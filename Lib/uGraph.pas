@@ -134,19 +134,23 @@ var
 	i, j, k: Integer;
 begin
 	Result := clNone;
+	if (Bmp.Width <= 1) or (Bmp.Height <= 1) then Exit;
 
-	PixColor[4] := Bmp.Canvas.Pixels[0, 1];
-	PixColor[5] := Bmp.Canvas.Pixels[Bmp.Width - 1, 1];
+	if (Bmp.Height >= 2) then
+	begin
+		PixColor[4] := Bmp.Canvas.Pixels[0, Bmp.Height - 2];
+		PixColor[5] := Bmp.Canvas.Pixels[Bmp.Width - 1, Bmp.Height - 2];
 
-	for i := 4 to 5 do
-		for j := 4 to 5 do
-		begin
-			if (i <> j) and (PixColor[i] = PixColor[j]) then
+		for i := 4 to 5 do
+			for j := 4 to 5 do
 			begin
-				Result := PixColor[i];
-				Exit;
+				if (i <> j) and (PixColor[i] = PixColor[j]) then
+				begin
+					Result := PixColor[i];
+					Exit;
+				end;
 			end;
-		end;
+	end;
 
 	PixColor[0] := Bmp.Canvas.Pixels[0, 0];
 	PixColor[1] := Bmp.Canvas.Pixels[Bmp.Width - 1, 0];

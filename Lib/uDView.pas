@@ -563,6 +563,7 @@ begin
 								Data := '<Empty>';
 								try
 									OnGetData(Self, Data, ColIndex, RowIndex);
+									if Length(Data) > 255 then SetLength(Data, 255);
 								except
 									on E: Exception do
 										MessageD(E.Message, mtError, [mbOk]);

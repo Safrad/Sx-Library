@@ -837,13 +837,31 @@ begin
 			try
 				Stream.Seek(0, 0);
 				MyGif.LoadFromStream(Stream);
-				Assign(MyGif);
 				{$ifopt d+}
 				if MyGif.Transparent then IE(45435);
+{				if MyGif.BackgroundColorIndex <> 0 then
+					Nop;}
 				{$endif}
-{				Transparent := MyGif.Transparent;
-				TransparentColor := MyGif.BackgroundColor;// Bitmap.TransparentColor;// BackgroundColor;}
-				Self.TryTransparent; // D???
+				Assign(MyGif);
+
+(*				if MyGif.BackgroundColor <> 0 then
+				begin
+{			if FGlyph.Transparent = True then
+			begin
+				Nop;
+{				FGlyph.Transparent := True;}
+//					MyGif.BackgroundColor :=
+//			end;
+					Transparent := True;
+					TransparentColor := MyGif.BackgroundColor;// Bitmap.TransparentColor;// BackgroundColor;}
+					TransparentColor := GetTransparentColor(Self); //MyGif.BackgroundColor;// Bitmap.TransparentColor;// BackgroundColor;}
+					MyGif.Transparent := True;
+				end
+				else
+					Transparent := False;*)
+
+//				Transparent := MyGif.Transparent;
+				Self.TryTransparent; // D??? TGifImage problem
 				Result := True;
 			except
 				on E: Exception do

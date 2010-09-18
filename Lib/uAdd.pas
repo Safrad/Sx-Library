@@ -2469,11 +2469,13 @@ begin
 end;
 
 procedure GetLocale;
+{$ifndef LINUX}
 var
 	s: string;
 	InLineIndex: SG;
+{$endif}
 begin
-	{$IFNDEF LINUX}
+	{$ifndef LINUX}
 	NativeSymbols := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNATIVEDIGITS, '0123456789');
 
 	DecimalSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SDECIMAL, '.');
@@ -2519,8 +2521,10 @@ begin
 end;
 
 initialization
+	{$ifndef LINUX}
 	{$ifopt d-}
 	NoErrMsg := True;
+	{$endif}
 	{$endif}
 	InitSin;
 	GetLocale;

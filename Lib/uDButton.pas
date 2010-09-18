@@ -485,8 +485,8 @@ begin
 		if FileExists(FileName) then
 		begin
 			FGlyph.LoadFromFile(FileName);
-			FGlyph.Transparent := True;
-			FGlyph.TransparentColor := GetTransparentColor(FGlyph);
+			if FGlyph.Transparent = False then
+				FGlyph.TryTransparent;
 		end;
 	end;
 
