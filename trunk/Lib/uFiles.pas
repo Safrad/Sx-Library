@@ -136,7 +136,7 @@ function ShortDir(const Dir: string): string;
 function FullDir (Dir: string): string;
 function DelFileExt(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
-function BackDir(const Dir: string): string;
+function BackDir(var Dir: string): BG;
 function LegalFileName(const FileName: string): string;
 procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
 function GetFileSizeU(const FileName: TFileName): U8;
@@ -796,15 +796,16 @@ begin
 	Result := DelFileExt(FName) + Text + ExtractFileExt(FName);
 end;
 
-function BackDir(const Dir: string): string;
+function BackDir(var Dir: string): BG;
 var i: Integer;
 begin
-	Result := Dir;
-	for i := Length(Result) - 1 downto 1 do
+	Result := False;
+	for i := Length(Dir) - 1 downto 3 do
 	begin
-		if Result[i] = '\' then
+		if Dir[i] = '\' then
 		begin
-			SetLength(Result, i);
+			SetLength(Dir, i);
+			Result := True;
 			Exit;
 		end;
 	end;
@@ -1491,7 +1492,7 @@ function ShortToLongPath(ShortName: string): string;
 var
 	LastSlash: string;
 begin
-	if FileExists(ShortName) = False then
+	if (FileExists(ShortName) = False) or (Length(ShortName) < 2) or (ShortName[1] = '\') then
 	begin
 		Result := ShortName;
 		Exit;

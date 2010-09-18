@@ -1656,10 +1656,10 @@ begin
 	begin
 		case j of
 		0: V := V + N[i];
-		1: V := V + 1000 * N[i];
-		2: V := V + 60 * 1000 * N[i];
-		3: V := V + 60 * 60 * 1000 * N[i];
-		4: V := V + 24 * 60 * 60 * 1000 * N[i];
+		1: V := V + Second * N[i];
+		2: V := V + Minute * N[i];
+		3: V := V + Hour * N[i];
+		4: V := V + Day * N[i];
 		end;
 		Inc(j);
 	end;

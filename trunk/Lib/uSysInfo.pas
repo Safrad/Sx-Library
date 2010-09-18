@@ -49,6 +49,9 @@ type
 		EditDuron: TEdit;
 		DLabelCPUUsage: TDLabel;
 		EditCPUUsage: TEdit;
+    EditCounter: TEdit;
+    DLabel1: TDLabel;
+    ComboBoxSize: TComboBox;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
@@ -69,7 +72,7 @@ type
 		CPU: U4;
 		CPUStr: string[12]; // 13
 		Reserved0: array[0..6] of S1; // 7
-		CPUFrequency: U8; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod) 
+		CPUFrequency: U8; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod)
 		CPUPower: U8;
 		DiskFree, DiskTotal: U8; // 16
 		CPUUsage: S4; // 4 (0..10000)
@@ -95,7 +98,7 @@ implementation
 {$R *.DFM}
 uses
 	uGraph, uScreen, uStrings, uFormat,
-	Registry;
+	Registry, Math;
 
 function GetKey(Default: Word): Word;
 label
@@ -178,7 +181,7 @@ type
    defaultObject          : cardinal;
    systemTime             : TSystemTime;
    perfTime               : comp;
-   perfFreq               : comp;
+	 perfFreq               : comp;
 	 perfTime100nSec        : comp;
 	 systemNameLength       : cardinal;
    systemnameOffset       : cardinal;
@@ -350,7 +353,16 @@ var
 	CPUTick: U8;
 const
 	P: array[0..3] of Char = ('C', ':', '\', CharNul);
+	Count = 1 shl 22;
+var
+	MaxMem4, MaxMem: UG;
+	PMem: Pointer;
 begin
+	if Assigned(fSysInfo) then
+		MaxMem4 :=  (1 shl Max(0, fSysInfo.ComboBoxSize.ItemIndex)){14 for duron} - 1 {10 = 4kB; 14=64kB}
+	else
+		MaxMem4 :=  1 shl 14 - 1; {10 = 4kB; 14=64kB}
+	MaxMem := 4 * (MaxMem4 + 1) - 1;
 {	P[0] := 'C';
 	P[1] := ':';
 	P[2] := '\';
@@ -371,6 +383,7 @@ begin
 
 	if IsCPUID_Available and (CPUException = False) then
 	begin
+		GetMem(PMem, MaxMem + 1);
 		SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
 		try
 			SysInfo.CPUStr := '            '; // 12 spaces
@@ -416,16 +429,26 @@ begin
 				pop ecx
 				sub ecx, 1
 			jnz @Loop}
-
-			mov ecx, 999999 // 1M
+(*
+			mov ecx, 999998 // 1M
 //      mov edi, U4 ptr PMem
-			@Loop:
+			@Loop: // 3 - Duron, 4 - P4
 				mov esi, edi
 				mov ebx, ecx
 				and ebx, 32767
 				add esi, ebx
 //        mov [esi], cl
 				sub ecx, 1
+			jnz @Loop*)
+
+			mov ecx, Count - 1 // 1M
+			mov edi, PMem
+			@Loop: // 4 clocks
+				mov eax, ecx
+				mov esi, edi
+				and eax, MaxMem4
+				sub ecx, 1
+				mov [esi+4*eax], ebx
 			jnz @Loop
 
 			popad
@@ -435,7 +458,7 @@ begin
 			if TickCount > 0 then
 			begin
 				SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
-				SysInfo.CPUPower := RoundDivS8(3 * 1000000 * PerformanceFrequency, TickCount);
+				SysInfo.CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
 			end
 			else
 			begin
@@ -448,6 +471,7 @@ begin
 			SysInfo.CPUPower := 0;
 		end;
 		SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
+		FreeMem(PMem);
 	end;
 end;
 
@@ -504,6 +528,7 @@ begin
 	else if SysInfo.CPUStr = 'GenuineIntel' then
 	begin
 		case Family of
+		0..3: s := '';
 		4:
 		begin
 			case Model of
@@ -530,20 +555,23 @@ begin
 			8: s := 'Pentium III E';
 			else s := 'Pentium 4';
 			end;
+		end
+		else // 15
+			s := 'Pentium 4';
 		end;
-		end;
-		s := 'Intel ' + s;
+		if  s <> '' then s := ' ' + s;
+		s := 'Intel' + s;
 	end
 	else if SysInfo.CPUStr = 'CyrixInstead' then
+		s := 'Cyrix '
 	else if SysInfo.CPUStr = 'NexGenDriven' then
+		s := 'NexGen '
 	else if SysInfo.CPUStr = 'CentaurHauls' then
+		s := 'Centaur '
 	else if SysInfo.CPUStr = 'RiseRiseRise' then
+		s := 'Rise '
 	else if SysInfo.CPUStr = 'UMC UMC UMC ' then
-
-
-	else
-		s := SysInfo.CPUStr;
-
+		s := 'UMC ';
 
 	if s <> '' then
 		s := s + ', ';
@@ -555,7 +583,7 @@ begin
 	EditCPUUsage.Text := NToS(SysInfo.CPUUsage, 2) + '%';
 	EditCPUFrequency.Text := NToS(SysInfo.CPUFrequency) + ' Hz';
 	EditDuron.Text := NToS(SysInfo.CPUPower) + ' Hz';
-
+	EditCounter.Text := NToS(PerformanceFrequency);
 
 	EditDiskU.Caption := BToStr(SysInfo.DiskTotal - SysInfo.DiskFree);
 	EditDiskF.Caption := BToStr(SysInfo.DiskFree);
@@ -577,8 +605,12 @@ begin
 end;
 
 procedure TfSysInfo.FormCreate(Sender: TObject);
+var i: SG;
 begin
 	Background := baGradient;
+	for i := 2 to 24 do
+		ComboBoxSize.Items.Add(BToStr(1 shl i));
+	ComboBoxSize.ItemIndex := 14;
 end;
 
 initialization

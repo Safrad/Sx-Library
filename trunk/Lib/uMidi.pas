@@ -10,7 +10,7 @@ unit uMidi;
 
 interface
 
-uses uAdd, MMSystem, SysUtils, Windows;
+uses uTypes, MMSystem, SysUtils, Windows;
 
 function MidiMCICallBack: Boolean;
 procedure MidiMCIOpen(FileName: TFileName);
@@ -44,7 +44,7 @@ var
 implementation
 
 uses
-	uError;
+	uError, uFormat;
 var
 	OpenParm: TMCI_Open_Parms;
 	PlayParm: TMCI_Play_Parms;

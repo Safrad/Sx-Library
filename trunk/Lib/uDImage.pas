@@ -22,7 +22,7 @@ type
 		zmFullSize, zmFitImage, zmFitWidth, zmFitHeight,
 		zm12, zm1, zm2,
 		zmCustom,
-		zmCenter, zmGrate, zmGrateColor);
+		zmCenter, zmCopy, zmGrate, zmGrateColor);
 
 type
 	TMouseAction = (mwNone, mwScroll,
@@ -90,6 +90,7 @@ type
 		// Output
 		Bitmap: TDBitmap;
 		Center, Grate: BG;
+		Grating: B1;
 		GrateColor: TColor;
 		Smaller: BG;
 		DX, DY, DW, DH: SG;
@@ -190,7 +191,7 @@ procedure Register;
 implementation
 
 uses
-	Math,
+	Math, ClipBrd,
 	uMenus, uGraph, uSysInfo, uStrings, uGetInt, uGColor, uFormat;
 
 const
@@ -199,12 +200,12 @@ const
 		'Zoom In', 'Zoom Out',
 		'Full Size', 'Fit Image', 'Fit Width', 'Fit Height', '1:2', '1:1', '2:1',
 		'Zoom To...',
-		'Center', 'Grate', 'Grate Color...');
+		'Center', 'Copy', 'Grate', 'Grate Color...');
 	MenuShort: array[TZoomMenu] of Char = (
 		'I', 'U',
 		'/', #0, #0, #0, #0, 'Q', #0,
 		#0,
-		#0, #0, #0);
+		#0, 'C', #0, #0);
 
 
 procedure TDImage.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
@@ -220,17 +221,21 @@ var
 	MS: TMenuItem;
 begin
 	PopupMenu := TPopupMenu.Create(Self);
+	ZoomMenu := Zoom1;
+
 	j := 0;
 	for i := Low(TZoomMenu) to High(TZoomMenu) do
 	begin
 		if i in [zmFullSize, zm12, zmCustom] then
 		begin
-			MS := TMenuItem.Create(Zoom1);
+			MS := TMenuItem.Create(nil);
 			MS.Caption := '-';
-			Zoom1.Insert(j, MS);
+{			if ZoomMenu <> nil then
+				ZoomMenu.Insert(j, MS);}
+			PopupMenu.Items.Insert(j, MS);
 			Inc(j);
 		end;
-		M[i] := TMenuItem.Create(Zoom1);
+		M[i] := TMenuItem.Create(nil);
 		M[i].Tag := SG(i);
 		M[i].Caption := MenuNames[i];
 		M[i].Name := ComponentName(MenuNames[i]);// 'Zoom' + IntToStr(SG(i));
@@ -238,14 +243,17 @@ begin
 			M[i].ShortCut := ShortCut(Ord(MenuShort[i]), [ssCtrl]);
 
 		M[i].OnClick := ZoomClick;
-		Zoom1.Insert(j, M[i]);
-//		PopupMenu.Items.Insert(j, M[i]);
+{		if ZoomMenu <> nil then
+			ZoomMenu.Insert(j, M[i]);}
+		PopupMenu.Items.Insert(j, M[i]);
 		Inc(j);
 	end;
 	FEnableZoom := True;
-	ZoomMenu := Zoom1;
-	MenuCreate(Zoom1, PopupMenu.Items);
-	MenuUpdate(Zoom1, PopupMenu.Items);
+	if ZoomMenu <> nil then
+	begin
+		MenuCreate(PopupMenu.Items, ZoomMenu);
+		MenuUpdate(PopupMenu.Items, ZoomMenu);
+	end;
 	MenuSet(PopupMenu, AdvancedDraw);
 end;
 
@@ -303,12 +311,15 @@ begin
 	end;
 	zmGrateColor:
 		GetColor('Grate Color', GrateColor, clWhite, nil{OnApply});
+	zmCopy:
+		Clipboard.Assign(TBitmap(Bitmap));
 	end;
 
 	M[zmIn].Enabled := Zoom < 16;
 	M[zmOut].Enabled := Zoom > 1 / 16;
 	M[zmFullSize].Enabled := Zoom <> 1;
-	MenuUpdate(PopupMenu.Items, ZoomMenu);
+	if ZoomMenu <> nil then
+		MenuUpdate(PopupMenu.Items, ZoomMenu);
 
 	Fill;
 end;
@@ -1344,7 +1355,7 @@ begin
 			{$endif}
 			if FramePerSec >= 0.1 then
 			begin
-				s := s + {$ifopt d+}s + ', ' +{$endif}NToS(Round(100 * FramePerSec), 2);
+				s := s + {$ifopt d+} ', ' +{$endif}NToS(Round(100 * FramePerSec), 2);
 			end;
 			FontSize := Bitmap.Canvas.Font.Size;
 			Bitmap.Canvas.Font.Size := 8;

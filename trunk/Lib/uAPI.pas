@@ -69,8 +69,8 @@ begin
 	VK_MODECHANGE: Result := 'Mode Change';
 	VK_ESCAPE: Result := 'ESC';
 	VK_SPACE: Result := 'Space';
-	VK_PRIOR: Result := 'Page Up';
-	VK_NEXT: Result := 'Page Down';
+	VK_PRIOR: Result := 'PgUp';//'Page Up';
+	VK_NEXT: Result := 'PgDn';//'Page Down';
 	VK_END: Result := 'End';
 	VK_HOME: Result := 'Home';
 	VK_LEFT: Result := 'Left';

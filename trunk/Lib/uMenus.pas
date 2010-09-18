@@ -13,6 +13,8 @@ interface
 uses
 	uTypes,
 	Windows, Graphics, Menus, Messages, Classes, ExtCtrls;
+const
+	IconSize = 22;
 
 {
 		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
@@ -756,7 +758,6 @@ begin
 end;
 }
 const
-	IconSize = 22;
 	BevelWidth = 7;
 
 var

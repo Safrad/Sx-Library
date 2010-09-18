@@ -156,7 +156,7 @@ begin
 				if DIdleTimer.Timers[i].FInterval = 0 then DIdleTimer.Timers[i].FInterval := 1;
 				DIdleTimer.Timers[i].FInterval12 := Max(RoundDiv(100 * DIdleTimer.Timers[i].TimWork, DIdleTimer.Timers[i].FInterval), 1);
 			end;
-			if (DIdleTimer.Timers[i].ElapsedTime > 0) and (DIdleTimer.Timers[i].ElapsedTime + RoundDivS8(PerformanceFrequency * LagTime, 2 * 1000) >= DIdleTimer.Timers[i].FInterval12) then
+			if (DIdleTimer.Timers[i].ElapsedTime > 0) and (DIdleTimer.Timers[i].ElapsedTime + RoundDivS8(PerformanceFrequency * LagTime, 2 * Second) >= DIdleTimer.Timers[i].FInterval12) then
 			begin
 				// Frame Rate
 				Inc(DIdleTimer.Timers[i].FNowFrameRate);
@@ -166,7 +166,7 @@ begin
 					if t = 0 then
 						DIdleTimer.Timers[i].FFrameRate := High(DIdleTimer.Timers[i].FFrameRate)
 					else
-						DIdleTimer.Timers[i].FFrameRate := RoundDivS8(DIdleTimer.Timers[i].FNowFrameRate * PerformanceFrequency * 1000, t);
+						DIdleTimer.Timers[i].FFrameRate := RoundDivS8(DIdleTimer.Timers[i].FNowFrameRate * PerformanceFrequency * Second, t);
 					DIdleTimer.Timers[i].FNowFrameRate := 0;
 {						LagCount := ElapsedTime div PerformanceFrequency;
 					if LagCount < 1 then LagCount := 1;

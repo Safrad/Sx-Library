@@ -66,6 +66,8 @@ type
 
 		procedure RWString(const Section, Ident: string; var Value: string; const Save: BG);
 		procedure RWStrings(const Section: string; Val: TStrings; const Save: BG);
+		procedure RWBool(const Section, Ident: string; var Value: B1; const Save: BG); overload;
+		procedure RWBool(const Section, Ident: string; var Value: BG; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: S1; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: U1; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: S2; const Save: BG); overload;
@@ -74,10 +76,8 @@ type
 		procedure RWNum(const Section, Ident: string; var Value: U4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: S8; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
-		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: FG; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: FA; const Save: BG); overload;
-		procedure RWBool(const Section, Ident: string; var Value: B1; const Save: BG); overload;
-		procedure RWBool(const Section, Ident: string; var Value: BG; const Save: BG); overload;
 		procedure RWDate(const Section, Ident: string; var Value: TDate; const Save: BG);
 		procedure RWTime(const Section, Ident: string; var Value: TTime; const Save: BG);
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
@@ -607,6 +607,36 @@ begin
 	if Result = False then ErrorMessage(FFileName + LineSep + 'Access Denied');
 end;
 
+procedure TDIniFile.RWBool(const Section, Ident: string; var Value: BG; const Save: BG);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadBG(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteBG(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWBool(const Section, Ident: string; var Value: B1; const Save: BG);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadBG(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteBG(Section, Ident, Value);
+		end;
+	end;
+end;
+
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: S1; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
@@ -692,7 +722,7 @@ begin
 		end
 		else
 		begin
-			WriteSG(Section, Ident, Value);
+			WriteS8(Section, Ident, Value);
 		end;
 	end;
 end;
@@ -712,36 +742,6 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWBool(const Section, Ident: string; var Value: BG; const Save: BG);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadBG(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteBG(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWBool(const Section, Ident: string; var Value: B1; const Save: BG);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadBG(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteBG(Section, Ident, Value);
-		end;
-	end;
-end;
-
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F4; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
@@ -757,7 +757,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F8; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: FG; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -987,8 +987,8 @@ begin
 		end;
 //		CorrectFormPos(Form);
 	end;
-	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
-		Form.WindowState := TWindowState(RWSGF(Form.Name, 'WindowState', Integer(Form.WindowState), Integer(Form.WindowState), Save));
+{	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
+		Form.WindowState := TWindowState(RWSGF(Form.Name, 'WindowState', Integer(Form.WindowState), Integer(Form.WindowState), Save));}
 end;
 
 procedure TDIniFile.RWFormPosV(Form: TForm; const Save: BG);
