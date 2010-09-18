@@ -122,7 +122,7 @@ implementation
 {$R *.DFM}
 uses
 	uStrings, uGraph, uDBitmap, uData, uInput,
-	Registry, MMSystem, Consts, Math, Types;
+	Registry, MMSystem, Consts, Math;
 
 type
 	TStyle = (stNormal, stInternal, stIO, stFile);

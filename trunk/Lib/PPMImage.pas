@@ -124,12 +124,12 @@ begin
 				begin
 					if BPC = 2 then
 					begin
-						cv := PByte(Buf)^ + PByte(SG(Buf) + 1)^;
+						cv := PU1(Buf)^ + PU1(SG(Buf) + 1)^;
 						Inc(SG(Buf), 2);
 					end
 					else
 					begin
-						cv := PByte(Buf)^;
+						cv := PU1(Buf)^;
 						Inc(SG(Buf), 1);
 					end;
 				end
@@ -181,9 +181,9 @@ begin
 		P := ScanLine[j];
 		for i := 0 to Width - 1 do
 		begin
-			RGB.R := PByte(SG(P) + 2)^;
-			RGB.G := PByte(SG(P) + 1)^;
-			RGB.B := PByte(SG(P) + 0)^;
+			RGB.R := PU1(SG(P) + 2)^;
+			RGB.G := PU1(SG(P) + 1)^;
+			RGB.B := PU1(SG(P) + 0)^;
 			Buf^ := RGB;
 			Inc(SG(Buf), 3);
 			Inc(SG(P), BPP);

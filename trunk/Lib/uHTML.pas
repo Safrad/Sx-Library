@@ -15,14 +15,17 @@ uses
 	SysUtils;
 
 type
+	TDistanceUnit = (duPercentage, duPixels, duPoints);
+
 	THTML = class(TObject)
 	private
 		FileName: TFileName;
 		Body: string;
 		FStyle: TFileName;
+		FFrameset: BG;
+		procedure WriteToFile;
 	public
 		Title: string;
-		FrameSet: BG;
 		AddCreated, AddTitle: BG;
 
 
@@ -30,11 +33,14 @@ type
 		constructor Create(FileName: TFileName);
 		destructor Destroy; override;
 
-		procedure AddDataCell(s: string; Align: BG);
+		procedure AddBodyFromFile;
+		procedure AddFramesetFromFile;
 		procedure AddBody(s: string);
+		procedure AddCommand(s: string);
+		procedure HorizontalRule(Width: SG = 100; DistanceUnit: TDistanceUnit = duPercentage; Size: SG = 2);
+		procedure AddDataCell(s: string; AlignRight: BG = False);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
 		procedure AddImage(FileName: TFileName); overload;
-		procedure WriteToFile;
 
 		procedure SetStyle(Value: TFileName);
 
@@ -52,6 +58,8 @@ function RelativePath(Source, Target: string): string;
 
 var
 	ImagesDir: string;
+const
+	DistanceUnitNames: array[TDistanceUnit] of string = ('%', 'px', 'pt');
 
 implementation
 
@@ -65,8 +73,8 @@ begin
 		Result := '&nbsp;'
 	else
 	begin
-		Result := ReplaceF(NToS(Value), ' ', '&thinsp;');
-		Result := ReplaceF(NToS(Value), #160, '&thinsp;');
+		Result := ReplaceF(NToS(Value), ' ', '&nbsp;'{'&thinsp;' IE DNS});
+		Result := ReplaceF(NToS(Value), #160, '&nbsp;'{'&thinsp;' IE DNS});
 	end;
 end;
 
@@ -185,14 +193,15 @@ begin
 	Self.FileName := FileName;
 	Body := '';
 	Title := '';
-	FrameSet := False;
+	FFrameset := False;
 	FStyle := '';
-	AddCreated := True;
+	AddCreated := UpperCase(DelFileExt(ExtractFileName(FileName))) <> 'MENU';
 	AddTitle := True;
 end;
 
 destructor THTML.Destroy;
 begin
+	WriteToFile;
 	FileName := '';
 	Body := '';
 	Title := '';
@@ -201,17 +210,32 @@ begin
 	inherited Destroy;
 end;
 
-procedure THTML.AddDataCell(s: string; Align: BG);
-begin
-	Body := Body + '<td';
-	if Align then
-		Body := Body + ' align="right"';
-	Body := Body + '>' + s + '</td>';
-end;
-
 procedure THTML.AddBody(s: string);
 begin
 	Body := Body + s;
+end;
+
+procedure THTML.AddCommand(s: string);
+begin
+	Body := Body + '<' + s + '>';
+end;
+
+procedure THTML.HorizontalRule(Width: SG = 100; DistanceUnit: TDistanceUnit = duPercentage; Size: SG = 2);
+begin
+	Body := Body + '<hr ';
+	if (Width <> 100) or (DistanceUnit <> duPercentage) then
+		Body := Body + 'width=' + IntToStr(Width) + DistanceUnitNames[DistanceUnit] + ' ';
+	if Size <> 2 then
+		Body := Body + 'size=' + IntToStr(Size);
+	Body := Body + '/>'
+end;
+
+procedure THTML.AddDataCell(s: string; AlignRight: BG = False);
+begin
+	Body := Body + '<td';
+	if AlignRight then
+		Body := Body + ' align="right"';
+	Body := Body + '>' + s + '</td>';
 end;
 
 function RelativePath(Source, Target: string): string;
@@ -226,7 +250,7 @@ var
 begin
 	Result := '';
 	LastDiv := 1;
-	for i := 1 to Max(Length(Source), Length(Target)) do
+	for i := 1 to Min(Length(Source), Length(Target)) do
 	begin
 		if Source[i] <> Target[i] then
 		begin
@@ -279,7 +303,7 @@ begin
 	s := s + d + ' (dd.mm.yyyy) ';}
 {	DateTimeToString(d, 'hh:nn:dd', t);
 	s := s + d + ' (hh:nn:ss)';}
-	if FrameSet then
+	if FFrameset then
 //		s := s + '	</FRAMESET>' + HTMLSep
 	else
 	begin
@@ -297,33 +321,32 @@ begin
 end;
 
 var
-	FName: TFileName;
 	LastBody, s: string;
 begin
 	LastBody := Body;
 	if Title = '' then Title := DelFileExt(ExtractFileName(FileName));
-	if FrameSet = False then
+	if FFrameset = False then
 	begin
 		if FStyle = '' then FStyle := 'style.css';
 	end;
 	s := '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 ';
-	if FrameSet then s := s + 'Frameset' else s := s + 'Transitional';
+	if FFrameset then s := s + 'Frameset' else s := s + 'Transitional';
 	s := s + '//EN">' + HTMLSep +
 	'<HTML>' + HTMLSep +
 	'<HEAD>' + HTMLSep;
 
-	if FrameSet = False then
-	begin
-		s := s +
-		'	<META name="Author" content="Safrad">' + HTMLSep +
-		'	<META name="lang" content="cz">' + HTMLSep +
-		'	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1250">' + HTMLSep +
-		'	<LINK REL="stylesheet" TYPE="text/css" HREF="' + FStyle + '">' + HTMLSep;
-	end;
 	s := s +
-	'	<TITLE>' + Title + '</TITLE>' + HTMLSep;
+		'	<meta name="Author" content="Safrad">' + HTMLSep +
+		'	<meta name="lang" content="cz">' + HTMLSep +
+		'	<meta http-equiv="Content-Type" content="text/html; charset=windows-1250">' + HTMLSep;
+	if FFrameset = False then
+		s := s + '	<link rel="stylesheet" type="text/css" href="' + FStyle + '">' + HTMLSep;
+	s := s +
+		'	<link rel="shortcut icon" href="' + RelativePath(Self.FileName, ImagesDir + 'favicon.ico') + '">' + HTMLSep;
+
+	s := s + '	<TITLE>' + Title + '</TITLE>' + HTMLSep;
 	s := s + '</HEAD>' + HTMLSep;
-	if FrameSet then
+	if FFrameset then
 //		s := s + '	<FRAMESET>' + HTMLSep
 	else
 	begin
@@ -333,12 +356,6 @@ begin
 	end;
 	Body := s + Body;
 
-	FName := DelFileExt(FileName) + '.body';
-	if FileExists(FName) then
-	begin
-		Body := Body + ReadStringFromFile(FName);
-	end;
-
 	HTMLEnd;
 	WriteStringToFile(FileName, Body, False);
 	Body := LastBody;
@@ -347,6 +364,31 @@ end;
 procedure THTML.SetStyle(Value: TFileName);
 begin
 	FStyle := RelativePath(FileName, Value);
+end;
+
+procedure THTML.AddBodyFromFile;
+var
+	FName: TFileName;
+	s, s2: string;
+begin
+	FName := DelFileExt(FileName) + '.body';
+	if FileExists(FName) then
+	begin
+		s := ReadStringFromFile(FName);
+		if Length(s) >= 9 then
+		begin
+			s2 := UpperCase(Copy(s, 1, 9));
+			if s2 = '<FRAMESET' then
+				FFrameset := True;
+		end;
+		Body := Body + s;
+	end;
+end;
+
+procedure THTML.AddFramesetFromFile;
+begin
+	FFrameset := True;
+	AddBodyFromFile;
 end;
 
 end.

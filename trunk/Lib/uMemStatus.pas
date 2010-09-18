@@ -6,7 +6,7 @@
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-unit uMemStatus platform;
+unit uMemStatus {platform};
 
 interface
 

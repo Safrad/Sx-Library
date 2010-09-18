@@ -98,14 +98,19 @@ object fGetInt: TfGetInt
     TransparentColorValue = clBlack
     WordWrap = False
   end
-  object EditInput: TEdit
+  object EditInput: TLabeledEdit
     Left = 16
     Top = 24
     Width = 113
     Height = 19
     AutoSize = False
+    EditLabel.Width = 27
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Value'
+    EditLabel.Transparent = True
     MaxLength = 15
     TabOrder = 0
+    Text = '0'
     OnChange = EditInputChange
   end
   object ButtonOk: TDButton
@@ -122,7 +127,7 @@ object fGetInt: TfGetInt
     Font.Style = []
     ModalResult = 1
     ParentFont = False
-    TabOrder = 7
+    TabOrder = 6
     OnClick = ButtonOkClick
   end
   object ButtonCancel: TDButton
@@ -139,7 +144,7 @@ object fGetInt: TfGetInt
     Font.Style = []
     ModalResult = 2
     ParentFont = False
-    TabOrder = 8
+    TabOrder = 7
     OnClick = ButtonCancelClick
   end
   object TrackBar: TTrackBar
@@ -149,7 +154,7 @@ object fGetInt: TfGetInt
     Height = 28
     Max = 99
     PageSize = 10
-    TabOrder = 6
+    TabOrder = 5
     ThumbLength = 19
     OnChange = TrackBarChange
   end
@@ -165,7 +170,7 @@ object fGetInt: TfGetInt
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 2
+    TabOrder = 1
     OnClick = ButtonMinClick
   end
   object ButtonCur: TDButton
@@ -180,7 +185,7 @@ object fGetInt: TfGetInt
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 3
+    TabOrder = 2
     OnClick = ButtonCurClick
   end
   object ButtonMax: TDButton
@@ -195,31 +200,8 @@ object fGetInt: TfGetInt
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 5
+    TabOrder = 4
     OnClick = ButtonMaxClick
-  end
-  object SpinButton1: TSpinButton
-    Left = 136
-    Top = 23
-    Width = 17
-    Height = 22
-    DownGlyph.Data = {
-      BA000000424DBA00000000000000420000002800000009000000060000000100
-      1000030000007800000000000000000000000000000000000000007C0000E003
-      00001F000000E03DE03DE03DE03DE03DE03DE03DE03DE03D0000E03DE03DE03D
-      E03D0000E03DE03DE03DE03DFCFFE03DE03DE03D000000000000E03DE03DE03D
-      7902E03DE03D00000000000000000000E03DE03D0200E03D0000000000000000
-      000000000000E03D5152E03DE03DE03DE03DE03DE03DE03DE03DE03D7902}
-    TabOrder = 1
-    UpGlyph.Data = {
-      BA000000424DBA00000000000000420000002800000009000000060000000100
-      1000030000007800000000000000000000000000000000000000007C0000E003
-      00001F000000E03DE03DE03DE03DE03DE03DE03DE03DE03D0500E03D00000000
-      00000000000000000000E03D3302E03DE03D00000000000000000000E03DE03D
-      1303E03DE03DE03D000000000000E03DE03DE03D0400E03DE03DE03DE03D0000
-      E03DE03DE03DE03D0602E03DE03DE03DE03DE03DE03DE03DE03DE03DB181}
-    OnDownClick = SpinButton1DownClick
-    OnUpClick = SpinButton1UpClick
   end
   object ButtonDef: TDButton
     Left = 224
@@ -233,7 +215,7 @@ object fGetInt: TfGetInt
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 4
+    TabOrder = 3
     OnClick = ButtonDefClick
   end
   object ButtonApply: TDButton
@@ -248,7 +230,7 @@ object fGetInt: TfGetInt
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 9
+    TabOrder = 8
     Visible = False
   end
   object EditError: TMemo
@@ -259,6 +241,16 @@ object fGetInt: TfGetInt
     ParentColor = True
     ReadOnly = True
     ScrollBars = ssVertical
+    TabOrder = 12
+  end
+  object UpDown: TUpDown
+    Left = 129
+    Top = 24
+    Width = 17
+    Height = 19
+    Min = -32768
+    Max = 32767
     TabOrder = 13
+    OnChangingEx = UpDownChangingEx
   end
 end

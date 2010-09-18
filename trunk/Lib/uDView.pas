@@ -630,7 +630,7 @@ begin
 				Co[1] := DarkerColor(C1);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				Bitmap.GenerateRGB(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+				Bitmap.GenerateRGBEx(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 
 				// Sort By
 				xx := x;

@@ -15,7 +15,7 @@ unit uDBitmap;
 interface
 
 uses
-	Types, OpenGL12,
+	OpenGL12,
 	uAdd, Windows, Graphics, ExtCtrls, SysUtils;
 
 const
@@ -203,9 +203,7 @@ type
 		procedure Rand(RandomColor: TColor);
 		procedure Texture(
 			BmpS: TDBitmap; const Effect: TEffect);
-		procedure Resize(
-			const BmpS: TDBitmap; const NewX, NewY: LongWord;
-			const InterruptProcedure: TInterruptProcedure); overload;
+		procedure Resize(const NewX, NewY: LongWord; BmpS: TDBitmap = nil; const InterruptProcedure: TInterruptProcedure = nil);
 
 		procedure SwapUD;
 		procedure Neg;
@@ -214,14 +212,14 @@ type
 {		procedure GenRGB(HidedColor: TColor;
 			const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);}
 
-		procedure GenerateRGB(XD1, YD1, XD2, YD2: Integer;
+		procedure GenerateRGBEx(XD1, YD1, XD2, YD2: Integer;
 			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
 			const Effect: TEffect; const Clock: LongWord;
-			const InterruptProcedure: TInterruptProcedure); overload;
+			const InterruptProcedure: TInterruptProcedure);
 		procedure GenerateRGB(
 			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
 			const Effect: TEffect;
-			const InterruptProcedure: TInterruptProcedure); overload;
+			const InterruptProcedure: TInterruptProcedure);
 		procedure FullRect;
 		procedure FormBitmap(Color: TColor);
 		procedure CopyBitmap(BmpS: TDBitmap); overload;
@@ -490,7 +488,7 @@ begin
 	if (NewWidth <> FWidth) or (NewHeight <> FHeight) then
 	begin
 		if (NewWidth > 0) and (NewHeight > 0) then
-			Resize(Self, NewWidth, NewHeight, nil);
+			Resize(NewWidth, NewHeight);
 	end;
 	SwapRB;
 end;
@@ -574,7 +572,7 @@ var
 begin
 	BmpC := TDBitmap.Create;
 	BmpC.SetSize(Wid, Hei);
-	BmpC.Resize(Self, Wid, Hei, nil);
+	BmpC.Resize(Wid, Hei, Self);
 	BmpC.SwapUD;
 
 	BmpColor := TBitmap.Create;
@@ -7254,9 +7252,8 @@ label LExit, NextX;
 var
 	CColor: array of TColor; // 4
 	CCount: array of UG;
-	PD: Pointer;
-	cy: TCoor;
-	ByteXD: LongWord;
+	PD, C2: PPixel;
+	cx, cy: TCoor;
 	L: UG;
 	FromV, ToV: SG;
 	C: TRColor;
@@ -7269,28 +7266,22 @@ begin
 	L := Min(Limit + 1, Width * Height);
 	SetLength(CColor, L);
 	SetLength(CCount, L);
-	PD := Data;
-	ByteXD := ByteX;
+	C2 := Data;
 	for cy := 0 to FHeight - 1 do
 	begin
-		asm
-		pushad
-		mov edi, PD
-		mov esi, edi
-		add esi, ByteXD
-
-		NextX:
-			mov eax, dword ptr [edi]
-			{$ifndef BPP4}
-			and eax, $00ffffff
+		PD := C2;
+		for cx := 0 to FWidth - 1 do
+		begin
+			{$ifdef BPP4}
+			C := PD^;
+			{$else}
+			C.A := 0;
+			C.RG := PD^.RG;
+			C.B := PD^.B;
 			{$endif}
-			mov C, eax
-			push edi
-			push esi
-			end;
 			FromV := 0;
 			ToV := SG(CACount) - 1;
-			if FindS4(PArrayS4(CColor), FromV, ToV, C.L, False) then
+			if {(CACount > 0) and} FindS4(PArrayS4(CColor), FromV, ToV, C.L, False) then
 			begin
 				Inc(CCount[FromV])
 			end
@@ -7317,19 +7308,9 @@ begin
 					goto LExit;
 				end;
 			end;
-			asm
-			pop esi
-			pop edi
-
-			add edi, BPP
-		cmp edi, esi
-		jb NextX
-
-		mov edi, PD
-		sub edi, ByteXD
-		mov PD, edi
-		popad
+			Inc(PD);
 		end;
+		Dec(SG(C2), ByteX);
 	end;
 	LExit:
 	SetLength(CColor, 0);
@@ -7341,7 +7322,7 @@ var
 	cx, cy: TCoor;
 	C, C2: PPixel;
 const
-	ColorMax = 1 shl 24 - 1;
+	ColorCount = 1 shl 24;
 var
 	CColorCount: array of U4;
 begin
@@ -7349,7 +7330,7 @@ begin
 	if (Width <= 0) or (Height <= 0) then Exit;
 
 	SetLength(CColorCount, 0);
-	SetLength(CColorCount, ColorMax);
+	SetLength(CColorCount, ColorCount);
 //	FillChar(CColorCount[0], SizeOf(CColorCount[0]) * ColorMax, 0);
 
 	C2 := Data;
@@ -7358,7 +7339,7 @@ begin
 		C := C2;
 		for cx := 0 to FWidth - 1 do
 		begin
-			if CColorCount[C.L] = 0 then
+			if CColorCount[{$ifdef BPP4}C.L{$else}SG(C^.RG) + SG(C^.B) shl 16{$endif}] = 0 then
 			begin
 				Inc(CACount);
 				if CACount > Limit then
@@ -7366,7 +7347,7 @@ begin
 					Exit;
 				end;
 			end;
-			Inc(CColorCount[C.L]);
+			Inc(CColorCount[{$ifdef BPP4}C.L{$else}SG(C.RG) + SG(C.B) shl 16{$endif}]);
 			Inc(C);
 		end;
 		Dec(SG(C2), ByteX);
@@ -7735,8 +7716,8 @@ begin
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Resize(
-	const BmpS: TDBitmap; const NewX, NewY: LongWord;
-	const InterruptProcedure: TInterruptProcedure);
+	const NewX, NewY: LongWord; BmpS: TDBitmap = nil;
+	const InterruptProcedure: TInterruptProcedure = nil);
 var
 	PS, PD: PPixel;
 
@@ -7771,6 +7752,7 @@ var
 begin
 	if (NewX = 0) or (NewY = 0) then Exit;
 
+	if BmpS = nil then BmpS := Self;
 	SX := BmpS.Width;
 	SY := BmpS.Height;
 	if (SX = NewX) and (SY = NewY) then
@@ -8102,7 +8084,7 @@ begin
 	end;
 end;
 
-procedure TDBitmap.GenerateRGB(
+procedure TDBitmap.GenerateRGBEx(
 	XD1, YD1, XD2, YD2: Integer;
 	const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
 	const Effect: TEffect; const Clock: LongWord;
@@ -8443,7 +8425,7 @@ procedure TDBitmap.GenerateRGB(
 	const Effect: TEffect;
 	const InterruptProcedure: TInterruptProcedure);
 begin
-	GenerateRGB(0, 0, FWidth - 1, FHeight - 1,
+	GenerateRGBEx(0, 0, FWidth - 1, FHeight - 1,
 		Func, Co, RandEffect, Effect, 0, InterruptProcedure);
 end;
 {
@@ -10186,7 +10168,7 @@ begin
 		Co[2] := Co[0];
 		Co[3] := Co[1];
 	end;
-	GenerateRGB(X1 + 2, Y1 + 2, X2 - 2, Y2 - 2, gfFade2x, Co, 0, ScrollEf, 0, nil);
+	GenerateRGBEx(X1 + 2, Y1 + 2, X2 - 2, Y2 - 2, gfFade2x, Co, 0, ScrollEf, 0, nil);
 	if Down then
 	begin
 		Inc(X1);

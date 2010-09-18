@@ -436,6 +436,8 @@ begin
 end;
 
 procedure TDButton.DrawItem(const DrawItemStruct: TDrawItemStruct);
+const
+	Border = 2;
 var
 	FileName: TFileName;
 
@@ -451,8 +453,7 @@ var
 	E: TColor;
 	s: string;
 	Orient: SG;
-const
-	Border = 2;
+	v: SG;
 begin
 	LoadBSounds;
 	IsDefault := DrawItemStruct.itemState and ODS_FOCUS <> 0;
@@ -484,6 +485,13 @@ begin
 		if FileExists(FileName) then
 		begin
 			FGlyph.LoadFromFile(FileName);
+			if FGlyph.Height > 0 then
+			if FGlyph.Height + 2 * Border > Height then
+			begin
+				v := FGlyph.Height - 2 * Border;
+
+				FGlyph.Resize(RoundDiv(FGlyph.Width * v, FGlyph.Height), v);
+			end;
 		end;
 	end;
 
@@ -527,7 +535,7 @@ begin
 	Co[2] := Co[0];
 	Co[3] := Co[1];
 	{$ifopt d-}
-	FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+	FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 		gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 	{$else}
 	FBmpOut.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
@@ -588,12 +596,12 @@ begin
 			or the bottom, then both the text and the glyph are centered horizontally.}
 		if Layout in [blGlyphLeft, blGlyphRight] then
 		begin
-			GlyphPos.Y := (FBmpOut.Height - GlyphSize.Y) div 2;
+			GlyphPos.Y := (FBmpOut.Height - GlyphSize.Y + 1) div 2;
 	//		TextPos.Y := (Recta.Bottom - TextSize.Y) div 2;
 		end
 		else
 		begin
-			GlyphPos.X := (FBmpOut.Width - GlyphSize.X) div 2;
+			GlyphPos.X := (FBmpOut.Width - GlyphSize.X + 1) div 2;
 	//		TextPos.X := (Recta.Right - TextSize.X) div 2;
 		end;
 
@@ -651,7 +659,7 @@ begin
 			Spacing := 2;
 
 			if Caption = '' then
-				GlyphPos.X := (FBmpOut.Width - GlyphSize.X) div 2
+				GlyphPos.X := (FBmpOut.Width - GlyphSize.X + 1) div 2
 			else
 			case Layout of
 			blGlyphLeft:

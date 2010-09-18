@@ -10,7 +10,7 @@ unit TGAImage;
 
 interface
 
-uses Types, SysUtils, Classes, Graphics;
+uses SysUtils, Classes, Graphics;
 
 type
 	TTGAImage = class(TBitmap)
@@ -72,7 +72,7 @@ begin
 		ImageSizeS := s.Size - SizeOf(Header) - Header.IDLength;
 
 		if (ImageSizeS = ImageSizeD) and (Header.ImageInfo = 0) and (Header.ImageType = 2) then
-			s.ReadBuffer(PByte(Scanline[Header.Height - 1])^, ImageSizeD)
+			s.ReadBuffer(PU1(Scanline[Header.Height - 1])^, ImageSizeD)
 		else
 		begin
 			GetMem(CompImage, ImageSizeS);
@@ -102,7 +102,7 @@ begin
 				begin
 					if Header.ImageType = 10 then
 					begin // Compressed
-						C := PByte(PS)^;
+						C := PU1(PS)^;
 						Inc(SG(PS), 1);
 						if SG(PS) >= MaxPS then Break;
 						if C and $80 = 0 then
@@ -177,9 +177,9 @@ begin
 	end;
 	header.Width := Width;
 	header.Height := Height;
-  ImageSize := Width * Height * (header.BPP div 8);
+	ImageSize := Width * Height * (header.BPP div 8);
   s.WriteBuffer(header, sizeof(header));
-  s.WriteBuffer(PByte(Scanline[height-1])^, ImageSize);
+	s.WriteBuffer(PU1(Scanline[height-1])^, ImageSize);
 end;
 
 initialization

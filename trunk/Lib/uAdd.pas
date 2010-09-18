@@ -11,7 +11,7 @@ unit uAdd;
 interface
 
 uses
-	SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, DateUtils, Classes;
+	SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, Classes;
 
 { Mul EAX, 10
 	asm
@@ -35,6 +35,12 @@ uses
 
 		FreeMem = Dispose
 }
+// Delphi <= 5
+const
+  NaN         =  0.0 / 0.0;
+	Infinity    =  1.0 / 0.0;
+	NegInfinity = -1.0 / 0.0;
+
 
 type
 	SG = Integer; // LongInt for Delphi 6
@@ -357,8 +363,24 @@ procedure CheckBool(var Bool: LongBool); overload;
 procedure Order(var I1, I2: Integer); overload;
 procedure Order(var I1, I2: Cardinal); overload;
 
-function CalcShr(N: U4): S1;
+// Statistics
 
+function CountData(const Data: array of FG): FG;
+function Minimum(const Data: array of FG): FG;
+function Maximum(const Data: array of FG): FG;
+function Sum(const Data: array of FG): FG;
+function Sumx(const Data: array of FG; x: SG): FG;
+function Avg(const Data: array of FG): FG;
+function mx(const Data: array of FG; x: SG): FG;
+function ux(const Data: array of FG; x: SG): FG;
+function Variance0(const Data: array of FG): FG;
+function VarianceCoef(const Data: array of FG): FG;
+function Skew(const Data: array of FG): FG;
+
+function CalcShr(N: U4): S1;
+{$ifopt d+}
+procedure CheckSize(Size: SG);
+{$endif}
 (*function AllocByB(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 function AllocByEx(const OldSize: SG; var NewSize: SG;
@@ -501,7 +523,7 @@ function ProcessPriority(const Prior: Byte): Integer;
 function ThreadPriority(const Prior: Byte): Integer;
 
 function GetCaption(const FName: TFileName; const Changed: Boolean;
-	const New: Integer; const Index, Count: Integer): string;
+	const New: Integer; const ReadOnly: BG; const Index, Count: Integer): string;
 
 function ComponentName(Name: string): string;
 function MenuNameToFileName(Name: string): string;
@@ -519,7 +541,7 @@ procedure CreateLink(
 	const IconFileName: TFileName;
 	const IconIdex: Integer);
 
-function DropFiles(hDrop: THandle): TStrings;
+function DropFiles(hDrop: LongWord): TStrings;
 
 procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
 
@@ -1205,6 +1227,132 @@ begin
 	end;
 end;
 
+// Statistics
+
+function CountData(const Data: array of FG): FG;
+begin
+	Result := Length(Data);
+end;
+
+function Minimum(const Data: array of FG): FG;
+var i: SG;
+begin
+	if Length(Data) <= 0 then
+		Result := NaN
+	else
+		Result := MaxDouble;
+	for i := 0 to Length(Data) - 1 do
+	begin
+		if Result > Data[i] then
+			Result := Data[i];
+	end;
+end;
+
+function Maximum(const Data: array of FG): FG;
+var i: SG;
+begin
+	if Length(Data) <= 0 then
+		Result := NaN
+	else
+		Result := -MaxDouble;
+	for i := 0 to Length(Data) - 1 do
+	begin
+		if Result < Data[i] then
+			Result := Data[i];
+	end;
+end;
+
+function Sum(const Data: array of FG): FG;
+var i: SG;
+begin
+	Result := 0;
+	for i := 0 to Length(Data) - 1 do
+	begin
+		Result := Result + Data[i];
+	end;
+end;
+
+function Sumx(const Data: array of FG; x: SG): FG;
+var i: SG;
+begin
+	Result := 0;
+	for i := 0 to Length(Data) - 1 do
+	begin
+		Result := Result + Power(Data[i], x);
+	end;
+end;
+
+// m1 = EX - Average Value (støední hodnota)
+function Avg(const Data: array of FG): FG;
+begin
+	if Length(Data) <= 0 then
+		Result := NaN
+	else
+		Result := Sum(Data) / Length(Data);
+end;
+
+// mx
+function mx(const Data: array of FG; x: SG): FG;
+begin
+	if Length(Data) <= 0 then
+		Result := NaN
+	else
+		Result := Sumx(Data, x) / Length(Data);
+end;
+
+// ux
+function ux(const Data: array of FG; x: SG): FG;
+begin
+	if Length(Data) <= 0 then
+		Result := NaN
+	else
+		Result := mx(Data, x) - Sqr(mx(Data, x - 1));
+end;
+
+// u2 = m2 - m1^2 = var (variance) X = DX = "o^2" = E(X - EX)^2 - rozptyl = E(X^2) - (EX)^2
+// o = Sqrt(var X) smerodatna odchylka
+function Variance0(const Data: array of FG): FG;
+var
+	i: SG;
+	A: FG;
+begin
+	if Length(Data) <= 1 then
+		Result := 0
+	else
+	begin
+{		Result := 0;
+		A := Avg(Data);
+		for i := 0 to Length(Data) - 1 do
+		begin
+			Result := Result + Sqr(Data[i]);
+		end;
+		Result := Result / Length(Data) - Sqr(A);}
+
+
+		Result := 0;
+		A := Avg(Data);
+		for i := 0 to Length(Data) - 1 do
+		begin
+			Result := Result + Sqr(Data[i] - A);
+		end;
+		Result := Result / Length(Data);
+	end;
+end;
+
+function VarianceCoef(const Data: array of FG): FG;
+begin
+	Result := Sqrt(Variance0(Data) / Avg(Data));
+end;
+
+// sikmost
+function Skew(const Data: array of FG): FG;
+begin
+	if Length(Data) <= 0 then
+		Result := NaN
+	else
+		Result := ux(Data, 3) / Power(Sqrt(Variance0(Data)), 3);
+end;
+
 function CalcShr(N: U4): S1;
 {
 	0: -1
@@ -1249,6 +1397,15 @@ begin
 		end;
 	end;
 end;
+
+{$ifopt d+}
+procedure CheckSize(Size: SG);
+begin
+	if Size <> 1 shl CalcShr(Size) then
+		MessageD('Bad type size ' + NToS(Size), mtWarning, [mbOk]);
+end;
+{$endif}
+
 (*
 function AllocByB(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
@@ -1365,18 +1522,33 @@ function AllocByExp(const OldSize: SG; var NewSize: SG): Boolean;
 	0 <= NewSize < 2^31
 }
 begin
-  Result := False;
+	{$ifopt d+}
+	if (OldSize < 0) or (OldSize > 1024 * 1024 * 1024) then
+		ErrorMessage('Bad AllocBy block OldSize' + LineSep + BToStr(OldSize));
+	if (NewSize < 0) or (NewSize > 1024 * 1024 * 1024) then
+		ErrorMessage('Bad AllocBy block NewSize' + LineSep + BToStr(NewSize));
+	{$endif}
+
+	Result := False;
 	if NewSize > OldSize then
 	begin
 		{$ifopt d+}
 		if OldSize > 0 then
 		if OldSize <> 1 shl CalcShr(OldSize) then
 		begin
-			ErrorMessage('Bad AllocBy block size' + LineSep + NToS(OldSize) + ' bytes');
+			ErrorMessage('Bad AllocBy block size' + LineSep + BToStr(OldSize));
 		end;
 		{$endif}
 		NewSize := Max(1 shl CalcShr(NewSize), 0{Minimum items});
 		Result := True;
+	end
+	else
+	begin
+		if NewSize < OldSize then
+		begin
+			if NewSize = 0 then Result := True;
+		end;
+
 	end;
 end;
 
@@ -2251,6 +2423,23 @@ begin
 	Result := SToMs(Str) / MSecsPerDay;
 end;
 
+function TryEncodeDate(Year, Month, Day: Word; out Date: TDateTime): Boolean;
+var
+  I: Integer;
+  DayTable: PDayTable;
+begin
+  Result := False;
+  DayTable := @MonthDays[IsLeapYear(Year)];
+  if (Year >= 1) and (Year <= 9999) and (Month >= 1) and (Month <= 12) and
+    (Day >= 1) and (Day <= DayTable^[Month]) then
+  begin
+    for I := 1 to Month - 1 do Inc(Day, DayTable^[I]);
+    I := Year - 1;
+    Date := I * 365 + I div 4 - I div 100 + I div 400 + Day - DateDelta;
+    Result := True;
+  end;
+end;
+
 function SToDate(Str: string): TDate;
 var
 	DateSep: Char;
@@ -2509,7 +2698,7 @@ begin
 	else
 	begin
 // DateTimeToStr(s, 'YYYY-MM-DD HH:MM:SS', Now);
-		Result := DateToS(DateOf(DT)) + ' ' + TimeToS(TimeOf(DT));
+		Result := DateToS(Trunc(DT)) + ' ' + TimeToS(Frac(DT));
 	end;
 end;
 
@@ -2603,15 +2792,11 @@ asm
 
 				MOV     ECX,EDX
 //        JS      @@exit
-//				DEC ECX
+				DEC ECX // D??? Required!
 //        SAR     ECX,2
 //				JS      @@exit
 
 				REP     STOSD   { Fill count dwords       }
-
-{        MOV     ECX,EDX
-				AND     ECX,3
-				REP     STOSB   { Fill count MOD 4 bytes        }}
 
 @@exit:
 				POP     EDI
@@ -2874,7 +3059,7 @@ begin
 end;
 
 function GetCaption(const FName: TFileName; const Changed: Boolean;
-	const New: Integer; const Index, Count: Integer): string;
+	const New: Integer; const ReadOnly: BG; const Index, Count: Integer): string;
 begin
 	Result := Application.Title;
 	if Count > 0 then
@@ -2885,6 +3070,7 @@ begin
 		Result := Result + ShortDir(FName);
 		if Changed then Result := Result + ' *';
 		if New <> 0 then Result := Result + ' (New)';
+		if ReadOnly then Result := Result + ' (Read Only)';
 	end;
 end;
 
@@ -3038,7 +3224,7 @@ begin
 	MyObject := nil;
 end;
 
-function DropFiles(hDrop: THandle): TStrings;
+function DropFiles(hDrop: LongWord): TStrings;
 var
 	fName: array[0..4095] of Char;
 	NumberOfFiles: Integer;
@@ -3081,7 +3267,7 @@ var
 {$endif}
 begin
 	{$ifndef LINUX}
-	{$WARN SYMBOL_PLATFORM OFF}
+	{$WARNINGS OFF}
 	NativeSymbols := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNATIVEDIGITS, '0123456789');
 
 	DecimalSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SDECIMAL, '.');
@@ -3107,7 +3293,7 @@ begin
 	InLineIndex := 1;
 	ICentury := StrToIntDef(ReadToChar(s, InLineIndex, ';'), 3);}
 	ICentury := 30; // D???
-	{$WARN SYMBOL_PLATFORM ON}
+	{$WARNINGS ON}
 	{$ELSE}
 	NativeSymbols := '0123456789';
 
