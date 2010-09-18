@@ -17,30 +17,44 @@ uses
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl;
 
 type
-	TDLabel = class(TLabel)
+	TDLabel = class(TWinControl)
 	private
 		{ Private declarations }
 		FBmpOut: TDBitmap;
-		FBmpBack: TDBitmap;
 		FBmpText: TDBitmap;
-//		FBuffer: TBuffer;
 
+		// Properties
+		FAlignment: TAlignment;
+		FAlphaBlend: Boolean;
+		FAlphaBlendValue: Byte;
+		FAutoSize: BG;
 		FBackEffect: TEffect;
-
-		FFontEffect: TEffect;
-		FFontAngle: TAngle;
-		FFontShadow: ShortInt;
-		FDispl: TDispl;
-
 		FBevelInner: TPanelBevel;
 		FBevelOuter: TPanelBevel;
 		FBevelWidth: TBevelWidth;
 		FBorderWidth: TBorderWidth;
 		FBorderStyle: TBorderStyle;
+		FFocusControl: TWinControl;
+		FCaption: string;
+//		FColor: TColor;
+//		FFont: TFont;
+		FFontEffect: TEffect;
+		FFontAngle: TAngle;
+		FFontShadow: ShortInt;
+		FDispl: TDispl;
+		FLayout: TTextLayout;
 
+		FTransparent: BG;
+		FTransparentColor: Boolean;
+		FTransparentColorValue: TColor;
+		FWordWrap: BG;
+
+		// Events
 		FOnPaint: TNotifyEvent;
 
 		procedure SetBackEffect(Value: TEffect);
+//		procedure SetColor(Value: TColor);
+		procedure SetCaption(Value: string);
 
 		procedure SetFontShadow(Value: ShortInt);
 		procedure SetFontAngle(Value: TAngle);
@@ -54,27 +68,45 @@ type
 		procedure SetBorderWidth(Value: TBorderWidth);
 		procedure SetBorderStyle(Value: TBorderStyle);
 
-//		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
+		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
-{		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
-		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;}
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;
+
+		procedure SetLayeredAttribs;
+		procedure SetAlphaBlend(const Value: Boolean);
+		procedure SetAlphaBlendValue(const Value: Byte);
+		procedure SetTransparentColor(const Value: Boolean);
+		procedure SetTransparentColorValue(const Value: TColor);
+		procedure SetWordWrap(const Value: Boolean);
+		procedure InitAlphaBlending(var Params: TCreateParams);
+
 	protected
 		{ Protected declarations }
-		procedure Paint; override;
-
+		procedure CreateParams(var Params: TCreateParams); override;
+//		procedure Paint; override;
 	public
 		{ Public declarations }
+
 		procedure Invalidate; override;
 		procedure Fill;
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
-		property Canvas;
+//		property Canvas;
 	published
 		{ Published declarations }
-//		property Buffer: TBuffer read FBuffer write SetBuffer default bfStatic;
+		property AlphaBlend: Boolean read FAlphaBlend write SetAlphaBlend;
+		property AlphaBlendValue: Byte read FAlphaBlendValue write SetAlphaBlendValue;
 
+		property AutoSize: BG read FAutoSize write FAutoSize;
+		property Alignment: TAlignment read FAlignment write FAlignment;
+		property Caption: string read FCaption write SetCaption;
+		property Color; //: TColor read FColor write SetColor;
 		property BackEffect: TEffect read FBackEffect write SetBackEffect default ef16;
 
+		property FocusControl: TWinControl read FFocusControl write FFocusControl;
+//		property FocusControl; //: TFont read FFont write SetFont;
+		property Font; //: TFont read FFont write SetFont;
 		property FontEffect: TEffect read FFontEffect write SetFontEffect default ef16;
 		property FontAngle: TAngle read FFontAngle write SetFontAngle default 0;
 		property FontShadow: ShortInt read FFontShadow write SetFontShadow default 0;
@@ -86,9 +118,27 @@ type
 		property BorderWidth: TBorderWidth read FBorderWidth write SetBorderWidth default 0;
 		property BorderStyle: TBorderStyle read FBorderStyle write SetBorderStyle default bsNone;
 
-		property OnMouseEnter;
-		property OnMouseLeave;
+		property Layout: TTextLayout read FLayout write FLayout;
+		property ParentColor; //: TColor read FColor write SetColor;
+		property Hint;
+		property ShowHint;
+		property ParentShowHint;
+		property ParentFont;
+		property PopupMenu;
+
+		property Transparent: Boolean read FTransparent write FTransparent;
+		property TransparentColor: Boolean read FTransparentColor write SetTransparentColor;
+		property TransparentColorValue: TColor read FTransparentColorValue write SetTransparentColorValue;
+
+		property WordWrap: Boolean read FWordWrap write SetWordWrap;
+
+		property OnClick;
+		property OnDblClick;
+{		property OnMouseEnter;
+		property OnMouseLeave;}
 		property OnMouseMove;
+		property OnMouseDown;
+		property OnMouseUp;
 
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
 	end;
@@ -97,7 +147,13 @@ procedure Register;
 
 implementation
 
-uses uStrings;
+uses uStrings, uScreen;
+
+type
+  TSetLayeredWindowAttributes = function (Hwnd: THandle; crKey: COLORREF; bAlpha: Byte; dwFlags: DWORD): Boolean; stdcall;
+
+var
+	SetLayeredWindowAttributes: TSetLayeredWindowAttributes = nil;
 
 constructor TDLabel.Create(AOwner: TComponent);
 begin
@@ -117,7 +173,7 @@ begin
 	FDispl.OnChange := DisplChanged;
 
 	FBmpOut := nil;
-	FBmpBack := nil;
+//	FBmpBack := nil;
 	FBmpText := nil;
 //	FBuffer := bfStatic;
 
@@ -131,8 +187,16 @@ begin
 	Width := 64;
 	Height := 64;
 //  Alignment := taCenter;
-	Layout := tlCenter;
-	AutoSize := False;
+	FLayout := tlCenter;
+	FAutoSize := False;
+//	FFont := TFont.Create;
+end;
+
+procedure TDLabel.CreateParams(var Params: TCreateParams);
+begin
+	inherited CreateParams(Params);
+	InitAlphaBlending(Params);
+  SetLayeredAttribs;
 end;
 
 destructor TDLabel.Destroy;
@@ -143,50 +207,19 @@ begin
 		FBmpOut.Free;
 		FBmpOut := nil;
 	end;
-	if Assigned(FBmpBack) then
+{	if Assigned(FBmpBack) then
 	begin
 		FBmpBack.Free;
 		FBmpBack := nil;
-	end;
+	end;}
 	if Assigned(FBmpText) then
 	begin
 		FBmpText.Free;
 		FBmpText := nil;
 	end;
+//	FFont.Free; FFont := nil;
 	inherited Destroy;
 end;
-
-{procedure TDLabel.SetBuffer(Value: TBuffer);
-begin
-	if FBuffer <> Value then
-	begin
-		if Value <> bfStatic then
-		begin
-			if Assigned(FBmpOut) then
-			begin
-				FBmpOut.Free;
-				FBmpOut := nil;
-			end;
-			if Assigned(FBmpText) then
-			begin
-				FBmpText.Free;
-				FBmpText := nil;
-			end;
-		end
-		else
-		begin
-			if not Assigned(FBmpOut) then
-			begin
-				FBmpOut := TDBitmap.Create;
-			end;
-			if not Assigned(FBmpText) then
-			begin
-				FBmpText := TDBitmap.Create;
-			end;
-		end;
-		FBuffer := Value;
-	end;
-end;}
 
 procedure TDLabel.DisplChanged(ADispl: TObject);
 begin
@@ -203,6 +236,34 @@ begin
 	if FBackEffect <> Value then
 	begin
 		FBackEffect := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDLabel.SetWordWrap(const Value: Boolean);
+begin
+	if FWordWrap <> Value then
+	begin
+		FWordWrap := Value;
+		Invalidate;
+	end;
+end;
+
+
+{procedure TDLabel.SetColor(Value: TColor);
+begin
+	if Value <> FColor then
+	begin
+		FColor := Value;
+		Invalidate;
+	end;
+end;}
+
+procedure TDLabel.SetCaption(Value: string);
+begin
+	if Value <> FCaption then
+	begin
+		FCaption := Value;
 		Invalidate;
 	end;
 end;
@@ -266,23 +327,38 @@ begin
 		Invalidate;
 	end;
 end;
-{
+
 procedure TDLabel.WMEraseBkgnd(var Message: TWMEraseBkgnd);
 begin
+//	Message.Result := 0;
 	DefaultHandler(Message);
-end;}
+end;
 
 procedure TDLabel.Invalidate;
+var Message: TWMPaint;
 begin
 	inherited Invalidate;
 	if (Assigned(FBmpOut)) then
+	begin
 		Fill;
+		Message.Msg := 0;
+		Message.DC := 0;
+		Message.Unused := 0;
+		Message.Result := 0;
+		WMPaint(Message);
+	end;
 end;
 
-procedure TDLabel.Paint;
+procedure TDLabel.WMPaint;
 var
 	Recta: TRect;
+	DC: HDC;
 begin
+	if Message.Msg <> 0 then
+		DefaultHandler(Message);
+
+	DC := GetDC(Handle);
+
 	Recta.Left := 0;
 	Recta.Top := 0;
 	Recta.Right := Width;
@@ -296,19 +372,22 @@ begin
 
 	if Assigned(FBmpOut) then
 	begin
-		BitBlt({Message.DC}Canvas.Handle, 0, 0, FBmpOut.Width, FBmpOut.Height,
+		BitBlt(DC, 0, 0, FBmpOut.Width, FBmpOut.Height,
 			FBmpOut.Canvas.Handle,
 			0, 0,
 			SRCCOPY);
-		if Assigned(FOnPaint) then FOnPaint(Self);
-	end;
+	end
+	else
+		PatBlt(DC, 0, 0, Width, Height, 10);
+	if Assigned(FOnPaint) then FOnPaint(Self);
+	ReleaseDC(Handle, DC);
 end;
-{
+
 procedure TDLabel.WMShow(var Message: TWMShowWindow);
 begin
 	Fill;
 	inherited;
-end;}
+end;
 
 procedure TDLabel.WMSize(var Message: TWMSize);
 begin
@@ -326,45 +405,46 @@ var
 	Co: array[0..3] of TColor;
 begin
 
-//  Recta := GetClientRect;
+//	Recta := GetClientRect;
 	Recta.Left := 0;
 	Recta.Top := 0;
 	Recta.Right := Width;
 	Recta.Bottom := Height;
 	if (not Assigned(FBmpOut)) then
 	begin
-		FBmpOut := TDBitmap.Create;
+		Exit;
+//		FBmpOut := TDBitmap.Create;
 	end;
 	FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
 
 // Background
 	if FBackEffect <> ef16 then
 	begin
-		if (Transparent = False) then
+//		if (Transparent = False) then
 		begin
 {			FBmpOut.Canvas.Brush := Parent.Brush;
 			FBmpOut.Canvas.FillRect(Recta);}
 			FBmpOut.FormBitmap(Color);
-		end
-		else
-		begin
+		end;
+{		else
+		begin}
 {	if FBackEffect <> ef16 then
 	begin
 		if (Transparent = True) then
 		begin}
-			if FBmpBack = nil then
+{			if FBmpBack = nil then
 			begin
 				FBmpBack := TDBitmap.Create;
 				FBmpBack.SetSize(FBmpOut.Width, FBmpOut.Height);
-				FBmpBack.Canvas.CopyRect(Rect(0, 0, FBmpOut.Width, FBmpOut.Height),
+				FBmpBack.Canvas.CopyRect(Rect(Left, Top, FBmpOut.Width, FBmpOut.Height),
 					Canvas, Recta);
-			end;
+			end;}
 {		end;
 	end;}
-			FBmpOut.CopyBitmap(FBmpBack);
+//			FBmpOut.CopyBitmap(FBmpBack);
 {			FBmpOut.Canvas.CopyRect(Rect(0, 0, FBmpOut.Width, FBmpOut.Height),
 				Canvas, Recta);}
-		end;
+//		end;
 	end;
 
 // Border
@@ -431,7 +511,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-				clNone, gfFade2x, Co, $000f0f0f{clBlack}, FBackEffect, nil);
+				clNone, gfFade2x, Co, ScreenCorectColor, FBackEffect, nil);
 //			FBmpOut.FormBitmap(Color);
 {			FBmpOut.Canvas.Brush.Color := Color;
 			FBmpOut.Canvas.FillRect(Recta);}
@@ -490,10 +570,10 @@ begin
 		if Displ.Enabled then
 		begin
 			if FFontEffect <> ef16 then
-				DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
+				DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, FAlignment, FLayout,
 					ef16)
 			else
-				DisplDrawRect(FBmpOut, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
+				DisplDrawRect(FBmpOut, DelCharsF(Caption, '&'), FDispl, Recta, FAlignment, FLayout,
 					ef16);
 		end
 		else
@@ -502,11 +582,11 @@ begin
 			begin
 //				FBmpOut.Canvas.Brush.Color := Color;
 				FBmpOut.Canvas.Brush.Style := bsClear;
-				DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, WordWrap, FFontShadow);
+				DrawCutedText(FBmpOut.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
 			end
 			else
 			begin
-				DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption, WordWrap, FFontShadow)
+				DrawCutedText(FBmpText.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow)
 			end;
 		end;
 
@@ -535,9 +615,92 @@ begin
 	end;}
 end;
 
+procedure TDLabel.SetLayeredAttribs;
+const
+  cUseAlpha: array [Boolean] of Integer = (0, LWA_ALPHA);
+  cUseColorKey: array [Boolean] of Integer = (0, LWA_COLORKEY);
+var
+  AStyle: Integer;
+begin
+	if not (csDesigning in ComponentState) and
+		(Assigned(SetLayeredWindowAttributes)) and HandleAllocated then
+	begin
+    AStyle := GetWindowLong(Handle, GWL_EXSTYLE);
+		if FAlphaBlend or FTransparentColor then
+    begin
+      if (AStyle and WS_EX_LAYERED) = 0 then
+        SetWindowLong(Handle, GWL_EXSTYLE, AStyle or WS_EX_LAYERED);
+      SetLayeredWindowAttributes(Handle, FTransparentColorValue, FAlphaBlendValue,
+        cUseAlpha[FAlphaBlend] or cUseColorKey[FTransparentColor]);
+    end
+    else
+    begin
+      SetWindowLong(Handle, GWL_EXSTYLE, AStyle and not WS_EX_LAYERED);
+      RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
+    end;
+	end;
+end;
+
+procedure TDLabel.SetAlphaBlend(const Value: Boolean);
+begin
+	if FAlphaBlend <> Value then
+	begin
+		FAlphaBlend := Value;
+		SetLayeredAttribs;
+	end;
+end;
+
+procedure TDLabel.SetAlphaBlendValue(const Value: Byte);
+begin
+	if FAlphaBlendValue <> Value then
+	begin
+		FAlphaBlendValue := Value;
+		SetLayeredAttribs;
+	end;
+end;
+
+procedure TDLabel.SetTransparentColorValue(const Value: TColor);
+begin
+	if FTransparentColorValue <> Value then
+	begin
+		FTransparentColorValue := Value;
+		SetLayeredAttribs;
+	end;
+end;
+
+procedure TDLabel.SetTransparentColor(const Value: Boolean);
+begin
+	if FTransparentColor <> Value then
+	begin
+		FTransparentColor := Value;
+		SetLayeredAttribs;
+	end;
+end;
+
+procedure TDLabel.InitAlphaBlending(var Params: TCreateParams);
+begin
+	if not (csDesigning in ComponentState) and (assigned(SetLayeredWindowAttributes)) then
+		if FAlphaBlend or FTransparentColor then
+			Params.ExStyle := Params.ExStyle or WS_EX_LAYERED;
+end;
+
+procedure InitProcs;
+const
+	sUser32 = 'User32.dll';
+var
+	ModH: HMODULE;
+begin
+	ModH := GetModuleHandle(sUser32);
+	if ModH <> 0 then
+		 @SetLayeredWindowAttributes := GetProcAddress(ModH, 'SetLayeredWindowAttributes');
+end;
+
 procedure Register;
 begin
 	RegisterComponents('DComp', [TDLabel]);
 end;
+
+initialization
+	InitProcs;
 
 end.

@@ -79,6 +79,7 @@ type
 
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
+
 		procedure OffsetRange(var NOfsX, NOfsY: Integer);
 		procedure ScrollTo(NOfsX, NOfsY: Integer);
 		procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -679,7 +680,7 @@ begin
 		SliderC2 := LighterColor(clScrollBar);
 
 		// H
-		if (BitmapWidth > 0) and (HType = 1) then
+		if (BitmapWidth > 0) and (HType = 1) and (NowMaxWidth > 2 * ScrollBarHHeight) then
 		begin
 			ScrollBarHWidth := NowMaxWidth;
 			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
@@ -789,7 +790,7 @@ begin
 			ScrollBarHWidth := 0;
 
 		// V
-		if (BitmapHeight > 0) and (VType = 1) then
+		if (BitmapHeight > 0) and (VType = 1) and (NowMaxHeight > 2 * ScrollBarVWidth) then
 		begin
 			ScrollBarVHeight := NowMaxHeight;
 			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;

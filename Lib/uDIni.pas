@@ -12,7 +12,7 @@ interface
 
 uses
 	uAdd, uDView,
-	Classes, SysUtils, Forms, ComCtrls, StdCtrls, Controls;
+	Classes, SysUtils, Forms, ComCtrls, StdCtrls, Controls, Menus;
 
 type
 	TKey = record // 8
@@ -90,6 +90,7 @@ type
 		procedure RWFormPosV(Form: TForm; const Save: Boolean);
 		procedure RWDView(DView: TDView; const Save: Boolean);
 		procedure RWListView(ListView: TListView; const Save: Boolean);
+		procedure RWMenuItem(MenuItem: TMenuItem; Section: string; const Save: Boolean);
 		procedure RWComboBox(ComboBox: TComboBox; const Save: Boolean);
 
 		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: Boolean): string;
@@ -985,6 +986,7 @@ end;
 
 procedure TDIniFile.RWFormPos(Form: TForm; const Save: Boolean);
 begin
+	if (Save = False) and (Form.Position <> poDesigned) then IE(12);
 	if (Save = False) or (Form.WindowState <> wsMaximized) then
 	begin
 		if (Form.Position = poDesigned) or (Form.Position = poDefaultSizeOnly) then
@@ -1042,6 +1044,12 @@ begin
 		end;
 	end;
 end;
+
+procedure TDIniFile.RWMenuItem(MenuItem: TMenuItem; Section: string; const Save: Boolean);
+begin
+	MenuItem.Checked := RWBGF(Section, MenuItem.Name, MenuItem.Checked, True, Save);
+end;
+
 
 procedure TDIniFile.RWComboBox(ComboBox: TComboBox; const Save: Boolean);
 begin

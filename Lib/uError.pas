@@ -195,6 +195,7 @@ end;
 
 procedure TfIOError.DrawTimeLeft;
 begin
+//	if StartTickCount > 0 then
 	PanelTimeLeft.Caption := msToStr(1000 * Ignore.TimeLeft + StartTickCount - TickCount, diMSD, 0, False);
 end;
 
@@ -314,8 +315,8 @@ begin
 
 (*	if MaxWid < fIOError.ButtonA.Left + fIOError.ButtonA.Width + 8 then
 		MaxWid := fIOError.ButtonA.Left + fIOError.ButtonA.Width + 8*)
-	if MaxWid > Screen.Width then
-		MaxWid := Screen.Width;
+	if MaxWid > Screen.Width - 2 * (fIOError.Width - fIOError.ClientWidth) then
+		MaxWid := Screen.Width - 2 * (fIOError.Width - fIOError.ClientWidth);
 
 	fIOError.MemoMsg.Width := MaxWid - fIOError.MemoMsg.Left - BSpace + 6;
 	Hei := Max(LineCount, 3) * fIOError.Canvas.TextHeight(Ignore.Msg) + 6;
@@ -573,20 +574,21 @@ begin
 
 		if fIOError.Visible = False then
 		begin
+			TickCount := GetTickCount;
+			StartTickCount := TickCount;
 {			fIOError.UpDown1.OnChangingEx := nil;
 			fIOError.UpDown1.Position := Ignores.Count - 1;
 			fIOError.UpDown1.OnChangingEx := fIOError.UpDown1ChangingEx;}
 			fIOError.ActItem := Ignores.Count - 1;
 			fIOError.EditIndex.Text := NToS(fIOError.ActItem);
 			fIOError.ShowMes;
-			TickCount := GetTickCount;
-			StartTickCount := TickCount;
 			fIOError.DrawTimeLeft;
 
 			fIOError.ModalResult := mrNone;
 			if Application.Terminated then
 			begin
 				fIOError.FormStyle := fsStayOnTop;
+				fIOError.Timer1.Enabled := True;
 				fIOError.Show;
 				repeat
 					Application.HandleMessage;
@@ -597,6 +599,7 @@ begin
 			begin
 				fIOError.FormStyle := fsNormal;
 //				if fIOError.Visible = True then Exit;
+				fIOError.Timer1.Enabled := True;
 				fIOError.ShowModal;
 			end;
 		end

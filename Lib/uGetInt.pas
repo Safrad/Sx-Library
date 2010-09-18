@@ -44,7 +44,7 @@ type
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
-		{ private declarations }
+		{ Private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: Integer;
 		OnApply: TOnApplyInt;
 		procedure ChangeInt;
@@ -147,9 +147,11 @@ end;
 
 procedure TfGetInt.InitEdit;
 begin
+	EditInput.OnChange := nil;
 	EditInput.Text := IntToStr(NowVal);
 	EditInput.SelectAll;
 	EditInput.Repaint;
+	EditInput.OnChange := EditInputChange;
 end;
 
 procedure TfGetInt.InitTrackBar;

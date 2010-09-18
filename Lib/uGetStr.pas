@@ -26,11 +26,11 @@ type
 		procedure ButtonDefClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
 	private
-		{ private declarations }
+		{ Private declarations }
 		CurS, DefS: string;
 		procedure InitButtons;
 	public
-		{ public declarations }
+		{ Public declarations }
 	end;
 
 function GetStr(Caption: string;

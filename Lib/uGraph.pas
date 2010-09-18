@@ -20,6 +20,8 @@ const
 	MaxSpectrum2 = 762;
 	MaxFireColor = 765;
 
+procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
+
 function GetBmpSize(const X, Y: LongWord; const PixelFormat: Byte): LongWord;
 function GetTransparentColor(const Bmp: TBitmap): TColor;
 function ShadowColor(C: TColor): TColor;
@@ -68,6 +70,7 @@ uses
 	Jpeg,
 	uStrings, uError, uGetInt;
 
+
 (*
 procedure WaitRetrace;
 // instruction "in al, dx" do not works in Microsoft Windows NT/2000
@@ -98,6 +101,30 @@ begin
 		end;
 	end;
 end;*)
+
+procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
+var T: SG;
+begin
+	case Angle and 3 of
+	1: // Left
+	begin
+		T := X;
+		X := Y;
+		Y := MaxX - T;
+	end;
+	2:
+	begin
+		X := MaxX - X;
+		Y := MaxY - Y;
+	end;
+	3: // Right
+	begin
+		T := X;
+		X := MaxY - Y;
+		Y := T;
+	end;
+	end;
+end;
 
 function GetBmpSize(const X, Y: LongWord; const PixelFormat: Byte): LongWord;
 begin

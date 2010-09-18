@@ -66,6 +66,7 @@ type
 		FFilePos: U8;
 		FFileSize: U8;
 		function GetFileSize(var Size: U8): Boolean;
+		function IsOpened: BG;
 	public
 		ReadCount, WriteCount: UG;
 		ReadBytes, WriteBytes: U8;
@@ -73,6 +74,7 @@ type
 		ErrorCode: U4;
 		property FilePos: U8 read FFilePos;
 		property FileSize: U8 read FFileSize;
+		property Opened: BG read IsOpened;
 		constructor Create;
 		destructor Free;
 		function Open(var FileName: TFileName; const Mode: TFileMode; Flags: U4; Protection: Boolean): Boolean;
@@ -187,7 +189,12 @@ end;
 
 destructor TFile.Free;
 begin
-	if HFile <> INVALID_HANDLE_VALUE then Close;
+	if IsOpened then Close;
+end;
+
+function TFile.IsOpened: BG;
+begin
+	Result := HFile <> INVALID_HANDLE_VALUE
 end;
 
 function TFile.Open(var FileName: TFileName; const Mode: TFileMode; Flags: U4; Protection: Boolean): Boolean;
@@ -198,7 +205,7 @@ var
 begin
 	Result := False;
 
-	if HFile <> INVALID_HANDLE_VALUE then Close;
+	if IsOpened then Close;
 
 	FFileName := Pointer(FileName);
 	FFilePos := 0;
@@ -264,7 +271,7 @@ begin
 		FILE_ATTRIBUTE_NORMAL or Flags, // file attributes
 		0   // handle to file with attributes to copy
 	 );
-	if HFile = INVALID_HANDLE_VALUE then
+	if not IsOpened then
 	begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
@@ -304,7 +311,9 @@ begin
 end;
 
 function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
-var HFile: THANDLE;
+var
+	HFile: THANDLE;
+	ErrorCode: U4;
 begin
 	Result := False;
 	U8(CreationTime) := 0;
@@ -322,7 +331,16 @@ begin
 	if HFile <> INVALID_HANDLE_VALUE then
 	begin
 		Result := GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
-		CloseHandle(HFile);
+		if CloseHandle(HFile) = False then
+		begin
+			ErrorCode := GetLastError;
+			IOError(FileName, ErrorCode);
+		end;
+	end
+	else
+	begin
+		ErrorCode := GetLastError;
+		IOError(FileName, ErrorCode);
 	end;
 end;
 
@@ -422,6 +440,11 @@ label LN;
 var BufPos: Integer;
 begin
 	Line := '';
+	if Eof then
+	begin
+		Result := False;
+		Exit;
+	end;
 	Result := True;
 	if FBufStart = High(FBufStart) then
 	begin
@@ -493,7 +516,7 @@ var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 begin
 	Result := False;
-	if HFile = INVALID_HANDLE_VALUE then
+	if not IsOpened then
 	begin
 		IOErrorMessage(TFileName(FTempFileName), 'File Is Closed');
 		Exit;
@@ -757,7 +780,8 @@ var
 		var
 			SearchRec: TSearchRec;
 		begin
-			ErrorCode := FindFirst(Path + SubPath + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+			// faReadOnly or faHidden or faSysFile or faArchive or faDirectory
+			ErrorCode := FindFirst(Path + SubPath + '*.*', faAnyFile, SearchRec);
 			while ErrorCode = NO_ERROR do
 			begin
 				IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
@@ -835,6 +859,7 @@ end;
 function GetFileSiz(const FileName: TFileName): U8;
 var
 	HFile: THandle;
+	ErrorCode: U4;
 begin
 	Result := 0;
 	HFile := CreateFile(
@@ -846,15 +871,19 @@ begin
 		FILE_ATTRIBUTE_NORMAL,  // file attributes
 		0 // handle to file with attributes to copy
 	 );
-	if HFile = INVALID_HANDLE_VALUE then
-	begin
-		GetLastError;
-	end
-	else
+	if HFile <> INVALID_HANDLE_VALUE then
 	begin
 		HandleFileSize(HFile, Result);
 		if CloseHandle(HFile) = False then
-			GetLastError;
+		begin
+			ErrorCode := GetLastError;
+			IOError(FileName, ErrorCode);
+		end;
+	end
+	else
+	begin
+		ErrorCode := GetLastError;
+		IOError(FileName, ErrorCode);
 	end;
 end;
 
@@ -918,7 +947,8 @@ begin
 
 	CreateDir(Dest);
 
-	ErrorCode := FindFirst(Source + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+	// faReadOnly or faHidden or faSysFile or faArchive or faDirectory
+	ErrorCode := FindFirst(Source + '*.*', faAnyFile, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
@@ -965,7 +995,8 @@ begin
 
 	if DirName[Length(DirName)] <> '\' then DirName := DirName + '\';
 
-	ErrorCode := FindFirst(DirName + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+	// faReadOnly or faHidden or faSysFile or faArchive or faDirectory
+	ErrorCode := FindFirst(DirName + '*.*', faAnyFile, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
@@ -1205,7 +1236,7 @@ var
   SearchHandle: THandle;
 begin
   SearchHandle := FindFirstFile(PChar(LongName), Temp);
-  if SearchHandle <> ERROR_INVALID_HANDLE then begin
+	if SearchHandle <> ERROR_INVALID_HANDLE then begin
     Result := string(Temp.cAlternateFileName);
 		if Result = '' then Result := string(Temp.cFileName);
   end

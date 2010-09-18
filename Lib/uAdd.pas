@@ -11,7 +11,7 @@ unit uAdd;
 interface
 
 uses
-	SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, DateUtils;
+	SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, DateUtils, Classes;
 
 { Mul EAX, 10
 	asm
@@ -169,23 +169,25 @@ type
 	B4 = LongBool;
 
 //	TArrayU1 = array[0..1024 * 1024 * 1024 - 1] of Byte;
-	TArrayS1 = array[0..1024 * 1024 * 1024 - 1] of U1;
+	TArrayS1 = array[0..1024 * 1024 * 1024 - 1] of S1;
 	PArrayS1 = ^TArrayS1;
 	TArrayU1 = array[0..1024 * 1024 * 1024 - 1] of U1;
 	PArrayU1 = ^TArrayU1;
-	TArrayS2 = array[0..1024 * 1024 * 1024 - 1] of U1;
+	TArrayS2 = array[0..1024 * 1024 * 1024 - 2] of S2;
 	PArrayS2 = ^TArrayS2;
-	TArrayU2 = array[0..1024 * 1024 * 1024 - 1] of U1;
+	TArrayU2 = array[0..1024 * 1024 * 1024 - 2] of U2;
 	PArrayU2 = ^TArrayU2;
-	TArrayS4 = array[0..1024 * 1024 * 1024 - 1] of U1;
+	TArrayS4 = array[0..512 * 1024 * 1024 - 2] of S4;
 	PArrayS4 = ^TArrayS4;
-	TArrayU4 = array[0..1024 * 1024 * 1024 - 1] of U1;
+	TArrayU4 = array[0..512 * 1024 * 1024 - 2] of U4;
 	PArrayU4 = ^TArrayU4;
-	TArrayS8 = array[0..1024 * 1024 * 1024 - 1] of U1;
+	TArrayS8 = array[0..256 * 1024 * 1024 - 2] of S8;
 	PArrayS8 = ^TArrayS8;
 
 	TArrayChar = array[0..1024 * 1024 * 1024 - 1] of AnsiChar;
 	PArrayChar = ^TArrayChar;
+
+	TIndex = SG;
 
 //	string = string;
 
@@ -334,6 +336,7 @@ function NToS(const Num: Int64; const Decimals: SG): string; overload;
 function NToS(const Num: Int64; const UseFormat: string): string; overload;
 function NToS(const Num: Int64; const UseWinFormat: BG): string; overload;
 function NToS(const Num: Int64; const UseWinFormat: BG; const Decimals: SG): string; overload;
+function NToHS(Num: Int64): string;
 
 function FToS(Num: Extended): string; overload;
 function FToS(Num: Extended; const UseWinFormat: BG): string; overload;
@@ -390,7 +393,7 @@ function StrToValE(S: string;
 function BToStr(const B: S4): string; overload;
 function BToStr(const B: S8): string; overload;
 
-function SToMs(const Str: string): SG; // msToStr<-
+function SToMs(const Str: string): SG; // MsToStr<-
 
 function SToDate(Str: string): TDate;
 function SToTime(Str: string): TTime;
@@ -427,10 +430,12 @@ procedure CreateLink(
 
 procedure ObjectFree(var Obj: TObject);
 
+function DropFiles(hDrop: THandle): TStrings;
+
 implementation
 
 uses
-	Windows, Math, Dialogs,
+	Windows, Math, Dialogs, ShellAPI,
 	uError, uStrings;
 
 function RColor(R, G, B: U1): TRColor;
@@ -1183,6 +1188,17 @@ begin
 		else
 			Result := '-' + Result;
 	end;
+end;
+
+function NToHS(Num: Int64): string;
+begin
+	repeat
+		case Num and $f of
+		0..9: Result := Result + Chr(Ord('0') + (Num and $f));
+		else Result := Result + Chr(Ord('A') + (Num and $f) - $a);
+		end;
+		Num := Num shr 4;
+	until Num = 0;
 end;
 
 function FToS(Num: Extended): string;
@@ -3151,6 +3167,24 @@ end;
 procedure ObjectFree(var Obj: TObject);
 begin
 	Obj.Free; Obj := nil;
+end;
+
+function DropFiles(hDrop: THandle): TStrings;
+var
+	fName: array[0..4095] of Char;
+	NumberOfFiles: Integer;
+	fCounter: Integer;
+begin
+	NumberOfFiles := DragQueryFile(hDrop, $FFFFFFFF, fName, SizeOf(fName));
+	Result := TStringList.Create;
+	Result.BeginUpdate;
+	for fCounter := 0 to NumberOfFiles - 1 do
+	begin
+		DragQueryFile(hDrop, fCounter, fName, 254);
+		Result.Add(fName);
+	end;
+	Result.EndUpdate;
+	DragFinish(hDrop);
 end;
 
 procedure InitSin;
