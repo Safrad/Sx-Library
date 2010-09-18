@@ -45,9 +45,9 @@ const
 	DlgNoTime = 0;
 	DlgWait = 15;
 
-function MessageD(const Msg: string; DlgType: TMsgDlgType;
+function MessageD(Msg: string; DlgType: TMsgDlgType;
 	Buttons: TDlgButtons): TDlgBtn;
-function MessageDEx(const Msg: string; DlgType: TMsgDlgType;
+function MessageDEx(Msg: string; DlgType: TMsgDlgType;
 	Buttons: array of ShortString; TimeLeft: SG; Owener: TComponent): SG;
 
 implementation
@@ -55,7 +55,7 @@ implementation
 {$R *.DFM}
 uses
 	Consts, Math,
-	uWave;
+	uWave, uStrings;
 var
 	fDialog: TfDialog;
 
@@ -83,7 +83,7 @@ var
 	IconIDs: array[TMsgDlgType] of PChar = (IDI_EXCLAMATION, IDI_HAND,
 		IDI_ASTERISK, IDI_QUESTION, nil);
 
-function MessageDEx(const Msg: string; DlgType: TMsgDlgType;
+function MessageDEx(Msg: string; DlgType: TMsgDlgType;
 	Buttons: array of ShortString; TimeLeft: SG; Owener: TComponent): SG;
 const
 	BWidth = 75;
@@ -97,6 +97,7 @@ var
 begin
 	Result := SG(mbCancel);
 	PlayWinSound(wsQuestion);
+	DelChars(Msg, '&');
 	for i := 0 to IgnoreCount - 1 do
 		if Ignores[i].Msg = Msg then
 		begin
@@ -217,7 +218,7 @@ begin
 	end;
 end;
 
-function MessageD(const Msg: string; DlgType: TMsgDlgType;
+function MessageD(Msg: string; DlgType: TMsgDlgType;
 	Buttons: TDlgButtons): TDlgBtn;
 
 var
@@ -234,7 +235,7 @@ begin
 		if B in Buttons then AddS(DlgBtnNames[B]);
 	Res := MessageDEx(Msg, DlgType, But, DlgWait, nil);
 	i := 0;
-  Result := mbCancel;
+	Result := mbCancel;
 	for B := Low(B) to High(B) do
 		if B in Buttons then
 		begin

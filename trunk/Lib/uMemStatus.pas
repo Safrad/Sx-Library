@@ -10,9 +10,8 @@ uses
 
 type
 	TfMemStatus = class(TDForm)
-    Timer1: TDTimer;
+		Timer1: TDTimer;
 		ButtonStart: TDButton;
-    ButtonStop: TDButton;
 		DPanel1: TDPanel;
 		DPanel2: TDPanel;
 		DPanel3: TDPanel;
@@ -27,10 +26,14 @@ type
 		DPanel12: TDPanel;
 		Bevel1: TBevel;
 		Bevel2: TBevel;
+    ButtonOk: TDButton;
 		procedure Timer1Timer(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure ButtonStartClick(Sender: TObject);
 		procedure ButtonStopClick(Sender: TObject);
+    procedure ButtonOkClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormHide(Sender: TObject);
 	private
 		{ Private declarations }
 	public
@@ -109,10 +112,25 @@ end;
 
 procedure TfMemStatus.ButtonStartClick(Sender: TObject);
 begin
-	Timer1.Enabled := True;
+	Timer1.Enabled := ButtonStart.Down;
 end;
 
 procedure TfMemStatus.ButtonStopClick(Sender: TObject);
+begin
+	Timer1.Enabled := False;
+end;
+
+procedure TfMemStatus.ButtonOkClick(Sender: TObject);
+begin
+	Close;
+end;
+
+procedure TfMemStatus.FormShow(Sender: TObject);
+begin
+	Timer1.Enabled := ButtonStart.Down;
+end;
+
+procedure TfMemStatus.FormHide(Sender: TObject);
 begin
 	Timer1.Enabled := False;
 end;

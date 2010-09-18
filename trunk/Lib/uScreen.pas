@@ -174,13 +174,13 @@ end;
 function ScreenModeToStr(const Width, Height: Word): string; overload;
 begin
 	Result :=
-		IntToStr(Width) + 'x' + IntToStr(Height);
+		IntToStr(Width) + '×' + IntToStr(Height);
 end;
 
 function ScreenModeToStr(const Width, Height, Bits: Word): string; overload;
 begin
 	Result := ScreenModeToStr(Width, Height) +
-		'x' + IntToStr(Bits) + ' bit';
+		'×' + IntToStr(Bits) + ' bit';
 end;
 
 function ScreenModeToStr(const Width, Height, Bits, VF: Word): string;

@@ -25,11 +25,9 @@ type
 		procedure InitButtons;
 	public
 		{ public declarations }
-		function Execute(const prompt: string;
-			var CurVal: string; const DefVal: string; const MaxL: Byte): Boolean;
 	end;
 
-function GetStr(const prompt: string;
+function GetStr(Caption: string;
 	var CurVal: string; const DefVal: string; const MaxL: Byte): Boolean;
 
 var StrMasked: Boolean;
@@ -37,7 +35,7 @@ var StrMasked: Boolean;
 implementation
 
 {$R *.DFM}
-uses uAdd;
+uses uAdd, uStrings;
 var
 	fGetStr: TfGetStr;
 
@@ -47,35 +45,30 @@ begin
 	ButtonDef.Enabled :=  EditInput.Text <> DefS;
 end;
 
-function GetStr(const prompt: string;
+function GetStr(Caption: string;
 	var CurVal: string; const DefVal: string; const MaxL: Byte): Boolean;
 begin
 	if not Assigned(fGetStr) then
 	begin
 		fGetStr := TfGetStr.Create(Application.MainForm);
 	end;
-	Result := fGetStr.Execute(prompt, CurVal, DefVal, MaxL);
-end;
-
-function TfGetStr.Execute(const prompt: string;
-	var CurVal: string; const DefVal: string; const MaxL: Byte): Boolean;
-begin
-	Caption := prompt;
-	EditInput.MaxLength := MaxL;
-	CurS := CurVal;
-	DefS := DefVal;
-	EditInput.OnChange := nil;
+	fGetStr.Caption := DelCharsF(Caption, '&');
+	fGetStr.EditInput.MaxLength := MaxL;
+	fGetStr.CurS := CurVal;
+	fGetStr.DefS := DefVal;
+	fGetStr.EditInput.OnChange := nil;
 	if StrMasked then
-		EditInput.PasswordChar := '*'
+		fGetStr.EditInput.PasswordChar := '*'
 	else
-		EditInput.PasswordChar := #0;
-	EditInput.Text := CurS;
-	EditInput.OnChange := EditInputChange;
-	InitButtons;
-	if ActiveControl <> EditInput then ActiveControl := EditInput;
-	if ShowModal = mrOK then
+		fGetStr.EditInput.PasswordChar := #0;
+	fGetStr.EditInput.Text := CurVal;
+	fGetStr.EditInput.OnChange := fGetStr.EditInputChange;
+	fGetStr.InitButtons;
+	if fGetStr.ActiveControl <> fGetStr.EditInput then
+		fGetStr.ActiveControl := fGetStr.EditInput;
+	if fGetStr.ShowModal = mrOK then
 	begin
-		CurVal := EditInput.Text;
+		CurVal := fGetStr.EditInput.Text;
 		Result := True;
 	end
 	else
@@ -83,6 +76,7 @@ begin
 		Result := False;
 	end;
 end;
+
 
 procedure TfGetStr.ButtonCurClick(Sender: TObject);
 begin

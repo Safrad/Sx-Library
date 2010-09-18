@@ -64,6 +64,8 @@ type
 		destructor Free;
 		function Open(var FileName: TFileName; const Mode: TFileMode; Flags: U32; Protection: Boolean): Boolean;
 		function Seek(const Pos: U64): Boolean;
+		function SeekStart: Boolean;
+		function SeekEnd: Boolean;
 		function BlockRead(var Buf; const Count: Cardinal): Boolean;
 		function BlockWrite(var Buf; const Count: Cardinal): Boolean;
 		function FillWrite(const Count: Cardinal): Boolean;
@@ -81,7 +83,7 @@ type
 
 function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
 {
-	Function Results: False: Error, True: Ok
+	Result of Functions : False: Error, True: Ok
 	Example:
 	label LRetry;
 	var
@@ -123,17 +125,18 @@ function GetFileSiz(const FileName: TFileName): U64; {$ifdef DLL}stdcall;{$endif
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CreateDir(const Dir: string): Boolean;
+function NewEmptyDir(var Dir: string; const CanCreate: Boolean): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
 
 function DeleteFileEx(const FileName: TFileName): Boolean;
 function DeleteDir(const DirName: string): Boolean;
-function DeleteDirs(const DirName: string; DeleteSelf: Boolean): Boolean;
+function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
 
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
 function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
-function WriteLinesToFile(var FileName: TFileName; Lines: TStrings): BG;
-function WriteLineToFile(var FileName: TFileName; Line: string): BG;
+function WriteStringToFile(var FileName: TFileName; Line: string; Append: BG): BG;
+function WriteStringsToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
 
 function GetDriveInfo(const Drive: Byte): TDriveInfo;
 
@@ -155,7 +158,7 @@ implementation
 
 uses
 	Dialogs,
-	uError;
+	uError, uDialog;
 
 constructor TFile.Create;
 begin
@@ -208,17 +211,17 @@ begin
 	fmReadOnly:
 	begin
 		DesiredAccess := GENERIC_READ;
-		ShareMode := FILE_SHARE_READ;
+		ShareMode := FILE_SHARE_READ or FILE_SHARE_WRITE;
 	end;
 	fmWriteOnly:
 	begin
 		DesiredAccess := GENERIC_WRITE;
-		ShareMode := 0;//FILE_SHARE_READ;
+		ShareMode := FILE_SHARE_READ or FILE_SHARE_WRITE;
 	end;
 	fmReadAndWrite:
 	begin
 		DesiredAccess := GENERIC_READ or GENERIC_WRITE;
-		ShareMode := 0;//FILE_SHARE_READ;
+		ShareMode := FILE_SHARE_READ or FILE_SHARE_WRITE;
 	end
 	else
 	begin
@@ -328,6 +331,16 @@ begin
 		else
 			Result := True;
 	end;
+end;
+
+function TFile.SeekStart: Boolean;
+begin
+	Result := Seek(0);
+end;
+
+function TFile.SeekEnd: Boolean;
+begin
+	Result := Seek(FFileSize);
 end;
 
 function TFile.BlockRead(var Buf; const Count: Cardinal): Boolean;
@@ -859,6 +872,37 @@ begin
 	end;
 end;
 
+function NewEmptyDir(var Dir: string; const CanCreate: Boolean): Boolean;
+var
+	i: Integer;
+	Dir2: string;
+begin
+	Result := False;
+	Dir2 := Copy(Dir, 1, Length(Dir) - 1);
+	i := 0;
+	while True do
+	begin
+		if i > 0 then
+		begin
+			Dir := Dir2 + Char(Ord('a') + i - 1) + '\';
+		end;
+
+		if DirectoryExists(Dir) = False then
+		begin
+			if CanCreate then
+				CreateDir(Dir);
+			Result := True;
+			Break;
+		end;
+		Inc(i);
+		if i > Ord('z') - Ord('a') + 1 then
+		begin
+			MessageD('Can not create empty directory', mtError, [mbOk]);
+			Break;
+		end;
+	end;
+end;
+
 function CopyDir(const Source, Dest: string): Boolean;
 var
 	SearchRec: TSearchRec;
@@ -901,7 +945,7 @@ begin
 		IOError(DirName, GetLastError);
 end;
 
-function DeleteDirs(const DirName: string; DeleteSelf: Boolean): Boolean;
+function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
 var
 	SearchRec: TSearchRec;
 	ErrorCode: Integer;
@@ -913,6 +957,8 @@ begin
 	end;
 	Result := True;
 
+	if DirName[Length(DirName)] <> '\' then DirName := DirName + '\';
+
 	ErrorCode := FindFirst(DirName + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
@@ -920,19 +966,19 @@ begin
 		begin
 			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
 			begin
-				Result := Result and DeleteDirs(DirName + SearchRec.Name + '\', True);
+				Result := DeleteDirs(DirName + SearchRec.Name + '\', True) and Result;
 			end;
 		end
 		else
 		begin
-			Result := Result and DeleteFileEx(DirName + SearchRec.Name);
+			Result := DeleteFileEx(DirName + SearchRec.Name) and Result;
 		end;
 		ErrorCode := SysUtils.FindNext(SearchRec);
 	end;
 	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(DirName, ErrorCode);
 	SysUtils.FindClose(SearchRec);
 
-	if DeleteSelf then Result := Result and DeleteDir(DirName);
+	if DeleteSelf then Result := DeleteDir(DirName) and Result;
 end;
 
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
@@ -995,7 +1041,26 @@ begin
 	F.Free;
 end;
 
-function WriteLinesToFile(var FileName: TFileName; Lines: TStrings): BG;
+function WriteStringToFile(var FileName: TFileName; Line: string; Append: BG): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		if Append then F.SeekEnd;
+		if not F.Write(Line) then goto LRetry;
+		if Append = False then F.Truncate;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function WriteStringsToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
 label LRetry;
 var
 	F: TFile;
@@ -1006,31 +1071,14 @@ begin
 	LRetry:
 	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
+		if Append then F.SeekEnd;
 		i := 0;
 		while i < Lines.Count do
 		begin
-			F.Writeln(Lines[i]);
+			if not F.Writeln(Lines[i]) then goto LRetry;
 			Inc(i);
 		end;
-		F.Truncate;
-		if not F.Close then goto LRetry;
-		Result := True;
-	end;
-	F.Free;
-end;
-
-function WriteLineToFile(var FileName: TFileName; Line: string): BG;
-label LRetry;
-var
-	F: TFile;
-begin
-	Result := False;
-	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		F.Write(Line);
-		F.Truncate;
+		if Append = False then F.Truncate;
 		if not F.Close then goto LRetry;
 		Result := True;
 	end;

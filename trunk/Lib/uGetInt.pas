@@ -49,17 +49,17 @@ type
 		{ Public declarations }
 	end;
 
-function GetInt(const prompt: string;
+function GetInt(Caption: string;
 	var CurVal: Integer; const MinVal, DefVal, MaxVal: Integer; OnApplyInt: TOnApplyInt): Boolean;
 
 implementation
 
 {$R *.DFM}
-uses uAdd;
+uses uAdd, uStrings;
 var
 	fGetInt: TfGetInt;
 
-function GetInt(const prompt: string;
+function GetInt(Caption: string;
 	var CurVal: Integer; const MinVal, DefVal, MaxVal: Integer; OnApplyInt: TOnApplyInt): Boolean;
 begin
 	if not Assigned(fGetInt) then
@@ -78,7 +78,7 @@ begin
 	else if fGetInt.TCurVal > fGetInt.TMaxVal then
 		fGetInt.TCurVal := fGetInt.TMaxVal;
 	fGetInt.NowVal := fGetInt.TCurVal;
-	fGetInt.Caption := prompt;
+	fGetInt.Caption := DelCharsF(Caption, '&');
 	fGetInt.LabelMin.Caption := IntToStr(fGetInt.TMinVal);
 	fGetInt.LabelMax.Caption := IntToStr(fGetInt.TMaxVal);
 	fGetInt.LabelNow.Caption := IntToStr(fGetInt.NowVal);

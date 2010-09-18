@@ -7,7 +7,7 @@ interface
 {$R *.RES}
 uses
 	uAdd, uFiles, uDImage, uDButton,
-	Classes, Controls, Windows, Graphics, SysUtils;
+	Classes, Controls, Windows, Graphics, SysUtils, Messages;
 
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
@@ -70,6 +70,7 @@ type
 		procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
 		procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
 			X, Y: Integer); override;
+		procedure WMKeyDown(var Msg: TWMKeyDown); message WM_KEYDOWN;
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 		procedure KeyUp(var Key: Word; Shift: TShiftState); override;
 		procedure LFill(Sender: TObject);
@@ -331,6 +332,12 @@ begin
 		end;
 	end;
 	end;
+end;
+
+procedure TDView.WMKeyDown(var Msg: TWMKeyDown);
+begin
+//	if Msg.CharCode <> 0 then Beep;
+	Msg.Result := 1;
 end;
 
 procedure TDView.KeyDown(var Key: Word; Shift: TShiftState);

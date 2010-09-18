@@ -55,6 +55,7 @@ type
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
 		property FrameRate: Integer read FFrameRate;
+		procedure Reset;
 	published
 		property ActiveOnly: Boolean read FActiveOnly write SetActiveOnly;
 		property Enabled: Boolean read FEnabled write SetEnabled;
@@ -326,6 +327,28 @@ begin
 	inherited Loaded;
 	if (not (csDesigning in ComponentState)) and FEnabled then
 		Initialize;
+end;
+
+procedure TDTimer.Reset;
+begin
+	FFrameRate := 0;
+	FNowFrameRate := 0;
+	FOldTime := 0;
+	FOldTime2 := 0;
+	TotalLags := 0;
+
+	TimerCount := 0;
+	Clock := 0;
+	ElapsedTime := 0;
+	LagCount := 0;
+	LagCount2 := 0;
+	TimLeave := 0;
+	TimSleep := 0;
+	TimWork := 0;
+	CPUUsage := 0;
+	TimWork2 := 0;
+	TimSleep2 := 0;
+	CPUUsage2 := 0;
 end;
 
 procedure TDTimer.Suspend;

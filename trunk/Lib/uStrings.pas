@@ -6,6 +6,9 @@ interface
 
 uses uAdd;
 
+type
+	TCharSet = set of Char;
+
 function DelCharsF(const s: string; const C: Char): string;
 procedure DelChars(var s: string; const C: Char);
 
@@ -23,6 +26,8 @@ procedure DelBESpace(var s: string);
 
 function ReadToChar(const Line: string; var InLineIndex: SG;
 	const C: Char): string;
+function ReadToChars(const Line: string; var InLineIndex: SG;
+	const C: TCharSet): string;
 function ReadToSingleChar(const Line: string; var InLineIndex: Integer;
 	const C: Char): string;
 function PosWW(Str, SubStr: string): Integer;
@@ -197,6 +202,17 @@ var NumStart: SG;
 begin
 	NumStart := InLineIndex;
 	while (InLineIndex <= Length(Line)) and (Line[InLineIndex] <> C) do
+		Inc(InLineIndex);
+	Result := Copy(Line, NumStart, InLineIndex - NumStart);
+	Inc(InLineIndex);
+end;
+
+function ReadToChars(const Line: string; var InLineIndex: SG;
+	const C: TCharSet): string;
+var NumStart: SG;
+begin
+	NumStart := InLineIndex;
+	while (InLineIndex <= Length(Line)) and (not (Line[InLineIndex] in C)) do
 		Inc(InLineIndex);
 	Result := Copy(Line, NumStart, InLineIndex - NumStart);
 	Inc(InLineIndex);

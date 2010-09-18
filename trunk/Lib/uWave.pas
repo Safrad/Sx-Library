@@ -342,6 +342,7 @@ begin
 			WaveFree(Wave);
 			goto LFin
 		end;
+		if (Wave.BitsPerSample = 4) then goto LFin;
 		if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
 		begin
 			IOErrorMessage(FName, 'Wave format not supported');
