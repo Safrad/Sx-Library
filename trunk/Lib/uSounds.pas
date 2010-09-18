@@ -580,9 +580,9 @@ begin
 end;
 
 initialization
-	Sounds := TData.Create;
+	Sounds := TData.Create(True);
 	Sounds.ItemSize := SizeOf(TSound);
-	DSounds := TData.Create;
+	DSounds := TData.Create(True);
 	DSounds.ItemSize := SizeOf(TDSound);
 finalization
 	FreeAndNil(DSounds);

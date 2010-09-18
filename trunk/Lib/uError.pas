@@ -399,8 +399,9 @@ begin
 	MemoMsg.Width := MaxWid - MemoMsg.Left - FormBorder + 6;
 
 	MemoMsg.Lines.BeginUpdate;
-	MemoMsg.Lines.Clear;
-	MemoMsg.Lines.Insert(0, ReplaceF(Ignore.Msg, CharLF, CharCR + CharLF));
+//	MemoMsg.Lines.Clear;
+//	MemoMsg.Lines.Insert(0, ReplaceF(Ignore.Msg, CharLF, CharCR + CharLF));
+	MemoMsg.Text := ReplaceF(Ignore.Msg, CharLF, CharCR + CharLF);
 	MemoMsg.Lines.EndUpdate;
 //	Hei := Max(Hei, ButtonAll.Top + ButtonAll.Height + 6);
 	Inc(Hei, MemoMsg.Top + FormBorder);
@@ -557,11 +558,10 @@ begin
 	if ErrorMsg <> '' then
 	begin
 		Ignore := Ignores.Add;
-		FillChar(Ignore^, SizeOf(Ignore^), 0);
 		Ignore.Style := Style;
 		Ignore.Retry := Retry;
 		Ignore.DlgType := DlgType;
-		Ignore.Msg := ErrorMsg;
+		Ignore.Msg := Copy(ErrorMsg, 1, 65536);
 		Ignore.ErrorFileName := FName;
 		Ignore.Buttons := nil;
 		SetLength(Ignore.Buttons, Length(Buttons));
@@ -857,7 +857,7 @@ begin
 end;
 
 initialization
-	Ignores := TData.Create;
+	Ignores := TData.Create(True);
 	Ignores.ItemSize := SizeOf(TIgnore);
 finalization
 	FreeAndNil(Ignores);

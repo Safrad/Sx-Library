@@ -23,17 +23,18 @@ package DComp;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DESCRIPTION 'Safrad''s Components'}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
   vcl,
   vclx,
   vcljpg,
-  vclsmp;
+	vclsmp,
+	dclusr;
 
 contains
-  uDPanel in 'uDPanel.pas',
-  uDGauge in 'uDGauge.pas',
+	uDPanel in 'uDPanel.pas',
+	uDGauge in 'uDGauge.pas',
   uDLabel in 'uDLabel.pas',
   uAdd in 'uAdd.pas',
   uDispl in 'uDispl.pas',

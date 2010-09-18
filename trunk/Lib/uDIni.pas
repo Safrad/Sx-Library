@@ -499,6 +499,7 @@ end;
 
 destructor TDIniFile.Destroy;
 begin
+	ShowAndClearErrors;
 	if FileSaved = False then Save;
 	FreeData;
 	inherited Destroy;
@@ -1048,7 +1049,7 @@ begin
 	end
 	else
 		DView.SortBy := -1;
-	DView.SortBySwap := RWBGF(DView.Name, 'SortBySwap', DView.SortBySwap, DView.SortBySwap, Save);
+	DView.FSortBySwap := RWBGF(DView.Name, 'SortBySwap', DView.FSortBySwap, DView.FSortBySwap, Save);
 	for i := 0 to DView.ColumnCount - 1 do
 	begin
 		DView.Columns[i].Width := RWSGF(DView.Name, 'Width' + NToS(i, False), DView.Columns[i].Width, DView.Columns[i].Width, Save);

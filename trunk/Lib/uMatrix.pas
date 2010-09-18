@@ -126,7 +126,7 @@ end;
 function TMatrix.ToString(MultiLines: BG): string;
 var x, y: SG;
 begin
-	Result := {ClassName + ' ' +} NToS(FXC) + ' × ' + NToS(FYC) + ' (';
+	Result := {ClassName + ' ' +} NToS(FXC) + ' ' + CharTimes + ' ' + NToS(FYC) + ' (';
 	if MultiLines then Result := Result + LineSep;
 	for y := 0 to FYC - 1 do
 	begin

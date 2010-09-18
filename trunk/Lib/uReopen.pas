@@ -45,6 +45,9 @@ type
 
 		OpenedFiles: Integer; // Suma ReopenItems[n].OpenedCount
 
+		constructor Create;
+		destructor Destroy; override;
+
 		procedure CreateMenu;
 		procedure FreeMenu;
 		procedure RWReopenNames(const Selection: string; const Save: Boolean);
@@ -61,6 +64,36 @@ uses
 
 var
 	ReopenLimit: Integer;
+	ReopenBitmaps: array[0..2] of TBitmap;
+
+constructor TReopen.Create;
+const
+	ReopenResNames: array[0..2] of PChar = ('Cancel', 'Help', 'Ok');
+var i: SG;
+begin
+	inherited;
+	for i := 0 to Length(ReopenBitmaps) - 1 do
+	begin
+		ReopenBitmaps[i] := TBitmap.Create;
+		ImgAdd(ReopenBitmaps[i], ReopenResNames[i]);
+	end;
+end;
+
+destructor TReopen.Destroy;
+var i: SG;
+begin
+	for i := 0 to Length(ReopenBitmaps) - 1 do
+		FreeAndNil(ReopenBitmaps[i]);
+	for i := 0 to ReopenCount - 1 do
+	begin
+		if Assigned(ReopenItems[i].MenuItem) then
+		begin
+			FreeAndNil(ReopenItems[i].MenuItem);
+		end;
+	end;
+	SetLength(ReopenItems, 0);
+	inherited;
+end;
 
 procedure TReopen.ReopenXClick(Sender: TObject);
 begin
@@ -346,15 +379,12 @@ begin
 end;
 
 procedure TReopen.DrawReopenCaption;
-const
-	ReopenResNames: array[0..2] of PChar = ('Cancel', 'Help', 'Ok');
 var
-	i, j: Integer;
-	NotExistsCount, ReopenAllCount: Integer;
-	Exists: Integer;
+	i, j: SG;
+	NotExistsCount, ReopenAllCount: SG;
+	Exists: U4;
 	s: string;
 	ReopenItem: TReopenItem;
-//  EndItem: Integer;
 begin
 	if ReopenCount > 0 then
 	if ReopenItems[0].OpenedCount = 0 then
@@ -397,7 +427,6 @@ begin
 		begin
 			Inc(NotExistsCount);
 		end;
-		ReopenItems[i].Exists := Exists;
 		if (i < ReopenLimit) and Assigned(ReopenItems[i].MenuItem) then
 		begin
 			if ReopenItems[i].OpenedCount <= 0 then Inc(ReopenAllCount);
@@ -406,8 +435,16 @@ begin
 
 			ReopenItems[i].MenuItem.Caption := s;
 
-			ReopenItems[i].MenuItem.Name := ReopenResNames[Exists] + IntToStr(i);
-			ComName(ReopenItems[i].MenuItem);
+			ReopenItems[i].MenuItem.Name := 'ReopenItem' + {ReopenResNames[Exists] +} IntToStr(i);
+			ReopenItems[i].MenuItem.Bitmap.Assign(ReopenBitmaps[Exists]);
+
+//			if ReopenItems[i].Exists <> Exists then
+{			begin
+				ReopenItems[i].MenuItem.Bitmap.Width := 0;
+				ReopenItems[i].MenuItem.Bitmap.Height := 0;
+			end;}
+
+//			ComName(ReopenItems[i].MenuItem);
 
 {			if ReopenItems[i].OpenedCount > 0 then
 			begin
@@ -425,6 +462,7 @@ begin
 			end;}
 			ReopenItems[i].MenuItem.Checked := ReopenItems[i].OpenedCount > 0;
 		end;
+		ReopenItems[i].Exists := Exists;
 	end;
 	if Assigned(MenuClear) then
 	begin

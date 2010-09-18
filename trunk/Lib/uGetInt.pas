@@ -197,8 +197,8 @@ begin
 	begin
 		NowVal := TDefVal;
 		ChangeInt;
-	end;}
-	MesToMemo(EditError);
+	end;
+	MesToMemo(EditError); D???}
 	InitButtons;
 	InitTrackBar;
 	ChangeInt;

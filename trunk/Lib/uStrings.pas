@@ -26,6 +26,7 @@ const
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
+	CharTimes = '×';
 
 type
 	TCharSet = set of Char;

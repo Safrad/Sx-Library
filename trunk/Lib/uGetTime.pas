@@ -79,7 +79,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uStrings, uError, uInput;
+	uStrings, uError, uInput, uParser;
 
 var
 	fGetTime: TfGetTime;

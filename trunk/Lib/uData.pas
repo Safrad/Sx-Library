@@ -24,6 +24,7 @@ type
 		Data: Pointer; // FFrag = False
 		Item: Pointer; // FFrag = True
 //		Indexes: TData;
+		FClearCreated: BG;
 		FItemSize: UG;
 		FItemSh: UG;
 		FItemMemSize: UG;
@@ -32,7 +33,8 @@ type
 		procedure SetItemSize(Value: UG);
 	protected
 	public
-		constructor Create;
+		constructor Create(ClearCreated: BG); overload;
+		constructor Create; overload;
 		destructor Destroy; override;
 
 		procedure Clear;
@@ -114,9 +116,10 @@ type
 
 // TData
 
-constructor TData.Create;
+constructor TData.Create(ClearCreated: BG);
 begin
 	inherited Create;
+	FClearCreated := ClearCreated;
 	FItemSize := 0;
 	FItemSh := 0;
 	FItemCount := 0;
@@ -126,6 +129,11 @@ begin
 		New(Item);
 		FillChar(Item^, SizeOf(Item^), 0);
 	end;
+end;
+
+constructor TData.Create;
+begin
+	Create(True);
 end;
 
 destructor TData.Destroy;
@@ -239,7 +247,8 @@ begin
 		Move(Pointer(UG(Data) + Index shl FItemSh)^,
 			Pointer(UG(Data) + (Index + 1) shl FItemSh)^, (FItemCount - Index) shl FItemSh);
 	end;
-	FillChar(Pointer(UG(Data) + Index shl FItemSh)^, ItemSize, 0);
+	if FClearCreated then
+		FillChar(Pointer(UG(Data) + Index shl FItemSh)^, ItemSize, 0);
 	Inc(FItemCount);
 end;
 

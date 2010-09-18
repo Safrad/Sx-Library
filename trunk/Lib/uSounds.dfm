@@ -144,8 +144,6 @@ object fSounds: TfSounds
     Top = 168
     Width = 169
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = '&Sound Quality:'
@@ -175,8 +173,6 @@ object fSounds: TfSounds
     Top = 288
     Width = 65
     Height = 21
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Frequency'

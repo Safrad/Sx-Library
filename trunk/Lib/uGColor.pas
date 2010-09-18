@@ -30,7 +30,7 @@ type
     LabelR: TDLabel;
 		EditR: TEdit;
 		TrackBarR: TTrackBar;
-    ButtonR: TDButton;
+		ButtonR: TDButton;
 		ButtonOk: TDButton;
 		ButtonApply: TDButton;
 		ButtonCancel: TDButton;
@@ -47,7 +47,6 @@ type
 		EditA: TEdit;
 		TrackBarA: TTrackBar;
     ButtonA: TDButton;
-		GroupBoxColors: TGroupBox;
 		PopupMenu1: TPopupMenu;
 		clScrollBar1: TMenuItem;
 		clBackground: TMenuItem;
@@ -77,20 +76,21 @@ type
 		clNone1: TMenuItem;
 		PanelS: TPanel;
 		PanelL: TPanel;
-    PanelNowColor: TDLabel;
-    PanelCurColor: TDLabel;
+    PanelNowColor: TDButton;
+    PanelCurColor: TDButton;
 		Bevel1: TBevel;
 		ImageS: TDImage;
 		ImageL: TDImage;
-		ShapeBorder: TShape;
-    PanelNowBitColor: TDLabel;
-    PanelDefaultColor: TDLabel;
+    PanelNowBitColor: TDButton;
+    PanelDefaultColor: TDButton;
 		LabelNow: TDLabel;
 		LabelNowXBit: TDLabel;
 		LabelDefault: TDLabel;
 		LabelCurrent: TDLabel;
 		Bevel2: TBevel;
 		ImageList1: TImageList;
+    BevelBasicColors: TBevel;
+    ShapeBorder: TShape;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure PanelCurColorClick(Sender: TObject);
@@ -139,10 +139,12 @@ type
 
 		procedure InitAll;
 
-		procedure PanelColorClick(Sender: TObject);
+		procedure PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 	public
 		{ Public declarations }
 	end;
+
+procedure InitButton(Button: TDButton);
 
 function GetColor(const prompt: string;
 	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
@@ -151,6 +153,20 @@ implementation
 
 {$R *.DFM}
 uses uMenus, uInput;
+
+procedure InitButton(Button: TDButton);
+begin
+	if Button.Color = clNone then
+	begin
+		Button.Font.Color := clWindowText;
+		Button.Caption := ColorToString(clNone);
+	end
+	else
+	begin
+		Button.Font.Color := NegMonoColor(Button.Color);
+		Button.Caption := ColorToString(Button.Color);
+	end;
+end;
 
 const
 	SpectrumPixel = 4;
@@ -183,7 +199,7 @@ begin
 			C.R := a;
 			C.G := C.R;
 			C.B := C.R;
-			C.T := 0;
+			C.A := 0;
 		end;
 		32..35:
 		begin
@@ -290,7 +306,7 @@ var
 	RC: TRColor;
 begin
 	RC.L := ColorToRGB(C) and $00ffffff;
-	Result.T := 0;
+	Result.A := 0;
 	case Bits of
 	1: Result.L := NegMonoColor(NegMonoColor(RC.L));
 	4:
@@ -330,7 +346,7 @@ function GetColor(const prompt: string;
 		fGColor.PanelColor[i].Width := 16;
 		fGColor.PanelColor[i].Height := 16;
 		fGColor.PanelColor[i].Tag := i;
-		fGColor.PanelColor[i].OnClick := fGColor.PanelColorClick;
+		fGColor.PanelColor[i].OnMouseDown := fGColor.PanelColorMouseDown;
 	end;
 
 var i: Integer;
@@ -345,22 +361,22 @@ begin
 			case i of
 			0..23:
 			begin
-				fGColor.PanelColor[i].Left := 16 + 20 * (i mod 12);
-				fGColor.PanelColor[i].Top := 16 + 20 * (i div 12);
+				fGColor.PanelColor[i].Left := fGColor.BevelBasicColors.Left + 8 + 20 * (i mod 12);
+				fGColor.PanelColor[i].Top := fGColor.BevelBasicColors.Top + 8 + 20 * (i div 12);
 			end;
 			24..31:
 			begin
-				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
-				fGColor.PanelColor[i].Top := 64;
+				fGColor.PanelColor[i].Left := fGColor.BevelBasicColors.Left + 8 + 20 * (i - 24);
+				fGColor.PanelColor[i].Top := fGColor.BevelBasicColors.Top + 64 - 8;
 			end;
 			32..35:
 			begin
-				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
-				fGColor.PanelColor[i].Top := 64;
+				fGColor.PanelColor[i].Left := fGColor.BevelBasicColors.Left + 8 + 20 * (i - 24);
+				fGColor.PanelColor[i].Top := fGColor.BevelBasicColors.Top + 64 - 8;
 			end;
 			end;
 			fGColor.PanelColor[i].Color := IntToColor(i).L;
-			fGColor.GroupBoxColors.InsertControl(fGColor.PanelColor[i]);
+			fGColor.InsertControl(fGColor.PanelColor[i]);
 		end;
 	end;
 	fGColor.OnApply := OnApply;
@@ -372,12 +388,10 @@ begin
 	fGColor.Caption := prompt;
 
 	fGColor.PanelCurColor.Color := fGColor.CurColor;
-	fGColor.PanelCurColor.Font.Color := NegMonoColor(fGColor.PanelCurColor.Color);
-	fGColor.PanelCurColor.Caption := ColorToString(fGColor.PanelCurColor.Color);
+	InitButton(fGColor.PanelCurColor);
 
 	fGColor.PanelDefaultColor.Color := fGColor.DefColor;
-	fGColor.PanelDefaultColor.Font.Color := NegMonoColor(fGColor.PanelDefaultColor.Color);
-	fGColor.PanelDefaultColor.Caption := ColorToString(fGColor.PanelDefaultColor.Color);
+	InitButton(fGColor.PanelDefaultColor);
 
 	fGColor.InitReadOnly;
 	fGColor.ChangeLightC;
@@ -416,13 +430,11 @@ var
 begin
 	C.L := ColorToRGB(NowColor) and $00ffffff;
 	PanelNowColor.Color := C.L;
-	PanelNowColor.Font.Color := NegMonoColor(C.L);
-	PanelNowColor.Caption := ColorToString(TColor(NowColor));
+	InitButton(PanelNowColor);
 	PanelNowColor.Repaint;
 
 	PanelNowBitColor.Color := BitColor(NowColor, ABits[RadioGroup1.ItemIndex]).L;
-	PanelNowBitColor.Font.Color := NegMonoColor(PanelNowBitColor.Color);
-	PanelNowBitColor.Caption := ColorToString(PanelNowBitColor.Color);
+	InitButton(PanelNowBitColor);
 	PanelNowBitColor.Repaint;
 	ImageS.Fill;
 	ImageL.Fill;
@@ -512,7 +524,7 @@ begin
 	ChangeColor;
 end;
 
-procedure TfGColor.PanelColorClick(Sender: TObject);
+procedure TfGColor.PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
 	NowColor := IntToColor(TPanel(Sender).Tag).L;
 	InitAll;
@@ -525,7 +537,7 @@ begin
 	begin
 		if PanelColor[i] <> nil then
 		begin
-			GroupBoxColors.RemoveControl(PanelColor[i]);
+			RemoveControl(PanelColor[i]);
 			FreeAndNil(PanelColor[i]);
 		end;
 	end;
@@ -629,10 +641,10 @@ begin
 	2: TRColor(NowColor).B := StrToValU1(TEdit(Sender).Text, True, TRColor(NowColor).B);
 	3:
 	begin
-		TRColor(NowColor).T := 0;
 		TRColor(NowColor).R := StrToValU1(EditA.Text, True, TRColor(NowColor).R);
 		TRColor(NowColor).G := StrToValU1(EditA.Text, True, TRColor(NowColor).G);
 		TRColor(NowColor).B := StrToValU1(EditA.Text, True, TRColor(NowColor).B);
+		TRColor(NowColor).A := 0;
 	end;
 	end;
 	InitReadOnly;
@@ -674,9 +686,10 @@ begin
 		TRColor(NowColor).R := LightC.R * i div 765;
 		TRColor(NowColor).G := LightC.G * i div 765;
 		TRColor(NowColor).B := LightC.B * i div 765;
-		TRColor(NowColor).T := 0;
+		TRColor(NowColor).A := 0;
 
-		ChangeColor;
+		//ChangeColor;
+		InitAll;
 	end;
 end;
 
@@ -775,7 +788,7 @@ begin
 		C.R := LightC.R * SG(i) div (BmpD.Width - 1);
 		C.G := LightC.G * SG(i) div (BmpD.Width - 1);
 		C.B := LightC.B * SG(i) div (BmpD.Width - 1);
-		C.T := 0;
+		C.A := 0;
 		BmpD.Line(i, 0, i, 15, C.L, ef16);
 	end;
 	C.L := ColorToRGB(NowColor)  and $00ffffff;
@@ -789,3 +802,181 @@ begin
 end;
 
 end.
+
+Nìco k pøevodu RGB <-> HLS <-> HSV
+Algoritmus pøevodu RGB <-> HLS (realizován v jazyce Java): 
+
+   public float[] RGBtoHLS(float red, float green, float blue) { 
+            float h = 0; 
+            float l = 0; 
+            float s = 0; 
+         
+            float max = Math.max(Math.max(red,green),blue); 
+            float min = Math.min(Math.min(red,green),blue); 
+  
+            l = (max+min)/2.0f; 
+  
+            if(max==min) { 
+                s = 0; 
+                h = Float.NaN; 
+             } 
+            else { 
+                if(l<0.5) s = (max-min)/(max+min); 
+                else s = (max-min)/(2-max-min); 
+  
+                float delta = max - min; 
+                if(red == max) h = (green-blue)/delta; 
+                else if(green == max) h = 2+(blue-red)/delta; 
+                else if(blue == max) h = 4+(red-green)/delta; 
+                 h *= 60; 
+                if(h < 0) h+=360; 
+            } 
+            return new float[] {h,l,s}; 
+     } 
+  
+
+Algoritmus pøevodu RGB <-> HSV: 
+        public float[] RGBtoHSV(float r, float g, float b) { 
+  
+          float max = Math.max(Math.max(r,g),b); 
+          float min = Math.min(Math.min(r,g),b); 
+  
+          float v = max; 
+          float s = 0; 
+          float h = 0; 
+  
+  
+          if(max != 0) s = (max - min)/max; 
+          else s = 0; 
+  
+          if(s==0) h = Float.NaN; 
+          else { 
+            float delta = max - min; 
+            if(r == max) h = (g-b)/delta; 
+            else if(g == max) h = 2+(b-r)/delta; 
+            else if(b == max) h = 4+(r-g)/delta; 
+            h *= 60; 
+            if(h<0) h += 360; 
+          } 
+  
+  
+					return new float[] {h,s,v};
+        } 
+
+Algoritmus pøevodu HLS <-> RGB: 
+    public float[] HLStoRGB(float h, float l, float s) { 
+        float r = 0; 
+        float g = 0; 
+        float b = 0; 
+  
+        float m2; 
+        float m1; 
+  
+        if(l<0.5) m2 = l*(1+s); 
+        else m2 = l+s-l*s; 
+        m1 = 2*l-m2; 
+        if(s == 0) 
+          /*if(h == Float.NaN)*/ r = g = b = l; 
+          //else System.err.println("Doslo k chybe pri prevodu HLS -> RGB"); 
+        else { 
+            r = HLSRGBValue(m1,m2,h+120); 
+            g = HLSRGBValue(m1,m2,h); 
+            b = HLSRGBValue(m1,m2,h-120); 
+        } 
+  
+        return new float[] {r,g,b}; 
+    } 
+
+  
+     private float HLSRGBValue(float n1, float n2, float hue) { 
+        if(hue>360) hue-=360; 
+        else if(hue<0) hue+=360; 
+        if(hue<60) return n1+(n2-n1)*hue/60; 
+        else if(hue<180) return n2; 
+        else if(hue<240) return n1+(n2-n1)*(240-hue)/60; 
+        else return n1; 
+    } 
+  
+
+Algoritmus pøevodu HSV <-> RGB: 
+        public float[] HSVtoRGB(float h, float s, float v) { 
+          float r = 0; 
+          float g = 0; 
+          float b = 0; 
+  
+          if(s == 0) { 
+            if(h == Float.NaN) { 
+              r = v; 
+              g = v; 
+              b = v; 
+            } 
+            else { 
+              rIndex.setText("xxx"); 
+							gIndex.setText("xxx");
+              bIndex.setText("xxx"); 
+            } 
+          } 
+  
+          else { 
+            if(h == 360) h = 0; 
+  
+            h/=60; 
+            int i = (int)Math.floor((double)h); 
+  
+            float f = h - i; 
+            float p = v*(1-s); 
+            float q = v*(1-(s*f)); 
+            float t = v*(1-(s*(1-f))); 
+  
+            switch(i) { 
+              case 0: r = v; 
+                      g = t; 
+                      b = p; 
+                      break; 
+  
+              case 1: r = q; 
+                      g = v; 
+                      b = p; 
+                      break; 
+  
+              case 2: r = p; 
+                      g = v; 
+                      b = t; 
+                      break; 
+  
+              case 3: r = p; 
+                      g = q; 
+                      b = v; 
+                      break; 
+  
+              case 4: r = t; 
+                      g = p; 
+                      b = v; 
+                      break; 
+  
+              case 5: r = v; 
+                      g = p; 
+                      b = q; 
+                      break; 
+  
+            } 
+  
+          } 
+          return new float[] {r,g,b}; 
+        } 
+
+
+///
+Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
+Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi: 
+|Y|   |0.299  0.587  0.114  | |R| 
+|U| = |-0.141  -0.289 0.437 | |G| 
+|V|   |0.615 -0.515 -0.1    | |B| 
+  
+
+|Y |   |0.299  0.587  0.114   | |R| 
+|Cb| = |-0.1687  -0.3313 -0.5 | |G| 
+|Cr|   |0.5 -0.4187 -0.0813   | |B| 
+
+Zpìtný pøevod se provádí pomocí inverzní matice. 
+				

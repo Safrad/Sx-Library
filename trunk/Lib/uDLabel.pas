@@ -25,8 +25,8 @@ type
 
 		// Properties
 		FAlignment: TAlignment;
-		FAlphaBlend: Boolean;
-		FAlphaBlendValue: Byte;
+{		FAlphaBlend: Boolean;
+		FAlphaBlendValue: Byte;}
 		FAutoSize: BG;
 		FBackEffect: TEffect;
 		FBevelInner: TPanelBevel;
@@ -73,13 +73,13 @@ type
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;
 
-		procedure SetLayeredAttribs;
-		procedure SetAlphaBlend(const Value: Boolean);
-		procedure SetAlphaBlendValue(const Value: Byte);
+//		procedure SetLayeredAttribs;
+{		procedure SetAlphaBlend(const Value: Boolean);
+		procedure SetAlphaBlendValue(const Value: Byte);}
 		procedure SetTransparentColor(const Value: Boolean);
 		procedure SetTransparentColorValue(const Value: TColor);
 		procedure SetWordWrap(const Value: Boolean);
-		procedure InitAlphaBlending(var Params: TCreateParams);
+//		procedure InitAlphaBlending(var Params: TCreateParams);
 
 	protected
 		{ Protected declarations }
@@ -95,8 +95,8 @@ type
 //		property Canvas;
 	published
 		{ Published declarations }
-		property AlphaBlend: Boolean read FAlphaBlend write SetAlphaBlend;
-		property AlphaBlendValue: Byte read FAlphaBlendValue write SetAlphaBlendValue;
+{		property AlphaBlend: Boolean read FAlphaBlend write SetAlphaBlend;
+		property AlphaBlendValue: Byte read FAlphaBlendValue write SetAlphaBlendValue;}
 
 		property AutoSize: BG read FAutoSize write FAutoSize;
 		property Alignment: TAlignment read FAlignment write FAlignment;
@@ -195,8 +195,8 @@ end;
 procedure TDLabel.CreateParams(var Params: TCreateParams);
 begin
 	inherited CreateParams(Params);
-	InitAlphaBlending(Params);
-  SetLayeredAttribs;
+//	InitAlphaBlending(Params);
+//  SetLayeredAttribs;
 end;
 
 destructor TDLabel.Destroy;
@@ -508,7 +508,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-				clNone, gfFade2x, Co, ScreenCorrectColor, FBackEffect, 0, nil);
+				gfFade2x, Co, ScreenCorrectColor, FBackEffect, 0, nil);
 //			FBmpOut.FormBitmap(Color);
 {			FBmpOut.Canvas.Brush.Color := Color;
 			FBmpOut.Canvas.FillRect(Recta);}
@@ -578,7 +578,7 @@ begin
 		begin
 			if (FFontAngle = 0) and (FFontEffect = ef16) then
 			begin
-//				FBmpOut.Canvas.Brush.Color := Color;
+				FBmpOut.Canvas.Brush.Color := Color;
 				FBmpOut.Canvas.Brush.Style := bsClear;
 				DrawCutedText(FBmpOut.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
 			end
@@ -595,7 +595,7 @@ begin
 		end
 		else
 		begin
-			RotateDef(FBmpOut, FBmpText, 0, FFontAngle, Color{NegColor(Font.Color)}, FFontEffect);
+			RotateDef(FBmpOut, FBmpText, 0, FFontAngle, FFontEffect);
 		end;
 {		if (Assigned(FBmpText)) then
 		begin
@@ -610,30 +610,30 @@ begin
 		FreeAndNil(FBmpOut);
 	end;}
 end;
-
+{
 procedure TDLabel.SetLayeredAttribs;
 const
-  cUseAlpha: array [Boolean] of Integer = (0, LWA_ALPHA);
-  cUseColorKey: array [Boolean] of Integer = (0, LWA_COLORKEY);
+	cUseAlpha: array [Boolean] of Integer = (0, LWA_ALPHA);
+	cUseColorKey: array [Boolean] of Integer = (0, LWA_COLORKEY);
 var
-  AStyle: Integer;
+	AStyle: Integer;
 begin
 	if not (csDesigning in ComponentState) and
 		(Assigned(SetLayeredWindowAttributes)) and HandleAllocated then
 	begin
-    AStyle := GetWindowLong(Handle, GWL_EXSTYLE);
+		AStyle := GetWindowLong(Handle, GWL_EXSTYLE);
 		if FAlphaBlend or FTransparentColor then
-    begin
-      if (AStyle and WS_EX_LAYERED) = 0 then
-        SetWindowLong(Handle, GWL_EXSTYLE, AStyle or WS_EX_LAYERED);
-      SetLayeredWindowAttributes(Handle, FTransparentColorValue, FAlphaBlendValue,
-        cUseAlpha[FAlphaBlend] or cUseColorKey[FTransparentColor]);
-    end
-    else
-    begin
-      SetWindowLong(Handle, GWL_EXSTYLE, AStyle and not WS_EX_LAYERED);
-      RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
-    end;
+		begin
+			if (AStyle and WS_EX_LAYERED) = 0 then
+				SetWindowLong(Handle, GWL_EXSTYLE, AStyle or WS_EX_LAYERED);
+			SetLayeredWindowAttributes(Handle, FTransparentColorValue, FAlphaBlendValue,
+				cUseAlpha[FAlphaBlend] or cUseColorKey[FTransparentColor]);
+		end
+		else
+		begin
+			SetWindowLong(Handle, GWL_EXSTYLE, AStyle and not WS_EX_LAYERED);
+			RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
+		end;
 	end;
 end;
 
@@ -654,13 +654,13 @@ begin
 		SetLayeredAttribs;
 	end;
 end;
-
+}
 procedure TDLabel.SetTransparentColorValue(const Value: TColor);
 begin
 	if FTransparentColorValue <> Value then
 	begin
 		FTransparentColorValue := Value;
-		SetLayeredAttribs;
+//		SetLayeredAttribs;
 	end;
 end;
 
@@ -669,11 +669,11 @@ begin
 	if FTransparentColor <> Value then
 	begin
 		FTransparentColor := Value;
-		SetLayeredAttribs;
+//		SetLayeredAttribs;
 	end;
 end;
 
-procedure TDLabel.InitAlphaBlending(var Params: TCreateParams);
+{procedure TDLabel.InitAlphaBlending(var Params: TCreateParams);
 begin
 	if not (csDesigning in ComponentState) and (assigned(SetLayeredWindowAttributes)) then
 		if FAlphaBlend or FTransparentColor then
@@ -689,7 +689,7 @@ begin
 	ModH := GetModuleHandle(sUser32);
 	if ModH <> 0 then
 		 @SetLayeredWindowAttributes := GetProcAddress(ModH, 'SetLayeredWindowAttributes');
-end;
+end;}
 
 procedure Register;
 begin
@@ -697,6 +697,6 @@ begin
 end;
 
 initialization
-	InitProcs;
+//	InitProcs;
 
 end.

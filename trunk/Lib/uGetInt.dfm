@@ -22,8 +22,6 @@ object fGetInt: TfGetInt
     Top = 120
     Width = 73
     Height = 13
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = '0'
@@ -51,8 +49,6 @@ object fGetInt: TfGetInt
     Top = 120
     Width = 73
     Height = 13
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Caption = '0'
@@ -80,8 +76,6 @@ object fGetInt: TfGetInt
     Top = 120
     Width = 73
     Height = 13
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taCenter
     Caption = '0'

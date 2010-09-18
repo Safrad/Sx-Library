@@ -47,10 +47,19 @@ procedure SortS4(const Stability: Boolean; const Reverse: Boolean; AIndex: PArra
 procedure SortU4(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayU4; Count: UG);
 procedure SortS8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS8; Count: UG);
 
+procedure SortF8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayF8; Count: UG);
 procedure SortFA(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayFA; Count: UG);
 
 procedure SortS(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; var AValue: array of string);
 procedure SortWS(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; var AValue: array of WideString);
+
+{
+Sort(TCompare
+function Compare(const Left, Right: SG;
+begin
+
+end;
+}
 
 implementation
 
@@ -99,6 +108,13 @@ procedure SortS8;
 type
 	TValue = type S8;
 {$I Sort.inc}
+
+procedure SortF8;
+type
+	TValue = type F8;
+{$define F}
+{$I Sort.inc}
+{$undef F}
 
 procedure SortFA;
 type

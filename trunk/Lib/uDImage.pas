@@ -148,10 +148,10 @@ procedure ZoomMake(
 	BmpSource: TDBitmap;
 	VisX, VisY: Integer;
 	AsWindow: Boolean; Zoom: Extended; XYConst: Boolean; QualityResize: Boolean;
-	OX, OY: Integer;
-	var SourceWidth, SourceHeight: Integer;
-	var SX1, SY1, SXW, SYH: Integer;
-	var DX1, DY1, DXW, DYH: Integer;
+	var OX, OY: Integer;
+	out SourceWidth, SourceHeight: Integer;
+	out SX1, SY1, SXW, SYH: Integer;
+	out DX1, DY1, DXW, DYH: Integer;
 	var BmpSource2: TDBitmap);
 
 procedure Register;
@@ -253,10 +253,14 @@ begin
 	FHotTrack := True;
 
 	Bitmap := TDBitmap.Create;
+	{$ifopt d-}
 	if NTSystem then
 		if Font.Name = 'MS Sans Serif' then
+		begin
 			Font.Name := 'Microsoft Sans Serif';
-	Bitmap.Canvas.Font.Name := Font.Name;
+			Bitmap.Canvas.Font.Name := Font.Name;
+		end;
+	{$endif}
 
 //	ControlStyle := [csDoubleClicks, csOpaque, csAcceptsControls, csMenuEvents, csDisplayDragImage, csReflector];
 	ControlStyle := ControlStyle + [csOpaque, csMenuEvents, csDisplayDragImage, csReflector] - [csSetCaption];
@@ -729,7 +733,7 @@ begin
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
-			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, 0, nil);
+			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
 			x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
 			for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
 			begin
@@ -841,7 +845,7 @@ begin
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
-			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, 0, nil);
+			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
 			y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
 			for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
 			begin
@@ -953,10 +957,10 @@ procedure ZoomMake(
 	BmpSource: TDBitmap;
 	VisX, VisY: Integer;
 	AsWindow: Boolean; Zoom: Extended; XYConst: Boolean; QualityResize: Boolean;
-	OX, OY: Integer;
-	var SourceWidth, SourceHeight: Integer;
-	var SX1, SY1, SXW, SYH: Integer;
-	var DX1, DY1, DXW, DYH: Integer;
+	var OX, OY: Integer;
+	out SourceWidth, SourceHeight: Integer;
+	out SX1, SY1, SXW, SYH: Integer;
+	out DX1, DY1, DXW, DYH: Integer;
 	var BmpSource2: TDBitmap);
 
 var
@@ -1010,7 +1014,11 @@ begin
 		SourceWidth := SX;
 		SourceHeight := SY;
 
-{   if SX > VisX then SX := VisX;
+		// D???
+		if OX > SX then OX := 0;//SX;
+		if OY > SY then OY := 0;//SY;
+
+		{   if SX > VisX then SX := VisX;
 		if SY > VisY then SY := VisY;}
 		if Zoom <= 1 then
 		begin

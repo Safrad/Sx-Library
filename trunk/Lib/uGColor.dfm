@@ -25,19 +25,34 @@ object fGColor: TfGColor
     Shape = bsTopLine
   end
   object Bevel2: TBevel
-    Left = 224
+    Left = 216
     Top = 280
     Width = 9
     Height = 49
     Shape = bsLeftLine
+  end
+  object BevelBasicColors: TBevel
+    Left = 8
+    Top = 192
+    Width = 253
+    Height = 81
+  end
+  object ShapeBorder: TShape
+    Left = 8
+    Top = 192
+    Width = 20
+    Height = 20
+    Brush.Style = bsClear
+    Enabled = False
+    Pen.Color = clHighlight
+    Pen.Width = 2
+    Shape = stSquare
   end
   object LabelR: TDLabel
     Left = 8
     Top = 8
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Red'
@@ -65,8 +80,6 @@ object fGColor: TfGColor
     Top = 40
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Green'
@@ -94,8 +107,6 @@ object fGColor: TfGColor
     Top = 72
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Blue'
@@ -123,8 +134,6 @@ object fGColor: TfGColor
     Top = 104
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'All'
@@ -150,10 +159,8 @@ object fGColor: TfGColor
   object LabelNow: TDLabel
     Left = 8
     Top = 284
-    Width = 54
+    Width = 49
     Height = 16
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Now'
@@ -178,15 +185,13 @@ object fGColor: TfGColor
     WordWrap = False
   end
   object LabelNowXBit: TDLabel
-    Left = 8
-    Top = 308
-    Width = 54
+    Left = 224
+    Top = 284
+    Width = 49
     Height = 16
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
-    Caption = 'Now x bit'
+    Caption = 'Reduced'
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -208,12 +213,10 @@ object fGColor: TfGColor
     WordWrap = False
   end
   object LabelDefault: TDLabel
-    Left = 232
-    Top = 284
-    Width = 39
+    Left = 224
+    Top = 308
+    Width = 49
     Height = 16
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Default'
@@ -238,12 +241,10 @@ object fGColor: TfGColor
     WordWrap = False
   end
   object LabelCurrent: TDLabel
-    Left = 232
+    Left = 8
     Top = 308
-    Width = 39
+    Width = 49
     Height = 16
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Current'
@@ -267,162 +268,74 @@ object fGColor: TfGColor
     TransparentColorValue = clBlack
     WordWrap = False
   end
-  object PanelNowColor: TDLabel
+  object PanelNowColor: TDButton
     Left = 64
     Top = 280
-    Width = 153
+    Width = 145
     Height = 24
-    AlphaBlend = False
-    AlphaBlendValue = 0
-    AutoSize = False
-    Alignment = taCenter
     Caption = '$00000000'
-    Color = clBlack
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
     Font.Height = -11
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Layout = tlCenter
-    ParentColor = False
     ParentFont = False
     PopupMenu = PopupMenu1
-    Transparent = False
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
-  end
-  object PanelCurColor: TDLabel
-    Left = 272
-    Top = 304
-    Width = 153
-    Height = 24
-    AlphaBlend = False
-    AlphaBlendValue = 0
-    AutoSize = False
-    Alignment = taCenter
-    Caption = '$00000000'
+    TabOrder = 26
     Color = clBlack
+  end
+  object PanelCurColor: TDButton
+    Left = 64
+    Top = 304
+    Width = 145
+    Height = 24
+    Caption = '$00000000'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
     Font.Height = -11
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Layout = tlCenter
-    ParentColor = False
     ParentFont = False
-    Transparent = False
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    TabOrder = 27
     OnClick = PanelCurColorClick
-  end
-  object PanelNowBitColor: TDLabel
-    Left = 64
-    Top = 304
-    Width = 153
-    Height = 24
-    AlphaBlend = False
-    AlphaBlendValue = 0
-    AutoSize = False
-    Alignment = taCenter
-    Caption = '$00000000'
     Color = clBlack
+  end
+  object PanelNowBitColor: TDButton
+    Left = 280
+    Top = 280
+    Width = 145
+    Height = 24
+    Caption = '$00000000'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
     Font.Height = -11
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Layout = tlCenter
-    ParentColor = False
     ParentFont = False
     PopupMenu = PopupMenu1
-    Transparent = False
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    TabOrder = 28
     OnClick = PanelNowBitColorClick
-  end
-  object PanelDefaultColor: TDLabel
-    Left = 272
-    Top = 280
-    Width = 153
-    Height = 24
-    AlphaBlend = False
-    AlphaBlendValue = 0
-    AutoSize = False
-    Alignment = taCenter
-    Caption = '$00000000'
     Color = clBlack
+  end
+  object PanelDefaultColor: TDButton
+    Left = 280
+    Top = 304
+    Width = 145
+    Height = 24
+    Caption = '$00000000'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
     Font.Height = -11
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Layout = tlCenter
-    ParentColor = False
     ParentFont = False
-    Transparent = False
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    TabOrder = 29
     OnClick = PanelDefaultColorClick
+    Color = clBlack
   end
   object EditR: TEdit
     Left = 48
@@ -529,7 +442,7 @@ object fGColor: TfGColor
       '15 bits'
       '18 bits'
       '24 bits')
-    TabOrder = 18
+    TabOrder = 17
     OnClick = RadioGroup1Click
   end
   object EditG: TEdit
@@ -669,25 +582,6 @@ object fGColor: TfGColor
     ParentFont = False
     TabOrder = 14
     OnClick = ButtonRGBAClick
-  end
-  object GroupBoxColors: TGroupBox
-    Left = 8
-    Top = 184
-    Width = 264
-    Height = 89
-    Caption = 'Basic Colors'
-    TabOrder = 17
-    object ShapeBorder: TShape
-      Left = 0
-      Top = 0
-      Width = 20
-      Height = 20
-      Brush.Style = bsClear
-      Enabled = False
-      Pen.Color = clHighlight
-      Pen.Width = 2
-      Shape = stSquare
-    end
   end
   object PanelS: TPanel
     Left = 24

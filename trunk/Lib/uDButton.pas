@@ -450,7 +450,6 @@ var
 	Co: array[0..3] of TColor;
 	E: TColor;
 	s: string;
-	C: TColor;
 	Orient: SG;
 const
 	Border = 2;
@@ -481,12 +480,10 @@ begin
 	if not Assigned(FGlyph) then
 	begin
 		FGlyph := TDBitmap.Create;
-		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + '.gif';
+		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + IconExt;
 		if FileExists(FileName) then
 		begin
 			FGlyph.LoadFromFile(FileName);
-			if FGlyph.Transparent = False then
-				FGlyph.TryTransparent;
 		end;
 	end;
 
@@ -531,16 +528,18 @@ begin
 	Co[3] := Co[1];
 	{$ifopt d-}
 	FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-		clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+		gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 	{$else}
 	FBmpOut.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
 	{$endif}
 
 	if IsDown then OffsetRect(Recta, 1, 1);
 	FBmpOut.Canvas.Font := Self.Font;
+	{$ifopt d-}
 	if NTSystem then
 		if FBmpOut.Canvas.Font.Name = 'MS Sans Serif' then
 			FBmpOut.Canvas.Font.Name := 'Microsoft Sans Serif';
+	{$endif}
 
 	if (Length(Caption) > 0) and (Caption[1] = '/') then
 	begin
@@ -691,24 +690,15 @@ begin
 		FBmpOut.Canvas.Brush.Style := bsClear;
 		if not Enabled then
 		begin
-			OffsetRect(Recta, 1, 1);
-			FBmpOut.Canvas.Font.Color := clBtnHighlight;
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
-			OffsetRect(Recta, -1, -1);
 			FBmpOut.Canvas.Font.Color := clBtnShadow;
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+			FBmpOut.Canvas.Brush.Color := clBtnHighlight;
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 1);
 		end
 		else
 		begin
-			C := Font.Color;
-			OffsetRect(Recta, 1, 1);
-			FBmpOut.Canvas.Font.Color := MixColors(Font.Color, clBtnFace);
-			FBmpOut.Canvas.Font.Color := MixColors(Font.Color, clBtnFace);
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
-
-			OffsetRect(Recta, -1, -1);
-			FBmpOut.Canvas.Font.Color := C;
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+			FBmpOut.Canvas.Brush.Color := Color;
+			FBmpOut.Canvas.Font.Color := Font.Color;
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 1);
 		end;
 	end;
 
@@ -748,7 +738,7 @@ begin
 		Co[1] := clBlack;
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		FBmpOut.GenerateRGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
+		FBmpOut.GenerateRGB(gfFade2x, Co, $00000000, efAdd, nil);
 	end;
 
 	if (Orient = -1) and FHighNow and Enabled then

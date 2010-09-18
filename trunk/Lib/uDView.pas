@@ -60,6 +60,7 @@ type
 		ColIndex, RowIndex: SG;}
 
 		Columns: array of TColumn;
+		FSortBySwap: BG;
 		ColumnOrder, RowOrder: array of SG;
 
 		SelRows: array of Boolean;
@@ -70,7 +71,6 @@ type
 
 		ActualRow, ActualColumn: SG;
 		SortBy: SG;
-		SortBySwap: Boolean;
 
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
@@ -344,10 +344,10 @@ begin
 					if SortBy <> IX then
 					begin
 						SortBy := IX;
-						SortBySwap := False;
+						FSortBySwap := False;
 					end
 					else
-						SortBySwap := not SortBySwap;
+						FSortBySwap := not FSortBySwap;
 					if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[IX]);
 					Fill;
 				end;
@@ -464,17 +464,15 @@ procedure Init;
 var FileName: TFileName;
 begin
 	SoundsLoaded := True;
-	FileName := GraphDir + 'Images\ArrowU.gif';
+	FileName := GraphDir + 'Images\ArrowU' + IconExt;
 	if FileExists(FileName) then
 	begin
 		BitmapReadFromFile(ArrowU, FileName);
-		ArrowU.TryTransparent;
 	end;
-	FileName := GraphDir + 'Images\ArrowD.gif';
+	FileName := GraphDir + 'Images\ArrowD' + IconExt;
 	if FileExists(FileName) then
 	begin
 		BitmapReadFromFile(ArrowD, FileName);
-		ArrowD.TryTransparent
 	end;
 end;
 
@@ -543,7 +541,10 @@ begin
 						if Assigned(OnGetData) then
 						begin
 							ColIndex := ColumnOrder[IX];
-							RowIndex := RowOrder[IY];
+							if FSortBySwap then
+								RowIndex := RowOrder[FRowCount - 1 - IY]
+							else
+								RowIndex := RowOrder[IY];
 							if SelRows[IY] {and MouseOn} then
 								Bitmap.Canvas.Font.Color := clWindow
 							else if HotRow = IY then
@@ -629,14 +630,14 @@ begin
 				Co[1] := DarkerColor(C1);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				Bitmap.GenerateRGB(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+				Bitmap.GenerateRGB(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 
 				// Sort By
 				xx := x;
 				ww := Columns[IX].Width;
 				if IX = SortBy then
 				begin
-					if SortBySwap then Arrow := ArrowU else Arrow := ArrowD;
+					if FSortBySwap then Arrow := ArrowU else Arrow := ArrowD;
 					if Arrow <> nil then
 					begin
 						Bitmap.Bmp(x, 0, Arrow, ef16);
