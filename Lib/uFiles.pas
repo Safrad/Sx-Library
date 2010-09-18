@@ -120,6 +120,7 @@ const
 	AllFiles = '|All Files (*.*)|*.*';
 	AllPictures = //'Bitmap (*.bmp)|*.bmp|Jpeg (*.jpg)|*.jpg' + AllFiles;
 		'Any Pictures (*.bmp;*.jpg;*.jpeg;*.gif;*.ppm)|*.bmp;*.jpg;*.jpeg;*.gif;*.ppm|Bitmaps (*.bmp)|*.bmp|JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|Graphics Interchange Format(*.gif)|*.gif|Portable Picture (*.ppm)|*.ppm' + AllFiles;
+	AllText = 'Text file (*.txt)|*.txt' + AllFiles;
 //	All (*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf)|*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf|Device Independent Bitmap (*.dib)|*.dib|JPEG Image File (*.jpg)|*.jpg|JPEG Image File (*.jpeg)|*.jpeg|Bitmaps (*.bmp)|*.bmp|Icons (*.ico)|*.ico|Enhanced Metafiles (*.emf)|*.emf|Metafiles (*.wmf)|*.wmf
 var
 	StartDir, // Dir with Ini and configuratios files (read and write)

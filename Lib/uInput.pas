@@ -290,27 +290,32 @@ type
 		opPlus, opMinus, opMul, opDiv, opMod,
 		opRound, opTrunc, opAbs, opNeg, opInv, opNot, opInc, opDec, opFact, opGCD, opLCM,
 		opPower, opExp, opLn, opLog, opSqr, opSqrt,
+		opLength,
 		opSin, opCos, opTan,
 		opArcSin, opArcCos, opArcTan,
 		opSinh, opCosh, opTanh,
 		opArcSinh, opArcCosh, opArcTanh,
+		opElo,
 		opAvg, opMin, opMax,
 		opRandom,
 		opShl, opShr, opAnd, opOr, opXor, opXnor);
 const
 	FcNames: array[TOperator] of string = (
 		'', '', '',
-		// Main
+		// Algebra
 		'PLUS', 'MINUS', 'MUL', 'DIV', 'MOD',
 		// Single
 		'ROUND', 'TRUNC', 'ABS', 'NEG', 'INV', 'NOT', 'INC', 'DEC', 'FACT', 'GCD', 'LCM',
 		// Exponencial
 		'POWER', 'EXP', 'LN', 'LOG', 'SQR', 'SQRT',
 		// Goniometric
+		'LENGTH',
 		'SIN', 'COS', 'TAN',
 		'ARCSIN', 'ARCCOS', 'ARCTAN',
 		'SINH', 'COSH', 'TANH',
 		'ARCSINH', 'ARCCOSH', 'ARCTANH',
+		// Desk games
+		'ELO',
 		// Statistics
 		'AVG', 'MIN', 'MAX',
 		'RANDOM',
@@ -601,6 +606,12 @@ uses
 
 var
 	BracketDepth: SG;
+	ELO: array[0..50] of SG = (
+		765,677,589,538,501,470,444,422,401,383,368,
+		351,336,322,309,296,284,273,262,251,240,
+		230,220,211,202,193,184,175,166,158,149,
+		141,133,125,117,110,102,95,87,80,
+		72,65,57,50,43,36,29,21,14,7,0);
 
 procedure FillCharsTable;
 var
@@ -1917,6 +1928,19 @@ begin
 end;
 
 function Calc(Node: PNode): Extended;
+
+	function GetElo(F: Extended): SG;
+	begin
+		if F <= 0 then
+			Result := -ELO[0]
+		else if F >= 1 then
+			Result := ELO[0]
+		else if F < 0.5 then
+			Result := -ELO[Round(100 * F)]
+		else
+			Result := ELO[100 - Round(100 * F)];
+	end;
+
 var
 	i, j: SG;
 	e, e0, e1: Extended;
@@ -2226,7 +2250,14 @@ begin
 	begin
 		Result := 0;
 		for i := 0 to Node.ArgCount - 1 do
-			Result := Sqrt(Calc(Node.Args[i]));
+			Result := Result + Sqrt(Calc(Node.Args[i]));
+	end;
+	opLength:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+			Result := Result + Sqr(Calc(Node.Args[i]));
+		Result := Sqrt(Result);
 	end;
 	opSin,
 	opCos,
@@ -2265,6 +2296,23 @@ begin
 			opArcCosH: Result := Result + ArcCosh(e);
 			opArcTanH: Result := Result + ArcTanh(e);
 			end;
+		end;
+	end;
+	opElo:
+	begin
+		if Node.ArgCount = 0 then
+			Result := 0
+		else if Node.ArgCount = 1 then
+			Result := GetELO(Calc(Node.Args[0]))
+		else if Node.ArgCount >= 2 then
+		begin
+			e := 0;
+			for i := 0 to Node.ArgCount - 2 do
+			begin
+				e := e + Calc(Node.Args[i]);
+			end;
+			Result := e / (Node.ArgCount - 1) +
+				GetELO(Calc(Node.Args[Node.ArgCount - 1]))
 		end;
 	end;
 	opAvg:
