@@ -1,7 +1,7 @@
 //* File:     Lib\uAdd.pas
 //* Created:  1998-01-01
-//* Modified: 2004-08-13
-//* Version:  X.X.31.X
+//* Modified: 2004-09-26
+//* Version:  X.X.32.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -386,7 +386,6 @@ function TimeToS(T: TTime): string;
 function DateTimeToS(DT: TDateTime): string;
 function DTToStr(DT: TDateTime): string; // UseWinFormat = True
 function PhoneToStr(Phone: U8): string;
-procedure HTMLEnd(var s: string);
 
 (*
 function StrToValC(S: string;
@@ -2200,24 +2199,6 @@ begin
 	else
 		Result := '+' + NToS(Phone div 1000000000, '000') + '-';
 	Result := Result + NToS(Phone mod 1000000000, '000000000');
-end;
-
-procedure HTMLEnd(var s: string);
-{var
-	T: TDateTime;
-	d: string;}
-begin
-	s := s + '  <P ALIGN="RIGHT"><FONT SIZE=1>Created ';
-	s := s + DateTimeToS(Now);
-{	t := Now;
-	DateTimeToString(d, 'dd.mm.yyyy', t);
-	s := s + d + ' (dd.mm.yyyy) ';}
-{	DateTimeToString(d, 'hh:nn:dd', t);
-	s := s + d + ' (hh:nn:ss)';}
-	s := s + '	</FONT>';
-	s := s + '	</P>' + HTMLSep;
-	s := s + '</BODY>' + HTMLSep;
-	s := s + '</HTML>' + HTMLSep;
 end;
 
 procedure Nop;
