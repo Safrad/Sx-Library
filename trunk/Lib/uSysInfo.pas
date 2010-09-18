@@ -38,9 +38,9 @@ type
 		DLabel5: TDLabel;
 		Bevel5: TBevel;
 		EditCPU: TEdit;
-    EditDiskU: TDLabel;
-    EditDiskF: TDLabel;
-    EditDiskT: TDLabel;
+		EditDiskU: TDLabel;
+		EditDiskF: TDLabel;
+		EditDiskT: TDLabel;
 		Bevel6: TBevel;
 		ButtonOk: TDButton;
 		DLabelCPUFrequency: TDLabel;
@@ -84,6 +84,7 @@ var
 	NTSystem: Boolean;
 	RegCap: Boolean;
 
+function GetKey(Default: Word): Word;
 function OSToStr(OS: TOSVersionInfo): string;
 function GetCPUUsage(IntTime: U8): SG;
 procedure FillSysInfoS(var SInfo: TSysInfo);
@@ -104,6 +105,29 @@ implementation
 uses
 	uGraph, uScreen, uStrings,
 	Registry;
+
+function GetKey(Default: Word): Word;
+label
+	LAgain;
+var
+	Keyboard: TKeyboardState;
+	i: Integer;
+begin
+	while True do
+	begin
+		Application.ProcessMessages;
+		GetKeyboardState(Keyboard);
+		for i := Low(Keyboard) to High(Keyboard) do
+		begin
+			if (Keyboard[i] and $80 <> 0) and (i <> VK_LBUTTON) and (i <> VK_RBUTTON)
+			and (i <> VK_MBUTTON) then
+			begin
+				Result := i;
+				if (not NTSystem) or (not (i in [VK_SHIFT, VK_CONTROL, VK_MENU])) then Exit;
+			end;
+		end;
+	end;
+end;
 
 function OSToStr(OS: TOSVersionInfo): string;
 var S: string;
@@ -164,7 +188,7 @@ type
    systemTime             : TSystemTime;
    perfTime               : comp;
    perfFreq               : comp;
-   perfTime100nSec        : comp;
+	 perfTime100nSec        : comp;
    systemNameLength       : cardinal;
    systemnameOffset       : cardinal;
  end;
@@ -199,7 +223,7 @@ type
  TPerfInstanceDefinition = packed record
    byteLength             : cardinal;
 	 parentObjectTitleIndex : cardinal;
-   parentObjectInstance   : cardinal;
+	 parentObjectInstance   : cardinal;
    uniqueID               : integer;
 	 nameOffset             : cardinal;
    nameLength             : cardinal;
@@ -234,7 +258,7 @@ begin
 					 perfInstanceDef := pointer(cardinal(perfObjectType) + perfObjectType^.definitionLength);
 					 result := PInt64(cardinal(perfInstanceDef) + perfInstanceDef^.byteLength + perfCounterDef^.counterOffset)^;
 					 break;
-         end;
+				 end;
          inc(perfCounterDef);
        end;
        break;

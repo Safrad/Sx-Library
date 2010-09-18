@@ -61,6 +61,9 @@ function InsChar(const CharCount: Integer; C: Char): string;
 function ReplaceF(s: string; const WhatS, ToS: string): string;
 procedure Replace(var s: string; const WhatS, ToS: string);
 
+function Code(s: ShortString; Decode: Boolean): ShortString; overload
+function Code(s: string; Decode: Boolean): string; overload;
+
 implementation
 
 uses
@@ -504,5 +507,32 @@ begin
 			Break;
 	end;
 end;
+
+function Code(s: ShortString; Decode: Boolean): ShortString;
+var i: Integer;
+begin
+	SetLength(Result, Length(s));
+	for i := 1 to Length(s) do
+	begin
+		if Decode then
+			Result[i] := Chr(((Ord(s[i]) xor $ff) + $f) and $ff)
+		else
+			Result[i] := Chr(((Ord(s[i]) - $f) and $ff) xor $ff);
+	end;
+end;
+
+function Code(s: string; Decode: Boolean): string;
+var i: Integer;
+begin
+	SetLength(Result, Length(s));
+	for i := 1 to Length(s) do
+	begin
+		if Decode then
+			Result[i] := Chr(((Ord(s[i]) xor $ff) + $f) and $ff)
+		else
+			Result[i] := Chr(((Ord(s[i]) - $f) and $ff) xor $ff);
+	end;
+end;
+
 
 end.

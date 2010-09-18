@@ -116,6 +116,11 @@ function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccess
 		F.Free;
 	end;
 }
+const
+	AllFiles = '|All Files (*.*)|*.*';
+	AllPictures = //'Bitmap (*.bmp)|*.bmp|Jpeg (*.jpg)|*.jpg' + AllFiles;
+		'Any Pictures (*.bmp;*.jpg;*.jpeg;*.ppm)|*.bmp;*.jpg;*.jpeg|Bitmaps (*.bmp)|*.bmp|JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|Portable Picture (*.ppm)|*.ppm' + AllFiles;
+//	All (*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf)|*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf|Device Independent Bitmap (*.dib)|*.dib|JPEG Image File (*.jpg)|*.jpg|JPEG Image File (*.jpeg)|*.jpeg|Bitmaps (*.bmp)|*.bmp|Icons (*.ico)|*.ico|Enhanced Metafiles (*.emf)|*.emf|Metafiles (*.wmf)|*.wmf
 var
 	StartDir, // Dir with Ini and configuratios files (read and write)
 	WorkDir, // Dir with exe file, data files (read only)
@@ -662,7 +667,7 @@ begin
 		SysDir := SysDir + '\';
 
 	SetLength(WinDir, MAX_PATH);
-	NewLength := GetwindowsDirectory(PChar(WinDir), MAX_PATH);
+	NewLength := GetWindowsDirectory(PChar(WinDir), MAX_PATH);
 	SetLength(WinDir, NewLength);
 	if (Length(WinDir) > 0) and (WinDir[Length(WinDir)] <> '\') then
 		WinDir := WinDir + '\';
@@ -694,16 +699,22 @@ function FullDir(Dir: string): string;
 var
 	i: Integer;
 begin
-	Replace(Dir, '%SystemRoot%', Copy(WinDir, 1, Length(WinDir) - 1));
-	for i := 1 to Length(Dir) do
+	if Dir = '' then
+		Result := ''
+	else
 	begin
-		if Dir[i] = ':' then
+		// %HOMEDRIVE%%HOMEPATH%
+		Replace(Dir, '%SystemRoot%', Copy(WinDir, 1, Length(WinDir) - 1));
+		for i := 1 to Length(Dir) do
 		begin
-			Result := Dir;
-			Exit;
+			if Dir[i] = ':' then
+			begin
+				Result := Dir;
+				Exit;
+			end;
 		end;
+		Result := WorkDir + Dir;
 	end;
-	Result := WorkDir + Dir;
 end;
 
 function DelFileExt(const FName: string): string;

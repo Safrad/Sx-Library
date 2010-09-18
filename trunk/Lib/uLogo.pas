@@ -203,11 +203,9 @@ end;
 
 procedure TfLogo.Timer1Timer(Sender: TObject);
 begin
-//  Timer1.Free; Problem D???
 	Enabled := False;
 	Close;
 	Hide;
-//	Free; fLogo := nil;
 end;
 
 procedure TfLogo.ImageLogoMouseMove(Sender: TObject; Shift: TShiftState; X,

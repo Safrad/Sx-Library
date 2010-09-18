@@ -110,6 +110,7 @@ type
 			const C1, C2: TColor; const Lines: SG; const Effect: TEffect);
 		procedure BarBrg24(
 			const X1, Y1, X2, Y2: TCoor);
+		procedure BorderF(const X1, Y1, X2, Y2: TCoor; const C: TColor);
 
 		procedure Bmp24(
 			XD1, YD1: TCoor;
@@ -991,6 +992,8 @@ end;
 
 procedure BitmapCopy(var BmpD, BmpS: TDBitmap);
 begin
+	if BmpS = nil then
+		MessageD('Source Bitmap Must Not Be Nil', mtError, [mbOk]);
 	if BmpD <> nil then
 		MessageD('Destination Bitmap Must Be Nil', mtError, [mbOk]);
 	BmpD := TDBitmap.Create;
@@ -4606,6 +4609,12 @@ procedure TDBitmap.BorderE24(
 begin
 	if (FWidth > Lines) and (FHeight > Lines) then
 		Border24(0, 0, FWidth - 1, FHeight - 1, C1, C2, Lines, Effect);
+end;
+(*-------------------------------------------------------------------------*)
+procedure TDBitmap.BorderF(const X1, Y1, X2, Y2: TCoor; const C: TColor);
+begin
+	Bar24(clNone, X1, Y1, X2, Y2, C, ef16);
+	Border24(X1 - 1, Y1 - 1, X2 + 1, Y2 + 1, clBlack, clWhite, 1, ef10);
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.BarBrg24(

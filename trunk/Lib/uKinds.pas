@@ -517,8 +517,8 @@ begin
 	Result := False;
 	if Assigned(SaveDialog1) then
 	begin
-		SaveDialog1.FileName := FileName;
 		SaveDialog1.InitialDir := ExtractFilePath(FileName);
+		SaveDialog1.FileName := ExtractFileName(FileName);
 		Result := SaveDialog1.Execute;
 		if Result then
 			FileName := SaveDialog1.FileName;
@@ -828,13 +828,13 @@ begin
 	begin
 		if Count <= 0 then
 		begin
-			OpenDialog1.FileName := '';
 			OpenDialog1.InitialDir := '';
+			OpenDialog1.FileName := '';
 		end
 		else
 		begin
-			OpenDialog1.FileName := Items[Index].FileName;
 			OpenDialog1.InitialDir := ExtractFilePath(Items[Index].FileName);
+			OpenDialog1.FileName := ExtractFileName(Items[Index].FileName);
 		end;
 		if OpenDialog1.Execute then
 		begin

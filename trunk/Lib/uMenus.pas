@@ -506,7 +506,7 @@ begin
 		if TopLevel and (odSelected in State) then OffsetRect(Rec, 1, 1);
 
 		OffsetRect(Rec, 0, 1);
-		s := ShortCutToText(MenuItem.ShortCut);
+		s := KeyToStr(MenuItem.ShortCut); //ShortCutToText(MenuItem.ShortCut);
 		if C2 <> clNone then
 		begin
 			DrawText(

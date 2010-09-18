@@ -452,6 +452,7 @@ end;
 (*-------------------------------------------------------------------------*)
 procedure ShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
+var n: SG;
 begin
 	if CB = clNone then
 		Canvas.Brush.Style := bsClear
@@ -462,7 +463,8 @@ begin
 	end;
 
 	Canvas.Font.Color := ShadowColor(CF);
-	Canvas.TextOut(X + 1, Y + 1, Text);
+	n := 1 + Canvas.Font.Size div 16;
+	Canvas.TextOut(X + n, Y + n, Text);
 
 	Canvas.Brush.Style := bsClear;
 	Canvas.Font.Color := CF;

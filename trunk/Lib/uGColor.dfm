@@ -432,7 +432,7 @@ object fGColor: TfGColor
     AutoSize = False
     TabOrder = 3
     Text = '255'
-    OnChange = EditRChange
+    OnChange = EditRGBAChange
   end
   object TrackBarR: TTrackBar
     Left = 88
@@ -450,7 +450,7 @@ object fGColor: TfGColor
     ThumbLength = 19
     TickMarks = tmBottomRight
     TickStyle = tsAuto
-    OnChange = TrackBarRChange
+    OnChange = TrackBarRGBAChange
   end
   object ButtonR: TDButton
     Left = 376
@@ -465,7 +465,7 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 5
-    OnClick = ButtonRClick
+    OnClick = ButtonRGBAClick
   end
   object ButtonOk: TDButton
     Left = 256
@@ -521,7 +521,7 @@ object fGColor: TfGColor
     Top = 184
     Width = 113
     Height = 89
-    Caption = 'Colors'
+    Caption = 'Bit Depth'
     ItemIndex = 4
     Items.Strings = (
       '1 bit'
@@ -533,6 +533,7 @@ object fGColor: TfGColor
     OnClick = RadioGroup1Click
   end
   object EditG: TEdit
+    Tag = 1
     Left = 48
     Top = 40
     Width = 25
@@ -540,8 +541,10 @@ object fGColor: TfGColor
     AutoSize = False
     TabOrder = 6
     Text = '255'
+    OnChange = EditRGBAChange
   end
   object TrackBarG: TTrackBar
+    Tag = 1
     Left = 88
     Top = 40
     Width = 286
@@ -557,8 +560,10 @@ object fGColor: TfGColor
     ThumbLength = 19
     TickMarks = tmBottomRight
     TickStyle = tsAuto
+    OnChange = TrackBarRGBAChange
   end
   object ButtonG: TDButton
+    Tag = 1
     Left = 376
     Top = 40
     Width = 49
@@ -571,9 +576,10 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 8
-    OnClick = ButtonGClick
+    OnClick = ButtonRGBAClick
   end
   object EditB: TEdit
+    Tag = 2
     Left = 48
     Top = 72
     Width = 25
@@ -581,8 +587,10 @@ object fGColor: TfGColor
     AutoSize = False
     TabOrder = 9
     Text = '255'
+    OnChange = EditRGBAChange
   end
   object TrackBarB: TTrackBar
+    Tag = 2
     Left = 88
     Top = 72
     Width = 286
@@ -598,8 +606,10 @@ object fGColor: TfGColor
     ThumbLength = 19
     TickMarks = tmBottomRight
     TickStyle = tsAuto
+    OnChange = TrackBarRGBAChange
   end
   object ButtonB: TDButton
+    Tag = 2
     Left = 376
     Top = 72
     Width = 49
@@ -612,9 +622,10 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 11
-    OnClick = ButtonBClick
+    OnClick = ButtonRGBAClick
   end
   object EditA: TEdit
+    Tag = 3
     Left = 48
     Top = 104
     Width = 25
@@ -622,8 +633,10 @@ object fGColor: TfGColor
     AutoSize = False
     TabOrder = 12
     Text = '255'
+    OnChange = EditRGBAChange
   end
   object TrackBarA: TTrackBar
+    Tag = 3
     Left = 88
     Top = 104
     Width = 286
@@ -639,9 +652,10 @@ object fGColor: TfGColor
     ThumbLength = 19
     TickMarks = tmBottomRight
     TickStyle = tsAuto
-    OnChange = TrackBarAChange
+    OnChange = TrackBarRGBAChange
   end
   object ButtonA: TDButton
+    Tag = 3
     Left = 376
     Top = 104
     Width = 49
@@ -654,14 +668,14 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 14
-    OnClick = ButtonAClick
+    OnClick = ButtonRGBAClick
   end
   object GroupBoxColors: TGroupBox
     Left = 8
     Top = 184
     Width = 264
     Height = 89
-    Caption = 'Colors'
+    Caption = 'Basic Colors'
     TabOrder = 17
     object ShapeBorder: TShape
       Left = 0

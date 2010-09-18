@@ -371,7 +371,7 @@ end;
 procedure TfFormats.FormClose(Sender: TObject; var Action: TCloseAction);
 var i: Integer;
 begin
-{	for i := 0 to CSVReqFormats.Count - 1 do D>??
+{	for i := 0 to CSVReqFormats.Count - 1 do D???
 	begin
 		RemoveControl(PanelNames[i]);
 		PanelNames[i].Free; PanelNames[i] := nil;

@@ -365,13 +365,24 @@ var
 	UnitSystem: PUnit;
 
 // Execution
+const
+	NodeHead = 2;
+	NodeNum = NodeHead + 10;
+	NodeIdent = NodeHead + 6;
+	NodeArgs = NodeHead + 2;
 type
 	PNode = ^TNode;
 	TNode = packed record // 11, 7,11,15 .. 3 + 4 * 65535
 		Operation: TOperator; // 1
+		Reserved: U1;
 		case Integer of
-		0: (Num: FA); // 10
-		1: (Ident: PVF); // 5
+		0: (
+			Num: FA // 10
+			); // 12
+		1: (
+			Reserver1: array[0..1] of U1; // 2
+			Ident: PVF // 4
+			 ); // 8
 		2: (
 			ArgCount: U2;
 			Args: array[0..65534] of PNode);
@@ -1527,8 +1538,8 @@ begin
 	case InputType of
 	itExclamation:
 	begin
-		GetMem(Result, 1 + 2 + 1 * 4);
-		Inc(TreeSize, 1 + 2 + 1 * 4);
+		GetMem(Result, NodeArgs + 1 * SizeOf(Result.Args[0]));
+		Inc(TreeSize, NodeArgs + 1 * SizeOf(Result.Args[0]));
 		Inc(NodeCount);
 		Result.Operation := opFact;
 		Result.ArgCount := 1;
@@ -1545,8 +1556,8 @@ var Operation: TOperator;
 
 	function NodeArg: PNode;
 	begin
-		GetMem(Result, 1 + 2);
-		Inc(TreeSize, 1 + 2);
+		GetMem(Result, NodeArgs);
+		Inc(TreeSize, NodeArgs);
 		Inc(NodeCount);
 		Result.Operation := Operation;
 		Result.ArgCount := 0;
@@ -1572,15 +1583,25 @@ var Operation: TOperator;
 				begin
 					ReadInput;
 				end;
-				//itInteger, itReal:
 				else
+				//itInteger, itReal, itIdent, itMinus:
 				begin
-					ReallocMem(Result, 1 + 2 + 4 * (Result.ArgCount + 1));
-					Inc(TreeSize, 4);
+					ReallocMem(Result, NodeArgs + SizeOf(Result.Args[0]) * (Result.ArgCount + 1));
+					Inc(TreeSize, SizeOf(Result.Args[0]));
 					Inc(NodeCount);
 					Result.Operation := Operation;
 					Result.Args[Result.ArgCount] := NodeE(nil);
+					if Result.Args[Result.ArgCount] = nil then
+					begin
+						AddMes2(mtExpressionExpected, [Id]);
+						ReadInput;
+					end;
 					Inc(Result.ArgCount);
+{				end
+				else
+				begin
+					AddMes2(mtExpressionExpected, [Id]);
+					ReadInput;}
 				end;
 				end;
 			end;
@@ -1598,8 +1619,8 @@ begin
 	case InputType of
 	itInteger, itReal:
 	begin
-		GetMem(Result, 1 + 10);
-		Inc(TreeSize, 1 + 10);
+		GetMem(Result, NodeNum);
+		Inc(TreeSize, NodeNum);
 		Inc(NodeCount);
 		Result.Operation := opNumber;
 		Result.Num := InReal;
@@ -1635,16 +1656,16 @@ begin
 			VF := IsVarFunc(Id, 0, UnitSystem);
 			if VF <> nil then
 			begin
-				GetMem(Result, 1 + 4);
-				Inc(TreeSize, 1 + 4);
+				GetMem(Result, NodeIdent);
+				Inc(TreeSize, NodeIdent);
 				Inc(NodeCount);
 				Result.Operation := opIdent;
 				Result.Ident := VF;
 			end
 			else
 			begin
-{				GetMem(Result, 1 + 10);
-				Inc(TreeSize, 1 + 10);
+{				GetMem(Result, NodeNum);
+				Inc(TreeSize, NodeNum);
 				Inc(NodeCount);
 				Result.Operation := opNumber;
 				Result.Num := 0;}
@@ -1658,8 +1679,8 @@ begin
 	begin
 		if (InputType = itKeyword) and (Keyword = kwNil) then
 		begin
-			GetMem(Result, 1 + 10);
-			Inc(TreeSize, 1 + 10);
+			GetMem(Result, NodeNum);
+			Inc(TreeSize, NodeNum);
 			Inc(NodeCount);
 			Result.Operation := opNumber;
 			Result.Num := 0;
@@ -1680,8 +1701,8 @@ begin
 	case InputType of
 	itPower:
 	begin
-		GetMem(Result, 1 + 2 + 2 * 4);
-		Inc(TreeSize, 1 + 2 + 2 * 4);
+		GetMem(Result, NodeArgs + 2 * SizeOf(Result.Args[0]));
+		Inc(TreeSize, NodeArgs + 2 * SizeOf(Result.Args[0]));
 		Inc(NodeCount);
 		Result.Operation := opPower;
 		Result.ArgCount := 2;
@@ -1703,8 +1724,8 @@ begin
 //		case InputType of
 {		itMinus:
 	begin
-		GetMem(Result, 1 + 2 + 4);
-		Inc(TreeSize, 1 + 2 + 4);
+		GetMem(Result, NodeArgs + 1 * SizeOf(Result.Args[0]));
+		Inc(TreeSize, NodeArgs + 1 * SizeOf(Result.Args[0]));
 		Inc(NodeCount);
 		Result.Operation := opUnarMinus;
 		Result.ArgCount := 1;
@@ -1726,8 +1747,8 @@ begin
 	end;}
 	itMul, itDiv:
 	begin
-		GetMem(Result, 1 + 2 + 2 * 4);
-		Inc(TreeSize, 1 + 2 + 2 * 4);
+		GetMem(Result, NodeArgs + 2 * SizeOf(Result.Args[0]));
+		Inc(TreeSize, NodeArgs + 2 * SizeOf(Result.Args[0]));
 		Inc(NodeCount);
 		case InputType of
 		itMul: Result.Operation := opMul;
@@ -1747,8 +1768,8 @@ begin
 			case Keyword of
 			kwDiv, kwMod, kwXor, kwOr, kwAnd, kwShr, kwShl:
 			begin
-				GetMem(Result, 1 + 2 + 2 * 4);
-				Inc(TreeSize, 1 + 2 + 2 * 4);
+				GetMem(Result, NodeArgs + 2 * SizeOf(Result.Args[0]));
+				Inc(TreeSize, NodeArgs + 2 * SizeOf(Result.Args[0]));
 				Inc(NodeCount);
 				case Keyword of
 				kwDiv: Result.Operation := opDiv;
@@ -1794,8 +1815,8 @@ begin
 	end;
 	itPlus, itMinus:
 	begin
-		GetMem(Result, 1 + 2 + 2 * 4);
-		Inc(TreeSize, 1 + 2 + 2 * 4);
+		GetMem(Result, NodeArgs + 2 * SizeOf(Result.Args[0]));
+		Inc(TreeSize, NodeArgs + 2 * SizeOf(Result.Args[0]));
 		Inc(NodeCount);
 		case InputType of
 		itPlus: Result.Operation := opPlus;
@@ -1849,13 +1870,13 @@ begin
 		case Node.Operation of
 		opNumber:
 		begin
-			FreeMem(Node{$ifopt d+}, 1 + 10{$endif});
-			Dec(TreeSize, 1 + 10);
+			FreeMem(Node{$ifopt d+}, NodeNum{$endif});
+			Dec(TreeSize, NodeNum);
 		end;
 		opIdent:
 		begin
-			FreeMem(Node{$ifopt d+}, 1 + 4{$endif});
-			Dec(TreeSize, 1 + 4);
+			FreeMem(Node{$ifopt d+}, NodeIdent{$endif});
+			Dec(TreeSize, NodeIdent);
 		end;
 		opPlus..opXNor:
 		begin
@@ -1869,8 +1890,8 @@ begin
 				FreeTree(Node.Args[i]);
 			end;
 
-			Dec(TreeSize, 1 + 2 + 4 * Node.ArgCount);
-			FreeMem(Node{$ifopt d+}, 1 + 2 + 4 * Node.ArgCount{$endif});
+			Dec(TreeSize, NodeArgs + Node.ArgCount * SizeOf(Node.Args[0]));
+			FreeMem(Node{$ifopt d+}, NodeArgs + Node.ArgCount * SizeOf(Node.Args[0]){$endif});
 		end;
 		else // opNone:
 		begin
@@ -1878,7 +1899,7 @@ begin
 			IE(20);
 			{$endif}
 			FreeMem(Node);
-	//		Dec(TreeSize, 1 + 2);
+	//		Dec(TreeSize, NodeArgs);
 		end;
 		end;
 	end;

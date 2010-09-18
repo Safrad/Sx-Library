@@ -41,7 +41,7 @@ type
 		FModified: Boolean;
 
 		function GetModified: Boolean;
-		function GetCanUndo: Boolean;
+//		function GetCanUndo: Boolean;
 		procedure SetModified(Value: Boolean);
 
 		procedure SetAutoCtl3D(const Value: boolean);
@@ -116,12 +116,12 @@ begin
 	Result := FModified;
 	if HandleAllocated then Result := SendMessage(Handle, EM_GETMODIFY, 0, 0) <> 0;
 end;
-
+{
 function TDEdit.GetCanUndo: Boolean;
 begin
 	Result := False;
 	if HandleAllocated then Result := SendMessage(Handle, EM_CANUNDO, 0, 0) <> 0;
-end;
+end;}
 
 procedure TDEdit.SetModified(Value: Boolean);
 begin
