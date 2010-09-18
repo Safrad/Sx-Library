@@ -55,11 +55,16 @@ function DelEndSpaceF(const s: string): string;
 procedure DelEndSpace(var s: string);
 function DelBESpaceF(s: string): string;
 procedure DelBESpace(var s: string);
+function RemoveBlanks(s: string): string;
+function DeleteLastEnter(s: string): string;
+function DeleteLastChar(s: string): string;
 
 function ReadToChar(const Line: string; var LineIndex: SG;
 	const C: Char): string;
 function ReadToChars(const Line: string; var LineIndex: SG;
-	const C: TCharSet): string;
+	const C: TCharSet): string; overload;
+function ReadToChars(const Line: string; var LineIndex: SG;
+	const C: TCharSet; out LastChar: Char): string; overload;
 function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
 function PosWW(Str, SubStr: string): Integer;
@@ -312,6 +317,38 @@ begin
 	end;
 end;
 
+function RemoveBlanks(s: string): string;
+begin
+	Result := s;
+	Replace(Result, ' ', '');
+	Replace(Result, CharTab, '');
+	Replace(Result, CharCR, '');
+	Replace(Result, CharLF, '');
+end;
+
+function DeleteLastEnter(s: string): string;
+begin
+	Result := s;
+	if Length(Result) >= 1 then
+	begin
+		if s[Length(Result)] = CharLF then
+			SetLength(Result, Length(Result) - 1);
+	end;
+	if Length(Result) >= 1 then
+	begin
+		if s[Length(Result)] = CharCR then
+			SetLength(Result, Length(Result) - 1);
+	end;
+end;
+
+function DeleteLastChar(s: string): string;
+begin
+	if Length(s) > 1 then
+		Result := Copy(s, 1, Length(s) - 1)
+	else
+		Result := '';
+end;
+
 function ReadToChar(const Line: string; var LineIndex: SG;
 	const C: Char): string;
 var StartIndex: SG;
@@ -331,6 +368,21 @@ begin
 	while (LineIndex <= Length(Line)) and (not (Line[LineIndex] in C)) do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	Inc(LineIndex);
+end;
+
+function ReadToChars(const Line: string; var LineIndex: SG;
+	const C: TCharSet; out LastChar: Char): string;
+var StartIndex: SG;
+begin
+	StartIndex := LineIndex;
+	while (LineIndex <= Length(Line)) and (not (Line[LineIndex] in C)) do
+		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	if LineIndex <= Length(Line) then
+		LastChar := Line[LineIndex]
+	else
+		LastChar := #0;
 	Inc(LineIndex);
 end;
 
@@ -521,7 +573,7 @@ procedure Replace(var s: string; const WhatS, ToS: string);
 var Po, Index: SG;
 begin
 	Index := 1;
-	while Index < Length(s) do
+	while Index + Length(WhatS) <= Length(s) + 1 do
 	begin
 //		Po := Pos(WhatS, s);
 		Po := Find(WhatS, s, Index);

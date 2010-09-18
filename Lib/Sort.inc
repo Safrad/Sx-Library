@@ -643,7 +643,7 @@
 	end;
 	{$ifopt d+}
 (*-------------------------------------------------------------------------*)
-(*	procedure MergeSort;
+	procedure MergeSort;
 	var
 		MeI: array of TIndex;
 		MeV: array of TValue; // D??? Delphi internal error L1030
@@ -726,7 +726,7 @@
 		Sort(MinIndex, MaxIndex);
 		SetLength(MeV, 0);
 		SetLength(MeI, 0);
-	end;*)
+	end;
 (*-------------------------------------------------------------------------*)
 	procedure RadixSort;
 	const
@@ -881,11 +881,10 @@ begin
 		stAuto:
 		begin
 			if Stability then
-				InsertionSort
-{				case MaxIndex of
+				case MaxIndex of
 				1..70: InsertionSort;
 				else MergeSort;
-				end}
+				end
 			else
 				QuickSort(MinIndex, MaxIndex);
 		end;

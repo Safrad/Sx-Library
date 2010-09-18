@@ -12,39 +12,30 @@ interface
 
 uses SysUtils, uAdd;
 
-const
-	PreHeadSize = 16;
 type
 	PColumn = ^TColumn;
 	TColumn = record // 16
 		Name: string;
-		Typ: Variant;
+		Typ: TVarType; // 2
+		Reserved: U2;
 		Width: S4;
 		Items: array of Variant;
 	end;
 
 	TDBF = class
 	private
-		Columns: array of TColumn;
-		ColumnCount: UG;
-
-	public
-
-		DbItemCount: SG;
 		FileName: TFileName;
-		IsNew: Boolean;
-
-
+		Columns: array of TColumn;
+		ColumnCount: SG;
+	public
+		Rows: array of BG; // True if row is enabled
+		DbItemCount: SG;
 
 		constructor Create;
 		destructor Destroy; override;
-//		procedure New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
 
 		function FindColumn(Name: string): PColumn;
 		procedure Close;
-		procedure SetItems(ItemsCount: Integer);
-		procedure CopyItem(Source, Dest: Integer);
-		procedure FreeItem(Item: Integer);
 
 		function LoadFromFile(FName: TFileName): Boolean;
 		function SaveToFile(FName: TFileName): Boolean;
@@ -53,67 +44,41 @@ type
 implementation
 
 uses
-	Windows,
-	uFiles, uStrings, uInput;
-{
-procedure TDBF.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
-begin
-	DbItemCount := -1;
-	DbItemSize := NewDbDataSize;
-	SetItems(0);
-	Id := HeadId;
-	Version := HeadVersion;
-	Head.Id := HeadId;
-	Head.Version := HeadVersion;
-	Head.HeadSize := SizeOf(TDbHead);
-	Head.ItemSize := SizeOf(TDbItem) - 4 + DbItemSize;
-	Head.SaveCount := 0;
-	Head.Modified := 0;
-	IsNew := True;
-end;}
+	Windows, Variants,
+	uFiles, uStrings, uInput, uError;
 
 procedure TDBF.Close;
+var i, j: SG;
 begin
-	SetItems(-1);
-end;
-
-procedure TDBF.CopyItem(Source, Dest: Integer);
-begin
-
-end;
-
-procedure TDBF.FreeItem(Item: Integer);
-begin
-
-end;
-
-procedure TDBF.SetItems(ItemsCount: Integer);
-var i: Integer;
-begin
-	if ItemsCount = DbItemCount then Exit;
-	if ItemsCount < DbItemCount then
+	for i := 0 to ColumnCount - 1 do
 	begin
-		for i := ItemsCount + 1 to DbItemCount do
+		Columns[i].Name := '';
+		Columns[i].Typ := varNull;
+		for j := 0 to DbItemCount - 1 do
 		begin
-			FreeItem(i);
+			Finalize(Columns[i].Items[j]);
 		end;
 	end;
-{	SetLength(DbItems, ItemsCount + 1);
-	if ItemsCount > DbItemCount then
-	begin
-		for i := DbItemCount + 1 to ItemsCount do
-		begin
-			FillChar(DbItems[i], SizeOf(DbItems[i]), 0);
-			GetMem(DbItems[i].PData, DbItemSize);
-			FillChar(DbItems[i].PData^, DbItemSize, 0);
-		end;
-	end;
-	DbItemCount := ItemsCount;}
+	SetLength(Columns, 0);
+	ColumnCount := 0;
+	SetLength(Rows, 0);
+	DbItemCount := 0;
+	FileName := '';
 end;
 
 function TDBF.LoadFromFile(FName: TFileName): Boolean;
 label LRetry, LExit;
 type
+	THead = packed record // 32
+		YearOffset: U1; // $03=1900, $30=2000
+		Year: U1;
+		Month: U1;
+		Day: U1;
+		ItemsCount: U4;
+		DataOffset: U2;
+		RowSize: U2;
+		R1, R2, R3, R4, R5: U4;
+	end;
 	TColumn = packed record // 32
 		Name: array[0..10] of Char; // 11
 		Typ: Char; // 1
@@ -127,30 +92,46 @@ type
 var
 	F: TFile;
 	j, k: SG;
-	s: string;
+
+	DataWStr: WideString;
+	DataStr: ShortString;
+
+	Head: THead;
 	Column: TColumn;
-	NewSize, Offset: SG;
-	Row: PArrayChar;
-	RowSize: SG;
+	NewSize: SG;
+	Row, SRow, CRow: Pointer;
+	RowSize, RowsSize: SG;
 begin
 	Result := False;
-	Row := nil;
+	FillChar(DataStr, SizeOf(DataStr), 0);
 	F := TFile.Create;
 	LRetry:
 	Close;
 	FileName := FName;
+	SRow := nil;
 	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
-		// Head
-		F.Seek(32);
+		// Header
+		F.BlockRead(Head, SizeOf(Head));
+		// Columns
 		ColumnCount := 0;
 		RowSize := 0;
 		while True do
 		begin
 			F.BlockRead(Column, SizeOf(TColumn));
-			if (U1(Column.Name[0]) = $0d) and (U1(Column.Name[1]) = $20) then
+			if (U1(Column.Name[0]) = $0d) {and ((U1(Column.Name[1]) = $20) or (U1(Column.Name[1]) = $00))} then
 			begin
-				F.Seek(F.FilePos - 30);
+				F.Seek(Head.DataOffset);
+(*				while not F.Eof do
+				begin
+					F.BlockRead(c, 1);
+					if c <> #0 {(c = $20) or (c = $2A)} then
+					begin
+						F.Seek(F.FilePos - 1); // Enable/Disable
+						Break;
+					end;
+				end;*)
+
 				Break;
 			end;
 			if F.Eof then goto LExit;
@@ -160,27 +141,14 @@ begin
 				SetLength(Columns, NewSize);
 			Columns[ColumnCount].Name := Column.Name;
 			case Column.Typ of
-			'C': Columns[ColumnCount].Typ := vtChar;
-			'N': Columns[ColumnCount].Typ := vtInteger;
-{ 		'D': Columns[ColumnCount].Typ := vtDate;
+			'C'{ars}: Columns[ColumnCount].Typ := varString;
+			'N'{umber}: Columns[ColumnCount].Typ := varInteger; // varDouble
+			'L'{ogical}: Columns[ColumnCount].Typ := varBoolean;
+			'W'{ide string}: Columns[ColumnCount].Typ := varOleStr;
+//			'M'{Memo}: Columns[ColumnCount].Typ := varPointer;
+{ 		'D': Columns[ColumnCount].Typ := varDate;}
 
-	vtBoolean    = 1;
-	vtChar       = 2;
-	vtExtended   = 3;
-	vtString     = 4;
-	vtPointer    = 5;
-	vtPChar      = 6;
-	vtObject     = 7;
-	vtClass      = 8;
-	vtWideChar   = 9;
-	vtPWideChar  = 10;
-	vtAnsiString = 11;
-	vtCurrency   = 12;
-	vtVariant    = 13;
-	vtInterface  = 14;
-	vtWideString = 15;
-	vtInt64      = 16;}
-			else Columns[ColumnCount].Typ := vtPointer;
+			else Columns[ColumnCount].Typ := varUnknown;
 			end;
 			DelEndSpace(Columns[ColumnCount].Name);
 			Columns[ColumnCount].Width := Column.Width;
@@ -189,51 +157,121 @@ begin
 		end;
 
 		// Data
-		Inc(RowSize);// := 2 * ((RowSize + 1) div 2);
-		GetMem(Row, RowSize);
-		DbItemCount := 0;
-		while True do
+		Inc(RowSize);// Enable/Disable := 2 * ((RowSize + 1) div 2);
+		if RowSize <> Head.RowSize then
 		begin
-			F.BlockRead(Row^, RowSize);
-			if F.Eof then goto LExit;
+			Head.RowSize := RowSize;
+			IOErrorMessage(FileName, 'Row Size Mishmash');
+		end;
+		RowsSize := Head.ItemsCount * Head.RowSize;
+		if RowsSize > F.FileSize - F.FilePos then
+		begin
+			Head.ItemsCount := (F.FileSize - F.FilePos) div RowSize;
+			IOErrorMessage(FileName, 'File Truncated');
+		end;
+		if RowsSize + 1 < F.FileSize - F.FilePos then
+			IOErrorMessage(FileName, 'File Too big');
 
-			Offset := 0;
+
+		GetMem(SRow, RowsSize);
+		F.BlockRead(SRow^, RowsSize);
+		if not F.Close then goto LRetry;
+
+		SetLength(Rows, Head.ItemsCount);
+		for j := 0 to ColumnCount - 1 do
+		begin
+			SetLength(Columns[j].Items, Head.ItemsCount);
+		end;
+		DbItemCount := 0;
+		CRow := SRow;
+		while SG(CRow) < SG(SRow) + RowsSize do
+		begin
+(*			if F.FilePos >= F.FileSize then goto LExit; // All readed
+			if F.FilePos + RowSize > F.FileSize then
+			begin
+				{$ifopt d+}
+				IOErrorMessage(FileName, 'File Truncated');
+				{$endif}
+//				MessageD('File too short'., [mbOk]);
+				goto LExit; // Cutted file
+			end;
+//			F.BlockRead(SRow^, RowsSize);*)
+
+{			NewSize := DbItemCount + 1;
+			if AllocByExp(Length(Rows), NewSize) then
+				SetLength(Rows, NewSize);}
+
+			Rows[DbItemCount] := Char(CRow^) = ' '; // 2A = Disabled
+			CRow := Pointer(SG(CRow) + 1);
 			for j := 0 to ColumnCount - 1 do
 			begin
-				NewSize := DbItemCount + 1;
+{				NewSize := DbItemCount + 1;
 				if AllocByExp(Length(Columns[j].Items), NewSize) then
-					SetLength(Columns[j].Items, NewSize);
+					SetLength(Columns[j].Items, NewSize);}
 
-				s := '';
-				for k := 0 to Columns[j].Width - 1 do
-					s := s + Row^[k + Offset];
+				Row := CRow;
+				case Columns[j].Typ of
+				varOleStr:
+				begin
+					for k := 0 to Columns[j].Width div 2 - 1 do
+					begin
+						if U2(Row^) = 0 then Break;
+						Inc(SG(Row), 2)
+					end;
+					DataWStr := '';
+					SetLength(DataWStr, k);
+					if k >= 1 then
+						Move(CRow^, DataWStr[1], 2 * k);
+				end
+				else
+				begin
+{					DataStr[0] := Char(Columns[j].Width);
+					for k := 0 to Columns[j].Width - 1 do
+					begin
+						if Char(Row^) = #0 then Break;
+//						DataStr[k + 1] := Char(Row^);
+						Inc(SG(Row));
+					end;}
+					k := Columns[j].Width;
+					DataStr[0] := Char(k);
+					if k >= 1 then
+						Move(CRow^, DataStr[1], k);
+				end;
+				end;
+				CRow := Pointer(SG(CRow) + Columns[j].Width);
 
 				case Columns[j].Typ of
-				vtChar: Columns[j].Items[DbItemCount] := s;
-				vtInteger:
+				varString:
 				begin
-					if Pos('.', s) <> 0 then
+					Columns[j].Items[DbItemCount] := DataStr;
+				end;
+{				varPointer:
+					Columns[j].Items[DbItemCount] := SG(s[1]) + SG(s[2]) shl 8 + SG(s[3]) shl 16 + SG(s[4]) shl 24;}
+				varInteger:
+				begin
+					if Pos('.', DataStr) <> 0 then
 					begin
-						Columns[j].Typ := vtExtended;
-						Columns[j].Items[DbItemCount] := StrToFA(s);
+						Columns[j].Typ := varDouble;
+						Columns[j].Items[DbItemCount] := StrToF8(DataStr);
 					end
 					else
-						Columns[j].Items[DbItemCount] := StrToSG(s); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
+						Columns[j].Items[DbItemCount] := StrToSG(DataStr); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
 
 				end;
-				vtExtended:
-						Columns[j].Items[DbItemCount] := StrToFA(s);
-//				vtDate:                                   
-
-
+				varDouble:
+					Columns[j].Items[DbItemCount] := StrToF8(DataStr);
+				varBoolean: Columns[j].Items[DbItemCount] := (DataStr <> 'F');
+				varOleStr:
+				begin
+					Columns[j].Items[DbItemCount] := DataWStr;
 				end;
-				Inc(Offset, Columns[j].Width);
+//				varDate:
+				end;
 			end;
 			Inc(DbItemCount);
 		end;
 		LExit:
-		FreeMem(Row);
-		if not F.Close then goto LRetry;
+		FreeMem(SRow);
 		Result := True;
 	end;
 	F.Free;
@@ -246,14 +284,13 @@ end;
 
 constructor TDBF.Create;
 begin
-	inherited;
-	IsNew := True;
+	inherited Create;
 end;
 
 destructor TDBF.Destroy;
 begin
 	Close;
-  inherited;
+	inherited Destroy;
 end;
 
 function TDBF.FindColumn(Name: string): PColumn;

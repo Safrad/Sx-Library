@@ -277,10 +277,11 @@ type
 		);*)
 	end;
 
+
 const
 	MinInt = Low(Integer);
-	MinInt8 = Low(Int64);
-	MaxInt8 = Int64($7FFFFFFFFFFFFFFF);
+{	MinInt64 = Low(Int64);
+	MaxInt64 = Int64($7FFFFFFFFFFFFFFF);}
 
 // Mathematics
 const
@@ -482,6 +483,8 @@ type
 
 //function SToMs(const Str: string): SG; // MsToStr<-
 
+function StrToF4(Str: string): F4;
+function StrToF8(Str: string): F8;
 function StrToFA(Str: string): FA;
 function StrToSG(Str: string): SG;
 function SToTime(Str: string): TTime;
@@ -514,10 +517,11 @@ procedure Nop;
 {$endif}
 //procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
+function SameData(P0, P1: Pointer; Size: Cardinal): Boolean; register;
 procedure FillU4(var Desc; Count: Cardinal; Value: U4);
 procedure FillOrderU4(var Desc; Size: Cardinal); register;
 procedure Swap02(var Desc; Count: Cardinal; Step: S4);
-function SelectDirectory(var Dir: string): BG;
+function SwapU4(D: U4): U4;
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
 function ThreadPriority(const Prior: Byte): Integer;
@@ -1860,7 +1864,7 @@ begin
 	while True do
 	begin
 		if Abs(Frac(Nu)) <= eps{MinExtended} then Break;
-		if Abs(Nu) < MaxInt8 div NumericBase then
+		if Abs(Nu) < High(S8) div NumericBase then
 		begin
 			Nu := Nu * NumericBase;
 			eps := eps * NumericBase;
@@ -2404,6 +2408,20 @@ begin
 	Result := (3600000 * h + 60000 * m + 1000 * s + d);
 end;}
 
+function StrToF4(Str: string): F4;
+var
+	E: Integer;
+begin
+	Val(Str, Result, E);
+end;
+
+function StrToF8(Str: string): F8;
+var
+	E: Integer;
+begin
+	Val(Str, Result, E);
+end;
+
 function StrToFA(Str: string): FA;
 var
 	E: Integer;
@@ -2767,15 +2785,38 @@ end;}
 
 procedure ReadMem(P: Pointer; Size: Cardinal); register;
 asm
+	push ebx
 	cmp Size, 0
 	je @Exit
 	add Size, P
 	@Loop:
-		mov ecx, [P]
+		mov ebx, [P]
 		add P, 4
 		cmp P, Size
 	jb @Loop
 	@Exit:
+	pop ebx
+end;
+
+function SameData(P0, P1: Pointer; Size: Cardinal): Boolean; register;
+asm
+	push ebx
+	mov Result, 1
+	cmp Size, 0
+	je @Exit
+	mov Result, 0
+	add Size, P0
+	@Loop:
+		mov ebx, [P0]
+		cmp ebx, [P1]
+		jne @Exit
+		add P0, 4
+		add P1, 4
+		cmp P0, Size
+	jb @Loop
+	mov Result, 1
+	@Exit:
+	pop ebx
 end;
 
 procedure FillU4(var Desc; Count: Cardinal; Value: U4); register;
@@ -2836,6 +2877,14 @@ asm
 		cmp edi, edx
 	jb @Loop
 	POP     EDI
+end;
+
+function SwapU4(D: U4): U4;
+begin
+	TU4(Result).B0 := TU4(D).B3;
+	TU4(Result).B1 := TU4(D).B2;
+	TU4(Result).B2 := TU4(D).B1;
+	TU4(Result).B3 := TU4(D).B0;
 end;
 
 procedure Exchange(var A, B: B1); register;
@@ -2994,27 +3043,6 @@ asm
 
 				POP ESI
 				POP     EDI
-end;
-
-function SelectDirectory(var Dir: string): BG;
-var OpenDialog1: TOpenDialog;
-begin
-	OpenDialog1 := TOpenDialog.Create(nil);
-	try
-		if Dir = '' then Dir := WorkDir;
-		OpenDialog1.FileName := '*.*';
-		OpenDialog1.InitialDir := ExtractFilePath(Dir);
-		OpenDialog1.Options := OpenDialog1.Options + [ofPathMustExist];
-		if OpenDialog1.Execute then
-		begin
-			Result := True;
-			Dir := ExtractFilePath(OpenDialog1.FileName);
-		end
-		else
-			Result := False;
-	finally
-		OpenDialog1.Free;
-	end;
 end;
 
 function DriveTypeToStr(const DriveType: Integer): string;

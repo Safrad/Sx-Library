@@ -27,7 +27,7 @@ type
 	public
 		Title: string;
 		AddCreated, AddTitle: BG;
-
+		Unicode: BG;
 
 
 		constructor Create(FileName: TFileName);
@@ -39,6 +39,7 @@ type
 		procedure AddCommand(s: string);
 		procedure HorizontalRule(Width: SG = 100; DistanceUnit: TDistanceUnit = duPercentage; Size: SG = 2);
 		procedure AddDataCell(s: string; AlignRight: BG = False);
+		procedure AddTable(FileName: TFileName);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
 		procedure AddImage(FileName: TFileName); overload;
 
@@ -49,6 +50,11 @@ type
 	end;
 
 function NToHTML(Value: SG): string;
+function XMLToStr(s: string): string;
+function StrToXML(s: string): string;
+{function XMLToWStr(s: string): WideString;
+function StrToIStr(s: WideString): string;}
+//function WStrToXML(s: WideString): string;
 function SToHTML(Value: string): string;
 procedure Silver(var s: string);
 procedure Small(var s: string);
@@ -65,7 +71,7 @@ implementation
 
 uses
 	Math,
-	uStrings, uFiles, uDBitmap;
+	uStrings, uFiles, uDBitmap, uLang;
 
 function NToHTML(Value: SG): string;
 begin
@@ -78,16 +84,84 @@ begin
 	end;
 end;
 
+function XMLToStr(s: string): string;
+begin
+	Result := s;
+	Replace(Result, '&gt;', '<');
+	Replace(Result, '&lt;', '>');
+	Replace(Result, '&amp;', '&');
+end;
+
+function StrToXML(s: string): string;
+begin
+	Result := s;
+	Replace(Result, '&', '&amp;');
+	Replace(Result, '>', '&lt;');
+	Replace(Result, '<', '&gt;');
+end;
+(*
+function XMLToWStr(s: string): WideString;
+var i: SG;
+begin
+	Result := '';
+	for i := 1 to Length(s) do
+	begin
+		case s[i] of
+		#$00..#$7F: Result := Result + s[i];
+		#$80..#$FF:
+		begin
+			if i < Length(s) then
+				Result := Result + WideChar(Ord(s[i]) + Ord(s[i + 1]) shl 8) // D???
+			else
+				Nop;
+		end;
+		end;
+	end;
+end;*)
+
+(*
+function StrToIStr(s: WideString): string;
+var
+	i: SG;
+	j: U2;
+begin
+	Result := '';
+	for i := 1 to Length(s) do
+	begin
+		case s[i] of
+		#$00..#$7F: Result := Result + s[i];
+		#$80..#$FFFF:
+		begin
+			j := U2(s[i]) + $C2C0;
+			Result := Result + Char(j shr 8) + Char(j and $ff);
+		end;
+		end;
+	end;
+end;
+
+function WStrToXML(s: WideString): string;
+var i: SG;
+begin
+	Result := '';
+	for i := 1 to Length(s) do
+	begin
+		case s[i] of
+		#$00..#$7F: Result := Result + s[i];
+		#$80..#$FFFF:
+		begin
+			Result := Result + Char(Ord(s[i]) and $ff) + Char(Ord(s[i + 1]) shr 8); // D???
+		end;
+		end;
+	end;
+end;*)
+
 function SToHTML(Value: string): string;
 begin
 	if Value = '' then
 		Result := '&nbsp;'
 	else
 	begin
-		Result := Value;
-		Replace(Result, '&', '&amp;');
-		Replace(Result, '>', '&lt;');
-		Replace(Result, '<', '&gt;');
+		Result := StrToXML(Value);
 		Replace(Result, LineSep, '<br/>');
 	end;
 end;
@@ -197,6 +271,7 @@ begin
 	FStyle := '';
 	AddCreated := UpperCase(DelFileExt(ExtractFileName(FileName))) <> 'MENU';
 	AddTitle := True;
+	Unicode := True;
 end;
 
 destructor THTML.Destroy;
@@ -320,6 +395,8 @@ begin
 	AddBody('</HTML>' + HTMLSep);
 end;
 
+const
+	CharsetName: array[BG] of string = ('ISO-8859-2'{ windows-1250}, 'utf-8');
 var
 	LastBody, s: string;
 begin
@@ -338,7 +415,8 @@ begin
 	s := s +
 		'	<meta name="Author" content="Safrad">' + HTMLSep +
 		'	<meta name="lang" content="cz">' + HTMLSep +
-		'	<meta http-equiv="Content-Type" content="text/html; charset=windows-1250">' + HTMLSep;
+		'	<meta http-equiv="Content-Type" content="text/html; charset=' + CharsetName[Unicode] + '">' + HTMLSep;
+
 	if FFrameset = False then
 		s := s + '	<link rel="stylesheet" type="text/css" href="' + FStyle + '">' + HTMLSep;
 	s := s +
@@ -357,7 +435,15 @@ begin
 	Body := s + Body;
 
 	HTMLEnd;
-	WriteStringToFile(FileName, Body, False);
+	if Unicode = False then
+	begin
+		ConvertCharset(Body, cp1250, cpISO88592);
+		WriteStringToFile(FileName, Body, False);
+	end
+	else
+	begin
+		WriteStringToFile(FileName, AnsiToUtf8(Body), False);
+	end;
 	Body := LastBody;
 end;
 
@@ -389,6 +475,50 @@ procedure THTML.AddFramesetFromFile;
 begin
 	FFrameset := True;
 	AddBodyFromFile;
+end;
+
+procedure THTML.AddTable(FileName: TFileName);
+var
+	Line: string;
+	InLineIndex, LInLineIndex: SG;
+	LineIndex: SG;
+	Data: string;
+	NewLine: BG;
+begin
+	Line := ReadStringFromFile(FileName);
+	Body := Body + '<table border=1 cellpadding=2>' + HTMLSep;
+
+	InLineIndex := 1;
+	LineIndex := 0;
+	NewLine := True;
+	while InLineIndex <= Length(Line) do
+	begin
+		if NewLine then
+			Body := Body + '<tr>';
+		LInLineIndex := InLineIndex;
+		Data := ReadToChars(Line, InLineIndex, [CharTab, CharCR, CharLF]);
+		if Data = '' then Data := '&nbsp;';
+		if LineIndex = 0 then
+			Body := Body + '<td><b>' + Data + '</b></td>'
+		else
+			Body := Body + '<td>' + Data + '</td>';
+
+		if (LInLineIndex <= 1) or (Line[InLineIndex - 1] = CharTab) then
+		begin
+      NewLine := False;
+		end
+		else
+		begin
+			Body := Body + '</tr>' + HTMLSep;
+			NewLine := True;
+			if Line[InLineIndex] = CharLF then
+				Inc(InLineIndex);
+			Inc(LineIndex);
+		end;
+
+
+	end;
+	Body := Body + '</table>' + HTMLSep;
 end;
 
 end.
