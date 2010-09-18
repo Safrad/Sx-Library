@@ -33,7 +33,7 @@ type
 	TBmpLine = array[0..MaxBitmapWidth - 1] of U1; // One line of 24 bit bitmap
 	PBmpLine = ^TBmpLine;
 
-	TCoor = LongInt;
+	TCoor = S4;
 
 	TInterruptProcedure = procedure(var Done: Word);
 
@@ -183,9 +183,9 @@ type
 		procedure DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
 			Orient: Integer; ScrollEf: TEffect);
 
-		procedure FireM(XS1, YS1, XS2, YS2: Longint; Tick: Byte);
-		procedure FireS(XS1, YS1, XS2, YS2: Longint);
-		procedure FogI(XS1, YS1, XS2, YS2: Longint);
+		procedure FireM(XS1, YS1, XS2, YS2: TCoor; Tick: Byte);
+		procedure FireS(XS1, YS1, XS2, YS2: TCoor);
+		procedure FogI(XS1, YS1, XS2, YS2: TCoor);
 	end;
 
 // Multicommands
@@ -7125,8 +7125,8 @@ var
 	PSource, PDest: PBmpData;
 
 	Done, LDone: Word;
-	R, G, B: LongInt;
-	TR, TG, TB: LongInt;
+	R, G, B: SG;
+	TR, TG, TB: SG;
 
 	X, Y: TCoor;
 	SX, SY: TCoor;
@@ -7269,12 +7269,12 @@ var
 	MaxX, MaxY,
 	MaxXD, MaxYD,
 	MaxX2, MaxY2,
-	MaxX2D, MaxY2D: LongInt;
-	X, Y: LongInt;
-	X2, Y2: LongInt;
-	CX, CY: Integer;
+	MaxX2D, MaxY2D,
+	X, Y,
+	X2, Y2,
+	CX, CY: SG;
 
-	R, G, B: LongInt;
+	R, G, B: SG;
 	Done, LDone: Word;
 	C: array[0..3] of TRColor; // absolute Co;
 	RColor: TRColor;
@@ -7340,7 +7340,7 @@ begin
 	for CY := YD1 to YD2 do
 	begin
 		Y := CY - YD1;
-		Y := (Y + Clock) mod MaxY;
+		Y := (Y + SG(Clock)) mod MaxY;
 		Y2 := 2 * Y;
 		if Assigned(InterruptProcedure) then
 		begin
@@ -7356,56 +7356,56 @@ begin
 		for CX := XD1 to XD2 do
 		begin
 			X := CX - XD1;
-			X := (X + Clock) mod MaxX;
+			X := (X + SG(Clock)) mod MaxX;
 			X2 := 2 * X;
 			case Func of
 			gfSpecHorz:
 			begin
-				R := aSpe[(6 * 256 * LongInt(X) div MaxX)];
-				G := aSpe[((6 * 256 * LongInt(X) div MaxX) + 1024)];
-				B := aSpe[((6 * 256 * LongInt(X) div MaxX) + 512)];
+				R := aSpe[(6 * 256 * X div MaxX)];
+				G := aSpe[((6 * 256 * X div MaxX) + 1024)];
+				B := aSpe[((6 * 256 * X div MaxX) + 512)];
 			end;
 			gfSpecVert:
 			begin
-				R := aSpe[(6 * 256 * LongInt(Y) div MaxY)];
-				G := aSpe[(6 * 256 * LongInt(Y) div MaxY) + 1024];
-				B := aSpe[(6 * 256 * LongInt(Y) div MaxY) + 512];
+				R := aSpe[(6 * 256 * Y div MaxY)];
+				G := aSpe[(6 * 256 * Y div MaxY) + 1024];
+				B := aSpe[(6 * 256 * Y div MaxY) + 512];
 			end;
 			gfTriaHorz:
 			begin
 				R := 355
-				 - (LongInt(X) shl 8) div MaxX
-				 - (LongInt(Y) shl 8) div MaxY;
+				 - SG(X shl 8 div MaxX)
+				 - SG(Y shl 8 div MaxY);
 				G := 320
-				 - ((MaxYD - Y) shl 8) div MaxY
-				 - (Abs(LongInt(X) - MaxXD shr 1) shl 8) div MaxX;
+				 - SG(((MaxYD - Y) shl 8) div MaxY)
+				 - SG((Abs(2 * X - MaxXD) shl 7) div MaxX);
 				B := 355
-				 - (LongInt(MaxXD - X) shl 8) div MaxX
-				 - (LongInt(Y) shl 8) div MaxY;
+				 - ((MaxXD - X) shl 8) div MaxX
+				 - (Y shl 8) div MaxY;
 			end;
 			gfTriaVert:
 			begin
 				R := 355
-				 - (LongInt(Y) shl 8) div MaxY
-				 - (LongInt(X) shl 8) div MaxX;
+				 - (Y shl 8) div MaxY
+				 - (X shl 8) div MaxX;
 				G := 320
 				 - ((MaxXD - X) shl 8) div MaxX
-				 - (Abs(LongInt(Y) - MaxYD shr 1) shl 8) div MaxY;
+				 - (Abs(Y - MaxYD shr 1) shl 8) div MaxY;
 				B := 355
-				 - (LongInt(MaxYD - Y) shl 8) div MaxY
-				 - (LongInt(X) shl 8) div MaxX;
+				 - ((MaxYD - Y) shl 8) div MaxY
+				 - (X shl 8) div MaxX;
 			end;
 			gfLineHorz:
 			begin
-				R := aLin[(LongInt(Y) shl 3) and $1ff];
-				G := aLin[(LongInt(X) shl 3) and $1ff];
-				B := (LongInt(MaxYD - Y) shl 8) div MaxY;
+				R := aLin[(Y shl 3) and $1ff];
+				G := aLin[(X shl 3) and $1ff];
+				B := ((MaxYD - Y) shl 8) div MaxY;
 			end;
 			gfLineVert:
 			begin
-				R := aLin[(LongInt(X) shl 3) and $1ff];
-				G := aLin[(LongInt(Y) shl 3) and $1ff];
-				B := (LongInt(MaxXD - X) shl 8) div MaxX;
+				R := aLin[(X shl 3) and $1ff];
+				G := aLin[(Y shl 3) and $1ff];
+				B := ((MaxXD - X) shl 8) div MaxX;
 			end;
 			gfCLineHorz:
 			begin
@@ -9414,7 +9414,7 @@ begin
 end;
 
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.FireM(XS1, YS1, XS2, YS2: Longint; tick:byte);
+procedure TDBitmap.FireM(XS1, YS1, XS2, YS2: TCoor; tick:byte);
 var
 	PD: PBmpData;
 	ByteXD: LongWord;
@@ -9437,7 +9437,7 @@ begin
 	HX := XS2 - XS1 + 1; // X sirka Source
 	UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
 
-	HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
+	HX := Xs1 + Xs1 + Xs1 - SG(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
 	Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
 
 	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
@@ -9572,7 +9572,7 @@ begin
 end;
 
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.FireS(XS1, YS1, XS2, YS2: Longint);
+procedure TDBitmap.FireS(XS1, YS1, XS2, YS2: TCoor);
 var
 PD: PBmpData;
 ByteXD: LongWord;
@@ -9588,7 +9588,7 @@ ByteXD := ByteX;
 HX := XS2 - XS1 + 1; // X sirka Source
 UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
 
-HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
+HX := Xs1 + Xs1 + Xs1 - SG(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
 Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
 
 EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
@@ -9707,7 +9707,7 @@ end;
 end;
 
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.FogI(XS1, YS1, XS2, YS2: Longint);
+procedure TDBitmap.FogI(XS1, YS1, XS2, YS2: TCoor);
 var
 PD: PBmpData;
 ByteXD: LongWord;
@@ -9725,7 +9725,7 @@ ByteXD := ByteX;
 HX := XS2 - XS1 + 1; // X sirka Source
 UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
 
-HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
+HX := Xs1 + Xs1 + Xs1 - SG(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
 Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
 
 EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination

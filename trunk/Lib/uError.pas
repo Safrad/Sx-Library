@@ -156,11 +156,9 @@ begin
 end;
 
 procedure IE(ErrorCode: SG);
-var S: string;
 begin
 //	{$ifopt d+}
-	S := 'Internal Error ' + IntToStr(ErrorCode);
-	ErrorMessage(S);
+	ErrorMessage('Internal Error ' + IntToStr(ErrorCode));
 //	{$else}
 //	PlayWinSound(wsCriticalStop);
 //	{$endif}
