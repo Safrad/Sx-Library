@@ -220,7 +220,7 @@ end;
 
 procedure TfAbout.InitNRT;
 begin
-	PanelNRT.Text := msToStr(GetTickCount - StartProgramTime + 1000 div 2, diMSD, 0, False);
+	PanelNRT.Text := msToStr(GetTickCount - StartProgramTime + 1000 div 2, diDHMSD, 0, False);
 end;
 
 procedure TfAbout.LoadFile(AboutFile: TFileName);
