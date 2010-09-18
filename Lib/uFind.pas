@@ -1,6 +1,6 @@
 //* File:     Lib\uFind.pas
 //* Created:  1999-05-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -15,9 +15,9 @@ uses uAdd;
 function FindS4(AValue: PArrayS4; var FromV, ToV: SG;	const Value: S4; FindGroup: BG): Boolean;
 
 function FindIS(var AIndex: array of SG; var AValue: array of string;
-	const Value: string; var FromV, ToV: SG): Boolean;
+	const Value: string; out FromV, ToV: SG): Boolean;
 function FindS(var AValue: array of string;
-	const Value: string; var FromV, ToV: SG): Boolean;
+	const Value: string; out FromV, ToV: SG): Boolean;
 
 function Find(SubStr, Str: string): SG; overload;
 function Find(SubStr, Str: string; FromPos: SG): SG; overload;
@@ -166,7 +166,7 @@ begin
 end;
 
 function FindIS(var AIndex: array of SG; var AValue: array of string;
-	const Value: string; var FromV, ToV: SG): Boolean;
+	const Value: string; out FromV, ToV: SG): Boolean;
 const
 	MinIndex = 0;
 type
@@ -198,7 +198,7 @@ begin
 end;
 
 function FindS(var AValue: array of string;
-	const Value: string; var FromV, ToV: SG): Boolean;
+	const Value: string; out FromV, ToV: SG): Boolean;
 const
 	MinIndex = 0;
 type

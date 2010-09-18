@@ -1,6 +1,6 @@
 //* File:     Lib\uDView.pas
 //* Created:  2001-08-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -622,7 +622,7 @@ begin
 				Co[1] := DarkerColor(C1);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				Bitmap.GenerateRGB(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+				Bitmap.GenerateRGB(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 
 				// Sort By
 				xx := x;

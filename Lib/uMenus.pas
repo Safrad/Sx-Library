@@ -1,6 +1,6 @@
 //* File:     Lib\uMenus.pas
 //* Created:  2000-08-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -50,6 +50,7 @@ procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEve
 procedure MenuCreate(Src: TMenuItem; Dsc: TMenuItem);
 procedure MenuUpdate(Src: TMenuItem; Dsc: TMenuItem);
 
+procedure MenuClick(Menu: TMenuItem);
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 
@@ -127,7 +128,7 @@ begin
 		else
 			 M := nil;
 
-		if not (Menu is TMenu) then
+		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
 		begin
 			M.OnAdvancedDrawItem := OnAdvancedMenuDraw;
 			ComName(M);
@@ -203,6 +204,11 @@ begin
 	end;
 end;
 
+procedure MenuClick(Menu: TMenuItem);
+begin
+	Menu.Checked := not Menu.Checked;
+end;
+
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 var
@@ -269,7 +275,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			MenuBmp.GenerateRGB(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-				clNone, gfFadeVert, Co, ScreenCorectColor, ef16, nil);
+				clNone, gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
 		end
 		else
 		begin
@@ -288,7 +294,7 @@ begin
 				Co[3] := Co[2];
 			end;
 			MenuBmp.GenerateRGB(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-				clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+				clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 		end;
 
 	// Line
@@ -337,7 +343,7 @@ begin
 				else
 				begin
 					MenuBmp.GenerateRGB(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
-						clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+						clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 				end;
 				MenuBmp.Border24(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 					DepthColor(1), DepthColor(3), 1, ef16);
@@ -359,7 +365,7 @@ begin
 				end
 				else
 					MenuBmp.GenerateRGB(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-						clNone, gfFade2x, Co, ScreenCorectColor, ef12, nil);
+						clNone, gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
 			end;
 		end
 		else
