@@ -61,6 +61,7 @@ type
 		procedure ButtonIgnoreAllClick(Sender: TObject);
 		procedure ButtonDownClick(Sender: TObject);
 		procedure EditIndexChange(Sender: TObject);
+    procedure FormHide(Sender: TObject);
 	private
 		{ Private declarations }
 		ActItem: UG;
@@ -196,6 +197,7 @@ end;
 procedure TfIOError.DrawTimeLeft;
 begin
 //	if StartTickCount > 0 then
+// D??? Error Ignore.TimeLeft not inicialized
 	PanelTimeLeft.Caption := msToStr(1000 * UG(Ignore.TimeLeft) + StartTickCount - TickCount, diMSD, 0, False);
 end;
 
@@ -815,6 +817,11 @@ procedure TfIOError.EditIndexChange(Sender: TObject);
 begin
 	ActItem := StrToValI(EditIndex.Text, True, 1, ActItem + 1, Ignores.Count, 1) - 1;
 	ShowMes;
+end;
+
+procedure TfIOError.FormHide(Sender: TObject);
+begin
+	fIOError.Timer1.Enabled := False;
 end;
 
 initialization

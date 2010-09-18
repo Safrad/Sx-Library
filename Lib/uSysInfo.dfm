@@ -23,157 +23,12 @@ object fSysInfo: TfSysInfo
     Height = 9
     Shape = bsTopLine
   end
-  object LabelTOperatingSystem: TDLabel
-    Left = 8
-    Top = 8
-    Width = 49
-    Height = 19
-    AutoSize = False
-    Caption = 'OS Id'
-    FocusControl = EditOS
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
   object Bevel4: TBevel
     Left = 8
     Top = 136
     Width = 289
     Height = 9
     Shape = bsTopLine
-  end
-  object LabelUsed: TDLabel
-    Left = 112
-    Top = 144
-    Width = 57
-    Height = 19
-    AutoSize = False
-    Caption = 'Used'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
-  object LabelFree: TDLabel
-    Left = 176
-    Top = 144
-    Width = 57
-    Height = 19
-    AutoSize = False
-    Caption = 'Free'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
-  object LabelTotal: TDLabel
-    Left = 240
-    Top = 144
-    Width = 57
-    Height = 19
-    AutoSize = False
-    Caption = 'Total'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
-  object LabelTPhysicalMemory: TDLabel
-    Left = 8
-    Top = 176
-    Width = 89
-    Height = 19
-    AutoSize = False
-    Caption = 'Physical Memory'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
-  object LabelTPageFile: TDLabel
-    Left = 8
-    Top = 200
-    Width = 89
-    Height = 19
-    AutoSize = False
-    Caption = 'Page File'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
   end
   object Bevel3: TBevel
     Left = 104
@@ -189,55 +44,6 @@ object fSysInfo: TfSysInfo
     Height = 9
     Shape = bsTopLine
   end
-  object DLabel3: TDLabel
-    Left = 8
-    Top = 40
-    Width = 49
-    Height = 19
-    AutoSize = False
-    Caption = 'CPU Id'
-    FocusControl = EditCPU
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
-  object DLabel5: TDLabel
-    Left = 8
-    Top = 224
-    Width = 89
-    Height = 19
-    AutoSize = False
-    Caption = 'Disk'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
   object Bevel5: TBevel
     Left = 8
     Top = 248
@@ -252,16 +58,47 @@ object fSysInfo: TfSysInfo
     Height = 9
     Shape = bsTopLine
   end
-  object DLabelCPUFrequency: TDLabel
+  object LabelTOperatingSystem: TDLabel
     Left = 8
-    Top = 88
-    Width = 89
+    Top = 8
+    Width = 49
     Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Caption = 'CPU Frequency'
-    FocusControl = EditCPUFrequency
-    Transparent = True
+    Alignment = taLeftJustify
+    Caption = 'OS Id'
+    BackEffect = ef04
+    FocusControl = EditOS
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
     Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelUsed: TDLabel
+    Left = 112
+    Top = 144
+    Width = 57
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Used'
     BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
@@ -276,18 +113,236 @@ object fSysInfo: TfSysInfo
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelFree: TDLabel
+    Left = 176
+    Top = 144
+    Width = 57
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Free'
+    BackEffect = ef04
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelTotal: TDLabel
+    Left = 240
+    Top = 144
+    Width = 57
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Total'
+    BackEffect = ef04
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelTPhysicalMemory: TDLabel
+    Left = 8
+    Top = 176
+    Width = 89
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Physical Memory'
+    BackEffect = ef04
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelTPageFile: TDLabel
+    Left = 8
+    Top = 200
+    Width = 89
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Commit Charge'
+    BackEffect = ef04
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object DLabel3: TDLabel
+    Left = 8
+    Top = 40
+    Width = 49
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'CPU Id'
+    BackEffect = ef04
+    FocusControl = EditCPU
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object DLabel5: TDLabel
+    Left = 8
+    Top = 224
+    Width = 89
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Disk'
+    BackEffect = ef04
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object DLabelCPUFrequency: TDLabel
+    Left = 8
+    Top = 88
+    Width = 89
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'CPU Frequency'
+    BackEffect = ef04
+    FocusControl = EditCPUFrequency
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object DLabel2: TDLabel
     Left = 8
     Top = 112
     Width = 89
     Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'AMD Duron Cmp'
-    FocusControl = EditDuron
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef04
+    FocusControl = EditDuron
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -301,18 +356,24 @@ object fSysInfo: TfSysInfo
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object DLabelCPUUsage: TDLabel
     Left = 8
     Top = 64
     Width = 89
     Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'CPU Usage'
-    FocusControl = EditCPUUsage
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef04
+    FocusControl = EditCPUUsage
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -326,15 +387,21 @@ object fSysInfo: TfSysInfo
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PMT: TDLabel
     Left = 240
     Top = 176
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -348,15 +415,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PMF: TDLabel
     Left = 176
     Top = 176
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -370,15 +443,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PFF: TDLabel
     Left = 176
     Top = 200
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -392,15 +471,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PFT: TDLabel
     Left = 240
     Top = 200
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -414,15 +499,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PMU: TDLabel
     Left = 112
     Top = 176
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -436,15 +527,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PFU: TDLabel
     Left = 112
     Top = 200
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -458,15 +555,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object EditDiskU: TDLabel
     Left = 112
     Top = 224
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -480,15 +583,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object EditDiskF: TDLabel
     Left = 176
     Top = 224
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -502,15 +611,21 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object EditDiskT: TDLabel
     Left = 240
     Top = 224
     Width = 57
     Height = 19
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
-    Layout = tlCenter
+    Alignment = taRightJustify
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -524,6 +639,11 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
+    Layout = tlCenter
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object EditOS: TEdit
     Left = 64
