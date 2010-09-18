@@ -127,6 +127,7 @@ var
 	DataDir,
 	SysDir, WinDir: string;
 	ExeFileName: TFileName;
+	ProgramFiles: string = 'C:\Program Files\';
 
 	ReadCount, WriteCount: UG;
 	ReadBytes, WriteBytes: U8;
@@ -137,7 +138,7 @@ function DelFileExt(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
 function BackDir(const Dir: string): string;
 function LegalFileName(const FileName: string): string;
-procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
 function GetFileSizeU(const FileName: TFileName): U8;
 function GetFileSizeS(const FileName: TFileName): string;
 function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
@@ -179,7 +180,7 @@ function LongToShortFileName(const LongName: string): string;
 function LongToShortPath(const LongName: string): string;
 {$ENDIF WIN32}
 
-procedure SelectPath(var Path: string; Handle: THandle);
+function SelectFolder(var Path: string; browseTitle: string = ''): BG;
 
 {
 	MapViewOfFile
@@ -191,7 +192,7 @@ procedure SelectPath(var Path: string; Handle: THandle);
 implementation
 
 uses
-	Dialogs, ShellAPI, ShlObj, Math,
+	Dialogs, ShellAPI, ShlObj, Math, Forms,
 	uError;
 
 constructor TFile.Create;
@@ -818,14 +819,13 @@ begin
 	end;
 end;
 
-procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
 var
-	FilesCount: SG;
 	NewSize: SG;
 	IsDir, IsFile: BG;
 	ErrorCode: Integer;
 
-		procedure ReadDir2(SubPath: string);
+		procedure ReadSubDir(SubPath: string);
 		var
 			SearchRec: TSearchRec;
 		begin
@@ -856,7 +856,7 @@ var
 
 				if IsDir and SubDirs then
 				begin
-					ReadDir2(SubPath + SearchRec.Name);
+					ReadSubDir(SubPath + SearchRec.Name);
 				end;
 				ErrorCode := FindNext(SearchRec);
 			end;
@@ -877,16 +877,14 @@ begin
 		if Path[Length(Path)] <> '\' then
 			Path := Path + '\';
 
-	FilesCount := Length(FileNames);
-	ReadDir2('');
-	SetLength(FileNames, FilesCount);
+	ReadSubDir('');
 
 	if Sort then
 	begin
-		Offset := Length(FileNames) div 2;
+		Offset := FilesCount div 2;
 		while Offset > 0 do
 		begin
-			MaxLimit := Length(FileNames) - Offset - 1;
+			MaxLimit := FilesCount - Offset - 1;
 			repeat
 				Switch := 0;
 				for i := 0 to MaxLimit do
@@ -1053,10 +1051,10 @@ end;
 
 function DirectoryExists(const Directory: string): Boolean;
 var
-	Code: Integer;
+	Code: Cardinal;
 begin
 	Code := GetFileAttributes(PChar(Directory));
-	Result := (Code <> -1) and (FILE_ATTRIBUTE_DIRECTORY and Code <> 0);
+	Result := (Code <> $ffffffff) and (FILE_ATTRIBUTE_DIRECTORY and Code <> 0);
 end;
 
 function CreateDir(const Dir: string): Boolean;
@@ -1263,7 +1261,8 @@ begin
 	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
 		SetLength(Line, F.FileSize);
-		if not F.BlockRead(Line[1], F.FileSize) then goto LRetry;
+		if Length(Line) >= 1 then
+			if not F.BlockRead(Line[1], F.FileSize) then goto LRetry;
 		F.Close;
 		Result := True;
 	end;
@@ -1495,39 +1494,122 @@ end;
 
 {$ENDIF WIN32}
 
-procedure SelectPath(var Path: string; Handle: THandle);
+
+var
+  lg_StartFolder: String;
+
+///////////////////////////////////////////////////////////////////
+// Call back function used to set the initial browse directory.
+///////////////////////////////////////////////////////////////////
+function BrowseForFolderCallBack(Wnd: HWND; uMsg: UINT;
+        lParam, lpData: LPARAM): Integer stdcall;
+begin
+  if uMsg = BFFM_INITIALIZED then
+    SendMessage(Wnd,BFFM_SETSELECTION,1,Integer(@lg_StartFolder[1]));
+  result := 0;
+end;
+
+///////////////////////////////////////////////////////////////////
+// This function allows the user to browse for a folder
+//
+// Arguments:-
+//    browseTitle : The title to display on the browse dialog.
+//  initialFolder : Optional argument. Use to specify the folder
+//                  initially selected when the dialog opens.
+//
+// Returns: The empty string if no folder was selected (i.e. if the
+//          user clicked cancel), otherwise the full folder path.
+///////////////////////////////////////////////////////////////////
+function SelectFolder(var Path: string; browseTitle: string = ''): BG;
+var
+	browse_info: TBrowseInfo;
+	folder: array[0..MAX_PATH] of char;
+	find_context: PItemIDList;
+begin
+	FillChar(browse_info,SizeOf(browse_info),#0);
+	lg_StartFolder := Path;
+	browse_info.pszDisplayName := @folder[0];
+	browse_info.lpszTitle := PChar(browseTitle);
+	browse_info.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI;
+	browse_info.hwndOwner := Application.Handle;
+	if Path <> '' then
+		browse_info.lpfn := BrowseForFolderCallBack;
+	find_context := SHBrowseForFolder(browse_info);
+	if Assigned(find_context) then
+	begin
+		Result := SHGetPathFromIDList(find_context, folder);
+		Path := folder;
+		if Length(Path) > 0 then
+			if Path[Length(Path)] <> '\' then Path := Path + '\';
+		GlobalFreePtr(find_context);
+	end
+	else
+		result := False;
+end;
+(*
 var
 	TitleName : string;
 	lpItemID : PItemIDList;
 	BrowseInfo : TBrowseInfo;
 //	DisplayName : array[0..MAX_PATH] of char;
-	TempPath : array[0..MAX_PATH] of char;
-	TempP: Shortstring;
+	TempPath : array[0..MAX_PATH] of Char;
 
 	I: TItemIdList;
 begin
+	if Path = '' then Path := 'C:\';
 	FillChar(BrowseInfo, SizeOf(TBrowseInfo), 0);
 	BrowseInfo.hwndOwner := Handle;
 //	TitleName := 'D:\';
-//	BrowseInfo.pszDisplayName := PChar(TitleName);
+	BrowseInfo.pszDisplayName := @Path[1];
 //	BrowseInfo.pszDisplayName := @DisplayName;
 	TitleName := 'Please specify a directory';
-	BrowseInfo.lpszTitle := @TitleName[1];
-//	BrowseInfo.iImage := 1;
-	BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
-	TempP:= 'D:\' + CharNul;
+	FillChar(I, SizeOf(I), 0);
 	I.mkid.cb := 1;
-	I.mkid.abID[0] := Byte('D');
+	I.mkid.abID[0] := Byte('C');
 //	BrowseInfo.pidlRoot := @I;
+	BrowseInfo.lpszTitle := @TitleName[1];
+	BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI;
+	BrowseInfo.lpfn := nil;
 	BrowseInfo.lParam := 0;
+	BrowseInfo.iImage := 1;
+
+	Move(Path[1], TempPath, Length(Path)); // := Path + CharNul;
+
 	lpItemID := SHBrowseForFolder(BrowseInfo);
 	if lpItemId <> nil then
 	begin
-		SHGetPathFromIDList(lpItemID, TempPath);
+		Result := SHGetPathFromIDList(lpItemID, TempPath);
 		Path := StrPas(TempPath);
 		GlobalFreePtr(lpItemID);
+	end
+	else
+		Result := False;
+end;   *)
+
+(*
+function SelectDirectory(var Dir: string): BG;
+(*var OpenDialog1: TOpenDialog;
+begin
+	OpenDialog1 := TOpenDialog.Create(nil);
+	try
+		if Dir = '' then Dir := WorkDir;
+		OpenDialog1.FileName := '*.*';
+		OpenDialog1.InitialDir := ExtractFilePath(Dir);
+		OpenDialog1.Options := OpenDialog1.Options + [ofPathMustExist];
+		OpenDialog1.Options := OpenDialog1.Options - [ofFileMustExist];
+		if OpenDialog1.Execute then
+		begin
+			Result := True;
+			Dir := ExtractFilePath(OpenDialog1.FileName);
+		end
+		else
+			Result := False;
+	finally
+		OpenDialog1.Free;
 	end;
-end;
+begin
+	FileCtrl.SelectDirectory('Select Direcotry...', Dir, Dir);
+end;*)
 
 initialization
 	InitPaths;

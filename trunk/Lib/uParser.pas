@@ -626,7 +626,7 @@ type
 		function SourcePos: Longint;
 		function TokenComponentIdent: string;
 		function TokenFloat: Extended;
-		function TokenInt: Int64;
+		function TokenInt: Integer;
 		function TokenString: string;
 		function TokenWideString: WideString;
 		function TokenSymbolIs(const S: string): Boolean;
@@ -1456,9 +1456,9 @@ begin
 	Result := ReadFA(-MaxExtended, 0, MaxExtended);
 end;
 
-function TDParser.TokenInt: Int64;
+function TDParser.TokenInt: Integer;
 begin
-	Result := ReadSG(MinInt, 0, MaxInt);
+	Result := ReadSG(Low(Result), 0, High(Result));
 end;
 
 function TDParser.TokenString: string;

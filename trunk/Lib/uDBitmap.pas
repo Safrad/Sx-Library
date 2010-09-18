@@ -1147,7 +1147,9 @@ begin
 		{		MyGif.Transparent := Transparent;
 		MyGif.BackgroundColor := TransparentColor;}
 //		MyGif.DitherMode :=
-		MyGif.Assign(Self);
+		MyBmp := TBitmap.Create;
+		GetBitmap(MyBmp);
+		MyGif.Assign(MyBmp);
 //		B.Free;
 //		MyGif.GlobalColorMap
 //		Self.PixelFormat := pf24bit;
@@ -1159,11 +1161,12 @@ begin
 			Stream := TMemoryStream.Create;
 			MyGif.SaveToStream(Stream);
 			Result := WriteStreamToFile(FileName, Stream);
-			Stream.Free;
+			FreeAndNil(Stream);
 		except
 			on E: Exception do ErrorMessage(E.Message);
 		end;
-//		MyGif.Free;
+		FreeAndNil(MyBmp);
+		FreeAndNil(MyGif);
 	end
 	else if Ext = 'png' then
 	begin
@@ -1177,8 +1180,8 @@ begin
 			MyGif.Assign(Self);
 			MyBmp := TBitmap.Create;
 			MyBmp.Assign(MyGif);
-{			MyBmp.Transparent := True;
-			MyBmp.TransparentColor := TransparentColor;}
+			MyBmp.Transparent := True;
+			MyBmp.TransparentColor := TransparentColor;
 			MyGif.Free;
 			MyPng.Assign(MyBmp);
 			MyBmp.Free;

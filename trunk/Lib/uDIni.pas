@@ -94,6 +94,7 @@ type
 		procedure RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: Boolean);
 		procedure RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: Boolean);
 		procedure RWComboBox(Section: string; ComboBox: TComboBox; const Save: Boolean);
+		procedure RWEdit(Section: string; Edit: TEdit; const Save: Boolean);
 		procedure RWButton(Section: string; Button: TDButton; const Save: Boolean);
 		procedure RWMemo(Section: string; Memo: TMemo; const Save: Boolean);
 
@@ -228,7 +229,7 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValS8(IntStr, False, MinInt, Default, MaxInt, 1);
+	Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
 end;
 
 procedure TDIniFile.WriteSG(const Section, Ident: string; Value: SG);
@@ -242,7 +243,7 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI(IntStr, False, MinInt, Default, MaxInt, 1);
+	Result := StrToValI(IntStr, False, Low(Result), Default, High(Result), 1);
 end;
 
 procedure TDIniFile.WriteS4(const Section, Ident: string; Value: S4);
@@ -256,7 +257,7 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValS8(IntStr, False, MinInt8, Default, MaxInt8, 1);
+	Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
 end;
 
 procedure TDIniFile.WriteS8(const Section, Ident: string; Value: Int64);
@@ -1112,6 +1113,18 @@ begin
 		ComboBox.Text := MainIni.RWStringF(Section, Name, ComboBox.Text, ComboBox.Text, Save);
 	end;
 	ComboBox.OnChange := NotifyEvent;
+end;
+
+procedure TDIniFile.RWEdit(Section: string; Edit: TEdit; const Save: Boolean);
+var
+	Name: string;
+	NotifyEvent: TNotifyEvent;
+begin
+	Name := ButtonNameToFileName(Edit.Name, False);
+	NotifyEvent := Edit.OnChange;
+	Edit.OnChange := nil;
+	Edit.Text := MainIni.RWStringF(Section, Name, Edit.Text, Edit.Text, Save);
+	Edit.OnChange := NotifyEvent;
 end;
 
 procedure TDIniFile.RWButton(Section: string; Button: TDButton; const Save: Boolean);

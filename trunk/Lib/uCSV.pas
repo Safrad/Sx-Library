@@ -393,39 +393,6 @@ begin
 	MainIni.RWFormPos(Self, False);
 end;
 
-procedure ReadDBF;
-type
-	TDBFHead = packed record
-		Name: array[0..10] of Char; // 11
-		ValueType: array[0..4] of Char; // 5
-		Size: U1;
-		Decimal: U1;
-		Reserved: array[0..13] of U1; // 14
-	end;
-var
-	DBFHead: TDBFHead;
-
-begin
-{	while True do D???
-	begin
-		case DBFHead.ValueType[0] of
-		'N':
-		'F':
-		'C':
-		'D':
-		'L':
-		'M':
-		'O':
-		'B':
-		end;
-
-		if Name[0] = $0D then
-		begin
-			Break
-		end;
-	end;}
-end;
-
 procedure TfFormats.FormDblClick(Sender: TObject);
 begin
 	// Auto Assign

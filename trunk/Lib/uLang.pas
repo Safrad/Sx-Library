@@ -53,10 +53,10 @@ uses
 type
 	TCzLetters = array[0..29] of Char;
 const
-	CZX: array [TCodePage] of TCzLetters =
+	CZX: array[TCodePage] of TCzLetters =
 	 ('ACDEEINORSTUUYZacdeeinorstuuyz', // ASCII
-		'ΑΘΟΙΜΝÒΣΨΪΩέαθοιμνςσψϊωύ', // CP1250
-		'µ¬Ò·ΦΥΰόζ›ιήν¦ Τ‚Ψ΅εΆύη£…μ§', // CP852 (LATIN 2)
+		'ΑΘΟΙΜΝÒΣΨΪΩέαθοιμνςσψϊωύ', // ANSI-CP1250
+		'µ¬Ò·ΦΥΰόζ›ιήν¦ Τ‚Ψ΅εΆύη£…μ§', // OEM-CP852 (LATIN 2)
 		'ΑΘΟΙΜΝÒΣΨ©«ΪΩέ®αθοιμνςσψΉ»ϊωύΎ', // ISO-8859-2
 		'€…‰‹¥•›†—¦’ ‡ƒ‚΅¤Ά©¨£–‘', // KEYBCS2 (Kamenicky)
 		'η‰‘ƒκΕξΫαθςρψλ‡‹“’Λ—ήδισωμ', // MAC CE
@@ -70,6 +70,19 @@ const
 		'ΑΘΟΙΜΝÒΣΨΪ΅έαθομινςσψϊ΅ύ', // vavrusa
 		'ΑΘΟΙΜΝÒΣ+Ϊ΅έ΅αθοιμνςσψϊωύ'); // navi
 
+{
+Unicode
+Α	00C1	Ν	00CD		0164
+α	00E1	ν	00ED		0165
+Θ	010C	Ò	0147	Ϊ	00DA
+θ	010D	ς	0148	ϊ	00FA
+Ο	010E	Σ	00D3	Ω	016E
+ο	010F	σ	00F3	ω	016F
+Ι	00C9	Ψ	0158	έ	00DD
+ι	00E9	ψ	0159	ύ	00FD
+Μ	011A		0160		017D
+μ	011B		0161		017E
+}
 
 procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage);
 var

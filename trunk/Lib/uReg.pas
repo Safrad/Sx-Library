@@ -12,10 +12,10 @@ interface
 
 uses Windows;
 
-const
-	WordPad = '"C:\Program Files\Accessories\WordPad.exe" "%1"';
+{const
+	WordPad = '"' + ProgramFiles + 'Accessories\WordPad.exe" "%1"';
 	NotePad = 'NotePad.exe "%1"';
-	Edit = 'Edit.com %1';
+	Edit = 'Edit.com %1';}
 type
 	TFileTypesOperation = (foCreate, foDelete, foExists);
 
@@ -27,6 +27,7 @@ function CustomFileType(
 	): Boolean;
 
 procedure CreateReg(var OutStr: string; RootKey: HKEY; Key: string);
+function ShellFolder(Name: string): string;
 
 implementation
 
@@ -496,17 +497,32 @@ var
 		end;
 	end;
 
-  var 		Str: TStrings;
-
-	begin
+var Str: TStrings;
+begin
 	OutStr := 'REGEDIT4' + CharCR+ CharLF;
 	Reg := TRegistry.Create;
 	Reg.RootKey := RootKey;
-			Str := TStringList.Create;
+	Str := TStringList.Create;
 	Reg.GetKeyNames(Str);
 	Sub(Key);
 	Reg.Free;
 end;
 
+function ShellFolder(Name: string): string;
+var
+	Reg: TRegistry;
+	Key: string;
+begin
+	Reg := TRegistry.Create;
+	Reg.RootKey := HKEY_CURRENT_USER;
+	Key := 'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\';
+	if Reg.KeyExists(Key) then
+	begin
+		Reg.OpenKey(Key, False);
+		Result := Reg.ReadString(Name) + '\';
+		Reg.CloseKey;
+	end;
+	Reg.Free;
+end;
 
 end.
