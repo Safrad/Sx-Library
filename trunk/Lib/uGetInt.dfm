@@ -1,6 +1,6 @@
 object fGetInt: TfGetInt
-  Left = 551
-  Top = 111
+  Left = 380
+  Top = 322
   ActiveControl = EditInput
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
@@ -104,38 +104,9 @@ object fGetInt: TfGetInt
     TransparentColorValue = clBlack
     WordWrap = False
   end
-  object DLabelError: TDLabel
-    Left = 16
-    Top = 50
-    Width = 313
-    Height = 31
-    AlphaBlend = False
-    AlphaBlendValue = 0
-    AutoSize = False
-    Alignment = taLeftJustify
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BorderStyle = bsSingle
-    Layout = tlCenter
-    Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
-  end
   object EditInput: TEdit
     Left = 16
-    Top = 26
+    Top = 24
     Width = 113
     Height = 19
     AutoSize = False
@@ -242,7 +213,7 @@ object fGetInt: TfGetInt
   end
   object SpinButton1: TSpinButton
     Left = 136
-    Top = 25
+    Top = 23
     Width = 17
     Height = 22
     DownGlyph.Data = {
@@ -292,5 +263,15 @@ object fGetInt: TfGetInt
     ParentFont = False
     TabOrder = 9
     Visible = False
+  end
+  object EditError: TMemo
+    Left = 16
+    Top = 48
+    Width = 307
+    Height = 33
+    ParentColor = True
+    ReadOnly = True
+    ScrollBars = ssVertical
+    TabOrder = 13
   end
 end

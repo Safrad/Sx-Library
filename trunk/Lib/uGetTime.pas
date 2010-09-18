@@ -43,6 +43,7 @@ type
 		SpinButtonD: TSpinButton;
 		ButtonDef: TDButton;
     ButtonApply: TDButton;
+    EditError: TMemo;
 		procedure EditInputChange(Sender: TObject);
 		procedure TrackBarHMSDChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
@@ -76,7 +77,7 @@ function GetTimeS8(const Prompt: string;
 implementation
 
 {$R *.DFM}
-uses uStrings, uError;
+uses uStrings, uError, uInput;
 
 var
 	fGetTime: TfGetTime;
@@ -248,14 +249,19 @@ end;
 
 procedure TfGetTime.EditInputChange(Sender: TObject);
 begin
-	NowVal := SToMs(EditInput.Text);
-	if NowVal < TMinVal then
+	EditInput.OnChange := nil;
+	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal);
+{	if NowVal < TMinVal then
 		NowVal := TMinVal
 	else if NowVal > TMaxVal then
-		NowVal := TMaxVal;
+		NowVal := TMaxVal;}
+
+	MesToMemo(EditError);
+
 	InitButtons;
 	InitTrackBar;
 	ChangeTime;
+	EditInput.OnChange := EditInputChange;
 end;
 
 procedure TfGetTime.TrackBarHMSDChange(Sender: TObject);

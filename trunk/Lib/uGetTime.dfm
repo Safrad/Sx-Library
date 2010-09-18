@@ -1,10 +1,10 @@
 object fGetTime: TfGetTime
-  Left = 345
-  Top = 166
+  Left = 157
+  Top = 107
   ActiveControl = EditInput
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
-  ClientHeight = 272
+  ClientHeight = 283
   ClientWidth = 362
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object fGetTime: TfGetTime
   TextHeight = 13
   object Label1: TDLabel
     Left = 8
-    Top = 68
+    Top = 92
     Width = 17
     Height = 17
     AlphaBlend = False
@@ -48,7 +48,7 @@ object fGetTime: TfGetTime
   end
   object Label2: TDLabel
     Left = 8
-    Top = 108
+    Top = 132
     Width = 17
     Height = 17
     AlphaBlend = False
@@ -77,7 +77,7 @@ object fGetTime: TfGetTime
   end
   object Label3: TDLabel
     Left = 8
-    Top = 148
+    Top = 172
     Width = 17
     Height = 17
     AlphaBlend = False
@@ -106,7 +106,7 @@ object fGetTime: TfGetTime
   end
   object Label4: TDLabel
     Left = 8
-    Top = 188
+    Top = 212
     Width = 17
     Height = 17
     AlphaBlend = False
@@ -135,7 +135,7 @@ object fGetTime: TfGetTime
   end
   object LabelH: TDLabel
     Left = 312
-    Top = 68
+    Top = 92
     Width = 20
     Height = 17
     AlphaBlend = False
@@ -164,7 +164,7 @@ object fGetTime: TfGetTime
   end
   object LabelM: TDLabel
     Left = 312
-    Top = 108
+    Top = 132
     Width = 20
     Height = 17
     AlphaBlend = False
@@ -193,7 +193,7 @@ object fGetTime: TfGetTime
   end
   object LabelS: TDLabel
     Left = 312
-    Top = 148
+    Top = 172
     Width = 20
     Height = 17
     AlphaBlend = False
@@ -222,7 +222,7 @@ object fGetTime: TfGetTime
   end
   object LabelD: TDLabel
     Left = 312
-    Top = 188
+    Top = 212
     Width = 20
     Height = 17
     AlphaBlend = False
@@ -251,7 +251,7 @@ object fGetTime: TfGetTime
   end
   object TrackBarH: TTrackBar
     Left = 32
-    Top = 64
+    Top = 88
     Width = 273
     Height = 28
     Ctl3D = True
@@ -270,7 +270,7 @@ object fGetTime: TfGetTime
   end
   object TrackBarM: TTrackBar
     Left = 32
-    Top = 104
+    Top = 128
     Width = 259
     Height = 28
     Max = 59
@@ -288,7 +288,7 @@ object fGetTime: TfGetTime
   end
   object TrackBarS: TTrackBar
     Left = 32
-    Top = 144
+    Top = 168
     Width = 259
     Height = 28
     Max = 59
@@ -306,7 +306,7 @@ object fGetTime: TfGetTime
   end
   object TrackBarD: TTrackBar
     Left = 32
-    Top = 184
+    Top = 208
     Width = 223
     Height = 28
     Max = 1000
@@ -324,7 +324,7 @@ object fGetTime: TfGetTime
   end
   object ButtonOk: TDButton
     Left = 192
-    Top = 240
+    Top = 248
     Width = 73
     Height = 25
     Caption = '&OK'
@@ -341,7 +341,7 @@ object fGetTime: TfGetTime
   end
   object ButtonCancel: TDButton
     Left = 280
-    Top = 240
+    Top = 248
     Width = 73
     Height = 25
     Cancel = True
@@ -357,9 +357,9 @@ object fGetTime: TfGetTime
     OnClick = ButtonCancelClick
   end
   object EditInput: TEdit
-    Left = 40
-    Top = 16
-    Width = 129
+    Left = 16
+    Top = 24
+    Width = 161
     Height = 19
     AutoSize = False
     MaxLength = 15
@@ -368,7 +368,7 @@ object fGetTime: TfGetTime
   end
   object ButtonMin: TDButton
     Left = 192
-    Top = 16
+    Top = 24
     Width = 48
     Height = 18
     Caption = 'Min'
@@ -398,7 +398,7 @@ object fGetTime: TfGetTime
   end
   object ButtonMax: TDButton
     Left = 304
-    Top = 16
+    Top = 24
     Width = 48
     Height = 18
     Caption = 'Max'
@@ -414,7 +414,7 @@ object fGetTime: TfGetTime
   object SpinButtonH: TSpinButton
     Tag = 3600000
     Left = 336
-    Top = 64
+    Top = 88
     Width = 17
     Height = 25
     Ctl3D = True
@@ -440,7 +440,7 @@ object fGetTime: TfGetTime
   object SpinButtonS: TSpinButton
     Tag = 1000
     Left = 336
-    Top = 144
+    Top = 168
     Width = 17
     Height = 25
     DownGlyph.Data = {
@@ -464,7 +464,7 @@ object fGetTime: TfGetTime
   object SpinButtonM: TSpinButton
     Tag = 60000
     Left = 336
-    Top = 104
+    Top = 128
     Width = 17
     Height = 25
     Ctl3D = True
@@ -490,7 +490,7 @@ object fGetTime: TfGetTime
   object SpinButtonD: TSpinButton
     Tag = 100
     Left = 336
-    Top = 184
+    Top = 208
     Width = 17
     Height = 25
     Ctl3D = True
@@ -530,7 +530,7 @@ object fGetTime: TfGetTime
   end
   object ButtonApply: TDButton
     Left = 8
-    Top = 240
+    Top = 248
     Width = 73
     Height = 25
     Caption = '&Apply'
@@ -542,5 +542,15 @@ object fGetTime: TfGetTime
     ParentFont = False
     TabOrder = 23
     Visible = False
+  end
+  object EditError: TMemo
+    Left = 16
+    Top = 48
+    Width = 339
+    Height = 33
+    ParentColor = True
+    ReadOnly = True
+    ScrollBars = ssVertical
+    TabOrder = 24
   end
 end

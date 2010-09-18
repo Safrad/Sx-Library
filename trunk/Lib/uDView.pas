@@ -18,7 +18,7 @@ uses
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
 
-	TColumn = packed record
+	TColumn = packed record // 16
 		Caption: string; // 4
 		Width, MaxWidth: S4; // 8
 		Click: B1; // 1

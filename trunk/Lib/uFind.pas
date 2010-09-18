@@ -14,13 +14,14 @@ uses uAdd;
 // AValue is Sorted Array
 function FindS4(AValue: PArrayS4; var FromV, ToV: SG;	const Value: S4; FindGroup: BG): Boolean;
 
-function FindIS(var AIndex: array of SG; var AValue: array of string;
+function FindIS(AIndex: array of SG; AValue: array of string;
 	const Value: string; out FromV, ToV: SG): Boolean;
-function FindS(var AValue: array of string;
+function FindS(AValue: array of string;
 	const Value: string; out FromV, ToV: SG): Boolean;
 
 function Find(SubStr, Str: string): SG; overload;
 function Find(SubStr, Str: string; FromPos: SG): SG; overload;
+function Find(SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
 
 implementation
 
@@ -165,7 +166,7 @@ begin
 //	Result := Value = AValue[L];
 end;
 
-function FindIS(var AIndex: array of SG; var AValue: array of string;
+function FindIS(AIndex: array of SG; AValue: array of string;
 	const Value: string; out FromV, ToV: SG): Boolean;
 const
 	MinIndex = 0;
@@ -174,15 +175,19 @@ type
 var
 	L, R, M: TIndex;
 	MaxIndex: TIndex;
-//	i: SG;
+	{$ifopt d+}
+	i: SG;
+	{$endif}
 begin
 	MaxIndex := Length(AValue) - 1;
 
-{	for i := MinIndex to MaxIndex - 1 do
+	{$ifopt d+}
+	for i := MinIndex to MaxIndex - 1 do
 	begin
 		if AValue[AIndex[i]] > AValue[AIndex[i]] then
 			IE(445);
-	end;}
+	end;
+	{$endif}
 
 	L := MinIndex;
 	R := MaxIndex;
@@ -197,7 +202,7 @@ begin
 	ToV := R;
 end;
 
-function FindS(var AValue: array of string;
+function FindS(AValue: array of string;
 	const Value: string; out FromV, ToV: SG): Boolean;
 const
 	MinIndex = 0;
@@ -206,8 +211,19 @@ type
 var
 	L, R, M: TIndex;
 	MaxIndex: TIndex;
+	{$ifopt d+}
+	i: SG;
+	{$endif}
 begin
 	MaxIndex := Length(AValue) - 1;
+
+	{$ifopt d+}
+	for i := MinIndex to MaxIndex - 1 do
+	begin
+		if AValue[i] > AValue[i + 1] then
+			IE(446);
+	end;
+	{$endif}
 
 	L := MinIndex;
 	R := MaxIndex;
@@ -226,17 +242,22 @@ end;
 // Standard
 function Find(SubStr, Str: string): SG;
 begin
-	Result := Find(SubStr, Str, 1);
+	Result := Find(SubStr, Str, 1, Length(Str));
 end;
 
 function Find(SubStr, Str: string; FromPos: SG): SG;
+begin
+	Result := Find(SubStr, Str, FromPos, Length(Str));
+end;
+
+function Find(SubStr, Str: string; FromPos, ToPos: SG): SG;
 label LNFound;
 var i, j: SG;
 begin
 	Result := 0;
 	if FromPos < 1 then FromPos := 1;
 	i := FromPos - 1;
-	while i <= Length(Str) - Length(SubStr) do
+	while i <= ToPos - Length(SubStr) do
 	begin
 		for j := 0 to Length(SubStr) - 1 do
 			if  Str[i + j + 1] <> SubStr[j + 1] then goto LNFound;
@@ -246,6 +267,8 @@ begin
 		i := i + 1;
 	end;
 end;
+
+
 {
 // Knuth, Morris, Pratt (KMP)
 function FindKMP(SubStr, Str: string): SG;
