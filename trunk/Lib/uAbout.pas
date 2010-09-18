@@ -46,7 +46,7 @@ type
 		Image4: TImage;
 		SysInfo1: TDButton;
     DButtonMemoryStatus: TDButton;
-    DLabel1: TDLabel;
+		DLabel1: TDLabel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -64,8 +64,8 @@ type
 		procedure ImageNameFill(Sender: TObject);
 		procedure ImageVersionFill(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
-    procedure DButtonMemoryStatusClick(Sender: TObject);
-    procedure FormHide(Sender: TObject);
+		procedure DButtonMemoryStatusClick(Sender: TObject);
+		procedure FormHide(Sender: TObject);
 	private
 		Effect: Byte;
 		Typ: Byte;
@@ -79,6 +79,7 @@ type
 	end;
 
 procedure ReadMe;
+procedure Help;
 procedure ExecuteAbout(AOwner: TComponent; Version, Build: string;
 	FileName: TFileName; const Modal: Boolean);
 procedure AboutRW(const Save: Boolean);
@@ -117,7 +118,19 @@ var
 	FileName: TFileName;
 	ErrorCode: U4;
 begin
-	FileName := WorkDir + 'ReadMe.htm';
+//	FileName := '"' + WorkDir + 'ReadMe.htm"';
+	FileName := LongToShortPath(WorkDir + 'ReadMe.htm');
+	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
+	if ErrorCode <= 32 then
+		IOError(FileName, ErrorCode);
+end;
+
+procedure Help;
+var
+	FileName: TFileName;
+	ErrorCode: U4;
+begin
+	FileName := LongToShortPath(WorkDir + 'Help.rtf');
 	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
 	if ErrorCode <= 32 then
 		IOError(FileName, ErrorCode);
@@ -173,9 +186,9 @@ begin
 	end;
 
 	if Save then
-		s := 'Finished'
+		s := 'F'
 	else
-		s := 'Started';
+		s := 'S';
 
 	s := s + CharTab + DateTimeToS(Now) + CharCR + CharLF;
 	FileName := DelFileExt(ExeFileName) + '.log';

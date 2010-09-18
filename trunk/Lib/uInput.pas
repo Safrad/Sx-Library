@@ -26,6 +26,7 @@ type
 			itLess, itBigger, itEqual,
 			itComma, itComma2, // , ;
 			itPoint, itDoublePoint, // . :
+			itExclamation, // !
 			// 2
 			itAssign,
 			// Var
@@ -219,34 +220,52 @@ var
 	LineBegin: BG;
 
 type
-	TGonFormat = (gfRad, gfGrad, gfDeg);
+	TGonFormat = (gfRad, gfGrad, gfCycle, gfDeg);
 var
 	GonFormat: TGonFormat;
-{	IdentNames: array of string;
-	IdentValues: array of Extended;}
 
 procedure ReadInput;
 
 type
 	TOperator = (opNone, opNumber, opIdent,
-//		opUnarMinus,
+//		opUnarMinus, implemented as opMinus with firts argument nil
 		opPlus, opMinus, opMul, opDiv, opMod,
-		opAbs, opNeg, opInv, opNot, opInc, opDec, opFact,
-		opPower, opExp, opLn, opSqr, opSqrt,
-		opSin, opCos, opTan, opArcSin, opArcCos, opArcTan,
-		opHypSin, opHypCos,
+		opRound, opTrunc, opAbs, opNeg, opInv, opNot, opInc, opDec, opFact, opGCD, opLCM,
+		opPower, opExp, opLn, opLog, opSqr, opSqrt,
+		opSin, opCos, opTan,
+		opArcSin, opArcCos, opArcTan,
+		opSinh, opCosh, opTanh,
+		opArcSinh, opArcCosh, opArcTanh,
 		opAvg, opMin, opMax,
-		opShl, opShr);
+		opRandom,
+		opShl, opShr, opAnd, opOr, opXor, opXnor);
 const
 	FcNames: array[TOperator] of string = (
 		'', '', '',
+		// Main
 		'PLUS', 'MINUS', 'MUL', 'DIV', 'MOD',
-		'ABS', 'NEG', 'INV', 'NOT', 'INC', 'DEC', 'FACT',
-		'POWER', 'EXP', 'LN', 'SQR', 'SQRT',
-		'SIN', 'COS', 'TAN', 'ARCSIN', 'ARCCOS', 'ARCTAN',
-		'HYPSIN', 'HYPCOS',
+		// Single
+		'ROUND', 'TRUNC', 'ABS', 'NEG', 'INV', 'NOT', 'INC', 'DEC', 'FACT', 'GCD', 'LCM',
+		// Exponencial
+		'POWER', 'EXP', 'LN', 'LOG', 'SQR', 'SQRT',
+		// Goniometric
+		'SIN', 'COS', 'TAN',
+		'ARCSIN', 'ARCCOS', 'ARCTAN',
+		'SINH', 'COSH', 'TANH',
+		'ARCSINH', 'ARCCOSH', 'ARCTANH',
+		// Statistics
 		'AVG', 'MIN', 'MAX',
-		'SHL', 'SHR');
+		'RANDOM',
+		// Logical
+		'SHL', 'SHR', 'AND', 'OR', 'XOR', 'XNOR');
+		{
+		b	a	| 0 and or xor xnor 1
+		0	0	  0  0  0   0   1   1
+		0	1   0  0  1   1   0   1
+		1	0   0  0  1   1   0   1
+		1	1   0  1  1   0   1   1
+		}
+
 
 // Compiler
 type
@@ -304,6 +323,10 @@ type
 	end;
 var
 	Root: PNode;
+	TreeSize: SG;
+	MaxBracketDepth,
+	TreeDepth,
+	NodeCount: SG;
 
 var
 	CharsTable: array[Char] of (ctSpace, ctLetter, ctIllegal, ctNumber, ctNumber2,
@@ -334,6 +357,7 @@ type
 		mtUnterminatedString,
 		mtIllegalChar,
 		mtIdentifierExpected,
+		mtExpressionExpected,
 		mtStringExpected,
 		mtStrokeOrSemicolonExpected, // , ;
 		mtStrokeOrColonExpected, // , :
@@ -392,6 +416,7 @@ const
 		'Unterminated string',
 		'Illegal character in input file: ''%1''',
 		'Identifier expected but ''%1'' found',
+		'Expression expected but ''%1'' found',
 		'string constant expected but identifier ''%1'' found',
 		''','' or '';'' expected but identifier ''%1'' found',
 		''','' or '':'' expected but identifier ''%1'' found',
@@ -476,11 +501,16 @@ function StrToValU1(Line: string; const UseWinFormat: BG;
 
 function MesToString(M: PCompileMes): string;
 
+function FreeTree(var Node: PNode): BG;
+
 implementation
 
 uses
 	Dialogs, Math,
 	uStrings, uError, uFind;
+
+var
+	BracketDepth: SG;
 
 procedure FillCharsTable;
 var
@@ -491,11 +521,11 @@ begin
 	// Make Char Table
 	for c := Low(Char) to High(Char) do
 		case c of
-		' ': //for c2 := 'a' to 'x' do ; repeat until True; D??? Test
+		' ': 
 		CharsTable[c] := ctSpace;
 		'a'..'z', 'A'..'Z', '_': CharsTable[c] := ctLetter;
 		'0'..'9': CharsTable[c] := ctNumber;
-		'!', '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharsTable[c] := ctNumber2;
+		{'!',} '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharsTable[c] := ctNumber2;
 		'+': CharsTable[c] := ctPlus;
 		'-': CharsTable[c] := ctMinus;
 		'^': CharsTable[c] := ctExp;
@@ -586,7 +616,7 @@ end;
 
 function EOI: BG;
 begin
-	Result := BufRI >= BufRC; // D??? >, >=
+	Result := BufRI >= BufRC;
 end;
 
 procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
@@ -656,13 +686,16 @@ begin
 					'%': Per := True;
 					'#': Base := 2;
 					'O', 'o': Base := 8;
-					'!': Base := 10;
+					{'!': Base := 10;}
 					'$', 'x', 'X', 'h', 'H': Base := 16;
 					'*', '/', ':', '^', ')', '(': Break;
 					'-', '+': if (Base <> 10) or (UpCase(BufR[BufRI - 1]) <> 'E') then Break else UnarExp := True;
 					',':
 					begin
-						if BufR[BufRI + 1] = ' ' then Break;
+						if BufR[BufRI + 1] = ' ' then
+						begin
+							Break;
+						end;
 					end
 					else
 					begin
@@ -934,10 +967,10 @@ begin
 					end;
 				end;
 			end
-			else if (BufR[BufRI] = '}') or
-				((BufR[BufRI] = '*') and (BufR[BufRI + 1] = ')')) then
+			else if ((Marks = maGlobalP) and (BufR[BufRI] = '}')) or
+				((Marks = maGlobalA) and (BufR[BufRI] = '*') and (BufR[BufRI + 1] = ')')) then
 			begin
-				if Marks <> maString then
+(*				if Marks <> maString then
 				begin
 					if BufR[BufRI] = '}' then
 					begin
@@ -947,7 +980,8 @@ begin
 					begin
 						if Marks = maGlobalA then Marks := maNone;
 					end;
-				end;
+				end;*)
+				Marks := maNone;
 				if BufR[BufRI] = '*' then Inc(BufRI);
 			end
 			else if (BufR[BufRI] = '/') and (BufR[BufRI + 1] = '/') then
@@ -1010,7 +1044,6 @@ begin
 							LastBufIR := BufRI;
 						end;
 						goto LNoAdd;}
-	//					if IsIdent = False then Break; // D??? Tmp
 						StartIndex := BufRI;
 						while CharsTable[BufR[BufRI]] in [ctLetter, ctNumber] do
 						begin
@@ -1073,6 +1106,7 @@ begin
 						'=': InputType := itEqual;
 						',': InputType := itComma;
 						'.': InputType := itPoint;
+						'!': InputType := itExclamation;
 						':':
 						begin
 							if BufR[BufRI + 1] = '=' then
@@ -1118,13 +1152,12 @@ begin
 
 //		if TabCount <>
 	// Warning While/while D???
-	// Warning EOI
 end;
 
 function CompareS(OldS, NewS: string): Boolean;
 begin
 	Result := UpperCase(OldS) = UpperCase(NewS);
-	if {FoundCase and} Result then // D??? move to ReadIdent
+	if {FoundCase and} Result then // D??? move to ReadInput
 	begin
 		if OldS <> NewS then
 		begin
@@ -1240,17 +1273,38 @@ G -> P G2
 G2 -> ^ P G2
 G2 ->
 
-P -> Number, Const, Var
-P -> Sin(E)
-P -> Avg(E, E, ...)
-P -> Sin(E)
+P -> [Number, Const, Var] Q
+P -> Sin(E) Q
+P -> Avg(E, E, ...) Q
+P -> Sin(E) Q
 ...
-P -> (E)
+P -> (E) Q
+
+Q -> !
+Q ->
 
 }
 
-function NodeE(Node: PNode; Num: BG): PNode; forward;
+function NodeE(Node: PNode): PNode; forward;
 //	function NodeE: PNode; forward;
+
+function NodeQ(Node: PNode): PNode;
+begin
+	case InputType of
+	itExclamation:
+	begin
+		GetMem(Result, 1 + 2 + 1 * 4);
+		Inc(TreeSize, 1 + 2 + 1 * 4);
+		Inc(NodeCount);
+		Result.Operation := opFact;
+		Result.ArgCount := 1;
+		Result.Args[0] := Node;
+		ReadInput;
+	end;
+	else
+		Result := Node;
+	end;
+end;
 
 function NodeP: PNode;
 var Operation: TOperator;
@@ -1258,6 +1312,8 @@ var Operation: TOperator;
 	function NodeArg: PNode;
 	begin
 		GetMem(Result, 1 + 2);
+		Inc(TreeSize, 1 + 2);
+		Inc(NodeCount);
 		Result.Operation := Operation;
 		Result.ArgCount := 0;
 		ReadInput;
@@ -1270,7 +1326,7 @@ var Operation: TOperator;
 				case InputType of
 				itEOI:
 				begin
-					AddMes2(mtExpected, [')', Id]);
+					AddMes2(mtExpected, [''')'', '','' or expression', Id]);
 					Exit;
 				end;
 				itRBracket:
@@ -1286,12 +1342,12 @@ var Operation: TOperator;
 				else
 				begin
 					ReallocMem(Result, 1 + 2 + 4 * (Result.ArgCount + 1));
+					Inc(TreeSize, 4);
+					Inc(NodeCount);
 					Result.Operation := Operation;
-					Result.Args[Result.ArgCount] := NodeE(nil, True);
+					Result.Args[Result.ArgCount] := NodeE(nil);
 					Inc(Result.ArgCount);
 				end;
-{					else
-					AddMes2(mtExpected, ['Expression , or )', Id]);}
 				end;
 			end;
 		end;
@@ -1309,14 +1365,19 @@ begin
 	itInteger, itReal:
 	begin
 		GetMem(Result, 1 + 10);
+		Inc(TreeSize, 1 + 10);
+		Inc(NodeCount);
 		Result.Operation := opNumber;
 		Result.Num := IdNumber;
 		ReadInput;
 	end;
 	itLBracket:
 	begin
+		Inc(BracketDepth); if BracketDepth > MaxBracketDepth then MaxBracketDepth := BracketDepth;
 		ReadInput;
-		Result := NodeE(nil, True);
+		Result := NodeE(nil);
+{		if Result = nil then
+			AddMes2(mtExpressionExpected, [Id]); D???}
 		if InputType <> itRBracket then
 		begin
 			AddMes2(mtExpected, [')', Id]);
@@ -1337,18 +1398,23 @@ begin
 
 		if Result = nil then
 		begin
-			VF := IsVarFunc(Id, 0, UnitSystem); // D???
+			VF := IsVarFunc(Id, 0, UnitSystem);
 			if VF <> nil then
 			begin
 				GetMem(Result, 1 + 4);
+				Inc(TreeSize, 1 + 4);
+				Inc(NodeCount);
 				Result.Operation := opIdent;
 				Result.Ident := VF;
 			end
 			else
 			begin
-				GetMem(Result, 1 + 10);
+{				GetMem(Result, 1 + 10);
+				Inc(TreeSize, 1 + 10);
+				Inc(NodeCount);
 				Result.Operation := opNumber;
-				Result.Num := 0;
+				Result.Num := 0;}
+				Result := nil;
 				AddMes2(mtUndeclaredIdentifier, [Id]);
 			end;
 			ReadInput;
@@ -1356,13 +1422,24 @@ begin
 	end
 	else
 	begin
-		GetMem(Result, 1 + 10);
-		Result.Operation := opNumber;
-		Result.Num := 0;
-		AddMes2(mtIdentifierExpected, [Id]);
-		ReadInput;
+		if (InputType = itKeyword) and (Keyword = kwNil) then
+		begin
+			GetMem(Result, 1 + 10);
+			Inc(TreeSize, 1 + 10);
+			Inc(NodeCount);
+			Result.Operation := opNumber;
+			Result.Num := 0;
+			ReadInput;
+		end
+		else
+		begin
+			AddMes2(mtExpressionExpected, [Id]);
+			Result := nil;
+//			ReadInput; D??? (3+) is only 1 error
+		end;
 	end;
 	end;
+	Result := NodeQ(Result);
 end;
 
 function NodeG2(Node: PNode): PNode;
@@ -1371,6 +1448,8 @@ begin
 	itPower:
 	begin
 		GetMem(Result, 1 + 2 + 2 * 4);
+		Inc(TreeSize, 1 + 2 + 2 * 4);
+		Inc(NodeCount);
 		Result.Operation := opPower;
 		Result.ArgCount := 2;
 		Result.Args[0] := Node;
@@ -1392,6 +1471,8 @@ begin
 {		itMinus:
 	begin
 		GetMem(Result, 1 + 2 + 4);
+		Inc(TreeSize, 1 + 2 + 4);
+		Inc(NodeCount);
 		Result.Operation := opUnarMinus;
 		Result.ArgCount := 1;
 		ReadInput;
@@ -1413,6 +1494,8 @@ begin
 	itMul, itDiv:
 	begin
 		GetMem(Result, 1 + 2 + 2 * 4);
+		Inc(TreeSize, 1 + 2 + 2 * 4);
+		Inc(NodeCount);
 		case InputType of
 		itMul: Result.Operation := opMul;
 		itDiv: Result.Operation := opDiv;
@@ -1432,6 +1515,8 @@ begin
 			kwDiv, kwMod:
 			begin
 				GetMem(Result, 1 + 2 + 2 * 4);
+				Inc(TreeSize, 1 + 2 + 2 * 4);
+				Inc(NodeCount);
 				case Keyword of
 				kwDiv: Result.Operation := opDiv;
 				kwMod: Result.Operation := opMod;
@@ -1454,7 +1539,7 @@ begin
 	Result := NodeA2(NodeF);
 end;
 
-function NodeE(Node: PNode; Num: BG): PNode;
+function NodeE(Node: PNode): PNode;
 begin
 	case InputType of
 	itEOI:
@@ -1464,13 +1549,15 @@ begin
 	end;
 	itRBracket:
 	begin
-//			ReadInput; D???
+		Dec(BracketDepth);
 		Result := Node;
 		Exit;
 	end;
 	itPlus, itMinus:
 	begin
 		GetMem(Result, 1 + 2 + 2 * 4);
+		Inc(TreeSize, 1 + 2 + 2 * 4);
+		Inc(NodeCount);
 		case InputType of
 		itPlus: Result.Operation := opPlus;
 		itMinus: Result.Operation := opMinus;
@@ -1480,14 +1567,19 @@ begin
 		ReadInput;
 //			Result.Args[1] := NodeE(NodeA); R. A.
 		Result.Args[1] := NodeA;
-		Result := NodeE(Result, True);
+		Result := NodeE(Result);
 	end;
-	else // Number
+	itReal, itInteger, itLBracket, itIdent:
 	begin
-		if Num then
-			Result := NodeE(NodeA, False)
+		if Node = nil then
+			Result := NodeE(NodeA)
 		else
 			Result := Node;
+	end;
+	else
+	begin
+		Result := Node;
+		Exit;
 	end;
 	end;
 end;
@@ -1499,8 +1591,12 @@ end;}
 
 function CreateTree: PNode;
 begin
+	BracketDepth := 0;
+	MaxBracketDepth := 0;
+	TreeDepth := 0;
+	NodeCount := 0;
 	ReadInput;
-	Result := NodeE(nil, True);
+	Result := NodeE(nil);
 end;
 
 function FreeTree(var Node: PNode): BG;
@@ -1509,28 +1605,37 @@ begin
 	Result := True;
 	if Node <> nil then
 	case Node.Operation of
-	opNone:
-	begin
-		IE(20);
-		FreeMem(Node, 1);
-		Node := nil;
-	end;
 	opNumber:
 	begin
 		FreeMem(Node, 1 + 10);
+		Dec(TreeSize, 1 + 10);
 		Node := nil;
 	end;
 	opIdent:
 	begin
-		FreeMem(Node, 1 + 2);
+		FreeMem(Node, 1 + 4);
+		Dec(TreeSize, 1 + 4);
 		Node := nil;
-	end
-	else
+	end;
+	opPlus..opXNor:
 	begin
 		for i := 0 to Node.ArgCount - 1 do
-			FreeTree(Node.Args[i]);
+		begin
+			if Node.Args[i] = Node then
+				IE(4342)
+			else
+				FreeTree(Node.Args[i]);
+		end;
 
+		Dec(TreeSize, 1 + 2 + 4 * Node.ArgCount);
 		FreeMem(Node, 1 + 2 + 4 * Node.ArgCount);
+		Node := nil;
+	end;
+	else // opNone:
+	begin
+		IE(20);
+		FreeMem(Node);
+//		Dec(TreeSize, 1 + 2);
 		Node := nil;
 	end;
 	end;
@@ -1538,7 +1643,7 @@ end;
 
 function Calc(Node: PNode): Extended;
 var
-	i: SG;
+	i, j: SG;
 	e: Extended;
 begin
 	Result := 0;
@@ -1581,7 +1686,10 @@ begin
 	begin
 		Result := 1;
 		for i := 0 to Node.ArgCount - 1 do
-			Result := Result * Calc(Node.Args[i]);
+		begin
+			if Node.Args[i] <> nil then
+				Result := Result * Calc(Node.Args[i]);
+		end;
 	end;
 	opDiv:
 	begin
@@ -1590,10 +1698,19 @@ begin
 			Result := Calc(Node.Args[0]);
 			for i := 1 to Node.ArgCount - 1 do
 			begin
-				e := Calc(Node.Args[i]);
-				if e = 0 then
-				else
-					Result := Result / e;
+				if Node.Args[i] <> nil then
+				begin
+					e := Calc(Node.Args[i]);
+					if (e = 0) then
+					begin
+						if Result > 0 then
+							Result := Infinity
+						else if Result < 0 then
+							Result := NegInfinity;
+					end
+					else
+						Result := Result / e;
+				end;
 			end;
 		end
 		else
@@ -1614,6 +1731,22 @@ begin
 		end
 		else
 			Result := 0;
+	end;
+	opTrunc:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			Result := Result + Trunc(Calc(Node.Args[i]));
+		end;
+	end;
+	opRound:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			Result := Result + Round(Calc(Node.Args[i]));
+		end;
 	end;
 	opAbs:
 	begin
@@ -1661,7 +1794,34 @@ begin
 	end;
 	opFact:
 	begin
-		Result := 0;
+		Result := 1;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			e := Round(Calc(Node.Args[i])); // D??? nopt round
+			if e < 0 then
+			begin
+//				ShowError('Input -infinity..2000 for Fact')
+			end
+			else if e <= 1754 then
+			begin
+				for j := 2 to Round(e) do
+					Result := Result * j;
+			end
+			else
+			begin
+				if e > 1754 then Result := Infinity;
+			end;
+		end;
+	end;
+	opGCD:
+	begin
+		Result := 0; // D???
+
+	end;
+	opLCM:
+	begin
+		Result := 0; // D???
+
 	end;
 	opPower:
 	begin
@@ -1701,6 +1861,7 @@ begin
 	end;
 	opLn:
 	begin
+		Result := 0;
 		if Node.ArgCount >= 1 then
 		begin
 			e := Calc(Node.Args[0]);
@@ -1710,6 +1871,23 @@ begin
 				Result := NegInfinity;
 //					ShowError('Input 0..infinity for Ln');}
 		end;
+	end;
+	opLog:
+	begin
+		Result := 0;
+		if Node.ArgCount >= 1 then
+		begin
+			e := Calc(Node.Args[0]);
+			if Node.ArgCount >= 2 then
+			begin
+				for i := 1 to Node.ArgCount - 1 do
+				begin
+					Result := Result + LogN(e, Calc(Node.Args[i]));
+				end;
+			end
+			else
+				Result := Log10(e);
+		end
 	end;
 	opSqr:
 	begin
@@ -1723,7 +1901,18 @@ begin
 		for i := 0 to Node.ArgCount - 1 do
 			Result := Sqrt(Calc(Node.Args[i]));
 	end;
-	opSin:
+	opSin,
+	opCos,
+	opTan,
+	opArcSin,
+	opArcCos,
+	opArcTan,
+	opSinh,
+	opCosh,
+	opTanh,
+	opArcSinh,
+	opArcCosh,
+	opArcTanh:
 	begin
 		Result := 0;
 		for i := 0 to Node.ArgCount - 1 do
@@ -1732,60 +1921,25 @@ begin
 			case GonFormat of
 			gfGrad: e := GradToRad(e);
 			gfDeg: e := DegToRad(e);
+			gfCycle: e := CycleToRad(e);
 			end;
-			Result := Result + Sin(e);
-		end;
+			case Node.Operation of
+			opSin: Result := Result + Sin(e);
+			opCos: Result := Result + Cos(e);
+			opTan: Result := Result + Tan(e);
+			opArcSin: Result := Result + ArcSin(e);
+			opArcCos: Result := Result + ArcCos(e);
+			opArcTan: Result := Result + ArcTan(e);
 
-(*			if Node.ArgCount <> 1 then
-		begin
-//				ShowError('1 argument required for Sin');
-		end;
-		if Node.ArgCount >= 1 then
-			Result := Sin(Calc(Node.Args[0]));*)
-	end;
-	opCos:
-	begin
-		Result := 0;
-		for i := 0 to Node.ArgCount - 1 do
-		begin
-			e := Calc(Node.Args[i]);
-			case GonFormat of
-			gfGrad: e := GradToRad(e);
-			gfDeg: e := DegToRad(e);
+			opSinH: Result := Result + Sinh(e);
+			opCosH: Result := Result + Cosh(e);
+			opTanH: Result := Result + Tanh(e);
+			opArcSinH: Result := Result + ArcSinh(e);
+			opArcCosH: Result := Result + ArcCosh(e);
+			opArcTanH: Result := Result + ArcTanh(e);
 			end;
-			Result := Result + Cos(e);
-		end;
-{			if Node.ArgCount = 0 then
-			Result := 1
-		else if Node.ArgCount = 1 then
-		begin
-			Result := Cos(Calc(Node.Args[i]))
-		end
-		else
-		begin
-			Result := Cos(Calc(Node.Args[0]));
-			for i := 1 to Node.ArgCount - 1 do
-				Result := Cos(Result) + Cos(Calc(Node.Args[i]));
-		end;}
-	end;
-	opTan:
-	begin
-		Result := 0;
-		for i := 0 to Node.ArgCount - 1 do
-		begin
-			e := Calc(Node.Args[i]);
-			case GonFormat of
-			gfGrad: e := GradToRad(e);
-			gfDeg: e := DegToRad(e);
-			end;
-			Result := Result + Tan(e);
 		end;
 	end;
-{		opArcSin:
-	opArcCos:
-	opArcTan:
-	opHypSin:
-	opHypCos:}
 	opAvg:
 	begin
 		e := 0;
@@ -1816,30 +1970,41 @@ begin
 			if e > Result then Result := e;
 		end;
 	end;
-	opShl:
+	opRandom:
 	begin
-		if Node.ArgCount > 0 then
+		if Node.ArgCount = 0 then
+			Result := Random(MaxInt) / MaxInt
+		else if Node.ArgCount = 1 then
+			Result := Random(Round(Calc(Node.Args[0])))
+		else if Node.ArgCount >= 2 then
 		begin
-			Result := Calc(Node.Args[0]);
-			for i := 0 to Node.ArgCount - 1 do
-				Result := Round(Result) shl Round(Calc(Node.Args[i]));
-		end
-		else
-			Result := 0;
+			e := Calc(Node.Args[0]);
+			Result := e + Random(Round(Calc(Node.Args[1]) - e))
+		end;
 	end;
-	opShr:
+	opShl, opShr, opAnd, opOr, opXor, opXnor:
 	begin
 		if Node.ArgCount > 0 then
 		begin
 			Result := Calc(Node.Args[0]);
-			for i := 0 to Node.ArgCount - 1 do
-				Result := Round(Result) shr Round(Calc(Node.Args[i]));
+			for i := 1 to Node.ArgCount - 1 do
+			begin
+				case Node.Operation of
+				opShl: Result := Round(Result) shl Round(Calc(Node.Args[i]));
+				opShr: Result := Round(Result) shr Round(Calc(Node.Args[i]));
+				opAnd: Result := Round(Result) and Round(Calc(Node.Args[i]));
+				opOr: Result := Round(Result) or Round(Calc(Node.Args[i]));
+				opXor: Result := Round(Result) xor Round(Calc(Node.Args[i]));
+				opXnor: Result := not (Round(Result) xor Round(Calc(Node.Args[i])));
+				end;
+			end;
 		end
 		else
 			Result := 0;
 	end;
 	else
 		Result := 0;
+		IE(17);
 	end;
 end;
 
@@ -2051,7 +2216,9 @@ function StrToValE(Line: string; const UseWinFormat: BG;
 label LNext;
 var
 	DecimalSep, ThousandSep: string[3];
-	VF: PVF;
+	M: PCompileMes;
+	i: SG;
+//	VF: PVF;
 begin
 {
 	IntStr := ReadString(Section, Ident, '');
@@ -2092,36 +2259,16 @@ begin
 		ThousandSep := ',';
 	end;
 
+	M := CompileMes.GetFirst;
+	for i := 0 to SG(CompileMes.Count) - 1 do
+	begin
+		M.Params := '';
+		Inc(M);
+	end;
 	CompileMes.Clear;
 	CreateUnitSystem;
-{	SetLength(IdentNames, 11);
-	SetLength(IdentValues, 11);
-	IdentNames[0] := 'DEF';
-	IdentValues[0] := DefVal;
-	IdentNames[1] := 'DEFAULT';
-	IdentValues[1] := DefVal;
-	IdentNames[2] := 'E';
-	IdentValues[2] := ConstE;
-	IdentNames[3] := 'INFINITE';
-	IdentValues[3] := MaxVal;
-	IdentNames[4] := 'MAXIMUM';
-	IdentValues[4] := MaxVal;
-	IdentNames[5] := 'MINIMUM';
-	IdentValues[5] := MinVal;
-	IdentNames[6] := 'NEGINFINITE';
-	IdentValues[6] := MaxVal;
-	IdentNames[7] := 'NIL';
-	IdentValues[7] := 0;
-	IdentNames[8] := 'NULL';
-	IdentValues[8] := 0;
-	IdentNames[9] := 'PI';
-	IdentValues[9] := pi;
-	IdentNames[10] := 'ZERO';
-	IdentValues[10] := 0;
-	D??? System Unit
-	}
 
-	VF := UnitSystem.VFs.Add;
+{	VF := UnitSystem.VFs.Add;
 	VF.Name := 'def';
 	VF.Typ := '';
 	VF.UsedCount := 0;
@@ -2137,7 +2284,7 @@ begin
 	VF.Line := 0;
 	VF.VFs := nil;
 	VF.Value := 0;
-	VF.ParamCount := 0;
+	VF.ParamCount := 0; D??? Free Error}
 
 	LinesL := 0;
 	LineBegin := True;
@@ -2148,6 +2295,9 @@ begin
 	BufRC := Length(Line);
 
 	FreeTree(Root);
+	if TreeSize <> 0 then
+		IE(4343);
+
 	Root := CreateTree;
 	if Root <> nil then
 		Result := Calc(Root)
@@ -2248,6 +2398,7 @@ initialization
 	CompileMes.ItemSize := SizeOf(TCompileMes);
 finalization
 	FreeTree(Root);
+	if TreeSize <> 0 then IE(4334);
 	FreeUnitSystem;
 	CompileMes.Free; CompileMes := nil;
 end.
@@ -2700,26 +2851,6 @@ end.
 					end;
 					opFact:
 					begin
-						if ArgCount <> 1 then
-						begin
-							ShowError('1 argument required for Neg');
-							if ArgCount = 1 then Result := Args[0];
-						end;
-						if ArgCount >= 1 then
-						begin
-							Result := 1;
-							if Round(Args[0]) < 0 then
-								ShowError('Input -infinity..2000 for Fact')
-							else if Round(Args[0]) <= 1754 then
-							begin
-								for a := 2 to Round(Args[0]) do
-									Result := Result * a;
-							end
-							else
-							begin
-								if Round(Args[0]) > 1754 then Result := Infinity;
-							end;
-						end;
 					end;
 					opPower:
 					begin

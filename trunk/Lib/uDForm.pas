@@ -95,6 +95,7 @@ procedure glShadowText(Canvas: TCanvas;
 procedure glTextOut(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const C: TColor);
 procedure ShowTaskBar(Visible: Boolean);
+procedure GetScreen(var Rect: TRect);
 
 procedure Register;
 
@@ -246,6 +247,33 @@ begin
 		ShowWindow(hTaskBar, SW_SHOW)
 	else
 		ShowWindow(hTaskBar, SW_HIDE);
+end;
+
+procedure GetScreen(var Rect: TRect);
+var
+	hTaskBar: HWND;
+	RectT: TRect;
+	Al: SG;
+	w, h: SG;
+begin
+	hTaskBar := FindWindow('Shell_TrayWnd', nil);
+	GetWindowRect(hTaskBar, RectT);
+	w := Screen.Width;
+	h := Screen.Height;
+	Al := 0;
+	Rect.Left := 0;
+	Rect.Right := w;
+	Rect.Top := 0;
+	Rect.Bottom := h;
+
+	if (RectT.Left = 0) and (RectT.Right = w) and (RectT.Top = 0) then
+		Rect.Top := RectT.Bottom // Up
+	else if (RectT.Left = 0) and (RectT.Right = w) and (RectT.Bottom = h) then
+		Rect.Bottom := RectT.Top // Down
+	else if (RectT.Left = 0) and (RectT.Top = 0) and (RectT.Bottom = h) then
+		Rect.Left := RectT.Right // Left
+	else if (RectT.Right = w) and (RectT.Top = 0) and (RectT.Bottom = h) then
+		Rect.Right := RectT.Left // Right
 end;
 
 procedure TDForm.Common(Value: Boolean);

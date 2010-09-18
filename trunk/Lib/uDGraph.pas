@@ -56,7 +56,7 @@ implementation
 
 uses
 	Math,
-	uFiles, uStrings, uError, uSysInfo, uFind;
+	uFiles, uStrings, uError, uSysInfo, uFind, uInput;
 
 const
 	NotOriented = True;
