@@ -1,4 +1,10 @@
-// Build: 07/2000-09/2000 Author: Safranek David
+//* File:     Lib\uDImage.pas
+//* Created:  2000-07-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDImage;
 
@@ -73,8 +79,6 @@ type
 
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
-		procedure DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
-			Orient: Integer);
 		procedure OffsetRange(var NOfsX, NOfsY: Integer);
 		procedure ScrollTo(NOfsX, NOfsY: Integer);
 		procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -158,8 +162,13 @@ uses
 	uAdd, uGraph, uSysInfo;
 const
 	OfsS = 20; // ms; FPS = 1000 / OfsS; 25-30FPS for VR; 50 = TV
-	ScrollEf = ef12;
-	ScrollEf2 = ef12;
+	{$ifopt d+}
+	ScrollEf = ef16;
+	ScrollEf2 = ef16;
+	{$else}
+	ScrollEf = ef13;
+	ScrollEf2 = ef13;
+	{$endif}
 
 procedure TDImage.WMPaint(var Message: TWMPaint);
 begin
@@ -641,80 +650,17 @@ begin
 	OffsetRange(OfsX, OfsY);
 end;
 
-procedure TDImage.DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
-	Orient: Integer);
-var
-	C1, C2: Integer;
-	i: Integer;
-	XM, HX1, HY1, HX2, HY2, H, Len: Integer;
-begin
-	if Down then
-	begin
-		C1 := 1;
-		C2 := 2;
-	end
-	else
-	begin
-		C1 := 3;
-		C2 := 0;
-	end;
-	Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(C1), DepthColor(C2), 1, ScrollEf);
-	if FHotTrack and Hot then C1 := clHighlight else C1 := clBtnFace;
-	Bitmap.Bar24(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, C1, ScrollEf);
-
-	if Down then
-	begin
-		Inc(X1);
-		Inc(X2);
-		Inc(Y1);
-		Inc(Y2);
-	end;
-	XM := X1 + X2;
-	Len := X2 - X1 + 1;
-	for i := 0 to Len div 3 - 1 do
-	begin
-		HX1 := (XM - 2 * i) div 2;
-		HY1 := Y1 + i + (Len + 2) div 3;
-		HX2 :=  (XM + 2 * i + 1) div 2;
-		HY2 := Y1 + i + (Len + 2) div 3;
-		case Orient of
-		1:
-		begin
-			H := HX1;
-			HX1 := (HY1 - Y1) + X1;
-			HY1 := (H - X1) + Y1;
-			H := HX2;
-			HX2 := (HY2 - Y1) + X1;
-			HY2 := (H - X1) + Y1;
-		end;
-		2:
-		begin
-			HY1 := Y2 - (HY1 - Y1);
-			HY2 := Y2 - (HY2 - Y1);
-		end;
-		3:
-		begin
-			H := HX1;
-			HX1 := X2 - (HY1 - Y1);
-			HY1 := (H - X1) + Y1;
-			H := HX2;
-			HX2 := X2 - (HY2 - Y1);
-			HY2 := (H - X1) + Y1;
-		end;
-		end;
-
-		Bitmap.Lin24(HX1, HY1, HX2, HY2, clBtnText, ef16);
-	end;
-end;
-
 procedure TDImage.Fill;
 var
 	ScrollLen, ScrollLenS: Integer;
 	X1, Y1, X2, Y2: Integer;
 	C: TColor;
+	Co: array[0..3] of TColor;
 	I1, I2: SG;
 	SliderC1, SliderC2: TColor;
 	s: string;
+	i, x, y: SG;
+	FontSize: SG;
 begin
 	if (Visible = False) or (csDesigning in ComponentState) then
 	begin
@@ -731,6 +677,7 @@ begin
 
 		SliderC1 := DarkerColor(clScrollBar);
 		SliderC2 := LighterColor(clScrollBar);
+
 		// H
 		if (BitmapWidth > 0) and (HType = 1) then
 		begin
@@ -740,23 +687,25 @@ begin
 
 			X1 := 0;
 			X2 := ScrollBarVWidth - 1;
+//			Bitmap.Lin24(X1, Y1, NowMaxWidth - 1, Y1, RColor(238, 237, 229).L, ScrollEf);
+
 	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHD, MouseWhere = mwScrollHD, 1);
+			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHD, FHotTrack and (MouseWhere = mwScrollHD), 1, ScrollEf);
 
 			X1 := NowMaxWidth - ScrollBarVWidth;
 			X2 := NowMaxWidth - 1;
 	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHU, MouseWhere = mwScrollHU, 3);
+			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHU, FHotTrack and (MouseWhere = mwScrollHU), 3, ScrollEf);
 
 			// TScrollBoxSlider
 			ScrollLen := NowMaxWidth - 2 * ScrollBarVWidth;
 			ScrollLenS := NowMaxWidth * ScrollLen div BitmapWidth;
 			if ScrollLenS < ScrollBarHHeight div 2 then ScrollLenS := ScrollBarHHeight div 2;
 
-			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
-			Y2 := Bitmap.Height - 1;
+			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight + 1;
+			Y2 := Bitmap.Height - 1 - 1;
 			X1 := ScrollBarVWidth + RoundDivS8(S8(ScrollLen - ScrollLenS) * S8(OfsX), BitmapWidth - NowMaxWidth);
 			X2 := X1 + ScrollLenS - 1;
 			SliderHX1 := X1;
@@ -773,8 +722,31 @@ begin
 				I2 := 0;
 			end;
 			Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
-			if FHotTrack and (MouseWhere = mwScrollH) then C := clHighlight else C := clBtnFace;
-			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+//			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+			if FHotTrack and (MouseWhere = mwScrollH) then
+			begin
+				Co[0] := RColor(253, 255, 255).L;
+				Co[1] := RColor(185, 218, 251).L;
+				Co[2] := Co[0];
+				Co[3] := Co[1];
+			end
+			else
+			begin
+				Co[0] := RColor(214, 230, 255).L;
+				Co[1] := RColor(174, 195, 241).L;
+				Co[2] := Co[0];
+				Co[3] := Co[1];
+			end;
+			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, nil);
+			x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
+			for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
+			begin
+				Bitmap.Lin24(x, Y1 + 4, x, Y2 - 5, RColor(238, 244, 254).L, ef16);
+				Inc(x);
+				Bitmap.Lin24(x, Y1 + 5, x, Y2 - 4, RColor(140, 176, 208).L, ef16);
+				Inc(x);
+			end;
+
 
 			// =
 			X1 := ScrollBarVWidth;
@@ -825,23 +797,24 @@ begin
 
 			Y1 := 0;
 			Y2 := ScrollBarHHeight - 1;
+//			Bitmap.Lin24(X1, Y1, X1, NowMaxHeight - 1, RColor(238, 237, 229).L, ScrollEf);
 	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, MouseWhere = mwScrollVD, 0);
+			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, FHotTrack and (MouseWhere = mwScrollVD), 0, ScrollEf);
 
 			Y1 := NowMaxHeight - ScrollBarHHeight;
 			Y2 := NowMaxHeight - 1;
 	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, MouseWhere = mwScrollVU, 2);
+			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, FHotTrack and (MouseWhere = mwScrollVU), 2, ScrollEf);
 
 			// TScrollBoxSlider
 			ScrollLen := NowMaxHeight - 2 * ScrollBarHHeight;
 			ScrollLenS := NowMaxHeight * ScrollLen div BitmapHeight;
 			if ScrollLenS < ScrollBarVWidth div 2 then ScrollLenS := ScrollBarVWidth div 2;
 
-			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
-			X2 := Bitmap.Width - 1;
+			X1 := Integer(Bitmap.Width) - ScrollBarVWidth + 1;
+			X2 := Bitmap.Width - 1 - 1;
 			Y1 := ScrollBarHHeight + (ScrollLen - ScrollLenS) * Int64(OfsY) div (BitmapHeight - NowMaxHeight);
 			Y2 := Y1 + ScrollLenS - 1;
 			SliderVY1 := Y1;
@@ -858,8 +831,31 @@ begin
 				I2 := 0;
 			end;
 			Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
-			if FHotTrack and (MouseWhere = mwScrollV) then C := clHighlight else C := clBtnFace;
-			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+//			if FHotTrack and (MouseWhere = mwScrollV) then C := clHighlight else C := clBtnFace;
+//			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+			if FHotTrack and (MouseWhere = mwScrollV) then
+			begin
+				Co[0] := RColor(253, 255, 255).L;
+				Co[1] := RColor(185, 218, 251).L;
+				Co[2] := Co[0];
+				Co[3] := Co[1];
+			end
+			else
+			begin
+				Co[0] := RColor(214, 230, 255).L;
+				Co[1] := RColor(174, 195, 241).L;
+				Co[2] := Co[0];
+				Co[3] := Co[1];
+			end;
+			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, nil);
+			y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
+			for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
+			begin
+				Bitmap.Lin24(X1 + 4, y, X2 - 5, y, RColor(238, 244, 254).L, ef16);
+				Inc(y);
+				Bitmap.Lin24(X1 + 5, y, X2 - 4, y, RColor(140, 176, 208).L, ef16);
+				Inc(y);
+			end;
 
 			// ||
 			Y1 := ScrollBarHHeight;
@@ -911,11 +907,14 @@ begin
 		{$endif}
 			if FramePerSec >= 0.1 then
 			begin
-				s := {$ifopt d+}s + ', ' +{$endif}NToS(Round(10 * FramePerSec), 1);
+				s := {$ifopt d+}s + ', ' +{$endif}NToS(Round(100 * FramePerSec), 2);
 			end;
+			FontSize := Bitmap.Canvas.Font.Size;
+			Bitmap.Canvas.Font.Size := 8;
 			ShadowText(Bitmap.Canvas, 0, 0,
 				s,
 				clWindowText, clNone);
+			Bitmap.Canvas.Font.Size := FontSize;
 		end;
 	finally
 		Inc(PaintCount);

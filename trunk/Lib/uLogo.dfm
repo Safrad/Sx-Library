@@ -6,6 +6,8 @@ object fLogo: TfLogo
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
+  AlphaBlend = True
+  AlphaBlendValue = 163
   BorderIcons = []
   BorderStyle = bsNone
   ClientHeight = 384
@@ -16,10 +18,11 @@ object fLogo: TfLogo
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poScreenCenter
+  OnClose = FormClose
   OnCreate = FormCreate
+  OnMouseDown = FormMouseDown
   OnMouseMove = ImageLogoMouseMove
   PixelsPerInch = 96
   TextHeight = 13

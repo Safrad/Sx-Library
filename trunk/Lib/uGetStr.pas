@@ -1,4 +1,10 @@
-// Build: 07/1998-05/1999 Author: Safranek David
+//* File:     Lib\uGetStr.pas
+//* Created:  1998-07-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uGetStr;
 
@@ -60,7 +66,7 @@ begin
 	if StrMasked then
 		fGetStr.EditInput.PasswordChar := '*'
 	else
-		fGetStr.EditInput.PasswordChar := #0;
+		fGetStr.EditInput.PasswordChar := CharNul;
 	fGetStr.EditInput.Text := CurVal;
 	fGetStr.EditInput.OnChange := fGetStr.EditInputChange;
 	fGetStr.InitButtons;

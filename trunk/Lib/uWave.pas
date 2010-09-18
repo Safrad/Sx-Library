@@ -1,4 +1,10 @@
-// Build: 07/1999-01/2000 Author: Safranek David
+//* File:     Lib\uWave.pas
+//* Created:  1999-07-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uWave;
 
@@ -94,7 +100,7 @@ type
 		wsMinimize,
 		wsOpenProgram,
 		wsProgramError,
-		wsQuestion, // uDialog
+		wsQuestion, // uError
 		wsRestoreDown,
 		wsRestoreUp,
 //		wsRingIn,
@@ -165,16 +171,17 @@ procedure Beep;
 
 type
 	PPlayItem = ^TPlayItem;
-	TPlayItem = record
-		PlayAs: (paWave, paTone, paNoise);
-		Wave: PWave;
-		SampleCount: UG;
-		SamplePos: UG;
-		Frequency: UG;
-		VolumeLeft: SG;
-		VolumeRight: SG;
-		Speed: UG;
-		Offset: UG;
+	TPlayItem = packed record // 64
+		Wave: PWave; // 4
+		SampleCount: U4;
+		SamplePos: U4;
+		Frequency: U4;
+		VolumeLeft: S4;
+		VolumeRight: S4;
+		Speed: U4;
+		Offset: U4;
+		PlayAs: (paWave, paTone, paNoise); // 1
+		Reserved: array[0..30] of B1;
 	end;
 
 
@@ -707,7 +714,7 @@ begin
 	begin
 		if Reg.ValueExists('') then
 		begin
-			SndName := Replace(Reg.ReadString(''), '%SystemRoot%', WinDir);
+			SndName := ReplaceF(Reg.ReadString(''), '%SystemRoot%', WinDir);
 			PlayWaveFile(SndName);
 		end;
 		Reg.CloseKey;

@@ -1,3 +1,11 @@
+//* File:     Lib\uData.pas
+//* Created:  1998-01-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uData;
 
 interface
@@ -9,6 +17,7 @@ uses
 
 type
 	TIndex = UG;
+
 	TData = class(TObject)
 	private
 		FFrag: Boolean;
@@ -51,7 +60,45 @@ type
 		property Count: UG read FItemCount;
 	end;
 
+	TA4 = class(TObject)
+	private
+		Data: PArrayS4;
+		FItemCount: UG;
+	public
+		constructor Create;
+		destructor Free;
+
+		procedure Clear;
+
+		procedure Add(var Value); overload;
+		function Add: Pointer; overload;
+
+		procedure Delete(Index: TIndex);
+		procedure DeleteFirst;
+		procedure DeleteLast;
+
+		procedure Insert(var Value; Index: TIndex); overload;
+		function Insert(Index: TIndex): Pointer; overload;
+
+		procedure Replace(var Value; Index: TIndex);
+
+		procedure Get(var Value; Index: TIndex); overload;
+		function Get(Index: TIndex): Pointer; overload;
+		procedure GetFirst(var Value); overload;
+		function GetFirst: Pointer; overload;
+		procedure GetLast(var Value); overload;
+		function GetLast: Pointer; overload;
+
+		function IsEmpty: Boolean;
+
+		property Count: UG read FItemCount;
+	end;
+
 implementation
+
+{$ifopt d+}
+uses uError;
+{$endif}
 
 type
 	PItem = ^TItem;
@@ -59,6 +106,8 @@ type
 		Next: PItem;
 		OneData: Pointer;
 	end;
+
+// TData
 
 constructor TData.Create;
 begin
@@ -101,11 +150,21 @@ begin
 end;
 
 procedure TData.SetItemSize(Value: UG);
+{$ifopt d+}
+var Sh: SG;
+{$endif}
 begin
 	if FItemSize <> Value then
 	begin
 		FItemSize := Value;
 		Clear;
+		{$ifopt d+}
+		Sh := CalcShr(Value);
+		if (1 shl Sh) <> Value then
+		begin
+			ErrorMessage('Bad AllocBy block size ' + NToS(Value) + ' bytes');
+		end;
+		{$endif}
 	end;
 end;
 
@@ -172,6 +231,7 @@ begin
 		Move(Pointer(UG(Data) + ItemSize * Index)^,
 			Pointer(UG(Data) + ItemSize * (Index + 1))^, ItemSize * (FItemCount - Index));
 	end;
+	FillChar(Pointer(UG(Data) + ItemSize * Index)^, ItemSize, 0); // D???
 	Inc(FItemCount);
 end;
 
@@ -238,7 +298,8 @@ procedure TData.Get(var Value; Index: TIndex);
 begin
 	if FFrag = False then
 	begin
-		Move(Pointer(UG(Data) + ItemSize * Index)^, Value, ItemSize);
+		if (Index < FItemCount) then
+			Move(Pointer(UG(Data) + ItemSize * Index)^, Value, ItemSize);
 	end;
 end;
 
@@ -296,6 +357,98 @@ end;
 function TData.IsEmpty: Boolean;
 begin
 	Result := FItemCount = 0;
+end;
+
+// TA4
+
+constructor TA4.Create;
+begin
+	FItemCount := 0;
+end;
+
+destructor TA4.Free;
+begin
+	Clear;
+end;
+
+procedure TA4.Clear;
+begin
+
+end;
+
+procedure TA4.Add(var Value);
+begin
+
+end;
+
+function TA4.Add: Pointer;
+begin
+
+end;
+
+procedure TA4.Delete(Index: TIndex);
+begin
+
+end;
+
+procedure TA4.DeleteFirst;
+begin
+
+end;
+
+procedure TA4.DeleteLast;
+begin
+
+end;
+
+procedure TA4.Insert(var Value; Index: TIndex);
+begin
+
+end;
+
+function TA4.Insert(Index: TIndex): Pointer;
+begin
+
+end;
+
+procedure TA4.Replace(var Value; Index: TIndex);
+begin
+
+end;
+
+procedure TA4.Get(var Value; Index: TIndex);
+begin
+
+end;
+
+function TA4.Get(Index: TIndex): Pointer;
+begin
+
+end;
+
+procedure TA4.GetFirst(var Value);
+begin
+
+end;
+
+function TA4.GetFirst: Pointer;
+begin
+
+end;
+
+procedure TA4.GetLast(var Value);
+begin
+
+end;
+
+function TA4.GetLast: Pointer;
+begin
+
+end;
+
+function TA4.IsEmpty: Boolean;
+begin
+
 end;
 
 end.

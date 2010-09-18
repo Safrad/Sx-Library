@@ -1,4 +1,10 @@
-// Build: 08/1999-02/2001 Author: Safranek David
+//* File:     Lib\uScreen.pas
+//* Created:  1999-08-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uScreen;
 
@@ -76,8 +82,8 @@ var
 	DriverNames: array of string;
 	DriverNameCount: SG;
 	ScreenModes: array of TScreenMode;
-	EnabledBits: array of Cardinal; // 4, 8, 15, 16, 24, 32
-	EnabledBitsCount: Integer;
+	EnabledBits: array of DWORD; // 4, 8, 15, 16, 24, 32
+	EnabledBitsCount: SG;
 
 	NotFirstTime: Boolean;
 
@@ -124,7 +130,7 @@ implementation
 {$R *.DFM}
 uses
 	Registry, Math, MMSystem,
-	uError, uStrings, uWave, uFiles, uGetInt, uDialog, uDIni;
+	uError, uStrings, uWave, uFiles, uGetInt, uDIni;
 var
 	SndBeep: PWave;
 	First: Boolean;
@@ -509,7 +515,7 @@ begin
 					DefVF := SaveVF;
 
 				if Reg.ValueExists('RefreshRate') then
-					ScreenModes[i].RefreshRate := StrToValI(Reg.ReadString('RefreshRate'), False, WorstVF, DefVF, BestVF, 1)
+					ScreenModes[i].RefreshRate := StrToValI(Reg.ReadString('RefreshRate'), False, 0, DefVF, BestVF, 1)
 				else
 					ScreenModes[i].RefreshRate := DefVF;
 				Reg.CloseKey;

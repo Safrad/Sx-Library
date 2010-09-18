@@ -1,3 +1,11 @@
+//* File:     Lib\uLang.pas
+//* Created:  1999-11-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uLang;
 
 interface
@@ -24,7 +32,7 @@ implementation
 
 uses
 	Dialogs, SysUtils,
-	uDialog;
+	uError, uStrings;
 
 const
 	CZX: array [0..14] of string =
@@ -191,7 +199,7 @@ begin
 		'Ÿ': Result := 'ﬁ';
 		'›': Result := 'Ì';
 		'é': Result := '¶';
-		else Result := #0;
+		else Result := CharNul;
 		end;
 		TableWinCzSkToDos[c] := Result;
 
@@ -231,7 +239,7 @@ begin
 		'è': Result := 'ç'; // 141
 		'Ø': Result := 'Ω'; // 189
 		'é': Result := '¶';
-		else Result := #0;
+		else Result := CharNul;
 		end;
 		TableWinPlToDos[c] := Result;
 
@@ -265,7 +273,7 @@ begin
 		'‹': Result := 'ò'; // 154
 		'€': Result := 'Î'; // 235
 		'›': Result := 'Ì';
-		else Result := #0;
+		else Result := CharNul;
 		end;
 		TableWinHuToDos[c] := Result;
 	end;
@@ -310,7 +318,7 @@ begin
 	for i := 1 to Length(s) do
 	begin
 		c := TableWinCzSkToDos[s[i]];
-		if c = #0 then
+		if c = CharNul then
 		begin
 			Result[i] := s[i];
 			MessageD('Unknown char ' + s[i] + ' (' + IntToStr(Ord(s[i])) + ')', mtError, [mbOk]);
@@ -329,7 +337,7 @@ begin
 	for i := 1 to Length(s) do
 	begin
 		c := TableWinPlToDos[s[i]];
-		if c = #0 then
+		if c = CharNul then
 		begin
 			Result[i] := s[i];
 			MessageD('Unknown char ' + s[i] + ' (' + IntToStr(Ord(s[i])) + ')', mtError, [mbOk]);
@@ -349,7 +357,7 @@ begin
 	begin
 		c := TableWinHuToDos[s[i]];
 		Result[i] := c;
-		if c = #0 then
+		if c = CharNul then
 		begin
 			Result[i] := s[i];
 			MessageD('Unknown char ' + s[i], mtError, [mbOk]);

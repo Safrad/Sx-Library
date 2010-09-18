@@ -1,10 +1,25 @@
-// Build: 08/2000-08/2000 Author: Safranek David
+//* File:     Lib\uStrings.pas
+//* Created:  2000-08-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uStrings;
 
 interface
 
 uses uAdd;
+
+const
+	CharNul = #0;
+	CharTab = #9;
+	CharHT = CharTab;
+	CharLF = #10;
+	CharCR = #13;
+	// DOS: CharCR + CharLF; Linux/C++: CharLF; CharCR: NLP
+	LineSep = CharLF;
 
 type
 	TCharSet = set of Char;
@@ -37,7 +52,9 @@ function PosWW(Str, SubStr: string): Integer;
 function IsSubStr(SubStr: string; Str: string): Boolean;
 
 function InsChar(const CharCount: Integer; C: Char): string;
-function Replace(s: string; const WhatS, ToS: string): string;
+
+function ReplaceF(s: string; const WhatS, ToS: string): string;
+procedure Replace(var s: string; const WhatS, ToS: string);
 
 implementation
 
@@ -126,7 +143,7 @@ begin
 	Result := 0;
 	for i := 1 to Length(s) do
 	begin
-		if s[i] = #9 then Inc(Result);
+		if s[i] = C then Inc(Result);
 	end;
 end;
 
@@ -408,7 +425,7 @@ begin
 	FillChar(Result[1], CharCount, C);
 end;
 
-function Replace(s: string; const WhatS, ToS: string): string;
+function ReplaceF(s: string; const WhatS, ToS: string): string;
 var Po: SG;
 begin
 	Result := '';
@@ -424,6 +441,25 @@ begin
 			Break;
 	end;
 	Result := Result + s;
+end;
+
+procedure Replace(var s: string; const WhatS, ToS: string);
+var Po, Index: SG;
+begin
+	Index := 1;
+	while Index < Length(s) do
+	begin
+//		Po := Pos(WhatS, s);
+		Po := Find(WhatS, s, Index);
+		if Po <> 0 then
+		begin
+			Delete(s, Po, Length(WhatS));
+			Insert(ToS, s, Po);
+			Index := Po + Length(ToS);
+		end
+		else
+			Break;
+	end;
 end;
 
 end.

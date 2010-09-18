@@ -1,4 +1,10 @@
-// Build: 08/2001-04/2003 Author: Safranek David
+//* File:     Lib\uDView.pas
+//* Created:  2001-08-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDView;
 
@@ -6,8 +12,8 @@ interface
 
 {$R *.RES}
 uses
-	uAdd, uFiles, uDImage, uDButton,
-	Classes, Controls, Windows, Graphics, SysUtils, Messages;
+	uAdd, uFiles, uDImage,
+	Classes, Controls, Windows, Graphics, SysUtils, Messages, Dialogs;
 
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
@@ -132,6 +138,12 @@ end;
 function TDView.PosToItem(MX, MY: SG; var IX, IY: SG): TViewAction;
 var w, i, X: SG;
 begin
+	if (MouseWhere <> mwScroll) then
+	begin
+		Result := vaNone;
+		Exit;
+	end;
+
 	Inc(MX, OfsX);
 	IX := -1;
 	X := 0;
@@ -261,7 +273,7 @@ begin
 		vaColumnMove:
 		begin
 			Cur := -14;
-//			Fill;
+			Fill;
 		end;
 		vaRow:
 		begin
@@ -359,6 +371,7 @@ begin
 			begin
 				if IX >= 0 then
 				Columns[IX].Width := Columns[IX].MaxWidth;
+				ChangeColumns;
 				Fill;
 			end;
 			end;
@@ -478,7 +491,9 @@ var
 begin
 	if Bitmap.Empty then Exit;
 	if SoundsLoaded = False then Init;
-//	Bitmap.Bar24(clNone, 0, 0{RowHeight}, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
+	{$ifopt d+}
+	Bitmap.Bar24(clNone, 0, 0{RowHeight}, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
+	{$endif}
 //	Bitmap.Canvas.Brush.Style := bsClear;
 
 	IX := 0;
@@ -540,13 +555,18 @@ begin
 							else
 							begin
 								Data := '<Empty>';
-								OnGetData(Self, Data, ColIndex, RowIndex);
+								try
+									OnGetData(Self, Data, ColIndex, RowIndex);
+								except
+									on E: Exception do
+										MessageD(E.Message, mtError, [mbOk]);
+								end;
 							end;
 						end
 						else
 							Data := '<No data event defined>';
 
-						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 3);
+						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 4);
 
 						Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if IY = ActualRow then
@@ -568,9 +588,9 @@ begin
 					else
 					begin
 //						Bitmap.Bar24(clNone, X, 0, Bitmap.Width - 1, RowHeight - 1, clAppWorkSpace, ef16);
-						Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, clAppWorkSpace, ef16);
-						Bitmap.Lin24(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
-						Bitmap.Lin24(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
+						Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 1, Height - 1{Y + RowHeight - 2}, clAppWorkSpace, ef16);
+//						Bitmap.Lin24(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // -
+//						Bitmap.Lin24(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // |
 //						Break;
 					end;
 {					end
@@ -659,7 +679,7 @@ begin
 		end;
 	end;
 	if X < Bitmap.Width then
-		Bitmap.Bar24(clNone, X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16);
+		Bitmap.Bar24(clNone, X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16); 
 end;
 
 procedure TDView.Paint;
@@ -740,7 +760,7 @@ begin
 			begin
 				RowOrder[i] := i;
 			end;
-			if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[SortBy]);
+//			if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[SortBy]);
 		end;
 		FRowCount := Value;
 		SelCount := 0;

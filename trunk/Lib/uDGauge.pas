@@ -1,4 +1,10 @@
-// Build: 08/1999-08/1999 Author: Safranek David
+//* File:     Lib\uDGauge.pas
+//* Created:  1999-08-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDGauge;
 
@@ -389,39 +395,13 @@ begin
 	begin
 		FBmpOut.Canvas.Brush.Style := bsClear;
 		FBmpOut.Canvas.Font := Font;
-		if FFontShadow <> 0 then
-		begin
-			FBmpOut.Canvas.Font.Color := ShadowColor(Font.Color);
-			TopColor := FDispl.ColorA;
-			BottomColor := FDispl.ColorD;
-			FDispl.ColorA := ShadowColor(FDispl.ColorA);
-			FDispl.ColorD := ShadowColor(FDispl.ColorD);
-			i := FFontShadow;
-			repeat
-				OffsetRect(Recta, i, i);
-				if Displ.Enabled then
-				begin
-					DisplDrawRect(FBmpOut, Caption, FDispl, Recta, Alignment, Layout,
-					ef16);
-				end
-				else
-				begin
-					DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, True);
-				end;
-				OffsetRect(Recta, -i, -i);
-				if FontShadow > 0 then Dec(i) else Inc(i);
-			until i = 0;
-			FDispl.ColorA := TopColor;
-			FDispl.ColorD := BottomColor;
-			FBmpOut.Canvas.Font.Color := Font.Color;
-		end;
 		if Displ.Enabled then
 		begin
 			DisplDrawRect(FBmpOut, Caption, FDispl, Recta, Alignment, Layout, ef16);
 		end
 		else
 		begin
-			DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, True);
+			DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, True, FFontShadow);
 		end;
 	end;
 

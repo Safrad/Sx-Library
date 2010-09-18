@@ -1,11 +1,17 @@
-// Build: 01/1998-03/2001 Author: Safranek David
+//* File:     Lib\uFiles.pas
+//* Created:  1998-01-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uFiles;
 
 interface
 
 uses
-	uAdd,
+	uAdd, uStrings,
 	SysUtils, Windows, Classes;
 
 // File system
@@ -16,6 +22,7 @@ const
 	06/2003: 65536-131072
 }
 	DefFileBuffer = 131072;
+	FileSep = CharCR + CharLF;
 type
 	TDriveLetter = 'A'..'Z';
 	TDriveInfo = packed record // 32
@@ -64,7 +71,6 @@ type
 		ReadBytes, WriteBytes: U8;
 
 		ErrorCode: U4;
-		EofStr: ShortString; // For Writeln only
 		property FilePos: U8 read FFilePos;
 		property FileSize: U8 read FFileSize;
 		constructor Create;
@@ -77,7 +83,8 @@ type
 		function BlockWrite(var Buf; const Count: Cardinal): Boolean;
 		function FillWrite(const Count: Cardinal): Boolean;
 		function Readln(var Line: string): Boolean;
-		function Write(Line: string): Boolean;
+		function Write(var Line: string): Boolean;
+		function WriteF(Line: string): Boolean;
 		function Writeln(Line: string): Boolean;
 		function WritelnW(Line: WideString): Boolean;
 		function Close: Boolean;
@@ -138,9 +145,15 @@ function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
 
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
 function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
+
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
-function WriteStringToFile(var FileName: TFileName; Line: string; Append: BG): BG;
-function WriteStringsToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
+function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
+
+function ReadStringFromFile(var FileName: TFileName; var Line: string): BG;
+function WriteStringToFile(var FileName: TFileName; var Line: string; Append: BG): BG;
+
+function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
 
 function GetDriveInfo(const Drive: Byte): TDriveInfo;
 
@@ -164,11 +177,11 @@ implementation
 
 uses
 	Dialogs, ShellAPI, ShlObj,
-	uError, uDialog;
+	uError;
 
 constructor TFile.Create;
 begin
-	EofStr := #13 + #10;
+//	LineSeparator := CharCR + CharLF;
 	HFile := INVALID_HANDLE_VALUE;
 end;
 
@@ -396,7 +409,7 @@ end;
 
 function TFile.FillWrite(const Count: Cardinal): Boolean;
 var
-	Buf: PArrayByte;
+	Buf: Pointer;
 begin
 	GetMem(Buf, Count);
 	FillChar(Buf^, Count, 0);
@@ -421,7 +434,7 @@ begin
 		if (FFilePos >= FBufStart) and (FFilePos <= FBufEnd) then
 		begin
 			BufPos := FFilePos - FBufStart;
-			if Eof or (FBuffer[BufPos] = #10) then
+			if Eof or (FBuffer[BufPos] = CharLF) then
 			begin
 				Inc(FFilePos);
 				Seek(FFilePos);
@@ -440,13 +453,13 @@ begin
 //      BufPos := FFilePos - FBufStart;
 			goto LN;
 		end;
-		if FBuffer[BufPos] <> #13 then
+		if FBuffer[BufPos] <> CharCR then
 			Line := Line + FBuffer[BufPos];
 		Inc(FFilePos);
 	end;
 end;
 
-function TFile.Write(Line: string): Boolean;
+function TFile.Write(var Line: string): Boolean;
 begin
 	if Length(Line) > 0 then
 		Result := BlockWrite(Line[1], Length(Line))
@@ -454,21 +467,25 @@ begin
 		Result := True;
 end;
 
-function TFile.Writeln(Line: string): Boolean;
+function TFile.WriteF(Line: string): Boolean;
 begin
 	if Length(Line) > 0 then
-		BlockWrite(Line[1], Length(Line));
-	Result := BlockWrite(EofStr[1], Length(EofStr));
+		Result := BlockWrite(Line[1], Length(Line))
+	else
+		Result := True;
+end;
+
+
+function TFile.Writeln(Line: string): Boolean;
+begin
+	Line := Line + FileSep;
+	Result := BlockWrite(Line[1], Length(Line));
 end;
 
 function TFile.WritelnW(Line: WideString): Boolean;
-var v: string;
 begin
-	if Length(Line) > 0 then
-		BlockWrite(Line[1], 2 * Length(Line));
-	v := #0 + #10;
-	Result := BlockWrite(v[1], SizeOf(v));
-//  Inc(FFilePos, 2 * Length(Line) + Length(EofStr));
+	Line := Line + CharNul + CharLF;
+	Result := BlockWrite(Line[1], 2 * Length(Line));
 end;
 
 function TFile.Close: Boolean;
@@ -846,7 +863,7 @@ begin
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
 	if Result = False then
-		IOError(Source + #13 + #10 + Dest, GetLastError);
+		IOError(Source + LineSep + Dest, GetLastError);
 end;
 
 function CreateDir(const Dir: string): Boolean;
@@ -970,6 +987,8 @@ begin
 	if DeleteSelf then Result := DeleteDir(DirName) and Result;
 end;
 
+// TFile Read Write
+
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
 label LRetry;
 var
@@ -981,9 +1000,9 @@ begin
 	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
 		GetMem(Pointer(Buf), F.FileSize);
-		F.BlockRead(Pointer(Buf)^, F.FileSize);
+		if not F.BlockRead(Pointer(Buf)^, F.FileSize) then goto LRetry;
 		Count := F.FileSize;
-		if not F.Close then goto LRetry;
+		F.Close;
 		Result := True;
 	end;
 	F.Free;
@@ -999,8 +1018,45 @@ begin
 	LRetry:
 	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
-		F.BlockWrite(Pointer(Buf)^, Count);
+		if not F.BlockWrite(Pointer(Buf)^, Count) then goto LRetry;
 		F.Truncate;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function ReadStringFromFile(var FileName: TFileName; var Line: string): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		SetLength(Line, F.FileSize);
+		if not F.BlockRead(Line[1], F.FileSize) then goto LRetry;
+		F.Close;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function WriteStringToFile(var FileName: TFileName; var Line: string; Append: BG): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		if Append then F.SeekEnd;
+		if not F.Write(Line) then goto LRetry;
+		if Append = False then F.Truncate;
 		if not F.Close then goto LRetry;
 		Result := True;
 	end;
@@ -1022,35 +1078,16 @@ begin
 	begin
 		while not F.Eof do
 		begin
-			F.Readln(Line);
+			if not F.Readln(Line) then goto LRetry;
 			Lines.Add(Line);
 		end;
-		if not F.Close then goto LRetry;
+		F.Close;
 		Result := True;
 	end;
 	F.Free;
 end;
 
-function WriteStringToFile(var FileName: TFileName; Line: string; Append: BG): BG;
-label LRetry;
-var
-	F: TFile;
-begin
-	Result := False;
-	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if Append then F.SeekEnd;
-		if not F.Write(Line) then goto LRetry;
-		if Append = False then F.Truncate;
-		if not F.Close then goto LRetry;
-		Result := True;
-	end;
-	F.Free;
-end;
-
-function WriteStringsToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
+function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
 label LRetry;
 var
 	F: TFile;
@@ -1065,7 +1102,7 @@ begin
 		i := 0;
 		while i < Lines.Count do
 		begin
-			if not F.Writeln(Lines[i]) then goto LRetry;
+			if not F.WriteF(Lines[i] + FileSep) then goto LRetry;
 			Inc(i);
 		end;
 		if Append = False then F.Truncate;
@@ -1075,17 +1112,43 @@ begin
 	F.Free;
 end;
 
+function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+label LRetry;
+var
+	Buf: Pointer;
+	Count: SG;
+begin
+	Result := ReadBufferFromFile(FileName, Buf, Count);
+{	Stream.SetSize(Count);
+	Stream.Seek(0, 0);}
+	Stream.WriteBuffer(Buf^, Count);
+	FreeMem(Buf);
+end;
+
+function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+label LRetry;
+var
+	Buf: Pointer;
+begin
+	GetMem(Buf, Stream.Size);
+	Stream.Seek(0, 0);
+	Stream.ReadBuffer(Buf^, Stream.Size);
+	Result := WriteBufferToFile(FileName, Buf, Stream.Size);
+	FreeMem(Buf);
+end;
+
 function GetDriveInfo(const Drive: Byte): TDriveInfo;
 var
 	P: array[0..3] of Char;
 	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
 	TotalNumberOfClusters: U4;
 begin
+	FillChar(Result, SizeOf(Result), 0);
 	Result.DriveLetter := Char(Drive + Ord('A'));
 	P[0] := Chr(Drive + Ord('A'));
 	P[1] := ':';
 	P[2] := '\';
-	P[3] := #0;
+	P[3] := CharNul;
 	Result.DriveType := GetDriveType(P);
 	case Result.DriveType of
 //  DRIVE_UNKNOWN:  Result := 4096;
@@ -1146,7 +1209,7 @@ begin
     Result := string(Temp.cAlternateFileName);
 		if Result = '' then Result := string(Temp.cFileName);
   end
-  else Result := '';
+	else Result := '';
   Windows.FindClose(SearchHandle);
 end;
 
@@ -1199,7 +1262,7 @@ var
 
 	I: TItemIdList;
 begin
-	FillChar(BrowseInfo, SizeOf(TBrowseInfo), #0);
+	FillChar(BrowseInfo, SizeOf(TBrowseInfo), 0);
 	BrowseInfo.hwndOwner := Handle;
 //	TitleName := 'D:\';
 //	BrowseInfo.pszDisplayName := PChar(TitleName);
@@ -1208,7 +1271,7 @@ begin
 	BrowseInfo.lpszTitle := PChar(TitleName);
 //	BrowseInfo.iImage := 1;
 	BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
-	TempP:= 'D:\' + #0;
+	TempP:= 'D:\' + CharNul;
 	I.mkid.cb := 1;
 	I.mkid.abID[0] := Byte('D');
 //	BrowseInfo.pidlRoot := Addr(I);

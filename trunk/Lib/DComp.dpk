@@ -46,7 +46,6 @@ contains
   uGetInt in 'uGetInt.pas' {fGetInt},
   uScreen in 'uScreen.pas',
   uStrings in 'uStrings.pas',
-  uDialog in 'uDialog.pas' {fDialog},
   uDView in 'uDView.pas',
   uDIni in 'uDIni.pas',
   uDButton in 'uDButton.pas',
@@ -55,6 +54,7 @@ contains
   TrayIcon in '..\ExtLib\TrayIcon.pas',
   CommInt in '..\ExtLib\CommInt.pas',
   CommObjs in '..\ExtLib\CommObjs.pas',
-  PtrEdit in '..\ExtLib\PtrEdit.pas';
+  PtrEdit in '..\ExtLib\PtrEdit.pas',
+  uDEdit in 'uDEdit.pas';
 
 end.

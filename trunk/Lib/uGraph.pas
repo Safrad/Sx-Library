@@ -1,4 +1,10 @@
-// Build: 05/1999-09/1999 Author: Safranek David
+//* File:     Lib\uGraph.pas
+//* Created:  1999-05-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uGraph;
 
@@ -44,7 +50,7 @@ procedure Rec(Canvas: TCanvas; const Rect: TRect;
 procedure Border(Canvas: TCanvas; const Rect: TRect;
 	TopColor, BottomColor: TColor; const Width: Integer);
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG);
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG);
 
 function Over(const SX1, SY1, SX2, SY2: Integer;
 	const DX1, DY1, DX2, DY2: Integer): Boolean; overload;
@@ -54,7 +60,7 @@ function OverE(const SX1, SY1, SX2, SY2: Extended;
 	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
 
 procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
-procedure InitImage(const Image: TImage; const C: TColor);
+//procedure InitImage(const Image: TImage; const C: TColor);
 
 implementation
 
@@ -441,23 +447,23 @@ procedure GoodText(Canvas: TCanvas; R: TRect; Text: string;
 begin
 	Canvas.Font.Color := MixColors(C1, C2);
 	DrawCutedText(Canvas, Rect(R.Left + 1, R.Top - 1, R.Right + 1, R.Bottom - 1),
-		Alignment, Layout, Text, True);
+		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := MixColors(C1, C2);
 	DrawCutedText(Canvas, Rect(R.Left - 1, R.Top + 1, R.Right - 1, R.Bottom + 1),
-		Alignment, Layout, Text, True);
+		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := C1;
 	DrawCutedText(Canvas, Rect(R.Left + 1, R.Top + 1, R.Right + 1, R.Bottom + 1),
-		Alignment, Layout, Text, True);
+		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := C2;
 	DrawCutedText(Canvas, Rect(R.Left - 1, R.Top - 1, R.Right - 1, R.Bottom - 1),
-		Alignment, Layout, Text, True);
+		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := C3;
 	DrawCutedText(Canvas, Rect(R.Left, R.Top, R.Right, R.Bottom),
-		Alignment, Layout, Text, True);
+		Alignment, Layout, Text, True, 0);
 end;
 (*-------------------------------------------------------------------------*)
 procedure CanvasLine(Canvas: TCanvas; const X1, Y1, X2, Y2: Integer);
@@ -526,9 +532,10 @@ begin
 end;
 (*-------------------------------------------------------------------------*)
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG);
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG);
 var
-	i, LastSpace, k: Integer;
+	i, LastSpace{, k}: Integer;
+	Shadow: SG;
 	LineS: array of string;
 	LineN: SG;
 	CurX, CurY: Integer;
@@ -536,6 +543,7 @@ var
 	MaxLines: Integer;
 
 	TextBounds: TRect;
+	C: TColor;
 begin
 	TextHeight := Canvas.TextHeight('W');
 	MaxLines := (Rect.Bottom - Rect.Top) div TextHeight - 1;
@@ -543,6 +551,7 @@ begin
 	LineN := 0;
 	i := 1;
 	LastSpace := 0;
+	DelChars(Caption, CharCR);
 	while i <= Length(Caption) do
 	begin
 		if (Caption[i] = ' ') {or (i=Length(Caption))} then
@@ -550,16 +559,16 @@ begin
 			LastSpace := i;
 		end;
 
-		if (LineN < MaxLines) and (i > 1) and
-			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left)
-			or (Caption[i] = #13) or (Caption[i] = #10))
+		if (Caption[i] = CharLF) or
+			((LineN < MaxLines) and (i > 1) and
+			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left)))
 			then
 		begin
-			if Caption[i] = #13 then
+			if Caption[i] = CharLF then   
 			begin
-				if Caption[i + 1] = #10 then k := 1 else k := 0;
+//				if Caption[i + 1] = CharLF then k := 1 else k := 0;
 				LineS[LineN] := Copy(Caption, 1, i - 1);
-				Delete(Caption, 1, i + k);
+				Delete(Caption, 1, i{ + k});
 			end
 			else
 			if LastSpace = 0 then
@@ -593,18 +602,35 @@ begin
 
 	for i := 0 to LineN - 1 do
 	begin
-		case Alignment of
-		taLeftJustify: CurX := Rect.Left;
-		taRightJustify: CurX := Rect.Right - Canvas.TextWidth(LineS[i]) - 1;
-		else CurX := (Rect.Right + Rect.Left - Canvas.TextWidth(LineS[i])) div 2;
-		end;
-		TextBounds.Left := CurX;
-		TextBounds.Top := CurY;
-		TextBounds.Right := Rect.Right;
-		TextBounds.Bottom := Rect.Bottom; //CurY + TextHeight;
-		DrawText(Canvas.Handle, PChar(LineS[i]), Length(LineS[i]), TextBounds,
-			DT_BOTTOM or DT_LEFT or DT_NOCLIP{ or DrawTextBiDiModeFlags(0)});
+		if LineS[i] <> '' then
+		begin
+			case Alignment of
+			taLeftJustify: CurX := Rect.Left;
+			taRightJustify: CurX := Rect.Right - Canvas.TextWidth(DelCharsF(LineS[i], '&')) - 1;
+			else CurX := (Rect.Right + Rect.Left - Canvas.TextWidth(DelCharsF(LineS[i], '&'))) div 2;
+			end;
+			TextBounds.Left := CurX;
+			TextBounds.Top := CurY;
+			TextBounds.Right := Rect.Right;
+			TextBounds.Bottom := Rect.Bottom; //CurY + TextHeight;
+			if FontShadow <> 0 then
+			begin
+				C := Canvas.Font.Color;
+				Canvas.Font.Color := ShadowColor(C);
+				Shadow := FontShadow;
+				repeat
+					OffsetRect(TextBounds, Shadow, Shadow);
+					DrawText(Canvas.Handle, PChar(LineS[i]), Length(LineS[i]), TextBounds,
+						DT_BOTTOM or DT_LEFT {or DT_NOCLIP}{ or DrawTextBiDiModeFlags(0)});
+					OffsetRect(TextBounds, -Shadow, -Shadow);
+					if FontShadow > 0 then Dec(Shadow) else Inc(Shadow);
+				until Shadow = 0;
+				Canvas.Font.Color := C;
+			end;
+			DrawText(Canvas.Handle, PChar(LineS[i]), Length(LineS[i]), TextBounds,
+				DT_BOTTOM or DT_LEFT {or DT_NOCLIP}{ or DrawTextBiDiModeFlags(0)});
 //		Canvas.TextOut(CurX, CurY, LineS[i]);
+		end;
 		Inc(CurY, TextHeight);
 	end;
 end;

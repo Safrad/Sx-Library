@@ -1,4 +1,10 @@
-// Build: 08/1999-08/1999 Author: Safranek David
+//* File:     Lib\uDPanel.pas
+//* Created:  1999-08-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDPanel;
 
@@ -79,7 +85,6 @@ procedure TDPanel.Paint;
 var
 	Recta: TRect;
 	TopColor, BottomColor: TColor;
-	i: Integer;
 begin
 	Recta := GetClientRect;
 	if BevelOuter <> bvNone then
@@ -126,19 +131,7 @@ begin
 	begin
 		Canvas.Brush.Style := bsClear;
 		Canvas.Font := Font;
-		if FFontShadow <> 0 then
-		begin
-			Canvas.Font.Color := ShadowColor(Font.Color);
-			i := FFontShadow;
-			repeat
-				OffsetRect(Recta, i, i);
-				DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True);
-				OffsetRect(Recta, -i, -i);
-				if FontShadow > 0 then Dec(i) else Inc(i);
-			until i = 0;
-			Canvas.Font.Color := Font.Color;
-		end;
-		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True);
+		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True, FFontShadow);
 	end;
 {	FBmpOut.SetSize(Width, Height);
 	FBmpOut.BarE24(clRed,0

@@ -1,3 +1,11 @@
+//* File:     Lib\uMapInfo.pas
+//* Created:  1998-01-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uMapInfo;
 
 interface
@@ -179,14 +187,14 @@ begin
 	begin
 		for FieldMIndex := 0 to FieldMCount - 1 do
 		begin
-			FIn.Writeln(
+			FIn.WriteF(
 				IntToStr(FieldsM[FieldMIndex].Kod) + ',' +
 				'"' + FieldsM[FieldMIndex].Nazev + '",' +
 				'"' + FieldsM[FieldMIndex].PSC + '",' +
 				IntToStr(FieldsM[FieldMIndex].Typ) + ',' +
 				IntToStr(FieldsM[FieldMIndex].Prior) + ',' +
 				'"' + FieldsM[FieldMIndex].GNazev + '",' +
-				'"' + FieldsM[FieldMIndex].Vojvod + '"');
+				'"' + FieldsM[FieldMIndex].Vojvod + '"' + FileSep);
 		end;
 		FIn.Truncate;
 		FIn.Close;

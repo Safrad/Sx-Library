@@ -1,4 +1,10 @@
-// Build: 10/1999-01/2000 Author: Safranek David
+//* File:     Lib\uAbout.pas
+//* Created:  1999-10-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uAbout;
 
@@ -87,7 +93,7 @@ implementation
 {$R *.DFM}
 uses
 	ShellAPI,
-	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, uMemStatus;
+	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, uMemStatus, uStrings;
 var
 	fAbout: TfAbout;
 
@@ -148,7 +154,6 @@ end;
 
 procedure AboutRW(const Save: Boolean);
 var
-	Tim: TDateTime;
 	FileName: TFileName;
 	s: string;
 begin
@@ -171,8 +176,8 @@ begin
 		s := 'Finished'
 	else
 		s := 'Started';
-	Tim := Now;
-	s := s + ' ' + DateToStr(Tim) + ' ' + TimeToStr(Tim) + #13 + #10;
+
+	s := s + ' ' + DateTimeToS(Now) + CharCR + CharLF;
 	FileName := DelFileExt(ExeFileName) + '.log';
 	WriteStringToFile(FileName, s, True);
 
@@ -186,7 +191,7 @@ begin
 			s := 'Finished'
 		else
 			s := 'Started';
-		s := s + ' ' + DateToStr(Now) + ' ' + TimeToStr(Now);
+		s := s + ' ' + DateToS(Now) + ' ' + TimeToS(Now);
 		if not LogFile.Writeln(s) then goto LRetry;
 		if not LogFile.Close then goto LRetry;
 	end;

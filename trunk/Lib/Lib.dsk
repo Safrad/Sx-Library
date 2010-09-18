@@ -4,9 +4,9 @@ Visible=1
 State=2
 Left=0
 Top=0
-Width=1200
+Width=1,280
 Height=105
-ClientWidth=1200
+ClientWidth=1,280
 ClientHeight=78
 
 [EditWindow0]
@@ -15,14 +15,14 @@ Visible=1
 State=0
 Left=222
 Top=0
-Width=962
-Height=836
+Width=1,042
+Height=896
 BottomPanelSize=52
-ClientWidth=954
-ClientHeight=809
+ClientWidth=1,034
+ClientHeight=869
 
 [MessageView@EditWindow0]
-Width=942
+Width=1,022
 Height=52
 Create=1
 Visible=1
@@ -30,5 +30,5 @@ State=0
 Left=12
 Top=0
 Dockable=1
-ClientWidth=942
+ClientWidth=1,022
 ClientHeight=52
