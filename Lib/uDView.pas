@@ -391,6 +391,7 @@ begin
 
 	Msg.Result := 0;
 //	DefaultHandler(Msg);
+	KeyDown(Msg.CharCode, []);
 end;
 
 procedure TDView.KeyDown(var Key: Word; Shift: TShiftState);
