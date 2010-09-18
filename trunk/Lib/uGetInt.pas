@@ -26,13 +26,14 @@ type
 		ButtonMin: TDButton;
 		ButtonCur: TDButton;
 		ButtonMax: TDButton;
-		LabelMin: TDLabel;
-		LabelMax: TDLabel;
-		LabelNow: TDLabel;
+    LabelMin: TLabel;
+    LabelMax: TLabel;
+    LabelNow: TLabel;
 		ButtonDef: TDButton;
 		ButtonApply: TDButton;
     EditError: TMemo;
     UpDown: TUpDown;
+    Bevel1: TBevel;
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
 		procedure ButtonCurClick(Sender: TObject);
@@ -48,7 +49,7 @@ type
       NewValue: Smallint; Direction: TUpDownDirection);
 	private
 		{ Private declarations }
-		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: Integer;
+		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: S8;
 		OnApply: TOnApplyInt;
 		procedure ChangeInt;
 		procedure InitButtons;
@@ -76,7 +77,9 @@ function GetNumber(Prompt: string;
 implementation
 
 {$R *.DFM}
-uses uStrings, uInput, uError, uParser;
+uses
+  Math,
+	uStrings, uInput, uError, uParser;
 
 var
 	fGetInt: TfGetInt;
@@ -110,7 +113,7 @@ begin
 	fGetInt.LabelNow.Caption := IntToStr(fGetInt.NowVal);
 
 	fGetInt.TrackBar.OnChange := nil;
-	fGetInt.TrackBar.Frequency := (UG(fGetInt.TMaxVal - fGetInt.TMinVal) + 19) div 20;
+	fGetInt.TrackBar.Frequency := (UG(Min(High(SG) div 2, fGetInt.TMaxVal - fGetInt.TMinVal)) + 19) div 20;
 	fGetInt.TrackBar.PageSize := fGetInt.TrackBar.Frequency;
 	if fGetInt.TMaxVal < fGetInt.TrackBar.Min then
 	begin
@@ -119,7 +122,7 @@ begin
 	end
 	else
 	begin
-		fGetInt.TrackBar.Max := fGetInt.TMaxVal;
+		fGetInt.TrackBar.Max := Min(High(SG), fGetInt.TMaxVal);
 		fGetInt.TrackBar.Min := fGetInt.TMinVal;
 	end;
 	fGetInt.TrackBar.SelStart := fGetInt.TCurVal;
@@ -133,6 +136,7 @@ begin
 	fGetInt.InitTrackBar;
 	fGetInt.InitButtons;
 	fGetInt.InitEdit;
+	fGetInt.EditInputChange(nil);
 	if fGetInt.ActiveControl <> fGetInt.EditInput then fGetInt.ActiveControl := fGetInt.EditInput;
 	if Assigned(fGetInt.OnApply) then
 	begin
@@ -177,7 +181,7 @@ end;
 procedure TfGetInt.InitTrackBar;
 begin
 	TrackBar.OnChange := nil;
-	TrackBar.Position := NowVal;
+	TrackBar.Position := Min(High(SG), NowVal);
 	TrackBar.OnChange := TrackBarChange;
 	TrackBar.Repaint;
 end;
@@ -185,7 +189,7 @@ end;
 procedure TfGetInt.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
-	NowVal := StrToValI(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
+	NowVal := StrToValS8(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
 	MesToMemo(EditError);
 	ClearErrors;
 

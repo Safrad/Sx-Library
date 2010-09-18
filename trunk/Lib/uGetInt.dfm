@@ -4,7 +4,7 @@ object fGetInt: TfGetInt
   ActiveControl = EditInput
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
-  ClientHeight = 177
+  ClientHeight = 193
   ClientWidth = 335
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,91 +17,47 @@ object fGetInt: TfGetInt
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelMin: TDLabel
+  object LabelMin: TLabel
     Left = 16
-    Top = 120
-    Width = 73
+    Top = 136
+    Width = 113
     Height = 13
     AutoSize = False
-    Alignment = taLeftJustify
-    Caption = '0'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
+    Caption = '0123456789012345'
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelMax: TDLabel
-    Left = 248
-    Top = 120
-    Width = 73
+  object LabelMax: TLabel
+    Left = 208
+    Top = 136
+    Width = 113
     Height = 13
-    AutoSize = False
     Alignment = taRightJustify
-    Caption = '0'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
+    AutoSize = False
+    Caption = '0123456789012345'
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelNow: TDLabel
-    Left = 136
-    Top = 120
-    Width = 73
+  object LabelNow: TLabel
+    Left = 11
+    Top = 45
+    Width = 125
     Height = 13
     AutoSize = False
-    Alignment = taCenter
-    Caption = '0'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
+    Caption = '0123456789012345'
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
+  end
+  object Bevel1: TBevel
+    Left = 6
+    Top = 102
+    Width = 324
+    Height = 32
   end
   object EditInput: TLabeledEdit
-    Left = 16
+    Left = 8
     Top = 24
-    Width = 113
+    Width = 137
     Height = 19
     AutoSize = False
     EditLabel.Width = 27
@@ -114,8 +70,8 @@ object fGetInt: TfGetInt
     OnChange = EditInputChange
   end
   object ButtonOk: TDButton
-    Left = 160
-    Top = 144
+    Left = 168
+    Top = 160
     Width = 73
     Height = 25
     Caption = '&OK'
@@ -131,8 +87,8 @@ object fGetInt: TfGetInt
     OnClick = ButtonOkClick
   end
   object ButtonCancel: TDButton
-    Left = 248
-    Top = 144
+    Left = 256
+    Top = 160
     Width = 73
     Height = 25
     Cancel = True
@@ -149,7 +105,7 @@ object fGetInt: TfGetInt
   end
   object TrackBar: TTrackBar
     Left = 8
-    Top = 88
+    Top = 104
     Width = 320
     Height = 28
     Max = 99
@@ -220,7 +176,7 @@ object fGetInt: TfGetInt
   end
   object ButtonApply: TDButton
     Left = 8
-    Top = 144
+    Top = 160
     Width = 73
     Height = 25
     Caption = '&Apply'
@@ -234,23 +190,23 @@ object fGetInt: TfGetInt
     Visible = False
   end
   object EditError: TMemo
-    Left = 16
-    Top = 48
-    Width = 307
+    Left = 8
+    Top = 62
+    Width = 321
     Height = 33
     ParentColor = True
     ReadOnly = True
     ScrollBars = ssVertical
-    TabOrder = 12
+    TabOrder = 9
   end
   object UpDown: TUpDown
-    Left = 128
+    Left = 144
     Top = 24
     Width = 17
     Height = 19
     Min = -32768
     Max = 32767
-    TabOrder = 13
+    TabOrder = 10
     OnChangingEx = UpDownChangingEx
   end
 end

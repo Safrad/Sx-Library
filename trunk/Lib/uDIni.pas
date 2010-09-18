@@ -87,8 +87,9 @@ type
 		procedure RWDImage(DImage: TDImage; const Save: BG);
 		procedure RWDView(DView: TDView; const Save: BG);
 		procedure RWListView(ListView: TListView; const Save: BG);
-		procedure RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG);
-		procedure RWMenuUG(Section: string; MenuItem: TMenuItem; var Value: UG; const Save: BG);
+		procedure RWBoolM(Section: string; MenuItem: TMenuItem; const Save: BG); overload;
+		procedure RWBoolM(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG); overload;
+		procedure RWNumM(Section: string; MenuItem: TMenuItem; var Value: UG; const Save: BG);
 		procedure RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: BG);
 		procedure RWComboBox(Section: string; ComboBox: TComboBox; const Save: BG);
 		procedure RWEdit(Section: string; Edit: TEdit; const Save: BG);
@@ -1037,14 +1038,22 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG);
+procedure TDIniFile.RWBoolM(Section: string; MenuItem: TMenuItem; const Save: BG);
+var Value: BG;
 begin
 	if (Save = False) then Value := MenuItem.Checked;
 	RWBool(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
 	if (Save = False) then MenuItem.Checked := Value;
 end;
 
-procedure TDIniFile.RWMenuUG(Section: string; MenuItem: TMenuItem; var Value: UG; const Save: BG);
+procedure TDIniFile.RWBoolM(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG);
+begin
+	if (Save = False) then Value := MenuItem.Checked;
+	RWBool(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
+	if (Save = False) then MenuItem.Checked := Value;
+end;
+
+procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: UG; const Save: BG);
 begin
 	RWNum(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
 //	if (Save = False) then MenuItem.Caption := Value;

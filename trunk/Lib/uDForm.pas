@@ -282,13 +282,13 @@ begin
 	Rect.Top := 0;
 	Rect.Bottom := h;
 
-	if (RectT.Left = 0) and (RectT.Right = w) and (RectT.Top = 0) then
+	if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Top <= 0) then
 		Rect.Top := RectT.Bottom // Up
-	else if (RectT.Left = 0) and (RectT.Right = w) and (RectT.Bottom = h) then
+	else if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Bottom >= h) then
 		Rect.Bottom := RectT.Top // Down
-	else if (RectT.Left = 0) and (RectT.Top = 0) and (RectT.Bottom = h) then
+	else if (RectT.Left <= 0) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
 		Rect.Left := RectT.Right // Left
-	else if (RectT.Right = w) and (RectT.Top = 0) and (RectT.Bottom = h) then
+	else if (RectT.Right >= w) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
 		Rect.Right := RectT.Left // Right
 end;
 {
