@@ -213,7 +213,7 @@ begin
 	end;
 
 	NewSize := ScreenModeCount + 1;
-	if AllocByEx(Length(ScreenModes), NewSize, SizeOf(ScreenModes[0])) then
+	if AllocByExp(Length(ScreenModes), NewSize) then
 		SetLength(ScreenModes, NewSize);
 	for i := ScreenModeCount - 1 downto Index do
 	begin
@@ -486,7 +486,7 @@ begin
 								end;
 
 								NewSize := ScreenModes[i].RefreshRateListCount + 1;
-								if AllocByEx(Length(ScreenModes[i].RefreshRateList), NewSize, SizeOf(ScreenModes[i].RefreshRateList[0])) then
+								if AllocByExp(Length(ScreenModes[i].RefreshRateList), NewSize) then
 									SetLength(ScreenModes[i].RefreshRateList, NewSize);
 								for j := ScreenModes[i].RefreshRateListCount - 1 downto Index do
 								begin
@@ -685,7 +685,7 @@ begin
 	Inc(LastModeIndex);
 	LastModeCount := LastModeIndex + 1;
 	NewSize := LastModeCount;
-	if AllocByEx(Length(LastModes), NewSize, SizeOf(LastModes[0])) then
+	if AllocByExp(Length(LastModes), NewSize) then
 		SetLength(LastModes, NewSize);
 	LastModes[LastModeIndex].Width := Width;
 	LastModes[LastModeIndex].Height := Height;
@@ -796,7 +796,7 @@ begin
 						or (SetRefreshRate < ScreenModes[ModeIndex].RefreshRateList[i]) then
 						begin
 							NewSize := ScreenModes[ModeIndex].RefreshRateListCount + 1;
-							if AllocByEx(Length(ScreenModes[ModeIndex].RefreshRateList), NewSize, SizeOf(ScreenModes[ModeIndex].RefreshRateList[0])) then
+							if AllocByExp(Length(ScreenModes[ModeIndex].RefreshRateList), NewSize) then
 								SetLength(ScreenModes[ModeIndex].RefreshRateList, NewSize);
 							for j := ScreenModes[ModeIndex].RefreshRateListCount - 1 downto i do
 								ScreenModes[ModeIndex].RefreshRateList[j + 1] := ScreenModes[ModeIndex].RefreshRateList[j];
@@ -943,7 +943,7 @@ begin
 				S := S + IntToStr(R) + ',';
 				Inc(ScreenModes[Index].RefreshRateListCount);
 				NewSize := ScreenModes[Index].RefreshRateListCount + 1;
-				if AllocByEx(Length(ScreenModes[Index].RefreshRateList), NewSize, SizeOf(ScreenModes[Index].RefreshRateList[0])) then
+				if AllocByExp(Length(ScreenModes[Index].RefreshRateList), NewSize) then
 					SetLength(ScreenModes[Index].RefreshRateList, NewSize);
 				ScreenModes[Index].RefreshRateList[ScreenModes[Index].RefreshRateListCount - 1] := R;
 			end;

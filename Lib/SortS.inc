@@ -38,7 +38,7 @@ var
 		begin
 			count_index := AVal[i] - min_value;
 			NewSize := Counts[count_index].ValCount + 1;
-			if AllocByEx(Length(Counts[count_index].Vals), NewSize, SizeOf(Counts[count_index].Vals[0])) then
+			if AllocByExp(Length(Counts[count_index].Vals), NewSize) then
 				SetLength(Counts[count_index].Vals, NewSize);
 			Counts[count_index].Vals[Counts[count_index].ValCount] := AIndex[i];
 			Inc(Counts[count_index].ValCount);

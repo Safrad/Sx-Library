@@ -87,7 +87,7 @@ begin
 		{$ifopt d+}
 		if Bitmap = nil then
 		begin
-			IE(434333);
+			IE(43433);
 			Exit;
 		end;
 		{$endif}
@@ -118,6 +118,7 @@ begin
 
 	if (Menu is TMenu) or (Menu is TPopupMenu) then
 	begin
+		TMenu(Menu).OwnerDraw := False;
 		TMenu(Menu).Images := ImageList;
 		c := TMenu(Menu).Items.Count
 	end
@@ -161,7 +162,8 @@ begin
 	for i := 0 to Src.Count - 1 do
 	begin
 		M := TMenuItem.Create(Dsc);
-		M.Name := Src[i].Name + '1';
+		if Src[i].Name <> '' then
+			M.Name := Src[i].Name + '1';
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
 		M.Tag := Src[i].Tag;

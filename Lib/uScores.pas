@@ -218,7 +218,7 @@ begin
 	Co[1] := ColorDiv(clBtnFace, 3 * 16384);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
-	Bmp.GenerateRGB(clNone, gfFadeVert, Co, ScreenCorrectColor, ef16, nil);
+	Bmp.GenerateRGB(gfFadeVert, Co, ScreenCorrectColor, ef16, nil);
 
 //  Bmp.Texture(Pics24[pcPlus + Integer(bnIncScore)], efSub);
 	for i := 0 to MaxHigh + 2 do

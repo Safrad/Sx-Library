@@ -127,7 +127,7 @@ type
 	TFlash = packed record // 16
 		X, Y: S4;
 		Power: S4;
-		Color: TColor;
+		Color: TRColor;
 	end;
 var
 	Flashs: TData;
@@ -547,7 +547,7 @@ begin
 		Flash.X := X;
 		Flash.Y := Y;
 		Flash.Power := 128 + Random(128 + 15);
-		Flash.Color := FireColor(256 + Random(256)); // SpectrumColor(Random(MaxSpectrum));
+		Flash.Color.L := FireColor(256 + Random(256)); // SpectrumColor(Random(MaxSpectrum));
 //	end;
 end;
 
@@ -649,8 +649,7 @@ begin
 			C.G := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
 			C.B := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
 			C.T := 0;}
-			Pix(BitmapAbout.Data, BitmapAbout.ByteX, Flash.X, Flash.Y, TRColor(Flash.Color),
-				TEffect(Flash.Power div 16));
+			Pix(BitmapAbout.Data, BitmapAbout.ByteX, Flash.X, Flash.Y, Flash.Color, TEffect(Flash.Power div 16));
 			Inc(i);
 		end;
 	end;
@@ -678,7 +677,7 @@ end;
 {var
 	MemCount, MemSize: SG;}
 {$endif}
-
+//P: Pointer;
 initialization
 {$ifopt d+}
 {	MemCount := AllocMemCount;
@@ -687,13 +686,15 @@ initialization
 	StartProgramTime := GetTickCount;
 	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
+//	GetMem(P, 1024);
 finalization
 	SetLength(Params, 0);
 	SetLength(DesParams, 0);
 	FreeAndNil(Flashs);
 {$ifopt d+}
-{	if (MemCount < AllocMemCount) or
-		(MemSize < AllocMemSize) then
-			MessageD('Memory Allocation Problem', mtWarning, [mbOk]);}
+{	if (MemCount + 22 < AllocMemCount) {or
+		(MemSize + 6508 < AllocMemSize) then
+			Nop;}
+//			MessageD('Memory Allocation Problem', mtWarning, [mbOk]);
 {$endif}
 end.

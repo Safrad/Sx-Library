@@ -28,10 +28,11 @@ type
 		Negative: Boolean; // False: -, True: +
 		procedure Shortest;
 	protected
+
+	public
 		constructor Create;
 		destructor Destroy; override;
 
-	public
 		procedure Resize(V: SG);
 
 		procedure Assign(V: SG); overload;
@@ -101,7 +102,7 @@ var
 	i, NewSize: SG;
 begin
 	NewSize := V;
-//	if AllocByEx(Length(Number), NewSize, DefMemBuffer) then
+//	if AllocByExp(Length(Number), NewSize) then
 	SetLength(Number, NewSize);
 	for i := NumberCount to V - 1 do
 		Number[i] := 0;
@@ -473,7 +474,7 @@ begin
 end;
 
 procedure TDNumber.Sqrt;
-var N: TDNumber;
+//var N: TDNumber;
 begin
 {	N := TDNumber.Create;
 	N.Assign(0.5);

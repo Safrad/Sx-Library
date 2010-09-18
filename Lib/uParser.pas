@@ -11,7 +11,7 @@ unit uParser;
 interface
 
 uses
-	Classes, StdCtrls, SysUtils,
+	Classes, StdCtrls, SysUtils, Controls,
 	uAdd, uData;
 
 type
@@ -191,6 +191,7 @@ type
 		itReturn,
 		itSpaceTab,
 		itDollar,
+		itPercent,
 		itIdent,
 		itInteger, itReal,
 		itChar, itString,
@@ -218,6 +219,7 @@ const
 		'space',
 		'',
 		'$',
+		'%',
 		'Integer', 'Real',
 		'Char', 'string',
 
@@ -526,6 +528,7 @@ var
 	MaxBracketDepth,
 	TreeDepth,
 	NodeCount: SG;
+	LinesL, LinesG: SG;
 
 type
 	TDParser = class(TObject)
@@ -560,11 +563,12 @@ type
 		BufRC: SG;
 //		TabInc: SG;
 		LineStart: SG;
-		LinesL, LinesG: SG;
+		LinesL: SG;
 		LineBegin: BG;
 //		Idents: string;
 
 		BracketDepth: SG;
+		ProblemCount: UG;
 
 		procedure NodeNumber;
 		function NodeQ(Node: PNode): PNode;
@@ -576,6 +580,7 @@ type
 		function NodeA: PNode;
 
 		function NodeE(Node: PNode): PNode;
+		function EOI: BG;
 
 	public
 		// Output
@@ -621,6 +626,8 @@ type
 //		property SourceLine: Integer read FSourceLine;
 //		property Token: Char read FToken;
 		property BufferIndex: SG read BufRI;
+		property BufferSize: SG read BufRC;
+		property LineIndex: SG read LinesL;
 
 		function Compare(s: string): BG;
 
@@ -634,6 +641,7 @@ type
 		function GetInt: SG;
 		function GetIntE: SG;
 		function GetStr: string;
+		function GetDate: TDate;
 		procedure NextLine;
 		function ReadMs(MinVal, DefVal, MaxVal: SG): SG;
 		function ReadFA(MinVal, DefVal, MaxVal: FA): FA;
@@ -643,7 +651,6 @@ type
 		procedure SkipBlanks;
 		procedure Skip(CharCount: SG);
 
-		function EOI: BG;
 		procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
 		procedure AddMes2(MesId: TMesId; Params: array of string);
 	end;
@@ -704,11 +711,6 @@ begin
 
 //	CompileMesClear;
 	FreeTree(Root);
-	{$ifopt d+}
-	if TreeSize <> 0 then
-		IE(4345);
-	{$endif}
-
 	LinesL := 0;
 	LineBegin := True;
 	LineStart := 0;
@@ -716,6 +718,8 @@ begin
 	BufR := Buffer;//Pointer(Line);
 	BufRI := 0;
 	BufRC := Size;
+
+	ProblemCount := 0;
 end;
 
 constructor TDParser.Create(Line: string);
@@ -737,6 +741,7 @@ begin
 //	if InputType <> itEOI then AddMes2(mtUnusedChars, []);
 	if BufRI > BufRC then AddMes2(mtUnusedChars, []);
 	if BufRI < BufRC then AddMes2(mtStatementExpected, []);
+	if Marks <> maNone then AddMes2(mtUnexpectedEndOfFile, []);
 	inherited Destroy;
 end;
 
@@ -1008,6 +1013,8 @@ begin
 			if BufR[BufRI] = CharCR then
 				if BufR[BufRI + 1] = CharLF then Inc(BufRI);
 			Inc(BufRI);
+			InputType := itReturn;
+			Id := '';
 			Break;
 		end
 		end;
@@ -1036,7 +1043,6 @@ procedure TDParser.Skip(CharCount: SG);
 begin
 	Inc(BufRI, CharCount); if BufRI > BufRC then BufRI := BufRC;
 end;
-
 
 procedure TDParser.ReadInput;
 label LSpaceToTab;
@@ -1083,8 +1089,10 @@ begin
 			end
 			else if EnableSpace = 1 then
 			begin
-				if InputType in [itSpaceTab, itReturn] then
+				if InputType in [{itEmpty,} itSpaceTab, itReturn] then
 				begin
+//					if InputType = itEmpty then Inc(BufRI);
+          Id := '';
 					InputType := itEmpty;
 					Exit;
 				end;
@@ -1181,6 +1189,7 @@ begin
 				end;
 				maString:
 				begin
+					Inc(BufRI);
 					if Compare(StringSep) then
 					begin // Double string sep
 //						Inc(BufRI);
@@ -1350,6 +1359,7 @@ begin
 						Id := BufR[BufRI];
 						case BufR[BufRI] of
 						'$': InputType := itDollar;
+						'%': InputType := itPercent;
 						'+': InputType := itPlus;
 						'-': InputType := itMinus;
 						'*': InputType := itMul;
@@ -1628,12 +1638,21 @@ var
 	M: PCompileMes;
 	i: SG;
 begin
+	Inc(ProblemCount);
+	if ProblemCount > 100 then Exit;
+
 	M := CompileMes.Add;
 	M.Line := Line;
 	M.X0 := X0;
 	M.X1 := X1;
 	M.FileNameIndex := FileNameIndex;
-	M.MesId := MesId;
+	if ProblemCount = 100 then
+	begin
+		M.MesId := mtCompilationTerminated;
+		Exit;
+	end
+	else
+		M.MesId := MesId;
 
 	for i := 0 to Length(Params) - 1 do
 	begin
@@ -1658,10 +1677,12 @@ begin
 	else
 		M.Param2Index := 0;
 
+	{$ifopt d+}
 	if Length(Params) > MesParam[M.MesId] then
 		MessageD('IE too many parameters', mtWarning, [mbOk])
 	else if Length(Params) < MesParam[M.MesId] then
 		MessageD('IE too less parameters', mtWarning, [mbOk]);
+	{$endif}
 end;
 
 procedure TDParser.AddMes2(MesId: TMesId; Params: array of string);
@@ -2290,7 +2311,8 @@ begin
 				e := Calc(Node.Args[i]);
 				if e = 0 then
 				else
-					Result := Round(Result) mod Round(e);
+					Result := ModE(Result, e);
+//					Result := Round(Result) mod Round(e);
 			end;
 		end
 		else
@@ -2996,7 +3018,7 @@ begin
 	CompileMes.Clear;
 end;
 
-function FreeTree(var Node: PNode): BG;
+function FreeTreeR(var Node: PNode): BG;
 var i: SG;
 begin
 	Result := True;
@@ -3005,12 +3027,12 @@ begin
 		case Node.Operation of
 		opNumber:
 		begin
-			FreeMem(Node{$ifopt d+}, NodeNum{$endif});
+			FreeMem(Node);
 			Dec(TreeSize, NodeNum);
 		end;
 		opIdent:
 		begin
-			FreeMem(Node{$ifopt d+}, NodeIdent{$endif});
+			FreeMem(Node);
 			Dec(TreeSize, NodeIdent);
 		end;
 		opPlus..opXNor:
@@ -3022,11 +3044,11 @@ begin
 					IE(4342)
 				else
 				{$endif}
-				FreeTree(Node.Args[i]);
+				FreeTreeR(Node.Args[i]);
 			end;
 
 			Dec(TreeSize, NodeArgs + Node.ArgCount * SizeOf(Node.Args[0]));
-			FreeMem(Node{$ifopt d+}, NodeArgs + Node.ArgCount * SizeOf(Node.Args[0]){$endif});
+			FreeMem(Node);
 		end;
 		else // opNone:
 		begin
@@ -3041,20 +3063,19 @@ begin
 	Node := nil;
 end;
 
-function TDParser.ReadFA(MinVal, DefVal, MaxVal: FA): FA;
+function FreeTree(var Node: PNode): BG;
 begin
-	DecimalSep := '.';
-	ThousandSep := ',';
-	BracketDepth := 0;
-	MaxBracketDepth := 0;
-	TreeDepth := 0;
-	NodeCount := 0;
-	ReadInput;
-	FreeTree(Root);
+	Result := FreeTreeR(Node);
 	{$ifopt d+}
 	if TreeSize <> 0 then
-		IE(4345);
+		IE(43451);
 	{$endif}
+end;
+
+function TDParser.ReadFA(MinVal, DefVal, MaxVal: FA): FA;
+begin
+	ReadInput;
+	FreeTree(Root);
 	Root := NodeE(nil);
 	if Root <> nil then
 	begin
@@ -3073,7 +3094,6 @@ begin
 		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
 		Result := MaxVal;
 	end;
-
 end;
 
 function TDParser.ReadSG(MinVal, DefVal, MaxVal: SG): SG;
@@ -3209,6 +3229,12 @@ begin
 	ReadInput;
 end;
 
+function TDParser.GetDate: TDate;
+begin
+	Result := SToDate(Id);
+	ReadInput;
+end;
+
 procedure TDParser.NextLine;
 begin
 	if InputType <> itReturn then
@@ -3226,9 +3252,5 @@ initialization
 finalization
 	FreeUnitSystem;
 	FreeTree(Root);
-	{$ifopt d+}
-	if TreeSize <> 0 then
-		IE(4345);
-	{$endif}
 	FreeAndNil(CompileMes);
 end.

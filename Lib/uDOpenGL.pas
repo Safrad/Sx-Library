@@ -195,7 +195,7 @@ begin
 		Bmp.Canvas.Brush := Canvas.Brush;
 		Bmp.Canvas.TextOut(0, 0, Text);
 
-		glDrawPixels(Bmp.Width, Bmp.Height, GL_RGB, GL_UNSIGNED_BYTE,
+		glDrawPixels(Bmp.Width, Bmp.Height, GL_FORMAT, GL_UNSIGNED_BYTE,
 			Bmp.GLData);
 
 		Bmp.Free;

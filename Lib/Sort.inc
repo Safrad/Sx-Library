@@ -869,8 +869,6 @@
 {$endif}
 var
 	i: TIndex;
-	j: SG;
-//	Len: SG;
 begin
 //	Len := Min(Length(AIndex), Length(AValue));
 	MaxIndex := Count - 1;
@@ -909,9 +907,8 @@ begin
 	begin
 		for i := 0 to (MaxIndex - 1) div 2 do
 		begin
-			j := AIndex[i];
-			AIndex[i] := AIndex[MaxIndex - i];
-			AIndex[MaxIndex - i] := j;
+			Exchange(AIndex[i], AIndex[MaxIndex - i]);
+			Exchange(AValue[i], AValue[MaxIndex - i]);
 		end;
 	end;
 

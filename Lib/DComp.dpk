@@ -29,12 +29,12 @@ requires
   vcl,
   vclx,
   vcljpg,
-	vclsmp,
-	dclusr;
+  vclsmp,
+  dclusr;
 
 contains
-	uDPanel in 'uDPanel.pas',
-	uDGauge in 'uDGauge.pas',
+  uDPanel in 'uDPanel.pas',
+  uDGauge in 'uDGauge.pas',
   uDLabel in 'uDLabel.pas',
   uAdd in 'uAdd.pas',
   uDispl in 'uDispl.pas',

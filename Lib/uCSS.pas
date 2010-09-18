@@ -58,7 +58,7 @@ begin
 	CharsTable['-'] := ctLetter;
 	CharsTable[''''] := ctLetter;
 	Parser.ReadInput;
-	while not Parser.EOI do
+	while Parser.InputType <> itEOI do
 	begin
 	{	if Parser.Id = ',' then
 		begin
@@ -73,7 +73,7 @@ begin
 			s := '';
 
 			Parser.ReadInput;
-			while not Parser.EOI do
+			while Parser.InputType <> itEOI do
 			begin
 				if Parser.Id = '}' then
 				begin
@@ -86,7 +86,7 @@ begin
 					Sections[SectionCount - 1].Props[Sections[SectionCount - 1].PropCount].Name := Parser.Id;
 					Parser.ReadInput;
 					Parser.ReadColon;
-					while not Parser.EOI do
+					while Parser.InputType <> itEOI do
 					begin
 						if Parser.Id = ';' then
 						begin

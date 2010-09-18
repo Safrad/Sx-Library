@@ -451,7 +451,7 @@ var
 	C: UG;
 begin
 	C := Min(Count, DefFileBuffer);
-	GetMem0(Buf, C);
+	Buf := AllocMem(C);
 	Result := True;
 	while Count > 0 do
 	begin
@@ -843,7 +843,7 @@ var
 					(UpperCase(ExtractFileExt(SearchRec.Name)) = UpperCase(Extension)) then
 					begin
 						NewSize := FilesCount + 1;
-						if AllocByEx(Length(FileNames), NewSize, SizeOf(FileNames[0])) then
+						if AllocByExp(Length(FileNames), NewSize) then
 							SetLength(FileNames, NewSize);
 						if SubDirs then
 							FileNames[FilesCount] := SubPath + SearchRec.Name
