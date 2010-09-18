@@ -31,8 +31,8 @@ type
 		LabelMax: TDLabel;
 		LabelNow: TDLabel;
 		ButtonDef: TDButton;
-		DLabelError: TDLabel;
 		ButtonApply: TDButton;
+    EditError: TMemo;
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
 		procedure ButtonCurClick(Sender: TObject);
@@ -190,10 +190,6 @@ begin
 end;
 
 procedure TfGetInt.EditInputChange(Sender: TObject);
-var
-	Me: PCompileMes;
-	i: SG;
-	s: string;
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToValI(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
@@ -202,14 +198,7 @@ begin
 		NowVal := TDefVal;
 		ChangeInt;
 	end;}
-	Me := CompileMes.GetFirst;
-	s := '';
-	for i := 0 to SG(CompileMes.Count) - 1 do
-	begin
-		s := s + MesToString(Me) + LineSep;
-		Inc(Me, 1);
-	end;
-	DLabelError.Caption := s;
+	MesToMemo(EditError);
 	InitButtons;
 	InitTrackBar;
 	ChangeInt;

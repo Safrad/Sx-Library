@@ -11,7 +11,7 @@ unit uInput;
 interface
 
 uses
-	SysUtils,
+	SysUtils, StdCtrls,
 	uAdd, uData;
 
 // Lexical Analyser
@@ -31,10 +31,11 @@ type
 			itPower, // ^
 			itLBracket, itRBracket, // ( )
 			itLBracket2, itRBracket2, // [ ]
+			itLBracket3, itRBracket3, // { }
 			itLess, itBigger, itEqual, // < > =
 			itComma, itSemicolon, // , ;
 			itPeriod, itColon, // . :
-			itExclamation, // !
+			itExclamation, itQuote, // ! "
 			// 2
 			itAssign, // :=
 			// Var
@@ -52,10 +53,11 @@ const
 		'^',
 		'(', ')',
 		'[', ']',
+		'{', '}',
 		'<', '>', '=',
 		',', ';',
 		'.', ':',
-		'!',
+		'!', '"',
 		':=',
 		'');
 
@@ -245,9 +247,11 @@ var
 	StringSep: Char = '''';
 	InputType: TInput;
 	Id: string; // itIdent
-	IdNumber: Extended; // itReal, itInteger
+	InReal: Extended; // itReal
+	InInteger: SG; // itInteger
 	Keyword: TKeyword; // itKeyword
 
+	ReadMarks: BG;
 	Marks: (
 		maNone,
 		maString,
@@ -263,6 +267,7 @@ var
 	LineStart: SG;
 	LinesL, LinesG: SG;
 	LineBegin: BG;
+	Idents: string;
 
 type
 	TGonFormat = (gfRad, gfGrad, gfCycle, gfDeg);
@@ -447,10 +452,10 @@ type
 		mtProgramSuccess
 		);
 const
-	FirstWarning = mtVariableNotUsed;
-	FirstError = mtUnterminatedString;
-	FirstFatalError = mtCouldNotCompileUnit;
-	FirstInfo = mtUnitSuccess;
+	FirstWarning = mtUserWarning;
+	FirstError = mtUserError;
+	FirstFatalError = mtUserFatalError;
+	FirstInfo = mtUserInfo;
 	MesStrings: array[TMesId] of string = (
 		// Hints
 		'%1',
@@ -535,9 +540,14 @@ function EOI: BG;
 procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
 procedure AddMes2(MesId: TMesId; Params: array of string);
 function CompareS(OldS, NewS: string): Boolean;
+procedure CompileMesClear;
 
 // Str To Data
+function ReadMs: SG;
+function StrToMs(Line: string; const MinVal, DefVal, MaxVal: SG): SG;
 
+function ReadFA(DefVal: FA): FA;
+function ReadSG(DefVal: SG): SG;
 function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 {function StrToValE(Line: string; const UseWinFormat: BG;
@@ -560,6 +570,7 @@ function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1): U1;
 
 function MesToString(M: PCompileMes): string;
+procedure MesToMemo(Memo: TMemo);
 
 function FreeTree(var Node: PNode): BG;
 
@@ -845,7 +856,8 @@ begin
 				if UnarExp then Exp := -Exp;
 				if Abs(Exp) > 1024 then Exp := Sgn(Exp) * 1024;
 				Res := Res * Power(10, Exp);
-				IdNumber := Res;
+				InReal := Res;
+				InInteger := RoundEx(Res);
 //				if Unar then Res := -Res;
 
 //        Val(Copy(Line, LastLineIndex, LineIndex - LastLineIndex), Res, ErrorCode);
@@ -1021,8 +1033,8 @@ begin
 				end;
 				end;
 			end
-			else if (BufR[BufRI] = '{') or
-				((BufR[BufRI] = '(') and (BufR[BufRI + 1] = '*')) then
+			else if ReadMarks and ((BufR[BufRI] = '{') or
+				((BufR[BufRI] = '(') and (BufR[BufRI + 1] = '*'))) then
 			begin
 				if (Marks = maNone) then
 				begin
@@ -1060,7 +1072,7 @@ begin
 				Marks := maNone;
 				if BufR[BufRI] = '*' then Inc(BufRI);
 			end
-			else if (BufR[BufRI] = '/') and (BufR[BufRI + 1] = '/') then
+			else if ReadMarks and ((BufR[BufRI] = '/') and (BufR[BufRI + 1] = '/')) then
 			begin
 				if Marks <> maString then
 					if Marks = maNone then Marks := maLocal;
@@ -1151,7 +1163,7 @@ begin
 					begin
 						InputType := itString;
 						NodeNumber;
-						Id := Id + Char(Round(IdNumber) and $ff);
+						Id := Id + Char(InInteger and $ff);
 						Inc(BufRI);
 						Break;
 					end;
@@ -1178,12 +1190,15 @@ begin
 						')': InputType := itRBracket;
 						'[': InputType := itLBracket2;
 						']': InputType := itRBracket2;
+						'{': InputType := itLBracket3;
+						'}': InputType := itRBracket3;
 						'<': InputType := itLess;
 						'>': InputType := itBigger;
 						'=': InputType := itEqual;
 						',': InputType := itComma;
 						'.': InputType := itPeriod;
 						'!': InputType := itExclamation;
+						'"': InputType := itQuote;
 						':':
 						begin
 							if BufR[BufRI + 1] = '=' then
@@ -1219,9 +1234,6 @@ begin
 			end;
 		end;
 
-{			if Line[LineIndex] = #13 then
-			Inc(LineNum);
-		Inc(LineIndex);}
 		Inc(BufRI);
 	end;
 	if (InputType = itString) and (Length(Id) = 1) then
@@ -1232,7 +1244,89 @@ begin
 
 //		if TabCount <>
 	// Warning While/while D???
+{	Idents := Idents + 'F' + NToS(FuncLevel) + '<B' + NToS(BlockLevel) + '>' +
+		Id + LineSep;}
 end;
+
+	procedure ReadKeyword(K: TKeyword);
+	begin
+		if (InputType <> itKeyword) or (K <> Keyword) then
+			AddMes2(mtExpected, [KWs[Keyword], ''])
+		else
+			ReadInput;
+	end;
+
+	procedure ReadInputType(I: TInput);
+	begin
+		if (InputType <> I) then
+			AddMes2(mtStrokeOrSemicolonExpected, [''])
+		else
+			ReadInput;
+	end;
+
+	procedure ReadConstS;
+	begin
+		if not (InputType in [itString, itChar]) then
+			AddMes2(mtStringExpected, [''])
+		else
+			ReadInput;
+	end;
+
+{	procedure ReadComma;
+	begin
+		if not (InputType in [itComma]) then
+			AddMes2(mtCommaExpected, [''])
+		else
+			ReadInput;
+	end;}
+
+	procedure ReadSemicolon;
+	begin
+		if not (InputType in [itSemicolon]) then
+			AddMes2(mtSemicolonExpected, [''])
+		else
+			ReadInput;
+	end;
+
+	procedure ReadCommaSemicolon;
+	begin
+		if not (InputType in [itComma, itSemicolon]) then
+			AddMes2(mtStrokeOrSemicolonExpected, [''])
+		else
+			ReadInput;
+	end;
+
+	procedure ReadPeriod;
+	begin
+		if not (InputType in [itPeriod]) then
+			AddMes2(mtPeriodExpected, [''])
+		else
+			ReadInput;
+	end;
+
+	procedure ReadColon;
+	begin
+		if not (InputType in [itColon]) then
+			AddMes2(mtColonExpected, [''])
+		else
+			ReadInput;
+	end;
+
+	{	function Compare(s: string): BG;
+	var Id: string;
+	begin
+		if (InputType <> itIdent) or Id <> s then
+		begin
+			AddMes2(mtExpected, [s,'']);
+			Result := False;
+		end
+		else
+		begin
+			ReadInput;
+			Result := True;
+		end;
+	end;}
+
 
 function CompareS(OldS, NewS: string): Boolean;
 begin
@@ -1246,6 +1340,64 @@ begin
 		end;
 	end;
 end;
+
+function ReadMs: SG;
+var
+	N: array[0..31] of FA;
+	V: FA;
+	NC: SG;
+	i, j: SG;
+	Period: BG;
+begin
+	NC := 0;
+	Period := False;
+	ReadInput;
+	while True do
+	begin
+		case InputType of
+		itEOI: Break;
+		itInteger, itReal:
+		begin
+			N[NC] := InReal;
+			if NC < Length(N) then
+				Inc(NC);
+			ReadInput;
+			if InputType <> itColon then Break;
+//			AddMes2(mtColonExpected, []);
+			ReadColon;
+		end
+{		itPeriod:
+		begin
+			Period := True;
+			N[NC - 1] :=
+			Inc(NC);
+			Continue;
+		end;}
+		else
+		begin
+			AddMes2(mtExpressionExpected, ['']);
+			Break;
+		end;
+		end;
+	end;
+
+	j := SG(not Period);
+	V := 0;
+	for i := NC - 1 downto 0 do
+	begin
+		case j of
+		0: V := V + N[i];
+		1: V := V + 1000 * N[i];
+		2: V := V + 60 * 1000 * N[i];
+		3: V := V + 60 * 60 * 1000 * N[i];
+		4: V := V + 24 * 60 * 60 * 1000 * N[i];
+		end;
+		Inc(j);
+	end;
+	Result := RoundEx(V);
+end;
+
+// Pascal Compiler
 
 function IsVarFunc(VarName: string; FuncLevel: SG; Uni: PUnit): PVF;
 var
@@ -1445,7 +1597,7 @@ begin
 		Inc(TreeSize, 1 + 10);
 		Inc(NodeCount);
 		Result.Operation := opNumber;
-		Result.Num := IdNumber;
+		Result.Num := InReal;
 		ReadInput;
 	end;
 	itLBracket:
@@ -1454,7 +1606,7 @@ begin
 		ReadInput;
 		Result := NodeE(nil);
 {		if Result = nil then
-			AddMes2(mtExpressionExpected, [Id]); D???}
+			AddMes2(mtExpressionExpected, ['']); D???}
 		if InputType <> itRBracket then
 		begin
 			AddMes2(mtExpected, [')', Id]);
@@ -1670,6 +1822,8 @@ end;
 begin
 	Result := NodeE2(NodeA);
 end;}
+
+
 
 function CreateTree: PNode;
 begin
@@ -2359,43 +2513,74 @@ begin
 	end;
 end;
 
+procedure CompileMesClear;
+var
+	M: PCompileMes;
+	i: SG;
+begin
+	M := CompileMes.GetFirst;
+	for i := 0 to SG(CompileMes.Count) - 1 do
+	begin
+		M.Params := '';
+		Inc(M);
+	end;
+	CompileMes.Clear;
+end;
+
+function StrToMs(Line: string; const MinVal, DefVal, MaxVal: SG): SG;
+begin
+	CompileMesClear;
+	CreateUnitSystem;
+
+	LinesL := 0;
+	LineBegin := True;
+	LineStart := 0;
+
+	BufR := Pointer(Line);
+	BufRI := 0;
+	BufRC := Length(Line);
+
+	Result := ReadMs;
+	if InputType <> itEOI then AddMes2(mtUnusedChars, []);
+
+	if Result < MinVal then
+	begin
+		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
+		Result := MinVal;
+	end
+	else if Result > MaxVal then
+	begin
+		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
+		Result := MaxVal;
+	end;
+end;
+
+function ReadFA(DefVal: FA): FA;
+begin
+	FreeTree(Root);
+	{$ifopt d+}
+	if TreeSize <> 0 then
+		IE(4345);
+	{$endif}
+	Root := CreateTree;
+	if Root <> nil then
+		Result := Calc(Root)
+	else
+		Result := DefVal;
+end;
+
+function ReadSG(DefVal: SG): SG;
+begin
+	Result := RoundEx(ReadFA(DefVal));
+end;
+
 function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 label LNext;
 var
 	DecimalSep, ThousandSep: string[3];
-	M: PCompileMes;
-	i: SG;
 //	VF: PVF;
 begin
-{
-	IntStr := ReadString(Section, Ident, '');
-	if (Length(IntStr) > 2) and (IntStr[1] = '0') and
-		((IntStr[2] = 'X') or (IntStr[2] = 'x')) then
-		IntStr := '$' + Copy(IntStr, 3, Maxint);
-	Result := StrToIntDef(IntStr, Default);
-}
-//	Result := DefVal;
-{	if Length(Line) <= 0 then
-	begin
-		AddMes2('Line too short');
-		Exit;
-	end;}
-{	if Length(Line) = 3 then
-	begin
-		if Pos(UpperCase(Line), 'DEF') <> 0 then Exit;
-		if Pos(UpperCase(Line), 'MIN') <> 0 then
-		begin
-			Result := MinVal;
-			Exit;
-		end;
-		if Pos(UpperCase(Line), 'MAX') <> 0 then
-		begin
-			Result := MaxVal;
-			Exit;
-		end;
-	end;}
-
 	if UseWinFormat then
 	begin
 		DecimalSep := DecimalSeparator;
@@ -2407,32 +2592,8 @@ begin
 		ThousandSep := ',';
 	end;
 
-	M := CompileMes.GetFirst;
-	for i := 0 to SG(CompileMes.Count) - 1 do
-	begin
-		M.Params := '';
-		Inc(M);
-	end;
-	CompileMes.Clear;
+	CompileMesClear;
 	CreateUnitSystem;
-
-{	VF := UnitSystem.VFs.Add;
-	VF.Name := 'def';
-	VF.Typ := '';
-	VF.UsedCount := 0;
-	VF.Line := 0;
-	VF.VFs := nil;
-	VF.Value := DefVal;
-	VF.ParamCount := 0;
-
-	VF := UnitSystem.VFs.Add;
-	VF.Name := 'zero';
-	VF.Typ := '';
-	VF.UsedCount := 0;
-	VF.Line := 0;
-	VF.VFs := nil;
-	VF.Value := 0;
-	VF.ParamCount := 0; D??? Free Error}
 
 	LinesL := 0;
 	LineBegin := True;
@@ -2442,31 +2603,18 @@ begin
 	BufRI := 0;
 	BufRC := Length(Line);
 
-	FreeTree(Root);
-	{$ifopt d+}
-	if TreeSize <> 0 then
-		IE(4343);
-	{$endif}
+	Result := ReadFA(DefVal);
 
-	Root := CreateTree;
-	if Root <> nil then
-		Result := Calc(Root)
-	else
-		Result := DefVal;
-
-//	if Level > 0 then ShowError('Incorect level');
-//	if BufRI < BufRC then AddMes2(mtUnusedChars, []);
-	BufRI := BufRC;
 	if InputType <> itEOI then AddMes2(mtUnusedChars, []);
 
 	if Result < MinVal then
 	begin
-//		ShowError('Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal));
+		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
 		Result := MinVal;
 	end
 	else if Result > MaxVal then
 	begin
-//		ShowError('Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal));
+		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
 		Result := MaxVal;
 	end;
 end;
@@ -2516,7 +2664,6 @@ begin
 	Result := StrToValI(Line, UseWinFormat, 0, UG(DefVal), 255, 1);
 end;
 
-
 function MesToString(M: PCompileMes): string;
 var s: string;
 begin
@@ -2540,6 +2687,22 @@ begin
 	if M.MesId = mtIllegalChar then s := s + ' ($' + NToHS(Ord(M.Params[1])) + ')';
 
 	Result := Result + s;
+end;
+
+procedure MesToMemo(Memo: TMemo);
+var
+	Me: PCompileMes;
+	i: SG;
+begin
+	Memo.Lines.BeginUpdate;
+	Memo.Lines.Clear;
+	Me := CompileMes.GetFirst;
+	for i := 0 to SG(CompileMes.Count) - 1 do
+	begin
+		Memo.Lines.Add(MesToString(Me));
+		Inc(Me);
+	end;
+	Memo.Lines.EndUpdate;
 end;
 
 initialization

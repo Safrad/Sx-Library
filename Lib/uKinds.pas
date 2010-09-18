@@ -867,8 +867,9 @@ begin
 	begin
 		// D???
 		FreeFile(Index);
+		Items[Index].Changed := False;
 		LoadFromFile(Index);
-		ChangeFile(Sender);
+		KindChangeFile(Sender);
 	end;
 end;
 

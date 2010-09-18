@@ -138,7 +138,7 @@ function GetFileSiz(const FileName: TFileName): U8;
 function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
-function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+function CopyFile(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CreateDir(const Dir: string): Boolean;
 function NewEmptyDir(var Dir: string; const CanCreate: Boolean): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
@@ -939,12 +939,14 @@ begin
 	F.Free;
 end;
 
-function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+function CopyFile(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+label LRetry;
 begin
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
+	LRetry:
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
 	if Result = False then
-		IOError(Source + LineSep + Dest, GetLastError);
+		if IOErrorRetry(Dest, GetLastError) then goto LRetry;
 end;
 
 function CreateDir(const Dir: string): Boolean;

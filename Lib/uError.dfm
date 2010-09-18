@@ -351,7 +351,6 @@ object fIOError: TfIOError
       '3')
     ReadOnly = True
     TabOrder = 5
-    WordWrap = False
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove

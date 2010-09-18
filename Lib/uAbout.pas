@@ -48,7 +48,7 @@ type
     DButtonMemoryStatus: TDButton;
 		DLabel1: TDLabel;
     EditModified: TEdit;
-    LabelModified: TDLabel;
+		LabelModified: TDLabel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -97,7 +97,7 @@ implementation
 
 {$R *.DFM}
 uses
-	ShellAPI,
+	ShellAPI, Dialogs,
 	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, uMemStatus, uStrings;
 var
 	LMemClock: U8;
@@ -506,9 +506,23 @@ begin
 		MainIni.RWFormPos(Self, True);
 end;
 
+{$ifopt d+}
+var
+	MemCount, MemSize: SG;
+{$endif}
+
 initialization
+{$ifopt d+}
+	MemCount := AllocMemCount;
+	MemSize := AllocMemSize;
+{$endif}
 	Flashs := TData.Create;
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization
 	Flashs.Free; Flashs := nil;
+{$ifopt d+}
+{	if (MemCount < AllocMemCount) or
+		(MemSize < AllocMemSize) then
+			MessageD('Memory Allocation Problem', mtWarning, [mbOk]);}
+{$endif}
 end.

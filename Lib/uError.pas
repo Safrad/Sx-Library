@@ -163,7 +163,6 @@ begin
 //	PlayWinSound(wsCriticalStop);
 //	{$endif}
 end;
-{$endif}
 
 procedure CreateException;
 begin
@@ -172,6 +171,7 @@ begin
 	call eax
 	end;
 end;
+{$endif}
 
 function ErrorMes(const ErrorCode: U4): string;
 var
@@ -317,13 +317,15 @@ begin
 					FButtons[i].OnKeyDown := FormKeyDown;
 					FButtons[i].OnKeyUp := FormKeyUp;
 					FButtons[i].OnMouseMove := FormMouseMove;
+					FButtons[i].Visible := False;
 
 					InsertControl(FButtons[i]);
-				end;
+				end
+				else
+					FButtons[i].Visible := False;
 
 				FButtons[i].Name := 'Button' + IntToStr(i);
 				FButtons[i].Caption := Ignore.Buttons[i];
-				FButtons[i].Visible := True;
 	//			(ButtonAll.Left + ButtonAll.Width + BSpace + (BWidth + BSpace) * (2 * i - ButtonCount) + BSpace + MaxWid) div 2;
 				FButtons[i].Left := 0;
 				FButtons[i].Width := Max(BMinWidth, Canvas.TextWidth(FButtons[i].Caption) + 2 * 5);
@@ -338,11 +340,9 @@ begin
 				FButtons[i].Tag := i;
 				FButtons[i].Down := Ignore.Res = i;
 				FButtons[i].Enabled := Ignore.Res = -1;
-				if (i = 0) and (FButtons[i].Enabled) then
-					ActiveControl := FButtons[i];
 				FButtons[i].Cancel := i = Length(Ignore.Buttons) - 1;
 			end
-			else if not Assigned(FButtons[i]) then
+			else if Assigned(FButtons[i]) then
 				FButtons[i].Visible := False;
 
 		end;
@@ -372,16 +372,26 @@ begin
 
 	MaxWid := Max(MaxWid, Wid);
 
-	if MaxWid > Screen.Width - 2 * (Width - ClientWidth) then
-		MaxWid := Screen.Width - 2 * (Width - ClientWidth);
-
-	MemoMsg.Width := MaxWid - MemoMsg.Left - FormBorder + 6;
 	Hei := Max(LineCount, 3) * Canvas.TextHeight(Ignore.Msg) + 6;
-
+	Wid := Canvas.TextHeight(Ignore.Msg) * ((Screen.Height - 128{TaskBar} - 2 * (Height - ClientHeight)) div Canvas.TextHeight(Ignore.Msg)) + 6;
+	if Hei > Wid then
+	begin
+		Hei := Wid;
+		MemoMsg.ScrollBars := ssVertical;
+		Inc(MaxWid, 20); // ScrollBarWidth
+	end
+	else
+		MemoMsg.ScrollBars := ssNone;
 	MemoMsg.Height := Hei;
 
+	MaxWid := Min(MaxWid, Screen.Width - 2 * (Width - ClientWidth));
+
+	MemoMsg.Width := MaxWid - MemoMsg.Left - FormBorder + 6;
+
+	MemoMsg.Lines.BeginUpdate;
 	MemoMsg.Lines.Clear;
 	MemoMsg.Lines.Insert(0, ReplaceF(Ignore.Msg, CharLF, CharCR + CharLF));
+	MemoMsg.Lines.EndUpdate;
 //	Hei := Max(Hei, ButtonAll.Top + ButtonAll.Height + 6);
 	Inc(Hei, MemoMsg.Top + FormBorder);
 	ClientWidth := MaxWid;
@@ -399,6 +409,9 @@ begin
 			FButtons[i].Left := Wid;
 			Inc(Wid, FButtons[i].Width + FormBorder);
 			FButtons[i].Top := Hei;
+			FButtons[i].Visible := True;
+			if (i = 0) and (FButtons[i].Enabled) then
+				ActiveControl := FButtons[i];
 		end;
 	end
 	else
@@ -710,6 +723,7 @@ procedure ShowMessages;
 begin
 	if Assigned(fIOError) then
 	begin
+		// StartTickCount D???
 		fIOError.ShowMes;
 		fIOError.ShowModal;
 	end

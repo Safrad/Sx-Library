@@ -241,13 +241,13 @@ function Sgn(const I: FA): SG; overload;
 function SgnMul(const Signum, Num: SG): SG;
 
 procedure DivModU32(const Dividend: LongWord; const Divisor: Word;
-	var Res, Remainder: Word);
+	out Res, Remainder: Word);
 procedure DivModS32(const Dividend: LongInt; const Divisor: SmallInt;
-	var Res, Remainder: SmallInt);
+	out Res, Remainder: SmallInt);
 procedure DivModU64(const Dividend: Int64; const Divisor: LongWord;
-	var Res, Remainder: LongWord);
+	out Res, Remainder: LongWord);
 procedure DivModS64(const Dividend: Int64; const Divisor: LongInt;
-	var Res, Remainder: LongInt);
+	out Res, Remainder: LongInt);
 
 function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
 function FastSqrt(A: SG): SG;
@@ -376,7 +376,7 @@ function StrToValE(S: string;
 function BToStr(const B: S4): string; overload;
 function BToStr(const B: S8): string; overload;
 
-function SToMs(const Str: string): SG; // MsToStr<-
+//function SToMs(const Str: string): SG; // MsToStr<-
 
 function SToDate(Str: string): TDate;
 function SToTime(Str: string): TTime;
@@ -509,7 +509,7 @@ begin
 end;
 
 procedure DivModU32(const Dividend: LongWord; const Divisor: Word;
-	var Res, Remainder: Word);
+	out Res, Remainder: Word);
 asm
 	PUSH    EBX
 	MOV     EBX,EDX
@@ -523,7 +523,7 @@ asm
 end;
 
 procedure DivModS32(const Dividend: LongInt; const Divisor: SmallInt;
-	var Res, Remainder: SmallInt);
+	out Res, Remainder: SmallInt);
 asm
 	PUSH    EBX
 	MOV     EBX,EDX
@@ -537,7 +537,7 @@ asm
 end;
 
 procedure DivModU64(const Dividend: Int64; const Divisor: LongWord;
-	var Res, Remainder: LongWord);
+	out Res, Remainder: LongWord);
 begin
 	asm
 	pushad
@@ -554,7 +554,7 @@ begin
 end;
 
 procedure DivModS64(const Dividend: Int64; const Divisor: LongInt;
-	var Res, Remainder: LongInt);
+	out Res, Remainder: LongInt);
 begin
 	asm
 	pushad
@@ -1577,8 +1577,9 @@ begin
 	end;
 end;
 
+
+
 function SToMs(const Str: string): SG;
-//function StrToShortTime(const Str: string): LongInt;
 var
 	V: LongInt;
 	Mul: LongInt;
@@ -1605,7 +1606,7 @@ begin
 			case Str[W] of
 			'0'..'9':
 			begin
-				V := V + Mul * (Ord(Str[W]) - 48);
+				V := V + Mul * (Ord(Str[W]) - Ord('0'));
 				Mul := Mul div 10;
 			end;
 			end;
@@ -1618,7 +1619,7 @@ begin
 			case Str[W] of
 			'0'..'9':
 			begin
-				V := V + Mul * (Ord(Str[W]) - 48);
+				V := V + Mul * (Ord(Str[W]) - Ord('0'));
 				if V > 100000000 then
 				begin
 					Result := V;
@@ -1735,6 +1736,7 @@ function MsToStr(const DT: Int64; const UseWinFormat: BG;
 var
 	h, m, s, d: LongWord;
 	Day: SG;
+	Res, Rem: U2;
 
 	TimeSep, DecimalSep, ListSep: string[3];
 begin
@@ -1787,10 +1789,13 @@ begin
 		if (h < 10) and (Display <> diHHMSD) then
 		begin
 			if (DT >= 0) and FixedWidth then Result := Result + ' ';
-			Result := Result + Chr(h + 48) + TimeSep;
+			Result := Result + Chr(h + Ord('0')) + TimeSep;
 		end
 		else if h < 100 then
-			Result := Result + Chr((h div 10) + 48) + Chr((h mod 10) + 48) + TimeSep
+		begin
+			DivModU32(h, 10, Res, Rem);
+			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep
+		end
 		else
 			Result := Result + IntToStr(h) + TimeSep;
 	end;
@@ -1803,10 +1808,13 @@ begin
 		else if h < 10 then
 		begin
 			if (DT >= 0) and FixedWidth then Result := Result + ' ';
-			Result := Result + Chr(h + 48) + TimeSep
+			Result := Result + Chr(h + Ord('0')) + TimeSep
 		end
 		else if h < 100 then
-			Result := Result + Chr((h div 10) + 48) + Chr((h mod 10) + 48) + TimeSep
+		begin
+			DivModU32(h, 10, Res, Rem);
+			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep
+		end
 		else
 			Result := Result + IntToStr(h) + TimeSep;
 	end;
@@ -1818,14 +1826,15 @@ begin
 			if (h = 0) and (not (Display in [diHHMSD, diHMSD, diDHMSD])) then
 			begin
 				if FixedWidth then Result := Result + ' ';
-				Result := Result + Chr(m + 48) + TimeSep
+				Result := Result + Chr(m + Ord('0')) + TimeSep
 			end
 			else
-				Result := Result + '0' + Chr(m + 48) + TimeSep;
+				Result := Result + '0' + Chr(m + Ord('0')) + TimeSep;
 		end
 		else
 		begin
-			Result := Result + Chr((m div 10) + 48) + Chr((m mod 10) + 48) + TimeSep;
+			DivModU32(m, 10, Res, Rem);
+			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep;
 		end;
 
 	if Display = diSD then
@@ -1835,11 +1844,12 @@ begin
 	else
 		if s < 10 then
 		begin
-			Result := Result + '0' + Chr(s + 48);
+			Result := Result + '0' + Chr(s + Ord('0'));
 		end
 		else
 		begin
-			Result := Result + Chr((s div 10) + 48) + Chr((s mod 10) + 48);
+			DivModU32(s, 10, Res, Rem);
+			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0'));
 		end;
 
 	case Abs(Decimals) of
@@ -1847,7 +1857,7 @@ begin
 	begin
 		d := d div 100;
 		if (Decimals > 0) or (d <> 0) then
-			Result := Result + DecimalSep + Chr(d + 48);
+			Result := Result + DecimalSep + Chr(d + Ord('0'));
 	end;
 	2:
 	begin

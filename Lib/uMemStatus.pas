@@ -14,6 +14,9 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls, uDLabel, uDButton, uDTimer, uDForm;
 
+const
+	MaxLabel = 11;
+	MaxHistory = 2;
 type
 	TfMemStatus = class(TDForm)
 		Timer1: TDTimer;
@@ -42,6 +45,8 @@ type
     procedure FormHide(Sender: TObject);
 	private
 		{ Private declarations }
+		LabelX: array[0..MaxHistory, 0..MaxLabel] of TDLabel;
+		LabelV: array[0..MaxHistory, 0..MaxLabel] of Integer;
 	public
 		{ Public declarations }
 	end;
@@ -53,12 +58,6 @@ implementation
 
 {$R *.DFM}
 uses uAdd;
-const
-	MaxLabel = 11;
-	MaxHistory = 2;
-var
-	LabelX: array[0..MaxHistory, 0..MaxLabel] of TDLabel;
-	LabelV: array[0..MaxHistory, 0..MaxLabel] of Integer;
 
 procedure TfMemStatus.Timer1Timer(Sender: TObject);
 var

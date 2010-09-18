@@ -353,12 +353,19 @@ begin
 	if FInMemory = False then LoadFromFile(FFileName);
 	Result := -1;
 	if SectionIndex >= 0 then
+	begin
+		{$ifopt d+}
+		if Length(FSections[SectionIndex].Keys) < FSections[SectionIndex].KeyCount then
+			IE(234)
+		else
+		{$endif}
 		for i := 0 to FSections[SectionIndex].KeyCount - 1 do
 			if FSections[SectionIndex].Keys[i].Name = Ident then
 			begin
 				Result := i;
 				Break;
 			end;
+	end;
 end;
 
 procedure TDIniFile.ReadSection(const Section: string; Strings: TStrings);

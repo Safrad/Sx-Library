@@ -25,7 +25,7 @@ const
 type
 	TCharSet = set of Char;
 
-function        LowCase( ch : Char ) : Char;
+function LowCase(ch: Char): Char;
 
 function DelCharsF(const s: string; const SubChar: Char): string;
 procedure DelChars(var s: string; const SubChar: Char);
