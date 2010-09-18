@@ -1,9 +1,9 @@
 //* File:     Lib\uDImage.pas
 //* Created:  2000-07-01
-//* Modified: 2005-02-17
-//* Version:  X.X.33.X
+//* Modified: 2005-05-31
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDImage;
@@ -288,7 +288,7 @@ begin
 	zmCustom:
 	begin
 		ZoomI := Round(Zoom * 1000);
-		if GetInt('Zoom To (×1000)', ZoomI, 1, 1000, 1000000, nil) then
+		if GetNumber('Zoom To (×1000)', ZoomI, 1, 1000, 1000000, nil) then
 			Zoom := ZoomI / 1000;
 	end;
 	zmCenter:

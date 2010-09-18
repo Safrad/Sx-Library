@@ -1,9 +1,9 @@
 //* File:     Lib\uScreen.pas
 //* Created:  1999-08-01
-//* Modified: 2004-09-26
-//* Version:  X.X.33.X
+//* Modified: 2005-06-27
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uScreen;
@@ -307,7 +307,7 @@ var
 
 	Ram: Cardinal;
 begin
-	Screen.Cursor := crHourGlass;
+	BeginLongOperation;
 
 	if First = False then
 	begin
@@ -553,7 +553,7 @@ begin
 		StartRefreshRate := NowRefreshRate;
 		NotFirstTime := True;
 	end;
-	Screen.Cursor := crDefault;
+	EndLongOperation(False);
 	if First = False then
 	begin
 		First := True;

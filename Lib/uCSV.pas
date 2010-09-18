@@ -1,9 +1,9 @@
 //* File:     Lib\uCSV.pas
 //* Created:  2004-01-04
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-06-23
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uCSV;

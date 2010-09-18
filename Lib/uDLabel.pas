@@ -1,9 +1,9 @@
 //* File:     Lib\uDLabel.pas
 //* Created:  1999-08-01
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-05-31
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDLabel;
@@ -27,7 +27,7 @@ type
 		FAlignment: TAlignment;
 {		FAlphaBlend: Boolean;
 		FAlphaBlendValue: Byte;}
-		FAutoSize: BG;
+		FAutoSize: Boolean;
 		FBackEffect: TEffect;
 		FBevelInner: TPanelBevel;
 		FBevelOuter: TPanelBevel;
@@ -44,10 +44,10 @@ type
 		FDispl: TDispl;
 		FLayout: TTextLayout;
 
-		FTransparent: BG;
+		FTransparent: Boolean;
 		FTransparentColor: Boolean;
 		FTransparentColorValue: TColor;
-		FWordWrap: BG;
+		FWordWrap: Boolean;
 
 		// Events
 		FOnPaint: TNotifyEvent;
@@ -98,7 +98,7 @@ type
 {		property AlphaBlend: Boolean read FAlphaBlend write SetAlphaBlend;
 		property AlphaBlendValue: Byte read FAlphaBlendValue write SetAlphaBlendValue;}
 
-		property AutoSize: BG read FAutoSize write FAutoSize;
+		property AutoSize: Boolean read FAutoSize write FAutoSize;
 		property Alignment: TAlignment read FAlignment write FAlignment;
 		property Caption: string read FCaption write SetCaption;
 		property Color; //: TColor read FColor write SetColor;
@@ -134,8 +134,6 @@ type
 
 		property OnClick;
 		property OnDblClick;
-{		property OnMouseEnter;
-		property OnMouseLeave;}
 		property OnMouseMove;
 		property OnMouseDown;
 		property OnMouseUp;

@@ -1,9 +1,9 @@
 //* File:     Lib\uLogo.pas
 //* Created:  1999-10-01
-//* Modified: 2005-02-14
-//* Version:  X.X.33.X
+//* Modified: 2005-06-27
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uLogo;
@@ -55,7 +55,7 @@ var
 	Co: array[0..3] of TColor;
 	Bmp, BmpT: TDBitmap;
 begin
-	Screen.Cursor := crHourGlass;
+	BeginLongOperation;
 	if Application.MainForm <> nil then
 		fLogo := TfLogo.Create(Application.MainForm)
 	else
@@ -144,7 +144,7 @@ var
 	OutBmp: TDBitmap;
 	XCount, YCount: Integer;
 begin
-	Screen.Cursor := crHourGlass;
+	BeginLongOperation;
 	fLogo := TfLogo.Create(Application.MainForm);
 //  Application.CreateForm(TfLogo, fLogo);
 	fLogo.FullScreen := True;
@@ -208,7 +208,7 @@ begin
 			fLogo.Timer1.Interval := MinimumTime - LogoTime;
 			fLogo.Timer1.Enabled := True;
 		end;
-		Screen.Cursor := crDefault;
+		EndLongOperation(False);
 	end;
 end;
 
@@ -216,7 +216,7 @@ procedure HideLogoPromptly;
 begin
 	if Assigned(fLogo) and fLogo.Visible then
 	begin
-		Screen.Cursor := crDefault;
+		EndLongOperation(False);
 		fLogo.Close;
 	end;
 end;
@@ -265,7 +265,7 @@ begin
 		Timer1.Enabled := False;
 	end;
 
-	Screen.Cursor := crDefault;
+	EndLongOperation;
 	BackBitmap.SetSize(0, 0);
 end;
 

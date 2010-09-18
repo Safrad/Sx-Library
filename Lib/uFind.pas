@@ -1,9 +1,9 @@
 //* File:     Lib\uFind.pas
 //* Created:  1999-05-01
-//* Modified: 2005-02-14
-//* Version:  X.X.33.X
+//* Modified: 2005-05-08
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uFind;

@@ -1,9 +1,9 @@
 //* File:     Lib\uInput.pas
 //* Created:  2004-03-07
-//* Modified: 2005-02-15
-//* Version:  X.X.33.X
+//* Modified: 2005-04-23
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uInput;
@@ -161,11 +161,25 @@ begin
 	end;
 end;*)
 
+procedure CompileMesClear;
+var
+	M: PCompileMes;
+	i: SG;
+begin
+	M := CompileMes.GetFirst;
+	for i := 0 to SG(CompileMes.Count) - 1 do
+	begin
+		M.Params := '';
+		Inc(M);
+	end;
+	CompileMes.Clear;
+end;
+
 procedure ClearErrors;
 begin
 	if CompileMes.Count > 0 then
 	begin
-		CompileMes.Clear;
+		CompileMesClear;
 	end;
 end;
 
@@ -174,8 +188,12 @@ begin
 	if CompileMes.Count > 0 then
 	begin
 		MessageD(MesToStrings, mtWarning, [mbOk]);
-		CompileMes.Clear;
+		CompileMesClear;
 	end;
 end;
 
+initialization
+
+finalization
+	ClearErrors;
 end.

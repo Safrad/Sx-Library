@@ -1,9 +1,9 @@
 //* File:     Lib\uGraph.pas
 //* Created:  1999-05-01
-//* Modified: 2005-02-09
-//* Version:  X.X.33.X
+//* Modified: 2005-05-31
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uGraph;
@@ -74,6 +74,7 @@ function OverE(const SX1, SY1, SX2, SY2: Extended;
 implementation
 
 uses
+	Math,
 	uStrings, uError, uGetInt;
 
 (*
@@ -596,7 +597,7 @@ var
 	TextBounds: TRect;
 	C: TColor;
 begin
-	TextHeight := Canvas.TextHeight('W');
+	TextHeight := Max(Canvas.TextHeight('W'), 1);
 	MaxLines := (Rect.Bottom - Rect.Top) div TextHeight - 1;
 	SetLength(LineS, Length(Caption));
 	LineN := 0;

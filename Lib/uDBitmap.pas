@@ -1,9 +1,9 @@
 //* File:     Lib\uDBitmap.pas
 //* Created:  1999-05-01
-//* Modified: 2005-03-08
-//* Version:  X.X.33.X
+//* Modified: 2005-06-26
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDBitmap;
@@ -95,11 +95,12 @@ type
 	end;
 	TGraphNodes = array of TGraphNode;}
 
-	TDrawStyle = packed record
-		Style: TGraphicStyle;
+	TDrawStyle = packed record // 16
 //		GenFunc: TGenFunc; // gsGen
 		Colors: array[0..1] of TColor; // gsSolid, gsGradient
-		Effect: TEffect;
+		Effect: TEffect; // 1
+		Style: TGraphicStyle; // 1
+		Reserve: array[0..5] of U1;
 {		TextureFileName: TFileName;
 		Texture: TDBitmap; // gsBitmap}
 	end;
@@ -1111,7 +1112,7 @@ begin
 		if Quality = 0 then Quality := 90;
 		if Quality > 0 then
 		begin
-			if GetInt('JPEG Quality', Quality, 1, 90, 100, nil) = False then Exit;
+			if GetNumber('JPEG Quality', Quality, 1, 90, 100, nil) = False then Exit;
 		end
 		else
 			Quality := -Quality;
@@ -1171,11 +1172,11 @@ begin
 	else if Ext = 'png' then
 	begin
 		MyPng := TPngObject.Create;
-		if Transparent{IE does not support 24bit transparency} or (ColorCount(256){Can be slow} <= 256) then
+		if Transparent{IE does not support 24bit transparency} {or (ColorCount(256) <= 256)D???} then
 		begin
 			// Save as 8bit
 			MyGif := TGifImage.Create;
-			MyGif.ColorReduction := rmQuantize;
+			MyGif.ColorReduction := rmQuantize; //rmQuantize;
 			MyGif.DitherMode := dmNearest; // pixelate backgroud color if ColorCount > 256
 			MyGif.Assign(Self);
 			MyBmp := TBitmap.Create;
@@ -2842,6 +2843,11 @@ begin
 	if C = clNone then Exit;
 	CR:= ColorToRGBStack(C);
 
+{	if XD1 > XD2 then Exit;
+	if YD1 > YD2 then Exit;}
+	if XD1 > XD2 then Exchange(XD1, XD2);
+	if YD1 > YD2 then Exchange(YD1, YD2);
+
 	if XD1 > TCoor(GraphMaxX) then Exit;
 	if XD1 < GraphMinX then
 	begin
@@ -2859,14 +2865,12 @@ begin
 	begin
 		XD2 := TCoor(GraphMaxX);
 	end;
-	if XD1 > XD2 then Exit;
 
 	if YD2 < 0 then Exit;
 	if YD2 > TCoor(GraphMaxY) then
 	begin
 		YD2 := TCoor(GraphMaxY);
 	end;
-	if YD1 > YD2 then Exit;
 
 	PD := Data;
 	ByteXD := ByteX;
@@ -7260,6 +7264,7 @@ var
 	L: UG;
 	FromV, ToV: SG;
 	C: TRColor;
+	i: SG;
 begin
 	CACount := 0;
 	if (Width <= 0) or (Height <= 0) then Exit;
@@ -7290,13 +7295,16 @@ begin
 			end
 			else
 			begin
-				Move(CColor[FromV], CColor[FromV + 1], SizeOf(CColor[0]) * (SG(CACount) - FromV));
-				Move(CCount[FromV], CCount[FromV + 1], SizeOf(CColor[0]) * (SG(CACount) - FromV));
-		{			for i := CACount - 1 downto FromV do
+				if SG(CACount) > FromV then
 				begin
-					CColor[i + 1] := CColor[i];
-					CCount[i + 1] := CCount[i];
-				end;}
+{					Move(CColor[FromV], CColor[FromV + 1], SizeOf(CColor[0]) * (SG(CACount) - FromV));
+					Move(CCount[FromV], CCount[FromV + 1], SizeOf(CColor[0]) * (SG(CACount) - FromV));D???}
+					for i := CACount - 1 downto FromV do
+					begin
+						CColor[i + 1] := CColor[i];
+						CCount[i + 1] := CCount[i];
+					end;
+				end;
 				CColor[FromV] := C.L;
 				CCount[FromV] := 1;
 				Inc(CACount);
@@ -10347,7 +10355,7 @@ begin
 		Co[1] := DarkerColor(C.L);
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		GenerateRGB(gfFade2x, Co, ScreenCorrectColor, ef16, nil);
+		GenerateRGBEx(XS1, YS1, XS2, YS2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 	end;
 //	gsBitmap: Bmp(XS1, YS1, FillStyle.Bitmap, ef16);
 	end;

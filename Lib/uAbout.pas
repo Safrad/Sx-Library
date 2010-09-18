@@ -1,9 +1,9 @@
 //* File:     Lib\uAbout.pas
 //* Created:  1999-10-01
-//* Modified: 2005-03-08
-//* Version:  X.X.33.X
+//* Modified: 2005-06-27
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uAbout;
@@ -196,7 +196,7 @@ begin
 			end;
 			if AF then
 			begin
-				ParamFile := ShortToLongPath(FullDir(Par));
+				ParamFile := FullDir(Par);
 				if (not FileExists(ParamFile)) and (not DirectoryExists(ParamFile)) then
 				begin
 					MessageD('Illegal command line parameter' + LineSep +
@@ -242,7 +242,7 @@ end;
 
 procedure ReadMe;
 begin
-	ExtOpenFile(LongToShortPath(WorkDir + 'ReadMe.htm'));
+	ExtOpenFile(WorkDir + 'ReadMe.htm');
 end;
 
 procedure Homepage;
@@ -252,32 +252,30 @@ end;
 
 procedure Help;
 begin
-	ExtOpenFile(LongToShortPath(WorkDir + 'Help.rtf'));
+	ExtOpenFile(WorkDir + 'Help.rtf');
 end;
 
 procedure Help(HRef: string);
 begin
-	ExtOpenFile(LongToShortPath(WorkDir + 'Help.htm#' + HRef));
+	ExtOpenFile(WorkDir + 'Help.htm#' + HRef);
 end;
 
 procedure ExtOpenFile(FileName: TFileName);
 var
 	ErrorCode: U4;
 begin
-	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
+	ErrorCode := ShellExecute(0, 'open', PChar('"' + FileName + '"'), nil, nil, SW_ShowNormal);
 	if ErrorCode <= 32 then
 		IOError(FileName, ErrorCode);
 end;
 
 procedure ExecuteAbout2(AOwner: TComponent; Version, Created, Modified: string;
 	FileName: TFileName; const Modal: Boolean);
-var OrigCursor: TCursor;
 begin
 	PlayWinSound(wsExclamation);
 	if not Assigned(fAbout) then
 	begin
-		OrigCursor := Screen.Cursor;
-		Screen.Cursor := crHourGlass;
+		BeginLongOperation;
 		fAbout := TfAbout.Create(AOwner);
 		fAbout.ProgramName := Application.Title;
 		fAbout.ProgramVersion := 'Version ' + Version;
@@ -285,7 +283,7 @@ begin
 		fAbout.EditCreated.Text := Created;
 		fAbout.EditModified.Text := Modified;
 		fAbout.LoadFile(FileName);
-		Screen.Cursor := OrigCursor;
+		EndLongOperation(False);
 	end
 	else
 		fAbout.LoadFile(FileName);
@@ -630,7 +628,7 @@ begin
 
 	if Effect > 0 then
 	begin
-		RotateDef(BitmapAbout, BmpAbout, Typ, (AngleCount * Timer1.Clock div (4 * PerformanceFrequency)), TEffect(Effect));
+		RotateDef(BitmapAbout, BmpAbout, Typ, (AngleCount * U8(Timer1.Clock) div (4 * PerformanceFrequency)), TEffect(Effect));
 	end;
 	
 	i := 0;

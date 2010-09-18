@@ -1,9 +1,9 @@
 //* File:     Lib\uSGL.pas
 //* Created:  2005-03-09
-//* Modified: 2005-04-16
-//* Version:  X.X.33.X
+//* Modified: 2005-06-05
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 {

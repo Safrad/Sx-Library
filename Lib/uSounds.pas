@@ -1,9 +1,9 @@
 //* File:     Lib\uSounds.pas
 //* Created:  2000-05-01
-//* Modified: 2005-02-18
-//* Version:  X.X.33.X
+//* Modified: 2005-03-19
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uSounds;
@@ -43,7 +43,7 @@ type
 		procedure ButtonApplyClick(Sender: TObject);
 		procedure DViewSDblClick(Sender: TObject);
 		procedure DViewSGetData(Sender: TObject; var Data: String; ColIndex,
-			RowIndex: Integer);
+			RowIndex: Integer; Rect: TRect);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 		procedure DViewSPaint(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -518,7 +518,7 @@ begin
 end;
 
 procedure TfSounds.DViewSGetData(Sender: TObject; var Data: String;
-	ColIndex, RowIndex: Integer);
+	ColIndex, RowIndex: Integer; Rect: TRect);
 var
 	Sound: PSound;
 	DSound: PDSound;

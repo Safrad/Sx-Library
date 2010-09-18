@@ -1,9 +1,9 @@
 //* File:     Lib\uSorts.pas
 //* Created:  2000-08-01
-//* Modified: 2005-03-08
-//* Version:  X.X.33.X
+//* Modified: 2005-04-04
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uSorts;
@@ -25,6 +25,7 @@ type
 
 		stHeap,      // n * log n   n           N           N
 		stQuick,     // n * log n   n+c*log n   N           N       +
+		stPartialQuick, // 2 times faster, but sort only some first half
 		stMerge,     // n * log n   2 * n       Y           N       +
 		stRadix,     // n           n * 8 !     Y           N       +
 		stCounting,  // n           n * v !     Y           N       +
@@ -35,8 +36,8 @@ var
 	SortType: TSortType = stAuto;
 {$ifopt d+}
 // Statistics
-	Compared, Swaped: U8;
-	MaxDepth: UG;
+	SortCompared, SortSwaped: U8;
+	SortMaxDepth: UG;
 {$endif}
 
 procedure SortS1(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS1; Count: UG);

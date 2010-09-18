@@ -1,9 +1,9 @@
 //* File:     Lib\uKinds.pas
 //* Created:  1999-12-01
-//* Modified: 2005-02-05
-//* Version:  X.X.33.X
+//* Modified: 2005-06-26
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uKinds;
@@ -66,7 +66,6 @@ type
 		procedure LastNextWindow1Click(Sender: TObject);
 		procedure WindowXClick(Sender: TObject);
 
-		function KindSave(Kind: SG; SD: BG; SaveCopy: BG): BG;
 		function KindSaveAll: BG;
 
 		function KindClose(const Kind: SG): BG;
@@ -123,6 +122,8 @@ type
 
 		function KindOpenFiles(Files: TStrings; ReadOnly: BG = False): BG; // Drag files to form
 		function CanClose: BG; // CanClose := Kinds.CanClose;
+
+		function KindSave(Kind: SG; SD: BG; SaveCopy: BG): BG;
 
 		{$ifopt d+}procedure OpenAll;{$endif}
 	end;
@@ -491,7 +492,15 @@ begin
 	Items[Count - 1].New := NewCount;
 	LastIndex := Index;
 	ChangeIndex(Count - 1);
-	Result := NewFile(Count - 1);
+	try
+		Result := NewFile(Count - 1);
+	except
+		on E: Exception do
+		begin
+			Result := False;
+		end;
+	end;
+	CreateMenuItem(Index);
 	if Result = False then
 	begin
 		KindClose(Count - 1);
@@ -500,7 +509,6 @@ begin
 	else
 	begin
 		Items[Index].Changed := False;
-		CreateMenuItem(Index);
 		if Assigned(Items[Index].MenuItem) then
 			Items[Index].MenuItem.Checked := True;
 		KindChangeFile(Sender);
@@ -517,7 +525,14 @@ begin
 		LastIndex := Index;
 		ChangeIndex(Count - 1);
 		Items[Count - 1].FileName := FileName;
-		Result := LoadFromFile(Count - 1);
+		try
+			Result := LoadFromFile(Count - 1);
+		except
+			on E: Exception do
+			begin
+				Result := False;
+			end;
+		end;
 		if Result = False then
 		begin
 			KindClose(Count - 1);
@@ -583,6 +598,11 @@ var
 	S: TFileName;
 	k: SG;
 begin
+	if Count = 0 then
+	begin
+		Result := False;
+		Exit;
+	end;
 	S := Items[Kind].FileName;
 
 	if SD = True then
@@ -615,7 +635,14 @@ begin
 	Inc(Items[Kind].WorkTime, GetTickCount - Items[Kind].ModificationTime);
 	k := Index;
 	ChangeIndex(Kind);
-	Result := SaveToFile(S);
+	try
+		Result := SaveToFile(S);
+	except
+		on E: Exception do
+		begin
+			Result := False;
+		end;
+	end;
 	ChangeIndex(k);
 	if SaveCopy = False then
 	if SD then
@@ -641,26 +668,29 @@ end;
 function TKinds.SaveAs(Kind: SG): BG;
 begin
 	Result := False;
-	if Items[Kind].Changed then
+	if Count > 0 then
 	begin
-		case MessageD('Save changes to ' + LineSep + Items[Kind].FileName,
-			mtInformation, [mbYes, mbNo, mbCancel]) of
-		mbYes:
+		if Items[Kind].Changed then
 		begin
-			Result := KindSave(Kind, True, False); //SaveToFile(Kind);
-		end;
-		mbNo:
-		begin
+			case MessageD('Save changes to ' + LineSep + Items[Kind].FileName,
+				mtInformation, [mbYes, mbNo, mbCancel]) of
+			mbYes:
+			begin
+				Result := KindSave(Kind, True, False); //SaveToFile(Kind);
+			end;
+			mbNo:
+			begin
+				Result := True;
+			end;
+			mbCancel:
+			begin
+				Result := False;
+			end;
+			end;
+		end
+		else
 			Result := True;
-		end;
-		mbCancel:
-		begin
-			Result := False;
-		end;
-		end;
-	end
-	else
-		Result := True;
+	end;
 end;
 
 function TKinds.KindClose(const Kind: SG): BG;
@@ -927,14 +957,21 @@ begin
 		// D???
 		FreeFile(Index);
 		Items[Index].Changed := False;
-		LoadFromFile(Index);
+		try
+			LoadFromFile(Index);
+		except
+			on E: Exception do
+			begin
+			end;
+		end;
 		KindChangeFile(Sender);
 	end;
 end;
 
 procedure TKinds.Save1Click(Sender: TObject);
 begin
-	if KindSave(Index, Items[Index].ReadOnly, False) then KindInit;
+	if Count > 0 then
+		if KindSave(Index, Items[Index].ReadOnly, False) then KindInit;
 end;
 
 procedure TKinds.SaveAs1Click(Sender: TObject);
@@ -964,12 +1001,13 @@ end;
 
 procedure TKinds.Delete1Click(Sender: TObject);
 begin
-	if MessageD(Items[Index].FileName + LineSep + 'Delete file?',
-		mtConfirmation, [mbYes, mbNo]) = mbYes then
-	begin
-		DeleteFileEx(Items[Index].FileName);
-		Close1Click(Sender);
-	end;
+	if Count > 0 then
+		if MessageD(Items[Index].FileName + LineSep + 'Delete file?',
+			mtConfirmation, [mbYes, mbNo]) = mbYes then
+		begin
+			DeleteFileEx(Items[Index].FileName);
+			Close1Click(Sender);
+		end;
 end;
 
 procedure TKinds.LastNextWindow1Click(Sender: TObject);
@@ -999,9 +1037,10 @@ procedure TKinds.OpenAll;
 	var
 		i: SG;
 		FileNames: TFileNames;
+		FileNameCount: SG;
 	begin
-		ReadDir(FileNames, Dir, '', True, True, False, False);
-		for i := 0 to Length(FileNames) - 1 do
+		ReadDir(FileNames, FileNameCount, Dir, '', True, True, False, False);
+		for i := 0 to FileNameCount - 1 do
 		begin
 			if FileNames[i][Length(FileNames[i])] = '\' then
 				Depth(Dir + FileNames[i])

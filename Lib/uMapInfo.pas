@@ -1,9 +1,9 @@
 //* File:     Lib\uMapInfo.pas
 //* Created:  1998-01-01
-//* Modified: 2004-09-26
-//* Version:  X.X.33.X
+//* Modified: 2005-05-28
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uMapInfo;

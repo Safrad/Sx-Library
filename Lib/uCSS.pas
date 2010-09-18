@@ -1,9 +1,9 @@
 //* File:     Lib\uCSS.pas
 //* Created:  2005-04-03
-//* Modified: 2005-04-03
-//* Version:  X.X.33.X
+//* Modified: 2005-05-15
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uCSS;

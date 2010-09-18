@@ -1,9 +1,9 @@
 //* File:     Lib\uGetInt.pas
 //* Created:  1998-07-01
-//* Modified: 2004-09-26
-//* Version:  X.X.33.X
+//* Modified: 2005-06-01
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uGetInt;
@@ -58,12 +58,20 @@ type
 		{ Public declarations }
 	end;
 
-function GetU4(Prompt: string;
-	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean;
-function GetInt(Prompt: string;
-	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean;
-function GetS8(Prompt: string;
-	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean;
+function GetNumber(Prompt: string;
+	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(Prompt: string;
+	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(Prompt: string;
+	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(Prompt: string;
+	var CurVal: U2; const MinVal, DefVal, MaxVal: U2; OnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(Prompt: string;
+	var CurVal: S2; const MinVal, DefVal, MaxVal: S2; OnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(Prompt: string;
+	var CurVal: U1; const MinVal, DefVal, MaxVal: U1; OnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(Prompt: string;
+	var CurVal: S1; const MinVal, DefVal, MaxVal: S1; OnApplyInt: TOnApplyInt): Boolean; overload;
 
 implementation
 
@@ -73,25 +81,7 @@ uses uStrings, uInput, uError, uParser;
 var
 	fGetInt: TfGetInt;
 
-function GetU4(Prompt: string;
-	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
-begin
-	C := CurVal;
-	Result := GetS8(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
-end;
-
-function GetInt(Prompt: string;
-	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
-begin
-	C := CurVal;
-	Result := GetS8(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
-end;
-
-function GetS8(Prompt: string;
+function GetNumber(Prompt: string;
 	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean;
 begin
 	{$ifopt d+}
@@ -316,6 +306,60 @@ begin
 		InitButtons;
 		ChangeInt;
 	end;
+end;
+
+function GetNumber(Prompt: string;
+	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
+begin
+	C := CurVal;
+	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
+end;
+
+function GetNumber(Prompt: string;
+	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
+begin
+	C := CurVal;
+	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
+end;
+
+function GetNumber(Prompt: string;
+	var CurVal: S2; const MinVal, DefVal, MaxVal: S2; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
+begin
+	C := CurVal;
+	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
+end;
+
+function GetNumber(Prompt: string;
+	var CurVal: U2; const MinVal, DefVal, MaxVal: U2; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
+begin
+	C := CurVal;
+	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
+end;
+
+function GetNumber(Prompt: string;
+	var CurVal: S1; const MinVal, DefVal, MaxVal: S1; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
+begin
+	C := CurVal;
+	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
+end;
+
+function GetNumber(Prompt: string;
+	var CurVal: U1; const MinVal, DefVal, MaxVal: U1; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
+begin
+	C := CurVal;
+	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
 end;
 
 end.

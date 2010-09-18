@@ -1,9 +1,9 @@
 //* File:     Lib\uDView.pas
 //* Created:  2001-08-01
-//* Modified: 2005-01-23
-//* Version:  X.X.33.X
+//* Modified: 2005-05-31
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDView;
@@ -26,7 +26,7 @@ type
 		Reserved: array[0..1] of U1; // 2
 	end;
 
-	TOnGetData = procedure(Sender: TObject; var Data: string; ColIndex, RowIndex: Integer) of object;
+	TOnGetData = procedure(Sender: TObject; var Data: string; ColIndex, RowIndex: Integer; Rect: TRect) of object;
 	TLVColumnClickEvent = procedure(Sender: TObject; Column: TColumn) of object;
 
 	TDView = class(TDImage)
@@ -53,6 +53,8 @@ type
 	protected
 		{ Protected declarations }
 //		procedure OnFill;
+		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
+		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 		procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
 	public
 		{ Public declarations }
@@ -93,7 +95,7 @@ type
 		property ColumnCount: SG read FColumnCount write SetColumnCount;
 		property RowCount: SG read FRowCount write SetRowCount;
 
-
+	 procedure  DataChanged;
 	published
 
 		property OnGetData: TOnGetData read FOnGetData write FOnGetData;
@@ -190,7 +192,6 @@ begin
 	MouseMove(Shift, X, Y); // Rigth click after menu popup
 
 	BDown := True;
-	inherited MouseDown(Button, Shift, X, Y);
 	case MouseAction of
 	mwNone, mwScroll:
 	begin
@@ -213,38 +214,41 @@ begin
 			end;
 			vaRow:
 			begin
-				if (Button = mbRight) and (SelRows[IY]) then Exit;
-				if not (ssCtrl in Shift) then
-					for i := 0 to FRowCount - 1 do
-						SelRows[i] := False;
-				if ssShift in Shift then
+				if not ((Button = mbRight) and (SelRows[IY])) then
 				begin
-					if ActualRow < IY then
+					if not (ssCtrl in Shift) then
+						for i := 0 to FRowCount - 1 do
+							SelRows[i] := False;
+					if ssShift in Shift then
 					begin
-						for i := ActualRow to IY do
-							SelRows[i] := True;
+						if ActualRow < IY then
+						begin
+							for i := ActualRow to IY do
+								SelRows[i] := True;
+						end
+						else
+						begin
+							for i := IY to ActualRow do
+								SelRows[i] := True;
+						end;
 					end
 					else
 					begin
-						for i := IY to ActualRow do
-							SelRows[i] := True;
+						SelRows[IY] := not SelRows[IY];
+						ActualRow := IY;
 					end;
-				end
-				else
-				begin
-					SelRows[IY] := not SelRows[IY];
-					ActualRow := IY;
+					ActualColumn := IX;
+					SelCount := 0;
+					for i := 0 to FRowCount - 1 do
+						if SelRows[i] then Inc(SelCount);
+					Fill;
 				end;
-				ActualColumn := IX;
-				SelCount := 0;
-				for i := 0 to FRowCount - 1 do
-					if SelRows[i] then Inc(SelCount);
-				Fill;
 			end;
 			end;
 		end;
 	end;
 	end;
+	inherited MouseDown(Button, Shift, X, Y);
 end;
 
 procedure TDView.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -355,6 +359,30 @@ begin
 			end;
 		end;
 	end;
+	end;
+end;
+
+procedure TDView.CMMouseEnter(var Message: TMessage);
+begin
+	inherited;
+	if (DragMode <> dmAutomatic) then
+	begin
+//		MouseMove([], Message.WParam, Message.LParam);
+//		Fill;
+	end;
+end;
+
+procedure TDView.CMMouseLeave(var Message: TMessage);
+begin
+	inherited;
+	if not Dragging then
+	begin
+		if Where <> vaNone then
+		begin
+			MouseMove([], MaxInt div 2, MaxInt div 2);
+{			Where := vaNone;
+			LFill(nil);}
+		end;
 	end;
 end;
 
@@ -538,6 +566,7 @@ begin
 						end
 						else
 							Bitmap.Canvas.Brush.Color := clWindow;
+						Bitmap.Bar(X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if Assigned(OnGetData) then
 						begin
 							ColIndex := ColumnOrder[IX];
@@ -563,7 +592,7 @@ begin
 							begin
 								Data := '<Empty>';
 								try
-									OnGetData(Self, Data, ColIndex, RowIndex);
+									OnGetData(Self, Data, ColIndex, RowIndex, Rect(X + 1, Y + 1, X + Columns[IX].Width - 2, Y + RowHeight - 2));
 									if Length(Data) > 255 then SetLength(Data, 255);
 								except
 									on E: Exception do
@@ -575,8 +604,6 @@ begin
 							Data := '<No data event defined>';
 
 						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 4);
-
-						Bitmap.Bar(X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if IY = ActualRow then
 							Bitmap.Border(X, Y, Wid - 1, Y + RowHeight - 1, DepthColor(0), DepthColor(3), 1, ef12);
 						Bitmap.Line(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
@@ -647,6 +674,7 @@ begin
 				end;
 
 				// Caption
+				Bitmap.Canvas.Font.Style := [];
 				Bitmap.Canvas.Font.Color := C2;
 				Bitmap.Canvas.Brush.Color := C1;
 				Bitmap.Canvas.Brush.Style := bsClear;
@@ -775,6 +803,15 @@ begin
 		for i := 0 to FRowCount - 1 do
 			if SelRows[i] then Inc(SelCount);
 		UserHeight := FRowCount * RowHeight + RowHeight;
+	end;
+end;
+
+procedure TDView.DataChanged;
+begin
+	if Assigned(FOnColumnClick) and (SortBy >= 0) then
+	begin
+		FOnColumnClick(Self, Columns[SortBy]);
+		Fill;
 	end;
 end;
 

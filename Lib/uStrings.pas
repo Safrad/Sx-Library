@@ -1,9 +1,9 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2005-02-08
-//* Version:  X.X.33.X
+//* Modified: 2005-06-26
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uStrings;
@@ -61,6 +61,8 @@ function DeleteLastChar(s: string): string;
 
 function ReadToChar(const Line: string; var LineIndex: SG;
 	const C: Char): string;
+function ReadToString(const Line: string; var LineIndex: SG;
+	const S: string): string;
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string; overload;
 function ReadToChars(const Line: string; var LineIndex: SG;
@@ -358,6 +360,17 @@ begin
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
 	Inc(LineIndex);
+end;
+
+function ReadToString(const Line: string; var LineIndex: SG;
+	const S: string): string;
+var StartIndex: SG;
+begin
+	StartIndex := LineIndex;
+	while (LineIndex + Length(S) <= Length(Line) + 1) and (Copy(Line, LineIndex, Length(S)) <> S) do
+		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	Inc(LineIndex, Length(S));
 end;
 
 function ReadToChars(const Line: string; var LineIndex: SG;

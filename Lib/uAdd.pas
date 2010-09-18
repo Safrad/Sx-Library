@@ -1,9 +1,9 @@
 //* File:     Lib\uAdd.pas
 //* Created:  1998-01-01
-//* Modified: 2005-03-07
-//* Version:  X.X.33.X
+//* Modified: 2005-07-09
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uAdd;
@@ -181,10 +181,11 @@ type
 	T1 = AnsiString;
 	T2 = WideString;}
 
-	BG = Boolean; // ByteBool for Delphi 6
-	B1 = ByteBool;
-	B2 = WordBool;
-	B4 = LongBool;
+	BG = Boolean; // LongBool;
+	// Boolean // $00 / $01
+	B1 = ByteBool; // $00 / $FF
+	B2 = WordBool; // $0000 / $FFFF
+	B4 = LongBool; // $0000 / $FFFFFFFF
 
 //	TArrayU1 = array[0..1024 * 1024 * 1024 - 1] of Byte;
 	TArrayS1 = array[0..1024 * 1024 * 1024 - 1] of S1;
@@ -285,10 +286,10 @@ const
 
 // Mathematics
 const
-	AngleCount = 16384; // 2*pi 256; 65536 // 2^x 1..
-	SinDiv = 32768; // 1.0 65536; // 1..128..1024*1024
+	AngleCount = 512{16384}; // 2*pi 256; 65536 // 2^x 1..
+	SinDiv = 16384; // 1.0 65536; // 1..128..1024*1024
 type
-	TAngle = SG;
+	TAngle = S2;
 var
 	Sins: array[0..AngleCount - 1] of TAngle;
 
@@ -326,6 +327,7 @@ function LinearMax(Clock, Maximum: LongWord): LongWord;
 
 function RoundSG(Value: FA): SG;
 function RoundS8(Value: FA): S8;
+function TruncS8(Value: FA): S8;
 function RangeS8(Value: FA): BG;
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function RoundDivU8(const Dividend: U8; const Divisor: U8): S8; //overload;
@@ -336,6 +338,7 @@ function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function Range(const Min, Cur, Max: Integer): Integer; overload;
 function Range(const Min, Cur, Max, Def: Integer): Integer; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
+function Range(const Min, Cur, Max: FG): FG; overload;
 
 procedure Exchange(var A, B: B1); register; overload;
 procedure Exchange(var A, B: B4); register; overload;
@@ -454,7 +457,7 @@ const
 		'y', 'z', '-', '*'});
 
 var UseNA: BG;
-		
+
 function NToS(const Num: Int64): string; overload;
 function NToS(const Num: Int64; const Decimals: SG): string; overload;
 function NToS(const Num: Int64; const UseFormat: string): string; overload;
@@ -492,10 +495,10 @@ function SToDate(Str: string): TDate;
 function SToDateTime(Str: string): TDateTime;
 
 
-function MsToStr(const DT: Int64;
-	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
-function MsToStr(const DT: Int64; const UseWinFormat: BG;
-	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
+function MsToStr(DT: Int64;
+	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
+function MsToStr(DT: Int64; const UseWinFormat: BG;
+	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
 
 function DateToS(var Year, Month, Day: U2): string; overload;
 function DateToS(D: TDate): string; overload;
@@ -517,9 +520,10 @@ procedure Nop;
 {$endif}
 //procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
-function SameData(P0, P1: Pointer; Size: Cardinal): Boolean; register;
+function SameData(P0, P1: Pointer; Size: Cardinal): Boolean;
+procedure FillU2(var Desc; Count: Cardinal; Value: U2);
 procedure FillU4(var Desc; Count: Cardinal; Value: U4);
-procedure FillOrderU4(var Desc; Size: Cardinal); register;
+procedure FillOrderU4(var Desc; Size: Cardinal);
 procedure Swap02(var Desc; Count: Cardinal; Step: S4);
 function SwapU4(D: U4): U4;
 function DriveTypeToStr(const DriveType: Integer): string;
@@ -532,6 +536,9 @@ function GetCaption(const FName: TFileName; const Changed: Boolean;
 function ComponentName(Name: string): string;
 function MenuNameToFileName(Name: string): string;
 function ButtonNameToFileName(Name: string; const Space: Boolean): string;
+
+procedure BeginLongOperation(const Background: BG = False);
+procedure EndLongOperation(const Sound: BG = True);
 
 //procedure CorrectFormPos(Form: TForm);
 //procedure SetListViewItems(ListView: TListView; NewSize: SG);
@@ -553,7 +560,7 @@ implementation
 
 uses
 	Windows, Math, Dialogs, ShellAPI,
-	uError, uStrings, uInput, uFiles, uParser;
+	uError, uStrings, uInput, uFiles, uParser, uWave;
 
 {
 Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
@@ -1004,11 +1011,21 @@ begin
 		Result := Round(Value);
 end;
 
+function TruncS8(Value: FA): S8;
+begin
+	if Value > High(Result) then
+		Result := High(Result)
+	else if Value < Low(Result) then
+		Result := Low(Result)
+	else
+		Result := Trunc(Value);
+end;
+
 function RangeS8(Value: FA): BG;
 begin
-	if Value > High(S8) then
+	if Value >= High(S8) then
 		Result := False
-	else if Value < Low(S8) then
+	else if Value <= Low(S8) then
 		Result := False
 	else
 		Result := True;
@@ -1134,6 +1151,15 @@ begin
 		Result := Max;
 end;
 
+function Range(const Min, Cur, Max: FG): FG;
+begin
+	Result := Cur;
+	if Cur < Min then
+		Result := Min
+	else if Cur > Max then
+		Result := Max;
+end;
+
 function Random2(Range: SG): SG;
 begin
 	Result := Random(2 * Range + 1) - Range;
@@ -1157,7 +1183,8 @@ var
 
 function RandomU4: U4;
 begin
-	Result := U4(Random(65536)) + U4(Random(65536)) shl 16;
+	TU4(Result).W0 := U4(Random(65536));
+	TU4(Result).W1 := U4(Random(65536));
 end;
 
 function RandomM: U4;
@@ -1348,7 +1375,6 @@ begin
 	Result := Sqrt(Variance0(Data) / Avg(Data));
 end;
 
-// sikmost
 function Skew(const Data: array of FG): FG;
 begin
 	if Length(Data) <= 0 then
@@ -1802,6 +1828,7 @@ begin
 		begin
 			if FirstNotZero then
 				Result := DecimalSep + Result;
+			FirstNotZero := True;
 			if i < 1 then
 			begin
 				if UseWinFormat then
@@ -2528,14 +2555,14 @@ begin
 		SToTime(ReadToChar(Str, InLineIndex, CharCR));
 end;
 
-function MsToStr(const DT: Int64;
-	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string;
+function MsToStr(DT: Int64;
+	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string;
 begin
 	Result := MsToStr(DT, True, Display, Decimals, FixedWidth);
 end;
 
-function MsToStr(const DT: Int64; const UseWinFormat: BG;
-	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string;
+function MsToStr(DT: Int64; const UseWinFormat: BG;
+	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string;
 var
 	h, m, s, d: LongWord;
 	Day: SG;
@@ -2570,9 +2597,16 @@ begin
 		DT := 10 * ((DT + 5) div 10);
 	end;
 	end;}
-	MsToHMSD(Abs(DT), h, m, s, d);
-
-	if DT < 0 then Result := '-' else Result := '';
+	if DT < 0 then
+	begin
+		DT := -DT;
+		Result := '-'
+	end
+	else
+		Result := '';
+	MsToHMSD(DT, h, m, s, d);
+	if (DT >= 60 * 1000) and (Display = diSD) then
+		Display := diMSD;
 
 	if Display = diDHMSD then
 	begin
@@ -2735,7 +2769,7 @@ begin
 	else
 	begin
 		try
-			Result := DateTimeToStr(DT);   
+			Result := DateTimeToStr(DT);
 		except
 			Result := 'Unknown';
 		end;
@@ -2819,6 +2853,34 @@ asm
 	pop ebx
 end;
 
+procedure FillU2(var Desc; Count: Cardinal; Value: U2); register;
+asm
+{     ->EAX     Pointer to destination  }
+{       EDX     count   }
+{       CX     value   }
+
+				PUSH    EDI
+
+				MOV     EDI,EAX { Point EDI to destination              }
+
+				MOV     EAX,ECX
+
+				shl eax, 16
+				mov ax, cx
+
+				MOV     ECX,EDX
+				sar ecx, 1
+//        JS      @@exit
+//				DEC ECX // D??? Required for CXY - bitmap
+//        SAR     ECX,2
+//				JS      @@exit
+
+				REP     STOSD   { Fill count dwords       }
+
+@@exit:
+				POP     EDI
+end;
+
 procedure FillU4(var Desc; Count: Cardinal; Value: U4); register;
 asm
 {     ->EAX     Pointer to destination  }
@@ -2833,7 +2895,7 @@ asm
 
 				MOV     ECX,EDX
 //        JS      @@exit
-				DEC ECX // D??? Required!
+//				DEC ECX // D??? Required for CXY - bitmap
 //        SAR     ECX,2
 //				JS      @@exit
 
@@ -2845,6 +2907,7 @@ end;
 
 procedure FillOrderU4(var Desc; Size: Cardinal); register;
 asm
+	push ecx
 	cmp Size, 0
 	je @Exit
 	shl Size, 2
@@ -2857,6 +2920,7 @@ asm
 		inc ecx
 	jb @Loop
 	@Exit:
+	pop ecx
 end;
 
 procedure Swap02(var Desc; Count: Cardinal; Step: S4); register;
@@ -3183,12 +3247,26 @@ begin
 		end;
 	end;
 
-
 	if Space then
 		for Index := 2 to Length(Result) do
 			if Result[Index] in ['A'..'Z'] then
 				if Result[Index - 1] in ['a'..'z'] then
 					Insert(' ', Result, Index);
+end;
+
+procedure BeginLongOperation(const Background: BG = False);
+begin
+	if Background then
+		Screen.Cursor := crAppStart
+	else
+		Screen.Cursor := crHourGlass;
+end;
+
+procedure EndLongOperation(const Sound: BG = True);
+begin
+	if Sound then
+		PlayWinSound(wsAsterisk);
+	Screen.Cursor := crDefault;
 end;
 {
 procedure CorrectFormPos(Form: TForm);
@@ -3276,7 +3354,7 @@ begin
 	Y := RoundDiv(Len * (Sins[(AngleCount div 4 + Angle) mod AngleCount]), SinDiv);
 end;
 
-procedure InitSin;
+procedure InitSins;
 var i: TAngle;
 begin
 	for i := 0 to AngleCount - 1 do
@@ -3350,7 +3428,7 @@ initialization
 	NoErrMsg := True;
 	{$endif}
 	{$endif}
-	InitSin;
+	InitSins;
 	GetLocale;
 end.
 

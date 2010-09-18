@@ -1,9 +1,9 @@
 //* File:     Lib\uError.pas
 //* Created:  1999-12-01
-//* Modified: 2005-03-04
-//* Version:  X.X.33.X
+//* Modified: 2005-06-25
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uError;
@@ -96,7 +96,7 @@ var
 {$ifopt d+}
 procedure IE; overload;
 procedure IE(ErrorCode: U2); overload;
-procedure IE(ErrorMes: string); overload;
+//procedure IE(ErrorMes: string); overload;
 procedure CreateException;
 {$endif}
 function ErrorMes(const ErrorCode: U4): string;
@@ -166,6 +166,7 @@ begin
 //	{$endif}
 end;
 
+(*
 procedure IE(ErrorMes: string);
 begin
 //	{$ifopt d+}
@@ -173,7 +174,7 @@ begin
 //	{$else}
 //	PlayWinSound(wsCriticalStop);
 //	{$endif}
-end;
+end;*)
 
 procedure CreateException;
 begin
@@ -214,7 +215,7 @@ begin
 	if Ignore.TimeLeft = 0 then
 		PanelTimeLeft.Caption := ''
 	else
-		PanelTimeLeft.Caption := msToStr(1000 * UG(Ignore.TimeLeft) + StartTickCount - TickCount, diMSD, 0, False);
+		PanelTimeLeft.Caption := MsToStr(1000 * S8(Ignore.TimeLeft) + StartTickCount - TickCount, diMSD, 0, False);
 end;
 
 var
@@ -505,7 +506,7 @@ procedure TfIOError.Timer1Timer(Sender: TObject);
 begin
 	TickCount := GetTickCount;
 	DrawTimeLeft;
-	if (Ignore.TimeLeft > 0) and (TickCount > Ignore.TimeLeft * 1000 + StartTickCount) then Close;
+	if (Ignore.TimeLeft > 0) and (TickCount > U8(Ignore.TimeLeft) * 1000 + StartTickCount) then Close;
 end;
 
 function DoForm(
@@ -544,9 +545,9 @@ begin
 	FoundSame := False;
 	if IgnoreAll = iaSame then
 	begin
+		Ignore := Ignores.GetLast;
 		for i := SG(Ignores.Count) - 1 downto 0 do
 		begin
-			Ignore := Ignores.Get(i);
 			LineIndex := 1;
 			if (Ignore.Ignore <> iaNone) then
 			if (Ignore.Style = Style) and (Ignore.Retry = Retry) and (Ignore.DlgType = DlgType) then
@@ -561,12 +562,16 @@ begin
 				end;}
 				Break;
 			end;
+			Dec(SG(Ignore), Ignores.ItemMemSize);
 		end;
 	end;
 	if FName <> '' then ErrorMsg := ErrorMsg + LineSep + FName;
 
+	if FoundSame = False then
 	if ErrorMsg <> '' then
 	begin
+		if Ignores.Count = 100 then
+			Ignores.DeleteFirst;
 		Ignore := Ignores.Add;
 		Ignore.Style := Style;
 		Ignore.Retry := Retry;
@@ -627,6 +632,7 @@ begin
 			begin
 				fIOError.FormStyle := fsStayOnTop;
 				fIOError.Timer1.Enabled := True;
+//				fIOError.ShowModal;
 				fIOError.Show;
 				repeat
 					Application.HandleMessage;
@@ -643,13 +649,13 @@ begin
 		end
 		else
 		begin
-			while Ignore.Res = -1 do
+{			while Ignore.Res = -1 do
 			begin
 				Application.ProcessMessages;
 				Sleep(20);
-			end; // D??? Stack overflow
-{			Ignore.Res := -1;
-			Exit;}
+			end; // D??? Stack overflow}
+			Ignore.Res := -1;
+			Exit;
 		end;
 
 //		if ModalResult = mrNone then ModalResult := mrCancel;

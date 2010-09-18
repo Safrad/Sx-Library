@@ -1,9 +1,9 @@
 //* File:     Lib\uDEdit.pas
 //* Created:  2003-09-01
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-03-08
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDEdit;

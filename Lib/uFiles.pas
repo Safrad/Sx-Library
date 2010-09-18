@@ -1,9 +1,9 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2005-03-08
-//* Version:  X.X.33.X
+//* Modified: 2005-06-27
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uFiles;
@@ -161,6 +161,15 @@ function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
 function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
 
+function ReadBlockFromFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+function WriteBlockToFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+
+type
+	TArrayOfString = array of string;
+
+function ReadStringsFromFile(var FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
+function WriteStringsToFile(var FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; Append: BG): BG;
+
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
 function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
 
@@ -176,8 +185,8 @@ function GetDriveInfo(const Drive: Byte): TDriveInfo;
 {$IFDEF WIN32}
 function ShortToLongFileName(const ShortName: string): string;
 function ShortToLongPath(const ShortName: string): string;
-function LongToShortFileName(const LongName: string): string;
-function LongToShortPath(const LongName: string): string;
+{function LongToShortFileName(const LongName: string): string;
+function LongToShortPath(const LongName: string): string;}
 {$ENDIF WIN32}
 
 function SelectFolder(var Path: string; browseTitle: string = ''): BG;
@@ -641,6 +650,84 @@ end;
 
 // Utils
 
+{$IFDEF WIN32}
+
+function ShortToLongFileName(const ShortName: string): string;
+var
+	Temp: TWIN32FindData;
+	SearchHandle: THandle;
+begin
+	SearchHandle := FindFirstFile(@ShortName[1], Temp);
+	if SearchHandle <> ERROR_INVALID_HANDLE then begin
+		Result := string(Temp.cFileName);
+		if Result = '' then Result := string(Temp.cAlternateFileName);
+	end
+	else Result := '';
+	Windows.FindClose(SearchHandle);
+end;
+(*
+function LongToShortFileName(const LongName: string): string;
+var
+  Temp: TWIN32FindData;
+  SearchHandle: THandle;
+begin
+	SearchHandle := FindFirstFile(@LongName[1], Temp);
+	if SearchHandle <> ERROR_INVALID_HANDLE then begin
+    Result := string(Temp.cAlternateFileName);
+		if Result = '' then Result := string(Temp.cFileName);
+  end
+	else Result := '';
+  Windows.FindClose(SearchHandle);
+end;
+*)
+function ShortToLongPath(const ShortName: string): string;
+var
+	LastSlash: PChar;
+	TempPathPtr: PChar;
+begin
+	if FileExists(ShortName) = False then
+	begin
+		Result := ShortName;
+		Exit;
+	end;
+	Result := '';
+	TempPathPtr := @ShortName[1];
+	LastSlash := StrRScan(TempPathPtr, '\');
+	while LastSlash <> nil do begin
+		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
+		if LastSlash <> nil then begin
+			LastSlash^ := char(0);
+			LastSlash := StrRScan(TempPathPtr, '\');
+		end;
+	end;
+	Result := TempPathPtr + Result;
+end;
+(*
+function LongToShortPath(const LongName: string): string;
+var
+	LastSlash: PChar;
+	TempPathPtr: PChar;
+begin
+	if FileExists(LongName) = False then
+	begin
+		Result := LongName;
+		Exit;
+	end;
+	Result := '';
+	TempPathPtr := @LongName[1];
+  LastSlash := StrRScan(TempPathPtr, '\');
+  while LastSlash <> nil do begin
+		Result := '\' + LongToShortFileName(TempPathPtr) + Result;
+    if LastSlash <> nil then begin
+      LastSlash^ := char(0);
+      LastSlash := StrRScan(TempPathPtr, '\');
+    end;
+	end;
+	Result := TempPathPtr + Result;
+end;
+*)
+{$ENDIF WIN32}
+
 procedure InitPaths;
 var
 	NewLength: SG;
@@ -744,6 +831,7 @@ begin
 		end
 		else
 			Result := WorkDir + Dir;
+		Result := ShortToLongPath(Result);
 	end;
 end;
 
@@ -1059,6 +1147,11 @@ end;
 
 function CreateDir(const Dir: string): Boolean;
 begin
+	if Dir = '' then
+	begin
+		Result := False;
+		Exit;
+	end;
 	if DirectoryExists(Dir) then
 		Result := True
 	else
@@ -1249,6 +1342,41 @@ begin
 	F.Free;
 end;
 
+function ReadBlockFromFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		if not F.BlockRead(Buf^, Min(Count, F.FileSize)) then goto LRetry;
+		F.Close;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function WriteBlockToFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		if not F.BlockWrite(Buf^, Count) then goto LRetry;
+		F.Truncate;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
 function ReadStringFromFile(var FileName: TFileName; out Line: string): BG; overload;
 label LRetry;
 var
@@ -1293,17 +1421,73 @@ begin
 	F.Free;
 end;
 
+function ReadStringsFromFile(var FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
+label LRetry;
+var
+	F: TFile;
+	Line: string;
+	NewSize: SG;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		while not F.Eof do
+		begin
+			if not F.Readln(Line) then goto LRetry;
+			NewSize := LineCount + 1;
+			if AllocByExp(Length(Lines), NewSize) then
+				SetLength(Lines, NewSize);
+			Lines[LineCount] := Line;
+			Inc(LineCount);
+		end;
+		F.Close;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function WriteStringsToFile(var FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; Append: BG): BG;
+label LRetry;
+var
+	F: TFile;
+	i: SG;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		if Append then F.SeekEnd;
+		i := 0;
+		while i < OpeningNameCount do
+		begin
+			if not F.Write(Lines[i] + FileSep) then goto LRetry;
+			Inc(i);
+		end;
+		if Append = False then F.Truncate;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
 label LRetry;
 var
 	F: TFile;
 	Line: string;
 begin
+	Result := False;
 	{$ifopt d+}
-	if not Assigned(Lines) then IE(454);
+	if not Assigned(Lines) then
+	begin
+		IE(454);
+		Exit;
+	end;
 	{$endif}
 	Lines.Clear;
-	Result := False;
 	F := TFile.Create;
 	LRetry:
 	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
@@ -1416,97 +1600,18 @@ begin
 	end;
 end;
 
-{$IFDEF WIN32}
-
-function ShortToLongFileName(const ShortName: string): string;
 var
-  Temp: TWIN32FindData;
-  SearchHandle: THandle;
-begin
-	SearchHandle := FindFirstFile(@ShortName[1], Temp);
-  if SearchHandle <> ERROR_INVALID_HANDLE then begin
-    Result := string(Temp.cFileName);
-    if Result = '' then Result := string(Temp.cAlternateFileName);
-  end
-  else Result := '';
-  Windows.FindClose(SearchHandle);
-end;
-
-function LongToShortFileName(const LongName: string): string;
-var
-  Temp: TWIN32FindData;
-  SearchHandle: THandle;
-begin
-	SearchHandle := FindFirstFile(@LongName[1], Temp);
-	if SearchHandle <> ERROR_INVALID_HANDLE then begin
-    Result := string(Temp.cAlternateFileName);
-		if Result = '' then Result := string(Temp.cFileName);
-  end
-	else Result := '';
-  Windows.FindClose(SearchHandle);
-end;
-
-function ShortToLongPath(const ShortName: string): string;
-var
-  LastSlash: PChar;
-  TempPathPtr: PChar;
-begin
-	if FileExists(ShortName) = False then
-	begin
-		Result := ShortName;
-		Exit;
-	end;
-	Result := '';
-	TempPathPtr := @ShortName[1];
-	LastSlash := StrRScan(TempPathPtr, '\');
-	while LastSlash <> nil do begin
-		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
-		if LastSlash <> nil then begin
-			LastSlash^ := char(0);
-			LastSlash := StrRScan(TempPathPtr, '\');
-		end;
-	end;
-	Result := TempPathPtr + Result;
-end;
-
-function LongToShortPath(const LongName: string): string;
-var
-	LastSlash: PChar;
-	TempPathPtr: PChar;
-begin
-	if FileExists(LongName) = False then
-	begin
-		Result := LongName;
-		Exit;
-	end;
-	Result := '';
-	TempPathPtr := @LongName[1];
-  LastSlash := StrRScan(TempPathPtr, '\');
-  while LastSlash <> nil do begin
-    Result := '\' + LongToShortFileName(TempPathPtr) + Result;
-    if LastSlash <> nil then begin
-      LastSlash^ := char(0);
-      LastSlash := StrRScan(TempPathPtr, '\');
-    end;
-  end;
-	Result := TempPathPtr + Result;
-end;
-
-{$ENDIF WIN32}
-
-
-var
-  lg_StartFolder: String;
+	lg_StartFolder: String;
 
 ///////////////////////////////////////////////////////////////////
 // Call back function used to set the initial browse directory.
 ///////////////////////////////////////////////////////////////////
 function BrowseForFolderCallBack(Wnd: HWND; uMsg: UINT;
-        lParam, lpData: LPARAM): Integer stdcall;
+				lParam, lpData: LPARAM): Integer stdcall;
 begin
-  if uMsg = BFFM_INITIALIZED then
-    SendMessage(Wnd,BFFM_SETSELECTION,1,Integer(@lg_StartFolder[1]));
-  result := 0;
+	if uMsg = BFFM_INITIALIZED then
+		SendMessage(Wnd,BFFM_SETSELECTION,1,Integer(@lg_StartFolder[1]));
+	result := 0;
 end;
 
 ///////////////////////////////////////////////////////////////////
