@@ -1,6 +1,6 @@
 object fSounds: TfSounds
-  Left = 198
-  Top = 107
+  Left = 409
+  Top = 260
   Width = 459
   Height = 390
   HorzScrollBar.Tracking = True
@@ -201,7 +201,7 @@ object fSounds: TfSounds
     WordWrap = False
   end
   object ComboBoxFrequency: TComboBox
-    Left = 88
+    Left = 96
     Top = 288
     Width = 73
     Height = 21
@@ -219,10 +219,10 @@ object fSounds: TfSounds
   end
   object Button16bits: TDButton
     Left = 16
-    Top = 264
+    Top = 256
     Width = 153
     Height = 21
-    Caption = 'Use 16 bits samples'
+    Caption = 'Use 16 bits Samples'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -235,10 +235,10 @@ object fSounds: TfSounds
   end
   object ButtonStereo: TDButton
     Left = 16
-    Top = 232
+    Top = 224
     Width = 153
     Height = 21
-    Caption = 'Stereo channels'
+    Caption = 'Stereo Channels'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -251,7 +251,7 @@ object fSounds: TfSounds
   end
   object ButtonReduce: TDButton
     Left = 16
-    Top = 200
+    Top = 192
     Width = 153
     Height = 21
     Caption = 'Reduce More Sounds at Time'

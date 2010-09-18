@@ -1,6 +1,6 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -29,7 +29,8 @@ type
 function LowCase(ch: Char): Char;
 
 function DelCharsF(const s: string; const SubChar: Char): string;
-procedure DelChars(var s: string; const SubChar: Char);
+procedure DelChars(var s: AnsiString; const SubChar: Char); overload;
+procedure DelChars(var s: ShortString; const SubChar: Char); overload;
 
 function DelStrF(s: string; const SubStr: string): string;
 procedure DelStr(var s: string; const SubStr: string);
@@ -62,7 +63,7 @@ function ReplaceF(s: string; const WhatS, ToS: string): string;
 procedure Replace(var s: string; const WhatS, ToS: string);
 
 function Code(s: ShortString; Decode: Boolean): ShortString; overload
-function Code(s: string; Decode: Boolean): string; overload;
+function Code(s: AnsiString; Decode: Boolean): AnsiString; overload;
 
 implementation
 
@@ -104,7 +105,20 @@ begin
 	end;
 end;
 
-procedure DelChars(var s: string; const SubChar: Char);
+procedure DelChars(var s: AnsiString; const SubChar: Char);
+var i: Integer;
+begin
+	i := 1;
+	while i <= Length(s) do
+	begin
+		if s[i] = SubChar then
+			Delete(s, i, 1)
+		else
+			Inc(i);
+	end;
+end;
+
+procedure DelChars(var s: ShortString; const SubChar: Char);
 var i: Integer;
 begin
 	i := 1;
@@ -521,7 +535,7 @@ begin
 	end;
 end;
 
-function Code(s: string; Decode: Boolean): string;
+function Code(s: AnsiString; Decode: Boolean): AnsiString;
 var i: Integer;
 begin
 	SetLength(Result, Length(s));

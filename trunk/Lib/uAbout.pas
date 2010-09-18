@@ -1,6 +1,6 @@
 //* File:     Lib\uAbout.pas
 //* Created:  1999-10-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -189,7 +189,7 @@ begin
 			if AF then
 			begin
 				ParamFile := ShortToLongPath(FullDir(Par));
-				if not FileExists(ParamFile) then
+				if (not FileExists(ParamFile)) and (not DirectoryExists(ParamFile)) then
 				begin
 					MessageD('Illegal command line parameter' + LineSep +
 						Par + LineSep +
@@ -352,7 +352,7 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 	begin
 		BmpAbout.SetSize(64, 64);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
-		BmpAbout.GenerateERGB(clNone,
+		BmpAbout.GenerateRGB(clNone,
 			GenFunc[RunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
 	end;
 begin
@@ -516,7 +516,7 @@ begin
 	BitmapName.GenerateRGB(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clNone, TGenFunc(Typ), Co, 0, ef16,
 		(16 * Timer1.Clock div PerformanceFrequency), nil);
 
-	BitmapName.BarE24(clNone, clBtnFace, ef12);
+	BitmapName.Bar(clNone, clBtnFace, ef12);
 	BitmapName.Canvas.Font.Color := clWindowText;
 	DrawCutedText(BitmapName.Canvas, Rect(0, 0, BitmapName.Width, BitmapName.Height), taCenter, tlCenter,
 		ProgramName, True, 1);
@@ -528,7 +528,7 @@ begin
 		BitmapName.Canvas.TextHeight(ProgramName)) div 2,
 		ProgramName);
 	}
-	BitmapName.Border24(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clBlack, clWhite, 2, ef08);
+	BitmapName.Border(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clBlack, clWhite, 2, ef08);
 end;
 
 procedure TfAbout.ImageVersionFill(Sender: TObject);
@@ -537,7 +537,7 @@ var
 	Co: array[0..3] of TColor;
 begin
 	BitmapVersion := ImageVersion.Bitmap;
-	BitmapVersion.BarE24(clNone, clBtnFace, ef16);
+	BitmapVersion.Bar(clNone, clBtnFace, ef16);
 	BitmapVersion.Canvas.Font.Color := clBlack;
 	BitmapVersion.Canvas.TextOut(
 		(BitmapVersion.Width -
@@ -550,7 +550,7 @@ begin
 	BitmapVersion.GenerateRGB(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBtnFace, TGenFunc(Typ), Co, 0, ef08,
 		(32 * Timer1.Clock div PerformanceFrequency), nil);
 
-	BitmapVersion.Border24(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);
+	BitmapVersion.Border(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);
 end;
 
 procedure TfAbout.ImageAboutFill(Sender: TObject);
@@ -561,7 +561,7 @@ var
 	Flash: ^TFlash;
 begin
 	BitmapAbout := ImageAbout.Bitmap;
-	BitmapAbout.BarE24(clNone, clBtnFace, ef02);
+	BitmapAbout.Bar(clNone, clBtnFace, ef02);
 	HClock := (32 * Timer1.Clock div PerformanceFrequency) and $7f;
 	if HClock <= 32  then
 	begin
@@ -583,7 +583,7 @@ begin
 	end;
 
 	if Effect > 0 then
-		RotateDefE24(BitmapAbout, BmpAbout, Typ, (AngleCount * Timer1.Clock div (4 * PerformanceFrequency)), BmpAbout.TransparentColor,
+		RotateDef(BitmapAbout, BmpAbout, Typ, (AngleCount * Timer1.Clock div (4 * PerformanceFrequency)), BmpAbout.TransparentColor,
 			TEffect(Effect));
 
 	i := 0;
@@ -602,12 +602,12 @@ begin
 			C.G := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
 			C.B := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
 			C.T := 0;}
-			Pix24(BitmapAbout.Data, BitmapAbout.ByteX, Flash.X, Flash.Y, TRColor(Flash.Color),
+			Pix(BitmapAbout.Data, BitmapAbout.ByteX, Flash.X, Flash.Y, TRColor(Flash.Color),
 				TEffect(Flash.Power div 16));
 			Inc(i);
 		end;
 	end;
-	BitmapAbout.Border24(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 3, ef08);
+	BitmapAbout.Border(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 3, ef08);
 end;
 
 procedure TfAbout.DButtonMemoryStatusClick(Sender: TObject);

@@ -1,6 +1,6 @@
 //* File:     Lib\uGetStr.pas
 //* Created:  1998-07-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-14
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -68,6 +68,7 @@ begin
 	else
 		fGetStr.EditInput.PasswordChar := CharNul;
 	fGetStr.EditInput.Text := CurVal;
+	fGetStr.EditInput.SelectAll;
 	fGetStr.EditInput.OnChange := fGetStr.EditInputChange;
 	fGetStr.InitButtons;
 	if fGetStr.ActiveControl <> fGetStr.EditInput then
@@ -88,6 +89,7 @@ procedure TfGetStr.ButtonCurClick(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	EditInput.Text := CurS;
+	EditInput.SelectAll;
 	EditInput.OnChange := EditInputChange;
 	InitButtons;
 end;
@@ -96,6 +98,7 @@ procedure TfGetStr.ButtonDefClick(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	EditInput.Text := DefS;
+	EditInput.SelectAll;
 	EditInput.OnChange := EditInputChange;
 	InitButtons;
 end;

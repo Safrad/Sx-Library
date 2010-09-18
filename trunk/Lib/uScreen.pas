@@ -82,7 +82,7 @@ var
 	DriverNames: array of string;
 	DriverNameCount: SG;
 	ScreenModes: array of TScreenMode;
-	EnabledBits: array of DWORD; // 4, 8, 15, 16, 24, 32
+	EnabledBits: array of U4; // 4, 8, 15, 16, 24, 32
 	EnabledBitsCount: SG;
 
 	NotFirstTime: Boolean;
@@ -700,7 +700,7 @@ var
 	NowDif, BestDif: LongWord;
 
 	DeviceMode: TDeviceMode;
-	Flags: DWORD;
+	Flags: U4;
 
 	Reg: TRegistry;
 	i, j: Integer;

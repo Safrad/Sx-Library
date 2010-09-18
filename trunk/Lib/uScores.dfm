@@ -1,6 +1,6 @@
 object fScores: TfScores
-  Left = 611
-  Top = 496
+  Left = 614
+  Top = 499
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
   Caption = 'High scores'

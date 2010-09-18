@@ -1,6 +1,6 @@
 object fIOError: TfIOError
-  Left = 482
-  Top = 597
+  Left = 489
+  Top = 604
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   ClientHeight = 135

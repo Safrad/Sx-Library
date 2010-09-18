@@ -1,6 +1,6 @@
 //* File:     Lib\uMidi.pas
 //* Created:  2000-01-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -21,7 +21,7 @@ procedure MidiMCIStop;
 procedure MidiMCIResume;
 procedure MidiMCIPlay;
 procedure MidiMCIClose;
-function MCIError(const ErrorCode: DWORD): string;
+function MCIError(const ErrorCode: U4): string;
 
 {
 procedure MidiReadFromFile(var Midi: PMidi; FName: TFileName);
@@ -51,7 +51,7 @@ var
 	GenParm: TMCI_Generic_Parms;
 	SeekParm: TMCI_Seek_Parms;
 
-function MCIError(const ErrorCode: DWORD): string;
+function MCIError(const ErrorCode: U4): string;
 begin
 {	case ErrorCode of
 	000: Result := 'The specified command was carried out.';
@@ -434,7 +434,7 @@ var ErrorCode: SG;
 begin
 	New(Header);
 	FillChar(Header^, SizeOf(Header^), 0);
-	Header.lpData := Pointer(SG(Addr(Midi.Data)) + kd);
+	Header.lpData := Pointer(SG(@Midi.Data) + kd);
 	Header.dwBufferLength := 4096;//Midi.DataBytes; //SizeOf(PMemBlock^);
 	Header.dwBytesRecorded := 0;
 	Header.dwUser := 4096;//Midi.DataBytes; // SizeOf(PMemBlock^);

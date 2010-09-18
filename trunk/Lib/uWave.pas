@@ -1,6 +1,6 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-15
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -141,7 +141,7 @@ const
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
 // For screen Width 800 is NowPos 0..799, MaxPos 799
 
-function WaveErrorText(ErrorCode: DWORD): string;
+function WaveErrorText(ErrorCode: U4): string;
 
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
 procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
@@ -245,7 +245,7 @@ uses
 	uFiles, uError, uStrings;
 
 (*
-procedure NoSound; assembler;
+procedure NoSound;
 asm
 	{$ifopt O+}
 	push ax
@@ -298,11 +298,11 @@ asm
 end;
 *)
 
-function WaveErrorText(ErrorCode: DWORD): string;
+function WaveErrorText(ErrorCode: U4): string;
 begin
 	SetLength(Result, MAXERRORLENGTH);
-	if waveOutGetErrorText(ErrorCode, PChar(Result), MAXERRORLENGTH) = MMSYSERR_NOERROR then
-		Result := PChar(Result)
+	if waveOutGetErrorText(ErrorCode, @Result[1], MAXERRORLENGTH) = MMSYSERR_NOERROR then
+//		Result := PChar(Result) D???
 	else
 		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' ' + 'Unknown error';
 end;
@@ -768,9 +768,9 @@ end;
 procedure MMOutDone(
 	wo: HWAVEOUT;
 	Msg: UINT;
-	Instance: DWORD;
-	Param1: DWORD;
-	Param2: DWORD); stdcall;
+	Instance: U4;
+	Param1: U4;
+	Param2: U4); stdcall;
 var
 	Header: PWaveHdr;
 	BufferOut: PWaveData;
@@ -845,7 +845,7 @@ begin
 	MMError('Play format not supported');
 	if FError <> 0 then Exit;
 
-	FError := waveOutOpen(@HWaveOut, 0, @WaveFormat, Cardinal(Addr(MMOutDone)), Cardinal(Self), CALLBACK_FUNCTION);
+	FError := waveOutOpen(@HWaveOut, 0, @WaveFormat, Cardinal(@MMOutDone), Cardinal(Self), CALLBACK_FUNCTION);
 	MMError('WaveOutOpen');
 	if FError <> 0 then Exit;
 
@@ -1095,7 +1095,11 @@ begin
 	PlayWinSound(wsDefaultSound);
 end;
 
-Initialization
-Finalization
-	WavePlayer.Free; WavePlayer := nil;
+initialization
+
+finalization
+	if Assigned(WavePlayer) then
+	begin
+		WavePlayer.Free; WavePlayer := nil;
+	end;
 end.

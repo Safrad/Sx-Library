@@ -1,6 +1,6 @@
 //* File:     Lib\uDEdit.pas
 //* Created:  2003-09-01
-//* Modified: 2004-04-28
+//* Modified: 2004-07-21
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz

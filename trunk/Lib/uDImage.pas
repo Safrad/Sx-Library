@@ -1,6 +1,6 @@
 //* File:     Lib\uDImage.pas
 //* Created:  2000-07-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -277,7 +277,7 @@ end;
 
 procedure TDImage.CreateParams(var Params: TCreateParams);
 {const
-	BorderStyles: array[TBorderStyle] of DWORD = (0, );}
+	BorderStyles: array[TBorderStyle] of U4 = (0, );}
 begin
 	inherited CreateParams(Params);
 	LCursor := Cursor;
@@ -669,7 +669,7 @@ begin
 		Exit;
 	end;
 	if (Bitmap.Width <> Width) or (Bitmap.Height <> Height) then
-//		Bitmap.Resize24E(Bitmap, clNone, Width, Height, nil);}
+//		Bitmap.Resize(Bitmap, clNone, Width, Height, nil);}
 		Bitmap.SetSize(Width, Height);
 
 	try
@@ -688,16 +688,16 @@ begin
 
 			X1 := 0;
 			X2 := ScrollBarVWidth - 1;
-//			Bitmap.Lin24(X1, Y1, NowMaxWidth - 1, Y1, RColor(238, 237, 229).L, ScrollEf);
+//			Bitmap.Line(X1, Y1, NowMaxWidth - 1, Y1, RColor(238, 237, 229).L, ScrollEf);
 
-	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+	{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+			Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHD, FHotTrack and (MouseWhere = mwScrollHD), 1, ScrollEf);
 
 			X1 := NowMaxWidth - ScrollBarVWidth;
 			X2 := NowMaxWidth - 1;
-	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+	{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+			Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHU, FHotTrack and (MouseWhere = mwScrollHU), 3, ScrollEf);
 
 			// TScrollBoxSlider
@@ -722,8 +722,8 @@ begin
 				I1 := 3;
 				I2 := 0;
 			end;
-			Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
-//			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+			Bitmap.Border(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
+//			Bitmap.Bar(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
 			if FHotTrack and (MouseWhere = mwScrollH) then
 			begin
 				Co[0] := RColor(253, 255, 255).L;
@@ -742,9 +742,9 @@ begin
 			x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
 			for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
 			begin
-				Bitmap.Lin24(x, Y1 + 4, x, Y2 - 5, RColor(238, 244, 254).L, ef16);
+				Bitmap.Line(x, Y1 + 4, x, Y2 - 5, RColor(238, 244, 254).L, ef16);
 				Inc(x);
-				Bitmap.Lin24(x, Y1 + 5, x, Y2 - 4, RColor(140, 176, 208).L, ef16);
+				Bitmap.Line(x, Y1 + 5, x, Y2 - 4, RColor(140, 176, 208).L, ef16);
 				Inc(x);
 			end;
 
@@ -761,9 +761,9 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Bitmap.Lin24(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
-				Bitmap.Lin24(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar24(clNone,
+				Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
+				Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar(clNone,
 					X1, Y1 + 1,
 					X2, Y2 - 1, C, ScrollEf2);
 			end;
@@ -779,9 +779,9 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Bitmap.Lin24(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
-				Bitmap.Lin24(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar24(clNone,
+				Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
+				Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar(clNone,
 					X1, Y1 + 1,
 					X2, Y2 - 1, C, ScrollEf2);
 			end;
@@ -799,15 +799,15 @@ begin
 			begin
 				Y1 := 0;
 				Y2 := ScrollBarHHeight - 1;
-	//			Bitmap.Lin24(X1, Y1, X1, NowMaxHeight - 1, RColor(238, 237, 229).L, ScrollEf);
-		{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-				Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+	//			Bitmap.Line(X1, Y1, X1, NowMaxHeight - 1, RColor(238, 237, 229).L, ScrollEf);
+		{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+				Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 				Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, FHotTrack and (MouseWhere = mwScrollVD), 0, ScrollEf);
 
 				Y1 := NowMaxHeight - ScrollBarHHeight;
 				Y2 := NowMaxHeight - 1;
-		{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-				Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+		{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+				Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 				Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, FHotTrack and (MouseWhere = mwScrollVU), 2, ScrollEf);
 			end;
 
@@ -833,9 +833,9 @@ begin
 				I1 := 3;
 				I2 := 0;
 			end;
-			Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
+			Bitmap.Border(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
 //			if FHotTrack and (MouseWhere = mwScrollV) then C := clHighlight else C := clBtnFace;
-//			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+//			Bitmap.Bar(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
 			if FHotTrack and (MouseWhere = mwScrollV) then
 			begin
 				Co[0] := RColor(253, 255, 255).L;
@@ -854,9 +854,9 @@ begin
 			y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
 			for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
 			begin
-				Bitmap.Lin24(X1 + 4, y, X2 - 5, y, RColor(238, 244, 254).L, ef16);
+				Bitmap.Line(X1 + 4, y, X2 - 5, y, RColor(238, 244, 254).L, ef16);
 				Inc(y);
-				Bitmap.Lin24(X1 + 5, y, X2 - 4, y, RColor(140, 176, 208).L, ef16);
+				Bitmap.Line(X1 + 5, y, X2 - 4, y, RColor(140, 176, 208).L, ef16);
 				Inc(y);
 			end;
 
@@ -872,9 +872,9 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Bitmap.Lin24(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
-				Bitmap.Lin24(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar24(clNone,
+				Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
+				Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar(clNone,
 					X1 + 1, Y1,
 					X2 - 1, Y2, C, ScrollEf2);
 			end;
@@ -890,9 +890,9 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Bitmap.Lin24(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
-				Bitmap.Lin24(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar24(clNone,
+				Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
+				Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar(clNone,
 					X1 + 1, Y1,
 					X2 - 1, Y2, C, ScrollEf2);
 			end;
@@ -900,7 +900,7 @@ begin
 		else
 			ScrollBarVHeight := 0;
 
-//    Pix24(Bitmap24.PData, Bitmap24.ByteX, MouseX, MouseY, clWhite, ef16);
+//    Pix(Bitmap.PData, Bitmap.ByteX, MouseX, MouseY, clWhite, ef16);
 		{$ifopt d-}
 		if FDrawFPS then
 		{$endif}
@@ -1085,7 +1085,7 @@ begin
 			begin
 				LastCursor := Screen.Cursor;
 				Screen.Cursor := crHourGlass;
-				BmpSource2.Resize24(BmpSource,
+				BmpSource2.Resize(BmpSource,
 					SourceWidth, SourceHeight, nil);
 				Screen.Cursor := LastCursor;
 			end;

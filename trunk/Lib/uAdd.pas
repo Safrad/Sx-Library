@@ -1,6 +1,6 @@
 //* File:     Lib\uAdd.pas
 //* Created:  1998-01-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-13
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -238,14 +238,16 @@ function Sgn(const I: F8): SG; overload;
 function Sgn(const I: FA): SG; overload;
 function SgnMul(const Signum, Num: SG): SG;
 
-procedure DivModU32(const Dividend: LongWord; const Divisor: Word;
-	out Res, Remainder: Word);
-procedure DivModS32(const Dividend: LongInt; const Divisor: SmallInt;
-	out Res, Remainder: SmallInt);
-procedure DivModU64(const Dividend: Int64; const Divisor: LongWord;
-	out Res, Remainder: LongWord);
-procedure DivModS64(const Dividend: Int64; const Divisor: LongInt;
-	out Res, Remainder: LongInt);
+procedure DivModU2(const Dividend: U2; const Divisor: U1;
+	out Res, Remainder: U1);
+procedure DivModU4(const Dividend: U4; const Divisor: U2;
+	out Res, Remainder: U2);
+procedure DivModS4(const Dividend: S4; const Divisor: S2;
+	out Res, Remainder: S2);
+procedure DivModU8(const Dividend: U8; const Divisor: U4;
+	out Res, Remainder: U4); pascal;
+procedure DivModS8(const Dividend: S8; const Divisor: S4;
+	out Res, Remainder: S4); pascal;
 
 function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
 function FastSqrt(A: SG): SG;
@@ -264,6 +266,8 @@ function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
 
 procedure Change(var A, B: B1); overload;
 procedure Change(var A, B: B4); overload;
+procedure Change(var A, B: U1); overload;
+procedure Change(var A, B: U2); overload;
 procedure Change(var A, B: U4); overload;
 procedure Change(var A, B: S4); overload;
 procedure Change(var A, B: Extended); overload;
@@ -271,6 +275,8 @@ procedure Change(var A, B: Extended); overload;
 function Arg(X, Y: Extended): Extended; overload;
 
 function Random2(Range: SG): SG;
+function RandomU4: U4;
+function RandomM: U4;
 
 procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
@@ -392,6 +398,7 @@ function StrToValE(S: string;
 // System
 procedure Nop;
 procedure GetMem0(var P: Pointer; Size: Cardinal);
+procedure ReadMem(P: Pointer; Size: Cardinal);
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
 function ThreadPriority(const Prior: Byte): Integer;
@@ -515,58 +522,64 @@ begin
 		Result := -Num;
 end;
 
-procedure DivModU32(const Dividend: LongWord; const Divisor: Word;
-	out Res, Remainder: Word);
+procedure DivModU2(const Dividend: U2; const Divisor: U1;
+	out Res, Remainder: U1); register;
 asm
-	PUSH    EBX
-	MOV     EBX,EDX
-	MOV     EDX,EAX
-	SHR     EDX,16
-	DIV     BX
-	MOV     EBX,Remainder
-	MOV     [ECX],AX
-	MOV     [EBX],DX
-	POP     EBX
+	div dl // al := ax div dl; ah := ax mod dl
+	mov edx, Remainder
+	mov [ecx], al
+	mov [edx], ah
 end;
 
-procedure DivModS32(const Dividend: LongInt; const Divisor: SmallInt;
-	out Res, Remainder: SmallInt);
+procedure DivModU4(const Dividend: U4; const Divisor: U2;
+	out Res, Remainder: U2); register;
 asm
-	PUSH    EBX
-	MOV     EBX,EDX
-	MOV     EDX,EAX
-	SHR     EDX,16
-	IDIV    BX
-	MOV     EBX,Remainder
-	MOV     [ECX],AX
-	MOV     [EBX],DX
-	POP     EBX
+	push ebx
+	mov bx, dx
+	mov edx, eax
+	shr edx, 16
+	div bx // ax := dx&ax div bx; dx := dx&ax mod bx
+	mov ebx, Remainder
+	mov [ecx], ax
+	mov [ebx], dx
+	pop ebx
 end;
 
-procedure DivModU64(const Dividend: Int64; const Divisor: LongWord;
-	out Res, Remainder: LongWord);
-begin
-	asm
-	pushad
-	mov edx, [ebp+$0c] //Divident-hi
-	mov eax, [ebp+$08] //Divident-lo
+procedure DivModS4(const Dividend: S4; const Divisor: S2;
+	out Res, Remainder: S2); register;
+asm
+	push ebx
+	mov ebx, edx
+	mov edx, eax
+	shr edx, 16
+	idiv bx // ax := dx&ax div bx; dx := dx&ax mod bx
+	mov ebx, Remainder
+	mov [ecx], ax
+	mov [ebx], dx
+	pop ebx
+end;
+
+procedure DivModU8(const Dividend: U8; const Divisor: U4;
+	out Res, Remainder: U4); pascal;
+asm
+	push ebx
+	mov edx, dword ptr [Dividend + 4]// Divident-hi
+	mov eax, dword ptr Dividend // Divident-lo
 	mov ebx, Divisor
 	div ebx // eax:=edx&eax div ebx; edx:=edx&eax mod ebx
-	mov edi, Res
-	mov [edi], eax
-	mov edi, Remainder
-	mov [edi], edx
-	popad
-	end;
+	mov ebx, Res
+	mov [ebx], eax
+	mov ebx, Remainder
+	mov [ebx], edx
+	pop ebx
 end;
 
-procedure DivModS64(const Dividend: Int64; const Divisor: LongInt;
-	out Res, Remainder: LongInt);
-begin
-	asm
+procedure DivModS8(const Dividend: S8; const Divisor: S4;
+	out Res, Remainder: S4); pascal;
+asm
 	pushad
-	mov edx, [ebp+$0c] //Divident-hi
-	mov eax, [ebp+$08] //Divident-lo
+	mov edx, dword ptr [Dividend + 4]// Divident-hi
+	mov eax, dword ptr Dividend // Divident-lo
 	mov ebx, Divisor
 	idiv ebx // eax:=edx&eax div ebx; edx:=edx&eax mod ebx
 	mov edi, Res
@@ -574,7 +587,6 @@ begin
 	mov edi, Remainder
 	mov [edi], edx
 	popad
-	end;
 end;
 
 function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
@@ -760,24 +772,24 @@ begin
 		Result := Max;
 end;
 
-procedure Change(var A, B: B1);
+procedure Change(var A, B: B1); register;
 asm
 	push bx
 	push cx
-	mov bl, byte ptr [A]
-	mov cl, byte ptr [B]
+	mov bl, B1 ptr [A]
+	mov cl, B1 ptr [B]
 	mov [B], bl
 	mov [A], cl
 	pop bx
 	pop cx
 end;
 
-procedure Change(var A, B: B4);
+procedure Change(var A, B: B4); register;
 asm
 	push ebx
 	push ecx
-	mov ebx, dword ptr [A]
-	mov ecx, dword ptr [B]
+	mov ebx, B4 ptr [A]
+	mov ecx, B4 ptr [B]
 	mov [B], ebx
 	mov [A], ecx
 	pop ebx
@@ -785,12 +797,34 @@ asm
 //  xchg A, B
 end;
 
-procedure Change(var A, B: U4);
+procedure Change(var A, B: U1); register;
+asm
+	push bx
+	mov bl, U1 ptr [A]
+	mov bh, U1 ptr [B]
+	mov [B], bl
+	mov [A], bh
+	pop bx
+end;
+
+procedure Change(var A, B: U2); register;
+asm
+	push bx
+	push cx
+	mov bx, U2 ptr [A]
+	mov cx, U2 ptr [B]
+	mov [B], bx
+	mov [A], cx
+	pop bx
+	pop cx
+end;
+
+procedure Change(var A, B: U4); register;
 asm
 	push ebx
 	push ecx
-	mov ebx, dword ptr [A]
-	mov ecx, dword ptr [B]
+	mov ebx, U4 ptr [A]
+	mov ecx, U4 ptr [B]
 	mov [B], ebx
 	mov [A], ecx
 	pop ebx
@@ -798,12 +832,12 @@ asm
 //  xchg A, B
 end;
 
-procedure Change(var A, B: S4);
+procedure Change(var A, B: S4); register;
 asm
 	push ebx
 	push ecx
-	mov ebx, dword ptr [A]
-	mov ecx, dword ptr [B]
+	mov ebx, S4 ptr [A]
+	mov ecx, S4 ptr [B]
 	mov [B], ebx
 	mov [A], ecx
 	pop ebx
@@ -811,7 +845,7 @@ asm
 //  xchg A, B
 end;
 
-procedure Change(var A, B: Extended);
+procedure Change(var A, B: Extended); register;
 var C: Extended;
 begin
 	C := A;
@@ -823,6 +857,47 @@ function Random2(Range: SG): SG;
 begin
 	Result := Random(2 * Range + 1) - Range;
 end;
+
+var
+	InitJ: SG = 24 - 1;
+	InitK: SG = 55 - 1;
+	InitX: array[0..54] of U4 = (
+		1410651636, 3012776752, 3497475623, 2892145026, 1571949714,
+		3253082284, 3489895018, 387949491, 2597396737, 1981903553,
+		3160251843, 129444464, 1851443344, 4156445905, 224604922,
+		1455067070, 3953493484, 1460937157, 2528362617, 317430674,
+		3229354360, 117491133, 832845075, 1961600170, 1321557429,
+		747750121, 545747446, 810476036, 503334515, 4088144633,
+		2824216555, 3738252341, 3493754131, 3672533954, 29494241,
+		1180928407, 4213624418, 33062851, 3221315737, 1145213552,
+		2957984897, 4078668503, 2262661702, 65478801, 2527208841,
+		1960622036, 315685891, 1196037864, 804614524, 1421733266,
+		2017105031, 3882325900, 810735053, 384606609, 2393861397 );
+
+function RandomU4: U4;
+begin
+	Result := U4(Random(65536)) + U4(Random(65536)) shl 16;
+end;
+
+function RandomM: U4;
+(*
+	random numbers from Mathematica 2.0.
+	SeedRandom = 1;
+	Table[Random[Integer, {0, 2^32 - 1}]
+	*)
+begin
+	Result := (InitX[InitJ] + InitX[InitK]);
+	InitX[InitJ] := Result;
+	if InitJ = 0 then
+		InitJ := High(InitX)
+	else
+		Dec(InitJ);
+	if InitK = 0 then
+		InitK := High(InitX)
+	else
+		Dec(InitK);
+end;
+
 
 function Arg(X, Y: Extended): Extended; // <0..2pi)
 begin
@@ -1058,7 +1133,10 @@ begin
 					if (UseFormat[i] = '#') and (((i > PointPos) and (NumFound = False))) then
 						Result := ' ' + Result
 					else
+					begin
+						NumFound := True;
 						Result := '0' + Result;
+					end;
 				end;
 			end
 			else
@@ -1066,7 +1144,10 @@ begin
 				if (UseFormat[i] = '#') and ((i < PointPos) or (NumFound = False)) then
 					Result := ' ' + Result
 				else
+				begin
+					NumFound := True;
 					Result := '0' + Result;
+				end;
 			end;
 			Dec(j);
 		end
@@ -1607,8 +1688,8 @@ function KeyToStr(Key: Word): string;
 begin
 	case Key and $ff of
 	0: Result := '';
-	VK_LBUTTON: Result := 'L.Button';
-	VK_RBUTTON: Result := 'R.Button';
+	VK_LBUTTON: Result := 'L. Button';
+	VK_RBUTTON: Result := 'R. Button';
 	VK_CANCEL: Result := 'Cancel';
 	VK_MBUTTON: Result := 'M.Button';
 	VK_BACK: Result := 'Back';
@@ -1649,31 +1730,31 @@ begin
 	VK_HELP: Result := 'Help';
 { VK_0 thru VK_9 are the same as ASCII '0' thru '9' ($30 - $39) }
 { VK_A thru VK_Z are the same as ASCII 'A' thru 'Z' ($41 - $5A) }
-	Ord('0')..Ord('9'): Result := Chr(Key);
-	Ord('A')..Ord('Z'): Result := Chr(Key);
+	Ord('0')..Ord('9'): Result := Chr(Key and $ff);
+	Ord('A')..Ord('Z'): Result := Chr(Key and $ff);
 	VK_LWIN: Result := 'L.Win';
 	VK_RWIN: Result := 'R.Win';
 	VK_APPS: Result := 'Apps';
-	96..96 + 9: Result := 'Num ' + Chr(Ord('0') + Key - 96);
+	96..96 + 9: Result := 'Num ' + Chr(Ord('0') + (Key and $ff) - 96);
 	VK_MULTIPLY: Result := 'Num *';
 	VK_ADD: Result := 'Num +';
 	VK_SEPARATOR: Result := 'Separator';
 	VK_SUBTRACT: Result := 'Num -';
 	VK_DECIMAL: Result := 'Num ,';
 	VK_DIVIDE: Result := 'Num /';
-	112..112 + 23: Result := 'F' + NToS(Key - 111, False);
+	112..112 + 23: Result := 'F' + NToS((Key and $ff)- 111, False);
 
 	VK_NUMLOCK: Result := 'Num Lock';
 	VK_SCROLL: Result := 'Scroll Lock';
 { VK_L & VK_R - left and right Alt, Ctrl and Shift virtual keys.
 	Used only as parameters to GetAsyncKeyState() and GetKeyState().
 	No other API or message will distinguish left and right keys in this way. }
-	VK_LSHIFT: Result := 'L.Shift';
-	VK_RSHIFT: Result := 'R.Shift';
-	VK_LCONTROL: Result := 'L.Control';
-	VK_RCONTROL: Result := 'R.Control';
-	VK_LMENU: Result := 'L.Alt';
-	VK_RMENU: Result := 'R.Alt';
+	VK_LSHIFT: Result := 'L. Shift';
+	VK_RSHIFT: Result := 'R. Shift';
+	VK_LCONTROL: Result := 'L. Control';
+	VK_RCONTROL: Result := 'R. Control';
+	VK_LMENU: Result := 'L. Alt';
+	VK_RMENU: Result := 'R. Alt';
 	187: Result := '=';
 	189: Result := '-';
 
@@ -1722,12 +1803,15 @@ begin
 		GM := 0;
 		GS := 0;
 		GD := 0;
+		{$ifopt d+}
+		IE(5453);
+		{$endif}
 	end
 	else
 	begin
-		DivModU64(Abs(T), 1000, DW, GD);
-		DivModU64(DW, 60, DW, GS);
-		DivModU64(DW, 60, GH, GM);
+		DivModU8(Abs(T), 1000, DW, GD);
+		DivModU8(DW, 60, DW, GS);
+		DivModU8(DW, 60, GH, GM);
 	end;
 end;
 
@@ -1888,7 +1972,7 @@ function MsToStr(const DT: Int64; const UseWinFormat: BG;
 var
 	h, m, s, d: LongWord;
 	Day: SG;
-	Res, Rem: U2;
+	Res, Rem: U1;
 
 	TimeSep, DecimalSep, ListSep: string[3];
 begin
@@ -1945,7 +2029,7 @@ begin
 		end
 		else if h < 100 then
 		begin
-			DivModU32(h, 10, Res, Rem);
+			DivModU2(h, 10, Res, Rem);
 			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep
 		end
 		else
@@ -1964,7 +2048,7 @@ begin
 		end
 		else if h < 100 then
 		begin
-			DivModU32(h, 10, Res, Rem);
+			DivModU2(h, 10, Res, Rem);
 			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep
 		end
 		else
@@ -1985,7 +2069,7 @@ begin
 		end
 		else
 		begin
-			DivModU32(m, 10, Res, Rem);
+			DivModU2(m, 10, Res, Rem);
 			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep;
 		end;
 
@@ -2000,7 +2084,7 @@ begin
 		end
 		else
 		begin
-			DivModU32(s, 10, Res, Rem);
+			DivModU2(s, 10, Res, Rem);
 			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0'));
 		end;
 
@@ -2082,7 +2166,13 @@ begin
 	if DT = 0 then
 		Result := 'Never'
 	else
-		Result := DateTimeToStr(DT);
+	begin
+		try
+			Result := DateTimeToStr(DT);   
+		except
+			Result := 'Unknown';
+		end;
+	end;
 end;
 
 {function DateToStr6(D: TDate): string; // Disk
@@ -2131,16 +2221,28 @@ begin
 end;
 
 procedure Nop;
-begin
-	asm
+asm
 	nop
-	end;
 end;
 
 procedure GetMem0(var P: Pointer; Size: Cardinal);
 begin
 	GetMem(P, Size);
 	FillChar(P^, Size, 0);
+end;
+
+procedure ReadMem(P: Pointer; Size: Cardinal); register;
+asm
+	add Size, P
+	sub Size, 4
+	cmp Size, 0
+	je @Exit
+	@Loop:
+		add P, 4
+		mov ecx, [P]
+		cmp P, Size
+	jb @Loop
+	@Exit:
 end;
 
 function DriveTypeToStr(const DriveType: Integer): string;
@@ -2303,11 +2405,11 @@ begin
 	MySLink := MyObject as IShellLink;
 	MyPFile := MyObject as IPersistFile;
 
-	MySLink.SetArguments(PChar(Arguments));
-	MySLink.SetPath(PChar(Target));
-	MySLink.SetWorkingDirectory(PChar(StartIn));
-	MySLink.SetDescription(PChar(Description));
-	MySLink.SetIconLocation(PChar(IconFileName), IconIdex);
+	MySLink.SetArguments(@Arguments[1]);
+	MySLink.SetPath(@Target[1]);
+	MySLink.SetWorkingDirectory(@StartIn[1]);
+	MySLink.SetDescription(@Description[1]);
+	MySLink.SetIconLocation(@IconFileName[1], IconIdex);
 	MySLink.SetHotkey(HotKey);
 
 	if not DirectoryExists(ExtractFileDir(LinkFileName)) then

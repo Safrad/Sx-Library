@@ -1,6 +1,6 @@
 //* File:     Lib\uError.pas
 //* Created:  1999-12-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-13
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -79,10 +79,10 @@ type
 
 const
 	DlgBtnNames: array[TDlgBtn] of string = (
-		'OK', 'Yes', 'YesToAll',
+		'OK', 'Yes', 'Yes To All',
 		'Retry', 'Ignore', 'Abort',
 		'Delete', 'DeleteAll',
-		'No', 'NoToAll', 'Cancel');
+		'No', 'No To All', 'Cancel');
 
 	DlgNoTime = 0;
 	DlgWait = 15;
@@ -104,7 +104,7 @@ procedure ShowMessages;
 function MessageD(Msg: string; DlgType: TMsgDlgType;
 	Buttons: TDlgButtons): TDlgBtn;
 function MessageDEx(Msg: string; DlgType: TMsgDlgType;
-	Buttons: array of ShortString; TimeLeft: SG; Owener: TComponent): SG;
+	Buttons: array of string; TimeLeft: SG; Owener: TComponent): SG;
 // IO Error
 procedure IOError(FName: TFileName; const ErrorCode: U4);
 function IOErrorRetry(var FName: TFileName; const ErrorCode: U4): Boolean;
@@ -185,7 +185,7 @@ begin
 		nil,
 		ErrorCode,
 		LANG_NEUTRAL or SUBLANG_DEFAULT shl 10,
-		PChar(Result),
+		@Result[1],
 		MAX_PATH,
 		nil);
 	SetLength(Result, NewLength);
@@ -204,7 +204,7 @@ begin
 end;
 
 var
-	Captions: array[TMsgDlgType] of string = (SMsgDlgWarning, SMsgDlgError,
+	Captions: array[TMsgDlgType] of AnsiString = (SMsgDlgWarning, SMsgDlgError,
 		SMsgDlgInformation, SMsgDlgConfirm, '');
 	IconIDs: array[TMsgDlgType] of PChar = (IDI_EXCLAMATION, IDI_HAND,
 		IDI_ASTERISK, IDI_QUESTION, nil);
@@ -240,7 +240,7 @@ begin
 
 	// Captions
 	EditIndex.Text:= NToS(ActItem + 1);
-	PanelCreated.Caption := DateTimeToStr(Ignore.DateTime);
+	PanelCreated.Caption := DTToStr(Ignore.DateTime);
 	case Ignore.Style of
 	stNormal:
 	begin
@@ -489,9 +489,9 @@ end;
 
 function DoForm(
 	const Style: TStyle; var FName: TFileName; const ErrorCode: U4;
-	ErrorMsg: string; const Retry: Boolean;
+	ErrorMsg: AnsiString; const Retry: Boolean;
 	DlgType: TMsgDlgType;
-	Buttons: array of ShortString; TimeLeft: SG; Owener: TComponent): SG;
+	Buttons: array of string; TimeLeft: SG; Owener: TComponent): SG;
 
 var
 	s: string;
@@ -511,10 +511,11 @@ begin
 
 	if Ignores = nil then Exit;
 
-	if Style = stIO then
-		ErrorMsg := ErrorMes(ErrorCode);
-{	else
-		s := ErrorMsg;}
+	case Style of
+	stIO: ErrorMsg := ErrorMes(ErrorCode);
+//	stFile: ErrorMsg := FName + LineSep + ErrorMsg;
+	end;
+
 	DelChars(ErrorMsg, '&');
 	LineIndex := 1;
 	s := ReadToChar(ErrorMsg, LineIndex, LineSep);
@@ -737,7 +738,7 @@ begin
 end;
 
 function MessageDEx(Msg: string; DlgType: TMsgDlgType;
-	Buttons: array of ShortString; TimeLeft: SG; Owener: TComponent): SG;
+	Buttons: array of string; TimeLeft: SG; Owener: TComponent): SG;
 var
 	FileName: TFileName;
 begin
@@ -750,7 +751,7 @@ function MessageD(Msg: string; DlgType: TMsgDlgType;
 var
 	B: TDlgBtn;
 	Res, i: SG;
-	But: array of ShortString;
+	But: array of string;
 
 	procedure AddS(s: string);
 	begin

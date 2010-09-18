@@ -134,7 +134,7 @@ begin
 		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True, FFontShadow);
 	end;
 {	FBmpOut.SetSize(Width, Height);
-	FBmpOut.BarE24(clRed,0
+	FBmpOut.Bar(clRed,0
 	BitBlt(Message.DC, 0, 0, FBmpOut.Width, FBmpOut.Height,
 		FBmpOut.Canvas.Handle,
 		0, 0,
