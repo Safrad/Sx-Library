@@ -1,6 +1,6 @@
 //* File:     Lib\uGetStr.pas
 //* Created:  1998-07-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz

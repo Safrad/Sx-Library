@@ -1,6 +1,6 @@
 //* File:     Lib\uError.pas
 //* Created:  1999-12-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -25,8 +25,8 @@ type
 
 
 	TfIOError = class(TDForm)
-    ButtonRetry: TDButton;
-    ButtonIgnore: TDButton;
+		ButtonRetry: TDButton;
+		ButtonIgnore: TDButton;
 		ButtonIgnoreAll: TDButton;
 		ButtonExit: TDButton;
 		ButtonOpen: TDButton;
@@ -39,7 +39,7 @@ type
     LabelTimeLeft: TDLabel;
     PanelTimeLeft: TDLabel;
     LabelCreated: TDLabel;
-    PanelCreated: TDLabel;
+		PanelCreated: TDLabel;
     LabelMessage: TDLabel;
     ButtonAll: TDButton;
 		Bevel1: TBevel;
@@ -231,196 +231,184 @@ end;
 procedure TfIOError.ShowMes;
 var
 	IconID: PChar;
-	B: SG;
 	Bo: BG;
-	ButtonWidth: SG;
-	Wid, MaxWid, LastLine, LineCount, i, Hei, ButtonCount, x: SG;
+	i, LastLine: SG;
+	Wid, Hei, BWid, MaxWid, LineCount: SG;
 const
-	BWidth = 81;
+	BMinWidth = 81;
 	BHeight = 23;
-	BSpace = 8;
 begin
 	Ignore := PIgnore(Ignores.Get(ActItem));
-	IconID := nil;
 
+	// Captions
+	EditIndex.Text:= NToS(ActItem + 1);
+	PanelCreated.Caption := DateTimeToStr(Ignore.DateTime);
 	case Ignore.Style of
 	stNormal:
 	begin
 		if Ignore.DlgType <> mtCustom then
-			fIOError.Caption := string(Captions[Ignore.DlgType])
+			Caption := string(Captions[Ignore.DlgType])
 		else
-			fIOError.Caption := Application.Title;
+			Caption := Application.Title;
 
 		IconID := IconIDs[Ignore.DlgType];
 	end;
 	stInternal:
 	begin
-		fIOError.Caption := 'Internal Error';
+		Caption := 'Internal Error';
 		IconID := IDI_APPLICATION;
 	end;
 	stIO:
 	begin
-		fIOError.Caption := 'I/O Error';
+		Caption := 'I/O Error';
 		IconID := IDI_WINLOGO;
 	end;
 	stFile:
 	begin
-		fIOError.Caption := 'File Error';
+		Caption := 'File Error';
 		IconID := IDI_WINLOGO;
+	end
+	else
+	begin
+		Caption := '';
+		IconID := nil;
 	end;
 	end;
 
+	// Image
 	if IconID <> nil then
 	begin
-		fIOError.Image.Name := 'Image';
-		fIOError.Image.Picture.Icon.Handle := LoadIcon(0, IconID);
+		Image.Name := 'Image';
+		Image.Picture.Icon.Handle := LoadIcon(0, IconID);
 	end;
 
-	fIOError.EditIndex.Text:= NToS(ActItem + 1);
-	fIOError.PanelCreated.Caption := DateTimeToStr(Ignore.DateTime);
+	MaxWid := PanelCreated.Left + PanelCreated.Width + FormBorder;
 
+	// Message Text
 	LineCount := 1;
-	MaxWid := 0;
 	LastLine := 1;
 	for i := 1 to Length(Ignore.Msg) + 1 do
 		if (i = Length(Ignore.Msg) + 1) or (Ignore.Msg[i] = CharLF) then
 		begin
 			Inc(LineCount);
-			Wid := fIOError.Canvas.TextWidth(Copy(Ignore.Msg, LastLine, i - LastLine)) + 4;
+			Wid := Canvas.TextWidth(Copy(Ignore.Msg, LastLine, i - LastLine)) + 4 + FormBorder + MemoMsg.Left;
 			if Wid > MaxWid then MaxWid := Wid;
 			LastLine := i + 1;
 		end;
-	Inc(MaxWid, BSpace + fIOError.MemoMsg.Left);
 
-	x := fIOError.ButtonAll.Left + fIOError.ButtonAll.Width + BSpace;
-	if (Ignore.Style = stNormal) or (Ignore.Style = stInternal) then
+	// Buttons
+	Bo := Ignore.Style in [stIO, stFile];
+	ButtonRetry.Visible := Bo;
+	ButtonIgnore.Visible := Bo;
+//	ButtonIgnoreAll.Visible := B;
+	ButtonOpen.Visible := Bo;
+
+//	ButtonExit.Visible := Bo;
+
+	BWid := 0;
+	if Bo = False then
 	begin
-		ButtonWidth := x - BSpace;
-		ButtonCount := 0;
-		for B := 0 to Length(Ignore.Buttons) - 1 do
+		if Length(Ignore.Buttons) > Length(FButtons) then SetLength(FButtons, Length(Ignore.Buttons));
+		for i := 0 to Length(FButtons) - 1 do
 		begin
-	//		if B in Buttons then
+			if i < Length(Ignore.Buttons) then
 			begin
-				Inc(ButtonWidth, BWidth + BSpace);
-				Inc(ButtonCount);
-			end;
+				if not Assigned(FButtons[i]) then
+				begin
+					FButtons[i] := TDButton.Create(Self);
+					FButtons[i].OnKeyDown := FormKeyDown;
+					FButtons[i].OnKeyUp := FormKeyUp;
+					FButtons[i].OnMouseMove := FormMouseMove;
+
+					InsertControl(FButtons[i]);
+				end;
+
+				FButtons[i].Name := 'Button' + IntToStr(i);
+				FButtons[i].Caption := Ignore.Buttons[i];
+				FButtons[i].Visible := True;
+	//			(ButtonAll.Left + ButtonAll.Width + BSpace + (BWidth + BSpace) * (2 * i - ButtonCount) + BSpace + MaxWid) div 2;
+				FButtons[i].Left := 0;
+				FButtons[i].Width := Max(BMinWidth, Canvas.TextWidth(FButtons[i].Caption) + 2 * 5);
+				Inc(BWid, FButtons[i].Width + FormBorder);
+				FButtons[i].Top := 0;
+
+				FButtons[i].Height := BHeight;
+				FButtons[i].OnClick := BClick;
+				FButtons[i].Default :=  i = 0;
+				FButtons[i].TabOrder := i + 4;
+				FButtons[i].TabStop := True;
+				FButtons[i].Tag := i;
+				FButtons[i].Down := Ignore.Res = i;
+				FButtons[i].Enabled := Ignore.Res = -1;
+				if (i = 0) and (FButtons[i].Enabled) then
+					ActiveControl := FButtons[i];
+				FButtons[i].Cancel := i = Length(Ignore.Buttons) - 1;
+			end
+			else if not Assigned(FButtons[i]) then
+				FButtons[i].Visible := False;
+
+		end;
+
+		Wid := BWid + MemoMsg.Left;
+	end
+	else
+	begin
+		ButtonOpen.Enabled := (Ignore.Res = -1) and Ignore.Retry;
+		ButtonRetry.Enabled := (Ignore.Res = -1) and Ignore.Retry;
+		ButtonRetry.Default := Ignore.Retry;
+		ButtonIgnore.Enabled := Ignore.Res = -1;
+		if ButtonRetry.Enabled then
+			ActiveControl := ButtonRetry
+		else if ButtonIgnore.Enabled then
+			ActiveControl := ButtonIgnore;
+
+
+		ButtonIgnore.Default := not Ignore.Retry;
+
+		ButtonIgnore.Down := Ignore.Res = 1;
+		ButtonRetry.Down := (Ignore.Res = 2);
+		ButtonOpen.Down := (Ignore.Res = 3);
+
+		Wid := ButtonOpen.Left + ButtonOpen.Width + FormBorder;
+	end;
+
+	MaxWid := Max(MaxWid, Wid);
+
+	if MaxWid > Screen.Width - 2 * (Width - ClientWidth) then
+		MaxWid := Screen.Width - 2 * (Width - ClientWidth);
+
+	MemoMsg.Width := MaxWid - MemoMsg.Left - FormBorder + 6;
+	Hei := Max(LineCount, 3) * Canvas.TextHeight(Ignore.Msg) + 6;
+
+	MemoMsg.Height := Hei;
+
+	MemoMsg.Lines.Clear;
+	MemoMsg.Lines.Insert(0, ReplaceF(Ignore.Msg, CharLF, CharCR + CharLF));
+//	Hei := Max(Hei, ButtonAll.Top + ButtonAll.Height + 6);
+	Inc(Hei, MemoMsg.Top + FormBorder);
+	ClientWidth := MaxWid;
+	ClientHeight := Hei + BHeight + FormBorder;//ButtonA.Top + ButtonA.Height + BSpace;
+
+	ButtonAll.Down := Ignore.Ignore <> iaNone;
+	ButtonAll.Enabled := Ignore.Res = -1;
+	ButtonAll.Top := Hei;
+
+	if Bo = False then
+	begin
+		Wid := MaxWid - BWid;
+		for i := 0 to Length(Ignore.Buttons) - 1 do
+		begin
+			FButtons[i].Left := Wid;
+			Inc(Wid, FButtons[i].Width + FormBorder);
+			FButtons[i].Top := Hei;
 		end;
 	end
 	else
 	begin
-		ButtonWidth := ButtonOpen.Left + ButtonOpen.Width + BSpace;
-		ButtonCount := 0;
+		ButtonRetry.Top := Hei;
+		ButtonIgnore.Top := Hei;
+		ButtonOpen.Top := Hei;
 	end;
-
-	MaxWid := Max(MaxWid, fIOError.PanelCreated.Left + fIOError.PanelCreated.Width + BSpace);
-
-	if ButtonWidth < MaxWid then
-		x := MaxWid - Length(Ignore.Buttons) * (BWidth + BSpace) + BSpace
-	else
-		MaxWid := Max(MaxWid, ButtonWidth);
-
-(*	if MaxWid < fIOError.ButtonA.Left + fIOError.ButtonA.Width + 8 then
-		MaxWid := fIOError.ButtonA.Left + fIOError.ButtonA.Width + 8*)
-	if MaxWid > Screen.Width - 2 * (fIOError.Width - fIOError.ClientWidth) then
-		MaxWid := Screen.Width - 2 * (fIOError.Width - fIOError.ClientWidth);
-
-	fIOError.MemoMsg.Width := MaxWid - fIOError.MemoMsg.Left - BSpace + 6;
-	Hei := Max(LineCount, 3) * fIOError.Canvas.TextHeight(Ignore.Msg) + 6;
-
-	fIOError.MemoMsg.Height := Hei;
-
-	fIOError.MemoMsg.Lines.Clear;
-	fIOError.MemoMsg.Lines.Insert(0, ReplaceF(Ignore.Msg, CharLF, CharCR + CharLF));
-//	Hei := Max(Hei, ButtonAll.Top + ButtonAll.Height + 6);
-	Inc(Hei, fIOError.MemoMsg.Top + BSpace);
-	fIOError.ClientWidth := fIOError.MemoMsg.Left + fIOError.MemoMsg.Width + 8;
-	fIOError.ClientHeight := Hei + BHeight + BSpace;//fIOError.ButtonA.Top + fIOError.ButtonA.Height + BSpace;
-
-(*	fIOError.LabelTimeLeft.Top := Hei + 20;
-	fIOError.PanelTimeLeft.Top := fIOError.LabelTimeLeft.Top;
-	fIOError.ButtonA.Top := fIOError.LabelTimeLeft.Top;*)
-	fIOError.ButtonAll.Down := Ignore.Ignore <> iaNone;
-	fIOError.ButtonAll.Enabled := Ignore.Res = -1;
-	fIOError.ButtonAll.Top := Hei;
-
-	// Buttons
-	Bo := Ignore.Style >= stIO;
-	fIOError.ButtonRetry.Visible := Bo;
-	fIOError.ButtonIgnore.Visible := Bo;
-//	fIOError.ButtonIgnoreAll.Visible := B;
-	fIOError.ButtonOpen.Visible := Bo;
-
-//	fIOError.ButtonExit.Visible := Bo;
-
-	if Bo then
-	begin
-		fIOError.ButtonOpen.Enabled := (Ignore.Res = -1) and Ignore.Retry and ((Ignore.Style = stIO) or (Ignore.Style = stFile));
-		fIOError.ButtonRetry.Enabled := (Ignore.Res = -1) and Ignore.Retry;
-		fIOError.ButtonRetry.Default := Ignore.Retry;
-		fIOError.ButtonIgnore.Enabled := Ignore.Res = -1;
-		if fIOError.ButtonRetry.Enabled then
-			fIOError.ActiveControl := fIOError.ButtonRetry
-		else if fIOError.ButtonIgnore.Enabled then
-			fIOError.ActiveControl := fIOError.ButtonIgnore;
-
-
-		fIOError.ButtonIgnore.Default := not Ignore.Retry;
-
-		fIOError.ButtonRetry.Top := Hei;
-		fIOError.ButtonIgnore.Top := Hei;
-		fIOError.ButtonOpen.Top := Hei;
-
-		fIOError.ButtonIgnore.Down := Ignore.Res = 1;
-		fIOError.ButtonRetry.Down := (Ignore.Res = 2);
-		fIOError.ButtonOpen.Down := (Ignore.Res = 3);
-
-	end;
-
-	i := 0;
-	if Length(Ignore.Buttons) > Length(fIOError.FButtons) then SetLength(fIOError.FButtons, Length(Ignore.Buttons));
-	for B := 0 to Length(FButtons) - 1 do
-	begin
-		if B < Length(Ignore.Buttons) then
-		begin
-			if not Assigned(fIOError.FButtons[B]) then
-			begin
-				fIOError.FButtons[B] := TDButton.Create(fIOError);
-				fIOError.FButtons[B].OnKeyDown := FormKeyDown;
-				fIOError.FButtons[B].OnKeyUp := FormKeyUp;
-				fIOError.FButtons[B].OnMouseMove := FormMouseMove;
-
-				fIOError.InsertControl(fIOError.FButtons[B]);
-			end;
-
-			fIOError.FButtons[B].Name := 'Button' + IntToStr(B);
-			fIOError.FButtons[B].Caption := Ignore.Buttons[B];
-			fIOError.FButtons[B].Visible := True;
-//			(fIOError.ButtonAll.Left + fIOError.ButtonAll.Width + BSpace + (BWidth + BSpace) * (2 * i - ButtonCount) + BSpace + MaxWid) div 2;
-			fIOError.FButtons[B].Left := x;
-			Inc(x, BWidth + BSpace);
-			fIOError.FButtons[B].Top := Hei;
-			fIOError.FButtons[B].Width := BWidth;
-			fIOError.FButtons[B].Height := BHeight;
-			fIOError.FButtons[B].OnClick := fIOError.BClick;
-			fIOError.FButtons[B].Default := i = 0;
-			fIOError.FButtons[B].TabOrder := i + 4;
-			fIOError.FButtons[B].TabStop := True;
-			fIOError.FButtons[B].Tag := B;
-			fIOError.FButtons[B].Down := Ignore.Res = B;
-			fIOError.FButtons[B].Enabled := Ignore.Res = -1;
-			if (B = 0) and (fIOError.FButtons[B].Enabled) then
-				fIOError.ActiveControl := fIOError.FButtons[B];
-			fIOError.FButtons[B].Cancel := i = ButtonCount - 1;
-
-			Inc(i);
-		end
-		else
-			fIOError.FButtons[B].Visible := False;
-
-	end;
-
-//	fIOError.ButtonA.Width := fIOError.ClientWidth - 2 * fIOError.ButtonA.Left;
-//	fIOError.ButtonA.Top := BTop + BHeight + BSpace;
 end;
 {
 procedure TfIOError.UpDown1ChangingEx(Sender: TObject;
@@ -578,7 +566,7 @@ begin
 			fIOError.PanelCount.Caption := NToS(Ignores.Count);
 		end;
 
-		if fIOError.Visible = False then
+ 		if fIOError.Visible = False then
 		begin
 			TickCount := GetTickCount;
 			StartTickCount := TickCount;
@@ -685,6 +673,7 @@ begin
 		ActItem := Last;
 		ShowMes;
 	end;
+	ModalResult := mrCancel;
 end;
 
 // Button Clicks

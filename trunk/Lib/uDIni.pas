@@ -1,6 +1,6 @@
 //* File:     Lib\uDIni.pas
 //* Created:  2000-07-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -556,14 +556,14 @@ begin
 	begin
 		for i := 0 to FSectionCount - 1 do
 		begin
-			F.WriteF('[' + FSections[i].Name + ']' + FileSep);
+			F.Write('[' + FSections[i].Name + ']' + FileSep);
 			for j := 0 to FSections[i].KeyCount - 1 do
 			begin
-				F.WriteF(FSections[i].Keys[j].Name + '=' +
+				F.Write(FSections[i].Keys[j].Name + '=' +
 					FSections[i].Keys[j].Value + FileSep);
 			end;
 			if i <> FSectionCount - 1 then
-				F.WriteF(FileSep);
+				F.Write(FileSep);
 		end;
 		F.Truncate;
 		if not F.Close then goto LRetry;
@@ -1049,13 +1049,13 @@ end;
 
 procedure TDIniFile.RWMenuItem(MenuItem: TMenuItem; Section: string; const Save: Boolean);
 begin
-	MenuItem.Checked := RWBGF(Section, MenuItem.Name, MenuItem.Checked, True, Save);
+	MenuItem.Checked := RWBGF(Section, ButtonNameToFileName(MenuItem.Name, False), MenuItem.Checked, MenuItem.Checked, Save);
 end;
 
 
 procedure TDIniFile.RWComboBox(ComboBox: TComboBox; const Save: Boolean);
 begin
-
+  // ToDo
 end;
 
 procedure MainIniCreate;

@@ -1,6 +1,6 @@
 //* File:     Lib\uDBitmap.pas
 //* Created:  1999-05-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -139,12 +139,12 @@ type
 		procedure SwapUD;
 		procedure RotateRight(TransparentColor: TColor; const Effect: TEffect);
 
-		procedure GenRGB(HidedColor: TColor;
-			const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);
+{		procedure GenRGB(HidedColor: TColor;
+			const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);}
 
 		procedure GenerateRGB(XD1, YD1, XD2, YD2: Integer; HidedColor: TColor;
 			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
-			const Effect: TEffect;
+			const Effect: TEffect; const Clock: LongWord; 
 			const InterruptProcedure: TInterruptProcedure);
 		procedure GenerateERGB(HidedColor: TColor;
 			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
@@ -7228,16 +7228,17 @@ end;
 const
 	ColorStep = 8;
 	ColorSpeed = 16;
+	SpeC = 10 * 256;
 var
 	Spe: Boolean;
-	aSpe: array[0..10 * 256 - 1] of Byte;
+	aSpe: array[0..SpeC - 1] of Byte;
 	aLin: array[0..511] of Byte;
 
 procedure InitRGB;
 var i: Integer;
 begin
 	Spe := True;
-	for i := 0 to 10 * 256 - 1 do
+	for i := 0 to SpeC - 1 do
 	begin
 		case i shr 8 of
 		0: aSpe[i] := 255;
@@ -7261,7 +7262,7 @@ end;
 procedure TDBitmap.GenerateRGB(
 	XD1, YD1, XD2, YD2: Integer; HidedColor: TColor;
 	const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
-	const Effect: TEffect;
+	const Effect: TEffect; const Clock: LongWord;
 	const InterruptProcedure: TInterruptProcedure);
 var
 	PDY, PDXY: PBmpData;
@@ -7339,6 +7340,7 @@ begin
 	for CY := YD1 to YD2 do
 	begin
 		Y := CY - YD1;
+		Y := (Y + Clock) mod MaxY;
 		Y2 := 2 * Y;
 		if Assigned(InterruptProcedure) then
 		begin
@@ -7354,13 +7356,14 @@ begin
 		for CX := XD1 to XD2 do
 		begin
 			X := CX - XD1;
+			X := (X + Clock) mod MaxX;
 			X2 := 2 * X;
 			case Func of
 			gfSpecHorz:
 			begin
 				R := aSpe[(6 * 256 * LongInt(X) div MaxX)];
-				G := aSpe[(6 * 256 * LongInt(X) div MaxX) + 1024];
-				B := aSpe[(6 * 256 * LongInt(X) div MaxX) + 512];
+				G := aSpe[((6 * 256 * LongInt(X) div MaxX) + 1024)];
+				B := aSpe[((6 * 256 * LongInt(X) div MaxX) + 512)];
 			end;
 			gfSpecVert:
 			begin
@@ -7412,7 +7415,7 @@ begin
 					C[2].R * (((MaxYD - Y) shl 8) div MaxY) shr 8;
 				G :=
 					C[0].G * aLin[(Y shl 3) and $1ff] shr 8 +
-					C[1].G * aLin[(X shl 3) and $1ff] shr 8 + 
+					C[1].G * aLin[(X shl 3) and $1ff] shr 8 +
 					C[2].G * (((MaxYD - Y) shl 8) div MaxY) shr 8;
 				B :=
 					C[0].B * aLin[(Y shl 3) and $1ff] shr 8 +
@@ -7557,6 +7560,7 @@ begin
 					RColor.G := G;
 					RColor.B := B;
 					RColor.T := 0;
+//					uGraph.ColorDiv(RColor.L, 32768 + 1000 * RandEffect shr 1 - Random(1000 * RandEffect + 1));
 					Pix24(Data, ByteX, CX, CY, TRColor(RColor), Effect);
 					Inc(Integer(PDXY), BPP);
 				end;
@@ -7575,9 +7579,9 @@ procedure TDBitmap.GenerateERGB(
 	const InterruptProcedure: TInterruptProcedure);
 begin
 	GenerateRGB(0, 0, FWidth - 1, FHeight - 1, HidedColor,
-		Func, Co, RandEffect, Effect, InterruptProcedure);
+		Func, Co, RandEffect, Effect, 0, InterruptProcedure);
 end;
-
+{
 procedure TDBitmap.GenRGB(
 	HidedColor: TColor;
 	const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);
@@ -7636,7 +7640,7 @@ begin
 			end;
 		end;
 	end;
-end;
+end;}
 
 procedure TDBitmap.FormBitmap(Color: TColor);
 var
@@ -7647,7 +7651,7 @@ begin
 	Co[1] := DarkerColor(Color);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
-	GenerateERGB(clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+	GenerateERGB(clNone, gfFade2x, Co, ScreenCorrectColor, ef16, nil);
 end;
 
 procedure Rotate24(
@@ -9277,7 +9281,7 @@ begin
 		Co[2] := Co[0];
 		Co[3] := Co[1];
 	end;
-	GenerateRGB(X1 + 2, Y1 + 2, X2 - 2, Y2 - 2, clNone, gfFade2x, Co, 0, ScrollEf, nil);
+	GenerateRGB(X1 + 2, Y1 + 2, X2 - 2, Y2 - 2, clNone, gfFade2x, Co, 0, ScrollEf, 0, nil);
 	if Down then
 	begin
 		Inc(X1);

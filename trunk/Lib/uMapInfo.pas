@@ -1,6 +1,6 @@
 //* File:     Lib\uMapInfo.pas
 //* Created:  1998-01-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -187,7 +187,7 @@ begin
 	begin
 		for FieldMIndex := 0 to FieldMCount - 1 do
 		begin
-			FIn.WriteF(
+			FIn.Write(
 				IntToStr(FieldsM[FieldMIndex].Kod) + ',' +
 				'"' + FieldsM[FieldMIndex].Nazev + '",' +
 				'"' + FieldsM[FieldMIndex].PSC + '",' +

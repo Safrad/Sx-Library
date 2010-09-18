@@ -1,6 +1,6 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -68,9 +68,6 @@ type
 		function GetFileSize(var Size: U8): Boolean;
 		function IsOpened: BG;
 	public
-		ReadCount, WriteCount: UG;
-		ReadBytes, WriteBytes: U8;
-
 		ErrorCode: U4;
 		property FilePos: U8 read FFilePos;
 		property FileSize: U8 read FFileSize;
@@ -84,9 +81,9 @@ type
 		function BlockRead(var Buf; const Count: Cardinal): Boolean;
 		function BlockWrite(var Buf; const Count: Cardinal): Boolean;
 		function FillWrite(const Count: Cardinal): Boolean;
-		function Readln(var Line: string): Boolean;
-		function Write(var Line: string): Boolean;
-		function WriteF(Line: string): Boolean;
+		function Readln(out Line: string): Boolean;
+		function Write(Line: string): Boolean;
+//		function WriteF(Line: string): Boolean;
 		function Writeln(Line: string): Boolean;
 		function WritelnW(Line: WideString): Boolean;
 		function Close: Boolean;
@@ -128,6 +125,9 @@ var
 	SysDir, WinDir: string;
 	ExeFileName: TFileName;
 
+	ReadCount, WriteCount: UG;
+	ReadBytes, WriteBytes: U8;
+
 function ShortDir(const Dir: string): string;
 function FullDir (Dir: string): string;
 function DelFileExt(const FName: string): string;
@@ -135,6 +135,8 @@ function BackDir(const Dir: string): string;
 function LegalFileName(const FileName: string): string;
 procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
 function GetFileSiz(const FileName: TFileName): U8;
+function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
+function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CreateDir(const Dir: string): Boolean;
@@ -145,14 +147,15 @@ function DeleteFileEx(const FileName: TFileName): Boolean;
 function DeleteDir(const DirName: string): Boolean;
 function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
 
+
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
 function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
 
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
 function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
 
-function ReadStringFromFile(var FileName: TFileName; var Line: string): BG;
-function WriteStringToFile(var FileName: TFileName; var Line: string; Append: BG): BG;
+function ReadStringFromFile(var FileName: TFileName; out Line: string): BG;
+function WriteStringToFile(var FileName: TFileName; const Line: string; Append: BG): BG;
 
 function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
 function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
@@ -435,7 +438,7 @@ begin
 	FreeMem(Buf, Count);
 end;
 
-function TFile.Readln(var Line: string): Boolean;
+function TFile.Readln(out Line: string): Boolean;
 label LN;
 var BufPos: Integer;
 begin
@@ -482,7 +485,7 @@ begin
 	end;
 end;
 
-function TFile.Write(var Line: string): Boolean;
+function TFile.Write(Line: string): Boolean;
 begin
 	if Length(Line) > 0 then
 		Result := BlockWrite(Line[1], Length(Line))
@@ -490,14 +493,14 @@ begin
 		Result := True;
 end;
 
+{
 function TFile.WriteF(Line: string): Boolean;
 begin
 	if Length(Line) > 0 then
 		Result := BlockWrite(Line[1], Length(Line))
 	else
 		Result := True;
-end;
-
+end;}
 
 function TFile.Writeln(Line: string): Boolean;
 begin
@@ -888,6 +891,54 @@ begin
 	end;
 end;
 
+function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
+label LRetry;
+var
+	F: TFile;
+	ACreationTime, ALastAccessTime: TFileTime;
+begin
+	Result := False;
+	LastWriteTime.dwLowDateTime := 0;
+	LastWriteTime.dwHighDateTime := 0;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		Result := GetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @LastWriteTime);
+		F.Close;
+	end;
+	F.Free;
+end;
+
+
+function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
+label LRetry;
+var
+	F: TFile;
+	ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmReadAndWrite, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		Result := GetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @ALastWriteTime);
+		if Result then
+		begin
+			Result := SetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @LastWriteTime);
+			if Result = False then
+				IOError(FileName, GetLastError);
+		end
+		else
+		begin
+			IOError(FileName, GetLastError);
+		end;
+
+		F.Close;
+	end;
+	F.Free;
+end;
+
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 begin
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
@@ -1058,7 +1109,7 @@ begin
 	F.Free;
 end;
 
-function ReadStringFromFile(var FileName: TFileName; var Line: string): BG;
+function ReadStringFromFile(var FileName: TFileName; out Line: string): BG;
 label LRetry;
 var
 	F: TFile;
@@ -1076,7 +1127,7 @@ begin
 	F.Free;
 end;
 
-function WriteStringToFile(var FileName: TFileName; var Line: string; Append: BG): BG;
+function WriteStringToFile(var FileName: TFileName; const Line: string; Append: BG): BG;
 label LRetry;
 var
 	F: TFile;
@@ -1136,7 +1187,7 @@ begin
 		i := 0;
 		while i < Lines.Count do
 		begin
-			if not F.WriteF(Lines[i] + FileSep) then goto LRetry;
+			if not F.Write(Lines[i] + FileSep) then goto LRetry;
 			Inc(i);
 		end;
 		if Append = False then F.Truncate;

@@ -1,6 +1,6 @@
-//* File:     Lib\uKinds.pas
+//* File:     Lib\uInput.pas
 //* Created:  2004-03-07
-//* Modified: 2004-03-24
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -27,18 +27,51 @@ type
 			itChar, itString,
 			// Special
 			// 1
-			itPlus, itMinus, itMul, itDiv,
-			itPower,
-			itLBracket, itRBracket,
-			itLBracket2, itRBracket2,
-			itLess, itBigger, itEqual,
-			itComma, itComma2, // , ;
-			itPoint, itDoublePoint, // . :
+			itPlus, itMinus, itMul, itDiv, // + - * /
+			itPower, // ^
+			itLBracket, itRBracket, // ( )
+			itLBracket2, itRBracket2, // [ ]
+			itLess, itBigger, itEqual, // < > =
+			itComma, itSemicolon, // , ;
+			itPeriod, itColon, // . :
 			itExclamation, // !
 			// 2
-			itAssign,
+			itAssign, // :=
 			// Var
 			itKeyword);
+
+const
+	InputToStr: array[TInput] of string = (
+		'Unknown',
+		'end of input',
+		'',
+		'Integer', 'Real',
+		'Char', 'string',
+
+		'+', '-', '*', '/',
+		'^',
+		'(', ')',
+		'[', ']',
+		'<', '>', '=',
+		',', ';',
+		'.', ':',
+		'!',
+		':=',
+		'');
+
+
+{
+	' ' Space
+	';' Semicolon
+	',' Stroke / Comma
+	':' Colon
+	'.' period, float point
+	'(' Left bracket
+	')' Right bracket
+	'"' Comma
+}
+
+
 type
 	TKeyword = (
 			kwNone,
@@ -70,6 +103,7 @@ type
 			kwfinalization,
 			kwfinally,
 			kwfor,
+			kwforward,
 			kwfunction,
 			kwgoto,
 			kwif,
@@ -94,12 +128,12 @@ type
 			kwoverride,
 			kwpacked,
 			kwprivate,
-			kwprotected,
-			kwpublic,
-			kwpublished,
 			kwprocedure,
 			kwprogram,
 			kwproperty,
+			kwprotected,
+			kwpublic,
+			kwpublished,
 			kwraise,
 			kwrecord,
 			kwrepeat,
@@ -123,6 +157,7 @@ type
 			kwxor);
 
 var
+	KWsU: array[TKeyword] of string;
 	KWs: array[TKeyword] of string = (
 		'',
 		'abstract', // V
@@ -153,6 +188,7 @@ var
 		'finalization',
 		'finally',
 		'for',
+		'forward',
 		'function',
 		'goto',
 		'if',
@@ -177,12 +213,12 @@ var
 		'override',
 		'packed',
 		'private', // V
-		'protected', // V
-		'public', // V
-		'published', // V
 		'procedure',
 		'program',
 		'property',
+		'protected', // V
+		'public', // V
+		'published', // V
 		'raise',
 		'record',
 		'repeat',
@@ -299,7 +335,7 @@ type
 		Value: FA; // D???
 		// Func
 		VFs: TData; // array of TVarFunc, nil for Variable
-		ParamCount: SG;
+		ParamCount: UG;
 	end;
 
 	PUnit = ^TUnit;
@@ -359,6 +395,7 @@ type
 		mtRemoveCRLF,
 		mtInsertCRLF,
 		mtCaseMishmash,
+		mtEmptyCommand,
 
 		// Warnings
 		mtUserWarning,
@@ -394,6 +431,7 @@ type
 		mtPeriodExpected,
 		mtUnexpectedEndOfFile,
 		mtUnusedChars,
+		mtOverload,
 
 		// Fatal Errors
 		mtUserFatalError,
@@ -423,6 +461,7 @@ const
 		'Remove ''CR,LF'' after %1',
 		'Insert ''CR,LF'' after %1',
 		'Identifier ''%1'' case mishmash ''%2''',
+		'Empty command',
 
 		// Warnings
 		'%1',
@@ -458,6 +497,7 @@ const
 		'''.'' expected but ''%1''',
 		'Unexpected end of file in comment started on line %1',
 		'Line too long, unused chars',
+		'Previous declaration of ''%1'' was not marked width then ''overload'' directive''',
 
 		// Fatal Errors
 		'%1',
@@ -537,11 +577,15 @@ var
 	c: Char;
 //	c2: Char;
 	MesId: TMesId;
+	i: SG;
 begin
+	for i := 0 to Length(KWsU) - 1 do
+		KWsU[TKeyword(i)] := UpperCase(KWs[TKeyword(i)]);
+
 	// Make Char Table
 	for c := Low(Char) to High(Char) do
 		case c of
-		' ': 
+		' ':
 		CharsTable[c] := ctSpace;
 		'a'..'z', 'A'..'Z', '_': CharsTable[c] := ctLetter;
 		'0'..'9': CharsTable[c] := ctNumber;
@@ -642,6 +686,7 @@ end;
 procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
 var
 	M: PCompileMes;
+	i: SG;
 begin
 	M := CompileMes.Add;
 	M.Line := Line;
@@ -650,6 +695,17 @@ begin
 	M.FileNameIndex := FileNameIndex;
 	M.MesId := MesId;
 
+	for i := 0 to Length(Params) - 1 do
+	begin
+		if Params[i] = '' then
+		begin
+			case InputType of
+			itIdent: Params[i] := Id;
+			itKeyword: Params[i] := KWs[Keyword];
+			else Params[i] :=  InputToStr[InputType];
+			end;
+		end;
+	end;
 	if Length(Params) >= 1 then
 		M.Params := Params[0]
 	else
@@ -1074,7 +1130,7 @@ begin
 						Move(BufR[StartIndex], Id[1], BufRI - StartIndex);
 						//Result := Copy(BufR, StartIndex, BufRI - StartIndex);
 
-						if FindS(KWs, Id, FromV, ToV) then
+						if FindS(KWsU, UpperCase(Id), FromV, ToV) then
 						begin
 							InputType := itKeyword;
 							Keyword := TKeyword(FromV);
@@ -1126,7 +1182,7 @@ begin
 						'>': InputType := itBigger;
 						'=': InputType := itEqual;
 						',': InputType := itComma;
-						'.': InputType := itPoint;
+						'.': InputType := itPeriod;
 						'!': InputType := itExclamation;
 						':':
 						begin
@@ -1137,10 +1193,10 @@ begin
 							end
 							else
 							begin
-								InputType := itDoublePoint;
+								InputType := itColon;
 							end;
 						end;
-						';': InputType := itComma2;
+						';': InputType := itSemicolon;
 						end;
 						if InputType = itUnknown then
 						begin
@@ -1199,9 +1255,6 @@ var
 	F: PVF;
 	Fr: SG;
 begin
-{	if VarName = 'Char' then
-		Nop;}
-
 	Result := nil;
 	// Local VarFunc
 	if FuncLevel > 0 then
@@ -1358,7 +1411,7 @@ var Operation: TOperator;
 					ReadInput;
 					Exit;
 				end;
-				itComma, itComma2:
+				itComma, itSemicolon:
 				begin
 					ReadInput;
 				end;
@@ -1459,7 +1512,6 @@ begin
 		begin
 			AddMes2(mtExpressionExpected, [Id]);
 			Result := nil;
-//			ReadInput; D??? (3+) is only 1 error
 		end;
 	end;
 	end;
@@ -1536,7 +1588,7 @@ begin
 		if InputType = itKeyword then
 		begin
 			case Keyword of
-			kwDiv, kwMod:
+			kwDiv, kwMod, kwXor, kwOr, kwAnd, kwShr, kwShl:
 			begin
 				GetMem(Result, 1 + 2 + 2 * 4);
 				Inc(TreeSize, 1 + 2 + 2 * 4);
@@ -1544,6 +1596,12 @@ begin
 				case Keyword of
 				kwDiv: Result.Operation := opDiv;
 				kwMod: Result.Operation := opMod;
+				kwShl: Result.Operation := opShl;
+				kwShr: Result.Operation := opShr;
+				kwAnd: Result.Operation := opAnd;
+				kwOr: Result.Operation := opOr;
+				kwXor: Result.Operation := opXor;
+//				kwXnor: Result.Operation := opXnor;
 				end;
 				Result.ArgCount := 2;
 				Result.Args[0] := Node;
@@ -1672,6 +1730,7 @@ function Calc(Node: PNode): Extended;
 var
 	i, j: SG;
 	e, e0, e1: Extended;
+	R: U8;
 begin
 	Result := 0;
 	if Node = nil then
@@ -1824,7 +1883,7 @@ begin
 		Result := 1;
 		for i := 0 to Node.ArgCount - 1 do
 		begin
-			e := Round(Calc(Node.Args[i])); // D??? nopt round
+			e := Round(Calc(Node.Args[i])); // D??? Factor 1.5 =
 			if e < 0 then
 			begin
 //				ShowError('Input -infinity..2000 for Fact')
@@ -2064,18 +2123,27 @@ begin
 	begin
 		if Node.ArgCount > 0 then
 		begin
-			Result := Calc(Node.Args[0]);
+			R := Round(Calc(Node.Args[0]));
 			for i := 1 to Node.ArgCount - 1 do
 			begin
 				case Node.Operation of
-				opShl: Result := Round(Result) shl Round(Calc(Node.Args[i]));
-				opShr: Result := Round(Result) shr Round(Calc(Node.Args[i]));
-				opAnd: Result := Round(Result) and Round(Calc(Node.Args[i]));
-				opOr: Result := Round(Result) or Round(Calc(Node.Args[i]));
-				opXor: Result := Round(Result) xor Round(Calc(Node.Args[i]));
-				opXnor: Result := not (Round(Result) xor Round(Calc(Node.Args[i])));
+				opShl: R := R shl Round(Calc(Node.Args[i]));
+				opShr: R := R shr Round(Calc(Node.Args[i]));
+				opAnd:
+				begin
+					if R = 0 then Break;
+					R := R and Round(Calc(Node.Args[i]));
+				end;
+				opOr:
+				begin
+					if R = $ffffffffffffffff then Break;
+					R := R or Round(Calc(Node.Args[i]));
+				end;
+				opXor: R := R xor Round(Calc(Node.Args[i]));
+				opXnor: R := not (R xor Round(Calc(Node.Args[i])));
 				end;
 			end;
+			Result := R;
 		end
 		else
 			Result := 0;
@@ -2083,7 +2151,7 @@ begin
 	else
 		Result := 0;
 		{$ifopt d+}
-		IE(17);
+		IE(117);
 		{$endif}
 	end;
 end;

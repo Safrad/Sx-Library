@@ -1,6 +1,6 @@
 //* File:     Lib\uDTimer.pas
 //* Created:  2000-08-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -86,7 +86,7 @@ implementation
 
 uses
 	Math,
-	uSysInfo;
+	uSysInfo, uError;
 
 type
 	TDIdleTimer = class(TComponent)
@@ -319,7 +319,11 @@ end;
 
 procedure TDTimer.DoTimer;
 begin
-	if Assigned(FOnTimer) then FOnTimer(Self);
+	try
+		if Assigned(FOnTimer) then FOnTimer(Self);
+	except
+		on E: Exception do MessageD(E.Message, mtError, [mbOk]);
+	end;
 end;
 
 procedure TDTimer.Finalize;

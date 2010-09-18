@@ -1,6 +1,6 @@
 //* File:     Lib\uDImage.pas
 //* Created:  2000-07-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -738,7 +738,7 @@ begin
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
-			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, nil);
+			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, 0, nil);
 			x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
 			for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
 			begin
@@ -848,7 +848,7 @@ begin
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
-			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, nil);
+			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, clNone, gfFade2x, Co, 0, ScrollEf, 0, nil);
 			y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
 			for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
 			begin

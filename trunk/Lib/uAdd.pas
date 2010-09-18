@@ -1,6 +1,6 @@
 //* File:     Lib\uAdd.pas
 //* Created:  1998-01-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -255,6 +255,7 @@ function LinearMax(Clock, Maximum: LongWord): LongWord;
 
 function RoundEx(Value: FA): SG;
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
+function RoundDivU8(const Dividend: U8; const Divisor: U8): S8; //overload;
 function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
@@ -349,12 +350,19 @@ function FToS(Num: Extended; const UseWinFormat: BG): string; overload;
 procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 type
 	TDisplay = (diDHMSD, diHHMSD, diHMSD, diMSD, diSD);
+
+{Decimals
+-3: 0:34.34
+3: 0:34.340
+}
+
 function MsToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
 function MsToStr(const DT: Int64; const UseWinFormat: BG;
 	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
 
-function DateToS(D: TDate): string;
+function DateToS(var Year, Month, Day: U2): string; overload;
+function DateToS(D: TDate): string; overload;
 function TimeToS(T: TTime): string;
 function DateTimeToS(DT: TDateTime): string;
 function DTToStr(DT: TDateTime): string; // UseWinFormat = True
@@ -643,6 +651,19 @@ begin
 		Result := (Dividend - (Divisor div 2)) div Divisor
 	else
 		Result := (Dividend + (Divisor div 2)) div Divisor;
+end;
+
+function RoundDivU8(const Dividend: U8; const Divisor: U8): U8;
+begin
+	{$ifopt d+}
+	if Divisor = 0 then
+	begin
+		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
+		Result := 0;
+		Exit;
+	end;
+	{$endif}
+	Result := (Dividend + (Divisor div 2)) div Divisor;
 end;
 
 function RoundDivS8(const Dividend: S8; const Divisor: S8): S8;
@@ -1706,7 +1727,7 @@ end;
 function MsToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string;
 begin
-	Result := msToStr(DT, True, Display, Decimals, FixedWidth);
+	Result := MsToStr(DT, True, Display, Decimals, FixedWidth);
 end;
 
 function MsToStr(const DT: Int64; const UseWinFormat: BG;
@@ -1730,7 +1751,21 @@ begin
 		ListSep := '; ';
 	end;
 
-	msToHMSD(Abs(DT), h, m, s, d);
+{	case Abs(Decimals) of
+	0:
+	begin
+		DT := 1000 * ((DT + 500) div 1000);
+	end;
+	1:
+	begin
+		DT := 100 * ((DT + 50) div 100);
+	end;
+	2:
+	begin
+		DT := 10 * ((DT + 5) div 10);
+	end;
+	end;}
+	MsToHMSD(Abs(DT), h, m, s, d);
 
 	if DT < 0 then Result := '-' else Result := '';
 
@@ -1808,16 +1843,15 @@ begin
 		end;
 
 	case Abs(Decimals) of
-	0: Exit;
 	1:
 	begin
-		d := (d + 50) div 100;
+		d := d div 100;
 		if (Decimals > 0) or (d <> 0) then
 			Result := Result + DecimalSep + Chr(d + 48);
 	end;
 	2:
 	begin
-		d := (d + 5) div 10;
+		d := d div 10;
 		if (Decimals > 0) then
 			Result := Result + DecimalSep + NToS(d, '00')
 		else
@@ -1839,6 +1873,11 @@ begin
 	end;
 end;
 
+function DateToS(var Year, Month, Day: U2): string;
+begin
+	Result := NToS(Year, '0000') + '-' + NToS(Month, '00') + '-' + NToS(Day, '00');
+end;
+
 function DateToS(D: TDate): string;
 var Year, Month, Day: U2;
 begin
@@ -1847,7 +1886,8 @@ begin
 	else
 	begin
 		DecodeDate(D, Year, Month, Day);
-		Result := NToS(Year, '0000') + '-' + NToS(Month, '00') + '-' + NToS(Day, '00');
+		Result := DateToS(Year, Month, Day);
+//		Result := NToS(Year, '0000') + '-' + NToS(Month, '00') + '-' + NToS(Day, '00');
 	end;
 end;
 
@@ -2029,10 +2069,6 @@ begin
 	Index := Pos('BUTTON', UpperCase(Result));
 	Count := 6;
 	if Index <> 0 then Delete(Result, Index, Count);
-
-{	Index := Pos('BUT', UpperCase(Result));
-	Count := 3;
-	if Index <> 0 then goto LDel;}
 
 	if Space then
 		for Index := 2 to Length(Result) do

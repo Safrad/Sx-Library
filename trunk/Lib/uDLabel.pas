@@ -1,6 +1,6 @@
 //* File:     Lib\uDLabel.pas
 //* Created:  1999-08-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -511,7 +511,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-				clNone, gfFade2x, Co, ScreenCorectColor, FBackEffect, nil);
+				clNone, gfFade2x, Co, ScreenCorrectColor, FBackEffect, 0, nil);
 //			FBmpOut.FormBitmap(Color);
 {			FBmpOut.Canvas.Brush.Color := Color;
 			FBmpOut.Canvas.FillRect(Recta);}

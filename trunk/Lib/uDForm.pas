@@ -1,6 +1,6 @@
 //* File:     Lib\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -153,7 +153,7 @@ begin
 	Result := False;
 	if not Assigned(Form) then Exit;
 	if Form.Visible = False then Exit;
-	if Form.WindowState = wsMinimized then Exit; // D??? Not Work
+	if Form.WindowState = wsMinimized then Exit; // D??? Do Not Work
 //	Style := GetWindowLong(Handle, GWL_STYLE);
 	Result := True;
 end;
@@ -358,7 +358,7 @@ begin
 		begin
 //			if Background <> baOpenGLBitmap then
 				FBitmapB.SetSize(ClientWidth, ClientHeight);
-{			else D???
+{			else
 				FBitmapB.SetSize(1 shl CalcShr(ClientWidth), 1 shl CalcShr(ClientHeight));}
 
 			if (ClientWidth = 0) or (ClientHeight = 0) then Exit;
@@ -453,6 +453,7 @@ begin
 //			FreeOpenGL;
 			glDeleteLists(FontBase, 256);
 			DestroyRenderingContext(RC); RC := 0;
+			Set8087CW(Default8087CW);
 		end;
 		end;
 
@@ -491,6 +492,7 @@ begin
 		case FBackground of
 		baOpenGL, baOpenGLBitmap:
 		begin
+			Set8087CW($133f);
 			if OneBuffer then
 				RC:=CreateRenderingContext(Canvas.Handle, [], 32, 0)
 			else
@@ -907,7 +909,7 @@ begin
 	begin
 		ActivateRenderingContext(Canvas.Handle,RC); // make context drawable
 {		if FBackground = baOpenGLBitmap then
-			ResizeScene; D???}
+			ResizeScene; }
 //		BeforeResize; }
 	end;
 	end;

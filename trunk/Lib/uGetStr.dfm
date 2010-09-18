@@ -32,7 +32,7 @@ object fGetStr: TfGetStr
     Top = 72
     Width = 73
     Height = 25
-    Caption = 'OK'
+    Caption = '&OK'
     Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -49,7 +49,7 @@ object fGetStr: TfGetStr
     Width = 73
     Height = 25
     Cancel = True
-    Caption = 'Cancel'
+    Caption = '&Cancel'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11

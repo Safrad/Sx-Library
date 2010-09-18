@@ -1,6 +1,6 @@
 //* File:     Lib\uKinds.pas
 //* Created:  1999-12-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -629,7 +629,8 @@ begin
 		if Items[Kind].New <> High(Items[Kind].New) then
 		begin
 			if Assigned(Window1) then
-				Window1.Delete(Kind);
+				if Window1.Count > Kind then
+					Window1.Delete(Kind);
 			if Items[Kind].New = 0 then Reopen.CloseFile(Items[Kind].FileName);
 			if Assigned(Items[Kind].MenuItem) then
 			begin
@@ -696,11 +697,11 @@ end;
 
 procedure TKinds.KindChangeFile(Sender: TObject);
 begin
-	KindInit;
 	Reopen.DrawReopenCaption;
 
 	if Assigned(ChangeFile) then
 		ChangeFile(Sender);
+	KindInit;
 end;
 
 function TKinds.CanClose: Boolean;

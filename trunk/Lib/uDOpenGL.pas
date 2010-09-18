@@ -1,6 +1,6 @@
 //* File:     Lib\uDOpenGL.pas
 //* Created:  2000-05-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -45,6 +45,7 @@ var
 implementation
 
 uses
+	Dialogs,
 	uGraph, uDBitmap, uAdd, uError;
 
 {
@@ -123,7 +124,7 @@ begin
 			ErrorMessage(ErrorMes(GetLastError));}
 	end
 	else
-		IE(19);
+		MessageD('OpenGL already created', mtError, [mbOk]);
 end;
 
 procedure BeforeDraw;
@@ -175,7 +176,7 @@ begin
 		Canv := nil;
 	end
 	else
-		IE(13);
+		MessageD('OpenGL already freed', mtError, [mbOk]);
 end;
 
 procedure glTextOutE(Canvas: TCanvas; Text: string);

@@ -1,6 +1,6 @@
 //* File:     Lib\uScreen.pas
 //* Created:  1999-08-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -91,7 +91,7 @@ var
 
 	ScreenModeIndex: Integer;
 	ScreenModeCount: Integer;
-	ScreenCorectColor: TColor;
+	ScreenCorrectColor: TColor;
 	ScreenBits: Cardinal;
 
 	ActualDriver: Integer;
@@ -1048,10 +1048,10 @@ begin
 	try
 		ScreenBits := GetDeviceCaps(DeskDC, BITSPIXEL);
 		case ScreenBits of
-		1..5: ScreenCorectColor := $001f1f1f;
-		6..11: ScreenCorectColor := $000f0f0f;
-		12..19: ScreenCorectColor := $00070707;
-		else ScreenCorectColor := $00000000;
+		1..5: ScreenCorrectColor := $001f1f1f;
+		6..11: ScreenCorrectColor := $000f0f0f;
+		12..19: ScreenCorrectColor := $00030303;
+		else ScreenCorrectColor := $00000000;
 		end;
 	finally
 		ReleaseDC(0, DeskDC);

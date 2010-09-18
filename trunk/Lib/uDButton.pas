@@ -1,6 +1,6 @@
 //* File:     Lib\uDButton.pas
 //* Created:  1999-09-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -475,7 +475,7 @@ begin
 	Co[3] := Co[1];
 	{$ifopt d-}
 	FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-		clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+		clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 	{$else}
 	FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
 	{$endif}
@@ -595,6 +595,9 @@ begin
 			Margin := 6;
 			Spacing := 2;
 
+			if Caption = '' then
+				GlyphPos.X := (FBmpOut.Width - GlyphSize.X) div 2
+			else
 			case Layout of
 			blGlyphLeft:
 			begin

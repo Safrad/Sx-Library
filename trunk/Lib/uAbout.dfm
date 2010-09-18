@@ -228,7 +228,7 @@ object fAbout: TfAbout
   end
   object LabelNowRunTime: TDLabel
     Left = 112
-    Top = 256
+    Top = 232
     Width = 33
     Height = 19
     AlphaBlend = False
@@ -261,7 +261,7 @@ object fAbout: TfAbout
   end
   object LabelTotalRunTime: TDLabel
     Left = 112
-    Top = 232
+    Top = 256
     Width = 33
     Height = 19
     AlphaBlend = False
@@ -323,16 +323,16 @@ object fAbout: TfAbout
     TransparentColorValue = clBlack
     WordWrap = False
   end
-  object LabelBuild: TDLabel
+  object LabelCreated: TDLabel
     Left = 152
     Top = 112
-    Width = 137
-    Height = 19
+    Width = 65
+    Height = 18
     AlphaBlend = False
     AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
-    Caption = 'Build'
+    Caption = 'Created'
     Color = clBtnFace
     BackEffect = ef04
     FontShadow = 1
@@ -406,16 +406,16 @@ object fAbout: TfAbout
     TabOrder = 0
     OnClick = ButtonOkClick
   end
-  object PanelBuild: TEdit
-    Left = 152
-    Top = 128
-    Width = 137
-    Height = 19
+  object EditCreated: TEdit
+    Left = 224
+    Top = 112
+    Width = 65
+    Height = 18
     AutoSize = False
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 4
-    Text = '1.10.1999-1.1.2000'
+    Text = '2004-04-28'
   end
   object PanelRC: TEdit
     Left = 56
@@ -426,20 +426,9 @@ object fAbout: TfAbout
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 9
-    Text = '000 000'
+    Text = '999 999'
   end
   object PanelTRT: TEdit
-    Left = 152
-    Top = 232
-    Width = 137
-    Height = 19
-    AutoSize = False
-    BevelOuter = bvNone
-    ParentColor = True
-    TabOrder = 10
-    Text = '356 days, 00:00:00.000'
-  end
-  object PanelNRT: TEdit
     Left = 152
     Top = 256
     Width = 137
@@ -447,8 +436,19 @@ object fAbout: TfAbout
     AutoSize = False
     BevelOuter = bvNone
     ParentColor = True
+    TabOrder = 10
+    Text = '365 days, 00:00:00.000'
+  end
+  object PanelNRT: TEdit
+    Left = 152
+    Top = 232
+    Width = 137
+    Height = 19
+    AutoSize = False
+    BevelOuter = bvNone
+    ParentColor = True
     TabOrder = 11
-    Text = '40 days, 00:00.000'
+    Text = '40 days, 00:00:00.000'
   end
   object EditAuthor: TEdit
     Left = 80
@@ -496,7 +496,7 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 6
-    Text = '69941919'
+    Text = '69-941-919'
     OnClick = EditIcqClick
   end
   object SysInfo1: TDButton
@@ -573,11 +573,54 @@ object fAbout: TfAbout
     TabOrder = 3
     TabStop = False
   end
+  object EditModified: TEdit
+    Left = 224
+    Top = 129
+    Width = 65
+    Height = 18
+    AutoSize = False
+    BevelOuter = bvNone
+    ParentColor = True
+    TabOrder = 23
+    Text = '2004-04-28'
+  end
+  object LabelModified: TDLabel
+    Left = 152
+    Top = 129
+    Width = 65
+    Height = 18
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Modified'
+    Color = clBtnFace
+    BackEffect = ef04
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    ParentColor = False
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
   object Timer1: TDTimer
     ActiveOnly = False
     Enabled = False
-    Interval = 15
-    EventStep = esCPU
+    Interval = 25
+    EventStep = esFrequency
     OnTimer = DTimer1Timer
     Left = 24
     Top = 24

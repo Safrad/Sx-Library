@@ -1,6 +1,6 @@
 //* File:     Lib\uAbout.pas
 //* Created:  1999-10-01
-//* Modified: 2003-10-12
+//* Modified: 2004-04-28
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -25,14 +25,14 @@ type
 		LabelRunCount: TDLabel;
 		LabelNowRunTime: TDLabel;
 		LabelTotalRunTime: TDLabel;
-    PanelBuild: TEdit;
+    EditCreated: TEdit;
     PanelRC: TEdit;
     PanelTRT: TEdit;
     PanelNRT: TEdit;
 		ImageName: TDImage;
 		ImageVersion: TDImage;
 		LabelAuthor: TDLabel;
-		LabelBuild: TDLabel;
+    LabelCreated: TDLabel;
 		LabelEMail: TDLabel;
 		EditAuthor: TEdit;
 		EditWeb: TEdit;
@@ -47,6 +47,8 @@ type
 		SysInfo1: TDButton;
     DButtonMemoryStatus: TDButton;
 		DLabel1: TDLabel;
+    EditModified: TEdit;
+    LabelModified: TDLabel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -80,11 +82,13 @@ type
 
 procedure ReadMe;
 procedure Help;
-procedure ExecuteAbout(AOwner: TComponent; Version, Build: string;
+procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
 	FileName: TFileName; const Modal: Boolean);
 procedure AboutRW(const Save: Boolean);
 
 var
+	fAbout: TfAbout;
+
 	RunCount: UG;
 	RunTime: U8;
 	StartProgramTime: U4;
@@ -96,11 +100,9 @@ uses
 	ShellAPI,
 	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, uMemStatus, uStrings;
 var
-	fAbout: TfAbout;
-
 	LMemClock: U8;
-
 	RunProgramTime: U8;
+
 type
 	PFlash = ^TFlash;
 	TFlash = packed record // 16
@@ -136,7 +138,7 @@ begin
 		IOError(FileName, ErrorCode);
 end;
 
-procedure ExecuteAbout(AOwner: TComponent; Version, Build: string;
+procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
 	FileName: TFileName; const Modal: Boolean);
 var OrigCursor: TCursor;
 begin
@@ -149,7 +151,8 @@ begin
 		fAbout.ProgramName := Application.Title;
 		fAbout.ProgramVersion := 'Version ' + Version;
 		fAbout.ImageVersion.Bitmap.Canvas.Font.Name := 'MS Sans Serif';
-		fAbout.PanelBuild.Text := Build;
+		fAbout.EditCreated.Text := Created;
+		fAbout.EditModified.Text := Modified;
 		fAbout.LoadFile(FileName);
 		Screen.Cursor := OrigCursor;
 	end;
@@ -173,18 +176,6 @@ begin
 	if Save then
 		RunTime := U8(GetTickCount - StartProgramTime) + RunProgramTime;
 
-	if Assigned(MainIni) then
-	begin
-		MainIni.RWUG('Statistics', 'RunCount', RunCount, Save);
-		MainIni.RWU8('Statistics', 'RunTime', RunTime, Save);
-		if Save = False then
-		begin
-			Inc(RunCount);
-			StartProgramTime := GetTickCount;
-			RunProgramTime := RunTime;
-		end;
-	end;
-
 	if Save then
 		s := 'F'
 	else
@@ -194,6 +185,22 @@ begin
 	FileName := DelFileExt(ExeFileName) + '.log';
 	WriteStringToFile(FileName, s, True);
 
+	if Assigned(MainIni) then
+	begin
+		MainIni.RWUG('Statistics', 'RunCount', RunCount, Save);
+		MainIni.RWU8('Statistics', 'RunTime', RunTime, Save);
+		MainIni.RWUG('Statistics', 'ReadCount', ReadCount, Save);
+		MainIni.RWU8('Statistics', 'ReadBytes', ReadBytes, Save);
+		MainIni.RWUG('Statistics', 'WriteCount', WriteCount, Save);
+		MainIni.RWU8('Statistics', 'WriteBytes', WriteBytes, Save);
+		if Save = False then
+		begin
+			Inc(RunCount);
+			StartProgramTime := GetTickCount;
+			RunProgramTime := RunTime;
+		end;
+	end;
+	
 {	LogFile := TFile.Create;
 	FileName := DelFileExt(ExeFileName) + '.log';
 	LRetry:
@@ -227,7 +234,7 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 		BmpAbout.SetSize(64, 64);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
 		BmpAbout.GenerateERGB(clNone,
-			GenFunc[RunCount mod (High(GenFunc) + 1)], AC, ScreenCorectColor, ef16, nil);
+			GenFunc[RunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
 	end;
 begin
 	if not Assigned(BmpAbout) then
@@ -382,22 +389,33 @@ end;
 procedure TfAbout.ImageNameFill(Sender: TObject);
 var
 	BitmapName: TDBitmap;
+	Co: array[0..3] of TColor;
 begin
 	BitmapName := ImageName.Bitmap;
-	BitmapName.GenRGB(clNone, gfSpecHorz, (16 * Timer1.Clock div PerformanceFrequency), ef16);
+//	BitmapName.GenRGB(clNone, gfSpecHorz, (16 * Timer1.Clock div PerformanceFrequency), ef16);
+
+	BitmapName.GenerateRGB(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clNone, TGenFunc(Typ), Co, 0, ef16,
+		(16 * Timer1.Clock div PerformanceFrequency), nil);
+
 	BitmapName.BarE24(clNone, clBtnFace, ef12);
+	BitmapName.Canvas.Font.Color := clWindowText;
+	DrawCutedText(BitmapName.Canvas, Rect(0, 0, BitmapName.Width, BitmapName.Height), taCenter, tlCenter,
+		ProgramName, True, 1);
+	{
 	BitmapName.Canvas.TextOut(
 		(BitmapName.Width -
 		BitmapName.Canvas.TextWidth(ProgramName)) div 2,
 		(BitmapName.Height -
 		BitmapName.Canvas.TextHeight(ProgramName)) div 2,
 		ProgramName);
+	}
 	BitmapName.Border24(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clBlack, clWhite, 2, ef08);
 end;
 
 procedure TfAbout.ImageVersionFill(Sender: TObject);
 var
 	BitmapVersion: TDBitmap;
+	Co: array[0..3] of TColor;
 begin
 	BitmapVersion := ImageVersion.Bitmap;
 	BitmapVersion.BarE24(clNone, clBtnFace, ef16);
@@ -408,7 +426,11 @@ begin
 		(BitmapVersion.Height -
 		BitmapVersion.Canvas.TextHeight(ProgramVersion)) div 2,
 		ProgramVersion);
-	BitmapVersion.GenRGB(clBtnFace, gfSpecHorz, (32 * Timer1.Clock div PerformanceFrequency), ef16);
+//	BitmapVersion.GenRGB(clBtnFace, gfSpecHorz, (32 * Timer1.Clock div PerformanceFrequency), ef16);
+
+	BitmapVersion.GenerateRGB(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBtnFace, TGenFunc(Typ), Co, 0, ef08,
+		(32 * Timer1.Clock div PerformanceFrequency), nil);
+
 	BitmapVersion.Border24(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);
 end;
 
