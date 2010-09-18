@@ -596,7 +596,7 @@ type
 		Keyword: TKeyword; // itKeyword
 
 		// Options
-		EnableMarks, EnableString, EnableReturn: BG;
+		EnableMarks, EnableString, EnableReturn, FloatNumber: BG;
 		EnableSpace: SG;
 		StringSep,
 		LineMark,
@@ -655,6 +655,8 @@ type
 		procedure SkipLine;
 		procedure SkipBlanks;
 		procedure Skip(CharCount: SG);
+		procedure ReadToChar(C: Char);
+//		procedure ReadToString(s: string);
 
 		procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
 		procedure AddMes2(MesId: TMesId; Params: array of string);
@@ -705,6 +707,7 @@ begin
 	// Set Default Options
 	EnableMarks := False;
 	EnableString := False;
+	FloatNumber := True;
 	StringSep := '''';
 	LineMark := '//';
 	GlobalMarkS0 := '{';
@@ -806,7 +809,7 @@ begin
 				Where := whNum;
 				while not EOI do
 				begin
-					if (BufR[BufRI] = DecimalSep) or ((ThousandSep <> '.') and (BufR[BufRI] = '.')) then
+					if (BufR[BufRI] = DecimalSep) or ((ThousandSep <> '.') and (BufR[BufRI] = '.')) and (FloatNumber) then
 						Point := True
 					else if (BufR[BufRI] = ThousandSep) or ((ThousandSep = #160) and (BufR[BufRI] = ' ')) then
 					begin
@@ -1047,6 +1050,47 @@ procedure TDParser.Skip(CharCount: SG);
 begin
 	Inc(BufRI, CharCount); if BufRI > BufRC then BufRI := BufRC;
 end;
+
+procedure TDParser.ReadToChar(C: Char);
+begin
+	Id := '';
+	while not EOI do
+	begin
+		if BufR[BufRI] = C then
+		begin
+			Break;
+		end
+		else
+		begin
+			Id := Id + BufR[BufRI];
+		end;
+		Inc(BufRI);
+	end;
+	if BufRI > BufRC then BufRI := BufRC;
+end;
+
+{
+procedure TDParser.ReadToString(S: string);
+var StartIndex: SG;
+begin
+	StartIndex := LineIndex;
+	while True do
+	begin
+		if (LineIndex + Length(S) > BufferSize) then
+		begin
+			BufRI := BufferSize + 1;
+			Id := Copy(BufR, StartIndex, LineIndex - StartIndex);
+			Exit;
+		end;
+		if (Copy(Line, LineIndex, Length(S)) = S) then
+		begin
+			Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+			Inc(LineIndex, Length(S));
+			Exit;
+		end;
+		Inc(LineIndex);
+	end;
+end; D???}
 
 procedure TDParser.ReadInput;
 label LSpaceToTab;
@@ -2777,7 +2821,7 @@ var
 begin
 	if UnitSystem = nil then
 	begin
-	 // D??? System.pas
+		// System.pas
 		New(UnitSystem);
 		U := UnitSystem;
 		U.Name := 'System';
@@ -3155,25 +3199,6 @@ begin
 		end;
 end;
 
-procedure _initialization;
-var
-	MesId: TMesId;
-	i: SG;
-begin
-	for i := 0 to Length(KWsU) - 1 do
-		KWsU[TKeyword(i)] := UpperCase(KWs[TKeyword(i)]);
-
-	StdCharTable;
-
-	for MesId := Low(TMesId) to High(TMesId) do
-	begin
-		if Pos('%1', MesStrings[MesId]) = 0 then
-			MesParam[MesId] := 0
-		else if Pos('%2', MesStrings[MesId]) = 0 then
-			MesParam[MesId] := 1
-		else MesParam[MesId] := 2
-	end;
-end;
 (*
 procedure FillCharsTable;
 var c: Char;
@@ -3242,6 +3267,26 @@ begin
 		AddMes2(mtExpected, ['end of line', Id]);
 	end;
 	ReadInput;
+end;
+
+procedure _initialization;
+var
+	MesId: TMesId;
+	i: SG;
+begin
+	for i := 0 to Length(KWsU) - 1 do
+		KWsU[TKeyword(i)] := UpperCase(KWs[TKeyword(i)]);
+
+	StdCharTable;
+
+	for MesId := Low(TMesId) to High(TMesId) do
+	begin
+		if Pos('%1', MesStrings[MesId]) = 0 then
+			MesParam[MesId] := 0
+		else if Pos('%2', MesStrings[MesId]) = 0 then
+			MesParam[MesId] := 1
+		else MesParam[MesId] := 2
+	end;
 end;
 
 initialization

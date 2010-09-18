@@ -28,7 +28,7 @@ type
 		stPartialQuick, // 2 times faster, but sort only some first half
 		stMerge,     // n * log n   2 * n       Y           N       +
 		stRadix,     // n           n * 8 !     Y           N       +
-		stCounting,  // n           n * v !     Y           N       +
+//		stCounting,  // n           n * v !     Y           N       +
 		stAuto);
 
 //  TAIndex = array of SG;
@@ -51,8 +51,8 @@ procedure SortS8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArra
 procedure SortF8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayF8; Count: UG);
 procedure SortFA(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayFA; Count: UG);
 
-procedure SortS(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; var AValue: array of string);
-procedure SortWS(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; var AValue: array of WideString);
+procedure SortS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of string);
+procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of WideString);
 
 {
 Sort(TCompare
@@ -127,7 +127,7 @@ type
 procedure SortS;
 type
 	TValue = type string;
-	TValue1 = U8;
+	TValue1 = U1;
 {$I SortS.inc}
 
 procedure SortWS;

@@ -42,6 +42,7 @@ type
 		procedure AddDataCell(s: string; AlignRight: SG = 0);
 		procedure AddHeadCell(s: string; AlignRight: BG = False);
 		procedure AddTable(FileName: TFileName; Border: SG = 1; CellSpacing: SG = 2; CellPadding: SG = 2);
+		procedure AddRef(FileName: TFileName; Text: string);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
 		procedure AddImage(FileName: TFileName); overload;
 
@@ -68,6 +69,7 @@ function RelativePath(Source, Target: string): string;
 var
 	ImagesDir: string;
 const
+	nbsp = '&nbsp;';
 	DistanceUnitNames: array[TDistanceUnit] of string = ('%', 'px', 'pt');
 
 implementation
@@ -82,24 +84,24 @@ begin
 	begin
 		if Value = 0 then
 		begin
-			Result := '&nbsp;';
+			Result := nbsp;
 			Exit;
 		end;
 	end;
 
 	if Value = MaxInt then
-		Result := '&nbsp;'
+		Result := nbsp
 	else
 	begin
-		Result := ReplaceF(NToS(Value), ' ', '&nbsp;'{'&thinsp;' IE DNS});
-		Result := ReplaceF(Result, #160, '&nbsp;'{'&thinsp;' IE DNS});
+		Result := ReplaceF(NToS(Value), ' ', nbsp{'&thinsp;' IE DNS});
+		Result := ReplaceF(Result, #160, nbsp{'&thinsp;' IE DNS});
 	end;
 end;
 
 function FToHTML(Value: FG): string;
 begin
-	Result := ReplaceF(FloatToStr(Value), ' ', '&nbsp;'{'&thinsp;' IE DNS});
-	Result := ReplaceF(Result, #160, '&nbsp;'{'&thinsp;' IE DNS});
+	Result := ReplaceF(FloatToStr(Value), ' ', nbsp{'&thinsp;' IE DNS});
+	Result := ReplaceF(Result, #160, nbsp{'&thinsp;' IE DNS});
 end;
 
 function XMLToStr(s: string): string;
@@ -129,7 +131,7 @@ begin
 		#$80..#$FF:
 		begin
 			if i < Length(s) then
-				Result := Result + WideChar(Ord(s[i]) + Ord(s[i + 1]) shl 8) // D???
+				Result := Result + WideChar(Ord(s[i]) + Ord(s[i + 1]) shl 8)
 			else
 				Nop;
 		end;
@@ -167,7 +169,7 @@ begin
 		#$00..#$7F: Result := Result + s[i];
 		#$80..#$FFFF:
 		begin
-			Result := Result + Char(Ord(s[i]) and $ff) + Char(Ord(s[i + 1]) shr 8); // D???
+			Result := Result + Char(Ord(s[i]) and $ff) + Char(Ord(s[i + 1]) shr 8);
 		end;
 		end;
 	end;
@@ -176,7 +178,7 @@ end;*)
 function SToHTML(Value: string): string;
 begin
 	if Value = '' then
-		Result := '&nbsp;'
+		Result := nbsp
 	else
 	begin
 		Result := StrToXML(Value);
@@ -207,75 +209,77 @@ begin
 end;
 
 function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
-var
-	Name: string;
 
 	procedure Ref(Text: string; Index: SG);
 	var A: BG;
 	begin
-		Name := Name + '<td width="' + IntToStr(Max(24, 8 * Length(Zeros))) + '">';
+		Result := Result + '<td width="' + IntToStr(Max(24, 8 * Length(Zeros))) + '">';
 		A := (Index <> HTMLIndex) and (Index >= 0) and (Index < HTMLCount);
 		if A then
-			Name := Name + '<a href="' + AddAfterName(HTMLRef, NToS(Index + 1, Zeros)) +  '">';
+			Result := Result + '<a href="' + AddAfterName(HTMLRef, NToS(Index + 1, Zeros)) +  '">';
 		if Index = HTMLIndex then
-			Name := Name + '<b>';
-		Name := Name + Text;
+			Result := Result + '<b>';
+		Result := Result + Text;
 		if Index = HTMLIndex then
-			Name := Name + '</b>';
+			Result := Result + '</b>';
 		if A then
-			Name := Name + '</a>';
-		Name := Name + '&nbsp';
-		Name := Name + '</td>';
+			Result := Result + '</a>';
+		Result := Result + '&nbsp';
+		Result := Result + '</td>';
 	end;
 
 var
 	Last, Next, Last2, Next2: SG;
 	i, j: SG;
 begin
-      if Refers > HTMLCount then Refers := HTMLCount;
-			Name := Name + '<table border="0" cellspacing="0" cellpadding="0"><tr>';
+	if HTMLCount <= 1 then
+	begin
+		Result := '';
+		Exit;
+	end;
+	if Refers > HTMLCount then Refers := HTMLCount;
+	Result := '<table border="0" cellspacing="0" cellpadding="0"><tr>';
 
-			Ref('|&lt;', HTMLCount - 1);
+	Ref('|&lt;', HTMLCount - 1);
 
-			Last := Min(HTMLIndex + 10, HTMLCount - 1);
-			Last2 := HTMLIndex + 1;
+	Last := Min(HTMLIndex + 10, HTMLCount - 1);
+	Last2 := HTMLIndex + 1;
 
-			Next2 := HTMLIndex - 1;
-			Next := Max(HTMLIndex - 10, 0);
+	Next2 := HTMLIndex - 1;
+	Next := Max(HTMLIndex - 10, 0);
 
-			if Last >= 0 then
-				Ref('&lt;&lt;', Last);
-			if Last2 >= 0 then
-				Ref('&lt;', Last2);
+	if Last >= 0 then
+		Ref('&lt;&lt;', Last);
+	if Last2 >= 0 then
+		Ref('&lt;', Last2);
 
 
-			j := Max(Refers - 1, Min(HTMLIndex + 5, HTMLCount - 1));
-			if j < HTMLCount - 1 then
-				Ref('...', -1)
-			else
-				Ref('&nbsp;', -1);
-			i := 0;
-			while True do
-			begin
-				if (j >= 0) and (j < HTMLCount) then
-					Ref(NToS(j + 1), j)
-				else
-					Break;
-				Inc(i);
-				if i >= Refers then Break;
-				Dec(j);
-			end;
-			if j > 0 then
-				Ref('...', -1)
-			else
-				Ref('&nbsp;', -1);
+	j := Max(Refers - 1, Min(HTMLIndex + 5, HTMLCount - 1));
+	if j < HTMLCount - 1 then
+		Ref('...', -1)
+	else
+		Ref(nbsp, -1);
+	i := 0;
+	while True do
+	begin
+		if (j >= 0) and (j < HTMLCount) then
+			Ref(NToS(j + 1), j)
+		else
+			Break;
+		Inc(i);
+		if i >= Refers then Break;
+		Dec(j);
+	end;
+	if j > 0 then
+		Ref('...', -1)
+	else
+		Ref(nbsp, -1);
 
-			Ref('&gt;', Next2);
-			Ref('&gt;&gt;', Next);
-			Ref('&gt;|', 0);
+	Ref('&gt;', Next2);
+	Ref('&gt;&gt;', Next);
+	Ref('&gt;|', 0);
 
-			Name := Name + '</tr></table>';
-	Result := Name;
+	Result := Result + '</tr></table>';
 end;
 
 constructor THTML.Create(FileName: TFileName);
@@ -348,9 +352,18 @@ end;
 
 function RelativePath(Source, Target: string): string;
 {
-	Source  C:\HTTP\data
-	Target	C:\HTTP\images
-	Result  ..\images
+	Source  C:\HTTP\
+	Target	C:\HTTP\images\
+	Result  images/
+
+	Source  C:\HTTP\images
+	Target	C:\HTTP\
+	Result  ../
+
+
+	Source  C:\HTTP\data\
+	Target	C:\HTTP\images\
+	Result  ../images
 }
 var
 	i, j: SG;
@@ -358,8 +371,23 @@ var
 begin
 	Result := '';
 	LastDiv := 1;
-	for i := 1 to Min(Length(Source), Length(Target)) do
+	for i := 1 to Max(Length(Source), Length(Target)) do
 	begin
+		if i > Length(Source) then
+		begin
+			Result := Copy(Target, i, MaxInt);
+			Break;
+		end;
+		if i > Length(Target) then
+		begin
+			for j := i to Length(Source) do
+			begin
+				if Source[j] = '\' then
+					Result := Result + '..\'
+			end;
+			Break;
+		end;
+
 		if Source[i] <> Target[i] then
 		begin
 			for j := LastDiv + 1 to Length(Source) do
@@ -374,6 +402,11 @@ begin
 		if Source[i] in ['\', '/'] then LastDiv := i;
 	end;
 	Replace(Result, '\', '/'); // W3C standard
+end;
+
+procedure THTML.AddRef(FileName: TFileName; Text: string);
+begin
+	AddBody('<a href="' + RelativePath(Self.FileName, FileName) + '">' + Text + '</a>');
 end;
 
 procedure THTML.AddImage(FileName: TFileName; Params: string);
@@ -419,14 +452,14 @@ begin
 		if AddCreated then
 		begin
 			AddBody('	<hr/>' + HTMLSep +
-				'<DIV ALIGN="RIGHT"><SMALL>Created ' + DateTimeToS(Now) + '</SMALL>&nbsp;&nbsp;');
+				'<DIV ALIGN="RIGHT"><SMALL>Created ' + DateTimeToS(Now) + '</SMALL>' + nbsp + nbsp);
 			FName := ExtractFilePath(FileName) + 'Foot.body';
 			if FileExists(FName) then
 			begin
 				Body := Body + ReadStringFromFile(FName);
 			end;
 			AddBody(Foot);
-			AddBody('&nbsp;&nbsp;<A HREF="http://validator.w3.org/check?uri=referer">');
+			AddBody(nbsp + nbsp + '<A HREF="http://validator.w3.org/check?uri=referer">');
 			AddImage(ImagesDir + 'valid-html40.png');
 			AddBody('</A></DIV>' + HTMLSep);
 		end
@@ -567,7 +600,7 @@ begin
 			Data := '<a href="' + Data + '">' + ExtractFileName(ReplaceF(Data, '/', '\')) + '</a>';
 
 		if Data = '' then
-//			Data := '&nbsp;'
+//			Data := nbsp
 		else
 		begin
 			if LineIndex = 0 then

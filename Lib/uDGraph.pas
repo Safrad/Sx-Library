@@ -12,7 +12,7 @@ interface
 
 uses
 	SysUtils,
-	uTypes, uData;
+	uTypes, uData, uMath;
 
 	{ Limits:
 		2^31 nodes (S4)

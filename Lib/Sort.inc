@@ -1,5 +1,3 @@
-{$R-}
-{$Q-}
 (*-------------------------------------------------------------------------*)
 {$ifopt d+}
 	procedure SelectSort;
@@ -31,7 +29,7 @@
 			{$ifopt d+}Inc(SortSwaped);{$endif}
 		end;
 	end;
-(*  procedure SelectSort;
+(* procedure SelectSort;
 	var
 		i, j, k: SG;
 		MinValue: TValue;
@@ -84,7 +82,7 @@
 					M := (L + R) div 2
 				else
 				begin
-					M := L + TIndex(HValue - AValue[L]) * (R - L) div TIndex(AValue[R] - AValue[L]);
+					M := L + TIndex(HValue - AValue[L]) * S8(R - L) div TIndex(AValue[R] - AValue[L]);
 					if M < L then M := L
 					else if M > R then M := R;
 				end;
@@ -700,7 +698,7 @@
 	procedure MergeSort;
 	var
 		MeI: array of TIndex;
-		MeV: array of TValue; // D??? Delphi internal error L1030
+		MeV: array of TValue; // D??? Delphi 5 internal error L1030
 
 		procedure Merge(I1F, I1T, I2F, I2T: SG);
 		var i, j, M: SG;

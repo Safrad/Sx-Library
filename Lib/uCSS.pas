@@ -34,6 +34,7 @@ type
 		constructor Create(FileName: TFileName);
 		destructor Destroy; override;
 
+		function GetProperty(Section, Prop: string): string;
 		procedure SetProperty(Section, Prop, Value: string);
 		procedure WriteToFile;
 	end;
@@ -140,6 +141,24 @@ begin
 				if Sections[i].Props[j].Name = Prop then
 				begin
 					Sections[i].Props[j].Value := Value;
+					Break;
+				end;
+			Break;
+		end;
+	end;
+end;
+
+function TCSS.GetProperty(Section, Prop: string): string;
+var i, j: SG;
+begin
+	for i := 0 to SectionCount - 1 do
+	begin
+		if Sections[i].Name = Section then
+		begin
+			for j := 0 to Sections[i].PropCount - 1 do
+				if Sections[i].Props[j].Name = Prop then
+				begin
+					Result := Sections[i].Props[j].Value;
 					Break;
 				end;
 			Break;

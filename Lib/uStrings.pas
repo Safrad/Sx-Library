@@ -54,6 +54,7 @@ function CharCount(const s: string; const C: Char): UG;
 function DelBeginSpaceF(const s: string): string;
 procedure DelBeginSpace(var s: string);
 function DelEndSpaceF(const s: string): string; overload;
+function DelEndNewLineF(const s: string): string;
 function DelEndSpaceF(const s: ShortString): ShortString; overload;
 procedure DelEndSpace(var s: string);
 function DelBESpaceF(s: string): string;
@@ -251,6 +252,21 @@ begin
 	for i := Length(s) downto 1 do
 	begin
 		if s[i] <> ' ' then
+		begin
+			Result := Copy(s, 1, i);
+			Exit;
+		end;
+	end;
+	Result := s;
+end;
+
+function DelEndNewLineF(const s: string): string;
+var
+	i: Integer;
+begin
+	for i := Length(s) downto 1 do
+	begin
+		if not (s[i] in [CharCR, CharLF]) then
 		begin
 			Result := Copy(s, 1, i);
 			Exit;

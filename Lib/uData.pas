@@ -25,7 +25,6 @@ type
 		FFrag: Boolean;
 		Data: Pointer; // FFrag = False
 		Item: Pointer; // FFrag = True
-//		Indexes: TData;
 		FClearCreated: BG;
 		FItemSize: UG;
 		FItemSh: UG;
@@ -60,6 +59,8 @@ type
 		function GetFirst: Pointer; overload;
 		procedure GetLast(var Value); overload;
 		function GetLast: Pointer; overload;
+
+		procedure Swap(I1, I2: UG);
 
 		function IsEmpty: Boolean;
 		function ToString: string;
@@ -104,9 +105,22 @@ type
 		property Count: UG read FItemCount;
 	end;
 
+	TDatas = class(TData)
+	private
+		FIndex: SG;
+		FItemAddr: Pointer;
+		procedure SetIndex(const Value: SG);
+	protected
+		constructor Create;
+	public
+		procedure Update;
+		property ItemAddr: Pointer read FItemAddr write FItemAddr;
+		property Index: SG read FIndex write SetIndex;
+	end;
+
 implementation
 
-uses uMem;
+uses uMem, uMath;
 
 type
 	PItem = ^TItem;
@@ -115,7 +129,7 @@ type
 		OneData: Pointer;
 	end;
 
-// TData
+{ TData }
 
 constructor TData.Create(ClearCreated: BG);
 begin
@@ -412,7 +426,12 @@ begin
 	end;
 end;
 
-// TA4
+procedure TData.Swap(I1, I2: UG);
+begin
+	Exchange(Pointer(TIndex(Data) + I1 shl FItemSh), Pointer(TIndex(Data) + I2 shl FItemSh), FItemSize);
+end;
+
+{ TA4 }
 
 constructor TA4.Create;
 begin
@@ -509,6 +528,37 @@ function TA4.IsEmpty: Boolean;
 begin
 	Result := True;
 
+end;
+
+{ TDatas }
+
+constructor TDatas.Create;
+begin
+	inherited;
+	FIndex := 0;
+end;
+
+procedure TDatas.SetIndex(const Value: SG);
+begin
+	if FIndex <> Value then
+	begin
+		if (ItemAddr <> nil) and (ItemSize <> 0) then
+			if (FIndex >= 0) and (UG(FIndex) < Count) then
+				Move(ItemAddr^, Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemSize);
+		FIndex := Value;
+		if (ItemAddr <> nil) and (ItemSize <> 0) then
+			if (FIndex >= 0) and (UG(FIndex) < Count) then
+				Move(Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemAddr^, ItemSize)
+			else
+				FillChar(ItemAddr^, ItemSize, 0);
+	end;
+end;
+
+procedure TDatas.Update;
+begin
+	if (ItemAddr <> nil) and (ItemSize <> 0) then
+		if (FIndex >= 0) and (UG(FIndex) < Count) then
+			Move(ItemAddr^, Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemSize);
 end;
 
 end.

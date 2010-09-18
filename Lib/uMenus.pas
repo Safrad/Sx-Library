@@ -71,7 +71,8 @@ procedure IconsResize(PanelTool: TPanel);
 implementation
 
 uses
-	Controls, ImgList, SysUtils, uDButton, uStrings,
+	Forms, Controls, ImgList, SysUtils,
+	uDButton, uStrings,
 	uGraph, uDBitmap, uScreen, uFiles, uError, uAPI, uMath, uParser;
 
 var ImageList: TCustomImageList;
@@ -902,6 +903,7 @@ var
 	C: TControl;
 	M: TMenuItem;
 begin
+//	Application.ProcessMessages;
 	for i := 0 to Panel.ControlCount - 1 do
 	begin
 		C := Panel.Controls[i];
@@ -909,7 +911,7 @@ begin
 		if M <> nil then
 		begin
 			C.Enabled := M.Enabled;
-			(C as TDButton).Down := M.Checked;
+//			(C as TDButton).Down := M.Checked;
 		end;
 	end;
 end;

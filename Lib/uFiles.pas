@@ -150,6 +150,7 @@ function CopyDamagedFile(Source, Dest: TFileName): Boolean;
 function DirectoryExists(const Directory: string): Boolean;
 function CreateDir(const Dir: string): Boolean;
 function NewFileOrDir(var FileOrDir: string): Boolean;
+function NewFileOrDirEx(var FileOrDir: string): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
 
 function DeleteFileEx(const FileName: TFileName): Boolean;
@@ -1169,6 +1170,14 @@ begin
 			Break;
 		end;}
 	end;
+end;
+
+function NewFileOrDirEx(var FileOrDir: string): Boolean;
+var D: TDateTime;
+begin
+	D := Date;
+	FileOrDir := DelFileExt(FileOrDir) + ' ' + DateToS(D) + ExtractFileExt(FileOrDir);
+	Result := NewFileOrDir(FileOrDir);
 end;
 
 function CopyDir(const Source, Dest: string): Boolean;

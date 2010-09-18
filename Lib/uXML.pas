@@ -112,8 +112,9 @@ begin
 			FElementType := xeEOI;
 			FElement := '';
 		end
+		{$ifopt d+}
 		else
-			IE(5435);
+			IE(5435);{$endif}
 		end;
 
 	end;
@@ -139,8 +140,9 @@ begin
 
 			end;}
 		end;
+		{$ifopt d+}
 		else
-			IE(5435);
+			IE(5435);{$endif}
 		end;
 
 	end;

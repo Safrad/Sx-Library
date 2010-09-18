@@ -46,6 +46,8 @@ type
 		LastWindow1,
 		NextWindow1: TMenuItem;
 
+		procedure FreeItem(i: SG);
+
 		procedure ChangeIndex(I: SG);
 		function AddKindItem: BG;
 		procedure KindInit;
@@ -180,12 +182,19 @@ begin
 	Count := 0;
 end;
 
+procedure TKinds.FreeItem(i: SG);
+begin
+	Items[i].FileName := '';
+	Items[i].MenuItem.Free; Items[i].MenuItem := nil;
+	FreeMem(Items[i].PData); Items[i].PData := nil;
+end;
+
 destructor TKinds.Destroy;
 var i: SG;
 begin
 	for i := 0 to Length(Items) - 1 do
 	begin
-		FreeMem(Items[i].PData); Items[i].PData := nil;
+		FreeItem(i);
 	end;
 	SetLength(Items, 0);
 	Reopen.FreeMenu;
@@ -714,6 +723,8 @@ begin
 			begin
 				FreeAndNil(Items[Kind].MenuItem);
 			end;
+			if Index <> Kind then
+				ChangeIndex(Kind);
 			try
 				FreeFile(Kind);
 			except
@@ -722,7 +733,7 @@ begin
 				end;
 			end;
 		end;
-		FreeMem(Items[Kind].PData); Items[Kind].PData := nil;
+		FreeItem(Kind);
 		for i := Kind to Count - 2 do
 		begin
 			Items[i] := Items[i + 1];
@@ -783,9 +794,9 @@ procedure TKinds.KindChangeFile(Sender: TObject);
 begin
 	Reopen.DrawReopenCaption;
 
+	KindInit;
 	if Assigned(ChangeFile) then
 		ChangeFile(Sender);
-	KindInit;
 end;
 
 function TKinds.CanClose: BG;
@@ -954,7 +965,6 @@ begin
 	if MessageD(Items[Index].FileName + LineSep + 'Lose all changes since your last save?',
 		mtConfirmation, [mbYes, mbNo]) = mbYes then
 	begin
-		// D???
 		FreeFile(Index);
 		Items[Index].Changed := False;
 		try

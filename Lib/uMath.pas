@@ -83,6 +83,7 @@ procedure Exchange(var A, B: F8); register; overload;
 procedure Exchange(var A, B: FA); register; overload;
 procedure Exchange(var A, B: Pointer); register; overload;
 procedure Exchange(var P0, P1; Count: Cardinal); register; overload;
+procedure Exchange(P0, P1: Pointer; Count: Cardinal); register; overload;
 
 function Arg(X, Y: Extended): Extended; overload;
 
@@ -103,7 +104,7 @@ function SameData(P0, P1: Pointer; Size: Cardinal): Boolean;
 procedure FillU2(var Desc; Count: Cardinal; Value: U2);
 procedure FillU4(var Desc; Count: Cardinal; Value: U4);
 procedure FillOrderU4(var Desc; Size: Cardinal);
-procedure Reverse(var Desc; Size: Cardinal);
+procedure Reverse4(var Desc; Size: Cardinal);
 procedure Swap02(var Desc; Count: Cardinal; Step: S4);
 function SwapU4(D: U4): U4;
 
@@ -276,15 +277,15 @@ begin
 		begin
 {							rIndex.setText("xxx");
 			gIndex.setText("xxx");
-			bIndex.setText("xxx"); D???}
+			bIndex.setText("xxx");}
 		end;
 	end
 	else
 	begin
 		if(C.h = 360) then C.h := 0;
 
-		C.h:=C.h div 60; // D???
-//            i := (int)Math.floor((double)h); D???
+		C.h:=C.h div 60;
+//		i := Floor(h);
 
 		f := C.h - i;
 		p := C.v*(1-C.s);
@@ -330,7 +331,8 @@ begin
 		end;
 		end;
 	end;
-end;*)
+end;
+*)
 
 function RColor(R, G, B: U1): TRColor;
 begin
@@ -933,6 +935,32 @@ asm
 				POP     EDI
 end;
 
+procedure Exchange(P0, P1: Pointer; Count: Cardinal); register;
+asm
+{     ->EAX     P0  }
+{       EDX     P1   }
+{       ECX     Count   }
+
+				PUSH    EDI
+				PUSH    ESI
+
+				MOV     ESI,EAX { Point EDI to destination              }
+				MOV     EDI,EDX { Point EDI to destination              }
+				ADD     EDX,ECX
+	@Loop:
+//	xchg [edi], [esi]
+		mov al, [edi]
+		xchg al, [esi]
+		mov [edi], al
+		add edi, 1
+		add esi, 1
+		cmp edi, edx
+	jb @Loop
+
+				POP ESI
+				POP     EDI
+end;
+
 function Arg(X, Y: Extended): Extended; // <0..2pi)
 begin
 {	if Abs(X) > Abs(Y) then
@@ -1077,27 +1105,16 @@ asm
 {     ->EAX     Pointer to destination  }
 {       EDX     count   }
 {       CX     value   }
-
-				PUSH    EDI
-
-				MOV     EDI,EAX { Point EDI to destination              }
-
-				MOV     EAX,ECX
-
-				shl eax, 16
-				mov ax, cx
-
-				MOV     ECX,EDX
-				sar ecx, 1
-//        JS      @@exit
-//				DEC ECX // D??? Required for CXY - bitmap
-//        SAR     ECX,2
-//				JS      @@exit
-
-				REP     STOSD   { Fill count dwords       }
-
+	PUSH    EDI
+	MOV     EDI,EAX { Point EDI to destination              }
+	MOV     EAX,ECX
+	shl eax, 16
+	mov ax, cx
+	MOV     ECX,EDX
+	sar ecx, 1
+	REP     STOSD   { Fill count dwords       }
 @@exit:
-				POP     EDI
+	POP     EDI
 end;
 
 procedure FillU4(var Desc; Count: Cardinal; Value: U4); register;
@@ -1105,23 +1122,13 @@ asm
 {     ->EAX     Pointer to destination  }
 {       EDX     count   }
 {       ECX     value   }
-
-				PUSH    EDI
-
-				MOV     EDI,EAX { Point EDI to destination              }
-
-				MOV     EAX,ECX
-
-				MOV     ECX,EDX
-//        JS      @@exit
-//				DEC ECX // D??? Required for CXY - bitmap
-//        SAR     ECX,2
-//				JS      @@exit
-
-				REP     STOSD   { Fill count dwords       }
-
+	PUSH    EDI
+	MOV     EDI,EAX { Point EDI to destination              }
+	MOV     EAX,ECX
+	MOV     ECX,EDX
+	REP     STOSD   { Fill count dwords       }
 @@exit:
-				POP     EDI
+	POP     EDI
 end;
 
 procedure FillOrderU4(var Desc; Size: Cardinal); register;
@@ -1142,7 +1149,7 @@ asm
 	pop ecx
 end;
 
-procedure Reverse(var Desc; Size: Cardinal);
+procedure Reverse4(var Desc; Size: Cardinal);
 asm
 	push esi
 	push ebx
@@ -1222,7 +1229,7 @@ function GetCPUCounter: TU8;
 begin
 	asm
 	mov ecx, 10h
-	dw 310fh // RDTSC 10clocks
+	dw 310fh // RDTSC 10 clocks
 	mov ebx, Result
 	mov [ebx], eax
 	mov [ebx + 4], edx
