@@ -559,7 +559,7 @@ begin
 		if FMouseDown then FDownNow := True;
 		FHighNow := True;
 		FTimer.Enabled := True;
-//		Invalidate;
+		Invalidate;
 	end;
 end;
 
@@ -571,7 +571,7 @@ begin
 		FDownNow := False;
 		FHighNow := False;
 		FTimer.Enabled := False;
-//		Invalidate;
+		Invalidate;
 	end;
 end;
 
@@ -582,6 +582,9 @@ end;
 
 procedure TDBitBtn.DrawItem(const DrawItemStruct: TDrawItemStruct);
 var
+	FileName: TFileName;
+	Quality: SG;
+
 	IsDown, IsDefault: Boolean;
 	CDefault, CCancel, CDefaultCancel: TColor;
 	Recta: TRect;
@@ -605,6 +608,18 @@ begin
 				IsDown);
 		end;
 		FLastDown := IsDown;
+	end;
+
+	// Glyph
+	if Glyph.Height = 0 then
+	begin
+		Glyph.Height := 16;
+		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name) + '.bmp';
+		if FileExists(FileName) then
+		begin
+			BitmapLoadFromFile(Glyph, FileName, 16, 16, Quality);
+			Glyph.PixelFormat := pf24bit;
+		end;
 	end;
 
 	FCanvas.Handle := DrawItemStruct.hDC;
@@ -929,8 +944,8 @@ procedure LoadBSounds;
 var
 	SoundUpDataBytes, SoundDownDataBytes: Integer;
 begin
-	WaveReadFromFile(BSoundUp, SharedDir + 'BUp.wav');
-	WaveReadFromFile(BSoundDown, SharedDir + 'BDown.wav');
+	WaveReadFromFile(BSoundUp, SoundsDir + 'BUp.wav');
+	WaveReadFromFile(BSoundDown, SoundsDir + 'BDown.wav');
 	if BSoundUp <> nil then
 		SoundUpDataBytes := BSoundUp.DataBytes div BSoundUp.Channels
 	else

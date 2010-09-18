@@ -16,6 +16,7 @@ object fLogo: TfLogo
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poDefault
   PixelsPerInch = 96
@@ -25,5 +26,11 @@ object fLogo: TfLogo
     Top = 0
     Width = 512
     Height = 384
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 16
+    Top = 8
   end
 end

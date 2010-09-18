@@ -16,7 +16,7 @@ uses
 	uDLabel, ImgList;
 
 type
-	TOnApply = procedure(Color: TColor);
+	TOnApplyColor = procedure(Color: TColor);
 
 	TfGColor = class(TForm)
 		Label1: TDLabel;
@@ -83,7 +83,7 @@ type
 		LabelCurrent: TDLabel;
 		Bevel2: TBevel;
 		ImageBackground: TImage;
-    ImageList1: TImageList;
+		ImageList1: TImageList;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure PanelCurColorClick(Sender: TObject);
@@ -106,7 +106,6 @@ type
 		procedure EditBChange(Sender: TObject);
 		procedure EditAChange(Sender: TObject);
 		procedure RadioGroup1Click(Sender: TObject);
-		procedure ButtonApplyClick(Sender: TObject);
 		procedure ImageLMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
 		procedure ImageLMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -117,14 +116,13 @@ type
 		procedure PanelNowBitColorClick(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
 		procedure ButtonOkClick(Sender: TObject);
-    procedure AdvencedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
-      State: TOwnerDrawState);
+		procedure AdvencedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
+			State: TOwnerDrawState);
 	private
 		{ Private declarations }
-		ColorChanged: Boolean;
 		CurColor, DefColor: TColor;
 		SchemeChanged: Boolean;
-		OnApply: TOnApply;
+		OnApply: TOnApplyColor;
 		SpectrumDown: Boolean;
 		LightDown: Boolean;
 		procedure ChangeColor;
@@ -138,9 +136,8 @@ type
 		{ Public declarations }
 	end;
 
-
-procedure GetColor(const prompt: string;
-	const CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApply);
+function GetColor(const prompt: string;
+	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
 
 implementation
 
@@ -198,8 +195,8 @@ begin
 		Result := C;
 end;
 
-procedure GetColor(const prompt: string;
-	const CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApply);
+function GetColor(const prompt: string;
+	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
 
 	procedure CreateBox(const i: Integer);
 	begin
@@ -248,7 +245,6 @@ begin
 	fGColor.OnApply := OnApply;
 	fGColor.ButtonApply.Enabled := Assigned(OnApply);
 
-	fGColor.ColorChanged := False;
 	fGColor.CurColor := CurrentColor;
 	NowColor := CurrentColor;
 	fGColor.DefColor := DefaultColor;
@@ -264,22 +260,25 @@ begin
 
 	fGColor.ChangeLightC;
 	fGColor.ChangeColor;
-	fGColor.Show;
-{
-	if Result then
+	if Assigned(OnApply) then
 	begin
-		CurrentColor := NowColor;
-		if Assigned(OnApply) then OnApply(NowColor);
-	end;
-	if ShowModal = mrOK then
-	begin
-		CurColor := NowColor;
+		fGColor.FormStyle := fsStayOnTop;
+		fGColor.Show;
 		Result := True;
 	end
 	else
 	begin
-		Result := False;
-	end;}
+		fGColor.FormStyle := fsNormal;
+		if fGColor.ShowModal = mrOK then
+		begin
+			CurrentColor := NowColor;
+			Result := True;
+		end
+		else
+		begin
+			Result := False;
+		end;
+	end;
 end;
 
 procedure TfGColor.PanelColorClick(Sender: TObject);
@@ -551,6 +550,7 @@ begin
 	InitImageS;
 	InitImageL;
 	InitBorder;
+	if Assigned(OnApply) then OnApply(NowColor);
 end;
 
 procedure TfGColor.ColorClick(Sender: TObject);
@@ -722,12 +722,6 @@ begin
 	ChangeColor;
 end;
 
-procedure TfGColor.ButtonApplyClick(Sender: TObject);
-begin
-	ColorChanged := True;
-	if Assigned(OnApply) then OnApply(NowColor);
-end;
-
 procedure TfGColor.ImageLMouseDown(Sender: TObject; Button: TMouseButton;
 	Shift: TShiftState; X, Y: Integer);
 begin
@@ -783,15 +777,20 @@ end;
 
 procedure TfGColor.ButtonCancelClick(Sender: TObject);
 begin
-	if ColorChanged then
-		if Assigned(OnApply) then OnApply(CurColor);
-	Close;
+	if Assigned(OnApply) then
+	begin
+		if NowColor <> CurColor then OnApply(CurColor);
+		Close;
+	end;
 end;
 
 procedure TfGColor.ButtonOkClick(Sender: TObject);
 begin
-	if Assigned(OnApply) then OnApply(NowColor);
-	Close;
+	if Assigned(OnApply) then
+	begin
+		OnApply(NowColor);
+		Close;
+	end;
 end;
 
 procedure TfGColor.AdvencedDraw(Sender: TObject; ACanvas: TCanvas;
@@ -818,7 +817,7 @@ begin
 	ImageList1.Clear;
 	ImageList1.Add(Bmp, nil);
 	Bmp.Free;
-	MenuAdvencedDrawItem(Sender, ACanvas, ARect, State);
+	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
 end;
 
 end.

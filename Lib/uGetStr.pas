@@ -31,6 +31,8 @@ type
 function GetStr(const prompt: string;
 	var CurVal: string; const DefVal: string; const MaxL: Byte): Boolean;
 
+var StrMasked: Boolean;
+
 implementation
 
 {$R *.DFM}
@@ -64,6 +66,10 @@ begin
 	CurS := CurVal;
 	DefS := DefVal;
 	EditInput.OnChange := nil;
+	if StrMasked then
+		EditInput.PasswordChar := '*'
+	else
+		EditInput.PasswordChar := #0;
 	EditInput.Text := CurS;
 	EditInput.OnChange := EditInputChange;
 	InitButtons;

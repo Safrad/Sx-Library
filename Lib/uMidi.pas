@@ -4,12 +4,12 @@ unit uMidi;
 
 interface
 
-uses MMSystem, SysUtils, Windows;
+uses uAdd, MMSystem, SysUtils, Windows;
 
 function MidiMCICallBack: Boolean;
 procedure MidiMCIOpen(FileName: TFileName);
-procedure MidiMCISeek(const SeekTo: Integer);
-function MidiMCIGetPos: LongInt;
+procedure MidiMCISeek(const SeekTo: U32);
+function MidiMCIGetPos: U32;
 procedure MidiMCIPause;
 procedure MidiMCIStop;
 procedure MidiMCIResume;
@@ -32,19 +32,19 @@ var
 	MidiPlaying: Boolean;
 	MidiOpened: Boolean;
 { HW: PHMidiOUT;
-	kd: Integer;}
+	kd: SG;}
 
 implementation
 
 uses
-	uError, uAdd;
+	uError;
 var
 	OpenParm: TMCI_Open_Parms;
 	PlayParm: TMCI_Play_Parms;
 	GenParm: TMCI_Generic_Parms;
 	SeekParm: TMCI_Seek_Parms;
 
-function MCIError(const ErrorCode: Integer): string;
+function MCIError(const ErrorCode: SG): string;
 begin
 	case ErrorCode of
 	000: Result := 'The specified command was carried out.';
@@ -96,7 +96,7 @@ begin
 	267: Result := 'The command string is empty.';
 	268: Result := 'The output string was too large to fit in the return buffer. Increase the size of the buffer.';
 	269: Result := 'The specified command requires a character-string parameter. Please provide one.';
-	270: Result := 'The integer entered is invalid for this command. Please enter a number.';
+	270: Result := 'The SG entered is invalid for this command. Please enter a number.';
 	271: Result := 'The device driver returned an invalid return type. To obtain a new driver, contact the device manufacturer.';
 	272: Result := 'There is a problem with the device driver. Check with the device manufacturer about obtaining a new driver.';
 	273: Result := 'The specified command is missing a paramter. Please enter one.';
@@ -167,7 +167,7 @@ begin
 	Result := 'MMSYSTEM' + Using('~000', ErrorCode) + ' ' + Result;
 end;
 
-function MidiMCIError(ErrorCode: Integer): Boolean;
+function MidiMCIError(ErrorCode: SG): Boolean;
 begin
 	if ErrorCode <> 0 then
 	begin
@@ -185,10 +185,10 @@ end;
 procedure MidiMCIOpen(FileName: TFileName);
 label LRetry, LRetrySend;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 	F: file;
-	ErrorCode: Integer;
+	ErrorCode: SG;
 begin
 	MidiPlaying := False;
 	LRetry:
@@ -210,16 +210,16 @@ begin
 	OpenParm.lpstrElementName := PChar(FileName);
 	FFlags := MCI_OPEN_ELEMENT or MCI_NOTIFY;
 
-	FError := mciSendCommand(0, mci_Open, FFlags, LongInt(@OpenParm));
+	FError := mciSendCommand(0, mci_Open, FFlags, U32(@OpenParm));
 	MidiOpened := FError = 0;
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
-procedure MidiMCISeek(const SeekTo: Integer);
+procedure MidiMCISeek(const SeekTo: U32);
 label LRetrySend;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	LRetrySend:
@@ -227,25 +227,25 @@ begin
 	SeekParm.dwCallback := 0;
 	FFlags := 0;
 	FFlags := FFlags or mci_To;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Seek, FFlags, LongInt(@SeekParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Seek, FFlags, U32(@SeekParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
-function MidiMCIGetPos: LongInt;
+function MidiMCIGetPos: U32;
 label LRetrySeek;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 	StatusParm: TMCI_Status_Parms;
 begin
-	Result := -1;
+	Result := 0;
 	if MidiOpened = False then Exit;
 	LRetrySeek:
 	StatusParm.dwItem := mci_Status_Position;
 	StatusParm.dwTrack := 0;
 	StatusParm.dwReturn := 0;
 	FFlags := mci_Wait or mci_Status_Item;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Status, FFlags, LongInt(@StatusParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Status, FFlags, U32(@StatusParm));
 	if MidiMCIError(FError) then goto LRetrySeek;
 	Result := StatusParm.dwReturn;
 end;
@@ -253,14 +253,14 @@ end;
 procedure MidiMCIPause;
 label LRetrySend;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	LRetrySend:
 	FFlags := 0;
 	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Pause, FFlags, LongInt(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Pause, FFlags, U32(@GenParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 	MidiPlaying := False;
 end;
@@ -268,29 +268,29 @@ end;
 procedure MidiMCIStop;
 label LRetrySend;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	LRetrySend:
 	MidiPlaying := False;
 	FFlags := 0;
 	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Stop, FFlags, LongInt(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Stop, FFlags, U32(@GenParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
 procedure MidiMCIResume;
 label LRetrySend;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	LRetrySend:
 	FFlags := 0;
 	GenParm.dwCallback := MidiHandle;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Resume, FFlags, LongInt(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Resume, FFlags, U32(@GenParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 	MidiPlaying := False;
 	MidiMCIPlay; // Need for Callback
@@ -299,8 +299,8 @@ end;
 procedure MidiMCIPlay;
 label LRetrySend;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	if MidiPlaying = True then Exit;
@@ -309,22 +309,22 @@ begin
 	FFlags := mci_Notify;
 	PlayParm.dwCallback := MidiHandle;
 
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Play, FFlags, LongInt(@PlayParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Play, FFlags, U32(@PlayParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
 procedure MidiMCIClose;
 label LRetrySend;
 var
-	FFlags: LongInt;
-	FError: Integer;
+	FFlags: U32;
+	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	LRetrySend:
 	FFlags := 0;
 	PlayParm.dwCallback := OpenParm.dwCallback;
 	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Close, FFlags, LongInt(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Close, FFlags, U32(@GenParm));
 	if FError = 0 then
 	begin
 		MidiOpened := False;
@@ -337,9 +337,9 @@ end;
 procedure MidiReadFromFile(var Midi: PMidi; FName: TFileName);
 label LRetry, LFin;
 var
-	FSize: LongInt;
+	FSize: U32;
 	F: file;
-	ErrorCode: Integer;
+	ErrorCode: SG;
 begin
 	LRetry:
 	AssignFile(F, FName);
@@ -371,7 +371,7 @@ procedure MidiWriteToFile(var Midi: PMidi; FName: TFileName);
 label LRetry;
 var
 	F: file;
-	ErrorCode: Integer;
+	ErrorCode: SG;
 begin
 	LRetry:
 	AssignFile(F, FName);
@@ -400,7 +400,7 @@ begin
 	end;
 end;
 
-function MidiErrorText(ErrorCode: Integer): ShortString;
+function MidiErrorText(ErrorCode: SG): ShortString;
 var P: PChar;
 begin
 	P := '...';
@@ -410,7 +410,7 @@ end;
 
 procedure MidiOpen;
 var
-	ErrorCode: Integer;
+	ErrorCode: SG;
 begin
 	HW := New(PHMidiOUT);
 	ErrorCode := MidiOutOpen(HW, Midi_MAPPER,
@@ -419,11 +419,11 @@ begin
 end;
 
 procedure MidiPrepareHeader(var Header: PMidiHdr; Midi: PMidi);
-var ErrorCode: Integer;
+var ErrorCode: SG;
 begin
 	New(Header);
 	FillChar(Header^, SizeOf(Header^), 0);
-	Header.lpData := Pointer(Integer(Addr(Midi.Data)) + kd);
+	Header.lpData := Pointer(SG(Addr(Midi.Data)) + kd);
 	Header.dwBufferLength := 4096;//Midi.DataBytes; //SizeOf(PMemBlock^);
 	Header.dwBytesRecorded := 0;
 	Header.dwUser := 4096;//Midi.DataBytes; // SizeOf(PMemBlock^);
@@ -436,7 +436,7 @@ begin
 end;
 
 procedure MidiUnprepareHeader(var Header: PMidiHdr);
-var ErrorCode: Integer;
+var ErrorCode: SG;
 begin
 	ErrorCode := MidiOutUnprepareHeader(HW^, Header, SizeOf(TMidiHdr));
 	if ErrorCode <> 0 then InternalError(MidiErrorText(ErrorCode));
@@ -446,7 +446,7 @@ end;
 
 procedure MidiPlay(Header: PMidiHdr);
 var
-	ErrorCode: Integer;
+	ErrorCode: SG;
 begin
 	ErrorCode := MidiOutReset(HW^);
 	if ErrorCode <> 0 then InternalError(MidiErrorText(ErrorCode));
@@ -457,7 +457,7 @@ end;
 
 procedure MidiClose;
 var
-	ErrorCode: Integer;
+	ErrorCode: SG;
 begin
 	ErrorCode := MidiOutClose(HW^);
 	if ErrorCode <> 0 then InternalError(MidiErrorText(ErrorCode));

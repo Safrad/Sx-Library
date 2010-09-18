@@ -11,6 +11,8 @@ uses
 type
 	TfLogo = class(TForm)
 		ImageLogo: TImage;
+    Timer1: TTimer;
+    procedure Timer1Timer(Sender: TObject);
 	private
 		{ private declarations }
 	public
@@ -49,6 +51,7 @@ end;
 
 procedure ShowLogo(const FileName: TFileName);
 begin
+	{$ifopt d-}
 	Screen.Cursor := crHourGlass;
 	fLogo := TfLogo.Create(Application.MainForm);
 	fLogo.Position := poDesktopCenter;
@@ -59,6 +62,7 @@ begin
 	fLogo.Show;
 	fLogo.Repaint;
 	LogoTime := GetTickCount;
+	{$endif}
 end;
 
 procedure ShowLogoFull;
@@ -143,16 +147,25 @@ procedure HideLogo;
 const
 	MinimumTime = 3000;
 begin
+	{$ifopt d-}
 	if Assigned(fLogo) then
 	begin
 		LogoTime := GetTickCount - LogoTime;
-		{$ifopt d-}
-		if LogoTime < MinimumTime then Sleep(MinimumTime - LogoTime);
-		{$endif}
-		fLogo.Hide;
-		fLogo.Free; fLogo := nil;
+		if LogoTime < MinimumTime then
+		begin
+			fLogo.Timer1.Interval := MinimumTime - LogoTime;
+			fLogo.Timer1.Enabled := True;
+		end;
 		Screen.Cursor := crDefault;
 	end;
+	{$endif}
+end;
+
+procedure TfLogo.Timer1Timer(Sender: TObject);
+begin
+	Close;
+	fLogo.Hide;
+	fLogo.Free; fLogo := nil;
 end;
 
 end.

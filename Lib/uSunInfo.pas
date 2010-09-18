@@ -4,7 +4,7 @@ unit uSunInfo;
 
 interface
 
-// Zprávy TV Nova 17.12.1999 vyjde slunce v 7:52 -> 15, -49.7
+// 17.12.1999 sunrise at 7:52 -> 15, -49.7
 type TSunPos = (spUD, spU, spD, spUA, spDA);
 
 procedure SunOnOff(const LongitudeX, LatitudeY, TimeZone: Extended;

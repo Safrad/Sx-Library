@@ -2,7 +2,7 @@ unit uGBlurF;
 
 interface
 
-uses Windows, Graphics;
+uses Windows, Graphics, uGraph24;
 
 type
 		PRGBTriple = ^TRGBTriple;
@@ -31,7 +31,8 @@ type
 //the idea is that when Using a TKernel you ignore the Weights
 //except for Weights in the range -Size..Size.
 
-procedure GBlur(theBitmap: TBitmap; radius: Double);
+procedure GBlur(theBitmap: TBitmap; radius: Double; const Horz, Vert: Boolean;
+	InterruptProcedure:  TInterruptProcedure);
 
 implementation
 
@@ -142,13 +143,16 @@ begin
 	Move(P[0], theRow[0], (High(theRow) + 1) * SizeOf(TRGBTriple));
 end;
 
-procedure GBlur(theBitmap: TBitmap; radius: Double);
+procedure GBlur(theBitmap: TBitmap; radius: Double; const Horz, Vert: Boolean;
+	InterruptProcedure:  TInterruptProcedure);
 var
 	Row, Col: Integer;
 	theRows: PPRows;
 	K: TKernel;
 	ACol: PRow;
 	P: PRow;
+
+	Done, LDone: Word;
 begin
 	if (theBitmap.HandleType <> bmDIB) then Exit;
 	if (radius = 0) then Exit;
@@ -162,15 +166,40 @@ begin
 	for Row := 0 to theBitmap.Height - 1 do
 		theRows[Row] := theBitmap.Scanline[Row];
 
+	LDone := High(Done);
 	//blur each row:
 	P := AllocMem(theBitmap.Width * SizeOf(TRGBTriple));
+	if Horz then
 	for Row := 0 to theBitmap.Height - 1 do
+	begin
+		if Assigned(InterruptProcedure) then
+		begin
+			Done := (Row shl 7) div theBitmap.Height;
+			if Done <> LDone then
+			begin
+				LDone := Done;
+				InterruptProcedure(Done);
+				if Done = High(Done) then Exit;
+			end;
+		end;
 		BlurRow(Slice(theRows[Row]^, theBitmap.Width), K, P);
+	end;
 
 	//now blur each column
 	ReAllocMem(P, theBitmap.Height * SizeOf(TRGBTriple));
+	if Vert then
 	for Col := 0 to theBitmap.Width - 1 do
 	begin
+		if Assigned(InterruptProcedure) then
+		begin
+			Done := 128 + (Col shl 7) div theBitmap.Width;
+			if Done <> LDone then
+			begin
+				LDone := Done;
+				InterruptProcedure(Done);
+				if Done = High(Done) then Exit;
+			end;
+		end;
 		//- first Read the column into a TRow:
 		for Row := 0 to theBitmap.Height - 1 do
 			ACol[Row] := theRows[Row][Col];

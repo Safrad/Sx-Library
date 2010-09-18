@@ -93,7 +93,7 @@ const
 constructor TScrollImage.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
-	InitBitmap(Self.Picture.Bitmap);
+	InitBitmap(Picture.Bitmap);
 end;
 
 destructor TScrollImage.Destroy;
@@ -165,7 +165,7 @@ const
 	Speed1 = 65536 div 8; // Pixels / ms (x65536)
 	StepInt = 500;
 var
-	Speed: Integer;
+	Speed: Int64;
 	TimeO, LastTickCount, FrameTickCount: LongWord;
 	Cycle: Cardinal;
 	NOfsX, NOfsY: Integer;
@@ -197,10 +197,10 @@ begin
 			MouseAction := MouseA;
 			LastTickCount := GetTickCount;
 			case MouseA of
-{			mwScrollHD, mwScrollHU,
+{     mwScrollHD, mwScrollHU,
 			mwScrollVD, mwScrollVU: Speed := Speed1;}
-			mwScrollHD2, mwScrollHU2: Speed := 64 * MaxOfsX;
-			mwScrollVD2, mwScrollVU2: Speed := 64 * MaxOfsY;
+			mwScrollHD2, mwScrollHU2: Speed := 64 * Int64(MaxOfsX);
+			mwScrollVD2, mwScrollVU2: Speed := 64 * Int64(MaxOfsY);
 			else Speed := Speed1;
 			end;
 			if Speed = 0 then Speed := 1;
@@ -208,14 +208,14 @@ begin
 			TimeO := 10; // ms
 			NOfsX := RoundDiv64(65536 * Int64(OfsX), Speed);
 			NOfsY := RoundDiv64(65536 * Int64(OfsY), Speed);
-{			case MouseW of
+{     case MouseW of
 			mwScrollHD, mwScrollHU,
 			mwScrollHD2, mwScrollHU2:
 			begin
 			else
 			begin
 			end;}
-//			MouseW := mdScrollB;
+//      MouseW := mdScrollB;
 			inherited MouseDown(Button, Shift, X, Y);
 			Cycle := 0;
 			FrameTickCount := 0;
@@ -229,7 +229,8 @@ begin
 				end;
 				ScrollTo(RoundDiv64(Int64(Speed) * Int64(NOfsX), 65536),
 					RoundDiv64(Int64(Speed) * Int64(NOfsY), 65536));
-				Application.HandleMessage;
+//				Application.HandleMessage; no
+				Application.ProcessMessages;
 				TimeO := GetTickCount - LastTickCount;
 				if TimeO < OfsS then
 				begin
@@ -291,13 +292,13 @@ begin
 	end;
 	mwScrollH:
 	begin
-		NOfsX := BOfsX + RoundDiv(BitmapWidth * (X - MouseX), NowMaxWidth - 2 * ScrollBarHHeight);
+		NOfsX := BOfsX + RoundDiv64(BitmapWidth * Int64(X - MouseX), NowMaxWidth - 2 * ScrollBarHHeight);
 		NOfsY := OfsY;
 	end;
 	mwScrollV:
 	begin
 		NOfsX := OfsX;
-		NOfsY := BOfsY + RoundDiv(BitmapHeight * (Y - MouseY), NowMaxHeight - 2 * ScrollBarVWidth);
+		NOfsY := BOfsY + RoundDiv64(BitmapHeight * (Y - MouseY), NowMaxHeight - 2 * ScrollBarVWidth);
 	end;
 	end;
 	TickCount := GetTickCount;
@@ -308,7 +309,7 @@ begin
 	end;
 	LTickCount := TickCount;
 	ScrollTo(NOfsX, NOfsY);
-//	if (MouseW = mwNone){ or (MouseW = mwScroll)} then
+//  if (MouseW = mwNone){ or (MouseW = mwScroll)} then
 	inherited MouseMove(Shift, X, Y);
 end;
 
@@ -462,8 +463,8 @@ begin
 		if Assigned(FOnFill) then FOnFill(Self);
 		InitScrolls;
 		OffsetRange(OfsX, OfsY);
-//		OffsetRange(NOfsX, NOfsY);
-//		ScrollTo(OfsX, OfsY);
+//    OffsetRange(NOfsX, NOfsY);
+//    ScrollTo(OfsX, OfsY);
 		SliderC1 := DarkerColor(clScrollBar);
 		SliderC2 := LighterColor(clScrollBar);
 		// H
@@ -475,13 +476,13 @@ begin
 
 			X1 := 0;
 			X2 := ScrollBarVWidth - 1;
-	{		Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHD, 1);
 
 			X1 := NowMaxWidth - ScrollBarVWidth;
 			X2 := NowMaxWidth - 1;
-	{		Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHU, 3);
 
@@ -492,7 +493,7 @@ begin
 
 			Y1 := Integer(Bitmap24.Height) - ScrollBarHHeight;
 			Y2 := Bitmap24.Height - 1;
-			X1 := ScrollBarVWidth + (ScrollLen - ScrollLenS) * OfsX div (BitmapWidth - NowMaxWidth);
+			X1 := ScrollBarVWidth + RoundDiv64(Int64(ScrollLen - ScrollLenS) * OfsX, BitmapWidth - NowMaxWidth);
 			X2 := X1 + ScrollLenS - 1;
 			SliderHX1 := X1;
 			SliderHX2 := X2;
@@ -549,13 +550,13 @@ begin
 
 			Y1 := 0;
 			Y2 := ScrollBarHHeight - 1;
-	{		Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, 0);
 
 			Y1 := NowMaxHeight - ScrollBarHHeight;
 			Y2 := NowMaxHeight - 1;
-	{		Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
 			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
 			DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, 2);
 
@@ -614,7 +615,7 @@ begin
 		else
 			ScrollBarVHeight := 0;
 
-//		Pix24(Bitmap24.PData, Bitmap24.ByteX, MouseX, MouseY, clWhite, ef16);
+//    Pix24(Bitmap24.PData, Bitmap24.ByteX, MouseX, MouseY, clWhite, ef16);
 		if FDrawFPS then
 			if FramePerSec >= 0.1 then
 			begin
@@ -631,7 +632,7 @@ end;
 procedure TScrollImage.Paint;
 begin
 	if WaitVBlank then WaitRetrace;
-{	SetStretchBltMode(inherited Canvas.Handle, STRETCH_DELETESCANS);
+{ SetStretchBltMode(inherited Canvas.Handle, STRETCH_DELETESCANS);
 	BitBlt(
 		inherited Canvas.Handle,
 		Left,
@@ -694,7 +695,7 @@ begin
 		DY1 := 0;
 		DXW := SX;
 		DYH := SY;
-{		ZoomedWidth := BmpSource.Width;
+{   ZoomedWidth := BmpSource.Width;
 		ZoomedHeight := BmpSource.Height;}
 
 		SourceWidth := SX;
@@ -708,7 +709,7 @@ begin
 		SourceWidth := SX;
 		SourceHeight := SY;
 
-{		if SX > VisX then SX := VisX;
+{   if SX > VisX then SX := VisX;
 		if SY > VisY then SY := VisY;}
 		if Zoom <= 1 then
 		begin
@@ -733,7 +734,7 @@ begin
 		end;
 		SXW := Ceil(VisX / Zoom - DX1);
 		SYH := Ceil(VisY / Zoom - DY1);
-{		if (DX1 < 0) then
+{   if (DX1 < 0) then
 		begin
 			Inc(SXW);
 		end;
@@ -770,7 +771,7 @@ begin
 					0, 0,
 					BmpSource.Width, BmpSource.Height,
 					SRCCOPY);
-	{			BmpSource2.Canvas.StretchDraw(Rect(0, 0,
+	{     BmpSource2.Canvas.StretchDraw(Rect(0, 0,
 					BmpSource2.Width, BmpSource2.Height), BmpSource);}
 			end
 			else

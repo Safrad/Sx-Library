@@ -4009,7 +4009,7 @@ begin
 	begin
 		Inc(XD1, BmpS.GraphMinX - XS1);
 		XS1 := BmpS.GraphMinX;
-	end;	
+	end;  
 	if YS1 < BmpS.GraphMinY then
 	begin
 		Inc(YD1, BmpS.GraphMinY - YS1);
@@ -6229,7 +6229,7 @@ var
 	SX, SY: LongWord;
 	ByteSX, ByteDX: LongWord;
 
-	Suma24: array[0..2] of LongWord;
+	Suma24: array[0..2] of Int64;
 	StpXU:  LongWord; //W
 	StpYU:  LongWord; //W
 	StpXYU: LongWord;
@@ -6259,7 +6259,8 @@ begin
 	SY := BmpS.Height;
 	if (SX = NewX) and (SY = NewY) then
 	begin
-		BmpE24(BmpD, 0, 0, BmpS, clNone, ef16);
+		if BmpS.PData <> BmpD.PData then
+			BmpE24(BmpD, 0, 0, BmpS, clNone, ef16);
 		Exit;
 	end;
 	if (SX = 0) or (SY = 0) then Exit;
@@ -6310,28 +6311,15 @@ begin
 			ryU := ry1U;
 			repeat
 				DivModU32(ryU, NewY, Res, Remainder);
-//				HelpU := ryU mod NewY;
-				HelpU := Remainder;
-{				if HelpU = 0 then
-					ttyU := NewY
-				else}
-				ttyU := NewY - HelpU;
+				ttyU := NewY - Remainder;
 				if ryU + ttyU > ry2U then ttyU := ry2U - ryU;
 				rxU := rx1U;
 				HY := Res;
-//				HY := (ryU div NewY);
 				repeat
 					DivModU32(rxU, NewX, Res, Remainder);
-					HelpU := Remainder;
-//					HelpU := rxU mod NewX;
-{					if Remainder = 0 then
-						ttxU := NewX
-					else}
-						ttxU := NewX - HelpU;
+					ttxU := NewX - Remainder;
 					if rxU + ttxU > rx2U then ttxU := rx2U - rxU;
-//					HelpU := rxU div NewX;
-					HelpU := Res;
-					PS := Pointer(Integer(BmpS.PData) + Integer(HelpU + HelpU + HelpU) - Integer(ByteSX * HY));
+					PS := Pointer(Integer(BmpS.PData) + Integer(Res + Res + Res) - Integer(ByteSX * HY));
 					HelpU := ttxU * ttyU;
 					if TranColor <> clNone then
 					begin
@@ -6342,11 +6330,11 @@ begin
 							Inc(TranCount, HelpU);
 						end;
 					end;
-					suma24[0] := suma24[0] + PS[0] * HelpU;
+					Inc(suma24[0], PS[0] * HelpU);
 					Inc(Integer(PS));
-					suma24[1] := suma24[1] + PS[0] * HelpU;
+					Inc(suma24[1], PS[0] * HelpU);
 					Inc(Integer(PS));
-					suma24[2] := suma24[2] + PS[0] * HelpU;
+					Inc(suma24[2], PS[0] * HelpU);
 
 					Inc(rxU, ttxU);
 				until rxU = rx2U;
@@ -6356,11 +6344,11 @@ begin
 			PD := Pointer(Integer(BmpDe.PData) + Integer(X + X + X) - Integer(ByteDX * Y));
 			if (TranColor = clNone) or (TranCount < StpXYU div 2) then
 			begin
-				PD[0] := Suma24[0] div stpXYU;
+				PD[0] := RoundDiv64(Suma24[0], stpXYU);
 				Inc(Integer(PD));
-				PD[0] := Suma24[1] div stpXYU;
+				PD[0] := RoundDiv64(Suma24[1], stpXYU);
 				Inc(Integer(PD));
-				PD[0] := Suma24[2] div stpXYU;
+				PD[0] := RoundDiv64(Suma24[2], stpXYU);
 			end
 			else
 			begin
@@ -6374,6 +6362,7 @@ begin
 			Inc(X);
 		until X = NewX;
 	end;
+	
 	if BmpS.PData = BmpD.PData then
 	begin
 		CopyBitmap24(BmpD, BmpDe);

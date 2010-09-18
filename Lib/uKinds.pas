@@ -9,7 +9,7 @@ uses
 	uReopen;
 
 type
-	TItem = packed record // 20
+	TItem = packed record // 16
 		FileName: TFileName; // 4
 		MenuItem: TMenuItem; // 4
 		PData: Pointer; // 4
@@ -25,7 +25,7 @@ type
 	public
 		AdvancedMenuDrawItemEvent: TAdvancedMenuDrawItemEvent;
 		Items: array of TItem;
-		ItemSize: Cardinal; // 4
+		ItemSize: Cardinal; 
 
 		KindIndex: Integer;
 		KindCount: Integer;

@@ -117,7 +117,7 @@ end;
 
 procedure TDb.FreeItem(Item: Integer);
 begin
-	FreeMem(DbItems[Item].PData); // D??? Invalid pointer operation
+	FreeMem(DbItems[Item].PData);
 	DbItems[Item].PData := nil;
 	DbItems[Item].Name := '';
 end;
