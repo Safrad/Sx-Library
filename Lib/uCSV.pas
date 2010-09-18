@@ -369,7 +369,7 @@ begin
 end;
 
 procedure TfFormats.FormClose(Sender: TObject; var Action: TCloseAction);
-var i: Integer;
+//var i: Integer;
 begin
 {	for i := 0 to CSVReqFormats.Count - 1 do D???
 	begin
@@ -405,7 +405,7 @@ var
 	DBFHead: TDBFHead;
 
 begin
-{	while True do
+{	while True do D???
 	begin
 		case DBFHead.ValueType[0] of
 		'N':

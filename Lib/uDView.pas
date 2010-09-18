@@ -464,12 +464,18 @@ procedure Init;
 var FileName: TFileName;
 begin
 	SoundsLoaded := True;
-	FileName := GraphDir + 'Images\ArrowU.bmp';
+	FileName := GraphDir + 'Images\ArrowU.gif';
 	if FileExists(FileName) then
+	begin
 		BitmapReadFromFile(ArrowU, FileName);
-	FileName := GraphDir + 'Images\ArrowD.bmp';
+		ArrowU.TryTransparent;
+	end;
+	FileName := GraphDir + 'Images\ArrowD.gif';
 	if FileExists(FileName) then
+	begin
 		BitmapReadFromFile(ArrowD, FileName);
+		ArrowD.TryTransparent
+	end;
 end;
 
 procedure Fin;
@@ -492,7 +498,7 @@ begin
 	if Bitmap.Empty then Exit;
 	if SoundsLoaded = False then Init;
 	{$ifopt d+}
-	Bitmap.Bar(clNone, 0, 0{RowHeight}, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
+	Bitmap.Bar(0, 0{RowHeight}, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
 	{$endif}
 //	Bitmap.Canvas.Brush.Style := bsClear;
 
@@ -568,7 +574,7 @@ begin
 
 						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 4);
 
-						Bitmap.Bar(clNone, X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
+						Bitmap.Bar(X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if IY = ActualRow then
 							Bitmap.Border(X, Y, Wid - 1, Y + RowHeight - 1, DepthColor(0), DepthColor(3), 1, ef12);
 						Bitmap.Line(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
@@ -588,7 +594,7 @@ begin
 					else
 					begin
 //						Bitmap.Bar(clNone, X, 0, Bitmap.Width - 1, RowHeight - 1, clAppWorkSpace, ef16);
-						Bitmap.Bar(clNone, X, Y, X + Columns[IX].Width - 1, Height - 1{Y + RowHeight - 2}, clAppWorkSpace, ef16);
+						Bitmap.Bar(X, Y, X + Columns[IX].Width - 1, Height - 1{Y + RowHeight - 2}, clAppWorkSpace, ef16);
 //						Bitmap.Lin(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // -
 //						Bitmap.Lin(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // |
 //						Break;
@@ -632,7 +638,7 @@ begin
 					if SortBySwap then Arrow := ArrowU else Arrow := ArrowD;
 					if Arrow <> nil then
 					begin
-						Bitmap.Bmp(x, 0, Arrow, clPurple, ef16);
+						Bitmap.Bmp(x, 0, Arrow, ef16);
 						Inc(xx, Arrow.Width);
 						Dec(ww, Arrow.Width);
 					end;
@@ -679,7 +685,7 @@ begin
 		end;
 	end;
 	if X < Bitmap.Width then
-		Bitmap.Bar(clNone, X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16);
+		Bitmap.Bar(X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16);
 end;
 
 procedure TDView.Paint;

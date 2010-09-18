@@ -119,7 +119,7 @@ function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccess
 const
 	AllFiles = '|All Files (*.*)|*.*';
 	AllPictures = //'Bitmap (*.bmp)|*.bmp|Jpeg (*.jpg)|*.jpg' + AllFiles;
-		'Any Pictures (*.bmp;*.jpg;*.jpeg;*.ppm)|*.bmp;*.jpg;*.jpeg|Bitmaps (*.bmp)|*.bmp|JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|Portable Picture (*.ppm)|*.ppm' + AllFiles;
+		'Any Pictures (*.bmp;*.jpg;*.jpeg;*.gif;*.ppm)|*.bmp;*.jpg;*.jpeg;*.gif;*.ppm|Bitmaps (*.bmp)|*.bmp|JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|Graphics Interchange Format(*.gif)|*.gif|Portable Picture (*.ppm)|*.ppm' + AllFiles;
 //	All (*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf)|*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf|Device Independent Bitmap (*.dib)|*.dib|JPEG Image File (*.jpg)|*.jpg|JPEG Image File (*.jpeg)|*.jpeg|Bitmaps (*.bmp)|*.bmp|Icons (*.ico)|*.ico|Enhanced Metafiles (*.emf)|*.emf|Metafiles (*.wmf)|*.wmf
 var
 	StartDir, // Dir with Ini and configuratios files (read and write)
@@ -703,8 +703,8 @@ begin
 end;
 
 function FullDir(Dir: string): string;
-var
-	i: Integer;
+{var
+	i: Integer;}
 begin
 	if Dir = '' then
 		Result := ''
@@ -712,15 +712,22 @@ begin
 	begin
 		// %HOMEDRIVE%%HOMEPATH%
 		Replace(Dir, '%SystemRoot%', Copy(WinDir, 1, Length(WinDir) - 1));
-		for i := 1 to Length(Dir) do
+{		for i := 1 to Length(Dir) do
 		begin
 			if Dir[i] = ':' then
 			begin
 				Result := Dir;
 				Exit;
 			end;
-		end;
-		Result := WorkDir + Dir;
+		end;}
+		if (Dir[1] = '\') then
+			Result := WorkDir[1] + WorkDir[2] + Dir
+		else if ((Length(Dir) > 1) and (Dir[2] = ':'))then
+		begin
+			Result := Dir;
+		end
+		else
+			Result := WorkDir + Dir;
 	end;
 end;
 

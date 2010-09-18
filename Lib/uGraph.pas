@@ -61,15 +61,10 @@ function Over3D(const SX1, SY1, SZ1, SX2, SY2, SZ2: Integer;
 function OverE(const SX1, SY1, SX2, SY2: Extended;
 	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
 
-procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
-//procedure InitImage(const Image: TImage; const C: TColor);
-
 implementation
 
 uses
-	Jpeg,
 	uStrings, uError, uGetInt;
-
 
 (*
 procedure WaitRetrace;
@@ -700,11 +695,6 @@ begin
 	if (SY1 > DY2) and (SY2 > DY2) then Exit;
 	if (SY1 < DY1) and (SY2 < DY1) then Exit;
 	Result := True;
-end;
-
-procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
-begin
-	Bitmap.LoadFromFile(FileName);
 end;
 
 procedure InitImage(const Image: TImage; const C: TColor);

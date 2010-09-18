@@ -756,6 +756,9 @@ begin
 	AddMesEx2(MesId, Params, LinesL, Max(StartBufRI - LineStart, 0), BufRI - LineStart, 0);
 end;
 
+var
+	DecimalSep, ThousandSep: string[3];
+
 procedure NodeNumber;
 label LNext;
 var
@@ -782,8 +785,15 @@ begin
 				Where := whNum;
 				while not EOI do
 				begin
-					if BufR[BufRI] = DecimalSeparator then
+					if BufR[BufRI] = DecimalSep then
 						Point := True
+					else if BufR[BufRI] = ThousandSep then
+					begin
+						if BufR[BufRI + 1] = ' ' then
+						begin
+							Break;
+						end;
+					end
 					else
 					case BufR[BufRI] of
 					'%': Per := True;
@@ -2597,15 +2607,14 @@ end;
 
 function ReadSG(DefVal: SG): SG;
 begin
+	DecimalSep := '.';
+	ThousandSep := ',';
 	Result := RoundEx(ReadFA(DefVal));
 end;
 
 function StrToValE(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 label LNext;
-var
-	DecimalSep, ThousandSep: string[3];
-//	VF: PVF;
 begin
 	if UseWinFormat then
 	begin

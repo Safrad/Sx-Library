@@ -516,7 +516,7 @@ begin
 	BitmapName.GenerateRGB(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clNone, TGenFunc(Typ), Co, 0, ef16,
 		(16 * Timer1.Clock div PerformanceFrequency), nil);
 
-	BitmapName.Bar(clNone, clBtnFace, ef12);
+	BitmapName.Bar(clBtnFace, ef12);
 	BitmapName.Canvas.Font.Color := clWindowText;
 	DrawCutedText(BitmapName.Canvas, Rect(0, 0, BitmapName.Width, BitmapName.Height), taCenter, tlCenter,
 		ProgramName, True, 1);
@@ -537,7 +537,7 @@ var
 	Co: array[0..3] of TColor;
 begin
 	BitmapVersion := ImageVersion.Bitmap;
-	BitmapVersion.Bar(clNone, clBtnFace, ef16);
+	BitmapVersion.Bar(clBtnFace, ef16);
 	BitmapVersion.Canvas.Font.Color := clBlack;
 	BitmapVersion.Canvas.TextOut(
 		(BitmapVersion.Width -
@@ -561,7 +561,7 @@ var
 	Flash: ^TFlash;
 begin
 	BitmapAbout := ImageAbout.Bitmap;
-	BitmapAbout.Bar(clNone, clBtnFace, ef02);
+	BitmapAbout.Bar(clBtnFace, ef02);
 	HClock := (32 * Timer1.Clock div PerformanceFrequency) and $7f;
 	if HClock <= 32  then
 	begin

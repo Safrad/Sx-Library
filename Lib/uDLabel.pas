@@ -527,8 +527,9 @@ begin
 		end;
 
 		FBmpText.SetSize(FBmpOut.Width, FBmpOut.Height);
-		FBmpText.Bar(clNone, 0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
+		FBmpText.Bar(0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
 			Color, ef16);
+		FBmpText.TransparentColor := Color;
 
 		FBmpText.Canvas.Brush.Style := bsClear;
 		FBmpText.Canvas.Font := Font;
@@ -593,7 +594,7 @@ begin
 		if FFontAngle = 0 then
 		begin
 			if FFontEffect <> ef16 then
-				FBmpOut.Bmp(0, 0, FBmpText, Color{NegColor(Font.Color)}, FFontEffect);
+				FBmpOut.Bmp(0, 0, FBmpText, FFontEffect);
 		end
 		else
 		begin

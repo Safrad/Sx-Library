@@ -426,10 +426,11 @@ begin
 	if not Assigned(FGlyph) then
 	begin
 		FGlyph := TDBitmap.Create;
-		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + '.bmp';
+		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + '.gif';
 		if FileExists(FileName) then
 		begin
 			FGlyph.LoadFromFile(FileName);
+			FGlyph.Transparent := True;
 			FGlyph.TransparentColor := GetTransparentColor(FGlyph);
 		end;
 	end;
@@ -477,7 +478,7 @@ begin
 	FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 		clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 	{$else}
-	FBmpOut.Bar(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
+	FBmpOut.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
 	{$endif}
 
 	if IsDown then OffsetRect(Recta, 1, 1);
@@ -626,9 +627,9 @@ begin
 			end;
 
 			if Enabled then
-				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef16)
+				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, ef16)
 			else
-				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef04);
+				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, ef04);
 		end;
 
 
@@ -737,7 +738,7 @@ begin
 		end;}
 		if FTimer.Clock < 3 * PerformanceFrequency then
 		begin
-			FBmpOut.Bar(clNone, Border, Border,
+			FBmpOut.Bar(Border, Border,
 				FBmpOut.Width - 1 - Border, FBmpOut.Height - 1 - Border, clHighlight, ef08);
 		end
 		else
@@ -752,7 +753,7 @@ begin
 				y := SizeY - y;
 //			if (x < SizeX div 2) and (y < SizeY div 2) then
 			begin
-				FBmpOut.Bar(clNone, Border + x - 1, Border + y - 1,
+				FBmpOut.Bar(Border + x - 1, Border + y - 1,
 					FBmpOut.Width - x - 0 - Border, FBmpOut.Height - y - 0 - Border, clHighlight, ef08);
 			end;
 

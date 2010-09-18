@@ -303,7 +303,12 @@ begin
 	ButtonOK.Left := ButtonApply.Left - 2 * FormBorder - ButtonOK.Width;
 
 
+
 	ButtonOK.Top := ClientHeight - FormBorder - ButtonOK.Height;
+
+	ButtonSound.Top := ButtonOK.Top;
+	ButtonMusic.Top := ButtonOK.Top;
+
 	ButtonApply.Top := ButtonOK.Top;
 	ButtonCancel.Top := ButtonOK.Top;
 	DViewS.Height := ButtonCancel.Top - FormBorder - DViewS.Top;
