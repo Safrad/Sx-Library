@@ -273,9 +273,9 @@ function BToStr(const B: Int64): TString; overload;
 // Time
 procedure msToHMSD(const T: Int64; var GH, GM, GS, GD: LongWord);
 type
-	TDisplay = (diHMSD, diMSD, diSD);
+	TDisplay = (diDHMSD, diHMSD, diMSD, diSD);
 function msToStr(const DT: Int64;
-	const Display: TDisplay; const Decimals: ShortInt): TString;
+	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString;
 function Date6(Year, Month, Day: Word): string;
 function Date6Now: string;
 
@@ -1635,7 +1635,7 @@ begin
 end;
 
 function msToStr(const DT: Int64;
-	const Display: TDisplay; const Decimals: ShortInt): TString;
+	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString;
 var
 	h, m, s, d: LongWord;
 begin
@@ -1643,12 +1643,17 @@ begin
 
 	if DT < 0 then Result := '-' else Result := '';
 
+	if Display = diDHMSD then
+	begin
+		if DT >= MSecsPerDay then Result := Result + IntToStr(DT div MSecsPerDay) + ' days'
+	end;
+
 	case Display of
-	diHMSD:
+	diHMSD, diDHMSD:
 	begin
 		if h < 10 then
 		begin
-			if DT >= 0 then Result := Result + ' ';
+			if (DT >= 0) and FixedWidth then Result := Result + ' ';
 			Result := Result + Chr(h + 48) + ':';
 		end
 		else if h < 100 then
@@ -1656,12 +1661,17 @@ begin
 		else
 			Result := Result + IntToStr(h) + ':';
 	end;
-	diMSD: 
+	diMSD:
 	begin
 		if h = 0 then
-			Result := Result + '   '
+		begin
+			if FixedWidth then Result := Result + '   '
+		end
 		else if h < 10 then
-			Result := Result + ' ' + Chr(h + 48) + ':'
+		begin
+			if (DT >= 0) and FixedWidth then Result := Result + ' ';
+			Result := Result + Chr(h + 48) + ':'
+		end
 		else if h < 100 then
 			Result := Result + Chr((h div 10) + 48) + Chr((h mod 10) + 48) + ':'
 		else
@@ -1673,7 +1683,10 @@ begin
 		if m < 10 then
 		begin
 			if (h = 0) and (Display <> diHMSD) then
-				Result := Result + ' ' + Chr(m + 48) + ':'
+			begin
+				if FixedWidth then Result := Result + ' ';
+				Result := Result + Chr(m + 48) + ':'
+			end
 			else
 				Result := Result + '0' + Chr(m + 48) + ':';
 		end

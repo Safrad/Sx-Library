@@ -301,8 +301,12 @@ begin
 	else if Width > MaxBitmapWidth then Width := MaxBitmapWidth;
 	if Height < 0 then Height := 0
 	else if Height > MaxBitmapHeight then Height := MaxBitmapHeight;
-	inherited Width := Width;
-	inherited Height := Height;
+	try
+		inherited Width := Width;
+		inherited Height := Height;
+	except
+		on E: Exception do Nop;
+	end;
 	Init;
 end;
 

@@ -68,7 +68,7 @@ var
 
 procedure TfDialog.DrawTimeLeft;
 begin
-	PanelTimeLeft.Caption := msToStr(1000 * TimeLeft, diMSD, 0);
+	PanelTimeLeft.Caption := msToStr(1000 * TimeLeft, diMSD, 0, False);
 end;
 
 procedure TfDialog.BClick(Sender: TObject);
