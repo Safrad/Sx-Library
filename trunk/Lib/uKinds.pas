@@ -1,7 +1,7 @@
 //* File:     Lib\uKinds.pas
 //* Created:  1999-12-01
-//* Modified: 2004-08-29
-//* Version:  X.X.32.X
+//* Modified: 2005-02-05
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -118,6 +118,8 @@ type
 
 		function KindOpenFiles(Files: TStrings): BG; // Drag files to form
 		function CanClose: BG; // CanClose := Kinds.CanClose;
+
+		{$ifopt d+}procedure OpenAll;{$endif}
 	end;
 
 {
@@ -935,5 +937,33 @@ begin
 	TMenuItem(Sender).Checked := True;
 	KindChangeFile(Sender);
 end;
+
+{$ifopt d+}
+procedure TKinds.OpenAll;
+
+	procedure Depth(Dir: string);
+	var
+		i: SG;
+		FileNames: TFileNames;
+	begin
+		ReadDir(FileNames, Dir, '', True, True, False, False);
+		for i := 0 to Length(FileNames) - 1 do
+		begin
+			if FileNames[i][Length(FileNames[i])] = '\' then
+				Depth(Dir + FileNames[i])
+			else
+			begin
+				KindLoadFromFile(Dir + FileNames[i]);
+
+				KindCloseAll;
+			end;
+
+		end;
+	end;
+
+begin
+	Depth('C:\');
+end;
+{$endif}
 
 end.

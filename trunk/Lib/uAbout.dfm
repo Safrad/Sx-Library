@@ -16,14 +16,14 @@ object fAbout: TfAbout
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Bevel6: TBevel
+  object Bevel: TBevel
     Left = 8
     Top = 8
     Width = 289
     Height = 273
     Shape = bsFrame
   end
-  object Bevel5: TBevel
+  object BevelSep: TBevel
     Left = 16
     Top = 224
     Width = 273
@@ -48,7 +48,7 @@ object fAbout: TfAbout
       030558FFBFFFBFFFB00558888888888888055555555555555555555555555555
       5555}
     Transparent = True
-    OnClick = EditEmailClick
+    OnClick = EditEMailClick
   end
   object Image2: TImage
     Left = 56
@@ -78,7 +78,7 @@ object fAbout: TfAbout
     Cursor = crHandPoint
     AutoSize = True
     Transparent = True
-    OnClick = EditEmailClick
+    OnClick = EditEMailClick
   end
   object Image4: TImage
     Left = 56
@@ -101,7 +101,7 @@ object fAbout: TfAbout
     Caption = 'ICQ'
     Color = clBtnFace
     BackEffect = ef04
-    FocusControl = EditEmail
+    FocusControl = EditEMail
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -171,7 +171,7 @@ object fAbout: TfAbout
     Caption = 'E-Mail'
     Color = clBtnFace
     BackEffect = ef04
-    FocusControl = EditEmail
+    FocusControl = EditEMail
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -191,7 +191,7 @@ object fAbout: TfAbout
     TransparentColor = False
     TransparentColorValue = clBlack
     WordWrap = False
-    OnClick = EditEmailClick
+    OnClick = EditEMailClick
   end
   object LabelRunCount: TDLabel
     Left = 16
@@ -471,10 +471,9 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 8
-    Text = 'http://safrad.webzdarma.cz'
     OnClick = EditWebClick
   end
-  object EditEmail: TEdit
+  object EditEMail: TEdit
     Left = 80
     Top = 176
     Width = 209
@@ -484,7 +483,7 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 7
-    OnClick = EditEmailClick
+    OnClick = EditEMailClick
   end
   object EditIcq: TEdit
     Left = 224

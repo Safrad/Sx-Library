@@ -1,7 +1,7 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-03-08
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -118,10 +118,7 @@ function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccess
 }
 const
 	AllFiles = '|All Files (*.*)|*.*';
-	AllPictures = //'Bitmap (*.bmp)|*.bmp|Jpeg (*.jpg)|*.jpg' + AllFiles;
-		'Any Pictures (*.bmp;*.jpg;*.jpeg;*.gif;*.ppm)|*.bmp;*.jpg;*.jpeg;*.gif;*.ppm|Bitmaps (*.bmp)|*.bmp|JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|Graphics Interchange Format(*.gif)|*.gif|Portable Picture (*.ppm)|*.ppm' + AllFiles;
 	AllText = 'Text file (*.txt)|*.txt' + AllFiles;
-//	All (*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf)|*.dib;*.jpg;*.jpeg;*.bmp;*.ico;*.emf;*.wmf|Device Independent Bitmap (*.dib)|*.dib|JPEG Image File (*.jpg)|*.jpg|JPEG Image File (*.jpeg)|*.jpeg|Bitmaps (*.bmp)|*.bmp|Icons (*.ico)|*.ico|Enhanced Metafiles (*.emf)|*.emf|Metafiles (*.wmf)|*.wmf
 var
 	StartDir, // Dir with Ini and configuratios files (read and write)
 	WorkDir, // Dir with exe file, data files (read only)
@@ -819,6 +816,7 @@ var
 			while ErrorCode = NO_ERROR do
 			begin
 				IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
+				if IsDir and (Files and Dirs) then SearchRec.Name := SearchRec.Name + '\';
 				IsFile := (SearchRec.Attr and faDirectory) = 0;
 
 				if (IsDir and Dirs)
@@ -840,7 +838,7 @@ var
 
 				if IsDir and SubDirs then
 				begin
-					ReadDir2(SubPath + SearchRec.Name + '\');
+					ReadDir2(SubPath + SearchRec.Name);
 				end;
 				ErrorCode := FindNext(SearchRec);
 			end;
@@ -981,12 +979,17 @@ end;
 
 function CopyFile(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 label LRetry;
+var Error: U4;
 begin
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
 	LRetry:
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
 	if Result = False then
-		if IOErrorRetry(Source, GetLastError) then goto LRetry;
+	begin
+		Error := GetLastError;
+		if IOErrorRetry(Source, Error) then goto LRetry;
+		if IOErrorRetry(Dest, Error) then goto LRetry;
+	end;
 end;
 
 function CopyDamagedFile(Source, Dest: TFileName): Boolean;
@@ -1007,20 +1010,11 @@ begin
 		LRetryD:
 		if FD.Open(Dest, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 		begin
-//			i := 0; //474275840 - 512; //  62 * FS.FileSize div 100; // 474275901 - 512
-{			FS.Seek(i);
-			FD.Seek(i);}
 			while not FS.Eof do
 			begin
 				FillChar(Buf^, Count, 0);
 				if not FS.BlockRead(Buf^, Count) then
 					Result := False;
-//					Nop;
-{				C := FS.FilePos - i;
-				if C <> Count then
-					Nop;}
-
-	//			FD.FillWrite(Count);
 				FD.BlockWrite(Buf^, Count);
 
 			end;
@@ -1029,8 +1023,6 @@ begin
 		end;
 		if not FS.Close then goto LRetryS;
 	end;
-
-
 	FS.Free;
 	FD.Free;
 	FreeMem(Buf, Count);

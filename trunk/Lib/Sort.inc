@@ -1,6 +1,7 @@
 {$R-}
 {$Q-}
 (*-------------------------------------------------------------------------*)
+{$ifopt d+}
 	procedure SelectSort;
 	var
 		i, j, k: SG;
@@ -60,6 +61,7 @@
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
+{$endif}
 	{$ifndef F}
 	procedure InsertionSort;
 	var
@@ -177,6 +179,7 @@
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
+{$ifopt d+}
 	procedure BubbleSort;
 	var
 		HValue: TValue;
@@ -582,6 +585,7 @@
 			PercolateDown(I - 1);
 		end;
 	end;
+	{$endif}
 (*-------------------------------------------------------------------------*)
 	procedure QuickSort(iLo, iHi: TIndex);
 	var
@@ -590,8 +594,8 @@
 		Lo, Hi: TIndex;
 		Mid: TValue;
 	begin
-		Inc(Depth);
 		{$ifopt d+}
+		Inc(Depth);
 		if Depth > MaxDepth then
 		begin
 			MaxDepth := Depth;
@@ -633,13 +637,16 @@
 		until Lo > Hi;
 		if Hi > iLo then QuickSort(iLo, Hi);
 		if Lo < iHi then QuickSort(Lo, iHi);
+		{$ifopt d+}
 		Dec(Depth);
+		{$endif}
 	end;
+	{$ifopt d+}
 (*-------------------------------------------------------------------------*)
 (*	procedure MergeSort;
 	var
 		MeI: array of TIndex;
-		MeV: array of TValue; // D?? L1030
+		MeV: array of TValue; // D??? Delphi internal error L1030
 
 		procedure Merge(I1F, I1T, I2F, I2T: SG);
 		var i, j, M: SG;
@@ -859,13 +866,14 @@
 		SetLength(Counts, 0);
 	end;}
 (*-------------------------------------------------------------------------*)
+{$endif}
 var
 	i: TIndex;
 	j: SG;
-	Len: SG;
+//	Len: SG;
 begin
-	Len := Min(Length(AIndex), Length(AValue));
-	MaxIndex := Len - 1;
+//	Len := Min(Length(AIndex), Length(AValue));
+	MaxIndex := Count - 1;
 	{$ifopt d+}
 	Swaped := 0; Compared := 0; MaxDepth := 0;
 	{$endif}
@@ -883,6 +891,7 @@ begin
 			else
 				QuickSort(MinIndex, MaxIndex);
 		end;
+		{$ifopt d+}
 		stSelect: SelectSort;
 		stInsertion: InsertionSort;
 		stBubble: BubbleSort;
@@ -893,6 +902,7 @@ begin
 //		stMerge: MergeSort;
 		stRadix: RadixSort;
 //		stCounting: CountingSort;
+		{$endif}
 		end;
 	end;
 	if Reverse then

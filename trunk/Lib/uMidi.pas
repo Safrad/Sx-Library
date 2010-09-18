@@ -1,7 +1,7 @@
 //* File:     Lib\uMidi.pas
 //* Created:  2000-01-01
-//* Modified: 2004-09-02
-//* Version:  X.X.32.X
+//* Modified: 2004-09-26
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz

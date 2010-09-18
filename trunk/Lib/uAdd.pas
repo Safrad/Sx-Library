@@ -1,7 +1,7 @@
 //* File:     Lib\uAdd.pas
 //* Created:  1998-01-01
-//* Modified: 2004-09-26
-//* Version:  X.X.32.X
+//* Modified: 2005-03-07
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -183,6 +183,11 @@ type
 	PArrayU4 = ^TArrayU4;
 	TArrayS8 = array[0..256 * 1024 * 1024 - 2] of S8;
 	PArrayS8 = ^TArrayS8;
+	TArraySG = array[0..256 * 1024 * 1024 - 2] of SG;
+	PArraySG = ^TArraySG;
+
+	TArrayFA = array[0..128 * 1024 * 1024 - 2] of FA;
+	PArrayFA = ^TArrayFA;
 
 	TArrayChar = array[0..1024 * 1024 * 1024 - 1] of AnsiChar;
 	PArrayChar = ^TArrayChar;
@@ -253,7 +258,9 @@ function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
 function FastSqrt(A: SG): SG;
 function LinearMax(Clock, Maximum: LongWord): LongWord;
 
-function RoundEx(Value: FA): SG;
+function RoundSG(Value: FA): SG;
+function RoundS8(Value: FA): S8;
+function RangeS8(Value: FA): BG;
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function RoundDivU8(const Dividend: U8; const Divisor: U8): S8; //overload;
 function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
@@ -303,6 +310,7 @@ var
 	DecimalSeparator: string[3]; // Decimal symbol
 	DigitsAfterDecimal: SG; // No. of digits after decimal
 	ThousandSeparator: string[3]; // Digit grouping symbol
+	UseThousandSeparator: BG = True; // Custom
 	ThousandGroup: SG; // Digit grouping
 	FractionGroup: SG;
 	NegSymbol: string[4]; // Negatove sing symbol
@@ -344,13 +352,27 @@ IntToStr	StrToInt ; 2102454545;  Windows Registry, IE
 		23.9.2003
 }
 // Data To Str
+var
+	NumericBase: U1 = 10;
+const
+	MaxNumericBase = 36;
+	CharTab: array[0..MaxNumericBase - 1] of Char = (
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+		'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+		'U', 'V', 'W', 'X', 'Y', 'Z'{, 'a', 'b', 'c', 'd',
+		'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+		'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
+		'y', 'z', '-', '*'});
 
 function NToS(const Num: Int64): string; overload;
 function NToS(const Num: Int64; const Decimals: SG): string; overload;
 function NToS(const Num: Int64; const UseFormat: string): string; overload;
 function NToS(const Num: Int64; const UseWinFormat: BG): string; overload;
 function NToS(const Num: Int64; const UseWinFormat: BG; const Decimals: SG): string; overload;
-function NToHS(Num: Int64): string;
+//function NToHS(Num: S8): string;
+
+//function NumToStr(Num: S8; const Base: SG): string;
 
 function FToS(Num: Extended): string; overload;
 function FToS(Num: Extended; const UseWinFormat: BG): string; overload;
@@ -396,7 +418,9 @@ function StrToValE(S: string;
 *)
 
 // System
+{$ifopt d+}
 procedure Nop;
+{$endif}
 procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
 function SelectDirectory(var Dir: string): BG;
@@ -641,7 +665,7 @@ begin
 	if Result > Maximum then Result := 2 * Maximum - Result;
 end;
 
-function RoundEx(Value: FA): SG;
+function RoundSG(Value: FA): SG;
 begin
 	if Value > MaxInt then
 		Result := MaxInt
@@ -649,6 +673,26 @@ begin
 		Result := MinInt
 	else
 		Result := Round(Value);
+end;
+
+function RoundS8(Value: FA): S8;
+begin
+	if Value > High(Result) then
+		Result := High(Result)
+	else if Value < Low(Result) then
+		Result := Low(Result)
+	else
+		Result := Round(Value);
+end;
+
+function RangeS8(Value: FA): BG;
+begin
+	if Value > High(S8) then
+		Result := False
+	else if Value < Low(S8) then
+		Result := False
+	else
+		Result := True;
 end;
 
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG;
@@ -1116,6 +1160,54 @@ begin
 	end;
 end;
 
+procedure AddMinusStr(var Result: string; const UseWinFormat: BG);
+begin
+	if UseWinFormat then
+	begin
+		case NegFormat of
+		0: Result := '(' + Result + ')';
+		1: Result := NegSymbol + Result;
+		2: Result := NegSymbol + ' ' + Result;
+		3: Result := Result + NegSymbol;
+		4: Result := Result + ' ' + NegSymbol;
+		else Result := NegSymbol + Result;
+		end;
+	end
+	else
+		Result := '-' + Result;
+end;
+
+function NumToStr(Num: S8; const Base: SG): string;
+var
+	M: SG;
+//	Minus: BG;
+begin
+	Result := '';
+	if Num < 0 then
+	begin
+		Num := -Num;
+//		Minus := True;
+	end;
+{	else
+		Minus := False;}
+	if (Base < 2) or (Base > MaxNumericBase) then
+	begin
+		{$ifopt d+}
+		IE(5465);
+		{$endif}
+		Exit;
+	end;
+	while True do
+	begin
+//		DivModS64(Num, Base, D, M);
+		M := Num mod Base;
+		Num := Num div Base;
+		Result := CharTab[M] + Result;
+		if Num = 0 then Break;
+	end;
+//	if Minus then AddMinusStr(Result);
+end;
+
 function NToS(const Num: Int64; const UseFormat: string): string;
 var
 	Nums: string;
@@ -1124,7 +1216,16 @@ var
 	NumFound: BG;
 begin
 	Result := '';
-	Nums := IntToStr(Abs(Num));
+	if (Num = Low(Num)) or (Num = High(Num)) then
+	begin
+		Result := 'Out of 64-bit range';
+		Exit;
+	end;
+
+	if NumericBase = 10 then
+		Nums := IntToStr(Abs(Num))
+	else
+		Nums := NumToStr(Abs(Num), NumericBase);
 	j := Length(Nums);
 	PointPos := Pos('.', UseFormat);
 	if PointPos = 0 then PointPos := High(PointPos);
@@ -1233,6 +1334,11 @@ var
 	c: Char;
 begin
 	Result := '';
+	if (Num = Low(Num)) or (Num = High(Num)) then
+	begin
+		Result := 'Out of 64-bit range';
+		Exit;
+	end;
 
 	if UseWinFormat then
 	begin
@@ -1248,11 +1354,14 @@ begin
 		ThousandGr := 3;
 		FractionGr := 3;
 	end;
+	if UseThousandSeparator = False then ThousandSep := '';
 
 	if Num = 0 then
 		Nums := ''
+	else if NumericBase = 10 then
+		Nums := IntToStr(Abs(Num))
 	else
-		Nums := IntToStr(Abs(Num));
+		Nums := NumToStr(Abs(Num), NumericBase);
 
 	M := -Abs(Decimals);
 	i := Length(Nums);
@@ -1305,10 +1414,7 @@ begin
 			if (FractionGr > 0) and (FirstNotZero) then
 				if Abs(M) mod FractionGr = 0 then
 				begin
-					if UseWinFormat then
-						Result := ThousandSep + Result
-					else
-						Result := ',' + Result;
+					Result := ThousandSep + Result
 				end;
 		end
 		else if (M > 0) then
@@ -1316,60 +1422,46 @@ begin
 			if ThousandGr > 0 then
 				if Abs(M) mod ThousandGr = 0 then
 				begin
-					if UseWinFormat then
-						Result := ThousandSep + Result
-					else
-						Result := ',' + Result;
+					Result := ThousandSep + Result
 				end;
 		end;
 	end;
 
 	if Num < 0 then
 	begin
-		if UseWinFormat then
-		begin
-			case NegFormat of
-			0: Result := '(' + Result + ')';
-			1: Result := NegSymbol + Result;
-			2: Result := NegSymbol + ' ' + Result;
-			3: Result := Result + NegSymbol;
-			4: Result := Result + ' ' + NegSymbol;
-			else Result := NegSymbol + Result;
-			end;
-		end
-		else
-			Result := '-' + Result;
+		AddMinusStr(Result, UseWinFormat);
 	end;
 end;
 
-function NToHS(Num: Int64): string;
+{
+function NToHS(Num: S8): string;
 begin
+	Result := '';
 	repeat
 		case Num and $f of
-		0..9: Result := Result + Chr(Ord('0') + (Num and $f));
-		else Result := Result + Chr(Ord('A') + (Num and $f) - $a);
+		0..9: Result := Chr(Ord('0') + (Num and $f)) + Result;
+		else Result := Chr(Ord('A') + (Num and $f) - $a) + Result;
 		end;
 		Num := Num shr 4;
 	until Num = 0;
-end;
-
-function FToS(Num: Extended): string;
-begin
-	Result := FToS(Num, True);
-end;
+end;}
 
 function FToS(Num: Extended; const UseWinFormat: BG): string;
 var
 	D: SG;
-	Nu: Extended;
+	Nu, eps: Extended;
 begin
 	D := 0;
 	Nu := Num;
+	eps := 5.6e-18; // D???
 	while True do
 	begin
-		if Abs(Frac(Nu)) <= Math.MinExtended then Break;
-		if Abs(Nu) < MaxInt8 div 10 then
-			Nu := Nu * 10
+		if Abs(Frac(Nu)) <= eps{MinExtended} then Break;
+		if Abs(Nu) < MaxInt8 div NumericBase then
+		begin
+			Nu := Nu * NumericBase;
+			eps := eps * NumericBase;
+		end
 		else
 		begin
 {			Result := FloatToStr(Num);
@@ -1380,6 +1472,11 @@ begin
 	end;
 
 	Result := NToS(Round(Nu), UseWinFormat, D);
+end;
+
+function FToS(Num: Extended): string;
+begin
+	Result := FToS(Num, True);
 end;
 
 {
@@ -2214,10 +2311,12 @@ begin
 	Result := Result + NToS(Phone mod 1000000000, '000000000');
 end;
 
+{$ifopt d+}
 procedure Nop;
 asm
 	nop
 end;
+{$endif}
 
 procedure GetMem0(var P: Pointer; Size: Cardinal);
 begin
@@ -2337,7 +2436,10 @@ end;
 
 function ButtonNameToFileName(Name: string; const Space: Boolean): string;
 label LDel;
-var Index, Count: SG;
+var
+	Index, i: SG;
+const
+	Names: array[0..4] of string = ('DBUTTON', 'BUTTON', 'COMBOBOX', 'EDIT', 'MEMO');
 begin
 	Result := Name;
 	while Length(Result) > 0 do
@@ -2357,13 +2459,15 @@ begin
 		end;
 	end;
 
-	Index := Pos('DBUTTON', UpperCase(Result));
-	Count := 7;
-	if Index <> 0 then Delete(Result, Index, Count);
-
-	Index := Pos('BUTTON', UpperCase(Result));
-	Count := 6;
-	if Index <> 0 then Delete(Result, Index, Count);
+	for i := 0 to Length(Names) - 1 do
+	begin
+		Index := Pos(Names[i], UpperCase(Result));
+		if Index <> 0 then
+		begin
+			Delete(Result, Index, Length(Names[i]));
+			Break;
+		end;
+	end;
 
 	if Space then
 		for Index := 2 to Length(Result) do

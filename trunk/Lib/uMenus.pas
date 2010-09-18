@@ -1,7 +1,7 @@
 //* File:     Lib\uMenus.pas
 //* Created:  2000-08-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-03-07
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -48,6 +48,7 @@ procedure ComName(MenuItem: TMenuItem);
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
 
 procedure MenuCreate(Src: TMenuItem; Dsc: TMenuItem);
+procedure MenuFree(Src: TMenuItem);
 procedure MenuUpdate(Src: TMenuItem; Dsc: TMenuItem);
 
 procedure MenuClick(Menu: TMenuItem);
@@ -155,8 +156,6 @@ begin
 	for i := 0 to Src.Count - 1 do
 	begin
 		M := TMenuItem.Create(Dsc);
-{		if Src[i].Name = '' then
-			Nop;}
 		M.Name := Src[i].Name + '1';
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
@@ -171,6 +170,20 @@ begin
 		begin
 			MenuCreate(Src[i], M);
 		end;
+	end;
+end;
+
+procedure MenuFree(Src: TMenuItem);
+var
+	i: SG;
+begin
+	for i := Src.Count - 1 downto 0 do
+	begin
+		if Src[i].Count > 0 then
+		begin
+			MenuFree(Src[i]);
+		end;
+		Src[i].Free;
 	end;
 end;
 
@@ -466,6 +479,7 @@ begin
 				Inc(y);
 			end;
 			MenuBmp.Bmp(x, y, BmpD, ef16);
+			BmpWid := BmpD.Width;
 			BmpD.Free;
 			MenuB := True;
 		end

@@ -1,7 +1,7 @@
 //* File:     Lib\uFind.pas
 //* Created:  1999-05-01
-//* Modified: 2004-08-29
-//* Version:  X.X.32.X
+//* Modified: 2005-02-14
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -60,7 +60,7 @@ begin
 			M := (L + R) div 2
 		else
 		begin
-			M := L + TIndex(Value - AValue[L]) * (R - L) div TIndex(AValue[R] - AValue[L]);
+			M := L + TIndex(Value - AValue[L]) * U8(R - L) div TIndex(AValue[R] - AValue[L]);
 			if M < L then M := L
 			else if M > R then M := R;
 		end;

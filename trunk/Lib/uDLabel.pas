@@ -1,7 +1,7 @@
 //* File:     Lib\uDLabel.pas
 //* Created:  1999-08-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2004-12-30
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
