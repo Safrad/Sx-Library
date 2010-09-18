@@ -2,7 +2,9 @@ unit uInput;
 
 interface
 
-uses uAdd, uData;
+uses
+	SysUtils,
+	uAdd, uData;
 
 // Lexical Analyser
 const
@@ -213,13 +215,15 @@ var
 	BufRC: SG;
 	TabInc: SG;
 	LineStart: SG;
+	LinesL, LinesG: SG;
+	LineBegin: BG;
 
 type
 	TGonFormat = (gfRad, gfGrad, gfDeg);
 var
 	GonFormat: TGonFormat;
-	IdentNames: array of string;
-	IdentValues: array of Extended;
+{	IdentNames: array of string;
+	IdentValues: array of Extended;}
 
 procedure ReadInput;
 
@@ -243,19 +247,73 @@ const
 		'HYPSIN', 'HYPCOS',
 		'AVG', 'MIN', 'MAX',
 		'SHL', 'SHR');
+
+// Compiler
+type
+	PType = ^TType;
+	TType = packed record
+		Name: string;
+		Typ: string;
+		BasicType: SG; // 0: New 1: Number, 2: Ponter 3: string
+		Size: SG;
+		Min: S8;
+		Max: S8;
+	end;
+
+	PVF = ^TVF;
+	TVF = packed record
+		// Func, Var
+		Name: string;
+		Typ: string; // D??? PType
+		UsedCount: U4;
+		Line: U4;
+		// Var
+		Value: FA; // D???
+		// Func
+		VFs: TData; // array of TVarFunc, nil for Variable
+		ParamCount: SG;
+	end;
+
+	PUnit = ^TUnit;
+	TUnit = packed record
+		Name: string;
+		FileNam: TFileName;
+		Code: string;
+		Error: SG;
+
+		Units: TData; // PUnit;
+		Types: TData;// TType;
+		VFs: TData;// TVar;
+		GlobalVF: SG;
+		Reserve: array[0..11] of U1;
+	end;
+var
+	UnitSystem: PUnit;
+
+// Execution
 type
 	PNode = ^TNode;
 	TNode = packed record // 11, 7,11,15 .. 3 + 4 * 65535
 		Operation: TOperator; // 1
 		case Integer of
 		0: (Num: FA); // 10
-		1: (Ident: U2); // 3
+		1: (Ident: PVF); // 5
 		2: (
 			ArgCount: U2;
 			Args: array[0..65534] of PNode);
 	end;
 var
 	Root: PNode;
+
+var
+	CharsTable: array[Char] of (ctSpace, ctLetter, ctIllegal, ctNumber, ctNumber2,
+		ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose,
+		ctPoint, ctComma, ctComma2);
+
+function IsVarFunc(VarName: string; FuncLevel: SG; Uni: PUnit): PVF;
+function CalcTree: Extended;
+procedure FreeUnitSystem;
+procedure CreateUnitSystem;
 
 type
 	TMesId = (
@@ -373,8 +431,8 @@ var
 	MesParam: array[TMesId] of U1;
 
 type
-	PMes = ^TMes;
-	TMes = packed record // 32
+	PCompileMes = ^TCompileMes;
+	TCompileMes = packed record // 32
 		Params: string; // 4
 		Line: U4; // 4
 		X0, X1: U4; // 8
@@ -386,7 +444,12 @@ type
 //		Reserve0: array [0..1] of U1;
 	end;
 var
-	Mes: TData;
+	CompileMes: TData;
+
+function EOI: BG;
+procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
+procedure AddMes2(MesId: TMesId; Params: array of string);
+function CompareS(OldS, NewS: string): Boolean;
 
 // Str To Data
 
@@ -411,18 +474,13 @@ function StrToValS8(Line: string; const UseWinFormat: BG;
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1): U1;
 
-function MesToString(M: PMes): string;
+function MesToString(M: PCompileMes): string;
 
 implementation
 
 uses
-	Dialogs, SysUtils, Math,
+	Dialogs, Math,
 	uStrings, uError, uFind;
-
-var
-	CharsTable: array[Char] of (ctSpace, ctLetter, ctIllegal, ctNumber, ctNumber2,
-		ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose,
-		ctPoint, ctComma, ctComma2);
 
 procedure FillCharsTable;
 var
@@ -526,7 +584,6 @@ begin
 	end;
 end;
 
-
 function EOI: BG;
 begin
 	Result := BufRI >= BufRC; // D??? >, >=
@@ -534,9 +591,9 @@ end;
 
 procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
 var
-	M: PMes;
+	M: PCompileMes;
 begin
-	M := Mes.Add;
+	M := CompileMes.Add;
 	M.Line := Line;
 	M.X0 := X0;
 	M.X1 := X1;
@@ -561,13 +618,9 @@ begin
 		MessageD('IE too less parameters', mtWarning, [mbOk]);
 end;
 
-var
-	LinesL, LinesG: SG;
-	LineBegin: BG;
-
 procedure AddMes2(MesId: TMesId; Params: array of string);
 begin
-	AddMesEx2(MesId, Params, LinesL, StartBufRI - LineStart, BufRI - LineStart, 0);
+	AddMesEx2(MesId, Params, LinesL, Max(StartBufRI - LineStart, 0), BufRI - LineStart, 0);
 end;
 
 procedure NodeNumber;
@@ -596,6 +649,9 @@ begin
 				Where := whNum;
 				while not EOI do
 				begin
+					if BufR[BufRI] = DecimalSeparator then
+						Point := True
+					else
 					case BufR[BufRI] of
 					'%': Per := True;
 					'#': Base := 2;
@@ -604,7 +660,6 @@ begin
 					'$', 'x', 'X', 'h', 'H': Base := 16;
 					'*', '/', ':', '^', ')', '(': Break;
 					'-', '+': if (Base <> 10) or (UpCase(BufR[BufRI - 1]) <> 'E') then Break else UnarExp := True;
-					'.': Point := True;
 					',':
 					begin
 						if BufR[BufRI + 1] = ' ' then Break;
@@ -1066,648 +1121,937 @@ begin
 	// Warning EOI
 end;
 
-
-	function FindIdent(Id: string): SG;
-	var FromV, ToV: SG;
+function CompareS(OldS, NewS: string): Boolean;
+begin
+	Result := UpperCase(OldS) = UpperCase(NewS);
+	if {FoundCase and} Result then // D??? move to ReadIdent
 	begin
-		Result := -1;
-		FromV := 0;
-		ToV := Length(IdentNames) - 1;
-		if FindS(IdentNames, Id, FromV, ToV) then
+		if OldS <> NewS then
 		begin
-			Result := FromV;
+//			AddMes(mtCaseMishmash, [NewS, OldS]); D???
+//			Move(OldS[1], BufW[BufIW - Length(OldS)], Length(OldS));
 		end;
 	end;
+end;
+
+function IsVarFunc(VarName: string; FuncLevel: SG; Uni: PUnit): PVF;
+var
+	i, j: SG;
+	V: PVF;
+	U: PUnit;
+	F: PVF;
+	Fr: SG;
+begin
+{	if VarName = 'Char' then
+		Nop;}
+
+	Result := nil;
+	// Local VarFunc
+	if FuncLevel > 0 then
+	begin
+		F := Uni.VFs.GetLast;
+		while F <> nil do
+		begin
+			if F.VFs = nil then
+			begin // Is Var
+//					AddMes(mtInternal, ['IE VarFunc']);
+				Break;
+			end;
+			for i := SG(F.VFs.Count) - 1 downto 0 do
+			begin
+				V := F.VFs.Get(i);
+				if CompareS(V.Name, VarName) then
+				begin
+					Result := V;
+					Break;
+				end;
+			end;
+			F := F.VFs.GetLast;
+		end;
+	end;
+	if Result <> nil then Exit;
+	// Global VarFunc
+	for j := SG(Uni.Units.Count) downto 0 do
+	begin
+		if j = SG(Uni.Units.Count) then
+		begin // This unit
+			U := Uni;
+			Fr := SG(U.VFs.Count) - 1;
+		end
+{			else if j = -1 then // System
+		begin
+			U := UnitSystem;
+			Fr := U.Types.Count - 1;
+		end}
+		else
+		begin // Other units
+			U := Uni.Units.Get(j);
+			Fr := U.GlobalVF - 1;
+		end;
+
+		for i := 0 to Fr do
+		begin
+			V := U.VFs.Get(i);
+			if CompareS(V.Name, VarName) then
+			begin
+//					if Result = nil then
+				begin
+					Result := V;
+					Exit;
+				end;
+{					else
+					AddMes(mtInternal, ['Var']);}
+			end;
+		end;
+	end;
+end;
+{
+function FindIdent(Id: string): SG;
+var FromV, ToV: SG;
+begin
+	Result := -1;
+	FromV := 0;
+	ToV := Length(IdentNames) - 1;
+	if FindS(IdentNames, Id, FromV, ToV) then
+	begin
+		Result := FromV;
+	end;
+end;}
 
 {
-	Grammar: E A F G P
+Grammar: E A F G P
 
-	E2 -> A E2
-	E2 -> + A E2
-	E2 -> - A E2
-	E2 ->
+E2 -> A E2
+E2 -> + A E2
+E2 -> - A E2
+E2 ->
 
-	A -> F A2
-	A2 -> * F A2
-	A2 -> / F A2
-	A2 -> div F A2
-	A2 -> mod F A2
-	A2 ->
+A -> F A2
+A2 -> * F A2
+A2 -> / F A2
+A2 -> div F A2
+A2 -> mod F A2
+A2 ->
 
 //	F -> - G
-	F -> G
+F -> G
 
-	G -> P G2
-	G2 -> ^ P G2
-	G2 ->
+G -> P G2
+G2 -> ^ P G2
+G2 ->
 
-	P -> Number, Const, Var
-	P -> Sin(E)
-	P -> Avg(E, E, ...)
-	P -> Sin(E)
-	...
-	P -> (E)
+P -> Number, Const, Var
+P -> Sin(E)
+P -> Avg(E, E, ...)
+P -> Sin(E)
+...
+P -> (E)
 
 }
 
-	function NodeE(Node: PNode; Num: BG): PNode; forward;
+function NodeE(Node: PNode; Num: BG): PNode; forward;
 //	function NodeE: PNode; forward;
 
-	function NodeP: PNode;
-	var Operation: TOperator;
+function NodeP: PNode;
+var Operation: TOperator;
 
-		function NodeArg: PNode;
-		begin
-			GetMem(Result, 1 + 2);
-			Result.Operation := Operation;
-			Result.ArgCount := 0;
-			ReadInput;
-			case InputType of
-			itLBracket:
-			begin
-				ReadInput;
-				while True do
-				begin
-					case InputType of
-					itEOI:
-					begin
-						AddMes2(mtExpected, [')', Id]);
-						Exit;
-					end;
-					itRBracket:
-					begin
-						ReadInput;
-						Exit;
-					end;
-					itComma, itComma2:
-					begin
-						ReadInput;
-					end;
-					//itInteger, itReal:
-					else
-					begin
-						ReallocMem(Result, 1 + 2 + 4 * (Result.ArgCount + 1));
-						Result.Operation := Operation;
-						Result.Args[Result.ArgCount] := NodeE(nil, True);
-						Inc(Result.ArgCount);
-					end;
-{					else
-						AddMes2(mtExpected, ['Expression , or )', Id]);}
-					end;
-				end;
-			end;
-			else
-				AddMes2(mtExpected, ['(', Id]);
-			end;
-		end;
-
-	var
-		i: SG;
-		Id2: string;
+	function NodeArg: PNode;
 	begin
+		GetMem(Result, 1 + 2);
+		Result.Operation := Operation;
+		Result.ArgCount := 0;
+		ReadInput;
 		case InputType of
-		itInteger, itReal:
-		begin
-			GetMem(Result, 1 + 10);
-			Result.Operation := opNumber;
-			Result.Num := IdNumber;
-			ReadInput;
-		end;
 		itLBracket:
 		begin
 			ReadInput;
-			Result := NodeE(nil, True);
-			if InputType <> itRBracket then
+			while True do
 			begin
-				AddMes2(mtExpected, [')', Id]);
-			end
-			else
-				ReadInput;
-		end;
-		itIdent:
-		begin
-			Id2 := UpperCase(Id);
-			Result := nil;
-			for i := 0 to Length(FcNames) - 1 do
-				if Id2 = FcNames[TOperator(i)] then
+				case InputType of
+				itEOI:
 				begin
-					Operation := TOperator(i);
-					Result := NodeArg;
+					AddMes2(mtExpected, [')', Id]);
+					Exit;
 				end;
-
-			if Result = nil then
-			begin
-				i := FindIdent(UpperCase(Id));
-				if i >= 0 then
+				itRBracket:
 				begin
-					GetMem(Result, 1 + 2);
-					Result.Operation := opIdent;
-					Result.Ident := i;
-				end
+					ReadInput;
+					Exit;
+				end;
+				itComma, itComma2:
+				begin
+					ReadInput;
+				end;
+				//itInteger, itReal:
 				else
 				begin
-					GetMem(Result, 1 + 10);
-					Result.Operation := opNumber;
-					Result.Num := 0;
-					AddMes2(mtUndeclaredIdentifier, [Id]);
+					ReallocMem(Result, 1 + 2 + 4 * (Result.ArgCount + 1));
+					Result.Operation := Operation;
+					Result.Args[Result.ArgCount] := NodeE(nil, True);
+					Inc(Result.ArgCount);
 				end;
-				ReadInput;
+{					else
+					AddMes2(mtExpected, ['Expression , or )', Id]);}
+				end;
 			end;
-		end
-		else
-		begin
-			GetMem(Result, 1 + 10);
-			Result.Operation := opNumber;
-			Result.Num := 0;
-			AddMes2(mtIdentifierExpected, [Id]);
-			ReadInput;
-		end;
-		end;
-	end;
-
-	function NodeG2(Node: PNode): PNode;
-	begin
-		case InputType of
-		itPower:
-		begin
-			GetMem(Result, 1 + 2 + 2 * 4);
-			Result.Operation := opPower;
-			Result.ArgCount := 2;
-			Result.Args[0] := Node;
-			ReadInput;
-			Result.Args[1] := NodeG2(NodeP);
-		end
-		else Result := Node;
-		end;
-	end;
-
-	function NodeG: PNode;
-	begin
-		Result := NodeG2(NodeP);
-	end;
-
-	function NodeF: PNode;
-	begin
-//		case InputType of
-{		itMinus:
-		begin
-			GetMem(Result, 1 + 2 + 4);
-			Result.Operation := opUnarMinus;
-			Result.ArgCount := 1;
-			ReadInput;
-			Result.Args[0] := NodeG;
-		end
-		else} Result := NodeG;
-//		end;
-	end;
-
-	function NodeA2(Node: PNode): PNode;
-	begin
-		Result := Node;
-		case InputType of
-{		itEOI:
-		begin
-			Result := Node;
-			Exit;
-		end;}
-		itMul, itDiv:
-		begin
-			GetMem(Result, 1 + 2 + 2 * 4);
-			case InputType of
-			itMul: Result.Operation := opMul;
-			itDiv: Result.Operation := opDiv;
-			end;
-			Result.ArgCount := 2;
-			Result.Args[0] := Node;
-			ReadInput;
-//			Result.Args[1] := NodeA2(NodeF); R. A.
-			Result.Args[1] := NodeF;
-			Result := NodeA2(Result);
 		end;
 		else
-		begin
-			if InputType = itKeyword then
-			begin
-				case Keyword of
-				kwDiv, kwMod:
-				begin
-					GetMem(Result, 1 + 2 + 2 * 4);
-					case Keyword of
-					kwDiv: Result.Operation := opDiv;
-					kwMod: Result.Operation := opMod;
-					end;
-					Result.ArgCount := 2;
-					Result.Args[0] := Node;
-					ReadInput;
-		//			Result.Args[1] := NodeA2(NodeF); R. A.
-					Result.Args[1] := NodeF;
-					Result := NodeA2(Result);
-				end;
-				end;
-			end;
-		end;
+			AddMes2(mtExpected, ['(', Id]);
 		end;
 	end;
 
-	function NodeA: PNode;
+var
+	i: SG;
+	VF: PVF;
+	Id2: string;
+begin
+	case InputType of
+	itInteger, itReal:
 	begin
-		Result := NodeA2(NodeF);
+		GetMem(Result, 1 + 10);
+		Result.Operation := opNumber;
+		Result.Num := IdNumber;
+		ReadInput;
 	end;
-
-	function NodeE(Node: PNode; Num: BG): PNode;
-	begin
-		case InputType of
-		itEOI:
-		begin
-			Result := Node;
-			Exit;
-		end;
-		itRBracket:
-		begin
-//			ReadInput; D???
-			Result := Node;
-			Exit;
-		end;
-		itPlus, itMinus:
-		begin
-			GetMem(Result, 1 + 2 + 2 * 4);
-			case InputType of
-			itPlus: Result.Operation := opPlus;
-			itMinus: Result.Operation := opMinus;
-			end;
-			Result.ArgCount := 2;
-			Result.Args[0] := Node;
-			ReadInput;
-//			Result.Args[1] := NodeE(NodeA); R. A.
-			Result.Args[1] := NodeA;
-			Result := NodeE(Result, True);
-		end;
-		else // Number
-		begin
-			if Num then
-				Result := NodeE(NodeA, False)
-			else
-				Result := Node;
-		end;
-		end;
-	end;
-
-{	function NodeE: PNode;
-	begin
-		Result := NodeE2(NodeA);
-	end;}
-
-	function CreateTree: PNode;
+	itLBracket:
 	begin
 		ReadInput;
 		Result := NodeE(nil, True);
+		if InputType <> itRBracket then
+		begin
+			AddMes2(mtExpected, [')', Id]);
+		end
+		else
+			ReadInput;
 	end;
-
-	function FreeTree(var Node: PNode): BG;
-	var i: SG;
+	itIdent:
 	begin
-		Result := True;
-		if Node <> nil then
-		case Node.Operation of
-		opNone:
+		Id2 := UpperCase(Id);
+		Result := nil;
+		for i := 0 to Length(FcNames) - 1 do
+			if Id2 = FcNames[TOperator(i)] then
+			begin
+				Operation := TOperator(i);
+				Result := NodeArg;
+			end;
+
+		if Result = nil then
 		begin
-			IE(20);
-			FreeMem(Node, 1);
-			Node := nil;
+			VF := IsVarFunc(Id, 0, UnitSystem); // D???
+			if VF <> nil then
+			begin
+				GetMem(Result, 1 + 4);
+				Result.Operation := opIdent;
+				Result.Ident := VF;
+			end
+			else
+			begin
+				GetMem(Result, 1 + 10);
+				Result.Operation := opNumber;
+				Result.Num := 0;
+				AddMes2(mtUndeclaredIdentifier, [Id]);
+			end;
+			ReadInput;
 		end;
-		opNumber:
-		begin
-			FreeMem(Node, 1 + 10);
-			Node := nil;
+	end
+	else
+	begin
+		GetMem(Result, 1 + 10);
+		Result.Operation := opNumber;
+		Result.Num := 0;
+		AddMes2(mtIdentifierExpected, [Id]);
+		ReadInput;
+	end;
+	end;
+end;
+
+function NodeG2(Node: PNode): PNode;
+begin
+	case InputType of
+	itPower:
+	begin
+		GetMem(Result, 1 + 2 + 2 * 4);
+		Result.Operation := opPower;
+		Result.ArgCount := 2;
+		Result.Args[0] := Node;
+		ReadInput;
+		Result.Args[1] := NodeG2(NodeP);
+	end
+	else Result := Node;
+	end;
+end;
+
+function NodeG: PNode;
+begin
+	Result := NodeG2(NodeP);
+end;
+
+function NodeF: PNode;
+begin
+//		case InputType of
+{		itMinus:
+	begin
+		GetMem(Result, 1 + 2 + 4);
+		Result.Operation := opUnarMinus;
+		Result.ArgCount := 1;
+		ReadInput;
+		Result.Args[0] := NodeG;
+	end
+	else} Result := NodeG;
+//		end;
+end;
+
+function NodeA2(Node: PNode): PNode;
+begin
+	Result := Node;
+	case InputType of
+{		itEOI:
+	begin
+		Result := Node;
+		Exit;
+	end;}
+	itMul, itDiv:
+	begin
+		GetMem(Result, 1 + 2 + 2 * 4);
+		case InputType of
+		itMul: Result.Operation := opMul;
+		itDiv: Result.Operation := opDiv;
 		end;
-		opIdent:
+		Result.ArgCount := 2;
+		Result.Args[0] := Node;
+		ReadInput;
+//			Result.Args[1] := NodeA2(NodeF); R. A.
+		Result.Args[1] := NodeF;
+		Result := NodeA2(Result);
+	end;
+	else
+	begin
+		if InputType = itKeyword then
 		begin
-			FreeMem(Node, 1 + 2);
-			Node := nil;
+			case Keyword of
+			kwDiv, kwMod:
+			begin
+				GetMem(Result, 1 + 2 + 2 * 4);
+				case Keyword of
+				kwDiv: Result.Operation := opDiv;
+				kwMod: Result.Operation := opMod;
+				end;
+				Result.ArgCount := 2;
+				Result.Args[0] := Node;
+				ReadInput;
+	//			Result.Args[1] := NodeA2(NodeF); R. A.
+				Result.Args[1] := NodeF;
+				Result := NodeA2(Result);
+			end;
+			end;
+		end;
+	end;
+	end;
+end;
+
+function NodeA: PNode;
+begin
+	Result := NodeA2(NodeF);
+end;
+
+function NodeE(Node: PNode; Num: BG): PNode;
+begin
+	case InputType of
+	itEOI:
+	begin
+		Result := Node;
+		Exit;
+	end;
+	itRBracket:
+	begin
+//			ReadInput; D???
+		Result := Node;
+		Exit;
+	end;
+	itPlus, itMinus:
+	begin
+		GetMem(Result, 1 + 2 + 2 * 4);
+		case InputType of
+		itPlus: Result.Operation := opPlus;
+		itMinus: Result.Operation := opMinus;
+		end;
+		Result.ArgCount := 2;
+		Result.Args[0] := Node;
+		ReadInput;
+//			Result.Args[1] := NodeE(NodeA); R. A.
+		Result.Args[1] := NodeA;
+		Result := NodeE(Result, True);
+	end;
+	else // Number
+	begin
+		if Num then
+			Result := NodeE(NodeA, False)
+		else
+			Result := Node;
+	end;
+	end;
+end;
+
+{	function NodeE: PNode;
+begin
+	Result := NodeE2(NodeA);
+end;}
+
+function CreateTree: PNode;
+begin
+	ReadInput;
+	Result := NodeE(nil, True);
+end;
+
+function FreeTree(var Node: PNode): BG;
+var i: SG;
+begin
+	Result := True;
+	if Node <> nil then
+	case Node.Operation of
+	opNone:
+	begin
+		IE(20);
+		FreeMem(Node, 1);
+		Node := nil;
+	end;
+	opNumber:
+	begin
+		FreeMem(Node, 1 + 10);
+		Node := nil;
+	end;
+	opIdent:
+	begin
+		FreeMem(Node, 1 + 2);
+		Node := nil;
+	end
+	else
+	begin
+		for i := 0 to Node.ArgCount - 1 do
+			FreeTree(Node.Args[i]);
+
+		FreeMem(Node, 1 + 2 + 4 * Node.ArgCount);
+		Node := nil;
+	end;
+	end;
+end;
+
+function Calc(Node: PNode): Extended;
+var
+	i: SG;
+	e: Extended;
+begin
+	Result := 0;
+	if Node = nil then
+	begin
+		Exit;
+	end;
+	case Node.Operation of
+	opNumber:
+		Result := Node.Num;
+	opIdent:
+		Result := Node.Ident.Value;
+{		opUnarMinus:
+	begin
+		Result := -Calc(Node.Args[0]);
+	end;}
+	opPlus:
+	begin
+		Result := 0;
+		if Node.ArgCount > 0 then
+		begin
+			for i := 0 to Node.ArgCount - 1 do
+			begin
+				Result := Result + Calc(Node.Args[i]);
+			end;
+		end;
+	end;
+	opMinus:
+	begin
+		if Node.ArgCount > 0 then
+		begin
+			Result := Calc(Node.Args[0]);
+			for i := 1 to Node.ArgCount - 1 do
+				Result := Result - Calc(Node.Args[i]);
+		end
+		else
+			Result := 0;
+	end;
+	opMul:
+	begin
+		Result := 1;
+		for i := 0 to Node.ArgCount - 1 do
+			Result := Result * Calc(Node.Args[i]);
+	end;
+	opDiv:
+	begin
+		if Node.ArgCount > 0 then
+		begin
+			Result := Calc(Node.Args[0]);
+			for i := 1 to Node.ArgCount - 1 do
+			begin
+				e := Calc(Node.Args[i]);
+				if e = 0 then
+				else
+					Result := Result / e;
+			end;
+		end
+		else
+			Result := 0;
+	end;
+	opMod:
+	begin
+		if Node.ArgCount > 0 then
+		begin
+			Result := Calc(Node.Args[0]);
+			for i := 1 to Node.ArgCount - 1 do
+			begin
+				e := Calc(Node.Args[i]);
+				if e = 0 then
+				else
+					Result := Round(Result) mod Round(e);
+			end;
+		end
+		else
+			Result := 0;
+	end;
+	opAbs:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			Result := Result + Abs(Calc(Node.Args[i]));
+		end;
+	end;
+	opNeg:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			Result := Result - Calc(Node.Args[i]);
+		end;
+	end;
+	opInv:
+	begin
+		Result := 1;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			Result := Result / Calc(Node.Args[i]);
+		end;
+	end;
+	opNot:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			Result := Result + (not Round(Calc(Node.Args[0])));
+		end;
+	end;
+	opInc:
+	begin
+		Result := 1;
+		for i := 0 to Node.ArgCount - 1 do
+			Result := Result + Calc(Node.Args[i]);
+	end;
+	opDec:
+	begin
+		Result := -1;
+		for i := 0 to Node.ArgCount - 1 do
+			Result := Result + Calc(Node.Args[i]);
+	end;
+	opFact:
+	begin
+		Result := 0;
+	end;
+	opPower:
+	begin
+		if Node.ArgCount > 0 then
+		begin
+			Result := Calc(Node.Args[0]);
+			for i := 1 to Node.ArgCount - 1 do
+				Result := Power(Result, Calc(Node.Args[i]));
+		end
+		else
+			Result := 0;
+
+{			if ArgCount < 2 then
+		begin
+			ShowError('2 arguments required for Power');
+			if ArgCount = 1 then Result := Args[0];
 		end
 		else
 		begin
-			for i := 0 to Node.ArgCount - 1 do
-				FreeTree(Node.Args[i]);
-
-			FreeMem(Node, 1 + 2 + 4 * Node.ArgCount);
-			Node := nil;
+			Result := Power(Args[0], Args[1]);
+{         Result := 1;
+		i := 1;
+		while  i <= R2 do
+		begin
+			Result := Result * R1;
+			Inc(i);
 		end;
-		end;
+		end;}
 	end;
-
-	function Calc(Node: PNode): Extended;
-	var
-		i: SG;
-		e: Extended;
+	opExp:
 	begin
 		Result := 0;
-		if Node = nil then
+		for i := 0 to Node.ArgCount - 1 do
 		begin
-			Exit;
-		end;
-		case Node.Operation of
-		opNumber:
-			Result := Node.Num;
-		opIdent:
-			Result := IdentValues[Node.Ident];
-{		opUnarMinus:
-		begin
-			Result := -Calc(Node.Args[0]);
-		end;}
-		opPlus:
-		begin
-			Result := 0;
-			if Node.ArgCount > 0 then
-			begin
-				for i := 0 to Node.ArgCount - 1 do
-				begin
-					Result := Result + Calc(Node.Args[i]);
-				end;
-			end;
-		end;
-		opMinus:
-		begin
-			if Node.ArgCount > 0 then
-			begin
-				Result := Calc(Node.Args[0]);
-				for i := 1 to Node.ArgCount - 1 do
-					Result := Result - Calc(Node.Args[i]);
-			end
-			else
-				Result := 0;
-		end;
-		opMul:
-		begin
-			Result := 1;
-			for i := 0 to Node.ArgCount - 1 do
-				Result := Result * Calc(Node.Args[i]);
-		end;
-		opDiv:
-		begin
-			if Node.ArgCount > 0 then
-			begin
-				Result := Calc(Node.Args[0]);
-				for i := 1 to Node.ArgCount - 1 do
-				begin
-					e := Calc(Node.Args[i]);
-					if e = 0 then
-					else
-						Result := Result / e;
-				end;
-			end
-			else
-				Result := 0;
-		end;
-		opMod:
-		begin
-			if Node.ArgCount > 0 then
-			begin
-				Result := Calc(Node.Args[0]);
-				for i := 1 to Node.ArgCount - 1 do
-				begin
-					e := Calc(Node.Args[i]);
-					if e = 0 then
-					else
-						Result := Round(Result) mod Round(e);
-				end;
-			end
-			else
-				Result := 0;
-		end;
-		opAbs:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				Result := Result + Abs(Calc(Node.Args[i]));
-			end;
-		end;
-		opNeg:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				Result := Result - Calc(Node.Args[i]);
-			end;
-		end;
-		opInv:
-		begin
-			Result := 1;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				Result := Result / Calc(Node.Args[i]);
-			end;
-		end;
-		opNot:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				Result := Result + (not Round(Calc(Node.Args[0])));
-			end;
-		end;
-		opInc:
-		begin
-			Result := 1;
-			for i := 0 to Node.ArgCount - 1 do
-				Result := Result + Calc(Node.Args[i]);
-		end;
-		opDec:
-		begin
-			Result := -1;
-			for i := 0 to Node.ArgCount - 1 do
-				Result := Result + Calc(Node.Args[i]);
-		end;
-		opFact:
-		begin
-			Result := 0;
-		end;
-		opPower:
-		begin
-			if Node.ArgCount > 0 then
-			begin
-				Result := Calc(Node.Args[0]);
-				for i := 1 to Node.ArgCount - 1 do
-					Result := Power(Result, Calc(Node.Args[i]));
-			end
-			else
-				Result := 0;
-
-{			if ArgCount < 2 then
-			begin
-				ShowError('2 arguments required for Power');
-				if ArgCount = 1 then Result := Args[0];
-			end
-			else
-			begin
-				Result := Power(Args[0], Args[1]);
-{         Result := 1;
-			i := 1;
-			while  i <= R2 do
-			begin
-				Result := Result * R1;
-				Inc(i);
-			end;
-			end;}
-		end;
-		opExp:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				Result := Result + Exp(Calc(Node.Args[i]));
-			end;
-		end;
-		opLn:
-		begin
-			if Node.ArgCount >= 1 then
-			begin
-				e := Calc(Node.Args[0]);
-				if e > 0 then
-					Result := Ln(e)
-				else
-					Result := NegInfinity;
-//					ShowError('Input 0..infinity for Ln');}
-			end;
-		end;
-		opSqr:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-				Result := Result + Sqr(Calc(Node.Args[i]));
-		end;
-		opSqrt:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-				Result := Sqrt(Calc(Node.Args[i]));
-		end;
-		opSin:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				e := Calc(Node.Args[i]);
-				case GonFormat of
-				gfGrad: e := GradToRad(e);
-				gfDeg: e := DegToRad(e);
-				end;
-				Result := Result + Sin(e);
-			end;
-
-(*			if Node.ArgCount <> 1 then
-			begin
-//				ShowError('1 argument required for Sin');
-			end;
-			if Node.ArgCount >= 1 then
-				Result := Sin(Calc(Node.Args[0]));*)
-		end;
-		opCos:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				e := Calc(Node.Args[i]);
-				case GonFormat of
-				gfGrad: e := GradToRad(e);
-				gfDeg: e := DegToRad(e);
-				end;
-				Result := Result + Cos(e);
-			end;
-{			if Node.ArgCount = 0 then
-				Result := 1
-			else if Node.ArgCount = 1 then
-			begin
-				Result := Cos(Calc(Node.Args[i]))
-			end
-			else
-			begin
-				Result := Cos(Calc(Node.Args[0]));
-				for i := 1 to Node.ArgCount - 1 do
-					Result := Cos(Result) + Cos(Calc(Node.Args[i]));
-			end;}
-		end;
-		opTan:
-		begin
-			Result := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				e := Calc(Node.Args[i]);
-				case GonFormat of
-				gfGrad: e := GradToRad(e);
-				gfDeg: e := DegToRad(e);
-				end;
-				Result := Result + Tan(e);
-			end;
-		end;
-{		opArcSin:
-		opArcCos:
-		opArcTan:
-		opHypSin:
-		opHypCos:}
-		opAvg:
-		begin
-			e := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				e := e + Calc(Node.Args[i]);
-			end;
-			if Node.ArgCount > 0 then
-				Result := e / Node.ArgCount
-			else
-				Result := 0;
-		end;
-		opMin:
-		begin
-			Result := Infinity;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				e := Calc(Node.Args[i]);
-				if e < Result then Result := e;
-			end;
-		end;
-		opMax:
-		begin
-			Result := -Infinity;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				e := Calc(Node.Args[i]);
-				if e > Result then Result := e;
-			end;
-		end;
-		opShl:
-		begin
-			if Node.ArgCount > 0 then
-			begin
-				Result := Calc(Node.Args[0]);
-				for i := 0 to Node.ArgCount - 1 do
-					Result := Round(Result) shl Round(Calc(Node.Args[i]));
-			end
-			else
-				Result := 0;
-		end;
-		opShr:
-		begin
-			if Node.ArgCount > 0 then
-			begin
-				Result := Calc(Node.Args[0]);
-				for i := 0 to Node.ArgCount - 1 do
-					Result := Round(Result) shr Round(Calc(Node.Args[i]));
-			end
-			else
-				Result := 0;
-		end;
-		else
-			Result := 0;
+			Result := Result + Exp(Calc(Node.Args[i]));
 		end;
 	end;
+	opLn:
+	begin
+		if Node.ArgCount >= 1 then
+		begin
+			e := Calc(Node.Args[0]);
+			if e > 0 then
+				Result := Ln(e)
+			else
+				Result := NegInfinity;
+//					ShowError('Input 0..infinity for Ln');}
+		end;
+	end;
+	opSqr:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+			Result := Result + Sqr(Calc(Node.Args[i]));
+	end;
+	opSqrt:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+			Result := Sqrt(Calc(Node.Args[i]));
+	end;
+	opSin:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			e := Calc(Node.Args[i]);
+			case GonFormat of
+			gfGrad: e := GradToRad(e);
+			gfDeg: e := DegToRad(e);
+			end;
+			Result := Result + Sin(e);
+		end;
+
+(*			if Node.ArgCount <> 1 then
+		begin
+//				ShowError('1 argument required for Sin');
+		end;
+		if Node.ArgCount >= 1 then
+			Result := Sin(Calc(Node.Args[0]));*)
+	end;
+	opCos:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			e := Calc(Node.Args[i]);
+			case GonFormat of
+			gfGrad: e := GradToRad(e);
+			gfDeg: e := DegToRad(e);
+			end;
+			Result := Result + Cos(e);
+		end;
+{			if Node.ArgCount = 0 then
+			Result := 1
+		else if Node.ArgCount = 1 then
+		begin
+			Result := Cos(Calc(Node.Args[i]))
+		end
+		else
+		begin
+			Result := Cos(Calc(Node.Args[0]));
+			for i := 1 to Node.ArgCount - 1 do
+				Result := Cos(Result) + Cos(Calc(Node.Args[i]));
+		end;}
+	end;
+	opTan:
+	begin
+		Result := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			e := Calc(Node.Args[i]);
+			case GonFormat of
+			gfGrad: e := GradToRad(e);
+			gfDeg: e := DegToRad(e);
+			end;
+			Result := Result + Tan(e);
+		end;
+	end;
+{		opArcSin:
+	opArcCos:
+	opArcTan:
+	opHypSin:
+	opHypCos:}
+	opAvg:
+	begin
+		e := 0;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			e := e + Calc(Node.Args[i]);
+		end;
+		if Node.ArgCount > 0 then
+			Result := e / Node.ArgCount
+		else
+			Result := 0;
+	end;
+	opMin:
+	begin
+		Result := Infinity;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			e := Calc(Node.Args[i]);
+			if e < Result then Result := e;
+		end;
+	end;
+	opMax:
+	begin
+		Result := -Infinity;
+		for i := 0 to Node.ArgCount - 1 do
+		begin
+			e := Calc(Node.Args[i]);
+			if e > Result then Result := e;
+		end;
+	end;
+	opShl:
+	begin
+		if Node.ArgCount > 0 then
+		begin
+			Result := Calc(Node.Args[0]);
+			for i := 0 to Node.ArgCount - 1 do
+				Result := Round(Result) shl Round(Calc(Node.Args[i]));
+		end
+		else
+			Result := 0;
+	end;
+	opShr:
+	begin
+		if Node.ArgCount > 0 then
+		begin
+			Result := Calc(Node.Args[0]);
+			for i := 0 to Node.ArgCount - 1 do
+				Result := Round(Result) shr Round(Calc(Node.Args[i]));
+		end
+		else
+			Result := 0;
+	end;
+	else
+		Result := 0;
+	end;
+end;
+
+function CalcTree: Extended;
+begin
+	Result := Calc(Root);
+end;
+
+procedure FreeUnitSystem;
+begin
+		if UnitSystem <> nil then
+		begin
+			UnitSystem.Units.Free;
+			UnitSystem.Types.Free;
+			UnitSystem.VFs.Free;
+			Dispose(UnitSystem);
+			UnitSystem := nil;
+		end;
+end;
+
+procedure CreateUnitSystem;
+var
+	U: PUnit;
+	T: PType;
+	VF: PVF;
+begin
+	if UnitSystem = nil then
+	begin
+		New(UnitSystem);
+		U := UnitSystem;
+		U.Name := 'System';
+		U.FileNam := '';
+		U.Code := '';
+		U.Error := 0;
+		U.Units := TData.Create;
+		U.Units.ItemSize := SizeOf(PUnit);
+		U.Types := TData.Create;
+		U.Types.ItemSize := SizeOf(TType);
+		U.VFs := TData.Create;
+		U.VFs.ItemSize := SizeOf(TVF);
+		U.GlobalVF := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'pi';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := pi;
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'e';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := ConstE;
+		VF.ParamCount := 0;
+
+		T := U.Types.Add;
+		T.Name := 'Cardinal';
+		T.Typ := '';
+		T.BasicType := 2;
+		T.Size := SizeOf(Cardinal);
+		T.Min := Low(Cardinal);
+		T.Max := High(Cardinal);
+
+		T := U.Types.Add;
+		T.Name := 'Integer';
+		T.Typ := '';
+		T.BasicType := 2;
+		T.Size := SizeOf(Integer);
+		T.Min := Low(Integer);
+		T.Max := High(Integer);
+
+		T := U.Types.Add;
+		T.Name := 'ShortInt';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(ShortInt);
+		T.Min := Low(ShortInt);
+		T.Max := High(ShortInt);
+
+		T := U.Types.Add;
+		T.Name := 'Byte';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(Byte);
+		T.Min := Low(Byte);
+		T.Max := High(Byte);
+
+		T := U.Types.Add;
+		T.Name := 'SmallInt';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(SmallInt);
+		T.Min := Low(SmallInt);
+		T.Max := High(SmallInt);
+
+		T := U.Types.Add;
+		T.Name := 'Word';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(Word);
+		T.Min := Low(Word);
+		T.Max := High(Word);
+
+		T := U.Types.Add;
+		T.Name := 'LongInt';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(LongInt);
+		T.Min := Low(LongInt);
+		T.Max := High(LongInt);
+
+		T := U.Types.Add;
+		T.Name := 'LongWord';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(LongWord);
+		T.Min := Low(LongWord);
+		T.Max := High(LongWord);
+
+		T := U.Types.Add;
+		T.Name := 'Int64';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(Int64);
+		T.Min := Low(Int64);
+		T.Max := High(Int64);
+
+		T := U.Types.Add;
+		T.Name := 'Boolean';
+		T.Typ := '';
+		T.BasicType := 1;
+		T.Size := SizeOf(Boolean);
+		T.Min := 0; //Low(Boolean);
+		T.Max := 1; //High(Boolean);
+
+		T := U.Types.Add;
+		T.Name := 'Pointer';
+		T.Typ := '';
+		T.BasicType := 2;
+		T.Size := SizeOf(Pointer);
+		T.Min := 0; //Low(Pointer);
+		T.Max := 0; //High(Pointer);
+
+		T := U.Types.Add;
+		T.Name := 'Char';
+		T.Typ := '';
+		T.BasicType := 2;
+		T.Size := SizeOf(Char);
+		T.Min := 0;
+		T.Max := 255;
+
+		T := U.Types.Add;
+		T.Name := 'string';
+		T.Typ := '';
+		T.BasicType := 3;
+		T.Size := SizeOf(string);
+		T.Min := 0;
+		T.Max := MaxInt;
+
+		T := U.Types.Add;
+		T.Name := 'Length';
+		T.Typ := '';
+		T.BasicType := 3;
+		T.Size := 0;
+		T.Min := 0;
+		T.Max := 0;
+
+		T := U.Types.Add;
+		T.Name := 'Continue';
+		T.Typ := '';
+		T.BasicType := 3;
+		T.Size := 0;
+		T.Min := 0;
+		T.Max := 0;
+
+		T := U.Types.Add;
+		T.Name := 'Break';
+		T.Typ := '';
+		T.BasicType := 3;
+		T.Size := 0;
+		T.Min := 0;
+		T.Max := 0;
+
+		T := U.Types.Add;
+		T.Name := 'Low';
+		T.Typ := '';
+		T.BasicType := 2;
+		T.Size := 0;
+		T.Min := 0;
+		T.Max := 0;
+
+		T := U.Types.Add;
+		T.Name := 'High';
+		T.Typ := '';
+		T.BasicType := 2;
+		T.Size := 0;
+		T.Min := 0;
+		T.Max := 0;
+	end;
+end;
 
 function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 label LNext;
 var
 	DecimalSep, ThousandSep: string[3];
+	VF: PVF;
 begin
 {
 	IntStr := ReadString(Section, Ident, '');
@@ -1716,8 +2060,7 @@ begin
 		IntStr := '$' + Copy(IntStr, 3, Maxint);
 	Result := StrToIntDef(IntStr, Default);
 }
-	Result := DefVal;
-	Mes.Clear;
+//	Result := DefVal;
 {	if Length(Line) <= 0 then
 	begin
 		AddMes2('Line too short');
@@ -1749,9 +2092,9 @@ begin
 		ThousandSep := ',';
 	end;
 
-	SetLength(IdentNames, 0);
-	SetLength(IdentValues, 0);
-	SetLength(IdentNames, 11);
+	CompileMes.Clear;
+	CreateUnitSystem;
+{	SetLength(IdentNames, 11);
 	SetLength(IdentValues, 11);
 	IdentNames[0] := 'DEF';
 	IdentValues[0] := DefVal;
@@ -1775,21 +2118,42 @@ begin
 	IdentValues[9] := pi;
 	IdentNames[10] := 'ZERO';
 	IdentValues[10] := 0;
+	D??? System Unit
+	}
+
+	VF := UnitSystem.VFs.Add;
+	VF.Name := 'def';
+	VF.Typ := '';
+	VF.UsedCount := 0;
+	VF.Line := 0;
+	VF.VFs := nil;
+	VF.Value := DefVal;
+	VF.ParamCount := 0;
+
+	VF := UnitSystem.VFs.Add;
+	VF.Name := 'zero';
+	VF.Typ := '';
+	VF.UsedCount := 0;
+	VF.Line := 0;
+	VF.VFs := nil;
+	VF.Value := 0;
+	VF.ParamCount := 0;
 
 	LinesL := 0;
-	LineBegin := False;
+	LineBegin := True;
 	LineStart := 0;
 
 	BufR := Pointer(Line);
 	BufRI := 0;
 	BufRC := Length(Line);
 
-	Root := CreateTree;
-	Result := Calc(Root);//Make(opNone);
 	FreeTree(Root);
+	Root := CreateTree;
+	if Root <> nil then
+		Result := Calc(Root)
+	else
+		Result := DefVal;
 
-	SetLength(IdentNames, 0);
-	SetLength(IdentValues, 0);
 //	if Level > 0 then ShowError('Incorect level');
 //	if BufRI < BufRC then AddMes2(mtUnusedChars, []);
 	BufRI := BufRC;
@@ -1853,7 +2217,7 @@ begin
 end;
 
 
-function MesToString(M: PMes): string;
+function MesToString(M: PCompileMes): string;
 var s: string;
 begin
 	case M.MesId of
@@ -1880,10 +2244,12 @@ end;
 
 initialization
 	FillCharsTable;
-	Mes := TData.Create;
-	Mes.ItemSize := SizeOf(TMes);
+	CompileMes := TData.Create;
+	CompileMes.ItemSize := SizeOf(TCompileMes);
 finalization
-	Mes.Free; Mes := nil;
+	FreeTree(Root);
+	FreeUnitSystem;
+	CompileMes.Free; CompileMes := nil;
 end.
 
 

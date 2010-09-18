@@ -22,10 +22,11 @@ object fGetTime: TfGetTime
     Top = 68
     Width = 17
     Height = 17
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'H'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -39,16 +40,22 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object Label2: TDLabel
     Left = 8
     Top = 108
     Width = 17
     Height = 17
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'M'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -62,16 +69,22 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object Label3: TDLabel
     Left = 8
     Top = 148
     Width = 17
     Height = 17
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'S'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -85,16 +98,22 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object Label4: TDLabel
     Left = 8
     Top = 188
     Width = 17
     Height = 17
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'D'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -108,17 +127,22 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelH: TDLabel
     Left = 312
     Top = 68
     Width = 20
     Height = 17
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taRightJustify
     Caption = '000'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -132,17 +156,22 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelM: TDLabel
     Left = 312
     Top = 108
     Width = 20
     Height = 17
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taRightJustify
     Caption = '000'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -156,17 +185,22 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelS: TDLabel
     Left = 312
     Top = 148
     Width = 20
     Height = 17
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taRightJustify
     Caption = '000'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -180,17 +214,22 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelD: TDLabel
     Left = 312
     Top = 188
     Width = 20
     Height = 17
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taRightJustify
     Caption = '000'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -204,6 +243,11 @@ object fGetTime: TfGetTime
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object TrackBarH: TTrackBar
     Left = 32
@@ -283,7 +327,7 @@ object fGetTime: TfGetTime
     Top = 240
     Width = 73
     Height = 25
-    Caption = 'OK'
+    Caption = '&OK'
     Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -293,6 +337,7 @@ object fGetTime: TfGetTime
     ModalResult = 1
     ParentFont = False
     TabOrder = 13
+    OnClick = ButtonOkClick
   end
   object ButtonCancel: TDButton
     Left = 280
@@ -300,7 +345,7 @@ object fGetTime: TfGetTime
     Width = 73
     Height = 25
     Cancel = True
-    Caption = 'Cancel'
+    Caption = '&Cancel'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -309,6 +354,7 @@ object fGetTime: TfGetTime
     ModalResult = 2
     ParentFont = False
     TabOrder = 14
+    OnClick = ButtonCancelClick
   end
   object EditInput: TEdit
     Left = 40
@@ -481,5 +527,20 @@ object fGetTime: TfGetTime
     ParentFont = False
     TabOrder = 3
     OnClick = ButtonDefClick
+  end
+  object ButtonApply: TDButton
+    Left = 8
+    Top = 240
+    Width = 73
+    Height = 25
+    Caption = '&Apply'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 23
+    Visible = False
   end
 end

@@ -178,6 +178,8 @@ type
 			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
 		procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
 
+		procedure DrawHand(CX, CY: Integer; Angle: TAngle; Len, Size: SG;
+			Color: TColor; Effect: TEffect);
 		procedure DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
 			Orient: Integer; ScrollEf: TEffect);
 
@@ -347,6 +349,7 @@ begin
 	if (Self.Width = Width) and (Self.Height = Height) then Exit;
 //	if (inherited Width = Width) and (inherited Height = Height) then Exit;
 	try
+		Canvas.Brush.Style := bsClear;
 		inherited Width := 0;
 		inherited Height := 0;
 //		inherited Height := Height div 2;
@@ -9184,6 +9187,40 @@ begin
 		HX2 := XSize - 1 - HY2;
 		HY2 := YSize - 1 - H;
 	end;
+	end;
+end;
+
+procedure TDBitmap.DrawHand(CX, CY: Integer; Angle: TAngle; Len, Size: SG;
+	Color: TColor; Effect: TEffect);
+var
+	i: SG;
+	Points: array[0..3] of TPoint;
+begin
+	if Size = 1 then
+	begin
+		RAToXY(Len div 16, Angle + AngleCount div 2, Points[0].X, Points[0].Y);
+		RAToXY(Len, Angle, Points[1].X, Points[1].Y);
+		for i := 0 to Length(Points) - 1 do
+		begin
+			Inc(Points[i].X, CX);
+			Points[i].Y := CY - Points[i].Y;
+		end;
+		Lin24(CX, CY, Points[1].X, Points[1].Y, Color, Effect);
+	end
+	else
+	begin
+		RAToXY(Len, Angle, Points[0].X, Points[0].Y);
+		RAToXY(Size * Len div 64, Angle + AngleCount div 4, Points[1].X, Points[1].Y);
+		RAToXY(16 * Len div 64, Angle + AngleCount div 2, Points[2].X, Points[2].Y);
+		RAToXY(Size * Len div 64, Angle + 3 * AngleCount div 4 , Points[3].X, Points[3].Y);
+		for i := 0 to Length(Points) - 1 do
+		begin
+			Inc(Points[i].X, CX);
+			Points[i].Y := CY - Points[i].Y;
+		end;
+		Canvas.Brush.Color := Color;
+		Canvas.Pen.Color := Color;
+		Canvas.Polygon(Points);
 	end;
 end;
 

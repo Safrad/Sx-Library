@@ -11,11 +11,12 @@ unit uGetInt;
 interface
 
 uses
+	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	StdCtrls, ComCtrls, Spin, uDButton, ExtCtrls, uDLabel, uDForm;
 
 type
-	TOnApplyInt = procedure(Value: Integer);
+	TOnApplyInt = procedure(Value: S8);
 
 	TfGetInt = class(TDForm)
 		EditInput: TEdit;
@@ -55,20 +56,43 @@ type
 		{ Public declarations }
 	end;
 
-function GetInt(Caption: string;
-	var CurVal: Integer; const MinVal, DefVal, MaxVal: Integer; OnApplyInt: TOnApplyInt): Boolean;
+function GetU4(Prompt: string;
+	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean;
+function GetInt(Prompt: string;
+	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean;
+function GetS8(Prompt: string;
+	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean;
 
 implementation
 
 {$R *.DFM}
-uses uAdd, uStrings, uInput;
+uses uStrings, uInput, uError;
 
 var
 	fGetInt: TfGetInt;
-
-function GetInt(Caption: string;
-	var CurVal: Integer; const MinVal, DefVal, MaxVal: Integer; OnApplyInt: TOnApplyInt): Boolean;
+function GetU4(Prompt: string;
+	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
 begin
+	C := CurVal;
+	Result := GetS8(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
+end;
+
+function GetInt(Prompt: string;
+	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean;
+var C: S8;
+begin
+	C := CurVal;
+	Result := GetS8(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
+	CurVal := C;
+end;
+
+function GetS8(Prompt: string;
+	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean;
+begin
+	if (MinVal > MaxVal) or (DefVal < MinVal) or (DefVal > MaxVal)
+		or (CurVal < MinVal) or (CurVal > MaxVal) then IE(0);
 	if not Assigned(fGetInt) then
 	begin
 		fGetInt := TfGetInt.Create(Application.MainForm);
@@ -85,7 +109,7 @@ begin
 	else if fGetInt.TCurVal > fGetInt.TMaxVal then
 		fGetInt.TCurVal := fGetInt.TMaxVal;
 	fGetInt.NowVal := fGetInt.TCurVal;
-	fGetInt.Caption := DelCharsF(Caption, '&');
+	fGetInt.Caption := DelCharsF(Prompt, '&');
 	fGetInt.LabelMin.Caption := IntToStr(fGetInt.TMinVal);
 	fGetInt.LabelMax.Caption := IntToStr(fGetInt.TMaxVal);
 	fGetInt.LabelNow.Caption := IntToStr(fGetInt.NowVal);
@@ -163,13 +187,11 @@ begin
 	TrackBar.Repaint;
 end;
 
-procedure TfGetInt.ChangeInt;
-begin
-	if Assigned(OnApply) then OnApply(NowVal);
-end;
-
 procedure TfGetInt.EditInputChange(Sender: TObject);
-var ErrorMsg: string;
+var
+	Me: PCompileMes;
+	i: SG;
+	s: string;
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToValI(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
@@ -178,7 +200,14 @@ begin
 		NowVal := TDefVal;
 		ChangeInt;
 	end;}
-	DLabelError.Caption := ErrorMsg;
+	Me := CompileMes.GetFirst;
+	s := '';
+	for i := 0 to SG(CompileMes.Count) - 1 do
+	begin
+		s := s + MesToString(Me) + LineSep;
+		Inc(Me, 1);
+	end;
+	DLabelError.Caption := s;
 	InitButtons;
 	InitTrackBar;
 	ChangeInt;
@@ -247,19 +276,24 @@ begin
 	ChangeInt;
 end;
 
-procedure TfGetInt.ButtonCancelClick(Sender: TObject);
+procedure TfGetInt.ChangeInt;
 begin
-	if Assigned(OnApply) then
-	begin
-		if NowVal <> TCurVal then OnApply(TCurVal);
-		Close;
-	end;
+	if Assigned(OnApply) then OnApply(NowVal);
 end;
 
 procedure TfGetInt.ButtonOkClick(Sender: TObject);
 begin
 	if Assigned(OnApply) then
 	begin
+		Close;
+	end;
+end;
+
+procedure TfGetInt.ButtonCancelClick(Sender: TObject);
+begin
+	if Assigned(OnApply) then
+	begin
+		if NowVal <> TCurVal then OnApply(TCurVal);
 		Close;
 	end;
 end;

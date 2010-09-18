@@ -614,7 +614,7 @@ end;
 
 procedure TDForm.Fill;
 begin
-	OnPaint(nil);
+	if Assigned(OnPaint) then OnPaint(nil);
 	Paint;
 end;
 
@@ -881,6 +881,21 @@ begin
 	end;
 	end;
 
+	case FBackground of
+	baNone:
+	begin
+
+	end;
+	baOpenGL, baOpenGLBitmap:
+	begin
+
+	end
+	else
+	begin
+		InitBackground;
+	end;
+	end;
+
 	inherited; // FOnResize Method
 
 	case FBackground of
@@ -897,7 +912,7 @@ begin
 	else
 	begin
 //		if (Message.Width <> Width) or (Message.Height <> Height) then
-			InitBackground;
+//			InitBackground;
 	end;
 	end;
 end;

@@ -155,7 +155,8 @@ function GetColor(const prompt: string;
 implementation
 
 {$R *.DFM}
-uses uMenus;
+uses uMenus, uInput;
+
 const
 	SpectrumPixel = 4;
 	LightPixel = 1;

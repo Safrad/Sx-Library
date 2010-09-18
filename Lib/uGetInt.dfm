@@ -4,7 +4,7 @@ object fGetInt: TfGetInt
   ActiveControl = EditInput
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
-  ClientHeight = 165
+  ClientHeight = 177
   ClientWidth = 335
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object fGetInt: TfGetInt
   TextHeight = 13
   object LabelMin: TDLabel
     Left = 16
-    Top = 104
+    Top = 120
     Width = 73
     Height = 13
     AlphaBlend = False
@@ -48,7 +48,7 @@ object fGetInt: TfGetInt
   end
   object LabelMax: TDLabel
     Left = 248
-    Top = 104
+    Top = 120
     Width = 73
     Height = 13
     AlphaBlend = False
@@ -77,7 +77,7 @@ object fGetInt: TfGetInt
   end
   object LabelNow: TDLabel
     Left = 132
-    Top = 104
+    Top = 120
     Width = 73
     Height = 13
     AlphaBlend = False
@@ -108,12 +108,11 @@ object fGetInt: TfGetInt
     Left = 16
     Top = 50
     Width = 313
-    Height = 15
+    Height = 31
     AlphaBlend = False
     AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
-    Caption = 'No Error'
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -127,6 +126,7 @@ object fGetInt: TfGetInt
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    BorderStyle = bsSingle
     Layout = tlCenter
     Transparent = True
     TransparentColor = False
@@ -145,7 +145,7 @@ object fGetInt: TfGetInt
   end
   object ButtonOk: TDButton
     Left = 160
-    Top = 128
+    Top = 144
     Width = 73
     Height = 25
     Caption = '&OK'
@@ -162,7 +162,7 @@ object fGetInt: TfGetInt
   end
   object ButtonCancel: TDButton
     Left = 248
-    Top = 128
+    Top = 144
     Width = 73
     Height = 25
     Cancel = True
@@ -179,7 +179,7 @@ object fGetInt: TfGetInt
   end
   object TrackBar: TTrackBar
     Left = 8
-    Top = 72
+    Top = 88
     Width = 320
     Height = 28
     Max = 99
@@ -280,7 +280,7 @@ object fGetInt: TfGetInt
   end
   object ButtonApply: TDButton
     Left = 8
-    Top = 128
+    Top = 144
     Width = 73
     Height = 25
     Caption = '&Apply'

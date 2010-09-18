@@ -17,98 +17,6 @@ object fGColor: TfGColor
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelR: TDLabel
-    Left = 8
-    Top = 8
-    Width = 33
-    Height = 19
-    AutoSize = False
-    Caption = 'Red'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-  end
-  object LabelG: TDLabel
-    Left = 8
-    Top = 40
-    Width = 33
-    Height = 19
-    AutoSize = False
-    Caption = 'Green'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-  end
-  object LabelB: TDLabel
-    Left = 8
-    Top = 72
-    Width = 33
-    Height = 19
-    AutoSize = False
-    Caption = 'Blue'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-  end
-  object LabelA: TDLabel
-    Left = 8
-    Top = 104
-    Width = 33
-    Height = 19
-    AutoSize = False
-    Caption = 'All'
-    Transparent = True
-    Layout = tlCenter
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-  end
   object Bevel1: TBevel
     Left = 8
     Top = 332
@@ -123,15 +31,132 @@ object fGColor: TfGColor
     Height = 49
     Shape = bsLeftLine
   end
+  object LabelR: TDLabel
+    Left = 8
+    Top = 8
+    Width = 33
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Red'
+    BackEffect = ef00
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelG: TDLabel
+    Left = 8
+    Top = 40
+    Width = 33
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Green'
+    BackEffect = ef00
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelB: TDLabel
+    Left = 8
+    Top = 72
+    Width = 33
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Blue'
+    BackEffect = ef00
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object LabelA: TDLabel
+    Left = 8
+    Top = 104
+    Width = 33
+    Height = 19
+    AlphaBlend = False
+    AlphaBlendValue = 0
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'All'
+    BackEffect = ef00
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
   object LabelNow: TDLabel
     Left = 8
     Top = 284
     Width = 54
     Height = 16
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'Now'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -146,16 +171,22 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvNone
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelNowXBit: TDLabel
     Left = 8
     Top = 308
     Width = 54
     Height = 16
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'Now x bit'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -170,16 +201,22 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvNone
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelDefault: TDLabel
     Left = 232
     Top = 284
     Width = 39
     Height = 16
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'Default'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -194,16 +231,22 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvNone
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelCurrent: TDLabel
     Left = 232
     Top = 308
     Width = 39
     Height = 16
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'Current'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -218,14 +261,21 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvNone
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PanelNowColor: TDLabel
     Left = 64
     Top = 280
     Width = 153
     Height = 24
-    Alignment = taCenter
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taCenter
     Caption = '$00000000'
     Color = clBlack
     Font.Charset = DEFAULT_CHARSET
@@ -234,10 +284,6 @@ object fGColor: TfGColor
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    ParentColor = False
-    ParentFont = False
-    PopupMenu = PopupMenu1
-    Layout = tlCenter
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -251,14 +297,24 @@ object fGColor: TfGColor
     Displ.Size = 0
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+    PopupMenu = PopupMenu1
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object PanelCurColor: TDLabel
     Left = 272
     Top = 304
     Width = 153
     Height = 24
-    Alignment = taCenter
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taCenter
     Caption = '$00000000'
     Color = clBlack
     Font.Charset = DEFAULT_CHARSET
@@ -267,10 +323,6 @@ object fGColor: TfGColor
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    ParentColor = False
-    ParentFont = False
-    Layout = tlCenter
-    OnClick = PanelCurColorClick
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -284,14 +336,24 @@ object fGColor: TfGColor
     Displ.Size = 0
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+    OnClick = PanelCurColorClick
   end
   object PanelNowBitColor: TDLabel
     Left = 64
     Top = 304
     Width = 153
     Height = 24
-    Alignment = taCenter
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taCenter
     Caption = '$00000000'
     Color = clBlack
     Font.Charset = DEFAULT_CHARSET
@@ -300,11 +362,6 @@ object fGColor: TfGColor
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    ParentColor = False
-    ParentFont = False
-    PopupMenu = PopupMenu1
-    Layout = tlCenter
-    OnClick = PanelNowBitColorClick
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -318,14 +375,25 @@ object fGColor: TfGColor
     Displ.Size = 0
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+    PopupMenu = PopupMenu1
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+    OnClick = PanelNowBitColorClick
   end
   object PanelDefaultColor: TDLabel
     Left = 272
     Top = 280
     Width = 153
     Height = 24
-    Alignment = taCenter
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taCenter
     Caption = '$00000000'
     Color = clBlack
     Font.Charset = DEFAULT_CHARSET
@@ -334,10 +402,6 @@ object fGColor: TfGColor
     Font.Name = 'Courier New'
     Font.Pitch = fpFixed
     Font.Style = []
-    ParentColor = False
-    ParentFont = False
-    Layout = tlCenter
-    OnClick = PanelDefaultColorClick
     Displ.Enabled = False
     Displ.Format = '88'
     Displ.SizeX = 4
@@ -351,6 +415,14 @@ object fGColor: TfGColor
     Displ.Size = 0
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+    Transparent = False
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+    OnClick = PanelDefaultColorClick
   end
   object EditR: TEdit
     Left = 48
