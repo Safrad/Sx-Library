@@ -1,0 +1,480 @@
+// Build: 08/1999-08/1999 Author: Safranek David
+
+unit uDGauge;
+
+interface
+
+{$R *.RES}
+uses
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	ExtCtrls, StdCtrls, uGraph24, uRot24, uDispl;
+
+type
+	TBuffer = (bfDynamic, bfStatic);
+	TGaugeKind = (gkNormal, gkSpectrum, gkStandard);
+
+	TDGauge = class(TLabel)
+	private
+		{ Private declarations }
+		FBmpOut: TBitmap;
+		FBuffer: TBuffer;
+
+		FBackEffect: TEffect;
+		FBackPaint: Boolean;
+		FFontShadow: ShortInt;
+		FDispl: TDispl;
+
+		FKind: TGaugeKind;
+
+		FMin: Integer;
+		FPosition: Integer;
+		FMax: Integer;
+
+		FBevelInner: TPanelBevel;
+		FBevelOuter: TPanelBevel;
+		FBevelWidth: TBevelWidth;
+		FBorderWidth: TBorderWidth;
+		FBorderStyle: TBorderStyle;
+
+		procedure SetBuffer(Value: TBuffer);
+		procedure SetBackEffect(Value: TEffect);
+		procedure SetFontShadow(Value: ShortInt);
+		procedure DisplChanged(ADispl: TObject);
+		procedure SetDispl(Value: TDispl);
+
+		procedure SetKind(Value: TGaugeKind);
+
+		procedure SetMin(Value: Integer);
+		procedure SetPosition(Value: Integer);
+		procedure SetMax(Value: Integer);
+
+		procedure SetBevelInner(Value: TPanelBevel);
+		procedure SetBevelOuter(Value: TPanelBevel);
+		procedure SetBevelWidth(Value: TBevelWidth);
+		procedure SetBorderWidth(Value: TBorderWidth);
+		procedure SetBorderStyle(Value: TBorderStyle);
+	protected
+		{ Protected declarations }
+		procedure Paint; override;
+	public
+		{ Public declarations }
+		constructor Create(AOwner: TComponent); override;
+		destructor Destroy; override;
+	published
+		{ Published declarations }
+		property Buffer: TBuffer read FBuffer write SetBuffer default bfStatic;
+
+		property BackPaint: Boolean read FBackPaint write FBackPaint default False;
+		property BackEffect: TEffect read FBackEffect write SetBackEffect default ef16;
+		property FontShadow: ShortInt read FFontShadow write SetFontShadow default 0;
+		property Displ: TDispl read FDispl write SetDispl;
+
+		property Kind: TGaugeKind read FKind write SetKind default gkNormal;
+
+		property Min: Integer read FMin write SetMin default 0;
+		property Position: Integer read FPosition write SetPosition default 8;
+		property Max: Integer read FMax write SetMax default 16;
+
+		property BevelInner: TPanelBevel read FBevelInner write SetBevelInner default bvLowered;
+		property BevelOuter: TPanelBevel read FBevelOuter write SetBevelOuter default bvRaised;
+		property BevelWidth: TBevelWidth read FBevelWidth write SetBevelWidth default 2;
+		property BorderWidth: TBorderWidth read FBorderWidth write SetBorderWidth default 0;
+		property BorderStyle: TBorderStyle read FBorderStyle write SetBorderStyle default bsNone;
+		property Color;
+		property Enabled;
+		property Visible;
+	end;
+
+procedure Register;
+
+implementation
+
+uses uGraph, uScreen;
+
+{function EffectToPenMode(Effect: TEffect): TPenMode;
+begin
+		case Effect of
+		ef00..ef03:
+			Result:=pmNop;
+		ef04..ef12:
+			Result:=pmMerge;
+		ef13..ef16:
+			Result:=pmCopy;
+		efNeg:
+			Result:=pmNot;
+		efXor:
+			Result:=pmXor;
+		efAdd:
+			Result:=pmWhite;
+		efSub:
+			Result:=pmBlack;
+		else
+			Result:=pmMask;
+		end;
+end;}
+
+constructor TDGauge.Create(AOwner: TComponent);
+begin
+	inherited Create(AOwner);
+	FBmpOut := nil;
+	FDispl := TDispl.Create;
+	FDispl.Enabled := False;
+	FDispl.Format := '88';
+	FDispl.SizeT := 1;
+	FDispl.SizeX := 4;
+	FDispl.SizeY := 4;
+	FDispl.SpaceSX := 2;
+	FDispl.SpaceSY := 2;
+	FDispl.Spacing := 0;
+	FDispl.ColorA := clRed;
+	FDispl.ColorD := clMaroon;
+	FDispl.OnChange := DisplChanged;
+
+	FBuffer := bfStatic;
+
+	FBackEffect := ef16;
+	FMin := 0;
+	FPosition := 0;
+	FMax := 100;
+	FBevelInner := bvLowered;
+	FBevelOuter := bvRaised;
+	FBevelWidth := 2;
+	FBorderWidth := 0;
+
+	AutoSize := False;
+	Alignment := taCenter;
+	Layout := tlCenter;
+	Width := 128;
+	Height := 32;
+end;
+
+destructor TDGauge.Destroy;
+begin
+	FDispl.Free;
+	if Assigned(FBmpOut) then
+	begin
+		FBmpOut.Free;
+		FBmpOut := nil;
+	end;
+	inherited Destroy;
+end;
+
+procedure TDGauge.SetBuffer(Value: TBuffer);
+begin
+	if FBuffer <> Value then
+	begin
+		if Value <> bfStatic then
+		begin
+			if Assigned(FBmpOut) then
+			begin
+				FBmpOut.Free;
+				FBmpOut := nil;
+			end;
+		end
+		else
+		begin
+			if not Assigned(FBmpOut) then
+			begin
+				FBmpOut := TBitmap.Create;
+				FBmpOut.PixelFormat := pf24bit;
+			end;
+		end;
+		FBuffer := Value;
+	end;
+end;
+
+procedure TDGauge.SetBackEffect(Value: TEffect);
+begin
+	if FBackEffect <> Value then
+	begin
+		FBackEffect := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDGauge.SetFontShadow(Value: ShortInt);
+begin
+	if FFontShadow <> Value then
+	begin
+		FFontShadow := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDGauge.DisplChanged(ADispl: TObject);
+begin
+	Invalidate;
+end;
+
+procedure TDGauge.SetDispl(Value: TDispl);
+begin
+	FDispl.Assign(Value);
+end;
+
+procedure TDGauge.SetKind(Value: TGaugeKind);
+begin
+	if FKind <> Value then
+	begin
+		FKind := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDGauge.SetMin(Value: Integer);
+begin
+	if FMin <> Value then
+	begin
+		FMin := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDGauge.SetPosition(Value: Integer);
+begin
+	if FPosition <> Value then
+	begin
+		FPosition := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDGauge.SetMax(Value: Integer);
+begin
+	if FMax <> Value then
+	begin
+		FMax := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDGauge.SetBevelInner(Value: TPanelBevel);
+begin
+	FBevelInner := Value;
+	Invalidate;
+end;
+
+procedure TDGauge.SetBevelOuter(Value: TPanelBevel);
+begin
+	FBevelOuter := Value;
+	Invalidate;
+end;
+
+procedure TDGauge.SetBevelWidth(Value: TBevelWidth);
+begin
+	FBevelWidth := Value;
+	Invalidate;
+end;
+
+procedure TDGauge.SetBorderWidth(Value: TBorderWidth);
+begin
+	FBorderWidth := Value;
+	Invalidate;
+end;
+
+procedure TDGauge.SetBorderStyle(Value: TBorderStyle);
+begin
+	if FBorderStyle <> Value then
+	begin
+		FBorderStyle := Value;
+		Invalidate;
+	end;
+end;
+
+procedure TDGauge.Paint;
+var
+	Recta, RectaS: TRect;
+	TopColor, BottomColor: TColor;
+	X: Integer;
+	C: TColor;
+	i: Integer;
+	Posit, MaxPosit: Integer;
+	Co: array[0..3] of TColor;
+
+	FBmpOut24: TBitmap24;
+begin
+//  Recta:=GetClientRect;
+	Recta.Left := 0;
+	Recta.Top := 0;
+	Recta.Right := Width;
+	Recta.Bottom := Height;
+	if (not Assigned(FBmpOut)) then
+	begin
+		FBmpOut := TBitmap.Create;
+		FBmpOut.PixelFormat := pf24bit;
+	end;
+	FBmpOut.Width := Recta.Right - Recta.Left;
+	FBmpOut.Height := Recta.Bottom - Recta.Top;
+
+	FBmpOut24 := Conv24(FBmpOut);
+	// Background
+	if (Transparent = False) and (BackPaint = True) then
+	begin
+		FBmpOut.Canvas.Brush := Parent.Brush;
+		FBmpOut.Canvas.FillRect(Recta);
+	end
+	else
+	begin
+		FBmpOut.Canvas.CopyRect(Rect(0, 0, FBmpOut.Width, FBmpOut.Height),
+			Canvas, Recta);
+	end;
+
+// Border
+	if (FBorderStyle <> bsNone) then
+	begin
+		BorderE24(FBmpOut24, clBtnShadow, clBtnHighlight, 1, BackEffect);
+		Border24(FBmpOut24, 1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
+			cl3DDkShadow, cl3DLight, 1, BackEffect);
+		InflateRect(Recta, -2, -2);
+	end;
+	if FBevelOuter <> bvNone then
+	begin
+		if BevelOuter = bvLowered then
+		begin
+			TopColor := DepthColor(1);
+			BottomColor := DepthColor(3);
+		end
+		else
+		begin
+			TopColor := DepthColor(3);
+			BottomColor := DepthColor(1);
+		end;
+		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			TopColor, BottomColor, FBevelWidth, BackEffect);
+		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
+	end;
+	if Color <> clNone then
+	begin
+		for i := 0 to FBorderWidth - 1 do
+			Rec24(FBmpOut24, Recta.Left + i, Recta.Top + i,
+				Recta.Right - i - 1, Recta.Bottom - i - 1,
+				Color, BackEffect);
+		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
+	end;
+	RectaS := Recta;
+	if FBevelInner <> bvNone then
+	begin
+		if BevelInner = bvLowered then
+		begin
+			TopColor := DepthColor(1);
+			BottomColor := DepthColor(3);
+		end
+		else
+		begin
+			TopColor := DepthColor(3);
+			BottomColor := DepthColor(1);
+		end;
+		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			TopColor, BottomColor, FBevelWidth, BackEffect);
+		InflateRect(Recta, -Integer(FBevelWidth) div 2, -Integer(FBevelWidth) div 2);
+		InflateRect(RectaS, -FBevelWidth, -FBevelWidth);
+	end;
+
+// Status
+	Posit := FPosition - FMin;
+	MaxPosit := FMax - FMin;
+	if Posit > MaxPosit then Posit := MaxPosit;
+	if MaxPosit = 0 then
+	begin
+		X := Recta.Left;
+		C := SpectrumColor((X - 1) shl 1);
+	end
+	else
+	begin
+		X := Recta.Left + (Recta.Right - Recta.Left) * Posit div MaxPosit;
+		if X > Recta.Right then X := Recta.Right;
+		C := SpectrumColor(512 * Posit div MaxPosit);
+	end;
+
+	if X > Recta.Left then
+	begin
+		case FKind of
+		gkNormal:
+		begin
+			Bar24(FBmpOut24, clNone, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+				C, FBackEffect);
+		end;
+		gkSpectrum:
+		begin
+			for i := Recta.Left to X - 1 do
+			begin
+				Lin24(FBmpOut24, i, Recta.Top, i, Recta.Bottom - 1,
+					SpectrumColor(512 * i div (Recta.Right - Recta.Left)), FBackEffect);
+			end;
+		end;
+		gkStandard:
+		begin
+			Co[0] := LighterColor(clBtnFace);
+			Co[1] := DarkerColor(clBtnFace);
+			Co[2] := Co[0];
+			Co[3] := Co[1];
+			GenerateRGB(FBmpOut24, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+				clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+		end;
+		end;
+	end;
+	if X < RectaS.Left then X := RectaS.Left;
+	if (X < RectaS.Right) then
+	begin
+		Bar24(FBmpOut24, clNone, X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
+			Color, FBackEffect);
+	end;
+
+// Caption
+	if (Caption <> '') {and (FFontEffect<>ef00)} then
+	begin
+		FBmpOut.Canvas.Brush.Style := bsClear;
+		FBmpOut.Canvas.Font := Font;
+		if FFontShadow <> 0 then
+		begin
+			FBmpOut.Canvas.Font.Color := ShadowColor(Font.Color);
+			TopColor := FDispl.ColorA;
+			BottomColor := FDispl.ColorD;
+			FDispl.FColorA := ShadowColor(FDispl.FColorA);
+			FDispl.FColorD := ShadowColor(FDispl.FColorD);
+			i := FFontShadow;
+			repeat
+				OffsetRect(Recta, i, i);
+				if Displ.Enabled then
+				begin
+					DisplDrawRect(FBmpOut24, Caption, FDispl, Recta, Alignment, Layout,
+					ef16);
+				end
+				else
+				begin
+					DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+				end;
+				OffsetRect(Recta, -i, -i);
+				if FontShadow > 0 then Dec(i) else Inc(i);
+			until i = 0;
+			FDispl.FColorA := TopColor;
+			FDispl.FColorD := BottomColor;
+			FBmpOut.Canvas.Font.Color := Font.Color;
+		end;
+		if Displ.Enabled then
+		begin
+			DisplDrawRect(FBmpOut24, Caption, FDispl, Recta, Alignment, Layout,
+			ef16);
+		end
+		else
+		begin
+			DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+		end;
+	end;
+
+// Draw
+	Canvas.Draw(0, 0, FBmpOut);
+	FBmpOut24.Free;
+// Free
+	if (Assigned(FBmpOut)) and (FBuffer <> bfStatic) then
+	begin
+		FBmpOut.Free;
+		FBmpOut := nil;
+	end;
+end;
+
+procedure Register;
+begin
+	RegisterComponents('DComp', [TDGauge]);
+end;
+
+end.

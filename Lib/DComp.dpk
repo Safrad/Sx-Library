@@ -1,0 +1,52 @@
+package DComp;
+
+{$R *.RES}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS OFF}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'David Safranek Components'}
+{$IMPLICITBUILD OFF}
+
+requires
+  vcl50,
+  VCLJPG50,
+  VCLSMP50;
+
+contains
+  uDPanel in 'uDPanel.pas',
+  uDGauge in 'uDGauge.pas',
+  uDLabel in 'uDLabel.pas',
+  uDBitBtn in 'uDBitBtn.pas',
+  uAdd in 'uAdd.pas',
+  uDispl in 'uDispl.pas',
+  uFiles in 'uFiles.pas',
+  uGraph in 'uGraph.pas',
+  uGraph24 in 'uGraph24.pas',
+  uRot24 in 'uRot24.pas',
+  uTexture in 'uTexture.pas',
+  uWave in 'uWave.pas',
+  uScrollImage in 'uScrollImage.pas',
+  uError in 'uError.pas' {fIOError},
+  uGetInt in 'uGetInt.pas' {fGetInt},
+  uScreen in 'uScreen.pas',
+  uStrings in 'uStrings.pas';
+
+end.
