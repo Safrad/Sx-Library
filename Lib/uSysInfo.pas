@@ -1,7 +1,7 @@
 //* File:     Lib\uSysInfo.pas
 //* Created:  2000-07-01
-//* Modified: 2004-07-21
-//* Version:  X.X.31.X
+//* Modified: 2004-09-02
+//* Version:  X.X.32.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz

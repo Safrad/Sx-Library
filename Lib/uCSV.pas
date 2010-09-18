@@ -1,7 +1,7 @@
 //* File:     Lib\uCSV.pas
 //* Created:  2004-01-04
-//* Modified: 2004-07-22
-//* Version:  X.X.31.X
+//* Modified: 2004-09-23
+//* Version:  X.X.32.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz

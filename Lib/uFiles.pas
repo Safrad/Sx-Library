@@ -1,7 +1,7 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2004-08-29
-//* Version:  X.X.31.X
+//* Modified: 2004-09-19
+//* Version:  X.X.32.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -139,7 +139,8 @@ function DelFileExt(const FName: string): string;
 function BackDir(const Dir: string): string;
 function LegalFileName(const FileName: string): string;
 procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
-function GetFileSiz(const FileName: TFileName): U8;
+function GetFileSizeU(const FileName: TFileName): U8;
+function GetFileSizeS(const FileName: TFileName): string;
 function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
@@ -302,7 +303,7 @@ end;
 
 function HandleFileSize(HFile: THandle; var Size: U8): U4;
 begin
-	TU8(Size).D0 := Windows.GetFileSize(HFile, @TU8(Size).D1);
+	TU8(Size).D0 := GetFileSize(HFile, @TU8(Size).D1);
 
 	if TU8(Size).D0 = $FFFFFFFF then
 	begin
@@ -885,7 +886,7 @@ begin
 	end;
 end;
 
-function GetFileSiz(const FileName: TFileName): U8;
+function GetFileSizeU(const FileName: TFileName): U8;
 var
 	HFile: THandle;
 	ErrorCode: U4;
@@ -914,6 +915,16 @@ begin
 		ErrorCode := GetLastError;
 		IOError(FileName, ErrorCode);
 	end;
+end;
+
+function GetFileSizeS(const FileName: TFileName): string;
+var FileSize: U8;
+begin
+	FileSize := GetFileSizeU(FileName);
+	if FileSize = 0 then
+		Result := 'N/A'
+	else
+		Result := BToStr(FileSize);
 end;
 
 function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;

@@ -1,7 +1,7 @@
 //* File:     Lib\uDGauge.pas
 //* Created:  1999-08-01
-//* Modified: 2004-08-12
-//* Version:  X.X.31.X
+//* Modified: 2004-08-29
+//* Version:  X.X.32.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -361,7 +361,7 @@ begin
 		case FKind of
 		gkNormal:
 		begin
-			FBmpOut.Bar(clNone, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+			FBmpOut.Bar(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				C, FBackEffect);
 		end;
 		gkSpectrum:
@@ -386,7 +386,7 @@ begin
 	if X < RectaS.Left then X := RectaS.Left;
 	if (X < RectaS.Right) then
 	begin
-		FBmpOut.Bar(clNone, X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
+		FBmpOut.Bar(X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
 			Color, FBackEffect);
 	end;
 
