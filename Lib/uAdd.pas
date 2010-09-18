@@ -2473,6 +2473,7 @@ var
 	s: string;
 	InLineIndex: SG;
 begin
+	{$IFNDEF LINUX}
 	NativeSymbols := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNATIVEDIGITS, '0123456789');
 
 	DecimalSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SDECIMAL, '.');
@@ -2494,7 +2495,26 @@ begin
 
 // Time Format
 	TimeSeparator := GetLocaleStr(SysLocale.DefaultLCID{ GetThreadLocale}, LOCALE_STIME, ':');
+	{$ELSE}
+	NativeSymbols := '0123456789';
 
+	DecimalSeparator := '.';
+	DigitsAfterDecimal := 0;
+	ThousandSeparator := ',';
+
+	ThousandGroup := 3;
+	FractionGroup := 0;
+
+	NegSymbol := '-';
+	PosSymbol := '+';
+	NegFormat := 1;
+	LeadingZero := 2;
+	ListSeparator := ';';
+
+// Time Format
+	TimeSeparator := ':';
+
+	{$ENDIF}
 //	WinDecimalSeparator := DecimalSeparator;
 end;
 

@@ -70,7 +70,7 @@ type
 		procedure RestoreWindow;
 		procedure StoreWindow;
 
-		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+//		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 
 		procedure Fill;
 		procedure ResizeScene;
@@ -646,13 +646,13 @@ begin
 		if Assigned(FOnRWOptions) then FOnRWOptions(Self, True);
 end;}
 
-procedure TDForm.KeyDown(var Key: Word; Shift: TShiftState);
+{procedure TDForm.KeyDown(var Key: Word; Shift: TShiftState);
 begin
 	if (Key = VK_RETURN) and (ssAlt in Shift) then
 		FullScreen := not FullScreen
 	else
 		inherited KeyDown(Key, Shift);
-end;
+end;}
 
 procedure TDForm.Fill;
 begin

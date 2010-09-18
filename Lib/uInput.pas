@@ -295,7 +295,7 @@ type
 		opArcSin, opArcCos, opArcTan,
 		opSinh, opCosh, opTanh,
 		opArcSinh, opArcCosh, opArcTanh,
-		opElo,
+		opElo, opArcElo,
 		opAvg, opMin, opMax,
 		opRandom,
 		opShl, opShr, opAnd, opOr, opXor, opXnor);
@@ -315,7 +315,7 @@ const
 		'SINH', 'COSH', 'TANH',
 		'ARCSINH', 'ARCCOSH', 'ARCTANH',
 		// Desk games
-		'ELO',
+		'ELO', 'ARCELO',
 		// Statistics
 		'AVG', 'MIN', 'MAX',
 		'RANDOM',
@@ -2313,6 +2313,32 @@ begin
 			end;
 			Result := e / (Node.ArgCount - 1) +
 				GetELO(Calc(Node.Args[Node.ArgCount - 1]))
+		end;
+	end;
+	opArcElo:
+	begin
+		if Node.ArgCount = 0 then
+			e := 0
+		else if Node.ArgCount = 1 then
+			e := Calc(Node.Args[0])
+		else {if Node.ArgCount >= 2 then}
+		begin
+			e := 0;
+			for i := 0 to Node.ArgCount - 2 do
+			begin
+				e := e + Calc(Node.Args[i]);
+			end;
+		end;
+
+		e0 := MaxInt;
+		for i := 0 to 100 do
+		begin
+			e1 := Abs(GetElo(i / 100) - e);
+			if e1 < e0 then
+			begin
+				e0 := e1;
+				Result := i / 100;
+			end;
 		end;
 	end;
 	opAvg:
