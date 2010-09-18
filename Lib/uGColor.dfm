@@ -1,6 +1,6 @@
 object fGColor: TfGColor
-  Left = 264
-  Top = 94
+  Left = 413
+  Top = 147
   BorderStyle = bsDialog
   Caption = 'Enter color'
   ClientHeight = 378

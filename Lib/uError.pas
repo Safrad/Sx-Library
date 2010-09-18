@@ -484,7 +484,7 @@ procedure TfIOError.Timer1Timer(Sender: TObject);
 begin
 	TickCount := GetTickCount;
 	DrawTimeLeft;
-	if TickCount > Ignore.TimeLeft * 1000 + StartTickCount then Close;
+	if (Ignore.TimeLeft > 0) and (TickCount > Ignore.TimeLeft * 1000 + StartTickCount) then Close;
 end;
 
 function DoForm(
