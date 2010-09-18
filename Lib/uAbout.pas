@@ -194,7 +194,7 @@ end;
 
 procedure TfAbout.InitNRT;
 begin
-	PanelNRT.Caption := msToStr(GetTickCount - StartProgramTime + 1000 div 2, diMSD, 0);
+	PanelNRT.Caption := msToStr(GetTickCount - StartProgramTime + 1000 div 2, diMSD, 0, False);
 end;
 
 procedure TfAbout.LoadFile(AboutFile: TFileName);
@@ -230,7 +230,7 @@ begin
 	Background := baGradient;
 	EditEmail.Text := 'safrad@email.cz?subject=' + Application.Title;
 	PanelRC.Caption := Using('~#,###,###,##0', RunCount);
-	PanelTRT.Caption := msToStr(RunTime, diMSD, 3);
+	PanelTRT.Caption := msToStr(RunTime, diMSD, 3, False);
 
 	ImageName.Bitmap.Canvas.Brush.Style := bsClear;
 	ImageName.Bitmap.Canvas.Font.Style := [fsBold];

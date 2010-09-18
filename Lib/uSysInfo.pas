@@ -309,6 +309,7 @@ begin
 			end;
 		end;
 		end;
+		s := 'AMD ' + s;
 	end
 	else if SysInfo.CPUStr = 'GenuineIntel' then
 	begin
@@ -341,6 +342,7 @@ begin
 			end;
 		end;
 		end;
+		s := 'Intel ' + s;
 	end
 	else if SysInfo.CPUStr = 'CyrixInstead' then
 	else if SysInfo.CPUStr = 'NexGenDriven' then
