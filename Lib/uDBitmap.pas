@@ -81,6 +81,8 @@ type
 		function BmpColorIn24(C: TColor): Integer;
 		procedure Lin24(
 			X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect);
+		procedure Line(
+			X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect; Width: SG);
 		procedure Rec24(
 			X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect);
 
@@ -123,6 +125,8 @@ type
 			const BmpS: TDBitmap; const NewX, NewY: LongWord;
 			const InterruptProcedure: TInterruptProcedure);
 
+		procedure Rotate(TransparentColor: TColor; const Effect: TEffect);
+
 		procedure GenRGB(HidedColor: TColor;
 			const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);
 
@@ -154,16 +158,16 @@ type
 			const ColorR, ColorG, ColorB: Boolean;
 			const InterruptProcedure: TInterruptProcedure);
 
-			procedure FTextOut(X, Y: Integer;
-				RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; Text: string);
+		procedure FTextOut(X, Y: Integer;
+			RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; Text: string);
 
-			procedure GBlur(Radius: Double; const Horz, Vert: Boolean;
-				InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
-			procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
+		procedure GBlur(Radius: Double; const Horz, Vert: Boolean;
+			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
+		procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
 
-			procedure FireM(XS1, YS1, XS2, YS2: Longint; Tick: Byte);
-			procedure FireS(XS1, YS1, XS2, YS2: Longint);
-			procedure FogI(XS1, YS1, XS2, YS2: Longint);
+		procedure FireM(XS1, YS1, XS2, YS2: Longint; Tick: Byte);
+		procedure FireS(XS1, YS1, XS2, YS2: Longint);
+		procedure FogI(XS1, YS1, XS2, YS2: Longint);
 	end;
 
 // Multicommands
@@ -680,7 +684,7 @@ procedure TDBitmap.CopyBitmap(BmpS: TDBitmap);
 begin
 	if BmpS = nil then Exit;
 	SetSize(BmpS.Width, BmpS.Height);
-	BmpE24(0, 0, BmpS, clNone, ef16);
+//	BmpE24(0, 0, BmpS, clNone, ef16);
 
 	Move(BmpS.GLData^, FGLData^, FByteX * FHeight);
 end;
@@ -2018,6 +2022,27 @@ begin
 		end;
 	end;}
 end;
+
+procedure TDBitmap.Line(X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect; Width: SG);
+var i: SG;
+begin
+	if Width < 1 then Width := 1;
+	if X1 = X2 then
+	begin
+		if Y2 < Y1 then Change(Y1, Y2);
+		for i := -((Width - 1) div 2) to Width div 2 do
+			Lin24(X1 + i, Y1 - Abs(i), X2 + i, Y2 + Abs(i), clBlack, ef16);
+	end
+	else if Y1 = Y2 then
+	begin
+		if X2 < X1 then Change(X1, X2);
+		for i := -((Width - 1) div 2) to Width div 2 do
+			Lin24(X1 - Abs(i), Y1 + i, X2 + Abs(i), Y2 + i, clBlack, ef16);
+	end
+	else
+		MessageD('Function Not Available', mtError, [mbOk]);
+end;
+
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Rec24(
 	X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect);
@@ -6741,6 +6766,16 @@ procedure TDBitmap.Resize24(
 	const InterruptProcedure: TInterruptProcedure);
 begin
 	Resize24E(BmpS, clNone, NewX, NewY, InterruptProcedure);
+end;
+(*-------------------------------------------------------------------------*)
+procedure TDBitmap.Rotate(TransparentColor: TColor; const Effect: TEffect);
+var BmpS: TDBitmap;
+begin
+	BmpS := TDBitmap.Create;
+	BmpS.CopyBitmap(Self);
+	SetSize(FHeight, FWidth);
+	RotateDefE24(Self, BmpS, 0, AngleCount div 4, TransparentColor, Effect);
+	BmpS.Free;
 end;
 (*-------------------------------------------------------------------------*)
 function GetColors24(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;

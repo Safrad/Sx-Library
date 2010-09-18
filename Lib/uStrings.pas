@@ -27,11 +27,11 @@ procedure DelEndSpace(var s: string);
 function DelBESpaceF(s: string): string;
 procedure DelBESpace(var s: string);
 
-function ReadToChar(const Line: string; var InLineIndex: SG;
+function ReadToChar(const Line: string; var LineIndex: SG;
 	const C: Char): string;
-function ReadToChars(const Line: string; var InLineIndex: SG;
+function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string;
-function ReadToSingleChar(const Line: string; var InLineIndex: Integer;
+function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
 function PosWW(Str, SubStr: string): Integer;
 function IsSubStr(SubStr: string; Str: string): Boolean;
@@ -235,41 +235,41 @@ begin
 	end;
 end;
 
-function ReadToChar(const Line: string; var InLineIndex: SG;
+function ReadToChar(const Line: string; var LineIndex: SG;
 	const C: Char): string;
-var NumStart: SG;
+var StartIndex: SG;
 begin
-	NumStart := InLineIndex;
-	while (InLineIndex <= Length(Line)) and (Line[InLineIndex] <> C) do
-		Inc(InLineIndex);
-	Result := Copy(Line, NumStart, InLineIndex - NumStart);
-	Inc(InLineIndex);
+	StartIndex := LineIndex;
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> C) do
+		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	Inc(LineIndex);
 end;
 
-function ReadToChars(const Line: string; var InLineIndex: SG;
+function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string;
-var NumStart: SG;
+var StartIndex: SG;
 begin
-	NumStart := InLineIndex;
-	while (InLineIndex <= Length(Line)) and (not (Line[InLineIndex] in C)) do
-		Inc(InLineIndex);
-	Result := Copy(Line, NumStart, InLineIndex - NumStart);
-	Inc(InLineIndex);
+	StartIndex := LineIndex;
+	while (LineIndex <= Length(Line)) and (not (Line[LineIndex] in C)) do
+		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	Inc(LineIndex);
 end;
 
-function ReadToSingleChar(const Line: string; var InLineIndex: Integer;
+function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
-var NumStart: Integer;
+var StartIndex: Integer;
 begin
-	NumStart := InLineIndex;
-	while (InLineIndex <= Length(Line)) do
+	StartIndex := LineIndex;
+	while (LineIndex <= Length(Line)) do
 	begin
-		if (Line[InLineIndex] = C) then
+		if (Line[LineIndex] = C) then
 		begin
-			if InLineIndex + 1 <= Length(Line) then
+			if LineIndex + 1 <= Length(Line) then
 			begin
-				if (Line[InLineIndex + 1] = C) then
-					Inc(InLineIndex)
+				if (Line[LineIndex + 1] = C) then
+					Inc(LineIndex)
 				else
 				begin
 					Break;
@@ -278,10 +278,10 @@ begin
 			else
 				Break;
 		end;
-		Inc(InLineIndex);
+		Inc(LineIndex);
 	end;
-	Result := Copy(Line, NumStart, InLineIndex - NumStart);
-	Inc(InLineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	Inc(LineIndex);
 end;
 
 function PosWW(Str, SubStr: string): Integer; // Str is word
