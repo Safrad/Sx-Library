@@ -5,15 +5,15 @@ unit uRot24;
 interface
 
 uses
-	uGraph24, Graphics;
+	uAdd, uGraph24, Graphics;
 const
 	AngleCount = 256;
 type
-	TAngle = Integer;
+	TAngle = SG;
 
 procedure Rotate24(
-	BmpD: TBitmap24; const XD12, YD12: Integer;
-	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: Integer;
+	BmpD: TBitmap24; const XD12, YD12: SG;
+	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: SG;
 	DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 procedure RotateE24(
@@ -22,38 +22,38 @@ procedure RotateE24(
 	const DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 procedure RotateDef24(
-	BmpD: TBitmap24; const XD12, YD12: Integer;
-	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: Integer;
-	const Typ: Byte; const Clock: TAngle;
+	BmpD: TBitmap24; const XD12, YD12: SG;
+	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: SG;
+	const Typ: U8; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 procedure RotateDefE24(
 	BmpD: TBitmap24;
 	BmpS: TBitmap24;
-	const Typ: Byte; const Clock: TAngle;
+	const Typ: U8; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 
 const
 	MaxTyp = 13;
 	SinDiv = 65536; // 1..128..1024*1024
 var
-	Sins: array[0..AngleCount - 1] of Integer;
+	Sins: array[0..AngleCount - 1] of SG;
 
 implementation
 
 procedure Rotate24(
-	BmpD: TBitmap24; const XD12, YD12: Integer;
-	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: Integer;
+	BmpD: TBitmap24; const XD12, YD12: SG;
+	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: SG;
 	DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 label LNext;
 var
-	XS, YS, XD, YD: Integer;
-	TmpYSToXD, TmpYSToYD: Integer;
+	XS, YS, XD, YD: SG;
+	TmpYSToXD, TmpYSToYD: SG;
 
 	PD, PS, PDataS: Pointer;
 	ByteXD, ByteXS: LongWord;
 
-	BmpSWidth, BmpSHeight: Integer;
+	BmpSWidth, BmpSHeight: SG;
 begin
 	if Effect = ef00 then Exit;
 	if TransparentColor <> clNone then
@@ -71,22 +71,22 @@ begin
 
 	BmpSWidth := XS2 + XS1;
 	BmpSHeight := YS2 + YS1;
-	Dec(Integer(PDataS), YS1 * Integer(BmpS.ByteX));
+	Dec(SG(PDataS), YS1 * SG(BmpS.ByteX));
 	for YS := YS1 to YS2 do
 	begin
-		PS := Pointer(Integer(PDataS) + XS1 + XS1 + XS1);
+		PS := Pointer(SG(PDataS) + XS1 + XS1 + XS1);
 		TmpYSToXD := (2 * YS - BmpSHeight) * Sins[DirYSToXD];
 		TmpYSToYD := (2 * YS - BmpSHeight) * Sins[DirYSToYD];
 		for XS := XS1 to XS2 do
 		begin
 			XD := (SinDiv * XD12 + TmpYSToXD + (2 * XS - BmpSWidth) * Sins[DirXSToXD]) div (2 * SinDiv);
 			{$ifndef NoCheck}
-			if (XD < 0) or (XD >= Integer(BmpD.Width)) then goto LNext;
+			if (XD < 0) or (XD >= SG(BmpD.Width)) then goto LNext;
 			{$endif}
 
 			YD := (SinDiv * YD12 + TmpYSToYD + (2 * XS - BmpSWidth) * Sins[DirXSToYD]) div (2 * SinDiv);
 			{$ifndef NoCheck}
-			if (YD < 0) or (YD >= Integer(BmpD.Height)) then goto LNext;
+			if (YD < 0) or (YD >= SG(BmpD.Height)) then goto LNext;
 			{$endif}
 			asm
 			pushad
@@ -910,9 +910,9 @@ begin
 			popad
 			end;
 			LNext:
-			Inc(Integer(PS), 3);
+			Inc(SG(PS), 3);
 		end;
-		Dec(Integer(PDataS), ByteXS)
+		Dec(SG(PDataS), ByteXS)
 	end;
 end;
 
@@ -930,9 +930,9 @@ begin
 end;
 
 procedure RotateDef24(
-	BmpD: TBitmap24; const XD12, YD12: Integer;
-	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: Integer;
-	const Typ: Byte; const Clock: TAngle;
+	BmpD: TBitmap24; const XD12, YD12: SG;
+	BmpS: TBitmap24; const XS1, YS1, XS2, YS2: SG;
+	const Typ: U8; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 var DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
 begin
@@ -1048,7 +1048,7 @@ end;
 procedure RotateDefE24(
 	BmpD: TBitmap24;
 	BmpS: TBitmap24;
-	const Typ: Byte; const Clock: TAngle;
+	const Typ: U8; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 begin
 	RotateDef24(

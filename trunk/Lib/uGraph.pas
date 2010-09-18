@@ -3,7 +3,7 @@
 unit uGraph;
 
 interface
-uses Windows, Graphics, ExtCtrls, StdCtrls, Classes, Controls, SysUtils;
+uses uAdd, Windows, Graphics, ExtCtrls, StdCtrls, Classes, Controls, SysUtils;
 
 const
 	clMoneyGreen = TColor($C0DCC0);
@@ -21,8 +21,8 @@ var
 procedure WaitRetrace;
 
 function GetBmpSize(const X, Y: LongWord; const PixelFormat: Byte): LongWord;
-procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName; const DefaultX, DefaultY: Integer;
-	var Quality: Integer);
+procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName; const DefaultX, DefaultY: SG;
+	var Quality: SG);
 function BitmapSaveToFile(Bitmap: TBitmap; var FileName: TFileName; var Quality: Integer): Boolean;
 procedure CopyBitmap(BmpD, BmpS: TBitmap);
 function GetTransparentColor(const Bmp: TBitmap): TColor;
@@ -69,7 +69,7 @@ implementation
 
 uses
 	Jpeg,
-	uAdd, uStrings, uError, uGetInt;
+	uStrings, uError, uGetInt;
 
 (*-------------------------------------------------------------------------*)
 procedure WaitRetrace;
@@ -83,7 +83,7 @@ begin
 		push ax
 		{$endif}
 		mov dx, 3DAh
-{		@L1:
+{   @L1:
 			in al, dx
 			and al, 08h
 			jz @L2
@@ -107,8 +107,8 @@ begin
 	Result := (((PixelFormat * X  + 31) and $FFFFFFE0) div 8) * Y;
 end;
 
-procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName; const DefaultX, DefaultY: Integer;
-	var Quality: Integer);
+procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName; const DefaultX, DefaultY: SG;
+	var Quality: SG);
 
 	procedure MakeDefault;
 	begin
@@ -189,7 +189,12 @@ begin
 	or (UpperCase(ExtractFileExt(FileName)) = '.JPEG') then
 	begin
 		if Quality = 0 then Quality := 90;
-		if GetInt('JPEG Quality', Quality, 90, 1, 100) = False then Exit;
+		if Quality > 0 then
+		begin
+			if GetInt('JPEG Quality', Quality, 1, 90, 100, nil) = False then Exit;
+		end
+		else
+			Quality := -Quality;
 	end;
 
 	AssignFile(F, FileName);
@@ -646,7 +651,7 @@ begin
 		Dec(i);
 		Canvas.Pen.Color := TopColor;
 		CanvasLine(Canvas, X1 + i,   Y1 + i,   X2 - i - 1, Y1 + i); //-
-		CanvasLine(Canvas, X1 + i,   Y1 + i + 1, X1 + i,   Y2 - i - 1); //|
+		CanvasLine(Canvas, X1 + i,   Y1 + i + 1, X1 + i,   Y2 - i - 1); //|}
 		Canvas.Pen.Color := BottomColor;
 		CanvasLine(Canvas, X1 + i + 1, Y2 - i,   X2 - i,   Y2 - i); //-
 		CanvasLine(Canvas, X2 - i,   Y1 + i + 1, X2 - i,   Y2 - i - 1); //|
@@ -683,7 +688,7 @@ begin
 		end;
 
 		if (LineN < MaxLines) and (i > 1) and
-			(Canvas.TextWidth(DelChars(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left) then
+			(Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left) then
 		begin
 			if LastSpace = 0 then
 			begin

@@ -203,6 +203,7 @@ var
 	InternalName, Key, ShortMenuCaption: string;
 	Flags: LongWord;
 begin
+	if MenuCaption = '' then Exit;
 	Reg := TRegistry.Create;
 	try
 		Reg.RootKey := HKEY_CLASSES_ROOT;
@@ -233,7 +234,7 @@ begin
 
 		if Reg.KeyExists(InternalName) then
 		begin
-			ShortMenuCaption := DelChars(MenuCaption, ' ');
+			ShortMenuCaption := DelCharsF(MenuCaption, ' ');
 			Key := InternalName + '\shell\' + ShortMenuCaption;
 			Reg.OpenKey(Key, True);
 			if ShortMenuCaption <> MenuCaption then
@@ -291,7 +292,7 @@ begin
 				goto Fin;
 		end;
 
-		ShortMenuCaption := DelChars(MenuCaption, ' ');
+		ShortMenuCaption := DelCharsF(MenuCaption, ' ');
 		Key := InternalName + '\shell\' + ShortMenuCaption;
 		if Reg.KeyExists(Key) then
 		begin
@@ -334,7 +335,7 @@ begin
 				goto Fin;
 		end;
 
-		ShortMenuCaption := DelChars(MenuCaption, ' ');
+		ShortMenuCaption := DelCharsF(MenuCaption, ' ');
 		Key := InternalName + '\shell\' + ShortMenuCaption;
 		if Reg.KeyExists(Key) then
 		begin

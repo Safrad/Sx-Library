@@ -1,10 +1,10 @@
 object fIOError: TfIOError
-  Left = 256
-  Top = 606
+  Left = 206
+  Top = 212
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   ClientHeight = 97
-  ClientWidth = 504
+  ClientWidth = 502
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object fIOError: TfIOError
   object ImageBackground: TImage
     Left = 0
     Top = 0
-    Width = 504
+    Width = 502
     Height = 97
     Align = alClient
   end

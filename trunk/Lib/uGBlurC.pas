@@ -31,7 +31,7 @@ type
 //the idea is that when Using a TKernel you ignore the Weights
 //except for Weights in the range -Size..Size.
 
-procedure DGBlur(theBitmap: TBitmap; radius: Integer;
+procedure DGBlur(theBitmap: TBitmap; radius: Integer; const Horz, Vert: Boolean;
 	InterruptProcedure:  TInterruptProcedure);
 
 implementation
@@ -80,7 +80,7 @@ begin
 	Move(P[0], theRow[0], (High(theRow) + 1) * SizeOf(TRGBTriple));
 end;
 
-procedure DGBlur(theBitmap: TBitmap; radius: Integer;
+procedure DGBlur(theBitmap: TBitmap; radius: Integer; const Horz, Vert: Boolean;
 	InterruptProcedure: TInterruptProcedure);
 var
 	Row, Col: Integer;
@@ -147,6 +147,7 @@ begin
 	LDone := High(Done);
 	//blur each row:
 	P := AllocMem(theBitmap.Width * SizeOf(TRGBTriple));
+	if Horz then
 	for Row := 0 to theBitmap.Height - 1 do
 	begin
 		if Assigned(InterruptProcedure) then
@@ -164,6 +165,7 @@ begin
 
 	//now blur each column
 	ReAllocMem(P, theBitmap.Height * SizeOf(TRGBTriple));
+	if Vert then
 	for Col := 0 to theBitmap.Width - 1 do
 	begin
 		if Assigned(InterruptProcedure) then

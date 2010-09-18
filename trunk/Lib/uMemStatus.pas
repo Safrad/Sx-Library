@@ -24,9 +24,9 @@ type
 		DPanel9: TDPanel;
 		DPanel10: TDPanel;
 		DPanel11: TDPanel;
-    DPanel12: TDPanel;
-    Bevel1: TBevel;
-    Bevel2: TBevel;
+		DPanel12: TDPanel;
+		Bevel1: TBevel;
+		Bevel2: TBevel;
 		procedure Timer1Timer(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure DBitBtn1Click(Sender: TObject);

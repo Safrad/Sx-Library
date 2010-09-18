@@ -359,7 +359,7 @@ begin
 		FBmpText.Height := FBmpOut.Height;
 		FBmpText24 := Conv24(FBmpText);
 		Bar24(FBmpText24, clNone, 0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
-			NegColor(Font.Color), ef16);
+			{NegColor(Font.Color)}Color, ef16);
 
 		FBmpText.Canvas.Brush.Style := bsClear;
 		FBmpText.Canvas.Font := Font;
@@ -375,7 +375,7 @@ begin
 				OffsetRect(Recta, i, i);
 				if Displ.Enabled then
 				begin
-					DisplDrawRect(FBmpText24, DelChars(Caption, '&'), FDispl, Recta, Alignment, Layout,
+					DisplDrawRect(FBmpText24, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
 						ef16);
 				end
 				else
@@ -391,7 +391,7 @@ begin
 		end;
 		if Displ.Enabled then
 		begin
-			DisplDrawRect(FBmpText24, DelChars(Caption, '&'), FDispl, Recta, Alignment, Layout,
+			DisplDrawRect(FBmpText24, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
 			ef16);
 		end
 		else
@@ -401,11 +401,11 @@ begin
 
 		if FFontAngle = 0 then
 		begin
-			BmpE24(FBmpOut24, 0, 0, FBmpText24, NegColor(Font.Color), FFontEffect);
+			BmpE24(FBmpOut24, 0, 0, FBmpText24, Color{NegColor(Font.Color)}, FFontEffect);
 		end
 		else
 		begin
-			RotateDefE24(FBmpOut24, FBmpText24, 0, FFontAngle, NegColor(Font.Color), FFontEffect);
+			RotateDefE24(FBmpOut24, FBmpText24, 0, FFontAngle, Color{NegColor(Font.Color)}, FFontEffect);
 		end;
 		FBmpText24.Free;
 		if (Assigned(FBmpText)) and (FBuffer <> bfStatic) then

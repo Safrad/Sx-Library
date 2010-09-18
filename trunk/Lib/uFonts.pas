@@ -34,7 +34,7 @@ begin
 	FontColor := ColorToRGB(FontColor);
 	if FontReaded[FontStyle] = False then
 	begin
-		Bitmap24ReadFromFile(FontBitmap[FontStyle], SharedDir + FontNames[FontStyle] + '.bmp');
+		Bitmap24ReadFromFile(FontBitmap[FontStyle], GraphDir + FontNames[FontStyle] + '.bmp');
 		FontReaded[FontStyle] := True;
 	end;
 	if FontBitmap[FontStyle].PData = nil then Exit;

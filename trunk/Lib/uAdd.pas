@@ -4,9 +4,10 @@ unit uAdd;
 
 interface
 
-uses SysUtils, Forms;
+uses SysUtils, Forms, FileCtrl, ShlObj, ActiveX, ComObj, ComCtrls;
+
 type
-{ SG = Integer; // LongInt
+	SG = Integer; // LongInt
 	UG = Cardinal; // LongWord
 	S8 = ShortInt;
 	U8 = Byte;
@@ -15,6 +16,109 @@ type
 	S32 = LongInt;
 	U32 = LongWord;
 	S64 = Int64;
+	U64 = Int64; // Wor64/Car64
+	TS16 = record
+		case Integer of
+		0: (
+				B0: U8;
+				B1: S8);
+		1: (
+				A: S16);
+	end;
+	TU16 = record
+		case Integer of
+		0: (
+				B0: U8;
+				B1: U8);
+		1: (
+				A: U16);
+	end;
+	TS32 = record
+		case Integer of
+		0: (
+				B0: U8;
+				B1: U8;
+				B2: U8;
+				B3: S8);
+		1: (
+				W0: U16;
+				W1: S16);
+		2: (
+			A: S32);
+	end;
+	TU32 = record
+		case Integer of
+		0: (
+				B0: U8;
+				B1: U8;
+				B2: U8;
+				B3: U8);
+		1: (
+				W0: U16;
+				W1: U16);
+		2: (
+			A: U32);
+	end;
+	TS64 = record
+		case Integer of
+		0: (
+				B0: U8;
+				B1: U8;
+				B2: U8;
+				B3: U8;
+				B4: U8;
+				B5: U8;
+				B6: U8;
+				B7: S8);
+		1: (
+				W0: U16;
+				W1: U16;
+				W2: U16;
+				W3: S16);
+		2: (
+			D0: U32;
+			D1: S32);
+		3: (
+			A: U64);
+	end;
+	TU64 = record
+		case Integer of
+		0: (
+				B0: U8;
+				B1: U8;
+				B2: U8;
+				B3: U8;
+				B4: U8;
+				B5: U8;
+				B6: U8;
+				B7: U8);
+		1: (
+				W0: U16;
+				W1: U16;
+				W2: U16;
+				W3: U16);
+		2: (
+			D0: U32;
+			D1: U32);
+		3: (
+			A: U64);
+	end;
+{	S64 = record
+		case Integer of
+		0: (
+			LowPart: U32;
+			HighPart: S32);
+		1: (
+			QuadPart: Int64);
+	end; overload;
+	U64 = record
+		case Integer of
+		0: (
+			LowPart: U32;
+			HighPart: U32);
+		1: (
+			QuadPart: Int64);
+	end;}
 
 	FG = Real; // Double
 	F32 = Single;
@@ -22,19 +126,19 @@ type
 	F64 = Double;
 	F80 = Extended;
 
-	CG = Char; // AnsiChar
+{	CG = Char; // AnsiChar
 	C8 = AnsiChar;
 	C16 = WideChar;
 
 	TG = string; // AnsiString
 	TA8 = ShortString;
 	T8 = AnsiString;
-	T16 = WideString;
+	T16 = WideString;}
 
 	BG = Boolean; // ByteBool
 	B8 = ByteBool;
 	B16 = WordBool;
-	B32 = LongBool;}
+	B32 = LongBool;
 
 	TArrayByte = array[0..1024 * 1024 * 1024 - 1] of Byte;
 	TArrayChar = array[0..1024 * 1024 * 1024 - 1] of AnsiChar;
@@ -46,12 +150,14 @@ type
 // Graphics
 	TRColor = packed record
 		case Integer of
-		0: (L: - $7FFFFFFF - 1..$7FFFFFFF);
+		0: (L: -$7FFFFFFF - 1..$7FFFFFFF);
 		1: (R, G, B, T: Byte);
 		2: (WordRG, WordBT: Word);
 	end;
 
-const MaxInt64 = Int64($7FFFFFFFFFFFFFFF);
+const
+	DefMemBuffer = 4096; // Best Performance
+	MaxInt64 = Int64($7FFFFFFFFFFFFFFF);
 // Mathematics
 function Sgn(const I: Integer): Integer; overload; {$ifdef DLL}stdcall;{$endif}
 function Sgn(const I: Int64): Integer; overload; {$ifdef DLL}stdcall;{$endif}
@@ -73,9 +179,9 @@ function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
 function LinearMax(Clock, Maximum: LongWord): LongWord;
 
 function RoundDiv(const Dividend: Integer; const Divisor: Integer): Integer; //overload;
-function RoundDiv64(const Dividend: Int64; const Divisor: Integer): Int64; //overload;
-function MaxDiv(const Dividend: Integer; const Divisor: Integer): Integer; overload;
-function MaxDiv(const Dividend: Int64; const Divisor: Integer): Integer; overload;
+function RoundDiv64(const Dividend: Int64; const Divisor: Int64): Int64; //overload;
+function MaxDiv(const Dividend: Integer; const Divisor: Integer): Integer; //overload;
+function MaxDiv64(const Dividend: Int64; const Divisor: Integer): Int64; //overload;
 
 function Range(const Min, Cur, Max: Integer): Integer; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
@@ -89,10 +195,10 @@ procedure CheckBool(var Bool: LongBool); overload;
 procedure Order(var I1, I2: Integer); overload;
 procedure Order(var I1, I2: Cardinal); overload;
 
-function CalcShr(N: LongWord): Byte;  {$ifdef DLL}stdcall;{$endif}
+function CalcShr(N: U32): S8;
 
-function AllocBy(const OldSize: Integer; var NewSize: Integer;
-	const BlockSize: Integer): Boolean;
+function AllocBy(const OldSize: SG; var NewSize: SG;
+	BlockSize: SG): Boolean;
 
 // Format functions
 var WinDecimalSeparator: Char;
@@ -124,7 +230,8 @@ function msToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt): TString;  {$ifdef DLL}stdcall;{$endif}
 
 // System
-procedure Delay(const ms: LongWord);  {$ifdef DLL}stdcall;{$endif}
+procedure Beep;
+procedure SndWarn;
 function DriveTypeToStr(const DriveType: Integer): TString;
 function ProcessPriority(const Prior: Byte): Integer;  {$ifdef DLL}stdcall;{$endif}
 function ThreadPriority(const Prior: Byte): Integer;  {$ifdef DLL}stdcall;{$endif}
@@ -135,11 +242,26 @@ function GetSingleCaption(const FName: TFileName; const Changed: Boolean;
 function GetMultiCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Integer; const Index, Count: Integer): string;
 
+function MenuNameToFileName(Name: string): string;
+function ButtonNameToFileName(Name: string): string;
+
 procedure CorrectPos(Form: TForm);
+procedure SetListViewItems(ListView: TListView; NewSize: SG);
+procedure CreateLink(
+	const LinkFileName: WideString;
+	const Target: TFileName;
+	const Arguments: string;
+	const StartIn: string;
+	const HotKey: Word;
+	const Description: string;
+	const IconFileName: TFileName;
+	const IconIdex: Integer);
 
 implementation
 
-uses Windows, Math;
+uses
+	Windows, Math,
+	uError;
 
 function Sgn(const I: Integer): Integer;
 begin
@@ -291,7 +413,7 @@ begin
 		Result := (Dividend + (Divisor div 2)) div Divisor;
 end;
 
-function RoundDiv64(const Dividend: Int64; const Divisor: Integer): Int64;
+function RoundDiv64(const Dividend: Int64; const Divisor: Int64): Int64;
 // 0 div 4 is 0
 // 1 div 4 is 0
 // 2 div 4 is 1
@@ -315,7 +437,7 @@ begin
 		Result := (Dividend + Divisor - 1) div Divisor;
 end;
 
-function MaxDiv(const Dividend: Int64; const Divisor: Integer): Integer;
+function MaxDiv64(const Dividend: Int64; const Divisor: Integer): Int64;
 // 0 div 4 is 0
 // 1 div 4 is 1
 // 2 div 4 is 1
@@ -355,7 +477,7 @@ asm
 	mov [A], ecx
 	pop ebx
 	pop ecx
-//	xchg A, B
+//  xchg A, B
 end;
 
 procedure CheckBool(var Bool: ByteBool); overload;
@@ -395,34 +517,65 @@ begin
 	end;
 end;
 
-function CalcShr(N: LongWord): Byte;
-var
-	Bit: Byte;
+function CalcShr(N: U32): S8;
+{
+	0: -1
+	1: 0
+	2: 1
+	4: 2
+	8: 3
+	16
+	32
+	64
+	16384: 14
+	32768: 15
+	65536: 16
+
+	0: -1
+	1: 0
+	2: 1
+	3..4: 2
+	5..8: 3
+
+	1 shl -1 = 0
+	1 shl 0 = 1
+	1 shl 1 = 2
+	1 shl 2 = 4
+	1 shl 3 = 8
+
+}
+var M: U32;
 begin
 	if N = 0 then
 	begin
-		Result := 0;
+		Result := -1;
 	end
 	else
 	begin
-		Bit := 0;
-		repeat
-			N := N shr 1;
-			if N = 0 then Break;
-			Inc(Bit);
-		until False;
-		Result := Bit;
+		Result := 0;
+		M := 1;
+		while N > M do
+		begin
+			Inc(Result);
+			M := M shl 1;
+		end;
 	end;
 end;
 
-function AllocBy(const OldSize: Integer; var NewSize: Integer;
-	const BlockSize: Integer): Boolean;
+function AllocBy(const OldSize: SG; var NewSize: SG;
+	BlockSize: SG): Boolean;
 {
 	OldSize = <0, 2^31)
 	NewSize = <0, 2^31)
 	BlockSize = 2^n, <2, 2^30>
 }
 begin
+	if (1 shl CalcShr(BlockSize)) <> BlockSize then
+	begin
+		ErrorMessage('Bad AllocBy block size ' + IntToStr(BlockSize));
+		BlockSize := 1 shl CalcShr(BlockSize);
+	end;
+
 	if NewSize > OldSize then
 		NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1)
 	else
@@ -633,7 +786,7 @@ var
 			if CharsTable[Line[LineIndex]] = ctNumber then
 			begin
 				LastLineIndex := LineIndex;
-{				repeat
+{       repeat
 					Inc(LineIndex);
 				until not ((LineIndex <= Length(Line)) and (CharsTable[Line[LineIndex]] = ctNumber));}
 
@@ -653,7 +806,7 @@ var
 					'!': Base := 10;
 					'$', 'x', 'X', 'h', 'H': Base := 16;
 					'.': Point := True;
-					'*', '/', '^', ')', '(': Break;
+					'*', '/', ':', '^', ')', '(': Break;
 					'-', '+': if (Base <> 10) or (UpCase(Line[LineIndex - 1]) <> 'E') then Break else UnarExp := True;
 					else
 					begin
@@ -713,6 +866,7 @@ var
 
 				if Per then Res := Res * MaxVal / 100;
 				if UnarExp then Exp := -Exp;
+				if Abs(Exp) > 1024 then Exp := Sgn(Exp) * 1024;
 				Res := Res * Power(10, Exp);
 				if Unar then Res := -Res;
 
@@ -771,7 +925,7 @@ var
 				opExp:
 				begin
 					Result := Power(R1, R2);
-{					Result := 1;
+{         Result := 1;
 					i := 1;
 					while  i <= R2 do
 					begin
@@ -791,7 +945,7 @@ var
 			end;
 			'-':
 			begin
-{				if LastOperator = opWaitOperator then
+{       if LastOperator = opWaitOperator then
 				begin
 					if (Line[LineIndex - 1] = 'E') then
 						UnarExp := not UnarExp
@@ -813,7 +967,7 @@ var
 				LastOperator := opMul;
 				Inc(LineIndex);
 			end;
-			'/':
+			'/', ':':
 			begin
 				LastOperator := opDiv;
 				Inc(LineIndex);
@@ -1050,6 +1204,7 @@ begin
 	//if B<10737418240 then
 	Result := Using('0.##~', (100 * (B div 128)) div (1073741824 div 128)) + Sep + 'GB';
 	LExit:
+	if B < 0 then Result := '-' + Result;
 end;
 
 function BToStr(const B: Int64): TString;
@@ -1138,6 +1293,7 @@ begin
 	//if B<11529215046068469760 then
 	Result := Using('0.##~', (100 * (B div 128)) div (1152921504606846976 div 128)) + Sep + 'EB'; //Exa
 	LExit:
+	if B < 0 then Result := '-' + Result;
 end;
 
 procedure msToHMSD(const T: Int64; var GH, GM, GS, GD: LongWord);
@@ -1247,12 +1403,14 @@ begin
 	end;
 end;
 
-procedure Delay(const ms: LongWord);
-var
-	TickCount: LongWord;
+procedure Beep;
 begin
-	TickCount := GetTickCount + ms;
-	while GetTickCount < TickCount do
+	Windows.Beep(0, 0);
+end;
+
+procedure SndWarn;
+begin
+	Windows.Beep(0, 0);
 end;
 
 function DriveTypeToStr(const DriveType: Integer): string;
@@ -1313,12 +1471,124 @@ begin
 	if New <> 0 then Result := Result + ' (New)';
 end;
 
+function MenuNameToFileName(Name: string): string;
+begin
+	Result := Name;
+	while Length(Result) > 0 do
+	begin
+		case Result[Length(Result)] of
+		'0'..'9':
+		begin
+			SetLength(Result, Length(Result) - 1);
+		end;
+		'_':
+		begin
+			SetLength(Result, Length(Result) - 1);
+			Break;
+		end
+		else
+			Break;
+		end;
+	end;
+end;
+
+function ButtonNameToFileName(Name: string): string;
+label LDel;
+var Index, Count: SG;
+begin
+	Result := Name;
+	while Length(Result) > 0 do
+	begin
+		case Result[Length(Result)] of
+		'0'..'9':
+		begin
+			SetLength(Result, Length(Result) - 1);
+		end;
+		'_':
+		begin
+			SetLength(Result, Length(Result) - 1);
+			Break;
+		end
+		else
+			Break;
+		end;
+	end;
+	Index := Pos('DITBTN', UpperCase(Result));
+	Count := 7;
+	if Index <> 0 then goto LDel;
+
+	Index := Pos('BITBTN', UpperCase(Result));
+	Count := 6;
+	if Index <> 0 then goto LDel;
+
+	Index := Pos('BUTTON', UpperCase(Result));
+	Count := 6;
+	if Index <> 0 then goto LDel;
+
+	Exit;
+	LDel:
+		Delete(Result, Index, Count);
+end;
+
 procedure CorrectPos(Form: TForm);
 begin
+	if not Assigned(Form) then Exit;
 	if Form.Left + Form.Width > Screen.Width then Form.Left := Screen.Width - Form.Width;
 	if Form.Top + Form.Height > Screen.Height then Form.Top := Screen.Height - Form.Height;
 	if Form.Left < 0 then Form.Left := 0;
 	if Form.Top < 0 then Form.Top := 0;
+end;
+
+procedure SetListViewItems(ListView: TListView; NewSize: SG);
+var j: SG;
+begin
+	if NewSize > ListView.Items.Count then
+	begin
+		for j := 0 to NewSize - ListView.Items.Count - 1 do
+		begin
+			ListView.Items.Add;
+		end;
+	end
+	else
+	begin
+		for j := ListView.Items.Count - 1 downto NewSize do
+		begin
+			ListView.Items[j].Delete;
+		end;
+	end;
+end;
+
+procedure CreateLink(
+	const LinkFileName: WideString;
+	const Target: TFileName;
+	const Arguments: string;
+	const StartIn: string;
+	const HotKey: Word;
+	const Description: string;
+	const IconFileName: TFileName;
+	const IconIdex: Integer);
+var
+	MyObject : IUnknown;
+	MySLink : IShellLink;
+	MyPFile : IPersistFile;
+begin
+	MyObject := CreateComObject(CLSID_ShellLink);
+	MySLink := MyObject as IShellLink;
+	MyPFile := MyObject as IPersistFile;
+
+	MySLink.SetArguments(PChar(Arguments));
+	MySLink.SetPath(PChar(Target));
+	MySLink.SetWorkingDirectory(PChar(StartIn));
+	MySLink.SetDescription(PChar(Description));
+	MySLink.SetIconLocation(PChar(IconFileName), IconIdex);
+	MySLink.SetHotkey(HotKey);
+
+	if not DirectoryExists(ExtractFileDir(LinkFileName)) then
+		CreateDir(ExtractFileDir(LinkFileName));
+	MyPFile.Save(PWChar(LinkFileName), False);
+	MySLink := nil;
+	MyPFile := nil;
+	MyObject := nil;
 end;
 
 procedure FillCharsTable;

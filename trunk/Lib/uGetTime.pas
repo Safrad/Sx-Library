@@ -142,7 +142,7 @@ end;
 
 function ShortTimeToStr(const T: LongInt): string;
 begin
-	Result := DelChars(msToStr(T, diMSD, -3), ' ');
+	Result := DelCharsF(msToStr(T, diMSD, -3), ' ');
 end;
 
 procedure TfGetTime.InitButtons;

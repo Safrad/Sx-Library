@@ -6,7 +6,7 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDBitBtn, ComCtrls, uDPanel, uDLabel;
+	ExtCtrls, StdCtrls, uDBitBtn, ComCtrls, uDPanel, uDLabel, uWave, uAdd;
 
 type
 	TfIOError = class(TForm)
@@ -37,12 +37,13 @@ type
 
 var
 	IgnoreAll: Boolean;
+	SndError: PWave;
 
-function ErrorMes(const ErrorCode: Integer): string;
+function ErrorMes(const ErrorCode: U32): string;
 
 // IO Error
-procedure IOError(FName: TFileName; const ErrorCode: Integer);
-function IOErrorRetry(var FName: TFileName; const ErrorCode: Integer): Boolean;
+procedure IOError(FName: TFileName; const ErrorCode: U32);
+function IOErrorRetry(var FName: TFileName; const ErrorCode: U32): Boolean;
 // File Error
 procedure IOErrorMessage(FName: TFileName; const ErrorMsg: string);
 function IOErrorMessageRetry(var FName: TFileName; const ErrorMsg: string): Boolean;
@@ -53,17 +54,19 @@ function ErrorMessageRetry(ErrorMsg: string): Boolean;
 implementation
 
 {$R *.DFM}
-uses uAdd, uGraph, uGraph24, uTexture;
+uses
+	uGraph, uGraph24, uTexture,
+	Registry, MMSystem;
 var
 	fIOError: TfIOError;
 	IOErrorMessages: TStrings;
 type
 	TStyle = (stIO, stFile, stInternal);
 
-function ErrorMes(const ErrorCode: Integer): string;
+function ErrorMes(const ErrorCode: U32): string;
 begin
 	case ErrorCode of
-	000: Result := 'No error';
+	000, $ffffffff: Result := 'No error';
 	001: Result := 'Invalid function number';
 	002: Result := 'File not found';
 	003: Result := 'Path not found';
@@ -155,7 +158,7 @@ begin
 	106: Result := 'Invalid numeric format';
 
 	112: Result := 'Disk is full';
-	
+
 	150: Result := 'Disk is write-protected';
 	151: Result := 'Bad drive request struct length';
 	152: Result := 'Drive not ready'; // Disk not ready
@@ -212,7 +215,25 @@ begin
 	Result := Result + ' (' + IntToStr(ErrorCode) + ')';
 end;
 
-function DoForm(const Style: TStyle; var FName: TFileName; const ErrorCode: Integer; const ErrorMsg: string; const Retry: Boolean): Boolean;
+procedure LoadSnd;
+var
+	Reg: TRegistry;
+	Key: string;
+	SndName: TFileName;
+begin
+	Reg := TRegistry.Create;
+	Reg.RootKey := HKEY_CURRENT_USER;
+	Key := 'AppEvents\Schemes\Apps\.Default\AppGPFault\.Current';
+	if Reg.OpenKey(Key, False) then
+	begin
+		SndName := Reg.ReadString('');
+		if FileExists(SndName) then
+			WaveReadFromFile(SndError, SndName);
+		Reg.CloseKey;
+	end;
+end;
+
+function DoForm(const Style: TStyle; var FName: TFileName; const ErrorCode: U32; const ErrorMsg: string; const Retry: Boolean): Boolean;
 var s: string;
 begin
 	Result := False;
@@ -226,6 +247,10 @@ begin
 
 	if IgnoreAll = False then
 	begin
+		if SndError = nil then LoadSnd;
+		if Assigned(SndError) then
+			PlaySound(PChar(SndError), 0, snd_ASync or snd_Memory);
+			
 		if not Assigned(fIOError) then
 		begin
 			fIOError := TfIOError.Create(Application.MainForm);
@@ -296,12 +321,12 @@ begin
 	end;
 end;
 
-procedure IOError(FName: TFileName; const ErrorCode: Integer);
+procedure IOError(FName: TFileName; const ErrorCode: U32);
 begin
 	DoForm(stIO, FName, ErrorCode, '', False);
 end;
 
-function IOErrorRetry(var FName: TFileName; const ErrorCode: Integer): Boolean;
+function IOErrorRetry(var FName: TFileName; const ErrorCode: U32): Boolean;
 begin
 	Result := DoForm(stIO, FName, ErrorCode, '', True);
 end;
