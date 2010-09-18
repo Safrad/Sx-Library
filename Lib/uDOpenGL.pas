@@ -46,7 +46,7 @@ implementation
 
 uses
 	Dialogs,
-	uGraph, uDBitmap, uAdd, uError;
+	uGraph, uDBitmap, uTypes, uError;
 
 {
 procedure glBindTexture(target: GLenum; texture: GLuint); external opengl32 name 'glBindTexture';

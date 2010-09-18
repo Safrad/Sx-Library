@@ -6,12 +6,14 @@
 //* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
+// D??? DNW
+
 unit uCSV;
 
 interface
 
 uses
-	uDForm, uAdd, uData,
+	uDForm, uTypes, uData,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls, uDButton, uDLabel, uMain;
 
@@ -107,7 +109,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uDIni, uError, uFiles, uStrings;
+	uDIni, uError, uFiles, uStrings, uFormat;
 
 var
 	CSVFile: TFile;

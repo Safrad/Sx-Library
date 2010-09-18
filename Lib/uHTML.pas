@@ -8,7 +8,7 @@
 
 unit uHTML;
 
-interface
+interface  // D??? Head, Body, Tail
 
 uses
 	uTypes,
@@ -20,18 +20,18 @@ type
 	THTML = class(TObject)
 	private
 		FileName: TFileName;
-		Body: string;
 		FStyle: TFileName;
 		FFrameset: BG;
 		procedure WriteToFile;
 	public
 		Title: string;
-		AddCreated, AddTitle: BG;
+		AddCreated: BG;
 		Unicode: BG;
 		ConvertCharser: BG;
+		Body: string;
 		Foot: string;
 
-		constructor Create(FileName: TFileName);
+		constructor Create(FileName: TFileName = '');
 		destructor Destroy; override;
 
 		procedure AddBodyFromFile;
@@ -45,6 +45,7 @@ type
 		procedure AddRef(FileName: TFileName; Text: string);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
 		procedure AddImage(FileName: TFileName); overload;
+		procedure AddTitle;
 
 		procedure SetStyle(Value: TFileName);
 
@@ -60,7 +61,6 @@ function StrToXML(s: string): string;
 function StrToIStr(s: WideString): string;}
 //function WStrToXML(s: WideString): string;
 function SToHTML(Value: string): string;
-procedure Silver(var s: string);
 procedure Small(var s: string);
 procedure HTMLRedirect(WriteToFileName: TFileName; RedirectURL: string);
 function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
@@ -68,9 +68,13 @@ function RelativePath(Source, Target: string): string;
 
 var
 	ImagesDir: string;
+	RootDir: string;
+	LastUpdateStr: string = 'Last Update';
+	StyleStr: string = 'style.css';
 const
 	nbsp = '&nbsp;';
 	DistanceUnitNames: array[TDistanceUnit] of string = ('%', 'px', 'pt');
+
 
 implementation
 
@@ -182,13 +186,8 @@ begin
 	else
 	begin
 		Result := StrToXML(Value);
-		Replace(Result, LineSep, '<br/>');
+		Replace(Result, LineSep, '<br />');
 	end;
-end;
-
-procedure Silver(var s: string);
-begin
-	s := '<font color="#7f7f7f">' + s + '</font>';
 end;
 
 procedure Small(var s: string);
@@ -196,16 +195,44 @@ begin
 	s := '<small>' + s + '</small>';
 end;
 
+function HeadStr(Charset: SG; FrameSet: BG): string;
+const
+	XMLDef0 = '<?xml version="1.0" encoding="';
+	XMLDef1 = '"?>' + HTMLSep;
+//	XMLDef = '';
+	HTMLId0 = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 '; // HTML 4.0
+	HTMLId1 = '//EN" ';
+	HTMLId2 = '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-';
+	HTMLTransitional = HTMLId0 + 'Transitional' + HTMLId1 + HTMLId2 + 'transitional.dtd">' + HTMLSep;
+	HTMLFrameset = HTMLId0 + 'Frameset' + HTMLId1 + HTMLId2 + 'frameset.dtd">' + HTMLSep;
+
+	CharsetName: array[0..1] of string = ('ISO-8859-2'{ windows-1250}, 'UTF-8');
+begin
+	Result :=
+		XMLDef0 +
+		CharsetName[Charset] +
+		XMLDef1;
+	if Frameset then Result := Result + HTMLFrameset else Result := Result + HTMLTransitional;
+	Result := Result +
+		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cz" lang="cz">' + HTMLSep +
+		'<head>' + HTMLSep +
+		'	<meta name="Author" content="Safranek David (Safrad)" />' + HTMLSep +
+		'	<meta name="E-Mail" content="safrad@centrum.cz" />' + HTMLSep +
+		'	<meta name="lang" content="cz" />' + HTMLSep +
+		'	<meta http-equiv="Content-Type" content="text/xml; charset='{html} + CharsetName[Charset] + '" />' + HTMLSep;
+end;
+
 procedure HTMLRedirect(WriteToFileName: TFileName; RedirectURL: string);
 var s: string;
 begin
-	s := '<HTML>';
-	s := s + '<HEAD>';
-	s := s + '<META HTTP-EQUIV=Refresh CONTENT="0; URL=' + ExtractFileName(RedirectURL) + '">';
-	s := s + '</HEAD>';
-	s := s + '</HTML>';
+	s := HeadStr(0, False) +
+		'	<meta http-equiv="refresh" content="0; url=' + RedirectURL + '">' + HTMLSep +
+		'</head>' +HTMLSep +
+		'<body>' +HTMLSep +
+		'	I''m trying to redirect you. If it fails, you can follow this<a href="' + RedirectURL + '">link</a>.' + HTMLSep +
+		'</body>' +HTMLSep +
+		'</html>';
 	WriteStringToFile(WriteToFileName, s, False);
-
 end;
 
 function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
@@ -224,7 +251,7 @@ function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): s
 			Result := Result + '</b>';
 		if A then
 			Result := Result + '</a>';
-		Result := Result + '&nbsp';
+		Result := Result + nbsp;
 		Result := Result + '</td>';
 	end;
 
@@ -282,7 +309,7 @@ begin
 	Result := Result + '</tr></table>';
 end;
 
-constructor THTML.Create(FileName: TFileName);
+constructor THTML.Create(FileName: TFileName = '');
 begin
 	inherited Create;
 
@@ -292,7 +319,6 @@ begin
 	FFrameset := False;
 	FStyle := '';
 	AddCreated := UpperCase(DelFileExt(ExtractFileName(FileName))) <> 'MENU';
-	AddTitle := True;
 	Unicode := True;
 	ConvertCharser := True;
 end;
@@ -322,9 +348,9 @@ procedure THTML.HorizontalRule(Width: SG = 100; DistanceUnit: TDistanceUnit = du
 begin
 	Body := Body + '<hr ';
 	if (Width <> 100) or (DistanceUnit <> duPercentage) then
-		Body := Body + 'width=' + IntToStr(Width) + DistanceUnitNames[DistanceUnit] + ' ';
+		Body := Body + 'width="' + IntToStr(Width) + DistanceUnitNames[DistanceUnit] + '" ';
 	if Size <> 2 then
-		Body := Body + 'size=' + IntToStr(Size);
+		Body := Body + 'size="' + IntToStr(Size) + '" ';
 	Body := Body + '/>'
 end;
 
@@ -418,14 +444,18 @@ begin
 	B.LoadFromFile(FileName);
 
 	s :=
-		'<IMG SRC="' + RelativePath(Self.FileName, FileName) + '" ' +
-		'WIDTH="' + IntToStr(B.Width) + '" ' +
-		'HEIGHT="' + IntToStr(B.Height) + '" ';
-	if Pos('ALT', Params) = 0 then
-		s := s + 'ALT="' + ExtractFileName(DelFileExt(FileName)) + '" ';
-	if Pos('BORDER', Params) = 0 then
-		s := s + 'BORDER="0" ';
-	s := s + Params + '>' + HTMLSep;
+		'<img src="' + RelativePath(Self.FileName, FileName) + '" ';
+	if FileExists(FileName) then
+	begin
+		s := s +
+			'width="' + IntToStr(B.Width) + '" ' +
+			'height="' + IntToStr(B.Height) + '" ';
+	end;
+	if Pos('alt', Params) = 0 then
+		s := s + 'alt="' + ExtractFileName(DelFileExt(FileName)) + '" ';
+	if Pos('border', Params) = 0 then
+		s := s + 'border="0" ';
+	s := s + Params + '/>';
 	AddBody(s);
 	B.Free;
 end;
@@ -435,10 +465,15 @@ begin
 	AddImage(FileName, '');
 end;
 
+procedure THTML.AddTitle;
+begin
+	Body := Body + '	<h2>' + Title + '</h2>' + HTMLSep;
+end;
+
 procedure THTML.WriteToFile;
 
 procedure HTMLEnd;
-var FName: TFileName;
+//var FName: TFileName;
 begin
 {	t := Now;
 	DateTimeToString(d, 'dd.mm.yyyy', t);
@@ -451,27 +486,28 @@ begin
 	begin
 		if AddCreated then
 		begin
-			AddBody('	<hr/>' + HTMLSep +
-				'<DIV ALIGN="RIGHT"><SMALL>Created ' + DateTimeToS(Now) + '</SMALL>' + nbsp + nbsp);
-			FName := ExtractFilePath(FileName) + 'Foot.body';
+			AddBody('	<!-- Foot -->' + HTMLSep +
+				'	<hr noshade="noshade" />' + HTMLSep +
+				'	<div align="right">' + HTMLSep +
+				'		<small>' + LastUpdateStr + ' ' + DateTimeToS(Now) + '</small>' + nbsp + nbsp);
+{			FName := ExtractFilePath(FileName) + 'Foot.body';
 			if FileExists(FName) then
 			begin
 				Body := Body + ReadStringFromFile(FName);
-			end;
+			end;}
 			AddBody(Foot);
-			AddBody(nbsp + nbsp + '<A HREF="http://validator.w3.org/check?uri=referer">');
-			AddImage(ImagesDir + 'valid-html40.png');
-			AddBody('</A></DIV>' + HTMLSep);
+			AddBody(nbsp + '<a href="http://validator.w3.org/check?uri=referer">');
+//			AddImage(ImagesDir + 'valid-html40.png');
+			AddImage(ImagesDir + 'vxhtml10.png');
+			AddBody('</a>' + HTMLSep + '	</div>' + HTMLSep);
 		end
 		else
 			AddBody(Foot);
-		AddBody('</BODY>' + HTMLSep);
+		AddBody('</body>' + HTMLSep);
 	end;
-	AddBody('</HTML>' + HTMLSep);
+	AddBody('</html>' + HTMLSep);
 end;
 
-const
-	CharsetName: array[0..1] of string = ('ISO-8859-2'{ windows-1250}, 'utf-8');
 var
 	LastBody, s: string;
 	BodySaved: string;
@@ -481,33 +517,22 @@ begin
 	if Title = '' then Title := DelFileExt(ExtractFileName(FileName));
 	if FFrameset = False then
 	begin
-		if FStyle = '' then FStyle := 'style.css';
+		if FStyle = '' then FStyle := StyleStr;
 	end;
-	s := '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 ';
-	if FFrameset then s := s + 'Frameset' else s := s + 'Transitional';
-	s := s + '//EN">' + HTMLSep +
-	'<HTML>' + HTMLSep +
-	'<HEAD>' + HTMLSep;
-
-	s := s +
-		'	<meta name="Author" content="Safrad">' + HTMLSep +
-		'	<meta name="lang" content="cz">' + HTMLSep +
-		'	<meta http-equiv="Content-Type" content="text/html; charset=' + CharsetName[SG(Unicode) and 1] + '">' + HTMLSep;
+	s := HeadStr(SG(Unicode) and 1, FFrameset);
 
 	if FFrameset = False then
-		s := s + '	<link rel="stylesheet" type="text/css" href="' + FStyle + '">' + HTMLSep;
+		s := s + '	<link rel="stylesheet" type="text/css" href="' + RelativePath(Self.FileName, RootDir + FStyle){FStyle} + '" />' + HTMLSep;
 	s := s +
-		'	<link rel="shortcut icon" href="' + RelativePath(Self.FileName, ImagesDir + 'favicon.ico') + '">' + HTMLSep;
+		'	<link rel="shortcut icon" href="' + RelativePath(Self.FileName, ImagesDir + 'favicon.ico') + '" />' + HTMLSep;
 
-	s := s + '	<TITLE>' + Title + '</TITLE>' + HTMLSep;
-	s := s + '</HEAD>' + HTMLSep;
+	s := s + '	<title>' + Title + '</title>' + HTMLSep;
+	s := s + '</head>' + HTMLSep;
 	if FFrameset then
-//		s := s + '	<FRAMESET>' + HTMLSep
+//		s := s + '	<frameset>' + HTMLSep
 	else
 	begin
-		s := s + '<BODY>' + HTMLSep;
-		if AddTitle then
-			s := s + '	<H2>' + Title + '</H2>' + HTMLSep;
+		s := s + '<body>' + HTMLSep;
 	end;
 	Body := s + Body;
 
@@ -549,6 +574,7 @@ procedure THTML.AddBodyFromFile;
 var
 	FName: TFileName;
 	s, s2: string;
+	i, InLineIndex: SG;
 begin
 	FName := DelFileExt(FileName) + '.body';
 	if FileExists(FName) then
@@ -556,9 +582,23 @@ begin
 		s := ReadStringFromFile(FName);
 		if Length(s) >= 9 then
 		begin
-			s2 := UpperCase(Copy(s, 1, 9));
-			if s2 = '<FRAMESET' then
-				FFrameset := True;
+			s2 := LowerCase(Copy(s, 1, 9));
+			if s2 = '<frameset' then
+				FFrameset := True
+			else
+			begin
+				i := Pos('$table', s);
+				if i <> 0 then
+				begin
+					InLineIndex := i + 8;
+					FName := ExtractFilePath(FileName) + ReadToChar(s, InLineIndex, '"');
+//					s2 := ReadStringFromFile(FName);
+					Body := Body + Copy(s, 1, i - 1);
+					AddTable(FName);
+					Body := Body + Copy(s, InLineIndex, MaxInt);
+					Exit;
+				end;
+			end;
 		end;
 		Body := Body + s;
 	end;
@@ -580,8 +620,8 @@ var
 	Wid, MaxWid: SG;
 begin
 	Line := ReadStringFromFile(FileName);
-	Body := Body + '<table border=' + IntToStr(Border) + ' cellspacing=' + IntToStr(CellSpacing) +
-	 ' cellpadding=' + IntToStr(CellPadding) + '>' + HTMLSep;
+	Body := Body + '<table border="' + IntToStr(Border) + '" cellspacing="' + IntToStr(CellSpacing) +
+	 '" cellpadding="' + IntToStr(CellPadding) + '">' + HTMLSep;
 
 	Wid := 0;
 	MaxWid := 0;
@@ -618,9 +658,9 @@ begin
 		begin
 			if Wid < MaxWid then
 			begin
-				Body := Body + '<td colspan=' + IntToStr(MaxWid - Wid) + '>';
+				Body := Body + '<td colspan="' + IntToStr(MaxWid - Wid) + '">';
 				if Wid = 0 then
-					Body := Body + '<hr/>';
+					Body := Body + '<hr />';
 				Body := Body + '</td>' + HTMLSep;
 			end;
 			Wid := 0;

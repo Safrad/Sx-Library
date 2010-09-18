@@ -262,7 +262,7 @@ var hTaskBar: HWND;
 begin
 	hTaskBar := FindWindow('Shell_TrayWnd', nil);
 	if Visible then
-		ShowWindow(hTaskBar, SW_SHOW)
+		ShowWindow(hTaskBar, SW_SHOWNA)
 	else
 		ShowWindow(hTaskBar, SW_HIDE);
 end;
@@ -301,7 +301,9 @@ begin
 end;}
 
 procedure TDForm.Common(Value: Boolean);
-var Style: LongInt;
+var
+	Style: LongInt;
+//	LastBackground: TBackground;
 begin
 {		if FBackground = baOpenGL then
 		begin
@@ -316,12 +318,17 @@ begin
 				ReadScreenModes;
 				SetScreenMode(640, 480, 32, 0, False, False, False, False, True);
 			end;
+{			LastBackground := Background;
+			Background := baNone;
+			BorderStyle := bsNone;
+			Background := LastBackground;}
 			Style := GetWindowLong(Handle, GWL_STYLE);
-			Style := Style and (not WS_CAPTION);
-			Style := Style and (not WS_THICKFRAME);
+			Style := Style and not WS_CAPTION;
+			Style := Style and not WS_THICKFRAME;
 			SetWindowLong(Handle, GWL_STYLE, Style);
+
 //			if FBackground = baOpenGL then
-				SetBounds(0, 0, Screen.Width, Screen.Height + 1); // -> PopupMenu is visibled
+				SetBounds(0, 0, Screen.Width, Screen.Height); // -> PopupMenu is visibled
 {			else
 				SetBounds(0, 0, Screen.Width, Screen.Height);}
 			if FBackground <> baOpenGL then
@@ -331,14 +338,18 @@ begin
 		end
 		else
 		begin
+{			LastBackground := Background;
+			BorderStyle := bsSizeable;
+			BorderStyle := bsNone;
+			Background := LastBackground;}
 			if FChangeMode then
 				RestoreStartMode;
-			RestoreWindow;
-{			Style := GetWindowLong(Handle, GWL_STYLE);
+			Style := GetWindowLong(Handle, GWL_STYLE);
 			Style := Style or (WS_CAPTION);
 			Style := Style or (WS_THICKFRAME);
 			SetWindowLong(Handle, GWL_STYLE, Style);
-			Show;}
+			RestoreWindow;
+//			Show;
 		end;
 {		if FBackground = baOpenGL then
 		begin
@@ -738,6 +749,8 @@ begin
 	end
 	else
 	begin
+{
+		PatBlt(Canvas.Handle, 0, 0, FBitmapB.Width, FBitmapB.Height, WHITENESS);}
 		BitBlt(Canvas.Handle, 0, 0, FBitmapB.Width, FBitmapB.Height,
 			FBitmapB.Canvas.Handle,
 			0, 0,
@@ -921,7 +934,7 @@ begin
 		glPopAttrib;*)
 	end;
 
-//	inherited Paint; // FOnPaint Method
+	inherited Paint; // FOnPaint Method
 
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:

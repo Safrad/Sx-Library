@@ -11,7 +11,7 @@ unit uSounds;
 interface
 
 uses
-	uTypes, uDForm,
+	uTypes, uDForm, uWave,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls;
 
@@ -28,8 +28,8 @@ type
     BevelSQ: TBevel;
     LabelSQ: TDLabel;
     LabelFrequency: TDLabel;
-    ComboBoxFrequency: TComboBox;
-    Button16bits: TDButton;
+		ComboBoxFrequency: TComboBox;
+		Button16bits: TDButton;
     ButtonStereo: TDButton;
     ButtonReduce: TDButton;
     ButtonMusic: TDButton;
@@ -58,6 +58,7 @@ const
 var
 	SoundEnabled: BG;
 	MusicEnabled: BG;
+	WavePlayer: TWavePlayer;
 
 procedure CreateSounds(SoundNames: array of string);
 procedure ReadSounds;
@@ -73,7 +74,7 @@ implementation
 
 {$R *.dfm}
 uses
-	uWave, uData, uFiles, uDIni, uInput, uError, uMath;
+	uData, uFiles, uDIni, uInput, uError, uMath;
 
 type
 	PSound = ^TSound;
@@ -102,6 +103,25 @@ var
 	SoundFrequency: Integer;
 	SoundStereo: Boolean;
 
+procedure InitSound;
+begin
+	if WavePlayer = nil then Exit;
+	WavePlayer.Close;
+	if Sound16bits then
+		WavePlayer.Bits := 16
+	else
+		WavePlayer.Bits := 8;
+	WavePlayer.Frequency := SoundFrequency;
+	if SoundStereo then
+		WavePlayer.Channels := 2
+	else
+		WavePlayer.Channels := 1;
+//	WavePlayer.BufferTime := 200;
+//	WavePlayer.VolumeLeft := 0; //MaxVolume div 2;
+//	WavePlayer.VolumeRight := 0; //MaxVolume div 2;
+	WavePlayer.Open;
+end;
+
 procedure RWOptions(const Save: Boolean);
 var
 	Section: string;
@@ -124,6 +144,7 @@ begin
 		Sound16bits := MainIni.RWBGF(Section, '16bits', Sound16bits, False, Save);
 		SoundFrequency := MainIni.RWSGF(Section, 'Frequency', SoundFrequency, 22050, Save);
 		SoundStereo := MainIni.RWBGF(Section, 'Stereo', SoundStereo, True, Save);
+		InitSound;
 	end;
 
 	if Save and (SoundsChanged = False) then Exit;
@@ -275,17 +296,6 @@ begin
 		end;
 		GSounds := False;
 	end;}
-end;
-
-procedure InitSound;
-begin
-	if WavePlayer = nil then Exit;
-	WavePlayer.Sound16bits := Sound16bits;
-	WavePlayer.Frequency := SoundFrequency;
-	WavePlayer.SoundStereo := SoundStereo;
-//	WavePlayer.BufferTime := 200;
-//	WavePlayer.VolumeLeft := 0; //MaxVolume div 2;
-//	WavePlayer.VolumeRight := 0; //MaxVolume div 2;
 end;
 
 procedure FormSounds;
@@ -450,7 +460,6 @@ begin
 			Sound16bits := Button16bits.Down;
 			SoundFrequency := NewFrequency;
 			SoundStereo := ButtonStereo.Down;
-			WavePlayer.Close;
 			InitSound;
 		end;
 	end;
@@ -460,10 +469,14 @@ begin
 		SoundEnabled := ButtonSound.Down;
 		if SoundEnabled then
 		begin
+			if Assigned(WavePlayer) then
+				WavePlayer.Open;
 //				if Pause = False then InitSound;
 		end
 		else
 		begin
+			if Assigned(WavePlayer) then
+				WavePlayer.Close;
 //				if DXSound1.Initialized then DXSound1.Finalize;
 		end;
 	end;
@@ -499,7 +512,14 @@ begin
 	for i := 0 to Sounds.Count - 1 do
 	begin
 		Sound.FileName := DSound.FileName;
-		Sound.Wave := DSound.Wave;
+		if DSound.Wave <> nil then
+			Sound.Wave := DSound.Wave
+		else
+		begin
+			if Sound.FileName <> '' then
+				WaveReadFromFile(Sound.Wave, FullDir(Sound.FileName));
+		end;
+
 		Sound.Enabled := DSound.Enabled;
 		DSound.Wave := nil;
 
@@ -577,6 +597,7 @@ begin
 		Inc(Sound);
 		Inc(DSound);
 	end;
+	DViewS.Fill;
 end;
 
 initialization

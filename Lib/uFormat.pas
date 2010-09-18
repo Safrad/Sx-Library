@@ -841,9 +841,9 @@ begin
 			':':
 			begin
 				case DP of
-				0: Mul := 60 * 1000;
-				1: Mul := 60 * 60 * 1000;
-				2: Mul := 60 * 60 * 1000;
+				0: Mul := Minute;
+				1: Mul := Hour;
+				2: Mul := Hour;
 				end;
 				Inc(DP);
 			end;
@@ -967,7 +967,7 @@ begin
 	else
 		Result := '';
 	MsToHMSD(DT, h, m, s, d);
-	if (DT >= 60 * 1000) and (Display = diSD) then
+	if (DT >= Minute) and (Display = diSD) then
 		Display := diMSD;
 
 	if Display = diDHMSD then

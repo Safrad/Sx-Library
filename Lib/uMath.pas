@@ -14,14 +14,13 @@ uses uTypes;
 
 // Mathematics
 const
-	AngleCount = 512{16384}; // 2*pi 256; 65536 // 2^x 1..
-	SinDiv = 16384; // 1.0 65536; // 1..128..1024*1024
+//	AngleCount = 512{16384}; // 2*pi 256; 65536 // 2^x 1.. D???
+	SinDiv = 32768; // 1.0 65536; // 1..128..1024*1024
 type
+	PAngle = ^TAngle;
 	TAngle = S2;
-var
-	Sins: array[0..AngleCount - 1] of TAngle;
-
-procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
+	PSinTable = ^TSinTable;
+	TSinTable = array[0..32767] of TAngle;
 
 function RGBToHLS(C: TRColor): THLSColor;
 function HLSToRGB(C: THLSColor): TRColor;
@@ -97,6 +96,7 @@ procedure CheckBool(var Bool: LongBool); overload;
 
 procedure Order(var I1, I2: Integer); overload;
 procedure Order(var I1, I2: Cardinal); overload;
+procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
 //procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
@@ -122,11 +122,6 @@ implementation
 
 uses Math, Windows;
 
-procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
-begin
-	X := RoundDiv(Len * (Sins[Angle mod AngleCount]), SinDiv);
-	Y := RoundDiv(Len * (Sins[(AngleCount div 4 + Angle) mod AngleCount]), SinDiv);
-end;
 {
 Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
 Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi:
@@ -1012,12 +1007,13 @@ begin
 	end;
 end;
 
-procedure InitSins;
+procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 var i: TAngle;
 begin
 	for i := 0 to AngleCount - 1 do
 	begin
-		Sins[i] := Round(SinDiv * sin(2 * pi * i / AngleCount));
+		Sins[0] := Round((SinDiv - 1) * sin(2 * pi * i / AngleCount));
+		Inc(SG(Sins), SizeOf(TAngle));
 //  Sins[i]:=Trunc(127*(sin(pi*i/128))+127);
 //  Sins[i]:=Trunc(128*(sin(pi*i/128)+1))-128;
 	end;
@@ -1262,7 +1258,6 @@ begin
 end;
 
 initialization
-	InitSins;
 	InitPerformanceCounter;
 end.
 

@@ -25,28 +25,28 @@ object fSysInfo: TfSysInfo
   end
   object Bevel4: TBevel
     Left = 8
-    Top = 136
+    Top = 160
     Width = 289
     Height = 9
     Shape = bsTopLine
   end
   object Bevel3: TBevel
     Left = 104
-    Top = 144
+    Top = 168
     Width = 7
     Height = 97
     Shape = bsLeftLine
   end
   object Bevel2: TBevel
     Left = 8
-    Top = 168
+    Top = 192
     Width = 289
     Height = 9
     Shape = bsTopLine
   end
   object Bevel5: TBevel
     Left = 8
-    Top = 248
+    Top = 272
     Width = 289
     Height = 9
     Shape = bsTopLine
@@ -89,7 +89,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelUsed: TDLabel
     Left = 112
-    Top = 144
+    Top = 168
     Width = 57
     Height = 19
     AutoSize = False
@@ -117,7 +117,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelFree: TDLabel
     Left = 176
-    Top = 144
+    Top = 168
     Width = 57
     Height = 19
     AutoSize = False
@@ -145,7 +145,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelTotal: TDLabel
     Left = 240
-    Top = 144
+    Top = 168
     Width = 57
     Height = 19
     AutoSize = False
@@ -173,7 +173,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelTPhysicalMemory: TDLabel
     Left = 8
-    Top = 176
+    Top = 200
     Width = 89
     Height = 19
     AutoSize = False
@@ -201,7 +201,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelTPageFile: TDLabel
     Left = 8
-    Top = 200
+    Top = 224
     Width = 89
     Height = 19
     AutoSize = False
@@ -258,7 +258,7 @@ object fSysInfo: TfSysInfo
   end
   object DLabel5: TDLabel
     Left = 8
-    Top = 224
+    Top = 248
     Width = 89
     Height = 19
     AutoSize = False
@@ -373,7 +373,7 @@ object fSysInfo: TfSysInfo
   end
   object PMT: TDLabel
     Left = 240
-    Top = 176
+    Top = 200
     Width = 57
     Height = 19
     AutoSize = False
@@ -399,7 +399,7 @@ object fSysInfo: TfSysInfo
   end
   object PMF: TDLabel
     Left = 176
-    Top = 176
+    Top = 200
     Width = 57
     Height = 19
     AutoSize = False
@@ -425,7 +425,7 @@ object fSysInfo: TfSysInfo
   end
   object PFF: TDLabel
     Left = 176
-    Top = 200
+    Top = 224
     Width = 57
     Height = 19
     AutoSize = False
@@ -451,7 +451,7 @@ object fSysInfo: TfSysInfo
   end
   object PFT: TDLabel
     Left = 240
-    Top = 200
+    Top = 224
     Width = 57
     Height = 19
     AutoSize = False
@@ -477,7 +477,7 @@ object fSysInfo: TfSysInfo
   end
   object PMU: TDLabel
     Left = 112
-    Top = 176
+    Top = 200
     Width = 57
     Height = 19
     AutoSize = False
@@ -503,7 +503,7 @@ object fSysInfo: TfSysInfo
   end
   object PFU: TDLabel
     Left = 112
-    Top = 200
+    Top = 224
     Width = 57
     Height = 19
     AutoSize = False
@@ -529,7 +529,7 @@ object fSysInfo: TfSysInfo
   end
   object EditDiskU: TDLabel
     Left = 112
-    Top = 224
+    Top = 248
     Width = 57
     Height = 19
     AutoSize = False
@@ -555,7 +555,7 @@ object fSysInfo: TfSysInfo
   end
   object EditDiskF: TDLabel
     Left = 176
-    Top = 224
+    Top = 248
     Width = 57
     Height = 19
     AutoSize = False
@@ -581,7 +581,7 @@ object fSysInfo: TfSysInfo
   end
   object EditDiskT: TDLabel
     Left = 240
-    Top = 224
+    Top = 248
     Width = 57
     Height = 19
     AutoSize = False
@@ -656,7 +656,7 @@ object fSysInfo: TfSysInfo
   object EditDuron: TEdit
     Left = 104
     Top = 112
-    Width = 193
+    Width = 105
     Height = 21
     AutoSelect = False
     Color = clBtnFace
@@ -672,5 +672,53 @@ object fSysInfo: TfSysInfo
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 3
+  end
+  object EditCounter: TEdit
+    Left = 103
+    Top = 136
+    Width = 193
+    Height = 21
+    AutoSelect = False
+    Color = clBtnFace
+    ReadOnly = True
+    TabOrder = 26
+  end
+  object DLabel1: TDLabel
+    Left = 8
+    Top = 136
+    Width = 89
+    Height = 19
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Mboard Counter'
+    BackEffect = ef04
+    FocusControl = EditDuron
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object ComboBoxSize: TComboBox
+    Left = 216
+    Top = 112
+    Width = 81
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    TabOrder = 28
   end
 end

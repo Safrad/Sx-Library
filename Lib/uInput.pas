@@ -221,7 +221,7 @@ begin
 	if Month > 50 then Dec(Month, 50); // Female offset
 	if TryEncodeDate(Year, Month, Day, TDateTime(Result)) = False then
 	begin
-		// AddMes2 D???
+		MessageD('Invalid date ' + Str, mtError, [mbOk]);
 		Result := 0;
 	end;
 end;

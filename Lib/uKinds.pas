@@ -120,6 +120,7 @@ type
 		procedure Unchange;
 
 		// For Reopen and ParamStr
+		procedure KindNewFile(Sender: TObject; FileName: string = '');
 		function KindLoadFromFile(FileName: TFileName; ReadOnly: BG = False): BG;
 
 		function KindOpenFiles(Files: TStrings; ReadOnly: BG = False): BG; // Drag files to form
@@ -471,12 +472,13 @@ begin
 		IE(3543);}
 end;
 
-procedure TKinds.New1Click;
+procedure TKinds.KindNewFile(Sender: TObject; FileName: string = '');
 var
 	Result: BG;
 	LastIndex: SG;
 begin
 //	Result := False;
+
 	if AddKindItem = False then Exit;
 {	for i := 1 to 99 do
 	begin
@@ -497,7 +499,11 @@ begin
 		end;
 	end;}
 	Inc(NewCount);
-	Items[Count - 1].FileName := 'NoName' + NToS(NewCount, False);
+	if FileName = '' then
+		Items[Count - 1].FileName := 'NoName' + NToS(NewCount, False)
+	else
+		Items[Count - 1].FileName := FileName;
+
 	Items[Count - 1].New := NewCount;
 	LastIndex := Index;
 	ChangeIndex(Count - 1);
@@ -522,6 +528,11 @@ begin
 			Items[Index].MenuItem.Checked := True;
 		KindChangeFile(Sender);
 	end;
+end;
+
+procedure TKinds.New1Click(Sender: TObject);
+begin
+	KindNewFile(Sender);
 end;
 
 function TKinds.KindLoadFromFile(FileName: TFileName; ReadOnly: BG): BG;

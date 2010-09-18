@@ -11,7 +11,7 @@ unit uScores;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls, uDButton, uDForm, uDImage;
 
@@ -39,7 +39,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uFiles, uError, uDIni, uDBitmap, uGraph, uScreen, uGetStr;
+	uFormat, uFiles, uError, uDIni, uDBitmap, uGraph, uScreen, uGetStr;
 
 var
 	fScores: TfScores;

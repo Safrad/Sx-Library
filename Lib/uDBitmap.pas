@@ -11,7 +11,7 @@ unit uDBitmap;
 {$define BPP4}
 {$define SaveReg}
 //{$define ShrAdd}
-
+// D??? Rotated-Grid Anti-Aliasing
 interface
 
 uses
@@ -66,6 +66,10 @@ const
 //	BPP = {$ifdef BPP4}4{$else}3{$endif}; // Bytes Per Pixel
 	MaxBitmapWidth = 65536 div 4;
 	MaxBitmapHeight = 32767;
+
+const
+	AngleCount = 1024;
+
 type
 	TEffect = (ef00, ef01, ef02, ef03, ef04, ef05, ef06, ef07,
 		ef08, ef09, ef10, ef11, ef12, ef13, ef14, ef15, ef16,
@@ -287,6 +291,7 @@ type
 			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
 		procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: SG; MinZoom, MaxZoom: SG);
 
+		procedure Arrow(X, Y, X2, Y2: SG; Size: SG; Color: TColor; Effect: TEffect);
 		procedure DrawHand(CX, CY: SG; Angle: TAngle; Len, Size: SG;
 			Color: TColor; Effect: TEffect);
 		procedure DrawArrow(X1, Y1, X2, Y2: SG; Down, Hot: Boolean;
@@ -361,6 +366,8 @@ type
 		Colors: array[0..65535] of TRColor; // For 1, 4, 8, 16 bits
 	end;
 	PBitmapHead = ^TBitmapHead;
+var
+	Sins: PSinTable;
 
 implementation
 
@@ -879,7 +886,6 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 		SetSize(DefaultX, DefaultY);
 	end;
 
-label LRetry;
 var
 	MyJPEG: TJPEGImage;
 	MyGif: TGifImage;
@@ -894,8 +900,8 @@ begin
 	Result := False;
 	if FileExists(FileName) = False then
 	begin
-		IOErrorMessageRetry(FileName, 'File not found');
-		Exit
+		IOErrorMessage(FileName, 'File not found');
+		Exit;
 	end;
 	Ext := LowerCase(ExtractFileExt(FileName));
 	if (Length(Ext) >= 1) and (Ext[1] = '.') then Delete(Ext, 1, 1);
@@ -1114,7 +1120,6 @@ function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: SG): Boolea
 		FreeMem(Ic);
 	end;}
 
-label LRetry;
 var
 	MyJPEG: TJPEGImage;
 	MyGif: TGifImage;
@@ -2902,13 +2907,13 @@ begin
 		YD1 := GraphMinY;
 	end;
 
-	if XD2 < 0 then Exit;
+	if XD2 < GraphMinX then Exit;
 	if XD2 > TCoor(GraphMaxX) then
 	begin
 		XD2 := TCoor(GraphMaxX);
 	end;
 
-	if YD2 < 0 then Exit;
+	if YD2 < GraphMinY then Exit;
 	if YD2 > TCoor(GraphMaxY) then
 	begin
 		YD2 := TCoor(GraphMaxY);
@@ -8228,14 +8233,14 @@ begin
 		YD1 := GraphMinY;
 	end;
 
-	if XD2 < 0 then Exit;
+	if XD2 < GraphMinX then Exit;
 	if XD2 > TCoor(GraphMaxX) then
 	begin
 		XD2 := TCoor(GraphMaxX);
 	end;
 	if XD1 > XD2 then Exit;
 
-	if YD2 < 0 then Exit;
+	if YD2 < GraphMinY then Exit;
 	if YD2 > TCoor(GraphMaxY) then
 	begin
 		YD2 := TCoor(GraphMaxY);
@@ -8610,6 +8615,13 @@ var
 	Same: BG;
 begin
 	if Effect = ef00 then Exit;
+
+	if Sins = nil then
+	begin
+		GetMem(Sins, SizeOf(TAngle) * AngleCount);
+		FillSinTable(Sins, AngleCount, SinDiv);
+	end;
+
 	if BmpS = BmpD then
 	begin
 		Same := True;
@@ -10176,12 +10188,41 @@ begin
 	end;
 end;
 
+procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
+begin
+	X := RoundDiv(Len * (Sins[Angle mod AngleCount]), SinDiv);
+	Y := RoundDiv(Len * (Sins[(AngleCount div 4 + Angle) mod AngleCount]), SinDiv);
+end;
+
+procedure TDBitmap.Arrow(X, Y, X2, Y2: SG; Size: SG; Color: TColor; Effect: TEffect);
+var
+	i: SG;
+begin
+	if Sins = nil then
+	begin
+		GetMem(Sins, SizeOf(TAngle) * AngleCount);
+		FillSinTable(Sins, AngleCount, SinDiv);
+	end;
+
+	// D???
+	Line(x, y, x2, y2, Color, Effect);
+	Bar(x - 1, y - 1, x + 1, y + 1, Color, Effect);
+{	Line(x2 - 3, y2 - 3, x2, y2, C, ef16);
+	Line(x2 - 3 * Sins, y2 + 3, x2, y2, C, ef16);}
+end;
+
 procedure TDBitmap.DrawHand(CX, CY: SG; Angle: TAngle; Len, Size: SG;
 	Color: TColor; Effect: TEffect);
 var
 	i: SG;
 	Points: array[0..3] of TPoint;
 begin
+	if Sins = nil then
+	begin
+		GetMem(Sins, SizeOf(TAngle) * AngleCount);
+		FillSinTable(Sins, AngleCount, SinDiv);
+	end;
+
 	if Size = 1 then
 	begin
 		RAToXY(Len div 16, Angle + AngleCount div 2, Points[0].X, Points[0].Y);
@@ -10841,4 +10882,9 @@ initialization
 	_Initialization;
 finalization
 	FreeFontBitmap;
+	if Sins <> nil then
+	begin
+		FreeMem(Sins);
+		Sins := nil;
+	end;
 end.

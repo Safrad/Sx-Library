@@ -11,7 +11,7 @@ unit uDayTip;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	StdCtrls, uDButton, ExtCtrls, uDForm;
 

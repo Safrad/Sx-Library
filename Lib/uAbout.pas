@@ -638,7 +638,7 @@ begin
 
 	if Effect > 0 then
 	begin
-		RotateDef(BitmapAbout, BmpAbout, Typ, (AngleCount * U8(Timer1.Clock) div (4 * PerformanceFrequency)), TEffect(Effect));
+		RotateDef(BitmapAbout, BmpAbout, Typ, (U8(AngleCount) * U8(Timer1.Clock) div (4 * PerformanceFrequency)) and (AngleCount - 1), TEffect(Effect));
 	end;
 	
 	i := 0;

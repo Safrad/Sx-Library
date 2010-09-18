@@ -132,8 +132,8 @@ begin
 		Caption := DelCharsF(Prompt, '&');
 	// H
 		TrackBarH.OnChange := nil;
-		TrackBarH.Min := TMinVal div (60 * 60 * 1000);
-		TrackBarH.Max := TMaxVal div (60 * 60 * 1000);
+		TrackBarH.Min := TMinVal div Hour;
+		TrackBarH.Max := TMaxVal div Hour;
 		if TrackBarH.Max - TrackBarH.Min > 112 then
 			TrackBarH.TickStyle := tsNone
 		else
@@ -141,10 +141,10 @@ begin
 		TrackBarH.OnChange := TrackBarHMSDChange;
 	// M
 		TrackBarM.OnChange := nil;
-		if TMaxVal < 60 * 60 * 1000 then
+		if TMaxVal < Hour then
 		begin
-			TrackBarM.Min := TMinVal div (60 * 1000);
-			TrackBarM.Max := TMaxVal div (60 * 1000);
+			TrackBarM.Min := TMinVal div Minute;
+			TrackBarM.Max := TMaxVal div Minute;
 		end
 		else
 		begin
@@ -154,10 +154,10 @@ begin
 		TrackBarM.OnChange := TrackBarHMSDChange;
 	// S
 		TrackBarS.OnChange := nil;
-		if TMaxVal < 60 * 1000 then
+		if TMaxVal < Minute then
 		begin
-			TrackBarS.Min := TMinVal div (1000);
-			TrackBarS.Max := TMaxVal div (1000);
+			TrackBarS.Min := TMinVal div Second;
+			TrackBarS.Max := TMaxVal div Second;
 		end
 		else
 		begin
@@ -223,7 +223,7 @@ end;
 procedure TfGetTime.InitEdit;
 begin
 	EditInput.OnChange := nil;
-	if TMaxVal >= 60 * 60 * 1000 then
+	if TMaxVal >= Hour then
 		EditInput.Text := msToStr(NowVal, diMSD, -3, False)
 	else
 		EditInput.Text := msToStr(NowVal, diHMSD, -3, False);
@@ -266,9 +266,9 @@ end;
 procedure TfGetTime.TrackBarHMSDChange(Sender: TObject);
 begin
 	NowVal :=
-		S8(TrackBarH.Position) * 60 * 60 * 1000 +
-		TrackBarM.Position * 60 * 1000 +
-		TrackBarS.Position * 1000 +
+		S8(TrackBarH.Position) * Hour +
+		TrackBarM.Position * Minute +
+		TrackBarS.Position * Second +
 		TrackBarD.Position;
 	if NowVal < TMinVal then
 		NowVal := TMinVal
