@@ -94,8 +94,6 @@ object fAbout: TfAbout
     Width = 41
     Height = 19
     Cursor = crHandPoint
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'ICQ'
@@ -129,8 +127,6 @@ object fAbout: TfAbout
     Width = 57
     Height = 19
     Cursor = crHandPoint
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Web'
@@ -164,8 +160,6 @@ object fAbout: TfAbout
     Width = 57
     Height = 19
     Cursor = crHandPoint
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'E-Mail'
@@ -198,8 +192,6 @@ object fAbout: TfAbout
     Top = 232
     Width = 89
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Run:'
@@ -231,8 +223,6 @@ object fAbout: TfAbout
     Top = 232
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Now'
@@ -264,8 +254,6 @@ object fAbout: TfAbout
     Top = 256
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Total'
@@ -297,8 +285,6 @@ object fAbout: TfAbout
     Top = 152
     Width = 56
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Author'
@@ -328,8 +314,6 @@ object fAbout: TfAbout
     Top = 112
     Width = 65
     Height = 18
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Created'
@@ -360,8 +344,6 @@ object fAbout: TfAbout
     Top = 256
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Count'
@@ -588,8 +570,6 @@ object fAbout: TfAbout
     Top = 129
     Width = 65
     Height = 18
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Modified'

@@ -22,7 +22,6 @@ type
 		PanelHigh: TPanel;
 		ImageHigh: TDImage;
 		procedure FormCreate(Sender: TObject);
-		procedure FormDestroy(Sender: TObject);
 		procedure ImageHighFill(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 	private
@@ -199,14 +198,6 @@ procedure TfScores.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
 	RWOptions(False);
-end;
-
-procedure TfScores.FormDestroy(Sender: TObject);
-begin
-	if Assigned(fScores) then
-	begin
-		FreeAndNil(fScores); // D???
-	end;
 end;
 
 procedure TfScores.ImageHighFill(Sender: TObject);

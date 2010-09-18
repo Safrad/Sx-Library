@@ -173,7 +173,7 @@ end;
 constructor TDGraph.Create;
 begin
 	inherited Create;
-	Borders := TData.Create;
+	Borders := TData.Create(True);
 	Borders.ItemSize := SizeOf(TBorder);
 	SetLength(NodesIndex, 1);
 	NodesIndex[0] := 0;
@@ -235,9 +235,9 @@ begin
 	CycleIndex:=0;
 	if Dij then
 	begin
-		StackNode := TData.Create;
+		StackNode := TData.Create(True);
 		StackNode.ItemSize := 4;
-		StackValue := TData.Create;
+		StackValue := TData.Create(True);
 		StackValue.ItemSize := 4;
 		PItem := StackNode.Add;
 		PItem^ := FromNode;

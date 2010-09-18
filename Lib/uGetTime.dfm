@@ -22,8 +22,6 @@ object fGetTime: TfGetTime
     Top = 92
     Width = 17
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'H'
@@ -51,8 +49,6 @@ object fGetTime: TfGetTime
     Top = 132
     Width = 17
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'M'
@@ -80,8 +76,6 @@ object fGetTime: TfGetTime
     Top = 172
     Width = 17
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'S'
@@ -109,8 +103,6 @@ object fGetTime: TfGetTime
     Top = 212
     Width = 17
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'D'
@@ -138,8 +130,6 @@ object fGetTime: TfGetTime
     Top = 92
     Width = 20
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Caption = '000'
@@ -167,8 +157,6 @@ object fGetTime: TfGetTime
     Top = 132
     Width = 20
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Caption = '000'
@@ -196,8 +184,6 @@ object fGetTime: TfGetTime
     Top = 172
     Width = 20
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Caption = '000'
@@ -225,8 +211,6 @@ object fGetTime: TfGetTime
     Top = 212
     Width = 20
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Caption = '000'

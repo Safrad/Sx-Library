@@ -180,13 +180,13 @@ end;
 function ScreenModeToStr(const Width, Height: Word): string; overload;
 begin
 	Result :=
-		NToS(Width) + '×' + NToS(Height);
+		NToS(Width) + CharTimes + NToS(Height);
 end;
 
 function ScreenModeToStr(const Width, Height, Bits: Word): string; overload;
 begin
 	Result := ScreenModeToStr(Width, Height);
-	if Bits <> 0 then Result := Result + '×' + NToS(Bits) + ' bit';
+	if Bits <> 0 then Result := Result + CharTimes + NToS(Bits) + ' bit';
 end;
 
 function ScreenModeToStr(const Width, Height, Bits, VF: Word): string;

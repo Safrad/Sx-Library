@@ -81,6 +81,9 @@ type
 	end;
 
 const
+	MyEMail = 'safrad@email.cz';
+	MyWeb = 'http://safrad.webzdarma.cz';
+
 	paExit = -1;
 	paFile = -2;
 var
@@ -93,7 +96,8 @@ procedure CloseParams;
 procedure HelpParams;
 procedure ReadMe;
 procedure Homepage;
-procedure Help;
+procedure Help; overload;
+procedure Help(HRef: string); overload;
 procedure ExtOpenFile(FileName: TFileName);
 procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
 	const Modal: Boolean);
@@ -129,7 +133,6 @@ var
 	Flashs: TData;
 const
 	MaxTyp = 13;
-	HomepageAddr = 'http://safrad.webzdarma.cz';
 
 var
 	AcceptFile: BG;
@@ -244,12 +247,17 @@ end;
 
 procedure Homepage;
 begin
-	ExtOpenFile(HomepageAddr + '/Software.html');
+	ExtOpenFile(MyWeb + '/Software.html');
 end;
 
 procedure Help;
 begin
 	ExtOpenFile(LongToShortPath(WorkDir + 'Help.rtf'));
+end;
+
+procedure Help(HRef: string);
+begin
+	ExtOpenFile(LongToShortPath(WorkDir + 'Help.htm#' + HRef));
 end;
 
 procedure ExtOpenFile(FileName: TFileName);
@@ -296,10 +304,14 @@ end;
 procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
 	const Modal: Boolean); overload;
 begin
-	if FileExists(GraphDir + Application.Title + '.gif') then
+	if FileExists(GraphDir + Application.Title + '.png') then
+		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.png', Modal)
+	else if FileExists(GraphDir + Application.Title + '.gif') then
 		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.gif', Modal)
 	else if FileExists(GraphDir + Application.Title + '.jpg') then
 		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.jpg', Modal)
+	else if FileExists(GraphDir + 'Logo.png') then
+		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + 'Logo.png', Modal)
 	else if FileExists(GraphDir + 'Logo.gif') then
 		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + 'Logo.gif', Modal)
 	else if FileExists(GraphDir + 'Logo.jpg') then
@@ -373,8 +385,7 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 	begin
 		BmpAbout.SetSize(64, 64);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
-		BmpAbout.GenerateRGB(clNone,
-			GenFunc[RunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
+		BmpAbout.GenerateRGB(GenFunc[RunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
 		BmpAbout.Transparent := False;
 	end;
 begin
@@ -387,12 +398,11 @@ begin
 	else
 	begin
 		BmpAbout.LoadFromFile(AboutFile);
-		BmpAbout.TryTransparent;
-		if (BmpAbout.Width < 64) or (BmpAbout.Height < 64) then
+		if (BmpAbout.Width < ImageAbout.Width div 2) or (BmpAbout.Height < ImageAbout.Height div 2) then
 		begin
 			BmpAbout.Resize(BmpAbout, BmpAbout.Width * 2, BmpAbout.Height * 2, nil);
 		end
-		else if (BmpAbout.Width > 192) or (BmpAbout.Height > 192) then
+		else if (BmpAbout.Width > ImageAbout.Width) or (BmpAbout.Height > ImageAbout.Height) then
 		begin
 			BmpAbout.Resize(BmpAbout, BmpAbout.Width div 2, BmpAbout.Height div 2, nil);
 		end;
@@ -407,8 +417,8 @@ begin
 	{$endif}
 
 	Background := baGradient;
-	EditEMail.Text := 'safrad@email.cz?subject=' + Application.Title;
-	EditWeb.Text := HomepageAddr;
+	EditEMail.Text := MyEMail + '?subject=' + Application.Title;
+	EditWeb.Text := MyWeb;
 
 	PanelRC.Text := NToS(RunCount);
 	PanelTRT.Text := msToStr(RunTime, diDHMSD, 3, False);
@@ -549,7 +559,7 @@ begin
 	BitmapName := ImageName.Bitmap;
 //	BitmapName.GenRGB(clNone, gfSpecHorz, (16 * Timer1.Clock div PerformanceFrequency), ef16);
 
-	BitmapName.GenerateRGB(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clNone, TGenFunc(Typ), Co, 0, ef16,
+	BitmapName.GenerateRGB(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, TGenFunc(Typ), Co, 0, ef16,
 		(16 * Timer1.Clock div PerformanceFrequency), nil);
 
 	BitmapName.Bar(clBtnFace, ef12);
@@ -583,7 +593,7 @@ begin
 		ProgramVersion);
 //	BitmapVersion.GenRGB(clBtnFace, gfSpecHorz, (32 * Timer1.Clock div PerformanceFrequency), ef16);
 
-	BitmapVersion.GenerateRGB(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBtnFace, TGenFunc(Typ), Co, 0, ef08,
+	BitmapVersion.GenerateRGB(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, TGenFunc(Typ), Co, 0, ef08,
 		(32 * Timer1.Clock div PerformanceFrequency), nil);
 
 	BitmapVersion.Border(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);
@@ -619,9 +629,10 @@ begin
 	end;
 
 	if Effect > 0 then
-		RotateDef(BitmapAbout, BmpAbout, Typ, (AngleCount * Timer1.Clock div (4 * PerformanceFrequency)), BmpAbout.TransparentColor,
-			TEffect(Effect));
-
+	begin
+		RotateDef(BitmapAbout, BmpAbout, Typ, (AngleCount * Timer1.Clock div (4 * PerformanceFrequency)), TEffect(Effect));
+	end;
+	
 	i := 0;
 	while i < Flashs.Count do
 	begin
@@ -673,7 +684,7 @@ initialization
 {	MemCount := AllocMemCount;
 	MemSize := AllocMemSize;}
 {$endif}
-	Flashs := TData.Create;
+	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization
 	SetLength(Params, 0);

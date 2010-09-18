@@ -153,7 +153,7 @@ begin
 	Result := False;
 	if not Assigned(Form) then Exit;
 	if Form.Visible = False then Exit;
-	if Form.WindowState = wsMinimized then Exit; // D??? Do Not Work
+	if Form.WindowState = wsMinimized then Exit; // D??? Does Not Work
 //	Style := GetWindowLong(Handle, GWL_STYLE);
 	Result := True;
 end;
@@ -211,7 +211,7 @@ begin
 		wx := 2 * (Canvas.TextWidth(Text) + 1) / Params[2];
 		wy := 2 * (Canvas.TextHeight(Text) + 1) / Params[3];
 		C.L := CB;
-		C.T := 95;
+		C.A := $ff;
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -358,7 +358,7 @@ begin
 end;
 
 procedure TDForm.InitBackground;
-var C: TRColor;
+//var C: TRColor;
 begin
 	if Assigned(FBitmapB) then
 	begin
@@ -383,7 +383,7 @@ begin
 					FBitmapB.FormBitmap(Color);
 					if FBitmapF <> nil then
 						FBitmapB.Texture(FBitmapF, ef04);
-					if (FBitmapB.Width >= 4) and (FBitmapB.Height >=4) then
+{					if (FBitmapB.Width >= 4) and (FBitmapB.Height >=4) then
 					begin
 						C.T := 0;
 						C.R := 117;
@@ -433,7 +433,7 @@ begin
 						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 1, C, ef10);
 						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 1, C, ef04);
 						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 2, C, ef04);
-					end;
+					end;}
 				end;
 				baGradientOnly:
 				begin
@@ -472,12 +472,18 @@ begin
 		baBitmap, baGradient:
 		begin
 			if FBitmapF = nil then
-			begin
+			begin                              
 				FBitmapF := TDBitmap.Create;
 				FBitmapF.SetSize(0, 0);
-				FileName := GraphDir + 'Form.jpg';
+				FileName := GraphDir + 'Form.png';
 				if FileExists(FileName) then
-					FBitmapF.LoadFromFile(FileName);
+					FBitmapF.LoadFromFile(FileName)
+				else
+				begin
+					FileName := GraphDir + 'Form.jpg';
+					if FileExists(FileName) then
+						FBitmapF.LoadFromFile(FileName);
+				end;
 			end;
 		end;
 		end;
@@ -594,10 +600,14 @@ var
 begin
 	inherited Create(AOwner);
 
+	{$ifopt d-}
 	if NTSystem then
 		if Font.Name = 'MS Sans Serif' then
+		begin
 			Font.Name := 'Microsoft Sans Serif';
-	Canvas.Font.Name := Font.Name;
+			Canvas.Font.Name := Font.Name;
+		end;
+	{$endif}
 
 	CheckPos;
 
@@ -735,8 +745,8 @@ begin
 			NewX := 1 shl CalcShr(FBitmapB.Width);
 			if FBitmapB.Width <> NewX then
 			begin
-				FBitmapB.Resize(FBitmapB, clNone, NewX, NewX div 2, nil);
-				FBitmapB.SwapRB24;
+				FBitmapB.Resize(FBitmapB, NewX, NewX div 2, nil);
+				FBitmapB.SwapRB;
 			end;
 //			FBitmapB.GLSetSize;
 
@@ -955,7 +965,7 @@ begin
 	begin
 //		if (Message.Width <> Width) or (Message.Height <> Height) then
 //			InitBackground;
-		Paint; // D???
+		Fill;
 	end;
 	end;
 end;

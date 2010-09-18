@@ -39,8 +39,10 @@ type
 
 	end;
 
+
+function RelativePath(Source, Target: string): string;
+
 var
-//	images: string = 'images/';
 	ImagesDir: string;
 
 implementation

@@ -23,6 +23,7 @@ const
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
 
 function GetBmpSize(const X, Y: LongWord; const PixelFormat: Byte): LongWord;
+function ColorToHTML(Color: TColor): string;
 function ShadowColor(C: TColor): TColor;
 function ShadowColor2(C1, C2: TColor): TColor;
 function ColorDiv(Color: TColor; const D: Integer): TColor;
@@ -35,8 +36,10 @@ function FireColor(X: Integer): TColor;
 function NegColor(C: TColor): TColor;
 function NegMonoColor(C: TColor): TColor;
 function DepthColor(const Depth: Byte): TColor;
-function MixColors(C1, C2: TColor): TColor;
-function MixColorsEx(C1, C2: TColor; Per1, Per2: Integer): TColor;
+function MixColors(C1, C2: TColor): TColor; overload;
+function MixColors(C1, C2: TRColor): TRColor; overload;
+function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
+function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 
 procedure ShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
@@ -125,6 +128,15 @@ begin
 	Result := (((PixelFormat * X  + 31) and $FFFFFFE0) div 8) * Y;
 end;
 (*-------------------------------------------------------------------------*)
+function ColorToHTML(Color: TColor): string;
+var C: TRColor;
+begin
+	C.L := ColorToRGB(Color);
+	Result := '#' +
+		IntToHex(C.R, 2) +
+		IntToHex(C.G, 2) +
+		IntToHex(C.B, 2);
+end;
 (*-------------------------------------------------------------------------*)
 function ShadowColor(C: TColor): TColor;
 begin
@@ -138,7 +150,7 @@ begin
 	else
 	begin
 		C := ColorToRGB(C);
-		TRColor(Result).T := 0;
+		TRColor(Result).A := 0;
 		if (TRColor(C).R <= 128) and (TRColor(C).G <= 128) and (TRColor(C).B <= 128) then
 		begin
 			if TRColor(C).B <= 127 then TRColor(Result).B := TRColor(C).B shl 1 else TRColor(Result).B := 255;
@@ -168,7 +180,7 @@ begin
 	begin
 		C1 := ColorToRGB(C1);
 		C2 := ColorToRGB(C2);
-		TRColor(Result).T := 0;
+		TRColor(Result).A := 0;
 		if (TRColor(C1).R <= 128) and (TRColor(C1).G <= 128) and (TRColor(C1).B <= 128) then
 		begin
 			if TRColor(C1).B <= 127 then TRColor(Result).B := TRColor(C1).B shl 1 else TRColor(Result).B := 255;
@@ -195,10 +207,10 @@ begin
 	if R > 255 then R := 255;
 	if G > 255 then G := 255;
 	if B > 255 then B := 255;
-	TRColor(Result).T := 0;
 	TRColor(Result).R := R;
 	TRColor(Result).G := G;
 	TRColor(Result).B := B;
+	TRColor(Result).A := 0;
 end;
 
 function LighterColor(Color: TColor): TColor;
@@ -216,14 +228,14 @@ begin
 	TRColor(Result).R := TRColor(C).B;
 	TRColor(Result).G := TRColor(C).G;
 	TRColor(Result).B := TRColor(C).R;
-	TRColor(Result).T := TRColor(C).T;
+	TRColor(Result).A := TRColor(C).A;
 end;
 (*-------------------------------------------------------------------------*)
 function SpectrumColor(X: Integer): TColor;
 //0..255..510..765..1020..1275..1529
 begin
 	if (X < 0) or (X > 1529) then X := X mod 1530;
-	TRColor(Result).T := 0;
+	TRColor(Result).A := 0;
 	case X of
 	0..255:
 	begin
@@ -267,7 +279,7 @@ end;
 function SpectrumColor2(X: Integer): TColor;
 //0..255..510..765..1020..1275..1529
 begin
-	TRColor(Result).T := 0;
+	TRColor(Result).A := 0;
 	case X of
 	0..127:
 	begin
@@ -311,7 +323,7 @@ end;
 (*-------------------------------------------------------------------------*)
 function FireColor(X: Integer): TColor;
 begin
-	TRColor(Result).T := 0;
+	TRColor(Result).A := 0;
 	case X of
 	Low(X)..255:
 	begin
@@ -339,7 +351,7 @@ end;
 function NegColor(C: TColor): TColor;
 begin
 	C := ColorToRGB(C);
-	TRColor(Result).T := 0;
+	TRColor(Result).A := 0;
 	if TRColor(C).R > 127 then TRColor(Result).R := 0 else TRColor(Result).R := 255;
 	if TRColor(C).G > 127 then TRColor(Result).G := 0 else TRColor(Result).G := 255;
 	if TRColor(C).B > 127 then TRColor(Result).B := 0 else TRColor(Result).B := 255;
@@ -376,8 +388,13 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TColor): TColor;
+function MixColors(C1, C2: TColor): TColor; overload;
 begin
+	if C1 = C2 then
+	begin
+		Result := C1;
+		Exit;
+	end;
 	if ((C1 = clBtnShadow) and (C2 = clBtnHighlight)) or
 		((C2 = clBtnShadow) and (C1 = clBtnHighlight)) then
 		Result := cl3DLight
@@ -389,21 +406,36 @@ begin
 	begin
 		C1 := ColorToRGB(C1);
 		C2 := ColorToRGB(C2);
-		TRColor(Result).T := 0;
+		TRColor(Result).A := 0;
 		TRColor(Result).B := (TRColor(C1).B + TRColor(C2).B) shr 1;
 		TRColor(Result).G := (TRColor(C1).G + TRColor(C2).G) shr 1;
 		TRColor(Result).R := (TRColor(C1).R + TRColor(C2).R) shr 1;
 	end;
 end;
+
+function MixColors(C1, C2: TRColor): TRColor; overload;
+begin
+	Result.L := MixColors(C1.L, C2.L);
+end;
 (*-------------------------------------------------------------------------*)
-function MixColorsEx(C1, C2: TColor; Per1, Per2: Integer): TColor;
+function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
 begin
 	C1 := ColorToRGB(C1);
 	C2 := ColorToRGB(C2);
-	TRColor(Result).T := 0;
 	TRColor(Result).B := (Per1 * TRColor(C1).B + Per2 * TRColor(C2).B) shr 16;
 	TRColor(Result).G := (Per1 * TRColor(C1).G + Per2 * TRColor(C2).G) shr 16;
 	TRColor(Result).R := (Per1 * TRColor(C1).R + Per2 * TRColor(C2).R) shr 16;
+	TRColor(Result).A := 0;
+end;
+(*-------------------------------------------------------------------------*)
+function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
+begin
+	C1 := ColorToRGB(C1);
+	C2 := ColorToRGB(C2);
+	TRColor(Result).B := (Per * TRColor(C1).B + (65535 - Per) * TRColor(C2).B) shr 16;
+	TRColor(Result).G := (Per * TRColor(C1).G + (65535 - Per) * TRColor(C2).G) shr 16;
+	TRColor(Result).R := (Per * TRColor(C1).R + (65535 - Per) * TRColor(C2).R) shr 16;
+	TRColor(Result).A := 0;
 end;
 (*-------------------------------------------------------------------------*)
 procedure ShadowText(Canvas: TCanvas;
@@ -600,10 +632,28 @@ begin
 			TextBounds.Bottom := Rect.Bottom; //CurY + TextHeight;
 			if FontShadow <> 0 then
 			begin
+				Canvas.Brush.Style := bsClear;
 				C := Canvas.Font.Color;
-				Canvas.Font.Color := ShadowColor(C);
+				Canvas.Font.Color := MixColors(C, Canvas.Brush.Color); //ShadowColor(C);
 				Shadow := FontShadow;
 				repeat
+{
+			C := ColorToRGB(Font.Color);
+			OffsetRect(Recta, 1, 1);
+			FBmpOut.Canvas.Font.Color := MixColors(Color, C);
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+
+			OffsetRect(Recta, -1, 0);
+			FBmpOut.Canvas.Font.Color := MixColors(Color, MixColors(Color, C));
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+
+			OffsetRect(Recta, 1, -1);
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+
+			OffsetRect(Recta, -1, 0);
+			FBmpOut.Canvas.Font.Color := C;
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+}
 					OffsetRect(TextBounds, Shadow, Shadow);
 					DrawText(Canvas.Handle, @LineS[i][1], Length(LineS[i]), TextBounds,
 						DT_BOTTOM or DT_LEFT {or DT_NOCLIP}{ or DrawTextBiDiModeFlags(0)});

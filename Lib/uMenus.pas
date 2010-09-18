@@ -43,6 +43,7 @@ type
 			message WM_DISPLAYCHANGE;
 	end;
 }
+procedure ImgAdd(Bitmap: TBitmap; Name: string);
 procedure ComName(MenuItem: TMenuItem);
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
@@ -60,48 +61,52 @@ implementation
 
 uses
 	ImgList, SysUtils,
-	uGraph, uDBitmap, uScreen, uAdd, uFiles;
+	uGraph, uDBitmap, uScreen, uAdd, uFiles, uError;
 
 var ImageList: TCustomImageList;
-
 
 procedure CreateImg;
 begin
 	if not Assigned(ImageList) then ImageList := TCustomImageList.CreateSize(16, 16);
 end;
 
-procedure ComName(MenuItem: TMenuItem);
-
-	procedure ImgAdd(Name: string);
-	var
-		Bmp: TDBitmap;
+procedure ImgAdd(Bitmap: TBitmap; Name: string);
+var
+	Bmp: TDBitmap;
 //		Quality: SG;
-		FileName: TFileName;
+	FileName: TFileName;
 //		TranColor: TColor;
-	begin
-		FileName := GraphDir + 'Images\' + Name + '.gif';
-		if FileExists(FileName) then
-		begin
-			Bmp := TDBitmap.Create;
-			Bmp.LoadFromFile(FileName);
-			if Bmp.Transparent = False then
-				Bmp.TryTransparent;
-
-			MenuItem.Bitmap.PixelFormat := pf24bit;
-			MenuItem.Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
-			MenuItem.Bitmap.Height := 16;
-			Bmp.Resize(Bmp, Bmp.TransparentColor, MenuItem.Bitmap.Width, MenuItem.Bitmap.Height, nil);
-			MenuItem.Bitmap.Transparent := Bmp.Transparent;
-			MenuItem.Bitmap.TransparentColor := Bmp.TransparentColor;
-			Bmp.Transparent := False;
-			MenuItem.Bitmap.Canvas.Draw(0, 0, Bmp);
-			Bmp.Free;
-		end;
-	end;
-
 begin
-	if (MenuItem.Bitmap.Empty) and (MenuItem.ImageIndex = -1) then
-		ImgAdd(MenuNameToFileName(MenuItem.Name))
+	FileName := GraphDir + 'Images\' + Name + IconExt;
+	if FileExists(FileName) then
+	begin
+		Bmp := TDBitmap.Create;
+		Bmp.LoadFromFile(FileName);
+
+//			MenuItem.Bitmap.PixelFormat := pf24bit;
+		{$ifopt d+}
+		if Bitmap = nil then
+		begin
+			IE(434333);
+			Exit;
+		end;
+		{$endif}
+		Bitmap.Height := 0;
+		Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
+		Bitmap.Height := 16;
+		Bmp.Resize(Bmp, Bitmap.Width, Bitmap.Height, nil);
+{			MenuItem.Bitmap.Transparent := Bmp.Transparent;
+		MenuItem.Bitmap.TransparentColor := Bmp.TransparentColor;
+		Bmp.Transparent := False;}
+		Bitmap.Assign(Bmp); //Canvas.Draw(0, 0, Bmp);
+		Bmp.Free;
+	end;
+end;
+
+procedure ComName(MenuItem: TMenuItem);
+begin
+	if (MenuItem.Bitmap.Width = 0) and (MenuItem.ImageIndex = -1) then
+		ImgAdd(MenuItem.Bitmap, MenuNameToFileName(MenuItem.Name))
 end;
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
@@ -294,7 +299,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			MenuBmp.GenerateRGB(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-				clNone, gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
+				gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
 		end
 		else
 		begin
@@ -313,7 +318,7 @@ begin
 				Co[3] := Co[2];
 			end;
 			MenuBmp.GenerateRGB(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-				clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 		end;
 
 	// Line
@@ -362,7 +367,7 @@ begin
 				else
 				begin
 					MenuBmp.GenerateRGB(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
-						clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+						gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 				end;
 				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 					DepthColor(1), DepthColor(3), 1, ef16);
@@ -384,7 +389,7 @@ begin
 				end
 				else
 					MenuBmp.GenerateRGB(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-						clNone, gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
+						gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
 			end;
 		end
 		else
@@ -400,9 +405,9 @@ begin
 					C1 := clMenuText;
 				end;
 				if TopLevel then
-					C2 := MixColorsEx(C1, clMenu, 32 * 256, 224 * 256)
+					C2 := MixColors(C1, clMenu, 32 * 256, 224 * 256)
 				else
-					C2 := MixColorsEx(C1, clMenu, 48 * 256, 208 * 256)
+					C2 := MixColors(C1, clMenu, 48 * 256, 208 * 256)
 			end
 			else
 			begin

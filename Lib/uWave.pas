@@ -264,9 +264,7 @@ end;
 procedure Sound(const Hz: Word);
 asm
 	{$ifopt O+}
-	push ax
-	push bx
-	push dx
+	pushad
 	{$endif}
 	mov bx, Hz
 	mov ax, 34DDh
@@ -294,9 +292,7 @@ asm
 	out 42h, al
 	@ExitProc:
 	{$ifopt O+}
-	pop dx
-	pop bx
-	pop ax
+	popad
 	{$endif}
 end;
 *)
@@ -305,7 +301,7 @@ function WaveErrorText(ErrorCode: U4): string;
 begin
 	SetLength(Result, MAXERRORLENGTH);
 	if waveOutGetErrorText(ErrorCode, @Result[1], MAXERRORLENGTH) = MMSYSERR_NOERROR then
-//		Result := PChar(Result) D???
+		Result := ''
 	else
 		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' ' + 'Unknown error';
 end;
@@ -362,25 +358,27 @@ begin
 		begin
 			IOErrorMessage(FName, 'File Is Not Wave');
 			WaveFree(Wave);
-			goto LFin
-		end;
-		if Wave.BytesFollowing <> F.FileSize - 8 then
+		end
+		else
 		begin
-			IOErrorMessage(FName, 'Wave Bytes Following repaired');
-			Wave.BytesFollowing := F.FileSize - 8;
+			if Wave.BytesFollowing <> F.FileSize - 8 then
+			begin
+				IOErrorMessage(FName, 'Wave Bytes Following Repaired');
+				Wave.BytesFollowing := F.FileSize - 8;
+			end;
+			if (Wave.BitsPerSample = 4) {Microsoft ADPCM} or (Wave.BitsPerSample = 0) {GSM 6.10} then goto LFin;
+			if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
+			begin
+				IOErrorMessage(FName, 'Wave Format Not Supported');
+				WaveFree(Wave);
+				goto LFin;
+			end;
+	{		if Wave.DataBytes > F.FileSize - 44 then
+			begin
+				IOErrorMessage(FName, 'Wave data bytes repaired');
+				Wave.DataBytes := F.FileSize - 44;
+			end;}
 		end;
-		if (Wave.BitsPerSample = 4) {Microsoft ADPCM} or (Wave.BitsPerSample = 0) {GSM 6.10} then goto LFin;
-		if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
-		begin
-			IOErrorMessage(FName, 'Wave Format Not Supported');
-			WaveFree(Wave);
-			goto LFin;
-		end;
-{		if Wave.DataBytes > F.FileSize - 44 then
-		begin
-			IOErrorMessage(FName, 'Wave data bytes repaired');
-			Wave.DataBytes := F.FileSize - 44;
-		end;}
 		LFin:
 		F.Close;
 	end;
@@ -748,7 +746,7 @@ constructor TWavePlayer.Create;
 begin
 	inherited Create;
 	HWaveOut := 0;
-	PlayItems := TData.Create;
+	PlayItems := TData.Create(True);
 	PlayItems.ItemSize := SizeOf(TPlayItem);
 	Initialized := False;
 	CloseInvoked := False;

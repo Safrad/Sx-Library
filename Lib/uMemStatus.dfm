@@ -42,8 +42,6 @@ object fMemStatus: TfMemStatus
       'of memory that were requested by the user. AllocMemCount is incr' +
       'emented each time a block of memory is allocated and is decremen' +
       'ted each time a block of memory is freed. Use AllocMemCount to '
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'AllocMemCount [1]'
@@ -79,8 +77,6 @@ object fMemStatus: TfMemStatus
       ' allocated blocks of memory in use by an application. Use AllocM' +
       'emSize to find out how many bytes of memory an application is cu' +
       'rrently using.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'AllocMemSize'
@@ -115,8 +111,6 @@ object fMemStatus: TfMemStatus
       'The (current) total address space available to your program, in ' +
       'bytes. This will grow as your program'#39's dynamic memory usage gro' +
       'ws.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'TotalAddrSpace'
@@ -150,8 +144,6 @@ object fMemStatus: TfMemStatus
     Hint = 
       'The total number of bytes (of TotalAddrSpace) for which space ha' +
       's not been allocated in the swap file.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'TotalUncommitted'
@@ -183,8 +175,6 @@ object fMemStatus: TfMemStatus
     Width = 97
     Height = 17
     Hint = 'The total number of bytes dynamically allocated by your program.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'TotalAllocated'
@@ -220,8 +210,6 @@ object fMemStatus: TfMemStatus
       's space for allocation by your program. If this number is exceed' +
       'ed, and enough virtual memory is available, more address space w' +
       'ill be allocated from the OS; TotalAddrSpace will be incremente'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'TotalFree'
@@ -255,8 +243,6 @@ object fMemStatus: TfMemStatus
     Hint = 
       'Total bytes of small memory blocks which are not currently alloc' +
       'ated by your program.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'FreeSmall'
@@ -292,8 +278,6 @@ object fMemStatus: TfMemStatus
       'ed by your program. Large free blocks can be created by coalesci' +
       'ng smaller, contiguous, free blocks or by freeing a large dynami' +
       'c allocation.  (The exact size of the blocks is immaterial)'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'FreeBig'
@@ -329,8 +313,6 @@ object fMemStatus: TfMemStatus
       'e: Unused + FreeBig + FreeSmall = TotalFree These three fields (' +
       'Unused, FreeBig, and FreeSmall) refer to dynamic allocation by t' +
       'he user program.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Unused'
@@ -364,8 +346,6 @@ object fMemStatus: TfMemStatus
     Hint = 
       'The total number of bytes required by the heap manager to manage' +
       ' all the blocks dynamically allocated by your program.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Overhead'
@@ -399,8 +379,6 @@ object fMemStatus: TfMemStatus
     Hint = 
       'Indicates the current status of the heap, as internally determin' +
       'ed.'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'HeapErrorCode [?]'
@@ -435,8 +413,6 @@ object fMemStatus: TfMemStatus
       'The total number of bytes (of TotalAddrSpace) for which space ha' +
       's been allocated in the swap file. Note: TotalUncommitted + Tota' +
       'lCommitted = TotalAddrSpace'
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'TotalCommitted'

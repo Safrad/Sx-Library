@@ -63,8 +63,6 @@ object fSysInfo: TfSysInfo
     Top = 8
     Width = 49
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'OS Id'
@@ -94,8 +92,6 @@ object fSysInfo: TfSysInfo
     Top = 144
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Used'
@@ -124,8 +120,6 @@ object fSysInfo: TfSysInfo
     Top = 144
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Free'
@@ -154,8 +148,6 @@ object fSysInfo: TfSysInfo
     Top = 144
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Total'
@@ -184,8 +176,6 @@ object fSysInfo: TfSysInfo
     Top = 176
     Width = 89
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Physical Memory'
@@ -214,8 +204,6 @@ object fSysInfo: TfSysInfo
     Top = 200
     Width = 89
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Commit Charge'
@@ -244,8 +232,6 @@ object fSysInfo: TfSysInfo
     Top = 40
     Width = 49
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'CPU Id'
@@ -275,8 +261,6 @@ object fSysInfo: TfSysInfo
     Top = 224
     Width = 89
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Disk'
@@ -305,8 +289,6 @@ object fSysInfo: TfSysInfo
     Top = 88
     Width = 89
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'CPU Frequency'
@@ -336,8 +318,6 @@ object fSysInfo: TfSysInfo
     Top = 112
     Width = 89
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'AMD Duron Cmp'
@@ -367,8 +347,6 @@ object fSysInfo: TfSysInfo
     Top = 64
     Width = 89
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'CPU Usage'
@@ -398,8 +376,6 @@ object fSysInfo: TfSysInfo
     Top = 176
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -426,8 +402,6 @@ object fSysInfo: TfSysInfo
     Top = 176
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -454,8 +428,6 @@ object fSysInfo: TfSysInfo
     Top = 200
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -482,8 +454,6 @@ object fSysInfo: TfSysInfo
     Top = 200
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -510,8 +480,6 @@ object fSysInfo: TfSysInfo
     Top = 176
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -538,8 +506,6 @@ object fSysInfo: TfSysInfo
     Top = 200
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -566,8 +532,6 @@ object fSysInfo: TfSysInfo
     Top = 224
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -594,8 +558,6 @@ object fSysInfo: TfSysInfo
     Top = 224
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -622,8 +584,6 @@ object fSysInfo: TfSysInfo
     Top = 224
     Width = 57
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False

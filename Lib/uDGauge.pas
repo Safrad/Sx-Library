@@ -379,7 +379,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
-				clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 		end;
 		end;
 	end;
@@ -393,6 +393,7 @@ begin
 // Caption
 	if (Caption <> '') {and (FFontEffect<>ef00)} then
 	begin
+		FBmpOut.Canvas.Brush.Color := Color;
 		FBmpOut.Canvas.Brush.Style := bsClear;
 		FBmpOut.Canvas.Font := Font;
 		if Displ.Enabled then

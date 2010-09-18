@@ -186,6 +186,8 @@ type
 	TArraySG = array[0..256 * 1024 * 1024 - 2] of SG;
 	PArraySG = ^TArraySG;
 
+	TArrayF8 = array[0..256 * 1024 * 1024 - 2] of F8;
+	PArrayF8 = ^TArrayF8;
 	TArrayFA = array[0..128 * 1024 * 1024 - 2] of FA;
 	PArrayFA = ^TArrayFA;
 
@@ -200,11 +202,18 @@ type
 const
 	MaxSpectrum = 1529;
 type
-	TRColor = packed record
+	PRColor = ^TRColor;
+	TRColor = packed record // TRGBA
 		case Integer of
-		0: (L: - $7FFFFFFF - 1..$7FFFFFFF);
-		1: (R, G, B, T: Byte);
-		2: (WordRG, WordBT: Word);
+		0: (L: -$7FFFFFFF - 1..$7FFFFFFF);
+		1: (R, G, B, A: Byte);
+		2: (WordRG, WordBA: Word);
+	end;
+	PRGB = ^TRGB;
+	TRGB = packed record
+		case Integer of
+		1: (R, G, B: Byte);
+		2: (WordRG: Word; ByteB: Byte);
 	end;
 	THSVColor = packed record // 4
 		Hue: 0..MaxSpectrum; // 2
@@ -356,7 +365,7 @@ var
 	NumericBase: U1 = 10;
 const
 	MaxNumericBase = 36;
-	CharTab: array[0..MaxNumericBase - 1] of Char = (
+	NumberTable: array[0..MaxNumericBase - 1] of Char = (
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
 		'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
@@ -365,6 +374,8 @@ const
 		'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
 		'y', 'z', '-', '*'});
 
+var UseNA: BG;
+		
 function NToS(const Num: Int64): string; overload;
 function NToS(const Num: Int64; const Decimals: SG): string; overload;
 function NToS(const Num: Int64; const UseFormat: string): string; overload;
@@ -423,6 +434,9 @@ procedure Nop;
 {$endif}
 procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
+procedure FillU4(var Desc; Count: Cardinal; Value: U4);
+procedure Swap02(var Desc; Count: Cardinal; Step: S4);
+procedure Exchange(var P0, P1; Count: Cardinal); register;
 function SelectDirectory(var Dir: string): BG;
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
@@ -458,8 +472,7 @@ uses
 
 function RColor(R, G, B: U1): TRColor;
 begin
-//	Result := R + B shl 8 + G shl 16;
-	Result.T := 0;
+	Result.A := 0;
 	Result.R := R;
 	Result.G := G;
 	Result.B := B;
@@ -1202,7 +1215,7 @@ begin
 //		DivModS64(Num, Base, D, M);
 		M := Num mod Base;
 		Num := Num div Base;
-		Result := CharTab[M] + Result;
+		Result := NumberTable[M] + Result;
 		if Num = 0 then Break;
 	end;
 //	if Minus then AddMinusStr(Result);
@@ -1219,6 +1232,12 @@ begin
 	if (Num = Low(Num)) or (Num = High(Num)) then
 	begin
 		Result := 'Out of 64-bit range';
+		Exit;
+	end;
+
+	if (UseNA) and (Num <= 0) then
+	begin
+		Result := 'N/A';
 		Exit;
 	end;
 
@@ -1337,6 +1356,11 @@ begin
 	if (Num = Low(Num)) or (Num = High(Num)) then
 	begin
 		Result := 'Out of 64-bit range';
+		Exit;
+	end;
+	if (UseNA) and (Num <= 0) then
+	begin
+		Result := 'N/A';
 		Exit;
 	end;
 
@@ -2336,6 +2360,80 @@ asm
 		cmp P, Size
 	jb @Loop
 	@Exit:
+end;
+
+procedure FillU4(var Desc; Count: Cardinal; Value: U4); register;
+asm
+{     ->EAX     Pointer to destination  }
+{       EDX     count   }
+{       ECX     value   }
+
+				PUSH    EDI
+
+				MOV     EDI,EAX { Point EDI to destination              }
+
+				MOV     EAX,ECX
+
+				MOV     ECX,EDX
+//        JS      @@exit
+//				DEC ECX
+//        SAR     ECX,2
+//				JS      @@exit
+
+				REP     STOSD   { Fill count dwords       }
+
+{        MOV     ECX,EDX
+				AND     ECX,3
+				REP     STOSB   { Fill count MOD 4 bytes        }}
+
+@@exit:
+				POP     EDI
+end;
+
+procedure Swap02(var Desc; Count: Cardinal; Step: S4); register;
+asm
+{     ->EAX     Pointer to destination  }
+{       EDX     Count   }
+{       ECX     Step    }
+
+	PUSH    EDI
+	MOV     EDI,EAX { Point EDI to destination              }
+	add edx, edi
+	@Loop:
+//	xchg [edi], [edi + 2]
+		mov al, [edi]
+		xchg al, [edi + 2]
+		mov [edi], al
+		add edi, ecx
+		cmp edi, edx
+	jb @Loop
+	POP     EDI
+end;
+
+procedure Exchange(var P0, P1; Count: Cardinal); register;
+asm
+{     ->EAX     P0  }
+{       EDX     P1   }
+{       ECX     Count   }
+
+				PUSH    EDI
+				PUSH    ESI
+
+				MOV     ESI,EAX { Point EDI to destination              }
+				MOV     EDI,EDX { Point EDI to destination              }
+				ADD     EDX,ECX
+	@Loop:
+//	xchg [edi], [esi]
+		mov al, [edi]
+		xchg al, [esi]
+		mov [esi], al
+		add edi, 1
+		add esi, 1
+		cmp edi, edx
+	jb @Loop
+
+				POP ESI
+				POP     EDI
 end;
 
 function SelectDirectory(var Dir: string): BG;

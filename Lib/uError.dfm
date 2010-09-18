@@ -39,8 +39,6 @@ object fIOError: TfIOError
     Top = 32
     Width = 16
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taCenter
     Caption = '/'
@@ -70,8 +68,6 @@ object fIOError: TfIOError
     Top = 32
     Width = 33
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Caption = '9,999'
@@ -101,8 +97,6 @@ object fIOError: TfIOError
     Top = 8
     Width = 73
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Time to Close:'
@@ -133,8 +127,6 @@ object fIOError: TfIOError
     Top = 24
     Width = 73
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -162,8 +154,6 @@ object fIOError: TfIOError
     Top = 8
     Width = 153
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Created:'
@@ -193,8 +183,6 @@ object fIOError: TfIOError
     Top = 24
     Width = 153
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taRightJustify
     Displ.Enabled = False
@@ -221,8 +209,6 @@ object fIOError: TfIOError
     Top = 8
     Width = 129
     Height = 19
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Message'

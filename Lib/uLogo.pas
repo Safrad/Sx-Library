@@ -78,12 +78,12 @@ begin
 		Co[1] := clGreen;
 		Co[2] := clBlue;
 		Co[3] := clSilver;
-		Bmp.GenerateRGB(clNone, gfTriaHorz, Co, clBlack, ef16, nil);
+		Bmp.GenerateRGB(gfTriaHorz, Co, clBlack, ef16, nil);
 		Co[0] := clWhite;
 		Co[1] := clBlack;
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		Bmp.GenerateRGB(clNone, gfFade2x, Co, clBlack, ef10, nil);
+		Bmp.GenerateRGB(gfFade2x, Co, clBlack, ef10, nil);
 	end;
 
 	BmpT := TDBitmap.Create;
@@ -127,6 +127,8 @@ procedure ShowLogo;
 begin
 	if FileExists(GraphDir + 'Logo.jpg') then
 		ShowLogo(GraphDir + 'Logo.jpg')
+	else if FileExists(GraphDir + 'Logo.png') then
+		ShowLogo(GraphDir + 'Logo.png')
 	else if FileExists(GraphDir + 'Logo.gif') then
 		ShowLogo(GraphDir + 'Logo.gif')
 	else

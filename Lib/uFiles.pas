@@ -80,7 +80,7 @@ type
 		function SeekEnd: Boolean;
 		function BlockRead(var Buf; const Count: Cardinal): Boolean;
 		function BlockWrite(var Buf; const Count: Cardinal): Boolean;
-		function FillWrite(const Count: Cardinal): Boolean;
+		function FillWrite(Count: Cardinal): Boolean;
 		function Readln(out Line: string): Boolean;
 		function Write(Line: string): Boolean;
 //		function WriteF(Line: string): Boolean;
@@ -134,6 +134,7 @@ var
 function ShortDir(const Dir: string): string;
 function FullDir (Dir: string): string;
 function DelFileExt(const FName: string): string;
+function AddAfterName(const FName: string; const Text: string): string;
 function BackDir(const Dir: string): string;
 function LegalFileName(const FileName: string): string;
 procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
@@ -143,12 +144,14 @@ function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
 function CopyFile(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+function CopyFileToDir(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CopyDamagedFile(Source, Dest: TFileName): Boolean;
 function CreateDir(const Dir: string): Boolean;
-function NewEmptyDir(var Dir: string; const CanCreate: Boolean): Boolean;
+function NewFileOrDir(var FileOrDir: string): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
 
 function DeleteFileEx(const FileName: TFileName): Boolean;
+function DeleteFileDialog(const FileName: TFileName): Boolean;
 function DeleteDir(const DirName: string): Boolean;
 function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
 
@@ -187,7 +190,7 @@ procedure SelectPath(var Path: string; Handle: THandle);
 implementation
 
 uses
-	Dialogs, ShellAPI, ShlObj,
+	Dialogs, ShellAPI, ShlObj, Math,
 	uError;
 
 constructor TFile.Create;
@@ -442,14 +445,23 @@ begin
 	end;
 end;
 
-function TFile.FillWrite(const Count: Cardinal): Boolean;
+function TFile.FillWrite(Count: Cardinal): Boolean;
 var
 	Buf: Pointer;
+	C: UG;
 begin
-	GetMem(Buf, Count);
-	FillChar(Buf^, Count, 0);
-	Result := BlockWrite(Buf^, Count);
-	FreeMem(Buf, Count);
+	C := Min(Count, DefFileBuffer);
+	GetMem0(Buf, C);
+	Result := True;
+	while Count > 0 do
+	begin
+		Result := Result and BlockWrite(Buf^, C);
+		Count := Count - C;
+		if C > Count then C := Count;
+		if Result = False then Break;
+	end;
+
+	FreeMem(Buf);
 end;
 
 function TFile.Readln(out Line: string): Boolean;
@@ -742,6 +754,11 @@ begin
 	if Length(Ext) > 0 then SetLength(Result, Length(Result) - Length(Ext));
 end;
 
+function AddAfterName(const FName: string; const Text: string): string;
+begin
+	Result := DelFileExt(FName) + Text + ExtractFileExt(FName);
+end;
+
 function BackDir(const Dir: string): string;
 var i: Integer;
 begin
@@ -816,7 +833,7 @@ var
 			while ErrorCode = NO_ERROR do
 			begin
 				IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
-				if IsDir and (Files and Dirs) then SearchRec.Name := SearchRec.Name + '\';
+				if IsDir and (Dirs or SubDirs) then SearchRec.Name := SearchRec.Name + '\';
 				IsFile := (SearchRec.Attr and faDirectory) = 0;
 
 				if (IsDir and Dirs)
@@ -992,6 +1009,11 @@ begin
 	end;
 end;
 
+function CopyFileToDir(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+begin
+	Result := CopyFile(Source, Dest + ExtractFileName(Source), FailExist);
+end;
+
 function CopyDamagedFile(Source, Dest: TFileName): Boolean;
 label LRetryS, LRetryD;
 const
@@ -1040,34 +1062,57 @@ begin
 	end;
 end;
 
-function NewEmptyDir(var Dir: string; const CanCreate: Boolean): Boolean;
+function NewFileOrDir(var FileOrDir: string): Boolean;
 var
-	i: Integer;
-	Dir2: string;
+	i: SG;
+	IsDir: BG;
+	DirS, DirE: string;
 begin
 	Result := False;
-	Dir2 := Copy(Dir, 1, Length(Dir) - 1);
+	if Length(FileOrDir) = 0 then Exit;
+	IsDir := FileOrDir[Length(FileOrDir) - 1] = '\';
+	if IsDir then
+	begin
+		DirS := Copy(FileOrDir, 1, Length(FileOrDir) - 1);
+		DirE := '\';
+	end
+	else
+	begin
+		DirS := DelFileExt(FileOrDir);
+		DirE := ExtractFileExt(FileOrDir);
+	end;
 	i := 0;
 	while True do
 	begin
 		if i > 0 then
 		begin
-			Dir := Dir2 + Char(Ord('a') + i - 1) + '\';
+			FileOrDir := DirS + ' (' + IntToStr(i) + ')' + DirE;
 		end;
 
-		if DirectoryExists(Dir) = False then
+		if IsDir then
 		begin
-			if CanCreate then
-				CreateDir(Dir);
-			Result := True;
-			Break;
+			if DirectoryExists(FileOrDir) = False then
+			begin
+				Result := True;
+				Break;
+			end;
+		end
+		else
+		begin
+			if FileExists(FileOrDir) = False then
+			begin
+				Result := True;
+				Break;
+			end;
+
+
 		end;
 		Inc(i);
-		if i > Ord('z') - Ord('a') + 1 then
+{		if i > Ord('z') - Ord('a') + 1 then
 		begin
 			MessageD('Can not create empty directory', mtError, [mbOk]);
 			Break;
-		end;
+		end;}
 	end;
 end;
 
@@ -1105,6 +1150,13 @@ begin
 	Result := DeleteFile(PChar(FileName));
 	if Result = False then
 		IOError(FileName, GetLastError);
+end;
+
+function DeleteFileDialog(const FileName: TFileName): Boolean;
+begin
+	Result := False;
+	if MessageD('Delete file' + LineSep + FileName, mtConfirmation, [mbYes, mbNo]) = mbYes then
+		Result := DeleteFileEx(FileName);
 end;
 
 function DeleteDir(const DirName: string): Boolean;
@@ -1294,6 +1346,7 @@ begin
 {	Stream.SetSize(Count);
 	Stream.Seek(0, 0);}
 	Stream.WriteBuffer(Buf^, Count);
+	Stream.Seek(0, 0);
 	FreeMem(Buf);
 end;
 

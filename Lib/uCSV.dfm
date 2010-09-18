@@ -28,8 +28,6 @@ object fFormats: TfFormats
     Top = 8
     Width = 65
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Type'
@@ -58,8 +56,6 @@ object fFormats: TfFormats
     Top = 8
     Width = 89
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Function'
@@ -88,8 +84,6 @@ object fFormats: TfFormats
     Top = 8
     Width = 97
     Height = 17
-    AlphaBlend = False
-    AlphaBlendValue = 0
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Name'

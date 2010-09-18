@@ -60,6 +60,7 @@ type
 		procedure Close1Click(Sender: TObject);
 		procedure CloseAll1Click(Sender: TObject);
 		procedure Delete1Click(Sender: TObject);
+		procedure LastNextWindow1Click(Sender: TObject);
 		procedure WindowXClick(Sender: TObject);
 
 		function KindSave(Kind: SG; SD: BG; SaveCopy: BG): BG;
@@ -220,6 +221,7 @@ begin
 	Close1 := TMenuItem.Create(File1);
 	Close1.Name := 'Close1';
 	Close1.Caption := 'Close';
+	Close1.ShortCut := ShortCut(Ord('W'), [ssCtrl]);
 	Close1.OnClick := Close1Click;
 	File1.Insert(i, Close1);
 	Inc(i);
@@ -287,6 +289,25 @@ begin
 	Delete1.OnClick := Delete1Click;
 	File1.Insert(i, Delete1);
 	Inc(i);
+
+
+	M := TMenuItem.Create(Window1);
+	M.Caption := '-';
+	Window1.Add(M);
+
+	M := TMenuItem.Create(Window1);
+	M.Tag := -1;
+	M.Caption := 'Last Window';
+	M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl, ssShift]);
+	M.OnClick := LastNextWindow1Click;
+	Window1.Add(M);
+
+	M := TMenuItem.Create(Window1);
+	M.Tag := +1;
+	M.Caption := 'Next Window';
+	M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl]);
+	M.OnClick := LastNextWindow1Click;
+	Window1.Add(M);
 
 	M := TMenuItem.Create(File1);
 	M.Caption := '-';
@@ -653,7 +674,13 @@ begin
 			begin
 				FreeAndNil(Items[Kind].MenuItem);
 			end;
-			FreeFile(Kind);
+			try
+				FreeFile(Kind);
+			except
+				on E: Exception do
+				begin
+				end;
+			end;
 		end;
 		FreeMem(Items[Kind].PData, ItemSize); Items[Kind].PData := nil;
 		for i := Kind to Count - 2 do
@@ -793,7 +820,8 @@ procedure TKinds.KindInit;
 			Delete1.Enabled := (Count > 0) and (Items[Index].New = 0);
 	end;
 
-var i: SG;
+var
+	i: SG;
 begin
 	if Assigned(Application.MainForm) then
 	if (Count <= 0) or (Index < 0) then
@@ -929,6 +957,19 @@ begin
 		DeleteFileEx(Items[Index].FileName);
 		Close1Click(Sender);
 	end;
+end;
+
+procedure TKinds.LastNextWindow1Click(Sender: TObject);
+var i: SG;
+begin
+	i := Index + TMenuItem(Sender).Tag;
+	if i >= Count then
+		i := 0
+	else if i < 0 then
+		i := Count - 1;
+	ChangeIndex(i);
+	Window1.Items[i].Checked := True;
+	KindChangeFile(Sender);
 end;
 
 procedure TKinds.WindowXClick(Sender: TObject);
