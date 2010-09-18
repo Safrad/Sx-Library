@@ -90,15 +90,6 @@ function GetCPUUsage(IntTime: U8): SG;
 procedure FillSysInfoS(var SInfo: TSysInfo);
 procedure FillSysInfoD(var SysInfo: TSysInfo);
 
-procedure Delay(const ms: LongWord);
-procedure DelayEx(const f: U8);
-function GetCPUCounter: TU8;
-function PerformanceCounter: U8;
-
-var
-	PerformanceType: SG;
-	PerformanceFrequency: U8;
-
 implementation
 
 {$R *.DFM}
@@ -189,7 +180,7 @@ type
    perfTime               : comp;
    perfFreq               : comp;
 	 perfTime100nSec        : comp;
-   systemNameLength       : cardinal;
+	 systemNameLength       : cardinal;
    systemnameOffset       : cardinal;
  end;
  TPerfObjectType = packed record
@@ -261,7 +252,7 @@ begin
 				 end;
          inc(perfCounterDef);
        end;
-       break;
+			 break;
      end;
      perfObjectType := pointer(cardinal(perfObjectType) + perfObjectType^.totalByteLength);
    end;
@@ -583,55 +574,6 @@ end;
 procedure TfSysInfo.ButtonOkClick(Sender: TObject);
 begin
 	Close;
-end;
-
-procedure InitPerformanceCounter;
-begin
-	if QueryPerformanceFrequency(PerformanceFrequency) then
-	begin
-		PerformanceType := 1;
-	end
-	else
-	begin
-		PerformanceType := 0;
-		PerformanceFrequency := 1000;
-	end;
-end;
-
-function GetCPUCounter: TU8;
-begin
-	asm
-	mov ecx, 10h
-	dw 310fh // RDTSC 10clocks
-	mov ebx, Result
-	mov [ebx], eax
-	mov [ebx + 4], edx
-	end;
-end;
-
-function PerformanceCounter: Int64;
-begin
-	case PerformanceType of
-	0: Result := GetTickCount;
-	1: QueryPerformanceCounter(Result);
-	else Result := GetCPUCounter.A;
-	end;
-end;
-
-procedure Delay(const ms: LongWord);
-var
-	TickCount: LongWord;
-begin
-	TickCount := GetTickCount + ms;
-	while GetTickCount < TickCount do
-end;
-
-procedure DelayEx(const f: Int64);
-var
-	TickCount: Int64;
-begin
-	TickCount := PerformanceCounter + f;
-	while PerformanceCounter < TickCount do
 end;
 
 procedure TfSysInfo.FormCreate(Sender: TObject);

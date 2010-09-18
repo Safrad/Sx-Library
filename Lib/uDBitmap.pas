@@ -70,7 +70,33 @@ type
 	TEffect = (ef00, ef01, ef02, ef03, ef04, ef05, ef06, ef07,
 		ef08, ef09, ef10, ef11, ef12, ef13, ef14, ef15, ef16,
 		efAdd, efSub, efAdd127, efSub127, efXor, efNeg);
+const
+	EffectNames: array[TEffect] of string = (
+		'0',
+		'1/16',
+		'1/8',
+		'3/16',
+		'25%',
+		'5/16',
+		'3/8',
+		'7/16',
+		'50%',
+		'9/16',
+		'5/8',
+		'11/16',
+		'75%',
+		'13/16',
+		'7/8',
+		'15/16',
+		'Copy',
+		'Add',
+		'Sub',
+		'Add-',
+		'Sub+',
+		'Xor',
+		'Neg');
 
+type
 {	PBmpData = ^TBmpData;
 	TBmpData = array[0..MaxBitmapWidth * MaxBitmapHeight - 1] of TPixel; // All data of bitmap
 	PBmpLine = ^TBmpLine;
@@ -84,9 +110,15 @@ type
 		gfLineHorz, gfLineVert, gfCLineHorz, gfCLineVert,
 		gfRandomLines, gfRandom, gfFadeHorz, gfFadeVert,
 		gfFade2x, gfFadeIOH, gfFadeIOV, gfFade2xx, gfNone);
-	TGraphicStyle = (gsBorder, gsLines, gsSolid, gsGradient {,gsGen, gsBitmap});
+	TGraphicStyle = (
+		gsSolid,
+		gsHorizontal, gsVertical, gsFDiagonal, gsBDiagonal, gsCross, gsDiagCross,
+		gsBorder, gsGradient {,gsGen, gsBitmap});
 const
-	GraphicStyleNames: array[TGraphicStyle] of string = ('Border', 'Lines', 'Solid', 'Gradient');
+	GraphicStyleNames: array[TGraphicStyle] of string = (
+		'Solid',
+		'Horizontal', 'Vertical', 'FDiagonal', 'BDiagonal', 'Cross', 'DiagCross',
+		'Border', 'Gradient');
 
 type
 {	TGraphNode = record // 32
@@ -94,7 +126,7 @@ type
 		Value: FA; // 10
 	end;
 	TGraphNodes = array of TGraphNode;}
-
+  PDrawStyle = ^TDrawStyle;
 	TDrawStyle = packed record // 16
 //		GenFunc: TGenFunc; // gsGen
 		Colors: array[0..1] of TColor; // gsSolid, gsGradient
@@ -1173,7 +1205,7 @@ begin
 	else if Ext = 'png' then
 	begin
 		MyPng := TPngObject.Create;
-		if Transparent{IE does not support 24bit transparency} {or (ColorCount(256) <= 256)D???} then
+		if Transparent{Internet Explorer does not support 24 bit transparency} {or (ColorCount(256) <= 256)D???} then
 		begin
 			// Save as 8bit
 			MyGif := TGifImage.Create;
@@ -10340,15 +10372,26 @@ var
 	Co: array[0..3] of TColor;
 begin
 	case DS.Style of
-	gsBorder: Border(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Colors[1], DS.BorderSize, ef16);
-	gsLines:
-	begin
-//		Border(XS1, YS1, XS2, YS2: TCoor; C, C, 2);
-	end;
 	gsSolid:
 	begin
-		Bar(XS1, YS1, XS2, YS2, DS.Colors[0], ef16);
+		Bar(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Effect);
 	end;
+	gsHorizontal, gsVertical, gsFDiagonal, gsBDiagonal, gsCross, gsDiagCross:
+	begin
+		Bar(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Effect);
+		Canvas.Brush.Color := DS.Colors[1];
+		Canvas.Pen.Style := psClear;
+		Canvas.Brush.Style := TBrushStyle(SG(bsHorizontal) + SG(DS.Style) - SG(gsHorizontal));
+		Canvas.FillRect(Rect(XS1, YS1, XS2, YS2));
+		Transparent := True;
+		TransparentColor := DS.Colors[1];
+		Bar(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Effect);
+		Transparent := False;
+//		Canvas.CopyMode
+
+//		Border(XS1, YS1, XS2, YS2: TCoor; C, C, 2);
+	end;
+	gsBorder: Border(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Colors[1], (DS.BorderSize * (XS2 - XS1 + 1) + 8) div 16, DS.Effect);
 	gsGradient:
 	begin
 		C := ColorToRGB(DS.Colors[0]);
@@ -10357,7 +10400,7 @@ begin
 		Co[1] := DarkerColor(C.L);
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		GenerateRGBEx(XS1, YS1, XS2, YS2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+		GenerateRGBEx(XS1, YS1, XS2, YS2, gfFade2x, Co, ScreenCorrectColor, DS.Effect, 0, nil);
 	end;
 //	gsBitmap: Bmp(XS1, YS1, FillStyle.Bitmap, ef16);
 	end;

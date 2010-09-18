@@ -1035,7 +1035,13 @@ var
 	s: string;
 	i, x, y: SG;
 	FontSize: SG;
+	{$ifopt d+}
+	StartTickCount: U4;
+	{$endif}
 begin
+	{$ifopt d+}
+	StartTickCount := GetTickCount;
+	{$endif}
 	if (Visible = False) or (csDesigning in ComponentState) then
 	begin
 		Bitmap.SetSize(0, 0);
@@ -1333,12 +1339,12 @@ begin
 		if FDrawFPS then
 		{$endif}
 		begin
-		{$ifopt d+}
-//		s := NToS(PaintCount);
-		{$endif}
+			{$ifopt d+}
+			s := IntToStr(GetTickCount - StartTickCount) + 'ms';// NToS(PaintCount);
+			{$endif}
 			if FramePerSec >= 0.1 then
 			begin
-				s := (*{$ifopt d+}s + ', ' +{$endif}*)NToS(Round(100 * FramePerSec), 2);
+				s := s + {$ifopt d+}s + ', ' +{$endif}NToS(Round(100 * FramePerSec), 2);
 			end;
 			FontSize := Bitmap.Canvas.Font.Size;
 			Bitmap.Canvas.Font.Size := 8;

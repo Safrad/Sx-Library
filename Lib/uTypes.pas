@@ -189,7 +189,11 @@ type
 	TIndex = SG;
 
 //	string = string;
-
+// Time
+const
+	Second = 1000;
+	Minute = 60 * Second;
+	Hour = 60 * Minute;
 // Graphics
 const
 	MaxSpectrum = 1529;

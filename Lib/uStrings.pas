@@ -29,6 +29,8 @@ const
 	CharBell = #$07;
 	CharTimes = '×';
 
+	FalseTrue: array[0..1] of string = ('false', 'true');
+
 var
 	HexValue: array[Char] of U1;
 

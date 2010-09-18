@@ -64,6 +64,7 @@ procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 
 procedure IconsFromMenu(Menu: TComponent; Panel: TPanel);
+procedure UpdateIcons(Menu: TComponent; Panel: TPanel);
 procedure IconsResize(PanelTool: TPanel);
 
 
@@ -793,8 +794,11 @@ begin
 		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
 		begin
 			if M.Name <> '' then
-			if M.Name <> 'Mark1' then
-			if (M.Bitmap <> nil) and (M.Bitmap.Empty = False) then
+			if M.Count = 0 then
+//			if M.Name <> 'Mark1' then
+			if (M.Bitmap <> nil) and (M.Bitmap.Empty = False) and (M.Name <> 'Exit1')
+			and (M.Name <> 'Register1') and (M.Name <> 'Unregister1') and (M.Name <> 'Delete1')
+			and (M.Name <> 'Logo1')then
 			begin
 				Name := M.Name + 'Icon1';
 				if Panel.FindComponent(Name) <> nil then
@@ -823,7 +827,7 @@ begin
 				Inc(Found);
 			end;
 		end
-		else
+		else if M.Name <> 'Help1' then
 			IconsFromMenu(M, Panel);
 	end;
 	if Found > 0 then
@@ -843,6 +847,70 @@ begin
 		end;
 
 		Panel.InsertControl(Bevel);
+	end;
+end;
+
+function FindMenuItem(Menu: TComponent; Name: string): TMenuItem;
+var
+	i, c: SG;
+	M: TMenuItem;
+begin
+	Result := nil;
+//TMenuItem(Menu.Items. FindComponent(
+	if (Menu is TMenu) or (Menu is TPopupMenu) then
+	begin
+		c := TMenu(Menu).Items.Count
+	end
+	else if Menu is TMenuItem then
+		c := TMenuItem(Menu).Count
+	else
+		Exit;
+
+	for i := 0 to c - 1 do
+	begin
+		if (Menu is TMenu) or (Menu is TPopupMenu) then
+		begin
+			M := TMenu(Menu).Items[i];
+		end
+		else if Menu is TMenuItem then
+			M := TMenuItem(Menu).Items[i]
+		else
+			 M := nil;
+
+		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
+		begin
+			if M.Count = 0 then
+			begin
+				if M.Name = Name then
+				begin
+					Result := M;
+					Exit;
+				end;
+			end;
+		end
+		else if M.Name <> 'Help1' then
+		begin
+			Result := FindMenuItem(M, Name);
+			if Result <> nil then Exit;
+		end;
+	end;
+end;
+
+procedure UpdateIcons(Menu: TComponent; Panel: TPanel);
+var
+	i: SG;
+	C: TControl;
+	M: TMenuItem;
+begin
+	for i := 0 to Panel.ControlCount - 1 do
+	begin
+		C := Panel.Controls[i];
+		M := FindMenuItem(Menu, Copy(C.Name, 1, Length(C.Name) - 5));
+		if M <> nil then
+		begin
+			C.Enabled := M.Enabled;
+			(C as TDButton).Down := M.Checked;
+		end;
 	end;
 end;
 

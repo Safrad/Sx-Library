@@ -119,7 +119,7 @@ begin
 		if PlayerName = '' then
 			PlayerName := MainIni.ReadString('Options', 'PlayerName', 'Unknown');
 		LAgain:
-		if GetStr('Enter Your Name', PlayerName, 'Unknown', 15) then
+		if GetStr('Your Name', PlayerName, 'Unknown', 15) then
 		begin
 			if PlayerName = '' then goto LAgain;
 			MainIni.WriteString('Options', 'PlayerName', PlayerName);

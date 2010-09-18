@@ -11,9 +11,9 @@ unit uStyle;
 interface
 
 uses
-	uTypes, uDForm, uDBitmap,
+	uTypes, uDForm, uDBitmap, uDIni,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, StdCtrls, uDButton;
+	Dialogs, StdCtrls, uDButton, ExtCtrls;
 
 type
 	TOnApplyStyle = procedure(Style: TDrawStyle);
@@ -23,17 +23,30 @@ type
 		ButtonOk: TDButton;
 		ButtonCancel: TDButton;
 		ButtonApply: TDButton;
+    ButtonColor0: TDButton;
+    ButtonSelectFile: TDButton;
+    ButtonColor1: TDButton;
+    ComboBoxEffect: TComboBox;
+    ComboBoxLineSize: TComboBox;
+    Bevel1: TBevel;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
 		procedure FormCreate(Sender: TObject);
-		procedure ComboBoxStylesChange(Sender: TObject);
+		procedure FormToData(Sender: TObject);
 		procedure FormResize(Sender: TObject);
+    procedure FormPaint(Sender: TObject);
+    procedure ButtonColor0Click(Sender: TObject);
 	private
 		{ Private declarations }
 		TCurVal, TDefVal, NowVal: TDrawStyle;
 		OnApply: TOnApplyStyle;
-		procedure Draw;
+		procedure DataToForm(Sender: TObject);
 	public
 		{ Public declarations }
 	end;
+
+procedure RWDrawStyle(MainIni: TDIniFile; Name: string; var DS: TDrawStyle; Save: BG);
 
 var
 	fStyle: TfStyle;
@@ -41,35 +54,50 @@ var
 function GetStyle(Prompt: string;
 	var CurVal: TDrawStyle; const DefVal: TDrawStyle; OnApplyStyle: TOnApplyStyle): Boolean;
 
+
 implementation
 
 {$R *.dfm}
-uses uGColor, uStrings;
-var
-	CurVal: TDrawStyle;
-
-procedure TfStyle.Draw;
-begin
-	BackBitmap.DrawStyle(CurVal, 0, 0, BackBitmap.Width - 1, BackBitmap.Height - 1);
-end;
+uses uGColor, uStrings, uFormat;
 
 procedure TfStyle.FormCreate(Sender: TObject);
 var i: SG;
 begin
-	Background := baGradient;
+	Background := baUser;
 	for i := 0 to Length(GraphicStyleNames) - 1 do
 		ComboBoxStyles.Items.Add(GraphicStyleNames[TGraphicStyle(i)]);
 
+	for i := 0 to Length(EffectNames) - 1 do
+		ComboBoxEffect.Items.Add(EffectNames[TEffect(i)]);
 
+	for i := 1 to 16 do
+		ComboBoxLineSize.Items.Add(NToS(i));
 end;
 
-procedure TfStyle.ComboBoxStylesChange(Sender: TObject);
+procedure RWDrawStyle(MainIni: TDIniFile; Name: string; var DS: TDrawStyle; Save: BG);
 begin
-	CurVal.Style := TGraphicStyle(ComboBoxStyles.ItemIndex);
-	Draw;
+	MainIni.RWNum(Name, 'Style', U1(DS.Style), Save);
+	MainIni.RWNum(Name, 'Effect', U1(DS.Effect), Save);
+	MainIni.RWNum(Name, 'Color0', S4(DS.Colors[0]), Save);
+	MainIni.RWNum(Name, 'Color1', S4(DS.Colors[1]), Save);
+	MainIni.RWNum(Name, 'BorderSize', DS.BorderSize, Save);
+end;
+
+procedure TfStyle.FormToData(Sender: TObject);
+begin
+	NowVal.Style := TGraphicStyle(ComboBoxStyles.ItemIndex);
+	NowVal.Effect := TEffect(ComboBoxEffect.ItemIndex);
+	NowVal.BorderSize := ComboBoxLineSize.ItemIndex + 1;
+
 	Fill;
 end;
 
+procedure TfStyle.DataToForm(Sender: TObject);
+begin
+	ComboBoxStyles.ItemIndex := SG(NowVal.Style);
+	ComboBoxEffect.ItemIndex := SG(NowVal.Effect);
+	ComboBoxLineSize.ItemIndex := NowVal.BorderSize - 1;
+end;
 
 function GetStyle(Prompt: string;
 	var CurVal: TDrawStyle; const DefVal: TDrawStyle; OnApplyStyle: TOnApplyStyle): Boolean;
@@ -84,6 +112,9 @@ begin
 	fStyle.TDefVal := DefVal;
 	fStyle.NowVal := fStyle.TCurVal;
 	fStyle.Caption := DelCharsF(Prompt, '&');
+
+	fStyle.DataToForm(nil);
+	fStyle.Fill;
 
 {	fGetInt.TrackBar.OnChange := nil;
 	fGetInt.TrackBar.Frequency := (fGetInt.TMaxVal - fGetInt.TMinVal + 19) div 20;
@@ -133,7 +164,19 @@ end;
 
 procedure TfStyle.FormResize(Sender: TObject);
 begin
-	Draw; // D???
+	Fill;
+end;
+
+procedure TfStyle.FormPaint(Sender: TObject);
+begin
+	BackBitmap.DrawStyle(NowVal, 0, 0, BackBitmap.Width - 1, BackBitmap.Height - 1);
+	Invalidate;
+end;
+
+procedure TfStyle.ButtonColor0Click(Sender: TObject);
+begin
+	if GetColor('Color', NowVal.Colors[TComponent(Sender).Tag], clSilver, nil) then
+		FormToData(Sender);
 end;
 
 end.

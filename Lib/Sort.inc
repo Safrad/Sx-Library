@@ -932,9 +932,11 @@ begin
 	{$endif}
 	if MaxIndex > MinIndex then
 	begin
+		{$ifopt d+}
 		case SortType of
 		stAuto:
 		begin
+		{$endif}
 			if Stability then
 				case MaxIndex of
 				1..70: InsertionSort;
@@ -942,8 +944,8 @@ begin
 				end
 			else
 				QuickSort(MinIndex, MaxIndex);
-		end;
 		{$ifopt d+}
+		end;
 		stSelect: SelectSort;
 		stInsertion: InsertionSort;
 		stBubble: BubbleSort;
@@ -955,8 +957,8 @@ begin
 		stMerge: MergeSort;
 		stRadix: RadixSort;
 //		stCounting: CountingSort;
-		{$endif}
 		end;
+		{$endif}
 	end;
 	if Reverse then
 	begin

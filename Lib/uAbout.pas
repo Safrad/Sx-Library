@@ -98,7 +98,8 @@ procedure ReadMe;
 procedure Homepage;
 procedure Help; overload;
 procedure Help(HRef: string); overload;
-procedure ExtOpenFile(FileName: TFileName);
+procedure ExtOpenFile(FileName: TFileName); overload;
+procedure ExtOpenFile(FileName: TFileName; Parameters: string); overload;
 procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
 	const Modal: Boolean);
 {procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
@@ -265,6 +266,15 @@ var
 	ErrorCode: U4;
 begin
 	ErrorCode := ShellExecute(0, 'open', PChar('"' + FileName + '"'), nil, nil, SW_ShowNormal);
+	if ErrorCode <= 32 then
+		IOError(FileName, ErrorCode);
+end;
+
+procedure ExtOpenFile(FileName: TFileName; Parameters: string);
+var
+	ErrorCode: U4;
+begin
+	ErrorCode := ShellExecute(0, 'open', PChar('"' + FileName + '"'), PChar(Parameters), nil, SW_ShowNormal);
 	if ErrorCode <= 32 then
 		IOError(FileName, ErrorCode);
 end;
@@ -562,7 +572,7 @@ begin
 
 	BitmapName.Bar(clBtnFace, ef12);
 	BitmapName.Canvas.Font.Color := clWindowText;
-	DrawCutedText(BitmapName.Canvas, Rect(0, 0, BitmapName.Width, BitmapName.Height), taCenter, tlCenter,
+	DrawCutedText(BitmapName.Canvas, Rect(2, 2, BitmapName.Width - 2, BitmapName.Height - 2), taCenter, tlCenter,
 		ProgramName, True, 1);
 	{
 	BitmapName.Canvas.TextOut(

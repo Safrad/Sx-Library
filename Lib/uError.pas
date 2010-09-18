@@ -94,6 +94,7 @@ var
 	IgnoreAll: TIgnoreAll;
 
 {$ifopt d+}
+// Line Assert()
 procedure IE; overload;
 procedure IE(ErrorCode: U2); overload;
 //procedure IE(ErrorMes: string); overload;
@@ -614,7 +615,7 @@ begin
 			begin
 				fIOError.FormStyle := fsNormal;
 //				if fIOError.Visible = True then Exit;
-				fIOError.Timer1.Enabled := True;
+				{$ifopt d-}fIOError.Timer1.Enabled := True;{$endif}
 				fIOError.ShowModal;
 			end;
 		end

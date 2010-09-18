@@ -107,9 +107,19 @@ procedure Reverse(var Desc; Size: Cardinal);
 procedure Swap02(var Desc; Count: Cardinal; Step: S4);
 function SwapU4(D: U4): U4;
 
+var
+	PerformanceType: U1;
+	PerformanceFrequency: U8;
+
+procedure InitPerformanceCounter;
+function GetCPUCounter: TU8;
+function PerformanceCounter: Int64;
+procedure Delay(const ms: LongWord);
+procedure DelayEx(const f: Int64);
+
 implementation
 
-uses Math;
+uses Math, Windows;
 
 procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
 begin
@@ -1190,7 +1200,62 @@ begin
 	TU4(Result).B3 := TU4(D).B0;
 end;
 
+procedure InitPerformanceCounter;
+begin
+	if QueryPerformanceFrequency(PerformanceFrequency) then
+	begin
+		PerformanceType := 1;
+		if PerformanceFrequency < 1000 then
+		begin
+			PerformanceType := 0;
+			PerformanceFrequency := 1000;
+		end;
+	end
+	else
+	begin
+		PerformanceType := 0;
+		PerformanceFrequency := 1000;
+	end;
+end;
+
+function GetCPUCounter: TU8;
+begin
+	asm
+	mov ecx, 10h
+	dw 310fh // RDTSC 10clocks
+	mov ebx, Result
+	mov [ebx], eax
+	mov [ebx + 4], edx
+	end;
+end;
+
+function PerformanceCounter: Int64;
+begin
+	case PerformanceType of
+	0: Result := GetTickCount;
+	1: QueryPerformanceCounter(Result);
+	else Result := GetCPUCounter.A;
+	end;
+end;
+
+procedure Delay(const ms: LongWord);
+var
+	TickCount: LongWord;
+begin
+	TickCount := GetTickCount + ms;
+	while GetTickCount < TickCount do
+end;
+
+procedure DelayEx(const f: Int64);
+var
+	TickCount: Int64;
+begin
+	TickCount := PerformanceCounter + f;
+	while PerformanceCounter < TickCount do
+end;
+
 initialization
 	InitSins;
+	InitPerformanceCounter;
 end.
 
