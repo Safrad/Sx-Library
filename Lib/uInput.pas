@@ -1,6 +1,6 @@
 //* File:     Lib\uInput.pas
 //* Created:  2004-03-07
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -560,18 +560,18 @@ procedure CompileMesClear;
 
 // Str To Data
 function ReadMs: SG;
-function StrToMs(Line: string; const MinVal, DefVal, MaxVal: SG): SG;
+function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: SG): SG;
 
 function ReadFA(DefVal: FA): FA;
 function ReadSG(DefVal: SG): SG;
-function StrToValE(Line: string; const UseWinFormat: BG;
+function StrToValE(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 {function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string): Extended; overload;}
 
-function StrToValI(Line: string; const UseWinFormat: BG;
+function StrToValI(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG): SG; overload;
-function StrToValI(Line: string; const UseWinFormat: BG;
+function StrToValI(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: UG): UG; overload;
 
 {function StrToValI(Line: string; const UseWinFormat: BG;
@@ -666,7 +666,7 @@ begin
 		end;
 end;*)
 
-function StrToI(s: string; Decimals: SG): SG; overload;
+function StrToI(s: AnsiString; Decimals: SG): SG; overload;
 var
 	Code: Integer;
 	e: Extended;
@@ -2553,7 +2553,7 @@ begin
 	CompileMes.Clear;
 end;
 
-function StrToMs(Line: string; const MinVal, DefVal, MaxVal: SG): SG;
+function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: SG): SG;
 begin
 	CompileMesClear;
 	CreateUnitSystem;
@@ -2600,7 +2600,7 @@ begin
 	Result := RoundEx(ReadFA(DefVal));
 end;
 
-function StrToValE(Line: string; const UseWinFormat: BG;
+function StrToValE(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 label LNext;
 var
@@ -2666,13 +2666,13 @@ begin
 	Result := StrToValI(Line, UseWinFormat, MinVal, DefVal, MaxVal, Denominator);
 end;}
 
-function StrToValI(Line: string; const UseWinFormat: BG;
+function StrToValI(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: Integer): Integer;
 begin
 	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator));
 end;
 
-function StrToValI(Line: string; const UseWinFormat: BG;
+function StrToValI(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: UG): UG;
 begin
 	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator));

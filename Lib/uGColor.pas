@@ -1,6 +1,6 @@
 //* File:     Lib\uGColor.pas
 //* Created:  1999-09-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -756,11 +756,11 @@ begin
 	BmpD := ImageS.Bitmap;
 	for i := 0 to ImageS.Width - 1 do
 	begin
-		BmpD.Lin24(i, 0, i, 15, SpectrumColor(SpectrumPixel * i), ef16);
+		BmpD.Line(i, 0, i, 15, SpectrumColor(SpectrumPixel * i), ef16);
 	end;
 	SpectrumC.L := SpectrumColor(SpectrumPos);
 	if SpectrumPos >= 0 then
-		BmpD.Lin24(SpectrumPos div SpectrumPixel, 0, SpectrumPos div SpectrumPixel, 15, clNone, efXor);
+		BmpD.Line(SpectrumPos div SpectrumPixel, 0, SpectrumPos div SpectrumPixel, 15, clNone, efXor);
 end;
 
 procedure TfGColor.ImageLFill(Sender: TObject);
@@ -776,7 +776,7 @@ begin
 		C.G := LightC.G * SG(i) div (BmpD.Width - 1);
 		C.B := LightC.B * SG(i) div (BmpD.Width - 1);
 		C.T := 0;
-		BmpD.Lin24(i, 0, i, 15, C.L, ef16);
+		BmpD.Line(i, 0, i, 15, C.L, ef16);
 	end;
 	C.L := ColorToRGB(NowColor)  and $00ffffff;
 	LightPos := C.R + C.G + C.B;
@@ -785,7 +785,7 @@ begin
 	else
 		X := 0;
 	if LightPos >= 0 then
-		BmpD.Lin24(X, 0, X, 15, clNone, efNeg);
+		BmpD.Line(X, 0, X, 15, clNone, efNeg);
 end;
 
 end.

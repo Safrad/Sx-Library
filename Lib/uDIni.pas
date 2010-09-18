@@ -1,6 +1,6 @@
 //* File:     Lib\uDIni.pas
 //* Created:  2000-07-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-13
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -90,7 +90,8 @@ type
 		procedure RWFormPosV(Form: TForm; const Save: Boolean);
 		procedure RWDView(DView: TDView; const Save: Boolean);
 		procedure RWListView(ListView: TListView; const Save: Boolean);
-		procedure RWMenuItem(MenuItem: TMenuItem; Section: string; const Save: Boolean);
+		procedure RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: Boolean);
+		procedure RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: Boolean);
 		procedure RWComboBox(ComboBox: TComboBox; const Save: Boolean);
 
 		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: Boolean): string;
@@ -111,7 +112,7 @@ type
 		procedure FreeData;
 		destructor Free;
 
-		procedure LoadFromFile(FileName: TFileName);
+		procedure LoadFromFile(var FileName: TFileName);
 		procedure SaveToFile(FileName: TFileName);
 		procedure Save;
 
@@ -163,8 +164,8 @@ var
 begin
 	case FileMethod of
 	fmWindows:
-		SetString(Result, Buffer, GetPrivateProfileString(PChar(Section),
-			PChar(Ident), PChar(Default), Buffer, SizeOf(Buffer), PChar(FFileName)));
+		SetString(Result, Buffer, GetPrivateProfileString(@Section[1],
+			@Ident[1], @Default[1], Buffer, SizeOf(Buffer), PChar(FFileName)));
 	else
 	begin
 		Result := Default;
@@ -188,8 +189,8 @@ begin
 		case FileMethod of
 		fmWindows:
 		begin
-			if not WritePrivateProfileString(PChar(Section), PChar(Ident),
-				PChar(Value), PChar(FFileName)) then
+			if not WritePrivateProfileString(@Section[1], @Ident[1],
+				@Value[1], @FFileName[1]) then
 				// Error
 		end
 		else
@@ -220,7 +221,7 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI(IntStr, False, MinInt, Default, MaxInt, 1);
+	Result := StrToValS8(IntStr, False, MinInt, Default, MaxInt, 1);
 end;
 
 procedure TDIniFile.WriteSG(const Section, Ident: string; Value: SG);
@@ -383,7 +384,7 @@ begin
 			Strings.BeginUpdate;
 			try
 				Strings.Clear;
-				if GetPrivateProfileString(PChar(Section), nil, nil, Buffer, BufSize,
+				if GetPrivateProfileString(@Section[1], nil, nil, Buffer, BufSize,
 					PChar(FFileName)) <> 0 then
 				begin
 					P := Buffer;
@@ -497,7 +498,7 @@ begin
 	FreeData;
 end;
 
-procedure TDIniFile.LoadFromFile(FileName: TFileName);
+procedure TDIniFile.LoadFromFile(var FileName: TFileName);
 label LRetry;
 var
 	F: TFile;
@@ -737,11 +738,11 @@ begin
 	begin
 		if Save = False then
 		begin
-			Value := ReadSG(Section, Ident, Value);
+			Value := ReadS8(Section, Ident, Value);
 		end
 		else
 		begin
-			WriteSG(Section, Ident, Value);
+			WriteS8(Section, Ident, Value);
 		end;
 	end;
 end;
@@ -1054,7 +1055,13 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWMenuItem(MenuItem: TMenuItem; Section: string; const Save: Boolean);
+procedure TDIniFile.RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: Boolean);
+begin
+	RWBG(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
+	if (Save = False) then MenuItem.Checked := Value;
+end;
+
+procedure TDIniFile.RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: Boolean);
 begin
 	MenuItem.Checked := RWBGF(Section, ButtonNameToFileName(MenuItem.Name, False), MenuItem.Checked, MenuItem.Checked, Save);
 end;

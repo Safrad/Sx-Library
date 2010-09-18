@@ -1,6 +1,6 @@
 //* File:     Lib\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -163,10 +163,12 @@ begin
 	if Assigned(Form) then
 	begin
 		Form.Close;
+//		Form.
 		Form.Free;
 		Form := nil;
 	end;
 end;
+
 
 procedure glTextOut(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const C: TColor);
@@ -278,6 +280,14 @@ begin
 	else if (RectT.Right = w) and (RectT.Top = 0) and (RectT.Bottom = h) then
 		Rect.Right := RectT.Left // Right
 end;
+{
+procedure TDForm.AfterCreate;
+begin
+	if Parent.WindowState = wsMDIForm then
+	begin
+		Form.Style := fsMDIChild;
+	end;
+end;}
 
 procedure TDForm.Common(Value: Boolean);
 var Style: LongInt;
@@ -367,13 +377,13 @@ begin
 				case FBackground of
 				baStandard:
 				begin
-					FBitmapB.BarE24(clNone, clBtnFace, ef16);
+					FBitmapB.Bar(clNone, Color, ef16);
 				end;
 				baGradient:
 				begin
 					FBitmapB.FormBitmap(Color);
 					if FBitmapF <> nil then
-						FBitmapB.Texture24(FBitmapF, clNone, ef04);
+						FBitmapB.Texture(FBitmapF, clNone, ef04);
 					if (FBitmapB.Width >= 4) and (FBitmapB.Height >=4) then
 					begin
 						C.T := 0;
@@ -381,49 +391,49 @@ begin
 						C.G := 140;
 						C.B := 220;
 
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 1, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 2, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, 0, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 3, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 3, 0, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 1, C, ef10);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, 1, C, ef04);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 2, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 1, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 2, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, 0, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 3, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 3, 0, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, 1, C, ef10);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, 1, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, 2, C, ef04);
 
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 1, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 2, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 0, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 3, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 3, FBitmapB.Height - 1 - 0, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 1, C, ef10);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 1, C, ef04);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 2, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 1, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 2, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 0, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 3, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 3, FBitmapB.Height - 1 - 0, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 1, C, ef10);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 1, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 2, C, ef04);
 
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 1, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 2, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 0, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 3, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, 0, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 1, C, ef10);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 1, C, ef04);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 2, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 1, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 2, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 0, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 3, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, 0, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 1, C, ef10);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 1, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 2, C, ef04);
 
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 1, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 2, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 0, C, ef12);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 3, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, FBitmapB.Height - 1 - 0, C, ef06);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 1, C, ef10);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 1, C, ef04);
-						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 2, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 1, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 2, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 0, C, ef12);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 3, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, FBitmapB.Height - 1 - 0, C, ef06);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 1, C, ef10);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 1, C, ef04);
+						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 2, C, ef04);
 					end;
 				end;
 				baGradientOnly:
@@ -433,7 +443,7 @@ begin
 				baBitmap:
 				begin
 					if FBitmapF <> nil then
-						FBitmapB.Texture24(FBitmapF, clNone, ef16);
+						FBitmapB.Texture(FBitmapF, clNone, ef16);
 				end;
 				end;
 			end;
@@ -726,7 +736,7 @@ begin
 			NewX := 1 shl CalcShr(FBitmapB.Width);
 			if FBitmapB.Width <> NewX then
 			begin
-				FBitmapB.Resize24E(FBitmapB, clNone, NewX, NewX div 2, nil);
+				FBitmapB.Resize(FBitmapB, clNone, NewX, NewX div 2, nil);
 				FBitmapB.SwapRB24;
 			end;
 //			FBitmapB.GLSetSize;

@@ -1,6 +1,6 @@
 //* File:     Lib\uDGauge.pas
 //* Created:  1999-08-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -292,8 +292,8 @@ begin
 // Border
 	if (FBorderStyle <> bsNone) then
 	begin
-		FBmpOut.BorderE24(clBtnShadow, clBtnHighlight, 1, BackEffect);
-		FBmpOut.Border24(1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
+		FBmpOut.Border(clBtnShadow, clBtnHighlight, 1, BackEffect);
+		FBmpOut.Border(1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
 			cl3DDkShadow, cl3DLight, 1, BackEffect);
 		InflateRect(Recta, -2, -2);
 	end;
@@ -309,14 +309,14 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
 	if Color <> clNone then
 	begin
 		for i := 0 to FBorderWidth - 1 do
-			FBmpOut.Rec24(Recta.Left + i, Recta.Top + i,
+			FBmpOut.Rec(Recta.Left + i, Recta.Top + i,
 				Recta.Right - i - 1, Recta.Bottom - i - 1,
 				Color, BackEffect);
 		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
@@ -334,7 +334,7 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -Integer(FBevelWidth) div 2, -Integer(FBevelWidth) div 2);
 		InflateRect(RectaS, -FBevelWidth, -FBevelWidth);
@@ -361,14 +361,14 @@ begin
 		case FKind of
 		gkNormal:
 		begin
-			FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+			FBmpOut.Bar(clNone, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				C, FBackEffect);
 		end;
 		gkSpectrum:
 		begin
 			for i := Recta.Left to X - 1 do
 			begin
-				FBmpOut.Lin24(i, Recta.Top, i, Recta.Bottom - 1,
+				FBmpOut.Line(i, Recta.Top, i, Recta.Bottom - 1,
 					SpectrumColor(512 * i div (Recta.Right - Recta.Left)), FBackEffect);
 			end;
 		end;
@@ -386,7 +386,7 @@ begin
 	if X < RectaS.Left then X := RectaS.Left;
 	if (X < RectaS.Right) then
 	begin
-		FBmpOut.Bar24(clNone, X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
+		FBmpOut.Bar(clNone, X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
 			Color, FBackEffect);
 	end;
 

@@ -1,6 +1,6 @@
 //* File:     Lib\uScores.pas
 //* Created:  2000-10-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-13
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -84,32 +84,17 @@ end;
 procedure WriteScores;
 label LRetry;
 var
-	ScoresFile: file;
-	ErrorCode: Integer;
+	F: TFile;
 begin
+	F := TFile.Create;
 	LRetry:
-	AssignFile(ScoresFile, ScoresFileName);
-	if FileExists(ScoresFileName) then
+	if F.Open(ScoresFileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
-		FileMode := 1; Reset(ScoresFile, 1);
-	end
-	else
-		Rewrite(ScoresFile, 1);
-	ErrorCode := IOResult;
-	if ErrorCode <> 0 then
-	begin
-		if IOErrorRetry(ScoresFileName, ErrorCode) then goto LRetry;
-	end
-	else
-	begin
-		BlockWrite(ScoresFile, Highs, SizeOf(Highs));
-		Truncate(ScoresFile);
-		ErrorCode := IOResult;
-		CloseFile(ScoresFile);
-		IOResult;
-		if ErrorCode <> 0 then
-			if IOErrorRetry(ScoresFileName, ErrorCode) then goto LRetry;
+		if not F.BlockWrite(Highs, SizeOf(Highs)) then goto LRetry;
+		F.Truncate;
+		if not F.Close then goto LRetry;
 	end;
+	F.Free;
 end;
 
 procedure SetScoresFileName(FileName: TFileName);
@@ -237,19 +222,19 @@ var
 	Co: array[0..3] of TColor;
 begin
 	Bmp := ImageHigh.Bitmap;
-	Bmp.BarE24(clNone, clSilver, ef16);
-//  Random24(Bitmap24, clNone, $000f0f0f);
+	Bmp.Bar(clNone, clSilver, ef16);
+//  Bmp.Random24(clNone, $000f0f0f);
 	Co[0] := ColorDiv(clBtnFace, 5 * 16384);
 	Co[1] := ColorDiv(clBtnFace, 3 * 16384);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
 	Bmp.GenerateERGB(clNone, gfFadeVert, Co, ScreenCorrectColor, ef16, nil);
 
-//  Texture24(Bitmap24, Pics24[pcPlus + Integer(bnIncScore)], clPurple, efSub);
+//  Bmp.Textue(Pics24[pcPlus + Integer(bnIncScore)], clPurple, efSub);
 	for i := 0 to MaxHigh + 2 do
 	begin
-		Bmp.Lin24(0, ColSize * i, Bmp.Width - 1, ColSize * i, clBtnHighlight, ef16);
-		Bmp.Lin24(0, ColSize * i + 1, Bmp.Width - 1, ColSize * i + 1, clBtnShadow, ef16);
+		Bmp.Line(0, ColSize * i, Bmp.Width - 1, ColSize * i, clBtnHighlight, ef16);
+		Bmp.Line(0, ColSize * i + 1, Bmp.Width - 1, ColSize * i + 1, clBtnShadow, ef16);
 	end;
 	Bmp.Canvas.Font.Size := 8;
 	Bmp.Canvas.Font.Color := cl3DDkShadow;
@@ -257,8 +242,8 @@ begin
 	Bmp.Canvas.Brush.Style := bsClear;
 	for i := 0 to High(ColNames) do
 	begin
-		Bmp.Lin24(RowX[i], 0, RowX[i], Bmp.Height - 1, clBtnHighlight, ef16);
-		Bmp.Lin24(RowX[i] + 1, 0, RowX[i] + 1, Bmp.Height - 1, clBtnShadow, ef16);
+		Bmp.Line(RowX[i], 0, RowX[i], Bmp.Height - 1, clBtnHighlight, ef16);
+		Bmp.Line(RowX[i] + 1, 0, RowX[i] + 1, Bmp.Height - 1, clBtnShadow, ef16);
 		Bmp.Canvas.TextOut(RowX[i] + 3, 3, ColNames[i]);
 	end;
 
@@ -274,7 +259,7 @@ begin
 			Bmp.Canvas.TextOut(RowX[1] + 3, ColSize * (i + 1) + 5,
 				Highs[i].Name);
 			Bmp.Canvas.TextOut(RowX[2] + 3, ColSize * (i + 1) + 5,
-				DateTimeToStr(Highs[i].DateTime));
+				DTToStr(Highs[i].DateTime));
 			Bmp.Canvas.TextOut(RowX[3] + 3, ColSize * (i + 1) + 5,
 				msToStr(Highs[i].GameTime, diMSD, 0, False));
 		end;

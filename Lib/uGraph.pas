@@ -1,6 +1,6 @@
 //* File:     Lib\uGraph.pas
 //* Created:  1999-05-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -52,7 +52,7 @@ procedure Rec(Canvas: TCanvas; const Rect: TRect;
 procedure Border(Canvas: TCanvas; const Rect: TRect;
 	TopColor, BottomColor: TColor; const Width: Integer);
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG);
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: AnsiString; const WordWrap: BG; FontShadow: SG);
 
 function Over(const SX1, SY1, SX2, SY2: Integer;
 	const DX1, DY1, DX2, DY2: Integer): Boolean; overload;
@@ -561,7 +561,7 @@ begin
 end;
 (*-------------------------------------------------------------------------*)
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG);
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: AnsiString; const WordWrap: BG; FontShadow: SG);
 var
 	i, LastSpace{, k}: Integer;
 	Shadow: SG;
@@ -649,14 +649,14 @@ begin
 				Shadow := FontShadow;
 				repeat
 					OffsetRect(TextBounds, Shadow, Shadow);
-					DrawText(Canvas.Handle, PChar(LineS[i]), Length(LineS[i]), TextBounds,
+					DrawText(Canvas.Handle, @LineS[i][1], Length(LineS[i]), TextBounds,
 						DT_BOTTOM or DT_LEFT {or DT_NOCLIP}{ or DrawTextBiDiModeFlags(0)});
 					OffsetRect(TextBounds, -Shadow, -Shadow);
 					if FontShadow > 0 then Dec(Shadow) else Inc(Shadow);
 				until Shadow = 0;
 				Canvas.Font.Color := C;
 			end;
-			DrawText(Canvas.Handle, PChar(LineS[i]), Length(LineS[i]), TextBounds,
+			DrawText(Canvas.Handle, @LineS[i][1], Length(LineS[i]), TextBounds,
 				DT_BOTTOM or DT_LEFT {or DT_NOCLIP}{ or DrawTextBiDiModeFlags(0)});
 //		Canvas.TextOut(CurX, CurY, LineS[i]);
 		end;

@@ -1,6 +1,6 @@
 //* File:     Lib\uMenus.pas
 //* Created:  2000-08-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -88,7 +88,7 @@ procedure ComName(MenuItem: TMenuItem);
 			MenuItem.Bitmap.PixelFormat := pf24bit;
 			MenuItem.Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
 			MenuItem.Bitmap.Height := 16;
-			Bmp.Resize24E(Bmp, TranColor, MenuItem.Bitmap.Width, MenuItem.Bitmap.Height, nil);
+			Bmp.Resize(Bmp, TranColor, MenuItem.Bitmap.Width, MenuItem.Bitmap.Height, nil);
 			MenuItem.Bitmap.Canvas.Draw(0, 0, Bmp);
 			MenuItem.Bitmap.TransparentColor := TranColor;
 			Bmp.Free;
@@ -215,7 +215,7 @@ var
 	MenuItem: TMenuItem;
 	ImageList: TCustomImageList;
 	Bmp: TDBitmap;
-	Bmp24D: TDBitmap;
+	BmpD: TDBitmap;
 	MenuBmp: TDBitmap;
 	BCanvas: TCanvas;
 	C1, C2, C: TColor;
@@ -264,7 +264,7 @@ begin
 
 	if ScreenBits <= 11 then
 	begin
-		MenuBmp.Bar24(clNone, 0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+		MenuBmp.Bar(clNone, 0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 			clMenu, ef16);
 	end
 	else
@@ -337,7 +337,7 @@ begin
 				Co[3] := Co[1];
 				if ScreenBits <= 11 then
 				begin
-					MenuBmp.Bar24(clNone, 1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
+					MenuBmp.Bar(clNone, 1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
 						clMenu, ef16);
 				end
 				else
@@ -345,7 +345,7 @@ begin
 					MenuBmp.GenerateRGB(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
 						clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 				end;
-				MenuBmp.Border24(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 					DepthColor(1), DepthColor(3), 1, ef16);
 			end
 			else
@@ -360,7 +360,7 @@ begin
 				Co[3] := Co[1];
 				if ScreenBits <= 11 then
 				begin
-					MenuBmp.Bar24(clNone, X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+					MenuBmp.Bar(clNone, X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 						clHighLight, ef16);
 				end
 				else
@@ -399,7 +399,7 @@ begin
 			if (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
-				MenuBmp.Bar24(clNone, 1, Y + 1, 1 + 15, Y + 1 + 15,
+				MenuBmp.Bar(clNone, 1, Y + 1, 1 + 15, Y + 1 + 15,
 					DepthColor(1), ef08);
 				BmpWid := 16;
 			end;
@@ -412,21 +412,21 @@ begin
 			Bmp := TDBitmap.Create;
 			BmpWid := 16;
 			Bmp.SetSize(16, 16);
-			Bmp.BarE24(clNone, clMenu, ef16);
+			Bmp.Bar(clNone, clMenu, ef16);
 
 			ImageList.Draw(Bmp.Canvas, 0, 0, MenuItem.ImageIndex,
 				True);
 			Bmp.TransparentColor := GetTransparentColor(Bmp);
 			if MenuItem.Enabled = False then
-				Bmp.BarE24(clNone, clMenu, ef12);
+				Bmp.Bar(clNone, clMenu, ef12);
 
-			MenuBmp.BmpE24(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, Bmp, clMenu, ef16);
+			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, Bmp, clMenu, ef16);
 
 			Bmp.Free;
 			if (TopLevel = False) and (MenuItem.Checked = False) and (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
-				MenuBmp.Border24(0, Y, 17 + 1, Y + 17 + 1,
+				MenuBmp.Border(0, Y, 17 + 1, Y + 17 + 1,
 					DepthColor(3), DepthColor(1), 1, ef16);
 			end;
 			MenuB := True;
@@ -436,16 +436,16 @@ begin
 		begin
 			MenuItem.Bitmap.PixelFormat := pf24bit;
 
-			Bmp24D := TDBitmap.Create;
-			Bmp24D.SetSize(MenuItem.Bitmap.Width, MenuItem.Bitmap.Height);
+			BmpD := TDBitmap.Create;
+			BmpD.SetSize(MenuItem.Bitmap.Width, MenuItem.Bitmap.Height);
 			BmpWid := MenuItem.Bitmap.Width;
 			C := MenuItem.Bitmap.TransparentColor;
 			MenuItem.Bitmap.TransparentColor := -1;
-			Bmp24D.CopyBitmap(MenuItem.Bitmap);
+			BmpD.CopyBitmap(MenuItem.Bitmap);
 			MenuItem.Bitmap.TransparentColor := C;
 			if (MenuItem.Enabled = False) or (odInactive in State) then
-				Bmp24D.BarE24(MenuItem.Bitmap.TransparentColor, clMenu, ef12);
-			Bmp24D.ChangeColorE24(MenuItem.Bitmap.TransparentColor, clMenu);
+				BmpD.Bar(MenuItem.Bitmap.TransparentColor, clMenu, ef12);
+			BmpD.ChangeColor(MenuItem.Bitmap.TransparentColor, clMenu);
 
 			x := 1;
 			y := (ARect.Bottom - ARect.Top - 18) div 2 + 1;
@@ -454,8 +454,8 @@ begin
 				Inc(x);
 				Inc(y);
 			end;
-			MenuBmp.BmpE24(x, y, Bmp24D, clMenu, ef16);
-			Bmp24D.Free;
+			MenuBmp.Bmp(x, y, BmpD, clMenu, ef16);
+			BmpD.Free;
 			MenuB := True;
 		end
 		else
@@ -479,9 +479,9 @@ begin
 		if MenuItem.Checked then
 		begin
 			Y := (ARect.Bottom - ARect.Top - 18) div 2;
-			MenuBmp.Border24(1, Y + 1, 0 + 16, Y + 16,
+			MenuBmp.Border(1, Y + 1, 0 + 16, Y + 16,
 				DepthColor(1), DepthColor(3), 1, ef06);
-			MenuBmp.Border24(0, Y + 0, 1 + 16 + 1, Y + 1 + 16 + 1,
+			MenuBmp.Border(0, Y + 0, 1 + 16 + 1, Y + 1 + 16 + 1,
 				DepthColor(1), DepthColor(3), 1, ef16);
 		end;
 

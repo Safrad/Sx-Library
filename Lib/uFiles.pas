@@ -1,6 +1,6 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-29
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -144,6 +144,7 @@ function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
 function CopyFile(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+function CopyDamagedFile(Source, Dest: TFileName): Boolean;
 function CreateDir(const Dir: string): Boolean;
 function NewEmptyDir(var Dir: string; const CanCreate: Boolean): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
@@ -392,21 +393,24 @@ var Suc: U4;
 begin
 	if ReadFile(HFile, Buf, Count, Suc, nil) then
 	begin
-		Inc(FFilePos, Suc);
 		Result := True;
 
 		Inc(ReadCount);
 		Inc(ReadBytes, Suc);
+		Inc(FFilePos, Count);
 	end
 	else
 	begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			Result := not IOErrorRetry(TFileName(FTempFileName), ErrorCode)
+			Result := not IOErrorRetry(TFileName(FTempFileName){ + LineSep +
+				'Position: ' + NToS(FFilePos)}, ErrorCode);
 		end
 		else
 			Result := True;
+		Inc(FFilePos, Count);
+		Seek(FFilePos);
 	end;
 end;
 
@@ -415,21 +419,24 @@ var Suc: U4;
 begin
 	if WriteFile(HFile, Buf, Count, Suc, nil) then
 	begin
-		Inc(FFilePos, Suc);
 		Result := True;
 
 		Inc(WriteCount);
 		Inc(WriteBytes, Suc);
+		Inc(FFilePos, Suc);
 	end
 	else
 	begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			Result := not IOErrorRetry(TFileName(FTempFileName), ErrorCode)
+			Result := not IOErrorRetry(TFileName(FTempFileName) {+ LineSep +
+				'Position: ' + NToS(FFilePos)}, ErrorCode)
 		end
 		else
 			Result := True;
+		Inc(FFilePos, Suc);
+//		Seek(FFilePos);
 	end;
 end;
 
@@ -661,13 +668,13 @@ begin
 	DataDir := WorkDir + 'Data\';
 
 	SetLength(SysDir, MAX_PATH);
-	NewLength := GetSystemDirectory(PChar(SysDir), MAX_PATH);
+	NewLength := GetSystemDirectory(@SysDir[1], MAX_PATH);
 	SetLength(SysDir, NewLength);
 	if (Length(SysDir) > 0) and (SysDir[Length(SysDir)] <> '\') then
 		SysDir := SysDir + '\';
 
 	SetLength(WinDir, MAX_PATH);
-	NewLength := GetWindowsDirectory(PChar(WinDir), MAX_PATH);
+	NewLength := GetWindowsDirectory(@WinDir[1], MAX_PATH);
 	SetLength(WinDir, NewLength);
 	if (Length(WinDir) > 0) and (WinDir[Length(WinDir)] <> '\') then
 		WinDir := WinDir + '\';
@@ -957,7 +964,54 @@ begin
 	LRetry:
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
 	if Result = False then
-		if IOErrorRetry(Dest, GetLastError) then goto LRetry;
+		if IOErrorRetry(Source, GetLastError) then goto LRetry;
+end;
+
+function CopyDamagedFile(Source, Dest: TFileName): Boolean;
+label LRetryS, LRetryD;
+const
+	Count = 512;
+var
+	FS, FD: TFile;
+	Buf: Pointer;
+begin
+	Result := True;
+	GetMem(Buf, Count);
+	FS := TFile.Create;
+	FD := TFile.Create;
+	LRetryS:
+	if FS.Open(Source, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		LRetryD:
+		if FD.Open(Dest, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+		begin
+//			i := 0; //474275840 - 512; //  62 * FS.FileSize div 100; // 474275901 - 512
+{			FS.Seek(i);
+			FD.Seek(i);}
+			while not FS.Eof do
+			begin
+				FillChar(Buf^, Count, 0);
+				if not FS.BlockRead(Buf^, Count) then
+					Result := False;
+//					Nop;
+{				C := FS.FilePos - i;
+				if C <> Count then
+					Nop;}
+
+	//			FD.FillWrite(Count);
+				FD.BlockWrite(Buf^, Count);
+
+			end;
+			FD.Truncate;
+			if not FD.Close then goto LRetryD;
+		end;
+		if not FS.Close then goto LRetryS;
+	end;
+
+
+	FS.Free;
+	FD.Free;
+	FreeMem(Buf, Count);
 end;
 
 function CreateDir(const Dir: string): Boolean;
@@ -966,7 +1020,7 @@ begin
 		Result := True
 	else
 	begin
-		Result := CreateDirectory(PChar(Dir), nil);
+		Result := CreateDirectory(@Dir[1], nil);
 		if Result = False then
 			IOError(Dir, GetLastError);
 	end;
@@ -1041,7 +1095,7 @@ end;
 
 function DeleteDir(const DirName: string): Boolean;
 begin
-	Result := Windows.RemoveDirectory(PChar(DirName));
+	Result := Windows.RemoveDirectory(@DirName[1]);
 	if Result = False then
 		IOError(DirName, GetLastError);
 end;
@@ -1288,7 +1342,7 @@ var
   Temp: TWIN32FindData;
   SearchHandle: THandle;
 begin
-  SearchHandle := FindFirstFile(PChar(ShortName), Temp);
+	SearchHandle := FindFirstFile(@ShortName[1], Temp);
   if SearchHandle <> ERROR_INVALID_HANDLE then begin
     Result := string(Temp.cFileName);
     if Result = '' then Result := string(Temp.cAlternateFileName);
@@ -1302,7 +1356,7 @@ var
   Temp: TWIN32FindData;
   SearchHandle: THandle;
 begin
-  SearchHandle := FindFirstFile(PChar(LongName), Temp);
+	SearchHandle := FindFirstFile(@LongName[1], Temp);
 	if SearchHandle <> ERROR_INVALID_HANDLE then begin
     Result := string(Temp.cAlternateFileName);
 		if Result = '' then Result := string(Temp.cFileName);
@@ -1322,7 +1376,7 @@ begin
 		Exit;
 	end;
 	Result := '';
-	TempPathPtr := PChar(ShortName);
+	TempPathPtr := @ShortName[1];
 	LastSlash := StrRScan(TempPathPtr, '\');
 	while LastSlash <> nil do begin
 		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
@@ -1345,7 +1399,7 @@ begin
 		Exit;
 	end;
 	Result := '';
-  TempPathPtr := PChar(LongName);
+	TempPathPtr := @LongName[1];
   LastSlash := StrRScan(TempPathPtr, '\');
   while LastSlash <> nil do begin
     Result := '\' + LongToShortFileName(TempPathPtr) + Result;
@@ -1374,15 +1428,15 @@ begin
 	BrowseInfo.hwndOwner := Handle;
 //	TitleName := 'D:\';
 //	BrowseInfo.pszDisplayName := PChar(TitleName);
-//	BrowseInfo.pszDisplayName := Addr(DisplayName);
+//	BrowseInfo.pszDisplayName := @DisplayName;
 	TitleName := 'Please specify a directory';
-	BrowseInfo.lpszTitle := PChar(TitleName);
+	BrowseInfo.lpszTitle := @TitleName[1];
 //	BrowseInfo.iImage := 1;
 	BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
 	TempP:= 'D:\' + CharNul;
 	I.mkid.cb := 1;
 	I.mkid.abID[0] := Byte('D');
-//	BrowseInfo.pidlRoot := Addr(I);
+//	BrowseInfo.pidlRoot := @I;
 	BrowseInfo.lParam := 0;
 	lpItemID := SHBrowseForFolder(BrowseInfo);
 	if lpItemId <> nil then

@@ -1,6 +1,6 @@
 object fLogo: TfLogo
-  Left = 270
-  Top = 210
+  Left = 273
+  Top = 213
   Cursor = crAppStart
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False

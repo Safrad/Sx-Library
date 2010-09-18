@@ -1,6 +1,6 @@
 object fAbout: TfAbout
-  Left = 269
-  Top = 173
+  Left = 271
+  Top = 175
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'About'

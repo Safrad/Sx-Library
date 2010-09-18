@@ -1,6 +1,6 @@
 //* File:     Lib\uDLabel.pas
 //* Created:  1999-08-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -150,7 +150,7 @@ implementation
 uses uStrings, uScreen;
 
 type
-  TSetLayeredWindowAttributes = function (Hwnd: THandle; crKey: COLORREF; bAlpha: Byte; dwFlags: DWORD): Boolean; stdcall;
+  TSetLayeredWindowAttributes = function (Hwnd: THandle; crKey: COLORREF; bAlpha: Byte; dwFlags: U4): Boolean; stdcall;
 
 var
 	SetLayeredWindowAttributes: TSetLayeredWindowAttributes = nil;
@@ -450,8 +450,8 @@ begin
 // Border
 	if (FBorderStyle <> bsNone) then
 	begin
-		FBmpOut.BorderE24(clBtnShadow, clBtnHighlight, 1, BackEffect);
-		FBmpOut.Border24(1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
+		FBmpOut.Border(clBtnShadow, clBtnHighlight, 1, BackEffect);
+		FBmpOut.Border(1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
 			cl3DDkShadow, cl3DLight, 1, BackEffect);
 		InflateRect(Recta, -2, -2);
 	end;
@@ -467,14 +467,14 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
 	if (Color <> clNone) then
 	begin
 		for i := 0 to FBorderWidth - 1 do
-			FBmpOut.Rec24(Recta.Left + i, Recta.Top + i,
+			FBmpOut.Rec(Recta.Left + i, Recta.Top + i,
 				Recta.Right - i - 1, Recta.Bottom - i - 1,
 				Color, BackEffect);
 		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
@@ -491,7 +491,7 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
@@ -501,7 +501,7 @@ begin
 	begin
 {		if (FBackEffect <> ef16) then
 		begin
-			FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			FBmpOut.Bar(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 				ColorToRGB(Color), FBackEffect);
 		end
 		else
@@ -527,7 +527,7 @@ begin
 		end;
 
 		FBmpText.SetSize(FBmpOut.Width, FBmpOut.Height);
-		FBmpText.Bar24(clNone, 0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
+		FBmpText.Bar(clNone, 0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
 			Color, ef16);
 
 		FBmpText.Canvas.Brush.Style := bsClear;
@@ -593,11 +593,11 @@ begin
 		if FFontAngle = 0 then
 		begin
 			if FFontEffect <> ef16 then
-				FBmpOut.BmpE24(0, 0, FBmpText, Color{NegColor(Font.Color)}, FFontEffect);
+				FBmpOut.Bmp(0, 0, FBmpText, Color{NegColor(Font.Color)}, FFontEffect);
 		end
 		else
 		begin
-			RotateDefE24(FBmpOut, FBmpText, 0, FFontAngle, Color{NegColor(Font.Color)}, FFontEffect);
+			RotateDef(FBmpOut, FBmpText, 0, FFontAngle, Color{NegColor(Font.Color)}, FFontEffect);
 		end;
 {		if (Assigned(FBmpText)) then
 		begin

@@ -1,6 +1,6 @@
 //* File:     Lib\uDBitmap.pas
 //* Created:  1999-05-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -27,7 +27,6 @@ type
 		ef08, ef09, ef10, ef11, ef12, ef13, ef14, ef15, ef16,
 		efAdd, efSub, efAdd127, efSub127, efXor, efNeg);
 
-
 	TBmpData = array[0..4 * MaxBitmapWidth * MaxBitmapHeight - 1] of U1; // All of 24 bit bitmap
 	PBmpData = ^TBmpData;
 	TBmpLine = array[0..MaxBitmapWidth - 1] of U1; // One line of 24 bit bitmap
@@ -37,6 +36,7 @@ type
 
 	TInterruptProcedure = procedure(var Done: Word);
 
+	TGraphicsStyle = (gsNone, gsBorder, gsLines, gsSolid, gsGradient, gsBitmap);
 	TGenFunc = (gfSpecHorz, gfSpecVert, gfTriaHorz, gfTriaVert,
 		gfLineHorz, gfLineVert, gfCLineHorz, gfCLineVert,
 		gfRandomLines, gfRandom, gfFadeHorz, gfFadeVert,
@@ -81,61 +81,61 @@ type
 		procedure GLSetSize;
 
 		procedure LoadFromIcon(Icon: TIcon);
-		procedure LoadFromFile(const Filename: string); override;
-		procedure SaveToFile(const Filename: string); override;
+		procedure LoadFromFile(const Filename: AnsiString); override;
+		procedure SaveToFile(const Filename: AnsiString); override;
 
 		function LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: SG;
 			var Quality: SG): BG;
 		function SaveToFileEx(var FileName: TFileName; var Quality: Integer): Boolean;
 
 
-		function BmpColorIn24(C: TColor): Integer;
-		procedure Lin24(
-			X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect);
+		function BmpColorIn(C: TColor): Integer;
 		procedure Line(
-			X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect; Width: SG);
-		procedure Rec24(
+			X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect); overload;
+		procedure Line(
+			X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect; Width: SG); overload;
+		procedure Rec(
 			X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect);
 
-		procedure Bar24(
+		procedure Bar(
 			BackColor: TColor;
-			XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect);
-		procedure BarE24(
+			XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect); overload;
+		procedure Bar(
 			BackColor: TColor;
-			C: TColor; const Effect: TEffect);
-		procedure Border24(
+			C: TColor; const Effect: TEffect); overload;
+		procedure Border(
 			const X1, Y1, X2, Y2: TCoor;
-			const C1, C2: TColor; const Lines: SG; const Effect: TEffect);
-		procedure BorderE24(
-			const C1, C2: TColor; const Lines: SG; const Effect: TEffect);
-		procedure BarBrg24(
+			const C1, C2: TColor; const Lines: SG; const Effect: TEffect); overload;
+		procedure Border(
+			const C1, C2: TColor; const Lines: SG; const Effect: TEffect); overload;
+		procedure BarBrg(
 			const X1, Y1, X2, Y2: TCoor);
 		procedure BorderF(const X1, Y1, X2, Y2: TCoor; const C: TColor);
 
-		procedure Bmp24(
+		procedure Bmp(
 			XD1, YD1: TCoor;
 			BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
-			C: TColor; const Effect: TEffect);
-		procedure BmpE24(
+			C: TColor; const Effect: TEffect); overload;
+		procedure Bmp(
 			const XD1, YD1: TCoor;
 			BmpS: TDBitmap;
-			C: TColor; const Effect: TEffect);
+			C: TColor; const Effect: TEffect); overload;
 
-		procedure ChangeColor24(
+		procedure ChangeColor(
 			const X1, Y1, X2, Y2: Integer;
-			const C1, C2: TColor);
-		procedure ChangeColorE24(
-			const C1, C2: TColor);
-		procedure ChangeBW24(const C: TColor);
-		procedure Random24(C: TColor; RandomColor: TColor);
-		procedure Texture24(
+			const C1, C2: TColor); overload;
+		procedure ChangeColor(
+			const C1, C2: TColor); overload;
+		procedure ChangeBW(const C: TColor);
+		procedure Rand(C: TColor; RandomColor: TColor);
+		procedure Texture(
 			BmpS: TDBitmap; C: TColor; const Effect: TEffect);
-		procedure Resize24E(
+		procedure Resize(
 			const BmpS: TDBitmap; const TranColor: TColor; const NewX, NewY: LongWord;
-			const InterruptProcedure: TInterruptProcedure);
-		procedure Resize24(
+			const InterruptProcedure: TInterruptProcedure); overload;
+		procedure Resize(
 			const BmpS: TDBitmap; const NewX, NewY: LongWord;
-			const InterruptProcedure: TInterruptProcedure);
+			const InterruptProcedure: TInterruptProcedure); overload;
 
 		procedure SwapUD;
 		procedure RotateRight(TransparentColor: TColor; const Effect: TEffect);
@@ -145,19 +145,19 @@ type
 
 		procedure GenerateRGB(XD1, YD1, XD2, YD2: Integer; HidedColor: TColor;
 			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
-			const Effect: TEffect; const Clock: LongWord; 
-			const InterruptProcedure: TInterruptProcedure);
-		procedure GenerateERGB(HidedColor: TColor;
+			const Effect: TEffect; const Clock: LongWord;
+			const InterruptProcedure: TInterruptProcedure); overload;
+		procedure GenerateRGB(HidedColor: TColor;
 			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
 			const Effect: TEffect;
-			const InterruptProcedure: TInterruptProcedure);
+			const InterruptProcedure: TInterruptProcedure); overload;
 		procedure FullRect;
 		procedure FormBitmap(Color: TColor);
 		procedure CopyBitmap(BmpS: TDBitmap); overload;
 		procedure CopyBitmap(BmpS: TBitmap); overload;
 		procedure GetBitmap(BmpD: TBitmap);
 
-		procedure Colors24(BmpS: TDBitmap; TransparentColor: TColor;
+		procedure Colors(BmpS: TDBitmap; TransparentColor: TColor;
 			const
 			Brig, // 0: No change -255 always Black, +255 always white
 			Cont, {
@@ -184,6 +184,8 @@ type
 		procedure DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
 			Orient: Integer; ScrollEf: TEffect);
 
+		procedure DrawStyle(Style: TGraphicsStyle; XS1, YS1, XS2, YS2: TCoor; BmpS: TDBitmap; C: TColor);
+
 		procedure FireM(XS1, YS1, XS2, YS2: TCoor; Tick: Byte);
 		procedure FireS(XS1, YS1, XS2, YS2: TCoor);
 		procedure FogI(XS1, YS1, XS2, YS2: TCoor);
@@ -195,33 +197,33 @@ procedure BitmapCopy(var BmpD, BmpS: TDBitmap); // Create + SetSize + CopyData
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor); // Create + SetSize
 procedure BitmapFree(var BmpD: TDBitmap); // Free + nil
 
-procedure GetPix24(PD: Pointer; const ByteXD: LongWord;
+procedure GetPix(PD: Pointer; const ByteXD: LongWord;
 	const X, Y: TCoor; var C: TRColor); // Must be fast
-procedure Pix24(PD: Pointer; const ByteXD: LongWord;
+procedure Pix(PD: Pointer; const ByteXD: LongWord;
 	const X, Y: TCoor; C: TRColor; Effect: TEffect); // Must be fast
 
-function GetColors24(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
+function GetColors(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
 
-procedure Rotate24(
+procedure RotateBmp(
 	BmpD: TDBitmap; const XD12, YD12: SG;
 	BmpS: TDBitmap; const XS1, YS1, XS2, YS2: SG;
 	DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
-	TransparentColor: TColor; const Effect: TEffect);
-procedure RotateE24(
+	TransparentColor: TColor; const Effect: TEffect); overload;
+procedure RotateBmp(
 	BmpD: TDBitmap;
 	BmpS: TDBitmap;
 	const DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
-	TransparentColor: TColor; const Effect: TEffect);
-procedure RotateDef24(
+	TransparentColor: TColor; const Effect: TEffect); overload;
+procedure RotateDef(
 	BmpD: TDBitmap; const XD12, YD12: SG;
 	BmpS: TDBitmap; const XS1, YS1, XS2, YS2: SG;
 	const Typ: U1; const Clock: TAngle;
-	TransparentColor: TColor; const Effect: TEffect);
-procedure RotateDefE24(
+	TransparentColor: TColor; const Effect: TEffect); overload;
+procedure RotateDef(
 	BmpD: TDBitmap;
 	BmpS: TDBitmap;
 	const Typ: U1; const Clock: TAngle;
-	TransparentColor: TColor; const Effect: TEffect);
+	TransparentColor: TColor; const Effect: TEffect); overload;
 
 const
 	BitmapHeadSize = 54;
@@ -365,10 +367,10 @@ end;
 procedure TDBitmap.Sample(Width, Height: TCoor);
 begin
 	SetSize(Width, Height);
-	BarE24(clNone, clRed, ef16);
-	BorderE24(clWhite, clBlack, 2, ef16);
-	Lin24(0, 0, FWidth - 1, FHeight - 1, clBlue, ef16);
-	Lin24(FWidth - 1, 0, 0, FHeight - 1, clGreen, ef16);
+	Bar(clNone, clRed, ef16);
+	Border(clWhite, clBlack, 2, ef16);
+	Line(0, 0, FWidth - 1, FHeight - 1, clBlue, ef16);
+	Line(FWidth - 1, 0, 0, FHeight - 1, clGreen, ef16);
 end;
 
 procedure TDBitmap.GLSetSize;
@@ -387,7 +389,7 @@ begin
 
 	if (NewWidth <> FWidth) or (NewHeight <> FHeight) then
 	begin
-		Resize24(Self, NewWidth, NewHeight, nil);
+		Resize(Self, NewWidth, NewHeight, nil);
 	end;
 	SwapRB24;
 end;
@@ -440,7 +442,7 @@ var
 begin
 	BmpC := TDBitmap.Create;
 	BmpC.SetSize(Wid, Hei);
-	BmpC.Resize24E(Self, clNone, Wid, Hei, nil);
+	BmpC.Resize(Self, clNone, Wid, Hei, nil);
 	BmpC.SwapUD;
 
 	BmpColor := TBitmap.Create;
@@ -466,7 +468,7 @@ begin
 	for y := Hei - 1 downto 0 do
 	for x := 0 to Wid - 1 do
 	begin
-		GetPix24(BmpC.FData, BmpC.FByteX, x, y, C);
+		GetPix(BmpC.FData, BmpC.FByteX, x, y, C);
 		if C.L = clPurple then
 		begin
 			S^ := S^ or M;
@@ -520,7 +522,7 @@ begin
 	Icon.Handle;
 	SetSize(Icon.Width, Icon.Height);
 	TransparentColor := clPurple;
-	BarE24(clNone, TransparentColor, ef16);
+	Bar(clNone, TransparentColor, ef16);
 	Canvas.Draw(0, 0, Icon);
 end;
 
@@ -594,7 +596,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					PS := Addr(BitmapHead.Colors[16]);
+					PS := PBmpData(@BitmapHead.Colors[16]);
 					PS := Pointer(Integer(PS) + y * Integer(WidthToByteX4(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
@@ -629,7 +631,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					PS := Addr(BitmapHead.Colors[256]);
+					PS := PBmpData(@BitmapHead.Colors[256]);
 					PS := Pointer(Integer(PS) + y * Integer(WidthToByteX8(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
@@ -655,7 +657,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					PS := Addr(BitmapHead.Colors[0]);
+					PS := @BitmapHead.Colors[0];
 					PS := Pointer(Integer(PS) + y * Integer(WidthToByteX24(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
@@ -692,7 +694,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					PS := Addr(BitmapHead.Colors[0]);
+					PS := PBmpData(@BitmapHead.Colors[0]);
 					PS := Pointer(Integer(PS) + y * Integer(WidthToByteX32(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
@@ -789,7 +791,7 @@ begin
 	Result := False;
 	if FileExists(FileName) = False then
 	begin
-		IOErrorMessage(FileName, 'File not found');
+		IOErrorMessageRetry(FileName, 'File not found');
 		Exit
 	end;
 	if UpperCase(ExtractFileExt(FileName)) = '.BMP' then
@@ -936,14 +938,14 @@ begin
 	end;
 end;
 
-procedure TDBitmap.LoadFromFile(const Filename: string);
+procedure TDBitmap.LoadFromFile(const Filename: AnsiString);
 var Quality: SG;
 begin
 	Quality := -90;
 	LoadFromFileEx(FileName, 0, 0, Quality);
 end;
 
-procedure TDBitmap.SaveToFile(const Filename: string);
+procedure TDBitmap.SaveToFile(const Filename: AnsiString);
 var
 	Quality: SG;
 	FileNam: TFileName;
@@ -958,7 +960,7 @@ procedure TDBitmap.CopyBitmap(BmpS: TDBitmap);
 begin
 	if BmpS = nil then Exit;
 	SetSize(BmpS.Width, BmpS.Height);
-//	BmpE24(0, 0, BmpS, clNone, ef16);
+//	Bmp(0, 0, BmpS, clNone, ef16);
 
 	Move(BmpS.GLData^, FGLData^, FByteX * FHeight);
 end;
@@ -1026,7 +1028,7 @@ begin
 	GraphMaxY := FHeight - 1;
 end;
 (*-------------------------------------------------------------------------*)
-function TDBitmap.BmpColorIn24(C: TColor): Integer;
+function TDBitmap.BmpColorIn(C: TColor): Integer;
 var
 	PD: PBmpData;
 	UseXD: LongWord;
@@ -1148,7 +1150,7 @@ begin
 	end;
 end;*)
 (*-------------------------------------------------------------------------*)
-procedure GetPix24(PD: Pointer; const ByteXD: LongWord;
+procedure GetPix(PD: Pointer; const ByteXD: LongWord;
 	const X, Y: TCoor; var C: TRColor);
 begin
 	asm
@@ -1183,7 +1185,7 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure Pix24(PD: Pointer; const ByteXD: LongWord;
+procedure Pix(PD: Pointer; const ByteXD: LongWord;
 	const X, Y: TCoor; C: TRColor; Effect: TEffect);
 begin
 	asm
@@ -2140,15 +2142,15 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure Pix24Check(BmpD: TDBitmap;
+procedure PixCheck(BmpD: TDBitmap;
 	const X, Y: TCoor; const C: TColor; Effect: TEffect);
 begin
 	if (X >= BmpD.GraphMinX) and (X <= BmpD.GraphMaxX) and
 	(Y >= BmpD.GraphMinY) and (Y <= BmpD.GraphMaxY) then
-		Pix24(BmpD.Data, BmpD.ByteX, X, Y, TRColor(C), Effect);
+		Pix(BmpD.Data, BmpD.ByteX, X, Y, TRColor(C), Effect);
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Lin24(
+procedure TDBitmap.Line(
 	X1, Y1, X2, Y2: TCoor; C: TColor; const Effect: TEffect);
 const
 	LinDiv = 65536;
@@ -2168,7 +2170,7 @@ begin
 		if Y2 > TCoor(FHeight) - 1 then Y2 := TCoor(FHeight) - 1;
 		for L := Y1 to Y2 do
 		begin
-			Pix24(Data, ByteX, X1, L, TRColor(C), Effect);
+			Pix(Data, ByteX, X1, L, TRColor(C), Effect);
 		end;
 		Exit;
 	end;
@@ -2181,7 +2183,7 @@ begin
 		if X2 > TCoor(FWidth) - 1 then X2 := TCoor(FWidth) - 1;
 		for L := X1 to X2 do
 		begin
-			Pix24(Data, ByteX, L, Y1, TRColor(C), Effect);
+			Pix(Data, ByteX, L, Y1, TRColor(C), Effect);
 		end;
 		Exit;
 	end;
@@ -2209,7 +2211,7 @@ begin
 		if (X1 > X2) xor (Y1 < Y2) then D := 1 else D := -1;
 		while x <= XYEnd do
 		begin
-			Pix24(Data, ByteX, x, y, TRColor(C), Effect);
+			Pix(Data, ByteX, x, y, TRColor(C), Effect);
 			Inc(x);
 			if e < 0 then
 				Inc(e, k1)
@@ -2240,7 +2242,7 @@ begin
 		if (Y1 > Y2) xor (X1 < X2) then D := 1 else D := -1;
 		while y <= XYEnd do
 		begin
-			Pix24(Data, ByteX, x, y, TRColor(C), Effect);
+			Pix(Data, ByteX, x, y, TRColor(C), Effect);
 			Inc(y);
 			if e < 0 then
 				Inc(e, k1)
@@ -2268,7 +2270,7 @@ begin
 			D := ((Y1 - Y2) * LinDiv) div (X2 - X1);
 			for L := X1 to X2 do
 			begin
-				Pix24(BmpD.PData, BmpD.ByteX, L, Y1 - (D * (L - X1) + LinDiv div 2) div LinDiv, C, Effect);
+				Pix(BmpD.PData, BmpD.ByteX, L, Y1 - (D * (L - X1) + LinDiv div 2) div LinDiv, C, Effect);
 			end;
 		end
 		else
@@ -2276,7 +2278,7 @@ begin
 			D := ((Y2 - Y1) * LinDiv) div (X2 - X1);
 			for L := X1 to X2 do
 			begin
-				Pix24(BmpD.PData, BmpD.ByteX, L, Y1 + (D * (L - X1) + LinDiv div 2) div LinDiv, C, Effect);
+				Pix(BmpD.PData, BmpD.ByteX, L, Y1 + (D * (L - X1) + LinDiv div 2) div LinDiv, C, Effect);
 			end;
 		end;
 	end
@@ -2296,7 +2298,7 @@ begin
 			D := ((X1 - X2) * LinDiv) div (Y2 - Y1);
 			for L := Y1 to Y2 do
 			begin
-				Pix24(BmpD.PData, BmpD.ByteX, X1 - (D * (L - Y1) + LinDiv div 2) div LinDiv, L, C, Effect);
+				Pix(BmpD.PData, BmpD.ByteX, X1 - (D * (L - Y1) + LinDiv div 2) div LinDiv, L, C, Effect);
 			end;
 		end
 		else
@@ -2304,7 +2306,7 @@ begin
 			D := ((X2 - X1) * LinDiv) div (Y2 - Y1);
 			for L := Y1 to Y2 do
 			begin
-				Pix24(BmpD.PData, BmpD.ByteX, X1 + (D * (L - Y1) + LinDiv div 2) div LinDiv, L, C, Effect);
+				Pix(BmpD.PData, BmpD.ByteX, X1 + (D * (L - Y1) + LinDiv div 2) div LinDiv, L, C, Effect);
 			end;
 		end;
 	end;}
@@ -2318,20 +2320,20 @@ begin
 	begin
 		if Y2 < Y1 then Change(Y1, Y2);
 		for i := -((Width - 1) div 2) to Width div 2 do
-			Lin24(X1 + i, Y1 - Abs(i), X2 + i, Y2 + Abs(i), clBlack, ef16);
+			Line(X1 + i, Y1 - Abs(i), X2 + i, Y2 + Abs(i), clBlack, ef16);
 	end
 	else if Y1 = Y2 then
 	begin
 		if X2 < X1 then Change(X1, X2);
 		for i := -((Width - 1) div 2) to Width div 2 do
-			Lin24(X1 - Abs(i), Y1 + i, X2 + Abs(i), Y2 + i, clBlack, ef16);
+			Line(X1 - Abs(i), Y1 + i, X2 + Abs(i), Y2 + i, clBlack, ef16);
 	end
 	else
 		MessageD('Function Not Available', mtError, [mbOk]);
 end;
 
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Rec24(
+procedure TDBitmap.Rec(
 	X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect);
 var Coor: TCoor;
 begin
@@ -2348,13 +2350,13 @@ begin
 		Y1 := Y2;
 		Y2 := Coor;
 	end;
-	Lin24(X1, Y1, X2 - 1, Y1, C, Effect);
-	Lin24(X1, Y1 + 1, X1, Y2, C, Effect);
-	Lin24(X1 + 1, Y2, X2, Y2, C, Effect);
-	Lin24(X2, Y1, X2, Y2 - 1, C, Effect);
+	Line(X1, Y1, X2 - 1, Y1, C, Effect);
+	Line(X1, Y1 + 1, X1, Y2, C, Effect);
+	Line(X1 + 1, Y2, X2, Y2, C, Effect);
+	Line(X2, Y1, X2, Y2 - 1, C, Effect);
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Bar24(
+procedure TDBitmap.Bar(
 	BackColor: TColor;
 	XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect);
 var
@@ -4570,14 +4572,14 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.BarE24(
+procedure TDBitmap.Bar(
 	BackColor: TColor;
 	C: TColor; const Effect: TEffect);
 begin
-	Bar24(BackColor, 0, 0, TCoor(FWidth - 1), TCoor(FHeight - 1), C, Effect);
+	Bar(BackColor, 0, 0, TCoor(FWidth - 1), TCoor(FHeight - 1), C, Effect);
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Border24(
+procedure TDBitmap.Border(
 	const X1, Y1, X2, Y2: TCoor;
 	const C1, C2: TColor; const Lines: SG; const Effect: TEffect);
 var
@@ -4595,29 +4597,29 @@ begin
 
 	for i := 0 to Lines - 1 do
 	begin
-		Lin24(X1 + i,   Y1 + i,   X2 - i - 1, Y1 + i,   C1, Effect); //-
-		Lin24(X1 + i,   Y1 + i + 1, X1 + i,   Y2 - i - 1, C1, Effect); //|
-		Lin24(X1 + i + 1, Y2 - i,   X2 - i,   Y2 - i,   C2, Effect); //-
-		Lin24(X2 - i,   Y1 + i + 1, X2 - i,   Y2 - i - 1, C2, Effect); //|
-		Pix24Check(Self, X1 + i, Y2 - i, CR12.L, Effect);
-		Pix24Check(Self, X2 - i, Y1 + i, CR12.L, Effect);
+		Line(X1 + i,   Y1 + i,   X2 - i - 1, Y1 + i,   C1, Effect); //-
+		Line(X1 + i,   Y1 + i + 1, X1 + i,   Y2 - i - 1, C1, Effect); //|
+		Line(X1 + i + 1, Y2 - i,   X2 - i,   Y2 - i,   C2, Effect); //-
+		Line(X2 - i,   Y1 + i + 1, X2 - i,   Y2 - i - 1, C2, Effect); //|
+		PixCheck(Self, X1 + i, Y2 - i, CR12.L, Effect);
+		PixCheck(Self, X2 - i, Y1 + i, CR12.L, Effect);
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.BorderE24(
+procedure TDBitmap.Border(
 	const C1, C2: TColor; const Lines: SG; const Effect: TEffect);
 begin
 	if (FWidth > Lines) and (FHeight > Lines) then
-		Border24(0, 0, FWidth - 1, FHeight - 1, C1, C2, Lines, Effect);
+		Border(0, 0, FWidth - 1, FHeight - 1, C1, C2, Lines, Effect);
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.BorderF(const X1, Y1, X2, Y2: TCoor; const C: TColor);
 begin
-	Bar24(clNone, X1, Y1, X2, Y2, C, ef16);
-	Border24(X1 - 1, Y1 - 1, X2 + 1, Y2 + 1, clBlack, clWhite, 1, ef10);
+	Bar(clNone, X1, Y1, X2, Y2, C, ef16);
+	Border(X1 - 1, Y1 - 1, X2 + 1, Y2 + 1, clBlack, clWhite, 1, ef10);
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.BarBrg24(
+procedure TDBitmap.BarBrg(
 	const X1, Y1, X2, Y2: TCoor);
 var
 	PD: PBmpData;
@@ -4669,7 +4671,7 @@ begin
 	until cy > Y2;
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Bmp24(
+procedure TDBitmap.Bmp(
 	XD1, YD1: TCoor;
 	BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
 	C: TColor; const Effect: TEffect);
@@ -4690,6 +4692,11 @@ begin
 	(GraphMaxY >= TCoor(FHeight)) then
 	begin
 		ErrorMessage('Out of Bitmap range');
+		Exit;
+	end;
+	if BmpS = nil then
+	begin
+		ErrorMessage('BmpS is nil');
 		Exit;
 	end;
 	{$endif}
@@ -6714,7 +6721,7 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.BmpE24(
+procedure TDBitmap.Bmp(
 	const XD1, YD1: TCoor;
 	BmpS: TDBitmap;
 	C: TColor; const Effect: TEffect);
@@ -6723,10 +6730,10 @@ begin
 	if BmpS.Data = nil then Exit;
 	if Self = nil then Exit;
 	if Self.Data = nil then Exit;
-	Bmp24(XD1, YD1, BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1, C, Effect);
+	Bmp(XD1, YD1, BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1, C, Effect);
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.ChangeColor24(
+procedure TDBitmap.ChangeColor(
 	const X1, Y1, X2, Y2: Integer;
 	const C1, C2: TColor);
 var
@@ -6777,13 +6784,13 @@ begin
 	end;
 end;
 
-procedure TDBitmap.ChangeColorE24(
+procedure TDBitmap.ChangeColor(
 	const C1, C2: TColor);
 begin
-	ChangeColor24(0, 0, FWidth - 1, FHeight - 1, C1, C2);
+	ChangeColor(0, 0, FWidth - 1, FHeight - 1, C1, C2);
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.ChangeBW24(const C: TColor);
+procedure TDBitmap.ChangeBW(const C: TColor);
 var
 	PD: Pointer;
 	CR: TRColor;
@@ -6832,7 +6839,7 @@ begin
 	end;
 end;
 
-procedure TDBitmap.Random24(C: TColor; RandomColor: TColor);
+procedure TDBitmap.Rand(C: TColor; RandomColor: TColor);
 var
 	PD, PData: PBmpData;
 	Y: Integer;
@@ -6884,7 +6891,7 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Texture24(
+procedure TDBitmap.Texture(
 	BmpS: TDBitmap; C: TColor; const Effect: TEffect);
 var
 	X, Y: Integer;
@@ -6897,12 +6904,12 @@ begin
 	for Y := 0 to MY - 1 do
 		for X := 0 to MX - 1 do
 		begin
-			BmpE24(TCoor(BmpS.Width) * X, TCoor(BmpS.Height) * Y,
+			Bmp(TCoor(BmpS.Width) * X, TCoor(BmpS.Height) * Y,
 				BmpS, C, Effect);
 		end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Resize24E(
+procedure TDBitmap.Resize(
 	const BmpS: TDBitmap; const TranColor: TColor; const NewX, NewY: LongWord;
 	const InterruptProcedure: TInterruptProcedure);
 var
@@ -6943,7 +6950,7 @@ begin
 	if (SX = NewX) and (SY = NewY) then
 	begin
 		if BmpS.Data <> Data then
-			BmpE24(0, 0, BmpS, clNone, ef16);
+			Bmp(0, 0, BmpS, clNone, ef16);
 		Exit;
 	end;
 
@@ -6999,13 +7006,13 @@ begin
 			Inc(Rx2U, StpXU);
 			ryU := ry1U;
 			repeat
-				DivModU32(ryU, NewY, Res, Remainder);
+				DivModU4(ryU, NewY, Res, Remainder);
 				ttyU := NewY - Remainder;
 				if ryU + ttyU > ry2U then ttyU := ry2U - ryU;
 				rxU := rx1U;
 				HY := Res;
 				repeat
-					DivModU32(rxU, NewX, Res, Remainder);
+					DivModU4(rxU, NewX, Res, Remainder);
 					ttxU := NewX - Remainder;
 					if rxU + ttxU > rx2U then ttxU := rx2U - rxU;
 					PS := Pointer(Integer(BmpS.Data) + Integer({$ifdef BPP4}Res shl 2{$else}Res + Res + Res{$endif}) - Integer(ByteSX * HY));
@@ -7060,11 +7067,11 @@ begin
 	end;
 end;
 
-procedure TDBitmap.Resize24(
+procedure TDBitmap.Resize(
 	const BmpS: TDBitmap; const NewX, NewY: LongWord;
 	const InterruptProcedure: TInterruptProcedure);
 begin
-	Resize24E(BmpS, clNone, NewX, NewY, InterruptProcedure);
+	Resize(BmpS, clNone, NewX, NewY, InterruptProcedure);
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.SwapUD;
@@ -7093,11 +7100,11 @@ begin
 	BmpS := TDBitmap.Create;
 	BmpS.CopyBitmap(Self);
 	SetSize(FHeight, FWidth);
-	RotateDefE24(Self, BmpS, 0, AngleCount div 4, TransparentColor, Effect);
+	RotateDef(Self, BmpS, 0, AngleCount div 4, TransparentColor, Effect);
 	BmpS.Free;
 end;
 (*-------------------------------------------------------------------------*)
-function GetColors24(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
+function GetColors(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
 var W: Integer;
 begin
 	W := Source + Brig;
@@ -7120,7 +7127,7 @@ begin
 	Result := W;
 end;
 
-procedure TDBitmap.Colors24(BmpS: TDBitmap; TransparentColor: TColor;
+procedure TDBitmap.Colors(BmpS: TDBitmap; TransparentColor: TColor;
 	const Brig, Cont, Gamma, ContBase, BW: Integer;
 	const ColorR, ColorG, ColorB: Boolean;
 	const InterruptProcedure: TInterruptProcedure);
@@ -7145,7 +7152,7 @@ begin
 	TransparentColor := ColorToRGB(TransparentColor);
 	if BW = 0 then
 		for i := Low(Byte) to High(Byte) do
-			Clrs[i] := GetColors24(i, Brig, Cont, Gamma, ContBase);
+			Clrs[i] := GetColors(i, Brig, Cont, Gamma, ContBase);
 
 	SX := FWidth;
 	SY := FHeight;
@@ -7570,7 +7577,7 @@ begin
 					RColor.B := B;
 					RColor.T := 0;
 //					uGraph.ColorDiv(RColor.L, 32768 + 1000 * RandEffect shr 1 - Random(1000 * RandEffect + 1));
-					Pix24(Data, ByteX, CX, CY, TRColor(RColor), Effect);
+					Pix(Data, ByteX, CX, CY, TRColor(RColor), Effect);
 					Inc(Integer(PDXY), BPP);
 				end;
 			end
@@ -7581,7 +7588,7 @@ begin
 	end;
 end;
 
-procedure TDBitmap.GenerateERGB(
+procedure TDBitmap.GenerateRGB(
 	HidedColor: TColor;
 	const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
 	const Effect: TEffect;
@@ -7607,14 +7614,14 @@ begin
 		gfSpecHorz:
 			for i := 0 to FWidth - 1 do
 			begin
-				Lin24(i, 0, i, FHeight - 1,
+				Line(i, 0, i, FHeight - 1,
 					SpectrumColor(c), Effect);
 				Dec(c, ColorStep); if c < 0 then c := MaxSpectrum;
 			end;
 		gfSpecVert:
 			for i := 0 to FHeight - 1 do
 			begin
-				Lin24(0, i, FWidth - 1, i,
+				Line(0, i, FWidth - 1, i,
 					SpectrumColor(c), Effect);
 				Dec(c, ColorStep); if c < 0 then c := MaxSpectrum;
 			end;
@@ -7630,9 +7637,9 @@ begin
 				for y := 0 to FHeight - 1 do
 				begin
 					Co.L := 7;
-					GetPix24(Data, ByteX, x, y, Co);
+					GetPix(Data, ByteX, x, y, Co);
 					if Co.L <> HidedColor then
-						Pix24(Data, ByteX, x, y, TRColor(SpectrumColor(c)), ef16);
+						Pix(Data, ByteX, x, y, TRColor(SpectrumColor(c)), ef16);
 				end;
 				Dec(c, ColorStep); if c < 0  then c := MaxSpectrum;
 			end;
@@ -7641,9 +7648,9 @@ begin
 			begin
 				for x := 0 to FWidth - 1 do
 				begin
-					GetPix24(Data, ByteX, x, y, Co);
+					GetPix(Data, ByteX, x, y, Co);
 					if Co.L <> HidedColor then
-						Pix24(Data, ByteX, x, y, TRColor(SpectrumColor(c)), ef16);
+						Pix(Data, ByteX, x, y, TRColor(SpectrumColor(c)), ef16);
 				end;
 				Dec(c, ColorStep); if c < 0  then c := MaxSpectrum;
 			end;
@@ -7660,10 +7667,10 @@ begin
 	Co[1] := DarkerColor(Color);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
-	GenerateERGB(clNone, gfFade2x, Co, ScreenCorrectColor, ef16, nil);
+	GenerateRGB(clNone, gfFade2x, Co, ScreenCorrectColor, ef16, nil);
 end;
 
-procedure Rotate24(
+procedure RotateBmp(
 	BmpD: TDBitmap; const XD12, YD12: SG;
 	BmpS: TDBitmap; const XS1, YS1, XS2, YS2: SG;
 	DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
@@ -8542,20 +8549,20 @@ begin
 	end;
 end;
 
-procedure RotateE24(
+procedure RotateBmp(
 	BmpD: TDBitmap;
 	BmpS: TDBitmap;
 	const DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 begin
-	Rotate24(
+	RotateBmp(
 		BmpD, BmpD.Width, BmpD.Height,
 		BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1,
 		DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD,
 		TransparentColor, Effect);
 end;
 
-procedure RotateDef24(
+procedure RotateDef(
 	BmpD: TDBitmap; const XD12, YD12: SG;
 	BmpS: TDBitmap; const XS1, YS1, XS2, YS2: SG;
 	const Typ: U1; const Clock: TAngle;
@@ -8665,19 +8672,19 @@ begin
 		Exit;
 	end;
 
-	Rotate24(
+	RotateBmp(
 		BmpD, XD12, YD12,
 		BmpS, XS1, YS1, XS2, YS2,
 		DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD, TransparentColor, Effect);
 end;
 
-procedure RotateDefE24(
+procedure RotateDef(
 	BmpD: TDBitmap;
 	BmpS: TDBitmap;
 	const Typ: U1; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 begin
-	RotateDef24(
+	RotateDef(
 		BmpD, BmpD.Width, BmpD.Height,
 		BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1,
 		Typ, Clock,
@@ -8712,7 +8719,7 @@ begin
 	for i := 1 to Length(Text) do
 	begin
 		c := Ord(Ord(Text[i]) - Ord(' '));
-		Letter.Bmp24(0, 0, FontBitmap[RasterFontStyle],
+		Letter.Bmp(0, 0, FontBitmap[RasterFontStyle],
 			0, FontHeight[RasterFontStyle] * c,
 			FontBitmap[RasterFontStyle].Width, FontHeight[RasterFontStyle] * c + FontHeight[RasterFontStyle] - 1, clNone, ef16);
 
@@ -8721,30 +8728,30 @@ begin
 		begin
 			if FontColor = clBlack then
 			begin
-				Letter.ChangeColorE24(clBlack, clSilver);
+				Letter.ChangeColor(clBlack, clSilver);
 				CB := clSilver;
 			end
 			else
 				CB := clBlack;
-			if FontColor <> clWhite then Letter.ChangeColorE24(clWhite, FontColor)
+			if FontColor <> clWhite then Letter.ChangeColor(clWhite, FontColor)
 		end
 		else
 		begin
 			CB := clNone;
 			if FontColor = clBlack then
 			begin
-				if BackColor <> clBlack then Letter.ChangeColorE24(clBlack, BackColor);
-				Letter.ChangeColorE24(clWhite, FontColor);
+				if BackColor <> clBlack then Letter.ChangeColor(clBlack, BackColor);
+				Letter.ChangeColor(clWhite, FontColor);
 			end
 			else
 			begin
-				if FontColor <> clWhite then Letter.ChangeColorE24(clWhite, FontColor);
-				if BackColor <> clBlack then Letter.ChangeColorE24(clBlack, BackColor);
+				if FontColor <> clWhite then Letter.ChangeColor(clWhite, FontColor);
+				if BackColor <> clBlack then Letter.ChangeColor(clBlack, BackColor);
 			end;
 		end;
 		end;
 
-		Bmp24(X, Y, Letter,
+		Bmp(X, Y, Letter,
 			0, 0,
 			FontBitmap[RasterFontStyle].Width - 1, FontHeight[RasterFontStyle] - 1, CB, Effect);
 		Inc(X, FontBitmap[RasterFontStyle].Width);
@@ -9171,8 +9178,8 @@ begin
 				xx := x;
 				yy := y;
 			end;
-			GetPix24(BmpS.FData, BmpS.FByteX, xx, yy, C);
-			Pix24(Self.FData, Self.FByteX, x, y, C, ef16);
+			GetPix(BmpS.FData, BmpS.FByteX, xx, yy, C);
+			Pix(Self.FData, Self.FByteX, x, y, C, ef16);
 		end;
 	end;
 end;
@@ -9223,7 +9230,7 @@ begin
 			Inc(Points[i].X, CX);
 			Points[i].Y := CY - Points[i].Y;
 		end;
-		Lin24(CX, CY, Points[1].X, Points[1].Y, Color, Effect);
+		Line(CX, CY, Points[1].X, Points[1].Y, Color, Effect);
 	end
 	else
 	begin
@@ -9270,11 +9277,11 @@ begin
 	C.T := 0;}
 
 	if Down then C.L := clSilver else C.L := clWhite;
-	Lin24(X1 + 1, Y1 + 1, X2 - 1, Y1 + 1, C.L, ScrollEf);
-	Lin24(X1 + 2, Y2 - 1, X2 - 2, Y2 - 1, C.L, ScrollEf);
+	Line(X1 + 1, Y1 + 1, X2 - 1, Y1 + 1, C.L, ScrollEf);
+	Line(X1 + 2, Y2 - 1, X2 - 2, Y2 - 1, C.L, ScrollEf);
 
-	Lin24(X1 + 1, Y1 + 1, X1 + 1, Y2 - 2, C.L, ScrollEf);
-	Lin24(X2 - 1, Y1 + 1, X2 - 1, Y2 - 2, C.L, ScrollEf);
+	Line(X1 + 1, Y1 + 1, X1 + 1, Y2 - 2, C.L, ScrollEf);
+	Line(X2 - 1, Y1 + 1, X2 - 1, Y2 - 2, C.L, ScrollEf);
 
 	if Hot then
 	begin
@@ -9328,7 +9335,7 @@ begin
 			HY2 := SizeY - 1 - SizeY div 4 - SizeY * (i) div (6 * Len);
 
 			Rotate(HX1, HY1, HX2, HY2, X2 - X1 + 1, Y2 - Y1 + 1, Orient);
-			Lin24(X1 + HX1, Y1 + HY1, X1 + HX2, Y1 + HY2, C.L, ScrollEf);
+			Line(X1 + HX1, Y1 + HY1, X1 + HX2, Y1 + HY2, C.L, ScrollEf);
 
 			HX1 := SizeX div 2; // OK
 			HY1 := SizeY div 4 + SizeY * (i) div (3 * Len);
@@ -9336,7 +9343,7 @@ begin
 			HY2 := SizeY - 1 - SizeY div 4 - SizeY * (i) div (6 * Len);
 
 			Rotate(HX1, HY1, HX2, HY2, X2 - X1 + 1, Y2 - Y1 + 1, Orient);
-			Lin24(X1 + HX1, Y1 + HY1, X1 + HX2, Y1 + HY2, C.L, ScrollEf);
+			Line(X1 + HX1, Y1 + HY1, X1 + HX2, Y1 + HY2, C.L, ScrollEf);
 		end;
 	end;
 
@@ -9374,14 +9381,14 @@ begin
 		end;
 		end;
 
-		Bitmap.Lin24(HX1, HY1, HX2, HY2, clBtnText, ef16);
+		Bitmap.Line(HX1, HY1, HX2, HY2, clBtnText, ef16);
 	end;}
 
 
 (*
-	Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(C1), DepthColor(C2), 1, ScrollEf);
+	Bitmap.Border(X1, Y1, X2, Y2, DepthColor(C1), DepthColor(C2), 1, ScrollEf);
 	if FHotTrack and Hot then C1 := clHighlight else C1 := clBtnFace;
-	Bitmap.Bar24(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, C1, ScrollEf);
+	Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, C1, ScrollEf);
 
 	XM := X1 + X2;
 	Len := X2 - X1 + 1;
@@ -9417,10 +9424,38 @@ begin
 		end;
 		end;
 
-		Bitmap.Lin24(HX1, HY1, HX2, HY2, clBtnText, ef16);
+		Bitmap.Line(HX1, HY1, HX2, HY2, clBtnText, ef16);
 	end;*)
 
 end;
+
+procedure TDBitmap.DrawStyle(Style: TGraphicsStyle; XS1, YS1, XS2, YS2: TCoor; BmpS: TDBitmap; C: TColor);
+var
+	Co: array[0..3] of TColor;
+begin
+	case Style of
+	gsBorder: Border(XS1, YS1, XS2, YS2, C, C, 2, ef16);
+	gsLines:
+	begin
+//		Border(XS1, YS1, XS2, YS2: TCoor; C, C, 2);
+	end;
+	gsSolid:
+	begin
+		Bar(clNone, XS1, YS1, XS2, YS2, C, ef16);
+	end;
+	gsGradient:
+	begin
+		C := ColorToRGB(C);
+		Co[0] := LighterColor(C);
+		Co[1] := DarkerColor(C);
+		Co[2] := Co[0];
+		Co[3] := Co[1];
+		GenerateRGB(clNone, gfFade2x, Co, ScreenCorrectColor, ef16, nil);
+	end;
+	gsBitmap: Bmp(XS1, YS1, BmpS, clNone, ef16);
+	end;
+end;
+
 
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.FireM(XS1, YS1, XS2, YS2: TCoor; tick:byte);
@@ -9451,7 +9486,7 @@ begin
 
 	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
 
-	ps:=integer(addr(rando));
+	ps:=integer(@rando);
 
 	begin
 	asm

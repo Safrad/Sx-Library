@@ -1,6 +1,6 @@
 //* File:     Lib\uSysInfo.pas
 //* Created:  2000-07-01
-//* Modified: 2004-04-28
+//* Modified: 2004-07-21
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -417,8 +417,8 @@ begin
 {     mov ecx, 999 // 1M
 
 			@Loop:
-				mov edi, dword ptr PMem
-				mov esi, dword ptr PMem2
+				mov edi, U4 ptr PMem
+				mov esi, U4 ptr PMem2
 				push ecx
 				mov ecx, 32768
 				shr ecx, 2
@@ -429,7 +429,7 @@ begin
 			jnz @Loop}
 
 			mov ecx, 999999 // 1M
-//      mov edi, dword ptr PMem
+//      mov edi, U4 ptr PMem
 			@Loop:
 				mov esi, edi
 				mov ebx, ecx

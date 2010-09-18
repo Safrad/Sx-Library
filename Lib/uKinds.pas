@@ -1,6 +1,6 @@
 //* File:     Lib\uKinds.pas
 //* Created:  1999-12-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-13
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -15,12 +15,17 @@ uses
 	SysUtils, Menus, Graphics, Classes, Dialogs, ExtDlgs, Controls;
 
 type
-	TItem = packed record // 16
+	TItem = packed record // 64
 		FileName: TFileName; // 4
 		MenuItem: TMenuItem; // 4
 		PData: Pointer; // 4
+		Created, Modified: TDateTime; // 8
+		ModificationTime: U4; // 4
+		SaveCount: U4; // 4
+		WorkTime: U8; // 8
 		New: U2; // 2
 		Changed: B2; // 2
+		Reserved: array[0..5] of U4; // 24
 	end;
 
 	TKinds = class
@@ -39,11 +44,11 @@ type
 		Delete1: TMenuItem;
 
 		procedure ChangeIndex(I: SG);
-		function AddKindItem: Boolean;
+		function AddKindItem: BG;
 		procedure KindInit;
 
-		procedure SetMenuItem(i: Integer);
-		procedure CreateMenuItem(i: Integer);
+		procedure SetMenuItem(i: SG);
+		procedure CreateMenuItem(i: SG);
 
 		procedure New1Click(Sender: TObject);
 		procedure Open1Click(Sender: TObject);
@@ -57,24 +62,24 @@ type
 		procedure Delete1Click(Sender: TObject);
 		procedure WindowXClick(Sender: TObject);
 
-		function KindSave(Kind: Integer; SD: Boolean; SaveCopy: BG): Boolean;
-		function KindSaveAll: Boolean;
+		function KindSave(Kind: SG; SD: BG; SaveCopy: BG): BG;
+		function KindSaveAll: BG;
 
-		function KindClose(const Kind: Integer): Boolean;
-		function KindCloseAll: Boolean;
+		function KindClose(const Kind: SG): BG;
+		function KindCloseAll: BG;
 
-		function SaveDialogP(var FileName: TFileName): Boolean;
-		function SaveAs(Kind: Integer): Boolean;
+		function SaveDialogP(var FileName: TFileName): BG;
+		function SaveAs(Kind: SG): BG;
 	public
 		AdvancedMenuDrawItemEvent: TAdvancedMenuDrawItemEvent;
 		Items: array of TItem;
 		ItemAddr: Pointer;
-		ItemSize: Cardinal;
+		ItemSize: UG;
 
-		Index: Integer;
-		Count: Integer;
+		Index,
+		Count: SG;
 
-		MultiFiles: Boolean;
+		MultiFiles: BG;
 		SkipStartup: BG;
 
 		File1,
@@ -88,10 +93,10 @@ type
 		OpenPictureDialog1: TOpenPictureDialog;
 		SavePictureDialog1: TSavePictureDialog;
 
-		NewFile: function(const Kind: Integer): Boolean;
-		FreeFile: procedure(const Kind: Integer);
-		LoadFromFile: function(const Kind: Integer{FileName: TFileName}): Boolean;
-		SaveToFile: function(var FileName: TFileName): Boolean;
+		NewFile: function(const Kind: SG): BG;
+		FreeFile: procedure(const Kind: SG);
+		LoadFromFile: function(const Kind: SG{FileName: TFileName}): BG;
+		SaveToFile: function(var FileName: TFileName): BG;
 
 		ChangeFile: TNotifyEvent; // Memory to Graphics (Actual File Changed)
 
@@ -99,7 +104,7 @@ type
 		destructor Free;
 
 
-		procedure CreateMenuFile(const NewLong: Boolean);
+		procedure CreateMenuFile(const NewLong: BG);
 		procedure RWOptions(const Save: BG);
 
 //		procedure StartupInit;
@@ -109,15 +114,16 @@ type
 		procedure Unchange;
 
 		// For Reopen and ParamStr
-		function KindLoadFromFile(FileName: TFileName): Boolean;
+		function KindLoadFromFile(FileName: TFileName): BG;
 
-		function KindOpenFiles(Files: TStrings): Boolean; // Drag files to form
-		function CanClose: Boolean; // CanClose := Kinds.CanClose;
+		function KindOpenFiles(Files: TStrings): BG; // Drag files to form
+		function CanClose: BG; // CanClose := Kinds.CanClose;
 	end;
 
 {
 	Kinds := TKinds.Create;
 	Kinds.AdvancedMenuDrawItemEvent := OnAdvancedMenuDraw;
+	Kinds.ItemAddr := @Kind;
 	Kinds.ItemSize := SizeOf(TKind);
 	Kinds.MultiFiles := True;
 
@@ -138,6 +144,9 @@ type
 	---
 
 	Kinds.RWOptions
+
+	Kinds.KindChangeFile(Sender);
+
 }
 {
 	Kinds.New1 := New1;
@@ -174,7 +183,7 @@ begin
 	Reopen.Free; Reopen := nil;
 end;
 
-procedure TKinds.CreateMenuFile(const NewLong: Boolean);
+procedure TKinds.CreateMenuFile(const NewLong: BG);
 var
 	M: TMenuItem;
 	i: SG;
@@ -269,7 +278,7 @@ begin
 
 	Delete1 := TMenuItem.Create(File1);
 	Delete1.Name := 'Delete1';
-	Delete1.Caption := 'Delete';
+	Delete1.Caption := 'Delete...';
 	Delete1.ShortCut := ShortCut(VK_DELETE, [ssShift, ssCtrl]);
 	Delete1.OnClick := Delete1Click;
 	File1.Insert(i, Delete1);
@@ -317,6 +326,7 @@ begin
 	else
 	begin
 		if SkipStartup then Exit;
+		c := 0;
 		MainIni.RWSG('Opened Files', 'Count', c, Save);
 	end;
 
@@ -338,17 +348,17 @@ begin
 		MainIni.RWSG('Opened Files', 'Count', c2, Save);
 end;
 
-procedure TKinds.SetMenuItem(i: Integer);
+procedure TKinds.SetMenuItem(i: SG);
 var S: string;
 begin
 	S := '&' + NToS(i + 1) + ' ' + ShortDir(ExtractFileName(Items[i].FileName));
-	if Items[i].Changed then S := S + ' *';
+	if Items[i].Changed then S := S + ' *' + '(' + MsToStr(GetTickCount - Items[i].ModificationTime, diMSD, 0, False) + ')';
 	if Items[i].New <> 0 then S := S + ' (New)';
 	Items[i].MenuItem.Caption := S;
 	Items[i].MenuItem.Tag := i;
 end;
 
-procedure TKinds.CreateMenuItem(i: Integer);
+procedure TKinds.CreateMenuItem(i: SG);
 begin
 	if Assigned(Window1) = False then Exit;
 	Items[i].MenuItem := TMenuItem.Create(Window1);
@@ -359,8 +369,8 @@ begin
 	Window1.Insert(i, Items[i].MenuItem);
 end;
 
-{procedure TKinds.SetWindow1MenuItems(const Limit: Integer);
-var i, MaxPos: Integer;
+{procedure TKinds.SetWindow1MenuItems(const Limit: SG);
+var i, MaxPos: SG;
 begin
 	MaxPos := Min(KindCount, Limit);
 	for i := MaxPos to KindCount - 1 do
@@ -380,7 +390,7 @@ begin
 	end;
 end;}
 
-function TKinds.AddKindItem: Boolean;
+function TKinds.AddKindItem: BG;
 begin
 	Result := False;
 	if MultiFiles = False then
@@ -463,7 +473,7 @@ begin
 	end;
 end;
 
-function TKinds.KindLoadFromFile(FileName: TFileName): Boolean;
+function TKinds.KindLoadFromFile(FileName: TFileName): BG;
 var LastIndex: SG;
 begin
 	Result := False;
@@ -493,9 +503,9 @@ begin
 	end;
 end;
 
-function TKinds.KindOpenFiles(Files: TStrings): Boolean;
+function TKinds.KindOpenFiles(Files: TStrings): BG;
 var
-	i: Integer;
+	i: SG;
 begin
 	Result := False;
 	for i := 0 to Files.Count - 1 do
@@ -512,7 +522,7 @@ begin
 	end;
 end;
 
-function TKinds.SaveDialogP(var FileName: TFileName): Boolean;
+function TKinds.SaveDialogP(var FileName: TFileName): BG;
 begin
 	Result := False;
 	if Assigned(SaveDialog1) then
@@ -533,7 +543,7 @@ begin
 	end;
 end;
 
-function TKinds.KindSave(Kind: Integer; SD: Boolean; SaveCopy: BG): Boolean;
+function TKinds.KindSave(Kind: SG; SD: BG; SaveCopy: BG): BG;
 var
 	S: TFileName;
 	k: SG;
@@ -565,6 +575,9 @@ begin
 
 	Items[Kind].New := 0;
 	Items[Kind].Changed := False;
+	Inc(Items[Kind].SaveCount);
+	Items[Kind].Modified := Now;
+	Inc(Items[Kind].WorkTime, GetTickCount - Items[Kind].ModificationTime);
 	k := Index;
 	ChangeIndex(Kind);
 	Result := SaveToFile(S);
@@ -577,8 +590,8 @@ begin
 	end;
 end;
 
-function TKinds.KindSaveAll: Boolean;
-var i: Integer;
+function TKinds.KindSaveAll: BG;
+var i: SG;
 begin
 	Result := False;
 	for i := 0 to Count - 1 do
@@ -590,7 +603,7 @@ begin
 	end;
 end;
 
-function TKinds.SaveAs(Kind: Integer): Boolean;
+function TKinds.SaveAs(Kind: SG): BG;
 begin
 	Result := False;
 	if Items[Kind].Changed then
@@ -615,9 +628,9 @@ begin
 		Result := True;
 end;
 
-function TKinds.KindClose(const Kind: Integer): Boolean;
+function TKinds.KindClose(const Kind: SG): BG;
 var
-	i: Integer;
+	i: SG;
 	LastIndex: SG;
 begin
 	Result := True;
@@ -654,8 +667,8 @@ begin
 	end;
 end;
 
-function TKinds.KindCloseAll: Boolean;
-var i: Integer;
+function TKinds.KindCloseAll: BG;
+var i: SG;
 begin
 	Result := False;
 	i := 0;
@@ -704,7 +717,7 @@ begin
 	KindInit;
 end;
 
-function TKinds.CanClose: Boolean;
+function TKinds.CanClose: BG;
 var i: SG;
 begin
 	Result := False;
@@ -737,8 +750,8 @@ procedure TKinds.KindInit;
 
 	procedure KindEnabled;
 	var
-		B: Boolean;
-		i: Integer;
+		B: BG;
+		i: SG;
 	begin
 		if Assigned(Save1) then
 		begin
@@ -776,7 +789,7 @@ procedure TKinds.KindInit;
 			Delete1.Enabled := (Count > 0) and (Items[Index].New = 0);
 	end;
 
-var i: Integer;
+var i: SG;
 begin
 	if Assigned(Application.MainForm) then
 	if (Count <= 0) or (Index < 0) then
@@ -801,6 +814,7 @@ begin
 		if Items[Index].Changed = False then
 		begin
 			Items[Index].Changed := True;
+			Items[Index].ModificationTime := GetTickCount;
 			KindInit;
 		end
 	end

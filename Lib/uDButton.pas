@@ -1,6 +1,6 @@
 //* File:     Lib\uDButton.pas
 //* Created:  1999-09-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -437,16 +437,16 @@ begin
 	// Draw
 	if IsDown then
 	begin
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			cl3DDkShadow, clBtnHighlight, 1, ef16);
 		InflateRect(Recta, -1, -1);
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			clBtnShadow, cl3DLight, 1, ef16);
 		InflateRect(Recta, -1, -1);
 	end
 	else
 	begin
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			clBtnHighlight, cl3DDkShadow, 1, ef16);
 		InflateRect(Recta, -1, -1);
 
@@ -463,7 +463,7 @@ begin
 		end
 		else
 		begin}
-			FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 				E, clBtnShadow, 1, ef16);
 //		end;
 
@@ -477,7 +477,7 @@ begin
 	FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 		clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 	{$else}
-	FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
+	FBmpOut.Bar(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
 	{$endif}
 
 	if IsDown then OffsetRect(Recta, 1, 1);
@@ -626,9 +626,9 @@ begin
 			end;
 
 			if Enabled then
-				FBmpOut.BmpE24(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef16)
+				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef16)
 			else
-				FBmpOut.BmpE24(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef04);
+				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef04);
 		end;
 
 
@@ -672,18 +672,18 @@ begin
 	end;
 	if Default and Cancel then
 	begin
-		FBmpOut.Rec24(2, 2,
+		FBmpOut.Rec(2, 2,
 			FBmpOut.Width - 3, FBmpOut.Height - 3,
 			CDefaultCancel, ef16);
 	end
 	else if Default then
 	begin
-		FBmpOut.Rec24(2, 2,
+		FBmpOut.Rec(2, 2,
 			FBmpOut.Width - 3, FBmpOut.Height - 3, CDefault, ef16);
 	end
 	else if Cancel then
 	begin
-		FBmpOut.Rec24(2, 2,
+		FBmpOut.Rec(2, 2,
 			FBmpOut.Width - 3, FBmpOut.Height - 3, CCancel, ef16);
 	end;
 	if IsFocused and IsDefault then
@@ -692,7 +692,7 @@ begin
 		Co[1] := clBlack;
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
+		FBmpOut.GenerateRGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
 	end;
 
 	if (Orient = -1) and FHighNow and Enabled then
@@ -707,7 +707,7 @@ begin
 		end;
 		hlBar:
 		begin
-			FBmpOut.Bar24(clNone, 2, 2,
+			FBmpOut.Bar(clNone, 2, 2,
 				FBmpOut.Width - 3, FBmpOut.Height - 3, clHighlight, ef08);
 		end;
 		hlRectMov:
@@ -718,7 +718,7 @@ begin
 			if x < (y div 2) then
 			begin
 				Inc(x);
-				FBmpOut.Bar24(clNone, x, x,
+				FBmpOut.Bar(clNone, x, x,
 					FBmpOut.Width - x - 1, FBmpOut.Height - x - 1, clHighlight, ef08);
 			end;
 		end;
@@ -737,7 +737,7 @@ begin
 		end;}
 		if FTimer.Clock < 3 * PerformanceFrequency then
 		begin
-			FBmpOut.Bar24(clNone, Border, Border,
+			FBmpOut.Bar(clNone, Border, Border,
 				FBmpOut.Width - 1 - Border, FBmpOut.Height - 1 - Border, clHighlight, ef08);
 		end
 		else
@@ -752,7 +752,7 @@ begin
 				y := SizeY - y;
 //			if (x < SizeX div 2) and (y < SizeY div 2) then
 			begin
-				FBmpOut.Bar24(clNone, Border + x - 1, Border + y - 1,
+				FBmpOut.Bar(clNone, Border + x - 1, Border + y - 1,
 					FBmpOut.Width - x - 0 - Border, FBmpOut.Height - y - 0 - Border, clHighlight, ef08);
 			end;
 
@@ -762,7 +762,7 @@ begin
 				x := y - x;
 			if x < (y div 2) then
 			begin
-				FBmpOut.Bar24(clNone, x, x,
+				FBmpOut.Bar(clNone, x, x,
 					FBmpOut.Width - x - 1, FBmpOut.Height - x - 1, clHighlight, ef08);
 			end;}
 		end;

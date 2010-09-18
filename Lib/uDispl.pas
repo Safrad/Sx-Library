@@ -1,6 +1,6 @@
 //* File:     Lib\uDispl.pas
 //* Created:  1999-07-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -539,7 +539,7 @@ begin
 				C := CA;
 			end;
 			if InfoOnly = False then
-				BmpD.Bar24(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
+				BmpD.Bar(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
 					X1 + SizeT - 1, Y1 + 2 * SizeY + 3 * SpaceSY - 2 + SizeT, C, ef16);
 			if SizeT + 2 > 0 then Inc(X1, SizeT + 2);
 //      if Spacing < SizeT + 2 then Inc(X1, SizeT + 2 - Spacing);
@@ -554,7 +554,7 @@ begin
 			end;
 			Inc(CaptionIndex);
 			if InfoOnly = False then
-				BmpD.Bar24(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
+				BmpD.Bar(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
 					X1 + SizeT - 1, Y1 + 2 * SizeY + 3 * SpaceSY - 2 + SizeT + SizeT, C, Effect);
 			if Spacing < SizeT + 2 then Inc(X1, SizeT + 2 - Spacing);
 		end;
@@ -571,10 +571,10 @@ begin
 			begin
 				X := X1;
 				Y := Y1 + 3 * SpaceSY - 1;
-				BmpD.Bar24(clNone, X, Y,
+				BmpD.Bar(clNone, X, Y,
 					X + SizeT - 1, Y + SizeT - 1, C, ef16);
 				Y := Y1 + SizeY + SizeY div 2 + 2 * SpaceSY - 1;
-				BmpD.Bar24(clNone, X, Y,
+				BmpD.Bar(clNone, X, Y,
 					X + SizeT - 1, Y + SizeT - 1, C, ef16);
 			end;
 			if SizeT + 2 > 0 then Inc(X1, SizeT + 2);
@@ -642,7 +642,7 @@ begin
 						else if (SY2 > BmpHeight) then
 							SY2 := BmpHeight;
 						{$endif}
-						BmpD.Lin24(SX1, SY1, SX2, SY2, C, Effect);
+						BmpD.Line(SX1, SY1, SX2, SY2, C, Effect);
 					end;
 				end;
 			end;

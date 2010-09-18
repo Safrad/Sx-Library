@@ -1,6 +1,6 @@
 //* File:     Lib\uLogo.pas
 //* Created:  1999-10-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -74,17 +74,17 @@ begin
 		Co[1] := clGreen;
 		Co[2] := clBlue;
 		Co[3] := clSilver;
-		Bmp.GenerateERGB(clNone, gfTriaHorz, Co, clBlack, ef16, nil);
+		Bmp.GenerateRGB(clNone, gfTriaHorz, Co, clBlack, ef16, nil);
 		Co[0] := clWhite;
 		Co[1] := clBlack;
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		Bmp.GenerateERGB(clNone, gfFade2x, Co, clBlack, ef10, nil);
+		Bmp.GenerateRGB(clNone, gfFade2x, Co, clBlack, ef10, nil);
 	end;
 
 	BmpT := TDBitmap.Create;
 	BmpT.SetSize(Bmp.Width, Bmp.Height);
-	BmpT.BarE24(clNone, clSilver, ef16);
+	BmpT.Bar(clNone, clSilver, ef16);
 	BmpT.Canvas.Brush.Style := bsClear;
 	BmpT.Canvas.Font.Style := [fsBold];
 	BmpT.Canvas.Font.Name := 'Times New Roman';
@@ -105,9 +105,9 @@ begin
 		clBlack, clWhite, clPurple, taLeftJustify, tlCenter);}
 
 
-	Bmp.BmpE24(0, 0, BmpT, clSilver, ef08);
+	Bmp.Bmp(0, 0, BmpT, clSilver, ef08);
 
-	Bmp.BorderE24(clWhite, clBlack, 8, ef08);
+	Bmp.Border(clWhite, clBlack, 8, ef08);
 
 	fLogo.ClientWidth := fLogo.BackBitmap.Width;
 	fLogo.ClientHeight := fLogo.BackBitmap.Height;
@@ -151,7 +151,7 @@ begin
 		Rect(0, 0, XCount, YCount));
 	OutBmp := fLogo.BackBitmap;
 
-	OutBmp.BmpE24(0, 0, BackgroundBmp, clNone, ef16);
+	OutBmp.Bmp(0, 0, BackgroundBmp, clNone, ef16);
 	fLogo.Show;
 	fLogo.Paint;
 
@@ -160,8 +160,8 @@ begin
 	li := 0;
 	while i <= 15 * 256 - 1 do
 	begin
-		OutBmp.BmpE24(0, 0, BackgroundBmp, clNone, ef16);
-		OutBmp.BarE24(clNone, clBlack, TEffect(i div 256));
+		OutBmp.Bmp(0, 0, BackgroundBmp, clNone, ef16);
+		OutBmp.Bar(clNone, clBlack, TEffect(i div 256));
 		Inc(i, GetTickCount - LogoTime);
 		if i div 256 = li div 256 then
 		begin
@@ -172,7 +172,7 @@ begin
 		li := i;
 		fLogo.Paint;
 	end;
-	OutBmp.BarE24(clNone, clBlack, ef16);
+	OutBmp.Bar(clNone, clBlack, ef16);
 	fLogo.Paint;
 	BitmapFree(BackgroundBmp);
 

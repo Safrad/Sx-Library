@@ -1,6 +1,6 @@
 //* File:     Lib\uDView.pas
 //* Created:  2001-08-01
-//* Modified: 2004-04-28
+//* Modified: 2004-08-12
 //* Version:  X.X.31.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
@@ -492,7 +492,7 @@ begin
 	if Bitmap.Empty then Exit;
 	if SoundsLoaded = False then Init;
 	{$ifopt d+}
-	Bitmap.Bar24(clNone, 0, 0{RowHeight}, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
+	Bitmap.Bar(clNone, 0, 0{RowHeight}, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
 	{$endif}
 //	Bitmap.Canvas.Brush.Style := bsClear;
 
@@ -568,11 +568,11 @@ begin
 
 						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 4);
 
-						Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
+						Bitmap.Bar(clNone, X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if IY = ActualRow then
-							Bitmap.Border24(X, Y, Wid - 1, Y + RowHeight - 1, DepthColor(0), DepthColor(3), 1, ef12);
-						Bitmap.Lin24(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
-						Bitmap.Lin24(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
+							Bitmap.Border(X, Y, Wid - 1, Y + RowHeight - 1, DepthColor(0), DepthColor(3), 1, ef12);
+						Bitmap.Line(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
+						Bitmap.Line(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
 
 						if Assigned(OnGetData) then
 						begin
@@ -587,10 +587,10 @@ begin
 					end
 					else
 					begin
-//						Bitmap.Bar24(clNone, X, 0, Bitmap.Width - 1, RowHeight - 1, clAppWorkSpace, ef16);
-						Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 1, Height - 1{Y + RowHeight - 2}, clAppWorkSpace, ef16);
-//						Bitmap.Lin24(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // -
-//						Bitmap.Lin24(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // |
+//						Bitmap.Bar(clNone, X, 0, Bitmap.Width - 1, RowHeight - 1, clAppWorkSpace, ef16);
+						Bitmap.Bar(clNone, X, Y, X + Columns[IX].Width - 1, Height - 1{Y + RowHeight - 2}, clAppWorkSpace, ef16);
+//						Bitmap.Lin(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // -
+//						Bitmap.Lin(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBlue{clBtnFace}, ef16); // |
 //						Break;
 					end;
 {					end
@@ -604,7 +604,7 @@ begin
 
 {				Dec(Y, RowHeight);
 				if Y < Bitmap.Height then
-					Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 1, Bitmap.Height - 1, clRed, ef16);}
+					Bitmap.Bar(clNone, X, Y, X + Columns[IX].Width - 1, Bitmap.Height - 1, clRed, ef16);}
 
 				// Bar
 				if HotTrack and (HotColumn = IX) and Columns[IX].Click then
@@ -617,7 +617,7 @@ begin
 					C1 := clBtnFace;
 					C2 := clBtnText;
 				end;
-//				Bitmap.Bar24(clNone, x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, C1, ef16);
+//				Bitmap.Bar(clNone, x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, C1, ef16);
 				Co[0] := LighterColor(C1);
 				Co[1] := DarkerColor(C1);
 				Co[2] := Co[0];
@@ -632,7 +632,7 @@ begin
 					if SortBySwap then Arrow := ArrowU else Arrow := ArrowD;
 					if Arrow <> nil then
 					begin
-						Bitmap.BmpE24(x, 0, Arrow, clPurple, ef16);
+						Bitmap.Bmp(x, 0, Arrow, clPurple, ef16);
 						Inc(xx, Arrow.Width);
 						Dec(ww, Arrow.Width);
 					end;
@@ -669,7 +669,7 @@ begin
 					C1 := 1;
 					C2 := 3;
 				end;
-				Bitmap.Border24(x, 0, x + Columns[IX].Width - 1, RowHeight - 1, DepthColor(C1), DepthColor(C2), 1, ef16);
+				Bitmap.Border(x, 0, x + Columns[IX].Width - 1, RowHeight - 1, DepthColor(C1), DepthColor(C2), 1, ef16);
 
 				if Columns[IX].Width <= 0 then w := 16 else w := Columns[IX].Width;
 				Inc(X, w);
@@ -679,7 +679,7 @@ begin
 		end;
 	end;
 	if X < Bitmap.Width then
-		Bitmap.Bar24(clNone, X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16); 
+		Bitmap.Bar(clNone, X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16);
 end;
 
 procedure TDView.Paint;
