@@ -1,7 +1,7 @@
 package DComp;
 
-{$R *.RES}
-{$ALIGN ON}
+{$R *.res}
+{$ALIGN 4}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}
@@ -26,10 +26,10 @@ package DComp;
 {$IMPLICITBUILD OFF}
 
 requires
-  vcl50,
-  VCLX50,
-  VCLJPG50,
-  VCLSMP50;
+  vcl,
+  vclx,
+  vcljpg,
+  vclsmp;
 
 contains
   uDPanel in 'uDPanel.pas',
@@ -39,9 +39,7 @@ contains
   uDispl in 'uDispl.pas',
   uFiles in 'uFiles.pas',
   uGraph in 'uGraph.pas',
-  uGraph24 in 'uGraph24.pas',
-  uRot24 in 'uRot24.pas',
-  uTexture in 'uTexture.pas',
+  uDBitmap in 'uDBitmap.pas',
   uWave in 'uWave.pas',
   uDImage in 'uDImage.pas',
   uError in 'uError.pas' {fIOError},
@@ -52,6 +50,7 @@ contains
   uDView in 'uDView.pas',
   uDIni in 'uDIni.pas',
   uDButton in 'uDButton.pas',
-  uDTimer in 'uDTimer.pas';
+  uDTimer in 'uDTimer.pas',
+  uDForm in 'uDForm.pas';
 
 end.

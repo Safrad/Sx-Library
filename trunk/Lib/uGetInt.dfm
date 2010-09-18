@@ -14,15 +14,9 @@ object fGetInt: TfGetInt
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object ImageBackground: TImage
-    Left = 0
-    Top = 0
-    Width = 335
-    Height = 165
-    Align = alClient
-  end
   object LabelMin: TDLabel
     Left = 16
     Top = 104

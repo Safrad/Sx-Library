@@ -6,23 +6,23 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDPanel, uDLabel, uWave, uAdd;
+	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDPanel, uDLabel, uWave, uAdd,
+	uDForm;
 
 type
-	TfIOError = class(TForm)
-    ButtonIRetry: TDButton;
-    ButtonIIgnore: TDButton;
-    ButtonIIgnoreAll: TDButton;
-    ButtonExit: TDButton;
+	TfIOError = class(TDForm)
+		ButtonIRetry: TDButton;
+		ButtonIIgnore: TDButton;
+		ButtonIIgnoreAll: TDButton;
+		ButtonExit: TDButton;
 		Image1: TImage;
-    ButtonOpen: TDButton;
+		ButtonOpen: TDButton;
 		OpenDialogFile: TOpenDialog;
 		MemoMsg: TMemo;
 		UpDown1: TUpDown;
 		Label1: TDLabel;
 		PanelIndex: TDPanel;
 		PanelCount: TDPanel;
-		ImageBackground: TImage;
 		procedure ButtonOpenClick(Sender: TObject);
 		procedure FormClose(Sender: TObject; var Action: TCloseAction);
 		procedure UpDown1ChangingEx(Sender: TObject; var AllowChange: Boolean;
@@ -39,6 +39,7 @@ var
 	IgnoreAll: Boolean;
 	SndError: PWave;
 
+procedure CreateException;
 function ErrorMes(const ErrorCode: U32): string;
 
 // IO Error
@@ -55,7 +56,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uGraph, uGraph24, uTexture,
+	uStrings, uGraph, uDBitmap,
 	Registry, MMSystem;
 var
 	fIOError: TfIOError;
@@ -63,155 +64,32 @@ var
 type
 	TStyle = (stIO, stFile, stInternal);
 
-function ErrorMes(const ErrorCode: U32): string;
+procedure CreateException;
 begin
-	case ErrorCode of
-	000, $ffffffff: Result := 'No error';
-	001: Result := 'Invalid function number';
-	002: Result := 'File not found';
-	003: Result := 'Path not found';
-	004: Result := 'Too many open files'; // (no handles available)
-	005: Result := 'File access denied'; // Access denied
-	006: Result := 'Invalid file handle'; // Invalid file descriptor
-	007: Result := 'Memory control block destroyed';
-	008: Result := 'Out of memory';
-	009: Result := 'Memory block address invalid';
-	010: Result := 'Invalid environment'; // (usually >32K in length)
-	011: Result := 'Invalid format';
-	012: Result := 'Invalid file access code';
-	013: Result := 'Data invalid';
-	014: Result := 'Reserved';
-	015: Result := 'Invalid drive number';
-	016: Result := 'Cannot remove current directory'; // attempted to remove current directory
-	017: Result := 'Cannot rename across drives'; // not same device
-	018: Result := 'No more files';
-	019: Result := 'Disk write-protected';
-	020: Result := 'Unknown unit';
-	021: Result := 'Disk not ready';
-	022: Result := 'Unknown command';
-	023: Result := 'Data error (CRC)';
-	024: Result := 'Bad request structure length';
-	025: Result := 'Seek error';
-	026: Result := 'Unknown media type (non-DOS disk)';
-	027: Result := 'Sector not found';
-	028: Result := 'Printer out of paper';
-	029: Result := 'Write fault';
-	030: Result := 'Read fault';
-	031: Result := 'General failure';
-	032: Result := 'Sharing violation';
-	033: Result := 'Lock violation';
-	034: Result := 'Disk change invalid (ES:DI -> media ID structure)(see #0981)';
-	035: Result := 'FCB unavailable';
-	036: Result := 'Sharing buffer overflow';
-	037: Result := 'Code page mismatch';
-	038: Result := 'Cannot complete file operation (out of input)';
-	039: Result := 'Insufficient disk space';
-	040..049: Result := 'Reserved';
-	050: Result := 'Network request not supported';
-	051: Result := 'Remote computer not listening';
-	052: Result := 'Duplicate name on network';
-	053: Result := 'Network name not found';
-	054: Result := 'Network busy';
-	055: Result := 'Network device no longer exists';
-	056: Result := 'Network BIOS command limit exceeded';
-	057: Result := 'Network adapter hardware error';
-	058: Result := 'Incorrect response from network';
-	059: Result := 'Unexpected network error';
-	060: Result := 'Incompatible remote adapter';
-	061: Result := 'Print queue full';
-	062: Result := 'Queue not full';
-	063: Result := 'Not enough space to print file';
-	064: Result := 'Network name was deleted';
-	065: Result := 'Network: Access denied';
-	066: Result := 'Network device type incorrect';
-	067: Result := 'Network name not found';
-	068: Result := 'Network name limit exceeded';
-	069: Result := 'Network BIOS session limit exceeded';
-	070: Result := 'Temporarily paused';
-	071: Result := 'Network request not accepted';
-	072: Result := 'Network print/disk redirection paused';
-	073: Result := 'Network software not installed'; // (LANtastic) invalid network version
-	074: Result := 'Unexpected adapter close'; // (LANtastic) account expired
-	075: Result := '(LANtastic) password expired';
-	076: Result := '(LANtastic) login attempt invalid at this time';
-	077: Result := '(LANtastic v3+) disk limit exceeded on network node';
-	078: Result := '(LANtastic v3+) not logged in to network node';
-	079: Result := 'Reserved';
-	080: Result := 'File exists';
-	081: Result := 'Reserved';
-	082: Result := 'Cannot make directory';
-	083: Result := 'Fail on INT 24h';
-	084: Result := 'Too many redirections';
-	085: Result := 'Duplicate redirection';
-	086: Result := 'Invalid password';
-	087: Result := 'Invalid parameter';
-	088: Result := 'Network write fault';
-	089: Result := 'Function not supported on network';
-	090: Result := 'Required system component not installed';
-
-	100: Result := 'Disk read error';
-	101: Result := 'Disk write error';
-	102: Result := 'File not assigned';
-	103: Result := 'File not open';
-	104: Result := 'File not open for input';
-	105: Result := 'File not open for output';
-	106: Result := 'Invalid numeric format';
-
-	112: Result := 'Disk is full';
-
-	150: Result := 'Disk is write-protected';
-	151: Result := 'Bad drive request struct length';
-	152: Result := 'Drive not ready'; // Disk not ready
-	154: Result := 'CRC error in data';
-	155: Result := 'Bad drive request structure length';
-	156: Result := 'Disk seek error';
-	157: Result := 'Unknown media type';
-	158: Result := 'Sector not Found';
-	159: Result := 'Printer out of paper';
-	160: Result := 'Device write fault';
-	161: Result := 'Device read fault';
-	162: Result := 'Hardware failure';
-
-	176: Result := 'Volume is not locked';
-	177: Result := 'Volume is locked in drive';
-	178: Result := 'Volume is not removable';
-	180: Result := 'Lock count has been exceeded';
-	181: Result := 'A valid eject request failed';
-
-	183: Result := 'Rename file error';
-
-	200: Result := 'Division by zero';
-	201: Result := 'Range check error';
-	202: Result := 'Stack overflow error';
-	203: Result := 'Heap overflow error';
-	204: Result := 'Invalid pointer operation';
-	205: Result := 'Floating point overflow';
-	206: Result := 'Floating point underflow';
-	207: Result := 'Invalid floating point operation';
-	208: Result := 'Overlay manager not installed';
-	209: Result := 'Overlay file read error';
-	210: Result := 'Object not initialized';
-	211: Result := 'Call to abstract method';
-	212: Result := 'Stream registration error';
-	213: Result := 'Collection index out of range';
-	214: Result := 'Collection overflow error';
-	215: Result := 'Arithmetic overflow error';
-	216: Result := 'Access violation'; // General Protection fault
-	217: Result := 'Control-C';
-	218: Result := 'Privileged instruction';
-	219: Result := 'Invalid typecast';
-	220: Result := 'Invalid variant typecast';
-	221: Result := 'Invalid variant operation';
-	222: Result := 'No variant method call dispatcher';
-	223: Result := 'Cannot create variant array';
-	224: Result := 'Variant does not contain array';
-	225: Result := 'Variant array bounds error';
-	226: Result := 'TLS initialization error';
-	227: Result := 'Assertion failed';
-	228: Result := 'Interface Cast Error';
-	229: Result := 'Safecall error';
-	else Result := 'Unknown error';
+	asm
+	mov eax, $ffffffff
+	call eax
 	end;
+end;
+
+function ErrorMes(const ErrorCode: U32): string;
+var
+	NewLength: SG;
+begin
+	SetLength(Result, MAX_PATH);
+	NewLength := FormatMessage(
+		{FORMAT_MESSAGE_ALLOCATE_BUFFER or}
+		FORMAT_MESSAGE_FROM_SYSTEM or
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		nil,
+		ErrorCode,
+		LANG_NEUTRAL or SUBLANG_DEFAULT shl 10,
+		PChar(Result),
+		MAX_PATH,
+		nil);
+	SetLength(Result, NewLength);
+	Result := Replace(Result, #$0D + #$0A, ' ');
+	DelBESpace(Result);
 	Result := Result + ' (' + IntToStr(ErrorCode) + ')';
 end;
 
@@ -231,6 +109,7 @@ begin
 			WaveReadFromFile(SndError, SndName);
 		Reg.CloseKey;
 	end;
+	Reg.Free;
 end;
 
 function DoForm(const Style: TStyle; var FName: TFileName; const ErrorCode: U32; const ErrorMsg: string; const Retry: Boolean): Boolean;
@@ -248,13 +127,12 @@ begin
 	if IgnoreAll = False then
 	begin
 		if SndError = nil then LoadSnd;
-		if Assigned(SndError) then
-			PlaySound(PChar(SndError), 0, snd_ASync or snd_Memory);
+		PlayWave(SndError);
 			
 		if not Assigned(fIOError) then
 		begin
 			fIOError := TfIOError.Create(Application.MainForm);
-			FormImage(fIOError.ImageBackground);
+			fIOError.Background := baGradient;
 		end;
 		fIOError.ErrorFileName := FName;
 		case Style of
@@ -288,7 +166,6 @@ begin
 		fIOError.PanelCount.Caption := IntToStr(IOErrorMessages.Count);
 		fIOError.ModalResult := mrNone;
 
-		CorrectFormPos(fIOError);
 		if Application.Terminated then
 		begin
 			fIOError.FormStyle := fsStayOnTop;
@@ -307,7 +184,6 @@ begin
 
 		case fIOError.ModalResult of
 		mrAll: IgnoreAll := True;
-//    mrAbort: TerminateProcess(GetCurrentProcess, 0); //Halt;
 		mrRetry:
 		begin
 			if fIOError.ErrorFileName <> '' then FName := fIOError.ErrorFileName;

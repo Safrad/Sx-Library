@@ -109,7 +109,7 @@ begin
 end;
 
 {
-// Standart
+// Standard
 function Find(SubStr, Str: string): SG;
 label LNFound;
 var i, j: SG;

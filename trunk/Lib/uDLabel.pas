@@ -6,8 +6,9 @@ interface
 
 {$R *.RES}
 uses
+	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uGraph, uGraph24, uRot24, uDispl;
+	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl;
 
 type
 	TBuffer = (bfDynamic, bfStatic);
@@ -15,8 +16,8 @@ type
 	TDLabel = class(TLabel)
 	private
 		{ Private declarations }
-		FBmpOut: TBitmap;
-		FBmpText: TBitmap;
+		FBmpOut: TDBitmap;
+		FBmpText: TDBitmap;
 		FBuffer: TBuffer;
 
 		FBackEffect: TEffect;
@@ -82,7 +83,7 @@ procedure Register;
 
 implementation
 
-uses uAdd, uStrings;
+uses uStrings;
 
 constructor TDLabel.Create(AOwner: TComponent);
 begin
@@ -154,13 +155,11 @@ begin
 		begin
 			if not Assigned(FBmpOut) then
 			begin
-				FBmpOut := TBitmap.Create;
-				FBmpOut.PixelFormat := pf24bit;
+				FBmpOut := TDBitmap.Create;
 			end;
 			if not Assigned(FBmpText) then
 			begin
-				FBmpText := TBitmap.Create;
-				FBmpText.PixelFormat := pf24bit;
+				FBmpText := TDBitmap.Create;
 			end;
 		end;
 		FBuffer := Value;
@@ -251,7 +250,6 @@ var
 	Recta: TRect;
 	TopColor, BottomColor: TColor;
 	i: Integer;
-	FBmpOut24, FBmpText24: TBitmap24;
 begin
 //  Recta := GetClientRect;
 	Recta.Left := 0;
@@ -260,11 +258,9 @@ begin
 	Recta.Bottom := Height;
 	if (not Assigned(FBmpOut)) then
 	begin
-		FBmpOut := TBitmap.Create;
-		FBmpOut.PixelFormat := pf24bit;
+		FBmpOut := TDBitmap.Create;
 	end;
-	FBmpOut.Width := Recta.Right - Recta.Left;
-	FBmpOut.Height := Recta.Bottom - Recta.Top;
+	FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
 
 // Background
 	if FBackEffect <> ef16 then
@@ -282,11 +278,10 @@ begin
 	end;
 
 // Border
-	FBmpOut24 := Conv24(FBmpOut);
 	if (FBorderStyle <> bsNone) then
 	begin
-		BorderE24(FBmpOut24, clBtnShadow, clBtnHighlight, 1, BackEffect);
-		Border24(FBmpOut24, 1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
+		FBmpOut.BorderE24(clBtnShadow, clBtnHighlight, 1, BackEffect);
+		FBmpOut.Border24(1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
 			cl3DDkShadow, cl3DLight, 1, BackEffect);
 		InflateRect(Recta, -2, -2);
 	end;
@@ -302,14 +297,14 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
 	if (Color <> clNone) then
 	begin
 		for i := 0 to FBorderWidth - 1 do
-			Rec24(FBmpOut24, Recta.Left + i, Recta.Top + i,
+			FBmpOut.Rec24(Recta.Left + i, Recta.Top + i,
 				Recta.Right - i - 1, Recta.Bottom - i - 1,
 				Color, BackEffect);
 		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
@@ -326,7 +321,7 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
@@ -336,7 +331,7 @@ begin
 	begin
 		if (FBackEffect <> ef16) then
 		begin
-			Bar24(FBmpOut24, clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 				Color, FBackEffect);
 		end
 		else
@@ -351,15 +346,12 @@ begin
 	begin
 		if (not Assigned(FBmpText)) then
 		begin
-			FBmpText := TBitmap.Create;
-			FBmpText.PixelFormat := pf24bit;
+			FBmpText := TDBitmap.Create;
 		end;
 
-		FBmpText.Width := FBmpOut.Width;
-		FBmpText.Height := FBmpOut.Height;
-		FBmpText24 := Conv24(FBmpText);
-		Bar24(FBmpText24, clNone, 0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
-			{NegColor(Font.Color)}Color, ef16);
+		FBmpText.SetSize(FBmpOut.Width, FBmpOut.Height);
+		FBmpText.Bar24(clNone, 0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
+			Color, ef16);
 
 		FBmpText.Canvas.Brush.Style := bsClear;
 		FBmpText.Canvas.Font := Font;
@@ -375,7 +367,7 @@ begin
 				OffsetRect(Recta, i, i);
 				if Displ.Enabled then
 				begin
-					DisplDrawRect(FBmpText24, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
+					DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
 						ef16);
 				end
 				else
@@ -391,7 +383,7 @@ begin
 		end;
 		if Displ.Enabled then
 		begin
-			DisplDrawRect(FBmpText24, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
+			DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
 			ef16);
 		end
 		else
@@ -401,13 +393,12 @@ begin
 
 		if FFontAngle = 0 then
 		begin
-			BmpE24(FBmpOut24, 0, 0, FBmpText24, Color{NegColor(Font.Color)}, FFontEffect);
+			FBmpOut.BmpE24(0, 0, FBmpText, Color{NegColor(Font.Color)}, FFontEffect);
 		end
 		else
 		begin
-			RotateDefE24(FBmpOut24, FBmpText24, 0, FFontAngle, Color{NegColor(Font.Color)}, FFontEffect);
+			RotateDefE24(FBmpOut, FBmpText, 0, FFontAngle, Color{NegColor(Font.Color)}, FFontEffect);
 		end;
-		FBmpText24.Free;
 		if (Assigned(FBmpText)) and (FBuffer <> bfStatic) then
 		begin
 			FBmpText.Free;
@@ -417,7 +408,6 @@ begin
 
 // Draw
 	Canvas.Draw(0, 0, FBmpOut);
-	FBmpOut24.Free;
 // Free
 	if (Assigned(FBmpOut)) and (FBuffer <> bfStatic) then
 	begin

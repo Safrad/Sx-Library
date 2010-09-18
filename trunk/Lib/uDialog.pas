@@ -4,7 +4,7 @@ interface
 
 uses
 	uDButton, uAdd, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDTimer;
+	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDTimer, uDForm;
 
 type
 	TDlgBtn = (
@@ -15,7 +15,7 @@ type
 	TDlgButtons = set of TDlgBtn;
 
 
-	TfDialog = class(TForm)
+	TfDialog = class(TDForm)
 		Memo: TMemo;
 		Image: TImage;
 		LabelTimeLeft: TDLabel;
@@ -95,6 +95,7 @@ var
 	IconID: PChar;
 	Wid, MaxWid, LastLine, LineCount, i, Hei, ButtonCount: SG;
 begin
+	Result := SG(mbCancel);
 	for i := 0 to IgnoreCount - 1 do
 		if Ignores[i].Msg = Msg then
 		begin
@@ -102,6 +103,7 @@ begin
 			Exit;
 		end;
 	if not Assigned(fDialog) then fDialog := TfDialog.Create(Owener);
+	if fDialog.Visible then Exit;
 	fDialog.TimeLeft := TimeLeft;
 	fDialog.DrawTimeLeft;
 	if DlgType <> mtCustom then
@@ -200,6 +202,11 @@ begin
 	fDialog.ModResult := -1;
 	fDialog.ShowModal;
 	Result := fDialog.ModResult;
+	for B := 0 to Length(Buttons) - 1 do
+	begin
+		fDialog.RemoveControl(fDialog.FButtons[B]);
+		fDialog.FButtons[B].Free; fDialog.FButtons[B] := nil;
+	end;
 	if fDialog.CheckBoxA.Checked then
 	begin
 		SetLength(Ignores, IgnoreCount + 1);
@@ -250,6 +257,8 @@ procedure TfDialog.FormCreate(Sender: TObject);
 {var
 	B: TMsgDlgBtn;}
 begin
+//	Background := baGradient;
+	Background := baStandard;
 {	for B := Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
 	begin
 		FButtons[B] := TDButton.Create(Self);

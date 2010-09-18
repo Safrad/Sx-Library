@@ -16,13 +16,6 @@ object fIOError: TfIOError
   OnClose = FormClose
   PixelsPerInch = 96
   TextHeight = 13
-  object ImageBackground: TImage
-    Left = 0
-    Top = 0
-    Width = 502
-    Height = 97
-    Align = alClient
-  end
   object Image1: TImage
     Left = 8
     Top = 8

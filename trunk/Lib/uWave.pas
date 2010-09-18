@@ -4,7 +4,9 @@ unit uWave;
 
 interface
 
-uses MMSystem, SysUtils;
+uses
+	MMSystem, SysUtils, Windows,
+	uDTimer, uAdd, uData;
 
 {
 procedure NoSound;
@@ -48,6 +50,7 @@ type
 	TDLR = record
 		L, R: LongInt;
 	end;
+	PWaveData = ^TWaveData;
 	TWaveData = packed record
 		case Integer of
 		0: (B: array[0..1024 * 1024 * 1024 - 1] of Byte);
@@ -82,7 +85,7 @@ const
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
 // For screen Width 800 is NowPos 0..799, MaxPos 799
 
-function WaveErrorText(ErrorCode: Integer): ShortString;
+function WaveErrorText(ErrorCode: DWORD): string;
 
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
 procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
@@ -92,6 +95,7 @@ procedure WaveCreate(var Wave: PWave;
 	const BitsPerSample: Word; // 8, 16
 	const SampleRate: LongInt; // 11025, 22050, 44100, 48000...
 	const TotalSamples: LongInt); // 1 sec = SampleRate
+procedure WaveFree(var Wave: PWave);
 
 // Left, Right (0..ConvertPre)
 procedure ConvertChannels(const WaveS: PWave; var WaveD: PWave;
@@ -104,15 +108,66 @@ procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
 	const BitsPerSample: Word;
 	const SampleRate: LongInt);
 
-procedure WaveOpen(const Channels: Word; const SampleRate: Cardinal;
-	const BytesPerSecond: Cardinal; const BitsPerSample: Word);
-procedure WavePrepareHeader(var Header: PWaveHdr; Wave: PWave);
-procedure WaveUnprepareHeader(var Header: PWaveHdr);
-procedure WavePlay(Header: PWaveHdr);
-procedure WaveClose;
+procedure PlayWave(Wave: PWave);
+procedure PlayWaveFile(WaveName: TFileName);
+
+type
+	PPlayItem = ^TPlayItem;
+	TPlayItem = record
+		PlayAs: (paWave, paTone, paNoise);
+		Wave: PWave;
+		SampleCount: UG;
+		SamplePos: UG;
+		Frequency: UG;
+		Channels: UG;
+		Balance: SG;
+		Speed: UG;
+		Offset: UG;
+	end;
+
+
+	TWavePlayer = class
+	public
+		// IO
+		HWaveOut: HWaveOut;
+		WaveFormat: TWaveFormatEx;
+
+		// Player status
+		FError: MMResult;
+		Initialized: Boolean;
+		CloseInvoked: Boolean;
+
+		// Output buffer
+		OutCount: SG;
+//		BufferOut: PWaveData;
+		BufferOutSize: SG;
+		BufferOutSamples: SG;
+
+		// Items to play
+		PlayItems: TData;
+
+		procedure MMError(s: string);
+		procedure SendBuffer;
+		constructor Create;
+		destructor Destroy; override;
+
+		procedure Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferSize, BufferCount: SG);
+		procedure Close;
+
+		procedure Pause;
+		procedure Resume;
+		procedure Stop;
+
+		procedure Play(Wave: PWave; Speed: UG; Balance: SG);
+		procedure Beep;
+		procedure Tone(Frequency, Tim: UG);
+		procedure Noise(Tim: UG);
+
+		property Running: Boolean read Initialized;
+	end;
 
 var
-	HW: PHWAVEOUT;
+	WavePlayer: TWavePlayer;
 
 implementation
 
@@ -172,36 +227,13 @@ asm
 end;
 *)
 
-(*
-	MMSYSERR_NOERROR      = 0;                  { no error }
-	MMSYSERR_ERROR        = MMSYSERR_BASE + 1;  { unspecified error }
-	MMSYSERR_BADDEVICEID  = MMSYSERR_BASE + 2;  { device ID out of range }
-	MMSYSERR_NOTENABLED   = MMSYSERR_BASE + 3;  { driver failed enable }
-	MMSYSERR_ALLOCATED    = MMSYSERR_BASE + 4;  { device already allocated }
-	MMSYSERR_INVALHANDLE  = MMSYSERR_BASE + 5;  { device handle is invalid }
-	MMSYSERR_NODRIVER     = MMSYSERR_BASE + 6;  { no device driver present }
-	MMSYSERR_NOMEM        = MMSYSERR_BASE + 7;  { memory allocation error }
-	MMSYSERR_NOTSUPPORTED = MMSYSERR_BASE + 8;  { function isn't supported }
-	MMSYSERR_BADERRNUM    = MMSYSERR_BASE + 9;  { error value out of range }
-	MMSYSERR_INVALFLAG    = MMSYSERR_BASE + 10; { invalid flag passed }
-	MMSYSERR_INVALPARAM   = MMSYSERR_BASE + 11; { invalid parameter passed }
-	MMSYSERR_HANDLEBUSY   = MMSYSERR_BASE + 12; { handle being used
-																								simultaneously on another
-																								thread (eg callback) }
-	MMSYSERR_INVALIDALIAS = MMSYSERR_BASE + 13; { specified alias not found }
-	MMSYSERR_BADDB        = MMSYSERR_BASE + 14; { bad registry database }
-	MMSYSERR_KEYNOTFOUND  = MMSYSERR_BASE + 15; { registry key not found }
-	MMSYSERR_READERROR    = MMSYSERR_BASE + 16; { registry read error }
-	MMSYSERR_WRITEERROR   = MMSYSERR_BASE + 17; { registry write error }
-	MMSYSERR_DELETEERROR  = MMSYSERR_BASE + 18; { registry delete error }
-	MMSYSERR_VALNOTFOUND  = MMSYSERR_BASE + 19; { registry value not found }
-	MMSYSERR_NODRIVERCB   = MMSYSERR_BASE + 20; { driver does not call DriverCallback }
-	MMSYSERR_LASTERROR    = MMSYSERR_BASE + 20; { last error in range }
-*)
-function WaveErrorText(ErrorCode: Integer): ShortString;
+function WaveErrorText(ErrorCode: DWORD): string;
 begin
-	SetLength(Result, 256);
-	waveOutGetErrorText(ErrorCode, PChar(Result[0]), 256);
+	SetLength(Result, MAXERRORLENGTH);
+	if waveOutGetErrorText(ErrorCode, PChar(Result), MAXERRORLENGTH) = MMSYSERR_NOERROR then
+		Result := PChar(Result)
+	else
+		Result := 'MMSYSTEM' + Using('~000', ErrorCode) + ' ' + 'Unknown error';
 end;
 
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
@@ -341,6 +373,11 @@ begin
 	8: FillChar(Wave.Data.B, Wave.DataBytes, 128);
 	16: FillChar(Wave.Data.W, Wave.DataBytes div 2, 0);
 	end;}
+end;
+
+procedure WaveFree(var Wave: PWave);
+begin
+	FreeMem(Wave); Wave := nil;
 end;
 
 procedure ConvertChannels(const WaveS: PWave; var WaveD: PWave;
@@ -583,121 +620,357 @@ begin
 	ConvertSampleRate(WaveD, SampleRate);}
 end;
 
-
-procedure WaveOpen(const Channels: Word; const SampleRate: Cardinal;
-	const BytesPerSecond: Cardinal; const BitsPerSample: Word);
-var
-	OpenParm: TMCI_Open_Parms;
-	FFlags: LongInt;
-	FError: Integer;
-	WF: PWaveFormatEx;
+procedure PlayWave(Wave: PWave);
 begin
-	FillChar(OpenParm, SizeOf(TMCI_Open_Parms), 0);
+	if Wave <> nil then
+		PlaySound(PChar(Wave), 0, snd_ASync or snd_Memory)
+end;
 
-	OpenParm.dwCallback := 0;
-	OpenParm.lpstrDeviceType := 'WaveAudio';
-	OpenParm.lpstrElementName := PChar('');
+procedure PlayWaveFile(WaveName: TFileName);
+var Wave: PWave;
+begin
+	WaveReadFromFile(Wave, WaveName);
+	PlayWave(Wave);
+	FreeMem(Wave);
+end;
 
-	FFlags := 0;
+constructor TWavePlayer.Create;
+begin
+	HWaveOut := 0;
+	PlayItems := TData.Create;
+	PlayItems.ItemSize := SizeOf(TPlayItem);
+	Initialized := False;
+	CloseInvoked := False;
+end;
 
-{ if FUseWait then
+destructor TWavePlayer.Destroy;
+begin
+	if Initialized then Close;
+	HWaveOut := 0;
+	PlayItems.Free; PlayItems := nil;
+end;
+
+procedure TWavePlayer.MMError(s: string);
+begin
+	if FError <> 0 then ErrorMessage(s + ' (' + WaveErrorText(FError) + ')');
+end;
+
+procedure MMOutDone(
+	wo: HWAVEOUT;
+	Msg: UINT;
+	Instance: DWORD;
+	Param1: DWORD;
+	Param2: DWORD); stdcall;
+var
+	Header: PWaveHdr;
+	BufferOut: PWaveData;
+//	BufferOutSize: SG;
+	WavePlayer: TWavePlayer;
+begin
+	if Msg = WOM_DONE then
 	begin
-		if FWait then FFlags := mci_Wait;
-		FUseWait := False;
-	end
+		WavePlayer := TWavePlayer(Instance);
+		Header := PWaveHdr(Param1);
+		BufferOut := Pointer(Header^.lpData);
+//		BufferOutSize := Header^.dwBufferLength;
+{		GetMem(Buffer, BufferSize);
+		Move(BufferOut^, Buffer^, BufferSize);}
+
+		WavePlayer.FError := waveOutUnPrepareHeader(WavePlayer.HWaveOut, Header, SizeOf(TWaveHdr));
+		WavePlayer.MMError('WaveOutUnPrepare');
+		FreeMem(BufferOut); //BufferOut := nil;
+		Dispose(Header);
+
+		if WavePlayer.Initialized = False then Exit;
+		Dec(WavePlayer.OutCount);
+		if WavePlayer.CloseInvoked = False then
+				WavePlayer.SendBuffer
+		else
+		if WavePlayer.OutCount = 0 then
+		begin
+			WavePlayer.FError := WaveOutClose(WavePlayer.HWaveOut);
+			WavePlayer.HWaveOut := 0;
+			WavePlayer.MMError('WaveOutClose');
+			if WavePlayer.FError = 0 then
+				WavePlayer.Initialized := False;
+		end;
+
+	end;
+end;
+
+function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;
+begin
+	Result := BufferOutSamples * ((wBitsPerSample * nChannels + 7) div 8);
+end;
+
+function GetBufferSample(wBitsPerSample, nChannels, BufferOutSize: SG): SG;
+begin
+	case wBitsPerSample of
+	16: Result := BufferOutSize div 2;
+	else Result := BufferOutSize;
+	end;
+end;
+
+procedure TWavePlayer.Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferSize, BufferCount: SG);
+var i: SG;
+begin
+	if Initialized then Close;
+	WaveFormat.WFormatTag := WAVE_FORMAT_PCM; // PCM format - the only option
+	if SoundStereo then
+		WaveFormat.nChannels := 2
 	else
-		FFlags := mci_Wait;
+		WaveFormat.nChannels := 1;
+	WaveFormat.nSamplesPerSec := Frequency;
+	if Sound16bits then
+		WaveFormat.wBitsPerSample := 16
+	else
+		WaveFormat.wBitsPerSample := 8;
+	WaveFormat.nAvgBytesPerSec := WaveFormat.wBitsPerSample * WaveFormat.nSamplesPerSec div 8;
+	WaveFormat.nBlockAlign := (WaveFormat.wBitsPerSample * WaveFormat.nChannels) div 8;
+	WaveFormat.cbSize := SizeOf(WaveFormat);
 
-	if FUseNotify then
+	FError := waveOutOpen(nil, 0, @WaveFormat, 0, 0, WAVE_FORMAT_QUERY);
+	MMError('Play format not supported');
+	if FError <> 0 then Exit;
+
+	FError := waveOutOpen(@HWaveOut, 0, @WaveFormat, Cardinal(Addr(MMOutDone)), Cardinal(Self), CALLBACK_FUNCTION);
+	MMError('WaveOutOpen');
+	if FError <> 0 then Exit;
+
+	OutCount := 0;
+
+	BufferOutSize := BufferSize;
+	BufferOutSamples := GetBufferSample(WaveFormat.wBitsPerSample, WaveFormat.nChannels, BufferOutSize);
+//	GetMem(BufferOut, BufferOutSize);
+	Initialized := True;
+	CloseInvoked := False;
+	for i := 0 to BufferCount - 1 do
+		SendBuffer;
+end;
+
+procedure TWavePlayer.Close;
+begin
+	CloseInvoked := True;
+end;
+
+procedure TWavePlayer.Pause;
+begin
+	waveOutPause(HWaveOut);
+end;
+
+procedure TWavePlayer.Resume;
+begin
+	waveOutRestart(HWaveOut);
+end;
+
+procedure TWavePlayer.Stop;
+begin
+	waveOutReset(HWaveOut);
+end;
+
+
+procedure TWavePlayer.SendBuffer;
+var
+	Header: PWaveHdr;
+	i, j: SG;
+	SampleP: UG;
+	Value: SG;
+	PlayItem: PPlayItem;
+	BufferOut: PWaveData;
+begin
+
+	j := 0;
+	while j < SG(PlayItems.Count) do
 	begin
-		if FNotify then FFlags := FFlags or mci_Notify;
-		FUseNotify := False;
+		PlayItem := PlayItems.Get(j);
+		if PlayItem.PlayAs = paWave then
+			PlayItem.Offset := PlayItem.Speed * UG(PlayItem.Wave.SampleRate) div UG(WaveFormat.nSamplesPerSec);
+		Inc(j);
+	end;
+	// 16bit Mixer
+	GetMem(BufferOut, BufferOutSize);
+	for i := 0 to BufferOutSamples - 1 do
+	begin
+		Value := 0;
+		j := 0;
+//		k := PlayItems.Count;
+		while j < SG(PlayItems.Count) do
+		begin
+			PlayItem := PlayItems.Get(j);
+			if PlayItem.PlayAs <> paWave then
+			begin
+				if PlayItem.SamplePos >= PlayItem.SampleCount then
+				begin
+					PlayItems.Delete(j);
+					Dec(j);
+				end
+				else
+				begin
+					if PlayItem.PlayAs = paNoise then
+					begin
+						Value := Value + Random2(32768);
+					end
+					else
+					begin
+						Value := Value + 32768 *
+							Sins[(Int64(AngleCount) * Int64(PlayItem.Frequency) * Int64(PlayItem.SamplePos) div UG(WaveFormat.nSamplesPerSec)) and (AngleCount - 1)] div SinDiv;
+					end;
+					Inc(PlayItem.SamplePos);
+				end;
+			end
+			else
+			begin
+				SampleP := PlayItem.SamplePos div 65536;
+				if SampleP >= PlayItem.SampleCount then
+				begin
+					PlayItems.Delete(j);
+					Dec(j);
+				end
+				else
+				begin
+					case PlayItem.Wave.BitsPerSample of
+					16: Value := Value + PlayItem.Wave.Data.W[SampleP];
+					else Value := Value + 256 * (SG(PlayItem.Wave.Data.B[SampleP]) - 128);
+					end;
+					Inc(PlayItem.SamplePos, PlayItem.Offset);
+				end;
+			end;
+			Inc(j);
+		end;
+
+		case WaveFormat.wBitsPerSample of
+		8:
+		begin
+			Value := (Value + 32768) div 256;
+			if Value < 0 then
+				Value := 0
+			else if Value > 255 then
+				Value := 255;
+		end;
+		16:
+		begin
+			if Value < -32768 then
+				Value := -32768
+			else if Value > 32767 then
+				Value := 32767;
+		end;
+		end;
+		if WaveFormat.nChannels = PlayItem.Channels then
+		begin
+			case WaveFormat.wBitsPerSample of
+			8:
+			begin
+				BufferOut.B[i] := Value;
+			end;
+			16:
+			begin
+				BufferOut.W[i] := Value;
+			end;
+			end;
+		end
+		else if WaveFormat.nChannels = 1 then
+		begin
+			if i and 1 <> 0 then
+			begin
+				case WaveFormat.wBitsPerSample of
+				8:
+				begin
+					BufferOut.B[i] := Value;
+				end;
+				16:
+				begin
+					BufferOut.W[i] := Value;
+				end;
+				end;
+
+			end;
+		end
+		else if WaveFormat.nChannels = 2 then
+		begin
+			case WaveFormat.wBitsPerSample of
+			8:
+			begin
+				BufferOut.BLR[i].L := Value;
+				BufferOut.BLR[i].R := Value;
+			end;
+			16:
+			begin
+				BufferOut.WLR[i].L := Value;
+				BufferOut.WLR[i].R := Value;
+			end;
+			end;
+		end;
 	end;
 
-	if FDeviceType <> dtAutoSelect then}
-		FFlags := FFlags or mci_Open_Type;
-{ else;
-		FFlags := FFlags or MCI_OPEN_ELEMENT;}
+	Header := New(PWaveHdr);
+	Header^.lpData := Pointer(BufferOut);
+	Header^.dwBufferLength := BufferOutSize;
+	Header^.dwBytesRecorded := 0;
+	Header^.dwUser := 0;
+	Header^.dwFlags := 0;
+	Header^.dwLoops := 0;
+	Header^.lpNext := nil;
+	Header^.reserved := 0;
 
-{ if FShareable then
-		FFlags := FFlags or mci_Open_Shareable;
-	OpenParm.dwCallback := Handle;}
+	FError := waveOutPrepareHeader(HWaveOut, Header, SizeOf(TWaveHdr));
+	MMError('WaveOutPrepare');
+	if FError <> 0 then Exit;
 
+	FError := waveOutWrite(HWaveOut, Header, SizeOf(TWaveHdr));
+	MMError('WaveOutWrite');
+	if FError <> 0 then Exit;
 
-	FError := mciSendCommand(0, mci_Open, FFlags, LongInt(@OpenParm));
-	if FError <> 0 then ErrorMessage(WaveErrorText(FError));
-
-	New(WF);
-	WF.WFormatTag := WAVE_FORMAT_PCM; {PCM format - the only option!}
-	WF.NChannels := 1;//Channels;
-	WF.NSamplesPerSec := 22050;//SampleRate;
-	WF.NAvgBytesPerSec := 22050;//BytesPerSecond;
-	WF.wBitsPerSample := 8;//BitsPerSample;
-	WF.NBlockAlign := 1; {only one Byte in each sample}
-	WF.cbSize := 0;
-	// , WAVE_MAPPER      DeviceId
-//MPlayer                              dtAVIVideo
-{ i := waveOutOpen(nil, 1,
-		WF, 0, 0, WAVE_FORMAT_QUERY);}
-
-	HW := New(PHWAVEOUT);
-	FError := waveOutOpen(HW, OpenParm.wDeviceID,
-		WF, 0, 0, CALLBACK_NULL{WAVE_MAPPED{WAVE_ALLOWSYNC});
-	if FError <> 0 then ErrorMessage(WaveErrorText(FError));
-
-	Dispose(WF);
+	Inc(OutCount);
 end;
 
-procedure WavePrepareHeader(var Header: PWaveHdr; Wave: PWave);
-var FError: Integer;
+procedure TWavePlayer.Play(Wave: PWave; Speed: UG; Balance: SG);
+var PlayItem: PPlayItem;
 begin
-	New(Header);
-	FillChar(Header^, SizeOf(Header^), 0);
-	Header.lpData := Addr(Wave.Data);
-	Header.dwBufferLength := Wave.DataBytes; //SizeOf(PMemBlock^);
-	Header.dwUser := Wave.DataBytes; // SizeOf(PMemBlock^);
-	Header.dwFlags := WHDR_DONE; //0 + WHDR_PREPARED  + WHDR_INQUEUE;
-	Header.lpNext := nil;//Header;
-	Header.dwLoops := 1;
-
-	FError := waveOutPrepareHeader(HW^, Header, SizeOf(TWaveHdr));
-	if FError <> 0 then ErrorMessage(WaveErrorText(FError));
-end;
-
-procedure WaveUnprepareHeader(var Header: PWaveHdr);
-var FError: Integer;
-begin
-	FError := waveOutUnprepareHeader(HW^, Header, SizeOf(TWaveHdr));
-	if FError <> 0 then ErrorMessage(WaveErrorText(FError));
-	Dispose(Header); Header := nil;
-end;
-
-
-procedure WavePlay(Header: PWaveHdr);
-var
-	FError: Integer;
-begin
-	FError := waveOutReset(HW^);
-	if FError <> 0 then ErrorMessage(WaveErrorText(FError));
-
-	FError := waveOutWrite(HW^, Header, SizeOf(TWaveHdr));
-	if FError <> 0 then ErrorMessage(WaveErrorText(FError));
-
-
-{ i := waveOutRestart(HW^);}
-end;
-
-procedure WaveClose;
-var
-	FError: Integer;
-begin
-	FError := waveOutClose(HW^);
-	if FError <> 0 then ErrorMessage(WaveErrorText(FError));
-
-	if FError = 0 then
+	if (Wave.BitsPerSample = 8) or (Wave.BitsPerSample = 16) then
 	begin
-		Dispose(HW); HW := nil;
+		PlayItem := PlayItems.Add;
+		PlayItem.PlayAs := paWave;
+		PlayItem.Wave := Wave;
+		PlayItem.SampleCount := 8 * Wave.DataBytes div Wave.BitsPerSample;
+		PlayItem.SamplePos := 0;
+		PlayItem.Balance := Balance;
+		PlayItem.Speed := Speed;
 	end;
 end;
 
+procedure TWavePlayer.Beep;
+begin
+	Tone(1000, 1000);
+end;
+
+procedure TWavePlayer.Tone(Frequency, Tim: UG);
+var
+	PlayItem: PPlayItem;
+begin
+	PlayItem := PlayItems.Add;
+	PlayItem.PlayAs := paTone;
+	PlayItem.Wave := nil;
+	PlayItem.Frequency := Frequency;
+	PlayItem.SampleCount := WaveFormat.nSamplesPerSec * Tim div 1000;
+	PlayItem.SamplePos := 0;
+	PlayItem.Balance := 0;
+end;
+
+procedure TWavePlayer.Noise(Tim: UG);
+var
+	PlayItem: PPlayItem;
+begin
+	PlayItem := PlayItems.Add;
+	PlayItem.PlayAs := paNoise;
+	PlayItem.Wave := nil;
+	PlayItem.Frequency := 0;
+	PlayItem.SampleCount := WaveFormat.nSamplesPerSec * Tim div 1000;
+	PlayItem.SamplePos := 0;
+	PlayItem.Balance := 0;
+end;
+
+Initialization
+	WavePlayer := TWavePlayer.Create;
+Finalization
+	WavePlayer.Free; WavePlayer := nil;
 end.

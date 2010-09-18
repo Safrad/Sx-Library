@@ -6,12 +6,12 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	StdCtrls, ComCtrls, Spin, uDButton, ExtCtrls, uDLabel;
+	StdCtrls, ComCtrls, Spin, uDButton, ExtCtrls, uDLabel, uDForm;
 
 type
 	TOnApplyInt = procedure(Value: Integer);
 
-	TfGetInt = class(TForm)
+	TfGetInt = class(TDForm)
 		EditInput: TEdit;
 		ButtonOk: TDButton;
 		ButtonCancel: TDButton;
@@ -23,7 +23,6 @@ type
 		LabelMin: TDLabel;
 		LabelMax: TDLabel;
 		LabelNow: TDLabel;
-		ImageBackground: TImage;
 		ButtonDef: TDButton;
 		DLabelError: TDLabel;
 		ButtonApply: TDButton;
@@ -37,6 +36,7 @@ type
 		procedure ButtonDefClick(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
 		procedure ButtonOkClick(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
 	private
 		{ private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: Integer;
@@ -55,7 +55,7 @@ function GetInt(const prompt: string;
 implementation
 
 {$R *.DFM}
-uses uTexture, uAdd;
+uses uAdd;
 var
 	fGetInt: TfGetInt;
 
@@ -65,11 +65,9 @@ begin
 	if not Assigned(fGetInt) then
 	begin
 		fGetInt := TfGetInt.Create(Application.MainForm);
-		FormImage(fGetInt.ImageBackground);
 	end;
 	fGetInt.ButtonApply.Enabled := Assigned(OnApplyInt);
 	fGetInt.OnApply := OnApplyInt;
-	CorrectFormPos(fGetInt);
 	fGetInt.TMinVal := MinVal;
 	fGetInt.TCurVal := CurVal;
 	fGetInt.TDefVal := DefVal;
@@ -138,12 +136,14 @@ begin
 	ButtonDef.Enabled := NowVal <> TDefVal;
 	ButtonMax.Enabled := NowVal <> TMaxVal;
 	LabelNow.Caption := IntToStr(NowVal);
+	LabelNow.Repaint;
 end;
 
 procedure TfGetInt.InitEdit;
 begin
 	EditInput.Text := IntToStr(NowVal);
 	EditInput.SelectAll;
+	EditInput.Repaint;
 end;
 
 procedure TfGetInt.InitTrackBar;
@@ -151,6 +151,7 @@ begin
 	TrackBar.OnChange := nil;
 	TrackBar.Position := NowVal;
 	TrackBar.OnChange := TrackBarChange;
+	TrackBar.Repaint;
 end;
 
 procedure TfGetInt.ChangeInt;
@@ -171,6 +172,7 @@ begin
 	DLabelError.Caption := ErrorMsg;
 	InitButtons;
 	InitTrackBar;
+	ChangeInt;
 	EditInput.OnChange := EditInputChange;
 end;
 
@@ -249,9 +251,13 @@ procedure TfGetInt.ButtonOkClick(Sender: TObject);
 begin
 	if Assigned(OnApply) then
 	begin
-//    OnApply(NowVal);
 		Close;
 	end;
+end;
+
+procedure TfGetInt.FormCreate(Sender: TObject);
+begin
+	Background := baGradient;
 end;
 
 end.

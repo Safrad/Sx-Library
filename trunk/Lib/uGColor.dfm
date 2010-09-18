@@ -13,16 +13,10 @@ object fGColor: TfGColor
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object ImageBackground: TImage
-    Left = 0
-    Top = 0
-    Width = 433
-    Height = 378
-    Align = alClient
-  end
   object Label1: TDLabel
     Left = 8
     Top = 8
@@ -484,15 +478,21 @@ object fGColor: TfGColor
     BevelOuter = bvNone
     BorderStyle = bsSingle
     TabOrder = 15
-    object ImageS: TImage
+    object ImageS: TDImage
       Left = 0
       Top = 0
       Width = 384
       Height = 16
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageSFill
       Align = alClient
+      TabOrder = 0
+      TabStop = False
       OnMouseDown = ImageSMouseDown
-      OnMouseMove = ImageSMouseMove
       OnMouseUp = ImageSMouseUp
+      OnMouseMove = ImageSMouseMove
     end
   end
   object PanelL: TPanel
@@ -503,15 +503,21 @@ object fGColor: TfGColor
     BevelOuter = bvNone
     BorderStyle = bsSingle
     TabOrder = 16
-    object ImageL: TImage
+    object ImageL: TDImage
       Left = 0
       Top = 0
       Width = 384
       Height = 16
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageLFill
       Align = alClient
+      TabOrder = 0
+      TabStop = False
       OnMouseDown = ImageLMouseDown
-      OnMouseMove = ImageLMouseMove
       OnMouseUp = ImageLMouseUp
+      OnMouseMove = ImageLMouseMove
     end
   end
   object PanelNowColor: TDPanel

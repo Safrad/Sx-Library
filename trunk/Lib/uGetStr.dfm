@@ -14,15 +14,9 @@ object fGetStr: TfGetStr
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object ImageBackground: TImage
-    Left = 0
-    Top = 0
-    Width = 266
-    Height = 105
-    Align = alClient
-  end
   object EditInput: TEdit
     Left = 8
     Top = 32

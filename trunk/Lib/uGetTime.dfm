@@ -14,15 +14,9 @@ object fGetTime: TfGetTime
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object ImageBackground: TImage
-    Left = 0
-    Top = 0
-    Width = 362
-    Height = 272
-    Align = alClient
-  end
   object Label1: TDLabel
     Left = 8
     Top = 68

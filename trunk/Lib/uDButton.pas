@@ -13,9 +13,9 @@ unit uDButton;
 
 interface
 
-{$C PRELOAD}
 {$R *.RES}
 uses
+	uDBitmap,
 	Windows, Messages, Classes, Controls, Forms, Graphics, StdCtrls,
 	ExtCtrls, CommCtrl, uWave, uDTimer;
 
@@ -26,7 +26,7 @@ type
 	TDButton = class(TButton)
 	private
 		FCanvas: TCanvas;
-		FBmpOut: TBitmap;
+		FBmpOut: TDBitmap;
 		FGlyph: Pointer;
 
 		FHighlight: THighlight;
@@ -58,6 +58,7 @@ type
 		procedure SetLayout(Value: TButtonLayout);
 		procedure SetSpacing(Value: Integer);
 		procedure SetMargin(Value: Integer);
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure CNMeasureItem(var Message: TWMMeasureItem); message CN_MEASUREITEM;
 		procedure CNDrawItem(var Message: TWMDrawItem); message CN_DRAWITEM;
 		procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
@@ -126,7 +127,7 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uGraph24, uFiles, uAdd, uScreen;
+	uGraph, uFiles, uAdd, uScreen;
 
 { TDButton data }
 var
@@ -177,12 +178,12 @@ end;
 type
 	TButtonGlyph = class
 	private
-		FOriginal: TBitmap;
+		FOriginal: TDBitmap;
 		FTransparentColor: TColor;
 		FOnChange: TNotifyEvent;
 		procedure GlyphChanged(Sender: TObject);
-		procedure SetGlyph(Value: TBitmap);
-		procedure DrawButtonGlyph(BmpD: TBitmap24; const GlyphPos: TPoint;
+		procedure SetGlyph(Value: TDBitmap);
+		procedure DrawButtonGlyph(BmpD: TDBitmap; const GlyphPos: TPoint;
 			Transparent: Boolean);
 		procedure DrawButtonText(Canvas: TCanvas; const Caption: string;
 			TextBounds: TRect; Enabled: Boolean; BiDiFlags: LongInt);
@@ -194,10 +195,10 @@ type
 		constructor Create;
 		destructor Destroy; override;
 		{ return the text rectangle }
-		function Draw(BmpD: TBitmap; const Client: TRect; const Offset: TPoint;
+		function Draw(BmpD: TDBitmap; const Client: TRect; const Offset: TPoint;
 			const Caption: string; Layout: TButtonLayout; Margin, Spacing: Integer;
 			Enabled: Boolean; BiDiFlags: LongInt): TRect;
-		property Glyph: TBitmap read FOriginal write SetGlyph;
+		property Glyph: TDBitmap read FOriginal write SetGlyph;
 		property OnChange: TNotifyEvent read FOnChange write FOnChange;
 	end;
 
@@ -206,8 +207,7 @@ type
 constructor TButtonGlyph.Create;
 begin
 	inherited Create;
-	FOriginal := TBitmap.Create;
-	FOriginal.PixelFormat := pf24bit;
+	FOriginal := TDBitmap.Create;
 	FOriginal.OnChange := GlyphChanged;
 	FTransparentColor := clNone;
 end;
@@ -227,7 +227,7 @@ begin
 	end;
 end;
 
-procedure TButtonGlyph.SetGlyph(Value: TBitmap);
+procedure TButtonGlyph.SetGlyph(Value: TDBitmap);
 begin
 	FOriginal.Assign(Value);
 	if (Value <> nil) and (Value.Width > 0) and (Value.Height > 0) then
@@ -236,20 +236,16 @@ begin
 	end;
 end;
 
-procedure TButtonGlyph.DrawButtonGlyph(BmpD: TBitmap24; const GlyphPos: TPoint;
+procedure TButtonGlyph.DrawButtonGlyph(BmpD: TDBitmap; const GlyphPos: TPoint;
 	Transparent: Boolean);
-var FOriginal24: TBitmap24;
 begin
 	if FOriginal = nil then Exit;
 	if (FOriginal.Width = 0) or (FOriginal.Height = 0) then Exit;
-	FOriginal.PixelFormat := pf24bit;
 
-	FOriginal24 := Conv24(FOriginal);
 	if Transparent then
-		BmpE24(BmpD, GlyphPos.x, GlyphPos.y, FOriginal24, FTransparentColor, ef16)
+		BmpD.BmpE24(GlyphPos.x, GlyphPos.y, FOriginal, FTransparentColor, ef16)
 	else
-		BmpE24(BmpD, GlyphPos.x, GlyphPos.y, FOriginal24, FTransparentColor, ef04);
-	FOriginal24.Free;
+		BmpD.BmpE24(GlyphPos.x, GlyphPos.y, FOriginal, FTransparentColor, ef04);
 end;
 
 procedure TButtonGlyph.DrawButtonText(Canvas: TCanvas; const Caption: string;
@@ -408,20 +404,17 @@ begin
 		TextPos.Y + Client.Top + Offset.X);
 end;
 
-function TButtonGlyph.Draw(BmpD: TBitmap; const Client: TRect;
+function TButtonGlyph.Draw(BmpD: TDBitmap; const Client: TRect;
 	const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
 	Margin, Spacing: Integer; Enabled: Boolean;
 	BiDiFlags: LongInt): TRect;
 var
 	GlyphPos: TPoint;
-	BmpD24: TBitmap24;
 begin
-	BmpD24 := Conv24(BmpD);
 	CalcButtonLayout(BmpD.Canvas, Client, Offset, Caption, Layout, Margin, Spacing,
 		GlyphPos, Result, BiDiFlags);
-	DrawButtonGlyph(BmpD24, GlyphPos, Enabled);
+	DrawButtonGlyph(BmpD, GlyphPos, Enabled);
 	DrawButtonText(BmpD.Canvas, Caption, Result, Enabled, BiDiFlags);
-	BmpD24.Free;
 end;
 
 { TDButton }
@@ -433,8 +426,7 @@ begin
 	inherited Create(AOwner);
 	Font.Color := clBtnText;
 	FCanvas := TCanvas.Create;
-	FBmpOut := TBitmap.Create;
-	FBmpOut.PixelFormat := pf24bit;
+	FBmpOut := TDBitmap.Create;
 	FTimer := TDTimer.Create(Self);
 	FTimer.Enabled := False;
 	FTimer.Interval := 33;
@@ -533,7 +525,6 @@ end;
 procedure TDButton.DrawItem(const DrawItemStruct: TDrawItemStruct);
 var
 	FileName: TFileName;
-	Quality: SG;
 
 	IsDown, IsDefault: Boolean;
 	CDefault, CCancel, CDefaultCancel: TColor;
@@ -542,7 +533,6 @@ var
 	x, y: Integer;
 	Co: array[0..3] of TColor;
 	E: TColor;
-	FBmpOut24: TBitmap24;
 	s: string;
 begin
 	IsDefault := DrawItemStruct.itemState and ODS_FOCUS <> 0;
@@ -568,16 +558,13 @@ begin
 		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + '.bmp';
 		if FileExists(FileName) then
 		begin
-			BitmapLoadFromFile(Glyph, FileName, 16, 16, Quality);
-			Glyph.PixelFormat := pf24bit;
+			Glyph.LoadFromFile(FileName);
 		end;
 	end;
 
 	FCanvas.Handle := DrawItemStruct.hDC;
 	Recta := ClientRect;
-	FBmpOut.Width := Recta.Right - Recta.Left;
-	FBmpOut.Height := Recta.Bottom - Recta.Top;
-	FBmpOut24 := Conv24(FBmpOut);
+	FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
 
 	{ DrawFrameControl doesn't allow for drawing a button as the
 			default button, so it must be done here. }
@@ -585,16 +572,16 @@ begin
 	{ DrawFrameControl does not draw a pressed button correctly }
 	if IsDown then
 	begin
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			cl3DDkShadow, clBtnHighlight, 1, ef16);
 		InflateRect(Recta, -1, -1);
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			clBtnShadow, cl3DLight, 1, ef16);
 		InflateRect(Recta, -1, -1);
 	end
 	else
 	begin
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			clBtnHighlight, cl3DDkShadow, 1, ef16);
 		InflateRect(Recta, -1, -1);
 
@@ -602,7 +589,7 @@ begin
 			E := cl3DLight
 		else
 			E := MixColors(FColor, clBtnHighlight);
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			E, clBtnShadow, 1, ef16);
 		InflateRect(Recta, -1, -1);
 	end;
@@ -610,7 +597,7 @@ begin
 	Co[1] := ColorDiv(FColor, 3 * 16384);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
-	GenerateRGB(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+	FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 		clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
 
 	if IsDown then OffsetRect(Recta, 1, 1);
@@ -643,18 +630,18 @@ begin
 	end;
 	if Default and Cancel then
 	begin
-		Rec24(FBmpOut24, 2, 2,
+		FBmpOut.Rec24(2, 2,
 			FBmpOut.Width - 3, FBmpOut.Height - 3,
 			CDefaultCancel, ef16);
 	end
 	else if Default then
 	begin
-		Rec24(FBmpOut24, 2, 2,
+		FBmpOut.Rec24(2, 2,
 			FBmpOut.Width - 3, FBmpOut.Height - 3, CDefault, ef16);
 	end
 	else if Cancel then
 	begin
-		Rec24(FBmpOut24, 2, 2,
+		FBmpOut.Rec24(2, 2,
 			FBmpOut.Width - 3, FBmpOut.Height - 3, CCancel, ef16);
 	end;
 	if IsFocused and IsDefault then
@@ -663,7 +650,7 @@ begin
 		Co[1] := clBlack;
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		GenerateERGB(FBmpOut24, clNone, gfFade2x, Co, $00000000, efAdd, nil);
+		FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
 	end;
 
 	if FHighNow then
@@ -671,14 +658,14 @@ begin
 		case FHighlight of
 		hlRect:
 		begin
-			Rec24(FBmpOut24, 2, 2,
+			FBmpOut.Rec24(2, 2,
 				FBmpOut.Width - 3, FBmpOut.Height - 3, clHighlight, ef12);
-			Rec24(FBmpOut24, 3, 3,
+			FBmpOut.Rec24(3, 3,
 				FBmpOut.Width - 4, FBmpOut.Height - 4, clHighlight, ef12);
 		end;
 		hlBar:
 		begin
-			Bar24(FBmpOut24, clNone, 2, 2,
+			FBmpOut.Bar24(clNone, 2, 2,
 				FBmpOut.Width - 3, FBmpOut.Height - 3, clHighlight, ef08);
 		end;
 		hlRectMov:
@@ -689,25 +676,24 @@ begin
 			if x < (y div 2) then
 			begin
 				Inc(x);
-				Bar24(FBmpOut24, clNone, x, x,
+				FBmpOut.Bar24(clNone, x, x,
 					FBmpOut.Width - x - 1, FBmpOut.Height - x - 1, clHighlight, ef08);
 			end;
 		end;
 		hlBarHorz:
-			GenRGB(FBmpOut24, clNone, gfSpecHorz, FHighClock, ef08);
+			FBmpOut.GenRGB(clNone, gfSpecHorz, FHighClock, ef08);
 		hlBarVert:
-			GenRGB(FBmpOut24, clNone, gfSpecVert, FHighClock, ef08);
+			FBmpOut.GenRGB(clNone, gfSpecVert, FHighClock, ef08);
 		hlUnderLight:
 		begin
 			Co[1] := ColorDiv(FColor, 32768  * LinearMax(FHighClock, 6) div 6);
 			Co[0] := clBlack;
 			Co[2] := Co[0];
 			Co[3] := Co[1];
-			GenerateERGB(FBmpOut24, clNone, gfFade2x, Co, $00000000, efAdd, nil);
+			FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
 		end;
 		end;
 	end;
-	FBmpOut24.Free;
 	FCanvas.Draw(0, 0, FBmpOut);
 	FCanvas.Handle := 0;
 end;
@@ -736,12 +722,13 @@ end;
 		
 procedure TDButton.SetGlyph(Value: TBitmap);
 begin
-	TButtonGlyph(FGlyph).Glyph := Value as TBitmap;
-	TButtonGlyph(FGlyph).Glyph.PixelFormat := pf24bit;
+	TButtonGlyph(FGlyph).Glyph := Value as TDBitmap;
 	if TButtonGlyph(FGlyph).Glyph.Width =
 		2 * TButtonGlyph(FGlyph).Glyph.Height then
 	begin
-		TButtonGlyph(FGlyph).Glyph.Width := TButtonGlyph(FGlyph).Glyph.Height;
+		TButtonGlyph(FGlyph).Glyph.SetSize(
+			TButtonGlyph(FGlyph).Glyph.Width,
+			TButtonGlyph(FGlyph).Glyph.Width);
 	end;
 	FModifiedGlyph := True;
 	Invalidate;
@@ -891,13 +878,18 @@ begin
 	if SoundUp then
 	begin
 		ConvertChannels(BSoundDown, BSoundBuffer, 2, SoundLeft, SoundRight);
-		PlaySound(PChar(BSoundBuffer), 0, snd_ASync or snd_Memory)
+		PlayWave(BSoundBuffer);
 	end
 	else
 	begin
 		ConvertChannels(BSoundUp, BSoundBuffer, 2, SoundLeft, SoundRight);
-		PlaySound(PChar(BSoundBuffer), 0, snd_ASync or snd_Memory);
+		PlayWave(BSoundBuffer);
 	end;
+end;
+
+procedure TDButton.WMEraseBkGnd;
+begin
+	Message.Result := -1;
 end;
 
 procedure Register;

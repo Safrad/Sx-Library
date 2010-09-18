@@ -5,10 +5,10 @@ interface
 uses
 	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDButton;
+	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDButton, uDForm;
 
 type
-	TfSysInfo = class(TForm)
+	TfSysInfo = class(TDForm)
 		Bevel1: TBevel;
 		LabelTOperatingSystem: TDLabel;
 		EditOS: TEdit;
@@ -42,6 +42,7 @@ type
 		DLabel2: TDLabel;
 		EditDuron: TEdit;
 		procedure ButtonOkClick(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
 	private
 		{ Private declarations }
 	public
@@ -233,7 +234,8 @@ end;
 
 procedure FillSysInfoS(var SysInfo: TSysInfo);
 begin
-	SysInfo.OS := OS;
+	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
+	GetVersionEx(SysInfo.OS);
 
 	if DriverDesc = '' then
 	begin
@@ -400,8 +402,15 @@ begin
 	while PerformanceCounter < TickCount do
 end;
 
+procedure TfSysInfo.FormCreate(Sender: TObject);
+begin
+	Background := baGradient;
+end;
+
 initialization
 	InitPerformanceCounter;
+	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
+	GetVersionEx(SysInfo.OS);
 { PerformanceType := 2;
 	PerformanceFrequency := SysInfo.CPUFrequency;}
 end.

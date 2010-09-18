@@ -4,7 +4,18 @@ unit uAdd;
 
 interface
 
-uses SysUtils, Forms, FileCtrl, ShlObj, ActiveX, ComObj, ComCtrls;
+uses SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls;
+
+{ Mul EAX, 10
+	asm
+	mov eax, a
+	lea eax, [eax*4+eax] // eax = eax * 5
+	shl eax, 1
+	end;}
+{ Exchange eax <-> ebx
+	xor eax, ebx
+	xor ebx, eax
+	xor eax, ebx}
 
 type
 	SG = Integer; // LongInt
@@ -145,26 +156,48 @@ type
 	PArrayByte = ^TArrayByte;
 	PArrayChar = ^TArrayChar;
 
-	TString = {$ifdef DLL}ShortString{$else}string{$endif};
+	TString = string;
 
 // Graphics
+const
+	MaxSpectrum = 1529;
+type
 	TRColor = packed record
 		case Integer of
 		0: (L: - $7FFFFFFF - 1..$7FFFFFFF);
 		1: (R, G, B, T: Byte);
 		2: (WordRG, WordBT: Word);
 	end;
+	THSVColor = packed record // 4
+		Hue: 0..MaxSpectrum; // 2
+		Saturation: 0..239; // 1
+		Value: 0..255; // 1
+	end;
+	THLSColor = packed record // 4
+		Hue: 0..MaxSpectrum; // 2
+		Lightness: 0..255; // 1
+		Saturation: 0..239; // 1
+	end;
 
 const
 	DefMemBuffer = 4096; // Best Performance
 	MaxInt64 = Int64($7FFFFFFFFFFFFFFF);
+
 // Mathematics
-function Sgn(const I: Integer): Integer; overload; {$ifdef DLL}stdcall;{$endif}
-function Sgn(const I: Int64): Integer; overload; {$ifdef DLL}stdcall;{$endif}
-function Sgn(const I: Single): Integer; overload; {$ifdef DLL}stdcall;{$endif}
-function Sgn(const I: Double): Integer; overload; {$ifdef DLL}stdcall;{$endif}
-function Sgn(const I: Extended): Integer; overload; {$ifdef DLL}stdcall;{$endif}
-function SgnMul(const Signum, Num: Integer): Integer; {$ifdef DLL}stdcall;{$endif}
+const
+	AngleCount = 16384; // 2*pi 256; 65536 // 2^x 1..
+	SinDiv = 32768; // 1.0 65536; // 1..128..1024*1024
+type
+	TAngle = SG;
+var
+	Sins: array[0..AngleCount - 1] of TAngle;
+
+function Sgn(const I: Integer): Integer; overload;
+function Sgn(const I: Int64): Integer; overload;
+function Sgn(const I: Single): Integer; overload;
+function Sgn(const I: Double): Integer; overload;
+function Sgn(const I: Extended): Integer; overload;
+function SgnMul(const Signum, Num: Integer): Integer;
 
 procedure DivModU32(const Dividend: LongWord; const Divisor: Word;
 	var Res, Remainder: Word);
@@ -188,6 +221,10 @@ function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
 
 procedure Change(var A, B: Integer); overload;
 
+function Arg(X, Y: Extended): Extended; overload;
+
+function Random2(Range: SG): SG;
+
 procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
 procedure CheckBool(var Bool: LongBool); overload;
@@ -202,8 +239,15 @@ function AllocByEx(const OldSize: SG; var NewSize: SG;
 
 // Format functions
 var WinDecimalSeparator: Char;
-function Using(const Typ: TString; const Num: Int64): TString;  {$ifdef DLL}stdcall;{$endif}
+function Using(const Typ: TString; const Num: Int64): TString;
 function IntToStrF(const Num: Int64): TString;
+function StrToI(const s: string): SG; overload;
+function StrToI(const s: string; Decimals: SG): SG; overload;
+function TimeToInt(Line: string): SG;
+
+function StrToValExt(Line: TString;
+	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string;
+	var InStr: string; var ErrorLineIndex: SG): Extended;
 function StrToValE(Line: TString;
 	const MinVal, DefVal, MaxVal: Extended): Extended; overload;
 function StrToValE(Line: TString;
@@ -216,27 +260,27 @@ function StrToValI64(Line: TString;
 	const MinVal, DefVal, MaxVal, Denominator: Int64): Int64;
 (*
 function StrToValC(S: TString;
-	const MinVal, DefVal, MaxVal, Denominator: Cardinal): Cardinal; {overload;} {$ifdef DLL}stdcall;{$endif}
+	const MinVal, DefVal, MaxVal, Denominator: Cardinal): Cardinal;
 function StrToValE(S: TString;
-	const MinVal, DefVal, MaxVal: Extended): Extended; {overload;} {$ifdef DLL}stdcall;{$endif}
+	const MinVal, DefVal, MaxVal: Extended): Extended;
 *)
-function BToStr(const B: Integer): TString; overload; {$ifdef DLL}stdcall;{$endif}
-function BToStr(const B: Int64): TString; overload; {$ifdef DLL}stdcall;{$endif}
+function BToStr(const B: Integer): TString; overload;
+function BToStr(const B: Int64): TString; overload;
 
 // Time
-procedure msToHMSD(const T: Int64; var GH, GM, GS, GD: LongWord);  {$ifdef DLL}stdcall;{$endif}
+procedure msToHMSD(const T: Int64; var GH, GM, GS, GD: LongWord);
 type
 	TDisplay = (diHMSD, diMSD, diSD);
 function msToStr(const DT: Int64;
-	const Display: TDisplay; const Decimals: ShortInt): TString;  {$ifdef DLL}stdcall;{$endif}
+	const Display: TDisplay; const Decimals: ShortInt): TString;
 
 // System
 procedure Nop;
 procedure Beep;
 procedure SndWarn;
 function DriveTypeToStr(const DriveType: Integer): TString;
-function ProcessPriority(const Prior: Byte): Integer;  {$ifdef DLL}stdcall;{$endif}
-function ThreadPriority(const Prior: Byte): Integer;  {$ifdef DLL}stdcall;{$endif}
+function ProcessPriority(const Prior: Byte): Integer;
+function ThreadPriority(const Prior: Byte): Integer;
 
 function GetSingleCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Boolean): string;
@@ -247,8 +291,8 @@ function GetMultiCaption(const FName: TFileName; const Changed: Boolean;
 function MenuNameToFileName(Name: string): string;
 function ButtonNameToFileName(Name: string; const Space: Boolean): string;
 
-procedure CorrectFormPos(Form: TForm);
-procedure SetListViewItems(ListView: TListView; NewSize: SG);
+//procedure CorrectFormPos(Form: TForm);
+//procedure SetListViewItems(ListView: TListView; NewSize: SG);
 procedure CreateLink(
 	const LinkFileName: WideString;
 	const Target: TFileName;
@@ -259,11 +303,13 @@ procedure CreateLink(
 	const IconFileName: TFileName;
 	const IconIdex: Integer);
 
+procedure ObjectFree(var Obj: TObject);
+
 implementation
 
 uses
-	Windows, Math,
-	uError;
+	Windows, Math, Dialogs,
+	uError, uDialog, uStrings;
 
 function Sgn(const I: Integer): Integer;
 begin
@@ -389,6 +435,14 @@ end;
 
 function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
 begin
+	{$ifopt d+}
+	if Divisor = 0 then
+	begin
+		MessageD('Div0', mtError, [mbOk]);
+		Result := 0;
+		Exit;
+	end;
+	{$endif}
 	if Dividend >= 0 then
 		Result := Dividend mod Divisor
 	else
@@ -409,6 +463,14 @@ function RoundDiv(const Dividend: Integer; const Divisor: Integer): Integer;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
+	{$ifopt d+}
+	if Divisor = 0 then
+	begin
+		MessageD('Div0', mtError, [mbOk]);
+		Result := 0;
+		Exit;
+	end;
+	{$endif}
 	if Dividend < 0 then
 		Result := (Dividend - (Divisor div 2)) div Divisor
 	else
@@ -421,6 +483,14 @@ function RoundDiv64(const Dividend: Int64; const Divisor: Int64): Int64;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
+	{$ifopt d+}
+	if Divisor = 0 then
+	begin
+		MessageD('Div0', mtError, [mbOk]);
+		Result := 0;
+		Exit;
+	end;
+	{$endif}
 	if Dividend < 0 then
 		Result := (Dividend - (Divisor div 2)) div Divisor
 	else
@@ -433,6 +503,14 @@ function MaxDiv(const Dividend: Integer; const Divisor: Integer): Integer;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
+	{$ifopt d+}
+	if Divisor = 0 then
+	begin
+		MessageD('Div0', mtError, [mbOk]);
+		Result := 0;
+		Exit;
+	end;
+	{$endif}
 	if Dividend < 0 then
 		Result := (Dividend - Divisor + 1) div Divisor
 	else
@@ -445,6 +523,14 @@ function MaxDiv64(const Dividend: Int64; const Divisor: Integer): Int64;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
+	{$ifopt d+}
+	if Divisor = 0 then
+	begin
+		MessageD('Div0', mtError, [mbOk]);
+		Result := 0;
+		Exit;
+	end;
+	{$endif}
 	if Dividend < 0 then
 		Result := (Dividend - Divisor + 1) div Divisor
 	else
@@ -469,7 +555,7 @@ begin
 		Result := Max;
 end;
 
-procedure Change(var A, B: Integer); overload;
+procedure Change(var A, B: Integer);
 asm
 	push ebx
 	push ecx
@@ -482,17 +568,36 @@ asm
 //  xchg A, B
 end;
 
-procedure CheckBool(var Bool: ByteBool); overload;
+function Random2(Range: SG): SG;
+begin
+	Result := Random(2 * Range + 1) - Range;
+end;
+
+function Arg(X, Y: Extended): Extended; // <0..2pi)
+begin
+{	if Abs(X) > Abs(Y) then
+	begin
+		Result := ArcTan(Y / X);
+	end
+	else
+	begin
+		Result := pi / 2 - ArcTan(X / Y);
+	end;}
+	Result := ArcTan2(Y, X);
+	if Result < 0 then Result := 2 * pi - Abs(Result);
+end;
+
+procedure CheckBool(var Bool: ByteBool);
 begin
 	Bool := ByteBool(Byte(Bool) and 1);
 end;
 
-procedure CheckBool(var Bool: WordBool); overload;
+procedure CheckBool(var Bool: WordBool);
 begin
 	Bool := WordBool(Word(Bool) and 1);
 end;
 
-procedure CheckBool(var Bool: LongBool); overload;
+procedure CheckBool(var Bool: LongBool);
 begin
 	Bool := LongBool(LongWord(Bool) and 1);
 end;
@@ -571,25 +676,51 @@ function AllocByEx(const OldSize: SG; var NewSize: SG;
 	NewSize = <0, 2^31)
 	BlockSize = 2^n, <2, 2^30>
 }
+var Sh: SG;
 begin
-	{$ifopt d+}
-	if (1 shl CalcShr(BlockSize)) <> BlockSize then
+	Sh := CalcShr(BlockSize);
+	if (1 shl Sh) <> BlockSize then
 	begin
-		ErrorMessage('Bad AllocBy block size ' + IntToStr(BlockSize));
-	end;
-	{$endif}
-//	BlockSize := 1 shl CalcShr(DefMemBuffer div BlockSize);
-	BlockSize := DefMemBuffer;
-
-	if NewSize > OldSize then
-		NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1)
-	else
-		if NewSize + BlockSize + BlockSize div 2 < OldSize then
-			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1)
+		{$ifopt d+}
+		//ErrorMessage('Bad AllocBy block size ' + IntToStr(BlockSize));
+		{$endif}
+//		BlockSize := 1 shl CalcShr(DefMemBuffer div BlockSize);
+		BlockSize := DefMemBuffer;
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
 		else
+		begin
 			NewSize := OldSize;
-
-	Result := OldSize <> NewSize;
+			Result := False;
+		end;
+	end
+	else
+	begin
+		BlockSize := DefMemBuffer shr Sh;
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else
+		begin
+			NewSize := OldSize;
+			Result := False;
+		end;
+	end;
 end;
 
 function Using(const Typ: TString; const Num: Int64): TString;
@@ -739,18 +870,138 @@ begin
 	Result := Using('~###,###,###,###,###,##0', Num);
 end;
 
+function StrToI(const s: string): SG;
+begin
+	Result := StrToI(s, 0);
+{var
+	i: SG;
+	Minus: Boolean;
+begin
+	Result := 0;
+	Minus := False;
+	for i := 1 to Length(s) do
+	begin
+		case s[i] of
+		'-': Minus := not Minus;
+		'0'..'9':
+		begin
+			Result := Result * 10;
+			if Minus then
+				Result := Result - (Ord(s[i]) - Ord('0'))
+			else
+				Result := Result + (Ord(s[i]) - Ord('0'));
+		end;
+		'.': Break;
+		end;
+	end;}
+end;
+
+function StrToI(const s: string; Decimals: SG): SG; overload;
+var
+	Code: Integer;
+	e: Extended;
+	i: Integer;
+	Point: SG;
+begin
+	if s = '' then
+	begin
+		Result := 0;
+		Exit;
+	end;
+
+	if Decimals > 0 then
+	begin
+		Val(s, e, Code);
+		if Code <> 0 then
+			Result := 0
+		else
+		begin
+			Point := 10;
+			for i := 2 to Decimals do
+				Point := Point * 10;
+
+			Result := Round(Point * e);
+		end;
+	end
+	else
+	begin
+		Val(s, Result, Code);
+		if Code <> 0 then
+			Result := 0;
+	end;
+{var
+	i, j: SG;
+	Point: SG;
+	Minus: Boolean;
+begin
+	Result := 0;
+	Minus := False;
+	Point := -1;
+	for i := 1 to Length(s) do
+	begin
+		case s[i] of
+		'-': Minus := not Minus;
+		'0'..'9':
+		begin
+			if Point = 0 then MessageD('Invalid float number decimals', mtWarning, [mbOk]);
+			if Point <> -1 then
+			begin
+				if Point <> 0 then
+				begin
+					if Minus then
+						Result := Result - Point * (Ord(s[i]) - Ord('0'))
+					else
+						Result := Result + Point * (Ord(s[i]) - Ord('0'));
+				end;
+				Point := Point div 10;
+//				if Point = 0 then Break;
+			end
+			else
+			begin
+				Result := Result * 10;
+				if Minus then
+					Result := Result - (Ord(s[i]) - Ord('0'))
+				else
+					Result := Result + (Ord(s[i]) - Ord('0'));
+			end;
+		end;
+		'.':
+		begin
+			if Decimals = 0 then
+			begin
+				MessageD('Integer number required, float found', mtWarning, [mbOk]);
+				Break;
+			end;
+//			if Decimals = 0 then Break;
+			Point := 1;
+			for j := 2 to Decimals do
+				Point := Point * 10;
+			Result := Result * 10 * Point;
+		end;
+		end;
+	end;}
+end;
+
+function TimeToInt(Line: string): SG;
+var
+	h, m, s, d: SG;
+	InLineIndex: SG;
+begin
+	InLineIndex := 1;
+	h := StrToI(ReadToChar(Line, InLineIndex, ':'));
+	m := StrToI(ReadToChar(Line, InLineIndex, ':'));
+	s := StrToI(ReadToChar(Line, InLineIndex, ','));
+	d := StrToI(ReadToChar(Line, InLineIndex, ' '));
+	Result := (3600000 * h + 60000 * m + 1000 * s + d);
+end;
+
+
 var
 	CharsTable: array[Char] of (ctIllegal, ctNumber, ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose);
 
-function StrToValE(Line: TString;
-	const MinVal, DefVal, MaxVal: Extended): Extended; overload;
-var ErrorMsg: string;
-begin
-	Result := StrToValE(Line, MinVal, DefVal, MaxVal, ErrorMsg);
-end;
-
-function StrToValE(Line: TString;
-	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string): Extended;
+function StrToValExt(Line: TString;
+	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string;
+	var InStr: string; var ErrorLineIndex: SG): Extended;
 type
 	TOperator = (opNone, opWaitOperator, opNumber, opPlus, opExp, opMinus, opMul, opDiv);
 var
@@ -771,7 +1022,10 @@ var
 	procedure ShowError(s: string);
 	begin
 		if ErrorMsg = '' then
+		begin
+			ErrorLineIndex := LineIndex;
 			ErrorMsg := 'Error: (' + IntToStr(LineIndex) + '): ' + s;
+		end;
 	end;
 
 	function Make: Extended;
@@ -807,7 +1061,7 @@ var
 				Res := 0;
 				Exp := 0;
 				Where := whNum;
-				while LineIndex < Length(Line) do
+				while LineIndex <= Length(Line) do
 				begin
 					case Line[LineIndex] of
 					'%': Per := True;
@@ -1017,7 +1271,7 @@ begin
 		IntStr := '$' + Copy(IntStr, 3, Maxint);
 	Result := StrToIntDef(IntStr, Default);
 }
-
+	ErrorLineIndex := 0;
 	Result := DefVal;
 	ErrorMsg := '';
 	LineIndex := 0;
@@ -1133,6 +1387,8 @@ begin
 		end;
 	end;
 
+	InStr := Line;
+
 	Level := 0; MaxLevel := 0;
 	LineIndex := 2; MaxLineIndex := Length(Line);
 	Result := Make;
@@ -1149,6 +1405,23 @@ begin
 		ShowError('Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal));
 		Result := MaxVal;
 	end;
+end;
+
+
+function StrToValE(Line: TString;
+	const MinVal, DefVal, MaxVal: Extended): Extended;
+var ErrorMsg: string;
+begin
+	Result := StrToValE(Line, MinVal, DefVal, MaxVal, ErrorMsg);
+end;
+
+function StrToValE(Line: TString;
+	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string): Extended;
+var
+	InStr: string;
+	LineIndex: SG;
+begin
+	Result := StrToValExt(Line, MinVal, DefVal, MaxVal, ErrorMsg, InStr, LineIndex);
 end;
 
 function StrToValI(Line: TString;
@@ -1549,7 +1822,7 @@ begin
 				if Result[Index - 1] in ['a'..'z'] then
 					Insert(' ', Result, Index);
 end;
-
+{
 procedure CorrectFormPos(Form: TForm);
 begin
 	if not Assigned(Form) then Exit;
@@ -1557,8 +1830,8 @@ begin
 	if Form.Top + Form.Height > Screen.Height then Form.Top := Screen.Height - Form.Height;
 	if Form.Left < 0 then Form.Left := 0;
 	if Form.Top < 0 then Form.Top := 0;
-end;
-
+end;}
+{
 procedure SetListViewItems(ListView: TListView; NewSize: SG);
 var j: SG;
 begin
@@ -1577,7 +1850,7 @@ begin
 		end;
 	end;
 end;
-
+}
 procedure CreateLink(
 	const LinkFileName: WideString;
 	const Target: TFileName;
@@ -1633,7 +1906,27 @@ begin
 		end;
 end;
 
+procedure ObjectFree(var Obj: TObject);
+begin
+	Obj.Free; Obj := nil;
+end;
+
+procedure InitSin;
+var i: TAngle;
+begin
+	for i := 0 to AngleCount - 1 do
+	begin
+		Sins[i] := Round(SinDiv * sin(2 * pi * i / AngleCount));
+//  Sins[i]:=Trunc(127*(sin(pi*i/128))+127);
+//  Sins[i]:=Trunc(128*(sin(pi*i/128)+1))-128;
+	end;
+end;
+
 initialization
+	{$ifopt d-}
+	NoErrMsg := True;
+	{$endif}
+	InitSin;
 	FillCharsTable;
 	WinDecimalSeparator := DecimalSeparator;
 end.
