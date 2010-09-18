@@ -912,7 +912,7 @@ begin
 			end;
 			FontSize := Bitmap.Canvas.Font.Size;
 			Bitmap.Canvas.Font.Size := 8;
-			ShadowText(Bitmap.Canvas, 0, 0,
+			ShadowText(Bitmap.Canvas, Width - Bitmap.Canvas.TextWidth(s) - 1 - 1, 1,
 				s,
 				clWindowText, clNone);
 			Bitmap.Canvas.Font.Size := FontSize;

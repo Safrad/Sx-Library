@@ -127,7 +127,7 @@ implementation
 
 uses
 	Registry, Windows, Math,
-	uError, uFiles, uStrings;
+	uError, uFiles, uStrings, uInput;
 
 const
 	BufferSize = 65536;

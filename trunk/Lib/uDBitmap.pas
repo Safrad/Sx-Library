@@ -247,7 +247,7 @@ implementation
 
 uses
 	Dialogs, Jpeg, Math, Classes,
-	uGraph, uError, uScreen, uFiles, uGetInt, uStrings, uSysInfo;
+	uGraph, uError, uScreen, uFiles, uGetInt, uStrings, uSysInfo, uInput;
 
 (*-------------------------------------------------------------------------*)
 function WidthToByteX4(const Width: LongWord): LongWord;

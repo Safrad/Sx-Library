@@ -61,7 +61,8 @@ function GetInt(Caption: string;
 implementation
 
 {$R *.DFM}
-uses uAdd, uStrings;
+uses uAdd, uStrings, uInput;
+
 var
 	fGetInt: TfGetInt;
 
@@ -171,12 +172,12 @@ procedure TfGetInt.EditInputChange(Sender: TObject);
 var ErrorMsg: string;
 begin
 	EditInput.OnChange := nil;
-	NowVal := StrToValI(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1, ErrorMsg);
-	if ErrorMsg <> '' then
+	NowVal := StrToValI(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
+{	if ErrorMsg <> '' then
 	begin
 		NowVal := TDefVal;
 		ChangeInt;
-	end;
+	end;}
 	DLabelError.Caption := ErrorMsg;
 	InitButtons;
 	InitTrackBar;

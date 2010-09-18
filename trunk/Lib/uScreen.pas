@@ -130,7 +130,7 @@ implementation
 {$R *.DFM}
 uses
 	Registry, Math, MMSystem,
-	uError, uStrings, uWave, uFiles, uGetInt, uDIni;
+	uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput;
 var
 	SndBeep: PWave;
 	First: Boolean;
