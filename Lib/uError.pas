@@ -532,6 +532,11 @@ begin
 			begin
 				FoundSame := True;
 				Result := Ignore.Res;
+{				if (IgnoreAll = iaAll) then
+				begin
+					Ignore.Res := Result;
+					Exit;
+				end;}
 				Break;
 			end;
 		end;

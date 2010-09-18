@@ -207,12 +207,12 @@ begin
 
 	C.L := CF;
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1); // D??? Open GL FP Exception
+	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1); // Open GL FP Exception
 	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
 
 	C.L := ShadowColor(CF);
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1); // D??? Open GL FP Exception
+	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1); // Open GL FP Exception
 {	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
 	glTexCoord4d(1, 1, 1, 1);
 	glRasterPos4d(68, 0, 0, 1);

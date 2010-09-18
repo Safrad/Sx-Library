@@ -98,7 +98,7 @@ begin
 		hrc := CreateRenderingContext(Canvas.Handle,[opDoubleBuffered],32,0);
 		Exit;
 		DC := GetDC(Hand);
-//		hrc := wglCreateContext(DC); // D???
+//		hrc := wglCreateContext(DC);
 {		if hrc <> 0 then}
 		begin
 //			wglMakeCurrent(DC, hrc);

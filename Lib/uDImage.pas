@@ -795,19 +795,21 @@ begin
 			ScrollBarVHeight := NowMaxHeight;
 			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
 			X2 := Bitmap.Width - 1;
+			if (X1 >= 0) and (X2 > X1) then
+			begin
+				Y1 := 0;
+				Y2 := ScrollBarHHeight - 1;
+	//			Bitmap.Lin24(X1, Y1, X1, NowMaxHeight - 1, RColor(238, 237, 229).L, ScrollEf);
+		{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+				Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+				Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, FHotTrack and (MouseWhere = mwScrollVD), 0, ScrollEf);
 
-			Y1 := 0;
-			Y2 := ScrollBarHHeight - 1;
-//			Bitmap.Lin24(X1, Y1, X1, NowMaxHeight - 1, RColor(238, 237, 229).L, ScrollEf);
-	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, FHotTrack and (MouseWhere = mwScrollVD), 0, ScrollEf);
-
-			Y1 := NowMaxHeight - ScrollBarHHeight;
-			Y2 := NowMaxHeight - 1;
-	{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-			Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, FHotTrack and (MouseWhere = mwScrollVU), 2, ScrollEf);
+				Y1 := NowMaxHeight - ScrollBarHHeight;
+				Y2 := NowMaxHeight - 1;
+		{   Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+				Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+				Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, FHotTrack and (MouseWhere = mwScrollVU), 2, ScrollEf);
+			end;
 
 			// TScrollBoxSlider
 			ScrollLen := NowMaxHeight - 2 * ScrollBarHHeight;

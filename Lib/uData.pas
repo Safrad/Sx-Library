@@ -237,7 +237,7 @@ begin
 		Move(Pointer(UG(Data) + Index shl FItemSh)^,
 			Pointer(UG(Data) + (Index + 1) shl FItemSh)^, (FItemCount - Index) shl FItemSh);
 	end;
-	FillChar(Pointer(UG(Data) + Index shl FItemSh)^, ItemSize, 0); // D???
+	FillChar(Pointer(UG(Data) + Index shl FItemSh)^, ItemSize, 0);
 	Inc(FItemCount);
 end;
 

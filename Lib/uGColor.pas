@@ -94,24 +94,15 @@ type
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure PanelCurColorClick(Sender: TObject);
-		procedure TrackBarRChange(Sender: TObject);
-		procedure TrackBarGChange(Sender: TObject);
-		procedure TrackBarBChange(Sender: TObject);
-		procedure ButtonRClick(Sender: TObject);
-		procedure ButtonGClick(Sender: TObject);
-		procedure ButtonBClick(Sender: TObject);
-		procedure ButtonAClick(Sender: TObject);
-		procedure TrackBarAChange(Sender: TObject);
+		procedure TrackBarRGBAChange(Sender: TObject);
+		procedure ButtonRGBAClick(Sender: TObject);
 		procedure ImageSMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
 		procedure ImageSMouseUp(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
 		procedure ImageSMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
-		procedure EditRChange(Sender: TObject);
-		procedure EditGChange(Sender: TObject);
-		procedure EditBChange(Sender: TObject);
-		procedure EditAChange(Sender: TObject);
+		procedure EditRGBAChange(Sender: TObject);
 		procedure RadioGroup1Click(Sender: TObject);
 		procedure ImageLMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
@@ -126,12 +117,11 @@ type
 		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 			State: TOwnerDrawState);
 		procedure FormCreate(Sender: TObject);
-    procedure ImageSFill(Sender: TObject);
-    procedure ImageLFill(Sender: TObject);
+		procedure ImageSFill(Sender: TObject);
+		procedure ImageLFill(Sender: TObject);
 	private
 		{ Private declarations }
 		CurColor, DefColor: TColor;
-		SchemeChanged: Boolean;
 		OnApply: TOnApplyColor;
 		SpectrumDown: Boolean;
 		LightDown: Boolean;
@@ -140,11 +130,16 @@ type
 
 		NowColor: TColor;
 		PanelColor: array[0..MaxColor] of TPanel;
-		procedure ChangeColor;
-		procedure PanelColorClick(Sender: TObject);
+
+		procedure InitReadOnly;
 		procedure ChangeLightC;
+		procedure InitTrackBar;
 		procedure InitEdits;
-		procedure InitBorder;
+		procedure ChangeColor;
+
+		procedure InitAll;
+
+		procedure PanelColorClick(Sender: TObject);
 	public
 		{ Public declarations }
 	end;
@@ -201,95 +196,6 @@ begin
 		end;
 		end;
 		Result := C;
-end;
-
-function GetColor(const prompt: string;
-	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
-
-	procedure CreateBox(const i: Integer);
-	begin
-		fGColor.PanelColor[i].BevelOuter := bvNone;
-		fGColor.PanelColor[i].BorderStyle := bsSingle;
-		fGColor.PanelColor[i].Width := 16;
-		fGColor.PanelColor[i].Height := 16;
-		fGColor.PanelColor[i].Tag := i;
-		fGColor.PanelColor[i].OnClick := fGColor.PanelColorClick;
-	end;
-
-var i: Integer;
-begin
-	if not Assigned(fGColor) then
-	begin
-		fGColor := TfGColor.Create(Application.MainForm);
-		for i := 0 to MaxColor do
-		begin
-			fGColor.PanelColor[i] := TPanel.Create(fGColor);
-			CreateBox(i);
-			case i of
-			0..23:
-			begin
-				fGColor.PanelColor[i].Left := 16 + 20 * (i mod 12);
-				fGColor.PanelColor[i].Top := 16 + 20 * (i div 12);
-			end;
-			24..31:
-			begin
-				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
-				fGColor.PanelColor[i].Top := 64;
-			end;
-			32..35:
-			begin
-				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
-				fGColor.PanelColor[i].Top := 64;
-			end;
-			end;
-			fGColor.PanelColor[i].Color := IntToColor(i).L;
-			fGColor.GroupBoxColors.InsertControl(fGColor.PanelColor[i]);
-		end;
-	end;
-	fGColor.OnApply := OnApply;
-	fGColor.ButtonApply.Enabled := Assigned(OnApply);
-
-	fGColor.CurColor := CurrentColor;
-	fGColor.NowColor := CurrentColor;
-	fGColor.DefColor := DefaultColor;
-	fGColor.Caption := prompt;
-
-	fGColor.PanelCurColor.Color := fGColor.CurColor;
-	fGColor.PanelCurColor.Font.Color := NegMonoColor(fGColor.PanelCurColor.Color);
-	fGColor.PanelCurColor.Caption := ColorToString(fGColor.PanelCurColor.Color);
-
-	fGColor.PanelDefaultColor.Color := fGColor.DefColor;
-	fGColor.PanelDefaultColor.Font.Color := NegMonoColor(fGColor.PanelDefaultColor.Color);
-	fGColor.PanelDefaultColor.Caption := ColorToString(fGColor.PanelDefaultColor.Color);
-
-	fGColor.ChangeLightC;
-	fGColor.ChangeColor;
-	if Assigned(OnApply) then
-	begin
-		fGColor.FormStyle := fsStayOnTop;
-		fGColor.Show;
-		Result := True;
-	end
-	else
-	begin
-		fGColor.FormStyle := fsNormal;
-		if fGColor.ShowModal = mrOK then
-		begin
-			CurrentColor := fGColor.NowColor;
-			Result := True;
-		end
-		else
-		begin
-			Result := False;
-		end;
-	end;
-end;
-
-procedure TfGColor.PanelColorClick(Sender: TObject);
-begin
-	NowColor := IntToColor(TPanel(Sender).Tag).L;
-	ChangeLightC;
-	ChangeColor;
 end;
 
 function ColorToSpectrum(var SpectrumPos: Integer; const C: TColor): Boolean;
@@ -353,80 +259,6 @@ begin
 	end;
 end;
 
-procedure TfGColor.FormDestroy(Sender: TObject);
-var i: Integer;
-begin
-	for i := 0 to MaxColor do
-	begin
-		if PanelColor[i] <> nil then
-		begin
-			GroupBoxColors.RemoveControl(PanelColor[i]);
-			PanelColor[i].Free; PanelColor[i] := nil;
-		end;
-	end;
-end;
-
-procedure TfGColor.InitEdits;
-var C: TRColor;
-begin
-	C.L := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	TrackBarR.OnChange := nil;
-	TrackBarG.OnChange := nil;
-	TrackBarB.OnChange := nil;
-	TrackBarA.OnChange := nil;
-
-	TrackBarR.Position := C.R;
-	TrackBarG.Position := C.G;
-	TrackBarB.Position := C.B;
-	TrackBarA.Position := (C.R + C.G + C.B) div 3;
-
-	TrackBarR.OnChange := TrackBarRChange;
-	TrackBarG.OnChange := TrackBarGChange;
-	TrackBarB.OnChange := TrackBarBChange;
-	TrackBarA.OnChange := TrackBarAChange;
-
-	EditR.OnChange := nil;
-	EditG.OnChange := nil;
-	EditB.OnChange := nil;
-	EditA.OnChange := nil;
-
-	EditR.Text := NToS(C.R, '000');
-	EditR.Repaint;
-	EditG.Text := NToS(C.G, '000');
-	EditG.Repaint;
-	EditB.Text := NToS(C.B, '000');
-	EditB.Repaint;
-	EditA.Text := NToS((C.R + C.G + C.B) div 3, '000');
-	EditA.Repaint;
-
-	EditR.OnChange := EditRChange;
-	EditG.OnChange := EditGChange;
-	EditB.OnChange := EditBChange;
-	EditA.OnChange := EditAChange;
-end;
-
-procedure TfGColor.InitBorder;
-var
-	C: TRColor;
-	i: Integer;
-	Vis: Boolean;
-begin
-	C.L := ColorToRGB(NowColor) and $00ffffff;
-	Vis := False;
-	for i := 0 to MaxColor do
-	begin
-		if C.L = IntToColor(I).L then
-		begin
-			Vis := True;
-			ShapeBorder.Left := PanelColor[i].Left - 2;
-			ShapeBorder.Top := PanelColor[i].Top - 2;
-			Break;
-		end;
-	end;
-	ShapeBorder.Visible := Vis;
-	ShapeBorder.Update;
-end;
-
 function GetVGAPalete(C: TColor): TColor;
 const
 	VGAColors: array[0..15] of TColor =
@@ -488,17 +320,103 @@ begin
 	end;
 end;
 
-procedure TfGColor.ChangeLightC;
+function GetColor(const prompt: string;
+	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
+
+	procedure CreateBox(const i: Integer);
+	begin
+		fGColor.PanelColor[i].BevelOuter := bvNone;
+		fGColor.PanelColor[i].BorderStyle := bsSingle;
+		fGColor.PanelColor[i].Width := 16;
+		fGColor.PanelColor[i].Height := 16;
+		fGColor.PanelColor[i].Tag := i;
+		fGColor.PanelColor[i].OnClick := fGColor.PanelColorClick;
+	end;
+
+var i: Integer;
 begin
-	LightC.L := AbsoluteColor(NowColor);
+	if not Assigned(fGColor) then
+	begin
+		fGColor := TfGColor.Create(Application.MainForm);
+		for i := 0 to MaxColor do
+		begin
+			fGColor.PanelColor[i] := TPanel.Create(fGColor);
+			CreateBox(i);
+			case i of
+			0..23:
+			begin
+				fGColor.PanelColor[i].Left := 16 + 20 * (i mod 12);
+				fGColor.PanelColor[i].Top := 16 + 20 * (i div 12);
+			end;
+			24..31:
+			begin
+				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
+				fGColor.PanelColor[i].Top := 64;
+			end;
+			32..35:
+			begin
+				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
+				fGColor.PanelColor[i].Top := 64;
+			end;
+			end;
+			fGColor.PanelColor[i].Color := IntToColor(i).L;
+			fGColor.GroupBoxColors.InsertControl(fGColor.PanelColor[i]);
+		end;
+	end;
+	fGColor.OnApply := OnApply;
+	fGColor.ButtonApply.Enabled := Assigned(OnApply);
+
+	fGColor.CurColor := CurrentColor;
+	fGColor.NowColor := CurrentColor;
+	fGColor.DefColor := DefaultColor;
+	fGColor.Caption := prompt;
+
+	fGColor.PanelCurColor.Color := fGColor.CurColor;
+	fGColor.PanelCurColor.Font.Color := NegMonoColor(fGColor.PanelCurColor.Color);
+	fGColor.PanelCurColor.Caption := ColorToString(fGColor.PanelCurColor.Color);
+
+	fGColor.PanelDefaultColor.Color := fGColor.DefColor;
+	fGColor.PanelDefaultColor.Font.Color := NegMonoColor(fGColor.PanelDefaultColor.Color);
+	fGColor.PanelDefaultColor.Caption := ColorToString(fGColor.PanelDefaultColor.Color);
+
+	fGColor.InitReadOnly;
+	fGColor.ChangeLightC;
+	fGColor.InitTrackBar;
+	fGColor.InitEdits;
+
+	if Assigned(OnApply) then
+	begin
+		fGColor.FormStyle := fsStayOnTop;
+		fGColor.Show;
+		Result := True;
+	end
+	else
+	begin
+		fGColor.FormStyle := fsNormal;
+		if fGColor.ShowModal = mrOK then
+		begin
+			CurrentColor := fGColor.NowColor;
+			Result := True;
+		end
+		else
+		begin
+			Result := False;
+		end;
+	end;
 end;
 
-procedure TfGColor.ChangeColor;
+// TfGColor
+
+procedure TfGColor.InitReadOnly;
 const ABits: array[0..4] of Byte = (1, 4, 15, 18, 24);
+var
+	C: TRColor;
+	i: Integer;
+	Vis: Boolean;
 begin
-	SchemeChanged := True;
-	PanelNowColor.Color := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	PanelNowColor.Font.Color := NegMonoColor(PanelNowColor.Color);
+	C.L := ColorToRGB(NowColor) and $00ffffff;
+	PanelNowColor.Color := C.L;
+	PanelNowColor.Font.Color := NegMonoColor(C.L);
 	PanelNowColor.Caption := ColorToString(TColor(NowColor));
 	PanelNowColor.Repaint;
 
@@ -506,11 +424,111 @@ begin
 	PanelNowBitColor.Font.Color := NegMonoColor(PanelNowBitColor.Color);
 	PanelNowBitColor.Caption := ColorToString(PanelNowBitColor.Color);
 	PanelNowBitColor.Repaint;
-	InitEdits;
 	ImageS.Fill;
 	ImageL.Fill;
-	InitBorder;
+
+	Vis := False;
+	for i := 0 to MaxColor do
+	begin
+		if C.L = IntToColor(I).L then
+		begin
+			Vis := True;
+			ShapeBorder.Left := PanelColor[i].Left - 2;
+			ShapeBorder.Top := PanelColor[i].Top - 2;
+			Break;
+		end;
+	end;
+	ShapeBorder.Visible := Vis;
+	ShapeBorder.Update;
+
+end;
+
+procedure TfGColor.ChangeLightC;
+begin
+	LightC.L := AbsoluteColor(NowColor);
+end;
+
+procedure TfGColor.InitTrackBar;
+var C: TRColor;
+begin
+	C.L := ColorToRGB(TColor(NowColor)) and $00ffffff;
+	TrackBarR.OnChange := nil;
+	TrackBarG.OnChange := nil;
+	TrackBarB.OnChange := nil;
+	TrackBarA.OnChange := nil;
+
+	TrackBarR.Position := C.R;
+	TrackBarG.Position := C.G;
+	TrackBarB.Position := C.B;
+	TrackBarA.Position := (C.R + C.G + C.B) div 3;
+
+	TrackBarR.OnChange := TrackBarRGBAChange;
+	TrackBarG.OnChange := TrackBarRGBAChange;
+	TrackBarB.OnChange := TrackBarRGBAChange;
+	TrackBarA.OnChange := TrackBarRGBAChange;
+
+	EditR.OnChange := nil;
+	EditG.OnChange := nil;
+	EditB.OnChange := nil;
+	EditA.OnChange := nil;
+end;
+
+procedure TfGColor.InitEdits;
+var C: TRColor;
+begin
+	C.L := ColorToRGB(TColor(NowColor)) and $00ffffff;
+
+	EditR.OnChange := nil;
+	EditG.OnChange := nil;
+	EditB.OnChange := nil;
+	EditA.OnChange := nil;
+
+	EditR.Text := NToS(C.R, '000');
+	EditR.Repaint;
+	EditG.Text := NToS(C.G, '000');
+	EditG.Repaint;
+	EditB.Text := NToS(C.B, '000');
+	EditB.Repaint;
+	EditA.Text := NToS((C.R + C.G + C.B) div 3, '000');
+	EditA.Repaint;
+
+	EditR.OnChange := EditRGBAChange;
+	EditG.OnChange := EditRGBAChange;
+	EditB.OnChange := EditRGBAChange;
+	EditA.OnChange := EditRGBAChange;
+end;
+
+procedure TfGColor.ChangeColor;
+begin
 	if Assigned(OnApply) then OnApply(NowColor);
+end;
+
+procedure TfGColor.InitAll;
+begin
+	InitReadOnly;
+	ChangeLightC;
+	InitTrackBar;
+	InitEdits;
+	ChangeColor;
+end;
+
+procedure TfGColor.PanelColorClick(Sender: TObject);
+begin
+	NowColor := IntToColor(TPanel(Sender).Tag).L;
+	InitAll;
+end;
+
+procedure TfGColor.FormDestroy(Sender: TObject);
+var i: Integer;
+begin
+	for i := 0 to MaxColor do
+	begin
+		if PanelColor[i] <> nil then
+		begin
+			GroupBoxColors.RemoveControl(PanelColor[i]);
+			PanelColor[i].Free; PanelColor[i] := nil;
+		end;
+	end;
 end;
 
 procedure TfGColor.ColorClick(Sender: TObject);
@@ -519,86 +537,52 @@ begin
 		NowColor := clNone
 	else
 		NowColor := TColor(LongWord(TMenuItem(Sender).Tag) or $80000000);
-	ChangeLightC;
-	ChangeColor;
+	InitAll;
 end;
 
 procedure TfGColor.PanelCurColorClick(Sender: TObject);
 begin
 	NowColor := CurColor;
-	ChangeLightC;
-	ChangeColor;
+	InitAll;
 end;
 
-procedure TfGColor.TrackBarRChange(Sender: TObject);
+procedure TfGColor.TrackBarRGBAChange(Sender: TObject);
 begin
 	NowColor := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	TRColor(NowColor).R := TrackBarR.Position;
+	case TTrackBar(Sender).Tag of
+	0: TRColor(NowColor).R := TrackBarR.Position;
+	1: TRColor(NowColor).G := TrackBarG.Position;
+	2: TRColor(NowColor).B := TrackBarB.Position;
+	3:
+	begin
+		TRColor(NowColor).R := TrackBarA.Position;
+		TRColor(NowColor).G := TrackBarA.Position;
+		TRColor(NowColor).B := TrackBarA.Position;
+	end;
+	end;
 	ColorToSpectrum(SpectrumPos, NowColor);
+	InitReadOnly;
 	ChangeLightC;
+//	InitTrackBar;
+	InitEdits;
 	ChangeColor;
 end;
 
-procedure TfGColor.TrackBarGChange(Sender: TObject);
-begin
-	NowColor := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	TRColor(NowColor).G := TrackBarG.Position;
-	ColorToSpectrum(SpectrumPos, NowColor);
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.TrackBarBChange(Sender: TObject);
-begin
-	NowColor := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	TRColor(NowColor).B := TrackBarB.Position;
-	ColorToSpectrum(SpectrumPos, NowColor);
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.TrackBarAChange(Sender: TObject);
-begin
-	NowColor := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	TRColor(NowColor).R := TrackBarA.Position;
-	TRColor(NowColor).G := TrackBarA.Position;
-	TRColor(NowColor).B := TrackBarA.Position;
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.ButtonRClick(Sender: TObject);
+procedure TfGColor.ButtonRGBAClick(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).R := 255 - TRColor(NowColor).R;
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.ButtonGClick(Sender: TObject);
-begin
-	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).G := 255 - TRColor(NowColor).G;
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.ButtonBClick(Sender: TObject);
-begin
-	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).B := 255 - TRColor(NowColor).B;
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.ButtonAClick(Sender: TObject);
-begin
-	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).R := 255 - TRColor(NowColor).R;
-	TRColor(NowColor).G := 255 - TRColor(NowColor).G;
-	TRColor(NowColor).B := 255 - TRColor(NowColor).B;
-	ChangeLightC;
-	ChangeColor;
+	case TButton(Sender).Tag of
+	0: TRColor(NowColor).R := 255 - TRColor(NowColor).R;
+	1: TRColor(NowColor).G := 255 - TRColor(NowColor).G;
+	2: TRColor(NowColor).B := 255 - TRColor(NowColor).B;
+	3:
+	begin
+		TRColor(NowColor).R := 255 - TRColor(NowColor).R;
+		TRColor(NowColor).G := 255 - TRColor(NowColor).G;
+		TRColor(NowColor).B := 255 - TRColor(NowColor).B;
+	end;
+	end;
+	InitAll;
 end;
 
 procedure TfGColor.ImageSMouseDown(Sender: TObject; Button: TMouseButton;
@@ -629,57 +613,38 @@ begin
 			SpectrumPos := MaxSpectrum
 		else
 		begin
-//      if X>0 then Dec(X);
 			SpectrumPos := X;
 		end;
 		NowColor := SpectrumColor(SpectrumPos);
-		ChangeLightC;
-		ChangeColor;
+		InitAll;
 	end;
 end;
 
-procedure TfGColor.EditRChange(Sender: TObject);
+procedure TfGColor.EditRGBAChange(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).R := StrToValU1(EditR.Text, True, TRColor(NowColor).R);
-	InitEdits;
+	case TEdit(Sender).Tag of
+	0: TRColor(NowColor).R := StrToValU1(TEdit(Sender).Text, True, TRColor(NowColor).R);
+	1: TRColor(NowColor).G := StrToValU1(TEdit(Sender).Text, True, TRColor(NowColor).G);
+	2: TRColor(NowColor).B := StrToValU1(TEdit(Sender).Text, True, TRColor(NowColor).B);
+	3:
+	begin
+		TRColor(NowColor).T := 0;
+		TRColor(NowColor).R := StrToValU1(EditA.Text, True, TRColor(NowColor).R);
+		TRColor(NowColor).G := StrToValU1(EditA.Text, True, TRColor(NowColor).G);
+		TRColor(NowColor).B := StrToValU1(EditA.Text, True, TRColor(NowColor).B);
+	end;
+	end;
+	InitReadOnly;
 	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.EditGChange(Sender: TObject);
-begin
-	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).G := StrToValU1(EditR.Text, True, TRColor(NowColor).G);
-	InitEdits;
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.EditBChange(Sender: TObject);
-begin
-	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).B := StrToValU1(EditB.Text, True, TRColor(NowColor).B);
-	InitEdits;
-	ChangeLightC;
-	ChangeColor;
-end;
-
-procedure TfGColor.EditAChange(Sender: TObject);
-begin
-	TRColor(NowColor).T := 0;
-	TRColor(NowColor).R := StrToValU1(EditA.Text, True, TRColor(NowColor).R);
-	TRColor(NowColor).G := StrToValU1(EditA.Text, True, TRColor(NowColor).G);
-	TRColor(NowColor).B := StrToValU1(EditA.Text, True, TRColor(NowColor).B);
-	InitEdits;
-	ChangeLightC;
+	InitTrackBar;
+//	InitEdits;
 	ChangeColor;
 end;
 
 procedure TfGColor.RadioGroup1Click(Sender: TObject);
 begin
-	ChangeLightC;
-	ChangeColor;
+	InitAll;
 end;
 
 procedure TfGColor.ImageLMouseDown(Sender: TObject; Button: TMouseButton;
@@ -724,15 +689,13 @@ end;
 procedure TfGColor.PanelDefaultColorClick(Sender: TObject);
 begin
 	NowColor := DefColor;
-	ChangeLightC;
-	ChangeColor;
+	InitAll;
 end;
 
 procedure TfGColor.PanelNowBitColorClick(Sender: TObject);
 begin
 	NowColor := PanelNowBitColor.Color;
-	ChangeLightC;
-	ChangeColor;
+	InitAll;
 end;
 
 procedure TfGColor.ButtonCancelClick(Sender: TObject);

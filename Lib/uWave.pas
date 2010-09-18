@@ -209,12 +209,18 @@ type
 		VolumeRight: SG;
 		Speed: SG;
 
+		// Options
+		Sound16bits: Boolean;
+		Frequency: SG;
+		SoundStereo: Boolean;
+		BufferTime: UG;
+
 		procedure MMError(s: string);
 		procedure SendBuffer;
 		constructor Create;
 		destructor Destroy; override;
 
-		procedure Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferTime: UG);
+		procedure Init;
 		procedure Close;
 
 		procedure Pause;
@@ -235,8 +241,8 @@ var
 implementation
 
 uses
-	uFiles, uError, uStrings,
-	Registry;
+	Registry, Dialogs,
+	uFiles, uError, uStrings;
 
 (*
 procedure NoSound; assembler;
@@ -336,6 +342,11 @@ label LRetry, LFin;
 var
 	F: TFile;
 begin
+	if Wave <> nil then
+	begin
+//		MessageD('Destination Wave Must Be Nil', mtError, [mbOk]);
+		WaveFree(Wave);
+	end;
 	F := TFile.Create;
 	LRetry:
 	if F.Open(FName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
@@ -408,18 +419,16 @@ begin
 	BitsPerSamples := Channels * BitsPerSample;
 	DataBytes := BitsToByte(BitsPerSamples * TotalSamples);
 
-	if Wave = nil then
+	if Wave <> nil then
 	begin
-		GetMem(Wave, WaveHead + DataBytes);
-	end
-	else
-	begin
+//		MessageD('Destination Wave Must Be Nil', mtError, [mbOk]);
 		if LongInt(Pointer(LongInt(Wave) - 4)^) - 6 < WaveHead + DataBytes then
 		begin
-			FreeMem(Wave);
-			GetMem(Wave, WaveHead + DataBytes);
+			WaveFree(Wave);
+//			FreeMem(Wave);
 		end;
 	end;
+	GetMem(Wave, WaveHead + DataBytes);
 	Wave.Marker1 := 'RIFF';
 	Wave.BytesFollowing := DataBytes + WaveHead - 8;
 	Wave.Marker2 := 'WAVE';
@@ -737,6 +746,11 @@ begin
 	VolumeLeft := MaxVolume;
 	VolumeRight := MaxVolume;
 	Speed := SpeedDiv;
+
+	Sound16bits := True;
+	Frequency := 44100;
+	SoundStereo := True;
+	BufferTime := 200;
 end;
 
 destructor TWavePlayer.Destroy;
@@ -807,7 +821,7 @@ begin
 	end;
 end;
 
-procedure TWavePlayer.Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferTime: UG);
+procedure TWavePlayer.Init;
 const BufferCount = 8;
 var i: SG;
 begin
@@ -1082,7 +1096,6 @@ begin
 end;
 
 Initialization
-	WavePlayer := TWavePlayer.Create;
 Finalization
 	WavePlayer.Free; WavePlayer := nil;
 end.

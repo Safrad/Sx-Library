@@ -210,7 +210,7 @@ begin
 	MainIni.RWSG(Selection, 'ReopenLimit', ReopenLimit, Save);
 	if Save = False then
 	begin
-		SetLength(ReopenItems, 0); // D??? ParamStr before RWOptions
+		SetLength(ReopenItems, 0);
 		ReopenO := ReopenCount;
 		ReopenCount := ReopenCount + ReopenC;
 //		Min(ReopenCount, MaxReopen);

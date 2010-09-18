@@ -262,7 +262,10 @@ function Range(const Min, Cur, Max: Integer): Integer; overload;
 function Range(const Min, Cur, Max, Def: Integer): Integer; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
 
-procedure Change(var A, B: Integer); overload;
+procedure Change(var A, B: B1); overload;
+procedure Change(var A, B: B4); overload;
+procedure Change(var A, B: U4); overload;
+procedure Change(var A, B: S4); overload;
 procedure Change(var A, B: Extended); overload;
 
 function Arg(X, Y: Extended): Extended; overload;
@@ -757,7 +760,45 @@ begin
 		Result := Max;
 end;
 
-procedure Change(var A, B: Integer);
+procedure Change(var A, B: B1);
+asm
+	push bx
+	push cx
+	mov bl, byte ptr [A]
+	mov cl, byte ptr [B]
+	mov [B], bl
+	mov [A], cl
+	pop bx
+	pop cx
+end;
+
+procedure Change(var A, B: B4);
+asm
+	push ebx
+	push ecx
+	mov ebx, dword ptr [A]
+	mov ecx, dword ptr [B]
+	mov [B], ebx
+	mov [A], ecx
+	pop ebx
+	pop ecx
+//  xchg A, B
+end;
+
+procedure Change(var A, B: U4);
+asm
+	push ebx
+	push ecx
+	mov ebx, dword ptr [A]
+	mov ecx, dword ptr [B]
+	mov [B], ebx
+	mov [A], ecx
+	pop ebx
+	pop ecx
+//  xchg A, B
+end;
+
+procedure Change(var A, B: S4);
 asm
 	push ebx
 	push ecx
@@ -1040,7 +1081,7 @@ begin
 		end
 		else if (UseFormat[i] = ',') then
 		begin
-			if Result <> '' then
+			if j > 0 then
 			begin
 				Result := UseFormat[i] + Result
 			end
@@ -1564,7 +1605,8 @@ end;
 
 function KeyToStr(Key: Word): string;
 begin
-	case Key of
+	case Key and $ff of
+	0: Result := '';
 	VK_LBUTTON: Result := 'L.Button';
 	VK_RBUTTON: Result := 'R.Button';
 	VK_CANCEL: Result := 'Cancel';
@@ -1665,6 +1707,9 @@ begin
 	VK_OEM_CLEAR: Result := 'OEM Clear';
 	else Result := 'SC: ' + IntToStr(Key);
 	end;
+	if Key and scShift <> 0 then Result := 'Shift+' + Result;
+	if Key and scCtrl <> 0 then Result := 'Ctrl+' + Result;
+	if Key and scAlt <> 0 then Result := 'Alt+' + Result;
 end;
 
 procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);

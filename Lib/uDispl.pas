@@ -550,9 +550,9 @@ begin
 				C := CD
 			else
 			begin
-				Inc(CaptionIndex);
 				C := CA;
 			end;
+			Inc(CaptionIndex);
 			if InfoOnly = False then
 				BmpD.Bar24(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
 					X1 + SizeT - 1, Y1 + 2 * SizeY + 3 * SpaceSY - 2 + SizeT + SizeT, C, Effect);
