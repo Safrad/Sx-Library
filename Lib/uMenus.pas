@@ -10,7 +10,9 @@ unit uMenus;
 
 interface
 
-uses Windows, Graphics, Menus, Messages, Classes;
+uses
+	uTypes,
+	Windows, Graphics, Menus, Messages, Classes, ExtCtrls;
 
 {
 		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
@@ -42,8 +44,14 @@ type
 			message WM_DISPLAYCHANGE;
 	end;
 }
+function TryFindIcon(Name: string; Path: string): string;
 procedure ImgAdd(Bitmap: TBitmap; Name: string);
 procedure ComName(MenuItem: TMenuItem);
+
+function ComponentName(Name: string): string;
+function MenuNameToFileName(Name: string): string;
+function ButtonNameToFileName(Name: string; const Space: Boolean): string;
+
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
 
@@ -55,18 +63,53 @@ procedure MenuClick(Menu: TMenuItem);
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 
+procedure IconsFromMenu(Menu: TComponent; Panel: TPanel);
+procedure IconsResize(PanelTool: TPanel);
+
 
 implementation
 
 uses
-	ImgList, SysUtils,
-	uGraph, uDBitmap, uScreen, uAdd, uFiles, uError;
+	Controls, ImgList, SysUtils, uDButton, uStrings,
+	uGraph, uDBitmap, uScreen, uFiles, uError, uAPI, uMath, uParser;
 
 var ImageList: TCustomImageList;
 
 procedure CreateImg;
 begin
 	if not Assigned(ImageList) then ImageList := TCustomImageList.CreateSize(16, 16);
+end;
+
+function TryFindIcon(Name: string; Path: string): string;
+label LAbort;
+var
+	k: SG;
+	SourceName, Name2: string;
+begin
+	Result := '';
+
+	while Length(Name) > 0 do
+	begin
+		Name2 := Name + IconExt;
+		SourceName := Path + Name2;
+		if FileExists(SourceName) then
+		begin
+			Result := Name2;
+			Break;
+		end;
+
+		for k := Length(Name) downto 1 do
+		begin
+			if Name[k] in ['A'..'Z'] then
+			begin
+				SetLength(Name, k - 1);
+				Break;
+			end;
+			if k = 1 then goto LAbort;
+		end;
+
+	end;
+	LAbort:
 end;
 
 procedure ImgAdd(Bitmap: TBitmap; Name: string);
@@ -76,36 +119,141 @@ var
 	FileName: TFileName;
 //		TranColor: TColor;
 begin
-	FileName := GraphDir + 'Images\' + Name + IconExt;
-	if FileExists(FileName) then
+	FileName := TryFindIcon(Name, GraphDir + 'Images\');
+	if FileName <> '' then
 	begin
-		Bmp := TDBitmap.Create;
-		Bmp.LoadFromFile(FileName);
-
-//			MenuItem.Bitmap.PixelFormat := pf24bit;
-		{$ifopt d+}
-		if Bitmap = nil then
+		FileName := GraphDir + 'Images\' + FileName;
+		if FileExists(FileName) then
 		begin
-			IE(43433);
-			Exit;
+			Bmp := TDBitmap.Create;
+			Bmp.LoadFromFile(FileName);
+
+	//			MenuItem.Bitmap.PixelFormat := pf24bit;
+			{$ifopt d+}
+			if Bitmap = nil then
+			begin
+				Exit;
+			end;
+			{$endif}
+			Bitmap.Height := 0;
+			Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
+			Bitmap.Height := 16;
+			Bmp.Resize(Bitmap.Width, Bitmap.Height);
+	{			MenuItem.Bitmap.Transparent := Bmp.Transparent;
+			MenuItem.Bitmap.TransparentColor := Bmp.TransparentColor;
+			Bmp.Transparent := False;}
+			Bitmap.Assign(Bmp); //Canvas.Draw(0, 0, Bmp);
+			Bmp.Free;
 		end;
-		{$endif}
-		Bitmap.Height := 0;
-		Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
-		Bitmap.Height := 16;
-		Bmp.Resize(Bitmap.Width, Bitmap.Height);
-{			MenuItem.Bitmap.Transparent := Bmp.Transparent;
-		MenuItem.Bitmap.TransparentColor := Bmp.TransparentColor;
-		Bmp.Transparent := False;}
-		Bitmap.Assign(Bmp); //Canvas.Draw(0, 0, Bmp);
-		Bmp.Free;
 	end;
+end;
+
+function ComponentName(Name: string): string;
+var i: SG;
+begin
+	i := 1;
+	while i <= Length(Name) do
+	begin
+		if not (CharsTable[Name[i]] in [ctLetter, ctNumber]) then
+			Delete(Name, i, 1)
+		else
+			Inc(i);
+	end;
+	if Name = '' then
+		Name := 'N'
+	else
+	begin
+		if CharsTable[Name[1]] <> ctLetter then
+			Name := 'N' + Name;
+	end;
+	Result := Name;
+end;
+
+function MenuNameToFileName(Name: string): string;
+var
+	Index, i: SG;
+const
+	Names: array[0..0] of string = ('MENU');
+begin
+	Result := Name;
+	for i := 0 to Length(Names) - 1 do
+	begin
+		Index := Pos(Names[i], UpperCase(Result));
+		if Index = 1 then
+		begin
+			Delete(Result, Index, Length(Names[i]));
+			Break;
+		end;
+	end;
+
+	while Length(Result) > 0 do
+	begin
+		case Result[Length(Result)] of
+		'0'..'9':
+		begin
+			SetLength(Result, Length(Result) - 1);
+		end;
+		'_':
+		begin
+			SetLength(Result, Length(Result) - 1);
+			Break;
+		end
+		else
+			Break;
+		end;
+	end;
+end;
+
+function ButtonNameToFileName(Name: string; const Space: Boolean): string;
+label LDel;
+var
+	Index, i: SG;
+	Found: BG;
+const
+	Names: array[0..4] of string = ('DBUTTON', 'BUTTON', 'COMBOBOX', 'EDIT', 'MEMO');
+begin
+	Result := Name;
+	Found := False;
+	for i := 0 to Length(Names) - 1 do
+	begin
+		Index := Pos(Names[i], UpperCase(Result));
+		if Index = 1 then
+		begin
+			Delete(Result, Index, Length(Names[i]));
+			Found := True;
+			Break;
+		end;
+	end;
+
+	if Found = False then
+	while Length(Result) > 0 do
+	begin
+		case Result[Length(Result)] of
+		'0'..'9':
+		begin
+			SetLength(Result, Length(Result) - 1);
+		end;
+		'_':
+		begin
+			SetLength(Result, Length(Result) - 1);
+			Break;
+		end
+		else
+			Break;
+		end;
+	end;
+
+	if Space then
+		for Index := 2 to Length(Result) do
+			if Result[Index] in ['A'..'Z'] then
+				if Result[Index - 1] in ['a'..'z'] then
+					Insert(' ', Result, Index);
 end;
 
 procedure ComName(MenuItem: TMenuItem);
 begin
 	if (MenuItem.Bitmap.Width = 0) and (MenuItem.ImageIndex = -1) then
-		ImgAdd(MenuItem.Bitmap, MenuNameToFileName(MenuItem.Name))
+		ImgAdd(MenuItem.Bitmap, MenuNameToFileName(MenuItem.Name));
 end;
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
@@ -605,5 +753,124 @@ begin
 	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
 end;
 }
+const
+	IconSize = 22;
+	BevelWidth = 7;
+
+var
+	IconX, IconY: SG;
+
+procedure IconsFromMenu(Menu: TComponent; Panel: TPanel);
+var
+	i, c: SG;
+	M: TMenuItem;
+	Bevel: TBevel;
+	B: TDButton;
+	Found: UG;
+	Name: string;
+begin
+	Found := 0;
+	if (Menu is TMenu) or (Menu is TPopupMenu) then
+	begin
+		c := TMenu(Menu).Items.Count
+	end
+	else if Menu is TMenuItem then
+		c := TMenuItem(Menu).Count
+	else
+		Exit;
+
+	for i := 0 to c - 1 do
+	begin
+		if (Menu is TMenu) or (Menu is TPopupMenu) then
+		begin
+			M := TMenu(Menu).Items[i];
+		end
+		else if Menu is TMenuItem then
+			M := TMenuItem(Menu).Items[i]
+		else
+			 M := nil;
+
+		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
+		begin
+			if M.Name <> '' then
+			if M.Name <> 'Mark1' then
+			if (M.Bitmap <> nil) and (M.Bitmap.Empty = False) then
+			begin
+				Name := M.Name + 'Icon1';
+				if Panel.FindComponent(Name) <> nil then
+					Name := M.Name + 'Icon2';
+				B := TDButton.Create(Panel);
+				B.Name := Name;
+
+				B.Caption := '';
+				B.ShowHint := True;
+				B.Hint := DelCharsF(M.Caption, '&');
+				if M.Shortcut <> 0 then
+					B.Hint := B.Hint + ' (' + KeyToStr(M.Shortcut) + ')';
+				B.Width := IconSize;
+				B.Height := IconSize;
+				B.Left := IconX;
+				B.Top := IconY;
+				B.Color := Panel.Color;
+				B.Highlight := hlNone;
+				B.Tag := M.Tag;
+				Inc(IconX, B.Width + 1);
+				B.FGlyph := TDBitmap.Create;
+				B.FGlyph.CopyBitmap(M.Bitmap);
+				B.OnClick := M.OnClick;
+
+				Panel.InsertControl(B);
+				Inc(Found);
+			end;
+		end
+		else
+			IconsFromMenu(M, Panel);
+	end;
+	if Found > 0 then
+	begin
+		Bevel := TBevel.Create(Panel);
+		Bevel.Name := Menu.Name + 'Bevel';
+		Bevel.Width := BevelWidth;
+		Bevel.Height := IconSize;
+		Bevel.Left := IconX + (BevelWidth - Bevel.Width + 1) div 2;
+		Bevel.Top := IconY;
+		Bevel.Shape := bsLeftLine;
+		Inc(IconX, BevelWidth);
+		if IconX >= Panel.Width - 4 * IconSize then
+		begin
+			IconX := 0;
+			Inc(IconY, Bevel.Height + 2);
+		end;
+
+		Panel.InsertControl(Bevel);
+	end;
+end;
+
+procedure IconsResize(PanelTool: TPanel);
+var
+	i, x, y: SG;
+begin
+	x := 0;
+	y := 0;
+	for i := 0 to PanelTool.ComponentCount - 1 do
+	begin
+		if (TControl(PanelTool.Components[i]).Left <> x) or
+		(TControl(PanelTool.Components[i]).Top <> y) then
+		begin
+//			TControl(PanelTool.Components[i]).Visible := False;
+			TControl(PanelTool.Components[i]).Top := y;
+			TControl(PanelTool.Components[i]).Left := x;
+//			TControl(PanelTool.Components[i]).Visible := True;
+		end;
+
+		if x + TControl(PanelTool.Components[i]).Width + IconSize > PanelTool.Width then
+		begin
+			x := 0;
+			Inc(y, TControl(PanelTool.Components[i]).Height);
+		end
+		else
+			Inc(x, TControl(PanelTool.Components[i]).Width);
+	end;
+end;
 
 end.

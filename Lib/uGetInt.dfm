@@ -72,7 +72,7 @@ object fGetInt: TfGetInt
     WordWrap = False
   end
   object LabelNow: TDLabel
-    Left = 132
+    Left = 136
     Top = 120
     Width = 73
     Height = 13
@@ -160,7 +160,7 @@ object fGetInt: TfGetInt
   end
   object ButtonMin: TDButton
     Left = 168
-    Top = 24
+    Top = 18
     Width = 48
     Height = 18
     Caption = 'Min'
@@ -175,7 +175,7 @@ object fGetInt: TfGetInt
   end
   object ButtonCur: TDButton
     Left = 224
-    Top = 8
+    Top = 6
     Width = 48
     Height = 18
     Caption = 'Cur'
@@ -190,7 +190,7 @@ object fGetInt: TfGetInt
   end
   object ButtonMax: TDButton
     Left = 280
-    Top = 24
+    Top = 18
     Width = 48
     Height = 18
     Caption = 'Max'
@@ -205,7 +205,7 @@ object fGetInt: TfGetInt
   end
   object ButtonDef: TDButton
     Left = 224
-    Top = 32
+    Top = 28
     Width = 48
     Height = 18
     Caption = 'Def'
@@ -244,7 +244,7 @@ object fGetInt: TfGetInt
     TabOrder = 12
   end
   object UpDown: TUpDown
-    Left = 129
+    Left = 128
     Top = 24
     Width = 17
     Height = 19

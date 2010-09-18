@@ -11,7 +11,7 @@ unit uStyle;
 interface
 
 uses
-	uAdd, uDForm, uDBitmap,
+	uTypes, uDForm, uDBitmap,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, StdCtrls, uDButton;
 
@@ -56,7 +56,7 @@ end;
 procedure TfStyle.FormCreate(Sender: TObject);
 var i: SG;
 begin
-	Background := baUser;
+	Background := baGradient;
 	for i := 0 to Length(GraphicStyleNames) - 1 do
 		ComboBoxStyles.Items.Add(GraphicStyleNames[TGraphicStyle(i)]);
 

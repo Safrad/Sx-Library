@@ -12,7 +12,7 @@ interface
 
 uses
 	MMSystem, SysUtils, Windows,
-	uDTimer, uAdd, uData;
+	uDTimer, uTypes, uData, uMath;
 
 {
 procedure NoSound;
@@ -245,7 +245,7 @@ implementation
 
 uses
 	Registry, Dialogs,
-	uFiles, uError, uStrings;
+	uFiles, uError, uStrings, uFormat;
 
 (*
 procedure NoSound;

@@ -11,7 +11,7 @@ unit uSysInfo;
 interface
 
 uses
-	uAdd,
+	uTypes, uMath,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls, uDLabel, uDButton, uDForm;
 
@@ -103,7 +103,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uGraph, uScreen, uStrings,
+	uGraph, uScreen, uStrings, uFormat,
 	Registry;
 
 function GetKey(Default: Word): Word;

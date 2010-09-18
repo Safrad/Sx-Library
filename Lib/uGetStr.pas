@@ -41,7 +41,7 @@ var StrMasked: Boolean;
 implementation
 
 {$R *.DFM}
-uses uAdd, uStrings;
+uses uStrings;
 var
 	fGetStr: TfGetStr;
 

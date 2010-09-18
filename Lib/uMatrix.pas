@@ -10,7 +10,7 @@ unit uMatrix;
 
 interface
 
-uses uAdd;
+uses uTypes;
 
 type
 	TMatrix = class(TObject)
@@ -40,7 +40,7 @@ type
 
 implementation
 
-uses uStrings;
+uses uStrings, uFormat;
 
 // TMatrix
 

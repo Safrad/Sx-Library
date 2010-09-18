@@ -41,7 +41,7 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uAdd, uFiles, uStrings;
+	uTypes, uFiles, uStrings, uMem;
 
 const
 	Delimiter = ',';

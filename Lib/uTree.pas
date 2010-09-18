@@ -10,7 +10,7 @@ unit uTree;
 
 interface
 
-uses uAdd;
+uses uTypes;
 
 // BWT
 // AVL (Adilson, Valeskij, Landis)

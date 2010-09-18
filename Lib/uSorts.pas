@@ -10,7 +10,7 @@ unit uSorts;
 
 interface
 
-uses uAdd;
+uses uTypes;
 type
 	TSortType = (
 		//                                                  For
@@ -64,7 +64,7 @@ end;
 
 implementation
 
-uses uError, Math;
+uses uMath, uMem;
 const
 	MinIndex = 0;
 type

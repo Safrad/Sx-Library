@@ -33,7 +33,7 @@ implementation
 
 uses
 	SysUtils, Registry, Dialogs, Classes,
-	uAdd, uStrings, uFiles, uError;
+	uTypes, uStrings, uFiles, uError;
 
 function WinNTDeleteKey(const Reg: TRegistry; const Key: string): Boolean;
 	var CanDelete: Boolean;

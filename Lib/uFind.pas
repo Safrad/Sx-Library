@@ -10,7 +10,7 @@ unit uFind;
 
 interface
 
-uses uAdd;
+uses uTypes;
 // AValue is Sorted Array
 function FindS2(AValue: PArrayS2; var FromV, ToV: SG; const Value: S2; FindGroup: BG): Boolean;
 function FindU2(AValue: PArrayU2; var FromV, ToV: SG; const Value: U2; FindGroup: BG): Boolean;
@@ -28,7 +28,6 @@ function Find(SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
 implementation
 
 uses
-	uError,
 	Math;
 
 function FindS2(AValue: PArrayS2; var FromV, ToV: SG; const Value: S2; FindGroup: BG): Boolean;
@@ -59,7 +58,7 @@ begin
 	for i := MinIndex to MaxIndex - 1 do
 	begin
 		if AValue[AIndex[i]] > AValue[AIndex[i]] then
-			IE(445);
+			CreateException;
 	end;
 	{$endif}
 
@@ -95,7 +94,7 @@ begin
 	for i := MinIndex to MaxIndex - 1 do
 	begin
 		if AValue[i] > AValue[i + 1] then
-			IE(446);
+			CreateException;
 	end;
 	{$endif}
 

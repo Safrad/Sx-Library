@@ -11,7 +11,7 @@ unit uSounds;
 interface
 
 uses
-	uAdd, uDForm,
+	uTypes, uDForm,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls;
 
@@ -73,7 +73,7 @@ implementation
 
 {$R *.dfm}
 uses
-	uWave, uData, uFiles, uDIni, uInput, uError;
+	uWave, uData, uFiles, uDIni, uInput, uError, uMath;
 
 type
 	PSound = ^TSound;

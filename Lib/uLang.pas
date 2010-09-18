@@ -49,7 +49,7 @@ implementation
 
 uses
 	Dialogs, Windows,
-	uAdd, uError, uStrings, uFiles, uSorts, uFind, uParser;
+	uTypes, uError, uStrings, uFiles, uSorts, uFind, uParser;
 
 type
 //	TCzLetters = array[0..29] of Char;

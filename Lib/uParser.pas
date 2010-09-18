@@ -20,7 +20,7 @@ interface
 
 uses
 	Classes, StdCtrls, SysUtils, Controls,
-	uAdd, uData;
+	uTypes, uData, uMath;
 
 type
 	TKeyword = (
@@ -686,8 +686,8 @@ procedure StdCharTable;
 implementation
 
 uses
-	Math, Dialogs,
-	uStrings, uFind, uError, uFiles;
+	Math,
+	uStrings, uFind, uError, uFiles, uFormat, uInput;
 
 
 constructor TDParser.Create(Stream: TStream);
@@ -1683,9 +1683,9 @@ begin
 
 	{$ifopt d+}
 	if Length(Params) > MesParam[M.MesId] then
-		MessageD('IE too many parameters', mtWarning, [mbOk])
+		CreateException
 	else if Length(Params) < MesParam[M.MesId] then
-		MessageD('IE too less parameters', mtWarning, [mbOk]);
+		CreateException;
 	{$endif}
 	for i := 0 to Length(Params) - 1 do
 	begin

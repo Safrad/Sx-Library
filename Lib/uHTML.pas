@@ -11,7 +11,7 @@ unit uHTML;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	SysUtils;
 
 type
@@ -29,6 +29,7 @@ type
 		AddCreated, AddTitle: BG;
 		Unicode: BG;
 		ConvertCharser: BG;
+		Foot: string;
 
 		constructor Create(FileName: TFileName);
 		destructor Destroy; override;
@@ -38,7 +39,7 @@ type
 		procedure AddBody(s: string);
 		procedure AddCommand(s: string);
 		procedure HorizontalRule(Width: SG = 100; DistanceUnit: TDistanceUnit = duPercentage; Size: SG = 2);
-		procedure AddDataCell(s: string; AlignRight: BG = False);
+		procedure AddDataCell(s: string; AlignRight: SG = 0);
 		procedure AddHeadCell(s: string; AlignRight: BG = False);
 		procedure AddTable(FileName: TFileName; Border: SG = 1; CellSpacing: SG = 2; CellPadding: SG = 2);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
@@ -73,7 +74,7 @@ implementation
 
 uses
 	Math,
-	uStrings, uFiles, uDBitmap, uLang;
+	uStrings, uFiles, uDBitmap, uLang, uFormat, uMath;
 
 function NToHTML(Value: SG; EnableZero: BG): string;
 begin
@@ -323,10 +324,12 @@ begin
 	Body := Body + '/>'
 end;
 
-procedure THTML.AddDataCell(s: string; AlignRight: BG = False);
+procedure THTML.AddDataCell(s: string; AlignRight: SG = 0);
 begin
 	Body := Body + '<td';
-	if AlignRight then
+	if AlignRight = 1 then
+		Body := Body + ' align="center"'
+	else if AlignRight = 2 then
 		Body := Body + ' align="right"';
 	Body := Body + '>' + s + '</td>';
 end;
@@ -422,10 +425,13 @@ begin
 			begin
 				Body := Body + ReadStringFromFile(FName);
 			end;
-			AddBody('<A HREF="http://validator.w3.org/check?uri=referer">');
+			AddBody(Foot);
+			AddBody('&nbsp;&nbsp;<A HREF="http://validator.w3.org/check?uri=referer">');
 			AddImage(ImagesDir + 'valid-html40.png');
 			AddBody('</A></DIV>' + HTMLSep);
-		end;
+		end
+		else
+			AddBody(Foot);
 		AddBody('</BODY>' + HTMLSep);
 	end;
 	AddBody('</HTML>' + HTMLSep);
@@ -435,6 +441,8 @@ const
 	CharsetName: array[0..1] of string = ('ISO-8859-2'{ windows-1250}, 'utf-8');
 var
 	LastBody, s: string;
+	BodySaved: string;
+	MaxSize: SG;
 begin
 	LastBody := Body;
 	if Title = '' then Title := DelFileExt(ExtractFileName(FileName));
@@ -470,21 +478,32 @@ begin
 	end;
 	Body := s + Body;
 
+	MaxSize := Length(Body);
+
 	HTMLEnd;
-	if ConvertCharser = False then
-		WriteStringToFile(FileName, Body, False)
-	else
+	if ConvertCharser then
 	begin
 		if Unicode = False then
 		begin
 			ConvertCharset(Body, cp1250, cpISO88592);
-			WriteStringToFile(FileName, Body, False);
 		end
 		else
 		begin
-			WriteStringToFile(FileName, AnsiToUtf8(Body), False);
+			Body := AnsiToUtf8(Body);
 		end;
 	end;
+
+	if FileExists(FileName) then
+	begin
+		ReadStringFromFile(FileName, BodySaved);
+
+		BodySaved := Copy(BodySaved, 1, MaxSize);
+		if BodySaved <> '' then
+		if SameData(Pointer(Body), Pointer(BodySaved), MaxSize) then
+			Exit
+	end;
+
+	WriteStringToFile(FileName, Body, False);
 	Body := LastBody;
 end;
 

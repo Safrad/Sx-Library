@@ -12,7 +12,7 @@ interface
 
 {$R *.RES}
 uses
-	uAdd, uFiles, uDImage,
+	uTypes, uMath, uMem, uFiles, uDImage,
 	Classes, Controls, Windows, Graphics, SysUtils, Messages, Dialogs;
 
 type
@@ -352,8 +352,7 @@ begin
 					end
 					else
 						FSortBySwap := not FSortBySwap;
-					if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[IX]);
-					Fill;
+					DataChanged;
 				end;
 			end;
 			end;
@@ -367,7 +366,7 @@ begin
 	inherited;
 	if (DragMode <> dmAutomatic) then
 	begin
-//		MouseMove([], Message.WParam, Message.LParam);
+//		MouseMove([], , );
 //		Fill;
 	end;
 end;
@@ -379,7 +378,7 @@ begin
 	begin
 		if Where <> vaNone then
 		begin
-			MouseMove([], MaxInt div 2, MaxInt div 2);
+//			MouseMove([], , ); D???
 {			Where := vaNone;
 			LFill(nil);}
 		end;
@@ -570,10 +569,10 @@ begin
 						if Assigned(OnGetData) then
 						begin
 							ColIndex := ColumnOrder[IX];
-							if FSortBySwap then
+{							if FSortBySwap then
 								RowIndex := RowOrder[FRowCount - 1 - IY]
-							else
-								RowIndex := RowOrder[IY];
+							else}
+							RowIndex := RowOrder[IY];
 							if SelRows[IY] {and MouseOn} then
 								Bitmap.Canvas.Font.Color := clWindow
 							else if HotRow = IY then
@@ -811,6 +810,10 @@ begin
 	if Assigned(FOnColumnClick) and (SortBy >= 0) then
 	begin
 		FOnColumnClick(Self, Columns[SortBy]);
+//					if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[IX]);
+		if FSortBySwap then
+			if RowCount > 1 then
+				Reverse(RowOrder[0], RowCount);
 		Fill;
 	end;
 end;

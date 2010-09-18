@@ -12,7 +12,7 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel, uWave, uAdd,
+	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel, uWave, uTypes,
 	uDForm, uDTimer, uDEdit;
 
 type
@@ -97,9 +97,7 @@ var
 procedure IE; overload;
 procedure IE(ErrorCode: U2); overload;
 //procedure IE(ErrorMes: string); overload;
-procedure CreateException;
 {$endif}
-function ErrorMes(const ErrorCode: U4): string;
 
 procedure ShowMessages;
 // Normal Dialog
@@ -121,7 +119,8 @@ implementation
 
 {$R *.DFM}
 uses
-	uStrings, uGraph, uDBitmap, uData, uInput,
+	uFiles,
+	uStrings, uGraph, uDBitmap, uData, uInput, uFormat,
 	Registry, MMSystem, Consts, Math;
 
 type
@@ -176,35 +175,7 @@ begin
 //	{$endif}
 end;*)
 
-procedure CreateException;
-begin
-	asm
-	mov eax, $ffffffff
-	call eax
-	end;
-end;
 {$endif}
-
-function ErrorMes(const ErrorCode: U4): string;
-var
-	NewLength: SG;
-begin
-	SetLength(Result, MAX_PATH);
-	NewLength := FormatMessage(
-		{FORMAT_MESSAGE_ALLOCATE_BUFFER or}
-		FORMAT_MESSAGE_FROM_SYSTEM or
-		FORMAT_MESSAGE_IGNORE_INSERTS,
-		nil,
-		ErrorCode,
-		LANG_NEUTRAL or SUBLANG_DEFAULT shl 10,
-		@Result[1],
-		MAX_PATH,
-		nil);
-	SetLength(Result, NewLength);
-	Replace(Result, CharCR + CharLF, ' ');
-	DelBESpace(Result);
-	Result := Result + ' (' + NToS(ErrorCode) + ')';
-end;
 
 // TfIOError
 

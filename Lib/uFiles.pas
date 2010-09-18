@@ -11,8 +11,8 @@ unit uFiles;
 interface
 
 uses
-	uAdd, uStrings,
-	SysUtils, Windows, Classes;
+	uTypes, uStrings,
+	SysUtils, Windows;
 
 // File system
 const
@@ -21,19 +21,9 @@ const
 	09/2001: 32768
 	06/2003: 65536-131072
 }
-	DefFileBuffer = 131072;
+	DefFileBuffer = {$ifndef NoGUI}131072{$else}32768{$endif};
 	FileSep = CharCR + CharLF;
 type
-	TDriveLetter = 'A'..'Z';
-	TDriveInfo = packed record // 32
-		FreeSpace: U8;
-		DriveSize: U8;
-		ClusterSize: U4;
-		DriveType: U1;
-		DriveLetter: TDriveLetter; // 1
-		Reserved: array[0..9] of U8; // 10
-	end;
-
 	TFileNames = array of TFileName;
 
 	TFileMode = (fmReadOnly, fmWriteOnly, fmReadAndWrite);
@@ -67,8 +57,12 @@ type
 		FFileSize: U8;
 		function GetFileSize(var Size: U8): Boolean;
 		function IsOpened: BG;
+		function Error: BG; overload;
+		function Error(const EC: U4): BG; overload;
 	public
+		{$ifndef NoGUI}
 		ErrorCode: U4;
+		{$endif}
 		property FilePos: U8 read FFilePos;
 		property FileSize: U8 read FFileSize;
 		property Opened: BG read IsOpened;
@@ -86,7 +80,7 @@ type
 //		function WriteF(Line: string): Boolean;
 		function Writeln(Line: string): Boolean;
 		function WritelnW(Line: WideString): Boolean;
-		function Close: Boolean;
+		function Close(ChangeDate: BG = True): Boolean;
 		function Truncate: Boolean;
 		function FlushFileBuffers: Boolean;
 		function Eof: Boolean;
@@ -94,6 +88,7 @@ type
 		function UnLock(From, Count: U8): Boolean;
 	end;
 
+function ErrorMes(const ErrorCode: U4): string;
 function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
 {
 	Result of Functions : False: Error, True: Ok
@@ -132,6 +127,11 @@ var
 	ReadCount, WriteCount: UG;
 	ReadBytes, WriteBytes: U8;
 
+	{$ifdef NoGUI}
+	ErrorStr: string;
+	ErrorCode: U4;
+	{$endif}
+
 function ShortDir(const Dir: string): string;
 function FullDir (Dir: string): string;
 function DelFileExt(const FName: string): string;
@@ -153,7 +153,6 @@ function NewFileOrDir(var FileOrDir: string): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
 
 function DeleteFileEx(const FileName: TFileName): Boolean;
-function DeleteFileDialog(const FileName: TFileName): Boolean;
 function DeleteDir(const DirName: string): Boolean;
 function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
 
@@ -170,26 +169,10 @@ type
 function ReadStringsFromFile(var FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
 function WriteStringsToFile(var FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; Append: BG): BG;
 
-function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
-function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
-
 function ReadStringFromFile(FileName: TFileName): string; overload;
 function ReadStringFromFile(var FileName: TFileName; out Line: string): BG; overload;
 function WriteStringToFile(var FileName: TFileName; const Line: string; Append: BG): BG;
 
-function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
-function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
-
-function GetDriveInfo(const Drive: Byte): TDriveInfo;
-
-{$IFDEF WIN32}
-function ShortToLongFileName(const ShortName: string): string;
-function ShortToLongPath(const ShortName: string): string;
-{function LongToShortFileName(const LongName: string): string;
-function LongToShortPath(const LongName: string): string;}
-{$ENDIF WIN32}
-
-function SelectFolder(var Path: string; browseTitle: string = ''): BG;
 
 {
 	MapViewOfFile
@@ -197,12 +180,40 @@ function SelectFolder(var Path: string; browseTitle: string = ''): BG;
 	CreateFileMapping
 }
 
+{$IFDEF WIN32}
+function ShortToLongFileName(const ShortName: string): string;
+function ShortToLongPath(ShortName: string): string;
+{function LongToShortFileName(const LongName: string): string;
+function LongToShortPath(const LongName: string): string;}
+{$ENDIF WIN32}
 
 implementation
 
 uses
-	Dialogs, ShellAPI, ShlObj, Math, Forms,
-	uError;
+	Math,
+	{$ifndef NoGUI}uError, {$endif}
+	uFormat, uMem;
+
+function ErrorMes(const ErrorCode: U4): string;
+var
+	NewLength: SG;
+begin
+	SetLength(Result, MAX_PATH);
+	NewLength := FormatMessage(
+		{FORMAT_MESSAGE_ALLOCATE_BUFFER or}
+		FORMAT_MESSAGE_FROM_SYSTEM or
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		nil,
+		ErrorCode,
+		LANG_NEUTRAL or SUBLANG_DEFAULT shl 10,
+		@Result[1],
+		MAX_PATH,
+		nil);
+	SetLength(Result, NewLength);
+	Replace(Result, CharCR + CharLF, ' ');
+	DelBESpace(Result);
+	Result := Result + ' (' + NToS(ErrorCode) + ')';
+end;
 
 constructor TFile.Create;
 begin
@@ -215,6 +226,22 @@ destructor TFile.Destroy;
 begin
 	if IsOpened then Close;
 	inherited Destroy;
+end;
+
+function TFile.Error: BG;
+begin
+	{$ifndef NoGUI}
+	Result := IOErrorRetry(TFileName(FTempFileName), ErrorCode);
+	{$else}
+	Result := False;
+	ErrorStr := FTempFileName + LineSep + ErrorMes(ErrorCode);
+	{$endif}
+end;
+
+function TFile.Error(const EC: U4): BG;
+begin
+	ErrorCode := EC;
+	Result := Error;
 end;
 
 function TFile.IsOpened: BG;
@@ -301,7 +328,7 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if IOErrorRetry(TFileName(FTempFileName), ErrorCode) then goto LRetry;
+			if Error then goto LRetry;
 		end
 		else
 		begin
@@ -332,13 +359,12 @@ function TFile.GetFileSize(var Size: U8): Boolean;
 begin
 	Result := HandleFileSize(HFile, Size) = NO_ERROR;
 	if Result = False then
-		IOError(TFileName(FTempFileName), ErrorCode);
+		Error;;
 end;
 
 function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
 var
 	HFile: THANDLE;
-	ErrorCode: U4;
 begin
 	Result := False;
 	U8(CreationTime) := 0;
@@ -358,14 +384,12 @@ begin
 		Result := GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
 		if CloseHandle(HFile) = False then
 		begin
-			ErrorCode := GetLastError;
-			IOError(FileName, ErrorCode);
+//			Error(GetLastError); D???
 		end;
 	end
 	else
 	begin
-		ErrorCode := GetLastError;
-		IOError(FileName, ErrorCode);
+//		Error(GetLastError); D???
 	end;
 end;
 
@@ -387,7 +411,7 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			IOError(TFileName(FTempFileName), ErrorCode);
+			Error(ErrorCode);
 		end
 		else
 			Result := True;
@@ -420,8 +444,7 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			Result := not IOErrorRetry(TFileName(FTempFileName){ + LineSep +
-				'Position: ' + NToS(FFilePos)}, ErrorCode);
+			Result := not Error(ErrorCode);
 		end
 		else
 			Result := True;
@@ -446,8 +469,7 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			Result := not IOErrorRetry(TFileName(FTempFileName) {+ LineSep +
-				'Position: ' + NToS(FFilePos)}, ErrorCode)
+			Result := not Error(ErrorCode);
 		end
 		else
 			Result := True;
@@ -551,26 +573,32 @@ begin
 	Result := BlockWrite(Line[1], 2 * Length(Line));
 end;
 
-function TFile.Close: Boolean;
+function TFile.Close(ChangeDate: BG = True): Boolean;
 var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 begin
 	Result := False;
 	if not IsOpened then
 	begin
+		{$ifndef NoGUI}
 		IOErrorMessage(TFileName(FTempFileName), 'File Is Closed');
+		{$else}
+		ErrorStr := 'File Is Closed';
+		{$endif}
 		Exit;
 	end;
 
 	SetLength(FBuffer, 0);
-	if FMode <> fmReadOnly then
-	begin
-		if GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime) then
+	if ChangeDate then
+		if FMode <> fmReadOnly then
 		begin
-			GetSystemTimeAsFileTime(LastWriteTime);
-			SetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
+			if GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime) then
+			begin
+				GetSystemTimeAsFileTime(LastWriteTime);
+				SetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
+			end;
 		end;
-	end;
+
 	if CloseHandle(HFile) then
 	begin
 		if FProtection and (FMode <> fmReadOnly) then
@@ -585,12 +613,10 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			Result := not IOErrorRetry(TFileName(FTempFileName), ErrorCode);
+			Result := not Error(ErrorCode);
 		end
 		else
-		begin
 			Result := True;
-		end;
 	end;
 	HFile := INVALID_HANDLE_VALUE;
 end;
@@ -607,12 +633,12 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			Result := True;
-			IOError(TFileName(FTempFileName), ErrorCode);
+			Result := False;
+			Error(ErrorCode);
 		end
 		else
 		begin
-			Result := False;
+			Result := True;
 			FFileSize := FFilePos;
 		end;
 	end;
@@ -647,86 +673,6 @@ begin
 		ErrorCode := GetLastError;
 	end;
 end;
-
-// Utils
-
-{$IFDEF WIN32}
-
-function ShortToLongFileName(const ShortName: string): string;
-var
-	Temp: TWIN32FindData;
-	SearchHandle: THandle;
-begin
-	SearchHandle := FindFirstFile(@ShortName[1], Temp);
-	if SearchHandle <> ERROR_INVALID_HANDLE then begin
-		Result := string(Temp.cFileName);
-		if Result = '' then Result := string(Temp.cAlternateFileName);
-	end
-	else Result := '';
-	Windows.FindClose(SearchHandle);
-end;
-(*
-function LongToShortFileName(const LongName: string): string;
-var
-  Temp: TWIN32FindData;
-  SearchHandle: THandle;
-begin
-	SearchHandle := FindFirstFile(@LongName[1], Temp);
-	if SearchHandle <> ERROR_INVALID_HANDLE then begin
-    Result := string(Temp.cAlternateFileName);
-		if Result = '' then Result := string(Temp.cFileName);
-  end
-	else Result := '';
-  Windows.FindClose(SearchHandle);
-end;
-*)
-function ShortToLongPath(const ShortName: string): string;
-var
-	LastSlash: PChar;
-	TempPathPtr: PChar;
-begin
-	if FileExists(ShortName) = False then
-	begin
-		Result := ShortName;
-		Exit;
-	end;
-	Result := '';
-	TempPathPtr := @ShortName[1];
-	LastSlash := StrRScan(TempPathPtr, '\');
-	while LastSlash <> nil do begin
-		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
-		if LastSlash <> nil then begin
-			LastSlash^ := char(0);
-			LastSlash := StrRScan(TempPathPtr, '\');
-		end;
-	end;
-	Result := TempPathPtr + Result;
-end;
-(*
-function LongToShortPath(const LongName: string): string;
-var
-	LastSlash: PChar;
-	TempPathPtr: PChar;
-begin
-	if FileExists(LongName) = False then
-	begin
-		Result := LongName;
-		Exit;
-	end;
-	Result := '';
-	TempPathPtr := @LongName[1];
-  LastSlash := StrRScan(TempPathPtr, '\');
-  while LastSlash <> nil do begin
-		Result := '\' + LongToShortFileName(TempPathPtr) + Result;
-    if LastSlash <> nil then begin
-      LastSlash^ := char(0);
-      LastSlash := StrRScan(TempPathPtr, '\');
-    end;
-	end;
-	Result := TempPathPtr + Result;
-end;
-*)
-{$ENDIF WIN32}
 
 procedure InitPaths;
 var
@@ -948,7 +894,9 @@ var
 				end;
 				ErrorCode := FindNext(SearchRec);
 			end;
+			{$ifndef NoGUI}
 			if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path + SubPath, ErrorCode);
+			{$endif}
 			SysUtils.FindClose(SearchRec);
 		end;
 var
@@ -995,7 +943,6 @@ end;
 function GetFileSizeU(const FileName: TFileName): U8;
 var
 	HFile: THandle;
-	ErrorCode: U4;
 begin
 	Result := 0;
 	HFile := CreateFile(
@@ -1012,14 +959,12 @@ begin
 		HandleFileSize(HFile, Result);
 		if CloseHandle(HFile) = False then
 		begin
-			ErrorCode := GetLastError;
-			IOError(FileName, ErrorCode);
+//			Error(GetLastError); D???
 		end;
 	end
 	else
 	begin
-		ErrorCode := GetLastError;
-		IOError(FileName, ErrorCode);
+//		Error(GetLastError); D???
 	end;
 end;
 
@@ -1047,7 +992,7 @@ begin
 	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
 		Result := GetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @LastWriteTime);
-		F.Close;
+		F.Close(False);
 	end;
 	F.Free;
 end;
@@ -1068,32 +1013,40 @@ begin
 		if Result then
 		begin
 			Result := SetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @LastWriteTime);
+			{$ifndef NoGUI}
 			if Result = False then
 				IOError(FileName, GetLastError);
+			{$endif}
 		end
 		else
 		begin
+			{$ifndef NoGUI}
 			IOError(FileName, GetLastError);
+			{$endif}
 		end;
 
-		F.Close;
+		F.Close(False);
 	end;
 	F.Free;
 end;
 
 function CopyFile(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 label LRetry;
+{$ifndef NoGUI}
 var Error: U4;
+{$endif}
 begin
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
 	LRetry:
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
+	{$ifndef NoGUI}
 	if Result = False then
 	begin
 		Error := GetLastError;
 		if IOErrorRetry(Source, Error) then goto LRetry;
 		if IOErrorRetry(Dest, Error) then goto LRetry;
 	end;
+	{$endif}
 end;
 
 function CopyFileToDir(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
@@ -1157,8 +1110,10 @@ begin
 	else
 	begin
 		Result := CreateDirectory(@Dir[1], nil);
+		{$ifndef NoGUI}
 		if Result = False then
 			IOError(Dir, GetLastError);
+		{$endif}
 	end;
 end;
 
@@ -1240,7 +1195,9 @@ begin
 		end;
 		ErrorCode := SysUtils.FindNext(SearchRec);
 	end;
+	{$ifndef NoGUI}
 	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Source, ErrorCode);
+	{$endif}
 	SysUtils.FindClose(SearchRec);
 end;
 
@@ -1248,22 +1205,19 @@ function DeleteFileEx(const FileName: TFileName): Boolean;
 begin
 	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
 	Result := DeleteFile(PChar(FileName));
+	{$ifndef NoGUI}
 	if Result = False then
 		IOError(FileName, GetLastError);
-end;
-
-function DeleteFileDialog(const FileName: TFileName): Boolean;
-begin
-	Result := False;
-	if MessageD('Delete file' + LineSep + FileName, mtConfirmation, [mbYes, mbNo]) = mbYes then
-		Result := DeleteFileEx(FileName);
+	{$endif}
 end;
 
 function DeleteDir(const DirName: string): Boolean;
 begin
 	Result := Windows.RemoveDirectory(@DirName[1]);
+	{$ifndef NoGUI}
 	if Result = False then
 		IOError(DirName, GetLastError);
+	{$endif}
 end;
 
 function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
@@ -1297,7 +1251,9 @@ begin
 		end;
 		ErrorCode := SysUtils.FindNext(SearchRec);
 	end;
+	{$ifndef NoGUI}
 	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(DirName, ErrorCode);
+	{$endif}
 	SysUtils.FindClose(SearchRec);
 
 	if DeleteSelf then Result := DeleteDir(DirName) and Result;
@@ -1473,248 +1429,127 @@ begin
 	F.Free;
 end;
 
-function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
-label LRetry;
+{$IFDEF WIN32}
+
+function ShortToLongFileName(const ShortName: string): string;
 var
-	F: TFile;
-	Line: string;
+	Temp: TWIN32FindData;
+	SearchHandle: THandle;
 begin
-	Result := False;
-	{$ifopt d+}
-	if not Assigned(Lines) then
+	SearchHandle := FindFirstFile(@ShortName[1], Temp);
+	if SearchHandle <> ERROR_INVALID_HANDLE then begin
+		Result := string(Temp.cFileName);
+		if Result = '' then Result := string(Temp.cAlternateFileName);
+	end
+	else Result := '';
+	Windows.FindClose(SearchHandle);
+end;
+(*
+function LongToShortFileName(const LongName: string): string;
+var
+	Temp: TWIN32FindData;
+	SearchHandle: THandle;
+begin
+	SearchHandle := FindFirstFile(@LongName[1], Temp);
+	if SearchHandle <> ERROR_INVALID_HANDLE then begin
+		Result := string(Temp.cAlternateFileName);
+		if Result = '' then Result := string(Temp.cFileName);
+	end
+	else Result := '';
+	Windows.FindClose(SearchHandle);
+end;
+*)
+
+
+function StrRScan(const Str: string; Chr: Char): string;
+var
+	Index: SG;
+begin
+	Result := '';
+	Index := Length(Str);
+	while Index > 0 do
 	begin
-		IE(454);
+		while Str[Index] = Chr do
+		begin
+			Result := Copy(Str, Index, MaxInt);
+			Exit;
+		end;
+		Dec(Index);
+	end;
+end;
+
+function ShortToLongPath(ShortName: string): string;
+var
+	LastSlash: string;
+begin
+	if FileExists(ShortName) = False then
+	begin
+		Result := ShortName;
 		Exit;
 	end;
-	{$endif}
-	Lines.Clear;
-	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	Result := '';
+	LastSlash := StrRScan(ShortName, '\');
+	while LastSlash <> '' do
 	begin
-		while not F.Eof do
+		Result := '\' + ShortToLongFileName(ShortName) + Result;
+		if LastSlash <> '' then
 		begin
-			if not F.Readln(Line) then goto LRetry;
-			Lines.Add(Line);
+			SetLength(ShortName, Length(ShortName) - Length(LastSlash));
+			LastSlash := StrRScan(ShortName, '\');
 		end;
-		F.Close;
-		Result := True;
 	end;
-	F.Free;
+	Result := ShortName + Result;
 end;
-
-function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
-label LRetry;
+{
+function ShortToLongPath(ShortName: string): string;
 var
-	F: TFile;
-	i: SG;
+	LastSlash: PChar;
+	TempPathPtr: PChar;
 begin
-	Result := False;
-	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	if FileExists(ShortName) = False then
 	begin
-		if Append then F.SeekEnd;
-		i := 0;
-		while i < Lines.Count do
-		begin
-			if not F.Write(Lines[i] + FileSep) then goto LRetry;
-			Inc(i);
+		Result := ShortName;
+		Exit;
+	end;
+	Result := '';
+	TempPathPtr := @ShortName[1];
+	LastSlash := StrRScan(TempPathPtr, '\');
+	while LastSlash <> nil do begin
+		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
+		if LastSlash <> nil then begin
+			LastSlash^ := char(0);
+			LastSlash := StrRScan(TempPathPtr, '\');
 		end;
-		if Append = False then F.Truncate;
-		if not F.Close then goto LRetry;
-		Result := True;
 	end;
-	F.Free;
-end;
-
-function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
-label LRetry;
-var
-	Buf: Pointer;
-	Count: SG;
-begin
-	Result := ReadBufferFromFile(FileName, Buf, Count);
-{	Stream.SetSize(Count);
-	Stream.Seek(0, 0);}
-	Stream.WriteBuffer(Buf^, Count);
-	Stream.Seek(0, 0);
-	FreeMem(Buf);
-end;
-
-function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
-label LRetry;
-var
-	Buf: Pointer;
-begin
-	GetMem(Buf, Stream.Size);
-	Stream.Seek(0, 0);
-	Stream.ReadBuffer(Buf^, Stream.Size);
-	Result := WriteBufferToFile(FileName, Buf, Stream.Size);
-	FreeMem(Buf);
-end;
-
-function GetDriveInfo(const Drive: Byte): TDriveInfo;
-var
-	P: array[0..3] of Char;
-	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
-	TotalNumberOfClusters: U4;
-begin
-	FillChar(Result, SizeOf(Result), 0);
-	Result.DriveLetter := Char(Drive + Ord('A'));
-	P[0] := Chr(Drive + Ord('A'));
-	P[1] := ':';
-	P[2] := '\';
-	P[3] := CharNul;
-	Result.DriveType := GetDriveType(P);
-	case Result.DriveType of
-//  DRIVE_UNKNOWN:  Result := 4096;
-	DRIVE_NO_ROOT_DIR: Result.ClusterSize := 0;
-	DRIVE_REMOVABLE:
-	begin
-		Result.ClusterSize := 512;
-		Result.FreeSpace := -1;
-		Result.DriveSize := -1;
-	end;
-{ DRIVE_FIXED: Result := 4096;
-	DRIVE_REMOTE: Result := 4096;
-	DRIVE_CDROM: Result := 2048;
-	DRIVE_RAMDISK: Result := 4096;}
-	else
-	begin
-		SectorsPerCluster := 0;
-		BytesPerSector := 0;
-		if GetDiskFreeSpace(P, SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
-			TotalNumberOfClusters) then
-			Result.ClusterSize := SectorsPerCluster * BytesPerSector;
-		Result.FreeSpace := Result.ClusterSize * U8(NumberOfFreeClusters);
-		Result.DriveSize := Result.ClusterSize * U8(TotalNumberOfClusters);
-		if Result.ClusterSize = 0 then
-			case Result.DriveType of
-			DRIVE_UNKNOWN:  Result.ClusterSize := 4096;
-			DRIVE_FIXED: Result.ClusterSize := 4096;
-			DRIVE_REMOTE: Result.ClusterSize := 4096;
-			DRIVE_CDROM: Result.ClusterSize := 2048;
-			end;
-	end;
-	end;
-end;
-
-var
-	lg_StartFolder: String;
-
-///////////////////////////////////////////////////////////////////
-// Call back function used to set the initial browse directory.
-///////////////////////////////////////////////////////////////////
-function BrowseForFolderCallBack(Wnd: HWND; uMsg: UINT;
-				lParam, lpData: LPARAM): Integer stdcall;
-begin
-	if uMsg = BFFM_INITIALIZED then
-		SendMessage(Wnd,BFFM_SETSELECTION,1,Integer(@lg_StartFolder[1]));
-	result := 0;
-end;
-
-///////////////////////////////////////////////////////////////////
-// This function allows the user to browse for a folder
-//
-// Arguments:-
-//    browseTitle : The title to display on the browse dialog.
-//  initialFolder : Optional argument. Use to specify the folder
-//                  initially selected when the dialog opens.
-//
-// Returns: The empty string if no folder was selected (i.e. if the
-//          user clicked cancel), otherwise the full folder path.
-///////////////////////////////////////////////////////////////////
-function SelectFolder(var Path: string; browseTitle: string = ''): BG;
-var
-	browse_info: TBrowseInfo;
-	folder: array[0..MAX_PATH] of char;
-	find_context: PItemIDList;
-begin
-	FillChar(browse_info,SizeOf(browse_info),#0);
-	lg_StartFolder := Path;
-	browse_info.pszDisplayName := @folder[0];
-	browse_info.lpszTitle := PChar(browseTitle);
-	browse_info.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI;
-	browse_info.hwndOwner := Application.Handle;
-	if Path <> '' then
-		browse_info.lpfn := BrowseForFolderCallBack;
-	find_context := SHBrowseForFolder(browse_info);
-	if Assigned(find_context) then
-	begin
-		Result := SHGetPathFromIDList(find_context, folder);
-		Path := folder;
-		if Length(Path) > 0 then
-			if Path[Length(Path)] <> '\' then Path := Path + '\';
-		GlobalFreePtr(find_context);
-	end
-	else
-		result := False;
-end;
-(*
-var
-	TitleName : string;
-	lpItemID : PItemIDList;
-	BrowseInfo : TBrowseInfo;
-//	DisplayName : array[0..MAX_PATH] of char;
-	TempPath : array[0..MAX_PATH] of Char;
-
-	I: TItemIdList;
-begin
-	if Path = '' then Path := 'C:\';
-	FillChar(BrowseInfo, SizeOf(TBrowseInfo), 0);
-	BrowseInfo.hwndOwner := Handle;
-//	TitleName := 'D:\';
-	BrowseInfo.pszDisplayName := @Path[1];
-//	BrowseInfo.pszDisplayName := @DisplayName;
-	TitleName := 'Please specify a directory';
-	FillChar(I, SizeOf(I), 0);
-	I.mkid.cb := 1;
-	I.mkid.abID[0] := Byte('C');
-//	BrowseInfo.pidlRoot := @I;
-	BrowseInfo.lpszTitle := @TitleName[1];
-	BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI;
-	BrowseInfo.lpfn := nil;
-	BrowseInfo.lParam := 0;
-	BrowseInfo.iImage := 1;
-
-	Move(Path[1], TempPath, Length(Path)); // := Path + CharNul;
-
-	lpItemID := SHBrowseForFolder(BrowseInfo);
-	if lpItemId <> nil then
-	begin
-		Result := SHGetPathFromIDList(lpItemID, TempPath);
-		Path := StrPas(TempPath);
-		GlobalFreePtr(lpItemID);
-	end
-	else
-		Result := False;
-end;   *)
+	Result := TempPathPtr + Result;
+end;}
 
 (*
-function SelectDirectory(var Dir: string): BG;
-(*var OpenDialog1: TOpenDialog;
+function LongToShortPath(const LongName: string): string;
+var
+	LastSlash: PChar;
+	TempPathPtr: PChar;
 begin
-	OpenDialog1 := TOpenDialog.Create(nil);
-	try
-		if Dir = '' then Dir := WorkDir;
-		OpenDialog1.FileName := '*.*';
-		OpenDialog1.InitialDir := ExtractFilePath(Dir);
-		OpenDialog1.Options := OpenDialog1.Options + [ofPathMustExist];
-		OpenDialog1.Options := OpenDialog1.Options - [ofFileMustExist];
-		if OpenDialog1.Execute then
-		begin
-			Result := True;
-			Dir := ExtractFilePath(OpenDialog1.FileName);
-		end
-		else
-			Result := False;
-	finally
-		OpenDialog1.Free;
+	if FileExists(LongName) = False then
+	begin
+		Result := LongName;
+		Exit;
 	end;
-begin
-	FileCtrl.SelectDirectory('Select Direcotry...', Dir, Dir);
-end;*)
+	Result := '';
+	TempPathPtr := @LongName[1];
+	LastSlash := StrRScan(TempPathPtr, '\');
+	while LastSlash <> nil do begin
+		Result := '\' + LongToShortFileName(TempPathPtr) + Result;
+		if LastSlash <> nil then begin
+			LastSlash^ := char(0);
+			LastSlash := StrRScan(TempPathPtr, '\');
+		end;
+	end;
+	Result := TempPathPtr + Result;
+end;
+*)
+{$ENDIF WIN32}
+
 
 initialization
 	InitPaths;

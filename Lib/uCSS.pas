@@ -11,7 +11,7 @@ unit uCSS;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	SysUtils;
 
 type

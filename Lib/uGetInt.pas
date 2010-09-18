@@ -11,7 +11,7 @@ unit uGetInt;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm;
 

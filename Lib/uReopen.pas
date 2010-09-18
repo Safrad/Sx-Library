@@ -11,7 +11,7 @@ unit uReopen;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	SysUtils, Menus, Classes;
 
 const
@@ -60,7 +60,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math, Dialogs,
-	uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus, uStrings;
+	uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus, uStrings, uFormat;
 
 var
 	ReopenLimit: Integer;
@@ -238,9 +238,9 @@ var
 	ReopenC, ReopenO: SG;
 begin
 	if Save = True then ReopenC := ReopenCount else ReopenC := 0;
-	MainIni.RWSG(Selection, 'ReopenCount', ReopenC, Save);
+	MainIni.RWNum(Selection, 'ReopenCount', ReopenC, Save);
 	if Save = False then ReopenLimit := 10;
-	MainIni.RWSG(Selection, 'ReopenLimit', ReopenLimit, Save);
+	MainIni.RWNum(Selection, 'ReopenLimit', ReopenLimit, Save);
 	if Save = False then
 	begin
 		SetLength(ReopenItems, 0);

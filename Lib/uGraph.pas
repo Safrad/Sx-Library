@@ -9,7 +9,7 @@
 unit uGraph;
 
 interface
-uses uAdd, Windows, Graphics, ExtCtrls, StdCtrls, Classes, Controls, SysUtils;
+uses uTypes, Windows, Graphics, ExtCtrls, StdCtrls, Classes, Controls, SysUtils;
 
 const
 	clMoneyGreen = TColor($C0DCC0);
@@ -112,13 +112,14 @@ procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
 var T: SG;
 begin
 	case Angle and 3 of
+	// Up
 	1: // Left
 	begin
 		T := X;
 		X := Y;
 		Y := MaxX - T;
 	end;
-	2:
+	2: // Down
 	begin
 		X := MaxX - X;
 		Y := MaxY - Y;

@@ -11,7 +11,7 @@ unit uInput;
 interface
 
 uses
-	uAdd;
+	uTypes;
 
 // Str To Data
 function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: SG): SG;
@@ -37,14 +37,17 @@ function StrToValS8(Line: string; const UseWinFormat: BG;
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1): U1;
 
+function SToDate(Str: string): TDateTime;
+function SToDateTime(Str: string): TDateTime;
+
 procedure ClearErrors;
 procedure ShowAndClearErrors;
 
 implementation
 
 uses
-	Dialogs,
-	uParser, uError;
+	SysUtils, Dialogs,
+	uParser, uFormat, uStrings, uError;
 
 function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: SG): SG;
 var Parser: TDParser;
@@ -161,11 +164,82 @@ begin
 	end;
 end;*)
 
+function SToDate(Str: string): TDateTime;
+var
+	DateSep: Char;
+	Year, Month, Day: U2;
+	InLineIndex: SG;
+begin
+	if Str = '' then
+	begin
+		Result := 0;
+		Exit;
+	end;
+
+	InLineIndex := 1;
+	if Pos('/', Str) <> 0 then
+	begin
+		DateSep := '/';
+		Month := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 12, 1);
+		Day := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 31, 1);
+		Year := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1900, UG(1900), 9999, 1);
+	end
+	else if Pos('-', Str) <> 0 then
+	begin
+		DateSep := '-';
+		Year := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1900, UG(1900), 9999, 1);
+		Month := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 12, 1);
+		Day := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 31, 1);
+	end
+	else if Pos('.', Str) <> 0 then
+	begin
+		DateSep := '.';
+		Day := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 31, 1);
+		Month := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 12, 1);
+		Year := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1900, UG(1900), 9999, 1);
+	end
+	else if Length(Str) = 6 then
+	begin
+		Year := StrToValI(Copy(Str, 1, 2), False, 00, UG(00), 99, 1);
+		if Year < ICentury then Inc(Year, 2000) else Inc(Year, 1900);
+		Month := StrToValI(Copy(Str, 3, 2), False, 1, UG(1), 99, 1);
+		Day := StrToValI(Copy(Str, 5, 2), False, 1, UG(1), 31, 1);
+	end
+	else if Length(Str) = 8 then
+	begin
+		Year := StrToValI(Copy(Str, 1, 4), False, 1900, UG(1900), 9999, 1);
+		Month := StrToValI(Copy(Str, 5, 2), False, 1, UG(1), 12, 1);
+		Day := StrToValI(Copy(Str, 7, 2), False, 1, UG(1), 31, 1);
+
+	end
+	else
+//	if (Pos(',', Str) <> 0) or (Str[1] = '3') then
+	begin
+		Result := StrToValI(Str, False, 0, 0, MaxInt, 1);
+		Exit;
+	end;
+	if Month > 50 then Dec(Month, 50); // Female offset
+	if TryEncodeDate(Year, Month, Day, TDateTime(Result)) = False then
+	begin
+		// AddMes2 D???
+		Result := 0;
+	end;
+end;
+
+function SToDateTime(Str: string): TDateTime;
+var InLineIndex: SG;
+begin
+	InLineIndex := 1;
+	Result := SToDate(ReadToChar(Str, InLineIndex, ' ')) +
+		SToTime(ReadToChar(Str, InLineIndex, CharCR));
+end;
+
 procedure CompileMesClear;
 var
 	M: PCompileMes;
 	i: SG;
 begin
+	if CompileMes = nil then Exit;
 	M := CompileMes.GetFirst;
 	for i := 0 to SG(CompileMes.Count) - 1 do
 	begin
@@ -177,6 +251,7 @@ end;
 
 procedure ClearErrors;
 begin
+	if CompileMes = nil then Exit;
 	if CompileMes.Count > 0 then
 	begin
 		CompileMesClear;

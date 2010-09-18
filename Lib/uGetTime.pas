@@ -11,7 +11,7 @@ unit uGetTime;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm;
 
@@ -80,7 +80,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uStrings, uError, uInput, uParser;
+	uStrings, uError, uInput, uParser, uFormat;
 
 var
 	fGetTime: TfGetTime;
@@ -213,7 +213,7 @@ begin
 	ButtonCur.Enabled := NowVal <> TCurVal;
 	ButtonDef.Enabled := NowVal <> TDefVal;
 	ButtonMax.Enabled := NowVal <> TMaxVal;
-	msToHMSD(NowVal, H, M, S, D);
+	MsToHMSD(NowVal, H, M, S, D);
 	LabelH.Caption := IntToStr(H);
 	LabelM.Caption := IntToStr(M);
 	LabelS.Caption := IntToStr(S);

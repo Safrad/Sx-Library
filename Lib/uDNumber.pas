@@ -10,7 +10,7 @@ unit uDNumber;
 
 interface
 
-uses uAdd;
+uses uTypes;
 
 type
 	TMainNumber = U1;
