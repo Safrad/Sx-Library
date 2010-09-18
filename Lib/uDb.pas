@@ -381,7 +381,7 @@ var
 	i: Integer;
 begin
 	Result := False;
-	IgnoreAll := False;
+	IgnoreAll := iaNone;
 	LRetry:
 	AssignFile(DbFile, FName);
 	if FileExists(FName) then

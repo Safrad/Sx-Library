@@ -191,7 +191,6 @@ end;
 
 procedure TDImage.WMChar(var Message: TWMChar);
 begin
-//	Beep;
 {	with Message do
 		if  (((CharCode = VK_RETURN) and FActive) or
 			((CharCode = VK_ESCAPE) and FCancel)) and
@@ -706,7 +705,9 @@ begin
 		Bitmap.SetSize(0, 0);
 		Exit;
 	end;
-	Bitmap.SetSize(Width, Height);
+	if (Bitmap.Width <> Width) or (Bitmap.Height <> Height) then
+//		Bitmap.Resize24E(Bitmap, clNone, Width, Height, nil);}
+		Bitmap.SetSize(Width, Height);
 
 	try
 		if Assigned(FOnFill) then FOnFill(Self);

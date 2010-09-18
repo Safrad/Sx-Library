@@ -336,7 +336,6 @@ end;
 
 procedure TDView.WMKeyDown(var Msg: TWMKeyDown);
 begin
-//	if Msg.CharCode <> 0 then Beep;
 	Msg.Result := 1;
 end;
 

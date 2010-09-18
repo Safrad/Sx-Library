@@ -19,11 +19,11 @@ type
 		LabelRunCount: TDLabel;
 		LabelNowRunTime: TDLabel;
 		LabelTotalRunTime: TDLabel;
-		PanelBuild: TDPanel;
+    PanelBuild: TEdit;
 		PanelImage: TDPanel;
-		PanelRC: TDPanel;
-		PanelTRT: TDPanel;
-		PanelNRT: TDPanel;
+    PanelRC: TEdit;
+    PanelTRT: TEdit;
+    PanelNRT: TEdit;
 		PanelName: TDPanel;
 		ImageName: TDImage;
 		PenelVersion: TDPanel;
@@ -43,6 +43,7 @@ type
 		Image4: TImage;
 		SysInfo1: TDButton;
     DButtonMemoryStatus: TDButton;
+    DLabel1: TDLabel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -130,7 +131,7 @@ begin
 		fAbout := TfAbout.Create(AOwner);
 		fAbout.ProgramName := Application.Title;
 		fAbout.ProgramVersion := 'Version ' + Version;
-		fAbout.PanelBuild.Caption := Build;
+		fAbout.PanelBuild.Text := Build;
 		fAbout.LoadFile(FileName);
 		Screen.Cursor := OrigCursor;
 	end;
@@ -194,7 +195,7 @@ end;
 
 procedure TfAbout.InitNRT;
 begin
-	PanelNRT.Caption := msToStr(GetTickCount - StartProgramTime + 1000 div 2, diMSD, 0, False);
+	PanelNRT.Text := msToStr(GetTickCount - StartProgramTime + 1000 div 2, diMSD, 0, False);
 end;
 
 procedure TfAbout.LoadFile(AboutFile: TFileName);
@@ -229,8 +230,8 @@ procedure TfAbout.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
 	EditEmail.Text := 'safrad@email.cz?subject=' + Application.Title;
-	PanelRC.Caption := Using('~#,###,###,##0', RunCount);
-	PanelTRT.Caption := msToStr(RunTime, diMSD, 3, False);
+	PanelRC.Text := Using('~#,###,###,##0', RunCount);
+	PanelTRT.Text := msToStr(RunTime, diDHMSD, 3, False);
 
 	ImageName.Bitmap.Canvas.Brush.Style := bsClear;
 	ImageName.Bitmap.Canvas.Font.Style := [fsBold];

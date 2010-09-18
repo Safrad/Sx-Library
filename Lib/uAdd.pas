@@ -281,8 +281,6 @@ function Date6Now: string;
 
 // System
 procedure Nop;
-procedure Beep;
-procedure SndWarn;
 function DriveTypeToStr(const DriveType: Integer): TString;
 function ProcessPriority(const Prior: Byte): Integer;
 function ThreadPriority(const Prior: Byte): Integer;
@@ -1638,6 +1636,7 @@ function msToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString;
 var
 	h, m, s, d: LongWord;
+	Day: SG;
 begin
 	msToHMSD(Abs(DT), h, m, s, d);
 
@@ -1645,7 +1644,13 @@ begin
 
 	if Display = diDHMSD then
 	begin
-		if DT >= MSecsPerDay then Result := Result + IntToStr(DT div MSecsPerDay) + ' days'
+		if DT >= MSecsPerDay then
+		begin
+			Day := DT div MSecsPerDay;
+			Result := Result + IntToStr(Day) + ' day';
+			if Day > 1 then Result := Result + 's';
+			Result := Result + ', ';
+		end;
 	end;
 
 	case Display of
@@ -1753,16 +1758,6 @@ begin
 	asm
 	nop
 	end;
-end;
-
-procedure Beep;
-begin
-	Windows.Beep(0, 0);
-end;
-
-procedure SndWarn;
-begin
-	Windows.Beep(0, 0);
 end;
 
 function DriveTypeToStr(const DriveType: Integer): string;

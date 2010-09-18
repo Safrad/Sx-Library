@@ -301,7 +301,12 @@ begin
 	else if Width > MaxBitmapWidth then Width := MaxBitmapWidth;
 	if Height < 0 then Height := 0
 	else if Height > MaxBitmapHeight then Height := MaxBitmapHeight;
+	if (Self.Width = Width) and (Self.Height = Height) then Exit;
+//	if (inherited Width = Width) and (inherited Height = Height) then Exit;
 	try
+		inherited Width := 0;
+		inherited Height := 0;
+//		inherited Height := Height div 2;
 		inherited Width := Width;
 		inherited Height := Height;
 	except
@@ -6607,7 +6612,12 @@ begin
 			BmpE24(0, 0, BmpS, clNone, ef16);
 		Exit;
 	end;
-	if (SX = 0) or (SY = 0) then Exit;
+
+	if (SX = 0) or (SY = 0) then
+	begin
+		SetSize(NewX, NewY);
+		Exit;
+	end;
 
 	if BmpS.Data = Data then
 	begin

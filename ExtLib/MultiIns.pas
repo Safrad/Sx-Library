@@ -15,6 +15,8 @@ function InitInstance: Boolean;
 
 implementation
 
+uses uError, uStrings;
+
 var
 	WProc: TFNWndProc;
 	MutHandle: THandle;
@@ -60,7 +62,7 @@ function InitInstance: Boolean;
 var
 	UniqueAppStr: string;
 begin
-	UniqueAppStr := Application.ExeName;
+	UniqueAppStr := DelCharsF(Application.ExeName, '\');
 	MessageID := RegisterWindowMessage(PChar(UniqueAppStr));
 	MutHandle := OpenMutex(MUTEX_ALL_ACCESS, False, PChar(UniqueAppStr));
 	if MutHandle = 0 then
@@ -72,9 +74,16 @@ begin
 		WProc := TFNWndProc(SetWindowLong(Application.Handle, GWL_WNDPROC,
 			LongInt(@NewWndProc)));
 		{ Set appropriate error flag if error condition occurred }
-		if WProc = nil then Beep;
+		if WProc = nil then
+		begin
+			ErrorMessage(ErrorMes(GetLastError));
+		end;
+		
 		MutHandle := CreateMutex(nil, False, PChar(UniqueAppStr));
-		if MutHandle = 0 then Beep;
+		if MutHandle = 0 then
+		begin
+			ErrorMessage(ErrorMes(GetLastError));
+		end;
 		Result := True;
 	end
 	else

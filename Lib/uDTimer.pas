@@ -270,6 +270,7 @@ end;
 
 function TDTimer.AppProc(var Message: TMessage): Boolean;
 begin
+	if Message.Msg = 0 then Exit;
 	Result := False;
 	case Message.Msg of
 	CM_ACTIVATE:
@@ -283,6 +284,9 @@ begin
 		if FInitialized and FActiveOnly then Suspend;
 	end;
 	end;
+	// D???
+{	Application.ProcessMessages;
+	Message.Result := 0;}
 end;
 
 procedure TDTimer.DoActivate;

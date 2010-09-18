@@ -50,7 +50,7 @@ begin
 	push dx
 
 	mov dx, ComIn
-	in al, dx
+//	in al, dx
 	mov dl, al
 
 	shr al, 7
@@ -106,7 +106,7 @@ begin
 	push ax
 	push dx
 	mov dx, ComOut
-	in ax, dx
+//	in ax, dx
 
 	mov bl, al
 	shr al, 6
@@ -150,7 +150,7 @@ begin
 	add al, dl}
 
 	mov dx, ComOut
-	out dx, ax
+//	out dx, ax
 
 	pop dx
 	pop ax

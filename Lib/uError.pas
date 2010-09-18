@@ -11,9 +11,9 @@ uses
 
 type
 	TfIOError = class(TDForm)
-		ButtonIRetry: TDButton;
-		ButtonIIgnore: TDButton;
-		ButtonIIgnoreAll: TDButton;
+    ButtonRetry: TDButton;
+    ButtonIgnore: TDButton;
+		ButtonIgnoreAll: TDButton;
 		ButtonExit: TDButton;
 		Image1: TImage;
 		ButtonOpen: TDButton;
@@ -28,17 +28,26 @@ type
 		procedure UpDown1ChangingEx(Sender: TObject; var AllowChange: Boolean;
 			NewValue: SmallInt; Direction: TUpDownDirection);
 		procedure ButtonExitClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure FormKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
 	private
 		{ Private declarations }
 		ErrorFileName: TFileName;
+		ShiftDown: BG;
 	public
 		{ Public declarations }
 	end;
 
+type
+	TIgnoreAll = (iaNone, iaSame, iaAll);
 var
-	IgnoreAll: Boolean;
+	IgnoreAll: TIgnoreAll;
 	SndError: PWave;
 
+procedure IE; overload;
+procedure IE(ErrorCode: SG); overload;
 procedure CreateException;
 function ErrorMes(const ErrorCode: U32): string;
 
@@ -63,6 +72,22 @@ var
 	IOErrorMessages: TStrings;
 type
 	TStyle = (stIO, stFile, stInternal);
+
+procedure IE;
+begin
+	IE(0);
+end;
+
+procedure IE(ErrorCode: SG);
+var S: string;
+begin
+	{$ifopt d+}
+	S := 'Internal Error ' + IntToStr(ErrorCode);
+	ErrorMessage(S);
+	{$else}
+	PlayWinSound(wsCriticalStop);
+	{$endif}
+end;
 
 procedure CreateException;
 begin
@@ -94,7 +119,10 @@ begin
 end;
 
 function DoForm(const Style: TStyle; var FName: TFileName; const ErrorCode: U32; const ErrorMsg: string; const Retry: Boolean): Boolean;
-var s: string;
+var
+	s: string;
+	i: SG;
+	FoundSame: BG;
 begin
 	Result := False;
 	if IOErrorMessages = nil then IOErrorMessages := TStringList.Create;
@@ -103,9 +131,22 @@ begin
 	else
 		s := ErrorMsg;
 	if FName <> '' then s := s + #13 + #10 + FName;
+
+	FoundSame := False;
+	if IgnoreAll = iaSame then
+	begin
+		for i := 0 to IOErrorMessages.Count - 1 do
+		begin
+			if s = IOErrorMessages[i] then
+			begin
+				FoundSame := True;
+				Break;
+			end;
+		end;
+	end;
 	IOErrorMessages.Add(s);
 
-	if IgnoreAll = False then
+	if (IgnoreAll <> iaAll) and (FoundSame = False) then
 	begin
 //		PlayWinSound(wsProgramError);
 		PlayWinSound(wsCriticalStop);
@@ -136,9 +177,9 @@ begin
 		fIOError.MemoMsg.Lines.Clear;
 		fIOError.MemoMsg.Lines.Add(s);
 
-		fIOError.ButtonIRetry.Enabled := Retry;
+		fIOError.ButtonRetry.Enabled := Retry;
 		fIOError.ButtonOpen.Enabled := Retry and ((Style = stIO) or (Style = stFile));
-		fIOError.ButtonIIgnore.Default := not Retry;
+		fIOError.ButtonIgnore.Default := not Retry;
 		fIOError.UpDown1.OnChangingEx := nil;
 		fIOError.UpDown1.Max := IOErrorMessages.Count - 1;
 		fIOError.UpDown1.Position := IOErrorMessages.Count - 1;
@@ -164,7 +205,13 @@ begin
 		end;
 
 		case fIOError.ModalResult of
-		mrAll: IgnoreAll := True;
+		mrAll:
+		begin
+			if fIOError.ShiftDown then
+				IgnoreAll := iaAll
+			else
+				IgnoreAll := iaSame;
+		end;
 		mrRetry:
 		begin
 			if fIOError.ErrorFileName <> '' then FName := fIOError.ErrorFileName;
@@ -253,10 +300,32 @@ end;
 
 procedure TfIOError.ButtonExitClick(Sender: TObject);
 begin
-	if Assigned(Application.MainForm) and (GetAsyncKeyState(VK_SHIFT) = 0) then
+	if Assigned(Application.MainForm) and (ShiftDown = False){(GetAsyncKeyState(VK_SHIFT) = 0)} then
 		Application.MainForm.Close
 	else
 		TerminateProcess(GetCurrentProcess, 1); //Halt;
+end;
+
+procedure TfIOError.FormKeyDown(Sender: TObject; var Key: Word;
+	Shift: TShiftState);
+begin
+	if (ShiftDown = False) and (Key = VK_SHIFT) then
+	begin
+		ShiftDown := True;
+		ButtonIgnoreAll.Caption := 'Ignore Realy All';
+		ButtonExit.Caption := 'Terimante';
+	end;
+end;
+
+procedure TfIOError.FormKeyUp(Sender: TObject; var Key: Word;
+	Shift: TShiftState);
+begin
+	if (ShiftDown = True) and (Key = VK_SHIFT) then
+	begin
+		ShiftDown := False;
+		ButtonIgnoreAll.Caption := 'Ignore All';
+		ButtonExit.Caption := 'Close';
+	end;
 end;
 
 end.

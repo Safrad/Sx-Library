@@ -115,7 +115,7 @@ begin
 			ErrorMessage(ErrorMes(GetLastError));}
 	end
 	else
-		Beep;
+		IE(12);
 end;
 
 procedure BeforeDraw;
@@ -167,7 +167,7 @@ begin
 		Canv := nil;
 	end
 	else
-		Beep;
+		IE(13);
 end;
 
 procedure glTextOutE(Canvas: TCanvas; Text: string);

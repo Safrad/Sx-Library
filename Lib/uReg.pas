@@ -186,12 +186,14 @@ begin
 		Key := '.' + FileType;
 		if Reg.KeyExists(Key) then
 		begin
-			Reg.OpenKey(Key, False);
-			InternalName := Reg.ReadString('');
-			Reg.CloseKey;
-			if Reg.KeyExists(InternalName) then
+			if Reg.OpenKey(Key, False) then
 			begin
-				Result := True;
+				InternalName := Reg.ReadString('');
+				Reg.CloseKey;
+				if Reg.KeyExists(InternalName) then
+				begin
+					Result := True;
+				end;
 			end;
 		end;
 	finally
@@ -441,7 +443,7 @@ var
 		Str: TStrings;
 		int: Integer;
 	begin
-		if Reg.OpenKeyReadOnly(SubKey) then
+		if Reg.OpenKey(SubKey, False) then
 		begin
 			OutStr := OutStr + #13 + #10;
 			OutStr := OutStr + '[' + RootKeyToStr(RootKey) + '\' + SubKey + ']' + #13 + #10;

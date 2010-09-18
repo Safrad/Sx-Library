@@ -179,14 +179,14 @@ end;
 
 function ScreenModeToStr(const Width, Height, Bits: Word): string; overload;
 begin
-	Result := ScreenModeToStr(Width, Height) +
-		'×' + IntToStr(Bits) + ' bit';
+	Result := ScreenModeToStr(Width, Height);
+	if Bits <> 0 then Result := Result + '×' + IntToStr(Bits) + ' bit';
 end;
 
 function ScreenModeToStr(const Width, Height, Bits, VF: Word): string;
 begin
-	Result := ScreenModeToStr(Width, Height, Bits) +
-		'/' + IntToStr(VF) + ' Hz';
+	Result := ScreenModeToStr(Width, Height, Bits);
+	if VF <> 0 then Result := Result + '/' + IntToStr(VF) + ' Hz';
 end;
 
 procedure AddMode(Width, Height, Bits: Cardinal);
@@ -310,6 +310,7 @@ begin
 
 		DriverNameCount := 0;
 		SetLength(DriverNames, 0);
+
 		Reg := TRegistry.Create;
 		try
 			Reg.RootKey := HKEY_LOCAL_MACHINE;
@@ -319,19 +320,23 @@ begin
 				if Reg.KeyExists(Key) then
 				begin
 					ActualDriver := i;
-					Reg.OpenKeyReadOnly(Key);
-					SetLength(DriverNames, DriverNameCount + 1);
-					DriverNames[DriverNameCount] := Reg.ReadString('DriverDesc');
-					Inc(DriverNameCount);
-					Reg.CloseKey;
+					if Reg.OpenKey(Key, False) then
+					begin
+						SetLength(DriverNames, DriverNameCount + 1);
+						DriverNames[DriverNameCount] := Reg.ReadString('DriverDesc');
+						Inc(DriverNameCount);
+						Reg.CloseKey;
+					end;
 
 					Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', i) + '\Modes\8';
 					if Reg.KeyExists(Key) then
 					begin
-						Reg.OpenKey(Key + '\641,' + IntToStr(i + 480), True);
-						Reg.WriteString('', '60,75');
-						Reg.WriteString('RefreshRate', '60');
-						Reg.CloseKey;
+						if Reg.OpenKey(Key + '\641,' + IntToStr(i + 480), True) then
+						begin
+							Reg.WriteString('', '60,75');
+							Reg.WriteString('RefreshRate', '60');
+							Reg.CloseKey;
+						end;
 					end;
 				end;
 			end;
@@ -429,55 +434,59 @@ begin
 	try
 		Reg.RootKey := HKEY_LOCAL_MACHINE;
 		Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver);
-		Reg.OpenKeyReadOnly(Key);
-		DriverDesc := Reg.ReadString('DriverDesc');
-		DriverDate := Reg.ReadString('DriverDate');
-		Reg.CloseKey;
+		if Reg.OpenKey(Key, False) then
+		begin
+			DriverDesc := Reg.ReadString('DriverDesc');
+			DriverDate := Reg.ReadString('DriverDate');
+			Reg.CloseKey;
+		end;
 		for i := 0 to ScreenModeCount - 1 do
 		begin
 			Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
 				IntToStr(ScreenModes[i].Bits) + '\' + IntToStr(ScreenModes[i].Width) + ',' + IntToStr(ScreenModes[i].Height);
 			if Reg.KeyExists(Key) then
 			begin
-				Reg.OpenKeyReadOnly(Key);
-				s := Reg.ReadString('');
-				ScreenModes[i].RefreshRateListCount := 0;
-				InLineIndex := 1;
-				while InLineIndex < Length(s) do
+				if Reg.OpenKey(Key, False) then
 				begin
-					f := StrToValI(ReadToChar(s, InLineIndex, ','), 0, 0, MaxInt, 1);
-					if (f >= WorstVF) and (f <= BestVF) then
+					s := Reg.ReadString('');
+					ScreenModes[i].RefreshRateListCount := 0;
+					InLineIndex := 1;
+					while InLineIndex < Length(s) do
 					begin
-						Found := False;
-						for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
+						f := StrToValI(ReadToChar(s, InLineIndex, ','), 0, 0, MaxInt, 1);
+						if (f >= WorstVF) and (f <= BestVF) then
 						begin
-							if ScreenModes[i].RefreshRateList[j] = f then
-							begin
-								Found := True;
-								Break;
-							end;
-						end;
-						if Found = False then
-						begin
-							Index := ScreenModes[i].RefreshRateListCount;
+							Found := False;
 							for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
 							begin
-								if f < ScreenModes[i].RefreshRateList[j] then
+								if ScreenModes[i].RefreshRateList[j] = f then
 								begin
-									Index := j;
+									Found := True;
 									Break;
 								end;
 							end;
-
-							NewSize := ScreenModes[i].RefreshRateListCount + 1;
-							if AllocByEx(Length(ScreenModes[i].RefreshRateList), NewSize, SizeOf(ScreenModes[i].RefreshRateList[0])) then
-								SetLength(ScreenModes[i].RefreshRateList, NewSize);
-							for j := ScreenModes[i].RefreshRateListCount - 1 downto Index do
+							if Found = False then
 							begin
-								ScreenModes[i].RefreshRateList[j + 1] := ScreenModes[i].RefreshRateList[j];
+								Index := ScreenModes[i].RefreshRateListCount;
+								for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
+								begin
+									if f < ScreenModes[i].RefreshRateList[j] then
+									begin
+										Index := j;
+										Break;
+									end;
+								end;
+
+								NewSize := ScreenModes[i].RefreshRateListCount + 1;
+								if AllocByEx(Length(ScreenModes[i].RefreshRateList), NewSize, SizeOf(ScreenModes[i].RefreshRateList[0])) then
+									SetLength(ScreenModes[i].RefreshRateList, NewSize);
+								for j := ScreenModes[i].RefreshRateListCount - 1 downto Index do
+								begin
+									ScreenModes[i].RefreshRateList[j + 1] := ScreenModes[i].RefreshRateList[j];
+								end;
+								Inc(ScreenModes[i].RefreshRateListCount);
+								ScreenModes[i].RefreshRateList[Index] := f;
 							end;
-							Inc(ScreenModes[i].RefreshRateListCount);
-							ScreenModes[i].RefreshRateList[Index] := f;
 						end;
 					end;
 				end;

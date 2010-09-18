@@ -161,6 +161,7 @@ procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
 procedure PlayWave(Wave: PWave);
 procedure PlayWaveFile(WaveName: TFileName);
 procedure PlayWinSound(WinSound: TWinSound);
+procedure Beep;
 
 type
 	PPlayItem = ^TPlayItem;
@@ -227,7 +228,7 @@ var
 implementation
 
 uses
-	uFiles, uError,
+	uFiles, uError, uStrings,
 	Registry;
 
 (*
@@ -706,7 +707,7 @@ begin
 	begin
 		if Reg.ValueExists('') then
 		begin
-			SndName := Reg.ReadString('');
+			SndName := Replace(Reg.ReadString(''), '%SystemRoot%', WinDir);
 			PlayWaveFile(SndName);
 		end;
 		Reg.CloseKey;
@@ -842,9 +843,9 @@ end;
 procedure TWavePlayer.Close;
 begin
 	CloseInvoked := True;
-	Stop;
-{	while OutCount > 0 do
-		Sleep(40);}
+//	Stop; // Lag problem
+	while OutCount > 0 do
+		Sleep(40);
 end;
 
 procedure TWavePlayer.Pause;
@@ -1066,6 +1067,11 @@ begin
 	PlayItem.VolumeLeft := VolumeLeft;
 	PlayItem.VolumeRight := VolumeRight;
 	PlayItem.Speed := Speed;
+end;
+
+procedure Beep;
+begin
+	PlayWinSound(wsDefaultSound);
 end;
 
 Initialization
