@@ -1,7 +1,7 @@
 //* File:     Lib\uSounds.pas
 //* Created:  2000-05-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-02-18
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -204,12 +204,16 @@ begin
 			PlayWinSound(wsDefaultSound)
 		else
 		begin
+			P.Enabled := False;
 			if P.Wave = nil then
 			begin
 				WaveReadFromFile(P.Wave, FullDir(P.FileName));
 			end;
 			if P.Wave <> nil then
+			begin
+				P.Enabled := True;
 				PlayWave(P.Wave);
+			end;
 		end;
 	end;
 end;
@@ -506,8 +510,11 @@ end;
 
 procedure TfSounds.DViewSDblClick(Sender: TObject);
 begin
-	TComponent(Sender).Tag := 2;
-	ButtonSelectClick(Sender);
+	if DViewS.Where = vaRow then
+	begin
+		TComponent(Sender).Tag := 2;
+		ButtonSelectClick(Sender);
+	end;
 end;
 
 procedure TfSounds.DViewSGetData(Sender: TObject; var Data: String;

@@ -1,7 +1,7 @@
 //* File:     Lib\uDispl.pas
 //* Created:  1999-07-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2004-09-26
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz

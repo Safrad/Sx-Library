@@ -1,7 +1,7 @@
 //* File:     Lib\uError.pas
 //* Created:  1999-12-01
-//* Modified: 2004-09-07
-//* Version:  X.X.32.X
+//* Modified: 2005-03-04
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -44,7 +44,7 @@ type
 		ButtonAll: TDButton;
 		Bevel1: TBevel;
     ButtonDown: TDButton;
-		EditIndex: TDEdit;
+		EditIndex: TEdit;
 		ButtonUp: TDButton;
 		procedure ButtonOpenClick(Sender: TObject);
 		procedure ButtonExitClick(Sender: TObject);
@@ -121,7 +121,7 @@ implementation
 {$R *.DFM}
 uses
 	uStrings, uGraph, uDBitmap, uData, uInput,
-	Registry, MMSystem, Consts, Math;
+	Registry, MMSystem, Consts, Math, Types;
 
 type
 	TStyle = (stNormal, stInternal, stIO, stFile);
@@ -236,6 +236,7 @@ var
 	Bo: BG;
 	i, LastLine: SG;
 	Wid, Hei, BWid, MaxWid, LineCount: SG;
+	R: TRect;
 const
 	BMinWidth = 81;
 	BHeight = 23;
@@ -243,7 +244,9 @@ begin
 	Ignore := PIgnore(Ignores.Get(ActItem));
 
 	// Captions
+	EditIndex.OnChange := nil;
 	EditIndex.Text:= NToS(ActItem + 1);
+	EditIndex.OnChange := EditIndexChange;
 	PanelCreated.Caption := DTToStr(Ignore.DateTime);
 	case Ignore.Style of
 	stNormal:
@@ -376,8 +379,11 @@ begin
 
 	MaxWid := Max(MaxWid, Wid);
 
+	GetScreen(R);
+
+
 	Hei := Max(LineCount, 3) * Canvas.TextHeight(Ignore.Msg) + 6;
-	Wid := Canvas.TextHeight(Ignore.Msg) * ((Screen.Height - 128{TaskBar} - 2 * (Height - ClientHeight)) div Canvas.TextHeight(Ignore.Msg)) + 6;
+	Wid := Canvas.TextHeight(Ignore.Msg) * ((R.Bottom - R.Top - 128{TaskBar} - 2 * (Height - ClientHeight)) div Canvas.TextHeight(Ignore.Msg)) + 6;
 	if Hei > Wid then
 	begin
 		Hei := Wid;
@@ -388,7 +394,7 @@ begin
 		MemoMsg.ScrollBars := ssNone;
 	MemoMsg.Height := Hei;
 
-	MaxWid := Min(MaxWid, Screen.Width - 2 * (Width - ClientWidth));
+	MaxWid := Min(MaxWid, R.Right - R.Left - 2 * (Width - ClientWidth));
 
 	MemoMsg.Width := MaxWid - MemoMsg.Left - FormBorder + 6;
 
@@ -548,23 +554,28 @@ begin
 	end;
 	if FName <> '' then ErrorMsg := ErrorMsg + LineSep + FName;
 
-	Ignore := Ignores.Add;
-	FillChar(Ignore^, SizeOf(Ignore^), 0);
-	Ignore.Style := Style;
-	Ignore.Retry := Retry;
-	Ignore.DlgType := DlgType;
-	Ignore.Msg := ErrorMsg;
-	Ignore.ErrorFileName := FName;
-	Ignore.Buttons := nil;
-	SetLength(Ignore.Buttons, Length(Buttons));
-	for B := 0 to Length(Buttons) - 1 do
+	if ErrorMsg <> '' then
 	begin
-		Ignore.Buttons[B] := Buttons[B];
-	end;
-	Ignore.Res := -1;
-	Ignore.Ignore := iaNone;
-	Ignore.DateTime := Now;
-	Ignore.TimeLeft := TimeLeft;
+		Ignore := Ignores.Add;
+		FillChar(Ignore^, SizeOf(Ignore^), 0);
+		Ignore.Style := Style;
+		Ignore.Retry := Retry;
+		Ignore.DlgType := DlgType;
+		Ignore.Msg := ErrorMsg;
+		Ignore.ErrorFileName := FName;
+		Ignore.Buttons := nil;
+		SetLength(Ignore.Buttons, Length(Buttons));
+		for B := 0 to Length(Buttons) - 1 do
+		begin
+			Ignore.Buttons[B] := Buttons[B];
+		end;
+		Ignore.Res := -1;
+		Ignore.Ignore := iaNone;
+		Ignore.DateTime := Now;
+		Ignore.TimeLeft := TimeLeft;
+	end
+	else
+		Ignore := Ignores.GetLast;
 
 	if (IgnoreAll <> iaAll) and (FoundSame = False) then
 	begin
@@ -595,7 +606,9 @@ begin
 			fIOError.UpDown1.Position := Ignores.Count - 1;
 			fIOError.UpDown1.OnChangingEx := fIOError.UpDown1ChangingEx;}
 			fIOError.ActItem := Ignores.Count - 1;
+			fIOError.EditIndex.OnChange := nil;
 			fIOError.EditIndex.Text := NToS(fIOError.ActItem);
+			fIOError.EditIndex.OnChange := fIOError.EditIndexChange;
 			fIOError.ShowMes;
 			fIOError.DrawTimeLeft;
 
@@ -622,11 +635,11 @@ begin
 		begin
 			while Ignore.Res = -1 do
 			begin
-//				Application.HandleMessage;
 				Application.ProcessMessages;
-//				uDTimer.TryTimer;
 				Sleep(20);
-			end;
+			end; // D??? Stack overflow
+{			Ignore.Res := -1;
+			Exit;}
 		end;
 
 //		if ModalResult = mrNone then ModalResult := mrCancel;
@@ -675,7 +688,6 @@ begin
 
 
 	end;
-
 	MCount := 0;
 	Last := -1;
 	for i := 0 to Ignores.Count - 1 do
@@ -687,13 +699,15 @@ begin
 		end;
 	end;
 	if MCount = 0 then
-		Close
+	begin
+		Close;
+		ModalResult := mrCancel; // D???
+	end
 	else
 	begin
 		ActItem := Last;
 		ShowMes;
 	end;
-	ModalResult := mrCancel;
 end;
 
 // Button Clicks
@@ -730,11 +744,10 @@ end;
 
 procedure ShowMessages;
 begin
-	if Assigned(fIOError) then
+//	if Assigned(fIOError) then
+	if Ignores.Count > 0 then
 	begin
-		// StartTickCount D???
-		fIOError.ShowMes;
-		fIOError.ShowModal;
+		MessageD('', mtInformation, [mbOk]);
 	end
 	else
 		MessageD('No message found', mtInformation, [mbOk]);

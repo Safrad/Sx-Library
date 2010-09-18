@@ -1,7 +1,7 @@
 //* File:     Lib\uSorts.pas
 //* Created:  2000-08-01
-//* Modified: 2004-08-29
-//* Version:  X.X.32.X
+//* Modified: 2005-03-08
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -31,25 +31,26 @@ type
 		stAuto);
 
 //  TAIndex = array of SG;
+var
+	SortType: TSortType = stAuto;
 {$ifopt d+}
 // Statistics
-var
 	Compared, Swaped: U8;
 	MaxDepth: UG;
 {$endif}
 
-procedure SortS1(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S1);
-procedure SortU1(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of U1);
-procedure SortS2(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S2);
-procedure SortU2(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of U2);
-procedure SortS4(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S4);
-procedure SortU4(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of U4);
-procedure SortS8(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S8);
+procedure SortS1(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS1; Count: UG);
+procedure SortU1(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayU1; Count: UG);
+procedure SortS2(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS2; Count: UG);
+procedure SortU2(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayU2; Count: UG);
+procedure SortS4(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS4; Count: UG);
+procedure SortU4(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayU4; Count: UG);
+procedure SortS8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS8; Count: UG);
 
-procedure SortFA(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of FA);
+procedure SortFA(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayFA; Count: UG);
 
-procedure SortS(const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of string);
-procedure SortWS(const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of WideString);
+procedure SortS(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; var AValue: array of string);
+procedure SortWS(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; var AValue: array of WideString);
 
 implementation
 
@@ -60,57 +61,59 @@ type
 	TIndex = type SG;
 var
 	MaxIndex: TIndex;
+{$ifopt d+}
 	Depth: UG;
+{$endif}
 
-procedure SortS1(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S1);
+procedure SortS1;
 type
 	TValue = type S1;
 {$I Sort.inc}
 
-procedure SortU1(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of U1);
+procedure SortU1;
 type
 	TValue = type U1;
 {$I Sort.inc}
 
-procedure SortS2(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S2);
+procedure SortS2;
 type
 	TValue = type S2;
 {$I Sort.inc}
 
-procedure SortU2(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of U2);
+procedure SortU2;
 type
 	TValue = type U2;
 {$I Sort.inc}
 
-procedure SortS4(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S4);
+procedure SortS4;
 type
 	TValue = type S4;
 {$I Sort.inc}
 
-procedure SortU4(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of U4);
+procedure SortU4;
 type
 	TValue = type U4;
 {$I Sort.inc}
 
-procedure SortS8(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of S8);
+procedure SortS8;
 type
 	TValue = type S8;
 {$I Sort.inc}
 
-procedure SortFA(const SortType: TSortType; const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of FA);
+procedure SortFA;
 type
 	TValue = type FA;
 {$define F}
 {$I Sort.inc}
 {$undef F}
 
-procedure SortS(const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of string);
+procedure SortS;
 type
 	TValue = type string;
 	TValue1 = U8;
 {$I SortS.inc}
 
-procedure SortWS(const Stability: Boolean; const Reverse: Boolean; var AIndex: array of SG; var AValue: array of WideString);
+procedure SortWS;
 type
 	TValue = type WideString;
 	TValue1 = U2;

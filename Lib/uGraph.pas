@@ -1,7 +1,7 @@
 //* File:     Lib\uGraph.pas
 //* Created:  1999-05-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-02-09
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -23,7 +23,6 @@ const
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
 
 function GetBmpSize(const X, Y: LongWord; const PixelFormat: Byte): LongWord;
-function GetTransparentColor(const Bmp: TBitmap): TColor;
 function ShadowColor(C: TColor): TColor;
 function ShadowColor2(C1, C2: TColor): TColor;
 function ColorDiv(Color: TColor; const D: Integer): TColor;
@@ -126,51 +125,6 @@ begin
 	Result := (((PixelFormat * X  + 31) and $FFFFFFE0) div 8) * Y;
 end;
 (*-------------------------------------------------------------------------*)
-function GetTransparentColor(const Bmp: TBitmap): TColor;
-const
-	MaxPix = 5;
-var
-	PixColor: array[0..MaxPix] of TColor;
-	i, j, k: Integer;
-begin
-	Result := clNone;
-	if (Bmp.Width <= 1) or (Bmp.Height <= 1) then Exit;
-
-	if (Bmp.Height >= 2) then
-	begin
-		PixColor[4] := Bmp.Canvas.Pixels[0, Bmp.Height - 2];
-		PixColor[5] := Bmp.Canvas.Pixels[Bmp.Width - 1, Bmp.Height - 2];
-
-		for i := 4 to 5 do
-			for j := 4 to 5 do
-			begin
-				if (i <> j) and (PixColor[i] = PixColor[j]) then
-				begin
-					Result := PixColor[i];
-					Exit;
-				end;
-			end;
-	end;
-
-	PixColor[0] := Bmp.Canvas.Pixels[0, 0];
-	PixColor[1] := Bmp.Canvas.Pixels[Bmp.Width - 1, 0];
-	PixColor[2] := Bmp.Canvas.Pixels[Bmp.Width - 1, Bmp.Height - 1];
-	PixColor[3] := Bmp.Canvas.Pixels[0, Bmp.Height - 1];
-
-	for i := 0 to 3 do
-	begin
-		j := (i - 1) and 3;
-		for k := 0 to 1 do
-		begin
-			if {(i <> j) and} (PixColor[i] = PixColor[j]) then
-			begin
-				Result := PixColor[i];
-				Exit;
-			end;
-			Inc(j, 2); j := j and 3;
-		end;
-	end;
-end;
 (*-------------------------------------------------------------------------*)
 function ShadowColor(C: TColor): TColor;
 begin

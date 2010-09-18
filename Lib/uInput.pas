@@ -1,7 +1,7 @@
 //* File:     Lib\uInput.pas
 //* Created:  2004-03-07
-//* Modified: 2004-09-20
-//* Version:  X.X.32.X
+//* Modified: 2005-02-15
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -20,32 +20,36 @@ const
 
 type
 	TInput = (
-			itUnknown,
-			itEOI,
-			itIdent,
-			itInteger, itReal,
-			itChar, itString,
-			// Special
-			// 1
-			itPlus, itMinus, itMul, itDiv, // + - * /
-			itPower, // ^
-			itLBracket, itRBracket, // ( )
-			itLBracket2, itRBracket2, // [ ]
-			itLBracket3, itRBracket3, // { }
-			itLess, itBigger, itEqual, // < > =
-			itComma, itSemicolon, // , ;
-			itPeriod, itColon, // . :
-			itExclamation, itQuote, // ! "
-			// 2
-			itAssign, // :=
-			// Var
-			itKeyword);
+		itUnknown,
+		itEOI,
+		itSpaceTab,
+		itDollar,
+		itIdent,
+		itInteger, itReal,
+		itChar, itString,
+		// Special
+		// 1
+		itPlus, itMinus, itMul, itDiv, // + - * /
+		itPower, // ^
+		itLBracket, itRBracket, // ( )
+		itLBracket2, itRBracket2, // [ ]
+		itLBracket3, itRBracket3, // { }
+		itLess, itBigger, itEqual, // < > =
+		itComma, itSemicolon, // , ;
+		itPeriod, itColon, // . :
+		itExclamation, itQuote, // ! "
+		// 2
+		itAssign, // :=
+		// Var
+		itKeyword);
 
 const
 	InputToStr: array[TInput] of string = (
 		'Unknown',
 		'end of input',
+		'space',
 		'',
+		'$',
 		'Integer', 'Real',
 		'Char', 'string',
 
@@ -76,87 +80,87 @@ const
 
 type
 	TKeyword = (
-			kwNone,
-			kwabstract,
-			kwand,
-			kwarray,
-			kwas,
-			kwasm,
-			kwassembler,
-			kwbegin,
-			kwBreak,
-			kwcase,
-			kwclass,
-			kwconst ,
-			kwconstructor,
-			kwContinue,
-			kwdestructor,
-			kwdispinterface,
-			kwdiv,
-			kwdo,
-			kwdownto,
-			kwdynamic,
-			kwelse,
-			kwend,
-			kwexcept,
-			kwExit,
-			kwexports,
-			kwfile,
-			kwfinalization,
-			kwfinally,
-			kwfor,
-			kwforward,
-			kwfunction,
-			kwgoto,
-			kwif,
-			kwimplementation,
-			kwin,
-			kwinherited,
-			kwinitialization,
-			kwinline,
-			kwinterface,
-			kwis,
-			kwlabel,
-			kwlibrary,
-			kwmod,
-			kwnil,
-			kwnot,
-			kwobject,
-			kwof,
-			kwon,
-			kwor,
-			kwout,
-			kwoverload,
-			kwoverride,
-			kwpacked,
-			kwprivate,
-			kwprocedure,
-			kwprogram,
-			kwproperty,
-			kwprotected,
-			kwpublic,
-			kwpublished,
-			kwraise,
-			kwrecord,
-			kwrepeat,
-			kwresourcestring,
-			kwset,
-			kwshl,
-			kwshr,
-			kwstring,
-			kwthen,
-			kwthreadvar,
-			kwto,
-			kwtry,
-			kwtype,
-			kwunit,
-			kwuntil,
-			kwuses,
-			kwvar,
-			kwvirtual,
-			kwwhile,
-			kwwith,
-			kwxor);
+		kwNone,
+		kwabstract,
+		kwand,
+		kwarray,
+		kwas,
+		kwasm,
+		kwassembler,
+		kwbegin,
+		kwBreak,
+		kwcase,
+		kwclass,
+		kwconst ,
+		kwconstructor,
+		kwContinue,
+		kwdestructor,
+		kwdispinterface,
+		kwdiv,
+		kwdo,
+		kwdownto,
+		kwdynamic,
+		kwelse,
+		kwend,
+		kwexcept,
+		kwExit,
+		kwexports,
+		kwfile,
+		kwfinalization,
+		kwfinally,
+		kwfor,
+		kwforward,
+		kwfunction,
+		kwgoto,
+		kwif,
+		kwimplementation,
+		kwin,
+		kwinherited,
+		kwinitialization,
+		kwinline,
+		kwinterface,
+		kwis,
+		kwlabel,
+		kwlibrary,
+		kwmod,
+		kwnil,
+		kwnot,
+		kwobject,
+		kwof,
+		kwon,
+		kwor,
+		kwout,
+		kwoverload,
+		kwoverride,
+		kwpacked,
+		kwprivate,
+		kwprocedure,
+		kwprogram,
+		kwproperty,
+		kwprotected,
+		kwpublic,
+		kwpublished,
+		kwraise,
+		kwrecord,
+		kwrepeat,
+		kwresourcestring,
+		kwset,
+		kwshl,
+		kwshr,
+		kwstring,
+		kwthen,
+		kwthreadvar,
+		kwto,
+		kwtry,
+		kwtype,
+		kwunit,
+		kwuntil,
+		kwuses,
+		kwvar,
+		kwvirtual,
+		kwwhile,
+		kwwith,
+		kwxor);
 
 var
 	KWsU: array[TKeyword] of string;
@@ -245,6 +249,8 @@ var
 
 var
 	StringSep: Char = '''';
+	MaxIdentSize: SG = 255;
+	EnableSpace: BG = False;
 	InputType: TInput;
 	Id: string; // itIdent
 	InReal: Extended; // itReal
@@ -258,9 +264,9 @@ var
 	Marks: (
 		maNone,
 		maString,
-		maLocal,  // //
+		maLocal, // //
 		maGlobalP, // { }
-		maGlobalA);   // (* *)
+		maGlobalA); // (* *)
 
 	BufR: ^TArrayChar;
 	BufRI: SG;
@@ -296,6 +302,7 @@ type
 		opSinh, opCosh, opTanh,
 		opArcSinh, opArcCosh, opArcTanh,
 		opElo, opArcElo,
+		opEloC,
 		opAvg, opMin, opMax,
 		opRandom,
 		opShl, opShr, opAnd, opOr, opXor, opXnor);
@@ -316,6 +323,7 @@ const
 		'ARCSINH', 'ARCCOSH', 'ARCTANH',
 		// Desk games
 		'ELO', 'ARCELO',
+		'ELOC',
 		// Statistics
 		'AVG', 'MIN', 'MAX',
 		'RANDOM',
@@ -364,8 +372,8 @@ type
 		Error: SG;
 
 		Units: TData; // PUnit;
-		Types: TData;// TType;
-		VFs: TData;// TVar;
+		Types: TData; // TType;
+		VFs: TData; // TVar;
 		GlobalVF: SG;
 		Reserve: array[0..11] of U1;
 	end;
@@ -397,13 +405,13 @@ type
 	end;
 var
 	Root: PNode;
-	TreeSize: SG;
+	TreeSize,
 	MaxBracketDepth,
 	TreeDepth,
 	NodeCount: SG;
 
 var
-	CharsTable: array[Char] of (ctSpace, ctLetter, ctIllegal, ctNumber, ctNumber2,
+	CharsTable: array[Char] of (ctSpace, ctTab, ctLetter, ctDollar, ctIllegal, ctNumber, ctNumber2,
 		ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose,
 		ctPoint, ctComma, ctComma2);
 
@@ -626,8 +634,8 @@ begin
 	// Make Char Table
 	for c := Low(Char) to High(Char) do
 		case c of
-		' ':
-		CharsTable[c] := ctSpace;
+		' ': CharsTable[c] := ctSpace;
+		CharTab: CharsTable[c] := ctTab;
 		'a'..'z', 'A'..'Z', '_': CharsTable[c] := ctLetter;
 		'0'..'9': CharsTable[c] := ctNumber;
 		{'!',} '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharsTable[c] := ctNumber2;
@@ -780,6 +788,7 @@ var
 	Base: SG;
 	Res, Exp: Extended;
 	Where: (whNum, whExp);
+	B: BG;
 begin
 	if CharsTable[BufR[BufRI]] in [ctNumber, ctNumber2] then
 	begin
@@ -798,7 +807,7 @@ begin
 				begin
 					if (BufR[BufRI] = DecimalSep) or ((ThousandSep <> '.') and (BufR[BufRI] = '.')) then
 						Point := True
-					else if BufR[BufRI] = ThousandSep then
+					else if (BufR[BufRI] = ThousandSep) or ((ThousandSep = #160) and (BufR[BufRI] = ' ')) then
 					begin
 						if BufR[BufRI + 1] = ' ' then
 						begin
@@ -809,7 +818,7 @@ begin
 					case BufR[BufRI] of
 					'%': Per := True;
 					'#': Base := 2;
-					'O', 'o': Base := 8;
+					'O', 'o': Base := 8; // D??? only 1o10 is ok
 					{'!': Base := 10;}
 					'$', 'x', 'X', 'h', 'H': Base := 16;
 					'*', '/', ':', '^', ')', '(': Break;
@@ -850,7 +859,9 @@ begin
 									Point := False;
 									PointDiv := 1;
 									goto LNext;
-								end;
+								end
+								else
+									Break;
 							end
 							else
 								Break;
@@ -891,10 +902,33 @@ begin
 
 				if Per then Res := Res / 100;
 				if UnarExp then Exp := -Exp;
-				if Abs(Exp) > 1024 then Exp := Sgn(Exp) * 1024;
-				Res := Res * Power(10, Exp);
+				if Abs(Exp) > 4932 then
+				begin
+					Exp := Sgn(Exp) * 4932;
+					AddMes2(mtUserError, ['Exponent out of range ']);
+				end;
+				Exp := Power(10, Exp);
+				if Res <> 0 then
+				begin
+					B := True;
+					if (Exp < 1) then
+					if Res > 1 then
+						B := (MaxExtended / Abs(Res) > Exp)
+					else
+						B := (MaxExtended > Abs(Res) * Exp);
+
+					if B then
+					begin
+						Res := Res * Exp;
+					end
+					else
+					begin
+						// Number out of range
+						AddMes2(mtUserError, ['Value out of range ']);
+					end;
+				end;
 				InReal := Res;
-				InInteger := RoundEx(Res);
+				InInteger := RoundSG(Res);
 //				if Unar then Res := -Res;
 
 //        Val(Copy(Line, LastLineIndex, LineIndex - LastLineIndex), Res, ErrorCode);
@@ -978,13 +1012,22 @@ begin
 			Break;
 		end;
 
-		if BufR[BufRI] = ' ' then
+		if BufR[BufRI] in [' ', CharTab] then
 		begin
-
+			if EnableSpace then
+			begin
+				while (CharsTable[BufR[BufRI]] in [ctSpace, ctTab]) do
+				begin
+					Inc(BufRI); if EOI then Break;
+				end;
+				InputType := itSpaceTab;
+				Id := ' ';
+				Break;
+			end;
 		end
-		else if BufR[BufRI] = CharTab then
-		begin
-(*			if FoundTabM then
+
+(*		begin
+			if FoundTabM then
 			begin
 				if (LineBegin = False) then
 				begin
@@ -996,8 +1039,8 @@ begin
 //						goto LNoAdd;
 				end;
 			end;
-			Inc(TabInc, (BufRI - LineStart + TabInc) mod TabSize);*)
-		end
+			Inc(TabInc, (BufRI - LineStart + TabInc) mod TabSize);
+		end*)
 		else if (BufR[BufRI] = CharCR) or (BufR[BufRI] = CharLF) then
 		begin
 			if BufR[BufRI] = CharCR then
@@ -1169,8 +1212,12 @@ begin
 							LastBufIR := BufRI;
 						end;
 						goto LNoAdd;}
+{						if InputType = itSpace then
+						begin
+							Break;
+						end;}
 						StartIndex := BufRI;
-						while CharsTable[BufR[BufRI]] in [ctLetter, ctNumber] do
+						while (BufRI - StartIndex < MaxIdentSize) and (CharsTable[BufR[BufRI]] in [ctLetter, ctNumber]) do
 						begin
 							Inc(BufRI); if EOI then Break;
 						end;
@@ -1218,6 +1265,7 @@ begin
 						StartIndex := BufRI;
 						Id := BufR[BufRI];
 						case BufR[BufRI] of
+						'$': InputType := itDollar;
 						'+': InputType := itPlus;
 						'-': InputType := itMinus;
 						'*': InputType := itMul;
@@ -1253,7 +1301,7 @@ begin
 						if InputType = itUnknown then
 						begin
 							Inc(BufRI);
-							AddMes2(mtIllegalChar, [BufR[BufRI]]);
+							AddMes2(mtIllegalChar, [BufR[BufRI - 1]]);
 							Dec(BufRI);
 						end
 						else
@@ -1431,7 +1479,7 @@ begin
 		end;
 		Inc(j);
 	end;
-	Result := RoundEx(V);
+	Result := RoundSG(V);
 end;
 
 // Pascal Compiler
@@ -1927,6 +1975,8 @@ begin
 	Node := nil;
 end;
 
+var Depth: SG;
+
 function Calc(Node: PNode): Extended;
 
 	function GetElo(F: Extended): SG;
@@ -1941,6 +1991,25 @@ function Calc(Node: PNode): Extended;
 			Result := ELO[100 - Round(100 * F)];
 	end;
 
+
+	function ArcElo(e: Extended): Extended;
+	var
+		i: SG;
+		e0, e1: Extended;
+	begin
+		e0 := MaxInt;
+		Result := 0;
+		for i := 0 to 100 do
+		begin
+			e1 := Abs(GetElo(i / 100) - e);
+			if e1 < e0 then
+			begin
+				e0 := e1;
+				Result := i / 100;
+			end;
+		end;
+	end;
+
 var
 	i, j: SG;
 	e, e0, e1: Extended;
@@ -1951,6 +2020,7 @@ begin
 	begin
 		Exit;
 	end;
+	Inc(Depth); if Depth > TreeDepth then TreeDepth := Depth;
 	case Node.Operation of
 	opNumber:
 		Result := Node.Num;
@@ -2312,7 +2382,65 @@ begin
 				e := e + Calc(Node.Args[i]);
 			end;
 			Result := e / (Node.ArgCount - 1) +
-				GetELO(Calc(Node.Args[Node.ArgCount - 1]))
+				GetELO(Calc(Node.Args[Node.ArgCount - 1]) / (Node.ArgCount - 1))
+		end;
+	end;
+	opEloC:
+	begin
+		if Node.ArgCount < 3 then
+			Result := 0
+		else if Node.ArgCount and 1 = 0 then
+		begin // Delta
+(*
+			e0 := Calc(Node.Args[1]
+			e := Calc(Node.Args[0]);
+			Result := 0;
+			for i := 1 to Node.ArgCount div 2 - 1 do
+			begin
+				e1 := ArcElo(e0) - Calc(Node.Args[2 * i]));
+				Result := Result + (1 * e * (Calc(Node.Args[2 * i + 1]) - e1)) / 1;
+			end;*)
+
+			e1 := (Node.ArgCount - 2) div 2;
+
+			// Elo
+			e := 0;
+			for i := 1 to (Node.ArgCount) div 2 - 1 do
+			begin
+				e := e + Calc(Node.Args[2 * i]);
+			end;
+			e0 := Round(e / e1); // Avg opponets elo
+
+			// Score
+			e := 0;
+			for i := 1 to (Node.ArgCount) div 2 - 1 do
+			begin
+				e := e + Calc(Node.Args[2 * i + 1]);
+			end;
+
+			Result := Round(Calc(Node.Args[0]) * (e - Round(100 * e1 * ArcElo(Calc(Node.Args[1]){your elo} - e0)) / 100));
+		end
+		else
+		begin // Performance
+			Calc(Node.Args[0]); // Skip your elo
+			e1 := ((Node.ArgCount - 1) div 2);
+
+			// Elo
+			e := 0;
+			for i := 0 to (Node.ArgCount - 1) div 2 - 1 do
+			begin
+				e := e + Calc(Node.Args[2 * i + 1]);
+			end;
+			e0 := Round(e / e1); // Avg opponets elo
+
+			// Score
+			e := 0;
+			for i := 0 to (Node.ArgCount - 1) div 2 - 1 do
+			begin
+				e := e + Calc(Node.Args[2 * i + 2]);
+			end;
+
+			Result := e0 + GetELO(e / e1);
 		end;
 	end;
 	opArcElo:
@@ -2324,22 +2452,12 @@ begin
 		else {if Node.ArgCount >= 2 then}
 		begin
 			e := 0;
-			for i := 0 to Node.ArgCount - 2 do
+			for i := 0 to Node.ArgCount - 1 do
 			begin
 				e := e + Calc(Node.Args[i]);
 			end;
 		end;
-
-		e0 := MaxInt;
-		for i := 0 to 100 do
-		begin
-			e1 := Abs(GetElo(i / 100) - e);
-			if e1 < e0 then
-			begin
-				e0 := e1;
-				Result := i / 100;
-			end;
-		end;
+		Result := ArcElo(e);
 	end;
 	opAvg:
 	begin
@@ -2418,6 +2536,7 @@ begin
 		IE(117);
 		{$endif}
 	end;
+	Dec(Depth);
 end;
 
 function CalcTree: Extended;
@@ -2475,6 +2594,60 @@ begin
 		VF.Line := 0;
 		VF.VFs := nil;
 		VF.Value := ConstE;
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'inf';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := Infinity;
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'neginf';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := NegInfinity;
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'inf';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := Infinity;
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'zero';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := 0;
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'false';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := 0;
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'true';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := 1;
 		VF.ParamCount := 0;
 
 		T := U.Types.Add;
@@ -2683,7 +2856,7 @@ function ReadSG(DefVal: SG): SG;
 begin
 	DecimalSep := '.';
 	ThousandSep := ',';
-	Result := RoundEx(ReadFA(DefVal));
+	Result := RoundSG(ReadFA(DefVal));
 end;
 
 function StrToValE(Line: AnsiString; const UseWinFormat: BG;
@@ -2793,7 +2966,12 @@ begin
 	end
 	else
 		Replace(s, '%1', Copy(M.Params, 1, MaxInt));
-	if M.MesId = mtIllegalChar then s := s + ' ($' + NToHS(Ord(M.Params[1])) + ')';
+	if M.MesId = mtIllegalChar then
+	begin
+		NumericBase := 16;
+		s := s + ' ($' + NToS(Ord(M.Params[1])) + ')';
+		NumericBase := 10;
+	end;
 
 	Result := Result + s;
 end;

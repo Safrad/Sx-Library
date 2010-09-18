@@ -1,7 +1,7 @@
 //* File:     Lib\uLogo.pas
 //* Created:  1999-10-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-02-14
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -33,10 +33,10 @@ type
 		{ Public declarations }
 	end;
 
-procedure ShowLogo(const FileName: TFileName); overload;
-procedure ShowLogo; overload;
+//procedure ShowLogo(const FileName: TFileName); overload;
+procedure ShowLogo; overload; // fMain.FormCreate
 //procedure ShowLogoFull;
-procedure HideLogo;
+procedure HideLogo; // fMain.FormShow
 
 implementation
 
@@ -48,7 +48,7 @@ var
 	fLogo: TfLogo;
 	LogoTime: LongWord;
 
-procedure ShowLogo(const FileName: TFileName);
+procedure ShowLogo(const FileName: TFileName); overload;
 var
 	x: SG;
 	Co: array[0..3] of TColor;
@@ -65,6 +65,10 @@ begin
 	if (FileName <> '') then
 	begin
 		fLogo.BackBitmap.LoadFromFile(FileName);
+		if (fLogo.BackBitmap.Width < 256) or (fLogo.BackBitmap.Height < 3 * 256 div 4) then
+		begin
+			fLogo.BackBitmap.Resize(fLogo.BackBitmap, fLogo.BackBitmap.Width * 2, fLogo.BackBitmap.Height * 2, nil);
+		end;
 	end;
 	if (FileName = '') then
 	begin
@@ -123,10 +127,12 @@ procedure ShowLogo;
 begin
 	if FileExists(GraphDir + 'Logo.jpg') then
 		ShowLogo(GraphDir + 'Logo.jpg')
+	else if FileExists(GraphDir + 'Logo.gif') then
+		ShowLogo(GraphDir + 'Logo.gif')
 	else
 		ShowLogo('');
 end;
-
+(*
 procedure ShowLogoFull;
 var
 	i, li: Integer;
@@ -185,7 +191,7 @@ begin
 	LogoTime := GetTickCount;
 	fLogo.FullScreen := False;
 	fLogo.Close;
-end;
+end;*)
 
 procedure HideLogo;
 const
@@ -229,6 +235,7 @@ end;
 
 procedure TfLogo.FormCreate(Sender: TObject);
 begin
+	{$ifopt d+}FormStyle := fsNormal;{$endif}
 	Background := baUser;
 end;
 

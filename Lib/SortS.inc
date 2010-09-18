@@ -65,10 +65,10 @@ var
 var
 	i, c, MaxL: SG;
   j: TIndex;
-	Len: SG;
+//	Len: SG;
 begin
-	Len := Min(Length(AIndex), Length(AValue));
-	MaxIndex := Len - 1;
+//	Len := Min(Length(AIndex), Length(AValue));
+	MaxIndex := Length(AValue) - 1;
 	{$ifopt d+}
 	Swaped := 0; Compared := 0; MaxDepth := 0;
 	{$endif}

@@ -390,25 +390,15 @@ object fIOError: TfIOError
     OnClick = ButtonDownClick
     OnMouseMove = FormMouseMove
   end
-  object EditIndex: TDEdit
+  object EditIndex: TEdit
     Left = 40
     Top = 32
     Width = 37
-    Height = 19
-    Style = csSimple
-    ItemHeight = 13
+    Height = 21
     TabOrder = 8
     Text = '9,999'
     OnChange = EditIndexChange
-    Readonly = False
-    Modified = False
-    SelStart = 0
-    SelLength = 0
     OnMouseMove = FormMouseMove
-    Caption = 'Caption'
-    LabelPosition = lpAbove
-    ShowCaption = False
-    SelectOnClick = True
   end
   object ButtonUp: TDButton
     Tag = 1

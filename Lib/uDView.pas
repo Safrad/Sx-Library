@@ -1,7 +1,7 @@
 //* File:     Lib\uDView.pas
 //* Created:  2001-08-01
-//* Modified: 2004-09-23
-//* Version:  X.X.32.X
+//* Modified: 2005-01-23
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz

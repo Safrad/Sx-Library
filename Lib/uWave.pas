@@ -1,7 +1,7 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2004-09-05
-//* Version:  X.X.32.X
+//* Modified: 2005-02-18
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -140,6 +140,9 @@ const
 	ConvertPre = 1 shl ConvertShr;
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
 // For screen Width 800 is NowPos 0..799, MaxPos 799
+
+function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;
+function GetBufferSample(wBitsPerSample, BufferOutSize: SG): SG;
 
 function WaveErrorText(ErrorCode: U4): string;
 
@@ -354,25 +357,30 @@ begin
 		GetMem(Wave, F.FileSize);
 		if not F.BlockRead(Wave^, F.FileSize) then goto LFin;
 		if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
-			(Wave.Marker3 <> 'fmt ') or
-			(Wave.BytesFollowing <> F.FileSize - 8) then
+			(Wave.Marker3 <> 'fmt ') {or
+			(Wave.BytesFollowing <> F.FileSize - 8) }then
 		begin
-			IOErrorMessage(FName, 'File is not wave');
+			IOErrorMessage(FName, 'File Is Not Wave');
 			WaveFree(Wave);
 			goto LFin
 		end;
-		if (Wave.BitsPerSample = 4) then goto LFin;
+		if Wave.BytesFollowing <> F.FileSize - 8 then
+		begin
+			IOErrorMessage(FName, 'Wave Bytes Following repaired');
+			Wave.BytesFollowing := F.FileSize - 8;
+		end;
+		if (Wave.BitsPerSample = 4) {Microsoft ADPCM} or (Wave.BitsPerSample = 0) {GSM 6.10} then goto LFin;
 		if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
 		begin
-			IOErrorMessage(FName, 'Wave format not supported');
+			IOErrorMessage(FName, 'Wave Format Not Supported');
 			WaveFree(Wave);
 			goto LFin;
 		end;
-		if Wave.DataBytes > F.FileSize - 44 then
+{		if Wave.DataBytes > F.FileSize - 44 then
 		begin
 			IOErrorMessage(FName, 'Wave data bytes repaired');
 			Wave.DataBytes := F.FileSize - 44;
-		end;
+		end;}
 		LFin:
 		F.Close;
 	end;
@@ -815,7 +823,7 @@ begin
 	Result := BufferOutSamples * ((wBitsPerSample * nChannels + 7) div 8);
 end;
 
-function GetBufferSample(wBitsPerSample, nChannels, BufferOutSize: SG): SG;
+function GetBufferSample(wBitsPerSample, BufferOutSize: SG): SG;
 begin
 	case wBitsPerSample of
 	16: Result := BufferOutSize div 2;

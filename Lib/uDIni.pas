@@ -1,7 +1,7 @@
 //* File:     Lib\uDIni.pas
 //* Created:  2000-07-01
-//* Modified: 2004-09-05
-//* Version:  X.X.32.X
+//* Modified: 2005-02-21
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -92,7 +92,8 @@ type
 		procedure RWListView(ListView: TListView; const Save: Boolean);
 		procedure RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: Boolean);
 		procedure RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: Boolean);
-		procedure RWComboBox(ComboBox: TComboBox; const Save: Boolean);
+		procedure RWComboBox(Section: string; ComboBox: TComboBox; const Save: Boolean);
+		procedure RWMemo(Section: string; Memo: TMemo; const Save: Boolean);
 
 		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: Boolean): string;
 		function RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: Boolean): SG;
@@ -131,7 +132,7 @@ uses
 	uError, uFiles, uStrings, uInput;
 
 const
-	BufferSize = 65536;
+	BufferSize = 32768;
 
 procedure TDIniFile.AddSection(Section: string);
 var NewSize: Integer;
@@ -159,13 +160,13 @@ end;
 
 function TDIniFile.ReadString(const Section, Ident, Default: string): string;
 var
-	Buffer: array[0..4095] of Char;
+	Buffer: array[0..BufferSize] of Char;
 	SectionIndex, ValueIndex: Integer;
 begin
 	case FileMethod of
 	fmWindows:
-		SetString(Result, Buffer, GetPrivateProfileString(@Section[1],
-			@Ident[1], @Default[1], Buffer, SizeOf(Buffer), PChar(FFileName)));
+		SetString(Result, Buffer, GetPrivateProfileString(PChar(Section),
+			PChar(Ident), PChar(Default), Buffer, BufferSize, PChar(FFileName)));
 	else
 	begin
 		Result := Default;
@@ -184,14 +185,18 @@ end;
 procedure TDIniFile.WriteString(const Section, Ident, Value: string);
 var SectionIndex, ValueIndex: Integer;
 begin
+	{$ifopt d+}
+	if (Pos(#10, Value) <> 0) or (Pos(#13, Value) <> 0) then
+		IE(45434);
+	{$endif}
 {	if CheckAccess(FileStatus, Save) then
 	begin}
 		case FileMethod of
 		fmWindows:
 		begin
-			if not WritePrivateProfileString(@Section[1], @Ident[1],
-				@Value[1], @FFileName[1]) then
-				// Error
+			if not WritePrivateProfileString(PChar(Section), PChar(Ident),
+				PChar(Value), PChar(FFileName)) then
+					IOError(FFileName, GetLastError());
 		end
 		else
 		begin
@@ -370,21 +375,20 @@ begin
 end;
 
 procedure TDIniFile.ReadSection(const Section: string; Strings: TStrings);
-const
-	BufSize = 65536;
 var
-	Buffer, P: PChar;
+	Buffer: array[0..BufferSize] of Char;
+	P: PChar;
 	i, SectionIndex: Integer;
 begin
 	case FileMethod of
 	fmWindows:
 	begin
-		GetMem(Buffer, BufSize);
+//		GetMem(Buffer, BufferSize);
 		try
 			Strings.BeginUpdate;
 			try
 				Strings.Clear;
-				if GetPrivateProfileString(@Section[1], nil, nil, Buffer, BufSize,
+				if GetPrivateProfileString(PChar(Section), nil, nil, Buffer, BufferSize,
 					PChar(FFileName)) <> 0 then
 				begin
 					P := Buffer;
@@ -398,7 +402,7 @@ begin
 				Strings.EndUpdate;
 			end;
 		finally
-			FreeMem(Buffer, BufSize);
+//			FreeMem(Buffer, BufferSize);
 		end;
 	end
 	else
@@ -902,7 +906,7 @@ begin
 end;
 
 procedure TDIniFile.RWStrings(const Section: string; Val: TStrings; const Save: Boolean);
-var i, j: Integer;
+var i, j, si, vi: SG;
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -917,7 +921,18 @@ begin
 			WriteSG(Section, 'LineCount', Val.Count);
 			for i := 0 to Val.Count - 1 do
 				WriteString(Section, 'Line' + NToS(i, False), Val[i]);
-
+      // Remove deleted lines
+			i := Val.Count;
+			si := GetSectionIndex(Section);
+			while True do
+			begin
+				vi := GetValueIndex(si, 'Line' + NToS(i, False));
+				if vi = -1 then Break;
+				Inc(i);
+				for j := vi to FSections[si].KeyCount - 2 do
+					FSections[si].Keys[j] := FSections[si].Keys[j + 1];
+				Dec(FSections[si].KeyCount);
+			end;
 		end;
 	end;
 end;
@@ -1069,9 +1084,41 @@ begin
 end;
 
 
-procedure TDIniFile.RWComboBox(ComboBox: TComboBox; const Save: Boolean);
+procedure TDIniFile.RWComboBox(Section: string; ComboBox: TComboBox; const Save: Boolean);
+var
+	i: SG;
+	Name: string;
+	NotifyEvent: TNotifyEvent;
 begin
-  // ToDo
+	Name := ButtonNameToFileName(ComboBox.Name, False);
+	NotifyEvent := ComboBox.OnChange;
+	ComboBox.OnChange := nil;
+	if ComboBox.Style = csDropDownList then
+	begin
+		i := ComboBox.ItemIndex;
+		ComboBox.ItemIndex := MainIni.RWSGF(Section, Name, i, i, Save);
+	end
+	else
+	begin
+		ComboBox.Text := MainIni.RWStringF(Section, Name, ComboBox.Text, ComboBox.Text, Save);
+	end;
+	ComboBox.OnChange := NotifyEvent;
+end;
+
+procedure TDIniFile.RWMemo(Section: string; Memo: TMemo; const Save: Boolean);
+var
+	Name: string;
+	NotifyEvent: TNotifyEvent;
+begin
+	Name := ButtonNameToFileName(Memo.Name, False);
+	NotifyEvent := Memo.OnChange;
+	Memo.OnChange := nil;
+	if Save = False then
+		Memo.Text := RemoveEscape(ReadString(Section, Name, ''))
+	else
+		WriteString(Section, Name, AddEscape(Memo.Text));
+//	MainIni.RWStrings(Section, Memo.Lines, Save);
+	Memo.OnChange := NotifyEvent;
 end;
 
 procedure MainIniCreate;

@@ -1,7 +1,7 @@
 //* File:     Lib\uDImage.pas
 //* Created:  2000-07-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-02-17
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -496,7 +496,7 @@ begin
 			Cur := 1 + SG(MouseL)
 		else
 			Cur := LCursor;
-		if (Cursor = crArrow) and (Cursor <> Cur) then
+		if {(Cursor = crArrow) and} (Cursor <> Cur) then
 			Cursor := Cur;
 	end;
 	end;
@@ -583,15 +583,6 @@ begin
 	end;
 	inherited MouseUp(Button, Shift, X, Y);
 end;
-{
-function TDImage.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
-	MousePos: TPoint): Boolean;
-begin
-	Result := False;
-	inherited DoMouseWheel(Shift, WheelDelta, MousePos);
-	ScrollTo(OfsX, OfsY + WheelDelta);
-end;}
-
 
 function TDImage.DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
 begin

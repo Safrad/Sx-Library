@@ -1,7 +1,7 @@
 //* File:     Lib\uLang.pas
 //* Created:  1999-11-01
-//* Modified: 2004-08-29
-//* Version:  X.X.32.X
+//* Modified: 2004-11-08
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz

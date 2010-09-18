@@ -1,7 +1,7 @@
 //* File:     Lib\uAbout.pas
 //* Created:  1999-10-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-03-08
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -19,7 +19,7 @@ type
 	TfAbout = class(TDForm)
 		Timer1: TDTimer;
 		ButtonOk: TDButton;
-		Bevel5: TBevel;
+    BevelSep: TBevel;
 		Image1: TImage;
 		Image2: TImage;
 		LabelRunCount: TDLabel;
@@ -37,8 +37,8 @@ type
 		EditAuthor: TEdit;
 		EditWeb: TEdit;
 		LabelWeb: TDLabel;
-		EditEmail: TEdit;
-		Bevel6: TBevel;
+    EditEMail: TEdit;
+    Bevel: TBevel;
 		ImageAbout: TDImage;
 		Image3: TImage;
 		LabelIcq: TDLabel;
@@ -47,7 +47,7 @@ type
 		SysInfo1: TDButton;
 		DButtonMemoryStatus: TDButton;
 		DLabel1: TDLabel;
-    EditModified: TEdit;
+		EditModified: TEdit;
 		LabelModified: TDLabel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
@@ -57,7 +57,7 @@ type
 		procedure ImageAboutMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
 		procedure EditWebClick(Sender: TObject);
-		procedure EditEmailClick(Sender: TObject);
+		procedure EditEMailClick(Sender: TObject);
 		procedure DTimer1Timer(Sender: TObject);
 		procedure EditIcqClick(Sender: TObject);
 		procedure SysInfo1Click(Sender: TObject);
@@ -92,10 +92,13 @@ function CompareParams: SG;
 procedure CloseParams;
 procedure HelpParams;
 procedure ReadMe;
+procedure Homepage;
 procedure Help;
 procedure ExtOpenFile(FileName: TFileName);
 procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
-	FileName: TFileName; const Modal: Boolean);
+	const Modal: Boolean);
+{procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
+	FileName: TFileName; const Modal: Boolean);}
 procedure AboutRW(const Save: Boolean);
 
 var
@@ -126,6 +129,7 @@ var
 	Flashs: TData;
 const
 	MaxTyp = 13;
+	HomepageAddr = 'http://safrad.webzdarma.cz';
 
 var
 	AcceptFile: BG;
@@ -234,10 +238,13 @@ begin
 end;
 
 procedure ReadMe;
-var
-	ErrorCode: U4;
 begin
 	ExtOpenFile(LongToShortPath(WorkDir + 'ReadMe.htm'));
+end;
+
+procedure Homepage;
+begin
+	ExtOpenFile(HomepageAddr + '/Software.html');
 end;
 
 procedure Help;
@@ -254,7 +261,7 @@ begin
 		IOError(FileName, ErrorCode);
 end;
 
-procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
+procedure ExecuteAbout2(AOwner: TComponent; Version, Created, Modified: string;
 	FileName: TFileName; const Modal: Boolean);
 var OrigCursor: TCursor;
 begin
@@ -284,6 +291,21 @@ begin
 		fAbout.FormStyle := fsStayOnTop;
 		fAbout.Show;
 	end;
+end;
+
+procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
+	const Modal: Boolean); overload;
+begin
+	if FileExists(GraphDir + Application.Title + '.gif') then
+		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.gif', Modal)
+	else if FileExists(GraphDir + Application.Title + '.jpg') then
+		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.jpg', Modal)
+	else if FileExists(GraphDir + 'Logo.gif') then
+		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + 'Logo.gif', Modal)
+	else if FileExists(GraphDir + 'Logo.jpg') then
+		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + 'Logo.jpg', Modal)
+	else
+		ExecuteAbout2(AOwner, Version, Created, Modified, '', Modal);
 end;
 
 procedure AboutRW(const Save: Boolean);
@@ -353,6 +375,7 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
 		BmpAbout.GenerateRGB(clNone,
 			GenFunc[RunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
+		BmpAbout.Transparent := False;
 	end;
 begin
 	if not Assigned(BmpAbout) then
@@ -364,19 +387,29 @@ begin
 	else
 	begin
 		BmpAbout.LoadFromFile(AboutFile);
-		if (BmpAbout.Width = 0) or (BmpAbout.Height = 0) then GenBmp;
+		BmpAbout.TryTransparent;
+		if (BmpAbout.Width < 64) or (BmpAbout.Height < 64) then
+		begin
+			BmpAbout.Resize(BmpAbout, BmpAbout.Width * 2, BmpAbout.Height * 2, nil);
+		end
+		else if (BmpAbout.Width > 192) or (BmpAbout.Height > 192) then
+		begin
+			BmpAbout.Resize(BmpAbout, BmpAbout.Width div 2, BmpAbout.Height div 2, nil);
+		end;
+		if BmpAbout.Empty then GenBmp;
 	end;
-	BmpAbout.TransparentColor := GetTransparentColor(BmpAbout);
 end;
 
 procedure TfAbout.FormCreate(Sender: TObject);
 begin
 	{$ifdef LINUX}
-  DButtonMemoryStatus.Visible := False;
+	DButtonMemoryStatus.Visible := False;
 	{$endif}
 
 	Background := baGradient;
-	EditEmail.Text := 'safrad@email.cz?subject=' + Application.Title;
+	EditEMail.Text := 'safrad@email.cz?subject=' + Application.Title;
+	EditWeb.Text := HomepageAddr;
+
 	PanelRC.Text := NToS(RunCount);
 	PanelTRT.Text := msToStr(RunTime, diDHMSD, 3, False);
 
@@ -443,7 +476,7 @@ begin
 		IOError(FileName, ErrorCode);
 end;
 
-procedure TfAbout.EditEmailClick(Sender: TObject);
+procedure TfAbout.EditEMailClick(Sender: TObject);
 var
 	FileName: TFileName;
 	ErrorCode: U4;

@@ -1,7 +1,7 @@
 //* File:     Lib\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-02-17
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
@@ -905,7 +905,7 @@ begin
 	InitRect;
 
 	case FBackground of
-	baGradient, baGradientOnly:
+	baUser, baGradient, baGradientOnly:
 	begin
 //		Invalidate;
 	end;
@@ -941,7 +941,7 @@ begin
 	inherited; // FOnResize Method
 
 	case FBackground of
-	baNone:
+	baNone, baStandard, baBitmap:
 	begin
 
 	end;
@@ -951,10 +951,11 @@ begin
 		Paint;
 		DeactivateRenderingContext; // make context drawable
 	end
-	else
+	else // baUser, baGradient, baGradientOnly
 	begin
 //		if (Message.Width <> Width) or (Message.Height <> Height) then
 //			InitBackground;
+		Paint; // D???
 	end;
 	end;
 end;

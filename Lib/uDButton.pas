@@ -1,7 +1,7 @@
 //* File:     Lib\uDButton.pas
 //* Created:  1999-09-01
-//* Modified: 2004-09-19
-//* Version:  X.X.32.X
+//* Modified: 2005-01-10
+//* Version:  X.X.33.X
 //* Author:   Safranek David (Safrad)
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
