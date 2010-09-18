@@ -11,10 +11,8 @@ unit uData;
 interface
 
 uses
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	StdCtrls,
-	uAdd;
-
+	uTypes,
+	SysUtils;
 type
 	TIndex = UG;
 
@@ -108,9 +106,7 @@ type
 
 implementation
 
-{$ifopt d+}
-uses uError;
-{$endif}
+uses uMem;
 
 type
 	PItem = ^TItem;
@@ -397,18 +393,18 @@ var
 begin
 	if FItemSize <> 0 then
 	begin
-		Result := 'ItemSize: ' + NToS(FItemSize);
+		Result := 'ItemSize: ' + IntToStr(FItemSize);
 	end
 	else
 		Result := 'VariableSize';
-	Result := Result + ', ItemCount: ' + NToS(FItemCount);
+	Result := Result + ', ItemCount: ' + IntToStr(FItemCount);
 	if FItemSize = 4 then
 	begin
 		Result := Result + ', Items: ';
 		D := Data;
 		for i := 0 to FItemCount - 1 do
 		begin
-			Result := Result + NToS(D^) + ',';
+			Result := Result + IntToStr(D^) + ',';
 
 			Inc(D, 1); //  shl FItemSh
 		end;

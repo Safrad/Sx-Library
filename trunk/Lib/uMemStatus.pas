@@ -57,7 +57,7 @@ var
 implementation
 
 {$R *.DFM}
-uses uAdd;
+uses uTypes, uFormat;
 
 procedure TfMemStatus.Timer1Timer(Sender: TObject);
 var

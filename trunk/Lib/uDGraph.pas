@@ -12,7 +12,7 @@ interface
 
 uses
 	SysUtils,
-	uAdd, uData;
+	uTypes, uData;
 
 	{ Limits:
 		2^31 nodes (S4)
@@ -64,7 +64,7 @@ implementation
 
 uses
 	Math,
-	uFiles, uStrings, uError, uSysInfo, uFind, uInput;
+	uFiles, uStrings, uError, uSysInfo, uFind, uInput, uFormat;
 
 const
 	NotOriented = True;

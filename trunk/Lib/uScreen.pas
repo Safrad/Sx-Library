@@ -11,7 +11,7 @@ unit uScreen;
 interface
 
 uses
-	uAdd,
+	uTypes, uMath,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	StdCtrls, uDButton, uDForm;
 
@@ -130,7 +130,7 @@ implementation
 {$R *.DFM}
 uses
 	Registry, Math, MMSystem,
-	uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput;
+	uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput, uMem, uFormat, uSystem;
 var
 	SndBeep: PWave;
 	First: Boolean;

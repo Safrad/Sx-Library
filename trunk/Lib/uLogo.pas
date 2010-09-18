@@ -11,7 +11,7 @@ unit uLogo;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, uDTimer, uDForm;
 
@@ -44,7 +44,7 @@ implementation
 {$R *.DFM}
 uses
 	StdCtrls,
-	uGraph, uDBitmap, uFiles;
+	uGraph, uDBitmap, uFiles, uMath, uSystem;
 var
 	fLogo: TfLogo;
 	LogoTime: LongWord;
@@ -265,7 +265,7 @@ begin
 		Timer1.Enabled := False;
 	end;
 
-	EndLongOperation;
+	EndLongOperation(False);
 	BackBitmap.SetSize(0, 0);
 end;
 

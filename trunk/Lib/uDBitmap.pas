@@ -16,7 +16,7 @@ interface
 
 uses
 	OpenGL12,
-	uAdd, Windows, Graphics, ExtCtrls, SysUtils;
+	uTypes, uMath, Windows, Graphics, ExtCtrls, SysUtils;
 
 const
 	IconExt = '.png';
@@ -100,7 +100,8 @@ type
 		Colors: array[0..1] of TColor; // gsSolid, gsGradient
 		Effect: TEffect; // 1
 		Style: TGraphicStyle; // 1
-		Reserve: array[0..5] of U1;
+		BorderSize: U1;
+		Reserve: array[0..4] of U1;
 {		TextureFileName: TFileName;
 		Texture: TDBitmap; // gsBitmap}
 	end;
@@ -331,7 +332,7 @@ uses
 	Jpeg, GifImage, PngImage, PPMImage, TGAImage,
 	Dialogs, Math, Classes, ClipBrd, ExtDlgs, StdCtrls,
 	uSGL,
-	uGraph, uError, uScreen, uFiles, uGetInt, uStrings, uSysInfo, uInput, uFind;
+	uGraph, uError, uScreen, uFiles, uGetInt, uStrings, uSysInfo, uInput, uFind, uMem, uSystem;
 
 (*-------------------------------------------------------------------------*)
 function WidthToByteX4(const Width: LongWord): LongWord;
@@ -8135,8 +8136,6 @@ begin
 	RandEffectR := ColorToRGB(RandEffect);
 
 	// For Colors
-	MaxX := XD2 - XD1 + 1;
-	MaxY := YD2 - YD1 + 1;
 
 	// Cut
 	if XD1 > TCoor(GraphMaxX) then Exit;
@@ -8165,6 +8164,8 @@ begin
 	end;
 	if YD1 > YD2 then Exit;
 
+	MaxX := XD2 - XD1 + 1;
+	MaxY := YD2 - YD1 + 1;
 	MaxX2 := 2 * MaxX;
 	MaxY2 := 2 * MaxY;
 	MaxXD := MaxX - 1;
@@ -10319,9 +10320,10 @@ var
 begin
 	for i := 0 to Length(AllPictureExt) - 1 do
 	begin
-		s1 := s1 + '*.' + AllPictureExt[i] + ',';
+		s1 := s1 + {'*.' +} AllPictureExt[i] + ', ';
 		s2 := s2 + '*.' + AllPictureExt[i] + ';';
 	end;
+	SetLength(s1, Length(s1) - 1);
 	s1[Length(s1)] := ')';
 	SetLength(s2, Length(s2) - 1);
 	AllPictures := 'Any Pictures (' + s1 + '|' + s2;
@@ -10338,7 +10340,7 @@ var
 	Co: array[0..3] of TColor;
 begin
 	case DS.Style of
-	gsBorder: Border(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Colors[1], 2, ef16);
+	gsBorder: Border(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Colors[1], DS.BorderSize, ef16);
 	gsLines:
 	begin
 //		Border(XS1, YS1, XS2, YS2: TCoor; C, C, 2);

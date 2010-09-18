@@ -10,7 +10,7 @@ unit uStrings;
 
 interface
 
-uses uAdd;
+uses uTypes;
 
 const
 	CharNul = #$00;
@@ -51,7 +51,8 @@ function CharCount(const s: string; const C: Char): UG;
 
 function DelBeginSpaceF(const s: string): string;
 procedure DelBeginSpace(var s: string);
-function DelEndSpaceF(const s: string): string;
+function DelEndSpaceF(const s: string): string; overload;
+function DelEndSpaceF(const s: ShortString): ShortString; overload;
 procedure DelEndSpace(var s: string);
 function DelBESpaceF(s: string): string;
 procedure DelBESpace(var s: string);
@@ -59,8 +60,11 @@ function RemoveBlanks(s: string): string;
 function DeleteLastEnter(s: string): string;
 function DeleteLastChar(s: string): string;
 
-function ReadToChar(const Line: string; var LineIndex: SG;
-	const C: Char): string;
+function ReadToChar(const Line: string; const C: Char): string; overload;
+function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
+function ReadToNewLine(const Line: string; var LineIndex: SG): string;
+function ReadNum(const Line: string; var LineIndex: SG): SG;
+procedure SkipSpace(const Line: string; var LineIndex: SG);
 function ReadToString(const Line: string; var LineIndex: SG;
 	const S: string): string;
 function ReadToChars(const Line: string; var LineIndex: SG;
@@ -81,16 +85,11 @@ procedure Replace(var s: string; const WhatS, ToS: string);
 function Code(s: ShortString; Decode: Boolean): ShortString; overload
 function Code(s: AnsiString; Decode: Boolean): AnsiString; overload;
 
-function RemoveEscape(s: string): string;
-function AddEscape(s: string): string; // 2.8x larger for random data
-
-function RandomString(Size: SG): string;
-
 implementation
 
 uses
 	Math,
-	uFind, uError;
+	uFind;
 var
 	TableWordSep: array[0..7] of Char = (' ', ',', '.', '-', '/', ';', '(', ')');
 
@@ -258,6 +257,21 @@ begin
 	Result := s;
 end;
 
+function DelEndSpaceF(const s: ShortString): ShortString;
+var
+	i: Integer;
+begin
+	for i := Length(s) downto 1 do
+	begin
+		if s[i] <> ' ' then
+		begin
+			Result := Copy(s, 1, i);
+			Exit;
+		end;
+	end;
+	Result := s;
+end;
+
 procedure DelEndSpace(var s: string);
 var
 	i: Integer;
@@ -351,8 +365,16 @@ begin
 		Result := '';
 end;
 
-function ReadToChar(const Line: string; var LineIndex: SG;
-	const C: Char): string;
+function ReadToChar(const Line: string; const C: Char): string;
+var LineIndex: SG;
+begin
+	LineIndex := 1;
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> C) do
+		Inc(LineIndex);
+	Result := Copy(Line, 1, LineIndex - 1);
+end;
+
+function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string;
 var StartIndex: SG;
 begin
 	StartIndex := LineIndex;
@@ -362,15 +384,58 @@ begin
 	Inc(LineIndex);
 end;
 
+function ReadToNewLine(const Line: string; var LineIndex: SG): string;
+var StartIndex: SG;
+begin
+	StartIndex := LineIndex;
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF)do
+		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	Inc(LineIndex);
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
+		Inc(LineIndex);
+end;
+
+function ReadNum(const Line: string; var LineIndex: SG): SG;
+begin
+	Result := 0;
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] in ['0'..'9']) do
+	begin
+		Result := Result * 10;
+		Result := Result + Ord(Line[LineIndex]) - Ord('0');
+		Inc(LineIndex);
+	end;
+end;
+
+procedure SkipSpace(const Line: string; var LineIndex: SG);
+begin
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] in [CharSpace, CharTab]) do
+	begin
+		Inc(LineIndex);
+	end;
+end;
+
 function ReadToString(const Line: string; var LineIndex: SG;
 	const S: string): string;
 var StartIndex: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex + Length(S) <= Length(Line) + 1) and (Copy(Line, LineIndex, Length(S)) <> S) do
+	while True do
+	begin
+		if (LineIndex + Length(S) > Length(Line)) then
+		begin
+			LineIndex := Length(Line) + 1;
+			Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+			Exit;
+		end;
+		if (Copy(Line, LineIndex, Length(S)) = S) then
+		begin
+			Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+			Inc(LineIndex, Length(S));
+			Exit;
+		end;
 		Inc(LineIndex);
-	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
-	Inc(LineIndex, Length(S));
+	end;
 end;
 
 function ReadToChars(const Line: string; var LineIndex: SG;
@@ -641,192 +706,6 @@ begin
 		end;
 end;
 
-{
-// Standard Escape Sequences:
-\b       backspace
-\f       formfeed
-\n       new line
-\r       carriage return
-\t       horizontal tab
-\'       single quote
-\0       null
-
-
-Sequence	Value	Char	What it does
-\a	0x07	BEL	Audible bell
-\b	0x08	BS	Backspace
-\f	0x0C	FF	Formfeed
-\n	0x0A	LF	Newline (linefeed)
-\r	0x0D	CR	Carriage return
-\t	0x09	HT	Tab (horizontal)
-\v	0x0B	VT	Vertical tab
-\\	0x5c	\	Backslash
-\'	0x27	'	Single quote (apostrophe)
-\"	0x22	"	Double quote
-\?	0x3F	?	Question mark
-\O		any	O=a string of up to three octal digits
-\xH		any	H=a string of hex digits
-\XH		any	H=a string of hex digits
-}
-
-function RemoveEscape(s: string): string;
-var
-	i, j: SG;
-	x, v: U1;
-	Special: BG;
-begin
-	Result := '';
-	i := 1;
-	Special := False;
-	while i <= Length(s) do
-	begin
-		if s[i] = '\' then
-		begin
-			if Special then
-			begin
-				Result := Result + s[i];
-				Special := False;
-			end
-			else
-				Special := True;
-		end
-		else
-			if Special then
-			begin
-				case s[i] of
-				'a': Result := Result + CharBell;
-				'b': Result := Result + CharBackspace;
-				'e', 'E': Result := Result + #$1B;
-				'f': Result := Result + CharFormfeed;
-				'n': Result := Result + CharLF;
-				'r': Result := Result + CharCR;
-				't': Result := Result + CharHT;
-{				'u', 'U':
-				begin
-				end;}
-				'v': 	Result := Result + CharVT;
-				'x':
-				begin
-					Inc(i);
-					x := 0;
-					while True do
-					begin
-						if i <= Length(s) then
-							v := HexValue[s[i]]
-						else
-							v := 16;
-						if (v < 16) then
-						begin
-							x := (x shl 4) and $ff;
-							x := (x + v) and $ff;
-							Inc(i);
-						end
-						else
-						begin
-							Result := Result + Char(x);
-							Dec(i);
-							Break;
-						end;
-					end;
-				end;
-				'''': Result := Result + '''';
-				'"': Result := Result + '"';
-				'?': Result := Result + '?';
-				'0'..'7': //Result := Result + Char(Ord(s[i]) - Ord('0'));//CharNull;
-				begin
-					x := 0;
-					j := 0;
-					while True do
-					begin
-						if (i <= Length(s)) and (j < 3) then
-							v := HexValue[s[i]]
-						else
-							v := 8;
-						if (v < 8) then
-						begin
-							x := (x shl 3) and $ff;
-							x := (x + v) and $ff;
-							Inc(i);
-						end
-						else
-						begin
-							Result := Result + Char(x);
-							Dec(i);
-							Break;
-						end;
-						Inc(j);
-					end;
-				end;
-				else
-					Result := Result + s[i];
-					{$ifopt d+}
-					IE(535);
-					{$endif}
-				end;
-				Special := False;
-			end
-			else
-				Result := Result + s[i];
-		Inc(i);
-	end;
-
-end;
-
-function AddEscape(s: string): string;
-var i: SG;
-begin
-	Result := '';
-	i := 1;
-	while i <= Length(s) do
-	begin
-		case s[i] of
-		'\': Result := Result + '\\';
-		CharBell: Result := Result + '\a';
-		CharBackspace: Result := Result + '\b';
-		#$1B: Result := Result + '\e'; // 'E'
-		CharFormfeed: Result := Result + '\f';
-		CharLF: Result := Result + '\n';
-		CharCR: Result := Result + '\r';
-		CharHT: Result := Result + '\t';
-		CharVT: Result := Result + '\v';
-//		'''': Result := Result + '\''';
-//		#0..#6: Result := Result + '\' + Char(Ord(s[i]) + Ord('0'));//CharNull;
-		#$20..#$5B, #$5D..#$7F: // ASCII
-			Result := Result + s[i];
-		else
-		begin
-			NumericBase := 8;
-			Result := Result + '\' + NToS(Ord(s[i]), '000');  // NumToStr(Ord(s[i]), 8);
-			NumericBase := 10;
-		end;
-		end;
-		Inc(i);
-	end;
-end;
-
-function RandomString(Size: SG): string;
-var i: SG;
-begin
-	SetLength(Result, Size);
-	for i := 1 to Size do
-		Result[i] := Char(Random(256));
-end;
-{
-var
-	i: SG;
-	s, s2: string;
-begin
-	for i := 0 to 20000 do
-	begin
-		s := RandomString(i);
-		s2 := AddEscape(s);
-		s2 := RemoveEscape(s2);
-		if s <> s2 then
-			Nop;
-	end;
-
-end;
-}
 initialization
 	FillHexValue;
 end.

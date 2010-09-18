@@ -14,7 +14,7 @@ interface
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, Menus,
 	ExtCtrls, StdCtrls,
-	uDBitmap, uAdd;
+	uDBitmap, uTypes, uMath;
 
 type
 	TZoomMenu = (
@@ -191,7 +191,7 @@ implementation
 
 uses
 	Math,
-	uMenus, uGraph, uSysInfo, uStrings, uGetInt, uGColor;
+	uMenus, uGraph, uSysInfo, uStrings, uGetInt, uGColor, uFormat;
 
 const
 //	ZoomDiv = 2520;

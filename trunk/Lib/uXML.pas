@@ -12,7 +12,7 @@ interface
 
 uses
 	SysUtils,
-	uAdd;
+	uTypes;
 
 type
 	TXMLElement = (xeEOI, xeStartTag, xeEndTag, xeDataValue);

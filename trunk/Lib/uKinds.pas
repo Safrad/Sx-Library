@@ -11,7 +11,7 @@ unit uKinds;
 interface
 
 uses
-	uAdd, uReopen,
+	uTypes, uReopen,
 	SysUtils, Menus, Graphics, Classes, Dialogs, ExtDlgs, Controls;
 
 type
@@ -170,7 +170,7 @@ implementation
 
 uses
 	Forms, Math, Windows,
-	uFiles, uError, uStrings, uDIni;
+	uFiles, uError, uStrings, uDIni, uMem, uFormat, uSystem;
 
 constructor TKinds.Create;
 begin
@@ -361,7 +361,7 @@ begin
 	begin
 		if SkipStartup then Exit;
 		c := 0;
-		MainIni.RWSG('Opened Files', 'Count', c, Save);
+		MainIni.RWNum('Opened Files', 'Count', c, Save);
 	end;
 
 	c2 := 0;
@@ -379,7 +379,7 @@ begin
 	end;
 
 	if Save = True then
-		MainIni.RWSG('Opened Files', 'Count', c2, Save);
+		MainIni.RWNum('Opened Files', 'Count', c2, Save);
 end;
 
 procedure TKinds.SetMenuItem(i: SG);

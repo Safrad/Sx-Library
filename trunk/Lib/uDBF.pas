@@ -10,7 +10,7 @@ unit uDBF;
 
 interface
 
-uses SysUtils, uAdd;
+uses SysUtils, uTypes;
 
 type
 	PColumn = ^TColumn;
@@ -45,7 +45,7 @@ implementation
 
 uses
 	Windows, Variants,
-	uFiles, uStrings, uInput, uError;
+	uFiles, uStrings, uInput, uError, uMem, uFormat, uMath;
 
 procedure TDBF.Close;
 var i, j: SG;

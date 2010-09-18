@@ -22,7 +22,7 @@ interface
 
 {$R *.RES}
 uses
-	uFiles, uDBitmap,
+	uTypes, uMath, uFiles, uDBitmap,
 	Windows, Messages, Classes, Controls, Forms, Graphics, StdCtrls,
 	ExtCtrls, CommCtrl, uWave, uDTimer;
 
@@ -120,7 +120,7 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uAdd, uScreen, uSysInfo;
+	uGraph, uScreen, uSysInfo, uMenus;
 
 
 var Loaded: BG;

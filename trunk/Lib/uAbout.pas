@@ -11,7 +11,7 @@ unit uAbout;
 interface
 
 uses
-	uDForm, uAdd, uDBitmap,
+	uDForm, uTypes, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage;
 
@@ -117,7 +117,7 @@ implementation
 {$R *.DFM}
 uses
 	ShellAPI, Dialogs,
-	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, {$ifndef LINUX}uMemStatus,{$endif} uStrings;
+	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, {$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uFormat;
 var
 	LMemClock: U8;
 	RunProgramTime: U8;
@@ -337,12 +337,12 @@ begin
 
 	if Assigned(MainIni) then
 	begin
-		MainIni.RWUG('Statistics', 'RunCount', RunCount, Save);
-		MainIni.RWU8('Statistics', 'RunTime', RunTime, Save);
-		MainIni.RWUG('Statistics', 'ReadCount', ReadCount, Save);
-		MainIni.RWU8('Statistics', 'ReadBytes', ReadBytes, Save);
-		MainIni.RWUG('Statistics', 'WriteCount', WriteCount, Save);
-		MainIni.RWU8('Statistics', 'WriteBytes', WriteBytes, Save);
+		MainIni.RWNum('Statistics', 'RunCount', RunCount, Save);
+		MainIni.RWNum('Statistics', 'RunTime', RunTime, Save);
+		MainIni.RWNum('Statistics', 'ReadCount', ReadCount, Save);
+		MainIni.RWNum('Statistics', 'ReadBytes', ReadBytes, Save);
+		MainIni.RWNum('Statistics', 'WriteCount', WriteCount, Save);
+		MainIni.RWNum('Statistics', 'WriteBytes', WriteBytes, Save);
 		if Save = False then
 		begin
 			Inc(RunCount);

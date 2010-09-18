@@ -23,7 +23,7 @@ type
 implementation
 
 uses
-	uAdd, uParser, uDBitmap, uInput, uStrings,
+	uTypes, uMath, uParser, uDBitmap, uInput, uStrings,
 	SysUtils;
 
 const MaxLineSize = 70;

@@ -20,7 +20,7 @@ begin
 		{$ifopt d+}
 		if AValue[R] < AValue[L] then
 		begin
-			IE(18);
+			CreateException;
 		end;
 		{$endif}
 		if AValue[R] = AValue[L] then

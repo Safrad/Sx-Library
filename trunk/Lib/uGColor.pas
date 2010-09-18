@@ -13,7 +13,7 @@ interface
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
-	uDLabel, ImgList, uDForm, uDBitmap, uAdd, uDImage;
+	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath;
 
 const
 	MaxColor = 6 * 4 + 3 * 4 - 1;
@@ -149,7 +149,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uMenus, uInput;
+	uMenus, uInput, uFormat;
 
 procedure InitButton(Button: TDButton);
 begin

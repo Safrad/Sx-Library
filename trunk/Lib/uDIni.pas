@@ -11,7 +11,7 @@ unit uDIni;
 interface
 
 uses
-	uAdd, uDView, uDImage, uDButton,
+	uTypes, uDView, uDImage, uDButton,
 	Classes, SysUtils, Forms, ComCtrls, StdCtrls, Controls, Menus;
 
 type
@@ -66,21 +66,18 @@ type
 
 		procedure RWString(const Section, Ident: string; var Value: string; const Save: BG);
 		procedure RWStrings(const Section: string; Val: TStrings; const Save: BG);
-		procedure RWS1(const Section, Ident: string; var Value: S1; const Save: BG);
-		procedure RWU1(const Section, Ident: string; var Value: U1; const Save: BG);
-		procedure RWS2(const Section, Ident: string; var Value: S2; const Save: BG);
-		procedure RWU2(const Section, Ident: string; var Value: U2; const Save: BG);
-		procedure RWS4(const Section, Ident: string; var Value: S4; const Save: BG);
-		procedure RWU4(const Section, Ident: string; var Value: U4; const Save: BG);
-		procedure RWS8(const Section, Ident: string; var Value: S8; const Save: BG);
-		procedure RWSG(const Section, Ident: string; var Value: SG; const Save: BG);
-		procedure RWUG(const Section, Ident: string; var Value: UG; const Save: BG);
-		procedure RWU8(const Section, Ident: string; var Value: U8; const Save: BG);
-		procedure RWB1(const Section, Ident: string; var Value: B1; const Save: BG);
-		procedure RWBG(const Section, Ident: string; var Value: BG; const Save: BG);
-		procedure RWF4(const Section, Ident: string; var Value: F4; const Save: BG);
-		procedure RWF8(const Section, Ident: string; var Value: F8; const Save: BG);
-		procedure RWFA(const Section, Ident: string; var Value: FA; const Save: BG);
+		procedure RWNum(const Section, Ident: string; var Value: S1; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: U1; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: S2; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: U2; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: S4; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: U4; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: S8; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: FA; const Save: BG); overload;
+		procedure RWBool(const Section, Ident: string; var Value: B1; const Save: BG); overload;
+		procedure RWBool(const Section, Ident: string; var Value: BG; const Save: BG); overload;
 		procedure RWDate(const Section, Ident: string; var Value: TDate; const Save: BG);
 		procedure RWTime(const Section, Ident: string; var Value: TTime; const Save: BG);
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
@@ -91,6 +88,7 @@ type
 		procedure RWDView(DView: TDView; const Save: BG);
 		procedure RWListView(ListView: TListView; const Save: BG);
 		procedure RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG);
+		procedure RWMenuUG(Section: string; MenuItem: TMenuItem; var Value: UG; const Save: BG);
 		procedure RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: BG);
 		procedure RWComboBox(Section: string; ComboBox: TComboBox; const Save: BG);
 		procedure RWEdit(Section: string; Edit: TEdit; const Save: BG);
@@ -131,7 +129,7 @@ implementation
 
 uses
 	Registry, Windows, Math,
-	uError, uFiles, uStrings, uInput;
+	uError, uFiles, uStrings, uInput, uMem, uFormat, uMenus, uParser, uSystem;
 
 const
 	BufferSize = 32768;
@@ -288,7 +286,7 @@ begin
 end;
 
 procedure TDIniFile.WriteFA(const Section, Name: string; Value: FA);
-var CurrDecimalSeparator: Char;
+var CurrDecimalSeparator: ShortString;
 begin
 	CurrDecimalSeparator := DecimalSeparator;
 	DecimalSeparator := '.';
@@ -608,7 +606,7 @@ begin
 	if Result = False then ErrorMessage(FFileName + LineSep + 'Access Denied');
 end;
 
-procedure TDIniFile.RWS1(const Section, Ident: string; var Value: S1; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: S1; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -623,7 +621,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWU1(const Section, Ident: string; var Value: U1; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: U1; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -638,7 +636,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWS2(const Section, Ident: string; var Value: S2; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: S2; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -653,7 +651,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWU2(const Section, Ident: string; var Value: U2; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: U2; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -668,7 +666,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWS4(const Section, Ident: string; var Value: S4; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: S4; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -683,7 +681,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWU4(const Section, Ident: string; var Value: U4; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: U4; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -698,7 +696,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWS8(const Section, Ident: string; var Value: S8; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: S8; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -713,52 +711,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWU8(const Section, Ident: string; var Value: U8; const Save: BG);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadS8(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteS8(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWSG(const Section, Ident: string; var Value: SG; const Save: BG);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadSG(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteSG(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWUG(const Section, Ident: string; var Value: UG; const Save: BG);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadS8(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteS8(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWBG(const Section, Ident: string; var Value: BG; const Save: BG);
+procedure TDIniFile.RWBool(const Section, Ident: string; var Value: BG; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -773,7 +726,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWB1(const Section, Ident: string; var Value: B1; const Save: BG);
+procedure TDIniFile.RWBool(const Section, Ident: string; var Value: B1; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -788,7 +741,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWF4(const Section, Ident: string; var Value: F4; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F4; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -803,7 +756,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWF8(const Section, Ident: string; var Value: F8; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F8; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -818,7 +771,7 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWFA(const Section, Ident: string; var Value: FA; const Save: BG);
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: FA; const Save: BG);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -977,7 +930,7 @@ begin
 end;
 
 function TDIniFile.RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
-var CurrDecimalSeparator: Char;
+var CurrDecimalSeparator: ShortString;
 begin
 	if Save then Result := SaveVal else Result := DefVal;
 
@@ -1086,9 +1039,17 @@ end;
 
 procedure TDIniFile.RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG);
 begin
-	RWBG(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
+	if (Save = False) then Value := MenuItem.Checked;
+	RWBool(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
 	if (Save = False) then MenuItem.Checked := Value;
 end;
+
+procedure TDIniFile.RWMenuUG(Section: string; MenuItem: TMenuItem; var Value: UG; const Save: BG);
+begin
+	RWNum(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
+//	if (Save = False) then MenuItem.Caption := Value;
+end;
+
 
 procedure TDIniFile.RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: BG);
 begin

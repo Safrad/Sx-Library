@@ -16,7 +16,7 @@ unit uSGL;
 interface
 
 uses
-	uAdd,
+	uTypes,
 	Graphics;
 
 ///////////////////////////////////////////////////////////////////////
@@ -191,8 +191,7 @@ sglEErrorCode = (
  sglOpInvalidTexture,
  sglOpOutOfMemory,
  sglOpBadParameters,
- sglOpBeginMissed,
- sglOpNI
+ sglOpBeginMissed
  (* ... *)
 );
 const
@@ -202,8 +201,7 @@ const
 		'Invalid Texture',
 		'Out of Memory',
 		'Bad Parameters',
-		'Begin Missed',
-		'Not implemented'
+		'Begin Missed'
 );
 
 (* Datova struktura udrzujici informace o jedne texture. *)
@@ -588,7 +586,7 @@ var
 
 implementation
 
-uses Math, uGraph, uError, uSorts, uDBitmap;
+uses Math, uGraph, uError, uSorts, uDBitmap, uMem, uMath;
 
 // ***************************************************************************************************************************
 

@@ -91,7 +91,7 @@ implementation
 
 uses
 	Dialogs, Controls, Windows,
-	uGetStr, uError, uAdd, uStrings;
+	uGetStr, uError, uTypes, uMath, uStrings;
 
 procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
 begin

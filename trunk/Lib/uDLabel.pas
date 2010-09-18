@@ -12,7 +12,7 @@ interface
 
 {$R *.RES}
 uses
-	uAdd,
+	uTypes, uMath,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl;
 
