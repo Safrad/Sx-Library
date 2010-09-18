@@ -44,7 +44,7 @@ procedure Rec(Canvas: TCanvas; const Rect: TRect;
 procedure Border(Canvas: TCanvas; const Rect: TRect;
 	TopColor, BottomColor: TColor; const Width: Integer);
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string);
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG);
 
 function Over(const SX1, SY1, SX2, SY2: Integer;
 	const DX1, DY1, DX2, DY2: Integer): Boolean; overload;
@@ -441,23 +441,23 @@ procedure GoodText(Canvas: TCanvas; R: TRect; Text: string;
 begin
 	Canvas.Font.Color := MixColors(C1, C2);
 	DrawCutedText(Canvas, Rect(R.Left + 1, R.Top - 1, R.Right + 1, R.Bottom - 1),
-		Alignment, Layout, Text);
+		Alignment, Layout, Text, True);
 
 	Canvas.Font.Color := MixColors(C1, C2);
 	DrawCutedText(Canvas, Rect(R.Left - 1, R.Top + 1, R.Right - 1, R.Bottom + 1),
-		Alignment, Layout, Text);
+		Alignment, Layout, Text, True);
 
 	Canvas.Font.Color := C1;
 	DrawCutedText(Canvas, Rect(R.Left + 1, R.Top + 1, R.Right + 1, R.Bottom + 1),
-		Alignment, Layout, Text);
+		Alignment, Layout, Text, True);
 
 	Canvas.Font.Color := C2;
 	DrawCutedText(Canvas, Rect(R.Left - 1, R.Top - 1, R.Right - 1, R.Bottom - 1),
-		Alignment, Layout, Text);
+		Alignment, Layout, Text, True);
 
 	Canvas.Font.Color := C3;
 	DrawCutedText(Canvas, Rect(R.Left, R.Top, R.Right, R.Bottom),
-		Alignment, Layout, Text);
+		Alignment, Layout, Text, True);
 end;
 (*-------------------------------------------------------------------------*)
 procedure CanvasLine(Canvas: TCanvas; const X1, Y1, X2, Y2: Integer);
@@ -526,11 +526,11 @@ begin
 end;
 (*-------------------------------------------------------------------------*)
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string);
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG);
 var
-	i, LastSpace: Integer;
+	i, LastSpace, k: Integer;
 	LineS: array of string;
-	LineN: Integer;
+	LineN: SG;
 	CurX, CurY: Integer;
 	TextHeight: Integer;
 	MaxLines: Integer;
@@ -551,8 +551,17 @@ begin
 		end;
 
 		if (LineN < MaxLines) and (i > 1) and
-			(Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left) then
+			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left)
+			or (Caption[i] = #13) or (Caption[i] = #10))
+			then
 		begin
+			if Caption[i] = #13 then
+			begin
+				if Caption[i + 1] = #10 then k := 1 else k := 0;
+				LineS[LineN] := Copy(Caption, 1, i - 1);
+				Delete(Caption, 1, i + k);
+			end
+			else
 			if LastSpace = 0 then
 			begin
 				LineS[LineN] := Copy(Caption, 1, i - 1);

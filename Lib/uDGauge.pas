@@ -406,7 +406,7 @@ begin
 				end
 				else
 				begin
-					DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+					DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, True);
 				end;
 				OffsetRect(Recta, -i, -i);
 				if FontShadow > 0 then Dec(i) else Inc(i);
@@ -421,7 +421,7 @@ begin
 		end
 		else
 		begin
-			DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+			DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, True);
 		end;
 	end;
 

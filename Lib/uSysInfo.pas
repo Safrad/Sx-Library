@@ -61,10 +61,10 @@ type
 		CPU: U4;
 		CPUStr: string[12]; // 13
 		Reserved0: array[0..6] of S1; // 7
-		CPUFrequency: U8;
+		CPUFrequency: U8; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod) 
 		CPUPower: U8;
 		DiskFree, DiskTotal: U8; // 16
-		CPUUsage: S4; // 4 (-!0..10000)
+		CPUUsage: S4; // 4 (0..10000)
 		MS: TMemoryStatus; // 8 * 4 = 32
 		OS: TOSVersionInfo; // 148
 //		Graph: string[127]; // 128
@@ -303,15 +303,15 @@ end;
 
 procedure FillSysInfoD(var SysInfo: TSysInfo);
 var
-	P: array[0..3] of Char;
 	TickCount: U8;
 	CPUTick: U8;
+const
+	P: array[0..3] of Char = ('C', ':', '\', #0);
 begin
-
-	P[0] := 'C';
+{	P[0] := 'C';
 	P[1] := ':';
 	P[2] := '\';
-	P[3] := #0;
+	P[3] := #0;}
 { SectorsPerCluster := 0;
 	BytesPerSector := 0;}
 {
@@ -592,19 +592,17 @@ begin
 end;
 
 initialization
-	CPUUsage := 30 * 100;
-	InitPerformanceCounter;
 	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
-//	D.A := GetVersion;
-//	NTSystem := D.A < $080000000;
-{	SysInfo.OS.dwMajorVersion := D.W0;
-	SysInfo.OS.dwMinorVersion := D.W1;}
 	GetVersionEx(SysInfo.OS);
 	NTSystem := SysInfo.OS.dwMajorVersion >= 5;
 	RegCap := not ((SysInfo.OS.dwMajorVersion < 4) or ((SysInfo.OS.dwMajorVersion = 4) and (SysInfo.OS.dwMinorVersion < 10)));
 
+	InitPerformanceCounter;
 { PerformanceType := 2;
+	FillSysInfoD(SysInfo);
 	PerformanceFrequency := SysInfo.CPUFrequency;}
+
+	CPUUsage := 30 * 100;
 	GetCPUUsage(0);
 
 finalization

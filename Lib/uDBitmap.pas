@@ -329,15 +329,21 @@ begin
 end;
 
 procedure TDBitmap.GLSetSize;
+const
+	MaxSize = 256;
 var
 	Sh: SG;
-	NewWidth: TCoor;
+	NewWidth, NewHeight: TCoor;
 begin
 	Sh := CalcShr(FWidth);
-	NewWidth := 1 shl Sh;
-	if NewWidth <> FWidth then
+	NewWidth := Min(1 shl Sh, MaxSize);
+//	NewHeight := RoundDiv(NewWidth * FHeight, FWidth);
+	Sh := CalcShr(FHeight);
+	NewHeight := Min(1 shl Sh, MaxSize);
+
+	if (NewWidth <> FWidth) or (NewHeight <> FHeight) then
 	begin
-		Resize24(Self, NewWidth, RoundDiv(NewWidth * FHeight, FWidth), nil);
+		Resize24(Self, NewWidth, NewHeight, nil);
 	end;
 	SwapRB24;
 end;

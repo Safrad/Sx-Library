@@ -467,11 +467,11 @@ begin
 					if (FFontAngle = 0) and (FFontEffect = ef16) then
 					begin
 						FBmpOut.Canvas.Brush.Style := bsClear;
-						DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+						DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, WordWrap);
 					end
 					else
 					begin
-						DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption);
+						DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption, WordWrap);
 					end;
 				end;
 				OffsetRect(Recta, -i, -i);
@@ -494,11 +494,11 @@ begin
 			begin
 //				FBmpOut.Canvas.Brush.Color := Color;
 				FBmpOut.Canvas.Brush.Style := bsClear;
-				DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+				DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, WordWrap);
 			end
 			else
 			begin
-				DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption);
+				DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption, WordWrap)
 			end;
 		end;
 
