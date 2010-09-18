@@ -154,6 +154,7 @@ begin
 	for i := 0 to Src.Count - 1 do
 	begin
 		M := TMenuItem.Create(Dsc);
+		M.Name := Src[i].Name + '1';
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
 		M.Tag := Src[i].Tag;

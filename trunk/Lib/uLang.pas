@@ -10,6 +10,13 @@ unit uLang;
 
 interface
 
+type
+	TCodePage = (cpAscii, cp1250, cp852, cpISO88592, cpKeybCS2, cpMacCE,
+		cpKOI8CS, cpkodxx, cpWFW_311, cpISO88591, cpT1, cpMEXSK, cpw311_cw,
+		cpVavrusa, cpNavi);
+
+procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage);
+
 function UpCaseCz(const s: string): string;
 function DelCz(const s: string): string;
 
@@ -18,7 +25,6 @@ function DosCzSkToWin(const s: string): string;
 function WinCzSkToDos(const s: string): string;
 function WinPlToDos(const s: string): string;
 function WinHuToDos(const s: string): string;
-
 
 var
 	TableUpCaseCz,
@@ -32,10 +38,12 @@ implementation
 
 uses
 	Dialogs, SysUtils,
-	uError, uStrings;
+	uAdd, uError, uStrings;
 
+type
+	TCzLetters = array[0..29] of Char;
 const
-	CZX: array [0..14] of string =
+	CZX: array [TCodePage] of TCzLetters =
 	 ('ACDEEINORSTUUYZacdeeinorstuuyz', // ASCII
 		'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı', // CP1250
 		'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§', // CP852 (LATIN 2)
@@ -51,6 +59,34 @@ const
 		'Á%ÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı', // w311_ce
 		'ÁÈÏÉÌÍÒÓØŠÚ¡İáèïìéíòóøšú¡ı', // vavrusa
 		'ÁÈÏÉÌÍÒÓ+ŠÚ¡İ¡áèïéìíòóøšúùı'); // navi
+
+
+procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage);
+var
+	i: SG;
+	c, d: Char;
+	CP: array[Char] of Char;
+begin
+	// Fill
+	for c := Low(c) to High(c) do
+	begin
+		d := c;
+		for i := Low(TCzLetters) to High(TCzLetters) do
+		begin
+			if CZX[FromCharset][i] = c then
+			begin
+				d := CZX[ToCharset][i];
+			end;
+		end;
+		CP[c] := d;
+	end;
+
+	// Convert
+	for i := 1 to Length(s) do
+	begin
+		s[i] := CP[s[i]];
+	end;
+end;
 
 procedure FillCharsTable;
 var c, Result: Char;
