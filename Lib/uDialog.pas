@@ -55,7 +55,7 @@ implementation
 {$R *.DFM}
 uses
 	Consts, Math,
-	uError;
+	uWave;
 var
 	fDialog: TfDialog;
 
@@ -96,6 +96,7 @@ var
 	Wid, MaxWid, LastLine, LineCount, i, Hei, ButtonCount: SG;
 begin
 	Result := SG(mbCancel);
+	PlayWinSound(wsQuestion);
 	for i := 0 to IgnoreCount - 1 do
 		if Ignores[i].Msg = Msg then
 		begin

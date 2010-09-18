@@ -81,6 +81,7 @@ object fDialog: TfDialog
     ActiveOnly = True
     Enabled = True
     Interval = 1000
+    EventStep = esInterval
     OnTimer = Timer1Timer
   end
 end

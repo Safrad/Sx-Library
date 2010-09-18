@@ -80,6 +80,55 @@ type
 	end;
 	PWave = ^TWave;
 
+type
+	TWinSound = (
+		wsAsterisk, // Done
+		wsCloseProgram,
+		wsCriticalStop, // uError
+		wsDefaultSound, // Beep
+		wsExclamation,
+		wsExitWindows,
+		wsMaximize,
+		wsMenuCommand,
+		wsMenuPopup,
+		wsMinimize,
+		wsOpenProgram,
+		wsProgramError,
+		wsQuestion, // uDialog
+		wsRestoreDown,
+		wsRestoreUp,
+//		wsRingIn,
+//		wsRingout,
+//		wsSelect,
+//		wsShowToolbarBand,
+		wsStartWindows
+//		wsSystemDefault
+		);
+const
+	WinSoundNames: array[TWinSound] of string = (
+		'SystemAsterisk',
+		'Close',
+		'SystemHand',
+		'.Default',
+		'SystemExclamation',
+		'SystemExit',
+		'Maximize',
+		'MenuCommand',
+		'MenuPopup',
+		'Minimize',
+		'Open',
+		'AppGPFault',
+		'SystemQuestion',
+		'RestoreDown',
+		'RestoreUp',
+//		'RingIn',
+//		'RingOut',
+//		'CCSelect',
+//		'ShowBand',
+		'SystemStart'
+//		'SystemDefault'
+		);
+
 const
 	ConvertShr = 16;
 	ConvertPre = 1 shl ConvertShr;
@@ -111,6 +160,7 @@ procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
 
 procedure PlayWave(Wave: PWave);
 procedure PlayWaveFile(WaveName: TFileName);
+procedure PlayWinSound(WinSound: TWinSound);
 
 type
 	PPlayItem = ^TPlayItem;
@@ -176,7 +226,9 @@ var
 
 implementation
 
-uses uFiles, uError;
+uses
+	uFiles, uError,
+	Registry;
 
 (*
 procedure NoSound; assembler;
@@ -274,84 +326,54 @@ end;
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
 label LRetry, LFin;
 var
-	FSize: LongInt;
-	F: file;
-	ErrorCode: Integer;
+	F: TFile;
 begin
+	F := TFile.Create;
 	LRetry:
-	AssignFile(F, FName);
-	FileMode := 0; Reset(F, 1);
-	ErrorCode := IOResult;
-	if ErrorCode <> 0 then
+	if F.Open(FName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
-		if IOErrorRetry(FName, ErrorCode) then goto LRetry;
-	end
-	else
-	begin
-		FSize := FileSize(F);
-		GetMem(Wave, FSize);
-		BlockRead(F, Wave^, FSize);
-		ErrorCode := IOResult; if ErrorCode <> 0 then goto LFin;
+		GetMem(Wave, F.FileSize);
+		if not F.BlockRead(Wave^, F.FileSize) then goto LFin;
 		if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
 			(Wave.Marker3 <> 'fmt ') or
-			(Wave.BytesFollowing <> FSize - 8) then
+			(Wave.BytesFollowing <> F.FileSize - 8) then
 		begin
-			IOErrorMessage(FName, 'is not wave');
+			IOErrorMessage(FName, 'File is not wave');
 			WaveFree(Wave);
-		end
-		else if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
-		begin
-			IOErrorMessage(FName, 'wave format not supported');
-			WaveFree(Wave);
+			goto LFin
 		end;
-		if Wave.DataBytes > FSize - 44 then
+		if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
 		begin
-			IOErrorMessage(FName, 'wave data bytes repaired');
-			Wave.DataBytes := FSize - 44;
+			IOErrorMessage(FName, 'Wave format not supported');
+			WaveFree(Wave);
+			goto LFin;
+		end;
+		if Wave.DataBytes > F.FileSize - 44 then
+		begin
+			IOErrorMessage(FName, 'Wave data bytes repaired');
+			Wave.DataBytes := F.FileSize - 44;
 		end;
 		LFin:
-		CloseFile(F);
-		IOResult;
-		if ErrorCode <> 0 then
-		begin
-			if IOErrorRetry(FName, ErrorCode) then goto LRetry;
-		end;
+		F.Close;
 	end;
+	F.Free;
 end;
 
 procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
 label LRetry;
 var
-	F: file;
-	ErrorCode: Integer;
+	F: TFile;
 begin
 	if Wave = nil then Exit;
+	F := TFile.Create;
 	LRetry:
-	AssignFile(F, FName);
-	if FileExists(FName) then
+	if F.Open(FName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
-		FileMode := 1; Reset(F, 1);
-	end
-	else
-		Rewrite(F, 1);
-
-	ErrorCode := IOResult;
-	if ErrorCode <> 0 then
-	begin
-		if IOErrorRetry(FName, ErrorCode) then goto LRetry;
-	end
-	else
-	begin
-		BlockWrite(F, Wave^, Wave^.BytesFollowing + 8);
-		Truncate(F);
-		ErrorCode := IOResult;
-		CloseFile(F);
-		IOResult;
-		if ErrorCode <> 0 then
-		begin
-			if IOErrorRetry(FName, ErrorCode) then goto LRetry;
-		end;
+		if not F.BlockWrite(Wave^, Wave^.BytesFollowing + 8) then goto LRetry;
+		F.Truncate;
+		F.Close;
 	end;
+	F.Free;
 end;
 
 function BitsToByte(const Bits: Int64): LongInt;
@@ -657,16 +679,41 @@ end;
 procedure PlayWave(Wave: PWave);
 begin
 	if Wave <> nil then
-		PlaySound(PChar(Wave), 0, snd_ASync or snd_Memory)
+		PlaySound(PChar(Wave), 0, SND_ASYNC or SND_MEMORY or SND_NODEFAULT)
 end;
 
 procedure PlayWaveFile(WaveName: TFileName);
-var Wave: PWave;
+//var Wave: PWave;
 begin
-	WaveReadFromFile(Wave, WaveName);
+{	WaveReadFromFile(Wave, WaveName);
 	PlayWave(Wave);
-	FreeMem(Wave);
+	FreeMem(Wave);}
+	if WaveName <> '' then
+		PlaySound(PChar(WaveName), 0, SND_ASYNC {and SND_FILENAME});
 end;
+
+procedure PlayWinSound(WinSound: TWinSound);
+var
+	Reg: TRegistry;
+	Key: string;
+	SndName: TFileName;
+begin
+	Reg := TRegistry.Create;
+	Reg.RootKey := HKEY_CURRENT_USER;
+	Key := 'AppEvents\Schemes\Apps\.Default\' + WinSoundNames[WinSound] + '\.Current';
+	if Reg.OpenKey(Key, False) then
+	begin
+		if Reg.ValueExists('') then
+		begin
+			SndName := Reg.ReadString('');
+			PlayWaveFile(SndName);
+		end;
+		Reg.CloseKey;
+	end;
+	Reg.Free;
+
+end;
+
 
 const
 	SpeedDiv = 1024;

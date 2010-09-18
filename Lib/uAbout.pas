@@ -85,7 +85,7 @@ implementation
 {$R *.DFM}
 uses
 	ShellAPI,
-	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData;
+	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave;
 var
 	fAbout: TfAbout;
 
@@ -119,6 +119,7 @@ procedure ExecuteAbout(AOwner: TComponent; Version, Build: string;
 	FileName: TFileName; const Modal: Boolean);
 var OrigCursor: TCursor;
 begin
+	PlayWinSound(wsExclamation);
 	if not Assigned(fAbout) then
 	begin
 		OrigCursor := Screen.Cursor;
@@ -149,7 +150,7 @@ var
 	FileName: TFileName;
 	s: string;
 begin
-	if Save  then
+	if Save then
 		RunTime := GetTickCount - StartProgramTime + RunProgramTime;
 	if Assigned(MainIni) then
 	begin
