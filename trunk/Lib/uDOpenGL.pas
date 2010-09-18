@@ -123,7 +123,7 @@ begin
 			ErrorMessage(ErrorMes(GetLastError));}
 	end
 	else
-		IE(12);
+		IE(19);
 end;
 
 procedure BeforeDraw;

@@ -10,20 +10,25 @@ unit uReopen;
 
 interface
 
-uses SysUtils, Menus, Classes;
+uses
+	uAdd,
+	SysUtils, Menus, Classes;
 
 const
 	MaxReopen = 100;
 type
-	TReopenOpen = function(FileName: TFileName): Boolean;
-	TReopenItem = record // 16
+	TReopenItem = packed record // 16
 		FileName: TFileName; // 4
 		MenuItem: TMenuItem; // 4
-		Exists: Integer; // 4
-		OpenedCount: Integer; // 4
+		Exists: U4; // 4
+		OpenedCount: U4; // 4
 	end;
+
 	TReopen = class
 	private
+		ReopenItems: array of TReopenItem;
+		ReopenCount: Integer;
+
 		MenuN, MenuAll, MenuClear, MenuLimit: TMenuItem;
 		procedure CreateMenuItem(const i: Integer);
 		procedure SetReopenMenuItems(const Limit: Integer);
@@ -32,13 +37,14 @@ type
 		procedure ReopenLimitClick(Sender: TObject);
 		procedure ReopenXClick(Sender: TObject);
 	public
-		ReopenCount: Integer;
-		OpenedFiles: Integer; // Suma ReopenItems[n].OpenedCount
 		MultiFiles: Boolean;
-		ReopenItems: array of TReopenItem;
 		Reopen1: TMenuItem;
-		ReopenOpen: TReopenOpen;
-		ReopenDone: TNotifyEvent;
+
+		LoadFromFile: function(FileName: TFileName): Boolean of object;
+		ChangeFile: TNotifyEvent;
+
+		OpenedFiles: Integer; // Suma ReopenItems[n].OpenedCount
+
 		procedure CreateMenu;
 		procedure FreeMenu;
 		procedure RWReopenNames(const Selection: string; const Save: Boolean);
@@ -51,17 +57,17 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math, Dialogs,
-	uAdd, uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus, uStrings;
+	uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus, uStrings;
 
 var
 	ReopenLimit: Integer;
 
 procedure TReopen.ReopenXClick(Sender: TObject);
 begin
-	if ReopenOpen(ReopenItems[TMenuItem(Sender).Tag].FileName) then
+	if LoadFromFile(ReopenItems[TMenuItem(Sender).Tag].FileName) then
 	begin
-		AddReopenCaption(ReopenItems[TMenuItem(Sender).Tag].FileName);
-		ReopenDone(Sender);
+//		AddReopenCaption(ReopenItems[TMenuItem(Sender).Tag].FileName);
+		ChangeFile(Sender);
 	end;
 end;
 
@@ -75,18 +81,18 @@ begin
 	begin
 		if ReopenItems[i].OpenedCount <= 0 then
 		begin
-			if Assigned(ReopenOpen) then
+			if Assigned(LoadFromFile) then
 			begin
-				if ReopenOpen(ReopenItems[i].FileName) then
+				if LoadFromFile(ReopenItems[i].FileName) then
 				begin
 					Opened := True;
-					Inc(ReopenItems[i].OpenedCount);
-					Inc(OpenedFiles);
+{					Inc(ReopenItems[i].OpenedCount);
+					Inc(OpenedFiles);}
 				end;
 			end;
 		end;
 	end;
-	if Opened and Assigned(ReopenDone) then ReopenDone(Sender);
+	if Opened and Assigned(ChangeFile) then ChangeFile(Sender);
 end;
 
 procedure TReopen.ReopenClearClick(Sender: TObject);
@@ -127,6 +133,7 @@ end;
 procedure TReopen.SetReopenMenuItems(const Limit: Integer);
 var i, MaxPos: Integer;
 begin
+	if Reopen1 = nil then Exit;
 	MaxPos := Min(ReopenCount, Limit);
 	for i := MaxPos to ReopenCount - 1 do
 	begin
@@ -147,6 +154,10 @@ end;
 
 procedure TReopen.CreateMenu;
 begin
+	if Reopen1 = nil then
+	begin
+		Exit;
+	end;
 	Reopen1.AutoLineReduction := maManual;
 	SetReopenMenuItems(ReopenLimit);
 	MenuN := TMenuItem.Create(Reopen1);
@@ -191,21 +202,25 @@ end;
 procedure TReopen.RWReopenNames(const Selection: string; const Save: Boolean);
 var
 	i: Integer;
+	ReopenC, ReopenO: SG;
 begin
-	MainIni.RWSG(Selection, 'ReopenCount', ReopenCount, Save);
+	if Save = True then ReopenC := ReopenCount else ReopenC := 0;
+	MainIni.RWSG(Selection, 'ReopenCount', ReopenC, Save);
 	if Save = False then ReopenLimit := 10;
 	MainIni.RWSG(Selection, 'ReopenLimit', ReopenLimit, Save);
 	if Save = False then
 	begin
-		SetLength(ReopenItems, 0);
-		ReopenCount := Min(ReopenCount, MaxReopen);
+		SetLength(ReopenItems, 0); // D??? ParamStr before RWOptions
+		ReopenO := ReopenCount;
+		ReopenCount := ReopenCount + ReopenC;
+//		Min(ReopenCount, MaxReopen);
 		SetLength(ReopenItems, ReopenCount);
-		for i := 0 to ReopenCount - 1 do
+		for i := 0 to ReopenC - 1 do
 		begin
-			ReopenItems[i].FileName := '';
-			ReopenItems[i].MenuItem := nil;
-			ReopenItems[i].Exists := 1;
-			ReopenItems[i].OpenedCount := 0;
+			ReopenItems[ReopenO + i].FileName := '';
+			ReopenItems[ReopenO + i].MenuItem := nil;
+			ReopenItems[ReopenO + i].Exists := 1;
+			ReopenItems[ReopenO + i].OpenedCount := 0;
 		end;
 	end;
 
@@ -279,7 +294,7 @@ var
 begin
 	if OpenedFiles <= 0 then
 	begin
-		ErrorMessage('Reopen: CloseFile');
+		ErrorMessage('Reopen: All files closed' + LineSep + FileName);
 		Exit;
 	end;
 
@@ -287,11 +302,17 @@ begin
 	begin
 		if UpperCase(ReopenItems[j].FileName) = UpperCase(FileName) then
 		begin
-			Dec(ReopenItems[j].OpenedCount);
-			Dec(OpenedFiles);
-			Break;
+			if ReopenItems[j].OpenedCount > 0 then
+			begin
+				Dec(ReopenItems[j].OpenedCount);
+				Dec(OpenedFiles);
+			end
+			else
+				ErrorMessage('Reopen: File already closed' + LineSep + FileName);
+			Exit;
 		end;
 	end;
+	ErrorMessage('Reopen: File never opened' + LineSep + FileName);
 end;
 
 function ReopenFileExists(FileName: TFileName): Integer;
@@ -380,36 +401,46 @@ begin
 		if (i < ReopenLimit) and Assigned(ReopenItems[i].MenuItem) then
 		begin
 			if ReopenItems[i].OpenedCount <= 0 then Inc(ReopenAllCount);
-			ReopenItems[i].MenuItem.Caption :=
-				'&' + IntToStr(i) + ' ' + ReopenItems[i].FileName;
+			s := '&' + IntToStr(i) + ' ' + ReopenItems[i].FileName;
+			if ReopenItems[i].OpenedCount > 1 then s := s + ' (' + NToS(ReopenItems[i].OpenedCount) + ')';
+
+			ReopenItems[i].MenuItem.Caption := s;
+
 			ReopenItems[i].MenuItem.Name := ReopenResNames[Exists] + IntToStr(i);
 			ComName(ReopenItems[i].MenuItem);
 
-			if ReopenItems[i].OpenedCount > 0 then
+{			if ReopenItems[i].OpenedCount > 0 then
 			begin
 				ReopenItems[i].MenuItem.Bitmap.TransparentColor := GetTransparentColor(ReopenItems[i].MenuItem.Bitmap);
 				if ReopenItems[i].OpenedCount > 1 then
 				begin
 					ReopenItems[i].MenuItem.Bitmap.Canvas.Brush.Style := bsClear;
 					ReopenItems[i].MenuItem.Bitmap.Canvas.Font.Color := NegMonoColor(clBtnFace);
-					s := IntToStr(ReopenItems[i].OpenedCount);
-					ReopenItems[i].MenuItem.Bitmap.Canvas.TextOut(
+					s := NToS(ReopenItems[i].OpenedCount);
+					ShadowText(ReopenItems[i].MenuItem.Bitmap.Canvas,
 						(ReopenItems[i].MenuItem.Bitmap.Width - ReopenItems[i].MenuItem.Bitmap.Canvas.TextWidth(s)) div 2,
 						(ReopenItems[i].MenuItem.Bitmap.Height - ReopenItems[i].MenuItem.Bitmap.Canvas.TextHeight(s)) div 2,
-						s);
+						s, clWhite, clNone);
 				end;
-			end;
+			end;}
 			ReopenItems[i].MenuItem.Checked := ReopenItems[i].OpenedCount > 0;
 		end;
 	end;
-	MenuClear.Enabled := NotExistsCount > 0;
-	MenuClear.Caption := 'Clear If Not Exists (' + IntToStr(NotExistsCount) + ')';
-	MenuLimit.Caption := 'Reopen Limit (' + IntToStr(ReopenLimit) + ')...';
-	MenuAll.Enabled := (ReopenAllCount > 0);
-	{$ifopt d-}
-	MenuAll.Visible := MultiFiles;
-	{$endif}
-	MenuAll.Caption := 'Open All (' + IntToStr(ReopenAllCount) + ')';
+	if Assigned(MenuClear) then
+	begin
+		MenuClear.Enabled := NotExistsCount > 0;
+		MenuClear.Caption := 'Clear If Not Exists (' + IntToStr(NotExistsCount) + ')';
+	end;
+	if Assigned(MenuLimit) then
+		MenuLimit.Caption := 'Reopen Limit (' + IntToStr(ReopenLimit) + ')...';
+	if Assigned(MenuAll) then
+	begin
+		MenuAll.Caption := 'Open All (' + IntToStr(ReopenAllCount) + ')';
+		MenuAll.Enabled := (ReopenAllCount > 0);
+		{$ifopt d-}
+		MenuAll.Visible := MultiFiles;
+		{$endif}
+	end;
 end;
 
 end.

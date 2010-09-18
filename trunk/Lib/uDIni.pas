@@ -986,7 +986,9 @@ end;
 
 procedure TDIniFile.RWFormPos(Form: TForm; const Save: Boolean);
 begin
-	if (Save = False) and (Form.Position <> poDesigned) then IE(12);
+	{$ifopt d+}
+	if (Save = False) and (Form.Position <> poDesigned) then IE(17);
+	{$endif}
 	if (Save = False) or (Form.WindowState <> wsMaximized) then
 	begin
 		if (Form.Position = poDesigned) or (Form.Position = poDefaultSizeOnly) then

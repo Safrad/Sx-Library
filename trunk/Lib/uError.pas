@@ -92,8 +92,10 @@ type
 var
 	IgnoreAll: TIgnoreAll;
 
+{$ifopt d+}
 procedure IE; overload;
 procedure IE(ErrorCode: SG); overload;
+{$endif}
 procedure CreateException;
 function ErrorMes(const ErrorCode: U4): string;
 
@@ -147,6 +149,7 @@ var
 	Ignore: PIgnore;
 	TickCount, StartTickCount: U8;
 
+{$ifopt d+}
 procedure IE;
 begin
 	IE(0);
@@ -155,13 +158,14 @@ end;
 procedure IE(ErrorCode: SG);
 var S: string;
 begin
-	{$ifopt d+}
+//	{$ifopt d+}
 	S := 'Internal Error ' + IntToStr(ErrorCode);
 	ErrorMessage(S);
-	{$else}
-	PlayWinSound(wsCriticalStop);
-	{$endif}
+//	{$else}
+//	PlayWinSound(wsCriticalStop);
+//	{$endif}
 end;
+{$endif}
 
 procedure CreateException;
 begin
@@ -388,8 +392,8 @@ begin
 				fIOError.InsertControl(fIOError.FButtons[B]);
 			end;
 
-			fIOError.FButtons[B].Name := 'Button' + Ignore.Buttons[B] + IntToStr(B);
-			fIOError.FButtons[B].Caption := '/';//ButtonNames[B];
+			fIOError.FButtons[B].Name := 'Button' + IntToStr(B);
+			fIOError.FButtons[B].Caption := Ignore.Buttons[B];
 			fIOError.FButtons[B].Visible := True;
 //			(fIOError.ButtonAll.Left + fIOError.ButtonAll.Width + BSpace + (BWidth + BSpace) * (2 * i - ButtonCount) + BSpace + MaxWid) div 2;
 			fIOError.FButtons[B].Left := x;

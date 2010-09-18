@@ -25,6 +25,8 @@ const
 type
 	TCharSet = set of Char;
 
+function        LowCase( ch : Char ) : Char;
+
 function DelCharsF(const s: string; const SubChar: Char): string;
 procedure DelChars(var s: string; const SubChar: Char);
 
@@ -62,6 +64,28 @@ implementation
 uses uFind;
 var
 	TableWordSep: array[0..7] of Char = (' ', ',', '.', '-', '/', ';', '(', ')');
+
+function        LowCase( ch : Char ) : Char;
+{$IFDEF PUREPASCAL}
+begin
+	Result := ch;
+	case Result of
+		'A'..'Z':  Inc(Result, Ord('a') - Ord('A'));
+  end;
+end;
+{$ELSE}
+asm
+{ ->    AL      Character       }
+{ <-    AL      Result          }
+
+				CMP     AL,'A'
+				JB      @@exit
+				CMP     AL,'Z'
+				JA      @@exit
+				ADD     AL,'a' - 'A'
+@@exit:
+end;
+{$ENDIF}
 
 function DelCharsF(const s: string; const SubChar: Char): string;
 var i: Integer;

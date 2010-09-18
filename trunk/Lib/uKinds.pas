@@ -11,66 +11,337 @@ unit uKinds;
 interface
 
 uses
-	SysUtils, Menus, Graphics, Classes, Dialogs, ExtDlgs, Controls,
-	uReopen;
+	uAdd, uReopen,
+	SysUtils, Menus, Graphics, Classes, Dialogs, ExtDlgs, Controls;
 
 type
 	TItem = packed record // 16
 		FileName: TFileName; // 4
 		MenuItem: TMenuItem; // 4
 		PData: Pointer; // 4
-		New: Word; // 2
-		Changed: WordBool; // 2
+		New: U2; // 2
+		Changed: B2; // 2
 	end;
 
 	TKinds = class
 	private
+		Reopen: TReopen;
+		NewCount: UG;
+
+		Revert1,
+		Reopen1,
+		Save1,
+		SaveAs1,
+		SaveCopyAs1,
+		SaveAll1,
+		Close1,
+		CloseAll1,
+		Delete1: TMenuItem;
+
+		procedure ChangeIndex(I: SG);
+		function AddKindItem: Boolean;
+		procedure KindInit;
+
 		procedure SetMenuItem(i: Integer);
 		procedure CreateMenuItem(i: Integer);
-//    procedure SetWindow1MenuItems(const Limit: Integer);
-	public
-		AdvancedMenuDrawItemEvent: TAdvancedMenuDrawItemEvent;
-		Items: array of TItem;
-		ItemSize: Cardinal; 
 
-		KindIndex: Integer;
-		KindCount: Integer;
-		NewCount: Integer;
+		procedure New1Click(Sender: TObject);
+		procedure Open1Click(Sender: TObject);
+		procedure Revert1Click(Sender: TObject);
+		procedure Save1Click(Sender: TObject);
+		procedure SaveAs1Click(Sender: TObject);
+		procedure SaveCopyAs1Click(Sender: TObject);
+		procedure SaveAll1Click(Sender: TObject);
+		procedure Close1Click(Sender: TObject);
+		procedure CloseAll1Click(Sender: TObject);
+		procedure Delete1Click(Sender: TObject);
+		procedure WindowXClick(Sender: TObject);
 
-		KindNew1, KindSave1, KindSaveAs1, KindSaveAll1,
-		KindClose1, KindCloseAll1: TMenuItem;
-		KindWindow1: TMenuItem;
-		KindWindowXClick: TNotifyEvent;
-		LoadFromFile: function(FileName: TFileName): Boolean;
-		SaveDialog: function(var FileName: TFileName): Boolean;
-		SaveToFile: function(Kind: Integer; SD: Boolean): Boolean;
-		FreeFile: procedure(const Kind: Integer);
-
-		Reopen: TReopen;
-
-		function KindInit: string;
-
-		procedure KindNew;
-		procedure KindLoadCommon(FileName: TFileName);
-		function KindOpen(Files: TStrings): Boolean;
-
-		function KindSave(Kind: Integer; SD: Boolean): Boolean;
+		function KindSave(Kind: Integer; SD: Boolean; SaveCopy: BG): Boolean;
 		function KindSaveAll: Boolean;
 
 		function KindClose(const Kind: Integer): Boolean;
 		function KindCloseAll: Boolean;
+
+		function SaveDialogP(var FileName: TFileName): Boolean;
+		function SaveAs(Kind: Integer): Boolean;
+	public
+		AdvancedMenuDrawItemEvent: TAdvancedMenuDrawItemEvent;
+		Items: array of TItem;
+		ItemAddr: Pointer;
+		ItemSize: Cardinal;
+
+		Index: Integer;
+		Count: Integer;
+
+		MultiFiles: Boolean;
+		SkipStartup: BG;
+
+		File1,
+		Window1: TMenuItem;
+
+		New1,
+		Open1: TMenuItem;
+
+		OpenDialog1: TOpenDialog;
+		SaveDialog1: TSaveDialog;
+		OpenPictureDialog1: TOpenPictureDialog;
+		SavePictureDialog1: TSavePictureDialog;
+
+		NewFile: function(const Kind: Integer): Boolean;
+		FreeFile: procedure(const Kind: Integer);
+		LoadFromFile: function(const Kind: Integer{FileName: TFileName}): Boolean;
+		SaveToFile: function(var FileName: TFileName): Boolean;
+
+		ChangeFile: TNotifyEvent; // Memory to Graphics (Actual File Changed)
+
+		constructor Create;
+		destructor Free;
+
+
+		procedure CreateMenuFile(const NewLong: Boolean);
+		procedure RWOptions(const Save: BG);
+
+//		procedure StartupInit;
+		procedure KindChangeFile(Sender: TObject);
+
+		procedure Change;
+		procedure Unchange;
+
+		// For Reopen and ParamStr
+		function KindLoadFromFile(FileName: TFileName): Boolean;
+
+		function KindOpenFiles(Files: TStrings): Boolean; // Drag files to form
+		function CanClose: Boolean; // CanClose := Kinds.CanClose;
 	end;
 
+{
+	Kinds := TKinds.Create;
+	Kinds.AdvancedMenuDrawItemEvent := OnAdvancedMenuDraw;
+	Kinds.ItemSize := SizeOf(TKind);
+	Kinds.MultiFiles := True;
+
+	Kinds.File1 := File1;
+	Kinds.Window1 := Window1;
+	Kinds.CreateMenuFile(True);
+
+
+	Kinds.OpenDialog1 := OpenPictureDialog1;
+	Kinds.SaveDialog1 := SavePictureDialog1;
+
+	Kinds.FreeFile := FreeFile;
+	Kinds.NewFile := NewFile;
+	Kinds.LoadFromFile := LoadFromFile;
+	Kinds.SaveToFile := SaveToFile;
+	Kinds.ChangeFile := ChangeFile;
+
+	---
+
+	Kinds.RWOptions
+}
+{
+	Kinds.New1 := New1;
+	Kinds.Open1 := Open1;
+	Kinds.Reopen1 := Reopen1;
+	Kinds.Save1 := Save1;
+	Kinds.SaveAs1 := SaveAs1;
+	Kinds.SaveAll1 := SaveAll1;
+	Kinds.Close1 := Close1;
+	Kinds.CloseAll1 := CloseAll1;
+}
 implementation
 
 uses
-	Forms, Math,
-	uAdd, uFiles, uError, uStrings;
+	Forms, Math, Windows,
+	uFiles, uError, uStrings, uDIni;
+
+constructor TKinds.Create;
+begin
+	Reopen := TReopen.Create;
+	Index := -1;
+	Count := 0;
+end;
+
+destructor TKinds.Free;
+var i: SG;
+begin
+	for i := 0 to Length(Items) - 1 do
+	begin
+		FreeMem(Items[i].PData, ItemSize); Items[i].PData := nil;
+	end;
+	SetLength(Items, 0);
+	Reopen.FreeMenu;
+	Reopen.Free; Reopen := nil;
+end;
+
+procedure TKinds.CreateMenuFile(const NewLong: Boolean);
+var
+	M: TMenuItem;
+	i: SG;
+begin
+	i := 0;
+	New1 := TMenuItem.Create(File1);
+	New1.Name := 'New1';
+	New1.Caption := 'New';
+	New1.ShortCut := ShortCut(Ord('N'), [ssCtrl]);
+	if NewLong then New1.Caption := New1.Caption + '...';
+	New1.OnClick := New1Click;
+	File1.Insert(i, New1);
+	Inc(i);
+
+	Open1 := TMenuItem.Create(File1);
+	Open1.Name := 'Open1';
+	Open1.Caption := 'Open...';
+	Open1.ShortCut := ShortCut(Ord('O'), [ssCtrl]);
+	Open1.OnClick := Open1Click;
+	File1.Insert(i, Open1);
+	Inc(i);
+
+	Reopen1 := TMenuItem.Create(File1);
+	Reopen1.Name := 'Reopen1';
+	Reopen1.Caption := 'Reopen';
+//	Reopen1.OnClick := Reopen1Click;
+	File1.Insert(i, Reopen1);
+	Inc(i);
+
+	Close1 := TMenuItem.Create(File1);
+	Close1.Name := 'Close1';
+	Close1.Caption := 'Close';
+	Close1.OnClick := Close1Click;
+	File1.Insert(i, Close1);
+	Inc(i);
+
+	if MultiFiles then
+	begin
+		CloseAll1 := TMenuItem.Create(File1);
+		CloseAll1.Name := 'CloseAll1';
+		CloseAll1.Caption := 'Close All';
+		CloseAll1.OnClick := CloseAll1Click;
+		File1.Insert(i, CloseAll1);
+		Inc(i);
+	end;
+
+	Revert1 := TMenuItem.Create(File1);
+	Revert1.Caption := 'Revert...';
+	Revert1.OnClick := Revert1Click;
+	File1.Insert(i, Revert1);
+	Inc(i);
+
+	M := TMenuItem.Create(File1);
+	M.Caption := '-';
+	File1.Insert(i, M);
+	Inc(i);
+
+	Save1 := TMenuItem.Create(File1);
+	Save1.Name := 'Save1';
+	Save1.Caption := 'Save';
+	Save1.ShortCut := ShortCut(Ord('S'), [ssCtrl]);
+	Save1.OnClick := Save1Click;
+	File1.Insert(i, Save1);
+	Inc(i);
+
+	SaveAs1 := TMenuItem.Create(File1);
+	SaveAs1.Name := 'SaveAs1';
+	SaveAs1.Caption := 'Save As...';
+	SaveAs1.ShortCut := ShortCut(VK_F12, []);
+	SaveAs1.OnClick := SaveAs1Click;
+	File1.Insert(i, SaveAs1);
+	Inc(i);
+
+	SaveCopyAs1 := TMenuItem.Create(File1);
+	SaveCopyAs1.Name := 'SaveCopyAs1';
+	SaveCopyAs1.Caption := 'Save Copy As...';
+	SaveCopyAs1.ShortCut := ShortCut(VK_F12, [ssCtrl]);
+	SaveCopyAs1.OnClick := SaveCopyAs1Click;
+	File1.Insert(i, SaveCopyAs1);
+	Inc(i);
+
+	if MultiFiles then
+	begin
+		SaveAll1 := TMenuItem.Create(File1);
+		SaveAll1.Name := 'SaveAll1';
+		SaveAll1.Caption := 'Save All';
+		SaveAll1.ShortCut := ShortCut(Ord('S'), [ssShift, ssCtrl]);
+		SaveAll1.OnClick := SaveAll1Click;
+		File1.Insert(i, SaveAll1);
+		Inc(i);
+	end;
+
+	Delete1 := TMenuItem.Create(File1);
+	Delete1.Name := 'Delete1';
+	Delete1.Caption := 'Delete';
+	Delete1.ShortCut := ShortCut(VK_DELETE, [ssShift, ssCtrl]);
+	Delete1.OnClick := Delete1Click;
+	File1.Insert(i, Delete1);
+	Inc(i);
+
+	M := TMenuItem.Create(File1);
+	M.Caption := '-';
+	File1.Insert(i, M);
+end;
+
+procedure TKinds.RWOptions(const Save: BG);
+var
+	FileName: string;
+	i, c, c2: SG;
+begin
+	Reopen.RWReopenNames('Reopen', Save);
+
+	if Save = False then
+	begin
+{		if Assigned(New1) then
+			New1.OnClick := New1Click;
+		if Assigned(Open1) then
+			Open1.OnClick := Open1Click;
+
+		if Assigned(Save1) then
+			Save1.OnClick := Save1Click;
+		if Assigned(SaveAs1) then
+			SaveAs1.OnClick := SaveAs1Click;
+		if Assigned(SaveAll1) then
+			SaveAll1.OnClick := SaveAll1Click;
+		if Assigned(Close1) then
+			Close1.OnClick := Close1Click;
+		if Assigned(CloseAll1) then
+			CloseAll1.OnClick := CloseAll1Click;}
+
+		Reopen.MultiFiles := MultiFiles;
+		Reopen.Reopen1 := Reopen1;
+		Reopen.LoadFromFile := KindLoadFromFile;
+		Reopen.ChangeFile := KindChangeFile;
+		Reopen.CreateMenu;
+	end;
+
+	if Save = True then
+		c := Count
+	else
+	begin
+		if SkipStartup then Exit;
+		MainIni.RWSG('Opened Files', 'Count', c, Save);
+	end;
+
+	c2 := 0;
+	for i := 0 to c - 1 do
+	begin
+		if Save = True then
+		begin
+			FileName := string(Items[i].FileName);
+			if Items[i].New <> 0 then Continue;
+		end;
+		MainIni.RWString('Opened Files', 'File ' + NToS(c2, False), FileName, Save);
+		Inc(c2);
+		if Save = False then
+			KindLoadFromFile(FileName);
+	end;
+
+	if Save = True then
+		MainIni.RWSG('Opened Files', 'Count', c2, Save);
+end;
 
 procedure TKinds.SetMenuItem(i: Integer);
 var S: string;
 begin
-	S := '&' + NToS(i + 1) + ' ' + ExtractFileName(Items[i].FileName);
+	S := '&' + NToS(i + 1) + ' ' + ShortDir(ExtractFileName(Items[i].FileName));
 	if Items[i].Changed then S := S + ' *';
 	if Items[i].New <> 0 then S := S + ' (New)';
 	Items[i].MenuItem.Caption := S;
@@ -79,12 +350,13 @@ end;
 
 procedure TKinds.CreateMenuItem(i: Integer);
 begin
-	Items[i].MenuItem := TMenuItem.Create(KindWindow1);
+	if Assigned(Window1) = False then Exit;
+	Items[i].MenuItem := TMenuItem.Create(Window1);
 	Items[i].MenuItem.OnAdvancedDrawItem := AdvancedMenuDrawItemEvent;
 	SetMenuItem(i);
-	Items[i].MenuItem.OnClick := KindWindowXClick;
+	Items[i].MenuItem.OnClick := WindowXClick;
 	Items[i].MenuItem.RadioItem := True;
-	KindWindow1.Insert(i, Items[i].MenuItem);
+	Window1.Insert(i, Items[i].MenuItem);
 end;
 
 {procedure TKinds.SetWindow1MenuItems(const Limit: Integer);
@@ -108,68 +380,54 @@ begin
 	end;
 end;}
 
-function TKinds.KindInit: string;
-
-	procedure KindEnabled;
-	var
-		B: Boolean;
-		i: Integer;
-	begin
-		if KindCount > 0 then
-			B := (Items[KindIndex].Changed) and (Items[KindIndex].New = 0)
-		else
-			B := False;
-
-		KindSave1.Enabled := B;
-
-		KindSaveAs1.Enabled := KindCount > 0;
-		B := False;
-		for i := 0 to KindCount - 1 do
-			if Items[i].Changed then
-			begin
-				B := True;
-				Break;
-			end;
-		KindSaveAll1.Enabled := B;
-
-		KindClose1.Enabled := KindCount > 0;
-		KindCloseAll1.Enabled := KindCount > 0;
-	end;
-
-var i: Integer;
+function TKinds.AddKindItem: Boolean;
 begin
-	if KindCount <= 0 then
+	Result := False;
+	if MultiFiles = False then
 	begin
-		Result := Application.Title;
-	end
-	else
-	begin
-		Result := GetMultiCaption(Items[KindIndex].FileName, Items[KindIndex].Changed,
-			Items[KindIndex].New, KindIndex, KindCount);
+		if Count > 0 then
+			if KindClose(Index) = False then Exit;
 	end;
-	KindEnabled;
-	KindWindow1.Enabled := KindCount > 0;
-	for i := 0 to KindCount - 1 do
-		SetMenuItem(i);
+
+	SetLength(Items, Count + 1);
+	FillChar(Items[Count], SizeOf(TItem), 0);
+	Inc(Count);
+
+	GetMem(Items[Count - 1].PData, ItemSize);
+	FillChar(Items[Count - 1].PData^, ItemSize, 0);
+	Items[Count - 1].New := High(Items[Count - 1].New);
+	Result := True;
 end;
 
-procedure TKinds.KindNew;
-var
-	i, j: Integer;
-	Found: Boolean;
+procedure TKinds.ChangeIndex(I: SG);
 begin
-	Inc(KindCount); SetLength(Items, KindCount);
+{	if I <> Index then
+	begin}
+		if (ItemAddr <> nil) and (ItemSize <> 0) then
+		if (Index >= 0) and (Items[Index].PData <> nil) then
+			Move(ItemAddr^, Items[Index].PData^, ItemSize);
+		Index := I;
+		if (ItemAddr <> nil) and (ItemSize <> 0) then
+		if (Index >= 0) and (Items[Index].PData <> nil) then
+			Move(Items[Index].PData^, ItemAddr^, ItemSize)
+		else
+			FillChar(ItemAddr^, ItemSize, 0);
+{	end
+	else
+		IE(3543);}
+end;
 
-	Inc(NewCount);
-	KindIndex := KindCount - 1;
-	Items[KindIndex].FileName := '';
-	GetMem(Items[KindIndex].PData, ItemSize);
-	FillChar(Items[KindIndex].PData^, ItemSize, 0);
-	Items[KindIndex].New := High(Items[KindIndex].New);
-	for i := 1 to 99 do
+procedure TKinds.New1Click;
+var
+	Result: BG;
+	LastIndex: SG;
+begin
+//	Result := False;
+	if AddKindItem = False then Exit;
+{	for i := 1 to 99 do
 	begin
 		Found := False;
-		for j := 0 to KindCount - 2 do
+		for j := 0 to Count - 2 do
 		begin
 			if Items[j].New = i then
 			begin
@@ -179,64 +437,119 @@ begin
 		end;
 		if Found = False then
 		begin
-			Items[KindIndex].FileName := 'NoName' + NToS(i, False);
-			Items[KindIndex].New := i;
+			Items[Count - 1].FileName := 'NoName' + NToS(i, False);
+			Items[Count - 1].New := i;
 			Break;
 		end;
+	end;}
+	Inc(NewCount);
+	Items[Count - 1].FileName := 'NoName' + NToS(NewCount, False);
+	Items[Count - 1].New := NewCount;
+	LastIndex := Index;
+	ChangeIndex(Count - 1);
+	Result := NewFile(Count - 1);
+	if Result = False then
+	begin
+		KindClose(Count - 1);
+		ChangeIndex(LastIndex);
+	end
+	else
+	begin
+		Items[Index].Changed := False;
+		CreateMenuItem(Index);
+		if Assigned(Items[Index].MenuItem) then
+			Items[Index].MenuItem.Checked := True;
+		KindChangeFile(Sender);
 	end;
-	CreateMenuItem(KindIndex);
-	Items[KindIndex].MenuItem.Checked := True;
 end;
 
-procedure TKinds.KindLoadCommon(FileName: TFileName);
+function TKinds.KindLoadFromFile(FileName: TFileName): Boolean;
+var LastIndex: SG;
 begin
-	Inc(KindCount); SetLength(Items, KindCount);
+	Result := False;
+	if Assigned(LoadFromFile) then
+	begin
+		if AddKindItem = False then Exit;
+		LastIndex := Index;
+		ChangeIndex(Count - 1);
+		Items[Count - 1].FileName := FileName;
+		Result := LoadFromFile(Count - 1);
+		if Result = False then
+		begin
+			KindClose(Count - 1);
+			ChangeIndex(LastIndex);
+		end
+		else
+		begin
+//			Index := Count - 1;
+			Items[Index].New := 0;
+			Items[Index].Changed := False;
+			CreateMenuItem(Index);
+			if Assigned(Items[Index].MenuItem) then
+				Items[Index].MenuItem.Checked := True;
 
-	KindIndex := KindCount - 1;
-
-	Items[KindIndex].FileName := FileName;
-	Items[KindIndex].New := 0;
-	Items[KindIndex].Changed := False;
-	CreateMenuItem(KindIndex);
-	Items[KindIndex].MenuItem.Checked := True;
-	if Items[KindIndex].PData <> nil then ErrorMessage('Kind not Free');
-	GetMem(Items[KindIndex].PData, ItemSize);
-	FillChar(Items[KindIndex].PData^, ItemSize, 0);
+			Reopen.AddReopenCaption(Items[Index].FileName);
+		end;
+	end;
 end;
 
-function TKinds.KindOpen(Files: TStrings): Boolean;
+function TKinds.KindOpenFiles(Files: TStrings): Boolean;
 var
 	i: Integer;
 begin
 	Result := False;
 	for i := 0 to Files.Count - 1 do
 	begin
-		if LoadFromFile(Files.Strings[i]) then
+		if KindLoadFromFile(Files.Strings[i]) then
 		begin
-			Reopen.AddReopenCaption(Files.Strings[i]);
 			Result := True;
 		end;
 	end;
+
 	if Result then
 	begin
-		Reopen.DrawReopenCaption;
+		KindChangeFile(nil);
 	end;
 end;
 
-function TKinds.KindSave(Kind: Integer; SD: Boolean): Boolean;
+function TKinds.SaveDialogP(var FileName: TFileName): Boolean;
+begin
+	Result := False;
+	if Assigned(SaveDialog1) then
+	begin
+		SaveDialog1.FileName := FileName;
+		SaveDialog1.InitialDir := ExtractFilePath(FileName);
+		Result := SaveDialog1.Execute;
+		if Result then
+			FileName := SaveDialog1.FileName;
+	end;
+	if Assigned(SavePictureDialog1) then
+	begin
+		SavePictureDialog1.FileName := FileName;
+		SavePictureDialog1.InitialDir := ExtractFilePath(FileName);
+		Result := SavePictureDialog1.Execute;
+		if Result then
+			FileName := SavePictureDialog1.FileName;
+	end;
+end;
+
+function TKinds.KindSave(Kind: Integer; SD: Boolean; SaveCopy: BG): Boolean;
 var
 	S: TFileName;
+	k: SG;
 begin
 	S := Items[Kind].FileName;
 
 	if SD = True then
 	begin
-		if SaveDialog(S) then
+		if SaveDialogP(S) then
 		begin
-			Reopen.CloseFile(Items[Kind].FileName);
-			Items[Kind].FileName := S;
-			Reopen.AddReopenCaption(Items[Kind].FileName);
-			Reopen.DrawReopenCaption;
+			if SaveCopy = False then
+			begin
+				if Items[Kind].New = 0 then
+					Reopen.CloseFile(Items[Kind].FileName);
+				Items[Kind].FileName := S;
+			end;
 		end
 		else
 		begin
@@ -246,29 +559,38 @@ begin
 	end
 	else
 	begin
-		Items[Kind].FileName := S;
+		if SaveCopy = False then
+			Items[Kind].FileName := S;
 	end;
 
 	Items[Kind].New := 0;
 	Items[Kind].Changed := False;
-	Result := True;
+	k := Index;
+	ChangeIndex(Kind);
+	Result := SaveToFile(S);
+	ChangeIndex(k);
+	if SaveCopy = False then
+	if SD then
+	begin
+		Reopen.AddReopenCaption(Items[Kind].FileName);
+		Reopen.DrawReopenCaption;
+	end;
 end;
 
 function TKinds.KindSaveAll: Boolean;
 var i: Integer;
 begin
 	Result := False;
-	for i := 0 to KindCount - 1 do
+	for i := 0 to Count - 1 do
 	begin
-		if SaveToFile(i, False) then
+		if KindSave(i, False, False) then
 			Result := True
 		else
 			Break;
 	end;
 end;
 
-function TKinds.KindClose(const Kind: Integer): Boolean;
-var i: Integer;
+function TKinds.SaveAs(Kind: Integer): Boolean;
 begin
 	Result := False;
 	if Items[Kind].Changed then
@@ -277,7 +599,7 @@ begin
 			mtInformation, [mbYes, mbNo, mbCancel]) of
 		mbYes:
 		begin
-			Result := SaveToFile(Kind, False);
+			Result := KindSave(Kind, True, False); //SaveToFile(Kind);
 		end;
 		mbNo:
 		begin
@@ -291,24 +613,43 @@ begin
 	end
 	else
 		Result := True;
+end;
+
+function TKinds.KindClose(const Kind: Integer): Boolean;
+var
+	i: Integer;
+	LastIndex: SG;
+begin
+	Result := True;
+	if Kind >= Count then Exit;
+	Result := SaveAs(Kind);
 
 	if Result = True then
 	begin
-		KindWindow1.Delete(Kind);
-		if Items[Kind].New = 0 then Reopen.CloseFile(Items[Kind].FileName);
-		FreeFile(Kind);
+		if Items[Kind].New <> High(Items[Kind].New) then
+		begin
+			if Assigned(Window1) then
+				Window1.Delete(Kind);
+			if Items[Kind].New = 0 then Reopen.CloseFile(Items[Kind].FileName);
+			if Assigned(Items[Kind].MenuItem) then
+			begin
+				Items[Kind].MenuItem.Free; Items[Kind].MenuItem := nil;
+			end;
+			FreeFile(Kind);
+		end;
 		FreeMem(Items[Kind].PData, ItemSize); Items[Kind].PData := nil;
-		if Items[Kind].New <> 0 then Dec(NewCount);
-		Items[Kind].MenuItem.Free; Items[Kind].MenuItem := nil;
-		for i := Kind to KindCount - 2 do
+		for i := Kind to Count - 2 do
 		begin
 			Items[i] := Items[i + 1];
 		end;
+		Dec(Count); SetLength(Items, Count);
 
-		Dec(KindCount); SetLength(Items, KindCount);
-
-		if KindIndex > KindCount - 1 then KindIndex := KindCount - 1;
-//    if ItemIndex >= 0 then Items[KindIndex].MenuItem.Checked := True;
+		if Index > Count - 1 then LastIndex := Count - 1 else LastIndex := Index;
+		Index := -1;
+		ChangeIndex(LastIndex);
+		if Index >= 0 then
+			if Assigned(Items[Index].MenuItem) then
+				 Items[Index].MenuItem.Checked := True;
 	end;
 end;
 
@@ -317,7 +658,7 @@ var i: Integer;
 begin
 	Result := False;
 	i := 0;
-	while i < KindCount do
+	while i < Count do
 	begin
 		if Items[i].Changed = True then
 		begin
@@ -334,13 +675,13 @@ begin
 			Inc(i);
 	end;
 	i := 0;
-	while i < KindCount do
+	while i < Count do
 	begin
 		if Items[i].Changed = False then
 		begin
 			if KindClose(i) = False then
 			begin
-				ErrorMessage('Kinds: Close 1');
+				ErrorMessage('Kinds: Can not close unchanged file');
 				Exit;
 			end
 			else
@@ -349,8 +690,232 @@ begin
 			end;
 		end
 		else
-			ErrorMessage('Kinds: Close 2');
+			ErrorMessage('Kinds: Can not close changed file');
 	end;
+end;
+
+procedure TKinds.KindChangeFile(Sender: TObject);
+begin
+	KindInit;
+	Reopen.DrawReopenCaption;
+
+	if Assigned(ChangeFile) then
+		ChangeFile(Sender);
+end;
+
+function TKinds.CanClose: Boolean;
+var i: SG;
+begin
+	Result := False;
+	i := 0;
+	while i < Count do
+	begin
+		if Items[i].Changed = True then
+		begin
+			if SaveAs(i) = False then
+			begin
+				Exit;
+			end
+			else
+			begin
+				if i = Index then
+					KindInit;
+//				Result := True;
+			end;
+		end;
+		Inc(i);
+	end;
+	Result := True;
+
+//	if (KindCloseAll) and (Count > 0) then KindChangeFile(nil);
+//	Result := Count = 0;
+end;
+
+
+procedure TKinds.KindInit;
+
+	procedure KindEnabled;
+	var
+		B: Boolean;
+		i: Integer;
+	begin
+		if Assigned(Save1) then
+		begin
+			if Count > 0 then
+				B := (Items[Index].Changed) and (Items[Index].New = 0)
+			else
+				B := False;
+
+			Save1.Enabled := B;
+		end;
+
+		if Assigned(Revert1) then
+			Revert1.Enabled := (Count > 0) and (Items[Index].New = 0) and (Items[Index].Changed);
+		if Assigned(SaveAs1) then
+			SaveAs1.Enabled := Count > 0;
+		if Assigned(SaveCopyAs1) then
+			SaveCopyAs1.Enabled := (Count > 0) and (Items[Index].New = 0);
+		if Assigned(SaveAll1) then
+		begin
+			B := False;
+			for i := 0 to Count - 1 do
+				if (Items[i].Changed) and (Items[i].New = 0) then
+				begin
+					B := True;
+					Break;
+				end;
+			SaveAll1.Enabled := B;
+		end;
+
+		if Assigned(Close1) then
+			Close1.Enabled := Count > 0;
+		if Assigned(CloseAll1) then
+			CloseAll1.Enabled := Count > 0;
+		if Assigned(Delete1) then
+			Delete1.Enabled := (Count > 0) and (Items[Index].New = 0);
+	end;
+
+var i: Integer;
+begin
+	if Assigned(Application.MainForm) then
+	if (Count <= 0) or (Index < 0) then
+		Application.MainForm.Caption := Application.Title
+	else
+		Application.MainForm.Caption := GetCaption(Items[Index].FileName, Items[Index].Changed,
+			Items[Index].New, Index, Count);
+
+	KindEnabled;
+	if Assigned(Window1) then
+	begin
+		Window1.Enabled := Count > 0;
+		for i := 0 to Count - 1 do
+			SetMenuItem(i);
+	end;
+end;
+
+procedure TKinds.Change;
+begin
+	if Count > 0 then
+	begin
+		if Items[Index].Changed = False then
+		begin
+			Items[Index].Changed := True;
+			KindInit;
+		end
+	end
+	{$ifopt d+}else
+		IE(546){$endif};
+end;
+
+procedure TKinds.Unchange;
+begin
+	if Count > 0 then
+	begin
+		if Items[Index].Changed = True then
+		begin
+			Items[Index].Changed := False;
+			KindInit;
+		end
+	end
+	{$ifopt d+}else
+		IE(546){$endif};
+end;
+
+procedure TKinds.Open1Click(Sender: TObject);
+begin
+	if Assigned(OpenDialog1) then
+	begin
+		if Count <= 0 then
+		begin
+			OpenDialog1.FileName := '';
+			OpenDialog1.InitialDir := '';
+		end
+		else
+		begin
+			OpenDialog1.FileName := Items[Index].FileName;
+			OpenDialog1.InitialDir := ExtractFilePath(Items[Index].FileName);
+		end;
+		if OpenDialog1.Execute then
+		begin
+			KindOpenFiles(OpenDialog1.Files);
+		end;
+	end;
+	if Assigned(OpenPictureDialog1) then
+	begin
+		if Count <= 0 then
+		begin
+			OpenPictureDialog1.FileName := '';
+			OpenPictureDialog1.InitialDir := '';
+		end
+		else
+		begin
+			OpenPictureDialog1.FileName := Items[Index].FileName;
+			OpenPictureDialog1.InitialDir := ExtractFilePath(Items[Index].FileName);
+		end;
+		if OpenPictureDialog1.Execute then
+		begin
+			KindOpenFiles(OpenPictureDialog1.Files);
+		end;
+	end;
+end;
+
+procedure TKinds.Revert1Click(Sender: TObject);
+begin
+	if MessageD(Items[Index].FileName + LineSep + 'Lose all changes since your last save?',
+		mtConfirmation, [mbYes, mbNo]) = mbYes then
+	begin
+		// D???
+		FreeFile(Index);
+		LoadFromFile(Index);
+		ChangeFile(Sender);
+	end;
+end;
+
+procedure TKinds.Save1Click(Sender: TObject);
+begin
+	if KindSave(Index, False, False) then KindInit;
+end;
+
+procedure TKinds.SaveAs1Click(Sender: TObject);
+begin
+	if KindSave(Index, True, False) then KindInit;
+end;
+
+procedure TKinds.SaveCopyAs1Click(Sender: TObject);
+begin
+	if KindSave(Index, True, True) then KindInit;
+end;
+
+procedure TKinds.SaveAll1Click(Sender: TObject);
+begin
+	if KindSaveAll then KindInit;
+end;
+
+procedure TKinds.Close1Click(Sender: TObject);
+begin
+	if KindClose(Index) then KindChangeFile(Sender);
+end;
+
+procedure TKinds.CloseAll1Click(Sender: TObject);
+begin
+	if KindCloseAll then KindChangeFile(Sender);
+end;
+
+procedure TKinds.Delete1Click(Sender: TObject);
+begin
+	if MessageD(Items[Index].FileName + LineSep + 'Delete file?',
+		mtConfirmation, [mbYes, mbNo]) = mbYes then
+	begin
+		DeleteFileEx(Items[Index].FileName);
+		Close1Click(Sender);
+	end;
+end;
+
+procedure TKinds.WindowXClick(Sender: TObject);
+begin
+	ChangeIndex(TMenuItem(Sender).Tag);
+	TMenuItem(Sender).Checked := True;
+	KindChangeFile(Sender);
 end;
 
 end.

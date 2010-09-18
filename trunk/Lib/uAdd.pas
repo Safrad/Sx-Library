@@ -260,6 +260,7 @@ function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 
 function Range(const Min, Cur, Max: Integer): Integer; overload;
+function Range(const Min, Cur, Max, Def: Integer): Integer; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
 
 procedure Change(var A, B: Integer); overload;
@@ -377,14 +378,12 @@ function PhoneToStr(Phone: U8): string;
 
 // System
 procedure Nop;
+procedure GetMem0(var P: Pointer; Size: Cardinal);
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
 function ThreadPriority(const Prior: Byte): Integer;
 
-function GetSingleCaption(const FName: TFileName; const Changed: Boolean;
-	const New: Boolean): string;
-
-function GetMultiCaption(const FName: TFileName; const Changed: Boolean;
+function GetCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Integer; const Index, Count: Integer): string;
 
 function MenuNameToFileName(Name: string): string;
@@ -410,7 +409,7 @@ implementation
 
 uses
 	Windows, Math, Dialogs, ShellAPI,
-	uError, uStrings, uInput;
+	uError, uStrings, uInput, uFiles;
 
 function RColor(R, G, B: U1): TRColor;
 begin
@@ -713,6 +712,15 @@ begin
 		Result := Min
 	else if Cur > Max then
 		Result := Max;
+end;
+
+function Range(const Min, Cur, Max, Def: Integer): Integer;
+begin
+	Result := Cur;
+	if Cur < Min then
+		Result := Def
+	else if Cur > Max then
+		Result := Def;
 end;
 
 function Range(const Min, Cur, Max: Cardinal): Cardinal;
@@ -1033,8 +1041,9 @@ begin
 			else
 				Result := ' ' + Result;
 		end
+		{$ifopt d+}
 		else
-			IE(34343);
+			IE(34343){$endif};
 	end;
 end;
 
@@ -1908,6 +1917,12 @@ begin
 	end;
 end;
 
+procedure GetMem0(var P: Pointer; Size: Cardinal);
+begin
+	GetMem(P, Size);
+	FillChar(P^, Size, 0);
+end;
+
 function DriveTypeToStr(const DriveType: Integer): string;
 begin
 	Result := '';
@@ -1949,21 +1964,19 @@ begin
 	end;
 end;
 
-function GetSingleCaption(const FName: TFileName; const Changed: Boolean;
-	const New: Boolean): string;
-begin
-	Result := Application.Title + ' - ' + FName;
-	if Changed then Result := Result + ' *';
-	if New then Result := Result + ' (New)';
-end;
-
-function GetMultiCaption(const FName: TFileName; const Changed: Boolean;
+function GetCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Integer; const Index, Count: Integer): string;
 begin
-	Result := Application.Title + ' - (' + NToS(Index + 1) + '/' +
-		NToS(Count) + ') ' + FName;
-	if Changed then Result := Result + ' *';
-	if New <> 0 then Result := Result + ' (New)';
+	Result := Application.Title;
+	if Count > 0 then
+	begin
+		Result := Result + ' - ';
+		if Count > 1 then
+			Result := Result + '(' + NToS(Index + 1) + '/' + NToS(Count) + ') ';
+		Result := Result + ShortDir(FName);
+		if Changed then Result := Result + ' *';
+		if New <> 0 then Result := Result + ' (New)';
+	end;
 end;
 
 function MenuNameToFileName(Name: string): string;
