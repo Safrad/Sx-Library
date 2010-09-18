@@ -10,7 +10,12 @@ uses
 
 // File system
 const
-	DefFileBuffer = 32768; // Best Performance
+{
+	Best Performance
+	09/2001: 32768
+	06/2003: 65536-131072
+}
+	DefFileBuffer = 131072;
 type
 	TDriveLetter = 'A'..'Z';
 	TDriveInfo = packed record // 32
@@ -187,8 +192,7 @@ begin
 	FMode := Mode;
 	SetLength(FBuffer, 0);
 	FBufferSize := DefFileBuffer;
-	SetLength(FBuffer, FBufferSize);
-	FBufStart := 1;
+	FBufStart := High(FBufStart);
 	FBufEnd := 0;
 	FProtection := Protection;
 
@@ -406,6 +410,11 @@ var BufPos: Integer;
 begin
 	Line := '';
 	Result := True;
+	if FBufStart = High(FBufStart) then
+	begin
+		SetLength(FBuffer, FBufferSize);
+	end;
+
 	while True do
 	begin
 		LN:

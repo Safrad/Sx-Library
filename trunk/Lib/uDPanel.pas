@@ -14,7 +14,7 @@ type
 	TDPanel = class(TPanel)
 	private
 		{ private declarations }
-		FBmpOut: TDBitmap;
+//		FBmpOut: TDBitmap;
 
 		FLayout: TTextLayout;
 		FFontShadow: ShortInt;
@@ -132,13 +132,13 @@ begin
 			i := FFontShadow;
 			repeat
 				OffsetRect(Recta, i, i);
-				DrawCutedText(Canvas, Recta, Alignment, Layout, Caption);
+				DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True);
 				OffsetRect(Recta, -i, -i);
 				if FontShadow > 0 then Dec(i) else Inc(i);
 			until i = 0;
 			Canvas.Font.Color := Font.Color;
 		end;
-		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption);
+		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True);
 	end;
 {	FBmpOut.SetSize(Width, Height);
 	FBmpOut.BarE24(clRed,0

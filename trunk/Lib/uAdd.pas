@@ -239,6 +239,8 @@ procedure Order(var I1, I2: Cardinal); overload;
 
 function CalcShr(N: U4): S1;
 
+function AllocByB(const OldSize: SG; var NewSize: SG;
+	BlockSize: SG): Boolean;
 function AllocByEx(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 
@@ -575,7 +577,7 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-		MessageD('Div0', mtError, [mbOk]);
+		MessageD('Division by 0 (' + NToS(Dividend) + ' / 0)', mtError, [mbOk]);
 		Result := 0;
 		Exit;
 	end;
@@ -595,7 +597,7 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-		MessageD('Div0', mtError, [mbOk]);
+		MessageD('Division by 0 (' + NToS(Dividend) + ' / 0)', mtError, [mbOk]);
 		Result := 0;
 		Exit;
 	end;
@@ -778,6 +780,59 @@ begin
 	end;
 end;
 
+function AllocByB(const OldSize: SG; var NewSize: SG;
+	BlockSize: SG): Boolean;
+{
+	OldSize = <0, 2^31)
+	NewSize = <0, 2^31)
+	BlockSize = 2^n, <2, 2^30>
+}
+var Sh: SG;
+begin
+{	Result := True;
+	Exit;}
+	Sh := CalcShr(BlockSize);
+	if (1 shl Sh) <> BlockSize then
+	begin
+		{$ifopt d+}
+		ErrorMessage('Bad AllocBy block size ' + NToS(BlockSize) + ' bytes');
+		{$endif}
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) mod (BlockSize + 0);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) mod (BlockSize + 0);
+			Result := OldSize <> NewSize;
+		end
+		else
+		begin
+			NewSize := OldSize;
+			Result := False;
+		end;
+	end
+	else
+	begin
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else
+		begin
+			NewSize := OldSize;
+			Result := False;
+		end;
+	end;
+end;
+
 function AllocByEx(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 {
@@ -919,6 +974,7 @@ end;
 
 function NToS(const Num: Int64): TString;
 begin
+//	Result := FormatFloat(',0', Num); D???
 	Result := NToS(Num, True, 0);
 end;
 
@@ -1686,7 +1742,7 @@ begin
 		ThousandSep := ',';
 	end;
 
-//	DelStr(Line, ThousandSep);
+	DelStr(Line, ThousandSep); // D??? '.'
 
 	// Make ()
 	if Line[1] <> '(' then
@@ -2036,7 +2092,7 @@ begin
 	begin
 		TimeSep := ':';
 		DecimalSep := '.';
-		ListSep := ';';
+		ListSep := '; ';
 	end;
 
 	msToHMSD(Abs(DT), h, m, s, d);
@@ -2050,7 +2106,7 @@ begin
 			Day := DT div MSecsPerDay;
 			Result := Result + IntToStr(Day) + ' day';
 			if Day > 1 then Result := Result + 's';
-			Result := Result + ListSep + ' ';
+			Result := Result + ListSep;
 			h := h mod 24;
 		end;
 	end;
