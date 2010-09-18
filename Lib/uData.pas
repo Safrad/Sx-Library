@@ -418,7 +418,7 @@ end;
 
 function TA4.Add: Pointer;
 begin
-
+	Result := nil;
 end;
 
 procedure TA4.Delete(Index: TIndex);
@@ -443,6 +443,7 @@ end;
 
 function TA4.Insert(Index: TIndex): Pointer;
 begin
+	Result := nil;
 
 end;
 
@@ -458,6 +459,7 @@ end;
 
 function TA4.Get(Index: TIndex): Pointer;
 begin
+	Result := nil;
 
 end;
 
@@ -468,6 +470,7 @@ end;
 
 function TA4.GetFirst: Pointer;
 begin
+	Result := nil;
 
 end;
 
@@ -478,11 +481,13 @@ end;
 
 function TA4.GetLast: Pointer;
 begin
+	Result := nil;
 
 end;
 
 function TA4.IsEmpty: Boolean;
 begin
+	Result := True;
 
 end;
 

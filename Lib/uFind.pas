@@ -49,10 +49,12 @@ begin
 	while True do
 	begin
 //    M := (L + R) div 2;
+		{$ifopt d+}
 		if AValue[R] < AValue[L] then
 		begin
-			IE(12);
+			IE(18);
 		end;
+		{$endif}
 		if AValue[R] = AValue[L] then
 			M := (L + R) div 2
 		else

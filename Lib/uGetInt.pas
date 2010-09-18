@@ -91,8 +91,10 @@ end;
 function GetS8(Prompt: string;
 	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean;
 begin
+	{$ifopt d+}
 	if (MinVal > MaxVal) or (DefVal < MinVal) or (DefVal > MaxVal)
 		or (CurVal < MinVal) or (CurVal > MaxVal) then IE(0);
+	{$endif}
 	if not Assigned(fGetInt) then
 	begin
 		fGetInt := TfGetInt.Create(Application.MainForm);

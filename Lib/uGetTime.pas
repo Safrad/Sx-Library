@@ -102,8 +102,10 @@ end;
 function GetTimeS8(const Prompt: string;
 	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyTime: TOnApplyTime): Boolean;
 begin
+	{$ifopt d+}
 	if (MinVal > MaxVal) or (DefVal < MinVal) or (DefVal > MaxVal)
 		or (CurVal < MinVal) or (CurVal > MaxVal) then IE(0);
+	{$endif}
 	if not Assigned(fGetTime) then
 	begin
 		fGetTime := TfGetTime.Create(Application.MainForm);

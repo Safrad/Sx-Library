@@ -568,13 +568,13 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 			GetMem(BitmapHead, BitmapHeadSize);
 			if FSize < BitmapHeadSize then
 			begin
-				IOErrorMessage(FileName, 'is truncated');
+				IOErrorMessage(FileName, 'File is truncated');
 				goto LFin;
 			end;
 			if not F.BlockRead(BitmapHead^, BitmapHeadSize) then goto LFin;
 			if BitmapHead.Id <> 'BM' then
 			begin
-				IOErrorMessage(FileName, 'is not bitmap');
+				IOErrorMessage(FileName, 'File is not bitmap');
 				goto LFin;
 			end;
 			SetSize(BitmapHead.Width, BitmapHead.Height);
@@ -709,7 +709,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				{$endif}
 			end;
 			else
-				IOErrorMessage(FileName, 'invalid pixel format');
+				IOErrorMessage(FileName, 'Invalid pixel format');
 				goto LFin;
 			end;
 			Result := True;
@@ -766,7 +766,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				SwapRB24;
 			end
 			else
-				IOErrorMessage(FileName, 'is not ppm picture');
+				IOErrorMessage(FileName, 'File not ppm picture');
 			F.Close;
 		end;
 		F.Free;
@@ -786,6 +786,11 @@ var
 begin
 	FreeImage;
 	Result := False;
+	if FileExists(FileName) = False then
+	begin
+		IOErrorMessage(FileName, 'File not found');
+		Exit
+	end;
 	if UpperCase(ExtractFileExt(FileName)) = '.BMP' then
 	begin
 		Result := BitmapRead; // Faster, not tested

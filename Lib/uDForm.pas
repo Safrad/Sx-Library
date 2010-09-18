@@ -193,6 +193,7 @@ var
 	Params: array[0..3] of SG;
 	C: TRColor;
 	sx, sy, wx, wy: Single;
+//	px: array[0..3] of Double;
 begin
 	glGetIntegerv(GL_VIEWPORT, @Params[0]);
 
@@ -206,12 +207,16 @@ begin
 
 	C.L := CF;
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1);
+	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1); // D??? Open GL FP Exception
 	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
 
 	C.L := ShadowColor(CF);
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1);
+	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1); // D??? Open GL FP Exception
+{	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
+	glTexCoord4d(1, 1, 1, 1);
+	glRasterPos4d(68, 0, 0, 1);
+	glBitmap(0, 0, 0, 0, 0, 0, nil);}
 	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
 
 	if CB <> clNone then
@@ -253,14 +258,12 @@ procedure GetScreen(var Rect: TRect);
 var
 	hTaskBar: HWND;
 	RectT: TRect;
-	Al: SG;
 	w, h: SG;
 begin
 	hTaskBar := FindWindow('Shell_TrayWnd', nil);
 	GetWindowRect(hTaskBar, RectT);
 	w := Screen.Width;
 	h := Screen.Height;
-	Al := 0;
 	Rect.Left := 0;
 	Rect.Right := w;
 	Rect.Top := 0;

@@ -10,7 +10,7 @@ unit uMenus;
 
 interface
 
-uses Windows, Graphics, Menus, Messages;
+uses Windows, Graphics, Menus, Messages, Classes;
 
 
 {
@@ -45,8 +45,10 @@ type
 }
 procedure ComName(MenuItem: TMenuItem);
 
-procedure SetMainMenu(MainMenu: TMainMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
-procedure SetPopupMenu(PopupMenu: TPopupMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
+procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
+
+procedure MenuCreate(Src: TMenuItem; Dsc: TMenuItem);
+procedure MenuUpdate(Src: TMenuItem; Dsc: TMenuItem);
 
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
@@ -97,36 +99,107 @@ begin
 		ImgAdd(MenuNameToFileName(MenuItem.Name))
 end;
 
-procedure SetMainMenu(MainMenu: TMainMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
-var i, j: SG;
+procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
+var
+	i, c: SG;
+	M: TMenuItem;
 begin
 	CreateImg;
-	MainMenu.Images := ImageList;
-	for i := 0 to MainMenu.Items.Count - 1 do
+
+	if (Menu is TMenu) or (Menu is TPopupMenu) then
 	begin
-		MainMenu.Items[i].OnAdvancedDrawItem := OnAdvancedMenuDraw;
-		for j := 0 to MainMenu.Items[i].Count - 1 do
+		TMenu(Menu).Images := ImageList;
+		c := TMenu(Menu).Items.Count
+	end
+	else if Menu is TMenuItem then
+		c := TMenuItem(Menu).Count
+	else
+		Exit;
+
+	for i := 0 to c - 1 do
+	begin
+		if (Menu is TMenu) or (Menu is TPopupMenu) then
 		begin
-			MainMenu.Items[i].Items[j].OnAdvancedDrawItem := OnAdvancedMenuDraw;
-			ComName(MainMenu.Items[i].Items[j]);
+			M := TMenu(Menu).Items[i];
+		end
+		else if Menu is TMenuItem then
+			M := TMenuItem(Menu).Items[i]
+		else
+			 M := nil;
+
+		if not (Menu is TMenu) then
+		begin
+			M.OnAdvancedDrawItem := OnAdvancedMenuDraw;
+			ComName(M);
+		end;
+		MenuSet(M, OnAdvancedMenuDraw);
+
+{		for j := 0 to PopupMenu.Items[i].Count - 1 do
+		begin
+			PopupMenu.Items[i].Items[j].OnAdvancedDrawItem := OnAdvancedMenuDraw;
+			ComName(PopupMenu.Items[i].Items[j]);
+		end;}
+	end;
+end;
+
+procedure MenuCreate(Src: TMenuItem; Dsc: TMenuItem);
+var
+	i: SG;
+	M: TMenuItem;
+begin
+//	Dsc.Items.Clear;
+	for i := 0 to Src.Count - 1 do
+	begin
+		M := TMenuItem.Create(Dsc);
+//		M.Caption := Src[i].Caption;
+//		M.Checked := Src[i].Checked;
+		M.Tag := Src[i].Tag;
+		M.OnClick := Src[i].OnClick;
+
+{		if Dsc is TMenu then
+			TMenu(Dsc).Items.Add(M)
+		else if Dsc is TMenuItem then}
+			Dsc.Add(M);
+		if Src[i].Count > 0 then
+		begin
+			MenuCreate(Src[i], M);
 		end;
 	end;
 end;
 
-procedure SetPopupMenu(PopupMenu: TPopupMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
-var i, j: SG;
+procedure MenuUpdate(Src: TMenuItem; Dsc: TMenuItem);
+var
+	i, c: SG;
+	M: TMenuItem;
 begin
-	CreateImg;
-	PopupMenu.Images := ImageList;
-	for i := 0 to PopupMenu.Items.Count - 1 do
+{	if Dsc is TMenu then
+		c := TMenu(Dsc).Items.Count - 1
+	else if Dsc is TMenuItem then}
+		c := Dsc.Count - 1;
+{	else
+		Exit;}
+
+	for i := Src.Count - 1 downto 0 do
 	begin
-		PopupMenu.Items[i].OnAdvancedDrawItem := OnAdvancedMenuDraw;
-		ComName(PopupMenu.Items[i]);
-		for j := 0 to PopupMenu.Items[i].Count - 1 do
+		if c < 0 then Break;
+{		if Dsc is TMenu then
+			M := TMenu(Dsc).Items[c]
+		else if Dsc is TMenuItem then}
+			M := Dsc.Items[c];
+{		else
+			M := nil;}
+//		M := Dsc.Items[c];
+		if M <> nil then
 		begin
-			PopupMenu.Items[i].Items[j].OnAdvancedDrawItem := OnAdvancedMenuDraw;
-			ComName(PopupMenu.Items[i].Items[j]);
+			M.Caption := Src[i].Caption;
+			M.Checked := Src[i].Checked;
+			M.Enabled := Src[i].Enabled;
+			if Src[i].Count > 0 then
+			begin
+				MenuUpdate(Src[i], M);
+			end;
 		end;
+		Dec(c);
 	end;
 end;
 

@@ -1101,7 +1101,9 @@ var
 	F: TFile;
 	Line: string;
 begin
+	{$ifopt d+}
 	if not Assigned(Lines) then IE(454);
+	{$endif}
 	Lines.Clear;
 	Result := False;
 	F := TFile.Create;
@@ -1250,25 +1252,35 @@ var
   LastSlash: PChar;
   TempPathPtr: PChar;
 begin
-  Result := '';
-  TempPathPtr := PChar(ShortName);
-  LastSlash := StrRScan(TempPathPtr, '\');
-  while LastSlash <> nil do begin
-    Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
-    if LastSlash <> nil then begin
-      LastSlash^ := char(0);
+	if FileExists(ShortName) = False then
+	begin
+		Result := ShortName;
+		Exit;
+	end;
+	Result := '';
+	TempPathPtr := PChar(ShortName);
+	LastSlash := StrRScan(TempPathPtr, '\');
+	while LastSlash <> nil do begin
+		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
+		if LastSlash <> nil then begin
+			LastSlash^ := char(0);
 			LastSlash := StrRScan(TempPathPtr, '\');
-    end;
-  end;
-  Result := TempPathPtr + Result;
+		end;
+	end;
+	Result := TempPathPtr + Result;
 end;
 
 function LongToShortPath(const LongName: string): string;
 var
-  LastSlash: PChar;
-  TempPathPtr: PChar;
+	LastSlash: PChar;
+	TempPathPtr: PChar;
 begin
-  Result := '';
+	if FileExists(LongName) = False then
+	begin
+		Result := LongName;
+		Exit;
+	end;
+	Result := '';
   TempPathPtr := PChar(LongName);
   LastSlash := StrRScan(TempPathPtr, '\');
   while LastSlash <> nil do begin
