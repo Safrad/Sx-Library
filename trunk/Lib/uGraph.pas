@@ -131,7 +131,7 @@ const
 	MaxPix = 5;
 var
 	PixColor: array[0..MaxPix] of TColor;
-	i, j: Integer;
+	i, j, k: Integer;
 begin
 	Result := clNone;
 
@@ -150,19 +150,22 @@ begin
 
 	PixColor[0] := Bmp.Canvas.Pixels[0, 0];
 	PixColor[1] := Bmp.Canvas.Pixels[Bmp.Width - 1, 0];
-	PixColor[2] := Bmp.Canvas.Pixels[0, Bmp.Height - 1];
-	PixColor[3] := Bmp.Canvas.Pixels[Bmp.Width - 1, Bmp.Height - 1];
+	PixColor[2] := Bmp.Canvas.Pixels[Bmp.Width - 1, Bmp.Height - 1];
+	PixColor[3] := Bmp.Canvas.Pixels[0, Bmp.Height - 1];
 
 	for i := 0 to 3 do
-		for j := 0 to 3 do
+	begin
+		j := (i - 1) and 3;
+		for k := 0 to 1 do
 		begin
-			if (i <> j) and (PixColor[i] = PixColor[j]) then
+			if {(i <> j) and} (PixColor[i] = PixColor[j]) then
 			begin
 				Result := PixColor[i];
 				Exit;
 			end;
+			Inc(j, 2); j := j and 3;
 		end;
-
+	end;
 end;
 (*-------------------------------------------------------------------------*)
 function ShadowColor(C: TColor): TColor;

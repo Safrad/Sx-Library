@@ -84,14 +84,15 @@ procedure ComName(MenuItem: TMenuItem);
 			Bmp := TDBitmap.Create;
 			Bmp.LoadFromFile(FileName);
 //			BitmapLoadFromFile(Bmp, FileName, 16, 16, Quality);
-			TranColor := GetTransparentColor(Bmp);
+//			TranColor := GetTransparentColor(Bmp);
 			MenuItem.Bitmap.PixelFormat := pf24bit;
 			MenuItem.Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
 			MenuItem.Bitmap.Height := 16;
-			Bmp.Resize(Bmp, TranColor, MenuItem.Bitmap.Width, MenuItem.Bitmap.Height, nil);
+			Bmp.Resize(Bmp, Bmp.TransparentColor, MenuItem.Bitmap.Width, MenuItem.Bitmap.Height, nil);
+			MenuItem.Bitmap.Transparent := Bmp.Transparent;
+			MenuItem.Bitmap.TransparentColor := Bmp.TransparentColor;
+			Bmp.Transparent := False;
 			MenuItem.Bitmap.Canvas.Draw(0, 0, Bmp);
-			MenuItem.Bitmap.Transparent := True;
-			MenuItem.Bitmap.TransparentColor := TranColor;
 			Bmp.Free;
 		end;
 	end;
@@ -440,22 +441,22 @@ begin
 		else if Assigned(MenuItem.Bitmap) and (TopLevel = False) and
 			(MenuItem.Bitmap.Empty = False) then
 		begin
-			MenuItem.Bitmap.PixelFormat := pf24bit;
+//			MenuItem.Bitmap.PixelFormat := pf24bit; D???
 
 			BmpD := TDBitmap.Create;
-			BmpD.SetSize(MenuItem.Bitmap.Width, MenuItem.Bitmap.Height);
-			BmpWid := MenuItem.Bitmap.Width;
+//			BmpD.SetSize(MenuItem.Bitmap.Width, MenuItem.Bitmap.Height);
+{			BmpWid := MenuItem.Bitmap.Width;
 			C := MenuItem.Bitmap.TransparentColor;
-			MenuItem.Bitmap.TransparentColor := -1;
+			MenuItem.Bitmap.TransparentColor := -1;}
 			BmpD.CopyBitmap(MenuItem.Bitmap);
-			MenuItem.Bitmap.TransparentColor := C;
+{			MenuItem.Bitmap.TransparentColor := C;
 			if (MenuItem.Enabled = False) or (odInactive in State) then
 			begin
 				BmpD.Transparent := True;
 				BmpD.TransparentColor := MenuItem.Bitmap.TransparentColor;
 				BmpD.Bar(clMenu, ef12);
 			end;
-			BmpD.ChangeColor(MenuItem.Bitmap.TransparentColor, clMenu);
+			BmpD.ChangeColor(MenuItem.Bitmap.TransparentColor, clMenu);}
 
 			x := 1;
 			y := (ARect.Bottom - ARect.Top - 18) div 2 + 1;

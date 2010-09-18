@@ -251,7 +251,10 @@ var
 	InInteger: SG; // itInteger
 	Keyword: TKeyword; // itKeyword
 
+// Parser Options
+	DecimalSep, ThousandSep: string[3];
 	ReadMarks: BG;
+
 	Marks: (
 		maNone,
 		maString,
@@ -756,9 +759,6 @@ begin
 	AddMesEx2(MesId, Params, LinesL, Max(StartBufRI - LineStart, 0), BufRI - LineStart, 0);
 end;
 
-var
-	DecimalSep, ThousandSep: string[3];
-
 procedure NodeNumber;
 label LNext;
 var
@@ -803,13 +803,13 @@ begin
 					'$', 'x', 'X', 'h', 'H': Base := 16;
 					'*', '/', ':', '^', ')', '(': Break;
 					'-', '+': if (Base <> 10) or (UpCase(BufR[BufRI - 1]) <> 'E') then Break else UnarExp := True;
-					',':
+{					',':
 					begin
 						if BufR[BufRI + 1] = ' ' then
 						begin
 							Break;
 						end;
-					end
+					end}
 					else
 					begin
 {						if (UseWinFormat and (Copy(Line, LineIndex, Length(DecimalSep)) = DecimalSep)) then

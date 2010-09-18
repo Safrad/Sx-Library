@@ -839,6 +839,12 @@ begin
 				Stream.Seek(0, 0);
 				MyGif.LoadFromStream(Stream);
 				Assign(MyGif);
+				{$ifopt d+}
+				if MyGif.Transparent then IE(45435);
+				{$endif}
+{				Transparent := MyGif.Transparent;
+				TransparentColor := MyGif.BackgroundColor;// Bitmap.TransparentColor;// BackgroundColor;}
+				Self.TryTransparent; // D???
 				Result := True;
 			except
 				on E: Exception do
@@ -913,6 +919,8 @@ var
 	MyJPEG: TJPEGImage;
 	MyGif: TGifImage;
 	Stream: TMemoryStream;
+//	B: TBitmap;
+//	ColorMapOptimizer: TColorMapOptimizer;
 begin
 	Result := False;
 	if (UpperCase(ExtractFileExt(FileName)) = '.BMP') then
@@ -952,7 +960,28 @@ begin
 	else if (UpperCase(ExtractFileExt(FileName)) = '.GIF') then
 	begin
 		MyGif := TGifImage.Create;
+//		MyGif.OptimizeColorMap;
+//		MyGif.BitsPerPixel;
+
+//		ColorMapOptimizer := TColorMapOptimizer.Create;
+//		B := TBitmap.Create;
+//		B.LoadFromFile('C:\My Documents\www\~sachy.wz.cz\Icons\~Back.bmp');
+{	 CreateOptimizedPaletteFromSingleBitmap(Self,
+			Colors, ColorBits: integer; Windows: boolean):}
+//		B.Assign(Self);
+//		B.PixelFormat := pf8bit;
+		MyGif.ColorReduction := rmQuantize; // D???
+{		MyGif.Transparent := Transparent;
+		MyGif.BackgroundColor := TransparentColor;}
+//		MyGif.DitherMode :=
 		MyGif.Assign(Self);
+//		B.Free;
+//		MyGif.GlobalColorMap
+//		Self.PixelFormat := pf24bit;
+///		MyGif.BitsPerPixel;
+//MyGif.Optimize(
+//		MyGif.OptimizeColorMap;
+//		MyGif.BitsPerPixel;
 		try
 			Stream := TMemoryStream.Create;
 			MyGif.SaveToStream(Stream);
@@ -1015,6 +1044,8 @@ procedure TDBitmap.CopyBitmap(BmpS: TBitmap);
 begin
 	if BmpS = nil then Exit;
 	SetSize(BmpS.Width, BmpS.Height);
+	Transparent := BmpS.Transparent;
+	TransparentColor := BmpS.TransparentColor;
 	BitBlt(Canvas.Handle, 0, 0, BmpS.Width, BmpS.Height,
 		BmpS.Canvas.Handle, 0, 0, SRCCOPY);
 end;
@@ -7037,6 +7068,8 @@ begin
 	begin
 		BmpDe := TDBitmap.Create;
 		BmpDe.SetSize(NewX, NewY);
+		BmpDe.Transparent := Transparent;
+		BmpDe.TransparentColor := TransparentColor;
 	end
 	else
 	begin
