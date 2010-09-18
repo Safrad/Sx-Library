@@ -40,6 +40,7 @@ procedure Sound(const Hz: Word);
 }
 const
 	WaveHead = 44;
+	MaxVolume = 1024;
 type
 	TBLR = record
 		L, R: Byte;
@@ -63,18 +64,18 @@ type
 
 	TWave = packed record // 44
 		Marker1:         array[0..3] of Char; // 4
-		BytesFollowing:  LongInt; // 4
+		BytesFollowing:  LongInt; // 4; FileSize - 8
 		Marker2:         array[0..3] of Char; // 4
 		Marker3:         array[0..3] of Char; // 4
-		BlockAlign:      LongInt; // 4
-		FormatTag:       Word; // 2
-		Channels:        Word; // 2
-		SampleRate:      LongInt; // 4
-		BytesPerSecond:  LongInt; // 4
-		BytesPerSample:  Word; // 2 ; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
-		BitsPerSample:   Word; // 2 16: 16 bit stereo, 8: 8 bit stereo
+		BlockAlign:      LongInt; // 4; 16
+		FormatTag:       Word; // 2; 1
+		Channels:        Word; // 2; 2: stereo, 1: mono
+		SampleRate:      LongInt; // 4; 11025, 22050, 44100
+		BytesPerSecond:  LongInt; // 4; BytesPerSample * SampleRate
+		BytesPerSample:  Word; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
+		BitsPerSample:   Word; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
 		Marker4:         array[0..3] of Char; // 4
-		DataBytes:       LongInt; // 4
+		DataBytes:       LongInt; // 4; <= (FileSize - 44)
 		Data:            TWaveData; // X
 	end;
 	PWave = ^TWave;
@@ -119,8 +120,8 @@ type
 		SampleCount: UG;
 		SamplePos: UG;
 		Frequency: UG;
-		Channels: UG;
-		Balance: SG;
+		VolumeLeft: SG;
+		VolumeRight: SG;
 		Speed: UG;
 		Offset: UG;
 	end;
@@ -146,19 +147,23 @@ type
 		// Items to play
 		PlayItems: TData;
 
+		VolumeLeft: SG;
+		VolumeRight: SG;
+		Speed: SG;
+
 		procedure MMError(s: string);
 		procedure SendBuffer;
 		constructor Create;
 		destructor Destroy; override;
 
-		procedure Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferSize, BufferCount: SG);
+		procedure Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferTime: UG);
 		procedure Close;
 
 		procedure Pause;
 		procedure Resume;
 		procedure Stop;
 
-		procedure Play(Wave: PWave; Speed: UG; Balance: SG);
+		procedure Play(Wave: PWave);
 		procedure Beep;
 		procedure Tone(Frequency, Tim: UG);
 		procedure Noise(Tim: UG);
@@ -250,6 +255,22 @@ begin
 		Right := ConvertPre;
 end;
 
+function CheckWave(Wave: PWave): Boolean;
+begin
+	Result := False;
+	if Wave <> nil then
+	begin
+		if ((Wave.BitsPerSample = 8) or (Wave.BitsPerSample = 16)) then
+		begin
+			Result := True;
+		end
+		else
+			ErrorMessage('Invalid wave format');
+	end
+	else
+		ErrorMessage('Wave is empty');
+end;
+
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
 label LRetry, LFin;
 var
@@ -272,9 +293,21 @@ begin
 		BlockRead(F, Wave^, FSize);
 		ErrorCode := IOResult; if ErrorCode <> 0 then goto LFin;
 		if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
-			(Wave.Marker3 <> 'fmt ') then
+			(Wave.Marker3 <> 'fmt ') or
+			(Wave.BytesFollowing <> FSize - 8) then
 		begin
 			IOErrorMessage(FName, 'is not wave');
+			WaveFree(Wave);
+		end
+		else if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
+		begin
+			IOErrorMessage(FName, 'wave format not supported');
+			WaveFree(Wave);
+		end;
+		if Wave.DataBytes > FSize - 44 then
+		begin
+			IOErrorMessage(FName, 'wave data bytes repaired');
+			Wave.DataBytes := FSize - 44;
 		end;
 		LFin:
 		CloseFile(F);
@@ -365,10 +398,11 @@ begin
 	Wave.Channels := Channels;
 	Wave.SampleRate := SampleRate;
 	Wave.BytesPerSecond := BitsToByte(BitsPerSamples * SampleRate);
-	Wave.BytesPerSample := BitsToByte(BitsPerSamples);  // 256 for 4 bit !!!
+	Wave.BytesPerSample := BitsToByte(BitsPerSamples); // 256 for 4 bit !!!
 	Wave.BitsPerSample := BitsPerSample;
 	Wave.Marker4 := 'data';
 	Wave.DataBytes := DataBytes;
+
 { case BitsPerSample of
 	8: FillChar(Wave.Data.B, Wave.DataBytes, 128);
 	16: FillChar(Wave.Data.W, Wave.DataBytes div 2, 0);
@@ -634,6 +668,9 @@ begin
 	FreeMem(Wave);
 end;
 
+const
+	SpeedDiv = 1024;
+
 constructor TWavePlayer.Create;
 begin
 	HWaveOut := 0;
@@ -641,6 +678,9 @@ begin
 	PlayItems.ItemSize := SizeOf(TPlayItem);
 	Initialized := False;
 	CloseInvoked := False;
+	VolumeLeft := MaxVolume;
+	VolumeRight := MaxVolume;
+	Speed := SpeedDiv;
 end;
 
 destructor TWavePlayer.Destroy;
@@ -711,10 +751,12 @@ begin
 	end;
 end;
 
-procedure TWavePlayer.Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferSize, BufferCount: SG);
+procedure TWavePlayer.Init(Sound16bits: Boolean; Frequency: SG; SoundStereo: Boolean; BufferTime: UG);
+const BufferCount = 8;
 var i: SG;
 begin
 	if Initialized then Close;
+	CloseInvoked := False;
 	WaveFormat.WFormatTag := WAVE_FORMAT_PCM; // PCM format - the only option
 	if SoundStereo then
 		WaveFormat.nChannels := 2
@@ -739,11 +781,12 @@ begin
 
 	OutCount := 0;
 
-	BufferOutSize := BufferSize;
-	BufferOutSamples := GetBufferSample(WaveFormat.wBitsPerSample, WaveFormat.nChannels, BufferOutSize);
-//	GetMem(BufferOut, BufferOutSize);
+	BufferOutSamples := RoundDiv(WaveFormat.nSamplesPerSec * BufferTime, BufferCount * 1000);
+	BufferOutSize := GetBufferSize(WaveFormat.wBitsPerSample, WaveFormat.nChannels, BufferOutSamples);
+{	BufferOutSize := BufferSize;
+	BufferOutSamples := GetBufferSample(WaveFormat.wBitsPerSample, WaveFormat.nChannels, BufferOutSize);}
+
 	Initialized := True;
-	CloseInvoked := False;
 	for i := 0 to BufferCount - 1 do
 		SendBuffer;
 end;
@@ -751,21 +794,27 @@ end;
 procedure TWavePlayer.Close;
 begin
 	CloseInvoked := True;
+	Stop;
+{	while OutCount > 0 do
+		Sleep(40);}
 end;
 
 procedure TWavePlayer.Pause;
 begin
-	waveOutPause(HWaveOut);
+	FError := waveOutPause(HWaveOut);
+	MMError('WaveOutOpen');
 end;
 
 procedure TWavePlayer.Resume;
 begin
-	waveOutRestart(HWaveOut);
+	FError := waveOutRestart(HWaveOut);
+	MMError('WaveOutOpen');
 end;
 
 procedure TWavePlayer.Stop;
 begin
-	waveOutReset(HWaveOut);
+	FError := waveOutReset(HWaveOut);
+	MMError('WaveOutOpen');
 end;
 
 
@@ -774,70 +823,12 @@ var
 	Header: PWaveHdr;
 	i, j: SG;
 	SampleP: UG;
-	Value: SG;
+	ValueL, ValueR, ValueLS, ValueRS, Value: SG;
 	PlayItem: PPlayItem;
 	BufferOut: PWaveData;
-begin
 
-	j := 0;
-	while j < SG(PlayItems.Count) do
+	procedure WriteValue;
 	begin
-		PlayItem := PlayItems.Get(j);
-		if PlayItem.PlayAs = paWave then
-			PlayItem.Offset := PlayItem.Speed * UG(PlayItem.Wave.SampleRate) div UG(WaveFormat.nSamplesPerSec);
-		Inc(j);
-	end;
-	// 16bit Mixer
-	GetMem(BufferOut, BufferOutSize);
-	for i := 0 to BufferOutSamples - 1 do
-	begin
-		Value := 0;
-		j := 0;
-//		k := PlayItems.Count;
-		while j < SG(PlayItems.Count) do
-		begin
-			PlayItem := PlayItems.Get(j);
-			if PlayItem.PlayAs <> paWave then
-			begin
-				if PlayItem.SamplePos >= PlayItem.SampleCount then
-				begin
-					PlayItems.Delete(j);
-					Dec(j);
-				end
-				else
-				begin
-					if PlayItem.PlayAs = paNoise then
-					begin
-						Value := Value + Random2(32768);
-					end
-					else
-					begin
-						Value := Value + 32768 *
-							Sins[(Int64(AngleCount) * Int64(PlayItem.Frequency) * Int64(PlayItem.SamplePos) div UG(WaveFormat.nSamplesPerSec)) and (AngleCount - 1)] div SinDiv;
-					end;
-					Inc(PlayItem.SamplePos);
-				end;
-			end
-			else
-			begin
-				SampleP := PlayItem.SamplePos div 65536;
-				if SampleP >= PlayItem.SampleCount then
-				begin
-					PlayItems.Delete(j);
-					Dec(j);
-				end
-				else
-				begin
-					case PlayItem.Wave.BitsPerSample of
-					16: Value := Value + PlayItem.Wave.Data.W[SampleP];
-					else Value := Value + 256 * (SG(PlayItem.Wave.Data.B[SampleP]) - 128);
-					end;
-					Inc(PlayItem.SamplePos, PlayItem.Offset);
-				end;
-			end;
-			Inc(j);
-		end;
-
 		case WaveFormat.wBitsPerSample of
 		8:
 		begin
@@ -846,6 +837,7 @@ begin
 				Value := 0
 			else if Value > 255 then
 				Value := 255;
+			BufferOut.B[i] := Value;
 		end;
 		16:
 		begin
@@ -853,52 +845,105 @@ begin
 				Value := -32768
 			else if Value > 32767 then
 				Value := 32767;
+			BufferOut.W[i] := Value;
 		end;
 		end;
-		if WaveFormat.nChannels = PlayItem.Channels then
-		begin
-			case WaveFormat.wBitsPerSample of
-			8:
-			begin
-				BufferOut.B[i] := Value;
-			end;
-			16:
-			begin
-				BufferOut.W[i] := Value;
-			end;
-			end;
-		end
-		else if WaveFormat.nChannels = 1 then
-		begin
-			if i and 1 <> 0 then
-			begin
-				case WaveFormat.wBitsPerSample of
-				8:
-				begin
-					BufferOut.B[i] := Value;
-				end;
-				16:
-				begin
-					BufferOut.W[i] := Value;
-				end;
-				end;
+		Inc(i);
+	end;
 
-			end;
-		end
-		else if WaveFormat.nChannels = 2 then
+begin
+	j := 0;
+	while j < SG(PlayItems.Count) do
+	begin
+		PlayItem := PlayItems.Get(j);
+		case PlayItem.PlayAs of
+		paNoise: PlayItem.Offset := PlayItem.Speed;
+		paTone: PlayItem.Offset := PlayItem.Speed;
+		else PlayItem.Offset := PlayItem.Wave.Channels * PlayItem.Speed * UG(PlayItem.Wave.SampleRate) div UG(WaveFormat.nSamplesPerSec);
+		end;
+		Inc(j);
+	end;
+	// 16bit Mixer
+	GetMem(BufferOut, BufferOutSize);
+	FillChar(BufferOut^, BufferOutSize, 0);
+	i := 0;
+	while i < BufferOutSamples * WaveFormat.nChannels do
+	begin
+		ValueLS := 0;
+		ValueRS := 0;
+		j := 0;
+		while j < SG(PlayItems.Count) do
 		begin
-			case WaveFormat.wBitsPerSample of
-			8:
+			ValueL := 0;
+			ValueR := 0;
+			PlayItem := PlayItems.Get(j);
+			SampleP := (PlayItem.SamplePos div SpeedDiv);
+			if SampleP >= PlayItem.SampleCount then
 			begin
-				BufferOut.BLR[i].L := Value;
-				BufferOut.BLR[i].R := Value;
-			end;
-			16:
+				PlayItems.Delete(j);
+			end
+			else
 			begin
-				BufferOut.WLR[i].L := Value;
-				BufferOut.WLR[i].R := Value;
+				Inc(j);
+				case PlayItem.PlayAs of
+				paNoise:
+				begin
+					ValueL := Random2(32768);
+					ValueR := Random2(32768);
+				end;
+				paTone:
+				begin
+					SampleP := (Int64(PlayItem.SamplePos));
+					ValueL := 32768 *
+						Sins[(SampleP) and (AngleCount - 1)] div SinDiv;
+					ValueR := ValueL;
+				end;
+				else // paWave
+				begin
+					if PlayItem.Wave.Channels = 2 then
+						SampleP := SampleP and $fffffffe;
+					case PlayItem.Wave.BitsPerSample of
+					16: ValueL := PlayItem.Wave.Data.W[SampleP];
+					else ValueL := 256 * (SG(PlayItem.Wave.Data.B[SampleP]) - 128);
+					end;
+					if PlayItem.Wave.Channels = 2 then
+					begin
+						case PlayItem.Wave.BitsPerSample of
+						16: ValueR := PlayItem.Wave.Data.W[SampleP + 1];
+						else ValueR := 256 * (SG(PlayItem.Wave.Data.B[SampleP + 1]) - 128);
+						end;
+//						Inc(PlayItem.SamplePos, PlayItem.Offset);
+					end
+					else
+					begin
+						ValueR := ValueL
+					end;
+				end;
+				end;
+				Inc(PlayItem.SamplePos, PlayItem.Offset);
 			end;
-			end;
+
+			if (PlayItem.VolumeLeft <> MaxVolume) then
+				ValueL := ValueL * PlayItem.VolumeLeft div MaxVolume;
+			if (PlayItem.VolumeRight <> MaxVolume) then
+				ValueR := ValueR * PlayItem.VolumeRight div MaxVolume;
+			Inc(ValueLS, ValueL);
+			Inc(ValueRS, ValueR);
+		end;
+
+		// 16bit stereo here
+
+		if WaveFormat.nChannels = 2 then
+		begin
+			Value := ValueLS;
+			WriteValue;
+			Value := ValueRS;
+			WriteValue;
+		end
+		else
+		begin
+			Value := (ValueLS + ValueRS) div 2;
+			WriteValue;
 		end;
 	end;
 
@@ -923,17 +968,19 @@ begin
 	Inc(OutCount);
 end;
 
-procedure TWavePlayer.Play(Wave: PWave; Speed: UG; Balance: SG);
+procedure TWavePlayer.Play(Wave: PWave);
 var PlayItem: PPlayItem;
 begin
-	if (Wave.BitsPerSample = 8) or (Wave.BitsPerSample = 16) then
+	if CheckWave(Wave) then
 	begin
 		PlayItem := PlayItems.Add;
 		PlayItem.PlayAs := paWave;
 		PlayItem.Wave := Wave;
+		PlayItem.Frequency := 0;
 		PlayItem.SampleCount := 8 * Wave.DataBytes div Wave.BitsPerSample;
 		PlayItem.SamplePos := 0;
-		PlayItem.Balance := Balance;
+		PlayItem.VolumeLeft := VolumeLeft;
+		PlayItem.VolumeRight := VolumeRight;
 		PlayItem.Speed := Speed;
 	end;
 end;
@@ -953,7 +1000,9 @@ begin
 	PlayItem.Frequency := Frequency;
 	PlayItem.SampleCount := WaveFormat.nSamplesPerSec * Tim div 1000;
 	PlayItem.SamplePos := 0;
-	PlayItem.Balance := 0;
+	PlayItem.VolumeLeft := VolumeLeft;
+	PlayItem.VolumeRight := VolumeRight;
+	PlayItem.Speed := Speed;
 end;
 
 procedure TWavePlayer.Noise(Tim: UG);
@@ -966,7 +1015,9 @@ begin
 	PlayItem.Frequency := 0;
 	PlayItem.SampleCount := WaveFormat.nSamplesPerSec * Tim div 1000;
 	PlayItem.SamplePos := 0;
-	PlayItem.Balance := 0;
+	PlayItem.VolumeLeft := VolumeLeft;
+	PlayItem.VolumeRight := VolumeRight;
+	PlayItem.Speed := Speed;
 end;
 
 Initialization

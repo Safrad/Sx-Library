@@ -20,7 +20,7 @@ procedure BeforeResize;
 procedure AfterResize;
 procedure FreeOpenGL;
 
-procedure glTextOutE(Canvas: TCanvas; Text: string);
+//procedure glTextOutE(Canvas: TCanvas; Text: string);
 
 var
 	OpenGLInit: Boolean;
