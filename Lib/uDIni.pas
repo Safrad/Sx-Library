@@ -78,6 +78,7 @@ type
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: Boolean);
 
 		procedure RWFormPos(Form: TForm; const Save: Boolean);
+		procedure RWFormPosV(Form: TForm; const Save: Boolean);
 		procedure RWDView(DView: TDView; const Save: Boolean);
 		procedure RWListView(ListView: TListView; const Save: Boolean);
 		procedure RWComboBox(ComboBox: TComboBox; const Save: Boolean);
@@ -206,7 +207,7 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI(IntStr, -MaxInt, Default, MaxInt, 1);
+	Result := StrToValI(IntStr, MinInt, Default, MaxInt, 1);
 end;
 
 procedure TDIniFile.WriteSG(const Section, Ident: string; Value: SG);
@@ -220,7 +221,7 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI(IntStr, -MaxInt, Default, MaxInt, 1);
+	Result := StrToValI(IntStr, MinInt, Default, MaxInt, 1);
 end;
 
 procedure TDIniFile.WriteS32(const Section, Ident: string; Value: S32);
@@ -234,7 +235,7 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI64(IntStr, -MaxInt, Default, MaxInt, 1);
+	Result := StrToValI64(IntStr, MinInt64, Default, MaxInt64, 1);
 end;
 
 procedure TDIniFile.WriteS64(const Section, Ident: string; Value: Int64);
@@ -335,6 +336,7 @@ end;
 function TDIniFile.GetSectionIndex(const Section: string): Integer;
 var i: Integer;
 begin
+	if FInMemory = False then LoadFromFile(FFileName);
 	Result := -1;
 	for i := 0 to FSectionCount - 1 do
 		if FSections[i].Name = Section then
@@ -347,6 +349,7 @@ end;
 function TDIniFile.GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer;
 var i: Integer;
 begin
+	if FInMemory = False then LoadFromFile(FFileName);
 	Result := -1;
 	if SectionIndex >= 0 then
 		for i := 0 to FSections[SectionIndex].KeyCount - 1 do
@@ -950,6 +953,12 @@ begin
 	end;
 	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 		Form.WindowState := TWindowState(RWSGF(Form.Name, 'WindowState', Integer(Form.WindowState), Integer(Form.WindowState), Save));
+end;
+
+procedure TDIniFile.RWFormPosV(Form: TForm; const Save: Boolean);
+begin
+	RWFormPos(Form, Save);
+	Form.Visible := RWBGF(Form.Name, 'Visible', Form.Visible, True, Save);
 end;
 
 procedure TDIniFile.RWDView(DView: TDView; const Save: Boolean);

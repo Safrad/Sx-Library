@@ -159,7 +159,11 @@ type
 
 			procedure GBlur(Radius: Double; const Horz, Vert: Boolean;
 				InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
+			procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
 
+			procedure FireM(XS1, YS1, XS2, YS2: Longint; Tick: Byte);
+			procedure FireS(XS1, YS1, XS2, YS2: Longint);
+			procedure FogI(XS1, YS1, XS2, YS2: Longint);
 	end;
 
 // Multicommands
@@ -222,7 +226,7 @@ type
 implementation
 
 uses
-	Dialogs, Jpeg,
+	Dialogs, Jpeg, Math,
 	uGraph, uError, uDialog, uScreen, uFiles, uGetInt, uStrings;
 
 (*-------------------------------------------------------------------------*)
@@ -673,7 +677,7 @@ end;
 procedure BitmapReadFromFile(var BmpD: TDBitmap; FName: TFileName);
 begin
 	if BmpD <> nil then
-		MessageD('Bitmap Error', mtError, [mbOk]);
+		MessageD('Destination Bitmap Must Be Nil', mtError, [mbOk]);
 	BmpD := TDBitmap.Create;
 	BmpD.LoadFromFile(FName);
 end;
@@ -681,7 +685,7 @@ end;
 procedure BitmapCopy(var BmpD, BmpS: TDBitmap);
 begin
 	if BmpD <> nil then
-		MessageD('Bitmap Error', mtError, [mbOk]);
+		MessageD('Destination Bitmap Must Be Nil', mtError, [mbOk]);
 	BmpD := TDBitmap.Create;
 	BmpD.SetSize(BmpS.Width, BmpS.Height);
 	BmpD.CopyBitmap(BmpS);
@@ -690,7 +694,7 @@ end;
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor);
 begin
 	if BmpD <> nil then
-		MessageD('Bitmap Error', mtError, [mbOk]);
+		MessageD('Destination Bitmap Must Be Nil', mtError, [mbOk]);
 	BmpD := TDBitmap.Create;
 	BmpD.SetSize(Width, Height);
 end;
@@ -6372,8 +6376,10 @@ procedure TDBitmap.BmpE24(
 	BmpS: TDBitmap;
 	C: TColor; const Effect: TEffect);
 begin
+	if BmpS = nil then Exit;
 	if BmpS.Data = nil then Exit;
-	if Data = nil then Exit;
+	if Self = nil then Exit;
+	if Self.Data = nil then Exit;
 	Bmp24(XD1, YD1, BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1, C, Effect);
 end;
 (*-------------------------------------------------------------------------*)
@@ -8717,6 +8723,474 @@ begin
 		GBlurA(Round(Radius * 65536), Horz, Vert, InterruptProcedure);
 end;
 
+procedure TDBitmap.Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
+var
+	x, y, SX, SY, R, xx, yy, DX, DY, D: SG;
+	C: TRColor;
+begin
+	SX := (X2 + X1) div 2;
+	SY := (Y2 + Y1) div 2;
+	DX := (X2 - X1 + 1) div 2;
+	DY := (Y2 - Y1 + 1) div 2;
+	D := DX * DY;
+	for y := Y1 to Y2 do
+	begin
+		for x := X1 to X2 do
+		begin
+			xx := x - SX;
+			yy := y - SY;
+			R := Sqr(xx) + Sqr(yy);
+			if R < D then
+			begin
+				// Dent
+				xx := SX + (MaxZoom - MinZoom) * (R) * xx div (D * MinZoom * MaxZoom);
+				yy := SY + (MaxZoom - MinZoom) * (R) * yy div (D * MinZoom * MaxZoom);
+				if (xx > X2) then
+					xx := X2
+				else if (xx < X1) then
+					xx := X1;
+				if (yy > Y2) then
+					yy := Y2
+				else if (yy < Y1) then
+					yy := Y1;
+			end
+			else
+			begin
+				xx := x;
+				yy := y;
+			end;
+			GetPix24(BmpS.FData, BmpS.FByteX, xx, yy, C);
+			Pix24(Self.FData, Self.FByteX, x, y, C, ef16);
+		end;
+	end;
+end;
+
+(*-------------------------------------------------------------------------*)
+procedure TDBitmap.FireM(XS1, YS1, XS2, YS2: Longint; tick:byte);
+var
+PD: PBmpData;
+ByteXD: LongWord;
+UseXSD: LongWord;
+
+HX: Integer;
+EndPD: Integer;
+PS: Integer;
+rando:array[0..768] of longword;
+i:word;
+begin
+
+tick:=((tick - random(tick))+tick) div 2;
+for i:=0 to 767 do begin
+rando[i]:=round(1+sin(DegToRad(i*(128/(tick+1)))))*3;
+end;
+
+PD := FData;
+ByteXD := ByteX;
+
+HX := XS2 - XS1 + 1; // X sirka Source
+UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
+
+HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
+Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
+
+EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
+
+ps:=integer(addr(rando));
+
+begin
+asm
+// {$ifdef SaveReg}
+pushad
+// {$endif}
+mov edi, PD // EDI = adresa Destination
+mov esi, ps
+
+@NextY:
+add esi,4
+
+mov ecx, edi
+add ecx, UseXSD // ECX = Adresa Source + sirka Source
+
+xor eax, eax // nuluj EAX
+xor ebx, ebx // nuluj EBX
+xor edx, edx // nuluj EDX
+
+@LMovS: // kopie source do destination
+mov al, [edi-3]
+mov bl, [edi+3]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi]
+add ax,bx
+add ax,bx
+mov bl, [edi-3]
+add ax,bx
+mov bl, [edi+3]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi]
+add ax,bx
+shr eax, 3
+mov bl,al
+xor bl, $ff
+shr bl,4
+sub edi,3
+add edi,[esi]
+sub al, bl
+jnc @l1
+xor al,al
+@l1: mov [edi], al // uloz na destination
+sub edi,[esi]
+add edi,3
+mov al, [edi-2]
+mov bl, [edi+4]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+add ax,bx
+mov bl, [edi-2]
+add ax,bx
+mov bl, [edi+4]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+shr eax, 3 
+mov bl,al
+xor bl, $ff
+shr bl,3
+sub edi,3
+add edi,[esi]
+sub al, bl
+jnc @l2
+xor al,al
+@l2: mov [edi+1], al // uloz na destination
+sub edi,[esi]
+add edi,3
+mov al, [edi-1]
+mov bl, [edi+5]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+add ax,bx
+mov bl, [edi-1]
+add ax,bx
+mov bl, [edi+5]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+shr eax, 3
+mov bl,al
+xor bl, $ff
+shr bl,5
+sub edi,3
+add edi,[esi]
+sub al, bl
+jnc @l3
+xor al,al
+@l3: mov [edi+2], al // uloz na destination
+sub edi,[esi]
+add edi,3
+add edi,3 // zvys EDI o 3
+// add esi, 3 // zvys ESI o 3
+cmp edi, ecx // dokud ESI <> ECX (neprenese 1 linku) opakuj
+jb @LMovS
+
+mov edi, PD
+sub edi, ByteXD
+mov PD, edi
+
+cmp edi, EndPD // opakuj, dokud se nedostanem na konec vyrezu
+jnb @NextY
+//{$ifdef SaveReg}
+popad
+//{$endif}
+end;
+end;
+end;
+
+(*-------------------------------------------------------------------------*)
+procedure TDBitmap.FireS(XS1, YS1, XS2, YS2: Longint);
+var
+PD: PBmpData;
+ByteXD: LongWord;
+UseXSD: LongWord;
+
+HX: Integer;
+EndPD: Integer;
+
+begin
+
+
+PD := FData;
+ByteXD := ByteX;
+
+HX := XS2 - XS1 + 1; // X sirka Source
+UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
+
+HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
+Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
+
+EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
+
+begin
+asm
+// {$ifdef SaveReg}
+pushad
+// {$endif}
+mov edi, PD // EDI = adresa Destination
+
+@NextY:
+
+mov ecx, edi
+add ecx, UseXSD // ECX = Adresa Source + sirka Source
+
+xor eax, eax // nuluj EAX
+xor ebx, ebx // nuluj EBX
+xor edx, edx // nuluj EDX
+
+@LMovS: // kopie source do destination
+mov al, [edi-3]
+mov bl, [edi+3]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi]
+add ax,bx
+add ax,bx
+mov bl, [edi-3]
+add ax,bx
+mov bl, [edi+3]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi]
+add ax,bx
+shr eax, 3
+mov bl,al
+xor bl, $ff
+shr bl,4
+sub al, bl
+jnc @l1
+xor al,al
+@l1: mov [edi], al // uloz na destination
+mov al, [edi-2]
+mov bl, [edi+4]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+add ax,bx
+mov bl, [edi-2]
+add ax,bx
+mov bl, [edi+4]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+shr eax, 3
+mov bl,al
+xor bl, $ff
+shr bl,3
+sub al, bl
+jnc @l2
+xor al,al
+@l2: mov [edi+1], al // uloz na destination
+mov al, [edi-1]
+mov bl, [edi+5]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+add ax,bx
+mov bl, [edi-1]
+add ax,bx
+mov bl, [edi+5]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+shr eax, 3
+mov bl,al
+xor bl, $ff
+shr bl,5
+sub al, bl
+jnc @l3
+xor al,al
+@l3: mov [edi+2], al // uloz na destination
+add edi,3 // zvys EDI o 3
+// add esi, 3 // zvys ESI o 3
+cmp edi, ecx // dokud ESI <> ECX (neprenese 1 linku) opakuj
+jb @LMovS
+
+mov edi, PD
+sub edi, ByteXD
+mov PD, edi
+
+cmp edi, EndPD // opakuj, dokud se nedostanem na konec vyrezu
+jnb @NextY
+//{$ifdef SaveReg}
+popad
+//{$endif}
+end;
+end;
+end;
+
+(*-------------------------------------------------------------------------*)
+procedure TDBitmap.FogI(XS1, YS1, XS2, YS2: Longint);
+var
+PD: PBmpData;
+ByteXD: LongWord;
+UseXSD: LongWord;
+
+HX: Integer;
+EndPD: Integer;
+
+begin
+
+
+PD := FData;
+ByteXD := ByteX;
+
+HX := XS2 - XS1 + 1; // X sirka Source
+UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
+
+HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
+Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
+
+EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
+
+begin
+asm
+// {$ifdef SaveReg}
+pushad
+// {$endif}
+mov edi, PD // EDI = adresa Destination
+
+@NextY:
+
+mov ecx, edi
+add ecx, UseXSD // ECX = Adresa Source + sirka Source
+
+xor eax, eax // nuluj EAX
+xor ebx, ebx // nuluj EBX
+xor edx, edx // nuluj EDX
+
+@LMovS: // kopie source do destination
+mov al, [edi-3]
+mov bl, [edi+3]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi]
+add ax,bx
+sub edi,bytexd
+shr eax, 2
+mov bl, [edi]
+add ax, bx
+shr eax, 1
+
+mov bl,al
+xor bl, $ff
+shr bl,5
+sub al, bl
+jnc @l1
+xor al,al
+@l1: mov [edi], al // uloz na destination
+
+mov al, [edi-2]
+mov bl, [edi+4]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi+1]
+add ax,bx
+sub edi,bytexd
+shr eax, 2
+mov bl, [edi+1]
+add ax, bx
+shr eax, 1
+
+mov bl,al
+xor bl, $ff
+shr bl,5
+sub al, bl
+jnc @l2
+xor al,al
+@l2: mov [edi+1], al // uloz na destination
+
+mov al, [edi-1]
+mov bl, [edi+5]
+add ax,bx
+sub edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+add edi,bytexd
+add edi,bytexd
+mov bl, [edi+2]
+add ax,bx
+sub edi,bytexd
+shr eax, 2
+mov bl, [edi+2]
+add ax, bx
+shr eax, 1
+
+mov bl,al
+xor bl, $ff
+shr bl,5
+sub al, bl
+jnc @l3
+xor al,al
+@l3: mov [edi+2], al // uloz na destination
+
+add edi,3 // zvys EDI o 3
+// add esi, 3 // zvys ESI o 3
+cmp edi, ecx // dokud ESI <> ECX (neprenese 1 linku) opakuj
+jb @LMovS
+
+mov edi, PD
+sub edi, ByteXD
+mov PD, edi
+
+cmp edi, EndPD // opakuj, dokud se nedostanem na konec vyrezu
+jnb @NextY
+//{$ifdef SaveReg}
+popad
+//{$endif}
+end;
+end;
+end;
 
 initialization
 

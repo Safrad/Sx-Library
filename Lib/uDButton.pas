@@ -45,7 +45,7 @@ type
 		FModifiedGlyph: Boolean;
 		FMouseDown: Boolean;
 
-		FHighClock: LongWord;
+//		FHighClock: LongWord;
 
 		procedure DrawItem(const DrawItemStruct: TDrawItemStruct);
 		procedure SetColor(Value: TColor);
@@ -127,7 +127,7 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uFiles, uAdd, uScreen;
+	uGraph, uFiles, uAdd, uScreen, uSysInfo;
 
 { TDButton data }
 var
@@ -429,7 +429,8 @@ begin
 	FBmpOut := TDBitmap.Create;
 	FTimer := TDTimer.Create(Self);
 	FTimer.Enabled := False;
-	FTimer.Interval := 33;
+	FTimer.EventStep := esFrequency;
+	FTimer.Interval := 25;
 	FTimer.OnTimer := Timer1Timer;
 	FLayout := blGlyphLeft;
 	FSpacing := 4;
@@ -500,6 +501,7 @@ begin
 	begin
 		if FMouseDown then FDownNow := True;
 		FHighNow := True;
+		FTimer.Reset;
 		FTimer.Enabled := True;
 		Invalidate;
 	end;
@@ -530,10 +532,12 @@ var
 	CDefault, CCancel, CDefaultCancel: TColor;
 	Recta: TRect;
 
-	x, y: Integer;
+	x, y, SizeX, SizeY: Integer;
 	Co: array[0..3] of TColor;
 	E: TColor;
 	s: string;
+const
+	Border = 2;
 begin
 	IsDefault := DrawItemStruct.itemState and ODS_FOCUS <> 0;
 	IsDown := DrawItemStruct.itemState and ODS_SELECTED <> 0;
@@ -655,7 +659,7 @@ begin
 
 	if FHighNow then
 	begin
-		case FHighlight of
+{		case FHighlight of
 		hlRect:
 		begin
 			FBmpOut.Rec24(2, 2,
@@ -692,6 +696,41 @@ begin
 			Co[3] := Co[1];
 			FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
 		end;
+		end;}
+		if FTimer.Clock < 3 * PerformanceFrequency then
+		begin
+			FBmpOut.Bar24(clNone, Border, Border,
+				FBmpOut.Width - 1 - Border, FBmpOut.Height - 1 - Border, clHighlight, ef08);
+		end
+		else
+		begin
+			SizeX := Width - 2 * Border;
+			SizeY := Height - 2 * Border;
+			x := (SizeX * (FTimer.Clock - 3 * PerformanceFrequency) div (2 * PerformanceFrequency)) mod SizeX;
+			y := (SizeY * (FTimer.Clock - 3 * PerformanceFrequency) div (2 * PerformanceFrequency)) mod SizeY;
+			if x >= (SizeX div 2) then
+				x := SizeX - x;
+			if y >= (Height div 2) then
+				y := SizeY - y;
+//			if (x < SizeX div 2) and (y < SizeY div 2) then
+			begin
+				FBmpOut.Bar24(clNone, Border + x - 1, Border + y - 1,
+					FBmpOut.Width - x - 0 - Border, FBmpOut.Height - y - 0 - Border, clHighlight, ef08);
+			end
+{			else
+			begin
+//				Beep;
+			end;}
+
+{			y := MinXY and $fffffffe - 2;
+			x := FHighClock mod LongWord(y);
+			if x > (y div 2) then
+				x := y - x;
+			if x < (y div 2) then
+			begin
+				FBmpOut.Bar24(clNone, x, x,
+					FBmpOut.Width - x - 1, FBmpOut.Height - x - 1, clHighlight, ef08);
+			end;}
 		end;
 	end;
 	FCanvas.Draw(0, 0, FBmpOut);
@@ -834,9 +873,9 @@ end;
 
 procedure TDButton.Timer1Timer(Sender: TObject);
 begin
-	if (FHighNow) and (FHighlight <> hlNone) and (FHighlight <> hlBar) and (FHighlight <> hlRect) then
+	if (FHighNow) {and (FHighlight <> hlNone) and (FHighlight <> hlBar) and (FHighlight <> hlRect)} then
 	begin
-		if FHighClock < High(FHighClock) then Inc(FHighClock) else FHighClock := 0;
+//		if FHighClock < High(FHighClock) then Inc(FHighClock) else FHighClock := 0;
 		Invalidate;
 	end;
 end;

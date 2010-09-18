@@ -1051,7 +1051,6 @@ begin
 			BmpSource2.SetSize(SourceWidth, SourceHeight);
 			if (QualityResize = False) {or (Zoom > 1)} then
 			begin
-
 				SetStretchBltMode(BmpSource2.Canvas.Handle, COLORONCOLOR);
 				StretchBlt(BmpSource2.Canvas.Handle,
 					0, 0,

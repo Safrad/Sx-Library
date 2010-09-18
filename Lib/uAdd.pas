@@ -181,6 +181,8 @@ type
 
 const
 	DefMemBuffer = 4096; // Best Performance
+	MinInt = Low(Integer);
+	MinInt64 = Low(Int64);
 	MaxInt64 = Int64($7FFFFFFFFFFFFFFF);
 
 // Mathematics
@@ -209,6 +211,7 @@ procedure DivModS64(const Dividend: Int64; const Divisor: LongInt;
 	var Res, Remainder: LongInt);
 
 function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
+function FastSqrt(A: SG): SG;
 function LinearMax(Clock, Maximum: LongWord): LongWord;
 
 function RoundDiv(const Dividend: Integer; const Divisor: Integer): Integer; //overload;
@@ -273,6 +276,8 @@ type
 	TDisplay = (diHMSD, diMSD, diSD);
 function msToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt): TString;
+function Date6(Year, Month, Day: Word): string;
+function Date6Now: string;
 
 // System
 procedure Nop;
@@ -449,6 +454,35 @@ begin
 	begin
 		Result := Dividend + Divisor * (Abs(Dividend - Divisor + 1) div Divisor);
 	end;
+end;
+
+function FastSqrt(A: SG): SG;
+const
+	Base = 16;
+	BaseS = 4;
+	Base2 = Base * Base; // 256
+	BaseS2 = 8;
+var
+	AX, B, k, Pow: SG;
+begin
+	B := 0;
+	AX := 0;
+	Pow := 24;
+	while Pow >= 0 do
+	begin
+		B := B shl BaseS;
+		k := B shl 1 + 1;
+		AX := AX shl BaseS2 + (A shr Pow) and (Base2 - 1);
+		while True do
+		begin
+			if AX < k then Break;
+			Dec(AX, k);
+			Inc(k, 2);
+			Inc(B);
+		end;
+		Pow := Pow - BaseS2;
+	end;
+	Result := B;
 end;
 
 function LinearMax(Clock, Maximum: LongWord): LongWord;
@@ -678,11 +712,13 @@ function AllocByEx(const OldSize: SG; var NewSize: SG;
 }
 var Sh: SG;
 begin
+{	Result := True;
+	Exit;}
 	Sh := CalcShr(BlockSize);
 	if (1 shl Sh) <> BlockSize then
 	begin
 		{$ifopt d+}
-		//ErrorMessage('Bad AllocBy block size ' + IntToStr(BlockSize));
+		ErrorMessage('Bad AllocBy block size ' + IntToStr(BlockSize));
 		{$endif}
 //		BlockSize := 1 shl CalcShr(DefMemBuffer div BlockSize);
 		BlockSize := DefMemBuffer;
@@ -1684,6 +1720,19 @@ begin
 			Result := Result + Using('.###', d);
 	end;
 	end;
+end;
+
+function Date6(Year, Month, Day: Word): string;
+begin
+	Result := Using('00', Year) + Using('00', Month) + Using('00', Day)
+end;
+
+function Date6Now: string;
+var
+	Year, Month, Day: Word;
+begin
+	DecodeDate(Date, Year, Month, Day);
+	Result := Date6(Year, Month, Day);
 end;
 
 procedure Nop;

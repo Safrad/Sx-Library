@@ -1,7 +1,7 @@
 object fMemStatus: TfMemStatus
   Left = 382
   Top = 127
-  BorderStyle = bsToolWindow
+  BorderStyle = bsDialog
   Caption = 'Memory Status'
   ClientHeight = 329
   ClientWidth = 384
@@ -13,7 +13,10 @@ object fMemStatus: TfMemStatus
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  Position = poScreenCenter
   OnCreate = FormCreate
+  OnHide = FormHide
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -35,7 +38,7 @@ object fMemStatus: TfMemStatus
     Top = 296
     Width = 81
     Height = 25
-    Caption = 'Start'
+    Caption = 'Run'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -45,22 +48,7 @@ object fMemStatus: TfMemStatus
     TabOrder = 0
     TabStop = False
     OnClick = ButtonStartClick
-  end
-  object ButtonStop: TDButton
-    Left = 296
-    Top = 296
-    Width = 81
-    Height = 25
-    Caption = 'Stop'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 1
-    TabStop = False
-    OnClick = ButtonStopClick
+    AutoChange = True
   end
   object DPanel1: TDPanel
     Left = 8
@@ -78,7 +66,7 @@ object fMemStatus: TfMemStatus
     Caption = 'AllocMemCount [1]'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 2
+    TabOrder = 1
     FontShadow = 1
   end
   object DPanel2: TDPanel
@@ -97,7 +85,7 @@ object fMemStatus: TfMemStatus
     Caption = 'AllocMemSize'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 3
+    TabOrder = 2
     FontShadow = 1
   end
   object DPanel3: TDPanel
@@ -115,7 +103,7 @@ object fMemStatus: TfMemStatus
     Caption = 'TotalAddrSpace'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 4
+    TabOrder = 3
     FontShadow = 1
   end
   object DPanel4: TDPanel
@@ -132,7 +120,7 @@ object fMemStatus: TfMemStatus
     Caption = 'TotalUncommitted'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 5
+    TabOrder = 4
     FontShadow = 1
   end
   object DPanel5: TDPanel
@@ -147,7 +135,7 @@ object fMemStatus: TfMemStatus
     Caption = 'TotalAllocated'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 6
+    TabOrder = 5
     FontShadow = 1
   end
   object DPanel6: TDPanel
@@ -166,7 +154,7 @@ object fMemStatus: TfMemStatus
     Caption = 'TotalFree'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 7
+    TabOrder = 6
     FontShadow = 1
   end
   object DPanel7: TDPanel
@@ -183,7 +171,7 @@ object fMemStatus: TfMemStatus
     Caption = 'FreeSmall'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 8
+    TabOrder = 7
     FontShadow = 1
   end
   object DPanel8: TDPanel
@@ -202,7 +190,7 @@ object fMemStatus: TfMemStatus
     Caption = 'FreeBig'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 9
+    TabOrder = 8
     FontShadow = 1
   end
   object DPanel9: TDPanel
@@ -221,7 +209,7 @@ object fMemStatus: TfMemStatus
     Caption = 'Unused'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 10
+    TabOrder = 9
     FontShadow = 1
   end
   object DPanel10: TDPanel
@@ -238,7 +226,7 @@ object fMemStatus: TfMemStatus
     Caption = 'Overhead'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 11
+    TabOrder = 10
     FontShadow = 1
   end
   object DPanel11: TDPanel
@@ -255,7 +243,7 @@ object fMemStatus: TfMemStatus
     Caption = 'HeapErrorCode [?]'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 12
+    TabOrder = 11
     FontShadow = 1
   end
   object DPanel12: TDPanel
@@ -273,13 +261,31 @@ object fMemStatus: TfMemStatus
     Caption = 'TotalCommitted'
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 13
+    TabOrder = 12
     FontShadow = 1
+  end
+  object ButtonOk: TDButton
+    Left = 296
+    Top = 296
+    Width = 81
+    Height = 25
+    Cancel = True
+    Caption = '&OK'
+    Default = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 13
+    OnClick = ButtonOkClick
   end
   object Timer1: TDTimer
     ActiveOnly = False
-    Enabled = True
+    Enabled = False
     Interval = 1000
+    EventStep = esInterval
     OnTimer = Timer1Timer
     Left = 8
     Top = 296

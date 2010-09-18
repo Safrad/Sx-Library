@@ -474,7 +474,7 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 7
-    Text = 'http://safrad.fbi.cz'
+    Text = 'http://safrad.webzdarma.cz'
     OnClick = EditWebClick
   end
   object EditEmail: TEdit
@@ -517,6 +517,21 @@ object fAbout: TfAbout
     TabOrder = 12
     OnClick = SysInfo1Click
   end
+  object DButtonMemoryStatus: TDButton
+    Left = 104
+    Top = 288
+    Width = 97
+    Height = 25
+    Caption = 'Memory Status...'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 13
+    OnClick = DButtonMemoryStatusClick
+  end
   object Timer1: TDTimer
     ActiveOnly = False
     Enabled = False
@@ -524,6 +539,6 @@ object fAbout: TfAbout
     EventStep = esCPU
     OnTimer = DTimer1Timer
     Left = 8
-    Top = 288
+    Top = 256
   end
 end

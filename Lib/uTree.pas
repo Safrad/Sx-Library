@@ -19,7 +19,7 @@ type
 	TKnot = packed record
 		Prvek: TPrvek;
 		LS, RS: PKnot;
-		Bal: - 1..1;
+		Bal: -1..1;
 	end;
 
 	TTree = class(TObject)
@@ -127,7 +127,7 @@ procedure TTree.TreeAdd(P: TPrvek);
 	procedure TreeAddSub(var S: PKnot; P: TPrvek);
 	var P1, P2: PKnot;
 	begin
-	//  TreeFind(Tree, Value);
+	// TreeFind(Tree, Value);
 		if S = nil then
 		begin
 			New(S); TreeChanged := True;

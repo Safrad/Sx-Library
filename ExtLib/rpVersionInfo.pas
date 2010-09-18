@@ -55,8 +55,6 @@ type
 		property Comments: string read GetComments;
 	end;
 
-procedure Register;
-
 implementation
 
 constructor TrpVersionInfo.Create(AOwner: TComponent);
@@ -125,30 +123,25 @@ var
 	sAppName, sVersionType : string;
 	iAppSize, iLenOfValue: Cardinal;
 	i: Integer;
-	pcBuf, pcValue: PChar;
+	pcBuf: PWideChar;
+	pcValue: PChar;
 begin
 	sAppName := Application.ExeName;
 	iAppSize := GetFileVersionInfoSize(PChar(sAppName), iAppSize);
 	if iAppSize > 0 then
 	begin
 		pcBuf := AllocMem(iAppSize);
-		GetFileVersionInfo(PChar(sAppName), 0, iAppSize, pcBuf);
+		if GetFileVersionInfo(PChar(sAppName), 0, iAppSize, pcBuf) then
 		for i := 0 to Ord(High(TVersionType)) do
 		begin
 			sVersionType := GetEnumName(TypeInfo(TVersionType), i);
-			sVersionType := Copy(sVersionType, 3, length(sVersionType));
-			if VerQueryValue(pcBuf, PChar('StringFileInfo\040904E4\' +
-				 sVersionType), Pointer(pcValue), iLenOfValue)
-				 then
+			sVersionType := Copy(sVersionType, 3, Length(sVersionType));
+			if VerQueryValue(pcBuf, PChar('StringFileInfo\040904E4\' + sVersionType),
+				Pointer(pcValue), iLenOfValue) then
 				FVersionInfo[i] := pcValue;
 		end;
 		FreeMem(pcBuf, iAppSize);
 	end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents('FreeWare', [TrpVersionInfo]);
 end;
 
 end.

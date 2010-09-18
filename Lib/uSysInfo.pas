@@ -37,10 +37,12 @@ type
 		EditDiskT: TDPanel;
 		Bevel6: TBevel;
 		ButtonOk: TDButton;
-		DLabel1: TDLabel;
+    DLabelCPUFrequency: TDLabel;
 		EditCPUFrequency: TEdit;
 		DLabel2: TDLabel;
 		EditDuron: TEdit;
+    DLabelCPUUsage: TDLabel;
+    EditCPUUsage: TEdit;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
@@ -56,13 +58,14 @@ var
 
 type
 	TSysInfo = packed record
-		CPU: U32;
+		CPU: U32; // 4
 		CPUStr: string[12]; // 13
-		CPUFrequency: U64;
-		CPUPower: U64;
+		CPUUsage: U8; // 1
+		CPUFrequency: U64; // 8
+		CPUPower: U64; // 8
 		MS: TMemoryStatus;
-		DiskFree, DiskTotal: U64;
-		Graph: string[127];
+		DiskFree, DiskTotal: U64; // 8
+		Graph: string[127]; // 128
 		OS: TOSVersionInfo; // 148
 	end;
 
@@ -128,6 +131,9 @@ end;
 
 var
 	CPUException: Boolean; // Cyrix
+	CPUUsage: U32;
+	Reg: TRegistry;
+	Dummy: array[0..1024] of Byte;
 
 procedure FillSysInfoD(var SysInfo: TSysInfo);
 var
@@ -154,6 +160,31 @@ begin
 	GetDiskFreeSpaceEx(P, SysInfo.DiskFree, SysInfo.DiskTotal, nil);
 
 	MemoryStatus(SysInfo);
+
+	if Reg = nil then
+	begin
+		Reg := TRegistry.Create;
+		Reg.RootKey:=HKEY_DYN_DATA;
+
+		Reg.CreateKey('PerfStats');
+		Reg.OpenKey('PerfStats\StartStat', True);
+		Reg.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
+		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+		Reg.CloseKey;
+
+		Reg.OpenKey('PerfStats\StatData', False);
+		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+		SysInfo.CPUUsage := CPUUsage;
+		Reg.CloseKey;
+
+	end;
+
+	Reg.OpenKey('PerfStats\StatData', False);
+	Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+	SysInfo.CPUUsage := CPUUsage;
+	Reg.CloseKey;
+
+
 	if CPUException = False then
 	begin
 		SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
@@ -273,8 +304,8 @@ begin
 		begin
 			case Model of
 			0, 1, 2: s := 'Athlon';
-			3: s := 'Duron';
 			4, 5: s := 'Thunderbird';
+			else {3, 6, 7:}s := 'Duron';
 			end;
 		end;
 		end;
@@ -306,6 +337,7 @@ begin
 			6: s := 'Celeron';
 			7: s := 'Pentium III';
 			8: s := 'Pentium III E';
+			else s := 'Pentium 4';
 			end;
 		end;
 		end;
@@ -321,12 +353,14 @@ begin
 		s := SysInfo.CPUStr;
 
 
-	s := s + ', ';
+	if s <> '' then
+		s := s + ', ';
 	s := s + 'Family: ' + IntToStr(Family) + ', ';
 	s := s + 'Model: ' + IntToStr(Model) + ', ';
 	s := s + 'Stepping: ' + IntToStr(SysInfo.CPU and $000000f);
 	EditCPU.Text := s;
 
+	EditCPUUsage.Text := IntToStr(SysInfo.CPUUsage) + '%';
 	EditCPUFrequency.Text :=
 		Using('~#,###,###,###,###,###,###,###,##0', SysInfo.CPUFrequency) + ' Hz';
 	EditDuron.Text :=
@@ -413,4 +447,15 @@ initialization
 	GetVersionEx(SysInfo.OS);
 { PerformanceType := 2;
 	PerformanceFrequency := SysInfo.CPUFrequency;}
+
+finalization
+	if Reg <> nil then
+	begin
+		Reg.OpenKey('PerfStats\StopStat', True);
+		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+		Reg.CloseKey;
+
+		Reg.Free;
+		Reg := nil;
+	end;
 end.

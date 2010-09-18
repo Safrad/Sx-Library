@@ -1,5 +1,5 @@
 object fSysInfo: TfSysInfo
-  Left = 338
+  Left = 528
   Top = 166
   BorderStyle = bsDialog
   Caption = 'System Info'
@@ -11,6 +11,7 @@ object fSysInfo: TfSysInfo
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
@@ -49,14 +50,14 @@ object fSysInfo: TfSysInfo
   end
   object Bevel4: TBevel
     Left = 8
-    Top = 112
+    Top = 136
     Width = 289
     Height = 9
     Shape = bsTopLine
   end
   object LabelUsed: TDLabel
     Left = 112
-    Top = 128
+    Top = 144
     Width = 57
     Height = 17
     AutoSize = False
@@ -79,7 +80,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelFree: TDLabel
     Left = 176
-    Top = 128
+    Top = 144
     Width = 57
     Height = 17
     AutoSize = False
@@ -102,7 +103,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelTotal: TDLabel
     Left = 240
-    Top = 128
+    Top = 144
     Width = 57
     Height = 17
     AutoSize = False
@@ -125,7 +126,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelTPhysicalMemory: TDLabel
     Left = 8
-    Top = 160
+    Top = 176
     Width = 89
     Height = 17
     AutoSize = False
@@ -148,7 +149,7 @@ object fSysInfo: TfSysInfo
   end
   object LabelTPageFile: TDLabel
     Left = 8
-    Top = 184
+    Top = 200
     Width = 89
     Height = 17
     AutoSize = False
@@ -171,14 +172,14 @@ object fSysInfo: TfSysInfo
   end
   object Bevel3: TBevel
     Left = 104
-    Top = 128
+    Top = 144
     Width = 7
     Height = 97
     Shape = bsLeftLine
   end
   object Bevel2: TBevel
     Left = 8
-    Top = 152
+    Top = 168
     Width = 289
     Height = 9
     Shape = bsTopLine
@@ -208,7 +209,7 @@ object fSysInfo: TfSysInfo
   end
   object DLabel5: TDLabel
     Left = 8
-    Top = 208
+    Top = 224
     Width = 89
     Height = 17
     AutoSize = False
@@ -231,7 +232,7 @@ object fSysInfo: TfSysInfo
   end
   object DLabel6: TDLabel
     Left = 8
-    Top = 248
+    Top = 256
     Width = 65
     Height = 19
     AutoSize = False
@@ -254,21 +255,21 @@ object fSysInfo: TfSysInfo
   end
   object Bevel5: TBevel
     Left = 8
-    Top = 232
+    Top = 248
     Width = 289
     Height = 9
     Shape = bsTopLine
   end
   object Bevel6: TBevel
     Left = 8
-    Top = 272
+    Top = 280
     Width = 289
     Height = 9
     Shape = bsTopLine
   end
-  object DLabel1: TDLabel
+  object DLabelCPUFrequency: TDLabel
     Left = 8
-    Top = 64
+    Top = 88
     Width = 89
     Height = 19
     AutoSize = False
@@ -291,11 +292,34 @@ object fSysInfo: TfSysInfo
   end
   object DLabel2: TDLabel
     Left = 8
-    Top = 88
+    Top = 112
     Width = 89
     Height = 19
     AutoSize = False
     Caption = 'AMD Duron Cmp'
+    Layout = tlCenter
+    BackEffect = ef08
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+  end
+  object DLabelCPUUsage: TDLabel
+    Left = 8
+    Top = 64
+    Width = 89
+    Height = 19
+    AutoSize = False
+    Caption = 'CPU Usage'
     Layout = tlCenter
     BackEffect = ef08
     FontShadow = 1
@@ -325,7 +349,7 @@ object fSysInfo: TfSysInfo
   end
   object PMT: TDPanel
     Left = 240
-    Top = 160
+    Top = 176
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -336,7 +360,7 @@ object fSysInfo: TfSysInfo
   end
   object PMF: TDPanel
     Left = 176
-    Top = 160
+    Top = 176
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -347,7 +371,7 @@ object fSysInfo: TfSysInfo
   end
   object PFF: TDPanel
     Left = 176
-    Top = 184
+    Top = 200
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -358,7 +382,7 @@ object fSysInfo: TfSysInfo
   end
   object PFT: TDPanel
     Left = 240
-    Top = 184
+    Top = 200
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -369,7 +393,7 @@ object fSysInfo: TfSysInfo
   end
   object PMU: TDPanel
     Left = 112
-    Top = 160
+    Top = 176
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -380,7 +404,7 @@ object fSysInfo: TfSysInfo
   end
   object PFU: TDPanel
     Left = 112
-    Top = 184
+    Top = 200
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -401,7 +425,7 @@ object fSysInfo: TfSysInfo
   end
   object EditDiskU: TDPanel
     Left = 112
-    Top = 208
+    Top = 224
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -412,7 +436,7 @@ object fSysInfo: TfSysInfo
   end
   object EditGraph: TEdit
     Left = 80
-    Top = 248
+    Top = 256
     Width = 217
     Height = 21
     AutoSelect = False
@@ -422,7 +446,7 @@ object fSysInfo: TfSysInfo
   end
   object EditDiskF: TDPanel
     Left = 176
-    Top = 208
+    Top = 224
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -433,7 +457,7 @@ object fSysInfo: TfSysInfo
   end
   object EditDiskT: TDPanel
     Left = 240
-    Top = 208
+    Top = 224
     Width = 57
     Height = 17
     Alignment = taRightJustify
@@ -461,7 +485,7 @@ object fSysInfo: TfSysInfo
   end
   object EditCPUFrequency: TEdit
     Left = 104
-    Top = 64
+    Top = 88
     Width = 193
     Height = 21
     AutoSelect = False
@@ -471,12 +495,22 @@ object fSysInfo: TfSysInfo
   end
   object EditDuron: TEdit
     Left = 104
-    Top = 88
+    Top = 112
     Width = 193
     Height = 21
     AutoSelect = False
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 14
+  end
+  object EditCPUUsage: TEdit
+    Left = 103
+    Top = 64
+    Width = 193
+    Height = 21
+    AutoSelect = False
+    Color = clBtnFace
+    ReadOnly = True
+    TabOrder = 15
   end
 end

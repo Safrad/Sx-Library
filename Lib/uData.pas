@@ -13,33 +13,42 @@ type
 	private
 		FFrag: Boolean;
 		Data: Pointer; // FFrag = False
-//		DataCount: UG;
 		Item: Pointer; // FFrag = True
 //		Indexes: TData;
 		FItemSize: UG;
 		FItemCount: UG;
+		procedure Ins(Index: TIndex);
+		procedure SetItemSize(Value: UG);
 	protected
 	public
 		constructor Create;
 		destructor Free;
 
 		procedure Clear;
-		function Add: Pointer;
-		procedure Push(var Value);
-		procedure Pop(Value: Pointer); // LIFO
-		procedure Delete(i: TIndex);
-		procedure Insert(Value: Pointer; Index: TIndex);
-		function Get(Index: TIndex): Pointer;
-		function GetFirst: Pointer;
-		function GetLast: Pointer;
-//		procedure Put(Index: Integer; const S: string);
-//		procedure Get(Value: Pointer; Index: TIndex);
-		procedure Put(Value: Pointer; Index: TIndex);
+
+		procedure Add(var Value); overload;
+		function Add: Pointer; overload;
+
+		procedure Delete(Index: TIndex);
+		procedure DeleteFirst;
+		procedure DeleteLast;
+
+		procedure Insert(var Value; Index: TIndex); overload;
+		function Insert(Index: TIndex): Pointer; overload;
+
+		procedure Replace(var Value; Index: TIndex);
+
+		procedure Get(var Value; Index: TIndex); overload;
+		function Get(Index: TIndex): Pointer; overload;
+		procedure GetFirst(var Value); overload;
+		function GetFirst: Pointer; overload;
+		procedure GetLast(var Value); overload;
+		function GetLast: Pointer; overload;
+
 		function IsEmpty: Boolean;
 
-		property ItemSize: UG read FItemSize write FItemSize;
+		property ItemSize: UG read FItemSize write SetItemSize;
 		property Count: UG read FItemCount;
-//		property Strings[Index: Integer]: string read Get write Put; default;
 	end;
 
 implementation
@@ -53,7 +62,8 @@ type
 
 constructor TData.Create;
 begin
-	FItemSize := 1;
+	FItemSize := 0;
+	FItemCount := 0;
 	FFrag := False;
 	if FFrag then
 	begin
@@ -65,7 +75,8 @@ end;
 destructor TData.Free;
 begin
 	Clear;
-	Dispose(Item);
+	if FFrag then
+		Dispose(Item);
 end;
 
 procedure TData.Clear;
@@ -89,80 +100,43 @@ begin
 	end;
 end;
 
+procedure TData.SetItemSize(Value: UG);
+begin
+	if FItemSize <> Value then
+	begin
+		FItemSize := Value;
+		Clear;
+	end;
+end;
+
 function TData.Add: Pointer;
-var D: Pointer;
 begin
-	GetMem(D, ItemSize);
-	Push(D);
-	Result := Get(FItemCount - 1);
-	FreeMem(D, ItemSize);
+	Result := Insert(FItemCount);
 end;
 
-procedure TData.Push(var Value);
-var
-	It: PItem;
+procedure TData.Add(var Value);
 begin
-	if FFrag = False then
-	begin
-		if FItemSize <> 0 then
-		begin
-			if FItemCount mod 1024 = 0 then ReallocMem(Data, ItemSize * (FItemCount + 1024));
-			Move(Addr(Value)^, Pointer(UG(Data) + ItemSize * FItemCount)^, ItemSize);
-		end
-		else
-		begin
-{			Indexes := TData.Create;
-			Indexes.ItemSize := SizeOf(Pointer);
-			ReallocMem(Data, DataCount + SizeOf(Value));
-			Indexes.Push(DataCount);
-			Move(Addr(Value)^, Pointer(UG(Data) + DataCount)^, SizeOf(Value));
-			Inc(DataCount, SizeOf(Value));}
-		end;
-	end
-	else
-	begin
-		It := Item;
-		while It.Next <> nil do
-		begin
-			It := It.Next;
-		end;
-		It.Next := AllocMem(SizeOf(PItem) + ItemSize);
-		It := It.Next;
-		Move(Addr(Value)^, Pointer(SG(It) + SizeOf(PItem))^, ItemSize);
-		It.Next := nil;
-	end;
-	Inc(FItemCount);
+	Insert(Value, FItemCount);
 end;
 
-procedure TData.Pop(Value: Pointer);
-begin
-	Dec(FItemCount);
-	if FFrag = False then
-	begin
-		Move(Pointer(UG(Data) + ItemSize * FItemCount)^, Value^, ItemSize);
-		if FItemCount mod 1024 = 0 then ReallocMem(Data, ItemSize * FItemCount);
-	end
-	else
-	begin
-
-	end;
-end;
-
-procedure TData.Delete(i: TIndex);
+procedure TData.Delete(Index: TIndex);
 var
 	It, It2: PItem;
-	Index: TIndex;
+	i: TIndex;
 begin
 	if FFrag = False then
 	begin
-		Move(Pointer(UG(Data) + ItemSize * (i + 1))^,
-			Pointer(UG(Data) + ItemSize * i)^, ItemSize * (FItemCount - i - 1));
-		Dec(FItemCount);
+		if (Index < FItemCount) then
+		begin
+			Move(Pointer(UG(Data) + ItemSize * (Index + 1))^,
+				Pointer(UG(Data) + ItemSize * Index)^, ItemSize * (FItemCount - Index - 1));
+			Dec(FItemCount);
+		end;
 	end
 	else
 	begin
 		It := Item;
-		Index := 0;
+		i := 0;
 		while It.Next <> nil do
 		begin
 			if i = Index then
@@ -175,20 +149,96 @@ begin
 			end
 			else
 				It := It.Next;
-			Inc(Index);
+			Inc(i);
 		end;
 	end;
 end;
 
-procedure TData.Insert(Value: Pointer; Index: TIndex);
+procedure TData.DeleteFirst;
+begin
+	Delete(0);
+end;
+
+procedure TData.DeleteLast;
+begin
+	Delete(FItemCount - 1);
+end;
+
+procedure TData.Ins(Index: TIndex);
+begin
+	if FItemCount mod 1024 = 0 then ReallocMem(Data, ItemSize * (FItemCount + 1024));
+	if Index < FItemCount then
+	begin
+		Move(Pointer(UG(Data) + ItemSize * Index)^,
+			Pointer(UG(Data) + ItemSize * (Index + 1))^, ItemSize * (FItemCount - Index));
+	end;
+	Inc(FItemCount);
+end;
+
+procedure TData.Insert(var Value; Index: TIndex);
+var
+	It: PItem;
 begin
 	if FFrag = False then
 	begin
+		if FItemSize <> 0 then
+		begin
+			Ins(Index);
+			Move(Value, Pointer(UG(Data) + ItemSize * Index)^, ItemSize);
+		end;
+	end
+	else
+	begin
+		It := Item;
+		while It.Next <> nil do
+		begin
+			It := It.Next;
+		end;
+		It.Next := AllocMem(SizeOf(PItem) + ItemSize);
+		It := It.Next;
+		Move(Value, Pointer(UG(It) + SizeOf(PItem))^, ItemSize);
+		It.Next := nil;
+		Inc(FItemCount);
+	end;
+end;
 
+function TData.Insert(Index: TIndex): Pointer;
+begin
+	if FFrag = False then
+	begin
+		if FItemSize <> 0 then
+		begin
+			Ins(Index);
+			Result := Pointer(UG(Data) + ItemSize * Index);
+		end
+		else
+			Result := nil;
+	end
+	else
+	begin
+		Result := nil;
+		Inc(FItemCount);
+	end;
+end;
+
+procedure TData.Replace(var Value; Index: TIndex);
+begin
+	if FFrag = False then
+	begin
+		if (Index < FItemCount) then
+			Move(Pointer(UG(Data) + ItemSize * Index)^, Value, ItemSize);
 	end
 	else
 	begin
 
+	end;
+end;
+
+procedure TData.Get(var Value; Index: TIndex);
+begin
+	if FFrag = False then
+	begin
+		Move(Pointer(UG(Data) + ItemSize * Index)^, Value, ItemSize);
 	end;
 end;
 
@@ -197,7 +247,6 @@ var
 	It: PItem;
 	i: TIndex;
 begin
-	Result := nil;
 	if FFrag = False then
 	begin
 		if (Index >= FItemCount) then
@@ -208,13 +257,14 @@ begin
 	end
 	else
 	begin
+		Result := nil;
 		i := 0;
 		It := Item;
 		while It <> nil do
 		begin
 			if i = Index then
 			begin
-//				Move(Pointer(SG(It) + SizeOf(PItem))^, Value^, ItemSize);
+//				Move(Pointer(UG(It) + SizeOf(PItem))^, Value^, ItemSize);
 				Break;
 			end;
 			It := It.Next;
@@ -223,27 +273,24 @@ begin
 	end;
 end;
 
+procedure TData.GetFirst(var Value);
+begin
+	Get(Value, 0);
+end;
+
 function TData.GetFirst: Pointer;
 begin
 	Result := Get(0);
 end;
 
+procedure TData.GetLast(var Value);
+begin
+	Get(Value, FItemCount - 1);
+end;
+
 function TData.GetLast: Pointer;
 begin
 	Result := Get(FItemCount - 1);
-end;
-
-procedure TData.Put(Value: Pointer; Index: TIndex);
-begin
-	if FFrag = False then
-	begin
-		if (Index >= FItemCount) then Exit;
-		Move(Pointer(UG(Data) + ItemSize * Index)^, Value^, ItemSize);
-	end
-	else
-	begin
-
-	end;
 end;
 
 function TData.IsEmpty: Boolean;

@@ -71,63 +71,54 @@ interface
 uses
 	SysUtils, Windows, Messages, Classes, Graphics, Controls, ShellAPI, Forms, Menus;
 
-const WM_TOOLTRAYICON = WM_USER + 1;
-			WM_RESETTOOLTIP = WM_USER + 2;
+const
+	WM_TOOLTRAYICON = WM_USER + 1;
+	WM_RESETTOOLTIP = WM_USER + 2;
 
 type
-
 	TTrayIcon = class(TComponent)
-
 	private
-
 	{ Field Variables }
-
 		IconData: TNOTIFYICONDATA;
-		fIcon : TIcon;
-		fToolTip : string;
-		fWindowHandle : HWND;
-		fActive : Boolean;
-		fShowDesigning : Boolean;
+		FIcon: TIcon;
+		FToolTip: string;
+		FWindowHandle: HWND;
+		FActive: Boolean;
+		FShowDesigning: Boolean;
 
 	{ Events }
-
-		fOnClick     : TNotifyEvent;
-		fOnDblClick  : TNotifyEvent;
-		fOnRightClick : TMouseEvent;
-		fPopupMenu   : TPopupMenu;
+		FOnClick: TNotifyEvent;
+		FOnDblClick: TNotifyEvent;
+		FOnRightClick: TMouseEvent;
+		FPopupMenu: TPopupMenu;
 
 		function AddIcon : Boolean;
 		function ModifyIcon : Boolean;
 		function DeleteIcon : Boolean;
 
 		procedure SetActive(Value : Boolean);
-		procedure SetShowDesigning(Value : Boolean);
-		procedure SetIcon(Value : TIcon);
-		procedure SetToolTip(Value : string);
-		procedure WndProc(var msg : TMessage);
+		procedure SetShowDesigning(Value: Boolean);
+		procedure SetIcon(Value: TIcon);
+		procedure SetToolTip(Value: string);
+		procedure WndProc(var Message: TMessage);
 
 		procedure FillDataStructure;
-		procedure DoRightClick( Sender : TObject );    
-
+		procedure DoRightClick(Sender: TObject);
 	protected
 
 	public
-
-		constructor create(aOwner : TComponent); override;
-		destructor destroy; override;
-
+		constructor Create(aOwner: TComponent); override;
+		destructor Destroy; override;
 	published
+		property Active: Boolean read FActive write SetActive;
+		property ShowDesigning: Boolean read FShowDesigning write SetShowDesigning;
+		property Icon: TIcon read FIcon write SetIcon;
+		property ToolTip : string read FTooltip write SetToolTip;
 
-		property Active : Boolean read fActive write SetActive;
-		property ShowDesigning : Boolean read fShowDesigning write SetShowDesigning;
-		property Icon : TIcon read fIcon write SetIcon;
-		property ToolTip : string read fTooltip write SetToolTip;
-
-		property OnClick     : TNotifyEvent read FOnClick write FOnClick;
-		property OnDblClick  : TNotifyEvent read FOnDblClick write FOnDblClick;
-		property OnRightClick : TMouseEvent  read FOnRightClick write FonRightClick;
-		property PopupMenu : TPopupMenu read fPopupMenu write fPopupMenu;
-
+		property OnClick: TNotifyEvent read FOnClick write FOnClick;
+		property OnDblClick: TNotifyEvent read FOnDblClick write FOnDblClick;
+		property OnRightClick: TMouseEvent  read FOnRightClick write FonRightClick;
+		property PopupMenu: TPopupMenu read FPopupMenu write fPopupMenu;
 	end;
 
 procedure Register;
@@ -136,70 +127,76 @@ implementation
 
 {$R TrayIcon.res}
 
-procedure TTrayIcon.SetActive(Value : Boolean);
+procedure TTrayIcon.SetActive(Value: Boolean);
 begin
-	 if value <> fActive then begin
-		 fActive := Value;
-		 if not (csdesigning in ComponentState) then begin
-				if Value then begin
-					 AddIcon;
-				end else begin
-					 DeleteIcon;
-				end;
-		 end;
-	end;
-end;
-
-procedure TTrayIcon.SetShowDesigning(Value : Boolean);
-begin
-	if csdesigning in ComponentState then begin
-		 if value <> fShowDesigning then begin
-				fShowDesigning := Value;
-				if Value then begin
-					 AddIcon;
-				end else begin
-					 DeleteIcon;
-				end;
-		 end;
-	end;
-end;
-
-procedure TTrayIcon.SetIcon(Value : Ticon);
-begin
-	if Value <> fIcon then
+	if Value <> FActive then
+	begin
+		fActive := Value;
+		if not (csDesigning in ComponentState) then
 		begin
-			fIcon.Assign(value);
-			ModifyIcon;
+			if Value then
+			begin
+				AddIcon;
+			end
+			else
+			begin
+				DeleteIcon;
+			end;
 		end;
+	end;
 end;
 
-procedure TTrayIcon.SetToolTip(Value : string);
+procedure TTrayIcon.SetShowDesigning(Value: Boolean);
 begin
-
-	 // This routine ALWAYS re-sets the field value and re-loads the
-	 // icon.  This is so the ToolTip can be set blank when the component
-	 // is first loaded.  If this is changed, the icon will be blank on
-	 // the tray when no ToolTip is specified.
-
-	 if length( Value ) > 62 then
-			Value := copy(Value, 1, 62);
-	 fToolTip := value;
-	 ModifyIcon;
-
+	if csDesigning in ComponentState then
+	begin
+		if Value <> FShowDesigning then
+		begin
+			FShowDesigning := Value;
+			if Value then
+			begin
+				AddIcon;
+			end
+			else
+			begin
+				DeleteIcon;
+			end;
+		end;
+	end;
 end;
 
-constructor TTrayIcon.create(aOwner : Tcomponent);
+procedure TTrayIcon.SetIcon(Value: TIcon);
 begin
-	inherited create(aOwner);
-	FWindowHandle := Classes.AllocateHWnd( WndProc );
+	if Value <> FIcon then
+	begin
+		FIcon.Assign(Value);
+		ModifyIcon;
+	end;
+end;
+
+procedure TTrayIcon.SetToolTip(Value: string);
+begin
+	// This routine ALWAYS re-sets the field value and re-loads the
+	// icon.  This is so the ToolTip can be set blank when the component
+	// is first loaded.  If this is changed, the icon will be blank on
+	// the tray when no ToolTip is specified.
+	if Length(Value) > 62 then SetLength(Value, 62);
+	fToolTip := Value;
+	ModifyIcon;
+end;
+
+constructor TTrayIcon.Create(aOwner: TComponent);
+begin
+	inherited Create(aOwner);
+	FWindowHandle := Classes.AllocateHWnd(WndProc);
 	FIcon := TIcon.Create;
 end;
 
-destructor TTrayIcon.destroy;
+destructor TTrayIcon.Destroy;
 begin
 	if (not (csDesigning in ComponentState) and fActive)
-		or ((csDesigning in ComponentState) and fShowDesigning) then
-			DeleteIcon;
+	or ((csDesigning in ComponentState) and fShowDesigning) then
+		DeleteIcon;
 
 	FIcon.Free;
 	Classes.DeAllocateHWnd(FWindowHandle);
@@ -220,7 +217,7 @@ begin
 	end;
 end;
 
-function TTrayIcon.AddIcon : Boolean;
+function TTrayIcon.AddIcon: Boolean;
 begin
 	FillDataStructure;
 	Result := Shell_NotifyIcon(NIM_ADD, @IconData);
@@ -232,7 +229,7 @@ begin
 		PostMessage(fWindowHandle, WM_RESETTOOLTIP, 0, 0);
 end;
 
-function TTrayIcon.ModifyIcon : Boolean;
+function TTrayIcon.ModifyIcon: Boolean;
 begin
 	FillDataStructure;
 	if fActive then
@@ -241,48 +238,48 @@ begin
 		Result := True;
 end;
 
-procedure TTrayIcon.DoRightClick( Sender : TObject );
-var MouseCo: Tpoint;
+procedure TTrayIcon.DoRightClick(Sender: TObject);
+var MouseCo: TPoint;
 begin
 	GetCursorPos(MouseCo);
 
 	if Assigned(fPopupMenu) then
 	begin
-		SetForegroundWindow( Application.Handle );
+		SetForegroundWindow(Application.Handle);
 		Application.ProcessMessages;
-		fPopupmenu.Popup( Mouseco.X, Mouseco.Y );
+		FPopupMenu.Popup(MouseCo.X, MouseCo.Y);
 	end;
 
 	if Assigned(FOnRightClick) then
 	begin
-		FOnRightClick(Self, mbRight, [], MouseCo.x, MouseCo.y);
+		FOnRightClick(Self, mbRight, [], MouseCo.X, MouseCo.Y);
 	end;
 end;
 
-function TTrayIcon.DeleteIcon : Boolean;
+function TTrayIcon.DeleteIcon: Boolean;
 begin
 	Result := Shell_NotifyIcon(NIM_DELETE, @IconData);
 end;
 
-procedure TTrayIcon.WndProc(var msg : TMessage);
+procedure TTrayIcon.WndProc(var Message: TMessage);
 begin
-	with msg do
-		if (msg = WM_RESETTOOLTIP) then
-			SetToolTip( fToolTip )
-		else if (msg = WM_TOOLTRAYICON) then begin
-			case lParam of
-			WM_LBUTTONDBLCLK   : if assigned (FOnDblClick) then FOnDblClick(Self);
-			WM_LBUTTONUP       : if assigned(FOnClick)then FOnClick(Self);
-			WM_RBUTTONUP       : DoRightClick(Self);
-			end;
-		end
-		else // Handle all messages with the default handler
-			Result := DefWindowProc(FWindowHandle, Msg, wParam, lParam);
+	if (Message.Msg = WM_RESETTOOLTIP) then
+		SetToolTip(FToolTip)
+	else if (Message.Msg = WM_TOOLTRAYICON) then
+	begin
+		case Message.LParam of
+		WM_LBUTTONDBLCLK: if Assigned(FOnDblClick) then FOnDblClick(Self);
+		WM_LBUTTONUP: if Assigned(FOnClick) then FOnClick(Self);
+		WM_RBUTTONUP: DoRightClick(Self);
+		end;
+	end
+	else // Handle all messages with the default handler
+		Message.Result := DefWindowProc(FWindowHandle, Message.Msg, Message.WParam, Message.LParam);
 end;
 
 procedure Register;
 begin
-	RegisterComponents('Win95', [TTrayIcon]);
+	RegisterComponents('User', [TTrayIcon]);
 end;
 
 end.

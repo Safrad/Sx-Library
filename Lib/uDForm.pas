@@ -111,9 +111,54 @@ end;
 
 procedure glShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
+var
+	Params: array[0..3] of SG;
+	C: TRColor;
+	sx, sy, wx, wy: Single;
 begin
-	glTextOut(Canvas, X, Y, Text, CF);
-	glTextOut(Canvas, X + 1, Y + 1, Text, ShadowColor(CF));
+	glGetIntegerv(GL_VIEWPORT, @Params[0]);
+
+	if (Params[2] = 0) or (Params[3] = 0) then Exit;
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity;
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity;
+
+	C.L := CF;
+	glColor3ubv(PGLUByte(@C));
+	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1);
+	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
+
+	C.L := ShadowColor(CF);
+	glColor3ubv(PGLUByte(@C));
+	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1);
+	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
+
+	if CB <> clNone then
+	begin
+		sx := 2 * (X + 1) / Params[2] - 1;
+		sy := -2 * (Y + 1 + 11) / Params[3] + 1;
+		wx := 2 * (Canvas.TextWidth(Text) + 1) / Params[2];
+		wy := 2 * (Canvas.TextHeight(Text) + 1) / Params[3];
+		C.L := CB;
+		C.T := 95;
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColor4ubv(PGLUByte(@C));
+		glBegin(GL_QUADS);
+			glVertex3f(sx, sy, 0);
+			glVertex3f(sx + wx, sy, 0);
+			glVertex3f(sx + wx, sy + wy, 0);
+			glVertex3f(sx, sy + wy , 0);
+		glEnd;
+		glDisable(GL_BLEND);
+	end;
+
+{	glTextOut(Canvas, X, Y, Text, CF);
+	glTextOut(Canvas, X + 1, Y + 1, Text, ShadowColor(CF));}
 end;
 
 procedure ShowTaskBar(Visible: Boolean);
@@ -214,6 +259,7 @@ begin
 				baGradient:
 				begin
 					FBitmapB.FormBitmap(Color);
+					FBitmapB.Texture24(FBitmapF, clNone, ef04);
 				end;
 				baGradientOnly:
 				begin
@@ -483,7 +529,7 @@ begin
 	baOpenGL:
 	begin
 		ActivateRenderingContext(Canvas.Handle,RC); // make context drawable
-//		BeforeResize; D???}
+//		BeforeResize; }
 	end;
 	end;
 
@@ -502,7 +548,7 @@ begin
 
 	if FBackground = baOpenGL then
 	begin
-//		AfterResize; D???
+//		AfterResize; 
 		Paint;
 		DeactivateRenderingContext; // make context drawable
 	end;

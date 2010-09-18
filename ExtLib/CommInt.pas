@@ -310,6 +310,7 @@ var
 	EvIndex: TCommEventType;
 	AttrWord: dword;
 begin
+	inherited Create(True);
 	Priority := tpHigher;
 	FreeOnTerminate := True;
 	FCommHandle := Handle;
@@ -318,7 +319,6 @@ begin
 		if EvIndex in Events then AttrWord := AttrWord or CommEventList[EvIndex];
 	SetCommMask(FCommHandle, AttrWord);
 	FEvent := TSimpleEvent.Create;
-	inherited Create(False);
 end;
 
 destructor TCommEventThread.Destroy;
@@ -490,6 +490,7 @@ begin
 
 		if not SetupComm(FHandle, FReadBufSize, FWriteBufSize) then
 			RaiseCommError(sSetupCommErr, GetLastError);
+		FEventThread.Resume;
 	end;
 end;
 
@@ -852,7 +853,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('Varian Freeware', [TComm]);
+	RegisterComponents('User', [TComm]);
 end;
 
 end.

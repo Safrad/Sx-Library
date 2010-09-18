@@ -42,6 +42,7 @@ type
 		EditIcq: TEdit;
 		Image4: TImage;
 		SysInfo1: TDButton;
+    DButtonMemoryStatus: TDButton;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -59,6 +60,7 @@ type
 		procedure ImageNameFill(Sender: TObject);
 		procedure ImageVersionFill(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
+    procedure DButtonMemoryStatusClick(Sender: TObject);
 	private
 		Effect: Byte;
 		Typ: Byte;
@@ -79,21 +81,22 @@ procedure AboutRW(const Save: Boolean);
 var
 	RunCount: UG;
 	RunTime: U64;
+	StartProgramTime: U32;
 
 implementation
 
 {$R *.DFM}
 uses
 	ShellAPI,
-	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave;
+	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, uMemStatus;
 var
 	fAbout: TfAbout;
 
 	LMemClock: U64;
 
 	RunProgramTime: U64;
-	StartProgramTime: U32;
 type
+	PFlash = ^TFlash;
 	TFlash = packed record // 16
 		X, Y: S32;
 		Power: S32;
@@ -144,14 +147,13 @@ begin
 end;
 
 procedure AboutRW(const Save: Boolean);
-label LRetry;
 var
-	LogFile: TFile;
+	Tim: TDateTime;
 	FileName: TFileName;
 	s: string;
 begin
 	if Save then
-		RunTime := GetTickCount - StartProgramTime + RunProgramTime;
+		RunTime := U64(GetTickCount - StartProgramTime) + RunProgramTime;
 	if Assigned(MainIni) then
 	begin
 		MainIni.RWUG('Statistics', 'RunCount', RunCount, Save);
@@ -164,12 +166,21 @@ begin
 		end;
 	end;
 
-	LogFile := TFile.Create;
+	if Save then
+		s := 'Finished'
+	else
+		s := 'Started';
+	Tim := Now;
+	s := s + ' ' + DateToStr(Tim) + ' ' + TimeToStr(Tim) + #13 + #10;
+	FileName := DelFileExt(ExeFileName) + '.log';
+	WriteStringToFile(FileName, s, True);
+
+{	LogFile := TFile.Create;
 	FileName := DelFileExt(ExeFileName) + '.log';
 	LRetry:
 	if LogFile.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, True) then
 	begin
-		LogFile.Seek(LogFile.FileSize);
+		LogFile.SeekEnd;
 		if Save then
 			s := 'Finished'
 		else
@@ -178,7 +189,7 @@ begin
 		if not LogFile.Writeln(s) then goto LRetry;
 		if not LogFile.Close then goto LRetry;
 	end;
-	LogFile.Free;
+	LogFile.Free;}
 end;
 
 procedure TfAbout.InitNRT;
@@ -310,24 +321,25 @@ end;
 procedure TfAbout.SysInfo1Click(Sender: TObject);
 begin
 	if not Assigned(fSysInfo) then fSysInfo := TfSysInfo.Create(Self);
+	fSysInfo.FormStyle := fAbout.FormStyle;
 	FillSysInfoS(SysInfo);
 	FillSysInfoD(SysInfo);
 	fSysInfo.FillComp;
-	fSysInfo.ShowModal;
+	fSysInfo.Show;
 end;
 
 procedure TfAbout.ImageAboutMouseMove(Sender: TObject; Shift: TShiftState;
 	X, Y: Integer);
 var
-	Flash: TFlash;
+	Flash: PFlash;
 begin
 //	if Random(10) = 0 then
 //	begin
+		Flash := Flashs.Add;
 		Flash.X := X;
 		Flash.Y := Y;
 		Flash.Power := 128 + Random(128 + 15);
 		Flash.Color := FireColor(256 + Random(256)); // SpectrumColor(Random(MaxSpectrum));
-		Flashs.Push(Flash);
 //	end;
 end;
 
@@ -416,6 +428,13 @@ begin
 			Inc(i);
 		end;
 	end;
+end;
+
+procedure TfAbout.DButtonMemoryStatusClick(Sender: TObject);
+begin
+	if not Assigned(fMemStatus) then fMemStatus := TfMemStatus.Create(Self);
+	fMemStatus.FormStyle := fAbout.FormStyle;
+	fMemStatus.Show;
 end;
 
 initialization
