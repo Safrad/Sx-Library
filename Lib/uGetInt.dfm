@@ -22,10 +22,11 @@ object fGetInt: TfGetInt
     Top = 104
     Width = 73
     Height = 13
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = '0'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -39,17 +40,22 @@ object fGetInt: TfGetInt
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelMax: TDLabel
     Left = 248
     Top = 104
     Width = 73
     Height = 13
-    Alignment = taRightJustify
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taRightJustify
     Caption = '0'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -63,17 +69,22 @@ object fGetInt: TfGetInt
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelNow: TDLabel
     Left = 132
     Top = 104
     Width = 73
     Height = 13
-    Alignment = taCenter
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taCenter
     Caption = '0'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -87,16 +98,22 @@ object fGetInt: TfGetInt
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object DLabelError: TDLabel
     Left = 16
     Top = 50
     Width = 313
     Height = 15
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'No Error'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef00
     FontShadow = 1
     Displ.Enabled = False
@@ -110,6 +127,11 @@ object fGetInt: TfGetInt
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object EditInput: TEdit
     Left = 16

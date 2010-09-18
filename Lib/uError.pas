@@ -116,7 +116,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uStrings, uGraph, uDBitmap, uData,
+	uStrings, uGraph, uDBitmap, uData, uInput,
 	Registry, MMSystem, Consts, Math;
 
 type

@@ -205,6 +205,7 @@ procedure TfLogo.Timer1Timer(Sender: TObject);
 begin
 //  Timer1.Free; Problem D???
 	Close;
+	Hide;
 //	Free; fLogo := nil;
 end;
 
