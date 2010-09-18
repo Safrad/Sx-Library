@@ -668,8 +668,7 @@ finalization
 				Reg.CloseKey;
 			end;
 
-			Reg.Free;
-			Reg := nil;
+			FreeAndNil(Reg);
 		end;
 	end;
 end.

@@ -282,7 +282,7 @@ begin
 		if Assigned(DIdleTimer) then
 		if Length(DIdleTimer.Timers) = 0 then
 		begin
-			DIdleTimer.Free; DIdleTimer := nil;
+			FreeAndNil(DIdleTimer);
 		end;
 	end;
 	inherited Destroy;

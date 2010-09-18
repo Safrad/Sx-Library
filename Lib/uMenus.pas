@@ -76,7 +76,7 @@ procedure ComName(MenuItem: TMenuItem);
 		Bmp: TDBitmap;
 //		Quality: SG;
 		FileName: TFileName;
-		TranColor: TColor;
+//		TranColor: TColor;
 	begin
 		FileName := GraphDir + 'Images\' + Name + '.gif';
 		if FileExists(FileName) then
@@ -154,6 +154,8 @@ begin
 	for i := 0 to Src.Count - 1 do
 	begin
 		M := TMenuItem.Create(Dsc);
+{		if Src[i].Name = '' then
+			Nop;}
 		M.Name := Src[i].Name + '1';
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
@@ -221,7 +223,7 @@ var
 	BmpD: TDBitmap;
 	MenuBmp: TDBitmap;
 	BCanvas: TCanvas;
-	C1, C2, C: TColor;
+	C1, C2: TColor;
 	Co: array[0..3] of TColor;
 	Rec: TRect;
 	s: string;
@@ -422,11 +424,9 @@ begin
 			Bmp.Transparent := True;
 			if MenuItem.Enabled = False then
 			begin
-				Bmp.Bar(clMenu, ef12);
+				Bmp.Bar(clRed, ef12);
 			end;
-			Bmp.TransparentColor := clMenu; // D???
-{			else
-				Bmp.TransparentColor := GetTransparentColor(Bmp);}
+			Bmp.TransparentColor := clMenu;
 
 			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, Bmp, ef16);
 
@@ -442,22 +442,20 @@ begin
 		else if Assigned(MenuItem.Bitmap) and (TopLevel = False) and
 			(MenuItem.Bitmap.Empty = False) then
 		begin
-//			MenuItem.Bitmap.PixelFormat := pf24bit; D???
-
 			BmpD := TDBitmap.Create;
 //			BmpD.SetSize(MenuItem.Bitmap.Width, MenuItem.Bitmap.Height);
 {			BmpWid := MenuItem.Bitmap.Width;
 			C := MenuItem.Bitmap.TransparentColor;
 			MenuItem.Bitmap.TransparentColor := -1;}
 			BmpD.CopyBitmap(MenuItem.Bitmap);
-{			MenuItem.Bitmap.TransparentColor := C;
+//			MenuItem.Bitmap.TransparentColor := C;
 			if (MenuItem.Enabled = False) or (odInactive in State) then
 			begin
-				BmpD.Transparent := True;
-				BmpD.TransparentColor := MenuItem.Bitmap.TransparentColor;
+{				BmpD.Transparent := True;
+				BmpD.TransparentColor := MenuItem.Bitmap.TransparentColor;}
 				BmpD.Bar(clMenu, ef12);
 			end;
-			BmpD.ChangeColor(MenuItem.Bitmap.TransparentColor, clMenu);}
+//			BmpD.ChangeColor(MenuItem.Bitmap.TransparentColor, clMenu);}
 
 			x := 1;
 			y := (ARect.Bottom - ARect.Top - 18) div 2 + 1;

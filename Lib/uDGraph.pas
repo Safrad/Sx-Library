@@ -46,7 +46,7 @@ type
 		Borders: TData;
 
 		constructor Create;
-		destructor Free;
+		destructor Destroy; override;
 
 		procedure AddBorder(j, k, l: SG);
 		procedure ReadFromFile(var FileName: TFileName);
@@ -162,8 +162,8 @@ begin
 			if Border <> nil then
 				Result := Result + NToS(j) + '-' + NToS(Border.ToNode) +
 					' (' + NToS(Border.Len) + ')'
-			else
-				IE(10);
+			{$ifopt d+}else
+				IE(10){$endif};
 
 		end;
 		Result := Result + LineSep;
@@ -172,16 +172,18 @@ end;
 
 constructor TDGraph.Create;
 begin
+	inherited Create;
 	Borders := TData.Create;
 	Borders.ItemSize := SizeOf(TBorder);
 	SetLength(NodesIndex, 1);
 	NodesIndex[0] := 0;
 end;
 
-destructor TDGraph.Free;
+destructor TDGraph.Destroy;
 begin
 	Clear;
 	Borders.Free;
+	inherited Destroy;
 end;
 
 procedure TDGraph.Clear;

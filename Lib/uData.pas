@@ -33,7 +33,7 @@ type
 	protected
 	public
 		constructor Create;
-		destructor Free;
+		destructor Destroy; override;
 
 		procedure Clear;
 
@@ -71,7 +71,7 @@ type
 		FItemCount: UG;
 	public
 		constructor Create;
-		destructor Free;
+		destructor Destroy; override;
 
 		procedure Clear;
 
@@ -116,6 +116,7 @@ type
 
 constructor TData.Create;
 begin
+	inherited Create;
 	FItemSize := 0;
 	FItemSh := 0;
 	FItemCount := 0;
@@ -127,11 +128,12 @@ begin
 	end;
 end;
 
-destructor TData.Free;
+destructor TData.Destroy;
 begin
 	Clear;
 	if FFrag then
 		Dispose(Item);
+	inherited Destroy;
 end;
 
 procedure TData.Clear;
@@ -398,12 +400,14 @@ end;
 
 constructor TA4.Create;
 begin
+	inherited Create;
 	FItemCount := 0;
 end;
 
-destructor TA4.Free;
+destructor TA4.Destroy;
 begin
 	Clear;
+	inherited Destroy;
 end;
 
 procedure TA4.Clear;

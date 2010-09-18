@@ -69,7 +69,7 @@ type
 
 		procedure Init;
 		procedure SwapRB24;
-		function CreateIcon(Wid, Hei: UG; PixelFormat: TPixelFormat): TIcon;
+		function CreateIcon(const Wid, Hei: UG): TIcon;
 		property Width: TCoor read FWidth;
 		property ByteX: TCoor read FByteX;
 		property Height: TCoor read FHeight;
@@ -193,7 +193,6 @@ procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
 procedure BitmapReadFromFile(var BmpD: TDBitmap; FName: TFileName); // Create + LoadFromFile
 procedure BitmapCopy(var BmpD, BmpS: TDBitmap); // Create + SetSize + CopyData
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor); // Create + SetSize
-procedure BitmapFree(var BmpD: TDBitmap); // Free + nil
 
 procedure GetPix(PD: Pointer; const ByteXD: LongWord;
 	const X, Y: TCoor; var C: TRColor); // Must be fast
@@ -434,7 +433,7 @@ begin
 	end;
 end;
 
-function TDBitmap.CreateIcon(Wid, Hei: UG; PixelFormat: TPixelFormat): TIcon;
+function TDBitmap.CreateIcon(const Wid, Hei: UG): TIcon;
 var
 //	IconInfo: _ICONINFO;
 	BmpColor: TBitmap;
@@ -1093,14 +1092,6 @@ begin
 	BmpD.SetSize(Width, Height);
 end;
 
-procedure BitmapFree(var BmpD: TDBitmap);
-begin
-	if Assigned(BmpD) then
-	begin
-		BmpD.Free;
-		BmpD := nil;
-	end;
-end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.FullRect;
 begin
@@ -7169,7 +7160,7 @@ begin
 	begin
 		SetSize(NewX, NewY);
 		CopyBitmap(BmpDe);
-		BitmapFree(BmpDe);
+		FreeAndNil(BmpDe);
 	end;
 end;
 
@@ -8869,8 +8860,8 @@ procedure FreeFontBitmap;
 var i: TRasterFontStyle;
 begin
 	for i := Low(i) to High(i) do
-		if FontReaded[i] then BitmapFree(FontBitmap[i]);
-	Letter.Free; Letter := nil;
+		if FontReaded[i] then FreeAndNil(FontBitmap[i]);
+	FreeAndNil(Letter);
 end;
 
 procedure TDBitmap.GBlur(Radius: Double; const Horz, Vert: Boolean;

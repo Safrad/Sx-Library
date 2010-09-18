@@ -110,7 +110,7 @@ type
 
 		constructor Create(FileName: TFileName);
 		procedure FreeData;
-		destructor Free;
+		destructor Destroy; override;
 
 		procedure LoadFromFile(var FileName: TFileName);
 		procedure SaveToFile(FileName: TFileName);
@@ -468,6 +468,7 @@ end;
 
 constructor TDIniFile.Create(FileName: TFileName);
 begin
+	inherited Create;
 	FFileName := FileName;
 	FileStatus := fsFull;
 	FileMethod := fmDelphi;
@@ -492,10 +493,11 @@ begin
 	FileSaved := False;
 end;
 
-destructor TDIniFile.Free;
+destructor TDIniFile.Destroy;
 begin
 	if FileSaved = False then Save;
 	FreeData;
+	inherited Destroy;
 end;
 
 procedure TDIniFile.LoadFromFile(var FileName: TFileName);
@@ -1106,7 +1108,8 @@ end;
 
 procedure MainIniFree;
 begin
-	MainIni.Free; MainIni := nil;
+	FreeAndNil(MainIni);
+//	MainIni.Free; MainIni := nil;
 { if FileStatus = fsClose then
 	begin
 		ErrorMessage('RWFree Not open');

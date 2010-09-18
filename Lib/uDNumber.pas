@@ -29,7 +29,7 @@ type
 		procedure Shortest;
 	protected
 		constructor Create;
-		destructor Free;
+		destructor Destroy; override;
 
 	public
 		procedure Resize(V: SG);
@@ -543,16 +543,18 @@ end;
 
 constructor TDNumber.Create;
 begin
+	inherited Create;
 	Assign(0);
 end;
 
-destructor TDNumber.Free;
+destructor TDNumber.Destroy;
 begin
 	Assign(0);
+	inherited Destroy;
 end;
 
 initialization
 	Reminder := TDNumber.Create;
 finalization
-	Reminder.Free; Reminder := nil;
+	FreeAndNil(Reminder);
 end.

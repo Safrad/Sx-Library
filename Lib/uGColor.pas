@@ -526,7 +526,7 @@ begin
 		if PanelColor[i] <> nil then
 		begin
 			GroupBoxColors.RemoveControl(PanelColor[i]);
-			PanelColor[i].Free; PanelColor[i] := nil;
+			FreeAndNil(PanelColor[i]);
 		end;
 	end;
 end;

@@ -480,8 +480,8 @@ end;
 
 procedure Fin;
 begin
-	BitmapFree(ArrowU);
-	BitmapFree(ArrowD);
+	FreeAndNil(ArrowU);
+	FreeAndNil(ArrowD);
 end;
 
 procedure TDView.LFill(Sender: TObject);

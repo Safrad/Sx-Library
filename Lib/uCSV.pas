@@ -186,7 +186,8 @@ end;
 
 function CSVClose: BG;
 begin
-	Result := CSVFile.Close; CSVFile.Free; CSVFile := nil;
+	Result := CSVFile.Close;
+	FreeAndNil(CSVFile);
 	SetLength(Columns, 0);
 	SetLength(Indexes, 0);
 end;
@@ -374,11 +375,11 @@ begin
 {	for i := 0 to CSVReqFormats.Count - 1 do D???
 	begin
 		RemoveControl(PanelNames[i]);
-		PanelNames[i].Free; PanelNames[i] := nil;
+		FreeAndNil(PanelNames[i]);
 		RemoveControl(PanelTypes[i]);
-		PanelTypes[i].Free; PanelTypes[i] := nil;
+		FreeAndNil(PanelTypes[i]);
 		RemoveControl(ComboBoxes[i]);
-		ComboBoxes[i].Free; ComboBoxes[i] := nil;
+		FreeAndNil(ComboBoxes[i]);
 		SetLength(PanelNames, 0);
 		SetLength(PanelTypes, 0);
 		SetLength(ComboBoxes, 0);
@@ -436,6 +437,6 @@ Initialization
 	CSVReqFormats := TData.Create;
 	CSVReqFormats.ItemSize := SizeOf(TCSVFormat);
 finalization
-	CSVReqFormats.Free; CSVReqFormats := nil;
-	CSVFormats.Free; CSVFormats := nil;
+	FreeAndNil(CSVReqFormats);
+	FreeAndNil(CSVFormats);
 end.

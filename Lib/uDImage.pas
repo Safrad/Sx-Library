@@ -271,7 +271,7 @@ end;
 destructor TDImage.Destroy;
 begin
 	FCanvas.Free;
-	Bitmap.Free; Bitmap := nil;
+	FreeAndNil(Bitmap);
 	inherited Destroy;
 end;
 
@@ -1097,7 +1097,7 @@ begin
 	begin
 		if Assigned(BmpSource2) then
 		begin
-			BmpSource2.Free; BmpSource2 := nil;
+			FreeAndNil(BmpSource2);
 		end;
 	end;
 end;

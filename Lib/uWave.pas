@@ -738,6 +738,7 @@ const
 
 constructor TWavePlayer.Create;
 begin
+	inherited Create;
 	HWaveOut := 0;
 	PlayItems := TData.Create;
 	PlayItems.ItemSize := SizeOf(TPlayItem);
@@ -757,7 +758,8 @@ destructor TWavePlayer.Destroy;
 begin
 	if Initialized then Close;
 	HWaveOut := 0;
-	PlayItems.Free; PlayItems := nil;
+	FreeAndNil(PlayItems);
+	inherited Destroy;
 end;
 
 procedure TWavePlayer.MMError(s: string);
@@ -1100,6 +1102,6 @@ initialization
 finalization
 	if Assigned(WavePlayer) then
 	begin
-		WavePlayer.Free; WavePlayer := nil;
+		FreeAndNil(WavePlayer);
 	end;
 end.

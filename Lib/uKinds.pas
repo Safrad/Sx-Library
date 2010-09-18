@@ -28,7 +28,7 @@ type
 		Reserved: array[0..5] of U4; // 24
 	end;
 
-	TKinds = class
+	TKinds = class(TObject)
 	private
 		Reopen: TReopen;
 		NewCount: UG;
@@ -101,7 +101,7 @@ type
 		ChangeFile: TNotifyEvent; // Memory to Graphics (Actual File Changed)
 
 		constructor Create;
-		destructor Free;
+		destructor Destroy; override;
 
 
 		procedure CreateMenuFile(const NewLong: BG);
@@ -166,12 +166,13 @@ uses
 
 constructor TKinds.Create;
 begin
+	inherited Create;
 	Reopen := TReopen.Create;
 	Index := -1;
 	Count := 0;
 end;
 
-destructor TKinds.Free;
+destructor TKinds.Destroy;
 var i: SG;
 begin
 	for i := 0 to Length(Items) - 1 do
@@ -180,7 +181,8 @@ begin
 	end;
 	SetLength(Items, 0);
 	Reopen.FreeMenu;
-	Reopen.Free; Reopen := nil;
+	FreeAndNil(Reopen);
+	inherited Destroy;
 end;
 
 procedure TKinds.CreateMenuFile(const NewLong: BG);
@@ -378,7 +380,7 @@ begin
 		if Assigned(Items[i].MenuItem) then
 		begin
 			KindWindow1.Delete(MaxPos);
-			Items[i].MenuItem.Free; Items[i].MenuItem := nil;
+			FreeAndNil(Items[i].MenuItem);
 		end;
 	end;
 	for i := 0 to Min(KindCount, Limit) - 1 do
@@ -647,7 +649,7 @@ begin
 			if Items[Kind].New = 0 then Reopen.CloseFile(Items[Kind].FileName);
 			if Assigned(Items[Kind].MenuItem) then
 			begin
-				Items[Kind].MenuItem.Free; Items[Kind].MenuItem := nil;
+				FreeAndNil(Items[Kind].MenuItem);
 			end;
 			FreeFile(Kind);
 		end;

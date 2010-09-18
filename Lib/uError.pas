@@ -41,7 +41,7 @@ type
     LabelCreated: TDLabel;
 		PanelCreated: TDLabel;
     LabelMessage: TDLabel;
-    ButtonAll: TDButton;
+		ButtonAll: TDButton;
 		Bevel1: TBevel;
     ButtonDown: TDButton;
 		EditIndex: TDEdit;
@@ -62,6 +62,7 @@ type
 		procedure ButtonDownClick(Sender: TObject);
 		procedure EditIndexChange(Sender: TObject);
     procedure FormHide(Sender: TObject);
+    procedure FormClick(Sender: TObject);
 	private
 		{ Private declarations }
 		ActItem: UG;
@@ -200,7 +201,10 @@ procedure TfIOError.DrawTimeLeft;
 begin
 //	if StartTickCount > 0 then
 // D??? Error Ignore.TimeLeft not inicialized
-	PanelTimeLeft.Caption := msToStr(1000 * UG(Ignore.TimeLeft) + StartTickCount - TickCount, diMSD, 0, False);
+	if Ignore.TimeLeft = 0 then
+		PanelTimeLeft.Caption := ''
+	else
+		PanelTimeLeft.Caption := msToStr(1000 * UG(Ignore.TimeLeft) + StartTickCount - TickCount, diMSD, 0, False);
 end;
 
 var
@@ -637,8 +641,7 @@ begin
 
 		if IsMultiThread then
 		begin
-			fIOError.Free;
-			fIOError := nil;
+			FreeAndNil(fIOError);
 		end;
 	end
 	else
@@ -835,9 +838,14 @@ begin
 	fIOError.Timer1.Enabled := False;
 end;
 
+procedure TfIOError.FormClick(Sender: TObject);
+begin
+	Ignore.TimeLeft := DlgNoTime;
+end;
+
 initialization
 	Ignores := TData.Create;
 	Ignores.ItemSize := SizeOf(TIgnore);
 finalization
-	Ignores.Free; Ignores := nil;
+	FreeAndNil(Ignores);
 end.

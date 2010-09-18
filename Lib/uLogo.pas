@@ -176,7 +176,7 @@ begin
 	end;
 	OutBmp.Bar(clBlack, ef16);
 	fLogo.Paint;
-	BitmapFree(BackgroundBmp);
+	FreeAndNil(BackgroundBmp);
 
 	ReleaseDC(0, BackgroundCanvas.Handle);
 	BackgroundCanvas.Free;

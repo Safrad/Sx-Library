@@ -21,7 +21,7 @@ type
 		Data: array of array of F8; // [y, x]
 
 		constructor Create;
-		destructor Free;
+		destructor Destroy; override;
 
 		procedure Clear;
 		procedure Mul(M0, M1: TMatrix);
@@ -46,13 +46,15 @@ uses uStrings;
 
 constructor TMatrix.Create;
 begin
+	inherited Create;
 	FXC := 0;
 	FYC := 0;
 end;
 
-destructor TMatrix.Free;
+destructor TMatrix.Destroy;
 begin
 	Clear;
+	inherited Destroy;
 end;
 
 procedure TMatrix.Clear;

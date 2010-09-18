@@ -77,7 +77,9 @@ function GetTimeS8(const Prompt: string;
 implementation
 
 {$R *.DFM}
-uses uStrings, uError, uInput;
+uses
+	Math,
+	uStrings, uError, uInput;
 
 var
 	fGetTime: TfGetTime;
@@ -251,11 +253,6 @@ procedure TfGetTime.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal);
-{	if NowVal < TMinVal then
-		NowVal := TMinVal
-	else if NowVal > TMaxVal then
-		NowVal := TMaxVal;}
-
 	MesToMemo(EditError);
 
 	InitButtons;
@@ -267,7 +264,7 @@ end;
 procedure TfGetTime.TrackBarHMSDChange(Sender: TObject);
 begin
 	NowVal :=
-		TrackBarH.Position * 60 * 60 * 1000 +
+		S8(TrackBarH.Position) * 60 * 60 * 1000 +
 		TrackBarM.Position * 60 * 1000 +
 		TrackBarS.Position * 1000 +
 		TrackBarD.Position;

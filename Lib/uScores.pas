@@ -205,8 +205,7 @@ procedure TfScores.FormDestroy(Sender: TObject);
 begin
 	if Assigned(fScores) then
 	begin
-		fScores.Free;
-		fScores := nil;
+		FreeAndNil(fScores); // D???
 	end;
 end;
 

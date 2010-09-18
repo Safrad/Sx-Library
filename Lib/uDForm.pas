@@ -162,13 +162,10 @@ procedure FormFree(var Form: TForm);
 begin
 	if Assigned(Form) then
 	begin
-		Form.Close;
-//		Form.
-		Form.Free;
-		Form := nil;
+		Form.Close; // Free does not call Close and CloseQuery events
+		FreeAndNil(Form);
 	end;
 end;
-
 
 procedure glTextOut(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const C: TColor);
@@ -207,24 +204,10 @@ begin
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity;
 
-	C.L := CF;
-	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1); // Open GL FP Exception
-	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
-
-	C.L := ShadowColor(CF);
-	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1); // Open GL FP Exception
-{	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
-	glTexCoord4d(1, 1, 1, 1);
-	glRasterPos4d(68, 0, 0, 1);
-	glBitmap(0, 0, 0, 0, 0, 0, nil);}
-	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
-
 	if CB <> clNone then
 	begin
 		sx := 2 * (X + 1) / Params[2] - 1;
-		sy := -2 * (Y + 1 + 11) / Params[3] + 1;
+		sy := -2 * (Y + 1 + Canvas.TextHeight(Text)) / Params[3] + 1;
 		wx := 2 * (Canvas.TextWidth(Text) + 1) / Params[2];
 		wy := 2 * (Canvas.TextHeight(Text) + 1) / Params[3];
 		C.L := CB;
@@ -241,6 +224,22 @@ begin
 		glEnd;
 		glDisable(GL_BLEND);
 	end;
+
+	C.L := ShadowColor(CF);
+	glColor3ubv(PGLUByte(@C));
+	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1); // Open GL FP Exception
+{	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
+	glTexCoord4d(1, 1, 1, 1);
+	glRasterPos4d(68, 0, 0, 1);
+	glBitmap(0, 0, 0, 0, 0, 0, nil);}
+	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
+
+
+	C.L := CF;
+	glColor3ubv(PGLUByte(@C));
+	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1); // Open GL FP Exception
+	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
+
 
 {	glTextOut(Canvas, X, Y, Text, CF);
 	glTextOut(Canvas, X + 1, Y + 1, Text, ShadowColor(CF));}
@@ -628,7 +627,7 @@ begin
 			RestoreStartMode;
 		ShowTaskBar(True);
 	end;
-	BitmapFree(FBitmapB);
+	FreeAndNil(FBitmapB);
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
 	begin
@@ -1028,5 +1027,5 @@ end;
 Initialization
 
 Finalization
-	BitmapFree(FBitmapF);
+	FreeAndNil(FBitmapF);
 end.
