@@ -102,6 +102,54 @@ object fIOError: TfIOError
     Displ.Size = 0
     BevelOuter = bvNone
   end
+  object PanelIndex: TDLabel
+    Left = 440
+    Top = 8
+    Width = 20
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = '00'
+    Layout = tlCenter
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object PanelCount: TDLabel
+    Left = 472
+    Top = 8
+    Width = 20
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = '00'
+    Layout = tlCenter
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
   object ButtonRetry: TDButton
     Left = 16
     Top = 64
@@ -214,28 +262,6 @@ object fIOError: TfIOError
     Thousands = False
     Wrap = True
     OnChangingEx = UpDown1ChangingEx
-  end
-  object PanelIndex: TDPanel
-    Left = 440
-    Top = 8
-    Width = 20
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = '00'
-    TabOrder = 7
-  end
-  object PanelCount: TDPanel
-    Left = 472
-    Top = 8
-    Width = 20
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = '00'
-    TabOrder = 8
   end
   object OpenDialogFile: TOpenDialog
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofCreatePrompt, ofEnableSizing]

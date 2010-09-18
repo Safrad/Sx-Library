@@ -6,10 +6,10 @@ interface
 uses uAdd, Windows, Graphics, ExtCtrls, StdCtrls, Classes, Controls, SysUtils;
 
 const
-	clMoneyGreen = TColor($C0DCC0);
+{	clMoneyGreen = TColor($C0DCC0);
 	clSkyBlue = TColor($F0CAA6);
 	clCream = TColor($F0FBFF);
-	clMediumGray = TColor($A4A0A0);
+	clMediumGray = TColor($A4A0A0);}
 
 	MaxSpectrum2 = 762;
 	MaxFireColor = 765;
@@ -594,9 +594,8 @@ begin
 		TextBounds.Right := Rect.Right;
 		TextBounds.Bottom := Rect.Bottom; //CurY + TextHeight;
 		DrawText(Canvas.Handle, PChar(LineS[i]), Length(LineS[i]), TextBounds,
-			DT_BOTTOM or DT_LEFT{ or DrawTextBiDiModeFlags(0)});
-
-//    Canvas.TextOut(CurX, CurY, LineS[i]);
+			DT_BOTTOM or DT_LEFT or DT_NOCLIP{ or DrawTextBiDiModeFlags(0)});
+//		Canvas.TextOut(CurX, CurY, LineS[i]);
 		Inc(CurY, TextHeight);
 	end;
 end;

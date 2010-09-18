@@ -5,7 +5,7 @@ unit uGetStr;
 interface
 
 uses
-	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDPanel, uDButton,
+	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDButton,
 	uDForm;
 
 type

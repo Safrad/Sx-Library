@@ -64,7 +64,7 @@ uses
 procedure TKinds.SetMenuItem(i: Integer);
 var S: string;
 begin
-	S := '&' + IntToStr(i + 1) + ' ' + ExtractFileName(Items[i].FileName);
+	S := '&' + NToS(i + 1) + ' ' + ExtractFileName(Items[i].FileName);
 	if Items[i].Changed then S := S + ' *';
 	if Items[i].New <> 0 then S := S + ' (New)';
 	Items[i].MenuItem.Caption := S;
@@ -173,7 +173,7 @@ begin
 		end;
 		if Found = False then
 		begin
-			Items[KindIndex].FileName := 'NoName' + Using('00', i);
+			Items[KindIndex].FileName := 'NoName' + NToS(i, False);
 			Items[KindIndex].New := i;
 			Break;
 		end;

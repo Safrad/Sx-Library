@@ -5,7 +5,7 @@ interface
 uses
 	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDButton, uDForm;
+	ExtCtrls, StdCtrls, uDLabel, uDButton, uDForm;
 
 type
 	TfSysInfo = class(TDForm)
@@ -16,33 +16,31 @@ type
 		LabelUsed: TDLabel;
 		LabelFree: TDLabel;
 		LabelTotal: TDLabel;
-		PMT: TDPanel;
-		PMF: TDPanel;
-		PFF: TDPanel;
-		PFT: TDPanel;
-		PMU: TDPanel;
-		PFU: TDPanel;
+    PMT: TDLabel;
+    PMF: TDLabel;
+    PFF: TDLabel;
+    PFT: TDLabel;
+    PMU: TDLabel;
+    PFU: TDLabel;
 		LabelTPhysicalMemory: TDLabel;
 		LabelTPageFile: TDLabel;
 		Bevel3: TBevel;
 		Bevel2: TBevel;
 		DLabel3: TDLabel;
 		DLabel5: TDLabel;
-		DLabel6: TDLabel;
 		Bevel5: TBevel;
 		EditCPU: TEdit;
-		EditDiskU: TDPanel;
-		EditGraph: TEdit;
-		EditDiskF: TDPanel;
-		EditDiskT: TDPanel;
+    EditDiskU: TDLabel;
+    EditDiskF: TDLabel;
+    EditDiskT: TDLabel;
 		Bevel6: TBevel;
 		ButtonOk: TDButton;
-    DLabelCPUFrequency: TDLabel;
+		DLabelCPUFrequency: TDLabel;
 		EditCPUFrequency: TEdit;
 		DLabel2: TDLabel;
 		EditDuron: TEdit;
-    DLabelCPUUsage: TDLabel;
-    EditCPUUsage: TEdit;
+		DLabelCPUUsage: TDLabel;
+		EditCPUUsage: TEdit;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
@@ -56,34 +54,41 @@ type
 var
 	fSysInfo: TfSysInfo;
 
+const
+	CPUUsageMul = 100;
 type
-	TSysInfo = packed record
-		CPU: U32; // 4
+	TSysInfo = packed record // 256
+		CPU: U4;
 		CPUStr: string[12]; // 13
-		CPUUsage: U8; // 1
-		CPUFrequency: U64; // 8
-		CPUPower: U64; // 8
-		MS: TMemoryStatus;
-		DiskFree, DiskTotal: U64; // 8
-		Graph: string[127]; // 128
+		Reserved0: array[0..6] of S1; // 7
+		CPUFrequency: U8;
+		CPUPower: U8;
+		DiskFree, DiskTotal: U8; // 16
+		CPUUsage: S4; // 4 (-!0..10000)
+		MS: TMemoryStatus; // 8 * 4 = 32
 		OS: TOSVersionInfo; // 148
+//		Graph: string[127]; // 128
+		Reserved1: array[0..15] of U1; // 16
 	end;
 
 var
 	SysInfo: TSysInfo;
+	NTSystem: Boolean;
+	RegCap: Boolean;
 
 function OSToStr(OS: TOSVersionInfo): string;
-procedure FillSysInfoS(var SysInfo: TSysInfo);
+function GetCPUUsage(IntTime: U8): SG;
+procedure FillSysInfoS(var SInfo: TSysInfo);
 procedure FillSysInfoD(var SysInfo: TSysInfo);
 
 procedure Delay(const ms: LongWord);
-function GetCPUCounter: TU64;
-function PerformanceCounter: Int64;
-procedure DelayEx(const f: Int64);
+procedure DelayEx(const f: U8);
+function GetCPUCounter: TU8;
+function PerformanceCounter: U8;
 
 var
 	PerformanceType: SG;
-	PerformanceFrequency: U64;
+	PerformanceFrequency: U8;
 
 implementation
 
@@ -110,15 +115,20 @@ begin
 		if OS.dwMajorVersion < 5 then
 			S := S + 'NT'
 		else
-			S := S + '2000';
+		begin
+			if OS.dwMinorVersion = 0 then
+				S := S + '2000'
+			else
+				S := S + 'XP';
+		end;
 	end;
 	else // 3
-		S := 'Unknown System ' + IntToStr(OS.dwPlatformId - VER_PLATFORM_WIN32_NT);
+		S := 'Unknown System ' + NToS(OS.dwPlatformId - VER_PLATFORM_WIN32_NT);
 	end;
 	S := S + ' (Build ' +
-		IntToStr(OS.dwMajorVersion) + '.' +
-		IntToStr(OS.dwMinorVersion) + '.' +
-		IntToStr(LoWord(OS.dwBuildNumber)) + ' ' +
+		NToS(OS.dwMajorVersion) + '.' +
+		NToS(OS.dwMinorVersion) + '.' +
+		NToS(LoWord(OS.dwBuildNumber)) + ' ' +
 		OS.szCSDVersion + ')';
 	Result := S;
 end;
@@ -129,22 +139,175 @@ begin
 	GlobalMemoryStatus(SysInfo.MS);
 end;
 
+
+function GetProcessorTime : int64;
+type
+ TPerfDataBlock = packed record
+   signature              : array [0..3] of wchar;
+	 littleEndian           : cardinal;
+   version                : cardinal;
+   revision               : cardinal;
+   totalByteLength        : cardinal;
+   headerLength           : cardinal;
+   numObjectTypes         : integer;
+   defaultObject          : cardinal;
+   systemTime             : TSystemTime;
+   perfTime               : comp;
+   perfFreq               : comp;
+   perfTime100nSec        : comp;
+   systemNameLength       : cardinal;
+   systemnameOffset       : cardinal;
+ end;
+ TPerfObjectType = packed record
+   totalByteLength        : cardinal;
+   definitionLength       : cardinal;
+   headerLength           : cardinal;
+   objectNameTitleIndex   : cardinal;
+   objectNameTitle        : PWideChar;
+   objectHelpTitleIndex   : cardinal;
+   objectHelpTitle        : PWideChar;
+   detailLevel            : cardinal;
+   numCounters            : integer;
+   defaultCounter         : integer;
+   numInstances           : integer;
+   codePage               : cardinal;
+   perfTime               : comp;
+   perfFreq               : comp;
+ end;
+ TPerfCounterDefinition = packed record
+   byteLength             : cardinal;
+   counterNameTitleIndex  : cardinal;
+   counterNameTitle       : PWideChar;
+   counterHelpTitleIndex  : cardinal;
+   counterHelpTitle       : PWideChar;
+   defaultScale           : integer;
+   defaultLevel           : cardinal;
+   counterType            : cardinal;
+   counterSize            : cardinal;
+   counterOffset          : cardinal;
+ end;
+ TPerfInstanceDefinition = packed record
+   byteLength             : cardinal;
+	 parentObjectTitleIndex : cardinal;
+   parentObjectInstance   : cardinal;
+   uniqueID               : integer;
+	 nameOffset             : cardinal;
+   nameLength             : cardinal;
+ end;
 var
+	c1, c2, c3      : cardinal;
+	i1, i2          : integer;
+	perfDataBlock   : ^TPerfDataBlock;
+	perfObjectType  : ^TPerfObjectType;
+	perfCounterDef  : ^TPerfCounterDefinition;
+	perfInstanceDef : ^TPerfInstanceDefinition;
+begin
+ result := 0;
+ perfDataBlock := nil;
+ try
+	 c1 := $10000;
+	 while true do begin
+		 ReallocMem(perfDataBlock, c1);
+		 c2 := c1;
+		 case RegQueryValueEx(HKEY_PERFORMANCE_DATA, '238', nil, @c3, Pointer(perfDataBlock), @c2) of
+		 ERROR_MORE_DATA: c1 := c1 * 2;
+		 ERROR_SUCCESS: Break;
+		 else Exit;
+		 end;
+	 end;
+	 perfObjectType := pointer(cardinal(perfDataBlock) + perfDataBlock^.headerLength);
+	 for i1 := 0 to perfDataBlock^.numObjectTypes - 1 do begin
+		 if perfObjectType^.objectNameTitleIndex = 238 then begin   // 238 -> "Processor"
+			 perfCounterDef := pointer(cardinal(perfObjectType) + perfObjectType^.headerLength);
+			 for i2 := 0 to perfObjectType^.numCounters - 1 do begin
+				 if perfCounterDef^.counterNameTitleIndex = 6 then begin    // 6 -> "% Processor Time"
+					 perfInstanceDef := pointer(cardinal(perfObjectType) + perfObjectType^.definitionLength);
+					 result := PInt64(cardinal(perfInstanceDef) + perfInstanceDef^.byteLength + perfCounterDef^.counterOffset)^;
+					 break;
+         end;
+         inc(perfCounterDef);
+       end;
+       break;
+     end;
+     perfObjectType := pointer(cardinal(perfObjectType) + perfObjectType^.totalByteLength);
+   end;
+ finally FreeMem(perfDataBlock) end;
+end; 
+
+var
+	LastTickCount, LastProcessorTime: U8;
+	CPUUsage: SG;
+
 	CPUException: Boolean; // Cyrix
-	CPUUsage: U32;
 	Reg: TRegistry;
 	Dummy: array[0..1024] of Byte;
+
+function GetCPUUsage(IntTime: U8): SG;
+var
+	tickCount     : U8;
+	processorTime : U8;
+begin
+	if NTSystem then
+	begin
+//		tickCount := GetTickCount;
+		tickCount := PerformanceCounter;
+		if tickCount < LastTickCount + IntTime then
+		begin
+			Result := CPUUsage;
+			Exit;
+		end;
+		processorTime := GetProcessorTime;
+
+		if (LastTickCount <> 0) and (tickCount <> LastTickCount) and (processorTime >= LastProcessorTime) then
+		begin // 1 000*10 000 = 10 000 000 / sec
+			CPUUsage := 10000 - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1});
+			if CPUUsage < 0 then CPUUsage := 0;
+		end;
+
+		Result := CPUUsage;
+
+		LastTickCount     := tickCount;
+		LastProcessorTime := processorTime;
+	end
+	else
+	begin
+		Result := CPUUsage;
+		if Reg = nil then
+		begin
+			Reg := TRegistry.Create;
+			Reg.RootKey := HKEY_DYN_DATA;
+//			Reg.CreateKey('PerfStats');
+			if Reg.OpenKey('PerfStats\StartStat', True) then
+			begin
+				Reg.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
+				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+				Reg.CloseKey;
+			end;
+
+			if Reg.OpenKey('PerfStats\StatData', False) then
+			begin
+				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+				Result := 100 * CPUUsage;
+				Reg.CloseKey;
+			end;
+		end;
+
+		if Reg.OpenKey('PerfStats\StatData', False) then
+		begin
+			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+			Result := 100 * CPUUsage;
+			Reg.CloseKey;
+		end;
+	end;
+end;
 
 procedure FillSysInfoD(var SysInfo: TSysInfo);
 var
 	P: array[0..3] of Char;
-{ PMem: PByteArray;
-	PMem2: PByteArray;}
-	TickCount: U64;
-{ SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
-	TotalNumberOfClusters: U32;}
-	CPUTick: U64;
+	TickCount: U8;
+	CPUTick: U8;
 begin
+
 	P[0] := 'C';
 	P[1] := ':';
 	P[2] := '\';
@@ -161,34 +324,7 @@ begin
 
 	MemoryStatus(SysInfo);
 
-	if Reg = nil then
-	begin
-		Reg := TRegistry.Create;
-		Reg.RootKey := HKEY_DYN_DATA;
-
-//		Reg.CreateKey('PerfStats');
-		if Reg.OpenKey('PerfStats\StartStat', True) then
-		begin
-			Reg.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
-			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-			Reg.CloseKey;
-		end;
-
-		if Reg.OpenKey('PerfStats\StatData', False) then
-		begin
-			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-			SysInfo.CPUUsage := CPUUsage;
-			Reg.CloseKey;
-		end;
-
-	end;
-
-	if Reg.OpenKey('PerfStats\StatData', False) then
-	begin
-		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-		SysInfo.CPUUsage := CPUUsage;
-		Reg.CloseKey;
-	end;
+	SysInfo.CPUUsage := GetCPUUsage(0);
 
 	if CPUException = False then
 	begin
@@ -196,7 +332,7 @@ begin
 {   GetMem(PMem, 32768);
 		GetMem(PMem2, 32768);}
 		try
-			SysInfo.CPUStr := '            ';
+			SysInfo.CPUStr := '            '; // 12 spaces
 			asm
 			pushad
 			mov eax, 0
@@ -216,7 +352,7 @@ begin
 			mov edx, 0
 			dw 0a20fh // cpuid
 
-			mov edx, SysInfo.CPU
+			mov edx, SysInfo
 			mov [edx], eax
 			popad
 			end;
@@ -254,9 +390,17 @@ begin
 			popad
 			end;
 			CPUTick := GetCPUCounter.A - CPUTick;
-			TickCount := PerformanceCounter - TickCount + 1;
-			SysInfo.CPUFrequency := RoundDiv64(CPUTick * PerformanceFrequency, TickCount);
-			SysInfo.CPUPower := RoundDiv64(3 * 1000000 * PerformanceFrequency, TickCount);
+			TickCount := PerformanceCounter - TickCount;
+			if TickCount > 0 then
+			begin
+				SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
+				SysInfo.CPUPower := RoundDivS8(3 * 1000000 * PerformanceFrequency, TickCount);
+			end
+			else
+			begin
+				SysInfo.CPUFrequency := 0;
+				SysInfo.CPUPower := 0;
+			end;
 		except
 			CPUException := True;
 			SysInfo.CPUFrequency := 0;
@@ -268,17 +412,19 @@ begin
 	end;
 end;
 
-procedure FillSysInfoS(var SysInfo: TSysInfo);
-begin
-	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
-	GetVersionEx(SysInfo.OS);
 
-	if DriverDesc = '' then
+procedure FillSysInfoS(var SInfo: TSysInfo);
+begin
+{	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
+	GetVersionEx(SysInfo.OS);}
+	SInfo.OS := SysInfo.OS;
+
+{	if DriverDesc = '' then
 	begin
 		DriverDesc := 'Not Available';
 		ReadScreenModes;
 	end;
-	SysInfo.Graph := DriverDesc;
+	SInfo.Graph := DriverDesc;}
 end;
 
 procedure TfSysInfo.FillComp;
@@ -362,16 +508,14 @@ begin
 
 	if s <> '' then
 		s := s + ', ';
-	s := s + 'Family: ' + IntToStr(Family) + ', ';
-	s := s + 'Model: ' + IntToStr(Model) + ', ';
-	s := s + 'Stepping: ' + IntToStr(SysInfo.CPU and $000000f);
+	s := s + 'Family: ' + NToS(Family) + ', ';
+	s := s + 'Model: ' + NToS(Model) + ', ';
+	s := s + 'Stepping: ' + NToS(SysInfo.CPU and $000000f);
 	EditCPU.Text := s;
 
-	EditCPUUsage.Text := IntToStr(SysInfo.CPUUsage) + '%';
-	EditCPUFrequency.Text :=
-		Using('~#,###,###,###,###,###,###,###,##0', SysInfo.CPUFrequency) + ' Hz';
-	EditDuron.Text :=
-		Using('~#,###,###,###,###,###,###,###,##0', SysInfo.CPUPower) + ' Hz';
+	EditCPUUsage.Text := NToS(SysInfo.CPUUsage, 2) + '%';
+	EditCPUFrequency.Text := NToS(SysInfo.CPUFrequency) + ' Hz';
+	EditDuron.Text := NToS(SysInfo.CPUPower) + ' Hz';
 
 
 	EditDiskU.Caption := BToStr(SysInfo.DiskTotal - SysInfo.DiskFree);
@@ -386,7 +530,6 @@ begin
 	PFF.Caption := BToStr(SysInfo.MS.dwAvailPageFile);
 	PFT.Caption := BToStr(SysInfo.MS.dwTotalPageFile);
 
-	EditGraph.Text := SysInfo.Graph;
 end;
 
 procedure TfSysInfo.ButtonOkClick(Sender: TObject);
@@ -407,7 +550,7 @@ begin
 	end;
 end;
 
-function GetCPUCounter: TU64;
+function GetCPUCounter: TU8;
 begin
 	asm
 	mov ecx, 10h
@@ -449,20 +592,34 @@ begin
 end;
 
 initialization
+	CPUUsage := 30 * 100;
 	InitPerformanceCounter;
 	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
+//	D.A := GetVersion;
+//	NTSystem := D.A < $080000000;
+{	SysInfo.OS.dwMajorVersion := D.W0;
+	SysInfo.OS.dwMinorVersion := D.W1;}
 	GetVersionEx(SysInfo.OS);
+	NTSystem := SysInfo.OS.dwMajorVersion >= 5;
+	RegCap := not ((SysInfo.OS.dwMajorVersion < 4) or ((SysInfo.OS.dwMajorVersion = 4) and (SysInfo.OS.dwMinorVersion < 10)));
+
 { PerformanceType := 2;
 	PerformanceFrequency := SysInfo.CPUFrequency;}
+	GetCPUUsage(0);
 
 finalization
-	if Reg <> nil then
+	if NTSystem = False then
 	begin
-		Reg.OpenKey('PerfStats\StopStat', True);
-		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-		Reg.CloseKey;
+		if Reg <> nil then
+		begin
+			if Reg.OpenKey('PerfStats\StopStat', False) then
+			begin
+				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+				Reg.CloseKey;
+			end;
 
-		Reg.Free;
-		Reg := nil;
+			Reg.Free;
+			Reg := nil;
+		end;
 	end;
 end.

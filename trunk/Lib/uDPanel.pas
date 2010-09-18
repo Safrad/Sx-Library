@@ -6,6 +6,7 @@ interface
 
 {$R *.RES}
 uses
+	uDBitmap,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls;
 
@@ -13,11 +14,16 @@ type
 	TDPanel = class(TPanel)
 	private
 		{ private declarations }
+		FBmpOut: TDBitmap;
+
 		FLayout: TTextLayout;
 		FFontShadow: ShortInt;
 		FOnPaint: TNotifyEvent;
 		procedure SetLayout(Value: TTextLayout);
 		procedure SetFontShadow(Value: ShortInt);
+
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+//		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
 	protected
 		{ Protected declarations }
 	public
@@ -27,6 +33,7 @@ type
 		property Canvas;
 	published
 		{ published declarations }
+		property Caption;
 		property Layout: TTextLayout read FLayout write SetLayout default tlCenter;
 		property FontShadow: ShortInt read FFontShadow write SetFontShadow default 0;
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
@@ -62,6 +69,12 @@ begin
 	FLayout := tlCenter;
 end;
 
+procedure TDPanel.WMEraseBkgnd(var Message: TWMEraseBkgnd);
+begin
+	DefaultHandler(Message);
+end;
+
+//procedure TDPanel.WMPaint(var Message: TWMPaint);
 procedure TDPanel.Paint;
 var
 	Recta: TRect;
@@ -127,7 +140,13 @@ begin
 		end;
 		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption);
 	end;
-	// if FOnPaint<>nil then call OnPaint(Sender);
+{	FBmpOut.SetSize(Width, Height);
+	FBmpOut.BarE24(clRed,0
+	BitBlt(Message.DC, 0, 0, FBmpOut.Width, FBmpOut.Height,
+		FBmpOut.Canvas.Handle,
+		0, 0,
+		SRCCOPY);}
+
 	if Assigned(FOnPaint) then FOnPaint(Self);
 end;
 

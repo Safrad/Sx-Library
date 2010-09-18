@@ -5,7 +5,7 @@ interface
 uses uAdd;
 
 type
-	TMainNumber = U8;
+	TMainNumber = U1;
 	TMNumber = array of TMainNumber;
 
 	TDNumber = class(TObject)

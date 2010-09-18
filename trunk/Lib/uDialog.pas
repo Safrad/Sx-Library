@@ -4,7 +4,7 @@ interface
 
 uses
 	uDButton, uAdd, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDTimer, uDForm;
+	ExtCtrls, StdCtrls, uDLabel, uDTimer, uDForm;
 
 type
 	TDlgBtn = (
@@ -19,15 +19,16 @@ type
 		Memo: TMemo;
 		Image: TImage;
 		LabelTimeLeft: TDLabel;
-		PanelTimeLeft: TDPanel;
+    PanelTimeLeft: TDLabel;
     Timer1: TDTimer;
-		CheckBoxA: TCheckBox;
+    ButtonA: TDButton;
 		procedure Timer1Timer(Sender: TObject);
-		procedure FormCreate(Sender: TObject);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
 	private
 		{ Private declarations }
 		ModResult: SG;
-		TimeLeft: SG;
+		TimeLeft, StartTimeLeft: SG;
 		FButtons: array of TDButton;
 		procedure DrawTimeLeft;
 		procedure BClick(Sender: TObject);
@@ -58,7 +59,6 @@ uses
 	uWave, uStrings;
 var
 	fDialog: TfDialog;
-
 
 	IgnoreCount: SG;
 	Ignores: array of record
@@ -104,9 +104,15 @@ begin
 			Result := Ignores[i].Res;
 			Exit;
 		end;
-	if not Assigned(fDialog) then fDialog := TfDialog.Create(Owener);
+	if not Assigned(fDialog) then
+	begin
+		fDialog := TfDialog.Create(Owener);
+		fDialog.Background := baGradient;
+	end;
+
 	if fDialog.Visible then Exit;
 	fDialog.TimeLeft := TimeLeft;
+	fDialog.StartTimeLeft := TimeLeft;
 	fDialog.DrawTimeLeft;
 	if DlgType <> mtCustom then
 		fDialog.Caption := string(Captions[DlgType])
@@ -145,14 +151,14 @@ begin
 	end;
 
 	MaxWid := Max(MaxWid, ButtonWidth);
-	if MaxWid < 128 then
-		MaxWid := 128
+	if MaxWid < fDialog.ButtonA.Left + fDialog.ButtonA.Width + 8 then
+		MaxWid := fDialog.ButtonA.Left + fDialog.ButtonA.Width + 8
 	else if MaxWid > Screen.Width then
 		MaxWid := Screen.Width;
 
 	fDialog.Memo.Clear;
-	fDialog.Memo.Width := MaxWid - fDialog.Memo.Left - BSpace;
-	Hei := LineCount * fDialog.Canvas.TextHeight(Msg);
+	fDialog.Memo.Width := MaxWid - fDialog.Memo.Left - BSpace + 6;
+	Hei := LineCount * fDialog.Canvas.TextHeight(Msg) + 6;
 	fDialog.Memo.Height := Hei;
 	if Hei < 40 then Hei := 40;
 	fDialog.Memo.Lines.Add(Msg);
@@ -160,6 +166,7 @@ begin
 
 	fDialog.LabelTimeLeft.Top := Hei + 20;
 	fDialog.PanelTimeLeft.Top := fDialog.LabelTimeLeft.Top;
+	fDialog.ButtonA.Top := fDialog.LabelTimeLeft.Top;
 
 	BTop := fDialog.PanelTimeLeft.Top + fDialog.PanelTimeLeft.Height + BSpace;
 	i := 0;
@@ -196,10 +203,10 @@ begin
 			fDialog.FButtons[B].Visible := False;}
 	end;
 
-	fDialog.CheckBoxA.Width := fDialog.ClientWidth - 2 * fDialog.CheckBoxA.Left;
-	fDialog.CheckBoxA.Top := BTop + BHeight + BSpace;
-	fDialog.CheckBoxA.Checked := False;
-	fDialog.ClientHeight := fDialog.CheckBoxA.Top + fDialog.CheckBoxA.Height + BSpace;
+//	fDialog.ButtonA.Width := fDialog.ClientWidth - 2 * fDialog.ButtonA.Left;
+//	fDialog.ButtonA.Top := BTop + BHeight + BSpace;
+	fDialog.ButtonA.Down := False;
+	fDialog.ClientHeight := BTop + BHeight + BSpace;//fDialog.ButtonA.Top + fDialog.ButtonA.Height + BSpace;
 
 	fDialog.ModResult := -1;
 	fDialog.ShowModal;
@@ -209,7 +216,7 @@ begin
 		fDialog.RemoveControl(fDialog.FButtons[B]);
 		fDialog.FButtons[B].Free; fDialog.FButtons[B] := nil;
 	end;
-	if fDialog.CheckBoxA.Checked then
+	if fDialog.ButtonA.Down then
 	begin
 		SetLength(Ignores, IgnoreCount + 1);
 		Ignores[IgnoreCount].Msg := Msg;
@@ -255,17 +262,10 @@ begin
 	if TimeLeft = 0 then Close;
 end;
 
-procedure TfDialog.FormCreate(Sender: TObject);
-{var
-	B: TMsgDlgBtn;}
+procedure TfDialog.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+	Y: Integer);
 begin
-//	Background := baGradient;
-	Background := baStandard;
-{	for B := Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
-	begin
-		FButtons[B] := TDButton.Create(Self);
-			InsertControl(FButtons[B]);
-	end;}
+	TimeLeft := StartTimeLeft;
 end;
 
 end.

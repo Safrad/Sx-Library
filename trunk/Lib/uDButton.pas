@@ -59,6 +59,7 @@ type
 		procedure SetSpacing(Value: Integer);
 		procedure SetMargin(Value: Integer);
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+		procedure WMSize(var Message: TWMSize); message WM_SIZE;
 		procedure CNMeasureItem(var Message: TWMMeasureItem); message CN_MEASUREITEM;
 		procedure CNDrawItem(var Message: TWMDrawItem); message CN_DRAWITEM;
 		procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
@@ -68,6 +69,7 @@ type
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 		procedure Timer1Timer(Sender: TObject);
+		procedure InitRect;
 	protected
 		procedure ActionChange(Sender: TObject; CheckDefaults: Boolean); override;
 		procedure CreateHandle; override;
@@ -111,10 +113,10 @@ procedure PlayBSound(const X, MaxX: Integer; const SoundUp: Boolean);
 var
 	BSounds: Boolean = True;
 	BSoundUp, BSoundDown, BSoundBuffer: PWave;
-
+(*
 function DrawButtonFace(Canvas: TCanvas; const Client: TRect;
 	BevelWidth: Integer; IsRounded, IsDown,
-	IsFocused: Boolean): TRect;
+	IsFocused: Boolean): TRect;*)
 
 {
 procedure LoadBSounds;
@@ -133,6 +135,7 @@ uses
 var
 	BadColors: Boolean;
 
+(*
 { DrawButtonFace - returns the remaining usable area inside the Client rect.}
 function DrawButtonFace(Canvas: TCanvas; const Client: TRect;
 	BevelWidth: Integer; IsRounded, IsDown,
@@ -173,7 +176,7 @@ begin
 	Result := Rect(Client.Left + 1, Client.Top + 1,
 		Client.Right - 2, Client.Bottom - 2);
 	if IsDown then OffsetRect(Result, 1, 1);
-end;
+end;    *)
 
 type
 	TButtonGlyph = class
@@ -419,6 +422,70 @@ end;
 
 { TDButton }
 
+procedure TDButton.InitRect;
+var
+	hR: THandle;
+	Po: array[0..9] of tagPOINT;
+	m: SG;
+begin
+	if RegCap = False then Exit;
+	if True then
+	begin
+		Po[0].x := 0;
+		Po[0].y := 0;
+		Po[1].x := Width;
+		Po[1].y := 0;
+		Po[2].x := Width;
+		Po[2].y := Height;
+
+		Po[3].x := Width div 2 + 8;
+		Po[3].y := Height;
+
+		Po[4].x := Width div 2 + 4;
+		Po[4].y := Height - 4;
+
+		Po[5].x := Width div 2;
+		Po[5].y := Height - 6;
+
+		Po[6].x := Width div 2 - 4;
+		Po[6].y := Height - 4;
+
+{		Po[4].x := Width div 2;
+		Po[4].y := Height - 8;}
+
+
+		Po[7].x := Width div 2 - 8;
+		Po[7].y := Height;
+
+		Po[8].x := 0;
+		Po[8].y := Height;
+		Po[9].x := 0;
+		Po[9].y := 0;
+
+		m := Min(Width, Height) div 2;
+		hR := CreateRoundRectRgn(0, 0, Width + 1, Height + 1, m, m);
+
+//			hR := CreateEllipticRgn(0, 0, Width, Height);
+//			hR := CreateRectRgn(0, 0, Width, Height);
+//		hR := CreatePolygonRgn(Po[0], Length(Po), {ALTERNATE}	WINDING);
+		SetWindowRgn(Handle, hR, True);
+		DeleteObject(hR);
+	end
+	else
+	begin
+		hR := CreateRectRgn(0, 0, Width, Height);
+		SetWindowRgn(Handle, hR, True);
+		DeleteObject(hR);
+	end;
+end;
+
+procedure TDButton.WMSize(var Message: TWMSize);
+begin
+	if Visible = False then Exit;
+	if (Message.Width = 0) or (Message.Height = 0) then Exit;
+	InitRect;
+end;
+
 constructor TDButton.Create(AOwner: TComponent);
 begin
 	FGlyph := TButtonGlyph.Create;
@@ -538,6 +605,7 @@ var
 	Co: array[0..3] of TColor;
 	E: TColor;
 	s: string;
+//	m: SG;
 const
 	Border = 2;
 begin
@@ -595,19 +663,37 @@ begin
 			E := cl3DLight
 		else
 			E := MixColors(FColor, clBtnHighlight);
-		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-			E, clBtnShadow, 1, ef16);
+
+{		if RegCap then
+		begin
+			m := Min(Width, Height) div 2;
+			FBmpOut.Canvas.Pen.Color := E;
+			FBmpOut.Canvas.RoundRect(Recta.Left, Recta.Top, Recta.Right + 1, Recta.Bottom + 1, m, m);
+		end
+		else
+		begin}
+			FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+				E, clBtnShadow, 1, ef16);
+//		end;
+
 		InflateRect(Recta, -1, -1);
 	end;
 	Co[0] := ColorDiv(FColor, 5 * 16384);
 	Co[1] := ColorDiv(FColor, 3 * 16384);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
+	{$ifopt d-}
 	FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 		clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+	{$else}
+	FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
+	{$endif}
 
 	if IsDown then OffsetRect(Recta, 1, 1);
 	FBmpOut.Canvas.Font := Self.Font;
+	if NTSystem then
+		if FBmpOut.Canvas.Font.Name = 'MS Sans Serif' then
+			FBmpOut.Canvas.Font.Name := 'Microsoft Sans Serif';
 
 	if (Length(Caption) > 0) and (Caption[1] = '/') then
 	begin

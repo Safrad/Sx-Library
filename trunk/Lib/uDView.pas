@@ -1,4 +1,4 @@
-// Build: 08/2001-04/2002 Author: Safranek David
+// Build: 08/2001-04/2003 Author: Safranek David
 
 unit uDView;
 
@@ -13,10 +13,11 @@ type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
 
 	TColumn = packed record
-		Caption: string;
-		Width: SG;
-		Click: Boolean;
-		Alignment: TAlignment;
+		Caption: string; // 4
+		Width, MaxWidth: S4; // 8
+		Click: B1; // 1
+		Alignment: TAlignment; // 1
+		Reserved: array[0..1] of U1; // 2
 	end;
 
 	TOnGetData = procedure(Sender: TObject; var Data: string; ColIndex, RowIndex: Integer) of object;
@@ -41,9 +42,12 @@ type
 		procedure SetColumnCount(Value: SG);
 		procedure SetRowCount(Value: SG);
 
+//		procedure OnDblClick; override;
+
 	protected
 		{ Protected declarations }
 //		procedure OnFill;
+		procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
 	public
 		{ Public declarations }
 {		Data: string;
@@ -83,6 +87,7 @@ type
 		property ColumnCount: SG read FColumnCount write SetColumnCount;
 		property RowCount: SG read FRowCount write SetRowCount;
 
+
 	published
 
 		property OnGetData: TOnGetData read FOnGetData write FOnGetData;
@@ -93,9 +98,12 @@ procedure Register;
 
 implementation
 
-uses uGraph, uDBitmap;
+uses
+	Math,
+	uGraph, uDBitmap, uError, uScreen;
 
 const
+	MinColumnWidth = 16;
 	RowHeight = 16;
 
 var
@@ -104,6 +112,7 @@ var
 constructor TDView.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
+
 	OnFill := LFill;
 	DragColumns := -1;
 	ColumnMove := -1;
@@ -145,7 +154,7 @@ begin
 		for i := 0 to FColumnCount - 1 do
 		begin
 			Inc(w, Columns[ColumnOrder[i]].Width);
-			if Abs(MX - w) <= 8 then
+			if Abs(MX - w) <= 4 then
 			begin
 				Result := vaColumnMove;
 				IX := i;
@@ -166,6 +175,8 @@ procedure TDView.MouseDown(Button: TMouseButton; Shift: TShiftState;
 var
 	i: SG;
 begin
+	MouseMove(Shift, X, Y); // Rigth click after menu popup
+
 	BDown := True;
 	inherited MouseDown(Button, Shift, X, Y);
 	case MouseAction of
@@ -190,6 +201,7 @@ begin
 			end;
 			vaRow:
 			begin
+				if (Button = mbRight) and (SelRows[IY]) then Exit;
 				if not (ssCtrl in Shift) then
 					for i := 0 to FRowCount - 1 do
 						SelRows[i] := False;
@@ -227,7 +239,7 @@ procedure TDView.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
 	inherited MouseMove(Shift, X, Y);
 	HotColumn := -1;
-	HotRow := -1;
+//	HotRow := -1;
 
 	if (DragColumns = -1) and (ColumnMove = -1) then
 	begin
@@ -258,7 +270,7 @@ begin
 				if HotRow <> IY then
 				begin
 					HotRow := IY;
-//					Fill;
+					Fill;
 				end;
 			end;
 		end;
@@ -276,7 +288,7 @@ begin
 				begin
 					Change(ColumnOrder[DragColumns], ColumnOrder[DragColumns + 1]);
 					// := X - ColumnMoveX;
-//					if Columns[ColumnMove].Width < 16 then Columns[ColumnMove].Width := 16;
+//					if Columns[ColumnMove].Width < MinColumnWidth then Columns[ColumnMove].Width := MinColumnWidth;
 					ChangeColumns;
 					Fill;
 				end;
@@ -287,7 +299,7 @@ begin
 //				if BDown then
 				begin
 					Columns[ColumnMove].Width := X - ColumnMoveX;
-					if Columns[ColumnMove].Width < 16 then Columns[ColumnMove].Width := 16;
+					if Columns[ColumnMove].Width < MinColumnWidth then Columns[ColumnMove].Width := MinColumnWidth;
 					ChangeColumns;
 					Fill;
 				end;
@@ -334,9 +346,51 @@ begin
 	end;
 end;
 
+procedure TDView.WMLButtonDblClk(var Message: TWMLButtonDblClk);
+begin
+	inherited;
+	case MouseAction of
+	mwNone, mwScroll:
+	begin
+//		if (Button = mbLeft) then
+		begin
+			case Where of
+			vaColumnMove:
+			begin
+				if IX >= 0 then
+				Columns[IX].Width := Columns[IX].MaxWidth;
+				Fill;
+			end;
+			end;
+		end;
+	end;
+	end;
+end;
+
 procedure TDView.WMKeyDown(var Msg: TWMKeyDown);
 begin
-	Msg.Result := 1;
+	if Msg.KeyData = 1966081 then // Ctrl+A
+	begin
+		SelectAll;
+		Fill;
+	end
+	else if Msg.KeyData = 65537 then // VK_ESCAPE:
+	begin
+		BDown := False;
+		DragColumns := -1;
+		if ColumnMove <> -1 then
+		begin
+//			ColumnMove := -1;
+			Columns[ColumnMove].Width := ColumnMoveW;
+			ChangeColumns;
+			Fill;
+//			Cursor := crDefault;
+		end;
+		ColumnMove := -1;
+	end;
+
+	Msg.Result := 0;
+//	DefaultHandler(Msg);
 end;
 
 procedure TDView.KeyDown(var Key: Word; Shift: TShiftState);
@@ -344,18 +398,6 @@ var i: SG;
 begin
 	i := Height - ScrollBarHHeight - RowHeight;
 	case Key of
-	VK_ESCAPE:
-	begin
-		BDown := False;
-		DragColumns := -1;
-		if ColumnMove <> -1 then
-		begin
-			Columns[ColumnMove].Width := ColumnMoveW;
-			ChangeColumns;
-			Fill;
-		end;
-		ColumnMove := -1;
-	end;
 	VK_RETURN:
 	begin
 		SelRows[ActualRow] := True;
@@ -427,13 +469,15 @@ var
 	i, w: SG;
 	X, xx, tx, ww, Y, IX, IY, Wid: SG;
 	C1, C2: SG;
+	Co: array[0..3] of TColor;
+
 	Arrow: TDBitmap;
 	Data: string;
 	ColIndex, RowIndex: SG;
 begin
 	if Bitmap.Empty then Exit;
 	if SoundsLoaded = False then Init;
-	Bitmap.BarE24(clNone, clAppWorkSpace, ef16);
+//	Bitmap.Bar24(clNone, 0, 0{RowHeight}, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
 //	Bitmap.Canvas.Brush.Style := bsClear;
 
 	IX := 0;
@@ -441,7 +485,7 @@ begin
 	Wid := 0;
 	for i := 0 to FColumnCount - 1 do
 	begin
-		Inc(Wid, Columns[ColumnOrder[i]].Width);
+		Inc(Wid, Columns[i{ColumnOrder[i]}].Width);
 	end;
 	for i := 0 to FColumnCount - 1 do
 	begin
@@ -455,18 +499,20 @@ begin
 	end;
 	if FColumnCount > 0 then
 	begin
-		while X < Width do
+		while X < Bitmap.Width do
 		begin
-			if IX >= FColumnCount then Break;
+			if IX > FColumnCount then Break;
 			if (IX >= 0) and (IX < FColumnCount) then
 			begin
+				if IX < FColumnCount then
+					Columns[IX].MaxWidth := MinColumnWidth;
 				Y := -OfsY mod RowHeight + RowHeight;
 				IY := OfsY div RowHeight;
-				while Y < Height do
+				while Y < Bitmap.Height do
 				begin
 					if (IY >= 0) and (IY < FRowCount) then
 					begin
-						if SelRows[IY] and MouseOn then
+						if SelRows[IY] {and MouseOn} then
 						begin
 							Bitmap.Canvas.Brush.Color := clHighlight
 						end
@@ -476,19 +522,19 @@ begin
 						begin
 							ColIndex := ColumnOrder[IX];
 							RowIndex := RowOrder[IY];
-							if SelRows[IY] and MouseOn then
+							if SelRows[IY] {and MouseOn} then
 								Bitmap.Canvas.Font.Color := clWindow
 							else if HotRow = IY then
 								Bitmap.Canvas.Font.Color := clHighlight
 							else
 								Bitmap.Canvas.Font.Color := clWindowText;
-							if (RowIndex < 0) or (RowIndex > FRowCount) then
+							if (RowIndex < 0) or (RowIndex >= FRowCount) then
 							begin
 								Data := '<Row out of range>';
 							end
-							else if (ColIndex < 0) or (ColIndex > FColumnCount) then
+							else if (ColIndex < 0) or (ColIndex >= FColumnCount) then
 							begin
-								Data := '<Row out of range>';
+								Data := '<Coloumn out of range>';
 							end
 							else
 							begin
@@ -498,6 +544,8 @@ begin
 						end
 						else
 							Data := '<No data event defined>';
+
+						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 3);
 
 						Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if IY = ActualRow then
@@ -515,11 +563,73 @@ begin
 							if xx < X + 2 then xx := x + 2;
 							Bitmap.Canvas.TextOut(xx, Y + 2, Data);
 						end;
+					end
+					else
+					begin
+//						Bitmap.Bar24(clNone, X, 0, Bitmap.Width - 1, RowHeight - 1, clAppWorkSpace, ef16);
+						Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, clAppWorkSpace, ef16);
+						Bitmap.Lin24(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
+						Bitmap.Lin24(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
+//						Break;
 					end;
+{					end
+					else
+					begin
+					end;}
 					Inc(Y, RowHeight);
 					Inc(IY);
 				end;
+				if IX = FColumnCount then Break;
 
+{				Dec(Y, RowHeight);
+				if Y < Bitmap.Height then
+					Bitmap.Bar24(clNone, X, Y, X + Columns[IX].Width - 1, Bitmap.Height - 1, clRed, ef16);}
+
+				// Bar
+				if HotTrack and (HotColumn = IX) and Columns[IX].Click then
+				begin
+					C1 := clHighlight;
+					C2 := clWindow;
+				end
+				else
+				begin
+					C1 := clBtnFace;
+					C2 := clBtnText;
+				end;
+//				Bitmap.Bar24(clNone, x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, C1, ef16);
+				Co[0] := LighterColor(C1);
+				Co[1] := DarkerColor(C1);
+				Co[2] := Co[0];
+				Co[3] := Co[1];
+				Bitmap.GenerateRGB(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+
+				// Sort By
+				xx := x;
+				ww := Columns[IX].Width;
+				if IX = SortBy then
+				begin
+					if SortBySwap then Arrow := ArrowU else Arrow := ArrowD;
+					if Arrow <> nil then
+					begin
+						Bitmap.BmpE24(x, 0, Arrow, clPurple, ef16);
+						Inc(xx, Arrow.Width);
+						Dec(ww, Arrow.Width);
+					end;
+				end;
+
+				// Caption
+				Bitmap.Canvas.Font.Color := C2;
+				Bitmap.Canvas.Brush.Color := C1;
+				Bitmap.Canvas.Brush.Style := bsClear;
+				case Columns[IX].Alignment of
+				taLeftJustify: tx := xx + 2;
+				taRightJustify: tx := xx + ww - 3 - Bitmap.Canvas.TextWidth(Columns[IX].Caption);
+				else tx := xx + (ww + Bitmap.Canvas.TextWidth(Columns[IX].Caption)) div 2;
+				end;
+				if tx < xx + 2 then tx := xx + 2;
+				Bitmap.Canvas.TextOut(tx, 2, Columns[IX].Caption);
+
+				// Border
 				if Columns[IX].Click then
 				begin
 					if IX = SortBy then
@@ -539,48 +649,16 @@ begin
 					C2 := 3;
 				end;
 				Bitmap.Border24(x, 0, x + Columns[IX].Width - 1, RowHeight - 1, DepthColor(C1), DepthColor(C2), 1, ef16);
-				if HotTrack and (HotColumn = IX) then
-				begin
-					C1 := clHighlight;
-					C2 := clWindow;
-				end
-				else
-				begin
-					C1 := clBtnFace;
-					C2 := clBtnText;
-				end;
-				Bitmap.Bar24(clNone, x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, C1, ef16);
-				xx := x;
-				ww := Columns[IX].Width;
-				if IX = SortBy then
-				begin
-					if SortBySwap then Arrow := ArrowU else Arrow := ArrowD;
-					if Arrow <> nil then
-					begin
-						Bitmap.BmpE24(x, 0, Arrow, clPurple, ef16);
-						Inc(xx, Arrow.Width);
-						Dec(ww, Arrow.Width);
-					end;
-				end;
-				Bitmap.Canvas.Font.Color := C2;
-				Bitmap.Canvas.Brush.Color := C1;
-				case Columns[IX].Alignment of
-				taLeftJustify: tx := xx + 2;
-				taRightJustify: tx := xx + ww - 3 - Bitmap.Canvas.TextWidth(Columns[IX].Caption);
-				else tx := xx + (ww + Bitmap.Canvas.TextWidth(Columns[IX].Caption)) div 2;
-				end;
-				if tx < xx + 2 then tx := xx + 2;
-
-				Bitmap.Canvas.TextOut(tx, 2, Columns[IX].Caption);
 
 				if Columns[IX].Width <= 0 then w := 16 else w := Columns[IX].Width;
-				Inc(X, W);
+				Inc(X, w);
 			end;
 
 			Inc(IX);
 		end;
 	end;
-
+	if X < Bitmap.Width then
+		Bitmap.Bar24(clNone, X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16);
 end;
 
 procedure TDView.Paint;
@@ -601,7 +679,7 @@ end;
 procedure TDView.SelectAll;
 var i: SG;
 begin
-	for i := 0 to RowCount - 1 do
+	for i := 0 to FRowCount - 1 do
 	begin
 		SelRows[i] := True;
 	end;
@@ -610,7 +688,7 @@ end;
 procedure TDView.SelectInvert;
 var i: SG;
 begin
-	for i := 0 to RowCount - 1 do
+	for i := 0 to FRowCount - 1 do
 	begin
 		SelRows[i] := not SelRows[i];
 	end;
@@ -643,16 +721,30 @@ begin
 	if Value <> FRowCount then
 	begin
 		NewSize := Value;
-		if AllocByEx(Length(SelRows), NewSize, DefMemBuffer) then
+		if AllocByEx(Length(SelRows), NewSize, SizeOf(RowOrder[0])) then
 		begin
-			SetLength(SelRows, Value);
-			SetLength(RowOrder, Value);
+			SetLength(SelRows, NewSize);
+			SetLength(RowOrder, NewSize);
 		end;
-		for i := FRowCount to Value - 1 do
+		if FRowCount < Value then
 		begin
-			RowOrder[i] := i;
+			for i := FRowCount to Value - 1 do
+			begin
+				RowOrder[i] := i;
+			end;
+		end
+		else
+		begin
+			for i := 0 to Value - 1 do
+			begin
+				RowOrder[i] := i;
+			end;
+			if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[SortBy]);
 		end;
 		FRowCount := Value;
+		SelCount := 0;
+		for i := 0 to FRowCount - 1 do
+			if SelRows[i] then Inc(SelCount);
 		BitmapHeight := FRowCount * RowHeight + RowHeight;
 	end;
 end;

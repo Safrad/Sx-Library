@@ -219,6 +219,139 @@ object fGColor: TfGColor
     Displ.Size = 0
     BevelOuter = bvNone
   end
+  object PanelNowColor: TDLabel
+    Left = 64
+    Top = 280
+    Width = 153
+    Height = 24
+    Alignment = taCenter
+    AutoSize = False
+    Caption = '$00000000'
+    Color = clBlack
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    PopupMenu = PopupMenu1
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelInner = bvRaised
+    BevelOuter = bvLowered
+  end
+  object PanelCurColor: TDLabel
+    Left = 272
+    Top = 304
+    Width = 153
+    Height = 24
+    Alignment = taCenter
+    AutoSize = False
+    Caption = '$00000000'
+    Color = clBlack
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    Layout = tlCenter
+    OnClick = PanelCurColorClick
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelInner = bvRaised
+    BevelOuter = bvLowered
+  end
+  object PanelNowBitColor: TDLabel
+    Left = 64
+    Top = 304
+    Width = 153
+    Height = 24
+    Alignment = taCenter
+    AutoSize = False
+    Caption = '$00000000'
+    Color = clBlack
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    PopupMenu = PopupMenu1
+    Layout = tlCenter
+    OnClick = PanelNowBitColorClick
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelInner = bvRaised
+    BevelOuter = bvLowered
+  end
+  object PanelDefaultColor: TDLabel
+    Left = 272
+    Top = 280
+    Width = 153
+    Height = 24
+    Alignment = taCenter
+    AutoSize = False
+    Caption = '$00000000'
+    Color = clBlack
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    Layout = tlCenter
+    OnClick = PanelDefaultColorClick
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelInner = bvRaised
+    BevelOuter = bvLowered
+  end
   object EditR: TEdit
     Left = 48
     Top = 8
@@ -519,83 +652,6 @@ object fGColor: TfGColor
       OnMouseUp = ImageLMouseUp
       OnMouseMove = ImageLMouseMove
     end
-  end
-  object PanelNowColor: TDPanel
-    Left = 64
-    Top = 280
-    Width = 153
-    Height = 24
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Caption = '$00000000'
-    Color = clBlack
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
-    Font.Style = []
-    ParentFont = False
-    PopupMenu = PopupMenu1
-    TabOrder = 19
-  end
-  object PanelCurColor: TDPanel
-    Left = 272
-    Top = 304
-    Width = 153
-    Height = 24
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Caption = '$00000000'
-    Color = clBlack
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 22
-    OnClick = PanelCurColorClick
-  end
-  object PanelNowBitColor: TDPanel
-    Left = 64
-    Top = 304
-    Width = 153
-    Height = 24
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Caption = '$00000000'
-    Color = clBlack
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
-    Font.Style = []
-    ParentFont = False
-    PopupMenu = PopupMenu1
-    TabOrder = 20
-    OnClick = PanelNowBitColorClick
-  end
-  object PanelDefaultColor: TDPanel
-    Left = 272
-    Top = 280
-    Width = 153
-    Height = 24
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    Caption = '$00000000'
-    Color = clBlack
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 21
-    OnClick = PanelDefaultColorClick
   end
   object PopupMenu1: TPopupMenu
     Images = ImageList1

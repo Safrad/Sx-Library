@@ -20,9 +20,9 @@ type
 		efAdd, efSub, efAdd127, efSub127, efXor, efNeg);
 
 
-	TBmpData = array[0..4 * MaxBitmapWidth * MaxBitmapHeight - 1] of U8; // All of 24 bit bitmap
+	TBmpData = array[0..4 * MaxBitmapWidth * MaxBitmapHeight - 1] of U1; // All of 24 bit bitmap
 	PBmpData = ^TBmpData;
-	TBmpLine = array[0..MaxBitmapWidth - 1] of U8; // One line of 24 bit bitmap
+	TBmpLine = array[0..MaxBitmapWidth - 1] of U1; // One line of 24 bit bitmap
 	PBmpLine = ^TBmpLine;
 
 	TCoor = LongInt;
@@ -177,7 +177,7 @@ procedure GetPix24(PD: Pointer; const ByteXD: LongWord;
 procedure Pix24(PD: Pointer; const ByteXD: LongWord;
 	const X, Y: TCoor; C: TRColor; Effect: TEffect); // Must be fast
 
-function GetColors24(Source: U8; const Brig, Cont, Gamma, ContBase: Integer): U8;
+function GetColors24(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
 
 procedure Rotate24(
 	BmpD: TDBitmap; const XD12, YD12: SG;
@@ -192,12 +192,12 @@ procedure RotateE24(
 procedure RotateDef24(
 	BmpD: TDBitmap; const XD12, YD12: SG;
 	BmpS: TDBitmap; const XS1, YS1, XS2, YS2: SG;
-	const Typ: U8; const Clock: TAngle;
+	const Typ: U1; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 procedure RotateDefE24(
 	BmpD: TDBitmap;
 	BmpS: TDBitmap;
-	const Typ: U8; const Clock: TAngle;
+	const Typ: U1; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 
 const
@@ -227,7 +227,7 @@ implementation
 
 uses
 	Dialogs, Jpeg, Math,
-	uGraph, uError, uDialog, uScreen, uFiles, uGetInt, uStrings;
+	uGraph, uError, uDialog, uScreen, uFiles, uGetInt, uStrings, uSysInfo;
 
 (*-------------------------------------------------------------------------*)
 function WidthToByteX4(const Width: LongWord): LongWord;
@@ -259,6 +259,10 @@ end;
 constructor TDBitmap.Create;
 begin
 	inherited Create;
+	if NTSystem then
+		if Canvas.Font.Name = 'MS Sans Serif' then
+			Canvas.Font.Name := 'Microsoft Sans Serif';
+
 	FPixelFormat := {$ifdef BPP4}pf32bit{$else}pf24bit{$endif};
 	Canvas.OnChange := nil; // Must be !!!
 	Canvas.OnChanging := nil;
@@ -501,8 +505,8 @@ procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY:
 			begin
 				F.Readln(Line);
 				InLineIndex := 1;
-				W := StrToValI(ReadToChar(Line, InLineIndex, ' '), 0, 0, MaxInt, 1);
-				H := StrToValI(ReadToChar(Line, InLineIndex, ' '), 0, 0, MaxInt, 1);
+				W := StrToValI(ReadToChar(Line, InLineIndex, ' '), False, 0, 0, MaxInt, 1);
+				H := StrToValI(ReadToChar(Line, InLineIndex, ' '), False, 0, 0, MaxInt, 1);
 				F.Readln(Line);
 				SetSize(W, H);
 				{$ifdef BPP4}
@@ -6699,11 +6703,11 @@ begin
 			PD := Pointer(Integer(BmpDe.Data) + Integer({$ifdef BPP4}X shl 2{$else}X + X + X{$endif}) - Integer(ByteDX * Y));
 			if (TranColor = clNone) or (TranCount < StpXYU div 2) then
 			begin
-				PD[0] := RoundDiv64(Suma24[0], stpXYU);
+				PD[0] := RoundDivS8(Suma24[0], stpXYU);
 				Inc(Integer(PD));
-				PD[0] := RoundDiv64(Suma24[1], stpXYU);
+				PD[0] := RoundDivS8(Suma24[1], stpXYU);
 				Inc(Integer(PD));
-				PD[0] := RoundDiv64(Suma24[2], stpXYU);
+				PD[0] := RoundDivS8(Suma24[2], stpXYU);
 			end
 			else
 			begin
@@ -6733,7 +6737,7 @@ begin
 	Resize24E(BmpS, clNone, NewX, NewY, InterruptProcedure);
 end;
 (*-------------------------------------------------------------------------*)
-function GetColors24(Source: U8; const Brig, Cont, Gamma, ContBase: Integer): U8;
+function GetColors24(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
 var W: Integer;
 begin
 	W := Source + Brig;
@@ -6933,8 +6937,37 @@ begin
 	HidedColor2.L := ColorToRGB(HidedColor);
 	RandEffect := ColorToRGB(RandEffect);
 
+	// For Colors
 	MaxX := XD2 - XD1 + 1;
 	MaxY := YD2 - YD1 + 1;
+
+	// Cut
+	if XD1 >= TCoor(GraphMaxX) then Exit;
+	if XD1 < GraphMinX then
+	begin
+		XD1 := GraphMinX;
+	end;
+
+	if YD1 >= TCoor(GraphMaxY) then Exit;
+	if YD1 < GraphMinY then
+	begin
+		YD1 := GraphMinY;
+	end;
+
+	if XD2 < 0 then Exit;
+	if XD2 > TCoor(GraphMaxX) then
+	begin
+		XD2 := TCoor(GraphMaxX);
+	end;
+	if XD1 > XD2 then Exit;
+
+	if YD2 < 0 then Exit;
+	if YD2 > TCoor(GraphMaxY) then
+	begin
+		YD2 := TCoor(GraphMaxY);
+	end;
+	if YD1 > YD2 then Exit;
+
 	MaxX2 := 2 * MaxX;
 	MaxY2 := 2 * MaxY;
 	MaxXD := MaxX - 1;
@@ -7258,6 +7291,7 @@ procedure TDBitmap.FormBitmap(Color: TColor);
 var
 	Co: array[0..3] of TColor;
 begin
+	Color := ColorToRGB(Color);
 	Co[0] := LighterColor(Color);
 	Co[1] := DarkerColor(Color);
 	Co[2] := Co[0];
@@ -8160,7 +8194,7 @@ end;
 procedure RotateDef24(
 	BmpD: TDBitmap; const XD12, YD12: SG;
 	BmpS: TDBitmap; const XS1, YS1, XS2, YS2: SG;
-	const Typ: U8; const Clock: TAngle;
+	const Typ: U1; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 var DirXSToXD, DirXSToYD, DirYSToXD, DirYSToYD: TAngle;
 begin
@@ -8276,7 +8310,7 @@ end;
 procedure RotateDefE24(
 	BmpD: TDBitmap;
 	BmpS: TDBitmap;
-	const Typ: U8; const Clock: TAngle;
+	const Typ: U1; const Clock: TAngle;
 	TransparentColor: TColor; const Effect: TEffect);
 begin
 	RotateDef24(

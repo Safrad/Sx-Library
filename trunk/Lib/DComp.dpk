@@ -51,6 +51,10 @@ contains
   uDIni in 'uDIni.pas',
   uDButton in 'uDButton.pas',
   uDTimer in 'uDTimer.pas',
-  uDForm in 'uDForm.pas';
+  uDForm in 'uDForm.pas',
+  TrayIcon in '..\ExtLib\TrayIcon.pas',
+  CommInt in '..\ExtLib\CommInt.pas',
+  CommObjs in '..\ExtLib\CommObjs.pas',
+  PtrEdit in '..\ExtLib\PtrEdit.pas';
 
 end.

@@ -490,10 +490,14 @@ var
 		end;
 	end;
 
-begin
+  var 		Str: TStrings;
+
+	begin
 	OutStr := 'REGEDIT4' + #13 + #10;
 	Reg := TRegistry.Create;
 	Reg.RootKey := RootKey;
+			Str := TStringList.Create;
+	Reg.GetKeyNames(Str);
 	Sub(Key);
 	Reg.Free;
 end;

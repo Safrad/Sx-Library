@@ -4,7 +4,7 @@ unit uDb;
 
 interface
 
-uses uDPanel, uDButton, StdCtrls, Classes, SysUtils;
+uses uDLabel, uDButton, StdCtrls, Classes, SysUtils;
 
 const
 	PreHeadSize = 12;
@@ -51,7 +51,7 @@ type
 		DbItemsChanged: Boolean;
 
 		DbPanelIndex,
-		DbPanelCount: TDPanel;
+		DbPanelCount: TDLabel;
 
 		DbComboBoxItems: TComboBox;
 		DbButtonAdd,

@@ -9,8 +9,11 @@ uses uAdd;
 type
 	TCharSet = set of Char;
 
-function DelCharsF(const s: string; const C: Char): string;
-procedure DelChars(var s: string; const C: Char);
+function DelCharsF(const s: string; const SubChar: Char): string;
+procedure DelChars(var s: string; const SubChar: Char);
+
+function DelStrF(s: string; const SubStr: string): string;
+procedure DelStr(var s: string; const SubStr: string);
 
 function DelQuoteF(const s: string): string;
 procedure DelQuote(var s: string);
@@ -38,31 +41,67 @@ function Replace(s: string; const WhatS, ToS: string): string;
 
 implementation
 
+uses uFind;
 var
 	TableWordSep: array[0..7] of Char = (' ', ',', '.', '-', '/', ';', '(', ')');
 
-function DelCharsF(const s: string; const C: Char): string;
+function DelCharsF(const s: string; const SubChar: Char): string;
 var i: Integer;
 begin
 	Result := '';
 	for i := 1 to Length(s) do
 	begin
-		if s[i] <> C then Result := Result + s[i];
+		if s[i] <> SubChar then Result := Result + s[i];
 	end;
 end;
 
-procedure DelChars(var s: string; const C: Char);
+procedure DelChars(var s: string; const SubChar: Char);
 var i: Integer;
 begin
 	i := 1;
 	while i <= Length(s) do
 	begin
-		if s[i] = C then
+		if s[i] = SubChar then
 			Delete(s, i, 1)
 		else
 			Inc(i);
 	end;
 end;
+
+function DelStrF(s: string; const SubStr: string): string;
+var i, F: SG;
+begin
+	Result := '';
+	F := 1;
+	while True do
+	begin
+		i := Find(SubStr, s, F);
+		if i = 0 then
+		begin
+			Break;
+		end;
+		F := i;
+		Delete(s, i, Length(SubStr));
+	end;
+	Result := s;
+end;
+
+procedure DelStr(var s: string; const SubStr: string);
+var i, F: SG;
+begin
+	F := 1;
+	while True do
+	begin
+		i := Find(SubStr, s, F);
+		if i = 0 then
+		begin
+			Break;
+		end;
+		F := i;
+		Delete(s, i, Length(SubStr));
+	end;
+end;
+
 
 function DelQuoteF(const s: string): string;
 begin

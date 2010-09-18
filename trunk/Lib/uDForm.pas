@@ -88,8 +88,12 @@ const
 
 procedure DFormFree(var DForm: TDForm);
 begin
-	DForm.Free;
-	DForm := nil;
+	if Assigned(DForm) then
+	begin
+		DForm.Close;
+		DForm.Free;
+		DForm := nil;
+	end;
 end;
 
 procedure glTextOut(Canvas: TCanvas;
@@ -347,10 +351,11 @@ end;
 procedure TDForm.InitRect;
 var
 	hR: THandle;
-	Po: array[0..7] of tagPOINT;
+	Po: array[0..9] of tagPOINT;
 begin
 	if (SysInfo.OS.dwMajorVersion < 4) or ((SysInfo.OS.dwMajorVersion = 4) and (SysInfo.OS.dwMinorVersion < 10)) then Exit;
-	if FFullScreen = False then
+	if (SysInfo.OS.dwMajorVersion >= 5) then Exit;
+	if (FFullScreen = False) and (WindowState <> wsMaximized) then
 	begin
 		Po[0].x := 0;
 		Po[0].y := 0;
@@ -358,18 +363,34 @@ begin
 		Po[1].y := 0;
 		Po[2].x := Width;
 		Po[2].y := Height;
+
 		Po[3].x := Width div 2 + 8;
 		Po[3].y := Height;
-		Po[4].x := Width div 2;
-		Po[4].y := Height - 8;
-		Po[5].x := Width div 2 - 8;
-		Po[5].y := Height;
-		Po[6].x := 0;
-		Po[6].y := Height;
-		Po[7].x := 0;
-		Po[7].y := 0;
-		//	hR := CreateEllipticRgn(0, 0, Width, Height);
-		//	hR := CreateRectRgn(0, 0, Width, Height);
+
+		Po[4].x := Width div 2 + 4;
+		Po[4].y := Height - 4;
+
+		Po[5].x := Width div 2;
+		Po[5].y := Height - 6;
+
+		Po[6].x := Width div 2 - 4;
+		Po[6].y := Height - 4;
+
+{		Po[4].x := Width div 2;
+		Po[4].y := Height - 8;}
+
+
+		Po[7].x := Width div 2 - 8;
+		Po[7].y := Height;
+
+		Po[8].x := 0;
+		Po[8].y := Height;
+		Po[9].x := 0;
+		Po[9].y := 0;
+//		hR := CreateRoundRectRgn(0, 0, Width + 1, Height + 1, 40, 40);
+//			hR := CreateEllipticRgn(0, 0, Width, Height);
+//			hR := CreateRectRgn(0, 0, Width, Height);
+//		hR := CreateRectRgn(0, 0, Width, Height);
 		hR := CreatePolygonRgn(Po[0], Length(Po), {ALTERNATE}	WINDING);
 		SetWindowRgn(Handle, hR, True);
 		DeleteObject(hR);
@@ -378,7 +399,7 @@ begin
 	begin
 		hR := CreateRectRgn(0, 0, Width, Height);
 		SetWindowRgn(Handle, hR, True);
-		DeleteObject(hR);
+		DeleteObject(hR);  
 	end;
 end;
 
@@ -395,6 +416,11 @@ var
 	FileName: TFileName;
 begin
 	inherited Create(AOwner);
+
+	if NTSystem then
+		if Font.Name = 'MS Sans Serif' then
+			Font.Name := 'Microsoft Sans Serif';        
+  Canvas.Font.Name := Font.Name;
 
 	CheckPos;
 
@@ -556,7 +582,7 @@ begin
 
 	if FBackground = baOpenGL then
 	begin
-//		AfterResize; 
+//		AfterResize;
 		Paint;
 		DeactivateRenderingContext; // make context drawable
 	end;

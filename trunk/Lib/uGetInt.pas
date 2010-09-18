@@ -163,7 +163,7 @@ procedure TfGetInt.EditInputChange(Sender: TObject);
 var ErrorMsg: string;
 begin
 	EditInput.OnChange := nil;
-	NowVal := StrToValI(EditInput.Text, TMinVal, NowVal, TMaxVal, 1, ErrorMsg);
+	NowVal := StrToValI(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1, ErrorMsg);
 	if ErrorMsg <> '' then
 	begin
 		NowVal := TDefVal;

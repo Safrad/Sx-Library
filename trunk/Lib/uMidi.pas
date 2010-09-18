@@ -8,8 +8,8 @@ uses uAdd, MMSystem, SysUtils, Windows;
 
 function MidiMCICallBack: Boolean;
 procedure MidiMCIOpen(FileName: TFileName);
-procedure MidiMCISeek(const SeekTo: U32);
-function MidiMCIGetPos: U32;
+procedure MidiMCISeek(const SeekTo: U4);
+function MidiMCIGetPos: U4;
 procedure MidiMCIPause;
 procedure MidiMCIStop;
 procedure MidiMCIResume;
@@ -169,7 +169,7 @@ begin
 	if mciGetErrorString(ErrorCode, PChar(Result), 128) then
 		Result := PChar(Result)
 	else
-		Result := 'MMSYSTEM' + Using('~000', ErrorCode) + ' ' + 'Unknown error';
+		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' Unknown error';
 end;
 
 function MidiMCIError(ErrorCode: SG): Boolean;
@@ -190,7 +190,7 @@ end;
 procedure MidiMCIOpen(FileName: TFileName);
 label LRetry, LRetrySend;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 	F: file;
 	ErrorCode: SG;
@@ -215,15 +215,15 @@ begin
 	OpenParm.lpstrElementName := PChar(FileName);
 	FFlags := MCI_OPEN_ELEMENT or MCI_NOTIFY;
 
-	FError := mciSendCommand(0, mci_Open, FFlags, U32(@OpenParm));
+	FError := mciSendCommand(0, mci_Open, FFlags, U4(@OpenParm));
 	MidiOpened := FError = 0;
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
-procedure MidiMCISeek(const SeekTo: U32);
+procedure MidiMCISeek(const SeekTo: U4);
 label LRetrySend;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 begin
 	if MidiOpened = False then Exit;
@@ -232,14 +232,14 @@ begin
 	SeekParm.dwCallback := 0;
 	FFlags := 0;
 	FFlags := FFlags or mci_To;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Seek, FFlags, U32(@SeekParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Seek, FFlags, U4(@SeekParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
-function MidiMCIGetPos: U32;
+function MidiMCIGetPos: U4;
 label LRetrySeek;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 	StatusParm: TMCI_Status_Parms;
 begin
@@ -250,7 +250,7 @@ begin
 	StatusParm.dwTrack := 0;
 	StatusParm.dwReturn := 0;
 	FFlags := mci_Wait or mci_Status_Item;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Status, FFlags, U32(@StatusParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Status, FFlags, U4(@StatusParm));
 	if MidiMCIError(FError) then goto LRetrySeek;
 	Result := StatusParm.dwReturn;
 end;
@@ -258,14 +258,14 @@ end;
 procedure MidiMCIPause;
 label LRetrySend;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	LRetrySend:
 	FFlags := 0;
 	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Pause, FFlags, U32(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Pause, FFlags, U4(@GenParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 	MidiPlaying := False;
 end;
@@ -273,7 +273,7 @@ end;
 procedure MidiMCIStop;
 label LRetrySend;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 begin
 	if MidiOpened = False then Exit;
@@ -281,21 +281,21 @@ begin
 	MidiPlaying := False;
 	FFlags := 0;
 	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Stop, FFlags, U32(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Stop, FFlags, U4(@GenParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
 procedure MidiMCIResume;
 label LRetrySend;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 begin
 	if MidiOpened = False then Exit;
 	LRetrySend:
 	FFlags := 0;
 	GenParm.dwCallback := MidiHandle;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Resume, FFlags, U32(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Resume, FFlags, U4(@GenParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 	MidiPlaying := False;
 	MidiMCIPlay; // Need for Callback
@@ -304,7 +304,7 @@ end;
 procedure MidiMCIPlay;
 label LRetrySend;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 begin
 	if MidiOpened = False then Exit;
@@ -314,14 +314,14 @@ begin
 	FFlags := mci_Notify;
 	PlayParm.dwCallback := MidiHandle;
 
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Play, FFlags, U32(@PlayParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Play, FFlags, U4(@PlayParm));
 	if MidiMCIError(FError) then goto LRetrySend;
 end;
 
 procedure MidiMCIClose;
 label LRetrySend;
 var
-	FFlags: U32;
+	FFlags: U4;
 	FError: SG;
 begin
 	if MidiOpened = False then Exit;
@@ -329,7 +329,7 @@ begin
 	FFlags := 0;
 	PlayParm.dwCallback := OpenParm.dwCallback;
 	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Close, FFlags, U32(@GenParm));
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Close, FFlags, U4(@GenParm));
 	if FError = 0 then
 	begin
 		MidiOpened := False;

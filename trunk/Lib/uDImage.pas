@@ -37,8 +37,8 @@ type
 
 		procedure WMChar(var Message: TWMChar); message WM_CHAR;
 
-		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
-		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+		procedure CMMouseEnter(var Message: TWMMouse); message CM_MOUSEENTER;
+		procedure CMMouseLeave(var Message: TWMMouse); message CM_MOUSELEAVE;
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
 		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
@@ -155,7 +155,7 @@ implementation
 
 uses
 	Math,
-	uAdd, uGraph;
+	uAdd, uGraph, uSysInfo;
 const
 	OfsS = 20; // ms; FPS = 1000 / OfsS; 25-30FPS for VR; 50 = TV
 	ScrollEf = ef12;
@@ -202,22 +202,30 @@ begin
 			inherited;}
 end;
 
-procedure TDImage.CMMouseEnter(var Message: TMessage);
+procedure TDImage.CMMouseEnter(var Message: TWMMouse);
 begin
 	inherited;
 	MouseOn := True;
-	if FHotTrack then
-		Fill;
+//	if FHotTrack then
+//		Fill;
 	if Assigned(FOnMouseEnter) then FOnMouseEnter(Self);
 end;
 
-procedure TDImage.CMMouseLeave(var Message: TMessage);
+procedure TDImage.CMMouseLeave(var Message: TWMMouse);
 begin
 	inherited;
 	MouseOn := False;
-	MouseWhere := mwNone;
-	if FHotTrack then
-		Fill;
+	if MouseWhere <> mwNone then
+	begin
+		if MouseWhere <> mwScroll then
+		begin
+			MouseWhere := mwNone;
+			Fill;
+		end
+		else
+			MouseWhere := mwNone;
+	end;
+//	if FHotTrack then
 	if Assigned(FOnMouseLeave) then FOnMouseLeave(Self);
 end;
 
@@ -235,6 +243,11 @@ begin
 	FHotTrack := True;
 
 	Bitmap := TDBitmap.Create;
+	if NTSystem then
+		if Font.Name = 'MS Sans Serif' then
+			Font.Name := 'Microsoft Sans Serif';
+	Bitmap.Canvas.Font.Name := Font.Name;
+
 //	ControlStyle := [csDoubleClicks, csOpaque, csAcceptsControls, csMenuEvents, csDisplayDragImage, csReflector];
 	ControlStyle := ControlStyle + [csOpaque, csMenuEvents, csDisplayDragImage, csReflector] - [csSetCaption];
 	{	Width := 250;
@@ -377,8 +390,8 @@ begin
 			if Speed = 0 then Speed := 1;
 
 			TimeO := 10; // ms
-			NOfsX := RoundDiv64(65536 * Int64(OfsX), Speed);
-			NOfsY := RoundDiv64(65536 * Int64(OfsY), Speed);
+			NOfsX := RoundDivS8(65536 * S8(OfsX), Speed);
+			NOfsY := RoundDivS8(65536 * S8(OfsY), Speed);
 {     case MouseW of
 			mwScrollHD, mwScrollHU,
 			mwScrollHD2, mwScrollHU2:
@@ -398,17 +411,20 @@ begin
 				mwScrollVD, mwScrollVD2: Dec(NOfsY, TimeO);
 				mwScrollVU, mwScrollVU2: Inc(NOfsY, TimeO);
 				end;
-				ScrollTo(RoundDiv64(Int64(Speed) * Int64(NOfsX), 65536),
-					RoundDiv64(Int64(Speed) * Int64(NOfsY), 65536));
+				ScrollTo(RoundDivS8(S8(Speed) * S8(NOfsX), 65536),
+					RoundDivS8(S8(Speed) * S8(NOfsY), 65536));
 //        Application.HandleMessage; no
 				Application.ProcessMessages;
-				TimeO := GetTickCount - LastTickCount;
-				if TimeO < OfsS then
+				if GetTickCount >= LastTickCount then
 				begin
-					Sleep(OfsS - TimeO);
-					TimeO := OfsS;
+					TimeO := GetTickCount - LastTickCount;
+					if TimeO < OfsS then
+					begin
+						Sleep(OfsS - TimeO);
+						TimeO := OfsS;
+					end;
+					Inc(LastTickCount, TimeO);
 				end;
-				Inc(LastTickCount, TimeO);
 				Inc(Cycle);
 				if LastTickCount >= FrameTickCount then
 				begin
@@ -500,13 +516,13 @@ begin
 	end;
 	mwScrollH:
 	begin
-		NOfsX := BOfsX + RoundDiv64(BitmapWidth * Int64(X - MouseX), NowMaxWidth - 2 * ScrollBarHHeight);
+		NOfsX := BOfsX + RoundDivS8(S8(BitmapWidth) * S8(X - MouseX), NowMaxWidth - 2 * ScrollBarHHeight);
 		NOfsY := OfsY;
 	end;
 	mwScrollV:
 	begin
 		NOfsX := OfsX;
-		NOfsY := BOfsY + RoundDiv64(BitmapHeight * Int64(Y - MouseY), NowMaxHeight - 2 * ScrollBarVWidth);
+		NOfsY := BOfsY + RoundDivS8(S8(BitmapHeight) * S8(Y - MouseY), NowMaxHeight - 2 * ScrollBarVWidth);
 	end;
 	end;
 {	TickCount := GetTickCount;
@@ -570,14 +586,14 @@ end;}
 function TDImage.DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
 begin
 	inherited DoMouseWheelDown(Shift, MousePos);
-	ScrollTo(OfsX, OfsY + RoundDiv64(MaxOfsY, 32));
+	ScrollTo(OfsX, OfsY + RoundDiv(MaxOfsY, 32));
 	Result := False;
 end;
 
 function TDImage.DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
 begin
 	inherited DoMouseWheelUp(Shift, MousePos);
-	ScrollTo(OfsX, OfsY - RoundDiv64(MaxOfsY, 32));
+	ScrollTo(OfsX, OfsY - RoundDiv(MaxOfsY, 32));
 	Result := False;
 end;
 
@@ -741,7 +757,7 @@ begin
 
 			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
 			Y2 := Bitmap.Height - 1;
-			X1 := ScrollBarVWidth + RoundDiv64(Int64(ScrollLen - ScrollLenS) * OfsX, BitmapWidth - NowMaxWidth);
+			X1 := ScrollBarVWidth + RoundDivS8(S8(ScrollLen - ScrollLenS) * S8(OfsX), BitmapWidth - NowMaxWidth);
 			X2 := X1 + ScrollLenS - 1;
 			SliderHX1 := X1;
 			SliderHX2 := X2;
@@ -891,11 +907,11 @@ begin
 		{$endif}
 		begin
 		{$ifopt d+}
-		s := IntToStr(PaintCount);
+		s := NToS(PaintCount);
 		{$endif}
 			if FramePerSec >= 0.1 then
 			begin
-				s := {$ifopt d+}s + ', ' +{$endif}Using('~### ##0.0', Round(10 * FramePerSec));
+				s := {$ifopt d+}s + ', ' +{$endif}NToS(Round(10 * FramePerSec), 1);
 			end;
 			ShadowText(Bitmap.Canvas, 0, 0,
 				s,
@@ -924,7 +940,7 @@ begin
 	end
 	else
 	begin
-		SetStretchBltMode(FCanvas.Handle, STRETCH_DELETESCANS);
+//		SetStretchBltMode(FCanvas.Handle, COLORONCOLOR);
 		BitBlt(
 			FCanvas.Handle,
 			0,

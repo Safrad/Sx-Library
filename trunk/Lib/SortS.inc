@@ -1,3 +1,5 @@
+{$R-}
+{$Q-}
 var
 	AVal: array of TValue1;
 
@@ -63,9 +65,10 @@ var
 var
 	i, c, MaxL: SG;
   j: TIndex;
+	Len: SG;
 begin
-	if Length(AIndex) <> Length(AValue) then Exit;
-	MaxIndex := Length(AIndex) - 1;
+	Len := Min(Length(AIndex), Length(AValue));
+	MaxIndex := Len - 1;
 	{$ifopt d+}
 	Swaped := 0; Compared := 0; MaxDepth := 0;
 	{$endif}
