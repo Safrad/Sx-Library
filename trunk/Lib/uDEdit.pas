@@ -39,7 +39,12 @@ type
 		FSelectOnClick: boolean;
 		FFirstClick : boolean;
 		FModified: Boolean;
-    procedure SetAutoCtl3D(const Value: boolean);
+
+		function GetModified: Boolean;
+		function GetCanUndo: Boolean;
+		procedure SetModified(Value: Boolean);
+
+		procedure SetAutoCtl3D(const Value: boolean);
 		procedure SetAlignment(Value: TAlignment);
     procedure SetLabelPosition(const Value: TLabelPosition);
 //    procedure SetLabelSpacing(const Value: Integer);
@@ -78,7 +83,7 @@ type
     property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
     property Align;
     property Autosize;
-		property Readonly: Boolean read FModified write FModified;
+		property Readonly: Boolean read GetModified write SetModified default False;
 		property HintColor: TColor read FColor write FColor default clInfoBk;
 		property HotTrack: boolean read FAutoCtl3D write SetAutoCtl3D default false;
 //    property Modified; D??? Edit
@@ -106,10 +111,29 @@ implementation
 
 uses uGraph;
 
+function TDEdit.GetModified: Boolean;
+begin
+	Result := FModified;
+	if HandleAllocated then Result := SendMessage(Handle, EM_GETMODIFY, 0, 0) <> 0;
+end;
+
+function TDEdit.GetCanUndo: Boolean;
+begin
+	Result := False;
+	if HandleAllocated then Result := SendMessage(Handle, EM_CANUNDO, 0, 0) <> 0;
+end;
+
+procedure TDEdit.SetModified(Value: Boolean);
+begin
+	if HandleAllocated then
+		SendMessage(Handle, EM_SETMODIFY, Byte(Value), 0) else
+		FModified := Value;
+end;
+
 {***********************************************}
 constructor TDEdit.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
+	inherited Create(AOwner);
 	Parent := TWinControl(AOwner);
 	FColor := clInfoBk;
 	FAutoctl3d := false;

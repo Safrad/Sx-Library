@@ -45,7 +45,7 @@ type
 		EditIcq: TEdit;
 		Image4: TImage;
 		SysInfo1: TDButton;
-    DButtonMemoryStatus: TDButton;
+		DButtonMemoryStatus: TDButton;
 		DLabel1: TDLabel;
     EditModified: TEdit;
 		LabelModified: TDLabel;
@@ -80,6 +80,17 @@ type
 		procedure LoadFile(AboutFile: TFileName);
 	end;
 
+const
+	paExit = -1;
+	paFile = -2;
+var
+	ParamFile: TFileName;
+	ParamIndex: SG = 0;
+
+procedure AcceptParams(AcceptFile: BG; Params: array of string; DesParams: array of string);
+function CompareParams: SG;
+procedure CloseParams;
+procedure HelpParams;
 procedure ReadMe;
 procedure Help;
 procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
@@ -114,6 +125,112 @@ var
 	Flashs: TData;
 const
 	MaxTyp = 13;
+
+var
+	AcceptFile: BG;
+	Params: array of string;
+	DesParams: array of string;
+	IllegalParam: BG = False;
+
+procedure AcceptParams(AcceptFile: BG; Params: array of string; DesParams: array of string);
+var i: SG;
+begin
+	uAbout.AcceptFile := AcceptFile;
+	SetLength(uAbout.Params, Length(Params));
+	for i := 0 to Length(uAbout.Params) - 1 do
+		uAbout.Params[i] := DelCharsF(Params[i], ' ');
+
+	SetLength(uAbout.DesParams, Length(DesParams));
+	for i := 0 to Length(uAbout.DesParams) - 1 do
+		uAbout.DesParams[i] := DesParams[i];
+end;
+
+function CompareParams: SG;
+label LAgain;
+var
+	i: SG;
+	Par: string;
+	AF: BG;
+begin
+	LAgain:
+	if ParamIndex >= ParamCount then
+		Result := paExit
+	else
+	begin
+		Par := ParamStr(ParamIndex + 1);
+		AF := AcceptFile;
+		if Par[1] = '-' then
+		begin
+			Delete(Par, 1, 1);
+			AF := False;
+		end
+		else if Par[1] = '/' then
+		begin
+			Delete(Par, 1, 1);
+			AF := False;
+		end;
+		Result := paFile;
+		for i := 0 to Length(Params) - 1 do
+		begin
+			if StartStr(UpperCase(Par), UpperCase(Params[i])) then
+			begin
+				Result := i;
+				Break;
+			end;
+		end;
+		if Result = paFile then
+		begin
+			if StartStr(UpperCase(Par), 'HELP') then
+			begin
+				HelpParams;
+				Inc(ParamIndex);
+				goto LAgain;
+			end;
+			if AF then
+			begin
+				ParamFile := ShortToLongPath(FullDir(Par));
+				if not FileExists(ParamFile) then
+				begin
+					MessageD('Illegal command line parameter' + LineSep +
+						Par + LineSep +
+						'Command line file not found' + LineSep + ParamFile, mtWarning, [mbOK]);
+					IllegalParam := True;
+					Inc(ParamIndex);
+					goto LAgain;
+				end;
+			end
+			else
+			begin
+				MessageD('Illegal command line parameter' + LineSep + Par, mtWarning, [mbOK]);
+				IllegalParam := True;
+				Inc(ParamIndex);
+				goto LAgain;
+			end;
+
+		end;
+	end;
+	Inc(ParamIndex)
+end;
+
+procedure CloseParams;
+begin
+	if IllegalParam then HelpParams;
+end;
+
+procedure HelpParams;
+var
+	i: SG;
+	s: string;
+begin
+	s := 'Param.' + CharTab + 'Description' + LineSep;
+	s := s + InsChar(96, '-') + LineSep;
+	s := s + 'Help' + CharTab + 'Dislay this help dialog' + LineSep;
+	for i := 0 to Length(Params) - 1 do
+	begin
+		s := s + Params[i] + CharTab + DesParams[i] + LineSep;
+	end;
+	MessageD(s, mtInformation, [mbOK]);
+end;
 
 procedure ReadMe;
 var
@@ -155,7 +272,9 @@ begin
 		fAbout.EditModified.Text := Modified;
 		fAbout.LoadFile(FileName);
 		Screen.Cursor := OrigCursor;
-	end;
+	end
+	else
+		fAbout.LoadFile(FileName);
 	if Modal then
 	begin
 		fAbout.FormStyle := fsNormal;
@@ -507,18 +626,20 @@ begin
 end;
 
 {$ifopt d+}
-var
-	MemCount, MemSize: SG;
+{var
+	MemCount, MemSize: SG;}
 {$endif}
 
 initialization
 {$ifopt d+}
-	MemCount := AllocMemCount;
-	MemSize := AllocMemSize;
+{	MemCount := AllocMemCount;
+	MemSize := AllocMemSize;}
 {$endif}
 	Flashs := TData.Create;
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization
+	SetLength(Params, 0);
+	SetLength(DesParams, 0);
 	Flashs.Free; Flashs := nil;
 {$ifopt d+}
 {	if (MemCount < AllocMemCount) or

@@ -95,8 +95,8 @@ var
 {$ifopt d+}
 procedure IE; overload;
 procedure IE(ErrorCode: SG); overload;
-{$endif}
 procedure CreateException;
+{$endif}
 function ErrorMes(const ErrorCode: U4): string;
 
 procedure ShowMessages;

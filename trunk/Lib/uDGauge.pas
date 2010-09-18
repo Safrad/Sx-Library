@@ -379,7 +379,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
-				clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
+				clNone, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 		end;
 		end;
 	end;

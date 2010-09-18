@@ -275,6 +275,11 @@ var
 	GonFormat: TGonFormat;
 
 procedure ReadInput;
+procedure ReadKeyword(K: TKeyword);
+procedure ReadConstS;
+procedure ReadSemicolon;
+procedure ReadCommaSemicolon;
+procedure ReadPeriod;
 
 type
 	TOperator = (opNone, opNumber, opIdent,
@@ -1248,84 +1253,84 @@ begin
 		Id + LineSep;}
 end;
 
-	procedure ReadKeyword(K: TKeyword);
-	begin
-		if (InputType <> itKeyword) or (K <> Keyword) then
-			AddMes2(mtExpected, [KWs[Keyword], ''])
-		else
-			ReadInput;
-	end;
+procedure ReadKeyword(K: TKeyword);
+begin
+	if (InputType <> itKeyword) or (K <> Keyword) then
+		AddMes2(mtExpected, [KWs[Keyword], ''])
+	else
+		ReadInput;
+end;
 
-	procedure ReadInputType(I: TInput);
-	begin
-		if (InputType <> I) then
-			AddMes2(mtStrokeOrSemicolonExpected, [''])
-		else
-			ReadInput;
-	end;
+procedure ReadInputType(I: TInput);
+begin
+	if (InputType <> I) then
+		AddMes2(mtStrokeOrSemicolonExpected, [''])
+	else
+		ReadInput;
+end;
 
-	procedure ReadConstS;
-	begin
-		if not (InputType in [itString, itChar]) then
-			AddMes2(mtStringExpected, [''])
-		else
-			ReadInput;
-	end;
+procedure ReadConstS;
+begin
+	if not (InputType in [itString, itChar]) then
+		AddMes2(mtStringExpected, [''])
+	else
+		ReadInput;
+end;
 
 {	procedure ReadComma;
-	begin
-		if not (InputType in [itComma]) then
-			AddMes2(mtCommaExpected, [''])
-		else
-			ReadInput;
-	end;}
+begin
+	if not (InputType in [itComma]) then
+		AddMes2(mtCommaExpected, [''])
+	else
+		ReadInput;
+end;}
 
-	procedure ReadSemicolon;
+procedure ReadSemicolon;
+begin
+	if not (InputType in [itSemicolon]) then
+		AddMes2(mtSemicolonExpected, [''])
+	else
+		ReadInput;
+end;
+
+procedure ReadCommaSemicolon;
+begin
+	if not (InputType in [itComma, itSemicolon]) then
+		AddMes2(mtStrokeOrSemicolonExpected, [''])
+	else
+		ReadInput;
+end;
+
+procedure ReadPeriod;
+begin
+	if not (InputType in [itPeriod]) then
+		AddMes2(mtPeriodExpected, [''])
+	else
+		ReadInput;
+end;
+
+procedure ReadColon;
+begin
+	if not (InputType in [itColon]) then
+		AddMes2(mtColonExpected, [''])
+	else
+		ReadInput;
+end;
+
+{	function Compare(s: string): BG;
+var Id: string;
+begin
+	if (InputType <> itIdent) or Id <> s then
 	begin
-		if not (InputType in [itSemicolon]) then
-			AddMes2(mtSemicolonExpected, [''])
-		else
-			ReadInput;
+		AddMes2(mtExpected, [s,'']);
+		Result := False;
+	end
+	else
+	begin
+		ReadInput;
+		Result := True;
 	end;
-
-	procedure ReadCommaSemicolon;
-	begin
-		if not (InputType in [itComma, itSemicolon]) then
-			AddMes2(mtStrokeOrSemicolonExpected, [''])
-		else
-			ReadInput;
-	end;
-
-	procedure ReadPeriod;
-	begin
-		if not (InputType in [itPeriod]) then
-			AddMes2(mtPeriodExpected, [''])
-		else
-			ReadInput;
-	end;
-
-	procedure ReadColon;
-	begin
-		if not (InputType in [itColon]) then
-			AddMes2(mtColonExpected, [''])
-		else
-			ReadInput;
-	end;
-
-	{	function Compare(s: string): BG;
-	var Id: string;
-	begin
-		if (InputType <> itIdent) or Id <> s then
-		begin
-			AddMes2(mtExpected, [s,'']);
-			Result := False;
-		end
-		else
-		begin
-			ReadInput;
-			Result := True;
-		end;
-	end;}
+end;}
 
 
 function CompareS(OldS, NewS: string): Boolean;

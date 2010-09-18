@@ -13,14 +13,15 @@ interface
 uses uAdd;
 
 const
-	CharNul = #$0;
-	CharTab = #$9;
+	CharNul = #$00;
+	CharTab = #$09;
 	CharHT = CharTab;
-	CharLF = #$A;// #10;
-	CharCR = #$D;// #13;
+	CharLF = #$0A;// #10;
+	CharCR = #$0D;// #13;
 	// DOS: CharCR + CharLF; Linux/C++: CharLF; CharCR: NLP
 	LineSep = CharLF;
 	FullSep = CharCR + CharLF;
+	HTMLSep = FullSep;
 
 type
 	TCharSet = set of Char;
@@ -52,6 +53,7 @@ function ReadToChars(const Line: string; var LineIndex: SG;
 function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
 function PosWW(Str, SubStr: string): Integer;
+function StartStr(SubStr: string; Str: string): Boolean;
 function IsSubStr(SubStr: string; Str: string): Boolean;
 
 function InsChar(const CharCount: Integer; C: Char): string;
@@ -61,7 +63,9 @@ procedure Replace(var s: string; const WhatS, ToS: string);
 
 implementation
 
-uses uFind;
+uses
+	Math,
+	uFind;
 var
 	TableWordSep: array[0..7] of Char = (' ', ',', '.', '-', '/', ';', '(', ')');
 
@@ -329,6 +333,20 @@ end;
 function PosWW(Str, SubStr: string): Integer; // Str is word
 begin
 	Result := Pos(Str, SubStr);
+end;
+
+function StartStr(SubStr: string; Str: string): Boolean;
+var i: SG;
+begin
+	for i := 1 to Min(Length(SubStr), Length(Str)) do
+	begin
+		if SubStr[i] <> Str[i] then
+		begin
+			Result := False;
+			Exit;
+		end;
+	end;
+	Result := True;
 end;
 
 function IsSubStr(SubStr: string; Str: string): Boolean;

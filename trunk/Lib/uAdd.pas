@@ -227,8 +227,6 @@ type
 var
 	Sins: array[0..AngleCount - 1] of TAngle;
 
-procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
-
 function RColor(R, G, B: U1): TRColor;
 
 function Sgn(const I: S1): SG; overload;
@@ -347,6 +345,11 @@ function NToHS(Num: Int64): string;
 function FToS(Num: Extended): string; overload;
 function FToS(Num: Extended; const UseWinFormat: BG): string; overload;
 
+function BToStr(const B: S4): string; overload;
+function BToStr(const B: S8): string; overload;
+
+function KeyToStr(Key: Word): string;
+
 procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 type
 	TDisplay = (diDHMSD, diHHMSD, diHMSD, diMSD, diSD);
@@ -355,6 +358,13 @@ type
 -3: 0:34.34
 3: 0:34.340
 }
+
+//function SToMs(const Str: string): SG; // MsToStr<-
+
+function SToTime(Str: string): TTime;
+function SToDate(Str: string): TDate;
+function SToDateTime(Str: string): TDateTime;
+
 
 function MsToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
@@ -366,6 +376,8 @@ function DateToS(D: TDate): string; overload;
 function TimeToS(T: TTime): string;
 function DateTimeToS(DT: TDateTime): string;
 function DTToStr(DT: TDateTime): string; // UseWinFormat = True
+function PhoneToStr(Phone: U8): string;
+procedure HTMLEnd(var s: string);
 
 (*
 function StrToValC(S: string;
@@ -373,16 +385,6 @@ function StrToValC(S: string;
 function StrToValE(S: string;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 *)
-function BToStr(const B: S4): string; overload;
-function BToStr(const B: S8): string; overload;
-
-//function SToMs(const Str: string): SG; // MsToStr<-
-
-function SToDate(Str: string): TDate;
-function SToTime(Str: string): TTime;
-function SToDateTime(Str: string): TDateTime;
-
-function PhoneToStr(Phone: U8): string;
 
 // System
 procedure Nop;
@@ -412,6 +414,8 @@ procedure CreateLink(
 procedure ObjectFree(var Obj: TObject);
 
 function DropFiles(hDrop: THandle): TStrings;
+
+procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
 
 implementation
 
@@ -1558,6 +1562,111 @@ begin
 //	if B < 0 then Result := '-' + Result;
 end;
 
+function KeyToStr(Key: Word): string;
+begin
+	case Key of
+	VK_LBUTTON: Result := 'L.Button';
+	VK_RBUTTON: Result := 'R.Button';
+	VK_CANCEL: Result := 'Cancel';
+	VK_MBUTTON: Result := 'M.Button';
+	VK_BACK: Result := 'Back';
+	VK_TAB: Result := 'Tab';
+	VK_CLEAR: Result := 'Clear';
+	VK_RETURN: Result := 'Return';
+	VK_SHIFT: Result := 'Shift'; // Old Win
+	VK_CONTROL: Result := 'Ctrl'; // Old Win
+	VK_MENU: Result := 'Alt'; // Old Win
+	VK_PAUSE: Result := 'Pause';
+	VK_CAPITAL: Result := 'Caps Lock';
+	VK_KANA: Result := 'Kana';
+//	VK_HANGUL: Result := 'Hangul';
+	VK_JUNJA: Result := 'Junja';
+	VK_FINAL: Result := 'Final';
+	VK_HANJA: Result := 'Hanja';
+//	VK_KANJI: Result := 'Kanji';
+	VK_CONVERT: Result := 'Convert';
+	VK_NONCONVERT: Result := 'Nonconvert';
+	VK_ACCEPT: Result := 'Accept';
+	VK_MODECHANGE: Result := 'Mode Change';
+	VK_ESCAPE: Result := 'ESC';
+	VK_SPACE: Result := 'Space';
+	VK_PRIOR: Result := 'Page Up';
+	VK_NEXT: Result := 'Page Down';
+	VK_END: Result := 'End';
+	VK_HOME: Result := 'Home';
+	VK_LEFT: Result := 'Left';
+	VK_UP: Result := 'Up';
+	VK_RIGHT: Result := 'Right';
+	VK_DOWN: Result := 'Down';
+	VK_SELECT: Result := 'Select';
+	VK_PRINT: Result := 'Print';
+	VK_EXECUTE: Result := 'Execute';
+	VK_SNAPSHOT: Result := 'Print Screen';
+	VK_INSERT: Result := 'Insert';
+	VK_DELETE: Result := 'Delete';
+	VK_HELP: Result := 'Help';
+{ VK_0 thru VK_9 are the same as ASCII '0' thru '9' ($30 - $39) }
+{ VK_A thru VK_Z are the same as ASCII 'A' thru 'Z' ($41 - $5A) }
+	Ord('0')..Ord('9'): Result := Chr(Key);
+	Ord('A')..Ord('Z'): Result := Chr(Key);
+	VK_LWIN: Result := 'L.Win';
+	VK_RWIN: Result := 'R.Win';
+	VK_APPS: Result := 'Apps';
+	96..96 + 9: Result := 'Num ' + Chr(Ord('0') + Key - 96);
+	VK_MULTIPLY: Result := 'Num *';
+	VK_ADD: Result := 'Num +';
+	VK_SEPARATOR: Result := 'Separator';
+	VK_SUBTRACT: Result := 'Num -';
+	VK_DECIMAL: Result := 'Num ,';
+	VK_DIVIDE: Result := 'Num /';
+	112..112 + 23: Result := 'F' + NToS(Key - 111, False);
+
+	VK_NUMLOCK: Result := 'Num Lock';
+	VK_SCROLL: Result := 'Scroll Lock';
+{ VK_L & VK_R - left and right Alt, Ctrl and Shift virtual keys.
+	Used only as parameters to GetAsyncKeyState() and GetKeyState().
+	No other API or message will distinguish left and right keys in this way. }
+	VK_LSHIFT: Result := 'L.Shift';
+	VK_RSHIFT: Result := 'R.Shift';
+	VK_LCONTROL: Result := 'L.Control';
+	VK_RCONTROL: Result := 'R.Control';
+	VK_LMENU: Result := 'L.Alt';
+	VK_RMENU: Result := 'R.Alt';
+	187: Result := '=';
+	189: Result := '-';
+
+	219: Result := '[';
+	221: Result := ']';
+
+	186: Result := ';';
+	222: Result := '''';
+	220: Result := '\';
+
+	188: Result := ',';
+	190: Result := '.';
+	191: Result := '/';
+
+	192: Result := '~';
+
+	172: Result := 'WWW';
+	180: Result := 'Mail';
+	170: Result := 'Search';
+
+
+	VK_PROCESSKEY: Result := 'Process Key';
+	VK_ATTN: Result := 'Attn';
+	VK_CRSEL: Result := 'CRSEL';
+	VK_EXSEL: Result := 'EXSEL';
+	VK_EREOF: Result := 'EREOF';
+	VK_PLAY: Result := 'Play';
+	VK_ZOOM: Result := 'Zoom';
+	VK_NONAME: Result := 'Noname';
+	VK_PA1: Result := 'PA1';
+	VK_OEM_CLEAR: Result := 'OEM Clear';
+	else Result := 'SC: ' + IntToStr(Key);
+	end;
+end;
+
 procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 var
 	DW: LongWord;
@@ -1576,8 +1685,6 @@ begin
 		DivModU64(DW, 60, GH, GM);
 	end;
 end;
-
-
 
 function SToMs(const Str: string): SG;
 var
@@ -1960,6 +2067,24 @@ begin
 	Result := Result + NToS(Phone mod 1000000000, '000000000');
 end;
 
+procedure HTMLEnd(var s: string);
+{var
+	T: TDateTime;
+	d: string;}
+begin
+	s := s + '  <P ALIGN="RIGHT"><FONT SIZE=1>Created ';
+	s := s + DateTimeToS(Now);
+{	t := Now;
+	DateTimeToString(d, 'dd.mm.yyyy', t);
+	s := s + d + ' (dd.mm.yyyy) ';}
+{	DateTimeToString(d, 'hh:nn:dd', t);
+	s := s + d + ' (hh:nn:ss)';}
+	s := s + '	</FONT>';
+	s := s + '	</P>' + HTMLSep;
+	s := s + '</BODY>' + HTMLSep;
+	s := s + '</HTML>' + HTMLSep;
+end;
+
 procedure Nop;
 begin
 	asm
@@ -2225,3 +2350,4 @@ initialization
 	InitSin;
 	GetLocale;
 end.
+
