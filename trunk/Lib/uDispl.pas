@@ -539,7 +539,7 @@ begin
 				C := CA;
 			end;
 			if InfoOnly = False then
-				BmpD.Bar(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
+				BmpD.Bar(X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
 					X1 + SizeT - 1, Y1 + 2 * SizeY + 3 * SpaceSY - 2 + SizeT, C, ef16);
 			if SizeT + 2 > 0 then Inc(X1, SizeT + 2);
 //      if Spacing < SizeT + 2 then Inc(X1, SizeT + 2 - Spacing);
@@ -554,7 +554,7 @@ begin
 			end;
 			Inc(CaptionIndex);
 			if InfoOnly = False then
-				BmpD.Bar(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
+				BmpD.Bar(X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
 					X1 + SizeT - 1, Y1 + 2 * SizeY + 3 * SpaceSY - 2 + SizeT + SizeT, C, Effect);
 			if Spacing < SizeT + 2 then Inc(X1, SizeT + 2 - Spacing);
 		end;
@@ -571,10 +571,10 @@ begin
 			begin
 				X := X1;
 				Y := Y1 + 3 * SpaceSY - 1;
-				BmpD.Bar(clNone, X, Y,
+				BmpD.Bar(X, Y,
 					X + SizeT - 1, Y + SizeT - 1, C, ef16);
 				Y := Y1 + SizeY + SizeY div 2 + 2 * SpaceSY - 1;
-				BmpD.Bar(clNone, X, Y,
+				BmpD.Bar(X, Y,
 					X + SizeT - 1, Y + SizeT - 1, C, ef16);
 			end;
 			if SizeT + 2 > 0 then Inc(X1, SizeT + 2);

@@ -763,7 +763,7 @@ begin
 					C := clHighlight;
 				Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
 				Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(clNone,
+				Bitmap.Bar(
 					X1, Y1 + 1,
 					X2, Y2 - 1, C, ScrollEf2);
 			end;
@@ -781,7 +781,7 @@ begin
 					C := clHighlight;
 				Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
 				Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(clNone,
+				Bitmap.Bar(
 					X1, Y1 + 1,
 					X2, Y2 - 1, C, ScrollEf2);
 			end;
@@ -874,7 +874,7 @@ begin
 					C := clHighlight;
 				Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
 				Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(clNone,
+				Bitmap.Bar(
 					X1 + 1, Y1,
 					X2 - 1, Y2, C, ScrollEf2);
 			end;
@@ -892,7 +892,7 @@ begin
 					C := clHighlight;
 				Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
 				Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(clNone,
+				Bitmap.Bar(
 					X1 + 1, Y1,
 					X2 - 1, Y2, C, ScrollEf2);
 			end;

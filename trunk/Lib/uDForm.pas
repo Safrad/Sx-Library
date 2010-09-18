@@ -377,13 +377,13 @@ begin
 				case FBackground of
 				baStandard:
 				begin
-					FBitmapB.Bar(clNone, Color, ef16);
+					FBitmapB.Bar(Color, ef16);
 				end;
 				baGradient:
 				begin
 					FBitmapB.FormBitmap(Color);
 					if FBitmapF <> nil then
-						FBitmapB.Texture(FBitmapF, clNone, ef04);
+						FBitmapB.Texture(FBitmapF, ef04);
 					if (FBitmapB.Width >= 4) and (FBitmapB.Height >=4) then
 					begin
 						C.T := 0;
@@ -443,7 +443,7 @@ begin
 				baBitmap:
 				begin
 					if FBitmapF <> nil then
-						FBitmapB.Texture(FBitmapF, clNone, ef16);
+						FBitmapB.Texture(FBitmapF, ef16);
 				end;
 				end;
 			end;

@@ -83,12 +83,14 @@ begin
 	end;
 
 	BmpT := TDBitmap.Create;
+	BmpT.TransparentColor := clSilver;
 	BmpT.SetSize(Bmp.Width, Bmp.Height);
-	BmpT.Bar(clNone, clSilver, ef16);
+	BmpT.Bar(clSilver, ef16);
 	BmpT.Canvas.Brush.Style := bsClear;
 	BmpT.Canvas.Font.Style := [fsBold];
 	BmpT.Canvas.Font.Name := 'Times New Roman';
 	BmpT.Canvas.Font.Height := -48;
+
 
 	GoodText(BmpT.Canvas, Rect(16, 16, Bmp.Width - 16, Bmp.Height - 16), Application.Title,
 		clBlack, clWhite, clSilver, taCenter, tlCenter);
@@ -105,7 +107,7 @@ begin
 		clBlack, clWhite, clPurple, taLeftJustify, tlCenter);}
 
 
-	Bmp.Bmp(0, 0, BmpT, clSilver, ef08);
+	Bmp.Bmp(0, 0, BmpT, ef08);
 
 	Bmp.Border(clWhite, clBlack, 8, ef08);
 
@@ -151,7 +153,7 @@ begin
 		Rect(0, 0, XCount, YCount));
 	OutBmp := fLogo.BackBitmap;
 
-	OutBmp.Bmp(0, 0, BackgroundBmp, clNone, ef16);
+	OutBmp.Bmp(0, 0, BackgroundBmp, ef16);
 	fLogo.Show;
 	fLogo.Paint;
 
@@ -160,8 +162,8 @@ begin
 	li := 0;
 	while i <= 15 * 256 - 1 do
 	begin
-		OutBmp.Bmp(0, 0, BackgroundBmp, clNone, ef16);
-		OutBmp.Bar(clNone, clBlack, TEffect(i div 256));
+		OutBmp.Bmp(0, 0, BackgroundBmp, ef16);
+		OutBmp.Bar(clBlack, TEffect(i div 256));
 		Inc(i, GetTickCount - LogoTime);
 		if i div 256 = li div 256 then
 		begin
@@ -172,7 +174,7 @@ begin
 		li := i;
 		fLogo.Paint;
 	end;
-	OutBmp.Bar(clNone, clBlack, ef16);
+	OutBmp.Bar(clBlack, ef16);
 	fLogo.Paint;
 	BitmapFree(BackgroundBmp);
 

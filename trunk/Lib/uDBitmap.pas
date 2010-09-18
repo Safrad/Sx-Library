@@ -97,12 +97,8 @@ type
 		procedure Rec(
 			X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect);
 
-		procedure Bar(
-			BackColor: TColor;
-			XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect); overload;
-		procedure Bar(
-			BackColor: TColor;
-			C: TColor; const Effect: TEffect); overload;
+		procedure Bar(XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect); overload;
+		procedure Bar(C: TColor; const Effect: TEffect); overload;
 		procedure Border(
 			const X1, Y1, X2, Y2: TCoor;
 			const C1, C2: TColor; const Lines: SG; const Effect: TEffect); overload;
@@ -115,11 +111,11 @@ type
 		procedure Bmp(
 			XD1, YD1: TCoor;
 			BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
-			C: TColor; const Effect: TEffect); overload;
+			const Effect: TEffect); overload;
 		procedure Bmp(
 			const XD1, YD1: TCoor;
 			BmpS: TDBitmap;
-			C: TColor; const Effect: TEffect); overload;
+			const Effect: TEffect); overload;
 
 		procedure ChangeColor(
 			const X1, Y1, X2, Y2: Integer;
@@ -129,7 +125,7 @@ type
 		procedure ChangeBW(const C: TColor);
 		procedure Rand(C: TColor; RandomColor: TColor);
 		procedure Texture(
-			BmpS: TDBitmap; C: TColor; const Effect: TEffect);
+			BmpS: TDBitmap; const Effect: TEffect);
 		procedure Resize(
 			const BmpS: TDBitmap; const TranColor: TColor; const NewX, NewY: LongWord;
 			const InterruptProcedure: TInterruptProcedure); overload;
@@ -156,6 +152,7 @@ type
 		procedure CopyBitmap(BmpS: TDBitmap); overload;
 		procedure CopyBitmap(BmpS: TBitmap); overload;
 		procedure GetBitmap(BmpD: TBitmap);
+		procedure TryTransparent;
 
 		procedure Colors(BmpS: TDBitmap; TransparentColor: TColor;
 			const
@@ -192,6 +189,7 @@ type
 	end;
 
 // Multicommands
+procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
 procedure BitmapReadFromFile(var BmpD: TDBitmap; FName: TFileName); // Create + LoadFromFile
 procedure BitmapCopy(var BmpD, BmpS: TDBitmap); // Create + SetSize + CopyData
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor); // Create + SetSize
@@ -251,7 +249,7 @@ type
 implementation
 
 uses
-	Dialogs, Jpeg, Math, Classes,
+	Dialogs, Jpeg, GifImage, Math, Classes,
 	uGraph, uError, uScreen, uFiles, uGetInt, uStrings, uSysInfo, uInput;
 
 (*-------------------------------------------------------------------------*)
@@ -292,6 +290,14 @@ asm
 	{$endif}
 end;
 (*-------------------------------------------------------------------------*)
+procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
+var B: TDBitmap;
+begin
+	B := TDBitmap.Create;
+	B.LoadFromFile(FileName);
+	Bitmap.Assign(B);
+	B.Free;
+end;
 
 // TDBitmap
 
@@ -367,7 +373,7 @@ end;
 procedure TDBitmap.Sample(Width, Height: TCoor);
 begin
 	SetSize(Width, Height);
-	Bar(clNone, clRed, ef16);
+	Bar(clRed, ef16);
 	Border(clWhite, clBlack, 2, ef16);
 	Line(0, 0, FWidth - 1, FHeight - 1, clBlue, ef16);
 	Line(FWidth - 1, 0, 0, FHeight - 1, clGreen, ef16);
@@ -521,8 +527,9 @@ procedure TDBitmap.LoadFromIcon(Icon: TIcon);
 begin
 	Icon.Handle;
 	SetSize(Icon.Width, Icon.Height);
+	Bar(clPurple, ef16);
+	Transparent := True;
 	TransparentColor := clPurple;
-	Bar(clNone, TransparentColor, ef16);
 	Canvas.Draw(0, 0, Icon);
 end;
 
@@ -783,8 +790,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 label LRetry;
 var
 	MyJPEG: TJPEGImage;
+	MyGif: TGifImage;
 	Icon: TIcon;
-//	Picture: TPicture;
 	Stream: TMemoryStream;
 begin
 	FreeImage;
@@ -819,6 +826,28 @@ begin
 				end;
 			end;
 			MyJPEG.Free;
+		end;
+		Stream.Free;
+	end
+	else if (UpperCase(ExtractFileExt(FileName)) = '.GIF') then
+	begin
+		Stream := TMemoryStream.Create;
+		if ReadStreamFromFile(FileName, Stream) then
+		begin
+			MyGif := TGifImage.Create;
+			try
+				Stream.Seek(0, 0);
+				MyGif.LoadFromStream(Stream);
+				Assign(MyGif);
+				Result := True;
+			except
+				on E: Exception do
+				begin
+					ErrorMessage(E.Message);
+					MakeDefault;
+				end;
+			end;
+			MyGif.Free;
 		end;
 		Stream.Free;
 	end
@@ -882,6 +911,7 @@ function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: Integer): B
 label LRetry;
 var
 	MyJPEG: TJPEGImage;
+	MyGif: TGifImage;
 	Stream: TMemoryStream;
 begin
 	Result := False;
@@ -918,6 +948,20 @@ begin
 			on E: Exception do ErrorMessage(E.Message);
 		end;
 		MyJPEG.Free;
+	end
+	else if (UpperCase(ExtractFileExt(FileName)) = '.GIF') then
+	begin
+		MyGif := TGifImage.Create;
+		MyGif.Assign(Self);
+		try
+			Stream := TMemoryStream.Create;
+			MyGif.SaveToStream(Stream);
+			Result := WriteStreamToFile(FileName, Stream);
+			Stream.Free;
+		except
+			on E: Exception do ErrorMessage(E.Message);
+		end;
+		MyGif.Free;
 	end
 	else
 {		if (UpperCase(ExtractFileExt(FileName)) = '.ICO') then
@@ -960,6 +1004,8 @@ procedure TDBitmap.CopyBitmap(BmpS: TDBitmap);
 begin
 	if BmpS = nil then Exit;
 	SetSize(BmpS.Width, BmpS.Height);
+	Transparent := BmpS.Transparent;
+	TransparentColor := BmpS.TransparentColor;
 //	Bmp(0, 0, BmpS, clNone, ef16);
 
 	Move(BmpS.GLData^, FGLData^, FByteX * FHeight);
@@ -983,6 +1029,11 @@ begin
 		Canvas.Handle, 0, 0, SRCCOPY);
 end;
 
+procedure TDBitmap.TryTransparent;
+begin
+	TransparentColor := GetTransparentColor(Self);
+	Transparent := TransparentColor <> clNone;
+end;
 (*-------------------------------------------------------------------------*)
 procedure BitmapReadFromFile(var BmpD: TDBitmap; FName: TFileName);
 begin
@@ -2357,7 +2408,6 @@ begin
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Bar(
-	BackColor: TColor;
 	XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect);
 var
 	PD: PBmpData;
@@ -2368,6 +2418,7 @@ var
 
 	WordR, WordG, WordB: Word;
 	BackColorR, CR: TRColor;
+	BackColor: TColor;
 begin
 	if Effect = ef00 then Exit;
 	if C = clNone then Exit;
@@ -2409,6 +2460,10 @@ begin
 
 	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YD2 - YD1 + 1));
 
+	if Transparent then
+		BackColor := TransparentColor
+	else
+		BackColor := clNone;
 	if BackColor = clNone then
 	begin
 		asm
@@ -4572,11 +4627,9 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Bar(
-	BackColor: TColor;
-	C: TColor; const Effect: TEffect);
+procedure TDBitmap.Bar(C: TColor; const Effect: TEffect);
 begin
-	Bar(BackColor, 0, 0, TCoor(FWidth - 1), TCoor(FHeight - 1), C, Effect);
+	Bar(0, 0, TCoor(FWidth - 1), TCoor(FHeight - 1), C, Effect);
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Border(
@@ -4615,7 +4668,7 @@ end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.BorderF(const X1, Y1, X2, Y2: TCoor; const C: TColor);
 begin
-	Bar(clNone, X1, Y1, X2, Y2, C, ef16);
+	Bar(X1, Y1, X2, Y2, C, ef16);
 	Border(X1 - 1, Y1 - 1, X2 + 1, Y2 + 1, clBlack, clWhite, 1, ef10);
 end;
 (*-------------------------------------------------------------------------*)
@@ -4674,7 +4727,7 @@ end;
 procedure TDBitmap.Bmp(
 	XD1, YD1: TCoor;
 	BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
-	C: TColor; const Effect: TEffect);
+	const Effect: TEffect);
 var
 	PS, PD: PBmpData;
 	ByteXS, ByteXD: LongWord;
@@ -4683,9 +4736,31 @@ var
 	HX: Integer;
 	EndPD: Integer;
 	CR: TRColor;
+	C: TColor;
 begin
 	if Effect = ef00 then Exit;
 	{$ifopt d+}
+	if BmpS = nil then
+	begin
+		IE(7330);
+		Exit;
+	end;
+	if BmpS.Data = nil then
+	begin
+		IE(7331);
+		Exit;
+	end;
+	if Self = nil then
+	begin
+		IE(7332);
+		Exit;
+	end;
+	if Self.Data = nil then
+	begin
+		IE(7333);
+		Exit;
+	end;
+
 	if (GraphMinX < 0) or
 	(GraphMinY < 0) or
 	(GraphMaxX >= TCoor(FWidth)) or
@@ -4705,12 +4780,12 @@ begin
 	if YS2 < BmpS.GraphMinY then Exit;
 	if XS2 > BmpS.GraphMaxX then XS2 := BmpS.GraphMaxX;
 	if YS2 > BmpS.GraphMaxY then YS2 := BmpS.GraphMaxY;
-	
+
 	if XS1 < BmpS.GraphMinX then
 	begin
 		Inc(XD1, BmpS.GraphMinX - XS1);
 		XS1 := BmpS.GraphMinX;
-	end;  
+	end;
 	if YS1 < BmpS.GraphMinY then
 	begin
 		Inc(YD1, BmpS.GraphMinY - YS1);
@@ -4756,6 +4831,8 @@ begin
 	Inc(Integer(PS), HX);
 
 	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1));
+
+	if BmpS.Transparent = False then C := clNone else C := BmpS.TransparentColor;
 
 	if C = clNone then
 	begin
@@ -6724,13 +6801,9 @@ end;
 procedure TDBitmap.Bmp(
 	const XD1, YD1: TCoor;
 	BmpS: TDBitmap;
-	C: TColor; const Effect: TEffect);
+	const Effect: TEffect);
 begin
-	if BmpS = nil then Exit;
-	if BmpS.Data = nil then Exit;
-	if Self = nil then Exit;
-	if Self.Data = nil then Exit;
-	Bmp(XD1, YD1, BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1, C, Effect);
+	Bmp(XD1, YD1, BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1, Effect);
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.ChangeColor(
@@ -6892,7 +6965,7 @@ begin
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Texture(
-	BmpS: TDBitmap; C: TColor; const Effect: TEffect);
+	BmpS: TDBitmap; const Effect: TEffect);
 var
 	X, Y: Integer;
 	MX, MY: TCoor;
@@ -6905,7 +6978,7 @@ begin
 		for X := 0 to MX - 1 do
 		begin
 			Bmp(TCoor(BmpS.Width) * X, TCoor(BmpS.Height) * Y,
-				BmpS, C, Effect);
+				BmpS, Effect);
 		end;
 end;
 (*-------------------------------------------------------------------------*)
@@ -6950,7 +7023,7 @@ begin
 	if (SX = NewX) and (SY = NewY) then
 	begin
 		if BmpS.Data <> Data then
-			Bmp(0, 0, BmpS, clNone, ef16);
+			Bmp(0, 0, BmpS, ef16);
 		Exit;
 	end;
 
@@ -8709,7 +8782,7 @@ begin
 	if FontReaded[RasterFontStyle] = False then
 	begin
 		FontBitmap[RasterFontStyle] := TDBitmap.Create;
-		FontBitmap[RasterFontStyle].LoadFromFile(GraphDir + FontNames[RasterFontStyle] + '.bmp');
+		FontBitmap[RasterFontStyle].LoadFromFile(GraphDir + FontNames[RasterFontStyle] + '.gif');
 		FontReaded[RasterFontStyle] := True;
 	end;
 	if FontBitmap[RasterFontStyle] = nil then Exit;
@@ -8721,7 +8794,7 @@ begin
 		c := Ord(Ord(Text[i]) - Ord(' '));
 		Letter.Bmp(0, 0, FontBitmap[RasterFontStyle],
 			0, FontHeight[RasterFontStyle] * c,
-			FontBitmap[RasterFontStyle].Width, FontHeight[RasterFontStyle] * c + FontHeight[RasterFontStyle] - 1, clNone, ef16);
+			FontBitmap[RasterFontStyle].Width, FontHeight[RasterFontStyle] * c + FontHeight[RasterFontStyle] - 1, ef16);
 
 		case BackColor of
 		clNone:
@@ -8751,9 +8824,10 @@ begin
 		end;
 		end;
 
+		FontBitmap[RasterFontStyle].TransparentColor := CB;
 		Bmp(X, Y, Letter,
 			0, 0,
-			FontBitmap[RasterFontStyle].Width - 1, FontHeight[RasterFontStyle] - 1, CB, Effect);
+			FontBitmap[RasterFontStyle].Width - 1, FontHeight[RasterFontStyle] - 1, Effect);
 		Inc(X, FontBitmap[RasterFontStyle].Width);
 	end;
 end;
@@ -9441,7 +9515,7 @@ begin
 	end;
 	gsSolid:
 	begin
-		Bar(clNone, XS1, YS1, XS2, YS2, C, ef16);
+		Bar(XS1, YS1, XS2, YS2, C, ef16);
 	end;
 	gsGradient:
 	begin
@@ -9452,7 +9526,7 @@ begin
 		Co[3] := Co[1];
 		GenerateRGB(clNone, gfFade2x, Co, ScreenCorrectColor, ef16, nil);
 	end;
-	gsBitmap: Bmp(XS1, YS1, BmpS, clNone, ef16);
+	gsBitmap: Bmp(XS1, YS1, BmpS, ef16);
 	end;
 end;
 

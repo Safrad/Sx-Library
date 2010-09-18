@@ -222,15 +222,15 @@ var
 	Co: array[0..3] of TColor;
 begin
 	Bmp := ImageHigh.Bitmap;
-	Bmp.Bar(clNone, clSilver, ef16);
+	Bmp.Bar(clSilver, ef16);
 //  Bmp.Random24(clNone, $000f0f0f);
 	Co[0] := ColorDiv(clBtnFace, 5 * 16384);
 	Co[1] := ColorDiv(clBtnFace, 3 * 16384);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
-	Bmp.GenerateERGB(clNone, gfFadeVert, Co, ScreenCorrectColor, ef16, nil);
+	Bmp.GenerateRGB(clNone, gfFadeVert, Co, ScreenCorrectColor, ef16, nil);
 
-//  Bmp.Textue(Pics24[pcPlus + Integer(bnIncScore)], clPurple, efSub);
+//  Bmp.Texture(Pics24[pcPlus + Integer(bnIncScore)], efSub);
 	for i := 0 to MaxHigh + 2 do
 	begin
 		Bmp.Line(0, ColSize * i, Bmp.Width - 1, ColSize * i, clBtnHighlight, ef16);

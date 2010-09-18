@@ -28,10 +28,11 @@ object fFormats: TfFormats
     Top = 8
     Width = 65
     Height = 17
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'Type'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef08
     FontShadow = 1
     Displ.Enabled = False
@@ -46,16 +47,22 @@ object fFormats: TfFormats
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelFunction: TDLabel
     Left = 184
     Top = 8
     Width = 89
     Height = 17
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'Function'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef08
     FontShadow = 1
     Displ.Enabled = False
@@ -70,16 +77,22 @@ object fFormats: TfFormats
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object LabelName: TDLabel
     Left = 8
     Top = 8
     Width = 97
     Height = 17
+    AlphaBlend = False
+    AlphaBlendValue = 0
     AutoSize = False
+    Alignment = taLeftJustify
     Caption = 'Name'
-    Transparent = True
-    Layout = tlCenter
     BackEffect = ef08
     FontShadow = 1
     Displ.Enabled = False
@@ -94,6 +107,11 @@ object fFormats: TfFormats
     Displ.ColorD = clMaroon
     Displ.Size = 0
     BevelOuter = bvLowered
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
   end
   object ButtonOK: TDButton
     Left = 8

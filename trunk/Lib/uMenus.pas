@@ -78,7 +78,7 @@ procedure ComName(MenuItem: TMenuItem);
 		FileName: TFileName;
 		TranColor: TColor;
 	begin
-		FileName := GraphDir + 'Images\' + Name + '.bmp';
+		FileName := GraphDir + 'Images\' + Name + '.gif';
 		if FileExists(FileName) then
 		begin
 			Bmp := TDBitmap.Create;
@@ -90,6 +90,7 @@ procedure ComName(MenuItem: TMenuItem);
 			MenuItem.Bitmap.Height := 16;
 			Bmp.Resize(Bmp, TranColor, MenuItem.Bitmap.Width, MenuItem.Bitmap.Height, nil);
 			MenuItem.Bitmap.Canvas.Draw(0, 0, Bmp);
+			MenuItem.Bitmap.Transparent := True;
 			MenuItem.Bitmap.TransparentColor := TranColor;
 			Bmp.Free;
 		end;
@@ -264,7 +265,7 @@ begin
 
 	if ScreenBits <= 11 then
 	begin
-		MenuBmp.Bar(clNone, 0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+		MenuBmp.Bar(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 			clMenu, ef16);
 	end
 	else
@@ -337,7 +338,7 @@ begin
 				Co[3] := Co[1];
 				if ScreenBits <= 11 then
 				begin
-					MenuBmp.Bar(clNone, 1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
+					MenuBmp.Bar(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
 						clMenu, ef16);
 				end
 				else
@@ -360,7 +361,7 @@ begin
 				Co[3] := Co[1];
 				if ScreenBits <= 11 then
 				begin
-					MenuBmp.Bar(clNone, X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+					MenuBmp.Bar(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 						clHighLight, ef16);
 				end
 				else
@@ -399,7 +400,7 @@ begin
 			if (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
-				MenuBmp.Bar(clNone, 1, Y + 1, 1 + 15, Y + 1 + 15,
+				MenuBmp.Bar(1, Y + 1, 1 + 15, Y + 1 + 15,
 					DepthColor(1), ef08);
 				BmpWid := 16;
 			end;
@@ -412,15 +413,20 @@ begin
 			Bmp := TDBitmap.Create;
 			BmpWid := 16;
 			Bmp.SetSize(16, 16);
-			Bmp.Bar(clNone, clMenu, ef16);
+			Bmp.Bar(clMenu, ef16);
 
 			ImageList.Draw(Bmp.Canvas, 0, 0, MenuItem.ImageIndex,
 				True);
-			Bmp.TransparentColor := GetTransparentColor(Bmp);
+			Bmp.Transparent := True;
 			if MenuItem.Enabled = False then
-				Bmp.Bar(clNone, clMenu, ef12);
+			begin
+				Bmp.Bar(clMenu, ef12);
+			end;
+			Bmp.TransparentColor := clMenu; // D???
+{			else
+				Bmp.TransparentColor := GetTransparentColor(Bmp);}
 
-			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, Bmp, clMenu, ef16);
+			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, Bmp, ef16);
 
 			Bmp.Free;
 			if (TopLevel = False) and (MenuItem.Checked = False) and (odSelected in State) then
@@ -444,7 +450,11 @@ begin
 			BmpD.CopyBitmap(MenuItem.Bitmap);
 			MenuItem.Bitmap.TransparentColor := C;
 			if (MenuItem.Enabled = False) or (odInactive in State) then
-				BmpD.Bar(MenuItem.Bitmap.TransparentColor, clMenu, ef12);
+			begin
+				BmpD.Transparent := True;
+				BmpD.TransparentColor := MenuItem.Bitmap.TransparentColor;
+				BmpD.Bar(clMenu, ef12);
+			end;
 			BmpD.ChangeColor(MenuItem.Bitmap.TransparentColor, clMenu);
 
 			x := 1;
@@ -454,7 +464,7 @@ begin
 				Inc(x);
 				Inc(y);
 			end;
-			MenuBmp.Bmp(x, y, BmpD, clMenu, ef16);
+			MenuBmp.Bmp(x, y, BmpD, ef16);
 			BmpD.Free;
 			MenuB := True;
 		end
