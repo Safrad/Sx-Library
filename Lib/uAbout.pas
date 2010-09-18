@@ -7,7 +7,7 @@ interface
 uses
 	uDForm, uAdd, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, uDPanel, uDButton, uDLabel, uDTimer, uDImage;
+	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage;
 
 type
 	TfAbout = class(TDForm)
@@ -20,13 +20,10 @@ type
 		LabelNowRunTime: TDLabel;
 		LabelTotalRunTime: TDLabel;
     PanelBuild: TEdit;
-		PanelImage: TDPanel;
     PanelRC: TEdit;
     PanelTRT: TEdit;
     PanelNRT: TEdit;
-		PanelName: TDPanel;
 		ImageName: TDImage;
-		PenelVersion: TDPanel;
 		ImageVersion: TDImage;
 		LabelAuthor: TDLabel;
 		LabelBuild: TDLabel;
@@ -62,6 +59,7 @@ type
 		procedure ImageVersionFill(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
     procedure DButtonMemoryStatusClick(Sender: TObject);
+    procedure FormHide(Sender: TObject);
 	private
 		Effect: Byte;
 		Typ: Byte;
@@ -81,8 +79,8 @@ procedure AboutRW(const Save: Boolean);
 
 var
 	RunCount: UG;
-	RunTime: U64;
-	StartProgramTime: U32;
+	RunTime: U8;
+	StartProgramTime: U4;
 
 implementation
 
@@ -93,14 +91,14 @@ uses
 var
 	fAbout: TfAbout;
 
-	LMemClock: U64;
+	LMemClock: U8;
 
-	RunProgramTime: U64;
+	RunProgramTime: U8;
 type
 	PFlash = ^TFlash;
 	TFlash = packed record // 16
-		X, Y: S32;
-		Power: S32;
+		X, Y: S4;
+		Power: S4;
 		Color: TColor;
 	end;
 var
@@ -111,7 +109,7 @@ const
 procedure ReadMe;
 var
 	FileName: TFileName;
-	ErrorCode: U32;
+	ErrorCode: U4;
 begin
 	FileName := WorkDir + 'ReadMe.htm';
 	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
@@ -131,6 +129,7 @@ begin
 		fAbout := TfAbout.Create(AOwner);
 		fAbout.ProgramName := Application.Title;
 		fAbout.ProgramVersion := 'Version ' + Version;
+		fAbout.ImageVersion.Bitmap.Canvas.Font.Name := 'MS Sans Serif';
 		fAbout.PanelBuild.Text := Build;
 		fAbout.LoadFile(FileName);
 		Screen.Cursor := OrigCursor;
@@ -154,11 +153,12 @@ var
 	s: string;
 begin
 	if Save then
-		RunTime := U64(GetTickCount - StartProgramTime) + RunProgramTime;
+		RunTime := U8(GetTickCount - StartProgramTime) + RunProgramTime;
+
 	if Assigned(MainIni) then
 	begin
 		MainIni.RWUG('Statistics', 'RunCount', RunCount, Save);
-		MainIni.RWU64('Statistics', 'RunTime', RunTime, Save);
+		MainIni.RWU8('Statistics', 'RunTime', RunTime, Save);
 		if Save = False then
 		begin
 			Inc(RunCount);
@@ -230,7 +230,7 @@ procedure TfAbout.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
 	EditEmail.Text := 'safrad@email.cz?subject=' + Application.Title;
-	PanelRC.Text := Using('~#,###,###,##0', RunCount);
+	PanelRC.Text := NToS(RunCount);
 	PanelTRT.Text := msToStr(RunTime, diDHMSD, 3, False);
 
 	ImageName.Bitmap.Canvas.Brush.Style := bsClear;
@@ -242,6 +242,9 @@ begin
 	ImageVersion.Bitmap.Canvas.Font.Style := [fsBold];
 
 	InitNRT;
+
+	if Assigned(MainIni) then
+		MainIni.RWFormPos(Self, False);
 end;
 
 procedure TfAbout.FormDestroy(Sender: TObject);
@@ -283,13 +286,25 @@ begin
 end;
 
 procedure TfAbout.EditWebClick(Sender: TObject);
+var
+	FileName: TFileName;
+	ErrorCode: U4;
 begin
-	ShellExecute(0, 'open', PChar(EditWeb.Text), nil, nil, SW_ShowNormal);
+	FileName := PChar(EditWeb.Text);
+	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
+	if ErrorCode <= 32 then
+		IOError(FileName, ErrorCode);
 end;
 
 procedure TfAbout.EditEmailClick(Sender: TObject);
+var
+	FileName: TFileName;
+	ErrorCode: U4;
 begin
-	ShellExecute(0, 'open', PChar('mailto: ' + EditEMail.Text), nil, nil, SW_ShowNormal);
+	FileName := PChar('mailto: ' + EditEMail.Text);
+	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
+	if ErrorCode <= 32 then
+		IOError(FileName, ErrorCode);
 end;
 
 procedure TfAbout.DTimer1Timer(Sender: TObject);
@@ -322,7 +337,9 @@ end;
 procedure TfAbout.SysInfo1Click(Sender: TObject);
 begin
 	if not Assigned(fSysInfo) then fSysInfo := TfSysInfo.Create(Self);
-	fSysInfo.FormStyle := fAbout.FormStyle;
+//	fSysInfo.FormStyle := fAbout.FormStyle;
+	fSysInfo.Left := fAbout.Left;
+	fSysInfo.Top := fAbout.Top;
 	FillSysInfoS(SysInfo);
 	FillSysInfoD(SysInfo);
 	fSysInfo.FillComp;
@@ -357,6 +374,7 @@ begin
 		(BitmapName.Height -
 		BitmapName.Canvas.TextHeight(ProgramName)) div 2,
 		ProgramName);
+	BitmapName.Border24(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clBlack, clWhite, 2, ef08);
 end;
 
 procedure TfAbout.ImageVersionFill(Sender: TObject);
@@ -373,6 +391,7 @@ begin
 		BitmapVersion.Canvas.TextHeight(ProgramVersion)) div 2,
 		ProgramVersion);
 	BitmapVersion.GenRGB(clBtnFace, gfSpecHorz, (32 * Timer1.Clock div PerformanceFrequency), ef16);
+	BitmapVersion.Border24(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);
 end;
 
 procedure TfAbout.ImageAboutFill(Sender: TObject);
@@ -429,13 +448,22 @@ begin
 			Inc(i);
 		end;
 	end;
+	BitmapAbout.Border24(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 3, ef08);
 end;
 
 procedure TfAbout.DButtonMemoryStatusClick(Sender: TObject);
 begin
 	if not Assigned(fMemStatus) then fMemStatus := TfMemStatus.Create(Self);
 	fMemStatus.FormStyle := fAbout.FormStyle;
+	fMemStatus.Left := fAbout.Left;
+	fMemStatus.Top := fAbout.Top;
 	fMemStatus.Show;
+end;
+
+procedure TfAbout.FormHide(Sender: TObject);
+begin
+	if Assigned(MainIni) then
+		MainIni.RWFormPos(Self, True);
 end;
 
 initialization

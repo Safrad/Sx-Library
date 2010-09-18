@@ -8,7 +8,7 @@ uses uAdd;
 // AVL (Adilson, Valeskij, Landis)
 type
 	TIndex = SG;
-	TValue = S32;
+	TValue = S4;
 
 	TPrvek = packed record
 		Index: TIndex;

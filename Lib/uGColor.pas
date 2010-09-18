@@ -12,7 +12,7 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	StdCtrls, ComCtrls, ExtCtrls, Menus, uDPanel, uGraph, uDButton,
+	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
 	uDLabel, ImgList, uDForm, uDBitmap, uAdd, uDImage;
 
 const
@@ -71,14 +71,14 @@ type
 		clNone1: TMenuItem;
 		PanelS: TPanel;
 		PanelL: TPanel;
-		PanelNowColor: TDPanel;
-		PanelCurColor: TDPanel;
+    PanelNowColor: TDLabel;
+    PanelCurColor: TDLabel;
 		Bevel1: TBevel;
 		ImageS: TDImage;
 		ImageL: TDImage;
 		ShapeBorder: TShape;
-		PanelNowBitColor: TDPanel;
-		PanelDefaultColor: TDPanel;
+    PanelNowBitColor: TDLabel;
+    PanelDefaultColor: TDLabel;
 		LabelNow: TDLabel;
 		LabelNowXBit: TDLabel;
 		LabelDefault: TDLabel;
@@ -189,7 +189,7 @@ begin
 			32: C.L := clMoneyGreen;
 			33: C.L := clSkyBlue;
 			34: C.L := clCream;
-			35: C.L := clMediumGray;
+			35: C.L := clMedGray;
 			end;
 		end;
 		end;
@@ -383,13 +383,13 @@ begin
 	EditB.OnChange := nil;
 	EditA.OnChange := nil;
 
-	EditR.Text := Using('000', C.R);
+	EditR.Text := NToS(C.R, '000');
 	EditR.Repaint;
-	EditG.Text := Using('000', C.G);
+	EditG.Text := NToS(C.G, '000');
 	EditG.Repaint;
-	EditB.Text := Using('000', C.B);
+	EditB.Text := NToS(C.B, '000');
 	EditB.Repaint;
-	EditA.Text := Using('000', (C.R + C.G + C.B) div 3);
+	EditA.Text := NToS((C.R + C.G + C.B) div 3, '000');
 	EditA.Repaint;
 
 	EditR.OnChange := EditRChange;
@@ -634,7 +634,7 @@ end;
 procedure TfGColor.EditRChange(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).R := StrToValI(EditR.Text, 0, TRColor(NowColor).R, 255, 1);
+	TRColor(NowColor).R := StrToValU1(EditR.Text, True, TRColor(NowColor).R);
 	InitEdits;
 	ChangeLightC;
 	ChangeColor;
@@ -643,7 +643,7 @@ end;
 procedure TfGColor.EditGChange(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).G := StrToValI(EditR.Text, 0, TRColor(NowColor).G, 255, 1);
+	TRColor(NowColor).G := StrToValU1(EditR.Text, True, TRColor(NowColor).G);
 	InitEdits;
 	ChangeLightC;
 	ChangeColor;
@@ -652,7 +652,7 @@ end;
 procedure TfGColor.EditBChange(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
-	TRColor(NowColor).B := StrToValI(EditB.Text, 0, TRColor(NowColor).B, 255, 1);
+	TRColor(NowColor).B := StrToValU1(EditB.Text, True, TRColor(NowColor).B);
 	InitEdits;
 	ChangeLightC;
 	ChangeColor;
@@ -661,9 +661,9 @@ end;
 procedure TfGColor.EditAChange(Sender: TObject);
 begin
 	TRColor(NowColor).T := 0;
-	TRColor(NowColor).R := StrToValI(EditA.Text, 0, TRColor(NowColor).R, 255, 1);
-	TRColor(NowColor).G := StrToValI(EditA.Text, 0, TRColor(NowColor).G, 255, 1);
-	TRColor(NowColor).B := StrToValI(EditA.Text, 0, TRColor(NowColor).B, 255, 1);
+	TRColor(NowColor).R := StrToValU1(EditA.Text, True, TRColor(NowColor).R);
+	TRColor(NowColor).G := StrToValU1(EditA.Text, True, TRColor(NowColor).G);
+	TRColor(NowColor).B := StrToValU1(EditA.Text, True, TRColor(NowColor).B);
 	InitEdits;
 	ChangeLightC;
 	ChangeColor;

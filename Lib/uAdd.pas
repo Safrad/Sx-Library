@@ -18,138 +18,138 @@ uses SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls;
 	xor eax, ebx}
 
 type
-	SG = Integer; // LongInt
-	UG = Cardinal; // LongWord
-	S8 = ShortInt;
-	U8 = Byte;
-	S16 = SmallInt;
-	U16 = Word;
-	S32 = LongInt;
-	U32 = LongWord;
-	S64 = Int64;
-	U64 = Int64; // Wor64/Car64
-	TS16 = record
+	SG = Integer; // LongInt for Delphi 6
+	UG = Cardinal; // LongWord for Delphi 6
+	S1 = ShortInt;
+	U1 = Byte;
+	S2 = SmallInt;
+	U2 = Word;
+	S4 = LongInt;
+	U4 = LongWord;
+	S8 = Int64;
+	U8 = Int64; // Wor64/Car64 for 64bit Delphi?
+	TS2 = record
 		case Integer of
 		0: (
-				B0: U8;
-				B1: S8);
+				B0: U1;
+				B1: S1);
 		1: (
-				A: S16);
+				A: S2);
 	end;
-	TU16 = record
+	TU2 = record
 		case Integer of
 		0: (
-				B0: U8;
-				B1: U8);
+				B0: U1;
+				B1: U1);
 		1: (
-				A: U16);
+				A: U2);
 	end;
-	TS32 = record
+	TS4 = record
 		case Integer of
 		0: (
-				B0: U8;
-				B1: U8;
-				B2: U8;
-				B3: S8);
+				B0: U1;
+				B1: U1;
+				B2: U1;
+				B3: S1);
 		1: (
-				W0: U16;
-				W1: S16);
+				W0: U2;
+				W1: S2);
 		2: (
-			A: S32);
+			A: S4);
 	end;
-	TU32 = record
+	TU4 = record
 		case Integer of
 		0: (
-				B0: U8;
-				B1: U8;
-				B2: U8;
-				B3: U8);
+				B0: U1;
+				B1: U1;
+				B2: U1;
+				B3: U1);
 		1: (
-				W0: U16;
-				W1: U16);
+				W0: U2;
+				W1: U2);
 		2: (
-			A: U32);
+			A: U4);
 	end;
-	TS64 = record
+	TS8 = record
 		case Integer of
 		0: (
-				B0: U8;
-				B1: U8;
-				B2: U8;
-				B3: U8;
-				B4: U8;
-				B5: U8;
-				B6: U8;
-				B7: S8);
+				B0: U1;
+				B1: U1;
+				B2: U1;
+				B3: U1;
+				B4: U1;
+				B5: U1;
+				B6: U1;
+				B7: S1);
 		1: (
-				W0: U16;
-				W1: U16;
-				W2: U16;
-				W3: S16);
+				W0: U2;
+				W1: U2;
+				W2: U2;
+				W3: S2);
 		2: (
-			D0: U32;
-			D1: S32);
+			D0: U4;
+			D1: S4);
 		3: (
-			A: U64);
+			A: U8);
 	end;
-	TU64 = record
+	TU8 = record
 		case Integer of
 		0: (
-				B0: U8;
-				B1: U8;
-				B2: U8;
-				B3: U8;
-				B4: U8;
-				B5: U8;
-				B6: U8;
-				B7: U8);
+				B0: U1;
+				B1: U1;
+				B2: U1;
+				B3: U1;
+				B4: U1;
+				B5: U1;
+				B6: U1;
+				B7: U1);
 		1: (
-				W0: U16;
-				W1: U16;
-				W2: U16;
-				W3: U16);
+				W0: U2;
+				W1: U2;
+				W2: U2;
+				W3: U2);
 		2: (
-			D0: U32;
-			D1: U32);
+			D0: U4;
+			D1: U4);
 		3: (
-			A: U64);
+			A: U8);
 	end;
-{ S64 = record
+{ S8 = record
 		case Integer of
 		0: (
-			LowPart: U32;
-			HighPart: S32);
+			LowPart: U4;
+			HighPart: S4);
 		1: (
 			QuadPart: Int64);
 	end; overload;
-	U64 = record
+	U8 = record
 		case Integer of
 		0: (
-			LowPart: U32;
-			HighPart: U32);
+			LowPart: U4;
+			HighPart: U4);
 		1: (
 			QuadPart: Int64);
 	end;}
 
-	FG = Real; // Double
-	F32 = Single;
-	F48 = Real48;
-	F64 = Double;
-	F80 = Extended;
+	FG = Real; // Double for Delphi 6
+	F4 = Single;
+	F6 = Real48;
+	F8 = Double;
+	FA = Extended;
 
-{ CG = Char; // AnsiChar
-	C8 = AnsiChar;
-	C16 = WideChar;
+{ CG = Char; // AnsiChar for Delphi 6
+	C1 = AnsiChar;
+	C2 = WideChar;
 
-	TG = string; // AnsiString
-	TA8 = ShortString;
-	T8 = AnsiString;
-	T16 = WideString;}
+	TG = string; // AnsiString for Delphi 6
+	TA1 = ShortString;
+	T1 = AnsiString;
+	T2 = WideString;}
 
-	BG = Boolean; // ByteBool
-	B8 = ByteBool;
-	B16 = WordBool;
-	B32 = LongBool;
+	BG = Boolean; // ByteBool for Delphi 6
+	B1 = ByteBool;
+	B2 = WordBool;
+	B4 = LongBool;
 
 	TArrayByte = array[0..1024 * 1024 * 1024 - 1] of Byte;
 	TArrayChar = array[0..1024 * 1024 * 1024 - 1] of AnsiChar;
@@ -182,8 +182,8 @@ type
 const
 	DefMemBuffer = 4096; // Best Performance
 	MinInt = Low(Integer);
-	MinInt64 = Low(Int64);
-	MaxInt64 = Int64($7FFFFFFFFFFFFFFF);
+	MinInt8 = Low(Int64);
+	MaxInt8 = Int64($7FFFFFFFFFFFFFFF);
 
 // Mathematics
 const
@@ -194,12 +194,14 @@ type
 var
 	Sins: array[0..AngleCount - 1] of TAngle;
 
-function Sgn(const I: Integer): Integer; overload;
-function Sgn(const I: Int64): Integer; overload;
-function Sgn(const I: Single): Integer; overload;
-function Sgn(const I: Double): Integer; overload;
-function Sgn(const I: Extended): Integer; overload;
-function SgnMul(const Signum, Num: Integer): Integer;
+function Sgn(const I: S1): SG; overload;
+function Sgn(const I: S2): SG; overload;
+function Sgn(const I: S4): SG; overload;
+function Sgn(const I: S8): SG; overload;
+function Sgn(const I: F4): SG; overload;
+function Sgn(const I: F8): SG; overload;
+function Sgn(const I: FA): SG; overload;
+function SgnMul(const Signum, Num: SG): SG;
 
 procedure DivModU32(const Dividend: LongWord; const Divisor: Word;
 	var Res, Remainder: Word);
@@ -214,10 +216,10 @@ function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
 function FastSqrt(A: SG): SG;
 function LinearMax(Clock, Maximum: LongWord): LongWord;
 
-function RoundDiv(const Dividend: Integer; const Divisor: Integer): Integer; //overload;
-function RoundDiv64(const Dividend: Int64; const Divisor: Int64): Int64; //overload;
-function MaxDiv(const Dividend: Integer; const Divisor: Integer): Integer; //overload;
-function MaxDiv64(const Dividend: Int64; const Divisor: Integer): Int64; //overload;
+function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
+function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
+function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
+function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 
 function Range(const Min, Cur, Max: Integer): Integer; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
@@ -235,32 +237,85 @@ procedure CheckBool(var Bool: LongBool); overload;
 procedure Order(var I1, I2: Integer); overload;
 procedure Order(var I1, I2: Cardinal); overload;
 
-function CalcShr(N: U32): S8;
+function CalcShr(N: U4): S1;
 
 function AllocByEx(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 
 // Format functions
-var WinDecimalSeparator: Char;
-function Using(const Typ: TString; const Num: Int64): TString;
-function IntToStrF(const Num: Int64): TString;
-function StrToI(const s: string): SG; overload;
-function StrToI(const s: string; Decimals: SG): SG; overload;
+
+// Number Format
+var
+	NativeSymbols: string[10];
+
+	DecimalSeparator: string[3]; // Decimal symbol
+	DigitsAfterDecimal: SG; // No. of digits after decimal
+	ThousandSeparator: string[3]; // Digit grouping symbol
+	ThousandGroup: SG; // Digit grouping
+	FractionGroup: SG;
+	NegSymbol: string[4]; // Negatove sing symbol
+	PosSymbol: string[4]; // Negatove sing symbol
+	NegFormat: SG; // Negative number format
+	LeadingZero: SG; // Display leading zeros
+	ListSeparator: string[3]; // List separator
+
+// Time Format
+	TimeSeparator: string[3];
+
+//var WinDecimalSeparator: Char;
+{
+NToS(S8, ...); <-> StrToValI(SG,UG), StrToValS8, U1(..., False, ...);
+
+FToS(F10, ...) <-> StrToValExt StrToE(..., False);
+
+UseWinFormat:
+False: 2,102,454,545.45644; Disk File Input/Output
+True: 2t102t454t545d4564; User Input, Graphics Output
+
+IntToStr	StrToInt ; 2102454545;  Windows Registry, IE
+
+}
+{
+	Decimals:
+	-2	2.2	Maximum decimals
+	+2	2.20	Fixed decimals
+}
+function NToS(const Num: Int64): TString; overload;
+function NToS(const Num: Int64; const Decimals: SG): TString; overload;
+function NToS(const Num: Int64; const UseFormat: TString): TString; overload;
+function NToS(const Num: Int64; const UseWinFormat: BG): TString; overload;
+function NToS(const Num: Int64; const UseWinFormat: BG; const Decimals: SG): TString; overload;
+
+function FToS(Num: Extended): TString; overload;
+function FToS(Num: Extended; const UseWinFormat: BG): TString; overload;
+
 function TimeToInt(Line: string): SG;
 
-function StrToValExt(Line: TString;
-	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string;
+function StrToValExt(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string;
 	var InStr: string; var ErrorLineIndex: SG): Extended;
-function StrToValE(Line: TString;
+
+function StrToValE(Line: TString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended; overload;
-function StrToValE(Line: TString;
-	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string): Extended; overload;
-function StrToValI(Line: TString;
-	const MinVal, DefVal, MaxVal, Denominator: Integer): Integer; overload;
-function StrToValI(Line: TString;
-	const MinVal, DefVal, MaxVal, Denominator: Integer; var ErrorMsg: string): Integer; overload;
-function StrToValI64(Line: TString;
-	const MinVal, DefVal, MaxVal, Denominator: Int64): Int64;
+function StrToValE(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string): Extended; overload;
+
+function StrToValI(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: SG): SG; overload;
+function StrToValI(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: UG): UG; overload;
+
+function StrToValI(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: SG; out ErrorMsg: string): SG; overload;
+function StrToValI(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: UG; out ErrorMsg: string): UG; overload;
+
+function StrToValS8(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: S8): S8;
+
+function StrToValU1(Line: TString; const UseWinFormat: BG;
+	const DefVal: U1): U1;
+
 (*
 function StrToValC(S: TString;
 	const MinVal, DefVal, MaxVal, Denominator: Cardinal): Cardinal;
@@ -271,11 +326,13 @@ function BToStr(const B: Integer): TString; overload;
 function BToStr(const B: Int64): TString; overload;
 
 // Time
-procedure msToHMSD(const T: Int64; var GH, GM, GS, GD: LongWord);
+procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 type
 	TDisplay = (diDHMSD, diHMSD, diMSD, diSD);
 function msToStr(const DT: Int64;
-	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString;
+	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString; overload;
+function msToStr(const DT: Int64; const UseWinFormat: BG;
+	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString; overload;
 function Date6(Year, Month, Day: Word): string;
 function Date6Now: string;
 
@@ -314,7 +371,7 @@ uses
 	Windows, Math, Dialogs,
 	uError, uDialog, uStrings;
 
-function Sgn(const I: Integer): Integer;
+function Sgn(const I: S1): SG;
 begin
 	if I = 0 then
 		Result := 0
@@ -324,7 +381,7 @@ begin
 		Result := -1;
 end;
 
-function Sgn(const I: Int64): Integer;
+function Sgn(const I: S2): SG;
 begin
 	if I = 0 then
 		Result := 0
@@ -334,7 +391,7 @@ begin
 		Result := -1;
 end;
 
-function Sgn(const I: Single): Integer;
+function Sgn(const I: S4): SG;
 begin
 	if I = 0 then
 		Result := 0
@@ -344,7 +401,7 @@ begin
 		Result := -1;
 end;
 
-function Sgn(const I: Double): Integer;
+function Sgn(const I: S8): SG;
 begin
 	if I = 0 then
 		Result := 0
@@ -354,7 +411,27 @@ begin
 		Result := -1;
 end;
 
-function Sgn(const I: Extended): Integer;
+function Sgn(const I: F4): SG;
+begin
+	if I = 0 then
+		Result := 0
+	else if I > 0 then
+		Result := 1
+	else
+		Result := -1;
+end;
+
+function Sgn(const I: F8): SG;
+begin
+	if I = 0 then
+		Result := 0
+	else if I > 0 then
+		Result := 1
+	else
+		Result := -1;
+end;
+
+function Sgn(const I: FA): SG;
 begin
 	if I = 0 then
 		Result := 0
@@ -489,7 +566,7 @@ begin
 	if Result > Maximum then Result := 2 * Maximum - Result;
 end;
 
-function RoundDiv(const Dividend: Integer; const Divisor: Integer): Integer;
+function RoundDiv(const Dividend: SG; const Divisor: SG): SG;
 // 0 div 4 is 0
 // 1 div 4 is 0
 // 2 div 4 is 1
@@ -509,7 +586,7 @@ begin
 		Result := (Dividend + (Divisor div 2)) div Divisor;
 end;
 
-function RoundDiv64(const Dividend: Int64; const Divisor: Int64): Int64;
+function RoundDivS8(const Dividend: S8; const Divisor: S8): S8;
 // 0 div 4 is 0
 // 1 div 4 is 0
 // 2 div 4 is 1
@@ -529,7 +606,7 @@ begin
 		Result := (Dividend + (Divisor div 2)) div Divisor;
 end;
 
-function MaxDiv(const Dividend: Integer; const Divisor: Integer): Integer;
+function MaxDiv(const Dividend: SG; const Divisor: SG): SG;
 // 0 div 4 is 0
 // 1 div 4 is 1
 // 2 div 4 is 1
@@ -549,7 +626,7 @@ begin
 		Result := (Dividend + Divisor - 1) div Divisor;
 end;
 
-function MaxDiv64(const Dividend: Int64; const Divisor: Integer): Int64;
+function MaxDivS8(const Dividend: S8; const Divisor: S8): S8;
 // 0 div 4 is 0
 // 1 div 4 is 1
 // 2 div 4 is 1
@@ -656,7 +733,7 @@ begin
 	end;
 end;
 
-function CalcShr(N: U32): S8;
+function CalcShr(N: U4): S1;
 {
 	0: -1
 	1: 0
@@ -683,7 +760,7 @@ function CalcShr(N: U32): S8;
 	1 shl 3 = 8
 
 }
-var M: U32;
+var M: U4;
 begin
 	if N = 0 then
 	begin
@@ -716,7 +793,7 @@ begin
 	if (1 shl Sh) <> BlockSize then
 	begin
 		{$ifopt d+}
-		ErrorMessage('Bad AllocBy block size ' + IntToStr(BlockSize));
+		ErrorMessage('Bad AllocBy block size ' + NToS(BlockSize) + ' bytes');
 		{$endif}
 //		BlockSize := 1 shl CalcShr(DefMemBuffer div BlockSize);
 		BlockSize := DefMemBuffer;
@@ -757,7 +834,257 @@ begin
 	end;
 end;
 
+function NToS(const Num: Int64; const UseFormat: TString): TString;
+var
+	Nums: TString;
+	i, j: SG;
+	PointPos: SG;
+	NumFound: BG;
+begin
+	Result := '';
+	Nums := IntToStr(Abs(Num));
+	j := Length(Nums);
+	PointPos := Pos('.', UseFormat);
+	if PointPos = 0 then PointPos := High(PointPos);
+	NumFound := False;
+	for i := Length(UseFormat) downto 1 do
+	begin
+		if (UseFormat[i] = '0') or (UseFormat[i] = '#') then
+		begin
+			if j >= 1 then
+			begin
+				if Nums[j] <> '0' then
+				begin
+					NumFound := True;
+					Result := Nums[j] + Result;
+				end
+				else
+				begin
+					if (UseFormat[i] = '#') and ((i < PointPos) or (NumFound = False)) then
+						Result := ' ' + Result
+					else
+						Result := '0' + Result;
+				end;
+			end
+			else
+			begin
+				if (UseFormat[i] = '#') and ((i < PointPos) or (NumFound = False)) then
+					Result := ' ' + Result
+				else
+					Result := '0' + Result;
+			end;
+			Dec(j);
+		end
+		else if (UseFormat[i] = '.') then
+		begin
+			if NumFound then
+			begin
+				Result := '.' + Result
+			end
+			else
+				Result := ' ' + Result;
+		end
+		else if (UseFormat[i] = ',') then
+		begin
+			if Result <> '' then
+			begin
+				Result := UseFormat[i] + Result
+			end
+			else
+				Result := ' ' + Result;
+		end
+		else if UseFormat[i] = ' ' then
+		begin
+			Result := ' ' + Result;
+		end
+		else if UseFormat[i] = '+' then
+		begin
+			if Num < 0 then
+				Result := '-' + Result
+			else
+				Result := '+' + Result;
+
+		end
+		else if UseFormat[i] = '-' then
+		begin
+			if Num < 0 then
+				Result := '-' + Result
+			else
+				Result := ' ' + Result;
+		end
+		else
+			IE(34343);
+	end;
+end;
+
+function NToS(const Num: Int64): TString;
+begin
+	Result := NToS(Num, True, 0);
+end;
+
+function NToS(const Num: Int64; const Decimals: SG): TString;
+begin
+	Result := NToS(Num, True, Decimals);
+end;
+
+function NToS(const Num: Int64; const UseWinFormat: BG): TString;
+begin
+	Result := NToS(Num, UseWinFormat, 0);
+end;
+
+// 454,545,455.456465; 0.045
+function NToS(const Num: Int64; const UseWinFormat: BG; const Decimals: SG): TString;
+var
+	DecimalSep, ThousandSep: string[3];
+	ThousandGr, FractionGr: SG;
+
+	Nums: TString;
+	i, M: SG;
+	FirstNotZero: BG;
+	c: Char;
+begin
+	Result := '';
+
+	if UseWinFormat then
+	begin
+		DecimalSep := DecimalSeparator;
+		ThousandSep := ThousandSeparator;
+		ThousandGr := ThousandGroup;
+		FractionGr := FractionGroup;
+	end
+	else
+	begin
+		DecimalSep := '.';
+		ThousandSep := ',';
+		ThousandGr := 3;
+		FractionGr := 3;
+	end;
+
+	if Num = 0 then
+		Nums := ''
+	else
+		Nums := IntToStr(Abs(Num));
+
+	M := -Abs(Decimals);
+	i := Length(Nums);
+	FirstNotZero := Decimals >= 0;
+	while True do
+	begin
+		if i > 0 then
+		begin
+			c := Nums[i];
+		end
+		else
+			c := '0';
+
+		if c = '0' then
+		begin
+			if FirstNotZero then
+				Result := '0' + Result;
+		end
+		else
+		begin
+			FirstNotZero := True;
+			Result := c + Result
+		end;
+
+		Dec(i);
+		Inc(M);
+
+		if (i < 1) and (M > 0) then Break;
+
+		if M = 0 then
+		begin
+			if FirstNotZero then
+				Result := DecimalSep + Result;
+			if i < 1 then
+			begin
+				if UseWinFormat then
+				begin
+					if LeadingZero = 1 then
+						Result := '0' + Result;
+				end
+				else
+				begin
+					Result := '0' + Result;
+				end;
+				Break;
+			end;
+		end
+		else if (M < 0) then
+		begin
+			if (FractionGr > 0) and (FirstNotZero) then
+				if Abs(M) mod FractionGr = 0 then
+				begin
+					if UseWinFormat then
+						Result := ThousandSep + Result
+					else
+						Result := ',' + Result;
+				end;
+		end
+		else if (M > 0) then
+		begin
+			if ThousandGr > 0 then
+				if Abs(M) mod ThousandGr = 0 then
+				begin
+					if UseWinFormat then
+						Result := ThousandSep + Result
+					else
+						Result := ',' + Result;
+				end;
+		end;
+	end;
+
+	if Num < 0 then
+	begin
+		if UseWinFormat then
+		begin
+			case NegFormat of
+			0: Result := '(' + Result + ')';
+			1: Result := NegSymbol + Result;
+			2: Result := NegSymbol + ' ' + Result;
+			3: Result := Result + NegSymbol;
+			4: Result := Result + ' ' + NegSymbol;
+			else Result := NegSymbol + Result;
+			end;
+		end
+		else
+			Result := '-' + Result;
+	end;
+end;
+
+function FToS(Num: Extended): TString;
+begin
+	Result := FToS(Num, True);
+end;
+
+function FToS(Num: Extended; const UseWinFormat: BG): TString;
+var
+	D: SG;
+	Nu: Extended;
+begin
+	D := 0;
+	Nu := Num;
+	while True do
+	begin
+		if Abs(Frac(Nu)) <= Math.MinExtended then Break;
+		if Abs(Nu) < MaxInt8 div 10 then
+			Nu := Nu * 10
+		else
+		begin
+{			Result := FloatToStr(Num);
+			Exit;}
+			Break;
+		end;
+		Inc(D);
+	end;
+
+	Result := NToS(Round(Nu), UseWinFormat, D);
+end;
+
+{
 function Using(const Typ: TString; const Num: Int64): TString;
+label LExit;
 var
 	inp: TString;
 	inpP: Integer;
@@ -768,21 +1095,22 @@ var
 	Fra: Boolean;
 begin
 	Result := '';
-	if Typ = '' then
+	if UseFormat = '' then
 	begin
+		IE(434333);
 		Exit;
 	end;
 
-	Poin := Pos('.', Typ);
-	if Typ[Length(Typ)] = '~' then DelSpace := True else DelSpace := False;
+	Poin := Pos('.', UseFormat);
+	if UseFormat[Length(UseFormat)] = '~' then DelSpace := True else DelSpace := False;
 
 	if Num = 0 then inp := '' else inp := IntToStr(Abs(Num));
 	inpP := Length(inp);
 
 	FixedSign := False;
-	for i := 1 to Length(typ) do
+	for i := 1 to Length(UseFormat) do
 	begin
-		if (typ[i] = '+') or (typ[i] = '-') then
+		if (UseFormat[i] = '+') or (UseFormat[i] = '-') then
 		begin
 			FixedSign := True;
 			Break;
@@ -790,9 +1118,9 @@ begin
 	end;
 
 	Fra := False;
-	for i := Length(typ) downto 1 do
+	for i := Length(UseFormat) downto 1 do
 	begin
-		case typ[i] of
+		case UseFormat[i] of
 		'#':
 		begin
 			if inpP > 0 then
@@ -845,9 +1173,9 @@ begin
 			begin
 				while Length(Result) > 0 do
 				begin
-					if Result[1] = ' ' then Delete(Result, 1, 1) else Exit;
+					if Result[1] = ' ' then Delete(Result, 1, 1) else goto LExit;
 				end;
-				Exit;
+				goto LExit;
 			end;
 		end;
 		'+':
@@ -876,9 +1204,12 @@ begin
 			end
 			else
 			begin
-				Result := DecimalSeparator + Result;
+				if UseWinFormat then
+					Result := DecimalSeparator + Result
+				else
+					Result := '.' + Result;
 			end;
-			if Typ[1] = '~' then DelSpace := True else DelSpace := False;
+			if UseFormat[1] = '~' then DelSpace := True else DelSpace := False;
 		end;
 		' ':
 		begin
@@ -888,7 +1219,10 @@ begin
 		begin
 				if (inpP > 0) then
 				begin
-					Result := ThousandSeparator + Result;
+					if UseWinFormat then
+						Result := ThousandSeparator + Result
+					else
+						Result := ',' + Result;
 				end
 				else
 				begin
@@ -897,14 +1231,10 @@ begin
 		end;
 		end;
 	end;
+	LExit:
 end;
 
-function IntToStrF(const Num: Int64): TString;
-begin
-	Result := Using('~###,###,###,###,###,##0', Num);
-end;
-
-function StrToI(const s: string): SG;
+{function StrToI(s: string): SG;
 begin
 	Result := StrToI(s, 0);
 {var
@@ -927,10 +1257,10 @@ begin
 		end;
 		'.': Break;
 		end;
-	end;}
+	end;
 end;
 
-function StrToI(const s: string; Decimals: SG): SG; overload;
+function StrToI(s: string; Decimals: SG): SG; overload;
 var
 	Code: Integer;
 	e: Extended;
@@ -942,6 +1272,10 @@ begin
 		Result := 0;
 		Exit;
 	end;
+	// Disk Format 2,456,454,546.42454
+	if CharCount(s, '.') > 0 then IE(431);
+
+	DelChars(s, ',');
 
 	if Decimals > 0 then
 	begin
@@ -1013,8 +1347,8 @@ begin
 			Result := Result * 10 * Point;
 		end;
 		end;
-	end;}
-end;
+	end;
+end;}
 
 function TimeToInt(Line: string): SG;
 var
@@ -1022,10 +1356,10 @@ var
 	InLineIndex: SG;
 begin
 	InLineIndex := 1;
-	h := StrToI(ReadToChar(Line, InLineIndex, ':'));
-	m := StrToI(ReadToChar(Line, InLineIndex, ':'));
-	s := StrToI(ReadToChar(Line, InLineIndex, ','));
-	d := StrToI(ReadToChar(Line, InLineIndex, ' '));
+	h := StrToValI(ReadToChar(Line, InLineIndex, ':'), False, 0, 0, MaxInt, 1);
+	m := StrToValI(ReadToChar(Line, InLineIndex, ':'), False, 0, 0, SG(59), 1);
+	s := StrToValI(ReadToChar(Line, InLineIndex, ','), False, 0, 0, SG(59), 1);
+	d := StrToValI(ReadToChar(Line, InLineIndex, ' '), False, 0, 0, SG(999), 1);
 	Result := (3600000 * h + 60000 * m + 1000 * s + d);
 end;
 
@@ -1033,12 +1367,14 @@ end;
 var
 	CharsTable: array[Char] of (ctIllegal, ctNumber, ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose);
 
-function StrToValExt(Line: TString;
-	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string;
+function StrToValExt(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string;
 	var InStr: string; var ErrorLineIndex: SG): Extended;
 type
 	TOperator = (opNone, opWaitOperator, opNumber, opPlus, opExp, opMinus, opMul, opDiv);
 var
+	DecimalSep, ThousandSep: string[3];
+
 	i: Integer;
 	Per, Point: Boolean;
 	PointDiv: Extended;
@@ -1058,7 +1394,10 @@ var
 		if ErrorMsg = '' then
 		begin
 			ErrorLineIndex := LineIndex;
-			ErrorMsg := 'Error: (' + IntToStr(LineIndex) + '): ' + s;
+			ErrorMsg := 'Error (' + NToS(LineIndex) + '): ' + s;
+			{$ifopt d+}
+//			ErrorMessage(ErrorMsg);
+			{$endif}
 		end;
 	end;
 
@@ -1103,13 +1442,22 @@ var
 					'O', 'o': Base := 8;
 					'!': Base := 10;
 					'$', 'x', 'X', 'h', 'H': Base := 16;
-					'.': Point := True;
 					'*', '/', ':', '^', ')', '(': Break;
 					'-', '+': if (Base <> 10) or (UpCase(Line[LineIndex - 1]) <> 'E') then Break else UnarExp := True;
 					else
 					begin
-						if Line[LineIndex] = DecimalSeparator then
-							Point := True
+						if (UseWinFormat and (Copy(Line, LineIndex, Length(DecimalSep)) = DecimalSep)) then
+						begin
+							if Point = True then ShowError('Too many decimal points');
+							Point := True;
+							Inc(LineIndex, Length(DecimalSep) - 1);
+						end
+						else if (Line[LineIndex] = '.') then
+						begin
+							if Point = True then ShowError('Too many decimal points');
+							Point := True;
+//							Inc(LineIndex);
+						end
 						else
 						begin
 							case UpCase(Line[LineIndex]) of
@@ -1327,6 +1675,19 @@ begin
 		Exit;
 	end;
 
+	if UseWinFormat then
+	begin
+		DecimalSep := DecimalSeparator;
+		ThousandSep := ThousandSeparator;
+	end
+	else
+	begin
+		DecimalSep := '.';
+		ThousandSep := ',';
+	end;
+
+//	DelStr(Line, ThousandSep);
+
 	// Make ()
 	if Line[1] <> '(' then
 	begin
@@ -1442,40 +1803,59 @@ begin
 end;
 
 
-function StrToValE(Line: TString;
+function StrToValE(Line: TString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 var ErrorMsg: string;
 begin
-	Result := StrToValE(Line, MinVal, DefVal, MaxVal, ErrorMsg);
+	Result := StrToValE(Line, UseWinFormat, MinVal, DefVal, MaxVal, ErrorMsg);
 end;
 
-function StrToValE(Line: TString;
-	const MinVal, DefVal, MaxVal: Extended; var ErrorMsg: string): Extended;
+function StrToValE(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string): Extended;
 var
 	InStr: string;
 	LineIndex: SG;
 begin
-	Result := StrToValExt(Line, MinVal, DefVal, MaxVal, ErrorMsg, InStr, LineIndex);
+	Result := StrToValExt(Line, UseWinFormat, MinVal, DefVal, MaxVal, ErrorMsg, InStr, LineIndex);
 end;
 
-function StrToValI(Line: TString;
+function StrToValI(Line: TString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: Integer): Integer;
 var ErrorMsg: string;
 begin
-	Result := StrToValI(Line, MinVal, DefVal, MaxVal, Denominator, ErrorMsg);
+	Result := StrToValI(Line, UseWinFormat, MinVal, DefVal, MaxVal, Denominator, ErrorMsg);
 end;
 
-function StrToValI(Line: TString;
-	const MinVal, DefVal, MaxVal, Denominator: Integer; var ErrorMsg: string): Integer;
-begin
-	Result := Round(Denominator * StrToValE(Line, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, ErrorMsg));
-end;
-
-function StrToValI64(Line: TString;
-	const MinVal, DefVal, MaxVal, Denominator: Int64): Int64;
+function StrToValI(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: UG): UG;
 var ErrorMsg: string;
 begin
-	Result := Round(Denominator * StrToValE(Line, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, ErrorMsg));
+	Result := StrToValI(Line, UseWinFormat, MinVal, DefVal, MaxVal, Denominator, ErrorMsg);
+end;
+
+function StrToValI(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: Integer; out ErrorMsg: string): Integer;
+begin
+	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, ErrorMsg));
+end;
+
+function StrToValI(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: UG; out ErrorMsg: string): UG;
+begin
+	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, ErrorMsg));
+end;
+
+function StrToValS8(Line: TString; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: S8): S8;
+var ErrorMsg: string;
+begin
+	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, ErrorMsg));
+end;
+
+function StrToValU1(Line: TString; const UseWinFormat: BG;
+	const DefVal: U1): U1;
+begin
+	Result := StrToValI(Line, UseWinFormat, 0, UG(DefVal), 255, 1);
 end;
 
 const Sep = ' ';
@@ -1485,43 +1865,43 @@ label LExit;
 begin
 	if B < 1024 then //2^10 ($400)
 	begin
-		Result := Using('~###0', B) + Sep + 'B';
+		Result := NToS(B, 0) + Sep + 'B';
 		goto LExit;
 	end;
 	if B < 10240 then
 	begin
-		Result := Using('0.##~', (100 * B) div 1024) + Sep + 'KB';
+		Result := NToS((100 * B) div 1024, -2) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 102400 then
 	begin
-		Result := Using('~#0.#~', (10 * B) div 1024) + Sep + 'KB';
+		Result := NToS((10 * B) div 1024, -1) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 1048576 then //2^20 ($100 000)
 	begin
-		Result := Using('~###0', B div 1024) + Sep + 'KB';
+		Result := NToS(B div 1024, 0) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 10485760 then
 	begin
-		Result := Using('0.##~', (100 * B) div 1048576) + Sep + 'MB';
+		Result := NToS((100 * B) div 1048576, -2) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < 104857600 then
 	begin
-		Result := Using('~#0.#~', (10 * B) div 1048576) + Sep + 'MB';
+		Result := NToS((10 * B) div 1048576, -1) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < 1073741824 then //2^30 ($40 000 000)
 	begin
-		Result := Using('~###0', B div 1048576) + Sep + 'MB';
+		Result := NToS(B div 1048576, 0) + Sep + 'MB';
 		goto LExit;
 	end;
 	//if B<10737418240 then
-	Result := Using('0.##~', (100 * (B div 128)) div (1073741824 div 128)) + Sep + 'GB';
+	Result := NToS((100 * (B div 128)) div (1073741824 div 128), -2) + Sep + 'GB';
 	LExit:
-	if B < 0 then Result := '-' + Result;
+//	if B < 0 then Result := '-' + Result;
 end;
 
 function BToStr(const B: Int64): TString;
@@ -1529,91 +1909,91 @@ label LExit;
 begin
 	if B < 1024 then //2^10 ($400)
 	begin
-		Result := Using('~###0', B) + Sep + 'B';
+		Result := NToS(B, 0) + Sep + 'B';
 		goto LExit;
 	end;
 	if B < 10240 then
 	begin
-		Result := Using('0.##~', (100 * B) div 1024) + Sep + 'KB'; //Kilo
+		Result := NToS((100 * B) div 1024, -2) + Sep + 'KB'; //Kilo
 		goto LExit;
 	end;
 	if B < 102400 then
 	begin
-		Result := Using('~#0.#~', (10 * B) div 1024) + Sep + 'KB';
+		Result := NToS((10 * B) div 1024, -1) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 1048576 then //2^20 ($100 000)
 	begin
-		Result := Using('~###0', B div 1024) + Sep + 'KB';
+		Result := NToS(B div 1024, 0) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 10485760 then
 	begin
-		Result := Using('0.##~', (100 * B) div 1048576) + Sep + 'MB'; //Mega
+		Result := NToS((100 * B) div 1048576, -2) + Sep + 'MB'; //Mega
 		goto LExit;
 	end;
 	if B < 104857600 then
 	begin
-		Result := Using('~#0.#~', (10 * B) div 1048576) + Sep + 'MB';
+		Result := NToS((10 * B) div 1048576, -1) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < 1073741824 then //2^30 ($40 000 000)
 	begin
-		Result := Using('~###0', B div 1048576) + Sep + 'MB';
+		Result := NToS(B div 1048576, 0) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < 10737418240 then
 	begin
-		Result := Using('0.##~', (100 * B) div 1073741824) + Sep + 'GB'; //Giga
+		Result := NToS((100 * B) div 1073741824, -2) + Sep + 'GB'; //Giga
 		goto LExit;
 	end;
 	if B < 107374182400 then
 	begin
-		Result := Using('~#0.#~', (10 * B) div 1073741824) + Sep + 'GB';
+		Result := NToS((10 * B) div 1073741824, -1) + Sep + 'GB';
 		goto LExit;
 	end;
 	if B < 1099511627776 then //2^40 ($10 000 000 000)
 	begin
-		Result := Using('~###0', B div 1073741824) + Sep + 'GB';
+		Result := NToS(B div 1073741824, 0) + Sep + 'GB';
 		goto LExit;
 	end;
 	if B < 10995116277760 then
 	begin
-		Result := Using('0.##~', (100 * B) div 1099511627776) + Sep + 'TB'; //Tera
+		Result := NToS((100 * B) div 1099511627776, -2) + Sep + 'TB'; //Tera
 		goto LExit;
 	end;
 	if B < 109951162777600 then
 	begin
-		Result := Using('~#0.#~', (10 * B) div 1099511627776) + Sep + 'TB';
+		Result := NToS((10 * B) div 1099511627776, -1) + Sep + 'TB';
 		goto LExit;
 	end;
 	if B < 1125899906842624 then //2^50 ($4 000 000 000 000)
 	begin
-		Result := Using('~###0', B div 1099511627776) + Sep + 'TB';
+		Result := NToS(B div 1099511627776, 0) + Sep + 'TB';
 		goto LExit;
 	end;
 	if B < 11258999068426240 then
 	begin;
-		Result := Using('0.##~', (100 * B) div 1125899906842624) + Sep + 'PB'; //Peta
+		Result := NToS((100 * B) div 1125899906842624, -2) + Sep + 'PB'; //Peta
 		goto LExit;
 	end;
 	if B < 112589990684262400 then
 	begin
-		Result := Using('~#0.#~', (10 * B) div 1125899906842624) + Sep + 'PB';
+		Result := NToS((10 * B) div 1125899906842624, -1) + Sep + 'PB';
 		goto LExit;
 	end;
 	if B < 1152921504606846976 then //2^60 ($1 000 000 000 000 000)
 	begin
-		Result := Using('~###0', B div 1125899906842624) + Sep + 'PB';
+		Result := NToS(B div 1125899906842624, 0) + Sep + 'PB';
 		goto LExit;
 	end;
 	//if B<11529215046068469760 then
-	Result := Using('0.##~', (100 * (B div 128)) div (1152921504606846976 div 128)) + Sep + 'EB'; //Exa
+	Result := NToS((100 * (B div 128)) div (1152921504606846976 div 128), -2) + Sep + 'EB'; //Exa
 	LExit:
-	if B < 0 then Result := '-' + Result;
+//	if B < 0 then Result := '-' + Result;
 end;
 
-procedure msToHMSD(const T: Int64; var GH, GM, GS, GD: LongWord);
+procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 var
 	DW: LongWord;
 begin
@@ -1634,10 +2014,31 @@ end;
 
 function msToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString;
+begin
+	Result := msToStr(DT, True, Display, Decimals, FixedWidth);
+end;
+
+function msToStr(const DT: Int64; const UseWinFormat: BG;
+	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): TString;
 var
 	h, m, s, d: LongWord;
 	Day: SG;
+
+	TimeSep, DecimalSep, ListSep: string[3];
 begin
+	if UseWinFormat then
+	begin
+		TimeSep := TimeSeparator;
+		DecimalSep := DecimalSeparator;
+		ListSep := ListSeparator;
+	end
+	else
+	begin
+		TimeSep := ':';
+		DecimalSep := '.';
+		ListSep := ';';
+	end;
+
 	msToHMSD(Abs(DT), h, m, s, d);
 
 	if DT < 0 then Result := '-' else Result := '';
@@ -1649,7 +2050,8 @@ begin
 			Day := DT div MSecsPerDay;
 			Result := Result + IntToStr(Day) + ' day';
 			if Day > 1 then Result := Result + 's';
-			Result := Result + ', ';
+			Result := Result + ListSep + ' ';
+			h := h mod 24;
 		end;
 	end;
 
@@ -1659,12 +2061,12 @@ begin
 		if h < 10 then
 		begin
 			if (DT >= 0) and FixedWidth then Result := Result + ' ';
-			Result := Result + Chr(h + 48) + ':';
+			Result := Result + Chr(h + 48) + TimeSep;
 		end
 		else if h < 100 then
-			Result := Result + Chr((h div 10) + 48) + Chr((h mod 10) + 48) + ':'
+			Result := Result + Chr((h div 10) + 48) + Chr((h mod 10) + 48) + TimeSep
 		else
-			Result := Result + IntToStr(h) + ':';
+			Result := Result + IntToStr(h) + TimeSep;
 	end;
 	diMSD:
 	begin
@@ -1675,29 +2077,29 @@ begin
 		else if h < 10 then
 		begin
 			if (DT >= 0) and FixedWidth then Result := Result + ' ';
-			Result := Result + Chr(h + 48) + ':'
+			Result := Result + Chr(h + 48) + TimeSep
 		end
 		else if h < 100 then
-			Result := Result + Chr((h div 10) + 48) + Chr((h mod 10) + 48) + ':'
+			Result := Result + Chr((h div 10) + 48) + Chr((h mod 10) + 48) + TimeSep
 		else
-			Result := Result + IntToStr(h) + ':';
+			Result := Result + IntToStr(h) + TimeSep;
 	end;
 	end;
 
 	if Display <> diSD then
 		if m < 10 then
 		begin
-			if (h = 0) and (Display <> diHMSD) then
+			if (h = 0) and (not (Display in [diHMSD, diDHMSD])) then
 			begin
 				if FixedWidth then Result := Result + ' ';
-				Result := Result + Chr(m + 48) + ':'
+				Result := Result + Chr(m + 48) + TimeSep
 			end
 			else
-				Result := Result + '0' + Chr(m + 48) + ':';
+				Result := Result + '0' + Chr(m + 48) + TimeSep;
 		end
 		else
 		begin
-			Result := Result + Chr((m div 10) + 48) + Chr((m mod 10) + 48) + ':';
+			Result := Result + Chr((m div 10) + 48) + Chr((m mod 10) + 48) + TimeSep;
 		end;
 
 	if Display = diSD then
@@ -1716,33 +2118,39 @@ begin
 
 	case Abs(Decimals) of
 	0: Exit;
-	1: 
+	1:
 	begin
 		d := (d + 50) div 100;
 		if (Decimals > 0) or (d <> 0) then
-			Result := Result + '.' + Chr(d + 48);
+			Result := Result + DecimalSep + Chr(d + 48);
 	end;
-	2: 
+	2:
 	begin
 		d := (d + 5) div 10;
 		if (Decimals > 0) then
-			Result := Result + Using('.00', d)
+			Result := Result + DecimalSep + NToS(d, '00')
 		else
-			Result := Result + Using('.##', d);
+		begin
+			Result := Result + NToS(d, '.##');
+			if FixedWidth = False then DelBESpace(Result);
+		end;
 	end;
 	3:
 	begin
 		if (Decimals > 0) then
-			Result := Result + Using('.000', d)
+			Result := Result + DecimalSep + NToS(d, '000')
 		else
-			Result := Result + Using('.###', d);
+		begin
+			Result := Result + NToS(d, '.###');
+			if FixedWidth = False then DelBESpace(Result);
+		end;
 	end;
 	end;
 end;
 
 function Date6(Year, Month, Day: Word): string;
 begin
-	Result := Using('00', Year) + Using('00', Month) + Using('00', Day)
+	Result := NToS(Year, '00') + NToS(Month, '00') + NToS(Day, '00')
 end;
 
 function Date6Now: string;
@@ -1812,8 +2220,8 @@ end;
 function GetMultiCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Integer; const Index, Count: Integer): string;
 begin
-	Result := Application.Title + ' - (' + IntToStr(Index + 1) + '/' +
-		IntToStr(Count) + ') ' + FName;
+	Result := Application.Title + ' - (' + NToS(Index + 1) + '/' +
+		NToS(Count) + ') ' + FName;
 	if Changed then Result := Result + ' *';
 	if New <> 0 then Result := Result + ' (New)';
 end;
@@ -1947,7 +2355,7 @@ begin
 	// Make Char Table
 	for c := Low(Char) to High(Char) do
 		case c of
-		'0'..'9', '.', '!', '#', '$', '%', 'a'..'z', 'A'..'Z', ' ': CharsTable[c] := ctNumber;
+		'0'..'9', '!', '#', '$', '%', 'a'..'z', 'A'..'Z', ' ': CharsTable[c] := ctNumber;
 		'+': CharsTable[c] := ctPlus;
 		'-': CharsTable[c] := ctMinus;
 		'^': CharsTable[c] := ctExp;
@@ -1955,8 +2363,9 @@ begin
 		'/': CharsTable[c] := ctDiv;
 		'(': CharsTable[c] := ctOpen;
 		')': CharsTable[c] := ctClose;
+		'.', ',': CharsTable[c] := ctNumber;
 		else
-			if c = DecimalSeparator then
+			if (c = DecimalSeparator[1]) or (c = ThousandSeparator[1]) then
 				CharsTable[c] := ctNumber
 			else
 				CharsTable[c] := ctIllegal;
@@ -1979,11 +2388,41 @@ begin
 	end;
 end;
 
+procedure GetLocale;
+var
+	s: string;
+	InLineIndex: SG;
+begin
+	NativeSymbols := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNATIVEDIGITS, '0123456789');
+
+	DecimalSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SDECIMAL, '.');
+	DigitsAfterDecimal := StrToIntDef(GetLocaleStr(SysLocale.DefaultLCID, LOCALE_IDIGITS, '0'), 0);
+	ThousandSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_STHOUSAND, ',');
+
+	s := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SGROUPING, '0');
+	InLineIndex := 1;
+	ThousandGroup := StrToIntDef(ReadToChar(s, InLineIndex, ';'), 3);
+	FractionGroup := StrToIntDef(ReadToChar(s, InLineIndex, ';'), 0);
+
+	NegSymbol := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNEGATIVESIGN, '-');
+	PosSymbol := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SPOSITIVESIGN, '+');
+{	PosSymbol := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_INEGSIGNPOSN, '1');
+	PosSymbol := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_INEGSIGNPOSN, '1');}
+	NegFormat := StrToIntDef(GetLocaleStr(SysLocale.DefaultLCID, LOCALE_INEGNUMBER, '1'), 1);
+	LeadingZero := StrToIntDef(GetLocaleStr(SysLocale.DefaultLCID, LOCALE_ILZERO, '2'), 2);
+	ListSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SLIST, ';');
+
+// Time Format
+	TimeSeparator := GetLocaleStr(SysLocale.DefaultLCID{ GetThreadLocale}, LOCALE_STIME, ':');
+
+//	WinDecimalSeparator := DecimalSeparator;
+end;
+
 initialization
 	{$ifopt d-}
 	NoErrMsg := True;
 	{$endif}
 	InitSin;
 	FillCharsTable;
-	WinDecimalSeparator := DecimalSeparator;
+	GetLocale;
 end.

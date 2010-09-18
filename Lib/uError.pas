@@ -6,7 +6,7 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDPanel, uDLabel, uWave, uAdd,
+	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel, uWave, uAdd,
 	uDForm;
 
 type
@@ -21,8 +21,8 @@ type
 		MemoMsg: TMemo;
 		UpDown1: TUpDown;
 		Label1: TDLabel;
-		PanelIndex: TDPanel;
-		PanelCount: TDPanel;
+    PanelIndex: TDLabel;
+    PanelCount: TDLabel;
 		procedure ButtonOpenClick(Sender: TObject);
 		procedure FormClose(Sender: TObject; var Action: TCloseAction);
 		procedure UpDown1ChangingEx(Sender: TObject; var AllowChange: Boolean;
@@ -49,11 +49,11 @@ var
 procedure IE; overload;
 procedure IE(ErrorCode: SG); overload;
 procedure CreateException;
-function ErrorMes(const ErrorCode: U32): string;
+function ErrorMes(const ErrorCode: U4): string;
 
 // IO Error
-procedure IOError(FName: TFileName; const ErrorCode: U32);
-function IOErrorRetry(var FName: TFileName; const ErrorCode: U32): Boolean;
+procedure IOError(FName: TFileName; const ErrorCode: U4);
+function IOErrorRetry(var FName: TFileName; const ErrorCode: U4): Boolean;
 // File Error
 procedure IOErrorMessage(FName: TFileName; const ErrorMsg: string);
 function IOErrorMessageRetry(var FName: TFileName; const ErrorMsg: string): Boolean;
@@ -97,7 +97,7 @@ begin
 	end;
 end;
 
-function ErrorMes(const ErrorCode: U32): string;
+function ErrorMes(const ErrorCode: U4): string;
 var
 	NewLength: SG;
 begin
@@ -115,10 +115,11 @@ begin
 	SetLength(Result, NewLength);
 	Result := Replace(Result, #$0D + #$0A, ' ');
 	DelBESpace(Result);
-	Result := Result + ' (' + IntToStr(ErrorCode) + ')';
+	Result := Result + ' (' + NToS(ErrorCode) + ')';
 end;
 
-function DoForm(const Style: TStyle; var FName: TFileName; const ErrorCode: U32; const ErrorMsg: string; const Retry: Boolean): Boolean;
+function DoForm(const Style: TStyle; var FName: TFileName; const ErrorCode: U4;
+	const ErrorMsg: string; const Retry: Boolean): Boolean;
 var
 	s: string;
 	i: SG;
@@ -148,7 +149,6 @@ begin
 
 	if (IgnoreAll <> iaAll) and (FoundSame = False) then
 	begin
-//		PlayWinSound(wsProgramError);
 		PlayWinSound(wsCriticalStop);
 
 		if not Assigned(fIOError) then
@@ -184,8 +184,8 @@ begin
 		fIOError.UpDown1.Max := IOErrorMessages.Count - 1;
 		fIOError.UpDown1.Position := IOErrorMessages.Count - 1;
 		fIOError.UpDown1.OnChangingEx := fIOError.UpDown1ChangingEx;
-		fIOError.PanelIndex.Caption := IntToStr(IOErrorMessages.Count);
-		fIOError.PanelCount.Caption := IntToStr(IOErrorMessages.Count);
+		fIOError.PanelIndex.Caption := NToS(IOErrorMessages.Count);
+		fIOError.PanelCount.Caption := NToS(IOErrorMessages.Count);
 		fIOError.ModalResult := mrNone;
 
 		if Application.Terminated then
@@ -226,12 +226,12 @@ begin
 	end;
 end;
 
-procedure IOError(FName: TFileName; const ErrorCode: U32);
+procedure IOError(FName: TFileName; const ErrorCode: U4);
 begin
 	DoForm(stIO, FName, ErrorCode, '', False);
 end;
 
-function IOErrorRetry(var FName: TFileName; const ErrorCode: U32): Boolean;
+function IOErrorRetry(var FName: TFileName; const ErrorCode: U4): Boolean;
 begin
 	Result := DoForm(stIO, FName, ErrorCode, '', True);
 end;
@@ -293,7 +293,7 @@ begin
 		AllowChange := False;
 		Exit;
 	end;
-	PanelIndex.Caption := IntToStr(NewValue + 1);
+	PanelIndex.Caption := NToS(NewValue + 1);
 	MemoMsg.Lines.Clear;
 	MemoMsg.Lines.Insert(0, IOErrorMessages[NewValue]);
 end;

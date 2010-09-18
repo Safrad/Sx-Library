@@ -4,22 +4,23 @@ interface
 
 uses uAdd;
 // AValue is Sorted Array
-function FindS32(var AValue: array of S32;
-	const Value: S32; var FromV, ToV: SG): Boolean;
+function FindS32(var AValue: array of S4;
+	const Value: S4; var FromV, ToV: SG): Boolean;
 
 function FindIS(var AIndex: array of SG; var AValue: array of string;
 	const Value: string; var FromV, ToV: SG): Boolean;
 function FindS(var AValue: array of string;
 	const Value: string; var FromV, ToV: SG): Boolean;
 
-//function Find(SubStr, Str: string): SG;
+function Find(SubStr, Str: string): SG; overload;
+function Find(SubStr, Str: string; FromPos: SG): SG; overload;
 
 implementation
 
 uses Math;
 
-function FindS32(var AValue: array of S32;
-	const Value: S32; var FromV, ToV: SG): Boolean;
+function FindS32(var AValue: array of S4;
+	const Value: S4; var FromV, ToV: SG): Boolean;
 const
 	MinIndex = 0;
 type
@@ -108,14 +109,20 @@ begin
 	ToV := R;
 end;
 
-{
+
 // Standard
 function Find(SubStr, Str: string): SG;
+begin
+	Result := Find(SubStr, Str, 1);
+end;
+
+function Find(SubStr, Str: string; FromPos: SG): SG;
 label LNFound;
 var i, j: SG;
 begin
 	Result := 0;
-	i := 0;
+	if FromPos < 1 then FromPos := 1;
+	i := FromPos - 1;
 	while i <= Length(Str) - Length(SubStr) do
 	begin
 		for j := 0 to Length(SubStr) - 1 do
@@ -126,9 +133,9 @@ begin
 		i := i + 1;
 	end;
 end;
-}
+{
 // Knuth, Morris, Pratt (KMP)
-{function Find(SubStr, Str: string): SG;
+function FindKMP(SubStr, Str: string): SG;
 label LNFound;
 var
 	i, j, k: SG;
@@ -205,7 +212,7 @@ begin
 	end;
 
 	SetLength(Fails, 0);
-end;}
+end;
 
 // Boyer-Moore (BM)
 var
@@ -246,7 +253,7 @@ begin
 	SetLength(F, 0);
 end;
 
-function Find(SubStr, Str: string): SG;
+function FindBM(SubStr, Str: string): SG;
 var
 	M, N: SG;
 	i, j: SG;
@@ -272,6 +279,6 @@ begin
 		else
 			j := j + Max(Fail1[Ord(Str[j])], Fail2[i]);
 	end;
-end;
+end;}
 
 end.

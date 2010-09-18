@@ -13,12 +13,13 @@ const
 	DefFileBuffer = 32768; // Best Performance
 type
 	TDriveLetter = 'A'..'Z';
-	TDriveInfo = record
-		DriveLetter: TDriveLetter;
-		DriveType: Word;
-		ClusterSize: Word;
-		FreeSpace: Int64;
-		DriveSize: Int64;
+	TDriveInfo = packed record // 32
+		FreeSpace: U8;
+		DriveSize: U8;
+		ClusterSize: U4;
+		DriveType: U1;
+		DriveLetter: TDriveLetter; // 1
+		Reserved: array[0..9] of U8; // 10
 	end;
 
 	TFileNames = array of TFileName;
@@ -48,20 +49,23 @@ type
 
 		// For Readln only
 		FBuffer: array of Char;
-		FBufStart, FBufEnd: U64;
-		FBufferSize: U64;
-		FFilePos: U64;
-		FFileSize: U64;
-		function GetFileSize(var Size: U64): Boolean;
+		FBufStart, FBufEnd: U8;
+		FBufferSize: U8;
+		FFilePos: U8;
+		FFileSize: U8;
+		function GetFileSize(var Size: U8): Boolean;
 	public
-		ErrorCode: U32;
+		ReadCount, WriteCount: UG;
+		ReadBytes, WriteBytes: U8;
+
+		ErrorCode: U4;
 		EofStr: ShortString; // For Writeln only
-		property FilePos: U64 read FFilePos;
-		property FileSize: U64 read FFileSize;
+		property FilePos: U8 read FFilePos;
+		property FileSize: U8 read FFileSize;
 		constructor Create;
 		destructor Free;
-		function Open(var FileName: TFileName; const Mode: TFileMode; Flags: U32; Protection: Boolean): Boolean;
-		function Seek(const Pos: U64): Boolean;
+		function Open(var FileName: TFileName; const Mode: TFileMode; Flags: U4; Protection: Boolean): Boolean;
+		function Seek(const Pos: U8): Boolean;
 		function SeekStart: Boolean;
 		function SeekEnd: Boolean;
 		function BlockRead(var Buf; const Count: Cardinal): Boolean;
@@ -75,8 +79,8 @@ type
 		function Truncate: Boolean;
 		function FlushFileBuffers: Boolean;
 		function Eof: Boolean;
-		function Lock(From, Count: U64): Boolean;
-		function UnLock(From, Count: U64): Boolean;
+		function Lock(From, Count: U8): Boolean;
+		function UnLock(From, Count: U8): Boolean;
 	end;
 
 function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
@@ -116,7 +120,7 @@ function DelFileExt(const FName: string): string;
 function BackDir(const Dir: string): string;
 function LegalFileName(const FileName: string): string;
 procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
-function GetFileSiz(const FileName: TFileName): U64;
+function GetFileSiz(const FileName: TFileName): U8;
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CreateDir(const Dir: string): Boolean;
@@ -168,11 +172,11 @@ begin
 	if HFile <> INVALID_HANDLE_VALUE then Close;
 end;
 
-function TFile.Open(var FileName: TFileName; const Mode: TFileMode; Flags: U32; Protection: Boolean): Boolean;
+function TFile.Open(var FileName: TFileName; const Mode: TFileMode; Flags: U4; Protection: Boolean): Boolean;
 label LRetry;
 var
-	CreationDistribution: U32;
-	DesiredAccess, ShareMode: U32;
+	CreationDistribution: U4;
+	DesiredAccess, ShareMode: U4;
 begin
 	Result := False;
 
@@ -263,11 +267,11 @@ begin
 	end;
 end;
 
-function HandleFileSize(HFile: THandle; var Size: U64): U32;
+function HandleFileSize(HFile: THandle; var Size: U8): U4;
 begin
-	TU64(Size).D0 := Windows.GetFileSize(HFile, @TU64(Size).D1);
+	TU8(Size).D0 := Windows.GetFileSize(HFile, @TU8(Size).D1);
 
-	if TU64(Size).D0 = $FFFFFFFF then
+	if TU8(Size).D0 = $FFFFFFFF then
 	begin
 		Result := GetLastError;
 	end
@@ -275,7 +279,7 @@ begin
 		Result := NO_ERROR;
 end;
 
-function TFile.GetFileSize(var Size: U64): Boolean;
+function TFile.GetFileSize(var Size: U8): Boolean;
 begin
 	Result := HandleFileSize(HFile, Size) = NO_ERROR;
 	if Result = False then
@@ -286,9 +290,9 @@ function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccess
 var HFile: THANDLE;
 begin
 	Result := False;
-	U64(CreationTime) := 0;
-	U64(LastAccessTime) := 0;
-	U64(LastWriteTime) := 0;
+	U8(CreationTime) := 0;
+	U8(LastAccessTime) := 0;
+	U8(LastWriteTime) := 0;
 	HFile := CreateFile(
 		PChar(FileName),  // pointer to name of the file
 		0,  // access (read-write) mode
@@ -305,13 +309,13 @@ begin
 	end;
 end;
 
-function TFile.Seek(const Pos: U64): Boolean;
+function TFile.Seek(const Pos: U8): Boolean;
 begin
 	Result := False;
 	if SetFilePointer(
 		HFile,  // handle of file
-		TU64(Pos).D0, // number of bytes to move file pointer
-		@TU64(Pos).D1,  // address of high-order word of distance to move
+		TU8(Pos).D0, // number of bytes to move file pointer
+		@TU8(Pos).D1,  // address of high-order word of distance to move
 		FILE_BEGIN    // how to move
 	 ) <> $FFFFFFFF then
 	begin
@@ -341,12 +345,15 @@ begin
 end;
 
 function TFile.BlockRead(var Buf; const Count: Cardinal): Boolean;
-var Suc: U32;
+var Suc: U4;
 begin
 	if ReadFile(HFile, Buf, Count, Suc, nil) then
 	begin
 		Inc(FFilePos, Suc);
 		Result := True;
+
+		Inc(ReadCount);
+		Inc(ReadBytes, Suc);
 	end
 	else
 	begin
@@ -361,13 +368,15 @@ begin
 end;
 
 function TFile.BlockWrite(var Buf; const Count: Cardinal): Boolean;
-var Suc: U32;
+var Suc: U4;
 begin
 	if WriteFile(HFile, Buf, Count, Suc, nil) then
 	begin
-
 		Inc(FFilePos, Suc);
 		Result := True;
+
+		Inc(WriteCount);
+		Inc(WriteBytes, Suc);
 	end
 	else
 	begin
@@ -532,18 +541,18 @@ begin
 	Result := FFilePos >= FFileSize;
 end;
 
-function TFile.Lock(From, Count: U64): Boolean;
+function TFile.Lock(From, Count: U8): Boolean;
 begin
-	Result := LockFile(HFile, TU64(From).D0, TU64(From).D1, TU64(Count).D0, TU64(Count).D1);
+	Result := LockFile(HFile, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
 	end;
 end;
 
-function TFile.UnLock(From, Count: U64): Boolean;
+function TFile.UnLock(From, Count: U8): Boolean;
 begin
-	Result := UnLockFile(HFile, TU64(From).D0, TU64(From).D1, TU64(Count).D0, TU64(Count).D1);
+	Result := UnLockFile(HFile, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
@@ -735,7 +744,7 @@ var
 					(UpperCase(ExtractFileExt(SearchRec.Name)) = UpperCase(Extension)) then
 					begin
 						NewSize := FilesCount + 1;
-						if AllocByEx(Length(FileNames), NewSize, 4) then
+						if AllocByEx(Length(FileNames), NewSize, SizeOf(FileNames[0])) then
 							SetLength(FileNames, NewSize);
 						if SubDirs then
 							FileNames[FilesCount] := SubPath + SearchRec.Name
@@ -797,7 +806,7 @@ begin
 	end;
 end;
 
-function GetFileSiz(const FileName: TFileName): U64;
+function GetFileSiz(const FileName: TFileName): U8;
 var
 	HFile: THandle;
 begin
@@ -995,6 +1004,7 @@ var
 	F: TFile;
 	Line: string;
 begin
+	if not Assigned(Lines) then IE(454);
 	Lines.Clear;
 	Result := False;
 	F := TFile.Create;
@@ -1060,7 +1070,7 @@ function GetDriveInfo(const Drive: Byte): TDriveInfo;
 var
 	P: array[0..3] of Char;
 	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
-	TotalNumberOfClusters: Cardinal;
+	TotalNumberOfClusters: U4;
 begin
 	Result.DriveLetter := Char(Drive + Ord('A'));
 	P[0] := Chr(Drive + Ord('A'));
@@ -1085,11 +1095,11 @@ begin
 	begin
 		SectorsPerCluster := 0;
 		BytesPerSector := 0;
-		GetDiskFreeSpace(P, SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
-			TotalNumberOfClusters);
-		Result.ClusterSize := SectorsPerCluster * BytesPerSector;
-		Result.FreeSpace := Result.ClusterSize * NumberOfFreeClusters;
-		Result.DriveSize := Result.ClusterSize * TotalNumberOfClusters;
+		if GetDiskFreeSpace(P, SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
+			TotalNumberOfClusters) then
+			Result.ClusterSize := SectorsPerCluster * BytesPerSector;
+		Result.FreeSpace := Result.ClusterSize * U8(NumberOfFreeClusters);
+		Result.DriveSize := Result.ClusterSize * U8(TotalNumberOfClusters);
 		if Result.ClusterSize = 0 then
 			case Result.DriveType of
 			DRIVE_UNKNOWN:  Result.ClusterSize := 4096;

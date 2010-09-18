@@ -50,8 +50,8 @@ type
 		Clock,
 		ElapsedTime: Int64;
 		LagCount, LagCount2: UG;
-		TimLeave: U64;
-		TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U64;
+		TimLeave: U8;
+		TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U8;
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
 		property FrameRate: Integer read FFrameRate;
@@ -69,8 +69,8 @@ type
 procedure Register;
 
 var
-	NowTime: U64;
-	TimLeave, TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U64;
+	NowTime: U8;
+	TimLeave, TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U8;
 
 implementation
 
@@ -111,12 +111,12 @@ procedure TDIdleTimer.AppIdle(Sender: TObject; var Done: Boolean);
 const LagTime = 40;
 var
 	i: SG;
-	NTime, t: S64;
-	MinTime: S64;
-	StartTime: U64;
+	NTime, t: S8;
+	MinTime: S8;
+	StartTime: U8;
 begin
 //	NTime := 0;
-	MinTime := MaxInt64;
+	MinTime := High(MinTime);
 
 	StartTime := PerformanceCounter;
 	TimSleep := StartTime - TimLeave;
@@ -137,7 +137,7 @@ begin
 				if DIdleTimer.Timers[i].FInterval = 0 then DIdleTimer.Timers[i].FInterval := 1;
 				DIdleTimer.Timers[i].FInterval12 := Max(RoundDiv(100 * DIdleTimer.Timers[i].TimWork, DIdleTimer.Timers[i].FInterval), 1);
 			end;
-			if (DIdleTimer.Timers[i].ElapsedTime > 0) and (DIdleTimer.Timers[i].ElapsedTime + RoundDiv64(PerformanceFrequency * LagTime, 2 * 1000) >= DIdleTimer.Timers[i].FInterval12) then
+			if (DIdleTimer.Timers[i].ElapsedTime > 0) and (DIdleTimer.Timers[i].ElapsedTime + RoundDivS8(PerformanceFrequency * LagTime, 2 * 1000) >= DIdleTimer.Timers[i].FInterval12) then
 			begin
 				// Frame Rate
 				Inc(DIdleTimer.Timers[i].FNowFrameRate);
@@ -147,7 +147,7 @@ begin
 					if t = 0 then
 						DIdleTimer.Timers[i].FFrameRate := High(DIdleTimer.Timers[i].FFrameRate)
 					else
-						DIdleTimer.Timers[i].FFrameRate := RoundDiv64(DIdleTimer.Timers[i].FNowFrameRate * PerformanceFrequency * 1000, t);
+						DIdleTimer.Timers[i].FFrameRate := RoundDivS8(DIdleTimer.Timers[i].FNowFrameRate * PerformanceFrequency * 1000, t);
 					DIdleTimer.Timers[i].FNowFrameRate := 0;
 {						LagCount := ElapsedTime div PerformanceFrequency;
 					if LagCount < 1 then LagCount := 1;
@@ -173,14 +173,14 @@ begin
 				t := DIdleTimer.Timers[i].TimWork + DIdleTimer.Timers[i].TimSleep;
 				if t > 0 then
 				begin
-					DIdleTimer.Timers[i].CPUUsage := RoundDiv64(1000 * DIdleTimer.Timers[i].TimWork, t);
+					DIdleTimer.Timers[i].CPUUsage := RoundDivS8(1000 * DIdleTimer.Timers[i].TimWork, t);
 				end;
 				Inc(DIdleTimer.Timers[i].TimWork2, DIdleTimer.Timers[i].TimWork);
 				Inc(DIdleTimer.Timers[i].TimSleep2, DIdleTimer.Timers[i].TimSleep);
 				t := DIdleTimer.Timers[i].TimWork2 + DIdleTimer.Timers[i].TimSleep2;
 				if t >= PerformanceFrequency then
 				begin
-					DIdleTimer.Timers[i].CPUUsage2 := RoundDiv64(1000 * DIdleTimer.Timers[i].TimWork2, t);
+					DIdleTimer.Timers[i].CPUUsage2 := RoundDivS8(1000 * DIdleTimer.Timers[i].TimWork2, t);
 					DIdleTimer.Timers[i].LagCount2 := DIdleTimer.Timers[i].TotalLags;
 					DIdleTimer.Timers[i].TotalLags := 0;
 					DIdleTimer.Timers[i].TimWork2 := 0;
@@ -198,19 +198,19 @@ begin
 	t := TimWork + TimSleep;
 	if t > 0 then
 	begin
-		CPUUsage := RoundDiv64(1000 * TimWork, t);
+		CPUUsage := RoundDivS8(1000 * TimWork, t);
 	end;
 	Inc(TimWork2, TimWork);
 	Inc(TimSleep2, TimSleep);
 	t := TimWork2 + TimSleep2;
 	if t >= PerformanceFrequency then
 	begin
-		CPUUsage2 := RoundDiv64(1000 * TimWork2, t);
+		CPUUsage2 := RoundDivS8(1000 * TimWork2, t);
 		TimWork2 := 0;
 		TimSleep2 := 0;
 	end;
 
-	if MinTime <> MaxInt64 then
+	if MinTime <> High(MinTime) then
 	begin
 		Done := False;
 		t := 1000 div 2 * MinTime div PerformanceFrequency;
@@ -256,8 +256,8 @@ begin
 			end;
 		Finalize;
 	end;
-	// D??? Error
-	if (not (csDesigning in ComponentState)) then
+
+	if (not (csDesigning in ComponentState)) then // Free DIdleTimers when contains no Timers
 	begin
 		if Assigned(DIdleTimer) then
 		if Length(DIdleTimer.Timers) = 0 then
@@ -270,8 +270,8 @@ end;
 
 function TDTimer.AppProc(var Message: TMessage): Boolean;
 begin
-	if Message.Msg = 0 then Exit;
 	Result := False;
+	if Message.Msg = 0 then Exit;
 	case Message.Msg of
 	CM_ACTIVATE:
 	begin
@@ -284,9 +284,7 @@ begin
 		if FInitialized and FActiveOnly then Suspend;
 	end;
 	end;
-	// D???
-{	Application.ProcessMessages;
-	Message.Result := 0;}
+	// Application.ProcessMessages;
 end;
 
 procedure TDTimer.DoActivate;
@@ -391,8 +389,8 @@ end;
 procedure TDTimer.InitInterval;
 begin
 	case FEventStep of
-	esInterval: FInterval12 := RoundDiv64(FInterval * PerformanceFrequency, 1000);
-	esFrequency: FInterval12 := RoundDiv64(PerformanceFrequency, FInterval);
+	esInterval: FInterval12 := RoundDivS8(FInterval * PerformanceFrequency, 1000);
+	esFrequency: FInterval12 := RoundDivS8(PerformanceFrequency, FInterval);
 	else FInterval12 := FInterval;
 	end;
 	if FInterval12 <= 0 then FInterval12 := 1;

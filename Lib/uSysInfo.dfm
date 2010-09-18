@@ -13,7 +13,6 @@ object fSysInfo: TfSysInfo
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
-  Position = poScreenCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -27,10 +26,10 @@ object fSysInfo: TfSysInfo
   object LabelTOperatingSystem: TDLabel
     Left = 8
     Top = 8
-    Width = 89
+    Width = 49
     Height = 19
     AutoSize = False
-    Caption = 'Operating System'
+    Caption = 'OS Id'
     FocusControl = EditOS
     Layout = tlCenter
     BackEffect = ef08
@@ -230,29 +229,6 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvLowered
   end
-  object DLabel6: TDLabel
-    Left = 8
-    Top = 256
-    Width = 65
-    Height = 19
-    AutoSize = False
-    Caption = 'Graphics'
-    Layout = tlCenter
-    BackEffect = ef08
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvLowered
-  end
   object Bevel5: TBevel
     Left = 8
     Top = 248
@@ -336,82 +312,214 @@ object fSysInfo: TfSysInfo
     Displ.Size = 0
     BevelOuter = bvLowered
   end
+  object PMT: TDLabel
+    Left = 240
+    Top = 176
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object PMF: TDLabel
+    Left = 176
+    Top = 176
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object PFF: TDLabel
+    Left = 176
+    Top = 200
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object PFT: TDLabel
+    Left = 240
+    Top = 200
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object PMU: TDLabel
+    Left = 112
+    Top = 176
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object PFU: TDLabel
+    Left = 112
+    Top = 200
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object EditDiskU: TDLabel
+    Left = 112
+    Top = 224
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object EditDiskF: TDLabel
+    Left = 176
+    Top = 224
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
+  object EditDiskT: TDLabel
+    Left = 240
+    Top = 224
+    Width = 57
+    Height = 17
+    Alignment = taRightJustify
+    AutoSize = False
+    Layout = tlCenter
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+  end
   object EditOS: TEdit
-    Left = 104
+    Left = 64
     Top = 8
-    Width = 193
+    Width = 233
     Height = 19
     AutoSelect = False
     AutoSize = False
     ParentColor = True
     ReadOnly = True
     TabOrder = 1
-  end
-  object PMT: TDPanel
-    Left = 240
-    Top = 176
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 3
-  end
-  object PMF: TDPanel
-    Left = 176
-    Top = 176
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 4
-  end
-  object PFF: TDPanel
-    Left = 176
-    Top = 200
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 5
-  end
-  object PFT: TDPanel
-    Left = 240
-    Top = 200
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 6
-  end
-  object PMU: TDPanel
-    Left = 112
-    Top = 176
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 7
-  end
-  object PFU: TDPanel
-    Left = 112
-    Top = 200
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 8
   end
   object EditCPU: TEdit
     Left = 64
@@ -422,49 +530,6 @@ object fSysInfo: TfSysInfo
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 2
-  end
-  object EditDiskU: TDPanel
-    Left = 112
-    Top = 224
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 9
-  end
-  object EditGraph: TEdit
-    Left = 80
-    Top = 256
-    Width = 217
-    Height = 21
-    AutoSelect = False
-    Color = clBtnFace
-    ReadOnly = True
-    TabOrder = 10
-  end
-  object EditDiskF: TDPanel
-    Left = 176
-    Top = 224
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 11
-  end
-  object EditDiskT: TDPanel
-    Left = 240
-    Top = 224
-    Width = 57
-    Height = 17
-    Alignment = taRightJustify
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 12
   end
   object ButtonOk: TDButton
     Left = 216
@@ -491,7 +556,7 @@ object fSysInfo: TfSysInfo
     AutoSelect = False
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 13
+    TabOrder = 3
   end
   object EditDuron: TEdit
     Left = 104
@@ -501,7 +566,7 @@ object fSysInfo: TfSysInfo
     AutoSelect = False
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 14
+    TabOrder = 4
   end
   object EditCPUUsage: TEdit
     Left = 103
@@ -511,6 +576,6 @@ object fSysInfo: TfSysInfo
     AutoSelect = False
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 15
+    TabOrder = 5
   end
 end

@@ -6,24 +6,24 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDLabel, uDButton, uDPanel, uDTimer, uDForm;
+	ExtCtrls, StdCtrls, uDLabel, uDButton, uDTimer, uDForm;
 
 type
 	TfMemStatus = class(TDForm)
 		Timer1: TDTimer;
 		ButtonStart: TDButton;
-		DPanel1: TDPanel;
-		DPanel2: TDPanel;
-		DPanel3: TDPanel;
-		DPanel4: TDPanel;
-		DPanel5: TDPanel;
-		DPanel6: TDPanel;
-		DPanel7: TDPanel;
-		DPanel8: TDPanel;
-		DPanel9: TDPanel;
-		DPanel10: TDPanel;
-		DPanel11: TDPanel;
-		DPanel12: TDPanel;
+    DPanel1: TDLabel;
+    DPanel2: TDLabel;
+    DPanel3: TDLabel;
+    DPanel4: TDLabel;
+    DPanel5: TDLabel;
+    DPanel6: TDLabel;
+    DPanel7: TDLabel;
+    DPanel8: TDLabel;
+    DPanel9: TDLabel;
+    DPanel10: TDLabel;
+    DPanel11: TDLabel;
+    DPanel12: TDLabel;
 		Bevel1: TBevel;
 		Bevel2: TBevel;
     ButtonOk: TDButton;
@@ -51,13 +51,14 @@ const
 	MaxLabel = 11;
 	MaxHistory = 2;
 var
-	LabelX: array[0..MaxHistory, 0..MaxLabel] of TPanel;
+	LabelX: array[0..MaxHistory, 0..MaxLabel] of TDLabel;
 	LabelV: array[0..MaxHistory, 0..MaxLabel] of Integer;
 
 procedure TfMemStatus.Timer1Timer(Sender: TObject);
 var
 	HS: THeapStatus;
-	i, j: Integer;
+	i, j: SG;
+	B: BG;
 begin
 	HS := GetHeapStatus;
 
@@ -87,7 +88,21 @@ begin
 	begin
 		for j := MaxHistory downto 0 do
 		begin
-			LabelX[j, i].Caption := Using('~# ### ### ##0', LabelV[j, i]);
+			B := False;
+			if (j <> 0) then
+				if LabelV[j, i] <> LabelV[j - 1, i] then B := True;
+			if B = False then
+			begin
+				LabelX[j, i].Color := clBtnFace;
+				LabelX[j, i].Font.Color := clWindowText;
+			end
+			else
+			begin
+				LabelX[j, i].Color := clHighlight;
+				LabelX[j, i].Font.Color := clHighlightText;
+			end;
+
+			LabelX[j, i].Caption := NToS(LabelV[j, i]);
 		end;
 	end;
 end;
@@ -100,11 +115,12 @@ begin
 	begin
 		for j := 0 to MaxHistory do
 		begin
-			LabelX[j, i] := TPanel.Create(Self);
+			LabelX[j, i] := TDLabel.Create(Self);
 			LabelX[j, i].Width := 72;
 			LabelX[j, i].Height := 16;
 			LabelX[j, i].Left := 144 + 80 * j;
 			LabelX[j, i].Top := 8 + 24 * i;
+			LabelX[j, i].Alignment := taRightJustify;
 			InsertControl(LabelX[j, i]);
 		end;
 	end;

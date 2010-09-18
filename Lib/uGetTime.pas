@@ -41,7 +41,7 @@ type
 		procedure SpinButtonDownClick(Sender: TObject);
 		procedure SpinButtonUpClick(Sender: TObject);
 		procedure ButtonDefClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
 	private
 		{ private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: LongWord;
@@ -138,11 +138,6 @@ begin
 	Result := V;
 end;
 
-function ShortTimeToStr(const T: LongInt): string;
-begin
-	Result := msToStr(T, diMSD, -3, False);
-end;
-
 procedure TfGetTime.InitButtons;
 var
 	H, M, S, D: LongWord;
@@ -161,7 +156,10 @@ end;
 procedure TfGetTime.InitEdit;
 begin
 	EditInput.OnChange := nil;
-	EditInput.Text := ShortTimeToStr(NowVal);
+	if TMaxVal >= 60 * 60 * 1000 then
+		EditInput.Text := msToStr(NowVal, diMSD, -3, False)
+	else
+		EditInput.Text := msToStr(NowVal, diHMSD, -3, False);
 	EditInput.SelectAll;
 	EditInput.OnChange := EditInputChange;
 end;

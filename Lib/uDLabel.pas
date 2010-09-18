@@ -11,14 +11,13 @@ uses
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl;
 
 type
-	TBuffer = (bfDynamic, bfStatic);
-
 	TDLabel = class(TLabel)
 	private
 		{ Private declarations }
 		FBmpOut: TDBitmap;
+		FBmpBack: TDBitmap;
 		FBmpText: TDBitmap;
-		FBuffer: TBuffer;
+//		FBuffer: TBuffer;
 
 		FBackEffect: TEffect;
 
@@ -35,8 +34,6 @@ type
 
 		FOnPaint: TNotifyEvent;
 
-		procedure SetBuffer(Value: TBuffer);
-
 		procedure SetBackEffect(Value: TEffect);
 
 		procedure SetFontShadow(Value: ShortInt);
@@ -51,17 +48,24 @@ type
 		procedure SetBorderWidth(Value: TBorderWidth);
 		procedure SetBorderStyle(Value: TBorderStyle);
 
+//		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
+{		procedure WMSize(var Message: TWMSize); message WM_SIZE;
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;}
 	protected
 		{ Protected declarations }
 		procedure Paint; override;
+
 	public
 		{ Public declarations }
+		procedure Invalidate; override;
+		procedure Fill;
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
 		property Canvas;
 	published
 		{ Published declarations }
-		property Buffer: TBuffer read FBuffer write SetBuffer default bfStatic;
+//		property Buffer: TBuffer read FBuffer write SetBuffer default bfStatic;
 
 		property BackEffect: TEffect read FBackEffect write SetBackEffect default ef16;
 
@@ -88,6 +92,7 @@ uses uStrings;
 constructor TDLabel.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
+
 	FDispl := TDispl.Create;
 	FDispl.Enabled := False;
 	FDispl.Format := '88';
@@ -102,12 +107,14 @@ begin
 	FDispl.OnChange := DisplChanged;
 
 	FBmpOut := nil;
+	FBmpBack := nil;
 	FBmpText := nil;
-	FBuffer := bfStatic;
+//	FBuffer := bfStatic;
 
 	FBackEffect := ef16;
 	FBevelOuter := bvRaised;
 	FBevelWidth := 1;
+//	Color := clWindow;
 
 	FFontEffect := ef16;
 
@@ -126,6 +133,11 @@ begin
 		FBmpOut.Free;
 		FBmpOut := nil;
 	end;
+	if Assigned(FBmpBack) then
+	begin
+		FBmpBack.Free;
+		FBmpBack := nil;
+	end;
 	if Assigned(FBmpText) then
 	begin
 		FBmpText.Free;
@@ -134,7 +146,7 @@ begin
 	inherited Destroy;
 end;
 
-procedure TDLabel.SetBuffer(Value: TBuffer);
+{procedure TDLabel.SetBuffer(Value: TBuffer);
 begin
 	if FBuffer <> Value then
 	begin
@@ -164,7 +176,7 @@ begin
 		end;
 		FBuffer := Value;
 	end;
-end;
+end;}
 
 procedure TDLabel.DisplChanged(ADispl: TObject);
 begin
@@ -244,13 +256,68 @@ begin
 		Invalidate;
 	end;
 end;
+{
+procedure TDLabel.WMEraseBkgnd(var Message: TWMEraseBkgnd);
+begin
+	DefaultHandler(Message);
+end;}
+
+procedure TDLabel.Invalidate;
+begin
+	inherited Invalidate;
+	if (Assigned(FBmpOut)) then
+		Fill;
+end;
 
 procedure TDLabel.Paint;
 var
 	Recta: TRect;
+begin
+	Recta.Left := 0;
+	Recta.Top := 0;
+	Recta.Right := Width;
+	Recta.Bottom := Height;
+	if (not Assigned(FBmpOut)) then
+	begin
+		FBmpOut := TDBitmap.Create;
+		FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
+		Fill;
+	end;
+
+
+
+	if Assigned(FBmpOut) then
+	begin
+		BitBlt({Message.DC}Canvas.Handle, 0, 0, FBmpOut.Width, FBmpOut.Height,
+			FBmpOut.Canvas.Handle,
+			0, 0,
+			SRCCOPY);
+		if Assigned(FOnPaint) then FOnPaint(Self);
+	end;
+end;
+{
+procedure TDLabel.WMShow(var Message: TWMShowWindow);
+begin
+	Fill;
+	inherited;
+end;}
+
+{procedure TDLabel.WMSize(var Message: TWMSize);
+begin
+	if Visible = False then Exit;
+	if (Message.Width = 0) or (Message.Height = 0) then Exit;
+	Fill;
+end;}
+
+//procedure TDLabel.WMPaint(var Message: TWMPaint);
+procedure TDLabel.Fill;
+var
+	Recta: TRect;
 	TopColor, BottomColor: TColor;
 	i: Integer;
+	Co: array[0..3] of TColor;
 begin
+
 //  Recta := GetClientRect;
 	Recta.Left := 0;
 	Recta.Top := 0;
@@ -267,13 +334,28 @@ begin
 	begin
 		if (Transparent = False) then
 		begin
-			FBmpOut.Canvas.Brush := Parent.Brush;
-			FBmpOut.Canvas.FillRect(Recta);
+{			FBmpOut.Canvas.Brush := Parent.Brush;
+			FBmpOut.Canvas.FillRect(Recta);}
+			FBmpOut.FormBitmap(Color);
 		end
 		else
 		begin
-			FBmpOut.Canvas.CopyRect(Rect(0, 0, FBmpOut.Width, FBmpOut.Height),
-				Canvas, Recta);
+{	if FBackEffect <> ef16 then
+	begin
+		if (Transparent = True) then
+		begin}
+			if FBmpBack = nil then
+			begin
+				FBmpBack := TDBitmap.Create;
+				FBmpBack.SetSize(FBmpOut.Width, FBmpOut.Height);
+				FBmpBack.Canvas.CopyRect(Rect(0, 0, FBmpOut.Width, FBmpOut.Height),
+					Canvas, Recta);
+			end;
+{		end;
+	end;}
+			FBmpOut.CopyBitmap(FBmpBack);
+{			FBmpOut.Canvas.CopyRect(Rect(0, 0, FBmpOut.Width, FBmpOut.Height),
+				Canvas, Recta);}
 		end;
 	end;
 
@@ -329,16 +411,23 @@ begin
 // Background
 	if Color <> clNone then
 	begin
-		if (FBackEffect <> ef16) then
+{		if (FBackEffect <> ef16) then
 		begin
 			FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-				Color, FBackEffect);
+				ColorToRGB(Color), FBackEffect);
 		end
 		else
-		begin
-			FBmpOut.Canvas.Brush.Color := Color;
-			FBmpOut.Canvas.FillRect(Recta);
-		end;
+		begin}
+			Co[0] := LighterColor(ColorToRGB(Color));
+			Co[1] := DarkerColor(ColorToRGB(Color));
+			Co[2] := Co[0];
+			Co[3] := Co[1];
+			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+				clNone, gfFade2x, Co, $000f0f0f{clBlack}, FBackEffect, nil);
+//			FBmpOut.FormBitmap(Color);
+{			FBmpOut.Canvas.Brush.Color := Color;
+			FBmpOut.Canvas.FillRect(Recta);}
+//		end;
 	end;
 
 //Caption
@@ -355,9 +444,12 @@ begin
 
 		FBmpText.Canvas.Brush.Style := bsClear;
 		FBmpText.Canvas.Font := Font;
+		FBmpOut.Canvas.Font := Font;
+//		if
 		if FFontShadow <> 0 then
 		begin
 			FBmpText.Canvas.Font.Color := ShadowColor(Font.Color);
+			FBmpOut.Canvas.Font.Color := ShadowColor(Font.Color);
 			TopColor := FDispl.ColorA;
 			BottomColor := FDispl.ColorD;
 			FDispl.ColorA := ShadowColor(FDispl.ColorA);
@@ -372,7 +464,15 @@ begin
 				end
 				else
 				begin
-					DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption);
+					if (FFontAngle = 0) and (FFontEffect = ef16) then
+					begin
+						FBmpOut.Canvas.Brush.Style := bsClear;
+						DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+					end
+					else
+					begin
+						DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption);
+					end;
 				end;
 				OffsetRect(Recta, -i, -i);
 				if FontShadow > 0 then Dec(i) else Inc(i);
@@ -381,40 +481,50 @@ begin
 			FDispl.ColorD := BottomColor;
 			FBmpText.Canvas.Font.Color := Font.Color;
 		end;
+		FBmpText.Canvas.Font := Font;
+		FBmpOut.Canvas.Font := Font;
 		if Displ.Enabled then
 		begin
 			DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
-			ef16);
+				ef16);
 		end
 		else
 		begin
-			DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption);
+			if (FFontAngle = 0) and (FFontEffect = ef16) then
+			begin
+//				FBmpOut.Canvas.Brush.Color := Color;
+				FBmpOut.Canvas.Brush.Style := bsClear;
+				DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption);
+			end
+			else
+			begin
+				DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption);
+			end;
 		end;
 
 		if FFontAngle = 0 then
 		begin
-			FBmpOut.BmpE24(0, 0, FBmpText, Color{NegColor(Font.Color)}, FFontEffect);
+			if FFontEffect <> ef16 then
+				FBmpOut.BmpE24(0, 0, FBmpText, Color{NegColor(Font.Color)}, FFontEffect);
 		end
 		else
 		begin
 			RotateDefE24(FBmpOut, FBmpText, 0, FFontAngle, Color{NegColor(Font.Color)}, FFontEffect);
 		end;
-		if (Assigned(FBmpText)) and (FBuffer <> bfStatic) then
+{		if (Assigned(FBmpText)) then
 		begin
 			FBmpText.Free;
 			FBmpText := nil;
-		end;
+		end;}
 	end;
 
 // Draw
-	Canvas.Draw(0, 0, FBmpOut);
-// Free
-	if (Assigned(FBmpOut)) and (FBuffer <> bfStatic) then
+//	Canvas.Draw(0, 0, FBmpOut);
+{	if (Assigned(FBmpOut)) then
 	begin
 		FBmpOut.Free;
 		FBmpOut := nil;
-	end;
-	if Assigned(FOnPaint) then FOnPaint(Self);
+	end;}
 end;
 
 procedure Register;

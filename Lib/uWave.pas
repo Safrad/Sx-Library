@@ -291,7 +291,7 @@ begin
 	if waveOutGetErrorText(ErrorCode, PChar(Result), MAXERRORLENGTH) = MMSYSERR_NOERROR then
 		Result := PChar(Result)
 	else
-		Result := 'MMSYSTEM' + Using('~000', ErrorCode) + ' ' + 'Unknown error';
+		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' ' + 'Unknown error';
 end;
 
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
@@ -713,9 +713,9 @@ begin
 		Reg.CloseKey;
 	end;
 	Reg.Free;
-
 end;
 
+// TWavePlayer
 
 const
 	SpeedDiv = 1024;

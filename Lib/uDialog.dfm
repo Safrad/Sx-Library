@@ -15,7 +15,7 @@ object fDialog: TfDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
-  OnCreate = FormCreate
+  OnMouseMove = FormMouseMove
   PixelsPerInch = 96
   TextHeight = 13
   object Image: TImage
@@ -24,6 +24,7 @@ object fDialog: TfDialog
     Width = 48
     Height = 48
     Transparent = True
+    OnMouseMove = FormMouseMove
   end
   object LabelTimeLeft: TDLabel
     Left = 8
@@ -32,7 +33,10 @@ object fDialog: TfDialog
     Height = 17
     AutoSize = False
     Caption = 'Time Left:'
+    Transparent = True
     Layout = tlCenter
+    OnMouseMove = FormMouseMove
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -47,35 +51,54 @@ object fDialog: TfDialog
     Displ.Size = 0
     BevelOuter = bvNone
   end
-  object Memo: TMemo
-    Left = 56
-    Top = 12
-    Width = 417
-    Height = 69
-    BorderStyle = bsNone
-    Color = clBtnFace
-    Lines.Strings = (
-      '')
-    ReadOnly = True
-    TabOrder = 0
-    WordWrap = False
-  end
-  object PanelTimeLeft: TDPanel
+  object PanelTimeLeft: TDLabel
     Left = 64
     Top = 88
     Width = 57
     Height = 17
     Alignment = taRightJustify
-    BevelOuter = bvNone
-    TabOrder = 1
+    AutoSize = False
+    Layout = tlCenter
+    OnMouseMove = FormMouseMove
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
   end
-  object CheckBoxA: TCheckBox
-    Left = 8
-    Top = 200
-    Width = 489
+  object Memo: TMemo
+    Left = 56
+    Top = 12
+    Width = 417
+    Height = 69
+    Color = clBtnFace
+    ReadOnly = True
+    TabOrder = 0
+    WordWrap = False
+    OnMouseMove = FormMouseMove
+  end
+  object ButtonA: TDButton
+    Left = 128
+    Top = 88
+    Width = 113
     Height = 17
     Caption = 'Do not show again'
-    TabOrder = 2
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    OnMouseMove = FormMouseMove
+    AutoChange = True
   end
   object Timer1: TDTimer
     ActiveOnly = True

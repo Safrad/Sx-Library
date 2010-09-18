@@ -226,7 +226,7 @@ begin
 	if FFrag = False then
 	begin
 		if (Index < FItemCount) then
-			Move(Pointer(UG(Data) + ItemSize * Index)^, Value, ItemSize);
+			Move(Value, Pointer(UG(Data) + ItemSize * Index)^, ItemSize);
 	end
 	else
 	begin

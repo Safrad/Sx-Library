@@ -9,10 +9,10 @@ object fAbout: TfAbout
   Color = clBtnFace
   ParentFont = True
   OldCreateOrder = False
-  Position = poScreenCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnHide = FormHide
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -24,13 +24,13 @@ object fAbout: TfAbout
     Shape = bsFrame
   end
   object LabelIcq: TDLabel
-    Left = 16
+    Left = 176
     Top = 152
-    Width = 57
+    Width = 41
     Height = 17
     Cursor = crHandPoint
     AutoSize = False
-    Caption = 'Icq'
+    Caption = 'ICQ'
     Color = clBtnFace
     FocusControl = EditEmail
     ParentColor = False
@@ -240,7 +240,7 @@ object fAbout: TfAbout
   end
   object LabelAuthor: TDLabel
     Left = 16
-    Top = 128
+    Top = 152
     Width = 56
     Height = 17
     AutoSize = False
@@ -266,9 +266,9 @@ object fAbout: TfAbout
     BevelOuter = bvLowered
   end
   object LabelBuild: TDLabel
-    Left = 136
-    Top = 96
-    Width = 56
+    Left = 152
+    Top = 128
+    Width = 33
     Height = 17
     AutoSize = False
     Caption = 'Build'
@@ -292,7 +292,7 @@ object fAbout: TfAbout
     BevelOuter = bvLowered
   end
   object Image3: TImage
-    Left = 56
+    Left = 200
     Top = 153
     Width = 16
     Height = 16
@@ -303,7 +303,7 @@ object fAbout: TfAbout
   end
   object Image4: TImage
     Left = 56
-    Top = 129
+    Top = 153
     Width = 16
     Height = 16
     AutoSize = True
@@ -336,33 +336,6 @@ object fAbout: TfAbout
     Displ.Size = 0
     BevelOuter = bvLowered
   end
-  object PanelImage: TDPanel
-    Left = 16
-    Top = 16
-    Width = 113
-    Height = 105
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    ParentColor = True
-    TabOrder = 1
-    object ImageAbout: TDImage
-      Left = 0
-      Top = 0
-      Width = 109
-      Height = 101
-      DrawFPS = False
-      HandScroll = False
-      HotTrack = True
-      OnFill = ImageAboutFill
-      Align = alClient
-      ParentShowHint = False
-      ShowHint = False
-      TabOrder = 0
-      TabStop = False
-      OnMouseDown = ImageAboutMouseDown
-      OnMouseMove = ImageAboutMouseMove
-    end
-  end
   object ButtonOk: TDButton
     Left = 216
     Top = 288
@@ -383,12 +356,12 @@ object fAbout: TfAbout
   end
   object PanelBuild: TEdit
     Left = 192
-    Top = 96
+    Top = 128
     Width = 97
     Height = 21
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 4
+    TabOrder = 1
     Text = '10/1999-01/2000'
   end
   object PanelRC: TEdit
@@ -398,7 +371,7 @@ object fAbout: TfAbout
     Height = 21
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 8
+    TabOrder = 6
     Text = '000 000'
   end
   object PanelTRT: TEdit
@@ -408,7 +381,7 @@ object fAbout: TfAbout
     Height = 21
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 9
+    TabOrder = 8
     Text = '356 days, 00:00:00.000'
   end
   object PanelNRT: TEdit
@@ -421,67 +394,15 @@ object fAbout: TfAbout
     TabOrder = 10
     Text = '40 days, 00:00.000'
   end
-  object PanelName: TDPanel
-    Left = 136
-    Top = 16
-    Width = 153
-    Height = 33
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = 'Program Name'
-    ParentColor = True
-    TabOrder = 2
-    object ImageName: TDImage
-      Left = 0
-      Top = 0
-      Width = 149
-      Height = 29
-      DrawFPS = False
-      HandScroll = False
-      HotTrack = True
-      OnFill = ImageNameFill
-      Align = alClient
-      ParentShowHint = False
-      ShowHint = False
-      TabOrder = 0
-      TabStop = False
-    end
-  end
-  object PenelVersion: TDPanel
-    Left = 136
-    Top = 64
-    Width = 153
-    Height = 17
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = 'Program Version'
-    ParentColor = True
-    TabOrder = 3
-    object ImageVersion: TDImage
-      Left = 0
-      Top = 0
-      Width = 149
-      Height = 13
-      DrawFPS = False
-      HandScroll = False
-      HotTrack = True
-      OnFill = ImageVersionFill
-      Align = alClient
-      ParentShowHint = False
-      ShowHint = False
-      TabOrder = 0
-      TabStop = False
-    end
-  end
   object EditAuthor: TEdit
     Left = 80
-    Top = 128
+    Top = 152
     Width = 89
     Height = 19
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 5
+    TabOrder = 2
     Text = 'Safranek David'
   end
   object EditWeb: TEdit
@@ -493,7 +414,7 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 7
+    TabOrder = 4
     Text = 'http://safrad.webzdarma.cz'
     OnClick = EditWebClick
   end
@@ -506,11 +427,11 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 6
+    TabOrder = 3
     OnClick = EditEmailClick
   end
   object EditIcq: TEdit
-    Left = 80
+    Left = 224
     Top = 152
     Width = 65
     Height = 19
@@ -518,7 +439,7 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 11
+    TabOrder = 5
     Text = '69941919'
     OnClick = EditIcqClick
   end
@@ -534,7 +455,7 @@ object fAbout: TfAbout
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 12
+    TabOrder = 7
     OnClick = SysInfo1Click
   end
   object DButtonMemoryStatus: TDButton
@@ -549,8 +470,52 @@ object fAbout: TfAbout
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 13
+    TabOrder = 9
     OnClick = DButtonMemoryStatusClick
+  end
+  object ImageAbout: TDImage
+    Left = 16
+    Top = 16
+    Width = 129
+    Height = 129
+    DrawFPS = False
+    HandScroll = False
+    HotTrack = True
+    OnFill = ImageAboutFill
+    ParentShowHint = False
+    ShowHint = False
+    TabOrder = 11
+    TabStop = False
+    OnMouseDown = ImageAboutMouseDown
+    OnMouseMove = ImageAboutMouseMove
+  end
+  object ImageName: TDImage
+    Left = 152
+    Top = 16
+    Width = 137
+    Height = 57
+    DrawFPS = False
+    HandScroll = False
+    HotTrack = True
+    OnFill = ImageNameFill
+    ParentShowHint = False
+    ShowHint = False
+    TabOrder = 12
+    TabStop = False
+  end
+  object ImageVersion: TDImage
+    Left = 152
+    Top = 88
+    Width = 137
+    Height = 24
+    DrawFPS = False
+    HandScroll = False
+    HotTrack = True
+    OnFill = ImageVersionFill
+    ParentShowHint = False
+    ShowHint = False
+    TabOrder = 13
+    TabStop = False
   end
   object Timer1: TDTimer
     ActiveOnly = False

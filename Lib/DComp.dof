@@ -1,6 +1,5 @@
 [FileVersion]
 Version=6.0
-
 [Compiler]
 A=4
 B=0
@@ -31,7 +30,6 @@ Z=1
 ShowHints=1
 ShowWarnings=1
 UnitAliases=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
-
 [Linker]
 MapFile=0
 OutputObjs=0
@@ -42,7 +40,6 @@ MinStackSize=16384
 MaxStackSize=1048576
 ImageBase=4194304
 ExeDescription=Safrad's Components
-
 [Directories]
 OutputDir=
 UnitOutputDir=
@@ -53,19 +50,16 @@ Packages=VCL50;VCLX50;VCLSMP50;VCLDB50;VCLADO50;ibevnt50;VCLBDE50;VCLDBX50;QRPT5
 Conditionals=
 DebugSourceDirs=
 UsePackages=0
-
 [Parameters]
 RunParams=
 HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
-
 [Language]
 ActiveLang=
 ProjectLang=
 RootDir=
-
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=1
@@ -80,7 +74,6 @@ Private=0
 DLL=0
 Locale=1033
 CodePage=1252
-
 [Version Info Keys]
 CompanyName=
 FileDescription=David Safranek Components

@@ -60,6 +60,7 @@
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
+	{$ifndef F}
 	procedure InsertionSort;
 	var
 		HValue: TValue;
@@ -100,7 +101,8 @@
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
-(*  procedure InsertionSort;
+	{$else}
+	procedure InsertionSort;
 	var
 		HValue: TValue;
 		HIndex: TIndex;
@@ -128,7 +130,7 @@
 			AValue[J + 1] := HValue;
 		end;
 	end;
-
+	{$endif}
 (*  procedure InsertionSort;
 	{
 	 ============================= InsertionSort ================================
@@ -361,7 +363,7 @@
 		x: TValue;
 		y: TIndex;
 
-		function Bin(I: TValue): TValue;
+		function Bin(I: TIndex): TIndex;
 		begin
 			Result := 0;
 			while i <> 0 do
@@ -754,7 +756,11 @@
 		end;
 		Stacks[0, 0].StCount := MaxIndex - MinIndex + 1;
 
+		{$ifndef F}
 		Sh := 0;
+		{$else}
+		Sh := 1;
+		{$endif}
 		for i := 0 to SizeOf(TValue) * 8 div ShOffset - 1 do
 		begin
 			for j := 0 to MaxV do
@@ -765,14 +771,22 @@
 			begin
 				for k := 0 to Stacks[StackIndex , j].StCount - 1 do
 				begin
+					{$ifndef F}
 					v := (Stacks[StackIndex, j].St[k].Value shr Sh) and MaxV;
+					{$else}
+					v := Trunc(Stacks[StackIndex, j].St[k].Value / Sh) and MaxV;
+					{$endif}
 {         if Stacks[StackIndex xor 1, v].StCount > 10 then
 						Exit;}
 					Stacks[StackIndex xor 1, v].St[Stacks[StackIndex xor 1, v].StCount] := Stacks[StackIndex, j].St[k];
 					Inc(Stacks[StackIndex xor 1, v].StCount);
 				end;
 			end;
+			{$ifndef F}
 			Inc(Sh, ShOffset);
+			{$else}
+			Sh := Sh * MaxV;
+			{$endif}
 			StackIndex := StackIndex xor 1;
 		end;
 
@@ -787,7 +801,7 @@
 			SetLength(Stacks[i, j].St, 0);
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure CountingSort;
+{	procedure CountingSort;
 	var
 		i, j, next_index : TIndex;
 		count_index      : TValue;
@@ -843,14 +857,15 @@
 
 		// Free the memory allocated for the counts array.
 		SetLength(Counts, 0);
-	end;
+	end;}
 (*-------------------------------------------------------------------------*)
 var
 	i: TIndex;
 	j: SG;
+	Len: SG;
 begin
-	if Length(AIndex) <> Length(AValue) then Exit;
-	MaxIndex := Length(AIndex) - 1;
+	Len := Min(Length(AIndex), Length(AValue));
+	MaxIndex := Len - 1;
 	{$ifopt d+}
 	Swaped := 0; Compared := 0; MaxDepth := 0;
 	{$endif}
@@ -877,7 +892,7 @@ begin
 		stQuick: QuickSort(MinIndex, MaxIndex);
 //		stMerge: MergeSort;
 		stRadix: RadixSort;
-		stCounting: CountingSort;
+//		stCounting: CountingSort;
 		end;
 	end;
 	if Reverse then

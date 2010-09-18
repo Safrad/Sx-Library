@@ -14,10 +14,10 @@ type
 		Value: string; // 4
 	end;
 	TSection = record // 16
+		Reserved: S4;
+		KeyCount: S4;
 		Name: string; // 4
-		KeyCount: S32; // 4
 		Keys: array of TKey; // 4
-		Reserved: S32; // 4
 	end;
 	TFileMethod = (fmWindows, fmDelphi);
 	TFileStatus = (fsNone, fsOpenR, fsOpenW, fsFull);
@@ -44,14 +44,14 @@ type
 		procedure WriteString(const Section, Ident, Value: string);
 		function ReadSG(const Section, Ident: string; Default: SG): SG;
 		procedure WriteSG(const Section, Ident: string; Value: SG);
-		function ReadS32(const Section, Ident: string; Default: S32): S32;
-		procedure WriteS32(const Section, Ident: string; Value: S32);
-		function ReadS64(const Section, Ident: string; Default: S64): S64;
-		procedure WriteS64(const Section, Ident: string; Value: S64);
+		function ReadS4(const Section, Ident: string; Default: S4): S4;
+		procedure WriteS4(const Section, Ident: string; Value: S4);
+		function ReadS8(const Section, Ident: string; Default: S8): S8;
+		procedure WriteS8(const Section, Ident: string; Value: S8);
 		function ReadBG(const Section, Ident: string; Default: BG): BG;
 		procedure WriteBG(const Section, Ident: string; Value: BG);
-		function ReadF80(const Section, Name: string; Default: F80): F80;
-		procedure WriteF80(const Section, Name: string; Value: F80);
+		function ReadFA(const Section, Name: string; Default: FA): FA;
+		procedure WriteFA(const Section, Name: string; Value: FA);
 		function ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteDate(const Section, Name: string; Value: TDateTime);
 		function ReadTime(const Section, Name: string; Default: TDateTime): TDateTime;
@@ -61,20 +61,21 @@ type
 
 		procedure RWString(const Section, Ident: string; var Value: string; const Save: Boolean);
 		procedure RWStrings(const Section: string; Val: TStrings; const Save: Boolean);
+		procedure RWS1(const Section, Ident: string; var Value: S1; const Save: Boolean);
+		procedure RWU1(const Section, Ident: string; var Value: U1; const Save: Boolean);
+		procedure RWS2(const Section, Ident: string; var Value: S2; const Save: Boolean);
+		procedure RWU2(const Section, Ident: string; var Value: U2; const Save: Boolean);
+		procedure RWS4(const Section, Ident: string; var Value: S4; const Save: Boolean);
+		procedure RWU4(const Section, Ident: string; var Value: U4; const Save: Boolean);
 		procedure RWS8(const Section, Ident: string; var Value: S8; const Save: Boolean);
-		procedure RWU8(const Section, Ident: string; var Value: U8; const Save: Boolean);
-		procedure RWS16(const Section, Ident: string; var Value: S16; const Save: Boolean);
-		procedure RWU16(const Section, Ident: string; var Value: U16; const Save: Boolean);
-		procedure RWS32(const Section, Ident: string; var Value: S32; const Save: Boolean);
-		procedure RWU32(const Section, Ident: string; var Value: U32; const Save: Boolean);
-		procedure RWS64(const Section, Ident: string; var Value: S64; const Save: Boolean);
 		procedure RWSG(const Section, Ident: string; var Value: SG; const Save: Boolean);
 		procedure RWUG(const Section, Ident: string; var Value: UG; const Save: Boolean);
-		procedure RWU64(const Section, Ident: string; var Value: U64; const Save: Boolean);
+		procedure RWU8(const Section, Ident: string; var Value: U8; const Save: Boolean);
+		procedure RWB1(const Section, Ident: string; var Value: B1; const Save: Boolean);
 		procedure RWBG(const Section, Ident: string; var Value: BG; const Save: Boolean);
-		procedure RWF32(const Section, Ident: string; var Value: F32; const Save: Boolean);
-		procedure RWF64(const Section, Ident: string; var Value: F64; const Save: Boolean);
-		procedure RWF80(const Section, Ident: string; var Value: F80; const Save: Boolean);
+		procedure RWF4(const Section, Ident: string; var Value: F4; const Save: Boolean);
+		procedure RWF8(const Section, Ident: string; var Value: F8; const Save: Boolean);
+		procedure RWFA(const Section, Ident: string; var Value: FA; const Save: Boolean);
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: Boolean);
 
 		procedure RWFormPos(Form: TForm; const Save: Boolean);
@@ -86,7 +87,7 @@ type
 		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: Boolean): string;
 		function RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: Boolean): SG;
 		function RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: Boolean): BG;
-		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: F80; const Save: Boolean): F80;
+		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: Boolean): FA;
 
 
 		function GetSectionIndex(const Section: string): Integer;
@@ -207,46 +208,46 @@ var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI(IntStr, MinInt, Default, MaxInt, 1);
+	Result := StrToValI(IntStr, False, MinInt, Default, MaxInt, 1);
 end;
 
 procedure TDIniFile.WriteSG(const Section, Ident: string; Value: SG);
 begin
-	WriteString(Section, Ident, IntToStr(Value));
+	WriteString(Section, Ident, NToS(Value, False));
 end;
 
-function TDIniFile.ReadS32(const Section, Ident: string;
-	Default: S32): S32;
+function TDIniFile.ReadS4(const Section, Ident: string;
+	Default: S4): S4;
 var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI(IntStr, MinInt, Default, MaxInt, 1);
+	Result := StrToValI(IntStr, False, MinInt, Default, MaxInt, 1);
 end;
 
-procedure TDIniFile.WriteS32(const Section, Ident: string; Value: S32);
+procedure TDIniFile.WriteS4(const Section, Ident: string; Value: S4);
 begin
-	WriteString(Section, Ident, IntToStr(Value));
+	WriteString(Section, Ident, NToS(Value, False));
 end;
 
-function TDIniFile.ReadS64(const Section, Ident: string;
-	Default: S64): S64;
+function TDIniFile.ReadS8(const Section, Ident: string;
+	Default: S8): S8;
 var
 	IntStr: string;
 begin
 	IntStr := ReadString(Section, Ident, '');
-	Result := StrToValI64(IntStr, MinInt64, Default, MaxInt64, 1);
+	Result := StrToValS8(IntStr, False, MinInt8, Default, MaxInt8, 1);
 end;
 
-procedure TDIniFile.WriteS64(const Section, Ident: string; Value: Int64);
+procedure TDIniFile.WriteS8(const Section, Ident: string; Value: Int64);
 begin
-	WriteString(Section, Ident, IntToStr(Value));
+	WriteString(Section, Ident, NToS(Value, False));
 end;
 
 function TDIniFile.ReadBG(const Section, Ident: string;
 	Default: BG): BG;
 begin
-	Result := ReadS32(Section, Ident, Ord(Default)) <> 0;
+	Result := ReadS4(Section, Ident, Ord(Default)) <> 0;
 end;
 
 procedure TDIniFile.WriteBG(const Section, Ident: string; Value: BG);
@@ -256,20 +257,20 @@ begin
 	WriteString(Section, Ident, Values[Value]);
 end;
 
-function TDIniFile.ReadF80(const Section, Name: string; Default: F80): F80;
+function TDIniFile.ReadFA(const Section, Name: string; Default: FA): FA;
 var
 	FloatStr: string;
 begin
 	FloatStr := ReadString(Section, Name, '');
-	Result := StrToValE(FloatStr, -MaxExtended, Default, MaxExtended);
+	Result := StrToValE(FloatStr, False, -MaxExtended, Default, MaxExtended);
 end;
 
-procedure TDIniFile.WriteF80(const Section, Name: string; Value: F80);
+procedure TDIniFile.WriteFA(const Section, Name: string; Value: FA);
 var CurrDecimalSeparator: Char;
 begin
 	CurrDecimalSeparator := DecimalSeparator;
 	DecimalSeparator := '.';
-	WriteString(Section, Name, FloatToStr(Value));
+	WriteString(Section, Name, FToS(Value, False));
 	DecimalSeparator := CurrDecimalSeparator;
 end;
 
@@ -588,7 +589,7 @@ begin
 	if Result = False then ErrorMessage(FFileName + #13 + #10 + 'Access Denied');
 end;
 
-procedure TDIniFile.RWS8(const Section, Ident: string; var Value: S8; const Save: Boolean);
+procedure TDIniFile.RWS1(const Section, Ident: string; var Value: S1; const Save: Boolean);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
@@ -599,6 +600,96 @@ begin
 		else
 		begin
 			WriteSG(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWU1(const Section, Ident: string; var Value: U1; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadSG(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteSG(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWS2(const Section, Ident: string; var Value: S2; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadSG(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteSG(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWU2(const Section, Ident: string; var Value: U2; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadSG(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteSG(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWS4(const Section, Ident: string; var Value: S4; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadS4(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteS4(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWU4(const Section, Ident: string; var Value: U4; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := U4(ReadS4(Section, Ident, Value));
+		end
+		else
+		begin
+			WriteSG(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWS8(const Section, Ident: string; var Value: S8; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadS8(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteS8(Section, Ident, Value);
 		end;
 	end;
 end;
@@ -609,101 +700,11 @@ begin
 	begin
 		if Save = False then
 		begin
-			Value := ReadSG(Section, Ident, Value);
+			Value := ReadS8(Section, Ident, Value);
 		end
 		else
 		begin
-			WriteSG(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWS16(const Section, Ident: string; var Value: S16; const Save: Boolean);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadSG(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteSG(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWU16(const Section, Ident: string; var Value: U16; const Save: Boolean);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadSG(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteSG(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWS32(const Section, Ident: string; var Value: S32; const Save: Boolean);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadS32(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteS32(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWU32(const Section, Ident: string; var Value: U32; const Save: Boolean);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadSG(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteSG(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWS64(const Section, Ident: string; var Value: S64; const Save: Boolean);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadS64(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteS64(Section, Ident, Value);
-		end;
-	end;
-end;
-
-procedure TDIniFile.RWU64(const Section, Ident: string; var Value: U64; const Save: Boolean);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadS64(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteS64(Section, Ident, Value);
+			WriteS8(Section, Ident, Value);
 		end;
 	end;
 end;
@@ -738,21 +739,6 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWF32(const Section, Ident: string; var Value: F32; const Save: Boolean);
-begin
-	if CheckAccess(FileStatus, Save) then
-	begin
-		if Save = False then
-		begin
-			Value := ReadF80(Section, Ident, Value);
-		end
-		else
-		begin
-			WriteF80(Section, Ident, Value);
-		end;
-	end;
-end;
-
 procedure TDIniFile.RWBG(const Section, Ident: string; var Value: BG; const Save: Boolean);
 begin
 	if CheckAccess(FileStatus, Save) then
@@ -768,32 +754,62 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWF64(const Section, Ident: string; var Value: Double; const Save: Boolean);
+procedure TDIniFile.RWB1(const Section, Ident: string; var Value: B1; const Save: Boolean);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
 		if Save = False then
 		begin
-			Value := ReadF80(Section, Ident, Value);
+			Value := ReadBG(Section, Ident, Value);
 		end
 		else
 		begin
-			WriteF80(Section, Ident, Value);
+			WriteBG(Section, Ident, Value);
 		end;
 	end;
 end;
 
-procedure TDIniFile.RWF80(const Section, Ident: string; var Value: F80; const Save: Boolean);
+procedure TDIniFile.RWF4(const Section, Ident: string; var Value: F4; const Save: Boolean);
 begin
 	if CheckAccess(FileStatus, Save) then
 	begin
 		if Save = False then
 		begin
-			Value := ReadF80(Section, Ident, Value);
+			Value := ReadFA(Section, Ident, Value);
 		end
 		else
 		begin
-			WriteF80(Section, Ident, Value);
+			WriteFA(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWF8(const Section, Ident: string; var Value: F8; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadFA(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteFA(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWFA(const Section, Ident: string; var Value: FA; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadFA(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteFA(Section, Ident, Value);
 		end;
 	end;
 end;
@@ -852,13 +868,13 @@ begin
 	begin
 		j := ReadSG(Section, 'LineCount', Val.Count);
 		for i := 0 to j - 1 do
-			Val.Add(ReadString(Section, 'Line' + IntToStr(i), ''));
+			Val.Add(ReadString(Section, 'Line' + NToS(i, False), ''));
 	end
 	else
 	begin
 		WriteSG(Section, 'LineCount', Val.Count);
 		for i := 0 to Val.Count - 1 do
-			WriteString(Section, 'Line' + IntToStr(i), Val[i]);
+			WriteString(Section, 'Line' + NToS(i, False), Val[i]);
 
 	end;
 end;
@@ -897,7 +913,7 @@ begin
 	end;
 end;
 
-function TDIniFile.RWFGF(const Section, Ident: string; const SaveVal, DefVal: F80; const Save: Boolean): F80;
+function TDIniFile.RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: Boolean): FA;
 var CurrDecimalSeparator: Char;
 begin
 	if Save then Result := SaveVal else Result := DefVal;
@@ -908,11 +924,11 @@ begin
 		DecimalSeparator := '.';
 		if Save = False then
 		begin
-			Result := ReadF80(Section, Ident, DefVal);
+			Result := ReadFA(Section, Ident, DefVal);
 		end
 		else
 		begin
-			WriteF80(Section, Ident, SaveVal);
+			WriteFA(Section, Ident, SaveVal);
 		end;
 		DecimalSeparator := CurrDecimalSeparator;
 	end;
@@ -974,8 +990,8 @@ begin
 	DView.SortBySwap := RWBGF(DView.Name, 'SortBySwap', DView.SortBySwap, DView.SortBySwap, Save);
 	for i := 0 to DView.ColumnCount - 1 do
 	begin
-		DView.Columns[i].Width := RWSGF(DView.Name, 'Width' + IntToStr(i), DView.Columns[i].Width, DView.Columns[i].Width, Save);
-		DView.ColumnOrder[i] := RWSGF(DView.Name, 'Order' + IntToStr(i), DView.ColumnOrder[i], i, Save);
+		DView.Columns[i].Width := RWSGF(DView.Name, 'Width' + NToS(i, False), DView.Columns[i].Width, DView.Columns[i].Width, Save);
+		DView.ColumnOrder[i] := RWSGF(DView.Name, 'Order' + NToS(i, False), DView.ColumnOrder[i], i, Save);
 	end;
 end;
 
@@ -983,12 +999,12 @@ procedure TDIniFile.RWListView(ListView: TListView; const Save: Boolean);
 var i, j: Integer;
 begin
 	for i := 0 to ListView.Columns.Count - 1 do
-		ListView.Columns[i].Width := RWSGF(ListView.Name, 'Width' + IntToStr(i), ListView.Columns[i].Width, ListView.Columns[i].Width, Save);
+		ListView.Columns[i].Width := RWSGF(ListView.Name, 'Width' + NToS(i, False), ListView.Columns[i].Width, ListView.Columns[i].Width, Save);
 	if ListView.FullDrag then
 	begin
 		for i := 0 to ListView.Columns.Count - 1 do
 		begin
-			j := RWSGF(ListView.Name, 'Index' + IntToStr(i), ListView.Columns.Items[i].ID, i, Save);
+			j := RWSGF(ListView.Name, 'Index' + NToS(i, False), ListView.Columns.Items[i].ID, i, Save);
 			if Save = False then ListView.Columns.Items[i].Index := j;
 
 		end;

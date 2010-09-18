@@ -437,10 +437,9 @@ begin
 				PChar(s), Length(s), Rec, DT_RIGHT or DT_SINGLELINE or DT_VCENTER);
 			Rec.Right := Rec.Right + 8;
 		end;
-	//  BCanvas.TextOut(22, 2, MenuItem.Caption);
 		BCanvas.Font.Color := C1;
+		BCanvas.Font.Name := BCanvas.Font.Name;
 		OffsetRect(Rec, -1, -1);
-	//  BCanvas.TextOut(21, 1, MenuItem.Caption);
 		DrawText(
 			BCanvas.Handle, // handle to device context
 			PChar(MenuItem.Caption),  // pointer to string to draw
@@ -454,7 +453,11 @@ begin
 		Rec.Right := Rec.Right + 8;
 	end;
 	MenuBmp.TransparentColor := -1;
-	ACanvas.Draw(ARect.Left, ARect.Top, MenuBmp);
+//	ACanvas.Draw(ARect.Left, ARect.Top, MenuBmp);
+	BitBlt(ACanvas.Handle, ARect.Left, ARect.Top, MenuBmp.Width, MenuBmp.Height,
+		MenuBmp.Canvas.Handle,
+			0, 0,
+			SRCCOPY);
 //  ACanvas.TextOut(ARect.Left, ARect.Top, IntToStr(MenuCount));
 
 	MenuBmp.Free;

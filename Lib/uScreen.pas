@@ -150,13 +150,13 @@ begin
 		Result := 0
 	else
 //    Result := Floor(Height / ((1 / RefreshRate) - Cardinal(RetraceDelay) / 1000000));
-		Result := MaxDiv64((Int64(Height) * Int64(RefreshRate) * 1000000), (1000000 - Int64(RetraceDelay) * Int64(RefreshRate)));
+		Result := MaxDivS8((S8(Height) * S8(RefreshRate) * 1000000), (1000000 - S8(RetraceDelay) * S8(RefreshRate)));
 
 end;
 
 function GetHeight(RefreshRate, HF: Cardinal): Cardinal;
 begin
-	Result := (1000000 * Int64(HF) - Int64(RefreshRate) * Int64(HF) * Int64(RetraceDelay)) div (1000000 * Int64(RefreshRate));
+	Result := (1000000 * S8(HF) - S8(RefreshRate) * S8(HF) * S8(RetraceDelay)) div (1000000 * S8(RefreshRate));
 	if Result <= DoubleHeight then Result := Result div 2;
 end;
 
@@ -174,19 +174,19 @@ end;
 function ScreenModeToStr(const Width, Height: Word): string; overload;
 begin
 	Result :=
-		IntToStr(Width) + '×' + IntToStr(Height);
+		NToS(Width) + '×' + NToS(Height);
 end;
 
 function ScreenModeToStr(const Width, Height, Bits: Word): string; overload;
 begin
 	Result := ScreenModeToStr(Width, Height);
-	if Bits <> 0 then Result := Result + '×' + IntToStr(Bits) + ' bit';
+	if Bits <> 0 then Result := Result + '×' + NToS(Bits) + ' bit';
 end;
 
 function ScreenModeToStr(const Width, Height, Bits, VF: Word): string;
 begin
 	Result := ScreenModeToStr(Width, Height, Bits);
-	if VF <> 0 then Result := Result + '/' + IntToStr(VF) + ' Hz';
+	if VF <> 0 then Result := Result + '/' + NToS(VF) + ' Hz';
 end;
 
 procedure AddMode(Width, Height, Bits: Cardinal);
@@ -316,7 +316,7 @@ begin
 			Reg.RootKey := HKEY_LOCAL_MACHINE;
 			for i := 0 to 15 do
 			begin
-				Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', i);
+				Key := 'System\CurrentControlSet\Services\Class\Display\' + NToS(i, '0000');
 				if Reg.KeyExists(Key) then
 				begin
 					ActualDriver := i;
@@ -328,7 +328,7 @@ begin
 						Reg.CloseKey;
 					end;
 
-					Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', i) + '\Modes\8';
+					Key := 'System\CurrentControlSet\Services\Class\Display\' + NToS(i, '0000') + '\Modes\8';
 					if Reg.KeyExists(Key) then
 					begin
 						if Reg.OpenKey(Key + '\641,' + IntToStr(i + 480), True) then
@@ -375,19 +375,21 @@ begin
 	end;
 	if (ActualDriver = -1) then
 	begin
-		ActualDriver := MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, False);
+		if MainIni <> nil then
+			ActualDriver := MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, False);
 		if (ActualDriver = -1) then
 		begin
 			fScreen := TfScreen.Create(nil);
 			fScreen.ComboBoxDriver.Items.Clear;
 			for i := 0 to DriverNameCount - 1 do
 			begin
-				fScreen.ComboBoxDriver.Items.Add(IntToStr(i) + ': ' + DriverNames[i]);
+				fScreen.ComboBoxDriver.Items.Add(NToS(i) + ': ' + DriverNames[i]);
 			end;
 			fScreen.ComboBoxDriver.ItemIndex := 0;
 			fScreen.ShowModal;
 			ActualDriver := fScreen.ComboBoxDriver.ItemIndex;
-			MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, True);
+			if MainIni <> nil then
+				MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, True);
 		end;
 	end;
 
@@ -397,7 +399,7 @@ begin
 		Reg.RootKey := HKEY_LOCAL_MACHINE;
 		for i := 0 to 15 do
 		begin
-			Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', i) + '\Modes\8';
+			Key := 'System\CurrentControlSet\Services\Class\Display\' + NToS(i, '0000') + '\Modes\8';
 			if Reg.KeyExists(Key) then
 			begin
 				Reg.DeleteKey(Key + '\641,' + IntToStr(i + 480));
@@ -433,7 +435,7 @@ begin
 	Reg := TRegistry.Create;
 	try
 		Reg.RootKey := HKEY_LOCAL_MACHINE;
-		Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver);
+		Key := 'System\CurrentControlSet\Services\Class\Display\' + NToS(ActualDriver, '0000');
 		if Reg.OpenKey(Key, False) then
 		begin
 			DriverDesc := Reg.ReadString('DriverDesc');
@@ -442,7 +444,7 @@ begin
 		end;
 		for i := 0 to ScreenModeCount - 1 do
 		begin
-			Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
+			Key := 'System\CurrentControlSet\Services\Class\Display\' + NToS(ActualDriver, '0000') + '\MODES\' +
 				IntToStr(ScreenModes[i].Bits) + '\' + IntToStr(ScreenModes[i].Width) + ',' + IntToStr(ScreenModes[i].Height);
 			if Reg.KeyExists(Key) then
 			begin
@@ -453,7 +455,7 @@ begin
 					InLineIndex := 1;
 					while InLineIndex < Length(s) do
 					begin
-						f := StrToValI(ReadToChar(s, InLineIndex, ','), 0, 0, MaxInt, 1);
+						f := StrToValI(ReadToChar(s, InLineIndex, ','), False, 0, 0, MaxInt, 1);
 						if (f >= WorstVF) and (f <= BestVF) then
 						begin
 							Found := False;
@@ -507,7 +509,7 @@ begin
 					DefVF := SaveVF;
 
 				if Reg.ValueExists('RefreshRate') then
-					ScreenModes[i].RefreshRate := StrToValI(Reg.ReadString('RefreshRate'), WorstVF, DefVF, BestVF, 1)
+					ScreenModes[i].RefreshRate := StrToValI(Reg.ReadString('RefreshRate'), False, WorstVF, DefVF, BestVF, 1)
 				else
 					ScreenModes[i].RefreshRate := DefVF;
 				Reg.CloseKey;
@@ -763,7 +765,7 @@ begin
 		Reg := TRegistry.Create;
 		try
 			Reg.RootKey := HKEY_LOCAL_MACHINE;
-			Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
+			Key := 'System\CurrentControlSet\Services\Class\Display\' + NToS(ActualDriver, '0000') + '\MODES\' +
 				IntToStr(SetBits) + '\' + IntToStr(SetWidth) + ',' + IntToStr(SetHeight);
 
 			Reg.OpenKey(Key, True);
@@ -908,7 +910,7 @@ begin
 	Reg := TRegistry.Create;
 	try
 		Reg.RootKey := HKEY_LOCAL_MACHINE;
-		Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
+		Key := 'System\CurrentControlSet\Services\Class\Display\' + NToS(ActualDriver, '0000') + '\MODES\' +
 			IntToStr(ScreenModes[Index].Bits) + '\' + IntToStr(ScreenModes[Index].Width) + ',' + IntToStr(ScreenModes[Index].Height);
 		Reg.OpenKey(Key, True);
 		D := Max(Min(GetVF(ScreenModes[Index].Height, UserMaxHF), UserMaxVF), VF);
@@ -1017,7 +1019,7 @@ begin
 			and ((Bits = 0) or (ScreenModes[i].Bits = Bits))
 			and (not StandardMode(ScreenModes[i].Width, ScreenModes[i].Height)) then
 			begin
-				Reg.DeleteKey('System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
+				Reg.DeleteKey('System\CurrentControlSet\Services\Class\Display\' + NToS(ActualDriver, '0000') + '\MODES\' +
 						IntToStr(ScreenModes[i].Bits) + '\' + IntToStr(ScreenModes[i].Width) + ',' + IntToStr(ScreenModes[i].Height));
 {       for j := i + 1 to ScreenModeCount - 1 do
 					ScreenModes[j - 1] := ScreenModes[j];
