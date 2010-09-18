@@ -1,9 +1,9 @@
 //* File:     Lib\uParser.pas
 //* Created:  2004-03-07
-//* Modified: 2005-03-29
-//* Version:  X.X.33.X
+//* Modified: 2005-06-13
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 {
@@ -466,17 +466,17 @@ type
 	end;
 
 	PVF = ^TVF;
-	TVF = packed record
+	TVF = packed record // 32
 		// Func, Var
-		Name: string;
-		Typ: string; // D??? PType
+		Name: string; // 4
+		Typ: string; // 4 D??? PType
 		UsedCount: U4;
 		Line: U4;
+		// Func
+		VFs: TData; // 4 array of TVarFunc, nil for Variable
 		// Var
 		Value: FA; // D???
-		// Func
-		VFs: TData; // array of TVarFunc, nil for Variable
-		ParamCount: UG;
+		ParamCount: U2;
 	end;
 
 	PUnit = ^TUnit;
@@ -502,10 +502,7 @@ function ArcElo(EloDifference: Extended): Extended;
 function IsVarFunc(VarName: string; FuncLevel: SG; Uni: PUnit): PVF;
 function CalcTree: Extended;
 
-
-
 function CompareS(OldS, NewS: string): Boolean;
-procedure CompileMesClear;
 
 
 const
@@ -714,10 +711,9 @@ begin
 	GlobalMarkS1 := '(*';
 	GlobalMarkF0 := '}';
 	GlobalMarkF1 := '*)';
-	MaxIdentSize := MaxInt;
+	MaxIdentSize := High(MaxIdentSize);
 	EnableSpace := 0;
 
-//	CompileMesClear;
 	FreeTree(Root);
 	LinesL := 0;
 	LineBegin := True;
@@ -1691,6 +1687,10 @@ begin
 	else if Length(Params) < MesParam[M.MesId] then
 		MessageD('IE too less parameters', mtWarning, [mbOk]);
 	{$endif}
+	for i := 0 to Length(Params) - 1 do
+	begin
+		Params[i] := '';
+	end;
 end;
 
 procedure TDParser.AddMes2(MesId: TMesId; Params: array of string);
@@ -1986,10 +1986,11 @@ begin
 		Id2 := UpperCase(Id);
 		Result := nil;
 		for i := 0 to Length(FcNames) - 1 do
-			if Id2 = FcNames[TOperator(i)] then
+			if (FcNames[TOperator(i)] <> '') and (Id2 = FcNames[TOperator(i)]) then
 			begin
 				Operation := TOperator(i);
 				Result := NodeArg;
+				Break;
 			end;
 
 		if Result = nil then
@@ -2146,13 +2147,11 @@ begin
 	itEOI:
 	begin
 		Result := Node;
-		Exit;
 	end;
 	itRBracket:
 	begin
 		Dec(BracketDepth);
 		Result := Node;
-		Exit;
 	end;
 	itPlus, itMinus:
 	begin
@@ -2180,7 +2179,6 @@ begin
 	else
 	begin
 		Result := Node;
-		Exit;
 	end;
 	end;
 end;
@@ -3012,20 +3010,6 @@ begin
 	end;
 end;
 
-procedure CompileMesClear;
-var
-	M: PCompileMes;
-	i: SG;
-begin
-	M := CompileMes.GetFirst;
-	for i := 0 to SG(CompileMes.Count) - 1 do
-	begin
-		M.Params := '';
-		Inc(M);
-	end;
-	CompileMes.Clear;
-end;
-
 function FreeTreeR(var Node: PNode): BG;
 var i: SG;
 begin
@@ -3040,6 +3024,12 @@ begin
 		end;
 		opIdent:
 		begin
+{			Node.Ident.Name := '';
+			Node.Ident.Typ := '';
+			FreeAndNil(Node.Ident.VFs);
+//			Finalize(Node.Ident^);
+			FreeMem(Node.Ident);}
+			Node.Ident := nil;
 			FreeMem(Node);
 			Dec(TreeSize, NodeIdent);
 		end;
@@ -3074,6 +3064,8 @@ end;
 function FreeTree(var Node: PNode): BG;
 begin
 	Result := FreeTreeR(Node);
+	TreeDepth := 0;
+	NodeCount := 0;
 	{$ifopt d+}
 	if TreeSize <> 0 then
 		IE(43451);

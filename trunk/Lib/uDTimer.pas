@@ -1,9 +1,9 @@
 //* File:     Lib\uDTimer.pas
 //* Created:  2000-08-01
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-03-08
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDTimer;
@@ -22,11 +22,11 @@ type
 
 	TDTimer = class(TComponent)
 	private
-		FActiveOnly: Boolean;
-		FEnabled: Boolean;
-		FSuspended: Boolean;
+		FActiveOnly: BG;
+		FEnabled: BG;
+		FSuspended: BG;
 		FFrameRate: Integer;
-		FInitialized: Boolean;
+		FInitialized: BG;
 		FEventStep: TEventStep;
 		FInterval: Cardinal;
 		FInterval12: Cardinal;
@@ -42,8 +42,8 @@ type
 		procedure Finalize;
 		procedure Initialize;
 		procedure Resume;
-		procedure SetActiveOnly(Value: Boolean);
-		procedure SetEnabled(Value: Boolean);
+		procedure SetActiveOnly(Value: BG);
+		procedure SetEnabled(Value: BG);
 		procedure SetEventStep(Value: TEventStep);
 		procedure SetInterval(Value: Cardinal);
 		procedure Suspend;
@@ -65,8 +65,8 @@ type
 		property FrameRate: Integer read FFrameRate;
 		procedure Reset;
 	published
-		property ActiveOnly: Boolean read FActiveOnly write SetActiveOnly;
-		property Enabled: Boolean read FEnabled write SetEnabled;
+		property ActiveOnly: BG read FActiveOnly write SetActiveOnly;
+		property Enabled: BG read FEnabled write SetEnabled;
 		property Interval: Cardinal read FInterval write SetInterval;
 		property EventStep: TEventStep read FEventStep write SetEventStep;
 		property OnTimer: TDTimerEvent read FOnTimer write FOnTimer;
@@ -102,7 +102,7 @@ var
 	DIdleTimer: TDIdleTimer;
 
 procedure TryTimer;
-var Done: BG;
+var Done: Boolean;
 begin
 	Done := False;
 	if Assigned(DIdleTimer) then
@@ -389,7 +389,7 @@ begin
 	FSuspended := False;
 end;
 
-procedure TDTimer.SetActiveOnly(Value: Boolean);
+procedure TDTimer.SetActiveOnly(Value: BG);
 begin
 	if FActiveOnly <> Value then
 	begin
@@ -400,7 +400,7 @@ begin
 	end;
 end;
 
-procedure TDTimer.SetEnabled(Value: Boolean);
+procedure TDTimer.SetEnabled(Value: BG);
 begin
 	if FEnabled <> Value then
 	begin

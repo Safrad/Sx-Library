@@ -1,9 +1,9 @@
 //* File:     Lib\uHTML.pas
 //* Created:  2004-09-26
-//* Modified: 2005-03-08
-//* Version:  X.X.33.X
+//* Modified: 2005-07-01
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uHTML;
@@ -28,7 +28,7 @@ type
 		Title: string;
 		AddCreated, AddTitle: BG;
 		Unicode: BG;
-
+		ConvertCharser: BG;
 
 		constructor Create(FileName: TFileName);
 		destructor Destroy; override;
@@ -39,7 +39,8 @@ type
 		procedure AddCommand(s: string);
 		procedure HorizontalRule(Width: SG = 100; DistanceUnit: TDistanceUnit = duPercentage; Size: SG = 2);
 		procedure AddDataCell(s: string; AlignRight: BG = False);
-		procedure AddTable(FileName: TFileName);
+		procedure AddHeadCell(s: string; AlignRight: BG = False);
+		procedure AddTable(FileName: TFileName; Border: SG = 1; CellSpacing: SG = 2; CellPadding: SG = 2);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
 		procedure AddImage(FileName: TFileName); overload;
 
@@ -49,7 +50,8 @@ type
 
 	end;
 
-function NToHTML(Value: SG): string;
+function NToHTML(Value: SG; EnableZero: BG): string;
+function FToHTML(Value: FG): string;
 function XMLToStr(s: string): string;
 function StrToXML(s: string): string;
 {function XMLToWStr(s: string): WideString;
@@ -73,15 +75,30 @@ uses
 	Math,
 	uStrings, uFiles, uDBitmap, uLang;
 
-function NToHTML(Value: SG): string;
+function NToHTML(Value: SG; EnableZero: BG): string;
 begin
+	if EnableZero = False then
+	begin
+		if Value = 0 then
+		begin
+			Result := '&nbsp;';
+			Exit;
+		end;
+	end;
+
 	if Value = MaxInt then
 		Result := '&nbsp;'
 	else
 	begin
 		Result := ReplaceF(NToS(Value), ' ', '&nbsp;'{'&thinsp;' IE DNS});
-		Result := ReplaceF(NToS(Value), #160, '&nbsp;'{'&thinsp;' IE DNS});
+		Result := ReplaceF(Result, #160, '&nbsp;'{'&thinsp;' IE DNS});
 	end;
+end;
+
+function FToHTML(Value: FG): string;
+begin
+	Result := ReplaceF(FloatToStr(Value), ' ', '&nbsp;'{'&thinsp;' IE DNS});
+	Result := ReplaceF(Result, #160, '&nbsp;'{'&thinsp;' IE DNS});
 end;
 
 function XMLToStr(s: string): string;
@@ -272,6 +289,7 @@ begin
 	AddCreated := UpperCase(DelFileExt(ExtractFileName(FileName))) <> 'MENU';
 	AddTitle := True;
 	Unicode := True;
+	ConvertCharser := True;
 end;
 
 destructor THTML.Destroy;
@@ -311,6 +329,18 @@ begin
 	if AlignRight then
 		Body := Body + ' align="right"';
 	Body := Body + '>' + s + '</td>';
+end;
+
+procedure THTML.AddHeadCell(s: string; AlignRight: BG = False);
+begin
+	Body := Body + '<td';
+	if AlignRight then
+		Body := Body + ' align="right"';
+	Body := Body + '><b>' + s + '</b></td>';
+{	Body := Body + '<th';
+	if AlignRight then
+		Body := Body + ' align="right"';
+	Body := Body + '>' + s + '</th>';}
 end;
 
 function RelativePath(Source, Target: string): string;
@@ -372,6 +402,7 @@ end;
 procedure THTML.WriteToFile;
 
 procedure HTMLEnd;
+var FName: TFileName;
 begin
 {	t := Now;
 	DateTimeToString(d, 'dd.mm.yyyy', t);
@@ -386,6 +417,11 @@ begin
 		begin
 			AddBody('	<hr/>' + HTMLSep +
 				'<DIV ALIGN="RIGHT"><SMALL>Created ' + DateTimeToS(Now) + '</SMALL>&nbsp;&nbsp;');
+			FName := ExtractFilePath(FileName) + 'Foot.body';
+			if FileExists(FName) then
+			begin
+				Body := Body + ReadStringFromFile(FName);
+			end;
 			AddBody('<A HREF="http://validator.w3.org/check?uri=referer">');
 			AddImage(ImagesDir + 'valid-html40.png');
 			AddBody('</A></DIV>' + HTMLSep);
@@ -396,7 +432,7 @@ begin
 end;
 
 const
-	CharsetName: array[BG] of string = ('ISO-8859-2'{ windows-1250}, 'utf-8');
+	CharsetName: array[0..1] of string = ('ISO-8859-2'{ windows-1250}, 'utf-8');
 var
 	LastBody, s: string;
 begin
@@ -415,7 +451,7 @@ begin
 	s := s +
 		'	<meta name="Author" content="Safrad">' + HTMLSep +
 		'	<meta name="lang" content="cz">' + HTMLSep +
-		'	<meta http-equiv="Content-Type" content="text/html; charset=' + CharsetName[Unicode] + '">' + HTMLSep;
+		'	<meta http-equiv="Content-Type" content="text/html; charset=' + CharsetName[SG(Unicode) and 1] + '">' + HTMLSep;
 
 	if FFrameset = False then
 		s := s + '	<link rel="stylesheet" type="text/css" href="' + FStyle + '">' + HTMLSep;
@@ -435,14 +471,19 @@ begin
 	Body := s + Body;
 
 	HTMLEnd;
-	if Unicode = False then
-	begin
-		ConvertCharset(Body, cp1250, cpISO88592);
-		WriteStringToFile(FileName, Body, False);
-	end
+	if ConvertCharser = False then
+		WriteStringToFile(FileName, Body, False)
 	else
 	begin
-		WriteStringToFile(FileName, AnsiToUtf8(Body), False);
+		if Unicode = False then
+		begin
+			ConvertCharset(Body, cp1250, cpISO88592);
+			WriteStringToFile(FileName, Body, False);
+		end
+		else
+		begin
+			WriteStringToFile(FileName, AnsiToUtf8(Body), False);
+		end;
 	end;
 	Body := LastBody;
 end;
@@ -477,17 +518,21 @@ begin
 	AddBodyFromFile;
 end;
 
-procedure THTML.AddTable(FileName: TFileName);
+procedure THTML.AddTable(FileName: TFileName; Border: SG = 1; CellSpacing: SG = 2; CellPadding: SG = 2);
 var
 	Line: string;
 	InLineIndex, LInLineIndex: SG;
 	LineIndex: SG;
 	Data: string;
 	NewLine: BG;
+	Wid, MaxWid: SG;
 begin
 	Line := ReadStringFromFile(FileName);
-	Body := Body + '<table border=1 cellpadding=2>' + HTMLSep;
+	Body := Body + '<table border=' + IntToStr(Border) + ' cellspacing=' + IntToStr(CellSpacing) +
+	 ' cellpadding=' + IntToStr(CellPadding) + '>' + HTMLSep;
 
+	Wid := 0;
+	MaxWid := 0;
 	InLineIndex := 1;
 	LineIndex := 0;
 	NewLine := True;
@@ -497,18 +542,36 @@ begin
 			Body := Body + '<tr>';
 		LInLineIndex := InLineIndex;
 		Data := ReadToChars(Line, InLineIndex, [CharTab, CharCR, CharLF]);
-		if Data = '' then Data := '&nbsp;';
-		if LineIndex = 0 then
-			Body := Body + '<td><b>' + Data + '</b></td>'
+		if Data = '' then
+
+		else if ((Pos('/', Data) <> 0) or (Pos('htm', Data) <> 0)) and (Pos('<', Data) = 0) then
+			Data := '<a href="' + Data + '">' + ExtractFileName(ReplaceF(Data, '/', '\')) + '</a>';
+
+		if Data = '' then
+//			Data := '&nbsp;'
 		else
-			Body := Body + '<td>' + Data + '</td>';
+		begin
+			if LineIndex = 0 then
+				Body := Body + '<td><b>' + Data + '</b></td>'
+			else
+				Body := Body + '<td>' + Data + '</td>';
+			Inc(Wid); if Wid > MaxWid then MaxWid := Wid;
+		end;
 
 		if (LInLineIndex <= 1) or (Line[InLineIndex - 1] = CharTab) then
 		begin
-      NewLine := False;
+			NewLine := False;
 		end
 		else
 		begin
+			if Wid < MaxWid then
+			begin
+				Body := Body + '<td colspan=' + IntToStr(MaxWid - Wid) + '>';
+				if Wid = 0 then
+					Body := Body + '<hr/>';
+				Body := Body + '</td>' + HTMLSep;
+			end;
+			Wid := 0;
 			Body := Body + '</tr>' + HTMLSep;
 			NewLine := True;
 			if Line[InLineIndex] = CharLF then

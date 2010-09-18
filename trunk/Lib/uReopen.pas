@@ -1,9 +1,9 @@
 //* File:     Lib\uReopen.pas
 //* Created:  1999-12-01
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-05-28
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uReopen;
@@ -37,10 +37,10 @@ type
 		procedure ReopenLimitClick(Sender: TObject);
 		procedure ReopenXClick(Sender: TObject);
 	public
-		MultiFiles: Boolean;
+		MultiFiles: BG;
 		Reopen1: TMenuItem;
 
-		LoadFromFile: function(FileName: TFileName; ReadOnly: BG = False): Boolean of object;
+		LoadFromFile: function(FileName: TFileName; ReadOnly: BG = False): BG of object;
 		ChangeFile: TNotifyEvent;
 
 		OpenedFiles: Integer; // Suma ReopenItems[n].OpenedCount
@@ -50,7 +50,7 @@ type
 
 		procedure CreateMenu;
 		procedure FreeMenu;
-		procedure RWReopenNames(const Selection: string; const Save: Boolean);
+		procedure RWReopenNames(const Selection: string; const Save: BG);
 		procedure AddReopenCaption(const FileName: TFileName);
 		procedure CloseFile(const FileName: TFileName);
 		procedure DrawReopenCaption;
@@ -107,7 +107,7 @@ end;
 procedure TReopen.ReopenAllClick(Sender: TObject);
 var
 	i: Integer;
-	Opened: Boolean;
+	Opened: BG;
 begin
 	Opened := False;
 	for i := 0 to Min(ReopenCount, ReopenLimit) - 1 do
@@ -225,14 +225,14 @@ end;
 
 procedure TReopen.ReopenLimitClick(Sender: TObject);
 begin
-	if GetInt('Reopen Limit', ReopenLimit, 0, 10, MaxReopen, nil) then
+	if GetNumber('Reopen Limit', ReopenLimit, 0, 10, MaxReopen, nil) then
 	begin
 		SetReopenMenuItems(ReopenLimit);
 		DrawReopenCaption;
 	end;
 end;
 
-procedure TReopen.RWReopenNames(const Selection: string; const Save: Boolean);
+procedure TReopen.RWReopenNames(const Selection: string; const Save: BG);
 var
 	i: Integer;
 	ReopenC, ReopenO: SG;

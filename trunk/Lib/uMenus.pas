@@ -1,9 +1,9 @@
 //* File:     Lib\uMenus.pas
 //* Created:  2000-08-01
-//* Modified: 2005-03-07
-//* Version:  X.X.33.X
+//* Modified: 2005-05-31
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uMenus;
@@ -11,7 +11,6 @@ unit uMenus;
 interface
 
 uses Windows, Graphics, Menus, Messages, Classes;
-
 
 {
 		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
@@ -167,6 +166,7 @@ begin
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
 		M.Tag := Src[i].Tag;
+		M.ShortCut := Src[i].ShortCut;
 		M.OnClick := Src[i].OnClick;
 
 {		if Dsc is TMenu then

@@ -1,9 +1,9 @@
 //* File:     Lib\uDBF.pas
 //* Created:  1999-12-01
-//* Modified: 2004-10-31
-//* Version:  X.X.33.X
+//* Modified: 2005-06-27
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDBF;
@@ -95,14 +95,20 @@ var
 
 	DataWStr: WideString;
 	DataStr: ShortString;
+	s: string;
 
 	Head: THead;
 	Column: TColumn;
 	NewSize: SG;
 	Row, SRow, CRow: Pointer;
 	RowSize, RowsSize: SG;
+	FPT: string;
+	FPTSize: UG;
+	Index: UG;
 begin
 	Result := False;
+	Index := 0;
+	FPTSize := 0;
 	FillChar(DataStr, SizeOf(DataStr), 0);
 	F := TFile.Create;
 	LRetry:
@@ -141,14 +147,26 @@ begin
 				SetLength(Columns, NewSize);
 			Columns[ColumnCount].Name := Column.Name;
 			case Column.Typ of
-			'C'{ars}: Columns[ColumnCount].Typ := varString;
+			'C'{hars}: Columns[ColumnCount].Typ := varString;
 			'N'{umber}: Columns[ColumnCount].Typ := varInteger; // varDouble
 			'L'{ogical}: Columns[ColumnCount].Typ := varBoolean;
 			'W'{ide string}: Columns[ColumnCount].Typ := varOleStr;
-//			'M'{Memo}: Columns[ColumnCount].Typ := varPointer;
+			'M'{emo}:
+			begin
+				Columns[ColumnCount].Typ := varUnknown;
+				if FPTSize = 0 then
+				begin
+					FPT := ReadStringFromFile(DelFileExt(FileName) + '.fpt');
+					if Length(FPT) >= 8 then
+					begin
+						FPTSize := Ord(FPT[5]) shl 24 + Ord(FPT[6]) shl 16 + Ord(FPT[7]) shl 8 + Ord(FPT[8]);
+					end
+					else
+						FPTSize := 0;
+				end;
+			end
 { 		'D': Columns[ColumnCount].Typ := varDate;}
-
-			else Columns[ColumnCount].Typ := varUnknown;
+			else Columns[ColumnCount].Typ := varNull;
 			end;
 			DelEndSpace(Columns[ColumnCount].Name);
 			Columns[ColumnCount].Width := Column.Width;
@@ -222,6 +240,10 @@ begin
 					SetLength(DataWStr, k);
 					if k >= 1 then
 						Move(CRow^, DataWStr[1], 2 * k);
+				end;
+				varUnknown:
+				begin
+					Index := U4(Row^);
 				end
 				else
 				begin
@@ -265,6 +287,23 @@ begin
 				begin
 					Columns[j].Items[DbItemCount] := DataWStr;
 				end;
+				varUnknown:
+				begin
+					if Index <> 0 then
+					begin
+						k := SwapU4(PU4(@FPT[FPTSize * Index + 1])^);
+						if k <> 1 then IE(343);
+						k := SwapU4(PU4(@FPT[FPTSize * Index + 5])^);
+						SetLength(s, k);
+						FillChar(s[1], k, 0);
+						if k > 0 then
+							Move(FPT[FPTSize * Index + 9], s[1], k);
+					end
+					else
+						s := '';
+					Columns[j].Items[DbItemCount] := s;
+					s := '';
+				end;
 //				varDate:
 				end;
 			end;
@@ -272,6 +311,7 @@ begin
 		end;
 		LExit:
 		FreeMem(SRow);
+		FPT := '';
 		Result := True;
 	end;
 	F.Free;

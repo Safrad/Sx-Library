@@ -1,9 +1,9 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2005-02-18
-//* Version:  X.X.33.X
+//* Modified: 2005-05-11
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uWave;
@@ -350,26 +350,31 @@ begin
 	LRetry:
 	if F.Open(FName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
+		if F.FileSize < WaveHead then
+		begin
+			IOErrorMessage(FName, 'File truncated');
+			goto LFin;
+		end;
 		GetMem(Wave, F.FileSize);
 		if not F.BlockRead(Wave^, F.FileSize) then goto LFin;
 		if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
 			(Wave.Marker3 <> 'fmt ') {or
 			(Wave.BytesFollowing <> F.FileSize - 8) }then
 		begin
-			IOErrorMessage(FName, 'File Is Not Wave');
+			IOErrorMessage(FName, 'File is not wave');
 			WaveFree(Wave);
 		end
 		else
 		begin
 			if Wave.BytesFollowing <> F.FileSize - 8 then
 			begin
-				IOErrorMessage(FName, 'Wave Bytes Following Repaired');
+				IOErrorMessage(FName, 'Wave bytes following repaired');
 				Wave.BytesFollowing := F.FileSize - 8;
 			end;
 			if (Wave.BitsPerSample = 4) {Microsoft ADPCM} or (Wave.BitsPerSample = 0) {GSM 6.10} then goto LFin;
 			if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
 			begin
-				IOErrorMessage(FName, 'Wave Format Not Supported');
+				IOErrorMessage(FName, 'Wave format not supported');
 				WaveFree(Wave);
 				goto LFin;
 			end;

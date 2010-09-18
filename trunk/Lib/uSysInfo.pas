@@ -1,9 +1,9 @@
 //* File:     Lib\uSysInfo.pas
 //* Created:  2000-07-01
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-05-22
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uSysInfo;
@@ -274,12 +274,12 @@ var
 
 	CPUException: Boolean; // Cyrix
 	Reg: TRegistry;
-	Dummy: array[0..1024] of Byte;
 
 function GetCPUUsage(IntTime: U8): SG;
 var
 	tickCount     : U8;
 	processorTime : U8;
+	Dummy: array[0..1024] of Byte;
 begin
 	if NTSystem then
 	begin

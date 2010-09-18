@@ -1,9 +1,9 @@
 //* File:     Lib\uDButton.pas
 //* Created:  1999-09-01
-//* Modified: 2005-01-10
-//* Version:  X.X.33.X
+//* Modified: 2005-05-31
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 {*******************************************************}
@@ -34,7 +34,6 @@ type
 	private
 		FCanvas: TCanvas;
 		FBmpOut: TDBitmap;
-		FGlyph: TDBitmap;
 
 		FHighlight: THighlight;
 		FHighNow: Boolean;
@@ -78,6 +77,7 @@ type
 		procedure CreateParams(var Params: TCreateParams); override;
 		procedure SetButtonStyle(ADefault: Boolean); override;
 	public
+		FGlyph: TDBitmap;
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
 		procedure Click; override;
@@ -273,7 +273,7 @@ var
 	m: SG;
 begin
 	if RegCap = False then Exit;
-	if True then
+	if (Width > 32) and (Height > 20) then 
 	begin
 		Po[0].x := 0;
 		Po[0].y := 0;
@@ -317,9 +317,9 @@ begin
 	end
 	else
 	begin
-		hR := CreateRectRgn(0, 0, Width, Height);
+{		hR := CreateRectRgn(0, 0, Width, Height);
 		SetWindowRgn(Handle, hR, True);
-		DeleteObject(hR);
+		DeleteObject(hR);}
 	end;
 end;
 

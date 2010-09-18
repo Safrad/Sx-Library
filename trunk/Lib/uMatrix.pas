@@ -1,9 +1,9 @@
 //* File:     Lib\uMatrix.pas
 //* Created:  2004-03-19
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-03-20
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uMatrix;

@@ -1,9 +1,9 @@
 //* File:     Lib\uLang.pas
 //* Created:  1999-11-01
-//* Modified: 2004-11-08
-//* Version:  X.X.33.X
+//* Modified: 2005-06-21
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uLang;
@@ -13,27 +13,28 @@ interface
 uses SysUtils;
 
 type
-	TCodePage = (cpAscii, cp1250, cp852, cpISO88592, cpKeybCS2, cpMacCE,
+	TCodePage = (cpAscii, cp1250, cp852, cpISO88592{, cpKeybCS2, cpMacCE,
 		cpKOI8CS, cpkodxx, cpWFW_311, cpISO88591, cpT1, cpMEXSK, cpw311_cw,
-		cpVavrusa, cpNavi);
+		cpVavrusa, cpNavi});
 var
-	TableUpCaseCz,
+	TableUpCaseCz{,
 	TableDelCz,
 	TableDosCzToWin,
 	TableWinCzSkToDos,
 	TableWinPlToDos,
-	TableWinHuToDos: array[Char] of Char;
+	TableWinHuToDos}: array[Char] of Char;
 
-procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage);
+procedure ConvertCharset(var s: ShortString; FromCharset: TCodePage; ToCharset: TCodePage); overload;
+procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage); overload;
 
 function UpCaseCz(const s: string): string;
 function DelCz(const s: string): string;
 
-function DosCzSkToWin(const s: string): string;
+{function DosCzSkToWin(const s: string): string;
 
 function WinCzSkToDos(const s: string): string;
 function WinPlToDos(const s: string): string;
-function WinHuToDos(const s: string): string;
+function WinHuToDos(const s: string): string;}
 
 //Alphabet
 procedure ReadAlphabet(FileName: TFileName);
@@ -51,8 +52,8 @@ uses
 	uAdd, uError, uStrings, uFiles, uSorts, uFind, uParser;
 
 type
-	TCzLetters = array[0..29] of Char;
-const
+//	TCzLetters = array[0..29] of Char;
+{const
 	CZX: array[TCodePage] of TCzLetters =
 	 ('ACDEEINORSTUUYZacdeeinorstuuyz', // ASCII
 		'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı', // ANSI-CP1250
@@ -69,7 +70,41 @@ const
 		'Á%ÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı', // w311_ce
 		'ÁÈÏÉÌÍÒÓØŠÚ¡İáèïìéíòóøšú¡ı', // vavrusa
 		'ÁÈÏÉÌÍÒÓ+ŠÚ¡İ¡áèïéìíòóøšúùı'); // navi
+	 }
 
+	TUpAscii = array[#128..#255] of Char;
+
+var
+	// [to, from]
+	CodePage: array[TCodePage, cp1250..High(TCodePage)] of TUpAscii = (
+		(
+		// to ASCII
+		'E'+#$27+'ƒ".++ˆ%S<STZZ'+#$27+#$27+'"".--˜ts>stzz   LoA| cS<--RZ~+ l'+#$27+'u. as>L lzRAAAALCCCEEEEIIDDNNOOOOxRUUUUYTbraaaalccceeeeiiddnnoooo/ruuuuyt ', // from CP1250
+		'CueaauccleOoiZACELlooLlSsOUTtLxcaiouAaZzEe-zCs<>   ||AAES||++Zz++++|-|Aa++==|=|odDDEdNIIe++  TU ObONnnSsRUrUyYt'+#$27+'-    / ~  uRr  ', // from OEM-CP852 (LATIN 2)
+		'€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ A LoLS SSTZ-ZZ~a l'+#$27+'ls  sstz zzRAAAALCCCEEEEIIDDNNOOOOxRUUUUYTbraaaalccceeeeiiddnnoooo/ruuuuyt '  // from ISO-8859-2
+		)
+		,
+		(
+		// to CP1250
+		'€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ', // from CP1250
+		'Çüéâäùæç³ëÕõîÄÆÉÅåôö¼¾ŒœÖÜ£×èáíóú¥¹Êê¬ŸÈº«»   ||ÁÂÌª||++¯¿++++|-|Ãã++==|=|¤ğĞÏËïÒÍÎì++  ŞÙ ÓßÔÑñòŠšÀÚàÛıİş´­½²¡¢§÷¸°¨ÿûØø  ', // from OEM-CP852 (LATIN 2)
+		'€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ ¥¢£¤¼Œ§¨Šª­¯°¹²³´¾œ¡¸šºŸ½¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ' // from ISO-8859-2
+		)
+		,
+		(
+		// to OEM-CP852 (LATIN 2)
+		'E'+#$27+'ƒ".ÅÅˆ%æ<—›¦'+#$27+#$27+'"".--˜tç>˜œ§«ÿóôÏ¤|õùc¸®ªğR½ø+òˆïu.÷¥­¯•ñ–¾èµ¶Æ‘€¬¨Ó·Ö×ÒÑãÕàâŠ™üŞéëšíİáê ƒÇ„’†‡Ÿ‚©‰Ø¡ŒÔĞäå¢“‹”öı…£ûìîú', // from CP1250
+		'€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ', // from OEM-CP852 (LATIN 2)
+		'€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸÿ¤ôÏ•—õùæ¸›ğ¦½ø¥òˆï–˜ó÷ç­œ«ñ§¾èµ¶Æ‘€¬¨Ó·Ö×ÒÑãÕàâŠ™üŞéëšíİáê ƒÇ„’†‡Ÿ‚©‰Ø¡ŒÔĞäå¢“‹”öı…£ûìîú' // from ISO-8859-2
+		)
+		,
+		(
+		// to ISO-8859-2
+		'E'+#$27+'ƒ".++ˆ%©<¦«®¬'+#$27+#$27+'"".--˜t¹>¶»¾¼ ·¢£¤¡|§¨cª<-­R¯°+²³´u.¸±º>¥½µ¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ', // from CP1250
+		'Çüéâäùæç³ëÕõî¬ÄÆÉÅåôö¥µ¦¶ÖÜ«»£×èáíóú¡±®¾Êê-¼Èº<>   ||ÁÂÌª||++¯¿++++|-|Ãã++==|=|¤ğĞÏËïÒÍÎì++  ŞÙ ÓßÔÑñò©¹ÀÚàÛıİş´­½²·¢§÷¸°¨ÿûØø  ', // from OEM-CP852 (LATIN 2)
+		'€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ' // from ISO-8859-2
+		)
+	);
 {
 Unicode
 Á	00C1	Í	00CD		0164
@@ -84,35 +119,70 @@ Unicode
 ì	011B	š	0161		017E
 }
 
-procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage);
+procedure ConvertCharset(var s: ShortString; FromCharset: TCodePage; ToCharset: TCodePage); overload;
 var
 	i: SG;
-	c, d: Char;
-	CP: array[Char] of Char;
 begin
-	// Fill
-	for c := Low(c) to High(c) do
+	if FromCharset = cpAscii then
 	begin
-		d := c;
-		for i := Low(TCzLetters) to High(TCzLetters) do
-		begin
-			if CZX[FromCharset][i] = c then
-			begin
-				d := CZX[ToCharset][i];
-			end;
-		end;
-		CP[c] := d;
+		{$ifopt d+}IE(434);{$endif}
+		Exit;
 	end;
-
-	// Convert
 	for i := 1 to Length(s) do
 	begin
-		s[i] := CP[s[i]];
+		if Ord(s[i]) >= $80 then
+			s[i] := CodePage[ToCharset, FromCharset][s[i]];
 	end;
+end;
+
+procedure ConvertCharset(var s: string; FromCharset: TCodePage; ToCharset: TCodePage); overload;
+var
+	i: SG;
+{	c, d: Char;
+	CP: array[Char] of Char;}
+begin
+	if FromCharset = cpAscii then
+	begin
+		{$ifopt d+}IE(434);{$endif}
+		Exit;
+	end;
+{	if ToCharset = cp1250 then
+	begin}
+		for i := 1 to Length(s) do
+		begin
+			if Ord(s[i]) >= $80 then
+				s[i] := CodePage[ToCharset, FromCharset][s[i]];
+		end;
+{	end
+	else
+	begin
+		// Fill
+		for c := Low(c) to High(c) do
+		begin
+			d := #0;
+			for i := Low(TCzLetters) to High(TCzLetters) do
+			begin
+				if CZX[FromCharset][i] = c then
+				begin
+					d := CZX[ToCharset][i];
+				end;
+			end;
+			CP[c] := d;
+		end;
+
+		// Convert
+		for i := 1 to Length(s) do
+		begin
+			if CP[s[i]] = '#0' then
+				IE(34);
+			s[i] := CP[s[i]];
+		end;
+	end;}
 end;
 
 procedure FillCharsTable;
 var c, Result: Char;
+{$ifopt d+}s: string;{$endif}
 begin
 	for c := Low(c) to High(c) do
 	begin
@@ -138,7 +208,7 @@ begin
 		end;
 		TableUpCaseCz[c] := Result;
 
-		// DelCz
+{		// DelCz
 		case c of
 		'á': Result := 'a';
 		'è': Result := 'c';
@@ -334,8 +404,172 @@ begin
 		'İ': Result := 'í';
 		else Result := CharNul;
 		end;
-		TableWinHuToDos[c] := Result;
+		TableWinHuToDos[c] := Result;}
 	end;
+	{$ifopt d+}
+	// Test if works
+
+{		#32..#127: Result := c;
+		'': Result := ''; // 132
+		'': Result := ''; // 160
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := ''; // 139
+		'': Result := ''; // 148
+		'': Result := ''; // 147
+		'': Result := '';
+		'': Result := '';
+		'': Result := ''; // 129
+		'': Result := ''; // 251
+		'': Result := '';
+
+		'Ä': Result := ''; // 142
+		'Á': Result := 'µ';
+		'É': Result := '';
+		'Í': Result := 'Ö';
+		'Ó': Result := 'à';
+		'Õ': Result := 'Š'; // 138
+		'Ö': Result := '™'; // 153
+		'Ô': Result := 'â'; // 226
+		'Ø': Result := 'ü';
+		'Ú': Result := 'é';
+		'Ü': Result := '˜'; // 154
+		'Û': Result := 'ë'; // 235
+		'İ': Result := 'í';}
+
+
+{	s := 'äáéíóõöôøúüûı';
+	ConvertCharset(s, cp1250, cp852);
+	if s <> '„ ‚¡¢‹”“ı£Àûì' then IE(434);}
+
+{		#32..#127: Result := c;
+		'': Result := '';
+		'': Result := ''; // 165
+		'': Result := ''; // 134
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := ''; // 136
+		'': Result := '';
+		'': Result := ''; // 162
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+
+		'Á': Result := 'µ';
+		'¥': Result := '¤'; // 164
+		'Æ': Result := ''; // 143
+		'Ê': Result := '¨'; // 168
+		'Ì': Result := '·';
+		'Í': Result := 'Ö';
+		'£': Result := ''; // 157
+		'Ñ': Result := 'ã'; // 227
+		'Ó': Result := 'à'; // 224
+		'Ø': Result := 'ü';
+		'Œ': Result := 'y'; // 151
+		'Š': Result := 'æ';
+		'İ': Result := 'í';
+		'': Result := ''; // 141
+		'¯': Result := '½'; // 189
+		'': Result := '¦';}
+
+{	s := 'á¹æêìí³ñóøœšıŸ¿';
+	ConvertCharset(s, cp1250, cp852);
+	if s <> ' ¥†©Ø¡–ä¢ı˜çì«¾§' then IE(434);}
+
+		// WinCzSkToDos
+{		case c of
+		#32..#127: Result := c;
+		'': Result := ''; // 132 ???SK
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := ''; // SK
+		'': Result := '';
+		'': Result := '';
+		'': Result := ''; // SK
+		'': Result := ''; // 234 ???SK
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+		'': Result := '';
+
+		'Ä': Result := ''; // 142 ???SK
+		'Á': Result := 'µ';
+		'È': Result := '¬';
+		'Ï': Result := 'Ò';
+		'É': Result := '';
+		'Ì': Result := '·';
+		'Í': Result := 'Ö'; // 214
+		'¼': Result := '‘'; //     SK
+		'Ò': Result := 'Õ';
+		'Ó': Result := 'à';
+		'Ô': Result := 'â'; // 226 SK
+		'À': Result := 'è'; // 232 ???SK
+		'Ø': Result := 'ü';
+		'Š': Result := 'æ';
+		'': Result := '›';
+		'Ú': Result := 'é';
+		'Ù': Result := 'Ş';
+		'İ': Result := 'í';
+		'': Result := '¦';
+		else Result := CharNul;
+		end;}
+
+	s := 'äáèïéìí¾òóôàøšúùı';
+	ConvertCharset(s, cp1250, cp852);
+	if s <> '„ ŸÔ‚Ø¡–å¢“êıçœ£…ì§' then IE(434);
+
+	s := 'ñ';
+	ConvertCharset(s, cp1250, cp852);
+	if s <> 'ä' then IE(434);
+
+	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
+	ConvertCharset(s, cp1250, cp852);
+	if s <> 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§' then IE(434);
+
+	s := 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§';
+	ConvertCharset(s, cp852, cp1250);
+	if s <> 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı' then IE(434);
+
+	s := 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾';
+	ConvertCharset(s, cpISO88592, cp1250);
+	if s <> 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı' then IE(434);
+
+	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
+	ConvertCharset(s, cp1250, cpISO88592);
+	if s <> 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾' then IE(434);
+
+	s := 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§';
+	ConvertCharset(s, cp852, cpISO88592);
+	if s <> 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾' then IE(434);
+
+	s := 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾';
+	ConvertCharset(s, cpISO88592, cp852);
+	if s <> 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§' then IE(434);
+
+
+
+	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
+	s := DelCz(s);
+	if s <> 'ACDEEINORSTUUYZacdeeinorstuuyz' then
+		IE(544);
+	s := 'Frühauf David';
+	s := DelCz(s);
+	if s <> 'Fruhauf David' then
+		IE(544);
+	{$endif}
 end;
 
 function UpCaseCz(const s: string): string;
@@ -348,6 +582,13 @@ begin
 	end;
 end;
 
+function DelCz(const s: string): string;
+begin
+	Result := s;
+	ConvertCharset(Result, cp1250, cpAscii);
+end;
+
+{
 function DelCz(const s: string): string;
 var i: Integer;
 begin
@@ -424,7 +665,7 @@ begin
 		else
 			Result[i] := c;
 	end;
-end;
+end;}
 
 // Alphabet
 var
@@ -500,7 +741,6 @@ begin
 		Result[j] := WideChar(AlphaCharToWord(Line, i));
 	end;
 end;
-
 
 // Dictionary
 type

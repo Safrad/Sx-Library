@@ -1,9 +1,9 @@
 //* File:     Lib\uGetTime.pas
 //* Created:  1999-05-01
-//* Modified: 2004-12-28
-//* Version:  X.X.33.X
+//* Modified: 2005-05-28
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uGetTime;

@@ -70,7 +70,7 @@ begin
 //	Len := Min(Length(AIndex), Length(AValue));
 	MaxIndex := Length(AValue) - 1;
 	{$ifopt d+}
-	Swaped := 0; Compared := 0; MaxDepth := 0;
+	SortSwaped := 0; SortCompared := 0; SortMaxDepth := 0;
 	{$endif}
 	if MaxIndex > MinIndex then
 	begin

@@ -1,9 +1,9 @@
 //* File:     Lib\uData.pas
 //* Created:  1998-01-01
-//* Modified: 2004-12-30
-//* Version:  X.X.33.X
+//* Modified: 2005-05-22
+//* Version:  X.X.34.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@email.cz
+//* E-Mail:   safrad@centrum.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uData;
@@ -17,6 +17,10 @@ uses
 
 type
 	TIndex = UG;
+
+	{ Warning!
+		Dynamic variables must be finalized before removed
+	}
 
 	TData = class(TObject)
 	private
