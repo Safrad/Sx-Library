@@ -835,7 +835,7 @@ end;
 
 procedure TfIOError.FormHide(Sender: TObject);
 begin
-	fIOError.Timer1.Enabled := False;
+	Timer1.Enabled := False;
 end;
 
 procedure TfIOError.FormClick(Sender: TObject);

@@ -83,8 +83,9 @@ procedure ComName(MenuItem: TMenuItem);
 		begin
 			Bmp := TDBitmap.Create;
 			Bmp.LoadFromFile(FileName);
-//			BitmapLoadFromFile(Bmp, FileName, 16, 16, Quality);
-//			TranColor := GetTransparentColor(Bmp);
+			if Bmp.Transparent = False then
+				Bmp.TryTransparent;
+
 			MenuItem.Bitmap.PixelFormat := pf24bit;
 			MenuItem.Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
 			MenuItem.Bitmap.Height := 16;

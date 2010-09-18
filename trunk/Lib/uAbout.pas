@@ -93,6 +93,7 @@ procedure CloseParams;
 procedure HelpParams;
 procedure ReadMe;
 procedure Help;
+procedure ExtOpenFile(FileName: TFileName);
 procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
 	FileName: TFileName; const Modal: Boolean);
 procedure AboutRW(const Save: Boolean);
@@ -109,7 +110,7 @@ implementation
 {$R *.DFM}
 uses
 	ShellAPI, Dialogs,
-	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, uMemStatus, uStrings;
+	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, {$ifndef LINUX}uMemStatus,{$endif} uStrings;
 var
 	LMemClock: U8;
 	RunProgramTime: U8;
@@ -234,22 +235,20 @@ end;
 
 procedure ReadMe;
 var
-	FileName: TFileName;
 	ErrorCode: U4;
 begin
-//	FileName := '"' + WorkDir + 'ReadMe.htm"';
-	FileName := LongToShortPath(WorkDir + 'ReadMe.htm');
-	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
-	if ErrorCode <= 32 then
-		IOError(FileName, ErrorCode);
+	ExtOpenFile(LongToShortPath(WorkDir + 'ReadMe.htm'));
 end;
 
 procedure Help;
+begin
+	ExtOpenFile(LongToShortPath(WorkDir + 'Help.rtf'));
+end;
+
+procedure ExtOpenFile(FileName: TFileName);
 var
-	FileName: TFileName;
 	ErrorCode: U4;
 begin
-	FileName := LongToShortPath(WorkDir + 'Help.rtf');
 	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
 	if ErrorCode <= 32 then
 		IOError(FileName, ErrorCode);
@@ -372,6 +371,10 @@ end;
 
 procedure TfAbout.FormCreate(Sender: TObject);
 begin
+	{$ifdef LINUX}
+  DButtonMemoryStatus.Visible := False;
+	{$endif}
+
 	Background := baGradient;
 	EditEmail.Text := 'safrad@email.cz?subject=' + Application.Title;
 	PanelRC.Text := NToS(RunCount);
@@ -612,11 +615,13 @@ end;
 
 procedure TfAbout.DButtonMemoryStatusClick(Sender: TObject);
 begin
+{$ifndef LINUX}
 	if not Assigned(fMemStatus) then fMemStatus := TfMemStatus.Create(Self);
 	fMemStatus.FormStyle := fAbout.FormStyle;
 	fMemStatus.Left := fAbout.Left;
 	fMemStatus.Top := fAbout.Top;
 	fMemStatus.Show;
+{$endif}
 end;
 
 procedure TfAbout.FormHide(Sender: TObject);
