@@ -161,7 +161,7 @@ function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): B
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
 function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
 
-function ReadStringFromFile(var FileName: TFileName): string; overload;
+function ReadStringFromFile(FileName: TFileName): string; overload;
 function ReadStringFromFile(var FileName: TFileName; out Line: string): BG; overload;
 function WriteStringToFile(var FileName: TFileName; const Line: string; Append: BG): BG;
 
@@ -1195,7 +1195,7 @@ begin
 	F.Free;
 end;
 
-function ReadStringFromFile(var FileName: TFileName): string; overload;
+function ReadStringFromFile(FileName: TFileName): string; overload;
 begin
 	ReadStringFromFile(FileName, Result);
 end;
