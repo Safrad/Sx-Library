@@ -1,6 +1,6 @@
 object fIOError: TfIOError
-  Left = 206
-  Top = 212
+  Left = 208
+  Top = 213
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   ClientHeight = 97
@@ -14,6 +14,8 @@ object fIOError: TfIOError
   OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
+  OnKeyDown = FormKeyDown
+  OnKeyUp = FormKeyUp
   PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
@@ -100,7 +102,7 @@ object fIOError: TfIOError
     Displ.Size = 0
     BevelOuter = bvNone
   end
-  object ButtonIRetry: TDButton
+  object ButtonRetry: TDButton
     Left = 16
     Top = 64
     Width = 81
@@ -115,8 +117,10 @@ object fIOError: TfIOError
     ModalResult = 4
     ParentFont = False
     TabOrder = 0
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
   end
-  object ButtonIIgnore: TDButton
+  object ButtonIgnore: TDButton
     Left = 112
     Top = 64
     Width = 81
@@ -131,8 +135,10 @@ object fIOError: TfIOError
     ModalResult = 5
     ParentFont = False
     TabOrder = 1
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
   end
-  object ButtonIIgnoreAll: TDButton
+  object ButtonIgnoreAll: TDButton
     Left = 208
     Top = 64
     Width = 81
@@ -146,6 +152,8 @@ object fIOError: TfIOError
     ModalResult = 8
     ParentFont = False
     TabOrder = 2
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
   end
   object ButtonExit: TDButton
     Left = 304
@@ -162,6 +170,8 @@ object fIOError: TfIOError
     ParentFont = False
     TabOrder = 3
     OnClick = ButtonExitClick
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
   end
   object ButtonOpen: TDButton
     Left = 400
@@ -177,6 +187,8 @@ object fIOError: TfIOError
     ParentFont = False
     TabOrder = 4
     OnClick = ButtonOpenClick
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
   end
   object MemoMsg: TMemo
     Left = 64
@@ -186,6 +198,8 @@ object fIOError: TfIOError
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 5
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
   end
   object UpDown1: TUpDown
     Left = 448

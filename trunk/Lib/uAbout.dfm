@@ -160,10 +160,10 @@ object fAbout: TfAbout
   object LabelRunCount: TDLabel
     Left = 16
     Top = 232
-    Width = 56
+    Width = 89
     Height = 17
     AutoSize = False
-    Caption = 'Run Count'
+    Caption = 'Run:'
     Color = clBtnFace
     FocusControl = PanelRC
     ParentColor = False
@@ -185,12 +185,12 @@ object fAbout: TfAbout
     BevelOuter = bvLowered
   end
   object LabelNowRunTime: TDLabel
-    Left = 128
+    Left = 112
     Top = 256
-    Width = 80
+    Width = 33
     Height = 17
     AutoSize = False
-    Caption = 'Now Run Time'
+    Caption = 'Now'
     Color = clBtnFace
     FocusControl = PanelNRT
     ParentColor = False
@@ -212,12 +212,12 @@ object fAbout: TfAbout
     BevelOuter = bvLowered
   end
   object LabelTotalRunTime: TDLabel
-    Left = 128
+    Left = 112
     Top = 232
-    Width = 80
+    Width = 33
     Height = 17
     AutoSize = False
-    Caption = 'Total Run Time'
+    Caption = 'Total'
     Color = clBtnFace
     FocusControl = PanelTRT
     ParentColor = False
@@ -309,6 +309,33 @@ object fAbout: TfAbout
     AutoSize = True
     Transparent = True
   end
+  object DLabel1: TDLabel
+    Left = 16
+    Top = 256
+    Width = 33
+    Height = 17
+    AutoSize = False
+    Caption = 'Count'
+    Color = clBtnFace
+    FocusControl = PanelRC
+    ParentColor = False
+    Transparent = True
+    Layout = tlCenter
+    BackEffect = ef04
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    BevelOuter = bvLowered
+  end
   object PanelImage: TDPanel
     Left = 16
     Top = 16
@@ -354,52 +381,45 @@ object fAbout: TfAbout
     TabOrder = 0
     OnClick = ButtonOkClick
   end
-  object PanelBuild: TDPanel
+  object PanelBuild: TEdit
     Left = 192
     Top = 96
     Width = 97
-    Height = 17
+    Height = 21
     BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = '10/1999-01/2000'
     ParentColor = True
     TabOrder = 4
+    Text = '10/1999-01/2000'
   end
-  object PanelRC: TDPanel
-    Left = 72
-    Top = 232
+  object PanelRC: TEdit
+    Left = 56
+    Top = 256
     Width = 45
-    Height = 17
-    Alignment = taRightJustify
+    Height = 21
     BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = '999 999'
     ParentColor = True
     TabOrder = 8
+    Text = '000 000'
   end
-  object PanelTRT: TDPanel
-    Left = 208
+  object PanelTRT: TEdit
+    Left = 152
     Top = 232
-    Width = 81
-    Height = 17
-    Alignment = taRightJustify
+    Width = 137
+    Height = 21
     BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = '0000:00:00.000'
     ParentColor = True
     TabOrder = 9
+    Text = '356 days, 00:00:00.000'
   end
-  object PanelNRT: TDPanel
-    Left = 208
+  object PanelNRT: TEdit
+    Left = 152
     Top = 256
-    Width = 81
-    Height = 17
-    Alignment = taRightJustify
+    Width = 137
+    Height = 21
     BevelOuter = bvNone
-    BorderStyle = bsSingle
-    Caption = '0000:00:00.000'
     ParentColor = True
     TabOrder = 10
+    Text = '40 days, 00:00.000'
   end
   object PanelName: TDPanel
     Left = 136
@@ -538,7 +558,7 @@ object fAbout: TfAbout
     Interval = 15
     EventStep = esCPU
     OnTimer = DTimer1Timer
-    Left = 8
-    Top = 256
+    Left = 24
+    Top = 24
   end
 end

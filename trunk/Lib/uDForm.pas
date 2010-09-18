@@ -83,6 +83,8 @@ implementation
 
 uses
 	uGraph, uAdd, uFiles, OpenGL12, uScreen, uSysInfo;
+const
+	OneBuffer = False;
 
 procedure DFormFree(var DForm: TDForm);
 begin
@@ -319,7 +321,10 @@ begin
 		case FBackground of
 		baOpenGL:
 		begin
-			RC:=CreateRenderingContext(Canvas.Handle, [opDoubleBuffered], 32, 0);
+			if OneBuffer then
+				RC:=CreateRenderingContext(Canvas.Handle, [], 32, 0)
+			else
+				RC:=CreateRenderingContext(Canvas.Handle, [opDoubleBuffered], 32, 0);
 //			CreateOpenGL(Handle, Canvas);
 			SelectObject(Canvas.Handle, GetStockObject(ANSI_VAR_FONT));
 				// create the bitmap display lists
@@ -468,7 +473,7 @@ begin
 	end;
 	if FBackground = baOpenGL then
 	begin
-		ActivateRenderingContext(Canvas.Handle,RC); // make context drawable
+		ActivateRenderingContext(Canvas.Handle, RC); // make context drawable
 //		BeforeDraw;
 	end;
 
@@ -476,7 +481,10 @@ begin
 
 	if FBackground = baOpenGL then
 	begin
-		SwapBuffers(Canvas.Handle);
+		if OneBuffer then
+			glFlush
+		else
+			SwapBuffers(Canvas.Handle);
 		DeactivateRenderingContext; // make context drawable
 //		AfterDraw;
 	end;

@@ -67,7 +67,7 @@ begin
 {	for i := MinIndex to MaxIndex - 1 do
 	begin
 		if AValue[AIndex[i]] > AValue[AIndex[i]] then
-			Beep;
+			IE(445);
 	end;}
 
 	L := MinIndex;

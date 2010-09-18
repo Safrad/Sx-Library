@@ -164,26 +164,31 @@ begin
 	if Reg = nil then
 	begin
 		Reg := TRegistry.Create;
-		Reg.RootKey:=HKEY_DYN_DATA;
+		Reg.RootKey := HKEY_DYN_DATA;
 
-		Reg.CreateKey('PerfStats');
-		Reg.OpenKey('PerfStats\StartStat', True);
-		Reg.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
-		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-		Reg.CloseKey;
+//		Reg.CreateKey('PerfStats');
+		if Reg.OpenKey('PerfStats\StartStat', True) then
+		begin
+			Reg.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
+			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+			Reg.CloseKey;
+		end;
 
-		Reg.OpenKey('PerfStats\StatData', False);
-		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-		SysInfo.CPUUsage := CPUUsage;
-		Reg.CloseKey;
+		if Reg.OpenKey('PerfStats\StatData', False) then
+		begin
+			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+			SysInfo.CPUUsage := CPUUsage;
+			Reg.CloseKey;
+		end;
 
 	end;
 
-	Reg.OpenKey('PerfStats\StatData', False);
-	Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-	SysInfo.CPUUsage := CPUUsage;
-	Reg.CloseKey;
-
+	if Reg.OpenKey('PerfStats\StatData', False) then
+	begin
+		Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+		SysInfo.CPUUsage := CPUUsage;
+		Reg.CloseKey;
+	end;
 
 	if CPUException = False then
 	begin

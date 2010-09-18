@@ -12,8 +12,6 @@ uses
 const
 	DefFileBuffer = 32768; // Best Performance
 type
-	TString = string;
-
 	TDriveLetter = 'A'..'Z';
 	TDriveInfo = record
 		DriveLetter: TDriveLetter;
@@ -109,19 +107,16 @@ var
 	GraphDir,
 	SoundsDir,
 	DataDir,
-	SysDir, WinDir: TString;
+	SysDir, WinDir: string;
 	ExeFileName: TFileName;
 
-//procedure InitPaths; {$ifdef DLL}stdcall;{$endif}
-function ShortDir(const Dir: TString): TString; {$ifdef DLL}stdcall;{$endif}
-function FullDir (const Dir: TString): TString; {$ifdef DLL}stdcall;{$endif}
-function DelFileExt(const FName: TString): TString; {$ifdef DLL}stdcall;{$endif}
-function BackDir(const Dir: TString): TString; {$ifdef DLL}stdcall;{$endif}
-function LegalFileName(const FileName: TString): TString; {$ifdef DLL}stdcall;{$endif}
-procedure ReadDirectory(var FileNames: TFileNames; Path, Extension: string);
-procedure ReadDirectory2(var FileNames: TFileNames; Path: string);
-procedure ReadDirectory3(var DirNames: TFileNames; Path: string);
-function GetFileSiz(const FileName: TFileName): U64; {$ifdef DLL}stdcall;{$endif}
+function ShortDir(const Dir: string): string;
+function FullDir (const Dir: string): string;
+function DelFileExt(const FName: string): string;
+function BackDir(const Dir: string): string;
+function LegalFileName(const FileName: string): string;
+procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
+function GetFileSiz(const FileName: TFileName): U64;
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CreateDir(const Dir: string): Boolean;
@@ -147,6 +142,8 @@ function LongToShortFileName(const LongName: string): string;
 function LongToShortPath(const LongName: string): string;
 {$ENDIF WIN32}
 
+procedure SelectPath(var Path: string; Handle: THandle);
+
 {
 	MapViewOfFile
 	OpenFileMapping
@@ -157,7 +154,7 @@ function LongToShortPath(const LongName: string): string;
 implementation
 
 uses
-	Dialogs,
+	Dialogs, ShellAPI, ShlObj,
 	uError, uDialog;
 
 constructor TFile.Create;
@@ -610,7 +607,7 @@ begin
 		WinDir := WinDir + '\';
 end;
 
-function ShortDir(const Dir: TString): TString;
+function ShortDir(const Dir: string): string;
 var
 	i: Integer;
 begin
@@ -632,7 +629,7 @@ begin
 	end;
 end;
 
-function FullDir(const Dir: TString): TString;
+function FullDir(const Dir: string): string;
 var
 	i: Integer;
 begin
@@ -647,16 +644,16 @@ begin
 	Result := WorkDir + Dir;
 end;
 
-function DelFileExt(const FName: TString): TString;
+function DelFileExt(const FName: string): string;
 var
-	Ext: TString;
+	Ext: string;
 begin
 	Result := FName;
 	Ext := ExtractFileExt(FName);
 	if Length(Ext) > 0 then SetLength(Result, Length(Result) - Length(Ext));
 end;
 
-function BackDir(const Dir: TString): TString;
+function BackDir(const Dir: string): string;
 var i: Integer;
 begin
 	Result := Dir;
@@ -676,7 +673,7 @@ begin
 	Result := ExtractFileName(Dir) + '\';
 end;}
 
-function LegalFileName(const FileName: TString): TString;
+function LegalFileName(const FileName: string): string;
 var
 	i: Integer;
 	StrLength: Integer;
@@ -714,11 +711,50 @@ begin
 	end;
 end;
 
-procedure ReadDirectory(var FileNames: TFileNames; Path, Extension: string);
+procedure ReadDir(var FileNames: TFileNames; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
 var
-	SearchRec: TSearchRec;
+	FilesCount: SG;
+	NewSize: SG;
+	IsDir, IsFile: BG;
 	ErrorCode: Integer;
 
+		procedure ReadDir2(SubPath: string);
+		var
+			SearchRec: TSearchRec;
+		begin
+			ErrorCode := FindFirst(Path + SubPath + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+			while ErrorCode = NO_ERROR do
+			begin
+				IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
+				IsFile := (SearchRec.Attr and faDirectory) = 0;
+
+				if (IsDir and Dirs)
+				or (IsFile and Files) then
+				begin
+					if (Extension = '') or (Extension = '*') or (Extension = '*.*') or
+					(UpperCase(ExtractFileExt(SearchRec.Name)) = UpperCase(Extension)) then
+					begin
+						NewSize := FilesCount + 1;
+						if AllocByEx(Length(FileNames), NewSize, 4) then
+							SetLength(FileNames, NewSize);
+						if SubDirs then
+							FileNames[FilesCount] := SubPath + SearchRec.Name
+						else
+							FileNames[FilesCount] := SearchRec.Name;
+						Inc(FilesCount);
+					end;
+				end;
+
+				if IsDir and SubDirs then
+				begin
+					ReadDir2(SubPath + SearchRec.Name + '\');
+				end;
+				ErrorCode := FindNext(SearchRec);
+			end;
+			if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path + SubPath, ErrorCode);
+			SysUtils.FindClose(SearchRec);
+		end;
+var
 	i: Integer;
 	Offset: Integer;
 	MaxLimit: Integer;
@@ -726,104 +762,39 @@ var
 	FileName: TFileName;
 begin
 	if Length(Extension) > 1 then
-		if Extension[1] <> '.' then Extension := '.' + Extension;
+		if (Extension <> '*') and (Extension <> '*.*') then
+			if Extension[1] <> '.' then Extension := '.' + Extension;
 	if Length(Path) > 1 then
 		if Path[Length(Path)] <> '\' then
 			Path := Path + '\';
 
-	ErrorCode := FindFirst(Path + '*.*', faReadOnly or faArchive, SearchRec);
-	while ErrorCode = NO_ERROR do
-	begin
-		if (UpperCase(ExtractFileExt(SearchRec.Name)) = UpperCase(Extension)) then
-		begin
-			SetLength(FileNames, Length(FileNames) + 1);
-			FileNames[Length(FileNames) - 1] := SearchRec.Name;
-		end;
-		ErrorCode := FindNext(SearchRec);
-	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path, ErrorCode);
-	SysUtils.FindClose(SearchRec);
+	FilesCount := Length(FileNames);
+	ReadDir2('');
+	SetLength(FileNames, FilesCount);
 
-	// Sort
-	Offset := Length(FileNames) div 2;
-	while Offset > 0 do
+	if Sort then
 	begin
-		MaxLimit := Length(FileNames) - Offset - 1;
-		repeat
-			Switch := 0;
-			for i := 0 to MaxLimit do
-			begin
-				if FileNames[i] > FileNames[i + Offset] then
+		Offset := Length(FileNames) div 2;
+		while Offset > 0 do
+		begin
+			MaxLimit := Length(FileNames) - Offset - 1;
+			repeat
+				Switch := 0;
+				for i := 0 to MaxLimit do
 				begin
-					FileName := FileNames[i];
-					FileNames[i] := FileNames[i + Offset];
-					FileNames[i + Offset] := FileName;
-					Switch := i;
+					if FileNames[i] > FileNames[i + Offset] then
+					begin
+						FileName := FileNames[i];
+						FileNames[i] := FileNames[i + Offset];
+						FileNames[i + Offset] := FileName;
+						Switch := i;
+					end;
 				end;
-			end;
-			MaxLimit := Switch - Offset;
-		until Switch = 0;
-		Offset := 2 * Offset div 3;
-	end;
-end;
-
-procedure ReadDirectory2(var FileNames: TFileNames; Path: string);
-var
-	SearchRec: TSearchRec;
-	ErrorCode: Integer;
-	i: SG;
-begin
-	if Length(Path) > 1 then
-		if Path[Length(Path)] <> '\' then
-			Path := Path + '\';
-
-	ErrorCode := FindFirst(Path + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
-	while ErrorCode = NO_ERROR do
-	begin
-		if (SearchRec.Attr and faDirectory) <> 0 then
-		begin
-			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-				ReadDirectory2(FileNames, Path + SearchRec.Name + '\')
-		end
-		else
-		begin
-			i := Length(FileNames);
-			SetLength(FileNames, i + 1);
-			FileNames[i] := Path + SearchRec.Name;
+				MaxLimit := Switch - Offset;
+			until Switch = 0;
+			Offset := 2 * Offset div 3;
 		end;
-
-		ErrorCode := FindNext(SearchRec);
 	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path, ErrorCode);
-	SysUtils.FindClose(SearchRec);
-end;
-
-procedure ReadDirectory3(var DirNames: TFileNames; Path: string);
-var
-	SearchRec: TSearchRec;
-	ErrorCode: Integer;
-	i: SG;
-begin
-	if Length(Path) > 1 then
-		if Path[Length(Path)] <> '\' then
-			Path := Path + '\';
-
-	ErrorCode := FindFirst(Path + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
-	while ErrorCode = NO_ERROR do
-	begin
-		if (SearchRec.Attr and faDirectory) <> 0 then
-		begin
-			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-			begin
-				i := Length(DirNames);
-				SetLength(DirNames, i + 1);
-				DirNames[i] := SearchRec.Name;
-			end;
-		end;
-		ErrorCode := FindNext(SearchRec);
-	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path, ErrorCode);
-	SysUtils.FindClose(SearchRec);
 end;
 
 function GetFileSiz(const FileName: TFileName): U64;
@@ -1197,6 +1168,40 @@ begin
 end;
 
 {$ENDIF WIN32}
+
+procedure SelectPath(var Path: string; Handle: THandle);
+var
+	TitleName : string;
+	lpItemID : PItemIDList;
+	BrowseInfo : TBrowseInfo;
+//	DisplayName : array[0..MAX_PATH] of char;
+	TempPath : array[0..MAX_PATH] of char;
+	TempP: Shortstring;
+
+	I: TItemIdList;
+begin
+	FillChar(BrowseInfo, SizeOf(TBrowseInfo), #0);
+	BrowseInfo.hwndOwner := Handle;
+//	TitleName := 'D:\';
+//	BrowseInfo.pszDisplayName := PChar(TitleName);
+//	BrowseInfo.pszDisplayName := Addr(DisplayName);
+	TitleName := 'Please specify a directory';
+	BrowseInfo.lpszTitle := PChar(TitleName);
+//	BrowseInfo.iImage := 1;
+	BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
+	TempP:= 'D:\' + #0;
+	I.mkid.cb := 1;
+	I.mkid.abID[0] := Byte('D');
+//	BrowseInfo.pidlRoot := Addr(I);
+	BrowseInfo.lParam := 0;
+	lpItemID := SHBrowseForFolder(BrowseInfo);
+	if lpItemId <> nil then
+	begin
+		SHGetPathFromIDList(lpItemID, TempPath);
+		Path := StrPas(TempPath);
+		GlobalFreePtr(lpItemID);
+	end;
+end;
 
 initialization
 	InitPaths;

@@ -427,11 +427,13 @@ begin
 	Font.Color := clBtnText;
 	FCanvas := TCanvas.Create;
 	FBmpOut := TDBitmap.Create;
+
 	FTimer := TDTimer.Create(Self);
 	FTimer.Enabled := False;
 	FTimer.EventStep := esFrequency;
 	FTimer.Interval := 25;
 	FTimer.OnTimer := Timer1Timer;
+
 	FLayout := blGlyphLeft;
 	FSpacing := 4;
 	FMargin := -1;
@@ -657,7 +659,7 @@ begin
 		FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
 	end;
 
-	if FHighNow then
+	if FHighNow and Enabled then
 	begin
 {		case FHighlight of
 		hlRect:
@@ -716,11 +718,7 @@ begin
 			begin
 				FBmpOut.Bar24(clNone, Border + x - 1, Border + y - 1,
 					FBmpOut.Width - x - 0 - Border, FBmpOut.Height - y - 0 - Border, clHighlight, ef08);
-			end
-{			else
-			begin
-//				Beep;
-			end;}
+			end;
 
 {			y := MinXY and $fffffffe - 2;
 			x := FHighClock mod LongWord(y);

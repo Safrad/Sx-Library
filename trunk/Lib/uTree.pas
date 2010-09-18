@@ -88,9 +88,8 @@ procedure TTree.TreeDelete(Value: TValue);
 		end;
 
 	begin
-		if Tree = nil then
-			Beep
-		else
+		if Tree = nil then Exit;
+
 		if Value < Tree^.Prvek.Value then
 			TreeDeleteSub(Tree^.LS, Value)
 		else
@@ -213,7 +212,7 @@ procedure TTree.TreeAdd(P: TPrvek);
 		end
 		else
 		begin
-			Beep; // Yet exists
+			// Yet exists D???
 		end;
 	end;
 
