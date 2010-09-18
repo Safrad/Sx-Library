@@ -177,7 +177,7 @@ begin
 	else
 		s := 'Started';
 
-	s := s + ' ' + DateTimeToS(Now) + CharCR + CharLF;
+	s := s + CharTab + DateTimeToS(Now) + CharCR + CharLF;
 	FileName := DelFileExt(ExeFileName) + '.log';
 	WriteStringToFile(FileName, s, True);
 
@@ -191,7 +191,7 @@ begin
 			s := 'Finished'
 		else
 			s := 'Started';
-		s := s + ' ' + DateToS(Now) + ' ' + TimeToS(Now);
+		s := s + ' ' + DateTimeToS(Now);
 		if not LogFile.Writeln(s) then goto LRetry;
 		if not LogFile.Close then goto LRetry;
 	end;

@@ -196,7 +196,7 @@ end;
 procedure TfIOError.DrawTimeLeft;
 begin
 //	if StartTickCount > 0 then
-	PanelTimeLeft.Caption := msToStr(1000 * Ignore.TimeLeft + StartTickCount - TickCount, diMSD, 0, False);
+	PanelTimeLeft.Caption := msToStr(1000 * UG(Ignore.TimeLeft) + StartTickCount - TickCount, diMSD, 0, False);
 end;
 
 var

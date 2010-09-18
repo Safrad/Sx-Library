@@ -343,7 +343,7 @@ function FToS(Num: Extended; const UseWinFormat: BG): string; overload;
 
 procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 type
-	TDisplay = (diDHMSD, diHMSD, diMSD, diSD);
+	TDisplay = (diDHMSD, diHHMSD, diHMSD, diMSD, diSD);
 function MsToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
 function MsToStr(const DT: Int64; const UseWinFormat: BG;
@@ -2788,9 +2788,9 @@ begin
 	end;
 
 	case Display of
-	diHMSD, diDHMSD:
+	diHHMSD, diHMSD, diDHMSD:
 	begin
-		if h < 10 then
+		if (h < 10) and (Display <> diHHMSD) then
 		begin
 			if (DT >= 0) and FixedWidth then Result := Result + ' ';
 			Result := Result + Chr(h + 48) + TimeSep;
@@ -2821,7 +2821,7 @@ begin
 	if Display <> diSD then
 		if m < 10 then
 		begin
-			if (h = 0) and (not (Display in [diHMSD, diDHMSD])) then
+			if (h = 0) and (not (Display in [diHHMSD, diHMSD, diDHMSD])) then
 			begin
 				if FixedWidth then Result := Result + ' ';
 				Result := Result + Chr(m + 48) + TimeSep
@@ -2894,7 +2894,7 @@ end;
 
 function TimeToS(T: TTime): string;
 begin
-	Result := MsToStr(Round(T * MSecsPerDay), False, diHMSD, 0, False);
+	Result := MsToStr(Round(T * MSecsPerDay), False, diHHMSD, 0, False);
 end;
 
 function DateTimeToS(DT: TDateTime): string;
