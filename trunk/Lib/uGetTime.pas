@@ -254,6 +254,7 @@ begin
 	EditInput.OnChange := nil;
 	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal);
 	MesToMemo(EditError);
+	ClearErrors;
 
 	InitButtons;
 	InitTrackBar;

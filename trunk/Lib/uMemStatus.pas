@@ -6,7 +6,7 @@
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-unit uMemStatus;
+unit uMemStatus platform;
 
 interface
 
@@ -65,8 +65,11 @@ var
 	i, j: SG;
 	B: BG;
 begin
+	{$ifndef LINUX}
 	HS := GetHeapStatus;
-
+	{$else}
+	FillChar(HS, SizeOf(HS), 0);
+	{$endif}
 	for i := 0 to MaxLabel do
 	begin
 		for j := MaxHistory downto 1 do

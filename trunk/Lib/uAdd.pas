@@ -23,6 +23,18 @@ uses
 	xor eax, ebx
 	xor ebx, eax
 	xor eax, ebx}
+{
+		GetMem call SysGetMem
+		FreeMem call SysFreeMem
+		etc.
+
+		New = GetMem
+		AllocMem = GetMem + FillChar
+
+		Initialize, Finalize: strings, dyn. arrays, interfaces
+
+		FreeMem = Dispose
+}
 
 type
 	SG = Integer; // LongInt for Delphi 6
@@ -34,7 +46,7 @@ type
 	S4 = LongInt;
 	U4 = LongWord;
 	S8 = Int64;
-	U8 = Int64; // Wor64/Car64 for 64bit Delphi?
+	U8 = Int64; // Car64 for 64bit Delphi?
 
 	PS1 = ^S1;
 	PU1 = ^U1;
@@ -150,7 +162,7 @@ type
 
 	FG = Real; // Double for Delphi 6
 	F4 = Single;
-	F6 = Real48;
+//	F6 = Real48;
 	F8 = Double;
 	FA = Extended;
 
@@ -202,20 +214,34 @@ type
 const
 	MaxSpectrum = 1529;
 type
-	PRColor = ^TRColor;
-	TRColor = packed record // TRGBA
+{	PRColor = ^TRColor;
+	TRColor = packed record // RGBA=4
 		case Integer of
 		0: (L: -$7FFFFFFF - 1..$7FFFFFFF);
 		1: (R, G, B, A: Byte);
-		2: (WordRG, WordBA: Word);
-	end;
+		2: (RG, BA: Word);
+	end;}
+
 	PRGB = ^TRGB;
-	TRGB = packed record
+	TRGB = packed record // RGB=3
 		case Integer of
-		1: (R, G, B: Byte);
-		2: (WordRG: Word; ByteB: Byte);
+		0: (R, G, B: U1);
+		1: (I: array[0..2] of U1);
+		2: (RG: U2);
 	end;
-	THSVColor = packed record // 4
+	PRGBA = ^TRGBA;
+	TRGBA = packed record // RGBA=4
+		case Integer of
+		0: (R, G, B, A: U1);
+		1: (L: S4);
+		2: (I: array[0..3] of U1);
+		3: (RG, BA: U2);
+	end;
+	// 4 byte for CPU
+//	PRColor = PRGBA;
+	TRColor = TRGBA;
+
+	{	THSVColor = packed record // 4
 		case Integer of
 		0:
 		(
@@ -229,24 +255,23 @@ type
 		Saturation: 0..239; // 1
 		Value: 0..255; // 1
 		);
-	end;
+	end;}
 	THLSColor = packed record // 4
-		case Integer of
+{		case Integer of
 		0:
-		(
+		(}
 		H: -1..MaxSpectrum; // 2
 		L: 0..255; // 1
-		S: 0..239; // 1
-		);
+		S: 0..255; // 1
+(*		);
 		1: (
 		Hue: -1..MaxSpectrum; // 2
-		Lightness: 0..255; // 1
-		Saturation: 0..239; // 1
-		);
+		Lightness{Lum(inary, inous)}: 0..255; // 1
+		Saturation{Sat(iety)}: 0..255; // 1
+		);*)
 	end;
 
 const
-	DefMemBuffer = 4096; // Best Performance
 	MinInt = Low(Integer);
 	MinInt8 = Low(Int64);
 	MaxInt8 = Int64($7FFFFFFFFFFFFFFF);
@@ -260,6 +285,10 @@ type
 var
 	Sins: array[0..AngleCount - 1] of TAngle;
 
+function RGBToHLS(C: TRColor): THLSColor;
+function HLSToRGB(C: THLSColor): TRColor;
+//function RGBtoHSV(C: TRColor): THSVColor;
+//function HSVtoRGB(C: THSVColor): TRColor;
 function RColor(R, G, B: U1): TRColor;
 
 function Sgn(const I: S1): SG; overload;
@@ -270,6 +299,7 @@ function Sgn(const I: F4): SG; overload;
 function Sgn(const I: F8): SG; overload;
 function Sgn(const I: FA): SG; overload;
 function SgnMul(const Signum, Num: SG): SG;
+//function Min(const A, B: UG): UG;
 
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1);
@@ -281,8 +311,9 @@ procedure DivModU8(const Dividend: U8; const Divisor: U4;
 	out Res, Remainder: U4); pascal;
 procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
-
 function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
+function ModE(x, y: Extended): Extended;
+
 function FastSqrt(A: SG): SG;
 function LinearMax(Clock, Maximum: LongWord): LongWord;
 
@@ -299,14 +330,19 @@ function Range(const Min, Cur, Max: Integer): Integer; overload;
 function Range(const Min, Cur, Max, Def: Integer): Integer; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
 
-procedure Change(var A, B: B1); overload;
-procedure Change(var A, B: B4); overload;
-procedure Change(var A, B: U1); overload;
-procedure Change(var A, B: U2); overload;
-procedure Change(var A, B: U4); overload;
-procedure Change(var A, B: S4); overload;
-procedure Change(var A, B: Extended); overload;
-procedure Change(var A, B: Pointer); overload;
+procedure Exchange(var A, B: B1); register; overload;
+procedure Exchange(var A, B: B4); register; overload;
+procedure Exchange(var A, B: U1); register; overload;
+procedure Exchange(var A, B: S1); register; overload;
+procedure Exchange(var A, B: U2); register; overload;
+procedure Exchange(var A, B: S2); register; overload;
+procedure Exchange(var A, B: U4); register; overload;
+procedure Exchange(var A, B: S4); register; overload;
+procedure Exchange(var A, B: S8); register; overload;
+procedure Exchange(var A, B: F8); register; overload;
+procedure Exchange(var A, B: FA); register; overload;
+procedure Exchange(var A, B: Pointer); register; overload;
+procedure Exchange(var P0, P1; Count: Cardinal); register; overload;
 
 function Arg(X, Y: Extended): Extended; overload;
 
@@ -323,10 +359,11 @@ procedure Order(var I1, I2: Cardinal); overload;
 
 function CalcShr(N: U4): S1;
 
-function AllocByB(const OldSize: SG; var NewSize: SG;
+(*function AllocByB(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 function AllocByEx(const OldSize: SG; var NewSize: SG;
-	BlockSize: SG): Boolean;
+	BlockSize: SG): Boolean;*)
+function AllocByExp(const OldSize: SG; var NewSize: SG): Boolean;
 
 // Format functions
 
@@ -351,7 +388,6 @@ var
 	TimeSeparator: string[3];
 	ICentury: SG;
 
-//var WinDecimalSeparator: Char;
 {
 NToS(S8, ...); <-> StrToValI(SG,UG), StrToValS8, U1(..., False, ...);
 
@@ -454,12 +490,11 @@ function StrToValE(S: string;
 {$ifopt d+}
 procedure Nop;
 {$endif}
-procedure GetMem0(var P: Pointer; Size: Cardinal);
+//procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
 procedure FillU4(var Desc; Count: Cardinal; Value: U4);
 procedure FillOrderU4(var Desc; Size: Cardinal); register;
 procedure Swap02(var Desc; Count: Cardinal; Step: S4);
-procedure Exchange(P0, P1: Pointer; Count: Cardinal); register;
 function SelectDirectory(var Dir: string): BG;
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
@@ -468,6 +503,7 @@ function ThreadPriority(const Prior: Byte): Integer;
 function GetCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Integer; const Index, Count: Integer): string;
 
+function ComponentName(Name: string): string;
 function MenuNameToFileName(Name: string): string;
 function ButtonNameToFileName(Name: string; const Space: Boolean): string;
 
@@ -491,7 +527,214 @@ implementation
 
 uses
 	Windows, Math, Dialogs, ShellAPI,
-	uError, uStrings, uInput, uFiles;
+	uError, uStrings, uInput, uFiles, uParser;
+
+{
+Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
+Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi:
+|Y|   |0.299  0.587  0.114  | |R|
+|U| = |-0.141  -0.289 0.437 | |G|
+|V|   |0.615 -0.515 -0.1    | |B|
+
+
+|Y |   |0.299  0.587  0.114   | |R|
+|Cb| = |-0.1687  -0.3313 -0.5 | |G|
+|Cr|   |0.5 -0.4187 -0.0813   | |B|
+
+Zpìtný pøevod se provádí pomocí inverzní matice.
+
+
+Model HSV vykazuje nìkteré nedostatky, které sice nejsou zásadního charakteru,
+nicménì mohou ztìžovat práci s definováním barvy v prostoru HSV.
+Jedním z nedostatkù je jehlanovitý tvar, který zpùsobuje,
+že ve øezu se musí bod o konstantní hodnotì s pohybovat pøi zmìnì h po dráze ve tvaru šestiúhelníku,
+nikoliv po kružnici, jak by bylo pøirozené.
+Dalším záporným jevem je nesymetrie modelu z hlediska pøechodù ve stupních šedi od èerné k bílé.
+Tyto nedostatky odstraòuje model HLS zavedený firmou Tektronix
+}
+
+function RGBToHLS(C: TRColor): THLSColor;
+var
+	MaxC, MinC, delta, H: SG;
+begin
+	Result.H := -1;
+	Result.L := 0;
+	Result.S := 0;
+
+	MaxC := max(max(C.R, C.G), C.B);
+	MinC := min(min(C.R, C.G), C.B);
+
+	Result.L := (maxC + minC) div 2;
+
+	delta := maxC - minC;
+	if delta = 0 then
+	begin
+		Result.S := 0;
+		Result.H := -1;
+	end
+	else
+	begin
+		if (Result.L < 128) then
+			Result.S := RoundDiv(255 * delta, (maxC + minC))
+		else
+			Result.S := RoundDiv(255 * delta, (2 * 255 - maxC - minC));
+
+		H := 0;
+		if (C.R = maxC) then
+			H := ((MaxSpectrum + 1) div 6) * (C.G - C.B) div delta
+		else if (C.G = maxC) then
+			H := ((MaxSpectrum + 1) div 6) * 2 + RoundDiv(((MaxSpectrum + 1) div 6) * (C.B - C.R), delta)
+		else if (C.B = maxC) then
+			H := ((MaxSpectrum + 1) div 6) * 4 + RoundDiv(((MaxSpectrum + 1) div 6) * (C.R - C.G), delta);
+		if (H < 0) then Inc(H, (MaxSpectrum + 1));
+		Result.H := H;
+	end;
+end;
+
+function HLSToRGB(C: THLSColor): TRColor;
+
+	function HLSRGBValue(n1, n2, hue: SG): U1;
+	begin
+		if(hue >= (MaxSpectrum + 1)) then
+			Dec(hue, (MaxSpectrum + 1))
+		else if (hue < 0) then
+			Inc(hue, (MaxSpectrum + 1));
+		if (hue < ((MaxSpectrum + 1) div 6)) then
+			Result := RoundDiv(n1+(n2-n1)*hue div ((MaxSpectrum + 1) div 6), 255)
+		else if (hue < ((MaxSpectrum + 1) div 2)) then
+			Result := RoundDiv(n2, 255)
+		else if (hue < (2 * (MaxSpectrum + 1) div 3)) then    //  n1+(n2-n1)*(240-hue)/60;
+			Result := RoundDiv(n1+(n2-n1)*(2 * (MaxSpectrum + 1) div 3-hue) div ((MaxSpectrum + 1) div 6), 255)
+		else
+			Result := RoundDiv(n1, 255);
+	end;
+
+var m2, m1: SG;
+begin
+	Result.L := 0;
+
+	if (C.L < 128) then
+		m2 := C.L * (255 + C.S)
+	else
+		m2 := 255 * (C.L + C.S) - C.L * C.S;
+	m1 := 2 * 255 * C.L - m2;
+	if (C.S = 0) then
+	begin
+		Result.R := C.L;
+		Result.G := C.L;
+		Result.B := C.L;
+	end
+	else
+	begin
+		Result.R := HLSRGBValue(m1, m2, C.H + ((MaxSpectrum + 1) div 3));
+		Result.G := HLSRGBValue(m1, m2, C.H);
+		Result.B := HLSRGBValue(m1, m2, C.H - ((MaxSpectrum + 1) div 3));
+	end;
+end;
+
+(*
+function RGBtoHSV(C: TRColor): THSVColor;
+var
+	MaxC, MinC, delta, H: SG;
+begin
+	maxC := Math.max(Math.max(C.r,C.g),C.b);
+	minC := Math.min(Math.min(C.r,C.g),C.b);
+
+	Result.v := maxC;
+	Result.h := 0;
+	h := 0;
+
+	if (maxC <> 0) then
+		Result.s := (maxC - minC) div maxC
+	else
+		Result.s := 0;
+
+	if(Result.s = 0) then
+		Result.h := -1
+	else
+	begin
+		delta := maxC - minC;
+		if(C.r = maxC) then h := 60*(C.g-C.b) div delta
+		else if(C.g = maxC) then h := 60*(2+(C.b-C.r)) div delta
+		else if(C.b = maxC) then h := 60*(4+(C.r-C.g)) div delta;
+		if(h<0) then Inc(h, 360);
+		Result.H := H;
+	end;
+end;*)
+
+(*
+function HSVtoRGB(C: THSVColor): TRColor;
+var i, f, p, q, t: SG;
+begin
+	Result.L := 0;
+	if(C.s = 0) then
+	begin
+		if(C.h = -1) then
+		begin
+			Result.r := C.v;
+			Result.g := C.v;
+			Result.b := C.v;
+		end
+		else
+		begin
+{							rIndex.setText("xxx");
+			gIndex.setText("xxx");
+			bIndex.setText("xxx"); D???}
+		end;
+	end
+	else
+	begin
+		if(C.h = 360) then C.h := 0;
+
+		C.h:=C.h div 60; // D???
+//            i := (int)Math.floor((double)h); D???
+
+		f := C.h - i;
+		p := C.v*(1-C.s);
+		q := C.v*(1-(C.s*f));
+		t := C.v*(1-(C.s*(1-f)));
+
+		case i of
+		0:
+		begin
+			Result.r := C.v;
+			Result.g := t;
+			Result.b := p;
+		end;
+		1:
+		begin
+			Result.r := q;
+			Result.g := C.v;
+			Result.b := p;
+		end;
+		2:
+		begin
+			Result.r := p;
+			Result.g := C.v;
+			Result.b := t;
+		end;
+		3:
+		begin
+			Result.r := p;
+			Result.g := q;
+			Result.b := C.v;
+		end;
+		4:
+		begin
+			Result.r := t;
+			Result.g := p;
+			Result.b := C.v;
+		end;
+		5:
+		begin
+			Result.r := C.v;
+			Result.g := p;
+			Result.b := q;
+		end;
+		end;
+	end;
+end;*)
+
 
 function RColor(R, G, B: U1): TRColor;
 begin
@@ -581,6 +824,15 @@ begin
 		Result := -Num;
 end;
 
+{
+function Min(const A, B: UG): UG;
+begin
+	if A < B then
+		Result := A
+	else
+		Result := B;
+end;}
+
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1); register;
 asm
@@ -664,6 +916,11 @@ begin
 	begin
 		Result := Dividend + Divisor * (Abs(Dividend - Divisor + 1) div Divisor);
 	end;
+end;
+
+function ModE(x, y: Extended): Extended;
+begin
+	Result := x - {Trunc}Floor(x / y) * y;
 end;
 
 function FastSqrt(A: SG): SG;
@@ -851,100 +1108,6 @@ begin
 		Result := Max;
 end;
 
-procedure Change(var A, B: B1); register;
-asm
-	push bx
-	push cx
-	mov bl, B1 ptr [A]
-	mov cl, B1 ptr [B]
-	mov [B], bl
-	mov [A], cl
-	pop bx
-	pop cx
-end;
-
-procedure Change(var A, B: B4); register;
-asm
-	push ebx
-	push ecx
-	mov ebx, B4 ptr [A]
-	mov ecx, B4 ptr [B]
-	mov [B], ebx
-	mov [A], ecx
-	pop ebx
-	pop ecx
-//  xchg A, B
-end;
-
-procedure Change(var A, B: U1); register;
-asm
-	push bx
-	mov bl, U1 ptr [A]
-	mov bh, U1 ptr [B]
-	mov [B], bl
-	mov [A], bh
-	pop bx
-end;
-
-procedure Change(var A, B: U2); register;
-asm
-	push bx
-	push cx
-	mov bx, U2 ptr [A]
-	mov cx, U2 ptr [B]
-	mov [B], bx
-	mov [A], cx
-	pop bx
-	pop cx
-end;
-
-procedure Change(var A, B: U4); register;
-asm
-	push ebx
-	push ecx
-	mov ebx, U4 ptr [A]
-	mov ecx, U4 ptr [B]
-	mov [B], ebx
-	mov [A], ecx
-	pop ebx
-	pop ecx
-//  xchg A, B
-end;
-
-procedure Change(var A, B: S4); register;
-asm
-	push ebx
-	push ecx
-	mov ebx, S4 ptr [A]
-	mov ecx, S4 ptr [B]
-	mov [B], ebx
-	mov [A], ecx
-	pop ebx
-	pop ecx
-//  xchg A, B
-end;
-
-procedure Change(var A, B: Extended); register;
-var C: Extended;
-begin
-	C := A;
-	A := B;
-	B := C;
-end;
-
-procedure Change(var A, B: Pointer); register;
-asm
-	push ebx
-	push ecx
-	mov ebx, U4 ptr [A]
-	mov ecx, U4 ptr [B]
-	mov [B], ebx
-	mov [A], ecx
-	pop ebx
-	pop ecx
-//  xchg A, B
-end;
-
 function Random2(Range: SG): SG;
 begin
 	Result := Random(2 * Range + 1) - Range;
@@ -1086,7 +1249,7 @@ begin
 		end;
 	end;
 end;
-
+(*
 function AllocByB(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 {
@@ -1193,6 +1356,27 @@ begin
 			NewSize := OldSize;
 			Result := False;
 		end;
+	end;
+end;*)
+
+function AllocByExp(const OldSize: SG; var NewSize: SG): Boolean;
+{
+	0 <= OldSize < 2^31
+	0 <= NewSize < 2^31
+}
+begin
+  Result := False;
+	if NewSize > OldSize then
+	begin
+		{$ifopt d+}
+		if OldSize > 0 then
+		if OldSize <> 1 shl CalcShr(OldSize) then
+		begin
+			ErrorMessage('Bad AllocBy block size' + LineSep + NToS(OldSize) + ' bytes');
+		end;
+		{$endif}
+		NewSize := Max(1 shl CalcShr(NewSize), 0{Minimum items});
+		Result := True;
 	end;
 end;
 
@@ -2385,11 +2569,12 @@ asm
 end;
 {$endif}
 
+{
 procedure GetMem0(var P: Pointer; Size: Cardinal);
 begin
 	GetMem(P, Size);
 	FillChar(P^, Size, 0);
-end;
+end;}
 
 procedure ReadMem(P: Pointer; Size: Cardinal); register;
 asm
@@ -2468,7 +2653,139 @@ asm
 	POP     EDI
 end;
 
-procedure Exchange(P0, P1: Pointer; Count: Cardinal); register;
+procedure Exchange(var A, B: B1); register;
+asm
+	push bx
+	push cx
+	mov bl, B1 ptr [A]
+	mov cl, B1 ptr [B]
+	mov [B], bl
+	mov [A], cl
+	pop cx
+	pop bx
+end;
+
+procedure Exchange(var A, B: B4); register;
+asm
+	push ebx
+	push ecx
+	mov ebx, B4 ptr [A]
+	mov ecx, B4 ptr [B]
+	mov [B], ebx
+	mov [A], ecx
+	pop ecx
+	pop ebx
+//  xchg A, B
+end;
+
+procedure Exchange(var A, B: U1); register;
+asm
+	push bx
+	mov bl, U1 ptr [A]
+	mov bh, U1 ptr [B]
+	mov [B], bl
+	mov [A], bh
+	pop bx
+end;
+
+procedure Exchange(var A, B: S1); register;
+asm
+	push bx
+	mov bl, S1 ptr [A]
+	mov bh, S1 ptr [B]
+	mov [B], bl
+	mov [A], bh
+	pop bx
+end;
+
+procedure Exchange(var A, B: U2); register;
+asm
+	push bx
+	push cx
+	mov bx, U2 ptr [A]
+	mov cx, U2 ptr [B]
+	mov [B], bx
+	mov [A], cx
+	pop cx
+	pop bx
+end;
+
+procedure Exchange(var A, B: S2); register;
+asm
+	push bx
+	push cx
+	mov bx, S2 ptr [A]
+	mov cx, S2 ptr [B]
+	mov [B], bx
+	mov [A], cx
+	pop cx
+	pop bx
+end;
+
+procedure Exchange(var A, B: U4); register;
+asm
+	push ebx
+	push ecx
+	mov ebx, U4 ptr [eax]
+	mov ecx, U4 ptr [edx]
+	mov [B], ebx
+	mov [A], ecx
+	pop ecx
+	pop ebx
+//  xchg A, B
+end;
+
+procedure Exchange(var A, B: S4); register;
+asm
+	push ebx
+	push ecx
+	mov ebx, S4 ptr [A]
+	mov ecx, S4 ptr [B]
+	mov [B], ebx
+	mov [A], ecx
+	pop ecx
+	pop ebx
+//  xchg A, B
+end;
+
+procedure Exchange(var A, B: S8); register;
+var C: S8;
+begin
+	C := A;
+	A := B;
+	B := C;
+end;
+
+procedure Exchange(var A, B: F8); register;
+var C: F8;
+begin
+	C := A;
+	A := B;
+	B := C;
+end;
+
+procedure Exchange(var A, B: FA); register;
+var C: FA;
+begin
+	C := A;
+	A := B;
+	B := C;
+end;
+
+procedure Exchange(var A, B: Pointer); register;
+asm
+	push ebx
+	push ecx
+	mov ebx, U4 ptr [A]
+	mov ecx, U4 ptr [B]
+	mov [B], ebx
+	mov [A], ecx
+	pop ecx
+	pop ebx
+//  xchg A, B
+end;
+
+procedure Exchange(var P0, P1; Count: Cardinal); register;
 asm
 {     ->EAX     P0  }
 {       EDX     P1   }
@@ -2499,8 +2816,10 @@ var OpenDialog1: TOpenDialog;
 begin
 	OpenDialog1 := TOpenDialog.Create(nil);
 	try
-		OpenDialog1.FileName := Dir;
-//		OpenDialog1.Options := OpenDialog1.Options or ofPathMustExist;
+		if Dir = '' then Dir := WorkDir;
+		OpenDialog1.FileName := '*.*';
+		OpenDialog1.InitialDir := ExtractFilePath(Dir);
+		OpenDialog1.Options := OpenDialog1.Options + [ofPathMustExist];
 		if OpenDialog1.Execute then
 		begin
 			Result := True;
@@ -2569,6 +2888,27 @@ begin
 	end;
 end;
 
+function ComponentName(Name: string): string;
+var i: SG;
+begin
+	i := 1;
+	while i <= Length(Name) do
+	begin
+		if not (CharsTable[Name[i]] in [ctLetter, ctNumber]) then
+			Delete(Name, i, 1)
+		else
+			Inc(i);
+	end;
+	if Name = '' then
+		Name := 'N'
+	else
+	begin
+		if CharsTable[Name[1]] <> ctLetter then
+			Name := 'N' + Name;
+	end;
+	Result := Name;
+end;
+
 function MenuNameToFileName(Name: string): string;
 begin
 	Result := Name;
@@ -2603,7 +2943,7 @@ begin
 	for i := 0 to Length(Names) - 1 do
 	begin
 		Index := Pos(Names[i], UpperCase(Result));
-		if Index <> 0 then
+		if Index = 1 then
 		begin
 			Delete(Result, Index, Length(Names[i]));
 			Found := True;
@@ -2741,6 +3081,7 @@ var
 {$endif}
 begin
 	{$ifndef LINUX}
+	{$WARN SYMBOL_PLATFORM OFF}
 	NativeSymbols := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNATIVEDIGITS, '0123456789');
 
 	DecimalSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SDECIMAL, '.');
@@ -2766,6 +3107,7 @@ begin
 	InLineIndex := 1;
 	ICentury := StrToIntDef(ReadToChar(s, InLineIndex, ';'), 3);}
 	ICentury := 30; // D???
+	{$WARN SYMBOL_PLATFORM ON}
 	{$ELSE}
 	NativeSymbols := '0123456789';
 
@@ -2786,7 +3128,6 @@ begin
 	TimeSeparator := ':';
 
 	{$ENDIF}
-//	WinDecimalSeparator := DecimalSeparator;
 end;
 
 initialization

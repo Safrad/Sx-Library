@@ -467,12 +467,12 @@ begin
 	FileName := GraphDir + 'Images\ArrowU' + IconExt;
 	if FileExists(FileName) then
 	begin
-		BitmapReadFromFile(ArrowU, FileName);
+		ArrowU := TDbitmap.Create(FileName);
 	end;
 	FileName := GraphDir + 'Images\ArrowD' + IconExt;
 	if FileExists(FileName) then
 	begin
-		BitmapReadFromFile(ArrowD, FileName);
+		ArrowD := TDBitmap.Create(FileName);
 	end;
 end;
 
@@ -700,9 +700,9 @@ var i: SG;
 begin
 {	SetLength(Columns, ColumnCount);
 	SetLength(ColumnOrder, ColumnCount);}
-	BitmapWidth := 0;
+	UserWidth := 0;
 	for i := 0 to FColumnCount - 1 do
-		Inc(BitmapWidth, Columns[i].Width);
+		Inc(UserWidth, Columns[i].Width);
 end;
 
 procedure TDView.SelectAll;
@@ -750,7 +750,7 @@ begin
 	if Value <> FRowCount then
 	begin
 		NewSize := Value;
-		if AllocByEx(Length(SelRows), NewSize, SizeOf(RowOrder[0])) then
+		if AllocByExp(Length(SelRows), NewSize) then
 		begin
 			SetLength(SelRows, NewSize);
 			SetLength(RowOrder, NewSize);
@@ -774,7 +774,7 @@ begin
 		SelCount := 0;
 		for i := 0 to FRowCount - 1 do
 			if SelRows[i] then Inc(SelCount);
-		BitmapHeight := FRowCount * RowHeight + RowHeight;
+		UserHeight := FRowCount * RowHeight + RowHeight;
 	end;
 end;
 

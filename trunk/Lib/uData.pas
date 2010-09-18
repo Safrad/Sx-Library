@@ -29,6 +29,7 @@ type
 		FItemSh: UG;
 		FItemMemSize: UG;
 		FItemCount: UG;
+		FItemAlloc: UG;
 		procedure Ins(Index: TIndex);
 		procedure SetItemSize(Value: UG);
 	protected
@@ -123,6 +124,7 @@ begin
 	FItemSize := 0;
 	FItemSh := 0;
 	FItemCount := 0;
+	FitemAlloc := 0;
 	FFrag := False;
 	if FFrag then
 	begin
@@ -150,8 +152,9 @@ var
 begin
 	if FFrag = False then
 	begin
-		ReallocMem(Data, 0);
+		FreeMem(Data); Data := nil;
 		FItemCount := 0;
+		FItemAlloc := 0;
 	end
 	else
 	begin
@@ -238,10 +241,14 @@ begin
 end;
 
 procedure TData.Ins(Index: TIndex);
-const
-	AllocBy = 1024;
+var NewSize: SG;
 begin
-	if FItemCount mod AllocBy = 0 then ReallocMem(Data, (FItemCount + AllocBy) shl FItemSh);
+	NewSize := FItemCount + 1;
+	if AllocByExp(FItemAlloc, NewSize) then //if FItemCount mod AllocBy = 0 then
+	begin
+		ReallocMem(Data, NewSize shl FItemSh);
+		FItemAlloc := NewSize;
+	end;
 	if Index < FItemCount then
 	begin
 		Move(Pointer(UG(Data) + Index shl FItemSh)^,

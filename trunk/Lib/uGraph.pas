@@ -36,10 +36,18 @@ function FireColor(X: Integer): TColor;
 function NegColor(C: TColor): TColor;
 function NegMonoColor(C: TColor): TColor;
 function DepthColor(const Depth: Byte): TColor;
+
+
+
 function MixColors(C1, C2: TColor): TColor; overload;
 function MixColors(C1, C2: TRColor): TRColor; overload;
+
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
+function MixColors(C1, C2: TRColor; Per1, Per2: Integer): TRColor; overload;
+
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
+function MixColors(C1, C2: TRColor; Per: Integer): TRColor; overload;
+
 
 procedure ShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
@@ -406,36 +414,62 @@ begin
 	begin
 		C1 := ColorToRGB(C1);
 		C2 := ColorToRGB(C2);
-		TRColor(Result).A := 0;
-		TRColor(Result).B := (TRColor(C1).B + TRColor(C2).B) shr 1;
-		TRColor(Result).G := (TRColor(C1).G + TRColor(C2).G) shr 1;
 		TRColor(Result).R := (TRColor(C1).R + TRColor(C2).R) shr 1;
+		TRColor(Result).G := (TRColor(C1).G + TRColor(C2).G) shr 1;
+		TRColor(Result).B := (TRColor(C1).B + TRColor(C2).B) shr 1;
+		TRColor(Result).A := 0;
 	end;
 end;
 
 function MixColors(C1, C2: TRColor): TRColor; overload;
 begin
-	Result.L := MixColors(C1.L, C2.L);
+	if C1.L = C2.L then
+	begin
+		Result := C1;
+		Exit;
+	end;
+	Result.R := (C1.R + C2.R) shr 1;
+	Result.G := (C1.G + C2.G) shr 1;
+	Result.B := (C1.B + C2.B) shr 1;
+	Result.A := (C1.B + C2.B) shr 1;
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
 begin
 	C1 := ColorToRGB(C1);
 	C2 := ColorToRGB(C2);
-	TRColor(Result).B := (Per1 * TRColor(C1).B + Per2 * TRColor(C2).B) shr 16;
-	TRColor(Result).G := (Per1 * TRColor(C1).G + Per2 * TRColor(C2).G) shr 16;
-	TRColor(Result).R := (Per1 * TRColor(C1).R + Per2 * TRColor(C2).R) shr 16;
+	TRColor(Result).R := (Per1 * TRColor(C1).R + Per2 * TRColor(C2).R + 32768) shr 16;
+	TRColor(Result).G := (Per1 * TRColor(C1).G + Per2 * TRColor(C2).G + 32768) shr 16;
+	TRColor(Result).B := (Per1 * TRColor(C1).B + Per2 * TRColor(C2).B + 32768) shr 16;
 	TRColor(Result).A := 0;
+end;
+(*-------------------------------------------------------------------------*)
+function MixColors(C1, C2: TRColor; Per1, Per2: Integer): TRColor; overload;
+begin
+	{$ifopt d+}
+	if Per1 < 0 then
+		IE(5345);
+	if Per2 < 0 then
+		IE(5345);
+	if Per1 > 65536 then
+		IE(5345);
+	if Per2 > 65536 then
+		IE(5345);
+	{$endif}
+	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
+	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
+	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
+	Result.A := (Per1 * C1.A + Per2 * C2.A + 32768) shr 16;
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 begin
-	C1 := ColorToRGB(C1);
-	C2 := ColorToRGB(C2);
-	TRColor(Result).B := (Per * TRColor(C1).B + (65535 - Per) * TRColor(C2).B) shr 16;
-	TRColor(Result).G := (Per * TRColor(C1).G + (65535 - Per) * TRColor(C2).G) shr 16;
-	TRColor(Result).R := (Per * TRColor(C1).R + (65535 - Per) * TRColor(C2).R) shr 16;
-	TRColor(Result).A := 0;
+	Result := MixColors(C1, C2, Per, 65536 - Per);
+end;
+(*-------------------------------------------------------------------------*)
+function MixColors(C1, C2: TRColor; Per: Integer): TRColor; overload;
+begin
+	Result := MixColors(C1, C2, Per, 65536 - Per);
 end;
 (*-------------------------------------------------------------------------*)
 procedure ShadowText(Canvas: TCanvas;

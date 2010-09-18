@@ -6,12 +6,6 @@
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-{
-	Hue = Shade = Odstin
-	Sat(iety) = Sytost
-	Lum{inary, inous) = Svetelnost (0-239)
-}
-
 unit uGColor;
 
 interface
@@ -22,30 +16,24 @@ uses
 	uDLabel, ImgList, uDForm, uDBitmap, uAdd, uDImage;
 
 const
-	MaxColor = 6 + 6 + 6 + 6 + 4 + 4 + 4 - 1;
+	MaxColor = 6 * 4 + 3 * 4 - 1;
 type
 	TOnApplyColor = procedure(Color: TColor);
 
 	TfGColor = class(TDForm)
     LabelR: TDLabel;
 		EditR: TEdit;
-		TrackBarR: TTrackBar;
 		ButtonR: TDButton;
 		ButtonOk: TDButton;
 		ButtonApply: TDButton;
 		ButtonCancel: TDButton;
     LabelG: TDLabel;
 		EditG: TEdit;
-		TrackBarG: TTrackBar;
     ButtonG: TDButton;
     LabelB: TDLabel;
 		EditB: TEdit;
-		TrackBarB: TTrackBar;
     ButtonB: TDButton;
-    LabelA: TDLabel;
-		EditA: TEdit;
-		TrackBarA: TTrackBar;
-    ButtonA: TDButton;
+    EditS: TEdit;
 		PopupMenu1: TPopupMenu;
 		clScrollBar1: TMenuItem;
 		clBackground: TMenuItem;
@@ -73,12 +61,12 @@ type
 		clInfoText1: TMenuItem;
 		clInfoBk1: TMenuItem;
 		clNone1: TMenuItem;
-		PanelS: TPanel;
+    PanelH: TPanel;
 		PanelL: TPanel;
     PanelNowColor: TDButton;
     PanelCurColor: TDButton;
 		Bevel1: TBevel;
-		ImageS: TDImage;
+    ImageH: TDImage;
 		ImageL: TDImage;
     PanelNowBitColor: TDButton;
     PanelDefaultColor: TDButton;
@@ -90,31 +78,28 @@ type
 		ImageList1: TImageList;
     BevelBasicColors: TBevel;
     ShapeBorder: TShape;
-    ComboBoxBitDepth: TComboBox;
-    DLabel1: TDLabel;
-    EditHue: TEdit;
-    TrackBarHue: TTrackBar;
-    DButtonH: TDButton;
-    DLabel2: TDLabel;
-    DLabel3: TDLabel;
+		ComboBoxBitDepth: TComboBox;
+    DLabelH: TDLabel;
+    EditL: TEdit;
+    DLabelS: TDLabel;
+    DLabelL: TDLabel;
+    PanelR: TPanel;
+		ImageR: TDImage;
+    PanelG: TPanel;
+    ImageG: TDImage;
+    PanelB: TPanel;
+    ImageB: TDImage;
+    EditH: TEdit;
+    PanelS: TPanel;
+    ImageS: TDImage;
+    ComboBoxNF: TComboBox;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure PanelCurColorClick(Sender: TObject);
-		procedure TrackBarRGBAChange(Sender: TObject);
 		procedure ButtonRGBAClick(Sender: TObject);
-		procedure ImageSMouseDown(Sender: TObject; Button: TMouseButton;
-			Shift: TShiftState; X, Y: Integer);
-		procedure ImageSMouseUp(Sender: TObject; Button: TMouseButton;
-			Shift: TShiftState; X, Y: Integer);
-		procedure ImageSMouseMove(Sender: TObject; Shift: TShiftState; X,
+		procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
 		procedure EditRGBAChange(Sender: TObject);
-		procedure ImageLMouseDown(Sender: TObject; Button: TMouseButton;
-			Shift: TShiftState; X, Y: Integer);
-		procedure ImageLMouseMove(Sender: TObject; Shift: TShiftState; X,
-			Y: Integer);
-		procedure ImageLMouseUp(Sender: TObject; Button: TMouseButton;
-			Shift: TShiftState; X, Y: Integer);
 		procedure PanelDefaultColorClick(Sender: TObject);
 		procedure PanelNowBitColorClick(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
@@ -122,30 +107,34 @@ type
 		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 			State: TOwnerDrawState);
 		procedure FormCreate(Sender: TObject);
-		procedure ImageSFill(Sender: TObject);
-		procedure ImageLFill(Sender: TObject);
+		procedure ImageFill(Sender: TObject);
 		procedure ComboBoxBitDepthChange(Sender: TObject);
+		procedure ImageMouseDown(Sender: TObject; Button: TMouseButton;
+			Shift: TShiftState; X, Y: Integer);
+		procedure ComboBoxNFChange(Sender: TObject);
 	private
 		{ Private declarations }
 		CurColor, DefColor: TColor;
 		OnApply: TOnApplyColor;
-		SpectrumDown: Boolean;
-		LightDown: Boolean;
-		SpectrumPos, LightPos: Integer;
-		SpectrumC, LightC: TRColor;
 
-		NowColor: TColor;
+		NumericPref: string;
+		FNowColor: TColor;
+		NowRGB: TRColor;
+		NowHLS: THLSColor;
 		PanelColor: array[0..MaxColor] of TPanel;
 
 		procedure InitReadOnly;
-		procedure ChangeLightC;
-		procedure InitTrackBar;
-		procedure InitEdits;
+		procedure InitEditsRGB;
+		procedure InitEditsHLS;
 		procedure ChangeColor;
-
 		procedure InitAll;
+		procedure SetNowColor(Color: TColor);
+		procedure SetNowRGB(Color: TRColor);
+		procedure SetNowHLS(HLS: THLSColor);
 
 		procedure PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+		procedure PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+		procedure PanelColorMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 	public
 		{ Public declarations }
 	end;
@@ -222,34 +211,6 @@ begin
 		Result := C;
 end;
 
-function ColorToSpectrum(var SpectrumPos: Integer; const C: TColor): Boolean;
-begin
-	Result := False;
-{
-var
-	RC: TRColor;
-	CA: array[0..2] of Byte;
-	i: Integer;
-begin
-	RC.L := ColorToRGB(C);
-	CA[0] := RC.R;
-	CA[1] := RC.G;
-	CA[2] := RC.B;
-	Result := False
-	for i := 0 to 2 do
-	begin
-		if (CA[i] < CA[(i + 1) mod 3]) and (CA[i] < CA[(i + 2) mod 3]) then
-		begin
-			Result := True;
-			Dec(CA[(i + 1) mod 3], CA[i]);
-			Dec(CA[(i + 2) mod 3], CA[i]);
-			CA[i] := 0;
-			SpectrumPos :=
-			Break;
-		end;
-	end;}
-end;
-
 function AbsoluteColor(C: TColor): TColor;
 var
 	RC: TRColor;
@@ -309,38 +270,35 @@ begin
 	end;
 end;
 
-function BitColor(const C: TColor; const Bits: Byte): TRColor;
-var
-	RC: TRColor;
+function BitColor(const C: TRColor; const Bits: Byte): TRColor;
 begin
-	RC.L := ColorToRGB(C) and $00ffffff;
 	Result.A := 0;
 	case Bits of
-	1: Result.L := NegMonoColor(NegMonoColor(RC.L));
+	1: Result.L := NegMonoColor(NegMonoColor(C.L));
 	4:
 	begin
-		Result.L := GetVGAPalete(RC.L);
+		Result.L := GetVGAPalete(C.L);
 	end;
 	15:
 	begin
-		Result.R := RC.R shr 3;
+		Result.R := C.R shr 3;
 		Result.R := 255 * Result.R div 31;
-		Result.G := RC.G shr 3;
+		Result.G := C.G shr 3;
 		Result.G := 255 * Result.G div 31;
-		Result.B := RC.B shr 3;
+		Result.B := C.B shr 3;
 		Result.B := 255 * Result.B div 31;
 	end;
 	18:
 	begin
-		Result.R := RC.R shr 2;
+		Result.R := C.R shr 2;
 		Result.R := 255 * Result.R div 63;
-		Result.G := RC.G shr 2;
+		Result.G := C.G shr 2;
 		Result.G := 255 * Result.G div 63;
-		Result.B := RC.B shr 2;
+		Result.B := C.B shr 2;
 		Result.B := 255 * Result.B div 63;
 	end;
 	else
-		Result.L := RC.L;
+		Result.L := C.L;
 	end;
 end;
 
@@ -355,6 +313,8 @@ function GetColor(const prompt: string;
 		fGColor.PanelColor[i].Height := 16;
 		fGColor.PanelColor[i].Tag := i;
 		fGColor.PanelColor[i].OnMouseDown := fGColor.PanelColorMouseDown;
+		fGColor.PanelColor[i].OnMouseUp := fGColor.PanelColorMouseUp;
+		fGColor.PanelColor[i].OnMouseMove := fGColor.PanelColorMouseMove;
 	end;
 
 var i: Integer;
@@ -391,9 +351,9 @@ begin
 	fGColor.ButtonApply.Enabled := Assigned(OnApply);
 
 	fGColor.CurColor := CurrentColor;
-	fGColor.NowColor := CurrentColor;
 	fGColor.DefColor := DefaultColor;
 	fGColor.Caption := prompt;
+	fGColor.SetNowColor(CurrentColor);
 
 	fGColor.PanelCurColor.Color := fGColor.CurColor;
 	InitButton(fGColor.PanelCurColor);
@@ -401,10 +361,7 @@ begin
 	fGColor.PanelDefaultColor.Color := fGColor.DefColor;
 	InitButton(fGColor.PanelDefaultColor);
 
-	fGColor.InitReadOnly;
-	fGColor.ChangeLightC;
-	fGColor.InitTrackBar;
-	fGColor.InitEdits;
+	fGColor.InitAll;
 
 	if Assigned(OnApply) then
 	begin
@@ -417,7 +374,7 @@ begin
 		fGColor.FormStyle := fsNormal;
 		if fGColor.ShowModal = mrOK then
 		begin
-			CurrentColor := fGColor.NowColor;
+			CurrentColor := fGColor.FNowColor;
 			Result := True;
 		end
 		else
@@ -437,16 +394,19 @@ var
 	i: Integer;
 	Vis: Boolean;
 begin
-	C.L := ColorToRGB(NowColor) and $00ffffff;
-	PanelNowColor.Color := C.L;
+	PanelNowColor.Color := NowRGB.L;
 	InitButton(PanelNowColor);
 	PanelNowColor.Repaint;
 
-	PanelNowBitColor.Color := BitColor(NowColor, ABits[ComboBoxBitDepth.ItemIndex]).L;
+	PanelNowBitColor.Color := BitColor(NowRGB, ABits[ComboBoxBitDepth.ItemIndex]).L;
 	InitButton(PanelNowBitColor);
 	PanelNowBitColor.Repaint;
-	ImageS.Fill;
+	ImageR.Fill;
+	ImageG.Fill;
+	ImageB.Fill;
+	ImageH.Fill;
 	ImageL.Fill;
+	ImageS.Fill;
 
 	Vis := False;
 	for i := 0 to MaxColor do
@@ -464,79 +424,101 @@ begin
 
 end;
 
-procedure TfGColor.ChangeLightC;
+procedure TfGColor.InitEditsRGB;
 begin
-	LightC.L := AbsoluteColor(NowColor);
-end;
-
-procedure TfGColor.InitTrackBar;
-var C: TRColor;
-begin
-	C.L := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	TrackBarR.OnChange := nil;
-	TrackBarG.OnChange := nil;
-	TrackBarB.OnChange := nil;
-	TrackBarA.OnChange := nil;
-
-	TrackBarR.Position := C.R;
-	TrackBarG.Position := C.G;
-	TrackBarB.Position := C.B;
-	TrackBarA.Position := (C.R + C.G + C.B) div 3;
-
-	TrackBarR.OnChange := TrackBarRGBAChange;
-	TrackBarG.OnChange := TrackBarRGBAChange;
-	TrackBarB.OnChange := TrackBarRGBAChange;
-	TrackBarA.OnChange := TrackBarRGBAChange;
-
 	EditR.OnChange := nil;
 	EditG.OnChange := nil;
 	EditB.OnChange := nil;
-	EditA.OnChange := nil;
-end;
 
-procedure TfGColor.InitEdits;
-var C: TRColor;
-begin
-	C.L := ColorToRGB(TColor(NowColor)) and $00ffffff;
-
-	EditR.OnChange := nil;
-	EditG.OnChange := nil;
-	EditB.OnChange := nil;
-	EditA.OnChange := nil;
-
-	EditR.Text := NToS(C.R, '000');
+	if ComboBoxNF.ItemIndex = 1 then
+		NumericBase := 16;
+	EditR.Text := NumericPref + NToS(NowRGB.R);
+	EditG.Text := NumericPref + NToS(NowRGB.G);
+	EditB.Text := NumericPref + NToS(NowRGB.B);
+	NumericBase := 10;
 	EditR.Repaint;
-	EditG.Text := NToS(C.G, '000');
 	EditG.Repaint;
-	EditB.Text := NToS(C.B, '000');
 	EditB.Repaint;
-	EditA.Text := NToS((C.R + C.G + C.B) div 3, '000');
-	EditA.Repaint;
 
 	EditR.OnChange := EditRGBAChange;
 	EditG.OnChange := EditRGBAChange;
 	EditB.OnChange := EditRGBAChange;
-	EditA.OnChange := EditRGBAChange;
+end;
+
+procedure TfGColor.InitEditsHLS;
+begin
+	EditH.OnChange := nil;
+	EditL.OnChange := nil;
+	EditS.OnChange := nil;
+
+	if ComboBoxNF.ItemIndex = 1 then
+		NumericBase := 16;
+	EditH.Text := NumericPref + NToS(NowHLS.H);
+	EditL.Text := NumericPref + NToS(NowHLS.L);
+	EditS.Text := NumericPref + NToS(NowHLS.S);
+	NumericBase := 10;
+	EditH.Repaint;
+	EditL.Repaint;
+	EditS.Repaint;
+
+	EditH.OnChange := EditRGBAChange;
+	EditL.OnChange := EditRGBAChange;
+	EditS.OnChange := EditRGBAChange;
 end;
 
 procedure TfGColor.ChangeColor;
 begin
-	if Assigned(OnApply) then OnApply(NowColor);
+	if Assigned(OnApply) then OnApply(FNowColor);
 end;
 
 procedure TfGColor.InitAll;
 begin
 	InitReadOnly;
-	ChangeLightC;
-	InitTrackBar;
-	InitEdits;
+	InitEditsRGB;
+	InitEditsHLS;
 	ChangeColor;
 end;
 
+procedure TfGColor.SetNowColor(Color: TColor);
+begin
+	FNowColor := Color;
+	NowRGB.L := ColorToRGB(FNowColor) and $00ffffff;
+	NowHLS := RGBToHLS(NowRGB);
+end;
+
+procedure TfGColor.SetNowRGB(Color: TRColor);
+begin
+	NowRGB := Color;
+	FNowColor := NowRGB.L;
+	NowHLS := RGBToHLS(NowRGB);
+end;
+
+procedure TfGColor.SetNowHLS(HLS: THLSColor);
+begin
+	NowHLS := HLS;
+	NowRGB := HLSToRGB(HLS);
+	FNowColor := NowRGB.L;
+end;
+
+{var
+	MouseL: BG;}
+
 procedure TfGColor.PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-	NowColor := IntToColor(TPanel(Sender).Tag).L;
+	SetNowColor(IntToColor(TPanel(Sender).Tag).L);
 	InitAll;
+//	MouseL := True;
+end;
+
+procedure TfGColor.PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+//	MouseL := False;
+end;
+
+procedure TfGColor.PanelColorMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+{	if MouseL then
+		PanelColorMouseDown(Sender, mbLeft, Shift, X, Y);}
 end;
 
 procedure TfGColor.FormDestroy(Sender: TObject);
@@ -555,18 +537,18 @@ end;
 procedure TfGColor.ColorClick(Sender: TObject);
 begin
 	if TMenuItem(Sender).Tag < 0 then
-		NowColor := clNone
+		SetNowColor(clNone)
 	else
-		NowColor := TColor(LongWord(TMenuItem(Sender).Tag) or $80000000);
+		SetNowColor(TColor(LongWord(TMenuItem(Sender).Tag) or $80000000));
 	InitAll;
 end;
 
 procedure TfGColor.PanelCurColorClick(Sender: TObject);
 begin
-	NowColor := CurColor;
+	SetNowColor(CurColor);
 	InitAll;
 end;
-
+{
 procedure TfGColor.TrackBarRGBAChange(Sender: TObject);
 begin
 	NowColor := ColorToRGB(TColor(NowColor)) and $00ffffff;
@@ -581,137 +563,104 @@ begin
 		TRColor(NowColor).B := TrackBarA.Position;
 	end;
 	end;
-	ColorToSpectrum(SpectrumPos, NowColor);
+	NowHLS := RGBToHLS(TRColor(NowColor));
+//	NowHSV := RGBToHSV(TRColor(NowColor));
 	InitReadOnly;
 	ChangeLightC;
 //	InitTrackBar;
 	InitEdits;
 	ChangeColor;
 end;
-
+}
 procedure TfGColor.ButtonRGBAClick(Sender: TObject);
 begin
-	NowColor := ColorToRGB(NowColor) and $00ffffff;
 	case TButton(Sender).Tag of
-	0: TRColor(NowColor).R := 255 - TRColor(NowColor).R;
-	1: TRColor(NowColor).G := 255 - TRColor(NowColor).G;
-	2: TRColor(NowColor).B := 255 - TRColor(NowColor).B;
-	3:
-	begin
-		TRColor(NowColor).R := 255 - TRColor(NowColor).R;
-		TRColor(NowColor).G := 255 - TRColor(NowColor).G;
-		TRColor(NowColor).B := 255 - TRColor(NowColor).B;
+	0: NowRGB.R := 255 - NowRGB.R;
+	1: NowRGB.G := 255 - NowRGB.G;
+	2: NowRGB.B := 255 - NowRGB.B;
 	end;
-	end;
+	SetNowRGB(NowRGB);
+
 	InitAll;
 end;
 
-procedure TfGColor.ImageSMouseDown(Sender: TObject; Button: TMouseButton;
-	Shift: TShiftState; X, Y: Integer);
-begin
-	if Button = mbLeft then
-	begin
-		SpectrumDown := True;
-		ImageSMouseMove(Sender, Shift, X, Y);
-	end;
-end;
-
-procedure TfGColor.ImageSMouseUp(Sender: TObject; Button: TMouseButton;
-	Shift: TShiftState; X, Y: Integer);
-begin
-	if Button = mbLeft then SpectrumDown := False;
-end;
-
-procedure TfGColor.ImageSMouseMove(Sender: TObject; Shift: TShiftState; X,
+procedure TfGColor.ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
 	Y: Integer);
+var B: U1;
 begin
-	if SpectrumDown then
+	if TDImage(Sender).MouseL then
 	begin
-		X := SpectrumPixel * X;
-		if X < 0 then
-			SpectrumPos := 0
-		else if X > MaxSpectrum then
-			SpectrumPos := MaxSpectrum
-		else
+		X := Range(0, X, TDImage(Sender).Width - 1);
+		B := Range(0, RoundDiv(255 * X, (TDImage(Sender).Bitmap.Width - 1)), 255);
+		case TDImage(Sender).Tag of
+		0:
 		begin
-			SpectrumPos := X;
+			NowRGB.R := B;
+			SetNowRGB(NowRGB);
 		end;
-		NowColor := SpectrumColor(SpectrumPos);
+		1:
+		begin
+			NowRGB.G := B;
+			SetNowRGB(NowRGB);
+		end;
+		2:
+		begin
+			NowRGB.B := B;
+			SetNowRGB(NowRGB);
+		end;
+		3:
+		begin
+			NowHLS.H := RoundDiv(MaxSpectrum * X, TDImage(Sender).Bitmap.Width - 1);
+			SetNowHLS(NowHLS);
+		end;
+		4:
+		begin
+			NowHLS.L := B;
+			SetNowHLS(NowHLS);
+		end;
+		5:
+		begin
+			NowHLS.S := B;
+			SetNowHLS(NowHLS);
+		end;
+		end;
 		InitAll;
 	end;
 end;
 
 procedure TfGColor.EditRGBAChange(Sender: TObject);
 begin
-	NowColor := ColorToRGB(NowColor) and $00ffffff;
 	case TEdit(Sender).Tag of
-	0: TRColor(NowColor).R := StrToValU1(TEdit(Sender).Text, True, TRColor(NowColor).R);
-	1: TRColor(NowColor).G := StrToValU1(TEdit(Sender).Text, True, TRColor(NowColor).G);
-	2: TRColor(NowColor).B := StrToValU1(TEdit(Sender).Text, True, TRColor(NowColor).B);
-	3:
-	begin
-		TRColor(NowColor).R := StrToValU1(EditA.Text, True, TRColor(NowColor).R);
-		TRColor(NowColor).G := StrToValU1(EditA.Text, True, TRColor(NowColor).G);
-		TRColor(NowColor).B := StrToValU1(EditA.Text, True, TRColor(NowColor).B);
-		TRColor(NowColor).A := 0;
+	0: NowRGB.R := StrToValU1(TEdit(Sender).Text, True, NowRGB.R);
+	1: NowRGB.G := StrToValU1(TEdit(Sender).Text, True, NowRGB.G);
+	2: NowRGB.B := StrToValU1(TEdit(Sender).Text, True, NowRGB.B);
+	3: NowHLS.H := StrToValI(TEdit(Sender).Text, True, -1, NowHLS.H, MaxSpectrum, 1);
+	4: NowHLS.L := StrToValU1(TEdit(Sender).Text, True, NowHLS.L);
+	5: NowHLS.S := StrToValU1(TEdit(Sender).Text, True, NowHLS.S);
 	end;
-	end;
+  ClearErrors;
+	if TEdit(Sender).Tag <= 2 then
+		SetNowRGB(NowRGB)
+	else
+		SetNowHLS(NowHLS);
+
 	InitReadOnly;
-	ChangeLightC;
-	InitTrackBar;
-//	InitEdits;
+	if TEdit(Sender).Tag <= 2 then
+		InitEditsHLS
+	else
+		InitEditsRGB;
 	ChangeColor;
-end;
-
-procedure TfGColor.ImageLMouseDown(Sender: TObject; Button: TMouseButton;
-	Shift: TShiftState; X, Y: Integer);
-begin
-	if Button = mbLeft then
-	begin
-		LightDown := True;
-		ImageLMouseMove(Sender, Shift, X, Y);
-	end;
-end;
-
-procedure TfGColor.ImageLMouseMove(Sender: TObject; Shift: TShiftState; X,
-	Y: Integer);
-var
-	i: Integer;
-begin
-	if LightDown then
-	begin
-		i := 765 * {(LightC.R + LightC.G + LightC.B) *} X div (ImageL.Width - 1);
-		if i < 0 then
-			i := 0
-		else if i > 765 then
-			i := 765;
-		LightPos := X;
-
-		TRColor(NowColor).R := LightC.R * i div 765;
-		TRColor(NowColor).G := LightC.G * i div 765;
-		TRColor(NowColor).B := LightC.B * i div 765;
-		TRColor(NowColor).A := 0;
-
-		//ChangeColor;
-		InitAll;
-	end;
-end;
-
-procedure TfGColor.ImageLMouseUp(Sender: TObject; Button: TMouseButton;
-	Shift: TShiftState; X, Y: Integer);
-begin
-	if Button = mbLeft then LightDown := False;
 end;
 
 procedure TfGColor.PanelDefaultColorClick(Sender: TObject);
 begin
-	NowColor := DefColor;
+	SetNowColor(DefColor);
 	InitAll;
 end;
 
 procedure TfGColor.PanelNowBitColorClick(Sender: TObject);
 begin
-	NowColor := PanelNowBitColor.Color;
+	SetNowColor(PanelNowBitColor.Color);
 	InitAll;
 end;
 
@@ -719,7 +668,7 @@ procedure TfGColor.ButtonCancelClick(Sender: TObject);
 begin
 	if Assigned(OnApply) then
 	begin
-		if NowColor <> CurColor then OnApply(CurColor);
+		if FNowColor <> CurColor then OnApply(CurColor);
 		Close;
 	end;
 end;
@@ -728,7 +677,7 @@ procedure TfGColor.ButtonOkClick(Sender: TObject);
 begin
 	if Assigned(OnApply) then
 	begin
-		OnApply(NowColor);
+		OnApply(FNowColor);
 		Close;
 	end;
 end;
@@ -769,44 +718,65 @@ begin
 	ComboBoxBitDepth.ItemIndex := Length(ABits) - 1;
 end;
 
-procedure TfGColor.ImageSFill(Sender: TObject);
+procedure TfGColor.ImageFill(Sender: TObject);
 var
 	BmpD: TDBitmap;
 	i: Integer;
-begin
-	BmpD := ImageS.Bitmap;
-	for i := 0 to ImageS.Width - 1 do
-	begin
-		BmpD.Line(i, 0, i, 15, SpectrumColor(SpectrumPixel * i), ef16);
-	end;
-	SpectrumC.L := SpectrumColor(SpectrumPos);
-	if SpectrumPos >= 0 then
-		BmpD.Line(SpectrumPos div SpectrumPixel, 0, SpectrumPos div SpectrumPixel, 15, clNone, efXor);
-end;
-
-procedure TfGColor.ImageLFill(Sender: TObject);
-var
-	BmpD: TDBitmap;
-	i, X: Integer;
+	B: U1;
 	C: TRColor;
+	HLS: THLSColor;
 begin
-	BmpD := ImageL.Bitmap;
-	for i := 0 to ImageL.Width - 1 do
+	BmpD := TDImage(Sender).Bitmap;
+	C := NowRGB;
+	HLS := NowHLS;
+	for i := 0 to BmpD.Width - 1 do
 	begin
-		C.R := LightC.R * SG(i) div (BmpD.Width - 1);
-		C.G := LightC.G * SG(i) div (BmpD.Width - 1);
-		C.B := LightC.B * SG(i) div (BmpD.Width - 1);
-		C.A := 0;
+		B := RoundDiv(SG(255 * i), (BmpD.Width - 1));
+		case TDImage(Sender).Tag of
+		0:
+		begin
+			C.R := B;
+		end;
+		1:
+		begin
+			C.G := B;
+		end;
+		2:
+		begin
+			C.B := B;
+		end;
+		3:
+		begin
+			if HLS.S <> 0 then
+				HLS.H := RoundDiv(MaxSpectrum * i, (BmpD.Width - 1))
+			else
+				HLS.H := -1;
+			C := HLSToRGB(HLS);
+		end;
+		4:
+		begin
+			HLS.L := B;
+			C := HLSToRGB(HLS);
+		end;
+		5:
+		begin
+			HLS.S := B;
+			C := HLSToRGB(HLS);
+		end;
+		end;
 		BmpD.Line(i, 0, i, 15, C.L, ef16);
 	end;
-	C.L := ColorToRGB(NowColor)  and $00ffffff;
-	LightPos := C.R + C.G + C.B;
-	if (LightC.R + LightC.G + LightC.B) > 0 then
-		X := LightPos * Integer(BmpD.Width - 1) div (LightC.R + LightC.G + LightC.B)
-	else
-		X := 0;
-	if LightPos >= 0 then
-		BmpD.Line(X, 0, X, 15, clNone, efNeg);
+
+	i := -1;
+	case TDImage(Sender).Tag of
+	0: i := RoundDiv(SG(255 * NowRGB.R), (BmpD.Width - 1));
+	1: i := RoundDiv(SG(255 * NowRGB.G), (BmpD.Width - 1));
+	2: i := RoundDiv(SG(255 * NowRGB.B), (BmpD.Width - 1));
+	3: i := RoundDiv(SG((BmpD.Width - 1) * NowHLS.H), MaxSpectrum);
+	4: i := RoundDiv(SG(255 * NowHLS.L), (BmpD.Width - 1));
+	5: i := RoundDiv(SG(255 * NowHLS.S), (BmpD.Width - 1));
+	end;
+	BmpD.Line(i, 0, i, 15, NegMonoColor(FNowColor), ef16);
 end;
 
 procedure TfGColor.ComboBoxBitDepthChange(Sender: TObject);
@@ -814,203 +784,21 @@ begin
 	InitAll;
 end;
 
-
-{
-Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
-Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi:
-|Y|   |0.299  0.587  0.114  | |R|
-|U| = |-0.141  -0.289 0.437 | |G|
-|V|   |0.615 -0.515 -0.1    | |B|
-
-
-|Y |   |0.299  0.587  0.114   | |R|
-|Cb| = |-0.1687  -0.3313 -0.5 | |G|
-|Cr|   |0.5 -0.4187 -0.0813   | |B|
-
-Zpìtný pøevod se provádí pomocí inverzní matice.
-
-
-Model HSV vykazuje nìkteré nedostatky, které sice nejsou zásadního charakteru,
-nicménì mohou ztìžovat práci s definováním barvy v prostoru HSV.
-Jedním z nedostatkù je jehlanovitý tvar, který zpùsobuje,
-že ve øezu se musí bod o konstantní hodnotì s pohybovat pøi zmìnì h po dráze ve tvaru šestiúhelníku,
-nikoliv po kružnici, jak by bylo pøirozené.
-Dalším záporným jevem je nesymetrie modelu z hlediska pøechodù ve stupních šedi od èerné k bílé.
-Tyto nedostatky odstraòuje model HLS zavedený firmou Tektronix
-}
-
-function RGBToHLS(C: TRColor): THLSColor;
-var
-	MaxC, MinC, delta, H: SG;
+procedure TfGColor.ImageMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
 begin
-	Result.H := 0;
-	Result.L := 0;
-	Result.S := 0;
-
-	MaxC := max(max(C.R, C.G), C.B);
-	MinC := min(min(C.R, C.G), C.B);
-
-	Result.L := (maxC + minC) div 2;
-
-	if (maxC = minC) then
-	begin
-		Result.S := 0;
-		Result.H := -1;
-	end
-	else
-	begin
-		if (Result.L < 128) then
-			Result.S := (maxC-minC) div (maxC+minC)
-		else
-			Result.S := (maxC-minC) div (2-maxC-minC);
-
-		delta := maxC - minC;
-		H := 0;
-		if (C.R = maxC) then H := 60*(C.G-C.B) div delta
-		else if (C.G = maxC) then H := 60*(2+(C.B-C.R)) div delta
-		else if (C.B = maxC) then H := 60*(4+(C.R-C.G)) div delta;
-		if (H < 0) then Inc(H, 360);
-		Result.H := H;
-	end;
+	ImageMouseMove(Sender, Shift, X, Y);
 end;
 
-function RGBtoHSV(C: TRColor): THSVColor;
-var
-	MaxC, MinC, delta, H: SG;
+procedure TfGColor.ComboBoxNFChange(Sender: TObject);
 begin
-	maxC := Math.max(Math.max(C.r,C.g),C.b);
-	minC := Math.min(Math.min(C.r,C.g),C.b);
-
-	Result.v := maxC;
-	Result.h := 0;
-	h := 0;
-
-	if (maxC <> 0) then
-		Result.s := (maxC - minC) div maxC
+	if ComboBoxNF.ItemIndex = 1 then
+		NumericPref := '$'
 	else
-		Result.s := 0;
-
-	if(Result.s = 0) then
-		Result.h := -1
-	else
-	begin
-		delta := maxC - minC;
-		if(C.r = maxC) then h := 60*(C.g-C.b) div delta
-		else if(C.g = maxC) then h := 60*(2+(C.b-C.r)) div delta
-		else if(C.b = maxC) then h := 60*(4+(C.r-C.g)) div delta;
-		if(h<0) then Inc(h, 360);
-		Result.H := H;
-	end;
+		NumericPref := '';
+	InitEditsRGB;
+	InitEditsHLS;
 end;
-
-function HLSRGBValue(n1, n2, hue: SG): U1;
-begin
-	if(hue>360) then Dec(hue, 360)
-	else if(hue<0) then Inc(hue, 360);
-	if(hue<60) then Result := n1+(n2-n1)*hue div 60
-	else if (hue<180) then Result := n2
-	else if (hue<240) then Result := n1+(n2-n1)*(240-hue) div 60
-	else Result := n1;
-end;
-
-function HSVtoRGB(C: THSVColor): TRColor;
-var i, f, p, q, t: SG;
-begin
-	Result.L := 0;
-	if(C.s = 0) then
-	begin
-		if(C.h = -1) then
-		begin
-			Result.r := C.v;
-			Result.g := C.v;
-			Result.b := C.v;
-		end
-		else
-		begin
-{							rIndex.setText("xxx");
-			gIndex.setText("xxx");
-			bIndex.setText("xxx"); D???}
-		end;
-	end
-	else
-	begin
-		if(C.h = 360) then C.h := 0;
-
-		C.h:=C.h div 60; // D???
-//            i := (int)Math.floor((double)h); D???
-  
-		f := C.h - i;
-		p := C.v*(1-C.s);
-		q := C.v*(1-(C.s*f));
-		t := C.v*(1-(C.s*(1-f)));
-
-		case i of
-		0:
-		begin
-			Result.r := C.v;
-			Result.g := t;
-			Result.b := p;
-		end;
-		1:
-		begin
-			Result.r := q;
-			Result.g := C.v;
-			Result.b := p;
-		end;
-		2:
-		begin
-			Result.r := p;
-			Result.g := C.v;
-			Result.b := t;
-		end;
-		3:
-		begin
-			Result.r := p;
-			Result.g := q;
-			Result.b := C.v;
-		end;
-		4:
-		begin
-			Result.r := t;
-			Result.g := p;
-			Result.b := C.v;
-		end;
-		5:
-		begin
-			Result.r := C.v;
-			Result.g := p;
-			Result.b := q;
-		end;
-		end;
-	end;
-end;
-
-function HLStoRGB(C: THLSColor): TRColor;
-var m2, m1: SG;
-begin
-	Result.R := 0;
-	Result.G := 0;
-	Result.B := 0;
-
-	if(C.l<128) then m2 := C.l*(1+C.s)
-	else m2 := C.l+C.s-C.l*C.s;
-	m1 := 2*C.l-m2;
-	if(C.s = 0) then
-	begin
-		{if(C.h = Float.NaN)}
-		Result.r := 255;
-		Result.g := 255;
-		Result.b := 255;
-		//else System.err.println("Doslo k chybe pri prevodu HLS -> RGB");
-	end
-	else
-	begin
-		Result.r := HLSRGBValue(m1,m2,C.h+120);
-		Result.g := HLSRGBValue(m1,m2,C.h);
-		Result.b := HLSRGBValue(m1,m2,C.h-120);
-	end;
-end;
-  
 
 end.
 

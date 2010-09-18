@@ -105,6 +105,7 @@ var
 	DesktopHWnd: HWnd;
 	DesktopDC: HDC;
 
+procedure SetControlEnabled(Component: TComponent; E: BG);
 function GetDesktop: BG;
 procedure ReleaseDesktop;
 
@@ -116,6 +117,16 @@ const
 	OneBuffer = False;
 var
 	FBitmapF: TDBitmap;
+
+procedure SetControlEnabled(Component: TComponent; E: BG);
+var i: SG;
+begin
+	for i := 0 to Component.ComponentCount - 1 do
+	begin
+		if Component.Components[i] is TControl then
+			TControl(Component.Components[i]).Enabled := E;
+	end;
+end;
 
 function GetDesktop: BG;
 begin
@@ -367,6 +378,7 @@ begin
 		begin
 //			if Background <> baOpenGLBitmap then
 				FBitmapB.SetSize(ClientWidth, ClientHeight);
+				FBitmapB.ChangeRB := FBackground = baOpenGLBitmap;
 {			else
 				FBitmapB.SetSize(1 shl CalcShr(ClientWidth), 1 shl CalcShr(ClientHeight));}
 
@@ -488,15 +500,14 @@ begin
 		end;
 		end;
 
+		FBitmapB.SetSize(0, 0);
 		case FBackground of
 		baNone, baOpenGL:
 		begin
 //			Image.Visible := False;
-			FBitmapB.SetSize(0, 0);
 		end
 		else
 		begin
-			FBitmapB.SetSize(0, 0);
 			InitBackground;
 //			Image.Visible := True;
 			if FBackground <> baOpenGLBitmap then
@@ -683,9 +694,6 @@ begin
 end;
 
 procedure TDForm.Paint;
-var
-	NewX: SG;
-	ZoomX, ZoomY: Single;
 begin
 	case FBackground of
 	baNone:
@@ -710,7 +718,23 @@ begin
 
 	if FBackground = baOpenGLBitmap then
 	begin
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
+		glClear(GL_DEPTH_BUFFER_BIT); // D??? TNT2 Error read at 0
+{		glClear(GL_CURRENT_BIT);
+		glClear(GL_TRANSFORM_BIT);
+		glClear(GL_ALL_ATTRIB_BITS);}
+{	glDisable(GL_LIGHT0);
+	glDisable(GL_LIGHT1);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_COLOR_MATERIAL);
+	glDisable(GL_NORMALIZE);
+	glDisable(GL_POINT_SMOOTH);
+	glDisable(GL_POINT_SIZE);}
+
+//		glDisable($ffff);
+//		glDrawPixels(16, 16, GL_RGB, GL_UNSIGNED_BYTE, FBitmapB.GLData);
+		glDrawPixels(FBitmapB.Width, FBitmapB.Height, GL_FORMAT, GL_UNSIGNED_BYTE, FBitmapB.GLData);
+
+(*		glPushAttrib(GL_ALL_ATTRIB_BITS);
 		glPushMatrix;
 
 
@@ -751,8 +775,8 @@ begin
 //			FBitmapB.GLSetSize;
 
 			glEnable(GL_TEXTURE_2D);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, FBitmapB.Width,
-				FBitmapB.Height, 0, GL_RGB, GL_UNSIGNED_BYTE,
+			glTexImage2D(GL_TEXTURE_2D, 0, BPP, FBitmapB.Width,
+				FBitmapB.Height, 0, GL_FORMAT, GL_UNSIGNED_BYTE,
 				FBitmapB.GLData);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP{GL_REPEAT});
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP{GL_REPEAT});
@@ -831,8 +855,8 @@ begin
 	glColor3ub(255, 255, 255);
 
 				glEnable(GL_TEXTURE_2D);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, FBitmapB.Width,
-					FBitmapB.Height, 0, GL_RGB, GL_UNSIGNED_BYTE,
+				glTexImage2D(GL_TEXTURE_2D, 0, BPP, FBitmapB.Width,
+					FBitmapB.Height, 0, GL_FORMAT, GL_UNSIGNED_BYTE,
 					FBitmapB.GLData);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -859,11 +883,11 @@ begin
 				glDisable(GL_TEXTURE_2D);
 
 
-		glDisable(GL_COLOR_MATERIAL);*)
+		glDisable(GL_COLOR_MATERIAL);
 
 
 		glPopMatrix;
-		glPopAttrib;
+		glPopAttrib;*)
 	end;
 
 	inherited Paint; // FOnPaint Method
@@ -927,8 +951,8 @@ begin
 	baOpenGL, baOpenGLBitmap:
 	begin
 		ActivateRenderingContext(Canvas.Handle,RC); // make context drawable
-{		if FBackground = baOpenGLBitmap then
-			ResizeScene; }
+		if FBackground = baOpenGLBitmap then
+			InitBackground;
 //		BeforeResize; }
 	end;
 	end;
@@ -960,12 +984,14 @@ begin
 //		AfterResize;
 		Paint;
 		DeactivateRenderingContext; // make context drawable
-	end
-	else // baUser, baGradient, baGradientOnly
+	end;
+	baUser: Fill;
+	baGradient, baGradientOnly:
 	begin
 //		if (Message.Width <> Width) or (Message.Height <> Height) then
 //			InitBackground;
-		Fill;
+//		Fill; Not, hides labels on form
+		Invalidate;
 	end;
 	end;
 end;
@@ -995,8 +1021,11 @@ end;}
 
 procedure TDForm.WMSysColorChange;
 begin
-	FBitmapB.SetSize(0, 0);
-	InitBackground;
+	if not (FBackground in [baUser, baOpenGLBitmap]) then
+	begin
+		FBitmapB.SetSize(0, 0);
+		InitBackground;
+	end;
 end;
 
 procedure TDForm.RestoreWindow;

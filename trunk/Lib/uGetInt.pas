@@ -66,10 +66,11 @@ function GetS8(Prompt: string;
 implementation
 
 {$R *.DFM}
-uses uStrings, uInput, uError;
+uses uStrings, uInput, uError, uParser;
 
 var
 	fGetInt: TfGetInt;
+
 function GetU4(Prompt: string;
 	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean;
 var C: S8;
@@ -117,8 +118,8 @@ begin
 	fGetInt.LabelNow.Caption := IntToStr(fGetInt.NowVal);
 
 	fGetInt.TrackBar.OnChange := nil;
-	fGetInt.TrackBar.Frequency := (fGetInt.TMaxVal - fGetInt.TMinVal + 19) div 20;
-	fGetInt.TrackBar.PageSize := (fGetInt.TMaxVal - fGetInt.TMinVal + 19) div 20;
+	fGetInt.TrackBar.Frequency := (UG(fGetInt.TMaxVal - fGetInt.TMinVal) + 19) div 20;
+	fGetInt.TrackBar.PageSize := fGetInt.TrackBar.Frequency;
 	if fGetInt.TMaxVal < fGetInt.TrackBar.Min then
 	begin
 		fGetInt.TrackBar.Min := fGetInt.TMinVal;
@@ -193,12 +194,9 @@ procedure TfGetInt.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToValI(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
-{	if ErrorMsg <> '' then
-	begin
-		NowVal := TDefVal;
-		ChangeInt;
-	end;
-	MesToMemo(EditError); D???}
+	MesToMemo(EditError);
+	ClearErrors;
+
 	InitButtons;
 	InitTrackBar;
 	ChangeInt;

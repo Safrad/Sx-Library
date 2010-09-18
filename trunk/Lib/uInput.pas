@@ -37,6 +37,7 @@ function StrToValS8(Line: string; const UseWinFormat: BG;
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1): U1;
 
+procedure ClearErrors;
 procedure ShowAndClearErrors;
 
 implementation
@@ -70,7 +71,6 @@ begin
 		Parser.DecimalSep := '.';
 		Parser.ThousandSep := ',';
 	end;
-
 //	CompileMesClear;
 	Result := Parser.ReadFA(MinVal, DefVal, MaxVal);
 	Parser.Free;
@@ -160,6 +160,14 @@ begin
 			Result := 0;
 	end;
 end;*)
+
+procedure ClearErrors;
+begin
+	if CompileMes.Count > 0 then
+	begin
+		CompileMes.Clear;
+	end;
+end;
 
 procedure ShowAndClearErrors;
 begin

@@ -240,16 +240,9 @@ object fGetTime: TfGetTime
     Height = 28
     Ctl3D = True
     Max = 23
-    Orientation = trHorizontal
     ParentCtl3D = False
-    Frequency = 1
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
     TabOrder = 5
     ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
     OnChange = TrackBarHMSDChange
   end
   object TrackBarM: TTrackBar
@@ -258,16 +251,9 @@ object fGetTime: TfGetTime
     Width = 259
     Height = 28
     Max = 59
-    Orientation = trHorizontal
     PageSize = 10
-    Frequency = 1
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
     TabOrder = 7
     ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
     OnChange = TrackBarHMSDChange
   end
   object TrackBarS: TTrackBar
@@ -276,16 +262,9 @@ object fGetTime: TfGetTime
     Width = 259
     Height = 28
     Max = 59
-    Orientation = trHorizontal
     PageSize = 10
-    Frequency = 1
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
     TabOrder = 9
     ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
     OnChange = TrackBarHMSDChange
   end
   object TrackBarD: TTrackBar
@@ -294,16 +273,10 @@ object fGetTime: TfGetTime
     Width = 223
     Height = 28
     Max = 1000
-    Orientation = trHorizontal
     PageSize = 10
     Frequency = 10
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
     TabOrder = 11
     ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
     OnChange = TrackBarHMSDChange
   end
   object ButtonOk: TDButton

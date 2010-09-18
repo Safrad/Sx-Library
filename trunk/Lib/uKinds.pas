@@ -41,7 +41,9 @@ type
 		SaveAll1,
 		Close1,
 		CloseAll1,
-		Delete1: TMenuItem;
+		Delete1,
+		LastWindow1,
+		NextWindow1: TMenuItem;
 
 		procedure ChangeIndex(I: SG);
 		function AddKindItem: BG;
@@ -71,6 +73,7 @@ type
 
 		function SaveDialogP(var FileName: TFileName): BG;
 		function SaveAs(Kind: SG): BG;
+
 	public
 		AdvancedMenuDrawItemEvent: TAdvancedMenuDrawItemEvent;
 		Items: array of TItem;
@@ -124,10 +127,11 @@ type
 	end;
 
 {
+	// OnCreate
 	Kinds := TKinds.Create;
 	Kinds.AdvancedMenuDrawItemEvent := OnAdvancedMenuDraw;
-	Kinds.ItemAddr := @Kind;
-	Kinds.ItemSize := SizeOf(TKind);
+	Kinds.ItemAddr := @Kind; // Multifiles only
+	Kinds.ItemSize := SizeOf(TKind); // Multifiles only
 	Kinds.MultiFiles := True;
 
 	Kinds.File1 := File1;
@@ -144,23 +148,22 @@ type
 	Kinds.SaveToFile := SaveToFile;
 	Kinds.ChangeFile := ChangeFile;
 
-	---
-
 	Kinds.RWOptions
 
+
+	// OnShow
 	Kinds.KindChangeFile(Sender);
 
+	// OnFileChange
+	Kinds.Change;
+
+	// OnCloseQuery
+	CanClose := Kinds.CanClose;
+
+	// OnDestroy
+	FreeAndNil(Kinds);
 }
-{
-	Kinds.New1 := New1;
-	Kinds.Open1 := Open1;
-	Kinds.Reopen1 := Reopen1;
-	Kinds.Save1 := Save1;
-	Kinds.SaveAs1 := SaveAs1;
-	Kinds.SaveAll1 := SaveAll1;
-	Kinds.Close1 := Close1;
-	Kinds.CloseAll1 := CloseAll1;
-}
+
 implementation
 
 uses
@@ -180,7 +183,7 @@ var i: SG;
 begin
 	for i := 0 to Length(Items) - 1 do
 	begin
-		FreeMem(Items[i].PData, ItemSize); Items[i].PData := nil;
+		FreeMem(Items[i].PData); Items[i].PData := nil;
 	end;
 	SetLength(Items, 0);
 	Reopen.FreeMenu;
@@ -290,28 +293,32 @@ begin
 	File1.Insert(i, Delete1);
 	Inc(i);
 
-
-	M := TMenuItem.Create(Window1);
-	M.Caption := '-';
-	Window1.Add(M);
-
-	M := TMenuItem.Create(Window1);
-	M.Tag := -1;
-	M.Caption := 'Last Window';
-	M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl, ssShift]);
-	M.OnClick := LastNextWindow1Click;
-	Window1.Add(M);
-
-	M := TMenuItem.Create(Window1);
-	M.Tag := +1;
-	M.Caption := 'Next Window';
-	M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl]);
-	M.OnClick := LastNextWindow1Click;
-	Window1.Add(M);
-
 	M := TMenuItem.Create(File1);
 	M.Caption := '-';
 	File1.Insert(i, M);
+
+	if Assigned(Window1) and MultiFiles then
+	begin
+		M := TMenuItem.Create(Window1);
+		M.Caption := '-';
+		Window1.Add(M);
+
+		M := TMenuItem.Create(Window1);
+		M.Tag := -1;
+		M.Caption := 'Last Window';
+		M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl, ssShift]);
+		M.OnClick := LastNextWindow1Click;
+		Window1.Add(M);
+		LastWindow1 := M;
+
+		M := TMenuItem.Create(Window1);
+		M.Tag := +1;
+		M.Caption := 'Next Window';
+		M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl]);
+		M.OnClick := LastNextWindow1Click;
+		Window1.Add(M);
+		NextWindow1 := M;
+	end;
 end;
 
 procedure TKinds.RWOptions(const Save: BG);
@@ -682,7 +689,7 @@ begin
 				end;
 			end;
 		end;
-		FreeMem(Items[Kind].PData, ItemSize); Items[Kind].PData := nil;
+		FreeMem(Items[Kind].PData); Items[Kind].PData := nil;
 		for i := Kind to Count - 2 do
 		begin
 			Items[i] := Items[i + 1];
@@ -748,7 +755,7 @@ begin
 	KindInit;
 end;
 
-function TKinds.CanClose: BG;
+function TKinds.CanClose:	BG;
 var i: SG;
 begin
 	Result := False;
@@ -836,6 +843,9 @@ begin
 		Window1.Enabled := Count > 0;
 		for i := 0 to Count - 1 do
 			SetMenuItem(i);
+		if Assigned(LastWindow1) then LastWindow1.Enabled := Count > 1;
+		if Assigned(NextWindow1) then NextWindow1.Enabled := Count > 1;
+
 	end;
 end;
 

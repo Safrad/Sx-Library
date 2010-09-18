@@ -11,7 +11,7 @@ unit uDIni;
 interface
 
 uses
-	uAdd, uDView, uDButton,
+	uAdd, uDView, uDImage, uDButton,
 	Classes, SysUtils, Forms, ComCtrls, StdCtrls, Controls, Menus;
 
 type
@@ -88,6 +88,7 @@ type
 
 		procedure RWFormPos(Form: TForm; const Save: Boolean);
 		procedure RWFormPosV(Form: TForm; const Save: Boolean);
+		procedure RWDImage(DImage: TDImage; const Save: Boolean);
 		procedure RWDView(DView: TDView; const Save: Boolean);
 		procedure RWListView(ListView: TListView; const Save: Boolean);
 		procedure RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: Boolean);
@@ -140,7 +141,7 @@ var NewSize: Integer;
 begin
 	Inc(FSectionCount);
 	NewSize := FSectionCount;
-	if AllocByEx(Length(FSections), NewSize, SizeOf(FSections[0])) then
+	if AllocByExp(Length(FSections), NewSize) then
 		SetLength(FSections, NewSize);
 	FSections[FSectionCount - 1].Name := Section;
 	FSections[FSectionCount - 1].Keys := nil;
@@ -152,7 +153,7 @@ var i, NewSize: Integer;
 begin
 	Inc(FSections[SectionIndex].KeyCount);
 	NewSize := FSections[SectionIndex].KeyCount;
-	if AllocByEx(Length(FSections[SectionIndex].Keys), NewSize, SizeOf(FSections[SectionIndex].Keys[0])) then
+	if AllocByExp(Length(FSections[SectionIndex].Keys), NewSize) then
 		SetLength(FSections[SectionIndex].Keys, NewSize);
 	i := FSections[SectionIndex].KeyCount - 1;
 	FSections[SectionIndex].Keys[i].Name := Ident;
@@ -403,7 +404,7 @@ begin
 				Strings.EndUpdate;
 			end;
 		finally
-//			FreeMem(Buffer, BufferSize);
+//			FreeMem(Buffer);
 		end;
 	end
 	else
@@ -1038,6 +1039,13 @@ procedure TDIniFile.RWFormPosV(Form: TForm; const Save: Boolean);
 begin
 	RWFormPos(Form, Save);
 	Form.Visible := RWBGF(Form.Name, 'Visible', Form.Visible, True, Save);
+end;
+
+procedure TDIniFile.RWDImage(DImage: TDImage; const Save: Boolean);
+begin
+	DImage.Center := RWBGF(DImage.Name, 'Center', DImage.Center, DImage.Center, Save);
+	DImage.Grate := RWBGF(DImage.Name, 'Grate', DImage.Grate, DImage.Grate, Save);
+	DImage.GrateColor := RWSGF(DImage.Name, 'Grate', DImage.GrateColor, DImage.GrateColor, Save);
 end;
 
 procedure TDIniFile.RWDView(DView: TDView; const Save: Boolean);

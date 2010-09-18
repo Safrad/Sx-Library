@@ -148,16 +148,9 @@ object fGetInt: TfGetInt
     Width = 320
     Height = 28
     Max = 99
-    Orientation = trHorizontal
     PageSize = 10
-    Frequency = 1
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
     TabOrder = 6
     ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
     OnChange = TrackBarChange
   end
   object ButtonMin: TDButton

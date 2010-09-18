@@ -12,9 +12,16 @@ interface
 
 {$R *.RES}
 uses
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, Menus,
 	ExtCtrls, StdCtrls,
-	uDBitmap;
+	uDBitmap, uAdd;
+
+type
+	TZoomMenu = (
+		zmIn, zmOut,
+		zmFullSize, zmFitImage, zmFitWidth, zmFitHeight,
+		zm12, zm1, zm2,
+		zmCustom);
 
 type
 	TMouseAction = (mwNone, mwScroll,
@@ -41,6 +48,11 @@ type
 		FCanvas: TCanvas;
 		LCursor: TCursor;
 
+		// Zoom
+		FEnableZoom: BG;
+		M: array[TZoomMenu] of TMenuItem;
+		BmpS, BmpSourceS: TDBitmap;
+
 		procedure WMChar(var Message: TWMChar); message WM_CHAR;
 
 		procedure CMMouseEnter(var Message: TWMMouse); message CM_MOUSEENTER;
@@ -51,6 +63,7 @@ type
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 
 		procedure SetHotTrack(Value: Boolean);
+		procedure ZoomClick(Sender: TObject);
 	protected
 		{ Protected declarations }
 		procedure CreateParams(var Params: TCreateParams); override;
@@ -60,18 +73,32 @@ type
 		property Canvas: TCanvas read FCanvas;
 	public
 		{ Public declarations }
+		Zoom: FG;
 		Cur: TCursor;
 		MouseL, MouseM, MouseR: Boolean;
 		MouseAction: TMouseAction;
 		MouseWhere: TMouseAction;
 		MouseOn: Boolean;
 
+		// Input
+		UserBitmap: TDBitmap;
+		UserWidth, UserHeight: SG; // Can be 0 if there is no borders
+		UserMouseX, UserMouseY: SG;
+		SX, SY, SW, SH: SG;
+
+		// Output
 		Bitmap: TDBitmap;
+		Center, Grate: BG;
+		GrateColor: TColor;
+		Smaller: BG;
+		DX, DY, DW, DH: SG;
+
+		OfsX, OfsY: SG;
+		MaxOfsX, MaxOfsY: SG;
+
+		// Scrolls
 		ScrollBarHWidth, ScrollBarHHeight,
 		ScrollBarVWidth, ScrollBarVHeight: Integer;
-		OfsX, OfsY: Integer;
-		MaxOfsX, MaxOfsY: Integer;
-		BitmapWidth, BitmapHeight: Integer;
 		FramePerSec: Extended;
 		PaintCount: Integer;
 		FHandScroll: Boolean;
@@ -91,9 +118,11 @@ type
 			MousePos: TPoint): Boolean; override;}
 		function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
 		function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean; override;
-		procedure Fill; {virtual; }dynamic;
+		procedure FillImage;
+		procedure Fill; {virtual; dynamic;}
 //		procedure Paint; //override;
 		function MouseWh(const X, Y: Integer): TMouseAction;
+		procedure CreateZoom(Zoom1: TMenuItem);
 	published
 		{ Published declarations }
 		property DrawFPS: Boolean read FDrawFPS write FDrawFPS;
@@ -144,15 +173,15 @@ type
 		property OnDblClick;
 	end;
 
-procedure ZoomMake(
+{procedure ZoomMake(
 	BmpSource: TDBitmap;
 	VisX, VisY: Integer;
-	AsWindow: Boolean; Zoom: Extended; XYConst: Boolean; QualityResize: Boolean;
+	AsWindow: Boolean; Zoom: FG; XYConst: Boolean; QualityResize: Boolean;
 	var OX, OY: Integer;
 	out SourceWidth, SourceHeight: Integer;
 	out SX1, SY1, SXW, SYH: Integer;
 	out DX1, DY1, DXW, DYH: Integer;
-	var BmpSource2: TDBitmap);
+	var BmpSource2: TDBitmap);}
 
 procedure Register;
 
@@ -160,7 +189,53 @@ implementation
 
 uses
 	Math,
-	uAdd, uGraph, uSysInfo;
+	uMenus, uGraph, uSysInfo, uStrings, uGetInt;
+
+const
+//	ZoomDiv = 2520;
+	MenuNames: array[TZoomMenu] of string = (
+		'Zoom In', 'Zoom Out',
+		'Full Size', 'Fit Image', 'Fit Width', 'Fit Height', '1:2', '1:1', '2:1',
+		'Zoom To...');
+	MenuShort: array[TZoomMenu] of Char = (
+		'I', 'U',
+		'/', #0, #0, #0, #0, 'Q', #0,
+		#0);
+
+procedure TDImage.CreateZoom(Zoom1: TMenuItem);
+var
+	i: TZoomMenu;
+	j: SG;
+	MS: TMenuItem;
+begin
+	PopupMenu := TPopupMenu.Create(Self);
+	j := 0;
+	for i := Low(TZoomMenu) to High(TZoomMenu) do
+	begin
+		if i in [zmFullSize, zm12, zmCustom] then
+		begin
+			MS := TMenuItem.Create(Zoom1);
+			MS.Caption := '-';
+			Zoom1.Insert(j, MS);
+			Inc(j);
+		end;
+		M[i] := TMenuItem.Create(Zoom1);
+		M[i].Tag := SG(i);
+		M[i].Caption := MenuNames[i];
+		M[i].Name := ComponentName(MenuNames[i]);// 'Zoom' + IntToStr(SG(i));
+		if MenuShort[i] <> #0 then
+			M[i].ShortCut := ShortCut(Ord(MenuShort[i]), [ssCtrl]);
+
+		M[i].OnClick := ZoomClick;
+		Zoom1.Insert(j, M[i]);
+//		PopupMenu.Items.Insert(j, M[i]);
+		Inc(j);
+	end;
+	FEnableZoom := True;
+	MenuCreate(Zoom1, PopupMenu.Items);
+	MenuUpdate(Zoom1, PopupMenu.Items);
+end;
+
 const
 	OfsS = 20; // ms; FPS = 1000 / OfsS; 25-30FPS for VR; 50 = TV
 	{$ifopt d+}
@@ -170,6 +245,49 @@ const
 	ScrollEf = ef13;
 	ScrollEf2 = ef13;
 	{$endif}
+
+
+procedure TDImage.ZoomClick(Sender: TObject);
+var ZoomI: SG;
+begin
+	case TZoomMenu(TMenuItem(Sender).Tag) of
+	zmIn:
+	begin
+		Zoom := Zoom * 2;
+//		fInfo.ComboBoxZoom.Text := FToS(Zoom);
+//		FreeAndNil(BmpSource2);
+	end;
+	zmOut:
+	begin
+		Zoom := Zoom / 2;
+	end;
+	zmFullSize:
+	begin
+		Zoom := 1;
+	end;
+	zmFitImage: Zoom := Max(UserWidth / Bitmap.Width, UserHeight / Bitmap.Height);
+	zmFitWidth: Zoom := UserWidth / Bitmap.Width;
+	zmFitHeight: Zoom := UserHeight / Bitmap.Height;
+	zm12: Zoom := 1 / 2;
+	zm1: Zoom := 1;
+	zm2: Zoom := 2;
+	zmCustom:
+	begin
+		ZoomI := Round(Zoom * 1000);
+		if GetInt('Zoom To (×1000)', ZoomI, 1, 1000, 1000000, nil) then
+			Zoom := ZoomI / 1000;
+	end;
+	end;
+
+	M[zmIn].Enabled := Zoom < 16;
+	M[zmOut].Enabled := Zoom > 1 / 16;
+	M[zmFullSize].Enabled := Zoom <> 1;
+
+	Fill;
+{	fInfo.ComboBoxZoom.Text := FToS(Zoom);
+	FreeAndNil(BmpSource2);
+	PaintImage;}
+end;
 
 procedure TDImage.WMPaint(var Message: TWMPaint);
 begin
@@ -248,6 +366,7 @@ end;
 constructor TDImage.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
+	Zoom := 1;
 	FCanvas := TControlCanvas.Create;
 	TControlCanvas(FCanvas).Control := Self;
 	FHotTrack := True;
@@ -276,6 +395,9 @@ destructor TDImage.Destroy;
 begin
 	FCanvas.Free;
 	FreeAndNil(Bitmap);
+	BmpS := nil;
+	UserBitmap := nil;
+	FreeAndNil(BmpSourceS);
 	inherited Destroy;
 end;
 
@@ -330,13 +452,13 @@ end;
 
 procedure TDImage.OffsetRange(var NOfsX, NOfsY: Integer);
 begin
-	if NOfsX > BitmapWidth - NowMaxWidth then
-		NOfsX := BitmapWidth - NowMaxWidth;
+	if NOfsX > UserWidth - NowMaxWidth then
+		NOfsX := UserWidth - NowMaxWidth;
 	if NOfsX < 0 then
 		NOfsX := 0;
 
-	if NOfsY > BitmapHeight - NowMaxHeight then
-		NOfsY := BitmapHeight - NowMaxHeight;
+	if NOfsY > UserHeight - NowMaxHeight then
+		NOfsY := UserHeight - NowMaxHeight;
 	if NOfsY < 0 then
 		NOfsY := 0;
 end;
@@ -495,7 +617,7 @@ begin
 	end
 	else
 	begin
-		Sc := (HandScroll or (ssShift in Shift)) and ((BitmapWidth - NowMaxWidth > 0) or (BitmapHeight - NowMaxHeight > 0));
+		Sc := (HandScroll or (ssShift in Shift)) and ((UserWidth - NowMaxWidth > 0) or (UserHeight - NowMaxHeight > 0));
 		if Sc then
 			Cur := 1 + SG(MouseL)
 		else
@@ -519,6 +641,18 @@ begin
 
 	NOfsX := OfsX;
 	NOfsY := OfsY;
+
+	if FEnableZoom then
+	case MouseAction of
+	mwNone, mwScroll:
+	begin
+		if DW <> 0 then
+			UserMouseX := Round((X - DX) * Zoom / DW) + OfsX;
+		if DH <> 0 then
+			UserMouseY := Round((Y - DY) * Zoom / DH) + OfsY;
+	end;
+	end;
+
 	case MouseAction of
 	mwScroll:
 	begin
@@ -530,13 +664,13 @@ begin
 	end;
 	mwScrollH:
 	begin
-		NOfsX := BOfsX + RoundDivS8(S8(BitmapWidth) * S8(X - MouseX), NowMaxWidth - 2 * ScrollBarHHeight);
+		NOfsX := BOfsX + RoundDivS8(S8(UserWidth) * S8(X - MouseX), NowMaxWidth - 2 * ScrollBarHHeight);
 		NOfsY := OfsY;
 	end;
 	mwScrollV:
 	begin
 		NOfsX := OfsX;
-		NOfsY := BOfsY + RoundDivS8(S8(BitmapHeight) * S8(Y - MouseY), NowMaxHeight - 2 * ScrollBarVWidth);
+		NOfsY := BOfsY + RoundDivS8(S8(UserHeight) * S8(Y - MouseY), NowMaxHeight - 2 * ScrollBarVWidth);
 	end;
 	end;
 {	TickCount := GetTickCount;
@@ -575,7 +709,7 @@ begin
 		mwScroll:
 		begin
 			MouseAction := mwNone;
-			if (HandScroll or (ssShift in Shift)) and ((BitmapWidth - NowMaxWidth > 0) or (BitmapHeight - NowMaxHeight > 0)) then
+			if (HandScroll or (ssShift in Shift)) and ((UserWidth - NowMaxWidth > 0) or (UserHeight - NowMaxHeight > 0)) then
 				Cursor := 1
 			else
 				Cursor := LCursor;
@@ -591,14 +725,20 @@ end;
 function TDImage.DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
 begin
 	inherited DoMouseWheelDown(Shift, MousePos);
-	ScrollTo(OfsX, OfsY + RoundDiv(MaxOfsY, 32));
+	if [] = Shift then
+	begin
+		ScrollTo(OfsX, OfsY + RoundDiv(MaxOfsY, 32));
+	end;
 	Result := False;
 end;
 
 function TDImage.DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
 begin
 	inherited DoMouseWheelUp(Shift, MousePos);
-	ScrollTo(OfsX, OfsY - RoundDiv(MaxOfsY, 32));
+	if [] = Shift then
+	begin
+		ScrollTo(OfsX, OfsY - RoundDiv(MaxOfsY, 32));
+	end;
 	Result := False;
 end;
 
@@ -606,20 +746,20 @@ procedure TDImage.InitScrolls;
 begin
 	ScrollBarVWidth := GetSystemMetrics(SM_CXVSCROLL);
 
-	if BitmapWidth > Bitmap.Width then
+	if UserWidth > Bitmap.Width then
 		HType := 1
-	else if BitmapWidth > Bitmap.Width - ScrollBarVWidth then
+	else if UserWidth > Bitmap.Width - ScrollBarVWidth then
 		HType := 2
 	else
 		HType := 0;
 
 	ScrollBarHHeight := GetSystemMetrics(SM_CYHSCROLL);
-	if BitmapHeight > Bitmap.Height then
+	if UserHeight > Bitmap.Height then
 	begin
 		VType := 1;
 		if HType = 2 then HType := 1;
 	end
-	else if BitmapHeight > Bitmap.Height - ScrollBarHHeight then
+	else if UserHeight > Bitmap.Height - ScrollBarHHeight then
 	begin
 		case HType of
 		0:
@@ -641,9 +781,223 @@ begin
 
 	NowMaxWidth := Bitmap.Width - ScrollBarVWidth * VType;
 	NowMaxHeight := Bitmap.Height - ScrollBarHHeight * HType;
-	MaxOfsX := BitmapWidth - NowMaxWidth;
-	MaxOfsY := BitmapHeight - NowMaxHeight;
+	MaxOfsX := UserWidth - NowMaxWidth;
+	MaxOfsY := UserHeight - NowMaxHeight;
 	OffsetRange(OfsX, OfsY);
+end;
+
+procedure ZoomMake(
+	BmpSource: TDBitmap;
+	VisX, VisY: Integer;
+	AsWindow, Center:BG; Zoom: FG; XYConst: Boolean; QualityResize: Boolean;
+	var OX, OY: Integer;
+	out SourceWidth, SourceHeight: Integer;
+	out SX1, SY1, SXW, SYH: Integer;
+	out DX1, DY1, DXW, DYH: Integer;
+	out Smaller: BG;
+	var BmpSource2: TDBitmap);
+
+var
+	SX, SY: Integer;
+//	LastCursor: TCursor;
+begin
+	if AsWindow then
+	begin
+		if XYConst = False then
+		begin
+			SX := VisX;
+			SY := VisY;
+		end
+		else
+		begin
+			if VisY * BmpSource.Width >=
+				VisX * BmpSource.Height then
+			begin
+				SX := VisX;
+				SY := RoundDiv(VisX * BmpSource.Height,
+					BmpSource.Width);
+			end
+			else
+			begin
+				SX := RoundDiv(VisY * BmpSource.Width,
+					BmpSource.Height);
+				SY := VisY;
+			end;
+		end;
+
+		SX1 := 0;
+		SY1 := 0;
+		SXW := BmpSource.Width;
+		SYH := BmpSource.Height;
+
+		DX1 := 0;
+		DY1 := 0;
+		DXW := SX;
+		DYH := SY;
+{   ZoomedWidth := BmpSource.Width;
+		ZoomedHeight := BmpSource.Height;}
+
+		SourceWidth := SX;
+		SourceHeight := SY;
+	end
+	else
+	begin
+		SX := Round(Zoom * BmpSource.Width);
+		SY := Round(Zoom * BmpSource.Height);
+
+		DX1 := 0;
+		DY1 := 0;
+
+		Smaller := False;
+		if VisX > SourceWidth then
+		begin
+			Smaller := True;
+			if Center then
+				DX1 := (VisX - SourceWidth) div 2;
+		end;
+		if VisY > SourceHeight then
+		begin
+			Smaller := True;
+			if Center then
+				DY1 := (VisY - SourceHeight) div 2;
+		end;
+
+
+		SourceWidth := SX;
+		SourceHeight := SY;
+
+		// D???
+		if OX > SX then OX := 0;//SX;
+		if OY > SY then OY := 0;//SY;
+
+		{   if SX > VisX then SX := VisX;
+		if SY > VisY then SY := VisY;}
+		if Zoom <= 1 then
+		begin
+
+		end
+		else
+		begin
+			DX1 := DX1 - Round(Zoom * Frac(OX / Zoom));
+			DY1 := DX1 - Round(Zoom * Frac(OY / Zoom));
+		end;
+
+		SXW := Ceil(VisX / Zoom - DX1);
+		SYH := Ceil(VisY / Zoom - DY1);
+		DXW := Round(Zoom * SXW);
+		DYH := Round(Zoom * SYH);
+
+		if Zoom <= 1 then
+		begin
+			SX1 := OX;
+			SY1 := OY;
+		end
+		else
+		begin
+			SX1 := Trunc(OX / Zoom);
+			SY1 := Trunc(OY / Zoom);
+		end;
+
+
+		{   if (DX1 < 0) then
+		begin
+			Inc(SXW);
+		end;
+		if (DY1 < 0) then
+		begin
+			Inc(SYH);
+		end;}
+
+
+	end;
+
+	if (SourceWidth < BmpSource.Width) or (SourceHeight < BmpSource.Height) then
+	begin
+		if not Assigned(BmpSource2) then
+		begin
+			BmpSource2 := TDBitmap.Create;
+		end;
+		if (BmpSource2.Width <> SourceWidth)
+		or (BmpSource2.Height <> SourceHeight) then
+		begin
+			BmpSource2.SetSize(SourceWidth, SourceHeight);
+			if (QualityResize = False) {or (Zoom > 1)} then
+			begin
+				SetStretchBltMode(BmpSource2.Canvas.Handle, COLORONCOLOR);
+				StretchBlt(BmpSource2.Canvas.Handle,
+					0, 0,
+					BmpSource2.Width, BmpSource2.Height,
+					BmpSource.Canvas.Handle,
+					0, 0,
+					BmpSource.Width, BmpSource.Height,
+					SRCCOPY);
+	{     BmpSource2.Canvas.StretchDraw(Rect(0, 0,
+					BmpSource2.Width, BmpSource2.Height), BmpSource);}
+			end
+			else
+			begin
+{				LastCursor := Screen.Cursor;
+				Screen.Cursor := crHourGlass;}
+				BmpSource2.Resize(BmpSource, SourceWidth, SourceHeight, nil);
+//				Screen.Cursor := LastCursor;
+			end;
+		end;
+		SXW := DXW;
+		SYH := DYH;
+	end
+	else
+	begin
+		if Assigned(BmpSource2) then
+		begin
+			FreeAndNil(BmpSource2);
+		end;
+	end;
+end;
+
+procedure TDImage.FillImage;
+var
+	BmpD: TDBitmap;
+	e: FA;
+	i, j: SG;
+begin
+	if UserBitmap = nil then Exit;
+		BmpD := Bitmap;
+		SetStretchBltMode(BmpD.Canvas.Handle, COLORONCOLOR);
+		StretchBlt(BmpD.Canvas.Handle,
+			DX, DY,
+			DW, DH,
+			BmpS.Canvas.Handle,
+			SX, SY,
+			SW, SH,
+			SRCCOPY);
+
+
+		if Grate then
+		begin
+			if Zoom >= 3 then
+			begin
+				e := (Round(Zoom) - OfsX) mod Round(Zoom);
+				i := Round(e);
+				j := 0;
+				while j < DW do
+				begin
+					BmpD.Line(i, 0, i, UserHeight - 1, GrateColor, ef12);
+					e := e + Zoom;
+					i := Round(e);
+					Inc(j);
+				end;
+				e := (Round(Zoom) - OfsY) mod Round(Zoom);
+				i := Round(e);
+				j := 0;
+				while j < BmpD.Height do
+				begin
+					BmpD.Line(0, i, UserHeight - 1, i, GrateColor, ef12);
+					e := e + Zoom;
+					i := Round(e);
+					Inc(j);
+				end;
+			end;
+		end;
 end;
 
 procedure TDImage.Fill;
@@ -667,6 +1021,61 @@ begin
 //		Bitmap.Resize(Bitmap, clNone, Width, Height, nil);}
 		Bitmap.SetSize(Width, Height);
 
+{	Smaller := False;
+	DW := Round(UserWidth * Zoom);
+	if DW > Width then
+	begin
+		DX := 0;
+		DW := Width;
+	end
+	else
+	begin
+		DX := (Width - DW) div 2;
+		Smaller := True;
+	end;
+	DH := Round(UserHeight * Zoom);
+	if DH > Height then
+	begin
+		DY := 0;
+		DH := Height;
+	end
+	else
+	begin
+		DY := (Height - DH) div 2;
+		Smaller := True;
+	end;}
+
+	if FEnableZoom then
+	begin
+		SX := 0;
+		SY := 0;
+		SW := 0;
+		SH := 0;
+		DX := 0;
+		DY := 0;
+		DX := 0;
+		DH := 0;
+		if UserBitmap <> nil then
+		begin
+			ZoomMake(
+				UserBitmap,
+				Width, Height,
+				False, Center, Zoom, False, True,
+				OfsX, OfsY,
+				UserWidth, UserHeight,
+				SX, SY, SW, SH,
+				DX, DY, DW, DH,
+				Smaller,
+				BmpSourceS);
+
+			if Assigned(BmpSourceS) then
+				BmpS := BmpSourceS
+			else
+				BmpS := UserBitmap;
+		end;
+	end;
+
+
 	try
 		if Assigned(FOnFill) then FOnFill(Self);
 		InitScrolls;
@@ -675,7 +1084,7 @@ begin
 		SliderC2 := LighterColor(clScrollBar);
 
 		// H
-		if (BitmapWidth > 0) and (HType = 1) and (NowMaxWidth > 2 * ScrollBarHHeight) then
+		if (UserWidth > 0) and (HType = 1) and (NowMaxWidth > 2 * ScrollBarHHeight) then
 		begin
 			ScrollBarHWidth := NowMaxWidth;
 			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
@@ -697,12 +1106,12 @@ begin
 
 			// TScrollBoxSlider
 			ScrollLen := NowMaxWidth - 2 * ScrollBarVWidth;
-			ScrollLenS := NowMaxWidth * ScrollLen div BitmapWidth;
+			ScrollLenS := NowMaxWidth * ScrollLen div UserWidth;
 			if ScrollLenS < ScrollBarHHeight div 2 then ScrollLenS := ScrollBarHHeight div 2;
 
 			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight + 1;
 			Y2 := Bitmap.Height - 1 - 1;
-			X1 := ScrollBarVWidth + RoundDivS8(S8(ScrollLen - ScrollLenS) * S8(OfsX), BitmapWidth - NowMaxWidth);
+			X1 := ScrollBarVWidth + RoundDivS8(S8(ScrollLen - ScrollLenS) * S8(OfsX), UserWidth - NowMaxWidth);
 			X2 := X1 + ScrollLenS - 1;
 			SliderHX1 := X1;
 			SliderHX2 := X2;
@@ -785,7 +1194,7 @@ begin
 			ScrollBarHWidth := 0;
 
 		// V
-		if (BitmapHeight > 0) and (VType = 1) and (NowMaxHeight > 2 * ScrollBarVWidth) then
+		if (UserHeight > 0) and (VType = 1) and (NowMaxHeight > 2 * ScrollBarVWidth) then
 		begin
 			ScrollBarVHeight := NowMaxHeight;
 			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
@@ -808,12 +1217,12 @@ begin
 
 			// TScrollBoxSlider
 			ScrollLen := NowMaxHeight - 2 * ScrollBarHHeight;
-			ScrollLenS := NowMaxHeight * ScrollLen div BitmapHeight;
+			ScrollLenS := NowMaxHeight * ScrollLen div UserHeight;
 			if ScrollLenS < ScrollBarVWidth div 2 then ScrollLenS := ScrollBarVWidth div 2;
 
 			X1 := Integer(Bitmap.Width) - ScrollBarVWidth + 1;
 			X2 := Bitmap.Width - 1 - 1;
-			Y1 := ScrollBarHHeight + (ScrollLen - ScrollLenS) * Int64(OfsY) div (BitmapHeight - NowMaxHeight);
+			Y1 := ScrollBarHHeight + (ScrollLen - ScrollLenS) * Int64(OfsY) div (UserHeight - NowMaxHeight);
 			Y2 := Y1 + ScrollLenS - 1;
 			SliderVY1 := Y1;
 			SliderVY2 := Y2;
@@ -953,154 +1362,6 @@ begin
 	if Assigned(FOnPaint) then FOnPaint(Self);
 end;
 
-procedure ZoomMake(
-	BmpSource: TDBitmap;
-	VisX, VisY: Integer;
-	AsWindow: Boolean; Zoom: Extended; XYConst: Boolean; QualityResize: Boolean;
-	var OX, OY: Integer;
-	out SourceWidth, SourceHeight: Integer;
-	out SX1, SY1, SXW, SYH: Integer;
-	out DX1, DY1, DXW, DYH: Integer;
-	var BmpSource2: TDBitmap);
-
-var
-	SX, SY: Integer;
-	LastCursor: TCursor;
-begin
-	if AsWindow then
-	begin
-		if XYConst = False then
-		begin
-			SX := VisX;
-			SY := VisY;
-		end
-		else
-		begin
-			if VisY * BmpSource.Width >=
-				VisX * BmpSource.Height then
-			begin
-				SX := VisX;
-				SY := RoundDiv(VisX * BmpSource.Height,
-					BmpSource.Width);
-			end
-			else
-			begin
-				SX := RoundDiv(VisY * BmpSource.Width,
-					BmpSource.Height);
-				SY := VisY;
-			end;
-		end;
-
-		SX1 := 0;
-		SY1 := 0;
-		SXW := BmpSource.Width;
-		SYH := BmpSource.Height;
-
-		DX1 := 0;
-		DY1 := 0;
-		DXW := SX;
-		DYH := SY;
-{   ZoomedWidth := BmpSource.Width;
-		ZoomedHeight := BmpSource.Height;}
-
-		SourceWidth := SX;
-		SourceHeight := SY;
-	end
-	else
-	begin
-		SX := Round(Zoom * BmpSource.Width);
-		SY := Round(Zoom * BmpSource.Height);
-
-		SourceWidth := SX;
-		SourceHeight := SY;
-
-		// D???
-		if OX > SX then OX := 0;//SX;
-		if OY > SY then OY := 0;//SY;
-
-		{   if SX > VisX then SX := VisX;
-		if SY > VisY then SY := VisY;}
-		if Zoom <= 1 then
-		begin
-			DX1 := 0;
-			DY1 := 0;
-		end
-		else
-		begin
-			DX1 := -Round(Zoom * Frac(OX / Zoom));
-			DY1 := -Round(Zoom * Frac(OY / Zoom));
-		end;
-
-		if Zoom <= 1 then
-		begin
-			SX1 := OX;
-			SY1 := OY;
-		end
-		else
-		begin
-			SX1 := Trunc(OX / Zoom);
-			SY1 := Trunc(OY / Zoom);
-		end;
-		SXW := Ceil(VisX / Zoom - DX1);
-		SYH := Ceil(VisY / Zoom - DY1);
-{   if (DX1 < 0) then
-		begin
-			Inc(SXW);
-		end;
-		if (DY1 < 0) then
-		begin
-			Inc(SYH);
-		end;}
-
-
-		DXW := Round(Zoom * SXW);
-		DYH := Round(Zoom * SYH);
-	end;
-
-	if (SourceWidth < BmpSource.Width) or (SourceHeight < BmpSource.Height) then
-	begin
-		if not Assigned(BmpSource2) then
-		begin
-			BmpSource2 := TDBitmap.Create;
-		end;
-		if (BmpSource2.Width <> SourceWidth)
-		or (BmpSource2.Height <> SourceHeight) then
-		begin
-			BmpSource2.SetSize(SourceWidth, SourceHeight);
-			if (QualityResize = False) {or (Zoom > 1)} then
-			begin
-				SetStretchBltMode(BmpSource2.Canvas.Handle, COLORONCOLOR);
-				StretchBlt(BmpSource2.Canvas.Handle,
-					0, 0,
-					BmpSource2.Width, BmpSource2.Height,
-					BmpSource.Canvas.Handle,
-					0, 0,
-					BmpSource.Width, BmpSource.Height,
-					SRCCOPY);
-	{     BmpSource2.Canvas.StretchDraw(Rect(0, 0,
-					BmpSource2.Width, BmpSource2.Height), BmpSource);}
-			end
-			else
-			begin
-				LastCursor := Screen.Cursor;
-				Screen.Cursor := crHourGlass;
-				BmpSource2.Resize(BmpSource,
-					SourceWidth, SourceHeight, nil);
-				Screen.Cursor := LastCursor;
-			end;
-		end;
-		SXW := DXW;
-		SYH := DYH;
-	end
-	else
-	begin
-		if Assigned(BmpSource2) then
-		begin
-			FreeAndNil(BmpSource2);
-		end;
-	end;
-end;
-
 procedure TDImage.SetHotTrack(Value: Boolean);
 begin
 	if FHotTrack <> Value then
@@ -1115,7 +1376,96 @@ begin
 	RegisterComponents('DComp', [TDImage]);
 end;
 
+{
+procedure TfMain.InitOXY;
+begin
+	if ZoomR > 1 then
+		OX2 := ZoomR * fMap.ScrollImageM.OfsX
+	else
+		OX2 := fMap.ScrollImageM.OfsX;
+	if ZoomR > 1 then
+		OY2 := ZoomR * fMap.ScrollImageM.OfsY
+	else
+		OY2 := fMap.ScrollImageM.OfsY;
+end;
+
+	if Zoom = 0 then
+	begin
+		BmpRWidth := ImageWorldWidth;
+		BmpRHeight := ImageWorldHeight;
+		ZoomR := ZoomDiv;
+	end
+	else
+	begin
+		if Zoom > 10 * ZoomDiv then Zoom := 10 * ZoomDiv;
+		BmpRWidth := Zoom * BmpFile.Width div ZoomDiv;
+		BmpRHeight := Zoom * BmpFile.Height div ZoomDiv;
+		ZoomR := Zoom;
+	end;
+
+	if (BmpRWidth < BmpFile.Width) or (BmpRHeight < BmpFile.Height) then
+	begin
+		if not Assigned(BmpRFile) then
+		begin
+			BmpRFile := TDBitmap.Create;
+		end;
+
+		if (QualityResize1.Checked = False) or (ZoomR > ZoomDiv) then
+		begin
+			BmpRFile.SetSize(BmpRWidth, BmpRHeight);
+
+			SetStretchBltMode(BmpRFile.Canvas.Handle, HALFTONE);
+			StretchBlt(BmpRFile.Canvas.Handle,
+				0, 0,
+				BmpRFile.Width, BmpRFile.Height,
+				BmpFile.Canvas.Handle,
+				0, 0,
+				BmpFile.Width, BmpFile.Height,
+				SRCCOPY);
+		end
+		else
+		begin
+			BmpRFile.SetSize(BmpRWidth, BmpRHeight);
+			BmpRFile.Resize(BmpFile, BmpRWidth, BmpRHeight, nil);
+		end;
+	end
+	else
+	begin
+		if Assigned(BmpRFile) then
+		begin
+			FreeAndNil(BmpRFile);
+		end;
+	end;
+
+	procedure TfMain.OffsetRange(var OX, OY: Integer);
+begin
+	if OX < 0 then
+		OX := 0
+	else if OX > fMap.ScrollImageM.MaxOfsX then
+		OX := fMap.ScrollImageM.MaxOfsX;
+	if OY < 0 then
+		OY := 0
+	else if OY > fMap.ScrollImageM.MaxOfsY then
+		OY := fMap.ScrollImageM.MaxOfsY;
+end;
+
+	Dec(OX2, ImageWorldWidth div 2);
+	Dec(OY2, ImageWorldHeight div 2);
+	if ZoomR > ZoomDiv then
+	begin
+		fMap.ScrollImageM.OfsX := ZoomDiv * OX2 div ZoomR;
+		fMap.ScrollImageM.OfsY := ZoomDiv * OY2 div ZoomR;
+	end
+	else
+	begin
+		fMap.ScrollImageM.OfsX := OX2;
+		fMap.ScrollImageM.OfsY := OY2;
+	end;
+	OffsetRange(fMap.ScrollImageM.OfsX, fMap.ScrollImageM.OfsY);
+}
+
 initialization
 	Screen.Cursors[1] := LoadCursor(HInstance, PChar('HANDPOINT'));
 	Screen.Cursors[2] := LoadCursor(HInstance, PChar('HANDPOINTDOWN'));
 end.
+

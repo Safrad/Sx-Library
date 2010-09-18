@@ -1,6 +1,10 @@
 object fAbout: TfAbout
   Left = 423
   Top = 273
+  HorzScrollBar.Tracking = True
+  HorzScrollBar.Visible = False
+  VertScrollBar.Tracking = True
+  VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'About'

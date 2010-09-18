@@ -156,7 +156,7 @@ begin
 			if F.Eof then goto LExit;
 
 			NewSize := ColumnCount + 1;
-			if AllocByEx(Length(Columns), NewSize, SizeOf(Columns[0])) then
+			if AllocByExp(Length(Columns), NewSize) then
 				SetLength(Columns, NewSize);
 			Columns[ColumnCount].Name := Column.Name;
 			case Column.Typ of
@@ -201,7 +201,7 @@ begin
 			for j := 0 to ColumnCount - 1 do
 			begin
 				NewSize := DbItemCount + 1;
-				if AllocByEx(Length(Columns[j].Items), NewSize, SizeOf(Columns[j].Items[0])) then
+				if AllocByExp(Length(Columns[j].Items), NewSize) then
 					SetLength(Columns[j].Items, NewSize);
 
 				s := '';

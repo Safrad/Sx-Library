@@ -30,6 +30,7 @@ type
 		constructor Create(FileName: TFileName);
 		destructor Destroy; override;
 
+		procedure AddDataCell(s: string; Align: BG);
 		procedure AddBody(s: string);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
 		procedure AddImage(FileName: TFileName); overload;
@@ -41,7 +42,12 @@ type
 
 	end;
 
-
+function NToHTML(Value: SG): string;
+function SToHTML(Value: string): string;
+procedure Silver(var s: string);
+procedure Small(var s: string);
+procedure HTMLRedirect(WriteToFileName: TFileName; RedirectURL: string);
+function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
 function RelativePath(Source, Target: string): string;
 
 var
@@ -52,6 +58,125 @@ implementation
 uses
 	Math,
 	uStrings, uFiles, uDBitmap;
+
+function NToHTML(Value: SG): string;
+begin
+	if Value = MaxInt then
+		Result := '&nbsp;'
+	else
+	begin
+		Result := ReplaceF(NToS(Value), ' ', '&thinsp;');
+		Result := ReplaceF(NToS(Value), #160, '&thinsp;');
+	end;
+end;
+
+function SToHTML(Value: string): string;
+begin
+	if Value = '' then
+		Result := '&nbsp;'
+	else
+	begin
+		Result := Value;
+		Replace(Result, '&', '&amp;');
+		Replace(Result, '>', '&lt;');
+		Replace(Result, '<', '&gt;');
+		Replace(Result, LineSep, '<br/>');
+	end;
+end;
+
+procedure Silver(var s: string);
+begin
+	s := '<font color="#7f7f7f">' + s + '</font>';
+end;
+
+procedure Small(var s: string);
+begin
+	s := '<small>' + s + '</small>';
+end;
+
+procedure HTMLRedirect(WriteToFileName: TFileName; RedirectURL: string);
+var s: string;
+begin
+	s := '<HTML>';
+	s := s + '<HEAD>';
+	s := s + '<META HTTP-EQUIV=Refresh CONTENT="0; URL=' + ExtractFileName(RedirectURL) + '">';
+	s := s + '</HEAD>';
+	s := s + '</HTML>';
+	WriteStringToFile(WriteToFileName, s, False);
+
+end;
+
+function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
+var
+	Name: string;
+
+	procedure Ref(Text: string; Index: SG);
+	var A: BG;
+	begin
+		Name := Name + '<td width="' + IntToStr(Max(24, 8 * Length(Zeros))) + '">';
+		A := (Index <> HTMLIndex) and (Index >= 0) and (Index < HTMLCount);
+		if A then
+			Name := Name + '<a href="' + AddAfterName(HTMLRef, NToS(Index + 1, Zeros)) +  '">';
+		if Index = HTMLIndex then
+			Name := Name + '<b>';
+		Name := Name + Text;
+		if Index = HTMLIndex then
+			Name := Name + '</b>';
+		if A then
+			Name := Name + '</a>';
+		Name := Name + '&nbsp';
+		Name := Name + '</td>';
+	end;
+
+var
+	Last, Next, Last2, Next2: SG;
+	i, j: SG;
+begin
+      if Refers > HTMLCount then Refers := HTMLCount;
+			Name := Name + '<table border="0" cellspacing="0" cellpadding="0"><tr>';
+
+			Ref('|&lt;', HTMLCount - 1);
+
+			Last := Min(HTMLIndex + 10, HTMLCount - 1);
+			Last2 := HTMLIndex + 1;
+
+			Next2 := HTMLIndex - 1;
+			Next := Max(HTMLIndex - 10, 0);
+
+			if Last >= 0 then
+				Ref('&lt;&lt;', Last);
+			if Last2 >= 0 then
+				Ref('&lt;', Last2);
+
+
+			j := Max(Refers - 1, Min(HTMLIndex + 5, HTMLCount - 1));
+			if j < HTMLCount - 1 then
+				Ref('...', -1)
+			else
+				Ref('&nbsp;', -1);
+			i := 0;
+			while True do
+			begin
+				if (j >= 0) and (j < HTMLCount) then
+					Ref(NToS(j + 1), j)
+				else
+					Break;
+				Inc(i);
+				if i >= Refers then Break;
+				Dec(j);
+			end;
+			if j > 0 then
+				Ref('...', -1)
+			else
+				Ref('&nbsp;', -1);
+
+			Ref('&gt;', Next2);
+			Ref('&gt;&gt;', Next);
+			Ref('&gt;|', 0);
+
+			Name := Name + '</tr></table>';
+	Result := Name;
+end;
 
 constructor THTML.Create(FileName: TFileName);
 begin
@@ -76,6 +201,13 @@ begin
 	inherited Destroy;
 end;
 
+procedure THTML.AddDataCell(s: string; Align: BG);
+begin
+	Body := Body + '<td';
+	if Align then
+		Body := Body + ' align="right"';
+	Body := Body + '>' + s + '</td>';
+end;
 
 procedure THTML.AddBody(s: string);
 begin
@@ -88,22 +220,26 @@ function RelativePath(Source, Target: string): string;
 	Target	C:\HTTP\images
 	Result  ..\images
 }
-var i, j: SG;
+var
+	i, j: SG;
+	LastDiv: SG;
 begin
 	Result := '';
+	LastDiv := 1;
 	for i := 1 to Max(Length(Source), Length(Target)) do
 	begin
 		if Source[i] <> Target[i] then
 		begin
-			for j := i to Length(Source) do
+			for j := LastDiv + 1 to Length(Source) do
 			begin
 				if Source[j] = '\' then
 					Result := Result + '..\'
 			end;
 
-			Result := Result + Copy(Target, i, MaxInt);
+			Result := Result + Copy(Target, LastDiv + 1, MaxInt);
 			Break;
 		end;
+		if Source[i] in ['\', '/'] then LastDiv := i;
 	end;
 	Replace(Result, '\', '/'); // W3C standard
 end;
@@ -179,6 +315,8 @@ begin
 	if FrameSet = False then
 	begin
 		s := s +
+		'	<META name="Author" content="Safrad">' + HTMLSep +
+		'	<META name="lang" content="cz">' + HTMLSep +
 		'	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1250">' + HTMLSep +
 		'	<LINK REL="stylesheet" TYPE="text/css" HREF="' + FStyle + '">' + HTMLSep;
 	end;

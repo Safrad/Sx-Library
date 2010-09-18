@@ -381,8 +381,6 @@ begin
 	if IsCPUID_Available and (CPUException = False) then
 	begin
 		SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
-{   GetMem(PMem, 32768);
-		GetMem(PMem2, 32768);}
 		try
 			SysInfo.CPUStr := '            '; // 12 spaces
 			asm
@@ -459,8 +457,6 @@ begin
 			SysInfo.CPUPower := 0;
 		end;
 		SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
-{   FreeMem(PMem2, 32768);
-		FreeMem(PMem, 32768);}
 	end;
 end;
 

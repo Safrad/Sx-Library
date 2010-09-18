@@ -29,6 +29,9 @@ const
 	CharBell = #$07;
 	CharTimes = '×';
 
+var
+	HexValue: array[Char] of U1;
+
 type
 	TCharSet = set of Char;
 
@@ -83,7 +86,6 @@ uses
 	uFind, uError;
 var
 	TableWordSep: array[0..7] of Char = (' ', ',', '.', '-', '/', ';', '(', ')');
-	HexValue: array[Char] of U1;
 
 function        LowCase( ch : Char ) : Char;
 {$IFDEF PUREPASCAL}

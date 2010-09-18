@@ -95,7 +95,8 @@ var
 
 {$ifopt d+}
 procedure IE; overload;
-procedure IE(ErrorCode: SG); overload;
+procedure IE(ErrorCode: U2); overload;
+procedure IE(ErrorMes: string); overload;
 procedure CreateException;
 {$endif}
 function ErrorMes(const ErrorCode: U4): string;
@@ -156,10 +157,19 @@ begin
 	IE(0);
 end;
 
-procedure IE(ErrorCode: SG);
+procedure IE(ErrorCode: U2);
 begin
 //	{$ifopt d+}
-	ErrorMessage('Internal Error ' + IntToStr(ErrorCode));
+	ErrorMessage('Internal Error: ' + IntToStr(ErrorCode));
+//	{$else}
+//	PlayWinSound(wsCriticalStop);
+//	{$endif}
+end;
+
+procedure IE(ErrorMes: string);
+begin
+//	{$ifopt d+}
+	ErrorMessage('Internal Error: ' + ErrorMes);
 //	{$else}
 //	PlayWinSound(wsCriticalStop);
 //	{$endif}

@@ -3,8 +3,8 @@ object fGColor: TfGColor
   Top = 147
   BorderStyle = bsDialog
   Caption = 'Enter color'
-  ClientHeight = 378
-  ClientWidth = 480
+  ClientHeight = 313
+  ClientWidth = 498
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,28 +18,28 @@ object fGColor: TfGColor
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
-    Left = 216
-    Top = 332
-    Width = 257
+    Left = 8
+    Top = 156
+    Width = 481
     Height = 9
     Shape = bsTopLine
   end
   object Bevel2: TBevel
     Left = 216
-    Top = 344
+    Top = 160
     Width = 9
-    Height = 25
+    Height = 145
     Shape = bsLeftLine
   end
   object BevelBasicColors: TBevel
-    Left = 216
-    Top = 240
+    Left = 232
+    Top = 168
     Width = 253
     Height = 81
   end
   object ShapeBorder: TShape
-    Left = 216
-    Top = 240
+    Left = 232
+    Top = 168
     Width = 20
     Height = 20
     Brush.Style = bsClear
@@ -51,12 +51,18 @@ object fGColor: TfGColor
   object LabelR: TDLabel
     Left = 8
     Top = 8
-    Width = 33
+    Width = 57
     Height = 19
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Red'
+    Color = clRed
     BackEffect = ef00
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -70,6 +76,8 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
     Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
     Transparent = True
     TransparentColor = False
     TransparentColorValue = clBlack
@@ -77,13 +85,19 @@ object fGColor: TfGColor
   end
   object LabelG: TDLabel
     Left = 8
-    Top = 40
-    Width = 33
+    Top = 32
+    Width = 57
     Height = 19
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Green'
+    Color = 50176
     BackEffect = ef00
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -97,6 +111,8 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
     Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
     Transparent = True
     TransparentColor = False
     TransparentColorValue = clBlack
@@ -104,13 +120,19 @@ object fGColor: TfGColor
   end
   object LabelB: TDLabel
     Left = 8
-    Top = 72
-    Width = 33
+    Top = 56
+    Width = 57
     Height = 19
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Blue'
+    Color = clBlue
     BackEffect = ef00
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -124,33 +146,8 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
     Layout = tlCenter
-    Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
-  end
-  object LabelA: TDLabel
-    Left = 8
-    Top = 104
-    Width = 33
-    Height = 19
-    AutoSize = False
-    Alignment = taLeftJustify
-    Caption = 'All'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
     Transparent = True
     TransparentColor = False
     TransparentColorValue = clBlack
@@ -158,7 +155,7 @@ object fGColor: TfGColor
   end
   object LabelNow: TDLabel
     Left = 8
-    Top = 276
+    Top = 212
     Width = 49
     Height = 16
     AutoSize = False
@@ -186,7 +183,7 @@ object fGColor: TfGColor
   end
   object LabelNowXBit: TDLabel
     Left = 8
-    Top = 300
+    Top = 236
     Width = 49
     Height = 45
     AutoSize = False
@@ -214,7 +211,7 @@ object fGColor: TfGColor
   end
   object LabelDefault: TDLabel
     Left = 8
-    Top = 228
+    Top = 164
     Width = 49
     Height = 16
     AutoSize = False
@@ -242,7 +239,7 @@ object fGColor: TfGColor
   end
   object LabelCurrent: TDLabel
     Left = 8
-    Top = 252
+    Top = 188
     Width = 49
     Height = 16
     AutoSize = False
@@ -270,7 +267,7 @@ object fGColor: TfGColor
   end
   object PanelNowColor: TDButton
     Left = 64
-    Top = 272
+    Top = 208
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -282,12 +279,12 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
-    TabOrder = 25
+    TabOrder = 27
     Color = clBlack
   end
   object PanelCurColor: TDButton
     Left = 64
-    Top = 248
+    Top = 184
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -304,7 +301,7 @@ object fGColor: TfGColor
   end
   object PanelNowBitColor: TDButton
     Left = 64
-    Top = 320
+    Top = 256
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -316,13 +313,13 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
-    TabOrder = 27
+    TabOrder = 32
     OnClick = PanelNowBitColorClick
     Color = clBlack
   end
   object PanelDefaultColor: TDButton
     Left = 64
-    Top = 224
+    Top = 160
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -333,43 +330,25 @@ object fGColor: TfGColor
     Font.Pitch = fpFixed
     Font.Style = []
     ParentFont = False
-    TabOrder = 28
+    TabOrder = 25
     OnClick = PanelDefaultColorClick
     Color = clBlack
   end
   object EditR: TEdit
-    Left = 48
+    Left = 64
     Top = 8
-    Width = 25
+    Width = 33
     Height = 19
     AutoSize = False
-    TabOrder = 3
-    Text = '255'
+    TabOrder = 4
+    Text = '$FFF'
     OnChange = EditRGBAChange
   end
-  object TrackBarR: TTrackBar
-    Left = 88
-    Top = 8
-    Width = 286
-    Height = 32
-    Max = 255
-    Orientation = trHorizontal
-    PageSize = 8
-    Frequency = 8
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
-    TabOrder = 4
-    ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
-    OnChange = TrackBarRGBAChange
-  end
   object ButtonR: TDButton
-    Left = 392
+    Left = 432
     Top = 8
-    Width = 49
-    Height = 24
+    Width = 55
+    Height = 19
     Caption = 'Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -377,12 +356,12 @@ object fGColor: TfGColor
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 5
+    TabOrder = 6
     OnClick = ButtonRGBAClick
   end
   object ButtonOk: TDButton
-    Left = 312
-    Top = 344
+    Left = 328
+    Top = 280
     Width = 73
     Height = 25
     Caption = '&OK'
@@ -394,12 +373,12 @@ object fGColor: TfGColor
     Font.Style = []
     ModalResult = 1
     ParentFont = False
-    TabOrder = 0
+    TabOrder = 1
     OnClick = ButtonOkClick
   end
   object ButtonApply: TDButton
-    Left = 224
-    Top = 344
+    Left = 240
+    Top = 280
     Width = 73
     Height = 25
     Caption = '&Apply'
@@ -409,12 +388,12 @@ object fGColor: TfGColor
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 0
     Visible = False
   end
   object ButtonCancel: TDButton
-    Left = 400
-    Top = 344
+    Left = 416
+    Top = 280
     Width = 73
     Height = 25
     Cancel = True
@@ -431,40 +410,21 @@ object fGColor: TfGColor
   end
   object EditG: TEdit
     Tag = 1
-    Left = 48
-    Top = 40
-    Width = 25
+    Left = 64
+    Top = 32
+    Width = 33
     Height = 19
     AutoSize = False
-    TabOrder = 6
-    Text = '255'
+    TabOrder = 8
+    Text = '$FFF'
     OnChange = EditRGBAChange
-  end
-  object TrackBarG: TTrackBar
-    Tag = 1
-    Left = 88
-    Top = 40
-    Width = 286
-    Height = 32
-    Max = 255
-    Orientation = trHorizontal
-    PageSize = 8
-    Frequency = 8
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
-    TabOrder = 7
-    ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
-    OnChange = TrackBarRGBAChange
   end
   object ButtonG: TDButton
     Tag = 1
-    Left = 392
-    Top = 40
-    Width = 49
-    Height = 24
+    Left = 432
+    Top = 32
+    Width = 55
+    Height = 19
     Caption = 'Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -472,91 +432,26 @@ object fGColor: TfGColor
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 8
+    TabOrder = 10
     OnClick = ButtonRGBAClick
   end
   object EditB: TEdit
     Tag = 2
-    Left = 48
-    Top = 72
-    Width = 25
-    Height = 19
-    AutoSize = False
-    TabOrder = 9
-    Text = '255'
-    OnChange = EditRGBAChange
-  end
-  object TrackBarB: TTrackBar
-    Tag = 2
-    Left = 88
-    Top = 72
-    Width = 286
-    Height = 32
-    Max = 255
-    Orientation = trHorizontal
-    PageSize = 8
-    Frequency = 8
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
-    TabOrder = 10
-    ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
-    OnChange = TrackBarRGBAChange
-  end
-  object ButtonB: TDButton
-    Tag = 2
-    Left = 392
-    Top = 72
-    Width = 49
-    Height = 24
-    Caption = 'Invert'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 11
-    OnClick = ButtonRGBAClick
-  end
-  object EditA: TEdit
-    Tag = 3
-    Left = 48
-    Top = 104
-    Width = 25
+    Left = 64
+    Top = 56
+    Width = 33
     Height = 19
     AutoSize = False
     TabOrder = 12
-    Text = '255'
+    Text = '$FFF'
     OnChange = EditRGBAChange
   end
-  object TrackBarA: TTrackBar
-    Tag = 3
-    Left = 88
-    Top = 104
-    Width = 286
-    Height = 32
-    Max = 255
-    Orientation = trHorizontal
-    PageSize = 8
-    Frequency = 8
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
-    TabOrder = 13
-    ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
-    OnChange = TrackBarRGBAChange
-  end
-  object ButtonA: TDButton
-    Tag = 3
-    Left = 392
-    Top = 104
-    Width = 49
-    Height = 24
+  object ButtonB: TDButton
+    Tag = 2
+    Left = 432
+    Top = 56
+    Width = 55
+    Height = 19
     Caption = 'Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -567,59 +462,70 @@ object fGColor: TfGColor
     TabOrder = 14
     OnClick = ButtonRGBAClick
   end
-  object PanelS: TPanel
-    Left = 80
-    Top = 176
-    Width = 388
+  object EditS: TEdit
+    Tag = 5
+    Left = 64
+    Top = 128
+    Width = 33
+    Height = 19
+    AutoSize = False
+    TabOrder = 22
+    Text = '$FFF'
+    OnChange = EditRGBAChange
+  end
+  object PanelH: TPanel
+    Left = 104
+    Top = 80
+    Width = 377
     Height = 20
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    TabOrder = 15
-    object ImageS: TDImage
+    TabOrder = 17
+    object ImageH: TDImage
+      Tag = 3
       Left = 0
       Top = 0
-      Width = 384
+      Width = 373
       Height = 16
       DrawFPS = False
       HandScroll = False
       HotTrack = True
-      OnFill = ImageSFill
+      OnFill = ImageFill
       Align = alClient
       TabOrder = 0
       TabStop = False
-      OnMouseDown = ImageSMouseDown
-      OnMouseUp = ImageSMouseUp
-      OnMouseMove = ImageSMouseMove
+      OnMouseDown = ImageMouseDown
+      OnMouseMove = ImageMouseMove
     end
   end
   object PanelL: TPanel
-    Left = 80
-    Top = 200
-    Width = 388
+    Left = 104
+    Top = 104
+    Width = 260
     Height = 20
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    TabOrder = 16
+    TabOrder = 20
     object ImageL: TDImage
+      Tag = 4
       Left = 0
       Top = 0
-      Width = 384
+      Width = 256
       Height = 16
       DrawFPS = False
       HandScroll = False
       HotTrack = True
-      OnFill = ImageLFill
+      OnFill = ImageFill
       Align = alClient
       TabOrder = 0
       TabStop = False
-      OnMouseDown = ImageLMouseDown
-      OnMouseUp = ImageLMouseUp
-      OnMouseMove = ImageLMouseMove
+      OnMouseDown = ImageMouseDown
+      OnMouseMove = ImageMouseMove
     end
   end
   object ComboBoxBitDepth: TComboBox
     Left = 64
-    Top = 296
+    Top = 232
     Width = 145
     Height = 21
     Style = csDropDownList
@@ -627,10 +533,10 @@ object fGColor: TfGColor
     TabOrder = 29
     OnChange = ComboBoxBitDepthChange
   end
-  object DLabel1: TDLabel
+  object DLabelH: TDLabel
     Left = 8
-    Top = 136
-    Width = 33
+    Top = 80
+    Width = 57
     Height = 19
     AutoSize = False
     Alignment = taLeftJustify
@@ -654,53 +560,21 @@ object fGColor: TfGColor
     TransparentColorValue = clBlack
     WordWrap = False
   end
-  object EditHue: TEdit
-    Left = 48
-    Top = 136
+  object EditL: TEdit
+    Tag = 4
+    Left = 64
+    Top = 104
     Width = 33
     Height = 19
     AutoSize = False
-    TabOrder = 31
-    Text = '239'
+    TabOrder = 19
+    Text = '$FFF'
     OnChange = EditRGBAChange
   end
-  object TrackBarHue: TTrackBar
-    Left = 88
-    Top = 136
-    Width = 286
-    Height = 32
-    Max = 255
-    Orientation = trHorizontal
-    PageSize = 8
-    Frequency = 8
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
-    TabOrder = 32
-    ThumbLength = 19
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
-    OnChange = TrackBarRGBAChange
-  end
-  object DButtonH: TDButton
-    Left = 392
-    Top = 136
-    Width = 49
-    Height = 24
-    Caption = 'Invert'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 33
-    OnClick = ButtonRGBAClick
-  end
-  object DLabel2: TDLabel
+  object DLabelS: TDLabel
     Left = 8
-    Top = 176
-    Width = 65
+    Top = 128
+    Width = 57
     Height = 19
     AutoSize = False
     Alignment = taLeftJustify
@@ -724,10 +598,10 @@ object fGColor: TfGColor
     TransparentColorValue = clBlack
     WordWrap = False
   end
-  object DLabel3: TDLabel
+  object DLabelL: TDLabel
     Left = 8
-    Top = 200
-    Width = 65
+    Top = 104
+    Width = 57
     Height = 19
     AutoSize = False
     Alignment = taLeftJustify
@@ -751,11 +625,136 @@ object fGColor: TfGColor
     TransparentColorValue = clBlack
     WordWrap = False
   end
+  object PanelR: TPanel
+    Left = 104
+    Top = 8
+    Width = 260
+    Height = 20
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+    TabOrder = 5
+    object ImageR: TDImage
+      Left = 0
+      Top = 0
+      Width = 256
+      Height = 16
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageFill
+      Align = alClient
+      TabOrder = 0
+      TabStop = False
+      OnMouseDown = ImageMouseDown
+      OnMouseMove = ImageMouseMove
+    end
+  end
+  object PanelG: TPanel
+    Left = 104
+    Top = 32
+    Width = 260
+    Height = 20
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+    TabOrder = 9
+    object ImageG: TDImage
+      Tag = 1
+      Left = 0
+      Top = 0
+      Width = 256
+      Height = 16
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageFill
+      Align = alClient
+      TabOrder = 0
+      TabStop = False
+      OnMouseDown = ImageMouseDown
+      OnMouseMove = ImageMouseMove
+    end
+  end
+  object PanelB: TPanel
+    Left = 104
+    Top = 56
+    Width = 260
+    Height = 20
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+    TabOrder = 13
+    object ImageB: TDImage
+      Tag = 2
+      Left = 0
+      Top = 0
+      Width = 256
+      Height = 16
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageFill
+      Align = alClient
+      TabOrder = 0
+      TabStop = False
+      OnMouseDown = ImageMouseDown
+      OnMouseMove = ImageMouseMove
+    end
+  end
+  object EditH: TEdit
+    Tag = 3
+    Left = 64
+    Top = 80
+    Width = 33
+    Height = 19
+    AutoSize = False
+    TabOrder = 16
+    Text = '$FFF'
+    OnChange = EditRGBAChange
+  end
+  object PanelS: TPanel
+    Left = 104
+    Top = 128
+    Width = 260
+    Height = 20
+    BevelOuter = bvNone
+    BorderStyle = bsSingle
+    TabOrder = 23
+    object ImageS: TDImage
+      Tag = 5
+      Left = 0
+      Top = 0
+      Width = 256
+      Height = 16
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageFill
+      Align = alClient
+      TabOrder = 0
+      TabStop = False
+      OnMouseDown = ImageMouseDown
+      OnMouseMove = ImageMouseMove
+    end
+  end
+  object ComboBoxNF: TComboBox
+    Left = 64
+    Top = 288
+    Width = 145
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    ItemIndex = 0
+    TabOrder = 33
+    Text = 'Decadic'
+    OnChange = ComboBoxNFChange
+    Items.Strings = (
+      'Decadic'
+      'Hexadecimal')
+  end
   object PopupMenu1: TPopupMenu
     Images = ImageList1
     OwnerDraw = True
     Left = 8
-    Top = 344
+    Top = 280
     object clScrollBar1: TMenuItem
       Caption = 'ScrollBar'
       ImageIndex = 0
@@ -942,6 +941,6 @@ object fGColor: TfGColor
   object ImageList1: TImageList
     AllocBy = 1
     Left = 40
-    Top = 344
+    Top = 280
   end
 end
