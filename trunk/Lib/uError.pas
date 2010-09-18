@@ -93,25 +93,6 @@ begin
 	Result := Result + ' (' + IntToStr(ErrorCode) + ')';
 end;
 
-procedure LoadSnd;
-var
-	Reg: TRegistry;
-	Key: string;
-	SndName: TFileName;
-begin
-	Reg := TRegistry.Create;
-	Reg.RootKey := HKEY_CURRENT_USER;
-	Key := 'AppEvents\Schemes\Apps\.Default\AppGPFault\.Current';
-	if Reg.OpenKey(Key, False) then
-	begin
-		SndName := Reg.ReadString('');
-		if FileExists(SndName) then
-			WaveReadFromFile(SndError, SndName);
-		Reg.CloseKey;
-	end;
-	Reg.Free;
-end;
-
 function DoForm(const Style: TStyle; var FName: TFileName; const ErrorCode: U32; const ErrorMsg: string; const Retry: Boolean): Boolean;
 var s: string;
 begin
@@ -126,9 +107,9 @@ begin
 
 	if IgnoreAll = False then
 	begin
-		if SndError = nil then LoadSnd;
-		PlayWave(SndError);
-			
+//		PlayWinSound(wsProgramError);
+		PlayWinSound(wsCriticalStop);
+
 		if not Assigned(fIOError) then
 		begin
 			fIOError := TfIOError.Create(Application.MainForm);

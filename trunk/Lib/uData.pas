@@ -30,6 +30,8 @@ type
 		procedure Delete(i: TIndex);
 		procedure Insert(Value: Pointer; Index: TIndex);
 		function Get(Index: TIndex): Pointer;
+		function GetFirst: Pointer;
+		function GetLast: Pointer;
 //		procedure Put(Index: Integer; const S: string);
 //		procedure Get(Value: Pointer; Index: TIndex);
 		procedure Put(Value: Pointer; Index: TIndex);
@@ -219,6 +221,16 @@ begin
 			Inc(i);
 		end;
 	end;
+end;
+
+function TData.GetFirst: Pointer;
+begin
+	Result := Get(0);
+end;
+
+function TData.GetLast: Pointer;
+begin
+	Result := Get(FItemCount - 1);
 end;
 
 procedure TData.Put(Value: Pointer; Index: TIndex);

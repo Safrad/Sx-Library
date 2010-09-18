@@ -7,7 +7,7 @@ object fLogo: TfLogo
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
   BorderIcons = []
-  BorderStyle = bsToolWindow
+  BorderStyle = bsNone
   ClientHeight = 384
   ClientWidth = 512
   Color = clBtnFace
@@ -27,6 +27,7 @@ object fLogo: TfLogo
     ActiveOnly = False
     Enabled = False
     Interval = 1000
+    EventStep = esInterval
     OnTimer = Timer1Timer
     Left = 16
     Top = 8
