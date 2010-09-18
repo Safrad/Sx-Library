@@ -1,5 +1,135 @@
+{$R-}
+{$Q-}
+(*-------------------------------------------------------------------------*)
+	procedure SelectSort;
+	var
+		i, j, k: SG;
+		MinValue: TValue;
+		HIndex: TIndex;
+		HValue: TValue;
+	begin
+		for i := MinIndex to MaxIndex - 1 do
+		begin
+			k := i;
+			MinValue := AValue[i];
+			for j := i + 1 to MaxIndex do
+			begin
+				{$ifopt d+}Inc(Compared);{$endif}
+				if AValue[j] < MinValue then
+				begin
+					k := j;
+					MinValue := AValue[j];
+				end;
+			end;
+			HIndex := AIndex[i];
+			AIndex[i] := AIndex[k];
+			AIndex[k] := HIndex;
+			HValue := AValue[i];
+			AValue[i] := AValue[k];
+			AValue[k] := HValue;
+			{$ifopt d+}Inc(Swaped);{$endif}
+		end;
+	end;
+(*  procedure SelectSort;
+	var
+		i, j, k: SG;
+		MinValue: TValue;
+		HIndex: TIndex;
+		HValue: TValue;
+	begin
+		for i := MaxIndex downto MinIndex + 1 do
+		begin
+			k := i;
+			MinValue := AValue[i];
+			for j := i - 1 downto MinIndex do
+			begin
+				{$ifopt d+}Inc(Compared);{$endif}
+				if AValue[j] < MinValue then
+				begin
+					k := j;
+					MinValue := AValue[j];
+				end;
+			end;
+			HIndex := AIndex[i];
+			AIndex[i] := AIndex[k];
+			AIndex[k] := HIndex;
+			HValue := AValue[i];
+			AValue[i] := AValue[k];
+			AValue[k] := HValue;
+			{$ifopt d+}Inc(Swaped);{$endif}
+		end;
+	end;
 (*-------------------------------------------------------------------------*)
 	procedure InsertionSort;
+	var
+		HValue: TValue;
+		HIndex: TIndex;
+		i, j: Integer;
+		L, R, M: TIndex;
+	begin
+		for i := MinIndex + 1 to MaxIndex do
+		begin
+			HIndex := AIndex[i];
+			HValue := AValue[i];
+//      J := i - 1;
+			L := MinIndex;
+			R := i - 1;
+			while L <= R do
+			begin
+//        M := (L + R) div 2;
+				if AValue[R] = AValue[L] then
+					M := (L + R) div 2
+				else
+				begin
+					M := L + TIndex(HValue - AValue[L]) * (R - L) div TIndex(AValue[R] - AValue[L]);
+					if M < L then M := L
+					else if M > R then M := R;
+				end;
+				{$ifopt d+}Inc(Compared);{$endif}
+				if HValue < AValue[M] then R := M - 1 else L := M + 1;
+			end;
+			for j := i - 1 downto L do
+			begin
+				{$ifopt d+}Inc(Swaped);{$endif}
+				AIndex[J + 1] := AIndex[J];
+				AValue[J + 1] := AValue[J];
+			end;
+			{$ifopt d+}Inc(Swaped);{$endif}
+			AIndex[L] := HIndex;
+			AValue[L] := HValue;
+		end;
+	end;
+(*-------------------------------------------------------------------------*)
+(*  procedure InsertionSort;
+	var
+		HValue: TValue;
+		HIndex: TIndex;
+		i, j: Integer;
+	begin
+		for i := MinIndex + 1 to MaxIndex do
+		begin
+			HIndex := AIndex[i];
+			HValue := AValue[i];
+			J := i - 1;
+			{$ifopt d+}Inc(Compared);{$endif}
+			while AValue[J] > HValue do
+			begin
+				AIndex[J + 1] := AIndex[J];
+				AValue[J + 1] := AValue[J];
+				{$ifopt d+}Inc(Swaped);{$endif}
+				Dec(J);
+				if J < MinIndex then Break;
+				{$ifopt d+}Inc(Compared);{$endif}
+			end;
+
+			{$ifopt d+}Inc(Swaped);{$endif}
+			// Insert the original value of SortArray(Row) in SortArray(J):
+			AIndex[J + 1] := HIndex;
+			AValue[J + 1] := HValue;
+		end;
+	end;
+
+(*  procedure InsertionSort;
 	{
 	 ============================= InsertionSort ================================
 		 The InsertionSort procedure compares the length of each successive
@@ -16,18 +146,20 @@
 	begin
 		for i := MinIndex + 1 to MaxIndex do
 		begin
-			HValue := AValue[i];
 			HIndex := AIndex[i];
+			HValue := AValue[i];
 			for J := i downto MinIndex + 1 do
 			begin
 				{ As long as the length of the J-1st element is greater than the
 				length of the original element in SortArray(Row), keep shifting
 				the array elements down: }
+				{$ifopt d+}Inc(Compared);{$endif}
 				if AValue[J - 1] > HValue then
 				begin
-					AValue[J] := AValue[J - 1];
 					AIndex[J] := AIndex[J - 1];
-					Inc(Swaped);
+					AValue[J] := AValue[J - 1];
+
+					{$ifopt d+}Inc(Swaped);{$endif}
 					// Otherwise, exit the FOR...NEXT loop:
 				end
 				else
@@ -36,9 +168,10 @@
 				end;
 			end;
 
+			{$ifopt d+}Inc(Swaped);{$endif}
 			// Insert the original value of SortArray(Row) in SortArray(J):
-			AValue[J] := HValue;
 			AIndex[J] := HIndex;
+			AValue[J] := HValue;
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
@@ -58,6 +191,7 @@
 			begin
 				{ Two adjacent elements are out of order, so swap their values
 				and redraw those two bars: }
+				{$ifopt d+}Inc(Compared);{$endif}
 				if AValue[J] > AValue[J + 1] then
 				begin
 					HValue := AValue[J];
@@ -67,7 +201,7 @@
 					AIndex[J] := AIndex[J + 1];
 					AIndex[J + 1] := HIndex;
 					Switch := j;
-					Inc(Swaped);
+					{$ifopt d+}Inc(Swaped);{$endif}
 				end;
 			end;
 			// Sort on next pass only to where the last switch was made:
@@ -79,6 +213,7 @@
 			begin
 				{ Two adjacent elements are out of order, so swap their values
 				and redraw those two bars: }
+				{$ifopt d+}Inc(Compared);{$endif}
 				if AValue[J] > AValue[J + 1] then
 				begin
 					HValue := AValue[J];
@@ -88,7 +223,7 @@
 					AIndex[J] := AIndex[J + 1];
 					AIndex[J + 1] := HIndex;
 					Switch := j;
-					Inc(Swaped);
+					{$ifopt d+}Inc(Swaped);{$endif}
 				end;
 			end;
 			// Sort on next pass only to where the last switch was made:
@@ -97,93 +232,27 @@
 		until False;
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure SelectionSort;
+	procedure ExchangeSort;
 	var
 		HValue: TValue;
 		HIndex: TIndex;
 		I, J: Integer;
 	begin
-	for I := MinIndex to MaxIndex - 1 do
-	begin
-		for J := I + 1 to MaxIndex do
+		for I := MinIndex to MaxIndex - 1 do
 		begin
-			{$ifopt d+}Inc(Compared);{$endif}
-			if AValue[I] < AValue[J] then
+			for J := MaxIndex downto I + 1 do
 			begin
-				HValue := AValue[I];
-				AValue[I] := AValue[J];
-				AValue[J] := HValue;
-				HIndex := AIndex[I];
-				AIndex[I] := AIndex[J];
-				AIndex[J] := HIndex;
-				{$ifopt d+}Inc(Swaped);{$endif}
-			end;
-		end;
-	end;
-	end;
-(*-------------------------------------------------------------------------*)
-	procedure SelectionSortS; // XX
-	var
-		HValue: TValue;
-		HIndex: TIndex;
-		I, J: Integer;
-	begin
-	for I := MinIndex to MaxIndex - 1 do
-	begin
-		for J := MaxIndex downto I + 1 do
-		begin
-			{$ifopt d+}Inc(Compared);{$endif}
-			if AValue[I] > AValue[J] then
-			begin
-				HValue := AValue[I];
-				AValue[I] := AValue[J];
-				AValue[J] := HValue;
-				HIndex := AIndex[I];
-				AIndex[I] := AIndex[J];
-				AIndex[J] := HIndex;
-				{$ifopt d+}Inc(Swaped);{$endif}
-			end;
-		end;
-	end;
-	end;
-(*-------------------------------------------------------------------------*)
-	procedure ExchangeSort; // Complexity: k * (n^2), Changes k * n (Select Sort)
-	{
-	 ============================= ExchangeSort =================================
-		 The ExchangeSort compares each element in SortArray - starting with
-		 the first element - with every following element.  If any of the
-		 following elements is smaller than the current element, it is exchanged
-		 with the current element and the process is repeated for the next
-		 element in SortArray.
-	 ============================================================================
-	}
-	var
-		HValue: TValue;
-		HIndex: TIndex;
-		i, j: Integer;
-		SmallestRow: Integer;
-	begin
-		for i := MinIndex to MaxIndex do
-		begin
-			SmallestRow := i;
-			for J := i + 1 to MaxIndex do
-			begin
-				if AValue[J] < AValue[SmallestRow] then
+				{$ifopt d+}Inc(Compared);{$endif}
+				if AValue[I] > AValue[J] then
 				begin
-					SmallestRow := J;
+					HValue := AValue[I];
+					AValue[I] := AValue[J];
+					AValue[J] := HValue;
+					HIndex := AIndex[I];
+					AIndex[I] := AIndex[J];
+					AIndex[J] := HIndex;
+					{$ifopt d+}Inc(Swaped);{$endif}
 				end;
-			end;
-			{ Found a row shorter than the current row, so swap those
-			two array elements: }
-			if SmallestRow > i then
-			begin
-				HValue := AValue[i];
-				AValue[i] := AValue[SmallestRow];
-				AValue[SmallestRow] := HValue;
-				HIndex := AIndex[i];
-				AIndex[i] := AIndex[SmallestRow];
-				AIndex[SmallestRow] := HIndex;
-				Inc(Swaped);
 			end;
 		end;
 	end;
@@ -218,6 +287,7 @@
 				// Compare elements and switch ones out of order:
 				for j := MinIndex to Limit do
 				begin
+					{$ifopt d+}Inc(Compared);{$endif}
 					if AValue[j] > AValue[j + Offset] then
 					begin
 						HValue := AValue[j];
@@ -227,7 +297,7 @@
 						AIndex[j] := AIndex[J + Offset];
 						AIndex[j + Offset] := HIndex;
 						Switch := j;
-						Inc(Swaped);
+						{$ifopt d+}Inc(Swaped);{$endif}
 					end;
 				end;
 				// Sort on next pass only to where last switch was made:
@@ -238,7 +308,126 @@
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure HeapSort; // XXXXXX
+	procedure HeapSort2;
+	var
+		L, R: TIndex;
+		x: TValue;
+		y: TIndex;
+
+		procedure Zarad;
+		var
+			i, j: TIndex;
+		begin
+			i := L; j := 2 * i;
+			x := AValue[i];
+			y := AIndex[i];
+			while j <= R do
+			begin
+				{$ifopt d+}Inc(Compared);{$endif}
+				if J < R then if AValue[j] < AValue[j + 1] then Inc(j);
+				if x >= AValue[j] then Break;
+				AValue[i] := AValue[j];
+				AIndex[i] := AIndex[j];
+				{$ifopt d+}Inc(Swaped);{$endif}
+				i := j; j := 2 * i;
+			end;
+			AValue[i] := x;
+			AIndex[i] := y;
+		end;
+	begin
+		L := (MaxIndex - MinIndex + 1) div 2;
+		R := MaxIndex;
+		while L > 0 do
+		begin
+			Dec(L);
+			Zarad;
+		end;
+
+		L := 0;
+		R := MaxIndex;
+		while R > 0 do
+		begin
+			x := AValue[0]; AValue[0] := AValue[R]; AValue[R] := x;
+			y := AIndex[0]; AIndex[0] := AIndex[R]; AIndex[R] := y;
+			{$ifopt d+}Inc(Swaped);{$endif}
+			Dec(R);
+			Zarad;
+		end;
+	end;
+
+	procedure HeapSort4;
+	var
+		L, R: TIndex;
+		x: TValue;
+		y: TIndex;
+
+		function Bin(I: TValue): TValue;
+		begin
+			Result := 0;
+			while i <> 0 do
+			begin
+				i := i shr 1;
+				Inc(Result);
+			end;
+		end;
+
+		procedure LeafSearch(L, R: TIndex; var j: TIndex);
+		begin
+			j := L + 1;
+			while 2 * j < R do
+				if AValue[2 * j - 1] < AValue[2 * j + 1 - 1] then j := j * 2 else j := j * 2 + 1;
+			if 2 * j - 1 = R then j := R;
+		end;
+
+		procedure BottomUpSearch(L: TIndex; var j: TIndex);
+		begin
+			while (L < j) and (AValue[L] < AValue[j]) do j := j div 2;
+		end;
+
+		procedure Interchange(L, J: TIndex);
+		var
+			p, k: SG;
+		begin
+			p := Bin(j) - Bin(L);
+			for k := p - 1 downto 0 do
+			begin
+				AValue[j shr (k + 1)] := AValue[j shr k];
+				AIndex[j shr (k + 1)] := AIndex[j shr k];
+			end;
+			AValue[j] := x;
+			AIndex[j] := y;
+		end;
+
+		procedure Zarad;
+		var J: TIndex;
+		begin
+			LeafSearch(L, R, J);
+			BottomUpSearch(L, J);
+			Interchange(L, R);
+		end;
+
+	begin
+		L := (MaxIndex - MinIndex + 1) div 2;
+		R := MaxIndex;
+		while L > 0 do
+		begin
+			Dec(L);
+			Zarad;
+		end;
+
+		L := 0;
+		R := MaxIndex;
+		while R > 0 do
+		begin
+			x := AValue[0]; AValue[0] := AValue[R]; AValue[R] := x;
+			y := AIndex[0]; AIndex[0] := AIndex[R]; AIndex[R] := y;
+			{$ifopt d+}Inc(Swaped);{$endif}
+			Dec(R);
+			Zarad;
+		end;
+	end;
+
+	procedure HeapSort;
 	{
 	 ============================== PercolateUp =================================
 		 The PercolateUp procedure converts the elements from 1 to MaxLevel in
@@ -262,6 +451,7 @@
 
 				{ The value at the current node is still bigger than the value at
 					its parent node, so swap these two array elements:}
+				{$ifopt d+}Inc(Compared);{$endif}
 				if AValue[I] > AValue[Parent] then
 				begin
 					HValue := AValue[Parent];
@@ -270,7 +460,7 @@
 					HIndex := AIndex[Parent];
 					AIndex[Parent] := AIndex[I];
 					AIndex[I] := HIndex;
-					Inc(Swaped);
+					{$ifopt d+}Inc(Swaped);{$endif}
 					I := Parent;
 
 					{ Otherwise, the element has reached its proper place in the heap,
@@ -309,6 +499,7 @@
 				// If there are two child nodes, find out which one is bigger:
 				if Child <> MaxLevel then //Child + 1 <= MaxLevel THEN
 				begin
+				{$ifopt d+}Inc(Compared);{$endif}
 					if AValue[Child + 1] > AValue[Child] then
 					begin
 						Inc(Child);
@@ -325,7 +516,7 @@
 					HIndex := AIndex[I];
 					AIndex[I] := AIndex[Child];
 					AIndex[Child] := HIndex;
-					Inc(Swaped);
+					{$ifopt d+}Inc(Swaped);{$endif}
 
 					I := Child;
 
@@ -372,12 +563,12 @@
 		HIndex: TIndex;
 		i: Integer;
 	begin
-		for I := MinIndex + 1 to MaxIndex do //Fast part
+		for I := MinIndex + 1 to MaxIndex do // Fast part
 		begin
 			PercolateUp(I);
 		end;
 
-		for I := MaxIndex downto MinIndex + 1 do //Slow part
+		for I := MaxIndex downto MinIndex + 1 do // Slow part
 		begin
 			HValue := AValue[MinIndex];
 			AValue[MinIndex] := AValue[I];
@@ -385,9 +576,62 @@
 			HIndex := AIndex[MinIndex];
 			AIndex[MinIndex] := AIndex[I];
 			AIndex[I] := HIndex;
-			Inc(Swaped);
+			{$ifopt d+}Inc(Swaped);{$endif}
 			PercolateDown(I - 1);
 		end;
+	end;
+(*-------------------------------------------------------------------------*)
+	procedure QuickSort(iLo, iHi: TIndex);
+	var
+		HValue: TValue;
+		HIndex: TIndex;
+		Lo, Hi: TIndex;
+		Mid: TValue;
+	begin
+		Inc(Depth);
+		{$ifopt d+}
+		if Depth > MaxDepth then
+		begin
+			MaxDepth := Depth;
+		end;
+		{$endif}
+
+{   if D < 3 then
+		begin
+			MC := 0;
+			for Lo := iLo to iHi do
+				Inc(MC, AValue[Lo]);
+			Mid := RoundDiv64(MC, (iHi - iLo + 1));
+		end;}
+		Lo := iLo;
+		Hi := iHi;
+//    if D >= 3 then
+		Mid := AValue[(Lo + Hi) div 2];
+		repeat
+			while AValue[Lo] < Mid do Inc(Lo);
+			while AValue[Hi] > Mid do Dec(Hi);
+			if Lo > Hi then
+				Break
+			else
+			begin
+				{$ifopt d+}Inc(Compared);{$endif}
+				if AValue[Lo] > AValue[Hi] then
+				begin
+					HValue := AValue[Lo];
+					AValue[Lo] := AValue[Hi];
+					AValue[Hi] := HValue;
+					HIndex := AIndex[Lo];
+					AIndex[Lo] := AIndex[Hi];
+					AIndex[Hi] := HIndex;
+					{$ifopt d+}Inc(Swaped);{$endif}
+				end;
+				Inc(Lo);
+				Dec(Hi);
+			end;
+		until Lo > Hi;
+		if Hi > iLo then QuickSort(iLo, Hi);
+		if Lo < iHi then QuickSort(Lo, iHi);
+		Dec(Depth);
 	end;
 (*-------------------------------------------------------------------------*)
 	procedure MergeSort;
@@ -403,6 +647,7 @@
 			M := 0;
 			while True do
 			begin
+				{$ifopt d+}Inc(Compared);{$endif}
 				if AValue[i] <= AValue[j] then
 				begin
 					MeI[M] := AIndex[i];
@@ -442,8 +687,14 @@
 					end;
 				end;
 			end;
-			Move(AValue[I1F], MeV[0], M);
-	//		Move(AIndex[I1F], MeI[0], M);
+			for i := 0 to M - 1 do
+			begin
+				{$ifopt d+}Inc(Swaped);{$endif}
+				AValue[i + I1F] := MeV[i];
+				AIndex[i + I1F] := MeI[i];
+			end;
+{     Move(AValue[I1F], MeV[0], SizeOf(AValue[0]) * M);
+			Move(AIndex[I1F], MeI[0], SizeOf(AIndex[0]) * M);}
 		end;
 
 		procedure Sort(F, T: SG);
@@ -468,77 +719,161 @@
 		SetLength(MeI, 0);
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure QuickSort(iLo, iHi: TIndex);
+	procedure RadixSort;
+	const
+		MaxV = 3;
+		ShOffset = 2;
+	type
+
+		TStack = record
+			St: array of packed record
+				Value: TValue;
+				Index: TIndex;
+			end;
+			StCount: SG;
+		end;
 	var
-		HValue: TValue;
-		HIndex: TIndex;
-		Lo, Hi: TIndex;
-		Mid: TValue;
+		Stacks: array[0..1, 0..MaxV] of TStack;
+
+		StackIndex: SG;
+		i, j, k, v: SG;
+		Sh: SG;
 	begin
-		Inc(Depth);
-		if Depth > MaxDepth then
+		StackIndex := 0;
+		for i := 0 to 1 do
+		for j := 0 to MaxV do
 		begin
-			MaxDepth := Depth;
+			SetLength(Stacks[i, j].St, MaxIndex - MinIndex + 1);
+			Stacks[i, j].StCount := 0;
 		end;
 
-{		if D < 3 then
+		for i := MinIndex to MaxIndex do
 		begin
-			MC := 0;
-			for Lo := iLo to iHi do
-				Inc(MC, AValue[Lo]);
-			Mid := RoundDiv64(MC, (iHi - iLo + 1));
-		end;}
-		Lo := iLo;
-		Hi := iHi;
-//		if D >= 3 then
-		Mid := AValue[(Lo + Hi) div 2];
-		repeat
-			while AValue[Lo] < Mid do Inc(Lo);
-			while AValue[Hi] > Mid do Dec(Hi);
-			if Lo > Hi then
-				Break
-			else
+			Stacks[0, 0].St[i - MinIndex].Value := AValue[i];
+			Stacks[0, 0].St[i - MinIndex].Index := AIndex[i];
+		end;
+		Stacks[0, 0].StCount := MaxIndex - MinIndex + 1;
+
+		Sh := 0;
+		for i := 0 to SizeOf(TValue) * 8 div ShOffset - 1 do
+		begin
+			for j := 0 to MaxV do
 			begin
-				if AValue[Lo] > AValue[Hi] then
-				begin
-					HValue := AValue[Lo];
-					AValue[Lo] := AValue[Hi];
-					AValue[Hi] := HValue;
-					HIndex := AIndex[Lo];
-					AIndex[Lo] := AIndex[Hi];
-					AIndex[Hi] := HIndex;
-					Inc(Swaped);
-				end;
-				Inc(Lo);
-				Dec(Hi);
+				Stacks[StackIndex xor 1, j].StCount := 0;
 			end;
-		until Lo > Hi;
-		if Hi > iLo then QuickSort(iLo, Hi);
-		if Lo < iHi then QuickSort(Lo, iHi);
-		Dec(Depth);
+			for j := 0 to MaxV do
+			begin
+				for k := 0 to Stacks[StackIndex , j].StCount - 1 do
+				begin
+					v := (Stacks[StackIndex, j].St[k].Value shr Sh) and MaxV;
+{         if Stacks[StackIndex xor 1, v].StCount > 10 then
+						Exit;}
+					Stacks[StackIndex xor 1, v].St[Stacks[StackIndex xor 1, v].StCount] := Stacks[StackIndex, j].St[k];
+					Inc(Stacks[StackIndex xor 1, v].StCount);
+				end;
+			end;
+			Inc(Sh, ShOffset);
+			StackIndex := StackIndex xor 1;
+		end;
+
+		for i := MinIndex to MaxIndex do
+		begin
+			AValue[i] := Stacks[StackIndex, 0].St[i - MinIndex].Value;
+			AIndex[i] := Stacks[StackIndex, 0].St[i - MinIndex].Index;
+		end;
+
+		for i := 0 to 1 do
+		for j := 0 to MaxV do
+			SetLength(Stacks[i, j].St, 0);
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure RadixSort;
+	procedure CountingSort;
+	var
+		i, j, next_index : TIndex;
+		count_index      : TValue;
+		Counts: array of record
+			Vals: array of TIndex;
+			ValCount: TIndex;
+		end;
+		NewSize: SG;
+		min_value, max_value: TValue;
+		i2: SG;
 	begin
+		min_Value := High(TValue);
+		max_Value := Low(TValue);
+		for i := MinIndex to MaxIndex do
+		begin
+			if AValue[i] < min_value then min_value := AValue[i];
+			if AValue[i] > max_value then max_value := AValue[i];
+		end;
 
+		// Create the Counts array.
+		SetLength(Counts, (max_value - min_value + 1));
+
+		// Initialize the counts to zero.
+		for i := 0 to max_value - min_value do
+		begin
+			Counts[i].ValCount := 0;
+			Counts[i].Vals := nil;
+		end;
+
+		// Count the items.
+		for i := MinIndex to MaxIndex do
+		begin
+			count_index := AValue[i] - min_value;
+			NewSize := Counts[count_index].ValCount + 1;
+			if AllocByEx(Length(Counts[count_index].Vals), NewSize, SizeOf(Counts[count_index].Vals[0])) then
+				SetLength(Counts[count_index].Vals, NewSize);
+			Counts[count_index].Vals[Counts[count_index].ValCount] := AIndex[i];
+			Inc(Counts[count_index].ValCount);
+
+		end;
+
+		// Place the items in the sorted array.
+		next_index := MinIndex;
+		for i2 := min_value to max_value do
+		begin
+			for j := 0 to Counts[i2 - SG(min_value)].ValCount - 1 do
+			begin
+				AValue[next_index] := i2;
+				AIndex[next_index] := Counts[i2 - SG(min_value)].Vals[j];
+				Inc(next_index);
+			end;
+		end;
+
+		// Free the memory allocated for the counts array.
+		SetLength(Counts, 0);
 	end;
 (*-------------------------------------------------------------------------*)
 begin
 	if Length(AIndex) <> Length(AValue) then Exit;
 	MaxIndex := Length(AIndex) - 1;
+	{$ifopt d+}
+	Swaped := 0; Compared := 0; MaxDepth := 0;
+	{$endif}
 	if MaxIndex > MinIndex then
 	begin
 		case SortType of
+		stAuto:
+		begin
+			if Stability then
+				case MaxIndex of
+				1..70: InsertionSort;
+				else MergeSort;
+				end
+			else
+				QuickSort(MinIndex, MaxIndex);
+		end;
+		stSelect: SelectSort;
 		stInsertion: InsertionSort;
 		stBubble: BubbleSort;
-		stSelection: SelectionSort;
-		stSelectionS: SelectionSortS;
 		stExchange: ExchangeSort;
 		stShell: ShellSort;
 		stHeap: HeapSort;
+		stQuick: QuickSort(MinIndex, MaxIndex);
 		stMerge: MergeSort;
-		stQuick: QuickSort(MinIndex, Length(AIndex) - 1);
 		stRadix: RadixSort;
+		stCounting: CountingSort;
 		end;
 	end;
 end;

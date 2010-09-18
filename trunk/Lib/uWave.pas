@@ -82,6 +82,7 @@ const
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
 // For screen Width 800 is NowPos 0..799, MaxPos 799
 
+function WaveErrorText(ErrorCode: Integer): ShortString;
 
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
 procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
@@ -89,7 +90,7 @@ procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
 procedure WaveCreate(var Wave: PWave;
 	const Channels: Word; // 1, 2
 	const BitsPerSample: Word; // 8, 16
-	const SampleRate: LongInt; // 11025, 22050, 44100 ...
+	const SampleRate: LongInt; // 11025, 22050, 44100, 48000...
 	const TotalSamples: LongInt); // 1 sec = SampleRate
 
 // Left, Right (0..ConvertPre)
@@ -197,12 +198,10 @@ end;
 	MMSYSERR_NODRIVERCB   = MMSYSERR_BASE + 20; { driver does not call DriverCallback }
 	MMSYSERR_LASTERROR    = MMSYSERR_BASE + 20; { last error in range }
 *)
-function WaveErrorText(ErrorCode: Integer): string;
-var P: PChar;
+function WaveErrorText(ErrorCode: Integer): ShortString;
 begin
-	P := '';
-	waveOutGetErrorText(ErrorCode, P, 255);
-	Result := P;
+	SetLength(Result, 256);
+	waveOutGetErrorText(ErrorCode, PChar(Result[0]), 256);
 end;
 
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);

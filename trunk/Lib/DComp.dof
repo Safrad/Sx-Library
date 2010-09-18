@@ -38,7 +38,7 @@ RemoteSymbols=0
 MinStackSize=16384
 MaxStackSize=1048576
 ImageBase=4194304
-ExeDescription=David Safranek Components
+ExeDescription=Safrad's Components
 
 [Directories]
 OutputDir=
@@ -55,9 +55,14 @@ UsePackages=0
 RunParams=
 HostApplication=
 
+[Language]
+ActiveLang=
+ProjectLang=$00000409
+RootDir=
+
 [Version Info]
 IncludeVerInfo=1
-AutoIncBuild=0
+AutoIncBuild=1
 MajorVer=1
 MinorVer=0
 Release=0
@@ -82,6 +87,5 @@ ProductName=
 ProductVersion=1.0.0.0
 Comments=
 
-[HistoryLists\hlUnitAliases]
-Count=1
-Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+[Excluded Packages]
+$(DELPHI)\BIN\DBX50.BPL=(untitled)

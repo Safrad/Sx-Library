@@ -103,7 +103,7 @@ type
 		3: (
 			A: U64);
 	end;
-{	S64 = record
+{ S64 = record
 		case Integer of
 		0: (
 			LowPart: U32;
@@ -126,7 +126,7 @@ type
 	F64 = Double;
 	F80 = Extended;
 
-{	CG = Char; // AnsiChar
+{ CG = Char; // AnsiChar
 	C8 = AnsiChar;
 	C16 = WideChar;
 
@@ -150,7 +150,7 @@ type
 // Graphics
 	TRColor = packed record
 		case Integer of
-		0: (L: -$7FFFFFFF - 1..$7FFFFFFF);
+		0: (L: - $7FFFFFFF - 1..$7FFFFFFF);
 		1: (R, G, B, T: Byte);
 		2: (WordRG, WordBT: Word);
 	end;
@@ -197,12 +197,13 @@ procedure Order(var I1, I2: Cardinal); overload;
 
 function CalcShr(N: U32): S8;
 
-function AllocBy(const OldSize: SG; var NewSize: SG;
+function AllocByEx(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 
 // Format functions
 var WinDecimalSeparator: Char;
 function Using(const Typ: TString; const Num: Int64): TString;  {$ifdef DLL}stdcall;{$endif}
+function IntToStrF(const Num: Int64): TString;
 function StrToValE(Line: TString;
 	const MinVal, DefVal, MaxVal: Extended): Extended; overload;
 function StrToValE(Line: TString;
@@ -230,6 +231,7 @@ function msToStr(const DT: Int64;
 	const Display: TDisplay; const Decimals: ShortInt): TString;  {$ifdef DLL}stdcall;{$endif}
 
 // System
+procedure Nop;
 procedure Beep;
 procedure SndWarn;
 function DriveTypeToStr(const DriveType: Integer): TString;
@@ -243,9 +245,9 @@ function GetMultiCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Integer; const Index, Count: Integer): string;
 
 function MenuNameToFileName(Name: string): string;
-function ButtonNameToFileName(Name: string): string;
+function ButtonNameToFileName(Name: string; const Space: Boolean): string;
 
-procedure CorrectPos(Form: TForm);
+procedure CorrectFormPos(Form: TForm);
 procedure SetListViewItems(ListView: TListView; NewSize: SG);
 procedure CreateLink(
 	const LinkFileName: WideString;
@@ -562,7 +564,7 @@ begin
 	end;
 end;
 
-function AllocBy(const OldSize: SG; var NewSize: SG;
+function AllocByEx(const OldSize: SG; var NewSize: SG;
 	BlockSize: SG): Boolean;
 {
 	OldSize = <0, 2^31)
@@ -570,11 +572,14 @@ function AllocBy(const OldSize: SG; var NewSize: SG;
 	BlockSize = 2^n, <2, 2^30>
 }
 begin
+	{$ifopt d+}
 	if (1 shl CalcShr(BlockSize)) <> BlockSize then
 	begin
 		ErrorMessage('Bad AllocBy block size ' + IntToStr(BlockSize));
-		BlockSize := 1 shl CalcShr(BlockSize);
 	end;
+	{$endif}
+//	BlockSize := 1 shl CalcShr(DefMemBuffer div BlockSize);
+	BlockSize := DefMemBuffer;
 
 	if NewSize > OldSize then
 		NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1)
@@ -727,6 +732,11 @@ begin
 		end;
 		end;
 	end;
+end;
+
+function IntToStrF(const Num: Int64): TString;
+begin
+	Result := Using('~###,###,###,###,###,##0', Num);
 end;
 
 var
@@ -1403,6 +1413,13 @@ begin
 	end;
 end;
 
+procedure Nop;
+begin
+	asm
+	nop
+	end;
+end;
+
 procedure Beep;
 begin
 	Windows.Beep(0, 0);
@@ -1492,7 +1509,7 @@ begin
 	end;
 end;
 
-function ButtonNameToFileName(Name: string): string;
+function ButtonNameToFileName(Name: string; const Space: Boolean): string;
 label LDel;
 var Index, Count: SG;
 begin
@@ -1513,24 +1530,27 @@ begin
 			Break;
 		end;
 	end;
-	Index := Pos('DITBTN', UpperCase(Result));
-	Count := 7;
-	if Index <> 0 then goto LDel;
 
-	Index := Pos('BITBTN', UpperCase(Result));
-	Count := 6;
-	if Index <> 0 then goto LDel;
+	Index := Pos('DBUTTON', UpperCase(Result));
+	Count := 7;
+	if Index <> 0 then Delete(Result, Index, Count);
 
 	Index := Pos('BUTTON', UpperCase(Result));
 	Count := 6;
-	if Index <> 0 then goto LDel;
+	if Index <> 0 then Delete(Result, Index, Count);
 
-	Exit;
-	LDel:
-		Delete(Result, Index, Count);
+{	Index := Pos('BUT', UpperCase(Result));
+	Count := 3;
+	if Index <> 0 then goto LDel;}
+
+	if Space then
+		for Index := 2 to Length(Result) do
+			if Result[Index] in ['A'..'Z'] then
+				if Result[Index - 1] in ['a'..'z'] then
+					Insert(' ', Result, Index);
 end;
 
-procedure CorrectPos(Form: TForm);
+procedure CorrectFormPos(Form: TForm);
 begin
 	if not Assigned(Form) then Exit;
 	if Form.Left + Form.Width > Screen.Width then Form.Left := Screen.Width - Form.Width;

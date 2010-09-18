@@ -253,7 +253,7 @@ object fGColor: TfGColor
     TickStyle = tsAuto
     OnChange = TrackBarRChange
   end
-  object BitBtnR: TDBitBtn
+  object ButtonR: TDButton
     Left = 376
     Top = 8
     Width = 49
@@ -266,24 +266,26 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 5
-    OnClick = BitBtnRClick
+    OnClick = ButtonRClick
   end
-  object ButtonOk: TDBitBtn
+  object ButtonOk: TDButton
     Left = 256
     Top = 344
     Width = 73
     Height = 25
+    Caption = 'OK'
+    Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = []
+    ModalResult = 1
     ParentFont = False
     TabOrder = 0
     OnClick = ButtonOkClick
-    Kind = bkOK
   end
-  object ButtonApply: TDBitBtn
+  object ButtonApply: TDButton
     Left = 112
     Top = 344
     Width = 73
@@ -297,50 +299,23 @@ object fGColor: TfGColor
     ParentFont = False
     TabOrder = 1
     Visible = False
-    Glyph.Data = {
-      B6030000424DB603000000000000B60000002800000010000000100000000100
-      1800000000000003000000000000000000001000000000000000000000000000
-      80000080000000808000800000008000800080800000C0C0C000808080000000
-      FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00800080800080
-      8000808000808000808000008000008000008000008000008000808000808000
-      8080008080008080008000800080000080008080008080000000800000800000
-      8000008000008000800000800000800080800080800080800080008000008000
-      8000008000000080000080000080000080000080000080000080000080008000
-      0080008080008080008000800000800000800000800000800000800000FF0000
-      FF0000FF0000FF00008000008000008000800000800080800080008000008000
-      00800000800000800000FF0080008080008080008080008000FF000080000080
-      0000800080000080008000800000800000800000800000800080008080008080
-      008080008080008080008000FF00008000008000800000800080008000008000
-      00800000800000800000800080008080008080008080008080008000FF008000
-      0080000080000080008000FF0000FF0000FF0000FF0000FF0000FF0000FF0080
-      0080800080800080800080800080800080800080800080800080800080800080
-      8000808000808000808000808000808000808000808000808000008000008000
-      0080000080000080000000FF0080000080000080000080008080008080008080
-      008080008000FF0000800000800000800000800000800080000000FF00008000
-      00800080000080008080008080008080008080008080008000FF000080000080
-      0000800000800080000080008000FF0000800000800080000080008080008080
-      008080008080000080000000800000800000800000800080000080008000FF00
-      0080000080000080008000008000008000008000000080000080000080000080
-      0000800000800080000080008080008000FF0000800000800000800000800000
-      800000800000800000800000800000FF0000FF00008000800000800080800080
-      80008000FF0000FF0000800000800000800000800000800000FF0000FF008000
-      8080008000FF0080008080008080008080008080008080008000FF0000FF0000
-      FF0000FF0000FF00800080800080800080800080800080800080}
   end
-  object ButtonCancel: TDBitBtn
+  object ButtonCancel: TDButton
     Left = 344
     Top = 344
     Width = 73
     Height = 25
+    Cancel = True
+    Caption = 'Cancel'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = []
+    ModalResult = 2
     ParentFont = False
     TabOrder = 2
     OnClick = ButtonCancelClick
-    Kind = bkCancel
   end
   object RadioGroup1: TRadioGroup
     Left = 312
@@ -384,7 +359,7 @@ object fGColor: TfGColor
     TickMarks = tmBottomRight
     TickStyle = tsAuto
   end
-  object BitBtnG: TDBitBtn
+  object ButtonG: TDButton
     Left = 376
     Top = 40
     Width = 49
@@ -397,7 +372,7 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 8
-    OnClick = BitBtnGClick
+    OnClick = ButtonGClick
   end
   object EditB: TEdit
     Left = 48
@@ -425,7 +400,7 @@ object fGColor: TfGColor
     TickMarks = tmBottomRight
     TickStyle = tsAuto
   end
-  object BitBtnB: TDBitBtn
+  object ButtonB: TDButton
     Left = 376
     Top = 72
     Width = 49
@@ -438,7 +413,7 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 11
-    OnClick = BitBtnBClick
+    OnClick = ButtonBClick
   end
   object EditA: TEdit
     Left = 48
@@ -467,7 +442,7 @@ object fGColor: TfGColor
     TickStyle = tsAuto
     OnChange = TrackBarAChange
   end
-  object BitBtnA: TDBitBtn
+  object ButtonA: TDButton
     Left = 376
     Top = 104
     Width = 49
@@ -480,7 +455,7 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     TabOrder = 14
-    OnClick = BitBtnAClick
+    OnClick = ButtonAClick
   end
   object GroupBoxColors: TGroupBox
     Left = 8
@@ -625,91 +600,91 @@ object fGColor: TfGColor
       Caption = 'ScrollBar'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clBackground: TMenuItem
       Tag = 1
       Caption = 'Background'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clActiveCaption1: TMenuItem
       Tag = 2
       Caption = 'ActiveCaption'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clInactiveCaption1: TMenuItem
       Tag = 3
       Caption = 'InactiveCaption'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clMenu1: TMenuItem
       Tag = 4
       Caption = 'Menu'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clWindow1: TMenuItem
       Tag = 5
       Caption = 'Window'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clWindowFrame1: TMenuItem
       Tag = 6
       Caption = 'WindowFrame'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clMenuText1: TMenuItem
       Tag = 7
       Caption = 'MenuText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clWindowText1: TMenuItem
       Tag = 8
       Caption = 'WindowText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clCaptionText1: TMenuItem
       Tag = 9
       Caption = 'CaptionText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clActiveBorder1: TMenuItem
       Tag = 10
       Caption = 'ActiveBorder'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clInactiveBorder1: TMenuItem
       Tag = 11
       Caption = 'InactiveBorder'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clAppWorkSpace1: TMenuItem
       Tag = 12
       Caption = 'AppWorkSpace'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clHighlight1: TMenuItem
       Tag = 13
@@ -717,91 +692,91 @@ object fGColor: TfGColor
       Caption = 'Highlight'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clHighlightText1: TMenuItem
       Tag = 14
       Caption = 'HighlightText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clBtnFace1: TMenuItem
       Tag = 15
       Caption = 'BtnFace'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clBtnShadow1: TMenuItem
       Tag = 16
       Caption = 'BtnShadow'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clGrayText1: TMenuItem
       Tag = 17
       Caption = 'GrayText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clBtnText1: TMenuItem
       Tag = 18
       Caption = 'BtnText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clInactiveCaptionText1: TMenuItem
       Tag = 19
       Caption = 'InactiveCaptionText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clBtnHighlight1: TMenuItem
       Tag = 20
       Caption = 'BtnHighlight'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object cl3DDkShadow1: TMenuItem
       Tag = 21
       Caption = '3DDkShadow'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object cl3DLight1: TMenuItem
       Tag = 22
       Caption = '3DLight'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clInfoText1: TMenuItem
       Tag = 23
       Caption = 'InfoText'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clInfoBk1: TMenuItem
       Tag = 24
       Caption = 'InfoBk'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
     object clNone1: TMenuItem
       Tag = -1
       Caption = 'None'
       ImageIndex = 0
       OnClick = ColorClick
-      OnAdvancedDrawItem = AdvencedDraw
+      OnAdvancedDrawItem = AdvancedDraw
     end
   end
   object ImageList1: TImageList

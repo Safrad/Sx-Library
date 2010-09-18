@@ -5,16 +5,20 @@ unit uLogo;
 interface
 
 uses
+	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls;
+	ExtCtrls, uDTimer;
 
 type
 	TfLogo = class(TForm)
 		ImageLogo: TImage;
-    Timer1: TTimer;
-    procedure Timer1Timer(Sender: TObject);
+    Timer1: TDTimer;
+		procedure Timer1Timer(Sender: TObject);
+		procedure ImageLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
+			Y: Integer);
 	private
 		{ private declarations }
+		MoveCount: SG;
 	public
 		{ public declarations }
 		procedure LoadFile(LogoFile: TFileName);
@@ -51,10 +55,9 @@ end;
 
 procedure ShowLogo(const FileName: TFileName);
 begin
-	{$ifopt d-}
+//  {$ifopt d-}
 	Screen.Cursor := crHourGlass;
 	fLogo := TfLogo.Create(Application.MainForm);
-	fLogo.Position := poDesktopCenter;
 	fLogo.ImageLogo.Align := alClient;
 
 	fLogo.LoadFile(FileName);
@@ -62,7 +65,7 @@ begin
 	fLogo.Show;
 	fLogo.Repaint;
 	LogoTime := GetTickCount;
-	{$endif}
+//  {$endif}
 end;
 
 procedure ShowLogoFull;
@@ -147,7 +150,6 @@ procedure HideLogo;
 const
 	MinimumTime = 3000;
 begin
-	{$ifopt d-}
 	if Assigned(fLogo) then
 	begin
 		LogoTime := GetTickCount - LogoTime;
@@ -158,14 +160,24 @@ begin
 		end;
 		Screen.Cursor := crDefault;
 	end;
-	{$endif}
 end;
 
 procedure TfLogo.Timer1Timer(Sender: TObject);
 begin
-	Close;
-	fLogo.Hide;
-	fLogo.Free; fLogo := nil;
+	Timer1.Enabled := False;
+	ImageLogo.Picture.Bitmap.Width := 0;
+	ImageLogo.Picture.Bitmap.Height := 0;
+	Hide;
+//	Free; fLogo := nil;
+end;
+
+procedure TfLogo.ImageLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
+	Y: Integer);
+begin
+	if MoveCount > 8 then
+		Timer1.Interval := 1
+	else
+		Inc(MoveCount);
 end;
 
 end.

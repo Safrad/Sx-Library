@@ -368,8 +368,8 @@ begin
 			FBmpText.Canvas.Font.Color := ShadowColor(Font.Color);
 			TopColor := FDispl.ColorA;
 			BottomColor := FDispl.ColorD;
-			FDispl.FColorA := ShadowColor(FDispl.FColorA);
-			FDispl.FColorD := ShadowColor(FDispl.FColorD);
+			FDispl.ColorA := ShadowColor(FDispl.ColorA);
+			FDispl.ColorD := ShadowColor(FDispl.ColorD);
 			i := FFontShadow;
 			repeat
 				OffsetRect(Recta, i, i);
@@ -385,8 +385,8 @@ begin
 				OffsetRect(Recta, -i, -i);
 				if FontShadow > 0 then Dec(i) else Inc(i);
 			until i = 0;
-			FDispl.FColorA := TopColor;
-			FDispl.FColorD := BottomColor;
+			FDispl.ColorA := TopColor;
+			FDispl.ColorD := BottomColor;
 			FBmpText.Canvas.Font.Color := Font.Color;
 		end;
 		if Displ.Enabled then

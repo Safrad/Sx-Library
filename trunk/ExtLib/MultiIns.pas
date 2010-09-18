@@ -33,7 +33,7 @@ var
 	FirstInst: Boolean;
 
 function GetMIError: Integer;
-Function InitInstance : Boolean;
+function InitInstance : Boolean;
 
 implementation
 
@@ -41,17 +41,17 @@ implementation
 var
 	UniqueAppStr : PChar;   {Change for every Application}
 	MessageId: Integer;
-	WProc: TFNWndProc = Nil;
+	WProc: TFNWndProc = nil;
 	MutHandle: THandle = 0;
 	MIError: Integer = 0;
 
 function GetMIError: Integer;
 begin
-  Result := MIError;
+	Result := MIError;
 end;
 
 function NewWndProc(Handle: HWND; Msg: Integer; wParam,
-                    lParam: Longint): Longint; StdCall;
+										lParam: LongInt): LongInt; StdCall;
 begin
 	Result := 0;
 	{ If this is the registered message... }
@@ -74,50 +74,50 @@ begin
 	{ We subclass Application window procedure so that }
 	{ Application.OnMessage remains available for user. }
 	WProc := TFNWndProc(SetWindowLong(Application.Handle, GWL_WNDPROC,
-																		Longint(@NewWndProc)));
-  { Set appropriate error flag if error condition occurred }
-  if WProc = Nil then
-    MIError := MIError or MI_FAIL_SUBCLASS;
+																		LongInt(@NewWndProc)));
+	{ Set appropriate error flag if error condition occurred }
+	if WProc = nil then
+		MIError := MIError or MI_FAIL_SUBCLASS;
 end;
 
 procedure DoFirstInstance;
 begin
 	SubClassApplication;
-	MutHandle := CreateMutex(Nil, False, UniqueAppStr);
+	MutHandle := CreateMutex(nil, False, UniqueAppStr);
 	if MutHandle = 0 then
-    MIError := MIError or MI_FAIL_CREATE_MUTEX;
+		MIError := MIError or MI_FAIL_CREATE_MUTEX;
 end;
 
 procedure BroadcastFocusMessage;
 { This is called when there is already an instance running. }
 var
-  BSMRecipients: DWORD;
+	BSMRecipients: DWORD;
 begin
-  { Don't flash main form }
-  Application.ShowMainForm := False;
-  { Post message and inform other instance to focus itself }
-  BSMRecipients := BSM_APPLICATIONS;
-  BroadCastSystemMessage(BSF_IGNORECURRENTTASK or BSF_POSTMESSAGE,
-                         @BSMRecipients, MessageID, 0, 0);
+	{ Don't flash main form }
+	Application.ShowMainForm := False;
+	{ Post message and inform other instance to focus itself }
+	BSMRecipients := BSM_APPLICATIONS;
+	BroadCastSystemMessage(BSF_IGNORECURRENTTASK or BSF_POSTMESSAGE,
+												 @BSMRecipients, MessageID, 0, 0);
 end;
 
-Function InitInstance : Boolean;
+function InitInstance : Boolean;
 begin
 	MutHandle := OpenMutex(MUTEX_ALL_ACCESS, False, UniqueAppStr);
 	if MutHandle = 0 then
 	begin
 		{ Mutex object has not yet been created, meaning that no previous }
 		{ instance has been created. }
-//		ShowWindow(Application.Handle, SW_ShowNormal);
-//		Application.ShowMainForm:=True;
+//    ShowWindow(Application.Handle, SW_ShowNormal);
+//    Application.ShowMainForm:=True;
 		DoFirstInstance;
-		result := True;
+		Result := True;
 	end
 	else
 	begin
 		BroadcastFocusMessage;
-//		SendMessage(MutHandle, WM_USER, 1, 1); // MessageId = 58998
-		result := False;
+//    SendMessage(MutHandle, WM_USER, 1, 1); // MessageId = 58998
+		Result := False;
 	end;
 	FirstInst := Result;
 end;
@@ -128,12 +128,12 @@ begin
 	 UniqueAppStr := PChar(Application.Exename);
 	 MessageID := RegisterWindowMessage(UniqueAppStr);
 	 ShowWindow(Application.Handle, SW_Hide);
-	 Application.ShowMainForm:=FALSE;
+	 Application.ShowMainForm := False;
 end;
 
 finalization
 begin
-	if WProc <> Nil then
+	if WProc <> nil then
 		{ Restore old window procedure }
 		SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(WProc));
 end;

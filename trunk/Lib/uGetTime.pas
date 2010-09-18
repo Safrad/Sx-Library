@@ -6,7 +6,7 @@ interface
 
 uses
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, ComCtrls, Spin, uDBitBtn, uDLabel;
+	ExtCtrls, ComCtrls, Spin, uDButton, uDLabel;
 
 type
 	TfGetTime = class(TForm)
@@ -22,18 +22,18 @@ type
 		LabelM: TDLabel;
 		LabelS: TDLabel;
 		LabelD: TDLabel;
-		ButtonOk: TDBitBtn;
-		ButtonCancel: TDBitBtn;
+		ButtonOk: TDButton;
+		ButtonCancel: TDButton;
 		EditInput: TEdit;
-		ButtonMin: TDBitBtn;
-		ButtonCur: TDBitBtn;
-		ButtonMax: TDBitBtn;
+		ButtonMin: TDButton;
+		ButtonCur: TDButton;
+		ButtonMax: TDButton;
 		SpinButtonH: TSpinButton;
 		SpinButtonS: TSpinButton;
 		SpinButtonM: TSpinButton;
 		SpinButtonD: TSpinButton;
 		ImageBackground: TImage;
-		ButtonDef: TDBitBtn;
+		ButtonDef: TDButton;
 		procedure EditInputChange(Sender: TObject);
 		procedure TrackBarHMSDChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
@@ -73,7 +73,7 @@ begin
 		fGetTime := TfGetTime.Create(Application.MainForm);
 		FormImage(fGetTime.ImageBackground);
 	end;
-	CorrectPos(fGetTime);
+	CorrectFormPos(fGetTime);
 	Result := fGetTime.Execute(prompt, CurVal, DefVal, MinVal, MaxVal);
 end;
 

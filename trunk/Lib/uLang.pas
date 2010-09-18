@@ -22,7 +22,9 @@ var
 
 implementation
 
-uses Dialogs, SysUtils;
+uses
+	Dialogs, SysUtils,
+	uDialog;
 
 procedure FillCharsTable;
 var c, Result: Char;
@@ -293,7 +295,7 @@ begin
 		if c = #0 then
 		begin
 			Result[i] := s[i];
-			MessageDlg('Unknown char ' + s[i], mtError, [mbOk], 0);
+			MessageD('Unknown char ' + s[i] + ' (' + IntToStr(Ord(s[i])) + ')', mtError, [mbOk]);
 		end
 		else
 			Result[i] := c;
@@ -312,7 +314,7 @@ begin
 		if c = #0 then
 		begin
 			Result[i] := s[i];
-			MessageDlg('Unknown char ' + s[i], mtError, [mbOk], 0);
+			MessageD('Unknown char ' + s[i] + ' (' + IntToStr(Ord(s[i])) + ')', mtError, [mbOk]);
 		end
 		else
 			Result[i] := c;
@@ -332,7 +334,7 @@ begin
 		if c = #0 then
 		begin
 			Result[i] := s[i];
-			MessageDlg('Unknown char ' + s[i], mtError, [mbOk], 0);
+			MessageD('Unknown char ' + s[i], mtError, [mbOk]);
 		end
 		else
 			Result[i] := c;

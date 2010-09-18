@@ -5,49 +5,49 @@ interface
 uses
 	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDBitBtn;
+	ExtCtrls, uDPanel, StdCtrls, uDLabel, uDButton;
 
 type
 	TfSysInfo = class(TForm)
-    Bevel1: TBevel;
-    LabelTOperatingSystem: TDLabel;
-    EditOS: TEdit;
-    Bevel4: TBevel;
-    LabelUsed: TDLabel;
-    LabelFree: TDLabel;
-    LabelTotal: TDLabel;
-    PMT: TDPanel;
-    PMF: TDPanel;
-    PFF: TDPanel;
-    PFT: TDPanel;
+		Bevel1: TBevel;
+		LabelTOperatingSystem: TDLabel;
+		EditOS: TEdit;
+		Bevel4: TBevel;
+		LabelUsed: TDLabel;
+		LabelFree: TDLabel;
+		LabelTotal: TDLabel;
+		PMT: TDPanel;
+		PMF: TDPanel;
+		PFF: TDPanel;
+		PFT: TDPanel;
 		PMU: TDPanel;
-    PFU: TDPanel;
-    LabelTPhysicalMemory: TDLabel;
-    LabelTPageFile: TDLabel;
-    Bevel3: TBevel;
+		PFU: TDPanel;
+		LabelTPhysicalMemory: TDLabel;
+		LabelTPageFile: TDLabel;
+		Bevel3: TBevel;
 		Bevel2: TBevel;
-    DLabel3: TDLabel;
-    DLabel5: TDLabel;
-    DLabel6: TDLabel;
+		DLabel3: TDLabel;
+		DLabel5: TDLabel;
+		DLabel6: TDLabel;
 		Bevel5: TBevel;
 		EditCPU: TEdit;
 		EditDiskU: TDPanel;
 		EditGraph: TEdit;
-    EditDiskF: TDPanel;
-    EditDiskT: TDPanel;
+		EditDiskF: TDPanel;
+		EditDiskT: TDPanel;
 		Bevel6: TBevel;
-		ButtonOk: TDBitBtn;
-    DLabel1: TDLabel;
-    EditCPUFrequency: TEdit;
-    DLabel2: TDLabel;
-    EditDuron: TEdit;
+		ButtonOk: TDButton;
+		DLabel1: TDLabel;
+		EditCPUFrequency: TEdit;
+		DLabel2: TDLabel;
+		EditDuron: TEdit;
 		procedure ButtonOkClick(Sender: TObject);
 	private
 		{ Private declarations }
 	public
 		{ Public declarations }
 		procedure FillComp;
-//		procedure MemoryStatus;
+//    procedure MemoryStatus;
 	end;
 
 var
@@ -131,10 +131,10 @@ var
 procedure FillSysInfoD(var SysInfo: TSysInfo);
 var
 	P: array[0..3] of Char;
-{	PMem: PByteArray;
+{ PMem: PByteArray;
 	PMem2: PByteArray;}
 	TickCount: U64;
-{	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
+{ SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
 	TotalNumberOfClusters: U32;}
 	CPUTick: U64;
 begin
@@ -142,7 +142,7 @@ begin
 	P[1] := ':';
 	P[2] := '\';
 	P[3] := #0;
-{	SectorsPerCluster := 0;
+{ SectorsPerCluster := 0;
 	BytesPerSector := 0;}
 {
 		GetDiskFreeSpace(P, SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
@@ -156,7 +156,7 @@ begin
 	if CPUException = False then
 	begin
 		SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
-{		GetMem(PMem, 32768);
+{   GetMem(PMem, 32768);
 		GetMem(PMem2, 32768);}
 		try
 			SysInfo.CPUStr := '            ';
@@ -189,7 +189,7 @@ begin
 			asm
 			pushad
 
-{			mov ecx, 999 // 1M
+{     mov ecx, 999 // 1M
 
 			@Loop:
 				mov edi, dword ptr PMem
@@ -204,13 +204,13 @@ begin
 			jnz @Loop}
 
 			mov ecx, 999999 // 1M
-//			mov edi, dword ptr PMem
+//      mov edi, dword ptr PMem
 			@Loop:
 				mov esi, edi
 				mov ebx, ecx
 				and ebx, 32767
 				add esi, ebx
-//				mov [esi], cl
+//        mov [esi], cl
 				sub ecx, 1
 			jnz @Loop
 
@@ -226,7 +226,7 @@ begin
 			SysInfo.CPUPower := 0;
 		end;
 		SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
-{		FreeMem(PMem2, 32768);
+{   FreeMem(PMem2, 32768);
 		FreeMem(PMem, 32768);}
 	end;
 end;
@@ -250,7 +250,7 @@ var
 begin
 	EditOS.Text := OSToStr(SysInfo.OS);
 
-//	SysInfo.CPUStr :=
+//  SysInfo.CPUStr :=
 	Family := SysInfo.CPU and $00000f00 shr 8;
 	Model := SysInfo.CPU and $000000f0 shr 4;
 
@@ -402,7 +402,6 @@ end;
 
 initialization
 	InitPerformanceCounter;
-//	FillSysInfo(SysInfo);
-{	PerformanceType := 2;
+{ PerformanceType := 2;
 	PerformanceFrequency := SysInfo.CPUFrequency;}
 end.

@@ -59,7 +59,7 @@ implementation
 
 uses
 	Forms, Math,
-	uAdd, uFiles, uError;
+	uAdd, uFiles, uError, uDialog;
 
 procedure TKinds.SetMenuItem(i: Integer);
 var S: string;
@@ -267,17 +267,17 @@ begin
 	Result := False;
 	if Items[Kind].Changed then
 	begin
-		case MessageDlg('Save changes to ' + #13 + #10 + Items[Kind].FileName,
-			mtInformation, [mbYes, mbNo, mbCancel], 0) of
-		mrYes:
+		case MessageD('Save changes to ' + #13 + #10 + Items[Kind].FileName,
+			mtInformation, [mbYes, mbNo, mbCancel]) of
+		mbYes:
 		begin
 			Result := SaveToFile(Kind, False);
 		end;
-		mrNo:
+		mbNo:
 		begin
 			Result := True;
 		end;
-		mrCancel:
+		mbCancel:
 		begin
 			Result := False;
 		end;

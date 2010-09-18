@@ -4,9 +4,21 @@ unit uScreen;
 
 interface
 
-uses Graphics;
+uses
+	uAdd,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	StdCtrls, uDButton;
 
 type
+	TfScreen = class(TForm)
+		ComboBoxDriver: TComboBox;
+		ButtonOk: TDButton;
+	private
+		{ Private declarations }
+	public
+		{ Public declarations }
+	end;
+
 	TRefreshRateList = array of Cardinal;
 	TScreenMode = packed record // 32
 		Width,
@@ -60,12 +72,13 @@ var
 	LastModeCount, LastModeIndex: Integer;
 
 	DriverDesc, DriverDate: string;
+	DriverNames: array of string;
+	DriverNameCount: SG;
 	ScreenModes: array of TScreenMode;
 	EnabledBits: array of Cardinal; // 4, 8, 15, 16, 24, 32
 	EnabledBitsCount: Integer;
 
 	NotFirstTime: Boolean;
-	MaxMemory: Cardinal;
 
 	SelfChange: Boolean;
 
@@ -78,23 +91,39 @@ var
 
 	MinWidth, MinHeight: Cardinal;
 	RetraceDelay: Integer;
-	MinVF, MaxVF, MaxHF, MaxPixelRate: Cardinal;
-	UserMaxVF, UserMaxHF: Cardinal;
+	MinVF, MaxVF, UserMaxVF,
+	MinHF, MaxHF, UserMaxHF,
+	MinPixelRate, MaxPixelRate, UserMaxPixelRate,
+	MinMemory, MaxMemory, UserMaxMemory: Cardinal;
+
+	fScreen: TfScreen;
 const
+	DefaultRetraceDelay = 560;
+
+	WorstVF = 30;
+	SaveVF = 60;
 	ErgoVF = 80;
 	BestVF = 200;
-	MinHF = 30000;
+
+	WorstHF = 30000;
 	BestHF = 700000;
-	DefaultRetraceDelay = 560;
+
+	WorstPixelRate = 1000000;
+	BestPixelRate = 1000000000;
+
+	WorstMemory = 1024 * 1024;
+	BestMemory = 256 * 1024 * 1024;
+
 	DoubleHeight = 399; // and less
 	MaxScreenWidth = 4096;
 	MaxScreenHeight = 3072;
 
 implementation
 
+{$R *.DFM}
 uses
-	Windows, Forms, SysUtils, Registry, Math, Dialogs, Controls, MMSystem,
-	uError, uAdd, uStrings, uWave, uFiles;
+	Registry, Math, MMSystem,
+	uError, uStrings, uWave, uFiles, uGetInt, uDialog, uDIni;
 var
 	SndBeep: PWave;
 	First: Boolean;
@@ -107,7 +136,7 @@ begin
 	begin
 		if Height <= DoubleHeight then Height := Height * 2;
 //  Result := HF div Height;
-//	Result := Trunc(HF / (Height + (RetraceDelay / 1000000) * HF))
+//  Result := Trunc(HF / (Height + (RetraceDelay / 1000000) * HF))
 		Result := (Int64(HF) * 1000000) div (Int64(Height) * 1000000 + Int64(RetraceDelay) * Int64(HF));
 	end;
 end;
@@ -119,7 +148,7 @@ begin
 	if RefreshRate = 0 then
 		Result := 0
 	else
-//		Result := Floor(Height / ((1 / RefreshRate) - Cardinal(RetraceDelay) / 1000000));
+//    Result := Floor(Height / ((1 / RefreshRate) - Cardinal(RetraceDelay) / 1000000));
 		Result := MaxDiv64((Int64(Height) * Int64(RefreshRate) * 1000000), (1000000 - Int64(RetraceDelay) * Int64(RefreshRate)));
 
 end;
@@ -177,7 +206,7 @@ begin
 	end;
 
 	NewSize := ScreenModeCount + 1;
-	if AllocBy(Length(ScreenModes), NewSize, DefMemBuffer div SizeOf(ScreenModes[0])) then
+	if AllocByEx(Length(ScreenModes), NewSize, SizeOf(ScreenModes[0])) then
 		SetLength(ScreenModes, NewSize);
 	for i := ScreenModeCount - 1 downto Index do
 	begin
@@ -250,7 +279,6 @@ begin
 end;
 
 procedure ReadScreenModes;
-label LRetry;
 var
 	ModeNumber: Integer;
 	done: Boolean;
@@ -276,84 +304,52 @@ begin
 
 	if First = False then
 	begin
-		First := True;
 		if FileExists(SoundsDir + 'Question.wav') then
 			WaveReadFromFile(SndBeep, SoundsDir + 'Question.wav');
+
+		DriverNameCount := 0;
+		SetLength(DriverNames, 0);
+		Reg := TRegistry.Create;
+		try
+			Reg.RootKey := HKEY_LOCAL_MACHINE;
+			for i := 0 to 15 do
+			begin
+				Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', i);
+				if Reg.KeyExists(Key) then
+				begin
+					ActualDriver := i;
+					Reg.OpenKeyReadOnly(Key);
+					SetLength(DriverNames, DriverNameCount + 1);
+					DriverNames[DriverNameCount] := Reg.ReadString('DriverDesc');
+					Inc(DriverNameCount);
+					Reg.CloseKey;
+
+					Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', i) + '\Modes\8';
+					if Reg.KeyExists(Key) then
+					begin
+						Reg.OpenKey(Key + '\641,' + IntToStr(i + 480), True);
+						Reg.WriteString('', '60,75');
+						Reg.WriteString('RefreshRate', '60');
+						Reg.CloseKey;
+					end;
+				end;
+			end;
+		finally
+			Reg.Free;
+		end;
+		if DriverNameCount > 1 then ActualDriver := -1;
 	end;
+
 
 	ScreenModeCount := 0;
 	SetLength(ScreenModes, 0);
 	EnabledBitsCount := 0;
 	SetLength(EnabledBits, 0);
 
-
-	// low-res modes don't always enumerate, ask about them explicitly
-	DeviceMode.dmFields := DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT;
-	// make sure the driver doesn't just answer yes to all tests
-	{
-type
-	TLowResMode = record // 8
-		 Width, // 4
-		 Height: Integer; // 4
-	 end;
-
-const
-	LowResModesBits: array[0..4] of Integer = (8, 15, 16, 24, 32);
-
-	LowResModes: array[0..14] of TLowResMode = (
-		(Width: 320; Height: 200),
-		(Width: 320; Height: 240),
-		(Width: 320; Height: 350),
-		(Width: 320; Height: 400),
-		(Width: 320; Height: 480),
-
-		(Width: 360; Height: 200),
-		(Width: 360; Height: 240),
-		(Width: 360; Height: 350),
-		(Width: 360; Height: 400),
-		(Width: 360; Height: 480),
-
-		(Width: 400; Height: 300),
-		(Width: 480; Height: 360),
-		(Width: 512; Height: 384),
-		(Width: 640; Height: 350),
-		(Width: 640; Height: 400));
-}
-
-{ if ChangeDisplaySettings(DeviceMode, CDS_TEST or CDS_FULLSCREEN) <> DISP_CHANGE_SUCCESSFUL then
-	begin
-		for Bits := Low(LowResModesBits) to High(LowResModesBits) do
-		for Res := Low(LowResModes) to High(LowResModes) do
-		begin
-			DeviceMode.dmSize := SizeOf(DeviceMode);
-			DeviceMode.dmBitsPerPel := LowResModesBits[Bits];
-			DeviceMode.dmPelsWidth := LowResModes[Res].Width;
-			DeviceMode.dmPelsHeight := LowResModes[Res].Height;
-			DeviceMode.dmFields := DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT;
-			TryToAddToList(DeviceMode);
-		end;
-	end;}
-	// ActualDriver
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_LOCAL_MACHINE;
-		for i := 0 to 15 do
-		begin
-			Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', i) + '\Modes\8';
-			if Reg.KeyExists(Key) then
-			begin
-				Reg.OpenKey(Key + '\641,' + IntToStr(i + 480), True);
-				Reg.WriteString('', '60,75');
-				Reg.WriteString('RefreshRate', '60');
-				Reg.CloseKey;
-			end;
-		end;
-	finally
-		Reg.Free;
-	end;
-
 	// enumerate all available Screen modes
 	ModeNumber := 0;
+	FillChar(DeviceMode, SizeOf(DeviceMode), 0);
+	DeviceMode.dmFields := DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT;
 	while True do
 	begin
 		DeviceMode.dmBitsPerPel := 0;
@@ -371,6 +367,24 @@ const
 		end;
 		Inc(ModeNumber);
 	end;
+	if (ActualDriver = -1) then
+	begin
+		ActualDriver := MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, False);
+		if (ActualDriver = -1) then
+		begin
+			fScreen := TfScreen.Create(nil);
+			fScreen.ComboBoxDriver.Items.Clear;
+			for i := 0 to DriverNameCount - 1 do
+			begin
+				fScreen.ComboBoxDriver.Items.Add(IntToStr(i) + ': ' + DriverNames[i]);
+			end;
+			fScreen.ComboBoxDriver.ItemIndex := 0;
+			fScreen.ShowModal;
+			ActualDriver := fScreen.ComboBoxDriver.ItemIndex;
+			MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, True);
+		end;
+	end;
+
 
 	Reg := TRegistry.Create;
 	try
@@ -402,7 +416,14 @@ const
 	TryToAddToList(DeviceMode);
 
 	// Read RefreshRates
+	MinVF := MaxInt;
+	MaxVF := 0;
+	MinHF := MaxInt;
 	MaxHF := 0;
+	MinPixelRate := MaxInt;
+	MaxPixelRate := 0;
+	MinMemory := MaxInt;
+	MaxMemory := 0;
 	Reg := TRegistry.Create;
 	try
 		Reg.RootKey := HKEY_LOCAL_MACHINE;
@@ -413,82 +434,74 @@ const
 		Reg.CloseKey;
 		for i := 0 to ScreenModeCount - 1 do
 		begin
-{     for Bits := 0 to 3 do
+			Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
+				IntToStr(ScreenModes[i].Bits) + '\' + IntToStr(ScreenModes[i].Width) + ',' + IntToStr(ScreenModes[i].Height);
+			if Reg.KeyExists(Key) then
 			begin
-				if EnabledBits[Bits] then
-				begin}
-					LRetry:
-					Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
-						IntToStr(ScreenModes[i].Bits) + '\' + IntToStr(ScreenModes[i].Width) + ',' + IntToStr(ScreenModes[i].Height);
-					if Reg.KeyExists(Key) then
+				Reg.OpenKeyReadOnly(Key);
+				s := Reg.ReadString('');
+				ScreenModes[i].RefreshRateListCount := 0;
+				InLineIndex := 1;
+				while InLineIndex < Length(s) do
+				begin
+					f := StrToValI(ReadToChar(s, InLineIndex, ','), 0, 0, MaxInt, 1);
+					if (f >= WorstVF) and (f <= BestVF) then
 					begin
-						Reg.OpenKeyReadOnly(Key);
-						s := Reg.ReadString('');
-						ScreenModes[i].RefreshRateListCount := 0;
-						InLineIndex := 1;
-						while InLineIndex < Length(s) do
-						begin
-							f := StrToValI(ReadToChar(s, InLineIndex, ','), 0, 0, MaxInt, 1);
-							if (f >= MinVF) and (f <= MaxVF) then
-							begin
-								Found := False;
-								for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
-								begin
-									if ScreenModes[i].RefreshRateList[j] = f then
-									begin
-										Found := True;
-										Break;
-									end;
-								end;
-								if Found = False then
-								begin
-									Index := ScreenModes[i].RefreshRateListCount;
-									for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
-									begin
-										if f < ScreenModes[i].RefreshRateList[j] then
-										begin
-											Index := j;
-											Break;
-										end;
-									end;
-
-									NewSize := ScreenModes[i].RefreshRateListCount + 1;
-									if AllocBy(Length(ScreenModes[i].RefreshRateList), NewSize, DefMemBuffer div SizeOf(ScreenModes[i].RefreshRateList[0])) then
-										SetLength(ScreenModes[i].RefreshRateList, NewSize);
-									for j := ScreenModes[i].RefreshRateListCount - 1 downto Index do
-									begin
-										ScreenModes[i].RefreshRateList[j + 1] := ScreenModes[i].RefreshRateList[j];
-									end;
-									Inc(ScreenModes[i].RefreshRateListCount);
-									ScreenModes[i].RefreshRateList[Index] := f;
-								end;
-							end;
-						end;
+						Found := False;
 						for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
 						begin
-							HF := GetHF(ScreenModes[i].Height, ScreenModes[i].RefreshRateList[j]);
-							if HF > MaxHF then MaxHF := HF;
-							PixelRate := GetPixelRate(ScreenModes[i].Width, HF);
-							if PixelRate > MaxPixelRate then MaxPixelRate := PixelRate;
+							if ScreenModes[i].RefreshRateList[j] = f then
+							begin
+								Found := True;
+								Break;
+							end;
 						end;
-						if ScreenModes[i].RefreshRateListCount > 0 then
-							DefVF := ScreenModes[i].RefreshRateList[0]
-						else
-							DefVF := MinVF;
+						if Found = False then
+						begin
+							Index := ScreenModes[i].RefreshRateListCount;
+							for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
+							begin
+								if f < ScreenModes[i].RefreshRateList[j] then
+								begin
+									Index := j;
+									Break;
+								end;
+							end;
 
-						if Reg.ValueExists('RefreshRate') then
-							ScreenModes[i].RefreshRate := StrToValI(Reg.ReadString('RefreshRate'), MinVF, DefVF, MaxVF, 1)
-						else
-							ScreenModes[i].RefreshRate := DefVF;
-						Reg.CloseKey;
-					end
-					else
-					begin
-{           Inc(ActualDriver);
-						goto LRetry;}
+							NewSize := ScreenModes[i].RefreshRateListCount + 1;
+							if AllocByEx(Length(ScreenModes[i].RefreshRateList), NewSize, SizeOf(ScreenModes[i].RefreshRateList[0])) then
+								SetLength(ScreenModes[i].RefreshRateList, NewSize);
+							for j := ScreenModes[i].RefreshRateListCount - 1 downto Index do
+							begin
+								ScreenModes[i].RefreshRateList[j + 1] := ScreenModes[i].RefreshRateList[j];
+							end;
+							Inc(ScreenModes[i].RefreshRateListCount);
+							ScreenModes[i].RefreshRateList[Index] := f;
+						end;
 					end;
-{       end;
-			end;}
+				end;
+				for j := 0 to ScreenModes[i].RefreshRateListCount - 1 do
+				begin
+					if ScreenModes[i].RefreshRateList[j] < MinVF then MinVF := ScreenModes[i].RefreshRateList[j];
+					if ScreenModes[i].RefreshRateList[j] > MaxVF then MaxVF := ScreenModes[i].RefreshRateList[j];
+					HF := GetHF(ScreenModes[i].Height, ScreenModes[i].RefreshRateList[j]);
+					if HF < MinHF then MinHF := HF;
+					if HF > MaxHF then MaxHF := HF;
+					PixelRate := GetPixelRate(ScreenModes[i].Width, HF);
+					if PixelRate < MinPixelRate then MinPixelRate := PixelRate;
+					if PixelRate > MaxPixelRate then MaxPixelRate := PixelRate;
+				end;
+				if ScreenModes[i].RefreshRateListCount > 0 then
+					DefVF := ScreenModes[i].RefreshRateList[0]
+				else
+					DefVF := SaveVF;
+
+				if Reg.ValueExists('RefreshRate') then
+					ScreenModes[i].RefreshRate := StrToValI(Reg.ReadString('RefreshRate'), WorstVF, DefVF, BestVF, 1)
+				else
+					ScreenModes[i].RefreshRate := DefVF;
+				Reg.CloseKey;
+			end;
 		end;
 	finally
 		Reg.Free;
@@ -508,6 +521,8 @@ const
 	for i := 0 to ScreenModeCount - 1 do
 	begin
 		Ram := GetVideoMemory(ScreenModes[i].Width, ScreenModes[i].Height, ScreenModes[i].Bits);
+		if Ram < MinMemory then
+			MinMemory := Ram;
 		if Ram > MaxMemory then
 			MaxMemory := Ram;
 	end;
@@ -521,6 +536,14 @@ const
 		NotFirstTime := True;
 	end;
 	Screen.Cursor := crDefault;
+	if First = False then
+	begin
+		First := True;
+		UserMaxHF := MaxHF;
+		UserMaxVF := MaxVF;
+		UserMaxPixelRate := MaxPixelRate;
+		UserMaxMemory := MaxMemory;
+	end;
 end;
 
 procedure ReadNowMode;
@@ -557,7 +580,7 @@ begin
 		640,
 		480,
 		8,
-		MinVF,
+		SaveVF,
 		False, True, False, True, True);
 end;
 
@@ -644,7 +667,7 @@ begin
 	Inc(LastModeIndex);
 	LastModeCount := LastModeIndex + 1;
 	NewSize := LastModeCount;
-	if AllocBy(Length(LastModes), NewSize, DefMemBuffer div SizeOf(LastModes[0])) then
+	if AllocByEx(Length(LastModes), NewSize, SizeOf(LastModes[0])) then
 		SetLength(LastModes, NewSize);
 	LastModes[LastModeIndex].Width := Width;
 	LastModes[LastModeIndex].Height := Height;
@@ -714,13 +737,13 @@ begin
 
 	FindMode;
 
-	VF := GetVF(SetHeight, MaxHF);
+	VF := GetVF(SetHeight, UserMaxHF);
 	if RefreshRate = 0 then
 		SetRefreshRate := ScreenModes[ModeIndex].RefreshRate
 	else
 		SetRefreshRate := RefreshRate;
-	if SetRefreshRate < MinVF then
-		SetRefreshRate := MinVF
+	if SetRefreshRate < WorstVF then
+		SetRefreshRate := WorstVF
 	else if SetRefreshRate > VF then
 		SetRefreshRate := VF;
 
@@ -755,7 +778,7 @@ begin
 						or (SetRefreshRate < ScreenModes[ModeIndex].RefreshRateList[i]) then
 						begin
 							NewSize := ScreenModes[ModeIndex].RefreshRateListCount + 1;
-							if AllocBy(Length(ScreenModes[ModeIndex].RefreshRateList), NewSize, DefMemBuffer div SizeOf(ScreenModes[ModeIndex].RefreshRateList[0])) then
+							if AllocByEx(Length(ScreenModes[ModeIndex].RefreshRateList), NewSize, SizeOf(ScreenModes[ModeIndex].RefreshRateList[0])) then
 								SetLength(ScreenModes[ModeIndex].RefreshRateList, NewSize);
 							for j := ScreenModes[ModeIndex].RefreshRateListCount - 1 downto i do
 								ScreenModes[ModeIndex].RefreshRateList[j + 1] := ScreenModes[ModeIndex].RefreshRateList[j];
@@ -840,9 +863,9 @@ begin
 				if Assigned(SndBeep) then
 					PlaySound(PChar(SndBeep), 0, snd_ASync or snd_Memory);
 				if LastModeIndex >= 0 then
-				if MessageDlg('Use mode ' + s + '?', mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+				if MessageD('Use mode ' + s + '?', mtConfirmation, [mbYes, mbNo]) <> mbYes then
 				begin
-{					SetScreenMode(StartWidth, StartHeight,
+{         SetScreenMode(StartWidth, StartHeight,
 						StartBits, StartRefreshRate,
 						False, False, False, True);
 					Sleep(100);}
@@ -876,51 +899,47 @@ begin
 	Reg := TRegistry.Create;
 	try
 		Reg.RootKey := HKEY_LOCAL_MACHINE;
-{   for Bits := 0 to 3 do
-		if EnabledBits[Bits] then
-		begin}
-			Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
-				IntToStr(ScreenModes[Index].Bits) + '\' + IntToStr(ScreenModes[Index].Width) + ',' + IntToStr(ScreenModes[Index].Height);
-			Reg.OpenKey(Key, True);
-			D := Max(Min(GetVF(ScreenModes[Index].Height, UserMaxHF), UserMaxVF), VF);
-//			if D > MaxVF then D := MaxVF;
-			DefD := D;
-			S := '';
-			R := Min(MinVF, D);
-			k := 0;
-			ScreenModes[Index].RefreshRateListCount := 0;
-			SetLength(ScreenModes[Index].RefreshRateList, 0);
+		Key := 'System\CurrentControlSet\Services\Class\Display\' + Using('0000', ActualDriver) + '\MODES\' +
+			IntToStr(ScreenModes[Index].Bits) + '\' + IntToStr(ScreenModes[Index].Width) + ',' + IntToStr(ScreenModes[Index].Height);
+		Reg.OpenKey(Key, True);
+		D := Max(Min(GetVF(ScreenModes[Index].Height, UserMaxHF), UserMaxVF), VF);
+		D := Min(D, GetVF(ScreenModes[Index].Height, UserMaxPixelRate div ScreenModes[Index].Width));  
+		DefD := D;
+		S := '';
+		R := Min(MinVF, D);
+		k := 0;
+		ScreenModes[Index].RefreshRateListCount := 0;
+		SetLength(ScreenModes[Index].RefreshRateList, 0);
 
-			while R <= D do
+		while R <= D do
+		begin
+			if (R >= D - k) or
+			(R = 85) or // Ergo
+			(R = 60) or // 2
+			// 24, 25, 30
+			(R = 72) or(R = 75) or (R = 90) or // 3
+			(R = 96) or (R = 100) or (R = 120) or // 4
+				(R = 125) or (R = 150) or // 5
+			(R = 144) or (R = 150) or (R = 180) // 6
+			then
 			begin
-				if (R >= D - k) or
-				(R = 85) or // Ergo
-				(R = 60) or // 2
-				// 24, 25, 30
-				(R = 72) or(R = 75) or (R = 90) or // 3
-				(R = 96) or (R = 100) or (R = 120) or // 4
-				(R = 120) or (R = 125) or (R = 150) or // 5
-				(R = 144) or (R = 150) or (R = 180) // 6
-				then
-				begin
-					S := S + IntToStr(R) + ',';
-					Inc(ScreenModes[Index].RefreshRateListCount);
-					NewSize := ScreenModes[Index].RefreshRateListCount + 1;
-					if AllocBy(Length(ScreenModes[Index].RefreshRateList), NewSize, DefMemBuffer div SizeOf(ScreenModes[Index].RefreshRateList[0])) then
-						SetLength(ScreenModes[Index].RefreshRateList, NewSize);
-					ScreenModes[Index].RefreshRateList[ScreenModes[Index].RefreshRateListCount - 1] := R;
-				end;
-				Inc(R);
+				S := S + IntToStr(R) + ',';
+				Inc(ScreenModes[Index].RefreshRateListCount);
+				NewSize := ScreenModes[Index].RefreshRateListCount + 1;
+				if AllocByEx(Length(ScreenModes[Index].RefreshRateList), NewSize, SizeOf(ScreenModes[Index].RefreshRateList[0])) then
+					SetLength(ScreenModes[Index].RefreshRateList, NewSize);
+				ScreenModes[Index].RefreshRateList[ScreenModes[Index].RefreshRateListCount - 1] := R;
 			end;
-			if Length(S) > 0 then
-				SetLength(S, Length(S) - 1);
+			Inc(R);
+		end;
+		if Length(S) > 0 then
+			SetLength(S, Length(S) - 1);
 
-			Reg.WriteString('', S);
-			Reg.WriteString('RefreshRate', IntToStr(DefD));
-			ScreenModes[Index].RefreshRate := DefD;
-			Reg.DeleteValue('ModeRefreshRateList');
-			Reg.CloseKey;
-{   end;}
+		Reg.WriteString('', S);
+		Reg.WriteString('RefreshRate', IntToStr(DefD));
+		ScreenModes[Index].RefreshRate := DefD;
+		Reg.DeleteValue('ModeRefreshRateList');
+		Reg.CloseKey;
 	finally
 		Reg.Free;
 	end;
@@ -953,11 +972,10 @@ end;
 function StandardMode(Width, Height: Cardinal): Boolean;
 begin
 	Result := True;
-{	if (Width = 320) and (Height = 200) then Exit;
+	if (Width = 320) and (Height = 200) then Exit;
 	if (Width = 320) and (Height = 240) then Exit;
 	if (Width = 400) and (Height = 300) then Exit;
 	if (Width = 512) and (Height = 384) then Exit;
-	if (Width = 640) and (Height = 400) then Exit;}
 	if (Width = 640) and (Height = 480) then Exit;
 	if (Width = 800) and (Height = 600) then Exit;
 	if (Width = 1024) and (Height = 768) then Exit;
@@ -1025,9 +1043,8 @@ end;
 
 initialization
 	LastModeIndex := -1;
+	ActualDriver := -1;
 	RetraceDelay := DefaultRetraceDelay;
-	MinVF := 30;
-	MaxVF := 200;
 	InitScreenCorectColor;
 finalization
 	if Assigned(SndBeep) then

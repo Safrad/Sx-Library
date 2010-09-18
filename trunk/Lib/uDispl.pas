@@ -28,6 +28,8 @@ type
 		FSpacing: Byte;
 
 		FSize: Byte;
+		FColorA,
+		FColorD: TColor;
 
 		procedure SetEnabled(Value: Boolean);
 		procedure SetFormat(Value: string);
@@ -43,8 +45,7 @@ type
 	protected
 		procedure Changed; override;
 	public
-		FColorA,
-		FColorD: TColor;
+
 	published
 		property Enabled: Boolean read FEnabled write SetEnabled;
 		property Format: string read FFormat write SetFormat;
@@ -74,6 +75,8 @@ procedure Displ24(BmpD: TBitmap24; Caption: string; X1, Y1: LongInt;
 procedure DisplDraw(BmpD: TBitmap24; const Caption: string; const Displ: TDispl;
 	X1, Y1: LongInt;
 	Effect: TEffect);
+
+procedure DisplSize(const Displ: TDispl; var DisplWidth, DisplHeight: Integer);
 
 procedure DisplDrawRect(BmpD: TBitmap24; const Caption: string; const Displ: TDispl;
 	const Recta: TRect; const Alignment: TAlignment; const Layout: TTextLayout;

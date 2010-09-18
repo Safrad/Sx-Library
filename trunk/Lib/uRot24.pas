@@ -7,7 +7,7 @@ interface
 uses
 	uAdd, uGraph24, Graphics;
 const
-	AngleCount = 256;
+	AngleCount = 65536; //256; // 2^x 1..
 type
 	TAngle = SG;
 

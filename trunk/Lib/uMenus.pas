@@ -8,16 +8,16 @@ uses Windows, Graphics, Menus, Messages;
 
 
 {
-		procedure OnAdvencedMenuDraw(Sender: TObject; ACanvas: TCanvas;
+		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
 			ARect: TRect; State: TOwnerDrawState);
 
-procedure TfMain.OnAdvencedMenuDraw(Sender: TObject; ACanvas: TCanvas;
+procedure TfMain.OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 begin
 	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State)
 end;
 
-	SetMainMenu(MainMenu1, OnAdvencedMenuDraw);
+	SetMainMenu(MainMenu1, OnAdvancedMenuDraw);
 
 
 type
@@ -37,6 +37,7 @@ type
 			message WM_DISPLAYCHANGE;
 	end;
 }
+procedure ComName(MenuItem: TMenuItem);
 
 procedure SetMainMenu(MainMenu: TMainMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
 procedure SetPopupMenu(PopupMenu: TPopupMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
@@ -72,16 +73,16 @@ procedure ComName(MenuItem: TMenuItem);
 		FileName := GraphDir + 'Images\' + Name + '.bmp';
 		if FileExists(FileName) then
 		begin
-			MenuItem.Bitmap.PixelFormat := pf24bit;
-			MenuItem.Bitmap.Width := 16;
-			MenuItem.Bitmap.Height := 16;
-			Bmp24D := Conv24(MenuItem.Bitmap);
 			Bmp := TBitmap.Create;
 			BitmapLoadFromFile(Bmp, FileName, 16, 16, Quality);
 			Bmp24 := Conv24(Bmp);
 			TranColor := GetTransparentColor(Bmp);
 			MenuItem.Bitmap.TransparentColor := TranColor;
-			Resize24E(Bmp24D, Bmp24, TranColor, 16, 16, nil);
+			MenuItem.Bitmap.PixelFormat := pf24bit;
+			MenuItem.Bitmap.Width := RoundDiv(Bmp24.Width * 16, Bmp24.Height);
+			MenuItem.Bitmap.Height := 16;
+			Bmp24D := Conv24(MenuItem.Bitmap);
+			Resize24E(Bmp24D, Bmp24, TranColor, Bmp24D.Width, Bmp24D.Height, nil);
 			Bmp24.Free;
 			Bmp24D.Free;
 			Bmp.Free;
@@ -94,15 +95,13 @@ begin
 end;
 
 procedure SetMainMenu(MainMenu: TMainMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
-var i, j: Integer;
+var i, j: SG;
 begin
 	CreateImg;
 	MainMenu.Images := ImageList;
-//	MainMenu.OwnerDraw := True;
 	for i := 0 to MainMenu.Items.Count - 1 do
 	begin
 		MainMenu.Items[i].OnAdvancedDrawItem := OnAdvancedMenuDraw;
-//		ComName(MainMenu.Items[i]);
 		for j := 0 to MainMenu.Items[i].Count - 1 do
 		begin
 			MainMenu.Items[i].Items[j].OnAdvancedDrawItem := OnAdvancedMenuDraw;
@@ -112,16 +111,19 @@ begin
 end;
 
 procedure SetPopupMenu(PopupMenu: TPopupMenu; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
-var
-	i: Integer;
+var i, j: SG;
 begin
 	CreateImg;
 	PopupMenu.Images := ImageList;
-//	PopupMenu.OwnerDraw := True;
 	for i := 0 to PopupMenu.Items.Count - 1 do
 	begin
 		PopupMenu.Items[i].OnAdvancedDrawItem := OnAdvancedMenuDraw;
 		ComName(PopupMenu.Items[i]);
+		for j := 0 to PopupMenu.Items[i].Count - 1 do
+		begin
+			PopupMenu.Items[i].Items[j].OnAdvancedDrawItem := OnAdvancedMenuDraw;
+			ComName(PopupMenu.Items[i].Items[j]);
+		end;
 	end;
 end;
 
@@ -145,6 +147,7 @@ var
 	TopLevel: Boolean;
 	MenuIndex, MenuCount: Integer;
 	MenuB: Boolean;
+	BmpWid: SG;
 begin
 	// Init
 	if not (Sender is TMenuItem) then Exit;
@@ -321,6 +324,7 @@ begin
 		end;
 
 		// Image
+		BmpWid := 16;
 		if MenuItem.Checked then
 		begin
 			if not (odSelected in State) then
@@ -331,6 +335,7 @@ begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
 				Bar24(MenuBmp24, clNone, 1, Y + 1, 1 + 15, Y + 1 + 15,
 					DepthColor(1), ef08);
+				BmpWid := 16;
 			end;
 		end;
 
@@ -341,6 +346,7 @@ begin
 			Bmp := TBitmap.Create;
 //      ImageList.GetBitmap(MenuItem.ImageIndex, Bmp);
 			Bmp.PixelFormat := pf24bit;
+			BmpWid := 16;
 			Bmp.Width := 16;
 			Bmp.Height := 16;
 			Bmp24 := Conv24(Bmp);
@@ -370,7 +376,8 @@ begin
 			MenuItem.Bitmap.PixelFormat := pf24bit;
 
 			Bmp24 := Conv24(MenuItem.Bitmap);
-			CreateBitmap24(Bmp24D, 16, 16);
+			CreateBitmap24(Bmp24D, Bmp24.Width, Bmp24.Height);
+			BmpWid := Bmp24.Width;
 			BmpE24(Bmp24D, 0, 0, Bmp24, clNone, ef16);
 			if (MenuItem.Enabled = False) or (odInactive in State) then
 				BarE24(Bmp24D, MenuItem.Bitmap.TransparentColor, clMenu, ef12);
@@ -426,7 +433,7 @@ begin
 		BCanvas.Font.Color := C2;
 
 		if (MenuB) or (TopLevel = False) then
-			Rec.Left := 6 + 16
+			Rec.Left := 6 + BmpWid
 		else
 			Rec.Left := 6;
 

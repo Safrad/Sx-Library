@@ -45,7 +45,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math, Dialogs,
-	uAdd, uFiles, uDIni, uGetInt, uGraph, uGraph24, uError;
+	uAdd, uFiles, uDIni, uGetInt, uGraph, uGraph24, uError, uMenus;
 
 var
 	ReopenLimit: Integer;
@@ -320,7 +320,7 @@ end;
 
 procedure TReopen.DrawReopenCaption;
 const
-	ReopenResNames: array[0..2] of PChar = ('DBNO', 'DBHELP', 'DBYES');
+	ReopenResNames: array[0..2] of PChar = ('Cancel', 'Help', 'Ok');
 var
 	i, j: Integer;
 	NotExistsCount, ReopenAllCount: Integer;
@@ -376,7 +376,9 @@ begin
 			if ReopenItems[i].OpenedCount <= 0 then Inc(ReopenAllCount);
 			ReopenItems[i].MenuItem.Caption :=
 				'&' + IntToStr(i) + ' ' + ReopenItems[i].FileName;
-			ReopenItems[i].MenuItem.Bitmap.LoadFromResourceName(HInstance, ReopenResNames[Exists]);
+			ReopenItems[i].MenuItem.Name := ReopenResNames[Exists] + IntToStr(i);
+			ComName(ReopenItems[i].MenuItem);
+//			ReopenItems[i].MenuItem.Bitmap.LoadFromResourceName(HInstance, ReopenResNames[Exists]);
 
 			if ReopenItems[i].OpenedCount > 0 then
 			begin
@@ -400,7 +402,7 @@ begin
 	end;
 	MenuClear.Enabled := NotExistsCount > 0;
 	MenuClear.Caption := 'Clear If Not Exists (' + IntToStr(NotExistsCount) + ')';
-	MenuLimit.Caption := 'Reopen Limit (' + IntToStr(ReopenLimit) + ') ...';
+	MenuLimit.Caption := 'Reopen Limit (' + IntToStr(ReopenLimit) + ')...';
 	MenuAll.Enabled := (ReopenAllCount > 0);
 	{$ifopt d-}
 	MenuAll.Visible := MultiFiles;

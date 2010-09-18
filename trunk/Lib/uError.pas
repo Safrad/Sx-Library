@@ -6,16 +6,16 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDBitBtn, ComCtrls, uDPanel, uDLabel, uWave, uAdd;
+	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDPanel, uDLabel, uWave, uAdd;
 
 type
 	TfIOError = class(TForm)
-		ButtonRetry: TDBitBtn;
-		ButtonIgnore: TDBitBtn;
-		ButtonIgnoreAll: TDBitBtn;
-		ButtonClose: TDBitBtn;
+    ButtonIRetry: TDButton;
+    ButtonIIgnore: TDButton;
+    ButtonIIgnoreAll: TDButton;
+    ButtonExit: TDButton;
 		Image1: TImage;
-		ButtonFile: TDBitBtn;
+    ButtonOpen: TDButton;
 		OpenDialogFile: TOpenDialog;
 		MemoMsg: TMemo;
 		UpDown1: TUpDown;
@@ -23,11 +23,11 @@ type
 		PanelIndex: TDPanel;
 		PanelCount: TDPanel;
 		ImageBackground: TImage;
-		procedure ButtonFileClick(Sender: TObject);
+		procedure ButtonOpenClick(Sender: TObject);
 		procedure FormClose(Sender: TObject; var Action: TCloseAction);
 		procedure UpDown1ChangingEx(Sender: TObject; var AllowChange: Boolean;
 			NewValue: SmallInt; Direction: TUpDownDirection);
-		procedure ButtonCloseClick(Sender: TObject);
+		procedure ButtonExitClick(Sender: TObject);
 	private
 		{ Private declarations }
 		ErrorFileName: TFileName;
@@ -277,9 +277,9 @@ begin
 		fIOError.MemoMsg.Lines.Clear;
 		fIOError.MemoMsg.Lines.Add(s);
 
-		fIOError.ButtonRetry.Enabled := Retry;
-		fIOError.ButtonFile.Enabled := Retry and ((Style = stIO) or (Style = stFile));
-		fIOError.ButtonIgnore.Default := not Retry;
+		fIOError.ButtonIRetry.Enabled := Retry;
+		fIOError.ButtonOpen.Enabled := Retry and ((Style = stIO) or (Style = stFile));
+		fIOError.ButtonIIgnore.Default := not Retry;
 		fIOError.UpDown1.OnChangingEx := nil;
 		fIOError.UpDown1.Max := IOErrorMessages.Count - 1;
 		fIOError.UpDown1.Position := IOErrorMessages.Count - 1;
@@ -288,7 +288,7 @@ begin
 		fIOError.PanelCount.Caption := IntToStr(IOErrorMessages.Count);
 		fIOError.ModalResult := mrNone;
 
-		CorrectPos(fIOError);
+		CorrectFormPos(fIOError);
 		if Application.Terminated then
 		begin
 			fIOError.FormStyle := fsStayOnTop;
@@ -301,6 +301,7 @@ begin
 		else
 		begin
 			fIOError.FormStyle := fsNormal;
+			if fIOError.Visible = True then Exit;
 			fIOError.ShowModal;
 		end;
 
@@ -308,7 +309,7 @@ begin
 		mrAll: IgnoreAll := True;
 //    mrAbort: TerminateProcess(GetCurrentProcess, 0); //Halt;
 		mrRetry:
-		begin  
+		begin
 			if fIOError.ErrorFileName <> '' then FName := fIOError.ErrorFileName;
 			Result := True;
 		end;
@@ -353,7 +354,7 @@ begin
 	Result := DoForm(stInternal, FName, 0, ErrorMsg, True);
 end;
 
-procedure TfIOError.ButtonFileClick(Sender: TObject);
+procedure TfIOError.ButtonOpenClick(Sender: TObject);
 var FExt: string;
 begin
 	FExt := ExtractFileExt(ErrorFileName);
@@ -393,7 +394,7 @@ begin
 	MemoMsg.Lines.Insert(0, IOErrorMessages[NewValue]);
 end;
 
-procedure TfIOError.ButtonCloseClick(Sender: TObject);
+procedure TfIOError.ButtonExitClick(Sender: TObject);
 begin
 	if Assigned(Application.MainForm) and (GetAsyncKeyState(VK_SHIFT) = 0) then
 		Application.MainForm.Close

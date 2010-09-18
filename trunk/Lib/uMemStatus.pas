@@ -6,13 +6,13 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDLabel, uDBitBtn, uDPanel;
+	ExtCtrls, StdCtrls, uDLabel, uDButton, uDPanel, uDTimer;
 
 type
 	TfMemStatus = class(TForm)
-		Timer1: TTimer;
-		DBitBtn1: TDBitBtn;
-		DBitBtn2: TDBitBtn;
+    Timer1: TDTimer;
+		ButtonStart: TDButton;
+    ButtonStop: TDButton;
 		DPanel1: TDPanel;
 		DPanel2: TDPanel;
 		DPanel3: TDPanel;
@@ -29,8 +29,8 @@ type
 		Bevel2: TBevel;
 		procedure Timer1Timer(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
-		procedure DBitBtn1Click(Sender: TObject);
-		procedure DBitBtn2Click(Sender: TObject);
+		procedure ButtonStartClick(Sender: TObject);
+		procedure ButtonStopClick(Sender: TObject);
 	private
 		{ Private declarations }
 	public
@@ -106,12 +106,12 @@ begin
 	end;
 end;
 
-procedure TfMemStatus.DBitBtn1Click(Sender: TObject);
+procedure TfMemStatus.ButtonStartClick(Sender: TObject);
 begin
 	Timer1.Enabled := True;
 end;
 
-procedure TfMemStatus.DBitBtn2Click(Sender: TObject);
+procedure TfMemStatus.ButtonStopClick(Sender: TObject);
 begin
 	Timer1.Enabled := False;
 end;

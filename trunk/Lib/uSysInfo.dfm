@@ -438,7 +438,7 @@ object fSysInfo: TfSysInfo
     ParentColor = True
     TabOrder = 12
   end
-  object ButtonOk: TDBitBtn
+  object ButtonOk: TDButton
     Left = 216
     Top = 288
     Width = 81
