@@ -264,7 +264,7 @@ end;
 function SpectrumColor(X: Integer): TColor;
 //0..255..510..765..1020..1275..1529
 begin
-	if X > 1529 then X := X mod 1530;
+	if (X < 0) or (X > 1529) then X := X mod 1530;
 	TRColor(Result).T := 0;
 	case X of
 	0..255:

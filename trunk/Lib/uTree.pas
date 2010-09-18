@@ -58,6 +58,7 @@ end;
 destructor TTree.Destroy;
 begin
 	TreeClear;
+	inherited Destroy;
 end;
 
 function TTree.TreeFind(Value: TValue): PKnot;

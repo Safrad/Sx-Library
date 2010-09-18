@@ -578,7 +578,6 @@ initialization
 	DSounds := TData.Create;
 	DSounds.ItemSize := SizeOf(TDSound);
 finalization
-//	FreeSounds;
-	DSounds.Free; DSounds := nil;
-	Sounds.Free; Sounds := nil;
+	FreeAndNil(DSounds);
+	FreeAndNil(Sounds);
 end.

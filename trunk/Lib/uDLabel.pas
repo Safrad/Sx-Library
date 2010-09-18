@@ -204,20 +204,17 @@ begin
 	FDispl.Free;
 	if Assigned(FBmpOut) then
 	begin
-		FBmpOut.Free;
-		FBmpOut := nil;
+		FreeAndNil(FBmpOut);
 	end;
 {	if Assigned(FBmpBack) then
 	begin
-		FBmpBack.Free;
-		FBmpBack := nil;
+		FreeAndNil(FBmpBack);
 	end;}
 	if Assigned(FBmpText) then
 	begin
-		FBmpText.Free;
-		FBmpText := nil;
+		FreeAndNil(FBmpText);
 	end;
-//	FFont.Free; FFont := nil;
+//	FreeAndNil(FFont);
 	inherited Destroy;
 end;
 
@@ -602,8 +599,7 @@ begin
 		end;
 {		if (Assigned(FBmpText)) then
 		begin
-			FBmpText.Free;
-			FBmpText := nil;
+			FreeAndNil(FBmpText);
 		end;}
 	end;
 
@@ -611,8 +607,7 @@ begin
 //	Canvas.Draw(0, 0, FBmpOut);
 {	if (Assigned(FBmpOut)) then
 	begin
-		FBmpOut.Free;
-		FBmpOut := nil;
+		FreeAndNil(FBmpOut);
 	end;}
 end;
 

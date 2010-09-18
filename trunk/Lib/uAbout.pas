@@ -395,7 +395,7 @@ procedure TfAbout.FormDestroy(Sender: TObject);
 begin
 	if Assigned(BmpAbout) then
 	begin
-		BmpAbout.Free; BmpAbout := nil;
+		FreeAndNil(BmpAbout);
 	end;
 end;
 
@@ -640,7 +640,7 @@ initialization
 finalization
 	SetLength(Params, 0);
 	SetLength(DesParams, 0);
-	Flashs.Free; Flashs := nil;
+	FreeAndNil(Flashs);
 {$ifopt d+}
 {	if (MemCount < AllocMemCount) or
 		(MemSize < AllocMemSize) then

@@ -105,7 +105,7 @@ begin
 		if (ReopenItems[i].Exists = 0) then
 		begin
 			ReopenItems[i].FileName := '';
-			ReopenItems[i].MenuItem.Free; ReopenItems[i].MenuItem := nil;
+			FreeAndNil(ReopenItems[i].MenuItem);
 			for j := i + 1 to ReopenCount - 1 do
 			begin
 				ReopenItems[j - 1] := ReopenItems[j];
@@ -140,7 +140,7 @@ begin
 		if Assigned(ReopenItems[i].MenuItem) then
 		begin
 			Reopen1.Delete(MaxPos);
-			ReopenItems[i].MenuItem.Free; ReopenItems[i].MenuItem := nil;
+			FreeAndNil(ReopenItems[i].MenuItem);
 		end;
 	end;
 	for i := 0 to Min(ReopenCount, Limit) - 1 do
@@ -184,10 +184,10 @@ end;
 procedure TReopen.FreeMenu;
 begin
 	SetReopenMenuItems(0);
-	MenuN.Free; MenuN := nil;
-	MenuAll.Free; MenuAll := nil;
-	MenuClear.Free; MenuClear := nil;
-	MenuLimit.Free; MenuLimit := nil;
+	FreeAndNil(MenuN);
+	FreeAndNil(MenuAll);
+	FreeAndNil(MenuClear);
+	FreeAndNil(MenuLimit);
 end;
 
 procedure TReopen.ReopenLimitClick(Sender: TObject);

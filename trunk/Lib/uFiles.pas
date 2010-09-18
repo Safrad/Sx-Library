@@ -73,7 +73,7 @@ type
 		property FileSize: U8 read FFileSize;
 		property Opened: BG read IsOpened;
 		constructor Create;
-		destructor Free;
+		destructor Destroy; override;
 		function Open(var FileName: TFileName; const Mode: TFileMode; Flags: U4; Protection: Boolean): Boolean;
 		function Seek(const Pos: U8): Boolean;
 		function SeekStart: Boolean;
@@ -195,13 +195,15 @@ uses
 
 constructor TFile.Create;
 begin
+	inherited Create;
 //	LineSeparator := CharCR + CharLF;
 	HFile := INVALID_HANDLE_VALUE;
 end;
 
-destructor TFile.Free;
+destructor TFile.Destroy;
 begin
 	if IsOpened then Close;
+	inherited Destroy;
 end;
 
 function TFile.IsOpened: BG;

@@ -213,7 +213,7 @@ destructor TDEdit.Destroy;
 begin
 {  FAutoSave.Free;
 	FMaxPixel.Free;}
-  inherited;
+  inherited Destroy;
 end;
 {***********************************************}
 procedure TDEdit.Change;

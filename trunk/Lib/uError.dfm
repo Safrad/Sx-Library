@@ -13,6 +13,7 @@ object fIOError: TfIOError
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClick = FormClick
   OnHide = FormHide
   OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp

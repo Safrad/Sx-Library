@@ -796,7 +796,7 @@ begin
 				Where := whNum;
 				while not EOI do
 				begin
-					if BufR[BufRI] = DecimalSep then
+					if (BufR[BufRI] = DecimalSep) or ((ThousandSep <> '.') and (BufR[BufRI] = '.')) then
 						Point := True
 					else if BufR[BufRI] = ThousandSep then
 					begin
@@ -2798,5 +2798,5 @@ finalization
 	if TreeSize <> 0 then IE(4334);
 	{$endif}
 	FreeUnitSystem;
-	CompileMes.Free; CompileMes := nil;
+	FreeAndNil(CompileMes);
 end.

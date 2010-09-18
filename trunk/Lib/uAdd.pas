@@ -271,6 +271,7 @@ procedure Change(var A, B: U2); overload;
 procedure Change(var A, B: U4); overload;
 procedure Change(var A, B: S4); overload;
 procedure Change(var A, B: Extended); overload;
+procedure Change(var A, B: Pointer); overload;
 
 function Arg(X, Y: Extended): Extended; overload;
 
@@ -398,6 +399,7 @@ function StrToValE(S: string;
 procedure Nop;
 procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
+function SelectDirectory(var Dir: string): BG;
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
 function ThreadPriority(const Prior: Byte): Integer;
@@ -419,8 +421,6 @@ procedure CreateLink(
 	const Description: string;
 	const IconFileName: TFileName;
 	const IconIdex: Integer);
-
-procedure ObjectFree(var Obj: TObject);
 
 function DropFiles(hDrop: THandle): TStrings;
 
@@ -850,6 +850,19 @@ begin
 	C := A;
 	A := B;
 	B := C;
+end;
+
+procedure Change(var A, B: Pointer); register;
+asm
+	push ebx
+	push ecx
+	mov ebx, U4 ptr [A]
+	mov ecx, U4 ptr [B]
+	mov [B], ebx
+	mov [A], ecx
+	pop ebx
+	pop ecx
+//  xchg A, B
 end;
 
 function Random2(Range: SG): SG;
@@ -2226,6 +2239,25 @@ asm
 	@Exit:
 end;
 
+function SelectDirectory(var Dir: string): BG;
+var OpenDialog1: TOpenDialog;
+begin
+	OpenDialog1 := TOpenDialog.Create(nil);
+	try
+		OpenDialog1.FileName := Dir;
+//		OpenDialog1.Options := OpenDialog1.Options or ofPathMustExist;
+		if OpenDialog1.Execute then
+		begin
+			Result := True;
+			Dir := ExtractFilePath(OpenDialog1.FileName);
+		end
+		else
+			Result := False;
+	finally
+		OpenDialog1.Free;
+	end;
+end;
+
 function DriveTypeToStr(const DriveType: Integer): string;
 begin
 	Result := '';
@@ -2399,11 +2431,6 @@ begin
 	MySLink := nil;
 	MyPFile := nil;
 	MyObject := nil;
-end;
-
-procedure ObjectFree(var Obj: TObject);
-begin
-	Obj.Free; Obj := nil;
 end;
 
 function DropFiles(hDrop: THandle): TStrings;

@@ -168,8 +168,7 @@ begin
 	for i := 0 to Length(Tips) - 1 do
 	begin
 		Tips[i].Clear;
-		Tips[i].Free;
-		Tips[i] := nil;
+		FreeAndNil(Tips[i]);
 	end;
 	SetLength(Tips, 0);
 end;

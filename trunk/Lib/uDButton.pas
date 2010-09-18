@@ -22,7 +22,7 @@ interface
 
 {$R *.RES}
 uses
-	uDBitmap,
+	uFiles, uDBitmap,
 	Windows, Messages, Classes, Controls, Forms, Graphics, StdCtrls,
 	ExtCtrls, CommCtrl, uWave, uDTimer;
 
@@ -120,7 +120,65 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uFiles, uAdd, uScreen, uSysInfo;
+	uGraph, uAdd, uScreen, uSysInfo;
+
+
+var Loaded: BG;
+
+procedure LoadBSounds;
+var
+	SoundUpDataBytes, SoundDownDataBytes: Integer;
+	FileName: TFileName;
+begin
+	if Loaded = False then Loaded := True else Exit;
+	FileName := SoundsDir + 'BUp.wav';
+	if FileExists(FileName) then
+		WaveReadFromFile(BSoundUp, FileName);
+	FileName := SoundsDir + 'BDown.wav';
+	if FileExists(FileName) then
+		WaveReadFromFile(BSoundDown, FileName);
+	if BSoundUp <> nil then
+		SoundUpDataBytes := BSoundUp.DataBytes div BSoundUp.Channels
+	else
+		SoundUpDataBytes := 0;
+	if BSoundDown <> nil then
+		SoundDownDataBytes := BSoundDown.DataBytes div BSoundDown.Channels
+	else
+		SoundDownDataBytes := 0;
+	if (SoundUpDataBytes > 0) or (SoundDownDataBytes > 0) then
+		GetMem(BSoundBuffer, WaveHead + 2 * Max(SoundUpDataBytes, SoundDownDataBytes));
+end;
+
+procedure UnloadBSounds;
+begin
+	FreeMem(BSoundUp); BSoundUp := nil;
+	FreeMem(BSoundDown); BSoundDown := nil;
+	FreeMem(BSoundBuffer); BSoundBuffer := nil;
+end;
+
+procedure PlayBSound(const X, MaxX: Integer; const SoundUp: Boolean);
+var SoundLeft, SoundRight: Integer;
+begin
+	if (BSoundBuffer = nil) then Exit;
+	SoundLR(SoundLeft, SoundRight, X, MaxX);
+	if SoundUp then
+	begin
+		if BSoundDown <> nil then
+		begin
+			ConvertChannels(BSoundDown, BSoundBuffer, 2, SoundLeft, SoundRight);
+			PlayWave(BSoundBuffer);
+		end;
+	end
+	else
+	begin
+		if BSoundUp <> nil then
+		begin
+			ConvertChannels(BSoundUp, BSoundBuffer, 2, SoundLeft, SoundRight);
+			PlayWave(BSoundBuffer);
+		end;
+	end;
+end;
+
 
 { TDButton data }
 var
@@ -299,11 +357,11 @@ end;
 destructor TDButton.Destroy;
 begin
 	FTimer.Enabled := False;
-	FTimer.Free; FTimer := nil;
-	inherited Destroy;
+	FreeAndNil(FTimer);
 	FCanvas.Free;
 	FBmpOut.Free;
 	FGlyph.Free;
+	inherited Destroy;
 end;
 
 procedure TDButton.CreateHandle;
@@ -397,6 +455,7 @@ var
 const
 	Border = 2;
 begin
+	LoadBSounds;
 	IsDefault := DrawItemStruct.itemState and ODS_FOCUS <> 0;
 	IsDown := DrawItemStruct.itemState and ODS_SELECTED <> 0;
 	if FDown then IsDown := not IsDown;
@@ -414,11 +473,7 @@ begin
 	// Sound
 	if BSounds and (FLastDown <> IsDown) then
 	begin
-		if (BSoundBuffer <> nil) then
-		begin
-			PlayBSound(Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1,
-				IsDown);
-		end;
+		PlayBSound(Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1, IsDown);
 		FLastDown := IsDown;
 	end;
 
@@ -860,52 +915,6 @@ begin
 	end;
 end;
 
-procedure LoadBSounds;
-var
-	SoundUpDataBytes, SoundDownDataBytes: Integer;
-	FileName: TFileName;
-begin
-	FileName := SoundsDir + 'BUp.wav';
-	if FileExists(FileName) then
-		WaveReadFromFile(BSoundUp, FileName);
-	FileName := SoundsDir + 'BDown.wav';
-	if FileExists(FileName) then
-		WaveReadFromFile(BSoundDown, FileName);
-	if BSoundUp <> nil then
-		SoundUpDataBytes := BSoundUp.DataBytes div BSoundUp.Channels
-	else
-		SoundUpDataBytes := 0;
-	if BSoundDown <> nil then
-		SoundDownDataBytes := BSoundDown.DataBytes div BSoundDown.Channels
-	else
-		SoundDownDataBytes := 0;
-	if (SoundUpDataBytes > 0) or (SoundDownDataBytes > 0) then
-		GetMem(BSoundBuffer, WaveHead + 2 * Max(SoundUpDataBytes, SoundDownDataBytes));
-end;
-
-procedure UnloadBSounds;
-begin
-	FreeMem(BSoundUp); BSoundUp := nil;
-	FreeMem(BSoundDown); BSoundDown := nil;
-	FreeMem(BSoundBuffer); BSoundBuffer := nil;
-end;
-
-procedure PlayBSound(const X, MaxX: Integer; const SoundUp: Boolean);
-var SoundLeft, SoundRight: Integer;
-begin
-		SoundLR(SoundLeft, SoundRight, X, MaxX);
-	if SoundUp then
-	begin
-		ConvertChannels(BSoundDown, BSoundBuffer, 2, SoundLeft, SoundRight);
-		PlayWave(BSoundBuffer);
-	end
-	else
-	begin
-		ConvertChannels(BSoundUp, BSoundBuffer, 2, SoundLeft, SoundRight);
-		PlayWave(BSoundBuffer);
-	end;
-end;
-
 procedure TDButton.WMEraseBkGnd;
 begin
 	Message.Result := -1;
@@ -917,7 +926,6 @@ begin
 end;
 
 initialization
-	LoadBSounds;
 	BadColors :=
 		(ColorToRGB(clBtnFace) = ColorToRGB(clActiveBorder)) or
 		(ColorToRGB(clBtnFace) = ColorToRGB(clInactiveBorder)) or
