@@ -225,6 +225,7 @@ function Range(const Min, Cur, Max: Integer): Integer; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
 
 procedure Change(var A, B: Integer); overload;
+procedure Change(var A, B: Extended); overload;
 
 function Arg(X, Y: Extended): Extended; overload;
 
@@ -679,6 +680,14 @@ asm
 //  xchg A, B
 end;
 
+procedure Change(var A, B: Extended);
+var C: Extended;
+begin
+	C := A;
+	A := B;
+	B := C;
+end;
+
 function Random2(Range: SG): SG;
 begin
 	Result := Random(2 * Range + 1) - Range;
@@ -974,7 +983,6 @@ end;
 
 function NToS(const Num: Int64): TString;
 begin
-//	Result := FormatFloat(',0', Num); D???
 	Result := NToS(Num, True, 0);
 end;
 
@@ -1421,13 +1429,21 @@ end;
 
 
 var
-	CharsTable: array[Char] of (ctIllegal, ctNumber, ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose);
+	CharsTable: array[Char] of (ctSpace, ctLetter, ctIllegal, ctNumber, ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose);
+const
+	ConstE = 2.7182818284590452353602874713527;
 
 function StrToValExt(Line: TString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string;
 	var InStr: string; var ErrorLineIndex: SG): Extended;
 type
-	TOperator = (opNone, opWaitOperator, opNumber, opPlus, opExp, opMinus, opMul, opDiv);
+	TOperator = (opNone,
+		opPlus, opMinus, opMul, opDiv,
+		opAbs, opNeg, opInv, opNot, opInc, opDec, opFact,
+		opPower, opExp, opLn, opSqr, opSqrt,
+		opSin, opCos, opTan, opArcSin, opArcCos, opArcTan,
+		opHypSin, opHypCos,
+		opAvg);
 var
 	DecimalSep, ThousandSep: string[3];
 
@@ -1439,6 +1455,7 @@ var
 
 	MaxLineIndex: Integer;
 	LineIndex: Integer;
+	StartIndex: SG;
 	LastLineIndex: Integer;
 
 	Res, Exp: Extended;
@@ -1450,32 +1467,54 @@ var
 		if ErrorMsg = '' then
 		begin
 			ErrorLineIndex := LineIndex;
-			ErrorMsg := 'Error (' + NToS(LineIndex) + '): ' + s;
 			{$ifopt d+}
 //			ErrorMessage(ErrorMsg);
 			{$endif}
 		end;
+		ErrorMsg := ErrorMsg + 'Error (' + NToS(LineIndex) + '): ' + s + #13 + #10;
 	end;
 
-	function Make: Extended;
+	function Make(LastOperator: TOperator): Extended;
 	label LFin, LNext;
 	var
-		R1, R2: Extended;
-		LastOperator: TOperator;
+		ArgCount: SG;
+		Args: array of Extended;
 		Unar, UnarExp: Boolean;
+
+		procedure AddArgument(Res: Extended);
+		begin
+			Inc(ArgCount);
+			SetLength(Args, ArgCount);
+			if Unar then
+			begin
+				Unar := False;
+				Res := -Res;
+			end;
+			Args[ArgCount - 1] := Res;
+		end;
+
+	var
+		a: SG;
+		Fce, FceO: string;
+		NextOperator: TOperator;
 	begin
 		Result := 0;
 		if Level >= 255 then Exit;
 		Inc(Level); if Level > MaxLevel then MaxLevel := Level;
 		Unar := False;
 		UnarExp := False;
-		R1 := 0;
-		R2 := 0;
-		LastOperator := opNone;
+		ArgCount := 0;
+		SetLength(Args, 0);
+		NextOperator := opNone;
 
 		while True do
 		begin
 			if (LineIndex > Length(Line)) then Break;
+			if CharsTable[Line[LineIndex]] = ctSpace then
+			begin
+				Inc(LineIndex);
+				Continue;
+			end;
 			if CharsTable[Line[LineIndex]] = ctNumber then
 			begin
 				LastLineIndex := LineIndex;
@@ -1500,9 +1539,14 @@ var
 					'$', 'x', 'X', 'h', 'H': Base := 16;
 					'*', '/', ':', '^', ')', '(': Break;
 					'-', '+': if (Base <> 10) or (UpCase(Line[LineIndex - 1]) <> 'E') then Break else UnarExp := True;
+					'.': Point := True;
+					',':
+					begin
+					
+					end
 					else
 					begin
-						if (UseWinFormat and (Copy(Line, LineIndex, Length(DecimalSep)) = DecimalSep)) then
+{						if (UseWinFormat and (Copy(Line, LineIndex, Length(DecimalSep)) = DecimalSep)) then
 						begin
 							if Point = True then ShowError('Too many decimal points');
 							Point := True;
@@ -1515,7 +1559,7 @@ var
 //							Inc(LineIndex);
 						end
 						else
-						begin
+						begin}
 							case UpCase(Line[LineIndex]) of
 							'0'..'9': Num := Ord(Line[LineIndex]) - Ord('0');
 							'A'..'F':
@@ -1530,11 +1574,13 @@ var
 									PointDiv := 1;
 									goto LNext;
 								end;
+							end
+							else
+								Break;
 							end;
-							end;
-							case UpCase(Line[LineIndex]) of
+{							case UpCase(Line[LineIndex]) of
 							'0'..'9', 'A'..'F':
-							begin
+							begin}
 								if Where = whExp then
 									if Point = False then
 									begin
@@ -1557,9 +1603,9 @@ var
 										PointDiv := PointDiv * Base;
 										Res := Res + Num / PointDiv;
 									end;
-							end;
-							end;
-						end;
+{							end;
+							end;}
+//						end;
 					end;
 					end;
 					LNext:
@@ -1570,120 +1616,529 @@ var
 				if UnarExp then Exp := -Exp;
 				if Abs(Exp) > 1024 then Exp := Sgn(Exp) * 1024;
 				Res := Res * Power(10, Exp);
-				if Unar then Res := -Res;
+//				if Unar then Res := -Res;
 
 //        Val(Copy(Line, LastLineIndex, LineIndex - LastLineIndex), Res, ErrorCode);
-				if LastOperator = opNone then
+				AddArgument(Res);
+{				if LastOperator = opNone then
 				begin
 					R1 := Res;
 					LastOperator := opWaitOperator;
 				end
 				else
-					R2 := Res;
-			end
-			else
-			case Line[LineIndex] of
-			'(':
-			begin
-				if LastOperator = opWaitOperator then ShowError('Operator required');
-				Inc(LineIndex);
-				Res := Make;
-				if Unar then Res := -Res;
-				if LastOperator = opNone then
 				begin
-					R1 := Res;
-					LastOperator := opWaitOperator;
-				end
-				else
-					R2 := Res;
-			end;
-			')':
-			begin
-				LFin:
-				case LastOperator of
-				opNone:
-				begin
-					ShowError('Number required');
-					Result := 0;
-				end;
-				opWaitOperator:
-				begin
-//          ShowError('Unary operation');
-					Result := R1;
-				end;
-				opPlus: Result := R1 + R2;
-				opMinus: Result := R1 - R2;
-				opMul: Result := R1 * R2;
-				opDiv:
-				begin
-					if R2 = 0 then
+					if LastOperator = opWaitOperator then
 					begin
-						ShowError('Division by zero');
-						Result := R1;
+						ShowError('Missing operator');
 					end
 					else
-						Result := R1 / R2;
-				end;
-				opExp:
-				begin
-					Result := Power(R1, R2);
-{         Result := 1;
-					i := 1;
-					while  i <= R2 do
-					begin
-						Result := Result * R1;
-						Inc(i);
-					end;}
-				end;
-				end;
-				Inc(LineIndex);
-				Break;
-			end;
-			'+':
-			begin
-				if LastOperator = opWaitOperator then
-					LastOperator := opPlus;
-				Inc(LineIndex);
-			end;
-			'-':
-			begin
-{       if LastOperator = opWaitOperator then
-				begin
-					if (Line[LineIndex - 1] = 'E') then
-						UnarExp := not UnarExp
-					else
-						LastOperator := opMinus
-				end
-				else
-					Unar := not Unar;}
-				if LastOperator = opWaitOperator then
-				begin
-					LastOperator := opMinus
-				end
-				else
-					Unar := not Unar;
-				Inc(LineIndex);
-			end;
-			'*':
-			begin
-				LastOperator := opMul;
-				Inc(LineIndex);
-			end;
-			'/', ':':
-			begin
-				LastOperator := opDiv;
-				Inc(LineIndex);
-			end;
-			'^':
-			begin
-				LastOperator := opExp;
-				Inc(LineIndex);
-			end;
+						R2 := Res;
+//						LastOperator := opNone;
+				end;}
+			end
 			else
 			begin
-				ShowError('Invalid operator ''' + Line[LineIndex] + '''');
-				Inc(LineIndex);
-			end;
+				case Line[LineIndex] of
+				'(':
+				begin
+//					if LastOperator = opNone then ShowError('Operator required');
+					Inc(LineIndex);
+					Res := Make(NextOperator);
+					AddArgument(Res);
+				end;
+				')':
+				begin
+					LFin:
+					case LastOperator of
+					opNone:
+					begin
+						if ArgCount = 0 then
+							ShowError('Argument required')
+						else if ArgCount = 1 then
+							Result := Args[0]
+						else
+							ShowError('Too many arguments');
+					end;
+					opPlus:
+					begin
+						if ArgCount < 2 then
+						begin
+							ShowError('Too few arguments for Plus');
+							if ArgCount = 1 then Result := Args[0];
+						end
+						else
+						begin
+							Result := Args[0];
+							for a := 1 to ArgCount - 1 do
+							begin
+								Result := Result + Args[a];
+							end;
+						end;
+					end;
+					opAvg:
+					begin
+						if ArgCount < 1 then
+						begin
+							ShowError('Too few arguments for Avg');
+						end
+						else
+						begin
+							Result := Args[0];
+							for a := 1 to ArgCount - 1 do
+							begin
+								Result := Result + Args[a];
+							end;
+							Result := Result / ArgCount;
+						end;
+					end;
+					opMinus:
+					begin
+						if ArgCount < 2 then
+						begin
+							ShowError('Too few arguments for Minus');
+							if ArgCount = 1 then Result := Args[0];
+						end
+						else
+						begin
+							Result := Args[0];
+							for a := 1 to ArgCount - 1 do
+							begin
+								Result := Result - Args[a];
+							end;
+						end;
+					end;
+					opMul:
+					begin
+						if ArgCount < 2 then
+						begin
+							ShowError('Too few arguments for Mul');
+							if ArgCount = 1 then Result := Args[0];
+						end
+						else
+						begin
+							Result := Args[0];
+							for a := 1 to ArgCount - 1 do
+							begin
+								Result := Result * Args[a];
+							end;
+						end;
+					end;
+					opDiv:
+					begin
+						if ArgCount < 2 then
+						begin
+							ShowError('Too few arguments for Div');
+							if ArgCount = 1 then Result := Args[0];
+						end
+						else
+						begin
+							Result := Args[0];
+							for a := 1 to ArgCount - 1 do
+							begin
+								if Args[a] = 0 then
+								begin
+									ShowError('Division by zero');
+								end
+								else
+									Result := Result / Args[a];
+							end;
+						end;
+					end;
+					opAbs:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Abs');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							Result := Abs(Args[0]);
+						end;
+					end;
+					opNeg:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Neg');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							Result := -Args[0];
+						end;
+					end;
+					opInv:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Inv');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							if Args[0] = 0 then
+								ShowError('Division by zero')
+							else
+								Result := 1 / Args[0];
+						end;
+					end;
+					opNot:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Not');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							Result := -Args[0] - 1;
+						end;
+					end;
+					opInc:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Inc');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							Result := Args[0] + 1;
+						end;
+					end;
+					opDec:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Dec');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							Result := Args[0] - 1;
+						end;
+					end;
+					opFact:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Neg');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							Result := 1;
+							if Round(Args[0]) < 0 then
+								ShowError('Input -infinity..2000 for Fact')
+							else if Round(Args[0]) <= 1754 then
+							begin
+								for a := 2 to Round(Args[0]) do
+									Result := Result * a;
+							end
+							else
+							begin
+								if Round(Args[0]) > 1754 then Result := Infinity;
+							end;
+						end;
+					end;
+					opPower:
+					begin
+						if ArgCount < 2 then
+						begin
+							ShowError('2 arguments required for Power');
+							if ArgCount = 1 then Result := Args[0];
+						end
+						else
+						begin
+							Result := Power(Args[0], Args[1]);
+	{         Result := 1;
+						i := 1;
+						while  i <= R2 do
+						begin
+							Result := Result * R1;
+							Inc(i);
+						end;}
+						end;
+					end;
+					opExp:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Exp');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							Result := Power(ConstE, Args[0]);
+						end;
+					end;
+					opLn:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Ln');
+							if ArgCount = 1 then Result := Args[0];
+						end;
+						if ArgCount >= 1 then
+						begin
+							if Args[0] > 0 then
+								Result := Ln(Args[0])
+							else
+								ShowError('Input 0..infinity for Ln');
+						end;
+					end;
+					opSqr:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Sqr');
+						end;
+						if ArgCount >= 1 then
+							Result := Sqr(Args[0]);
+					end;
+					opSqrt:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Sqrt');
+						end;
+						if ArgCount >= 1 then
+							Result := Sqrt(Args[0]);
+					end;
+
+					opSin:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Sin');
+						end;
+						if ArgCount >= 1 then
+							Result := Sin(Args[0]);
+					end;
+					opCos:
+					begin
+						if ArgCount <> 1 then
+						begin
+							ShowError('1 argument required for Cos');
+						end;
+						if ArgCount >= 1 then
+							Result := Sin(Args[0]);
+					end;
+					end;
+					Inc(LineIndex);
+					Break;
+				end;
+				'+':
+				begin
+{					case LastOperator of
+					opNone:}
+						LastOperator := opPlus;
+//					end;
+					Inc(LineIndex);
+				end;
+				'-':
+				begin
+{		      if LastOperator = opWaitOperator then
+					begin
+						if (Line[LineIndex - 1] = 'E') then
+							UnarExp := not UnarExp
+						else
+							LastOperator := opMinus
+					end
+					else
+						Unar := not Unar;}
+{					if LastOperator = opNone then
+					begin
+					end}
+					if ArgCount = 0 then
+						Unar := not Unar
+					else
+						LastOperator := opMinus;
+					Inc(LineIndex);
+				end;
+				'*':
+				begin
+					LastOperator := opMul;
+					Inc(LineIndex);
+				end;
+				'/', ':':
+				begin
+					LastOperator := opDiv;
+					Inc(LineIndex);
+				end;
+				'^':
+				begin
+					LastOperator := opPower;
+					Inc(LineIndex);
+				end;
+				';', ' ':
+				begin
+					// Next argument
+					Inc(LineIndex);
+				end
+{				'=':
+				begin
+					for a := 0 to MemCount - 1 do
+						if Mems[a].Name =
+				end}
+				else
+				begin
+					if CharsTable[Line[LineIndex]] = ctLetter then
+					begin
+						// Functions
+						StartIndex := LineIndex;
+						while (LineIndex <= Length(Line)) and (CharsTable[Line[LineIndex]] = ctLetter) do
+							Inc(LineIndex);
+						FceO := Copy(Line, StartIndex, LineIndex - StartIndex);
+//						Inc(LineIndex);
+
+						Fce := UpperCase(FceO);
+						if Fce = 'PI' then
+						begin
+							AddArgument(pi); // 3,1415926535897932384626433832795
+						end
+						else if Fce = 'E' then
+						begin
+							AddArgument(ConstE);
+						end
+						else if Fce = 'C' then
+						begin
+							AddArgument(299999025);
+						end
+						else if (Fce = 'ZERO') or (Fce = 'FALSE') then
+						begin
+							AddArgument(0);
+						end
+						else if Fce = 'TRUE' then
+						begin
+							AddArgument(1);
+						end
+						else if (Fce = 'INFINITY') or (Fce = 'INFINITY') then
+						begin
+							AddArgument(Infinity);
+						end
+						else if (Fce = 'NEGINFINITY') or (Fce = 'NEGINFINITY') then
+						begin
+							AddArgument(NegInfinity);
+						end
+						else if (Fce = 'PLUS') or (Fce = 'SUM') then
+						begin
+							NextOperator := opPlus;
+						end
+						else if Fce = 'MINUS' then
+						begin
+							NextOperator := opMinus;
+						end
+						else if Fce = 'MUL' then
+						begin
+							NextOperator := opMul;
+						end
+						else if Fce = 'DIV' then
+						begin
+							NextOperator := opDiv;
+						end
+						else if Fce = 'ABS' then
+						begin
+							NextOperator := opAbs;
+						end
+						else if (Fce = 'NEG') then
+						begin
+							NextOperator := opNeg;
+						end
+						else if (Fce = 'INV') then
+						begin
+							NextOperator := opInv;
+						end
+						else if (Fce = 'NOT') then
+						begin
+							NextOperator := opNot;
+						end
+						else if (Fce = 'INC') then
+						begin
+							NextOperator := opInc;
+						end
+						else if (Fce = 'DEC') then
+						begin
+							NextOperator := opDec;
+						end
+						else if (Fce = 'FACT') then
+						begin
+							NextOperator := opFact;
+						end
+						else if Fce = 'POWER' then
+						begin
+							NextOperator := opPower;
+						end
+						else if Fce = 'EXP' then
+						begin
+							NextOperator := opExp;
+						end
+						else if Fce = 'LN' then
+						begin
+							NextOperator := opLn;
+						end
+						else if Fce = 'SQR' then
+						begin
+							NextOperator := opSqr;
+						end
+						else if Fce = 'SQRT' then
+						begin
+							NextOperator := opSqrt;
+						end
+						else if Fce = 'SIN' then
+						begin
+							NextOperator := opSin;
+						end
+						else if Fce = 'COS' then
+						begin
+							NextOperator := opCos;
+						end
+						else if Fce = 'TAN' then
+						begin
+							NextOperator := opTan;
+						end
+						else if Fce = 'ARCSIN' then
+						begin
+							NextOperator := opArcSin;
+						end
+						else if Fce = 'ARCCOS' then
+						begin
+							NextOperator := opArcCos;
+						end
+						else if Fce = 'ARCTAN' then
+						begin
+							NextOperator := opArcTan;
+						end
+						else if Fce = 'AVG' then
+						begin
+							NextOperator := opAvg;
+						end
+						else if Fce = 'AVG' then
+						begin
+							NextOperator := opAvg;
+						end
+						else
+						begin
+{							Found := False;
+							for a := 0 to MemCount - 1 do
+								if Fce = Mems[a].Name then
+								begin
+									AddArgument(Mems[a].Value);
+									Found := True;
+									Break;
+								end;
+							if Found = False then}
+								ShowError('Invalid identifier ''' + FceO + '''');
+						end;
+					end
+					else
+					begin
+						ShowError('Invalid operator ''' + Line[LineIndex] + '''');
+						Inc(LineIndex);
+					end;
+				end;
+				end;
 			end;
 			if LineIndex > MaxLineIndex then
 			begin
@@ -1718,17 +2173,19 @@ begin
 		ShowError('Line too short');
 		Exit;
 	end;
-	if Pos(UpperCase(Line), 'DEF') <> 0 then Exit;
-	if Pos(UpperCase(Line), 'MIN') <> 0 then
+	if Length(Line) = 3 then
 	begin
-		Result := MinVal;
-		Exit;
-	end;
-	if Pos(UpperCase(Line), 'MAX') <> 0 then
-	begin
-		ShowError('Line too short');
-		Result := MaxVal;
-		Exit;
+		if Pos(UpperCase(Line), 'DEF') <> 0 then Exit;
+		if Pos(UpperCase(Line), 'MIN') <> 0 then
+		begin
+			Result := MinVal;
+			Exit;
+		end;
+		if Pos(UpperCase(Line), 'MAX') <> 0 then
+		begin
+			Result := MaxVal;
+			Exit;
+		end;
 	end;
 
 	if UseWinFormat then
@@ -1742,7 +2199,7 @@ begin
 		ThousandSep := ',';
 	end;
 
-	DelStr(Line, ThousandSep); // D??? '.'
+//	DelStr(Line, ThousandSep); // D??? '.'
 
 	// Make ()
 	if Line[1] <> '(' then
@@ -1842,7 +2299,7 @@ begin
 
 	Level := 0; MaxLevel := 0;
 	LineIndex := 2; MaxLineIndex := Length(Line);
-	Result := Make;
+	Result := Make(opNone);
 	if Level > 0 then ShowError('Incorect level');
 	if LineIndex <= MaxLineIndex  then ShowError('Line too long, unused chars');
 
@@ -2411,7 +2868,9 @@ begin
 	// Make Char Table
 	for c := Low(Char) to High(Char) do
 		case c of
-		'0'..'9', '!', '#', '$', '%', 'a'..'z', 'A'..'Z', ' ': CharsTable[c] := ctNumber;
+		' ': CharsTable[c] := ctSpace;
+		'a'..'z', 'A'..'Z', '_': CharsTable[c] := ctLetter;
+		'0'..'9', '!', '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharsTable[c] := ctNumber;
 		'+': CharsTable[c] := ctPlus;
 		'-': CharsTable[c] := ctMinus;
 		'^': CharsTable[c] := ctExp;
