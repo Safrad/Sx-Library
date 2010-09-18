@@ -626,11 +626,13 @@ begin
 end;
 
 procedure TDForm.CheckPos;
+var Rect: TRect;
 begin
-	if Left + Width > Screen.Width then Left := Screen.Width - Width;
-	if Top + Height > Screen.Height then Top := Screen.Height - Height;
-	if Left < 0 then Left := 0;
-	if Top < 0 then Top := 0;
+	GetScreen(Rect);
+	if Left + Width > Rect.Right - Rect.Left then Left := Rect.Right - Rect.Left - Width;
+	if Top + Height > Rect.Bottom - Rect.Top then Top := Rect.Bottom - Rect.Top - Height;
+	if Left < Rect.Left then Left := Rect.Left;
+	if Top < Rect.Top then Top := Rect.Top;
 end;
 
 constructor TDForm.Create(AOwner: TComponent);
@@ -747,7 +749,7 @@ begin
 
 	if FBackground = baOpenGLBitmap then
 	begin
-		glClear(GL_DEPTH_BUFFER_BIT); // D??? TNT2 Error read at 0
+		glClear(GL_DEPTH_BUFFER_BIT); // TNT2 Error read at 0
 {		glClear(GL_CURRENT_BIT);
 		glClear(GL_TRANSFORM_BIT);
 		glClear(GL_ALL_ATTRIB_BITS);}

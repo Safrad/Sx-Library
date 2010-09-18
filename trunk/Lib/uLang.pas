@@ -26,6 +26,7 @@ var
 
 procedure ConvertCharset(var s: ShortString; FromCharset: TCodePage; ToCharset: TCodePage); overload;
 procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage); overload;
+function ConvertCharsetF(s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
 
 function UpCaseCz(const s: string): string;
 function DelCz(const s: string): string;
@@ -178,6 +179,20 @@ begin
 			s[i] := CP[s[i]];
 		end;
 	end;}
+end;
+
+function ConvertCharsetF(s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
+var
+	i: SG;
+begin
+	SetLength(Result, Length(s));
+	for i := 1 to Length(s) do
+	begin
+		if Ord(s[i]) >= $80 then
+			Result[i] := CodePage[ToCharset, FromCharset][s[i]]
+		else
+			Result[i] := s[i];
+	end;
 end;
 
 procedure FillCharsTable;

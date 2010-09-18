@@ -50,7 +50,7 @@ type
 	PPixel = ^TPixel;
 	TPixel = {$ifdef BPP4}TRGBA{$else}TRGB{$endif};
 (*	TPixel = packed record // 3 / 4
-		case Integer of
+		case SG of
 		0: (R, G, B{$ifdef BPP4}, A{$endif}: U1);
 		1: (RG{$ifdef BPP4}, BA{$endif}: U2);
 		{$ifdef BPP4}
@@ -142,8 +142,8 @@ type
 type
 	TRasterFontStyle = (fs6x8, fs8x8, fs8x16);
 const
-	FontWidth: array[TRasterFontStyle] of Integer = (6, 8, 8);
-	FontHeight: array[TRasterFontStyle] of Integer = (8, 8, 16);
+	FontWidth: array[TRasterFontStyle] of SG = (6, 8, 8);
+	FontHeight: array[TRasterFontStyle] of SG = (8, 8, 16);
 
 type
 	TDBitmap = class(TBitmap)
@@ -187,10 +187,10 @@ type
 		procedure SaveToFile(const Filename: AnsiString); override;
 
 		function LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: SG): BG;
-		function SaveToFileEx(var FileName: TFileName; var Quality: Integer): Boolean;
+		function SaveToFileEx(var FileName: TFileName; var Quality: SG): Boolean;
 
 
-		function BmpColorIn(C: TColor): Integer;
+		function BmpColorIn(C: TColor): SG;
 		procedure Line(
 			X1, Y1, X2, Y2: TCoor; Color: TColor; const Effect: TEffect); overload;
 		procedure Line(
@@ -224,12 +224,12 @@ type
 		procedure Histogram(Limit: UG);
 		function ColorCount(Limit: UG): SG;
 		procedure ChangeColor(
-			X1, Y1, X2, Y2: Integer;
+			X1, Y1, X2, Y2: SG;
 			const C1, C2: TColor); overload;
 		procedure ChangeColor(
 			const C1, C2: TColor); overload;
 		procedure ChangeColor2(
-			const X1, Y1, X2, Y2: Integer;
+			const X1, Y1, X2, Y2: SG;
 			const CS1, CS2, CD1, CD2: TColor); overload;
 		procedure ChangeColor2(
 			const CS1, CS2, CD1, CD2: TColor); overload;
@@ -242,11 +242,15 @@ type
 		procedure SwapUD;
 		procedure Neg;
 		procedure RotateRight(const Effect: TEffect);
+		procedure SwapHorz;
+		procedure SwapVert;
+		procedure Texturize; overload;
+		procedure Texturize(Size: SG); overload;
 
 {		procedure GenRGB(HidedColor: TColor;
 			const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);}
 
-		procedure GenerateRGBEx(XD1, YD1, XD2, YD2: Integer;
+		procedure GenerateRGBEx(XD1, YD1, XD2, YD2: SG;
 			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
 			const Effect: TEffect; const Clock: LongWord;
 			const InterruptProcedure: TInterruptProcedure);
@@ -272,21 +276,21 @@ type
 			Gamma, // 0: No change, dark color is dec by gamma, light color is inc by gamma [-127..+127]
 			ContBase, // Base for Cont [0..255]
 			BW // 0: No change, 256: Black and White, -256: Absolute color
-			: Integer;
+			: SG;
 			const ColorR, ColorG, ColorB: Boolean;
 			const InterruptProcedure: TInterruptProcedure);
 
-		procedure FTextOut(X, Y: Integer;
+		procedure FTextOut(X, Y: SG;
 			RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; Text: ShortString);
 
 		procedure GBlur(Radius: Double; const Horz, Vert: Boolean;
 			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
-		procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
+		procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: SG; MinZoom, MaxZoom: SG);
 
-		procedure DrawHand(CX, CY: Integer; Angle: TAngle; Len, Size: SG;
+		procedure DrawHand(CX, CY: SG; Angle: TAngle; Len, Size: SG;
 			Color: TColor; Effect: TEffect);
-		procedure DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
-			Orient: Integer; ScrollEf: TEffect);
+		procedure DrawArrow(X1, Y1, X2, Y2: SG; Down, Hot: Boolean;
+			Orient: SG; ScrollEf: TEffect);
 
 {		procedure FireM(XS1, YS1, XS2, YS2: TCoor; Tick: Byte);
 		procedure FireS(XS1, YS1, XS2, YS2: TCoor);
@@ -312,7 +316,7 @@ procedure GetPix(PD: Pointer; const ByteXD: LongWord;
 procedure Pix(PD: Pointer; const ByteXD: LongWord;
 	const X, Y: TCoor; C: TRColor; Effect: TEffect); // Must be fast
 
-function GetColors(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
+function GetColors(Source: U1; const Brig, Cont, Gamma, ContBase: SG): U1;
 
 procedure RotateBmp(
 	BmpD: TDBitmap; const XD12, YD12: SG;
@@ -472,7 +476,7 @@ begin
 //	Rand(clWhite);
 end;
 
-procedure TDBitmap.SetSize(Width, Height: Integer);
+procedure TDBitmap.SetSize(Width, Height: SG);
 begin
 	if Width < 0 then Width := 0
 	else if Width > MaxBitmapWidth then Width := MaxBitmapWidth;
@@ -721,8 +725,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 		FSize: Int64;
 
 		BitmapHead: PBitmapHead;
-		x, y: Integer;
-		ColorIndex: Integer;
+		x, y: SG;
+		ColorIndex: SG;
 		P1: PByte;
 		PS: {$ifdef BPP4}PRGBA{$else}PRGB{$endif};
 		PD: PPixel;
@@ -760,8 +764,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
-					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * Integer(WidthToByteX4(BitmapHead.Width)));
+					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * SG(WidthToByteX4(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						if (x and 1) = 0 then
@@ -791,16 +795,16 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
-					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * Integer(WidthToByteX8(BitmapHead.Width)));
+					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * SG(WidthToByteX8(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						PD.R := BitmapHead.Colors[P1^].R;
-						Inc(Integer(PD));
+						Inc(SG(PD));
 						PD.G := BitmapHead.Colors[P1^].G;
-						Inc(Integer(PD));
+						Inc(SG(PD));
 						PD.B := BitmapHead.Colors[P1^].B;
-						Inc(Integer(PD));
+						Inc(SG(PD));
 						{$ifdef BPP4}
 						PD.A := 0;
 						{$endif}
@@ -816,13 +820,13 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
-					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * Integer(WidthToByteX24(BitmapHead.Width)));
+					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX24(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						PD^ := PS^;
 						PD.A := 0;
-						Inc(PS);
+						Inc(SG(PS), 3);
 						Inc(PD);
 					end;
 				end;
@@ -843,13 +847,13 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
-					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
-					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * Integer(WidthToByteX32(BitmapHead.Width)));
+					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX32(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						PD.RG := PS.RG;
 						PD.B := PS.B;
-						Inc(PS);
+						Inc(SG(PS), 4);
 						Inc(PD);
 					end;
 				end;
@@ -1093,7 +1097,7 @@ begin
 		SwapRB;
 end;
 (*-------------------------------------------------------------------------*)
-function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: Integer): Boolean;
+function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: SG): Boolean;
 
 {	procedure WriteIcon;
 	var
@@ -1171,19 +1175,22 @@ begin
 //		B := TBitmap.Create;
 //		B.LoadFromFile('C:\My Documents\www\~sachy.wz.cz\Icons\~Back.bmp');
 {	 CreateOptimizedPaletteFromSingleBitmap(Self,
-			Colors, ColorBits: integer; Windows: boolean):}
+			Colors, ColorBits: SG; Windows: boolean):}
 //		B.Assign(Self);
 //		B.PixelFormat := pf8bit;
 		MyGif.ColorReduction := rmQuantize; // rmPalette
 //		MyGif.DitherMode := dmNearest; change backgroud color!!!
 		MyGif.DitherMode := dmFloydSteinberg;
 //		MyGif.Compression := gcLZW;
-		{		MyGif.Transparent := Transparent;
-		MyGif.BackgroundColor := TransparentColor;}
-//		MyGif.DitherMode :=
+
+
+
+		//		MyGif.DitherMode :=
 		MyBmp := TBitmap.Create;
 		GetBitmap(MyBmp);
 		MyGif.Assign(MyBmp);
+{		MyGif.Transparent := MyBmp.Transparent;
+		MyGif.BackgroundColor := MyBmp.TransparentColor;}
 //		B.Free;
 //		MyGif.GlobalColorMap
 //		Self.PixelFormat := pf24bit;
@@ -1324,6 +1331,8 @@ begin
 	BmpD.Height := Height;
 	BitBlt(BmpD.Canvas.Handle, 0, 0, Width, Height,
 		Canvas.Handle, 0, 0, SRCCOPY);
+	BmpD.Transparent := Transparent;
+	BmpD.TransparentColor := TransparentColor;
 end;
 (*
 function GetTransparentColor(const Bmp: TBitmap): TColor;
@@ -1331,7 +1340,7 @@ const
 	MaxPix = 5;
 var
 	PixColor: array[0..MaxPix] of TColor;
-	i, j, k: Integer;
+	i, j, k: SG;
 begin
 	Result := clNone;
 	if (Bmp.Width <= 1) or (Bmp.Height <= 1) then Exit;
@@ -1515,12 +1524,12 @@ begin
 	GraphMaxY := FHeight - 1;
 end;
 (*-------------------------------------------------------------------------*)
-function TDBitmap.BmpColorIn(C: TColor): Integer;
+function TDBitmap.BmpColorIn(C: TColor): SG;
 var
 	PD: PPixel;
 	UseXD: LongWord;
 	ByteXD: LongWord;
-	EndPD: Integer;
+	EndPD: SG;
 	CR: TRColor;
 begin
 	Result := 0;
@@ -1530,7 +1539,7 @@ begin
 	UseXD := BPP * FWidth;
 	ByteXD := ByteX;
 
-	EndPD := Integer(PD) - Integer(FByteX * FHeight);
+	EndPD := SG(PD) - SG(FByteX * FHeight);
 
 	asm
 	{$ifdef SaveReg}
@@ -1572,7 +1581,7 @@ var
 	ByteXS, ByteXD: LongWord;
 	UseXD: LongWord;
 
-	HX: Integer;
+	HX: SG;
 	EndPD: LongWord;
 begin
 	if BmpD.PixelFormat <> pf15bit then Exit;
@@ -1584,7 +1593,7 @@ begin
 	UseXD := HX + HX;
 	ByteXS := WidthToByteX(BmpS.Width);
 
-	EndPD := Integer(PD) - Integer(ByteXD * LongWord(BmpD.Height));
+	EndPD := SG(PD) - SG(ByteXD * LongWord(BmpD.Height));
 
 	asm
 	{$ifdef SaveReg}
@@ -2676,8 +2685,8 @@ begin
 		Exit;
 	end;
 
-	DX := Abs(Integer(X2) - Integer(X1));
-	DY := Abs(Integer(Y2) - Integer(Y1));
+	DX := Abs(SG(X2) - SG(X1));
+	DY := Abs(SG(Y2) - SG(Y1));
 
 	if DX > DY then
 	begin
@@ -2742,7 +2751,7 @@ begin
 		end;
 	end;
 {
-	if Abs(Integer(X2) - Integer(X1)) > Abs(Integer(Y2) - Integer(Y1)) then
+	if Abs(SG(X2) - SG(X1)) > Abs(SG(Y2) - SG(Y1)) then
 	begin
 		if X1 > X2 then
 		begin
@@ -2866,8 +2875,8 @@ var
 	PD: PPixel;
 	UseXS, ByteXD: LongWord;
 
-	HX: Integer;
-	EndPD: Integer;
+	HX: SG;
+	EndPD: SG;
 
 	WordR, WordG, WordB: Word;
 	BackColorR, CR: TRColor;
@@ -2911,9 +2920,9 @@ begin
 	HX := XD2 - XD1 + 1; {$ifdef BPP4}UseXS := HX shl 2{$else}UseXS := HX + HX + HX{$endif};
 
 	HX := {$ifdef BPP4}XD1 shl 2{$else}XD1 + XD1 + XD1{$endif} - TCoor(ByteXD) * YD1;
-	Inc(Integer(PD), HX);
+	Inc(SG(PD), HX);
 
-	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YD2 - YD1 + 1));
+	EndPD := SG(PD) - SG(ByteXD * LongWord(YD2 - YD1 + 1));
 
 	if Transparent = False then
 	begin
@@ -5206,8 +5215,8 @@ var
 	ByteXS, ByteXD: LongWord;
 	UseXSD: LongWord;
 
-	HX: Integer;
-	EndPD: Integer;
+	HX: SG;
+	EndPD: SG;
 	CR: TRColor;
 	C: TColor;
 begin
@@ -5278,7 +5287,7 @@ begin
 		Dec(XS2, HX);
 	end;
 
-	if YD1 >= TCoor(GraphMaxY) then Exit;
+	if YD1 > TCoor(GraphMaxY) then Exit;
 	if YD1 < GraphMinY then
 	begin
 		Inc(YS1, GraphMinY - YD1);
@@ -5299,11 +5308,11 @@ begin
 	HX := XS2 - XS1 + 1; UseXSD := {$ifdef BPP4}HX shl 2{$else}HX + HX + HX{$endif};
 
 	HX := {$ifdef BPP4}XD1 shl 2{$else}XD1 + XD1 + XD1{$endif} - TCoor(ByteXD) * YD1;
-	Inc(Integer(PD), HX);
+	Inc(SG(PD), HX);
 	HX := {$ifdef BPP4}XS1 shl 2{$else}XS1 + XS1 + XS1{$endif} - TCoor(ByteXS) * YS1;
-	Inc(Integer(PS), HX);
+	Inc(SG(PS), HX);
 
-	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1));
+	EndPD := SG(PD) - SG(ByteXD * LongWord(YS2 + 1 - YS1));
 
 	if BmpS.Transparent = False then C := clNone else C := BmpS.TransparentColor;
 
@@ -7383,7 +7392,7 @@ begin
 		C := C2;
 		for cx := 0 to FWidth - 1 do
 		begin
-			if CColorCount[{$ifdef BPP4}C.L{$else}SG(C^.RG) + SG(C^.B) shl 16{$endif}] = 0 then
+			if CColorCount[{$ifdef BPP4}C.L and $00ffffff{$else}SG(C^.RG) + SG(C^.B) shl 16{$endif}] = 0 then
 			begin
 				Inc(CACount);
 				if CACount > Limit then
@@ -7391,7 +7400,7 @@ begin
 					Exit;
 				end;
 			end;
-			Inc(CColorCount[{$ifdef BPP4}C.L{$else}SG(C.RG) + SG(C.B) shl 16{$endif}]);
+			Inc(CColorCount[{$ifdef BPP4}C.L and $00ffffff{$else}SG(C.RG) + SG(C.B) shl 16{$endif}]);
 			Inc(C);
 		end;
 		Dec(SG(C2), ByteX);
@@ -7490,7 +7499,7 @@ begin
 end;
 
 procedure TDBitmap.ChangeColor(
-	X1, Y1, X2, Y2: Integer;
+	X1, Y1, X2, Y2: SG;
 	const C1, C2: TColor);
 var
 	PD: Pointer;
@@ -7528,8 +7537,9 @@ begin
 	CC1 := ColorToRGB(C1);
 	CC2 := ColorToRGB(C2);
 	CC1.A := CC1.G;
+	Exchange(CC1.G, CC1.B);
 	CC2.A := CC2.G;
-	PD := Pointer(Integer(Data) - Y1 * Integer(ByteX) + X1);
+	PD := Pointer(SG(Data) - Y1 * SG(ByteX) + X1);
 	ByteXD := ByteX;
 	BmpDByteX := X2 - X1 + 1;
 	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
@@ -7545,7 +7555,7 @@ begin
 			mov ax, word ptr CC1.G
 			cmp [edi], ax
 			jne @EndIf
-			mov bl, byte ptr CC1.B
+			mov bl, byte ptr CC1.R
 			cmp [edi + 2], bl
 			jne @EndIf
 				mov ax, word ptr CC2
@@ -7574,7 +7584,7 @@ begin
 end;
 
 procedure TDBitmap.ChangeColor2(
-	const X1, Y1, X2, Y2: Integer;
+	const X1, Y1, X2, Y2: SG;
 	const CS1, CS2, CD1, CD2: TColor);
 var
 	PD: Pointer;
@@ -7587,7 +7597,7 @@ begin
 	S2 := ColorToRGB(CS2);
 	D1 := ColorToRGB(CD1);
 	D2 := ColorToRGB(CD2);
-	PD := Pointer(Integer(Data) - Y1 * Integer(ByteX) + X1);
+	PD := Pointer(SG(Data) - Y1 * SG(ByteX) + X1);
 	ByteXD := ByteX;
 	BmpDByteX := X2 - X1 + 1;
 	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
@@ -7701,8 +7711,8 @@ procedure TDBitmap.Rand(RandomColor: TColor);
 var
 	PD: PPixel;
 	PData: PPixel;
-	Y: Integer;
-	HX: Integer;
+	Y: SG;
+	HX: SG;
 	i, j, k: SG;
 	Tran: BG;
 	TranC, RC: TRColor;
@@ -7716,7 +7726,7 @@ begin
 	for Y := 0 to FHeight - 1 do
 	begin
 		PD := PData;
-		HX := Integer(PD) + BPP * Integer(FWidth);
+		HX := SG(PD) + BPP * SG(FWidth);
 		repeat
 			if (Tran = False) or
 			(PD.RG <> TranC.RG) or
@@ -7736,15 +7746,15 @@ begin
 			end
 			else
 				Inc(PD);
-		until Integer(PD) >= HX;
-		Dec(Integer(PData), ByteX)
+		until SG(PD) >= HX;
+		Dec(SG(PData), ByteX)
 	end;
 end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Texture(
 	BmpS: TDBitmap; const Effect: TEffect);
 var
-	X, Y: Integer;
+	X, Y: SG;
 	MX, MY: TCoor;
 begin
 	if (BmpS.Width = 0) or (BmpS.Height = 0) then Exit;
@@ -7880,7 +7890,7 @@ begin
 					DivModU4(rxU, NewX, Res, Remainder);
 					ttxU := NewX - Remainder;
 					if rxU + ttxU > rx2U then ttxU := rx2U - rxU;
-					PS := Pointer(Integer(BmpS.Data) + Integer({$ifdef BPP4}Res shl 2{$else}Res + Res + Res{$endif}) - Integer(ByteSX * HY));
+					PS := Pointer(SG(BmpS.Data) + SG({$ifdef BPP4}Res shl 2{$else}Res + Res + Res{$endif}) - SG(ByteSX * HY));
 					HelpU := ttxU * ttyU;
 					if TranColor <> clNone then
 					begin
@@ -7899,7 +7909,7 @@ begin
 				Inc(ryU, ttyU);
 			until ryU = ry2U;
 
-			PD := Pointer(Integer(BmpDe.Data) + Integer({$ifdef BPP4}X shl 2{$else}X + X + X{$endif}) - Integer(ByteDX * Y));
+			PD := Pointer(SG(BmpDe.Data) + SG({$ifdef BPP4}X shl 2{$else}X + X + X{$endif}) - SG(ByteDX * Y));
 			if (TranColor = clNone) or (TranCount <{<} StpXYU div 2) then
 			begin
 				PD.R := RoundDivS8(Suma24[0], stpXYU);
@@ -7958,9 +7968,45 @@ begin
 	RotateDef(Self, BmpS, 0, AngleCount div 4, Effect);
 	BmpS.Free;
 end;
+
+procedure TDBitmap.SwapHorz;
+var
+	PData: PPixel;
+	Y: SG;
+//	HX: SG;
+begin
+	PData := FData;
+	for Y := 0 to FHeight - 1 do
+	begin
+//		HX := SG(PD) + BPP * SG(FWidth);
+		Reverse4(PData^, FWidth);
+		Dec(SG(PData), ByteX)
+	end;
+end;
+
+procedure TDBitmap.SwapVert;
+var
+	P0, P1, B: PPixel;
+	Siz: UG;
+	Y: SG;
+begin
+	Siz := BPP * SG(FWidth);
+	GetMem(B, Siz);
+	P0 := FData;
+	P1 := PPixel(SG(FData) - (FHeight - 1) * ByteX);
+	for Y := 0 to FHeight div 2 - 1 do
+	begin
+		Move(P0^, B^, Siz);
+		Move(P1^, P0^, Siz);
+		Move(B^, P1^, Siz);
+		Dec(SG(P0), ByteX);
+		Inc(SG(P1), ByteX);
+	end;
+	FreeMem(B);
+end;
 (*-------------------------------------------------------------------------*)
-function GetColors(Source: U1; const Brig, Cont, Gamma, ContBase: Integer): U1;
-var W: Integer;
+function GetColors(Source: U1; const Brig, Cont, Gamma, ContBase: SG): U1;
+var W: SG;
 begin
 	W := Source + Brig;
 	W := Cont * (W - ContBase) div 256 + ContBase;
@@ -7983,7 +8029,7 @@ begin
 end;
 
 procedure TDBitmap.Colors(BmpS: TDBitmap;
-	const Brig, Cont, Gamma, ContBase, BW: Integer;
+	const Brig, Cont, Gamma, ContBase, BW: SG;
 	const ColorR, ColorG, ColorB: Boolean;
 	const InterruptProcedure: TInterruptProcedure);
 const
@@ -8001,7 +8047,7 @@ var
 
 	X, Y: TCoor;
 	SX, SY: TCoor;
-	i: Integer;
+	i: SG;
 	Clrs: array[Byte] of Byte;
 	TransparentColor: TRColor;
 begin
@@ -8027,9 +8073,9 @@ begin
 				if Done = High(Done) then Exit;
 			end;
 		end;
-		i := Y * Integer(ByteX);
-		PSource := Pointer(Integer(BmpS.Data) - Integer(i));
-		PDest := Pointer(Integer(Data) - Integer(i));
+		i := Y * SG(ByteX);
+		PSource := Pointer(SG(BmpS.Data) - SG(i));
+		PDest := Pointer(SG(Data) - SG(i));
 		for X := 0 to SX - 1 do
 		begin
 			if (TransparentColor.RG <> PSource.RG) or
@@ -8088,8 +8134,8 @@ begin
 			begin
 				PDest := PSource;
 			end;
-			Inc(Integer(PSource), BPP);
-			Inc(Integer(PDest), BPP);
+			Inc(SG(PSource), BPP);
+			Inc(SG(PDest), BPP);
 		end;
 	end;
 end;
@@ -8104,7 +8150,7 @@ var
 	aLin: array[0..511] of Byte;
 
 procedure InitRGB;
-var i: Integer;
+var i: SG;
 begin
 	Spe := True;
 	for i := 0 to SpeC - 1 do
@@ -8129,7 +8175,7 @@ begin
 end;
 
 procedure TDBitmap.GenerateRGBEx(
-	XD1, YD1, XD2, YD2: Integer;
+	XD1, YD1, XD2, YD2: SG;
 	const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
 	const Effect: TEffect; const Clock: LongWord;
 	const InterruptProcedure: TInterruptProcedure);
@@ -8219,7 +8265,7 @@ begin
 		A := 0;
 	end;
 
-	PDY := Pointer(Integer(Data) - Integer(ByteX) * YD1);
+	PDY := Pointer(SG(Data) - SG(ByteX) * YD1);
 	LDone := High(Done);
 	for CY := YD1 to YD2 do
 	begin
@@ -8236,7 +8282,7 @@ begin
 				if Done = High(Done) then Exit;
 			end;
 		end;
-		PDXY := Pointer(Integer(PDY) + BPP * XD1);
+		PDXY := Pointer(SG(PDY) + BPP * XD1);
 		for CX := XD1 to XD2 do
 		begin
 			X := CX - XD1;
@@ -8454,13 +8500,13 @@ begin
 				begin
 					Exchange(RColor.R, RColor.B);
 					Pix(Data, ByteX, CX, CY, RColor, Effect);
-					Inc(Integer(PDXY), BPP);
+					Inc(SG(PDXY), BPP);
 				end;
 			end
 			else
-				Inc(Integer(PDXY), BPP);
+				Inc(SG(PDXY), BPP);
 		end;
-		Dec(Integer(PDY), ByteX);
+		Dec(SG(PDY), ByteX);
 	end;
 end;
 
@@ -8477,9 +8523,9 @@ procedure TDBitmap.GenRGB(
 	HidedColor: TColor;
 	const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);
 var
-	i: Integer;
-	c: Integer;
-	x, y: Integer;
+	i: SG;
+	c: SG;
+	x, y: SG;
 	Co: TRColor;
 begin
 	c := ((ColorSpeed * Clock) mod (MaxSpectrum + 1));
@@ -9597,7 +9643,7 @@ var
 	FontReaded: array[TRasterFontStyle] of Boolean;
 	Letter: TDBitmap;
 
-procedure TDBitmap.FTextOut(X, Y: Integer;
+procedure TDBitmap.FTextOut(X, Y: SG;
 	RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; Text: ShortString);
 var
 	c, i, FX: SG;
@@ -9703,21 +9749,21 @@ type
 	TKernelSize = 1..MaxKernelSize;
 
 
-	procedure GBlurA(Radius: Integer; const Horz, Vert: Boolean;
+	procedure GBlurA(Radius: SG; const Horz, Vert: Boolean;
 		InterruptProcedure: TInterruptProcedure);
 	type
 		TKernel = record
 			Size: TKernelSize;
-			Weights: array[ - MaxKernelSize..MaxKernelSize] of Integer;
+			Weights: array[ - MaxKernelSize..MaxKernelSize] of SG;
 		end;
 	//the idea is that when Using a TKernel you ignore the Weights
 	//except for Weights in the range -Size..Size.
 
 		procedure DBlurRow(var theRow: array of TRGBTriple; K: TKernel; P: PRow);
 		var
-			j, n: Integer;
-			tr, tg, tb: Integer; //tempRed, etc
-			i, w: Integer;
+			j, n: SG;
+			tr, tg, tb: SG; //tempRed, etc
+			i, w: SG;
 		begin
 			for j := 0 to High(theRow) do
 			begin
@@ -9755,14 +9801,14 @@ type
 
 
 	var
-		Row, Col: Integer;
+		Row, Col: SG;
 		theRows: PPRows;
 		K: TKernel;
 		ACol: PRow;
 		P: PRow;
 
-		j: Integer;
-		temp, delta: Integer;
+		j: SG;
+		temp, delta: SG;
 		KernelSize: TKernelSize;
 
 		Done, LDone: Word;
@@ -9881,7 +9927,7 @@ type
 		//that are so small they can't possibly matter. (Small Size
 		//is good because the execution time is going to be
 		//propertional to K.Size.)
-		var j: Integer; temp, delta: Double; KernelSize: TKernelSize;
+		var j: SG; temp, delta: Double; KernelSize: TKernelSize;
 		begin
 			for j := Low(K.Weights) to High(K.Weights) do
 			begin
@@ -9923,7 +9969,7 @@ type
 				K.Weights[j] := K.Weights[j] / temp;
 		end;
 
-		function TrimInt(Lower, Upper, theInteger: Integer): Integer;
+		function TrimInt(Lower, Upper, theInteger: SG): SG;
 		begin
 			if (theInteger <= Upper) and (theInteger >= Lower) then
 				Result := theInteger
@@ -9933,7 +9979,7 @@ type
 				Result := Lower;
 		end;
 
-		function TrimReal(Lower, Upper: Integer; x: Double): Integer;
+		function TrimReal(Lower, Upper: SG; x: Double): SG;
 		begin
 			if (x < upper) and (x >= lower) then
 				Result := trunc(x)
@@ -9945,7 +9991,7 @@ type
 
 		procedure BlurRow(var theRow: array of TRGBTriple; K: TKernel; P: PRow);
 		var
-			j, n: Integer;
+			j, n: SG;
 			tr, tg, tb: Double; //tempRed, etc
 			w: Double;
 		begin
@@ -9978,7 +10024,7 @@ type
 		end;
 
 		var
-			Row, Col: Integer;
+			Row, Col: SG;
 			theRows: PPRows;
 			K: TKernel;
 			ACol: PRow;
@@ -10055,7 +10101,7 @@ begin
 		GBlurA(Round(Radius * 65536), Horz, Vert, InterruptProcedure);
 end;
 
-procedure TDBitmap.Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
+procedure TDBitmap.Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: SG; MinZoom, MaxZoom: SG);
 var
 	x, y, SX, SY, R, xx, yy, DX, DY, D: SG;
 	C: TRColor;
@@ -10130,7 +10176,7 @@ begin
 	end;
 end;
 
-procedure TDBitmap.DrawHand(CX, CY: Integer; Angle: TAngle; Len, Size: SG;
+procedure TDBitmap.DrawHand(CX, CY: SG; Angle: TAngle; Len, Size: SG;
 	Color: TColor; Effect: TEffect);
 var
 	i: SG;
@@ -10164,10 +10210,10 @@ begin
 	end;
 end;
 
-procedure TDBitmap.DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
-	Orient: Integer; ScrollEf: TEffect);
+procedure TDBitmap.DrawArrow(X1, Y1, X2, Y2: SG; Down, Hot: Boolean;
+	Orient: SG; ScrollEf: TEffect);
 var
-//	C1, C2: Integer;
+//	C1, C2: SG;
 	C: TRColor;
 	Co: array[0..3] of TColor;
 	i: SG;
@@ -10424,7 +10470,7 @@ end;
 procedure TDBitmap.SaveToFileDialog;
 var
 	FileName: TFileName;
-	Quality: Integer;
+	Quality: SG;
 	SavePictureDialog: TSavePictureDialog;
 begin
 	SavePictureDialog := TSavePictureDialog.Create(nil);
@@ -10459,7 +10505,7 @@ begin
 		FBmpText.SetSize(m, m);
 		FBmpText.Canvas.Font.Name := Canvas.Font.Name;
 		FBmpText.Canvas.Font.Size := Canvas.Font.Size;
-		// D??? ToDo
+		// ToDo
 		FBmpText.Bar(clPurple, ef16);
 		FBmpText.Transparent := True;
 		FBmpText.TransparentColor := clPurple;
@@ -10746,6 +10792,49 @@ begin
 	Result.Right := GraphMaxX;
 	Result.Top := GraphMinY;
 	Result.Bottom := GraphMaxY;
+end;
+
+procedure TDBitmap.Texturize;
+var
+	B: TDBitmap;
+begin
+	B := TDBitmap.Create;
+	B.CopyBitmap(Self);
+	SetSize(Width * 2, Height * 2);
+
+	Bmp(0, 0, B, ef16);
+	B.SwapHorz;
+	Bmp(B.Width, 0, B, ef16);
+	B.SwapHorz;
+	B.SwapVert;
+	Bmp(0, B.Height, B, ef16);
+	B.SwapHorz;
+	Bmp(B.Width, B.Height, B, ef16);
+	B.Free;
+end;
+
+procedure TDBitmap.Texturize(Size: SG);
+const
+	Step = 1;
+var
+	B: TDBitmap;
+	i: SG;
+	E: TEffect;
+begin
+	B := TDBitmap.Create;
+	B.CopyBitmap(Self);
+
+	for i := 0 to 15 * Step - 1 do
+	begin
+		E := TEffect(SG(ef15) - i div Step);
+		Bmp(0, Height - i - 1, B, 0, i, Width - 1, i, E);
+	end;
+	for i := 0 to 15 * Step - 1 do
+	begin
+		E := TEffect(SG(ef15) - i div Step);
+		Bmp(Width - i - 1, 0, B, i, 0, i, Height - 1, E);
+	end;
+	B.Free;
 end;
 
 initialization

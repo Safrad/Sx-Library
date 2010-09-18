@@ -23,7 +23,8 @@ type
 		Width, MaxWidth: S4; // 8
 		Click: B1; // 1
 		Alignment: TAlignment; // 1
-		Reserved: array[0..1] of U1; // 2
+		Visible: BG; // 1
+		Reserved: array[0..0] of U1; // 1
 	end;
 
 	TOnGetData = procedure(Sender: TObject; var Data: string; ColIndex, RowIndex: Integer; Rect: TRect) of object;
@@ -151,6 +152,7 @@ begin
 	X := 0;
 	for i := 0 to FColumnCount - 1 do
 	begin
+		if Columns[ColumnOrder[i]].Visible = False then Continue;
 		Inc(X, Columns[ColumnOrder[i]].Width);
 		if X >= MX then
 		begin
@@ -167,6 +169,7 @@ begin
 		w := 0;
 		for i := 0 to FColumnCount - 1 do
 		begin
+			if Columns[ColumnOrder[i]].Visible = False then Continue;
 			Inc(w, Columns[ColumnOrder[i]].Width);
 			if Abs(MX - w) <= 4 then
 			begin
@@ -378,9 +381,9 @@ begin
 	begin
 		if Where <> vaNone then
 		begin
-//			MouseMove([], , ); D???
-{			Where := vaNone;
-			LFill(nil);}
+			MouseMove([], -1, -1);
+			Where := vaNone;
+			LFill(nil);
 		end;
 	end;
 end;
@@ -532,10 +535,12 @@ begin
 	Wid := 0;
 	for i := 0 to FColumnCount - 1 do
 	begin
-		Inc(Wid, Columns[i{ColumnOrder[i]}].Width);
+		if Columns[i].Visible = False then Continue;
+		Inc(Wid, Columns[i].Width);
 	end;
 	for i := 0 to FColumnCount - 1 do
 	begin
+		if Columns[ColumnOrder[i]].Visible = False then Continue;
 		Inc(X, Columns[ColumnOrder[i]].Width);
 		if X > OfsX then
 		begin
@@ -549,7 +554,7 @@ begin
 		while X < Bitmap.Width do
 		begin
 			if IX > FColumnCount then Break;
-			if (IX >= 0) and (IX < FColumnCount) then
+			if (IX >= 0) and (IX < FColumnCount) and Columns[IX].Visible then
 			begin
 				if IX < FColumnCount then
 					Columns[IX].MaxWidth := MinColumnWidth;
@@ -729,7 +734,10 @@ begin
 	SetLength(ColumnOrder, ColumnCount);}
 	UserWidth := 0;
 	for i := 0 to FColumnCount - 1 do
+	begin
+		if Columns[i].Visible = False then Continue;
 		Inc(UserWidth, Columns[i].Width);
+	end;
 end;
 
 procedure TDView.SelectAll;
@@ -763,6 +771,7 @@ begin
 			Columns[i].Width := 64;
 			Columns[i].Click := False;
 			Columns[i].Alignment := taLeftJustify;
+			Columns[i].Visible := True;
 			ColumnOrder[i] := i;
 		end;
 		FColumnCount := Value;
@@ -813,7 +822,7 @@ begin
 //					if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[IX]);
 		if FSortBySwap then
 			if RowCount > 1 then
-				Reverse(RowOrder[0], RowCount);
+				Reverse4(RowOrder[0], RowCount);
 		Fill;
 	end;
 end;

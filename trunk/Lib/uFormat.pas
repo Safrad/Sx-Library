@@ -773,12 +773,12 @@ var
 begin
 	if Abs(T) >= 1000 * Int64(High(LongWord)) then
 	begin
-		GH := 0;
-		GM := 0;
-		GS := 0;
-		GD := 0;
+		GH := 999;
+		GM := 59;
+		GS := 59;
+		GD := 99;
 		{$ifopt d+}
-		CreateException;
+//		CreateException;
 //		IE(5453);
 		{$endif}
 	end

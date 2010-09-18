@@ -27,6 +27,8 @@ type
 	S8 = Int64;
 	U8 = Int64; // Car64 for 64bit Delphi?
 
+	PSG = ^SG;
+	PUG = ^UG;
 	PS1 = ^S1;
 	PU1 = ^U1;
 	PS2 = ^S2;

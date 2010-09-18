@@ -24,12 +24,13 @@ type
 
 	TDBF = class
 	private
-		FileName: TFileName;
-		Columns: array of TColumn;
-		ColumnCount: SG;
+		FFileName: TFileName;
+		FColumns: array of TColumn;
+		FColumnCount: SG;
+		FFileDate: TDateTime;
+		FItemCount: SG;
 	public
 		Rows: array of BG; // True if row is enabled
-		DbItemCount: SG;
 
 		constructor Create;
 		destructor Destroy; override;
@@ -39,6 +40,9 @@ type
 
 		function LoadFromFile(FName: TFileName): Boolean;
 		function SaveToFile(FName: TFileName): Boolean;
+
+		property Count: SG read FItemCount;
+		property FileDate: TDateTime read FFileDate;
 	end;
 
 implementation
@@ -50,20 +54,21 @@ uses
 procedure TDBF.Close;
 var i, j: SG;
 begin
-	for i := 0 to ColumnCount - 1 do
+	for i := 0 to FColumnCount - 1 do
 	begin
-		Columns[i].Name := '';
-		Columns[i].Typ := varNull;
-		for j := 0 to DbItemCount - 1 do
+		FColumns[i].Name := '';
+		FColumns[i].Typ := varNull;
+		for j := 0 to FItemCount - 1 do
 		begin
-			Finalize(Columns[i].Items[j]);
+			Finalize(FColumns[i].Items[j]);
 		end;
 	end;
-	SetLength(Columns, 0);
-	ColumnCount := 0;
+	SetLength(FColumns, 0);
+	FColumnCount := 0;
 	SetLength(Rows, 0);
-	DbItemCount := 0;
-	FileName := '';
+	FItemCount := 0;
+	FFileName := '';
+	FFileDate := 0;
 end;
 
 function TDBF.LoadFromFile(FName: TFileName): Boolean;
@@ -105,6 +110,7 @@ var
 	FPT: string;
 	FPTSize: UG;
 	Index: UG;
+	Year: SG;
 begin
 	Result := False;
 	Index := 0;
@@ -113,14 +119,22 @@ begin
 	F := TFile.Create;
 	LRetry:
 	Close;
-	FileName := FName;
+	FFileName := FName;
 	SRow := nil;
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	if F.Open(FFileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
 		// Header
 		F.BlockRead(Head, SizeOf(Head));
+		case Head.YearOffset of
+		$03:
+			Year := 1900
+		else
+			Year := 2000;
+		end;
+		FFileDate := EncodeDate(Head.Year + Year, Head.Month, Head.Day);
+
 		// Columns
-		ColumnCount := 0;
+		FColumnCount := 0;
 		RowSize := 0;
 		while True do
 		begin
@@ -142,21 +156,21 @@ begin
 			end;
 			if F.Eof then goto LExit;
 
-			NewSize := ColumnCount + 1;
-			if AllocByExp(Length(Columns), NewSize) then
-				SetLength(Columns, NewSize);
-			Columns[ColumnCount].Name := Column.Name;
+			NewSize := FColumnCount + 1;
+			if AllocByExp(Length(FColumns), NewSize) then
+				SetLength(FColumns, NewSize);
+			FColumns[FColumnCount].Name := Column.Name;
 			case Column.Typ of
-			'C'{hars}: Columns[ColumnCount].Typ := varString;
-			'N'{umber}: Columns[ColumnCount].Typ := varInteger; // varDouble
-			'L'{ogical}: Columns[ColumnCount].Typ := varBoolean;
-			'W'{ide string}: Columns[ColumnCount].Typ := varOleStr;
+			'C'{hars}: FColumns[FColumnCount].Typ := varString;
+			'N'{umber}: FColumns[FColumnCount].Typ := varInteger; // varDouble
+			'L'{ogical}: FColumns[FColumnCount].Typ := varBoolean;
+			'W'{ide string}: FColumns[FColumnCount].Typ := varOleStr;
 			'M'{emo}:
 			begin
-				Columns[ColumnCount].Typ := varUnknown;
+				FColumns[FColumnCount].Typ := varUnknown;
 				if FPTSize = 0 then
 				begin
-					FPT := ReadStringFromFile(DelFileExt(FileName) + '.fpt');
+					FPT := ReadStringFromFile(DelFileExt(FFileName) + '.fpt');
 					if Length(FPT) >= 8 then
 					begin
 						FPTSize := Ord(FPT[5]) shl 24 + Ord(FPT[6]) shl 16 + Ord(FPT[7]) shl 8 + Ord(FPT[8]);
@@ -166,12 +180,12 @@ begin
 				end;
 			end
 { 		'D': Columns[ColumnCount].Typ := varDate;}
-			else Columns[ColumnCount].Typ := varNull;
+			else FColumns[FColumnCount].Typ := varNull;
 			end;
-			DelEndSpace(Columns[ColumnCount].Name);
-			Columns[ColumnCount].Width := Column.Width;
+			DelEndSpace(FColumns[FColumnCount].Name);
+			FColumns[FColumnCount].Width := Column.Width;
 			Inc(RowSize, Column.Width);
-			Inc(ColumnCount);
+			Inc(FColumnCount);
 		end;
 
 		// Data
@@ -179,16 +193,16 @@ begin
 		if RowSize <> Head.RowSize then
 		begin
 			Head.RowSize := RowSize;
-			IOErrorMessage(FileName, 'Row Size Mishmash');
+			IOErrorMessage(FFileName, 'Row Size Mishmash');
 		end;
 		RowsSize := Head.ItemsCount * Head.RowSize;
 		if RowsSize > F.FileSize - F.FilePos then
 		begin
 			Head.ItemsCount := (F.FileSize - F.FilePos) div RowSize;
-			IOErrorMessage(FileName, 'File Truncated');
+			IOErrorMessage(FFileName, 'File Truncated');
 		end;
 		if RowsSize + 1 < F.FileSize - F.FilePos then
-			IOErrorMessage(FileName, 'File Too big');
+			IOErrorMessage(FFileName, 'File Too big');
 
 
 		GetMem(SRow, RowsSize);
@@ -196,11 +210,11 @@ begin
 		if not F.Close then goto LRetry;
 
 		SetLength(Rows, Head.ItemsCount);
-		for j := 0 to ColumnCount - 1 do
+		for j := 0 to FColumnCount - 1 do
 		begin
-			SetLength(Columns[j].Items, Head.ItemsCount);
+			SetLength(FColumns[j].Items, Head.ItemsCount);
 		end;
-		DbItemCount := 0;
+		FItemCount := 0;
 		CRow := SRow;
 		while SG(CRow) < SG(SRow) + RowsSize do
 		begin
@@ -219,19 +233,19 @@ begin
 			if AllocByExp(Length(Rows), NewSize) then
 				SetLength(Rows, NewSize);}
 
-			Rows[DbItemCount] := Char(CRow^) = ' '; // 2A = Disabled
+			Rows[FItemCount] := Char(CRow^) = ' '; // 2A = Disabled
 			CRow := Pointer(SG(CRow) + 1);
-			for j := 0 to ColumnCount - 1 do
+			for j := 0 to FColumnCount - 1 do
 			begin
 {				NewSize := DbItemCount + 1;
 				if AllocByExp(Length(Columns[j].Items), NewSize) then
 					SetLength(Columns[j].Items, NewSize);}
 
 				Row := CRow;
-				case Columns[j].Typ of
+				case FColumns[j].Typ of
 				varOleStr:
 				begin
-					for k := 0 to Columns[j].Width div 2 - 1 do
+					for k := 0 to FColumns[j].Width div 2 - 1 do
 					begin
 						if U2(Row^) = 0 then Break;
 						Inc(SG(Row), 2)
@@ -254,45 +268,46 @@ begin
 //						DataStr[k + 1] := Char(Row^);
 						Inc(SG(Row));
 					end;}
-					k := Columns[j].Width;
+					k := FColumns[j].Width;
 					DataStr[0] := Char(k);
 					if k >= 1 then
 						Move(CRow^, DataStr[1], k);
 				end;
 				end;
-				CRow := Pointer(SG(CRow) + Columns[j].Width);
+				CRow := Pointer(SG(CRow) + FColumns[j].Width);
 
-				case Columns[j].Typ of
+				case FColumns[j].Typ of
 				varString:
 				begin
-					Columns[j].Items[DbItemCount] := DataStr;
+					FColumns[j].Items[FItemCount] := DataStr;
 				end;
 {				varPointer:
-					Columns[j].Items[DbItemCount] := SG(s[1]) + SG(s[2]) shl 8 + SG(s[3]) shl 16 + SG(s[4]) shl 24;}
+					FColumns[j].Items[FItemCount] := SG(s[1]) + SG(s[2]) shl 8 + SG(s[3]) shl 16 + SG(s[4]) shl 24;}
 				varInteger:
 				begin
 					if Pos('.', DataStr) <> 0 then
 					begin
-						Columns[j].Typ := varDouble;
-						Columns[j].Items[DbItemCount] := StrToF8(DataStr);
+						FColumns[j].Typ := varDouble;
+						FColumns[j].Items[FItemCount] := StrToF8(DataStr);
 					end
 					else
-						Columns[j].Items[DbItemCount] := StrToSG(DataStr); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
+						FColumns[j].Items[FItemCount] := StrToSG(DataStr); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
 
 				end;
 				varDouble:
-					Columns[j].Items[DbItemCount] := StrToF8(DataStr);
-				varBoolean: Columns[j].Items[DbItemCount] := (DataStr <> 'F');
+					FColumns[j].Items[FItemCount] := StrToF8(DataStr);
+				varBoolean: FColumns[j].Items[FItemCount] := (DataStr <> 'F');
 				varOleStr:
 				begin
-					Columns[j].Items[DbItemCount] := DataWStr;
+					FColumns[j].Items[FItemCount] := DataWStr;
 				end;
 				varUnknown:
 				begin
 					if Index <> 0 then
 					begin
+						{$ifopt d+}
 						k := SwapU4(PU4(@FPT[FPTSize * Index + 1])^);
-						if k <> 1 then IE(343);
+						if k <> 1 then IE(343);{$endif}
 						k := SwapU4(PU4(@FPT[FPTSize * Index + 5])^);
 						SetLength(s, k);
 						FillChar(s[1], k, 0);
@@ -301,13 +316,13 @@ begin
 					end
 					else
 						s := '';
-					Columns[j].Items[DbItemCount] := s;
+					FColumns[j].Items[FItemCount] := s;
 					s := '';
 				end;
 //				varDate:
 				end;
 			end;
-			Inc(DbItemCount);
+			Inc(FItemCount);
 		end;
 		LExit:
 		FreeMem(SRow);
@@ -340,11 +355,11 @@ var
 begin
 	Result := nil;
 	NameU := UpperCase(Name);
-	for i := 0 to ColumnCount - 1 do
+	for i := 0 to FColumnCount - 1 do
 	begin
-		if NameU = Columns[i].Name then
+		if NameU = FColumns[i].Name then
 		begin
-			Result := @Columns[i];
+			Result := @FColumns[i];
 		end;
 	end;
 end;
