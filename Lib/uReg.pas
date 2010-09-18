@@ -4,6 +4,8 @@ unit uReg;
 
 interface
 
+uses Windows;
+
 const
 	WordPad = '"C:\Program Files\Accessories\WordPad.exe" "%1"';
 	NotePad = 'NotePad.exe "%1"';
@@ -18,10 +20,12 @@ function CustomFileType(
 	const OpenPrograms: array of ShortString
 	): Boolean;
 
+procedure CreateReg(var OutStr: string; RootKey: HKEY; Key: string);
+
 implementation
 
 uses
-	SysUtils, Registry, Windows, Dialogs,
+	SysUtils, Registry, Dialogs, Classes,
 	uAdd, uStrings, uFiles, uError;
 
 function WinNTDeleteKey(const Reg: TRegistry; const Key: string): Boolean;
@@ -400,5 +404,97 @@ begin
 	end;
 	end;
 end;
+
+function DoubleBackSlash(s: string): string;
+var i: SG;
+begin
+	Result := '';
+	for i := 1 to Length(s) do
+	begin
+		Result := Result + s[i];
+		if s[i] = '\' then Result := Result + '\';
+	end;
+end;
+
+function RootKeyToStr(RootKey: HKEY): string;
+begin
+	case RootKey of
+	HKEY_CLASSES_ROOT: Result := 'HKEY_CLASSES_ROOT';
+	HKEY_CURRENT_USER: Result := 'HKEY_CURRENT_USER';
+	HKEY_LOCAL_MACHINE: Result := 'HKEY_LOCAL_MACHINE';
+	HKEY_USERS: Result := 'HKEY_USERS';
+	HKEY_PERFORMANCE_DATA: Result := 'HKEY_PERFORMANCE_DATA';
+	HKEY_CURRENT_CONFIG: Result := 'HKEY_CURRENT_CONFIG';
+	HKEY_DYN_DATA: Result := 'HKEY_DYN_DATA';
+	else Result := '';
+	end;
+end;
+
+procedure CreateReg(var OutStr: string; RootKey: HKEY; Key: string);
+var
+	Reg: TRegistry;
+
+	procedure Sub(SubKey: string);
+	var
+		i, j, BufSize: SG;
+		Buf: string;
+		Str: TStrings;
+		int: Integer;
+	begin
+		if Reg.OpenKeyReadOnly(SubKey) then
+		begin
+			OutStr := OutStr + #13 + #10;
+			OutStr := OutStr + '[' + RootKeyToStr(RootKey) + '\' + SubKey + ']' + #13 + #10;
+			Str := TStringList.Create;
+			Reg.GetValueNames(Str);
+			for i := 0 to Str.Count - 1 do
+			begin
+				OutStr := OutStr + '"' + DoubleBackSlash(Str[i]) + '"=';
+				case Reg.GetDataType(Str[i]) of
+				rdString, rdExpandString:
+				begin
+					Buf := Replace(DoubleBackSlash(Reg.ReadString(Str[i])), #13 + #10, '\r\n');
+					OutStr := OutStr + '"' + Buf + '"';
+					Buf := '';
+				end;
+				rdInteger:
+				begin
+					int := Reg.ReadInteger(Str[i]);
+					OutStr := OutStr + 'dword:' + Format('%x', [int]); // 0000000f
+				end;
+				rdBinary:
+				begin
+					OutStr := OutStr + 'hex:';
+					BufSize := Reg.GetDataSize(Str[i]);
+					SetLength(Buf, BufSize);
+					Reg.ReadBinaryData(Str[i], Buf[1], BufSize);
+					for j := 1 to BufSize do
+					begin
+						OutStr := OutStr + Format('%x', [SG(Buf[j])]); // 0f
+						if j <> BufSize then OutStr := OutStr + ',';
+					end;
+					Buf := '';
+				end;
+				end;
+				OutStr := OutStr + #13 + #10;
+			end;
+			Reg.GetKeyNames(Str);
+			Reg.CloseKey;
+			for i := 0 to Str.Count - 1 do
+			begin
+				Sub(SubKey + '\' + Str[i]);
+			end;
+			Str.Free;
+		end;
+	end;
+
+begin
+	OutStr := 'REGEDIT4' + #13 + #10;
+	Reg := TRegistry.Create;
+	Reg.RootKey := RootKey;
+	Sub(Key);
+	Reg.Free;
+end;
+
 
 end.

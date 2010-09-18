@@ -4,12 +4,11 @@ unit uDImage;
 
 interface
 
-{$C PRELOAD}
 {$R *.RES}
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls,
-	uGraph24;
+	uDBitmap;
 
 type
 	TMouseAction = (mwNone, mwScroll,
@@ -17,11 +16,10 @@ type
 		mwScrollV, mwScrollVD, mwScrollVU, mwScrollVD2, mwScrollVU2);
 	TDImage = class(TWinControl)
 	private
-		{ Private declarations }
+		{ Private declarations }                  
 		FHotTrack: Boolean;
 
 		FDrawFPS: Boolean;
-		FWaitVBlank: Boolean;
 		FOnFill: TNotifyEvent;
 		FOnPaint: TNotifyEvent;
 		FOnMouseEnter: TNotifyEvent;
@@ -34,11 +32,10 @@ type
 		SliderHX2,
 		SliderVY1,
 		SliderVY2: Integer;
-		LTickCount: LongWord;
 		FCanvas: TCanvas;
 		LCursor: TCursor;
 
-		procedure CMDialogKey(var Message: TCMDialogKey); message CM_DIALOGKEY;
+		procedure WMChar(var Message: TWMChar); message WM_CHAR;
 
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
@@ -57,19 +54,20 @@ type
 		property Canvas: TCanvas read FCanvas;
 	public
 		{ Public declarations }
+		Cur: TCursor;
 		MouseL, MouseM, MouseR: Boolean;
 		MouseAction: TMouseAction;
 		MouseWhere: TMouseAction;
 		MouseOn: Boolean;
 
-		Bitmap: TBitmap;
-		Bitmap24: TBitmap24;
+		Bitmap: TDBitmap;
 		ScrollBarHWidth, ScrollBarHHeight,
 		ScrollBarVWidth, ScrollBarVHeight: Integer;
 		OfsX, OfsY: Integer;
 		MaxOfsX, MaxOfsY: Integer;
 		BitmapWidth, BitmapHeight: Integer;
 		FramePerSec: Extended;
+		PaintCount: Integer;
 		FHandScroll: Boolean;
 		procedure InitScrolls;
 
@@ -96,7 +94,6 @@ type
 		property DrawFPS: Boolean read FDrawFPS write FDrawFPS;
 		property HandScroll: Boolean read FHandScroll write FHandScroll;
 		property HotTrack: Boolean read FHotTrack write SetHotTrack default False;
-		property WaitVBlank: Boolean read FWaitVBlank write FWaitVBlank;
 		property OnFill: TNotifyEvent read FOnFill write FOnFill;
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
 
@@ -143,14 +140,14 @@ type
 	end;
 
 procedure ZoomMake(
-	BmpSource: TBitmap;
+	BmpSource: TDBitmap;
 	VisX, VisY: Integer;
 	AsWindow: Boolean; Zoom: Extended; XYConst: Boolean; QualityResize: Boolean;
 	OX, OY: Integer;
 	var SourceWidth, SourceHeight: Integer;
 	var SX1, SY1, SXW, SYH: Integer;
 	var DX1, DY1, DXW, DYH: Integer;
-	var BmpSource2: TBitmap);
+	var BmpSource2: TDBitmap);
 
 procedure Register;
 
@@ -192,9 +189,9 @@ begin
 	DefaultHandler(Message);
 end;
 
-procedure TDImage.CMDialogKey(var Message: TCMDialogKey);
+procedure TDImage.WMChar(var Message: TWMChar);
 begin
-	Beep;
+//	Beep;
 {	with Message do
 		if  (((CharCode = VK_RETURN) and FActive) or
 			((CharCode = VK_ESCAPE) and FCancel)) and
@@ -210,7 +207,8 @@ procedure TDImage.CMMouseEnter(var Message: TMessage);
 begin
 	inherited;
 	MouseOn := True;
-	Fill;
+	if FHotTrack then
+		Fill;
 	if Assigned(FOnMouseEnter) then FOnMouseEnter(Self);
 end;
 
@@ -219,16 +217,15 @@ begin
 	inherited;
 	MouseOn := False;
 	MouseWhere := mwNone;
-	Fill;
-//	MouseL := False;
-//	MouseM := False;
-//	MouseR := False;
+	if FHotTrack then
+		Fill;
 	if Assigned(FOnMouseLeave) then FOnMouseLeave(Self);
 end;
 
 procedure TDImage.WMSize(var Message: TWMSize);
 begin
 	inherited;
+	Fill;
 end;
 
 constructor TDImage.Create(AOwner: TComponent);
@@ -238,8 +235,7 @@ begin
 	TControlCanvas(FCanvas).Control := Self;
 	FHotTrack := True;
 
-	Bitmap := TBitmap.Create;
-	InitBitmap(Bitmap);
+	Bitmap := TDBitmap.Create;
 //	ControlStyle := [csDoubleClicks, csOpaque, csAcceptsControls, csMenuEvents, csDisplayDragImage, csReflector];
 	ControlStyle := ControlStyle + [csOpaque, csMenuEvents, csDisplayDragImage, csReflector] - [csSetCaption];
 	{	Width := 250;
@@ -253,7 +249,7 @@ end;
 destructor TDImage.Destroy;
 begin
 	FCanvas.Free;
-	Bitmap24.Free; Bitmap24 := nil;
+	Bitmap.Free; Bitmap := nil;
 	inherited Destroy;
 end;
 
@@ -354,6 +350,7 @@ begin
 			MouseAction := mwScrollH;
 			MouseX := X;
 			BOfsX := OfsX;
+			Fill;
 //			inherited MouseDown(Button, Shift, X, Y);
 		end;
 		mwScrollV:
@@ -361,6 +358,7 @@ begin
 			MouseAction := mwScrollV;
 			MouseY := Y;
 			BOfsY := OfsY;
+			Fill;
 //			inherited MouseDown(Button, Shift, X, Y);
 		end;
 		mwScrollHD, mwScrollHU,
@@ -451,10 +449,8 @@ end;
 procedure TDImage.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
 	NOfsX, NOfsY: Integer;
-	TickCount: LongWord;
 	Sc: Boolean;
 	MouseW: TMouseAction;
-	Cur: TCursor;
 begin
 	MouseW := MouseWh(X, Y);
 	case MouseW of
@@ -475,15 +471,21 @@ begin
 			Cur := 1 + SG(MouseL)
 		else
 			Cur := LCursor;
-		if Cursor <> Cur then
+		if (Cursor = crArrow) and (Cursor <> Cur) then
 			Cursor := Cur;
 	end;
 	end;
 
 	if MouseWhere <> MouseW then
 	begin
-		MouseWhere := MouseW;
-		Fill;
+		if ((MouseWhere = mwNone) and (MouseW = mwScroll)) or
+		((MouseWhere = mwScroll) and (MouseW = mwNone)) then
+			MouseWhere := MouseW
+		else
+		begin
+			MouseWhere := MouseW;
+			Fill;
+		end;
 	end;
 
 	NOfsX := OfsX;
@@ -508,13 +510,13 @@ begin
 		NOfsY := BOfsY + RoundDiv64(BitmapHeight * Int64(Y - MouseY), NowMaxHeight - 2 * ScrollBarVWidth);
 	end;
 	end;
-	TickCount := GetTickCount;
+{	TickCount := GetTickCount;
 	if TickCount < LTickCount + OfsS then
 	begin
 		Sleep(LTickCount + OfsS - TickCount);
 		TickCount := LTickCount + OfsS;
 	end;
-	LTickCount := TickCount;
+	LTickCount := TickCount;}
 	ScrollTo(NOfsX, NOfsY);
 //  if (MouseW = mwNone){ or (MouseW = mwScroll)} then
 	inherited MouseMove(Shift, X, Y);
@@ -532,10 +534,14 @@ begin
 		mwScrollHD, mwScrollHU,
 		mwScrollVD, mwScrollVU,
 		mwScrollHD2, mwScrollHU2,
-		mwScrollVD2, mwScrollVU2:
+		mwScrollVD2, mwScrollVU2,
+		mwScrollH, mwScrollV:
 		begin
-			MouseAction := mwNone;
-			Fill;
+			if MouseAction <> mwNone then
+			begin
+				MouseAction := mwNone;
+				Fill;
+			end;
 		end;
 		mwScroll:
 		begin
@@ -544,10 +550,6 @@ begin
 				Cursor := 1
 			else
 				Cursor := LCursor;
-		end
-		else
-		begin
-			MouseAction := mwNone;
 		end;
 		end;
 	end;
@@ -641,9 +643,9 @@ begin
 		C1 := 3;
 		C2 := 0;
 	end;
-	Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(C1), DepthColor(C2), 1, ScrollEf);
+	Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(C1), DepthColor(C2), 1, ScrollEf);
 	if FHotTrack and Hot then C1 := clHighlight else C1 := clBtnFace;
-	Bar24(Bitmap24, clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, C1, ScrollEf);
+	Bitmap.Bar24(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, C1, ScrollEf);
 
 	if Down then
 	begin
@@ -686,7 +688,7 @@ begin
 		end;
 		end;
 
-		Lin24(Bitmap24, HX1, HY1, HX2, HY2, clBtnText, ef16);
+		Bitmap.Lin24(HX1, HY1, HX2, HY2, clBtnText, ef16);
 	end;
 end;
 
@@ -695,12 +697,17 @@ var
 	ScrollLen, ScrollLenS: Integer;
 	X1, Y1, X2, Y2: Integer;
 	C: TColor;
+	I1, I2: SG;
 	SliderC1, SliderC2: TColor;
+	s: string;
 begin
-	Bitmap.Width := Width;
-	Bitmap.Height := Height;
+	if (Visible = False) or (csDesigning in ComponentState) then
+	begin
+		Bitmap.SetSize(0, 0);
+		Exit;
+	end;
+	Bitmap.SetSize(Width, Height);
 
-	Bitmap24 := Conv24(Bitmap);
 	try
 		if Assigned(FOnFill) then FOnFill(Self);
 		InitScrolls;
@@ -711,8 +718,8 @@ begin
 		if (BitmapWidth > 0) and (HType = 1) then
 		begin
 			ScrollBarHWidth := NowMaxWidth;
-			Y1 := Integer(Bitmap24.Height) - ScrollBarHHeight;
-			Y2 := Bitmap24.Height - 1;
+			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
+			Y2 := Bitmap.Height - 1;
 
 			X1 := 0;
 			X2 := ScrollBarVWidth - 1;
@@ -731,22 +738,32 @@ begin
 			ScrollLenS := NowMaxWidth * ScrollLen div BitmapWidth;
 			if ScrollLenS < ScrollBarHHeight div 2 then ScrollLenS := ScrollBarHHeight div 2;
 
-			Y1 := Integer(Bitmap24.Height) - ScrollBarHHeight;
-			Y2 := Bitmap24.Height - 1;
+			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
+			Y2 := Bitmap.Height - 1;
 			X1 := ScrollBarVWidth + RoundDiv64(Int64(ScrollLen - ScrollLenS) * OfsX, BitmapWidth - NowMaxWidth);
 			X2 := X1 + ScrollLenS - 1;
 			SliderHX1 := X1;
 			SliderHX2 := X2;
 
-			Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+			if MouseAction = mwScrollH then
+			begin
+				I1 := 0;
+				I2 := 3;
+			end
+			else
+			begin
+				I1 := 3;
+				I2 := 0;
+			end;
+			Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
 			if FHotTrack and (MouseWhere = mwScrollH) then C := clHighlight else C := clBtnFace;
-			Bar24(Bitmap24, clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
 
 			// =
 			X1 := ScrollBarVWidth;
 			X2 := SliderHX1 - 1;
-			Y1 := Integer(Bitmap24.Height) - ScrollBarHHeight;
-			Y2 := Bitmap24.Height - 1;
+			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
+			Y2 := Bitmap.Height - 1;
 
 			if X2 >= X1 then
 			begin
@@ -754,17 +771,17 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Lin24(Bitmap24, X1, Y1, X2, Y1, SliderC1, ScrollEf2);
-				Lin24(Bitmap24, X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bar24(Bitmap24, clNone,
+				Bitmap.Lin24(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
+				Bitmap.Lin24(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar24(clNone,
 					X1, Y1 + 1,
 					X2, Y2 - 1, C, ScrollEf2);
 			end;
 
 			X1 := SliderHX2 + 1;
 			X2 := NowMaxWidth - ScrollBarVWidth - 1;
-			Y1 := Integer(Bitmap24.Height) - ScrollBarHHeight;
-			Y2 := Bitmap24.Height - 1;
+			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
+			Y2 := Bitmap.Height - 1;
 
 			if X2 >= X1 then
 			begin
@@ -772,9 +789,9 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Lin24(Bitmap24, X1, Y1, X2, Y1, SliderC1, ScrollEf2);
-				Lin24(Bitmap24, X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bar24(Bitmap24, clNone,
+				Bitmap.Lin24(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
+				Bitmap.Lin24(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar24(clNone,
 					X1, Y1 + 1,
 					X2, Y2 - 1, C, ScrollEf2);
 			end;
@@ -786,8 +803,8 @@ begin
 		if (BitmapHeight > 0) and (VType = 1) then
 		begin
 			ScrollBarVHeight := NowMaxHeight;
-			X1 := Integer(Bitmap24.Width) - ScrollBarVWidth;
-			X2 := Bitmap24.Width - 1;
+			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
+			X2 := Bitmap.Width - 1;
 
 			Y1 := 0;
 			Y2 := ScrollBarHHeight - 1;
@@ -806,22 +823,32 @@ begin
 			ScrollLenS := NowMaxHeight * ScrollLen div BitmapHeight;
 			if ScrollLenS < ScrollBarVWidth div 2 then ScrollLenS := ScrollBarVWidth div 2;
 
-			X1 := Integer(Bitmap24.Width) - ScrollBarVWidth;
-			X2 := Bitmap24.Width - 1;
+			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
+			X2 := Bitmap.Width - 1;
 			Y1 := ScrollBarHHeight + (ScrollLen - ScrollLenS) * Int64(OfsY) div (BitmapHeight - NowMaxHeight);
 			Y2 := Y1 + ScrollLenS - 1;
 			SliderVY1 := Y1;
 			SliderVY2 := Y2;
 
-			Border24(Bitmap24, X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+			if MouseAction = mwScrollV then
+			begin
+				I1 := 0;
+				I2 := 3;
+			end
+			else
+			begin
+				I1 := 3;
+				I2 := 0;
+			end;
+			Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
 			if FHotTrack and (MouseWhere = mwScrollV) then C := clHighlight else C := clBtnFace;
-			Bar24(Bitmap24, clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+			Bitmap.Bar24(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
 
 			// ||
 			Y1 := ScrollBarHHeight;
 			Y2 := SliderVY1 - 1;
-			X1 := Integer(Bitmap24.Width) - ScrollBarVWidth;
-			X2 := Bitmap24.Width - 1;
+			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
+			X2 := Bitmap.Width - 1;
 
 			if Y2 >= Y1 then
 			begin
@@ -829,17 +856,17 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Lin24(Bitmap24, X1, Y1, X1, Y2, SliderC1, ScrollEf2);
-				Lin24(Bitmap24, X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bar24(Bitmap24, clNone,
+				Bitmap.Lin24(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
+				Bitmap.Lin24(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar24(clNone,
 					X1 + 1, Y1,
 					X2 - 1, Y2, C, ScrollEf2);
 			end;
 
 			Y1 := SliderVY2 + 1;
 			Y2 := NowMaxHeight - ScrollBarHHeight - 1;
-			X1 := Integer(Bitmap24.Width) - ScrollBarVWidth;
-			X2 := Bitmap24.Width - 1;
+			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
+			X2 := Bitmap.Width - 1;
 
 			if Y2 >= Y1 then
 			begin
@@ -847,9 +874,9 @@ begin
 					C := clScrollBar
 				else
 					C := clHighlight;
-				Lin24(Bitmap24, X1, Y1, X1, Y2, SliderC1, ScrollEf2);
-				Lin24(Bitmap24, X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bar24(Bitmap24, clNone,
+				Bitmap.Lin24(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
+				Bitmap.Lin24(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
+				Bitmap.Bar24(clNone,
 					X1 + 1, Y1,
 					X2 - 1, Y2, C, ScrollEf2);
 			end;
@@ -858,15 +885,23 @@ begin
 			ScrollBarVHeight := 0;
 
 //    Pix24(Bitmap24.PData, Bitmap24.ByteX, MouseX, MouseY, clWhite, ef16);
+		{$ifopt d-}
 		if FDrawFPS then
+		{$endif}
+		begin
+		{$ifopt d+}
+		s := IntToStr(PaintCount);
+		{$endif}
 			if FramePerSec >= 0.1 then
 			begin
-				ShadowText(Bitmap.Canvas, 0, 0,
-					Using('~### ##0.0', Round(10 * FramePerSec)),
-					clWindowText, clNone);
+				s := {$ifopt d+}s + ', ' +{$endif}Using('~### ##0.0', Round(10 * FramePerSec));
 			end;
+			ShadowText(Bitmap.Canvas, 0, 0,
+				s,
+				clWindowText, clNone);
+		end;
 	finally
-		Bitmap24.Free; Bitmap24 := nil;
+		Inc(PaintCount);
 		Paint;
 	end;
 end;
@@ -889,11 +924,10 @@ begin
 	else
 	begin
 		SetStretchBltMode(FCanvas.Handle, STRETCH_DELETESCANS);
-		if WaitVBlank then WaitRetrace;
 		BitBlt(
 			FCanvas.Handle,
-			0, //Left,
-			0, //Top,
+			0,
+			0,
 			Width,
 			Height,
 			Bitmap.Canvas.Handle,
@@ -906,18 +940,17 @@ begin
 end;
 
 procedure ZoomMake(
-	BmpSource: TBitmap;
+	BmpSource: TDBitmap;
 	VisX, VisY: Integer;
 	AsWindow: Boolean; Zoom: Extended; XYConst: Boolean; QualityResize: Boolean;
 	OX, OY: Integer;
 	var SourceWidth, SourceHeight: Integer;
 	var SX1, SY1, SXW, SYH: Integer;
 	var DX1, DY1, DXW, DYH: Integer;
-	var BmpSource2: TBitmap);
+	var BmpSource2: TDBitmap);
 
 var
 	SX, SY: Integer;
-	BmpDe, BS: TBitmap24;
 	LastCursor: TCursor;
 begin
 	if AsWindow then
@@ -1010,14 +1043,12 @@ begin
 	begin
 		if not Assigned(BmpSource2) then
 		begin
-			BmpSource2 := TBitmap.Create;
-			BmpSource2.PixelFormat := pf24bit;
+			BmpSource2 := TDBitmap.Create;
 		end;
 		if (BmpSource2.Width <> SourceWidth)
 		or (BmpSource2.Height <> SourceHeight) then
 		begin
-			BmpSource2.Width := SourceWidth;
-			BmpSource2.Height := SourceHeight;
+			BmpSource2.SetSize(SourceWidth, SourceHeight);
 			if (QualityResize = False) {or (Zoom > 1)} then
 			begin
 
@@ -1036,12 +1067,8 @@ begin
 			begin
 				LastCursor := Screen.Cursor;
 				Screen.Cursor := crHourGlass;
-				BmpDe := Conv24(BmpSource2);
-				BS := Conv24(BmpSource);
-				Resize24(BmpDe, BS,
+				BmpSource2.Resize24(BmpSource,
 					SourceWidth, SourceHeight, nil);
-				BS.Free;
-				BmpDe.Free;
 				Screen.Cursor := LastCursor;
 			end;
 		end;

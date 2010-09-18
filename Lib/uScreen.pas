@@ -7,12 +7,13 @@ interface
 uses
 	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	StdCtrls, uDButton;
+	StdCtrls, uDButton, uDForm;
 
 type
-	TfScreen = class(TForm)
+	TfScreen = class(TDForm)
 		ComboBoxDriver: TComboBox;
 		ButtonOk: TDButton;
+    procedure FormCreate(Sender: TObject);
 	private
 		{ Private declarations }
 	public
@@ -421,7 +422,7 @@ begin
 	MinHF := MaxInt;
 	MaxHF := 0;
 	MinPixelRate := MaxInt;
-	MaxPixelRate := 0;
+	MaxPixelRate := 0;     
 	MinMemory := MaxInt;
 	MaxMemory := 0;
 	Reg := TRegistry.Create;
@@ -860,8 +861,7 @@ begin
 		begin
 			if Confirm then
 			begin
-				if Assigned(SndBeep) then
-					PlaySound(PChar(SndBeep), 0, snd_ASync or snd_Memory);
+				PlayWave(SndBeep);
 				if LastModeIndex >= 0 then
 				if MessageD('Use mode ' + s + '?', mtConfirmation, [mbYes, mbNo]) <> mbYes then
 				begin
@@ -1041,6 +1041,11 @@ begin
 	end;
 end;
 
+procedure TfScreen.FormCreate(Sender: TObject);
+begin
+	Background := baGradient;
+end;
+
 initialization
 	LastModeIndex := -1;
 	ActualDriver := -1;
@@ -1049,7 +1054,6 @@ initialization
 finalization
 	if Assigned(SndBeep) then
 	begin
-		FreeMem(SndBeep);
-		SndBeep := nil;
+		FreeMem(SndBeep); SndBeep := nil;
 	end;
-end.
+end.           

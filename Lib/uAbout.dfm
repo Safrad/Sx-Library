@@ -16,13 +16,6 @@ object fAbout: TfAbout
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object ImageBackground: TImage
-    Left = 0
-    Top = 0
-    Width = 304
-    Height = 320
-    Align = alClient
-  end
   object Bevel6: TBevel
     Left = 8
     Top = 8
@@ -325,16 +318,20 @@ object fAbout: TfAbout
     BorderStyle = bsSingle
     ParentColor = True
     TabOrder = 1
-    object ImageAbout: TImage
+    object ImageAbout: TDImage
       Left = 0
       Top = 0
       Width = 109
       Height = 101
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageAboutFill
       Align = alClient
-      AutoSize = True
       ParentShowHint = False
       ShowHint = False
-      OnDblClick = ImageAboutDblClick
+      TabOrder = 0
+      TabStop = False
       OnMouseDown = ImageAboutMouseDown
       OnMouseMove = ImageAboutMouseMove
     end
@@ -414,15 +411,20 @@ object fAbout: TfAbout
     Caption = 'Program Name'
     ParentColor = True
     TabOrder = 2
-    object ImageName: TImage
+    object ImageName: TDImage
       Left = 0
       Top = 0
       Width = 149
       Height = 29
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageNameFill
       Align = alClient
-      AutoSize = True
       ParentShowHint = False
       ShowHint = False
+      TabOrder = 0
+      TabStop = False
     end
   end
   object PenelVersion: TDPanel
@@ -435,15 +437,20 @@ object fAbout: TfAbout
     Caption = 'Program Version'
     ParentColor = True
     TabOrder = 3
-    object ImageVersion: TImage
+    object ImageVersion: TDImage
       Left = 0
       Top = 0
       Width = 149
       Height = 13
+      DrawFPS = False
+      HandScroll = False
+      HotTrack = True
+      OnFill = ImageVersionFill
       Align = alClient
-      AutoSize = True
       ParentShowHint = False
       ShowHint = False
+      TabOrder = 0
+      TabStop = False
     end
   end
   object EditAuthor: TEdit
@@ -513,7 +520,8 @@ object fAbout: TfAbout
   object Timer1: TDTimer
     ActiveOnly = False
     Enabled = False
-    Interval = 33
+    Interval = 15
+    EventStep = esCPU
     OnTimer = DTimer1Timer
     Left = 8
     Top = 288

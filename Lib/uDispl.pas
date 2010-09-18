@@ -3,7 +3,9 @@
 unit uDispl;
 
 interface
-uses uGraph24, Windows, Graphics, Classes, StdCtrls;
+
+uses uDBitmap, Windows, Graphics, Classes, StdCtrls;
+
 const
 	clAVideo = $009fff1f;
 	clDVideo = $004f7f0f;
@@ -60,25 +62,19 @@ type
 		property Size: Byte read FSize write SetSize;
 	end;
 
-{procedure Displ24(BmpD: TBitmap24; S: string; X1, Y1: LongInt;
-	Format: string;
-	SizeX, SizeY,
-	SpaceSX, SpaceSY, SizeT, Spacing: Byte; CA, CD: TColor; Effect: TEffect;
-	InfoOnly: Boolean; var DisplWidth, DisplHeight: Integer);}
-
-procedure Displ24(BmpD: TBitmap24; Caption: string; X1, Y1: LongInt;
+procedure Displ24(BmpD: TDBitmap; Caption: string; X1, Y1: LongInt;
 	Format: string;
 	SizeX, SizeY,
 	SpaceSX, SpaceSY, SizeT, Spacing: Byte; ColorA, ColorD: TColor; Effect: TEffect;
 	InfoOnly: Boolean);
 
-procedure DisplDraw(BmpD: TBitmap24; const Caption: string; const Displ: TDispl;
+procedure DisplDraw(BmpD: TDBitmap; const Caption: string; const Displ: TDispl;
 	X1, Y1: LongInt;
 	Effect: TEffect);
 
 procedure DisplSize(const Displ: TDispl; var DisplWidth, DisplHeight: Integer);
 
-procedure DisplDrawRect(BmpD: TBitmap24; const Caption: string; const Displ: TDispl;
+procedure DisplDrawRect(BmpD: TDBitmap; const Caption: string; const Displ: TDispl;
 	const Recta: TRect; const Alignment: TAlignment; const Layout: TTextLayout;
 	const Effect: TEffect);
 
@@ -86,7 +82,7 @@ implementation
 
 uses
 	SysUtils,
-	uGraph;
+	uGraph, uAdd;
 const
 	MaxChar = 2 + 10 + 26 - 1;
 type
@@ -473,7 +469,7 @@ begin
 end;
 *)
 
-procedure DisplDraw24(BmpD: TBitmap24; Caption: string; X1, Y1: LongInt;
+procedure DisplDraw24(BmpD: TDBitmap; Caption: string; X1, Y1: LongInt;
 	Format: string;
 	SizeX, SizeY,
 	SpaceSX, SpaceSY, SizeT, Spacing: Byte; CA, CD: TColor; Effect: TEffect;
@@ -537,7 +533,7 @@ begin
 				C := CA;
 			end;
 			if InfoOnly = False then
-				Bar24(BmpD, clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
+				BmpD.Bar24(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
 					X1 + SizeT - 1, Y1 + 2 * SizeY + 3 * SpaceSY - 2 + SizeT, C, ef16);
 			if SizeT + 2 > 0 then Inc(X1, SizeT + 2);
 //      if Spacing < SizeT + 2 then Inc(X1, SizeT + 2 - Spacing);
@@ -552,7 +548,7 @@ begin
 				C := CA;
 			end;
 			if InfoOnly = False then
-				Bar24(BmpD, clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
+				BmpD.Bar24(clNone, X1, Y1 + 2 * SizeY + 3 * SpaceSY - 1,
 					X1 + SizeT - 1, Y1 + 2 * SizeY + 3 * SpaceSY - 2 + SizeT + SizeT, C, Effect);
 			if Spacing < SizeT + 2 then Inc(X1, SizeT + 2 - Spacing);
 		end;
@@ -569,10 +565,10 @@ begin
 			begin
 				X := X1;
 				Y := Y1 + 3 * SpaceSY - 1;
-				Bar24(BmpD, clNone, X, Y,
+				BmpD.Bar24(clNone, X, Y,
 					X + SizeT - 1, Y + SizeT - 1, C, ef16);
 				Y := Y1 + SizeY + SizeY div 2 + 2 * SpaceSY - 1;
-				Bar24(BmpD, clNone, X, Y,
+				BmpD.Bar24(clNone, X, Y,
 					X + SizeT - 1, Y + SizeT - 1, C, ef16);
 			end;
 			if SizeT + 2 > 0 then Inc(X1, SizeT + 2);
@@ -640,7 +636,7 @@ begin
 						else if (SY2 > BmpHeight) then
 							SY2 := BmpHeight;
 						{$endif}
-						Lin24(BmpD, SX1, SY1, SX2, SY2, C, Effect);
+						BmpD.Lin24(SX1, SY1, SX2, SY2, C, Effect);
 					end;
 				end;
 			end;
@@ -663,7 +659,7 @@ begin
 		True, DisplWidth, DisplHeight);
 end;
 
-procedure DisplDrawRect(BmpD: TBitmap24; const Caption: string; const Displ: TDispl;
+procedure DisplDrawRect(BmpD: TDBitmap; const Caption: string; const Displ: TDispl;
 	const Recta: TRect; const Alignment: TAlignment; const Layout: TTextLayout;
 	const Effect: TEffect);
 var
@@ -699,7 +695,7 @@ begin
 		Displ.ColorA, Displ.ColorD, Effect, False, DisplWidth, DisplHeight);
 end;
 
-procedure DisplDraw(BmpD: TBitmap24; const Caption: string; const Displ: TDispl;
+procedure DisplDraw(BmpD: TDBitmap; const Caption: string; const Displ: TDispl;
 	X1, Y1: LongInt;
 	Effect: TEffect);
 var DisplWidth, DisplHeight: Integer;
@@ -712,7 +708,7 @@ begin
 		Effect, False, DisplWidth, DisplHeight);
 end;
 
-procedure Displ24(BmpD: TBitmap24; Caption: string; X1, Y1: LongInt;
+procedure Displ24(BmpD: TDBitmap; Caption: string; X1, Y1: LongInt;
 	Format: string;
 	SizeX, SizeY,
 	SpaceSX, SpaceSY, SizeT, Spacing: Byte; ColorA, ColorD: TColor; Effect: TEffect;

@@ -45,7 +45,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math, Dialogs,
-	uAdd, uFiles, uDIni, uGetInt, uGraph, uGraph24, uError, uMenus;
+	uAdd, uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus;
 
 var
 	ReopenLimit: Integer;
@@ -378,13 +378,10 @@ begin
 				'&' + IntToStr(i) + ' ' + ReopenItems[i].FileName;
 			ReopenItems[i].MenuItem.Name := ReopenResNames[Exists] + IntToStr(i);
 			ComName(ReopenItems[i].MenuItem);
-//			ReopenItems[i].MenuItem.Bitmap.LoadFromResourceName(HInstance, ReopenResNames[Exists]);
 
 			if ReopenItems[i].OpenedCount > 0 then
 			begin
-//        ReopenItems[i].MenuItem.Bitmap.PixelFormat := pf24bit;
 				ReopenItems[i].MenuItem.Bitmap.TransparentColor := GetTransparentColor(ReopenItems[i].MenuItem.Bitmap);
-//        ChangeColor24(Conv24(ReopenItems[i].MenuItem.Bitmap), ReopenItems[i].MenuItem.Bitmap.TransparentColor, clBtnFace);
 				if ReopenItems[i].OpenedCount > 1 then
 				begin
 					ReopenItems[i].MenuItem.Bitmap.Canvas.Brush.Style := bsClear;
@@ -395,7 +392,6 @@ begin
 						(ReopenItems[i].MenuItem.Bitmap.Height - ReopenItems[i].MenuItem.Bitmap.Canvas.TextHeight(s)) div 2,
 						s);
 				end;
-//        BorderE24(Conv24(ReopenItems[i].MenuItem.Bitmap), clBlack, clWhite, 1, ef12);
 			end;
 			ReopenItems[i].MenuItem.Checked := ReopenItems[i].OpenedCount > 0;
 		end;

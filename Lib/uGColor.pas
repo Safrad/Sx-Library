@@ -13,12 +13,14 @@ interface
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uDPanel, uGraph, uDButton,
-	uDLabel, ImgList;
+	uDLabel, ImgList, uDForm, uDBitmap, uAdd, uDImage;
 
+const
+	MaxColor = 6 + 6 + 6 + 6 + 4 + 4 + 4 - 1;
 type
 	TOnApplyColor = procedure(Color: TColor);
 
-	TfGColor = class(TForm)
+	TfGColor = class(TDForm)
 		Label1: TDLabel;
 		EditR: TEdit;
 		TrackBarR: TTrackBar;
@@ -72,8 +74,8 @@ type
 		PanelNowColor: TDPanel;
 		PanelCurColor: TDPanel;
 		Bevel1: TBevel;
-		ImageS: TImage;
-		ImageL: TImage;
+		ImageS: TDImage;
+		ImageL: TDImage;
 		ShapeBorder: TShape;
 		PanelNowBitColor: TDPanel;
 		PanelDefaultColor: TDPanel;
@@ -82,7 +84,6 @@ type
 		LabelDefault: TDLabel;
 		LabelCurrent: TDLabel;
 		Bevel2: TBevel;
-		ImageBackground: TImage;
 		ImageList1: TImageList;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
@@ -118,6 +119,9 @@ type
 		procedure ButtonOkClick(Sender: TObject);
 		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 			State: TOwnerDrawState);
+		procedure FormCreate(Sender: TObject);
+    procedure ImageSFill(Sender: TObject);
+    procedure ImageLFill(Sender: TObject);
 	private
 		{ Private declarations }
 		CurColor, DefColor: TColor;
@@ -125,11 +129,14 @@ type
 		OnApply: TOnApplyColor;
 		SpectrumDown: Boolean;
 		LightDown: Boolean;
+		SpectrumPos, LightPos: Integer;
+		SpectrumC, LightC: TRColor;
+
+		NowColor: TColor;
+		PanelColor: array[0..MaxColor] of TPanel;
 		procedure ChangeColor;
 		procedure PanelColorClick(Sender: TObject);
-		procedure InitImageS;
 		procedure ChangeLightC;
-		procedure InitImageL;
 		procedure InitEdits;
 		procedure InitBorder;
 	public
@@ -142,18 +149,12 @@ function GetColor(const prompt: string;
 implementation
 
 {$R *.DFM}
-uses uAdd, uGraph24, uTexture, uMenus;
+uses uMenus;
 const
-	MaxColor = 6 + 6 + 6 + 6 + 4 + 4 + 4 - 1;
 	SpectrumPixel = 4;
 	LightPixel = 1;
 var
 	fGColor: TfGColor;
-	PanelColor: array[0..MaxColor] of TPanel;
-	SpectrumPos, LightPos: Integer;
-	SpectrumC, LightC: TRColor;
-
-	NowColor: TColor;
 
 function IntToColor(const i: Integer): TRColor;
 var
@@ -200,12 +201,12 @@ function GetColor(const prompt: string;
 
 	procedure CreateBox(const i: Integer);
 	begin
-		PanelColor[i].BevelOuter := bvNone;
-		PanelColor[i].BorderStyle := bsSingle;
-		PanelColor[i].Width := 16;
-		PanelColor[i].Height := 16;
-		PanelColor[i].Tag := i;
-		PanelColor[i].OnClick := fGColor.PanelColorClick;
+		fGColor.PanelColor[i].BevelOuter := bvNone;
+		fGColor.PanelColor[i].BorderStyle := bsSingle;
+		fGColor.PanelColor[i].Width := 16;
+		fGColor.PanelColor[i].Height := 16;
+		fGColor.PanelColor[i].Tag := i;
+		fGColor.PanelColor[i].OnClick := fGColor.PanelColorClick;
 	end;
 
 var i: Integer;
@@ -213,40 +214,36 @@ begin
 	if not Assigned(fGColor) then
 	begin
 		fGColor := TfGColor.Create(Application.MainForm);
-		FormImage(fGColor.ImageBackground);
 		for i := 0 to MaxColor do
 		begin
-			PanelColor[i] := TPanel.Create(fGColor);
+			fGColor.PanelColor[i] := TPanel.Create(fGColor);
 			CreateBox(i);
 			case i of
 			0..23:
 			begin
-				PanelColor[i].Left := 16 + 20 * (i mod 12);
-				PanelColor[i].Top := 16 + 20 * (i div 12);
+				fGColor.PanelColor[i].Left := 16 + 20 * (i mod 12);
+				fGColor.PanelColor[i].Top := 16 + 20 * (i div 12);
 			end;
 			24..31:
 			begin
-				PanelColor[i].Left := 16 + 20 * (i - 24);
-				PanelColor[i].Top := 64;
+				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
+				fGColor.PanelColor[i].Top := 64;
 			end;
 			32..35:
 			begin
-				PanelColor[i].Left := 16 + 20 * (i - 24);
-				PanelColor[i].Top := 64;
+				fGColor.PanelColor[i].Left := 16 + 20 * (i - 24);
+				fGColor.PanelColor[i].Top := 64;
 			end;
 			end;
-			PanelColor[i].Color := IntToColor(i).L;
-			fGColor.GroupBoxColors.InsertControl(PanelColor[i]);
+			fGColor.PanelColor[i].Color := IntToColor(i).L;
+			fGColor.GroupBoxColors.InsertControl(fGColor.PanelColor[i]);
 		end;
-		InitImage(fGColor.ImageS, clNone);
-		InitImage(fGColor.ImageL, clNone);
 	end;
-	CorrectFormPos(fGColor);
 	fGColor.OnApply := OnApply;
 	fGColor.ButtonApply.Enabled := Assigned(OnApply);
 
 	fGColor.CurColor := CurrentColor;
-	NowColor := CurrentColor;
+	fGColor.NowColor := CurrentColor;
 	fGColor.DefColor := DefaultColor;
 	fGColor.Caption := prompt;
 
@@ -271,7 +268,7 @@ begin
 		fGColor.FormStyle := fsNormal;
 		if fGColor.ShowModal = mrOK then
 		begin
-			CurrentColor := NowColor;
+			CurrentColor := fGColor.NowColor;
 			Result := True;
 		end
 		else
@@ -349,50 +346,6 @@ begin
 	end;
 end;
 
-procedure TfGColor.InitImageL;
-var
-	BmpD: TBitmap24;
-	i, X: Integer;
-	C: TRColor;
-begin
-	BmpD := Conv24(ImageL.Picture.Bitmap);
-	for i := 0 to ImageL.Width - 1 do
-	begin
-		C.R := LightC.R * Cardinal(i) div (BmpD.Width - 1);
-		C.G := LightC.G * Cardinal(i) div (BmpD.Width - 1);
-		C.B := LightC.B * Cardinal(i) div (BmpD.Width - 1);
-		C.T := 0;
-		Lin24(BmpD, i, 0, i, 15, C.L, ef16);
-	end;
-	C.L := ColorToRGB(NowColor)  and $00ffffff;
-	LightPos := C.R + C.G + C.B;
-	if (LightC.R + LightC.G + LightC.B) > 0 then
-		X := LightPos * Integer(BmpD.Width - 1) div (LightC.R + LightC.G + LightC.B)
-	else
-		X := 0;
-	if LightPos >= 0 then
-		Lin24(BmpD, X, 0, X, 15, clNone, efNeg);
-	BmpD.Free;
-	ImageL.Repaint;
-end;
-
-procedure TfGColor.InitImageS;
-var
-	BmpD: TBitmap24;
-	i: Integer;
-begin
-	BmpD := Conv24(ImageS.Picture.Bitmap);
-	for i := 0 to ImageS.Width - 1 do
-	begin
-		Lin24(BmpD, i, 0, i, 15, SpectrumColor(SpectrumPixel * i), ef16);
-	end;
-	SpectrumC.L := SpectrumColor(SpectrumPos);
-	if SpectrumPos >= 0 then
-		Lin24(BmpD, SpectrumPos div SpectrumPixel, 0, SpectrumPos div SpectrumPixel, 15, clNone, efXor);
-	BmpD.Free;
-	ImageS.Repaint;
-end;
-
 procedure TfGColor.FormDestroy(Sender: TObject);
 var i: Integer;
 begin
@@ -464,7 +417,7 @@ begin
 		end;
 	end;
 	ShapeBorder.Visible := Vis;
-	ShapeBorder.Repaint;
+	ShapeBorder.Update;
 end;
 
 function GetVGAPalete(C: TColor): TColor;
@@ -547,8 +500,8 @@ begin
 	PanelNowBitColor.Caption := ColorToString(PanelNowBitColor.Color);
 	PanelNowBitColor.Repaint;
 	InitEdits;
-	InitImageS;
-	InitImageL;
+	ImageS.Fill;
+	ImageL.Fill;
 	InitBorder;
 	if Assigned(OnApply) then OnApply(NowColor);
 end;
@@ -818,6 +771,51 @@ begin
 	ImageList1.Add(Bmp, nil);
 	Bmp.Free;
 	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
+end;
+
+procedure TfGColor.FormCreate(Sender: TObject);
+begin
+	Background := baGradient;
+end;
+
+procedure TfGColor.ImageSFill(Sender: TObject);
+var
+	BmpD: TDBitmap;
+	i: Integer;
+begin
+	BmpD := ImageS.Bitmap;
+	for i := 0 to ImageS.Width - 1 do
+	begin
+		BmpD.Lin24(i, 0, i, 15, SpectrumColor(SpectrumPixel * i), ef16);
+	end;
+	SpectrumC.L := SpectrumColor(SpectrumPos);
+	if SpectrumPos >= 0 then
+		BmpD.Lin24(SpectrumPos div SpectrumPixel, 0, SpectrumPos div SpectrumPixel, 15, clNone, efXor);
+end;
+
+procedure TfGColor.ImageLFill(Sender: TObject);
+var
+	BmpD: TDBitmap;
+	i, X: Integer;
+	C: TRColor;
+begin
+	BmpD := ImageL.Bitmap;
+	for i := 0 to ImageL.Width - 1 do
+	begin
+		C.R := LightC.R * SG(i) div (BmpD.Width - 1);
+		C.G := LightC.G * SG(i) div (BmpD.Width - 1);
+		C.B := LightC.B * SG(i) div (BmpD.Width - 1);
+		C.T := 0;
+		BmpD.Lin24(i, 0, i, 15, C.L, ef16);
+	end;
+	C.L := ColorToRGB(NowColor)  and $00ffffff;
+	LightPos := C.R + C.G + C.B;
+	if (LightC.R + LightC.G + LightC.B) > 0 then
+		X := LightPos * Integer(BmpD.Width - 1) div (LightC.R + LightC.G + LightC.B)
+	else
+		X := 0;
+	if LightPos >= 0 then
+		BmpD.Lin24(X, 0, X, 15, clNone, efNeg);
 end;
 
 end.

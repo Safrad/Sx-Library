@@ -62,6 +62,7 @@ var
 (*-------------------------------------------------------------------------*)
 var
 	i, c, MaxL: SG;
+  j: TIndex;
 begin
 	if Length(AIndex) <> Length(AValue) then Exit;
 	MaxIndex := Length(AIndex) - 1;
@@ -88,5 +89,14 @@ begin
 			CountingSort;
 		end;
 		SetLength(AVal, 0);
+	end;
+	if Reverse then
+	begin
+		for i := 0 to (MaxIndex - 1) div 2 do
+		begin
+			j := AIndex[i];
+			AIndex[i] := AIndex[MaxIndex - i];
+			AIndex[MaxIndex - i] := j;
+		end;
 	end;
 end;

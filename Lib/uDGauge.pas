@@ -7,7 +7,7 @@ interface
 {$R *.RES}
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uGraph24, uRot24, uDispl;
+	ExtCtrls, StdCtrls, uDBitmap, uDispl;
 
 type
 	TBuffer = (bfDynamic, bfStatic);
@@ -16,8 +16,7 @@ type
 	TDGauge = class(TLabel)
 	private
 		{ Private declarations }
-		FBmpOut: TBitmap;
-		FBuffer: TBuffer;
+		FBmpOut: TDBitmap;
 
 		FBackEffect: TEffect;
 		FBackPaint: Boolean;
@@ -36,7 +35,6 @@ type
 		FBorderWidth: TBorderWidth;
 		FBorderStyle: TBorderStyle;
 
-		procedure SetBuffer(Value: TBuffer);
 		procedure SetBackEffect(Value: TEffect);
 		procedure SetFontShadow(Value: ShortInt);
 		procedure DisplChanged(ADispl: TObject);
@@ -62,8 +60,6 @@ type
 		destructor Destroy; override;
 	published
 		{ Published declarations }
-		property Buffer: TBuffer read FBuffer write SetBuffer default bfStatic;
-
 		property BackPaint: Boolean read FBackPaint write FBackPaint default False;
 		property BackEffect: TEffect read FBackEffect write SetBackEffect default ef16;
 		property FontShadow: ShortInt read FFontShadow write SetFontShadow default 0;
@@ -130,8 +126,6 @@ begin
 	FDispl.ColorD := clMaroon;
 	FDispl.OnChange := DisplChanged;
 
-	FBuffer := bfStatic;
-
 	FBackEffect := ef16;
 	FMin := 0;
 	FPosition := 0;
@@ -157,30 +151,6 @@ begin
 		FBmpOut := nil;
 	end;
 	inherited Destroy;
-end;
-
-procedure TDGauge.SetBuffer(Value: TBuffer);
-begin
-	if FBuffer <> Value then
-	begin
-		if Value <> bfStatic then
-		begin
-			if Assigned(FBmpOut) then
-			begin
-				FBmpOut.Free;
-				FBmpOut := nil;
-			end;
-		end
-		else
-		begin
-			if not Assigned(FBmpOut) then
-			begin
-				FBmpOut := TBitmap.Create;
-				FBmpOut.PixelFormat := pf24bit;
-			end;
-		end;
-		FBuffer := Value;
-	end;
 end;
 
 procedure TDGauge.SetBackEffect(Value: TEffect);
@@ -289,8 +259,6 @@ var
 	i: Integer;
 	Posit, MaxPosit: Integer;
 	Co: array[0..3] of TColor;
-
-	FBmpOut24: TBitmap24;
 begin
 //  Recta:=GetClientRect;
 	Recta.Left := 0;
@@ -299,13 +267,10 @@ begin
 	Recta.Bottom := Height;
 	if (not Assigned(FBmpOut)) then
 	begin
-		FBmpOut := TBitmap.Create;
-		FBmpOut.PixelFormat := pf24bit;
+		FBmpOut := TDBitmap.Create;
 	end;
-	FBmpOut.Width := Recta.Right - Recta.Left;
-	FBmpOut.Height := Recta.Bottom - Recta.Top;
+	FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
 
-	FBmpOut24 := Conv24(FBmpOut);
 	// Background
 	if (Transparent = False) and (BackPaint = True) then
 	begin
@@ -321,8 +286,8 @@ begin
 // Border
 	if (FBorderStyle <> bsNone) then
 	begin
-		BorderE24(FBmpOut24, clBtnShadow, clBtnHighlight, 1, BackEffect);
-		Border24(FBmpOut24, 1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
+		FBmpOut.BorderE24(clBtnShadow, clBtnHighlight, 1, BackEffect);
+		FBmpOut.Border24(1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
 			cl3DDkShadow, cl3DLight, 1, BackEffect);
 		InflateRect(Recta, -2, -2);
 	end;
@@ -338,14 +303,14 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
 	if Color <> clNone then
 	begin
 		for i := 0 to FBorderWidth - 1 do
-			Rec24(FBmpOut24, Recta.Left + i, Recta.Top + i,
+			FBmpOut.Rec24(Recta.Left + i, Recta.Top + i,
 				Recta.Right - i - 1, Recta.Bottom - i - 1,
 				Color, BackEffect);
 		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
@@ -363,7 +328,7 @@ begin
 			TopColor := DepthColor(3);
 			BottomColor := DepthColor(1);
 		end;
-		Border24(FBmpOut24, Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -Integer(FBevelWidth) div 2, -Integer(FBevelWidth) div 2);
 		InflateRect(RectaS, -FBevelWidth, -FBevelWidth);
@@ -390,14 +355,14 @@ begin
 		case FKind of
 		gkNormal:
 		begin
-			Bar24(FBmpOut24, clNone, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+			FBmpOut.Bar24(clNone, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				C, FBackEffect);
 		end;
 		gkSpectrum:
 		begin
 			for i := Recta.Left to X - 1 do
 			begin
-				Lin24(FBmpOut24, i, Recta.Top, i, Recta.Bottom - 1,
+				FBmpOut.Lin24(i, Recta.Top, i, Recta.Bottom - 1,
 					SpectrumColor(512 * i div (Recta.Right - Recta.Left)), FBackEffect);
 			end;
 		end;
@@ -407,7 +372,7 @@ begin
 			Co[1] := DarkerColor(clBtnFace);
 			Co[2] := Co[0];
 			Co[3] := Co[1];
-			GenerateRGB(FBmpOut24, Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				clNone, gfFade2x, Co, ScreenCorectColor, ef16, nil);
 		end;
 		end;
@@ -415,7 +380,7 @@ begin
 	if X < RectaS.Left then X := RectaS.Left;
 	if (X < RectaS.Right) then
 	begin
-		Bar24(FBmpOut24, clNone, X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
+		FBmpOut.Bar24(clNone, X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
 			Color, FBackEffect);
 	end;
 
@@ -436,7 +401,7 @@ begin
 				OffsetRect(Recta, i, i);
 				if Displ.Enabled then
 				begin
-					DisplDrawRect(FBmpOut24, Caption, FDispl, Recta, Alignment, Layout,
+					DisplDrawRect(FBmpOut, Caption, FDispl, Recta, Alignment, Layout,
 					ef16);
 				end
 				else
@@ -452,8 +417,7 @@ begin
 		end;
 		if Displ.Enabled then
 		begin
-			DisplDrawRect(FBmpOut24, Caption, FDispl, Recta, Alignment, Layout,
-			ef16);
+			DisplDrawRect(FBmpOut, Caption, FDispl, Recta, Alignment, Layout, ef16);
 		end
 		else
 		begin
@@ -463,13 +427,6 @@ begin
 
 // Draw
 	Canvas.Draw(0, 0, FBmpOut);
-	FBmpOut24.Free;
-// Free
-	if (Assigned(FBmpOut)) and (FBuffer <> bfStatic) then
-	begin
-		FBmpOut.Free;
-		FBmpOut := nil;
-	end;
 end;
 
 procedure Register;

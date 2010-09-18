@@ -5,19 +5,20 @@ unit uGetStr;
 interface
 
 uses
-	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDPanel, uDButton;
+	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDPanel, uDButton,
+	uDForm;
 
 type
-	TfGetStr = class(TForm)
+	TfGetStr = class(TDForm)
 		ButtonOK: TDButton;
 		ButtonCancel: TDButton;
 		EditInput: TEdit;
 		ButtonCur: TDButton;
-		ImageBackground: TImage;
 		ButtonDef: TDButton;
 		procedure ButtonCurClick(Sender: TObject);
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonDefClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
 	private
 		{ private declarations }
 		CurS, DefS: string;
@@ -36,7 +37,7 @@ var StrMasked: Boolean;
 implementation
 
 {$R *.DFM}
-uses uTexture, uAdd;
+uses uAdd;
 var
 	fGetStr: TfGetStr;
 
@@ -52,9 +53,7 @@ begin
 	if not Assigned(fGetStr) then
 	begin
 		fGetStr := TfGetStr.Create(Application.MainForm);
-		FormImage(fGetStr.ImageBackground);
 	end;
-	CorrectFormPos(fGetStr);
 	Result := fGetStr.Execute(prompt, CurVal, DefVal, MaxL);
 end;
 
@@ -104,6 +103,11 @@ end;
 procedure TfGetStr.EditInputChange(Sender: TObject);
 begin
 	InitButtons;
+end;
+
+procedure TfGetStr.FormCreate(Sender: TObject);
+begin
+	Background := baGradient;
 end;
 
 end.

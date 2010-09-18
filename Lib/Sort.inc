@@ -634,10 +634,10 @@
 		Dec(Depth);
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure MergeSort;
+(*	procedure MergeSort;
 	var
 		MeI: array of TIndex;
-		MeV: array of TValue;
+		MeV: array of TValue; // D?? L1030
 
 		procedure Merge(I1F, I1T, I2F, I2T: SG);
 		var i, j, M: SG;
@@ -717,7 +717,7 @@
 		Sort(MinIndex, MaxIndex);
 		SetLength(MeV, 0);
 		SetLength(MeI, 0);
-	end;
+	end;*)
 (*-------------------------------------------------------------------------*)
 	procedure RadixSort;
 	const
@@ -845,6 +845,9 @@
 		SetLength(Counts, 0);
 	end;
 (*-------------------------------------------------------------------------*)
+var
+	i: TIndex;
+	j: SG;
 begin
 	if Length(AIndex) <> Length(AValue) then Exit;
 	MaxIndex := Length(AIndex) - 1;
@@ -857,10 +860,11 @@ begin
 		stAuto:
 		begin
 			if Stability then
-				case MaxIndex of
+				InsertionSort
+{				case MaxIndex of
 				1..70: InsertionSort;
 				else MergeSort;
-				end
+				end}
 			else
 				QuickSort(MinIndex, MaxIndex);
 		end;
@@ -871,9 +875,19 @@ begin
 		stShell: ShellSort;
 		stHeap: HeapSort;
 		stQuick: QuickSort(MinIndex, MaxIndex);
-		stMerge: MergeSort;
+//		stMerge: MergeSort;
 		stRadix: RadixSort;
 		stCounting: CountingSort;
 		end;
 	end;
+	if Reverse then
+	begin
+		for i := 0 to (MaxIndex - 1) div 2 do
+		begin
+			j := AIndex[i];
+			AIndex[i] := AIndex[MaxIndex - i];
+			AIndex[MaxIndex - i] := j;
+		end;
+	end;
+
 end;

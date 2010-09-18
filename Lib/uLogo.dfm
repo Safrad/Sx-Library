@@ -7,7 +7,7 @@ object fLogo: TfLogo
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
   BorderIcons = []
-  BorderStyle = bsNone
+  BorderStyle = bsToolWindow
   ClientHeight = 384
   ClientWidth = 512
   Color = clBtnFace
@@ -19,15 +19,10 @@ object fLogo: TfLogo
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
+  OnMouseMove = ImageLogoMouseMove
   PixelsPerInch = 96
   TextHeight = 13
-  object ImageLogo: TImage
-    Left = 0
-    Top = 0
-    Width = 512
-    Height = 384
-    OnMouseMove = ImageLogoMouseMove
-  end
   object Timer1: TDTimer
     ActiveOnly = False
     Enabled = False

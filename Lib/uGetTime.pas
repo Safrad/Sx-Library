@@ -6,10 +6,10 @@ interface
 
 uses
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, ComCtrls, Spin, uDButton, uDLabel;
+	ExtCtrls, ComCtrls, Spin, uDButton, uDLabel, uDForm;
 
 type
-	TfGetTime = class(TForm)
+	TfGetTime = class(TDForm)
 		TrackBarH: TTrackBar;
 		TrackBarM: TTrackBar;
 		TrackBarS: TTrackBar;
@@ -32,7 +32,6 @@ type
 		SpinButtonS: TSpinButton;
 		SpinButtonM: TSpinButton;
 		SpinButtonD: TSpinButton;
-		ImageBackground: TImage;
 		ButtonDef: TDButton;
 		procedure EditInputChange(Sender: TObject);
 		procedure TrackBarHMSDChange(Sender: TObject);
@@ -42,6 +41,7 @@ type
 		procedure SpinButtonDownClick(Sender: TObject);
 		procedure SpinButtonUpClick(Sender: TObject);
 		procedure ButtonDefClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
 	private
 		{ private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: LongWord;
@@ -61,7 +61,7 @@ function GetTime(const prompt: string;
 implementation
 
 {$R *.DFM}
-uses uAdd, uTexture, uStrings;
+uses uAdd, uStrings;
 var
 	fGetTime: TfGetTime;
 
@@ -71,9 +71,7 @@ begin
 	if not Assigned(fGetTime) then
 	begin
 		fGetTime := TfGetTime.Create(Application.MainForm);
-		FormImage(fGetTime.ImageBackground);
 	end;
-	CorrectFormPos(fGetTime);
 	Result := fGetTime.Execute(prompt, CurVal, DefVal, MinVal, MaxVal);
 end;
 
@@ -346,6 +344,11 @@ begin
 	InitTrackBar;
 	InitEdit;
 	InitButtons;
+end;
+
+procedure TfGetTime.FormCreate(Sender: TObject);
+begin
+	Background := baGradient;
 end;
 
 end.

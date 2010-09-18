@@ -6,10 +6,10 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDLabel, uDButton, uDPanel, uDTimer;
+	ExtCtrls, StdCtrls, uDLabel, uDButton, uDPanel, uDTimer, uDForm;
 
 type
-	TfMemStatus = class(TForm)
+	TfMemStatus = class(TDForm)
     Timer1: TDTimer;
 		ButtonStart: TDButton;
     ButtonStop: TDButton;
@@ -92,6 +92,7 @@ end;
 procedure TfMemStatus.FormCreate(Sender: TObject);
 var i, j: Integer;
 begin
+	Background := baGradient;
 	for i := 0 to MaxLabel do
 	begin
 		for j := 0 to MaxHistory do

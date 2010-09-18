@@ -38,24 +38,18 @@ uses
 const
 	Delimiter = ',';
 
-function GetNextFloat(Line: string; var InLineIndex: Integer): TFlo;
-var
-	NumStart: Integer;
-	LastDecimalSeparator: Char;
-begin
-	while (InLineIndex <= Length(Line)) and (CharKind[Line[InLineIndex]] <> ckNum) do
-		Inc(InLineIndex);
-	NumStart := InLineIndex;
-	Inc(InLineIndex);
-	while (InLineIndex <= Length(Line)) and ((CharKind[Line[InLineIndex]] = ckNum) or
-	(CharKind[Line[InLineIndex]] = ckDecimalSeparator)) do
-		Inc(InLineIndex);
+	function StrToFlo(s: string): TFlo;
+	var ErrorPos: Integer;
+	begin
+		Val(s, Result, ErrorPos);
+		if ErrorPos <> 0 then
+			Result := 0;
+	end;
 
-	LastDecimalSeparator := DecimalSeparator;
-	DecimalSeparator := '.';
-	Result := StrToFloat(Copy(Line, NumStart, InLineIndex - NumStart));
-	DecimalSeparator := LastDecimalSeparator;
-end;
+	function GetNextFloat(Line: string; var InLineIndex: Integer): TFlo;
+	begin
+		Result := StrToFlo(ReadToChar(Line, InLineIndex, ' '));
+	end;
 
 procedure ReadMidMif(const MiName: string);
 label LRetry;

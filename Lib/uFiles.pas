@@ -13,7 +13,16 @@ const
 	DefFileBuffer = 32768; // Best Performance
 type
 	TString = string;
-//	TLines = array of string;
+
+	TDriveLetter = 'A'..'Z';
+	TDriveInfo = record
+		DriveLetter: TDriveLetter;
+		DriveType: Word;
+		ClusterSize: Word;
+		FreeSpace: Int64;
+		DriveSize: Int64;
+	end;
+
 	TFileNames = array of TFileName;
 
 	TFileMode = (fmReadOnly, fmWriteOnly, fmReadAndWrite);
@@ -109,17 +118,31 @@ function BackDir(const Dir: TString): TString; {$ifdef DLL}stdcall;{$endif}
 function LegalFileName(const FileName: TString): TString; {$ifdef DLL}stdcall;{$endif}
 procedure ReadDirectory(var FileNames: TFileNames; Path, Extension: string);
 procedure ReadDirectory2(var FileNames: TFileNames; Path: string);
+procedure ReadDirectory3(var DirNames: TFileNames; Path: string);
 function GetFileSiz(const FileName: TFileName): U64; {$ifdef DLL}stdcall;{$endif}
-function CreateDir(const Dir: string): Boolean;
+
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
-function DeleteFile(const FileName: TFileName): Boolean;
+function CreateDir(const Dir: string): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
-function DeleteFolder(const Folder: string): Boolean;
+
+function DeleteFileEx(const FileName: TFileName): Boolean;
+function DeleteDir(const DirName: string): Boolean;
+function DeleteDirs(const DirName: string; DeleteSelf: Boolean): Boolean;
 
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
-function WriteBufferToFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
 function WriteLinesToFile(var FileName: TFileName; Lines: TStrings): BG;
+function WriteLineToFile(var FileName: TFileName; Line: string): BG;
+
+function GetDriveInfo(const Drive: Byte): TDriveInfo;
+
+{$IFDEF WIN32}
+function ShortToLongFileName(const ShortName: string): string;
+function ShortToLongPath(const ShortName: string): string;
+function LongToShortFileName(const LongName: string): string;
+function LongToShortPath(const LongName: string): string;
+{$ENDIF WIN32}
 
 {
 	MapViewOfFile
@@ -131,7 +154,7 @@ function WriteLinesToFile(var FileName: TFileName; Lines: TStrings): BG;
 implementation
 
 uses
-	Dialogs, FileCtrl,
+	Dialogs,
 	uError;
 
 constructor TFile.Create;
@@ -152,6 +175,9 @@ var
 	DesiredAccess, ShareMode: U32;
 begin
 	Result := False;
+
+	if HFile <> INVALID_HANDLE_VALUE then Close;
+
 	FFileName := Pointer(FileName);
 	FFilePos := 0;
 	FMode := Mode;
@@ -421,6 +447,13 @@ function TFile.Close: Boolean;
 var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 begin
+	Result := False;
+	if HFile = INVALID_HANDLE_VALUE then
+	begin
+		IOErrorMessage(TFileName(FTempFileName), 'File Is Closed');
+		Exit;
+	end;
+
 	SetLength(FBuffer, 0);
 	if FMode <> fmReadOnly then
 	begin
@@ -623,6 +656,12 @@ begin
 		end;
 	end;
 end;
+{
+function BackDir2(Dir: string): string;
+begin
+	Delete(Dir, Length(Dir), 1);
+	Result := ExtractFileName(Dir) + '\';
+end;}
 
 function LegalFileName(const FileName: TString): TString;
 var
@@ -689,7 +728,7 @@ begin
 		end;
 		ErrorCode := FindNext(SearchRec);
 	end;
-	if ErrorCode <> 18 then IOError(Path, ErrorCode);
+	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path, ErrorCode);
 	SysUtils.FindClose(SearchRec);
 
 	// Sort
@@ -736,15 +775,41 @@ begin
 		else
 		begin
 			i := Length(FileNames);
-{			NewSize := i + 1;
-			if AllocByEx(i, NewSize, 4) then}
-				SetLength(FileNames, i + 1{NewSize});
+			SetLength(FileNames, i + 1);
 			FileNames[i] := Path + SearchRec.Name;
 		end;
 
 		ErrorCode := FindNext(SearchRec);
 	end;
-	if ErrorCode <> 18 then IOError(Path, ErrorCode);
+	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path, ErrorCode);
+	SysUtils.FindClose(SearchRec);
+end;
+
+procedure ReadDirectory3(var DirNames: TFileNames; Path: string);
+var
+	SearchRec: TSearchRec;
+	ErrorCode: Integer;
+	i: SG;
+begin
+	if Length(Path) > 1 then
+		if Path[Length(Path)] <> '\' then
+			Path := Path + '\';
+
+	ErrorCode := FindFirst(Path + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+	while ErrorCode = NO_ERROR do
+	begin
+		if (SearchRec.Attr and faDirectory) <> 0 then
+		begin
+			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+			begin
+				i := Length(DirNames);
+				SetLength(DirNames, i + 1);
+				DirNames[i] := SearchRec.Name;
+			end;
+		end;
+		ErrorCode := FindNext(SearchRec);
+	end;
+	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path, ErrorCode);
 	SysUtils.FindClose(SearchRec);
 end;
 
@@ -774,6 +839,14 @@ begin
 	end;
 end;
 
+function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+begin
+	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
+	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
+	if Result = False then
+		IOError(Source + #13 + #10 + Dest, GetLastError);
+end;
+
 function CreateDir(const Dir: string): Boolean;
 begin
 	if DirectoryExists(Dir) then
@@ -784,20 +857,6 @@ begin
 		if Result = False then
 			IOError(Dir, GetLastError);
 	end;
-end;
-
-function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
-begin
-	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
-	if Result = False then
-		IOError(Source + #13 + #10 + Dest, GetLastError);
-end;
-
-function DeleteFile(const FileName: TFileName): Boolean;
-begin
-	Result := Windows.DeleteFile(PChar(FileName));
-	if Result = False then
-		IOError(FileName, GetLastError);
 end;
 
 function CopyDir(const Source, Dest: string): Boolean;
@@ -815,7 +874,7 @@ begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
 		begin
 			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-				CopyDir(Source + SearchRec.Name + '\', Dest + SearchRec.Name + '\')
+				CopyDir(Source + SearchRec.Name + '\', Dest + SearchRec.Name + '\');
 		end
 		else
 		begin
@@ -823,36 +882,57 @@ begin
 		end;
 		ErrorCode := SysUtils.FindNext(SearchRec);
 	end;
-	if ErrorCode <> 18 then IOError(Source, ErrorCode);
+	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Source, ErrorCode);
 	SysUtils.FindClose(SearchRec);
 end;
 
-function DeleteFolder(const Folder: string): Boolean;
+function DeleteFileEx(const FileName: TFileName): Boolean;
+begin
+	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
+	Result := DeleteFile(PChar(FileName));
+	if Result = False then
+		IOError(FileName, GetLastError);
+end;
+
+function DeleteDir(const DirName: string): Boolean;
+begin
+	Result := Windows.RemoveDirectory(PChar(DirName));
+	if Result = False then
+		IOError(DirName, GetLastError);
+end;
+
+function DeleteDirs(const DirName: string; DeleteSelf: Boolean): Boolean;
 var
 	SearchRec: TSearchRec;
 	ErrorCode: Integer;
 begin
+	if DirectoryExists(DirName) = False then
+	begin
+		Result := False;
+		Exit;
+	end;
 	Result := True;
 
-	ErrorCode := FindFirst(Folder + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+	ErrorCode := FindFirst(DirName + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
 		begin
 			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
 			begin
-				DeleteFolder(Folder + SearchRec.Name + '\');
-				RemoveDir(Folder + SearchRec.Name)
+				Result := Result and DeleteDirs(DirName + SearchRec.Name + '\', True);
 			end;
 		end
 		else
 		begin
-			DeleteFile(Folder + SearchRec.Name);
+			Result := Result and DeleteFileEx(DirName + SearchRec.Name);
 		end;
 		ErrorCode := SysUtils.FindNext(SearchRec);
 	end;
-	if ErrorCode <> 18 then IOError(Folder, ErrorCode);
+	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(DirName, ErrorCode);
 	SysUtils.FindClose(SearchRec);
+
+	if DeleteSelf then Result := Result and DeleteDir(DirName);
 end;
 
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
@@ -874,7 +954,7 @@ begin
 	F.Free;
 end;
 
-function WriteBufferToFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
 label LRetry;
 var
 	F: TFile;
@@ -938,6 +1018,137 @@ begin
 	end;
 	F.Free;
 end;
+
+function WriteLineToFile(var FileName: TFileName; Line: string): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		F.Write(Line);
+		F.Truncate;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function GetDriveInfo(const Drive: Byte): TDriveInfo;
+var
+	P: array[0..3] of Char;
+	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
+	TotalNumberOfClusters: Cardinal;
+begin
+	Result.DriveLetter := Char(Drive + Ord('A'));
+	P[0] := Chr(Drive + Ord('A'));
+	P[1] := ':';
+	P[2] := '\';
+	P[3] := #0;
+	Result.DriveType := GetDriveType(P);
+	case Result.DriveType of
+//  DRIVE_UNKNOWN:  Result := 4096;
+	DRIVE_NO_ROOT_DIR: Result.ClusterSize := 0;
+	DRIVE_REMOVABLE:
+	begin
+		Result.ClusterSize := 512;
+		Result.FreeSpace := -1;
+		Result.DriveSize := -1;
+	end;
+{ DRIVE_FIXED: Result := 4096;
+	DRIVE_REMOTE: Result := 4096;
+	DRIVE_CDROM: Result := 2048;
+	DRIVE_RAMDISK: Result := 4096;}
+	else
+	begin
+		SectorsPerCluster := 0;
+		BytesPerSector := 0;
+		GetDiskFreeSpace(P, SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
+			TotalNumberOfClusters);
+		Result.ClusterSize := SectorsPerCluster * BytesPerSector;
+		Result.FreeSpace := Result.ClusterSize * NumberOfFreeClusters;
+		Result.DriveSize := Result.ClusterSize * TotalNumberOfClusters;
+		if Result.ClusterSize = 0 then
+			case Result.DriveType of
+			DRIVE_UNKNOWN:  Result.ClusterSize := 4096;
+			DRIVE_FIXED: Result.ClusterSize := 4096;
+			DRIVE_REMOTE: Result.ClusterSize := 4096;
+			DRIVE_CDROM: Result.ClusterSize := 2048;
+			end;
+	end;
+	end;
+end;
+
+{$IFDEF WIN32}
+
+function ShortToLongFileName(const ShortName: string): string;
+var
+  Temp: TWIN32FindData;
+  SearchHandle: THandle;
+begin
+  SearchHandle := FindFirstFile(PChar(ShortName), Temp);
+  if SearchHandle <> ERROR_INVALID_HANDLE then begin
+    Result := string(Temp.cFileName);
+    if Result = '' then Result := string(Temp.cAlternateFileName);
+  end
+  else Result := '';
+  Windows.FindClose(SearchHandle);
+end;
+
+function LongToShortFileName(const LongName: string): string;
+var
+  Temp: TWIN32FindData;
+  SearchHandle: THandle;
+begin
+  SearchHandle := FindFirstFile(PChar(LongName), Temp);
+  if SearchHandle <> ERROR_INVALID_HANDLE then begin
+    Result := string(Temp.cAlternateFileName);
+		if Result = '' then Result := string(Temp.cFileName);
+  end
+  else Result := '';
+  Windows.FindClose(SearchHandle);
+end;
+
+function ShortToLongPath(const ShortName: string): string;
+var
+  LastSlash: PChar;
+  TempPathPtr: PChar;
+begin
+  Result := '';
+  TempPathPtr := PChar(ShortName);
+  LastSlash := StrRScan(TempPathPtr, '\');
+  while LastSlash <> nil do begin
+    Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
+    if LastSlash <> nil then begin
+      LastSlash^ := char(0);
+			LastSlash := StrRScan(TempPathPtr, '\');
+    end;
+  end;
+  Result := TempPathPtr + Result;
+end;
+
+function LongToShortPath(const LongName: string): string;
+var
+  LastSlash: PChar;
+  TempPathPtr: PChar;
+begin
+  Result := '';
+  TempPathPtr := PChar(LongName);
+  LastSlash := StrRScan(TempPathPtr, '\');
+  while LastSlash <> nil do begin
+    Result := '\' + LongToShortFileName(TempPathPtr) + Result;
+    if LastSlash <> nil then begin
+      LastSlash^ := char(0);
+      LastSlash := StrRScan(TempPathPtr, '\');
+    end;
+  end;
+	Result := TempPathPtr + Result;
+end;
+
+{$ENDIF WIN32}
 
 initialization
 	InitPaths;

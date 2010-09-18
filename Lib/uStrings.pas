@@ -29,6 +29,7 @@ function PosWW(Str, SubStr: string): Integer;
 function IsSubStr(SubStr: string; Str: string): Boolean;
 
 function InsChar(const CharCount: Integer; C: Char): string;
+function Replace(s: string; const WhatS, ToS: string): string;
 
 implementation
 
@@ -350,6 +351,24 @@ begin
 	end;
 	SetLength(Result, CharCount);
 	FillChar(Result[1], CharCount, C);
+end;
+
+function Replace(s: string; const WhatS, ToS: string): string;
+var Po: SG;
+begin
+	Result := '';
+	while True do
+	begin
+		Po := Pos(WhatS, s);
+		if Po <> 0 then
+		begin
+			Result := Result + Copy(s, 1, Po - 1) + ToS;
+			Delete(s, 1, Po - 1 + Length(WhatS));
+		end
+		else
+			Break;
+	end;
+	Result := Result + s;
 end;
 
 end.

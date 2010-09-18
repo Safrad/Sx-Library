@@ -15,6 +15,7 @@ procedure MidiMCIStop;
 procedure MidiMCIResume;
 procedure MidiMCIPlay;
 procedure MidiMCIClose;
+function MCIError(const ErrorCode: DWORD): string;
 
 {
 procedure MidiReadFromFile(var Midi: PMidi; FName: TFileName);
@@ -44,9 +45,9 @@ var
 	GenParm: TMCI_Generic_Parms;
 	SeekParm: TMCI_Seek_Parms;
 
-function MCIError(const ErrorCode: SG): string;
+function MCIError(const ErrorCode: DWORD): string;
 begin
-	case ErrorCode of
+{	case ErrorCode of
 	000: Result := 'The specified command was carried out.';
 	001: Result := 'Undefined external error.';
 	002: Result := 'A device ID has been used that is out of range for your system.';
@@ -163,8 +164,12 @@ begin
 	begin
 		Result := 'Unknown error';
 	end;
-	end;
-	Result := 'MMSYSTEM' + Using('~000', ErrorCode) + ' ' + Result;
+	end;}
+	SetLength(Result, 128);
+	if mciGetErrorString(ErrorCode, PChar(Result), 128) then
+		Result := PChar(Result)
+	else
+		Result := 'MMSYSTEM' + Using('~000', ErrorCode) + ' ' + 'Unknown error';
 end;
 
 function MidiMCIError(ErrorCode: SG): Boolean;

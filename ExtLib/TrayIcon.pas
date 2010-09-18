@@ -69,7 +69,7 @@ unit TrayIcon;
 interface
 
 uses
-	SysUtils, Windows, Messages, Classes, Graphics, Controls, ShellAPI, Forms, menus;
+	SysUtils, Windows, Messages, Classes, Graphics, Controls, ShellAPI, Forms, Menus;
 
 const WM_TOOLTRAYICON = WM_USER + 1;
 			WM_RESETTOOLTIP = WM_USER + 2;
@@ -191,102 +191,93 @@ end;
 constructor TTrayIcon.create(aOwner : Tcomponent);
 begin
 	inherited create(aOwner);
-	FWindowHandle := AllocateHWnd( WndProc );
+	FWindowHandle := Classes.AllocateHWnd( WndProc );
 	FIcon := TIcon.Create;
 end;
 
 destructor TTrayIcon.destroy;
 begin
-
 	if (not (csDesigning in ComponentState) and fActive)
-		 or ((csDesigning in ComponentState) and fShowDesigning) then
-				DeleteIcon;
+		or ((csDesigning in ComponentState) and fShowDesigning) then
+			DeleteIcon;
 
 	FIcon.Free;
-	DeAllocateHWnd( FWindowHandle );
-	inherited destroy;
-
+	Classes.DeAllocateHWnd(FWindowHandle);
+	inherited Destroy;
 end;
 
 procedure TTrayIcon.FillDataStructure;
 begin
-
-	with IconData do begin
-
-		 cbSize := SizeOf(TNOTIFYICONDATA);
-		 wnd := FWindowHandle;
-		 uID := 0; // is not passed in with message so make it 0
-		 uFlags := NIF_MESSAGE + NIF_ICON + NIF_TIP;
-		 hIcon := fIcon.Handle;
-		 StrPCopy(szTip, fToolTip);
-		 uCallbackMessage := WM_TOOLTRAYICON;
-
+	with IconData do
+	begin
+		cbSize := SizeOf(TNOTIFYICONDATA);
+		wnd := FWindowHandle;
+		uID := 0; // is not passed in with message so make it 0
+		uFlags := NIF_MESSAGE + NIF_ICON + NIF_TIP;
+		hIcon := fIcon.Handle;
+		StrPCopy(szTip, fToolTip);
+		uCallbackMessage := WM_TOOLTRAYICON;
 	end;
-
 end;
 
 function TTrayIcon.AddIcon : Boolean;
 begin
-	 FillDataStructure;
-	 Result := Shell_NotifyIcon(NIM_ADD, @IconData);
+	FillDataStructure;
+	Result := Shell_NotifyIcon(NIM_ADD, @IconData);
 
-	 // For some reason, if there is no tool tip set up, then the icon
-	 // doesn't display.  This fixes that.
+	// For some reason, if there is no tool tip set up, then the icon
+	// doesn't display.  This fixes that.
 
-	 if fToolTip = '' then
-			PostMessage( fWindowHandle, WM_RESETTOOLTIP, 0, 0 );
-
+	if fToolTip = '' then
+		PostMessage(fWindowHandle, WM_RESETTOOLTIP, 0, 0);
 end;
 
 function TTrayIcon.ModifyIcon : Boolean;
 begin
-
-	 FillDataStructure;
-	 if fActive then
-			Result := Shell_NotifyIcon(NIM_MODIFY, @IconData)
-	 else
-			Result := True;
-
+	FillDataStructure;
+	if fActive then
+		Result := Shell_NotifyIcon(NIM_MODIFY, @IconData)
+	else
+		Result := True;
 end;
 
 procedure TTrayIcon.DoRightClick( Sender : TObject );
 var MouseCo: Tpoint;
 begin
+	GetCursorPos(MouseCo);
 
-	 GetCursorPos(MouseCo);
+	if Assigned(fPopupMenu) then
+	begin
+		SetForegroundWindow( Application.Handle );
+		Application.ProcessMessages;
+		fPopupmenu.Popup( Mouseco.X, Mouseco.Y );
+	end;
 
-	 if assigned( fPopupMenu ) then begin
-			SetForegroundWindow( Application.Handle );
-			Application.ProcessMessages; 
-			fPopupmenu.Popup( Mouseco.X, Mouseco.Y );
-	 end;
-
-	 if assigned( FOnRightClick ) then
-			begin
-				 FOnRightClick(Self, mbRight, [], MouseCo.x, MouseCo.y);
-			end;
+	if Assigned(FOnRightClick) then
+	begin
+		FOnRightClick(Self, mbRight, [], MouseCo.x, MouseCo.y);
+	end;
 end;
 
 function TTrayIcon.DeleteIcon : Boolean;
 begin
-	 Result := Shell_NotifyIcon(NIM_DELETE, @IconData);
+	Result := Shell_NotifyIcon(NIM_DELETE, @IconData);
 end;
 
 procedure TTrayIcon.WndProc(var msg : TMessage);
 begin
-	 with msg do
-		 if (msg = WM_RESETTOOLTIP) then
-				SetToolTip( fToolTip )
-		 else if (msg = WM_TOOLTRAYICON) then begin
-				case lParam of
-					 WM_LBUTTONDBLCLK   : if assigned (FOnDblClick) then FOnDblClick(Self);
-					 WM_LBUTTONUP       : if assigned(FOnClick)then FOnClick(Self);
-					 WM_RBUTTONUP       : DoRightClick(Self);
-				end;
-		 end
-		 else // Handle all messages with the default handler
-				Result := DefWindowProc(FWindowHandle, Msg, wParam, lParam);
-
+	with msg do
+		if (msg = WM_RESETTOOLTIP) then
+			SetToolTip( fToolTip )
+		else if (msg = WM_TOOLTRAYICON) then begin
+			case lParam of
+			WM_LBUTTONDBLCLK   : if assigned (FOnDblClick) then FOnDblClick(Self);
+			WM_LBUTTONUP       : if assigned(FOnClick)then FOnClick(Self);
+			WM_RBUTTONUP       : DoRightClick(Self);
+			end;
+		end
+		else // Handle all messages with the default handler
+			Result := DefWindowProc(FWindowHandle, Msg, wParam, lParam);
 end;
 
 procedure Register;

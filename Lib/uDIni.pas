@@ -15,9 +15,9 @@ type
 	end;
 	TSection = record // 16
 		Name: string; // 4
-		KeyCount: Integer; // 4
+		KeyCount: S32; // 4
 		Keys: array of TKey; // 4
-		Reserved: Integer; // 4
+		Reserved: S32; // 4
 	end;
 	TFileMethod = (fmWindows, fmDelphi);
 	TFileStatus = (fsNone, fsOpenR, fsOpenW, fsFull);
@@ -115,7 +115,7 @@ var
 implementation
 
 uses
-	Registry, Windows, FileCtrl, Math,
+	Registry, Windows, Math,
 	uError, uFiles, uStrings;
 
 const
@@ -181,6 +181,7 @@ begin
 	end
 	else
 	begin
+		if FInMemory = False then LoadFromFile(FFileName);
 		FileSaved := False;
 		SectionIndex := GetSectionIndex(Section);
 		if SectionIndex < 0 then
@@ -257,13 +258,9 @@ end;
 function TDIniFile.ReadF80(const Section, Name: string; Default: F80): F80;
 var
 	FloatStr: string;
-	CurrDecimalSeparator: Char;
 begin
-	CurrDecimalSeparator := DecimalSeparator;
-	DecimalSeparator := '.';
 	FloatStr := ReadString(Section, Name, '');
 	Result := StrToValE(FloatStr, -MaxExtended, Default, MaxExtended);
-	DecimalSeparator := CurrDecimalSeparator;
 end;
 
 procedure TDIniFile.WriteF80(const Section, Name: string; Value: F80);
@@ -479,8 +476,8 @@ begin
 		SetLength(FSections[i].Keys, 0);
 	end;
 	SetLength(FSections, 0);
-	FInMemory := False;
-	FileSaved := True;
+	FInMemory := True;
+	FileSaved := False;
 end;
 
 destructor TDIniFile.Free;
@@ -949,29 +946,28 @@ begin
 			Form.Width := RWSGF(Form.Name, 'Width', Form.Width, Form.Width, Save);
 			Form.Height := RWSGF(Form.Name, 'Height', Form.Height, Form.Height, Save);
 		end;
-		CorrectFormPos(Form);
+//		CorrectFormPos(Form);
 	end;
 	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 		Form.WindowState := TWindowState(RWSGF(Form.Name, 'WindowState', Integer(Form.WindowState), Integer(Form.WindowState), Save));
 end;
 
 procedure TDIniFile.RWDView(DView: TDView; const Save: Boolean);
-var i{, j}: Integer;
+var i: SG;
 begin
+	DView.SortBy := RWSGF(DView.Name, 'SortBy', DView.SortBy, DView.SortBy, Save);
+	if (DView.SortBy >= 0) and (DView.SortBy < DView.ColumnCount) then
+	begin
+		if DView.Columns[DView.SortBy].Click = False then DView.SortBy := -1;
+	end
+	else
+		DView.SortBy := -1;
+	DView.SortBySwap := RWBGF(DView.Name, 'SortBySwap', DView.SortBySwap, DView.SortBySwap, Save);
 	for i := 0 to DView.ColumnCount - 1 do
 	begin
 		DView.Columns[i].Width := RWSGF(DView.Name, 'Width' + IntToStr(i), DView.Columns[i].Width, DView.Columns[i].Width, Save);
 		DView.ColumnOrder[i] := RWSGF(DView.Name, 'Order' + IntToStr(i), DView.ColumnOrder[i], i, Save);
 	end;
-{	if DView.FullDrag then
-	begin
-		for i := 0 to ListView.Columns.Count - 1 do
-		begin
-			j := RWSGF(ListView.Name, 'Index' + IntToStr(i), ListView.Columns.Items[i].ID, i, Save);
-			if Save = False then ListView.Columns.Items[i].Index := j;
-
-		end;
-	end;}
 end;
 
 procedure TDIniFile.RWListView(ListView: TListView; const Save: Boolean);
@@ -988,20 +984,6 @@ begin
 
 		end;
 	end;
-{
-var
-	ColumnOrder: array of Integer;
-	I: Integer;
-begin
-	inherited SetIndex(Value);
-	SetLength(ColumnOrder, Collection.Count);
-	for I := 0 to Collection.Count - 1 do
-		ColumnOrder[I] := TListColumn(Collection.Items[I]).FOrderTag;
-	ListView_SetColumnOrderArray(TListColumns(Collection).Owner.Handle,
-		Collection.Count, PInteger(ColumnOrder));
-
-
-	end;}
 end;
 
 procedure TDIniFile.RWComboBox(ComboBox: TComboBox; const Save: Boolean);
