@@ -129,7 +129,7 @@ var
 	ExeFileName: TFileName;
 
 function ShortDir(const Dir: string): string;
-function FullDir (const Dir: string): string;
+function FullDir (Dir: string): string;
 function DelFileExt(const FName: string): string;
 function BackDir(const Dir: string): string;
 function LegalFileName(const FileName: string): string;
@@ -687,10 +687,11 @@ begin
 	end;
 end;
 
-function FullDir(const Dir: string): string;
+function FullDir(Dir: string): string;
 var
 	i: Integer;
 begin
+	Replace(Dir, '%SystemRoot%', Copy(WinDir, 1, Length(WinDir) - 1));
 	for i := 1 to Length(Dir) do
 	begin
 		if Dir[i] = ':' then

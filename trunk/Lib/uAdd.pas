@@ -227,6 +227,8 @@ type
 var
 	Sins: array[0..AngleCount - 1] of TAngle;
 
+procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
+
 function RColor(R, G, B: U1): TRColor;
 
 function Sgn(const I: S1): SG; overload;
@@ -251,6 +253,7 @@ function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
 function FastSqrt(A: SG): SG;
 function LinearMax(Clock, Maximum: LongWord): LongWord;
 
+function RoundEx(Value: FA): SG;
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
@@ -611,6 +614,16 @@ function LinearMax(Clock, Maximum: LongWord): LongWord;
 begin
 	Result := Clock mod (2 * Maximum);
 	if Result > Maximum then Result := 2 * Maximum - Result;
+end;
+
+function RoundEx(Value: FA): SG;
+begin
+	if Value > MaxInt then
+		Result := MaxInt
+	else if Value < MinInt then
+		Result := MinInt
+	else
+		Result := Round(Value);
 end;
 
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG;
@@ -2097,6 +2110,12 @@ begin
 	end;
 	Result.EndUpdate;
 	DragFinish(hDrop);
+end;
+
+procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
+begin
+	X := RoundDiv(Len * (Sins[Angle mod AngleCount]), SinDiv);
+	Y := RoundDiv(Len * (Sins[(AngleCount div 4 + Angle) mod AngleCount]), SinDiv);
 end;
 
 procedure InitSin;
