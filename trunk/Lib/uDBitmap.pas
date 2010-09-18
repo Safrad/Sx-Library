@@ -154,6 +154,7 @@ type
 		procedure FormBitmap(Color: TColor);
 		procedure CopyBitmap(BmpS: TDBitmap); overload;
 		procedure CopyBitmap(BmpS: TBitmap); overload;
+		procedure GetBitmap(BmpD: TBitmap);
 
 		procedure Colors24(BmpS: TDBitmap; TransparentColor: TColor;
 			const
@@ -310,7 +311,7 @@ end;
 
 function TDBitmap.Empty: Boolean;
 begin
-	Result := (Width <= 0) and (Height <= 0);
+	Result := (Width <= 0) or (Height <= 0);
 end;
 
 procedure TDBitmap.FreeImage;
@@ -522,7 +523,29 @@ end;
 function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: SG;
 	var Quality: SG): BG;
 
-	procedure BitmapRead;
+	function ReadComp: Boolean;
+	var Stream: TMemoryStream;
+	begin
+		Result := False;
+		Stream := TMemoryStream.Create;
+		if ReadStreamFromFile(FileName, Stream) then
+		begin
+			Result := True;
+			try
+				Stream.Seek(0, 0);
+				inherited LoadFromStream(Stream);
+				Result := True;
+			except
+				on E: Exception do
+				begin
+					ErrorMessage(E.Message);
+				end;
+			end;
+		end;
+		Stream.Free;
+	end;
+
+	function BitmapRead: BG;
 	label LRetry, LFin;
 	var
 		F: TFile;
@@ -533,6 +556,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 		ColorIndex: Integer;
 		PS, PD: PBmpData;
 	begin
+		Result := False;
 		F := TFile.Create;
 		LRetry:
 		if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
@@ -553,7 +577,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 			SetSize(BitmapHead.Width, BitmapHead.Height);
 			if BitmapHead.Compression <> 0 then
 			begin
-				IOErrorMessage(FileName, 'is compressed');
+//				IOErrorMessage(FileName, 'is compressed');
+
 				goto LFin;
 			end;
 			case BitmapHead.Bits of
@@ -682,12 +707,16 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 			end;
 			else
 				IOErrorMessage(FileName, 'invalid pixel format');
+				goto LFin;
 			end;
+			Result := True;
 
 			LFin:
-			FreeMem(BitmapHead);
 			F.Close;
 			F.Free;
+			if BitmapHead.Compression <> 0 then
+				Result := ReadComp;
+			FreeMem(BitmapHead);
 		end;
 	end;
 
@@ -752,26 +781,11 @@ var
 //	Picture: TPicture;
 	Stream: TMemoryStream;
 begin
+	FreeImage;
 	Result := False;
 	if UpperCase(ExtractFileExt(FileName)) = '.BMP' then
 	begin
-		BitmapRead; // Faster, not tested
-{		Stream := TMemoryStream.Create;
-		if ReadStreamFromFile(FileName, Stream) then
-		begin
-			try
-				Stream.Seek(0, 0);
-				inherited LoadFromStream(Stream);
-				Result := True;
-			except
-				on E: Exception do
-				begin
-					ErrorMessage(E.Message);
-					MakeDefault;
-				end;
-			end;
-		end;
-		Stream.Free;}
+		Result := BitmapRead; // Faster, not tested
 	end
 	else if (UpperCase(ExtractFileExt(FileName)) = '.JPG')
 	or (UpperCase(ExtractFileExt(FileName)) = '.JPEG') then
@@ -944,9 +958,20 @@ procedure TDBitmap.CopyBitmap(BmpS: TBitmap);
 begin
 	if BmpS = nil then Exit;
 	SetSize(BmpS.Width, BmpS.Height);
-	BitBlt(Self.Canvas.Handle, 0, 0, BmpS.Width, BmpS.Height,
+	BitBlt(Canvas.Handle, 0, 0, BmpS.Width, BmpS.Height,
 		BmpS.Canvas.Handle, 0, 0, SRCCOPY);
 end;
+
+procedure TDBitmap.GetBitmap(BmpD: TBitmap);
+begin
+	if BmpD = nil then Exit;
+//	SetSize(BmpD.Width, BmpD.Height);
+	BmpD.Width := Width;
+	BmpD.Height := Height;
+	BitBlt(BmpD.Canvas.Handle, 0, 0, Width, Height,
+		Canvas.Handle, 0, 0, SRCCOPY);
+end;
+
 (*-------------------------------------------------------------------------*)
 procedure BitmapReadFromFile(var BmpD: TDBitmap; FName: TFileName);
 begin

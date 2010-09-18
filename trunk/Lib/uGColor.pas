@@ -27,7 +27,7 @@ type
 	TOnApplyColor = procedure(Color: TColor);
 
 	TfGColor = class(TDForm)
-		Label1: TDLabel;
+    LabelR: TDLabel;
 		EditR: TEdit;
 		TrackBarR: TTrackBar;
     ButtonR: TDButton;
@@ -35,15 +35,15 @@ type
 		ButtonApply: TDButton;
 		ButtonCancel: TDButton;
 		RadioGroup1: TRadioGroup;
-		Label2: TDLabel;
+    LabelG: TDLabel;
 		EditG: TEdit;
 		TrackBarG: TTrackBar;
     ButtonG: TDButton;
-		Label3: TDLabel;
+    LabelB: TDLabel;
 		EditB: TEdit;
 		TrackBarB: TTrackBar;
     ButtonB: TDButton;
-		Label4: TDLabel;
+    LabelA: TDLabel;
 		EditA: TEdit;
 		TrackBarA: TTrackBar;
     ButtonA: TDButton;

@@ -622,7 +622,10 @@ begin
 			end;
 			end;
 
-			FBmpOut.BmpE24(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef16)
+			if Enabled then
+				FBmpOut.BmpE24(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef16)
+			else
+				FBmpOut.BmpE24(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef04);
 		end;
 
 

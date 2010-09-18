@@ -25,6 +25,8 @@ type
 		Item: Pointer; // FFrag = True
 //		Indexes: TData;
 		FItemSize: UG;
+		FItemSh: UG;
+		FItemMemSize: UG;
 		FItemCount: UG;
 		procedure Ins(Index: TIndex);
 		procedure SetItemSize(Value: UG);
@@ -55,14 +57,17 @@ type
 		function GetLast: Pointer; overload;
 
 		function IsEmpty: Boolean;
+		function ToString: string;
 
 		property ItemSize: UG read FItemSize write SetItemSize;
+		property ItemSh: UG read FItemSh;
+		property ItemMemSize: UG read FItemMemSize;
 		property Count: UG read FItemCount;
 	end;
 
 	TA4 = class(TObject)
 	private
-		Data: PArrayS4;
+//		Data: PArrayS4;
 		FItemCount: UG;
 	public
 		constructor Create;
@@ -112,6 +117,7 @@ type
 constructor TData.Create;
 begin
 	FItemSize := 0;
+	FItemSh := 0;
 	FItemCount := 0;
 	FFrag := False;
 	if FFrag then
@@ -150,20 +156,18 @@ begin
 end;
 
 procedure TData.SetItemSize(Value: UG);
-{$ifopt d+}
-var Sh: SG;
-{$endif}
 begin
 	if FItemSize <> Value then
 	begin
 		FItemSize := Value;
 		Clear;
+		FItemSh := CalcShr(Value);
+		FItemMemSize := 1 shl FItemSh;
 		{$ifopt d+}
-		Sh := CalcShr(Value);
-		if (1 shl Sh) <> Value then
+{		if (1 shl Sh) <> Value then
 		begin
 			ErrorMessage('Bad AllocBy block size ' + NToS(Value) + ' bytes');
-		end;
+		end;}
 		{$endif}
 	end;
 end;
@@ -187,8 +191,8 @@ begin
 	begin
 		if (Index < FItemCount) then
 		begin
-			Move(Pointer(UG(Data) + ItemSize * (Index + 1))^,
-				Pointer(UG(Data) + ItemSize * Index)^, ItemSize * (FItemCount - Index - 1));
+			Move(Pointer(UG(Data) + (Index + 1) shl FItemSh)^,
+				Pointer(UG(Data) + Index shl FItemSh)^, (FItemCount - Index - 1) shl FItemSh);
 			Dec(FItemCount);
 		end;
 	end
@@ -224,14 +228,16 @@ begin
 end;
 
 procedure TData.Ins(Index: TIndex);
+const
+	AllocBy = 1024;
 begin
-	if FItemCount mod 1024 = 0 then ReallocMem(Data, ItemSize * (FItemCount + 1024));
+	if FItemCount mod AllocBy = 0 then ReallocMem(Data, (FItemCount + AllocBy) shl FItemSh);
 	if Index < FItemCount then
 	begin
-		Move(Pointer(UG(Data) + ItemSize * Index)^,
-			Pointer(UG(Data) + ItemSize * (Index + 1))^, ItemSize * (FItemCount - Index));
+		Move(Pointer(UG(Data) + Index shl FItemSh)^,
+			Pointer(UG(Data) + (Index + 1) shl FItemSh)^, (FItemCount - Index) shl FItemSh);
 	end;
-	FillChar(Pointer(UG(Data) + ItemSize * Index)^, ItemSize, 0); // D???
+	FillChar(Pointer(UG(Data) + Index shl FItemSh)^, ItemSize, 0); // D???
 	Inc(FItemCount);
 end;
 
@@ -244,7 +250,7 @@ begin
 		if FItemSize <> 0 then
 		begin
 			Ins(Index);
-			Move(Value, Pointer(UG(Data) + ItemSize * Index)^, ItemSize);
+			Move(Value, Pointer(UG(Data) + Index shl FItemSh)^, ItemSize);
 		end;
 	end
 	else
@@ -269,7 +275,7 @@ begin
 		if FItemSize <> 0 then
 		begin
 			Ins(Index);
-			Result := Pointer(UG(Data) + ItemSize * Index);
+			Result := Pointer(UG(Data) + Index shl FItemSh);
 		end
 		else
 			Result := nil;
@@ -286,7 +292,7 @@ begin
 	if FFrag = False then
 	begin
 		if (Index < FItemCount) then
-			Move(Value, Pointer(UG(Data) + ItemSize * Index)^, ItemSize);
+			Move(Value, Pointer(UG(Data) + Index shl FItemSh)^, ItemSize);
 	end
 	else
 	begin
@@ -299,7 +305,7 @@ begin
 	if FFrag = False then
 	begin
 		if (Index < FItemCount) then
-			Move(Pointer(UG(Data) + ItemSize * Index)^, Value, ItemSize);
+			Move(Pointer(UG(Data) + Index shl FItemSh)^, Value, ItemSize);
 	end;
 end;
 
@@ -313,8 +319,8 @@ begin
 		if (Index >= FItemCount) then
 			Result := nil
 		else
-//		Move(Pointer(TIndex(Data) + ItemSize * Index)^, Value^, ItemSize);
-			Result := Pointer(TIndex(Data) + ItemSize * Index);
+//		Move(Pointer(TIndex(Data) + Index shl FItemSh)^, Value^, ItemSize);
+			Result := Pointer(TIndex(Data) + Index shl FItemSh);
 	end
 	else
 	begin
@@ -346,17 +352,46 @@ end;
 
 procedure TData.GetLast(var Value);
 begin
-	Get(Value, FItemCount - 1);
+	Get(Value, FItemCount - 1)
 end;
 
 function TData.GetLast: Pointer;
 begin
-	Result := Get(FItemCount - 1);
+	if FItemCount > 0 then
+		Result := Get(FItemCount - 1)
+	else
+		Result := nil;
 end;
 
 function TData.IsEmpty: Boolean;
 begin
 	Result := FItemCount = 0;
+end;
+
+function TData.ToString: string;
+var
+	i: SG;
+	D: PS4;
+begin
+	if FItemSize <> 0 then
+	begin
+		Result := 'ItemSize: ' + NToS(FItemSize);
+	end
+	else
+		Result := 'VariableSize';
+	Result := Result + ', ItemCount: ' + NToS(FItemCount);
+	if FItemSize = 4 then
+	begin
+		Result := Result + ', Items: ';
+		D := Data;
+		for i := 0 to FItemCount - 1 do
+		begin
+			Result := Result + NToS(D^) + ',';
+
+			Inc(D, 1); //  shl FItemSh
+		end;
+		SetLength(Result, Length(Result) - 1);
+	end;
 end;
 
 // TA4

@@ -109,6 +109,7 @@ begin
 			end;
 
 			LabelX[j, i].Caption := NToS(LabelV[j, i]);
+			LabelX[j, i].Repaint;
 		end;
 	end;
 end;

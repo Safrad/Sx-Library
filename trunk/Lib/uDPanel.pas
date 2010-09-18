@@ -19,7 +19,7 @@ uses
 type
 	TDPanel = class(TPanel)
 	private
-		{ private declarations }
+		{ Private declarations }
 //		FBmpOut: TDBitmap;
 
 		FLayout: TTextLayout;
@@ -33,12 +33,12 @@ type
 	protected
 		{ Protected declarations }
 	public
-		{ public declarations }
+		{ Public declarations }
 		constructor Create(AOwner: TComponent); override;
 		procedure Paint; override;
 		property Canvas;
 	published
-		{ published declarations }
+		{ Published declarations }
 		property Caption;
 		property Layout: TTextLayout read FLayout write SetLayout default tlCenter;
 		property FontShadow: ShortInt read FFontShadow write SetFontShadow default 0;

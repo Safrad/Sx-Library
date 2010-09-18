@@ -402,6 +402,24 @@ begin
 	Num.Resize(NumberCount);
 	Num2 := TDNumber.Create;
 	Reminder.Assign(Self);
+	{
+	NLP dvojk only: A/B
+	C=A
+	1. C=C-B
+	2.(C>0 or C<0)->result
+	3.C shl 1
+	4.C := C(- or +)B
+	goto 1
+
+	// NLP: A/B
+	C = A
+	1. C=C-B
+	2.(C>0 or C<0)->result
+	4.C := C(- or +)B
+	5. C=C shl 1
+	6.goto 1
+	}
+
 	for i := NumberCount - 1 downto 0 do
 	begin
 		Number[i] := 0;

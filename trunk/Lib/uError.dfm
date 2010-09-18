@@ -393,7 +393,7 @@ object fIOError: TfIOError
   end
   object Timer1: TDTimer
     ActiveOnly = True
-    Enabled = True
+    Enabled = False
     Interval = 1000
     EventStep = esInterval
     OnTimer = Timer1Timer

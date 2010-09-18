@@ -31,7 +31,7 @@ type
 		FOnRestored: TNotifyEvent;
 {    FAutoSave: TBUAutoSave;
 		FMaxPixel: TBUMaxPixel;}
-		FEditLabel: TDLabel;
+		FEditLabel: TLabel;
 		FLabelPosition: TLabelPosition;
 		FLabelSpacing: Integer;
 		FCaption : TCaption;
@@ -132,7 +132,7 @@ end;
 procedure TDEdit.SetupInternalLabel;
 begin
 	if Assigned(FEditLabel) then exit;
-	FEditLabel := TDLabel.Create(Self);
+	FEditLabel := TLabel.Create(Self);
 	FEditLabel.FreeNotification(Self);
 	FEditLabel.FocusControl := Self;
 	FEditLabel.Parent := Parent;

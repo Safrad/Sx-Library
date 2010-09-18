@@ -13,13 +13,14 @@ interface
 uses uAdd;
 
 const
-	CharNul = #0;
-	CharTab = #9;
+	CharNul = #$0;
+	CharTab = #$9;
 	CharHT = CharTab;
-	CharLF = #10;
-	CharCR = #13;
+	CharLF = #$A;// #10;
+	CharCR = #$D;// #13;
 	// DOS: CharCR + CharLF; Linux/C++: CharLF; CharCR: NLP
 	LineSep = CharLF;
+	FullSep = CharCR + CharLF;
 
 type
 	TCharSet = set of Char;

@@ -26,11 +26,11 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
 	private
-		{ private declarations }
+		{ Private declarations }
 		FirstX, FirstY: SG;
 		MoveCount: SG;
 	public
-		{ public declarations }
+		{ Public declarations }
 	end;
 
 procedure ShowLogo(const FileName: TFileName); overload;

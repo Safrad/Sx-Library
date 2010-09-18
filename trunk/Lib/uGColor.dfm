@@ -1,6 +1,6 @@
 object fGColor: TfGColor
-  Left = 115
-  Top = 76
+  Left = 261
+  Top = 91
   BorderStyle = bsDialog
   Caption = 'Enter color'
   ClientHeight = 378
@@ -17,7 +17,7 @@ object fGColor: TfGColor
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TDLabel
+  object LabelR: TDLabel
     Left = 8
     Top = 8
     Width = 33
@@ -40,7 +40,7 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
   end
-  object Label2: TDLabel
+  object LabelG: TDLabel
     Left = 8
     Top = 40
     Width = 33
@@ -63,7 +63,7 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
   end
-  object Label3: TDLabel
+  object LabelB: TDLabel
     Left = 8
     Top = 72
     Width = 33
@@ -86,7 +86,7 @@ object fGColor: TfGColor
     Displ.ColorD = clMaroon
     Displ.Size = 0
   end
-  object Label4: TDLabel
+  object LabelA: TDLabel
     Left = 8
     Top = 104
     Width = 33

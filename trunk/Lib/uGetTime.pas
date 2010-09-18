@@ -49,13 +49,13 @@ type
 		procedure ButtonDefClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
-		{ private declarations }
+		{ Private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: LongWord;
 		procedure InitButtons;
 		procedure InitEdit;
 		procedure InitTrackBar;
 	public
-		{ public declarations }
+		{ Public declarations }
 		function Execute(const prompt: string;
 			var CurVal: LongWord; const DefVal, MinVal, MaxVal: LongWord): Boolean;
 	end;

@@ -12,7 +12,7 @@ interface
 
 {$R *.RES}
 uses
-	uDBitmap,
+	uAdd, uDBitmap,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls;
 
@@ -20,9 +20,11 @@ type
 	TBackground = (baNone, baUser, baStandard, baGradientOnly, baGradient,
 		baBitmap, baOpenGL, baOpenGLBitmap);
 
+	TRWOptionsEvent = procedure(Sender: TObject; Save: Boolean) of object;
+
 	TDForm = class(TForm)
 	private
-		{ private declarations }
+		{ Private declarations }
 		FStoreWindow: Boolean;
 		FWindowPlacement: TWindowPlacement;
 		FWindowLong: LongInt;
@@ -34,6 +36,8 @@ type
 		FBackground: TBackground;
 		FFullScreen: Boolean;
 		FChangeMode: Boolean;
+
+		FOnRWOptions: TRWOptionsEvent;
 
 		procedure InitRect;
 		procedure CheckPos;
@@ -55,12 +59,13 @@ type
 	protected
 		{ Protected declarations }
 	public
-		{ public declarations }
+		{ Public declarations }
 		RC: HGLRC;
 		FontBase: LongWord;
 
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
+//		function CloseQuery: Boolean; override;
 
 		procedure RestoreWindow;
 		procedure StoreWindow;
@@ -77,10 +82,14 @@ type
 		property Background: TBackground read FBackground write SetBackground default baNone;
 		property FullScreen: Boolean read FFullScreen write SetFullScreen default False;
 		property ChangeMode: Boolean read FChangeMode write SetChangeMode default False;
+
+		property OnRWOptions: TRWOptionsEvent read FOnRWOptions write FOnRWOptions;
 //		property OnMouseMove;
 	end;
 
-procedure DFormFree(var DForm: TDForm);
+procedure FormFree(var Form: TForm);
+function FormDraw(Form: TForm): BG;
+
 procedure glShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
 procedure glTextOut(Canvas: TCanvas;
@@ -89,22 +98,72 @@ procedure ShowTaskBar(Visible: Boolean);
 
 procedure Register;
 
+const
+	FormBorder = 8;
+var
+	DesktopHWnd: HWnd;
+	DesktopDC: HDC;
+
+function GetDesktop: BG;
+procedure ReleaseDesktop;
+
 implementation
 
 uses
-	uGraph, uAdd, uFiles, OpenGL12, uScreen, uSysInfo;
+	uGraph, uFiles, OpenGL12, uScreen, uSysInfo;
 const
 	OneBuffer = False;
 var
 	FBitmapF: TDBitmap;
 
-procedure DFormFree(var DForm: TDForm);
+function GetDesktop: BG;
 begin
-	if Assigned(DForm) then
+	Result := False;
+	if DesktopHWnd = INVALID_HANDLE_VALUE then
 	begin
-		DForm.Close;
-		DForm.Free;
-		DForm := nil;
+		DesktopDC := 0;
+		Exit;
+	end;
+	if (DesktopDC = 0) then
+	begin
+		DesktopHWnd := GetDesktopWindow;
+		if DesktopHWnd <> INVALID_HANDLE_VALUE then
+		begin
+			DesktopDC := GetDC(DesktopHWnd);
+			if DesktopDC <> 0 then Result := True;
+		end;
+	end
+	else
+		Result := True;
+end;
+
+procedure ReleaseDesktop;
+begin
+	if (DesktopHWnd <> INVALID_HANDLE_VALUE) and (DesktopDC <> 0) then
+	begin
+		ReleaseDC(DesktopHWnd, DesktopDC);
+		DesktopHWnd := 0;
+		DesktopDC := 0;
+	end;
+end;
+
+function FormDraw(Form: TForm): BG;
+begin
+	Result := False;
+	if not Assigned(Form) then Exit;
+	if Form.Visible = False then Exit;
+	if Form.WindowState = wsMinimized then Exit; // D??? Not Work
+//	Style := GetWindowLong(Handle, GWL_STYLE);
+	Result := True;
+end;
+
+procedure FormFree(var Form: TForm);
+begin
+	if Assigned(Form) then
+	begin
+		Form.Close;
+		Form.Free;
+		Form := nil;
 	end;
 end;
 
@@ -284,54 +343,57 @@ begin
 					FBitmapB.FormBitmap(Color);
 					if FBitmapF <> nil then
 						FBitmapB.Texture24(FBitmapF, clNone, ef04);
-					C.T := 0;
-					C.R := 117;
-					C.G := 140;
-					C.B := 220;
+					if (FBitmapB.Width >= 4) and (FBitmapB.Height >=4) then
+					begin
+						C.T := 0;
+						C.R := 117;
+						C.G := 140;
+						C.B := 220;
 
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 1, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 2, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, 0, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 3, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 3, 0, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 1, C, ef10);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, 1, C, ef04);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 2, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 1, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 2, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, 0, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, 3, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 3, 0, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 1, C, ef10);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, 1, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, 2, C, ef04);
 
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 1, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 2, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 0, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 3, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 3, FBitmapB.Height - 1 - 0, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 1, C, ef10);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 1, C, ef04);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 2, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 1, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 2, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 0, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 3, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 3, FBitmapB.Height - 1 - 0, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 1, C, ef10);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 1, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 2, C, ef04);
 
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 1, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 2, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 0, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 3, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, 0, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 1, C, ef10);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 1, C, ef04);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 2, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 1, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 2, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 0, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 3, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, 0, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 1, C, ef10);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 1, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 2, C, ef04);
 
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 1, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 0, C, ef16);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 2, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 0, C, ef12);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 3, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, FBitmapB.Height - 1 - 0, C, ef06);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 1, C, ef10);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 1, C, ef04);
-					Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 2, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 1, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 0, C, ef16);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 2, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 0, C, ef12);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 3, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, FBitmapB.Height - 1 - 0, C, ef06);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 1, C, ef10);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 1, C, ef04);
+						Pix24(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 2, C, ef04);
+					end;
 				end;
 				baGradientOnly:
 				begin
@@ -492,8 +554,8 @@ begin
 
 	if NTSystem then
 		if Font.Name = 'MS Sans Serif' then
-			Font.Name := 'Microsoft Sans Serif';        
-  Canvas.Font.Name := Font.Name;
+			Font.Name := 'Microsoft Sans Serif';
+	Canvas.Font.Name := Font.Name;
 
 	CheckPos;
 
@@ -511,6 +573,8 @@ begin
 	FileName := GraphDir + FileName + '.ico';
 	if FileExists(FileName) then
 		Icon.LoadFromFile(FileName);
+
+	if Assigned(FOnRWOptions) then FOnRWOptions(Self, False);
 end;
 
 destructor TDForm.Destroy;
@@ -532,6 +596,13 @@ begin
 	end;
 	inherited Destroy;
 end;
+
+{function TDForm.CloseQuery: Boolean;
+begin
+//procedure TDForm.CloseQuery(Sender: TObject; var CanClose: Boolean);
+	if inherited CloseQuery then
+		if Assigned(FOnRWOptions) then FOnRWOptions(Self, True);
+end;}
 
 procedure TDForm.KeyDown(var Key: Word; Shift: TShiftState);
 begin
