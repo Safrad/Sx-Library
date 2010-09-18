@@ -71,7 +71,7 @@ begin
 		Parser.ThousandSep := ',';
 	end;
 
-	CompileMesClear;
+//	CompileMesClear;
 	Result := Parser.ReadFA(MinVal, DefVal, MaxVal);
 	Parser.Free;
 end;

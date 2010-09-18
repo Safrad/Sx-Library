@@ -15,6 +15,7 @@ uses uAdd;
 const
 	CharNul = #$00;
 	CharTab = #$09;
+	CharSpace = #$20;
 	CharHT = CharTab;
 	CharVT = #$0B;
 	CharLF = #$0A;// #10;

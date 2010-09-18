@@ -15,25 +15,32 @@ uses SysUtils, uAdd;
 const
 	PreHeadSize = 16;
 type
-	TColumns = record
+	PColumn = ^TColumn;
+	TColumn = record // 16
 		Name: string;
 		Typ: Variant;
-		Width: SG;
+		Width: S4;
 		Items: array of Variant;
 	end;
 
 	TDBF = class
 	private
-
-	public
-		Columns: array of TColumns;
+		Columns: array of TColumn;
 		ColumnCount: UG;
 
-		DbItemCount: UG;
+	public
+
+		DbItemCount: SG;
 		FileName: TFileName;
 		IsNew: Boolean;
 
+
+
+		constructor Create;
+		destructor Destroy; override;
 //		procedure New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
+
+		function FindColumn(Name: string): PColumn;
 		procedure Close;
 		procedure SetItems(ItemsCount: Integer);
 		procedure CopyItem(Source, Dest: Integer);
@@ -126,9 +133,11 @@ var
 	Row: PArrayChar;
 	RowSize: SG;
 begin
+	Result := False;
 	Row := nil;
 	F := TFile.Create;
 	LRetry:
+	Close;
 	FileName := FName;
 	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 	begin
@@ -153,7 +162,9 @@ begin
 			case Column.Typ of
 			'C': Columns[ColumnCount].Typ := vtChar;
 			'N': Columns[ColumnCount].Typ := vtInteger;
-{	vtBoolean    = 1;
+{ 		'D': Columns[ColumnCount].Typ := vtDate;
+
+	vtBoolean    = 1;
 	vtChar       = 2;
 	vtExtended   = 3;
 	vtString     = 4;
@@ -199,7 +210,20 @@ begin
 
 				case Columns[j].Typ of
 				vtChar: Columns[j].Items[DbItemCount] := s;
-				vtInteger: Columns[j].Items[DbItemCount] := StrToValI(s, False, MinInt, 0, MaxInt, 1)
+				vtInteger:
+				begin
+					if Pos('.', s) <> 0 then
+					begin
+						Columns[j].Typ := vtExtended;
+						Columns[j].Items[DbItemCount] := StrToFA(s);
+					end
+					else
+						Columns[j].Items[DbItemCount] := StrToSG(s); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
+
+				end;
+				vtExtended:
+						Columns[j].Items[DbItemCount] := StrToFA(s);
+//				vtDate:                                   
 
 
 				end;
@@ -210,18 +234,42 @@ begin
 		LExit:
 		FreeMem(Row);
 		if not F.Close then goto LRetry;
+		Result := True;
 	end;
 	F.Free;
 end;
 
 function TDBF.SaveToFile(FName: TFileName): Boolean;
-label LRetry;
-var
-	DbFile: file;
-	ErrorCode: Integer;
-	i: Integer;
 begin
 	Result := False;
+end;
+
+constructor TDBF.Create;
+begin
+	inherited;
+	IsNew := True;
+end;
+
+destructor TDBF.Destroy;
+begin
+	Close;
+  inherited;
+end;
+
+function TDBF.FindColumn(Name: string): PColumn;
+var
+	i: SG;
+	NameU: string;
+begin
+	Result := nil;
+	NameU := UpperCase(Name);
+	for i := 0 to ColumnCount - 1 do
+	begin
+		if NameU = Columns[i].Name then
+		begin
+			Result := @Columns[i];
+		end;
+	end;
 end;
 
 end.

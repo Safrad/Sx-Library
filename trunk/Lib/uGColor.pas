@@ -34,7 +34,6 @@ type
 		ButtonOk: TDButton;
 		ButtonApply: TDButton;
 		ButtonCancel: TDButton;
-		RadioGroup1: TRadioGroup;
     LabelG: TDLabel;
 		EditG: TEdit;
 		TrackBarG: TTrackBar;
@@ -91,6 +90,13 @@ type
 		ImageList1: TImageList;
     BevelBasicColors: TBevel;
     ShapeBorder: TShape;
+    ComboBoxBitDepth: TComboBox;
+    DLabel1: TDLabel;
+    EditHue: TEdit;
+    TrackBarHue: TTrackBar;
+    DButtonH: TDButton;
+    DLabel2: TDLabel;
+    DLabel3: TDLabel;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure PanelCurColorClick(Sender: TObject);
@@ -103,7 +109,6 @@ type
 		procedure ImageSMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
 		procedure EditRGBAChange(Sender: TObject);
-		procedure RadioGroup1Click(Sender: TObject);
 		procedure ImageLMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
 		procedure ImageLMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -119,6 +124,7 @@ type
 		procedure FormCreate(Sender: TObject);
 		procedure ImageSFill(Sender: TObject);
 		procedure ImageLFill(Sender: TObject);
+		procedure ComboBoxBitDepthChange(Sender: TObject);
 	private
 		{ Private declarations }
 		CurColor, DefColor: TColor;
@@ -152,7 +158,9 @@ function GetColor(const prompt: string;
 implementation
 
 {$R *.DFM}
-uses uMenus, uInput;
+uses
+	Math,
+	uMenus, uInput;
 
 procedure InitButton(Button: TDButton);
 begin
@@ -421,8 +429,9 @@ end;
 
 // TfGColor
 
-procedure TfGColor.InitReadOnly;
 const ABits: array[0..4] of Byte = (1, 4, 15, 18, 24);
+
+procedure TfGColor.InitReadOnly;
 var
 	C: TRColor;
 	i: Integer;
@@ -433,7 +442,7 @@ begin
 	InitButton(PanelNowColor);
 	PanelNowColor.Repaint;
 
-	PanelNowBitColor.Color := BitColor(NowColor, ABits[RadioGroup1.ItemIndex]).L;
+	PanelNowBitColor.Color := BitColor(NowColor, ABits[ComboBoxBitDepth.ItemIndex]).L;
 	InitButton(PanelNowBitColor);
 	PanelNowBitColor.Repaint;
 	ImageS.Fill;
@@ -654,11 +663,6 @@ begin
 	ChangeColor;
 end;
 
-procedure TfGColor.RadioGroup1Click(Sender: TObject);
-begin
-	InitAll;
-end;
-
 procedure TfGColor.ImageLMouseDown(Sender: TObject; Button: TMouseButton;
 	Shift: TShiftState; X, Y: Integer);
 begin
@@ -757,8 +761,12 @@ begin
 end;
 
 procedure TfGColor.FormCreate(Sender: TObject);
+var i: SG;
 begin
 	Background := baGradient;
+	for i := 0 to Length(ABits) - 1 do
+		ComboBoxBitDepth.Items.Add(NToS(ABits[i]) + ' bit');
+	ComboBoxBitDepth.ItemIndex := Length(ABits) - 1;
 end;
 
 procedure TfGColor.ImageSFill(Sender: TObject);
@@ -801,182 +809,209 @@ begin
 		BmpD.Line(X, 0, X, 15, clNone, efNeg);
 end;
 
+procedure TfGColor.ComboBoxBitDepthChange(Sender: TObject);
+begin
+	InitAll;
+end;
+
+
+{
+Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
+Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi:
+|Y|   |0.299  0.587  0.114  | |R|
+|U| = |-0.141  -0.289 0.437 | |G|
+|V|   |0.615 -0.515 -0.1    | |B|
+
+
+|Y |   |0.299  0.587  0.114   | |R|
+|Cb| = |-0.1687  -0.3313 -0.5 | |G|
+|Cr|   |0.5 -0.4187 -0.0813   | |B|
+
+Zpìtný pøevod se provádí pomocí inverzní matice.
+
+
+Model HSV vykazuje nìkteré nedostatky, které sice nejsou zásadního charakteru,
+nicménì mohou ztìžovat práci s definováním barvy v prostoru HSV.
+Jedním z nedostatkù je jehlanovitý tvar, který zpùsobuje,
+že ve øezu se musí bod o konstantní hodnotì s pohybovat pøi zmìnì h po dráze ve tvaru šestiúhelníku,
+nikoliv po kružnici, jak by bylo pøirozené.
+Dalším záporným jevem je nesymetrie modelu z hlediska pøechodù ve stupních šedi od èerné k bílé.
+Tyto nedostatky odstraòuje model HLS zavedený firmou Tektronix
+}
+
+function RGBToHLS(C: TRColor): THLSColor;
+var
+	MaxC, MinC, delta, H: SG;
+begin
+	Result.H := 0;
+	Result.L := 0;
+	Result.S := 0;
+
+	MaxC := max(max(C.R, C.G), C.B);
+	MinC := min(min(C.R, C.G), C.B);
+
+	Result.L := (maxC + minC) div 2;
+
+	if (maxC = minC) then
+	begin
+		Result.S := 0;
+		Result.H := -1;
+	end
+	else
+	begin
+		if (Result.L < 128) then
+			Result.S := (maxC-minC) div (maxC+minC)
+		else
+			Result.S := (maxC-minC) div (2-maxC-minC);
+
+		delta := maxC - minC;
+		H := 0;
+		if (C.R = maxC) then H := 60*(C.G-C.B) div delta
+		else if (C.G = maxC) then H := 60*(2+(C.B-C.R)) div delta
+		else if (C.B = maxC) then H := 60*(4+(C.R-C.G)) div delta;
+		if (H < 0) then Inc(H, 360);
+		Result.H := H;
+	end;
+end;
+
+function RGBtoHSV(C: TRColor): THSVColor;
+var
+	MaxC, MinC, delta, H: SG;
+begin
+	maxC := Math.max(Math.max(C.r,C.g),C.b);
+	minC := Math.min(Math.min(C.r,C.g),C.b);
+
+	Result.v := maxC;
+	Result.h := 0;
+	h := 0;
+
+	if (maxC <> 0) then
+		Result.s := (maxC - minC) div maxC
+	else
+		Result.s := 0;
+
+	if(Result.s = 0) then
+		Result.h := -1
+	else
+	begin
+		delta := maxC - minC;
+		if(C.r = maxC) then h := 60*(C.g-C.b) div delta
+		else if(C.g = maxC) then h := 60*(2+(C.b-C.r)) div delta
+		else if(C.b = maxC) then h := 60*(4+(C.r-C.g)) div delta;
+		if(h<0) then Inc(h, 360);
+		Result.H := H;
+	end;
+end;
+
+function HLSRGBValue(n1, n2, hue: SG): U1;
+begin
+	if(hue>360) then Dec(hue, 360)
+	else if(hue<0) then Inc(hue, 360);
+	if(hue<60) then Result := n1+(n2-n1)*hue div 60
+	else if (hue<180) then Result := n2
+	else if (hue<240) then Result := n1+(n2-n1)*(240-hue) div 60
+	else Result := n1;
+end;
+
+function HSVtoRGB(C: THSVColor): TRColor;
+var i, f, p, q, t: SG;
+begin
+	Result.L := 0;
+	if(C.s = 0) then
+	begin
+		if(C.h = -1) then
+		begin
+			Result.r := C.v;
+			Result.g := C.v;
+			Result.b := C.v;
+		end
+		else
+		begin
+{							rIndex.setText("xxx");
+			gIndex.setText("xxx");
+			bIndex.setText("xxx"); D???}
+		end;
+	end
+	else
+	begin
+		if(C.h = 360) then C.h := 0;
+
+		C.h:=C.h div 60; // D???
+//            i := (int)Math.floor((double)h); D???
+  
+		f := C.h - i;
+		p := C.v*(1-C.s);
+		q := C.v*(1-(C.s*f));
+		t := C.v*(1-(C.s*(1-f)));
+
+		case i of
+		0:
+		begin
+			Result.r := C.v;
+			Result.g := t;
+			Result.b := p;
+		end;
+		1:
+		begin
+			Result.r := q;
+			Result.g := C.v;
+			Result.b := p;
+		end;
+		2:
+		begin
+			Result.r := p;
+			Result.g := C.v;
+			Result.b := t;
+		end;
+		3:
+		begin
+			Result.r := p;
+			Result.g := q;
+			Result.b := C.v;
+		end;
+		4:
+		begin
+			Result.r := t;
+			Result.g := p;
+			Result.b := C.v;
+		end;
+		5:
+		begin
+			Result.r := C.v;
+			Result.g := p;
+			Result.b := q;
+		end;
+		end;
+	end;
+end;
+
+function HLStoRGB(C: THLSColor): TRColor;
+var m2, m1: SG;
+begin
+	Result.R := 0;
+	Result.G := 0;
+	Result.B := 0;
+
+	if(C.l<128) then m2 := C.l*(1+C.s)
+	else m2 := C.l+C.s-C.l*C.s;
+	m1 := 2*C.l-m2;
+	if(C.s = 0) then
+	begin
+		{if(C.h = Float.NaN)}
+		Result.r := 255;
+		Result.g := 255;
+		Result.b := 255;
+		//else System.err.println("Doslo k chybe pri prevodu HLS -> RGB");
+	end
+	else
+	begin
+		Result.r := HLSRGBValue(m1,m2,C.h+120);
+		Result.g := HLSRGBValue(m1,m2,C.h);
+		Result.b := HLSRGBValue(m1,m2,C.h-120);
+	end;
+end;
+  
+
 end.
 
-Nìco k pøevodu RGB <-> HLS <-> HSV
-Algoritmus pøevodu RGB <-> HLS (realizován v jazyce Java): 
 
-   public float[] RGBtoHLS(float red, float green, float blue) { 
-            float h = 0; 
-            float l = 0; 
-            float s = 0; 
-         
-            float max = Math.max(Math.max(red,green),blue); 
-            float min = Math.min(Math.min(red,green),blue); 
-  
-            l = (max+min)/2.0f; 
-  
-            if(max==min) { 
-                s = 0; 
-                h = Float.NaN; 
-             } 
-            else { 
-                if(l<0.5) s = (max-min)/(max+min); 
-                else s = (max-min)/(2-max-min); 
-  
-                float delta = max - min; 
-                if(red == max) h = (green-blue)/delta; 
-                else if(green == max) h = 2+(blue-red)/delta; 
-                else if(blue == max) h = 4+(red-green)/delta; 
-                 h *= 60; 
-                if(h < 0) h+=360; 
-            } 
-            return new float[] {h,l,s}; 
-     } 
-  
-
-Algoritmus pøevodu RGB <-> HSV: 
-        public float[] RGBtoHSV(float r, float g, float b) { 
-  
-          float max = Math.max(Math.max(r,g),b); 
-          float min = Math.min(Math.min(r,g),b); 
-  
-          float v = max; 
-          float s = 0; 
-          float h = 0; 
-  
-  
-          if(max != 0) s = (max - min)/max; 
-          else s = 0; 
-  
-          if(s==0) h = Float.NaN; 
-          else { 
-            float delta = max - min; 
-            if(r == max) h = (g-b)/delta; 
-            else if(g == max) h = 2+(b-r)/delta; 
-            else if(b == max) h = 4+(r-g)/delta; 
-            h *= 60; 
-            if(h<0) h += 360; 
-          } 
-  
-  
-					return new float[] {h,s,v};
-        } 
-
-Algoritmus pøevodu HLS <-> RGB: 
-    public float[] HLStoRGB(float h, float l, float s) { 
-        float r = 0; 
-        float g = 0; 
-        float b = 0; 
-  
-        float m2; 
-        float m1; 
-  
-        if(l<0.5) m2 = l*(1+s); 
-        else m2 = l+s-l*s; 
-        m1 = 2*l-m2; 
-        if(s == 0) 
-          /*if(h == Float.NaN)*/ r = g = b = l; 
-          //else System.err.println("Doslo k chybe pri prevodu HLS -> RGB"); 
-        else { 
-            r = HLSRGBValue(m1,m2,h+120); 
-            g = HLSRGBValue(m1,m2,h); 
-            b = HLSRGBValue(m1,m2,h-120); 
-        } 
-  
-        return new float[] {r,g,b}; 
-    } 
-
-  
-     private float HLSRGBValue(float n1, float n2, float hue) { 
-        if(hue>360) hue-=360; 
-        else if(hue<0) hue+=360; 
-        if(hue<60) return n1+(n2-n1)*hue/60; 
-        else if(hue<180) return n2; 
-        else if(hue<240) return n1+(n2-n1)*(240-hue)/60; 
-        else return n1; 
-    } 
-  
-
-Algoritmus pøevodu HSV <-> RGB: 
-        public float[] HSVtoRGB(float h, float s, float v) { 
-          float r = 0; 
-          float g = 0; 
-          float b = 0; 
-  
-          if(s == 0) { 
-            if(h == Float.NaN) { 
-              r = v; 
-              g = v; 
-              b = v; 
-            } 
-            else { 
-              rIndex.setText("xxx"); 
-							gIndex.setText("xxx");
-              bIndex.setText("xxx"); 
-            } 
-          } 
-  
-          else { 
-            if(h == 360) h = 0; 
-  
-            h/=60; 
-            int i = (int)Math.floor((double)h); 
-  
-            float f = h - i; 
-            float p = v*(1-s); 
-            float q = v*(1-(s*f)); 
-            float t = v*(1-(s*(1-f))); 
-  
-            switch(i) { 
-              case 0: r = v; 
-                      g = t; 
-                      b = p; 
-                      break; 
-  
-              case 1: r = q; 
-                      g = v; 
-                      b = p; 
-                      break; 
-  
-              case 2: r = p; 
-                      g = v; 
-                      b = t; 
-                      break; 
-  
-              case 3: r = p; 
-                      g = q; 
-                      b = v; 
-                      break; 
-  
-              case 4: r = t; 
-                      g = p; 
-                      b = v; 
-                      break; 
-  
-              case 5: r = v; 
-                      g = p; 
-                      b = q; 
-                      break; 
-  
-            } 
-  
-          } 
-          return new float[] {r,g,b}; 
-        } 
-
-
-///
-Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
-Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi: 
-|Y|   |0.299  0.587  0.114  | |R| 
-|U| = |-0.141  -0.289 0.437 | |G| 
-|V|   |0.615 -0.515 -0.1    | |B| 
-  
-
-|Y |   |0.299  0.587  0.114   | |R| 
-|Cb| = |-0.1687  -0.3313 -0.5 | |G| 
-|Cr|   |0.5 -0.4187 -0.0813   | |B| 
-
-Zpìtný pøevod se provádí pomocí inverzní matice. 
-				

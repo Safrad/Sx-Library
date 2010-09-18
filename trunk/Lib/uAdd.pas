@@ -216,14 +216,33 @@ type
 		2: (WordRG: Word; ByteB: Byte);
 	end;
 	THSVColor = packed record // 4
+		case Integer of
+		0:
+		(
+		H: -1..MaxSpectrum; // 2
+		S: 0..239; // 1
+		V: 0..255; // 1
+		);
+		1:
+		(
 		Hue: 0..MaxSpectrum; // 2
 		Saturation: 0..239; // 1
 		Value: 0..255; // 1
+		);
 	end;
 	THLSColor = packed record // 4
-		Hue: 0..MaxSpectrum; // 2
+		case Integer of
+		0:
+		(
+		H: -1..MaxSpectrum; // 2
+		L: 0..255; // 1
+		S: 0..239; // 1
+		);
+		1: (
+		Hue: -1..MaxSpectrum; // 2
 		Lightness: 0..255; // 1
 		Saturation: 0..239; // 1
+		);
 	end;
 
 const
@@ -330,6 +349,7 @@ var
 
 // Time Format
 	TimeSeparator: string[3];
+	ICentury: SG;
 
 //var WinDecimalSeparator: Char;
 {
@@ -404,6 +424,8 @@ type
 
 //function SToMs(const Str: string): SG; // MsToStr<-
 
+function StrToFA(Str: string): FA;
+function StrToSG(Str: string): SG;
 function SToTime(Str: string): TTime;
 function SToDate(Str: string): TDate;
 function SToDateTime(Str: string): TDateTime;
@@ -435,8 +457,9 @@ procedure Nop;
 procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
 procedure FillU4(var Desc; Count: Cardinal; Value: U4);
+procedure FillOrderU4(var Desc; Size: Cardinal); register;
 procedure Swap02(var Desc; Count: Cardinal; Step: S4);
-procedure Exchange(var P0, P1; Count: Cardinal); register;
+procedure Exchange(P0, P1: Pointer; Count: Cardinal); register;
 function SelectDirectory(var Dir: string): BG;
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
@@ -2025,6 +2048,20 @@ begin
 	Result := (3600000 * h + 60000 * m + 1000 * s + d);
 end;}
 
+function StrToFA(Str: string): FA;
+var
+	E: Integer;
+begin
+	Val(Str, Result, E);
+end;
+
+function StrToSG(Str: string): SG;
+var
+  E: Integer;
+begin
+	Val(Str, Result, E);
+end;
+
 function SToTime(Str: string): TTime;
 begin
 	Result := SToMs(Str) / MSecsPerDay;
@@ -2066,8 +2103,9 @@ begin
 	end
 	else if Length(Str) = 6 then
 	begin
-		Year := StrToValI(Copy(Str, 1, 2), False, 1900, UG(1900), 9999, 1);
-		Month := StrToValI(Copy(Str, 3, 2), False, 1, UG(1), 12, 1);
+		Year := StrToValI(Copy(Str, 1, 2), False, 00, UG(00), 99, 1);
+		if Year < ICentury then Inc(Year, 2000) else Inc(Year, 1900);
+		Month := StrToValI(Copy(Str, 3, 2), False, 1, UG(1), 99, 1);
 		Day := StrToValI(Copy(Str, 5, 2), False, 1, UG(1), 31, 1);
 	end
 	else if Length(Str) = 8 then
@@ -2083,7 +2121,12 @@ begin
 		Result := StrToValI(Str, False, 0, 0, MaxInt, 1);
 		Exit;
 	end;
-	Result := EncodeDate(Year, Month, Day);
+	if Month > 50 then Dec(Month, 50); // Female offset
+	if TryEncodeDate(Year, Month, Day, TDateTime(Result)) = False then
+	begin
+		// AddMes2 D???
+		Result := 0;
+	end;
 end;
 
 function SToDateTime(Str: string): TDateTime;
@@ -2350,13 +2393,12 @@ end;
 
 procedure ReadMem(P: Pointer; Size: Cardinal); register;
 asm
-	add Size, P
-	sub Size, 4
 	cmp Size, 0
 	je @Exit
+	add Size, P
 	@Loop:
-		add P, 4
 		mov ecx, [P]
+		add P, 4
 		cmp P, Size
 	jb @Loop
 	@Exit:
@@ -2390,6 +2432,22 @@ asm
 				POP     EDI
 end;
 
+procedure FillOrderU4(var Desc; Size: Cardinal); register;
+asm
+	cmp Size, 0
+	je @Exit
+	shl Size, 2
+	add Size, Desc
+	xor ecx, ecx
+	@Loop:
+		mov [Desc], ecx
+		add Desc, 4
+		cmp Desc, Size
+		inc ecx
+	jb @Loop
+	@Exit:
+end;
+
 procedure Swap02(var Desc; Count: Cardinal; Step: S4); register;
 asm
 {     ->EAX     Pointer to destination  }
@@ -2410,7 +2468,7 @@ asm
 	POP     EDI
 end;
 
-procedure Exchange(var P0, P1; Count: Cardinal); register;
+procedure Exchange(P0, P1: Pointer; Count: Cardinal); register;
 asm
 {     ->EAX     P0  }
 {       EDX     P1   }
@@ -2426,7 +2484,7 @@ asm
 //	xchg [edi], [esi]
 		mov al, [edi]
 		xchg al, [esi]
-		mov [esi], al
+		mov [edi], al
 		add edi, 1
 		add esi, 1
 		cmp edi, edx
@@ -2536,10 +2594,24 @@ function ButtonNameToFileName(Name: string; const Space: Boolean): string;
 label LDel;
 var
 	Index, i: SG;
+	Found: BG;
 const
 	Names: array[0..4] of string = ('DBUTTON', 'BUTTON', 'COMBOBOX', 'EDIT', 'MEMO');
 begin
 	Result := Name;
+	Found := False;
+	for i := 0 to Length(Names) - 1 do
+	begin
+		Index := Pos(Names[i], UpperCase(Result));
+		if Index <> 0 then
+		begin
+			Delete(Result, Index, Length(Names[i]));
+			Found := True;
+			Break;
+		end;
+	end;
+
+	if Found = False then
 	while Length(Result) > 0 do
 	begin
 		case Result[Length(Result)] of
@@ -2557,15 +2629,6 @@ begin
 		end;
 	end;
 
-	for i := 0 to Length(Names) - 1 do
-	begin
-		Index := Pos(Names[i], UpperCase(Result));
-		if Index <> 0 then
-		begin
-			Delete(Result, Index, Length(Names[i]));
-			Break;
-		end;
-	end;
 
 	if Space then
 		for Index := 2 to Length(Result) do
@@ -2699,6 +2762,10 @@ begin
 
 // Time Format
 	TimeSeparator := GetLocaleStr(SysLocale.DefaultLCID{ GetThreadLocale}, LOCALE_STIME, ':');
+{	s := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_ICENTURY, '0');
+	InLineIndex := 1;
+	ICentury := StrToIntDef(ReadToChar(s, InLineIndex, ';'), 3);}
+	ICentury := 30; // D???
 	{$ELSE}
 	NativeSymbols := '0123456789';
 

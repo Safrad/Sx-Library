@@ -11,7 +11,7 @@ unit uDIni;
 interface
 
 uses
-	uAdd, uDView,
+	uAdd, uDView, uDButton,
 	Classes, SysUtils, Forms, ComCtrls, StdCtrls, Controls, Menus;
 
 type
@@ -93,6 +93,7 @@ type
 		procedure RWMenuBG(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: Boolean);
 		procedure RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: Boolean);
 		procedure RWComboBox(Section: string; ComboBox: TComboBox; const Save: Boolean);
+		procedure RWButton(Section: string; Button: TDButton; const Save: Boolean);
 		procedure RWMemo(Section: string; Memo: TMemo; const Save: Boolean);
 
 		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: Boolean): string;
@@ -1084,7 +1085,6 @@ begin
 	MenuItem.Checked := RWBGF(Section, ButtonNameToFileName(MenuItem.Name, False), MenuItem.Checked, MenuItem.Checked, Save);
 end;
 
-
 procedure TDIniFile.RWComboBox(Section: string; ComboBox: TComboBox; const Save: Boolean);
 var
 	i: SG;
@@ -1104,6 +1104,14 @@ begin
 		ComboBox.Text := MainIni.RWStringF(Section, Name, ComboBox.Text, ComboBox.Text, Save);
 	end;
 	ComboBox.OnChange := NotifyEvent;
+end;
+
+procedure TDIniFile.RWButton(Section: string; Button: TDButton; const Save: Boolean);
+var
+	Name: string;
+begin
+	Name := ButtonNameToFileName(Button.Name, False);
+	Button.Down := MainIni.RWBGF(Section, Name, Button.Down, Button.Down, Save);
 end;
 
 procedure TDIniFile.RWMemo(Section: string; Memo: TMemo; const Save: Boolean);
