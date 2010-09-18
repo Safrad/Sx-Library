@@ -134,6 +134,7 @@ type
 	Index: SG;
 	LG, SG: TGraphicPoint; // Lines
 	WP: TWorldPoints; // BezierC
+	Offset: SG;
 {	case Integer of
 	0: (LG, SG: TGraphicPoint);
 	1: (
@@ -925,19 +926,21 @@ begin
 end;
 
 const
-	PreM = 256;
 	Pre = 8;
+	PreM = 1 shl Pre;
 	PreS = 1 shl (Pre - 1);
-	// D???
 
-procedure Lin(P1, P2: TGraphicPoint); overload;
+var
+	DCR, DCG, DCB, DCA: SG;
+	CR, CG, CB, CA: SG;
+
+procedure Lin(P1, P2: TGraphicPoint; Size: SG); overload;
 var
 	D, DXY: SG;
 	DX, DY,
 	x, y, k1, k2, e, XYEnd: SG;
-	DCR, DCG, DCB, DCA: SG;
-	CR, CG, CB, CA: SG;
-	P: PRColor;
+	P, PN: PRColor;
+	i: SG;
 	C: TRColor;
 begin
 	if Drawable.AreaMode = SGL_AREA_MODE_POINTS then
@@ -1022,12 +1025,7 @@ begin
 					Inc(CA, DCA);
 					C.R := (CR + PreS) div PreM;
 					C.G := (CG + PreS) div PreM;
-					if (CB + PreS) div PreM < 0 then
-						C.B := 0
-					else if (CB + PreS) div PreM > 255 then
-						C.B := 255
-					else
-						C.B := (CB + PreS) div PreM;
+					C.B := (CB + PreS) div PreM;
 					C.A := (CA + PreS) div PreM;
 				end;
 				if e < 0 then
@@ -1076,7 +1074,17 @@ begin
 			if {(P1.Y > P2.Y) xor} (P1.X < P2.X) then D := 1 else D := -1;
 			while True do
 			begin
-				Pix(P, C);
+				if Size = 1 then
+					Pix(P, C)
+				else
+				begin
+					PN := PRColor(SG(P) - 4 * (Size div 2));
+					for i := 1 to Size do
+					begin
+						Pix(PN, C);
+						Inc(PN, 4);
+					end;
+				end;
 				if y = XYEnd then Break;
 				if DXY < 0 then
 				begin
@@ -1093,17 +1101,9 @@ begin
 					Inc(CG, DCG);
 					Inc(CB, DCB);
 					Inc(CA, DCA);
-					if CR + Pres < 0 then
-						Nop
-					else
 					C.R := (CR + PreS) div PreM;
 					C.G := (CG + PreS) div PreM;
-					if (CB + PreS) div PreM < 0 then
-						C.B := 0
-					else if (CB + PreS) div PreM > 255 then
-						C.B := 255
-					else
-						C.B := (CB + PreS) div PreM;
+					C.B := (CB + PreS) div PreM;
 					C.A := (CA + PreS) div PreM;
 				end;
 				if e < 0 then
@@ -1128,6 +1128,13 @@ begin
 		end;
 	end;
 end;
+
+procedure Lin(P1, P2: TGraphicPoint); overload;
+begin
+	Lin(P1, P2, 1);
+end;
+
+
 {
 procedure Lin(X1, Y1, X2, Y2: SG); overload;
 var
@@ -1316,7 +1323,9 @@ var
 	i, j, l: SG;
 begin
 	l := Length(Orig);
+	{$ifopt d+}
 	if l = 2 then IE(5454);
+	{$endif}
 	SetLength(left, l);
 	SetLength(right, l);
 	if l = 3 then
@@ -1346,8 +1355,8 @@ begin
 	else
 	begin
 		{$ifopt d+}
-		FillChar(left[0], l * SizeOf(left[0]), 0);
-		FillChar(right[0], l * SizeOf(right[0]), 0);
+{		FillChar(left[0], l * SizeOf(left[0]), 0);
+		FillChar(right[0], l * SizeOf(right[0]), 0);}
 		{$endif}
 		for i := 0 to l - 1 do
 		begin
@@ -1398,17 +1407,17 @@ begin
 end;
 
 procedure BezierC;
-var
+{var
 	i: SG;
-	G0, G1: TGraphicPoint;
+	G0, G1: TGraphicPoint;}
 begin
 	{$ifopt d+}
-	for i := 0 to Drawable.Index - 2 do
+{	for i := 0 to Drawable.Index - 2 do
 	begin
 		Tran(Drawable.WP[i], G0);
 		Tran(Drawable.WP[i + 1], G1);
 		Lin(G0, G1);
-	end;
+	end;}
 	{$endif}
 	DrawCurveUsingRecursiveSubdivision4(Drawable.WP);
 end;
@@ -1458,7 +1467,9 @@ begin
 	end;}
 	Divide := False;
 	if Depth > 512 then
+		{$ifopt d+}
 		IE(5354)
+		{$endif}
 	else
 	for i := 1 to l - 2 do
 	begin
@@ -1519,7 +1530,7 @@ procedure BezierG;
 begin
 	DrawCurveUsingRecursiveSubdivision(Drawable.WP);
 	{$ifopt d+}
-	DrawWrap;
+//	DrawWrap;
 	{$endif}
 end;
 
@@ -1539,8 +1550,8 @@ begin
 	sglFergusonCurve:
 	begin
 		F[0] := 2*t*t*t - 3*t*t + 1;
-		F[1] :=-2*t*t*t + 3*t*t;
-		F[2] := t*t*t - 2*t*t + t;
+		F[2] :=-2*t*t*t + 3*t*t;
+		F[1] := t*t*t - 2*t*t + t;
 		F[3] := t*t*t - t*t;
 	end;
 	end;
@@ -1550,9 +1561,10 @@ begin
 	Result.W := 0;
 	for i := 0 to 3 do
 	begin
-		Result.X := Result.X + Drawable.WP[i].X * F[i];
-		Result.Y := Result.Y + Drawable.WP[i].Y * F[i];
-		Result.W := Result.W + Drawable.WP[i].W * F[i];
+		Result.X := Result.X + Drawable.WP[Drawable.Offset + i].X * F[i];
+		Result.Y := Result.Y + Drawable.WP[Drawable.Offset + i].Y * F[i];
+		if (Drawable.LastElement <> sglFergusonCurve) or (i = 0) or (i = 2) then
+			Result.W := Result.W + Drawable.WP[Drawable.Offset + i].W * F[i];
 	end;
 	case Drawable.LastElement of
 	sglCoonsSpline:
@@ -1562,6 +1574,11 @@ begin
 		Result.W := Result.W / 6;
 	end;
 	end;
+	{$ifopt d+}
+	if Result.W <> 1 then
+		IE(3433);
+	{$endif}
+	Result.W := 1;
 	Result.C.L := MixColors(Drawable.WP[0].C.L, Drawable.WP[1].C.L, Round(65535 * t));
 
 end;
@@ -1570,19 +1587,32 @@ procedure Ferguson(from, too: Double);
 var
 	mid: Double;
 	P: TWorldPoint;
-	GX0, GY0, GX1, GY1, GX2, GY2: Double;
+	GX0, GY0, GX1, GY1, {GXM1, GYM1,} GX2, GY2: Double;
 	G0, G1: TGraphicPoint;
 begin
 	if too - from <= MinDouble then Exit;
+	Inc(Depth);
 	P := FergusonT(from);
 	Tran(P, GX0, GY0);
+
+{	mid := (from + too) / 3;
+	P := FergusonT(mid);
+	Tran(P, GX1M, GY1M);}
+
 	mid := (from + too) / 2;
 	P := FergusonT(mid);
 	Tran(P, GX1, GY1);
+
 	P := FergusonT(too);
 	Tran(P, GX2, GY2);
-	if (Sqr((GX0 + GX2) - 2 * GX1)) +
-	(Sqr((GY0 + GY2) - 2 * GY1)) > Max(sglPrecision, MinDouble) then
+	{$ifopt d+}
+	if (Depth > 512) then
+		IE(35);
+	{$endif}
+	if ((Sqr((GX0 + GX2) - 2 * GX1)) +
+	(Sqr((GY0 + GY2) - 2 * GY1)) > Max(sglPrecision, MinDouble)) then
+{	((Sqr((GX0 + GX2) - 3 * GX1M)) +
+	(Sqr((GY0 + GY2) - 3 * GY1M)) > Max(sglPrecision, MinDouble)) then D???}
 	begin
 		Ferguson(from, mid);
 		Ferguson(mid, too);
@@ -1597,14 +1627,16 @@ begin
 		G1.C := Drawable.Color;
 		Lin(G0, G1);
 	end;
+	Dec(Depth);
 end;
 
 type
 	TLine = record
 		Status: (stDown, stIn, stUp);
-		D, DXY: SG;
-		DX, DY,
-		k1, k2, e, XYEnd: SG;
+		DXY: SG;
+//		DX, DY,
+		XL, DXL,
+		{k1, k2, e,} XYEnd: SG;
 		DCR, DCG, DCB, DCA: SG;
 		CR, CG, CB, CA: SG;
 		P: PRColor;
@@ -1612,95 +1644,101 @@ type
 	end;
 
 procedure CreateLine(out Line: TLine; P1, P2: TGraphicPoint);
+var D: SG;
 begin
 	with Line do
 	begin
 		Status := stDown;
-		DX := Abs(Integer(P2.X) - Integer(P1.X));
-		DY := Abs(Integer(P2.Y) - Integer(P1.Y));
+{		DX := Abs(Integer(P2.X) - Integer(P1.X));
+		DY := Abs(Integer(P2.Y) - Integer(P1.Y));}
+
+		D := P2.Y - P1.Y;
 		if Drawable.ShadeModel = sglTrue then
 		begin
-			if DX > DY then
-				D := Abs(Integer(P2.X) - Integer(P1.X))
-			else
-				D := Abs(Integer(P2.Y) - Integer(P1.Y));
-
 			if D = 0 then
 			begin
-				P1.C := MixColors(P1.C, P2.C);
-				Pix(P1);
-				Exit;
+				GP.C.L := MixColors(P1.C.L, P2.C.L);
+			end
+			else
+			begin
+				DCR := ((Integer(P2.C.R) - Integer(P1.C.R)) * PreM) div D;
+				DCG := ((Integer(P2.C.G) - Integer(P1.C.G)) * PreM) div D;
+				DCB := ((Integer(P2.C.B) - Integer(P1.C.B)) * PreM) div D;
+				DCA := ((Integer(P2.C.A) - Integer(P1.C.A)) * PreM) div D;
+				CR := P1.C.R shl Pre;
+				CG := P1.C.G shl Pre;
+				CB := P1.C.B shl Pre;
+				CA := P1.C.A shl Pre;
+				GP.C := P1.C;
 			end;
-			DCR := ((Integer(P2.C.R) - Integer(P1.C.R)) * PreM) div D;
-			DCG := ((Integer(P2.C.G) - Integer(P1.C.G)) * PreM) div D;
-			DCB := ((Integer(P2.C.B) - Integer(P1.C.B)) * PreM) div D;
-			DCA := ((Integer(P2.C.A) - Integer(P1.C.A)) * PreM) div D;
-			CR := P1.C.R shl Pre;
-			CG := P1.C.G shl Pre;
-			CB := P1.C.B shl Pre;
-			CA := P1.C.A shl Pre;
-			GP.C := P1.C;
 		end
 		else
 			GP.C.L := MixColors(P1.C.L, P2.C.L);
 
-			e := 2 * DX - DY;
-			k1 := 2 * DX;
-			k2 := 2 * (DX - DY);
-			DXY := 4 * Drawable._width;
-			GP.X := P1.X;
-			GP.Y := P1.Y;
-			XYEnd := P2.Y;
-			P := XYToAddr(GP.X, GP.Y);
+{		e := 2 * DX - DY;
+		k1 := 2 * DX;
+		k2 := 2 * (DX - DY);}
+		DXY := 4 * Drawable._width;
+		GP.X := P1.X;
+		XL := P1.X shl Pre;
+		if D = 0 then
+			DXL := 0
+		else
+			DXL := (Integer(P2.X) - Integer(P1.X)) * PreM div D;
+		GP.Y := P1.Y;
+		XYEnd := P2.Y;
+		P := XYToAddr(GP.X, GP.Y);
 
-			if (P1.X < P2.X) then D := 1 else D := -1;
+//		if (P1.X < P2.X) then D := 1 else D := -1;
 	end;
 end;
 
 procedure NextY(var Line: TLine);
+var X: SG;
 begin
 	with Line do
 	begin
-//				Pix(P, C);
-				if GP.Y = XYEnd then Exit;
-				if DXY < 0 then
-				begin
-					Dec(GP.Y);
-				end
-				else
-				begin
-					Inc(GP.Y);
-				end;
-				Inc(SG(P), DXY);
-				if Drawable.ShadeModel = sglTrue then
-				begin
-					Inc(CR, DCR);
-					Inc(CG, DCG);
-					Inc(CB, DCB);
-					Inc(CA, DCA);
-					GP.C.R := (CR + PreS) div PreM;
-					GP.C.G := (CG + PreS) div PreM;
-					GP.C.B := (CB + PreS) div PreM;
-					GP.C.A := (CA + PreS) div PreM;
-				end;
-				if e < 0 then
-					Inc(e, k1)
-				else
-				begin
-					if D < 0 then
-					begin
-						if GP.X <= Drawable.MinBX then Exit;
-						Dec(GP.X);
-						Dec(P);
-					end
-					else
-					begin
-						if GP.X >= Drawable.MaxBX then Exit;
-						Inc(GP.X);
-						Inc(P);
-					end;
-					Inc(e, k2);
-				end;
+		if GP.Y = XYEnd then Exit;
+		Inc(GP.Y);
+		Inc(SG(P), DXY);
+		if Drawable.ShadeModel = sglTrue then
+		begin
+			Inc(CR, DCR);
+			Inc(CG, DCG);
+			Inc(CB, DCB);
+			Inc(CA, DCA);
+			GP.C.R := (CR + PreS) div PreM;
+			GP.C.G := (CG + PreS) div PreM;
+			GP.C.B := (CB + PreS) div PreM;
+			GP.C.A := (CA + PreS) div PreM;
+		end;
+
+		Inc(XL, DXL);
+		X := (XL + PreS) div PreM;
+		if GP.X <= Drawable.MinBX then Exit;
+		if GP.X >= Drawable.MaxBX then Exit;
+		Inc(SG(P), 4 * (X - GP.X));
+		GP.X := X;
+
+
+{		if e < 0 then
+			Inc(e, k1)
+		else
+		begin
+			if D < 0 then
+			begin
+				if GP.X <= Drawable.MinBX then Exit;
+				Dec(GP.X);
+				Dec(P);
+			end
+			else
+			begin
+				if GP.X >= Drawable.MaxBX then Exit;
+				Inc(GP.X);
+				Inc(P);
+			end;
+			Inc(e, k2);
+		end;}
 	end;
 end;
 
@@ -1752,6 +1790,7 @@ begin
 		CreateLine(Lines[LineCount], P1, P2);
 		Inc(LineCount);
 	end;
+//	if MinY < Drawable.MinBX then MinY := Drawable.MinBY;
 
 	for y := MinY to MaxY do
 	begin
@@ -1827,6 +1866,18 @@ begin
 		begin
 			BezierG;
 		end;
+		sglCoonsSpline, sglFergusonCurve:
+		begin
+			Drawable.Offset := 0;
+			while Drawable.Index >= Drawable.Offset + 4 do
+			begin
+				Ferguson(0, 1);
+				if Drawable.LastElement = sglCoonsSpline then
+					Inc(Drawable.Offset)
+				else
+					Inc(Drawable.Offset, 2);
+			end;
+		end;
 		end;
 		Drawable.LG.X := MinInt;
 		Drawable.LG.Y := MinInt;
@@ -1835,9 +1886,62 @@ begin
 	end;
 end;
 
+procedure sglArc2(x, y, radiusX, radiusY, from, too: Double);
+var
+	xx, yy, mid: Double;
+	GX0, GY0, GX1, GY1, GX2, GY2: Double;
+	GX, GY: SG;
+	G0, G1: TGraphicPoint;
+begin
+	if sglPrecision < 0 then
+	begin
+		sglBegin(sglLineStrip);
+		while from <= too do
+		begin
+			xx := x + radiusX * Cos(DegToRad(from));
+			yy := y + radiusY * Sin(DegToRad(from));
+			Tran(xx, yy, 1, GX, GY);
+			sglVertex(xx, yy, 1);
+			from := from - sglPrecision;
+		end;
+		sglEnd;
+		Exit;
+	end;
+
+	if too - from <= MinDouble then Exit;
+	xx := x + radiusX * Cos(DegToRad(from));
+	yy := y + radiusY * Sin(DegToRad(from));
+	Tran(xx, yy, 1, GX0, GY0);
+	mid := (from + too) / 2;
+	xx := x + radiusX * Cos(DegToRad(mid));
+	yy := y + radiusY * Sin(DegToRad(mid));
+	Tran(xx, yy, 1, GX1, GY1);
+	xx := x + radiusX * Cos(DegToRad(too));
+	yy := y + radiusY * Sin(DegToRad(too));
+	Tran(xx, yy, 1, GX2, GY2);
+	if (Sqr((GX0 + GX2) - 2 * GX1)) +
+	(Sqr((GY0 + GY2) - 2 * GY1)) > Max(sglPrecision, MinDouble) then
+	begin
+		sglArc2(x, y, radiusX, radiusY, from, mid);
+		sglArc2(x, y, radiusX, radiusY, mid, too);
+	end
+	else
+	begin
+		G0.X := Round(GX0);
+		G0.Y := Round(GY0);
+		G0.C := Drawable.Color;
+		G1.X := Round(GX2);
+		G1.Y := Round(GY2);
+		G1.C := Drawable.Color;
+		Lin(G0, G1);
+	end;
+end;
+
 (* Zadani bodu v homogenich souradnicich. *)
 procedure sglVertex(x, y, w: Double); overload;
-var G: TGraphicPoint;
+var
+	G: TGraphicPoint;
+	i: SG;
 begin
 	if Check then
 	begin
@@ -1852,7 +1956,12 @@ begin
 		end;
 		sglPoints:        (* body                         *)
 		begin
-			Pix(G);
+			case Round(Drawable.PointSize) of
+			1: Pix(G);
+			else
+				for i := 1 to Round(Drawable.PointSize) - 1 do
+					sglArc2(x, y, i, i, 0, 360);
+			end;
 		end;
 		sglLines:         (* cary                         *)
 		begin
@@ -1950,13 +2059,13 @@ begin
 			Drawable.WP[Drawable.Index].W := w;
 			Drawable.WP[Drawable.Index].C := Drawable.Color;
 			Inc(Drawable.Index);
-			if Drawable.LastElement in [sglBezierCCurve, sglCoonsSpline, sglFergusonCurve] then
+			if Drawable.LastElement in [sglBezierCCurve{, sglCoonsSpline, sglFergusonCurve}] then
 			if Drawable.Index = 4 then
 			begin
-				if Drawable.LastElement = sglBezierCCurve then
-					BezierC
-				else
-					Ferguson(0, 1);
+//				if Drawable.LastElement = sglBezierCCurve then
+					BezierC;
+{				else
+					Ferguson(0, 1);}
 				Drawable.Index := 0;
 				SetLength(Drawable.WP, 0);
 			end;
@@ -1968,57 +2077,6 @@ end;
 procedure sglVertex(x, y: Double); overload;
 begin
 	sglVertex(x, y, 1);
-end;
-
-procedure sglArc2(x, y, radiusX, radiusY, from, too: Double);
-var
-	xx, yy, mid: Double;
-	GX0, GY0, GX1, GY1, GX2, GY2: Double;
-	GX, GY: SG;
-	G0, G1: TGraphicPoint;
-begin
-	if sglPrecision < 0 then
-	begin
-		sglBegin(sglLineStrip);
-		while from <= too do
-		begin
-			xx := x + radiusX * Cos(DegToRad(from));
-			yy := y + radiusY * Sin(DegToRad(from));
-			Tran(xx, yy, 1, GX, GY);
-			sglVertex(xx, yy, 1);
-			from := from - sglPrecision;
-		end;
-		sglEnd;
-		Exit;
-	end;
-
-	if too - from <= MinDouble then Exit;
-	xx := x + radiusX * Cos(DegToRad(from));
-	yy := y + radiusY * Sin(DegToRad(from));
-	Tran(xx, yy, 1, GX0, GY0);
-	mid := (from + too) / 2;
-	xx := x + radiusX * Cos(DegToRad(mid));
-	yy := y + radiusY * Sin(DegToRad(mid));
-	Tran(xx, yy, 1, GX1, GY1);
-	xx := x + radiusX * Cos(DegToRad(too));
-	yy := y + radiusY * Sin(DegToRad(too));
-	Tran(xx, yy, 1, GX2, GY2);
-	if (Sqr((GX0 + GX2) - 2 * GX1)) +
-	(Sqr((GY0 + GY2) - 2 * GY1)) > Max(sglPrecision, MinDouble) then
-	begin
-		sglArc2(x, y, radiusX, radiusY, from, mid);
-		sglArc2(x, y, radiusX, radiusY, mid, too);
-	end
-	else
-	begin
-		G0.X := Round(GX0);
-		G0.Y := Round(GY0);
-		G0.C := Drawable.Color;
-		G1.X := Round(GX2);
-		G1.Y := Round(GY2);
-		G1.C := Drawable.Color;
-		Lin(G0, G1);
-	end;
 end;
 
 (* Kresleni kruznice.            *)

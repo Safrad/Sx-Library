@@ -23,7 +23,9 @@ type
 	public
 		Title: string;
 		FrameSet: BG;
-		NoCreated: BG;
+		AddCreated, AddTitle: BG;
+
+
 
 		constructor Create(FileName: TFileName);
 		destructor Destroy; override;
@@ -60,7 +62,8 @@ begin
 	Title := '';
 	FrameSet := False;
 	FStyle := '';
-	NoCreated := False;
+	AddCreated := True;
+	AddTitle := True;
 end;
 
 destructor THTML.Destroy;
@@ -68,9 +71,7 @@ begin
 	FileName := '';
 	Body := '';
 	Title := '';
-	FrameSet := False;
 	FStyle := '';
-	NoCreated := False;
 
 	inherited Destroy;
 end;
@@ -110,17 +111,21 @@ end;
 procedure THTML.AddImage(FileName: TFileName; Params: string);
 var
 	B: TDBitmap;
+	s: string;
 begin
 	B := TDBitmap.Create;
 	B.LoadFromFile(FileName);
 
-	AddBody(
+	s :=
 		'<IMG SRC="' + RelativePath(Self.FileName, FileName) + '" ' +
-		'ALT="' + ExtractFileName(DelFileExt(FileName)) + '" ' +
 		'WIDTH="' + IntToStr(B.Width) + '" ' +
-		'HEIGHT="' + IntToStr(B.Height) + '"' +
-		'BORDER="0" ' + Params +
-		'>' + HTMLSep);
+		'HEIGHT="' + IntToStr(B.Height) + '" ';
+	if Pos('ALT', Params) = 0 then
+		s := s + 'ALT="' + ExtractFileName(DelFileExt(FileName)) + '" ';
+	if Pos('BORDER', Params) = 0 then
+		s := s + 'BORDER="0" ';
+	s := s + Params + '>' + HTMLSep;
+	AddBody(s);
 	B.Free;
 end;
 
@@ -142,7 +147,7 @@ begin
 //		s := s + '	</FRAMESET>' + HTMLSep
 	else
 	begin
-		if NoCreated = False then
+		if AddCreated then
 		begin
 			AddBody('	<hr/>' + HTMLSep +
 				'<DIV ALIGN="RIGHT"><SMALL>Created ' + DateTimeToS(Now) + '</SMALL>&nbsp;&nbsp;');
@@ -185,7 +190,7 @@ begin
 	else
 	begin
 		s := s + '<BODY>' + HTMLSep;
-		if NoCreated = False then
+		if AddTitle then
 			s := s + '	<H2>' + Title + '</H2>' + HTMLSep;
 	end;
 	Body := s + Body;

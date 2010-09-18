@@ -8,6 +8,7 @@
 
 unit uDBitmap;
 
+{$define BPP4}
 {$define SaveReg}
 //{$define ShrAdd}
 
@@ -40,9 +41,21 @@ const
 		'Truevision Targa Graphic');
 var          
 	AllPictures: string;
+type
+	PPixel = ^TPixel;
+	TPixel = packed record
+		case Integer of
+		0: (R, G, B{$ifdef BPP4}, A{$endif}: U1);
+		{$ifdef BPP4}
+		1: (L: S4);
+		{$else}
+		1: (L: array[0..3] of U1);
+		{$endif}
+		2: (I: array[0..{$ifdef BPP4}3{$else}4{$endif}] of U1);
+	end;
 const
-  {$define BPP4}
-	BPP = {$ifdef BPP4}4{$else}3{$endif}; // Bytes Per Pixel
+	BPP = SizeOf(TPixel); // Bytes Per Pixel
+//	BPP = {$ifdef BPP4}4{$else}3{$endif}; // Bytes Per Pixel
 	MaxBitmapWidth = 65536 div 4;
 	MaxBitmapHeight = 32767;
 type
@@ -50,10 +63,10 @@ type
 		ef08, ef09, ef10, ef11, ef12, ef13, ef14, ef15, ef16,
 		efAdd, efSub, efAdd127, efSub127, efXor, efNeg);
 
-	TBmpData = array[0..4 * MaxBitmapWidth * MaxBitmapHeight - 1] of U1; // All data of bitmap
 	PBmpData = ^TBmpData;
-	TBmpLine = array[0..MaxBitmapWidth - 1] of U1; // One line of bitmap
+	TBmpData = array[0..MaxBitmapWidth * MaxBitmapHeight - 1] of TPixel; // All data of bitmap
 	PBmpLine = ^TBmpLine;
+	TBmpLine = array[0..MaxBitmapWidth - 1] of TPixel; // One line of bitmap
 
 	TCoor = S4;
 
@@ -228,6 +241,8 @@ type
 
 		procedure SaveToClipboard;
 		procedure SaveToFileDialog;
+
+		procedure DataToGraph(Values: PArrayFA; ValueOffset, ValueStep: FA; ValueCount: SG);
 	end;
 
 // Multicommands
@@ -686,22 +701,23 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 					begin
 						if (x and 1) = 0 then
 						begin
-							ColorIndex := PS[0] shr 4;
+							ColorIndex := PS[0].R shr 4;
 						end
 						else
 						begin
-							ColorIndex := PS[0] and $f;
+							ColorIndex := PS[0].R and $f;
 							Inc(Integer(PS));
 						end;
 
-						PD[0] := BitmapHead.Colors[ColorIndex].R;
+//						PD[0] := BitmapHead.Colors[ColorIndex]; D???
+						PD[0].R := BitmapHead.Colors[ColorIndex].R;
 						Inc(Integer(PD));
-						PD[0] := BitmapHead.Colors[ColorIndex].G;
+						PD[0].R := BitmapHead.Colors[ColorIndex].G;
 						Inc(Integer(PD));
-						PD[0] := BitmapHead.Colors[ColorIndex].B;
+						PD[0].R := BitmapHead.Colors[ColorIndex].B;
 						Inc(Integer(PD));
 						{$ifdef BPP4}
-						PD[0] := 0;
+						PD[0].R := 0;
 						Inc(Integer(PD));
 						{$endif}
 					end;
@@ -719,14 +735,15 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 					PS := Pointer(Integer(PS) + y * Integer(WidthToByteX8(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
-						PD[0] := BitmapHead.Colors[PS[0]].R;
+						// D???
+						PD[0].R := BitmapHead.Colors[PS[0].R].R;
 						Inc(Integer(PD));
-						PD[0] := BitmapHead.Colors[PS[0]].G;
+						PD[0].R := BitmapHead.Colors[PS[0].R].G;
 						Inc(Integer(PD));
-						PD[0] := BitmapHead.Colors[PS[0]].B;
+						PD[0].R := BitmapHead.Colors[PS[0].R].B;
 						Inc(Integer(PD));
 						{$ifdef BPP4}
-						PD[0] := 0;
+						PD[0].R := 0;
 						Inc(Integer(PD));
 						{$endif}
 						Inc(Integer(PS));
@@ -755,7 +772,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: 
 						Inc(Integer(PS));
 						Inc(Integer(PD));
 						{$ifdef BPP4}
-						PD[0] := 0;
+						PD[0].R := 0;
 						Inc(Integer(PD));
 						{$endif}
 					end;
@@ -2754,6 +2771,16 @@ begin
 		MessageD('Function Not Available', mtError, [mbOk]);
 end;
 
+function ColorToRGBStack(C: TColor): TPixel;
+begin
+	Result.L := ColorToRGB(C);
+{	Exchange(@Result.R, @Result.A, 1);
+	Exchange(@Result.G, @Result.B, 1);}
+	Exchange(@Result.R, @Result.B, 1);
+	Result.A := 0;
+end;
+
+
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Rec(
 	X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect);
@@ -2788,12 +2815,12 @@ var
 	EndPD: Integer;
 
 	WordR, WordG, WordB: Word;
-	BackColorR, CR: TRColor;
+	BackColorR, CR: TPixel;
 	BackColor: TColor;
 begin
 	if Effect = ef00 then Exit;
 	if C = clNone then Exit;
-	CR.L:= ColorToRGB(C);
+	CR:= ColorToRGBStack(C);
 
 	if XD1 > TCoor(GraphMaxX) then Exit;
 	if XD1 < GraphMinX then
@@ -2832,7 +2859,7 @@ begin
 	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YD2 - YD1 + 1));
 
 	if Transparent then
-		BackColor := TransparentColor
+		BackColor := ColorToRGB(TransparentColor)
 	else
 		BackColor := clNone;
 	if BackColor = clNone then
@@ -2850,9 +2877,9 @@ begin
 			xor ebx, ebx
 			xor ecx, ecx
 			xor edx, edx
-			mov bl, CR.B
+			mov bl, CR.R
 			mov cl, CR.G
-			mov dl, CR.R
+			mov dl, CR.B
 
 			mov al, Effect
 			cmp al, ef16
@@ -2902,11 +2929,16 @@ begin
 			jmp @Fin
 
 			@LMov:
+			{$ifndef BPP4}
 			cmp bl, cl
 			jne @NoGray
 			cmp cl, dl
 			jne @NoGray
+			{$endif}
 
+			{$ifdef BPP4}
+			mov eax, CR;
+			{$else}
 			mov al, bl
 			shl eax, 8
 			mov al, bl
@@ -2914,6 +2946,7 @@ begin
 			mov al, bl
 			shl eax, 8
 			mov al, bl
+			{$endif}
 			mov ecx, UseXS
 			shr ecx, 2
 			cld
@@ -2925,11 +2958,12 @@ begin
 
 			@NoGray:
 			{$ifdef BPP4}
-			xor ax, ax
+{			xor ax, ax
 			mov al, dl //TRColor(C).R
 			shl eax, 16
 			mov al, bl//TRColor(C).B
-			mov ah, cl//TRColor(C).G
+			mov ah, cl//TRColor(C).G}
+			mov eax, CR
 			{$else}
 			mov al, bl
 			mov ah, cl
@@ -2977,7 +3011,7 @@ begin
 			jmp @Fin
 
 			@L4:
-				mov al, CR.B
+				mov al, CR.R
 				mov bl, [edi]
 				add ax, bx
 				add ax, bx
@@ -2999,7 +3033,7 @@ begin
 				shr ax, 2
 				mov [edi + 1], al
 
-				mov al, CR.R
+				mov al, CR.B
 				mov bl, [edi + 2]
 				add ax, bx
 				add ax, bx
@@ -3053,7 +3087,7 @@ begin
 
 			@L2:
 				mov dl, [edi]
-				mov bl, CR.B
+				mov bl, CR.R
 				mov ax, dx
 				shl ax, 3
 				sub ax, dx
@@ -3077,7 +3111,7 @@ begin
 				mov [edi + 1], al
 
 				mov dl, [edi + 2]
-				mov bl, CR.R
+				mov bl, CR.B
 				mov ax, dx
 				shl ax, 3
 				sub ax, dx
@@ -3094,7 +3128,7 @@ begin
 			jmp @Fin
 
 			@L14:
-				mov al, CR.B
+				mov al, CR.R
 				mov bl, [edi]
 				mov dl, al
 				shl ax, 3
@@ -3118,7 +3152,7 @@ begin
 				shr ax, 3
 				mov [edi + 1], al
 
-				mov al, CR.R
+				mov al, CR.B
 				mov bl, [edi + 2]
 				mov dl, al
 				shl ax, 3
@@ -3136,7 +3170,7 @@ begin
 			jmp @Fin
 
 			@L6:
-				mov bl, CR.B
+				mov bl, CR.R
 				mov al, [edi]
 				mov dl, al
 				shl ax, 2
@@ -3164,7 +3198,7 @@ begin
 				shr ax, 3
 				mov [edi + 1], al
 
-				mov bl, CR.R
+				mov bl, CR.B
 				mov al, [edi + 2]
 				mov dl, al
 				shl ax, 2
@@ -3184,7 +3218,7 @@ begin
 			jmp @Fin
 
 			@L10:
-				mov al, CR.B
+				mov al, CR.R
 				mov bl, [edi]
 				mov dl, al
 				shl ax, 2
@@ -3212,7 +3246,7 @@ begin
 				shr ax, 3
 				mov [edi + 1], al
 
-				mov al, CR.R
+				mov al, CR.B
 				mov bl, [edi + 2]
 				mov dl, al
 				shl ax, 2
@@ -3233,7 +3267,7 @@ begin
 
 			@L1:
 				mov dl, [edi]
-				mov bl, CR.B
+				mov bl, CR.R
 				mov ax, dx
 				shl ax, 4
 				sub ax, dx
@@ -3257,7 +3291,7 @@ begin
 				mov [edi + 1], al
 
 				mov dl, [edi + 2]
-				mov bl, CR.R
+				mov bl, CR.B
 				mov ax, dx
 				shl ax, 4
 				sub ax, dx
@@ -3274,7 +3308,7 @@ begin
 			jmp @Fin
 
 			@L15:
-				mov dl, CR.B
+				mov dl, CR.R
 				mov bl, [edi]
 				mov ax, dx
 				shl ax, 4
@@ -3298,7 +3332,7 @@ begin
 				shr ax, 4
 				mov [edi + 1], al
 
-				mov dl, CR.R
+				mov dl, CR.B
 				mov bl, [edi + 2]
 				mov ax, dx
 				shl ax, 4
@@ -3322,7 +3356,7 @@ begin
 				sub ax, dx
 				sub ax, dx
 				sub ax, dx
-				mov bl, CR.B
+				mov bl, CR.R
 				add ax, bx
 				add ax, bx
 				add ax, bx
@@ -3354,7 +3388,7 @@ begin
 				sub ax, dx
 				sub ax, dx
 				sub ax, dx
-				mov bl, CR.R
+				mov bl, CR.B
 				add ax, bx
 				add ax, bx
 				add ax, bx
@@ -3370,7 +3404,7 @@ begin
 			jmp @Fin
 
 			@L13S:
-				mov al, CR.B
+				mov al, CR.R
 				mov dl, al
 				shl ax, 4
 				sub ax, dx
@@ -3402,7 +3436,7 @@ begin
 				shr ax, 4
 				mov [edi + 1], al
 
-				mov al, CR.R
+				mov al, CR.B
 				mov dl, al
 				shl ax, 4
 				sub ax, dx
@@ -3431,7 +3465,7 @@ begin
 				add ax, dx
 				add ax, dx
 
-				mov bl, CR.B
+				mov bl, CR.R
 				add ax, bx
 				add ax, bx
 				add ax, bx
@@ -3471,7 +3505,7 @@ begin
 				add ax, dx
 				add ax, dx
 
-				mov bl, CR.R
+				mov bl, CR.B
 				add ax, bx
 				add ax, bx
 				add ax, bx
@@ -3490,7 +3524,7 @@ begin
 			jmp @Fin
 
 			@L11S:
-				mov al, CR.B
+				mov al, CR.R
 				mov dx, ax
 				shl ax, 3
 				add ax, dx
@@ -3530,7 +3564,7 @@ begin
 				shr ax, 4
 				mov [edi + 1], al
 
-				mov al, CR.R
+				mov al, CR.B
 				mov dx, ax
 				shl ax, 3
 				add ax, dx
@@ -3556,7 +3590,7 @@ begin
 			jmp @Fin
 
 			@L7S:
-				mov al, CR.B
+				mov al, CR.R
 				mov dx, ax
 				shl ax, 3
 				sub ax, dx
@@ -3586,7 +3620,7 @@ begin
 				shr ax, 4
 				mov [edi + 1], al
 
-				mov al, CR.R
+				mov al, CR.B
 				mov dx, ax
 				shl ax, 3
 				sub ax, dx
@@ -3611,7 +3645,7 @@ begin
 				mov dx, ax
 				shl ax, 3
 				sub ax, dx
-				mov bl, CR.B
+				mov bl, CR.R
 				mov dx, bx
 				shl dx, 3
 				add ax, dx
@@ -3641,7 +3675,7 @@ begin
 				mov dx, ax
 				shl ax, 3
 				sub ax, dx
-				mov bl, CR.R
+				mov bl, CR.B
 				mov dx, bx
 				shl dx, 3
 				add ax, dx
@@ -3714,7 +3748,7 @@ begin
 			@LAdd127S:
 				mov al, [edi]
 				xor bh, bh
-				mov bl, CR.B
+				mov bl, CR.R
 				sub bx, 127
 				add ax, bx
 				cmp ax, $0000
@@ -3750,7 +3784,7 @@ begin
 
 				mov al, [edi + 2]
 				xor bh, bh
-				mov bl, CR.R
+				mov bl, CR.B
 				sub bx, 127
 				add ax, bx
 				cmp ax, $0000
@@ -3774,7 +3808,7 @@ begin
 			@LSub127S:
 				mov al, [edi]
 				xor bh, bh
-				mov bl, CR.B
+				mov bl, CR.R
 				add ax, 127
 				sub ax, bx
 				cmp ax, $0000
@@ -3810,7 +3844,7 @@ begin
 
 				mov al, [edi + 2]
 				xor bh, bh
-				mov bl, CR.R
+				mov bl, CR.B
 				add ax, 127
 				sub ax, bx
 				cmp ax, $0000
@@ -3891,10 +3925,10 @@ begin
 	end
 	else
 	begin
-		BackColorR.L := ColorToRGB(BackColor);
-		WordB := CR.B;
+		BackColorR := ColorToRGBStack(BackColor);
+		WordB := CR.R;
 		WordG := CR.G;
-		WordR := CR.R;
+		WordR := CR.B;
 		asm
 		{$ifdef SaveReg}
 		pushad
@@ -3908,9 +3942,9 @@ begin
 			xor ebx, ebx
 			xor ecx, ecx
 			xor edx, edx
-			mov cl, BackColorR.B
+			mov cl, BackColorR.R
 			mov ch, BackColorR.G
-			mov dh, BackColorR.R
+			mov dh, BackColorR.B
 
 			mov al, Effect
 			cmp al, ef16
@@ -3960,17 +3994,30 @@ begin
 			jmp @Fin
 
 			@LMovS:
-			mov bl, CR.B
+			{$ifdef BPP4}
+			mov ebx, CR.L
+			mov ecx, BackColorR
+			{$else}
+			mov bl, CR.R
 			mov bh, CR.G
-			mov dl, CR.R
+			mov dl, CR.B
+			{$endif}
 			@LMov:
+				{$ifdef BPP4}
+				cmp [edi], ecx
+				{$else}
 				cmp cx, [esi]
 				jne @L16A
 				cmp dh, [esi+2]
+				{$endif}
 				je @L16E
 				@L16A:
+					{$ifdef BPP4}
+					mov [edi], ebx
+					{$else}
 					mov [edi], bx
 					mov [edi + 2], dl
+					{$endif}
 				@L16E:
 				add edi, BPP
 				cmp edi, esi
@@ -4018,7 +4065,7 @@ begin
 				cmp dh, [edi+2]
 				je @L4E
 				@L4A:
-					mov al, CR.B
+					mov al, CR.R
 					mov bl, [edi]
 					add ax, bx
 					add ax, bx
@@ -4040,7 +4087,7 @@ begin
 					shr ax, 2
 					mov [edi + 1], al
 
-					mov al, CR.R
+					mov al, CR.B
 					mov bl, [edi + 2]
 					add ax, bx
 					add ax, bx
@@ -4108,7 +4155,7 @@ begin
 					mov ax, bx
 					shl ax, 3
 					sub ax, bx
-					mov bl, CR.B
+					mov bl, CR.R
 					add ax, bx
 					{$ifdef ShrAdd}
 					add ax, 7
@@ -4132,7 +4179,7 @@ begin
 					mov ax, bx
 					shl ax, 3
 					sub ax, bx
-					mov bl, CR.R
+					mov bl, CR.B
 					add ax, bx
 					{$ifdef ShrAdd}
 					add ax, 7
@@ -4151,7 +4198,7 @@ begin
 				cmp dh, [edi+2]
 				je @L14E
 				@L14A:
-					mov al, CR.B
+					mov al, CR.R
 					mov bl, al
 					shl ax, 3
 					sub ax, bx
@@ -4175,7 +4222,7 @@ begin
 					shr ax, 3
 					mov [edi + 1], al
 
-					mov al, CR.R
+					mov al, CR.B
 					mov bl, al
 					shl ax, 3
 					sub ax, bx
@@ -4202,7 +4249,7 @@ begin
 					mov bl, al
 					shl ax, 2
 					add ax, bx
-					mov bl, CR.B
+					mov bl, CR.R
 					add ax, bx
 					add ax, bx
 					add ax, bx
@@ -4230,7 +4277,7 @@ begin
 					mov bl, al
 					shl ax, 2
 					add ax, bx
-					mov bl, CR.R
+					mov bl, CR.B
 					add ax, bx
 					add ax, bx
 					add ax, bx
@@ -4251,7 +4298,7 @@ begin
 				cmp dh, [edi+2]
 				je @L10E
 				@L10A:
-					mov al, CR.B
+					mov al, CR.R
 					mov bl, al
 					shl ax, 2
 					add ax, bx
@@ -4279,7 +4326,7 @@ begin
 					shr ax, 3
 					mov [edi + 1], al
 
-					mov al, CR.R
+					mov al, CR.B
 					mov bl, al
 					shl ax, 2
 					add ax, bx
@@ -4308,7 +4355,7 @@ begin
 					mov ax, bx
 					shl ax, 4
 					sub ax, bx
-					mov bl, CR.B
+					mov bl, CR.R
 					add ax, bx
 					{$ifdef ShrAdd}
 					add ax, 15
@@ -4332,7 +4379,7 @@ begin
 					mov ax, bx
 					shl ax, 4
 					sub ax, bx
-					mov bl, CR.R
+					mov bl, CR.B
 					add ax, bx
 					{$ifdef ShrAdd}
 					add ax, 15
@@ -4351,7 +4398,7 @@ begin
 				cmp dh, [edi+2]
 				je @L15E
 				@L15A:
-					mov bl, CR.B
+					mov bl, CR.R
 					mov ax, bx
 					shl ax, 4
 					sub ax, bx
@@ -4375,7 +4422,7 @@ begin
 					shr ax, 4
 					mov [edi + 1], al
 
-					mov bl, CR.R
+					mov bl, CR.B
 					mov ax, bx
 					shl ax, 4
 					sub ax, bx
@@ -4404,7 +4451,7 @@ begin
 					sub ax, bx
 					sub ax, bx
 					sub ax, bx
-					mov bl, CR.B
+					mov bl, CR.R
 					add ax, bx
 					add ax, bx
 					add ax, bx
@@ -4436,7 +4483,7 @@ begin
 					sub ax, bx
 					sub ax, bx
 					sub ax, bx
-					mov bl, CR.R
+					mov bl, CR.B
 					add ax, bx
 					add ax, bx
 					add ax, bx
@@ -4457,7 +4504,7 @@ begin
 				cmp dh, [edi+2]
 				je @L13E
 				@L13A:
-					mov bl, CR.B
+					mov bl, CR.R
 					mov ax, bx
 					shl ax, 4
 					sub ax, bx
@@ -4489,7 +4536,7 @@ begin
 					shr ax, 4
 					mov [edi + 1], al
 
-					mov bl, CR.R
+					mov bl, CR.B
 					mov ax, bx
 					shl ax, 4
 					sub ax, bx
@@ -4522,7 +4569,7 @@ begin
 					add ax, bx
 					add ax, bx
 					add ax, bx
-					mov bl, CR.B
+					mov bl, CR.R
 					add ax, bx
 					shl bx, 2
 					add ax, bx
@@ -4554,7 +4601,7 @@ begin
 					add ax, bx
 					add ax, bx
 					add ax, bx
-					mov bl, CR.R
+					mov bl, CR.B
 					add ax, bx
 					shl bx, 2
 					add ax, bx
@@ -4575,7 +4622,7 @@ begin
 				cmp dh, [edi+2]
 				je @L11E
 				@L11A:
-					mov al, CR.B
+					mov al, CR.R
 					mov bx, ax
 					shl ax, 3
 					add ax, bx
@@ -4607,7 +4654,7 @@ begin
 					shr ax, 4
 					mov [edi + 1], al
 
-					mov al, CR.R
+					mov al, CR.B
 					mov bx, ax
 					shl ax, 3
 					add ax, bx
@@ -4634,7 +4681,7 @@ begin
 				cmp dh, [edi+2]
 				je @L7E
 				@L7A:
-					mov al, CR.B
+					mov al, CR.R
 					mov bx, ax
 					shl ax, 3
 					sub ax, bx
@@ -4662,7 +4709,7 @@ begin
 					shr ax, 4
 					mov [edi + 1], al
 
-					mov al, CR.R
+					mov al, CR.B
 					mov bx, ax
 					shl ax, 3
 					sub ax, bx
@@ -4691,7 +4738,7 @@ begin
 					mov bx, ax
 					shl ax, 3
 					sub ax, bx
-					mov bl, CR.B
+					mov bl, CR.R
 					add ax, bx
 					shl bx, 3
 					add ax, bx
@@ -4719,7 +4766,7 @@ begin
 					mov bx, ax
 					shl ax, 3
 					sub ax, bx
-					mov bl, CR.R
+					mov bl, CR.B
 					add ax, bx
 					shl bx, 3
 					add ax, bx
@@ -4806,7 +4853,7 @@ begin
 				@LAdd127A:
 					mov al, [edi]
 					xor bh, bh
-					mov bl, CR.B
+					mov bl, CR.R
 					sub bx, 127
 					add ax, bx
 					cmp ax, $0000
@@ -4842,7 +4889,7 @@ begin
 
 					mov al, [edi + 2]
 					xor bh, bh
-					mov bl, CR.R
+					mov bl, CR.B
 					sub bx, 127
 					add ax, bx
 					cmp ax, $0000
@@ -4871,7 +4918,7 @@ begin
 				@LSub127A:
 					mov al, [edi]
 					xor bh, bh
-					mov bl, CR.B
+					mov bl, CR.R
 					add ax, 127
 					sub ax, bx
 					cmp ax, $0000
@@ -4907,7 +4954,7 @@ begin
 
 					mov al, [edi + 2]
 					xor bh, bh
-					mov bl, CR.R
+					mov bl, CR.B
 					add ax, 127
 					sub ax, bx
 					cmp ax, $0000
@@ -5014,8 +5061,8 @@ var
 begin
 	if Lines <= 0 then Exit;
 
-	CR1.L := Graphics.ColorToRGB(C1);
-	CR2.L := Graphics.ColorToRGB(C2);
+	CR1.L := ColorToRGB(C1);
+	CR2.L := ColorToRGB(C2);
 	CR12.A := 0;
 	CR12.B := (CR1.B + CR2.B) shr 1;
 	CR12.G := (CR1.G + CR2.G) shr 1;
@@ -7456,15 +7503,15 @@ var
 	PD, PData: PBmpData;
 	Y: Integer;
 	HX: Integer;
-	i: Integer;
-	C: TColor;
+	i, j, k: SG;
+	TranC: TColor;
 begin
 	if RandomColor = clNone then Exit;
 	RandomColor := ColorToRGB(RandomColor);
 	if Transparent then
-		C := ColorToRGB(TransparentColor)
+		TranC := ColorToRGB(TransparentColor)
 	else
-		C := clNone;
+		TranC := clNone;
 
 	PData := FData;
 	for Y := 0 to FHeight - 1 do
@@ -7472,33 +7519,21 @@ begin
 		PD := PData;
 		HX := Integer(PD) + BPP * Integer(FWidth);
 		repeat
-			if (C = clNone) or (PD[0] <> TRColor(C).R) or
-			(PD[1] <> TRColor(C).G) or
-			(PD[2] <> TRColor(C).B) then
+			if (TranC = clNone) or (PD[0].R <> TRColor(TranC).R) or
+			(PD[0].G <> TRColor(TranC).G) or
+			(PD[0].B <> TRColor(TranC).B) then
 			begin
-				i := PD[0] + TRColor(RandomColor).B - Random(TRColor(RandomColor).B shl 1 + 1);
-				if i < 0 then
-					i := 0
-				else if i > 255 then
-					i := 255;
-				PD[0] := i;
-				Inc(Integer(PD));
-
-				i := PD[0] + TRColor(RandomColor).G - Random(TRColor(RandomColor).G shl 1 + 1);
-				if i < 0 then
-					i := 0
-				else if i > 255 then
-					i := 255;
-				PD[0] := i;
-				Inc(Integer(PD));
-
-				i := PD[0] + TRColor(RandomColor).R - Random(TRColor(RandomColor).R shl 1 + 1);
-				if i < 0 then
-					i := 0
-				else if i > 255 then
-					i := 255;
-				PD[0] := i;
-				Inc(Integer(PD){$ifdef BPP4}, 2{$endif});
+				for j := 0 to 2 do
+				begin
+					k := TPixel(RandomColor).I[2 - j];
+					i := PD[0].I[j] + k - k shl 1 + 1;
+					if i < 0 then
+						i := 0
+					else if i > 255 then
+						i := 255;
+					PD[0].I[j] := i;
+				end;
+				Inc(PD);
 			end
 			else
 				Inc(Integer(PD), BPP);
@@ -7648,18 +7683,18 @@ begin
 					HelpU := ttxU * ttyU;
 					if TranColor <> clNone then
 					begin
-						if (PS[0] = TRColor(TranColor2).B)
-						and (PS[1] = TRColor(TranColor2).G)
-						and (PS[2] = TRColor(TranColor2).R) then
+						if (PS[0].R = TRColor(TranColor2).B)
+						and (PS[0].G = TRColor(TranColor2).G)
+						and (PS[0].B = TRColor(TranColor2).R) then
 						begin
 							Inc(TranCount, HelpU);
 						end;
 					end;
-					Inc(suma24[0], PS[0] * HelpU);
+					Inc(suma24[0], PS[0].R * HelpU);
 					Inc(Integer(PS));
-					Inc(suma24[1], PS[0] * HelpU);
+					Inc(suma24[1], PS[0].R * HelpU);
 					Inc(Integer(PS));
-					Inc(suma24[2], PS[0] * HelpU);
+					Inc(suma24[2], PS[0].R * HelpU);
 
 					Inc(rxU, ttxU);
 				until rxU = rx2U;
@@ -7669,19 +7704,19 @@ begin
 			PD := Pointer(Integer(BmpDe.Data) + Integer({$ifdef BPP4}X shl 2{$else}X + X + X{$endif}) - Integer(ByteDX * Y));
 			if (TranColor = clNone) or (TranCount <{<} StpXYU div 2) then
 			begin
-				PD[0] := RoundDivS8(Suma24[0], stpXYU);
+				PD[0].R := RoundDivS8(Suma24[0], stpXYU);
 				Inc(Integer(PD));
-				PD[0] := RoundDivS8(Suma24[1], stpXYU);
+				PD[0].R := RoundDivS8(Suma24[1], stpXYU);
 				Inc(Integer(PD));
-				PD[0] := RoundDivS8(Suma24[2], stpXYU);
+				PD[0].R := RoundDivS8(Suma24[2], stpXYU);
 			end
 			else
 			begin
-				PD[0] := TRColor(TranColor2).B;
+				PD[0].R := TRColor(TranColor2).B;
 				Inc(Integer(PD));
-				PD[0] := TRColor(TranColor2).G;
+				PD[0].R := TRColor(TranColor2).G;
 				Inc(Integer(PD));
-				PD[0] := TRColor(TranColor2).R;
+				PD[0].R := TRColor(TranColor2).R;
 			end;
 
 			Inc(X);
@@ -7761,7 +7796,7 @@ const
 	cG = 7;
 	cB = 4;
 var
-	PSource, PDest: PBmpData;
+	PSource, PDest: PPixel;
 
 	Done, LDone: Word;
 	R, G, B: SG;
@@ -7771,9 +7806,9 @@ var
 	SX, SY: TCoor;
 	i: Integer;
 	Clrs: array[Byte] of Byte;
-	TransparentColor: TColor;
+	TransparentColor: TPixel;
 begin
-	TransparentColor := ColorToRGB(BmpS.TransparentColor);
+	TransparentColor := ColorToRGBStack(BmpS.TransparentColor);
 	if BW = 0 then
 		for i := Low(Byte) to High(Byte) do
 			Clrs[i] := GetColors(i, Brig, Cont, Gamma, ContBase);
@@ -7800,15 +7835,13 @@ begin
 		PDest := Pointer(Integer(Data) - Integer(i));
 		for X := 0 to SX - 1 do
 		begin
-			if (TRColor(TransparentColor).B <> PSource[0])
-			or (TRColor(TransparentColor).G <> PSource[1])
-			or (TRColor(TransparentColor).R <> PSource[2]) then
+			if (TransparentColor.L <> PSource.L) then
 			begin
 				if BW <> 0 then
 				begin
-					B := PSource[0];
-					G := PSource[1];
-					R := PSource[2];
+					B := PSource.R;
+					G := PSource.G;
+					R := PSource.B;
 					TR := R * cR;
 					TG := G * cG;
 					TB := B * cB;
@@ -7827,37 +7860,35 @@ begin
 						B := 0
 					else
 					if B > 255 then B := 255;
-					PDest[0] := B;
-					PDest[1] := G;
-					PDest[2] := R;
+					PDest.R := B;
+					PDest.G := G;
+					PDest.B := R;
 				end
 				else
 				begin
 					if ColorB = True then
 					begin
-						PDest[0] := Clrs[PSource[0]];
+						PDest.R := Clrs[PSource.R];
 					end
 					else
-						PDest[0] := PSource[0];
+						PDest.R := PSource.R;
 					if ColorG = True then
 					begin
-						PDest[1] := Clrs[PSource[1]];
+						PDest.G := Clrs[PSource.G];
 					end
 					else
-						PDest[1] := PSource[1];
+						PDest.G := PSource.G;
 					if ColorR = True then
 					begin
-						PDest[2] := Clrs[PSource[2]];
+						PDest.B := Clrs[PSource.B];
 					end
 					else
-						PDest[2] := PSource[2];
+						PDest.B := PSource.B;
 				end;
 			end
 			else
 			begin
-				PDest[0] := PSource[0];
-				PDest[1] := PSource[1];
-				PDest[2] := PSource[2];
+				PDest := PSource;
 			end;
 			Inc(Integer(PSource), BPP);
 			Inc(Integer(PDest), BPP);
@@ -7905,7 +7936,7 @@ procedure TDBitmap.GenerateRGB(
 	const Effect: TEffect; const Clock: LongWord;
 	const InterruptProcedure: TInterruptProcedure);
 var
-	PDY, PDXY: PBmpData;
+	PDY, PDXY: PPixel;
 	MaxX, MaxY,
 	MaxXD, MaxYD,
 	MaxX2, MaxY2,
@@ -7919,7 +7950,7 @@ var
 	C: array[0..3] of TRColor; // absolute Co;
 	RColor: TRColor;
 	HidedColor: TColor;
-	HidedColor2: TRColor;
+	HidedColor2: TPixel;
 begin
 	if Spe = False then InitRGB;
 
@@ -7934,7 +7965,7 @@ begin
 	else
 		HidedColor := TransparentColor;
 
-	HidedColor2.L := ColorToRGB(HidedColor);
+	HidedColor2 := ColorToRGBStack(HidedColor);
 	RandEffect := ColorToRGB(RandEffect);
 
 	// For Colors
@@ -8177,9 +8208,7 @@ begin
 				B := B + TRColor(RandEffect).B shr 1 - Random(TRColor(RandEffect).B + 1);
 			end;
 			if (HidedColor = clNone)
-			or (PDXY[0] <> TRColor(HidedColor2).B)
-			or (PDXY[1] <> TRColor(HidedColor2).G)
-			or (PDXY[2] <> TRColor(HidedColor2).R) then
+			or (PDXY.L <> HidedColor2.L) then
 			begin
 				if B < 0 then
 					B := 0
@@ -8195,12 +8224,10 @@ begin
 					R := 255;
 				if Effect = ef16 then
 				begin
-					PDXY[0] := B;
-					Inc(Integer(PDXY));
-					PDXY[0] := G;
-					Inc(Integer(PDXY));
-					PDXY[0] := R;
-					Inc(Integer(PDXY){$ifdef BPP4}, 2{$endif});
+					PDXY.R := B;
+					PDXY.G := G;
+					PDXY.B := R;
+					Inc(PDXY);
 				end
 				else
 				begin
@@ -10149,9 +10176,113 @@ begin
 	SavePictureDialog.Free;
 end;
 
+procedure TDBitmap.DataToGraph;
+const
+	OfsX = 32;
+	OfsY = 32;
+var
+//	ZoomX, ZoomY: FA;
+	W, H: SG;
+	i, x, y, li, lx, ly: SG;
+	j: SG;
+	Sum: FA;
+//	y2: SG;
+	Value, MinValue, MaxValue: FA;
+	LastMarkX, StepMarkX: FA;
+	LastMarkY, StepMarkY: FA;
+	C: TRColor;
+begin
+	Transparent := False;
+	W := Width;
+	H := Height;
+	Dec(W, 2 * OfsX);
+	Dec(H, 2 * OfsY);
+
+	MaxValue := MinInt;
+	MinValue := MaxInt;
+	for i := 0 to ValueCount - 1 do
+	begin
+		Value := Values[i];
+		if Value > MaxValue then MaxValue := Value;
+		if Value < MinValue then MinValue := Value;
+	end;
+
+{	DrawXY(MinValue, MaxValue, False);
+	DrawXY(ValueOffset, ValueOffset + ValueCount, False);}
+
+	Bar(clWhite, ef16);
+	lx := 0;
+	ly := 0;
+	li := 0;
+	StepMarkX := Max(1, Round(Power(10, Round(Log10(RoundDiv(ValueCount * 32, W))))));
+	LastMarkX := 0; //ValueOffset mod StepMarkX;
+
+	Border(OfsX, OfsY, OfsX + W - 1, OfsY + H - 1, clSilver, clGray, 2, ef16);
+
+	if MaxValue <= MinValue then
+	begin
+		StepMarkY := MaxInt;
+		LastMarkY := MaxInt;
+	end
+	else
+	begin
+		StepMarkY := Max(1, Round(Power(10, Round(Log10((MaxValue - MinValue) * 32 / H)))));
+		LastMarkY := 0; // MinValue mod StepMarkY;
+	end;
+	
+	while LastMarkY < H do
+	begin
+		LastMarkY := LastMarkY + StepMarkY;
+
+		y := Round(H * (LastMarkY - MinValue) / (MaxValue - MinValue + 1));
+		Line(OfsX, y, OfsX + W - 1, y, clBlue, ef08);
+	end;
+
+	for x := 0 to W - 1 do
+	begin
+		// Calc X
+		i := RoundDiv(ValueCount * x, W);
+		if i < 0 then
+			i := 0
+		else if i >= ValueCount then
+			i := ValueCount - 1;
+
+		// Calc Y
+		Sum := 0;
+		for j := li to i do
+			Sum := Sum + Values[j];
+		Sum := Round(Sum / (i - li + 1));
+
+		li := i + 1;
+		y := Height - 1 - Round(H * (Sum - MinValue) / (MaxValue - MinValue + 1));
+		if y < 0 then
+			y := 0
+		else if y > H then
+			y := H;
+		Inc(y, OfsY);
+
+		// Draw
+		if (i + ValueOffset) > LastMarkX then
+		begin
+			Line(x, OfsY, x, H - 1 - OfsY, clBlue, ef08);
+			LastMarkX := LastMarkX + StepMarkX;
+		end;
+//		if (x = 0) or (x = W - 1) or Inc then
+
+		if x > 0 then
+			Line(lx, ly, x, y, clBlack, ef08);
+		C.L := clBlack;
+		Pix(Data, ByteX, x, y, C, ef16);
+
+		lx := x;
+		ly := y;
+	end;
+	Transparent := True;
+	TransparentColor := clWhite;
+end;
+
 initialization
 	_Initialization;
 finalization
 	FreeFontBitmap;
 end.
-

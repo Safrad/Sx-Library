@@ -684,6 +684,7 @@ initialization
 {	MemCount := AllocMemCount;
 	MemSize := AllocMemSize;}
 {$endif}
+	StartProgramTime := GetTickCount;
 	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization

@@ -186,7 +186,9 @@ var
 type
 	TInput = (
 		itUnknown,
+		itEmpty,
 		itEOI,
+		itReturn,
 		itSpaceTab,
 		itDollar,
 		itIdent,
@@ -210,7 +212,9 @@ type
 const
 	InputToStr: array[TInput] of string = (
 		'Unknown',
+		'',
 		'end of input',
+		'end of line',
 		'space',
 		'',
 		'$',
@@ -550,6 +554,7 @@ type
 			maLocal, // //
 			maGlobalP, // { }
 			maGlobalA); // (* *)
+		BufString: string;
 		BufR: ^TArrayChar;
 		BufRI: SG;
 		BufRC: SG;
@@ -581,7 +586,8 @@ type
 		Keyword: TKeyword; // itKeyword
 
 		// Options
-		EnableMarks, EnableString, EnableSpace: BG;
+		EnableMarks, EnableString, EnableReturn: BG;
+		EnableSpace: SG;
 		StringSep,
 		LineMark,
 		GlobalMarkS0,
@@ -594,6 +600,7 @@ type
 		constructor Create(Stream: TStream); overload;
 		constructor Create(Buffer: Pointer; Size: UG); overload;
 		constructor Create(Line: string); overload;
+		constructor CreateFromFile(FileName: TFileName);
 		destructor Destroy; override;
 		procedure CheckToken(T: Char);
 		procedure CheckTokenSymbol(const S: string);
@@ -624,10 +631,15 @@ type
 		procedure ReadCommaSemicolon;
 		procedure ReadPeriod;
 		procedure ReadColon;
+		function GetInt: SG;
+		function GetIntE: SG;
+		function GetStr: string;
+		procedure NextLine;
 		function ReadMs(MinVal, DefVal, MaxVal: SG): SG;
 		function ReadFA(MinVal, DefVal, MaxVal: FA): FA;
 		function ReadSG(MinVal, DefVal, MaxVal: SG): SG;
 		function ReadSGFast(MinVal, DefVal, MaxVal: SG): SG;
+		procedure SkipLine;
 		procedure SkipBlanks;
 		procedure Skip(CharCount: SG);
 
@@ -637,7 +649,8 @@ type
 	end;
 
 var
-	CharsTable: array[Char] of (ctSpace, ctTab, ctLetter, ctDollar, ctIllegal, ctNumber, ctNumber2,
+	CharsTable: array[Char] of (
+		{ctSpace, ctTab,} ctLetter, ctBlank, ctReturn, ctDollar, ctIllegal, ctNumber, ctNumber2,
 		ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose,
 		ctPoint, ctComma, ctComma2);
 
@@ -655,13 +668,14 @@ procedure MesToMemo(Memo: TMemo);
 {procedure CreateUnitSystem;
 		function CreateTree: PNode;}
 function FreeTree(var Node: PNode): BG;
-procedure FillCharTable;
+procedure LetterCharTable;
+procedure StdCharTable;
 
 implementation
 
 uses
 	Math, Dialogs,
-	uStrings, uFind, uError;
+	uStrings, uFind, uError, uFiles;
 
 
 constructor TDParser.Create(Stream: TStream);
@@ -673,7 +687,9 @@ end;
 
 constructor TDParser.Create(Buffer: Pointer; Size: UG);
 begin
-//	FBuffer := Buffer;
+	inherited Create;
+
+	//	FBuffer := Buffer;
 	// Set Default Options
 	EnableMarks := False;
 	EnableString := False;
@@ -684,9 +700,9 @@ begin
 	GlobalMarkF0 := '}';
 	GlobalMarkF1 := '*)';
 	MaxIdentSize := MaxInt;
-	EnableSpace := False;
+	EnableSpace := 0;
 
-	CompileMesClear;
+//	CompileMesClear;
 	FreeTree(Root);
 	{$ifopt d+}
 	if TreeSize <> 0 then
@@ -700,8 +716,6 @@ begin
 	BufR := Buffer;//Pointer(Line);
 	BufRI := 0;
 	BufRC := Size;
-
-	inherited Create;
 end;
 
 constructor TDParser.Create(Line: string);
@@ -709,9 +723,17 @@ begin
 	Create(Pointer(Line), Length(Line));
 end;
 
+constructor TDParser.CreateFromFile(FileName: TFileName);
+begin
+	BufString := ReadStringFromFile(FileName);
+	Create(BufString);
+end;
+
+
 destructor TDParser.Destroy;
 begin
 	FreeMem(FBuffer);
+	BufString := '';
 //	if InputType <> itEOI then AddMes2(mtUnusedChars, []);
 	if BufRI > BufRC then AddMes2(mtUnusedChars, []);
 	if BufRI < BufRC then AddMes2(mtStatementExpected, []);
@@ -964,6 +986,7 @@ function TDParser.Compare(s: string): BG;
 var i, j: SG;
 begin
 	Result := False;
+	if Length(s) = 0 then Exit;
 	j := BufRI;
 	for i := 1 to Length(s) do
 	begin
@@ -971,21 +994,42 @@ begin
 		if (BufR[j] <> s[i]) then Exit;
 		Inc(j);
 	end;
-	Inc(BufRI, j);
+	BufRI := j - 1;
 	Result := True;
 end;
 
-procedure TDParser.SkipBlanks;
+procedure TDParser.SkipLine;
 begin
-  while True do
+	while not EOI do
 	begin
 		case BufR[BufRI] of
-		' ', CharTab, CharCR, CharLF: Nop;
+		CharCR, CharLF:
+		begin
+			if BufR[BufRI] = CharCR then
+				if BufR[BufRI + 1] = CharLF then Inc(BufRI);
+			Inc(BufRI);
+			Break;
+		end
+		end;
+		Inc(BufRI);
+	end;
+end;
+
+
+procedure TDParser.SkipBlanks;
+begin
+	while not EOI do
+	begin
+		case BufR[BufRI] of
+		' ', CharTab, CharCR, CharLF:
+		begin
+
+		end
 		else
 			Exit;
 		end;
 		Inc(BufRI);
-  end;
+	end;
 end;
 
 procedure TDParser.Skip(CharCount: SG);
@@ -1001,10 +1045,18 @@ var
 //	ReqD, ReqM: SG;
 	FromV, ToV: SG;
 begin
-	InputType := itUnknown;
 	Keyword := kwNone;
-
 	Id := '';
+	InReal := 0;
+	InInteger := 0;
+
+	if EOI then
+	begin
+		InputType := itEOI;
+		Exit;
+	end;
+
+//	InputType := itUnknown;
 	StartBufRI := BufRI;
 	while True do
 	begin
@@ -1012,21 +1064,31 @@ begin
 		begin
 //				Result := Copy(BufR, StartIndex, BufRI - StartIndex);
 //				Inc(BufRI);
-			InputType := itEOI;
 			Break;
 		end;
 
-		if (Marks = maNone) and (BufR[BufRI] in [' ', CharTab]) then
+		if (Marks = maNone) and (CharsTable[BufR[BufRI]] in [ctBlank]) then
 		begin
-			if EnableSpace then
+			if EnableSpace > 1 then
 			begin
-				while (CharsTable[BufR[BufRI]] in [ctSpace, ctTab]) do
+				InputType := itSpaceTab;
+				Id := BufR[BufRI];
+				Inc(BufRI);
+				// Read other blanks
+				while (CharsTable[BufR[BufRI]] in [ctBlank]) do
 				begin
 					Inc(BufRI); if EOI then Break;
 				end;
-				InputType := itSpaceTab;
-				Id := ' ';
 				Break;
+			end
+			else if EnableSpace = 1 then
+			begin
+				if InputType in [itSpaceTab, itReturn] then
+				begin
+					InputType := itEmpty;
+					Exit;
+				end;
+				InputType := itSpaceTab;
 			end;
 		end
 
@@ -1045,8 +1107,18 @@ begin
 			end;
 			Inc(TabInc, (BufRI - LineStart + TabInc) mod TabSize);
 		end*)
-		else if (BufR[BufRI] = CharCR) or (BufR[BufRI] = CharLF) then
+		else if (CharsTable[BufR[BufRI]] = ctReturn) then
 		begin
+			if EnableSpace = 1 then
+			begin
+				if InputType in [itSpaceTab, itReturn] then
+				begin
+					InputType := itEmpty;
+					Exit;
+				end;
+				InputType := itReturn;
+			end;
+
 			if BufR[BufRI] = CharCR then
 				if BufR[BufRI + 1] = CharLF then Inc(BufRI);
 
@@ -1066,6 +1138,12 @@ begin
 //				Inc(BufIW);
 			LineBegin := True;
 			LineStart := BufRI + 1;
+			if EnableReturn then
+			begin
+				InputType := itReturn;
+				Inc(BufRI);
+				Break;
+			end;
 //				Inc(BufRI);
 		end
 		else
@@ -1165,8 +1243,11 @@ begin
 			begin
 				if (Marks = maNone) and (CharsTable[BufR[BufRI]] in [ctNumber, ctNumber2]) then
 				begin
-					StartIndex := BufRI;
-					InputType := itInteger;
+//					if InputType = itUnknown then
+					begin
+						StartIndex := BufRI;
+						InputType := itInteger;
+					end;
 
 					NodeNumber;
 
@@ -3014,16 +3095,29 @@ begin
 	Result := Range(MinVal, V, MaxVal);
 end;
 
-procedure FillCharTable;
+procedure LetterCharTable;
+var
+	c: Char;
+begin
+	FillChar(CharsTable, SizeOf(CharsTable), ctLetter);
+	for c := Low(Char) to High(Char) do
+		case c of
+		CharSpace, CharTab: CharsTable[c] := ctBlank;
+		CharCR, CharLF: CharsTable[c] := ctReturn;
+		'0'..'9': CharsTable[c] := ctNumber;
+		end;
+end;
+
+procedure StdCharTable;
 var
 	c: Char;
 begin
 	// Make Char Table
 	for c := Low(Char) to High(Char) do
 		case c of
-		' ': CharsTable[c] := ctSpace;
-		CharTab: CharsTable[c] := ctTab;
-		'a'..'z', 'A'..'Z', '_': CharsTable[c] := ctLetter;
+		CharSpace, CharTab: CharsTable[c] := ctBlank;
+		CharCR, CharLF: CharsTable[c] := ctReturn;
+		'a'..'z', 'A'..'Z', '_'{, #$80..#$ff}: CharsTable[c] := ctLetter;
 		'0'..'9': CharsTable[c] := ctNumber;
 		{'!',} '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharsTable[c] := ctNumber2;
 		'+': CharsTable[c] := ctPlus;
@@ -3049,7 +3143,7 @@ begin
 	for i := 0 to Length(KWsU) - 1 do
 		KWsU[TKeyword(i)] := UpperCase(KWs[TKeyword(i)]);
 
-	FillCharTable;
+	StdCharTable;
 
 	for MesId := Low(TMesId) to High(TMesId) do
 	begin
@@ -3085,6 +3179,44 @@ begin
 				CharsTable[c] := ctIllegal;
 		end;
 end;*)
+
+function TDParser.GetInt: SG;
+begin
+	if InputType <> itInteger then
+	begin
+		AddMes2(mtExpected, ['Integer', Id]);
+		Result := 0;
+	end
+	else
+		Result := InInteger;
+	ReadInput;
+end;
+
+function TDParser.GetIntE: SG;
+begin
+	if InputType = itEmpty then
+	begin
+		Result := 0;
+		ReadInput;
+	end
+	else
+		Result := GetInt;
+end;
+
+function TDParser.GetStr: string;
+begin
+	Result := Id;
+	ReadInput;
+end;
+
+procedure TDParser.NextLine;
+begin
+	if InputType <> itReturn then
+	begin
+		AddMes2(mtExpected, ['end of line', Id]);
+	end;
+	ReadInput;
+end;
 
 initialization
 	_initialization;

@@ -112,7 +112,7 @@ begin
 			Parser.ReadInput;
 		end;
 	end;
-	FillCharTable;
+	StdCharTable;
 	Parser.Free;
 end;
 

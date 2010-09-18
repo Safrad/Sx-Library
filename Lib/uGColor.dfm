@@ -4,7 +4,7 @@ object fGColor: TfGColor
   BorderStyle = bsDialog
   Caption = 'Enter color'
   ClientHeight = 378
-  ClientWidth = 433
+  ClientWidth = 480
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,28 +18,28 @@ object fGColor: TfGColor
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
-    Left = 8
+    Left = 216
     Top = 332
-    Width = 417
+    Width = 257
     Height = 9
     Shape = bsTopLine
   end
   object Bevel2: TBevel
     Left = 216
-    Top = 280
+    Top = 344
     Width = 9
-    Height = 49
+    Height = 25
     Shape = bsLeftLine
   end
   object BevelBasicColors: TBevel
-    Left = 8
-    Top = 192
+    Left = 216
+    Top = 240
     Width = 253
     Height = 81
   end
   object ShapeBorder: TShape
-    Left = 8
-    Top = 192
+    Left = 216
+    Top = 240
     Width = 20
     Height = 20
     Brush.Style = bsClear
@@ -158,7 +158,7 @@ object fGColor: TfGColor
   end
   object LabelNow: TDLabel
     Left = 8
-    Top = 284
+    Top = 276
     Width = 49
     Height = 16
     AutoSize = False
@@ -185,10 +185,10 @@ object fGColor: TfGColor
     WordWrap = False
   end
   object LabelNowXBit: TDLabel
-    Left = 224
-    Top = 284
+    Left = 8
+    Top = 300
     Width = 49
-    Height = 16
+    Height = 45
     AutoSize = False
     Alignment = taLeftJustify
     Caption = 'Reduced'
@@ -213,8 +213,8 @@ object fGColor: TfGColor
     WordWrap = False
   end
   object LabelDefault: TDLabel
-    Left = 224
-    Top = 308
+    Left = 8
+    Top = 228
     Width = 49
     Height = 16
     AutoSize = False
@@ -242,7 +242,7 @@ object fGColor: TfGColor
   end
   object LabelCurrent: TDLabel
     Left = 8
-    Top = 308
+    Top = 252
     Width = 49
     Height = 16
     AutoSize = False
@@ -270,7 +270,7 @@ object fGColor: TfGColor
   end
   object PanelNowColor: TDButton
     Left = 64
-    Top = 280
+    Top = 272
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -282,12 +282,12 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
-    TabOrder = 26
+    TabOrder = 25
     Color = clBlack
   end
   object PanelCurColor: TDButton
     Left = 64
-    Top = 304
+    Top = 248
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -298,13 +298,13 @@ object fGColor: TfGColor
     Font.Pitch = fpFixed
     Font.Style = []
     ParentFont = False
-    TabOrder = 27
+    TabOrder = 26
     OnClick = PanelCurColorClick
     Color = clBlack
   end
   object PanelNowBitColor: TDButton
-    Left = 280
-    Top = 280
+    Left = 64
+    Top = 320
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -316,13 +316,13 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
-    TabOrder = 28
+    TabOrder = 27
     OnClick = PanelNowBitColorClick
     Color = clBlack
   end
   object PanelDefaultColor: TDButton
-    Left = 280
-    Top = 304
+    Left = 64
+    Top = 224
     Width = 145
     Height = 24
     Caption = '$00000000'
@@ -333,7 +333,7 @@ object fGColor: TfGColor
     Font.Pitch = fpFixed
     Font.Style = []
     ParentFont = False
-    TabOrder = 29
+    TabOrder = 28
     OnClick = PanelDefaultColorClick
     Color = clBlack
   end
@@ -366,7 +366,7 @@ object fGColor: TfGColor
     OnChange = TrackBarRGBAChange
   end
   object ButtonR: TDButton
-    Left = 376
+    Left = 392
     Top = 8
     Width = 49
     Height = 24
@@ -381,7 +381,7 @@ object fGColor: TfGColor
     OnClick = ButtonRGBAClick
   end
   object ButtonOk: TDButton
-    Left = 256
+    Left = 312
     Top = 344
     Width = 73
     Height = 25
@@ -398,7 +398,7 @@ object fGColor: TfGColor
     OnClick = ButtonOkClick
   end
   object ButtonApply: TDButton
-    Left = 112
+    Left = 224
     Top = 344
     Width = 73
     Height = 25
@@ -413,7 +413,7 @@ object fGColor: TfGColor
     Visible = False
   end
   object ButtonCancel: TDButton
-    Left = 344
+    Left = 400
     Top = 344
     Width = 73
     Height = 25
@@ -428,22 +428,6 @@ object fGColor: TfGColor
     ParentFont = False
     TabOrder = 2
     OnClick = ButtonCancelClick
-  end
-  object RadioGroup1: TRadioGroup
-    Left = 312
-    Top = 184
-    Width = 113
-    Height = 89
-    Caption = 'Bit Depth'
-    ItemIndex = 4
-    Items.Strings = (
-      '1 bit'
-      '4 bits'
-      '15 bits'
-      '18 bits'
-      '24 bits')
-    TabOrder = 17
-    OnClick = RadioGroup1Click
   end
   object EditG: TEdit
     Tag = 1
@@ -477,7 +461,7 @@ object fGColor: TfGColor
   end
   object ButtonG: TDButton
     Tag = 1
-    Left = 376
+    Left = 392
     Top = 40
     Width = 49
     Height = 24
@@ -523,7 +507,7 @@ object fGColor: TfGColor
   end
   object ButtonB: TDButton
     Tag = 2
-    Left = 376
+    Left = 392
     Top = 72
     Width = 49
     Height = 24
@@ -569,7 +553,7 @@ object fGColor: TfGColor
   end
   object ButtonA: TDButton
     Tag = 3
-    Left = 376
+    Left = 392
     Top = 104
     Width = 49
     Height = 24
@@ -584,8 +568,8 @@ object fGColor: TfGColor
     OnClick = ButtonRGBAClick
   end
   object PanelS: TPanel
-    Left = 24
-    Top = 136
+    Left = 80
+    Top = 176
     Width = 388
     Height = 20
     BevelOuter = bvNone
@@ -609,8 +593,8 @@ object fGColor: TfGColor
     end
   end
   object PanelL: TPanel
-    Left = 24
-    Top = 160
+    Left = 80
+    Top = 200
     Width = 388
     Height = 20
     BevelOuter = bvNone
@@ -633,11 +617,145 @@ object fGColor: TfGColor
       OnMouseMove = ImageLMouseMove
     end
   end
+  object ComboBoxBitDepth: TComboBox
+    Left = 64
+    Top = 296
+    Width = 145
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    TabOrder = 29
+    OnChange = ComboBoxBitDepthChange
+  end
+  object DLabel1: TDLabel
+    Left = 8
+    Top = 136
+    Width = 33
+    Height = 19
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Hue'
+    BackEffect = ef00
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object EditHue: TEdit
+    Left = 48
+    Top = 136
+    Width = 33
+    Height = 19
+    AutoSize = False
+    TabOrder = 31
+    Text = '239'
+    OnChange = EditRGBAChange
+  end
+  object TrackBarHue: TTrackBar
+    Left = 88
+    Top = 136
+    Width = 286
+    Height = 32
+    Max = 255
+    Orientation = trHorizontal
+    PageSize = 8
+    Frequency = 8
+    Position = 0
+    SelEnd = 0
+    SelStart = 0
+    TabOrder = 32
+    ThumbLength = 19
+    TickMarks = tmBottomRight
+    TickStyle = tsAuto
+    OnChange = TrackBarRGBAChange
+  end
+  object DButtonH: TDButton
+    Left = 392
+    Top = 136
+    Width = 49
+    Height = 24
+    Caption = 'Invert'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 33
+    OnClick = ButtonRGBAClick
+  end
+  object DLabel2: TDLabel
+    Left = 8
+    Top = 176
+    Width = 65
+    Height = 19
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Saturation'
+    BackEffect = ef00
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
+  object DLabel3: TDLabel
+    Left = 8
+    Top = 200
+    Width = 65
+    Height = 19
+    AutoSize = False
+    Alignment = taLeftJustify
+    Caption = 'Lightness'
+    BackEffect = ef00
+    FontShadow = 1
+    Displ.Enabled = False
+    Displ.Format = '88'
+    Displ.SizeX = 4
+    Displ.SizeY = 4
+    Displ.SpaceSX = 2
+    Displ.SpaceSY = 2
+    Displ.SizeT = 1
+    Displ.Spacing = 0
+    Displ.ColorA = clRed
+    Displ.ColorD = clMaroon
+    Displ.Size = 0
+    Layout = tlCenter
+    Transparent = True
+    TransparentColor = False
+    TransparentColorValue = clBlack
+    WordWrap = False
+  end
   object PopupMenu1: TPopupMenu
     Images = ImageList1
     OwnerDraw = True
-    Left = 16
-    Top = 336
+    Left = 8
+    Top = 344
     object clScrollBar1: TMenuItem
       Caption = 'ScrollBar'
       ImageIndex = 0
@@ -823,7 +941,7 @@ object fGColor: TfGColor
   end
   object ImageList1: TImageList
     AllocBy = 1
-    Left = 48
-    Top = 336
+    Left = 40
+    Top = 344
   end
 end
