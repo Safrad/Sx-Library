@@ -126,7 +126,7 @@ begin
 	end;
 	if (DesktopDC = 0) then
 	begin
-		DesktopHWnd := GetDesktopWindow;
+		DesktopHWnd := 0; //GetDesktopWindow;
 		if DesktopHWnd <> INVALID_HANDLE_VALUE then
 		begin
 			DesktopDC := GetDC(DesktopHWnd);
