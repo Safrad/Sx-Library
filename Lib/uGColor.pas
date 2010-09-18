@@ -12,7 +12,7 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	StdCtrls, ComCtrls, ExtCtrls, Menus, uDPanel, uGraph, uDBitBtn,
+	StdCtrls, ComCtrls, ExtCtrls, Menus, uDPanel, uGraph, uDButton,
 	uDLabel, ImgList;
 
 type
@@ -22,23 +22,23 @@ type
 		Label1: TDLabel;
 		EditR: TEdit;
 		TrackBarR: TTrackBar;
-		BitBtnR: TDBitBtn;
-		ButtonOk: TDBitBtn;
-		ButtonApply: TDBitBtn;
-		ButtonCancel: TDBitBtn;
+    ButtonR: TDButton;
+		ButtonOk: TDButton;
+		ButtonApply: TDButton;
+		ButtonCancel: TDButton;
 		RadioGroup1: TRadioGroup;
 		Label2: TDLabel;
 		EditG: TEdit;
 		TrackBarG: TTrackBar;
-		BitBtnG: TDBitBtn;
+    ButtonG: TDButton;
 		Label3: TDLabel;
 		EditB: TEdit;
 		TrackBarB: TTrackBar;
-		BitBtnB: TDBitBtn;
+    ButtonB: TDButton;
 		Label4: TDLabel;
 		EditA: TEdit;
 		TrackBarA: TTrackBar;
-		BitBtnA: TDBitBtn;
+    ButtonA: TDButton;
 		GroupBoxColors: TGroupBox;
 		PopupMenu1: TPopupMenu;
 		clScrollBar1: TMenuItem;
@@ -90,10 +90,10 @@ type
 		procedure TrackBarRChange(Sender: TObject);
 		procedure TrackBarGChange(Sender: TObject);
 		procedure TrackBarBChange(Sender: TObject);
-		procedure BitBtnRClick(Sender: TObject);
-		procedure BitBtnGClick(Sender: TObject);
-		procedure BitBtnBClick(Sender: TObject);
-		procedure BitBtnAClick(Sender: TObject);
+		procedure ButtonRClick(Sender: TObject);
+		procedure ButtonGClick(Sender: TObject);
+		procedure ButtonBClick(Sender: TObject);
+		procedure ButtonAClick(Sender: TObject);
 		procedure TrackBarAChange(Sender: TObject);
 		procedure ImageSMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
@@ -116,7 +116,7 @@ type
 		procedure PanelNowBitColorClick(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
 		procedure ButtonOkClick(Sender: TObject);
-		procedure AdvencedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
+		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 			State: TOwnerDrawState);
 	private
 		{ Private declarations }
@@ -241,7 +241,7 @@ begin
 		InitImage(fGColor.ImageS, clNone);
 		InitImage(fGColor.ImageL, clNone);
 	end;
-	CorrectPos(fGColor);
+	CorrectFormPos(fGColor);
 	fGColor.OnApply := OnApply;
 	fGColor.ButtonApply.Enabled := Assigned(OnApply);
 
@@ -607,7 +607,7 @@ begin
 	ChangeColor;
 end;
 
-procedure TfGColor.BitBtnRClick(Sender: TObject);
+procedure TfGColor.ButtonRClick(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
 	TRColor(NowColor).R := 255 - TRColor(NowColor).R;
@@ -615,7 +615,7 @@ begin
 	ChangeColor;
 end;
 
-procedure TfGColor.BitBtnGClick(Sender: TObject);
+procedure TfGColor.ButtonGClick(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
 	TRColor(NowColor).G := 255 - TRColor(NowColor).G;
@@ -623,7 +623,7 @@ begin
 	ChangeColor;
 end;
 
-procedure TfGColor.BitBtnBClick(Sender: TObject);
+procedure TfGColor.ButtonBClick(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
 	TRColor(NowColor).B := 255 - TRColor(NowColor).B;
@@ -631,7 +631,7 @@ begin
 	ChangeColor;
 end;
 
-procedure TfGColor.BitBtnAClick(Sender: TObject);
+procedure TfGColor.ButtonAClick(Sender: TObject);
 begin
 	NowColor := ColorToRGB(NowColor) and $00ffffff;
 	TRColor(NowColor).R := 255 - TRColor(NowColor).R;
@@ -793,7 +793,7 @@ begin
 	end;
 end;
 
-procedure TfGColor.AdvencedDraw(Sender: TObject; ACanvas: TCanvas;
+procedure TfGColor.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 var
 	Bmp: TBitmap;

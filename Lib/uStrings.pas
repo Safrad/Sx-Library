@@ -12,6 +12,8 @@ procedure DelChars(var s: string; const C: Char);
 function DelQuoteF(const s: string): string;
 procedure DelQuote(var s: string);
 
+function CharCount(const s: string; const C: Char): UG;
+
 function DelBeginSpaceF(const s: string): string;
 procedure DelBeginSpace(var s: string);
 function DelEndSpaceF(const s: string): string;
@@ -71,6 +73,16 @@ begin
 	if s[1] = '"' then Delete(s, 1, 1);
 	if s = '' then Exit;
 	if s[Length(s)] = '"' then SetLength(s, Length(s) - 1);
+end;
+
+function CharCount(const s: string; const C: Char): UG;
+var i: SG;
+begin
+	Result := 0;
+	for i := 1 to Length(s) do
+	begin
+		if s[i] = #9 then Inc(Result);
+	end;
 end;
 
 function DelBeginSpaceF(const s: string): string;

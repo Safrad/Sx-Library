@@ -9,25 +9,21 @@
 
 // Build: 09/1999-11/1999 Author: Safranek David
 
-unit uDBitBtn;
+unit uDButton;
 
 interface
 
 {$C PRELOAD}
-
 {$R *.RES}
 uses
 	Windows, Messages, Classes, Controls, Forms, Graphics, StdCtrls,
-	ExtCtrls, CommCtrl, uWave;
+	ExtCtrls, CommCtrl, uWave, uDTimer;
 
 type
 	THighlight = (hlNone, hlRect, hlBar, hlRectMov, hlBarHorz, hlBarVert, hlUnderlight);
 	TButtonLayout = (blGlyphLeft, blGlyphRight, blGlyphTop, blGlyphBottom);
 
-	TBitBtnKind = (bkCustom, bkOK, bkCancel, bkHelp, bkYes, bkNo, bkClose,
-		bkAbort, bkRetry, bkIgnore, bkAll);
-
-	TDBitBtn = class(TButton)
+	TDButton = class(TButton)
 	private
 		FCanvas: TCanvas;
 		FBmpOut: TBitmap;
@@ -41,8 +37,7 @@ type
 		FAutoChange: Boolean;
 
 		FColor: TColor;
-		FTimer: TTimer;
-		FKind: TBitBtnKind;
+		FTimer: TDTimer;
 		FLayout: TButtonLayout;
 		FSpacing: Integer;
 		FMargin: Integer;
@@ -59,10 +54,7 @@ type
 		procedure SetGlyph(Value: TBitmap);
 		function GetGlyph: TBitmap;
 		procedure GlyphChanged(Sender: TObject);
-		function IsCustom: Boolean;
 		function IsCustomCaption: Boolean;
-		procedure SetKind(Value: TBitBtnKind);
-		function GetKind: TBitBtnKind;
 		procedure SetLayout(Value: TButtonLayout);
 		procedure SetSpacing(Value: Integer);
 		procedure SetMargin(Value: Integer);
@@ -90,19 +82,18 @@ type
 		property Anchors;
 		property AutoChange: Boolean read FAutoChange write FAutoChange default False;
 		property BiDiMode;
-		property Cancel stored IsCustom;
+		property Cancel;
 		property Caption stored IsCustomCaption;
 		property Color: TColor read FColor write SetColor default clBtnFace;
 		property Constraints;
-		property Default stored IsCustom;
+		property Default;
 		property Down: Boolean read FDown write SetDown default False;
 		property Enabled;
-		property Glyph: TBitmap read GetGlyph write SetGlyph stored IsCustom;
+		property Glyph: TBitmap read GetGlyph write SetGlyph;
 		property Highlight: THighLight read FHighlight write SetHighlight default hlUnderlight;
-		property Kind: TBitBtnKind read GetKind write SetKind default bkCustom;
 		property Layout: TButtonLayout read FLayout write SetLayout default blGlyphLeft;
 		property Margin: Integer read FMargin write SetMargin default - 1;
-		property ModalResult stored IsCustom;
+		property ModalResult;
 		property ParentShowHint;
 		property ParentBiDiMode;
 		property ShowHint;
@@ -124,8 +115,10 @@ function DrawButtonFace(Canvas: TCanvas; const Client: TRect;
 	BevelWidth: Integer; IsRounded, IsDown,
 	IsFocused: Boolean): TRect;
 
+{
 procedure LoadBSounds;
 procedure UnloadBSounds;
+}
 
 procedure Register;
 
@@ -135,20 +128,9 @@ uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
 	uGraph, uGraph24, uFiles, uAdd, uScreen;
 
-{ TDBitBtn data }
+{ TDButton data }
 var
-	BitBtnResNames: array[TBitBtnKind] of PChar = (
-		nil, 'DBOK', 'DBCANCEL', 'DBHELP', 'DBYES', 'DBNO', 'DBCLOSE',
-		'DBABORT', 'DBRETRY', 'DBIGNORE', 'DBALL');
-	BitBtnCaptions: array[TBitBtnKind] of string = (
-		'', '&OK', '&Cancel', '&Help', '&Yes', '&No', '&Close',
-		'&Abort', '&Retry', '&Ignore', '&All');
-	BitBtnModalResults: array[TBitBtnKind] of TModalResult = (
-		0, mrOk, mrCancel, 0, mrYes, mrNo, 0,
-		mrAbort, mrRetry, mrIgnore, mrAll);
 	BadColors: Boolean;
-
-	BitBtnGlyphs: array[TBitBtnKind] of TBitmap;
 
 { DrawButtonFace - returns the remaining usable area inside the Client rect.}
 function DrawButtonFace(Canvas: TCanvas; const Client: TRect;
@@ -190,17 +172,6 @@ begin
 	Result := Rect(Client.Left + 1, Client.Top + 1,
 		Client.Right - 2, Client.Bottom - 2);
 	if IsDown then OffsetRect(Result, 1, 1);
-end;
-
-function GetBitBtnGlyph(Kind: TBitBtnKind): TBitmap;
-begin
-	if BitBtnGlyphs[Kind] = nil then
-	begin
-		BitBtnGlyphs[Kind] := TBitmap.Create;
-		BitBtnGlyphs[Kind].LoadFromResourceName(HInstance, BitBtnResNames[Kind]);
-		BitBtnGlyphs[Kind].PixelFormat := pf24bit;
-	end;
-	Result := BitBtnGlyphs[Kind];
 end;
 
 type
@@ -453,9 +424,9 @@ begin
 	BmpD24.Free;
 end;
 
-{ TDBitBtn }
+{ TDButton }
 
-constructor TDBitBtn.Create(AOwner: TComponent);
+constructor TDButton.Create(AOwner: TComponent);
 begin
 	FGlyph := TButtonGlyph.Create;
 	TButtonGlyph(FGlyph).OnChange := GlyphChanged;
@@ -464,11 +435,10 @@ begin
 	FCanvas := TCanvas.Create;
 	FBmpOut := TBitmap.Create;
 	FBmpOut.PixelFormat := pf24bit;
-	FTimer := TTimer.Create(Self);
+	FTimer := TDTimer.Create(Self);
 	FTimer.Enabled := False;
-	FTimer.Interval := 55;
+	FTimer.Interval := 33;
 	FTimer.OnTimer := Timer1Timer;
-	FKind := bkCustom;
 	FLayout := blGlyphLeft;
 	FSpacing := 4;
 	FMargin := -1;
@@ -480,28 +450,28 @@ begin
 	ControlStyle := ControlStyle + [csReflector];
 end;
 
-destructor TDBitBtn.Destroy;
+destructor TDButton.Destroy;
 begin
 	FTimer.Enabled := False;
-	FTimer.Free;
+	FTimer.Free; FTimer := nil;
 	inherited Destroy;
 	TButtonGlyph(FGlyph).Free;
 	FCanvas.Free;
 	FBmpOut.Free;
 end;
 
-procedure TDBitBtn.CreateHandle;
+procedure TDButton.CreateHandle;
 begin
 	inherited CreateHandle;
 end;
-		
-procedure TDBitBtn.CreateParams(var Params: TCreateParams);
+
+procedure TDButton.CreateParams(var Params: TCreateParams);
 begin
 	inherited CreateParams(Params);
 	with Params do Style := Style or BS_OWNERDRAW;
 end;
 		
-procedure TDBitBtn.SetButtonStyle(ADefault: Boolean);
+procedure TDButton.SetButtonStyle(ADefault: Boolean);
 begin
 	if ADefault <> IsFocused then
 	begin
@@ -510,37 +480,17 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.Click;
-var
-	Form: TCustomForm;
-	Control: TWinControl;
+procedure TDButton.Click;
 begin
 	if FAutoChange then
 	begin
 		FDown := not FDown;
 		Invalidate;
 	end;
-	case FKind of
-		bkClose:
-			begin
-				Form := GetParentForm(Self);
-				if Form <> nil then Form.Close
-				else inherited Click;
-			end;
-		bkHelp:
-			begin
-				Control := Self;
-				while (Control <> nil) and (Control.HelpContext = 0) do
-					Control := Control.Parent;
-				if Control <> nil then Application.HelpContext(Control.HelpContext)
-				else inherited Click;
-			end;
-		else
-			inherited Click;
-	end;
+	inherited Click;
 end;
 
-procedure TDBitBtn.CNMeasureItem(var Message: TWMMeasureItem);
+procedure TDButton.CNMeasureItem(var Message: TWMMeasureItem);
 begin
 	with Message.MeasureItemStruct^ do
 	begin
@@ -549,7 +499,7 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.CMMouseEnter(var Message: TMessage);
+procedure TDButton.CMMouseEnter(var Message: TMessage);
 begin
 	inherited;
 	{ Don't draw a border if DragMode <> dmAutomatic since this button is meant to
@@ -563,7 +513,7 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.CMMouseLeave(var Message: TMessage);
+procedure TDButton.CMMouseLeave(var Message: TMessage);
 begin
 	inherited;
 	if not Dragging then
@@ -575,12 +525,12 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.CNDrawItem(var Message: TWMDrawItem);
+procedure TDButton.CNDrawItem(var Message: TWMDrawItem);
 begin
 	DrawItem(Message.DrawItemStruct^);
 end;
 
-procedure TDBitBtn.DrawItem(const DrawItemStruct: TDrawItemStruct);
+procedure TDButton.DrawItem(const DrawItemStruct: TDrawItemStruct);
 var
 	FileName: TFileName;
 	Quality: SG;
@@ -593,6 +543,7 @@ var
 	Co: array[0..3] of TColor;
 	E: TColor;
 	FBmpOut24: TBitmap24;
+	s: string;
 begin
 	IsDefault := DrawItemStruct.itemState and ODS_FOCUS <> 0;
 	IsDown := DrawItemStruct.itemState and ODS_SELECTED <> 0;
@@ -614,7 +565,7 @@ begin
 	if Glyph.Height = 0 then
 	begin
 		Glyph.Height := 16;
-		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name) + '.bmp';
+		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + '.bmp';
 		if FileExists(FileName) then
 		begin
 			BitmapLoadFromFile(Glyph, FileName, 16, 16, Quality);
@@ -664,7 +615,17 @@ begin
 
 	if IsDown then OffsetRect(Recta, 1, 1);
 	FBmpOut.Canvas.Font := Self.Font;
-	TButtonGlyph(FGlyph).Draw(FBmpOut, Recta, Point(0, 0), Caption, FLayout,
+
+	if (Length(Caption) > 0) and (Caption[1] = '/') then
+	begin
+		s := Caption;
+		Delete(s, 1, 1);
+		s := ButtonNameToFileName(Name, True) + s;
+	end
+	else
+		s := Caption;
+
+	TButtonGlyph(FGlyph).Draw(FBmpOut, Recta, Point(0, 0), s, FLayout,
 		FMargin, FSpacing, Enabled, DrawTextBiDiModeFlags(0));
 	if IsDown then OffsetRect(Recta, -1, -1);
 
@@ -751,29 +712,29 @@ begin
 	FCanvas.Handle := 0;
 end;
 
-procedure TDBitBtn.CMFontChanged(var Message: TMessage);
+procedure TDButton.CMFontChanged(var Message: TMessage);
 begin
 	inherited;
 	Invalidate;
 end;
 
-procedure TDBitBtn.CMEnabledChanged(var Message: TMessage);
+procedure TDButton.CMEnabledChanged(var Message: TMessage);
 begin
 	inherited;
 	Invalidate;
 end;
 
-procedure TDBitBtn.WMLButtonDblClk(var Message: TWMLButtonDblClk);
+procedure TDButton.WMLButtonDblClk(var Message: TWMLButtonDblClk);
 begin
 	Perform(WM_LBUTTONDOWN, Message.Keys, LongInt(Message.Pos));
 end;
 
-function TDBitBtn.GetPalette: HPALETTE;
+function TDButton.GetPalette: HPALETTE;
 begin
 	Result := Glyph.Palette;
 end;
 		
-procedure TDBitBtn.SetGlyph(Value: TBitmap);
+procedure TDButton.SetGlyph(Value: TBitmap);
 begin
 	TButtonGlyph(FGlyph).Glyph := Value as TBitmap;
 	TButtonGlyph(FGlyph).Glyph.PixelFormat := pf24bit;
@@ -786,63 +747,24 @@ begin
 	Invalidate;
 end;
 
-function TDBitBtn.GetGlyph: TBitmap;
+function TDButton.GetGlyph: TBitmap;
 begin
 	Result := TButtonGlyph(FGlyph).Glyph;
 end;
 		
-procedure TDBitBtn.GlyphChanged(Sender: TObject);
+procedure TDButton.GlyphChanged(Sender: TObject);
 begin
 	Invalidate;
 end;
-		
-function TDBitBtn.IsCustom: Boolean;
+
+function TDButton.IsCustomCaption: Boolean;
 begin
-	Result := Kind = bkCustom;
+	Result := True;
+{	Result :=	(UpperCase(Caption) <> UpperCase(Name))
+		and (UpperCase(Caption) <> UpperCase(ButtonNameToFileName(Name)));}
 end;
 
-procedure TDBitBtn.SetKind(Value: TBitBtnKind);
-begin
-	if Value <> FKind then
-	begin
-		if Value <> bkCustom then
-		begin
-			Default := Value in [bkOK, bkYes];
-			Cancel := Value in [bkCancel, bkNo];
-		
-			if ((csLoading in ComponentState) and (Caption = '')) or
-				(not (csLoading in ComponentState)) then
-			begin
-				if BitBtnCaptions[Value] <> '' then
-					Caption := BitBtnCaptions[Value];
-			end;
-
-			ModalResult := BitBtnModalResults[Value];
-			TButtonGlyph(FGlyph).Glyph := GetBitBtnGlyph(Value);
-			FModifiedGlyph := False;
-		end;
-		FKind := Value;
-		Invalidate;
-	end;
-end;
-		
-function TDBitBtn.IsCustomCaption: Boolean;
-begin
-	Result := AnsiCompareStr(Caption, BitBtnCaptions[FKind]) <> 0;
-end;
-
-function TDBitBtn.GetKind: TBitBtnKind;
-begin
-	if FKind <> bkCustom then
-		if ((FKind in [bkOK, bkYes]) xor Default) or
-			((FKind in [bkCancel, bkNo]) xor Cancel) or
-			(ModalResult <> BitBtnModalResults[FKind]) or
-			FModifiedGlyph then
-			FKind := bkCustom;
-	Result := FKind;
-end;
-
-procedure TDBitBtn.SetLayout(Value: TButtonLayout);
+procedure TDButton.SetLayout(Value: TButtonLayout);
 begin
 	if FLayout <> Value then
 	begin
@@ -851,7 +773,7 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.SetSpacing(Value: Integer);
+procedure TDButton.SetSpacing(Value: Integer);
 begin
 	if FSpacing <> Value then
 	begin
@@ -860,7 +782,7 @@ begin
 	end;
 end;
 		
-procedure TDBitBtn.SetMargin(Value: Integer);
+procedure TDButton.SetMargin(Value: Integer);
 begin
 	if (Value <> FMargin) and (Value >= -1) then
 	begin
@@ -869,7 +791,7 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.ActionChange(Sender: TObject; CheckDefaults: Boolean);
+procedure TDButton.ActionChange(Sender: TObject; CheckDefaults: Boolean);
 
 	procedure CopyImage(ImageList: TCustomImageList; Index: Integer);
 	begin
@@ -895,7 +817,7 @@ begin
 		end;
 end;
 
-procedure TDBitBtn.SetColor(Value: TColor);
+procedure TDButton.SetColor(Value: TColor);
 begin
 	if (Value <> FColor) then
 	begin
@@ -904,7 +826,7 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.SetDown(Value: Boolean);
+procedure TDButton.SetDown(Value: Boolean);
 begin
 	if (Value <> FDown) then
 	begin
@@ -914,7 +836,7 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.SetHighlight(Value: THighLight);
+procedure TDButton.SetHighlight(Value: THighLight);
 begin
 	if (Value <> FHighlight) then
 	begin
@@ -923,7 +845,7 @@ begin
 	end;
 end;
 
-procedure TDBitBtn.Timer1Timer(Sender: TObject);
+procedure TDButton.Timer1Timer(Sender: TObject);
 begin
 	if (FHighNow) and (FHighlight <> hlNone) and (FHighlight <> hlBar) and (FHighlight <> hlRect) then
 	begin
@@ -932,20 +854,17 @@ begin
 	end;
 end;
 
-procedure DestroyLocals; far;
-var
-	I: TBitBtnKind;
-begin
-	for I := Low(TBitBtnKind) to High(TBitBtnKind) do
-		BitBtnGlyphs[I].Free;
-end;
-
 procedure LoadBSounds;
 var
 	SoundUpDataBytes, SoundDownDataBytes: Integer;
+	FileName: TFileName;
 begin
-	WaveReadFromFile(BSoundUp, SoundsDir + 'BUp.wav');
-	WaveReadFromFile(BSoundDown, SoundsDir + 'BDown.wav');
+	FileName := SoundsDir + 'BUp.wav';
+	if FileExists(FileName) then
+		WaveReadFromFile(BSoundUp, FileName);
+	FileName := SoundsDir + 'BDown.wav';
+	if FileExists(FileName) then
+		WaveReadFromFile(BSoundDown, FileName);
 	if BSoundUp <> nil then
 		SoundUpDataBytes := BSoundUp.DataBytes div BSoundUp.Channels
 	else
@@ -983,14 +902,15 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDBitBtn]);
+	RegisterComponents('DComp', [TDButton]);
 end;
 
 initialization
+	LoadBSounds;
 	BadColors :=
 		(ColorToRGB(clBtnFace) = ColorToRGB(clActiveBorder)) or
 		(ColorToRGB(clBtnFace) = ColorToRGB(clInactiveBorder)) or
 		(ColorToRGB(clActiveBorder) = ColorToRGB(clInactiveBorder));
 finalization
-	DestroyLocals;
+	UnloadBSounds;
 end.

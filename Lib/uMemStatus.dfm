@@ -30,7 +30,7 @@ object fMemStatus: TfMemStatus
     Height = 94
     Shape = bsLeftLine
   end
-  object DBitBtn1: TDBitBtn
+  object ButtonStart: TDButton
     Left = 200
     Top = 296
     Width = 81
@@ -44,9 +44,9 @@ object fMemStatus: TfMemStatus
     ParentFont = False
     TabOrder = 0
     TabStop = False
-    OnClick = DBitBtn1Click
+    OnClick = ButtonStartClick
   end
-  object DBitBtn2: TDBitBtn
+  object ButtonStop: TDButton
     Left = 296
     Top = 296
     Width = 81
@@ -60,7 +60,7 @@ object fMemStatus: TfMemStatus
     ParentFont = False
     TabOrder = 1
     TabStop = False
-    OnClick = DBitBtn2Click
+    OnClick = ButtonStopClick
   end
   object DPanel1: TDPanel
     Left = 8
@@ -276,7 +276,10 @@ object fMemStatus: TfMemStatus
     TabOrder = 13
     FontShadow = 1
   end
-  object Timer1: TTimer
+  object Timer1: TDTimer
+    ActiveOnly = False
+    Enabled = True
+    Interval = 1000
     OnTimer = Timer1Timer
     Left = 8
     Top = 296

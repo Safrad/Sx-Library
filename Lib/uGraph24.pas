@@ -169,7 +169,7 @@ implementation
 
 uses
 	Dialogs,
-	uGraph, uError;
+	uGraph, uError, uDialog;
 
 (*-------------------------------------------------------------------------*)
 function WidthToByteX4(const Width: LongWord): LongWord;
@@ -197,7 +197,7 @@ begin
 	{$ifopt d+}
 	if Bitmap.PixelFormat <> pf24bit then
 	begin
-		MessageDlg('24bit bitmap required', mtError, [mbOk], 0);
+		MessageD('24bit bitmap required', mtError, [mbOk]);
 		Bitmap.PixelFormat := pf24bit;
 	end;
 	{$endif}

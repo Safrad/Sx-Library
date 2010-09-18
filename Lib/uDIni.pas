@@ -4,7 +4,10 @@ unit uDIni;
 
 interface
 
-uses uAdd, Classes, SysUtils, Forms, ComCtrls, StdCtrls;
+uses
+	uAdd, uDView,
+	Classes, SysUtils, Forms, ComCtrls, StdCtrls;
+
 type
 	TKey = record // 8
 		Name: string; // 4
@@ -75,6 +78,7 @@ type
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: Boolean);
 
 		procedure RWFormPos(Form: TForm; const Save: Boolean);
+		procedure RWDView(DView: TDView; const Save: Boolean);
 		procedure RWListView(ListView: TListView; const Save: Boolean);
 		procedure RWComboBox(ComboBox: TComboBox; const Save: Boolean);
 
@@ -122,7 +126,7 @@ var NewSize: Integer;
 begin
 	Inc(FSectionCount);
 	NewSize := FSectionCount;
-	if AllocBy(Length(FSections), NewSize, 65536 div SizeOf(FSections[0])) then
+	if AllocByEx(Length(FSections), NewSize, SizeOf(FSections[0])) then
 		SetLength(FSections, NewSize);
 	FSections[FSectionCount - 1].Name := Section;
 	FSections[FSectionCount - 1].Keys := nil;
@@ -134,7 +138,7 @@ var i, NewSize: Integer;
 begin
 	Inc(FSections[SectionIndex].KeyCount);
 	NewSize := FSections[SectionIndex].KeyCount;
-	if AllocBy(Length(FSections[SectionIndex].Keys), NewSize, 65536 div SizeOf(FSections[SectionIndex].Keys[0])) then
+	if AllocByEx(Length(FSections[SectionIndex].Keys), NewSize, SizeOf(FSections[SectionIndex].Keys[0])) then
 		SetLength(FSections[SectionIndex].Keys, NewSize);
 	i := FSections[SectionIndex].KeyCount - 1;
 	FSections[SectionIndex].Keys[i].Name := Ident;
@@ -459,6 +463,7 @@ begin
 	FileStatus := fsFull;
 	FileMethod := fmDelphi;
 	FileProtection := True;
+	FileSaved := True;
 { case FileAccess of
 	1: FileStatus := fsOpenW;
 	2: FileStatus := fsFull;
@@ -475,6 +480,7 @@ begin
 	end;
 	SetLength(FSections, 0);
 	FInMemory := False;
+	FileSaved := True;
 end;
 
 destructor TDIniFile.Free;
@@ -493,40 +499,44 @@ begin
 	if FileName <> '' then FFileName := FileName;
 	if FileExists(FFileName) = False then
 	begin
-		Exit;
-	end;
-
-	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		while not F.Eof do
-		begin
-			F.Readln(Line);
-			if Line = '' then Continue;
-
-			if Line[1] = '[' then
-			begin
-
-				if Line[Length(Line)] = ']' then
-					SetLength(Line, Length(Line) - 1);
-				AddSection(Copy(Line, 2, MaxInt));
-			end
-			else
-			begin
-				InLineIndex := 1;
-				AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
-				FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt);
-{       Inc(FSections[FSectionCount - 1].KeyCount);
-				i := FSections[FSectionCount - 1].KeyCount;
-				SetLength(FSections[FSectionCount - 1].Keys, i);
-				Dec(i);
-				FSections[FSectionCount - 1].Keys[i].Name := ReadToChar(Line, InLineIndex, '=');}
-
-			end;
-		end;
-		if not F.Close then goto LRetry;
 		FInMemory := True;
+		FileSaved := True;
+	end
+	else
+	begin
+		FileSaved := True;
+		F := TFile.Create;
+		LRetry:
+		if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+		begin
+			while not F.Eof do
+			begin
+				F.Readln(Line);
+				if Line = '' then Continue;
+
+				if Line[1] = '[' then
+				begin
+
+					if Line[Length(Line)] = ']' then
+						SetLength(Line, Length(Line) - 1);
+					AddSection(Copy(Line, 2, MaxInt));
+				end
+				else
+				begin
+					InLineIndex := 1;
+					AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
+					FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt);
+	{       Inc(FSections[FSectionCount - 1].KeyCount);
+					i := FSections[FSectionCount - 1].KeyCount;
+					SetLength(FSections[FSectionCount - 1].Keys, i);
+					Dec(i);
+					FSections[FSectionCount - 1].Keys[i].Name := ReadToChar(Line, InLineIndex, '=');}
+
+				end;
+			end;
+			if not F.Close then goto LRetry;
+			FInMemory := True;
+		end;
 	end;
 end;
 
@@ -536,6 +546,7 @@ var
 	F: TFile;
 	i, j: Integer;
 begin
+	if FInMemory = False then LoadFromFile(FFileName);
 	if FileName <> '' then FFileName := FileName;
 
 	F := TFile.Create;
@@ -938,9 +949,29 @@ begin
 			Form.Width := RWSGF(Form.Name, 'Width', Form.Width, Form.Width, Save);
 			Form.Height := RWSGF(Form.Name, 'Height', Form.Height, Form.Height, Save);
 		end;
+		CorrectFormPos(Form);
 	end;
 	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 		Form.WindowState := TWindowState(RWSGF(Form.Name, 'WindowState', Integer(Form.WindowState), Integer(Form.WindowState), Save));
+end;
+
+procedure TDIniFile.RWDView(DView: TDView; const Save: Boolean);
+var i{, j}: Integer;
+begin
+	for i := 0 to DView.ColumnCount - 1 do
+	begin
+		DView.Columns[i].Width := RWSGF(DView.Name, 'Width' + IntToStr(i), DView.Columns[i].Width, DView.Columns[i].Width, Save);
+		DView.ColumnOrder[i] := RWSGF(DView.Name, 'Order' + IntToStr(i), DView.ColumnOrder[i], i, Save);
+	end;
+{	if DView.FullDrag then
+	begin
+		for i := 0 to ListView.Columns.Count - 1 do
+		begin
+			j := RWSGF(ListView.Name, 'Index' + IntToStr(i), ListView.Columns.Items[i].ID, i, Save);
+			if Save = False then ListView.Columns.Items[i].Index := j;
+
+		end;
+	end;}
 end;
 
 procedure TDIniFile.RWListView(ListView: TListView; const Save: Boolean);

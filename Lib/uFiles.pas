@@ -4,13 +4,16 @@ unit uFiles;
 
 interface
 
-uses SysUtils, Windows, uAdd;
+uses
+	uAdd,
+	SysUtils, Windows, Classes;
 
 // File system
 const
 	DefFileBuffer = 32768; // Best Performance
 type
-	TString = ShortString;
+	TString = string;
+//	TLines = array of string;
 	TFileNames = array of TFileName;
 
 	TFileMode = (fmReadOnly, fmWriteOnly, fmReadAndWrite);
@@ -30,7 +33,7 @@ type
 	private
 		HFile: THANDLE;
 		FFileName: ^TFileName;
-		FTempFileName:	TFileName;
+		FTempFileName:  TFileName;
 
 		FMode: TFileMode;
 		// For Write only
@@ -40,18 +43,21 @@ type
 		FBuffer: array of Char;
 		FBufStart, FBufEnd: U64;
 		FBufferSize: U64;
-	public
 		FFilePos: U64;
 		FFileSize: U64;
+		function GetFileSize(var Size: U64): Boolean;
+	public
 		ErrorCode: U32;
 		EofStr: ShortString; // For Writeln only
+		property FilePos: U64 read FFilePos;
+		property FileSize: U64 read FFileSize;
 		constructor Create;
 		destructor Free;
 		function Open(var FileName: TFileName; const Mode: TFileMode; Flags: U32; Protection: Boolean): Boolean;
-		function FileSize(var Size: U64): Boolean;
 		function Seek(const Pos: U64): Boolean;
 		function BlockRead(var Buf; const Count: Cardinal): Boolean;
 		function BlockWrite(var Buf; const Count: Cardinal): Boolean;
+		function FillWrite(const Count: Cardinal): Boolean;
 		function Readln(var Line: string): Boolean;
 		function Write(Line: string): Boolean;
 		function Writeln(Line: string): Boolean;
@@ -91,7 +97,9 @@ var
 	WorkDir, // Dir with exe file, data files (read only)
 	GraphDir,
 	SoundsDir,
-	ExeFileName: TString;
+	DataDir,
+	SysDir, WinDir: TString;
+	ExeFileName: TFileName;
 
 //procedure InitPaths; {$ifdef DLL}stdcall;{$endif}
 function ShortDir(const Dir: TString): TString; {$ifdef DLL}stdcall;{$endif}
@@ -100,15 +108,30 @@ function DelFileExt(const FName: TString): TString; {$ifdef DLL}stdcall;{$endif}
 function BackDir(const Dir: TString): TString; {$ifdef DLL}stdcall;{$endif}
 function LegalFileName(const FileName: TString): TString; {$ifdef DLL}stdcall;{$endif}
 procedure ReadDirectory(var FileNames: TFileNames; Path, Extension: string);
+procedure ReadDirectory2(var FileNames: TFileNames; Path: string);
 function GetFileSiz(const FileName: TFileName): U64; {$ifdef DLL}stdcall;{$endif}
 function CreateDir(const Dir: string): Boolean;
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function DeleteFile(const FileName: TFileName): Boolean;
+function CopyDir(const Source, Dest: string): Boolean;
+function DeleteFolder(const Folder: string): Boolean;
+
+function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+function WriteBufferToFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
+function WriteLinesToFile(var FileName: TFileName; Lines: TStrings): BG;
+
+{
+	MapViewOfFile
+	OpenFileMapping
+	CreateFileMapping
+}
+
 
 implementation
 
 uses
-	Dialogs,
+	Dialogs, FileCtrl,
 	uError;
 
 constructor TFile.Create;
@@ -142,7 +165,7 @@ begin
 	if FProtection and (FMode <> fmReadOnly) then
 	begin
 		FTempFileName := ExtractFilePath(FileName) + '$' + ExtractFileName(FileName);
-{		if FileExists(FTempFileName) then
+{   if FileExists(FTempFileName) then
 		begin
 			DeleteFile(FTempFileName);
 		end;}
@@ -164,12 +187,12 @@ begin
 	fmWriteOnly:
 	begin
 		DesiredAccess := GENERIC_WRITE;
-		ShareMode := 0;
+		ShareMode := 0;//FILE_SHARE_READ;
 	end;
 	fmReadAndWrite:
 	begin
 		DesiredAccess := GENERIC_READ or GENERIC_WRITE;
-		ShareMode := 0;
+		ShareMode := 0;//FILE_SHARE_READ;
 	end
 	else
 	begin
@@ -177,7 +200,7 @@ begin
 		ShareMode := 0;
 	end;
 	end;
-{	FILE_SHARE_READ
+{ FILE_SHARE_READ
 	FILE_SHARE_WRITE}
 
 	if (FileExists(FTempFileName) = False) and (FMode <> fmReadOnly) then
@@ -186,13 +209,13 @@ begin
 		CreationDistribution := OPEN_EXISTING;
 
 	HFile := CreateFile(
-		PChar(FTempFileName),	// pointer to name of the file
-		DesiredAccess,	// access (read-write) mode
-		ShareMode,	// share mode
-		nil,	// pointer to security attributes
-		CreationDistribution,	// how to create
-		FILE_ATTRIBUTE_NORMAL or Flags,	// file attributes
-		0 	// handle to file with attributes to copy
+		PChar(FTempFileName), // pointer to name of the file
+		DesiredAccess,  // access (read-write) mode
+		ShareMode,  // share mode
+		nil,  // pointer to security attributes
+		CreationDistribution, // how to create
+		FILE_ATTRIBUTE_NORMAL or Flags, // file attributes
+		0   // handle to file with attributes to copy
 	 );
 	if HFile = INVALID_HANDLE_VALUE then
 	begin
@@ -203,13 +226,13 @@ begin
 		end
 		else
 		begin
-			FileSize(FFileSize);
+			GetFileSize(FFileSize);
 			Result := True;
 		end;
 	end
 	else
 	begin
-		FileSize(FFileSize);
+		GetFileSize(FFileSize);
 		Result := True;
 	end;
 end;
@@ -226,7 +249,7 @@ begin
 		Result := NO_ERROR;
 end;
 
-function TFile.FileSize(var Size: U64): Boolean;
+function TFile.GetFileSize(var Size: U64): Boolean;
 begin
 	Result := HandleFileSize(HFile, Size) = NO_ERROR;
 	if Result = False then
@@ -241,13 +264,13 @@ begin
 	U64(LastAccessTime) := 0;
 	U64(LastWriteTime) := 0;
 	HFile := CreateFile(
-		PChar(FileName),	// pointer to name of the file
-		0,	// access (read-write) mode
-		FILE_SHARE_READ or FILE_SHARE_WRITE,	// share mode
-		nil,	// pointer to security attributes
-		OPEN_EXISTING,	// how to create
-		FILE_ATTRIBUTE_NORMAL,	// file attributes
-		0 	// handle to file with attributes to copy
+		PChar(FileName),  // pointer to name of the file
+		0,  // access (read-write) mode
+		FILE_SHARE_READ or FILE_SHARE_WRITE,  // share mode
+		nil,  // pointer to security attributes
+		OPEN_EXISTING,  // how to create
+		FILE_ATTRIBUTE_NORMAL,  // file attributes
+		0   // handle to file with attributes to copy
 	 );
 	if HFile <> INVALID_HANDLE_VALUE then
 	begin
@@ -260,10 +283,10 @@ function TFile.Seek(const Pos: U64): Boolean;
 begin
 	Result := False;
 	if SetFilePointer(
-		HFile,	// handle of file
-		TU64(Pos).D0,	// number of bytes to move file pointer
-		@TU64(Pos).D1,	// address of high-order word of distance to move
-		FILE_BEGIN	 	// how to move
+		HFile,  // handle of file
+		TU64(Pos).D0, // number of bytes to move file pointer
+		@TU64(Pos).D1,  // address of high-order word of distance to move
+		FILE_BEGIN    // how to move
 	 ) <> $FFFFFFFF then
 	begin
 		Result := True;
@@ -306,6 +329,7 @@ var Suc: U32;
 begin
 	if WriteFile(HFile, Buf, Count, Suc, nil) then
 	begin
+
 		Inc(FFilePos, Suc);
 		Result := True;
 	end
@@ -319,6 +343,16 @@ begin
 		else
 			Result := True;
 	end;
+end;
+
+function TFile.FillWrite(const Count: Cardinal): Boolean;
+var
+	Buf: PArrayByte;
+begin
+	GetMem(Buf, Count);
+	FillChar(Buf^, Count, 0);
+	Result := BlockWrite(Buf^, Count);
+	FreeMem(Buf, Count);
 end;
 
 function TFile.Readln(var Line: string): Boolean;
@@ -380,7 +414,7 @@ begin
 		BlockWrite(Line[1], 2 * Length(Line));
 	v := #0 + #10;
 	Result := BlockWrite(v[1], SizeOf(v));
-//	Inc(FFilePos, 2 * Length(Line) + Length(EofStr));
+//  Inc(FFilePos, 2 * Length(Line) + Length(EofStr));
 end;
 
 function TFile.Close: Boolean;
@@ -477,15 +511,24 @@ end;
 
 procedure InitPaths;
 var
-	i: Integer;
+	NewLength: SG;
+	i: SG;
 begin
 	GetDir(0, StartDir);
 	if StartDir[Length(StartDir)] <> '\' then StartDir := StartDir + '\';
 
 	WorkDir := GetCommandLine;
-	if WorkDir[1] = '"' then Delete(WorkDir, 1, 1);
-	i := Pos('"', WorkDir);
-	if i > 0 then Delete(WorkDir, i, Length(WorkDir) - i + 1);
+	if WorkDir[1] = '"' then
+	begin
+		Delete(WorkDir, 1, 1);
+		i := Pos('"', WorkDir);
+		if i > 0 then Delete(WorkDir, i, Length(WorkDir) - i + 1);
+	end
+	else
+	begin
+		i := Pos(' ', WorkDir);
+		Delete(WorkDir, i, Length(WorkDir) - i + 1);
+	end;
 
 	ExeFileName := WorkDir;
 
@@ -506,6 +549,19 @@ begin
 //  SharedDir := BackDir(WorkDir) + 'Shared\';
 	GraphDir := WorkDir + 'Graphics\';
 	SoundsDir := WorkDir + 'Sounds\';
+	DataDir := WorkDir + 'Data\';
+
+	SetLength(SysDir, MAX_PATH);
+	NewLength := GetSystemDirectory(PChar(SysDir), MAX_PATH);
+	SetLength(SysDir, NewLength);
+	if (Length(SysDir) > 0) and (SysDir[Length(SysDir)] <> '\') then
+		SysDir := SysDir + '\';
+
+	SetLength(WinDir, MAX_PATH);
+	NewLength := GetwindowsDirectory(PChar(WinDir), MAX_PATH);
+	SetLength(WinDir, NewLength);
+	if (Length(WinDir) > 0) and (WinDir[Length(WinDir)] <> '\') then
+		WinDir := WinDir + '\';
 end;
 
 function ShortDir(const Dir: TString): TString;
@@ -617,6 +673,12 @@ var
 	Switch: Integer;
 	FileName: TFileName;
 begin
+	if Length(Extension) > 1 then
+		if Extension[1] <> '.' then Extension := '.' + Extension;
+	if Length(Path) > 1 then
+		if Path[Length(Path)] <> '\' then
+			Path := Path + '\';
+
 	ErrorCode := FindFirst(Path + '*.*', faReadOnly or faArchive, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
@@ -653,18 +715,51 @@ begin
 	end;
 end;
 
+procedure ReadDirectory2(var FileNames: TFileNames; Path: string);
+var
+	SearchRec: TSearchRec;
+	ErrorCode: Integer;
+	i: SG;
+begin
+	if Length(Path) > 1 then
+		if Path[Length(Path)] <> '\' then
+			Path := Path + '\';
+
+	ErrorCode := FindFirst(Path + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+	while ErrorCode = NO_ERROR do
+	begin
+		if (SearchRec.Attr and faDirectory) <> 0 then
+		begin
+			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+				ReadDirectory2(FileNames, Path + SearchRec.Name + '\')
+		end
+		else
+		begin
+			i := Length(FileNames);
+{			NewSize := i + 1;
+			if AllocByEx(i, NewSize, 4) then}
+				SetLength(FileNames, i + 1{NewSize});
+			FileNames[i] := Path + SearchRec.Name;
+		end;
+
+		ErrorCode := FindNext(SearchRec);
+	end;
+	if ErrorCode <> 18 then IOError(Path, ErrorCode);
+	SysUtils.FindClose(SearchRec);
+end;
+
 function GetFileSiz(const FileName: TFileName): U64;
 var
 	HFile: THandle;
 begin
 	Result := 0;
 	HFile := CreateFile(
-		PChar(FileName),	// pointer to name of the file
-		0,	// access (read-write) mode
-		0,	// share mode
-		nil,	// pointer to security attributes
-		OPEN_EXISTING,	// how to create
-		FILE_ATTRIBUTE_NORMAL,	// file attributes
+		PChar(FileName),  // pointer to name of the file
+		0,  // access (read-write) mode
+		0,  // share mode
+		nil,  // pointer to security attributes
+		OPEN_EXISTING,  // how to create
+		FILE_ATTRIBUTE_NORMAL,  // file attributes
 		0 // handle to file with attributes to copy
 	 );
 	if HFile = INVALID_HANDLE_VALUE then
@@ -681,9 +776,14 @@ end;
 
 function CreateDir(const Dir: string): Boolean;
 begin
-	Result := CreateDirectory(PChar(Dir), nil);
-	if Result = False then
-		IOError(Dir, GetLastError);
+	if DirectoryExists(Dir) then
+		Result := True
+	else
+	begin
+		Result := CreateDirectory(PChar(Dir), nil);
+		if Result = False then
+			IOError(Dir, GetLastError);
+	end;
 end;
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): Boolean;
@@ -698,6 +798,145 @@ begin
 	Result := Windows.DeleteFile(PChar(FileName));
 	if Result = False then
 		IOError(FileName, GetLastError);
+end;
+
+function CopyDir(const Source, Dest: string): Boolean;
+var
+	SearchRec: TSearchRec;
+	ErrorCode: Integer;
+begin
+	Result := True;
+
+	CreateDir(Dest);
+
+	ErrorCode := FindFirst(Source + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+	while ErrorCode = NO_ERROR do
+	begin
+		if (SearchRec.Attr and faDirectory) <> 0 then
+		begin
+			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+				CopyDir(Source + SearchRec.Name + '\', Dest + SearchRec.Name + '\')
+		end
+		else
+		begin
+			CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False);
+		end;
+		ErrorCode := SysUtils.FindNext(SearchRec);
+	end;
+	if ErrorCode <> 18 then IOError(Source, ErrorCode);
+	SysUtils.FindClose(SearchRec);
+end;
+
+function DeleteFolder(const Folder: string): Boolean;
+var
+	SearchRec: TSearchRec;
+	ErrorCode: Integer;
+begin
+	Result := True;
+
+	ErrorCode := FindFirst(Folder + '*.*', faReadOnly or faHidden or faSysFile or faArchive or faDirectory, SearchRec);
+	while ErrorCode = NO_ERROR do
+	begin
+		if (SearchRec.Attr and faDirectory) <> 0 then
+		begin
+			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+			begin
+				DeleteFolder(Folder + SearchRec.Name + '\');
+				RemoveDir(Folder + SearchRec.Name)
+			end;
+		end
+		else
+		begin
+			DeleteFile(Folder + SearchRec.Name);
+		end;
+		ErrorCode := SysUtils.FindNext(SearchRec);
+	end;
+	if ErrorCode <> 18 then IOError(Folder, ErrorCode);
+	SysUtils.FindClose(SearchRec);
+end;
+
+function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		GetMem(Pointer(Buf), F.FileSize);
+		F.BlockRead(Pointer(Buf)^, F.FileSize);
+		Count := F.FileSize;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function WriteBufferToFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+label LRetry;
+var
+	F: TFile;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		F.BlockWrite(Pointer(Buf)^, Count);
+		F.Truncate;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
+label LRetry;
+var
+	F: TFile;
+	Line: string;
+begin
+	Lines.Clear;
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		while not F.Eof do
+		begin
+			F.Readln(Line);
+			Lines.Add(Line);
+		end;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
+end;
+
+function WriteLinesToFile(var FileName: TFileName; Lines: TStrings): BG;
+label LRetry;
+var
+	F: TFile;
+	i: SG;
+begin
+	Result := False;
+	F := TFile.Create;
+	LRetry:
+	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		i := 0;
+		while i < Lines.Count do
+		begin
+			F.Writeln(Lines[i]);
+			Inc(i);
+		end;
+		F.Truncate;
+		if not F.Close then goto LRetry;
+		Result := True;
+	end;
+	F.Free;
 end;
 
 initialization

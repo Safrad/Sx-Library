@@ -6,27 +6,27 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	StdCtrls, ComCtrls, Spin, uDBitBtn, ExtCtrls, uDLabel;
+	StdCtrls, ComCtrls, Spin, uDButton, ExtCtrls, uDLabel;
 
 type
 	TOnApplyInt = procedure(Value: Integer);
 
 	TfGetInt = class(TForm)
 		EditInput: TEdit;
-		ButtonOk: TDBitBtn;
-		ButtonCancel: TDBitBtn;
+		ButtonOk: TDButton;
+		ButtonCancel: TDButton;
 		TrackBar: TTrackBar;
-		ButtonMin: TDBitBtn;
-		ButtonCur: TDBitBtn;
-		ButtonMax: TDBitBtn;
+		ButtonMin: TDButton;
+		ButtonCur: TDButton;
+		ButtonMax: TDButton;
 		SpinButton1: TSpinButton;
 		LabelMin: TDLabel;
 		LabelMax: TDLabel;
 		LabelNow: TDLabel;
 		ImageBackground: TImage;
-		ButtonDef: TDBitBtn;
+		ButtonDef: TDButton;
 		DLabelError: TDLabel;
-    ButtonApply: TDBitBtn;
+		ButtonApply: TDButton;
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
 		procedure ButtonCurClick(Sender: TObject);
@@ -69,7 +69,7 @@ begin
 	end;
 	fGetInt.ButtonApply.Enabled := Assigned(OnApplyInt);
 	fGetInt.OnApply := OnApplyInt;
-	CorrectPos(fGetInt);
+	CorrectFormPos(fGetInt);
 	fGetInt.TMinVal := MinVal;
 	fGetInt.TCurVal := CurVal;
 	fGetInt.TDefVal := DefVal;
@@ -249,7 +249,7 @@ procedure TfGetInt.ButtonOkClick(Sender: TObject);
 begin
 	if Assigned(OnApply) then
 	begin
-//		OnApply(NowVal);
+//    OnApply(NowVal);
 		Close;
 	end;
 end;

@@ -5,16 +5,16 @@ unit uGetStr;
 interface
 
 uses
-	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDPanel, uDBitBtn;
+	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDPanel, uDButton;
 
 type
 	TfGetStr = class(TForm)
-		ButtonOK: TDBitBtn;
-		ButtonCancel: TDBitBtn;
+		ButtonOK: TDButton;
+		ButtonCancel: TDButton;
 		EditInput: TEdit;
-		ButtonCur: TDBitBtn;
+		ButtonCur: TDButton;
 		ImageBackground: TImage;
-		ButtonDef: TDBitBtn;
+		ButtonDef: TDButton;
 		procedure ButtonCurClick(Sender: TObject);
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonDefClick(Sender: TObject);
@@ -54,7 +54,7 @@ begin
 		fGetStr := TfGetStr.Create(Application.MainForm);
 		FormImage(fGetStr.ImageBackground);
 	end;
-	CorrectPos(fGetStr);
+	CorrectFormPos(fGetStr);
 	Result := fGetStr.Execute(prompt, CurVal, DefVal, MaxL);
 end;
 

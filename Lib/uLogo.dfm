@@ -1,6 +1,6 @@
 object fLogo: TfLogo
-  Left = 151
-  Top = 110
+  Left = 270
+  Top = 210
   Cursor = crAppStart
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
@@ -18,7 +18,7 @@ object fLogo: TfLogo
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
-  Position = poDefault
+  Position = poScreenCenter
   PixelsPerInch = 96
   TextHeight = 13
   object ImageLogo: TImage
@@ -26,9 +26,12 @@ object fLogo: TfLogo
     Top = 0
     Width = 512
     Height = 384
+    OnMouseMove = ImageLogoMouseMove
   end
-  object Timer1: TTimer
+  object Timer1: TDTimer
+    ActiveOnly = False
     Enabled = False
+    Interval = 1000
     OnTimer = Timer1Timer
     Left = 16
     Top = 8

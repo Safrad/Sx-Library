@@ -22,11 +22,12 @@ package DComp;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'David Safranek Components'}
+{$DESCRIPTION 'Safrad''s Components'}
 {$IMPLICITBUILD OFF}
 
 requires
   vcl50,
+  VCLX50,
   VCLJPG50,
   VCLSMP50;
 
@@ -34,7 +35,6 @@ contains
   uDPanel in 'uDPanel.pas',
   uDGauge in 'uDGauge.pas',
   uDLabel in 'uDLabel.pas',
-  uDBitBtn in 'uDBitBtn.pas',
   uAdd in 'uAdd.pas',
   uDispl in 'uDispl.pas',
   uFiles in 'uFiles.pas',
@@ -43,10 +43,15 @@ contains
   uRot24 in 'uRot24.pas',
   uTexture in 'uTexture.pas',
   uWave in 'uWave.pas',
-  uScrollImage in 'uScrollImage.pas',
+  uDImage in 'uDImage.pas',
   uError in 'uError.pas' {fIOError},
   uGetInt in 'uGetInt.pas' {fGetInt},
   uScreen in 'uScreen.pas',
-  uStrings in 'uStrings.pas';
+  uStrings in 'uStrings.pas',
+  uDialog in 'uDialog.pas' {fDialog},
+  uDView in 'uDView.pas',
+  uDIni in 'uDIni.pas',
+  uDButton in 'uDButton.pas',
+  uDTimer in 'uDTimer.pas';
 
 end.

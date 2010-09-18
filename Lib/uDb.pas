@@ -4,7 +4,7 @@ unit uDb;
 
 interface
 
-uses uDPanel, uDBitBtn, StdCtrls, Classes, SysUtils;
+uses uDPanel, uDButton, StdCtrls, Classes, SysUtils;
 
 const
 	PreHeadSize = 12;
@@ -56,7 +56,7 @@ type
 		DbComboBoxItems: TComboBox;
 		DbButtonAdd,
 		DbButtonRename,
-		DbButtonDelete: TDBitBtn;
+		DbButtonDelete: TDButton;
 		OnDbItemsChanged: procedure;
 		DbComboBoxItemsChange: TNotifyEvent;
 
@@ -85,7 +85,7 @@ implementation
 
 uses
 	Dialogs, Controls, Windows,
-	uGetStr, uError, uAdd;
+	uGetStr, uError, uAdd, uDialog;
 
 procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
 begin
@@ -251,8 +251,8 @@ end;
 function TDb.DbDelete: Boolean;
 var i: Integer;
 begin
-	if MessageDlg('Delete item' + #13 + #10 + DbItems[DbItemIndex].Name,
-		mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+	if MessageD('Delete item' + #13 + #10 + DbItems[DbItemIndex].Name,
+		mtConfirmation, [mbYes, mbNo]) = mbYes then
 	begin
 		Result := True;
 		CopyItem(DbItemIndex, 0);
