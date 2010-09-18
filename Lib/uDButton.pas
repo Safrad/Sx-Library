@@ -1,3 +1,11 @@
+//* File:     Lib\uDButton.pas
+//* Created:  1999-09-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 {*******************************************************}
 {                                                       }
 {       Borland Delphi Runtime Library                  }
@@ -7,7 +15,6 @@
 {                                                       }
 {*******************************************************}
 
-// Build: 09/1999-11/1999 Author: Safranek David
 
 unit uDButton;
 
@@ -27,7 +34,7 @@ type
 	private
 		FCanvas: TCanvas;
 		FBmpOut: TDBitmap;
-		FGlyph: Pointer;
+		FGlyph: TDBitmap;
 
 		FHighlight: THighlight;
 		FHighNow: Boolean;
@@ -42,7 +49,6 @@ type
 		FSpacing: Integer;
 		FMargin: Integer;
 		IsFocused: Boolean;
-		FModifiedGlyph: Boolean;
 		FMouseDown: Boolean;
 
 //		FHighClock: LongWord;
@@ -51,9 +57,6 @@ type
 		procedure SetColor(Value: TColor);
 		procedure SetDown(Value: Boolean);
 		procedure SetHighlight(Value: THighLight);
-		procedure SetGlyph(Value: TBitmap);
-		function GetGlyph: TBitmap;
-		procedure GlyphChanged(Sender: TObject);
 		function IsCustomCaption: Boolean;
 		procedure SetLayout(Value: TButtonLayout);
 		procedure SetSpacing(Value: Integer);
@@ -71,10 +74,8 @@ type
 		procedure Timer1Timer(Sender: TObject);
 		procedure InitRect;
 	protected
-		procedure ActionChange(Sender: TObject; CheckDefaults: Boolean); override;
 		procedure CreateHandle; override;
 		procedure CreateParams(var Params: TCreateParams); override;
-		function GetPalette: HPALETTE; override;
 		procedure SetButtonStyle(ADefault: Boolean); override;
 	public
 		constructor Create(AOwner: TComponent); override;
@@ -92,7 +93,6 @@ type
 		property Default;
 		property Down: Boolean read FDown write SetDown default False;
 		property Enabled;
-		property Glyph: TBitmap read GetGlyph write SetGlyph;
 		property Highlight: THighLight read FHighlight write SetHighlight default hlUnderlight;
 		property Layout: TButtonLayout read FLayout write SetLayout default blGlyphLeft;
 		property Margin: Integer read FMargin write SetMargin default - 1;
@@ -113,15 +113,6 @@ procedure PlayBSound(const X, MaxX: Integer; const SoundUp: Boolean);
 var
 	BSounds: Boolean = True;
 	BSoundUp, BSoundDown, BSoundBuffer: PWave;
-(*
-function DrawButtonFace(Canvas: TCanvas; const Client: TRect;
-	BevelWidth: Integer; IsRounded, IsDown,
-	IsFocused: Boolean): TRect;*)
-
-{
-procedure LoadBSounds;
-procedure UnloadBSounds;
-}
 
 procedure Register;
 
@@ -135,50 +126,7 @@ uses
 var
 	BadColors: Boolean;
 
-(*
-{ DrawButtonFace - returns the remaining usable area inside the Client rect.}
-function DrawButtonFace(Canvas: TCanvas; const Client: TRect;
-	BevelWidth: Integer; IsRounded, IsDown,
-	IsFocused: Boolean): TRect;
-var
-	R: TRect;
-	DC: THandle;
-begin
-	R := Client;
-	with Canvas do
-	begin
-			Brush.Color := clBtnFace;
-			Brush.Style := bsSolid;
-			DC := Canvas.Handle;    { Reduce calls to GetHandle }
-
-			if IsDown then
-			begin    { DrawEdge is faster than Polyline }
-				DrawEdge(DC, R, BDR_SUNKENINNER, BF_TOPLEFT);              { black     }
-				DrawEdge(DC, R, BDR_SUNKENOUTER, BF_BOTTOMRIGHT);          { btnhilite }
-				Dec(R.Bottom);
-				Dec(R.Right);
-				Inc(R.Top);
-				Inc(R.Left);
-				DrawEdge(DC, R, BDR_SUNKENOUTER, BF_TOPLEFT or BF_MIDDLE); { btnshadow }
-			end
-			else
-			begin
-				DrawEdge(DC, R, BDR_RAISEDOUTER, BF_BOTTOMRIGHT);          { black }
-				Dec(R.Bottom);
-				Dec(R.Right);
-				DrawEdge(DC, R, BDR_RAISEDINNER, BF_TOPLEFT);              { btnhilite }
-				Inc(R.Top);
-				Inc(R.Left);
-				DrawEdge(DC, R, BDR_RAISEDINNER, BF_BOTTOMRIGHT or BF_MIDDLE); { btnshadow }
-			end;
-	end;
-
-	Result := Rect(Client.Left + 1, Client.Top + 1,
-		Client.Right - 2, Client.Bottom - 2);
-	if IsDown then OffsetRect(Result, 1, 1);
-end;    *)
-
-type
+(*type
 	TButtonGlyph = class
 	private
 		FOriginal: TDBitmap;
@@ -188,8 +136,6 @@ type
 		procedure SetGlyph(Value: TDBitmap);
 		procedure DrawButtonGlyph(BmpD: TDBitmap; const GlyphPos: TPoint;
 			Transparent: Boolean);
-		procedure DrawButtonText(Canvas: TCanvas; const Caption: string;
-			TextBounds: TRect; Enabled: Boolean; BiDiFlags: LongInt);
 		procedure CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
 			const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
 			Margin, Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
@@ -198,7 +144,7 @@ type
 		constructor Create;
 		destructor Destroy; override;
 		{ return the text rectangle }
-		function Draw(BmpD: TDBitmap; const Client: TRect; const Offset: TPoint;
+		function Draw(BmpD: TDBitmap; Client: TRect; const Offset: TPoint;
 			const Caption: string; Layout: TButtonLayout; Margin, Spacing: Integer;
 			Enabled: Boolean; BiDiFlags: LongInt): TRect;
 		property Glyph: TDBitmap read FOriginal write SetGlyph;
@@ -242,183 +188,23 @@ end;
 procedure TButtonGlyph.DrawButtonGlyph(BmpD: TDBitmap; const GlyphPos: TPoint;
 	Transparent: Boolean);
 begin
-	if FOriginal = nil then Exit;
-	if (FOriginal.Width = 0) or (FOriginal.Height = 0) then Exit;
-
-	if Transparent then
-		BmpD.BmpE24(GlyphPos.x, GlyphPos.y, FOriginal, FTransparentColor, ef16)
-	else
-		BmpD.BmpE24(GlyphPos.x, GlyphPos.y, FOriginal, FTransparentColor, ef04);
-end;
-
-procedure TButtonGlyph.DrawButtonText(Canvas: TCanvas; const Caption: string;
-	TextBounds: TRect; Enabled: Boolean; BiDiFlags: LongInt);
-var C: TColor;
-begin
-	with Canvas do
-	begin
-		Brush.Style := bsClear;
-		if not Enabled then
-		begin
-			OffsetRect(TextBounds, 1, 1);
-			Font.Color := clBtnHighlight;
-			DrawText(Handle, PChar(Caption), Length(Caption), TextBounds,
-				DT_CENTER or DT_VCENTER or BiDiFlags);
-			OffsetRect(TextBounds, -1, -1);
-			Font.Color := clBtnShadow;
-			DrawText(Handle, PChar(Caption), Length(Caption), TextBounds,
-				DT_CENTER or DT_VCENTER or BiDiFlags);
-		end
-		else
-		begin
-			C := Canvas.Font.Color;
-			OffsetRect(TextBounds, 1, 1);
-			Canvas.Font.Color := MixColors(Canvas.Font.Color, clBtnFace);
-			Canvas.Font.Color := MixColors(Canvas.Font.Color, clBtnFace);
-			DrawText(Handle, PChar(Caption), Length(Caption), TextBounds,
-				DT_CENTER or DT_VCENTER or BiDiFlags);
-
-			OffsetRect(TextBounds, -1, -1);
-			Canvas.Font.Color := C;
-			DrawText(Handle, PChar(Caption), Length(Caption), TextBounds,
-				DT_CENTER or DT_VCENTER or BiDiFlags);
-		end;
-	end;
 end;
 
 procedure TButtonGlyph.CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
 	const Offset: TPoint; const Caption: string; Layout: TButtonLayout; Margin,
 	Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
 	BiDiFlags: LongInt);
-var
-	TextPos: TPoint;
-	ClientSize, GlyphSize, TextSize: TPoint;
-	TotalSize: TPoint;
-begin
-	if (BiDiFlags and DT_RIGHT) = DT_RIGHT then
-		if Layout = blGlyphLeft then Layout := blGlyphRight
-		else 
-			if Layout = blGlyphRight then Layout := blGlyphLeft;
-	{ calculate the item sizes }
-	ClientSize := Point(Client.Right - Client.Left, Client.Bottom -
-		Client.Top);
-
-	if FOriginal <> nil then
-		GlyphSize := Point(FOriginal.Width, FOriginal.Height) else
-		GlyphSize := Point(0, 0);
-
-	if Length(Caption) > 0 then
-	begin
-		TextBounds := Rect(0, 0, Client.Right - Client.Left, 0);
-		DrawText(Canvas.Handle, PChar(Caption), Length(Caption), TextBounds,
-			DT_CALCRECT or BiDiFlags);
-		TextSize := Point(TextBounds.Right - TextBounds.Left, TextBounds.Bottom -
-			TextBounds.Top);
-	end
-	else
-	begin
-		TextBounds := Rect(0, 0, 0, 0);
-		TextSize := Point(0, 0);
-	end;
-
-	{ If the layout has the glyph on the right or the left, then both the
-		text and the glyph are centered vertically.  If the glyph is on the top
-		or the bottom, then both the text and the glyph are centered horizontally.}
-	if Layout in [blGlyphLeft, blGlyphRight] then
-	begin
-		GlyphPos.Y := (ClientSize.Y - GlyphSize.Y) div 2;
-		TextPos.Y := (ClientSize.Y - TextSize.Y) div 2;
-	end
-	else
-	begin
-		GlyphPos.X := (ClientSize.X - GlyphSize.X) div 2;
-		TextPos.X := (ClientSize.X - TextSize.X) div 2;
-	end;
-
-	{ if there is no text or no bitmap, then Spacing is irrelevant }
-	if (TextSize.X = 0) or (GlyphSize.X = 0) then
-		Spacing := 0;
-		
-	{ adjust Margin and Spacing }
-	if Margin = -1 then
-	begin
-		if Spacing = -1 then
-		begin
-			TotalSize := Point(GlyphSize.X + TextSize.X, GlyphSize.Y + TextSize.Y);
-			if Layout in [blGlyphLeft, blGlyphRight] then
-				Margin := (ClientSize.X - TotalSize.X) div 3
-			else
-				Margin := (ClientSize.Y - TotalSize.Y) div 3;
-			Spacing := Margin;
-		end
-		else
-		begin
-			TotalSize := Point(GlyphSize.X + Spacing + TextSize.X, GlyphSize.Y +
-				Spacing + TextSize.Y);
-			if Layout in [blGlyphLeft, blGlyphRight] then
-				Margin := (ClientSize.X - TotalSize.X + 1) div 2
-			else
-				Margin := (ClientSize.Y - TotalSize.Y + 1) div 2;
-		end;
-	end
-	else
-	begin
-		if Spacing = -1 then
-		begin
-			TotalSize := Point(ClientSize.X - (Margin + GlyphSize.X), ClientSize.Y -
-				(Margin + GlyphSize.Y));
-			if Layout in [blGlyphLeft, blGlyphRight] then
-				Spacing := (TotalSize.X - TextSize.X) div 2
-			else
-				Spacing := (TotalSize.Y - TextSize.Y) div 2;
-		end;
-	end;
-		
-	case Layout of
-		blGlyphLeft:
-			begin
-				GlyphPos.X := Margin;
-				TextPos.X := GlyphPos.X + GlyphSize.X + Spacing;
-			end;
-		blGlyphRight:
-			begin
-				GlyphPos.X := ClientSize.X - Margin - GlyphSize.X;
-				TextPos.X := GlyphPos.X - Spacing - TextSize.X;
-			end;
-		blGlyphTop:
-			begin
-				GlyphPos.Y := Margin;
-				TextPos.Y := GlyphPos.Y + GlyphSize.Y + Spacing;
-			end;
-		blGlyphBottom:
-			begin
-				GlyphPos.Y := ClientSize.Y - Margin - GlyphSize.Y;
-				TextPos.Y := GlyphPos.Y - Spacing - TextSize.Y;
-			end;
-	end;
-		
-	{ fixup the result variables }
-	with GlyphPos do
-	begin
-		Inc(X, Client.Left + Offset.X);
-		Inc(Y, Client.Top + Offset.Y);
-	end;
-	OffsetRect(TextBounds, TextPos.X + Client.Left + Offset.X,
-		TextPos.Y + Client.Top + Offset.X);
 end;
 
-function TButtonGlyph.Draw(BmpD: TDBitmap; const Client: TRect;
+function TButtonGlyph.Draw(BmpD: TDBitmap; Client: TRect;
 	const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
 	Margin, Spacing: Integer; Enabled: Boolean;
 	BiDiFlags: LongInt): TRect;
 var
 	GlyphPos: TPoint;
+	C: TColor;
 begin
-	CalcButtonLayout(BmpD.Canvas, Client, Offset, Caption, Layout, Margin, Spacing,
-		GlyphPos, Result, BiDiFlags);
-	DrawButtonGlyph(BmpD, GlyphPos, Enabled);
-	DrawButtonText(BmpD.Canvas, Caption, Result, Enabled, BiDiFlags);
-end;
+end;*)
 
 { TDButton }
 
@@ -488,8 +274,6 @@ end;
 
 constructor TDButton.Create(AOwner: TComponent);
 begin
-	FGlyph := TButtonGlyph.Create;
-	TButtonGlyph(FGlyph).OnChange := GlyphChanged;
 	inherited Create(AOwner);
 	Font.Color := clBtnText;
 	FCanvas := TCanvas.Create;
@@ -517,9 +301,9 @@ begin
 	FTimer.Enabled := False;
 	FTimer.Free; FTimer := nil;
 	inherited Destroy;
-	TButtonGlyph(FGlyph).Free;
 	FCanvas.Free;
 	FBmpOut.Free;
+	FGlyph.Free;
 end;
 
 procedure TDButton.CreateHandle;
@@ -532,7 +316,7 @@ begin
 	inherited CreateParams(Params);
 	with Params do Style := Style or BS_OWNERDRAW;
 end;
-		
+
 procedure TDButton.SetButtonStyle(ADefault: Boolean);
 begin
 	if ADefault <> IsFocused then
@@ -599,13 +383,17 @@ var
 
 	IsDown, IsDefault: Boolean;
 	CDefault, CCancel, CDefaultCancel: TColor;
-	Recta: TRect;
+	Rec, Recta: TRect;
+	GlyphPos, GlyphSize{, TotalSize}: TPoint;
+	TextA: TAlignment;
+	TextL: TTextLayout;
 
 	x, y, SizeX, SizeY: Integer;
 	Co: array[0..3] of TColor;
 	E: TColor;
 	s: string;
-//	m: SG;
+	C: TColor;
+	Orient: SG;
 const
 	Border = 2;
 begin
@@ -613,6 +401,15 @@ begin
 	IsDown := DrawItemStruct.itemState and ODS_SELECTED <> 0;
 	if FDown then IsDown := not IsDown;
 	if FAutoChange and (FDown <> IsDown) and (FLastDown <> IsDown) then Exit;
+
+	FCanvas.Handle := DrawItemStruct.hDC;
+	Rec := ClientRect;
+	Recta.Left := 0;
+	Recta.Top := 0;
+	Recta.Right := Rec.Right - Rec.Left;
+	Recta.Bottom := Rec.Bottom - Rec.Top;
+
+	FBmpOut.SetSize(Recta.Right, Recta.Bottom);
 
 	// Sound
 	if BSounds and (FLastDown <> IsDown) then
@@ -626,24 +423,18 @@ begin
 	end;
 
 	// Glyph
-	if Glyph.Height = 0 then
+	if not Assigned(FGlyph) then
 	begin
-		Glyph.Height := 16;
+		FGlyph := TDBitmap.Create;
 		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + '.bmp';
 		if FileExists(FileName) then
 		begin
-			Glyph.LoadFromFile(FileName);
+			FGlyph.LoadFromFile(FileName);
+			FGlyph.TransparentColor := GetTransparentColor(FGlyph);
 		end;
 	end;
 
-	FCanvas.Handle := DrawItemStruct.hDC;
-	Recta := ClientRect;
-	FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
-
-	{ DrawFrameControl doesn't allow for drawing a button as the
-			default button, so it must be done here. }
-
-	{ DrawFrameControl does not draw a pressed button correctly }
+	// Draw
 	if IsDown then
 	begin
 		FBmpOut.Border24(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
@@ -704,8 +495,161 @@ begin
 	else
 		s := Caption;
 
-	TButtonGlyph(FGlyph).Draw(FBmpOut, Recta, Point(0, 0), s, FLayout,
-		FMargin, FSpacing, Enabled, DrawTextBiDiModeFlags(0));
+	Orient := -1;
+	if s = 'Up' then Orient := 0
+	else if s = 'Left' then Orient := 1
+	else if s = 'Down' then Orient := 2
+	else if s = 'Right' then Orient := 3;
+
+	if Orient <> -1 then
+	begin
+		FBmpOut.DrawArrow(Recta.Left - 1, Recta.Top - 1, Recta.Right - 0, Recta.Bottom - 0, FDown, FHighNow and Enabled, Orient, ef16);
+	end
+	else
+	begin
+
+		// Icon
+		// Layout
+		// Spacing
+		// Margin
+
+
+		GlyphSize := Point(FGlyph.Width, FGlyph.Height);
+
+	(*	if Length(s) > 0 then
+		begin
+			TextBounds := Rect(0, 0, Recta.Right - Recta.Left, 0);
+			TextSize := Point(TextBounds.Right - TextBounds.Left, TextBounds.Bottom -
+				TextBounds.Top);
+		end
+		else
+		begin
+			TextBounds := Rect(0, 0, 0, 0);
+			TextSize := Point(0, 0);
+		end;*)
+
+		{ If the layout has the glyph on the right or the left, then both the
+			text and the glyph are centered vertically.  If the glyph is on the top
+			or the bottom, then both the text and the glyph are centered horizontally.}
+		if Layout in [blGlyphLeft, blGlyphRight] then
+		begin
+			GlyphPos.Y := (FBmpOut.Height - GlyphSize.Y) div 2;
+	//		TextPos.Y := (Recta.Bottom - TextSize.Y) div 2;
+		end
+		else
+		begin
+			GlyphPos.X := (FBmpOut.Width - GlyphSize.X) div 2;
+	//		TextPos.X := (Recta.Right - TextSize.X) div 2;
+		end;
+
+		{ if there is no text or no bitmap, then Spacing is irrelevant }
+	{	if (TextSize.X = 0) or (GlyphSize.X = 0) then
+			Spacing := 0;}
+
+		{ adjust Margin and Spacing }
+	{	if Margin = -1 then
+		begin
+			if Spacing = -1 then
+			begin
+				TotalSize := Point(GlyphSize.X + TextSize.X, GlyphSize.Y + TextSize.Y);
+				if Layout in [blGlyphLeft, blGlyphRight] then
+					Margin := (ClientSize.X - TotalSize.X) div 3
+				else
+					Margin := (ClientSize.Y - TotalSize.Y) div 3;
+				Spacing := Margin;
+			end
+			else
+			begin
+				TotalSize := Point(GlyphSize.X + Spacing + TextSize.X, GlyphSize.Y +
+					Spacing + TextSize.Y);
+				if Layout in [blGlyphLeft, blGlyphRight] then
+					Margin := (ClientSize.X - TotalSize.X + 1) div 2
+				else
+					Margin := (ClientSize.Y - TotalSize.Y + 1) div 2;
+			end;
+		end
+		else
+		begin
+			if Spacing = -1 then
+			begin
+				TotalSize := Point(ClientSize.X - (Margin + GlyphSize.X), ClientSize.Y -
+					(Margin + GlyphSize.Y));
+				if Layout in [blGlyphLeft, blGlyphRight] then
+					Spacing := (TotalSize.X - TextSize.X) div 2
+				else
+					Spacing := (TotalSize.Y - TextSize.Y) div 2;
+			end;
+		end;}
+
+	{	TextRect.Left := 2;
+		TextRect.Top := 2;
+		TextRect.Right := FBmpOut.Width - 2;
+		TextRect.Bottom := FBmpOut.Height - 2;}
+
+
+		TextA := taCenter;
+		TextL := tlCenter;
+
+		if FGlyph.Empty = False then
+		begin
+			Margin := 6;
+			Spacing := 2;
+
+			case Layout of
+			blGlyphLeft:
+			begin
+	//			TextA := taLeftJustify;
+				GlyphPos.X := Margin;
+				Inc(Recta.Left, GlyphPos.X + GlyphSize.X + Spacing);
+			end;
+			blGlyphRight:
+			begin
+	//			TextA := taRightJustify;
+				GlyphPos.X := FBmpOut.Width - Margin - GlyphSize.X;
+				Dec(Recta.Right, Spacing + GlyphSize.X);
+			end;
+			blGlyphTop:
+			begin
+	//			TextL := tlTop;
+				GlyphPos.Y := Margin;
+				Inc(Recta.Top, GlyphPos.Y + GlyphSize.Y + Spacing);
+			end;
+			blGlyphBottom:
+			begin
+	//			TextL := tlBottom;
+				GlyphPos.Y := FBmpOut.Height - Margin - GlyphSize.Y;
+				Dec(Recta.Bottom, Spacing + GlyphSize.Y);
+			end;
+			end;
+
+			FBmpOut.BmpE24(GlyphPos.x, GlyphPos.y, FGlyph, FGlyph.TransparentColor, ef16)
+		end;
+
+
+		FBmpOut.Canvas.Brush.Style := bsClear;
+		if not Enabled then
+		begin
+			OffsetRect(Recta, 1, 1);
+			FBmpOut.Canvas.Font.Color := clBtnHighlight;
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+			OffsetRect(Recta, -1, -1);
+			FBmpOut.Canvas.Font.Color := clBtnShadow;
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+		end
+		else
+		begin
+			C := Font.Color;
+			OffsetRect(Recta, 1, 1);
+			FBmpOut.Canvas.Font.Color := MixColors(Font.Color, clBtnFace);
+			FBmpOut.Canvas.Font.Color := MixColors(Font.Color, clBtnFace);
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+
+			OffsetRect(Recta, -1, -1);
+			FBmpOut.Canvas.Font.Color := C;
+			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+		end;
+	end;
+
 	if IsDown then OffsetRect(Recta, -1, -1);
 
 	if BadColors then
@@ -745,7 +689,7 @@ begin
 		FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
 	end;
 
-	if FHighNow and Enabled then
+	if (Orient = -1) and FHighNow and Enabled then
 	begin
 {		case FHighlight of
 		hlRect:
@@ -817,7 +761,7 @@ begin
 			end;}
 		end;
 	end;
-	FCanvas.Draw(0, 0, FBmpOut);
+	FCanvas.Draw(Rec.Left, Rec.Top, FBmpOut);
 	FCanvas.Handle := 0;
 end;
 
@@ -836,35 +780,6 @@ end;
 procedure TDButton.WMLButtonDblClk(var Message: TWMLButtonDblClk);
 begin
 	Perform(WM_LBUTTONDOWN, Message.Keys, LongInt(Message.Pos));
-end;
-
-function TDButton.GetPalette: HPALETTE;
-begin
-	Result := Glyph.Palette;
-end;
-		
-procedure TDButton.SetGlyph(Value: TBitmap);
-begin
-	TButtonGlyph(FGlyph).Glyph := Value as TDBitmap;
-	if TButtonGlyph(FGlyph).Glyph.Width =
-		2 * TButtonGlyph(FGlyph).Glyph.Height then
-	begin
-		TButtonGlyph(FGlyph).Glyph.SetSize(
-			TButtonGlyph(FGlyph).Glyph.Width,
-			TButtonGlyph(FGlyph).Glyph.Width);
-	end;
-	FModifiedGlyph := True;
-	Invalidate;
-end;
-
-function TDButton.GetGlyph: TBitmap;
-begin
-	Result := TButtonGlyph(FGlyph).Glyph;
-end;
-		
-procedure TDButton.GlyphChanged(Sender: TObject);
-begin
-	Invalidate;
 end;
 
 function TDButton.IsCustomCaption: Boolean;
@@ -899,32 +814,6 @@ begin
 		FMargin := Value;
 		Invalidate;
 	end;
-end;
-
-procedure TDButton.ActionChange(Sender: TObject; CheckDefaults: Boolean);
-
-	procedure CopyImage(ImageList: TCustomImageList; Index: Integer);
-	begin
-		with Glyph do
-		begin
-			Width := ImageList.Width;
-			Height := ImageList.Height;
-			Canvas.Brush.Color := clFuchsia; //! for lack of a better color
-			Canvas.FillRect(Rect(0, 0, Width, Height));
-			ImageList.Draw(Canvas, 0, 0, Index);
-		end;
-	end;
-
-begin
-	inherited ActionChange(Sender, CheckDefaults);
-	if Sender is TCustomAction then
-		with TCustomAction(Sender) do
-		begin
-			{ Copy image from action's imagelist }
-			if (Glyph.Empty) and (ActionList <> nil) and (ActionList.Images <> nil) and
-				(ImageIndex >= 0) and (ImageIndex < ActionList.Images.Count) then
-				CopyImage(ActionList.Images, ImageIndex);
-		end;
 end;
 
 procedure TDButton.SetColor(Value: TColor);

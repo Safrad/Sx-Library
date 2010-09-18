@@ -1,4 +1,10 @@
-// Build: 08/1999-08/1999 Author: Safranek David
+//* File:     Lib\uDLabel.pas
+//* Created:  1999-08-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDLabel;
 
@@ -49,8 +55,8 @@ type
 		procedure SetBorderStyle(Value: TBorderStyle);
 
 //		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
-{		procedure WMSize(var Message: TWMSize); message WM_SIZE;
-		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+		procedure WMSize(var Message: TWMSize); message WM_SIZE;
+{		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;}
 	protected
 		{ Protected declarations }
@@ -79,6 +85,10 @@ type
 		property BevelWidth: TBevelWidth read FBevelWidth write SetBevelWidth default 1;
 		property BorderWidth: TBorderWidth read FBorderWidth write SetBorderWidth default 0;
 		property BorderStyle: TBorderStyle read FBorderStyle write SetBorderStyle default bsNone;
+
+		property OnMouseEnter;
+		property OnMouseLeave;
+		property OnMouseMove;
 
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
 	end;
@@ -284,8 +294,6 @@ begin
 		Fill;
 	end;
 
-
-
 	if Assigned(FBmpOut) then
 	begin
 		BitBlt({Message.DC}Canvas.Handle, 0, 0, FBmpOut.Width, FBmpOut.Height,
@@ -302,12 +310,12 @@ begin
 	inherited;
 end;}
 
-{procedure TDLabel.WMSize(var Message: TWMSize);
+procedure TDLabel.WMSize(var Message: TWMSize);
 begin
 	if Visible = False then Exit;
 	if (Message.Width = 0) or (Message.Height = 0) then Exit;
 	Fill;
-end;}
+end;
 
 //procedure TDLabel.WMPaint(var Message: TWMPaint);
 procedure TDLabel.Fill;
@@ -446,14 +454,12 @@ begin
 		FBmpText.Canvas.Font := Font;
 		FBmpOut.Canvas.Font := Font;
 //		if
-		if FFontShadow <> 0 then
+(*		if FFontShadow <> 0 then
 		begin
 			FBmpText.Canvas.Font.Color := ShadowColor(Font.Color);
 			FBmpOut.Canvas.Font.Color := ShadowColor(Font.Color);
-			TopColor := FDispl.ColorA;
-			BottomColor := FDispl.ColorD;
-			FDispl.ColorA := ShadowColor(FDispl.ColorA);
-			FDispl.ColorD := ShadowColor(FDispl.ColorD);
+{			TopColor := ShadowColor(FDispl.ColorA);
+			BottomColor := ShadowColor(FDispl.ColorD);}
 			i := FFontShadow;
 			repeat
 				OffsetRect(Recta, i, i);
@@ -475,18 +481,20 @@ begin
 					end;
 				end;
 				OffsetRect(Recta, -i, -i);
-				if FontShadow > 0 then Dec(i) else Inc(i);
+				if FFontShadow > 0 then Dec(i) else Inc(i);
 			until i = 0;
-			FDispl.ColorA := TopColor;
-			FDispl.ColorD := BottomColor;
 			FBmpText.Canvas.Font.Color := Font.Color;
-		end;
+		end; *)
 		FBmpText.Canvas.Font := Font;
 		FBmpOut.Canvas.Font := Font;
 		if Displ.Enabled then
 		begin
-			DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
-				ef16);
+			if FFontEffect <> ef16 then
+				DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
+					ef16)
+			else
+				DisplDrawRect(FBmpOut, DelCharsF(Caption, '&'), FDispl, Recta, Alignment, Layout,
+					ef16);
 		end
 		else
 		begin
@@ -494,11 +502,11 @@ begin
 			begin
 //				FBmpOut.Canvas.Brush.Color := Color;
 				FBmpOut.Canvas.Brush.Style := bsClear;
-				DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, WordWrap);
+				DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, WordWrap, FFontShadow);
 			end
 			else
 			begin
-				DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption, WordWrap)
+				DrawCutedText(FBmpText.Canvas, Recta, Alignment, Layout, Caption, WordWrap, FFontShadow)
 			end;
 		end;
 

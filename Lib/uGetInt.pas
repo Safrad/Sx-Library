@@ -1,4 +1,10 @@
-// Build: 07/1998-09/1999 Author: Safranek David
+//* File:     Lib\uGetInt.pas
+//* Created:  1998-07-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uGetInt;
 

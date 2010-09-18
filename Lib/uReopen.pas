@@ -1,4 +1,10 @@
-// Build: 12/1999-01/2000 Author: Safranek David
+//* File:     Lib\uReopen.pas
+//* Created:  1999-12-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uReopen;
 
@@ -45,7 +51,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math, Dialogs,
-	uAdd, uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus;
+	uAdd, uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus, uStrings;
 
 var
 	ReopenLimit: Integer;
@@ -302,7 +308,7 @@ begin
 	P[0] := FileName[1];
 	P[1] := FileName[2];
 	P[2] := FileName[3];
-	P[3] := #0;
+	P[3] := CharNul;
 	DriveType := GetDriveType(P);
 
 //      Reopen[i].Caption := Reopen[i].Caption + ' (' + DriveTypeToStr(DriveType) + ')';

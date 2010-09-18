@@ -1,4 +1,10 @@
-// Build: 12/1999-01/2000 Author: Safranek David
+//* File:     Lib\uDb.pas
+//* Created:  1999-12-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDb;
 
@@ -85,7 +91,7 @@ implementation
 
 uses
 	Dialogs, Controls, Windows,
-	uGetStr, uError, uAdd, uDialog;
+	uGetStr, uError, uAdd, uStrings;
 
 procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
 begin
@@ -251,7 +257,7 @@ end;
 function TDb.DbDelete: Boolean;
 var i: Integer;
 begin
-	if MessageD('Delete item' + #13 + #10 + DbItems[DbItemIndex].Name,
+	if MessageD('Delete item' + LineSep + DbItems[DbItemIndex].Name,
 		mtConfirmation, [mbYes, mbNo]) = mbYes then
 	begin
 		Result := True;
@@ -359,7 +365,7 @@ begin
 		begin
 			CloseFile(DbFile); IOResult;
 			if IOErrorMessageRetry(FileName,
-				'File version ' + IntToStr(Head.Version) + #13 + #10 +
+				'File version ' + IntToStr(Head.Version) + LineSep +
 				'Required version ' + IntToStr(Version)) then goto LRetry;
 			goto LExit;
 		end;

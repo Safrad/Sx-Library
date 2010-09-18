@@ -1,4 +1,10 @@
-// Build: 07/2000-09/2000 Author: Safranek David
+//* File:     Lib\uDIni.pas
+//* Created:  2000-07-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDIni;
 
@@ -6,7 +12,7 @@ interface
 
 uses
 	uAdd, uDView,
-	Classes, SysUtils, Forms, ComCtrls, StdCtrls;
+	Classes, SysUtils, Forms, ComCtrls, StdCtrls, Controls;
 
 type
 	TKey = record // 8
@@ -76,6 +82,8 @@ type
 		procedure RWF4(const Section, Ident: string; var Value: F4; const Save: Boolean);
 		procedure RWF8(const Section, Ident: string; var Value: F8; const Save: Boolean);
 		procedure RWFA(const Section, Ident: string; var Value: FA; const Save: Boolean);
+		procedure RWDate(const Section, Ident: string; var Value: TDate; const Save: Boolean);
+		procedure RWTime(const Section, Ident: string; var Value: TTime; const Save: Boolean);
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: Boolean);
 
 		procedure RWFormPos(Form: TForm; const Save: Boolean);
@@ -174,32 +182,35 @@ end;
 procedure TDIniFile.WriteString(const Section, Ident, Value: string);
 var SectionIndex, ValueIndex: Integer;
 begin
-	case FileMethod of
-	fmWindows:
-	begin
-		if not WritePrivateProfileString(PChar(Section), PChar(Ident),
-			PChar(Value), PChar(FFileName)) then
-			// Error
-	end
-	else
-	begin
-		if FInMemory = False then LoadFromFile(FFileName);
-		FileSaved := False;
-		SectionIndex := GetSectionIndex(Section);
-		if SectionIndex < 0 then
+{	if CheckAccess(FileStatus, Save) then
+	begin}
+		case FileMethod of
+		fmWindows:
 		begin
-			AddSection(Section);
-			SectionIndex := FSectionCount - 1;
-		end;
-		ValueIndex := GetValueIndex(SectionIndex, Ident);
-		if ValueIndex < 0 then
+			if not WritePrivateProfileString(PChar(Section), PChar(Ident),
+				PChar(Value), PChar(FFileName)) then
+				// Error
+		end
+		else
 		begin
-			AddValue(SectionIndex, Ident);
-			ValueIndex := FSections[SectionIndex].KeyCount - 1;
+			if FInMemory = False then LoadFromFile(FFileName);
+			FileSaved := False;
+			SectionIndex := GetSectionIndex(Section);
+			if SectionIndex < 0 then
+			begin
+				AddSection(Section);
+				SectionIndex := FSectionCount - 1;
+			end;
+			ValueIndex := GetValueIndex(SectionIndex, Ident);
+			if ValueIndex < 0 then
+			begin
+				AddValue(SectionIndex, Ident);
+				ValueIndex := FSections[SectionIndex].KeyCount - 1;
+			end;
+			FSections[SectionIndex].Keys[ValueIndex].Value := Value;
 		end;
-		FSections[SectionIndex].Keys[ValueIndex].Value := Value;
-	end;
-	end;
+		end;
+//	end;
 end;
 
 function TDIniFile.ReadSG(const Section, Ident: string;
@@ -281,17 +292,12 @@ begin
 	DateStr := ReadString(Section, Name, '');
 	Result := Default;
 	if DateStr <> '' then
-	try
-		Result := StrToDate(DateStr);
-	except
-		on EConvertError do
-		else raise;
-	end;
+		Result := SToDate(DateStr);
 end;
 
 procedure TDIniFile.WriteDate(const Section, Name: string; Value: TDateTime);
 begin
-	WriteString(Section, Name, DateToStr(Value));
+	WriteString(Section, Name, DateToS(Value));
 end;
 
 function TDIniFile.ReadTime(const Section, Name: string; Default: TDateTime): TDateTime;
@@ -301,12 +307,7 @@ begin
 	TimeStr := ReadString(Section, Name, '');
 	Result := Default;
 	if TimeStr <> '' then
-	try
-		Result := StrToTime(TimeStr);
-	except
-		on EConvertError do
-		else raise;
-	end;
+		Result := SToTime(TimeStr);
 end;
 
 procedure TDIniFile.WriteTime(const Section, Name: string; Value: TDateTime);
@@ -318,20 +319,18 @@ function TDIniFile.ReadDateTime(const Section, Name: string; Default: TDateTime)
 var
 	DateStr: string;
 begin
-	DateStr := ReadString(Section, Name, '');
-	Result := Default;
-	if DateStr <> '' then
-	try
-		Result := StrToDateTime(DateStr);
-	except
-		on EConvertError do
-		else raise;
-	end;
+	DateStr := ReadString(Section, Name, '~');
+	if DateStr = '~' then
+		Result := 0
+	else if DateStr <> '' then
+		Result := SToDateTime(DateStr)
+	else
+		Result := Default;
 end;
 
 procedure TDIniFile.WriteDateTime(const Section, Name: string; Value: TDateTime);
 begin
-	WriteString(Section, Name, DateTimeToStr(Value));
+	WriteString(Section, Name, DateTimeToS(Value));
 end;
 
 function TDIniFile.GetSectionIndex(const Section: string): Integer;
@@ -380,7 +379,7 @@ begin
 					PChar(FFileName)) <> 0 then
 				begin
 					P := Buffer;
-					while P^ <> #0 do
+					while P^ <> CharNul do
 					begin
 						Strings.Add(P);
 						Inc(P, StrLen(P) + 1);
@@ -556,14 +555,14 @@ begin
 	begin
 		for i := 0 to FSectionCount - 1 do
 		begin
-			F.Writeln('[' + FSections[i].Name + ']');
+			F.WriteF('[' + FSections[i].Name + ']' + FileSep);
 			for j := 0 to FSections[i].KeyCount - 1 do
 			begin
-				F.Writeln(FSections[i].Keys[j].Name + '=' +
-					FSections[i].Keys[j].Value);
+				F.WriteF(FSections[i].Keys[j].Name + '=' +
+					FSections[i].Keys[j].Value + FileSep);
 			end;
 			if i <> FSectionCount - 1 then
-				F.Writeln('');
+				F.WriteF(FileSep);
 		end;
 		F.Truncate;
 		if not F.Close then goto LRetry;
@@ -586,7 +585,7 @@ begin
 	else
 		Result := (FileStatus = fsOpenR) or (FileStatus = fsFull);
 
-	if Result = False then ErrorMessage(FFileName + #13 + #10 + 'Access Denied');
+	if Result = False then ErrorMessage(FFileName + LineSep + 'Access Denied');
 end;
 
 procedure TDIniFile.RWS1(const Section, Ident: string; var Value: S1; const Save: Boolean);
@@ -814,6 +813,36 @@ begin
 	end;
 end;
 
+procedure TDIniFile.RWDate(const Section, Ident: string; var Value: TDate; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadDate(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteDate(Section, Ident, Value);
+		end;
+	end;
+end;
+
+procedure TDIniFile.RWTime(const Section, Ident: string; var Value: TTime; const Save: Boolean);
+begin
+	if CheckAccess(FileStatus, Save) then
+	begin
+		if Save = False then
+		begin
+			Value := ReadTime(Section, Ident, Value);
+		end
+		else
+		begin
+			WriteTime(Section, Ident, Value);
+		end;
+	end;
+end;
+
 procedure TDIniFile.RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: Boolean);
 begin
 	if CheckAccess(FileStatus, Save) then
@@ -864,18 +893,21 @@ end;
 procedure TDIniFile.RWStrings(const Section: string; Val: TStrings; const Save: Boolean);
 var i, j: Integer;
 begin
-	if Save = False then
+	if CheckAccess(FileStatus, Save) then
 	begin
-		j := ReadSG(Section, 'LineCount', Val.Count);
-		for i := 0 to j - 1 do
-			Val.Add(ReadString(Section, 'Line' + NToS(i, False), ''));
-	end
-	else
-	begin
-		WriteSG(Section, 'LineCount', Val.Count);
-		for i := 0 to Val.Count - 1 do
-			WriteString(Section, 'Line' + NToS(i, False), Val[i]);
+		if Save = False then
+		begin
+			j := ReadSG(Section, 'LineCount', Val.Count);
+			for i := 0 to j - 1 do
+				Val.Add(ReadString(Section, 'Line' + NToS(i, False), ''));
+		end
+		else
+		begin
+			WriteSG(Section, 'LineCount', Val.Count);
+			for i := 0 to Val.Count - 1 do
+				WriteString(Section, 'Line' + NToS(i, False), Val[i]);
 
+		end;
 	end;
 end;
 

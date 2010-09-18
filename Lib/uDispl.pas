@@ -1,4 +1,10 @@
-// Build: 07/1999-08/1999 Author: Safranek David
+//* File:     Lib\uDispl.pas
+//* Created:  1999-07-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDispl;
 
@@ -689,10 +695,10 @@ begin
 	end;
 
 	DisplDraw24(BmpD, Caption, X1, Y1,
-		Displ.Format,
-		Displ.SizeX, Displ.SizeY,
-		Displ.SpaceSX, Displ.SpaceSY, Displ.SizeT, Displ.Spacing,
-		Displ.ColorA, Displ.ColorD, Effect, False, DisplWidth, DisplHeight);
+		Displ.FFormat,
+		Displ.FSizeX, Displ.FSizeY,
+		Displ.FSpaceSX, Displ.FSpaceSY, Displ.FSizeT, Displ.FSpacing,
+		Displ.FColorA, Displ.FColorD, Effect, False, DisplWidth, DisplHeight);
 end;
 
 procedure DisplDraw(BmpD: TDBitmap; const Caption: string; const Displ: TDispl;
@@ -702,9 +708,9 @@ var DisplWidth, DisplHeight: Integer;
 begin
 	DisplWidth := 0;
 	DisplHeight := 0;
-	DisplDraw24(BmpD, Caption, X1, Y1, Displ.Format, Displ.SizeX, Displ.SizeY,
-		Displ.SpaceSX, Displ.SpaceSY, Displ.SizeT, Displ.Spacing,
-		Displ.ColorA, Displ.ColorD,
+	DisplDraw24(BmpD, Caption, X1, Y1, Displ.FFormat, Displ.FSizeX, Displ.FSizeY,
+		Displ.FSpaceSX, Displ.FSpaceSY, Displ.FSizeT, Displ.FSpacing,
+		Displ.FColorA, Displ.FColorD,
 		Effect, False, DisplWidth, DisplHeight);
 end;
 

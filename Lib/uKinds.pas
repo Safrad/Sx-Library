@@ -1,4 +1,10 @@
-// Build: 12/1999-12/1999 Author: Safranek David
+//* File:     Lib\uKinds.pas
+//* Created:  1999-12-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uKinds;
 
@@ -59,7 +65,7 @@ implementation
 
 uses
 	Forms, Math,
-	uAdd, uFiles, uError, uDialog;
+	uAdd, uFiles, uError, uStrings;
 
 procedure TKinds.SetMenuItem(i: Integer);
 var S: string;
@@ -267,7 +273,7 @@ begin
 	Result := False;
 	if Items[Kind].Changed then
 	begin
-		case MessageD('Save changes to ' + #13 + #10 + Items[Kind].FileName,
+		case MessageD('Save changes to ' + LineSep + Items[Kind].FileName,
 			mtInformation, [mbYes, mbNo, mbCancel]) of
 		mbYes:
 		begin

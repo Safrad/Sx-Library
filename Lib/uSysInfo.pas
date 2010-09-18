@@ -1,3 +1,11 @@
+//* File:     Lib\uSysInfo.pas
+//* Created:  2000-07-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uSysInfo;
 
 interface
@@ -93,7 +101,9 @@ var
 implementation
 
 {$R *.DFM}
-uses uGraph, Registry, uScreen;
+uses
+	uGraph, uScreen, uStrings,
+	Registry;
 
 function OSToStr(OS: TOSVersionInfo): string;
 var S: string;
@@ -301,17 +311,35 @@ begin
 	end;
 end;
 
+function IsCPUID_Available : Boolean; register;
+const
+	ID_BIT	=	$200000;			// EFLAGS ID bit
+asm
+	PUSHFD							{direct access to flags no possible, only via stack}
+	POP     EAX					{flags to EAX}
+	MOV     EDX,EAX			{save current flags}
+	XOR     EAX,ID_BIT	{not ID bit}
+	PUSH    EAX					{onto stack}
+	POPFD								{from stack to flags, with not ID bit}
+	PUSHFD							{back to stack}
+	POP     EAX					{get back to EAX}
+	XOR     EAX,EDX			{check if ID bit affected}
+	JZ      @exit				{no, CPUID not availavle}
+	MOV     AL,True			{Result=True}
+@exit:
+end;
+
 procedure FillSysInfoD(var SysInfo: TSysInfo);
 var
 	TickCount: U8;
 	CPUTick: U8;
 const
-	P: array[0..3] of Char = ('C', ':', '\', #0);
+	P: array[0..3] of Char = ('C', ':', '\', CharNul);
 begin
 {	P[0] := 'C';
 	P[1] := ':';
 	P[2] := '\';
-	P[3] := #0;}
+	P[3] := CharNul;}
 { SectorsPerCluster := 0;
 	BytesPerSector := 0;}
 {
@@ -326,7 +354,7 @@ begin
 
 	SysInfo.CPUUsage := GetCPUUsage(0);
 
-	if CPUException = False then
+	if IsCPUID_Available and (CPUException = False) then
 	begin
 		SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
 {   GetMem(PMem, 32768);

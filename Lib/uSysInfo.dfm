@@ -1,6 +1,6 @@
 object fSysInfo: TfSysInfo
-  Left = 528
-  Top = 166
+  Left = 593
+  Top = 173
   BorderStyle = bsDialog
   Caption = 'System Info'
   ClientHeight = 320
@@ -31,8 +31,9 @@ object fSysInfo: TfSysInfo
     AutoSize = False
     Caption = 'OS Id'
     FocusControl = EditOS
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -58,11 +59,12 @@ object fSysInfo: TfSysInfo
     Left = 112
     Top = 144
     Width = 57
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Used'
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -81,11 +83,12 @@ object fSysInfo: TfSysInfo
     Left = 176
     Top = 144
     Width = 57
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Free'
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -104,11 +107,12 @@ object fSysInfo: TfSysInfo
     Left = 240
     Top = 144
     Width = 57
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Total'
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -127,11 +131,12 @@ object fSysInfo: TfSysInfo
     Left = 8
     Top = 176
     Width = 89
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Physical Memory'
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -150,11 +155,12 @@ object fSysInfo: TfSysInfo
     Left = 8
     Top = 200
     Width = 89
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Page File'
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -190,8 +196,10 @@ object fSysInfo: TfSysInfo
     Height = 19
     AutoSize = False
     Caption = 'CPU Id'
+    FocusControl = EditCPU
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -210,11 +218,12 @@ object fSysInfo: TfSysInfo
     Left = 8
     Top = 224
     Width = 89
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Disk'
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -250,8 +259,10 @@ object fSysInfo: TfSysInfo
     Height = 19
     AutoSize = False
     Caption = 'CPU Frequency'
+    FocusControl = EditCPUFrequency
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -273,8 +284,10 @@ object fSysInfo: TfSysInfo
     Height = 19
     AutoSize = False
     Caption = 'AMD Duron Cmp'
+    FocusControl = EditDuron
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -296,8 +309,10 @@ object fSysInfo: TfSysInfo
     Height = 19
     AutoSize = False
     Caption = 'CPU Usage'
+    FocusControl = EditCPUUsage
+    Transparent = True
     Layout = tlCenter
-    BackEffect = ef08
+    BackEffect = ef04
     FontShadow = 1
     Displ.Enabled = False
     Displ.Format = '88'
@@ -316,7 +331,7 @@ object fSysInfo: TfSysInfo
     Left = 240
     Top = 176
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -338,7 +353,7 @@ object fSysInfo: TfSysInfo
     Left = 176
     Top = 176
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -360,7 +375,7 @@ object fSysInfo: TfSysInfo
     Left = 176
     Top = 200
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -382,7 +397,7 @@ object fSysInfo: TfSysInfo
     Left = 240
     Top = 200
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -404,7 +419,7 @@ object fSysInfo: TfSysInfo
     Left = 112
     Top = 176
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -426,7 +441,7 @@ object fSysInfo: TfSysInfo
     Left = 112
     Top = 200
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -448,7 +463,7 @@ object fSysInfo: TfSysInfo
     Left = 112
     Top = 224
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -470,7 +485,7 @@ object fSysInfo: TfSysInfo
     Left = 176
     Top = 224
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -492,7 +507,7 @@ object fSysInfo: TfSysInfo
     Left = 240
     Top = 224
     Width = 57
-    Height = 17
+    Height = 19
     Alignment = taRightJustify
     AutoSize = False
     Layout = tlCenter
@@ -556,7 +571,7 @@ object fSysInfo: TfSysInfo
     AutoSelect = False
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 3
+    TabOrder = 4
   end
   object EditDuron: TEdit
     Left = 104
@@ -566,7 +581,7 @@ object fSysInfo: TfSysInfo
     AutoSelect = False
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 4
+    TabOrder = 5
   end
   object EditCPUUsage: TEdit
     Left = 103
@@ -576,6 +591,6 @@ object fSysInfo: TfSysInfo
     AutoSelect = False
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 5
+    TabOrder = 3
   end
 end

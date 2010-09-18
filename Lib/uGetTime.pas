@@ -1,4 +1,10 @@
-// Build: 05/1999-07/1999 Author: Safranek David
+//* File:     Lib\uGetTime\.pas
+//* Created:  1999-05-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uGetTime;
 
@@ -55,7 +61,7 @@ type
 	end;
 
 function GetTime(const prompt: string;
-	var CurVal: LongWord; const DefVal, MinVal, MaxVal: LongWord): Boolean;
+	var CurVal: LongWord; const MinVal, DefVal, MaxVal: LongWord): Boolean;
 
 
 implementation
@@ -66,76 +72,13 @@ var
 	fGetTime: TfGetTime;
 
 function GetTime(const prompt: string;
-	var CurVal: LongWord; const DefVal, MinVal, MaxVal: LongWord): Boolean;
+	var CurVal: LongWord; const MinVal, DefVal, MaxVal: LongWord): Boolean;
 begin
 	if not Assigned(fGetTime) then
 	begin
 		fGetTime := TfGetTime.Create(Application.MainForm);
 	end;
 	Result := fGetTime.Execute(prompt, CurVal, DefVal, MinVal, MaxVal);
-end;
-
-function StrToShortTime(const Str: string): LongInt;
-var
-	V: LongInt;
-	Mul: LongInt;
-	W: Byte;
-	F: Byte;
-	DP: Byte;
-begin
-	V := 0;
-	if Length(Str) > 0 then
-	begin
-		F := 0;
-		for W := Length(Str) - 1 downto 1 do
-		begin
-			if Str[W] = '.' then
-			begin
-				F := W;
-				Break;
-			end;
-		end;
-		Mul := 1000 div 10;
-		if F > 0 then
-		for W := F + 1 to Length(Str) do
-		begin
-			case Str[W] of
-			'0'..'9':
-			begin
-				V := V + Mul * (Ord(Str[W]) - 48);
-				Mul := Mul div 10;
-			end;
-			end;
-		end;
-		Mul := 1000;
-		DP := 0;
-		if F = 0 then F := Length(Str) + 1;
-		for W := F - 1 downto 1 do
-		begin
-			case Str[W] of
-			'0'..'9':
-			begin
-				V := V + Mul * (Ord(Str[W]) - 48);
-				if V > 100000000 then
-				begin
-					Result := V;
-					Exit;
-				end;
-				if Mul < 100000000 then Mul := Mul * 10;
-			end;
-			':':
-			begin
-				case DP of
-				0: Mul := 60 * 1000;
-				1: Mul := 60 * 60 * 1000;
-				2: Mul := 60 * 60 * 1000;
-				end;
-				Inc(DP);
-			end;
-			end;
-		end;
-	end;
-	Result := V;
 end;
 
 procedure TfGetTime.InitButtons;
@@ -262,7 +205,7 @@ end;
 
 procedure TfGetTime.EditInputChange(Sender: TObject);
 begin
-	NowVal := StrToShortTime(EditInput.Text);
+	NowVal := SToMs(EditInput.Text);
 	if NowVal < TMinVal then
 		NowVal := TMinVal
 	else if NowVal > TMaxVal then

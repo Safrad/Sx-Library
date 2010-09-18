@@ -1,3 +1,11 @@
+//* File:     Lib\uDTimer.pas
+//* Created:  2000-08-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uDTimer;
 
 interface
@@ -66,10 +74,12 @@ type
 		property OnDeactivate: TNotifyEvent read FOnDeactivate write FOnDeactivate;
 	end;
 
+procedure TryTimer;
 procedure Register;
 
 var
-	NowTime: U8;
+	NowTime: U8; // Actual PerformanceCounter Value
+	// Statistic Values
 	TimLeave, TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U8;
 
 implementation
@@ -90,6 +100,14 @@ type
 
 var
 	DIdleTimer: TDIdleTimer;
+
+procedure TryTimer;
+var Done: BG;
+begin
+	Done := False;
+	if Assigned(DIdleTimer) then
+		DIdleTimer.AppIdle(nil, Done);
+end;
 
 constructor TDIdleTimer.Create(AOwner: TComponent);
 begin
@@ -120,7 +138,8 @@ begin
 
 	StartTime := PerformanceCounter;
 	TimSleep := StartTime - TimLeave;
-	for i := 0 to Length(Timers) - 1 do
+	i := 0;
+	while i < Length(Timers) do
 	begin
 		if (DIdleTimer.Timers[i].FEnabled) and ((DIdleTimer.Timers[i].FSuspended = False) or (DIdleTimer.Timers[i].FActiveOnly = False)) then
 		begin
@@ -191,6 +210,7 @@ begin
 			end;
 			if MinTime > DIdleTimer.Timers[i].FInterval12 - NowTime + DIdleTimer.Timers[i].FOldTime then MinTime := DIdleTimer.Timers[i].FInterval12 - NowTime + DIdleTimer.Timers[i].FOldTime;
 		end;
+		Inc(i);
 	end;
 
 	TimLeave := PerformanceCounter;

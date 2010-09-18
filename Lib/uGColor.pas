@@ -1,4 +1,10 @@
-// Build: 09/1999-01/2000 Author: Safranek David
+//* File:     Lib\uGColor.pas
+//* Created:  1999-09-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 {
 	Hue = Shade = Odstin

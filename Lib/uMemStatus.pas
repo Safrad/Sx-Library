@@ -1,4 +1,10 @@
-// Build: 05/2000-05/2000 Author: Safranek David
+//* File:     Lib\uMemStatus.pas
+//* Created:  2000-05-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uMemStatus;
 

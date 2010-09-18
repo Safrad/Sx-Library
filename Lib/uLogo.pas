@@ -1,4 +1,10 @@
-// Build: 10/1999-10/1999 Author: Safranek David
+//* File:     Lib\uLogo.pas
+//* Created:  1999-10-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uLogo;
 
@@ -11,54 +17,112 @@ uses
 
 type
 	TfLogo = class(TDForm)
-    Timer1: TDTimer;
+		Timer1: TDTimer;
 		procedure Timer1Timer(Sender: TObject);
 		procedure ImageLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
-    procedure FormCreate(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
 	private
 		{ private declarations }
+		FirstX, FirstY: SG;
 		MoveCount: SG;
 	public
 		{ public declarations }
-		procedure LoadFile(LogoFile: TFileName);
 	end;
 
-procedure ShowLogo(const FileName: TFileName);
-procedure ShowLogoFull;
+procedure ShowLogo(const FileName: TFileName); overload;
+procedure ShowLogo; overload;
+//procedure ShowLogoFull;
 procedure HideLogo;
 
 implementation
 
 {$R *.DFM}
 uses
-	uGraph, uDBitmap;
+	StdCtrls,
+	uGraph, uDBitmap, uFiles;
 var
 	fLogo: TfLogo;
 	LogoTime: LongWord;
 
-procedure TfLogo.LoadFile(LogoFile: TFileName);
-begin
-	BackBitmap.LoadFromFile(LogoFile);
-	if BackBitmap.Empty then Exit;
-	ClientWidth := BackBitmap.Width;
-	ClientHeight := BackBitmap.Height;
-	BackBitmap.BorderE24(clWhite, clBlack, 8, ef08);
-end;
-
 procedure ShowLogo(const FileName: TFileName);
+var
+	x: SG;
+	Co: array[0..3] of TColor;
+	Bmp, BmpT: TDBitmap;
 begin
-//  {$ifopt d-}
 	Screen.Cursor := crHourGlass;
-	fLogo := TfLogo.Create(Application.MainForm);
+	if Application.MainForm <> nil then
+		fLogo := TfLogo.Create(Application.MainForm)
+	else
+		fLogo := TfLogo.Create(nil);
 
-	fLogo.LoadFile(FileName);
-	if fLogo.BackBitmap.Empty then Exit;
+	Bmp := fLogo.BackBitmap;
+
+	if (FileName <> '') then
+	begin
+		fLogo.BackBitmap.LoadFromFile(FileName);
+	end;
+	if (FileName = '') then
+	begin
+		x := RoundDiv(2 * Screen.Width, 7);
+		Bmp.SetSize(x, RoundDiv(3 * x, 4));
+		Co[0] := clRed;
+		Co[1] := clGreen;
+		Co[2] := clBlue;
+		Co[3] := clSilver;
+		Bmp.GenerateERGB(clNone, gfTriaHorz, Co, clBlack, ef16, nil);
+		Co[0] := clWhite;
+		Co[1] := clBlack;
+		Co[2] := Co[0];
+		Co[3] := Co[1];
+		Bmp.GenerateERGB(clNone, gfFade2x, Co, clBlack, ef10, nil);
+	end;
+
+	BmpT := TDBitmap.Create;
+	BmpT.SetSize(Bmp.Width, Bmp.Height);
+	BmpT.BarE24(clNone, clSilver, ef16);
+	BmpT.Canvas.Brush.Style := bsClear;
+	BmpT.Canvas.Font.Style := [fsBold];
+	BmpT.Canvas.Font.Name := 'Times New Roman';
+	BmpT.Canvas.Font.Height := -48;
+
+	GoodText(BmpT.Canvas, Rect(16, 16, Bmp.Width - 16, Bmp.Height - 16), Application.Title,
+		clBlack, clWhite, clSilver, taCenter, tlCenter);
+
+{ BmpT.Canvas.Font.Name := 'Arial';
+
+	BmpT.Canvas.Font.Height := -16;
+	Text := 'Author: Safranek David';
+	GoodText(BmpT.Canvas, Rect(0, 0, Bmp.Width, Bmp.Height), Text,
+		clWhite, clBlack, clPurple, taLeftJustify, tlCenter);
+
+	Text := 'Build: 04/1999-01/2000';
+	GoodText(BmpT.Canvas, Rect(0, 96, Bmp.Width, Bmp.Height), Text,
+		clBlack, clWhite, clPurple, taLeftJustify, tlCenter);}
+
+
+	Bmp.BmpE24(0, 0, BmpT, clSilver, ef08);
+
+	Bmp.BorderE24(clWhite, clBlack, 8, ef08);
+
+	fLogo.ClientWidth := fLogo.BackBitmap.Width;
+	fLogo.ClientHeight := fLogo.BackBitmap.Height;
 	fLogo.Show;
 //	fLogo.BackImage.Repaint;
 	fLogo.Paint;
 	LogoTime := GetTickCount;
-//  {$endif}
+end;
+
+procedure ShowLogo;
+begin
+	if FileExists(GraphDir + 'Logo.jpg') then
+		ShowLogo(GraphDir + 'Logo.jpg')
+	else
+		ShowLogo('');
 end;
 
 procedure ShowLogoFull;
@@ -72,20 +136,10 @@ begin
 	Screen.Cursor := crHourGlass;
 	fLogo := TfLogo.Create(Application.MainForm);
 //  Application.CreateForm(TfLogo, fLogo);
-//  fLogo.LoadFile(FileName);
-//  fLogo.Color := clBlack;
 	fLogo.FullScreen := True;
 
 	XCount := Screen.Width;
 	YCount := Screen.Height;
-
-{	fLogo.BackImage.Width := XCount;
-	fLogo.BackImage.Height := YCount;
-	fLogo.BackImage.Picture.Bitmap.PixelFormat := pf24bit;
-	fLogo.BackImage.Picture.Bitmap.Width := XCount;
-	fLogo.BackImage.Picture.Bitmap.Height := YCount;}
-
-//  InitImage(fLogo.ImageLogo, clNone);
 
 	BackgroundBmp := TDBitmap.Create;
 	BackgroundBmp.SetSize(XCount, YCount);
@@ -100,7 +154,7 @@ begin
 	OutBmp.BmpE24(0, 0, BackgroundBmp, clNone, ef16);
 	fLogo.Show;
 	fLogo.Paint;
-//	Sleep(2000);
+
 	LogoTime := GetTickCount;
 	i := 0;
 	li := 0;
@@ -135,7 +189,7 @@ procedure HideLogo;
 const
 	MinimumTime = 3000;
 begin
-	if Assigned(fLogo) then
+	if Assigned(fLogo) and fLogo.Visible then
 	begin
 		LogoTime := GetTickCount - LogoTime;
 		if LogoTime < MinimumTime then
@@ -149,24 +203,49 @@ end;
 
 procedure TfLogo.Timer1Timer(Sender: TObject);
 begin
-	Timer1.Enabled := False;
-	BackBitmap.SetSize(0, 0);
-	Hide;
+//  Timer1.Free; Problem D???
+	Close;
 //	Free; fLogo := nil;
 end;
 
 procedure TfLogo.ImageLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
 	Y: Integer);
 begin
-	if MoveCount > 8 then
-		Timer1.Interval := 1
-	else
-		Inc(MoveCount);
+	if MoveCount = 0 then
+	begin
+		FirstX := X;
+		FirstY := Y;
+	end;
+	if Sqr(FirstX - X) + Sqr(FirstY - Y) >= 256 {16 pixels} then
+	begin
+		Close;
+		Free; fLogo := nil;
+	end;
+
+	Inc(MoveCount);
 end;
 
 procedure TfLogo.FormCreate(Sender: TObject);
 begin
 	Background := baUser;
+end;
+
+procedure TfLogo.FormMouseDown(Sender: TObject; Button: TMouseButton;
+	Shift: TShiftState; X, Y: Integer);
+begin
+	Close;
+	Free; fLogo := nil;
+end;
+
+procedure TfLogo.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+	if fLogo.Timer1.Enabled then
+	begin
+		Timer1.Enabled := False;
+	end
+	else
+		Screen.Cursor := crDefault;
+	BackBitmap.SetSize(0, 0);
 end;
 
 end.

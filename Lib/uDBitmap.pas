@@ -1,4 +1,10 @@
-// Build: 05/1999-04/2002 Author: Safranek David
+//* File:     Lib\uDBitmap.pas
+//* Created:  1999-05-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uDBitmap;
 
@@ -7,10 +13,12 @@ unit uDBitmap;
 
 interface
 
-uses uAdd, Windows, Graphics, ExtCtrls, SysUtils;
+uses
+	Types,
+	uAdd, Windows, Graphics, ExtCtrls, SysUtils;
 
 const
-//  {$define BPP4}
+//	{$define BPP4}
 	BPP = {$ifdef BPP4}4{$else}3{$endif}; // Bytes Per Pixel
 	MaxBitmapWidth = 65536 div 4;
 	MaxBitmapHeight = 32767;
@@ -56,10 +64,12 @@ type
 		constructor Create; override;
 		destructor Destroy; override;
 
+		function Empty: Boolean;
 		procedure FreeImage; overload;
 
 		procedure Init;
 		procedure SwapRB24;
+		function CreateIcon(Wid, Hei: UG; PixelFormat: TPixelFormat): TIcon;
 		property Width: TCoor read FWidth;
 		property ByteX: TCoor read FByteX;
 		property Height: TCoor read FHeight;
@@ -70,12 +80,13 @@ type
 		procedure Sample(Width, Height: TCoor);
 		procedure GLSetSize;
 
+		procedure LoadFromIcon(Icon: TIcon);
 		procedure LoadFromFile(const Filename: string); override;
 		procedure SaveToFile(const Filename: string); override;
 
-		procedure LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: SG;
-			var Quality: SG);
-		function SaveToFileEx(FileName: TFileName; var Quality: Integer): Boolean;
+		function LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: SG;
+			var Quality: SG): BG;
+		function SaveToFileEx(var FileName: TFileName; var Quality: Integer): Boolean;
 
 
 		function BmpColorIn24(C: TColor): Integer;
@@ -125,7 +136,8 @@ type
 			const BmpS: TDBitmap; const NewX, NewY: LongWord;
 			const InterruptProcedure: TInterruptProcedure);
 
-		procedure Rotate(TransparentColor: TColor; const Effect: TEffect);
+		procedure SwapUD;
+		procedure RotateRight(TransparentColor: TColor; const Effect: TEffect);
 
 		procedure GenRGB(HidedColor: TColor;
 			const Func: TGenFunc; const Clock: LongWord; const Effect: TEffect);
@@ -164,6 +176,9 @@ type
 		procedure GBlur(Radius: Double; const Horz, Vert: Boolean;
 			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
 		procedure Lens(BmpS: TDBitmap; X1, Y1, X2, Y2: Integer; MinZoom, MaxZoom: SG);
+
+		procedure DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
+			Orient: Integer; ScrollEf: TEffect);
 
 		procedure FireM(XS1, YS1, XS2, YS2: Longint; Tick: Byte);
 		procedure FireS(XS1, YS1, XS2, YS2: Longint);
@@ -209,7 +224,7 @@ const
 type
 	TBitmapHead = packed record
 		Id: array[0..1] of Char; // 2: BM
-		FileSize:  LongInt; // 4
+		FileSize:  LongWord; // 4
 		Reserved0: LongInt; // 4: 0
 		HeadAndColorsSize: LongInt; // 4: 54 + 4 * 16 for 16 colors
 		HeadFollowing: LongWord; // 4: Is 40
@@ -230,8 +245,8 @@ type
 implementation
 
 uses
-	Dialogs, Jpeg, Math,
-	uGraph, uError, uDialog, uScreen, uFiles, uGetInt, uStrings, uSysInfo;
+	Dialogs, Jpeg, Math, Classes,
+	uGraph, uError, uScreen, uFiles, uGetInt, uStrings, uSysInfo;
 
 (*-------------------------------------------------------------------------*)
 function WidthToByteX4(const Width: LongWord): LongWord;
@@ -242,6 +257,20 @@ end;
 function WidthToByteX8(const Width: LongWord): LongWord;
 begin
 	Result := (Width + 3) and $fffffffc;
+end;
+(*-------------------------------------------------------------------------*)
+function WidthToByteX24(const Width: LongWord): LongWord;
+asm
+	lea eax, [eax*2+eax]
+	add eax, 3
+	and eax, $fffffffc
+	mov Result, eax
+end;
+(*-------------------------------------------------------------------------*)
+function WidthToByteX32(const Width: LongWord): LongWord;
+asm
+	shl eax, 2
+	mov Result, eax
 end;
 (*-------------------------------------------------------------------------*)
 function WidthToByteX(const Width: LongWord): LongWord;
@@ -277,6 +306,11 @@ destructor TDBitmap.Destroy;
 begin
 	SetSize(0, 0);
 	inherited Destroy;
+end;
+
+function TDBitmap.Empty: Boolean;
+begin
+	Result := (Width <= 0) and (Height <= 0);
 end;
 
 procedure TDBitmap.FreeImage;
@@ -318,7 +352,7 @@ begin
 		inherited Width := Width;
 		inherited Height := Height;
 	except
-		on E: Exception do Nop;
+		on E: Exception do ErrorMessage(E.Message);
 	end;
 	Init;
 end;
@@ -334,16 +368,17 @@ end;
 
 procedure TDBitmap.GLSetSize;
 const
-	MaxSize = 256;
+	MaxWidth = 256;
+	MaxHeight = 256;
 var
 	Sh: SG;
 	NewWidth, NewHeight: TCoor;
 begin
 	Sh := CalcShr(FWidth);
-	NewWidth := Min(1 shl Sh, MaxSize);
+	NewWidth := Min(1 shl Sh, MaxWidth);
 //	NewHeight := RoundDiv(NewWidth * FHeight, FWidth);
 	Sh := CalcShr(FHeight);
-	NewHeight := Min(1 shl Sh, MaxSize);
+	NewHeight := Min(1 shl Sh, MaxHeight);
 
 	if (NewWidth <> FWidth) or (NewHeight <> FHeight) then
 	begin
@@ -386,10 +421,108 @@ begin
 	end;
 end;
 
-procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: SG;
-	var Quality: SG);
+function TDBitmap.CreateIcon(Wid, Hei: UG; PixelFormat: TPixelFormat): TIcon;
+var
+//	IconInfo: _ICONINFO;
+	BmpColor: TBitmap;
+	BmpC: TDBitmap;
+	BmpMask: PBmpData;
+	BmpMaskSize: SG;
+	x, y: SG;
+	C: TRColor;
+	S: PU1;
+	M: UG;
+begin
+	BmpC := TDBitmap.Create;
+	BmpC.SetSize(Wid, Hei);
+	BmpC.Resize24E(Self, clNone, Wid, Hei, nil);
+	BmpC.SwapUD;
 
-(*	procedure BitmapRead;
+	BmpColor := TBitmap.Create;
+	case ScreenBits of
+	1: BmpColor.PixelFormat := pf1bit;
+	4: BmpColor.PixelFormat := pf4bit;
+	8: BmpColor.PixelFormat := pf8bit;
+	15: BmpColor.PixelFormat := pf15bit;
+	16: BmpColor.PixelFormat := pf16bit;
+	24: BmpColor.PixelFormat := pf24bit;
+	else
+	BmpColor.PixelFormat := pf32bit;
+	end;
+	BmpColor.Width := Wid;
+	BmpColor.Height := Hei;
+	BmpColor.Canvas.Draw(0, 0, BmpC);
+
+	BmpMaskSize := MaxDiv(Wid * Hei, 8);
+	GetMem(BmpMask, BmpMaskSize);
+	FillChar(BmpMask^, BmpMaskSize, 0);
+	S := Pointer(BmpMask);
+	M := 1 shl 7;
+	for y := Hei - 1 downto 0 do
+	for x := 0 to Wid - 1 do
+	begin
+		GetPix24(BmpC.FData, BmpC.FByteX, x, y, C);
+		if C.L = clPurple then
+		begin
+			S^ := S^ or M;
+			BmpColor.Canvas.Pixels[x, y] := clBlack;
+		end;
+		if M = 1 then
+		begin
+			M := 1 shl 7;
+			Inc(SG(S), SizeOf(S^));
+		end
+		else
+			M := M shr 1;
+	end;
+
+{	IconInfo.fIcon := True;
+	IconInfo.xHotspot := 0;
+	IconInfo.yHotspot := 0;
+	IconInfo.hbmMask := BmpMask.Handle;
+	IconInfo.hbmColor := BmpColor.Handle;}
+
+	Result := TIcon.Create;
+//	Result.Handle := CreateIconIndirect(IconInfo); // !!! not support more that 4bit
+	Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, ScreenBits,
+		BmpMask,
+		BmpColor.ScanLine[BmpColor.Height - 1]);
+
+{	GetIconInfo(Result.Handle, IconInfo);
+//	IconInfo.hbmMask := 0;
+	BmpColor.Handle := IconInfo.hbmColor;
+	BmpColor.Canvas.Ellipse(0, 0, 8, 8);}
+
+
+	FreeMem(BmpMask);
+	BmpColor.Free;
+	BmpC.Free;
+//	BmpMask.Free;
+end;
+
+{procedure TDBitmap.ReplaceIcon(Icon: TIcon);
+var
+	IconInfo: _ICONINFO;
+	BmpMask, BmpColor: TBitmap;
+	BmpC: TDBitmap;
+begin
+
+
+end;}
+
+procedure TDBitmap.LoadFromIcon(Icon: TIcon);
+begin
+	Icon.Handle;
+	SetSize(Icon.Width, Icon.Height);
+	TransparentColor := clPurple;
+	BarE24(clNone, TransparentColor, ef16);
+	Canvas.Draw(0, 0, Icon);
+end;
+
+function TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY: SG;
+	var Quality: SG): BG;
+
+	procedure BitmapRead;
 	label LRetry, LFin;
 	var
 		F: TFile;
@@ -423,11 +556,6 @@ procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY:
 				IOErrorMessage(FileName, 'is compressed');
 				goto LFin;
 			end;
-			if (BitmapHead.Bits <> 4) and (BitmapHead.Bits <> 8) and (BitmapHead.Bits <> 24) then
-			begin
-				IOErrorMessage(FileName, 'invalid pixel format');
-				goto LFin;
-			end;
 			case BitmapHead.Bits of
 			4:
 			begin
@@ -456,7 +584,11 @@ procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY:
 						PD[0] := BitmapHead.Colors[ColorIndex].G;
 						Inc(Integer(PD));
 						PD[0] := BitmapHead.Colors[ColorIndex].B;
-						Inc(Integer(PD){$ifdef BPP4}, 2{$endif});
+						Inc(Integer(PD));
+						{$ifdef BPP4}
+						PD[0] := 0;
+						Inc(Integer(PD));
+						{$endif}
 					end;
 				end;
 			end;
@@ -477,15 +609,79 @@ procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY:
 						PD[0] := BitmapHead.Colors[PS[0]].G;
 						Inc(Integer(PD));
 						PD[0] := BitmapHead.Colors[PS[0]].B;
-						Inc(Integer(PD){$ifdef BPP4}, 2{$endif});
+						Inc(Integer(PD));
+						{$ifdef BPP4}
+						PD[0] := 0;
+						Inc(Integer(PD));
+						{$endif}
 						Inc(Integer(PS));
 					end;
 				end;
 			end;
 			24:
 			begin
+				{$ifdef BPP4}
+				ReallocMem(BitmapHead, BitmapHead.FileSize);
+				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+				for y := 0 to BitmapHead.Height - 1 do
+				begin
+					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
+					PS := Addr(BitmapHead.Colors[0]);
+					PS := Pointer(Integer(PS) + y * Integer(WidthToByteX24(BitmapHead.Width)));
+					for x := 0 to BitmapHead.Width - 1 do
+					begin
+						PD[0] := PS[0];
+						Inc(Integer(PS));
+						Inc(Integer(PD));
+						PD[0] := PS[0];
+						Inc(Integer(PS));
+						Inc(Integer(PD));
+						PD[0] := PS[0];
+						Inc(Integer(PS));
+						Inc(Integer(PD));
+						{$ifdef BPP4}
+						PD[0] := 0;
+						Inc(Integer(PD));
+						{$endif}
+					end;
+				end;
+				{$else}
+				if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
+					BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
 				F.BlockRead(GLData^, BitmapHead.DataBytes);
+				{$endif}
 			end;
+			32:
+			begin
+				if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
+					BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
+				{$ifdef BPP4}
+				F.BlockRead(GLData^, BitmapHead.DataBytes);
+				{$else}
+				ReallocMem(BitmapHead, BitmapHead.FileSize);
+				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+				for y := 0 to BitmapHead.Height - 1 do
+				begin
+					PD := Pointer(Integer(Data) - (BitmapHead.Height - 1 - y) * Integer(ByteX));
+					PS := Addr(BitmapHead.Colors[0]);
+					PS := Pointer(Integer(PS) + y * Integer(WidthToByteX32(BitmapHead.Width)));
+					for x := 0 to BitmapHead.Width - 1 do
+					begin
+						PD[0] := PS[0];
+						Inc(Integer(PS));
+						Inc(Integer(PD));
+						PD[0] := PS[0];
+						Inc(Integer(PS));
+						Inc(Integer(PD));
+						PD[0] := PS[0];
+						Inc(Integer(PS), 2);
+						Inc(Integer(PD));
+					end;
+				end;
+				{$endif}
+			end;
+			else
+				IOErrorMessage(FileName, 'invalid pixel format');
 			end;
 
 			LFin:
@@ -493,7 +689,7 @@ procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY:
 			F.Close;
 			F.Free;
 		end;
-	end;*)
+	end;
 
 	procedure PPMReadFromFile;
 	label LRetry;
@@ -536,7 +732,9 @@ procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY:
 				end;
 				{$endif}
 				SwapRB24;
-			end;
+			end
+			else
+				IOErrorMessage(FileName, 'is not ppm picture');
 			F.Close;
 		end;
 		F.Free;
@@ -550,76 +748,133 @@ procedure TDBitmap.LoadFromFileEx(FileName: TFileName; const DefaultX, DefaultY:
 label LRetry;
 var
 	MyJPEG: TJPEGImage;
-	Picture: TPicture;
-	F: file;
-	ErrorCode: Integer;
+	Icon: TIcon;
+//	Picture: TPicture;
+	Stream: TMemoryStream;
 begin
-	LRetry:
-	AssignFile(F, FileName);
-	FileMode := 0; Reset(F, 1);
-	ErrorCode := IOResult;
-	if ErrorCode <> 0 then
+	Result := False;
+	if UpperCase(ExtractFileExt(FileName)) = '.BMP' then
 	begin
-		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
-		MakeDefault;
-	end
-	else
-	begin
-		CloseFile(F);
-		IOResult;
-
-		Quality := 0;
-		if UpperCase(ExtractFileExt(FileName)) = '.BMP' then
+		BitmapRead; // Faster, not tested
+{		Stream := TMemoryStream.Create;
+		if ReadStreamFromFile(FileName, Stream) then
 		begin
 			try
-//				BitmapRead; // Faster, not tested
-				inherited LoadFromFile(FileName);
+				Stream.Seek(0, 0);
+				inherited LoadFromStream(Stream);
+				Result := True;
 			except
-				MakeDefault;
+				on E: Exception do
+				begin
+					ErrorMessage(E.Message);
+					MakeDefault;
+				end;
 			end;
-		end
-		else if (UpperCase(ExtractFileExt(FileName)) = '.JPG')
-		or (UpperCase(ExtractFileExt(FileName)) = '.JPEG') then
+		end;
+		Stream.Free;}
+	end
+	else if (UpperCase(ExtractFileExt(FileName)) = '.JPG')
+	or (UpperCase(ExtractFileExt(FileName)) = '.JPEG') then
+	begin
+		Stream := TMemoryStream.Create;
+		if ReadStreamFromFile(FileName, Stream) then
 		begin
 			MyJPEG := TJPEGImage.Create;
 			try
-				MyJPEG.LoadFromFile(FileName);
+				Stream.Seek(0, 0);
+				MyJPEG.LoadFromStream(Stream);
 				Quality := MyJPEG.CompressionQuality;
 				Assign(MyJPEG);
+				Result := True;
 			except
-				MakeDefault;
+				on E: Exception do
+				begin
+					ErrorMessage(E.Message);
+					MakeDefault;
+				end;
 			end;
 			MyJPEG.Free;
-		end
-		else if UpperCase(ExtractFileExt(FileName)) = '.PPM' then
-			PPMReadFromFile
-		else
-		begin
-			Picture := TPicture.Create;
-			try
-				Picture.LoadFromFile(FileName);
-				Assign(Picture.Graphic);
-			except
-				MakeDefault;
-			end;
-			Picture.Free;
 		end;
+		Stream.Free;
+	end
+	else if UpperCase(ExtractFileExt(FileName)) = '.PPM' then
+		PPMReadFromFile
+	else if UpperCase(ExtractFileExt(FileName)) = '.ICO' then
+	begin
+		Stream := TMemoryStream.Create;
+		if ReadStreamFromFile(FileName, Stream) then
+		begin
+			Icon := TIcon.Create;
+			try
+				Icon.LoadFromStream(Stream);
+				Assign(Icon);
+				Result := True;
+			except
+				on E: Exception do
+				begin
+					ErrorMessage(E.Message);
+					MakeDefault;
+				end;
+			end;
+			Icon.Free;
+		end;
+		Stream.Free;
+	end
+	else
+	begin
+		MessageD('Picture Format not Supported', mtError, [mbOk]);
+		MakeDefault;
+{			Picture := TPicture.Create;
+		try
+			Picture.LoadFromFile(FileName);
+			Assign(Picture.Graphic);
+			Result := True;
+		except
+			MakeDefault;
+		end;
+		Picture.Free;}
 	end;
 	Init;
 end;
 (*-------------------------------------------------------------------------*)
-function TDBitmap.SaveToFileEx(FileName: TFileName; var Quality: Integer): Boolean;
+function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: Integer): Boolean;
+
+{	procedure WriteIcon;
+	var
+		Ic: PArrayU1;
+		Siz: UG;
+	begin
+		Siz := 10;
+		GetMem(Ic, Siz);
+		Ic[0] := 0;
+		Ic[1] := 0;
+		Ic[2] := 1;
+
+		WriteBufferToFile(FileName, Ic, Siz);
+		FreeMem(Ic);
+	end;}
+
 label LRetry;
 var
 	MyJPEG: TJPEGImage;
-	F: file;
-	ErrorCode: Integer;
+	Stream: TMemoryStream;
 begin
 	Result := False;
-	LRetry:
-	if (UpperCase(ExtractFileExt(FileName)) = '.JPG')
+	if (UpperCase(ExtractFileExt(FileName)) = '.BMP') then
+	begin
+		try
+			Stream := TMemoryStream.Create;
+			Self.SaveToStream(Stream);
+			Result := WriteStreamToFile(FileName, Stream);
+			Stream.Free;
+		except
+			on E: Exception do ErrorMessage(E.Message);
+		end;
+	end
+	else if (UpperCase(ExtractFileExt(FileName)) = '.JPG')
 	or (UpperCase(ExtractFileExt(FileName)) = '.JPEG') then
 	begin
+		MyJPEG := TJPEGImage.Create;
 		if Quality = 0 then Quality := 90;
 		if Quality > 0 then
 		begin
@@ -627,41 +882,34 @@ begin
 		end
 		else
 			Quality := -Quality;
-	end;
-
-	AssignFile(F, FileName);
-	FileMode := 1; Rewrite(F, 1);
-	ErrorCode := IOResult;
-	if ErrorCode <> 0 then
-	begin
-		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
+		MyJPEG.CompressionQuality := Quality;
+		MyJPEG.Assign(Self);
+		try
+			Stream := TMemoryStream.Create;
+			MyJPEG.SaveToStream(Stream);
+			Result := WriteStreamToFile(FileName, Stream);
+			Stream.Free;
+		except
+			on E: Exception do ErrorMessage(E.Message);
+		end;
+		MyJPEG.Free;
 	end
 	else
-	begin
-		CloseFile(F);
-		IOResult;
-
-		if (UpperCase(ExtractFileExt(FileName)) = '.JPG')
-		or (UpperCase(ExtractFileExt(FileName)) = '.JPEG') then
+{		if (UpperCase(ExtractFileExt(FileName)) = '.ICO') then
 		begin
-			MyJPEG := TJPEGImage.Create;
-			MyJPEG.CompressionQuality := Quality;
-			MyJPEG.Assign(Self);
+			WriteIcon;
+			Icon := TIcon.Create;
+			Icon.Assign(Self);
 			try
-				MyJPEG.SaveToFile(FileName);
+				Icon.SaveToFile(FileName);
 			except
 
 			end;
-			MyJPEG.Free;
+			Icon.Free;
 		end
-		else
-		begin
-			try
-				inherited SaveToFile(FileName);
-			except
-
-			end;
-		end;
+		else}
+	begin
+		MessageD('Picture Format not Supported', mtError, [mbOk]);
 	end;
 end;
 
@@ -673,10 +921,13 @@ begin
 end;
 
 procedure TDBitmap.SaveToFile(const Filename: string);
-var Quality: SG;
+var
+	Quality: SG;
+	FileNam: TFileName;
 begin
 	Quality := -90;
-	SaveToFileEx(FileName, Quality);
+	FileNam := FileName;
+	SaveToFileEx(FileNam, Quality);
 end;
 
 (*-------------------------------------------------------------------------*)
@@ -2084,13 +2335,13 @@ begin
 	if C = clNone then Exit;
 	CR.L:= ColorToRGB(C);
 
-	if XD1 >= TCoor(GraphMaxX) then Exit;
+	if XD1 > TCoor(GraphMaxX) then Exit;
 	if XD1 < GraphMinX then
 	begin
 		XD1 := GraphMinX;
 	end;
 
-	if YD1 >= TCoor(GraphMaxY) then Exit;
+	if YD1 > TCoor(GraphMaxY) then Exit;
 	if YD1 < GraphMinY then
 	begin
 		YD1 := GraphMinY;
@@ -2208,10 +2459,11 @@ begin
 
 			@NoGray:
 			{$ifdef BPP4}
-			mov al, TRColor(C).R
+			xor ax, ax
+			mov al, dl //TRColor(C).R
 			shl eax, 16
-			mov al, TRColor(C).B
-			mov ah, TRColor(C).G
+			mov al, bl//TRColor(C).B
+			mov ah, cl//TRColor(C).G
 			{$else}
 			mov al, bl
 			mov ah, cl
@@ -4416,19 +4668,19 @@ begin
 		YS1 := BmpS.GraphMinY;
 	end;
 	
-	if XD1 >= TCoor(GraphMaxX) then Exit;
+	if XD1 > TCoor(GraphMaxX) then Exit;
 	if XD1 < GraphMinX then
 	begin
 		Inc(XS1, GraphMinX - XD1);
 		XD1 := GraphMinX;
 	end;
-	if XS1 >= TCoor(BmpS.Width) then Exit;
+	if XS1 > TCoor(BmpS.Width) then Exit;
 	HX := XD1 + (XS2 - XS1) - GraphMaxX;
 	if HX > 0 then
 	begin
 		Dec(XS2, HX);
 	end;
-	
+
 	if YD1 >= TCoor(GraphMaxY) then Exit;
 	if YD1 < GraphMinY then
 	begin
@@ -6386,10 +6638,15 @@ begin
 				cmp dl, [esi + 2]
 				je @LMovE
 				@LMovA:
+					{$ifdef BPP4}
+					mov eax, [esi]
+					mov [edi], eax
+					{$else}
 					mov ax, [esi]
 					mov [edi], ax
 					mov al, [esi + 2]
 					mov [edi + 2], al
+					{$endif}
 				@LMovE:
 				add edi, BPP
 				add esi, BPP
@@ -6768,7 +7025,27 @@ begin
 	Resize24E(BmpS, clNone, NewX, NewY, InterruptProcedure);
 end;
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.Rotate(TransparentColor: TColor; const Effect: TEffect);
+procedure TDBitmap.SwapUD;
+var
+	Line, S, D: PBmpData;
+	y: SG;
+begin
+	GetMem(Line, FByteX);
+
+	S := FData;
+	D := FGLData;
+	for y := 0 to Height div 2 - 1 do
+	begin
+		Move(D^, Line^, FByteX);
+		Move(S^, D^, FByteX);
+		Move(Line^, S^, FByteX);
+		Dec(SG(S), FByteX);
+		Inc(SG(D), FByteX);
+	end;
+	FreeMem(Line);
+end;
+(*-------------------------------------------------------------------------*)
+procedure TDBitmap.RotateRight(TransparentColor: TColor; const Effect: TEffect);
 var BmpS: TDBitmap;
 begin
 	BmpS := TDBitmap.Create;
@@ -6983,13 +7260,13 @@ begin
 	MaxY := YD2 - YD1 + 1;
 
 	// Cut
-	if XD1 >= TCoor(GraphMaxX) then Exit;
+	if XD1 > TCoor(GraphMaxX) then Exit;
 	if XD1 < GraphMinX then
 	begin
 		XD1 := GraphMinX;
 	end;
 
-	if YD1 >= TCoor(GraphMaxY) then Exit;
+	if YD1 > TCoor(GraphMaxY) then Exit;
 	if YD1 < GraphMinY then
 	begin
 		YD1 := GraphMinY;
@@ -8854,163 +9131,373 @@ begin
 	end;
 end;
 
+procedure Rotate(var HX1, HY1, HX2, HY2: SG; XSize, YSize, Orient: SG);
+var H: SG;
+begin
+	case Orient of
+	// 0: Up
+	1: // Left
+	begin
+		H := HX1;
+		HX1 := HY1;
+		HY1 := H;
+		H := HX2;
+		HX2 := HY2;
+		HY2 := H;
+	end;
+	2: // Down
+	begin
+		HY1 := YSize - 1 - HY1;
+		HY2 := YSize - 1 - HY2;
+	end;
+	3: // Right
+	begin
+		H := HX1;
+		HX1 := XSize - 1 - HY1;
+		HY1 := YSize - 1 - H;
+		H := HX2;
+		HX2 := XSize - 1 - HY2;
+		HY2 := YSize - 1 - H;
+	end;
+	end;
+end;
+
+procedure TDBitmap.DrawArrow(X1, Y1, X2, Y2: Integer; Down, Hot: Boolean;
+	Orient: Integer; ScrollEf: TEffect);
+var
+//	C1, C2: Integer;
+	C: TRColor;
+	Co: array[0..3] of TColor;
+	i: SG;
+	HX1, HY1, HX2, HY2, H: SG;
+	SizeX, SizeY: SG;
+	Len: SG;
+begin
+{	if Down then
+	begin
+		C1 := 1;
+		C2 := 2;
+	end
+	else
+	begin
+		C1 := 3;
+		C2 := 0;
+	end;}
+
+{	C.R := 238;
+	C.G := 237;
+	C.B := 229;
+	C.T := 0;}
+
+	if Down then C.L := clSilver else C.L := clWhite;
+	Lin24(X1 + 1, Y1 + 1, X2 - 1, Y1 + 1, C.L, ScrollEf);
+	Lin24(X1 + 2, Y2 - 1, X2 - 2, Y2 - 1, C.L, ScrollEf);
+
+	Lin24(X1 + 1, Y1 + 1, X1 + 1, Y2 - 2, C.L, ScrollEf);
+	Lin24(X2 - 1, Y1 + 1, X2 - 1, Y2 - 2, C.L, ScrollEf);
+
+	if Hot then
+	begin
+		Co[0] := RColor(253, 255, 255).L;
+		Co[1] := RColor(185, 218, 251).L;
+		Co[2] := Co[0];
+		Co[3] := Co[1];
+	end
+	else
+	begin
+		Co[0] := RColor(214, 230, 255).L;
+		Co[1] := RColor(174, 195, 241).L;
+		Co[2] := Co[0];
+		Co[3] := Co[1];
+	end;
+	GenerateRGB(X1 + 2, Y1 + 2, X2 - 2, Y2 - 2, clNone, gfFade2x, Co, 0, ScrollEf, nil);
+	if Down then
+	begin
+		Inc(X1);
+		Inc(X2);
+		Inc(Y1);
+		Inc(Y2);
+	end;
+
+	SizeX := X2 - X1 + 1;
+	SizeY := Y2 - Y1 + 1;
+	if (SizeX >= 7) and (SizeY >= 7) then
+	begin
+		Inc(X1, 3);
+		Inc(Y1, 3);
+		Dec(X2, 3);
+		Dec(Y2, 3);
+		SizeX := X2 - X1 + 1;
+		SizeY := Y2 - Y1 + 1;
+		case Orient of
+		1, 3:
+		begin
+			H := SizeY;
+			SizeY := SizeX;
+			SizeX := H;
+		end;
+		end;
+
+		Len := Max(SizeX div 2, SizeY div 2);
+		C := RColor(77, 97, 133);
+		for i := 0 to Len - 1 do
+		begin
+			HX1 := SizeX div 2; // OK
+			HY1 := SizeY div 4 + SizeY * (i) div (3 * Len);
+			HX2 := SizeX div 12 + SizeX * (i) div (6 * Len);
+			HY2 := SizeY - 1 - SizeY div 4 - SizeY * (i) div (6 * Len);
+
+			Rotate(HX1, HY1, HX2, HY2, X2 - X1 + 1, Y2 - Y1 + 1, Orient);
+			Lin24(X1 + HX1, Y1 + HY1, X1 + HX2, Y1 + HY2, C.L, ScrollEf);
+
+			HX1 := SizeX div 2; // OK
+			HY1 := SizeY div 4 + SizeY * (i) div (3 * Len);
+			HX2 := SizeX - 1 - SizeX div 12 - SizeX * (i) div (6 * Len);
+			HY2 := SizeY - 1 - SizeY div 4 - SizeY * (i) div (6 * Len);
+
+			Rotate(HX1, HY1, HX2, HY2, X2 - X1 + 1, Y2 - Y1 + 1, Orient);
+			Lin24(X1 + HX1, Y1 + HY1, X1 + HX2, Y1 + HY2, C.L, ScrollEf);
+		end;
+	end;
+
+{	XM := X1 + X2;
+	Len := X2 - X1 + 1;
+	for i := 0 to Len div 3 - 1 do
+	begin
+		HX1 := (XM - 2 * i) div 2;
+		HY1 := Y1 + i + (Len + 2) div 3;
+		HX2 :=  (XM + 2 * i + 1) div 2;
+		HY2 := Y1 + i + (Len + 2) div 3;
+		case Orient of
+		1:
+		begin
+			H := HX1;
+			HX1 := (HY1 - Y1) + X1;
+			HY1 := (H - X1) + Y1;
+			H := HX2;
+			HX2 := (HY2 - Y1) + X1;
+			HY2 := (H - X1) + Y1;
+		end;
+		2:
+		begin
+			HY1 := Y2 - (HY1 - Y1);
+			HY2 := Y2 - (HY2 - Y1);
+		end;
+		3:
+		begin
+			H := HX1;
+			HX1 := X2 - (HY1 - Y1);
+			HY1 := (H - X1) + Y1;
+			H := HX2;
+			HX2 := X2 - (HY2 - Y1);
+			HY2 := (H - X1) + Y1;
+		end;
+		end;
+
+		Bitmap.Lin24(HX1, HY1, HX2, HY2, clBtnText, ef16);
+	end;}
+
+
+(*
+	Bitmap.Border24(X1, Y1, X2, Y2, DepthColor(C1), DepthColor(C2), 1, ScrollEf);
+	if FHotTrack and Hot then C1 := clHighlight else C1 := clBtnFace;
+	Bitmap.Bar24(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, C1, ScrollEf);
+
+	XM := X1 + X2;
+	Len := X2 - X1 + 1;
+	for i := 0 to Len div 3 - 1 do
+	begin
+		HX1 := (XM - 2 * i) div 2;
+		HY1 := Y1 + i + (Len + 2) div 3;
+		HX2 :=  (XM + 2 * i + 1) div 2;
+		HY2 := Y1 + i + (Len + 2) div 3;
+		case Orient of
+		1:
+		begin
+			H := HX1;
+			HX1 := (HY1 - Y1) + X1;
+			HY1 := (H - X1) + Y1;
+			H := HX2;
+			HX2 := (HY2 - Y1) + X1;
+			HY2 := (H - X1) + Y1;
+		end;
+		2:
+		begin
+			HY1 := Y2 - (HY1 - Y1);
+			HY2 := Y2 - (HY2 - Y1);
+		end;
+		3:
+		begin
+			H := HX1;
+			HX1 := X2 - (HY1 - Y1);
+			HY1 := (H - X1) + Y1;
+			H := HX2;
+			HX2 := X2 - (HY2 - Y1);
+			HY2 := (H - X1) + Y1;
+		end;
+		end;
+
+		Bitmap.Lin24(HX1, HY1, HX2, HY2, clBtnText, ef16);
+	end;*)
+
+end;
+
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.FireM(XS1, YS1, XS2, YS2: Longint; tick:byte);
 var
-PD: PBmpData;
-ByteXD: LongWord;
-UseXSD: LongWord;
+	PD: PBmpData;
+	ByteXD: LongWord;
+	UseXSD: LongWord;
 
-HX: Integer;
-EndPD: Integer;
-PS: Integer;
-rando:array[0..768] of longword;
-i:word;
+	HX: Integer;
+	EndPD: Integer;
+	PS: Integer;
+	rando:array[0..768] of longword;
+	i:word;
 begin
+	tick:=((tick - random(tick))+tick) div 2;
+	for i:=0 to 767 do begin
+		rando[i]:=round(1+sin(DegToRad(i*(128/(tick+1)))))*3;
+	end;
 
-tick:=((tick - random(tick))+tick) div 2;
-for i:=0 to 767 do begin
-rando[i]:=round(1+sin(DegToRad(i*(128/(tick+1)))))*3;
-end;
+	PD := FData;
+	ByteXD := ByteX;
 
-PD := FData;
-ByteXD := ByteX;
+	HX := XS2 - XS1 + 1; // X sirka Source
+	UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
 
-HX := XS2 - XS1 + 1; // X sirka Source
-UseXSD := HX + HX + HX; // * 3 (UseXSD = Sirka vyrezu)
+	HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
+	Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
 
-HX := Xs1 + Xs1 + Xs1 - Longint(ByteXD) * Ys1; // 3 * DestinationX - sirka destination * DestinationY
-Inc(Integer(PD), HX); // nastav PD na zacatek vyrezu
+	EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
 
-EndPD := Integer(PD) - Integer(ByteXD * LongWord(YS2 + 1 - YS1)); // nastav EndPD na konec vyrezu v Destination
+	ps:=integer(addr(rando));
 
-ps:=integer(addr(rando));
+	begin
+	asm
+	// {$ifdef SaveReg}
+	pushad
+	// {$endif}
+	mov edi, PD // EDI = adresa Destination
+	mov esi, ps
 
-begin
-asm
-// {$ifdef SaveReg}
-pushad
-// {$endif}
-mov edi, PD // EDI = adresa Destination
-mov esi, ps
+	@NextY:
+	add esi,4
 
-@NextY:
-add esi,4
+	mov ecx, edi
+	add ecx, UseXSD // ECX = Adresa Source + sirka Source
 
-mov ecx, edi
-add ecx, UseXSD // ECX = Adresa Source + sirka Source
+	xor eax, eax // nuluj EAX
+	xor ebx, ebx // nuluj EBX
+	xor edx, edx // nuluj EDX
 
-xor eax, eax // nuluj EAX
-xor ebx, ebx // nuluj EBX
-xor edx, edx // nuluj EDX
+	@LMovS: // kopie source do destination
+	mov al, [edi-3]
+	mov bl, [edi+3]
+	add ax,bx
+	sub edi,bytexd
+	mov bl, [edi]
+	add ax,bx
+	sub edi,bytexd
+	mov bl, [edi]
+	add ax,bx
+	add ax,bx
+	mov bl, [edi-3]
+	add ax,bx
+	mov bl, [edi+3]
+	add ax,bx
+	add edi,bytexd
+	add edi,bytexd
+	mov bl, [edi]
+	add ax,bx
+	shr eax, 3
+	mov bl,al
+	xor bl, $ff
+	shr bl,4
+	sub edi,3
+	add edi,[esi]
+	sub al, bl
+	jnc @l1
+	xor al,al
+	@l1: mov [edi], al // uloz na destination
+	sub edi,[esi]
+	add edi,3
+	mov al, [edi-2]
+	mov bl, [edi+4]
+	add ax,bx
+	sub edi,bytexd
+	mov bl, [edi+1]
+	add ax,bx
+	sub edi,bytexd
+	mov bl, [edi+1]
+	add ax,bx
+	add ax,bx
+	mov bl, [edi-2]
+	add ax,bx
+	mov bl, [edi+4]
+	add ax,bx
+	add edi,bytexd
+	add edi,bytexd
+	mov bl, [edi+1]
+	add ax,bx
+	shr eax, 3 
+	mov bl,al
+	xor bl, $ff
+	shr bl,3
+	sub edi,3
+	add edi,[esi]
+	sub al, bl
+	jnc @l2
+	xor al,al
+	@l2: mov [edi+1], al // uloz na destination
+	sub edi,[esi]
+	add edi,3
+	mov al, [edi-1]
+	mov bl, [edi+5]
+	add ax,bx
+	sub edi,bytexd
+	mov bl, [edi+2]
+	add ax,bx
+	sub edi,bytexd
+	mov bl, [edi+2]
+	add ax,bx
+	add ax,bx
+	mov bl, [edi-1]
+	add ax,bx
+	mov bl, [edi+5]
+	add ax,bx
+	add edi,bytexd
+	add edi,bytexd
+	mov bl, [edi+2]
+	add ax,bx
+	shr eax, 3
+	mov bl,al
+	xor bl, $ff
+	shr bl,5
+	sub edi,3
+	add edi,[esi]
+	sub al, bl
+	jnc @l3
+	xor al,al
+	@l3: mov [edi+2], al // uloz na destination
+	sub edi,[esi]
+	add edi,3
+	add edi,3 // zvys EDI o 3
+	// add esi, 3 // zvys ESI o 3
+	cmp edi, ecx // dokud ESI <> ECX (neprenese 1 linku) opakuj
+	jb @LMovS
 
-@LMovS: // kopie source do destination
-mov al, [edi-3]
-mov bl, [edi+3]
-add ax,bx
-sub edi,bytexd
-mov bl, [edi]
-add ax,bx
-sub edi,bytexd
-mov bl, [edi]
-add ax,bx
-add ax,bx
-mov bl, [edi-3]
-add ax,bx
-mov bl, [edi+3]
-add ax,bx
-add edi,bytexd
-add edi,bytexd
-mov bl, [edi]
-add ax,bx
-shr eax, 3
-mov bl,al
-xor bl, $ff
-shr bl,4
-sub edi,3
-add edi,[esi]
-sub al, bl
-jnc @l1
-xor al,al
-@l1: mov [edi], al // uloz na destination
-sub edi,[esi]
-add edi,3
-mov al, [edi-2]
-mov bl, [edi+4]
-add ax,bx
-sub edi,bytexd
-mov bl, [edi+1]
-add ax,bx
-sub edi,bytexd
-mov bl, [edi+1]
-add ax,bx
-add ax,bx
-mov bl, [edi-2]
-add ax,bx
-mov bl, [edi+4]
-add ax,bx
-add edi,bytexd
-add edi,bytexd
-mov bl, [edi+1]
-add ax,bx
-shr eax, 3 
-mov bl,al
-xor bl, $ff
-shr bl,3
-sub edi,3
-add edi,[esi]
-sub al, bl
-jnc @l2
-xor al,al
-@l2: mov [edi+1], al // uloz na destination
-sub edi,[esi]
-add edi,3
-mov al, [edi-1]
-mov bl, [edi+5]
-add ax,bx
-sub edi,bytexd
-mov bl, [edi+2]
-add ax,bx
-sub edi,bytexd
-mov bl, [edi+2]
-add ax,bx
-add ax,bx
-mov bl, [edi-1]
-add ax,bx
-mov bl, [edi+5]
-add ax,bx
-add edi,bytexd
-add edi,bytexd
-mov bl, [edi+2]
-add ax,bx
-shr eax, 3
-mov bl,al
-xor bl, $ff
-shr bl,5
-sub edi,3
-add edi,[esi]
-sub al, bl
-jnc @l3
-xor al,al
-@l3: mov [edi+2], al // uloz na destination
-sub edi,[esi]
-add edi,3
-add edi,3 // zvys EDI o 3
-// add esi, 3 // zvys ESI o 3
-cmp edi, ecx // dokud ESI <> ECX (neprenese 1 linku) opakuj
-jb @LMovS
+	mov edi, PD
+	sub edi, ByteXD
+	mov PD, edi
 
-mov edi, PD
-sub edi, ByteXD
-mov PD, edi
-
-cmp edi, EndPD // opakuj, dokud se nedostanem na konec vyrezu
-jnb @NextY
-//{$ifdef SaveReg}
-popad
-//{$endif}
-end;
-end;
+	cmp edi, EndPD // opakuj, dokud se nedostanem na konec vyrezu
+	jnb @NextY
+	//{$ifdef SaveReg}
+	popad
+	//{$endif}
+	end;
+	end;
 end;
 
 (*-------------------------------------------------------------------------*)
@@ -9024,8 +9511,6 @@ HX: Integer;
 EndPD: Integer;
 
 begin
-
-
 PD := FData;
 ByteXD := ByteX;
 

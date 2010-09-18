@@ -155,8 +155,8 @@ end;}
 {***********************************************}
 
 procedure TPtrEdit.Loaded;
-var
- st: string;
+{var
+ st: string;}
 begin
   inherited;
 {  if (FAutoSave.LoadValue(st))  then

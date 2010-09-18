@@ -1,3 +1,11 @@
+//* File:     Lib\uDNumber.pas
+//* Created:  2001-03-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uDNumber;
 
 interface
@@ -51,6 +59,9 @@ type
 		procedure Exp(V: SG); overload;
 
 		procedure Sin(V: TDNumber);
+
+		procedure Sqr;
+		procedure Sqrt;
 
 		function ToInt: SG;
 		function ToFloat: Extended;
@@ -437,6 +448,21 @@ procedure TDNumber.Log(V: SG);
 begin
 
 end;}
+
+procedure TDNumber.Sqr;
+begin
+	Exp(2);
+end;
+
+procedure TDNumber.Sqrt;
+var N: TDNumber;
+begin
+{	N := TDNumber.Create;
+	N.Assign(0.5);
+	N.Exp(N);
+	N.Free;}
+end;
+
 
 procedure TDNumber.Sin(V: TDNumber);
 begin

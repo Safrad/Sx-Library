@@ -1,4 +1,10 @@
-// Build: 11/1999-12/1999 Author: Safranek David
+//* File:     Lib\uReg.pas
+//* Created:  1999-11-01
+//* Modified: 2003-10-12
+//* Version:  X.X.31.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad@email.cz
+//* Web:      http://safrad.webzdarma.cz
 
 unit uReg;
 
@@ -41,7 +47,7 @@ begin
 	end
 	else
 	begin
-		ErrorMessage('Registry: Can not delete key with SubKey(s)' + #13 + #10 +
+		ErrorMessage('Registry: Can not delete key with SubKey(s)' + LineSep +
 			Key);
 	end;
 end;
@@ -445,8 +451,8 @@ var
 	begin
 		if Reg.OpenKey(SubKey, False) then
 		begin
-			OutStr := OutStr + #13 + #10;
-			OutStr := OutStr + '[' + RootKeyToStr(RootKey) + '\' + SubKey + ']' + #13 + #10;
+			OutStr := OutStr + CharCR + CharLF;
+			OutStr := OutStr + '[' + RootKeyToStr(RootKey) + '\' + SubKey + ']' + CharCR + CharLF;
 			Str := TStringList.Create;
 			Reg.GetValueNames(Str);
 			for i := 0 to Str.Count - 1 do
@@ -455,7 +461,7 @@ var
 				case Reg.GetDataType(Str[i]) of
 				rdString, rdExpandString:
 				begin
-					Buf := Replace(DoubleBackSlash(Reg.ReadString(Str[i])), #13 + #10, '\r\n');
+					Buf := ReplaceF(DoubleBackSlash(Reg.ReadString(Str[i])), CharCR + CharLF, '\r\n');
 					OutStr := OutStr + '"' + Buf + '"';
 					Buf := '';
 				end;
@@ -478,7 +484,7 @@ var
 					Buf := '';
 				end;
 				end;
-				OutStr := OutStr + #13 + #10;
+				OutStr := OutStr + CharCR + CharLF;
 			end;
 			Reg.GetKeyNames(Str);
 			Reg.CloseKey;
@@ -493,7 +499,7 @@ var
   var 		Str: TStrings;
 
 	begin
-	OutStr := 'REGEDIT4' + #13 + #10;
+	OutStr := 'REGEDIT4' + CharCR+ CharLF;
 	Reg := TRegistry.Create;
 	Reg.RootKey := RootKey;
 			Str := TStringList.Create;

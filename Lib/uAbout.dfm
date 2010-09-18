@@ -1,6 +1,6 @@
 object fAbout: TfAbout
-  Left = 180
-  Top = 160
+  Left = 269
+  Top = 173
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'About'
@@ -27,7 +27,7 @@ object fAbout: TfAbout
     Left = 176
     Top = 152
     Width = 41
-    Height = 17
+    Height = 19
     Cursor = crHandPoint
     AutoSize = False
     Caption = 'ICQ'
@@ -56,7 +56,7 @@ object fAbout: TfAbout
     Left = 16
     Top = 200
     Width = 57
-    Height = 17
+    Height = 19
     Cursor = crHandPoint
     AutoSize = False
     Caption = 'Web'
@@ -85,7 +85,7 @@ object fAbout: TfAbout
     Left = 16
     Top = 176
     Width = 57
-    Height = 17
+    Height = 19
     Cursor = crHandPoint
     AutoSize = False
     Caption = 'E-Mail'
@@ -161,7 +161,7 @@ object fAbout: TfAbout
     Left = 16
     Top = 232
     Width = 89
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Run:'
     Color = clBtnFace
@@ -188,7 +188,7 @@ object fAbout: TfAbout
     Left = 112
     Top = 256
     Width = 33
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Now'
     Color = clBtnFace
@@ -215,7 +215,7 @@ object fAbout: TfAbout
     Left = 112
     Top = 232
     Width = 33
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Total'
     Color = clBtnFace
@@ -242,12 +242,10 @@ object fAbout: TfAbout
     Left = 16
     Top = 152
     Width = 56
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Author'
-    Color = clBtnFace
     FocusControl = EditAuthor
-    ParentColor = False
     Transparent = True
     Layout = tlCenter
     BackEffect = ef04
@@ -267,9 +265,9 @@ object fAbout: TfAbout
   end
   object LabelBuild: TDLabel
     Left = 152
-    Top = 128
-    Width = 33
-    Height = 17
+    Top = 112
+    Width = 137
+    Height = 19
     AutoSize = False
     Caption = 'Build'
     Color = clBtnFace
@@ -313,7 +311,7 @@ object fAbout: TfAbout
     Left = 16
     Top = 256
     Width = 33
-    Height = 17
+    Height = 19
     AutoSize = False
     Caption = 'Count'
     Color = clBtnFace
@@ -355,43 +353,47 @@ object fAbout: TfAbout
     OnClick = ButtonOkClick
   end
   object PanelBuild: TEdit
-    Left = 192
+    Left = 152
     Top = 128
-    Width = 97
-    Height = 21
+    Width = 137
+    Height = 19
+    AutoSize = False
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 1
-    Text = '10/1999-01/2000'
+    TabOrder = 4
+    Text = '1.10.1999-1.1.2000'
   end
   object PanelRC: TEdit
     Left = 56
     Top = 256
     Width = 45
-    Height = 21
+    Height = 19
+    AutoSize = False
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 6
+    TabOrder = 9
     Text = '000 000'
   end
   object PanelTRT: TEdit
     Left = 152
     Top = 232
     Width = 137
-    Height = 21
+    Height = 19
+    AutoSize = False
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 8
+    TabOrder = 10
     Text = '356 days, 00:00:00.000'
   end
   object PanelNRT: TEdit
     Left = 152
     Top = 256
     Width = 137
-    Height = 21
+    Height = 19
+    AutoSize = False
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 10
+    TabOrder = 11
     Text = '40 days, 00:00.000'
   end
   object EditAuthor: TEdit
@@ -402,7 +404,7 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 2
+    TabOrder = 5
     Text = 'Safranek David'
   end
   object EditWeb: TEdit
@@ -414,7 +416,7 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 4
+    TabOrder = 8
     Text = 'http://safrad.webzdarma.cz'
     OnClick = EditWebClick
   end
@@ -427,7 +429,7 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 3
+    TabOrder = 7
     OnClick = EditEmailClick
   end
   object EditIcq: TEdit
@@ -439,7 +441,7 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     ReadOnly = True
-    TabOrder = 5
+    TabOrder = 6
     Text = '69941919'
     OnClick = EditIcqClick
   end
@@ -455,7 +457,7 @@ object fAbout: TfAbout
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 7
+    TabOrder = 12
     OnClick = SysInfo1Click
   end
   object DButtonMemoryStatus: TDButton
@@ -470,7 +472,7 @@ object fAbout: TfAbout
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 9
+    TabOrder = 13
     OnClick = DButtonMemoryStatusClick
   end
   object ImageAbout: TDImage
@@ -484,7 +486,7 @@ object fAbout: TfAbout
     OnFill = ImageAboutFill
     ParentShowHint = False
     ShowHint = False
-    TabOrder = 11
+    TabOrder = 1
     TabStop = False
     OnMouseDown = ImageAboutMouseDown
     OnMouseMove = ImageAboutMouseMove
@@ -500,12 +502,12 @@ object fAbout: TfAbout
     OnFill = ImageNameFill
     ParentShowHint = False
     ShowHint = False
-    TabOrder = 12
+    TabOrder = 2
     TabStop = False
   end
   object ImageVersion: TDImage
     Left = 152
-    Top = 88
+    Top = 80
     Width = 137
     Height = 24
     DrawFPS = False
@@ -514,7 +516,7 @@ object fAbout: TfAbout
     OnFill = ImageVersionFill
     ParentShowHint = False
     ShowHint = False
-    TabOrder = 13
+    TabOrder = 3
     TabStop = False
   end
   object Timer1: TDTimer
