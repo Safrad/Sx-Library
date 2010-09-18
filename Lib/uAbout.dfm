@@ -116,7 +116,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -149,7 +148,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -182,7 +180,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -214,7 +211,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -245,7 +241,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -276,7 +271,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -306,7 +300,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     Transparent = True
     TransparentColor = False
@@ -335,7 +328,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -366,7 +358,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True
@@ -398,7 +389,6 @@ object fAbout: TfAbout
     Width = 65
     Height = 18
     AutoSize = False
-    BevelOuter = bvNone
     ParentColor = True
     TabOrder = 4
     Text = '2004-04-28'
@@ -409,7 +399,6 @@ object fAbout: TfAbout
     Width = 45
     Height = 19
     AutoSize = False
-    BevelOuter = bvNone
     ParentColor = True
     TabOrder = 9
     Text = '999 999'
@@ -420,7 +409,6 @@ object fAbout: TfAbout
     Width = 137
     Height = 19
     AutoSize = False
-    BevelOuter = bvNone
     ParentColor = True
     TabOrder = 10
     Text = '365 days, 00:00:00.000'
@@ -431,7 +419,6 @@ object fAbout: TfAbout
     Width = 137
     Height = 19
     AutoSize = False
-    BevelOuter = bvNone
     ParentColor = True
     TabOrder = 11
     Text = '40 days, 00:00:00.000'
@@ -564,7 +551,6 @@ object fAbout: TfAbout
     Width = 65
     Height = 18
     AutoSize = False
-    BevelOuter = bvNone
     ParentColor = True
     TabOrder = 23
     Text = '2004-04-28'
@@ -591,7 +577,6 @@ object fAbout: TfAbout
     Displ.ColorA = clRed
     Displ.ColorD = clMaroon
     Displ.Size = 0
-    BevelOuter = bvLowered
     Layout = tlCenter
     ParentColor = False
     Transparent = True

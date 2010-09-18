@@ -37,6 +37,7 @@ type
 procedure ShowLogo; overload; // fMain.FormCreate
 //procedure ShowLogoFull;
 procedure HideLogo; // fMain.FormShow
+procedure HideLogoPromptly;
 
 implementation
 
@@ -67,7 +68,7 @@ begin
 		fLogo.BackBitmap.LoadFromFile(FileName);
 		if (fLogo.BackBitmap.Width < 256) or (fLogo.BackBitmap.Height < 3 * 256 div 4) then
 		begin
-			fLogo.BackBitmap.Resize(fLogo.BackBitmap, fLogo.BackBitmap.Width * 2, fLogo.BackBitmap.Height * 2, nil);
+			fLogo.BackBitmap.Resize(fLogo.BackBitmap.Width * 2, fLogo.BackBitmap.Height * 2);
 		end;
 	end;
 	if (FileName = '') then
@@ -211,11 +212,20 @@ begin
 	end;
 end;
 
+procedure HideLogoPromptly;
+begin
+	if Assigned(fLogo) and fLogo.Visible then
+	begin
+		Screen.Cursor := crDefault;
+		fLogo.Close;
+	end;
+end;
+
 procedure TfLogo.Timer1Timer(Sender: TObject);
 begin
 	Enabled := False;
 	Close;
-	Hide;
+//	Hide;
 end;
 
 procedure TfLogo.ImageLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -229,7 +239,7 @@ begin
 	if Sqr(FirstX - X) + Sqr(FirstY - Y) >= 256 {16 pixels} then
 	begin
 		Close;
-		Free; fLogo := nil;
+//		Free; fLogo := nil;
 	end;
 
 	Inc(MoveCount);
@@ -253,9 +263,9 @@ begin
 	if fLogo.Timer1.Enabled then
 	begin
 		Timer1.Enabled := False;
-	end
-	else
-		Screen.Cursor := crDefault;
+	end;
+
+	Screen.Cursor := crDefault;
 	BackBitmap.SetSize(0, 0);
 end;
 

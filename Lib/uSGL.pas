@@ -6,7 +6,10 @@
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-{ ToDo: Depth, Clipping bug }
+{
+	Support only 32bit RGBA buffer
+	ToDo: Depth, Clipping bug
+}
 
 unit uSGL;
 
@@ -36,12 +39,10 @@ uses
 
 (* Datovy typ BYTE - hodnoty 0 - 255. *)
 // typedef unsigned char BYTE;
+type
+PFloat = ^TFloat;
+TFloat = Double;
 
-(* Datovy typ boolean. *)
-type sglEBool = (
- sglFalse = 0,
- sglTrue
-);
 
 (* Typ grafickych elementu. *)
 type sglEElementType = (
@@ -78,7 +79,7 @@ const
 
 type
 	PMatrix = ^TMatrix;
-	TMatrix = array[0..2, 0..2] of Double;
+	TMatrix = array[0..2, 0..2] of TFloat;
 const
 	ETM: TMatrix = ((1, 0 ,0), (0, 1, 0), (0, 0, 1));
 
@@ -92,30 +93,34 @@ sglEMatrixMode = (
 (* Datova struktura udrzujici informace o kreslici plose + dalsich pomocnych pametech.   *)
 (* Struktura take obsahuje aktualni nastaveni vsech parametru, transformacni matice, ... *)
 type
-	TTexBitmap = packed record
+	TTexBitmap = packed record // 16
 		Datas: PRGBA;
-		Shift: U1;
 		w, h: S4;
+		Shift: U1;
+		Reserved: array[0..2] of U1;
 	end;
-	TTexture = packed record // 16
-		MipMaps: array[0..10] of TTexBitmap;
-		Reserved: U4;
+	TTexture = packed record // 256
+		MipMaps: array[0..10] of TTexBitmap; // 16 * 11 = 176
+		MipCount: S4;
+		Filter, TexMode: S4; // 8
+		Enabled: B4;
+		Reserved: array[0..15] of U4; // 72
 	end;
 	TGraphicPos = packed record // 8
 		X, Y: S4; // 8
 	end;
-	TGraphicPoint = packed record // 24
+	TGraphicPoint = packed record // 32
 		Pos: TGraphicPos; // 8
 		Tex: TGraphicPos; // 8
 		C: TRColor; // 4
 		Reserved: array[0..3] of U4;
 	end;
-	TWorldPos = packed record // 24
-		X, Y, W, R: Double;
+	TWorldPos = packed record // 32
+		X, Y, W, R: TFloat;
 	end;
-	TWorldPoint = packed record // 64
-		Pos: TWorldPos; // 24
-		Tex: TWorldPos; // 24
+	TWorldPoint = packed record // 128
+		Pos: TWorldPos; // 32
+		Tex: TWorldPos; // 32
 		C: TRColor; // 4
 		Reserved: array[0..14] of U4;
 //		Reserved1: array[0..1] of U4; // 8
@@ -144,24 +149,22 @@ type
 	MinG, MaxG: TGraphicPos; // Output window
 	MinC, MaxC, // Clipping window
 	MinB, MaxB: TGraphicPos;
-	MinX, MinY, MaxX, MaxY: Double; // World
+	MinX, MinY, MaxX, MaxY: TFloat; // World
 	// Options
 	Color: TRColor;
 	EnableClipping,
 	EnableBlending,
-	ShadeModel: sglEBool;
+	ShadeModel: BG;
 	BlendFunc: SG;
 	AreaMode: SG;
-	PointSize, LineWidth: Double;
+	PointSize, LineWidth: TFloat;
 	Hatching: SG;
 	HatchingColor: TColor;
 	LineStyle: SG;
 	LineJoinStyle: SG;
 	// Textures
-	EnableTexturing: sglEBool;
+	EnableTexturing: BG;
 	TexturePoint: TWorldPos;
-	Filter,
-	TexMode: SG;
 
 	// Elements
 	CurrentLayer: SG;
@@ -185,6 +188,7 @@ sglEErrorCode = (
  (* operace probehla s chybou        *)
  (* sglOpError[1-N] urcuje typ chyby *)
  sglOpInvalidDrawable,
+ sglOpInvalidTexture,
  sglOpOutOfMemory,
  sglOpBadParameters,
  sglOpBeginMissed,
@@ -195,6 +199,7 @@ const
 	sglOpError: array[sglEErrorCode] of string = (
 		'Ok',
 		'Invalid Drawable',
+		'Invalid Texture',
 		'Out of Memory',
 		'Bad Parameters',
 		'Begin Missed',
@@ -217,8 +222,9 @@ sglSTextureObj = (
 (* Promenna indikujici jak probehla posledni operace. *)
 var
 _libStatus: sglEErrorCode  = sglOpOk;
-sglFinishCoons: sglEBool = sglTrue;
+sglFinishCoons: BG = True;
 sglErrors: array of sglEErrorCode;
+sglErrorCount: SG;
 
 
 (* Identifikator aktualni kreslici plochy (drawable). *)
@@ -226,9 +232,10 @@ _currentDrawable: SG = -1;
 //sglSDrawable *_currentDrawablePtr = NULL;
 
 (* Identifikator aktualni textury. *)
-_currentTexture: SG; (* textura je reprezentovana texturovacim objektem *)
+_currentTexture: SG = -1; (* textura je reprezentovana texturovacim objektem *)
 
 	Textures: array of TTexture;
+	TextureCount: SG;
 	ATexture: TTexture;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -318,28 +325,28 @@ procedure sglBegin(elementType: sglEElementType);
 procedure sglEnd();
 
 (* Zadani bodu v homogenich souradnicich. *)
-procedure sglVertex(x, y: Double); overload;
-procedure sglVertex(x, y, w: Double); overload;
+procedure sglVertex(x, y: TFloat); overload;
+procedure sglVertex(x, y, w: TFloat); overload;
 procedure sglVertex(var WP: TWorldPos); overload;
 
 (* Kresleni kruznice.            *)
 (* VSTUP:                        *)
 (*   * x, y   - stred kruznice   *)
 (*   * radius - polomer          *)
-procedure sglCircle(x, y, radius: Double);
+procedure sglCircle(x, y, radius: TFloat);
 
 (* Kresleni elipsy v zakladni poloze.      *)
 (* VSTUP:                                  *)
 (*   * x, y - stred kruznice               *)
 (*   * a, b - delka hlavni a vedlejsi osy  *)
-procedure sglEllipse(x, y, a, b: Double);
+procedure sglEllipse(x, y, a, b: TFloat);
 
 (* Kresleni kruhoveho oblouku (kruhova vysec).                                *)
 (* VSTUP:                                                                     *)
 (*   * x, y     - stred kruznice                                              *)
 (*   * radius   - polomer                                                     *)
 (*   * from, to - pocatecni a koncovy uhel vysece (uhly jsou mereny od osy x) *)
-procedure sglArc(x, y, radius, from, too: Double);
+procedure sglArc(x, y, radius, from, too: TFloat);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////// Transformacni funkce //////////////////////////////////////////////////////////
@@ -362,20 +369,20 @@ procedure sglLoadIdentity();
 
 (* Nahrazeni aktualni matice matici na kterou ukazuje ukazatel matrix. *)
 (* Matice matrix je uzena v poli po sloupcich.                         *)
-procedure sglLoadMatrix(matrix: PDouble);
+procedure sglLoadMatrix(matrix: PFloat);
 
 (* Vynasobeni aktualni modelovaci matice matici matrix. Matice matrix    *)
 (* je prinasobena zleva nebo zprava v zavislosti na parametru fromRight. *)
-procedure sglMultMatrix(matrix: PDouble; fromRight: sglEBool (* = sglTrue *));
+procedure sglMultMatrix(matrix: PFloat; fromRight: BG);
 
 (* Posunuti o vektor [x, y]. *)
-procedure sglTranslate(x, y: Double);
+procedure sglTranslate(x, y: TFloat);
 
 (* Zmena meritka v obou osach v zavislosti na parametrech scaleX a scaleY. *)
-procedure sglScale(scaleX, scaleY: Double);
+procedure sglScale(scaleX, scaleY: TFloat);
 
 (* Otoceni okolo bodu [centerX, centerY] o uhel angle (ve stupnich). *)
-procedure sglRotate(angle, centerX, centerY: Double);
+procedure sglRotate(angle, centerX, centerY: TFloat);
 
 (* Nastaveni viewport transformace. Parametry sX, sY urcuji pozici viewportu *)
 (* vzhledem ke kereslici plose a width x height jeho velikost v pixelech.    *)
@@ -385,7 +392,7 @@ procedure sglViewport(sX, sY, width, height: SG);
 (* VSTUP:                                                         *)
 (*   * minX, maxX - velikost kreslici plochy v ose X              *)
 (*   * minY, maxY - velikost kreslici plochy v ose Y              *)
-procedure sglOrtho2D(minX, maxX, minY, maxY: Double);
+procedure sglOrtho2D(minX, maxX, minY, maxY: TFloat);
 
 (********************************************************************************************)
 (***************** CAST 2 *******************************************************************)
@@ -419,10 +426,10 @@ procedure sglAreaMode(mode: SG);
 (* Styl stinovani - urcen parametrem smooth. smooth=true - interpolace barvy, *)
 (* smooth=false - konstantni stinovani (element je vykreslen barvou posleniho *)
 (* vrcholu, vyjimka polygon - kresli se barvou prvniho vrcholu).              *)
-procedure sglShadeModel(smooth: sglEBool (* = sglTrue*));
+procedure sglShadeModel(smooth: BG);
 
 (* Povoleni/zakazani orezavani obdelnikovym oknem. *)
-procedure sglEnableClipping(clipping: sglEBool);
+procedure sglEnableClipping(clipping: BG);
 
 (* Definice obdelnikoveho orezavaciho okna v souradnicich okna. *)
 (* VSTUP:                                                       *)
@@ -474,7 +481,7 @@ SGL_HATCH_CHESS_BOARD = 6;  (* sachovnice                          *)
 procedure sglHatching(Typ: SG; R, G, B, A: U1);
 
 (* Povoleni / zakazani michani barev kreslenych elementu s pozadim. *)
-procedure sglEnableBlending(blend: sglEBool);
+procedure sglEnableBlending(blend: BG);
 
 (* zpusoby michani barev *)
 const
@@ -495,10 +502,10 @@ SGL_BLEND_ONE_MINUS_FG_ALPHA = 4;
 procedure sglBlendFunc(func: SG);
 
 (* Nastaveni velikosti bodu v pixelech. *)
-procedure sglPointSize(size: Double);
+procedure sglPointSize(size: TFloat);
 
 (* Nastaveni tloustky cary. *)
-procedure sglLineWidth(width: double);
+procedure sglLineWidth(width: TFloat);
 
 const
 SGL_LINE_STYLE_SOLID              = 0; (* _________ plna cara *)
@@ -527,7 +534,7 @@ procedure sglLineJoinStyle(Typ: SG);
 (********************************************************************************************)
 
 (* Zapne / vypne pouzivani textur. *)
-procedure sglEnableTexturing(texturing: sglEBool);
+procedure sglEnableTexturing(texturing: BG);
 
 (* Vytvoreni prazdneho texturovaciho objektu. Funkce vrati jednoznacne *)
 (* id vytvoreneho texturovaciho objektu.                               *)
@@ -548,15 +555,15 @@ procedure sglLoadTexture(filename: string);
 
 (* Zadani texturovacich souradnic [s, t, q], ktere se budou automaticky *)
 (* aplikovat na nasledne zadane vrcholy.                                *)
-procedure sglTexCoord(s, t, q: Double);
+procedure sglTexCoord(s, t: TFloat; q: TFloat = 1);
 
 (* typy filtrovani textur *)
 const
 SGL_TEXTURE_FILTER_NEAREST = 0; (* vyber nejblizsiho souseda             *)
 SGL_TEXTURE_FILTER_LINEAR  = 1; (* vazeny prumer ze 4 nejblizsich texelu *)
-SGL_TEXTURE_FILTER_MIPMAP  = 2; (* pouziti mipmap                        *)
+SGL_TEXTURE_FILTER_MIPMAP_NEAREST  = 2; (* pouziti mipmap                        *)
 SGL_TEXTURE_FILTER_MIPMAP_LINEAR  = 3; (* pouziti mipmap                        *)
-
+SGL_TEXTURE_FILTER_MIPMAP = SGL_TEXTURE_FILTER_MIPMAP_LINEAR;
 (* Nastaveni zpusobu filtrovani textury. *)
 procedure sglTexFilter(filter: SG);
 
@@ -577,7 +584,7 @@ procedure sglSaveImage(FileName: string);
 (* Modifikace texturovaci matice probiha stejne jako modifikace modelovaci matice. *)
 
 var
-	sglPrecision: Double = 1; // sglArc precision [pixels^2]'
+	sglPrecision: TFloat = 1; // sglArc precision [pixels^2]'
 
 implementation
 
@@ -588,6 +595,7 @@ uses Math, uGraph, uError, uSorts, uDBitmap;
 var
 	Drawable: sglSDrawable;
 	Drawables: array of sglSDrawable;
+	DrawableCount: SG;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////// Funkce //////////////////////////////////////////////////////////////
@@ -621,14 +629,19 @@ var i: SG;
 begin
 	for i := 0 to Length(sglErrors) - 1 do
 		Result := sglGetErrorString(sglErrors[i]);
+	sglErrorCount := 0;
 	SetLength(sglErrors, 0);
 	_libStatus := sglOpOk;
 end;
 
 procedure AddError(sglError: sglEErrorCode);
+var NewSize: SG;
 begin
-	SetLength(sglErrors, Length(sglErrors) + 1);
-	sglErrors[Length(sglErrors) - 1] := sglError;
+	NewSize := sglErrorCount + 1;
+	if AllocByExp(Length(sglErrors), NewSize) then
+		SetLength(sglErrors, NewSize);
+	sglErrors[sglErrorCount] := sglError;
+	Inc(sglErrorCount);
 	_libStatus := sglError;
 end;
 
@@ -647,15 +660,17 @@ var i: SG;
 begin
 	_libStatus := sglOpOk;
 	// Free Mem
-	for i := 0 to Length(Drawables) - 1 do
+	for i := 0 to DrawableCount - 1 do
 	begin
 		sglDestroyDrawable(i);
 	end;
+	DrawableCount := 0;
 	SetLength(Drawables, 0);
-	for i := 0 to Length(Textures) - 1 do
+	for i := 0 to TextureCount - 1 do
 	begin
 		sglDeleteTexture(i);
 	end;
+	TextureCount := 0;
 	SetLength(Textures, 0);
 	FillChar(ATexture, SizeOf(ATexture), 0);
 end;
@@ -674,7 +689,9 @@ begin
 end;
 
 function sglCreateDrawable(width, height: SG; Data: Pointer): SG;
-var i: SG;
+var
+	i: SG;
+	NewSize: SG;
 begin
 	Result := -1;
 	if width * height > 32 * 1024 * 1024 then
@@ -691,10 +708,13 @@ begin
 	i := 0;
 	while True do
 	begin
-		if i >= Length(Drawables) then
+		if i >= DrawableCount then
 		begin
-			SetLength(Drawables, i + 1);
+			NewSize := i + 1;
+			if AllocByExp(Length(Drawables), NewSize) then
+				SetLength(Drawables, NewSize);
 			FillChar(Drawables[i], SizeOf(Drawables[i]), 0);
+			Inc(DrawableCount);
 		end;
 
 		if Drawables[i]._frameBuffer = nil then
@@ -738,9 +758,7 @@ begin
 			Drawables[i].PointSize := 1;
 			Drawables[i].LineWidth := 1;
 			Drawables[i].AreaMode := SGL_AREA_MODE_FILL;
-			Drawables[i].ShadeModel := sglTrue;
-			Drawables[i].Filter := SGL_TEXTURE_FILTER_MIPMAP_LINEAR;
-			Drawables[i].TexMode := SGL_TEXTURE_MODE_REPLACE;
+			Drawables[i].ShadeModel := True;
 
 			Break;
 		end;
@@ -748,35 +766,38 @@ begin
 	end;
 
 	Result := i;
+//	sglSetDrawable(i);
 	_libStatus := sglOpOk;
 end;
-(* Zruseni kreslici plochy s identifikatorem id + zruseni dalsich pomocnych pameti *)
-(* VSTUP:                                                                          *)
-(*   * id - identifikator rusene plochy                                            *)
-procedure sglDestroyDrawable(id: SG);
+
+function sglCreateTexture(): SG;
+var
+	i: SG;
+	NewSize: SG;
 begin
-	if (id < 0) or (id >= Length(Drawables)) then
+	i := 0;
+	while True do
 	begin
-		AddError(sglOpBadParameters);
-		Exit;
+		if i >= TextureCount then
+		begin
+			NewSize := i + 1;
+			if AllocByExp(Length(Textures), NewSize) then
+				SetLength(Textures, NewSize);
+			FillChar(Textures[i], SizeOf(Textures[i]), 0);
+			Inc(TextureCount);
+		end;
+		if Textures[i].Enabled = False then
+		begin
+			Textures[i].Filter := SGL_TEXTURE_FILTER_MIPMAP_LINEAR;
+			Textures[i].TexMode := SGL_TEXTURE_MODE_REPLACE;
+			Textures[i].Enabled := True;
+			Break;
+		end;
+		Inc(i);
 	end;
-	if id = _currentDrawable then
-	begin
-		Move(Drawable, Drawables[id], SizeOf(Drawable));
-		FillChar(Drawable, SizeOf(Drawable), 0);
-		_currentDrawable := -1;
-	end;
-	if Drawables[id].Ext then
-		Drawables[id]._frameBuffer := nil
-	else
-		FreeMem(Drawables[id]._frameBuffer);
-	Drawables[id]._width := 0;
-	Drawables[id]._height := 0;
-	FreeMem(Drawables[id]._depthBuffer);
-	SetLength(Drawables[id].Stack, 0);
 
-
-	FillChar(Drawables[id], SizeOf(Drawables[id]), 0);
+	Result := i;
+	sglBindTexture(i);
 	_libStatus := sglOpOk;
 end;
 
@@ -792,24 +813,16 @@ begin
 		Result := True;
 end;
 
-(* Nastaveni kreslici plochy do ktere se bude kreslit.         *)
-(* VSTUP:                                                      *)
-(*   * id - identifikator nove aktualni kreslici plochy        *)
-procedure sglSetDrawable(id: SG);
+function CheckTexture: BG;
 begin
-	if (id < -1) or (id >= Length(Drawables)) or (Drawables[id]._frameBuffer = nil) then
+	if (_currentTexture < 0) or (ATexture.Enabled = False) then
 	begin
-		AddError(sglOpBadParameters);
+		Result := False;
+		AddError(sglOpInvalidTexture);
 		Exit;
-	end;
-	if _currentDrawable >= 0 then
-		Move(Drawable, Drawables[_currentDrawable], SizeOf(Drawable));
-	_currentDrawable := id;
-	if _currentDrawable >= 0 then
-		Move(Drawables[_currentDrawable], Drawable, SizeOf(Drawable));
-	_libStatus := sglOpOk;
-
-	(* dalsi potrebne akce *)
+	end
+	else
+		Result := True;
 end;
 
 (* Fuknce vraci identifikator aktualni kreslici plochy.        *)
@@ -846,8 +859,9 @@ procedure sglClear(R, G, B, A: U1);
 begin
 	if Check then
 	begin
+		FillChar(Drawable._frameBuffer^, Drawable._frameBufferSize, 0);
 //		if BPP = 4 then
-			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
+{			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
 				B or (G shl 8) or (R shl 16) or (A shl 24))
 {		else
 			FillChar(Drawable[_currentDrawable]._frameBuffer^, Drawable[_currentDrawable]._frameBufferSize, 255);}
@@ -870,8 +884,8 @@ begin
 	end;
 end;
 
-procedure TranT(var Pos: TWorldPos; out rx, ry: Double); overload;
-var xx, yy: Double;
+procedure TranT(var Pos: TWorldPos; out rx, ry: TFloat); overload;
+var xx, yy: TFloat;
 begin
 	rx := 0;
 	ry := 0;
@@ -896,8 +910,8 @@ begin
 	ry := ry + Drawable.MinG.Y;}
 end;
 
-procedure Tran(var Pos: TWorldPos; out rx, ry: Double); overload;
-var xx, yy: Double;
+procedure Tran(var Pos: TWorldPos; out rx, ry: TFloat); overload;
+var xx, yy: TFloat;
 begin
 	rx := 0;
 	ry := 0;
@@ -927,7 +941,7 @@ begin
 end;
 
 procedure Tran(var Pos: TWorldPos; out GX, GY: SG); overload;
-var rx, ry: Double;
+var rx, ry: TFloat;
 begin
 	Tran(Pos, rx, ry);
 	GX := Round(rx);
@@ -935,7 +949,7 @@ begin
 end;
 
 procedure Tran(var WP: TWorldPoint; out G: TGraphicPoint); overload;
-var rx, ry: Double;
+var rx, ry: TFloat;
 begin
 	Tran(WP.Pos, rx, ry);
 	G.Pos.X := Round(rx);
@@ -1019,6 +1033,7 @@ var
 	m: UG;
 	fx, fy: UG;
 	tx, ty: UG;
+//	DM: SG;
 begin
 	{$ifopt d+}
 	if SG(P) < SG(Drawable._frameBuffer) then
@@ -1033,10 +1048,10 @@ begin
 	end;
 	{$endif}
 
-	if Drawable.EnableTexturing = sglTrue then
+	if Drawable.EnableTexturing = True then
 	begin
-		case Drawable.Filter of
-		SGL_TEXTURE_FILTER_NEAREST, SGL_TEXTURE_FILTER_MIPMAP: (* vyber nejblizsiho souseda             *)
+		case ATexture.Filter of
+		SGL_TEXTURE_FILTER_NEAREST, SGL_TEXTURE_FILTER_MIPMAP_NEAREST: (* vyber nejblizsiho souseda             *)
 		begin
 			x := (TexX{ + PreS}) div (PreM shl TexM);
 			y := (TexY{ + PreS}) div (PreM shl TexM);
@@ -1044,6 +1059,8 @@ begin
 			begin
 				Pixel := ATexture.MipMaps[TexM].Datas;
 				TexColor := PRGBA(SG(Pixel) + 4 * (x + y shl ATexture.MipMaps[TexM].Shift))^;
+{				if TexColor.L <> $808080 then
+					IE(553);}
 			end
 			else
 				TexColor := Color;
@@ -1061,8 +1078,9 @@ begin
 		end;
 		SGL_TEXTURE_FILTER_LINEAR, SGL_TEXTURE_FILTER_MIPMAP_LINEAR:
 		begin
-			fx := PreM - 1 - TexX and (PreM - 1); // TexX mod PreM;
-			fy := PreM - 1 - TexY and (PreM - 1); // TexY mod PreM;
+//			DM := (PreM shl TexM);
+			fx := PreM - 1 - ((TexX{ + PreS}) mod (PreM - 0)); // TexX mod PreM;
+			fy := PreM - 1 - ((TexY{ + PreS}) mod (PreM - 0)); // TexY mod PreM;
 {			if TexX <> 0 then
 			Nop;
 			if TexY <> 0 then
@@ -1070,9 +1088,9 @@ begin
 //			fx := 65535;
 //			fy := 65535;
 
-			ax[0] := (TexX{ + PreS}) div (PreM shl TexM);
+			ax[0] := (TexX{ - PreS}) shr (Pre + TexM);
 			ax[1] := ax[0] + 1;
-			ay[0] := (TexY{ + PreS}) div (PreM shl TexM);
+			ay[0] := (TexY{ - PreS}) shr (Pre + TexM);
 			ay[1] := ay[0] + 1;
 			SumR := 0;
 			SumG := 0;
@@ -1106,20 +1124,23 @@ begin
 				end;
 				Inc(ty, PreM - 1);
 			end;
-			TexColor.R := SumR div (65536);
-			TexColor.G := SumG div (65536);
-			TexColor.B := SumB div (65536);
-			TexColor.A := SumA div (65536);
+			TexColor.R := SumR div PreM;
+			TexColor.G := SumG div PreM;
+			TexColor.B := SumB div PreM;
+			TexColor.A := SumA div PreM;
 
 		end;
 		end;
 
-		case Drawable.TexMode of
+		case ATexture.TexMode of
 		SGL_TEXTURE_MODE_ADD:  (* secteni barvy textury a gr. elementu *)
 		begin
 			Color.R := (TexColor.R + Color.R) div 2;
 			Color.G := (TexColor.G + Color.G) div 2;
 			Color.B := (TexColor.B + Color.B) div 2;
+{			Color.R := Min(255, TexColor.R + Color.R);
+			Color.G := Min(255, TexColor.G + Color.G);
+			Color.B := Min(255, TexColor.B + Color.B);}
 		end;
 		SGL_TEXTURE_MODE_MUL:  (* vynasobeni barev                     *)
 		begin
@@ -1135,7 +1156,7 @@ begin
 			Color := TexColor;
 		end;
 	end;
-	if Drawable.EnableBlending = sglTrue then
+	if Drawable.EnableBlending = True then
 	begin
 		PixMix(P, Color, Drawable.BlendFunc);
 	end
@@ -1208,12 +1229,12 @@ begin
 				P1.C := MixColors(P1.C, P2.C, (P2.Pos.Y - Drawable.MaxB.Y) * 65536 div (P2.Pos.Y - P1.Pos.Y));
 				P1.Pos.X := x;
 				P1.Pos.Y := Drawable.MaxB.Y;
-				if Drawable.EnableTexturing = sglTrue then
+{				if Drawable.EnableTexturing = True then
 				begin
-					// D?? Test
+					// D??? Test
 					P1.Tex.X := P1.Tex.X + (Drawable.MaxB.Y - P1.Pos.Y) * (P2.Tex.X - P1.Tex.X) div (P2.Tex.Y - P1.Tex.Y);
 					P1.Tex.Y := P1.Tex.Y + (Drawable.MaxB.Y - P1.Pos.Y) * (P2.Tex.Y - P1.Tex.Y) div (P2.Tex.X - P1.Tex.X);
-				end;
+				end;}
 				KodA := PointCode(P1);
 			end
 			else
@@ -1384,18 +1405,15 @@ var
 
 var
 	DTX, DTY: SG;
-	TX, TY: SG;
 
 	procedure NextPix;
 	begin
-		if Drawable.EnableTexturing = sglTrue then
+		if Drawable.EnableTexturing = True then
 		begin
-			Inc(TX, DTX);
-			Inc(TY, DTY);
-			TexX := TX;
-			TexY := TY;
+			Inc(TexX, DTX);
+			Inc(TexY, DTY);
 		end;
-		if Drawable.ShadeModel = sglTrue then
+		if Drawable.ShadeModel = True then
 		begin
 			Inc(CR, DCR);
 			Inc(CG, DCG);
@@ -1412,6 +1430,7 @@ var
 	D, DXY: SG;
 	DX, DY,
 	x, y, k1, k2, e, XYEnd: SG;
+	Ratio: TFloat;
 begin
 	if Drawable.AreaMode = SGL_AREA_MODE_POINTS then
 	begin
@@ -1429,40 +1448,62 @@ begin
 		else
 			D := DY;
 
+		if Drawable.EnableTexturing = True then
+		begin
+			if D <> 0 then
+			begin
+				DTX := ((P2.Tex.X - P1.Tex.X) {* PreM}) div (D + 0);
+				DTY := ((P2.Tex.Y - P1.Tex.Y) {* PreM}) div (D + 0); // D???
+			end;
+			TexX := P1.Tex.X{ shl Pre};
+			TexY := P1.Tex.Y{ shl Pre};
+			TexM := 0;
+			if ATexture.Filter >= SGL_TEXTURE_FILTER_MIPMAP_NEAREST then
+			begin
+				if D = 0 then
+					Ratio := 10
+				else
+					Ratio :=  (P2.Tex.X - P1.Tex.X) / ((D + 0) * PreM{pixels});
+
+				TexM := 0;
+				while Ratio >= 1.9 do
+				begin
+					Ratio := Ratio / 2;
+					Inc(TexM);
+				end;
+
+				if TexM < 0 then
+					TexM := 0
+				else if TexM >= ATexture.MipCount then
+					TexM := ATexture.MipCount - 1;
+
+(*				while TexM < Length(ATexture.MipMaps) - 1 do
+				begin
+//					if D > Min(ATexture.MipMaps[TexM].w, ATexture.MipMaps[TexM].h) then Break;
+//					if (D + 1) * PreM <= Max((P2.Tex.X - P1.Tex.X) div ATexture.MipMaps[TexM].w, (P2.Tex.Y - P1.Tex.Y) div ATexture.MipMaps[TexM].h) then Break;
+					if ATexture.MipMaps[TexM + 1].w <= 0 then Break;
+					Inc(TexM);
+				end;*)
+
+			end;
+		end;
+
 		if D = 0 then // Line is point
 		begin
 //				Pix(XYToAddr(P1.X, P1.Y), MixColors(P1.C, P2.C));
 			C := MixColors(P1.C, P2.C);
-			if Drawable.EnableTexturing = sglTrue then
+{			if Drawable.EnableTexturing = True then
 			begin
 				TexX := P1.Tex.X;
 				TexY := P1.Tex.Y;
 				TexM := 0;
-			end;
+			end;}
 			P := XYToAddr(P1.Pos.X, P1.Pos.Y);
 			LinePix(P1.Pos.X);
 			Exit;
 		end;
 
-		if Drawable.EnableTexturing = sglTrue then
-		begin
-			DTX := ((P2.Tex.X - P1.Tex.X) {* PreM}) div D;
-			DTY := ((P2.Tex.Y - P1.Tex.Y) {* PreM}) div D;
-			TX := P1.Tex.X{ shl Pre};
-			TY := P1.Tex.Y{ shl Pre};
-			TexX := TX;
-			TexY := TY;
-			TexM := 0;
-			if Drawable.Filter >= SGL_TEXTURE_FILTER_MIPMAP then
-			begin
-				while TexM < Length(ATexture.MipMaps) - 1 do
-				begin
-					if D > Min(ATexture.MipMaps[TexM].w, ATexture.MipMaps[TexM].h) then Break;
-					Inc(TexM);
-				end;
-			end;
-		end;
-		if Drawable.ShadeModel = sglTrue then
+		if Drawable.ShadeModel = True then
 		begin
 {			DCR := RoundDiv((Integer(P2.C.R) - Integer(P1.C.R)) * PreM, D);
 			DCG := RoundDiv((Integer(P2.C.G) - Integer(P1.C.G)) * PreM, D);
@@ -1785,7 +1826,7 @@ var
 procedure DrawCurveUsingRecursiveSubdivision4(C: TWorldPoints);
 var
 	xy: TWorldPos;
-	GX0, GY0, GX1, GY1, GX2, GY2: Double;
+	GX0, GY0, GX1, GY1, GX2, GY2: TFloat;
 	G0, G1: TGraphicPoint;
 	L, R: TWorldPoints;
 	Divi: BG;
@@ -1851,7 +1892,7 @@ end;
 procedure DrawCurveUsingRecursiveSubdivision(C: TWorldPoints);
 label LExit;
 var
-	GX0, GY0, GX1, GY1, GX2, GY2: Double;
+	GX0, GY0, GX1, GY1, GX2, GY2: TFloat;
 	G0, G1: TGraphicPoint;
 	Left, Right: TWorldPoints;
 	i, l: SG;
@@ -1966,9 +2007,9 @@ begin
 	{$endif}
 end;
 
-function CoonsFergusonT(t: Double): TWorldPoint;
+function CoonsFergusonT(t: TFloat): TWorldPoint;
 var
-	F: array[0..3] of Double;
+	F: array[0..3] of TFloat;
 	i: SG;
 begin
 	case Drawable.LastElement of
@@ -2017,11 +2058,11 @@ begin
 	Result.Pos.W := 1;
 end;
 
-procedure CoonsFerguson(from, too: Double);
+procedure CoonsFerguson(from, too: TFloat);
 var
-	mid: Double;
+	mid: TFloat;
 	P: TWorldPoint;
-	GX0, GY0, GX1, GY1, {GXM1, GYM1,} GX2, GY2: Double;
+	GX0, GY0, GX1, GY1, {GXM1, GYM1,} GX2, GY2: TFloat;
 	C0, C2: TRColor;
 	G0, G1: TGraphicPoint;
 	Divi: BG;
@@ -2078,7 +2119,6 @@ type
 		CR, CG, CB, CA: SG;
 		P: PRGBA;
 		GP: TGraphicPoint;
-		TX, TY: SG;
 		DTX, DTY: SG;
 	end;
 
@@ -2092,14 +2132,14 @@ begin
 		DY := Abs(Integer(P2.Y) - Integer(P1.Y));}
 
 		D := P2.Pos.Y - P1.Pos.Y;
-		if Drawable.EnableTexturing = sglTrue then
+		if Drawable.EnableTexturing = True then
 		begin
 			DTX := ((Integer(P2.Tex.X) - Integer(P1.Tex.X)) {* PreM}) div D;
 			DTY := ((Integer(P2.Tex.Y) - Integer(P1.Tex.Y)) {* PreM}) div D;
-			TX := P1.Tex.X{ shl Pre};
-			TY := P1.Tex.Y{ shl Pre};
+			GP.Tex.X := P1.Tex.X;
+			GP.Tex.Y := P1.Tex.Y;
 		end;
-		if Drawable.ShadeModel = sglTrue then
+		if Drawable.ShadeModel = True then
 		begin
 			if D = 0 then
 			begin
@@ -2151,14 +2191,12 @@ begin
 		if GP.Pos.Y = XYEnd then Exit;
 		Inc(GP.Pos.Y);
 		Inc(SG(P), DXY);
-		if Drawable.EnableTexturing = sglTrue then
+		if Drawable.EnableTexturing = True then
 		begin
-			Inc(TX, DTX);
-			Inc(TY, DTY);
-			GP.Tex.X := (TX{ + PreS}){ div PreM};
-			GP.Tex.Y := (TY{ + PreS}){ div PreM};
+			Inc(GP.Tex.X, DTX);
+			Inc(GP.Tex.Y, DTY);
 		end;
-		if Drawable.ShadeModel = sglTrue then
+		if Drawable.ShadeModel = True then
 		begin
 			Inc(CR, DCR);
 			Inc(CG, DCG);
@@ -2213,7 +2251,7 @@ var
 	LineStyle: SG;
 	LineOffset: SG;
 	n: SG;
-	TexX, TexY: Double;
+	TextureX, TextureY: TFloat;
 begin
 	SetLength(AIndex, Drawable.Index);
 	SetLength(AValue, Drawable.Index);
@@ -2239,12 +2277,16 @@ begin
 
 {		sglPushMatrix;
 		Drawable.ATM := Drawable.ATeM;}
-		TranT(Drawable.WP[i].Tex, TexX, TexY);
-		P1.Tex.X := Round(PreM * TexX);
-		P1.Tex.Y := Round(PreM * TexY);
-		TranT(Drawable.WP[j].Tex, TexX, TexY);
-		P2.Tex.X := Round(PreM * TexX);
-		P2.Tex.Y := Round(PreM * TexY);
+		TranT(Drawable.WP[i].Tex, TextureX, TextureY);
+		P1.Tex.X := Trunc((PreM - 1) * TextureX);
+		P1.Tex.Y := Trunc((PreM - 1) * TextureY);
+		TranT(Drawable.WP[j].Tex, TextureX, TextureY);
+		P2.Tex.X := Trunc((PreM - 1) * TextureX);
+		P2.Tex.Y := Trunc((PreM - 1) * TextureY);
+
+{		if (P1.Tex.X = 0) and (P2.Tex.X = 0) then
+			IE(545);}
+
 //		sglPopMatrix;
 
 
@@ -2261,7 +2303,7 @@ begin
 		CreateLine(Lines[LineCount], P1, P2);
 		Inc(LineCount);
 	end;
-//	if MinY < Drawable.MinBX then MinY := Drawable.MinBY;
+//	if MinY < Drawable.MinBX then MinY := Drawable.MinBY; D??? Polygon clipping!
 
 	for y := MinY to MaxY do
 	begin
@@ -2271,8 +2313,9 @@ begin
 			if Lines[i].Status = stIn then
 			begin
 				NextY(Lines[i]);
-				if Lines[i].GP.Pos.Y = Lines[i].XYEnd then
+				if {(y <> MaxY) and} (Lines[i].GP.Pos.Y = Lines[i].XYEnd) then
 					Lines[i].Status := stUp;
+//				else
 			end
 			else if Lines[i].Status = stDown then
 			begin
@@ -2355,30 +2398,38 @@ begin
 					Inc(fxCount);
 				end;
 			end;
+{			if fxCount <> 2 then
+				IE(53534); D???}
 			if fxCount > 0 then
+			begin
 				SortS4(False, False, PArraySG(@AIndex[0]), PArrayS4(@AValue[0]), fxCount);
 
-			// Draw
-			fx := 0;
-			while fx < fxCount - 1 do
-			begin
-				i := AIndex[fx];
-				j := AIndex[fx + 1];
+				// Draw
+				fx := 0;
+				while fx < fxCount - 1 do
+				begin
+					i := AIndex[fx];
+					j := AIndex[fx + 1];
 
-				if EnLin = False then
-				begin
-					Lines[i].GP.C.L := Drawable.HatchingColor;
-					Lines[j].GP.C.L := Drawable.HatchingColor;
-{				end
-				else
-				begin
-					if Drawable.EnableTexturing = sglTrue then
+					if EnLin = False then
 					begin
-					end;}
+						Lines[i].GP.C.L := Drawable.HatchingColor;
+						Lines[j].GP.C.L := Drawable.HatchingColor;
+	{				end
+					else
+					begin
+						if Drawable.EnableTexturing = True then
+						begin
+						end;}
+					end;
+{						if Lines[j].GP.Tex.X = Lines[i].GP.Tex.X then
+							IE(554);}
+					Lin(Lines[i].GP, Lines[j].GP, 1, LineStyle, LineOffset);
+					Inc(fx, 2{2});
 				end;
-				Lin(Lines[i].GP, Lines[j].GP, 1, LineStyle, LineOffset);
-				Inc(fx, 2);
 			end;
+{			else
+				IE(424);}
 		end;
 
 	end;
@@ -2431,7 +2482,7 @@ begin
 					Inc(Drawable.Offset, 2);
 			end;
 			if Drawable.Index >= 4 then
-			if (Drawable.LastElement = sglCoonsSpline) and (sglFinishCoons = sglTrue) then
+			if (Drawable.LastElement = sglCoonsSpline) and (sglFinishCoons = True) then
 			begin
 				Drawable.Offset := 0;
 				T3 := Drawable.WP[3];
@@ -2465,11 +2516,11 @@ begin
 	end;
 end;
 
-procedure sglArc2(x, y, radiusX, radiusY, from, too: Double);
+procedure sglArc2(x, y, radiusX, radiusY, from, too: TFloat);
 var
 	xy: TWorldPos;
-	mid: Double;
-	GX0, GY0, GX1, GY1, GX2, GY2: Double;
+	mid: TFloat;
+	GX0, GY0, GX1, GY1, GX2, GY2: TFloat;
 	GX, GY: SG;
 	G0, G1: TGraphicPoint;
 	Divi: BG;
@@ -2711,19 +2762,19 @@ begin
 {				else
 					Ferguson(0, 1);}
 				Drawable.Index := 0;
-				SetLength(Drawable.WP, 0);
+//				SetLength(Drawable.WP, 0);
 			end;
 		end;
 		end;
 	end;
 end;
 
-procedure sglVertex(x, y: Double); overload;
+procedure sglVertex(x, y: TFloat); overload;
 begin
 	sglVertex(x, y, 1);
 end;
 
-procedure sglVertex(x, y, w: Double); overload;
+procedure sglVertex(x, y, w: TFloat); overload;
 var WP: TWorldPos;
 begin
 	WP.X := x;
@@ -2736,7 +2787,7 @@ end;
 (* VSTUP:                        *)
 (*   * x, y   - stred kruznice   *)
 (*   * radius - polomer          *)
-procedure sglCircle(x, y, radius: Double);
+procedure sglCircle(x, y, radius: TFloat);
 begin
 	if Check then
 		sglArc2(x, y, radius, radius, 0, 360);
@@ -2747,7 +2798,7 @@ end;
 (* VSTUP:                                  *)
 (*   * x, y - stred kruznice               *)
 (*   * a, b - delka hlavni a vedlejsi osy  *)
-procedure sglEllipse(x, y, a, b: Double);
+procedure sglEllipse(x, y, a, b: TFloat);
 begin
 	if Check then
 		sglArc2(x, y, a, b, 0, 360);
@@ -2759,7 +2810,7 @@ end;
 (*   * x, y     - stred kruznice                                              *)
 (*   * radius   - polomer                                                     *)
 (*   * from, to - pocatecni a koncovy uhel vysece (uhly jsou mereny od osy x) *)
-procedure sglArc(x, y, radius, from, too: Double);
+procedure sglArc(x, y, radius, from, too: TFloat);
 begin
 	if Check then
 		sglArc2(x, y, radius, radius, from, too);
@@ -2785,10 +2836,13 @@ end;
 
 (* Ulozeni aktualni transformacni matice na zasobnik. *)
 procedure sglPushMatrix();
+var NewSize: SG;
 begin
 	if Check then
 	begin
-		SetLength(Drawable.Stack, Drawable.StackCount + 1);
+		NewSize := Drawable.StackCount + 1;
+		if AllocByExp(Length(Drawable.Stack), NewSize) then
+			SetLength(Drawable.Stack, NewSize);
 		case Drawable.MatrixMode of
 		sglModelMatrix: Drawable.Stack[Drawable.StackCount] := Drawable.ATM;
 		else Drawable.Stack[Drawable.StackCount] := Drawable.ATeM;
@@ -2800,6 +2854,7 @@ end;
 
 (* Vyzvednuti aktualni transformacni matice ze zasobniku. *)
 procedure sglPopMatrix();
+var NewSize: SG;
 begin
 	if Check then
 	begin
@@ -2813,7 +2868,9 @@ begin
 			sglModelMatrix: Drawable.ATM := Drawable.Stack[Drawable.StackCount - 1];
 			else Drawable.ATeM := Drawable.Stack[Drawable.StackCount - 1];
 			end;
-			SetLength(Drawable.Stack, Drawable.StackCount - 1);
+			NewSize := Drawable.StackCount - 1;
+			if AllocByExp(Length(Drawable.Stack), NewSize) then
+				SetLength(Drawable.Stack, NewSize);
 			Dec(Drawable.StackCount);
 
 			_libStatus := sglOpOk;
@@ -2836,7 +2893,7 @@ end;
 
 (* Nahrazeni aktualni matice matici na kterou ukazuje ukazatel matrix. *)
 (* Matice matrix je uzena v poli po sloupcich.                         *)
-procedure sglLoadMatrix(matrix: PDouble);
+procedure sglLoadMatrix(matrix: PFloat);
 begin
 	case Drawable.MatrixMode of
 	sglModelMatrix: Drawable.ATM := PMatrix(matrix)^;
@@ -2847,7 +2904,7 @@ end;
 
 type
 	PMatrix2 = ^TMatrix2;
-	TMatrix2 = array[0..8] of Double;
+	TMatrix2 = array[0..8] of TFloat;
 
 procedure MulMatrix(m0, m1, mrr: PMatrix2);
 var
@@ -2869,7 +2926,7 @@ end;
 
 (* Vynasobeni aktualni modelovaci matice matici matrix. Matice matrix    *)
 (* je prinasobena zleva nebo zprava v zavislosti na parametru fromRight. *)
-procedure sglMultMatrix(matrix: PDouble; fromRight: sglEBool (* = sglTrue *));
+procedure sglMultMatrix(matrix: PFloat; fromRight: BG);
 var P1, P2: PMatrix2;
 begin
 	case Drawable.MatrixMode of
@@ -2878,7 +2935,7 @@ begin
 	end;
 	P2 := PMatrix2(matrix);
 
-	if fromRight = sglFalse then
+	if fromRight = False then
 	begin
 		// matrix * Drawable.ATM
 		MulMatrix(P2, P1, P1);
@@ -2892,7 +2949,7 @@ begin
 end;
 
 (* Posunuti o vektor [x, y]. *)
-procedure sglTranslate(x, y: Double);
+procedure sglTranslate(x, y: TFloat);
 var M: TMatrix;
 begin
 	if Check then
@@ -2906,7 +2963,7 @@ begin
 		M[2, 2] := 1;
 		M[2, 0] := 0;
 		M[2, 1] := 0;
-		sglMultMatrix(@M[0, 0], sglFalse);
+		sglMultMatrix(@M[0, 0], False);
 
 	{	Drawable.ATM[0, 2] := Drawable.ATM[0, 2] + x;
 		Drawable.ATM[1, 2] := Drawable.ATM[1, 2] + y;}
@@ -2915,7 +2972,7 @@ begin
 end;
 
 (* Zmena meritka v obou osach v zavislosti na parametrech scaleX a scaleY. *)
-procedure sglScale(scaleX, scaleY: Double);
+procedure sglScale(scaleX, scaleY: TFloat);
 var M: TMatrix;
 begin
 	if Check then
@@ -2929,7 +2986,7 @@ begin
 		M[2, 2] := 1;
 		M[2, 0] := 0;
 		M[2, 1] := 0;
-		sglMultMatrix(@M[0, 0], sglFalse);
+		sglMultMatrix(@M[0, 0], False);
 
 	{	Drawable.ATM[0, 0] := Drawable.ATM[0, 0] * scaleX;
 		Drawable.ATM[1, 1] := Drawable.ATM[1, 1] * scaleY;}
@@ -2939,14 +2996,14 @@ begin
 end;
 
 (* Otoceni okolo bodu [centerX, centerY] o uhel angle (ve stupnich). *)
-procedure sglRotate(angle, centerX, centerY: Double);
-var M: TMatrix;
+procedure sglRotate(angle, centerX, centerY: TFloat);
 var
-	angleR: Double;
+	M: TMatrix;
+	angleR: TFloat;
 begin
 	if Check then
 	begin
-		sglTranslate(-centerX, -centerY);
+		sglTranslate(centerX, centerY);
 		angleR := DegToRad(angle);
 
 		M[0, 0] := Cos(angleR);
@@ -2958,7 +3015,7 @@ begin
 		M[2, 2] := 1;
 		M[2, 0] := 0;
 		M[2, 1] := 0;
-		sglMultMatrix(@M[0, 0], sglFalse);
+		sglMultMatrix(@M[0, 0], False);
 	{	M := Drawable.ATM;
 		Drawable.ATM[0, 0] :=
 			M[0, 0] * Cos(angleR) +
@@ -2987,7 +3044,7 @@ begin
 		Drawable.ATM[1, 0] := Drawable.ATM[1, 0] * Sin(DegToRad(angle));
 		Drawable.ATM[0, 1] := Drawable.ATM[0, 1] * -Sin(DegToRad(angle));}
 
-		sglTranslate(centerX, centerY);
+		sglTranslate(-centerX, -centerY);
 		_libStatus := sglOpOk;
 	end;
 end;
@@ -3017,7 +3074,7 @@ end;
 (* VSTUP:                                                         *)
 (*   * minX, maxX - velikost kreslici plochy v ose X              *)
 (*   * minY, maxY - velikost kreslici plochy v ose Y              *)
-procedure sglOrtho2D(minX, maxX, minY, maxY: Double);
+procedure sglOrtho2D(minX, maxX, minY, maxY: TFloat);
 begin
 	if Check then
 	begin
@@ -3086,20 +3143,20 @@ begin
 		Drawable.AreaMode := mode;
 end;
 
-procedure sglShadeModel(smooth: sglEBool (* = sglTrue*));
+procedure sglShadeModel(smooth: BG);
 begin
 	if Check then
 		Drawable.ShadeModel := smooth;
 end;
 
-procedure sglEnableClipping(clipping: sglEBool);
+procedure sglEnableClipping(clipping: BG);
 begin
 	if Check then
 	begin
 		if Drawable.EnableClipping <> clipping then
 		begin
 			Drawable.EnableClipping := clipping;
-			if clipping = sglTrue then
+			if clipping = True then
 			begin
 				Drawable.MinB := Drawable.MinC;
 				Drawable.MaxB := Drawable.MaxC;
@@ -3123,7 +3180,7 @@ begin
 		Drawable.MinC.Y := Range(0, sY, Drawable._height - 1);
 		Drawable.MaxC.X := Range(0, sX + w - 1, Drawable._width - 1);
 		Drawable.MaxC.Y := Range(0, sY + h - 1, Drawable._height - 1);
-		if Drawable.EnableClipping = sglTrue then
+		if Drawable.EnableClipping = True then
 		begin
 			Drawable.MinB := Drawable.MinC;
 			Drawable.MaxB := Drawable.MaxC;
@@ -3177,7 +3234,7 @@ begin
 	end;
 end;
 
-procedure sglEnableBlending(blend: sglEBool);
+procedure sglEnableBlending(blend: BG);
 begin
 	if Check then
 		Drawable.EnableBlending := blend;
@@ -3192,13 +3249,13 @@ begin
 			AddError(sglOpBadParameters);
 end;
 
-procedure sglPointSize(size: Double);
+procedure sglPointSize(size: TFloat);
 begin
 	if Check then
 		Drawable.PointSize := size;
 end;
 
-procedure sglLineWidth(width: Double);
+procedure sglLineWidth(width: TFloat);
 begin
 	if Check then
 		Drawable.LineWidth := width;
@@ -3216,74 +3273,101 @@ begin
 		Drawable.LineJoinStyle := Typ;
 end;
 
-procedure sglEnableTexturing(texturing: sglEBool);
+procedure sglEnableTexturing(texturing: BG);
 begin
 	if Check then
 		Drawable.EnableTexturing := texturing;
 end;
 
-function sglCreateTexture(): SG;
-var i: SG;
+
+(* Zruseni kreslici plochy s identifikatorem id + zruseni dalsich pomocnych pameti *)
+(* VSTUP:                                                                          *)
+(*   * id - identifikator rusene plochy                                            *)
+procedure sglDestroyDrawable(id: SG);
 begin
-	i := 0;
-	while True do
+	if (id < 0) or (id >= DrawableCount) then
 	begin
-		if i >= Length(Textures) then
-		begin
-			SetLength(Textures, i + 1);
-			FillChar(Textures[i], SizeOf(Textures[i]), 0);
-			Break;
-		end;
-
-{		if Textures[i].Data = nil then
-		begin
-//			Drawable.Textures[i].Data : ToDo
-			Break;
-		end;}
-		Inc(i);
+		AddError(sglOpInvalidDrawable);
+		Exit;
 	end;
+	if id = _currentDrawable then
+	begin
+		Move(Drawable, Drawables[id], SizeOf(Drawable));
+		FillChar(Drawable, SizeOf(Drawable), 0);
+		_currentDrawable := -1;
+	end;
+	if Drawables[id].Ext then
+		Drawables[id]._frameBuffer := nil
+	else
+		FreeMem(Drawables[id]._frameBuffer);
+	Drawables[id]._width := 0;
+	Drawables[id]._height := 0;
+	FreeMem(Drawables[id]._depthBuffer);
+	SetLength(Drawables[id].Stack, 0);
 
-	Result := i;
+
+	FillChar(Drawables[id], SizeOf(Drawables[id]), 0);
 	_libStatus := sglOpOk;
 end;
 
 procedure sglDeleteTexture(id: SG);
 var i: SG;
 begin
-	if (id < 0) or (id >= Length(Textures)) then
+	if (id < 0) or (id >= TextureCount) then
 	begin
-		AddError(sglOpBadParameters);
+		AddError(sglOpInvalidTexture);
 		Exit;
+	end;
+	if id = _currentTexture then
+	begin
+		Move(ATexture, Textures[id], SizeOf(ATexture));
+		FillChar(ATexture, SizeOf(ATexture), 0);
+		_currentTexture := -1;
 	end;
 	for i := 0 to Length(Textures[id].MipMaps) - 1 do
 		FreeMem(Textures[id].MipMaps[i].Datas);
 
 	FillChar(Textures[id], SizeOf(Textures[id]), 0);
-	if id = _currentTexture then
-	begin
-		sglBindTexture(-1);
-	end;
+	_libStatus := sglOpOk;
+end;
 
+(* Nastaveni kreslici plochy do ktere se bude kreslit.         *)
+(* VSTUP:                                                      *)
+(*   * id - identifikator nove aktualni kreslici plochy        *)
+procedure sglSetDrawable(id: SG);
+begin
+	if id <> -1 then
+	if (id < 0) or (id >= DrawableCount) or (Drawables[id]._frameBuffer = nil) then
+	begin
+		AddError(sglOpInvalidDrawable);
+		Exit;
+	end;
+	if _currentDrawable >= 0 then
+		Move(Drawable, Drawables[_currentDrawable], SizeOf(Drawable));
+	_currentDrawable := id;
+	if _currentDrawable >= 0 then
+		Move(Drawables[_currentDrawable], Drawable, SizeOf(Drawable))
+	else
+		FillChar(Drawable, SizeOf(Drawable), 0);
 	_libStatus := sglOpOk;
 end;
 
 procedure sglBindTexture(id: SG);
 begin
-	if Check then
+	if (id <> -1) then
+	if (id < 0) or (id >= TextureCount) or (Textures[id].Enabled = False) then
 	begin
-		if (id < -1) or (id >= Length(Textures)) then
-		begin
-			AddError(sglOpBadParameters);
-			Exit;
-		end;
-		_currentTexture := id;
-		if id = -1 then
-			FillChar(ATexture, SizeOf(ATexture), 0)
-		else
-			ATexture := Textures[id];
-		_libStatus := sglOpOk;
-
+		AddError(sglOpInvalidTexture);
+		Exit;
 	end;
+	if _currentTexture >= 0 then
+		Textures[_currentTexture] := ATexture;
+	_currentTexture := id;
+	if id >= 0 then
+		ATexture := Textures[id]
+	else
+		FillChar(ATexture, SizeOf(ATexture), 0);
+	_libStatus := sglOpOk;
 end;
 
 procedure sglLoadTexture(filename: string);
@@ -3292,17 +3376,12 @@ var
 	Size: UG;
 	i: SG;
 begin
-	if Check then
+	if CheckTexture then
 	begin
-		if (_currentTexture < 0) or (_currentTexture >= Length(Textures)) then
-		begin
-			AddError(sglOpBadParameters);
-			Exit;
-		end;
-
 		Bmp := TDBitmap.Create;
 		Bmp.LoadFromFile(filename);
-		Bmp.GLSetSize;
+//		Bmp.GLSetSize;
+//		Bmp.SwapRB;
 		i := 0;
 		while (i < Length(ATexture.MipMaps)) and (Bmp.Width > 0) and (Bmp.Height > 0) do
 		begin
@@ -3312,16 +3391,17 @@ begin
 			Size := Bmp.ByteX * Bmp.Height;
 			GetMem(ATexture.MipMaps[i].Datas, Size);
 			Move(Bmp.GLData^, ATexture.MipMaps[i].Datas^, Size);
-			Bmp.Resize(Bmp, Bmp.Width div 2, Bmp.Height div 2, nil);
+			Bmp.Resize(Bmp.Width div 2, Bmp.Height div 2);
 
 			Inc(i);
+			Inc(ATexture.MipCount);
 		end;
 		Bmp.Free;
 		_libStatus := sglOpOk;
 	end;
 end;
 
-procedure sglTexCoord(s, t, q: Double);
+procedure sglTexCoord(s, t: TFloat; q: TFloat = 1);
 begin
 	if Check then
 	begin
@@ -3333,14 +3413,14 @@ end;
 
 procedure sglTexFilter(filter: SG);
 begin
-	if Check then
-		Drawable.Filter := filter;
+	if CheckTexture then
+		ATexture.Filter := filter;
 end;
 
 procedure sglTexMode(mode: SG);
 begin
-	if Check then
-		Drawable.TexMode := mode;
+	if CheckTexture then
+		ATexture.TexMode := mode;
 end;
 
 procedure sglSaveImage(FileName: string);

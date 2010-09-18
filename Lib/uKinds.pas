@@ -19,13 +19,14 @@ type
 		FileName: TFileName; // 4
 		MenuItem: TMenuItem; // 4
 		PData: Pointer; // 4
-		Created, Modified: TDateTime; // 8
-		ModificationTime: U4; // 4
 		SaveCount: U4; // 4
+		Created, Modified: TDateTime; // 2*8 = 16
 		WorkTime: U8; // 8
+		ModificationTime: U4; // 4
 		New: U2; // 2
-		Changed: B2; // 2
-		Reserved: array[0..5] of U4; // 24
+		Changed: B1; // 1
+		ReadOnly: B1; // 1
+		Reserved: array[0..3] of U4; // 16
 	end;
 
 	TKinds = class(TObject)
@@ -118,9 +119,9 @@ type
 		procedure Unchange;
 
 		// For Reopen and ParamStr
-		function KindLoadFromFile(FileName: TFileName): BG;
+		function KindLoadFromFile(FileName: TFileName; ReadOnly: BG = False): BG;
 
-		function KindOpenFiles(Files: TStrings): BG; // Drag files to form
+		function KindOpenFiles(Files: TStrings; ReadOnly: BG = False): BG; // Drag files to form
 		function CanClose: BG; // CanClose := Kinds.CanClose;
 
 		{$ifopt d+}procedure OpenAll;{$endif}
@@ -386,6 +387,7 @@ begin
 	S := '&' + NToS(i + 1) + ' ' + ShortDir(ExtractFileName(Items[i].FileName));
 	if Items[i].Changed then S := S + ' *' + '(' + MsToStr(GetTickCount - Items[i].ModificationTime, diMSD, 0, False) + ')';
 	if Items[i].New <> 0 then S := S + ' (New)';
+	if Items[i].ReadOnly then S := S + ' (ReadOnly)';
 	Items[i].MenuItem.Caption := S;
 	Items[i].MenuItem.Tag := i;
 end;
@@ -505,7 +507,7 @@ begin
 	end;
 end;
 
-function TKinds.KindLoadFromFile(FileName: TFileName): BG;
+function TKinds.KindLoadFromFile(FileName: TFileName; ReadOnly: BG): BG;
 var LastIndex: SG;
 begin
 	Result := False;
@@ -526,6 +528,7 @@ begin
 //			Index := Count - 1;
 			Items[Index].New := 0;
 			Items[Index].Changed := False;
+			Items[Index].ReadOnly := ReadOnly;
 			CreateMenuItem(Index);
 			if Assigned(Items[Index].MenuItem) then
 				Items[Index].MenuItem.Checked := True;
@@ -535,14 +538,14 @@ begin
 	end;
 end;
 
-function TKinds.KindOpenFiles(Files: TStrings): BG;
+function TKinds.KindOpenFiles(Files: TStrings; ReadOnly: BG = False): BG;
 var
 	i: SG;
 begin
 	Result := False;
 	for i := 0 to Files.Count - 1 do
 	begin
-		if KindLoadFromFile(Files.Strings[i]) then
+		if KindLoadFromFile(Files.Strings[i], ReadOnly) then
 		begin
 			Result := True;
 		end;
@@ -755,7 +758,7 @@ begin
 	KindInit;
 end;
 
-function TKinds.CanClose:	BG;
+function TKinds.CanClose: BG;
 var i: SG;
 begin
 	Result := False;
@@ -835,7 +838,7 @@ begin
 		Application.MainForm.Caption := Application.Title
 	else
 		Application.MainForm.Caption := GetCaption(Items[Index].FileName, Items[Index].Changed,
-			Items[Index].New, Index, Count);
+			Items[Index].New, Items[Index].ReadOnly, Index, Count);
 
 	KindEnabled;
 	if Assigned(Window1) then
@@ -901,17 +904,17 @@ begin
 	begin
 		if Count <= 0 then
 		begin
-			OpenPictureDialog1.FileName := '';
 			OpenPictureDialog1.InitialDir := '';
+			OpenPictureDialog1.FileName := '';
 		end
 		else
 		begin
-			OpenPictureDialog1.FileName := Items[Index].FileName;
 			OpenPictureDialog1.InitialDir := ExtractFilePath(Items[Index].FileName);
+			OpenPictureDialog1.FileName := ExtractFileName(Items[Index].FileName);
 		end;
 		if OpenPictureDialog1.Execute then
 		begin
-			KindOpenFiles(OpenPictureDialog1.Files);
+			KindOpenFiles(OpenPictureDialog1.Files, ofReadOnly in OpenPictureDialog1.Options);
 		end;
 	end;
 end;
@@ -931,7 +934,7 @@ end;
 
 procedure TKinds.Save1Click(Sender: TObject);
 begin
-	if KindSave(Index, False, False) then KindInit;
+	if KindSave(Index, Items[Index].ReadOnly, False) then KindInit;
 end;
 
 procedure TKinds.SaveAs1Click(Sender: TObject);
@@ -1017,4 +1020,9 @@ begin
 end;
 {$endif}
 
+
+{$ifopt d+}
+initialization
+	CheckSize(SizeOf(TItem));
+{$endif}
 end.

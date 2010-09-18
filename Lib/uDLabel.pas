@@ -506,8 +506,8 @@ begin
 			Co[0] := LighterColor(ColorToRGB(Color));
 			Co[1] := DarkerColor(ColorToRGB(Color));
 			Co[2] := Co[0];
-			Co[3] := Co[1];
-			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			Co[3] := Co[1]; 
+			FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, SG(Recta.Bottom) - 1,
 				gfFade2x, Co, ScreenCorrectColor, FBackEffect, 0, nil);
 //			FBmpOut.FormBitmap(Color);
 {			FBmpOut.Canvas.Brush.Color := Color;

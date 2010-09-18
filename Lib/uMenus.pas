@@ -94,7 +94,7 @@ begin
 		Bitmap.Height := 0;
 		Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
 		Bitmap.Height := 16;
-		Bmp.Resize(Bmp, Bitmap.Width, Bitmap.Height, nil);
+		Bmp.Resize(Bitmap.Width, Bitmap.Height);
 {			MenuItem.Bitmap.Transparent := Bmp.Transparent;
 		MenuItem.Bitmap.TransparentColor := Bmp.TransparentColor;
 		Bmp.Transparent := False;}
@@ -300,7 +300,7 @@ begin
 			Co[1] := ColorDiv(clMenu, 7 * 65536 div 8);
 			Co[2] := Co[0];
 			Co[3] := Co[1];
-			MenuBmp.GenerateRGB(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+			MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 				gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
 		end
 		else
@@ -319,7 +319,7 @@ begin
 				Co[2] := ColorDiv(clMenu, 4 * 65536 div 4);
 				Co[3] := Co[2];
 			end;
-			MenuBmp.GenerateRGB(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+			MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 		end;
 
@@ -368,7 +368,7 @@ begin
 				end
 				else
 				begin
-					MenuBmp.GenerateRGB(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
+					MenuBmp.GenerateRGBEx(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
 						gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 				end;
 				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
@@ -390,7 +390,7 @@ begin
 						clHighLight, ef16);
 				end
 				else
-					MenuBmp.GenerateRGB(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
+					MenuBmp.GenerateRGBEx(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 						gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
 			end;
 		end

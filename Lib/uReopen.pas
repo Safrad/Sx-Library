@@ -40,7 +40,7 @@ type
 		MultiFiles: Boolean;
 		Reopen1: TMenuItem;
 
-		LoadFromFile: function(FileName: TFileName): Boolean of object;
+		LoadFromFile: function(FileName: TFileName; ReadOnly: BG = False): Boolean of object;
 		ChangeFile: TNotifyEvent;
 
 		OpenedFiles: Integer; // Suma ReopenItems[n].OpenedCount

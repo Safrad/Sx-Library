@@ -13,26 +13,26 @@ interface
 uses
 	uAdd,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	StdCtrls, ComCtrls, Spin, uDButton, ExtCtrls, uDLabel, uDForm;
+	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm;
 
 type
 	TOnApplyInt = procedure(Value: S8);
 
 	TfGetInt = class(TDForm)
-		EditInput: TEdit;
+		EditInput: TLabeledEdit;
 		ButtonOk: TDButton;
 		ButtonCancel: TDButton;
 		TrackBar: TTrackBar;
 		ButtonMin: TDButton;
 		ButtonCur: TDButton;
 		ButtonMax: TDButton;
-		SpinButton1: TSpinButton;
 		LabelMin: TDLabel;
 		LabelMax: TDLabel;
 		LabelNow: TDLabel;
 		ButtonDef: TDButton;
 		ButtonApply: TDButton;
     EditError: TMemo;
+    UpDown: TUpDown;
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
 		procedure ButtonCurClick(Sender: TObject);
@@ -44,6 +44,8 @@ type
 		procedure ButtonCancelClick(Sender: TObject);
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
+    procedure UpDownChangingEx(Sender: TObject; var AllowChange: Boolean;
+      NewValue: Smallint; Direction: TUpDownDirection);
 	private
 		{ Private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: Integer;
@@ -290,6 +292,30 @@ end;
 procedure TfGetInt.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
+end;
+
+procedure TfGetInt.UpDownChangingEx(Sender: TObject;
+	var AllowChange: Boolean; NewValue: Smallint;
+	Direction: TUpDownDirection);
+begin
+	AllowChange := True; //(NewValue >= TMinVal) and (NewValue <= TMaxVal);
+	//	if NowVal > TMinVal then Dec(NowVal) else Exit;
+
+	if AllowChange then
+	begin
+		if Direction = updUp then
+		begin
+			if NowVal < TMaxVal then Inc(NowVal) else Exit;
+		end
+		else
+		begin
+			if NowVal > TMinVal then Dec(NowVal) else Exit;
+		end;
+		InitTrackBar;
+		InitEdit;
+		InitButtons;
+		ChangeInt;
+	end;
 end;
 
 end.

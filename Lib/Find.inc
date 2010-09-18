@@ -12,9 +12,8 @@ begin
 	if L > R then
 	begin
 		ToV := L;
-		Result := False;
-		Exit;
-	end;
+	end
+	else
 	while True do
 	begin
 //    M := (L + R) div 2;

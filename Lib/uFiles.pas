@@ -146,6 +146,7 @@ function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 function CopyFile(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CopyFileToDir(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
 function CopyDamagedFile(Source, Dest: TFileName): Boolean;
+function DirectoryExists(const Directory: string): Boolean;
 function CreateDir(const Dir: string): Boolean;
 function NewFileOrDir(var FileOrDir: string): Boolean;
 function CopyDir(const Source, Dest: string): Boolean;
@@ -1050,6 +1051,14 @@ begin
 	FreeMem(Buf, Count);
 end;
 
+function DirectoryExists(const Directory: string): Boolean;
+var
+	Code: Integer;
+begin
+	Code := GetFileAttributes(PChar(Directory));
+	Result := (Code <> -1) and (FILE_ATTRIBUTE_DIRECTORY and Code <> 0);
+end;
+
 function CreateDir(const Dir: string): Boolean;
 begin
 	if DirectoryExists(Dir) then
@@ -1242,11 +1251,6 @@ begin
 	F.Free;
 end;
 
-function ReadStringFromFile(FileName: TFileName): string; overload;
-begin
-	ReadStringFromFile(FileName, Result);
-end;
-
 function ReadStringFromFile(var FileName: TFileName; out Line: string): BG; overload;
 label LRetry;
 var
@@ -1264,6 +1268,11 @@ begin
 		Result := True;
 	end;
 	F.Free;
+end;
+
+function ReadStringFromFile(FileName: TFileName): string; overload;
+begin
+	ReadStringFromFile(FileName, Result);
 end;
 
 function WriteStringToFile(var FileName: TFileName; const Line: string; Append: BG): BG;

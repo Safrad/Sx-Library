@@ -81,7 +81,7 @@ type
 	end;
 
 const
-	MyEMail = 'safrad@email.cz';
+	MyEMail = 'safrad@centrum.cz';
 	MyWeb = 'http://safrad.webzdarma.cz';
 
 	paExit = -1;
@@ -400,11 +400,11 @@ begin
 		BmpAbout.LoadFromFile(AboutFile);
 		if (BmpAbout.Width < ImageAbout.Width div 2) or (BmpAbout.Height < ImageAbout.Height div 2) then
 		begin
-			BmpAbout.Resize(BmpAbout, BmpAbout.Width * 2, BmpAbout.Height * 2, nil);
+			BmpAbout.Resize(BmpAbout.Width * 2, BmpAbout.Height * 2);
 		end
 		else if (BmpAbout.Width > ImageAbout.Width) or (BmpAbout.Height > ImageAbout.Height) then
 		begin
-			BmpAbout.Resize(BmpAbout, BmpAbout.Width div 2, BmpAbout.Height div 2, nil);
+			BmpAbout.Resize(BmpAbout.Width div 2, BmpAbout.Height div 2);
 		end;
 		if BmpAbout.Empty then GenBmp;
 	end;
@@ -559,7 +559,7 @@ begin
 	BitmapName := ImageName.Bitmap;
 //	BitmapName.GenRGB(clNone, gfSpecHorz, (16 * Timer1.Clock div PerformanceFrequency), ef16);
 
-	BitmapName.GenerateRGB(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, TGenFunc(Typ), Co, 0, ef16,
+	BitmapName.GenerateRGBEx(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, TGenFunc(Typ), Co, 0, ef16,
 		(16 * Timer1.Clock div PerformanceFrequency), nil);
 
 	BitmapName.Bar(clBtnFace, ef12);
@@ -593,7 +593,7 @@ begin
 		ProgramVersion);
 //	BitmapVersion.GenRGB(clBtnFace, gfSpecHorz, (32 * Timer1.Clock div PerformanceFrequency), ef16);
 
-	BitmapVersion.GenerateRGB(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, TGenFunc(Typ), Co, 0, ef08,
+	BitmapVersion.GenerateRGBEx(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, TGenFunc(Typ), Co, 0, ef08,
 		(32 * Timer1.Clock div PerformanceFrequency), nil);
 
 	BitmapVersion.Border(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);

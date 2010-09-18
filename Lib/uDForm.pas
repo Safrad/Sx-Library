@@ -112,6 +112,7 @@ procedure ReleaseDesktop;
 implementation
 
 uses
+	Math,
 	uGraph, uFiles, OpenGL12, uScreen, uSysInfo;
 const
 	OneBuffer = False;
@@ -462,6 +463,28 @@ begin
 	end;
 end;
 
+// Delphi <=5
+type
+	TFPUException = (exInvalidOp, exDenormalized, exZeroDivide,
+									 exOverflow, exUnderflow, exPrecision);
+	TFPUExceptionMask = set of TFPUException;
+
+function Get8087CW: Word;
+asm
+        PUSH    0
+        FNSTCW  [ESP].Word
+        POP     EAX
+end;
+
+function SetExceptionMask(const Mask: TFPUExceptionMask): TFPUExceptionMask;
+var
+  CtlWord: Word;
+begin
+  CtlWord := Get8087CW;
+  Set8087CW( (CtlWord and $FFC0) or Byte(Mask) );
+  Byte(Result) := CtlWord and $3F;
+end;
+
 procedure TDForm.SetBackground(Value: TBackground);
 var
 	FileName: TFileName;
@@ -471,10 +494,10 @@ begin
 		case FBackground of
 		baOpenGL, baOpenGLBitmap:
 		begin
-//			FreeOpenGL;
+//			FreeOpenGL; Math
 			glDeleteLists(FontBase, 256);
 			DestroyRenderingContext(RC); RC := 0;
-			Set8087CW(Default8087CW);
+			SetExceptionMask([exDenormalized, exUnderflow..exPrecision]);
 		end;
 		end;
 
@@ -518,7 +541,7 @@ begin
 		case FBackground of
 		baOpenGL, baOpenGLBitmap:
 		begin
-			Set8087CW($133f);
+			SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
 			if OneBuffer then
 				RC:=CreateRenderingContext(Canvas.Handle, [], 32, 0)
 			else

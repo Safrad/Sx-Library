@@ -44,9 +44,9 @@ procedure SetCom(ComIndex: Integer);
 begin
 	ComIn := ComAddr[ComIndex] + 6;
 	ComOut := ComAddr[ComIndex] + 3;
-	GetIn;
+{	GetIn;
 	GetOut;
-	SetOut;
+	SetOut;}
 end;
 
 procedure GetIn;

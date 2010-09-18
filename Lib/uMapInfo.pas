@@ -120,7 +120,7 @@ begin
 						if Po <> 0 then
 						begin
 							NewSize := FieldMCount + 1;
-							if AllocByExp(Length(FieldsM), NewSize, SizeOf(FieldsM[0])) then
+							if AllocByExp(Length(FieldsM), NewSize) then
 								SetLength(FieldsM, NewSize);
 							FieldsM[FieldMCount].Point.X := GetNextFloat(Line, InLineIndex);
 							FieldsM[FieldMCount].Point.Y := GetNextFloat(Line, InLineIndex);

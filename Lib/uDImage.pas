@@ -21,7 +21,8 @@ type
 		zmIn, zmOut,
 		zmFullSize, zmFitImage, zmFitWidth, zmFitHeight,
 		zm12, zm1, zm2,
-		zmCustom);
+		zmCustom,
+		zmCenter, zmGrate, zmGrateColor);
 
 type
 	TMouseAction = (mwNone, mwScroll,
@@ -29,7 +30,6 @@ type
 		mwScrollV, mwScrollVD, mwScrollVU, mwScrollVD2, mwScrollVU2);
 	TDImage = class(TWinControl)
 	private
-		{ Private declarations }                  
 		FHotTrack: Boolean;
 
 		FDrawFPS: Boolean;
@@ -50,6 +50,7 @@ type
 
 		// Zoom
 		FEnableZoom: BG;
+		ZoomMenu: TMenuItem;
 		M: array[TZoomMenu] of TMenuItem;
 		BmpS, BmpSourceS: TDBitmap;
 
@@ -123,8 +124,9 @@ type
 //		procedure Paint; //override;
 		function MouseWh(const X, Y: Integer): TMouseAction;
 		procedure CreateZoom(Zoom1: TMenuItem);
+		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
+			ARect: TRect; State: TOwnerDrawState);
 	published
-		{ Published declarations }
 		property DrawFPS: Boolean read FDrawFPS write FDrawFPS;
 		property HandScroll: Boolean read FHandScroll write FHandScroll;
 		property HotTrack: Boolean read FHotTrack write SetHotTrack default False;
@@ -189,18 +191,27 @@ implementation
 
 uses
 	Math,
-	uMenus, uGraph, uSysInfo, uStrings, uGetInt;
+	uMenus, uGraph, uSysInfo, uStrings, uGetInt, uGColor;
 
 const
 //	ZoomDiv = 2520;
 	MenuNames: array[TZoomMenu] of string = (
 		'Zoom In', 'Zoom Out',
 		'Full Size', 'Fit Image', 'Fit Width', 'Fit Height', '1:2', '1:1', '2:1',
-		'Zoom To...');
+		'Zoom To...',
+		'Center', 'Grate', 'Grate Color...');
 	MenuShort: array[TZoomMenu] of Char = (
 		'I', 'U',
 		'/', #0, #0, #0, #0, 'Q', #0,
-		#0);
+		#0,
+		#0, #0, #0);
+
+
+procedure TDImage.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
+	ARect: TRect; State: TOwnerDrawState);
+begin
+	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
+end;
 
 procedure TDImage.CreateZoom(Zoom1: TMenuItem);
 var
@@ -232,20 +243,23 @@ begin
 		Inc(j);
 	end;
 	FEnableZoom := True;
+	ZoomMenu := Zoom1;
 	MenuCreate(Zoom1, PopupMenu.Items);
 	MenuUpdate(Zoom1, PopupMenu.Items);
+	MenuSet(PopupMenu, AdvancedDraw);
 end;
 
 const
 	OfsS = 20; // ms; FPS = 1000 / OfsS; 25-30FPS for VR; 50 = TV
-	{$ifopt d+}
-	ScrollEf = ef16;
-	ScrollEf2 = ef16;
-	{$else}
-	ScrollEf = ef13;
-	ScrollEf2 = ef13;
-	{$endif}
+	ScrollEf = ef14;
+	ScrollEf2 = ef12;
 
+{
+procedure OnApply(Color: TColor);
+begin
+	GrateColor := Color;
+	fMain.PaintImage;
+end; D???}
 
 procedure TDImage.ZoomClick(Sender: TObject);
 var ZoomI: SG;
@@ -277,16 +291,26 @@ begin
 		if GetInt('Zoom To (×1000)', ZoomI, 1, 1000, 1000000, nil) then
 			Zoom := ZoomI / 1000;
 	end;
+	zmCenter:
+	begin
+		Center := not Center;
+		M[zmCenter].Checked := Center;
+	end;
+	zmGrate:
+	begin
+		Grate := not Grate;
+		M[zmGrate].Checked := Grate;
+	end;
+	zmGrateColor:
+		GetColor('Grate Color', GrateColor, clWhite, nil{OnApply});
 	end;
 
 	M[zmIn].Enabled := Zoom < 16;
 	M[zmOut].Enabled := Zoom > 1 / 16;
 	M[zmFullSize].Enabled := Zoom <> 1;
+	MenuUpdate(PopupMenu.Items, ZoomMenu);
 
 	Fill;
-{	fInfo.ComboBoxZoom.Text := FToS(Zoom);
-	FreeAndNil(BmpSource2);
-	PaintImage;}
 end;
 
 procedure TDImage.WMPaint(var Message: TWMPaint);
@@ -938,7 +962,7 @@ begin
 			begin
 {				LastCursor := Screen.Cursor;
 				Screen.Cursor := crHourGlass;}
-				BmpSource2.Resize(BmpSource, SourceWidth, SourceHeight, nil);
+				BmpSource2.Resize(SourceWidth, SourceHeight, BmpSource);
 //				Screen.Cursor := LastCursor;
 			end;
 		end;
@@ -1142,7 +1166,7 @@ begin
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
-			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
+			Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
 			x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
 			for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
 			begin
@@ -1254,7 +1278,7 @@ begin
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
-			Bitmap.GenerateRGB(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
+			Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
 			y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
 			for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
 			begin
@@ -1310,11 +1334,11 @@ begin
 		{$endif}
 		begin
 		{$ifopt d+}
-		s := NToS(PaintCount);
+//		s := NToS(PaintCount);
 		{$endif}
 			if FramePerSec >= 0.1 then
 			begin
-				s := {$ifopt d+}s + ', ' +{$endif}NToS(Round(100 * FramePerSec), 2);
+				s := (*{$ifopt d+}s + ', ' +{$endif}*)NToS(Round(100 * FramePerSec), 2);
 			end;
 			FontSize := Bitmap.Canvas.Font.Size;
 			Bitmap.Canvas.Font.Size := 8;

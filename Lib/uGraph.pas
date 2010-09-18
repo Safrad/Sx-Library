@@ -12,10 +12,10 @@ interface
 uses uAdd, Windows, Graphics, ExtCtrls, StdCtrls, Classes, Controls, SysUtils;
 
 const
-{	clMoneyGreen = TColor($C0DCC0);
+	clMoneyGreen = TColor($C0DCC0);
 	clSkyBlue = TColor($F0CAA6);
 	clCream = TColor($F0FBFF);
-	clMediumGray = TColor($A4A0A0);}
+	clMedGray = TColor($A4A0A0);
 
 	MaxSpectrum2 = 762;
 	MaxFireColor = 765;

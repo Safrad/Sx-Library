@@ -13,7 +13,7 @@ interface
 uses
 	uAdd,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, ComCtrls, Spin, uDButton, uDLabel, uDForm;
+	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm;
 
 type
 	TOnApplyTime = procedure(Value: S8);
@@ -37,10 +37,10 @@ type
 		ButtonMin: TDButton;
 		ButtonCur: TDButton;
 		ButtonMax: TDButton;
-		SpinButtonH: TSpinButton;
-		SpinButtonS: TSpinButton;
-		SpinButtonM: TSpinButton;
-		SpinButtonD: TSpinButton;
+    SpinButtonH: TUpDown;
+    SpinButtonS: TUpDown;
+    SpinButtonM: TUpDown;
+    SpinButtonD: TUpDown;
 		ButtonDef: TDButton;
     ButtonApply: TDButton;
     EditError: TMemo;
@@ -49,12 +49,13 @@ type
 		procedure ButtonMinClick(Sender: TObject);
 		procedure ButtonCurClick(Sender: TObject);
 		procedure ButtonMaxClick(Sender: TObject);
-		procedure SpinButtonDownClick(Sender: TObject);
-		procedure SpinButtonUpClick(Sender: TObject);
 		procedure ButtonDefClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
     procedure ButtonOkClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
+    procedure SpinButtonHMSDChangingEx(Sender: TObject;
+      var AllowChange: Boolean; NewValue: Smallint;
+      Direction: TUpDownDirection);
 	private
 		{ Private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: S8;
@@ -314,34 +315,6 @@ begin
 	ChangeTime;
 end;
 
-procedure TfGetTime.SpinButtonDownClick(Sender: TObject);
-var L: SG;
-begin
-	L := TSpinButton(Sender).Tag;
-	if NowVal >= L then Dec(NowVal, L) else NowVal := 0;
-	if NowVal < TMinVal then
-		NowVal := TMinVal
-	else if NowVal > TMaxVal then
-		NowVal := TMaxVal;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeTime;
-end;
-
-procedure TfGetTime.SpinButtonUpClick(Sender: TObject);
-begin
-	Inc(NowVal, TSpinButton(Sender).Tag);
-	if NowVal < TMinVal then
-		NowVal := TMinVal
-	else if NowVal > TMaxVal then
-		NowVal := TMaxVal;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeTime;
-end;
-
 procedure TfGetTime.ChangeTime;
 begin
 	if Assigned(OnApply) then OnApply(NowVal);
@@ -369,5 +342,29 @@ begin
 	Background := baGradient;
 end;
 
+
+procedure TfGetTime.SpinButtonHMSDChangingEx(Sender: TObject;
+	var AllowChange: Boolean; NewValue: Smallint;
+	Direction: TUpDownDirection);
+var L: SG;
+begin
+	L := TUpDown(Sender).Tag;
+	if Direction = updUp then
+	begin
+		if NowVal + L <= TMaxVal  then Inc(NowVal, L) else NowVal := TMaxVal;
+	end
+	else
+	begin
+		if NowVal >= L + TMinVal then Dec(NowVal, L) else NowVal := 0;
+	end;
+{	if NowVal < TMinVal then
+		NowVal := TMinVal
+	else if NowVal > TMaxVal then
+		NowVal := TMaxVal;}
+	InitTrackBar;
+	InitEdit;
+	InitButtons;
+	ChangeTime;
+end;
 
 end.

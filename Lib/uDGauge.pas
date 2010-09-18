@@ -378,7 +378,7 @@ begin
 			Co[1] := DarkerColor(clBtnFace);
 			Co[2] := Co[0];
 			Co[3] := Co[1];
-			FBmpOut.GenerateRGB(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+			FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 		end;
 		end;

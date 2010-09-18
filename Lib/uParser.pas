@@ -6,6 +6,14 @@
 //* E-Mail:   safrad@email.cz
 //* Web:      http://safrad.webzdarma.cz
 
+{
+	Token = znak
+	Parser: Program kontolujici vyrazy
+	Syntakticky analyzator
+	---
+	Lexikalni analyzator (slovni zasoba)
+}
+
 unit uParser;
 
 interface
@@ -361,7 +369,7 @@ const
 		'''interface'' expected but identifier ''%1'' found',
 		'''.'' expected but ''%1''',
 		'Unexpected end of file in comment started on line %1',
-		'Statement expected but end of file',
+		'Statement expected but end of file found',
 		'Line too long, unused chars',
 		'Previous declaration of ''%1'' was not marked width then ''overload'' directive''',
 
@@ -739,8 +747,8 @@ begin
 	FreeMem(FBuffer);
 	BufString := '';
 //	if InputType <> itEOI then AddMes2(mtUnusedChars, []);
-	if BufRI > BufRC then AddMes2(mtUnusedChars, []);
-	if BufRI < BufRC then AddMes2(mtStatementExpected, []);
+	if BufRI > BufRC then AddMes2(mtStatementExpected, []);
+	if BufRI < BufRC then AddMes2(mtUnusedChars, []);
 	if Marks <> maNone then AddMes2(mtUnexpectedEndOfFile, []);
 	inherited Destroy;
 end;
