@@ -40,7 +40,8 @@ type
 		FLoggingLevel: TLogType;
 		procedure WriteLine(const Line: string; const FileBuffers: BG = False);
 	public
-		constructor Create(FileName: TFileName; const LogLevel: TLogType = DefLogType; const DirectWrite: BG= True);
+		property FileName: TFileName read FFileName;
+		constructor Create(const FileName: TFileName; const LogLevel: TLogType = DefLogType; const DirectWrite: BG= True);
 		destructor Destroy; override;
 		procedure Add(const Line: string; const LogType: TLogType = DefLogType; const FileBuffers: BG = False);
 		procedure Flush;
@@ -50,6 +51,7 @@ type
 // Add startup parameter -LogDebug for all debuging information
 	procedure MainLogAdd(const Line: string; const LogType: TLogType = DefLogType; const FileBuffers: BG = False);
 	procedure InitializeLog;
+
 var
 	MainLog: TLog;
 
@@ -57,7 +59,7 @@ implementation
 
 uses
 	uParams,
-	uFormat, uStrings, uInput,
+	uFormat, uStrings, uInput, uProjectInfo,
 	Windows, TypInfo;
 
 procedure TLog.WriteLine(const Line: string; const FileBuffers: BG = False);
@@ -84,42 +86,43 @@ end;
 const
 	IdLine = ';Local Date Time	Type	Message' + FileSep;
 
-constructor TLog.Create(FileName: TFileName; const LogLevel: TLogType = DefLogType; const DirectWrite: BG = True);
+constructor TLog.Create(const FileName: TFileName; const LogLevel: TLogType = DefLogType; const DirectWrite: BG = True);
 var
-	Found: BG;
 	NewFileName: TFileName;
 	Instance: SG;
+	Info: TInfo;
 begin
 	inherited Create;
 	FLoggingLevel := LogLevel;
 	FFileName := FileName;
 	FDirectWrite := DirectWrite;
-	Found := True;
-	if FileExists(FFileName) = False then
-	begin
-		Found := False;
-	end
-	else
-	begin
-		if GetFileSizeU(FFileName) > 4 * MB then
-		begin
-			NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName))) + ExtractFileExt(FFileName);
-			if FileExists(NewFileName) = False then
-				RenameFile(FFileName, NewFileName);
-		end;
-	end;
 
 	FFile := TFile.Create;
 	for Instance := 1 to 9 do
 	begin
-		if FFile.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then Break;
+		if FFile.Open(FFileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then Break;
 		FFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
 		if Instance = 9 then Exit;
 	end;
-	FFile.SeekEnd;
-	if Found = False then
-		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine);
-	Add('Started', ltInfo, True);
+
+	if FFile.FileSize > 4 * MB then
+	begin
+		FFile.Close;
+		NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName))) + ExtractFileExt(FFileName);
+		if FileExists(NewFileName) = False then
+		begin
+			RenameFile(FFileName, NewFileName);
+		end;
+		FFile.Open(FFileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False)
+	end;
+
+	if FFile.FileSize = 0 then
+		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine)
+	else
+		FFile.SeekEnd;
+	Info := TInfo.Create(nil);
+	Add('Started Version ' + Info.GetProjectInfo(piFileVersion), ltInfo, True);
+	Info.Free;
 end;
 
 destructor TLog.Destroy;
@@ -140,7 +143,7 @@ begin
 	Assert(LogType <> ltNone);
 	if LogType >= FLoggingLevel then
 	begin
-		WriteLine(DateTimeToS(Now, 3) + CharTab + LogTypeStr[LogType][1] + CharTab + AddEscape(Line) + FileSep, FileBuffers);
+		WriteLine(DateTimeToS(Now, 3) + CharTab + FirstChar(LogTypeStr[LogType]) + CharTab + AddEscape(Line) + FileSep, FileBuffers);
 	end;
 end;
 
@@ -197,6 +200,11 @@ begin
 		MainLog.Add(Line, LogType, FileBuffers);
 end;
 
+procedure SetLoggingLevel(const Value: string);
+begin
+	MainLog.LoggingLevel := GetLoggingLevel(Value);
+end;
+
 procedure InitializeLog;
 var
 	i: SG;
@@ -205,15 +213,6 @@ var
 	OutStr, Line, IdStr, DTStr: string;
 	LineIndex, InLineIndex: SG;
 begin
-	for i := 0 to Length(LogTypeStr) - 1 do
-	begin
-		LogTypeStr[TLogType(i)] := Copy(GetEnumName(TypeInfo(TLogType), i), 3, MaxInt);
-		s := s + LogTypeStr[TLogType(i)] + '|';
-	end;
-	DelLastChar(s);
-	AddParams(['Log'], ['Logging level: Log[' + s + ']']);
-	s := '';
-
 	CreateDirEx(ExtractFilePath(MainLogFileName));
 	OldFileName := WorkDir + AppName + '.log';
 	if FileExists(OldFileName) then
@@ -249,7 +248,16 @@ begin
 		end;
 	end;
 
-	MainLog := TLog.Create(MainLogFileName, GetLoggingLevel(GetParamValue('LOG')), True);
+	for i := 0 to Length(LogTypeStr) - 1 do
+	begin
+		LogTypeStr[TLogType(i)] := Copy(GetEnumName(TypeInfo(TLogType), i), 3, MaxInt);
+		s := s + LogTypeStr[TLogType(i)] + '|';
+	end;
+	DelLastChar(s);
+
+	MainLog := TLog.Create(MainLogFileName); //, GetLoggingLevel(GetParamValue('LOG')), True);
+
+	RegisterParam('Log', 'Logging level: Log[' + s + ']', SetLoggingLevel);
 end;
 
 initialization

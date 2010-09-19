@@ -5,7 +5,7 @@ interface
 uses SysUtils, Messages;
 
 type
-	TWatchFileChanged = procedure;
+	TWatchFileChanged = procedure(const FileName: TFileName);
 
 procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChanged);
 procedure WatchRemoveFile(const FileName: TFileName);
@@ -27,7 +27,6 @@ type
 	end;
 var
 	WatchedFiles: TData;
-
 	ActivateCount: UG;
 
 type
@@ -85,7 +84,7 @@ begin
 							if Reload then
 								try
 									if Assigned(WatchedFile.OnChange) then
-										WatchedFile.OnChange;
+										WatchedFile.OnChange(WatchedFile.FileName);
 								finally
 
 								end;
@@ -138,7 +137,7 @@ begin
 end;
 
 procedure WatchRemoveFile(const FileName: TFileName);
-var i: UG;
+var i: SG;
 begin
 	i := 0;
 	while i < WatchedFiles.Count do

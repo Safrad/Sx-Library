@@ -728,7 +728,8 @@ end;
 
 procedure TDIniFile.RWFileName(const Section, Ident: string; var Value: TFileName; const Save: BG);
 begin
-	Value := FullDir(RWStringF(Section, Ident, ShortDir(Value), Value, Save));
+//	Value := FullDir(RWStringF(Section, Ident, ShortDir(Value), Value, Save)); Takes long time for network path
+	Value := RWStringF(Section, Ident, Value, Value, Save);
 end;
 
 function TDIniFile.RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: BG): string;

@@ -22,7 +22,7 @@ type
 
 	TfGColor = class(TDForm)
     LabelR: TDLabel;
-    EditR: TDEdit;
+		EditR: TDEdit;
 		ButtonR: TDButton;
 		ButtonOk: TDButton;
 		ButtonApply: TDButton;
@@ -79,7 +79,7 @@ type
     BevelBasicColors: TBevel;
     ShapeBorder: TShape;
 		ComboBoxBitDepth: TComboBox;
-    LabelH: TDLabel;
+		LabelH: TDLabel;
     EditL: TDEdit;
     LabelS: TDLabel;
     LabelL: TDLabel;
@@ -88,7 +88,7 @@ type
     PanelG: TPanel;
     ImageG: TDImage;
     PanelB: TPanel;
-    ImageB: TDImage;
+		ImageB: TDImage;
     EditH: TDEdit;
     PanelS: TPanel;
     ImageS: TDImage;
@@ -101,7 +101,7 @@ type
 		procedure ButtonRGBAClick(Sender: TObject);
 		procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
-		procedure EditRGBAChange(Sender: TObject);
+		procedure EditChange(Sender: TObject);
 		procedure PanelDefaultColorClick(Sender: TObject);
 		procedure PanelNowBitColorClick(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
@@ -115,25 +115,25 @@ type
 			Shift: TShiftState; X, Y: Integer);
 		procedure ComboBoxNFChange(Sender: TObject);
     procedure PanelPreviousClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 	private
 		{ Private declarations }
 		CurColor, DefColor: TColor;
 		OnApply: TOnApplyColor;
 
-		NumericPref: string;
 		FNowColor: TColor;
 		NowRGB: TRGBA;
 		NowHLS: THLSColor;
 		PanelColor: array[0..MaxColor] of TPanel;
 
+		procedure RWOptions(const Save: BG);
 		procedure InitReadOnly;
-		procedure InitEditsRGB;
-		procedure InitEditsHLS;
+		procedure InitEdits(const SkipEdit: TDEdit);
 		procedure ChangeColor;
 		procedure InitAll;
 		procedure SetNowColor(Color: TColor);
-		procedure SetNowRGB(Color: TRGBA);
-		procedure SetNowHLS(HLS: THLSColor);
+		function SetNowRGB(Color: TRGBA): BG;
+		function SetNowHLS(HLS: THLSColor): BG;
 
 		procedure PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 		procedure PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -152,7 +152,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uMenus, uInput, uFormat, uParserMsg;
+	uMenus, uInput, uFormat, uParserMsg, uDIni;
 
 procedure InitButton(Button: TDButton);
 begin
@@ -419,50 +419,74 @@ begin
 	ShapeBorder.Update;
 end;
 
-procedure TfGColor.InitEditsRGB;
+procedure TfGColor.InitEdits(const SkipEdit: TDEdit);
+var
+	NumericPref: string;
 begin
 	EditR.OnChange := nil;
 	EditG.OnChange := nil;
 	EditB.OnChange := nil;
 	EditRGBA.OnChange := nil;
-
-	if ComboBoxNF.ItemIndex = 1 then
-		NumericBase := 16;
-	EditR.Text := NumericPref + NToS(NowRGB.R);
-	EditR.Update;
-	EditG.Text := NumericPref + NToS(NowRGB.G);
-	EditG.Update;
-	EditB.Text := NumericPref + NToS(NowRGB.B);
-	EditB.Update;
-	EditRGBA.Text := NumericPref + NToS(NowRGB.L);
-	EditRGBA.Update;
-	NumericBase := 10;
-
-	EditR.OnChange := EditRGBAChange;
-	EditG.OnChange := EditRGBAChange;
-	EditB.OnChange := EditRGBAChange;
-	EditRGBA.OnChange := EditRGBAChange;
-end;
-
-procedure TfGColor.InitEditsHLS;
-begin
 	EditH.OnChange := nil;
 	EditL.OnChange := nil;
 	EditS.OnChange := nil;
 
-	if ComboBoxNF.ItemIndex = 1 then
-		NumericBase := 16;
-	EditH.Text := NumericPref + NToS(NowHLS.H);
-	EditH.Update;
-	EditL.Text := NumericPref + NToS(NowHLS.L);
-	EditL.Update;
-	EditS.Text := NumericPref + NToS(NowHLS.S);
-	EditS.Update;
-	NumericBase := 10;
+	try
+		if ComboBoxNF.ItemIndex = 1 then
+		begin
+			NumericBase := 16;
+			UseThousandSeparator := False;
+			NumericPref := '$'
+		end
+		else
+			NumericPref := '';
+		if SkipEdit <> EditR then
+		begin
+			EditR.Text := NumericPref + NToS(NowRGB.R);
+			EditR.Update;
+		end;
+		if SkipEdit <> EditG then
+		begin
+			EditG.Text := NumericPref + NToS(NowRGB.G);
+			EditG.Update;
+		end;
+		if SkipEdit <> EditB then
+		begin
+			EditB.Text := NumericPref + NToS(NowRGB.B);
+			EditB.Update;
+		end;
+		if SkipEdit <> EditRGBA then
+		begin
+			EditRGBA.Text := NumericPref + NToS(NowRGB.L);
+			EditRGBA.Update;
+		end;
+		if SkipEdit <> EditH then
+		begin
+			EditH.Text := NumericPref + NToS(NowHLS.H);
+			EditH.Update;
+		end;
+		if SkipEdit <> EditL then
+		begin
+			EditL.Text := NumericPref + NToS(NowHLS.L);
+			EditL.Update;
+		end;
+		if SkipEdit <> EditS then
+		begin
+			EditS.Text := NumericPref + NToS(NowHLS.S);
+			EditS.Update;
+		end;
+	finally
+		NumericBase := 10;
+		UseThousandSeparator := True;
+	end;
 
-	EditH.OnChange := EditRGBAChange;
-	EditL.OnChange := EditRGBAChange;
-	EditS.OnChange := EditRGBAChange;
+	EditR.OnChange := EditChange;
+	EditG.OnChange := EditChange;
+	EditB.OnChange := EditChange;
+	EditRGBA.OnChange := EditChange;
+	EditH.OnChange := EditChange;
+	EditL.OnChange := EditChange;
+	EditS.OnChange := EditChange;
 end;
 
 procedure TfGColor.ChangeColor;
@@ -473,8 +497,7 @@ end;
 procedure TfGColor.InitAll;
 begin
 	InitReadOnly;
-	InitEditsRGB;
-	InitEditsHLS;
+	InitEdits(nil);
 	ChangeColor;
 end;
 
@@ -485,39 +508,44 @@ begin
 	NowHLS := RGBToHLS(NowRGB);
 end;
 
-procedure TfGColor.SetNowRGB(Color: TRGBA);
+function TfGColor.SetNowRGB(Color: TRGBA): BG;
 begin
-	NowRGB := Color;
-	FNowColor := NowRGB.L;
-	NowHLS := RGBToHLS(NowRGB);
+	if (NowRGB.L <> Color.L) or (FNowColor <> NowRGB.L) then
+	begin
+		NowRGB := Color;
+		FNowColor := NowRGB.L;
+		NowHLS := RGBToHLS(NowRGB);
+		Result := True;
+	end
+	else
+		Result := False;
 end;
 
-procedure TfGColor.SetNowHLS(HLS: THLSColor);
+function TfGColor.SetNowHLS(HLS: THLSColor): BG;
 begin
-	NowHLS := HLS;
-	NowRGB := HLSToRGB(HLS);
-	FNowColor := NowRGB.L;
+{	TODO: if NowHLS.A <> HLS.A then
+	begin}
+		NowHLS := HLS;
+		NowRGB := HLSToRGB(HLS);
+		FNowColor := NowRGB.L;
+		Result := True;
+{	end
+	else
+		Result := False;}
 end;
-
-{var
-	MouseL: BG;}
 
 procedure TfGColor.PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
 	SetNowColor(IntToColor(TPanel(Sender).Tag).L);
 	InitAll;
-//	MouseL := True;
 end;
 
 procedure TfGColor.PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-//	MouseL := False;
 end;
 
 procedure TfGColor.PanelColorMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
-{	if MouseL then
-		PanelColorMouseDown(Sender, mbLeft, Shift, X, Y);}
 end;
 
 procedure TfGColor.FormDestroy(Sender: TObject);
@@ -541,30 +569,7 @@ begin
 		SetNowColor(TColor(U4(TMenuItem(Sender).Tag) or $80000000));
 	InitAll;
 end;
-{
-procedure TfGColor.TrackBarRGBAChange(Sender: TObject);
-begin
-	NowColor := ColorToRGB(TColor(NowColor)) and $00ffffff;
-	case TTrackBar(Sender).Tag of
-	0: TRGBA(NowColor).R := TrackBarR.Position;
-	1: TRGBA(NowColor).G := TrackBarG.Position;
-	2: TRGBA(NowColor).B := TrackBarB.Position;
-	3:
-	begin
-		TRGBA(NowColor).R := TrackBarA.Position;
-		TRGBA(NowColor).G := TrackBarA.Position;
-		TRGBA(NowColor).B := TrackBarA.Position;
-	end;
-	end;
-	NowHLS := RGBToHLS(TRGBA(NowColor));
-//	NowHSV := RGBToHSV(TRGBA(NowColor));
-	InitReadOnly;
-	ChangeLightC;
-//	InitTrackBar;
-	InitEdits;
-	ChangeColor;
-end;
-}
+
 procedure TfGColor.ButtonRGBAClick(Sender: TObject);
 begin
 	case TButton(Sender).Tag of
@@ -572,56 +577,60 @@ begin
 	1: NowRGB.G := 255 - NowRGB.G;
 	2: NowRGB.B := 255 - NowRGB.B;
 	end;
-	SetNowRGB(NowRGB);
-
-	InitAll;
+	if SetNowRGB(NowRGB) then
+		InitAll;
 end;
 
 procedure TfGColor.ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
 	Y: Integer);
-var B: U1;
+var
+	B: U1;
+	Changed: BG;
 begin
 	if TDImage(Sender).MouseL then
 	begin
 		X := Range(0, X, TDImage(Sender).Width - 1);
 		B := Range(0, RoundDiv(255 * X, (TDImage(Sender).Bitmap.Width - 1)), 255);
+		Changed := False;
 		case TDImage(Sender).Tag of
 		0:
 		begin
 			NowRGB.R := B;
-			SetNowRGB(NowRGB);
+			Changed := SetNowRGB(NowRGB);
 		end;
 		1:
 		begin
 			NowRGB.G := B;
-			SetNowRGB(NowRGB);
+			Changed := SetNowRGB(NowRGB);
 		end;
 		2:
 		begin
 			NowRGB.B := B;
-			SetNowRGB(NowRGB);
+			Changed := SetNowRGB(NowRGB);
 		end;
 		3:
 		begin
 			NowHLS.H := RoundDiv(MaxSpectrum * X, TDImage(Sender).Bitmap.Width - 1);
-			SetNowHLS(NowHLS);
+			Changed := SetNowHLS(NowHLS);
 		end;
 		4:
 		begin
 			NowHLS.L := B;
-			SetNowHLS(NowHLS);
+			Changed := SetNowHLS(NowHLS);
 		end;
 		5:
 		begin
 			NowHLS.S := B;
-			SetNowHLS(NowHLS);
+			Changed := SetNowHLS(NowHLS);
 		end;
 		end;
-		InitAll;
+		if Changed then InitAll;
 	end;
 end;
 
-procedure TfGColor.EditRGBAChange(Sender: TObject);
+procedure TfGColor.EditChange(Sender: TObject);
+var
+	Changed: BG;
 begin
 	case TComponent(Sender).Tag of
 	-1: NowRGB.L := StrToValI(TDEdit(Sender).Text, True, MinInt, NowRGB.L, MaxInt, 1);
@@ -635,16 +644,16 @@ begin
 	TDEdit(Sender).Hint := AllMesToString;
 	ParserMsgClear;
 	if TDEdit(Sender).Tag <= 2 then
-		SetNowRGB(NowRGB)
+		Changed := SetNowRGB(NowRGB)
 	else
-		SetNowHLS(NowHLS);
+		Changed := SetNowHLS(NowHLS);
 
-	InitReadOnly;
-	if TDEdit(Sender).Tag <= 2 then
-		InitEditsHLS
-	else
-		InitEditsRGB;
-	ChangeColor;
+	if Changed then
+	begin
+		InitReadOnly;
+		InitEdits(TDEdit(Sender));
+		ChangeColor;
+	end;
 end;
 
 procedure TfGColor.PanelDefaultColorClick(Sender: TObject);
@@ -704,6 +713,15 @@ begin
 	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
 end;
 
+procedure TfGColor.RWOptions(const Save: BG);
+begin
+	if Assigned(MainIni) then
+	begin
+		MainIni.RWComboBox('ColorDialog', ComboBoxBitDepth, Save);
+		MainIni.RWComboBox('ColorDialog', ComboBoxNF, Save);
+	end;
+end;
+
 procedure TfGColor.FormCreate(Sender: TObject);
 var i: SG;
 begin
@@ -711,6 +729,7 @@ begin
 	for i := 0 to Length(ABits) - 1 do
 		ComboBoxBitDepth.Items.Add(NToS(ABits[i]) + ' bit');
 	ComboBoxBitDepth.ItemIndex := Length(ABits) - 1;
+	RWOptions(False);
 end;
 
 procedure TfGColor.ImageFill(Sender: TObject);
@@ -728,18 +747,7 @@ begin
 	begin
 		B := RoundDiv(SG(255 * i), (BmpD.Width - 1));
 		case TDImage(Sender).Tag of
-		0:
-		begin
-			C.R := B;
-		end;
-		1:
-		begin
-			C.G := B;
-		end;
-		2:
-		begin
-			C.B := B;
-		end;
+		0..2: C.I[TDImage(Sender).Tag] := B;
 		3:
 		begin
 			if HLS.S <> 0 then
@@ -787,18 +795,18 @@ end;
 
 procedure TfGColor.ComboBoxNFChange(Sender: TObject);
 begin
-	if ComboBoxNF.ItemIndex = 1 then
-		NumericPref := '$'
-	else
-		NumericPref := '';
-	InitEditsRGB;
-	InitEditsHLS;
+	InitEdits(nil);
 end;
 
 procedure TfGColor.PanelPreviousClick(Sender: TObject);
 begin
 	SetNowColor(CurColor);
 	InitAll;
+end;
+
+procedure TfGColor.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+	RWOptions(True);
 end;
 
 end.

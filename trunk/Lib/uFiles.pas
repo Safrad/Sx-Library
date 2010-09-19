@@ -69,7 +69,8 @@ type
 		property Opened: BG read IsOpened;
 		constructor Create;
 		destructor Destroy; override;
-		function Open(var FileName: TFileName; const Mode: TFileMode; Flags: U4; Protection: Boolean): Boolean;
+		function Open(const FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): Boolean; overload;
+		function Open(var FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: Boolean = False): Boolean; overload;
 		function Seek(const Pos: U8): Boolean;
 		function SeekStart: Boolean;
 		function SeekEnd: Boolean;
@@ -125,10 +126,9 @@ var
 	SysDir,
 	WinDir, // Shared configuration files (Read and Write)
 	ProgramFilesDir,
-	ApplicationDataDir, // Application Data
 	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
 	DocsDir, // User documnets (Read and Write)
-//	AppData,
+	ApplicationDataDir, // Application Data
 	TempDir: string;
 	ExeFileName, MainIniFileName, MainLogFileName: TFileName;
 
@@ -136,7 +136,7 @@ var
 	ReadBytes, WriteBytes: U8;
 
 function ShortDir(const Dir: string): string;
-function FullDir (Dir: string): string;
+function ExpandDir(Dir: string): string;
 function DelFileExt(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
 function BackDir(var Dir: string): BG;
@@ -165,7 +165,7 @@ function DeleteFileEx(const FileName: TFileName): Boolean;
 function RemoveDirEx(const DirName: string): Boolean;
 function RemoveDirsEx(DirName: string; DeleteSelf: Boolean = False): Boolean;
 
-function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+function ReadBufferFromFile(var FileName: TFileName; out Buf; out Count: SG): BG;
 function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
 
 function ReadBlockFromFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
@@ -202,6 +202,7 @@ function TempFileName(const FileName: TFileName): TFileName;
 procedure ReplaceIfChanged(FileName: TFileName);
 function DialogStr(Ext, Des: array of string): string;
 procedure InitPaths;
+function FileOrDirExists(const FileOrDirName: string): BG;
 
 implementation
 
@@ -239,10 +240,18 @@ end;
 
 function TFile.IsOpened: BG;
 begin
-	Result := HFile <> INVALID_HANDLE_VALUE
+	Result := HFile <> INVALID_HANDLE_VALUE;
 end;
 
-function TFile.Open(var FileName: TFileName; const Mode: TFileMode; Flags: U4; Protection: Boolean): Boolean;
+function TFile.Open(const FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): Boolean;
+var
+	FileName2: TFileName;
+begin
+	FileName2 := FileName;
+	Result := Open(FileName2, Mode, Flags, False);
+end;
+
+function TFile.Open(var FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: Boolean = False): Boolean;
 label LRetry;
 var
 	CreationDistribution: U4;
@@ -270,7 +279,7 @@ begin
 
 	if FProtection and (FMode <> fmReadOnly) then
 	begin
-		FTempFileName := TempFileName(FileName);
+		FTempFileName := ExpandDir(TempFileName(FileName));
 {   if FileExists(FTempFileName) then
 		begin
 			DeleteFile(FTempFileName);
@@ -279,7 +288,7 @@ begin
 			CopyFile(FileName, FTempFileName, False);
 	end
 	else
-		FTempFileName := FileName;
+		FTempFileName := ExpandDir(FileName);
 
 
 	LRetry:
@@ -288,6 +297,7 @@ begin
 	fmReadOnly:
 	begin
 		DesiredAccess := GENERIC_READ;
+		ShareMode := ShareMode or FILE_SHARE_WRITE;
 	end;
 	fmWriteOnly:
 	begin
@@ -807,9 +817,11 @@ begin
 		end;
 		SetLength(Result, Length(Dir) - Length(WorkDir));
 	end;
+
+	// TODO: C:\Windows -> %windir%
 end;
 
-function FullDir(Dir: string): string;
+function ExpandDir(Dir: string): string;
 var
 	i, Start: SG;
 	Variable, Value: string;
@@ -849,15 +861,23 @@ begin
 				Exit;
 			end;
 		end;}
-		if (Length(Dir) > 0) and (Dir[1] = '\') then
+		if (Length(Dir) > 1) and (Dir[1] = '\') and (Dir[2] = '\') then
+		begin
+			// Network path
+			Result := Dir;
+		end
+		else if (Length(Dir) > 0) and (Dir[1] = '\') then
 			Result := WorkDir[1] + WorkDir[2] + Dir
 		else if ((Length(Dir) > 1) and (Dir[2] = ':'))then
 		begin
+			// Absolute path
 			Result := Dir;
 		end
 		else
+			// Relative path
 			Result := WorkDir + Dir;
-		Result := ShortToLongPath(Result);
+
+		// TODO: '..' like HTML (New Parameter WorkDir=ActualDir)
 	end;
 end;
 
@@ -1249,7 +1269,7 @@ var
 begin
 	Result := False;
 	if Length(FileOrDir) = 0 then Exit;
-	IsDir := FileOrDir[Length(FileOrDir) - 1] = '\';
+	IsDir := LastChar(FileOrDir) = '\';
 	if IsDir then
 	begin
 		DirS := Copy(FileOrDir, 1, Length(FileOrDir) - 1);
@@ -1376,12 +1396,14 @@ end;
 
 // TFile Read Write
 
-function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
+function ReadBufferFromFile(var FileName: TFileName; out Buf; out Count: SG): BG;
 label LRetry;
 var
 	F: TFile;
 begin
 	Result := False;
+	Count := 0;
+	Pointer(Buf) := nil;
 	F := TFile.Create;
 	LRetry:
 	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
@@ -1619,7 +1641,7 @@ end;
 *)
 
 
-function StrRScan(const Str: string; Chr: Char): string;
+function StrRScan(const Str: string): string;
 var
 	Index: SG;
 begin
@@ -1627,7 +1649,7 @@ begin
 	Index := Length(Str);
 	while Index > 0 do
 	begin
-		while Str[Index] = Chr do
+		while Str[Index] in ['\', '/'] do
 		begin
 			Result := Copy(Str, Index, MaxInt);
 			Exit;
@@ -1639,24 +1661,26 @@ end;
 function ShortToLongPath(ShortName: string): string;
 var
 	LastSlash: string;
+	s: string;
 begin
+	s := ShortName;
 	if (FileExists(ShortName) = False) or (Length(ShortName) < 2) or (ShortName[1] = '\') then
 	begin
 		Result := ShortName;
 		Exit;
 	end;
 	Result := '';
-	LastSlash := StrRScan(ShortName, '\');
+	LastSlash := StrRScan(ShortName);
 	while LastSlash <> '' do
 	begin
 		Result := '\' + ShortToLongFileName(ShortName) + Result;
 		if LastSlash <> '' then
 		begin
 			SetLength(ShortName, Length(ShortName) - Length(LastSlash));
-			LastSlash := StrRScan(ShortName, '\');
+			LastSlash := StrRScan(ShortName);
 		end;
 	end;
-	Result := ShortName + Result;
+	Result := UpperCase(ShortName) {c: -> C:} + Result;
 end;
 {
 function ShortToLongPath(ShortName: string): string;
@@ -1710,7 +1734,7 @@ end;
 
 function RepairDirectory(const Dir: TFileName): TFileName;
 begin
-	Result := Dir;
+	Result := ShortToLongPath(ExpandDir(Dir));
 	while True do
 	begin
 		if DirectoryExists(Result) then Break;
@@ -1724,7 +1748,8 @@ begin
 	Dialog.FileName := ExtractFileName(FileName);
 	Dialog.InitialDir := RepairDirectory(ExtractFilePath(FileName));
 	Result := Dialog.Execute;
-	FileName := Dialog.FileName;
+	if Result then
+		FileName := ShortDir(Dialog.FileName);
 end;
 {$endif}
 
@@ -1838,6 +1863,16 @@ begin
 	end;
 	DelLastChar(Result);
 	Result := Result + AllFiles;
+end;
+
+function FileOrDirExists(const FileOrDirName: string): BG;
+begin
+	if Length(FileOrDirName) = 0 then
+		Result := False
+	else if LastChar(FileOrDirName) = '\' then
+		Result := DirectoryExists(FileOrDirName)
+	else
+		Result := FileExists(FileOrDirName);
 end;
 
 initialization

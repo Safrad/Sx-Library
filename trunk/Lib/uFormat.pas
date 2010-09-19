@@ -464,7 +464,7 @@ begin
 	end;
 
 	Poin := Pos('.', UseFormat);
-	if UseFormat[Length(UseFormat)] = '~' then DelSpace := True else DelSpace := False;
+	if LastChar(UseFormat) = '~' then DelSpace := True else DelSpace := False;
 
 	if Num = 0 then inp := '' else inp := IntToStr(Abs(Num));
 	inpP := Length(inp);

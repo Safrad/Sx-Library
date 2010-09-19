@@ -13,6 +13,7 @@ object fGColor: TfGColor
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
@@ -234,10 +235,11 @@ object fGColor: TfGColor
   object EditR: TDEdit
     Left = 64
     Top = 8
-    Width = 33
+    Width = 34
     Height = 19
     TabOrder = 4
-    OnChange = EditRGBAChange
+    WantReturns = False
+    OnChange = EditChange
   end
   object ButtonR: TDButton
     Left = 424
@@ -307,10 +309,11 @@ object fGColor: TfGColor
     Tag = 1
     Left = 64
     Top = 32
-    Width = 33
+    Width = 34
     Height = 19
     TabOrder = 7
-    OnChange = EditRGBAChange
+    WantReturns = False
+    OnChange = EditChange
   end
   object ButtonG: TDButton
     Tag = 1
@@ -332,10 +335,11 @@ object fGColor: TfGColor
     Tag = 2
     Left = 64
     Top = 56
-    Width = 33
+    Width = 34
     Height = 19
     TabOrder = 10
-    OnChange = EditRGBAChange
+    WantReturns = False
+    OnChange = EditChange
   end
   object ButtonB: TDButton
     Tag = 2
@@ -357,10 +361,11 @@ object fGColor: TfGColor
     Tag = 5
     Left = 64
     Top = 152
-    Width = 33
+    Width = 34
     Height = 19
     TabOrder = 20
-    OnChange = EditRGBAChange
+    WantReturns = False
+    OnChange = EditChange
   end
   object PanelH: TPanel
     Left = 104
@@ -432,10 +437,11 @@ object fGColor: TfGColor
     Tag = 4
     Left = 64
     Top = 128
-    Width = 33
+    Width = 34
     Height = 19
     TabOrder = 18
-    OnChange = EditRGBAChange
+    WantReturns = False
+    OnChange = EditChange
   end
   object LabelS: TDLabel
     Left = 8
@@ -529,10 +535,11 @@ object fGColor: TfGColor
     Tag = 3
     Left = 64
     Top = 104
-    Width = 33
+    Width = 34
     Height = 19
     TabOrder = 16
-    OnChange = EditRGBAChange
+    WantReturns = False
+    OnChange = EditChange
   end
   object PanelS: TPanel
     Left = 104
@@ -576,10 +583,11 @@ object fGColor: TfGColor
     Tag = -1
     Left = 64
     Top = 80
-    Width = 73
+    Width = 74
     Height = 19
     TabOrder = 15
-    OnChange = EditRGBAChange
+    WantReturns = False
+    OnChange = EditChange
   end
   object PopupMenu1: TPopupMenu
     Images = ImageList1

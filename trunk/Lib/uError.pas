@@ -73,7 +73,7 @@ type
     procedure FormShow(Sender: TObject);
 	private
 		{ Private declarations }
-		ActItem: UG;
+		ActItem: SG;
 		ShiftDown: BG;
 
 		FButtons: array of TDButton;
@@ -477,8 +477,7 @@ var
 begin
 	{$ifopt d+}
 	Assert(Length(ErrorMsg) > 0);
-	s := DelEndSpaceF(ErrorMsg);
-	s := s[Length(s)];
+	s := LastChar(DelEndSpaceF(ErrorMsg));
 	case DlgType of
 	mtDebug,
 	mtInformation,
@@ -743,7 +742,7 @@ begin
 	end
 	else
 	begin
-		if ActItem < Ignores.Count - 1 then
+		if ActItem + 1 < Ignores.Count then
 			Inc(ActItem);
 	end;
 	ShowMes;

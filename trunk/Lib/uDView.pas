@@ -52,11 +52,12 @@ type
 
 		DragColumns, DragX: SG;
 		HotRow, HotColumn: SG;
+		FStartShift: SG;
 
 		FColumnCount: SG;
 		FRowCount: SG;
 
-		procedure ScrollToActualRow;
+		procedure ScrollToActualCell;
 		function PosToItem(MX, MY: SG; var IX, IY: SG): TViewAction;
 
 		procedure SetColumnCount(Value: SG);
@@ -65,6 +66,7 @@ type
 		procedure CopySelection;
 		function GetSelCount: SG;
 
+		procedure CellClick(const ColumnIndex, RowIndex: SG; const Shift: TShiftState);
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 		procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
@@ -78,7 +80,7 @@ type
 		SelRows: array of Boolean;
 
 		Where, LWhere: TViewAction;
-		IX, IY: SG;
+		IX, IY: SG; // MouseOnCellX,Y
 
 		ActualRow, ActualColumn: SG;
 		SortBy: SG;
@@ -92,6 +94,9 @@ type
 		procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
 			X, Y: Integer); override;
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+		procedure PageDownUp(const n: SG); override;
+		procedure LineDownUp(const n: SG); override;
+
 		procedure LFill(Sender: TObject);
 
 		procedure AddColumns(const C: array of TColumnOptions);
@@ -109,6 +114,7 @@ type
 
 		procedure DataChanged;
 		function CellWidth(Text: string): SG;
+
 	published
 
 		property OnGetData: TOnGetData read FOnGetData write FOnGetData;
@@ -136,7 +142,7 @@ begin
 	HotColumn := -1;
 	SortBy := -1;
 	ActualRow := -1;
-	ShortStep := RowHeight;
+//	ShortStep := RowHeight;
 end;
 
 destructor TDView.Destroy;
@@ -173,6 +179,7 @@ begin
 	end;
 
 	Result := vaNone;
+	IY := -1;
 	if IX = -1 then Exit;
 
 	if MY < RowHeight then
@@ -201,10 +208,39 @@ begin
 	end;
 end;
 
+procedure TDView.CellClick(const ColumnIndex, RowIndex: SG; const Shift: TShiftState);
+var i: SG;
+begin
+	if not (ssCtrl in Shift) then
+		for i := 0 to FRowCount - 1 do
+			SelRows[i] := False;
+	if (ssShift in Shift) and (ActualRow <> -1) then
+	begin
+		if FStartShift < RowIndex then
+		begin
+			for i := FStartShift to RowIndex do
+				SelRows[i] := True;
+		end
+		else
+		begin
+			for i := RowIndex to FStartShift do
+				SelRows[i] := True;
+		end;
+	end
+	else
+	begin
+		FStartShift := RowIndex;
+		SelRows[RowIndex] := not SelRows[RowIndex];
+	end;
+	ActualRow := RowIndex;
+	ActualColumn := ColumnIndex;
+
+	ScrollToActualCell;
+	Invalidate;
+end;
+
 procedure TDView.MouseDown(Button: TMouseButton; Shift: TShiftState;
 	X, Y: Integer);
-var
-	i: SG;
 begin
 	MouseMove(Shift, X, Y); // Rigth click after menu popup
 
@@ -236,29 +272,7 @@ begin
 			begin
 				if not ((Button = mbRight) and (SelRows[IY])) then
 				begin
-					if not (ssCtrl in Shift) then
-						for i := 0 to FRowCount - 1 do
-							SelRows[i] := False;
-					if (ssShift in Shift) and (ActualRow <> -1) then
-					begin
-						if ActualRow < IY then
-						begin
-							for i := ActualRow to IY do
-								SelRows[i] := True;
-						end
-						else
-						begin
-							for i := IY to ActualRow do
-								SelRows[i] := True;
-						end;
-					end
-					else
-					begin
-						SelRows[IY] := not SelRows[IY];
-						ActualRow := IY;
-					end;
-					ActualColumn := IX;
-					Invalidate;
+					CellClick(IX, IY, Shift);
 				end;
 			end;
 			end;
@@ -275,7 +289,8 @@ begin
 
 	if (DragColumns = -1) and (ColumnMove = -1) then
 	begin
-		ActualCursor := crDefault;
+		if ActualCursor = -14 then
+			ActualCursor := crDefault;
 		Where := PosToItem(X, Y, IX, IY);
 		case Where of
 		vaColumnClick:
@@ -295,15 +310,16 @@ begin
 		end;
 		vaRow:
 		begin
-			if HotTrack then
-			begin
-				if HotRow <> IY then
-				begin
-					HotRow := IY;
-					Invalidate;
-				end;
-			end;
+
 		end;
+		end;
+		if HotTrack then
+		begin
+			if HotRow <> IY then
+			begin
+				HotRow := IY;
+				Invalidate;
+			end;
 		end;
 		if Where <> LWhere then
 		begin
@@ -419,6 +435,16 @@ begin
 	end;
 end;
 
+procedure TDView.PageDownUp(const n: SG);
+begin
+	ScrollTo(OfsX, OfsY + n * RowHeight * ((NowMaxHeight - RowHeight) div RowHeight));
+end;
+
+procedure TDView.LineDownUp(const n: SG);
+begin
+	ScrollTo(OfsX, OfsY + n * RowHeight);
+end;
+
 procedure TDView.KeyDown(var Key: Word; Shift: TShiftState);
 begin
 	if Shift = [ssCtrl] then
@@ -428,88 +454,109 @@ begin
 		begin
 			SelectAll;
 			Invalidate;
+			Exit;
 		end;
 		Ord('C'):
+		begin
 			CopySelection;
+			Exit;
+		end;
 		end;
 	end;
 
-	if Shift = [] then
+	case Key of
+	VK_SPACE: CellClick(-1, ActualRow, Shift);
+	VK_RETURN:
 	begin
-		case Key of
-		VK_RETURN:
+		// TODO: Event Rows Click
+{		if ActualRow < RowCount then
 		begin
-			if ActualRow < RowCount then
-			begin
-				SelRows[ActualRow] := True;
-				Inc(ActualRow);
-				Invalidate;
-			end;
-		end;
-		VK_ESCAPE:
-		begin
-			if ColumnMove <> -1 then
-			begin
-				BDown := False;
-				DragColumns := -1;
-				Columns[ColumnMove].Width := ColumnMoveW;
-				ChangeColumnsWidth;
-				ColumnMove := -1;
-				Invalidate;
-			end;
-		end;
-		VK_UP:
-		begin
-			if GetKeyState(VK_Scroll) = 0 then
-			begin
-				if ActualRow > 0 then
-				begin
-					Dec(ActualRow);
-					ScrollToActualRow;
-					Invalidate;
-				end;
-			end
-			else
-				ScrollTo(OfsX, OfsY - RowHeight);
-		end;
-		VK_DOWN:
-		begin
-			if GetKeyState(VK_Scroll) = 0 then
-			begin
-				if ActualRow < FRowCount - 1 then
-				begin
-					Inc(ActualRow);
-					ScrollToActualRow;
-					Invalidate;
-				end;
-			end
-			else
-				ScrollTo(OfsX, OfsY + RowHeight);
-		end;
-		VK_LEFT: ScrollTo(OfsX - 32, OfsY);
-		VK_RIGHT: ScrollTo(OfsX + 32, OfsY);
-		VK_PRIOR:
-		begin
-		end;
-		VK_NEXT:
-		begin
-		end;
-		VK_HOME:
-		begin
-			OfsY := 0;
-			ActualRow := 0;
+			SelRows[ActualRow] := True;
+			Inc(ActualRow);
 			Invalidate;
-		end;
-		VK_END:
+		end;}
+	end;
+	VK_ESCAPE:
+	begin
+		if ColumnMove <> -1 then
 		begin
-			OfsY := MaxOfsY;
-			ActualRow := FRowCount - 1;
+			BDown := False;
+			DragColumns := -1;
+			Columns[ColumnMove].Width := ColumnMoveW;
+			ChangeColumnsWidth;
+			ColumnMove := -1;
 			Invalidate;
-		end;
 		end;
 	end;
-
-	inherited;
+	VK_UP:
+	begin
+		if GetKeyState(VK_Scroll) = 0 then
+		begin
+			if ActualRow > 0 then
+			begin
+				CellClick(-1, ActualRow - 1, Shift);
+			end;
+		end
+		else
+			LineDownUp(-1);
+	end;
+	VK_DOWN:
+	begin
+		if GetKeyState(VK_Scroll) = 0 then
+		begin
+			if ActualRow < FRowCount - 1 then
+			begin
+				CellClick(-1, ActualRow + 1, Shift);
+			end;
+		end
+		else
+			LineDownUp(1);
+	end;
+{	VK_LEFT: ScrollTo(OfsX - HorizontalOffset, OfsY);
+	VK_RIGHT: ScrollTo(OfsX + HorizontalOffset, OfsY);}
+	VK_PRIOR:
+	begin
+		if GetKeyState(VK_Scroll) = 0 then
+		begin
+			if FRowCount > 0 then
+				CellClick(-1, Max(0, ActualRow - (NowMaxHeight -RowHeight) div RowHeight), Shift);
+		end
+		else
+			PageDownUp(-1);
+	end;
+	VK_NEXT:
+	begin
+		if GetKeyState(VK_Scroll) = 0 then
+		begin
+			if FRowCount > 0 then
+				CellClick(-1, Min(FRowCount - 1, ActualRow + (NowMaxHeight -RowHeight) div RowHeight), Shift);
+		end
+		else
+			PageDownUp(1);
+	end;
+	VK_HOME:
+	begin
+		if GetKeyState(VK_Scroll) = 0 then
+		begin
+			if FRowCount > 0 then
+				CellClick(-1, 0, Shift);
+		end
+		else
+			ScrollHome;
+	end;
+	VK_END:
+	begin
+		if GetKeyState(VK_Scroll) = 0 then
+		begin
+			if FRowCount > 0 then
+				CellClick(-1, FRowCount - 1, Shift);
+		end
+		else
+			ScrollEnd;
+	end;
+	else
+		inherited;
+	end;
 end;
 
 var
@@ -717,7 +764,7 @@ begin
 				end;
 				Bitmap.Border(x, 0, x + Columns[IX].Width - 1, RowHeight - 1, clDepth[C1], clDepth[C2], 1, ef16);
 
-				if Columns[IX].Width <= 0 then w := 16 else w := Columns[IX].Width;
+				if Columns[IX].Width <= 0 then w := HorizontalOffset else w := Columns[IX].Width;
 				Inc(X, w);
 			end;
 
@@ -881,6 +928,7 @@ procedure TDView.DataChanged;
 begin
 	SortData;
 	UpdateColumnVisibility;
+	ChangeColumnsWidth;
 end;
 
 function TDView.GetSelCount: SG;
@@ -901,14 +949,15 @@ end;
 procedure TDView.CMWantSpecialKey(var Message: TCMWantSpecialKey);
 begin
 	case Message.CharCode of
-	VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT:
-		Message.Result := 1;
+{	VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT:
+		Message.Result := 1;}
 	VK_ESCAPE:
 	begin
 		if ColumnMove <> -1 then
 			Message.Result := 1;
 	end;
 	end;
+	inherited;
 end;
 
 procedure TDView.CopySelection;
@@ -950,13 +999,29 @@ begin
 		Clipboard.SetTextBuf(PChar(Buffer));
 end;
 
-procedure TDView.ScrollToActualRow;
-var Rect: TRect;
+procedure TDView.ScrollToActualCell;
+var
+	Rect: TRect;
+	i: SG;
 begin
-	Rect.Left := 0;
-	Rect.Right := Self.UserWidth - 1;
-	Rect.Top := RowHeight * ActualRow;
-	Rect.Bottom := Rect.Top + RowHeight - 1;
+	if ActualColumn = -1 then
+	begin
+		Rect.Left := 0;
+		Rect.Right := UserWidth - 1;
+	end
+	else
+	begin
+		Rect.Left := 0;
+		for i := 0 to ActualColumn - 1 do
+		begin
+			if Columns[ColumnOrder[i]].Visible then
+				Inc(Rect.Left, Columns[ColumnOrder[i]].Width);
+		end;
+		Dec(Rect.Left, HorizontalOffset);
+		Rect.Right := Rect.Left + Columns[ColumnOrder[ActualColumn]].Width - 1 + HorizontalOffset;
+	end;
+	Rect.Top := RowHeight * ActualRow; // + RowHeight{Table head};
+	Rect.Bottom := Rect.Top + RowHeight - 1 + RowHeight{Table head};
 	OffsetOnRect(Rect);
 end;
 

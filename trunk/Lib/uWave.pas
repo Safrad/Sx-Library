@@ -181,7 +181,7 @@ procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: U4);
 	const SampleRate: U4);}
 
 procedure PlayWave(Wave: PWave);
-procedure PlayWaveFile(WaveName: TFileName);
+procedure PlayWaveFile(const WaveName: TFileName);
 procedure PlayWinSound(WinSound: TWinSound);
 procedure Beep;
 
@@ -699,14 +699,14 @@ begin
 		PlaySound(PChar(Wave), 0, SND_ASYNC or SND_MEMORY or SND_NODEFAULT)
 end;
 
-procedure PlayWaveFile(WaveName: TFileName);
+procedure PlayWaveFile(const WaveName: TFileName);
 //var Wave: PWave;
 begin
 {	WaveReadFromFile(Wave, WaveName);
 	PlayWave(Wave);
 	FreeMem(Wave);}
 	if WaveName <> '' then
-		PlaySound(PChar(WaveName), 0, SND_ASYNC {and SND_FILENAME});
+		PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME});
 end;
 
 procedure PlayWinSound(WinSound: TWinSound);
@@ -722,7 +722,7 @@ begin
 		begin
 			if Reg.ValueExists('') then
 			begin
-				PlayWaveFile(FullDir(Reg.ReadString('')));
+				PlayWaveFile(Reg.ReadString(''));
 			end;
 			Reg.CloseKey;
 		end;

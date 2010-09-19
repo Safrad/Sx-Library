@@ -250,8 +250,9 @@ begin
 		Clear;
 	end;
 	MainIni.RWNum(Selection, 'Count', FReopenCount, Save);
-	if Save = False then FReopenLimit := 10;
 	if FReopenCount > MaxReopen then FReopenCount := MaxReopen;
+
+	if Save = False then FReopenLimit := 10;
 	MainIni.RWNum(Selection, 'Limit', FReopenLimit, Save);
 	if FReopenLimit > MaxReopen then FReopenLimit := MaxReopen;
 
@@ -266,6 +267,13 @@ begin
 			MainIni.RWFileName(Selection, IntToStr(i), FReopenItems[i].FileName, Save);
 			if (Save = False) or (FReopenItems[i].FilePos <> '') then
 				MainIni.RWString(Selection, IntToStr(i) + 'Pos', FReopenItems[i].FilePos, Save);
+		end;
+	end
+	else
+	begin
+		for i := 0 to FReopenCount - 1 do
+		begin
+			MainIni.RWFileName(Selection, IntToStr(i), FReopenItems[i].FileName, Save);
 		end;
 	end;
 end;
@@ -353,17 +361,20 @@ begin
 		Exit;
 	end;
 
-	P[0] := FileName[1];
-	P[1] := FileName[2];
-	P[2] := FileName[3];
-	P[3] := CharNul;
-	DriveType := GetDriveType(P);
-
-//      Reopen[i].Caption := Reopen[i].Caption + ' (' + DriveTypeToStr(DriveType) + ')';
+	if FileName[1] = '\' then
+		DriveType := DRIVE_REMOTE
+	else
+	begin
+		P[0] := FileName[1];
+		P[1] := FileName[2];
+		P[2] := FileName[3];
+		P[3] := CharNul;
+		DriveType := GetDriveType(P);
+	end;
 
 	if (DriveType = DRIVE_FIXED) or (DriveType = DRIVE_RAMDISK) then
 	begin
-		if not FileExists(FileName) then
+		if not FileOrDirExists(FileName) then
 			Result := reNo
 		else
 			Result := reYes;

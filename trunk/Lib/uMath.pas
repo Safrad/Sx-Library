@@ -28,6 +28,7 @@ function Sgn(const I: F4): SG; overload;
 function Sgn(const I: F8): SG; overload;
 function Sgn(const I: FA): SG; overload;
 function SgnMul(const Signum, Num: SG): SG;
+function AbsMin(const A, B: SG): SG;
 
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1);
@@ -223,6 +224,13 @@ begin
 		Result := -Num;
 end;
 
+function AbsMin(const A, B: SG): SG;
+begin
+	if Abs(A) < Abs(B) then
+		Result := A
+	else
+		Result := B;
+end;
 {
 function Min(const A, B: UG): UG;
 begin
