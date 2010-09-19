@@ -91,6 +91,7 @@ begin
 			FreeAndNil(ReopenItems[i].MenuItem);
 		end;
 	end;
+	ReopenCount := 0;
 	SetLength(ReopenItems, 0);
 	inherited;
 end;
@@ -260,16 +261,14 @@ begin
 	for i := 0 to ReopenCount - 1 do
 	begin
 		ReopenItems[i].FileName := FullDir(MainIni.RWStringF(Selection, 'Reopen' + IntToStr(i), ShortDir(ReopenItems[i].FileName), '', Save));
-		ReopenItems[i].MenuItem := nil;
-		ReopenItems[i].Exists := 1;
-		ReopenItems[i].OpenedCount := 0;
 	end;
-
-	if Save = True then
-	begin
-		ReopenCount := 0;
-		SetLength(ReopenItems, ReopenCount);
-	end;
+	if Save = False then
+		for i := 0 to ReopenCount - 1 do
+		begin
+			ReopenItems[i].MenuItem := nil;
+			ReopenItems[i].Exists := 1;
+			ReopenItems[i].OpenedCount := 0;
+		end;
 end;
 
 procedure TReopen.AddReopenCaption(const FileName: TFileName);
@@ -430,7 +429,11 @@ begin
 		if (i < ReopenLimit) and Assigned(ReopenItems[i].MenuItem) then
 		begin
 			if ReopenItems[i].OpenedCount <= 0 then Inc(ReopenAllCount);
-			s := '&' + IntToStr(i) + ' ' + ReopenItems[i].FileName;
+			if i < 10 then
+				s := '&'
+			else
+				s := '';
+			s := s + IntToStr(i) + ' ' + ReopenItems[i].FileName;
 			if ReopenItems[i].OpenedCount > 1 then s := s + ' (' + NToS(ReopenItems[i].OpenedCount) + ')';
 
 			ReopenItems[i].MenuItem.Caption := s;

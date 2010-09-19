@@ -144,9 +144,9 @@ begin
 	VK_OEM_CLEAR: Result := 'OEM Clear';
 	else Result := 'SC: ' + IntToStr(Key);
 	end;
-	if Key and scShift <> 0 then Result := 'Shift+' + Result;
-	if Key and scCtrl <> 0 then Result := 'Ctrl+' + Result;
 	if Key and scAlt <> 0 then Result := 'Alt+' + Result;
+	if Key and scCtrl <> 0 then Result := 'Ctrl+' + Result;
+	if Key and scShift <> 0 then Result := 'Shift+' + Result;
 end;
 
 end.

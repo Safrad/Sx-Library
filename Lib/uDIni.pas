@@ -1041,22 +1041,22 @@ end;
 procedure TDIniFile.RWBoolM(Section: string; MenuItem: TMenuItem; const Save: BG);
 var Value: BG;
 begin
-	if (Save = False) then Value := MenuItem.Checked;
+	Value := MenuItem.Checked;
 	RWBool(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
-	if (Save = False) then MenuItem.Checked := Value;
+	if Save = False then MenuItem.Checked := Value;
 end;
 
 procedure TDIniFile.RWBoolM(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG);
 begin
-	if (Save = False) then Value := MenuItem.Checked;
+	Value := MenuItem.Checked;
 	RWBool(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
-	if (Save = False) then MenuItem.Checked := Value;
+	if Save = False then MenuItem.Checked := Value;
 end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: UG; const Save: BG);
 begin
 	RWNum(Section, ButtonNameToFileName(MenuItem.Name, False), Value, Save);
-//	if (Save = False) then MenuItem.Caption := Value;
+//	if Save = False then MenuItem.Caption := Value;
 end;
 
 

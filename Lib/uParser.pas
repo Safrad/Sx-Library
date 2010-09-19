@@ -25,29 +25,29 @@ uses
 type
 	TKeyword = (
 		kwNone,
-		kwabstract,
+		kwabstract, // V
 		kwand,
 		kwarray,
 		kwas,
 		kwasm,
 		kwassembler,
 		kwbegin,
-		kwBreak,
+		kwBreak, // V
 		kwcase,
 		kwclass,
 		kwconst ,
 		kwconstructor,
-		kwContinue,
+		kwContinue, // V
 		kwdestructor,
 		kwdispinterface,
 		kwdiv,
 		kwdo,
 		kwdownto,
-		kwdynamic,
+		kwdynamic, // V
 		kwelse,
 		kwend,
 		kwexcept,
-		kwExit,
+		kwExit, // V
 		kwexports,
 		kwfile,
 		kwfinalization,
@@ -71,19 +71,19 @@ type
 		kwnot,
 		kwobject,
 		kwof,
-		kwon,
+		kwon, // V
 		kwor,
-		kwout,
+		kwout, // V
 		kwoverload,
 		kwoverride,
 		kwpacked,
-		kwprivate,
+		kwprivate, // V
 		kwprocedure,
 		kwprogram,
 		kwproperty,
-		kwprotected,
-		kwpublic,
-		kwpublished,
+		kwprotected, // V
+		kwpublic, // V
+		kwpublished, // V
 		kwraise,
 		kwrecord,
 		kwrepeat,
@@ -101,96 +101,14 @@ type
 		kwuntil,
 		kwuses,
 		kwvar,
-		kwvirtual,
+		kwvirtual, // V
 		kwwhile,
 		kwwith,
 		kwxor);
 
 var
 	KWsU: array[TKeyword] of string;
-	KWs: array[TKeyword] of string = (
-		'',
-		'abstract', // V
-		'and',
-		'array',
-		'as',
-		'asm',
-		'assembler',
-		'begin',
-		'Break', // V
-		'case',
-		'class',
-		'const',
-		'constructor',
-		'Continue', // V
-		'destructor',
-		'dispinterface',
-		'div',
-		'do',
-		'downto',
-		'dynamic', // V
-		'else',
-		'end',
-		'except',
-		'Exit', // V
-		'exports',
-		'file',
-		'finalization',
-		'finally',
-		'for',
-		'forward',
-		'function',
-		'goto',
-		'if',
-		'implementation',
-		'in',
-		'inherited',
-		'initialization',
-		'inline',
-		'interface',
-		'is',
-		'label',
-		'library',
-		'mod',
-		'nil',
-		'not',
-		'object',
-		'of',
-		'on', // V
-		'or',
-		'out', // V
-		'overload',
-		'override',
-		'packed',
-		'private', // V
-		'procedure',
-		'program',
-		'property',
-		'protected', // V
-		'public', // V
-		'published', // V
-		'raise',
-		'record',
-		'repeat',
-		'resourcestring',
-		'set',
-		'shl',
-		'shr',
-		'string',
-		'then',
-		'threadvar',
-		'to',
-		'try',
-		'type',
-		'unit',
-		'until',
-		'uses',
-		'var',
-		'virtual', // V
-		'while',
-		'with',
-		'xor');
-
+	KWs: array[TKeyword] of string;
 type
 	TInput = (
 		itUnknown,
@@ -688,7 +606,7 @@ procedure StdCharTable;
 implementation
 
 uses
-	Math,
+	Math, TypInfo,
 	uStrings, uFind, uError, uFiles, uFormat, uInput;
 
 
@@ -2236,7 +2154,7 @@ end;}
 
 var
 	ELO: array[0..50] of SG = (
-		765,677,589,538,501,470,444,422,401,383,368,
+		765{6},677,589,538,501,470,444,422,401,383,368,
 		351,336,322,309,296,284,273,262,251,240,
 		230,220,211,202,193,184,175,166,158,149,
 		141,133,125,117,110,102,95,87,80,
@@ -3286,6 +3204,12 @@ begin
 		else if Pos('%2', MesStrings[MesId]) = 0 then
 			MesParam[MesId] := 1
 		else MesParam[MesId] := 2
+	end;
+
+
+	for i := 0 to Length(KWs) - 1 do
+	begin
+		KWs[TKeyword(i)] := Copy(GetEnumName(TypeInfo(TKeyword), i), 3, MaxInt);
 	end;
 end;
 

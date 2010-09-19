@@ -13,7 +13,7 @@ interface
 uses
 	uTypes, uDForm, uDBitmap, uDIni,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, StdCtrls, uDButton, ExtCtrls;
+	Dialogs, StdCtrls, uDButton, ExtCtrls, uDImage;
 
 type
 	TOnApplyStyle = procedure(Style: TDrawStyle);
@@ -32,11 +32,11 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    ImageSample: TDImage;
 		procedure FormCreate(Sender: TObject);
 		procedure FormToData(Sender: TObject);
-		procedure FormResize(Sender: TObject);
-    procedure FormPaint(Sender: TObject);
     procedure ButtonColor0Click(Sender: TObject);
+    procedure ImageSampleFill(Sender: TObject);
 	private
 		{ Private declarations }
 		TCurVal, TDefVal, NowVal: TDrawStyle;
@@ -63,7 +63,7 @@ uses uGColor, uStrings, uFormat;
 procedure TfStyle.FormCreate(Sender: TObject);
 var i: SG;
 begin
-	Background := baUser;
+	Background := baStandard;
 	for i := 0 to Length(GraphicStyleNames) - 1 do
 		ComboBoxStyles.Items.Add(GraphicStyleNames[TGraphicStyle(i)]);
 
@@ -89,7 +89,7 @@ begin
 	NowVal.Effect := TEffect(ComboBoxEffect.ItemIndex);
 	NowVal.BorderSize := ComboBoxLineSize.ItemIndex + 1;
 
-	Fill;
+	ImageSample.Fill;
 end;
 
 procedure TfStyle.DataToForm(Sender: TObject);
@@ -114,7 +114,7 @@ begin
 	fStyle.Caption := DelCharsF(Prompt, '&');
 
 	fStyle.DataToForm(nil);
-	fStyle.Fill;
+	fStyle.ImageSample.Fill;
 
 {	fGetInt.TrackBar.OnChange := nil;
 	fGetInt.TrackBar.Frequency := (fGetInt.TMaxVal - fGetInt.TMinVal + 19) div 20;
@@ -162,21 +162,16 @@ begin
 	end;
 end;
 
-procedure TfStyle.FormResize(Sender: TObject);
-begin
-	Fill;
-end;
-
-procedure TfStyle.FormPaint(Sender: TObject);
-begin
-	BackBitmap.DrawStyle(NowVal, 0, 0, BackBitmap.Width - 1, BackBitmap.Height - 1);
-	Invalidate;
-end;
-
 procedure TfStyle.ButtonColor0Click(Sender: TObject);
 begin
 	if GetColor('Color', NowVal.Colors[TComponent(Sender).Tag], clSilver, nil) then
 		FormToData(Sender);
+end;
+
+procedure TfStyle.ImageSampleFill(Sender: TObject);
+begin
+	ImageSample.Bitmap.Bar(clBtnFace, ef16);
+	ImageSample.Bitmap.DrawStyle(NowVal, 0, 0, ImageSample.Width - 1, ImageSample.Height - 1);
 end;
 
 end.

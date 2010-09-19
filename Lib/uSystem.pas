@@ -492,9 +492,12 @@ var
 	find_context: PItemIDList;
 begin
 	FillChar(browse_info,SizeOf(browse_info),#0);
-	lg_StartFolder := Path;
+	lg_StartFolder := RepairDirectory(Path);
 	browse_info.pszDisplayName := @folder[0];
-	browse_info.lpszTitle := PChar(browseTitle);
+	if browseTitle <> '' then
+		browse_info.lpszTitle := PChar('Select the folder ' + browseTitle + '.')
+	else
+		browse_info.lpszTitle := '';
 	browse_info.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI;
 	browse_info.hwndOwner := Application.Handle;
 	if Path <> '' then
@@ -558,11 +561,9 @@ begin
 	OpenDialog1 := TOpenDialog.Create(nil);
 	try
 		if Dir = '' then Dir := WorkDir;
-		OpenDialog1.FileName := '*.*';
-		OpenDialog1.InitialDir := ExtractFilePath(Dir);
 		OpenDialog1.Options := OpenDialog1.Options + [ofPathMustExist];
 		OpenDialog1.Options := OpenDialog1.Options - [ofFileMustExist];
-		if OpenDialog1.Execute then
+		if ExecuteDialog(OpenDialog1, Dir + '*.*') then
 		begin
 			Result := True;
 			Dir := ExtractFilePath(OpenDialog1.FileName);

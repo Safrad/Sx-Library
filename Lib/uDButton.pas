@@ -408,6 +408,7 @@ begin
 	inherited;
 	{ Don't draw a border if DragMode <> dmAutomatic since this button is meant to
 		be used as a dock client. }
+	if (not (csDesigning in ComponentState)) then
 	if (DragMode <> dmAutomatic) then
 	begin
 		if FMouseDown then FDownNow := True;
@@ -421,6 +422,7 @@ end;
 procedure TDButton.CMMouseLeave(var Message: TMessage);
 begin
 	inherited;
+	if (not (csDesigning in ComponentState)) then
 	if not Dragging then
 	begin
 		FDownNow := False;

@@ -12,6 +12,7 @@ interface
 
 uses
 	uTypes, uStrings,
+	{$ifndef NoGUI}Dialogs,{$endif}
 	SysUtils, Windows;
 
 // File system
@@ -137,9 +138,11 @@ function FullDir (Dir: string): string;
 function DelFileExt(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
 function BackDir(var Dir: string): BG;
+function BackDirF(Dir: string): string;
 function LegalFileName(const FileName: string): string;
 procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
-function GetFileSizeU(const FileName: TFileName): U8;
+function GetFileSizeU(HFile: THandle): U8; overload;
+function GetFileSizeU(const FileName: TFileName): U8; overload;
 function GetFileSizeS(const FileName: TFileName): string;
 function GetFileModified(FileName: TFileName; var LastWriteTime: TFileTime): BG;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
@@ -169,6 +172,7 @@ type
 
 function ReadStringsFromFile(var FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
 function WriteStringsToFile(var FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; Append: BG): BG;
+function WriteStringToFileEx(var FileName: TFileName; const Line: string; Append: BG): BG;
 
 function ReadStringFromFile(FileName: TFileName): string; overload;
 function ReadStringFromFile(var FileName: TFileName; out Line: string): BG; overload;
@@ -188,12 +192,17 @@ function ShortToLongPath(ShortName: string): string;
 function LongToShortPath(const LongName: string): string;}
 {$ENDIF WIN32}
 
+function RepairDirectory(const Dir: TFileName): TFileName;
+{$ifndef NoGUI}function ExecuteDialog(Dialog: TOpenDialog; FileName: TFileName): BG;{$endif}
+function TempFileName(FileName: TFileName): TFileName;
+procedure ReplaceIfChanged(FileName: TFileName);
+
 implementation
 
 uses
 	Math,
 	{$ifndef NoGUI}uError, {$endif}
-	uFormat, uMem;
+	uFormat, uMem, uMath;
 
 function ErrorMes(const ErrorCode: U4): string;
 var
@@ -810,12 +819,12 @@ begin
 		end;
 	end;
 end;
-{
-function BackDir2(Dir: string): string;
+
+function BackDirF(Dir: string): string;
 begin
-	Delete(Dir, Length(Dir), 1);
-	Result := ExtractFileName(Dir) + '\';
-end;}
+	Result := Dir;
+	BackDir(Result);
+end;
 
 function LegalFileName(const FileName: string): string;
 var
@@ -939,6 +948,15 @@ begin
 			until Switch = 0;
 			Offset := 2 * Offset div 3;
 		end;
+	end;
+end;
+
+function GetFileSizeU(HFile: THandle): U8;
+begin
+	Result := 0;
+	if HFile <> INVALID_HANDLE_VALUE then
+	begin
+		HandleFileSize(HFile, Result);
 	end;
 end;
 
@@ -1387,6 +1405,54 @@ begin
 	F.Free;
 end;
 
+
+function SameDataInFile(var FileName: TFileName; const Line: string): BG;
+label LRetry, LClose;
+const
+	BufSize = 32768; // 32kB, 32MB max!
+var
+	F: TFile;
+	Buf: Pointer;
+	TotalBytes, ReadBytes: SG;
+begin
+	Result := False;
+	if FileExists(FileName) then
+	begin
+		F := TFile.Create;
+		GetMem(Buf, BufSize);
+		LRetry:
+		if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+		begin
+			TotalBytes := F.FileSize;
+			if TotalBytes <> Length(Line) then goto LClose;
+			while TotalBytes > 0 do
+			begin
+				ReadBytes := BufSize;
+				if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
+				if not F.BlockRead(Buf^, ReadBytes) then
+				begin
+					goto LClose;
+				end;
+				if SameData(Buf, @Line[Length(Line) - TotalBytes + 1], ReadBytes) = False then goto LClose;
+				Dec(TotalBytes, ReadBytes);
+			end;
+			Result := True;
+			LClose:
+			if not F.Close then goto LRetry;
+		end;
+		FreeMem(Buf);
+		F.Free;
+	end;
+end;
+
+function WriteStringToFileEx(var FileName: TFileName; const Line: string; Append: BG): BG;
+begin
+	if (Append = False) and SameDataInFile(FileName, Line) then
+		Result := True
+	else
+		Result := WriteStringToFile(FileName, Line, Append);
+end;
+
 function ReadStringsFromFile(var FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
 label LRetry;
 var
@@ -1560,6 +1626,110 @@ end;
 *)
 {$ENDIF WIN32}
 
+function RepairDirectory(const Dir: TFileName): TFileName;
+begin
+	Result := Dir;
+	while True do
+	begin
+		if DirectoryExists(Result) then Break;
+		if BackDir(string(Result)) = False then Break;
+	end;
+end;
+
+{$ifndef NoGUI}
+function ExecuteDialog(Dialog: TOpenDialog; FileName: TFileName): BG;
+begin
+	Dialog.FileName := ExtractFileName(FileName);
+	Dialog.InitialDir := RepairDirectory(ExtractFilePath(FileName));
+	Result := Dialog.Execute;
+end;
+{$endif}
+
+
+function SameFiles(FileName1, FileName2: TFileName): BG;
+label LClose;
+const
+	BufSize = 32768; // 32kB, 32MB max!
+var
+	TotalBytes, ReadBytes: SG;
+	File1, File2: TFile;
+	Buf1, Buf2: Pointer;
+begin
+	Result := False;
+	File1 := nil;
+	File2 := nil;
+	Buf1 := nil;
+	Buf2 := nil;
+
+	File1 := TFile.Create;
+	if not File1.Open(FileName1, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		goto LClose;
+	end;
+	File2 := TFile.Create;
+	if not File2.Open(FileName2, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	begin
+		goto LClose;
+	end;
+	if File1.FileSize <> File2.FileSize then goto LClose;
+	GetMem(Buf1, BufSize);
+	GetMem(Buf2, BufSize);
+
+	TotalBytes := File1.FileSize;
+	while TotalBytes > 0 do
+	begin
+		ReadBytes := BufSize;
+		if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
+		if not File1.BlockRead(Buf1^, ReadBytes) then
+		begin
+			goto LClose;
+		end;
+		if not File2.BlockRead(Buf2^, ReadBytes) then
+		begin
+			goto LClose;
+		end;
+		Dec(TotalBytes, ReadBytes);
+		if SameData(Buf1, Buf2, ReadBytes) = False then goto LClose;
+	end;
+	Result := True;
+
+	LClose:
+	if Assigned(File1) then
+	begin
+		FreeAndNil(File1);
+	end;
+	if Assigned(File2) then
+	begin
+		FreeAndNil(File2);
+	end;
+	FreeMem(Buf1);
+	FreeMem(Buf2);
+end;
+
+function TempFileName(FileName: TFileName): TFileName;
+begin
+	Result := ExtractFilePath(FileName) + '~' + ExtractFileName(FileName);
+end;
+
+procedure ReplaceIfChanged(FileName: TFileName);
+var
+	OrigFileName: TFileName;
+begin
+	OrigFileName := ExtractFileName(FileName);
+	if Length(OrigFileName) <= 0 then Exit;
+	if OrigFileName[1] <> '~' then Exit;
+	Delete(OrigFileName, 1, 1);
+	OrigFileName := ExtractFilePath(FileName) + OrigFileName;
+
+	if SameFiles(OrigFileName, FileName) then
+		DeleteFileEx(FileName)
+	else
+	begin
+		CopyFile(FileName, OrigFileName, False);
+		DeleteFileEx(FileName);
+	end;
+
+end;
 
 initialization
 	InitPaths;

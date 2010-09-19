@@ -26,7 +26,7 @@ const
 		'jpg', // Compresssed, losing format
 		'jpeg', // Compresssed, losing format
 		'jfif', // Compresssed, losing format
-		'gif', // Compresssed, not support truecolor
+		'gif', // Compresssed, not supports truecolor
 		'png', // Compresssed better that gif
 		'ppm', // Uncompresssed
 		'tga');// Uncompresssed
@@ -73,7 +73,7 @@ const
 type
 	TEffect = (ef00, ef01, ef02, ef03, ef04, ef05, ef06, ef07,
 		ef08, ef09, ef10, ef11, ef12, ef13, ef14, ef15, ef16,
-		efAdd, efSub, efAdd127, efSub127, efXor, efNeg);
+		efAdd, efSub, efAdd127, efSub127, efXor, efNeg, efDif);
 const
 	EffectNames: array[TEffect] of string = (
 		'0',
@@ -98,7 +98,8 @@ const
 		'Add-',
 		'Sub+',
 		'Xor',
-		'Neg');
+		'Neg',
+		'Dif');
 
 type
 {	PBmpData = ^TBmpData;
@@ -368,6 +369,9 @@ type
 	PBitmapHead = ^TBitmapHead;
 var
 	Sins: PSinTable;
+	BitmapDif: UG; // D???
+
+function DialogStr(Ext, Des: array of string): string;
 
 implementation
 
@@ -5210,6 +5214,7 @@ begin
 		Inc(cy);
 	until cy > Y2;
 end;
+
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Bmp(
 	XD1, YD1: TCoor;
@@ -5382,6 +5387,8 @@ begin
 			je @LXorS
 			cmp al, efNeg
 			je @LNegS
+			cmp al, efDif
+			je @LDifS
 			jmp @Fin
 
 			@LMovS:
@@ -6208,6 +6215,36 @@ begin
 				add esi, BPP
 				cmp esi, ecx
 			jb @LNegS
+			jmp @Fin
+
+			@LDifS:
+				xor eax, eax
+
+				mov al, [esi]
+				sub al, [edi]
+				movsx eax, al
+				cdq
+				xor eax, edx
+				add BitmapDif, eax
+
+				mov al, [esi + 1]
+				sub al, [edi + 1]
+				movsx eax, al
+				cdq
+				xor eax, edx
+				add BitmapDif, eax
+
+				mov al, [esi + 2]
+				sub al, [edi + 2]
+				movsx eax, al
+				cdq
+				xor eax, edx
+				add BitmapDif, eax
+
+				add edi, BPP
+				add esi, BPP
+				cmp esi, ecx
+			jb @LDifS
 			jmp @Fin
 
 			@LXorS:
@@ -7296,6 +7333,7 @@ begin
 	else{$endif}
 		Bmp(XD1, YD1, BmpS, 0, 0, BmpS.Width - 1, BmpS.Height - 1, Effect);
 end;
+
 (*-------------------------------------------------------------------------*)
 
 var
@@ -10431,27 +10469,28 @@ begin
 
 end;
 
-(*-------------------------------------------------------------------------*)
-procedure _Initialization;
+function DialogStr(Ext, Des: array of string): string;
 var
 	i: SG;
 	s1, s2: string;
 begin
-	for i := 0 to Length(AllPictureExt) - 1 do
+	for i := 0 to Length(Ext) - 1 do
 	begin
-		s1 := s1 + {'*.' +} AllPictureExt[i] + ', ';
-		s2 := s2 + '*.' + AllPictureExt[i] + ';';
+		s1 := s1 + {'*.' +} Ext[i] + ', ';
+		s2 := s2 + '*.' + Ext[i] + ';';
 	end;
 	SetLength(s1, Length(s1) - 1);
 	s1[Length(s1)] := ')';
 	SetLength(s2, Length(s2) - 1);
-	AllPictures := 'Any Pictures (' + s1 + '|' + s2;
-	for i := 0 to Length(AllPictureExt) - 1 do
+	Result := 'Any (' + s1 + '|' + s2;
+	for i := 0 to Length(Ext) - 1 do
 	begin
-		AllPictures := AllPictures + '|' + AllPictureDes[i] + ' (*.' + AllPictureExt[i] + ')|*.' + AllPictureExt[i];
+		Result := Result + '|' + Des[i] + ' (*.' + Ext[i] + ')|*.' + Ext[i];
 	end;
-	AllPictures := AllPictures +  '|' + AllFiles;
+	Result := Result + AllFiles;
 end;
+
+(*-------------------------------------------------------------------------*)
 
 procedure TDBitmap.DrawStyle(DS: TDrawStyle; XS1, YS1, XS2, YS2: TCoor);
 var
@@ -10465,15 +10504,16 @@ begin
 	end;
 	gsHorizontal, gsVertical, gsFDiagonal, gsBDiagonal, gsCross, gsDiagCross:
 	begin
-		Bar(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Effect);
-		Canvas.Brush.Color := DS.Colors[1];
-		Canvas.Pen.Style := psClear;
+		Bar(XS1, YS1, XS2, YS2, DS.Colors[1], DS.Effect);
+		Canvas.Pen.Color := DS.Colors[1];
+		Canvas.Brush.Color := DS.Colors[0];
 		Canvas.Brush.Style := TBrushStyle(SG(bsHorizontal) + SG(DS.Style) - SG(gsHorizontal));
-		Canvas.FillRect(Rect(XS1, YS1, XS2, YS2));
-		Transparent := True;
+		Canvas.Pen.Style := psSolid;
+		Canvas.FillRect(Rect(XS1, YS1, XS2 + 1, YS2 + 1));
+{		Transparent := True;
 		TransparentColor := DS.Colors[1];
 		Bar(XS1, YS1, XS2, YS2, DS.Colors[0], DS.Effect);
-		Transparent := False;
+		Transparent := False;}
 //		Canvas.CopyMode
 
 //		Border(XS1, YS1, XS2, YS2: TCoor; C, C, 2);
@@ -10517,8 +10557,7 @@ begin
 	SavePictureDialog := TSavePictureDialog.Create(nil);
 	SavePictureDialog.Filter := AllPictures;
 	SavePictureDialog.Options := SavePictureDialog.Options + [ofOverwritePrompt, ofPathMustExist];
-	SavePictureDialog.FileName := DataDir + '*.png';
-	if SavePictureDialog.Execute then
+	if ExecuteDialog(SavePictureDialog, DataDir + '*.png') then
 	begin
 		FileName := SavePictureDialog.FileName;
 		Quality := 90;
@@ -10879,7 +10918,7 @@ begin
 end;
 
 initialization
-	_Initialization;
+	AllPictures := DialogStr(AllPictureExt, AllPictureDes);
 finalization
 	FreeFontBitmap;
 	if Sins <> nil then

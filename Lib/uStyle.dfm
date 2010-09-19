@@ -17,8 +17,6 @@ object fStyle: TfStyle
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
-  OnPaint = FormPaint
-  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -181,5 +179,17 @@ object fStyle: TfStyle
     ItemHeight = 13
     TabOrder = 8
     OnChange = FormToData
+  end
+  object ImageSample: TDImage
+    Left = 152
+    Top = 40
+    Width = 105
+    Height = 57
+    DrawFPS = False
+    HandScroll = False
+    HotTrack = True
+    OnFill = ImageSampleFill
+    TabOrder = 9
+    TabStop = False
   end
 end

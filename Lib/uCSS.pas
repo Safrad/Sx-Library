@@ -96,6 +96,8 @@ begin
 						end
 						else
 						begin
+{							if Sections[SectionCount - 1].Props[Sections[SectionCount - 1].PropCount].Value <> '' then
+								Sections[SectionCount - 1].Props[Sections[SectionCount - 1].PropCount].Value := Sections[SectionCount - 1].Props[Sections[SectionCount - 1].PropCount].Value + ', ';}
 							Sections[SectionCount - 1].Props[Sections[SectionCount - 1].PropCount].Value :=
 								Sections[SectionCount - 1].Props[Sections[SectionCount - 1].PropCount].Value + Parser.Id;
 						end;
@@ -151,6 +153,7 @@ end;
 function TCSS.GetProperty(Section, Prop: string): string;
 var i, j: SG;
 begin
+  Result := '';
 	for i := 0 to SectionCount - 1 do
 	begin
 		if Sections[i].Name = Section then
@@ -177,7 +180,7 @@ begin
 		s := s + Sections[i].Name + ' {' + HTMLSep;
 		for j := 0 to Sections[i].PropCount - 1 do
 		begin
-			s := s + CharTab + Sections[i].Props[j].Name + ': ' + Sections[i].Props[j].Value + ';' + HTMLSep;
+			s := s + CharTab + Sections[i].Props[j].Name + ': ' + ReplaceF(Sections[i].Props[j].Value, ',', ', ') + ';' + HTMLSep;
 		end;
 		s := s + '}' + HTMLSep + HTMLSep;
 	end;

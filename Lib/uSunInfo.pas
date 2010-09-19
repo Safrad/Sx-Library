@@ -21,7 +21,7 @@ procedure SunOnOff(const LongitudeX, LatitudeY, TimeZone: Extended;
 
 implementation
 
-uses uAdd;
+uses uTypes, uMath;
 
 procedure SunOnOff(const LongitudeX, LatitudeY, TimeZone: Extended;
 	Year: Integer; Month, Day: Byte;

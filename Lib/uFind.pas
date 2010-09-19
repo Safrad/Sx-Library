@@ -29,6 +29,8 @@ function Find(SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
 function FindBM(SubStr, Str: string): SG;
 {$endif}
 *)
+function Search(Pattern, Text: string; ErrorLen: SG = 0): SG;
+
 implementation
 
 uses
@@ -129,20 +131,56 @@ end;
 
 function Find(SubStr, Str: string; FromPos, ToPos: SG): SG;
 label LNFound;
-var i, j: SG;
+var
+	i, j: SG;
+	Dir: SG;
 begin
 	Result := 0;
+	// Check parameters
+	if Length(Str) = 0 then Exit;
+	if Length(SubStr) = 0 then Exit;
+	if Length(SubStr) > Length(Str) then Exit;
+
 	if FromPos < 1 then FromPos := 1;
-	i := FromPos - 1;
-	while i <= ToPos - Length(SubStr) do
+	if ToPos < 1 then ToPos := 1;
+
+	if FromPos = ToPos then
+		Dir := 0
+	else if FromPos > ToPos then
 	begin
-		for j := 0 to Length(SubStr) - 1 do
-			if  Str[i + j + 1] <> SubStr[j + 1] then goto LNFound;
-		Result := i + 1;
+		Dir := -1;
+		if FromPos > Length(Str) - Length(SubStr) + 1 then FromPos := Length(Str) - Length(SubStr) + 1;
+		if FromPos <= ToPos  then
+		begin
+			FromPos := ToPos;
+			Dir := 0;
+		end
+		else
+			Dec(ToPos);
+	end
+	else // if FromPos < ToPos then
+	begin
+		Dir := 1;
+		if ToPos > Length(Str) - Length(SubStr) + 1 then ToPos := Length(Str) - Length(SubStr) + 1;
+		if FromPos >= ToPos  then
+		begin
+			FromPos := ToPos;
+			Dir := 0;
+		end
+		else
+			Inc(ToPos);
+	end;
+
+	// Find D??? BM
+	i := FromPos;
+	repeat
+		for j := 1 to Length(SubStr) do
+			if  Str[i - 1 + j] <> SubStr[j] then goto LNFound;
+		Result := i;
 		Exit;
 		LNFound:
-		i := i + 1;
-	end;
+		Inc(i, Dir);
+	until i = ToPos;
 end;
 
 
@@ -301,5 +339,64 @@ begin
 end;
 {$endif}
 *)
+function Search(Pattern, Text: string; ErrorLen: SG = 0): SG;
+const
+	Empty = $FFFFFFFFFFFFFFFF;
+var
+	R: array[0..7] of U8;
+	D: array[Char] of U8;
+	L: U8;
+	i, j: SG;
+	c: Char;
+begin
+	Result := 0;
+	// bit paralelism version Shift-Or
+	if ErrorLen > Length(R) then ErrorLen := Length(R);
+	if Length(Pattern) <= 0 then Exit;
+	if Length(Pattern) >= 64 then Exit;
+
+	// Precalculate
+	for c := Low(c) to High(c) do
+	begin
+		D[c] := Empty;
+		for i := Length(Pattern) downto 1 do
+		begin
+			D[c] := D[c] shl 1;
+			if c <> Pattern[i] then
+				D[c] := D[c] or 1
+{			else
+				Nop};
+		end;
+	end;
+
+	L := 1 shl (Length(Pattern) - 1);
+
+	R[0] := Empty;
+	for j := 1 to ErrorLen do
+		R[j] := Empty;
+	for i := 1 to Length(Text) do
+	begin
+		for j := ErrorLen downto 1 do
+		begin
+			R[j] :=
+				((R[j] shl 1) or D[Text[i]]) and // Hamming
+				// ((R[j - 1] and LR[j - 1])shl 1) and // Levenshtein
+				(R[j - 1] shl 1 {or V});
+		end;
+		R[0] := (R[0] shl 1) or D[Text[i]];
+		if (R[0] and L) = 0 then
+		begin
+			Result := i - Length(Pattern) + 1;
+			Exit;
+		end;
+		for j := 1 to ErrorLen do
+			if (R[j] and L) = 0 then
+			begin
+				Result := i - Length(Pattern) + 1;
+				Exit;
+			end;
+
+	end;
+end;
 
 end.

@@ -25,6 +25,7 @@ type
 	TDForm = class(TForm)
 	private
 		{ Private declarations }
+		FCaption: string;
 		FStoreWindow: Boolean;
 		FWindowPlacement: TWindowPlacement;
 		FWindowLong: LongInt;
@@ -46,6 +47,7 @@ type
 		procedure InitBackground;
 		procedure SetBackground(Value: TBackground);
 		procedure SetChangeMode(Value: Boolean);
+		procedure SetCaption(Value: string);
 //		procedure WMPaint(var Message: TWMPaint); //message WM_PAINT;
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
@@ -78,6 +80,7 @@ type
 		procedure ResizeMessage;
 	published
 		{ published declarations }
+		property Caption: string read FCaption write SetCaption;
 		property BackBitmap: TDBitmap read FBitmapB;
 		property Background: TBackground read FBackground write SetBackground default baNone;
 		property FullScreen: Boolean read FFullScreen write SetFullScreen default False;
@@ -113,7 +116,7 @@ implementation
 
 uses
 	Math,
-	uGraph, uFiles, OpenGL12, uScreen, uSysInfo;
+	uGraph, uFiles, OpenGL12, uScreen, uSysInfo, uFormat, uStrings;
 const
 	OneBuffer = False;
 var
@@ -1101,6 +1104,15 @@ begin
 	FWindowPlacement.Length := SizeOf(FWindowPlacement);
 	FStoreWindow := GetWindowPlacement(Handle, @FWindowPlacement);
 	FStoreWindow := True;
+end;
+
+procedure TDForm.SetCaption(Value: string);
+begin
+	if FCaption <> Value then
+	begin
+		FCaption := Value;
+		inherited Caption := Value; // + ' (' + NToS(ClientWidth) + ' ' + CharTimes + ' ' + NToS(ClientHeight) + ')';
+	end;
 end;
 
 procedure Register;

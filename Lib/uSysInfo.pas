@@ -18,39 +18,38 @@ uses
 type
 	TfSysInfo = class(TDForm)
 		Bevel1: TBevel;
-		LabelTOperatingSystem: TDLabel;
+    LabelTOperatingSystem: TLabel;
 		EditOS: TEdit;
 		Bevel4: TBevel;
-		LabelUsed: TDLabel;
-		LabelFree: TDLabel;
-		LabelTotal: TDLabel;
-    PMT: TDLabel;
-    PMF: TDLabel;
-    PFF: TDLabel;
-    PFT: TDLabel;
-    PMU: TDLabel;
-    PFU: TDLabel;
-		LabelTPhysicalMemory: TDLabel;
-		LabelTPageFile: TDLabel;
+    LabelUsed: TLabel;
+    LabelFree: TLabel;
+    LabelTotal: TLabel;
+    edMT: TEdit;
+    edMF: TEdit;
+    edFF: TEdit;
+    edFT: TEdit;
+    edMU: TEdit;
+    edFU: TEdit;
+    LabelTPhysicalMemory: TLabel;
+    LabelTPageFile: TLabel;
 		Bevel3: TBevel;
 		Bevel2: TBevel;
-		DLabel3: TDLabel;
-		DLabel5: TDLabel;
+		DLabel3: TLabel;
+    LabelDisk: TLabel;
 		Bevel5: TBevel;
 		EditCPU: TEdit;
-		EditDiskU: TDLabel;
-		EditDiskF: TDLabel;
-		EditDiskT: TDLabel;
-		Bevel6: TBevel;
+    edDiskU: TEdit;
+    edDiskF: TEdit;
+    edDiskT: TEdit;
 		ButtonOk: TDButton;
-		DLabelCPUFrequency: TDLabel;
+    DLabelCPUFrequency: TLabel;
 		EditCPUFrequency: TEdit;
-		DLabel2: TDLabel;
+    LabelAMDDuronCmp: TLabel;
 		EditDuron: TEdit;
-		DLabelCPUUsage: TDLabel;
+    DLabelCPUUsage: TLabel;
 		EditCPUUsage: TEdit;
     EditCounter: TEdit;
-		DLabel1: TDLabel;
+    LabelMBoardCounter: TLabel;
 		ComboBoxSize: TComboBox;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
@@ -91,6 +90,7 @@ function GetKey(Default: Word): Word;
 function OSToStr(OS: TOSVersionInfo): string;
 function GetCPUUsage(IntTime: U8): SG;
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
+procedure FillCPUTest(var SysInfo: TSysInfo);
 
 implementation
 
@@ -580,19 +580,19 @@ begin
 	EditCPUUsage.Text := NToS(GSysInfo.CPUUsage, 2) + '%';
 	EditCPUFrequency.Text := NToS(GSysInfo.CPUFrequency) + ' Hz';
 	EditDuron.Text := NToS(GSysInfo.CPUPower) + ' Hz';
-	EditCounter.Text := NToS(PerformanceFrequency);
+	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz';
 
-	EditDiskU.Caption := BToStr(GSysInfo.DiskTotal - GSysInfo.DiskFree);
-	EditDiskF.Caption := BToStr(GSysInfo.DiskFree);
-	EditDiskT.Caption := BToStr(GSysInfo.DiskTotal);
+	edDiskU.Text := BToStr(GSysInfo.DiskTotal - GSysInfo.DiskFree);
+	edDiskF.Text := BToStr(GSysInfo.DiskFree);
+	edDiskT.Text := BToStr(GSysInfo.DiskTotal);
 
-	PMU.Caption := BToStr(GSysInfo.MS.dwTotalPhys - GSysInfo.MS.dwAvailPhys);
-	PMF.Caption := BToStr(GSysInfo.MS.dwAvailPhys);
-	PMT.Caption := BToStr(GSysInfo.MS.dwTotalPhys);
+	edMU.Text := BToStr(GSysInfo.MS.dwTotalPhys - GSysInfo.MS.dwAvailPhys);
+	edMF.Text := BToStr(GSysInfo.MS.dwAvailPhys);
+	edMT.Text := BToStr(GSysInfo.MS.dwTotalPhys);
 
-	PFU.Caption := BToStr(GSysInfo.MS.dwTotalPageFile - GSysInfo.MS.dwAvailPageFile);
-	PFF.Caption := BToStr(GSysInfo.MS.dwAvailPageFile);
-	PFT.Caption := BToStr(GSysInfo.MS.dwTotalPageFile);
+	edFU.Text := BToStr(GSysInfo.MS.dwTotalPageFile - GSysInfo.MS.dwAvailPageFile);
+	edFF.Text := BToStr(GSysInfo.MS.dwAvailPageFile);
+	edFT.Text := BToStr(GSysInfo.MS.dwTotalPageFile);
 
 end;
 
@@ -625,7 +625,7 @@ begin
 	PerformanceFrequency := SysInfo.CPUFrequency;}
 
 	VersionInfo := TrpVersionInfo.Create(nil);
-	GSysInfo.ProgramVersion := VersionInfo.ProductVersion;
+	GSysInfo.ProgramVersion := VersionInfo.FileVersion;
 	VersionInfo.Free;
 
 	CPUUsage := 0 * CPUUsageMul;

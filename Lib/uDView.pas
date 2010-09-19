@@ -356,6 +356,7 @@ begin
 					else
 						FSortBySwap := not FSortBySwap;
 					DataChanged;
+					Fill;
 				end;
 			end;
 			end;
@@ -369,8 +370,8 @@ begin
 	inherited;
 	if (DragMode <> dmAutomatic) then
 	begin
-//		MouseMove([], , );
-//		Fill;
+//		MouseMove([], -1, -1);
+		Fill;
 	end;
 end;
 
@@ -381,9 +382,15 @@ begin
 	begin
 		if Where <> vaNone then
 		begin
-			MouseMove([], -1, -1);
 			Where := vaNone;
-			LFill(nil);
+			if (HotRow <> -1) or (HotColumn <> -1) then
+			begin
+				HotRow := -1;
+				HotColumn := -1;
+//			MouseMove([], -1, -1);
+				Fill;
+			end;
+//			LFill(nil);
 		end;
 	end;
 end;
@@ -823,7 +830,6 @@ begin
 		if FSortBySwap then
 			if RowCount > 1 then
 				Reverse4(RowOrder[0], RowCount);
-		Fill;
 	end;
 end;
 

@@ -339,7 +339,7 @@ begin
 	DViewS.Columns[0].Caption := 'Event';
 	DViewS.Columns[0].Width := 114;
 	DViewS.Columns[1].Caption := 'Sound File Name';
-	DViewS.Columns[0].Width := 238;
+	DViewS.Columns[1].Width := 238;
 
 	MainIni.RWFormPos(Self, False);
 	MainIni.RWDView(DViewS, False);
@@ -386,9 +386,7 @@ begin
 			0:
 			begin
 				s := FullDir(P.FileName);
-				OpenDialog1.InitialDir := ExtractFilePath(s);
-				OpenDialog1.FileName := ExtractFileName(s);
-				if OpenDialog1.Execute then
+				if ExecuteDialog(OpenDialog1, s) then
 				begin
 					P.FileName := ShortDir(OpenDialog1.FileName);
 					WaveReadFromFile(P.Wave, FullDir(P.FileName));

@@ -800,7 +800,7 @@ begin
 //			if M.Name <> 'Mark1' then
 			if (M.Bitmap <> nil) and (M.Bitmap.Empty = False) and (M.Name <> 'Exit1')
 			and (M.Name <> 'Register1') and (M.Name <> 'Unregister1') and (M.Name <> 'Delete1')
-			and (M.Name <> 'Logo1')then
+			and (M.Name <> 'Logo1') and (M.Name <> 'PrinterSetup1') and (M.Name <> 'FileExtensions1') then
 			begin
 				Name := M.Name + 'Icon1';
 				if Panel.FindComponent(Name) <> nil then
@@ -912,7 +912,7 @@ begin
 		if M <> nil then
 		begin
 			C.Enabled := M.Enabled;
-//			(C as TDButton).Down := M.Checked;
+			(C as TDButton).Down := M.Checked;
 		end;
 	end;
 end;

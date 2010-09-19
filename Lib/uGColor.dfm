@@ -356,7 +356,7 @@ object fGColor: TfGColor
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 6
+    TabOrder = 12
     OnClick = ButtonRGBAClick
   end
   object ButtonOk: TDButton
@@ -415,7 +415,7 @@ object fGColor: TfGColor
     Width = 33
     Height = 19
     AutoSize = False
-    TabOrder = 8
+    TabOrder = 7
     Text = '$FFF'
     OnChange = EditRGBAChange
   end
@@ -432,7 +432,7 @@ object fGColor: TfGColor
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 10
+    TabOrder = 13
     OnClick = ButtonRGBAClick
   end
   object EditB: TEdit
@@ -442,7 +442,7 @@ object fGColor: TfGColor
     Width = 33
     Height = 19
     AutoSize = False
-    TabOrder = 12
+    TabOrder = 10
     Text = '$FFF'
     OnChange = EditRGBAChange
   end
@@ -530,7 +530,7 @@ object fGColor: TfGColor
     Height = 21
     Style = csDropDownList
     ItemHeight = 13
-    TabOrder = 29
+    TabOrder = 28
     OnChange = ComboBoxBitDepthChange
   end
   object DLabelH: TDLabel
@@ -656,7 +656,7 @@ object fGColor: TfGColor
     Height = 20
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    TabOrder = 9
+    TabOrder = 8
     object ImageG: TDImage
       Tag = 1
       Left = 0
@@ -681,7 +681,7 @@ object fGColor: TfGColor
     Height = 20
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    TabOrder = 13
+    TabOrder = 11
     object ImageB: TDImage
       Tag = 2
       Left = 0
