@@ -692,7 +692,7 @@ begin
 	F.Free;
 end;
 
-function AlphaCharToWord(Line: string; var InLineIndex: Integer): Word;
+function AlphaCharToWord(Line: string; var InLineIndex: Integer): U2;
 var
 	i: Integer;
 	Found: Integer;

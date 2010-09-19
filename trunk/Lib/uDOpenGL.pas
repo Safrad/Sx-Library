@@ -10,7 +10,9 @@ unit uDOpenGL;
 
 interface
 
-uses OpenGL12, Windows, Graphics;
+uses
+	uTypes,
+	OpenGL12, Windows, Graphics;
 
 (*
 // Open GL 1.1 Enhacement
@@ -37,7 +39,7 @@ var
 	hrc: HGLRC; //OpenGL rendering context
 	DC: HDC; // Secondary Buffer
 
-	FontBase: LongWord;
+	FontBase: UG;
 var
 	Hand: HWND;
 	Canv: TCanvas;
@@ -46,7 +48,7 @@ implementation
 
 uses
 	Dialogs,
-	uGraph, uDBitmap, uTypes, uError;
+	uGraph, uDBitmap, uError;
 
 {
 procedure glBindTexture(target: GLenum; texture: GLuint); external opengl32 name 'glBindTexture';

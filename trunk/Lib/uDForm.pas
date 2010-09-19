@@ -28,42 +28,35 @@ type
 		FCaption: string;
 		FStoreWindow: Boolean;
 		FWindowPlacement: TWindowPlacement;
-		FWindowLong: LongInt;
-//		ALeft, ATop, AWidth, AHeight: LongInt;
+		FWindowLong: S4;
 
 		FBitmapB: TDBitmap;
 
-//		Image: TImage;
 		FBackground: TBackground;
 		FFullScreen: Boolean;
 		FChangeMode: Boolean;
 
 		FOnRWOptions: TRWOptionsEvent;
 
-		procedure InitRect;
+		procedure ResizeMessage;
 		procedure CheckPos;
 		procedure Common(Value: Boolean);
 		procedure SetFullScreen(Value: Boolean);
-		procedure InitBackground;
+		procedure InitBackground(const Direct: BG);
 		procedure SetBackground(Value: TBackground);
 		procedure SetChangeMode(Value: Boolean);
 		procedure SetCaption(Value: string);
-//		procedure WMPaint(var Message: TWMPaint); //message WM_PAINT;
-		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;
-
-{		procedure WMHScroll(var Message: TWMScroll); message WM_HSCROLL;
-		procedure WMVScroll(var Message: TWMScroll); message WM_VSCROLL;}
-
 		procedure WMSysColorChange(var Message: TWMSysColorChange); message WM_SYSCOLORCHANGE;
-
 	protected
 		{ Protected declarations }
 	public
 		{ Public declarations }
 		RC: HGLRC;
-		FontBase: LongWord;
+		FontBase: U4;
 
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
@@ -72,12 +65,10 @@ type
 		procedure RestoreWindow;
 		procedure StoreWindow;
 
-//		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+//		procedure KeyDown(var Key: U2; Shift: TShiftState); override;
 
-		procedure Fill; // OnPaint + Paint
 		procedure Paint; override;
 		procedure ResizeScene;
-		procedure ResizeMessage;
 	published
 		{ published declarations }
 		property Caption: string read FCaption write SetCaption;
@@ -94,11 +85,11 @@ procedure FormFree(var Form: TForm);
 function FormDraw(Form: TForm): BG;
 
 procedure glShadowText(Canvas: TCanvas;
-	const X, Y: Integer; const Text: string; const CF, CB: TColor);
+	const X, Y: Integer; const Text: string; const CF, CB: TColor; Shadow: SG);
 procedure glTextOut(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const C: TColor);
 procedure ShowTaskBar(Visible: Boolean);
-procedure GetScreen(var Rect: TRect);
+function GetScreen(var Rect: TRect): SG{Up, Down, Left, Right};
 
 procedure Register;
 
@@ -202,7 +193,7 @@ begin
 end;
 
 procedure glShadowText(Canvas: TCanvas;
-	const X, Y: Integer; const Text: string; const CF, CB: TColor);
+	const X, Y: Integer; const Text: string; const CF, CB: TColor; Shadow: SG);
 var
 	Params: array[0..3] of SG;
 	C: TRGBA;
@@ -232,32 +223,29 @@ begin
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4ubv(PGLUByte(@C));
 		glBegin(GL_QUADS);
-			glVertex3f(sx, sy, 0);
-			glVertex3f(sx + wx, sy, 0);
-			glVertex3f(sx + wx, sy + wy, 0);
-			glVertex3f(sx, sy + wy , 0);
+			glVertex3f(sx, sy, 1);
+			glVertex3f(sx + wx, sy, 1);
+			glVertex3f(sx + wx, sy + wy, 0.5);
+			glVertex3f(sx, sy + wy , 0.5);
 		glEnd;
 		glDisable(GL_BLEND);
 	end;
 
-	C.L := ShadowColor(CF);
+(*	C.L := MixColors(CF, CB);
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1); // Open GL FP Exception
+	glRasterPos3d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1, 1); // Open GL FP Exception
 {	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
 	glTexCoord4d(1, 1, 1, 1);
 	glRasterPos4d(68, 0, 0, 1);
 	glBitmap(0, 0, 0, 0, 0, 0, nil);}
-	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
+	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1]))); *)
 
 
 	C.L := CF;
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1); // Open GL FP Exception
+	glRasterPos3d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1, 0); // Open GL FP Exception
 	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
 
-
-{	glTextOut(Canvas, X, Y, Text, CF);
-	glTextOut(Canvas, X + 1, Y + 1, Text, ShadowColor(CF));}
 end;
 
 procedure ShowTaskBar(Visible: Boolean);
@@ -270,7 +258,7 @@ begin
 		ShowWindow(hTaskBar, SW_HIDE);
 end;
 
-procedure GetScreen(var Rect: TRect);
+function GetScreen(var Rect: TRect): SG;
 var
 	hTaskBar: HWND;
 	RectT: TRect;
@@ -286,13 +274,27 @@ begin
 	Rect.Bottom := h;
 
 	if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Top <= 0) then
-		Rect.Top := RectT.Bottom // Up
+	begin
+		Rect.Top := RectT.Bottom; // Up
+		Result := 0;
+	end
 	else if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Bottom >= h) then
-		Rect.Bottom := RectT.Top // Down
+	begin
+		Rect.Bottom := RectT.Top; // Down
+		Result := 1;
+	end
 	else if (RectT.Left <= 0) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-		Rect.Left := RectT.Right // Left
+	begin
+		Rect.Left := RectT.Right; // Left
+		Result := 2;
+	end
 	else if (RectT.Right >= w) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-		Rect.Right := RectT.Left // Right
+	begin
+		Rect.Right := RectT.Left; // Right
+		Result := 3;
+	end
+	else
+		Result := -1;
 end;
 {
 procedure TDForm.AfterCreate;
@@ -305,63 +307,37 @@ end;}
 
 procedure TDForm.Common(Value: Boolean);
 var
-	Style: LongInt;
-//	LastBackground: TBackground;
+	Style: S4;
 begin
-{		if FBackground = baOpenGL then
-		begin
-			FreeOpenGL;
-		end;}
-		if Value then
-		begin
-			StoreWindow;
+	if Value then
+	begin
+		StoreWindow;
 
-			if FChangeMode then
-			begin
-				ReadScreenModes;
-				SetScreenMode(640, 480, 32, 0, False, False, False, False, True);
-			end;
-{			LastBackground := Background;
-			Background := baNone;
-			BorderStyle := bsNone;
-			Background := LastBackground;}
-			Style := GetWindowLong(Handle, GWL_STYLE);
-			Style := Style and not WS_CAPTION;
-			Style := Style and not WS_THICKFRAME;
-			SetWindowLong(Handle, GWL_STYLE, Style);
-			WindowState := wsMaximized;
-//			if FBackground = baOpenGL then
-{				Width := Screen.Width;
-				Height := Screen.Height;}
-				SetBounds(0, 0, Screen.Width, Screen.Height); // -> PopupMenu is visibled
-{			else
-				SetBounds(0, 0, Screen.Width, Screen.Height);}
-			if FBackground <> baOpenGL then
-			begin
-				InitBackground;
-			end;
-		end
-		else
+		if FChangeMode then
 		begin
-{			LastBackground := Background;
-			BorderStyle := bsSizeable;
-			BorderStyle := bsNone;
-			Background := LastBackground;}
-			if FChangeMode then
-				RestoreStartMode;
-			Style := GetWindowLong(Handle, GWL_STYLE);
-			Style := Style or (WS_CAPTION);
-			Style := Style or (WS_THICKFRAME);
-			SetWindowLong(Handle, GWL_STYLE, Style);
-			WindowState := wsNormal;
-			RestoreWindow;
-//			Show;
+			ReadScreenModes;
+			SetScreenMode(640, 480, 32, 0, False, False, False, False, True);
 		end;
-{		if FBackground = baOpenGL then
-		begin
-			CreateOpenGL(Handle, Canvas);
-		end;}
-		ResizeMessage;
+		Style := GetWindowLong(Handle, GWL_STYLE);
+		Style := Style and not WS_CAPTION;
+		Style := Style and not WS_THICKFRAME;
+		SetWindowLong(Handle, GWL_STYLE, Style);
+		WindowState := wsMaximized;
+		SetBounds(0, 0, Screen.Width, Screen.Height); // -> PopupMenu is visibled
+		InitBackground(False);
+	end
+	else
+	begin
+		if FChangeMode then
+			RestoreStartMode;
+		Style := GetWindowLong(Handle, GWL_STYLE);
+		Style := Style or (WS_CAPTION);
+		Style := Style or (WS_THICKFRAME);
+		SetWindowLong(Handle, GWL_STYLE, Style);
+		WindowState := wsNormal;
+		RestoreWindow;
+	end;
+	ResizeMessage;
 end;
 
 procedure TDForm.SetFullScreen(Value: Boolean);
@@ -386,22 +362,22 @@ begin
 	end;
 end;
 
-procedure TDForm.InitBackground;
-//var C: TRColor;
+procedure TDForm.InitBackground(const Direct: BG);
 begin
 	if Assigned(FBitmapB) then
 	begin
-//		Caption := IntToStr(FBitmapB.Width);
-		if (FBitmapB.Width <> ClientWidth) or
-			(FBitmapB.Height <> ClientHeight) then
+		case FBackground of
+		baNone, baOpenGL:
 		begin
-//			if Background <> baOpenGLBitmap then
-				FBitmapB.SetSize(ClientWidth, ClientHeight);
-				FBitmapB.ChangeRB := FBackground = baOpenGLBitmap;
-{			else
-				FBitmapB.SetSize(1 shl CalcShr(ClientWidth), 1 shl CalcShr(ClientHeight));}
+			FBitmapB.SetSize(0, 0);
+			Exit;
+		end;
+		end;
+		if Direct or (FBitmapB.Width <> ClientWidth) or (FBitmapB.Height <> ClientHeight) then
+		begin
+			FBitmapB.SetSize(ClientWidth, ClientHeight);
+			FBitmapB.ChangeRB := FBackground = baOpenGLBitmap;
 
-			if (ClientWidth = 0) or (ClientHeight = 0) then Exit;
 			if FBitmapB.Empty = False then
 			begin
 				case FBackground of
@@ -414,57 +390,6 @@ begin
 					FBitmapB.FormBitmap(Color);
 					if FBitmapF <> nil then
 						FBitmapB.Texture(FBitmapF, ef04);
-{					if (FBitmapB.Width >= 4) and (FBitmapB.Height >=4) then
-					begin
-						C.T := 0;
-						C.R := 117;
-						C.G := 140;
-						C.B := 220;
-
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 1, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 2, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, 0, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, 3, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 3, 0, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, 1, C, ef10);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, 1, C, ef04);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, 2, C, ef04);
-
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 1, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 2, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 0, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 0, FBitmapB.Height - 1 - 3, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 3, FBitmapB.Height - 1 - 0, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 1, C, ef10);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 2, FBitmapB.Height - 1 - 1, C, ef04);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, 1, FBitmapB.Height - 1 - 2, C, ef04);
-
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 1, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 2, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 0, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, 3, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, 0, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 1, C, ef10);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, 1, C, ef04);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, 2, C, ef04);
-
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 1, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 0, C, ef16);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 2, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 0, C, ef12);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 0, FBitmapB.Height - 1 - 3, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 3, FBitmapB.Height - 1 - 0, C, ef06);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 1, C, ef10);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 2, FBitmapB.Height - 1 - 1, C, ef04);
-						Pix(FBitmapB.Data, FBitmapB.ByteX, FBitmapB.Width - 1 - 1, FBitmapB.Height - 1 - 2, C, ef04);
-					end;}
 				end;
 				baGradientOnly:
 				begin
@@ -487,20 +412,20 @@ type
 									 exOverflow, exUnderflow, exPrecision);
 	TFPUExceptionMask = set of TFPUException;
 
-function Get8087CW: Word;
+function Get8087CW: U2;
 asm
 	PUSH 0
-	FNSTCW [ESP].Word
+	FNSTCW [ESP].U2
 	POP EAX
 end;
 
 function SetExceptionMask(const Mask: TFPUExceptionMask): TFPUExceptionMask;
 var
-  CtlWord: Word;
+	CtlWord: U2;
 begin
-  CtlWord := Get8087CW;
-  Set8087CW( (CtlWord and $FFC0) or Byte(Mask) );
-  Byte(Result) := CtlWord and $3F;
+	CtlWord := Get8087CW;
+	Set8087CW( (CtlWord and $FFC0) or U1(Mask) );
+	U1(Result) := CtlWord and $3F;
 end;
 
 procedure TDForm.SetBackground(Value: TBackground);
@@ -541,20 +466,7 @@ begin
 		end;
 		end;
 
-		FBitmapB.SetSize(0, 0);
-		case FBackground of
-		baNone, baOpenGL:
-		begin
-//			Image.Visible := False;
-		end
-		else
-		begin
-			InitBackground;
-//			Image.Visible := True;
-			if FBackground <> baOpenGLBitmap then
-				Invalidate;
-		end;
-		end;
+		InitBackground(True);
 
 		case FBackground of
 		baOpenGL, baOpenGLBitmap:
@@ -578,68 +490,8 @@ begin
 		end;
 		end;
 
-		if Visible then
-		begin
-			if Background = baUser then
-				Fill
-			else
-				Paint;
-		end;
+		Invalidate;
 	end;
-end;
-
-procedure TDForm.InitRect;
-{var
-	hR: THandle;
-	Po: array[0..9] of tagPOINT;}
-begin
-	if not RegCap then Exit;
-(*	if (FFullScreen = False) and (WindowState <> wsMaximized) then
-	begin
-		Po[0].x := 0;
-		Po[0].y := 0;
-		Po[1].x := Width;
-		Po[1].y := 0;
-		Po[2].x := Width;
-		Po[2].y := Height;
-
-		Po[3].x := Width div 2 + 8;
-		Po[3].y := Height;
-
-		Po[4].x := Width div 2 + 4;
-		Po[4].y := Height - 4;
-
-		Po[5].x := Width div 2;
-		Po[5].y := Height - 6;
-
-		Po[6].x := Width div 2 - 4;
-		Po[6].y := Height - 4;
-
-{		Po[4].x := Width div 2;
-		Po[4].y := Height - 8;}
-
-
-		Po[7].x := Width div 2 - 8;
-		Po[7].y := Height;
-
-		Po[8].x := 0;
-		Po[8].y := Height;
-		Po[9].x := 0;
-		Po[9].y := 0;
-//		hR := CreateRoundRectRgn(0, 0, Width + 1, Height + 1, 40, 40);
-//			hR := CreateEllipticRgn(0, 0, Width, Height);
-//			hR := CreateRectRgn(0, 0, Width, Height);
-//		hR := CreateRectRgn(0, 0, Width, Height);
-		hR := CreatePolygonRgn(Po[0], Length(Po), {ALTERNATE}	WINDING);
-		SetWindowRgn(Handle, hR, True);
-		DeleteObject(hR);
-	end
-	else
-	begin
-		hR := CreateRectRgn(0, 0, Width, Height);
-		SetWindowRgn(Handle, hR, True);
-		DeleteObject(hR);
-	end; *)
 end;
 
 procedure TDForm.CheckPos;
@@ -657,15 +509,6 @@ var
 	FileName: TFileName;
 begin
 	inherited Create(AOwner);
-
-	{$ifopt d-}
-	if NTSystem then
-		if Font.Name = 'MS Sans Serif' then
-		begin
-			Font.Name := 'Microsoft Sans Serif';
-			Canvas.Font.Name := Font.Name;
-		end;
-	{$endif}
 
 	CheckPos;
 
@@ -722,13 +565,6 @@ begin
 		inherited KeyDown(Key, Shift);
 end;}
 
-procedure TDForm.Fill;
-begin
-	//if Assigned(OnPaint) then OnPaint(nil);
-	inherited Paint;
-	Paint;
-end;
-
 procedure TDForm.ResizeScene;
 begin
 		glMatrixMode(GL_PROJECTION);
@@ -743,6 +579,8 @@ end;
 
 procedure TDForm.Paint;
 begin
+	if FBackground = baUser then
+		inherited; // FOnPaint Method
 	case FBackground of
 	baNone:
 	begin
@@ -750,8 +588,7 @@ begin
 	end;
 	baOpenGL, baOpenGLBitmap:
 	begin
-		ActivateRenderingContext(Canvas.Handle, RC); // make context drawable
-//		BeforeDraw;
+		ActivateRenderingContext(Canvas.Handle, RC);
 	end
 	else
 	begin
@@ -759,8 +596,6 @@ begin
 			FBitmapB.Canvas.Handle,
 			0, 0,
 			SRCCOPY);
-//		Canvas.Draw(0, 0, FBitmapB);
-//		InitBackground;
 	end;
 	end;
 
@@ -816,11 +651,11 @@ begin
 				 *)
 
 				glDisable(GL_CONVOLUTION_1D_EXT);
-        glDisable(GL_CONVOLUTION_2D_EXT);
-        glDisable(GL_SEPARABLE_2D_EXT);
+				glDisable(GL_CONVOLUTION_2D_EXT);
+				glDisable(GL_SEPARABLE_2D_EXT);
 
 				glDisable(GL_HISTOGRAM_EXT);
-        glDisable(GL_MINMAX_EXT);
+				glDisable(GL_MINMAX_EXT);
 
 				glDisable(GL_TEXTURE_3D_EXT);
 
@@ -832,164 +667,10 @@ begin
 //				glDisable(GL_MULTISAMPLE_SGIS);
 
 		glDrawPixels(FBitmapB.Width, FBitmapB.Height, GL_FORMAT, GL_UNSIGNED_BYTE, FBitmapB.GLData);
-
-(*		glPushAttrib(GL_ALL_ATTRIB_BITS);
-		glPushMatrix;
-
-
-//		ResizeScene;
-
-
-{		gluLookAt(0, 0, 0,
-			0, 0, 10,
-			0, 1, 0);}
-
-		glClearColor(0, 0, 0, 1);
-//			glDisable(GL_LIGHTING);
-//			glDisable(GL_CULL_FACE);
-			glClear(GL_DEPTH_BUFFER_BIT or GL_ACCUM_BUFFER_BIT); // CPU GL_ACCUM_BUFFER_BIT!!!!!!!!!!!
-
-		if (not Assigned(FBitmapB)) then
-		begin
-			glNormal3f(0.0, 0.0, -1.0);
-			glBegin(GL_QUADS);
-				glColor3ub(Random(256), 0, 0);
-				glVertex3f(1.0, 1.0, 1.0);
-				glColor3ub(0, Random(256), 0);
-				glVertex3f(-1.0, 1.0, 1.0);
-				glColor3ub(0, 0, 255);
-				glVertex3f(-1.0, -1.0, 1.0);
-				glColor3ub(0, 255, Random(256));
-				glVertex3f(1.0, -1.0, 1.0);
-			glEnd;
-		end
-		else
-		begin
-			NewX := 1 shl CalcShr(FBitmapB.Width);
-			if FBitmapB.Width <> NewX then
-			begin
-				FBitmapB.Resize(FBitmapB, NewX, NewX div 2, nil);
-				FBitmapB.SwapRB;
-			end;
-//			FBitmapB.GLSetSize;
-
-			glEnable(GL_TEXTURE_2D);
-			glTexImage2D(GL_TEXTURE_2D, 0, BPP, FBitmapB.Width,
-				FBitmapB.Height, 0, GL_FORMAT, GL_UNSIGNED_BYTE,
-				FBitmapB.GLData);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP{GL_REPEAT});
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP{GL_REPEAT});
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-			ZoomX := 512 / 822;
-			ZoomY := 1;
-			glBegin(GL_QUADS);
-				glNormal3f(0.0, 0.0, -1.0);
-
-//				glColor3ub(255, 0, 0);
-				glTexCoord2f(ZoomX, ZoomY);
-				glVertex3f(1.0, 1.0, -1.0);
-//				glColor3ub(0, 255, 0);
-				glTexCoord2f(0, ZoomY);
-				glVertex3f(-1.0, 1.0, -1.0);
-//				glColor3ub(0, 0, 255);
-				glTexCoord2f(0, 0);
-				glVertex3f(-1.0, -1.0, -1.0);
-//				glColor3ub(0, 255, 255);
-				glTexCoord2f(ZoomX, 0);
-				glVertex3f(1.0, -1.0, -1.0);
-			glEnd;
-			glDisable(GL_TEXTURE_2D);
-		end;
-(*
-
-		glDisable(GL_LIGHTING);
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-//	glShadeModel(GL_FLAT);}
-
-		glClearColor(0, 0, 0, 1);
-//			glDisable(GL_LIGHTING);
-//			glDisable(GL_CULL_FACE);
-			glClear(GL_DEPTH_BUFFER_BIT {or GL_ACCUM_BUFFER_BIT}); // CPU GL_ACCUM_BUFFER_BIT!!!!!!!!!!!
-	//		glClearDepth(1);
-	//  glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-		glEnable(GL_AUTO_NORMAL);
-		glEnable(GL_NORMALIZE);
-//		glDisable(GL_AUTO_NORMAL);
-//		glDisable(GL_NORMALIZE);
-	//	glDisable(GL_ALPHA_TEST);
-	//	glDepthFunc(GL_GREATER);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity;
-
-		glDisable(GL_LIGHT1);
-
-			// 2
-
-
-	glEnable(GL_COLOR_MATERIAL);
-
-{	LightPos[0] := UserX;
-	LightPos[1] := UserY;
-	LightPos[2] := UserZ;
-
-	glEnable(GL_LIGHT0);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, @glfLightAmbient[0]);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, @glfLightDiffuse[0]);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, @glfLightSpecular[0]);
-	glLightfv(GL_LIGHT0, GL_POSITION, @LightPos[0]);
-	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 60);
-	glfDirect[0] := Sin(AngleXZ);
-	glfDirect[1] := AngleY;
-	glfDirect[2] := -Cos(AngleXZ);
-	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, @glfDirect[0]);}
-
-	glLoadIdentity;
-	glScalef(10, 10, 10);
-	glColor3ub(255, 255, 255);
-
-				glEnable(GL_TEXTURE_2D);
-				glTexImage2D(GL_TEXTURE_2D, 0, BPP, FBitmapB.Width,
-					FBitmapB.Height, 0, GL_FORMAT, GL_UNSIGNED_BYTE,
-					FBitmapB.GLData);
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-		glBegin(GL_QUADS);
-			glNormal3f(0.0, 0.0, -1.0);
-//			glColor3ub(255, 0, 0);
-			glTexCoord2f(0, 0);
-			glVertex3f(1.0, 1.0, -1.0);
-//			glColor3ub(0, 255, 0);
-			glTexCoord2f(4, 0);
-			glVertex3f(-1.0, 1.0, -1.0);
-//			glColor3ub(0, 0, 255);
-			glTexCoord2f(4, 4);
-			glVertex3f(-1.0, -1.0, -1.0);
-//			glColor3ub(0, 255, 255);
-			glTexCoord2f(0, 4);
-			glVertex3f(1.0, -1.0, -1.0);
-		glEnd;
-				glDisable(GL_TEXTURE_2D);
-
-
-		glDisable(GL_COLOR_MATERIAL);
-
-
-		glPopMatrix;
-		glPopAttrib;*)
 	end;
 
-	inherited Paint; // FOnPaint Method
+	if FBackground <> baUser then
+		inherited; // FOnPaint Method
 
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
@@ -999,23 +680,13 @@ begin
 		else
 			SwapBuffers(Canvas.Handle);
 		DeactivateRenderingContext; // make context drawable
-//		AfterDraw;
 	end;
 	end;
 end;
-{
-procedure TDForm.WMPaint;
-begin
-//	Paint;
-//	DefaultHandler(Message);
-	inherited;
-end;}
 
 procedure TDForm.WMEraseBkGnd;
 begin
-	Message.Result := -1;
-//	InitBackground;
-//	Canvas.FillRect(Rect(0, 0, ClientWidth, ClientHeight));
+	Message.Result := 1;
 end;
 
 procedure TDForm.ResizeMessage;
@@ -1032,67 +703,25 @@ end;
 
 procedure TDForm.WMSize(var Message: TWMSize);
 begin
-	if Visible = False then Exit;
-	if (Message.Width = 0) or (Message.Height = 0) then Exit;
-//	if (Message.Width <> Width) or (Message.Height <> Height) then
-	InitRect;
+	if (Visible = False) or (Message.Width = 0) or (Message.Height = 0) then Exit;
 
 	case FBackground of
-	baUser, baGradient, baGradientOnly:
-	begin
-//		Invalidate;
-	end;
-	baBitmap, baStandard:
-	begin
-{		if (Message.Width > Width) or (Message.Height > Height) then
-			Invalidate;}
-	end;
 	baOpenGL, baOpenGLBitmap:
 	begin
-		ActivateRenderingContext(Canvas.Handle,RC); // make context drawable
-		if FBackground = baOpenGLBitmap then
-			InitBackground;
-//		BeforeResize; }
+		ActivateRenderingContext(Canvas.Handle,RC);
 	end;
 	end;
-
-	case FBackground of
-	baNone:
-	begin
-
-	end;
-	baOpenGL, baOpenGLBitmap:
-	begin
-
-	end
-	else
-	begin
-		InitBackground;
-	end;
-	end;
+	InitBackground(False);
 
 	inherited; // FOnResize Method
 
 	case FBackground of
-	baNone, baStandard, baBitmap:
-	begin
-
-	end;
 	baOpenGL, baOpenGLBitmap:
 	begin
-//		AfterResize;
-//		Paint; // pri zvetsovani probiha automaticky
 		DeactivateRenderingContext; // make context drawable
 	end;
-//	baUser: inherited Paint;
-	baGradient, baGradientOnly:
-	begin
-//		if (Message.Width <> Width) or (Message.Height <> Height) then
-//			InitBackground;
-//		Fill; Not, hides labels on form
-		Invalidate;
 	end;
-	end;
+	Invalidate; // Required when new size is smaller
 end;
 
 procedure TDForm.WMShow(var Message: TWMShowWindow);
@@ -1100,30 +729,16 @@ begin
 	if (Message.Show) and (Message.Status = 0) then
 	begin
 		CheckPos;
-		InitBackground;
-		InitRect;
+		InitBackground(False);
 	end;
 	inherited;
 end;
-
-{procedure TDForm.WMHScroll(var Message: TWMScroll);
-begin
-	inherited;
-	Paint;
-end;
-
-procedure TDForm.WMVScroll(var Message: TWMScroll);
-begin
-	inherited;
-	Paint;
-end;}
 
 procedure TDForm.WMSysColorChange;
 begin
 	if not (FBackground in [baUser, baOpenGLBitmap]) then
 	begin
-		FBitmapB.SetSize(0, 0);
-		InitBackground;
+		InitBackground(True);
 	end;
 end;
 
@@ -1139,11 +754,12 @@ begin
 			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top,
 			SWP_NOZORDER + SWP_NOACTIVATE);}
 		SetWindowLong(Handle, GWL_STYLE, FWindowLong);
-		SetBounds(
+		SetWindowPlacement(Handle, @FWindowPlacement);
+{		SetBounds(
 			FWindowPlacement.rcNormalPosition.Left,
 			FWindowPlacement.rcNormalPosition.Top,
 			FWindowPlacement.rcNormalPosition.Right - FWindowPlacement.rcNormalPosition.Left,
-			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top);
+			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top); TaskBar problem }
 		FStoreWindow := False;
 		BringToFront;
 	end;
@@ -1155,7 +771,7 @@ begin
 	FWindowLong := FWindowLong or WS_VISIBLE;
 	FWindowPlacement.Length := SizeOf(FWindowPlacement);
 	FStoreWindow := GetWindowPlacement(Handle, @FWindowPlacement);
-	FStoreWindow := True;
+//	FStoreWindow := True;
 end;
 
 procedure TDForm.SetCaption(Value: string);

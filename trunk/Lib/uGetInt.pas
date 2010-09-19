@@ -165,7 +165,7 @@ begin
 	ButtonDef.Enabled := NowVal <> TDefVal;
 	ButtonMax.Enabled := NowVal <> TMaxVal;
 	LabelNow.Caption := IntToStr(NowVal);
-	LabelNow.Repaint;
+	LabelNow.Update;
 end;
 
 procedure TfGetInt.InitEdit;
@@ -173,7 +173,7 @@ begin
 	EditInput.OnChange := nil;
 	EditInput.Text := IntToStr(NowVal);
 	EditInput.SelectAll;
-	EditInput.Repaint;
+	EditInput.Update;
 	EditInput.OnChange := EditInputChange;
 end;
 
@@ -181,8 +181,8 @@ procedure TfGetInt.InitTrackBar;
 begin
 	TrackBar.OnChange := nil;
 	TrackBar.Position := Min(High(SG), NowVal);
+	TrackBar.Update;
 	TrackBar.OnChange := TrackBarChange;
-	TrackBar.Repaint;
 end;
 
 procedure TfGetInt.EditInputChange(Sender: TObject);

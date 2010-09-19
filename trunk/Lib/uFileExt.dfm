@@ -25,9 +25,7 @@ object fFileExt: TfFileExt
     Top = 0
     Width = 440
     Height = 415
-    DrawFPS = False
-    HandScroll = False
-    HotTrack = True
+    Zoom = 1.000000000000000000
     Align = alClient
     PopupMenu = PopupMenuFE
     TabOrder = 0

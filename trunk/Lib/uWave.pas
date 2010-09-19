@@ -16,17 +16,17 @@ uses
 
 {
 procedure NoSound;
-procedure Sound(const Hz: Word);
+procedure Sound(const Hz: U2);
 }
 {
 	Supported Wave:
 	Format: PCM only
 	Channels: 1..2 (Mono, Stereo)
 	BitsPerSample: 8 or 16 bits
-	SampleRate: 1..512 * 1024 * 1024
+	SampleRate: 1..512 * MB
 
 	8 bits
-			Byte Hex SortInt
+			 U1   Hex S1
 	Max: 255  $ff -1
 
 	Cen: 128  $80 -128
@@ -36,7 +36,7 @@ procedure Sound(const Hz: Word);
 
 
 	16 bits
-			 Word   Hex SmallInt
+			 U2    Hex    S2
 	Max: 32767 $7fff  32767
 
 	Cen:     0 $0000      0
@@ -72,32 +72,32 @@ type
 	PWaveData = ^TWaveData;
 	TWaveData = packed record
 		case Integer of
-		0: (B: array[0..1024 * 1024 * 1024 - 1] of Byte);
-		1: (W: array[0..512 * 1024 * 1024 - 1] of SmallInt);
-		2: (D: array[0..256 * 1024 * 1024 - 1] of LongInt);
-		3: (BLR: array[0..512 * 1024 * 1024 - 1] of TBLR);
-		4: (WLR: array[0..256 * 1024 * 1024 - 1] of TWLR);
-		5: (DLR: array[0..128 * 1024 * 1024 - 1] of TDLR);
+		0: (B: array[0..GB - 1] of U1);
+		1: (W: array[0..512 * MB - 1] of S2);
+		2: (D: array[0..256 * MB - 1] of S4);
+		3: (BLR: array[0..512 * MB - 1] of TBLR);
+		4: (WLR: array[0..256 * MB - 1] of TWLR);
+		5: (DLR: array[0..128 * MB - 1] of TDLR);
 	end;
 
 	PWave = ^TWave;
 	TWave = packed record // 44
 		Marker1: array[0..3] of Char; // 4
-		BytesFollowing: LongInt; // 4; FileSize - 8
+		BytesFollowing: U4; // 4; FileSize - 8
 		// Data
 		Marker2: array[0..3] of Char; // 4
 		// Format
 		Marker3: array[0..3] of Char; // 4
-		BlockAlign: LongInt; // 4; 16
-		FormatTag: Word; // 2; 1
-		Channels: Word; // 2; 2: stereo, 1: mono
-		SampleRate: LongInt; // 4; 11025, 22050, 44100
-		BytesPerSecond: LongInt; // 4; BytesPerSample * SampleRate
-		BytesPerSample: Word; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
-		BitsPerSample: Word; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
+		BlockAlign: U4; // 4; 16
+		FormatTag: U2; // 2; 1
+		Channels: U2; // 2; 2: stereo, 1: mono
+		SampleRate: U4; // 4; 11025, 22050, 44100
+		BytesPerSecond: U4; // 4; BytesPerSample * SampleRate
+		BytesPerSample: U2; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
+		BitsPerSample: U2; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
 		// Wave data
 		Marker4: array[0..3] of Char; // 4
-		DataBytes: LongInt; // 4; <= (FileSize - 44)
+		DataBytes: U4; // 4; <= (FileSize - 44)
 		Data: TWaveData; // X
 	end;
 
@@ -163,22 +163,22 @@ procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
 procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
 
 procedure WaveCreate(var Wave: PWave;
-	const Channels: Word; // 1, 2
-	const BitsPerSample: Word; // 8, 16
-	const SampleRate: LongInt; // 11025, 22050, 44100, 48000...
-	const TotalSamples: LongInt); // 1 sec = SampleRate
+	const Channels: U2; // 1, 2
+	const BitsPerSample: U2; // 8, 16
+	const SampleRate: U4; // 11025, 22050, 44100, 48000...
+	const TotalSamples: U4); // 1 sec = SampleRate
 procedure WaveFree(var Wave: PWave);
 
 // Left, Right (0..ConvertPre)
 procedure ConvertChannels(const WaveS: PWave; var WaveD: PWave;
-	const NewChannels: Word; const Left, Right: Integer);
+	const NewChannels: U2; const Left, Right: Integer);
 procedure ConvertBitsPerSample(const WaveS: PWave; var WaveD: PWave;
 	const NewBitsPerSample: Integer);
-procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: LongInt);
-procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
-	const Channels: Word;
-	const BitsPerSample: Word;
-	const SampleRate: LongInt);
+procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: U4);
+{procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
+	const Channels: U2;
+	const BitsPerSample: U2;
+	const SampleRate: U4);}
 
 procedure PlayWave(Wave: PWave);
 procedure PlayWaveFile(WaveName: TFileName);
@@ -392,20 +392,20 @@ begin
 	Result := (Bits + 7) shr 3;
 end;
 
-function GetTotalSamples(const BytesPerSample: Word;
-	const DataBytes: LongInt): LongInt;
+function GetTotalSamples(const BytesPerSample: U2;
+	const DataBytes: U4): U4;
 begin
 	Result := DataBytes div BytesPerSample;
 end;
 
 procedure WaveCreate(var Wave: PWave;
-	const Channels: Word;
-	const BitsPerSample: Word;
-	const SampleRate: LongInt;
-	const TotalSamples: LongInt);
+	const Channels: U2;
+	const BitsPerSample: U2;
+	const SampleRate: U4;
+	const TotalSamples: U4);
 var
-	BitsPerSamples: Word;
-	DataBytes: LongInt;
+	BitsPerSamples: U2;
+	DataBytes: U4;
 begin
 	BitsPerSamples := Channels * BitsPerSample;
 	DataBytes := BitsToByte(BitsPerSamples * U8(TotalSamples));
@@ -413,7 +413,7 @@ begin
 	if Wave <> nil then
 	begin
 //		MessageD('Destination Wave Must Be Nil', mtError, [mbOk]);
-{		if LongInt(Pointer(LongInt(Wave) - 4)^) - 6 < WaveHead + DataBytes then
+{		if SG(Pointer(SG(Wave) - 4)^) - 6 < WaveHead + DataBytes then
 		begin
 			WaveFree(Wave);
 //			FreeMem(Wave);
@@ -447,11 +447,11 @@ begin
 end;
 
 procedure ConvertChannels(const WaveS: PWave; var WaveD: PWave;
-	const NewChannels: Word; const Left, Right: Integer);
+	const NewChannels: U2; const Left, Right: SG);
 var
-	i: Integer;
-//  WaveData: Integer;
-	TotalSamples: Integer;
+	i: SG;
+//  WaveData: SG;
+	TotalSamples: SG;
 begin
 	if (WaveS = nil) or (WaveS = WaveD) then Exit;
 	TotalSamples :=
@@ -487,8 +487,8 @@ begin
 			begin
 {       for i := 0 to WaveD.DataBytes div 2 - 1 do
 				begin
-					WaveD.Data.B[i shl 1 + 0] := Left * ShortInt(WaveS.Data.B[i] - 128) div ConvertPre + 128;
-					WaveD.Data.B[i shl 1 + 1] := Right * ShortInt(WaveS.Data.B[i] - 128) div ConvertPre + 128;
+					WaveD.Data.B[i shl 1 + 0] := Left * S1(WaveS.Data.B[i] - 128) div ConvertPre + 128;
+					WaveD.Data.B[i shl 1 + 1] := Right * S1(WaveS.Data.B[i] - 128) div ConvertPre + 128;
 				end;}
 				asm
 				pushad
@@ -531,14 +531,14 @@ begin
 				for i := 0 to WaveD.DataBytes - 1 do
 				begin
 					WaveD.Data.B[i] :=
-						(Left * ShortInt(WaveS.Data.B[i] - 128) div ConvertPre +
-						Right * ShortInt(WaveS.Data.B[i] - 128) div ConvertPre) div 2 + 128;
+						(Left * S1(WaveS.Data.B[i] - 128) div ConvertPre +
+						Right * S1(WaveS.Data.B[i] - 128) div ConvertPre) div 2 + 128;
 				end;
 			2:
 				for i := 0 to WaveD.DataBytes div 2 - 1 do
 				begin
-					WaveD.Data.B[i shl 1 + 0] := Left * ShortInt(WaveS.Data.B[i shl 1 + 0] - 128) div ConvertPre + 128;
-					WaveD.Data.B[i shl 1 + 1] := Right * ShortInt(WaveS.Data.B[i shl 1 + 1] - 128) div ConvertPre + 128;
+					WaveD.Data.B[i shl 1 + 0] := Left * S1(WaveS.Data.B[i shl 1 + 0] - 128) div ConvertPre + 128;
+					WaveD.Data.B[i shl 1 + 1] := Right * S1(WaveS.Data.B[i shl 1 + 1] - 128) div ConvertPre + 128;
 				end;
 			end;
 		end;
@@ -613,7 +613,7 @@ procedure ConvertBitsPerSample(const WaveS: PWave; var WaveD: PWave;
 	const NewBitsPerSample: Integer);
 var
 	i: Integer;
-	TotalSamples: LongInt;
+	TotalSamples: U4;
 begin
 	if (WaveS = nil) or (WaveS = WaveD) then Exit;
 	TotalSamples :=
@@ -669,22 +669,22 @@ begin
 	end;
 end;
 
-procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: LongInt);
+procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: U4);
 begin
 	WaveD.SampleRate := SampleRate;
 	WaveD.BytesPerSecond := WaveD.BytesPerSample * WaveD.SampleRate;
 //    BitsToByte(WaveD.Channels * WaveD.BitsPerSample * U8(SampleRate));
 end;
-
+{
 procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
-	const Channels: Word;
-	const BitsPerSample: Word;
-	const SampleRate: LongInt);
+	const Channels: U2;
+	const BitsPerSample: U2;
+	const SampleRate: U4);
 begin
-{ ConvertBitsPerSample(WaveS, WaveD, BitsPerSample);
+ ConvertBitsPerSample(WaveS, WaveD, BitsPerSample);
 	ConvertChannels(WaveS, WaveD, Channels, ConvertPre, ConvertPre);
-	ConvertSampleRate(WaveD, SampleRate);}
-end;
+	ConvertSampleRate(WaveD, SampleRate);
+end;}
 
 procedure PlayWave(Wave: PWave);
 begin
@@ -922,9 +922,9 @@ begin
 	if FError <> 0 then Exit;
 
 	if Self is TWavePlayer then
-		FError := waveOutOpen(@FHWave, 0, @FWaveFormat, Cardinal(@MMOutDone), Cardinal(Self), CALLBACK_FUNCTION)
+		FError := waveOutOpen(@FHWave, 0, @FWaveFormat, UG(@MMOutDone), UG(Self), CALLBACK_FUNCTION)
 	else
-		FError := waveInOpen(@FHWave, 0, @FWaveFormat, Cardinal(@MMInDone), Cardinal(Self), CALLBACK_FUNCTION);
+		FError := waveInOpen(@FHWave, 0, @FWaveFormat, UG(@MMInDone), UG(Self), CALLBACK_FUNCTION);
 	MMError('WaveOpen');
 	if FError <> 0 then
 	begin

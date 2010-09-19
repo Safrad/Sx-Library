@@ -12,6 +12,7 @@ interface
 
 {$R *.RES}
 uses
+	uTypes, uDImage,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls, uDBitmap, uDispl;
 
@@ -19,14 +20,14 @@ type
 	TBuffer = (bfDynamic, bfStatic);
 	TGaugeKind = (gkNormal, gkSpectrum, gkStandard);
 
-	TDGauge = class(TLabel)
+	TDGauge = class(TDImage)
 	private
 		{ Private declarations }
 		FBmpOut: TDBitmap;
 
 		FBackEffect: TEffect;
 		FBackPaint: Boolean;
-		FFontShadow: ShortInt;
+		FFontShadow: SG;
 		FDispl: TDispl;
 
 		FKind: TGaugeKind;
@@ -42,7 +43,7 @@ type
 		FBorderStyle: TBorderStyle;
 
 		procedure SetBackEffect(Value: TEffect);
-		procedure SetFontShadow(Value: ShortInt);
+		procedure SetFontShadow(Value: SG);
 		procedure DisplChanged(ADispl: TObject);
 		procedure SetDispl(Value: TDispl);
 
@@ -57,9 +58,10 @@ type
 		procedure SetBevelWidth(Value: TBevelWidth);
 		procedure SetBorderWidth(Value: TBorderWidth);
 		procedure SetBorderStyle(Value: TBorderStyle);
+
+		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
 	protected
 		{ Protected declarations }
-		procedure Paint; override;
 	public
 		{ Public declarations }
 		constructor Create(AOwner: TComponent); override;
@@ -68,7 +70,7 @@ type
 		{ Published declarations }
 		property BackPaint: Boolean read FBackPaint write FBackPaint default False;
 		property BackEffect: TEffect read FBackEffect write SetBackEffect default ef16;
-		property FontShadow: ShortInt read FFontShadow write SetFontShadow default 0;
+		property FontShadow: SG read FFontShadow write SetFontShadow default 0;
 		property Displ: TDispl read FDispl write SetDispl;
 
 		property Kind: TGaugeKind read FKind write SetKind default gkNormal;
@@ -91,29 +93,7 @@ procedure Register;
 
 implementation
 
-uses uGraph, uScreen;
-
-{function EffectToPenMode(Effect: TEffect): TPenMode;
-begin
-		case Effect of
-		ef00..ef03:
-			Result:=pmNop;
-		ef04..ef12:
-			Result:=pmMerge;
-		ef13..ef16:
-			Result:=pmCopy;
-		efNeg:
-			Result:=pmNot;
-		efXor:
-			Result:=pmXor;
-		efAdd:
-			Result:=pmWhite;
-		efSub:
-			Result:=pmBlack;
-		else
-			Result:=pmMask;
-		end;
-end;}
+uses uGraph, uScreen, uFormat;
 
 constructor TDGauge.Create(AOwner: TComponent);
 begin
@@ -142,8 +122,6 @@ begin
 	FBorderWidth := 0;
 
 	AutoSize := False;
-	Alignment := taCenter;
-	Layout := tlCenter;
 	Width := 128;
 	Height := 32;
 end;
@@ -151,11 +129,7 @@ end;
 destructor TDGauge.Destroy;
 begin
 	FDispl.Free;
-	if Assigned(FBmpOut) then
-	begin
-		FBmpOut.Free;
-		FBmpOut := nil;
-	end;
+	FreeAndNil(FBmpOut);
 	inherited Destroy;
 end;
 
@@ -168,7 +142,7 @@ begin
 	end;
 end;
 
-procedure TDGauge.SetFontShadow(Value: ShortInt);
+procedure TDGauge.SetFontShadow(Value: SG);
 begin
 	if FFontShadow <> Value then
 	begin
@@ -256,7 +230,7 @@ begin
 	end;
 end;
 
-procedure TDGauge.Paint;
+procedure TDGauge.WMPaint(var Message: TWMPaint);
 var
 	Recta, RectaS: TRect;
 	TopColor, BottomColor: TColor;
@@ -266,7 +240,8 @@ var
 	Posit, MaxPosit: Integer;
 	Co: array[0..3] of TColor;
 begin
-//  Recta:=GetClientRect;
+	inherited;
+
 	Recta.Left := 0;
 	Recta.Top := 0;
 	Recta.Right := Width;
@@ -278,16 +253,8 @@ begin
 	FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
 
 	// Background
-	if (Transparent = False) and (BackPaint = True) then
-	begin
-		FBmpOut.Canvas.Brush := Parent.Brush;
-		FBmpOut.Canvas.FillRect(Recta);
-	end
-	else
-	begin
-		FBmpOut.Canvas.CopyRect(Rect(0, 0, FBmpOut.Width, FBmpOut.Height),
-			Canvas, Recta);
-	end;
+	FBmpOut.Canvas.Brush := Parent.Brush;
+	FBmpOut.Canvas.FillRect(Recta);
 
 // Border
 	if (FBorderStyle <> bsNone) then
@@ -301,13 +268,13 @@ begin
 	begin
 		if BevelOuter = bvLowered then
 		begin
-			TopColor := DepthColor(1);
-			BottomColor := DepthColor(3);
+			TopColor := clDepth[1];
+			BottomColor := clDepth[3];
 		end
 		else
 		begin
-			TopColor := DepthColor(3);
-			BottomColor := DepthColor(1);
+			TopColor := clDepth[3];
+			BottomColor := clDepth[1];
 		end;
 		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
@@ -326,13 +293,13 @@ begin
 	begin
 		if BevelInner = bvLowered then
 		begin
-			TopColor := DepthColor(1);
-			BottomColor := DepthColor(3);
+			TopColor := clDepth[1];
+			BottomColor := clDepth[3];
 		end
 		else
 		begin
-			TopColor := DepthColor(3);
-			BottomColor := DepthColor(1);
+			TopColor := clDepth[3];
+			BottomColor := clDepth[1];
 		end;
 		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
@@ -390,7 +357,7 @@ begin
 			Color, FBackEffect);
 	end;
 
-// Caption
+	Caption := NToS(100 * FPosition div FMax) + '%';
 	if (Caption <> '') {and (FFontEffect<>ef00)} then
 	begin
 		FBmpOut.Canvas.Brush.Color := Color;
@@ -398,16 +365,15 @@ begin
 		FBmpOut.Canvas.Font := Font;
 		if Displ.Enabled then
 		begin
-			DisplDrawRect(FBmpOut, Caption, FDispl, Recta, Alignment, Layout, ef16);
+			DisplDrawRect(FBmpOut, Caption, FDispl, Recta, taCenter, tlCenter, ef16);
 		end
 		else
 		begin
-			DrawCutedText(FBmpOut.Canvas, Recta, Alignment, Layout, Caption, True, FFontShadow);
+			DrawCutedText(FBmpOut.Canvas, Recta, taCenter, tlCenter, Caption, True, FFontShadow);
 		end;
 	end;
 
-// Draw
-	Canvas.Draw(0, 0, FBmpOut);
+	FBmpOut.DrawToDC(Canvas.Handle, 0, 0);
 end;
 
 procedure Register;

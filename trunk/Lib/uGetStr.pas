@@ -11,6 +11,7 @@ unit uGetStr;
 interface
 
 uses
+	uTypes,
 	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDButton,
 	uDForm;
 
@@ -34,7 +35,7 @@ type
 	end;
 
 function GetStr(Caption: string;
-	var CurVal: string; const DefVal: string; const MaxL: Byte): Boolean;
+	var CurVal: string; const DefVal: string; const MaxL: UG): Boolean;
 
 var StrMasked: Boolean;
 
@@ -52,7 +53,7 @@ begin
 end;
 
 function GetStr(Caption: string;
-	var CurVal: string; const DefVal: string; const MaxL: Byte): Boolean;
+	var CurVal: string; const DefVal: string; const MaxL: UG): Boolean;
 begin
 	if not Assigned(fGetStr) then
 	begin

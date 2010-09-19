@@ -21,6 +21,7 @@ const
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
 
+	// D??? Change column order
 	TColumn = packed record // 16
 		Caption: string; // 4
 		Width, MaxWidth: S4; // 8
@@ -51,9 +52,6 @@ type
 
 		procedure SetColumnCount(Value: SG);
 		procedure SetRowCount(Value: SG);
-
-//		procedure OnDblClick; override;
-
 	protected
 		{ Protected declarations }
 //		procedure OnFill;
@@ -90,7 +88,6 @@ type
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 		procedure KeyUp(var Key: Word; Shift: TShiftState); override;
 		procedure LFill(Sender: TObject);
-		procedure Paint; override;
 
 		procedure ChangeColumns;
 		procedure SelectAll;
@@ -111,7 +108,7 @@ procedure Register;
 implementation
 
 uses
-	Math,
+	Math, StdCtrls,
 	uGraph, uDBitmap, uError, uScreen;
 
 const
@@ -122,8 +119,7 @@ var
 
 constructor TDView.Create(AOwner: TComponent);
 begin
-	inherited Create(AOwner);
-
+	inherited;
 	OnFill := LFill;
 	DragColumns := -1;
 	ColumnMove := -1;
@@ -137,7 +133,7 @@ begin
 	SetLength(Columns, 0);
 	SetLength(ColumnOrder, 0);
 	SetLength(SelRows, 0);
-	inherited Destroy;
+	inherited;
 end;
 
 function TDView.PosToItem(MX, MY: SG; var IX, IY: SG): TViewAction;
@@ -246,25 +242,25 @@ begin
 					SelCount := 0;
 					for i := 0 to FRowCount - 1 do
 						if SelRows[i] then Inc(SelCount);
-					Fill;
+					Invalidate;
 				end;
 			end;
 			end;
 		end;
 	end;
 	end;
-	inherited MouseDown(Button, Shift, X, Y);
+	inherited;
 end;
 
 procedure TDView.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
-	inherited MouseMove(Shift, X, Y);
+	inherited;
 	HotColumn := -1;
 //	HotRow := -1;
 
 	if (DragColumns = -1) and (ColumnMove = -1) then
 	begin
-		Cur := crDefault;
+		FCur := crDefault;
 		Where := PosToItem(X, Y, IX, IY);
 		case Where of
 //		vaNone: Fill;
@@ -281,8 +277,8 @@ begin
 		end;
 		vaColumnMove:
 		begin
-			Cur := -14;
-			Fill;
+			FCur := -14;
+			Invalidate;
 		end;
 		vaRow:
 		begin
@@ -291,7 +287,7 @@ begin
 				if HotRow <> IY then
 				begin
 					HotRow := IY;
-					Fill;
+					Invalidate;
 				end;
 			end;
 		end;
@@ -299,7 +295,7 @@ begin
 		if Where <> LWhere then
 		begin
 			LWhere := Where;
-			Fill;
+			Invalidate;
 		end;
 	end;
 
@@ -322,20 +318,20 @@ begin
 					Columns[ColumnMove].Width := X - ColumnMoveX;
 					if Columns[ColumnMove].Width < MinColumnWidth then Columns[ColumnMove].Width := MinColumnWidth;
 					ChangeColumns;
-					Fill;
+					Invalidate;
 				end;
 	end;
 
-	if Cursor <> Cur then
+	if Cursor <> FCur then
 	begin
-		Cursor := Cur;
+		Cursor := FCur;
 	end;
 end;
 
 procedure TDView.MouseUp(Button: TMouseButton; Shift: TShiftState;
 	X, Y: Integer);
 begin
-	inherited MouseUp(Button, Shift, X, Y);
+	inherited;
 	BDown := False;
 	DragColumns := -1;
 	ColumnMove := -1;
@@ -358,7 +354,7 @@ begin
 					else
 						FSortBySwap := not FSortBySwap;
 					DataChanged;
-					Fill;
+					Invalidate;
 				end;
 			end;
 			end;
@@ -373,7 +369,7 @@ begin
 	if (DragMode <> dmAutomatic) then
 	begin
 //		MouseMove([], -1, -1);
-		Fill;
+		Invalidate;
 	end;
 end;
 
@@ -390,7 +386,7 @@ begin
 				HotRow := -1;
 				HotColumn := -1;
 //			MouseMove([], -1, -1);
-				Fill;
+				Invalidate;
 			end;
 //			LFill(nil);
 		end;
@@ -411,7 +407,7 @@ begin
 				if IX >= 0 then
 				Columns[IX].Width := Columns[IX].MaxWidth;
 				ChangeColumns;
-				Fill;
+				Invalidate;
 			end;
 			end;
 		end;
@@ -424,7 +420,7 @@ begin
 	if Msg.KeyData = 1966081 then // Ctrl+A
 	begin
 		SelectAll;
-		Fill;
+		Invalidate;
 	end
 	else if Msg.KeyData = 65537 then // VK_ESCAPE:
 	begin
@@ -435,14 +431,13 @@ begin
 //			ColumnMove := -1;
 			Columns[ColumnMove].Width := ColumnMoveW;
 			ChangeColumns;
-			Fill;
+			Invalidate;
 //			Cursor := crDefault;
 		end;
 		ColumnMove := -1;
 	end;
 
-	Msg.Result := 0;
-//	DefaultHandler(Msg);
+	Msg.Result := 1;
 	KeyDown(Msg.CharCode, []);
 end;
 
@@ -455,45 +450,45 @@ begin
 	begin
 		SelRows[ActualRow] := True;
 		Inc(ActualRow);
-		Fill;
+		Invalidate;
 	end;
 	VK_HOME:
 	begin
 		OfsY := 0;
 		ActualRow := 0;
-		Fill;
+		Invalidate;
 	end;
 	VK_END:
 	begin
 		OfsY := MaxOfsY;
 		ActualRow := FRowCount - 1;
-		Fill;
+		Invalidate;
 	end;
 	33:
 	begin
 		Dec(OfsY, i);
 		Dec(ActualRow, RoundDiv(i, RowHeight));
-		Fill;
+		Invalidate;
 	end;
 	34:
 	begin
 		Inc(OfsY, i);
 		Inc(ActualRow, RoundDiv(i, RowHeight));
-		Fill;
+		Invalidate;
 	end;
 	65:
 	begin
 		for i := 0 to FRowCount - 1 do
 			SelRows[i] := True;
-		Fill;
+		Invalidate;
 	end;
 	end;
-	inherited KeyDown(Key, Shift);
+	inherited;
 end;
 
 procedure TDView.KeyUp(var Key: Word; Shift: TShiftState);
 begin
-	inherited KeyUp(Key, Shift);
+	inherited;
 end;
 
 var
@@ -522,9 +517,13 @@ begin
 end;
 
 procedure TDView.LFill(Sender: TObject);
+const
+	Border = 1;
+	LeftOffset = 1;
 var
 	i, w: SG;
-	X, xx, tx, ww, Y, IX, IY, Wid: SG;
+	X, xx, ww, Y, IX, IY, Wid: SG;
+	R: TRect;
 	C1, C2: SG;
 	Co: array[0..3] of TColor;
 
@@ -580,7 +579,7 @@ begin
 						else
 							Bitmap.Canvas.Brush.Color := clWindow;
 						Bitmap.Bar(X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
-						if Assigned(OnGetData) then
+						if Assigned(FOnGetData) then
 						begin
 							ColIndex := ColumnOrder[IX];
 {							if FSortBySwap then
@@ -605,8 +604,8 @@ begin
 							begin
 								Data := '<Empty>';
 								try
-									OnGetData(Self, Data, ColIndex, RowIndex, Rect(X + 1, Y + 1, X + Columns[IX].Width - 2, Y + RowHeight - 2));
-									if Length(Data) > 255 then SetLength(Data, 255);
+									FOnGetData(Self, Data, ColIndex, RowIndex, Rect(X + 1, Y + 1, X + Columns[IX].Width - 2, Y + RowHeight - 2));
+//									if Length(Data) > 255 then SetLength(Data, 255);
 								except
 									on E: Exception do
 										MessageD(E.Message, mtError, [mbOk]);
@@ -616,21 +615,19 @@ begin
 						else
 							Data := '<No data event defined>';
 
-						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 4);
+						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 2 + 2 * Border + LeftOffset);
 						if IY = ActualRow then
-							Bitmap.Border(X, Y, Wid - 1, Y + RowHeight - 1, DepthColor(0), DepthColor(3), 1, ef12);
+							Bitmap.Border(X, Y, Wid - 1, Y + RowHeight - 1, clDepth[0], clDepth[3], 1, ef12);
 						Bitmap.Line(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
 						Bitmap.Line(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
 
-						if Assigned(OnGetData) then
+						if Assigned(FOnGetData) then
 						begin
-							case Columns[IX].Alignment of
-							taLeftJustify: xx := X + 2;
-							taRightJustify: xx := X + Columns[IX].Width - 3 - Bitmap.Canvas.TextWidth(Data);
-							else xx := X + (Columns[IX].Width + Bitmap.Canvas.TextWidth(Data)) div 2;
-							end;
-							if xx < X + 2 then xx := x + 2;
-							Bitmap.Canvas.TextOut(xx, Y + 2, Data);
+							R.Left := X + Border + LeftOffset{Microsoft Sans Serif};
+							R.Top := Y + Border;
+							R.Right := X + Columns[IX].Width - 2 - Border;
+							R.Bottom := Y + RowHeight - 2 - Border;
+							DrawCutedText(Bitmap.Canvas, R, Columns[IX].Alignment, tlCenter, Data, False, 0);
 						end;
 					end
 					else
@@ -689,15 +686,12 @@ begin
 				// Caption
 				Bitmap.Canvas.Font.Style := [];
 				Bitmap.Canvas.Font.Color := C2;
-				Bitmap.Canvas.Brush.Color := C1;
 				Bitmap.Canvas.Brush.Style := bsClear;
-				case Columns[IX].Alignment of
-				taLeftJustify: tx := xx + 2;
-				taRightJustify: tx := xx + ww - 3 - Bitmap.Canvas.TextWidth(Columns[IX].Caption);
-				else tx := xx + (ww + Bitmap.Canvas.TextWidth(Columns[IX].Caption)) div 2;
-				end;
-				if tx < xx + 2 then tx := xx + 2;
-				Bitmap.Canvas.TextOut(tx, 2, Columns[IX].Caption);
+				R.Left := xx + Border + LeftOffset{Microsoft Sans Serif};
+				R.Top := 0 + Border;
+				R.Right := xx + ww - 2 - Border;
+				R.Bottom := RowHeight - 2 - Border;
+				DrawCutedText(Bitmap.Canvas, R, Columns[IX].Alignment, tlCenter, Columns[IX].Caption, False, 1);
 
 				// Border
 				if Columns[IX].Click then
@@ -718,7 +712,7 @@ begin
 					C1 := 1;
 					C2 := 3;
 				end;
-				Bitmap.Border(x, 0, x + Columns[IX].Width - 1, RowHeight - 1, DepthColor(C1), DepthColor(C2), 1, ef16);
+				Bitmap.Border(x, 0, x + Columns[IX].Width - 1, RowHeight - 1, clDepth[C1], clDepth[C2], 1, ef16);
 
 				if Columns[IX].Width <= 0 then w := 16 else w := Columns[IX].Width;
 				Inc(X, w);
@@ -729,11 +723,6 @@ begin
 	end;
 	if X < Bitmap.Width then
 		Bitmap.Bar(X, 0, Bitmap.Width - 1, Bitmap.Height - 1, clAppWorkSpace, ef16);
-end;
-
-procedure TDView.Paint;
-begin
-	inherited Paint;
 end;
 
 procedure TDView.ChangeColumns;
@@ -827,7 +816,12 @@ procedure TDView.DataChanged;
 begin
 	if Assigned(FOnColumnClick) and (SortBy >= 0) then
 	begin
-		FOnColumnClick(Self, Columns[SortBy]);
+		try
+			FOnColumnClick(Self, Columns[SortBy]);
+		except
+			on E: Exception do
+				MessageD(E.Message, mtError, [mbOk]);
+		end;
 //					if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[IX]);
 		if FSortBySwap then
 			if RowCount > 1 then

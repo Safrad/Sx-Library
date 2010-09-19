@@ -10,6 +10,8 @@ unit uMapInfo;
 
 interface
 
+uses uTypes;
+
 type
 	TFlo = Single;
 	TPoint = record
@@ -18,14 +20,14 @@ type
 
 	TFieldM = record
 		Point: TPoint;
-		Kod: LongInt; { Decimal(7, 0)}
+		Kod: S4; { Decimal(7, 0)}
 		Nazev: string[30];
 		PSC: string[10];
-		Typ: LongInt;{Decimal(3, 0)}
-		Prior: LongInt; {Decimal(5, 0)}
+		Typ: S4;{Decimal(3, 0)}
+		Prior: S4; {Decimal(5, 0)}
 		GNazev: string[30];
 		Vojvod: string[5];
-		Reserved: array[0..23] of Byte;
+		Reserved: array[0..23] of U1;
 	end;
 
 var
@@ -41,7 +43,7 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uTypes, uFiles, uStrings, uMath;
+	uFiles, uStrings, uMath;
 
 const
 	Delimiter = ',';

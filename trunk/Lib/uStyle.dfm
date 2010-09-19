@@ -119,7 +119,7 @@ object fStyle: TfStyle
     Top = 104
     Width = 75
     Height = 25
-    Caption = 'Brush Color...'
+    Caption = '&Brush Color...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -134,7 +134,7 @@ object fStyle: TfStyle
     Top = 104
     Width = 75
     Height = 25
-    Caption = 'Image...'
+    Caption = '&Image...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -149,7 +149,7 @@ object fStyle: TfStyle
     Top = 104
     Width = 75
     Height = 25
-    Caption = 'Pen Color...'
+    Caption = '&Pen Color...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -185,9 +185,7 @@ object fStyle: TfStyle
     Top = 40
     Width = 105
     Height = 57
-    DrawFPS = False
-    HandScroll = False
-    HotTrack = True
+    Zoom = 1.000000000000000000
     OnFill = ImageSampleFill
     TabOrder = 9
     TabStop = False

@@ -14,22 +14,34 @@ interface
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, Menus,
 	ExtCtrls, StdCtrls,
-	uDBitmap, uTypes, uMath;
+	uDBitmap, uTypes, uMath, uDTimer;
 
 type
 	TZoomMenu = (
 		zmIn, zmOut,
-		zmFullSize, zmFitImage, zmFitWidth, zmFitHeight,
 		zm12, zm1, zm2,
+		zmFitImage, zmFitWidth, zmFitHeight,
 		zmCustom,
-		zmCenter, zmCopy, zmGrate, zmGrateColor);
+		zmCenter, zmGrate, zmGrateColor, zmCopy);
 
 type
 	TMouseAction = (mwNone, mwScroll,
 		mwScrollH, mwScrollHD, mwScrollHU, mwScrollHD2, mwScrollHU2,
 		mwScrollV, mwScrollVD, mwScrollVU, mwScrollVD2, mwScrollVU2);
+
+	TZoom = FG;
+
 	TDImage = class(TWinControl)
 	private
+		FTimer: TTimer;
+		FBitmap: TDBitmap;
+
+		FNeedFill: BG;
+		FHandScroll: BG;
+		{$ifopt d+}
+		FFillCount, FPaintCount: U4;
+		{$endif}
+
 		FHotTrack: Boolean;
 
 		FDrawFPS: Boolean;
@@ -38,7 +50,7 @@ type
 		FOnMouseEnter: TNotifyEvent;
 		FOnMouseLeave: TNotifyEvent;
 		BOfsX, BOfsY: Integer;
-		HType, VType: Byte;
+		HType, VType: U1;
 		NowMaxWidth, NowMaxHeight: Integer;
 		SliderHX1,
 		SliderHX2,
@@ -48,36 +60,49 @@ type
 		LCursor: TCursor;
 		LMouseX, LMouseY: SG;
 
+		FFramePerSec: Extended;
+
 		// Zoom
+		V, A: TZoom;
+		LastTickCount: U4;
+		TargetZoom: TZoom;
 		FEnableZoom: BG;
 		ZoomMenu: TMenuItem;
 		M: array[TZoomMenu] of TMenuItem;
 		BmpS, BmpSourceS: TDBitmap;
 
-		procedure WMChar(var Message: TWMChar); message WM_CHAR;
+		procedure SetZoom(Value: TZoom);
+		procedure SetHotTrack(Value: Boolean);
+		procedure ChangeZoom(NewZoom: TZoom);
+		procedure InitZoomMenu;
+		procedure ZoomClick(Sender: TObject);
 
-		procedure CMMouseEnter(var Message: TWMMouse); message CM_MOUSEENTER;
-		procedure CMMouseLeave(var Message: TWMMouse); message CM_MOUSELEAVE;
-		procedure WMSize(var Message: TWMSize); message WM_SIZE;
+		procedure InitScrolls;
+		procedure FillBitmap;
+		procedure FillUserBitmap;
+
+		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
+			ARect: TRect; State: TOwnerDrawState);
+		procedure Timer1Timer(Sender: TObject);
 
 		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
+		procedure WMSize(var Message: TWMSize); message WM_SIZE;
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
-
-		procedure SetHotTrack(Value: Boolean);
-		procedure ZoomClick(Sender: TObject);
+		procedure CMMouseEnter(var Message: TWMMouse); message CM_MOUSEENTER;
+		procedure CMMouseLeave(var Message: TWMMouse); message CM_MOUSELEAVE;
 	protected
 		{ Protected declarations }
-		procedure CreateParams(var Params: TCreateParams); override;
+		FCur: TCursor;
 
-		procedure Paint; virtual;
-		procedure PaintWindow(DC: HDC); override;
+		procedure CreateParams(var Params: TCreateParams); override;
+//		procedure PaintWindow(DC: HDC); override;
 		property Canvas: TCanvas read FCanvas;
+		function MouseWh(const X, Y: Integer): TMouseAction;
 	public
 		{ Public declarations }
 		MouseX, MouseY: Integer;
 
-		Zoom: FG;
-		Cur: TCursor;
+		ActualZoom: TZoom;
 		MouseL, MouseM, MouseR: Boolean;
 		MouseAction: TMouseAction;
 		MouseWhere: TMouseAction;
@@ -90,11 +115,9 @@ type
 		SX, SY, SW, SH: SG;
 
 		// Output
-		Bitmap: TDBitmap;
 		Center, Grate: BG;
 		Grating: B1;
 		GrateColor: TColor;
-		Smaller: BG;
 		DX, DY, DW, DH: SG;
 
 		OfsX, OfsY: SG;
@@ -103,37 +126,31 @@ type
 		// Scrolls
 		ScrollBarHWidth, ScrollBarHHeight,
 		ScrollBarVWidth, ScrollBarVHeight: Integer;
-		FramePerSec: Extended;
-		PaintCount: Integer;
-		FHandScroll: Boolean;
-		SkipFillWhenResized: BG;
-		procedure InitScrolls;
 
 		constructor Create(AOwner: TComponent); override;
+		procedure CreateZoom(Zoom1: TMenuItem);
 		destructor Destroy; override;
+
+		function GetPosX(X: SG): SG;
+		function GetPosY(Y: SG): SG;
 
 		procedure OffsetRange(var NOfsX, NOfsY: Integer);
 		procedure ScrollTo(NOfsX, NOfsY: Integer);
-		procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
-			X, Y: Integer); override;
+		procedure Invalidate; override; // Invalidate (Fill and Paint)
+
+		// override
+		procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
 		procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-		procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
-			X, Y: Integer); override;
-{		function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
-			MousePos: TPoint): Boolean; override;}
+		procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
 		function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
 		function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean; override;
-		procedure FillImage;
-		procedure Fill; {virtual; dynamic;}
-//		procedure Paint; //override;
-		function MouseWh(const X, Y: Integer): TMouseAction;
-		procedure CreateZoom(Zoom1: TMenuItem);
-		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
-			ARect: TRect; State: TOwnerDrawState);
+		property Bitmap: TDBitmap read FBitmap;
 	published
-		property DrawFPS: Boolean read FDrawFPS write FDrawFPS;
-		property HandScroll: Boolean read FHandScroll write FHandScroll;
-		property HotTrack: Boolean read FHotTrack write SetHotTrack default False;
+
+		property Zoom: TZoom read TargetZoom write SetZoom;
+		property DrawFPS: Boolean read FDrawFPS write FDrawFPS default False;
+		property HandScroll: Boolean read FHandScroll write FHandScroll default False;
+		property HotTrack: Boolean read FHotTrack write SetHotTrack default True;
 		property OnFill: TNotifyEvent read FOnFill write FOnFill;
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
 
@@ -182,7 +199,7 @@ type
 {procedure ZoomMake(
 	BmpSource: TDBitmap;
 	VisX, VisY: Integer;
-	AsWindow: Boolean; Zoom: FG; XYConst: Boolean; QualityResize: Boolean;
+	AsWindow: Boolean; Zoom: TZoom; XYConst: Boolean; QualityResize: Boolean;
 	var OX, OY: Integer;
 	out SourceWidth, SourceHeight: Integer;
 	out SX1, SY1, SXW, SYH: Integer;
@@ -195,21 +212,22 @@ implementation
 
 uses
 	Math, ClipBrd,
-	uMenus, uGraph, uSysInfo, uStrings, uGetInt, uGColor, uFormat;
+	uMenus, uGraph, uSysInfo, uStrings, uGetInt, uGColor, uFormat, uError;
 
 const
 //	ZoomDiv = 2520;
 	MenuNames: array[TZoomMenu] of string = (
 		'Zoom In', 'Zoom Out',
-		'Full Size', 'Fit Image', 'Fit Width', 'Fit Height', '1:2', '1:1', '2:1',
+		'1:2', '1:1', '2:1',
+		'Fit Image', 'Fit Width', 'Fit Height',
 		'Zoom To' + cDialogSuffix,
-		'Center', 'Copy', 'Grate', 'Grate Color' + cDialogSuffix);
+		'Center', 'Grate', 'Grate Color' + cDialogSuffix, 'Copy');
 	MenuShort: array[TZoomMenu] of Char = (
 		'I', 'U',
-		#0, #0, #0, #0, #0, 'Q', #0,
+		#0, 'Q', #0,
+		#0, #0, #0,
 		#0,
-		#0, 'C', #0, #0);
-
+		#0, #0, #0, 'C');
 
 procedure TDImage.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
@@ -229,7 +247,7 @@ begin
 	j := 0;
 	for i := Low(TZoomMenu) to High(TZoomMenu) do
 	begin
-		if i in [zmFullSize, zm12, zmCustom] then
+		if i in [zm12, zmCenter] then
 		begin
 			MS := TMenuItem.Create(nil);
 			MS.Caption := '-';
@@ -242,6 +260,8 @@ begin
 		M[i].Tag := SG(i);
 		M[i].Caption := MenuNames[i];
 		M[i].Name := ComponentName(MenuNames[i]);// 'Zoom' + IntToStr(SG(i));
+		if M[i].Name = 'ZoomIn' then M[i].Name := 'InZoom'
+		else if M[i].Name = 'ZoomOut' then M[i].Name := 'OutZoom';
 		if MenuShort[i] <> #0 then
 			M[i].ShortCut := ShortCut(Ord(MenuShort[i]), [ssCtrl]);
 
@@ -265,115 +285,199 @@ const
 	ScrollEf = ef14;
 	ScrollEf2 = ef12;
 
-{
-procedure OnApply(Color: TColor);
+var Slf: TDImage;
+
+procedure OnApplyNum(Value: S8);
 begin
-	GrateColor := Color;
-	fMain.PaintImage;
-end; D???}
+	Slf.ChangeZoom(Value / 1000);
+	Slf.Invalidate;
+end;
+
+procedure OnApplyColor(Color: TColor);
+begin
+	Slf.GrateColor := Color;
+	Slf.Invalidate;
+end;
+
+procedure TDImage.Timer1Timer(Sender: TObject);
+const
+	A0 = 1;
+var
+	DT: TZoom;
+	Dif, Dif2: TZoom;
+	k: TZoom;
+begin
+//	DT := FTimer.ElapsedTime / PerformanceFrequency;
+	DT := FTimer.Interval / 1000;
+	Dif := TargetZoom - ActualZoom;
+	Dif2 := Dif / TargetZoom;
+	if (Abs(Dif2) < 0.01){Distance is small} and (V < 100){Speed is slow} then
+	begin
+		// Parking
+		ActualZoom := TargetZoom;
+		V := 0;
+		A := 0;
+		FTimer.Enabled := False;
+	end
+	else
+	begin
+		k := 1 * V - 2300{Value < 2000 is unstable!} * (1.1 * Dif2);
+{		if Abs(k) < 100 then
+			A := 0
+		else} if k > 0 then
+			A := -A0
+		else
+			A := A0;
+		if Sgn(A) = Sgn(V) then
+			if Abs(A) > A0 div 2 then A := Sgn(A) * A0 / 4; // Slows acceleration
+	end;
+
+//	if V < 100 then A := A0;
+
+	V := V + A * DT * 1000; if Abs(V) > 500 then V := Sgn(V) * 500;
+	ActualZoom := ActualZoom * (1 + 0.003 * V * DT);
+{	if S > MaxS then S := MaxS;
+	ActualZoom := ((MaxS - S) * StartZoom + S * NewZoom) / MaxS;}
+
+	Invalidate;
+end;
+
+
+procedure TDImage.InitZoomMenu;
+begin
+	if Assigned(M[zmCenter]) = False then Exit;
+	M[zmCenter].Checked := Center;
+	M[zmGrate].Checked := Grate;
+
+	M[zmIn].Enabled := TargetZoom < 256;
+	M[zmOut].Enabled := TargetZoom > 1 / 256;
+
+	M[zm12].Enabled := TargetZoom <> 1 / 2;
+	M[zm12].Checked := not M[zm12].Enabled;
+
+	M[zm1].Enabled := TargetZoom <> 1;
+	M[zm1].Checked := not M[zm1].Enabled;
+
+	M[zm2].Enabled := TargetZoom <> 2;
+	M[zm2].Checked := not M[zm2].Enabled;
+	if ZoomMenu <> nil then
+		MenuUpdate(PopupMenu.Items, ZoomMenu);
+end;
+
+procedure TDImage.ChangeZoom(NewZoom: TZoom);
+begin
+	if NewZoom <> TargetZoom then
+	begin
+		TargetZoom := NewZoom;
+		InitZoomMenu;
+		if FTimer = nil then
+		begin
+			FTimer := TTimer.Create(Self);
+			FTimer.Enabled := False;
+//			FTimer.EventStep := esFrequency;
+//			FTimer.Interval := 25;
+			FTimer.Interval := 40;
+			FTimer.OnTimer := Timer1Timer;
+		end;
+		FTimer.Enabled := True;
+		LastTickCount := GetTickCount;
+	end;
+end;
 
 procedure TDImage.ZoomClick(Sender: TObject);
 var ZoomI: SG;
 begin
+	Slf := Self;
 	case TZoomMenu(TMenuItem(Sender).Tag) of
 	zmIn:
 	begin
-		Zoom := Zoom * 2;
-//		fInfo.ComboBoxZoom.Text := FToS(Zoom);
-//		FreeAndNil(BmpSource2);
+		ChangeZoom(TargetZoom * 2);
 	end;
 	zmOut:
 	begin
-		Zoom := Zoom / 2;
+		ChangeZoom(TargetZoom / 2);
 	end;
-	zmFullSize:
-	begin
-		Zoom := 1;
-	end;
-	zmFitImage: Zoom := Max(UserWidth / Bitmap.Width, UserHeight / Bitmap.Height);
-	zmFitWidth: Zoom := UserWidth / Bitmap.Width;
-	zmFitHeight: Zoom := UserHeight / Bitmap.Height;
-	zm12: Zoom := 1 / 2;
-	zm1: Zoom := 1;
-	zm2: Zoom := 2;
+	zmFitImage: if UserBitmap <> nil then ChangeZoom(Min(FBitmap.Width / UserBitmap.Width, FBitmap.Height / UserBitmap.Height));
+	zmFitWidth: if UserBitmap <> nil then ChangeZoom(FBitmap.Width / UserBitmap.Width);
+	zmFitHeight: if UserBitmap <> nil then ChangeZoom(FBitmap.Height / UserBitmap.Height);
+	zm12: ChangeZoom(1 / 2);
+	zm1: ChangeZoom(1);
+	zm2: ChangeZoom(2);
 	zmCustom:
 	begin
-		ZoomI := Round(Zoom * 1000);
-		if GetNumber('Zoom To (' + CharTimes + '1000)', ZoomI, 1, 1000, 1000000, nil) then
-			Zoom := ZoomI / 1000;
+		ZoomI := Round(TargetZoom * 1000);
+		if GetNumber('Zoom To (' + CharTimes + '1000)', ZoomI, 1, 1000, 256 * 1000, OnApplyNum) then
+			TargetZoom := ZoomI / 1000;
 	end;
 	zmCenter:
 	begin
 		Center := not Center;
+		Invalidate;
 		M[zmCenter].Checked := Center;
 	end;
 	zmGrate:
 	begin
 		Grate := not Grate;
+		Invalidate;
 		M[zmGrate].Checked := Grate;
 	end;
 	zmGrateColor:
-		GetColor('Grate Color', GrateColor, clWhite, nil{OnApply});
+		GetColor('Grate Color', GrateColor, clWhite, OnApplyColor);
 	zmCopy:
 		Clipboard.Assign(TBitmap(Bitmap));
 	end;
-
-	M[zmIn].Enabled := Zoom < 16;
-	M[zmOut].Enabled := Zoom > 1 / 16;
-	M[zmFullSize].Enabled := Zoom <> 1;
-	if ZoomMenu <> nil then
-		MenuUpdate(PopupMenu.Items, ZoomMenu);
-
-	Fill;
 end;
 
 procedure TDImage.WMPaint(var Message: TWMPaint);
 begin
-	Paint;
-//	DefaultHandler(Message);
 	inherited;
-end;
+	{$ifopt d+}
+	Inc(FPaintCount);
+	{$endif}
+	if FNeedFill then FillBitmap;
 
-procedure TDImage.PaintWindow(DC: HDC);
-begin
-	FCanvas.Lock;
-	try
-		FCanvas.Handle := DC;
-		try
-			TControlCanvas(FCanvas).UpdateTextFlags;
-			Paint;
-		finally
-			FCanvas.Handle := 0;
-		end;
-	finally
-		FCanvas.Unlock;
+	if FBitmap.Empty then
+	begin
+		FCanvas.Brush.Style := bsSolid;
+		FCanvas.Brush.Color := clAppWorkSpace;
+		PatBlt(
+			FCanvas.Handle,
+			0,
+			0,
+			Width,
+			Height,
+			PATCOPY
+		);
+	end
+	else
+	begin
+		FBitmap.DrawToDC(FCanvas.Handle, 0, 0);
 	end;
+	if Assigned(FOnPaint) then
+	begin
+		try
+			FOnPaint(Self);
+		except
+			on E: Exception do
+				MessageD(E.Message, mtError, [mbOk]);
+		end;
+	end;
+	{$ifopt d+}
+	Canvas.Brush.Style := bsClear;
+	Canvas.Font.Color := clWhite;
+	Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));
+	{$endif}
 end;
 
 procedure TDImage.WMEraseBkgnd(var Message: TWMEraseBkgnd);
 begin
-	DefaultHandler(Message);
-end;
-
-procedure TDImage.WMChar(var Message: TWMChar);
-begin
-{	with Message do
-		if  (((CharCode = VK_RETURN) and FActive) or
-			((CharCode = VK_ESCAPE) and FCancel)) and
-			(KeyDataToShiftState(Message.KeyData) = []) and CanFocus then
-		begin
-			Click;
-			Result := 1;
-		end else
-			inherited;}
+	Message.Result := 1;
 end;
 
 procedure TDImage.CMMouseEnter(var Message: TWMMouse);
 begin
 	inherited;
 	MouseOn := True;
-//	if FHotTrack then
-//		Fill;
 	if Assigned(FOnMouseEnter) then FOnMouseEnter(Self);
 end;
 
@@ -386,65 +490,56 @@ begin
 		if MouseWhere <> mwScroll then
 		begin
 			MouseWhere := mwNone;
-			Fill;
+			Invalidate;
 		end
 		else
 			MouseWhere := mwNone;
 	end;
-//	if FHotTrack then
 	if Assigned(FOnMouseLeave) then FOnMouseLeave(Self);
 end;
 
 procedure TDImage.WMSize(var Message: TWMSize);
 begin
 	inherited;
-	if SkipFillWhenResized =False then
-		Fill;
+	Invalidate;
 end;
 
 constructor TDImage.Create(AOwner: TComponent);
 begin
-	inherited Create(AOwner);
-	Zoom := 1;
+	inherited;
+	ActualZoom := 1;
+	TargetZoom := 1;
+
 	FCanvas := TControlCanvas.Create;
 	TControlCanvas(FCanvas).Control := Self;
+
 	FHotTrack := True;
 
-	Bitmap := TDBitmap.Create;
-	{$ifopt d-}
-	if NTSystem then
-		if Font.Name = 'MS Sans Serif' then
-		begin
-			Font.Name := 'Microsoft Sans Serif';
-			Bitmap.Canvas.Font.Name := Font.Name;
-		end;
-	{$endif}
+	FBitmap := TDBitmap.Create;
+	FBitmap.Canvas.Font := Font;
 
-//	ControlStyle := [csDoubleClicks, csOpaque, csAcceptsControls, csMenuEvents, csDisplayDragImage, csReflector];
+	TabStop := True;
+	//	ControlStyle := [csDoubleClicks, csOpaque, csAcceptsControls, csMenuEvents, csDisplayDragImage, csReflector];
 	ControlStyle := ControlStyle + [csOpaque, csMenuEvents, csDisplayDragImage, csReflector] - [csSetCaption];
-	{	Width := 250;
-	Height := 150;}
-{	Bitmap.Width := Width;
-	Bitmap.Height := Height;}
-//	ParentColor := False;
-//	TabStop := True;
 end;
 
 destructor TDImage.Destroy;
 begin
-	FCanvas.Free;
-	FreeAndNil(Bitmap);
+	FreeAndNil(FTimer);
+
+	FreeAndNil(FCanvas);
+	FreeAndNil(FBitmap);
 	BmpS := nil;
 	UserBitmap := nil;
 	FreeAndNil(BmpSourceS);
-	inherited Destroy;
+	inherited;
 end;
 
 procedure TDImage.CreateParams(var Params: TCreateParams);
 {const
 	BorderStyles: array[TBorderStyle] of U4 = (0, );}
 begin
-	inherited CreateParams(Params);
+	inherited;
 	LCursor := Cursor;
 	with Params do
 	begin
@@ -458,34 +553,39 @@ end;
 
 function TDImage.MouseWh(const X, Y: Integer): TMouseAction;
 begin
-	Result := mwScroll;
-	if VType <> 0 then
-	if X + ScrollBarVWidth > Bitmap.Width  then
-	begin // V
-		if Y < ScrollBarHHeight then
-			Result := mwScrollVD
-		else if Y < SliderVY1 then
-			Result := mwScrollVD2
-		else if Y <= SliderVY2 then
-			Result := mwScrollV
-		else if Y < ScrollBarVHeight - ScrollBarHHeight then
-			Result := mwScrollVU2
-		else if Y < ScrollBarVHeight then
-			Result := mwScrollVU;
-	end;
-	if HType <> 0 then
-	if Y + ScrollBarHHeight > Bitmap.Height  then
-	begin // H
-		if X < ScrollBarVWidth then
-			Result := mwScrollHD
-		else if X < SliderHX1 then
-			Result := mwScrollHD2
-		else if X <= SliderHX2 then
-			Result := mwScrollH
-		else if X < ScrollBarHWidth - ScrollBarVWidth then
-			Result := mwScrollHU2
-		else if X < ScrollBarHWidth then
-			Result := mwScrollHU;
+	if (X < 0) or (X >= FBitmap.Width) or (Y < 0) or (Y >= FBitmap.Height) then
+		Result := mwScroll
+	else
+	begin
+		Result := mwScroll;
+		if VType <> 0 then
+		if X + ScrollBarVWidth > FBitmap.Width then
+		begin // V
+			if Y < ScrollBarHHeight then
+				Result := mwScrollVD
+			else if Y < SliderVY1 then
+				Result := mwScrollVD2
+			else if Y <= SliderVY2 then
+				Result := mwScrollV
+			else if Y < ScrollBarVHeight - ScrollBarHHeight then
+				Result := mwScrollVU2
+			else if Y < ScrollBarVHeight then
+				Result := mwScrollVU;
+		end;
+		if HType <> 0 then
+		if Y + ScrollBarHHeight > FBitmap.Height then
+		begin // H
+			if X < ScrollBarVWidth then
+				Result := mwScrollHD
+			else if X < SliderHX1 then
+				Result := mwScrollHD2
+			else if X <= SliderHX2 then
+				Result := mwScrollH
+			else if X < ScrollBarHWidth - ScrollBarVWidth then
+				Result := mwScrollHU2
+			else if X < ScrollBarHWidth then
+				Result := mwScrollHU;
+		end;
 	end;
 end;
 
@@ -509,7 +609,7 @@ begin
 	begin
 		OfsX := NOfsX;
 		OfsY := NOfsY;
-		Fill;
+		Invalidate;
 	end;
 end;
 
@@ -520,8 +620,8 @@ const
 	StepInt = 500;
 var
 	Speed: Int64;
-	TimeO, LastTickCount, FrameTickCount: LongWord;
-	Cycle: Cardinal;
+	TimeO, LastTickCount, FrameTickCount: U4;
+	Cycle: UG;
 	NOfsX, NOfsY: Integer;
 	MouseA: TMouseAction;
 begin
@@ -541,16 +641,14 @@ begin
 			MouseAction := mwScrollH;
 			MouseX := X;
 			BOfsX := OfsX;
-			Fill;
-//			inherited MouseDown(Button, Shift, X, Y);
+			Invalidate;
 		end;
 		mwScrollV:
 		begin
 			MouseAction := mwScrollV;
 			MouseY := Y;
 			BOfsY := OfsY;
-			Fill;
-//			inherited MouseDown(Button, Shift, X, Y);
+			Invalidate;
 		end;
 		mwScrollHD, mwScrollHU,
 		mwScrollVD, mwScrollVU,
@@ -579,7 +677,6 @@ begin
 			begin
 			end;}
 //      MouseW := mdScrollB;
-//			inherited MouseDown(Button, Shift, X, Y);
 			Cycle := 0;
 			FrameTickCount := 0;
 			while MouseAction <> mwNone do
@@ -607,14 +704,14 @@ begin
 				Inc(Cycle);
 				if LastTickCount >= FrameTickCount then
 				begin
-					FramePerSec := 1000 * Cycle / (LastTickCount - FrameTickCount + StepInt);
+					FFramePerSec := 1000 * Cycle / (LastTickCount - FrameTickCount + StepInt);
 					FrameTickCount := LastTickCount + StepInt;
 					Cycle := 0;
 				end;
 			end;
 			MouseAction := MouseA;
 			MouseAction := mwNone;
-			FramePerSec := 0;
+			FFramePerSec := 0;
 			Exit;
 		end;
 		mwScroll:
@@ -629,7 +726,6 @@ begin
 			else
 			begin
 				MouseAction := mwNone;
-//				inherited MouseDown(Button, Shift, X, Y);
 			end;
 		end;
 		end;
@@ -638,7 +734,7 @@ begin
 	mbMiddle: MouseM := True;
 	end;
 
-	inherited MouseDown(Button, Shift, X, Y);
+	inherited;
 end;
 
 procedure TDImage.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -650,42 +746,44 @@ begin
 	if (X = LMouseX) and (Y = LMouseY) then Exit;
 	LMouseX := X;
 	LMouseY := Y;
-{	MouseX := X;
-	MouseY := Y;}
 
-	MouseW := MouseWh(X, Y);
-	case MouseW of
-	mwScrollH, mwScrollV,
-	mwScrollHD, mwScrollHU,
-	mwScrollVD, mwScrollVU,
-	mwScrollHD2, mwScrollHU2,
-	mwScrollVD2, mwScrollVU2:
+	Sc := True;
+	if MouseAction = mwNone then
 	begin
-		Sc := False;
-		if Cursor <> crArrow then
-			Cursor := crArrow;
-	end
-	else
-	begin
-		Sc := (HandScroll or (ssShift in Shift)) and ((UserWidth - NowMaxWidth > 0) or (UserHeight - NowMaxHeight > 0));
-		if Sc then
-			Cur := 1 + SG(MouseL)
-		else
-			Cur := LCursor;
-		if {(Cursor = crArrow) and} (Cursor <> Cur) then
-			Cursor := Cur;
-	end;
-	end;
-
-	if MouseWhere <> MouseW then
-	begin
-		if ((MouseWhere = mwNone) and (MouseW = mwScroll)) or
-		((MouseWhere = mwScroll) and (MouseW = mwNone)) then
-			MouseWhere := MouseW
+		MouseW := MouseWh(X, Y);
+		case MouseW of
+		mwScrollH, mwScrollV,
+		mwScrollHD, mwScrollHU,
+		mwScrollVD, mwScrollVU,
+		mwScrollHD2, mwScrollHU2,
+		mwScrollVD2, mwScrollVU2:
+		begin
+			Sc := False;
+			if Cursor <> crArrow then
+				Cursor := crArrow;
+		end
 		else
 		begin
-			MouseWhere := MouseW;
-			Fill;
+			Sc := (HandScroll or (ssShift in Shift)) and ((UserWidth - NowMaxWidth > 0) or (UserHeight - NowMaxHeight > 0));
+			if Sc then
+				FCur := 1 + SG(MouseL)
+			else
+				FCur := LCursor;
+			if {(Cursor = crArrow) and} (Cursor <> FCur) then
+				Cursor := FCur;
+		end;
+		end;
+
+		if MouseWhere <> MouseW then
+		begin
+			if ((MouseWhere = mwNone) and (MouseW = mwScroll)) or
+			((MouseWhere = mwScroll) and (MouseW = mwNone)) then
+				MouseWhere := MouseW
+			else
+			begin
+				MouseWhere := MouseW;
+				Invalidate;
+			end;
 		end;
 	end;
 
@@ -697,9 +795,9 @@ begin
 	mwNone, mwScroll:
 	begin
 		if DW <> 0 then
-			UserMouseX := Round((X - DX) * Zoom / DW) + OfsX;
+			UserMouseX := Trunc((X + OfsX) / ActualZoom);
 		if DH <> 0 then
-			UserMouseY := Round((Y - DY) * Zoom / DH) + OfsY;
+			UserMouseY := Trunc((Y + OfsY) / ActualZoom);
 	end;
 	end;
 
@@ -732,7 +830,7 @@ begin
 	LTickCount := TickCount;}
 	ScrollTo(NOfsX, NOfsY);
 //  if (MouseW = mwNone){ or (MouseW = mwScroll)} then
-	inherited MouseMove(Shift, X, Y);
+	inherited;
 end;
 
 procedure TDImage.MouseUp(Button: TMouseButton; Shift: TShiftState;
@@ -753,7 +851,7 @@ begin
 			if MouseAction <> mwNone then
 			begin
 				MouseAction := mwNone;
-				Fill;
+				Invalidate;
 			end;
 		end;
 		mwScroll:
@@ -769,7 +867,7 @@ begin
 	mbRight: MouseR := False;
 	mbMiddle: MouseM := False;
 	end;
-	inherited MouseUp(Button, Shift, X, Y);
+	inherited;
 end;
 
 function TDImage.DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
@@ -778,6 +876,11 @@ begin
 	if [] = Shift then
 	begin
 		ScrollTo(OfsX, OfsY + RoundDiv(MaxOfsY, 32));
+	end
+	else if ssCtrl in Shift then
+	begin
+		if FEnableZoom then
+			ChangeZoom(TargetZoom / 2);
 	end;
 	Result := False;
 end;
@@ -788,6 +891,11 @@ begin
 	if [] = Shift then
 	begin
 		ScrollTo(OfsX, OfsY - RoundDiv(MaxOfsY, 32));
+	end
+	else if ssCtrl in Shift then
+	begin
+		if FEnableZoom then
+			ChangeZoom(TargetZoom * 2);
 	end;
 	Result := False;
 end;
@@ -795,21 +903,20 @@ end;
 procedure TDImage.InitScrolls;
 begin
 	ScrollBarVWidth := GetSystemMetrics(SM_CXVSCROLL);
-
-	if UserWidth > Bitmap.Width then
+	if UserWidth > FBitmap.Width then
 		HType := 1
-	else if UserWidth > Bitmap.Width - ScrollBarVWidth then
+	else if UserWidth > FBitmap.Width - ScrollBarVWidth then
 		HType := 2
 	else
 		HType := 0;
 
 	ScrollBarHHeight := GetSystemMetrics(SM_CYHSCROLL);
-	if UserHeight > Bitmap.Height then
+	if UserHeight > FBitmap.Height then
 	begin
 		VType := 1;
 		if HType = 2 then HType := 1;
 	end
-	else if UserHeight > Bitmap.Height - ScrollBarHHeight then
+	else if UserHeight > FBitmap.Height - ScrollBarHHeight then
 	begin
 		case HType of
 		0:
@@ -829,22 +936,21 @@ begin
 		if HType = 2 then HType := 0;
 	end;
 
-	NowMaxWidth := Bitmap.Width - ScrollBarVWidth * VType;
-	NowMaxHeight := Bitmap.Height - ScrollBarHHeight * HType;
+	NowMaxWidth := FBitmap.Width - ScrollBarVWidth * VType;
+	NowMaxHeight := FBitmap.Height - ScrollBarHHeight * HType;
 	MaxOfsX := UserWidth - NowMaxWidth;
 	MaxOfsY := UserHeight - NowMaxHeight;
-	OffsetRange(OfsX, OfsY);
+//	OffsetRange(OfsX, OfsY);
 end;
 
 procedure ZoomMake(
 	BmpSource: TDBitmap;
 	VisX, VisY: Integer;
-	AsWindow, Center:BG; Zoom: FG; XYConst: Boolean; QualityResize: Boolean;
+	AsWindow, Center:BG; Zoom: TZoom; XYConst: Boolean; QualityResize: Boolean;
 	var OX, OY: Integer;
 	out SourceWidth, SourceHeight: Integer;
 	out SX1, SY1, SXW, SYH: Integer;
 	out DX1, DY1, DXW, DYH: Integer;
-	out Smaller: BG;
 	var BmpSource2: TDBitmap);
 
 var
@@ -898,16 +1004,16 @@ begin
 		DX1 := 0;
 		DY1 := 0;
 
-		Smaller := False;
+//		Smaller := False;
 		if VisX > SourceWidth then
 		begin
-			Smaller := True;
+//			Smaller := True;
 			if Center then
 				DX1 := (VisX - SourceWidth) div 2;
 		end;
 		if VisY > SourceHeight then
 		begin
-			Smaller := True;
+//			Smaller := True;
 			if Center then
 				DY1 := (VisY - SourceHeight) div 2;
 		end;
@@ -929,7 +1035,7 @@ begin
 		else
 		begin
 			DX1 := DX1 - Round(Zoom * Frac(OX / Zoom));
-			DY1 := DX1 - Round(Zoom * Frac(OY / Zoom));
+			DY1 := DY1 - Round(Zoom * Frac(OY / Zoom));
 		end;
 
 		SXW := Ceil(VisX / Zoom - DX1);
@@ -963,6 +1069,8 @@ begin
 
 	if (SourceWidth < BmpSource.Width) or (SourceHeight < BmpSource.Height) then
 	begin
+		// D??? Zoom Part
+		// D??? Update problem!
 		if not Assigned(BmpSource2) then
 		begin
 			BmpSource2 := TDBitmap.Create;
@@ -1004,16 +1112,29 @@ begin
 	end;
 end;
 
-procedure TDImage.FillImage;
-var
-	BmpD: TDBitmap;
-	e: FA;
-	i, j: SG;
+function TDImage.GetPosX(X: SG): SG;
 begin
-	if UserBitmap = nil then Exit;
-		BmpD := Bitmap;
-		SetStretchBltMode(BmpD.Canvas.Handle, COLORONCOLOR);
-		StretchBlt(BmpD.Canvas.Handle,
+	Result := RoundSG(ActualZoom * X - OfsX);
+end;
+
+function TDImage.GetPosY(Y: SG): SG;
+begin
+	Result := RoundSG(ActualZoom * Y - OfsY);
+end;
+
+procedure TDImage.FillUserBitmap;
+var
+	e: FA;
+	i: SG;
+begin
+	if UserBitmap <> nil then
+	begin
+		if Center then
+			FBitmap.AntiBar(DX, DY, DW - 1, DH - 1, clAppWorkSpace, ef16)
+		else
+			FBitmap.Bar(DX, DY, DW - 1, DH - 1, clAppWorkSpace, ef16); // D??? Temp
+		SetStretchBltMode(FBitmap.Canvas.Handle, COLORONCOLOR);
+		StretchBlt(FBitmap.Canvas.Handle,
 			DX, DY,
 			DW, DH,
 			BmpS.Canvas.Handle,
@@ -1021,36 +1142,38 @@ begin
 			SW, SH,
 			SRCCOPY);
 
-
 		if Grate then
 		begin
-			if Zoom >= 3 then
+			if ActualZoom >= 3 then
 			begin
-				e := (Round(Zoom) - OfsX) mod Round(Zoom);
+				e := (Round(ActualZoom) - OfsX) mod Round(ActualZoom);
 				i := Round(e);
-				j := 0;
-				while j < DW do
+				while i < UserWidth do
 				begin
-					BmpD.Line(i, 0, i, UserHeight - 1, GrateColor, ef12);
-					e := e + Zoom;
-					i := Round(e);
-					Inc(j);
+					FBitmap.Line(i, 0, i, UserHeight - 1, GrateColor, ef12);
+					e := e + ActualZoom;
+					i := RoundSG(e);
 				end;
-				e := (Round(Zoom) - OfsY) mod Round(Zoom);
-				i := Round(e);
-				j := 0;
-				while j < BmpD.Height do
+				e := (Round(ActualZoom) - OfsY) mod Round(ActualZoom);
+				i := RoundSG(e);
+				while i < UserHeight do
 				begin
-					BmpD.Line(0, i, UserHeight - 1, i, GrateColor, ef12);
-					e := e + Zoom;
+					FBitmap.Line(0, i, UserWidth - 1, i, GrateColor, ef12);
+					e := e + ActualZoom;
 					i := Round(e);
-					Inc(j);
 				end;
 			end;
 		end;
+	end;
 end;
 
-procedure TDImage.Fill;
+procedure TDImage.Invalidate;
+begin
+	FNeedFill := True;
+	inherited Invalidate;
+end;
+
+procedure TDImage.FillBitmap;
 var
 	ScrollLen, ScrollLenS: Integer;
 	X1, Y1, X2, Y2: Integer;
@@ -1060,22 +1183,17 @@ var
 	SliderC1, SliderC2: TColor;
 	s: string;
 	i, x, y: SG;
+  FontColor: TColor;
 	FontSize: SG;
-	FontName: TFontName;
+//	FontName: TFontName;
+	R: TRect;
 	{$ifopt d+}
 	StartTickCount: U4;
 	{$endif}
 begin
-	{$ifopt d+}
-	StartTickCount := GetTickCount;
-	{$endif}
-	if (Visible = False) or (csDesigning in ComponentState) then
-	begin
-		Bitmap.SetSize(0, 0);
-		Exit;
-	end;
-	if (Bitmap.Width <> Width) or (Bitmap.Height <> Height) then
-//		Bitmap.Resize(Bitmap, clNone, Width, Height, nil);}
+	{$ifopt d+}StartTickCount := GetTickCount;{$endif}
+	FNeedFill := False;
+	if (FBitmap.Width <> Width) or (FBitmap.Height <> Height) then
 		Bitmap.SetSize(Width, Height);
 
 {	Smaller := False;
@@ -1117,12 +1235,11 @@ begin
 			ZoomMake(
 				UserBitmap,
 				Width, Height,
-				False, Center, Zoom, False, True,
+				False, Center, ActualZoom, False, False{True},
 				OfsX, OfsY,
 				UserWidth, UserHeight,
 				SX, SY, SW, SH,
 				DX, DY, DW, DH,
-				Smaller,
 				BmpSourceS);
 
 			if Assigned(BmpSourceS) then
@@ -1132,292 +1249,289 @@ begin
 		end;
 	end;
 
+	FillUserBitmap;
+	if Assigned(FOnFill) then
+	begin
+		try
+			FOnFill(Self);
+		except
+			on E: Exception do
+				MessageD(E.Message, mtError, [mbOk]);
+		end;
+	end;
+	InitScrolls;
 
-	try
-		if Assigned(FOnFill) then FOnFill(Self);
-		InitScrolls;
+	SliderC1 := DarkerColor(clScrollBar);
+	SliderC2 := LighterColor(clScrollBar);
 
-		SliderC1 := DarkerColor(clScrollBar);
-		SliderC2 := LighterColor(clScrollBar);
+	// H
+	if (UserWidth > 0) and (HType = 1) and (NowMaxWidth > 2 * ScrollBarHHeight) then
+	begin
+		ScrollBarHWidth := NowMaxWidth;
+		Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
+		Y2 := Bitmap.Height - 1;
 
-		// H
-		if (UserWidth > 0) and (HType = 1) and (NowMaxWidth > 2 * ScrollBarHHeight) then
-		begin
-			ScrollBarHWidth := NowMaxWidth;
-			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
-			Y2 := Bitmap.Height - 1;
-
-			X1 := 0;
-			X2 := ScrollBarVWidth - 1;
+		X1 := 0;
+		X2 := ScrollBarVWidth - 1;
 //			Bitmap.Line(X1, Y1, NowMaxWidth - 1, Y1, RColor(238, 237, 229).L, ScrollEf);
 
-	{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-			Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHD, FHotTrack and (MouseWhere = mwScrollHD), 1, ScrollEf);
+{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+		Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+		Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHD, FHotTrack and (MouseWhere = mwScrollHD), 1, ScrollEf);
 
-			X1 := NowMaxWidth - ScrollBarVWidth;
-			X2 := NowMaxWidth - 1;
-	{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-			Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHU, FHotTrack and (MouseWhere = mwScrollHU), 3, ScrollEf);
+		X1 := NowMaxWidth - ScrollBarVWidth;
+		X2 := NowMaxWidth - 1;
+{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+		Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+		Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollHU, FHotTrack and (MouseWhere = mwScrollHU), 3, ScrollEf);
 
-			// TScrollBoxSlider
-			ScrollLen := NowMaxWidth - 2 * ScrollBarVWidth;
-			ScrollLenS := NowMaxWidth * ScrollLen div UserWidth;
-			if ScrollLenS < ScrollBarHHeight div 2 then ScrollLenS := ScrollBarHHeight div 2;
+		// TScrollBoxSlider
+		ScrollLen := NowMaxWidth - 2 * ScrollBarVWidth;
+		ScrollLenS := NowMaxWidth * ScrollLen div UserWidth;
+		if ScrollLenS < ScrollBarHHeight div 2 then ScrollLenS := ScrollBarHHeight div 2;
 
-			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight + 1;
-			Y2 := Bitmap.Height - 1 - 1;
-			X1 := ScrollBarVWidth + RoundDivS8(S8(ScrollLen - ScrollLenS) * S8(OfsX), UserWidth - NowMaxWidth);
-			X2 := X1 + ScrollLenS - 1;
-			SliderHX1 := X1;
-			SliderHX2 := X2;
+		Y1 := Integer(Bitmap.Height) - ScrollBarHHeight + 1;
+		Y2 := Bitmap.Height - 1 - 1;
+		X1 := ScrollBarVWidth + RoundDivS8(S8(ScrollLen - ScrollLenS) * S8(OfsX), UserWidth - NowMaxWidth);
+		X2 := X1 + ScrollLenS - 1;
+		SliderHX1 := X1;
+		SliderHX2 := X2;
 
-			if MouseAction = mwScrollH then
-			begin
-				I1 := 0;
-				I2 := 3;
-			end
-			else
-			begin
-				I1 := 3;
-				I2 := 0;
-			end;
-			Bitmap.Border(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
-//			Bitmap.Bar(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
-			if FHotTrack and (MouseWhere = mwScrollH) then
-			begin
-				Co[0] := $fffffd;
-				Co[1] := $fbdab9;
-				Co[2] := Co[0];
-				Co[3] := Co[1];
-			end
-			else
-			begin
-				Co[0] := $ffe6d6;
-				Co[1] := $f1c3ae;
-				Co[2] := Co[0];
-				Co[3] := Co[1];
-			end;
-			Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
-			x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
-			for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
-			begin
-				Bitmap.Line(x, Y1 + 4, x, Y2 - 5, $fef4ee, ef16);
-				Inc(x);
-				Bitmap.Line(x, Y1 + 5, x, Y2 - 4, $d0b08c, ef16);
-				Inc(x);
-			end;
-
-
-			// =
-			X1 := ScrollBarVWidth;
-			X2 := SliderHX1 - 1;
-			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
-			Y2 := Bitmap.Height - 1;
-
-			if X2 >= X1 then
-			begin
-				if (MouseAction <> mwScrollHD2) then
-					C := clScrollBar
-				else
-					C := clHighlight;
-				Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
-				Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(
-					X1, Y1 + 1,
-					X2, Y2 - 1, C, ScrollEf2);
-			end;
-
-			X1 := SliderHX2 + 1;
-			X2 := NowMaxWidth - ScrollBarVWidth - 1;
-			Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
-			Y2 := Bitmap.Height - 1;
-
-			if X2 >= X1 then
-			begin
-				if (MouseAction <> mwScrollHU2) then
-					C := clScrollBar
-				else
-					C := clHighlight;
-				Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
-				Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(
-					X1, Y1 + 1,
-					X2, Y2 - 1, C, ScrollEf2);
-			end;
+		if MouseAction = mwScrollH then
+		begin
+			I1 := 0;
+			I2 := 3;
 		end
 		else
-			ScrollBarHWidth := 0;
-
-		// V
-		if (UserHeight > 0) and (VType = 1) and (NowMaxHeight > 2 * ScrollBarVWidth) then
 		begin
-			ScrollBarVHeight := NowMaxHeight;
-			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
-			X2 := Bitmap.Width - 1;
-			if (X1 >= 0) and (X2 > X1) then
-			begin
-				Y1 := 0;
-				Y2 := ScrollBarHHeight - 1;
-	//			Bitmap.Line(X1, Y1, X1, NowMaxHeight - 1, RColor(238, 237, 229).L, ScrollEf);
-		{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-				Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-				Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, FHotTrack and (MouseWhere = mwScrollVD), 0, ScrollEf);
+			I1 := 3;
+			I2 := 0;
+		end;
+		Bitmap.Border(X1, Y1, X2, Y2, clDepth[I1], clDepth[I2], 1, ScrollEf);
+//			Bitmap.Bar(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
+		if FHotTrack and (MouseWhere = mwScrollH) then
+		begin
+			Co[0] := $fffffd;
+			Co[1] := $fbdab9;
+			Co[2] := Co[0];
+			Co[3] := Co[1];
+		end
+		else
+		begin
+			Co[0] := $ffe6d6;
+			Co[1] := $f1c3ae;
+			Co[2] := Co[0];
+			Co[3] := Co[1];
+		end;
+		Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
+		x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
+		for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
+		begin
+			Bitmap.Line(x, Y1 + 4, x, Y2 - 5, $fef4ee, ef16);
+			Inc(x);
+			Bitmap.Line(x, Y1 + 5, x, Y2 - 4, $d0b08c, ef16);
+			Inc(x);
+		end;
 
-				Y1 := NowMaxHeight - ScrollBarHHeight;
-				Y2 := NowMaxHeight - 1;
-		{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
-				Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
-				Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, FHotTrack and (MouseWhere = mwScrollVU), 2, ScrollEf);
-			end;
 
-			// TScrollBoxSlider
-			ScrollLen := NowMaxHeight - 2 * ScrollBarHHeight;
-			ScrollLenS := NowMaxHeight * ScrollLen div UserHeight;
-			if ScrollLenS < ScrollBarVWidth div 2 then ScrollLenS := ScrollBarVWidth div 2;
+		// =
+		X1 := ScrollBarVWidth;
+		X2 := SliderHX1 - 1;
+		Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
+		Y2 := Bitmap.Height - 1;
 
-			X1 := Integer(Bitmap.Width) - ScrollBarVWidth + 1;
-			X2 := Bitmap.Width - 1 - 1;
-			Y1 := ScrollBarHHeight + (ScrollLen - ScrollLenS) * Int64(OfsY) div (UserHeight - NowMaxHeight);
-			Y2 := Y1 + ScrollLenS - 1;
-			SliderVY1 := Y1;
-			SliderVY2 := Y2;
-
-			if MouseAction = mwScrollV then
-			begin
-				I1 := 0;
-				I2 := 3;
-			end
+		if X2 >= X1 then
+		begin
+			if (MouseAction <> mwScrollHD2) then
+				C := clScrollBar
 			else
-			begin
-				I1 := 3;
-				I2 := 0;
-			end;
-			Bitmap.Border(X1, Y1, X2, Y2, DepthColor(I1), DepthColor(I2), 1, ScrollEf);
+				C := clHighlight;
+			Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
+			Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
+			Bitmap.Bar(
+				X1, Y1 + 1,
+				X2, Y2 - 1, C, ScrollEf2);
+		end;
+
+		X1 := SliderHX2 + 1;
+		X2 := NowMaxWidth - ScrollBarVWidth - 1;
+		Y1 := Integer(Bitmap.Height) - ScrollBarHHeight;
+		Y2 := Bitmap.Height - 1;
+
+		if X2 >= X1 then
+		begin
+			if (MouseAction <> mwScrollHU2) then
+				C := clScrollBar
+			else
+				C := clHighlight;
+			Bitmap.Line(X1, Y1, X2, Y1, SliderC1, ScrollEf2);
+			Bitmap.Line(X1, Y2, X2, Y2, SliderC2, ScrollEf2);
+			Bitmap.Bar(
+				X1, Y1 + 1,
+				X2, Y2 - 1, C, ScrollEf2);
+		end;
+	end
+	else
+		ScrollBarHWidth := 0;
+
+	// V
+	if (UserHeight > 0) and (VType = 1) and (NowMaxHeight > 2 * ScrollBarVWidth) then
+	begin
+		ScrollBarVHeight := NowMaxHeight;
+		X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
+		X2 := Bitmap.Width - 1;
+		if (X1 >= 0) and (X2 > X1) then
+		begin
+			Y1 := 0;
+			Y2 := ScrollBarHHeight - 1;
+//			Bitmap.Line(X1, Y1, X1, NowMaxHeight - 1, RColor(238, 237, 229).L, ScrollEf);
+	{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+			Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVD, FHotTrack and (MouseWhere = mwScrollVD), 0, ScrollEf);
+
+			Y1 := NowMaxHeight - ScrollBarHHeight;
+			Y2 := NowMaxHeight - 1;
+	{   Bitmap.Border(X1, Y1, X2, Y2, DepthColor(3), DepthColor(0), 1, ScrollEf);
+			Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, clBtnFace, ScrollEf);}
+			Bitmap.DrawArrow(X1, Y1, X2, Y2, MouseAction = mwScrollVU, FHotTrack and (MouseWhere = mwScrollVU), 2, ScrollEf);
+		end;
+
+		// TScrollBoxSlider
+		ScrollLen := NowMaxHeight - 2 * ScrollBarHHeight;
+		ScrollLenS := NowMaxHeight * ScrollLen div UserHeight;
+		if ScrollLenS < ScrollBarVWidth div 2 then ScrollLenS := ScrollBarVWidth div 2;
+
+		X1 := Integer(Bitmap.Width) - ScrollBarVWidth + 1;
+		X2 := Bitmap.Width - 1 - 1;
+		Y1 := ScrollBarHHeight + (ScrollLen - ScrollLenS) * Int64(OfsY) div (UserHeight - NowMaxHeight);
+		Y2 := Y1 + ScrollLenS - 1;
+		SliderVY1 := Y1;
+		SliderVY2 := Y2;
+
+		if MouseAction = mwScrollV then
+		begin
+			I1 := 0;
+			I2 := 3;
+		end
+		else
+		begin
+			I1 := 3;
+			I2 := 0;
+		end;
+		Bitmap.Border(X1, Y1, X2, Y2, clDepth[I1], clDepth[I2], 1, ScrollEf);
 //			if FHotTrack and (MouseWhere = mwScrollV) then C := clHighlight else C := clBtnFace;
 //			Bitmap.Bar(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
-			if FHotTrack and (MouseWhere = mwScrollV) then
-			begin
-				Co[0] := $fffffd;
-				Co[1] := $fbdab9;
-				Co[2] := Co[0];
-				Co[3] := Co[1];
-			end
-			else
-			begin
-				Co[0] := $ffe6d6;
-				Co[1] := $f1c3ae;
-				Co[2] := Co[0];
-				Co[3] := Co[1];
-			end;
-			Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
-			y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
-			for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
-			begin
-				Bitmap.Line(X1 + 4, y, X2 - 5, y, $fef4ee, ef16);
-				Inc(y);
-				Bitmap.Line(X1 + 5, y, X2 - 4, y, $d0b08c, ef16);
-				Inc(y);
-			end;
-
-			// ||
-			Y1 := ScrollBarHHeight;
-			Y2 := SliderVY1 - 1;
-			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
-			X2 := Bitmap.Width - 1;
-
-			if Y2 >= Y1 then
-			begin
-				if (MouseAction <> mwScrollVD2) then
-					C := clScrollBar
-				else
-					C := clHighlight;
-				Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
-				Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(
-					X1 + 1, Y1,
-					X2 - 1, Y2, C, ScrollEf2);
-			end;
-
-			Y1 := SliderVY2 + 1;
-			Y2 := NowMaxHeight - ScrollBarHHeight - 1;
-			X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
-			X2 := Bitmap.Width - 1;
-
-			if Y2 >= Y1 then
-			begin
-				if (MouseAction <> mwScrollVU2) then
-					C := clScrollBar
-				else
-					C := clHighlight;
-				Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
-				Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
-				Bitmap.Bar(
-					X1 + 1, Y1,
-					X2 - 1, Y2, C, ScrollEf2);
-			end;
+		if FHotTrack and (MouseWhere = mwScrollV) then
+		begin
+			Co[0] := $fffffd;
+			Co[1] := $fbdab9;
+			Co[2] := Co[0];
+			Co[3] := Co[1];
 		end
 		else
-			ScrollBarVHeight := 0;
-
-//    Pix(Bitmap.PData, Bitmap.ByteX, MouseX, MouseY, clWhite, ef16);
-		{$ifopt d-}
-		if FDrawFPS then
-		{$endif}
 		begin
-			{$ifopt d+}
-			s := IntToStr(GetTickCount - StartTickCount) + 'ms, ' + NToS(PaintCount) + CharTimes;
-			{$endif}
-			if FramePerSec >= 0.1 then
-			begin
-				s := s + {$ifopt d+} ', ' +{$endif}NToS(Round(100 * FramePerSec), 2);
-			end;
-			FontSize := Bitmap.Canvas.Font.Size;
-			FontName := Bitmap.Canvas.Font.Name;
-			Bitmap.Canvas.Font.Name := 'Sans Serif';
-			Bitmap.Canvas.Font.Height := -Range(8, Min(Width, Height) div 4, 11);
-			ShadowText(Bitmap.Canvas, Width - Bitmap.Canvas.TextWidth(s) - 1 - 1, 1, s, clWindowText, clNone);
-			Bitmap.Canvas.Font.Size := FontSize;
-			Bitmap.Canvas.Font.Name := FontName;
+			Co[0] := $ffe6d6;
+			Co[1] := $f1c3ae;
+			Co[2] := Co[0];
+			Co[3] := Co[1];
 		end;
-	finally
-		Inc(PaintCount);
-		Paint;
+		Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
+		y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
+		for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
+		begin
+			Bitmap.Line(X1 + 4, y, X2 - 5, y, $fef4ee, ef16);
+			Inc(y);
+			Bitmap.Line(X1 + 5, y, X2 - 4, y, $d0b08c, ef16);
+			Inc(y);
+		end;
+
+		// ||
+		Y1 := ScrollBarHHeight;
+		Y2 := SliderVY1 - 1;
+		X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
+		X2 := Bitmap.Width - 1;
+
+		if Y2 >= Y1 then
+		begin
+			if (MouseAction <> mwScrollVD2) then
+				C := clScrollBar
+			else
+				C := clHighlight;
+			Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
+			Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
+			Bitmap.Bar(
+				X1 + 1, Y1,
+				X2 - 1, Y2, C, ScrollEf2);
+		end;
+
+		Y1 := SliderVY2 + 1;
+		Y2 := NowMaxHeight - ScrollBarHHeight - 1;
+		X1 := Integer(Bitmap.Width) - ScrollBarVWidth;
+		X2 := Bitmap.Width - 1;
+
+		if Y2 >= Y1 then
+		begin
+			if (MouseAction <> mwScrollVU2) then
+				C := clScrollBar
+			else
+				C := clHighlight;
+			Bitmap.Line(X1, Y1, X1, Y2, SliderC1, ScrollEf2);
+			Bitmap.Line(X2, Y1, X2, Y2, SliderC2, ScrollEf2);
+			Bitmap.Bar(
+				X1 + 1, Y1,
+				X2 - 1, Y2, C, ScrollEf2);
+		end;
+	end
+	else
+		ScrollBarVHeight := 0;
+
+	{$ifopt d-}
+	if FDrawFPS then
+	{$endif}
+	begin
+		FontColor := Bitmap.Canvas.Font.Color;
+		FontSize := Bitmap.Canvas.Font.Size;
+//		FontName := Bitmap.Canvas.Font.Name;
+		Bitmap.Canvas.Font.Color := clWhite;
+		Bitmap.Canvas.Font.Height := -Range(8, Min(Width, Height) div 4, 11);
+		Bitmap.Canvas.Brush.Style := bsClear;
+//		Bitmap.Canvas.Font.Name := 'Sans Serif';
+
+		R := Rect(2, 2, Width - 1 - 2, Height - 1 - 2);
+
+		{$ifopt d+}
+		if (OfsX <> 0) or (OfsY <> 0) then
+			s := NToS(OfsX) + CharTimes + NToS(OfsY)
+		else
+			s := '';
+		if ActualZoom <> 1 then s := s + ', Zoom=' + FToS(ActualZoom) + ':1' + LineSep + 'V=' + FToS(V) + LineSep + 'A=' + FToS(A);
+		DrawCutedText(Bitmap.Canvas, R, taLeftJustify, tlTop, s, True, 1);
+		StartTickCount := GetTickCount - StartTickCount;
+		if StartTickCount > 15 then
+			s := MsToStr(StartTickCount, True, diSD, 3, False)
+		else
+			s := '';
+		Inc(FFillCount);
+		{$endif}
+		if FFramePerSec >= 0.1 then
+		begin
+			s := s + {$ifopt d+} ', ' +{$endif}NToS(Round(100 * FFramePerSec), 2);
+		end;
+		DrawCutedText(Bitmap.Canvas, R, taRightJustify, tlTop, s, True, 1);
+		Bitmap.Canvas.Font.Color := FontColor;
+		Bitmap.Canvas.Font.Size := FontSize;
+//		Bitmap.Canvas.Font.Name := FontName;
 	end;
 end;
 
-procedure TDImage.Paint;
+procedure TDImage.SetZoom(Value: TZoom);
 begin
-	if Bitmap.Empty then
+	if TargetZoom <> Value then
 	begin
-		FCanvas.Brush.Style := bsSolid;
-		FCanvas.Brush.Color := clAppWorkSpace;
-		PatBlt(
-			FCanvas.Handle,
-			0,
-			0,
-			Width,
-			Height,
-			PATCOPY
-		 );
-	end
-	else
-	begin
-//		SetStretchBltMode(FCanvas.Handle, COLORONCOLOR);
-		BitBlt(
-			FCanvas.Handle,
-			0,
-			0,
-			Width,
-			Height,
-			Bitmap.Canvas.Handle,
-			0,
-			0,
-			SRCCOPY
-		 );
+		TargetZoom := Value;
+		ActualZoom := Value;
+		Invalidate;
 	end;
-	if Assigned(FOnPaint) then FOnPaint(Self);
 end;
 
 procedure TDImage.SetHotTrack(Value: Boolean);
@@ -1425,7 +1539,7 @@ begin
 	if FHotTrack <> Value then
 	begin
 		FHotTrack := Value;
-		Fill;
+		Invalidate;
 	end;
 end;
 
@@ -1472,7 +1586,7 @@ end;
 		begin
 			BmpRFile.SetSize(BmpRWidth, BmpRHeight);
 
-			SetStretchBltMode(BmpRFile.Canvas.Handle, HALFTONE);
+			SetStretchBltMode(BmpRFile.Canvas.Handle, COLORONCOLOR);
 			StretchBlt(BmpRFile.Canvas.Handle,
 				0, 0,
 				BmpRFile.Width, BmpRFile.Height,
@@ -1526,4 +1640,3 @@ initialization
 	Screen.Cursors[1] := LoadCursor(HInstance, PChar('HANDPOINT'));
 	Screen.Cursors[2] := LoadCursor(HInstance, PChar('HANDPOINTDOWN'));
 end.
-

@@ -31,7 +31,7 @@ begin
 	// Background
 	Chart.Gradient.Visible := True;
 	Chart.Gradient.Direction := gdFromCenter;
-	Chart.Gradient.StartColor := $F5ECCC; //$f4ebcb; //$ffc03e;
+	Chart.Gradient.StartColor := $cef6ee{jaro}; // $F5ECCC {zima}; //$f4ebcb; //$ffc03e;
 	Chart.Gradient.EndColor := clWhite;
 
 	// Fonts

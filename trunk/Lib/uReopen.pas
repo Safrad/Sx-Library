@@ -444,29 +444,6 @@ begin
 
 			ReopenItems[i].MenuItem.Name := 'ReopenItem' + {ReopenResNames[Exists] +} IntToStr(i);
 			ReopenItems[i].MenuItem.Bitmap.Assign(ReopenBitmaps[Exists]);
-
-//			if ReopenItems[i].Exists <> Exists then
-{			begin
-				ReopenItems[i].MenuItem.Bitmap.Width := 0;
-				ReopenItems[i].MenuItem.Bitmap.Height := 0;
-			end;}
-
-//			ComName(ReopenItems[i].MenuItem);
-
-{			if ReopenItems[i].OpenedCount > 0 then
-			begin
-				ReopenItems[i].MenuItem.Bitmap.TransparentColor := GetTransparentColor(ReopenItems[i].MenuItem.Bitmap);
-				if ReopenItems[i].OpenedCount > 1 then
-				begin
-					ReopenItems[i].MenuItem.Bitmap.Canvas.Brush.Style := bsClear;
-					ReopenItems[i].MenuItem.Bitmap.Canvas.Font.Color := NegMonoColor(clBtnFace);
-					s := NToS(ReopenItems[i].OpenedCount);
-					ShadowText(ReopenItems[i].MenuItem.Bitmap.Canvas,
-						(ReopenItems[i].MenuItem.Bitmap.Width - ReopenItems[i].MenuItem.Bitmap.Canvas.TextWidth(s)) div 2,
-						(ReopenItems[i].MenuItem.Bitmap.Height - ReopenItems[i].MenuItem.Bitmap.Canvas.TextHeight(s)) div 2,
-						s, clWhite, clNone);
-				end;
-			end;}
 			ReopenItems[i].MenuItem.Checked := ReopenItems[i].OpenedCount > 0;
 		end;
 		ReopenItems[i].Exists := Exists;

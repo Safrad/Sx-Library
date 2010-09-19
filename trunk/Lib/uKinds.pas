@@ -399,8 +399,11 @@ begin
 	if Items[i].Changed then S := S + ' *' + '(' + MsToStr(GetTickCount - Items[i].ModificationTime, diMSD, 0, False) + ')';
 	if Items[i].New <> 0 then S := S + ' (New)';
 	if Items[i].ReadOnly then S := S + ' (ReadOnly)';
-	Items[i].MenuItem.Caption := S;
-	Items[i].MenuItem.Tag := i;
+	if Items[i].MenuItem <> nil then
+	begin
+		Items[i].MenuItem.Caption := S;
+		Items[i].MenuItem.Tag := i;
+	end;
 end;
 
 procedure TKinds.CreateMenuItem(i: SG);
@@ -598,14 +601,10 @@ begin
 	if Assigned(SaveDialog1) then
 	begin
 		Result := ExecuteDialog(SaveDialog1, FileName);
-		if Result then
-			FileName := SaveDialog1.FileName;
 	end;
 	if Assigned(SavePictureDialog1) then
 	begin
 		Result := ExecuteDialog(SavePictureDialog1, FileName);
-		if Result then
-			FileName := SavePictureDialog1.FileName;
 	end;
 end;
 
@@ -692,7 +691,7 @@ begin
 				mtInformation, [mbYes, mbNo, mbCancel]) of
 			mbYes:
 			begin
-				Result := KindSave(Kind, True, False); //SaveToFile(Kind);
+				Result := KindSave(Kind, Items[Kind].New <> 0, False); //SaveToFile(Kind);
 			end;
 			mbNo:
 			begin
@@ -939,9 +938,7 @@ begin
 			FileName := Items[Index].FileName;
 		end;
 		if ExecuteDialog(OpenDialog1, FileName) then
-		begin
 			KindOpenFiles(OpenDialog1.Files);
-		end;
 	end;
 	if Assigned(OpenPictureDialog1) then
 	begin
@@ -954,9 +951,7 @@ begin
 			FileName := Items[Index].FileName;
 		end;
 		if ExecuteDialog(OpenPictureDialog1, FileName) then
-		begin
 			KindOpenFiles(OpenPictureDialog1.Files, ofReadOnly in OpenPictureDialog1.Options);
-		end;
 	end;
 end;
 

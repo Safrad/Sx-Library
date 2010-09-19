@@ -13,15 +13,17 @@
 
 unit uSGL;
 
+// {$define BPP4}
+
 interface
 
 uses
-	uTypes,
+	uTypes, uDBitmap,
 	Graphics;
 
 type
-PFloat = ^TFloat;
-TFloat = Double;
+	PFloat = ^TFloat;
+	TFloat = Double;
 
 
 (* Typ grafickych elementu. *)
@@ -92,8 +94,8 @@ type
 	TGraphicPoint = packed record // 32
 		Pos: TGraphicPos; // 8
 		Tex: TGraphicPos; // 8
-		C: TRGBA; // 4
-		Reserved: array[0..3] of U4;
+		C: TPixel; // 4
+		Reserved: array[0..{$ifdef BPP4}3{$else}4{$endif}] of U4;
 	end;
 	TWorldPos = packed record // 32
 		X, Y, W, R: TFloat;
@@ -101,8 +103,8 @@ type
 	TWorldPoint = packed record // 128
 		Pos: TWorldPos; // 32
 		Tex: TWorldPos; // 32
-		C: TRGBA; // 4
-		Reserved: array[0..14] of U4;
+		C: TPixel; // 4
+		Reserved: array[0..{$ifdef BPP4}14{$else}15{$endif}] of U4;
 //		Reserved1: array[0..1] of U4; // 8
 	end;
 	TWorldPoints = array of TWorldPoint;
@@ -111,7 +113,7 @@ type
 
  (* dalsi polozky dle vasi potreby *)
 
- _width, _height: SG;
+ _width, _height, _ByteX: SG;
 
  _frameBuffer: Pointer;
 	Ext: BG; // External/Internal Frame Buffer
@@ -131,7 +133,7 @@ type
 	MinB, MaxB: TGraphicPos;
 	MinX, MinY, MaxX, MaxY: TFloat; // World
 	// Options
-	Color: TRGBA;
+	Color: TPixel;
 	EnableClipping,
 	EnableBlending,
 	ShadeModel: BG;
@@ -139,7 +141,7 @@ type
 	AreaMode: SG;
 	PointSize, LineWidth: TFloat;
 	Hatching: SG;
-	HatchingColor: TColor;
+	HatchingColor: TPixel;
 	LineStyle: SG;
 	LineJoinStyle: SG;
 	// Textures
@@ -256,6 +258,7 @@ procedure sglFinish();
 (*   * jednoznacny identifikator vytvorene kreslici plochy (int)                   *)
 function sglCreateDrawable(width, height: SG): SG; overload;
 function sglCreateDrawable(width, height: SG; Data: Pointer): SG; overload;
+procedure sglRecreateDrawable(width, height: SG; Data: Pointer);
 
 (* Zruseni kreslici plochy s identifikatorem id + zruseni dalsich pomocnych pameti *)
 (* VSTUP:                                                                          *)
@@ -386,9 +389,7 @@ procedure sglOrtho2D(minX, maxX, minY, maxY: TFloat);
 (********************************************************************************************)
 
 (* Zadani barvy v barevnem modelu RGBA - vyuzije se pro kresleni nasledne zadanych vrcholu. *)
-const
-sglPenColor = $00ffffff;
-procedure sglColor(C: TRGBA); overload;
+procedure sglColor(C: TPixel); overload;
 procedure sglColor(C: TColor); overload;
 procedure sglColor(R, G, B, A: U1); overload; // 255 = 1.0
 procedure sglColor(R, G, B: U1); overload;
@@ -566,7 +567,7 @@ var
 
 implementation
 
-uses Math, uGraph, uError, uSorts, uDBitmap, uMath;
+uses Math, uGraph, uError, uSorts, uMath;
 
 // ***************************************************************************************************************************
 
@@ -653,6 +654,18 @@ begin
 	FillChar(ATexture, SizeOf(ATexture), 0);
 end;
 
+function Check: BG;
+begin
+	if (_currentDrawable < 0) or (Drawable._frameBuffer = nil) then
+	begin
+		Result := False;
+		AddError(sglOpInvalidDrawable);
+		Exit;
+	end
+	else
+		Result := True;
+end;
+
 (* Vytvoreni nove kreslici plochy (pixmapy) o velikosti width x height RGBA pixelu *)
 (* + vytvoreni dalsich pomocnych pameti pro kresleni                               *)
 (*                                                                                 *)
@@ -661,6 +674,18 @@ end;
 (*   * height - vyska kreslici plochy                                              *)
 (* VYSTUP:                                                                         *)
 (*   * jednoznacny identifikator vytvorene kreslici plochy (int)                   *)
+procedure sglRecreateDrawable(width, height: SG; Data: Pointer);
+begin
+	if Check then
+	begin
+		Drawable._width := width;
+		Drawable._ByteX := WidthToByteX(width);
+		Drawable._height := height;
+		Drawable._frameBufferSize := Drawable._ByteX * height;
+		Drawable._frameBuffer := Pointer(SG(Data) - SG(Drawable._frameBufferSize) + Drawable._ByteX)
+	end;
+end;
+
 function sglCreateDrawable(width, height: SG): SG;
 begin
 	Result := sglCreateDrawable(width, height, nil);
@@ -672,7 +697,7 @@ var
 	NewSize: SG;
 begin
 	Result := -1;
-	if width * height > 32 * 1024 * 1024 then
+	if width * height > 32 * MB then
 	begin
 		AddError(sglOpOutOfMemory);
 		Exit;
@@ -697,7 +722,10 @@ begin
 
 		if Drawables[i]._frameBuffer = nil then
 		begin
-			Drawables[i]._frameBufferSize := width * height * 4;
+			Drawables[i]._width := width;
+			Drawables[i]._ByteX := WidthToByteX(width);
+			Drawables[i]._height := height;
+			Drawables[i]._frameBufferSize := Drawables[i]._ByteX * height;
 			if Data = nil then
 			begin
 				GetMem(Drawables[i]._frameBuffer, Drawables[i]._frameBufferSize);
@@ -705,11 +733,9 @@ begin
 			end
 			else
 			begin
-				Drawables[i]._frameBuffer := Pointer(SG(Data) - SG(Drawables[i]._frameBufferSize) + width * 4);
+				Drawables[i]._frameBuffer := Pointer(SG(Data) - SG(Drawables[i]._frameBufferSize) + Drawables[i]._ByteX);
 				Drawables[i].Ext := True;
 			end;
-			Drawables[i]._width := width;
-			Drawables[i]._height := height;
 			// Full ViewPort
 			Drawables[i].MinG.X := 0;
 			Drawables[i].MinG.Y := 0;
@@ -732,7 +758,8 @@ begin
 			Drawables[i].ATeM := ETM;
 
 			// Options
-			Drawables[i].Color.L := sglPenColor;
+			Drawables[i].Color.RG := $ffff;
+			Drawables[i].Color.B := $ff;
 			Drawables[i].PointSize := 1;
 			Drawables[i].LineWidth := 1;
 			Drawables[i].AreaMode := SGL_AREA_MODE_FILL;
@@ -777,18 +804,6 @@ begin
 	Result := i;
 	sglBindTexture(i);
 	_libStatus := sglOpOk;
-end;
-
-function Check: BG;
-begin
-	if (_currentDrawable < 0) or (Drawable._frameBuffer = nil) then
-	begin
-		Result := False;
-		AddError(sglOpInvalidDrawable);
-		Exit;
-	end
-	else
-		Result := True;
 end;
 
 function CheckTexture: BG;
@@ -838,7 +853,7 @@ begin
 	if Check then
 	begin
 		FillChar(Drawable._frameBuffer^, Drawable._frameBufferSize, 0);
-//		if BPP = 4 then
+//		if BPP = 4 then D???
 {			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
 				B or (G shl 8) or (R shl 16) or (A shl 24))
 {		else
@@ -935,6 +950,7 @@ begin
 	G.C := WP.C;
 end;
 
+{$ifdef BPP4}
 procedure PixMix(D: PRGBA; S: TRGBA; BlendFunc: SG);
 var
 	L: U2;
@@ -989,6 +1005,7 @@ begin
 	end;
 	end;
 end;
+{$endif}
 
 const
 	Pre = 16;
@@ -1000,13 +1017,13 @@ var
 	TexX, TexY: SG; // Parameters Line -> Pix
 
 
-procedure Pix(P: PRGBA; Color: TRGBA); overload;
+procedure Pix(P: PPixel; Color: TPixel); overload;
 var
-	C, TexColor: TRGBA;
+	C, TexColor: TPixel;
 	x, y: SG;
 	ix, iy: UG;
 	ax, ay: array[0..1] of SG;
-	SumR, SumG, SumB, SumA: UG;
+	SumR, SumG, SumB{$ifdef BPP4}, SumA{$endif}: UG;
 	Pixel: PRGBA;
 	m: UG;
 	fx, fy: UG;
@@ -1026,7 +1043,7 @@ begin
 			if (x >= 0) and (y >= 0) and (x < ATexture.MipMaps[TexM].w) and (y < ATexture.MipMaps[TexM].h) then
 			begin
 				Pixel := ATexture.MipMaps[TexM].Datas;
-				TexColor := PRGBA(SG(Pixel) + 4 * (x + y shl ATexture.MipMaps[TexM].Shift))^;
+				TexColor := PPixel(SG(Pixel) + SizeOf(TPixel) * (x + y shl ATexture.MipMaps[TexM].Shift))^;
 			end
 			else
 				TexColor := Color;
@@ -1036,7 +1053,7 @@ begin
 			if (x >= 0) and (y >= 0) and (x < ATexture.MipMaps[0].w) and (y < ATexture.MipMaps[0].h) then
 			begin
 				Pixel := ATexture.MipMaps[0].Datas;
-				TexColor := PRGBA(SG(Pixel) + 4 * (x + y shl ATexture.MipMaps[0].Shift))^;
+				TexColor := PRGBA(SG(Pixel) + SizeOf(TPixel) * (x + y shl ATexture.MipMaps[0].Shift))^;
 			end
 			else
 				TexColor.L := clSilver;*)
@@ -1057,7 +1074,7 @@ begin
 			SumR := 0;
 			SumG := 0;
 			SumB := 0;
-			SumA := 0;
+			{$ifdef BPP4}SumA := 0;{$endif}
 
 			ty := 0;
 			for iy := 0 to 1 do
@@ -1069,18 +1086,18 @@ begin
 					if (ax[ix] >= 0) and (ay[iy] >= 0) and (ax[ix] < ATexture.MipMaps[TexM].w) and (ay[iy] < ATexture.MipMaps[TexM].h) then
 					begin
 						Pixel := ATexture.MipMaps[TexM].Datas;
-						C := PRGBA(SG(Pixel) + 4 * (ax[ix] + ay[iy] shl ATexture.MipMaps[TexM].Shift))^;
+						C := PPixel(SG(Pixel) + SizeOf(TPixel) * (ax[ix] + ay[iy] shl ATexture.MipMaps[TexM].Shift))^;
 						Inc(SumR, C.R * m);
 						Inc(SumG, C.G * m);
 						Inc(SumB, C.B * m);
-						Inc(SumA, C.A * m);
+						{$ifdef BPP4}Inc(SumA, C.A * m);{$endif}
 					end
 					else
 					begin
 						Inc(SumR, Color.R * m);
 						Inc(SumG, Color.G * m);
 						Inc(SumB, Color.B * m);
-						Inc(SumA, Color.A * m);
+						{$ifdef BPP4}Inc(SumA, Color.A * m);{$endif}
 					end;
 					Inc(tx, PreM - 1);
 				end;
@@ -1089,8 +1106,7 @@ begin
 			TexColor.R := SumR div PreM;
 			TexColor.G := SumG div PreM;
 			TexColor.B := SumB div PreM;
-			TexColor.A := SumA div PreM;
-
+			{$ifdef BPP4}TexColor.A := SumA div PreM;{$endif}
 		end;
 		end;
 
@@ -1118,19 +1134,21 @@ begin
 			Color := TexColor;
 		end;
 	end;
+	{$ifdef BPP4}
 	if Drawable.EnableBlending = True then
 	begin
 		PixMix(P, Color, Drawable.BlendFunc);
 	end
 	else
+	{$endif}
 	begin
 		P^ := Color;
 	end;
 end;
 
-function XYToAddr(X, Y: SG): PRGBA;
+function XYToAddr(X, Y: SG): PPixel;
 begin
-	Result := PRGBA(SG(Drawable._frameBuffer) + (X + Y * Drawable._width) shl 2);
+	Result := PPixel(SG(Drawable._frameBuffer) + (X * SizeOf(TPixel) + Y * Drawable._ByteX));
 end;
 
 procedure PixCheck(var P: TGraphicPoint); overload;
@@ -1287,16 +1305,16 @@ end;
 
 procedure Lin(var P1, P2: TGraphicPoint; Size: SG; LineStyle: SG; LineOffset: SG); overload;
 var
-	P: PRGBA;
-	C: TRGBA;
+	P: PPixel;
+	C: TPixel;
 
 	procedure LinePix(x: SG);
 	var
 		EnPix: BG;
 		n: SG;
 		i: SG;
-		PN: PRGBA;
-		COut: TRGBA;
+		PN: PPixel;
+		COut: TPixel;
 	begin
 		Inc(x, LineOffset);
 		case LineStyle of
@@ -1340,12 +1358,12 @@ var
 			COut := C;
 		end
 		else
-			COut.L := Drawable.HatchingColor;
+			COut := Drawable.HatchingColor;
 		if Abs(Size) = 1 then
 			Pix(P, COut)
 		else if Size > 1 then
 		begin
-			PN := PRGBA(SG(P) - 4 * (Size div 2));
+			PN := PPixel(SG(P) - SizeOf(TPixel) * (Size div 2));
 			for i := 1 to Size do
 			begin
 				Pix(PN, COut); // D??? Check
@@ -1354,8 +1372,8 @@ var
 		end
 		else if Size <= -1 then
 		begin
-			PN := PRGBA(SG(P) + 4 * Drawable._width * (Size div 2));
-			n := 4 * Drawable._width;
+			PN := PPixel(SG(P) + Drawable._ByteX * (Size div 2));
+			n := Drawable._ByteX;
 			for i := 1 to -Size do
 			begin
 				Pix(PN, COut); // D??? Check
@@ -1384,7 +1402,7 @@ var
 			C.R := (CR + PreS) div PreM;
 			C.G := (CG + PreS) div PreM;
 			C.B := (CB + PreS) div PreM;
-			C.A := (CA + PreS) div PreM;
+			{$ifdef BPP4}C.A := (CA + PreS) div PreM;{$endif}
 		end;
 	end;
 
@@ -1474,11 +1492,11 @@ begin
 			DCR := ((Integer(P2.C.R) - Integer(P1.C.R)) * PreM) div D;
 			DCG := ((Integer(P2.C.G) - Integer(P1.C.G)) * PreM) div D;
 			DCB := ((Integer(P2.C.B) - Integer(P1.C.B)) * PreM) div D;
-			DCA := ((Integer(P2.C.A) - Integer(P1.C.A)) * PreM) div D;
+			{$ifdef BPP4}DCA := ((Integer(P2.C.A) - Integer(P1.C.A)) * PreM) div D;{$endif}
 			CR := P1.C.R shl Pre;
 			CG := P1.C.G shl Pre;
 			CB := P1.C.B shl Pre;
-			CA := P1.C.A shl Pre;
+			{$ifdef BPP4}CA := P1.C.A shl Pre;{$endif}
 			C := P1.C;
 		end
 		else
@@ -1508,7 +1526,7 @@ begin
 				P := XYToAddr(x, y);
 				XYEnd := P2.Pos.X;
 
-			if {(P1.X > P2.X) xor} (P1.Pos.Y < P2.Pos.Y) then D := 4 * Drawable._width else D := -4 * Drawable._width;
+			if {(P1.X > P2.X) xor} (P1.Pos.Y < P2.Pos.Y) then D := Drawable._ByteX else D := -Drawable._ByteX;
 			while True do
 			begin
 				LinePix(x);
@@ -1551,14 +1569,14 @@ begin
 			k2 := 2 * (DX - DY);
 			if P1.Pos.Y > P2.Pos.Y then
 			begin
-				DXY := -4 * Drawable._width;
+				DXY := -Drawable._ByteX;
 {				x := P2.X;
 				y := P2.Y;
 				XYEnd := P1.Y;}
 			end
 			else
 			begin
-				DXY := 4 * Drawable._width;
+				DXY := Drawable._ByteX;
 {				x := P1.X;
 				y := P1.Y;
 				XYEnd := P2.Y;}
@@ -2020,7 +2038,7 @@ var
 	mid: TFloat;
 	P: TWorldPoint;
 	GX0, GY0, GX1, GY1, {GXM1, GYM1,} GX2, GY2: TFloat;
-	C0, C2: TRGBA;
+	C0, C2: TPixel;
 	G0, G1: TGraphicPoint;
 	Divi: BG;
 begin
@@ -2071,7 +2089,7 @@ type
 		XYEnd: SG;
 		DCR, DCG, DCB, DCA: SG;
 		CR, CG, CB, CA: SG;
-		P: PRGBA;
+		P: PPixel;
 		GP: TGraphicPoint;
 		DTX, DTY: SG;
 	end;
@@ -2097,7 +2115,7 @@ begin
 		begin
 			if D = 0 then
 			begin
-				GP.C.L := MixColors(P1.C.L, P2.C.L);
+				GP.C := MixColors(P1.C, P2.C);
 			end
 			else
 			begin
@@ -2108,21 +2126,21 @@ begin
 				DCR := ((Integer(P2.C.R) - Integer(P1.C.R)) * PreM) div D;
 				DCG := ((Integer(P2.C.G) - Integer(P1.C.G)) * PreM) div D;
 				DCB := ((Integer(P2.C.B) - Integer(P1.C.B)) * PreM) div D;
-				DCA := ((Integer(P2.C.A) - Integer(P1.C.A)) * PreM) div D;
+				{$ifdef BPP4}DCA := ((Integer(P2.C.A) - Integer(P1.C.A)) * PreM) div D;{$endif}
 				CR := P1.C.R shl Pre;
 				CG := P1.C.G shl Pre;
 				CB := P1.C.B shl Pre;
-				CA := P1.C.A shl Pre;
+				{$ifdef BPP4}CA := P1.C.A shl Pre;{$endif}
 				GP.C := P1.C;
 			end;
 		end
 		else
-			GP.C.L := MixColors(P1.C.L, P2.C.L);
+			GP.C := MixColors(P1.C, P2.C);
 
 {		e := 2 * DX - DY;
 		k1 := 2 * DX;
 		k2 := 2 * (DX - DY);}
-		DXY := 4 * Drawable._width;
+		DXY := Drawable._ByteX;
 		GP.Pos.X := P1.Pos.X;
 		XL := P1.Pos.X shl Pre;
 		if D = 0 then
@@ -2159,14 +2177,14 @@ begin
 			GP.C.R := (CR + PreS) div PreM;
 			GP.C.G := (CG + PreS) div PreM;
 			GP.C.B := (CB + PreS) div PreM;
-			GP.C.A := (CA + PreS) div PreM;
+			{$ifdef BPP4}GP.C.A := (CA + PreS) div PreM;{$endif}
 		end;
 
 		Inc(XL, DXL);
 		X := (XL + PreS) div PreM;
 {		if GP.X <= Drawable.MinBX then Exit;
 		if GP.X >= Drawable.MaxBX then Exit;}
-		Inc(SG(P), 4 * (X - GP.Pos.X));
+		Inc(SG(P), SizeOf(TPixel) * (X - GP.Pos.X));
 		GP.Pos.X := X;
 
 
@@ -2360,8 +2378,8 @@ begin
 
 					if EnLin = False then
 					begin
-						Lines[i].GP.C.L := Drawable.HatchingColor;
-						Lines[j].GP.C.L := Drawable.HatchingColor;
+						Lines[i].GP.C := Drawable.HatchingColor;
+						Lines[j].GP.C := Drawable.HatchingColor;
 	{				end
 					else
 					begin
@@ -3034,14 +3052,14 @@ begin
 	end;
 end;
 
-procedure sglColor(C: TRGBA); overload;
+procedure sglColor(C: TPixel); overload;
 begin
 	if Check then
 	begin
 		Drawable.Color.R := C.B;
 		Drawable.Color.G := C.G;
 		Drawable.Color.B := C.R;
-		Drawable.Color.A := C.A;
+		{$ifdef BPP4}Drawable.Color.A := C.A;{$endif}
 	end;
 end;
 
@@ -3054,7 +3072,7 @@ begin
 		Drawable.Color.R := CR.B;
 		Drawable.Color.G := CR.G;
 		Drawable.Color.B := CR.R;
-		Drawable.Color.A := 0;
+		{$ifdef BPP4}Drawable.Color.A := 0;{$endif}
 	end;
 end;
 
@@ -3065,7 +3083,7 @@ begin
 		Drawable.Color.R := B;
 		Drawable.Color.G := G;
 		Drawable.Color.B := R;
-		Drawable.Color.A := A;
+		{$ifdef BPP4}Drawable.Color.A := A;{$endif}
 	end;
 end;
 
@@ -3076,7 +3094,7 @@ begin
 		Drawable.Color.R := B;
 		Drawable.Color.G := G;
 		Drawable.Color.B := R;
-		Drawable.Color.A := 0;
+		{$ifdef BPP4}Drawable.Color.A := 0;{$endif}
 	end;
 end;
 
@@ -3173,7 +3191,10 @@ begin
 	if Check then
 	begin
 		Drawable.Hatching := Typ;
-		Drawable.HatchingColor := B or (G shl 8) or (R shl 16) or (A shl 24);
+		Drawable.HatchingColor.R := R;
+		Drawable.HatchingColor.G := G;
+		Drawable.HatchingColor.B := B;
+		{$ifdef BPP4}Drawable.HatchingColor.A := A;{$endif}
 	end;
 end;
 

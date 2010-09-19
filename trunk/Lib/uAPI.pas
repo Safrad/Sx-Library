@@ -11,18 +11,19 @@ unit uAPI;
 interface
 
 uses
+	uTypes,
 	SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, Classes;
 
-function DropFiles(hDrop: LongWord): TStrings;
-function KeyToStr(Key: Word): string;
+function DropFiles(hDrop: U4): TStrings;
+function KeyToStr(Key: U2): string;
 
 implementation
 
 uses
 	Windows, Math, Dialogs, ShellAPI,
-	uStrings, uInput, uFiles, uParser, uWave, uTypes, uFormat;
+	uStrings, uInput, uFiles, uParser, uWave, uFormat;
 
-function DropFiles(hDrop: LongWord): TStrings;
+function DropFiles(hDrop: U4): TStrings;
 var
 	fName: array[0..4095] of Char;
 	NumberOfFiles: Integer;
@@ -40,7 +41,7 @@ begin
 	DragFinish(hDrop);
 end;
 
-function KeyToStr(Key: Word): string;
+function KeyToStr(Key: U2): string;
 begin
 	case Key and $ff of
 	0: Result := '';
@@ -51,7 +52,7 @@ begin
 	VK_BACK: Result := 'Back';
 	VK_TAB: Result := 'Tab';
 	VK_CLEAR: Result := 'Clear';
-	VK_RETURN: Result := 'Return';
+	VK_RETURN: Result := 'Enter';
 	VK_SHIFT: Result := 'Shift'; // Old Win
 	VK_CONTROL: Result := 'Ctrl'; // Old Win
 	VK_MENU: Result := 'Alt'; // Old Win

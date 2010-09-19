@@ -10,21 +10,23 @@ unit uSunInfo;
 
 interface
 
+uses uTypes;
+
 // 17.12.1999 sunrise at 7:52 -> 15, -49.7
 type TSunPos = (spUD, spU, spD, spUA, spDA);
 
 procedure SunOnOff(const LongitudeX, LatitudeY, TimeZone: Extended;
-	Year: Integer; Month, Day: Byte;
+	Year: Integer; Month, Day: U1;
 	var TimeOn, TimeOff: Extended;
 	var AzimuthOn, AzimuthOff: Extended;
 	var SunPos: TSunPos);
 
 implementation
 
-uses uTypes, uMath;
+uses uMath;
 
 procedure SunOnOff(const LongitudeX, LatitudeY, TimeZone: Extended;
-	Year: Integer; Month, Day: Byte;
+	Year: Integer; Month, Day: U1;
 	var TimeOn, TimeOff: Extended;
 	var AzimuthOn, AzimuthOff: Extended;
 	var SunPos: TSunPos);
@@ -47,7 +49,7 @@ var
 	H2, D2, V0, C, Z, A0, D0, A2,
 	V2, V1, B, D, M8, W8, E, T3, H7, N7, D7, AZ, Z1, DA, DD,
 	P: Extended;
-	C0: Byte;
+	C0: U1;
 
 	procedure Calendar;
 	var J3, D1, G: Extended;

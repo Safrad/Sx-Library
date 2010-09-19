@@ -10,7 +10,9 @@ unit uDispl;
 
 interface
 
-uses uDBitmap, Windows, Graphics, Classes, StdCtrls;
+uses
+	uTypes,
+	uDBitmap, Windows, Graphics, Classes, StdCtrls;
 
 const
 	clAVideo = $009fff1f;
@@ -33,49 +35,50 @@ type
 		FSpaceSX,
 		FSpaceSY,
 		FSizeT,
-		FSpacing: Byte;
+		FSpacing: U1;
 
-		FSize: Byte;
+		FSize: U1;
 		FColorA,
 		FColorD: TColor;
 
 		procedure SetEnabled(Value: Boolean);
 		procedure SetFormat(Value: string);
-		procedure SetSizeX(Value: Byte);
-		procedure SetSizeY(Value: Byte);
-		procedure SetSpaceSX(Value: Byte);
-		procedure SetSpaceSY(Value: Byte);
-		procedure SetSizeT(Value: Byte);
-		procedure SetSpacing(Value: Byte);
+		procedure SetSizeX(Value: U1);
+		procedure SetSizeY(Value: U1);
+		procedure SetSpaceSX(Value: U1);
+		procedure SetSpaceSY(Value: U1);
+		procedure SetSizeT(Value: U1);
+		procedure SetSpacing(Value: U1);
 		procedure SetColorA(Value: TColor);
 		procedure SetColorD(Value: TColor);
-		procedure SetSize(Value: Byte);
+		procedure SetSize(Value: U1);
 	protected
-		procedure Changed; override;
-	public
 
+	public
+		constructor Create;
+		destructor Destroy; override;
 	published
-		property Enabled: Boolean read FEnabled write SetEnabled;
+		property Enabled: Boolean read FEnabled write SetEnabled default False;
 		property Format: string read FFormat write SetFormat;
-		property SizeX: Byte read FSizeX write SetSizeX;
-		property SizeY: Byte read FSizeY write SetSizeY;
-		property SpaceSX: Byte read FSpaceSX write SetSpaceSX;
-		property SpaceSY: Byte read FSpaceSY write SetSpaceSY;
-		property SizeT: Byte read FSizeT write SetSizeT;
-		property Spacing: Byte read FSpacing write SetSpacing;
-		property ColorA: TColor read FColorA write SetColorA;
-		property ColorD: TColor read FColorD write SetColorD;
-		property Size: Byte read FSize write SetSize;
+		property SizeX: U1 read FSizeX write SetSizeX default 4;
+		property SizeY: U1 read FSizeY write SetSizeY default 4;
+		property SpaceSX: U1 read FSpaceSX write SetSpaceSX default 2;
+		property SpaceSY: U1 read FSpaceSY write SetSpaceSY default 2;
+		property SizeT: U1 read FSizeT write SetSizeT default 1;
+		property Spacing: U1 read FSpacing write SetSpacing default 0;
+		property ColorA: TColor read FColorA write SetColorA default clRed;
+		property ColorD: TColor read FColorD write SetColorD default clMaroon;
+		property Size: U1 read FSize write SetSize default 0;
 	end;
 
-procedure Displ24(BmpD: TDBitmap; Caption: string; X1, Y1: LongInt;
+procedure Displ24(BmpD: TDBitmap; Caption: string; X1, Y1: SG;
 	Format: string;
 	SizeX, SizeY,
-	SpaceSX, SpaceSY, SizeT, Spacing: Byte; ColorA, ColorD: TColor; Effect: TEffect;
+	SpaceSX, SpaceSY, SizeT, Spacing: U1; ColorA, ColorD: TColor; Effect: TEffect;
 	InfoOnly: Boolean);
 
 procedure DisplDraw(BmpD: TDBitmap; const Caption: string; const Displ: TDispl;
-	X1, Y1: LongInt;
+	X1, Y1: SG;
 	Effect: TEffect);
 
 procedure DisplSize(const Displ: TDispl; var DisplWidth, DisplHeight: Integer);
@@ -92,7 +95,7 @@ uses
 const
 	MaxChar = 2 + 10 + 26 - 1;
 type
-	TOneDisp = array[0..14] of Byte;
+	TOneDisp = array[0..14] of U1;
 const
 	DispC: array[0..MaxChar] of TOneDisp = (
 		(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), //
@@ -134,7 +137,7 @@ const
 		(0, 1, 1, 1, 0, 1, 1, 2, 0, 2, 0, 2, 0, 0, 0), //Y
 		(3, 0, 1, 1, 1, 0, 3, 0, 0, 2, 2, 0, 0, 0, 0));//Z
 
-function Conv(C: Char): Byte;
+function Conv(C: Char): U1;
 begin
 	case C of
 	'0'..'9': Result := 2 + Ord(C) - Ord('0');
@@ -148,10 +151,24 @@ begin
 	if Result > MaxChar then Result := MaxChar;
 end;
 
-procedure TDispl.Changed;
+constructor TDispl.Create;
 begin
-	inherited Changed;
-//  if FNotify <> nil then FNotify.Changed;
+	inherited;
+	Enabled := False;
+	Format := '';
+	SizeT := 1;
+	SizeX := 4;
+	SizeY := 4;
+	SpaceSX := 2;
+	SpaceSY := 2;
+	Spacing := 0;
+	ColorA := clRed;
+	ColorD := clMaroon;
+end;
+
+destructor TDispl.Destroy;
+begin
+	inherited;
 end;
 
 procedure TDispl.SetEnabled(Value: Boolean);
@@ -172,7 +189,7 @@ begin
 	end;
 end;
 
-procedure TDispl.SetSizeX(Value: Byte);
+procedure TDispl.SetSizeX(Value: U1);
 begin
 	if FSizeX <> Value then
 	begin
@@ -181,7 +198,7 @@ begin
 	end;
 end;
 
-procedure TDispl.SetSizeY(Value: Byte);
+procedure TDispl.SetSizeY(Value: U1);
 begin
 	if FSizeY <> Value then
 	begin
@@ -190,7 +207,7 @@ begin
 	end;
 end;
 
-procedure TDispl.SetSpaceSX(Value: Byte);
+procedure TDispl.SetSpaceSX(Value: U1);
 begin
 	if FSpaceSX <> Value then
 	begin
@@ -199,7 +216,7 @@ begin
 	end;
 end;
 
-procedure TDispl.SetSpaceSY(Value: Byte);
+procedure TDispl.SetSpaceSY(Value: U1);
 begin
 	if FSpaceSY <> Value then
 	begin
@@ -208,7 +225,7 @@ begin
 	end;
 end;
 
-procedure TDispl.SetSizeT(Value: Byte);
+procedure TDispl.SetSizeT(Value: U1);
 begin
 	if FSizeT <> Value then
 	begin
@@ -217,7 +234,7 @@ begin
 	end;
 end;
 
-procedure TDispl.SetSpacing(Value: Byte);
+procedure TDispl.SetSpacing(Value: U1);
 begin
 	if FSpacing <> Value then
 	begin
@@ -244,7 +261,7 @@ begin
 	end;
 end;
 
-procedure TDispl.SetSize(Value: Byte);
+procedure TDispl.SetSize(Value: U1);
 begin
 	if FSize <> Value then
 	begin
@@ -318,11 +335,11 @@ end;
 //      6
 
 }
-procedure DispXY(DC: Byte;
-	var SX1, SY1, SX2, SY2: LongInt; sx, sy, SizeX, SizeY, n, SizeT: Byte);
+procedure DispXY(DC: U1;
+	var SX1, SY1, SX2, SY2: SG; sx, sy, SizeX, SizeY, n, SizeT: U1);
 var
-	mx, my1, my2, my3: Byte;
-	t3: Byte;
+	mx, my1, my2, my3: U1;
+	t3: U1;
 begin
 	mx := (sx + SizeX shr 1);
 	if (SizeT and 1) <> (sy and 1) then
@@ -475,22 +492,22 @@ begin
 end;
 *)
 
-procedure DisplDraw24(BmpD: TDBitmap; Caption: string; X1, Y1: LongInt;
+procedure DisplDraw24(BmpD: TDBitmap; Caption: string; X1, Y1: SG;
 	Format: string;
 	SizeX, SizeY,
-	SpaceSX, SpaceSY, SizeT, Spacing: Byte; CA, CD: TColor; Effect: TEffect;
+	SpaceSX, SpaceSY, SizeT, Spacing: U1; CA, CD: TColor; Effect: TEffect;
 	InfoOnly: Boolean; var DisplWidth, DisplHeight: Integer);
 label LPoint;
 var
-	B, D, D2, DC: Byte;
+	B, D, D2, DC: U1;
 	C: TColor;
-	SX1, SY1, SX2, SY2: LongInt;
+	SX1, SY1, SX2, SY2: SG;
 	CaptionIndex, MaxCaption: Integer;
-	MaxS: Byte;
-	A: Byte;
+	MaxS: U1;
+	A: U1;
 	X, Y: Integer;
 
-	BmpWidth, BmpHeight: LongInt;
+	BmpWidth, BmpHeight: SG;
 begin
 	if SizeX < 1 then SizeX := 1;
 	if SizeY < 1 then SizeY := 1;
@@ -702,7 +719,7 @@ begin
 end;
 
 procedure DisplDraw(BmpD: TDBitmap; const Caption: string; const Displ: TDispl;
-	X1, Y1: LongInt;
+	X1, Y1: SG;
 	Effect: TEffect);
 var DisplWidth, DisplHeight: Integer;
 begin
@@ -714,10 +731,10 @@ begin
 		Effect, False, DisplWidth, DisplHeight);
 end;
 
-procedure Displ24(BmpD: TDBitmap; Caption: string; X1, Y1: LongInt;
+procedure Displ24(BmpD: TDBitmap; Caption: string; X1, Y1: SG;
 	Format: string;
 	SizeX, SizeY,
-	SpaceSX, SpaceSY, SizeT, Spacing: Byte; ColorA, ColorD: TColor; Effect: TEffect;
+	SpaceSX, SpaceSY, SizeT, Spacing: U1; ColorA, ColorD: TColor; Effect: TEffect;
 	InfoOnly: Boolean);
 var DisplWidth, DisplHeight: Integer;
 begin

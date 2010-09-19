@@ -26,44 +26,44 @@ type
 		{ Public declarations }
 	end;
 
-	TRefreshRateList = array of Cardinal;
+	TRefreshRateList = array of UG;
 	TScreenMode = packed record // 32
 		Width,
-		Height, Bits: Cardinal; // 12
-		RefreshRate: Cardinal; // 4
+		Height, Bits: UG; // 12
+		RefreshRate: UG; // 4
 		RefreshRateList: TRefreshRateList; // 4
 		RefreshRateListCount: Integer; // 4
 		Reserved: array[0..1] of Integer; // 8
 	end;
 	TScreenModeS = packed record // 16
 		Width,
-		Height, Bits: Cardinal; // 12
-		RefreshRate: Cardinal; // 4
+		Height, Bits: UG; // 12
+		RefreshRate: UG; // 4
 	end;
 
-function GetVF(Height, HF: Cardinal): Cardinal; // Hz
-function GetHF(Height, RefreshRate: Cardinal): Cardinal; // KHz
-function GetHeight(RefreshRate, HF: Cardinal): Cardinal; // Pixels
-function GetPixelRate(const Width, HF: Cardinal): Cardinal; // MHz
-function GetVideoMemory(const Width, Height, Bits: Cardinal): Cardinal; // Bytes
-function ScreenModeToStr(const Width, Height: Word): string; overload;
-function ScreenModeToStr(const Width, Height, Bits: Word): string; overload;
-function ScreenModeToStr(const Width, Height, Bits, VF: Word): string; overload;
+function GetVF(Height, HF: UG): UG; // Hz
+function GetHF(Height, RefreshRate: UG): UG; // KHz
+function GetHeight(RefreshRate, HF: UG): UG; // Pixels
+function GetPixelRate(const Width, HF: UG): UG; // MHz
+function GetVideoMemory(const Width, Height, Bits: UG): UG; // Bytes
+function ScreenModeToStr(const Width, Height: UG): string; overload;
+function ScreenModeToStr(const Width, Height, Bits: UG): string; overload;
+function ScreenModeToStr(const Width, Height, Bits, VF: UG): string; overload;
 
 procedure ReadScreenModes;
 procedure ReadNowMode;
 function RateListToStr(RefreshRateList: TRefreshRateList; RefreshRateListCount: Integer): string;
-function CorrectWidth(Width: Cardinal): Cardinal;
-function CorrectHeight(Height: Cardinal): Cardinal;
-procedure AddLastMode(Width, Height, Bits, RefreshRate: Cardinal);
+function CorrectWidth(Width: UG): UG;
+function CorrectHeight(Height: UG): UG;
+procedure AddLastMode(Width, Height, Bits, RefreshRate: UG);
 
 
-function SetScreenMode(Width, Height, Bits, RefreshRate: Word;
+function SetScreenMode(Width, Height, Bits, RefreshRate: UG;
 	const Test, UpdateRegistry, Confirm, CanCreate, SaveLast: Boolean): Boolean;
 procedure SetSaveMode;
 function RestoreStartMode: Boolean;
-procedure FillRefreshRates(Index, VF: Cardinal);
-function DeleteScreenMode(Width, Height, Bits: Cardinal): Boolean;
+procedure FillRefreshRates(Index, VF: UG);
+function DeleteScreenMode(Width, Height, Bits: UG): Boolean;
 procedure InitScreenCorectColor;
 
 {
@@ -73,8 +73,8 @@ const
 	LightLMax = 760; // nm
 }
 var
-	StartWidth, StartHeight, StartBits, StartRefreshRate: Cardinal;
-	NowWidth, NowHeight, NowBits, NowRefreshRate: Cardinal;
+	StartWidth, StartHeight, StartBits, StartRefreshRate: UG;
+	NowWidth, NowHeight, NowBits, NowRefreshRate: UG;
 	LastModes: array of TScreenModeS;
 	LastModeCount, LastModeIndex: Integer;
 
@@ -92,16 +92,15 @@ var
 	ScreenModeIndex: Integer;
 	ScreenModeCount: Integer;
 	ScreenCorrectColor: TColor;
-	ScreenBits: Cardinal;
 
 	ActualDriver: Integer;
 
-	MinWidth, MinHeight: Cardinal;
+	MinWidth, MinHeight: UG;
 	RetraceDelay: Integer;
 	MinVF, MaxVF, UserMaxVF,
 	MinHF, MaxHF, UserMaxHF,
 	MinPixelRate, MaxPixelRate, UserMaxPixelRate,
-	MinMemory, MaxMemory, UserMaxMemory: Cardinal;
+	MinMemory, MaxMemory, UserMaxMemory: UG;
 
 	fScreen: TfScreen;
 const
@@ -118,8 +117,8 @@ const
 	WorstPixelRate = 1000000;
 	BestPixelRate = 1000000000;
 
-	WorstMemory = 1024 * 1024;
-	BestMemory = 256 * 1024 * 1024;
+	WorstMemory = MB;
+	BestMemory = 256 * MB;
 
 	DoubleHeight = 399; // and less
 	MaxScreenWidth = 4096;
@@ -135,7 +134,7 @@ var
 	SndBeep: PWave;
 	First: Boolean;
 
-function GetVF(Height, HF: Cardinal): Cardinal;
+function GetVF(Height, HF: UG): UG;
 begin
 	if (Height = 0) or (HF = 0) then
 		Result := 0
@@ -148,54 +147,54 @@ begin
 	end;
 end;
 
-function GetHF(Height, RefreshRate: Cardinal): Cardinal;
+function GetHF(Height, RefreshRate: UG): UG;
 begin
 	if Height <= DoubleHeight then Height := Height * 2;
 //  Result := Height * RefreshRate;
 	if RefreshRate = 0 then
 		Result := 0
 	else
-//    Result := Floor(Height / ((1 / RefreshRate) - Cardinal(RetraceDelay) / 1000000));
+//    Result := Floor(Height / ((1 / RefreshRate) - UG(RetraceDelay) / 1000000));
 		Result := MaxDivS8((S8(Height) * S8(RefreshRate) * 1000000), (1000000 - S8(RetraceDelay) * S8(RefreshRate)));
 
 end;
 
-function GetHeight(RefreshRate, HF: Cardinal): Cardinal;
+function GetHeight(RefreshRate, HF: UG): UG;
 begin
 	Result := (1000000 * S8(HF) - S8(RefreshRate) * S8(HF) * S8(RetraceDelay)) div (1000000 * S8(RefreshRate));
 	if Result <= DoubleHeight then Result := Result div 2;
 end;
 
-function GetPixelRate(const Width, HF: Cardinal): Cardinal;
+function GetPixelRate(const Width, HF: UG): UG;
 begin
 	Result := Width * HF; // +
 end;
 
-function GetVideoMemory(const Width, Height, Bits: Cardinal): Cardinal;
+function GetVideoMemory(const Width, Height, Bits: UG): UG;
 begin
 	Result := 4 * ((Width * Bits + 31) div 32);
 	Result := Result * Height;
 end;
 
-function ScreenModeToStr(const Width, Height: Word): string; overload;
+function ScreenModeToStr(const Width, Height: UG): string; overload;
 begin
 	Result :=
 		NToS(Width) + CharTimes + NToS(Height);
 end;
 
-function ScreenModeToStr(const Width, Height, Bits: Word): string; overload;
+function ScreenModeToStr(const Width, Height, Bits: UG): string; overload;
 begin
 	Result := ScreenModeToStr(Width, Height);
 	if Bits <> 0 then Result := Result + CharTimes + NToS(Bits) + ' bit';
 end;
 
-function ScreenModeToStr(const Width, Height, Bits, VF: Word): string;
+function ScreenModeToStr(const Width, Height, Bits, VF: UG): string;
 begin
 	Result := ScreenModeToStr(Width, Height, Bits);
 	if VF <> 0 then Result := Result + '/' + NToS(VF) + ' Hz';
 end;
 
-procedure AddMode(Width, Height, Bits: Cardinal);
+procedure AddMode(Width, Height, Bits: UG);
 var
 	Index: Integer;
 	i: Integer;
@@ -285,27 +284,40 @@ begin
 	AddMode(DeviceMode.dmPelsWidth, DeviceMode.dmPelsHeight, DeviceMode.dmBitsPerPel);
 end;
 
+procedure InitNowScreen;
+var
+	DeskDC: HDC;
+begin
+	DeskDC := GetDC(0);
+	try
+		NowBits := GetDeviceCaps(DeskDC, BITSPIXEL);
+		NowWidth := GetSystemMetrics(SM_CXSCREEN);
+		NowHeight := GetSystemMetrics(SM_CYSCREEN);
+	finally
+		ReleaseDC(0, DeskDC);
+	end;
+end;
+
 procedure ReadScreenModes;
 var
 	ModeNumber: Integer;
 	done: Boolean;
 	DeviceMode: TDeviceMode;
-	DeskDC: HDC;
 	i, j: Integer;
 
 	Reg: TRegistry;
 	Key: string;
 	S: string;
-	HF, PixelRate: Cardinal;
-	DefVF: Cardinal;
+	HF, PixelRate: UG;
+	DefVF: UG;
 
-	f: Cardinal;
+	f: UG;
 	InLineIndex: Integer;
 	Found: Boolean;
 	Index: Integer;
 	NewSize: SG;
 
-	Ram: Cardinal;
+	Ram: UG;
 begin
 	BeginLongOperation;
 
@@ -416,14 +428,7 @@ begin
 	end;
 
 	// For Check Only
-	DeskDC := GetDC(0);
-	try
-		NowBits := GetDeviceCaps(DeskDC, BITSPIXEL);
-		NowWidth := Screen.Width;
-		NowHeight := Screen.Height;
-	finally
-		ReleaseDC(0, DeskDC);
-	end;
+	InitNowScreen;
 	DeviceMode.dmPelsWidth := NowWidth;
 	DeviceMode.dmPelsHeight := NowHeight;
 	DeviceMode.dmBitsPerPel := NowBits;
@@ -566,17 +571,9 @@ end;
 
 procedure ReadNowMode;
 var
-	DeskDC: HDC;
 	i: Integer;
 begin
-	DeskDC := GetDC(0);
-	try
-		NowBits := GetDeviceCaps(DeskDC, BITSPIXEL);
-		NowWidth := Screen.Width;
-		NowHeight := Screen.Height;
-	finally
-		ReleaseDC(0, DeskDC);
-	end;
+	InitNowScreen;
 
 	ScreenModeIndex := 0;
 	for i := 0 to ScreenModeCount - 1 do
@@ -653,7 +650,7 @@ begin
 	Result := s;
 end;
 
-function CorrectWidth(Width: Cardinal): Cardinal;
+function CorrectWidth(Width: UG): UG;
 begin
 	Result := 8 * (Width div 8);
 	if (Result < MinWidth) then
@@ -663,7 +660,7 @@ begin
 
 end;
 
-function CorrectHeight(Height: Cardinal): Cardinal;
+function CorrectHeight(Height: UG): UG;
 begin
 	Result := Height;
 	if Result < MinHeight then
@@ -672,14 +669,14 @@ begin
 		Result := MaxScreenHeight;
 end;
 
-procedure CorrectWidthHeight(var Width, Height: Cardinal);
+procedure CorrectWidthHeight(var Width, Height: UG);
 begin
 	Width := CorrectWidth(Width);
 	Height := CorrectHeight(Height);
 
 end;
 
-procedure AddLastMode(Width, Height, Bits, RefreshRate: Cardinal);
+procedure AddLastMode(Width, Height, Bits, RefreshRate: UG);
 var NewSize: SG;
 begin
 	Inc(LastModeIndex);
@@ -693,21 +690,21 @@ begin
 	LastModes[LastModeIndex].RefreshRate := RefreshRate;
 end;
 
-function SetScreenMode(Width, Height, Bits, RefreshRate: Word;
+function SetScreenMode(Width, Height, Bits, RefreshRate: UG;
 	const Test, UpdateRegistry, Confirm, CanCreate, SaveLast: Boolean): Boolean;
 var
-	BestMode, ModeIndex: Integer;
-	NowDif, BestDif: LongWord;
+	BestMode, ModeIndex: SG;
+	NowDif, BestDif: UG;
 
 	DeviceMode: TDeviceMode;
 	Flags: U4;
 
 	Reg: TRegistry;
-	i, j: Integer;
+	i, j: SG;
 	Key, s: string;
-	Found: Boolean;
-	SetWidth, SetHeight, SetBits, SetRefreshRate: Cardinal;
-	VF: Cardinal;
+	Found: BG;
+	SetWidth, SetHeight, SetBits, SetRefreshRate: UG;
+	VF: UG;
 
 	NewSize: SG;
 
@@ -905,11 +902,11 @@ begin
 	end;
 end;
 
-procedure FillRefreshRates(Index, VF: Cardinal);
+procedure FillRefreshRates(Index, VF: UG);
 var
 	Reg: TRegistry;
 	Key: string;
-	D, DefD, R, k: Cardinal;
+	D, DefD, R, k: UG;
 	s: string;
 	NewSize: SG;
 begin
@@ -963,7 +960,7 @@ begin
 end;
 
 {
-function CreateScreenMode(Width, Height: Cardinal): Boolean;
+function CreateScreenMode(Width, Height: UG): Boolean;
 var
 	i: Integer;
 begin
@@ -986,7 +983,7 @@ begin
 end;
 }
 
-function StandardMode(Width, Height: Cardinal): Boolean;
+function StandardMode(Width, Height: UG): Boolean;
 begin
 	Result := True;
 	if (Width = 320) and (Height = 200) then Exit;
@@ -1006,7 +1003,7 @@ begin
 	Result := False;
 end;
 
-function DeleteScreenMode(Width, Height, Bits: Cardinal): Boolean;
+function DeleteScreenMode(Width, Height, Bits: UG): Boolean;
 var
 	i: Integer;
 	Reg: TRegistry;
@@ -1042,19 +1039,13 @@ begin
 end;
 
 procedure InitScreenCorectColor;
-var DeskDC: HDC;
 begin
-	DeskDC := GetDC(0);
-	try
-		ScreenBits := GetDeviceCaps(DeskDC, BITSPIXEL);
-		case ScreenBits of
-		1..5: ScreenCorrectColor := $001f1f1f;
-		6..11: ScreenCorrectColor := $000f0f0f;
-		12..19: ScreenCorrectColor := $00030303;
-		else ScreenCorrectColor := $00000000;
-		end;
-	finally
-		ReleaseDC(0, DeskDC);
+	InitNowScreen;
+	case NowBits of
+	1..5: ScreenCorrectColor := $001f1f1f;
+	6..11: ScreenCorrectColor := $000f0f0f;
+	12..19: ScreenCorrectColor := $00030303;
+	else ScreenCorrectColor := $00000000;
 	end;
 end;
 

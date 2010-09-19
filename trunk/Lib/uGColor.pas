@@ -95,6 +95,7 @@ type
     ComboBoxNF: TComboBox;
     EditRGBA: TEdit;
     LabelRGB: TLabel;
+    LabelFormat: TLabel;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure PanelCurColorClick(Sender: TObject);
@@ -213,7 +214,7 @@ end;
 
 function AbsoluteColor(C: TColor): TColor;
 var
-	CA: array[0..2] of Byte;
+	CA: array[0..2] of U1;
 	i: Integer;
 begin
 	Result := ColorToRGB(C) and $00ffffff;
@@ -268,7 +269,7 @@ begin
 	end;
 end;
 
-function BitColor(const C: TRGBA; const Bits: Byte): TRGBA;
+function BitColor(const C: TRGBA; const Bits: U1): TRGBA;
 begin
 	Result.A := 0;
 	case Bits of
@@ -382,7 +383,7 @@ end;
 
 // TfGColor
 
-const ABits: array[0..4] of Byte = (1, 4, 15, 18, 24);
+const ABits: array[0..4] of U1 = (1, 4, 15, 18, 24);
 
 procedure TfGColor.InitReadOnly;
 var
@@ -392,17 +393,17 @@ var
 begin
 	PanelNowColor.Color := NowRGB.L;
 	InitButton(PanelNowColor);
-	PanelNowColor.Repaint;
+	PanelNowColor.Update;
 
 	PanelNowBitColor.Color := BitColor(NowRGB, ABits[ComboBoxBitDepth.ItemIndex]).L;
 	InitButton(PanelNowBitColor);
-	PanelNowBitColor.Repaint;
-	ImageR.Fill;
-	ImageG.Fill;
-	ImageB.Fill;
-	ImageH.Fill;
-	ImageL.Fill;
-	ImageS.Fill;
+	PanelNowBitColor.Update;
+	ImageR.Invalidate;
+	ImageG.Invalidate;
+	ImageB.Invalidate;
+	ImageH.Invalidate;
+	ImageL.Invalidate;
+	ImageS.Invalidate;
 
 	Vis := False;
 	for i := 0 to MaxColor do
@@ -429,14 +430,14 @@ begin
 	if ComboBoxNF.ItemIndex = 1 then
 		NumericBase := 16;
 	EditR.Text := NumericPref + NToS(NowRGB.R);
+	EditR.Update;
 	EditG.Text := NumericPref + NToS(NowRGB.G);
+	EditG.Update;
 	EditB.Text := NumericPref + NToS(NowRGB.B);
+	EditB.Update;
 	EditRGBA.Text := NumericPref + NToS(NowRGB.L);
+	EditRGBA.Update;
 	NumericBase := 10;
-	EditR.Repaint;
-	EditG.Repaint;
-	EditB.Repaint;
-	EditRGBA.Repaint;
 
 	EditR.OnChange := EditRGBAChange;
 	EditG.OnChange := EditRGBAChange;
@@ -453,12 +454,12 @@ begin
 	if ComboBoxNF.ItemIndex = 1 then
 		NumericBase := 16;
 	EditH.Text := NumericPref + NToS(NowHLS.H);
+	EditH.Update;
 	EditL.Text := NumericPref + NToS(NowHLS.L);
+	EditL.Update;
 	EditS.Text := NumericPref + NToS(NowHLS.S);
+	EditS.Update;
 	NumericBase := 10;
-	EditH.Repaint;
-	EditL.Repaint;
-	EditS.Repaint;
 
 	EditH.OnChange := EditRGBAChange;
 	EditL.OnChange := EditRGBAChange;
@@ -538,7 +539,7 @@ begin
 	if TMenuItem(Sender).Tag < 0 then
 		SetNowColor(clNone)
 	else
-		SetNowColor(TColor(LongWord(TMenuItem(Sender).Tag) or $80000000));
+		SetNowColor(TColor(U4(TMenuItem(Sender).Tag) or $80000000));
 	InitAll;
 end;
 
@@ -697,8 +698,8 @@ begin
 	Rec.Right := Bmp.Width;
 	Rec.Bottom := Bmp.Height;
 
-	C := TColor(LongWord(TMenuItem(Sender).Tag) or $80000000);
-	Bmp.Canvas.Brush.Color := NegColor(C);
+	C := TColor(U4(TMenuItem(Sender).Tag) or $80000000);
+	Bmp.Canvas.Brush.Color := NegMonoColor(C);
 	Bmp.Canvas.FrameRect(Rec);
 	InflateRect(Rec, -1, -1);
 	Bmp.Canvas.Brush.Color := C;

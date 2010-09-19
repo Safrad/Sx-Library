@@ -10,20 +10,20 @@ unit uDb; // Not developed
 
 interface
 
-uses uDLabel, uDButton, StdCtrls, Classes, SysUtils;
+uses uTypes, uDButton, StdCtrls, Classes, SysUtils;
 
 const
 	PreHeadSize = 12;
 type
 	TFileId = array[0..3] of Char;
-	TFileVersion = LongWord;
+	TFileVersion = U4;
 
 	TFileHead = class(TObject)
 	public
 		Id: TFileId; // 4
 		Version: TFileVersion; //4
-		HeadSize: LongWord; // 4
-		SaveCount: LongWord; // 4
+		HeadSize: U4; // 4
+		SaveCount: U4; // 4
 		Modified: TDateTime; // 8
 	end;
 
@@ -34,20 +34,20 @@ type
 	TDbHeadId = array[0..3] of Char;
 	TDbHead = packed record // 32
 		Id: TDbHeadId; // 4
-		Version: LongWord; // 4
-		HeadSize: LongWord; // 4
-		ItemCount: LongInt; // 4
-		ItemSize: LongWord; // 4
-		SaveCount: LongWord; // 4
+		Version: U4; // 4
+		HeadSize: U4; // 4
+		ItemCount: U4; // 4
+		ItemSize: U4; // 4
+		SaveCount: U4; // 4
 		Modified: TDateTime; // 8
 	end;
 
 	TDb = class
 	private
-		DbItemSize: LongWord;
+		DbItemSize: U4;
 	public
 		Id: TDbHeadId;
-		Version: LongWord;
+		Version: U4;
 		FileName: TFileName;
 		IsNew: Boolean;
 		Head: TDbHead;
@@ -57,7 +57,7 @@ type
 		DbItemsChanged: Boolean;
 
 		DbPanelIndex,
-		DbPanelCount: TDLabel;
+		DbPanelCount: TLabel;
 
 		DbComboBoxItems: TComboBox;
 		DbButtonAdd,
@@ -66,7 +66,7 @@ type
 		OnDbItemsChanged: procedure;
 		DbComboBoxItemsChange: TNotifyEvent;
 
-		procedure New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
+		procedure New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: U4);
 		procedure Close;
 		procedure SetItems(ItemsCount: Integer);
 		procedure CopyItem(Source, Dest: Integer);
@@ -91,9 +91,9 @@ implementation
 
 uses
 	Dialogs, Controls, Windows,
-	uGetStr, uError, uTypes, uMath, uStrings;
+	uGetStr, uError, uMath, uStrings;
 
-procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: LongWord);
+procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: U4);
 begin
 	DbItemCount := -1;
 	DbItemSize := NewDbDataSize;
