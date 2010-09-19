@@ -22,30 +22,31 @@ function CustomFileType(
 	const OpenPrograms: array of ShortString
 	): Boolean;
 
-procedure CreateReg(var OutStr: string; RootKey: HKEY; Key: string);
-function ShellFolder(Name: string): string;
+procedure CreateReg(var OutStr: string; const RootKey: HKEY; const Key: string);
+function ShellFolder(const Name: string): string;
 
 implementation
 
 uses
-	SysUtils, Registry, Dialogs, Classes,
-	uTypes, uStrings, uFiles, uError;
+	SysUtils, Registry, Classes,
+	uTypes, uStrings, uFiles, uMsg;
 
 function WinNTDeleteKey(const Reg: TRegistry; const Key: string): Boolean;
 	var CanDelete: Boolean;
 begin
 	Result := False;
-	Reg.OpenKey(Key, False);
-	CanDelete := not Reg.HasSubKeys;
-	Reg.CloseKey;
-	if CanDelete then
+	if Reg.OpenKey(Key, False) then
 	begin
-		Result := Reg.DeleteKey(Key);
-	end
-	else
-	begin
-		ErrorMessage('Registry: Can not delete key with SubKey(s)' + LineSep +
-			Key);
+		CanDelete := not Reg.HasSubKeys;
+		Reg.CloseKey;
+		if CanDelete then
+		begin
+			Result := Reg.DeleteKey(Key);
+		end
+		else
+		begin
+			Warning('Can not delete key "%1" with subkeys.', Reg.CurrentPath + '\' + Key);
+		end;
 	end;
 end;
 
@@ -62,42 +63,68 @@ begin
 		Key := '.' + FileType;
 		if Reg.KeyExists(Key) then
 		begin
-			Reg.OpenKey(Key, False);
-			InternalName := Reg.ReadString('');
-			Reg.CloseKey;
+			if Reg.OpenKeyReadOnly(Key) then
+			begin
+				InternalName := Reg.ReadString('');
+				Reg.CloseKey;
+			end;
 		end
 		else
 		begin
 			InternalName := FileType + 'file';
-			Reg.OpenKey(Key, True);
-			Reg.WriteString('', InternalName);
-			Reg.CloseKey;
+			if Reg.OpenKey(Key, True) then
+			begin
+				Reg.WriteString('', InternalName);
+				Reg.CloseKey;
+			end;
 		end;
+	finally
+		Reg.Free;
+	end;
 
+	Reg := TRegistry.Create;
+	try
+		Reg.RootKey := HKEY_CLASSES_ROOT;
 		// Caption
 		if FileTypeCaption <> '' then // Folder or no change
 		begin
 			Key := InternalName;
 //      if (CanReplace) or (Reg.KeyExists(Key) = False) then
 			begin
-				Reg.OpenKey(Key, True);
-				Reg.WriteString('', FileTypeCaption);
-	{     Reg.WriteString('AlwaysShowExt', '');}
-				Reg.CloseKey;
+				if Reg.OpenKey(Key, True) then
+				begin
+					Reg.WriteString('', FileTypeCaption);
+					Reg.CloseKey;
+				end;
 			end;
 		end;
+	finally
+		Reg.Free;
+	end;
 
+	Reg := TRegistry.Create;
+	try
+		Reg.RootKey := HKEY_CLASSES_ROOT;
 		// Icon
 		if Icon <> '' then
 		begin
 			Key := InternalName + '\DefaultIcon';
 //      if (CanReplace) or (Reg.KeyExists(Key) = False) then
 			begin
-				Reg.OpenKey(Key, True);
-				Reg.WriteString('', Icon);
-				Reg.CloseKey;
+				if Reg.OpenKey(Key, True) then
+				begin
+					Reg.WriteString('', Icon);
+					Reg.CloseKey;
+				end;
 			end;
 		end;
+	finally
+		Reg.Free;
+	end;
+
+	Reg := TRegistry.Create;
+	try
+		Reg.RootKey := HKEY_CLASSES_ROOT;
 
 		Key := InternalName + '\shell';
 		if not Reg.KeyExists(Key) then
@@ -144,30 +171,37 @@ begin
 		Key := '.' + FileType;
 		if Reg.KeyExists(Key) then
 		begin
-			Reg.OpenKey(Key, False);
-			InternalName := Reg.ReadString('');
-			Reg.CloseKey;
-			if Reg.KeyExists(InternalName) then
+			if Reg.OpenKeyReadOnly(Key) then
 			begin
-				Reg.OpenKey(InternalName + '\shell', False);
-				if Reg.HasSubKeys = False then
+				InternalName := Reg.ReadString('');
+				Reg.CloseKey;
+				if Reg.KeyExists(InternalName) then
 				begin
-					Reg.CloseKey;
-					if WinNTDeleteKey(Reg, InternalName + '\shell') then
-					if WinNTDeleteKey(Reg, InternalName + '\DefaultIcon') then
-					if WinNTDeleteKey(Reg, InternalName) then
-					if Reg.KeyExists(Key) then
+					Reg.OpenKeyReadOnly(InternalName + '\shell');
+					if Reg.HasSubKeys = False then
 					begin
-						WinNTDeleteKey(Reg, Key);
-					end;
-				end
-				else
-					Reg.CloseKey;
+						Reg.CloseKey;
+						if WinNTDeleteKey(Reg, InternalName + '\shell') then
+						if WinNTDeleteKey(Reg, InternalName + '\DefaultIcon') then
+						if WinNTDeleteKey(Reg, InternalName) then
+						if Reg.KeyExists(Key) then
+						begin
+							WinNTDeleteKey(Reg, Key);
+						end;
+					end
+					else
+						Reg.CloseKey;
+				end;
 			end;
 		end;
 	finally
 		Reg.Free;
 	end;
+end;
+
+function IsFolder(const FileType: string): BG;
+begin
+	Result := (FileType = 'Folder') or (FileType = 'Directory');
 end;
 
 function ExistsExt(const FileType: string): Boolean;
@@ -176,20 +210,19 @@ var
 	InternalName, Key: string;
 begin
 	Result := False;
-	if (FileType = 'Folder')
-	or (FileType = 'Directory') then
+	if IsFolder(FileType) then
 	begin
 		Result := True;
 		Exit;
 	end;
-	Reg := TRegistry.Create;
+	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CLASSES_ROOT;
 
 		Key := '.' + FileType;
 		if Reg.KeyExists(Key) then
 		begin
-			if Reg.OpenKey(Key, False) then
+			if Reg.OpenKeyReadOnly(Key) then
 			begin
 				InternalName := Reg.ReadString('');
 				Reg.CloseKey;
@@ -217,8 +250,7 @@ begin
 	try
 		Reg.RootKey := HKEY_CLASSES_ROOT;
 
-		if (FileType = 'Folder')
-		or (FileType = 'Directory') then
+		if IsFolder(FileType) then
 		begin
 			InternalName := FileType;
 		end
@@ -227,44 +259,49 @@ begin
 			Key := '.' + FileType;
 			if Reg.KeyExists(Key) then
 			begin
-				Reg.OpenKey(Key, False);
-				InternalName := Reg.ReadString('');
-				Reg.CloseKey;
+				if Reg.OpenKeyReadOnly(Key) then
+				begin
+					InternalName := Reg.ReadString('');
+					Reg.CloseKey;
+				end;
 			end
 			else
 			begin
 				goto LExit;
-{       Reg.OpenKey(Key, True);
-				InternalName := FileType + 'file';
-				Reg.WriteString('', InternalName);
-				Reg.CloseKey;}
 			end;
 		end;
+
+		Reg.Free;
+		Reg := TRegistry.Create;
+		Reg.RootKey := HKEY_CLASSES_ROOT;
 
 		if Reg.KeyExists(InternalName) then
 		begin
 			ShortMenuCaption := DelCharsF(MenuCaption, ' ');
 			Key := InternalName + '\shell\' + ShortMenuCaption;
-			Reg.OpenKey(Key, True);
-			if ShortMenuCaption <> MenuCaption then
-				Reg.WriteString('', MenuCaption);
-
-		if (FileType = 'Folder')
-		or (FileType = 'Directory') then
+			if Reg.OpenKey(Key, True) then
 			begin
-				Flags := $00000001;
-				Reg.WriteBinaryData('EditFlags', Flags, SizeOf(Flags)); // Enable modification
+				if ShortMenuCaption <> MenuCaption then
+					Reg.WriteString('', MenuCaption);
+
+				if IsFolder(FileType) then
+				begin
+					// Enable modification
+					Flags := $00000001;
+					Reg.WriteBinaryData('EditFlags', Flags, SizeOf(Flags));
+				end;
+				Reg.CloseKey;
 			end;
-			Reg.CloseKey;
+			Reg.Free;
+			Reg := TRegistry.Create;
+			Reg.RootKey := HKEY_CLASSES_ROOT;
 
 			Key := InternalName + '\shell\' + ShortMenuCaption + '\command';
-			Reg.OpenKey(Key, True);
-			Reg.WriteString('', OpenProgram);
-			Reg.CloseKey;
-		end
-		else
-		begin
-
+			if Reg.OpenKey(Key, True) then
+			begin
+				Reg.WriteString('', OpenProgram);
+				Reg.CloseKey;
+			end;
 		end;
 		LExit:
 	finally
@@ -283,8 +320,7 @@ begin
 	try
 		Reg.RootKey := HKEY_CLASSES_ROOT;
 
-		if (FileType = 'Folder')
-		or (FileType = 'Directory') then
+		if IsFolder(FileType) then
 		begin
 			InternalName := FileType;
 		end
@@ -293,9 +329,11 @@ begin
 			Key := '.' + FileType;
 			if Reg.KeyExists(Key) then
 			begin
-				Reg.OpenKey(Key, False);
-				InternalName := Reg.ReadString('');
-				Reg.CloseKey;
+				if Reg.OpenKeyReadOnly(Key) then
+				begin
+					InternalName := Reg.ReadString('');
+					Reg.CloseKey;
+				end;
 			end
 			else
 				goto Fin;
@@ -326,8 +364,7 @@ begin
 	try
 		Reg.RootKey := HKEY_CLASSES_ROOT;
 
-		if (FileType = 'Folder')
-		or (FileType = 'Directory') then
+		if IsFolder(FileType) then
 		begin
 			InternalName := FileType;
 		end
@@ -336,7 +373,7 @@ begin
 			Key := '.' + FileType;
 			if Reg.KeyExists(Key) then
 			begin
-				Reg.OpenKey(Key, False);
+				Reg.OpenKeyReadOnly(Key);
 				InternalName := Reg.ReadString('');
 				Reg.CloseKey;
 			end
@@ -368,12 +405,12 @@ begin
 	Result := True;
 	if High(MenuCaptions) <> High(OpenPrograms) then
 	begin
-		ErrorMessage('Registry: Illegal parameters');
+		Warning('Registry: Illegal parameters');
 		Exit;
 	end;
 	if FileType = '' then
 	begin
-		ErrorMessage('Registry: Illegal file extension');
+		Warning('Registry: Illegal file extension');
 		Exit;
 	end;
 	case FileTypesOperation of
@@ -435,7 +472,7 @@ begin
 	end;
 end;
 
-procedure CreateReg(var OutStr: string; RootKey: HKEY; Key: string);
+procedure CreateReg(var OutStr: string; const RootKey: HKEY; const Key: string);
 var
 	Reg: TRegistry;
 
@@ -471,14 +508,17 @@ var
 				begin
 					OutStr := OutStr + 'hex:';
 					BufSize := Reg.GetDataSize(Str[i]);
-					SetLength(Buf, BufSize);
-					Reg.ReadBinaryData(Str[i], Buf[1], BufSize);
-					for j := 1 to BufSize do
+					if BufSize > 0 then
 					begin
-						OutStr := OutStr + Format('%x', [SG(Buf[j])]); // 0f
-						if j <> BufSize then OutStr := OutStr + ',';
+						SetLength(Buf, BufSize);
+						Reg.ReadBinaryData(Str[i], Buf[1], BufSize);
+						for j := 1 to BufSize do
+						begin
+							OutStr := OutStr + Format('%x', [SG(Buf[j])]); // 0f
+							if j <> BufSize then OutStr := OutStr + ',';
+						end;
+						Buf := '';
 					end;
-					Buf := '';
 				end;
 				end;
 				OutStr := OutStr + FullSep;
@@ -504,21 +544,24 @@ begin
 	Reg.Free;
 end;
 
-function ShellFolder(Name: string): string;
+function ShellFolder(const Name: string): string;
 var
 	Reg: TRegistry;
 	Key: string;
 begin
-	Reg := TRegistry.Create;
-	Reg.RootKey := HKEY_CURRENT_USER;
-	Key := 'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\';
-	if Reg.KeyExists(Key) then
-	begin
-		Reg.OpenKey(Key, False);
-		Result := Reg.ReadString(Name) + '\';
-		Reg.CloseKey;
+	Reg := TRegistry.Create(KEY_QUERY_VALUE);
+	try
+		Reg.RootKey := HKEY_CURRENT_USER;
+		Key := 'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\';
+		if Reg.KeyExists(Key) then
+		begin
+			Reg.OpenKeyReadOnly(Key);
+			Result := Reg.ReadString(Name) + '\';
+			Reg.CloseKey;
+		end;
+	finally
+		Reg.Free;
 	end;
-	Reg.Free;
 end;
 
 end.

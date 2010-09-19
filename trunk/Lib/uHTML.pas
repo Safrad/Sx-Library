@@ -12,7 +12,7 @@ interface
 
 uses
 	uTypes,
-	SysUtils;
+	SysUtils, Classes{TAlignment};
 
 type
 	TDistanceUnit = (duPercentage, duPixels, duPoints);
@@ -37,8 +37,9 @@ type
 		procedure AddBody(s: string);
 		procedure AddCommand(s: string);
 		procedure HorizontalRule(Width: SG = 100; DistanceUnit: TDistanceUnit = duPercentage; Size: SG = 2);
-		procedure AddDataCell(s: string; AlignRight: SG = 0);
-		procedure AddHeadCell(s: string; AlignRight: BG = False);
+		procedure AddDataCell(s: string; Align: TAlignment = taCenter);
+		procedure AddHeadCell(s: string; Align: TAlignment = taCenter);
+		procedure ClosedTag(const s: string; Tag: string);
 		procedure AddTable(FileName: TFileName; Border: SG = 1; CellSpacing: SG = 2; CellPadding: SG = 2);
 		procedure AddRef(FileName: TFileName; Text: string);
 		procedure AddImage(FileName: TFileName; Params: string); overload;
@@ -85,8 +86,8 @@ const
 implementation
 
 uses
-	Math,
-	uStrings, uFiles, uDBitmap, uLang, uFormat, uMath;
+	Math, Menus,
+	uStrings, uFiles, uDBitmap, uFormat, uMath, uCharset;
 
 function NToHTML(Value: SG; EnableZero: BG): string;
 begin
@@ -117,17 +118,13 @@ end;
 function XMLToStr(s: string): string;
 begin
 	Result := s;
-	Replace(Result, '&gt;', '>');
-	Replace(Result, '&lt;', '<');
-	Replace(Result, '&amp;', '&');
+	Replace(Result, ['&gt;', '&lt;', '&amp;'], ['>', '<', '&']);
 end;
 
 function StrToXML(s: string): string;
 begin
 	Result := s;
-	Replace(Result, '&', '&amp;');
-	Replace(Result, '<', '&lt;');
-	Replace(Result, '>', '&gt;');
+	Replace(Result, ['&', '<', '>'], ['&amp;', '&lt;', '&gt;']);
 end;
 (*
 function XMLToWStr(s: string): WideString;
@@ -190,8 +187,7 @@ begin
 	else
 	begin
 		Result := StrToXML(Value);
-		Replace(Result, LineSep, '<br />');
-		Replace(Result, HTMLSep, '<br />');
+		Replace(Result, [LineSep, HTMLSep], ['<br />', '<br />']);
 	end;
 end;
 
@@ -248,7 +244,7 @@ begin
 		'	<p>I''m trying to redirect you. If it fails, you can follow this <a href="' + RedirectURL + '">link</a>.</p>' + HTMLSep +
 		'</body>' +HTMLSep +
 		'</html>';
-	WriteStringToFileEx(WriteToFileName, s, False);
+	WriteStringToFile(WriteToFileName, s, False);
 end;
 
 function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
@@ -299,7 +295,7 @@ begin
 
 	j := Max(Refers - 1, Min(HTMLIndex + 5, HTMLCount - 1));
 	if j < HTMLCount - 1 then
-		Ref('...', -1)
+		Ref(cDialogSuffix, -1)
 	else
 		Ref(nbsp, -1);
 	i := 0;
@@ -314,7 +310,7 @@ begin
 		Dec(j);
 	end;
 	if j > 0 then
-		Ref('...', -1)
+		Ref(cDialogSuffix, -1)
 	else
 		Ref(nbsp, -1);
 
@@ -339,7 +335,8 @@ end;
 
 destructor THTML.Destroy;
 begin
-	WriteToFile;
+	if FileName <> '' then
+		WriteToFile;
 	FileName := '';
 	Body := '';
 	Title := '';
@@ -368,26 +365,24 @@ begin
 	Body := Body + '/>'
 end;
 
-procedure THTML.AddDataCell(s: string; AlignRight: SG = 0);
+procedure THTML.AddDataCell(s: string; Align: TAlignment = taCenter);
 begin
 	Body := Body + '<td';
-	if AlignRight = 1 then
+	if Align = taCenter then
 		Body := Body + ' align="center"'
-	else if AlignRight = 2 then
+	else if Align = taRightJustify then
 		Body := Body + ' align="right"';
 	Body := Body + '>' + s + '</td>';
 end;
 
-procedure THTML.AddHeadCell(s: string; AlignRight: BG = False);
+procedure THTML.AddHeadCell(s: string; Align: TAlignment = taCenter);
 begin
 	Body := Body + '<td';
-	if AlignRight then
+	if Align = taCenter then
+		Body := Body + ' align="center"'
+	else if Align = taRightJustify then
 		Body := Body + ' align="right"';
 	Body := Body + '><b>' + s + '</b></td>';
-{	Body := Body + '<th';
-	if AlignRight then
-		Body := Body + ' align="right"';
-	Body := Body + '>' + s + '</th>';}
 end;
 
 function RelativePath(Source, Target: string): string;
@@ -668,6 +663,11 @@ procedure THTML.AddFramesetFromFile;
 begin
 	FFrameset := True;
 	AddBodyFromFile;
+end;
+
+procedure THTML.ClosedTag(const s: string; Tag: string);
+begin
+	Body := Body + '<' + Tag + '>' + s + '</' + Tag + '>';
 end;
 
 procedure THTML.AddTable(FileName: TFileName; Border: SG = 1; CellSpacing: SG = 2; CellPadding: SG = 2);

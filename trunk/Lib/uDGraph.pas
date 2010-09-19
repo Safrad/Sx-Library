@@ -100,7 +100,7 @@ begin
 		Inc(NodesIndex[i]);
 	end;
 
-	Border := Borders.Insert(NodesIndex[j + 1] - 1);
+	Border := Borders.Add(NodesIndex[j + 1] - 1);
 	Border.ToNode := k;
 	Border.Len := l;
 end;
@@ -290,9 +290,9 @@ begin
 			else
 				Inc(ToV);
 
-			PItem := StackValue.Insert(ToV);
+			PItem := StackValue.Add(ToV);
 			PItem^ := BestLen;
-			PItem := StackNode.Insert(ToV);
+			PItem := StackNode.Add(ToV);
 			PItem^ := BestNode;
 			if ToNode >= 0 then
 				if NodesValue[ToNode] <= BestLen then Break;

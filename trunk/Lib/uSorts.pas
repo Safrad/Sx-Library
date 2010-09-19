@@ -21,7 +21,7 @@ type
 		stInsertion, // n ^ 2       n           Y           Y       +
 		stBubble,    // n ^ 2       n           Y           Y
 		stExchange,  // n ^ 2       n           N           N
-		stShell,     // n ^ 1.2     n           N           Y
+		stShell,     // n ^ 1.5     n           N           Y
 
 		stHeap,      // n * log n   n           N           N
 		stQuick,     // n * log n   n+c*log n   N           N       +
@@ -55,16 +55,23 @@ procedure SortS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of s
 procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of WideString);
 
 {
-Sort(TCompare
-function Compare(const Left, Right: SG;
-begin
-
-end;
+Value	Meaning
+-1 The string pointed to by the Index0 parameter is less in lexical value than the string pointed to by the Index1 parameter.
+0  The string pointed to by Index0 is equal in lexical value to the string pointed to by Index1.
++1 The string pointed to by Index0 is greater in lexical value than the string pointed to by Index1.
 }
+type TCompare = function(const Index0, Index1: SG): SG;
+
+procedure SortStr(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);
+// Stable Megre sort used for strings (few comparison)
+procedure Sort(const AIndex: PArraySG; const Count: SG; const Compare: TCompare; const Reverse: BG = False);
 
 implementation
 
-uses uMath;
+uses
+	uMath,
+	Windows;
+
 const
 	MinIndex = 0;
 type
@@ -145,4 +152,141 @@ type
 	TValue1 = U2;
 {$I SortS.inc}
 
+var
+	MeI: array of TIndex;
+
+procedure Merge(const AIndex: PArraySG; const I1F, I1T, I2F, I2T: SG; const Compare: TCompare);
+var i, j, M, c: SG;
+begin
+	i := I1F;
+	j := I2F;
+	M := 0;
+	while True do
+	begin
+		{$ifopt d+}Inc(SortCompared);{$endif}
+		if Compare(AIndex[i], AIndex[j]) <= 0 then
+		begin
+			MeI[M] := AIndex[i];
+			Inc(M);
+
+			Inc(i);
+			if i > I1T then
+			begin
+				if j <> I2T then
+				begin
+					c := I2T- j + 1;
+					Move(AIndex[j], MeI[M], SizeOf(TIndex) * c);
+					Inc(M, c);
+				end
+				else
+				begin
+					MeI[M] := AIndex[j];
+					Inc(M);
+				end;
+
+{				while j <= I2T do
+				begin
+					MeI[M] := AIndex[j];
+					Inc(M);
+					Inc(j);
+				end;}
+				Break;
+			end;
+		end
+		else
+		begin
+			MeI[M] := AIndex[j];
+			Inc(M);
+
+			Inc(j);
+			if j > I2T then
+			begin
+				if i <> I1T then
+				begin
+					c := I1T- i + 1;
+					Move(AIndex[i], MeI[M], SizeOf(TIndex) * c);
+					Inc(M, c);
+				end
+				else
+				begin
+					MeI[M] := AIndex[i];
+					Inc(M);
+				end;
+
+			{				while i <= I1T do
+				begin
+					MeI[M] := AIndex[i];
+					Inc(M);
+					Inc(i);
+				end;}
+				Break;
+			end;
+		end;
+	end;
+	{$ifopt d+}Inc(SortSwaped, M);{$endif}
+(*	for i := 0 to M - 1 do
+	begin
+		{$ifopt d+}Inc(SortSwaped);{$endif}
+		AIndex[i + I1F] := MeI[i];
+	end; *)
+	if M = 2 then
+	begin
+		AIndex[I1F] := MeI[0];
+		AIndex[I1F + 1] := MeI[1];
+	end
+	else
+		Move(MeI[0], AIndex[I1F], SizeOf(TIndex) * M);
+end;
+
+procedure RSort(const AIndex: PArraySG; const F, T: SG; const Compare: TCompare);
+var
+	I1F, I1T, I2F, I2T: SG;
+begin
+	I1F := F;
+	I1T := F + (T - F) div 2; //(F + T) div 2;
+	I2F := I1T + 1;
+	I2T := T;
+
+	if I1F < I1T then RSort(AIndex, I1F, I1T, Compare);
+	if I2F < I2T then RSort(AIndex, I2F, I2T, Compare);
+	Merge(AIndex, I1F, I1T, I2F, I2T, Compare);
+end;
+
+procedure MergeSort(const AIndex: PArraySG; const MaxIndex: TIndex; const Compare: TCompare);
+begin
+	if Length(MeI) < MaxIndex - MinIndex + 1 then
+		SetLength(MeI, MaxIndex - MinIndex + 1);
+	RSort(AIndex, MinIndex, MaxIndex, Compare);
+	if MaxIndex - MinIndex + 1 > 256 * KB then
+		SetLength(MeI, 0);
+end;
+
+
+var
+	AStr: PArrayString;
+
+function Compare(const Index0, Index1: SG): SG;
+begin
+	Result := CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
+		PChar(AStr[Index0]), Length(AStr[Index0]),
+		PChar(AStr[Index1]), Length(AStr[Index1])) - 2;
+end;
+
+procedure SortStr(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);
+begin
+	AStr := AString;
+	Sort(AIndex, Count, Compare, Reverse);
+end;
+
+procedure Sort(const AIndex: PArraySG; const Count: SG; const Compare: TCompare; const Reverse: BG = False);
+begin
+	MergeSort(AIndex, Count - 1, Compare);
+	if Reverse then
+		Reverse4(AIndex[0], MaxIndex - MinIndex + 1);
+end;
+
+initialization
+
+finalization
+	SetLength(MeI, 0);
 end.

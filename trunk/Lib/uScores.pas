@@ -12,7 +12,7 @@ interface
 
 uses
 	uTypes,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDButton, uDForm, uDImage;
 
 type
@@ -39,7 +39,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uFormat, uFiles, uError, uDIni, uDBitmap, uGraph, uScreen, uGetStr;
+	uFormat, uFiles, uError, uDIni, uDBitmap, uGraph, uScreen, uGetStr, uColor;
 
 var
 	fScores: TfScores;

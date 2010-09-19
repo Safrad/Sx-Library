@@ -1,6 +1,6 @@
 object fScreen: TfScreen
-  Left = 201
-  Top = 107
+  Left = 322
+  Top = 171
   AutoSize = True
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog

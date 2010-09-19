@@ -90,13 +90,9 @@ function NToS(const Num: Int64; const OutputFormat: TOutputFormat): string; over
 
 function FToS(Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
 
-function BToStr(const B: S4): string; overload;
-function BToStr(const B: S8): string; overload;
+function BToStr(const B: S4; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function BToStr(const B: S8; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NodesToS(const Value: U8): string;
-const
-	ScoreOne = 100;
-function ScoreToStr(Score: UG; HTML: BG = True): string;
-function EloToStr(Elo: U2; const OutputFormat: TOutputFormat): string;
 
 procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: U4);
 type
@@ -107,14 +103,12 @@ type
 3: 0:34.340
 }
 
-// function SToMs(const Str: string): SG; // MsToStr<-
-
 function StrToF4(Str: string): F4;
 function StrToF8(Str: string): F8;
 function StrToFA(Str: string): FA;
 function StrToSG(Str: string): SG;
 function SToTime(Str: string): TDateTime;
-
+function SToMs(const Str: string): SG; // MsToStr<-
 
 function MsToStr(DT: Int64;
 	Display: TDisplay; const Decimals: SG; FixedWidth: Boolean): string; overload;
@@ -123,8 +117,8 @@ function MsToStr(DT: Int64; const UseWinFormat: BG;
 
 function DateToS(var Year, Month, Day: U2): string; overload;
 function DateToS(D: TDateTime): string; overload;
-function TimeToS(T: TDateTime): string;
-function DateTimeToS(DT: TDateTime): string;
+function TimeToS(T: TDateTime; Prec: SG = 0): string;
+function DateTimeToS(DT: TDateTime; Prec: SG = 0): string;
 function DTToStr(DT: TDateTime): string; // UseWinFormat = True
 function PhoneToStr(Phone: U8): string;
 
@@ -423,14 +417,14 @@ begin
 	until Num = 0;
 end;}
 
-function FToS(Num: Extended; const OutputFormat: TOutputFormat): string;
+function FToS(Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
 var
 	D: SG;
 	Nu, eps: Extended;
 begin
 	D := 0;
 	Nu := Num;
-	eps := 5.6e-18; // D???
+	eps := 5.6e-18; // TODO : Round
 	while True do
 	begin
 		if Abs(Frac(Nu)) <= eps{MinExtended} then Break;
@@ -631,135 +625,137 @@ end;
 
 const Sep = ' ';
 
-function BToStr(const B: Integer): string;
+function BToStr(const B: S4; const OutputFormat: TOutputFormat = ofDisplay): string;
 label LExit;
 begin
+	Assert(B >= 0);
 	if B < KB then // 2^10 ($400)
 	begin
-		Result := NToS(B, 0) + Sep + 'B';
+		Result := NToS(B, 0, OutputFormat) + Sep + 'B';
 		goto LExit;
 	end;
 	if B < 10 * KB then
 	begin
-		Result := NToS((100 * B) div KB, -2) + Sep + 'KB';
+		Result := NToS((100 * B) div KB, -2, OutputFormat) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 100 * KB then
 	begin
-		Result := NToS((10 * B) div KB, -1) + Sep + 'KB';
+		Result := NToS((10 * B) div KB, -1, OutputFormat) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < MB then // 2^20 ($100 000)
 	begin
-		Result := NToS(B div KB, 0) + Sep + 'KB';
+		Result := NToS(B div KB, 0, OutputFormat) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 10 * MB then
 	begin
-		Result := NToS((100 * B) div MB, -2) + Sep + 'MB';
+		Result := NToS((100 * B) div MB, -2, OutputFormat) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < 100 * MB then
 	begin
-		Result := NToS((10 * B) div MB, -1) + Sep + 'MB';
+		Result := NToS((10 * B) div MB, -1, OutputFormat) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < GB then // 2^30 ($40 000 000)
 	begin
-		Result := NToS(B div MB, 0) + Sep + 'MB';
+		Result := NToS(B div MB, 0, OutputFormat) + Sep + 'MB';
 		goto LExit;
 	end;
 	//if B < GB then
-	Result := NToS((100 * (B div 128)) div (GB div 128), -2) + Sep + 'GB';
+	Result := NToS((100 * (B div 128)) div (GB div 128), -2, OutputFormat) + Sep + 'GB';
 	LExit:
 //	if B < 0 then Result := '-' + Result;
 end;
 
-function BToStr(const B: Int64): string;
+function BToStr(const B: S8; const OutputFormat: TOutputFormat = ofDisplay): string;
 label LExit;
 begin
+	Assert(B >= 0);
 	if B < KB then // 2^10 ($400)
 	begin
-		Result := NToS(B, 0) + Sep + 'B';
+		Result := NToS(B, 0, OutputFormat) + Sep + 'B';
 		goto LExit;
 	end;
 	if B < 10 * KB then
 	begin
-		Result := NToS((100 * B) div KB, -2) + Sep + 'KB'; // Kilo
+		Result := NToS((100 * B) div KB, -2, OutputFormat) + Sep + 'KB'; // Kilo
 		goto LExit;
 	end;
 	if B < 100 * KB then
 	begin
-		Result := NToS((10 * B) div KB, -1) + Sep + 'KB';
+		Result := NToS((10 * B) div KB, -1, OutputFormat) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < MB then // 2^20 ($100 000)
 	begin
-		Result := NToS(B div KB, 0) + Sep + 'KB';
+		Result := NToS(B div KB, 0, OutputFormat) + Sep + 'KB';
 		goto LExit;
 	end;
 	if B < 10 * MB then
 	begin
-		Result := NToS((100 * B) div MB, -2) + Sep + 'MB'; // Mega
+		Result := NToS((100 * B) div MB, -2, OutputFormat) + Sep + 'MB'; // Mega
 		goto LExit;
 	end;
 	if B < 100 * MB then
 	begin
-		Result := NToS((10 * B) div MB, -1) + Sep + 'MB';
+		Result := NToS((10 * B) div MB, -1, OutputFormat) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < GB then // 2^30 ($40 000 000)
 	begin
-		Result := NToS(B div MB, 0) + Sep + 'MB';
+		Result := NToS(B div MB, 0, OutputFormat) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < 10737418240 then
 	begin
-		Result := NToS((100 * B) div GB, -2) + Sep + 'GB'; // Giga
+		Result := NToS((100 * B) div GB, -2, OutputFormat) + Sep + 'GB'; // Giga
 		goto LExit;
 	end;
 	if B < 107374182400 then
 	begin
-		Result := NToS((10 * B) div GB, -1) + Sep + 'GB';
+		Result := NToS((10 * B) div GB, -1, OutputFormat) + Sep + 'GB';
 		goto LExit;
 	end;
 	if B < 1099511627776 then //2^40 ($10 000 000 000)
 	begin
-		Result := NToS(B div GB, 0) + Sep + 'GB';
+		Result := NToS(B div GB, 0, OutputFormat) + Sep + 'GB';
 		goto LExit;
 	end;
 	if B < 10995116277760 then
 	begin
-		Result := NToS((100 * B) div 1099511627776, -2) + Sep + 'TB'; // Tera
+		Result := NToS((100 * B) div 1099511627776, -2, OutputFormat) + Sep + 'TB'; // Tera
 		goto LExit;
 	end;
 	if B < 109951162777600 then
 	begin
-		Result := NToS((10 * B) div 1099511627776, -1) + Sep + 'TB';
+		Result := NToS((10 * B) div 1099511627776, -1, OutputFormat) + Sep + 'TB';
 		goto LExit;
 	end;
 	if B < 1125899906842624 then //2^50 ($4 000 000 000 000)
 	begin
-		Result := NToS(B div 1099511627776, 0) + Sep + 'TB';
+		Result := NToS(B div 1099511627776, 0, OutputFormat) + Sep + 'TB';
 		goto LExit;
 	end;
 	if B < 11258999068426240 then
 	begin;
-		Result := NToS((100 * B) div 1125899906842624, -2) + Sep + 'PB'; // Peta
+		Result := NToS((100 * B) div 1125899906842624, -2, OutputFormat) + Sep + 'PB'; // Peta
 		goto LExit;
 	end;
 	if B < 112589990684262400 then
 	begin
-		Result := NToS((10 * B) div 1125899906842624, -1) + Sep + 'PB';
+		Result := NToS((10 * B) div 1125899906842624, -1, OutputFormat) + Sep + 'PB';
 		goto LExit;
 	end;
 	if B < 1152921504606846976 then //2^60 ($1 000 000 000 000 000)
 	begin
-		Result := NToS(B div 1125899906842624, 0) + Sep + 'PB';
+		Result := NToS(B div 1125899906842624, 0, OutputFormat) + Sep + 'PB';
 		goto LExit;
 	end;
-	//if B<11529215046068469760 then
-	Result := NToS((100 * (B div 128)) div (1152921504606846976 div 128), -2) + Sep + 'EB'; // Exa
+	//if B < 11529215046068469760 then
+	Result := NToS((100 * (B div 128)) div (1152921504606846976 div 128), -2, OutputFormat) + Sep + 'EB'; // Exa
 	LExit:
 //	if B < 0 then Result := '-' + Result;
 end;
@@ -784,49 +780,6 @@ begin
 		Result := NToS(Value div G) + ' G'
 	else
 		Result := NToS(Value div T) + ' T';
-end;
-
-function ScoreToStr(Score: UG; HTML: BG = True): string;
-var
-	Res, Rem: U2;
-begin
-	DivModU4(Score, ScoreOne, Res, Rem);
-	if (Res > 0) or (Rem = 0) then
-		Result := NToS(Res)
-	else
-		Result := '';
-	if (Rem <> 0) or (HTML = False) then
-	begin
-		if HTML then
-		begin
-			if Rem = ScoreOne div 2 then
-				Result := Result + '&frac12;'
-			else if Rem = ScoreOne div 4 then
-				Result := Result + '&frac14;'
-			else if Rem = 3 * ScoreOne div 4 then
-				Result := Result + '&frac34;'
-			else
-				Result := Result + ',' + NToS(Rem, '00');
-		end
-		else
-			Result := Result + ',' + NToS(Rem, '00');
-	end;
-end;
-
-function EloToStr(Elo: U2; const OutputFormat: TOutputFormat): string;
-begin
-	if Elo = 0 then
-	begin
-		case OutputFormat of
-		ofHTML: Result := nbsp;
-		ofIO: Result := '0';
-		else Result := '';
-		end;
-	end
-	else
-	begin
-		Result := IntToStr(Elo);
-	end;
 end;
 
 procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: U4);
@@ -860,7 +813,7 @@ begin
 		F := 0;
 		for W := Length(Str) - 1 downto 1 do
 		begin
-			if Str[W] = '.' then
+			if Str[W] in ['.', ','] then
 			begin
 				F := W;
 				Break;
@@ -1017,9 +970,7 @@ begin
 		if DT >= MSecsPerDay then
 		begin
 			Day := DT div MSecsPerDay;
-			Result := Result + IntToStr(Day) + ' day';
-			if Day > 1 then Result := Result + 's';
-			Result := Result + ListSep;
+			Result := Result + IntToStr(Day) + ' day' + Plural(Day)+ ListSep;
 			h := h mod 24;
 		end;
 	end;
@@ -1142,19 +1093,19 @@ begin
 	end;
 end;
 
-function TimeToS(T: TDateTime): string;
+function TimeToS(T: TDateTime; Prec: SG = 0): string;
 begin
-	Result := MsToStr(Round(T * MSecsPerDay), False, diHHMSD, 0, False);
+	Result := MsToStr(Round(T * MSecsPerDay), False, diHHMSD, Prec, False);
 end;
 
-function DateTimeToS(DT: TDateTime): string;
+function DateTimeToS(DT: TDateTime; Prec: SG = 0): string;
 begin
 	if DT = 0 then
 		Result := ''
 	else
 	begin
 // DateTimeToStr(s, 'YYYY-MM-DD HH:MM:SS', Now);
-		Result := DateToS(Trunc(DT)) + ' ' + TimeToS(Frac(DT));
+		Result := DateToS(Trunc(DT)) + ' ' + TimeToS(Frac(DT), Prec);
 	end;
 end;
 
@@ -1400,7 +1351,7 @@ begin
 {	s := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_ICENTURY, '0');
 	InLineIndex := 1;
 	ICentury := StrToIntDef(ReadToChar(s, InLineIndex, ';'), 3);}
-	ICentury := 30; // D???
+	ICentury := 30; // TODO : Get From API
 	{$WARNINGS ON}
 	{$ELSE}
 	NativeSymbols := '0123456789';

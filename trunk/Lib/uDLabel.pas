@@ -13,7 +13,7 @@ interface
 {$R *.RES}
 uses
 	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl;
 
 type
@@ -123,12 +123,14 @@ procedure Register;
 
 implementation
 
-uses uStrings, uScreen, uError;
+uses uStrings, uScreen, uMsg, uColor;
 
 constructor TDLabel.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
 
+	DoubleBuffered := True;
+	
 	FCanvas := TControlCanvas.Create;
 	TControlCanvas(FCanvas).Control := Self;
 
@@ -290,7 +292,7 @@ begin
 			FOnPaint(Self);
 		except
 			on E: Exception do
-				MessageD(E.Message, mtError, [mbOk]);
+				ErrorMsg(E.Message);
 		end;
 	end;
 	{$ifopt d+}

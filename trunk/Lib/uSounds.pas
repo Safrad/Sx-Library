@@ -13,7 +13,7 @@ interface
 uses
 	uTypes, uDForm, uWave,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus;
+	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs;
 
 type
 	TfSounds = class(TDForm)
@@ -54,8 +54,6 @@ type
 		procedure PopupMenuSoundsPopup(Sender: TObject);
 	private
 		{ Private declarations }
-		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
-			ARect: TRect; State: TOwnerDrawState);
 	public
 		{ Public declarations }
 	end;
@@ -267,41 +265,44 @@ begin
 		RWOptions(False);
 	end;
 
-	if SoundEnabled = False then Exit;
+	if (SoundEnabled = False) or (not Assigned(Sounds)) then Exit;
 	P := Sounds.Get(SoundKind);
-	if P.Wave = nil then
-		WaveReadFromFile(P.Wave, FullDir(P.FileName));
-	if P.Enabled and (P.Wave <> nil) then
+	if P.Enabled then
 	begin
-		if WavePlayer = nil then
+		if P.Wave = nil then
+			WaveReadFromFile(P.Wave, FullDir(P.FileName));
+		if (P.Wave <> nil) then
 		begin
-			NewSize := 2{Convert from Mono to Stereo} * (P.Wave.BytesFollowing + 8);
-			if SoundBufferSize < NewSize then
+			if WavePlayer = nil then
 			begin
-				FreeMem(SoundBuffer);
-				SoundBufferSize := NewSize;
-				GetMem(SoundBuffer, SoundBufferSize);
-			end;
-			SoundLR(SoundLeft, SoundRight, CX, CXCount);
-			ConvertChannels(P.Wave, SoundBuffer, 2, SoundLeft, SoundRight);
-			PlayWave(SoundBuffer);
-		end
-		else if ((SoundReduce = False) or (P.Used = False)) then
-		begin
-			if SoundStereo and (CX <> Center) then
-			begin
-	//			i := MaxVolume div 2;
-				Pan := RoundDiv(MaxVolume * CX, CXCount);
-				WavePlayer.VolumeLeft := (MaxVolume - Pan) div 2;
-				WavePlayer.VolumeRight := Pan div 2;
+				NewSize := 2{Convert from Mono to Stereo} * (P.Wave.BytesFollowing + 8);
+				if SoundBufferSize < NewSize then
+				begin
+					FreeMem(SoundBuffer);
+					SoundBufferSize := NewSize;
+					GetMem(SoundBuffer, SoundBufferSize);
+				end;
+				SoundLR(SoundLeft, SoundRight, CX, CXCount);
+				ConvertChannels(P.Wave, SoundBuffer, 2, SoundLeft, SoundRight);
+				PlayWave(SoundBuffer);
 			end
-			else
+			else if ((SoundReduce = False) or (P.Used = False)) then
 			begin
-				WavePlayer.VolumeLeft := MaxVolume div 2;
-				WavePlayer.VolumeRight := MaxVolume div 2;
+				if SoundStereo and (CX <> Center) then
+				begin
+		//			i := MaxVolume div 2;
+					Pan := RoundDiv(MaxVolume * CX, CXCount);
+					WavePlayer.VolumeLeft := (MaxVolume - Pan) div 2;
+					WavePlayer.VolumeRight := Pan div 2;
+				end
+				else
+				begin
+					WavePlayer.VolumeLeft := MaxVolume div 2;
+					WavePlayer.VolumeRight := MaxVolume div 2;
+				end;
+				WavePlayer.Play(P.Wave);
+				P.Used := True;
 			end;
-			WavePlayer.Play(P.Wave);
-			P.Used := True;
 		end;
 	end;
 end;
@@ -374,25 +375,19 @@ begin
 		ButtonCancel.Top - FormBorder - L);
 end;
 
-procedure TfSounds.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
-	ARect: TRect; State: TOwnerDrawState);
-begin
-	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
-end;
-
 procedure TfSounds.FormCreate(Sender: TObject);
 var
 	B: BG;
 begin
 	Background := baGradient;
-	MenuSet(PopupMenuSounds, AdvancedDraw);
+	MenuSet(PopupMenuSounds);
 
 	OpenDialog1.Filter := 'Sound Wave (*.wav)|*.wav|Any file (*.*)|*.*';
 
 	DViewSounds.ColumnCount := 2;
 	DViewSounds.Columns[0].Caption := 'Event';
 	DViewSounds.Columns[0].Width := 114;
-	DViewSounds.Columns[1].Caption := 'Sound File Name';
+	DViewSounds.Columns[1].Caption := 'File Name';
 	DViewSounds.Columns[1].Width := 238;
 
 	if Assigned(MainIni) then

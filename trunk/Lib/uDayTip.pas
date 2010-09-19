@@ -12,7 +12,7 @@ interface
 
 uses
 	uTypes,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, uDButton, ExtCtrls, uDForm;
 
 type

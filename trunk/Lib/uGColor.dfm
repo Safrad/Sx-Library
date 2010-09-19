@@ -48,13 +48,13 @@ object fGColor: TfGColor
     Pen.Width = 2
     Shape = stSquare
   end
-  object LabelNow: TLabel
+  object LabelPrevious: TLabel
     Left = 8
-    Top = 240
+    Top = 216
     Width = 49
     Height = 19
     AutoSize = False
-    Caption = 'Now'
+    Caption = 'Previous'
     Transparent = True
     Layout = tlCenter
   end
@@ -80,7 +80,7 @@ object fGColor: TfGColor
   end
   object LabelCurrent: TLabel
     Left = 8
-    Top = 216
+    Top = 240
     Width = 49
     Height = 19
     AutoSize = False
@@ -162,24 +162,7 @@ object fGColor: TfGColor
     ParentFont = False
     Transparent = True
   end
-  object PanelNowColor: TDButton
-    Left = 64
-    Top = 240
-    Width = 145
-    Height = 19
-    Caption = '&$00000000'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
-    Font.Style = []
-    ParentFont = False
-    PopupMenu = PopupMenu1
-    TabOrder = 24
-    Color = clBlack
-  end
-  object PanelCurColor: TDButton
+  object PanelPrevious: TDButton
     Left = 64
     Top = 216
     Width = 145
@@ -192,14 +175,31 @@ object fGColor: TfGColor
     Font.Pitch = fpFixed
     Font.Style = []
     ParentFont = False
+    PopupMenu = PopupMenu1
     TabOrder = 23
-    OnClick = PanelCurColorClick
+    OnClick = PanelPreviousClick
+    Color = clBlack
+  end
+  object PanelCurrent: TDButton
+    Left = 64
+    Top = 240
+    Width = 145
+    Height = 19
+    Caption = '&$00000000'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Courier New'
+    Font.Pitch = fpFixed
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 24
     Color = clBlack
   end
   object PanelNowBitColor: TDButton
-    Left = 112
+    Left = 120
     Top = 264
-    Width = 97
+    Width = 89
     Height = 19
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
@@ -210,7 +210,7 @@ object fGColor: TfGColor
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
-    TabOrder = 19
+    TabOrder = 29
     OnClick = PanelNowBitColorClick
     Color = clBlack
   end
@@ -231,14 +231,12 @@ object fGColor: TfGColor
     OnClick = PanelDefaultColorClick
     Color = clBlack
   end
-  object EditR: TEdit
+  object EditR: TDEdit
     Left = 64
     Top = 8
     Width = 33
     Height = 19
-    AutoSize = False
     TabOrder = 4
-    Text = '$FFF'
     OnChange = EditRGBAChange
   end
   object ButtonR: TDButton
@@ -305,15 +303,13 @@ object fGColor: TfGColor
     TabOrder = 2
     OnClick = ButtonCancelClick
   end
-  object EditG: TEdit
+  object EditG: TDEdit
     Tag = 1
     Left = 64
     Top = 32
     Width = 33
     Height = 19
-    AutoSize = False
     TabOrder = 7
-    Text = '$FFF'
     OnChange = EditRGBAChange
   end
   object ButtonG: TDButton
@@ -332,15 +328,13 @@ object fGColor: TfGColor
     TabOrder = 13
     OnClick = ButtonRGBAClick
   end
-  object EditB: TEdit
+  object EditB: TDEdit
     Tag = 2
     Left = 64
     Top = 56
     Width = 33
     Height = 19
-    AutoSize = False
     TabOrder = 10
-    Text = '$FFF'
     OnChange = EditRGBAChange
   end
   object ButtonB: TDButton
@@ -359,15 +353,13 @@ object fGColor: TfGColor
     TabOrder = 14
     OnClick = ButtonRGBAClick
   end
-  object EditS: TEdit
+  object EditS: TDEdit
     Tag = 5
     Left = 64
     Top = 152
     Width = 33
     Height = 19
-    AutoSize = False
     TabOrder = 20
-    Text = '$FFF'
     OnChange = EditRGBAChange
   end
   object PanelH: TPanel
@@ -377,7 +369,7 @@ object fGColor: TfGColor
     Height = 20
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    TabOrder = 16
+    TabOrder = 17
     object ImageH: TDImage
       Tag = 3
       Left = 0
@@ -400,7 +392,7 @@ object fGColor: TfGColor
     Height = 20
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    TabOrder = 18
+    TabOrder = 19
     object ImageL: TDImage
       Tag = 4
       Left = 0
@@ -419,11 +411,11 @@ object fGColor: TfGColor
   object ComboBoxBitDepth: TComboBox
     Left = 64
     Top = 264
-    Width = 49
+    Width = 57
     Height = 21
     Style = csDropDownList
     ItemHeight = 13
-    TabOrder = 28
+    TabOrder = 25
     OnChange = ComboBoxBitDepthChange
   end
   object LabelH: TDLabel
@@ -436,15 +428,13 @@ object fGColor: TfGColor
     Displ.Format = '88'
     Transparent = True
   end
-  object EditL: TEdit
+  object EditL: TDEdit
     Tag = 4
     Left = 64
     Top = 128
     Width = 33
     Height = 19
-    AutoSize = False
-    TabOrder = 17
-    Text = '$FFF'
+    TabOrder = 18
     OnChange = EditRGBAChange
   end
   object LabelS: TDLabel
@@ -535,15 +525,13 @@ object fGColor: TfGColor
       OnMouseMove = ImageMouseMove
     end
   end
-  object EditH: TEdit
+  object EditH: TDEdit
     Tag = 3
     Left = 64
     Top = 104
     Width = 33
     Height = 19
-    AutoSize = False
-    TabOrder = 15
-    Text = '$FFF'
+    TabOrder = 16
     OnChange = EditRGBAChange
   end
   object PanelS: TPanel
@@ -572,27 +560,25 @@ object fGColor: TfGColor
   object ComboBoxNF: TComboBox
     Left = 64
     Top = 288
-    Width = 81
+    Width = 97
     Height = 21
     Style = csDropDownList
     ItemHeight = 13
     ItemIndex = 0
-    TabOrder = 29
+    TabOrder = 30
     Text = 'Decadic'
     OnChange = ComboBoxNFChange
     Items.Strings = (
       'Decadic'
       'Hexadecimal')
   end
-  object EditRGBA: TEdit
+  object EditRGBA: TDEdit
     Tag = -1
     Left = 64
     Top = 80
-    Width = 65
+    Width = 73
     Height = 19
-    AutoSize = False
-    TabOrder = 30
-    Text = '$FFFFFFFF'
+    TabOrder = 15
     OnChange = EditRGBAChange
   end
   object PopupMenu1: TPopupMenu

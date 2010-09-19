@@ -6,16 +6,6 @@
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-{*******************************************************}
-{                                                       }
-{       Borland Delphi Runtime Library                  }
-{       Windows Messages and Types                      }
-{                                                       }
-{       Copyright (C) 1991,99 Inprise Corporation       }
-{                                                       }
-{*******************************************************}
-
-
 unit uDButton;
 
 interface
@@ -34,6 +24,7 @@ type
 	private
 		FBmpOut: TDBitmap;
 		{$ifopt d+}FFillCount, FPaintCount: UG;{$endif}
+		FSmall: BG;
 
 		FHighlight: THighlight;
 		FHighNow: Boolean;
@@ -112,7 +103,7 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uScreen, uSysInfo, uMenus, uStrings,
+	uGraph, uScreen, uSysInfo, uMenus, uStrings, uColor,
 	uSounds;
 
 { TDButton }
@@ -124,8 +115,9 @@ var
 	hR: THandle;
 //	Po: array[0..9] of tagPOINT;
 begin
+	FSmall := (Width <= IconSize) and (Height <= IconSize);
 	if RegCap = False then Exit;
-	if (Width > 32) and (Height > 20) then
+	if not FSmall then
 	begin
 (*		Po[0].x := 0;
 		Po[0].y := 0;
@@ -239,7 +231,7 @@ begin
 	if ADefault <> IsFocused then
 	begin
 		IsFocused := ADefault;
-		Refresh;
+		Repaint;
 	end;
 end;
 
@@ -353,8 +345,11 @@ begin
 	Co[2] := Co[0];
 	Co[3] := Co[1];
 //	{$ifopt d-}
-	FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-		gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+	if FSmall then
+		FBmpOut.Bar(Recta, FColor, ef16)
+	else
+		FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 //	{$else}
 //	FBmpOut.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
 //	{$endif}
@@ -381,7 +376,7 @@ begin
 
 	if Orient <> -1 then
 	begin
-		FBmpOut.DrawArrow(Recta.Left - 1, Recta.Top - 1, Recta.Right - 0, Recta.Bottom - 0, FDown, FHighNow and Enabled, Orient, ef16);
+		FBmpOut.DrawArrow(Recta.Left - 1, Recta.Top - 1, Recta.Right - 0, Recta.Bottom - 0, FDown, FHighNow and FEnabled, Orient, ef16);
 	end
 	else
 	begin
@@ -499,14 +494,14 @@ begin
 			end;
 			end;
 
-			if Enabled then
+			if FEnabled then
 				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, ef16)
 			else
 				FBmpOut.Bmp(GlyphPos.x, GlyphPos.y, FGlyph, ef04);
 		end;
 
 
-		if not Enabled then
+		if not FEnabled then
 		begin
 			FBmpOut.Canvas.Font.Color := clDepth[1];
 			FBmpOut.Canvas.Brush.Color := clDepth[3];
@@ -546,7 +541,7 @@ begin
 			FBmpOut.Width - 3, FBmpOut.Height - 3, E, ef16);}
 	end;
 
-	if (Orient = -1) and FHighNow and Enabled then
+	if (Orient = -1) and FHighNow and FEnabled then
 	begin
 		Co[0] := ColorDiv(FColor, 21504);
 		Co[1] := clBlack;
@@ -557,95 +552,40 @@ begin
 
 	if IsFocused and IsDefault then
 	begin
-{		case FHighlight of
-		hlRect:
-		begin
-			FBmpOut.Rec24(2, 2,
-				FBmpOut.Width - 3, FBmpOut.Height - 3, clHighlight, ef12);
-			FBmpOut.Rec24(3, 3,
-				FBmpOut.Width - 4, FBmpOut.Height - 4, clHighlight, ef12);
-		end;
-		hlBar:
-		begin
-			FBmpOut.Bar(clNone, 2, 2,
-				FBmpOut.Width - 3, FBmpOut.Height - 3, clHighlight, ef08);
-		end;
-		hlRectMov:
-		begin
-			y := Min(Width, Height) and $fffffffe - 2;
-			x := FHighClock mod y;
-			if x > (y div 2) then x := y - x;
-			if x < (y div 2) then
-			begin
-				Inc(x);
-				FBmpOut.Bar(clNone, x, x,
-					FBmpOut.Width - x - 1, FBmpOut.Height - x - 1, clHighlight, ef08);
-			end;
-		end;
-		hlBarHorz:
-			FBmpOut.GenRGB(clNone, gfSpecHorz, FHighClock, ef08);
-		hlBarVert:
-			FBmpOut.GenRGB(clNone, gfSpecVert, FHighClock, ef08);
-		hlUnderLight:
-		begin
-			Co[1] := ColorDiv(FColor, 32768  * LinearMax(FHighClock, 6) div 6);
-			Co[0] := clBlack;
-			Co[2] := Co[0];
-			Co[3] := Co[1];
-			FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
-		end;
-		end;}
-//		if FTimer.Clock < 3 * PerformanceFrequency then
-		begin
-			FBmpOut.Bar(Border, Border,
-				FBmpOut.Width - 1 - Border, FBmpOut.Height - 1 - Border, clHighlight, ef08);
-		end
-(*		else
-		begin
-			// Animation
-			SizeX := Width - 2 * Border;
-			SizeY := Height - 2 * Border;
-			x := (SizeX * (FTimer.Clock - 3 * PerformanceFrequency) div (2 * PerformanceFrequency)) mod SizeX;
-			y := (SizeY * (FTimer.Clock - 3 * PerformanceFrequency) div (2 * PerformanceFrequency)) mod SizeY;
-			if x >= (SizeX div 2) then
-				x := SizeX - x;
-			if y >= (Height div 2) then
-				y := SizeY - y;
-//			if (x < SizeX div 2) and (y < SizeY div 2) then
-			begin
-				FBmpOut.Bar(Border + x - 1, Border + y - 1,
-					FBmpOut.Width - x - 0 - Border, FBmpOut.Height - y - 0 - Border, clHighlight, ef08);
-			end;
-
-{			y := MinXY and $fffffffe - 2;
-			x := FHighClock mod y;
-			if x > (y div 2) then
-				x := y - x;
-			if x < (y div 2) then
-			begin
-				FBmpOut.Bar(clNone, x, x,
-					FBmpOut.Width - x - 1, FBmpOut.Height - x - 1, clHighlight, ef08);
-			end;}
-		end;*)
+		FBmpOut.Bar(Border, Border, FBmpOut.Width - 1 - Border, FBmpOut.Height - 1 - Border, clHighlight, ef08);
 	end;
 
-	if IsDown then
-		FBmpOut.Canvas.Pen.Color := clDepth[1]
-	else
-		FBmpOut.Canvas.Pen.Color := clDepth[3];
-	FBmpOut.Canvas.RoundRect(0, 0, Width, Height, FEllipseSize + 2, FEllipseSize + 2);
-	if IsDown then
-		FBmpOut.Canvas.Pen.Color := clDepth[3]
-	else
-		FBmpOut.Canvas.Pen.Color := clDepth[1];
-	FBmpOut.Canvas.RoundRect(1, 1, Width - 1, Height - 1, FEllipseSize, FEllipseSize);
+	begin
+		if IsDown then
+			FBmpOut.Canvas.Pen.Color := clDepth[1]
+		else if not FSmall then
+			FBmpOut.Canvas.Pen.Color := clDepth[3]
+		else
+			FBmpOut.Canvas.Pen.Color := FColor;
+
+		if (FSmall = False) then
+			FBmpOut.Canvas.RoundRect(0, 0, Width, Height, FEllipseSize + 2, FEllipseSize + 2)
+		else
+			FBmpOut.Canvas.Rectangle(0, 0, Width, Height);
+
+		if IsDown then
+			FBmpOut.Canvas.Pen.Color := clDepth[3]
+		else if not FSmall then
+			FBmpOut.Canvas.Pen.Color := clDepth[1]
+		else
+			FBmpOut.Canvas.Pen.Color := FColor;
+		if (FSmall = False) then
+			FBmpOut.Canvas.RoundRect(1, 1, Width - 1, Height - 1, FEllipseSize, FEllipseSize)
+		else
+			FBmpOut.Canvas.Rectangle(1, 1, Width - 1, Height - 1);
+	end;
 
 	{$ifopt d+}
 	Inc(FFillCount);
 	Inc(FPaintCount);
-	FBmpOut.Canvas.Brush.Style := bsClear;
+{	FBmpOut.Canvas.Brush.Style := bsClear;
 	FBmpOut.Canvas.Font.Color := clWhite;
-	FBmpOut.Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));
+	FBmpOut.Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));}
 	{$endif}
 	FBmpOut.DrawToDC(Message.DrawItemStruct.hDC, 0, 0);
 	Message.Result := 1;

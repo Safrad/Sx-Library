@@ -90,8 +90,8 @@ type
 implementation
 
 uses
-	Dialogs, Controls, Windows,
-	uGetStr, uError, uMath, uStrings;
+	Controls, Windows,
+	uGetStr, uMsg, uError, uMath, uStrings;
 
 procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: U4);
 begin
@@ -257,8 +257,7 @@ end;
 function TDb.DbDelete: Boolean;
 var i: Integer;
 begin
-	if MessageD('Delete item' + LineSep + DbItems[DbItemIndex].Name,
-		mtConfirmation, [mbYes, mbNo]) = mbYes then
+	if Confirmation('Delete item?' + LineSep + DbItems[DbItemIndex].Name, [mbYes, mbNo]) = mbYes then
 	begin
 		Result := True;
 		CopyItem(DbItemIndex, 0);
@@ -387,7 +386,6 @@ var
 	i: Integer;
 begin
 	Result := False;
-	IgnoreAll := iaNone;
 	LRetry:
 	AssignFile(DbFile, FName);
 	if FileExists(FName) then

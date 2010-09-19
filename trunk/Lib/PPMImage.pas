@@ -23,7 +23,7 @@ type
 implementation
 
 uses
-	uTypes, uMath, uParser, uDBitmap, uInput, uStrings,
+	uTypes, uMath, uParser, uParserMsg, uDBitmap, uInput, uStrings, uColor,
 	SysUtils;
 
 const MaxLineSize = 70;
@@ -105,7 +105,7 @@ begin
 		for i := 0 to H - 1 do
 		begin
 			P := ScanLine[i];
-			Move(Buf^,	P^, 3 * W);
+			Move(Buf^, P^, 3 * W);
 //			Inc(SG(P), 3 * W);
 			Inc(SG(Buf), 3 * W);
 		end;
@@ -156,7 +156,7 @@ begin
 		Parser.Skip(W * H * BPC * 3);
 	end;
 	Parser.Free;
-	ShowAndClearErrors;
+	ParserMsgShowAndClear;
 	FreeMem(Buffer);
 end;
 

@@ -1423,7 +1423,7 @@ object fDayTip: TfDayTip
     Top = 168
     Width = 329
     Height = 17
-    Caption = '/'
+    Caption = '&Show Tips On Startup'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -1448,7 +1448,7 @@ object fDayTip: TfDayTip
     Top = 192
     Width = 89
     Height = 25
-    Caption = '/'
+    Caption = '&Previous Tip'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -1463,7 +1463,7 @@ object fDayTip: TfDayTip
     Top = 192
     Width = 89
     Height = 25
-    Caption = '/'
+    Caption = '&Next Tip'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -1479,7 +1479,7 @@ object fDayTip: TfDayTip
     Width = 89
     Height = 25
     Cancel = True
-    Caption = '/'
+    Caption = '&Close'
     Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText

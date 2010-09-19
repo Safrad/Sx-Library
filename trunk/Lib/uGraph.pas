@@ -11,52 +11,13 @@ unit uGraph;
 interface
 
 uses
-	uTypes,
+	uTypes, uColor,
 	Windows, Graphics, StdCtrls, Classes, SysUtils;
 
-const
-	clMoneyGreen = TColor($C0DCC0);
-	clSkyBlue = TColor($F0CAA6);
-	clCream = TColor($F0FBFF);
-	clMedGray = TColor($A4A0A0);
-
-	clFlesh = TColor($98ADFF);
-	clBaize = TColor($818000);
-	clWater = TColor($D1D856);
-
-	clDepth: array[0..3] of TColor = (cl3DDkShadow{Black}, clBtnShadow{Gray}, cl3DLight{Silver}, clBtnHighlight{White});
-
-	MaxSpectrum2 = 762;
-	MaxFireColor = 765;
-
-procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
-
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
-function ColorToHTML(Color: TColor): string;
-//function ShadowColor(C: TColor): TColor;
-//function ShadowColor2(C1, C2: TColor): TColor;
-function ColorDiv(Color: TColor; const D: Integer): TColor;
-function ColorRB(C: TColor): TColor;
-function LighterColor(Color: TColor): TColor;
-function DarkerColor(Color: TColor): TColor;
-function GrayColor(X: SG): TColor;
-function SpectrumColor(X: Integer): TColor;
-function SpectrumColor2(X: Integer): TColor;
-function FireColor(X: Integer): TColor;
-function NegColor(C: TColor): TColor;
-function NegMonoColor(C: TColor): TColor;
 
-function MixColors(C1, C2: TColor): TColor; overload;
-function MixColors(C1, C2: TRGBA): TRGBA; overload;
-function MixColors(C1, C2: TRGB): TRGB; overload;
-
-function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
-function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
-function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
-
-function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
-function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
-function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
+procedure PushFont(const Font: TFont);
+procedure PopFont(const Font: TFont);
 
 procedure ShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
@@ -89,374 +50,40 @@ procedure InflatePoint(var P: TPoint; dx, dy: SG); overload;
 implementation
 
 uses
-	Math,
+	Math, Menus,
 	uStrings, uError, uGetInt, uMath;
-
-procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
-var T: SG;
-begin
-	case Angle and 3 of
-	// Up
-	1: // Left
-	begin
-		T := X;
-		X := Y;
-		Y := MaxX - T;
-	end;
-	2: // Down
-	begin
-		X := MaxX - X;
-		Y := MaxY - Y;
-	end;
-	3: // Right
-	begin
-		T := X;
-		X := MaxY - Y;
-		Y := T;
-	end;
-	end;
-end;
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 begin
 	Result := (((PixelFormat * X  + 31) and $FFFFFFE0) div 8) * Y;
 end;
-(*-------------------------------------------------------------------------*)
-function ColorToHTML(Color: TColor): string;
-var C: TRGBA;
+
+var
+	FontStack: TFont;
+
+procedure CopyFont(const FD, FS: TFont);
 begin
-	C.L := ColorToRGB(Color);
-	Result := '#' +
-		IntToHex(C.R, 2) +
-		IntToHex(C.G, 2) +
-		IntToHex(C.B, 2);
-end;
-(*-------------------------------------------------------------------------*)
-{function ShadowColor(C: TColor): TColor;
-begin
-	case C of
-	clNone:
-		Result := clNone;
-	clWindowText, clBtnShadow:
-		Result := clBtnHighlight;
-	clBtnHighlight:
-		Result := clBtnShadow;
-	else
-	begin
-		C := ColorToRGB(C);
-		TRGBA(Result).A := 0;
-		if (TRGBA(C).R <= 128) and (TRGBA(C).G <= 128) and (TRGBA(C).B <= 128) then
-		begin
-			if TRGBA(C).B <= 127 then TRGBA(Result).B := TRGBA(C).B shl 1 else TRGBA(Result).B := 255;
-			if TRGBA(C).G <= 127 then TRGBA(Result).G := TRGBA(C).G shl 1 else TRGBA(Result).G := 255;
-			if TRGBA(C).R <= 127 then TRGBA(Result).R := TRGBA(C).R shl 1 else TRGBA(Result).R := 255;
-		end
-		else
-		begin
-			TRGBA(Result).B := (TRGBA(C).B + 1) shr 1;
-			TRGBA(Result).G := (TRGBA(C).G + 1) shr 1;
-			TRGBA(Result).R := (TRGBA(C).R + 1) shr 1;
-		end;
-	end;
-	end;
-end;}
-(*-------------------------------------------------------------------------*)
-{function ShadowColor2(C1, C2: TColor): TColor;
-begin
-	case C1 of
-	clNone:
-		Result := clNone;
-	clBtnShadow:
-		Result := clBtnHighlight;
-	clBtnHighlight:
-		Result := clBtnShadow;
-	else
-	begin
-		C1 := ColorToRGB(C1);
-		C2 := ColorToRGB(C2);
-		TRGBA(Result).A := 0;
-		if (TRGBA(C1).R <= 128) and (TRGBA(C1).G <= 128) and (TRGBA(C1).B <= 128) then
-		begin
-			if TRGBA(C1).B <= 127 then TRGBA(Result).B := TRGBA(C1).B shl 1 else TRGBA(Result).B := 255;
-			if TRGBA(C1).G <= 127 then TRGBA(Result).G := TRGBA(C1).G shl 1 else TRGBA(Result).G := 255;
-			if TRGBA(C1).R <= 127 then TRGBA(Result).R := TRGBA(C1).R shl 1 else TRGBA(Result).R := 255;
-		end
-		else
-		begin
-			TRGBA(Result).B := (TRGBA(C1).B + TRGBA(C2).B + 1) shr 2;
-			TRGBA(Result).G := (TRGBA(C1).G + TRGBA(C2).G + 1) shr 2;
-			TRGBA(Result).R := (TRGBA(C1).R + TRGBA(C2).R + 1) shr 2;
-		end;
-	end;
-	end;
-end; }
-(*-------------------------------------------------------------------------*)
-function ColorDiv(Color: TColor; const D: Integer): TColor;
-var R, G, B: Integer;
-begin
-	Color := ColorToRGB(Color);
-	R := D * TRGBA(Color).R shr 16;
-	G := D * TRGBA(Color).G shr 16;
-	B := D * TRGBA(Color).B shr 16;
-	if R > 255 then R := 255;
-	if G > 255 then G := 255;
-	if B > 255 then B := 255;
-	TRGBA(Result).R := R;
-	TRGBA(Result).G := G;
-	TRGBA(Result).B := B;
-	TRGBA(Result).A := 0;
+	FD.Name := FS.Name;
+	FD.PixelsPerInch := FS.PixelsPerInch;
+	FD.Charset := FS.Charset;
+	FD.Height := FS.Height;
+	FD.Color := FS.Color;
+	FD.Pitch := FS.Pitch;
+	FD.Style := FD.Style;
 end;
 
-function LighterColor(Color: TColor): TColor;
+procedure PushFont(const Font: TFont);
 begin
-	Result := ColorDiv(Color, 4 * 65536 div 3);
+	CopyFont(FontStack, Font);
+//	FontStack.Assign(Font);
 end;
 
-function DarkerColor(Color: TColor): TColor;
+procedure PopFont(const Font: TFont);
 begin
-	Result := ColorDiv(Color, 2 * 65536 div 3);
-end;
-(*-------------------------------------------------------------------------*)
-function ColorRB(C: TColor): TColor;
-begin
-	TRGBA(Result).R := TRGBA(C).B;
-	TRGBA(Result).G := TRGBA(C).G;
-	TRGBA(Result).B := TRGBA(C).R;
-	TRGBA(Result).A := TRGBA(C).A;
-end;
-(*-------------------------------------------------------------------------*)
-function GrayColor(X: SG): TColor;
-begin
-	TRGBA(Result).R := X;
-	TRGBA(Result).G := X;
-	TRGBA(Result).B := X;
-	TRGBA(Result).A := 0;
+	CopyFont(Font, FontStack);
+//	Font.Assign(FontStack);
 end;
 
-function SpectrumColor(X: SG): TColor;
-//0..255..510..765..1020..1275..1529
-begin
-	if (X < 0) or (X > 1529) then X := X mod 1530;
-	TRGBA(Result).A := 0;
-	case X of
-	0..255:
-	begin
-		TRGBA(Result).R := 255;
-		TRGBA(Result).G := X;
-		TRGBA(Result).B := 0;
-	end;
-	256..510:
-	begin
-		TRGBA(Result).R := 510 - X;
-		TRGBA(Result).G := 255;
-		TRGBA(Result).B := 0;
-	end;
-	511..765:
-	begin
-		TRGBA(Result).R := 0;
-		TRGBA(Result).G := 255;
-		TRGBA(Result).B := X - 510;
-	end;
-	766..1020:
-	begin
-		TRGBA(Result).R := 0;
-		TRGBA(Result).G := 1020 - X;
-		TRGBA(Result).B := 255;
-	end;
-	1021..1275:
-	begin
-		TRGBA(Result).R := X - 1020;
-		TRGBA(Result).G := 0;
-		TRGBA(Result).B := 255;
-	end;
-	else{1276..1529:}
-	begin
-		TRGBA(Result).R := 255;
-		TRGBA(Result).G := 0;
-		TRGBA(Result).B := 1530 - X;
-	end;
-	end;
-end;
-(*-------------------------------------------------------------------------*)
-function SpectrumColor2(X: Integer): TColor;
-//0..255..510..765..1020..1275..1529
-begin
-	TRGBA(Result).A := 0;
-	case X of
-	0..127:
-	begin
-		TRGBA(Result).R := 255;
-		TRGBA(Result).G := 128 + X;
-		TRGBA(Result).B := 0;
-	end;
-	128..254:
-	begin
-		TRGBA(Result).R := 509 - X;
-		TRGBA(Result).G := 255;
-		TRGBA(Result).B := 0;
-	end;
-	255..381:
-	begin
-		TRGBA(Result).R := 0;
-		TRGBA(Result).G := 255;
-		TRGBA(Result).B := X - 126;
-	end;
-	382..508:
-	begin
-		TRGBA(Result).R := 0;
-		TRGBA(Result).G := 763 - X;
-		TRGBA(Result).B := 255;
-	end;
-	509..635:
-	begin
-		TRGBA(Result).R := X - 380;
-		TRGBA(Result).G := 0;
-		TRGBA(Result).B := 255;
-	end;
-	else{636..762:}
-	begin
-		if X > 762 then X := 762;
-		TRGBA(Result).R := 255;
-		TRGBA(Result).G := 0;
-		TRGBA(Result).B := 1017 - X;
-	end;
-	end;
-end;
-(*-------------------------------------------------------------------------*)
-function FireColor(X: Integer): TColor;
-begin
-	TRGBA(Result).A := 0;
-	case X of
-	Low(X)..255:
-	begin
-		if X < 0 then X := 0;
-		TRGBA(Result).R := X;
-		TRGBA(Result).G := 0;
-		TRGBA(Result).B := 0;
-	end;
-	256..510:
-	begin
-		TRGBA(Result).R := 255;
-		TRGBA(Result).G := X - 255;
-		TRGBA(Result).B := 0;
-	end;
-	else
-	begin
-		if X > 765 then X := 765;
-		TRGBA(Result).R := 255;
-		TRGBA(Result).G := 255;
-		TRGBA(Result).B := X - 510;
-	end;
-	end;
-end;
-(*-------------------------------------------------------------------------*)
-function NegColor(C: TColor): TColor;
-begin
-	C := ColorToRGB(C);
-	TRGBA(Result).A := 0;
-	if TRGBA(C).R > 127 then TRGBA(Result).R := 0 else TRGBA(Result).R := 255;
-	if TRGBA(C).G > 127 then TRGBA(Result).G := 0 else TRGBA(Result).G := 255;
-	if TRGBA(C).B > 127 then TRGBA(Result).B := 0 else TRGBA(Result).B := 255;
-end;
-(*-------------------------------------------------------------------------*)
-function NegMonoColor(C: TColor): TColor;
-begin
-	C := ColorToRGB(C);
-	if 2 * TRGBA(C).R + 4 * TRGBA(C).G + 1 * TRGBA(C).B > 768 then
-		Result := $00000000
-	else
-		Result := $00FFFFFF;
-end;
-(*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TColor): TColor; overload;
-begin
-{	if C1 = C2 then
-	begin
-		Result := C1;
-		Exit;
-	end;}
-	if ((C1 = clBtnShadow) and (C2 = clBtnHighlight)) or
-		((C2 = clBtnShadow) and (C1 = clBtnHighlight)) then
-		Result := cl3DLight
-	else
-	if ((C1 = cl3DDkShadow) and (C2 = cl3DLight)) or
-		((C2 = cl3DDkShadow) and (C1 = cl3DLight)) then
-		Result := clBtnShadow
-	else
-	begin
-		C1 := ColorToRGB(C1);
-		C2 := ColorToRGB(C2);
-		TRGBA(Result).R := (TRGBA(C1).R + TRGBA(C2).R) shr 1;
-		TRGBA(Result).G := (TRGBA(C1).G + TRGBA(C2).G) shr 1;
-		TRGBA(Result).B := (TRGBA(C1).B + TRGBA(C2).B) shr 1;
-		TRGBA(Result).A := 0;
-	end;
-end;
-
-function MixColors(C1, C2: TRGBA): TRGBA; overload;
-begin
-{	if C1.L = C2.L then
-	begin
-		Result := C1;
-		Exit;
-	end;}
-	Result.R := (C1.R + C2.R) shr 1;
-	Result.G := (C1.G + C2.G) shr 1;
-	Result.B := (C1.B + C2.B) shr 1;
-	Result.A := (C1.B + C2.B) shr 1;
-end;
-
-function MixColors(C1, C2: TRGB): TRGB; overload;
-begin
-	Result.R := (C1.R + C2.R) shr 1;
-	Result.G := (C1.G + C2.G) shr 1;
-	Result.B := (C1.B + C2.B) shr 1;
-end;
-(*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
-begin
-	C1 := ColorToRGB(C1);
-	C2 := ColorToRGB(C2);
-	TRGBA(Result).R := (Per1 * TRGBA(C1).R + Per2 * TRGBA(C2).R + 32768) shr 16;
-	TRGBA(Result).G := (Per1 * TRGBA(C1).G + Per2 * TRGBA(C2).G + 32768) shr 16;
-	TRGBA(Result).B := (Per1 * TRGBA(C1).B + Per2 * TRGBA(C2).B + 32768) shr 16;
-	TRGBA(Result).A := 0;
-end;
-(*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
-begin
-	Assert((Per1 >= 0) and (Per1 <= 65536));
-	Assert((Per2 >= 0) and (Per2 <= 65536));
-	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
-	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
-	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
-	Result.A := (Per1 * C1.A + Per2 * C2.A + 32768) shr 16;
-end;
-(*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
-begin
-	Assert((Per1 >= 0) and (Per1 <= 65536));
-	Assert((Per2 >= 0) and (Per2 <= 65536));
-	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
-	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
-	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
-end;
-(*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
-begin
-	Result := MixColors(C1, C2, Per, 65536 - Per);
-end;
-(*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
-begin
-	Result := MixColors(C1, C2, Per, 65536 - Per);
-end;
-(*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
-begin
-	Result := MixColors(C1, C2, Per, 65536 - Per);
-end;
-(*-------------------------------------------------------------------------*)
 procedure ShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: string; const CF, CB: TColor);
 var n: SG;
 begin
@@ -575,11 +202,11 @@ begin
 		w := Length(Result);
 		while w > 1 do
 		begin
-			if Canvas.TextWidth(DelCharsF(Result, '&') + '…') <= Width then Break;
+			if Canvas.TextWidth(DelCharsF(Result, '&') + cDialogSuffix) <= Width then Break;
 			Dec(w);
 			SetLength(Result, w);
 		end;
-		Result := Result + '…';
+		Result := Result + cDialogSuffix;
 	end;
 end;
 
@@ -767,4 +394,8 @@ begin
 	Inc(P.Y, dy);
 end;
 
+initialization
+	FontStack := TFont.Create;
+finalization
+	FreeAndNil(FontStack);
 end.

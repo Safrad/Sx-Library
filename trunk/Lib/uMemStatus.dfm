@@ -46,7 +46,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -64,7 +63,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -81,7 +79,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -97,7 +94,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -111,7 +107,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -129,7 +124,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -145,7 +139,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -163,7 +156,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -181,7 +173,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -197,7 +188,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -213,7 +203,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end
@@ -230,7 +219,6 @@ object fMemStatus: TfMemStatus
     FontShadow = 1
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
     ShowHint = True
     ParentShowHint = False
   end

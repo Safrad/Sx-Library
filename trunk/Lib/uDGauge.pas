@@ -13,13 +13,10 @@ interface
 {$R *.RES}
 uses
 	uTypes, uDImage,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDBitmap, uDispl;
 
 type
-	TBuffer = (bfDynamic, bfStatic);
-	TGaugeKind = (gkNormal, gkSpectrum, gkStandard);
-
 	TDGauge = class(TDImage)
 	private
 		{ Private declarations }
@@ -30,11 +27,10 @@ type
 		FFontShadow: SG;
 		FDispl: TDispl;
 
-		FKind: TGaugeKind;
-
 		FMin: Integer;
 		FPosition: Integer;
 		FMax: Integer;
+		FPercentage: SG;
 
 		FBevelInner: TPanelBevel;
 		FBevelOuter: TPanelBevel;
@@ -47,8 +43,6 @@ type
 		procedure DisplChanged(ADispl: TObject);
 		procedure SetDispl(Value: TDispl);
 
-		procedure SetKind(Value: TGaugeKind);
-
 		procedure SetMin(Value: Integer);
 		procedure SetPosition(Value: Integer);
 		procedure SetMax(Value: Integer);
@@ -60,8 +54,7 @@ type
 		procedure SetBorderStyle(Value: TBorderStyle);
 
 		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
-	protected
-		{ Protected declarations }
+		function InitPercentage: BG;
 	public
 		{ Public declarations }
 		constructor Create(AOwner: TComponent); override;
@@ -73,11 +66,9 @@ type
 		property FontShadow: SG read FFontShadow write SetFontShadow default 0;
 		property Displ: TDispl read FDispl write SetDispl;
 
-		property Kind: TGaugeKind read FKind write SetKind default gkNormal;
-
 		property Min: Integer read FMin write SetMin default 0;
-		property Position: Integer read FPosition write SetPosition default 8;
-		property Max: Integer read FMax write SetMax default 16;
+		property Position: Integer read FPosition write SetPosition default 0;
+		property Max: Integer read FMax write SetMax default 100;
 
 		property BevelInner: TPanelBevel read FBevelInner write SetBevelInner default bvLowered;
 		property BevelOuter: TPanelBevel read FBevelOuter write SetBevelOuter default bvRaised;
@@ -93,7 +84,7 @@ procedure Register;
 
 implementation
 
-uses uGraph, uScreen, uFormat;
+uses uGraph, uScreen, uFormat, uColor;
 
 constructor TDGauge.Create(AOwner: TComponent);
 begin
@@ -161,21 +152,30 @@ begin
 	FDispl.Assign(Value);
 end;
 
-procedure TDGauge.SetKind(Value: TGaugeKind);
+function TDGauge.InitPercentage: BG;
+var FPerc: SG;
 begin
-	if FKind <> Value then
+	if FMax <= FMin then
+		FPerc := 0
+	else
+		FPerc:= 1000 * (FPosition - FMin) div (FMax - FMin);
+	if FPercentage <> FPerc then
 	begin
-		FKind := Value;
-		Invalidate;
-	end;
+		Result := True;
+		FPercentage := FPerc;
+	end
+	else
+		Result := False;
 end;
+
 
 procedure TDGauge.SetMin(Value: Integer);
 begin
 	if FMin <> Value then
 	begin
 		FMin := Value;
-		Invalidate;
+		if InitPercentage then
+			Invalidate;
 	end;
 end;
 
@@ -184,7 +184,8 @@ begin
 	if FPosition <> Value then
 	begin
 		FPosition := Value;
-		Invalidate;
+		if InitPercentage then
+			Invalidate;
 	end;
 end;
 
@@ -193,7 +194,8 @@ begin
 	if FMax <> Value then
 	begin
 		FMax := Value;
-		Invalidate;
+		if InitPercentage then
+			Invalidate;
 	end;
 end;
 
@@ -235,7 +237,7 @@ var
 	Recta, RectaS: TRect;
 	TopColor, BottomColor: TColor;
 	X: Integer;
-	C: TColor;
+//	C: TColor;
 	i: Integer;
 	Posit, MaxPosit: Integer;
 	Co: array[0..3] of TColor;
@@ -314,18 +316,18 @@ begin
 	if MaxPosit = 0 then
 	begin
 		X := Recta.Left;
-		C := SpectrumColor((X - 1) shl 1);
+//		C := SpectrumColor((X - 1) shl 1);
 	end
 	else
 	begin
 		X := Recta.Left + (Recta.Right - Recta.Left) * Posit div MaxPosit;
 		if X > Recta.Right then X := Recta.Right;
-		C := SpectrumColor(512 * Posit div MaxPosit);
+//		C := SpectrumColor(512 * Posit div MaxPosit);
 	end;
 
 	if X > Recta.Left then
 	begin
-		case FKind of
+{		case FKind of
 		gkNormal:
 		begin
 			FBmpOut.Bar(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
@@ -340,15 +342,15 @@ begin
 			end;
 		end;
 		gkStandard:
-		begin
+		begin}
 			Co[0] := LighterColor(clBtnFace);
 			Co[1] := DarkerColor(clBtnFace);
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
-		end;
-		end;
+{		end;
+		end;}
 	end;
 	if X < RectaS.Left then X := RectaS.Left;
 	if (X < RectaS.Right) then
@@ -357,7 +359,7 @@ begin
 			Color, FBackEffect);
 	end;
 
-	Caption := NToS(100 * FPosition div FMax) + '%';
+	Caption := NToS(FPercentage, 1) + '%';
 	if (Caption <> '') {and (FFontEffect<>ef00)} then
 	begin
 		FBmpOut.Canvas.Brush.Color := Color;

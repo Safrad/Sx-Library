@@ -10,7 +10,7 @@ unit uSystem;
 
 interface
 
-uses uTypes, SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, Classes;
+uses uTypes, SysUtils, Forms, ShlObj, Controls, Classes;
 
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: U1): Integer;
@@ -21,16 +21,6 @@ function GetCaption(const FName: TFileName; const Changed: Boolean;
 
 procedure BeginLongOperation(const Background: BG = False);
 procedure EndLongOperation(const Sound: BG = True);
-
-procedure CreateLink(
-	const LinkFileName: WideString;
-	const Target: TFileName;
-	const Arguments: string;
-	const StartIn: string;
-	const HotKey: U2;
-	const Description: string;
-	const IconFileName: TFileName;
-	const IconIdex: Integer);
 
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
 function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
@@ -47,14 +37,14 @@ type
 		DriveLetter: TDriveLetter; // 1
 		Reserved: array[0..9] of U8; // 10
 	end;
-function GetDriveInfo(const Drive: U1): TDriveInfo;
+function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
 
 function SelectFolder(var Path: string; browseTitle: string = ''): BG;
 
 implementation
 
 uses
-	Windows, Math, Dialogs, ShellAPI,
+	Windows, Math,
 	uStrings, uInput, uFiles, uParser, uWave, uMath, uFormat, uError;
 
 function DriveTypeToStr(const DriveType: Integer): string;
@@ -104,11 +94,12 @@ begin
 	Result := Application.Title;
 	if Count > 0 then
 	begin
-		Result := Result + ' - ';
+		if (Index >= 0) or (Count > 1) then
+			Result := Result + ' - ';
 		if Count > 1 then
-			Result := Result + '(' + NToS(Index + 1) + '/' + NToS(Count) + ') ';
-		Result := Result + ShortDir(FName);
+			Result := Result + '(' + NToS(Index + 1) + '/' + NToS(Count) + ')';
 		if Changed then Result := Result + ' *';
+		Result := Result + ' ' + ShortDir(FName);
 		if New <> 0 then Result := Result + ' (New)';
 		if ReadOnly then Result := Result + ' (Read Only)';
 	end;
@@ -127,39 +118,6 @@ begin
 	if Sound then
 		PlayWinSound(wsAsterisk);
 	Screen.Cursor := crDefault;
-end;
-
-procedure CreateLink(
-	const LinkFileName: WideString;
-	const Target: TFileName;
-	const Arguments: string;
-	const StartIn: string;
-	const HotKey: U2;
-	const Description: string;
-	const IconFileName: TFileName;
-	const IconIdex: Integer);
-var
-	MyObject : IUnknown;
-	MySLink : IShellLink;
-	MyPFile : IPersistFile;
-begin
-	MyObject := CreateComObject(CLSID_ShellLink);
-	MySLink := MyObject as IShellLink;
-	MyPFile := MyObject as IPersistFile;
-
-	MySLink.SetArguments(@Arguments[1]);
-	MySLink.SetPath(@Target[1]);
-	MySLink.SetWorkingDirectory(@StartIn[1]);
-	MySLink.SetDescription(@Description[1]);
-	MySLink.SetIconLocation(@IconFileName[1], IconIdex);
-	MySLink.SetHotkey(HotKey);
-
-	if not DirectoryExists(ExtractFileDir(LinkFileName)) then
-		CreateDir(ExtractFileDir(LinkFileName));
-	MyPFile.Save(PWChar(LinkFileName), False);
-	MySLink := nil;
-	MyPFile := nil;
-	MyObject := nil;
 end;
 
 function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
@@ -188,15 +146,15 @@ begin
 	FreeMem(Buf);
 end;
 
-function GetDriveInfo(const Drive: U1): TDriveInfo;
+function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
 var
 	P: array[0..3] of Char;
 	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
 	TotalNumberOfClusters: U4;
 begin
 	FillChar(Result, SizeOf(Result), 0);
-	Result.DriveLetter := Char(Drive + Ord('A'));
-	P[0] := Chr(Drive + Ord('A'));
+	Result.DriveLetter := Drive;
+	P[0] := Drive;
 	P[1] := ':';
 	P[2] := '\';
 	P[3] := CharNul;

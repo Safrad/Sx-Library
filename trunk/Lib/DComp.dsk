@@ -11,11 +11,11 @@ File_8=SourceModule,'C:\My Documents\Delphi\Lib\SortS.inc',0,1,1,1,1,0,0
 File_9=SourceModule,'c:\program files\borland\delphi5\source\vcl\Controls.pas',0,1,763,23,782,0,0
 
 [Modules]
-Module0=C:\My Documents\Delphi\Screen\uContact.pas
+Module0=C:\My Documents\Delphi\Lib\uLog.pas
 Module1=C:\My Documents\Delphi\Lib\DComp.dpk
-Module2=C:\My Documents\Delphi\Lib\uDForm.pas
-Module3=C:\My Documents\Delphi\Lib\uDIni.pas
-Module4=C:\My Documents\Delphi\Lib\uAdd.pas
+Module2=C:\My Documents\Delphi\Screen\uContact.pas
+Module3=C:\My Documents\Delphi\Lib\uDForm.pas
+Module4=C:\My Documents\Delphi\Lib\uDIni.pas
 Module5=C:\My Documents\Delphi\Lib\uDBitmap.pas
 Module6=C:\My Documents\Delphi\Screen\uMessage.pas
 Module7=C:\My Documents\Delphi\Screen\uContacts.pas
@@ -24,13 +24,29 @@ Module9=C:\My Documents\Delphi\Screen\uMain.pas
 Module10=C:\My Documents\Delphi\Screen\Screen.dpr
 Module11=C:\My Documents\Delphi\Caser\uEngine.pas
 Module12=C:\My Documents\Delphi\Caser\uMain.pas
-Module13=C:\My Documents\Delphi\Lib\uDEdit.pas
-Module14=C:\My Documents\Delphi\Caser\Caser.dpr
-Count=15
+Module13=C:\My Documents\Delphi\Caser\Caser.dpr
+Module14=C:\My Documents\Delphi\Calc\uMain.pas
+Module15=C:\My Documents\Delphi\Calc\uFavorites.pas
+Module16=C:\My Documents\Delphi\Lib\uParserMsg.pas
+Module17=C:\My Documents\Delphi\Lib\uTypes.pas
+Module18=C:\My Documents\Delphi\Lib\uDNumber.pas
+Module19=c:\program files\borland\delphi7\source\rtl\Sys\system.pas
+Module20=c:\my documents\delphi\lib\uData.pas
+Module21=c:\my documents\delphi\lib\uParser.pas
+Module22=c:\my documents\delphi\lib\uSplash.pas
+Module23=C:\My Documents\Delphi\Calc\uChart.pas
+Module24=c:\my documents\delphi\lib\uCommon.pas
+Module25=c:\my documents\delphi\lib\uError.pas
+Module26=C:\My Documents\Delphi\Lib\uFormat.pas
+Module27=C:\My Documents\Delphi\Lib\uVector.pas
+Module28=C:\My Documents\Delphi\Lib\uInput.pas
+Module29=C:\My Documents\Delphi\Lib\uDEdit.pas
+Module30=C:\My Documents\Delphi\Calc\Calc.dpr
+Count=31
 EditWindowCount=1
 PackageWindowCount=1
 
-[C:\My Documents\Delphi\Screen\uContact.pas]
+[C:\My Documents\Delphi\Lib\uLog.pas]
 ModuleType=SourceModule
 FormState=0
 FormOnTop=0
@@ -40,17 +56,17 @@ ModuleType=PackageEditModule
 FormState=0
 FormOnTop=1
 
+[C:\My Documents\Delphi\Screen\uContact.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
 [C:\My Documents\Delphi\Lib\uDForm.pas]
 ModuleType=SourceModule
 FormState=0
 FormOnTop=0
 
 [C:\My Documents\Delphi\Lib\uDIni.pas]
-ModuleType=SourceModule
-FormState=0
-FormOnTop=0
-
-[C:\My Documents\Delphi\Lib\uAdd.pas]
 ModuleType=SourceModule
 FormState=0
 FormOnTop=0
@@ -95,12 +111,92 @@ ModuleType=SourceModule
 FormState=0
 FormOnTop=0
 
+[C:\My Documents\Delphi\Caser\Caser.dpr]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[C:\My Documents\Delphi\Calc\uMain.pas]
+ModuleType=SourceModule
+FormState=1
+FormOnTop=1
+
+[C:\My Documents\Delphi\Calc\uFavorites.pas]
+ModuleType=SourceModule
+FormState=1
+FormOnTop=0
+
+[C:\My Documents\Delphi\Lib\uParserMsg.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[C:\My Documents\Delphi\Lib\uTypes.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[C:\My Documents\Delphi\Lib\uDNumber.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\program files\borland\delphi7\source\rtl\Sys\system.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\my documents\delphi\lib\uData.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\my documents\delphi\lib\uParser.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\my documents\delphi\lib\uSplash.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[C:\My Documents\Delphi\Calc\uChart.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\my documents\delphi\lib\uCommon.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[c:\my documents\delphi\lib\uError.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[C:\My Documents\Delphi\Lib\uFormat.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[C:\My Documents\Delphi\Lib\uVector.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
+[C:\My Documents\Delphi\Lib\uInput.pas]
+ModuleType=SourceModule
+FormState=0
+FormOnTop=0
+
 [C:\My Documents\Delphi\Lib\uDEdit.pas]
 ModuleType=SourceModule
 FormState=0
 FormOnTop=0
 
-[C:\My Documents\Delphi\Caser\Caser.dpr]
+[C:\My Documents\Delphi\Calc\Calc.dpr]
 ModuleType=SourceModule
 FormState=0
 FormOnTop=0
@@ -110,8 +206,8 @@ FormState=0
 FormOnTop=0
 
 [EditWindow0]
-ViewCount=15
-CurrentView=14
+ViewCount=31
+CurrentView=30
 View0=0
 View1=1
 View2=2
@@ -127,6 +223,22 @@ View11=11
 View12=12
 View13=13
 View14=14
+View15=15
+View16=16
+View17=17
+View18=18
+View19=19
+View20=20
+View21=21
+View22=22
+View23=23
+View24=24
+View25=25
+View26=26
+View27=27
+View28=28
+View29=29
+View30=30
 CodeExplorer=CodeExplorer@EditWindow0
 MessageView=MessageView@EditWindow0
 Create=1
@@ -149,87 +261,87 @@ BottomPanelClients=MessageView@EditWindow0
 BottomPanelData=000004000000000000000000000000000000000000000000000100000000000000000B0000004D65737361676556696577FFFFFFFF
 
 [View0]
+Module=C:\My Documents\Delphi\Calc\Calc.dpr
+CursorX=11
+CursorY=16
+TopLine=1
+LeftCol=1
+
+[View1]
+Module=C:\My Documents\Delphi\Calc\uMain.pas
+CursorX=1
+CursorY=861
+TopLine=841
+LeftCol=1
+
+[View2]
 Module=C:\My Documents\Delphi\Caser\Caser.dpr
 CursorX=1
 CursorY=12
 TopLine=1
 LeftCol=1
 
-[View1]
+[View3]
 Module=C:\My Documents\Delphi\Caser\uMain.pas
 CursorX=27
 CursorY=9
 TopLine=1
 LeftCol=1
 
-[View2]
-Module=C:\My Documents\Delphi\Lib\uDEdit.pas
-CursorX=26
-CursorY=87
-TopLine=55
-LeftCol=1
-
-[View3]
+[View4]
 Module=C:\My Documents\Delphi\Caser\uEngine.pas
 CursorX=35
 CursorY=596
 TopLine=575
 LeftCol=1
 
-[View4]
+[View5]
 Module=C:\My Documents\Delphi\Screen\Screen.dpr
 CursorX=40
 CursorY=25
 TopLine=3
 LeftCol=1
 
-[View5]
+[View6]
 Module=C:\My Documents\Delphi\Screen\uMain.pas
 CursorX=35
 CursorY=268
 TopLine=256
 LeftCol=1
 
-[View6]
+[View7]
 Module=C:\My Documents\Delphi\Screen\uMessages.pas
 CursorX=26
 CursorY=150
 TopLine=140
 LeftCol=1
 
-[View7]
+[View8]
 Module=C:\My Documents\Delphi\Screen\uContacts.pas
 CursorX=6
 CursorY=191
 TopLine=187
 LeftCol=1
 
-[View8]
+[View9]
 Module=C:\My Documents\Delphi\Screen\uMessage.pas
 CursorX=15
 CursorY=181
 TopLine=169
 LeftCol=1
 
-[View9]
+[View10]
 Module=C:\My Documents\Delphi\Lib\DComp.dpk
 CursorX=5
-CursorY=56
+CursorY=51
 TopLine=33
 LeftCol=1
 
-[View10]
+[View11]
 Module=C:\My Documents\Delphi\Lib\uDBitmap.pas
 CursorX=6
 CursorY=744
 TopLine=731
-LeftCol=1
-
-[View11]
-Module=C:\My Documents\Delphi\Lib\uAdd.pas
-CursorX=23
-CursorY=7
-TopLine=1
 LeftCol=1
 
 [View12]
@@ -253,6 +365,118 @@ CursorY=115
 TopLine=89
 LeftCol=1
 
+[View15]
+Module=C:\My Documents\Delphi\Lib\uDEdit.pas
+CursorX=1
+CursorY=18
+TopLine=1
+LeftCol=1
+
+[View16]
+Module=C:\My Documents\Delphi\Lib\uInput.pas
+CursorX=50
+CursorY=55
+TopLine=24
+LeftCol=1
+
+[View17]
+Module=C:\My Documents\Delphi\Lib\uVector.pas
+CursorX=1
+CursorY=152
+TopLine=133
+LeftCol=1
+
+[View18]
+Module=C:\My Documents\Delphi\Lib\uFormat.pas
+CursorX=9
+CursorY=427
+TopLine=406
+LeftCol=1
+
+[View19]
+Module=c:\my documents\delphi\lib\uError.pas
+CursorX=1
+CursorY=489
+TopLine=470
+LeftCol=1
+
+[View20]
+Module=c:\my documents\delphi\lib\uCommon.pas
+CursorX=3
+CursorY=86
+TopLine=26
+LeftCol=1
+
+[View21]
+Module=C:\My Documents\Delphi\Calc\uChart.pas
+CursorX=23
+CursorY=95
+TopLine=77
+LeftCol=1
+
+[View22]
+Module=c:\my documents\delphi\lib\uSplash.pas
+CursorX=15
+CursorY=77
+TopLine=58
+LeftCol=1
+
+[View23]
+Module=c:\my documents\delphi\lib\uParser.pas
+CursorX=33
+CursorY=2938
+TopLine=2910
+LeftCol=1
+
+[View24]
+Module=c:\my documents\delphi\lib\uData.pas
+CursorX=1
+CursorY=214
+TopLine=195
+LeftCol=1
+
+[View25]
+Module=c:\program files\borland\delphi7\source\rtl\Sys\system.pas
+CursorX=1
+CursorY=15985
+TopLine=15966
+LeftCol=1
+
+[View26]
+Module=C:\My Documents\Delphi\Calc\uFavorites.pas
+CursorX=1
+CursorY=129
+TopLine=110
+LeftCol=1
+
+[View27]
+Module=C:\My Documents\Delphi\Lib\uDNumber.pas
+CursorX=1
+CursorY=1
+TopLine=1
+LeftCol=1
+
+[View28]
+Module=C:\My Documents\Delphi\Lib\uTypes.pas
+CursorX=1
+CursorY=153
+TopLine=153
+LeftCol=1
+
+[View29]
+Module=C:\My Documents\Delphi\Lib\uParserMsg.pas
+CursorX=1
+CursorY=160
+TopLine=141
+LeftCol=1
+
+[View30]
+Module=C:\My Documents\Delphi\Lib\uLog.pas
+CursorX=1
+CursorY=1
+TopLine=1
+LeftCol=1
+
 [PackageWindow0]
 Create=1
 Visible=1
@@ -264,7 +488,7 @@ Height=244
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=360
-ClientHeight=218
+ClientHeight=219
 TBDockHeight=244
 LRDockWidth=368
 Dockable=1
@@ -277,6 +501,24 @@ Module=C:\My Documents\Delphi\Lib\DComp.dpk
 
 [Watches]
 Count=0
+
+[WatchWindow]
+WatchColumnWidth=137
+WatchShowColumnHeaders=1
+Create=1
+Visible=0
+State=0
+Left=18
+Top=442
+Width=639
+Height=169
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=631
+ClientHeight=144
+TBDockHeight=149
+LRDockWidth=421
+Dockable=1
 
 [Breakpoints]
 Count=0
@@ -291,11 +533,11 @@ State=0
 Left=0
 Top=0
 Width=1280
-Height=105
+Height=108
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1272
-ClientHeight=78
+ClientHeight=81
 
 [ProjectManager]
 Create=1
@@ -308,23 +550,26 @@ Height=305
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=433
-ClientHeight=279
+ClientHeight=280
 TBDockHeight=305
 LRDockWidth=440
 Dockable=0
 
 [Components]
-Create=1
-Visible=0
-State=0
 Left=600
 Top=386
 Width=183
 Height=266
+Create=1
+Visible=0
+State=0
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=175
-ClientHeight=240
+ClientHeight=241
+TBDockHeight=266
+LRDockWidth=183
+Dockable=1
 
 [CPUWindow]
 Create=1
@@ -350,7 +595,7 @@ State=0
 Left=200
 Top=109
 Width=156
-Height=84
+Height=83
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=150
@@ -367,31 +612,15 @@ Height=511
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=183
-ClientHeight=485
+ClientHeight=486
 TBDockHeight=386
 LRDockWidth=190
 Dockable=0
 SplitPos=85
 ArrangeBy=Name
-SelectedItem=
+SelectedItem=OnChange
 ExpandedItems=BorderIcons,Font,Font.Style,HorzScrollBar,Miscellaneous,Options,VertScrollBar
 HiddenCategories=
-
-[WatchWindow]
-Create=1
-Visible=0
-State=0
-Left=18
-Top=442
-Width=639
-Height=169
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=631
-ClientHeight=143
-TBDockHeight=149
-LRDockWidth=421
-Dockable=1
 
 [BreakpointWindow]
 Create=1
@@ -404,7 +633,7 @@ Height=197
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=729
-ClientHeight=171
+ClientHeight=172
 TBDockHeight=197
 LRDockWidth=737
 Dockable=1
@@ -426,7 +655,7 @@ Height=161
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=309
-ClientHeight=135
+ClientHeight=136
 TBDockHeight=161
 LRDockWidth=294
 Dockable=1
@@ -442,7 +671,7 @@ Height=155
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=466
-ClientHeight=129
+ClientHeight=130
 TBDockHeight=152
 LRDockWidth=624
 Dockable=1
@@ -450,27 +679,6 @@ Column0Width=95
 Column1Width=60
 Column2Width=75
 Column3Width=230
-
-[ModuleWindow]
-Create=1
-Visible=0
-State=0
-Left=197
-Top=130
-Width=638
-Height=355
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=630
-ClientHeight=329
-TBDockHeight=355
-LRDockWidth=638
-Dockable=1
-Column0Width=125
-Column1Width=100
-Column2Width=155
-EntryPointPane=225
-CompUnitPane=104
 
 [ObjectTree]
 Create=1
@@ -483,7 +691,7 @@ Height=350
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=182
-ClientHeight=324
+ClientHeight=325
 TBDockHeight=350
 LRDockWidth=190
 Dockable=1
@@ -499,7 +707,7 @@ Height=291
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=409
-ClientHeight=265
+ClientHeight=266
 TBDockHeight=291
 LRDockWidth=417
 Dockable=1
@@ -515,7 +723,7 @@ Height=192
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=413
-ClientHeight=166
+ClientHeight=167
 TBDockHeight=192
 LRDockWidth=421
 Dockable=1
@@ -531,7 +739,7 @@ Height=250
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=523
-ClientHeight=224
+ClientHeight=225
 TBDockHeight=250
 LRDockWidth=531
 Dockable=1
@@ -558,6 +766,43 @@ ClientWidth=449
 ClientHeight=223
 RegisterPane=121
 FlagPane=59
+
+[ModuleWindow]
+Create=1
+Visible=0
+State=0
+Left=197
+Top=130
+Width=638
+Height=355
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=630
+ClientHeight=330
+TBDockHeight=355
+LRDockWidth=638
+Dockable=1
+Column0Width=125
+Column1Width=100
+Column2Width=155
+EntryPointPane=225
+CompUnitPane=104
+
+[MessageHintFrm]
+Create=1
+Visible=0
+State=0
+Left=983
+Top=825
+Width=383
+Height=195
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=375
+ClientHeight=170
+TBDockHeight=195
+LRDockWidth=383
+Dockable=1
 
 [CodeExplorer@EditWindow0]
 Create=1

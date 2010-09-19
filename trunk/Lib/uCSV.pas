@@ -6,7 +6,7 @@
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-// D??? DNW
+// TODO : DNW
 
 unit uCSV;
 
@@ -14,7 +14,7 @@ interface
 
 uses
 	uDForm, uTypes, uData,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDButton, uDLabel, uMain;
 
 type
@@ -109,7 +109,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uDIni, uError, uFiles, uStrings, uFormat;
+	uDIni, uMsg, uError, uFiles, uStrings, uFormat;
 
 var
 	CSVFile: TFile;
@@ -339,21 +339,21 @@ begin
 	ReqFormat := CSVReqFormats.GetFirst;
 	for i := 0 to CSVReqFormats.Count - 1 do
 	begin
-		Indexes[i] := ComboBoxes[i].ItemIndex; // D??? Func
+		Indexes[i] := ComboBoxes[i].ItemIndex; // TODO : Func
 	end;
 
 	for i := 0 to CSVReqFormats.Count - 1 do
 	begin
 		if ComboBoxes[i].ItemIndex = -1 then
 		begin
-			MessageD('Must select all columns', mtError, [mbOk]);
+			Warning('Please select all columns');
 			Exit;
 		end;
 
 		for j := i + 1 to CSVReqFormats.Count - 1 do
 			if Indexes[i] = Indexes[j] then
 			begin
-				MessageD('Columns colision ' + NToS(i + 1) + ' - ' + NToS(j + 1), mtError, [mbOk]);
+				Warning('Columns colision ' + NToS(i + 1) + ' - ' + NToS(j + 1));
 				Exit;
 			end;
 
@@ -366,7 +366,7 @@ end;
 procedure TfFormats.FormClose(Sender: TObject; var Action: TCloseAction);
 //var i: Integer;
 begin
-{	for i := 0 to CSVReqFormats.Count - 1 do D???
+{	TODO : for i := 0 to CSVReqFormats.Count - 1 do
 	begin
 		RemoveControl(PanelNames[i]);
 		FreeAndNil(PanelNames[i]);

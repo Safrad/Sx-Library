@@ -11,11 +11,20 @@ unit uError;
 interface
 
 uses
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Consts,
 	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel, uWave, uTypes,
-	uDForm, uDTimer;
+	uDForm, uDTimer, Dialogs, uDEdit;
 
 type
+	TDlgType = (
+		mtDebug,
+		mtInformation,
+		mtWarning,
+		mtError,
+		mtConfirmation,
+		mtInternal,
+		mtIO);
+
 	TDlgBtn = (
 		mbOK, mbYes, mbYesToAll,
 		mbRetry, mbIgnore, mbAbort,
@@ -42,9 +51,9 @@ type
     LabelMessage: TDLabel;
 		ButtonAll: TDButton;
 		Bevel1: TBevel;
-    ButtonDown: TDButton;
-		EditIndex: TEdit;
-		ButtonUp: TDButton;
+    ButtonLeft: TDButton;
+		EditIndex: TDEdit;
+    ButtonRight: TDButton;
 		procedure ButtonOpenClick(Sender: TObject);
 		procedure ButtonExitClick(Sender: TObject);
 		procedure FormKeyDown(Sender: TObject; var Key: Word;
@@ -57,8 +66,7 @@ type
 		procedure LabelTimeLeftClick(Sender: TObject);
 		procedure ButtonRetryClick(Sender: TObject);
 		procedure ButtonIgnoreClick(Sender: TObject);
-		procedure ButtonIgnoreAllClick(Sender: TObject);
-		procedure ButtonDownClick(Sender: TObject);
+		procedure ButtonLeftClick(Sender: TObject);
 		procedure EditIndexChange(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure FormClick(Sender: TObject);
@@ -74,45 +82,31 @@ type
 		procedure BClick(Sender: TObject);
 		procedure ShowMes;
 		procedure TryClose;
+		procedure ShowForm;
 	public
 		{ Public declarations }
 	end;
 
 const
 	DlgBtnNames: array[TDlgBtn] of string = (
-		'OK', 'Yes', 'Yes To All',
-		'Retry', 'Ignore', 'Abort',
-		'Delete', 'DeleteAll',
-		'No', 'No To All', 'Cancel');
+		SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll,
+		SMsgDlgRetry, SMsgDlgIgnore, SMsgDlgAbort,
+		'&Delete', 'Delete All',
+		SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel);
 
 	DlgNoTime = 0;
 	DlgWait = 15;
 
-type
-	TIgnoreAll = (iaNone, iaSame, iaAll);
-var
-	IgnoreAll: TIgnoreAll;
-
-{$ifopt d+}
-//procedure IE(ErrorCode: U2);
-procedure IE(const ErrorMes: string); overload;
-{$endif}
-
 procedure ShowMessages;
-// Normal Dialog
-function MessageD(const Msg: string; const DlgType: TMsgDlgType;
-	const Buttons: TDlgButtons): TDlgBtn;
-function MessageDEx(const Msg: string; const DlgType: TMsgDlgType;
-	const Buttons: array of string; const TimeLeft: SG; const Owener: TComponent): SG;
-// IO Error
-procedure IOError(FName: TFileName; const ErrorCode: U4);
-function IOErrorRetry(var FName: TFileName; const ErrorCode: U4): BG;
-// File Error
-procedure IOErrorMessage(FName: TFileName; const ErrorMsg: string);
-function IOErrorMessageRetry(var FName: TFileName; const ErrorMsg: string): BG;
-// Internal Error
-procedure ErrorMessage(const ErrorMsg: string);
-function ErrorMessageRetry(const ErrorMsg: string): BG;
+function DoForm(
+	var FName: TFileName; // Used when DlgType is mtIO
+	ErrorMsg: string; const Retry: BG;
+	const DlgType: TDlgType;
+	const Buttons: array of string; const TimeLeft: UG): SG;
+function MessageD(const Msg: string; const DlgType: TDlgType;
+	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn;
+function MessageDEx(const Msg: string; const DlgType: TDlgType;
+	const Buttons: array of string; const TimeLeft: UG = DlgWait): SG;
 
 function DeleteFileDialog(const FileName: TFileName): Boolean;
 
@@ -121,18 +115,20 @@ implementation
 {$R *.DFM}
 uses
 	uFiles,
-	uStrings, uGraph, uDBitmap, uData, uInput, uFormat,
-	Registry, MMSystem, Consts, Math;
+	uStrings, uGraph, uDBitmap, uData, uInput, uFormat, uSimulation,
+	Registry, MMSystem, Math;
 
 type
-	TStyle = (stNormal, stInternal, stIO, stFile);
-
+	TIgnoreAll = (iaNone, iaSame, iaAll);
+var
+	IgnoreAll: TIgnoreAll;
+type
 	PIgnore = ^TIgnore;
 	TIgnore = packed record // 32
-		Style: TStyle; // 1
+		DlgType: TDlgType; // 1
 		Retry: B1; // 1
 		Ignore: TIgnoreAll; // 1
-		DlgType: TMsgDlgType; // 1
+		Reserved: U1;
 
 		Msg: string; // 4
 		ErrorFileName: TFileName; // 4
@@ -140,9 +136,8 @@ type
 
 		Buttons: array of ShortString; // 4
 
-		DateTime: TDateTime; // 4
-		TimeLeft: U4; // 4
-//		Reserved: array[0..3] of U1; // 4
+		DateTime: TDateTime; // 8
+		TimeLeft: U2; // 4
 	end;
 
 var
@@ -150,28 +145,6 @@ var
 	Ignores: TData;
 	TickCount, StartTickCount: U8;
 
-{$ifopt d+}
-(*
-procedure IE(ErrorCode: U2);
-begin
-//	{$ifopt d+}
-	ErrorMessage('Internal Error: ' + IntToStr(ErrorCode));
-//	{$else}
-//	PlayWinSound(wsCriticalStop);
-//	{$endif}
-end;
-*)
-
-procedure IE(const ErrorMes: string);
-begin
-//	{$ifopt d+}
-	ErrorMessage('Internal Error: ' + ErrorMes);
-//	{$else}
-//	PlayWinSound(wsCriticalStop);
-//	{$endif}
-end;
-
-{$endif}
 
 // TfIOError
 
@@ -183,14 +156,14 @@ begin
 	if Ignore.TimeLeft = 0 then
 		PanelTimeLeft.Caption := ''
 	else
-		PanelTimeLeft.Caption := MsToStr(1000 * S8(Ignore.TimeLeft) - 1 + StartTickCount - TickCount, diMSD, 0, False);
+		PanelTimeLeft.Caption := MsToStr(Second * S8(Ignore.TimeLeft) - 1 - TimeDifference(TickCount, StartTickCount), diMSD, 0, False);
 end;
 
 var
-	Captions: array[TMsgDlgType] of AnsiString = (SMsgDlgWarning, SMsgDlgError,
-		SMsgDlgInformation, SMsgDlgConfirm, '');
-	IconIDs: array[TMsgDlgType] of PChar = (IDI_EXCLAMATION, IDI_HAND,
-		IDI_ASTERISK, IDI_QUESTION, nil);
+	Captions: array[TDlgType] of string = ('Debug', SMsgDlgInformation, SMsgDlgWarning, SMsgDlgError, SMsgDlgConfirm,
+		'Internal', 'I/O');
+	IconIDs: array[TDlgType] of PChar = (IDI_WINLOGO, IDI_ASTERISK, IDI_EXCLAMATION, IDI_HAND, IDI_QUESTION,
+		IDI_APPLICATION, IDI_WINLOGO);
 
 procedure TfIOError.ButtonOpenClick(Sender: TObject);
 var
@@ -229,37 +202,9 @@ begin
 	EditIndex.Text:= NToS(ActItem + 1);
 	EditIndex.OnChange := EditIndexChange;
 	PanelCreated.Caption := DTToStr(Ignore.DateTime);
-	case Ignore.Style of
-	stNormal:
-	begin
-		if Ignore.DlgType <> mtCustom then
-			Caption := string(Captions[Ignore.DlgType])
-		else
-			Caption := Application.Title;
+	Caption := Captions[Ignore.DlgType];
 
-		IconID := IconIDs[Ignore.DlgType];
-	end;
-	stInternal:
-	begin
-		Caption := 'Internal Error';
-		IconID := IDI_APPLICATION;
-	end;
-	stIO:
-	begin
-		Caption := 'I/O Error';
-		IconID := IDI_WINLOGO;
-	end;
-	stFile:
-	begin
-		Caption := 'File Error';
-		IconID := IDI_WINLOGO;
-	end
-	else
-	begin
-		Caption := '';
-		IconID := nil;
-	end;
-	end;
+	IconID := IconIDs[Ignore.DlgType];
 
 	// Image
 	if IconID <> nil then
@@ -283,7 +228,7 @@ begin
 		end;
 
 	// Buttons
-	Bo := Ignore.Style in [stIO, stFile];
+	Bo := Ignore.DlgType in [mtIO];
 	ButtonRetry.Visible := Bo;
 	ButtonIgnore.Visible := Bo;
 //	ButtonIgnoreAll.Visible := B;
@@ -356,7 +301,7 @@ begin
 
 	MaxWid := Max(MaxWid, Wid);
 
-	GetScreen(R);
+	GetDesktopRect(R);
 
 	Hei := Max(LineCount, 3) * Canvas.TextHeight(Ignore.Msg) + 6;
 	Wid := Canvas.TextHeight(Ignore.Msg) * ((R.Bottom - R.Top - 128{TaskBar} - 2 * (Height - ClientHeight)) div Canvas.TextHeight(Ignore.Msg)) + 6;
@@ -471,12 +416,57 @@ begin
 	if (Ignore.TimeLeft > 0) and (TickCount > U8(Ignore.TimeLeft) * 1000 + StartTickCount) then Close;
 end;
 
-function DoForm(
-	const Style: TStyle; var FName: TFileName; const ErrorCode: U4;
-	ErrorMsg: AnsiString; const Retry: BG;
-	DlgType: TMsgDlgType;
-	Buttons: array of string; TimeLeft: SG; Owener: TComponent): SG;
+procedure TfIOError.ShowForm;
+var Ignore: PIgnore;
+begin
+	PanelCount.Caption := NToS(Ignores.Count);
 
+	if Visible = False then
+	begin
+		TickCount := GetTickCount;
+		StartTickCount := TickCount;
+{			UpDown1.OnChangingEx := nil;
+		UpDown1.Position := Ignores.Count - 1;
+		UpDown1.OnChangingEx := UpDown1ChangingEx;}
+		ActItem := Ignores.Count - 1;
+		EditIndex.OnChange := nil;
+		EditIndex.Text := NToS(ActItem);
+		EditIndex.OnChange := EditIndexChange;
+		ShowMes;
+		DrawTimeLeft;
+
+		ModalResult := mrNone;
+		if Application.Terminated then
+		begin
+			FormStyle := fsStayOnTop;
+			Timer1.Enabled := True;
+//				ShowModal;
+			Show;
+			repeat
+				Application.HandleMessage;
+			until ModalResult <> mrNone;
+			Hide;
+		end
+		else
+		begin
+			FormStyle := fsNormal;
+			Timer1.Enabled := True;
+			ShowModal;
+		end;
+	end
+	else
+	begin
+		Ignore :=Ignores.Get(ActItem);
+		Ignore.Res := -1;
+		Exit;
+	end;
+end;
+
+function DoForm(
+	var FName: TFileName; // Used as FileName when DlgType is mtIO
+	ErrorMsg: string; const Retry: BG;
+	const DlgType: TDlgType;
+	const Buttons: array of string; const TimeLeft: UG): SG;
 var
 	s: string;
 	i: SG;
@@ -485,22 +475,42 @@ var
 	LineIndex: SG;
 	B: SG;
 begin
+	{$ifopt d+}
+	Assert(Length(ErrorMsg) > 0);
+	s := DelEndSpaceF(ErrorMsg);
+	s := s[Length(s)];
+	case DlgType of
+	mtDebug,
+	mtInformation,
+	mtWarning,
+	mtError,
+	mtInternal, mtIO:
+	begin
+		if not (s[1] in ['.', '!']) then
+			ErrorMsg := ErrorMsg + '%.%';
+	end;
+	mtConfirmation:
+	begin
+		if s[1] <> '?' then
+			ErrorMsg := ErrorMsg + '%?%';
+	end;
+	end;
+	{$endif}
+
 	// Win X pressed
-	case Style of
-	stNormal, stInternal:
+	case DlgType of
+	mtIO:
+		Result := 0; // Ignore
+	else
 		Result := -1; // None of Button
-	else // stIO, stFile:
-		Result := 2; // Ignore
 	end;
 
-	if Ignores = nil then Exit;
-
-	case Style of
-	stIO: ErrorMsg := ErrorMes(ErrorCode);
-//	stFile: ErrorMsg := FName + LineSep + ErrorMsg;
+	if Ignores = nil then
+	begin
+		Ignores := TData.Create(True);
+		Ignores.ItemSize := SizeOf(TIgnore);
 	end;
 
-	DelChars(ErrorMsg, '&');
 	LineIndex := 1;
 	s := ReadToChar(ErrorMsg, LineIndex, LineSep);
 
@@ -512,7 +522,7 @@ begin
 		begin
 			LineIndex := 1;
 			if (Ignore.Ignore <> iaNone) then
-			if (Ignore.Style = Style) and (Ignore.Retry = Retry) and (Ignore.DlgType = DlgType) then
+			if (Ignore.Retry = Retry) and (Ignore.DlgType = DlgType) then
 			if (ReadToChar(Ignore.Msg, LineIndex, LineSep) = s) then
 			begin
 				FoundSame := True;
@@ -527,98 +537,51 @@ begin
 			Dec(SG(Ignore), Ignores.ItemMemSize);
 		end;
 	end;
-	if FName <> '' then ErrorMsg := ErrorMsg + LineSep + FName;
 
 	if FoundSame = False then
-	if ErrorMsg <> '' then
-	begin
-{		if Ignores.Count = 100 then
-			Ignores.DeleteFirst; // can not be actual!}
-		Ignore := Ignores.Add;
-		Ignore.Style := Style;
-		Ignore.Retry := Retry;
-		Ignore.DlgType := DlgType;
-		Ignore.Msg := Copy(ErrorMsg, 1, 65536);
-		Ignore.ErrorFileName := FName;
-		Ignore.Buttons := nil;
-		SetLength(Ignore.Buttons, Length(Buttons));
-		for B := 0 to Length(Buttons) - 1 do
+		if ErrorMsg <> '' then
 		begin
-			Ignore.Buttons[B] := Buttons[B];
-		end;
-		Ignore.Res := -1;
-		Ignore.Ignore := iaNone;
-		Ignore.DateTime := Now;
-		Ignore.TimeLeft := TimeLeft;
-	end
-	else
-		Ignore := Ignores.GetLast;
-
-	if (IgnoreAll <> iaAll) and (FoundSame = False) then
-	begin
-		if Style = stNormal then
-			PlayWinSound(wsQuestion)
+	{		if Ignores.Count = 100 then
+				Ignores.DeleteFirst; // can not be actual!}
+			Ignore := Ignores.Add;
+			Ignore.DlgType := DlgType;
+			Ignore.Retry := Retry;
+			if FName <> '' then
+				Ignore.Msg := FName + LineSep;
+			Ignore.Msg := Ignore.Msg + Copy(ErrorMsg, 1, 65536);
+			Ignore.ErrorFileName := FName;
+			Ignore.Buttons := nil;
+			SetLength(Ignore.Buttons, Length(Buttons));
+			for B := 0 to Length(Buttons) - 1 do
+			begin
+				Ignore.Buttons[B] := Buttons[B];
+			end;
+			Ignore.Res := -1;
+			Ignore.Ignore := iaNone;
+			Ignore.DateTime := Now;
+			Ignore.TimeLeft := TimeLeft;
+		end
 		else
+			Ignore := Ignores.GetLast;
+
+	if (IgnoreAll <> iaAll) and (FoundSame = False) and (FormDraw(fIOError) = False) then
+	begin
+		case DlgType of
+		mtWarning:
+			PlayWinSound(wsExclamation);
+		mtError:
 			PlayWinSound(wsCriticalStop);
+		else
+			PlayWinSound(wsQuestion);
+		end;
 
 		if not Assigned(fIOError) then
 		begin
-			fIOError := TfIOError.Create(Owener);
+			fIOError := TfIOError.Create(Application.MainForm);
 			fIOError.Background := baGradient;
 		end;
-
-		if Assigned(fIOError) then
-		begin
-//			fIOError.UpDown1.OnChangingEx := nil;
-//			fIOError.UpDown1.Max := Ignores.Count - 1;
-//			fIOError.UpDown1.OnChangingEx := fIOError.UpDown1ChangingEx;
-			fIOError.PanelCount.Caption := NToS(Ignores.Count);
-		end;
-
- 		if fIOError.Visible = False then
-		begin
-			TickCount := GetTickCount;
-			StartTickCount := TickCount;
-{			fIOError.UpDown1.OnChangingEx := nil;
-			fIOError.UpDown1.Position := Ignores.Count - 1;
-			fIOError.UpDown1.OnChangingEx := fIOError.UpDown1ChangingEx;}
-			fIOError.ActItem := Ignores.Count - 1;
-			fIOError.EditIndex.OnChange := nil;
-			fIOError.EditIndex.Text := NToS(fIOError.ActItem);
-			fIOError.EditIndex.OnChange := fIOError.EditIndexChange;
-			fIOError.ShowMes;
-			fIOError.DrawTimeLeft;
-
-			fIOError.ModalResult := mrNone;
-			if Application.Terminated then
-			begin
-				fIOError.FormStyle := fsStayOnTop;
-				fIOError.Timer1.Enabled := True;
-//				fIOError.ShowModal;
-				fIOError.Show;
-				repeat
-					Application.HandleMessage;
-				until fIOError.ModalResult <> mrNone;
-				fIOError.Hide;
-			end
-			else
-			begin
-				fIOError.FormStyle := fsNormal;
-				fIOError.Timer1.Enabled := True;
-				fIOError.ShowModal;
-			end;
-		end
-		else
-		begin
-{			while Ignore.Res = -1 do
-			begin
-				Application.ProcessMessages;
-				Sleep(20);
-			end; // Stack overflow}
-			Ignore.Res := -1;
-			Exit;
-		end;
-
+		fIOError.ShowForm;
+		Ignore :=Ignores.Get(fIOError.ActItem);
 //		if ModalResult = mrNone then ModalResult := mrCancel;
 		if Ignore.Res = -1 then
 		begin
@@ -630,9 +593,7 @@ begin
 		if Ignore.ErrorFileName <> FName then FName := Ignore.ErrorFileName;
 
 		if IsMultiThread then
-		begin
 			FreeAndNil(fIOError);
-		end;
 	end
 	else
 		Ignore.Res := Result;
@@ -719,55 +680,46 @@ begin
 	TryClose;
 end;
 
-procedure TfIOError.ButtonIgnoreAllClick(Sender: TObject);
-begin
-{	if fIOError.ShiftDown then
-		IgnoreAll := iaAll
-	else
-		IgnoreAll := iaSame;
-	Ignore.Res := ;
-	TryClose;}
-end;
-
-// Public
-
 procedure ShowMessages;
 begin
-//	if Assigned(fIOError) then
-	if Ignores.Count > 0 then
+	if Assigned(Ignores) and (Ignores.Count > 0) then
 	begin
-		MessageD('', mtInformation, [mbOk]);
+		fIOError.ShowForm;
 	end
 	else
-		MessageD('No message found', mtInformation, [mbOk]);
+		MessageD('No message found.', mtInformation, [mbOk]);
 end;
 
-function MessageDEx(const Msg: string; const DlgType: TMsgDlgType;
-	const Buttons: array of string; const TimeLeft: SG; const Owener: TComponent): SG;
+function MessageDEx(const Msg: string; const DlgType: TDlgType;
+	const Buttons: array of string; const TimeLeft: UG = DlgWait): SG;
 var
 	FileName: TFileName;
 begin
 	FileName := '';
-	Result := DoForm(stNormal, FileName, 0, Msg, False, DlgType, Buttons, TimeLeft, Owener);
+	Result := DoForm(FileName, Msg, False, DlgType, Buttons, TimeLeft);
 end;
 
-function MessageD(const Msg: string; const DlgType: TMsgDlgType;
-	const Buttons: TDlgButtons): TDlgBtn;
+function MessageD(const Msg: string; const DlgType: TDlgType;
+	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn;
 var
 	B: TDlgBtn;
-	Res, i: SG;
 	But: array of string;
-
-	procedure AddS(s: string);
-	begin
-		SetLength(But, Length(But) + 1);
-		But[Length(But) - 1] := s;
-	end;
-
+	Res, i: SG;
 begin
+	i := 0;
 	for B := Low(B) to High(B) do
-		if B in Buttons then AddS(DlgBtnNames[B]);
-	Res := MessageDEx(Msg, DlgType, But, DlgWait, nil);
+		if B in Buttons then Inc(i);
+	SetLength(But, i);
+	i := 0;
+	for B := Low(B) to High(B) do
+		if B in Buttons then
+		begin
+			But[i] := DlgBtnNames[B];
+			Inc(i);
+		end;
+
+	Res := MessageDEx(Msg, DlgType, But, DlgWait);
+
 	i := 0;
 	Result := mbCancel;
 	for B := Low(B) to High(B) do
@@ -782,39 +734,7 @@ begin
 		end;
 end;
 
-procedure IOError(FName: TFileName; const ErrorCode: U4);
-begin
-	DoForm(stIO, FName, ErrorCode, '', False, mtCustom, [], DlgWait, Application.MainForm);
-end;
-
-function IOErrorRetry(var FName: TFileName; const ErrorCode: U4): BG;
-begin
-	Result := DoForm(stIO, FName, ErrorCode, '', True, mtCustom, [], DlgWait, Application.MainForm) > 1;
-end;
-
-procedure IOErrorMessage(FName: TFileName; const ErrorMsg: string);
-begin
-	DoForm(stFile, FName, 0, ErrorMsg, False, mtCustom, [], DlgWait, Application.MainForm);
-end;
-
-function IOErrorMessageRetry(var FName: TFileName; const ErrorMsg: string): BG;
-begin
-	Result := DoForm(stFile, FName, 0, ErrorMsg, True, mtCustom, [], DlgWait, Application.MainForm) > 1;
-end;
-
-procedure ErrorMessage(const ErrorMsg: string);
-var FName: TFileName;
-begin
-	DoForm(stInternal, FName, 0, ErrorMsg, False, mtCustom, ['OK'], DlgWait, Application.MainForm);
-end;
-
-function ErrorMessageRetry(const ErrorMsg: string): BG;
-var FName: TFileName;
-begin
-	Result := DoForm(stInternal, FName, 0, ErrorMsg, True, mtCustom, ['OK'], DlgWait, Application.MainForm) > 1;
-end;
-
-procedure TfIOError.ButtonDownClick(Sender: TObject);
+procedure TfIOError.ButtonLeftClick(Sender: TObject);
 begin
 	if TDButton(Sender).Tag = 0 then
 	begin
@@ -865,8 +785,7 @@ begin
 end;
 
 initialization
-	Ignores := TData.Create(True);
-	Ignores.ItemSize := SizeOf(TIgnore);
+
 finalization
 	FreeAndNil(Ignores);
 end.

@@ -177,133 +177,121 @@ object fSysInfo: TfSysInfo
     Transparent = True
     Layout = tlCenter
   end
-  object edMT: TEdit
+  object edMT: TDEdit
     Left = 240
     Top = 200
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 6
   end
-  object edMF: TEdit
+  object edMF: TDEdit
     Left = 176
     Top = 200
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 7
   end
-  object edFF: TEdit
+  object edFF: TDEdit
     Left = 176
     Top = 224
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 8
   end
-  object edFT: TEdit
+  object edFT: TDEdit
     Left = 240
     Top = 224
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 9
   end
-  object edMU: TEdit
+  object edMU: TDEdit
     Left = 112
     Top = 200
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 10
   end
-  object edFU: TEdit
+  object edFU: TDEdit
     Left = 112
     Top = 224
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 11
   end
-  object edDiskU: TEdit
+  object edDiskU: TDEdit
     Left = 112
     Top = 248
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 12
   end
-  object edDiskF: TEdit
+  object edDiskF: TDEdit
     Left = 176
     Top = 248
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 13
   end
-  object edDiskT: TEdit
+  object edDiskT: TDEdit
     Left = 240
     Top = 248
     Width = 57
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 14
   end
-  object EditOS: TEdit
+  object EditOS: TDEdit
     Left = 64
     Top = 9
     Width = 233
     Height = 19
-    AutoSelect = False
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     ReadOnly = True
     TabOrder = 1
   end
-  object EditCPU: TEdit
+  object EditCPU: TDEdit
     Left = 64
     Top = 41
     Width = 233
     Height = 19
-    AutoSelect = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
@@ -327,48 +315,44 @@ object fSysInfo: TfSysInfo
     TabOrder = 0
     OnClick = ButtonOkClick
   end
-  object EditCPUFrequency: TEdit
+  object EditCPUFrequency: TDEdit
     Left = 104
     Top = 89
     Width = 193
     Height = 19
-    AutoSelect = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 4
   end
-  object EditDuron: TEdit
+  object EditDuron: TDEdit
     Left = 104
     Top = 113
     Width = 105
     Height = 19
-    AutoSelect = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 5
   end
-  object EditCPUUsage: TEdit
+  object EditCPUUsage: TDEdit
     Left = 103
     Top = 65
     Width = 193
     Height = 19
-    AutoSelect = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 3
   end
-  object EditCounter: TEdit
+  object EditCounter: TDEdit
     Left = 103
     Top = 137
     Width = 193
     Height = 19
-    AutoSelect = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace

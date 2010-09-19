@@ -40,7 +40,8 @@ function GetPassword(out Password: string): BG;
 implementation
 
 {$R *.DFM}
-uses uStrings;
+uses uStrings, uMsg;
+
 var
 	fGetStr: TfGetStr;
 
@@ -116,7 +117,11 @@ begin
 	if GetStr('Password', Password, '', 0, True) and GetStr('Re-enter Password', RepeatedPassword, '', 0, True) then
 	begin
 		Result := Password = RepeatedPassword;
-	end;
+		if Result = False then
+			Warning('Passwords doesn''t equal.');
+	end
+	else
+		Result := False;
 end;
 
 end.

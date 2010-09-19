@@ -11,11 +11,12 @@ unit uInput;
 interface
 
 uses
-	uTypes;
+	uTypes, uVector;
 
 // Str To Data
 function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: UG): UG;
 
+function StrToVector(Line: AnsiString; const UseWinFormat: BG): TVector;
 function StrToValE(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
 {function StrToValE(Line: string; const UseWinFormat: BG;
@@ -37,30 +38,50 @@ function StrToValS8(Line: string; const UseWinFormat: BG;
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1): U1;
 
-function SToDate(Str: string): TDateTime;
-function SToDateTime(Str: string): TDateTime;
-
-procedure ClearErrors;
-procedure ShowAndClearErrors;
+function SToDate(const Str: string): TDateTime;
+function SToDateTime(const Str: string): TDateTime;
 
 implementation
 
 uses
-	SysUtils, Dialogs,
-	uParser, uFormat, uStrings, uError;
+	SysUtils,
+	uParser, uFormat, uStrings, uMsg;
 
 function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: UG): UG;
 var Parser: TDParser;
 begin
 	Parser := TDParser.Create(Pointer(Line), Length(Line));
 	Result := Parser.ReadMs(MinVal, DefVal, MaxVal);
-	if Parser.InputType <> itEOI then Parser.AddMes2(mtUnusedChars, []);
+	if Parser.InputType <> itEOI then Parser.AddMes(mtEUnusedChars, []);
+	Parser.Free;
+end;
+
+function StrToVector(Line: AnsiString; const UseWinFormat: BG): TVector;
+var Parser: TDParser;
+begin
+	Parser := TDParser.Create(Line);
+	if UseWinFormat then
+	begin
+		Parser.DecimalSep := DecimalSeparator;
+		Parser.ThousandSep := ThousandSeparator;
+	end
+	else
+	begin
+		Parser.DecimalSep := '.';
+		Parser.ThousandSep := ',';
+	end;
+	Parser.ReadInput;
+	FreeTree(Root);
+	Root := Parser.NodeE(nil);
+	if Root <> nil then
+	begin
+		Result := Calc(Root);
+	end;
 	Parser.Free;
 end;
 
 function StrToValE(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
-label LNext;
 var Parser: TDParser;
 begin
 	Parser := TDParser.Create(Line);
@@ -124,7 +145,7 @@ begin
 	Result := StrToValI(Line, UseWinFormat, 0, UG(DefVal), 255, 1);
 end;
 
-function SToDate(Str: string): TDateTime;
+function SToDate(const Str: string): TDateTime;
 var
 	DateSep: Char;
 	Year, Month, Day: U2;
@@ -181,12 +202,12 @@ begin
 	if Month > 50 then Dec(Month, 50); // Female offset
 	if TryEncodeDate(Year, Month, Day, TDateTime(Result)) = False then
 	begin
-		MessageD('Invalid date' + LineSep + Str, mtError, [mbOk]);
+		ErrorMsg('Invalid date' + LineSep + Str + '.');
 		Result := 0;
 	end;
 end;
 
-function SToDateTime(Str: string): TDateTime;
+function SToDateTime(const Str: string): TDateTime;
 var InLineIndex: SG;
 begin
 	InLineIndex := 1;
@@ -194,41 +215,4 @@ begin
 		SToTime(ReadToChar(Str, InLineIndex, CharCR));
 end;
 
-procedure CompileMesClear;
-var
-	M: PCompileMes;
-	i: SG;
-begin
-	if CompileMes = nil then Exit;
-	M := CompileMes.GetFirst;
-	for i := 0 to SG(CompileMes.Count) - 1 do
-	begin
-		M.Params := '';
-		Inc(M);
-	end;
-	CompileMes.Clear;
-end;
-
-procedure ClearErrors;
-begin
-	if CompileMes = nil then Exit;
-	if CompileMes.Count > 0 then
-	begin
-		CompileMesClear;
-	end;
-end;
-
-procedure ShowAndClearErrors;
-begin
-	if CompileMes.Count > 0 then
-	begin
-		MessageD(MesToStrings, mtWarning, [mbOk]);
-		CompileMesClear;
-	end;
-end;
-
-initialization
-
-finalization
-	ClearErrors;
 end.

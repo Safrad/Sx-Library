@@ -6,10 +6,8 @@
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-{
-	Support only 32bit RGBA buffer
-	ToDo: Depth, Clipping bug
-}
+// Support only 32bit RGBA buffer
+{ TODO : Depth, Clipping bug }
 
 unit uSGL;
 
@@ -18,7 +16,7 @@ unit uSGL;
 interface
 
 uses
-	uTypes, uDBitmap,
+	uTypes, uDBitmap, uColor,
 	Graphics;
 
 type
@@ -853,7 +851,7 @@ begin
 	if Check then
 	begin
 		FillChar(Drawable._frameBuffer^, Drawable._frameBufferSize, 0);
-//		if BPP = 4 then D???
+// TODO : if BPP = 4 then
 {			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
 				B or (G shl 8) or (R shl 16) or (A shl 24))
 {		else
@@ -1211,7 +1209,7 @@ begin
 				P1.Pos.Y := Drawable.MaxB.Y;
 {				if Drawable.EnableTexturing = True then
 				begin
-					// D??? Test
+					// TODO : Test
 					P1.Tex.X := P1.Tex.X + (Drawable.MaxB.Y - P1.Pos.Y) * (P2.Tex.X - P1.Tex.X) div (P2.Tex.Y - P1.Tex.Y);
 					P1.Tex.Y := P1.Tex.Y + (Drawable.MaxB.Y - P1.Pos.Y) * (P2.Tex.Y - P1.Tex.Y) div (P2.Tex.X - P1.Tex.X);
 				end;}
@@ -1366,7 +1364,7 @@ var
 			PN := PPixel(SG(P) - SizeOf(TPixel) * (Size div 2));
 			for i := 1 to Size do
 			begin
-				Pix(PN, COut); // D??? Check
+				Pix(PN, COut); // TODO : Check
 				Inc(PN);
 			end;
 		end
@@ -1376,7 +1374,7 @@ var
 			n := Drawable._ByteX;
 			for i := 1 to -Size do
 			begin
-				Pix(PN, COut); // D??? Check
+				Pix(PN, COut); // TODO : Check
 				Inc(SG(PN), n);
 			end;
 		end;
@@ -1433,7 +1431,7 @@ begin
 			if D <> 0 then
 			begin
 				DTX := ((P2.Tex.X - P1.Tex.X) {* PreM}) div (D + 0);
-				DTY := ((P2.Tex.Y - P1.Tex.Y) {* PreM}) div (D + 0); // D???
+				DTY := ((P2.Tex.Y - P1.Tex.Y) {* PreM}) div (D + 0); // TODO : ?
 			end;
 			TexX := P1.Tex.X{ shl Pre};
 			TexY := P1.Tex.Y{ shl Pre};
@@ -2119,10 +2117,10 @@ begin
 			end
 			else
 			begin
-{				DCR := RoundDiv((Integer(P2.C.R) - Integer(P1.C.R)) * PreM, D);
+{ TODO : DCR := RoundDiv((Integer(P2.C.R) - Integer(P1.C.R)) * PreM, D);
 				DCG := RoundDiv((Integer(P2.C.G) - Integer(P1.C.G)) * PreM, D);
 				DCB := RoundDiv((Integer(P2.C.B) - Integer(P1.C.B)) * PreM, D);
-				DCA := RoundDiv((Integer(P2.C.A) - Integer(P1.C.A)) * PreM, D); D???}
+				DCA := RoundDiv((Integer(P2.C.A) - Integer(P1.C.A)) * PreM, D); }
 				DCR := ((Integer(P2.C.R) - Integer(P1.C.R)) * PreM) div D;
 				DCG := ((Integer(P2.C.G) - Integer(P1.C.G)) * PreM) div D;
 				DCB := ((Integer(P2.C.B) - Integer(P1.C.B)) * PreM) div D;
@@ -2270,7 +2268,8 @@ begin
 		CreateLine(Lines[LineCount], P1, P2);
 		Inc(LineCount);
 	end;
-//	if MinY < Drawable.MinBX then MinY := Drawable.MinBY; D??? Polygon clipping!
+//	if MinY < Drawable.MinBX then MinY := Drawable.MinBY;
+// TODO : Polygon clipping!
 
 	for y := MinY to MaxY do
 	begin
@@ -2525,12 +2524,12 @@ begin
 	Divi := (Sqr((GX0 + GX2) - 2 * GX1)) + (Sqr((GY0 + GY2) - 2 * GY1)) > Max(sglPrecision, MinDouble);
 	if Divi then
 	begin
-{		if (Abs(GX0 - GX2) <= 1) and (Abs(GY0 - GY2) <= 1) then
+{ TODO : DNW if (Abs(GX0 - GX2) <= 1) and (Abs(GY0 - GY2) <= 1) then
 			Divi := False;
 		if (Abs(GX0 - GX2) <= 2) and (Abs(GY0 - GY2) = 0) then
 			Divi := False;
 		if (Abs(GX0 - GX2) = 0) and (Abs(GY0 - GY2) <= 2) then
-			Divi := False; D??? DNW}
+			Divi := False;}
 		if (mid - from <= MinDouble) or (too - mid <= MinDouble) then Divi := False
 
 	end;

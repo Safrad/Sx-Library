@@ -10,7 +10,7 @@ object fSounds: TfSounds
   BorderStyle = bsSizeToolWin
   Caption = 'Sounds'
   Color = clBtnFace
-  Constraints.MinHeight = 298
+  Constraints.MinHeight = 160
   Constraints.MinWidth = 458
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

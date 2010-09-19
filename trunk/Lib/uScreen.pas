@@ -12,7 +12,7 @@ interface
 
 uses
 	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, 
 	StdCtrls, uDButton, uDForm;
 
 type
@@ -60,7 +60,7 @@ procedure AddLastMode(Width, Height, Bits, RefreshRate: UG);
 
 function SetScreenMode(Width, Height, Bits, RefreshRate: UG;
 	const Test, UpdateRegistry, Confirm, CanCreate, SaveLast: Boolean): Boolean;
-procedure SetSaveMode;
+procedure SetSafeMode;
 function RestoreStartMode: Boolean;
 procedure FillRefreshRates(Index, VF: UG);
 function DeleteScreenMode(Width, Height, Bits: UG): Boolean;
@@ -107,7 +107,7 @@ const
 	DefaultRetraceDelay = 560;
 
 	WorstVF = 30;
-	SaveVF = 60;
+	SafeVF = 60;
 	ErgoVF = 80;
 	BestVF = 200;
 
@@ -129,7 +129,7 @@ implementation
 {$R *.DFM}
 uses
 	Registry, Math, MMSystem,
-	uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput, uFormat, uSystem;
+	uMsg, uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput, uFormat, uSystem;
 var
 	SndBeep: PWave;
 	First: Boolean;
@@ -517,7 +517,7 @@ begin
 				if ScreenModes[i].RefreshRateListCount > 0 then
 					DefVF := ScreenModes[i].RefreshRateList[0]
 				else
-					DefVF := SaveVF;
+					DefVF := SafeVF;
 
 				if Reg.ValueExists('RefreshRate') then
 					ScreenModes[i].RefreshRate := StrToValI(Reg.ReadString('RefreshRate'), False, 0, DefVF, BestVF, 1)
@@ -589,13 +589,13 @@ begin
 	end;
 end;
 
-procedure SetSaveMode;
+procedure SetSafeMode;
 begin
 	SetScreenMode(
-		640,
-		480,
-		8,
-		SaveVF,
+		800,
+		600,
+		16,
+		SafeVF,
 		False, True, False, True, True);
 end;
 
@@ -834,7 +834,7 @@ begin
 		or ((RefreshRate <> 0) and (ScreenModes[ModeIndex].RefreshRate <> RefreshRate))
 		and ((ScreenModes[ModeIndex].Bits <> 32) or (Bits <> 24))
 		and ((ScreenModes[ModeIndex].Bits <> 24) or (Bits <> 32)) then
-			ErrorMessage('Screen mode ' + ScreenModeToStr(Width, Height, Bits, RefreshRate) +
+			ErrorMsg('Screen mode ' + ScreenModeToStr(Width, Height, Bits, RefreshRate) +
 				' can not be set, using ' +
 				ScreenModeToStr(ScreenModes[ModeIndex].Width, ScreenModes[ModeIndex].Height, ScreenModes[ModeIndex].Bits, ScreenModes[ModeIndex].RefreshRate));
 
@@ -877,12 +877,8 @@ begin
 			begin
 				PlayWave(SndBeep);
 				if LastModeIndex >= 0 then
-				if MessageD('Use mode ' + s + '?', mtConfirmation, [mbYes, mbNo]) <> mbYes then
+				if Confirmation('Use mode ' + s + '?', [mbYes, mbNo]) <> mbYes then
 				begin
-{						SetScreenMode(StartWidth, StartHeight,
-						StartBits, StartRefreshRate,
-						False, False, False, True);
-					Sleep(100);}
 					SetScreenMode(LastModes[LastModeIndex].Width, LastModes[LastModeIndex].Height,
 						LastModes[LastModeIndex].Bits, LastModes[LastModeIndex].RefreshRate,
 						False, UpdateRegistry, False, True, False);
@@ -898,7 +894,7 @@ begin
 				AddLastMode(NowWidth, NowHeight, NowBits, NowRefreshRate);
 		end
 		else
-			ErrorMessage('Can not change screen mode to ' + s);
+			ErrorMsg('Can not change screen mode to ' + s);
 	end;
 end;
 

@@ -12,16 +12,44 @@ interface
 
 uses
 	uTypes,
-	SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, Classes;
+	Classes, SysUtils;
 
+procedure APIOpen(FileName: TFileName; const Params: string = '');
+procedure PropertiesDialog(FileName: TFileName);
 function DropFiles(hDrop: U4): TStrings;
 function KeyToStr(Key: U2): string;
 
 implementation
 
 uses
-	Windows, Math, Dialogs, ShellAPI,
-	uStrings, uInput, uFiles, uParser, uWave, uFormat;
+	Windows, ShellAPI,
+	uMsg;
+
+procedure APIOpen(FileName: TFileName; const Params: string = '');
+label LRetry;
+var
+	ErrorCode: U4;
+begin
+	LRetry:
+	ErrorCode := ShellExecute(0, 'open', PChar('"' + FileName + '"'), PChar(Params), nil, SW_ShowNormal);
+	if ErrorCode <= 32 then
+		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
+end;
+
+procedure PropertiesDialog(FileName: TFileName);
+label LRetry;
+var
+	sei: TShellExecuteInfo;
+begin
+	LRetry:
+	FillChar(sei, SizeOf(sei), 0);
+	sei.cbSize := SizeOf(sei);
+	sei.lpFile := PChar(FileName);
+	sei.lpVerb := 'properties';
+	sei.fMask  := SEE_MASK_INVOKEIDLIST;
+	if ShellExecuteEx(@sei) = False then
+		if IOErrorRetry(FileName, GetLastError) then goto LRetry;
+end;
 
 function DropFiles(hDrop: U4): TStrings;
 var
@@ -82,8 +110,8 @@ begin
 	VK_PRINT: Result := 'Print';
 	VK_EXECUTE: Result := 'Execute';
 	VK_SNAPSHOT: Result := 'Print Screen';
-	VK_INSERT: Result := 'Insert';
-	VK_DELETE: Result := 'Delete';
+	VK_INSERT: Result := 'Ins';
+	VK_DELETE: Result := 'Del';
 	VK_HELP: Result := 'Help';
 { VK_0 thru VK_9 are the same as ASCII '0' thru '9' ($30 - $39) }
 { VK_A thru VK_Z are the same as ASCII 'A' thru 'Z' ($41 - $5A) }

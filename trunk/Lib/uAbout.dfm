@@ -236,72 +236,63 @@ object fAbout: TfAbout
     TabOrder = 0
     OnClick = ButtonOkClick
   end
-  object EditFirstRelease: TEdit
+  object EditFirstRelease: TDEdit
     Left = 224
     Top = 104
     Width = 65
     Height = 18
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 4
   end
-  object PanelRC: TEdit
+  object PanelRC: TDEdit
     Left = 56
     Top = 256
     Width = 45
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 11
-    Text = '999 999'
   end
-  object PanelTRT: TEdit
+  object PanelTRT: TDEdit
     Left = 152
     Top = 256
     Width = 137
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 12
-    Text = '365 days, 00:00:00.000'
   end
-  object PanelNRT: TEdit
+  object PanelNRT: TDEdit
     Left = 152
     Top = 232
     Width = 137
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 10
-    Text = '40 days, 00:00:00.000'
   end
-  object EditAuthor: TEdit
+  object EditAuthor: TDEdit
     Left = 56
     Top = 152
     Width = 137
     Height = 19
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     ReadOnly = True
     TabOrder = 6
   end
-  object EditWeb: TEdit
+  object EditWeb: TDEdit
     Left = 80
     Top = 200
     Width = 209
     Height = 19
     Cursor = crHandPoint
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
@@ -309,13 +300,12 @@ object fAbout: TfAbout
     TabOrder = 9
     OnClick = EditWebClick
   end
-  object EditEMail: TEdit
+  object EditEMail: TDEdit
     Left = 80
     Top = 176
     Width = 209
     Height = 19
     Cursor = crHandPoint
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
@@ -323,19 +313,17 @@ object fAbout: TfAbout
     TabOrder = 8
     OnClick = EditEMailClick
   end
-  object EditIcq: TEdit
+  object EditIcq: TDEdit
     Left = 224
     Top = 152
     Width = 65
     Height = 19
     Cursor = crHandPoint
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     ReadOnly = True
     TabOrder = 7
-    Text = '69-941-919'
     OnClick = EditIcqClick
   end
   object SysInfo1: TDButton
@@ -394,23 +382,21 @@ object fAbout: TfAbout
     TabOrder = 2
     TabStop = False
   end
-  object EditRelease: TEdit
+  object EditRelease: TDEdit
     Left = 224
     Top = 129
     Width = 65
     Height = 18
-    AutoSize = False
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 5
   end
-  object EditVersion: TEdit
+  object EditVersion: TDEdit
     Left = 200
     Top = 80
     Width = 89
     Height = 18
-    AutoSize = False
     BevelKind = bkSoft
     BiDiMode = bdLeftToRight
     BorderStyle = bsNone

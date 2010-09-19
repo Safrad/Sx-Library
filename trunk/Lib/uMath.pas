@@ -20,9 +20,6 @@ type
 	PSinTable = ^TSinTable;
 	TSinTable = array[0..32767] of TAngle;
 
-function RGBToHLS(C: TRGBA): THLSColor;
-function HLSToRGB(C: THLSColor): TRGBA;
-
 function Sgn(const I: S1): SG; overload;
 function Sgn(const I: S2): SG; overload;
 function Sgn(const I: S4): SG; overload;
@@ -47,6 +44,7 @@ function ModE(x, y: Extended): Extended;
 
 function FastSqrt(A: SG): SG;
 function LinearMax(Clock, Maximum: UG): UG;
+procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
 
 function RoundSG(Value: FA): SG;
 function RoundS8(Value: FA): S8;
@@ -144,189 +142,6 @@ nikoliv po kružnici, jak by bylo pøirozené.
 Dalším záporným jevem je nesymetrie modelu z hlediska pøechodù ve stupních šedi od èerné k bílé.
 Tyto nedostatky odstraòuje model HLS zavedený firmou Tektronix
 }
-
-function RGBToHLS(C: TRGBA): THLSColor;
-var
-	MaxC, MinC, delta, H: SG;
-begin
-	Result.H := -1;
-	Result.L := 0;
-	Result.S := 0;
-
-	MaxC := max(max(C.R, C.G), C.B);
-	MinC := min(min(C.R, C.G), C.B);
-
-	Result.L := (maxC + minC) div 2;
-
-	delta := maxC - minC;
-	if delta = 0 then
-	begin
-		Result.S := 0;
-		Result.H := -1;
-	end
-	else
-	begin
-		if (Result.L < 128) then
-			Result.S := RoundDiv(255 * delta, (maxC + minC))
-		else
-			Result.S := RoundDiv(255 * delta, (2 * 255 - maxC - minC));
-
-		H := 0;
-		if (C.R = maxC) then
-			H := ((MaxSpectrum + 1) div 6) * (C.G - C.B) div delta
-		else if (C.G = maxC) then
-			H := ((MaxSpectrum + 1) div 6) * 2 + RoundDiv(((MaxSpectrum + 1) div 6) * (C.B - C.R), delta)
-		else if (C.B = maxC) then
-			H := ((MaxSpectrum + 1) div 6) * 4 + RoundDiv(((MaxSpectrum + 1) div 6) * (C.R - C.G), delta);
-		if (H < 0) then Inc(H, (MaxSpectrum + 1));
-		Result.H := H;
-	end;
-end;
-
-function HLSToRGB(C: THLSColor): TRGBA;
-
-	function HLSRGBValue(n1, n2, hue: SG): U1;
-	begin
-		if(hue >= (MaxSpectrum + 1)) then
-			Dec(hue, (MaxSpectrum + 1))
-		else if (hue < 0) then
-			Inc(hue, (MaxSpectrum + 1));
-		if (hue < ((MaxSpectrum + 1) div 6)) then
-			Result := RoundDiv(n1+(n2-n1)*hue div ((MaxSpectrum + 1) div 6), 255)
-		else if (hue < ((MaxSpectrum + 1) div 2)) then
-			Result := RoundDiv(n2, 255)
-		else if (hue < (2 * (MaxSpectrum + 1) div 3)) then    //  n1+(n2-n1)*(240-hue)/60;
-			Result := RoundDiv(n1+(n2-n1)*(2 * (MaxSpectrum + 1) div 3-hue) div ((MaxSpectrum + 1) div 6), 255)
-		else
-			Result := RoundDiv(n1, 255);
-	end;
-
-var m2, m1: SG;
-begin
-	Result.L := 0;
-
-	if (C.L < 128) then
-		m2 := C.L * (255 + C.S)
-	else
-		m2 := 255 * (C.L + C.S) - C.L * C.S;
-	m1 := 2 * 255 * C.L - m2;
-	if (C.S = 0) then
-	begin
-		Result.R := C.L;
-		Result.G := C.L;
-		Result.B := C.L;
-	end
-	else
-	begin
-		Result.R := HLSRGBValue(m1, m2, C.H + ((MaxSpectrum + 1) div 3));
-		Result.G := HLSRGBValue(m1, m2, C.H);
-		Result.B := HLSRGBValue(m1, m2, C.H - ((MaxSpectrum + 1) div 3));
-	end;
-end;
-
-(*
-function RGBtoHSV(C: TRColor): THSVColor;
-var
-	MaxC, MinC, delta, H: SG;
-begin
-	maxC := Math.max(Math.max(C.r,C.g),C.b);
-	minC := Math.min(Math.min(C.r,C.g),C.b);
-
-	Result.v := maxC;
-	Result.h := 0;
-	h := 0;
-
-	if (maxC <> 0) then
-		Result.s := (maxC - minC) div maxC
-	else
-		Result.s := 0;
-
-	if(Result.s = 0) then
-		Result.h := -1
-	else
-	begin
-		delta := maxC - minC;
-		if(C.r = maxC) then h := 60*(C.g-C.b) div delta
-		else if(C.g = maxC) then h := 60*(2+(C.b-C.r)) div delta
-		else if(C.b = maxC) then h := 60*(4+(C.r-C.g)) div delta;
-		if(h<0) then Inc(h, 360);
-		Result.H := H;
-	end;
-end;*)
-
-(*
-function HSVtoRGB(C: THSVColor): TRColor;
-var i, f, p, q, t: SG;
-begin
-	Result.L := 0;
-	if(C.s = 0) then
-	begin
-		if(C.h = -1) then
-		begin
-			Result.r := C.v;
-			Result.g := C.v;
-			Result.b := C.v;
-		end
-		else
-		begin
-{							rIndex.setText("xxx");
-			gIndex.setText("xxx");
-			bIndex.setText("xxx");}
-		end;
-	end
-	else
-	begin
-		if(C.h = 360) then C.h := 0;
-
-		C.h:=C.h div 60;
-//		i := Floor(h);
-
-		f := C.h - i;
-		p := C.v*(1-C.s);
-		q := C.v*(1-(C.s*f));
-		t := C.v*(1-(C.s*(1-f)));
-
-		case i of
-		0:
-		begin
-			Result.r := C.v;
-			Result.g := t;
-			Result.b := p;
-		end;
-		1:
-		begin
-			Result.r := q;
-			Result.g := C.v;
-			Result.b := p;
-		end;
-		2:
-		begin
-			Result.r := p;
-			Result.g := C.v;
-			Result.b := t;
-		end;
-		3:
-		begin
-			Result.r := p;
-			Result.g := q;
-			Result.b := C.v;
-		end;
-		4:
-		begin
-			Result.r := t;
-			Result.g := p;
-			Result.b := C.v;
-		end;
-		5:
-		begin
-			Result.r := C.v;
-			Result.g := p;
-			Result.b := q;
-		end;
-		end;
-	end;
-end;
-*)
 
 function Sgn(const I: S1): SG;
 begin
@@ -489,7 +304,6 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-//		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
 		Assert(False);
 		Result := 0;
 		Exit;
@@ -543,6 +357,31 @@ begin
 	if Result > Maximum then Result := 2 * Maximum - Result;
 end;
 
+procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
+var T: SG;
+begin
+	case Angle and 3 of
+	// Up
+	1: // Left
+	begin
+		T := X;
+		X := Y;
+		Y := MaxX - T;
+	end;
+	2: // Down
+	begin
+		X := MaxX - X;
+		Y := MaxY - Y;
+	end;
+	3: // Right
+	begin
+		T := X;
+		X := MaxY - Y;
+		Y := T;
+	end;
+	end;
+end;
+
 function RoundSG(Value: FA): SG;
 begin
 	if Value > MaxInt then
@@ -592,7 +431,6 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-//		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
 		Assert(False);
 		Result := 0;
 		Exit;
@@ -609,7 +447,6 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-//		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
 		Assert(False);
 		Result := 0;
 		Exit;
@@ -627,7 +464,6 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-//		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
 		Assert(False);
 		Result := 0;
 		Exit;
@@ -648,7 +484,6 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-//		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
 		Assert(False);
 		Result := 0;
 		Exit;
@@ -669,7 +504,6 @@ begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
-//		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
 		Assert(False);
 		Result := 0;
 		Exit;
@@ -1401,11 +1235,11 @@ function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
 begin
 	{$ifopt d+}
 	if (OldSize < 0) or (OldSize > GB) then
-//		ErrorMessage('Bad AllocBy block OldSize' + LineSep + BToStr(OldSize));
-		Assert(False);
+//		ErrorMessage('' + LineSep + BToStr(OldSize));
+		Assert(False, 'Bad AllocBy block OldSize');
 	if (NewSize < 0) or (NewSize > GB) then
 //		ErrorMessage('Bad AllocBy block NewSize' + LineSep + BToStr(NewSize));
-		Assert(False);
+		Assert(False, 'Bad AllocBy block NewSize');
 	{$endif}
 
 	Result := False;
@@ -1415,7 +1249,7 @@ begin
 		if OldSize > 0 then
 		if OldSize <> 1 shl CalcShr(OldSize) then
 		begin
-			Assert(False);
+			Assert(False, 'Bad AllocBy block size');
 //			ErrorMessage('Bad AllocBy block size' + LineSep + BToStr(OldSize));
 		end;
 		{$endif}

@@ -13,7 +13,7 @@ interface
 {$R *.RES}
 uses
 	uTypes, uDBitmap,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls;
 
 type
@@ -51,8 +51,6 @@ type
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;
 		procedure WMSysColorChange(var Message: TWMSysColorChange); message WM_SYSCOLORCHANGE;
-	protected
-		{ Protected declarations }
 	public
 		{ Public declarations }
 		RC: HGLRC;
@@ -89,7 +87,7 @@ procedure glShadowText(Canvas: TCanvas;
 procedure glTextOut(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const C: TColor);
 procedure ShowTaskBar(Visible: Boolean);
-function GetScreen(var Rect: TRect): SG{Up, Down, Left, Right};
+function GetDesktopRect(var Rect: TRect): SG{Up, Down, Left, Right};
 
 procedure Register;
 
@@ -107,7 +105,7 @@ implementation
 
 uses
 	Math,
-	uGraph, uFiles, OpenGL12, uScreen, uSysInfo, uFormat, uStrings;
+	uGraph, uFiles, OpenGL12, uScreen, uSysInfo, uFormat, uStrings, uColor;
 const
 	OneBuffer = False;
 var
@@ -159,7 +157,7 @@ begin
 	Result := False;
 	if not Assigned(Form) then Exit;
 	if Form.Visible = False then Exit;
-	if Form.WindowState = wsMinimized then Exit; // D??? DNW
+	if Form.WindowState = wsMinimized then Exit; // TODO : DNW
 //	Style := GetWindowLong(Handle, GWL_STYLE);
 	Result := True;
 end;
@@ -258,7 +256,7 @@ begin
 		ShowWindow(hTaskBar, SW_HIDE);
 end;
 
-function GetScreen(var Rect: TRect): SG;
+function GetDesktopRect(var Rect: TRect): SG;
 var
 	hTaskBar: HWND;
 	RectT: TRect;
@@ -497,7 +495,7 @@ end;
 procedure TDForm.CheckPos;
 var Rect: TRect;
 begin
-	GetScreen(Rect);
+	GetDesktopRect(Rect);
 	if Left + Width > Rect.Right - Rect.Left then Left := Rect.Right - Rect.Left - Width;
 	if Top + Height > Rect.Bottom - Rect.Top then Top := Rect.Bottom - Rect.Top - Height;
 	if Left < Rect.Left then Left := Rect.Left;
@@ -511,6 +509,7 @@ begin
 	inherited Create(AOwner);
 
 	CheckPos;
+//	DoubleBuffered := True;
 
 	HorzScrollBar.Tracking := True;
 	VertScrollBar.Tracking := True;
@@ -520,8 +519,11 @@ begin
 	FBitmapB.SetSize(0, 0);
 
 	FileName := Name;
-	if FileName[1] = 'f' then Delete(FileName, 1, 1);
-	if FileName = 'Main' then FileName := Application.Title;
+	if Length(FileName) > 0 then
+	begin
+		if FileName[1] = 'f' then Delete(FileName, 1, 1);
+		if FileName = 'Main' then FileName := Application.Title;
+	end;
 
 	FileName := GraphDir + FileName + '.ico';
 	if FileExists(FileName) then

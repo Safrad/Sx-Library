@@ -3,7 +3,7 @@ unit uProjectInfo;
 interface
 
 uses
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	TypInfo;
 
 type

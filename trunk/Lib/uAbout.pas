@@ -13,7 +13,7 @@ interface
 uses
 	uDForm, uTypes, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage;
+	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit;
 
 type
 	TfAbout = class(TDForm)
@@ -25,29 +25,29 @@ type
 		LabelRunCount: TLabel;
 		LabelNowRunTime: TLabel;
 		LabelTotalRunTime: TLabel;
-    EditFirstRelease: TEdit;
-		PanelRC: TEdit;
-		PanelTRT: TEdit;
-		PanelNRT: TEdit;
+    EditFirstRelease: TDEdit;
+		PanelRC: TDEdit;
+		PanelTRT: TDEdit;
+		PanelNRT: TDEdit;
 		ImageName: TDImage;
 		LabelAuthor: TLabel;
     LabelFirstRelease: TLabel;
 		LabelEMail: TLabel;
-		EditAuthor: TEdit;
-		EditWeb: TEdit;
+		EditAuthor: TDEdit;
+		EditWeb: TDEdit;
 		LabelWeb: TLabel;
-		EditEMail: TEdit;
+		EditEMail: TDEdit;
 		Bevel: TBevel;
 		ImageAbout: TDImage;
 		LabelIcq: TLabel;
-		EditIcq: TEdit;
+		EditIcq: TDEdit;
 		SysInfo1: TDButton;
 		DButtonMemoryStatus: TDButton;
 		LabelCount: TLabel;
-    EditRelease: TEdit;
+    EditRelease: TDEdit;
     LabelRelease: TLabel;
 		LabelVersion: TLabel;
-		EditVersion: TEdit;
+		EditVersion: TDEdit;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -76,23 +76,10 @@ type
 		procedure LoadFile(AboutFile: TFileName);
 	end;
 
-const
-	paExit = -1;
-	paFile = -2;
-var
-	ParamFile: TFileName;
-	ParamIndex: SG = 0;
-
-procedure AcceptParams(AcceptFile: BG; Params: array of string; DesParams: array of string);
-function CompareParams: SG;
-procedure CloseParams;
-procedure HelpParams;
 procedure ReadMe;
 procedure Homepage;
-procedure Help; overload;
-procedure Help(HRef: string); overload;
-procedure ExtOpenFile(FileName: TFileName); overload;
-procedure ExtOpenFile(FileName: TFileName; Parameters: string); overload;
+{procedure Help; overload;
+procedure Help(HRef: string); overload;}
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
 procedure AboutRW(const Save: Boolean);
 var
@@ -106,145 +93,25 @@ implementation
 
 {$R *.DFM}
 uses
-	ShellAPI, Dialogs,
+	uAPI, uSimulation,
 	uProjectInfo,
-	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, {$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uFormat;
+	uGraph, uDIni, uScreen, uSysInfo, uFiles, uMsg, uError, uData, uWave, uColor,
+	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uFormat, uLog;
 var
 	LMemClock: U8;
 	RunProgramTime: U8;
 
-
-procedure AddMenus;
-{var
-	MainMenu: TMainMenu;
-begin
-	if Assigned(Application) and Assigned(Application.MainForm) then
-	begin
-		MainMenu := Application.MainForm.FindComponent('MainMenu');
-		if Assigned(MainMenu) then
-		begin
-			MainMenu.
-		end;
-	end;}
-begin
-end;
-
-var
-	AcceptFile: BG;
-	Params: array of string;
-	DesParams: array of string;
-	IllegalParam: BG = False;
-
-procedure AcceptParams(AcceptFile: BG; Params: array of string; DesParams: array of string);
-var i: SG;
-begin
-	uAbout.AcceptFile := AcceptFile;
-	SetLength(uAbout.Params, Length(Params));
-	for i := 0 to Length(uAbout.Params) - 1 do
-		uAbout.Params[i] := DelCharsF(Params[i], ' ');
-
-	SetLength(uAbout.DesParams, Length(DesParams));
-	for i := 0 to Length(uAbout.DesParams) - 1 do
-		uAbout.DesParams[i] := DesParams[i];
-end;
-
-function CompareParams: SG;
-label LAgain;
-var
-	i: SG;
-	Par: string;
-	AF: BG;
-begin
-	LAgain:
-	if ParamIndex >= ParamCount then
-		Result := paExit
-	else
-	begin
-		Par := ParamStr(ParamIndex + 1);
-		AF := AcceptFile;
-		if Par[1] = '-' then
-		begin
-			Delete(Par, 1, 1);
-			AF := False;
-		end
-		else if Par[1] = '/' then
-		begin
-			Delete(Par, 1, 1);
-			AF := False;
-		end;
-		Result := paFile;
-		for i := 0 to Length(Params) - 1 do
-		begin
-			if StartStr(UpperCase(Par), UpperCase(Params[i])) then
-			begin
-				Result := i;
-				Break;
-			end;
-		end;
-		if Result = paFile then
-		begin
-			if StartStr(UpperCase(Par), 'HELP') then
-			begin
-				HelpParams;
-				Inc(ParamIndex);
-				goto LAgain;
-			end;
-			if AF then
-			begin
-				ParamFile := FullDir(Par);
-				if (not FileExists(ParamFile)) and (not DirectoryExists(ParamFile)) then
-				begin
-					MessageD('Illegal command line parameter' + LineSep +
-						Par + LineSep +
-						'Command line file not found' + LineSep + ParamFile, mtWarning, [mbOK]);
-					IllegalParam := True;
-					Inc(ParamIndex);
-					goto LAgain;
-				end;
-			end
-			else
-			begin
-				MessageD('Illegal command line parameter' + LineSep + Par, mtWarning, [mbOK]);
-				IllegalParam := True;
-				Inc(ParamIndex);
-				goto LAgain;
-			end;
-
-		end;
-	end;
-	Inc(ParamIndex)
-end;
-
-procedure CloseParams;
-begin
-	if IllegalParam then HelpParams;
-end;
-
-procedure HelpParams;
-var
-	i: SG;
-	s: string;
-begin
-	s := 'Param.' + CharTab + 'Description' + LineSep;
-	s := s + StringOfChar('-', 96) + LineSep;
-	s := s + 'Help' + CharTab + 'Display this help dialog' + LineSep;
-	for i := 0 to Length(Params) - 1 do
-	begin
-		s := s + Params[i] + CharTab + DesParams[i] + LineSep;
-	end;
-	MessageD(s, mtInformation, [mbOK]);
-end;
-
 procedure ReadMe;
 begin
-	ExtOpenFile(WorkDir + 'ReadMe.htm');
+	APIOpen(WorkDir + 'ReadMe.htm');
 end;
 
 procedure Homepage;
 begin
-	ExtOpenFile(MyWeb + '/Software.html');
+	APIOpen(MyWeb + '/Software/' + DelFileExt(ExtractFileName(ExeFileName)) + '.html');
 end;
 
+{
 procedure Help;
 begin
 	ExtOpenFile(WorkDir + 'Help.rtf');
@@ -253,25 +120,7 @@ end;
 procedure Help(HRef: string);
 begin
 	ExtOpenFile(WorkDir + 'Help.htm#' + HRef);
-end;
-
-procedure ExtOpenFile(FileName: TFileName);
-var
-	ErrorCode: U4;
-begin
-	ErrorCode := ShellExecute(0, 'open', PChar('"' + FileName + '"'), nil, nil, SW_ShowNormal);
-	if ErrorCode <= 32 then
-		IOError(FileName, ErrorCode);
-end;
-
-procedure ExtOpenFile(FileName: TFileName; Parameters: string);
-var
-	ErrorCode: U4;
-begin
-	ErrorCode := ShellExecute(0, 'open', PChar('"' + FileName + '"'), PChar(Parameters), nil, SW_ShowNormal);
-	if ErrorCode <= 32 then
-		IOError(FileName, ErrorCode);
-end;
+end;}
 
 procedure ExecuteAbout2(AOwner: TComponent; FileName: TFileName; const Modal: Boolean);
 var
@@ -331,18 +180,9 @@ begin
 end;
 
 procedure AboutRW(const Save: Boolean);
-const
-	IdStr: array[Boolean] of Char = ('S', 'F');
-var
-	FileName: TFileName;
 begin
 	if Save then
-		RunTime := U8(GetTickCount - StartProgramTime) + RunProgramTime
-	else
-		AddMenus;
-
-	FileName := DelFileExt(ExeFileName) + '.log';
-	WriteStringToFile(FileName, IdStr[Save] + CharTab + DateTimeToS(Now) + FileSep, True);
+		RunTime := U8(TimeDifference(GetTickCount, StartProgramTime)) + RunProgramTime;
 
 	if Assigned(MainIni) then
 	begin
@@ -355,7 +195,7 @@ begin
 		if Save = False then
 		begin
 			Inc(RunCount);
-			StartProgramTime := GetTickCount;
+//			StartProgramTime := GetTickCount;
 			RunProgramTime := RunTime;
 		end;
 	end;
@@ -363,7 +203,7 @@ end;
 
 procedure TfAbout.InitNRT;
 begin
-	PanelNRT.Text := msToStr(GetTickCount - StartProgramTime + 1000 div 2, diDHMSD, 0, False);
+	PanelNRT.Text := msToStr(TimeDifference(GetTickCount, StartProgramTime) + Second div 2, diDHMSD, 0, False);
 end;
 
 procedure TfAbout.LoadFile(AboutFile: TFileName);
@@ -479,25 +319,13 @@ begin
 end;
 
 procedure TfAbout.EditWebClick(Sender: TObject);
-var
-	FileName: TFileName;
-	ErrorCode: U4;
 begin
-	FileName := PChar(EditWeb.Text);
-	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
-	if ErrorCode <= 32 then
-		IOError(FileName, ErrorCode);
+	APIOpen(EditWeb.Text);
 end;
 
 procedure TfAbout.EditEMailClick(Sender: TObject);
-var
-	FileName: TFileName;
-	ErrorCode: U4;
 begin
-	FileName := PChar('mailto: ' + EditEMail.Text);
-	ErrorCode := ShellExecute(0, 'open', PChar(FileName), nil, nil, SW_ShowNormal);
-	if ErrorCode <= 32 then
-		IOError(FileName, ErrorCode);
+	APIOpen('mailto: ' + EditEMail.Text);
 end;
 
 procedure TfAbout.DTimer1Timer(Sender: TObject);
@@ -522,7 +350,7 @@ end;
 
 procedure TfAbout.EditIcqClick(Sender: TObject);
 begin
-	ShellExecute(0, 'open', PChar('icq.exe'), nil, nil, SW_ShowNormal);
+	APIOpen('icq.exe');
 end;
 
 procedure TfAbout.SysInfo1Click(Sender: TObject);
@@ -598,7 +426,7 @@ begin
 		end;
 	end;
 
-	if Effect > 0 then
+	if (Effect > 0) and (BmpAbout <> nil) then
 	begin
 		RotateDef(BitmapAbout, BmpAbout, Typ, (U8(AngleCount) * U8(Timer1.Clock) div (4 * PerformanceFrequency)) and (AngleCount - 1), TEffect(Effect));
 	end;
@@ -655,12 +483,10 @@ initialization
 	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization
-	SetLength(Params, 0);
-	SetLength(DesParams, 0);
 	FreeAndNil(Flashs);
 {$ifopt d+}
 {	if (MemCount + 22 < AllocMemCount) {or
 		(MemSize + 6508 < AllocMemSize) then
-			MessageD('Memory Allocation Problem', mtWarning, [mbOk]);}
+			Warning('Memory Allocation Problem');}
 {$endif}
 end.

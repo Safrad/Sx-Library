@@ -15,11 +15,11 @@ const
 	MyEMail = 'safrad at email.cz';
 	MyWeb = 'http://safrad.webzdarma.cz';
 
-// Delphi <= 5
+{$ifdef VER130} // Delphi = 5
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
-//
+{$endif}
 
 type
 	SG = Integer; // LongInt for 32bit Delphi
@@ -181,52 +181,30 @@ type
 	TArrayChar = array[0..GB - 1] of AnsiChar;
 	PArrayChar = ^TArrayChar;
 
+	TArrayString = array[0..512 * MB - 2] of string;
+	PArrayString = ^TArrayString;
+
 	TIndex = SG;
 
 // Time
 const
+	MiliSecond = 1;
 	Second = 1000;
 	Minute = 60 * Second;
 	Hour = 60 * Minute;
 	Day = 24 * Hour;
 
-// Graphics
-const
-	MaxSpectrum = 1529;
-type
-	PRGB = ^TRGB;
-	TRGB = packed record // RGB=3
-		case Integer of
-		0: (R, G, B: U1);
-		1: (I: array[0..2] of U1);
-		2: (RG: U2);
-	end;
-	PRGBA = ^TRGBA;
-	TRGBA = packed record // RGBA=4
-		case Integer of
-		0: (R, G, B, A: U1);
-		1: (L: S4);
-		2: (I: array[0..3] of U1);
-		3: (RG, BA: U2);
-	end;
-
-	THLSColor = packed record // 4
-{		case Integer of
-		0:
-		(}
-		H: -1..MaxSpectrum; // 2
-		L: 0..255; // 1
-		S: 0..255; // 1
-(*		);
-		1: (
-		Hue: -1..MaxSpectrum; // 2
-		Lightness{Lum(inary, inous)}: 0..255; // 1
-		Saturation{Sat(iety)}: 0..255; // 1
-		);*)
-	end;
+	LoopSleepTime = 40;
 
 const
 	MinInt = Low(Integer);
+
+	{$EXTERNALSYM WM_XBUTTONDOWN}
+	WM_XBUTTONDOWN      = $020B;
+	{$EXTERNALSYM WM_XBUTTONUP}
+	WM_XBUTTONUP        = $020C;
+	{$EXTERNALSYM WM_XBUTTONDBLCLK}
+	WM_XBUTTONDBLCLK    = $020D;
 
 implementation
 

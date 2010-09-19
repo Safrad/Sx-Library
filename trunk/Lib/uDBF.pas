@@ -49,7 +49,7 @@ implementation
 
 uses
 	Windows, Variants,
-	uFiles, uStrings, uInput, uError, uFormat, uMath;
+	uFiles, uStrings, uInput, uMsg, uFormat, uMath;
 
 procedure TDBF.Close;
 var i, j: SG;
@@ -224,7 +224,7 @@ begin
 				{$ifopt d+}
 				IOErrorMessage(FileName, 'File Truncated');
 				{$endif}
-//				MessageD('File too short'., [mbOk]);
+//				ErrorMsg('File too short');
 				goto LExit; // Cutted file
 			end;
 //			F.BlockRead(SRow^, RowsSize);*)
