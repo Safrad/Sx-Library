@@ -780,6 +780,7 @@ begin
 end;
 
 procedure MainIniCreate;
+label LRetry;
 {var
 	Reg: TRegistry;
 	F: file;

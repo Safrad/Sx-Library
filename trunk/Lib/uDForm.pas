@@ -89,7 +89,7 @@ procedure glShadowText(Canvas: TCanvas;
 procedure glTextOut(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const C: TColor);
 procedure ShowTaskBar(Visible: Boolean);
-function GetScreen(var Rect: TRect): SG{Up, Down, Left, Right};
+procedure GetScreen(var Rect: TRect);
 
 procedure Register;
 
@@ -258,7 +258,7 @@ begin
 		ShowWindow(hTaskBar, SW_HIDE);
 end;
 
-function GetScreen(var Rect: TRect): SG;
+procedure GetScreen(var Rect: TRect);
 var
 	hTaskBar: HWND;
 	RectT: TRect;
@@ -274,27 +274,13 @@ begin
 	Rect.Bottom := h;
 
 	if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Top <= 0) then
-	begin
-		Rect.Top := RectT.Bottom; // Up
-		Result := 0;
-	end
+		Rect.Top := RectT.Bottom // Up
 	else if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Bottom >= h) then
-	begin
-		Rect.Bottom := RectT.Top; // Down
-		Result := 1;
-	end
+		Rect.Bottom := RectT.Top // Down
 	else if (RectT.Left <= 0) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-	begin
-		Rect.Left := RectT.Right; // Left
-		Result := 2;
-	end
+		Rect.Left := RectT.Right // Left
 	else if (RectT.Right >= w) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-	begin
-		Rect.Right := RectT.Left; // Right
-		Result := 3;
-	end
-	else
-		Result := -1;
+		Rect.Right := RectT.Left // Right
 end;
 {
 procedure TDForm.AfterCreate;
@@ -754,12 +740,11 @@ begin
 			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top,
 			SWP_NOZORDER + SWP_NOACTIVATE);}
 		SetWindowLong(Handle, GWL_STYLE, FWindowLong);
-		SetWindowPlacement(Handle, @FWindowPlacement);
-{		SetBounds(
+		SetBounds(
 			FWindowPlacement.rcNormalPosition.Left,
 			FWindowPlacement.rcNormalPosition.Top,
 			FWindowPlacement.rcNormalPosition.Right - FWindowPlacement.rcNormalPosition.Left,
-			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top); TaskBar problem }
+			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top);
 		FStoreWindow := False;
 		BringToFront;
 	end;
@@ -771,7 +756,7 @@ begin
 	FWindowLong := FWindowLong or WS_VISIBLE;
 	FWindowPlacement.Length := SizeOf(FWindowPlacement);
 	FStoreWindow := GetWindowPlacement(Handle, @FWindowPlacement);
-//	FStoreWindow := True;
+	FStoreWindow := True;
 end;
 
 procedure TDForm.SetCaption(Value: string);

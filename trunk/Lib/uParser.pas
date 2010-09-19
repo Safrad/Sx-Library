@@ -6,6 +6,14 @@
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
+{
+	Token = znak
+	Parser: Program kontolujici vyrazy
+	Syntakticky analyzator
+	---
+	Lexikalni analyzator (slovni zasoba)
+}
+
 unit uParser;
 
 interface
@@ -117,7 +125,6 @@ type
 		// 1
 		itPlus, itMinus, itMul, itDiv, // + - * /
 		itPower, // ^
-		itPower2,
 		itLBracket, itRBracket, // ( )
 		itLBracket2, itRBracket2, // [ ]
 		itLBracket3, itRBracket3, // { }
@@ -143,7 +150,7 @@ const
 		'Char', 'string',
 
 		'+', '-', '*', '/',
-		'^', '**',
+		'^',
 		'(', ')',
 		'[', ']',
 		'{', '}',
@@ -1313,18 +1320,7 @@ begin
 						'%': InputType := itPercent;
 						'+': InputType := itPlus;
 						'-': InputType := itMinus;
-						'*':
-						begin
-							if BufR[BufRI + 1] = '*' then
-							begin
-								InputType := itPower2;
-								Inc(BufRI);
-							end
-							else
-							begin
-								InputType := itMul;
-							end;
-						end;
+						'*': InputType := itMul;
 						'/': InputType := itDiv;
 						'^': InputType := itPower;
 						'(': InputType := itLBracket;
@@ -2031,7 +2027,7 @@ end;
 function TDParser.NodeG2(Node: PNode): PNode;
 begin
 	case InputType of
-	itPower, itPower2:
+	itPower:
 	begin
 		GetMem(Result, NodeArgs + 2 * SizeOf(Result.Args[0]));
 		Inc(TreeSize, NodeArgs + 2 * SizeOf(Result.Args[0]));
@@ -3196,20 +3192,7 @@ end;
 
 procedure TDParser.ReadToNewLine;
 begin
-{	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF) do
-		Inc(LineIndex);
-	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
-	if Line[LineIndex] = CharCR then
-	begin
-		Inc(LineIndex);
-		while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
-			Inc(LineIndex);
-	end
-	else
-		Inc(LineIndex); D??? }
-
-	while (not EOI) and (not (BufR[BufRI] in [CharCR, CharLF])) do // D???
+	while (not EOI) and (not (BufR[BufRI] in [CharCR, CharLF])) do
 	begin
 		Inc(BufRI);
 	end;

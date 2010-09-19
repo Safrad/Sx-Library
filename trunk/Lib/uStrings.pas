@@ -20,19 +20,15 @@ const
 	CharVT = #$0B;
 	CharLF = #$0A;// #10;
 	CharCR = #$0D;// #13;
-	{
-	DOSLineSep = CharCR + CharLF;
-	LinuxLineSep =  CharLF;
-	MacintoshLineSep = CharCR;
-	}
-	LineSep = CharLF; // Deafult
-	FullSep = CharCR + CharLF; // Required by some Windows components
+	// DOS: CharCR + CharLF; Linux/C++: CharLF; CharCR: NLP
+	LineSep = CharLF;
+	FullSep = CharCR + CharLF;
 	HTMLSep = LineSep;
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
 	CharTimes = '×';
-	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
+	Space = [CharNul, CharTab, CharLF, CharCR, CharSpace];
 
 	FalseTrue: array[0..1] of string = ('false', 'true');
 
@@ -75,7 +71,6 @@ function DelLastNumber(const s: string): string;
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
-procedure RepairNewLine(var Line: string);
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
 function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
@@ -378,23 +373,12 @@ function ReadToNewLine(const Line: string; var LineIndex: SG): string;
 var StartIndex: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF) do
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF)do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
-	if Line[LineIndex] = CharCR then
-	begin
+	Inc(LineIndex);
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
 		Inc(LineIndex);
-		while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
-			Inc(LineIndex);
-	end
-	else
-		Inc(LineIndex);
-end;
-
-procedure RepairNewLine(var Line: string);
-begin
-	Replace(Line, FullSep, LineSep);
-	Replace(Line, CharCR, LineSep);
 end;
 
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
