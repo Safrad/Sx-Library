@@ -144,18 +144,24 @@ begin
 	MenuSet(PopupMenuFE, AdvancedDraw);
 	DViewFileExtensions.ColumnCount := 2;
 	DViewFileExtensions.Columns[0].Caption := 'Extension';
-	DViewFileExtensions.Columns[0].Width := DViewFileExtensions.Bitmap.Canvas.TextWidth('www') + CellBorder;
+	DViewFileExtensions.Columns[0].Width := DViewFileExtensions.CellWidth('Folder');
 	DViewFileExtensions.Columns[1].Caption := 'Description';
 	DViewFileExtensions.Columns[1].Width := DViewFileExtensions.Width - DViewFileExtensions.Columns[0].Width;
 
-	MainIni.RWFormPos(Self, False);
-	MainIni.RWDView(DViewFileExtensions, False);
+	if Assigned(MainIni) then
+	begin
+		MainIni.RWFormPos(Self, False);
+		MainIni.RWDView(DViewFileExtensions, False);
+	end;
 end;
 
 procedure TfFileExt.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-	MainIni.RWFormPos(Self, True);
-	MainIni.RWDView(DViewFileExtensions, True);
+	if Assigned(MainIni) then
+	begin
+		MainIni.RWFormPos(Self, True);
+		MainIni.RWDView(DViewFileExtensions, True);
+	end;
 end;
 
 procedure TfFileExt.PopupMenuFEPopup(Sender: TObject);

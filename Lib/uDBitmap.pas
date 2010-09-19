@@ -8,11 +8,9 @@
 
 unit uDBitmap;
 
-{$define BPP4}
+// {$define BPP4}
 
-// D??? Rotated-Grid Anti-Aliasing
-
-// adc ax, 0 - round
+// D??? ToDo: Rotated-Grid Anti-Aliasing, Alpha blending
 
 interface
 
@@ -157,6 +155,7 @@ const
 	FontWidth: array[TRasterFontStyle] of SG = (6, 8, 8);
 	FontHeight: array[TRasterFontStyle] of SG = (8, 8, 16);
 
+function WidthToByteX(const Width: U4): U4;
 procedure Pix(PD: Pointer; ByteXD: UG; X, Y: U4; C: PRGBA; Effect: TEffect);
 procedure GetPix(PD: Pointer; ByteXD: UG; X, Y: U4; out C: TRGBA);
 
@@ -201,6 +200,7 @@ type
 		property Data: PPixel read FData;
 		property GLData: PPixel read FGLData;
 		property PixelFormat: TPixelFormat read FPixelFormat;
+		procedure Init;
 		procedure SetSize(NewWidth, NewHeight: TCoor);
 		procedure Sample(Width, Height: TCoor);
 		procedure GLSetSize;
@@ -1377,12 +1377,16 @@ asm
 	mul edx // edx & eax = eax * edx
 	sub edi, eax
 
+	{$ifdef BPP4}
 	mov eax, [edi]
 	mov edi, C
-	{$ifdef BPP4}
 	mov [edi], eax
 	{$else}
-	shr eax, 8
+	xor eax, eax
+	mov ax, [edi + 1]
+	shl eax, 8
+	mov al, [edi]
+	mov edi, C
 	mov [edi], eax
 	{$endif}
 
@@ -1412,11 +1416,7 @@ end;
 constructor TDBitmap.Create;
 begin
 	inherited;
-{	FCanvas := TCanvas.Create;
-	FCanvas.Handle := CreateCompatibleDC(GetDC(0));}
-	FPixelFormat := {$ifdef BPP4}pf32bit{$else}pf24bit{$endif};
-	Canvas.OnChange := nil; // Must be !!!
-	Canvas.OnChanging := nil;
+	Init;
 	SetSize(0, 0);
 end;
 
@@ -1451,10 +1451,7 @@ begin
 	begin
 //		if FGLData <> nil then FreeMem(FGLData);
 		try
-			Canvas.Brush.Style := bsSolid;
-			Canvas.Brush.Color := clAppWorkSpace;
-			// Faster
-			inherited PixelFormat := {$ifdef BPP4}pf32bit{$else}pf24bit{$endif};
+			Init;
 			inherited Width := 0;
 			inherited Height := 0;
 			inherited Width := NewWidth;
@@ -1713,10 +1710,12 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 		P1: PByte;
 		PS: PPixel;
 		PD: PPixel;
+		ReadStd: BG;
 	begin
 		Result := False;
 		F := TFile.Create;
 		LRetry:
+		ReadStd := False;
 		if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
 		begin
 			FSize := F.FileSize;
@@ -1735,8 +1734,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 			SetSize(BitmapHead.Width, BitmapHead.Height);
 			if BitmapHead.Compression <> 0 then
 			begin
+				ReadStd := True;
 //				IOErrorMessage(FileName, 'is compressed');
-
 				goto LFin;
 			end;
 			case BitmapHead.Bits of
@@ -1748,7 +1747,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * SG(WidthToByteX4(BitmapHead.Width)));
+//					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * SG(WidthToByteX4(BitmapHead.Width)));
+					P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX4(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						if (x and 1) = 0 then
@@ -1779,7 +1779,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * SG(WidthToByteX8(BitmapHead.Width)));
+//					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * SG(WidthToByteX8(BitmapHead.Width)));
+					P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX8(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						PD.R := BitmapHead.Colors[P1^].R;
@@ -1801,7 +1802,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX24(BitmapHead.Width)));
+//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX24(BitmapHead.Width)));
+					PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX24(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						PD^ := PS^;
@@ -1828,7 +1830,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 				for y := 0 to BitmapHead.Height - 1 do
 				begin
 					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX32(BitmapHead.Width)));
+//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX32(BitmapHead.Width)));
+					PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX32(BitmapHead.Width)));
 					for x := 0 to BitmapHead.Width - 1 do
 					begin
 						PD.RG := PS.RG;
@@ -1840,7 +1843,8 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 				{$endif}
 			end;
 			else
-				IOErrorMessage(FileName, 'Invalid pixel format');
+				ReadStd := True;
+//				IOErrorMessage(FileName, 'Invalid pixel format');
 				goto LFin;
 			end;
 			Result := True;
@@ -1848,7 +1852,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 			LFin:
 			F.Close;
 			F.Free;
-			if BitmapHead.Compression <> 0 then
+			if ReadStd then
 				Result := ReadComp;
 			FreeMem(BitmapHead);
 		end;
@@ -2193,7 +2197,7 @@ begin
 			MyBmp.TransparentColor := TransparentColor;
 			MyGif.Free;
 			MyPng.Assign(MyBmp);
-			MyBmp.Free; D??? *)
+			MyBmp.Free; *)
 
 			MyBmp := TBitmap.Create;
 			Self.GetBitmap(MyBmp);
@@ -7352,7 +7356,7 @@ end;
 (*-------------------------------------------------------------------------*)
 procedure TDBitmap.Resize(
 	const NewX, NewY: UG; BmpS: TDBitmap = nil;
-	const InterruptProcedure: TInterruptProcedure = nil); // D??? Alpha
+	const InterruptProcedure: TInterruptProcedure = nil);
 var
 	PS, PD: PPixel;
 
@@ -7778,7 +7782,7 @@ var
 	Pixel: TPixel;
 	Done, LDone: U2;
 	C: array[0..3] of TRGBA;
-	RColor: TRGBA;
+	RColor: TPixel;
 	HidedColor: TColor;
 	HidedColorR, RandEffectR: TRGBA;
 begin
@@ -8075,7 +8079,12 @@ begin
 				RColor.B := B;
 			if (HidedColor = clNone) then
 			begin
+				{$ifdef BPP4}
 				PDXY^ := RColor;
+				{$else}
+				PDXY^.RG := RColor.RG;
+				PDXY^.B := RColor.B;
+				{$endif}
 			end
 			else
 			begin
@@ -9771,8 +9780,8 @@ begin
 end;
 
 procedure TDBitmap.Arrow(X, Y, X2, Y2: SG; Size: SG; Color: TColor; Effect: TEffect);
-{var
-	i: SG;}
+var
+	Len: SG;
 begin
 	if Sins = nil then
 	begin
@@ -9780,11 +9789,20 @@ begin
 		FillSinTable(Sins, AngleCount, SinDiv);
 	end;
 
-	// D???
 	Line(x, y, x2, y2, Color, Effect);
 	Bar(x - 1, y - 1, x + 1, y + 1, Color, Effect);
-{	Line(x2 - 3, y2 - 3, x2, y2, C, ef16);
-	Line(x2 - 3 * Sins, y2 + 3, x2, y2, C, ef16);}
+
+	Len := Round(Sqrt(Sqr(X - X2) + Sqr(Y - Y2)));
+	if Len > 0 then
+	begin
+		Len := Len * 8;
+		Line(x2, y2,
+			X + 4 * (Y - Y2) div Len,
+			Y - 4 * (X - X2) div Len, Color, Effect);
+		Line(x2, y2,
+			X - 4 * (Y - Y2) div Len,
+			Y + 4 * (X - X2) div Len, Color, Effect);
+	end;
 end;
 
 procedure TDBitmap.DrawHand(CX, CY: SG; Angle: TAngle; Len, Size: SG;
@@ -10460,6 +10478,19 @@ function TDBitmap.GetCanvas: TCanvas;
 begin
 	Result := Canvas;
 end;}
+
+procedure TDBitmap.Init;
+begin
+	Canvas.Brush.Style := bsSolid;
+	Canvas.Brush.Color := clAppWorkSpace;
+{	FCanvas := TCanvas.Create;
+	FCanvas.Handle := CreateCompatibleDC(GetDC(0));}
+	FPixelFormat := {$ifdef BPP4}pf32bit{$else}pf24bit{$endif};
+	Canvas.OnChange := nil; // Must be !!!
+	Canvas.OnChanging := nil;
+
+	inherited PixelFormat := {$ifdef BPP4}pf32bit{$else}pf24bit{$endif};
+end;
 
 initialization
 	AllPictures := DialogStr(AllPictureExt, AllPictureDes);

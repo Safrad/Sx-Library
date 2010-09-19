@@ -17,21 +17,24 @@ uses
 const
 	MaxReopen = 100;
 type
+	TReopenExists = (reNo, reUnknown, reYes);
 	TReopenItem = packed record // 16
 		FileName: TFileName; // 4
+		FilePos: S4; // 4
 		MenuItem: TMenuItem; // 4
-		Exists: U4; // 4
-		OpenedCount: U4; // 4
+		OpenedCount: U2; // 2
+		Exists: TReopenExists; // 1
+		Reserved: U1; // 1
 	end;
 
 	TReopen = class
 	private
 		ReopenItems: array of TReopenItem;
-		ReopenCount: Integer;
+		ReopenCount: SG;
 
 		MenuN, MenuAll, MenuClear, MenuLimit: TMenuItem;
-		procedure CreateMenuItem(const i: Integer);
-		procedure SetReopenMenuItems(const Limit: Integer);
+		procedure CreateMenuItem(const i: SG);
+		procedure SetReopenMenuItems(const Limit: UG);
 		procedure ReopenAllClick(Sender: TObject);
 		procedure ReopenClearClick(Sender: TObject);
 		procedure ReopenLimitClick(Sender: TObject);
@@ -40,10 +43,10 @@ type
 		MultiFiles: BG;
 		Reopen1: TMenuItem;
 
-		LoadFromFile: function(FileName: TFileName; ReadOnly: BG = False): BG of object;
+		LoadFromFile: function(FileName: TFileName; FilePos: SG = 0; ReadOnly: BG = False): BG of object;
 		ChangeFile: TNotifyEvent;
 
-		OpenedFiles: Integer; // Suma ReopenItems[n].OpenedCount
+		OpenedFiles: UG; // Suma ReopenItems[n].OpenedCount
 
 		constructor Create;
 		destructor Destroy; override;
@@ -63,19 +66,19 @@ uses
 	uFiles, uDIni, uGetInt, uGraph, uDBitmap, uError, uMenus, uStrings, uFormat;
 
 var
-	ReopenLimit: Integer;
-	ReopenBitmaps: array[0..2] of TBitmap;
+	ReopenLimit: SG;
+	ReopenBitmaps: array[TReopenExists] of TBitmap;
 
 constructor TReopen.Create;
 const
-	ReopenResNames: array[0..2] of PChar = ('Cancel', 'Help', 'Ok');
+	ReopenResNames: array[TReopenExists] of PChar = ('Cancel', 'Help', 'Ok');
 var i: SG;
 begin
 	inherited;
 	for i := 0 to Length(ReopenBitmaps) - 1 do
 	begin
-		ReopenBitmaps[i] := TBitmap.Create;
-		ImgAdd(ReopenBitmaps[i], ReopenResNames[i]);
+		ReopenBitmaps[TReopenExists(i)] := TBitmap.Create;
+		ImgAdd(ReopenBitmaps[TReopenExists(i)], ReopenResNames[TReopenExists(i)]);
 	end;
 end;
 
@@ -83,7 +86,7 @@ destructor TReopen.Destroy;
 var i: SG;
 begin
 	for i := 0 to Length(ReopenBitmaps) - 1 do
-		FreeAndNil(ReopenBitmaps[i]);
+		FreeAndNil(ReopenBitmaps[TReopenExists(i)]);
 	for i := 0 to ReopenCount - 1 do
 	begin
 		if Assigned(ReopenItems[i].MenuItem) then
@@ -107,7 +110,7 @@ end;
 
 procedure TReopen.ReopenAllClick(Sender: TObject);
 var
-	i: Integer;
+	i: SG;
 	Opened: BG;
 begin
 	Opened := False;
@@ -131,12 +134,12 @@ end;
 
 procedure TReopen.ReopenClearClick(Sender: TObject);
 var
-	i, j: Integer;
+	i, j: SG;
 begin
 	i := 0;
 	while i < ReopenCount do
 	begin
-		if (ReopenItems[i].Exists = 0) then
+		if (ReopenItems[i].Exists = reNo) then
 		begin
 			ReopenItems[i].FileName := '';
 			FreeAndNil(ReopenItems[i].MenuItem);
@@ -155,7 +158,7 @@ begin
 	DrawReopenCaption;
 end;
 
-procedure TReopen.CreateMenuItem(const i: Integer);
+procedure TReopen.CreateMenuItem(const i: SG);
 begin
 	ReopenItems[i].MenuItem := TMenuItem.Create(Reopen1);
 	ReopenItems[i].MenuItem.Tag := i;
@@ -165,8 +168,8 @@ begin
 	Reopen1.Insert(i, ReopenItems[i].MenuItem);
 end;
 
-procedure TReopen.SetReopenMenuItems(const Limit: Integer);
-var i, MaxPos: Integer;
+procedure TReopen.SetReopenMenuItems(const Limit: UG);
+var i, MaxPos: SG;
 begin
 	if Reopen1 = nil then Exit;
 	MaxPos := Min(ReopenCount, Limit);
@@ -239,7 +242,7 @@ end;
 
 procedure TReopen.RWReopenNames(const Selection: string; const Save: BG);
 var
-	i: Integer;
+	i: SG;
 	ReopenC, ReopenO: SG;
 begin
 	if Save = True then ReopenC := ReopenCount else ReopenC := 0;
@@ -257,7 +260,7 @@ begin
 		begin
 			ReopenItems[ReopenO + i].FileName := '';
 			ReopenItems[ReopenO + i].MenuItem := nil;
-			ReopenItems[ReopenO + i].Exists := 1;
+			ReopenItems[ReopenO + i].Exists := reUnknown;
 			ReopenItems[ReopenO + i].OpenedCount := 0;
 		end;
 	end;
@@ -265,20 +268,22 @@ begin
 	for i := 0 to ReopenCount - 1 do
 	begin
 		ReopenItems[i].FileName := FullDir(MainIni.RWStringF(Selection, 'Reopen' + IntToStr(i), ShortDir(ReopenItems[i].FileName), '', Save));
+		if (Save = False) or (ReopenItems[i].FilePos <> 0) then
+			MainIni.RWNum(Selection, 'Reopen' + IntToStr(i) + 'Pos', ReopenItems[i].FilePos, Save);
 	end;
 	if Save = False then
 		for i := 0 to ReopenCount - 1 do
 		begin
 			ReopenItems[i].MenuItem := nil;
-			ReopenItems[i].Exists := 1;
+			ReopenItems[i].Exists := reUnknown;
 			ReopenItems[i].OpenedCount := 0;
 		end;
 end;
 
 procedure TReopen.AddReopenCaption(const FileName: TFileName);
 var
-	i, InsertPos: Integer;
-	OpenedCount: Integer;
+	i, InsertPos: SG;
+	OpenedCount: UG;
 begin
 	InsertPos := ReopenCount;
 	for i := 0 to ReopenCount - 1 do
@@ -318,7 +323,7 @@ begin
 	if ReopenCount > 0 then
 	begin
 		ReopenItems[0].FileName := FileName;
-		ReopenItems[0].Exists := 1;
+		ReopenItems[0].Exists := reUnknown;
 		ReopenItems[0].OpenedCount := OpenedCount;
 	end;
 	Inc(OpenedFiles);
@@ -326,7 +331,7 @@ end;
 
 procedure TReopen.CloseFile(const FileName: TFileName);
 var
-	j: Integer;
+	j: SG;
 begin
 	if OpenedFiles <= 0 then
 	begin
@@ -351,14 +356,14 @@ begin
 	ErrorMessage('Reopen: File never opened' + LineSep + FileName);
 end;
 
-function ReopenFileExists(FileName: TFileName): Integer;
+function ReopenFileExists(FileName: TFileName): TReopenExists;
 var
-	DriveType: Integer;
+	DriveType: SG;
 	P: array[0..3] of Char;
 begin
 	if Length(FileName) < 3 then
 	begin
-		Result := 0;
+		Result := reNo;
 		Exit;
 	end;
 
@@ -373,19 +378,19 @@ begin
 	if (DriveType = DRIVE_FIXED) or (DriveType = DRIVE_RAMDISK) then
 	begin
 		if not FileExists(FileName) then
-			Result := 0
+			Result := reNo
 		else
-			Result := 2;
+			Result := reYes;
 	end
 	else
-		Result := 1;
+		Result := reUnknown;
 end;
 
 procedure TReopen.DrawReopenCaption;
 var
 	i, j: SG;
 	NotExistsCount, ReopenAllCount: SG;
-	Exists: U4;
+	Exists: TReopenExists;
 	s: string;
 	ReopenItem: TReopenItem;
 begin
@@ -426,7 +431,7 @@ begin
 	for i := 0 to ReopenCount - 1 do
 	begin
 		Exists := ReopenFileExists(ReopenItems[i].FileName);
-		if Exists = 0 then
+		if Exists = reNo then
 		begin
 			Inc(NotExistsCount);
 		end;

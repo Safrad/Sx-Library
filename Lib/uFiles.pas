@@ -115,8 +115,8 @@ function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccess
 	end;
 }
 const
-	AllFiles = '|All Files (*.*)|*.*';
-	AllText = 'Text file (*.txt)|*.txt' + AllFiles;
+	AllFiles = 'All Files (*.*)|*.*';
+	AllText = 'Text file (*.txt)|*.txt|' + AllFiles;
 var
 	StartDir, // Dir with Ini and configuratios files (read and write)
 	WorkDir, // Dir with exe file, data files (read only)
@@ -142,7 +142,7 @@ function AddAfterName(const FName: string; const Text: string): string;
 function BackDir(var Dir: string): BG;
 function BackDirF(Dir: string): string;
 function LegalFileName(const FileName: string): string;
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: Boolean);
 function GetFileSizeU(HFile: THandle): U8; overload;
 function GetFileSizeU(const FileName: TFileName): U8; overload;
 function GetFileSizeS(const FileName: TFileName): string;
@@ -876,7 +876,7 @@ begin
 	end;
 end;
 
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path, Extension: string; Files, Dirs, SubDirs, Sort: Boolean);
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: Boolean);
 var
 	NewSize: SG;
 	IsDir, IsFile: BG;
@@ -885,6 +885,8 @@ var
 		procedure ReadSubDir(SubPath: string);
 		var
 			SearchRec: TSearchRec;
+			Read: BG;
+			i: SG;
 		begin
 			// faReadOnly or faHidden or faSysFile or faArchive or faDirectory
 			ErrorCode := FindFirst(Path + SubPath + '*.*', faAnyFile, SearchRec);
@@ -897,8 +899,21 @@ var
 				if (IsDir and Dirs)
 				or (IsFile and Files) then
 				begin
-					if (Extension = '') or (Extension = '*') or (Extension = '*.*') or
-					(UpperCase(ExtractFileExt(SearchRec.Name)) = UpperCase(Extension)) then
+					if Length(Extensions) = 0 then
+						Read := True
+					else
+					begin
+						Read := False;
+						for i := 0 to Length(Extensions) - 1 do
+						begin
+							if UpperCase(ExtractFileExt(SearchRec.Name)) = '.' + UpperCase(Extensions[i]) then
+							begin
+								Read := True;
+								Break;
+							end;
+						end;
+					end;
+					if Read then
 					begin
 						NewSize := FilesCount + 1;
 						if AllocByExp(Length(FileNames), NewSize) then
@@ -929,9 +944,17 @@ var
 	Switch: Integer;
 	FileName: TFileName;
 begin
+	{$ifopt d+}
+	for i := 0 to Length(Extensions) - 1 do
+	begin
+		Assert(Length(Extensions[i]) > 0);
+		Assert(Extensions[i, 1] <> '.');
+	end;
+	{$endif}
+{						if (Extensions = '') or (Extension = '*') or (Extension = '*.*') or
 	if Length(Extension) > 1 then
 		if (Extension <> '*') and (Extension <> '*.*') then
-			if Extension[1] <> '.' then Extension := '.' + Extension;
+			if Extension[1] <> '.' then Extension := '.' + Extension;}
 	CorrectDir(Path);
 
 	ReadSubDir('');
@@ -1742,19 +1765,25 @@ var
 	i: SG;
 	s1, s2: string;
 begin
+	if Length(Ext) > 1 then
+	begin
+		for i := 0 to Length(Ext) - 1 do
+		begin
+			s1 := s1 + {'*.' +} Ext[i] + ', ';
+			s2 := s2 + '*.' + Ext[i] + ';';
+		end;
+		DelLastChar(s1);
+		s1[Length(s1)] := ')';
+		DelLastChar(s2);
+		Result := 'Any (' + s1 + '|' + s2 + '|';
+	end
+	else
+		Result := '';
 	for i := 0 to Length(Ext) - 1 do
 	begin
-		s1 := s1 + {'*.' +} Ext[i] + ', ';
-		s2 := s2 + '*.' + Ext[i] + ';';
+		Result := Result + Des[i] + ' (*.' + Ext[i] + ')|*.' + Ext[i] + '|';
 	end;
-	SetLength(s1, Length(s1) - 1);
-	s1[Length(s1)] := ')';
-	SetLength(s2, Length(s2) - 1);
-	Result := 'Any (' + s1 + '|' + s2;
-	for i := 0 to Length(Ext) - 1 do
-	begin
-		Result := Result + '|' + Des[i] + ' (*.' + Ext[i] + ')|*.' + Ext[i];
-	end;
+	DelLastChar(Result);
 	Result := Result + AllFiles;
 end;
 

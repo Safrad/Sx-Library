@@ -91,9 +91,9 @@ begin
 			while not FIn.Eof do
 			begin
 				FIn.Readln(Line);
-				InLineIndex := 1;
+				RemoveComment(Line);
 				if Line = '' then Continue;
-				if Line[1] = ';' then Continue;
+				InLineIndex := 1;
 				if FileIndex and 1 = 0 then
 				begin // MIF
 					case WhereMif of

@@ -48,12 +48,15 @@ function NegMonoColor(C: TColor): TColor;
 
 function MixColors(C1, C2: TColor): TColor; overload;
 function MixColors(C1, C2: TRGBA): TRGBA; overload;
+function MixColors(C1, C2: TRGB): TRGB; overload;
 
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
 function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
+function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
 
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
+function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
 
 procedure ShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
@@ -367,11 +370,11 @@ end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor): TColor; overload;
 begin
-	if C1 = C2 then
+{	if C1 = C2 then
 	begin
 		Result := C1;
 		Exit;
-	end;
+	end;}
 	if ((C1 = clBtnShadow) and (C2 = clBtnHighlight)) or
 		((C2 = clBtnShadow) and (C1 = clBtnHighlight)) then
 		Result := cl3DLight
@@ -392,15 +395,22 @@ end;
 
 function MixColors(C1, C2: TRGBA): TRGBA; overload;
 begin
-	if C1.L = C2.L then
+{	if C1.L = C2.L then
 	begin
 		Result := C1;
 		Exit;
-	end;
+	end;}
 	Result.R := (C1.R + C2.R) shr 1;
 	Result.G := (C1.G + C2.G) shr 1;
 	Result.B := (C1.B + C2.B) shr 1;
 	Result.A := (C1.B + C2.B) shr 1;
+end;
+
+function MixColors(C1, C2: TRGB): TRGB; overload;
+begin
+	Result.R := (C1.R + C2.R) shr 1;
+	Result.G := (C1.G + C2.G) shr 1;
+	Result.B := (C1.B + C2.B) shr 1;
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
@@ -423,12 +433,26 @@ begin
 	Result.A := (Per1 * C1.A + Per2 * C2.A + 32768) shr 16;
 end;
 (*-------------------------------------------------------------------------*)
+function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
+begin
+	Assert((Per1 >= 0) and (Per1 <= 65536));
+	Assert((Per2 >= 0) and (Per2 <= 65536));
+	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
+	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
+	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
+end;
+(*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 begin
 	Result := MixColors(C1, C2, Per, 65536 - Per);
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
+begin
+	Result := MixColors(C1, C2, Per, 65536 - Per);
+end;
+(*-------------------------------------------------------------------------*)
+function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
 begin
 	Result := MixColors(C1, C2, Per, 65536 - Per);
 end;
@@ -569,7 +593,7 @@ begin
 		B := Canvas.Brush.Style;
 		Canvas.Brush.Style := bsClear;
 		C := Canvas.Font.Color;
-		Canvas.Font.Color := $808080; // D??? 50% transparency
+		Canvas.Font.Color := $808080;
 		repeat
 			OffsetRect(R, FontShadow, FontShadow);
 //			ExtTextOut(Canvas.Handle, X, Y, 0, nil, PChar(Text), Length(Text), nil);
@@ -599,7 +623,7 @@ procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
 const Border = 0;
 var
 	i, LastSpace{, k}: Integer;
-	Lines: array of string; // D??? Breaks!
+	Lines: array of string;
 	LineCount: SG;
 	Text, TextR: string;
 	CurX, CurY: Integer;
@@ -614,7 +638,6 @@ begin
 	LineCount := 0;
 	i := 1;
 	LastSpace := 0;
-	DelChars(Caption, CharCR);
 	while i <= Length(Caption) do
 	begin
 		if Caption[i] = CharSpace then
@@ -622,14 +645,18 @@ begin
 			LastSpace := i;
 		end;
 
-		if (Caption[i] = CharLF) or
+		if (Caption[i] in [CharCR, CharLF]) or
 			((LineCount < MaxLines) and (i > 1) and
 			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left))) then
 		begin
-			if Caption[i] = CharLF then
+			if Caption[i] in [CharCR, CharLF] then
 			begin
+				if (i <= Length(Caption)) and (Caption[i] = CharCR) and (Caption[i + 1] = CharLF) then
+					NewSize := 2
+				else
+					NewSize := 1;
 				Lines[LineCount] := Copy(Caption, 1, i - 1);
-				Delete(Caption, 1, i);
+				Delete(Caption, NewSize, i);
 			end
 			else
 			if LastSpace = 0 then
