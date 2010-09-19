@@ -25,12 +25,11 @@ type
     LabelRunCount: TLabel;
     LabelNowRunTime: TLabel;
     LabelTotalRunTime: TLabel;
-    EditCreated: TEdit;
+    EditCreationDate: TEdit;
     PanelRC: TEdit;
     PanelTRT: TEdit;
     PanelNRT: TEdit;
 		ImageName: TDImage;
-		ImageVersion: TDImage;
     LabelAuthor: TLabel;
     LabelCreated: TLabel;
     LabelEMail: TLabel;
@@ -47,8 +46,10 @@ type
 		SysInfo1: TDButton;
 		DButtonMemoryStatus: TDButton;
     LabelCount: TLabel;
-		EditModified: TEdit;
+    EditReleaseDate: TEdit;
     LabelModified: TLabel;
+    LabelVersion: TLabel;
+    EditVersion: TEdit;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -64,7 +65,6 @@ type
 		procedure ImageAboutMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
 		procedure ImageNameFill(Sender: TObject);
-		procedure ImageVersionFill(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
 		procedure DButtonMemoryStatusClick(Sender: TObject);
 		procedure FormHide(Sender: TObject);
@@ -285,9 +285,10 @@ begin
 		BeginLongOperation;
 		fAbout := TfAbout.Create(AOwner);
 		fAbout.EditAuthor.Text := VersionInfo.Author;
-		fAbout.ImageVersion.Bitmap.Canvas.Font.Name := 'MS Sans Serif';
-		fAbout.EditCreated.Text := VersionInfo.LegalCopyright;
-		fAbout.EditModified.Text := VersionInfo.ReleaseDate;
+//		fAbout.ImageVersion.Bitmap.Canvas.Font.Name := 'MS Sans Serif';
+		fAbout.EditVersion.Text := VersionInfo.FileVersion;
+		fAbout.EditCreationDate.Text := VersionInfo.LegalCopyright;
+		fAbout.EditReleaseDate.Text := VersionInfo.ReleaseDate;
 		fAbout.LoadFile(FileName);
 		EndLongOperation(False);
 		VersionInfo.Free;
@@ -439,8 +440,8 @@ begin
 	ImageName.Bitmap.Canvas.Font.Size := 12;
 	ImageName.Bitmap.Canvas.Font.Name := 'Times New Roman';
 	ImageName.Bitmap.Canvas.Font.Color := clBlack;
-	ImageVersion.Bitmap.Canvas.Brush.Style := bsClear;
-	ImageVersion.Bitmap.Canvas.Font.Style := [fsBold];
+{	ImageVersion.Bitmap.Canvas.Brush.Style := bsClear;
+	ImageVersion.Bitmap.Canvas.Font.Style := [fsBold];}
 
 	InitNRT;
 
@@ -526,7 +527,7 @@ begin
 
 	ImageAbout.Fill;
 	ImageName.Fill;
-	ImageVersion.Fill;
+//	ImageVersion.Fill;
 end;
 
 procedure TfAbout.EditIcqClick(Sender: TObject);
@@ -584,7 +585,7 @@ begin
 	}
 	BitmapName.Border(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clBlack, clWhite, 2, ef08);
 end;
-
+{
 procedure TfAbout.ImageVersionFill(Sender: TObject);
 var
 	BitmapVersion: TDBitmap;
@@ -607,7 +608,7 @@ begin
 		(32 * Timer1.Clock div PerformanceFrequency), nil);
 
 	BitmapVersion.Border(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);
-end;
+end;}
 
 procedure TfAbout.ImageAboutFill(Sender: TObject);
 var

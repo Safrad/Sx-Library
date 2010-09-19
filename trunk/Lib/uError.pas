@@ -204,8 +204,7 @@ begin
 		OpenDialogFile.Filter := '(*' + FExt + ')|*' + FExt + '|Any file (*.*)|*.*'
 	else
 		OpenDialogFile.Filter := 'Any file (*.*)|*.*';
-	OpenDialogFile.FileName := Ignore.ErrorFileName;
-	if OpenDialogFile.Execute then
+	if ExecuteDialog(OpenDialogFile, Ignore.ErrorFileName) then
 	begin
 		Ignore.ErrorFileName := OpenDialogFile.FileName;
 		Ignore.Res := 3;
@@ -542,8 +541,8 @@ begin
 	if FoundSame = False then
 	if ErrorMsg <> '' then
 	begin
-		if Ignores.Count = 100 then
-			Ignores.DeleteFirst;
+{		if Ignores.Count = 100 then
+			Ignores.DeleteFirst; // can not be actual!}
 		Ignore := Ignores.Add;
 		Ignore.Style := Style;
 		Ignore.Retry := Retry;

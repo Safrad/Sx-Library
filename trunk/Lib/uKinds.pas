@@ -120,7 +120,7 @@ type
 		procedure Unchange;
 
 		// For Reopen and ParamStr
-		procedure KindNewFile(Sender: TObject; FileName: string = '');
+		procedure KindNewFile(Sender: TObject; FileName: string = ''; CallNewFile: BG = True);
 		function KindLoadFromFile(FileName: TFileName; ReadOnly: BG = False): BG;
 
 		function KindOpenFiles(Files: TStrings; ReadOnly: BG = False): BG; // Drag files to form
@@ -379,13 +379,13 @@ begin
 	begin
 		if Save = True then
 		begin
-			FileName := string(Items[i].FileName);
+			FileName := ShortDir(string(Items[i].FileName));
 			if Items[i].New <> 0 then Continue;
 		end;
 		MainIni.RWString('Opened Files', 'File ' + NToS(c2, False), FileName, Save);
 		Inc(c2);
 		if Save = False then
-			KindLoadFromFile(FileName);
+			KindLoadFromFile(FullDir(FileName));
 	end;
 
 	if Save = True then
@@ -472,7 +472,7 @@ begin
 		IE(3543);}
 end;
 
-procedure TKinds.KindNewFile(Sender: TObject; FileName: string = '');
+procedure TKinds.KindNewFile(Sender: TObject; FileName: string = ''; CallNewFile: BG = True);
 var
 	Result: BG;
 	LastIndex: SG;
@@ -507,14 +507,19 @@ begin
 	Items[Count - 1].New := NewCount;
 	LastIndex := Index;
 	ChangeIndex(Count - 1);
-	try
-		Result := NewFile(Count - 1);
-	except
-		on E: Exception do
-		begin
-			Result := False;
+	if CallNewFile then
+	begin
+		try
+			Result := NewFile(Count - 1);
+		except
+			on E: Exception do
+			begin
+				Result := False;
+			end;
 		end;
-	end;
+	end
+	else
+		Result := True;
 	CreateMenuItem(Index);
 	if Result = False then
 	begin
@@ -597,17 +602,13 @@ begin
 	Result := False;
 	if Assigned(SaveDialog1) then
 	begin
-		SaveDialog1.InitialDir := ExtractFilePath(FileName);
-		SaveDialog1.FileName := ExtractFileName(FileName);
-		Result := SaveDialog1.Execute;
+		Result := ExecuteDialog(SaveDialog1, FileName);
 		if Result then
 			FileName := SaveDialog1.FileName;
 	end;
 	if Assigned(SavePictureDialog1) then
 	begin
-		SavePictureDialog1.FileName := FileName;
-		SavePictureDialog1.InitialDir := ExtractFilePath(FileName);
-		Result := SavePictureDialog1.Execute;
+		Result := ExecuteDialog(SavePictureDialog1, FileName);
 		if Result then
 			FileName := SavePictureDialog1.FileName;
 	end;
@@ -895,7 +896,7 @@ begin
 	KindEnabled;
 	if Assigned(Window1) then
 	begin
-		Window1.Enabled := Count > 0;
+//		Window1.Enabled := Count > 0; Permanently change menu color
 		for i := 0 to Count - 1 do
 			SetMenuItem(i);
 		if Assigned(LastWindow1) then LastWindow1.Enabled := Count > 1;
@@ -934,20 +935,19 @@ begin
 end;
 
 procedure TKinds.Open1Click(Sender: TObject);
+var FileName: TFileName;
 begin
 	if Assigned(OpenDialog1) then
 	begin
 		if Count <= 0 then
 		begin
-			OpenDialog1.InitialDir := '';
-			OpenDialog1.FileName := '';
+			FileName := '';
 		end
 		else
 		begin
-			OpenDialog1.InitialDir := ExtractFilePath(Items[Index].FileName);
-			OpenDialog1.FileName := ExtractFileName(Items[Index].FileName);
+			FileName := Items[Index].FileName;
 		end;
-		if OpenDialog1.Execute then
+		if ExecuteDialog(OpenDialog1, FileName) then
 		begin
 			KindOpenFiles(OpenDialog1.Files);
 		end;
@@ -956,15 +956,13 @@ begin
 	begin
 		if Count <= 0 then
 		begin
-			OpenPictureDialog1.InitialDir := '';
-			OpenPictureDialog1.FileName := '';
+			FileName := '';
 		end
 		else
 		begin
-			OpenPictureDialog1.InitialDir := ExtractFilePath(Items[Index].FileName);
-			OpenPictureDialog1.FileName := ExtractFileName(Items[Index].FileName);
+			FileName := Items[Index].FileName;
 		end;
-		if OpenPictureDialog1.Execute then
+		if ExecuteDialog(OpenPictureDialog1, FileName) then
 		begin
 			KindOpenFiles(OpenPictureDialog1.Files, ofReadOnly in OpenPictureDialog1.Options);
 		end;

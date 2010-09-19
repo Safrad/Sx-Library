@@ -17,6 +17,9 @@ const
 	clCream = TColor($F0FBFF);
 	clMedGray = TColor($A4A0A0);
 
+	clFlesh = TColor($98ADFF);
+	clBaize = TColor($818000);
+
 	MaxSpectrum2 = 762;
 	MaxFireColor = 765;
 

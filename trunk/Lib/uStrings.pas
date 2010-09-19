@@ -23,7 +23,7 @@ const
 	// DOS: CharCR + CharLF; Linux/C++: CharLF; CharCR: NLP
 	LineSep = CharLF;
 	FullSep = CharCR + CharLF;
-	HTMLSep = FullSep;
+	HTMLSep = LineSep;
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
@@ -96,24 +96,24 @@ uses
 var
 	TableWordSep: array[0..7] of Char = (' ', ',', '.', '-', '/', ';', '(', ')');
 
-function        LowCase( ch : Char ) : Char;
+function LowCase(ch : Char): Char;
 {$IFDEF PUREPASCAL}
 begin
 	Result := ch;
 	case Result of
-		'A'..'Z':  Inc(Result, Ord('a') - Ord('A'));
-  end;
+	'A'..'Z':  Inc(Result, Ord('a') - Ord('A'));
+	end;
 end;
 {$ELSE}
 asm
 { ->    AL      Character       }
 { <-    AL      Result          }
 
-				CMP     AL,'A'
-				JB      @@exit
-				CMP     AL,'Z'
-				JA      @@exit
-				ADD     AL,'a' - 'A'
+	CMP AL, 'A'
+	JB  @@exit
+	CMP AL, 'Z'
+	JA  @@exit
+	ADD AL, 'a' - 'A'
 @@exit:
 end;
 {$ENDIF}

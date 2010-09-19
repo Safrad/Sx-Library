@@ -12,10 +12,6 @@ interface
 
 uses Windows;
 
-{const
-	WordPad = '"' + ProgramFiles + 'Accessories\WordPad.exe" "%1"';
-	NotePad = 'NotePad.exe "%1"';
-	Edit = 'Edit.com %1';}
 type
 	TFileTypesOperation = (foCreate, foDelete, foExists);
 

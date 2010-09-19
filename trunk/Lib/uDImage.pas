@@ -104,6 +104,7 @@ type
 		FramePerSec: Extended;
 		PaintCount: Integer;
 		FHandScroll: Boolean;
+		SkipFillWhenResized: BG;
 		procedure InitScrolls;
 
 		constructor Create(AOwner: TComponent); override;
@@ -395,7 +396,8 @@ end;
 procedure TDImage.WMSize(var Message: TWMSize);
 begin
 	inherited;
-	Fill;
+	if SkipFillWhenResized =False then
+		Fill;
 end;
 
 constructor TDImage.Create(AOwner: TComponent);
@@ -1351,7 +1353,7 @@ begin
 		{$endif}
 		begin
 			{$ifopt d+}
-			s := IntToStr(GetTickCount - StartTickCount) + 'ms';// NToS(PaintCount);
+			s := IntToStr(GetTickCount - StartTickCount) + 'ms, ' + NToS(PaintCount);
 			{$endif}
 			if FramePerSec >= 0.1 then
 			begin

@@ -84,7 +84,9 @@ type
 	TWave = packed record // 44
 		Marker1:         array[0..3] of Char; // 4
 		BytesFollowing:  LongInt; // 4; FileSize - 8
+		// Data
 		Marker2:         array[0..3] of Char; // 4
+		// Format
 		Marker3:         array[0..3] of Char; // 4
 		BlockAlign:      LongInt; // 4; 16
 		FormatTag:       Word; // 2; 1
@@ -93,6 +95,7 @@ type
 		BytesPerSecond:  LongInt; // 4; BytesPerSample * SampleRate
 		BytesPerSample:  Word; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
 		BitsPerSample:   Word; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
+		// Wave data
 		Marker4:         array[0..3] of Char; // 4
 		DataBytes:       LongInt; // 4; <= (FileSize - 44)
 		Data:            TWaveData; // X

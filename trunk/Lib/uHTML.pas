@@ -8,7 +8,7 @@
 
 unit uHTML;
 
-interface  // D??? Head, Body, Tail
+interface
 
 uses
 	uTypes,
@@ -26,10 +26,8 @@ type
 	public
 		Title: string;
 		AddCreated: BG;
-		Unicode: BG;
-		ConvertCharser: BG;
+		ConvertCharset: BG;
 		Body: string;
-		Foot: string;
 
 		constructor Create(FileName: TFileName = '');
 		destructor Destroy; override;
@@ -65,14 +63,19 @@ procedure Small(var s: string);
 procedure HTMLRedirect(WriteToFileName: TFileName; RedirectURL: string);
 function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
 function RelativePath(Source, Target: string): string;
+function GetHTMLHead(HTMLFileName: TFileName; Head: string): string;
 function GetHTMLFoot(HTMLFileName: TFileName; Foot: string): string;
 
+type
+	TCharsetName = (cnwindows1250, cnISO88592, cnUTF8);
 var
+	// Common options
+	CharsetName: TCharsetName = cnUTF8;
+	Head, Foot: string;
 	RootDir: string;
-	ImagesDir: string; // RootDir + 'images\';
-	LastUpdateStr: string = 'Last Update';
+//	LastUpdateStr: string = 'Last Update';
 	StyleStr: string = 'style.css';
-	AddValid: BG = False;
+//	AddValid: BG = False;
 	HTMLDate: string;
 const
 	nbsp = '&nbsp;';
@@ -199,38 +202,46 @@ begin
 	s := '<small>' + s + '</small>';
 end;
 
-function HeadStr(Charset: SG; FrameSet: BG): string;
+function HeadStr(Charset: TCharsetName; FrameSet: BG; Redirect: BG; FileName: string): string;
 const
-	XMLDef0 = '<?xml version="1.0" encoding="';
-	XMLDef1 = '"?>' + HTMLSep;
-//	XMLDef = '';
+{	XMLDef0 = '<?xml version="1.0" encoding="';
+	XMLDef1 = '"?>' + HTMLSep;}
 	HTMLId0 = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 '; // HTML 4.0
 	HTMLId1 = '//EN" ';
 	HTMLId2 = '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-';
 	HTMLTransitional = HTMLId0 + 'Transitional' + HTMLId1 + HTMLId2 + 'transitional.dtd">' + HTMLSep;
 	HTMLFrameset = HTMLId0 + 'Frameset' + HTMLId1 + HTMLId2 + 'frameset.dtd">' + HTMLSep;
 
-	CharsetName: array[0..1] of string = ('ISO-8859-2'{ windows-1250}, 'UTF-8');
+	CharsetNames: array[TCharsetName] of string = ('windows-1250', 'ISO-8859-2', 'UTF-8');
+var
+	Ext: string;
 begin
-	Result :=
-		XMLDef0 +
-		CharsetName[Charset] +
-		XMLDef1;
+	Ext := ExtractFileExt(FileName);
+//	if (Length(Ext) = 0) or (UpCase(Ext[1]) = 'P') then
+		Result := ''
+{	else
+		Result :=
+			XMLDef0 +
+			CharsetNames[Charset] +
+			XMLDef1};
 	if Frameset then Result := Result + HTMLFrameset else Result := Result + HTMLTransitional;
 	Result := Result +
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cs" lang="cs">' + HTMLSep +
 		'<head>' + HTMLSep +
-		'	<meta http-equiv="Content-Type" content="text/xml; charset='{html} + CharsetName[Charset] + '" />' + HTMLSep +
-		'	<meta name="author" content="' + MyName + '; e-mail: ' + MyEmail + '" />' + HTMLSep +
+		'	<meta http-equiv="Content-Type" content="text/xml; charset='{html} + CharsetNames[Charset] + '" />' + HTMLSep +
+		'	<meta name="author" content="' + MyName + '; e-mail: ' + MyEmail + '" />' + HTMLSep;
 //		'	<meta name="expires" content="' +  + '" />' + HTMLSep +
-		'	<meta name="last-modified" content="' + HTMLDate + '" />' + HTMLSep +
+	if not Redirect then
+		Result := Result +
+			'	<meta name="last-modified" content="' + HTMLDate + '" />' + HTMLSep;
+	Result := Result +
 		'	<meta name="lang" content="cs" />' + HTMLSep;
 end;
 
 procedure HTMLRedirect(WriteToFileName: TFileName; RedirectURL: string);
 var s: string;
 begin
-	s := HeadStr(0, False) +
+	s := HeadStr(CharsetName, False, True, WriteToFileName) +
 //		'	<meta name="ROBOTS" content="noindex" />' + HTMLSep +
 		'	<meta http-equiv="refresh" content="0; url=' + RedirectURL + '" />' + HTMLSep +
 		'	<title>Redirection</title>' + HTMLSep +
@@ -239,7 +250,7 @@ begin
 		'	<p>I''m trying to redirect you. If it fails, you can follow this <a href="' + RedirectURL + '">link</a>.</p>' + HTMLSep +
 		'</body>' +HTMLSep +
 		'</html>';
-	WriteStringToFile(WriteToFileName, s, False);
+	WriteStringToFileEx(WriteToFileName, s, False);
 end;
 
 function GetContent(HTMLIndex, HTMLCount, Refers: SG; HTMLRef, Zeros: string): string;
@@ -324,10 +335,8 @@ begin
 	Body := '';
 	Title := '';
 	FFrameset := False;
-//	FStyle := '';
+	ConvertCharset := True;
 	AddCreated := UpperCase(DelFileExt(ExtractFileName(FileName))) <> 'MENU';
-	Unicode := True;
-	ConvertCharser := True;
 end;
 
 destructor THTML.Destroy;
@@ -504,54 +513,51 @@ begin
 	Body := Body + '	<h2>' + Title + '</h2>' + HTMLSep;
 end;
 
+function GetHTMLHead(HTMLFileName: TFileName; Head: string): string;
+begin
+	Replace(Head, '%root', RelativePath(HTMLFileName, RootDir));
+	if Head = '' then
+		Result := ''
+	else
+		Result := '<!-- Head Begin -->' + Head + '<!-- Head End -->';
+end;
+
 function GetHTMLFoot(HTMLFileName: TFileName; Foot: string): string;
 begin
-	Result :=
-		HTMLSep + '	<!-- Foot -->' + HTMLSep +
-		'	<hr noshade="noshade" />' + HTMLSep +
+	Replace(Foot, '%root', RelativePath(HTMLFileName, RootDir));
+	if Foot = '' then
+		Result := ''
+	else
+		Result := '<!-- Foot -->' + HTMLSep + Foot + HTMLSep;
+
+		;
+{		'	<hr noshade="noshade" />' + HTMLSep +
 		'	<div align="right">' + HTMLSep;
 	if LastUpdateStr <> '' then
 		Result := Result +
-			'		<small>' + LastUpdateStr + ' ' + HTMLDate + '</small>' + nbsp + nbsp;
+			'		<small>' + LastUpdateStr + ' ' + HTMLDate + '</small>' + nbsp + nbsp;}
 
-	Result := Result + Foot;
 
-	if AddValid then
+{	if AddValid then
 		Result := Result + nbsp + '<a href="http://validator.w3.org/check?uri=referer">' +
 			AddImage2(HTMLFileName, ImagesDir + 'vxhtml10.png', '') +
 			'</a>';
-	Result := Result + HTMLSep + '	</div>' + HTMLSep;
+	Result := Result + HTMLSep + '	</div>' + HTMLSep;}
+end;
+
+procedure SetCharset(var s: string);
+begin
+	case CharsetName of
+	cnISO88592: ConvertCharset(s, cp1250, cpISO88592);
+	cnUTF8: s := AnsiToUtf8(s)
+	end;
 end;
 
 procedure THTML.WriteToFile;
-
-	procedure HTMLEnd;
-	//var FName: TFileName;
-	begin
-	{	t := Now;
-		DateTimeToString(d, 'dd.mm.yyyy', t);
-		s := s + d + ' (dd.mm.yyyy) ';}
-	{	DateTimeToString(d, 'hh:nn:dd', t);
-		s := s + d + ' (hh:nn:ss)';}
-		if FFrameset then
-	//		s := s + '	</FRAMESET>' + HTMLSep
-		else
-		begin
-			if AddCreated then
-			begin
-				AddBody(GetHTMLFoot(Self.FileName, Foot));
-			end
-			else
-				AddBody(Foot);
-			AddBody('</body>' + HTMLSep);
-		end;
-		AddBody('</html>' + HTMLSep);
-	end;
-
 var
 	LastBody, s: string;
 	BodySaved: string;
-	MaxSize: SG;
+	HeadEnd, HeadSavedEnd: SG;
 begin
 	LastBody := Body;
 	if Title = '' then Title := DelFileExt(ExtractFileName(FileName));
@@ -559,12 +565,12 @@ begin
 	begin
 //		if FStyle = '' then FStyle := StyleStr;
 	end;
-	s := HeadStr(SG(Unicode) and 1, FFrameset);
+	s := HeadStr(CharsetName, FFrameset, False, FileName);
 
 	if FFrameset = False then
 		s := s + '	<link rel="stylesheet" type="text/css" href="' + RelativePath(Self.FileName, RootDir + StyleStr){FStyle} + '" />' + HTMLSep;
-	s := s +
-		'	<link rel="shortcut icon" href="' + RelativePath(Self.FileName, RootDir + 'favicon.ico') + '" />' + HTMLSep;
+	if FileExists(RootDir + 'favicon.ico') then
+		s := s + '	<link rel="shortcut icon" href="' + RelativePath(Self.FileName, RootDir + 'favicon.ico') + '" />' + HTMLSep;
 
 	s := s + '	<title>' + Title + '</title>' + HTMLSep;
 	s := s + '</head>' + HTMLSep;
@@ -572,34 +578,49 @@ begin
 //		s := s + '	<frameset>' + HTMLSep
 	else
 	begin
-		s := s + '<body>' + HTMLSep;
-	end;
-	Body := s + Body;
-
-	MaxSize := Length(Body) + 10; // D???
-
-	HTMLEnd;
-	if ConvertCharser then
-	begin
-		if Unicode = False then
+		if AddCreated then
 		begin
-			ConvertCharset(Body, cp1250, cpISO88592);
+			BodySaved := GetHTMLHead(FileName, Head);
 		end
 		else
-		begin
-			Body := AnsiToUtf8(Body);
-		end;
+			BodySaved := '';
+		s := s + '<body>' + BodySaved + HTMLSep;
 	end;
+	Body := s + Body;
+	if Self.ConvertCharset then
+		SetCharset(Body);
 
 	if FileExists(FileName) then
 	begin
-		ReadStringFromFile(FileName, BodySaved);
-
-		BodySaved := Copy(BodySaved, 1, MaxSize);
-		if BodySaved <> '' then
-		if SameData(Pointer(Body), Pointer(BodySaved), MaxSize) then
-			Exit
+		if ReadStringFromFile(FileName, BodySaved) then
+		begin
+			HeadEnd := Pos('</head>' + HTMLSep, Body);
+			HeadSavedEnd := Pos('</head>' + HTMLSep, BodySaved);
+			if (HeadEnd <> 0) and (HeadSavedEnd <> 0) then
+			begin
+				if SameData(@Body[HeadEnd], Pointer(@BodySaved[HeadSavedEnd]), Length(Body) - HeadEnd + 1) then
+					Exit; // Skip saving
+			end;
+		end;
 	end;
+
+{	t := Now;
+	DateTimeToString(d, 'dd.mm.yyyy', t);
+	s := s + d + ' (dd.mm.yyyy) ';}
+{	DateTimeToString(d, 'hh:nn:dd', t);
+	s := s + d + ' (hh:nn:ss)';}
+	if FFrameset = False then
+	begin
+		if AddCreated then
+		begin
+			s := GetHTMLFoot(Self.FileName, Foot);
+		end;
+//		else
+//			s := Foot;
+		SetCharset(s);
+		AddBody(s + '</body>' + HTMLSep);
+	end;
+	AddBody('</html>');
 
 	WriteStringToFile(FileName, Body, False);
 	Body := LastBody;
@@ -661,7 +682,7 @@ var
 begin
 	Line := ReadStringFromFile(FileName);
 	Body := Body + '<table border="' + IntToStr(Border) + '" cellspacing="' + IntToStr(CellSpacing) +
-	 '" cellpadding="' + IntToStr(CellPadding) + '">' + HTMLSep;
+		'" cellpadding="' + IntToStr(CellPadding) + '">' + HTMLSep;
 
 	Wid := 0;
 	MaxWid := 0;
@@ -675,8 +696,6 @@ begin
 		LInLineIndex := InLineIndex;
 		Data := ReadToChars(Line, InLineIndex, [CharTab, CharCR, CharLF]);
 		if Data = '' then
-
-		else if Data[1] = ';' then
 
 		else if ((Pos('/', Data) <> 0) or (Pos('htm', Data) <> 0)) and (Pos('<', Data) = 0) then
 			Data := '<a href="' + Data + '">' + ExtractFileName(ReplaceF(Data, '/', '\')) + '</a>';

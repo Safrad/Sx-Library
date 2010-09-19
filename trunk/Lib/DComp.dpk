@@ -36,26 +36,11 @@ contains
   uDPanel in 'uDPanel.pas',
   uDGauge in 'uDGauge.pas',
   uDLabel in 'uDLabel.pas',
-  uAdd in 'uAdd.pas',
   uDispl in 'uDispl.pas',
-  uFiles in 'uFiles.pas',
-  uGraph in 'uGraph.pas',
-  uDBitmap in 'uDBitmap.pas',
-  uWave in 'uWave.pas',
   uDImage in 'uDImage.pas',
-  uError in 'uError.pas' {fIOError},
-  uGetInt in 'uGetInt.pas' {fGetInt},
-  uScreen in 'uScreen.pas',
-  uStrings in 'uStrings.pas',
   uDView in 'uDView.pas',
-  uDIni in 'uDIni.pas',
   uDButton in 'uDButton.pas',
   uDTimer in 'uDTimer.pas',
-  uDForm in 'uDForm.pas',
-  TrayIcon in '..\ExtLib\TrayIcon.pas',
-  CommInt in '..\ExtLib\CommInt.pas',
-  CommObjs in '..\ExtLib\CommObjs.pas',
-  PtrEdit in '..\ExtLib\PtrEdit.pas',
-  uDEdit in 'uDEdit.pas';
+  uDForm in 'uDForm.pas';
 
 end.

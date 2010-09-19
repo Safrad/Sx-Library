@@ -105,6 +105,7 @@ procedure FillU2(var Desc; Count: Cardinal; Value: U2);
 procedure FillU4(var Desc; Count: Cardinal; Value: U4);
 procedure FillOrderU4(var Desc; Size: Cardinal);
 procedure Reverse4(var Desc; Size: Cardinal);
+function Checksum(var Desc; Size: Cardinal): U4;
 procedure Swap02(var Desc; Count: Cardinal; Step: S4);
 function SwapU4(D: U4): U4;
 
@@ -774,100 +775,68 @@ end;
 
 procedure Exchange(var A, B: B1); register;
 asm
-	push bx
-	push cx
-	mov bl, B1 ptr [A]
-	mov cl, B1 ptr [B]
-	mov [B], bl
+	mov cl, [A]
+	xchg cl, [B]
 	mov [A], cl
-	pop cx
-	pop bx
-end;
-
-procedure Exchange(var A, B: B4); register;
-asm
-	push ebx
-	push ecx
-	mov ebx, B4 ptr [A]
-	mov ecx, B4 ptr [B]
-	mov [B], ebx
-	mov [A], ecx
-	pop ecx
-	pop ebx
-//  xchg A, B
 end;
 
 procedure Exchange(var A, B: U1); register;
 asm
-	push bx
-	mov bl, U1 ptr [A]
-	mov bh, U1 ptr [B]
-	mov [B], bl
-	mov [A], bh
-	pop bx
+	mov cl, [A]
+	xchg cl, [B]
+	mov [A], cl
 end;
 
 procedure Exchange(var A, B: S1); register;
 asm
-	push bx
-	mov bl, S1 ptr [A]
-	mov bh, S1 ptr [B]
-	mov [B], bl
-	mov [A], bh
-	pop bx
+	mov cl, [A]
+	xchg cl, [B]
+	mov [A], cl
 end;
 
 procedure Exchange(var A, B: U2); register;
 asm
-	push bx
-	push cx
-	mov bx, U2 ptr [A]
-	mov cx, U2 ptr [B]
-	mov [B], bx
+	mov cx, [A]
+	xchg cx, [B]
 	mov [A], cx
-	pop cx
-	pop bx
 end;
 
 procedure Exchange(var A, B: S2); register;
 asm
-	push bx
-	push cx
-	mov bx, S2 ptr [A]
-	mov cx, S2 ptr [B]
-	mov [B], bx
+	mov cx, [A]
+	xchg cx, [B]
 	mov [A], cx
-	pop cx
-	pop bx
+end;
+
+procedure Exchange(var A, B: B4); register;
+asm
+	mov ecx, [A]
+	xchg ecx, [B]
+	mov [A], ecx
 end;
 
 procedure Exchange(var A, B: U4); register;
 asm
-	push ebx
-	push ecx
-	mov ebx, U4 ptr [eax]
-	mov ecx, U4 ptr [edx]
-	mov [B], ebx
+	mov ecx, [A]
+	xchg ecx, [B]
 	mov [A], ecx
-	pop ecx
-	pop ebx
-//  xchg A, B
 end;
 
 procedure Exchange(var A, B: S4); register;
 asm
-	push ebx
-	push ecx
-	mov ebx, S4 ptr [A]
-	mov ecx, S4 ptr [B]
-	mov [B], ebx
+	mov ecx, [A]
+	xchg ecx, [B]
 	mov [A], ecx
-	pop ecx
-	pop ebx
-//  xchg A, B
 end;
 
-procedure Exchange(var A, B: S8); register;
+procedure Exchange(var A, B: Pointer); register; // 32bit only
+asm
+	mov ecx, [A]
+	xchg ecx, [B]
+	mov [A], ecx
+end;
+
+procedure Exchange(var A, B: S8);
 var C: S8;
 begin
 	C := A;
@@ -875,7 +844,7 @@ begin
 	B := C;
 end;
 
-procedure Exchange(var A, B: F8); register;
+procedure Exchange(var A, B: F8);
 var C: F8;
 begin
 	C := A;
@@ -883,7 +852,7 @@ begin
 	B := C;
 end;
 
-procedure Exchange(var A, B: FA); register;
+procedure Exchange(var A, B: FA);
 var C: FA;
 begin
 	C := A;
@@ -891,69 +860,46 @@ begin
 	B := C;
 end;
 
-procedure Exchange(var A, B: Pointer); register;
-asm
-	push ebx
-	push ecx
-	mov ebx, U4 ptr [A]
-	mov ecx, U4 ptr [B]
-	mov [B], ebx
-	mov [A], ecx
-	pop ecx
-	pop ebx
-//  xchg A, B
-end;
-
 procedure Exchange(var P0, P1; Count: Cardinal); register;
 asm
-{     ->EAX     P0  }
-{       EDX     P1   }
-{       ECX     Count   }
+	push edi
+	push esi
 
-				PUSH    EDI
-				PUSH    ESI
-
-				MOV     ESI,EAX { Point EDI to destination              }
-				MOV     EDI,EDX { Point EDI to destination              }
-				ADD     EDX,ECX
+	MOV ESI,EAX
+	MOV EDI,EDX
+	ADD EDX,ECX
 	@Loop:
-//	xchg [edi], [esi]
-		mov al, [edi]
-		xchg al, [esi]
-		mov [edi], al
+		mov al, [esi]
+		xchg al, [edi]
+		mov [esi], al
 		add edi, 1
 		add esi, 1
 		cmp edi, edx
 	jb @Loop
 
-				POP ESI
-				POP     EDI
+	POP ESI
+	POP EDI
 end;
 
 procedure Exchange(P0, P1: Pointer; Count: Cardinal); register;
 asm
-{     ->EAX     P0  }
-{       EDX     P1   }
-{       ECX     Count   }
+	PUSH EDI
+	PUSH ESI
 
-				PUSH    EDI
-				PUSH    ESI
-
-				MOV     ESI,EAX { Point EDI to destination              }
-				MOV     EDI,EDX { Point EDI to destination              }
-				ADD     EDX,ECX
+	MOV ESI,EAX
+	MOV EDI,EDX
+	ADD EDX,ECX
 	@Loop:
-//	xchg [edi], [esi]
-		mov al, [edi]
-		xchg al, [esi]
-		mov [edi], al
+		mov al, [esi]
+		xchg al, [edi]
+		mov [esi], al
 		add edi, 1
 		add esi, 1
 		cmp edi, edx
 	jb @Loop
 
-				POP ESI
-				POP     EDI
+	POP ESI
+	POP EDI
 end;
 
 function Arg(X, Y: Extended): Extended; // <0..2pi)
@@ -1028,17 +974,15 @@ end;}
 
 procedure ReadMem(P: Pointer; Size: Cardinal); register;
 asm
-	push ebx
 	cmp Size, 0
 	je @Exit
 	add Size, P
 	@Loop:
-		mov ebx, [P]
+		mov ecx, [P]
 		add P, 4
 		cmp P, Size
 	jb @Loop
 	@Exit:
-	pop ebx
 end;
 
 function SameData(P0, P1: Pointer; Size: Cardinal): Boolean; register;
@@ -1063,9 +1007,7 @@ asm
 	mov Result, 1
 	cmp Size, 0
 	je @Exit
-	push edx
 	push ebx
-	push ecx
 	push edi
 	push esi
 	cld
@@ -1090,46 +1032,37 @@ asm
 	@Exit:
 	pop esi
 	pop edi
-	pop ecx
 	pop ebx
-	pop edx
 	@Exit0:
 end;
 
 procedure FillU2(var Desc; Count: Cardinal; Value: U2); register;
 asm
-{     ->EAX     Pointer to destination  }
-{       EDX     count   }
-{       CX     value   }
 	PUSH    EDI
-	MOV     EDI,EAX { Point EDI to destination              }
+	MOV     EDI,EAX
 	MOV     EAX,ECX
 	shl eax, 16
 	mov ax, cx
 	MOV     ECX,EDX
 	sar ecx, 1
-	REP     STOSD   { Fill count dwords       }
+	REP     STOSD
 @@exit:
 	POP     EDI
 end;
 
 procedure FillU4(var Desc; Count: Cardinal; Value: U4); register;
 asm
-{     ->EAX     Pointer to destination  }
-{       EDX     count   }
-{       ECX     value   }
 	PUSH    EDI
-	MOV     EDI,EAX { Point EDI to destination              }
+	MOV     EDI,EAX
 	MOV     EAX,ECX
 	MOV     ECX,EDX
-	REP     STOSD   { Fill count dwords       }
+	REP     STOSD
 @@exit:
 	POP     EDI
 end;
 
 procedure FillOrderU4(var Desc; Size: Cardinal); register;
 asm
-	push ecx
 	cmp Size, 0
 	je @Exit
 	shl Size, 2
@@ -1142,14 +1075,12 @@ asm
 		inc ecx
 	jb @Loop
 	@Exit:
-	pop ecx
 end;
 
-procedure Reverse4(var Desc; Size: Cardinal);
+procedure Reverse4(var Desc; Size: Cardinal); register;
 asm
 	push esi
 	push ebx
-	push ecx
 	mov esi, Desc
 	sub esi, 4
 	shl Size, 2
@@ -1170,19 +1101,32 @@ asm
 		cmp Desc, Size
 	jb @Loop
 	@Exit:
-	pop ecx
 	pop ebx
 	pop esi
 end;
 
+function Checksum(var Desc; Size: Cardinal): U4; register;
+asm
+	mov Result, 0
+	and Size, $fffffffc
+	cmp Size, 0
+	je @Exit
+	mov ecx, eax
+	add ecx, Size
+	@Loop:
+		mov edx, [eax]
+		add Result, edx
+
+		add eax, 4
+		cmp eax, ecx
+	jb @Loop
+	@Exit:
+end;
+
 procedure Swap02(var Desc; Count: Cardinal; Step: S4); register;
 asm
-{     ->EAX     Pointer to destination  }
-{       EDX     Count   }
-{       ECX     Step    }
-
 	PUSH    EDI
-	MOV     EDI,EAX { Point EDI to destination              }
+	MOV     EDI, EAX
 	add edx, edi
 	@Loop:
 //	xchg [edi], [edi + 2]
@@ -1192,15 +1136,18 @@ asm
 		add edi, ecx
 		cmp edi, edx
 	jb @Loop
-	POP     EDI
+	POP EDI
 end;
 
-function SwapU4(D: U4): U4;
-begin
+function SwapU4(D: U4): U4; register;
+asm
+	bswap D
+	mov Result, D
+{begin
 	TU4(Result).B0 := TU4(D).B3;
 	TU4(Result).B1 := TU4(D).B2;
 	TU4(Result).B2 := TU4(D).B1;
-	TU4(Result).B3 := TU4(D).B0;
+	TU4(Result).B3 := TU4(D).B0;}
 end;
 
 procedure InitPerformanceCounter;
@@ -1221,15 +1168,14 @@ begin
 	end;
 end;
 
-function GetCPUCounter: TU8;
-begin
-	asm
+function GetCPUCounter: TU8; register;
+asm
+	push Result
 	mov ecx, 10h
 	dw 310fh // RDTSC 10 clocks
-	mov ebx, Result
-	mov [ebx], eax
-	mov [ebx + 4], edx
-	end;
+	pop ecx
+	mov [ecx], eax
+	mov [ecx + 4], edx
 end;
 
 function PerformanceCounter: Int64;
