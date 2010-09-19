@@ -121,7 +121,7 @@ type
 
 		// For Reopen and ParamStr
 		procedure KindNewFile(Sender: TObject; FileName: string = ''; CallNewFile: BG = True);
-		function KindLoadFromFile(FileName: TFileName; ReadOnly: BG = False): BG;
+		function KindLoadFromFile(FileName: TFileName; FilePos: SG = 0; ReadOnly: BG = False): BG;
 
 		function KindOpenFiles(Files: TStrings; ReadOnly: BG = False): BG; // Drag files to form
 		function CanClose: BG; // CanClose := Kinds.CanClose;
@@ -166,7 +166,7 @@ type
 	CanClose := Kinds.CanClose;
 
 	// OnDestroy
-	FreeAndNil(Kinds);
+	FreeAndNil(Kinds); / Kinds.Free;
 }
 
 implementation
@@ -185,6 +185,13 @@ end;
 
 procedure TKinds.FreeItem(i: SG);
 begin
+	try
+		if Assigned(FreeFile) then FreeFile(i);
+	except
+		on E: Exception do
+		begin
+		end;
+	end;
 	Items[i].FileName := '';
 	Items[i].MenuItem.Free; Items[i].MenuItem := nil;
 	FreeMem(Items[i].PData); Items[i].PData := nil;
@@ -538,7 +545,7 @@ begin
 	KindNewFile(Sender);
 end;
 
-function TKinds.KindLoadFromFile(FileName: TFileName; ReadOnly: BG): BG;
+function TKinds.KindLoadFromFile(FileName: TFileName; FilePos: SG = 0; ReadOnly: BG = False): BG;
 var LastIndex: SG;
 begin
 	Result := False;
@@ -583,7 +590,7 @@ begin
 	Result := False;
 	for i := 0 to Files.Count - 1 do
 	begin
-		if KindLoadFromFile(Files.Strings[i], ReadOnly) then
+		if KindLoadFromFile(Files.Strings[i], 0, ReadOnly) then
 		begin
 			Result := True;
 		end;
@@ -731,13 +738,6 @@ begin
 			end;
 			if Index <> Kind then
 				ChangeIndex(Kind);
-			try
-				FreeFile(Kind);
-			except
-				on E: Exception do
-				begin
-				end;
-			end;
 		end;
 		FreeItem(Kind);
 		for i := Kind to Count - 2 do
@@ -960,7 +960,13 @@ begin
 	if MessageD(Items[Index].FileName + LineSep + 'Lose all changes since your last save?',
 		mtConfirmation, [mbYes, mbNo]) = mbYes then
 	begin
-		FreeFile(Index);
+		try
+			if Assigned(FreeFile) then FreeFile(Index);
+		except
+			on E: Exception do
+			begin
+			end;
+		end;
 		Items[Index].Changed := False;
 		try
 			LoadFromFile(Index);
@@ -1044,7 +1050,7 @@ procedure TKinds.OpenAll;
 		FileNames: TFileNames;
 		FileNameCount: SG;
 	begin
-		ReadDir(FileNames, FileNameCount, Dir, '', True, True, False, False);
+		ReadDir(FileNames, FileNameCount, Dir, [''], True, True, False, False);
 		for i := 0 to FileNameCount - 1 do
 		begin
 			if FileNames[i][Length(FileNames[i])] = '\' then

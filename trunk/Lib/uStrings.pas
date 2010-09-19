@@ -20,15 +20,19 @@ const
 	CharVT = #$0B;
 	CharLF = #$0A;// #10;
 	CharCR = #$0D;// #13;
-	// DOS: CharCR + CharLF; Linux/C++: CharLF; CharCR: NLP
-	LineSep = CharLF;
-	FullSep = CharCR + CharLF;
+	{
+	DOSLineSep = CharCR + CharLF;
+	LinuxLineSep =  CharLF;
+	MacintoshLineSep = CharCR;
+	}
+	LineSep = CharLF; // Deafult
+	FullSep = CharCR + CharLF; // Required by some Windows components
 	HTMLSep = LineSep;
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
 	CharTimes = '×';
-	Space = [CharNul, CharTab, CharLF, CharCR, CharSpace];
+	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
 
 	FalseTrue: array[0..1] of string = ('false', 'true');
 
@@ -71,6 +75,7 @@ function DelLastNumber(const s: string): string;
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
+procedure RepairNewLine(var Line: string);
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
 function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
@@ -88,6 +93,7 @@ function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
 function StartStr(const SubStr: string; const Str: string): BG;
 function IsSubStr(const SubStr: string; const Str: string): BG;
+procedure RemoveComment(var s: string);
 
 function ReplaceF(const s: string; const WhatS, ToS: string): string;
 procedure Replace(var s: string; const WhatS, ToS: string);
@@ -373,12 +379,23 @@ function ReadToNewLine(const Line: string; var LineIndex: SG): string;
 var StartIndex: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF)do
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF) do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
-	Inc(LineIndex);
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
+	if (LineIndex <= Length(Line)) and (Line[LineIndex] = CharCR) then
+	begin
 		Inc(LineIndex);
+		while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
+			Inc(LineIndex);
+	end
+	else
+		Inc(LineIndex);
+end;
+
+procedure RepairNewLine(var Line: string);
+begin
+	Replace(Line, FullSep, LineSep);
+	Replace(Line, CharCR, LineSep);
 end;
 
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
@@ -540,6 +557,13 @@ begin
 		if i > Length(Str) then Exit;
 		Inc(i);
 	end;
+end;
+
+procedure RemoveComment(var s: string);
+var i: SG;
+begin
+	i := Pos(';', s);
+	if i <> 0 then SetLength(s, i - 1);
 end;
 
 function ReplaceF(const s: string; const WhatS, ToS: string): string;

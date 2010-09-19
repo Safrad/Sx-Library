@@ -50,7 +50,7 @@ var
 	Parser: TDParser;
 	s: string;
 begin
-	inherited;
+	inherited Create;
 
 	Self.FileName := FileName;
 

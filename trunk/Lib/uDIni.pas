@@ -489,7 +489,7 @@ begin
 				begin
 					InLineIndex := 1;
 					AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
-					FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt);
+					FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt); // D???
 				end;
 			end;
 			FInMemory := True;
@@ -780,7 +780,6 @@ begin
 end;
 
 procedure MainIniCreate;
-label LRetry;
 {var
 	Reg: TRegistry;
 	F: file;
@@ -937,13 +936,13 @@ begin
 		Top := Form.Top;
 		Width := Form.Width;
 		Height := Form.Height;
-		if (Form.Position = poDesigned) or (Form.Position = poDefaultSizeOnly) then
+		if (Form.Position in [poDesigned, poDefaultSizeOnly]) then
 		begin
-			if Save = False then
+{			if Save = False then
 			begin
 				Left := (Screen.Width - Form.Width) div 2;
 				Top := (Screen.Height - Form.Height) div 2;
-			end;
+			end;}
 			RWNum(Form.Name, 'Left', Left, Save);
 			RWNum(Form.Name, 'Top', Top, Save);
 		end;

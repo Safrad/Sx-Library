@@ -16,8 +16,8 @@ uses
 	Classes, Controls, Windows, Graphics, SysUtils, Messages, Dialogs;
 
 const
-	CellBorder = 4;
-	MinColumnWidth = 16;
+	RowHeight = 17;
+
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
 
@@ -52,6 +52,7 @@ type
 
 		procedure SetColumnCount(Value: SG);
 		procedure SetRowCount(Value: SG);
+		function GetSelCount: SG;
 	protected
 		{ Protected declarations }
 //		procedure OnFill;
@@ -68,7 +69,6 @@ type
 		ColumnOrder, RowOrder: array of SG;
 
 		SelRows: array of Boolean;
-		SelCount: SG;
 
 		Where, LWhere: TViewAction;
 		IX, IY: SG;
@@ -95,8 +95,10 @@ type
 
 		property ColumnCount: SG read FColumnCount write SetColumnCount;
 		property RowCount: SG read FRowCount write SetRowCount;
+		property SelCount: SG read GetSelCount;
 
-	 procedure  DataChanged;
+		procedure  DataChanged;
+		function CellWidth(Text: string): SG;
 	published
 
 		property OnGetData: TOnGetData read FOnGetData write FOnGetData;
@@ -112,7 +114,8 @@ uses
 	uGraph, uDBitmap, uError, uScreen;
 
 const
-	RowHeight = 16;
+	CellBorder = 4;
+	MinColumnWidth = 12;
 
 var
 	ArrowU, ArrowD: TDBitmap;
@@ -239,9 +242,6 @@ begin
 						ActualRow := IY;
 					end;
 					ActualColumn := IX;
-					SelCount := 0;
-					for i := 0 to FRowCount - 1 do
-						if SelRows[i] then Inc(SelCount);
 					Invalidate;
 				end;
 			end;
@@ -313,13 +313,10 @@ begin
 	end;}
 	if ColumnMove <> -1 then
 	begin
-//				if BDown then
-				begin
-					Columns[ColumnMove].Width := X - ColumnMoveX;
-					if Columns[ColumnMove].Width < MinColumnWidth then Columns[ColumnMove].Width := MinColumnWidth;
-					ChangeColumns;
-					Invalidate;
-				end;
+		Columns[ColumnMove].Width := X - ColumnMoveX;
+		if Columns[ColumnMove].Width < MinColumnWidth then Columns[ColumnMove].Width := MinColumnWidth;
+		ChangeColumns;
+		Invalidate;
 	end;
 
 	if Cursor <> FCur then
@@ -448,9 +445,12 @@ begin
 	case Key of
 	VK_RETURN:
 	begin
-		SelRows[ActualRow] := True;
-		Inc(ActualRow);
-		Invalidate;
+		if ActualRow < RowCount then
+		begin
+			SelRows[ActualRow] := True;
+			Inc(ActualRow);
+			Invalidate;
+		end;
 	end;
 	VK_HOME:
 	begin
@@ -577,7 +577,12 @@ begin
 							Bitmap.Canvas.Brush.Color := clHighlight
 						end
 						else
-							Bitmap.Canvas.Brush.Color := clWindow;
+						begin
+							if IY and 1 <> 0 then
+								Bitmap.Canvas.Brush.Color := ColorDiv(clWindow, 63109)
+							else
+								Bitmap.Canvas.Brush.Color := clWindow;
+						end;
 						Bitmap.Bar(X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if Assigned(FOnGetData) then
 						begin
@@ -805,9 +810,6 @@ begin
 //			if Assigned(FOnColumnClick) then FOnColumnClick(Self, Columns[SortBy]);
 		end;
 		FRowCount := Value;
-		SelCount := 0;
-		for i := 0 to FRowCount - 1 do
-			if SelRows[i] then Inc(SelCount);
 		UserHeight := FRowCount * RowHeight + RowHeight;
 	end;
 end;
@@ -832,6 +834,19 @@ end;
 procedure Register;
 begin
 	RegisterComponents('DComp', [TDView]);
+end;
+
+function TDView.GetSelCount: SG;
+var i: SG;
+begin
+	Result := 0;
+	for i := 0 to FRowCount - 1 do
+		if SelRows[i] then Inc(Result);
+end;
+
+function TDView.CellWidth(Text: string): SG;
+begin
+	Result := Max(MinColumnWidth, Bitmap.Canvas.TextWidth(Text) + CellBorder + 1);
 end;
 
 initialization

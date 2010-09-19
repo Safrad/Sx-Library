@@ -1134,7 +1134,7 @@ end;}
 function DTToStr(DT: TDateTime): string;
 begin
 	if DT = 0 then
-		Result := 'Never'
+		Result := ''
 	else
 	begin
 		try

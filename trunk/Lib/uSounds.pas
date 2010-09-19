@@ -126,7 +126,8 @@ begin
 //	WavePlayer.BufferTime := 200;
 //	WavePlayer.VolumeLeft := 0; //MaxVolume div 2;
 //	WavePlayer.VolumeRight := 0; //MaxVolume div 2;
-	WavePlayer.Open;
+	if SoundEnabled then
+		WavePlayer.Open;
 end;
 
 procedure RWOptions(const Save: Boolean);
@@ -178,11 +179,22 @@ begin
 	end;
 end;
 
+var
+	SoundBuffer: PWave;
+	SoundBufferSize: UG;
+	IniLoaded: BG;
+
 procedure ReadSounds;
 var
 	i: SG;
 	P: PSound;
 begin
+	if IniLoaded = False then
+	begin
+		IniLoaded := True;
+		RWOptions(False);
+	end;
+
 	P := Sounds.GetFirst;
 	for i := 0 to Sounds.Count - 1 do
 	begin
@@ -191,10 +203,6 @@ begin
 		Inc(P);
 	end;
 end;
-
-var
-	SoundBuffer: PWave;
-	IniLoaded: BG;
 
 procedure FreeSounds;
 var
@@ -251,6 +259,7 @@ var
 	P: PSound;
 	Pan: SG;
 	SoundLeft, SoundRight: SG;
+	NewSize: UG;
 begin
 	if IniLoaded = False then
 	begin
@@ -260,17 +269,20 @@ begin
 
 	if SoundEnabled = False then Exit;
 	P := Sounds.Get(SoundKind);
-	if P.Enabled then
+	if P.Wave = nil then
+		WaveReadFromFile(P.Wave, FullDir(P.FileName));
+	if P.Enabled and (P.Wave <> nil) then
 	begin
 		if WavePlayer = nil then
 		begin
-			if (SoundBuffer = nil) then
+			NewSize := 2{Convert from Mono to Stereo} * (P.Wave.BytesFollowing + 8);
+			if SoundBufferSize < NewSize then
 			begin
-				GetMem(SoundBuffer, 65536{WaveHead + 2 * Max(SoundUpDataBytes, SoundDownDataBytes) D???});
+				FreeMem(SoundBuffer);
+				SoundBufferSize := NewSize;
+				GetMem(SoundBuffer, SoundBufferSize);
 			end;
 			SoundLR(SoundLeft, SoundRight, CX, CXCount);
-			if P.Wave = nil then
-				WaveReadFromFile(P.Wave, FullDir(P.FileName));
 			ConvertChannels(P.Wave, SoundBuffer, 2, SoundLeft, SoundRight);
 			PlayWave(SoundBuffer);
 		end
@@ -383,8 +395,11 @@ begin
 	DViewSounds.Columns[1].Caption := 'Sound File Name';
 	DViewSounds.Columns[1].Width := 238;
 
-	MainIni.RWFormPos(Self, False);
-	MainIni.RWDView(DViewSounds, False);
+	if Assigned(MainIni) then
+	begin
+		MainIni.RWFormPos(Self, False);
+		MainIni.RWDView(DViewSounds, False);
+	end;
 
 	ButtonSound.Down := SoundEnabled;
 	ButtonReduce.Down := SoundReduce;
@@ -537,8 +552,11 @@ end;
 
 procedure TfSounds.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-	MainIni.RWFormPos(Self, True);
-	MainIni.RWDView(DViewSounds, True);
+	if Assigned(MainIni) then
+	begin
+		MainIni.RWFormPos(Self, True);
+		MainIni.RWDView(DViewSounds, True);
+	end;
 end;
 
 procedure TfSounds.FormShow(Sender: TObject);

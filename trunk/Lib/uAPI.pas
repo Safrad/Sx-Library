@@ -52,7 +52,7 @@ begin
 	VK_BACK: Result := 'Back';
 	VK_TAB: Result := 'Tab';
 	VK_CLEAR: Result := 'Clear';
-	VK_RETURN: Result := 'Return';
+	VK_RETURN: Result := 'Enter';
 	VK_SHIFT: Result := 'Shift'; // Old Win
 	VK_CONTROL: Result := 'Ctrl'; // Old Win
 	VK_MENU: Result := 'Alt'; // Old Win
