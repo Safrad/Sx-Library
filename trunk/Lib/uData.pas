@@ -120,7 +120,7 @@ type
 
 implementation
 
-uses uMem, uMath;
+uses uMath;
 
 type
 	PItem = ^TItem;

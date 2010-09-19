@@ -19,37 +19,37 @@ type
 	TfAbout = class(TDForm)
 		Timer1: TDTimer;
 		ButtonOk: TDButton;
-    BevelSep: TBevel;
+		BevelSep: TBevel;
 		Image1: TImage;
 		Image2: TImage;
-    LabelRunCount: TLabel;
-    LabelNowRunTime: TLabel;
-    LabelTotalRunTime: TLabel;
-    EditCreationDate: TEdit;
-    PanelRC: TEdit;
-    PanelTRT: TEdit;
-    PanelNRT: TEdit;
+		LabelRunCount: TLabel;
+		LabelNowRunTime: TLabel;
+		LabelTotalRunTime: TLabel;
+		EditCreationDate: TEdit;
+		PanelRC: TEdit;
+		PanelTRT: TEdit;
+		PanelNRT: TEdit;
 		ImageName: TDImage;
-    LabelAuthor: TLabel;
-    LabelCreated: TLabel;
-    LabelEMail: TLabel;
+		LabelAuthor: TLabel;
+		LabelCreated: TLabel;
+		LabelEMail: TLabel;
 		EditAuthor: TEdit;
 		EditWeb: TEdit;
-    LabelWeb: TLabel;
-    EditEMail: TEdit;
-    Bevel: TBevel;
+		LabelWeb: TLabel;
+		EditEMail: TEdit;
+		Bevel: TBevel;
 		ImageAbout: TDImage;
 		Image3: TImage;
-    LabelIcq: TLabel;
+		LabelIcq: TLabel;
 		EditIcq: TEdit;
 		Image4: TImage;
 		SysInfo1: TDButton;
 		DButtonMemoryStatus: TDButton;
-    LabelCount: TLabel;
-    EditReleaseDate: TEdit;
-    LabelModified: TLabel;
-    LabelVersion: TLabel;
-    EditVersion: TEdit;
+		LabelCount: TLabel;
+		EditReleaseDate: TEdit;
+		LabelModified: TLabel;
+		LabelVersion: TLabel;
+		EditVersion: TEdit;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -96,8 +96,6 @@ procedure Help(HRef: string); overload;
 procedure ExtOpenFile(FileName: TFileName); overload;
 procedure ExtOpenFile(FileName: TFileName; Parameters: string); overload;
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
-{procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
-	FileName: TFileName; const Modal: Boolean);}
 procedure AboutRW(const Save: Boolean);
 
 var
@@ -123,7 +121,7 @@ type
 	TFlash = packed record // 16
 		X, Y: S4;
 		Power: S4;
-		Color: TRColor;
+		Color: TRGBA;
 	end;
 var
 	Flashs: TData;
@@ -227,8 +225,8 @@ var
 	s: string;
 begin
 	s := 'Param.' + CharTab + 'Description' + LineSep;
-	s := s + InsChar(96, '-') + LineSep;
-	s := s + 'Help' + CharTab + 'Dislay this help dialog' + LineSep;
+	s := s + StringOfChar('-', 96) + LineSep;
+	s := s + 'Help' + CharTab + 'Display this help dialog' + LineSep;
 	for i := 0 to Length(Params) - 1 do
 	begin
 		s := s + Params[i] + CharTab + DesParams[i] + LineSep;
@@ -364,22 +362,6 @@ begin
 			RunProgramTime := RunTime;
 		end;
 	end;
-	
-{	LogFile := TFile.Create;
-	FileName := DelFileExt(ExeFileName) + '.log';
-	LRetry:
-	if LogFile.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, True) then
-	begin
-		LogFile.SeekEnd;
-		if Save then
-			s := 'Finished'
-		else
-			s := 'Started';
-		s := s + ' ' + DateTimeToS(Now);
-		if not LogFile.Writeln(s) then goto LRetry;
-		if not LogFile.Close then goto LRetry;
-	end;
-	LogFile.Free;}
 end;
 
 procedure TfAbout.InitNRT;
@@ -539,8 +521,7 @@ procedure TfAbout.SysInfo1Click(Sender: TObject);
 begin
 	if not Assigned(fSysInfo) then fSysInfo := TfSysInfo.Create(Self);
 //	fSysInfo.FormStyle := fAbout.FormStyle;
-	fSysInfo.Left := fAbout.Left;
-	fSysInfo.Top := fAbout.Top;
+	fSysInfo.SetBounds(fAbout.Left, fAbout.Top, fSysInfo.Width, fSysInfo.Height);
 	fSysInfo.FillComp;
 	fSysInfo.Show;
 end;
@@ -557,6 +538,7 @@ begin
 		Flash.Y := Y;
 		Flash.Power := 128 + Random(128 + 15);
 		Flash.Color.L := FireColor(256 + Random(256)); // SpectrumColor(Random(MaxSpectrum));
+		Exchange(Flash.Color.R, Flash.Color.B);
 //	end;
 end;
 
@@ -620,7 +602,7 @@ begin
 	BitmapAbout := ImageAbout.Bitmap;
 	BitmapAbout.Bar(clBtnFace, ef02);
 	HClock := (32 * Timer1.Clock div PerformanceFrequency) and $7f;
-	if HClock <= 32  then
+	if HClock <= 32 then
 	begin
 		Effect := HClock shr 1;
 		Reset := False;
@@ -660,7 +642,7 @@ begin
 			C.G := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
 			C.B := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
 			C.T := 0;}
-			Pix(BitmapAbout.Data, BitmapAbout.ByteX, Flash.X, Flash.Y, Flash.Color, TEffect(Flash.Power div 16));
+			Pix(BitmapAbout.Data, BitmapAbout.ByteX, Flash.X, Flash.Y, @Flash.Color, TEffect(Flash.Power div 16));
 			Inc(i);
 		end;
 	end;
@@ -672,8 +654,7 @@ begin
 {$ifndef LINUX}
 	if not Assigned(fMemStatus) then fMemStatus := TfMemStatus.Create(Self);
 	fMemStatus.FormStyle := fAbout.FormStyle;
-	fMemStatus.Left := fAbout.Left;
-	fMemStatus.Top := fAbout.Top;
+	fMemStatus.SetBounds(fAbout.Left, fAbout.Top, fMemStatus.Width, fMemStatus.Height);
 	fMemStatus.Show;
 {$endif}
 end;
@@ -705,7 +686,6 @@ finalization
 {$ifopt d+}
 {	if (MemCount + 22 < AllocMemCount) {or
 		(MemSize + 6508 < AllocMemSize) then
-			Nop;}
-//			MessageD('Memory Allocation Problem', mtWarning, [mbOk]);
+			MessageD('Memory Allocation Problem', mtWarning, [mbOk]);}
 {$endif}
 end.

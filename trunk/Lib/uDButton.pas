@@ -120,7 +120,7 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uScreen, uSysInfo, uMenus;
+	uGraph, uScreen, uSysInfo, uMenus, uStrings;
 
 
 var Loaded: BG;
@@ -483,7 +483,7 @@ begin
 	if not Assigned(FGlyph) then
 	begin
 		FGlyph := TDBitmap.Create;
-		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name, False) + IconExt;
+		FileName := GraphDir + 'Images\' + ButtonNameToFileName(Name) + IconExt;
 		if FileExists(FileName) then
 		begin
 			FGlyph.LoadFromFile(FileName);
@@ -555,7 +555,7 @@ begin
 	begin
 		s := Caption;
 		Delete(s, 1, 1);
-		s := ButtonNameToFileName(Name, True) + s;
+		s := AddSpace(ButtonNameToFileName(Name)) + s;
 	end
 	else
 		s := Caption;
@@ -847,8 +847,6 @@ end;
 function TDButton.IsCustomCaption: Boolean;
 begin
 	Result := True;
-{	Result :=	(UpperCase(Caption) <> UpperCase(Name))
-		and (UpperCase(Caption) <> UpperCase(ButtonNameToFileName(Name)));}
 end;
 
 procedure TDButton.SetLayout(Value: TButtonLayout);

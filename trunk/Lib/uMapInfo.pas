@@ -41,7 +41,7 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uTypes, uFiles, uStrings, uMem;
+	uTypes, uFiles, uStrings, uMath;
 
 const
 	Delimiter = ',';
@@ -101,7 +101,7 @@ begin
 						if Po = 1 then
 						begin
 							WhereMif := wmType;
-{             InLineIndex := Po + 7;
+{							InLineIndex := Po + 7;
 							FormatCount := GetNextInt(Line, InLineIndex);
 							SetLength(Formats, FormatCount);
 							FormatIndex := 0;}
@@ -161,9 +161,9 @@ begin
 					DelQuote(s);
 					FieldsM[FieldMIndex].PSC99 := s;*)
 
-//          FieldsM[FieldMIndex].KodObc := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));}
+//				FieldsM[FieldMIndex].KodObc := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));}
 					Inc(FieldMIndex);
-	//        Inc(LineIndex);
+//				Inc(LineIndex);
 				end;
 			end;
 			FIn.Close;

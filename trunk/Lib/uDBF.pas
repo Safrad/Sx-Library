@@ -49,7 +49,7 @@ implementation
 
 uses
 	Windows, Variants,
-	uFiles, uStrings, uInput, uError, uMem, uFormat, uMath;
+	uFiles, uStrings, uInput, uError, uFormat, uMath;
 
 procedure TDBF.Close;
 var i, j: SG;
@@ -306,8 +306,8 @@ begin
 					if Index <> 0 then
 					begin
 						{$ifopt d+}
-						k := SwapU4(PU4(@FPT[FPTSize * Index + 1])^);
-						if k <> 1 then IE(343);{$endif}
+						Assert(SwapU4(PU4(@FPT[FPTSize * Index + 1])^) = 1);
+						{$endif}
 						k := SwapU4(PU4(@FPT[FPTSize * Index + 5])^);
 						SetLength(s, k);
 						FillChar(s[1], k, 0);

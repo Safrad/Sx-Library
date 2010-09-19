@@ -82,23 +82,23 @@ type
 
 	PWave = ^TWave;
 	TWave = packed record // 44
-		Marker1:         array[0..3] of Char; // 4
-		BytesFollowing:  LongInt; // 4; FileSize - 8
+		Marker1: array[0..3] of Char; // 4
+		BytesFollowing: LongInt; // 4; FileSize - 8
 		// Data
-		Marker2:         array[0..3] of Char; // 4
+		Marker2: array[0..3] of Char; // 4
 		// Format
-		Marker3:         array[0..3] of Char; // 4
-		BlockAlign:      LongInt; // 4; 16
-		FormatTag:       Word; // 2; 1
-		Channels:        Word; // 2; 2: stereo, 1: mono
-		SampleRate:      LongInt; // 4; 11025, 22050, 44100
-		BytesPerSecond:  LongInt; // 4; BytesPerSample * SampleRate
-		BytesPerSample:  Word; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
-		BitsPerSample:   Word; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
+		Marker3: array[0..3] of Char; // 4
+		BlockAlign: LongInt; // 4; 16
+		FormatTag: Word; // 2; 1
+		Channels: Word; // 2; 2: stereo, 1: mono
+		SampleRate: LongInt; // 4; 11025, 22050, 44100
+		BytesPerSecond: LongInt; // 4; BytesPerSample * SampleRate
+		BytesPerSample: Word; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
+		BitsPerSample: Word; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
 		// Wave data
-		Marker4:         array[0..3] of Char; // 4
-		DataBytes:       LongInt; // 4; <= (FileSize - 44)
-		Data:            TWaveData; // X
+		Marker4: array[0..3] of Char; // 4
+		DataBytes: LongInt; // 4; <= (FileSize - 44)
+		Data: TWaveData; // X
 	end;
 
 type
@@ -281,55 +281,6 @@ uses
 	Registry, Dialogs,
 	uFiles, uError, uStrings, uFormat;
 
-(*
-procedure NoSound;
-asm
-	{$ifopt O+}
-	push ax
-	{$endif}
-	in al, 61h
-	and al, 00fch
-	out 61h, al
-	{$ifopt O+}
-	pop ax
-	{$endif}
-end;
-
-procedure Sound(const Hz: Word);
-asm
-	{$ifopt O+}
-	pushad
-	{$endif}
-	mov bx, Hz
-	mov ax, 34DDh
-	mov dx, 0012h
-	cmp dx, bx
-	jnb @ExitProc
-	div bx
-	{ ax := dx&ax div bx
-		dx := dx&ax mod bx
-		dx&ax := 1193181
-		f := 1092Hz
-	}
-	mov bx, ax
-	in al, 61h
-	test al, 03h
-	jne @SoundIsOn
-		or al, 03h
-		out 61h, al
-		mov al, 0B6h
-		out 43h, al
-	@SoundIsOn:
-	mov al, bl
-	out 42h, al
-	mov al, bh
-	out 42h, al
-	@ExitProc:
-	{$ifopt O+}
-	popad
-	{$endif}
-end;
-*)
 procedure Beep;
 begin
 	PlayWinSound(wsDefaultSound);
@@ -550,7 +501,7 @@ begin
 				add ecx, esi
 				@Loop:
 					xor ebx, ebx
-					mov bl, byte ptr [esi] // 3
+					mov bl, U1 ptr [esi] // 3
 					sub ebx, 128
 
 					mov eax, Left
@@ -617,7 +568,7 @@ begin
 				add esi, WaveHead
 				add ecx, esi
 				@Loop:
-					movsx ebx, SmallInt ptr [esi] // 3
+					movsx ebx, S2 ptr [esi] // 3
 
 					mov eax, Left
 					imul eax, ebx // 10
@@ -923,7 +874,7 @@ begin
 				end;
 				end;
 			end;
-		end; D??? }
+		end; }
 		if Assigned(WaveRecorder.FOnReciveBuffrer) then
 			WaveRecorder.FOnReciveBuffrer(WaveRecorder, BufferIn);
 
@@ -1005,14 +956,11 @@ begin
 		FCloseInvoked := True;
 {	if Self is TWavePlayer then
 		waveOutBreakLoop(FHWave);}
-//	Stop; // Lag problem D???
 		while FOutCount > 0 do
 			Sleep(40);
 		FActive := False;
 		FCloseInvoked := False;
 	end;
-{	if FOutCount > 0 then
-		Sleep(1000);}
 end;
 
 procedure TWaveCommon.Pause;

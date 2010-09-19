@@ -250,10 +250,7 @@ begin
 	for i := 0 to CSVReqFormats.Count - 1 do
 	begin
 		PanelNames[i] := TDLabel.Create(Self);
-		PanelNames[i].Left := LabelName.Left;
-		PanelNames[i].Width := LabelName.Width;
-		PanelNames[i].Top := 28 + 21 * i;
-		PanelNames[i].Height := 21;
+		PanelNames[i].SetBounds(LabelName.Left, 28 + 21 * i, LabelName.Width, 21);
 		PanelNames[i].Alignment := taLeftJustify;
 		PanelNames[i].BevelOuter := bvNone;
 		PanelNames[i].BorderStyle := bsSingle;
@@ -261,10 +258,7 @@ begin
 		PanelNames[i].Caption := NToS(i + 1) + ': ' + ReqFormat.Name;
 
 		PanelTypes[i] := TDLabel.Create(Self);
-		PanelTypes[i].Left := LabelType.Left;
-		PanelTypes[i].Width := LabelType.Width;
-		PanelTypes[i].Top := 28 + 21 * i;
-		PanelTypes[i].Height := 21;
+		PanelTypes[i].SetBounds(LabelType.Left, 28 + 21 * i, LabelType.Width, 21);
 		PanelTypes[i].Alignment := taLeftJustify;
 		PanelTypes[i].BevelOuter := bvNone;
 		PanelTypes[i].BorderStyle := bsSingle;
@@ -291,9 +285,7 @@ begin
 		PanelTypes[i].Caption := s;
 
 		ComboBoxes[i] := TComboBox.Create(Self);
-		ComboBoxes[i].Top := PanelNames[i].Top;
-		ComboBoxes[i].Left := LabelFunction.Left;
-		ComboBoxes[i].Width := LabelFunction.Width;
+		ComboBoxes[i].SetBounds(LabelFunction.Left, PanelNames[i].Top, LabelFunction.Width, ComboBoxes[i].Height);
 		ComboBoxes[i].Style := csDropDownList;
 		ComboBoxes[i].DropDownCount := 24;
 

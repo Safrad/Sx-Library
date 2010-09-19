@@ -20,7 +20,7 @@ object fFileExt: TfFileExt
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object DViewFE: TDView
+  object DViewFileExtensions: TDView
     Left = 0
     Top = 0
     Width = 440
@@ -32,7 +32,7 @@ object fFileExt: TfFileExt
     PopupMenu = PopupMenuFE
     TabOrder = 0
     TabStop = False
-    OnGetData = DViewFEGetData
+    OnGetData = DViewFileExtensionsGetData
   end
   object PopupMenuFE: TPopupMenu
     OnPopup = PopupMenuFEPopup

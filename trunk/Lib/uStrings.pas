@@ -28,6 +28,7 @@ const
 	CharFormfeed = #$0C;
 	CharBell = #$07;
 	CharTimes = '×';
+	Space = [CharNul, CharTab, CharLF, CharCR, CharSpace];
 
 	FalseTrue: array[0..1] of string = ('false', 'true');
 
@@ -37,36 +38,44 @@ var
 type
 	TCharSet = set of Char;
 
-function LowCase(ch: Char): Char;
-
-function DelCharsF(const s: string; const SubChar: Char): string;
-procedure DelChars(var s: AnsiString; const SubChar: Char); overload;
-procedure DelChars(var s: ShortString; const SubChar: Char); overload;
-
-function DelStrF(s: string; const SubStr: string): string;
-procedure DelStr(var s: string; const SubStr: string);
-
-function DelQuoteF(const s: string): string;
-procedure DelQuote(var s: string);
+// Strings
+function PosEx(SubStr, Str: string): SG; overload;
+function PosEx(SubStr, Str: string; FromPos: SG): SG; overload;
+function PosEx(SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
 
 function CharCount(const s: string; const C: Char): UG;
+function LowCase(ch: Char): Char;
 
-function DelBeginSpaceF(const s: string): string;
+procedure DelChars(var s: string; const SubChar: Char);
+function DelCharsF(const s: string; const SubChar: Char): string;
+
+procedure DelStr(var s: string; const SubStr: string);
+function DelStrF(const s: string; const SubStr: string): string;
+
+procedure DelQuote(var s: string);
+function DelQuoteF(const s: string): string;
+
 procedure DelBeginSpace(var s: string);
-function DelEndSpaceF(const s: string): string; overload;
-function DelEndNewLineF(const s: string): string;
-function DelEndSpaceF(const s: ShortString): ShortString; overload;
+function DelBeginSpaceF(const s: string): string;
+
 procedure DelEndSpace(var s: string);
-function DelBESpaceF(s: string): string;
+function DelEndSpaceF(const s: string): string;
+
 procedure DelBESpace(var s: string);
-function RemoveBlanks(s: string): string;
-function DeleteLastEnter(s: string): string;
-function DeleteLastChar(s: string): string;
+function DelBESpaceF(const s: string): string;
+
+function DeleteLastChar(const s: string; Right: SG = 1): string;
+function DeleteLastNumber(const s: string): string;
 
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
-function ReadNum(const Line: string; var LineIndex: SG): SG;
+function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
+function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
+function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
+function ReadSGFast(const Line: string): SG; overload;
+function ReadS8Fast(const Line: string): S8; overload;
+function ReadFAFast(const Line: string): FA; overload;
 procedure SkipSpace(const Line: string; var LineIndex: SG);
 function ReadToString(const Line: string; var LineIndex: SG;
 	const S: string): string;
@@ -76,25 +85,98 @@ function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet; out LastChar: Char): string; overload;
 function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
-function PosWW(Str, SubStr: string): Integer;
-function StartStr(SubStr: string; Str: string): Boolean;
-function IsSubStr(SubStr: string; Str: string): Boolean;
+function StartStr(const SubStr: string; const Str: string): BG;
+function IsSubStr(const SubStr: string; const Str: string): BG;
 
-function InsChar(const CharCount: Integer; C: Char): string;
-
-function ReplaceF(s: string; const WhatS, ToS: string): string;
+function ReplaceF(const s: string; const WhatS, ToS: string): string;
 procedure Replace(var s: string; const WhatS, ToS: string);
 
-function Code(s: ShortString; Decode: Boolean): ShortString; overload
-function Code(s: AnsiString; Decode: Boolean): AnsiString; overload;
+function Code(const s: string; const Decode: BG): string;
+
+function AddSpace(const s: string): string;
+function RandomString(Size: SG): string;
 
 implementation
 
-uses
-	Math,
-	uFind;
+uses Math;
+
+function PosEx(SubStr, Str: string): SG;
+begin
+	Result := PosEx(SubStr, Str, 1, Length(Str));
+end;
+
+function PosEx(SubStr, Str: string; FromPos: SG): SG;
+begin
+	Result := PosEx(SubStr, Str, FromPos, Length(Str));
+end;
+
+function PosEx(SubStr, Str: string; FromPos, ToPos: SG): SG;
+label LNFound;
 var
-	TableWordSep: array[0..7] of Char = (' ', ',', '.', '-', '/', ';', '(', ')');
+	i, j: SG;
+	Dir: SG;
+	SubStrLen, StrLen: SG;
+begin
+	Result := 0;
+	// Check parameters
+	SubStrLen := Length(SubStr);
+	if SubStrLen = 0 then Exit;
+	StrLen := Length(Str);
+	if SubStrLen > StrLen then Exit;
+
+	if FromPos < 1 then FromPos := 1;
+	if ToPos < 1 then ToPos := 1;
+
+	if FromPos = ToPos then
+		Dir := 0
+	else if FromPos > ToPos then
+	begin
+		Dir := -1;
+		if FromPos > StrLen - SubStrLen + 1 then FromPos := StrLen - SubStrLen + 1;
+		if FromPos <= ToPos  then
+		begin
+			FromPos := ToPos;
+			Dir := 0;
+		end
+		else
+			Dec(ToPos);
+	end
+	else // if FromPos < ToPos then
+	begin
+		Dir := 1;
+		if ToPos > StrLen - SubStrLen + 1 then ToPos := StrLen - SubStrLen + 1;
+		if FromPos >= ToPos  then
+		begin
+			FromPos := ToPos;
+			Dir := 0;
+		end
+		else
+			Inc(ToPos);
+	end;
+
+	i := FromPos;
+	repeat
+		if SubStr[1] = Str[i] then
+		begin
+			for j := 2 to SubStrLen do
+				if  Str[i - 1 + j] <> SubStr[j] then goto LNFound;
+			Result := i;
+			Exit;
+			LNFound:
+		end;
+		Inc(i, Dir);
+	until i = ToPos;
+end;
+
+function CharCount(const s: string; const C: Char): UG;
+var i: SG;
+begin
+	Result := 0;
+	for i := 1 to Length(s) do
+	begin
+		if s[i] = C then Inc(Result);
+	end;
+end;
 
 function LowCase(ch : Char): Char;
 {$IFDEF PUREPASCAL}
@@ -118,58 +200,23 @@ asm
 end;
 {$ENDIF}
 
+procedure DelChars(var s: string; const SubChar: Char);
+var i: Integer;
+begin
+	i := 1;
+	while i <= Length(s) do
+	begin
+		if s[i] = SubChar then
+			Delete(s, i, 1)
+		else
+			Inc(i);
+	end;
+end;
+
 function DelCharsF(const s: string; const SubChar: Char): string;
-var i: Integer;
 begin
-	Result := '';
-	for i := 1 to Length(s) do
-	begin
-		if s[i] <> SubChar then Result := Result + s[i];
-	end;
-end;
-
-procedure DelChars(var s: AnsiString; const SubChar: Char);
-var i: Integer;
-begin
-	i := 1;
-	while i <= Length(s) do
-	begin
-		if s[i] = SubChar then
-			Delete(s, i, 1)
-		else
-			Inc(i);
-	end;
-end;
-
-procedure DelChars(var s: ShortString; const SubChar: Char);
-var i: Integer;
-begin
-	i := 1;
-	while i <= Length(s) do
-	begin
-		if s[i] = SubChar then
-			Delete(s, i, 1)
-		else
-			Inc(i);
-	end;
-end;
-
-function DelStrF(s: string; const SubStr: string): string;
-var i, F: SG;
-begin
-	Result := '';
-	F := 1;
-	while True do
-	begin
-		i := Find(SubStr, s, F);
-		if i = 0 then
-		begin
-			Break;
-		end;
-		F := i;
-		Delete(s, i, Length(SubStr));
-	end;
 	Result := s;
+	DelChars(Result, SubChar);
 end;
 
 procedure DelStr(var s: string; const SubStr: string);
@@ -178,7 +225,7 @@ begin
 	F := 1;
 	while True do
 	begin
-		i := Find(SubStr, s, F);
+		i := PosEx(SubStr, s, F);
 		if i = 0 then
 		begin
 			Break;
@@ -188,14 +235,10 @@ begin
 	end;
 end;
 
-
-function DelQuoteF(const s: string): string;
+function DelStrF(const s: string; const SubStr: string): string;
 begin
 	Result := s;
-	if Result = '' then Exit;
-	if Result[1] = '"' then Delete(Result, 1, 1);
-	if Result = '' then Exit;
-	if Result[Length(Result)] = '"' then SetLength(Result, Length(Result) - 1);
+	DelStr(Result, SubStr);
 end;
 
 procedure DelQuote(var s: string);
@@ -206,29 +249,10 @@ begin
 	if s[Length(s)] = '"' then SetLength(s, Length(s) - 1);
 end;
 
-function CharCount(const s: string; const C: Char): UG;
-var i: SG;
-begin
-	Result := 0;
-	for i := 1 to Length(s) do
-	begin
-		if s[i] = C then Inc(Result);
-	end;
-end;
-
-function DelBeginSpaceF(const s: string): string;
-var i: Integer;
+function DelQuoteF(const s: string): string;
 begin
 	Result := s;
-	for i := 1 to Length(Result) do
-	begin
-		if Result[i] <> ' ' then
-		begin
-			if i <> 1 then
-				Delete(Result, 1, i - 1);
-			Break;
-		end;
-	end;
+	DelQuote(Result);
 end;
 
 procedure DelBeginSpace(var s: string);
@@ -236,58 +260,19 @@ var i: Integer;
 begin
 	for i := 1 to Length(s) do
 	begin
-		if s[i] <> ' ' then
+		if not (s[i] in Space) then
 		begin
-			if i <> 1 then
+			if i > 1 then
 				Delete(s, 1, i - 1);
-			Break;
+			Exit;
 		end;
 	end;
 end;
 
-function DelEndSpaceF(const s: string): string;
-var
-	i: Integer;
+function DelBeginSpaceF(const s: string): string;
 begin
-	for i := Length(s) downto 1 do
-	begin
-		if s[i] <> ' ' then
-		begin
-			Result := Copy(s, 1, i);
-			Exit;
-		end;
-	end;
 	Result := s;
-end;
-
-function DelEndNewLineF(const s: string): string;
-var
-	i: Integer;
-begin
-	for i := Length(s) downto 1 do
-	begin
-		if not (s[i] in [CharCR, CharLF]) then
-		begin
-			Result := Copy(s, 1, i);
-			Exit;
-		end;
-	end;
-	Result := s;
-end;
-
-function DelEndSpaceF(const s: ShortString): ShortString;
-var
-	i: Integer;
-begin
-	for i := Length(s) downto 1 do
-	begin
-		if s[i] <> ' ' then
-		begin
-			Result := Copy(s, 1, i);
-			Exit;
-		end;
-	end;
-	Result := s;
+	DelBeginSpace(Result);
 end;
 
 procedure DelEndSpace(var s: string);
@@ -296,7 +281,7 @@ var
 begin
 	for i := Length(s) downto 1 do
 	begin
-		if s[i] <> ' ' then
+		if not (s[i] in Space) then
 		begin
 			SetLength(s, i);
 			Exit;
@@ -304,83 +289,58 @@ begin
 	end;
 end;
 
-function DelBESpaceF(s: string): string;
-var i: Integer;
+function DelEndSpaceF(const s: string): string;
 begin
-	for i := Length(s) downto 1 do
-	begin
-		if s[i] <> ' ' then
-		begin
-			if i <> Length(s) then
-				SetLength(s, i);
-			Break;
-		end;
-	end;
-	for i := 1 to Length(s) do
-	begin
-		if s[i] <> ' ' then
-		begin
-			if i <> 1 then
-				Delete(s, 1, i - 1);
-			Break;
-		end;
-	end;
 	Result := s;
+	DelEndSpace(Result);
 end;
 
 procedure DelBESpace(var s: string);
-var i: Integer;
 begin
-	for i := Length(s) downto 1 do
-	begin
-		if s[i] <> ' ' then
-		begin
-			if i <> Length(s) then
-				SetLength(s, i);
-			Break;
-		end;
-	end;
-	for i := 1 to Length(s) do
-	begin
-		if s[i] <> ' ' then
-		begin
-			if i <> 1 then
-				Delete(s, 1, i - 1);
-			Break;
-		end;
-	end;
+	DelEndSpace(s);
+	DelBeginSpace(s);
 end;
 
-function RemoveBlanks(s: string): string;
+function DelBESpaceF(const s: string): string;
 begin
 	Result := s;
-	Replace(Result, ' ', '');
-	Replace(Result, CharTab, '');
-	Replace(Result, CharCR, '');
-	Replace(Result, CharLF, '');
+	DelBESpace(Result);
 end;
 
-function DeleteLastEnter(s: string): string;
+function DeleteLastChar(const s: string; Right: SG = 1): string;
 begin
-	Result := s;
-	if Length(Result) >= 1 then
+	Right := Min(Length(s), Right);
+	if Right > 0 then
 	begin
-		if s[Length(Result)] = CharLF then
-			SetLength(Result, Length(Result) - 1);
-	end;
-	if Length(Result) >= 1 then
-	begin
-		if s[Length(Result)] = CharCR then
-			SetLength(Result, Length(Result) - 1);
-	end;
-end;
-
-function DeleteLastChar(s: string): string;
-begin
-	if Length(s) > 1 then
-		Result := Copy(s, 1, Length(s) - 1)
+		Result := s;
+		SetLength(Result, Length(s) - Right);
+	end
 	else
 		Result := '';
+end;
+
+function DeleteLastNumber(const s: string): string;
+var i: SG;
+begin
+	i := Length(s);
+	while i > 0 do
+	begin
+		case s[i] of
+		'0'..'9':
+		begin
+
+		end;
+		'_':
+		begin
+			Dec(i);
+			Break;
+		end
+		else
+			Break;
+		end;
+		Dec(i);
+	end;
+	Result := Copy(s, 1, i);
 end;
 
 function ReadToChar(const Line: string; const C: Char): string;
@@ -414,15 +374,34 @@ begin
 		Inc(LineIndex);
 end;
 
-function ReadNum(const Line: string; var LineIndex: SG): SG;
+function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
+{$i StrToNum.inc}
+
+function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
+{$i StrToNum.inc}
+
+function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
+{$i StrToNum.inc}
+
+function ReadSGFast(const Line: string): SG; overload;
+var LineIndex: SG;
 begin
-	Result := 0;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] in ['0'..'9']) do
-	begin
-		Result := Result * 10;
-		Result := Result + Ord(Line[LineIndex]) - Ord('0');
-		Inc(LineIndex);
-	end;
+	LineIndex := 1;
+	Result := ReadSGFast(Line, LineIndex);
+end;
+
+function ReadS8Fast(const Line: string): S8; overload;
+var LineIndex: SG;
+begin
+	LineIndex := 1;
+	Result := ReadS8Fast(Line, LineIndex);
+end;
+
+function ReadFAFast(const Line: string): FA; overload;
+var LineIndex: SG;
+begin
+	LineIndex := 1;
+	Result := ReadFAFast(Line, LineIndex);
 end;
 
 procedure SkipSpace(const Line: string; var LineIndex: SG);
@@ -509,12 +488,7 @@ begin
 	Inc(LineIndex);
 end;
 
-function PosWW(Str, SubStr: string): Integer; // Str is word
-begin
-	Result := Pos(Str, SubStr);
-end;
-
-function StartStr(SubStr: string; Str: string): Boolean;
+function StartStr(const SubStr: string; const Str: string): BG;
 var i: SG;
 begin
 	for i := 1 to Min(Length(SubStr), Length(Str)) do
@@ -528,7 +502,7 @@ begin
 	Result := True;
 end;
 
-function IsSubStr(SubStr: string; Str: string): Boolean;
+function IsSubStr(const SubStr: string; const Str: string): BG;
 var
 	i: Integer;
 	Wor: string;
@@ -539,14 +513,12 @@ begin
 	LastWordBegin := 0;
 	while True do
 	begin
-		if (i > Length(Str)) or (Str[i] = ' ') or (Str[i] = ',') or
-			(Str[i] = '.') or (Str[i] = '-') or (Str[i] = '/') or
-			(Str[i] = ';') or (Str[i] = '(') or (Str[i] = ')') then
+		if (i > Length(Str)) or (Str[i] in [' ', ',', '.', '-', '/', ';', '(', ')']) then
 		begin
 			if (LastWordBegin <> 0) then
 			begin
 				Wor := Copy(Str, LastWordBegin, i - LastWordBegin);
-				if PosWW(Wor, SubStr) <> 0 then
+				if Pos(Wor, SubStr) <> 0 then
 				begin
 					Result := True;
 					Exit;
@@ -563,128 +535,35 @@ begin
 	end;
 end;
 
-{
-function IsSubStr(SubStr: string; Str: string): Boolean;
-var
-	i: Integer;
-	Wor: string;
-	LastWordBegin: Integer;
+function ReplaceF(const s: string; const WhatS, ToS: string): string;
 begin
-	Result := False;
-	i := 1;
-	LastWordBegin := 0;
-	while True do
-	begin
-		if (i > Length(Str)) or (Str[i] = ' ') or (Str[i] = ',') or
-			(Str[i] = '.') or (Str[i] = '-') or (Str[i] = '/') or
-			(Str[i] = ';') or (Str[i] = '(') or (Str[i] = ')') then
-		begin
-			if (LastWordBegin <> 0) then
-			begin
-				Wor := Copy(Str, LastWordBegin, i - LastWordBegin);
-				if Pos(Wor, SubStr) <> 0 then // ? Whole words only
-				begin
-					Result := True;
-					Exit;
-				end;
-				LastWordBegin := 0;
-			end;
-		end
-		else
-		begin
-			if LastWordBegin = 0 then LastWordBegin := i;
-		end;
-		if i > Length(Str) then Exit;
-		Inc(i);
-	end;
-end;
-
-function IsSubStr(SubStr: string; Str: string): Boolean;
-var
-	i: Integer;
-	Wor: string;
-	LastWordBegin: Integer;
-begin
-	Result := False;
-	i := 1;
-	LastWordBegin := 0;
-	while True do
-	begin
-		if (i > Length(Str)) or (Str[i] = ' ') or (Str[i] = ',') or
-			(Str[i] = '.') or (Str[i] = '-') or (Str[i] = '/') or
-			(Str[i] = ';') or (Str[i] = '(') or (Str[i] = ')') then
-		begin
-			if (LastWordBegin <> 0) then
-			begin
-				Wor := Copy(Str, LastWordBegin, i - LastWordBegin);
-				if Pos(Wor, SubStr) <> 0 then // ? Whole words only
-				begin
-					Result := True;
-					Exit;
-				end;
-				LastWordBegin := 0;
-			end;
-		end
-		else
-		begin
-			if LastWordBegin = 0 then LastWordBegin := i;
-		end;
-		if i > Length(Str) then Exit;
-		Inc(i);
-	end;
-end;
-
-}
-
-function InsChar(const CharCount: Integer; C: Char): string;
-begin
-	if CharCount <= 0 then
-	begin
-		Result := '';
-		Exit;
-	end;
-	SetLength(Result, CharCount);
-	FillChar(Result[1], CharCount, C);
-end;
-
-function ReplaceF(s: string; const WhatS, ToS: string): string;
-var Po: SG;
-begin
-	Result := '';
-	while True do
-	begin
-		Po := Pos(WhatS, s);
-		if Po <> 0 then
-		begin
-			Result := Result + Copy(s, 1, Po - 1) + ToS;
-			Delete(s, 1, Po - 1 + Length(WhatS));
-		end
-		else
-			Break;
-	end;
-	Result := Result + s;
+	Result := s;
+	Replace(Result, WhatS, ToS);
 end;
 
 procedure Replace(var s: string; const WhatS, ToS: string);
-var Po, Index: SG;
+var
+	Po, Index: SG;
+	WhatSLen, ToSLen: SG;
 begin
 	Index := 1;
-	while Index + Length(WhatS) <= Length(s) + 1 do
+	WhatSLen := Length(WhatS);
+	ToSLen := Length(ToS);
+	while Index + WhatSLen <= Length(s) + 1 do
 	begin
-//		Po := Pos(WhatS, s);
-		Po := Find(WhatS, s, Index);
+		Po := PosEx(WhatS, s, Index);
 		if Po <> 0 then
 		begin
-			Delete(s, Po, Length(WhatS));
+			Delete(s, Po, WhatSLen);
 			Insert(ToS, s, Po);
-			Index := Po + Length(ToS);
+			Index := Po + ToSLen;
 		end
 		else
 			Break;
 	end;
 end;
 
-function Code(s: ShortString; Decode: Boolean): ShortString;
+function Code(const s: string; const Decode: BG): string;
 var i: Integer;
 begin
 	SetLength(Result, Length(s));
@@ -697,18 +576,38 @@ begin
 	end;
 end;
 
-function Code(s: AnsiString; Decode: Boolean): AnsiString;
-var i: Integer;
+function AddSpace(const s: string): string;
+var Index: SG;
 begin
-	SetLength(Result, Length(s));
-	for i := 1 to Length(s) do
-	begin
-		if Decode then
-			Result[i] := Chr(((Ord(s[i]) xor $ff) + $f) and $ff)
-		else
-			Result[i] := Chr(((Ord(s[i]) - $f) and $ff) xor $ff);
-	end;
+	Result := s;
+	for Index := 2 to Length(Result) do
+		if Result[Index] in ['A'..'Z'] then
+			if Result[Index - 1] in ['a'..'z'] then
+				Insert(' ', Result, Index);
 end;
+
+function RandomString(Size: SG): string;
+var i: SG;
+begin
+	SetLength(Result, Size);
+	for i := 1 to Size do
+		Result[i] := Char(Random(256));
+end;
+{
+var
+	i: SG;
+	s, s2: string;
+begin
+	for i := 0 to 32767 do
+	begin
+		s := RandomString(i);
+		s2 := AddEscape(s);
+		s2 := RemoveEscape(s2);
+		Assert(s = s2);
+	end;
+
+end;
+}
 
 procedure FillHexValue;
 var
@@ -717,10 +616,10 @@ begin
 	for c := Low(Char) to High(Char) do
 		case c of
 		'0'..'9': HexValue[c] := Ord(c) - Ord('0');
-		'a'..'z': HexValue[c] := Ord(c) - Ord('a') + 10;
 		'A'..'Z': HexValue[c] := Ord(c) - Ord('A') + 10;
+		'a'..'z': HexValue[c] := Ord(c) - Ord('a') + 10;
 		else
-			HexValue[c] := 255;
+			HexValue[c] := 0;
 		end;
 end;
 

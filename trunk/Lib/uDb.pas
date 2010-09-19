@@ -6,7 +6,7 @@
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-unit uDb;
+unit uDb; // Not developed
 
 interface
 
@@ -33,13 +33,13 @@ type
 	end;
 	TDbHeadId = array[0..3] of Char;
 	TDbHead = packed record // 32
-		Id: TDbHeadId;        // 4
-		Version: LongWord;    // 4
-		HeadSize: LongWord;   // 4
-		ItemCount: LongInt;   // 4
-		ItemSize: LongWord;   // 4
-		SaveCount: LongWord;  // 4
-		Modified: TDateTime;  // 8
+		Id: TDbHeadId; // 4
+		Version: LongWord; // 4
+		HeadSize: LongWord; // 4
+		ItemCount: LongInt; // 4
+		ItemSize: LongWord; // 4
+		SaveCount: LongWord; // 4
+		Modified: TDateTime; // 8
 	end;
 
 	TDb = class

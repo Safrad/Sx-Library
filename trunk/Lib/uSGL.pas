@@ -19,26 +19,6 @@ uses
 	uTypes,
 	Graphics;
 
-///////////////////////////////////////////////////////////////////////
-// sgl.h                                                             //
-// Hlavickovy soubor knihovny SGL (Simple Graphics Library)          //
-// verze: 9.brezna 2005 (v.02)                                       //
-///////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////
-// !!! POZOR !!!                                                     //
-//   * zmena - frame buffer je ulozen po radcich - 1.radek je dole   //
-///////////////////////////////////////////////////////////////////////
-
-{#ifndef __SGL_H
-#define __SGL_H}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////// Datove typy /////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-(* Datovy typ BYTE - hodnoty 0 - 255. *)
-// typedef unsigned char BYTE;
 type
 PFloat = ^TFloat;
 TFloat = Double;
@@ -112,7 +92,7 @@ type
 	TGraphicPoint = packed record // 32
 		Pos: TGraphicPos; // 8
 		Tex: TGraphicPos; // 8
-		C: TRColor; // 4
+		C: TRGBA; // 4
 		Reserved: array[0..3] of U4;
 	end;
 	TWorldPos = packed record // 32
@@ -121,7 +101,7 @@ type
 	TWorldPoint = packed record // 128
 		Pos: TWorldPos; // 32
 		Tex: TWorldPos; // 32
-		C: TRColor; // 4
+		C: TRGBA; // 4
 		Reserved: array[0..14] of U4;
 //		Reserved1: array[0..1] of U4; // 8
 	end;
@@ -151,7 +131,7 @@ type
 	MinB, MaxB: TGraphicPos;
 	MinX, MinY, MaxX, MaxY: TFloat; // World
 	// Options
-	Color: TRColor;
+	Color: TRGBA;
 	EnableClipping,
 	EnableBlending,
 	ShadeModel: BG;
@@ -408,7 +388,7 @@ procedure sglOrtho2D(minX, maxX, minY, maxY: TFloat);
 (* Zadani barvy v barevnem modelu RGBA - vyuzije se pro kresleni nasledne zadanych vrcholu. *)
 const
 sglPenColor = $00ffffff;
-procedure sglColor(C: TRColor); overload;
+procedure sglColor(C: TRGBA); overload;
 procedure sglColor(C: TColor); overload;
 procedure sglColor(R, G, B, A: U1); overload; // 255 = 1.0
 procedure sglColor(R, G, B: U1); overload;
@@ -586,7 +566,7 @@ var
 
 implementation
 
-uses Math, uGraph, uError, uSorts, uDBitmap, uMem, uMath;
+uses Math, uGraph, uError, uSorts, uDBitmap, uMath;
 
 // ***************************************************************************************************************************
 
@@ -955,7 +935,7 @@ begin
 	G.C := WP.C;
 end;
 
-procedure PixMix(D: PRGBA; S: TRColor; BlendFunc: SG);
+procedure PixMix(D: PRGBA; S: TRGBA; BlendFunc: SG);
 var
 	L: U2;
 	A: U1 absolute L;
@@ -1020,9 +1000,9 @@ var
 	TexX, TexY: SG; // Parameters Line -> Pix
 
 
-procedure Pix(P: PRGBA; Color: TRColor); overload;
+procedure Pix(P: PRGBA; Color: TRGBA); overload;
 var
-	C, TexColor: TRColor;
+	C, TexColor: TRGBA;
 	x, y: SG;
 	ix, iy: UG;
 	ax, ay: array[0..1] of SG;
@@ -1033,18 +1013,8 @@ var
 	tx, ty: UG;
 //	DM: SG;
 begin
-	{$ifopt d+}
-	if SG(P) < SG(Drawable._frameBuffer) then
-	begin
-		IE(543);
-		Exit;
-	end;
-	if SG(P) + SizeOf(P) > SG(Drawable._frameBuffer) + SG(Drawable._frameBufferSize) then
-	begin
-		IE(544);
-		Exit;
-	end;
-	{$endif}
+	Assert(SG(P) >= SG(Drawable._frameBuffer));
+	Assert(SG(P) + SizeOf(P) <= SG(Drawable._frameBuffer) + SG(Drawable._frameBufferSize));
 
 	if Drawable.EnableTexturing = True then
 	begin
@@ -1057,8 +1027,6 @@ begin
 			begin
 				Pixel := ATexture.MipMaps[TexM].Datas;
 				TexColor := PRGBA(SG(Pixel) + 4 * (x + y shl ATexture.MipMaps[TexM].Shift))^;
-{				if TexColor.L <> $808080 then
-					IE(553);}
 			end
 			else
 				TexColor := Color;
@@ -1079,10 +1047,6 @@ begin
 //			DM := (PreM shl TexM);
 			fx := PreM - 1 - ((TexX{ + PreS}) mod (PreM - 0)); // TexX mod PreM;
 			fy := PreM - 1 - ((TexY{ + PreS}) mod (PreM - 0)); // TexY mod PreM;
-{			if TexX <> 0 then
-			Nop;
-			if TexY <> 0 then
-			Nop;}
 //			fx := 65535;
 //			fy := 65535;
 
@@ -1284,7 +1248,7 @@ begin
 			end
 			else
 			begin
-				P2.C := MixColors(P2.C, P1.C, (Drawable.MaxB.X - P1.Pos.X) * 65536 div (P2.Pos.X - P1.Pos.X));;
+				P2.C := MixColors(P2.C, P1.C, (Drawable.MaxB.X - P1.Pos.X) * 65536 div (P2.Pos.X - P1.Pos.X));
 				P2.Pos.Y := y;
 				P2.Pos.X := Drawable.MaxB.X;
 				KodB := PointCode(P2);
@@ -1324,7 +1288,7 @@ end;
 procedure Lin(var P1, P2: TGraphicPoint; Size: SG; LineStyle: SG; LineOffset: SG); overload;
 var
 	P: PRGBA;
-	C: TRColor;
+	C: TRGBA;
 
 	procedure LinePix(x: SG);
 	var
@@ -1332,7 +1296,7 @@ var
 		n: SG;
 		i: SG;
 		PN: PRGBA;
-		COut: TRColor;
+		COut: TRGBA;
 	begin
 		Inc(x, LineOffset);
 		case LineStyle of
@@ -1774,9 +1738,7 @@ var
 	i, j, l: SG;
 begin
 	l := Length(Orig);
-	{$ifopt d+}
-	if l = 2 then IE(5454);
-	{$endif}
+	Assert(l <> 2);
 	SetLength(left, l);
 	SetLength(right, l);
 	if l = 3 then
@@ -2049,10 +2011,7 @@ begin
 	else
 		Result.C := MixColors(Drawable.WP[Drawable.Offset + 2].C, Drawable.WP[Drawable.Offset].C, Round(65536 * t));
 	end;
-	{$ifopt d+}
-	if Result.Pos.W <> 1 then
-		IE(3433);
-	{$endif}
+	Assert(Result.Pos.W = 1);
 	Result.Pos.W := 1;
 end;
 
@@ -2061,7 +2020,7 @@ var
 	mid: TFloat;
 	P: TWorldPoint;
 	GX0, GY0, GX1, GY1, {GXM1, GYM1,} GX2, GY2: TFloat;
-	C0, C2: TRColor;
+	C0, C2: TRGBA;
 	G0, G1: TGraphicPoint;
 	Divi: BG;
 begin
@@ -2080,10 +2039,7 @@ begin
 
 	P := CoonsFergusonT(too);
 	Tran(P.Pos, GX2, GY2); C2 := P.C;
-	{$ifopt d+}
-	if (Depth > 512) then
-		IE(35);
-	{$endif}
+	Assert(Depth <= 512);
 	if sglPrecision < 0 then
 		Divi := Depth <= 8
 	else
@@ -2282,12 +2238,7 @@ begin
 		P2.Tex.X := Trunc((PreM - 1) * TextureX);
 		P2.Tex.Y := Trunc((PreM - 1) * TextureY);
 
-{		if (P1.Tex.X = 0) and (P2.Tex.X = 0) then
-			IE(545);}
-
 //		sglPopMatrix;
-
-
 
 		if P1.Pos.Y = P2.Pos.Y then // Horizontal lines
 			Continue
@@ -2396,8 +2347,6 @@ begin
 					Inc(fxCount);
 				end;
 			end;
-{			if fxCount <> 2 then
-				IE(53534); D???}
 			if fxCount > 0 then
 			begin
 				SortS4(False, False, PArraySG(@AIndex[0]), PArrayS4(@AValue[0]), fxCount);
@@ -2420,14 +2369,10 @@ begin
 						begin
 						end;}
 					end;
-{						if Lines[j].GP.Tex.X = Lines[i].GP.Tex.X then
-							IE(554);}
 					Lin(Lines[i].GP, Lines[j].GP, 1, LineStyle, LineOffset);
 					Inc(fx, 2{2});
 				end;
 			end;
-{			else
-				IE(424);}
 		end;
 
 	end;
@@ -3089,7 +3034,7 @@ begin
 	end;
 end;
 
-procedure sglColor(C: TRColor); overload;
+procedure sglColor(C: TRGBA); overload;
 begin
 	if Check then
 	begin
@@ -3101,11 +3046,11 @@ begin
 end;
 
 procedure sglColor(C: TColor); overload;
-var CR: TRColor;
+var CR: TRGBA;
 begin
 	if Check then
 	begin
-		CR := TRColor(ColorToRGB(C));
+		CR := TRGBA(ColorToRGB(C));
 		Drawable.Color.R := CR.B;
 		Drawable.Color.G := CR.G;
 		Drawable.Color.B := CR.R;

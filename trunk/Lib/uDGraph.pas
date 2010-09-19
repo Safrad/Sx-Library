@@ -161,10 +161,7 @@ begin
 			Border := Borders.Get(i);
 			if Border <> nil then
 				Result := Result + NToS(j) + '-' + NToS(Border.ToNode) +
-					' (' + NToS(Border.Len) + ')'
-			{$ifopt d+}else
-				IE(10){$endif};
-
+					' (' + NToS(Border.Len) + ')';
 		end;
 		Result := Result + LineSep;
 	end;

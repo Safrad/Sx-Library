@@ -18,10 +18,7 @@ begin
 	begin
 //    M := (L + R) div 2;
 		{$ifopt d+}
-		if AValue[R] < AValue[L] then
-		begin
-			CreateException;
-		end;
+		Assert(AValue[L] <= AValue[R]);
 		{$endif}
 		if AValue[R] = AValue[L] then
 			M := (L + R) div 2

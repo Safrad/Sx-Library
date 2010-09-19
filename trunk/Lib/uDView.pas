@@ -12,9 +12,12 @@ interface
 
 {$R *.RES}
 uses
-	uTypes, uMath, uMem, uFiles, uDImage,
+	uTypes, uMath, uFiles, uDImage,
 	Classes, Controls, Windows, Graphics, SysUtils, Messages, Dialogs;
 
+const
+	CellBorder = 4;
+	MinColumnWidth = 16;
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
 
@@ -112,7 +115,6 @@ uses
 	uGraph, uDBitmap, uError, uScreen;
 
 const
-	MinColumnWidth = 16;
 	RowHeight = 16;
 
 var

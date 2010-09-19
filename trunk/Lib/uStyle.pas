@@ -81,6 +81,7 @@ begin
 	MainIni.RWNum(Name, 'Color0', S4(DS.Colors[0]), Save);
 	MainIni.RWNum(Name, 'Color1', S4(DS.Colors[1]), Save);
 	MainIni.RWNum(Name, 'BorderSize', DS.BorderSize, Save);
+	if Save = False then if DS.BorderSize <= 0 then DS.BorderSize := 1;
 end;
 
 procedure TfStyle.FormToData(Sender: TObject);

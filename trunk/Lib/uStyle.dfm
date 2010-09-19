@@ -119,7 +119,7 @@ object fStyle: TfStyle
     Top = 104
     Width = 75
     Height = 25
-    Caption = 'Color...'
+    Caption = 'Brush Color...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -134,7 +134,7 @@ object fStyle: TfStyle
     Top = 104
     Width = 75
     Height = 25
-    Caption = 'File...'
+    Caption = 'Image...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -149,7 +149,7 @@ object fStyle: TfStyle
     Top = 104
     Width = 75
     Height = 25
-    Caption = 'Color...'
+    Caption = 'Pen Color...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11

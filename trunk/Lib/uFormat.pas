@@ -93,6 +93,7 @@ function FToS(Num: Extended; const UseWinFormat: BG): string; overload;
 
 function BToStr(const B: S4): string; overload;
 function BToStr(const B: S8): string; overload;
+function NodesToS(const Value: U8): string;
 
 procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 type
@@ -103,7 +104,7 @@ type
 3: 0:34.340
 }
 
-//function SToMs(const Str: string): SG; // MsToStr<-
+// function SToMs(const Str: string): SG; // MsToStr<-
 
 function StrToF4(Str: string): F4;
 function StrToF8(Str: string): F8;
@@ -123,6 +124,9 @@ function TimeToS(T: TDateTime): string;
 function DateTimeToS(DT: TDateTime): string;
 function DTToStr(DT: TDateTime): string; // UseWinFormat = True
 function PhoneToStr(Phone: U8): string;
+
+function RemoveEscape(s: string): string;
+function AddEscape(s: string): string; // 2.8x larger for random data
 
 implementation
 
@@ -160,13 +164,7 @@ begin
 	end;
 {	else
 		Minus := False;}
-	if (Base < 2) or (Base > MaxNumericBase) then
-	begin
-		{$ifopt d+}
-		CreateException;
-		{$endif}
-		Exit;
-	end;
+	Assert((Base >= 2) and (Base <= MaxNumericBase));
 	while True do
 	begin
 //		DivModS64(Num, Base, D, M);
@@ -279,7 +277,7 @@ begin
 		end
 		{$ifopt d+}
 		else
-			CreateException{$endif};
+			Assert(False, 'Unknown char in format string'){$endif};
 	end;
 end;
 
@@ -476,7 +474,6 @@ begin
 	Result := '';
 	if UseFormat = '' then
 	begin
-		IE(434333);
 		Exit;
 	end;
 
@@ -775,6 +772,28 @@ begin
 //	if B < 0 then Result := '-' + Result;
 end;
 
+function NodesToS(const Value: U8): string;
+const
+	K = 1000;
+	M = 1000 * K;
+	G = 1000 * M;
+	T = 1000 * U8(G);
+	E = 1000 * T;
+begin
+	if Value < 0 then
+		Result := '> 9E18'
+	else if Value < M then
+		Result := NToS(Value)
+	else if Value < G then
+		Result := NToS(Value div K) + ' k'
+	else if Value < T then
+		Result := NToS(Value div M) + ' M'
+	else if Value < E then
+		Result := NToS(Value div G) + ' G'
+	else
+		Result := NToS(Value div T) + ' T';
+end;
+
 procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
 var
 	DW: LongWord;
@@ -785,10 +804,6 @@ begin
 		GM := 59;
 		GS := 59;
 		GD := 99;
-		{$ifopt d+}
-//		CreateException;
-//		IE(5453);
-		{$endif}
 	end
 	else
 	begin
@@ -860,20 +875,6 @@ begin
 	end;
 	Result := V;
 end;
-
-{
-function SToMs(const Line: string): SG;
-var
-	h, m, s, d: SG;
-	InLineIndex: SG;
-begin
-	InLineIndex := 1;
-	h := StrToValI(ReadToChar(Line, InLineIndex, ':'), False, 0, 0, MaxInt, 1);
-	m := StrToValI(ReadToChar(Line, InLineIndex, ':'), False, 0, 0, SG(59), 1);
-	s := StrToValI(ReadToChar(Line, InLineIndex, '.'), False, 0, 0, SG(59), 1);
-	d := StrToValI(ReadToChar(Line, InLineIndex, ' '), False, 0, 0, SG(999), 1);
-	Result := (3600000 * h + 60000 * m + 1000 * s + d);
-end;}
 
 function StrToF4(Str: string): F4;
 var
@@ -1171,6 +1172,166 @@ begin
 	else
 		Result := '+' + NToS(Phone div 1000000000, '000') + '-';
 	Result := Result + NToS(Phone mod 1000000000, '000000000');
+end;
+
+{
+// Standard Escape Sequences:
+\b       backspace
+\f       formfeed
+\n       new line
+\r       carriage return
+\t       horizontal tab
+\'       single quote
+\0       null
+
+
+Sequence	Value	Char	What it does
+\a	0x07	BEL	Audible bell
+\b	0x08	BS	Backspace
+\f	0x0C	FF	Formfeed
+\n	0x0A	LF	Newline (linefeed)
+\r	0x0D	CR	Carriage return
+\t	0x09	HT	Tab (horizontal)
+\v	0x0B	VT	Vertical tab
+\\	0x5c	\	Backslash
+\'	0x27	'	Single quote (apostrophe)
+\"	0x22	"	Double quote
+\?	0x3F	?	Question mark
+\O		any	O=a string of up to three octal digits
+\xH		any	H=a string of hex digits
+\XH		any	H=a string of hex digits
+}
+
+function RemoveEscape(s: string): string;
+var
+	i, j: SG;
+	x, v: U1;
+	Special: BG;
+begin
+	Result := '';
+	i := 1;
+	Special := False;
+	while i <= Length(s) do
+	begin
+		if s[i] = '\' then
+		begin
+			if Special then
+			begin
+				Result := Result + s[i];
+				Special := False;
+			end
+			else
+				Special := True;
+		end
+		else
+			if Special then
+			begin
+				case s[i] of
+				'a': Result := Result + CharBell;
+				'b': Result := Result + CharBackspace;
+				'e', 'E': Result := Result + #$1B;
+				'f': Result := Result + CharFormfeed;
+				'n': Result := Result + CharLF;
+				'r': Result := Result + CharCR;
+				't': Result := Result + CharHT;
+{				'u', 'U':
+				begin
+				end;}
+				'v': 	Result := Result + CharVT;
+				'x':
+				begin
+					Inc(i);
+					x := 0;
+					while True do
+					begin
+						if i <= Length(s) then
+							v := HexValue[s[i]]
+						else
+							v := 16;
+						if (v < 16) then
+						begin
+							x := (x shl 4) and $ff;
+							x := (x + v) and $ff;
+							Inc(i);
+						end
+						else
+						begin
+							Result := Result + Char(x);
+							Dec(i);
+							Break;
+						end;
+					end;
+				end;
+				'''': Result := Result + '''';
+				'"': Result := Result + '"';
+				'?': Result := Result + '?';
+				'0'..'7': //Result := Result + Char(Ord(s[i]) - Ord('0'));//CharNull;
+				begin
+					x := 0;
+					j := 0;
+					while True do
+					begin
+						if (i <= Length(s)) and (j < 3) then
+							v := HexValue[s[i]]
+						else
+							v := 8;
+						if (v < 8) then
+						begin
+							x := (x shl 3) and $ff;
+							x := (x + v) and $ff;
+							Inc(i);
+						end
+						else
+						begin
+							Result := Result + Char(x);
+							Dec(i);
+							Break;
+						end;
+						Inc(j);
+					end;
+				end;
+				else
+					Result := Result + s[i];
+				end;
+				Special := False;
+			end
+			else
+				Result := Result + s[i];
+		Inc(i);
+	end;
+
+end;
+
+function AddEscape(s: string): string;
+var i: SG;
+begin
+	Result := '';
+	i := 1;
+	while i <= Length(s) do
+	begin
+		case s[i] of
+		'\': Result := Result + '\\';
+		CharBell: Result := Result + '\a';
+		CharBackspace: Result := Result + '\b';
+		#$1B: Result := Result + '\e'; // 'E'
+		CharFormfeed: Result := Result + '\f';
+		CharLF: Result := Result + '\n';
+		CharCR: Result := Result + '\r';
+		CharHT: Result := Result + '\t';
+		CharVT: Result := Result + '\v';
+//		'''': Result := Result + '\''';
+//		#0..#6: Result := Result + '\' + Char(Ord(s[i]) + Ord('0'));//CharNull;
+		#$20..#$5B, #$5D..#$7F: // ASCII
+			Result := Result + s[i];
+		else
+		begin
+			NumericBase := 8;
+			Result := Result + '\' + NToS(Ord(s[i]), '000');  // NumToStr(Ord(s[i]), 8);
+			NumericBase := 10;
+		end;
+		end;
+		Inc(i);
+	end;
 end;
 
 procedure GetLocale;

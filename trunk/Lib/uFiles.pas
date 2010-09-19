@@ -202,7 +202,7 @@ implementation
 uses
 	Math,
 	{$ifndef NoGUI}uError, {$endif}
-	uFormat, uMem, uMath;
+	uFormat, uMath;
 
 function ErrorMes(const ErrorCode: U4): string;
 var
@@ -238,6 +238,12 @@ begin
 	inherited Destroy;
 end;
 
+function TFile.Error(const EC: U4): BG;
+begin
+	ErrorCode := EC;
+	Result := Error;
+end;
+
 function TFile.Error: BG;
 begin
 	{$ifndef NoGUI}
@@ -248,10 +254,13 @@ begin
 	{$endif}
 end;
 
-function TFile.Error(const EC: U4): BG;
+procedure Error(const FileName: TFileName; const ErrorCode: U4);
 begin
-	ErrorCode := EC;
-	Result := Error;
+	{$ifndef NoGUI}
+	IOError(FileName, ErrorCode);
+	{$else}
+	ErrorStr := FileName + LineSep + ErrorMes(ErrorCode);
+	{$endif}
 end;
 
 function TFile.IsOpened: BG;
@@ -369,7 +378,7 @@ function TFile.GetFileSize(var Size: U8): Boolean;
 begin
 	Result := HandleFileSize(HFile, Size) = NO_ERROR;
 	if Result = False then
-		Error;;
+		Error;
 end;
 
 function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
@@ -394,12 +403,12 @@ begin
 		Result := GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
 		if CloseHandle(HFile) = False then
 		begin
-//			Error(GetLastError); D???
+			Error(FileName, GetLastError);
 		end;
 	end
 	else
 	begin
-//		Error(GetLastError); D???
+		Error(FileName, GetLastError);
 	end;
 end;
 
@@ -979,12 +988,12 @@ begin
 		HandleFileSize(HFile, Result);
 		if CloseHandle(HFile) = False then
 		begin
-//			Error(GetLastError); D???
+			Error(FileName, GetLastError);
 		end;
 	end
 	else
 	begin
-//		Error(GetLastError); D???
+		Error(FileName, GetLastError);
 	end;
 end;
 
@@ -1412,7 +1421,7 @@ const
 	BufSize = 32768; // 32kB, 32MB max!
 var
 	F: TFile;
-	Buf: Pointer;
+	Buf, P: Pointer;
 	TotalBytes, ReadBytes: SG;
 begin
 	Result := False;
@@ -1433,7 +1442,8 @@ begin
 				begin
 					goto LClose;
 				end;
-				if SameData(Buf, @Line[Length(Line) - TotalBytes + 1], ReadBytes) = False then goto LClose;
+				P := @Line[Length(Line) - TotalBytes + 1];
+				if SameData(Buf, P, ReadBytes) = False then goto LClose;
 				Dec(TotalBytes, ReadBytes);
 			end;
 			Result := True;
@@ -1644,7 +1654,6 @@ begin
 	Result := Dialog.Execute;
 end;
 {$endif}
-
 
 function SameFiles(FileName1, FileName2: TFileName): BG;
 label LClose;

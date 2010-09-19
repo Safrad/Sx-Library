@@ -9,7 +9,8 @@
 unit uGraph;
 
 interface
-uses uTypes, Windows, Graphics, ExtCtrls, StdCtrls, Classes, Controls, SysUtils;
+
+uses uTypes, Windows, Graphics, ExtCtrls, StdCtrls, Classes, SysUtils;
 
 const
 	clMoneyGreen = TColor($C0DCC0);
@@ -43,13 +44,13 @@ function DepthColor(const Depth: Byte): TColor;
 
 
 function MixColors(C1, C2: TColor): TColor; overload;
-function MixColors(C1, C2: TRColor): TRColor; overload;
+function MixColors(C1, C2: TRGBA): TRGBA; overload;
 
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
-function MixColors(C1, C2: TRColor; Per1, Per2: Integer): TRColor; overload;
+function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
 
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
-function MixColors(C1, C2: TRColor; Per: Integer): TRColor; overload;
+function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
 
 
 procedure ShadowText(Canvas: TCanvas;
@@ -73,43 +74,14 @@ function Over3D(const SX1, SY1, SZ1, SX2, SY2, SZ2: Integer;
 	const DX1, DY1, DZ1, DX2, DY2, DZ2: Integer): Boolean; overload;
 function OverE(const SX1, SY1, SX2, SY2: Extended;
 	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
+procedure InflatePoint(var P: TPoint; d: SG); overload;
+procedure InflatePoint(var P: TPoint; dx, dy: SG); overload;
 
 implementation
 
 uses
 	Math,
 	uStrings, uError, uGetInt;
-
-(*
-procedure WaitRetrace;
-// instruction "in al, dx" do not works in Microsoft Windows NT/2000
-begin
-	if OS.dwPlatformId <= VER_PLATFORM_WIN32_WINDOWS then
-	begin
-		asm
-		{$ifopt O+}
-		push dx
-		push ax
-		{$endif}
-		mov dx, 3DAh
-{   @L1:
-			in al, dx
-			and al, 08h
-			jz @L2
-			push $01
-			call Sleep
-		jmp @L1}
-		@L2:
-			in al, dx
-			and al, 08h
-		jz @L2
-		{$ifopt O+}
-		pop ax
-		pop dx
-		{$endif}
-		end;
-	end;
-end;*)
 
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
 var T: SG;
@@ -142,7 +114,7 @@ begin
 end;
 (*-------------------------------------------------------------------------*)
 function ColorToHTML(Color: TColor): string;
-var C: TRColor;
+var C: TRGBA;
 begin
 	C.L := ColorToRGB(Color);
 	Result := '#' +
@@ -163,18 +135,18 @@ begin
 	else
 	begin
 		C := ColorToRGB(C);
-		TRColor(Result).A := 0;
-		if (TRColor(C).R <= 128) and (TRColor(C).G <= 128) and (TRColor(C).B <= 128) then
+		TRGBA(Result).A := 0;
+		if (TRGBA(C).R <= 128) and (TRGBA(C).G <= 128) and (TRGBA(C).B <= 128) then
 		begin
-			if TRColor(C).B <= 127 then TRColor(Result).B := TRColor(C).B shl 1 else TRColor(Result).B := 255;
-			if TRColor(C).G <= 127 then TRColor(Result).G := TRColor(C).G shl 1 else TRColor(Result).G := 255;
-			if TRColor(C).R <= 127 then TRColor(Result).R := TRColor(C).R shl 1 else TRColor(Result).R := 255;
+			if TRGBA(C).B <= 127 then TRGBA(Result).B := TRGBA(C).B shl 1 else TRGBA(Result).B := 255;
+			if TRGBA(C).G <= 127 then TRGBA(Result).G := TRGBA(C).G shl 1 else TRGBA(Result).G := 255;
+			if TRGBA(C).R <= 127 then TRGBA(Result).R := TRGBA(C).R shl 1 else TRGBA(Result).R := 255;
 		end
 		else
 		begin
-			TRColor(Result).B := (TRColor(C).B + 1) shr 1;
-			TRColor(Result).G := (TRColor(C).G + 1) shr 1;
-			TRColor(Result).R := (TRColor(C).R + 1) shr 1;
+			TRGBA(Result).B := (TRGBA(C).B + 1) shr 1;
+			TRGBA(Result).G := (TRGBA(C).G + 1) shr 1;
+			TRGBA(Result).R := (TRGBA(C).R + 1) shr 1;
 		end;
 	end;
 	end;
@@ -193,18 +165,18 @@ begin
 	begin
 		C1 := ColorToRGB(C1);
 		C2 := ColorToRGB(C2);
-		TRColor(Result).A := 0;
-		if (TRColor(C1).R <= 128) and (TRColor(C1).G <= 128) and (TRColor(C1).B <= 128) then
+		TRGBA(Result).A := 0;
+		if (TRGBA(C1).R <= 128) and (TRGBA(C1).G <= 128) and (TRGBA(C1).B <= 128) then
 		begin
-			if TRColor(C1).B <= 127 then TRColor(Result).B := TRColor(C1).B shl 1 else TRColor(Result).B := 255;
-			if TRColor(C1).G <= 127 then TRColor(Result).G := TRColor(C1).G shl 1 else TRColor(Result).G := 255;
-			if TRColor(C1).R <= 127 then TRColor(Result).R := TRColor(C1).R shl 1 else TRColor(Result).R := 255;
+			if TRGBA(C1).B <= 127 then TRGBA(Result).B := TRGBA(C1).B shl 1 else TRGBA(Result).B := 255;
+			if TRGBA(C1).G <= 127 then TRGBA(Result).G := TRGBA(C1).G shl 1 else TRGBA(Result).G := 255;
+			if TRGBA(C1).R <= 127 then TRGBA(Result).R := TRGBA(C1).R shl 1 else TRGBA(Result).R := 255;
 		end
 		else
 		begin
-			TRColor(Result).B := (TRColor(C1).B + TRColor(C2).B + 1) shr 2;
-			TRColor(Result).G := (TRColor(C1).G + TRColor(C2).G + 1) shr 2;
-			TRColor(Result).R := (TRColor(C1).R + TRColor(C2).R + 1) shr 2;
+			TRGBA(Result).B := (TRGBA(C1).B + TRGBA(C2).B + 1) shr 2;
+			TRGBA(Result).G := (TRGBA(C1).G + TRGBA(C2).G + 1) shr 2;
+			TRGBA(Result).R := (TRGBA(C1).R + TRGBA(C2).R + 1) shr 2;
 		end;
 	end;
 	end;
@@ -214,16 +186,16 @@ function ColorDiv(Color: TColor; const D: Integer): TColor;
 var R, G, B: Integer;
 begin
 	Color := ColorToRGB(Color);
-	R := D * TRColor(Color).R shr 16;
-	G := D * TRColor(Color).G shr 16;
-	B := D * TRColor(Color).B shr 16;
+	R := D * TRGBA(Color).R shr 16;
+	G := D * TRGBA(Color).G shr 16;
+	B := D * TRGBA(Color).B shr 16;
 	if R > 255 then R := 255;
 	if G > 255 then G := 255;
 	if B > 255 then B := 255;
-	TRColor(Result).R := R;
-	TRColor(Result).G := G;
-	TRColor(Result).B := B;
-	TRColor(Result).A := 0;
+	TRGBA(Result).R := R;
+	TRGBA(Result).G := G;
+	TRGBA(Result).B := B;
+	TRGBA(Result).A := 0;
 end;
 
 function LighterColor(Color: TColor): TColor;
@@ -238,53 +210,53 @@ end;
 (*-------------------------------------------------------------------------*)
 function ColorRB(C: TColor): TColor;
 begin
-	TRColor(Result).R := TRColor(C).B;
-	TRColor(Result).G := TRColor(C).G;
-	TRColor(Result).B := TRColor(C).R;
-	TRColor(Result).A := TRColor(C).A;
+	TRGBA(Result).R := TRGBA(C).B;
+	TRGBA(Result).G := TRGBA(C).G;
+	TRGBA(Result).B := TRGBA(C).R;
+	TRGBA(Result).A := TRGBA(C).A;
 end;
 (*-------------------------------------------------------------------------*)
 function SpectrumColor(X: Integer): TColor;
 //0..255..510..765..1020..1275..1529
 begin
 	if (X < 0) or (X > 1529) then X := X mod 1530;
-	TRColor(Result).A := 0;
+	TRGBA(Result).A := 0;
 	case X of
 	0..255:
 	begin
-		TRColor(Result).R := 255;
-		TRColor(Result).G := X;
-		TRColor(Result).B := 0;
+		TRGBA(Result).R := 255;
+		TRGBA(Result).G := X;
+		TRGBA(Result).B := 0;
 	end;
 	256..510:
 	begin
-		TRColor(Result).R := 510 - X;
-		TRColor(Result).G := 255;
-		TRColor(Result).B := 0;
+		TRGBA(Result).R := 510 - X;
+		TRGBA(Result).G := 255;
+		TRGBA(Result).B := 0;
 	end;
 	511..765:
 	begin
-		TRColor(Result).R := 0;
-		TRColor(Result).G := 255;
-		TRColor(Result).B := X - 510;
+		TRGBA(Result).R := 0;
+		TRGBA(Result).G := 255;
+		TRGBA(Result).B := X - 510;
 	end;
 	766..1020:
 	begin
-		TRColor(Result).R := 0;
-		TRColor(Result).G := 1020 - X;
-		TRColor(Result).B := 255;
+		TRGBA(Result).R := 0;
+		TRGBA(Result).G := 1020 - X;
+		TRGBA(Result).B := 255;
 	end;
 	1021..1275:
 	begin
-		TRColor(Result).R := X - 1020;
-		TRColor(Result).G := 0;
-		TRColor(Result).B := 255;
+		TRGBA(Result).R := X - 1020;
+		TRGBA(Result).G := 0;
+		TRGBA(Result).B := 255;
 	end;
 	else{1276..1529:}
 	begin
-		TRColor(Result).R := 255;
-		TRColor(Result).G := 0;
-		TRColor(Result).B := 1530 - X;
+		TRGBA(Result).R := 255;
+		TRGBA(Result).G := 0;
+		TRGBA(Result).B := 1530 - X;
 	end;
 	end;
 end;
@@ -292,71 +264,71 @@ end;
 function SpectrumColor2(X: Integer): TColor;
 //0..255..510..765..1020..1275..1529
 begin
-	TRColor(Result).A := 0;
+	TRGBA(Result).A := 0;
 	case X of
 	0..127:
 	begin
-		TRColor(Result).R := 255;
-		TRColor(Result).G := 128 + X;
-		TRColor(Result).B := 0;
+		TRGBA(Result).R := 255;
+		TRGBA(Result).G := 128 + X;
+		TRGBA(Result).B := 0;
 	end;
 	128..254:
 	begin
-		TRColor(Result).R := 509 - X;
-		TRColor(Result).G := 255;
-		TRColor(Result).B := 0;
+		TRGBA(Result).R := 509 - X;
+		TRGBA(Result).G := 255;
+		TRGBA(Result).B := 0;
 	end;
 	255..381:
 	begin
-		TRColor(Result).R := 0;
-		TRColor(Result).G := 255;
-		TRColor(Result).B := X - 126;
+		TRGBA(Result).R := 0;
+		TRGBA(Result).G := 255;
+		TRGBA(Result).B := X - 126;
 	end;
 	382..508:
 	begin
-		TRColor(Result).R := 0;
-		TRColor(Result).G := 763 - X;
-		TRColor(Result).B := 255;
+		TRGBA(Result).R := 0;
+		TRGBA(Result).G := 763 - X;
+		TRGBA(Result).B := 255;
 	end;
 	509..635:
 	begin
-		TRColor(Result).R := X - 380;
-		TRColor(Result).G := 0;
-		TRColor(Result).B := 255;
+		TRGBA(Result).R := X - 380;
+		TRGBA(Result).G := 0;
+		TRGBA(Result).B := 255;
 	end;
 	else{636..762:}
 	begin
 		if X > 762 then X := 762;
-		TRColor(Result).R := 255;
-		TRColor(Result).G := 0;
-		TRColor(Result).B := 1017 - X;
+		TRGBA(Result).R := 255;
+		TRGBA(Result).G := 0;
+		TRGBA(Result).B := 1017 - X;
 	end;
 	end;
 end;
 (*-------------------------------------------------------------------------*)
 function FireColor(X: Integer): TColor;
 begin
-	TRColor(Result).A := 0;
+	TRGBA(Result).A := 0;
 	case X of
 	Low(X)..255:
 	begin
 		if X < 0 then X := 0;
-		TRColor(Result).R := X;
-		TRColor(Result).G := 0;
-		TRColor(Result).B := 0;
+		TRGBA(Result).R := X;
+		TRGBA(Result).G := 0;
+		TRGBA(Result).B := 0;
 	end;
 	256..510:
 	begin
-		TRColor(Result).R := 255;
-		TRColor(Result).G := X - 255;
-		TRColor(Result).B := 0;
+		TRGBA(Result).R := 255;
+		TRGBA(Result).G := X - 255;
+		TRGBA(Result).B := 0;
 	end;
 	else
 	begin
 		if X > 765 then X := 765;
-		TRColor(Result).R := 255;
-		TRColor(Result).G := 255;
-		TRColor(Result).B := X - 510;
+		TRGBA(Result).R := 255;
+		TRGBA(Result).G := 255;
+		TRGBA(Result).B := X - 510;
 	end;
 	end;
 end;
@@ -364,16 +336,16 @@ end;
 function NegColor(C: TColor): TColor;
 begin
 	C := ColorToRGB(C);
-	TRColor(Result).A := 0;
-	if TRColor(C).R > 127 then TRColor(Result).R := 0 else TRColor(Result).R := 255;
-	if TRColor(C).G > 127 then TRColor(Result).G := 0 else TRColor(Result).G := 255;
-	if TRColor(C).B > 127 then TRColor(Result).B := 0 else TRColor(Result).B := 255;
+	TRGBA(Result).A := 0;
+	if TRGBA(C).R > 127 then TRGBA(Result).R := 0 else TRGBA(Result).R := 255;
+	if TRGBA(C).G > 127 then TRGBA(Result).G := 0 else TRGBA(Result).G := 255;
+	if TRGBA(C).B > 127 then TRGBA(Result).B := 0 else TRGBA(Result).B := 255;
 end;
 (*-------------------------------------------------------------------------*)
 function NegMonoColor(C: TColor): TColor;
 begin
 	C := ColorToRGB(C);
-	if 2 * TRColor(C).R + 4 * TRColor(C).G + 1 * TRColor(C).B > 768 then
+	if 2 * TRGBA(C).R + 4 * TRGBA(C).G + 1 * TRGBA(C).B > 768 then
 		Result := $00000000
 	else
 		Result := $00FFFFFF;
@@ -419,14 +391,14 @@ begin
 	begin
 		C1 := ColorToRGB(C1);
 		C2 := ColorToRGB(C2);
-		TRColor(Result).R := (TRColor(C1).R + TRColor(C2).R) shr 1;
-		TRColor(Result).G := (TRColor(C1).G + TRColor(C2).G) shr 1;
-		TRColor(Result).B := (TRColor(C1).B + TRColor(C2).B) shr 1;
-		TRColor(Result).A := 0;
+		TRGBA(Result).R := (TRGBA(C1).R + TRGBA(C2).R) shr 1;
+		TRGBA(Result).G := (TRGBA(C1).G + TRGBA(C2).G) shr 1;
+		TRGBA(Result).B := (TRGBA(C1).B + TRGBA(C2).B) shr 1;
+		TRGBA(Result).A := 0;
 	end;
 end;
 
-function MixColors(C1, C2: TRColor): TRColor; overload;
+function MixColors(C1, C2: TRGBA): TRGBA; overload;
 begin
 	if C1.L = C2.L then
 	begin
@@ -443,24 +415,16 @@ function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
 begin
 	C1 := ColorToRGB(C1);
 	C2 := ColorToRGB(C2);
-	TRColor(Result).R := (Per1 * TRColor(C1).R + Per2 * TRColor(C2).R + 32768) shr 16;
-	TRColor(Result).G := (Per1 * TRColor(C1).G + Per2 * TRColor(C2).G + 32768) shr 16;
-	TRColor(Result).B := (Per1 * TRColor(C1).B + Per2 * TRColor(C2).B + 32768) shr 16;
-	TRColor(Result).A := 0;
+	TRGBA(Result).R := (Per1 * TRGBA(C1).R + Per2 * TRGBA(C2).R + 32768) shr 16;
+	TRGBA(Result).G := (Per1 * TRGBA(C1).G + Per2 * TRGBA(C2).G + 32768) shr 16;
+	TRGBA(Result).B := (Per1 * TRGBA(C1).B + Per2 * TRGBA(C2).B + 32768) shr 16;
+	TRGBA(Result).A := 0;
 end;
 (*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TRColor; Per1, Per2: Integer): TRColor; overload;
+function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
 begin
-	{$ifopt d+}
-	if Per1 < 0 then
-		IE(5345);
-	if Per2 < 0 then
-		IE(5345);
-	if Per1 > 65536 then
-		IE(5345);
-	if Per2 > 65536 then
-		IE(5345);
-	{$endif}
+	Assert((Per1 >= 0) and (Per1 <= 65536));
+	Assert((Per2 >= 0) and (Per2 <= 65536));
 	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
 	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
 	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
@@ -472,7 +436,7 @@ begin
 	Result := MixColors(C1, C2, Per, 65536 - Per);
 end;
 (*-------------------------------------------------------------------------*)
-function MixColors(C1, C2: TRColor; Per: Integer): TRColor; overload;
+function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
 begin
 	Result := MixColors(C1, C2, Per, 65536 - Per);
 end;
@@ -747,19 +711,16 @@ begin
 	Result := True;
 end;
 
-procedure InitImage(const Image: TImage; const C: TColor);
+procedure InflatePoint(var P: TPoint; d: SG);
 begin
-	Image.Picture.Bitmap.PixelFormat := pf24bit;
-	Image.Picture.Bitmap.Canvas.OnChange := nil; // Must be !!!
-	Image.Picture.Bitmap.Canvas.OnChanging := nil;
-	Image.Picture.Bitmap.Width := Image.Width;
-	Image.Picture.Bitmap.Height := Image.Height;
-	if C <> clNone then
-	begin
-		Image.Picture.Bitmap.Canvas.Brush.Color := C;
-		Image.Picture.Bitmap.Canvas.FillRect(Rect(0, 0,
-			Image.Picture.Bitmap.Width, Image.Picture.Bitmap.Height));
-	end;
+	Inc(P.X, d);
+	Inc(P.Y, d);
+end;
+
+procedure InflatePoint(var P: TPoint; dx, dy: SG);
+begin
+	Inc(P.X, dx);
+	Inc(P.Y, dy);
 end;
 
 end.

@@ -50,11 +50,7 @@ begin
 end;
 
 procedure GetIn;
-begin
-	asm
-	push ax
-	push dx
-
+asm
 	mov dx, ComIn
 //	in al, dx
 	mov dl, al
@@ -81,36 +77,21 @@ begin
 	shr al, 3
 	and al, 1
 	mov RxD, al
-
-	pop dx
-	pop ax
-	end;
 end;
 
 {
 function GetDCD: Boolean;
-begin
-	asm
-	push ax
-	push dx
-
+asm
 	mov dx, ComIn
 	in al, dx
 
 	shr al, 7
 	mov DCD, al
 	mov Result, al
-
-	pop dx
-	pop ax
-	end;
 end;}
 
 procedure GetOut;
-begin
-	asm
-	push ax
-	push dx
+asm
 	mov dx, ComOut
 //	in ax, dx
 
@@ -132,18 +113,10 @@ begin
 	shr ah, 1
 	and ah, 1
 	mov RTS, ah
-
-	pop dx
-	pop ax
-	end;
 end;
 
 procedure SetOut;
-begin
-	asm
-	push ax
-	push dx
-
+asm
 	mov ah, RTS
 	shl ah, 1
 	add ah, DTR
@@ -157,10 +130,6 @@ begin
 
 	mov dx, ComOut
 //	out dx, ax
-
-	pop dx
-	pop ax
-	end;
 end;
 
 end.
