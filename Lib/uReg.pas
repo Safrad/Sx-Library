@@ -448,8 +448,8 @@ var
 	begin
 		if Reg.OpenKey(SubKey, False) then
 		begin
-			OutStr := OutStr + FullSep;
-			OutStr := OutStr + '[' + RootKeyToStr(RootKey) + '\' + SubKey + ']' + FullSep;
+			OutStr := OutStr + CharCR + CharLF;
+			OutStr := OutStr + '[' + RootKeyToStr(RootKey) + '\' + SubKey + ']' + CharCR + CharLF;
 			Str := TStringList.Create;
 			Reg.GetValueNames(Str);
 			for i := 0 to Str.Count - 1 do
@@ -458,7 +458,7 @@ var
 				case Reg.GetDataType(Str[i]) of
 				rdString, rdExpandString:
 				begin
-					Buf := ReplaceF(DoubleBackSlash(Reg.ReadString(Str[i])), FullSep, '\r\n');
+					Buf := ReplaceF(DoubleBackSlash(Reg.ReadString(Str[i])), CharCR + CharLF, '\r\n');
 					OutStr := OutStr + '"' + Buf + '"';
 					Buf := '';
 				end;
@@ -481,7 +481,7 @@ var
 					Buf := '';
 				end;
 				end;
-				OutStr := OutStr + FullSep;
+				OutStr := OutStr + CharCR + CharLF;
 			end;
 			Reg.GetKeyNames(Str);
 			Reg.CloseKey;
@@ -495,7 +495,7 @@ var
 
 var Str: TStrings;
 begin
-	OutStr := 'REGEDIT4' + FullSep;
+	OutStr := 'REGEDIT4' + CharCR+ CharLF;
 	Reg := TRegistry.Create;
 	Reg.RootKey := RootKey;
 	Str := TStringList.Create;

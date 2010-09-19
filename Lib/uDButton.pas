@@ -169,9 +169,9 @@ begin
 	end
 	else
 	begin
-		hR := CreateRectRgn(0, 0, Width, Height);
+{		hR := CreateRectRgn(0, 0, Width, Height);
 		SetWindowRgn(Handle, hR, True);
-		DeleteObject(hR);
+		DeleteObject(hR);}
 	end;
 end;
 
@@ -299,10 +299,11 @@ var
 
 	IsDown, IsDefault: BG;
 	Rec, Recta: TRect;
-	GlyphPos, GlyphSize: TPoint;
+	GlyphPos, GlyphSize{, TotalSize}: TPoint;
 	TextA: TAlignment;
 	TextL: TTextLayout;
 
+//	x, y, SizeX, SizeY: SG;
 	Co: array[0..3] of TColor;
 	E: TColor;
 	s: string;
@@ -323,9 +324,10 @@ begin
 	FBmpOut.SetSize(Recta.Right, Recta.Bottom);
 
 	// Sound
-	if (FLastDown <> IsDown) then
+	if {BSounds and} (FLastDown <> IsDown) then
 	begin
-		PlaySound(SG(IsDown), Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1);
+		uSounds.PlaySound(SG(IsDown), Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1);
+//		PlayBSound(Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1, IsDown);
 		FLastDown := IsDown;
 	end;
 
@@ -338,15 +340,50 @@ begin
 		begin
 			FGlyph.LoadFromFile(FileName);
 			if FGlyph.Height > 0 then
-			if FGlyph.Height + 3 * Border > Height then
+			if FGlyph.Height + 2 * Border > Height then
 			begin
-				v := Height - 3 * Border;
+				v := FGlyph.Height - 2 * Border;
+
 				FGlyph.Resize(RoundDiv(FGlyph.Width * v, FGlyph.Height), v);
 			end;
 		end;
 	end;
 
 	// Draw
+
+	(*
+
+	if IsDown then
+	begin
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			clDepth[0], clDepth[3], 1, ef16);
+		InflateRect(Recta, -1, -1);
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			clDepth[1], clDepth[2], 1, ef16);
+	end
+	else
+	begin
+		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+			clDepth[3], clDepth[0], 1, ef16);
+		InflateRect(Recta, -1, -1);
+
+		if ColorToRGB(clBtnFace) <> ColorToRGB(clDepth[2]) then
+			E := clDepth[2]
+		else
+			E := MixColors(FColor, clDepth[3]);
+
+{		if RegCap then
+		begin
+			FBmpOut.Canvas.Pen.Color := E;
+			FBmpOut.Canvas.RoundRect(Recta.Left, Recta.Top, Recta.Right + 1, Recta.Bottom + 1, FEllipseSize, FEllipseSize);
+		end
+		else
+		begin}
+			FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+				E, clDepth[1], 1, ef16);
+//		end;
+
+	end; D??? *)
 	InflateRect(Recta, -2, -2);
 	Co[0] := ColorDiv(FColor, 5 * 16384);
 	Co[1] := ColorDiv(FColor, 3 * 16384);
@@ -517,6 +554,7 @@ begin
 			FBmpOut.Canvas.Font.Color := Font.Color;
 		end;
 		FBmpOut.Canvas.Brush.Style := bsClear;
+//		FBmpOut.Canvas.Font.Color := clRed; D???
 		DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 1);
 	end;
 	FBmpOut.Canvas.Brush.Style := bsClear;
@@ -763,4 +801,6 @@ initialization
 		CDefaultCancel := MixColors(CDefault, CCancel)
 	end;
 	AddSounds(['BDown', 'BUp'], True);
+{finalization
+	UnloadBSounds;}
 end.

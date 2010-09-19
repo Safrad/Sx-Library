@@ -175,10 +175,10 @@ procedure ConvertChannels(const WaveS: PWave; var WaveD: PWave;
 procedure ConvertBitsPerSample(const WaveS: PWave; var WaveD: PWave;
 	const NewBitsPerSample: Integer);
 procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: U4);
-{procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
+procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
 	const Channels: U2;
 	const BitsPerSample: U2;
-	const SampleRate: U4);}
+	const SampleRate: U4);
 
 procedure PlayWave(Wave: PWave);
 procedure PlayWaveFile(WaveName: TFileName);
@@ -675,16 +675,16 @@ begin
 	WaveD.BytesPerSecond := WaveD.BytesPerSample * WaveD.SampleRate;
 //    BitsToByte(WaveD.Channels * WaveD.BitsPerSample * U8(SampleRate));
 end;
-{
+
 procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
 	const Channels: U2;
 	const BitsPerSample: U2;
 	const SampleRate: U4);
 begin
- ConvertBitsPerSample(WaveS, WaveD, BitsPerSample);
+{ ConvertBitsPerSample(WaveS, WaveD, BitsPerSample);
 	ConvertChannels(WaveS, WaveD, Channels, ConvertPre, ConvertPre);
-	ConvertSampleRate(WaveD, SampleRate);
-end;}
+	ConvertSampleRate(WaveD, SampleRate);}
+end;
 
 procedure PlayWave(Wave: PWave);
 begin

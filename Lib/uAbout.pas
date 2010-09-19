@@ -115,7 +115,6 @@ var
 	LMemClock: U8;
 	RunProgramTime: U8;
 
-
 procedure AddMenus;
 {var
 	MainMenu: TMainMenu;
@@ -127,7 +126,8 @@ begin
 		begin
 			MainMenu.
 		end;
-	end;}
+	end; D???
+}
 begin
 end;
 
@@ -344,7 +344,7 @@ begin
 		AddMenus;
 
 	FileName := DelFileExt(ExeFileName) + '.log';
-	WriteStringToFile(FileName, IdStr[Save] + CharTab + DateTimeToS(Now) + FileSep, True);
+	WriteStringToFile(FileName, IdStr[Save] + CharTab + DateTimeToS(Now) + CharCR + CharLF, True);
 
 	if Assigned(MainIni) then
 	begin
