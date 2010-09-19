@@ -1,9 +1,9 @@
 //* File:     Lib\uFind.pas
 //* Created:  1999-05-01
-//* Modified: 2005-05-08
-//* Version:  X.X.34.X
+//* Modified: 2006-01-25
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uFind;
@@ -24,7 +24,11 @@ function FindS(AValue: array of string;
 function Find(SubStr, Str: string): SG; overload;
 function Find(SubStr, Str: string; FromPos: SG): SG; overload;
 function Find(SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
-
+(*
+{$ifopt d+}
+function FindBM(SubStr, Str: string): SG;
+{$endif}
+*)
 implementation
 
 uses
@@ -142,7 +146,8 @@ begin
 end;
 
 
-{
+(*
+{$ifopt d+}
 // Knuth, Morris, Pratt (KMP)
 function FindKMP(SubStr, Str: string): SG;
 label LNFound;
@@ -267,27 +272,34 @@ var
 	M, N: SG;
 	i, j: SG;
 begin
+	Result := 0;
 	M := Length(SubStr);
 	N := Length(Str);
 	FillFail(SubStr, M);
 
-	j := M; Result := 0;
+	j := M;
 	while j <= N do
 	begin
 		i := M;
 		while (i > 0) and (Str[j] = SubStr[i]) do
 		begin
 			Dec(i);
-			Dec(i);
+			Dec(j);
 		end;
 		if i = 0 then
 		begin
-			Result := i + 1;
-			Exit;
+			if Result = 0 then
+			begin
+				Result := j + 1;
+			end;
+			j := j + M;
+//			Exit;
 		end
 		else
 			j := j + Max(Fail1[Ord(Str[j])], Fail2[i]);
 	end;
-end;}
+end;
+{$endif}
+*)
 
 end.

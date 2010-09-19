@@ -1,9 +1,9 @@
 //* File:     Lib\TGAImage.pas
 //* Created:  2005-03-29
-//* Modified: 2005-05-31
-//* Version:  X.X.34.X
+//* Modified: 2005-08-28
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit TGAImage;

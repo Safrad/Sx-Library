@@ -92,278 +92,137 @@ object fAbout: TfAbout
     AutoSize = True
     Transparent = True
   end
-  object LabelIcq: TDLabel
-    Left = 176
+  object LabelIcq: TLabel
+    Left = 200
     Top = 152
-    Width = 41
+    Width = 25
     Height = 19
     Cursor = crHandPoint
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'ICQ'
     Color = clBtnFace
-    BackEffect = ef04
     FocusControl = EditEMail
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
     OnClick = EditIcqClick
   end
-  object LabelWeb: TDLabel
+  object LabelWeb: TLabel
     Left = 16
     Top = 200
     Width = 57
     Height = 19
     Cursor = crHandPoint
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Web'
     Color = clBtnFace
-    BackEffect = ef04
     FocusControl = EditWeb
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
     OnClick = EditWebClick
   end
-  object LabelEMail: TDLabel
+  object LabelEMail: TLabel
     Left = 16
     Top = 176
     Width = 57
     Height = 19
     Cursor = crHandPoint
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'E-Mail'
     Color = clBtnFace
-    BackEffect = ef04
     FocusControl = EditEMail
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
     OnClick = EditEMailClick
   end
-  object LabelRunCount: TDLabel
+  object LabelRunCount: TLabel
     Left = 16
     Top = 232
     Width = 89
     Height = 19
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Run:'
     Color = clBtnFace
-    BackEffect = ef04
     FocusControl = PanelRC
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelNowRunTime: TDLabel
+  object LabelNowRunTime: TLabel
     Left = 112
     Top = 232
     Width = 33
     Height = 19
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Now'
     Color = clBtnFace
-    BackEffect = ef04
     FocusControl = PanelNRT
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelTotalRunTime: TDLabel
+  object LabelTotalRunTime: TLabel
     Left = 112
     Top = 256
     Width = 33
     Height = 19
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Total'
     Color = clBtnFace
-    BackEffect = ef04
     FocusControl = PanelTRT
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelAuthor: TDLabel
+  object LabelAuthor: TLabel
     Left = 16
     Top = 152
-    Width = 56
+    Width = 57
     Height = 19
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Author'
-    BackEffect = ef04
     FocusControl = EditAuthor
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelCreated: TDLabel
+  object LabelCreated: TLabel
     Left = 152
     Top = 112
     Width = 65
     Height = 18
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Created'
     Color = clBtnFace
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object DLabel1: TDLabel
+  object LabelCount: TLabel
     Left = 16
     Top = 256
     Width = 33
     Height = 19
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Count'
     Color = clBtnFace
-    BackEffect = ef04
     FocusControl = PanelRC
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     ParentColor = False
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
+  end
+  object LabelModified: TLabel
+    Left = 152
+    Top = 129
+    Width = 65
+    Height = 18
+    AutoSize = False
+    Caption = 'Modified'
+    Color = clBtnFace
+    ParentColor = False
+    Transparent = True
+    Layout = tlCenter
   end
   object ButtonOk: TDButton
     Left = 216
@@ -391,7 +250,6 @@ object fAbout: TfAbout
     AutoSize = False
     ParentColor = True
     TabOrder = 4
-    Text = '2004-04-28'
   end
   object PanelRC: TEdit
     Left = 56
@@ -424,15 +282,14 @@ object fAbout: TfAbout
     Text = '40 days, 00:00:00.000'
   end
   object EditAuthor: TEdit
-    Left = 80
+    Left = 64
     Top = 152
-    Width = 89
+    Width = 129
     Height = 19
     AutoSize = False
     ParentColor = True
     ReadOnly = True
     TabOrder = 5
-    Text = 'Safranek David'
   end
   object EditWeb: TEdit
     Left = 80
@@ -552,40 +409,10 @@ object fAbout: TfAbout
     Height = 18
     AutoSize = False
     ParentColor = True
-    TabOrder = 23
-    Text = '2004-04-28'
-  end
-  object LabelModified: TDLabel
-    Left = 152
-    Top = 129
-    Width = 65
-    Height = 18
-    AutoSize = False
-    Alignment = taLeftJustify
-    Caption = 'Modified'
-    Color = clBtnFace
-    BackEffect = ef04
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
-    ParentColor = False
-    Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    TabOrder = 14
   end
   object Timer1: TDTimer
-    ActiveOnly = False
+    ActiveOnly = True
     Enabled = False
     Interval = 25
     EventStep = esFrequency

@@ -1,9 +1,9 @@
 //* File:     Lib\uDNumber.pas
 //* Created:  2001-03-01
-//* Modified: 2005-05-22
-//* Version:  X.X.34.X
+//* Modified: 2005-08-28
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDNumber;

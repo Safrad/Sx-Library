@@ -1,9 +1,9 @@
 //* File:     Lib\uDGraph.pas
 //* Created:  2004-01-06
-//* Modified: 2005-03-20
-//* Version:  X.X.34.X
+//* Modified: 2005-10-05
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDGraph;

@@ -1,9 +1,9 @@
 //* File:     Lib\uDBitmap.pas
 //* Created:  1999-05-01
-//* Modified: 2005-06-26
-//* Version:  X.X.34.X
+//* Modified: 2005-11-27
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDBitmap;
@@ -10195,8 +10195,8 @@ begin
 end;
 
 procedure TDBitmap.Arrow(X, Y, X2, Y2: SG; Size: SG; Color: TColor; Effect: TEffect);
-var
-	i: SG;
+{var
+	i: SG;}
 begin
 	if Sins = nil then
 	begin

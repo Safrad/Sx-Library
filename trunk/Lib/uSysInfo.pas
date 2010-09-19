@@ -1,9 +1,9 @@
 //* File:     Lib\uSysInfo.pas
 //* Created:  2000-07-01
-//* Modified: 2005-05-22
-//* Version:  X.X.34.X
+//* Modified: 2005-12-11
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uSysInfo;
@@ -50,8 +50,8 @@ type
 		DLabelCPUUsage: TDLabel;
 		EditCPUUsage: TEdit;
     EditCounter: TEdit;
-    DLabel1: TDLabel;
-    ComboBoxSize: TComboBox;
+		DLabel1: TDLabel;
+		ComboBoxSize: TComboBox;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
@@ -59,7 +59,6 @@ type
 	public
 		{ Public declarations }
 		procedure FillComp;
-//    procedure MemoryStatus;
 	end;
 
 var
@@ -78,26 +77,27 @@ type
 		CPUUsage: S4; // 4 (0..10000)
 		MS: TMemoryStatus; // 8 * 4 = 32
 		OS: TOSVersionInfo; // 148
+		ProgramVersion: string[15]; // 10.32.101.10000
 //		Graph: string[127]; // 128
-		Reserved1: array[0..15] of U1; // 16
+//		Reserved1: array[0..15] of U1; // 16
 	end;
 
 var
-	SysInfo: TSysInfo;
+	GSysInfo: TSysInfo;
 	NTSystem: Boolean;
 	RegCap: Boolean;
 
 function GetKey(Default: Word): Word;
 function OSToStr(OS: TOSVersionInfo): string;
 function GetCPUUsage(IntTime: U8): SG;
-procedure FillSysInfoS(var SInfo: TSysInfo);
-procedure FillSysInfoD(var SysInfo: TSysInfo);
+procedure FillMemoryStatus(var SysInfo: TSysInfo);
 
 implementation
 
 {$R *.DFM}
 uses
 	uGraph, uScreen, uStrings, uFormat,
+	rpVersionInfo,
 	Registry, Math;
 
 function GetKey(Default: Word): Word;
@@ -161,12 +161,11 @@ begin
 	Result := S;
 end;
 
-procedure MemoryStatus(var SysInfo: TSysInfo);
+procedure FillMemoryStatus(var SysInfo: TSysInfo);
 begin
 	SysInfo.MS.dwLength := SizeOf(SysInfo.MS);
 	GlobalMemoryStatus(SysInfo.MS);
 end;
-
 
 function GetProcessorTime : int64;
 type
@@ -218,7 +217,7 @@ type
    byteLength             : cardinal;
 	 parentObjectTitleIndex : cardinal;
 	 parentObjectInstance   : cardinal;
-   uniqueID               : integer;
+	 uniqueID               : integer;
 	 nameOffset             : cardinal;
    nameLength             : cardinal;
  end;
@@ -237,7 +236,7 @@ begin
 	 while true do begin
 		 ReallocMem(perfDataBlock, c1);
 		 c2 := c1;
-		 case RegQueryValueEx(HKEY_PERFORMANCE_DATA, '238', nil, @c3, Pointer(perfDataBlock), @c2) of
+		 case RegQueryValueEx(HKEY_PERFORMANCE_DATA, '238'{'Processor/Processor Time'}, nil, @c3, Pointer(perfDataBlock), @c2) of
 		 ERROR_MORE_DATA: c1 := c1 * 2;
 		 ERROR_SUCCESS: Break;
 		 else Exit;
@@ -288,7 +287,7 @@ begin
 
 		if (LastTickCount <> 0) and (tickCount <> LastTickCount) and (processorTime >= LastProcessorTime) then
 		begin // 1 000*10 000 = 10 000 000 / sec
-			CPUUsage := 10000 - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1});
+			CPUUsage := 100 * CPUUsageMul - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1});
 			if CPUUsage < 0 then CPUUsage := 0;
 		end;
 
@@ -315,7 +314,7 @@ begin
 			if Reg.OpenKey('PerfStats\StatData', False) then
 			begin
 				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-				Result := 100 * CPUUsage;
+				Result := CPUUsageMul * CPUUsage;
 				Reg.CloseKey;
 			end;
 		end;
@@ -323,7 +322,7 @@ begin
 		if Reg.OpenKey('PerfStats\StatData', False) then
 		begin
 			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-			Result := 100 * CPUUsage;
+			Result := CPUUsageMul * CPUUsage;
 			Reg.CloseKey;
 		end;
 	end;
@@ -347,7 +346,14 @@ asm
 @exit:
 end;
 
-procedure FillSysInfoD(var SysInfo: TSysInfo);
+procedure FillDiskInfo(var SysInfo: TSysInfo);
+const
+	P: array[0..3] of Char = ('C', ':', '\', CharNul);
+begin
+	GetDiskFreeSpaceEx(P, SysInfo.DiskFree, SysInfo.DiskTotal, nil);
+end;
+
+procedure FillCPUTest(var SysInfo: TSysInfo);
 var
 	TickCount: U8;
 	CPUTick: U8;
@@ -359,28 +365,10 @@ var
 	PMem: Pointer;
 begin
 	if Assigned(fSysInfo) then
-		MaxMem4 :=  (1 shl Max(0, fSysInfo.ComboBoxSize.ItemIndex)){14 for duron} - 1 {10 = 4kB; 14=64kB}
+		MaxMem4 :=  (1 shl Max(0, fSysInfo.ComboBoxSize.ItemIndex)){14 for Duron} - 1 {10 = 4kB; 14=64kB}
 	else
 		MaxMem4 :=  1 shl 14 - 1; {10 = 4kB; 14=64kB}
 	MaxMem := 4 * (MaxMem4 + 1) - 1;
-{	P[0] := 'C';
-	P[1] := ':';
-	P[2] := '\';
-	P[3] := CharNul;}
-{ SectorsPerCluster := 0;
-	BytesPerSector := 0;}
-{
-		GetDiskFreeSpace(P, SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
-			TotalNumberOfClusters);
-		SysInfo.DiskFree := BytesPerSector * SectorsPerCluster * NumberOfFreeClusters;
-		SysInfo.DiskTotal := BytesPerSector * SectorsPerCluster * TotalNumberOfClusters;
-}
-	GetDiskFreeSpaceEx(P, SysInfo.DiskFree, SysInfo.DiskTotal, nil);
-
-	MemoryStatus(SysInfo);
-
-	SysInfo.CPUUsage := GetCPUUsage(0);
-
 	if IsCPUID_Available and (CPUException = False) then
 	begin
 		GetMem(PMem, MaxMem + 1);
@@ -474,13 +462,13 @@ begin
 		FreeMem(PMem);
 	end;
 end;
-
-
-procedure FillSysInfoS(var SInfo: TSysInfo);
+(*
+procedure FillOS(var SysInfo: TSysInfo);
+var VersionInfo: TrpVersionInfo;
 begin
 {	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
 	GetVersionEx(SysInfo.OS);}
-	SInfo.OS := SysInfo.OS;
+	SysInfo.OS := GSysInfo.OS;
 
 {	if DriverDesc = '' then
 	begin
@@ -488,6 +476,14 @@ begin
 		ReadScreenModes;
 	end;
 	SInfo.Graph := DriverDesc;}
+end;         *)
+
+procedure FillDynamicInfo(var SysInfo: TSysInfo);
+begin
+	FillDiskInfo(SysInfo);
+	FillMemoryStatus(SysInfo);
+	SysInfo.CPUUsage := GetCPUUsage(0);
+	FillCPUTest(SysInfo);
 end;
 
 procedure TfSysInfo.FillComp;
@@ -495,14 +491,15 @@ var
 	s: string;
 	Family, Model: SG;
 begin
-	EditOS.Text := OSToStr(SysInfo.OS);
+	FillDynamicInfo(GSysInfo);
 
-//  SysInfo.CPUStr :=
-	Family := SysInfo.CPU and $00000f00 shr 8;
-	Model := SysInfo.CPU and $000000f0 shr 4;
+	EditOS.Text := OSToStr(GSysInfo.OS);
+
+	Family := GSysInfo.CPU and $00000f00 shr 8;
+	Model := GSysInfo.CPU and $000000f0 shr 4;
 
 	s := '';
-	if SysInfo.CPUStr = 'AuthenticAMD' then
+	if GSysInfo.CPUStr = 'AuthenticAMD' then
 	begin
 		case Family of
 		5:
@@ -525,7 +522,7 @@ begin
 		end;
 		s := 'AMD ' + s;
 	end
-	else if SysInfo.CPUStr = 'GenuineIntel' then
+	else if GSysInfo.CPUStr = 'GenuineIntel' then
 	begin
 		case Family of
 		0..3: s := '';
@@ -562,40 +559,40 @@ begin
 		if  s <> '' then s := ' ' + s;
 		s := 'Intel' + s;
 	end
-	else if SysInfo.CPUStr = 'CyrixInstead' then
+	else if GSysInfo.CPUStr = 'CyrixInstead' then
 		s := 'Cyrix '
-	else if SysInfo.CPUStr = 'NexGenDriven' then
+	else if GSysInfo.CPUStr = 'NexGenDriven' then
 		s := 'NexGen '
-	else if SysInfo.CPUStr = 'CentaurHauls' then
+	else if GSysInfo.CPUStr = 'CentaurHauls' then
 		s := 'Centaur '
-	else if SysInfo.CPUStr = 'RiseRiseRise' then
+	else if GSysInfo.CPUStr = 'RiseRiseRise' then
 		s := 'Rise '
-	else if SysInfo.CPUStr = 'UMC UMC UMC ' then
+	else if GSysInfo.CPUStr = 'UMC UMC UMC ' then
 		s := 'UMC ';
 
 	if s <> '' then
 		s := s + ', ';
 	s := s + 'Family: ' + NToS(Family) + ', ';
 	s := s + 'Model: ' + NToS(Model) + ', ';
-	s := s + 'Stepping: ' + NToS(SysInfo.CPU and $000000f);
+	s := s + 'Stepping: ' + NToS(GSysInfo.CPU and $000000f);
 	EditCPU.Text := s;
 
-	EditCPUUsage.Text := NToS(SysInfo.CPUUsage, 2) + '%';
-	EditCPUFrequency.Text := NToS(SysInfo.CPUFrequency) + ' Hz';
-	EditDuron.Text := NToS(SysInfo.CPUPower) + ' Hz';
+	EditCPUUsage.Text := NToS(GSysInfo.CPUUsage, 2) + '%';
+	EditCPUFrequency.Text := NToS(GSysInfo.CPUFrequency) + ' Hz';
+	EditDuron.Text := NToS(GSysInfo.CPUPower) + ' Hz';
 	EditCounter.Text := NToS(PerformanceFrequency);
 
-	EditDiskU.Caption := BToStr(SysInfo.DiskTotal - SysInfo.DiskFree);
-	EditDiskF.Caption := BToStr(SysInfo.DiskFree);
-	EditDiskT.Caption := BToStr(SysInfo.DiskTotal);
+	EditDiskU.Caption := BToStr(GSysInfo.DiskTotal - GSysInfo.DiskFree);
+	EditDiskF.Caption := BToStr(GSysInfo.DiskFree);
+	EditDiskT.Caption := BToStr(GSysInfo.DiskTotal);
 
-	PMU.Caption := BToStr(SysInfo.MS.dwTotalPhys - SysInfo.MS.dwAvailPhys);
-	PMF.Caption := BToStr(SysInfo.MS.dwAvailPhys);
-	PMT.Caption := BToStr(SysInfo.MS.dwTotalPhys);
+	PMU.Caption := BToStr(GSysInfo.MS.dwTotalPhys - GSysInfo.MS.dwAvailPhys);
+	PMF.Caption := BToStr(GSysInfo.MS.dwAvailPhys);
+	PMT.Caption := BToStr(GSysInfo.MS.dwTotalPhys);
 
-	PFU.Caption := BToStr(SysInfo.MS.dwTotalPageFile - SysInfo.MS.dwAvailPageFile);
-	PFF.Caption := BToStr(SysInfo.MS.dwAvailPageFile);
-	PFT.Caption := BToStr(SysInfo.MS.dwTotalPageFile);
+	PFU.Caption := BToStr(GSysInfo.MS.dwTotalPageFile - GSysInfo.MS.dwAvailPageFile);
+	PFF.Caption := BToStr(GSysInfo.MS.dwAvailPageFile);
+	PFT.Caption := BToStr(GSysInfo.MS.dwTotalPageFile);
 
 end;
 
@@ -613,20 +610,31 @@ begin
 	ComboBoxSize.ItemIndex := 14;
 end;
 
-initialization
-	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
-	GetVersionEx(SysInfo.OS);
-	NTSystem := SysInfo.OS.dwMajorVersion >= 5;
-	RegCap := not ((SysInfo.OS.dwMajorVersion < 4) or ((SysInfo.OS.dwMajorVersion = 4) and (SysInfo.OS.dwMinorVersion < 10)));
+procedure Init;
+var
+	VersionInfo: TrpVersionInfo;
+begin
+	GSysInfo.OS.dwOSVersionInfoSize := SizeOf(GSysInfo.OS);
+	GetVersionEx(GSysInfo.OS);
+	NTSystem := GSysInfo.OS.dwMajorVersion >= 5;
+	RegCap := not ((GSysInfo.OS.dwMajorVersion < 4) or ((GSysInfo.OS.dwMajorVersion = 4) and (GSysInfo.OS.dwMinorVersion < 10)));
 
 	InitPerformanceCounter;
 { PerformanceType := 2;
 	FillSysInfoD(SysInfo);
 	PerformanceFrequency := SysInfo.CPUFrequency;}
 
-	CPUUsage := 30 * 100;
+	VersionInfo := TrpVersionInfo.Create(nil);
+	GSysInfo.ProgramVersion := VersionInfo.ProductVersion;
+	VersionInfo.Free;
+
+	CPUUsage := 0 * CPUUsageMul;
 	GetCPUUsage(0);
 
+end;
+
+initialization
+	Init;
 finalization
 	if NTSystem = False then
 	begin

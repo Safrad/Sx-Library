@@ -1,9 +1,9 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2005-05-11
-//* Version:  X.X.34.X
+//* Modified: 2005-11-10
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uWave;

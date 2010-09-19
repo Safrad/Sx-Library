@@ -1,9 +1,9 @@
 //* File:     Lib\uError.pas
 //* Created:  1999-12-01
-//* Modified: 2005-06-25
-//* Version:  X.X.34.X
+//* Modified: 2005-09-25
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uError;

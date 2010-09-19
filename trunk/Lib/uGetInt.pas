@@ -1,9 +1,9 @@
 //* File:     Lib\uGetInt.pas
 //* Created:  1998-07-01
-//* Modified: 2005-06-01
-//* Version:  X.X.34.X
+//* Modified: 2005-09-23
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uGetInt;
