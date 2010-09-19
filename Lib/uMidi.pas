@@ -411,7 +411,7 @@ begin
 	end;
 end;
 
-function MidiErrorText(ErrorCode: SG): ShortString;
+function MidiErrorText(ErrorCode: SG): string;
 var P: PChar;
 begin
 	P := '...';

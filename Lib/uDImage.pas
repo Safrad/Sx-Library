@@ -37,7 +37,6 @@ type
 		FOnPaint: TNotifyEvent;
 		FOnMouseEnter: TNotifyEvent;
 		FOnMouseLeave: TNotifyEvent;
-		MouseX, MouseY: Integer;
 		BOfsX, BOfsY: Integer;
 		HType, VType: Byte;
 		NowMaxWidth, NowMaxHeight: Integer;
@@ -47,6 +46,7 @@ type
 		SliderVY2: Integer;
 		FCanvas: TCanvas;
 		LCursor: TCursor;
+		LMouseX, LMouseY: SG;
 
 		// Zoom
 		FEnableZoom: BG;
@@ -74,6 +74,8 @@ type
 		property Canvas: TCanvas read FCanvas;
 	public
 		{ Public declarations }
+		MouseX, MouseY: Integer;
+
 		Zoom: FG;
 		Cur: TCursor;
 		MouseL, MouseM, MouseR: Boolean;
@@ -200,11 +202,11 @@ const
 	MenuNames: array[TZoomMenu] of string = (
 		'Zoom In', 'Zoom Out',
 		'Full Size', 'Fit Image', 'Fit Width', 'Fit Height', '1:2', '1:1', '2:1',
-		'Zoom To...',
-		'Center', 'Copy', 'Grate', 'Grate Color...');
+		'Zoom To' + cDialogSuffix,
+		'Center', 'Copy', 'Grate', 'Grate Color' + cDialogSuffix);
 	MenuShort: array[TZoomMenu] of Char = (
 		'I', 'U',
-		'/', #0, #0, #0, #0, 'Q', #0,
+		#0, #0, #0, #0, #0, 'Q', #0,
 		#0,
 		#0, 'C', #0, #0);
 
@@ -259,7 +261,7 @@ begin
 end;
 
 const
-	OfsS = 20; // ms; FPS = 1000 / OfsS; 25-30FPS for VR; 50 = TV
+	OfsS = 20; // ms; FPS = 1000 / OfsS
 	ScrollEf = ef14;
 	ScrollEf2 = ef12;
 
@@ -297,7 +299,7 @@ begin
 	zmCustom:
 	begin
 		ZoomI := Round(Zoom * 1000);
-		if GetNumber('Zoom To (×1000)', ZoomI, 1, 1000, 1000000, nil) then
+		if GetNumber('Zoom To (' + CharTimes + '1000)', ZoomI, 1, 1000, 1000000, nil) then
 			Zoom := ZoomI / 1000;
 	end;
 	zmCenter:
@@ -524,6 +526,10 @@ var
 	MouseA: TMouseAction;
 begin
 	SetFocus;
+
+	MouseX := X;
+	MouseY := Y;
+
 	case Button of
 	mbLeft:
 	begin
@@ -586,7 +592,7 @@ begin
 				end;
 				ScrollTo(RoundDivS8(S8(Speed) * S8(NOfsX), 65536),
 					RoundDivS8(S8(Speed) * S8(NOfsY), 65536));
-//        Application.HandleMessage; no
+//				Application.HandleMessage; no
 				Application.ProcessMessages;
 				if GetTickCount >= LastTickCount then
 				begin
@@ -609,6 +615,7 @@ begin
 			MouseAction := MouseA;
 			MouseAction := mwNone;
 			FramePerSec := 0;
+			Exit;
 		end;
 		mwScroll:
 		begin
@@ -640,6 +647,12 @@ var
 	Sc: Boolean;
 	MouseW: TMouseAction;
 begin
+	if (X = LMouseX) and (Y = LMouseY) then Exit;
+	LMouseX := X;
+	LMouseY := Y;
+{	MouseX := X;
+	MouseY := Y;}
+
 	MouseW := MouseWh(X, Y);
 	case MouseW of
 	mwScrollH, mwScrollV,
@@ -1048,6 +1061,7 @@ var
 	s: string;
 	i, x, y: SG;
 	FontSize: SG;
+	FontName: TFontName;
 	{$ifopt d+}
 	StartTickCount: U4;
 	{$endif}
@@ -1173,15 +1187,15 @@ begin
 //			Bitmap.Bar(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
 			if FHotTrack and (MouseWhere = mwScrollH) then
 			begin
-				Co[0] := RColor(253, 255, 255).L;
-				Co[1] := RColor(185, 218, 251).L;
+				Co[0] := $fffffd;
+				Co[1] := $fbdab9;
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end
 			else
 			begin
-				Co[0] := RColor(214, 230, 255).L;
-				Co[1] := RColor(174, 195, 241).L;
+				Co[0] := $ffe6d6;
+				Co[1] := $f1c3ae;
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
@@ -1189,9 +1203,9 @@ begin
 			x := (X1 + X2) div 2 - RoundDiv(ScrollBarHHeight, 6);
 			for i := 0 to RoundDiv(ScrollBarHHeight, 6) - 1 do
 			begin
-				Bitmap.Line(x, Y1 + 4, x, Y2 - 5, RColor(238, 244, 254).L, ef16);
+				Bitmap.Line(x, Y1 + 4, x, Y2 - 5, $fef4ee, ef16);
 				Inc(x);
-				Bitmap.Line(x, Y1 + 5, x, Y2 - 4, RColor(140, 176, 208).L, ef16);
+				Bitmap.Line(x, Y1 + 5, x, Y2 - 4, $d0b08c, ef16);
 				Inc(x);
 			end;
 
@@ -1285,15 +1299,15 @@ begin
 //			Bitmap.Bar(clNone, X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, C, ScrollEf);
 			if FHotTrack and (MouseWhere = mwScrollV) then
 			begin
-				Co[0] := RColor(253, 255, 255).L;
-				Co[1] := RColor(185, 218, 251).L;
+				Co[0] := $fffffd;
+				Co[1] := $fbdab9;
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end
 			else
 			begin
-				Co[0] := RColor(214, 230, 255).L;
-				Co[1] := RColor(174, 195, 241).L;
+				Co[0] := $ffe6d6;
+				Co[1] := $f1c3ae;
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 			end;
@@ -1301,9 +1315,9 @@ begin
 			y := (Y1 + Y2) div 2 - RoundDiv(ScrollBarVWidth, 6);
 			for i := 0 to RoundDiv(ScrollBarVWidth, 6) - 1 do
 			begin
-				Bitmap.Line(X1 + 4, y, X2 - 5, y, RColor(238, 244, 254).L, ef16);
+				Bitmap.Line(X1 + 4, y, X2 - 5, y, $fef4ee, ef16);
 				Inc(y);
-				Bitmap.Line(X1 + 5, y, X2 - 4, y, RColor(140, 176, 208).L, ef16);
+				Bitmap.Line(X1 + 5, y, X2 - 4, y, $d0b08c, ef16);
 				Inc(y);
 			end;
 
@@ -1353,18 +1367,19 @@ begin
 		{$endif}
 		begin
 			{$ifopt d+}
-			s := IntToStr(GetTickCount - StartTickCount) + 'ms, ' + NToS(PaintCount);
+			s := IntToStr(GetTickCount - StartTickCount) + 'ms, ' + NToS(PaintCount) + CharTimes;
 			{$endif}
 			if FramePerSec >= 0.1 then
 			begin
 				s := s + {$ifopt d+} ', ' +{$endif}NToS(Round(100 * FramePerSec), 2);
 			end;
 			FontSize := Bitmap.Canvas.Font.Size;
-			Bitmap.Canvas.Font.Size := 8;
-			ShadowText(Bitmap.Canvas, Width - Bitmap.Canvas.TextWidth(s) - 1 - 1, 1,
-				s,
-				clWindowText, clNone);
+			FontName := Bitmap.Canvas.Font.Name;
+			Bitmap.Canvas.Font.Name := 'Sans Serif';
+			Bitmap.Canvas.Font.Height := -Range(8, Min(Width, Height) div 4, 11);
+			ShadowText(Bitmap.Canvas, Width - Bitmap.Canvas.TextWidth(s) - 1 - 1, 1, s, clWindowText, clNone);
 			Bitmap.Canvas.Font.Size := FontSize;
+			Bitmap.Canvas.Font.Name := FontName;
 		end;
 	finally
 		Inc(PaintCount);

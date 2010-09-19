@@ -117,8 +117,8 @@ end;
 function XMLToStr(s: string): string;
 begin
 	Result := s;
-	Replace(Result, '&gt;', '<');
-	Replace(Result, '&lt;', '>');
+	Replace(Result, '&gt;', '>');
+	Replace(Result, '&lt;', '<');
 	Replace(Result, '&amp;', '&');
 end;
 
@@ -126,8 +126,8 @@ function StrToXML(s: string): string;
 begin
 	Result := s;
 	Replace(Result, '&', '&amp;');
-	Replace(Result, '>', '&lt;');
-	Replace(Result, '<', '&gt;');
+	Replace(Result, '<', '&lt;');
+	Replace(Result, '>', '&gt;');
 end;
 (*
 function XMLToWStr(s: string): WideString;
@@ -141,9 +141,7 @@ begin
 		#$80..#$FF:
 		begin
 			if i < Length(s) then
-				Result := Result + WideChar(Ord(s[i]) + Ord(s[i + 1]) shl 8)
-			else
-				Nop;
+				Result := Result + WideChar(Ord(s[i]) + Ord(s[i + 1]) shl 8);
 		end;
 		end;
 	end;
@@ -594,8 +592,9 @@ begin
 	begin
 		if ReadStringFromFile(FileName, BodySaved) then
 		begin
-			HeadEnd := Pos('</head>' + HTMLSep, Body);
-			HeadSavedEnd := Pos('</head>' + HTMLSep, BodySaved);
+			Replace(BodySaved, FullSep, HTMLSep);
+			HeadEnd := Pos('</head>', Body);
+			HeadSavedEnd := Pos('</head>', BodySaved);
 			if (HeadEnd <> 0) and (HeadSavedEnd <> 0) then
 			begin
 				if SameData(@Body[HeadEnd], Pointer(@BodySaved[HeadSavedEnd]), Length(Body) - HeadEnd + 1) then

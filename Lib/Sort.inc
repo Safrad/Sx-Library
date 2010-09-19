@@ -1,6 +1,6 @@
 (*-------------------------------------------------------------------------*)
-{$ifopt d+}
-	procedure SelectSort;
+	{$ifopt d+}
+	procedure SelectSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	var
 		i, j, k: SG;
 		MinValue: TValue;
@@ -60,8 +60,9 @@
 	end;
 (*-------------------------------------------------------------------------*)
 {$endif}
+	{$define F} // D???
 	{$ifndef F}
-	procedure InsertionSort;
+	procedure InsertionSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	var
 		HValue: TValue;
 		HIndex: TIndex;
@@ -82,7 +83,7 @@
 					M := (L + R) div 2
 				else
 				begin
-					M := L + TIndex(HValue - AValue[L]) * S8(R - L) div TIndex(AValue[R] - AValue[L]);
+					M := L + TIndex(HValue - AValue[L]) * S8(R - L) div TIndex(AValue[R] - AValue[L]); // D???
 					if M < L then M := L
 					else if M > R then M := R;
 				end;
@@ -102,7 +103,7 @@
 	end;
 (*-------------------------------------------------------------------------*)
 	{$else}
-	procedure InsertionSort;
+	procedure InsertionSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	var
 		HValue: TValue;
 		HIndex: TIndex;
@@ -131,7 +132,7 @@
 		end;
 	end;
 	{$endif}
-(*  procedure InsertionSort;
+(*  procedure InsertionSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	{
 	 ============================= InsertionSort ================================
 		 The InsertionSort procedure compares the length of each successive
@@ -178,7 +179,7 @@
 	end;
 (*-------------------------------------------------------------------------*)
 {$ifopt d+}
-	procedure BubbleSort;
+	procedure BubbleSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	var
 		HValue: TValue;
 		HIndex: TIndex;
@@ -235,7 +236,7 @@
 		until False;
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure ExchangeSort;
+	procedure ExchangeSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	var
 		HValue: TValue;
 		HIndex: TIndex;
@@ -260,7 +261,7 @@
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure ShellSort; // XXXX
+	procedure ShellSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex); // XXXX
 	{
 	 =============================== ShellSort ==================================
 		The ShellSort procedure is similar to the BubbleSort procedure.  However,
@@ -307,7 +308,7 @@
 				Limit := Switch - Offset;
 			until Switch = 0;
 			// No switches at last offset, try one half as big:
-			Offset := 2 * Offset div 3; // Can change ( div 2)
+			Offset := Offset div 2;
 		end;
 	end;
 (*-------------------------------------------------------------------------*)
@@ -430,7 +431,7 @@
 		end;
 	end;
 
-	procedure HeapSort;
+	procedure HeapSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	{
 	 ============================== PercolateUp =================================
 		 The PercolateUp procedure converts the elements from 1 to MaxLevel in
@@ -585,7 +586,7 @@
 	end;
 	{$endif}
 (*-------------------------------------------------------------------------*)
-	procedure QuickSort(iLo, iHi: TIndex);
+	procedure QuickSort(AIndex: PArraySG; AValue: PArray; iLo, iHi: TIndex);
 	var
 		HValue: TValue;
 		HIndex: TIndex;
@@ -623,19 +624,32 @@
 		1:
 		begin
 			if AValue[iLo] > AValue[iHi] then
+			begin
 				Exchange(AValue[iLo], AValue[iHi]);
+				Exchange(AIndex[iLo], AIndex[iHi]);
+			end;
 			Exit;
 		end;
 		2:
 		begin
-{			if AValue[iLo] > AValue[iLo + 2] then
+			if AValue[iLo] > AValue[iLo + 2] then
+			begin
 				Exchange(AValue[iLo], AValue[iLo + 2]);
+				Exchange(AIndex[iLo], AIndex[iLo + 2]);
+			end;
 			if AValue[iLo] > AValue[iLo + 1] then
-				Exchange(AValue[iLo], AValue[iLo + 1])
+			begin
+				Exchange(AValue[iLo], AValue[iLo + 1]);
+				Exchange(AIndex[iLo], AIndex[iLo + 1]);
+			end
 			else if AValue[iLo + 1] > AValue[iLo + 2] then
-				Exchange(AValue[iLo + 1], AValue[iLo + 2]);}
+			begin
+				Exchange(AValue[iLo + 1], AValue[iLo + 2]);
+				Exchange(AIndex[iLo + 1], AIndex[iLo + 2]);
+			end;
+			Exit;
 
-			if AValue[iLo] > AValue[iLo + 1] then
+{			if AValue[iLo] > AValue[iLo + 1] then
 				Exchange(AValue[iLo], AValue[iLo + 1]);
 			if AValue[iLo + 1] > AValue[iLo + 2] then
 			begin
@@ -645,7 +659,7 @@
 					Exchange(AValue[iLo + 1], AValue[iLo + 2]);
 			end;
 
-			Exit;
+			Exit;}
 		end;
 (*		3..5:
 		begin
@@ -698,8 +712,8 @@
 				Dec(Hi);
 			end;
 		until Lo > Hi;
-		if Hi > iLo then QuickSort(iLo, Hi);
-		if Lo < iHi then QuickSort(Lo, iHi);
+		if Hi > iLo then QuickSort(AIndex, AValue, iLo, Hi);
+		if Lo < iHi then QuickSort(AIndex, AValue, Lo, iHi);
 		{$ifopt d+}
 		Dec(Depth);
 		{$endif}
@@ -754,13 +768,13 @@
 			end;
 		until Lo > Hi;
 //		if Hi > iLo then QuickSort(iLo, Hi); Partial
-		if Lo < iHi then QuickSort(Lo, iHi);
+		if Lo < iHi then QuickSort(AIndex, AValue, Lo, iHi);
 		{$ifopt d+}
 		Dec(Depth);
 		{$endif}
 	end;
 (*-------------------------------------------------------------------------*)
-	procedure MergeSort;
+	procedure MergeSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	var
 		MeI: array of TIndex;
 		MeV: array of TValue; // D??? Delphi 5 internal error L1030
@@ -846,7 +860,7 @@
 	end;
 (*-------------------------------------------------------------------------*)
 	{$ifopt d+}
-	procedure RadixSort;
+	procedure RadixSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	const
 		MaxV = 3;
 		ShOffset = 2;
@@ -1003,24 +1017,24 @@ begin
 			if Stability then
 //				case MaxIndex of
 //				1..70:
-					InsertionSort
+					InsertionSort(AIndex, AValue, MaxIndex)
 //				else MergeSort; D??? DNW
 //				end
 			else
-				QuickSort(MinIndex, MaxIndex);
+				QuickSort(AIndex, AValue, MinIndex, MaxIndex);
 		{$ifopt d+}
 		end;
-		stSelect: SelectSort;
-		stInsertion: InsertionSort;
-		stBubble: BubbleSort;
-		stExchange: ExchangeSort;
-		stShell: ShellSort;
-		stHeap: HeapSort;
-		stQuick: QuickSort(MinIndex, MaxIndex);
+		stSelect: SelectSort(AIndex, AValue, MaxIndex);
+		stInsertion: InsertionSort(AIndex, AValue, MaxIndex);
+		stBubble: BubbleSort(AIndex, AValue, MaxIndex);
+		stExchange: ExchangeSort(AIndex, AValue, MaxIndex);
+		stShell: ShellSort(AIndex, AValue, MaxIndex);
+		stHeap: HeapSort(AIndex, AValue, MaxIndex);
+		stQuick: QuickSort(AIndex, AValue, MinIndex, MaxIndex);
 		stPartialQuick: PartialQuickSort(MinIndex, MaxIndex);
-		stMerge: MergeSort;
-		stRadix: RadixSort;
-//		stCounting: CountingSort;
+		stMerge: MergeSort(AIndex, AValue, MaxIndex);
+		stRadix: RadixSort(AIndex, AValue, MaxIndex);
+//		stCounting: CountingSort(AIndex, AValue, MaxIndex);
 		end;
 		{$endif}
 	end;

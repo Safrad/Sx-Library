@@ -397,7 +397,7 @@ var
 	Recta: TRect;
 	TopColor, BottomColor: TColor;
 	i: Integer;
-	Co: array[0..3] of TColor;
+	{$ifopt d-}Co: array[0..3] of TColor;{$endif}
 begin
 
 //	Recta := GetClientRect;
@@ -501,16 +501,18 @@ begin
 		end
 		else
 		begin}
+			{$ifopt d-}
 			Co[0] := LighterColor(ColorToRGB(Color));
 			Co[1] := DarkerColor(ColorToRGB(Color));
 			Co[2] := Co[0];
-			Co[3] := Co[1]; 
+			Co[3] := Co[1];
 			FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, SG(Recta.Bottom) - 1,
 				gfFade2x, Co, ScreenCorrectColor, FBackEffect, 0, nil);
 //			FBmpOut.FormBitmap(Color);
-{			FBmpOut.Canvas.Brush.Color := Color;
-			FBmpOut.Canvas.FillRect(Recta);}
-//		end;
+			{$else}
+			FBmpOut.Canvas.Brush.Color := Color;
+			FBmpOut.Canvas.FillRect(Recta);
+			{$endif}
 	end;
 
 //Caption

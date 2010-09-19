@@ -168,7 +168,7 @@ begin
 	Result := False;
 	if not Assigned(Form) then Exit;
 	if Form.Visible = False then Exit;
-	if Form.WindowState = wsMinimized then Exit; // D??? Does Not Work
+	if Form.WindowState = wsMinimized then Exit; // D??? DNW
 //	Style := GetWindowLong(Handle, GWL_STYLE);
 	Result := True;
 end;
@@ -205,7 +205,7 @@ procedure glShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
 var
 	Params: array[0..3] of SG;
-	C: TRColor;
+	C: TRGBA;
 	sx, sy, wx, wy: Single;
 //	px: array[0..3] of Double;
 begin
@@ -329,8 +329,10 @@ begin
 			Style := Style and not WS_CAPTION;
 			Style := Style and not WS_THICKFRAME;
 			SetWindowLong(Handle, GWL_STYLE, Style);
-
+			WindowState := wsMaximized;
 //			if FBackground = baOpenGL then
+{				Width := Screen.Width;
+				Height := Screen.Height;}
 				SetBounds(0, 0, Screen.Width, Screen.Height); // -> PopupMenu is visibled
 {			else
 				SetBounds(0, 0, Screen.Width, Screen.Height);}
@@ -351,6 +353,7 @@ begin
 			Style := Style or (WS_CAPTION);
 			Style := Style or (WS_THICKFRAME);
 			SetWindowLong(Handle, GWL_STYLE, Style);
+			WindowState := wsNormal;
 			RestoreWindow;
 //			Show;
 		end;
@@ -388,6 +391,7 @@ procedure TDForm.InitBackground;
 begin
 	if Assigned(FBitmapB) then
 	begin
+//		Caption := IntToStr(FBitmapB.Width);
 		if (FBitmapB.Width <> ClientWidth) or
 			(FBitmapB.Height <> ClientHeight) then
 		begin
@@ -485,9 +489,9 @@ type
 
 function Get8087CW: Word;
 asm
-        PUSH    0
-        FNSTCW  [ESP].Word
-        POP     EAX
+	PUSH 0
+	FNSTCW [ESP].Word
+	POP EAX
 end;
 
 function SetExceptionMask(const Mask: TFPUExceptionMask): TFPUExceptionMask;
@@ -521,7 +525,7 @@ begin
 		baBitmap, baGradient:
 		begin
 			if FBitmapF = nil then
-			begin                              
+			begin
 				FBitmapF := TDBitmap.Create;
 				FBitmapF.SetSize(0, 0);
 				FileName := GraphDir + 'Form.png';
@@ -585,13 +589,12 @@ begin
 end;
 
 procedure TDForm.InitRect;
-var
+{var
 	hR: THandle;
-	Po: array[0..9] of tagPOINT;
+	Po: array[0..9] of tagPOINT;}
 begin
 	if not RegCap then Exit;
-	if NTSystem then Exit;
-	if (FFullScreen = False) and (WindowState <> wsMaximized) then
+(*	if (FFullScreen = False) and (WindowState <> wsMaximized) then
 	begin
 		Po[0].x := 0;
 		Po[0].y := 0;
@@ -635,8 +638,8 @@ begin
 	begin
 		hR := CreateRectRgn(0, 0, Width, Height);
 		SetWindowRgn(Handle, hR, True);
-		DeleteObject(hR);  
-	end;
+		DeleteObject(hR);
+	end; *)
 end;
 
 procedure TDForm.CheckPos;
@@ -752,8 +755,6 @@ begin
 	end
 	else
 	begin
-{
-		PatBlt(Canvas.Handle, 0, 0, FBitmapB.Width, FBitmapB.Height, WHITENESS);}
 		BitBlt(Canvas.Handle, 0, 0, FBitmapB.Width, FBitmapB.Height,
 			FBitmapB.Canvas.Handle,
 			0, 0,
@@ -779,6 +780,57 @@ begin
 
 //		glDisable($ffff);
 //		glDrawPixels(16, 16, GL_RGB, GL_UNSIGNED_BYTE, FBitmapB.GLData);
+
+
+		(*
+				 * Disable stuff that's likely to slow down
+				 * glDrawPixels.(Omit as much of this as possible,
+				 * when you know in advance that the OpenGL state is
+				 * already set correctly.)
+				 *)
+				glDisable(GL_ALPHA_TEST);
+				glDisable(GL_BLEND);
+				glDisable(GL_DEPTH_TEST);
+				glDisable(GL_DITHER);
+				glDisable(GL_FOG);
+				glDisable(GL_LIGHTING);
+				glDisable(GL_LOGIC_OP);
+				glDisable(GL_STENCIL_TEST);
+				glDisable(GL_TEXTURE_1D);
+				glDisable(GL_TEXTURE_2D);
+				glPixelTransferi(GL_MAP_COLOR, GL_FALSE);
+				glPixelTransferi(GL_RED_SCALE, 1);
+				glPixelTransferi(GL_RED_BIAS, 0);
+				glPixelTransferi(GL_GREEN_SCALE, 1);
+				glPixelTransferi(GL_GREEN_BIAS, 0);
+				glPixelTransferi(GL_BLUE_SCALE, 1);
+				glPixelTransferi(GL_BLUE_BIAS, 0);
+				glPixelTransferi(GL_ALPHA_SCALE, 1);
+				glPixelTransferi(GL_ALPHA_BIAS, 0);
+
+				(*
+				 * Disable extensions that could slow down
+				 * glDrawPixels.(Actually, you should check for the
+				 * presence of the proper extension before making
+				 * these calls.I omitted that code for simplicity.)
+				 *)
+
+				glDisable(GL_CONVOLUTION_1D_EXT);
+        glDisable(GL_CONVOLUTION_2D_EXT);
+        glDisable(GL_SEPARABLE_2D_EXT);
+
+				glDisable(GL_HISTOGRAM_EXT);
+        glDisable(GL_MINMAX_EXT);
+
+				glDisable(GL_TEXTURE_3D_EXT);
+
+				(*
+				 * The following is needed only when using a
+				 * multisample-capable visual.
+				 *)
+
+//				glDisable(GL_MULTISAMPLE_SGIS);
+
 		glDrawPixels(FBitmapB.Width, FBitmapB.Height, GL_FORMAT, GL_UNSIGNED_BYTE, FBitmapB.GLData);
 
 (*		glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -1029,7 +1081,7 @@ begin
 	baOpenGL, baOpenGLBitmap:
 	begin
 //		AfterResize;
-		Paint;
+//		Paint; // pri zvetsovani probiha automaticky
 		DeactivateRenderingContext; // make context drawable
 	end;
 //	baUser: inherited Paint;

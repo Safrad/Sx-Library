@@ -151,6 +151,7 @@ begin
 		else
 			Inc(i);
 	end;
+	SetReopenMenuItems(ReopenLimit);
 	DrawReopenCaption;
 end;
 
@@ -200,16 +201,19 @@ begin
 	Reopen1.Add(MenuN);
 
 	MenuAll := TMenuItem.Create(Reopen1);
+	MenuAll.Name := 'OpenAll1';
 	MenuAll.OnClick := ReopenAllClick;
 	MenuAll.OnAdvancedDrawItem := Reopen1.OnAdvancedDrawItem;
 	Reopen1.Add(MenuAll);
 
 	MenuClear := TMenuItem.Create(Reopen1);
+	MenuClear.Name := 'ClearIfNotExists1';
 	MenuClear.OnClick := ReopenClearClick;
 	MenuClear.OnAdvancedDrawItem := Reopen1.OnAdvancedDrawItem;
 	Reopen1.Add(MenuClear);
 
 	MenuLimit := TMenuItem.Create(Reopen1);
+	MenuLimit.Name := 'ReopenLimit1';
 	MenuLimit.OnClick := ReopenLimitClick;
 	MenuLimit.OnAdvancedDrawItem := Reopen1.OnAdvancedDrawItem;
 	Reopen1.Add(MenuLimit);
@@ -469,14 +473,19 @@ begin
 	end;
 	if Assigned(MenuClear) then
 	begin
+		FormatCaption(MenuClear, NotExistsCount, False, False, False);
+//		MenuClear.Caption := 'Clear If Not Exists (' + IntToStr(NotExistsCount) + ')';
 		MenuClear.Enabled := NotExistsCount > 0;
-		MenuClear.Caption := 'Clear If Not Exists (' + IntToStr(NotExistsCount) + ')';
 	end;
 	if Assigned(MenuLimit) then
-		MenuLimit.Caption := 'Reopen Limit (' + IntToStr(ReopenLimit) + ')...';
+	begin
+		FormatCaption(MenuLimit, ReopenLimit, False, False);
+//		MenuLimit.Caption := 'Reopen Limit (' + IntToStr(ReopenLimit) + ')...';
+	end;
 	if Assigned(MenuAll) then
 	begin
-		MenuAll.Caption := 'Open All (' + IntToStr(ReopenAllCount) + ')';
+		FormatCaption(MenuAll, ReopenAllCount, False, False, False);
+//		MenuAll.Caption := 'Open All (' + IntToStr(ReopenAllCount) + ')';
 		MenuAll.Enabled := (ReopenAllCount > 0);
 		{$ifopt d-}
 		MenuAll.Visible := MultiFiles;

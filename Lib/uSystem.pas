@@ -12,9 +12,6 @@ interface
 
 uses uTypes, SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, Classes;
 
-
-// System
-
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: Byte): Integer;
 function ThreadPriority(const Prior: Byte): Integer;
@@ -25,14 +22,6 @@ function GetCaption(const FName: TFileName; const Changed: Boolean;
 procedure BeginLongOperation(const Background: BG = False);
 procedure EndLongOperation(const Sound: BG = True);
 
-function RemoveEscape(s: string): string;
-function AddEscape(s: string): string; // 2.8x larger for random data
-
-function RandomString(Size: SG): string;
-
-
-//procedure CorrectFormPos(Form: TForm);
-//procedure SetListViewItems(ListView: TListView; NewSize: SG);
 procedure CreateLink(
 	const LinkFileName: WideString;
 	const Target: TFileName;
@@ -58,10 +47,9 @@ type
 		DriveLetter: TDriveLetter; // 1
 		Reserved: array[0..9] of U8; // 10
 	end;
-
 function GetDriveInfo(const Drive: Byte): TDriveInfo;
+
 function SelectFolder(var Path: string; browseTitle: string = ''): BG;
-function DeleteFileDialog(const FileName: TFileName): Boolean;
 
 implementation
 
@@ -140,220 +128,6 @@ begin
 		PlayWinSound(wsAsterisk);
 	Screen.Cursor := crDefault;
 end;
-{
-procedure CorrectFormPos(Form: TForm);
-begin
-	if not Assigned(Form) then Exit;
-	if Form.Left + Form.Width > Screen.Width then Form.Left := Screen.Width - Form.Width;
-	if Form.Top + Form.Height > Screen.Height then Form.Top := Screen.Height - Form.Height;
-	if Form.Left < 0 then Form.Left := 0;
-	if Form.Top < 0 then Form.Top := 0;
-end;}
-{
-procedure SetListViewItems(ListView: TListView; NewSize: SG);
-var j: SG;
-begin
-	if NewSize > ListView.Items.Count then
-	begin
-		for j := 0 to NewSize - ListView.Items.Count - 1 do
-		begin
-			ListView.Items.Add;
-		end;
-	end
-	else
-	begin
-		for j := ListView.Items.Count - 1 downto NewSize do
-		begin
-			ListView.Items[j].Delete;
-		end;
-	end;
-end;
-}
-
-{
-// Standard Escape Sequences:
-\b       backspace
-\f       formfeed
-\n       new line
-\r       carriage return
-\t       horizontal tab
-\'       single quote
-\0       null
-
-
-Sequence	Value	Char	What it does
-\a	0x07	BEL	Audible bell
-\b	0x08	BS	Backspace
-\f	0x0C	FF	Formfeed
-\n	0x0A	LF	Newline (linefeed)
-\r	0x0D	CR	Carriage return
-\t	0x09	HT	Tab (horizontal)
-\v	0x0B	VT	Vertical tab
-\\	0x5c	\	Backslash
-\'	0x27	'	Single quote (apostrophe)
-\"	0x22	"	Double quote
-\?	0x3F	?	Question mark
-\O		any	O=a string of up to three octal digits
-\xH		any	H=a string of hex digits
-\XH		any	H=a string of hex digits
-}
-
-function RemoveEscape(s: string): string;
-var
-	i, j: SG;
-	x, v: U1;
-	Special: BG;
-begin
-	Result := '';
-	i := 1;
-	Special := False;
-	while i <= Length(s) do
-	begin
-		if s[i] = '\' then
-		begin
-			if Special then
-			begin
-				Result := Result + s[i];
-				Special := False;
-			end
-			else
-				Special := True;
-		end
-		else
-			if Special then
-			begin
-				case s[i] of
-				'a': Result := Result + CharBell;
-				'b': Result := Result + CharBackspace;
-				'e', 'E': Result := Result + #$1B;
-				'f': Result := Result + CharFormfeed;
-				'n': Result := Result + CharLF;
-				'r': Result := Result + CharCR;
-				't': Result := Result + CharHT;
-{				'u', 'U':
-				begin
-				end;}
-				'v': 	Result := Result + CharVT;
-				'x':
-				begin
-					Inc(i);
-					x := 0;
-					while True do
-					begin
-						if i <= Length(s) then
-							v := HexValue[s[i]]
-						else
-							v := 16;
-						if (v < 16) then
-						begin
-							x := (x shl 4) and $ff;
-							x := (x + v) and $ff;
-							Inc(i);
-						end
-						else
-						begin
-							Result := Result + Char(x);
-							Dec(i);
-							Break;
-						end;
-					end;
-				end;
-				'''': Result := Result + '''';
-				'"': Result := Result + '"';
-				'?': Result := Result + '?';
-				'0'..'7': //Result := Result + Char(Ord(s[i]) - Ord('0'));//CharNull;
-				begin
-					x := 0;
-					j := 0;
-					while True do
-					begin
-						if (i <= Length(s)) and (j < 3) then
-							v := HexValue[s[i]]
-						else
-							v := 8;
-						if (v < 8) then
-						begin
-							x := (x shl 3) and $ff;
-							x := (x + v) and $ff;
-							Inc(i);
-						end
-						else
-						begin
-							Result := Result + Char(x);
-							Dec(i);
-							Break;
-						end;
-						Inc(j);
-					end;
-				end;
-				else
-					Result := Result + s[i];
-				end;
-				Special := False;
-			end
-			else
-				Result := Result + s[i];
-		Inc(i);
-	end;
-
-end;
-
-function AddEscape(s: string): string;
-var i: SG;
-begin
-	Result := '';
-	i := 1;
-	while i <= Length(s) do
-	begin
-		case s[i] of
-		'\': Result := Result + '\\';
-		CharBell: Result := Result + '\a';
-		CharBackspace: Result := Result + '\b';
-		#$1B: Result := Result + '\e'; // 'E'
-		CharFormfeed: Result := Result + '\f';
-		CharLF: Result := Result + '\n';
-		CharCR: Result := Result + '\r';
-		CharHT: Result := Result + '\t';
-		CharVT: Result := Result + '\v';
-//		'''': Result := Result + '\''';
-//		#0..#6: Result := Result + '\' + Char(Ord(s[i]) + Ord('0'));//CharNull;
-		#$20..#$5B, #$5D..#$7F: // ASCII
-			Result := Result + s[i];
-		else
-		begin
-			NumericBase := 8;
-			Result := Result + '\' + NToS(Ord(s[i]), '000');  // NumToStr(Ord(s[i]), 8);
-			NumericBase := 10;
-		end;
-		end;
-		Inc(i);
-	end;
-end;
-
-function RandomString(Size: SG): string;
-var i: SG;
-begin
-	SetLength(Result, Size);
-	for i := 1 to Size do
-		Result[i] := Char(Random(256));
-end;
-{
-var
-	i: SG;
-	s, s2: string;
-begin
-	for i := 0 to 20000 do
-	begin
-		s := RandomString(i);
-		s2 := AddEscape(s);
-		s2 := RemoveEscape(s2);
-		if s <> s2 then
-			Nop;
-	end;
-
-end;
-}
-
 
 procedure CreateLink(
 	const LinkFileName: WideString;
@@ -474,17 +248,6 @@ begin
 	result := 0;
 end;
 
-///////////////////////////////////////////////////////////////////
-// This function allows the user to browse for a folder
-//
-// Arguments:-
-//    browseTitle : The title to display on the browse dialog.
-//  initialFolder : Optional argument. Use to specify the folder
-//                  initially selected when the dialog opens.
-//
-// Returns: The empty string if no folder was selected (i.e. if the
-//          user clicked cancel), otherwise the full folder path.
-///////////////////////////////////////////////////////////////////
 function SelectFolder(var Path: string; browseTitle: string = ''): BG;
 var
 	browse_info: TBrowseInfo;
@@ -514,68 +277,6 @@ begin
 	else
 		result := False;
 end;
-(*
-var
-	TitleName : string;
-	lpItemID : PItemIDList;
-	BrowseInfo : TBrowseInfo;
-//	DisplayName : array[0..MAX_PATH] of char;
-	TempPath : array[0..MAX_PATH] of Char;
-
-	I: TItemIdList;
-begin
-	if Path = '' then Path := 'C:\';
-	FillChar(BrowseInfo, SizeOf(TBrowseInfo), 0);
-	BrowseInfo.hwndOwner := Handle;
-//	TitleName := 'D:\';
-	BrowseInfo.pszDisplayName := @Path[1];
-//	BrowseInfo.pszDisplayName := @DisplayName;
-	TitleName := 'Please specify a directory';
-	FillChar(I, SizeOf(I), 0);
-	I.mkid.cb := 1;
-	I.mkid.abID[0] := Byte('C');
-//	BrowseInfo.pidlRoot := @I;
-	BrowseInfo.lpszTitle := @TitleName[1];
-	BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI;
-	BrowseInfo.lpfn := nil;
-	BrowseInfo.lParam := 0;
-	BrowseInfo.iImage := 1;
-
-	Move(Path[1], TempPath, Length(Path)); // := Path + CharNul;
-
-	lpItemID := SHBrowseForFolder(BrowseInfo);
-	if lpItemId <> nil then
-	begin
-		Result := SHGetPathFromIDList(lpItemID, TempPath);
-		Path := StrPas(TempPath);
-		GlobalFreePtr(lpItemID);
-	end
-	else
-		Result := False;
-end;   *)
-
-(*
-function SelectDirectory(var Dir: string): BG;
-(*var OpenDialog1: TOpenDialog;
-begin
-	OpenDialog1 := TOpenDialog.Create(nil);
-	try
-		if Dir = '' then Dir := WorkDir;
-		OpenDialog1.Options := OpenDialog1.Options + [ofPathMustExist];
-		OpenDialog1.Options := OpenDialog1.Options - [ofFileMustExist];
-		if ExecuteDialog(OpenDialog1, Dir + '*.*') then
-		begin
-			Result := True;
-			Dir := ExtractFilePath(OpenDialog1.FileName);
-		end
-		else
-			Result := False;
-	finally
-		OpenDialog1.Free;
-	end;
-begin
-	FileCtrl.SelectDirectory('Select Direcotry...', Dir, Dir);
-end;*)
 
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
 label LRetry;
@@ -630,14 +331,6 @@ begin
 	end;
 	F.Free;
 end;
-
-function DeleteFileDialog(const FileName: TFileName): Boolean;
-begin
-	Result := False;
-	if MessageD('Delete file' + LineSep + FileName, mtConfirmation, [mbYes, mbNo]) = mbYes then
-		Result := DeleteFileEx(FileName);
-end;
-
 
 initialization
 	{$ifndef LINUX}

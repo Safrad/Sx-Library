@@ -64,7 +64,7 @@ end;
 
 implementation
 
-uses uMath, uMem;
+uses uMath;
 const
 	MinIndex = 0;
 type
@@ -78,41 +78,49 @@ var
 procedure SortS1;
 type
 	TValue = type S1;
+	PArray = PArrayS1;
 {$I Sort.inc}
 
 procedure SortU1;
 type
 	TValue = type U1;
+	PArray = PArrayU1;
 {$I Sort.inc}
 
 procedure SortS2;
 type
 	TValue = type S2;
+	PArray = PArrayS2;
 {$I Sort.inc}
 
 procedure SortU2;
 type
 	TValue = type U2;
+	PArray = PArrayU2;
 {$I Sort.inc}
 
 procedure SortS4;
 type
 	TValue = type S4;
+	PArray = PArrayS4;
 {$I Sort.inc}
 
 procedure SortU4;
 type
 	TValue = type U4;
+	PArray = PArrayU4;
 {$I Sort.inc}
 
 procedure SortS8;
 type
 	TValue = type S8;
+	PArray = PArrayS8;
 {$I Sort.inc}
 
 procedure SortF8;
 type
 	TValue = type F8;
+	PArray = PArrayF8;
 {$define F}
 {$I Sort.inc}
 {$undef F}
@@ -120,6 +128,7 @@ type
 procedure SortFA;
 type
 	TValue = type FA;
+	PArray = PArrayFA;
 {$define F}
 {$I Sort.inc}
 {$undef F}

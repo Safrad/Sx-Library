@@ -36,7 +36,7 @@ var
 	P: Pointer;
 	Binary: BG;
 	Parser: TDParser;
-	C: TRColor;
+	C: TRGBA;
 	BPC: SG;
 begin
 	W := 0;
@@ -170,7 +170,6 @@ var
 begin
 	Line := 'P6' + LineSep +
 		IntToStr(Width) + ' ' + IntToStr(Height) + LineSep;
-//	Line := Line + InsChar((Length(Line) + 5) mod 4, ' ');
 	Line := Line + '255' + LineSep;
 	Stream.WriteBuffer(Line[1], Length(Line));
 

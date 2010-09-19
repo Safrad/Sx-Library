@@ -82,7 +82,7 @@ begin
 		if FElementType <> xeDataValue then
 		begin
 			FElement := ReadToChar(Body, BodyIndex, '<');
-			if RemoveBlanks(Element) <> '' then
+			if DelBESpaceF(Element) <> '' then
 			begin
 				FElementType := xeDataValue;
 				Exit;
@@ -111,10 +111,7 @@ begin
 		begin
 			FElementType := xeEOI;
 			FElement := '';
-		end
-		{$ifopt d+}
-		else
-			IE(5435);{$endif}
+		end;
 		end;
 
 	end;
@@ -129,7 +126,7 @@ begin
 		'>':
 		begin
 				goto Lab;
-{			FElementText := RemoveBlanks(ReadToChar(Body, BodyIndex, '<'));
+{			FElementText := DelBESpace(ReadToChar(Body, BodyIndex, '<'));
 			if FElementText <> '' then
 			begin
 				FElementType := xeDataValue;
@@ -140,9 +137,6 @@ begin
 
 			end;}
 		end;
-		{$ifopt d+}
-		else
-			IE(5435);{$endif}
 		end;
 
 	end;

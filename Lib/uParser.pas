@@ -181,8 +181,7 @@ type
 		mtInsertSpaceAfter,
 		mtSpaceToTabInBegin,
 		mtTabToSpaceInMiddle,
-		mtRemoveCRLF,
-		mtInsertCRLF,
+		mtRemoveBlanks,
 		mtCaseMishmash,
 		mtEmptyCommand,
 
@@ -249,8 +248,7 @@ const
 		'Insert ''Space'' after ''%1''',
 		'''Space'' to ''Tab'' in start of line',
 		'''Tab'' to ''Space'' in middle of line',
-		'Remove ''CR,LF'' after %1',
-		'Insert ''CR,LF'' after %1',
+		'Remove ''blanks'' after %1',
 		'Identifier ''%1'' case mishmash ''%2''',
 		'Empty command',
 
@@ -326,42 +324,26 @@ var
 type
 	TOperator = (opNone, opNumber, opIdent,
 //		opUnarMinus, implemented as opMinus with firts argument nil
+		// Algebra
 		opPlus, opMinus, opMul, opDiv, opMod,
+		// Single
 		opRound, opTrunc, opAbs, opNeg, opInv, opNot, opInc, opDec, opFact, opGCD, opLCM,
+		// Exponencial
 		opPower, opExp, opLn, opLog, opSqr, opSqrt,
+		// Goniometric
 		opLength,
 		opSin, opCos, opTan,
 		opArcSin, opArcCos, opArcTan,
 		opSinh, opCosh, opTanh,
 		opArcSinh, opArcCosh, opArcTanh,
+		// Chess
 		opElo, opArcElo,
 		opEloC,
+		// Statistics
 		opAvg, opMin, opMax,
 		opRandom,
-		opShl, opShr, opAnd, opOr, opXor, opXnor);
-const
-	FcNames: array[TOperator] of string = (
-		'', '', '',
-		// Algebra
-		'PLUS', 'MINUS', 'MUL', 'DIV', 'MOD',
-		// Single
-		'ROUND', 'TRUNC', 'ABS', 'NEG', 'INV', 'NOT', 'INC', 'DEC', 'FACT', 'GCD', 'LCM',
-		// Exponencial
-		'POWER', 'EXP', 'LN', 'LOG', 'SQR', 'SQRT',
-		// Goniometric
-		'LENGTH',
-		'SIN', 'COS', 'TAN',
-		'ARCSIN', 'ARCCOS', 'ARCTAN',
-		'SINH', 'COSH', 'TANH',
-		'ARCSINH', 'ARCCOSH', 'ARCTANH',
-		// Desk games
-		'ELO', 'ARCELO',
-		'ELOC',
-		// Statistics
-		'AVG', 'MIN', 'MAX',
-		'RANDOM',
 		// Logical
-		'SHL', 'SHR', 'AND', 'OR', 'XOR', 'XNOR');
+		opShl, opShr, opAnd, opOr, opXor, opXnor);
 		{
 		b	a	| 0 and or xor xnor 1
 		0	0	  0  0  0   0   1   1
@@ -369,7 +351,8 @@ const
 		1	0   0  0  1   1   0   1
 		1	1   0  1  1   0   1   1
 		}
-
+var
+	FcNames: array[opPlus..opXnor] of string;
 
 // Compiler
 type
@@ -454,6 +437,13 @@ var
 	LinesL, LinesG: SG;
 
 type
+	TCommentMark = (
+			maNone,
+			maString,
+			maLocal, // //
+			maGlobalP, // { }
+			maGlobalA); // (* *)
+
 	TDParser = class(TObject)
 	private
 {		FStream: TStream;
@@ -474,12 +464,7 @@ type
 		procedure SkipBlanks;}
 
 		StartBufRI: SG;
-		Marks: (
-			maNone,
-			maString,
-			maLocal, // //
-			maGlobalP, // { }
-			maGlobalA); // (* *)
+		Marks: TCommentMark;
 		BufString: string;
 		BufR: ^TArrayChar;
 		BufRI: SG;
@@ -566,6 +551,7 @@ type
 		function GetStr: string;
 		function GetDate: TDate;
 		procedure NextLine;
+		procedure ReadToNewLine;
 		function ReadMs(MinVal, DefVal, MaxVal: SG): SG;
 		function ReadFA(MinVal, DefVal, MaxVal: FA): FA;
 		function ReadSG(MinVal, DefVal, MaxVal: SG): SG;
@@ -594,6 +580,7 @@ type
 var
 	GonFormat: TGonFormat;
 
+procedure DAddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
 function MesToString(M: PCompileMes): string;
 function MesToStrings: string;
 procedure MesToMemo(Memo: TMemo);
@@ -853,7 +840,7 @@ begin
 				InInteger := RoundSG(Res);
 //				if Unar then Res := -Res;
 
-//        Val(Copy(Line, LastLineIndex, LineIndex - LastLineIndex), Res, ErrorCode);
+//				Val(Copy(Line, LastLineIndex, LineIndex - LastLineIndex), Res, ErrorCode);
 //				AddArgument(Res);
 {				if LastOperator = opNone then
 				begin
@@ -1058,7 +1045,7 @@ begin
 				if InputType in [{itEmpty,} itSpaceTab, itReturn] then
 				begin
 //					if InputType = itEmpty then Inc(BufRI);
-          Id := '';
+					Id := '';
 					InputType := itEmpty;
 					Exit;
 				end;
@@ -1599,6 +1586,40 @@ begin
 	Result := BufRI >= BufRC;
 end;
 
+procedure DAddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
+var
+	M: PCompileMes;
+	i: SG;
+begin
+	M := CompileMes.Add;
+	M.Line := Line;
+	M.X0 := X0;
+	M.X1 := X1;
+	M.FileNameIndex := FileNameIndex;
+	M.MesId := MesId;
+
+	if Length(Params) >= 1 then
+		M.Params := Params[0]
+	else
+		M.Params := '';
+	if Length(Params) >= 2 then
+	begin
+		M.Param2Index := Length(M.Params) + 1;
+		M.Params := M.Params + Params[1];
+	end
+	else
+		M.Param2Index := 0;
+
+	{$ifopt d+}
+	Assert(Length(Params) <= MesParam[M.MesId]);
+	Assert(Length(Params) >= MesParam[M.MesId]);
+	{$endif}
+	for i := 0 to Length(Params) - 1 do
+	begin
+		Params[i] := '';
+	end;
+end;
+
 procedure TDParser.AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
 var
 	M: PCompileMes;
@@ -1644,10 +1665,8 @@ begin
 		M.Param2Index := 0;
 
 	{$ifopt d+}
-	if Length(Params) > MesParam[M.MesId] then
-		CreateException
-	else if Length(Params) < MesParam[M.MesId] then
-		CreateException;
+	Assert(Length(Params) <= MesParam[M.MesId]);
+	Assert(Length(Params) >= MesParam[M.MesId]);
 	{$endif}
 	for i := 0 to Length(Params) - 1 do
 	begin
@@ -1947,8 +1966,8 @@ begin
 	begin
 		Id2 := UpperCase(Id);
 		Result := nil;
-		for i := 0 to Length(FcNames) - 1 do
-			if (FcNames[TOperator(i)] <> '') and (Id2 = FcNames[TOperator(i)]) then
+		for i := SG(Low(FcNames)) to Length(FcNames) - 1 do
+			if (Id2 = FcNames[TOperator(i)]) then
 			begin
 				Operation := TOperator(i);
 				Result := NodeArg;
@@ -2447,7 +2466,7 @@ begin
 		else
 		begin
 			Result := Power(Args[0], Args[1]);
-{         Result := 1;
+{				Result := 1;
 		i := 1;
 		while  i <= R2 do
 		begin
@@ -2707,9 +2726,7 @@ begin
 	end;
 	else
 		Result := 0;
-		{$ifopt d+}
-		IE(117);
-		{$endif}
+		Assert(False);
 	end;
 	Dec(Depth);
 end;
@@ -2999,11 +3016,7 @@ begin
 		begin
 			for i := 0 to Node.ArgCount - 1 do
 			begin
-				{$ifopt d+}
-				if Node.Args[i] = Node then
-					IE(4342)
-				else
-				{$endif}
+				Assert(Node.Args[i] <> Node);
 				FreeTreeR(Node.Args[i]);
 			end;
 
@@ -3012,10 +3025,7 @@ begin
 		end;
 		else // opNone:
 		begin
-			{$ifopt d+}
-			IE(20);
-			{$endif}
-			FreeMem(Node);
+//			FreeMem(Node);
 	//		Dec(TreeSize, NodeArgs);
 		end;
 		end;
@@ -3028,10 +3038,7 @@ begin
 	Result := FreeTreeR(Node);
 	TreeDepth := 0;
 	NodeCount := 0;
-	{$ifopt d+}
-	if TreeSize <> 0 then
-		IE(43451);
-	{$endif}
+	Assert(TreeSize = 0);
 end;
 
 function TDParser.ReadFA(MinVal, DefVal, MaxVal: FA): FA;
@@ -3064,17 +3071,8 @@ begin
 end;
 
 function TDParser.ReadSGFast(MinVal, DefVal, MaxVal: SG): SG;
-var V: SG;
 begin
-	V := 0;
-	while (BufR[BufRI] in ['0'..'9']) do
-	begin
-		if V < MaxInt div 10 then
-			V := V * 10;
-		Inc(V, Ord(BufR[BufRI]) - Ord('0'));
-		Inc(BufRI);
-	end;
-	Result := Range(MinVal, V, MaxVal);
+	Result := Range(MinVal, uStrings.ReadSGFast(string(PChar(BufR)), BufRI), MaxVal);
 end;
 
 procedure LetterCharTable;
@@ -3187,6 +3185,15 @@ begin
 	ReadInput;
 end;
 
+procedure TDParser.ReadToNewLine;
+begin
+	while (not EOI) and (not (BufR[BufRI] in [CharCR, CharLF])) do
+	begin
+		Inc(BufRI);
+	end;
+	ReadInput;
+end;
+
 procedure _initialization;
 var
 	MesId: TMesId;
@@ -3206,11 +3213,16 @@ begin
 		else MesParam[MesId] := 2
 	end;
 
-
 	for i := 0 to Length(KWs) - 1 do
 	begin
 		KWs[TKeyword(i)] := Copy(GetEnumName(TypeInfo(TKeyword), i), 3, MaxInt);
 	end;
+
+	for i := SG(Low(FcNames)) to Length(FcNames) - 1 do
+	begin
+		FcNames[TOperator(i)] := UpperCase(Copy(GetEnumName(TypeInfo(TOperator), i), 3, MaxInt));
+	end;
+
 end;
 
 initialization

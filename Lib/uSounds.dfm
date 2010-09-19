@@ -31,7 +31,7 @@ object fSounds: TfSounds
     Height = 137
     Shape = bsFrame
   end
-  object DViewS: TDView
+  object DViewSounds: TDView
     Left = 184
     Top = 8
     Width = 257
@@ -39,11 +39,11 @@ object fSounds: TfSounds
     DrawFPS = False
     HandScroll = False
     HotTrack = True
-    OnPaint = DViewSPaint
+    OnPaint = DViewSoundsPaint
     TabOrder = 13
     TabStop = False
-    OnDblClick = DViewSDblClick
-    OnGetData = DViewSGetData
+    OnDblClick = DViewSoundsDblClick
+    OnGetData = DViewSoundsGetData
   end
   object ButtonSelect: TDButton
     Left = 8

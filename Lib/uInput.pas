@@ -124,46 +124,6 @@ begin
 	Result := StrToValI(Line, UseWinFormat, 0, UG(DefVal), 255, 1);
 end;
 
-(*
-function StrToI(s: AnsiString; Decimals: SG): SG;
-var
-	Code: Integer;
-	e: Extended;
-	i: Integer;
-	Point: SG;
-begin
-	if s = '' then
-	begin
-		Result := 0;
-		Exit;
-	end;
-	// Disk Format 2,456,454,546.42454
-//	if CharCount(s, '.') > 0 then IE(431);
-
-	DelChars(s, ',');
-
-	if Decimals > 0 then
-	begin
-		Val(s, e, Code);
-		if Code <> 0 then
-			Result := 0
-		else
-		begin
-			Point := 10;
-			for i := 2 to Decimals do
-				Point := Point * 10;
-
-			Result := Round(Point * e);
-		end;
-	end
-	else
-	begin
-		Val(s, Result, Code);
-		if Code <> 0 then
-			Result := 0;
-	end;
-end;*)
-
 function SToDate(Str: string): TDateTime;
 var
 	DateSep: Char;

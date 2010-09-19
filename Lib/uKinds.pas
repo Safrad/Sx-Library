@@ -173,7 +173,7 @@ implementation
 
 uses
 	Forms, Math, Windows,
-	uFiles, uError, uStrings, uDIni, uMem, uFormat, uSystem;
+	uMath, uFiles, uError, uStrings, uDIni, uFormat, uSystem;
 
 constructor TKinds.Create;
 begin
@@ -456,20 +456,15 @@ end;
 
 procedure TKinds.ChangeIndex(I: SG);
 begin
-{	if I <> Index then
-	begin}
-		if (ItemAddr <> nil) and (ItemSize <> 0) then
-		if (Index >= 0) and (Items[Index].PData <> nil) then
-			Move(ItemAddr^, Items[Index].PData^, ItemSize);
-		Index := I;
-		if (ItemAddr <> nil) and (ItemSize <> 0) then
-		if (Index >= 0) and (Items[Index].PData <> nil) then
-			Move(Items[Index].PData^, ItemAddr^, ItemSize)
-		else
-			FillChar(ItemAddr^, ItemSize, 0);
-{	end
+	if (ItemAddr <> nil) and (ItemSize <> 0) then
+	if (Index >= 0) and (Items[Index].PData <> nil) then
+		Move(ItemAddr^, Items[Index].PData^, ItemSize);
+	Index := I;
+	if (ItemAddr <> nil) and (ItemSize <> 0) then
+	if (Index >= 0) and (Items[Index].PData <> nil) then
+		Move(Items[Index].PData^, ItemAddr^, ItemSize)
 	else
-		IE(3543);}
+		FillChar(ItemAddr^, ItemSize, 0);
 end;
 
 procedure TKinds.KindNewFile(Sender: TObject; FileName: string = ''; CallNewFile: BG = True);
@@ -915,9 +910,7 @@ begin
 			Items[Index].ModificationTime := GetTickCount;
 			KindInit;
 		end
-	end
-	{$ifopt d+}else
-		IE(546){$endif};
+	end;
 end;
 
 procedure TKinds.Unchange;
@@ -929,9 +922,7 @@ begin
 			Items[Index].Changed := False;
 			KindInit;
 		end
-	end
-	{$ifopt d+}else
-		IE(546){$endif};
+	end;
 end;
 
 procedure TKinds.Open1Click(Sender: TObject);
@@ -1081,6 +1072,6 @@ end;
 
 {$ifopt d+}
 initialization
-	CheckSize(SizeOf(TItem));
+	CheckExpSize(SizeOf(TItem));
 {$endif}
 end.

@@ -17,7 +17,7 @@ uses
 
 type
 	TfFileExt = class(TDForm)
-    DViewFE: TDView;
+    DViewFileExtensions: TDView;
 		PopupMenuFE: TPopupMenu;
 		Register1: TMenuItem;
 		Unregister1: TMenuItem;
@@ -28,10 +28,12 @@ type
     procedure FormCreate(Sender: TObject);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 		procedure PopupMenuFEPopup(Sender: TObject);
-		procedure DViewFEGetData(Sender: TObject; var Data: String; ColIndex,
+		procedure DViewFileExtensionsGetData(Sender: TObject; var Data: String; ColIndex,
       RowIndex: Integer; Rect: TRect);
 	private
 		{ Private declarations }
+		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
+			ARect: TRect; State: TOwnerDrawState);
 		procedure Init(Sender: TObject);
 	public
 		{ Public declarations }
@@ -56,7 +58,7 @@ type
 		FileType, FileTypeCaption, Icon: string; // 12
 		Exists: B4;
 		MenuCaptions: array of ShortString; // 4
-		OpenPrograms: array of ShortString // 8
+		OpenPrograms: array of ShortString // 4
 	end;
 var
 	FileTypes: array of TFileType;
@@ -67,7 +69,7 @@ var
 procedure FormFileExt;
 begin
 	if not Assigned(fFileExt) then fFileExt := TfFileExt.Create(nil);
-	fFileExt.DViewFE.RowCount := FileTypeCount;
+	fFileExt.DViewFileExtensions.RowCount := FileTypeCount;
 	fFileExt.Init(nil);
 	fFileExt.Show;
 end;
@@ -117,7 +119,7 @@ begin
 	Tg := TComponent(Sender).Tag;
 	for i := 0 to FileTypeCount - 1 do
 	begin
-		if (Tg >= 2) or (DViewFE.SelRows[i]) then
+		if (Tg >= 2) or (DViewFileExtensions.SelRows[i]) then
 			CustomFileType(
 				TFileTypesOperation(Tg and 1),
 				FileTypes[i].FileType,
@@ -127,26 +129,32 @@ begin
 				FileTypes[i].OpenPrograms);
 	end;
 	Init(Sender);
-	DViewFE.Fill;
+	DViewFileExtensions.Fill;
+end;
+
+procedure TfFileExt.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
+	ARect: TRect; State: TOwnerDrawState);
+begin
+	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
 end;
 
 procedure TfFileExt.FormCreate(Sender: TObject);
 begin
-//	MenuSet(PopupMenuFE, OnAdvancedMenuDraw); D???
-	DViewFE.ColumnCount := 2;
-	DViewFE.Columns[0].Caption := 'Extension';
-	DViewFE.Columns[0].Width := 64;
-	DViewFE.Columns[1].Caption := 'Description';
-	DViewFE.Columns[1].Width := 256;
+	MenuSet(PopupMenuFE, AdvancedDraw);
+	DViewFileExtensions.ColumnCount := 2;
+	DViewFileExtensions.Columns[0].Caption := 'Extension';
+	DViewFileExtensions.Columns[0].Width := DViewFileExtensions.Bitmap.Canvas.TextWidth('www') + CellBorder;
+	DViewFileExtensions.Columns[1].Caption := 'Description';
+	DViewFileExtensions.Columns[1].Width := DViewFileExtensions.Width - DViewFileExtensions.Columns[0].Width;
 
 	MainIni.RWFormPos(Self, False);
-	MainIni.RWDView(DViewFE, False);
+	MainIni.RWDView(DViewFileExtensions, False);
 end;
 
 procedure TfFileExt.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
 	MainIni.RWFormPos(Self, True);
-	MainIni.RWDView(DViewFE, True);
+	MainIni.RWDView(DViewFileExtensions, True);
 end;
 
 procedure TfFileExt.PopupMenuFEPopup(Sender: TObject);
@@ -154,7 +162,7 @@ var
 	i: SG;
 	C, E: BG;
 begin
-	i := DViewFE.ActualRow;
+	i := DViewFileExtensions.ActualRow;
 	if (i >= 0) and (i < FileTypeCount) then
 	begin
 		C := FileTypes[i].Exists;
@@ -171,13 +179,13 @@ begin
 	Unregister1.Checked := not C;
 end;
 
-procedure TfFileExt.DViewFEGetData(Sender: TObject; var Data: String;
+procedure TfFileExt.DViewFileExtensionsGetData(Sender: TObject; var Data: String;
   ColIndex, RowIndex: Integer; Rect: TRect);
 begin
 	if FileTypes[RowIndex].Exists then
-		DViewFE.Bitmap.Canvas.Font.Style := []
+		DViewFileExtensions.Bitmap.Canvas.Font.Style := []
 	else
-		DViewFE.Bitmap.Canvas.Font.Style := [fsStrikeOut];
+		DViewFileExtensions.Bitmap.Canvas.Font.Style := [fsStrikeOut];
 	case ColIndex of
 	0: Data := FileTypes[RowIndex].FileType;
 	1: Data := FileTypes[RowIndex].FileTypeCaption;

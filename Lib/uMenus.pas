@@ -46,13 +46,12 @@ type
 			message WM_DISPLAYCHANGE;
 	end;
 }
-function TryFindIcon(Name: string; Path: string): string;
-procedure ImgAdd(Bitmap: TBitmap; Name: string);
+function TryFindIcon(Name: string; const Path: string): string;
+procedure ImgAdd(Bitmap: TBitmap; const Name: string);
 procedure ComName(MenuItem: TMenuItem);
 
-function ComponentName(Name: string): string;
-function MenuNameToFileName(Name: string): string;
-function ButtonNameToFileName(Name: string; const Space: Boolean): string;
+function ComponentName(const Name: string): string;
+function ButtonNameToFileName(const Name: string): string;
 
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
@@ -61,7 +60,7 @@ procedure MenuCreate(Src: TMenuItem; Dsc: TMenuItem);
 procedure MenuFree(Src: TMenuItem);
 procedure MenuUpdate(Src: TMenuItem; Dsc: TMenuItem);
 
-procedure MenuClick(Menu: TMenuItem);
+//procedure MenuClick(Menu: TMenuItem);
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 
@@ -69,12 +68,13 @@ procedure IconsFromMenu(Menu: TComponent; Panel: TPanel);
 procedure UpdateIcons(Menu: TComponent; Panel: TPanel);
 procedure IconsResize(PanelTool: TPanel);
 
+procedure FormatCaption(M: TMenuItem; Value: SG; AsTime: BG = False; Bullet: BG = False; Suffix: BG = True);
 
 implementation
 
 uses
 	Forms, Controls, ImgList, SysUtils,
-	uDButton, uStrings,
+	uDButton, uStrings, uFormat,
 	uGraph, uDBitmap, uScreen, uFiles, uError, uAPI, uMath, uParser;
 
 var ImageList: TCustomImageList;
@@ -84,7 +84,7 @@ begin
 	if not Assigned(ImageList) then ImageList := TCustomImageList.CreateSize(16, 16);
 end;
 
-function TryFindIcon(Name: string; Path: string): string;
+function TryFindIcon(Name: string; const Path: string): string;
 label LAbort;
 var
 	k: SG;
@@ -116,7 +116,7 @@ begin
 	LAbort:
 end;
 
-procedure ImgAdd(Bitmap: TBitmap; Name: string);
+procedure ImgAdd(Bitmap: TBitmap; const Name: string);
 var
 	Bmp: TDBitmap;
 //		Quality: SG;
@@ -131,14 +131,7 @@ begin
 		begin
 			Bmp := TDBitmap.Create;
 			Bmp.LoadFromFile(FileName);
-
 	//			MenuItem.Bitmap.PixelFormat := pf24bit;
-			{$ifopt d+}
-			if Bitmap = nil then
-			begin
-				Exit;
-			end;
-			{$endif}
 			Bitmap.Height := 0;
 			Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
 			Bitmap.Height := 16;
@@ -152,63 +145,28 @@ begin
 	end;
 end;
 
-function ComponentName(Name: string): string;
+function ComponentName(const Name: string): string;
 var i: SG;
 begin
+	Result := Name;
 	i := 1;
-	while i <= Length(Name) do
+	while i <= Length(Result) do
 	begin
-		if not (CharsTable[Name[i]] in [ctLetter, ctNumber]) then
-			Delete(Name, i, 1)
+		if not (CharsTable[Result[i]] in [ctLetter, ctNumber]) then
+			Delete(Result, i, 1)
 		else
 			Inc(i);
 	end;
-	if Name = '' then
-		Name := 'N'
+	if Result = '' then
+		Result := 'N'
 	else
 	begin
-		if CharsTable[Name[1]] <> ctLetter then
-			Name := 'N' + Name;
-	end;
-	Result := Name;
-end;
-
-function MenuNameToFileName(Name: string): string;
-var
-	Index, i: SG;
-const
-	Names: array[0..0] of string = ('MENU');
-begin
-	Result := Name;
-	for i := 0 to Length(Names) - 1 do
-	begin
-		Index := Pos(Names[i], UpperCase(Result));
-		if Index = 1 then
-		begin
-			Delete(Result, Index, Length(Names[i]));
-			Break;
-		end;
-	end;
-
-	while Length(Result) > 0 do
-	begin
-		case Result[Length(Result)] of
-		'0'..'9':
-		begin
-			SetLength(Result, Length(Result) - 1);
-		end;
-		'_':
-		begin
-			SetLength(Result, Length(Result) - 1);
-			Break;
-		end
-		else
-			Break;
-		end;
+		if CharsTable[Result[1]] <> ctLetter then
+			Result := 'N' + Result;
 	end;
 end;
 
-function ButtonNameToFileName(Name: string; const Space: Boolean): string;
+function ButtonNameToFileName(const Name: string): string;
 label LDel;
 var
 	Index, i: SG;
@@ -230,34 +188,13 @@ begin
 	end;
 
 	if Found = False then
-	while Length(Result) > 0 do
-	begin
-		case Result[Length(Result)] of
-		'0'..'9':
-		begin
-			SetLength(Result, Length(Result) - 1);
-		end;
-		'_':
-		begin
-			SetLength(Result, Length(Result) - 1);
-			Break;
-		end
-		else
-			Break;
-		end;
-	end;
-
-	if Space then
-		for Index := 2 to Length(Result) do
-			if Result[Index] in ['A'..'Z'] then
-				if Result[Index - 1] in ['a'..'z'] then
-					Insert(' ', Result, Index);
+		Result := DeleteLastNumber(Result);
 end;
 
 procedure ComName(MenuItem: TMenuItem);
 begin
 	if (MenuItem.Bitmap.Width = 0) and (MenuItem.ImageIndex = -1) then
-		ImgAdd(MenuItem.Bitmap, MenuNameToFileName(MenuItem.Name));
+		ImgAdd(MenuItem.Bitmap, DeleteLastNumber(MenuItem.Name));
 end;
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
@@ -265,6 +202,7 @@ var
 	i, c: SG;
 	M: TMenuItem;
 begin
+//	{$ifopt d+}Exit;{$endif}
 	CreateImg;
 
 	if (Menu is TMenu) or (Menu is TPopupMenu) then
@@ -317,6 +255,8 @@ begin
 			M.Name := Src[i].Name + '1';
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
+		M.GroupIndex := Src[i].GroupIndex;
+		M.RadioItem := Src[i].RadioItem;
 		M.Tag := Src[i].Tag;
 		M.ShortCut := Src[i].ShortCut;
 		M.OnClick := Src[i].OnClick;
@@ -381,10 +321,20 @@ begin
 		Dec(c);
 	end;
 end;
-
+{
 procedure MenuClick(Menu: TMenuItem);
 begin
 	Menu.Checked := not Menu.Checked;
+end;}
+
+var
+	BmpCheck: TBitmap;
+
+procedure LoadBmpCheck;
+begin
+	BmpCheck := TBitmap.Create;
+	BmpCheck.Transparent := True;
+	BmpCheck.Handle := LoadBitmap(0, PChar(OBM_CHECK));
 end;
 
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
@@ -402,7 +352,6 @@ var
 	s: string;
 	X, Y: Integer;
 
-	Glyph: TBitmap;
 	TopLevel: Boolean;
 	MenuIndex, MenuCount: Integer;
 	MenuB: Boolean;
@@ -453,7 +402,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-				gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
+			gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
 		end
 		else
 		begin
@@ -520,11 +469,9 @@ begin
 				end
 				else
 				begin
-					MenuBmp.GenerateRGBEx(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
-						gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+					MenuBmp.GenerateRGBEx(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 				end;
-				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-					DepthColor(1), DepthColor(3), 1, ef16);
+				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, DepthColor(1), DepthColor(3), 1, ef16);
 			end
 			else
 			begin
@@ -538,12 +485,10 @@ begin
 				Co[3] := Co[1];
 				if ScreenBits <= 11 then
 				begin
-					MenuBmp.Bar(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-						clHighLight, ef16);
+					MenuBmp.Bar(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clHighLight, ef16);
 				end
 				else
-					MenuBmp.GenerateRGBEx(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-						gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
+					MenuBmp.GenerateRGBEx(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
 			end;
 		end
 		else
@@ -577,15 +522,13 @@ begin
 			if (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
-				MenuBmp.Bar(1, Y + 1, 1 + 15, Y + 1 + 15,
-					DepthColor(1), ef08);
+				MenuBmp.Bar(1, Y + 1, 1 + 15, Y + 1 + 15, DepthColor(1), ef08);
 				BmpWid := 16;
 			end;
 		end;
 
 		MenuB := False;
-		if (MenuItem.ImageIndex >= 0) and Assigned(ImageList)
-		and (TopLevel = False) then
+		if (MenuItem.ImageIndex >= 0) and Assigned(ImageList) and (TopLevel = False) then
 		begin
 			Bmp := TDBitmap.Create;
 			BmpWid := 16;
@@ -607,8 +550,7 @@ begin
 			if (TopLevel = False) and (MenuItem.Checked = False) and (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
-				MenuBmp.Border(0, Y, 17 + 1, Y + 17 + 1,
-					DepthColor(3), DepthColor(1), 1, ef16);
+				MenuBmp.Border(0, Y, 17 + 1, Y + 17 + 1, DepthColor(3), DepthColor(1), 1, ef16);
 			end;
 			MenuB := True;
 		end
@@ -644,18 +586,23 @@ begin
 		end
 		else
 		begin
-			if MenuItem.Checked then
+			if MenuItem.RadioItem then
 			begin
-				Glyph := TBitmap.Create;
-				try
-					Glyph.Transparent := True;
-					Glyph.Handle := LoadBitmap(0, PChar(OBM_CHECK));
-					MenuBmp.Canvas.Font.Color := clBtnText;
-					MenuBmp.Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, Glyph);
-					DeleteObject(Glyph.Handle);
-				finally
-					Glyph.Free;
-				end;
+				MenuBmp.Canvas.Pen.Color := clWindowText;
+				MenuBmp.Canvas.Brush.Color := clWindowText;
+				if MenuItem.Checked then
+					MenuBmp.Canvas.Brush.Style := bsSolid
+				else
+					MenuBmp.Canvas.Brush.Style := bsClear;
+
+				MenuBmp.Canvas.Ellipse(7, 7, ARect.Bottom - ARect.Top - 7, ARect.Bottom - ARect.Top - 7);
+			end
+			else if MenuItem.Checked then
+			begin
+				if BmpCheck = nil then
+					LoadBmpCheck;
+//				MenuBmp.Canvas.Font.Color := clBtnText;
+				MenuBmp.Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, BmpCheck);
 				MenuB := True;
 			end;
 		end;
@@ -759,6 +706,7 @@ end;
 }
 const
 	BevelWidth = 7;
+	IconSuffix = 'I';
 
 var
 	IconX, IconY: SG;
@@ -802,9 +750,9 @@ begin
 			and (M.Name <> 'Register1') and (M.Name <> 'Unregister1') and (M.Name <> 'Delete1')
 			and (M.Name <> 'Logo1') and (M.Name <> 'PrinterSetup1') and (M.Name <> 'FileExtensions1') then
 			begin
-				Name := M.Name + 'Icon1';
-				if Panel.FindComponent(Name) <> nil then
-					Name := M.Name + 'Icon2';
+				Name := M.Name + IconSuffix;
+{				if Panel.FindComponent(Name) <> nil then
+					Name := M.Name + 'Icon2';}
 				B := TDButton.Create(Panel);
 				B.Name := Name;
 
@@ -813,10 +761,7 @@ begin
 				B.Hint := DelCharsF(M.Caption, '&');
 				if M.Shortcut <> 0 then
 					B.Hint := B.Hint + ' (' + KeyToStr(M.Shortcut) + ')';
-				B.Width := IconSize;
-				B.Height := IconSize;
-				B.Left := IconX;
-				B.Top := IconY;
+				B.SetBounds(IconX, IconY, IconSize, IconSize);
 				B.Color := Panel.Color;
 				B.Highlight := hlNone;
 				B.Tag := M.Tag;
@@ -836,10 +781,7 @@ begin
 	begin
 		Bevel := TBevel.Create(Panel);
 		Bevel.Name := Menu.Name + 'Bevel';
-		Bevel.Width := BevelWidth;
-		Bevel.Height := IconSize;
-		Bevel.Left := IconX + (BevelWidth - Bevel.Width + 1) div 2;
-		Bevel.Top := IconY;
+		Bevel.SetBounds(IconX + (BevelWidth - Bevel.Width + 1) div 2, IconY, BevelWidth, IconSize);
 		Bevel.Shape := bsLeftLine;
 		Inc(IconX, BevelWidth);
 		if IconX >= Panel.Width - 4 * IconSize then
@@ -908,7 +850,7 @@ begin
 	for i := 0 to Panel.ControlCount - 1 do
 	begin
 		C := Panel.Controls[i];
-		M := FindMenuItem(Menu, Copy(C.Name, 1, Length(C.Name) - 5));
+		M := FindMenuItem(Menu, Copy(C.Name, 1, Length(C.Name) - Length(IconSuffix)));
 		if M <> nil then
 		begin
 			C.Enabled := M.Enabled;
@@ -920,6 +862,7 @@ end;
 procedure IconsResize(PanelTool: TPanel);
 var
 	i, x, y: SG;
+	C: TControl;
 begin
 	x := 0;
 	y := 0;
@@ -928,10 +871,8 @@ begin
 		if (TControl(PanelTool.Components[i]).Left <> x) or
 		(TControl(PanelTool.Components[i]).Top <> y) then
 		begin
-//			TControl(PanelTool.Components[i]).Visible := False;
-			TControl(PanelTool.Components[i]).Top := y;
-			TControl(PanelTool.Components[i]).Left := x;
-//			TControl(PanelTool.Components[i]).Visible := True;
+			C := TControl(PanelTool.Components[i]);
+			C.SetBounds(x, y, C.Width, C.Height);
 		end;
 
 		if x + TControl(PanelTool.Components[i]).Width + IconSize > PanelTool.Width then
@@ -944,4 +885,30 @@ begin
 	end;
 end;
 
+procedure FormatCaption(M: TMenuItem; Value: SG; AsTime: BG = False; Bullet: BG = False; Suffix: BG = True);
+var Result: string;
+begin
+	if Bullet then
+		Result := '|- '
+	else
+		Result := '';
+	Result := Result + AddSpace(DeleteLastNumber(M.Name)) + ' (';
+	if AsTime then
+		Result := Result + MsToStr(Value, True, diSD, 3, False)
+	else
+		Result := Result + NToS(Value);
+
+	Result := Result + ')';
+	if Suffix then Result := Result + cDialogSuffix;
+
+	M.Caption := Result;
+//	M.Checked := Value <> 0;
+end;
+
+initialization
+
+finalization
+	if Assigned(BmpCheck) then
+		DeleteObject(BmpCheck.Handle);
+	FreeAndNil(BmpCheck);
 end.

@@ -221,7 +221,7 @@ procedure TTree.TreeAdd(P: TPrvek);
 		end
 		else
 		begin
-			// Yet not exists D???
+			// Yet not exists
 		end;
 	end;
 

@@ -377,10 +377,10 @@ begin
 			SysInfo.CPUStr := '            '; // 12 spaces
 			asm
 			pushad
-			mov eax, 0
-			mov ebx, 0
-			mov ecx, 0
-			mov edx, 0
+			xor eax, eax
+			xor ebx, ebx
+			xor ecx, ecx
+			xor edx, edx
 			dw 0a20fh // cpuid
 			mov eax, SysInfo
 			add eax, 5
@@ -389,9 +389,9 @@ begin
 			mov [eax+8], ecx
 
 			mov eax, 1
-			mov ebx, 0
-			mov ecx, 0
-			mov edx, 0
+			xor ebx, ebx
+			xor ecx, ecx
+			xor edx, edx
 			dw 0a20fh // cpuid
 
 			mov edx, SysInfo
@@ -476,7 +476,7 @@ begin
 		ReadScreenModes;
 	end;
 	SInfo.Graph := DriverDesc;}
-end;         *)
+end; *)
 
 procedure FillDynamicInfo(var SysInfo: TSysInfo);
 begin
@@ -494,6 +494,25 @@ begin
 	FillDynamicInfo(GSysInfo);
 
 	EditOS.Text := OSToStr(GSysInfo.OS);
+
+{
+function GetCpuSpeed: string;
+var
+	Reg: TRegistry;
+begin
+	Reg := TRegistry.Create;
+try
+	Reg.RootKey := HKEY_LOCAL_MACHINE;
+	if Reg.OpenKey('Hardware\Description\System\CentralProcessor\0', False) then
+	begin
+		Result := IntToStr(Reg.ReadInteger('~MHz')) + ' MHz';
+		Reg.CloseKey;
+	end;
+	finally
+		Reg.Free;
+	end;
+end;
+}
 
 	Family := GSysInfo.CPU and $00000f00 shr 8;
 	Model := GSysInfo.CPU and $000000f0 shr 4;

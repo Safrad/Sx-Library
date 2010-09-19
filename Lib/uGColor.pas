@@ -70,19 +70,19 @@ type
 		ImageL: TDImage;
     PanelNowBitColor: TDButton;
     PanelDefaultColor: TDButton;
-		LabelNow: TDLabel;
-		LabelNowXBit: TDLabel;
-		LabelDefault: TDLabel;
-		LabelCurrent: TDLabel;
+    LabelNow: TLabel;
+    LabelNowXBit: TLabel;
+    LabelDefault: TLabel;
+    LabelCurrent: TLabel;
 		Bevel2: TBevel;
 		ImageList1: TImageList;
     BevelBasicColors: TBevel;
     ShapeBorder: TShape;
 		ComboBoxBitDepth: TComboBox;
-    DLabelH: TDLabel;
+    LabelH: TDLabel;
     EditL: TEdit;
-    DLabelS: TDLabel;
-    DLabelL: TDLabel;
+    LabelS: TDLabel;
+    LabelL: TDLabel;
     PanelR: TPanel;
 		ImageR: TDImage;
     PanelG: TPanel;
@@ -93,6 +93,8 @@ type
     PanelS: TPanel;
     ImageS: TDImage;
     ComboBoxNF: TComboBox;
+    EditRGBA: TEdit;
+    LabelRGB: TLabel;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure PanelCurColorClick(Sender: TObject);
@@ -119,7 +121,7 @@ type
 
 		NumericPref: string;
 		FNowColor: TColor;
-		NowRGB: TRColor;
+		NowRGB: TRGBA;
 		NowHLS: THLSColor;
 		PanelColor: array[0..MaxColor] of TPanel;
 
@@ -129,7 +131,7 @@ type
 		procedure ChangeColor;
 		procedure InitAll;
 		procedure SetNowColor(Color: TColor);
-		procedure SetNowRGB(Color: TRColor);
+		procedure SetNowRGB(Color: TRGBA);
 		procedure SetNowHLS(HLS: THLSColor);
 
 		procedure PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -171,57 +173,53 @@ const
 var
 	fGColor: TfGColor;
 
-function IntToColor(const i: Integer): TRColor;
+function IntToColor(const i: Integer): TRGBA;
 var
-	C: TRColor;
 	a: Integer;
 begin
+	case i of
+	0..23:
+	begin
+		Result.L := SpectrumColor(255 * (i mod 12) div 2);
+		if i > 11 then
+		begin
+			Result.R := (Result.R + 1) div 2;
+			Result.G := (Result.G + 1) div 2;
+			Result.B := (Result.B + 1) div 2;
+		end;
+	end;
+	24:
+		Result.L := 0;
+	25..31:
+	begin
+		a := 256 * (i - 23) div 8;
+		if a > 255 then a := 255;
+		Result.R := a;
+		Result.G := Result.R;
+		Result.B := Result.R;
+		Result.A := 0;
+	end;
+	32..35:
+	begin
 		case i of
-		0..23:
-		begin
-			C.L := SpectrumColor(255 * (i mod 12) div 2);
-			if i > 11 then
-			begin
-				C.R := (C.R + 1) div 2;
-				C.G := (C.G + 1) div 2;
-				C.B := (C.B + 1) div 2;
-			end;
+		32: Result.L := clMoneyGreen;
+		33: Result.L := clSkyBlue;
+		34: Result.L := clCream;
+		35: Result.L := clMedGray;
 		end;
-		24:
-			C.L := 0;
-		25..31:
-		begin
-			a := 256 * (i - 23) div 8;
-			if a > 255 then a := 255;
-			C.R := a;
-			C.G := C.R;
-			C.B := C.R;
-			C.A := 0;
-		end;
-		32..35:
-		begin
-			case i of
-			32: C.L := clMoneyGreen;
-			33: C.L := clSkyBlue;
-			34: C.L := clCream;
-			35: C.L := clMedGray;
-			end;
-		end;
-		end;
-		Result := C;
+	end;
+	end;
 end;
 
 function AbsoluteColor(C: TColor): TColor;
 var
-	RC: TRColor;
 	CA: array[0..2] of Byte;
 	i: Integer;
 begin
-	RC.L := ColorToRGB(C) and $00ffffff;
-	Result := RC.L;
-	CA[0] := RC.R;
-	CA[1] := RC.G;
-	CA[2] := RC.B;
+	Result := ColorToRGB(C) and $00ffffff;
+	CA[0] := TRGBA(Result).R;
+	CA[1] := TRGBA(Result).G;
+	CA[2] := TRGBA(Result).B;
 	for i := 0 to 2 do
 	begin
 		if (CA[i] >= CA[(i + 1) mod 3]) and (CA[i] >= CA[(i + 2) mod 3]) then
@@ -235,9 +233,9 @@ begin
 				CA[(i + 1) mod 3] := 255 * CA[(i + 1) mod 3] div CA[i];
 				CA[(i + 2) mod 3] := 255 * CA[(i + 2) mod 3] div CA[i];
 				CA[i] := 255;
-				TRColor(Result).R := CA[0];
-				TRColor(Result).G := CA[1];
-				TRColor(Result).B := CA[2];
+				TRGBA(Result).R := CA[0];
+				TRGBA(Result).G := CA[1];
+				TRGBA(Result).B := CA[2];
 			end;
 			Break;
 		end;
@@ -259,9 +257,9 @@ begin
 	for i := 0 to 15 do
 	begin
 		Dif :=
-			Abs(TRColor(VGAColors[i]).R - TRColor(C).R) +
-			Abs(TRColor(VGAColors[i]).G - TRColor(C).G) +
-			Abs(TRColor(VGAColors[i]).B - TRColor(C).B);
+			Abs(TRGBA(VGAColors[i]).R - TRGBA(C).R) +
+			Abs(TRGBA(VGAColors[i]).G - TRGBA(C).G) +
+			Abs(TRGBA(VGAColors[i]).B - TRGBA(C).B);
 		if Dif <= BestDif then
 		begin
 			Result := VGAColors[i];
@@ -270,7 +268,7 @@ begin
 	end;
 end;
 
-function BitColor(const C: TRColor; const Bits: Byte): TRColor;
+function BitColor(const C: TRGBA; const Bits: Byte): TRGBA;
 begin
 	Result.A := 0;
 	case Bits of
@@ -302,22 +300,20 @@ begin
 	end;
 end;
 
+procedure CreateBox(const i, L, T: SG);
+begin
+	fGColor.PanelColor[i].BevelOuter := bvNone;
+	fGColor.PanelColor[i].BorderStyle := bsSingle;
+	fGColor.PanelColor[i].SetBounds(L, T, 16, 16);
+	fGColor.PanelColor[i].Tag := i;
+	fGColor.PanelColor[i].OnMouseDown := fGColor.PanelColorMouseDown;
+	fGColor.PanelColor[i].OnMouseUp := fGColor.PanelColorMouseUp;
+	fGColor.PanelColor[i].OnMouseMove := fGColor.PanelColorMouseMove;
+end;
+
 function GetColor(const prompt: string;
 	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
-
-	procedure CreateBox(const i: Integer);
-	begin
-		fGColor.PanelColor[i].BevelOuter := bvNone;
-		fGColor.PanelColor[i].BorderStyle := bsSingle;
-		fGColor.PanelColor[i].Width := 16;
-		fGColor.PanelColor[i].Height := 16;
-		fGColor.PanelColor[i].Tag := i;
-		fGColor.PanelColor[i].OnMouseDown := fGColor.PanelColorMouseDown;
-		fGColor.PanelColor[i].OnMouseUp := fGColor.PanelColorMouseUp;
-		fGColor.PanelColor[i].OnMouseMove := fGColor.PanelColorMouseMove;
-	end;
-
-var i: Integer;
+var i, L, T: Integer;
 begin
 	if not Assigned(fGColor) then
 	begin
@@ -325,24 +321,24 @@ begin
 		for i := 0 to MaxColor do
 		begin
 			fGColor.PanelColor[i] := TPanel.Create(fGColor);
-			CreateBox(i);
 			case i of
 			0..23:
 			begin
-				fGColor.PanelColor[i].Left := fGColor.BevelBasicColors.Left + 8 + 20 * (i mod 12);
-				fGColor.PanelColor[i].Top := fGColor.BevelBasicColors.Top + 8 + 20 * (i div 12);
+				L  := 8 + 20 * (i mod 12);
+				T :=  8 + 20 * (i div 12);
 			end;
 			24..31:
 			begin
-				fGColor.PanelColor[i].Left := fGColor.BevelBasicColors.Left + 8 + 20 * (i - 24);
-				fGColor.PanelColor[i].Top := fGColor.BevelBasicColors.Top + 64 - 8;
+				L := 8 + 20 * (i - 24);
+				T := 64 - 8;
 			end;
-			32..35:
+			else // 32..35:
 			begin
-				fGColor.PanelColor[i].Left := fGColor.BevelBasicColors.Left + 8 + 20 * (i - 24);
-				fGColor.PanelColor[i].Top := fGColor.BevelBasicColors.Top + 64 - 8;
+				L := 8 + 20 * (i - 24);
+				T := 64 - 8;
 			end;
 			end;
+			CreateBox(i, fGColor.BevelBasicColors.Left + L, fGColor.BevelBasicColors.Top + T);
 			fGColor.PanelColor[i].Color := IntToColor(i).L;
 			fGColor.InsertControl(fGColor.PanelColor[i]);
 		end;
@@ -390,7 +386,7 @@ const ABits: array[0..4] of Byte = (1, 4, 15, 18, 24);
 
 procedure TfGColor.InitReadOnly;
 var
-	C: TRColor;
+	C: TRGBA;
 	i: Integer;
 	Vis: Boolean;
 begin
@@ -414,8 +410,7 @@ begin
 		if C.L = IntToColor(I).L then
 		begin
 			Vis := True;
-			ShapeBorder.Left := PanelColor[i].Left - 2;
-			ShapeBorder.Top := PanelColor[i].Top - 2;
+			ShapeBorder.SetBounds(PanelColor[i].Left - 2, PanelColor[i].Top - 2, ShapeBorder.Width, ShapeBorder.Height);
 			Break;
 		end;
 	end;
@@ -429,20 +424,24 @@ begin
 	EditR.OnChange := nil;
 	EditG.OnChange := nil;
 	EditB.OnChange := nil;
+	EditRGBA.OnChange := nil;
 
 	if ComboBoxNF.ItemIndex = 1 then
 		NumericBase := 16;
 	EditR.Text := NumericPref + NToS(NowRGB.R);
 	EditG.Text := NumericPref + NToS(NowRGB.G);
 	EditB.Text := NumericPref + NToS(NowRGB.B);
+	EditRGBA.Text := NumericPref + NToS(NowRGB.L);
 	NumericBase := 10;
 	EditR.Repaint;
 	EditG.Repaint;
 	EditB.Repaint;
+	EditRGBA.Repaint;
 
 	EditR.OnChange := EditRGBAChange;
 	EditG.OnChange := EditRGBAChange;
 	EditB.OnChange := EditRGBAChange;
+	EditRGBA.OnChange := EditRGBAChange;
 end;
 
 procedure TfGColor.InitEditsHLS;
@@ -486,7 +485,7 @@ begin
 	NowHLS := RGBToHLS(NowRGB);
 end;
 
-procedure TfGColor.SetNowRGB(Color: TRColor);
+procedure TfGColor.SetNowRGB(Color: TRGBA);
 begin
 	NowRGB := Color;
 	FNowColor := NowRGB.L;
@@ -553,18 +552,18 @@ procedure TfGColor.TrackBarRGBAChange(Sender: TObject);
 begin
 	NowColor := ColorToRGB(TColor(NowColor)) and $00ffffff;
 	case TTrackBar(Sender).Tag of
-	0: TRColor(NowColor).R := TrackBarR.Position;
-	1: TRColor(NowColor).G := TrackBarG.Position;
-	2: TRColor(NowColor).B := TrackBarB.Position;
+	0: TRGBA(NowColor).R := TrackBarR.Position;
+	1: TRGBA(NowColor).G := TrackBarG.Position;
+	2: TRGBA(NowColor).B := TrackBarB.Position;
 	3:
 	begin
-		TRColor(NowColor).R := TrackBarA.Position;
-		TRColor(NowColor).G := TrackBarA.Position;
-		TRColor(NowColor).B := TrackBarA.Position;
+		TRGBA(NowColor).R := TrackBarA.Position;
+		TRGBA(NowColor).G := TrackBarA.Position;
+		TRGBA(NowColor).B := TrackBarA.Position;
 	end;
 	end;
-	NowHLS := RGBToHLS(TRColor(NowColor));
-//	NowHSV := RGBToHSV(TRColor(NowColor));
+	NowHLS := RGBToHLS(TRGBA(NowColor));
+//	NowHSV := RGBToHSV(TRGBA(NowColor));
 	InitReadOnly;
 	ChangeLightC;
 //	InitTrackBar;
@@ -631,6 +630,7 @@ end;
 procedure TfGColor.EditRGBAChange(Sender: TObject);
 begin
 	case TEdit(Sender).Tag of
+	-1: NowRGB.L := StrToValI(TEdit(Sender).Text, True, MinInt, NowRGB.L, MaxInt, 1);
 	0: NowRGB.R := StrToValU1(TEdit(Sender).Text, True, NowRGB.R);
 	1: NowRGB.G := StrToValU1(TEdit(Sender).Text, True, NowRGB.G);
 	2: NowRGB.B := StrToValU1(TEdit(Sender).Text, True, NowRGB.B);
@@ -723,7 +723,7 @@ var
 	BmpD: TDBitmap;
 	i: Integer;
 	B: U1;
-	C: TRColor;
+	C: TRGBA;
 	HLS: THLSColor;
 begin
 	BmpD := TDImage(Sender).Bitmap;
@@ -801,5 +801,3 @@ begin
 end;
 
 end.
-
-

@@ -48,7 +48,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uFiles, uDIni, uStrings;
+	uFiles, uDIni, uStrings, uMath;
 var
 	DayTipFile: TFileName;
 	TipIndex, TipCount: SG;
@@ -128,6 +128,7 @@ var
 	Line: string;
 	InLineIndex: SG;
 	s: string;
+	NewSize: SG;
 begin
 	Background := baGradient;
 
@@ -139,7 +140,9 @@ begin
 		while not F.Eof do
 		begin
 			F.Readln(Line);
-			SetLength(Tips, TipCount + 1);
+			NewSize := TipCount + 1;
+			if AllocByExp(Length(Tips), NewSize) then
+				SetLength(Tips, NewSize);
 			Tips[TipCount] := TStringList.Create;
 			InLineIndex := 1;
 			while InLineIndex < Length(Line) do

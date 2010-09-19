@@ -21,20 +21,13 @@ function FindIS(AIndex: array of SG; AValue: array of string;
 function FindS(AValue: array of string;
 	const Value: string; out FromV, ToV: SG): Boolean;
 
-function Find(SubStr, Str: string): SG; overload;
-function Find(SubStr, Str: string; FromPos: SG): SG; overload;
-function Find(SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
 (*
-{$ifopt d+}
 function FindBM(SubStr, Str: string): SG;
-{$endif}
+function FindKMP(SubStr, Str: string): SG;
+function Search(Pattern, Text: string; ErrorLen: SG = 0): SG; // 10x slower that Pos();
 *)
-function Search(Pattern, Text: string; ErrorLen: SG = 0): SG;
 
 implementation
-
-uses
-	Math;
 
 function FindS2(AValue: PArrayS2; var FromV, ToV: SG; const Value: S2; FindGroup: BG): Boolean;
 {$I Find.inc}
@@ -63,8 +56,7 @@ begin
 	{$ifopt d+}
 	for i := MinIndex to MaxIndex - 1 do
 	begin
-		if AValue[AIndex[i]] > AValue[AIndex[i]] then
-			CreateException;
+		Assert(AValue[AIndex[i]] <= AValue[AIndex[i]]);
 	end;
 	{$endif}
 
@@ -99,8 +91,7 @@ begin
 	{$ifopt d+}
 	for i := MinIndex to MaxIndex - 1 do
 	begin
-		if AValue[i] > AValue[i + 1] then
-			CreateException;
+		Assert(AValue[i] <= AValue[i + 1]);
 	end;
 	{$endif}
 
@@ -118,74 +109,8 @@ begin
 end;
 
 
-// Standard
-function Find(SubStr, Str: string): SG;
-begin
-	Result := Find(SubStr, Str, 1, Length(Str));
-end;
-
-function Find(SubStr, Str: string; FromPos: SG): SG;
-begin
-	Result := Find(SubStr, Str, FromPos, Length(Str));
-end;
-
-function Find(SubStr, Str: string; FromPos, ToPos: SG): SG;
-label LNFound;
-var
-	i, j: SG;
-	Dir: SG;
-begin
-	Result := 0;
-	// Check parameters
-	if Length(Str) = 0 then Exit;
-	if Length(SubStr) = 0 then Exit;
-	if Length(SubStr) > Length(Str) then Exit;
-
-	if FromPos < 1 then FromPos := 1;
-	if ToPos < 1 then ToPos := 1;
-
-	if FromPos = ToPos then
-		Dir := 0
-	else if FromPos > ToPos then
-	begin
-		Dir := -1;
-		if FromPos > Length(Str) - Length(SubStr) + 1 then FromPos := Length(Str) - Length(SubStr) + 1;
-		if FromPos <= ToPos  then
-		begin
-			FromPos := ToPos;
-			Dir := 0;
-		end
-		else
-			Dec(ToPos);
-	end
-	else // if FromPos < ToPos then
-	begin
-		Dir := 1;
-		if ToPos > Length(Str) - Length(SubStr) + 1 then ToPos := Length(Str) - Length(SubStr) + 1;
-		if FromPos >= ToPos  then
-		begin
-			FromPos := ToPos;
-			Dir := 0;
-		end
-		else
-			Inc(ToPos);
-	end;
-
-	// Find D??? BM
-	i := FromPos;
-	repeat
-		for j := 1 to Length(SubStr) do
-			if  Str[i - 1 + j] <> SubStr[j] then goto LNFound;
-		Result := i;
-		Exit;
-		LNFound:
-		Inc(i, Dir);
-	until i = ToPos;
-end;
-
 
 (*
-{$ifopt d+}
 // Knuth, Morris, Pratt (KMP)
 function FindKMP(SubStr, Str: string): SG;
 label LNFound;
@@ -337,8 +262,7 @@ begin
 			j := j + Max(Fail1[Ord(Str[j])], Fail2[i]);
 	end;
 end;
-{$endif}
-*)
+
 function Search(Pattern, Text: string; ErrorLen: SG = 0): SG;
 const
 	Empty = $FFFFFFFFFFFFFFFF;
@@ -363,9 +287,7 @@ begin
 		begin
 			D[c] := D[c] shl 1;
 			if c <> Pattern[i] then
-				D[c] := D[c] or 1
-{			else
-				Nop};
+				D[c] := D[c] or 1;
 		end;
 	end;
 
@@ -398,5 +320,6 @@ begin
 
 	end;
 end;
+*)
 
 end.

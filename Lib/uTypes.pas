@@ -9,19 +9,21 @@
 unit uTypes;
 
 interface
-// Delphi <= 5
+
 const
-	MyName = 'Safranek David (Safrad)';
+	MyName = 'David Safranek (Safrad)';
 	MyEMail = 'safrad at email.cz';
 	MyWeb = 'http://safrad.webzdarma.cz';
 
+// Delphi <= 5
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
+//
 
 type
-	SG = Integer; // LongInt for Delphi 6
-	UG = Cardinal; // LongWord for Delphi 6
+	SG = Integer; // LongInt for 32bit Delphi
+	UG = Cardinal; // LongWord for 32bit Delphi
 	S1 = ShortInt;
 	U1 = Byte;
 	S2 = SmallInt;
@@ -128,22 +130,6 @@ type
 		3: (
 			A: U8);
 	end;
-{ S8 = record
-		case Integer of
-		0: (
-			LowPart: U4;
-			HighPart: S4);
-		1: (
-			QuadPart: Int64);
-	end; overload;
-	U8 = record
-		case Integer of
-		0: (
-			LowPart: U4;
-			HighPart: U4);
-		1: (
-			QuadPart: Int64);
-	end;}
 
 	FG = Real; // Double for Delphi 6
 	F4 = Single;
@@ -166,7 +152,6 @@ type
 	B2 = WordBool; // $0000 / $FFFF
 	B4 = LongBool; // $0000 / $FFFFFFFF
 
-//	TArrayU1 = array[0..1024 * 1024 * 1024 - 1] of Byte;
 	TArrayS1 = array[0..1024 * 1024 * 1024 - 1] of S1;
 	PArrayS1 = ^TArrayS1;
 	TArrayU1 = array[0..1024 * 1024 * 1024 - 1] of U1;
@@ -194,25 +179,17 @@ type
 
 	TIndex = SG;
 
-//	string = string;
 // Time
 const
 	Second = 1000;
 	Minute = 60 * Second;
 	Hour = 60 * Minute;
 	Day = 24 * Hour;
+
 // Graphics
 const
 	MaxSpectrum = 1529;
 type
-{	PRColor = ^TRColor;
-	TRColor = packed record // RGBA=4
-		case Integer of
-		0: (L: -$7FFFFFFF - 1..$7FFFFFFF);
-		1: (R, G, B, A: Byte);
-		2: (RG, BA: Word);
-	end;}
-
 	PRGB = ^TRGB;
 	TRGB = packed record // RGB=3
 		case Integer of
@@ -228,25 +205,7 @@ type
 		2: (I: array[0..3] of U1);
 		3: (RG, BA: U2);
 	end;
-	// 4 byte for CPU
-//	PRColor = PRGBA;
-	TRColor = TRGBA;
 
-	{	THSVColor = packed record // 4
-		case Integer of
-		0:
-		(
-		H: -1..MaxSpectrum; // 2
-		S: 0..239; // 1
-		V: 0..255; // 1
-		);
-		1:
-		(
-		Hue: 0..MaxSpectrum; // 2
-		Saturation: 0..239; // 1
-		Value: 0..255; // 1
-		);
-	end;}
 	THLSColor = packed record // 4
 {		case Integer of
 		0:
@@ -262,32 +221,9 @@ type
 		);*)
 	end;
 
-
 const
 	MinInt = Low(Integer);
-{	MinInt64 = Low(Int64);
-	MaxInt64 = Int64($7FFFFFFFFFFFFFFF);}
-
-{$ifopt d+}
-procedure Nop;
-procedure CreateException;
-{$endif}
 
 implementation
-
-{$ifopt d+}
-procedure Nop;
-asm
-	nop
-end;
-
-procedure CreateException;
-begin
-	asm
-	mov eax, $ffffffff
-	call eax
-	end;
-end;
-{$endif}
 
 end.

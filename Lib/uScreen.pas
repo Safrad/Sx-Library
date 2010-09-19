@@ -130,7 +130,7 @@ implementation
 {$R *.DFM}
 uses
 	Registry, Math, MMSystem,
-	uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput, uMem, uFormat, uSystem;
+	uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput, uFormat, uSystem;
 var
 	SndBeep: PWave;
 	First: Boolean;
@@ -882,7 +882,7 @@ begin
 				if LastModeIndex >= 0 then
 				if MessageD('Use mode ' + s + '?', mtConfirmation, [mbYes, mbNo]) <> mbYes then
 				begin
-{         SetScreenMode(StartWidth, StartHeight,
+{						SetScreenMode(StartWidth, StartHeight,
 						StartBits, StartRefreshRate,
 						False, False, False, True);
 					Sleep(100);}
@@ -1073,4 +1073,4 @@ finalization
 	begin
 		FreeMem(SndBeep); SndBeep := nil;
 	end;
-end.           
+end.

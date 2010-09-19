@@ -12,9 +12,7 @@ interface
 
 uses uTypes;
 
-// Mathematics
 const
-//	AngleCount = 512{16384}; // 2*pi 256; 65536 // 2^x 1.. D???
 	SinDiv = 32768; // 1.0 65536; // 1..128..1024*1024
 type
 	PAngle = ^TAngle;
@@ -22,11 +20,8 @@ type
 	PSinTable = ^TSinTable;
 	TSinTable = array[0..32767] of TAngle;
 
-function RGBToHLS(C: TRColor): THLSColor;
-function HLSToRGB(C: THLSColor): TRColor;
-//function RGBtoHSV(C: TRColor): THSVColor;
-//function HSVtoRGB(C: THSVColor): TRColor;
-function RColor(R, G, B: U1): TRColor;
+function RGBToHLS(C: TRGBA): THLSColor;
+function HLSToRGB(C: THLSColor): TRGBA;
 
 function Sgn(const I: S1): SG; overload;
 function Sgn(const I: S2): SG; overload;
@@ -36,7 +31,6 @@ function Sgn(const I: F4): SG; overload;
 function Sgn(const I: F8): SG; overload;
 function Sgn(const I: FA): SG; overload;
 function SgnMul(const Signum, Num: SG): SG;
-//function Min(const A, B: UG): UG;
 
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1);
@@ -48,7 +42,7 @@ procedure DivModU8(const Dividend: U8; const Divisor: U4;
 	out Res, Remainder: U4); pascal;
 procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
-function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
+function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: Extended): Extended;
 
 function FastSqrt(A: SG): SG;
@@ -64,8 +58,8 @@ function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 
-function Range(const Min, Cur, Max: Integer): Integer; overload;
-function Range(const Min, Cur, Max, Def: Integer): Integer; overload;
+function Range(const Min, Cur, Max: SG): SG; overload;
+function Range(const Min, Cur, Max, Def: SG): SG; overload;
 function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
 function Range(const Min, Cur, Max: FG): FG; overload;
 
@@ -83,6 +77,7 @@ procedure Exchange(var A, B: FA); register; overload;
 procedure Exchange(var A, B: Pointer); register; overload;
 procedure Exchange(var P0, P1; Count: Cardinal); register; overload;
 procedure Exchange(P0, P1: Pointer; Count: Cardinal); register; overload;
+procedure Exchange(var s0, s1: string); overload;
 
 function Arg(X, Y: Extended): Extended; overload;
 
@@ -94,13 +89,12 @@ procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
 procedure CheckBool(var Bool: LongBool); overload;
 
-procedure Order(var I1, I2: Integer); overload;
+procedure Order(var I1, I2: SG); overload;
 procedure Order(var I1, I2: Cardinal); overload;
 procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
-//procedure GetMem0(var P: Pointer; Size: Cardinal);
 procedure ReadMem(P: Pointer; Size: Cardinal);
-function SameData(P0, P1: Pointer; Size: Cardinal): Boolean;
+function SameData(P0, P1: Pointer; Size: Cardinal): BG;
 procedure FillU2(var Desc; Count: Cardinal; Value: U2);
 procedure FillU4(var Desc; Count: Cardinal; Value: U4);
 procedure FillOrderU4(var Desc; Size: Cardinal);
@@ -115,9 +109,13 @@ var
 
 procedure InitPerformanceCounter;
 function GetCPUCounter: TU8;
-function PerformanceCounter: Int64;
+function PerformanceCounter: U8;
 procedure Delay(const ms: LongWord);
-procedure DelayEx(const f: Int64);
+procedure DelayEx(const f: U8);
+
+function CalcShr(N: U4): S1;
+{$ifopt d+}procedure CheckExpSize(const Size: SG);{$endif}
+function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
 
 implementation
 
@@ -137,7 +135,6 @@ Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi:
 
 Zpìtný pøevod se provádí pomocí inverzní matice.
 
-
 Model HSV vykazuje nìkteré nedostatky, které sice nejsou zásadního charakteru,
 nicménì mohou ztìžovat práci s definováním barvy v prostoru HSV.
 Jedním z nedostatkù je jehlanovitý tvar, který zpùsobuje,
@@ -147,7 +144,7 @@ Dalším záporným jevem je nesymetrie modelu z hlediska pøechodù ve stupních šedi 
 Tyto nedostatky odstraòuje model HLS zavedený firmou Tektronix
 }
 
-function RGBToHLS(C: TRColor): THLSColor;
+function RGBToHLS(C: TRGBA): THLSColor;
 var
 	MaxC, MinC, delta, H: SG;
 begin
@@ -185,7 +182,7 @@ begin
 	end;
 end;
 
-function HLSToRGB(C: THLSColor): TRColor;
+function HLSToRGB(C: THLSColor): TRGBA;
 
 	function HLSRGBValue(n1, n2, hue: SG): U1;
 	begin
@@ -330,14 +327,6 @@ begin
 end;
 *)
 
-function RColor(R, G, B: U1): TRColor;
-begin
-	Result.A := 0;
-	Result.R := R;
-	Result.G := G;
-	Result.B := B;
-end;
-
 function Sgn(const I: S1): SG;
 begin
 	if I = 0 then
@@ -408,7 +397,7 @@ begin
 		Result := -1;
 end;
 
-function SgnMul(const Signum, Num: Integer): Integer;
+function SgnMul(const Signum, Num: SG): SG;
 begin
 	if Signum = 0 then
 		Result := 0
@@ -468,8 +457,8 @@ procedure DivModU8(const Dividend: U8; const Divisor: U4;
 	out Res, Remainder: U4); pascal;
 asm
 	push ebx
-	mov edx, dword ptr [Dividend + 4]// Divident-hi
-	mov eax, dword ptr Dividend // Divident-lo
+	mov eax, U4 ptr [Dividend] // Divident-lo
+	mov edx, U4 ptr [Dividend + 4]// Divident-hi
 	mov ebx, Divisor
 	div ebx // eax:=edx&eax div ebx; edx:=edx&eax mod ebx
 	mov ebx, Res
@@ -483,8 +472,8 @@ procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
 asm
 	pushad
-	mov edx, dword ptr [Dividend + 4]// Divident-hi
-	mov eax, dword ptr Dividend // Divident-lo
+	mov eax, U4 ptr [Dividend] // Divident-lo
+	mov edx, U4 ptr [Dividend + 4]// Divident-hi
 	mov ebx, Divisor
 	idiv ebx // eax:=edx&eax div ebx; edx:=edx&eax mod ebx
 	mov edi, Res
@@ -494,13 +483,13 @@ asm
 	popad
 end;
 
-function UnsignedMod(const Dividend: Int64; const Divisor: Integer): Integer;
+function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 begin
 	{$ifopt d+}
 	if Divisor = 0 then
 	begin
 //		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
-		CreateException;
+		Assert(False);
 		Result := 0;
 		Exit;
 	end;
@@ -603,7 +592,7 @@ begin
 	if Divisor = 0 then
 	begin
 //		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
-		CreateException;
+		Assert(False);
 		Result := 0;
 		Exit;
 	end;
@@ -620,7 +609,7 @@ begin
 	if Divisor = 0 then
 	begin
 //		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
-		CreateException;
+		Assert(False);
 		Result := 0;
 		Exit;
 	end;
@@ -638,7 +627,7 @@ begin
 	if Divisor = 0 then
 	begin
 //		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
-		CreateException;
+		Assert(False);
 		Result := 0;
 		Exit;
 	end;
@@ -659,7 +648,7 @@ begin
 	if Divisor = 0 then
 	begin
 //		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
-		CreateException;
+		Assert(False);
 		Result := 0;
 		Exit;
 	end;
@@ -680,7 +669,7 @@ begin
 	if Divisor = 0 then
 	begin
 //		MessageD('Division by 0' + LineSep + NToS(Dividend) + ' / 0', mtError, [mbOk]);
-		CreateException;
+		Assert(False);
 		Result := 0;
 		Exit;
 	end;
@@ -691,7 +680,7 @@ begin
 		Result := (Dividend + Divisor - 1) div Divisor;
 end;
 
-function Range(const Min, Cur, Max: Integer): Integer;
+function Range(const Min, Cur, Max: SG): SG;
 begin
 	Result := Cur;
 	if Cur < Min then
@@ -700,7 +689,7 @@ begin
 		Result := Max;
 end;
 
-function Range(const Min, Cur, Max, Def: Integer): Integer;
+function Range(const Min, Cur, Max, Def: SG): SG;
 begin
 	Result := Cur;
 	if Cur < Min then
@@ -758,7 +747,7 @@ function RandomM: U4;
 (*
 	random numbers from Mathematica 2.0.
 	SeedRandom = 1;
-	Table[Random[Integer, {0, 2^32 - 1}]
+	Table[Random[SG, {0, 2^32 - 1}]
 	*)
 begin
 	Result := (InitX[InitJ] + InitX[InitK]);
@@ -860,6 +849,14 @@ begin
 	B := C;
 end;
 
+{
+	push [A]
+	push [B]
+	pop [A]
+	pop [B]
+	+4
+}
+
 procedure Exchange(var P0, P1; Count: Cardinal); register;
 asm
 	push edi
@@ -902,6 +899,15 @@ asm
 	POP EDI
 end;
 
+procedure Exchange(var s0, s1: string);
+var
+	s: string;
+begin
+	s := s1;
+	s1 :=s0;
+	s0 := s;
+end;
+
 function Arg(X, Y: Extended): Extended; // <0..2pi)
 begin
 {	if Abs(X) > Abs(Y) then
@@ -931,8 +937,8 @@ begin
 	Bool := LongBool(LongWord(Bool) and 1);
 end;
 
-procedure Order(var I1, I2: Integer);
-var I: Integer;
+procedure Order(var I1, I2: SG);
+var I: SG;
 begin
 	if I1 > I2 then
 	begin
@@ -985,7 +991,7 @@ asm
 	@Exit:
 end;
 
-function SameData(P0, P1: Pointer; Size: Cardinal): Boolean; register;
+function SameData(P0, P1: Pointer; Size: Cardinal): BG; register;
 asm
 {	push ebx
 	mov Result, 1
@@ -1143,11 +1149,6 @@ function SwapU4(D: U4): U4; register;
 asm
 	bswap D
 	mov Result, D
-{begin
-	TU4(Result).B0 := TU4(D).B3;
-	TU4(Result).B1 := TU4(D).B2;
-	TU4(Result).B2 := TU4(D).B1;
-	TU4(Result).B3 := TU4(D).B0;}
 end;
 
 procedure InitPerformanceCounter;
@@ -1178,7 +1179,7 @@ asm
 	mov [ecx + 4], edx
 end;
 
-function PerformanceCounter: Int64;
+function PerformanceCounter: U8;
 begin
 	case PerformanceType of
 	0: Result := GetTickCount;
@@ -1195,12 +1196,212 @@ begin
 	while GetTickCount < TickCount do
 end;
 
-procedure DelayEx(const f: Int64);
+procedure DelayEx(const f: U8);
 var
-	TickCount: Int64;
+	TickCount: U8;
 begin
 	TickCount := PerformanceCounter + f;
 	while PerformanceCounter < TickCount do
+end;
+
+function CalcShr(N: U4): S1;
+{
+	0: -1
+	1: 0
+	2: 1
+	4: 2
+	8: 3
+	16
+	32
+	64
+	16384: 14
+	32768: 15
+	65536: 16
+
+	0: -1
+	1: 0
+	2: 1
+	3..4: 2
+	5..8: 3
+
+	1 shl -1 = 0
+	1 shl 0 = 1
+	1 shl 1 = 2
+	1 shl 2 = 4
+	1 shl 3 = 8
+
+}
+var M: U4;
+begin
+	if N = 0 then
+	begin
+		Result := -1;
+	end
+	else
+	begin
+		Result := 0;
+		M := 1;
+		while N > M do
+		begin
+			Inc(Result);
+			M := M shl 1;
+		end;
+	end;
+end;
+{$ifopt d+}
+procedure CheckExpSize(const Size: SG);
+begin
+	Assert(Size = 1 shl CalcShr(Size), 'Bad type size');
+end;
+{$endif}
+
+(*
+function AllocByB(const OldSize: SG; var NewSize: SG;
+	BlockSize: SG): BG;
+{
+	OldSize = <0, 2^31)
+	NewSize = <0, 2^31)
+	BlockSize = 2^n, <2, 2^30>
+}
+var Sh: SG;
+begin
+{	Result := True;
+	Exit;}
+	Sh := CalcShr(BlockSize);
+	if (1 shl Sh) <> BlockSize then
+	begin
+		{$ifopt d+}
+		ErrorMessage('Bad AllocBy block size' + LineSep + NToS(BlockSize) + ' bytes');
+		{$endif}
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) mod (BlockSize + 0);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) mod (BlockSize + 0);
+			Result := OldSize <> NewSize;
+		end
+		else
+		begin
+			NewSize := OldSize;
+			Result := False;
+		end;
+	end
+	else
+	begin
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else
+		begin
+			NewSize := OldSize;
+			Result := False;
+		end;
+	end;
+end;
+
+function AllocByEx(const OldSize: SG; var NewSize: SG;
+	BlockSize: SG): BG;
+{
+	OldSize = <0, 2^31)
+	NewSize = <0, 2^31)
+	BlockSize = 2^n, <2, 2^30>
+}
+var Sh: SG;
+begin
+{	Result := True;
+	Exit;}
+	Sh := CalcShr(BlockSize);
+	if (1 shl Sh) <> BlockSize then
+	begin
+		{$ifopt d+}
+		ErrorMessage('Bad AllocBy block size' + LineSep + NToS(BlockSize) + ' bytes');
+		{$endif}
+//		BlockSize := 1 shl CalcShr(DefMemBuffer div BlockSize);
+		BlockSize := DefMemBuffer;
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else
+		begin
+			NewSize := OldSize;
+			Result := False;
+		end;
+	end
+	else
+	begin
+		BlockSize := DefMemBuffer shr Sh;
+		if NewSize > OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else if NewSize + BlockSize + BlockSize div 2 < OldSize then
+		begin
+			NewSize := (NewSize + BlockSize - 1) and ($7fffffff - BlockSize + 1);
+			Result := OldSize <> NewSize;
+		end
+		else
+		begin
+			NewSize := OldSize;
+			Result := False;
+		end;
+	end;
+end;*)
+
+function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
+{
+	0 <= OldSize < 2^31
+	0 <= NewSize < 2^31
+}
+begin
+	{$ifopt d+}
+	if (OldSize < 0) or (OldSize > 1024 * 1024 * 1024) then
+//		ErrorMessage('Bad AllocBy block OldSize' + LineSep + BToStr(OldSize));
+		Assert(False);
+	if (NewSize < 0) or (NewSize > 1024 * 1024 * 1024) then
+//		ErrorMessage('Bad AllocBy block NewSize' + LineSep + BToStr(NewSize));
+		Assert(False);
+	{$endif}
+
+	Result := False;
+	if NewSize > OldSize then
+	begin
+		{$ifopt d+}
+		if OldSize > 0 then
+		if OldSize <> 1 shl CalcShr(OldSize) then
+		begin
+			Assert(False);
+//			ErrorMessage('Bad AllocBy block size' + LineSep + BToStr(OldSize));
+		end;
+		{$endif}
+		NewSize := Max(1 shl CalcShr(NewSize), 0{Minimum items});
+		Result := True;
+	end
+	else
+	begin
+		if NewSize < OldSize then
+		begin
+			if NewSize = 0 then Result := True;
+		end;
+
+	end;
 end;
 
 initialization

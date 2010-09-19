@@ -24,9 +24,8 @@ var
 	TableWinPlToDos,
 	TableWinHuToDos}: array[Char] of Char;
 
-procedure ConvertCharset(var s: ShortString; FromCharset: TCodePage; ToCharset: TCodePage); overload;
 procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage); overload;
-function ConvertCharsetF(s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
+function ConvertCharsetF(const s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
 
 function UpCaseCz(const s: string): string;
 function DelCz(const s: string): string;
@@ -50,7 +49,7 @@ implementation
 
 uses
 	Dialogs, Windows,
-	uTypes, uError, uStrings, uFiles, uSorts, uFind, uParser;
+	uTypes, uError, uStrings, uFiles, uSorts, uFind, uParser, uMath;
 
 type
 //	TCzLetters = array[0..29] of Char;
@@ -120,33 +119,13 @@ Unicode
 ì	011B	š	0161		017E
 }
 
-procedure ConvertCharset(var s: ShortString; FromCharset: TCodePage; ToCharset: TCodePage); overload;
-var
-	i: SG;
-begin
-	if FromCharset = cpAscii then
-	begin
-		{$ifopt d+}IE(434);{$endif}
-		Exit;
-	end;
-	for i := 1 to Length(s) do
-	begin
-		if Ord(s[i]) >= $80 then
-			s[i] := CodePage[ToCharset, FromCharset][s[i]];
-	end;
-end;
-
 procedure ConvertCharset(var s: string; FromCharset: TCodePage; ToCharset: TCodePage); overload;
 var
 	i: SG;
 {	c, d: Char;
 	CP: array[Char] of Char;}
 begin
-	if FromCharset = cpAscii then
-	begin
-		{$ifopt d+}IE(434);{$endif}
-		Exit;
-	end;
+	Assert(FromCharset <> cpAscii);
 {	if ToCharset = cp1250 then
 	begin}
 		for i := 1 to Length(s) do
@@ -174,14 +153,12 @@ begin
 		// Convert
 		for i := 1 to Length(s) do
 		begin
-			if CP[s[i]] = '#0' then
-				IE(34);
 			s[i] := CP[s[i]];
 		end;
 	end;}
 end;
 
-function ConvertCharsetF(s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
+function ConvertCharsetF(const s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
 var
 	i: SG;
 begin
@@ -456,7 +433,7 @@ begin
 
 {	s := 'äáéíóõöôøúüûı';
 	ConvertCharset(s, cp1250, cp852);
-	if s <> '„ ‚¡¢‹”“ı£Àûì' then IE(434);}
+	if s <> '„ ‚¡¢‹”“ı£Àûì' then ;
 
 {		#32..#127: Result := c;
 		'': Result := '';
@@ -495,7 +472,7 @@ begin
 
 {	s := 'á¹æêìí³ñóøœšıŸ¿';
 	ConvertCharset(s, cp1250, cp852);
-	if s <> ' ¥†©Ø¡–ä¢ı˜çì«¾§' then IE(434);}
+	if s <> ' ¥†©Ø¡–ä¢ı˜çì«¾§' then ;
 
 		// WinCzSkToDos
 {		case c of
@@ -544,46 +521,45 @@ begin
 
 	s := 'äáèïéìí¾òóôàøšúùı';
 	ConvertCharset(s, cp1250, cp852);
-	if s <> '„ ŸÔ‚Ø¡–å¢“êıçœ£…ì§' then IE(434);
+	Assert(s = '„ ŸÔ‚Ø¡–å¢“êıçœ£…ì§');
 
 	s := 'ñ';
 	ConvertCharset(s, cp1250, cp852);
-	if s <> 'ä' then IE(434);
+	Assert(s = 'ä');
 
 	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
 	ConvertCharset(s, cp1250, cp852);
-	if s <> 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§' then IE(434);
+	Assert(s = 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§');
 
 	s := 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§';
 	ConvertCharset(s, cp852, cp1250);
-	if s <> 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı' then IE(434);
+	Assert(s = 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı');
 
 	s := 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾';
 	ConvertCharset(s, cpISO88592, cp1250);
-	if s <> 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı' then IE(434);
+	Assert(s = 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı');
 
 	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
 	ConvertCharset(s, cp1250, cpISO88592);
-	if s <> 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾' then IE(434);
+	Assert(s = 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾');
 
 	s := 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§';
 	ConvertCharset(s, cp852, cpISO88592);
-	if s <> 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾' then IE(434);
+	Assert(s = 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾');
 
 	s := 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾';
 	ConvertCharset(s, cpISO88592, cp852);
-	if s <> 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§' then IE(434);
+	Assert(s = 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§');
 
 
 
 	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
 	s := DelCz(s);
-	if s <> 'ACDEEINORSTUUYZacdeeinorstuuyz' then
-		IE(544);
+	Assert(s = 'ACDEEINORSTUUYZacdeeinorstuuyz');
+
 	s := 'Frühauf David';
 	s := DelCz(s);
-	if s <> 'Fruhauf David' then
-		IE(544);
+	Assert(s = 'Fruhauf David');
 	{$endif}
 end;
 
@@ -692,6 +668,7 @@ label LRetry;
 var
 	F: TFile;
 	s: string;
+	NewSize: SG;
 begin
 	F := TFile.Create;
 	LRetry:
@@ -703,7 +680,9 @@ begin
 			F.Readln(s);
 			if Length(s) > 0 then
 			begin
-				SetLength(Alpha, AlphaCount + 1);
+				NewSize := AlphaCount + 1;
+				if AllocByExp(Length(Alpha), NewSize) then
+					SetLength(Alpha, NewSize);
 				Alpha[AlphaCount] := s;
 				Inc(AlphaCount);
 			end;
@@ -810,7 +789,7 @@ begin
 		WhatS := UpCaseCz(Dict[i].Cz);
 		while Index < Length(Line) do
 		begin
-			Po := Find(WhatS, UpCaseCz(Line), Index);
+			Po := PosEx(WhatS, UpCaseCz(Line), Index);
 
 			if (Po <> 0) then
 			begin
