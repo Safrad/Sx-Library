@@ -1,9 +1,9 @@
 //* File:     Lib\uKinds.pas
 //* Created:  1999-12-01
-//* Modified: 2005-06-26
-//* Version:  X.X.34.X
+//* Modified: 2005-11-26
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uKinds;

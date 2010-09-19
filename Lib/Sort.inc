@@ -607,6 +607,71 @@
 				Inc(MC, AValue[Lo]);
 			Mid := RoundDiv64(MC, (iHi - iLo + 1));
 		end;}
+
+(*	if(p2-p1<10){ /*je-li jich malo, je rychlejsi
+	kvadraticky minimax*/
+	for(;p1<p2;p1++){
+	b=p1;
+	for(a=p1+1;a<=p2;a++)
+	if(a->cena>b->cena){t1=*a;*a=*b;*b=t1;}
+	}
+	return;
+	}*)
+
+		case iHi - iLo of
+		0: Exit;
+		1:
+		begin
+			if AValue[iLo] > AValue[iHi] then
+				Exchange(AValue[iLo], AValue[iHi]);
+			Exit;
+		end;
+		2:
+		begin
+{			if AValue[iLo] > AValue[iLo + 2] then
+				Exchange(AValue[iLo], AValue[iLo + 2]);
+			if AValue[iLo] > AValue[iLo + 1] then
+				Exchange(AValue[iLo], AValue[iLo + 1])
+			else if AValue[iLo + 1] > AValue[iLo + 2] then
+				Exchange(AValue[iLo + 1], AValue[iLo + 2]);}
+
+			if AValue[iLo] > AValue[iLo + 1] then
+				Exchange(AValue[iLo], AValue[iLo + 1]);
+			if AValue[iLo + 1] > AValue[iLo + 2] then
+			begin
+				if AValue[iLo + 0] > AValue[iLo + 2] then
+					Exchange(AValue[iLo + 0], AValue[iLo + 2])
+				else
+					Exchange(AValue[iLo + 1], AValue[iLo + 2]);
+			end;
+
+			Exit;
+		end;
+(*		3..5:
+		begin
+			for Hi := iLo + 1 to iHi do
+			begin
+				HIndex := AIndex[Hi];
+				HValue := AValue[Hi];
+				Lo := Hi - 1;
+				{$ifopt d+}Inc(SortCompared);{$endif}
+				while AValue[Lo] > HValue do
+				begin
+					AIndex[Lo + 1] := AIndex[Lo];
+					AValue[Lo + 1] := AValue[Lo];
+					{$ifopt d+}Inc(SortSwaped);{$endif}
+					Dec(Lo);
+					if Lo < iLo then Break;
+					{$ifopt d+}Inc(SortCompared);{$endif}
+				end;
+
+				{$ifopt d+}Inc(SortSwaped);{$endif}
+				// Insert the original value of SortArray(Row) in SortArray(J):
+				AIndex[Lo + 1] := HIndex;
+				AValue[Lo + 1] := HValue;
+			end;
+		end;  *)
+		end;
 		Lo := iLo;
 		Hi := iHi;
 //    if D >= 3 then
@@ -936,10 +1001,11 @@ begin
 		begin
 		{$endif}
 			if Stability then
-				case MaxIndex of
-				1..70: InsertionSort;
-				else MergeSort;
-				end
+//				case MaxIndex of
+//				1..70:
+					InsertionSort
+//				else MergeSort; D??? DNW
+//				end
 			else
 				QuickSort(MinIndex, MaxIndex);
 		{$ifopt d+}

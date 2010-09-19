@@ -1,9 +1,9 @@
 //* File:     Lib\uXML.pas
 //* Created:  2005-06-21
-//* Modified: 2005-06-21
-//* Version:  X.X.34.X
+//* Modified: 2005-10-09
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uXML;

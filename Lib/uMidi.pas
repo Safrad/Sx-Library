@@ -1,9 +1,9 @@
 //* File:     Lib\uMidi.pas
 //* Created:  2000-01-01
-//* Modified: 2005-03-08
-//* Version:  X.X.34.X
+//* Modified: 2005-10-31
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uMidi;

@@ -1,9 +1,9 @@
 //* File:     Lib\uAbout.pas
 //* Created:  1999-10-01
-//* Modified: 2005-06-27
-//* Version:  X.X.34.X
+//* Modified: 2006-01-25
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uAbout;
@@ -22,33 +22,33 @@ type
     BevelSep: TBevel;
 		Image1: TImage;
 		Image2: TImage;
-		LabelRunCount: TDLabel;
-		LabelNowRunTime: TDLabel;
-		LabelTotalRunTime: TDLabel;
+    LabelRunCount: TLabel;
+    LabelNowRunTime: TLabel;
+    LabelTotalRunTime: TLabel;
     EditCreated: TEdit;
     PanelRC: TEdit;
     PanelTRT: TEdit;
     PanelNRT: TEdit;
 		ImageName: TDImage;
 		ImageVersion: TDImage;
-		LabelAuthor: TDLabel;
-    LabelCreated: TDLabel;
-		LabelEMail: TDLabel;
+    LabelAuthor: TLabel;
+    LabelCreated: TLabel;
+    LabelEMail: TLabel;
 		EditAuthor: TEdit;
 		EditWeb: TEdit;
-		LabelWeb: TDLabel;
+    LabelWeb: TLabel;
     EditEMail: TEdit;
     Bevel: TBevel;
 		ImageAbout: TDImage;
 		Image3: TImage;
-		LabelIcq: TDLabel;
+    LabelIcq: TLabel;
 		EditIcq: TEdit;
 		Image4: TImage;
 		SysInfo1: TDButton;
 		DButtonMemoryStatus: TDButton;
-		DLabel1: TDLabel;
+    LabelCount: TLabel;
 		EditModified: TEdit;
-		LabelModified: TDLabel;
+    LabelModified: TLabel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -75,15 +75,10 @@ type
 		BmpAbout: TDBitmap;
 		procedure InitNRT;
 	public
-		ProgramName: string;
-		ProgramVersion: string;
 		procedure LoadFile(AboutFile: TFileName);
 	end;
 
 const
-	MyEMail = 'safrad@centrum.cz';
-	MyWeb = 'http://safrad.webzdarma.cz';
-
 	paExit = -1;
 	paFile = -2;
 var
@@ -100,8 +95,7 @@ procedure Help; overload;
 procedure Help(HRef: string); overload;
 procedure ExtOpenFile(FileName: TFileName); overload;
 procedure ExtOpenFile(FileName: TFileName; Parameters: string); overload;
-procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
-	const Modal: Boolean);
+procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
 {procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
 	FileName: TFileName; const Modal: Boolean);}
 procedure AboutRW(const Save: Boolean);
@@ -118,6 +112,7 @@ implementation
 {$R *.DFM}
 uses
 	ShellAPI, Dialogs,
+	rpVersionInfo,
 	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, {$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uFormat;
 var
 	LMemClock: U8;
@@ -279,21 +274,23 @@ begin
 		IOError(FileName, ErrorCode);
 end;
 
-procedure ExecuteAbout2(AOwner: TComponent; Version, Created, Modified: string;
-	FileName: TFileName; const Modal: Boolean);
+procedure ExecuteAbout2(AOwner: TComponent; FileName: TFileName; const Modal: Boolean);
+var
+	VersionInfo: TrpVersionInfo;
 begin
 	PlayWinSound(wsExclamation);
 	if not Assigned(fAbout) then
 	begin
+		VersionInfo := TrpVersionInfo.Create(nil);
 		BeginLongOperation;
 		fAbout := TfAbout.Create(AOwner);
-		fAbout.ProgramName := Application.Title;
-		fAbout.ProgramVersion := 'Version ' + Version;
+		fAbout.EditAuthor.Text := VersionInfo.Author;
 		fAbout.ImageVersion.Bitmap.Canvas.Font.Name := 'MS Sans Serif';
-		fAbout.EditCreated.Text := Created;
-		fAbout.EditModified.Text := Modified;
+		fAbout.EditCreated.Text := VersionInfo.LegalCopyright;
+		fAbout.EditModified.Text := VersionInfo.ReleaseDate;
 		fAbout.LoadFile(FileName);
 		EndLongOperation(False);
+		VersionInfo.Free;
 	end
 	else
 		fAbout.LoadFile(FileName);
@@ -309,23 +306,29 @@ begin
 	end;
 end;
 
-procedure ExecuteAbout(AOwner: TComponent; Version, Created, Modified: string;
-	const Modal: Boolean); overload;
+procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean); overload;
+const
+	Ext: array[0..3] of string = ('png', 'gif', 'jpg', 'jpeg');
+var
+	i, j: SG;
+	FileName: TFileName;
 begin
-	if FileExists(GraphDir + Application.Title + '.png') then
-		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.png', Modal)
-	else if FileExists(GraphDir + Application.Title + '.gif') then
-		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.gif', Modal)
-	else if FileExists(GraphDir + Application.Title + '.jpg') then
-		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + Application.Title + '.jpg', Modal)
-	else if FileExists(GraphDir + 'Logo.png') then
-		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + 'Logo.png', Modal)
-	else if FileExists(GraphDir + 'Logo.gif') then
-		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + 'Logo.gif', Modal)
-	else if FileExists(GraphDir + 'Logo.jpg') then
-		ExecuteAbout2(AOwner, Version, Created, Modified, GraphDir + 'Logo.jpg', Modal)
-	else
-		ExecuteAbout2(AOwner, Version, Created, Modified, '', Modal);
+	for j := 0 to 1 do
+		for i := 0 to Length(Ext) - 1 do
+		begin
+			FileName := GraphDir;
+			if j <> 0 then
+				FileName := FileName + 'Logo'
+			else
+				FileName := FileName + Application.Title;
+			FileName := FileName + '.' + Ext[i];
+			if FileExists(FileName) then
+			begin
+				ExecuteAbout2(AOwner, FileName, Modal);
+				Exit;
+			end;
+		end;
+	ExecuteAbout2(AOwner, '', Modal);
 end;
 
 procedure AboutRW(const Save: Boolean);
@@ -513,7 +516,6 @@ begin
 		if Assigned(fSysInfo) then
 			if fSysInfo.Visible then
 			begin
-				FillSysInfoD(SysInfo);
 				fSysInfo.FillComp;
 			end;
 		while NowTime - LMemClock >= PerformanceFrequency do
@@ -538,8 +540,6 @@ begin
 //	fSysInfo.FormStyle := fAbout.FormStyle;
 	fSysInfo.Left := fAbout.Left;
 	fSysInfo.Top := fAbout.Top;
-	FillSysInfoS(SysInfo);
-	FillSysInfoD(SysInfo);
 	fSysInfo.FillComp;
 	fSysInfo.Show;
 end;
@@ -573,7 +573,7 @@ begin
 	BitmapName.Bar(clBtnFace, ef12);
 	BitmapName.Canvas.Font.Color := clWindowText;
 	DrawCutedText(BitmapName.Canvas, Rect(2, 2, BitmapName.Width - 2, BitmapName.Height - 2), taCenter, tlCenter,
-		ProgramName, True, 1);
+		Application.Title, True, 1);
 	{
 	BitmapName.Canvas.TextOut(
 		(BitmapName.Width -
@@ -589,16 +589,18 @@ procedure TfAbout.ImageVersionFill(Sender: TObject);
 var
 	BitmapVersion: TDBitmap;
 	Co: array[0..3] of TColor;
+	s: string;
 begin
 	BitmapVersion := ImageVersion.Bitmap;
 	BitmapVersion.Bar(clBtnFace, ef16);
 	BitmapVersion.Canvas.Font.Color := clBlack;
+	s := 'Version ' + GSysInfo.ProgramVersion;
 	BitmapVersion.Canvas.TextOut(
 		(BitmapVersion.Width -
-		BitmapVersion.Canvas.TextWidth(ProgramVersion)) div 2,
+		BitmapVersion.Canvas.TextWidth(s)) div 2,
 		(BitmapVersion.Height -
-		BitmapVersion.Canvas.TextHeight(ProgramVersion)) div 2,
-		ProgramVersion);
+		BitmapVersion.Canvas.TextHeight(s)) div 2,
+		s);
 //	BitmapVersion.GenRGB(clBtnFace, gfSpecHorz, (32 * Timer1.Clock div PerformanceFrequency), ef16);
 
 	BitmapVersion.GenerateRGBEx(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, TGenFunc(Typ), Co, 0, ef08,

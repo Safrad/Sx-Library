@@ -1,9 +1,9 @@
 //* File:     Lib\uScores.pas
 //* Created:  2000-10-01
-//* Modified: 2005-04-19
-//* Version:  X.X.34.X
+//* Modified: 2005-10-31
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uScores;

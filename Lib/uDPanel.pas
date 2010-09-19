@@ -1,9 +1,9 @@
 //* File:     Lib\uDPanel.pas
 //* Created:  1999-08-01
-//* Modified: 2005-03-08
-//* Version:  X.X.34.X
+//* Modified: 2005-07-10
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDPanel;

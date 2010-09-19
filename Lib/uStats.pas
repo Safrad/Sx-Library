@@ -1,3 +1,11 @@
+//* File:     Lib\uStats.pas
+//* Created:  2000-08-01
+//* Modified: 2005-08-28
+//* Version:  X.X.35.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uStats;
 
 interface

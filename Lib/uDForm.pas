@@ -1,9 +1,9 @@
 //* File:     Lib\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2005-05-31
-//* Version:  X.X.34.X
+//* Modified: 2005-12-05
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uDForm;
@@ -586,8 +586,8 @@ var
 	hR: THandle;
 	Po: array[0..9] of tagPOINT;
 begin
-	if (SysInfo.OS.dwMajorVersion < 4) or ((SysInfo.OS.dwMajorVersion = 4) and (SysInfo.OS.dwMinorVersion < 10)) then Exit;
-	if (SysInfo.OS.dwMajorVersion >= 5) then Exit;
+	if not RegCap then Exit;
+	if NTSystem then Exit;
 	if (FFullScreen = False) and (WindowState <> wsMaximized) then
 	begin
 		Po[0].x := 0;

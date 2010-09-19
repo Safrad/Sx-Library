@@ -1,9 +1,9 @@
 //* File:     Lib\uTypes.pas
 //* Created:  1998-01-01
-//* Modified: 2005-07-09
-//* Version:  X.X.34.X
+//* Modified: 2006-01-25
+//* Version:  X.X.35.X
 //* Author:   Safranek David (Safrad)
-//* E-Mail:   safrad@centrum.cz
+//* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
 unit uTypes;
@@ -11,6 +11,10 @@ unit uTypes;
 interface
 // Delphi <= 5
 const
+	MyName = 'Safranek David (Safrad)';
+	MyEMail = 'safrad at email.cz';
+	MyWeb = 'http://safrad.webzdarma.cz';
+
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
