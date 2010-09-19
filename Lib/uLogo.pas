@@ -33,10 +33,8 @@ type
 		{ Public declarations }
 	end;
 
-//procedure ShowLogo(const FileName: TFileName); overload;
-procedure ShowLogo; overload; // fMain.FormCreate
-//procedure ShowLogoFull;
-procedure HideLogo; // fMain.FormShow
+procedure ShowLogo; overload; // TfMain.FormCreate
+procedure HideLogo; // TfMain.FormShow
 procedure HideLogoPromptly;
 
 implementation
@@ -44,32 +42,46 @@ implementation
 {$R *.DFM}
 uses
 	StdCtrls,
+	uProjectInfo,
 	uGraph, uDBitmap, uFiles, uMath, uSystem;
 var
 	fLogo: TfLogo;
-	LogoTime: LongWord;
+	LogoTime: U4;
 
 procedure ShowLogo(const FileName: TFileName); overload;
+const
+	BorderSize = 7;
 var
-	x: SG;
+	x, y: SG;
 	Co: array[0..3] of TColor;
 	Bmp, BmpT: TDBitmap;
+	Info: TInfo;
+	s, LastFontName: string;
+	i: SG;
 begin
 	BeginLongOperation;
 	if Application.MainForm <> nil then
 		fLogo := TfLogo.Create(Application.MainForm)
 	else
 		fLogo := TfLogo.Create(nil);
+	fLogo.Cursor := crHourGlass;
 
 	Bmp := fLogo.BackBitmap;
 
 	if (FileName <> '') then
 	begin
 		fLogo.BackBitmap.LoadFromFile(FileName);
-		if (fLogo.BackBitmap.Width < 256) or (fLogo.BackBitmap.Height < 3 * 256 div 4) then
+		x := fLogo.BackBitmap.Width;
+		y := fLogo.BackBitmap.Height;
+		if (x > 0) and (y > 0) then
 		begin
-			fLogo.BackBitmap.Resize(fLogo.BackBitmap.Width * 2, fLogo.BackBitmap.Height * 2);
+			while (x < 256) or (y < 3 * 256 div 4) do
+			begin
+				x := x * 2;
+				y := y * 2;
+			end;
 		end;
+		fLogo.BackBitmap.Resize(x, y);
 	end;
 	if (FileName = '') then
 	begin
@@ -93,34 +105,45 @@ begin
 	BmpT.Bar(clSilver, ef16);
 	BmpT.Canvas.Brush.Style := bsClear;
 	BmpT.Canvas.Font.Style := [fsBold];
+	LastFontName := BmpT.Canvas.Font.Name;
 	BmpT.Canvas.Font.Name := 'Times New Roman';
 	BmpT.Canvas.Font.Height := -48;
 
+	Info := TInfo.Create(nil);
 
-	GoodText(BmpT.Canvas, Rect(16, 16, Bmp.Width - 16, Bmp.Height - 16), Application.Title,
+	s := Info.GetProjectInfo(piFileVersion);
+	for i := Length(s) downto 2 do
+	begin
+		if s[i] = '.' then
+		begin
+			SetLength(s, i - 1);
+			Break;
+		end;
+	end;
+	GoodText(BmpT.Canvas, Rect(16, 16, Bmp.Width - 16, Bmp.Height - 16), Application.Title + ' ' +
+		s,
 		clBlack, clWhite, clSilver, taCenter, tlCenter);
 
-{ BmpT.Canvas.Font.Name := 'Arial';
+	BmpT.Canvas.Font.Name := LastFontName;
 
-	BmpT.Canvas.Font.Height := -16;
-	Text := 'Author: Safranek David';
-	GoodText(BmpT.Canvas, Rect(0, 0, Bmp.Width, Bmp.Height), Text,
-		clWhite, clBlack, clPurple, taLeftJustify, tlCenter);
+	BmpT.Canvas.Font.Style := [];
+	BmpT.Canvas.Font.Height := 14;
 
-	Text := 'Build: 04/1999-01/2000';
-	GoodText(BmpT.Canvas, Rect(0, 96, Bmp.Width, Bmp.Height), Text,
-		clBlack, clWhite, clPurple, taLeftJustify, tlCenter);}
+	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), 'by ' + Info.GetProjectInfo(piAuthor),
+		clNone, clNone, clWhite, taRightJustify, tlCenter);
+	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), Info.GetProjectInfo(piRelease),
+		clNone, clNone, clWhite, taLeftJustify, tlCenter);
+	Info.Free;
 
-
-	Bmp.Bmp(0, 0, BmpT, ef08);
-
-	Bmp.Border(clWhite, clBlack, 8, ef08);
+	Bmp.Bmp(0, 0, BmpT, ef12);
+	Bmp.Border(clWhite, clBlack, BorderSize, ef08);
 
 	fLogo.ClientWidth := fLogo.BackBitmap.Width;
 	fLogo.ClientHeight := fLogo.BackBitmap.Height;
 	fLogo.Show;
-//	fLogo.BackImage.Repaint;
-	fLogo.Paint;
+	fLogo.Update;
+	Application.HandleMessage; // Change Mouse Cursor
+
 	LogoTime := GetTickCount;
 end;
 
@@ -164,7 +187,7 @@ begin
 
 	OutBmp.Bmp(0, 0, BackgroundBmp, ef16);
 	fLogo.Show;
-	fLogo.Paint;
+	fLogo.Update;
 
 	LogoTime := GetTickCount;
 	i := 0;
@@ -181,13 +204,12 @@ begin
 			Inc(i, i - li);
 		end;
 		li := i;
-		fLogo.Paint;
+		fLogo.Update;
 	end;
 	OutBmp.Bar(clBlack, ef16);
-	fLogo.Paint;
+	fLogo.Update;
 	FreeAndNil(BackgroundBmp);
 
-	ReleaseDC(0, BackgroundCanvas.Handle);
 	BackgroundCanvas.Free;
 	BackgroundBmp.Free;
 
@@ -198,10 +220,11 @@ end;*)
 
 procedure HideLogo;
 const
-	MinimumTime = 3000;
+	MinimumTime = 4000;
 begin
 	if Assigned(fLogo) and fLogo.Visible then
 	begin
+		fLogo.Cursor := crArrow;
 		LogoTime := GetTickCount - LogoTime;
 		if LogoTime < MinimumTime then
 		begin
@@ -247,7 +270,7 @@ end;
 
 procedure TfLogo.FormCreate(Sender: TObject);
 begin
-	{$ifopt d+}FormStyle := fsNormal;{$endif}
+//	FormStyle := fsNormal;
 	Background := baUser;
 end;
 

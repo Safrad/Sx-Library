@@ -31,7 +31,7 @@ type
 		ButtonOpen: TDButton;
 		OpenDialogFile: TOpenDialog;
 		MemoMsg: TMemo;
-		Label1: TDLabel;
+    LabelX: TLabel;
     PanelCount: TDLabel;
     Timer1: TDTimer;
     Image: TImage;
@@ -62,6 +62,7 @@ type
 		procedure EditIndexChange(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure FormClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
 	private
 		{ Private declarations }
 		ActItem: UG;
@@ -182,7 +183,7 @@ begin
 	if Ignore.TimeLeft = 0 then
 		PanelTimeLeft.Caption := ''
 	else
-		PanelTimeLeft.Caption := MsToStr(1000 * S8(Ignore.TimeLeft) + StartTickCount - TickCount, diMSD, 0, False);
+		PanelTimeLeft.Caption := MsToStr(1000 * S8(Ignore.TimeLeft) - 1 + StartTickCount - TickCount, diMSD, 0, False);
 end;
 
 var
@@ -204,7 +205,6 @@ begin
 		OpenDialogFile.Filter := 'Any file (*.*)|*.*';
 	if ExecuteDialog(OpenDialogFile, Ignore.ErrorFileName) then
 	begin
-		Ignore.ErrorFileName := OpenDialogFile.FileName;
 		Ignore.Res := 3;
 		TryClose;
 	end;
@@ -393,8 +393,6 @@ begin
 			FButtons[i].SetBounds(Wid, Hei, FButtons[i].Width, FButtons[i].Height);
 			Inc(Wid, FButtons[i].Width + FormBorder);
 			FButtons[i].Visible := True;
-			if (i = 0) and (FButtons[i].Enabled) then
-				ActiveControl := FButtons[i];
 		end;
 	end
 	else
@@ -460,7 +458,7 @@ procedure TfIOError.FormMouseMove(Sender: TObject; Shift: TShiftState;
 	X, Y: Integer);
 begin
 	StartTickCount := TickCount;
-	Timer1Timer(Sender);
+	DrawTimeLeft;
 end;
 
 procedure TfIOError.Timer1Timer(Sender: TObject);
@@ -606,8 +604,7 @@ begin
 			else
 			begin
 				fIOError.FormStyle := fsNormal;
-//				if fIOError.Visible = True then Exit;
-				{$ifopt d-}fIOError.Timer1.Enabled := True;{$endif}
+				fIOError.Timer1.Enabled := True;
 				fIOError.ShowModal;
 			end;
 		end
@@ -668,6 +665,9 @@ begin
 			IgnoreAll := iaSame;
 		end;
 	end;
+
+	Ignore.TimeLeft := DlgNoTime;
+
 	MCount := 0;
 	Last := -1;
 	for i := 0 to Ignores.Count - 1 do
@@ -853,6 +853,15 @@ begin
 	Result := False;
 	if MessageD('Delete file' + LineSep + FileName, mtConfirmation, [mbYes, mbNo]) = mbYes then
 		Result := DeleteFileEx(FileName);
+end;
+
+procedure TfIOError.FormShow(Sender: TObject);
+var
+	Ignore: PIgnore;
+begin
+	Ignore := Ignores.Get(ActItem);
+	if (Length(Ignore.Buttons) > 0) and (FButtons[0].Enabled) then
+		ActiveControl := FButtons[0];
 end;
 
 initialization

@@ -20,15 +20,19 @@ const
 	CharVT = #$0B;
 	CharLF = #$0A;// #10;
 	CharCR = #$0D;// #13;
-	// DOS: CharCR + CharLF; Linux/C++: CharLF; CharCR: NLP
-	LineSep = CharLF;
-	FullSep = CharCR + CharLF;
+	{
+	DOSLineSep = CharCR + CharLF;
+	LinuxLineSep =  CharLF;
+	MacintoshLineSep = CharCR;
+	}
+	LineSep = CharLF; // Deafult
+	FullSep = CharCR + CharLF; // Required by some Windows components
 	HTMLSep = LineSep;
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
 	CharTimes = '×';
-	Space = [CharNul, CharTab, CharLF, CharCR, CharSpace];
+	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
 
 	FalseTrue: array[0..1] of string = ('false', 'true');
 
@@ -52,6 +56,7 @@ function DelCharsF(const s: string; const SubChar: Char): string;
 procedure DelStr(var s: string; const SubStr: string);
 function DelStrF(const s: string; const SubStr: string): string;
 
+procedure AddQuote(var s: string);
 procedure DelQuote(var s: string);
 function DelQuoteF(const s: string): string;
 
@@ -64,12 +69,13 @@ function DelEndSpaceF(const s: string): string;
 procedure DelBESpace(var s: string);
 function DelBESpaceF(const s: string): string;
 
-function DeleteLastChar(const s: string; Right: SG = 1): string;
-function DeleteLastNumber(const s: string): string;
+function DelLastChar(const s: string; Right: SG = 1): string;
+function DelLastNumber(const s: string): string;
 
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
+procedure RepairNewLine(var Line: string);
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
 function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
@@ -94,6 +100,7 @@ procedure Replace(var s: string; const WhatS, ToS: string);
 function Code(const s: string; const Decode: BG): string;
 
 function AddSpace(const s: string): string;
+procedure CorrectDir(var s: string);
 function RandomString(Size: SG): string;
 
 implementation
@@ -241,6 +248,11 @@ begin
 	DelStr(Result, SubStr);
 end;
 
+procedure AddQuote(var s: string);
+begin
+	s := '"' + s + '"';
+end;
+
 procedure DelQuote(var s: string);
 begin
 	if s = '' then Exit;
@@ -307,7 +319,7 @@ begin
 	DelBESpace(Result);
 end;
 
-function DeleteLastChar(const s: string; Right: SG = 1): string;
+function DelLastChar(const s: string; Right: SG = 1): string;
 begin
 	Right := Min(Length(s), Right);
 	if Right > 0 then
@@ -319,7 +331,7 @@ begin
 		Result := '';
 end;
 
-function DeleteLastNumber(const s: string): string;
+function DelLastNumber(const s: string): string;
 var i: SG;
 begin
 	i := Length(s);
@@ -366,12 +378,23 @@ function ReadToNewLine(const Line: string; var LineIndex: SG): string;
 var StartIndex: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF)do
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF) do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
-	Inc(LineIndex);
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
+	if Line[LineIndex] = CharCR then
+	begin
 		Inc(LineIndex);
+		while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
+			Inc(LineIndex);
+	end
+	else
+		Inc(LineIndex);
+end;
+
+procedure RepairNewLine(var Line: string);
+begin
+	Replace(Line, FullSep, LineSep);
+	Replace(Line, CharCR, LineSep);
 end;
 
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
@@ -584,6 +607,13 @@ begin
 		if Result[Index] in ['A'..'Z'] then
 			if Result[Index - 1] in ['a'..'z'] then
 				Insert(' ', Result, Index);
+end;
+
+procedure CorrectDir(var s: string);
+var i: SG;
+begin
+	i := Length(s);
+	if (i > 0) and (s[i] <> '\') then s := s + '\';
 end;
 
 function RandomString(Size: SG): string;

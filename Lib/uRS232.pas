@@ -10,6 +10,8 @@ unit uRS232;
 
 interface
 
+uses uTypes;
+
 procedure SetCom(ComIndex: Integer);
 
 procedure GetIn;
@@ -23,7 +25,7 @@ const
 var
 	ComIn, // DCD(7), RI(6), DSR(5), CTS(4), RxD
 	ComOut // TxD(6), RTS (9), DTR(8)
-	: Word;
+	: U2;
 	DCD, RI, DSR, CTS, RxD, // In
 	RTS, DTR, TxD: Boolean; // Out
 	RSIn: array[0..4] of Boolean absolute DCD;

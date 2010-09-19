@@ -1,6 +1,6 @@
 object fGetInt: TfGetInt
-  Left = 380
-  Top = 322
+  Left = 389
+  Top = 314
   ActiveControl = EditInput
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
@@ -119,7 +119,7 @@ object fGetInt: TfGetInt
     Top = 18
     Width = 48
     Height = 18
-    Caption = 'Min'
+    Caption = '&Min'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -134,7 +134,7 @@ object fGetInt: TfGetInt
     Top = 6
     Width = 48
     Height = 18
-    Caption = 'Cur'
+    Caption = '&Cur'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -149,7 +149,7 @@ object fGetInt: TfGetInt
     Top = 18
     Width = 48
     Height = 18
-    Caption = 'Max'
+    Caption = '&Max'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -164,7 +164,7 @@ object fGetInt: TfGetInt
     Top = 28
     Width = 48
     Height = 18
-    Caption = 'Def'
+    Caption = '&Def'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11

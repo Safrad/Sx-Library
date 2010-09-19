@@ -25,17 +25,17 @@ uses uTypes, uMath, uDBitmap;
 
 type
 // Header type for TGA images
-	TTgaHeader = packed record
-		IDLength     : Byte;
-		ColorMapType : Byte;
-		ImageType    : Byte;
-		ColorMapSpec : array[0..4] of Byte;
-		OrigX  : Word;
-		OrigY  : Word;
-		Width  : Word;
-		Height : Word;
-		BPP    : Byte;
-		ImageInfo : Byte;
+	TTgaHeader = packed record // 18
+		IDLength     : U1;
+		ColorMapType : U1;
+		ImageType    : U1;
+		ColorMapSpec : array[0..4] of U1; // 5
+		OrigX  : U2;
+		OrigY  : U2;
+		Width  : U2;
+		Height : U2;
+		BPP    : U1;
+		ImageInfo : U1;
 	end;
 
 procedure TTgaImage.LoadFromStream(s: TStream);

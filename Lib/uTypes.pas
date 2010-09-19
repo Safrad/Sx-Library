@@ -151,30 +151,34 @@ type
 	B1 = ByteBool; // $00 / $FF
 	B2 = WordBool; // $0000 / $FFFF
 	B4 = LongBool; // $0000 / $FFFFFFFF
-
-	TArrayS1 = array[0..1024 * 1024 * 1024 - 1] of S1;
+const
+	KB = 1024;
+	MB = 1024 * KB;
+	GB = 1024 * MB;
+type
+	TArrayS1 = array[0..GB - 1] of S1;
 	PArrayS1 = ^TArrayS1;
-	TArrayU1 = array[0..1024 * 1024 * 1024 - 1] of U1;
+	TArrayU1 = array[0..GB - 1] of U1;
 	PArrayU1 = ^TArrayU1;
-	TArrayS2 = array[0..1024 * 1024 * 1024 - 2] of S2;
+	TArrayS2 = array[0..GB - 2] of S2;
 	PArrayS2 = ^TArrayS2;
-	TArrayU2 = array[0..1024 * 1024 * 1024 - 2] of U2;
+	TArrayU2 = array[0..GB - 2] of U2;
 	PArrayU2 = ^TArrayU2;
-	TArrayS4 = array[0..512 * 1024 * 1024 - 2] of S4;
+	TArrayS4 = array[0..512 * MB - 2] of S4;
 	PArrayS4 = ^TArrayS4;
-	TArrayU4 = array[0..512 * 1024 * 1024 - 2] of U4;
+	TArrayU4 = array[0..512 * MB - 2] of U4;
 	PArrayU4 = ^TArrayU4;
-	TArrayS8 = array[0..256 * 1024 * 1024 - 2] of S8;
+	TArrayS8 = array[0..256 * MB - 2] of S8;
 	PArrayS8 = ^TArrayS8;
-	TArraySG = array[0..256 * 1024 * 1024 - 2] of SG;
+	TArraySG = array[0..256 * MB - 2] of SG;
 	PArraySG = ^TArraySG;
 
-	TArrayF8 = array[0..256 * 1024 * 1024 - 2] of F8;
+	TArrayF8 = array[0..256 * MB - 2] of F8;
 	PArrayF8 = ^TArrayF8;
-	TArrayFA = array[0..128 * 1024 * 1024 - 2] of FA;
+	TArrayFA = array[0..128 * MB - 2] of FA;
 	PArrayFA = ^TArrayFA;
 
-	TArrayChar = array[0..1024 * 1024 * 1024 - 1] of AnsiChar;
+	TArrayChar = array[0..GB - 1] of AnsiChar;
 	PArrayChar = ^TArrayChar;
 
 	TIndex = SG;
@@ -226,4 +230,10 @@ const
 
 implementation
 
+initialization
+	{$ifndef LINUX}
+	{$ifopt d-}
+	NoErrMsg := True;
+	{$endif}
+	{$endif}
 end.

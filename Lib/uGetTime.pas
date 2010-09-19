@@ -22,15 +22,15 @@ type
 		TrackBarH: TTrackBar;
 		TrackBarM: TTrackBar;
 		TrackBarS: TTrackBar;
-		Label1: TDLabel;
-		Label2: TDLabel;
-		Label3: TDLabel;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
 		TrackBarD: TTrackBar;
-		Label4: TDLabel;
-		LabelH: TDLabel;
-		LabelM: TDLabel;
-		LabelS: TDLabel;
-		LabelD: TDLabel;
+    Label4: TLabel;
+    LabelH: TLabel;
+    LabelM: TLabel;
+    LabelS: TLabel;
+    LabelD: TLabel;
 		ButtonOk: TDButton;
 		ButtonCancel: TDButton;
 		EditInput: TEdit;
@@ -206,7 +206,7 @@ end;
 
 procedure TfGetTime.InitButtons;
 var
-	H, M, S, D: LongWord;
+	H, M, S, D: U4;
 begin
 	ButtonMin.Enabled := NowVal <> TMinVal;
 	ButtonCur.Enabled := NowVal <> TCurVal;
@@ -232,7 +232,7 @@ end;
 
 procedure TfGetTime.InitTrackBar;
 var
-	H, M, S, D: LongWord;
+	H, M, S, D: U4;
 begin
 	msToHMSD(NowVal, H, M, S, D);
 	TrackBarH.OnChange := nil;

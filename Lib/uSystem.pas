@@ -13,8 +13,8 @@ interface
 uses uTypes, SysUtils, Forms, ShlObj, ActiveX, ComObj, ComCtrls, Controls, Classes;
 
 function DriveTypeToStr(const DriveType: Integer): string;
-function ProcessPriority(const Prior: Byte): Integer;
-function ThreadPriority(const Prior: Byte): Integer;
+function ProcessPriority(const Prior: U1): Integer;
+function ThreadPriority(const Prior: U1): Integer;
 
 function GetCaption(const FName: TFileName; const Changed: Boolean;
 	const New: Integer; const ReadOnly: BG; const Index, Count: Integer): string;
@@ -27,7 +27,7 @@ procedure CreateLink(
 	const Target: TFileName;
 	const Arguments: string;
 	const StartIn: string;
-	const HotKey: Word;
+	const HotKey: U2;
 	const Description: string;
 	const IconFileName: TFileName;
 	const IconIdex: Integer);
@@ -47,7 +47,7 @@ type
 		DriveLetter: TDriveLetter; // 1
 		Reserved: array[0..9] of U8; // 10
 	end;
-function GetDriveInfo(const Drive: Byte): TDriveInfo;
+function GetDriveInfo(const Drive: U1): TDriveInfo;
 
 function SelectFolder(var Path: string; browseTitle: string = ''): BG;
 
@@ -66,12 +66,12 @@ begin
 	DRIVE_REMOVABLE: Result := 'Removable'; // The drive can be removed from the drive.
 	DRIVE_FIXED: Result := 'Fixed'; // The disk cannot be removed from the drive.
 	DRIVE_REMOTE: Result := 'Remote'; // The drive is a remote (network) drive.
-	DRIVE_CDROM: Result := 'CD-ROM'; // The drive is a CD-ROM drive.
+	DRIVE_CDROM: Result := 'CD/DVD'; // The drive is a CD-ROM drive.
 	DRIVE_RAMDISK: Result := 'Ramdisk'; // The drive is a RAM disk.
 	end;
 end;
 
-function ProcessPriority(const Prior: Byte): Integer;
+function ProcessPriority(const Prior: U1): Integer;
 begin
 	case Prior of
 	0: Result := IDLE_PRIORITY_CLASS;
@@ -83,7 +83,7 @@ begin
 	end;
 end;
 
-function ThreadPriority(const Prior: Byte): Integer;
+function ThreadPriority(const Prior: U1): Integer;
 begin
 	case Prior of
 	0: Result := THREAD_PRIORITY_IDLE;
@@ -122,7 +122,7 @@ begin
 		Screen.Cursor := crHourGlass;
 end;
 
-procedure EndLongOperation(const Sound: BG = True);
+procedure EndLongOperation(const Sound: BG);
 begin
 	if Sound then
 		PlayWinSound(wsAsterisk);
@@ -134,7 +134,7 @@ procedure CreateLink(
 	const Target: TFileName;
 	const Arguments: string;
 	const StartIn: string;
-	const HotKey: Word;
+	const HotKey: U2;
 	const Description: string;
 	const IconFileName: TFileName;
 	const IconIdex: Integer);
@@ -188,7 +188,7 @@ begin
 	FreeMem(Buf);
 end;
 
-function GetDriveInfo(const Drive: Byte): TDriveInfo;
+function GetDriveInfo(const Drive: U1): TDriveInfo;
 var
 	P: array[0..3] of Char;
 	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
@@ -270,8 +270,7 @@ begin
 	begin
 		Result := SHGetPathFromIDList(find_context, folder);
 		Path := folder;
-		if Length(Path) > 0 then
-			if Path[Length(Path)] <> '\' then Path := Path + '\';
+		CorrectDir(Path);
 		GlobalFreePtr(find_context);
 	end
 	else
@@ -332,11 +331,4 @@ begin
 	F.Free;
 end;
 
-initialization
-	{$ifndef LINUX}
-	{$ifopt d-}
-	NoErrMsg := True;
-	{$endif}
-	{$endif}
 end.
-

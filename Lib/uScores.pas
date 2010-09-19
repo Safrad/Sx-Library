@@ -179,7 +179,6 @@ begin
 			begin
 				fScores := TfScores.Create(Application.MainForm);
 			end;
-			fScores.ImageHigh.Fill;
 			fScores.ShowModal;
 		end;
 		LResumeGame:
@@ -262,7 +261,6 @@ begin
 	begin
 		fScores := TfScores.Create(nil);
 	end;
-	fScores.ImageHigh.Fill;
 	fScores.ShowModal;
 end;
 

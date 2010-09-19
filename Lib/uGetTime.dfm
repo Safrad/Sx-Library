@@ -17,221 +17,89 @@ object fGetTime: TfGetTime
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TDLabel
+  object Label1: TLabel
     Left = 8
     Top = 88
     Width = 17
     Height = 17
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'H'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object Label2: TDLabel
+  object Label2: TLabel
     Left = 8
     Top = 128
     Width = 17
     Height = 17
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'M'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object Label3: TDLabel
+  object Label3: TLabel
     Left = 8
     Top = 168
     Width = 17
     Height = 17
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'S'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object Label4: TDLabel
+  object Label4: TLabel
     Left = 8
     Top = 208
     Width = 17
     Height = 17
     AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'D'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelH: TDLabel
+  object LabelH: TLabel
     Left = 312
     Top = 88
     Width = 20
     Height = 17
-    AutoSize = False
     Alignment = taRightJustify
+    AutoSize = False
     Caption = '000'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelM: TDLabel
+  object LabelM: TLabel
     Left = 312
     Top = 128
     Width = 20
     Height = 17
-    AutoSize = False
     Alignment = taRightJustify
+    AutoSize = False
     Caption = '000'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelS: TDLabel
+  object LabelS: TLabel
     Left = 312
     Top = 168
     Width = 20
     Height = 17
-    AutoSize = False
     Alignment = taRightJustify
+    AutoSize = False
     Caption = '000'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
-  object LabelD: TDLabel
+  object LabelD: TLabel
     Left = 312
     Top = 208
     Width = 20
     Height = 17
-    AutoSize = False
     Alignment = taRightJustify
+    AutoSize = False
     Caption = '000'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
   end
   object TrackBarH: TTrackBar
     Left = 32
@@ -437,7 +305,7 @@ object fGetTime: TfGetTime
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 23
+    TabOrder = 15
     Visible = False
   end
   object EditError: TMemo
@@ -448,6 +316,6 @@ object fGetTime: TfGetTime
     ParentColor = True
     ReadOnly = True
     ScrollBars = ssVertical
-    TabOrder = 24
+    TabOrder = 16
   end
 end

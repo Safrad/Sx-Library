@@ -12,7 +12,7 @@ interface
 
 {$R *.RES}
 uses
-	uDBitmap,
+	uTypes, uDBitmap,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
 	ExtCtrls, StdCtrls;
 
@@ -20,28 +20,25 @@ type
 	TDPanel = class(TPanel)
 	private
 		{ Private declarations }
-//		FBmpOut: TDBitmap;
-
 		FLayout: TTextLayout;
-		FFontShadow: ShortInt;
+		FFontShadow: SG;
 		FOnPaint: TNotifyEvent;
 		procedure SetLayout(Value: TTextLayout);
-		procedure SetFontShadow(Value: ShortInt);
+		procedure SetFontShadow(Value: SG);
 
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
-//		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
 	protected
 		{ Protected declarations }
+		procedure Paint; override;
 	public
 		{ Public declarations }
 		constructor Create(AOwner: TComponent); override;
-		procedure Paint; override;
 		property Canvas;
 	published
 		{ Published declarations }
 		property Caption;
 		property Layout: TTextLayout read FLayout write SetLayout default tlCenter;
-		property FontShadow: ShortInt read FFontShadow write SetFontShadow default 0;
+		property FontShadow: SG read FFontShadow write SetFontShadow default 0;
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
 	end;
 
@@ -60,7 +57,7 @@ begin
 	end;
 end;
 
-procedure TDPanel.SetFontShadow(Value: ShortInt);
+procedure TDPanel.SetFontShadow(Value: SG);
 begin
 	if FFontShadow <> Value then
 	begin
@@ -77,10 +74,9 @@ end;
 
 procedure TDPanel.WMEraseBkgnd(var Message: TWMEraseBkgnd);
 begin
-	DefaultHandler(Message);
+	Message.Result := 1;
 end;
 
-//procedure TDPanel.WMPaint(var Message: TWMPaint);
 procedure TDPanel.Paint;
 var
 	Recta: TRect;
@@ -91,13 +87,13 @@ begin
 	begin
 		if BevelOuter = bvLowered then
 		begin
-			TopColor := DepthColor(1);
-			BottomColor := DepthColor(3);
+			TopColor := clDepth[1];
+			BottomColor := clDepth[3];
 		end
 		else
 		begin
-			TopColor := DepthColor(3);
-			BottomColor := DepthColor(1);
+			TopColor := clDepth[3];
+			BottomColor := clDepth[1];
 		end;
 		Border(Canvas, Recta, TopColor, BottomColor, BevelWidth);
 		InflateRect(Recta, -BevelWidth, -BevelWidth);
@@ -111,13 +107,13 @@ begin
 	begin
 		if BevelInner = bvLowered then
 		begin
-			TopColor := DepthColor(1);
-			BottomColor := DepthColor(3);
+			TopColor := clDepth[1];
+			BottomColor := clDepth[3];
 		end
 		else
 		begin
-			TopColor := DepthColor(3);
-			BottomColor := DepthColor(1);
+			TopColor := clDepth[3];
+			BottomColor := clDepth[1];
 		end;
 		Border(Canvas, Recta, TopColor, BottomColor, BevelWidth);
 		InflateRect(Recta, -BevelWidth, -BevelWidth);
@@ -133,12 +129,6 @@ begin
 		Canvas.Font := Font;
 		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True, FFontShadow);
 	end;
-{	FBmpOut.SetSize(Width, Height);
-	FBmpOut.Bar(clRed,0
-	BitBlt(Message.DC, 0, 0, FBmpOut.Width, FBmpOut.Height,
-		FBmpOut.Canvas.Handle,
-		0, 0,
-		SRCCOPY);}
 
 	if Assigned(FOnPaint) then FOnPaint(Self);
 end;

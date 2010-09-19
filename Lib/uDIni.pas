@@ -147,9 +147,6 @@ uses
 	uMath, uFiles, uStrings, uFormat
 	{$ifndef NoGUI}, uMenus, uError, uInput, uParser, uSystem{$endif};
 
-{const
-	BufferSize = 32768;}
-
 procedure TDIniFile.AddSection(Section: string);
 var NewSize: Integer;
 begin
@@ -783,7 +780,6 @@ begin
 end;
 
 procedure MainIniCreate;
-label LRetry;
 {var
 	Reg: TRegistry;
 	F: file;
@@ -969,10 +965,18 @@ begin
 end;
 
 procedure TDIniFile.RWDImage(DImage: TDImage; const Save: BG);
+var
+	Section: string;
 begin
-	DImage.Center := RWBGF(DImage.Name, 'Center', DImage.Center, DImage.Center, Save);
-	DImage.Grate := RWBGF(DImage.Name, 'Grate', DImage.Grate, DImage.Grate, Save);
-	DImage.GrateColor := RWSGF(DImage.Name, 'Grate', DImage.GrateColor, DImage.GrateColor, Save);
+	Section := DImage.Name;
+
+	DImage.Zoom := MainIni.RWFGF(Section, 'Zoom', DImage.Zoom, 1, Save);
+	DImage.OfsX := MainIni.RWSGF(Section, 'OffsetX', DImage.OfsX, 0, Save);
+	DImage.OfsY := MainIni.RWSGF(Section, 'OffsetY', DImage.OfsY, 0, Save);
+
+	DImage.Center := RWBGF(Section, 'Center', DImage.Center, DImage.Center, Save);
+	DImage.Grate := RWBGF(Section, 'Grate', DImage.Grate, DImage.Grate, Save);
+	DImage.GrateColor := RWSGF(Section, 'Grate', DImage.GrateColor, DImage.GrateColor, Save);
 end;
 
 procedure TDIniFile.RWDView(DView: TDView; const Save: BG);
@@ -980,10 +984,10 @@ var
 	i: SG;
 	Section: string;
 begin
-	if Copy(DView.Name, 1, 5) = 'DView' then
+{	if Copy(DView.Name, 1, 5) = 'DView' then
 		Section := Copy(DView.Name, 6, MaxInt)
-	else
-		Section := DView.Name;
+	else}
+	Section := DView.Name;
 
 	DView.SortBy := RWSGF(Section, 'SortBy', DView.SortBy, DView.SortBy, Save);
 	if (DView.SortBy >= 0) and (DView.SortBy < DView.ColumnCount) then
@@ -998,6 +1002,9 @@ begin
 		DView.Columns[i].Width := RWSGF(Section, 'Width' + NToS(i, False), DView.Columns[i].Width, DView.Columns[i].Width, Save);
 		DView.ColumnOrder[i] := RWSGF(Section, 'Order' + NToS(i, False), DView.ColumnOrder[i], i, Save);
 	end;
+
+	RWDImage(TDImage(DView), Save);
+	DView.ChangeColumns;
 end;
 
 procedure TDIniFile.RWListView(ListView: TListView; const Save: BG);
@@ -1020,20 +1027,20 @@ procedure TDIniFile.RWBoolM(Section: string; MenuItem: TMenuItem; const Save: BG
 var Value: BG;
 begin
 	Value := MenuItem.Checked;
-	RWBool(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWBool(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if Save = False then MenuItem.Checked := Value;
 end;
 
 procedure TDIniFile.RWBoolM(Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG; SubMenu: BG = False);
 begin
 	Value := MenuItem.Checked;
-	RWBool(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWBool(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if Save = False then MenuItem.Checked := Value;
 end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: S1; const Save: BG; SubMenu: BG = False);
 begin
-	RWNum(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
 		if Save = False then
 			if (Value >= 0) and (Value < MenuItem.Count) then
@@ -1042,7 +1049,7 @@ end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: U1; const Save: BG; SubMenu: BG = False);
 begin
-	RWNum(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
 		if Save = False then
 			if (Value < MenuItem.Count) then
@@ -1051,7 +1058,7 @@ end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: U2; const Save: BG; SubMenu: BG = False);
 begin
-	RWNum(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
 		if Save = False then
 			if (Value < MenuItem.Count) then
@@ -1060,7 +1067,7 @@ end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: S2; const Save: BG; SubMenu: BG = False);
 begin
-	RWNum(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
 		if Save = False then
 			if (Value >= 0) and (Value < MenuItem.Count) then
@@ -1069,7 +1076,7 @@ end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: S4; const Save: BG; SubMenu: BG = False);
 begin
-	RWNum(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
 		if Save = False then
 			if (Value >= 0) and (Value < MenuItem.Count) then
@@ -1078,7 +1085,7 @@ end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: U4; const Save: BG; SubMenu: BG = False);
 begin
-	RWNum(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
 		if Save = False then
 			if (Value < U4(MenuItem.Count)) then
@@ -1087,7 +1094,7 @@ end;
 
 procedure TDIniFile.RWNumM(Section: string; MenuItem: TMenuItem; var Value: S8; const Save: BG; SubMenu: BG = False);
 begin
-	RWNum(Section, DeleteLastNumber(MenuItem.Name), Value, Save);
+	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
 		if Save = False then
 			if (Value >= 0) and (Value < MenuItem.Count) then
@@ -1096,7 +1103,7 @@ end;
 
 procedure TDIniFile.RWMenuItem(Section: string; MenuItem: TMenuItem; const Save: BG);
 begin
-	MenuItem.Checked := RWBGF(Section, DeleteLastNumber(MenuItem.Name), MenuItem.Checked, MenuItem.Checked, Save);
+	MenuItem.Checked := RWBGF(Section, DelLastNumber(MenuItem.Name), MenuItem.Checked, MenuItem.Checked, Save);
 end;
 
 procedure TDIniFile.RWComboBox(Section: string; ComboBox: TComboBox; const Save: BG);

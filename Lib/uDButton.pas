@@ -32,46 +32,44 @@ type
 
 	TDButton = class(TButton)
 	private
-		FCanvas: TCanvas;
 		FBmpOut: TDBitmap;
+		{$ifopt d+}FFillCount, FPaintCount: UG;{$endif}
 
 		FHighlight: THighlight;
 		FHighNow: Boolean;
 		FDown: Boolean;
 		FDownNow: Boolean;
+		FEnabled: Boolean;
 		FLastDown: Boolean;
 		FAutoChange: Boolean;
 
 		FColor: TColor;
-		FTimer: TDTimer;
 		FLayout: TButtonLayout;
 		FSpacing: Integer;
 		FMargin: Integer;
 		IsFocused: Boolean;
 		FMouseDown: Boolean;
+		FEllipseSize: SG;
 
-//		FHighClock: LongWord;
-
-		procedure DrawItem(const DrawItemStruct: TDrawItemStruct);
+		procedure InitRect;
 		procedure SetColor(Value: TColor);
 		procedure SetDown(Value: Boolean);
 		procedure SetHighlight(Value: THighLight);
+		procedure SetEnabled2(Value: Boolean);
 		function IsCustomCaption: Boolean;
 		procedure SetLayout(Value: TButtonLayout);
 		procedure SetSpacing(Value: Integer);
 		procedure SetMargin(Value: Integer);
+
+		procedure CNDrawItem(var Message: TWMDrawItem); message CN_DRAWITEM;
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
 		procedure CNMeasureItem(var Message: TWMMeasureItem); message CN_MEASUREITEM;
-		procedure CNDrawItem(var Message: TWMDrawItem); message CN_DRAWITEM;
 		procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
 		procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
-		procedure WMLButtonDblClk(var Message: TWMLButtonDblClk);
-			message WM_LBUTTONDBLCLK;
+		procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
-		procedure Timer1Timer(Sender: TObject);
-		procedure InitRect;
 	protected
 		procedure CreateHandle; override;
 		procedure CreateParams(var Params: TCreateParams); override;
@@ -92,7 +90,7 @@ type
 		property Constraints;
 		property Default;
 		property Down: Boolean read FDown write SetDown default False;
-		property Enabled;
+		property Enabled read FEnabled write SetEnabled2 default True;
 		property Highlight: THighLight read FHighlight write SetHighlight default hlUnderlight;
 		property Layout: TButtonLayout read FLayout write SetLayout default blGlyphLeft;
 		property Margin: Integer read FMargin write SetMargin default - 1;
@@ -108,174 +106,28 @@ type
 		property OnExit;
 	end;
 
-procedure PlayBSound(const X, MaxX: Integer; const SoundUp: Boolean);
-
-var
-	BSounds: Boolean = True;
-	BSoundUp, BSoundDown, BSoundBuffer: PWave;
-
 procedure Register;
 
 implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uScreen, uSysInfo, uMenus, uStrings;
-
-
-var Loaded: BG;
-
-procedure LoadBSounds;
-var
-	SoundUpDataBytes, SoundDownDataBytes: Integer;
-	FileName: TFileName;
-begin
-	if Loaded = False then Loaded := True else Exit;
-	FileName := SoundsDir + 'BUp.wav';
-	if FileExists(FileName) then
-		WaveReadFromFile(BSoundUp, FileName);
-	FileName := SoundsDir + 'BDown.wav';
-	if FileExists(FileName) then
-		WaveReadFromFile(BSoundDown, FileName);
-	if BSoundUp <> nil then
-		SoundUpDataBytes := BSoundUp.DataBytes div BSoundUp.Channels
-	else
-		SoundUpDataBytes := 0;
-	if BSoundDown <> nil then
-		SoundDownDataBytes := BSoundDown.DataBytes div BSoundDown.Channels
-	else
-		SoundDownDataBytes := 0;
-	if (SoundUpDataBytes > 0) or (SoundDownDataBytes > 0) then
-		GetMem(BSoundBuffer, WaveHead + 2 * Max(SoundUpDataBytes, SoundDownDataBytes));
-end;
-
-procedure UnloadBSounds;
-begin
-	FreeMem(BSoundUp); BSoundUp := nil;
-	FreeMem(BSoundDown); BSoundDown := nil;
-	FreeMem(BSoundBuffer); BSoundBuffer := nil;
-end;
-
-procedure PlayBSound(const X, MaxX: Integer; const SoundUp: Boolean);
-var SoundLeft, SoundRight: Integer;
-begin
-	if (BSoundBuffer = nil) then Exit;
-	SoundLR(SoundLeft, SoundRight, X, MaxX);
-	if SoundUp then
-	begin
-		if BSoundDown <> nil then
-		begin
-			ConvertChannels(BSoundDown, BSoundBuffer, 2, SoundLeft, SoundRight);
-			PlayWave(BSoundBuffer);
-		end;
-	end
-	else
-	begin
-		if BSoundUp <> nil then
-		begin
-			ConvertChannels(BSoundUp, BSoundBuffer, 2, SoundLeft, SoundRight);
-			PlayWave(BSoundBuffer);
-		end;
-	end;
-end;
-
-
-{ TDButton data }
-var
-	BadColors: Boolean;
-
-(*type
-	TButtonGlyph = class
-	private
-		FOriginal: TDBitmap;
-		FTransparentColor: TColor;
-		FOnChange: TNotifyEvent;
-		procedure GlyphChanged(Sender: TObject);
-		procedure SetGlyph(Value: TDBitmap);
-		procedure DrawButtonGlyph(BmpD: TDBitmap; const GlyphPos: TPoint;
-			Transparent: Boolean);
-		procedure CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
-			const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
-			Margin, Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
-			BiDiFlags: LongInt);
-	public
-		constructor Create;
-		destructor Destroy; override;
-		{ return the text rectangle }
-		function Draw(BmpD: TDBitmap; Client: TRect; const Offset: TPoint;
-			const Caption: string; Layout: TButtonLayout; Margin, Spacing: Integer;
-			Enabled: Boolean; BiDiFlags: LongInt): TRect;
-		property Glyph: TDBitmap read FOriginal write SetGlyph;
-		property OnChange: TNotifyEvent read FOnChange write FOnChange;
-	end;
-
-{ TButtonGlyph }
-
-constructor TButtonGlyph.Create;
-begin
-	inherited Create;
-	FOriginal := TDBitmap.Create;
-	FOriginal.OnChange := GlyphChanged;
-	FTransparentColor := clNone;
-end;
-
-destructor TButtonGlyph.Destroy;
-begin
-	FOriginal.Free;
-	inherited Destroy;
-end;
-
-procedure TButtonGlyph.GlyphChanged(Sender: TObject);
-begin
-	if Sender = FOriginal then
-	begin
-		FTransparentColor := GetTransparentColor(FOriginal);
-		if Assigned(FOnChange) then FOnChange(Self);
-	end;
-end;
-
-procedure TButtonGlyph.SetGlyph(Value: TDBitmap);
-begin
-	FOriginal.Assign(Value);
-	if (Value <> nil) and (Value.Width > 0) and (Value.Height > 0) then
-	begin
-		FTransparentColor := GetTransparentColor(Value);
-	end;
-end;
-
-procedure TButtonGlyph.DrawButtonGlyph(BmpD: TDBitmap; const GlyphPos: TPoint;
-	Transparent: Boolean);
-begin
-end;
-
-procedure TButtonGlyph.CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
-	const Offset: TPoint; const Caption: string; Layout: TButtonLayout; Margin,
-	Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
-	BiDiFlags: LongInt);
-end;
-
-function TButtonGlyph.Draw(BmpD: TDBitmap; Client: TRect;
-	const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
-	Margin, Spacing: Integer; Enabled: Boolean;
-	BiDiFlags: LongInt): TRect;
-var
-	GlyphPos: TPoint;
-	C: TColor;
-begin
-end;*)
+	uGraph, uScreen, uSysInfo, uMenus, uStrings,
+	uSounds;
 
 { TDButton }
+var
+	CDefault, CCancel, CDefaultCancel: TColor;
 
 procedure TDButton.InitRect;
 var
 	hR: THandle;
-	Po: array[0..9] of tagPOINT;
-	m: SG;
+//	Po: array[0..9] of tagPOINT;
 begin
 	if RegCap = False then Exit;
-	if (Width > 32) and (Height > 20) then 
+	if (Width > 32) and (Height > 20) then
 	begin
-		Po[0].x := 0;
+(*		Po[0].x := 0;
 		Po[0].y := 0;
 		Po[1].x := Width;
 		Po[1].y := 0;
@@ -304,10 +156,10 @@ begin
 		Po[8].x := 0;
 		Po[8].y := Height;
 		Po[9].x := 0;
-		Po[9].y := 0;
+		Po[9].y := 0;   *)
 
-		m := Min(Width, Height) div 2;
-		hR := CreateRoundRectRgn(0, 0, Width + 1, Height + 1, m, m);
+		FEllipseSize := Min(Width, Height) div 2;
+		hR := CreateRoundRectRgn(0, 0, Width + 1, Height + 1, FEllipseSize, FEllipseSize);
 
 //			hR := CreateEllipticRgn(0, 0, Width, Height);
 //			hR := CreateRectRgn(0, 0, Width, Height);
@@ -317,31 +169,22 @@ begin
 	end
 	else
 	begin
-{		hR := CreateRectRgn(0, 0, Width, Height);
+		hR := CreateRectRgn(0, 0, Width, Height);
 		SetWindowRgn(Handle, hR, True);
-		DeleteObject(hR);}
+		DeleteObject(hR);
 	end;
 end;
 
 procedure TDButton.WMSize(var Message: TWMSize);
 begin
-	if Visible = False then Exit;
-	if (Message.Width = 0) or (Message.Height = 0) then Exit;
+	inherited;
 	InitRect;
 end;
 
 constructor TDButton.Create(AOwner: TComponent);
 begin
-	inherited Create(AOwner);
-	Font.Color := clBtnText;
-	FCanvas := TCanvas.Create;
+	inherited;
 	FBmpOut := TDBitmap.Create;
-
-	FTimer := TDTimer.Create(Self);
-	FTimer.Enabled := False;
-	FTimer.EventStep := esFrequency;
-	FTimer.Interval := 25;
-	FTimer.OnTimer := Timer1Timer;
 
 	FLayout := blGlyphLeft;
 	FSpacing := 4;
@@ -350,18 +193,18 @@ begin
 	FHighlight := hlUnderlight;
 	FDown := False;
 	FDownNow := False;
+	FEnabled := True;
 	FLastDown := False;
 	ControlStyle := ControlStyle + [csReflector];
+
+	// Caption can not be changed there
 end;
 
 destructor TDButton.Destroy;
 begin
-	FTimer.Enabled := False;
-	FreeAndNil(FTimer);
-	FCanvas.Free;
 	FBmpOut.Free;
 	FGlyph.Free;
-	inherited Destroy;
+	inherited;
 end;
 
 procedure TDButton.CreateHandle;
@@ -370,7 +213,23 @@ begin
 end;
 
 procedure TDButton.CreateParams(var Params: TCreateParams);
+var
+	i: SG;
+	s: string;
 begin
+	s := Caption;
+	i := Pos('/', s);
+//	if (Length(s) > 0) and (s[1] = '/') then
+	if i <> 0 then
+	begin
+		Delete(s, i, 1);
+		Insert(AddSpace(ButtonNameToFileName(Name)), s, i);
+	end;
+
+	if (Length(s) > 0) and (s[1] <> '&') then
+		s := '&' + s;
+	Caption := s;
+
 	inherited CreateParams(Params);
 	with Params do Style := Style or BS_OWNERDRAW;
 end;
@@ -386,12 +245,15 @@ end;
 
 procedure TDButton.Click;
 begin
-	if FAutoChange then
+	if FEnabled then
 	begin
-		FDown := not FDown;
-		Invalidate;
+		if FAutoChange then
+		begin
+			FDown := not FDown;
+			Invalidate;
+		end;
+		inherited Click;
 	end;
-	inherited Click;
 end;
 
 procedure TDButton.CNMeasureItem(var Message: TWMMeasureItem);
@@ -413,8 +275,6 @@ begin
 	begin
 		if FMouseDown then FDownNow := True;
 		FHighNow := True;
-		FTimer.Reset;
-		FTimer.Enabled := True;
 		Invalidate;
 	end;
 end;
@@ -427,43 +287,33 @@ begin
 	begin
 		FDownNow := False;
 		FHighNow := False;
-		FTimer.Enabled := False;
 		Invalidate;
 	end;
 end;
 
 procedure TDButton.CNDrawItem(var Message: TWMDrawItem);
-begin
-	DrawItem(Message.DrawItemStruct^);
-end;
-
-procedure TDButton.DrawItem(const DrawItemStruct: TDrawItemStruct);
 const
 	Border = 2;
 var
 	FileName: TFileName;
 
-	IsDown, IsDefault: Boolean;
-	CDefault, CCancel, CDefaultCancel: TColor;
+	IsDown, IsDefault: BG;
 	Rec, Recta: TRect;
-	GlyphPos, GlyphSize{, TotalSize}: TPoint;
+	GlyphPos, GlyphSize: TPoint;
 	TextA: TAlignment;
 	TextL: TTextLayout;
 
-	x, y, SizeX, SizeY: Integer;
 	Co: array[0..3] of TColor;
 	E: TColor;
 	s: string;
 	Orient: SG;
 	v: SG;
 begin
-	LoadBSounds;
-	IsDefault := DrawItemStruct.itemState and ODS_FOCUS <> 0;
-	IsDown := DrawItemStruct.itemState and ODS_SELECTED <> 0;
+	IsDefault := Message.DrawItemStruct.itemState and ODS_FOCUS <> 0;
+	IsDown := Message.DrawItemStruct.itemState and ODS_SELECTED <> 0;
 	if FDown then IsDown := not IsDown;
 	if FAutoChange and (FDown <> IsDown) and (FLastDown <> IsDown) then Exit;
 
-	FCanvas.Handle := DrawItemStruct.hDC;
 	Rec := ClientRect;
 	Recta.Left := 0;
 	Recta.Top := 0;
@@ -473,9 +323,9 @@ begin
 	FBmpOut.SetSize(Recta.Right, Recta.Bottom);
 
 	// Sound
-	if BSounds and (FLastDown <> IsDown) then
+	if (FLastDown <> IsDown) then
 	begin
-		PlayBSound(Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1, IsDown);
+		PlaySound(SG(IsDown), Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1);
 		FLastDown := IsDown;
 	end;
 
@@ -488,83 +338,46 @@ begin
 		begin
 			FGlyph.LoadFromFile(FileName);
 			if FGlyph.Height > 0 then
-			if FGlyph.Height + 2 * Border > Height then
+			if FGlyph.Height + 3 * Border > Height then
 			begin
-				v := FGlyph.Height - 2 * Border;
-
+				v := Height - 3 * Border;
 				FGlyph.Resize(RoundDiv(FGlyph.Width * v, FGlyph.Height), v);
 			end;
 		end;
 	end;
 
 	// Draw
-	if IsDown then
-	begin
-		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-			cl3DDkShadow, clBtnHighlight, 1, ef16);
-		InflateRect(Recta, -1, -1);
-		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-			clBtnShadow, cl3DLight, 1, ef16);
-		InflateRect(Recta, -1, -1);
-	end
-	else
-	begin
-		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-			clBtnHighlight, cl3DDkShadow, 1, ef16);
-		InflateRect(Recta, -1, -1);
-
-		if ColorToRGB(clBtnFace) <> ColorToRGB(cl3DLight) then
-			E := cl3DLight
-		else
-			E := MixColors(FColor, clBtnHighlight);
-
-{		if RegCap then
-		begin
-			m := Min(Width, Height) div 2;
-			FBmpOut.Canvas.Pen.Color := E;
-			FBmpOut.Canvas.RoundRect(Recta.Left, Recta.Top, Recta.Right + 1, Recta.Bottom + 1, m, m);
-		end
-		else
-		begin}
-			FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-				E, clBtnShadow, 1, ef16);
-//		end;
-
-		InflateRect(Recta, -1, -1);
-	end;
+	InflateRect(Recta, -2, -2);
 	Co[0] := ColorDiv(FColor, 5 * 16384);
 	Co[1] := ColorDiv(FColor, 3 * 16384);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
-	{$ifopt d-}
+//	{$ifopt d-}
 	FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 		gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
-	{$else}
-	FBmpOut.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
-	{$endif}
+//	{$else}
+//	FBmpOut.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
+//	{$endif}
 
 	if IsDown then OffsetRect(Recta, 1, 1);
 	FBmpOut.Canvas.Font := Self.Font;
-	{$ifopt d-}
-	if NTSystem then
-		if FBmpOut.Canvas.Font.Name = 'MS Sans Serif' then
-			FBmpOut.Canvas.Font.Name := 'Microsoft Sans Serif';
-	{$endif}
-
-	if (Length(Caption) > 0) and (Caption[1] = '/') then
+	if FAutoChange then
 	begin
-		s := Caption;
-		Delete(s, 1, 1);
-		s := AddSpace(ButtonNameToFileName(Name)) + s;
+		if FDown then
+			FBmpOut.Canvas.Font.Style := [fsUnderline]
+		else
+			FBmpOut.Canvas.Font.Style := [fsStrikeOut];
 	end
 	else
-		s := Caption;
+		FBmpOut.Canvas.Font.Style := [];
 
-	Orient := -1;
+	s := Caption;
+	
 	if s = 'Up' then Orient := 0
 	else if s = 'Left' then Orient := 1
 	else if s = 'Down' then Orient := 2
-	else if s = 'Right' then Orient := 3;
+	else if s = 'Right' then Orient := 3
+	else Orient := -1;
 
 	if Orient <> -1 then
 	begin
@@ -572,13 +385,10 @@ begin
 	end
 	else
 	begin
-
 		// Icon
 		// Layout
 		// Spacing
 		// Margin
-
-
 		GlyphSize := Point(FGlyph.Width, FGlyph.Height);
 
 	(*	if Length(s) > 0 then
@@ -651,7 +461,6 @@ begin
 		TextRect.Right := FBmpOut.Width - 2;
 		TextRect.Bottom := FBmpOut.Height - 2;}
 
-
 		TextA := taCenter;
 		TextL := tlCenter;
 
@@ -660,7 +469,7 @@ begin
 			Margin := 6;
 			Spacing := 2;
 
-			if Caption = '' then
+			if s = '' then
 				GlyphPos.X := (FBmpOut.Width - GlyphSize.X + 1) div 2
 			else
 			case Layout of
@@ -697,52 +506,47 @@ begin
 		end;
 
 
-		FBmpOut.Canvas.Brush.Style := bsClear;
 		if not Enabled then
 		begin
-			FBmpOut.Canvas.Font.Color := clBtnShadow;
-			FBmpOut.Canvas.Brush.Color := clBtnHighlight;
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 1);
+			FBmpOut.Canvas.Font.Color := clDepth[1];
+			FBmpOut.Canvas.Brush.Color := clDepth[3];
 		end
 		else
 		begin
 			FBmpOut.Canvas.Brush.Color := Color;
 			FBmpOut.Canvas.Font.Color := Font.Color;
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 1);
 		end;
+		FBmpOut.Canvas.Brush.Style := bsClear;
+		DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 1);
 	end;
+	FBmpOut.Canvas.Brush.Style := bsClear;
 
 	if IsDown then OffsetRect(Recta, -1, -1);
 
-	if BadColors then
-	begin
-		CDefault := clLime;
-		CCancel := clRed;
-		CDefaultCancel := clYellow;
-	end
-	else
-	begin
-		CDefault := clActiveBorder;
-		CCancel := clInactiveBorder;
-		CDefaultCancel := MixColors(CDefault, CCancel)
-	end;
 	if Default and Cancel then
 	begin
-		FBmpOut.Rec(2, 2,
-			FBmpOut.Width - 3, FBmpOut.Height - 3,
-			CDefaultCancel, ef16);
+		E := CDefaultCancel;
 	end
 	else if Default then
 	begin
-		FBmpOut.Rec(2, 2,
-			FBmpOut.Width - 3, FBmpOut.Height - 3, CDefault, ef16);
+		E := CDefault;
 	end
 	else if Cancel then
 	begin
-		FBmpOut.Rec(2, 2,
-			FBmpOut.Width - 3, FBmpOut.Height - 3, CCancel, ef16);
+		E := CCancel;
+	end
+	else
+		E := clNone;
+
+	if E <> clNone then
+	begin
+		FBmpOut.Canvas.Pen.Color := E;
+		FBmpOut.Canvas.RoundRect(2, 2, Width - 2, Height - 2, FEllipseSize, FEllipseSize);
+{		FBmpOut.Rec(2, 2,
+			FBmpOut.Width - 3, FBmpOut.Height - 3, E, ef16);}
 	end;
-	if IsFocused and IsDefault then
+
+	if (Orient = -1) and FHighNow and Enabled then
 	begin
 		Co[0] := ColorDiv(FColor, 21504);
 		Co[1] := clBlack;
@@ -751,7 +555,7 @@ begin
 		FBmpOut.GenerateRGB(gfFade2x, Co, $00000000, efAdd, nil);
 	end;
 
-	if (Orient = -1) and FHighNow and Enabled then
+	if IsFocused and IsDefault then
 	begin
 {		case FHighlight of
 		hlRect:
@@ -769,7 +573,7 @@ begin
 		hlRectMov:
 		begin
 			y := Min(Width, Height) and $fffffffe - 2;
-			x := FHighClock mod LongWord(y);
+			x := FHighClock mod y;
 			if x > (y div 2) then x := y - x;
 			if x < (y div 2) then
 			begin
@@ -791,13 +595,14 @@ begin
 			FBmpOut.GenerateERGB(clNone, gfFade2x, Co, $00000000, efAdd, nil);
 		end;
 		end;}
-		if FTimer.Clock < 3 * PerformanceFrequency then
+//		if FTimer.Clock < 3 * PerformanceFrequency then
 		begin
 			FBmpOut.Bar(Border, Border,
 				FBmpOut.Width - 1 - Border, FBmpOut.Height - 1 - Border, clHighlight, ef08);
 		end
-		else
+(*		else
 		begin
+			// Animation
 			SizeX := Width - 2 * Border;
 			SizeY := Height - 2 * Border;
 			x := (SizeX * (FTimer.Clock - 3 * PerformanceFrequency) div (2 * PerformanceFrequency)) mod SizeX;
@@ -813,7 +618,7 @@ begin
 			end;
 
 {			y := MinXY and $fffffffe - 2;
-			x := FHighClock mod LongWord(y);
+			x := FHighClock mod y;
 			if x > (y div 2) then
 				x := y - x;
 			if x < (y div 2) then
@@ -821,10 +626,29 @@ begin
 				FBmpOut.Bar(clNone, x, x,
 					FBmpOut.Width - x - 1, FBmpOut.Height - x - 1, clHighlight, ef08);
 			end;}
-		end;
+		end;*)
 	end;
-	FCanvas.Draw(Rec.Left, Rec.Top, FBmpOut);
-	FCanvas.Handle := 0;
+
+	if IsDown then
+		FBmpOut.Canvas.Pen.Color := clDepth[1]
+	else
+		FBmpOut.Canvas.Pen.Color := clDepth[3];
+	FBmpOut.Canvas.RoundRect(0, 0, Width, Height, FEllipseSize + 2, FEllipseSize + 2);
+	if IsDown then
+		FBmpOut.Canvas.Pen.Color := clDepth[3]
+	else
+		FBmpOut.Canvas.Pen.Color := clDepth[1];
+	FBmpOut.Canvas.RoundRect(1, 1, Width - 1, Height - 1, FEllipseSize, FEllipseSize);
+
+	{$ifopt d+}
+	Inc(FFillCount);
+	Inc(FPaintCount);
+	FBmpOut.Canvas.Brush.Style := bsClear;
+	FBmpOut.Canvas.Font.Color := clWhite;
+	FBmpOut.Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));
+	{$endif}
+	FBmpOut.DrawToDC(Message.DrawItemStruct.hDC, 0, 0);
+	Message.Result := 1;
 end;
 
 procedure TDButton.CMFontChanged(var Message: TMessage);
@@ -841,7 +665,7 @@ end;
 
 procedure TDButton.WMLButtonDblClk(var Message: TWMLButtonDblClk);
 begin
-	Perform(WM_LBUTTONDOWN, Message.Keys, LongInt(Message.Pos));
+	Perform(WM_LBUTTONDOWN, Message.Keys, S4(Message.Pos));
 end;
 
 function TDButton.IsCustomCaption: Boolean;
@@ -866,7 +690,7 @@ begin
 		Invalidate;
 	end;
 end;
-		
+
 procedure TDButton.SetMargin(Value: Integer);
 begin
 	if (Value <> FMargin) and (Value >= -1) then
@@ -895,6 +719,15 @@ begin
 	end;
 end;
 
+procedure TDButton.SetEnabled2(Value: Boolean);
+begin
+	if (Value <> FEnabled) then
+	begin
+		FEnabled := Value;
+		Invalidate;
+	end;
+end;
+
 procedure TDButton.SetHighlight(Value: THighLight);
 begin
 	if (Value <> FHighlight) then
@@ -904,18 +737,9 @@ begin
 	end;
 end;
 
-procedure TDButton.Timer1Timer(Sender: TObject);
-begin
-	if (FHighNow) {and (FHighlight <> hlNone) and (FHighlight <> hlBar) and (FHighlight <> hlRect)} then
-	begin
-//		if FHighClock < High(FHighClock) then Inc(FHighClock) else FHighClock := 0;
-		Invalidate;
-	end;
-end;
-
 procedure TDButton.WMEraseBkGnd;
 begin
-	Message.Result := -1;
+	Message.Result := 1;
 end;
 
 procedure Register;
@@ -924,10 +748,19 @@ begin
 end;
 
 initialization
-	BadColors :=
-		(ColorToRGB(clBtnFace) = ColorToRGB(clActiveBorder)) or
+	if (ColorToRGB(clBtnFace) = ColorToRGB(clActiveBorder)) or
 		(ColorToRGB(clBtnFace) = ColorToRGB(clInactiveBorder)) or
-		(ColorToRGB(clActiveBorder) = ColorToRGB(clInactiveBorder));
-finalization
-	UnloadBSounds;
+		(ColorToRGB(clActiveBorder) = ColorToRGB(clInactiveBorder)) then
+	begin
+		CDefault := clLime;
+		CCancel := clRed;
+		CDefaultCancel := clYellow;
+	end
+	else
+	begin
+		CDefault := clActiveBorder;
+		CCancel := clInactiveBorder;
+		CDefaultCancel := MixColors(CDefault, CCancel)
+	end;
+	AddSounds(['BDown', 'BUp'], True);
 end.

@@ -21,18 +21,18 @@ type
 	TfMemStatus = class(TDForm)
 		Timer1: TDTimer;
 		ButtonStart: TDButton;
-    DPanel1: TDLabel;
-    DPanel2: TDLabel;
-    DPanel3: TDLabel;
-    DPanel4: TDLabel;
-    DPanel5: TDLabel;
-    DPanel6: TDLabel;
-    DPanel7: TDLabel;
-    DPanel8: TDLabel;
-    DPanel9: TDLabel;
-    DPanel10: TDLabel;
-    DPanel11: TDLabel;
-    DPanel12: TDLabel;
+    LabelAllocMemCount: TDLabel;
+    LabelAllocMemSize: TDLabel;
+    LabelTotalAddrSpace: TDLabel;
+    LabelTotalUncommited: TDLabel;
+    LabelTotalAllocated: TDLabel;
+    LabelTotalFree: TDLabel;
+    LabelFreeSmall: TDLabel;
+    LabelFreeBig: TDLabel;
+    LabelUnused: TDLabel;
+    LabelOverhead: TDLabel;
+    LabelHeapErrorCode: TDLabel;
+    LabelTotalCommited: TDLabel;
 		Bevel1: TBevel;
 		Bevel2: TBevel;
     ButtonOk: TDButton;
@@ -111,7 +111,7 @@ begin
 			end;
 
 			LabelX[j, i].Caption := NToS(LabelV[j, i]);
-			LabelX[j, i].Repaint;
+			LabelX[j, i].Update;
 		end;
 	end;
 end;

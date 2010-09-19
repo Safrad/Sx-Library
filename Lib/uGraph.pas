@@ -10,7 +10,9 @@ unit uGraph;
 
 interface
 
-uses uTypes, Windows, Graphics, ExtCtrls, StdCtrls, Classes, SysUtils;
+uses
+	uTypes,
+	Windows, Graphics, StdCtrls, Classes, SysUtils;
 
 const
 	clMoneyGreen = TColor($C0DCC0);
@@ -20,38 +22,41 @@ const
 
 	clFlesh = TColor($98ADFF);
 	clBaize = TColor($818000);
+	clWater = TColor($D1D856);
+
+	clDepth: array[0..3] of TColor = (cl3DDkShadow{Black}, clBtnShadow{Gray}, cl3DLight{Silver}, clBtnHighlight{White});
 
 	MaxSpectrum2 = 762;
 	MaxFireColor = 765;
 
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
 
-function GetBmpSize(const X, Y: LongWord; const PixelFormat: Byte): LongWord;
+function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 function ColorToHTML(Color: TColor): string;
-function ShadowColor(C: TColor): TColor;
-function ShadowColor2(C1, C2: TColor): TColor;
+//function ShadowColor(C: TColor): TColor;
+//function ShadowColor2(C1, C2: TColor): TColor;
 function ColorDiv(Color: TColor; const D: Integer): TColor;
 function ColorRB(C: TColor): TColor;
 function LighterColor(Color: TColor): TColor;
 function DarkerColor(Color: TColor): TColor;
+function GrayColor(X: SG): TColor;
 function SpectrumColor(X: Integer): TColor;
 function SpectrumColor2(X: Integer): TColor;
 function FireColor(X: Integer): TColor;
 function NegColor(C: TColor): TColor;
 function NegMonoColor(C: TColor): TColor;
-function DepthColor(const Depth: Byte): TColor;
-
-
 
 function MixColors(C1, C2: TColor): TColor; overload;
 function MixColors(C1, C2: TRGBA): TRGBA; overload;
+function MixColors(C1, C2: TRGB): TRGB; overload;
 
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
 function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
+function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
 
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
-
+function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
 
 procedure ShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
@@ -65,8 +70,12 @@ procedure Rec(Canvas: TCanvas; const Rect: TRect;
 	const Color: TColor; const Width: Integer);
 procedure Border(Canvas: TCanvas; const Rect: TRect;
 	TopColor, BottomColor: TColor; const Width: Integer);
+
+function CutText(const Canvas: TCanvas; const Text: string; const Width: SG): string;
+procedure DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: AnsiString; FontShadow: SG); overload;
+procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: AnsiString; FontShadow: SG); overload;
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: AnsiString; const WordWrap: BG; FontShadow: SG);
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: AnsiString; const WordWrap: BG; FontShadow: SG); overload;
 
 function Over(const SX1, SY1, SX2, SY2: Integer;
 	const DX1, DY1, DX2, DY2: Integer): Boolean; overload;
@@ -81,7 +90,7 @@ implementation
 
 uses
 	Math,
-	uStrings, uError, uGetInt;
+	uStrings, uError, uGetInt, uMath;
 
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
 var T: SG;
@@ -108,7 +117,7 @@ begin
 	end;
 end;
 
-function GetBmpSize(const X, Y: LongWord; const PixelFormat: Byte): LongWord;
+function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 begin
 	Result := (((PixelFormat * X  + 31) and $FFFFFFE0) div 8) * Y;
 end;
@@ -123,7 +132,7 @@ begin
 		IntToHex(C.B, 2);
 end;
 (*-------------------------------------------------------------------------*)
-function ShadowColor(C: TColor): TColor;
+{function ShadowColor(C: TColor): TColor;
 begin
 	case C of
 	clNone:
@@ -150,9 +159,9 @@ begin
 		end;
 	end;
 	end;
-end;
+end;}
 (*-------------------------------------------------------------------------*)
-function ShadowColor2(C1, C2: TColor): TColor;
+{function ShadowColor2(C1, C2: TColor): TColor;
 begin
 	case C1 of
 	clNone:
@@ -180,7 +189,7 @@ begin
 		end;
 	end;
 	end;
-end;
+end; }
 (*-------------------------------------------------------------------------*)
 function ColorDiv(Color: TColor; const D: Integer): TColor;
 var R, G, B: Integer;
@@ -216,7 +225,15 @@ begin
 	TRGBA(Result).A := TRGBA(C).A;
 end;
 (*-------------------------------------------------------------------------*)
-function SpectrumColor(X: Integer): TColor;
+function GrayColor(X: SG): TColor;
+begin
+	TRGBA(Result).R := X;
+	TRGBA(Result).G := X;
+	TRGBA(Result).B := X;
+	TRGBA(Result).A := 0;
+end;
+
+function SpectrumColor(X: SG): TColor;
 //0..255..510..765..1020..1275..1529
 begin
 	if (X < 0) or (X > 1529) then X := X mod 1530;
@@ -351,35 +368,13 @@ begin
 		Result := $00FFFFFF;
 end;
 (*-------------------------------------------------------------------------*)
-function DepthColor(const Depth: Byte): TColor;
-begin
-	case Depth of
-	0: 
-	begin
-		Result := cl3DDkShadow; // Black
-	end;
-	1:
-	begin
-		Result := clBtnShadow; // Gray
-	end;
-	2: 
-	begin
-		Result := cl3DLight; // Silver
-	end;
-	else
-	begin
-		Result := clBtnHighlight; // White
-	end;
-	end;
-end;
-(*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor): TColor; overload;
 begin
-	if C1 = C2 then
+{	if C1 = C2 then
 	begin
 		Result := C1;
 		Exit;
-	end;
+	end;}
 	if ((C1 = clBtnShadow) and (C2 = clBtnHighlight)) or
 		((C2 = clBtnShadow) and (C1 = clBtnHighlight)) then
 		Result := cl3DLight
@@ -400,15 +395,22 @@ end;
 
 function MixColors(C1, C2: TRGBA): TRGBA; overload;
 begin
-	if C1.L = C2.L then
+{	if C1.L = C2.L then
 	begin
 		Result := C1;
 		Exit;
-	end;
+	end;}
 	Result.R := (C1.R + C2.R) shr 1;
 	Result.G := (C1.G + C2.G) shr 1;
 	Result.B := (C1.B + C2.B) shr 1;
 	Result.A := (C1.B + C2.B) shr 1;
+end;
+
+function MixColors(C1, C2: TRGB): TRGB; overload;
+begin
+	Result.R := (C1.R + C2.R) shr 1;
+	Result.G := (C1.G + C2.G) shr 1;
+	Result.B := (C1.B + C2.B) shr 1;
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
@@ -431,6 +433,15 @@ begin
 	Result.A := (Per1 * C1.A + Per2 * C2.A + 32768) shr 16;
 end;
 (*-------------------------------------------------------------------------*)
+function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
+begin
+	Assert((Per1 >= 0) and (Per1 <= 65536));
+	Assert((Per2 >= 0) and (Per2 <= 65536));
+	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
+	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
+	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
+end;
+(*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 begin
 	Result := MixColors(C1, C2, Per, 65536 - Per);
@@ -441,8 +452,12 @@ begin
 	Result := MixColors(C1, C2, Per, 65536 - Per);
 end;
 (*-------------------------------------------------------------------------*)
-procedure ShadowText(Canvas: TCanvas;
-	const X, Y: Integer; const Text: string; const CF, CB: TColor);
+function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
+begin
+	Result := MixColors(C1, C2, Per, 65536 - Per);
+end;
+(*-------------------------------------------------------------------------*)
+procedure ShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: string; const CF, CB: TColor);
 var n: SG;
 begin
 	if CB = clNone then
@@ -453,7 +468,7 @@ begin
 		Canvas.Brush.Color := CB;
 	end;
 
-	Canvas.Font.Color := ShadowColor(CF);
+	Canvas.Font.Color := MixColors(CF, CB);
 	n := 1 + Canvas.Font.Size div 16;
 	Canvas.TextOut(X + n, Y + n, Text);
 
@@ -551,123 +566,152 @@ begin
 	end;
 end;
 (*-------------------------------------------------------------------------*)
+function CutText(const Canvas: TCanvas; const Text: string; const Width: SG): string;
+var w: SG;
+begin
+	Result := Text;
+	if Canvas.TextWidth(DelCharsF(Result, '&')) > Width then
+	begin
+		w := Length(Result);
+		while w > 1 do
+		begin
+			if Canvas.TextWidth(DelCharsF(Result, '&') + '…') <= Width then Break;
+			Dec(w);
+			SetLength(Result, w);
+		end;
+		Result := Result + '…';
+	end;
+end;
+
+procedure DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: AnsiString; FontShadow: SG);
+var
+	C: TColor;
+	B: TBrushStyle;
+begin
+	if FontShadow <> 0 then
+	begin
+		B := Canvas.Brush.Style;
+		Canvas.Brush.Style := bsClear;
+		C := Canvas.Font.Color;
+		Canvas.Font.Color := $808080;
+		repeat
+			OffsetRect(R, FontShadow, FontShadow);
+//			ExtTextOut(Canvas.Handle, X, Y, 0, nil, PChar(Text), Length(Text), nil);
+			DrawText(Canvas.Handle, PChar(Text), Length(Text), R, DT_NOCLIP or DT_SINGLELINE);
+			OffsetRect(R, -FontShadow, -FontShadow);
+			if FontShadow > 0 then Dec(FontShadow) else Inc(FontShadow);
+		until FontShadow = 0;
+		Canvas.Font.Color := C;
+		Canvas.Brush.Style := B;
+	end;
+//	ExtTextOut(Canvas.Handle, X, Y, 0, nil, PChar(Text), Length(Text), nil);
+	DrawText(Canvas.Handle, PChar(Text), Length(Text), R, DT_NOCLIP or DT_SINGLELINE);
+end;
+
+procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: AnsiString; FontShadow: SG);
+var R: TRect;
+begin
+	R.Left := X;
+	R.Top := Y;
+	R.Right := High(R.Right);
+	R.Bottom := High(R.Bottom);
+	DrawShadowText(Canvas, R, Text, FontShadow);
+end;
+
 procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
 	const Alignment: TAlignment; const Layout: TTextLayout; Caption: AnsiString; const WordWrap: BG; FontShadow: SG);
+const Border = 0;
 var
 	i, LastSpace{, k}: Integer;
-	Shadow: SG;
-	LineS: array of string;
-	LineN: SG;
+	Lines: array of string;
+	LineCount: SG;
+	Text, TextR: string;
 	CurX, CurY: Integer;
 	TextHeight: Integer;
 	MaxLines: Integer;
-
-	TextBounds: TRect;
-	C: TColor;
+	R: TRect;
+	NewSize: SG;
 begin
 	TextHeight := Max(Canvas.TextHeight('W'), 1);
 	MaxLines := (Rect.Bottom - Rect.Top) div TextHeight - 1;
-	SetLength(LineS, Length(Caption));
-	LineN := 0;
+	SetLength(Lines, 1);
+	LineCount := 0;
 	i := 1;
 	LastSpace := 0;
-	DelChars(Caption, CharCR);
 	while i <= Length(Caption) do
 	begin
-		if (Caption[i] = ' ') {or (i=Length(Caption))} then
+		if Caption[i] = CharSpace then
 		begin
 			LastSpace := i;
 		end;
 
-		if (Caption[i] = CharLF) or
-			((LineN < MaxLines) and (i > 1) and
-			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left)))
-			then
+		if (Caption[i] in [CharCR, CharLF]) or
+			((LineCount < MaxLines) and (i > 1) and
+			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left))) then
 		begin
-			if Caption[i] = CharLF then   
+			if Caption[i] in [CharCR, CharLF] then
 			begin
-//				if Caption[i + 1] = CharLF then k := 1 else k := 0;
-				LineS[LineN] := Copy(Caption, 1, i - 1);
-				Delete(Caption, 1, i{ + k});
+				if (i <= Length(Caption)) and (Caption[i] = CharCR) and (Caption[i + 1] = CharLF) then
+					NewSize := 2
+				else
+					NewSize := 1;
+				Lines[LineCount] := Copy(Caption, 1, i - 1);
+				Delete(Caption, NewSize, i);
 			end
 			else
 			if LastSpace = 0 then
 			begin
-				LineS[LineN] := Copy(Caption, 1, i - 1);
+				Lines[LineCount] := Copy(Caption, 1, i - 1);
 				Delete(Caption, 1, i - 1);
 			end
 			else
 			begin
-				LineS[LineN] := Copy(Caption, 1, LastSpace - 1);
+				Lines[LineCount] := Copy(Caption, 1, LastSpace - 1);
 				Delete(Caption, 1, LastSpace);
 			end;
 			LastSpace := 0;
-			Inc(LineN);
+			NewSize := LineCount + 2;
+			if AllocByExp(Length(Lines), NewSize) then
+				SetLength(Lines, NewSize);
+			Inc(LineCount);
 			i := 0;
 		end;
 		Inc(i);
 		if (i = Length(Caption) + 1) then
 		begin
-			LineS[LineN] := Caption;
-			Inc(LineN);
+			NewSize := LineCount + 2;
+			if AllocByExp(Length(Lines), NewSize) then
+				SetLength(Lines, NewSize);
+			Lines[LineCount] := Caption;
+			Inc(LineCount);
 			Break;
 		end;
 	end;
 
 	case Layout of
 	tlTop: CurY := Rect.Top;
-	tlBottom: CurY := Rect.Bottom - TextHeight * LineN;
-	else CurY := (Rect.Top + Rect.Bottom - TextHeight * LineN) div 2;
+	tlBottom: CurY := Rect.Bottom + 1 - TextHeight * LineCount;
+	else {tlCenter} CurY := Rect.Top + (Rect.Bottom - Rect.Top + 1 - TextHeight * LineCount) div 2;
 	end;
 
-	for i := 0 to LineN - 1 do
+	for i := 0 to LineCount - 1 do
 	begin
-		if LineS[i] <> '' then
+		if Lines[i] <> '' then
 		begin
+			Text := CutText(Canvas, Lines[i], Rect.Right - Rect.Left - 2 * Border);
+			TextR := DelCharsF(Text, '&');
 			case Alignment of
-			taLeftJustify: CurX := Rect.Left;
-			taRightJustify: CurX := Rect.Right - Canvas.TextWidth(DelCharsF(LineS[i], '&')) - 1;
-			else CurX := (Rect.Right + Rect.Left - Canvas.TextWidth(DelCharsF(LineS[i], '&'))) div 2;
+			taLeftJustify: CurX := Rect.Left + Border;
+			taRightJustify: CurX := Rect.Right - Border + 1 - Canvas.TextWidth(TextR);
+			else {taCenter} CurX := Rect.Left + (Rect.Right - Rect.Left + 1 - Canvas.TextWidth(TextR)) div 2;
 			end;
-			TextBounds.Left := CurX;
-			TextBounds.Top := CurY;
-			TextBounds.Right := Rect.Right;
-			TextBounds.Bottom := Rect.Bottom; //CurY + TextHeight;
-			if FontShadow <> 0 then
-			begin
-				Canvas.Brush.Style := bsClear;
-				C := Canvas.Font.Color;
-				Canvas.Font.Color := MixColors(C, Canvas.Brush.Color); //ShadowColor(C);
-				Shadow := FontShadow;
-				repeat
-{
-			C := ColorToRGB(Font.Color);
-			OffsetRect(Recta, 1, 1);
-			FBmpOut.Canvas.Font.Color := MixColors(Color, C);
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
+			if CurX < Rect.Left + Border then CurX := Rect.Left + Border;
 
-			OffsetRect(Recta, -1, 0);
-			FBmpOut.Canvas.Font.Color := MixColors(Color, MixColors(Color, C));
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
-
-			OffsetRect(Recta, 1, -1);
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
-
-			OffsetRect(Recta, -1, 0);
-			FBmpOut.Canvas.Font.Color := C;
-			DrawCutedText(FBmpOut.Canvas, Recta, TextA, TextL, s, True, 0);
-}
-					OffsetRect(TextBounds, Shadow, Shadow);
-					DrawText(Canvas.Handle, @LineS[i][1], Length(LineS[i]), TextBounds,
-						DT_BOTTOM or DT_LEFT {or DT_NOCLIP}{ or DrawTextBiDiModeFlags(0)});
-					OffsetRect(TextBounds, -Shadow, -Shadow);
-					if FontShadow > 0 then Dec(Shadow) else Inc(Shadow);
-				until Shadow = 0;
-				Canvas.Font.Color := C;
-			end;
-			DrawText(Canvas.Handle, @LineS[i][1], Length(LineS[i]), TextBounds,
-				DT_BOTTOM or DT_LEFT {or DT_NOCLIP}{ or DrawTextBiDiModeFlags(0)});
-//		Canvas.TextOut(CurX, CurY, LineS[i]);
+			R.Left := CurX;
+			R.Top :=  CurY;
+			R.Right := Rect.Right;
+			R.Bottom := Rect.Bottom;
+			DrawShadowText(Canvas, R, Text, FontShadow);
 		end;
 		Inc(CurY, TextHeight);
 	end;

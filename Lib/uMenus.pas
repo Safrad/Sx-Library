@@ -16,36 +16,6 @@ uses
 const
 	IconSize = 22;
 
-{
-		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
-			ARect: TRect; State: TOwnerDrawState);
-
-procedure TfMain.OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
-	ARect: TRect; State: TOwnerDrawState);
-begin
-	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State)
-end;
-
-	SetMainMenu(MainMenu1, OnAdvancedMenuDraw);
-
-
-type
-	TDMainMenu = class(TMainMenu)
-	private
-		procedure AdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
-			ARect: TRect; State: TOwnerDrawState);
-		procedure WMDisplayChange(var Message: TMessage);
-			message WM_DISPLAYCHANGE;
-	end;
-
-	TDPopupMenu = class(TPopupMenu)
-	private
-		procedure AdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
-			ARect: TRect; State: TOwnerDrawState);
-		procedure WMDisplayChange(var Message: TMessage);
-			message WM_DISPLAYCHANGE;
-	end;
-}
 function TryFindIcon(Name: string; const Path: string): string;
 procedure ImgAdd(Bitmap: TBitmap; const Name: string);
 procedure ComName(MenuItem: TMenuItem);
@@ -56,11 +26,10 @@ function ButtonNameToFileName(const Name: string): string;
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
 
-procedure MenuCreate(Src: TMenuItem; Dsc: TMenuItem);
+procedure MenuCreate(Src: TComponent; Dsc: TComponent);
 procedure MenuFree(Src: TMenuItem);
 procedure MenuUpdate(Src: TMenuItem; Dsc: TMenuItem);
 
-//procedure MenuClick(Menu: TMenuItem);
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 	ARect: TRect; State: TOwnerDrawState);
 
@@ -119,9 +88,7 @@ end;
 procedure ImgAdd(Bitmap: TBitmap; const Name: string);
 var
 	Bmp: TDBitmap;
-//		Quality: SG;
 	FileName: TFileName;
-//		TranColor: TColor;
 begin
 	FileName := TryFindIcon(Name, GraphDir + 'Images\');
 	if FileName <> '' then
@@ -131,15 +98,15 @@ begin
 		begin
 			Bmp := TDBitmap.Create;
 			Bmp.LoadFromFile(FileName);
-	//			MenuItem.Bitmap.PixelFormat := pf24bit;
-			Bitmap.Height := 0;
-			Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
-			Bitmap.Height := 16;
-			Bmp.Resize(Bitmap.Width, Bitmap.Height);
-	{			MenuItem.Bitmap.Transparent := Bmp.Transparent;
-			MenuItem.Bitmap.TransparentColor := Bmp.TransparentColor;
-			Bmp.Transparent := False;}
-			Bitmap.Assign(Bmp); //Canvas.Draw(0, 0, Bmp);
+			if Bmp.Empty = False then
+			begin
+				Bitmap.Width := 0;
+				Bitmap.Height := 0;
+				Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
+				Bitmap.Height := 16;
+				Bmp.Resize(Bitmap.Width, Bitmap.Height);
+				Bmp.GetBitmap(Bitmap);
+			end;
 			Bmp.Free;
 		end;
 	end;
@@ -188,13 +155,13 @@ begin
 	end;
 
 	if Found = False then
-		Result := DeleteLastNumber(Result);
+		Result := DelLastNumber(Result);
 end;
 
 procedure ComName(MenuItem: TMenuItem);
 begin
 	if (MenuItem.Bitmap.Width = 0) and (MenuItem.ImageIndex = -1) then
-		ImgAdd(MenuItem.Bitmap, DeleteLastNumber(MenuItem.Name));
+		ImgAdd(MenuItem.Bitmap, DelLastNumber(MenuItem.Name));
 end;
 
 procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
@@ -202,7 +169,6 @@ var
 	i, c: SG;
 	M: TMenuItem;
 begin
-//	{$ifopt d+}Exit;{$endif}
 	CreateImg;
 
 	if (Menu is TMenu) or (Menu is TPopupMenu) then
@@ -233,41 +199,49 @@ begin
 			ComName(M);
 		end;
 		MenuSet(M, OnAdvancedMenuDraw);
-
-{		for j := 0 to PopupMenu.Items[i].Count - 1 do
-		begin
-			PopupMenu.Items[i].Items[j].OnAdvancedDrawItem := OnAdvancedMenuDraw;
-			ComName(PopupMenu.Items[i].Items[j]);
-		end;}
 	end;
 end;
 
-procedure MenuCreate(Src: TMenuItem; Dsc: TMenuItem);
+procedure MenuCreate(Src: TComponent; Dsc: TComponent);
 var
-	i: SG;
+	i, c: SG;
+	Items: TMenuItem;
 	M: TMenuItem;
 begin
-//	Dsc.Items.Clear;
-	for i := 0 to Src.Count - 1 do
+	if (Src is TMenu) or (Src is TPopupMenu) then
+	begin
+		c := TMenu(Src).Items.Count;
+		Items := TMenu(Src).Items;
+	end
+	else if Src is TMenuItem then
+	begin
+		c := TMenuItem(Src).Count;
+		Items := TMenuItem(Src);
+	end
+	else
+		Exit;
+
+		//	Dsc.Items.Clear;
+	for i := 0 to c - 1 do
 	begin
 		M := TMenuItem.Create(Dsc);
-		if Src[i].Name <> '' then
-			M.Name := Src[i].Name + '1';
+		if Items[i].Name <> '' then
+			M.Name := Items[i].Name + '1';
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
-		M.GroupIndex := Src[i].GroupIndex;
-		M.RadioItem := Src[i].RadioItem;
-		M.Tag := Src[i].Tag;
-		M.ShortCut := Src[i].ShortCut;
-		M.OnClick := Src[i].OnClick;
+		M.GroupIndex := Items[i].GroupIndex;
+		M.RadioItem := Items[i].RadioItem;
+		M.Tag := Items[i].Tag;
+		M.ShortCut := Items[i].ShortCut;
+		M.OnClick := Items[i].OnClick;
 
-{		if Dsc is TMenu then
+		if (Dsc is TMenu) or (Dsc is TPopupMenu) then
 			TMenu(Dsc).Items.Add(M)
-		else if Dsc is TMenuItem then}
-			Dsc.Add(M);
-		if Src[i].Count > 0 then
+		else if Dsc is TMenuItem then
+			TMenuItem(Dsc).Add(M);
+		if Items[i].Count > 0 then
 		begin
-			MenuCreate(Src[i], M);
+			MenuCreate(Items[i], M);
 		end;
 	end;
 end;
@@ -321,14 +295,11 @@ begin
 		Dec(c);
 	end;
 end;
-{
-procedure MenuClick(Menu: TMenuItem);
-begin
-	Menu.Checked := not Menu.Checked;
-end;}
 
 var
 	BmpCheck: TBitmap;
+	MenuBmp, BmpD: TDBitmap;
+	BCanvas: TCanvas;
 
 procedure LoadBmpCheck;
 begin
@@ -342,10 +313,6 @@ procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
 var
 	MenuItem: TMenuItem;
 	ImageList: TCustomImageList;
-	Bmp: TDBitmap;
-	BmpD: TDBitmap;
-	MenuBmp: TDBitmap;
-	BCanvas: TCanvas;
 	C1, C2: TColor;
 	Co: array[0..3] of TColor;
 	Rec: TRect;
@@ -357,7 +324,6 @@ var
 	MenuB: Boolean;
 	BmpWid: SG;
 begin
-	// Init
 	if not (Sender is TMenuItem) then Exit;
 	MenuItem := TMenuItem(Sender);
 	ImageList := MenuItem.GetImageList;
@@ -382,14 +348,11 @@ begin
 		MenuCount := TMenuItem(MenuItem.GetParentComponent).Count;
 	end;
 
-	MenuBmp := TDBitmap.Create;
 	MenuBmp.SetSize(ARect.Right - ARect.Left, ARect.Bottom - ARect.Top);
 
-	BCanvas := MenuBmp.Canvas;
-	BCanvas.Brush.Style := bsSolid;
 	BCanvas.Font := ACanvas.Font;
 
-	if ScreenBits <= 11 then
+	if NowBits <= 11 then
 	begin
 		MenuBmp.Bar(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 			clMenu, ef16);
@@ -452,8 +415,8 @@ begin
 			end
 			else
 			begin
-				C1 := DepthColor(1);
-				C2 := DepthColor(3);
+				C1 := clDepth[1];
+				C2 := clDepth[3];
 			end;
 
 			if TopLevel then
@@ -462,7 +425,7 @@ begin
 				Co[1] := ColorDiv(clMenu, 2 * 65536 div 3);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				if ScreenBits <= 11 then
+				if NowBits <= 11 then
 				begin
 					MenuBmp.Bar(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
 						clMenu, ef16);
@@ -471,7 +434,7 @@ begin
 				begin
 					MenuBmp.GenerateRGBEx(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 				end;
-				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, DepthColor(1), DepthColor(3), 1, ef16);
+				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clDepth[1], clDepth[3], 1, ef16);
 			end
 			else
 			begin
@@ -483,7 +446,7 @@ begin
 				Co[1] := ColorDiv(clHighLight, 2 * 65536 div 3);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				if ScreenBits <= 11 then
+				if NowBits <= 11 then
 				begin
 					MenuBmp.Bar(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clHighLight, ef16);
 				end
@@ -510,8 +473,8 @@ begin
 			end
 			else
 			begin
-				C1 := DepthColor(1);
-				C2 := DepthColor(3);
+				C1 := clDepth[1];
+				C2 := clDepth[3];
 			end;
 		end;
 
@@ -522,55 +485,38 @@ begin
 			if (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
-				MenuBmp.Bar(1, Y + 1, 1 + 15, Y + 1 + 15, DepthColor(1), ef08);
-				BmpWid := 16;
+				MenuBmp.Bar(1, Y + 1, 1 + 15, Y + 1 + 15, clDepth[1], ef08);
 			end;
 		end;
 
 		MenuB := False;
 		if (MenuItem.ImageIndex >= 0) and Assigned(ImageList) and (TopLevel = False) then
 		begin
-			Bmp := TDBitmap.Create;
-			BmpWid := 16;
-			Bmp.SetSize(16, 16);
-			Bmp.Bar(clMenu, ef16);
+      // Not often uses
+			BmpD.Bar(clMenu, ef16);
 
-			ImageList.Draw(Bmp.Canvas, 0, 0, MenuItem.ImageIndex,
+			ImageList.Draw(BmpD.Canvas, 0, 0, MenuItem.ImageIndex,
 				True);
-			Bmp.Transparent := True;
+			BmpD.Transparent := True;
 			if MenuItem.Enabled = False then
-			begin
-				Bmp.Bar(clRed, ef12);
-			end;
-			Bmp.TransparentColor := clMenu;
+				BmpD.Bar(clRed, ef12);
+			BmpD.TransparentColor := clMenu;
 
-			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, Bmp, ef16);
+			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, BmpD, ef16);
 
-			Bmp.Free;
 			if (TopLevel = False) and (MenuItem.Checked = False) and (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
-				MenuBmp.Border(0, Y, 17 + 1, Y + 17 + 1, DepthColor(3), DepthColor(1), 1, ef16);
+				MenuBmp.Border(0, Y, 17 + 1, Y + 17 + 1, clDepth[3], clDepth[1], 1, ef16);
 			end;
 			MenuB := True;
 		end
 		else if Assigned(MenuItem.Bitmap) and (TopLevel = False) and
 			(MenuItem.Bitmap.Empty = False) then
 		begin
-			BmpD := TDBitmap.Create;
-//			BmpD.SetSize(MenuItem.Bitmap.Width, MenuItem.Bitmap.Height);
-{			BmpWid := MenuItem.Bitmap.Width;
-			C := MenuItem.Bitmap.TransparentColor;
-			MenuItem.Bitmap.TransparentColor := -1;}
 			BmpD.CopyBitmap(MenuItem.Bitmap);
-//			MenuItem.Bitmap.TransparentColor := C;
 			if (MenuItem.Enabled = False) or (odInactive in State) then
-			begin
-{				BmpD.Transparent := True;
-				BmpD.TransparentColor := MenuItem.Bitmap.TransparentColor;}
 				BmpD.Bar(clMenu, ef12);
-			end;
-//			BmpD.ChangeColor(MenuItem.Bitmap.TransparentColor, clMenu);}
 
 			x := 1;
 			y := (ARect.Bottom - ARect.Top - 18) div 2 + 1;
@@ -581,15 +527,14 @@ begin
 			end;
 			MenuBmp.Bmp(x, y, BmpD, ef16);
 			BmpWid := BmpD.Width;
-			BmpD.Free;
 			MenuB := True;
 		end
 		else
 		begin
 			if MenuItem.RadioItem then
 			begin
-				MenuBmp.Canvas.Pen.Color := clWindowText;
-				MenuBmp.Canvas.Brush.Color := clWindowText;
+				MenuBmp.Canvas.Pen.Color := C1;
+				MenuBmp.Canvas.Brush.Color := C1;
 				if MenuItem.Checked then
 					MenuBmp.Canvas.Brush.Style := bsSolid
 				else
@@ -601,7 +546,6 @@ begin
 			begin
 				if BmpCheck = nil then
 					LoadBmpCheck;
-//				MenuBmp.Canvas.Font.Color := clBtnText;
 				MenuBmp.Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, BmpCheck);
 				MenuB := True;
 			end;
@@ -611,9 +555,9 @@ begin
 		begin
 			Y := (ARect.Bottom - ARect.Top - 18) div 2;
 			MenuBmp.Border(1, Y + 1, 0 + 16, Y + 16,
-				DepthColor(1), DepthColor(3), 1, ef06);
+				clDepth[1], clDepth[3], 1, ef06);
 			MenuBmp.Border(0, Y + 0, 1 + 16 + 1, Y + 1 + 16 + 1,
-				DepthColor(1), DepthColor(3), 1, ef16);
+				clDepth[1], clDepth[3], 1, ef16);
 		end;
 
 		// Caption
@@ -637,73 +581,30 @@ begin
 		if TopLevel and (odSelected in State) then OffsetRect(Rec, 1, 1);
 
 		OffsetRect(Rec, 0, 1);
-		s := KeyToStr(MenuItem.ShortCut); //ShortCutToText(MenuItem.ShortCut);
+		s := KeyToStr(MenuItem.ShortCut);
 		if C2 <> clNone then
 		begin
-			DrawText(
-				BCanvas.Handle, // handle to device context
-				PChar(MenuItem.Caption),  // pointer to string to draw
-				Length(MenuItem.Caption), // string length, in characters
-				Rec,  // pointer to structure with formatting dimensions
-				DT_SINGLELINE or DT_VCENTER{DT_CALCRECT}  // text-drawing flags
-			 );
-{       ARect.Left := ARect.Right;}
+			DrawText(BCanvas.Handle, PChar(MenuItem.Caption), Length(MenuItem.Caption), Rec,
+				DT_SINGLELINE or DT_VCENTER or DT_NOCLIP);
 			Rec.Right := Rec.Right - 8;
-			DrawText(BCanvas.Handle,
-				PChar(s), Length(s), Rec, DT_RIGHT or DT_SINGLELINE or DT_VCENTER);
+			DrawText(BCanvas.Handle, PChar(s), Length(s), Rec,
+				DT_RIGHT or DT_SINGLELINE or DT_VCENTER or DT_NOCLIP);
 			Rec.Right := Rec.Right + 8;
 		end;
 		BCanvas.Font.Color := C1;
 		BCanvas.Font.Name := BCanvas.Font.Name;
 		OffsetRect(Rec, -1, -1);
-		DrawText(
-			BCanvas.Handle, // handle to device context
-			PChar(MenuItem.Caption),  // pointer to string to draw
-			Length(MenuItem.Caption), // string length, in characters
-			Rec,  // pointer to structure with formatting dimensions
-			DT_SINGLELINE or DT_VCENTER{DT_CALCRECT}  // text-drawing flags
-		 );
+		DrawText(BCanvas.Handle, PChar(MenuItem.Caption), Length(MenuItem.Caption), Rec,
+			DT_SINGLELINE or DT_VCENTER or DT_NOCLIP);
 		Rec.Right := Rec.Right - 8;
-		DrawText(BCanvas.Handle,
-			PChar(s), Length(s), Rec, DT_RIGHT or DT_SINGLELINE or DT_VCENTER);
+		DrawText(BCanvas.Handle, PChar(s), Length(s), Rec,
+			DT_RIGHT or DT_SINGLELINE or DT_VCENTER or DT_NOCLIP);
 		Rec.Right := Rec.Right + 8;
 	end;
 	MenuBmp.TransparentColor := -1;
-//	ACanvas.Draw(ARect.Left, ARect.Top, MenuBmp);
-	BitBlt(ACanvas.Handle, ARect.Left, ARect.Top, MenuBmp.Width, MenuBmp.Height,
-		MenuBmp.Canvas.Handle,
-			0, 0,
-			SRCCOPY);
-//  ACanvas.TextOut(ARect.Left, ARect.Top, IntToStr(MenuCount));
-
-	MenuBmp.Free;
+	BitBlt(ACanvas.Handle, ARect.Left, ARect.Top, MenuBmp.Width, MenuBmp.Height, MenuBmp.Canvas.Handle, 0, 0, SRCCOPY);
 end;
 
-{
-procedure TDMainMenu.AdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
-	ARect: TRect; State: TOwnerDrawState);
-begin
-	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
-end;
-
-procedure TDMainMenu.WMDisplayChange(var Message: TMessage);
-begin
-	SetMainMenu(Self, AdvancedDrawItem);
-
-end;
-
-procedure TDPopupMenu.WMDisplayChange(var Message: TMessage);
-begin
-	SetPopupMenu(Self, AdvancedDrawItem);
-
-end;
-
-procedure TDPopupMenu.AdvancedDrawItem(Sender: TObject; ACanvas: TCanvas;
-	ARect: TRect; State: TOwnerDrawState);
-begin
-	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
-end;
-}
 const
 	BevelWidth = 7;
 	IconSuffix = 'I';
@@ -846,7 +747,6 @@ var
 	C: TControl;
 	M: TMenuItem;
 begin
-//	Application.ProcessMessages;
 	for i := 0 to Panel.ControlCount - 1 do
 	begin
 		C := Panel.Controls[i];
@@ -892,7 +792,7 @@ begin
 		Result := '|- '
 	else
 		Result := '';
-	Result := Result + AddSpace(DeleteLastNumber(M.Name)) + ' (';
+	Result := Result + AddSpace(DelLastNumber(M.Name)) + ' (';
 	if AsTime then
 		Result := Result + MsToStr(Value, True, diSD, 3, False)
 	else
@@ -906,9 +806,15 @@ begin
 end;
 
 initialization
-
+	MenuBmp := TDBitmap.Create;
+	BCanvas := MenuBmp.Canvas;
+	BCanvas.Brush.Style := bsSolid;
+	BmpD := TDBitmap.Create;
+	BmpD.SetSize(16, 16);
 finalization
 	if Assigned(BmpCheck) then
 		DeleteObject(BmpCheck.Handle);
 	FreeAndNil(BmpCheck);
+	FreeAndNil(BmpD);
+	FreeAndNil(MenuBmp);
 end.

@@ -13,7 +13,7 @@ interface
 uses uTypes;
 
 const
-	SinDiv = 32768; // 1.0 65536; // 1..128..1024*1024
+	SinDiv = 32768; // 1.0 65536; // 1..128..MB
 type
 	PAngle = ^TAngle;
 	TAngle = S2;
@@ -46,7 +46,7 @@ function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: Extended): Extended;
 
 function FastSqrt(A: SG): SG;
-function LinearMax(Clock, Maximum: LongWord): LongWord;
+function LinearMax(Clock, Maximum: UG): UG;
 
 function RoundSG(Value: FA): SG;
 function RoundS8(Value: FA): S8;
@@ -60,7 +60,7 @@ function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 
 function Range(const Min, Cur, Max: SG): SG; overload;
 function Range(const Min, Cur, Max, Def: SG): SG; overload;
-function Range(const Min, Cur, Max: Cardinal): Cardinal; overload;
+function Range(const Min, Cur, Max: UG): UG; overload;
 function Range(const Min, Cur, Max: FG): FG; overload;
 
 procedure Exchange(var A, B: B1); register; overload;
@@ -75,8 +75,8 @@ procedure Exchange(var A, B: S8); register; overload;
 procedure Exchange(var A, B: F8); register; overload;
 procedure Exchange(var A, B: FA); register; overload;
 procedure Exchange(var A, B: Pointer); register; overload;
-procedure Exchange(var P0, P1; Count: Cardinal); register; overload;
-procedure Exchange(P0, P1: Pointer; Count: Cardinal); register; overload;
+procedure Exchange(var P0, P1; Count: U4); register; overload;
+procedure Exchange(P0, P1: Pointer; Count: U4); register; overload;
 procedure Exchange(var s0, s1: string); overload;
 
 function Arg(X, Y: Extended): Extended; overload;
@@ -90,17 +90,18 @@ procedure CheckBool(var Bool: WordBool); overload;
 procedure CheckBool(var Bool: LongBool); overload;
 
 procedure Order(var I1, I2: SG); overload;
-procedure Order(var I1, I2: Cardinal); overload;
+procedure Order(var I1, I2: UG); overload;
 procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
-procedure ReadMem(P: Pointer; Size: Cardinal);
-function SameData(P0, P1: Pointer; Size: Cardinal): BG;
-procedure FillU2(var Desc; Count: Cardinal; Value: U2);
-procedure FillU4(var Desc; Count: Cardinal; Value: U4);
-procedure FillOrderU4(var Desc; Size: Cardinal);
-procedure Reverse4(var Desc; Size: Cardinal);
-function Checksum(var Desc; Size: Cardinal): U4;
-procedure Swap02(var Desc; Count: Cardinal; Step: S4);
+procedure ReadMem(P: Pointer; Size: UG);
+function SameData(P0, P1: Pointer; Size: UG): BG;
+procedure FillU2(var Desc; Count: UG; Value: U2);
+procedure FillU4(var Desc; Count: UG; Value: U4);
+procedure FillOrderU4(var Desc; Size: UG);
+procedure Reverse4(var Desc; Size: UG);
+function Checksum(var Desc; Size: UG): U4;
+function Hash(var Desc; Size: UG): U4;
+procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
 var
@@ -110,7 +111,7 @@ var
 procedure InitPerformanceCounter;
 function GetCPUCounter: TU8;
 function PerformanceCounter: U8;
-procedure Delay(const ms: LongWord);
+procedure Delay(const ms: U4);
 procedure DelayEx(const f: U8);
 
 function CalcShr(N: U4): S1;
@@ -536,7 +537,7 @@ begin
 	Result := B;
 end;
 
-function LinearMax(Clock, Maximum: LongWord): LongWord;
+function LinearMax(Clock, Maximum: UG): UG;
 begin
 	Result := Clock mod (2 * Maximum);
 	if Result > Maximum then Result := 2 * Maximum - Result;
@@ -698,7 +699,7 @@ begin
 		Result := Def;
 end;
 
-function Range(const Min, Cur, Max: Cardinal): Cardinal;
+function Range(const Min, Cur, Max: UG): UG;
 begin
 	Result := Cur;
 	if Cur < Min then
@@ -857,7 +858,7 @@ end;
 	+4
 }
 
-procedure Exchange(var P0, P1; Count: Cardinal); register;
+procedure Exchange(var P0, P1; Count: U4); register;
 asm
 	push edi
 	push esi
@@ -878,7 +879,7 @@ asm
 	POP EDI
 end;
 
-procedure Exchange(P0, P1: Pointer; Count: Cardinal); register;
+procedure Exchange(P0, P1: Pointer; Count: UG); register;
 asm
 	PUSH EDI
 	PUSH ESI
@@ -922,19 +923,19 @@ begin
 	if Result < 0 then Result := 2 * pi - Abs(Result);
 end;
 
-procedure CheckBool(var Bool: ByteBool);
+procedure CheckBool(var Bool: B1);
 begin
-	Bool := ByteBool(Byte(Bool) and 1);
+	Bool := B1(U1(Bool) and 1);
 end;
 
-procedure CheckBool(var Bool: WordBool);
+procedure CheckBool(var Bool: B2);
 begin
-	Bool := WordBool(Word(Bool) and 1);
+	Bool := B2(U2(Bool) and 1);
 end;
 
-procedure CheckBool(var Bool: LongBool);
+procedure CheckBool(var Bool: B4);
 begin
-	Bool := LongBool(LongWord(Bool) and 1);
+	Bool := B4(U4(Bool) and 1);
 end;
 
 procedure Order(var I1, I2: SG);
@@ -948,8 +949,8 @@ begin
 	end;
 end;
 
-procedure Order(var I1, I2: Cardinal);
-var I: Cardinal;
+procedure Order(var I1, I2: UG);
+var I: UG;
 begin
 	if I1 > I2 then
 	begin
@@ -972,13 +973,13 @@ begin
 end;
 
 {
-procedure GetMem0(var P: Pointer; Size: Cardinal);
+procedure GetMem0(var P: Pointer; Size: UG);
 begin
 	GetMem(P, Size);
 	FillChar(P^, Size, 0);
 end;}
 
-procedure ReadMem(P: Pointer; Size: Cardinal); register;
+procedure ReadMem(P: Pointer; Size: UG); register;
 asm
 	cmp Size, 0
 	je @Exit
@@ -991,7 +992,7 @@ asm
 	@Exit:
 end;
 
-function SameData(P0, P1: Pointer; Size: Cardinal): BG; register;
+function SameData(P0, P1: Pointer; Size: UG): BG; register;
 asm
 {	push ebx
 	mov Result, 1
@@ -1042,7 +1043,7 @@ asm
 	@Exit0:
 end;
 
-procedure FillU2(var Desc; Count: Cardinal; Value: U2); register;
+procedure FillU2(var Desc; Count: UG; Value: U2); register;
 asm
 	PUSH    EDI
 	MOV     EDI,EAX
@@ -1056,7 +1057,7 @@ asm
 	POP     EDI
 end;
 
-procedure FillU4(var Desc; Count: Cardinal; Value: U4); register;
+procedure FillU4(var Desc; Count: UG; Value: U4); register;
 asm
 	PUSH    EDI
 	MOV     EDI,EAX
@@ -1067,7 +1068,7 @@ asm
 	POP     EDI
 end;
 
-procedure FillOrderU4(var Desc; Size: Cardinal); register;
+procedure FillOrderU4(var Desc; Size: UG); register;
 asm
 	cmp Size, 0
 	je @Exit
@@ -1083,7 +1084,7 @@ asm
 	@Exit:
 end;
 
-procedure Reverse4(var Desc; Size: Cardinal); register;
+procedure Reverse4(var Desc; Size: UG); register;
 asm
 	push esi
 	push ebx
@@ -1111,7 +1112,7 @@ asm
 	pop esi
 end;
 
-function Checksum(var Desc; Size: Cardinal): U4; register;
+function Checksum(var Desc; Size: UG): U4; register;
 asm
 	mov Result, 0
 	and Size, $fffffffc
@@ -1129,7 +1130,36 @@ asm
 	@Exit:
 end;
 
-procedure Swap02(var Desc; Count: Cardinal; Step: S4); register;
+function Hash(var Desc; Size: UG): U4; register;
+{const
+	Shift = 6;
+	Mask = 1 shl (8 * SizeOf(Result) - Shift);
+	Result := (Result and Mask) xor (Result shl Shift) xor Data;
+}
+asm
+	mov Result, 0
+	and Size, $fffffffc
+	cmp Size, 0
+	je @Exit
+	mov ecx, eax
+	add ecx, Size
+	@Loop:
+		// <<
+{		mov edx, Result
+		shl edx, Shift
+		xor Result, edx}
+
+		// Standard
+		mov edx, [eax]
+		xor Result, edx
+
+		add eax, 4
+		cmp eax, ecx
+	jb @Loop
+	@Exit:
+end;
+
+procedure Swap02(var Desc; Count: UG; Step: S4); register;
 asm
 	PUSH    EDI
 	MOV     EDI, EAX
@@ -1188,9 +1218,9 @@ begin
 	end;
 end;
 
-procedure Delay(const ms: LongWord);
+procedure Delay(const ms: U4);
 var
-	TickCount: LongWord;
+	TickCount: U4;
 begin
 	TickCount := GetTickCount + ms;
 	while GetTickCount < TickCount do
@@ -1211,9 +1241,7 @@ function CalcShr(N: U4): S1;
 	2: 1
 	4: 2
 	8: 3
-	16
-	32
-	64
+	...
 	16384: 14
 	32768: 15
 	65536: 16
@@ -1372,10 +1400,10 @@ function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
 }
 begin
 	{$ifopt d+}
-	if (OldSize < 0) or (OldSize > 1024 * 1024 * 1024) then
+	if (OldSize < 0) or (OldSize > GB) then
 //		ErrorMessage('Bad AllocBy block OldSize' + LineSep + BToStr(OldSize));
 		Assert(False);
-	if (NewSize < 0) or (NewSize > 1024 * 1024 * 1024) then
+	if (NewSize < 0) or (NewSize > GB) then
 //		ErrorMessage('Bad AllocBy block NewSize' + LineSep + BToStr(NewSize));
 		Assert(False);
 	{$endif}

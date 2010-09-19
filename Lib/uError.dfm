@@ -1,6 +1,6 @@
 object fIOError: TfIOError
-  Left = 489
-  Top = 542
+  Left = 323
+  Top = 256
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   ClientHeight = 135
@@ -18,6 +18,7 @@ object fIOError: TfIOError
   OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp
   OnMouseMove = FormMouseMove
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -34,33 +35,16 @@ object fIOError: TfIOError
     Transparent = True
     OnMouseMove = FormMouseMove
   end
-  object Label1: TDLabel
+  object LabelX: TLabel
     Left = 96
     Top = 32
     Width = 16
     Height = 19
-    AutoSize = False
     Alignment = taCenter
+    AutoSize = False
     Caption = '/'
-    BackEffect = ef00
-    FontShadow = 1
-    Displ.Enabled = False
-    Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
-    BevelOuter = bvNone
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
+    Layout = tlCenter
     OnMouseMove = FormMouseMove
   end
   object PanelCount: TDLabel
@@ -68,28 +52,12 @@ object fIOError: TfIOError
     Top = 32
     Width = 33
     Height = 19
-    AutoSize = False
     Alignment = taRightJustify
     Caption = '9,999'
     FontShadow = 1
-    Displ.Enabled = False
     Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
     BevelOuter = bvNone
     BorderStyle = bsSingle
-    Layout = tlCenter
-    Transparent = False
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
     OnMouseMove = FormMouseMove
   end
   object LabelTimeLeft: TDLabel
@@ -97,28 +65,11 @@ object fIOError: TfIOError
     Top = 8
     Width = 73
     Height = 17
-    AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Time to Close:'
-    BackEffect = ef08
     FontShadow = 1
-    Displ.Enabled = False
     Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
     BevelOuter = bvLowered
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
     OnClick = LabelTimeLeftClick
     OnMouseMove = FormMouseMove
   end
@@ -127,25 +78,9 @@ object fIOError: TfIOError
     Top = 24
     Width = 73
     Height = 17
-    AutoSize = False
     Alignment = taRightJustify
-    Displ.Enabled = False
     Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
     BevelOuter = bvLowered
-    Layout = tlCenter
-    Transparent = False
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
     OnClick = LabelTimeLeftClick
     OnMouseMove = FormMouseMove
   end
@@ -154,28 +89,11 @@ object fIOError: TfIOError
     Top = 8
     Width = 153
     Height = 17
-    AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Created:'
-    BackEffect = ef08
     FontShadow = 1
-    Displ.Enabled = False
     Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
     BevelOuter = bvLowered
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
     OnMouseMove = FormMouseMove
   end
   object PanelCreated: TDLabel
@@ -183,25 +101,9 @@ object fIOError: TfIOError
     Top = 24
     Width = 153
     Height = 17
-    AutoSize = False
     Alignment = taRightJustify
-    Displ.Enabled = False
     Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
     BevelOuter = bvLowered
-    Layout = tlCenter
-    Transparent = False
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
     OnMouseMove = FormMouseMove
   end
   object LabelMessage: TDLabel
@@ -209,28 +111,11 @@ object fIOError: TfIOError
     Top = 8
     Width = 129
     Height = 19
-    AutoSize = False
-    Alignment = taLeftJustify
     Caption = 'Message'
-    BackEffect = ef08
     FontShadow = 1
-    Displ.Enabled = False
     Displ.Format = '88'
-    Displ.SizeX = 4
-    Displ.SizeY = 4
-    Displ.SpaceSX = 2
-    Displ.SpaceSY = 2
-    Displ.SizeT = 1
-    Displ.Spacing = 0
-    Displ.ColorA = clRed
-    Displ.ColorD = clMaroon
-    Displ.Size = 0
     BevelOuter = bvLowered
-    Layout = tlCenter
     Transparent = True
-    TransparentColor = False
-    TransparentColorValue = clBlack
-    WordWrap = False
     OnMouseMove = FormMouseMove
   end
   object ButtonRetry: TDButton
@@ -276,7 +161,7 @@ object fIOError: TfIOError
     Top = 0
     Width = 81
     Height = 23
-    Caption = 'Ignore &All'
+    Caption = '&Ignore &All'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -347,7 +232,7 @@ object fIOError: TfIOError
     Top = 103
     Width = 145
     Height = 23
-    Caption = 'Use Answer for All'
+    Caption = '&Use Answer for All'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -365,7 +250,7 @@ object fIOError: TfIOError
     Top = 32
     Width = 19
     Height = 19
-    Caption = 'Left'
+    Caption = '&Left'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -374,6 +259,8 @@ object fIOError: TfIOError
     ParentFont = False
     TabOrder = 7
     OnClick = ButtonDownClick
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
   end
   object EditIndex: TEdit
@@ -384,6 +271,8 @@ object fIOError: TfIOError
     TabOrder = 8
     Text = '9,999'
     OnChange = EditIndexChange
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
   end
   object ButtonUp: TDButton
@@ -392,7 +281,7 @@ object fIOError: TfIOError
     Top = 32
     Width = 19
     Height = 19
-    Caption = 'Right'
+    Caption = '&Right'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -401,6 +290,8 @@ object fIOError: TfIOError
     ParentFont = False
     TabOrder = 9
     OnClick = ButtonDownClick
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
   end
   object OpenDialogFile: TOpenDialog
@@ -410,10 +301,7 @@ object fIOError: TfIOError
     Top = 144
   end
   object Timer1: TDTimer
-    ActiveOnly = True
     Enabled = False
-    Interval = 1000
-    EventStep = esInterval
     OnTimer = Timer1Timer
     Left = 8
     Top = 88

@@ -339,13 +339,13 @@ end;
 
 constructor TDBF.Create;
 begin
-	inherited Create;
+	inherited;
 end;
 
 destructor TDBF.Destroy;
 begin
 	Close;
-	inherited Destroy;
+	inherited;
 end;
 
 function TDBF.FindColumn(Name: string): PColumn;

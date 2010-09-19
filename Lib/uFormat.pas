@@ -95,7 +95,7 @@ function BToStr(const B: S4): string; overload;
 function BToStr(const B: S8): string; overload;
 function NodesToS(const Value: U8): string;
 
-procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
+procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: U4);
 type
 	TDisplay = (diDHMSD, diHHMSD, diHMSD, diMSD, diSD);
 
@@ -114,9 +114,9 @@ function SToTime(Str: string): TDateTime;
 
 
 function MsToStr(DT: Int64;
-	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
+	Display: TDisplay; const Decimals: SG; FixedWidth: Boolean): string; overload;
 function MsToStr(DT: Int64; const UseWinFormat: BG;
-	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string; overload;
+	Display: TDisplay; const Decimals: SG; FixedWidth: Boolean): string; overload;
 
 function DateToS(var Year, Month, Day: U2): string; overload;
 function DateToS(D: TDateTime): string; overload;
@@ -125,8 +125,8 @@ function DateTimeToS(DT: TDateTime): string;
 function DTToStr(DT: TDateTime): string; // UseWinFormat = True
 function PhoneToStr(Phone: U8): string;
 
-function RemoveEscape(s: string): string;
-function AddEscape(s: string): string; // 2.8x larger for random data
+function RemoveEscape(const s: string): string;
+function AddEscape(const s: string): string; // 2.8x larger for random data
 
 implementation
 
@@ -642,43 +642,43 @@ const Sep = ' ';
 function BToStr(const B: Integer): string;
 label LExit;
 begin
-	if B < 1024 then //2^10 ($400)
+	if B < KB then // 2^10 ($400)
 	begin
 		Result := NToS(B, 0) + Sep + 'B';
 		goto LExit;
 	end;
-	if B < 10240 then
+	if B < 10 * KB then
 	begin
-		Result := NToS((100 * B) div 1024, -2) + Sep + 'KB';
+		Result := NToS((100 * B) div KB, -2) + Sep + 'KB';
 		goto LExit;
 	end;
-	if B < 102400 then
+	if B < 100 * KB then
 	begin
-		Result := NToS((10 * B) div 1024, -1) + Sep + 'KB';
+		Result := NToS((10 * B) div KB, -1) + Sep + 'KB';
 		goto LExit;
 	end;
-	if B < 1048576 then //2^20 ($100 000)
+	if B < MB then // 2^20 ($100 000)
 	begin
-		Result := NToS(B div 1024, 0) + Sep + 'KB';
+		Result := NToS(B div KB, 0) + Sep + 'KB';
 		goto LExit;
 	end;
-	if B < 10485760 then
+	if B < 10 * MB then
 	begin
-		Result := NToS((100 * B) div 1048576, -2) + Sep + 'MB';
+		Result := NToS((100 * B) div MB, -2) + Sep + 'MB';
 		goto LExit;
 	end;
-	if B < 104857600 then
+	if B < 100 * MB then
 	begin
-		Result := NToS((10 * B) div 1048576, -1) + Sep + 'MB';
+		Result := NToS((10 * B) div MB, -1) + Sep + 'MB';
 		goto LExit;
 	end;
-	if B < 1073741824 then //2^30 ($40 000 000)
+	if B < GB then // 2^30 ($40 000 000)
 	begin
-		Result := NToS(B div 1048576, 0) + Sep + 'MB';
+		Result := NToS(B div MB, 0) + Sep + 'MB';
 		goto LExit;
 	end;
-	//if B<10737418240 then
-	Result := NToS((100 * (B div 128)) div (1073741824 div 128), -2) + Sep + 'GB';
+	//if B < GB then
+	Result := NToS((100 * (B div 128)) div (GB div 128), -2) + Sep + 'GB';
 	LExit:
 //	if B < 0 then Result := '-' + Result;
 end;
@@ -686,59 +686,59 @@ end;
 function BToStr(const B: Int64): string;
 label LExit;
 begin
-	if B < 1024 then //2^10 ($400)
+	if B < KB then // 2^10 ($400)
 	begin
 		Result := NToS(B, 0) + Sep + 'B';
 		goto LExit;
 	end;
-	if B < 10240 then
+	if B < 10 * KB then
 	begin
-		Result := NToS((100 * B) div 1024, -2) + Sep + 'KB'; //Kilo
+		Result := NToS((100 * B) div KB, -2) + Sep + 'KB'; // Kilo
 		goto LExit;
 	end;
-	if B < 102400 then
+	if B < 100 * KB then
 	begin
-		Result := NToS((10 * B) div 1024, -1) + Sep + 'KB';
+		Result := NToS((10 * B) div KB, -1) + Sep + 'KB';
 		goto LExit;
 	end;
-	if B < 1048576 then //2^20 ($100 000)
+	if B < MB then // 2^20 ($100 000)
 	begin
-		Result := NToS(B div 1024, 0) + Sep + 'KB';
+		Result := NToS(B div KB, 0) + Sep + 'KB';
 		goto LExit;
 	end;
-	if B < 10485760 then
+	if B < 10 * MB then
 	begin
-		Result := NToS((100 * B) div 1048576, -2) + Sep + 'MB'; //Mega
+		Result := NToS((100 * B) div MB, -2) + Sep + 'MB'; // Mega
 		goto LExit;
 	end;
-	if B < 104857600 then
+	if B < 100 * MB then
 	begin
-		Result := NToS((10 * B) div 1048576, -1) + Sep + 'MB';
+		Result := NToS((10 * B) div MB, -1) + Sep + 'MB';
 		goto LExit;
 	end;
-	if B < 1073741824 then //2^30 ($40 000 000)
+	if B < GB then // 2^30 ($40 000 000)
 	begin
-		Result := NToS(B div 1048576, 0) + Sep + 'MB';
+		Result := NToS(B div MB, 0) + Sep + 'MB';
 		goto LExit;
 	end;
 	if B < 10737418240 then
 	begin
-		Result := NToS((100 * B) div 1073741824, -2) + Sep + 'GB'; //Giga
+		Result := NToS((100 * B) div GB, -2) + Sep + 'GB'; // Giga
 		goto LExit;
 	end;
 	if B < 107374182400 then
 	begin
-		Result := NToS((10 * B) div 1073741824, -1) + Sep + 'GB';
+		Result := NToS((10 * B) div GB, -1) + Sep + 'GB';
 		goto LExit;
 	end;
 	if B < 1099511627776 then //2^40 ($10 000 000 000)
 	begin
-		Result := NToS(B div 1073741824, 0) + Sep + 'GB';
+		Result := NToS(B div GB, 0) + Sep + 'GB';
 		goto LExit;
 	end;
 	if B < 10995116277760 then
 	begin
-		Result := NToS((100 * B) div 1099511627776, -2) + Sep + 'TB'; //Tera
+		Result := NToS((100 * B) div 1099511627776, -2) + Sep + 'TB'; // Tera
 		goto LExit;
 	end;
 	if B < 109951162777600 then
@@ -753,7 +753,7 @@ begin
 	end;
 	if B < 11258999068426240 then
 	begin;
-		Result := NToS((100 * B) div 1125899906842624, -2) + Sep + 'PB'; //Peta
+		Result := NToS((100 * B) div 1125899906842624, -2) + Sep + 'PB'; // Peta
 		goto LExit;
 	end;
 	if B < 112589990684262400 then
@@ -767,7 +767,7 @@ begin
 		goto LExit;
 	end;
 	//if B<11529215046068469760 then
-	Result := NToS((100 * (B div 128)) div (1152921504606846976 div 128), -2) + Sep + 'EB'; //Exa
+	Result := NToS((100 * (B div 128)) div (1152921504606846976 div 128), -2) + Sep + 'EB'; // Exa
 	LExit:
 //	if B < 0 then Result := '-' + Result;
 end;
@@ -794,11 +794,11 @@ begin
 		Result := NToS(Value div T) + ' T';
 end;
 
-procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: LongWord);
+procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: U4);
 var
-	DW: LongWord;
+	DW: U4;
 begin
-	if Abs(T) >= 1000 * Int64(High(LongWord)) then
+	if Abs(T) >= 1000 * U8(High(U4)) then
 	begin
 		GH := 999;
 		GM := 59;
@@ -815,11 +815,9 @@ end;
 
 function SToMs(const Str: string): SG;
 var
-	V: LongInt;
-	Mul: LongInt;
-	W: Byte;
-	F: Byte;
-	DP: Byte;
+	V: S4;
+	Mul: S4;
+	W, F, DP: U1;
 begin
 	V := 0;
 	if Length(Str) > 0 then
@@ -909,7 +907,7 @@ begin
 	Result := SToMs(Str) / MSecsPerDay;
 end;
 
-function TryEncodeDate(Year, Month, Day: Word; out Date: TDateTime): Boolean;
+function TryEncodeDate(Year, Month, Day: U2; out Date: TDateTime): Boolean;
 var
   I: Integer;
   DayTable: PDayTable;
@@ -927,15 +925,15 @@ begin
 end;
 
 function MsToStr(DT: Int64;
-	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string;
+	Display: TDisplay; const Decimals: SG; FixedWidth: Boolean): string;
 begin
 	Result := MsToStr(DT, True, Display, Decimals, FixedWidth);
 end;
 
 function MsToStr(DT: Int64; const UseWinFormat: BG;
-	Display: TDisplay; const Decimals: ShortInt; FixedWidth: Boolean): string;
+	Display: TDisplay; const Decimals: SG; FixedWidth: Boolean): string;
 var
-	h, m, s, d: LongWord;
+	h, m, s, d: U4;
 	Day: SG;
 	Res, Rem: U1;
 
@@ -1149,13 +1147,13 @@ end;
 
 {function DateToStr6(D: TDate): string; // Disk
 var
-	Year, Month, Day: Word;
+	Year, Month, Day: U2;
 begin
 	DecodeDate(D, Year, Month, Day);
 	Result := DateToStr6(Year, Month, Day);
 end;
 
-function DateToStr6(Year, Month, Day: Word): string; // Disk
+function DateToStr6(Year, Month, Day: U2): string; // Disk
 begin
 	Result := NToS(Year, '00') + NToS(Month, '00') + NToS(Day, '00')
 end;}
@@ -1202,7 +1200,7 @@ Sequence	Value	Char	What it does
 \XH		any	H=a string of hex digits
 }
 
-function RemoveEscape(s: string): string;
+function RemoveEscape(const s: string): string;
 var
 	i, j: SG;
 	x, v: U1;
@@ -1302,7 +1300,7 @@ begin
 
 end;
 
-function AddEscape(s: string): string;
+function AddEscape(const s: string): string;
 var i: SG;
 begin
 	Result := '';

@@ -113,7 +113,8 @@ type
 	protected
 		constructor Create;
 	public
-		procedure Update;
+		procedure BeginUpdate;
+		procedure EndUpdate;
 		property ItemAddr: Pointer read FItemAddr write FItemAddr;
 		property Index: SG read FIndex write SetIndex;
 	end;
@@ -157,7 +158,7 @@ begin
 	Clear;
 	if FFrag then
 		Dispose(Item);
-	inherited Destroy;
+	inherited;
 end;
 
 procedure TData.Clear;
@@ -435,14 +436,14 @@ end;
 
 constructor TA4.Create;
 begin
-	inherited Create;
+	inherited;
 	FItemCount := 0;
 end;
 
 destructor TA4.Destroy;
 begin
 	Clear;
-	inherited Destroy;
+	inherited;
 end;
 
 procedure TA4.Clear;
@@ -542,23 +543,26 @@ procedure TDatas.SetIndex(const Value: SG);
 begin
 	if FIndex <> Value then
 	begin
-		if (ItemAddr <> nil) and (ItemSize <> 0) then
-			if (FIndex >= 0) and (UG(FIndex) < Count) then
-				Move(ItemAddr^, Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemSize);
+		BeginUpdate;
 		FIndex := Value;
-		if (ItemAddr <> nil) and (ItemSize <> 0) then
-			if (FIndex >= 0) and (UG(FIndex) < Count) then
-				Move(Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemAddr^, ItemSize)
-			else
-				FillChar(ItemAddr^, ItemSize, 0);
+		EndUpdate;
 	end;
 end;
 
-procedure TDatas.Update;
+procedure TDatas.BeginUpdate;
 begin
 	if (ItemAddr <> nil) and (ItemSize <> 0) then
 		if (FIndex >= 0) and (UG(FIndex) < Count) then
 			Move(ItemAddr^, Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemSize);
+end;
+
+procedure TDatas.EndUpdate;
+begin
+	if (ItemAddr <> nil) and (ItemSize <> 0) then
+		if (FIndex >= 0) and (UG(FIndex) < Count) then
+			Move(Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemAddr^, ItemSize)
+		else
+			FillChar(ItemAddr^, ItemSize, 0);
 end;
 
 end.

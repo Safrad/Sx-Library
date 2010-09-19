@@ -129,7 +129,7 @@ begin
 	end;
 	SetLength(Sections, 0);
 //	Data := '';
-	inherited Destroy;
+	inherited;
 end;
 
 procedure TCSS.SetProperty(Section, Prop, Value: string);

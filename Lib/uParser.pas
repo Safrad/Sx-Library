@@ -6,14 +6,6 @@
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-{
-	Token = znak
-	Parser: Program kontolujici vyrazy
-	Syntakticky analyzator
-	---
-	Lexikalni analyzator (slovni zasoba)
-}
-
 unit uParser;
 
 interface
@@ -125,6 +117,7 @@ type
 		// 1
 		itPlus, itMinus, itMul, itDiv, // + - * /
 		itPower, // ^
+		itPower2,
 		itLBracket, itRBracket, // ( )
 		itLBracket2, itRBracket2, // [ ]
 		itLBracket3, itRBracket3, // { }
@@ -150,7 +143,7 @@ const
 		'Char', 'string',
 
 		'+', '-', '*', '/',
-		'^',
+		'^', '**',
 		'(', ')',
 		'[', ']',
 		'{', '}',
@@ -324,10 +317,10 @@ var
 type
 	TOperator = (opNone, opNumber, opIdent,
 //		opUnarMinus, implemented as opMinus with firts argument nil
-		// Algebra
+		// Arithmetic
 		opPlus, opMinus, opMul, opDiv, opMod,
 		// Single
-		opRound, opTrunc, opAbs, opNeg, opInv, opNot, opInc, opDec, opFact, opGCD, opLCM,
+		opRound, opTrunc, opAbs, opNeg, opInv, opInc, opDec, opFact, opGCD, opLCM,
 		// Exponencial
 		opPower, opExp, opLn, opLog, opSqr, opSqrt,
 		// Goniometric
@@ -336,14 +329,8 @@ type
 		opArcSin, opArcCos, opArcTan,
 		opSinh, opCosh, opTanh,
 		opArcSinh, opArcCosh, opArcTanh,
-		// Chess
-		opElo, opArcElo,
-		opEloC,
-		// Statistics
-		opAvg, opMin, opMax,
-		opRandom,
-		// Logical
-		opShl, opShr, opAnd, opOr, opXor, opXnor);
+		// Logic
+		opNot, opShl, opShr, opAnd, opOr, opXor, opXnor,
 		{
 		b	a	| 0 and or xor xnor 1
 		0	0	  0  0  0   0   1   1
@@ -351,8 +338,12 @@ type
 		1	0   0  0  1   1   0   1
 		1	1   0  1  1   0   1   1
 		}
+		// Chess
+		opElo, opArcElo, opEloC,
+		// Statistics
+		opAvg, opMin, opMax, opRandom);
 var
-	FcNames: array[opPlus..opXnor] of string;
+	FcNames: array[opPlus..High(TOperator)] of string;
 
 // Compiler
 type
@@ -447,7 +438,7 @@ type
 	TDParser = class(TObject)
 	private
 {		FStream: TStream;
-		FOrigin: Longint;}
+		FOrigin: S4;}
 		FBuffer: PChar;
 {		FBufPtr: PChar;
 		FBufEnd: PChar;
@@ -523,7 +514,7 @@ type
 		procedure HexToBinary(Stream: TStream);
 		procedure ReadInput;
 		function NextToken: string;
-		function SourcePos: Longint;
+		function SourcePos: SG;
 		function TokenComponentIdent: string;
 		function TokenFloat: Extended;
 		function TokenInt: Integer;
@@ -552,7 +543,7 @@ type
 		function GetDate: TDate;
 		procedure NextLine;
 		procedure ReadToNewLine;
-		function ReadMs(MinVal, DefVal, MaxVal: SG): SG;
+		function ReadMs(MinVal, DefVal, MaxVal: UG): UG;
 		function ReadFA(MinVal, DefVal, MaxVal: FA): FA;
 		function ReadSG(MinVal, DefVal, MaxVal: SG): SG;
 		function ReadSGFast(MinVal, DefVal, MaxVal: SG): SG;
@@ -566,11 +557,13 @@ type
 		procedure AddMes2(MesId: TMesId; Params: array of string);
 	end;
 
-var
-	CharsTable: array[Char] of (
-		{ctSpace, ctTab,} ctLetter, ctBlank, ctReturn, ctDollar, ctIllegal, ctNumber, ctNumber2,
+type
+	TCharsTable = array[Char] of (
+		{ctSpace, ctTab,} ctLetter, ctLastLetter, ctBlank, ctReturn, ctDollar, ctIllegal, ctNumber, ctNumber2,
 		ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose,
 		ctPoint, ctComma, ctComma2);
+var
+	CharsTable: TCharsTable;
 
 const
 	ConstE = 2.7182818284590452353602874713527;
@@ -1247,7 +1240,7 @@ begin
 						Move(BufR[StartIndex], Id[1], BufRI - StartIndex);
 					Break;
 				end
-				else if CharsTable[BufR[BufRI]] = ctLetter then
+				else if CharsTable[BufR[BufRI]] in [ctLetter, ctLastLetter] then
 				begin
 					case Marks of
 					maNone:
@@ -1263,9 +1256,14 @@ begin
 							Break;
 						end;}
 						StartIndex := BufRI;
-						while (BufRI - StartIndex < MaxIdentSize) and (CharsTable[BufR[BufRI]] in [ctLetter, ctNumber]) do
+						while (BufRI - StartIndex < MaxIdentSize) and (CharsTable[BufR[BufRI]] in [ctLetter, ctLastLetter, ctNumber]) and (EOI = False) do
 						begin
-							Inc(BufRI); if EOI then Break;
+							if CharsTable[BufR[BufRI]] in [ctLastLetter] then
+							begin
+								Inc(BufRI);
+								Break;
+							end;
+							Inc(BufRI);
 						end;
 						InputType := itIdent;
 						SetLength(Id, BufRI - StartIndex);
@@ -1315,7 +1313,18 @@ begin
 						'%': InputType := itPercent;
 						'+': InputType := itPlus;
 						'-': InputType := itMinus;
-						'*': InputType := itMul;
+						'*':
+						begin
+							if BufR[BufRI + 1] = '*' then
+							begin
+								InputType := itPower2;
+								Inc(BufRI);
+							end
+							else
+							begin
+								InputType := itMul;
+							end;
+						end;
 						'/': InputType := itDiv;
 						'^': InputType := itPower;
 						'(': InputType := itLBracket;
@@ -1386,7 +1395,7 @@ begin
 	Result := Id;
 end;
 
-function TDParser.SourcePos: Longint;
+function TDParser.SourcePos: SG;
 begin
   Result := BufRI;
 end;
@@ -1515,7 +1524,7 @@ begin
 	end;
 end;
 
-function TDParser.ReadMs(MinVal, DefVal, MaxVal: SG): SG;
+function TDParser.ReadMs(MinVal, DefVal, MaxVal: UG): UG;
 var
 	N: array[0..31] of FA;
 	V: FA;
@@ -1966,7 +1975,7 @@ begin
 	begin
 		Id2 := UpperCase(Id);
 		Result := nil;
-		for i := SG(Low(FcNames)) to Length(FcNames) - 1 do
+		for i := SG(Low(FcNames)) to SG(High(FcNames)) do
 			if (Id2 = FcNames[TOperator(i)]) then
 			begin
 				Operation := TOperator(i);
@@ -2022,7 +2031,7 @@ end;
 function TDParser.NodeG2(Node: PNode): PNode;
 begin
 	case InputType of
-	itPower:
+	itPower, itPower2:
 	begin
 		GetMem(Result, NodeArgs + 2 * SizeOf(Result.Args[0]));
 		Inc(TreeSize, NodeArgs + 2 * SizeOf(Result.Args[0]));
@@ -2386,24 +2395,26 @@ begin
 			end;
 		end;
 	end;
-	opGCD: // Greatest Common Measure (divident)
+	opGCD: // Greatest Common Measure (Divident)
 	begin
 		if Node.ArgCount = 1 then
 			Result := Round(Calc(Node.Args[0]))
 		else if Node.ArgCount >= 2 then
 		begin
 			Result := Round(Calc(Node.Args[0]));
-			e := Round(Calc(Node.Args[1]));
 
-			while Result <> e do
+			for i := 1 to Node.ArgCount - 1 do
 			begin
-				if Result > e then
-					Result := Result - e
-				else
-					e := e - Result;
+				e := Round(Calc(Node.Args[i]));
+
+				while Result <> e do
+				begin
+					if Result > e then
+						Result := Result - e
+					else
+						e := e - Result;
+				end;
 			end;
-
-
 
 		end
 		else
@@ -2416,33 +2427,30 @@ begin
 		else if Node.ArgCount >= 2 then
 		begin
 			e0 := Round(Calc(Node.Args[0]));
-			e1 := Round(Calc(Node.Args[1]));
-{			Result := e0;
-			e := e1;
-
-			while Result <> e do
-			begin
-				if Result > e then
-					e := e + e1
-				else
-					Result := Result + e0;
-			end;}
-			// GCD
 
 			Result := e0;
-			e := e1;
-			while Result <> e do
-			begin
-				if Result > e then
-					Result := Result - e
-				else
-					e := e - Result;
-			end;
 
-			if Result <> 0 then
-				Result := e0 * e1 / Result
-			else
-				Result := Infinity;
+			for i := 1 to Node.ArgCount - 1 do
+			begin
+				e1 := Round(Calc(Node.Args[i]));
+				e := e1;
+				while Result <> e do
+				begin
+					if Result > e then
+						Result := Result - e
+					else
+						e := e - Result;
+				end;
+				if Result <> 0 then
+					Result := e0 * e1 / Result
+				else
+					Result := Infinity;
+				e0 := Result;
+			end;
+			{$ifopt d+}
+			for i := 0 to Node.ArgCount - 1 do
+				Assert(Frac(Result / Round(Calc(Node.Args[i]))) = 0);
+			{$endif}
 		end
 		else
 			Result := 0;
@@ -3012,7 +3020,7 @@ begin
 			FreeMem(Node);
 			Dec(TreeSize, NodeIdent);
 		end;
-		opPlus..opXNor:
+		opPlus..High(TOperator):
 		begin
 			for i := 0 to Node.ArgCount - 1 do
 			begin
@@ -3027,6 +3035,7 @@ begin
 		begin
 //			FreeMem(Node);
 	//		Dec(TreeSize, NodeArgs);
+			Assert(True);
 		end;
 		end;
 	end;
@@ -3187,7 +3196,20 @@ end;
 
 procedure TDParser.ReadToNewLine;
 begin
-	while (not EOI) and (not (BufR[BufRI] in [CharCR, CharLF])) do
+{	StartIndex := LineIndex;
+	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF) do
+		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	if Line[LineIndex] = CharCR then
+	begin
+		Inc(LineIndex);
+		while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
+			Inc(LineIndex);
+	end
+	else
+		Inc(LineIndex); D??? }
+
+	while (not EOI) and (not (BufR[BufRI] in [CharCR, CharLF])) do // D???
 	begin
 		Inc(BufRI);
 	end;
@@ -3218,7 +3240,7 @@ begin
 		KWs[TKeyword(i)] := Copy(GetEnumName(TypeInfo(TKeyword), i), 3, MaxInt);
 	end;
 
-	for i := SG(Low(FcNames)) to Length(FcNames) - 1 do
+	for i := SG(Low(FcNames)) to SG(High(FcNames)) do
 	begin
 		FcNames[TOperator(i)] := UpperCase(Copy(GetEnumName(TypeInfo(TOperator), i), 3, MaxInt));
 	end;

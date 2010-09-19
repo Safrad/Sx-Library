@@ -28,8 +28,8 @@ type
 		FFrameRate: Integer;
 		FInitialized: BG;
 		FEventStep: TEventStep;
-		FInterval: Cardinal;
-		FInterval12: Cardinal;
+		FInterval: UG;
+		FInterval12: UG;
 		FNowFrameRate: Integer;
 		FOldTime: Int64;
 		FOldTime2: Int64;
@@ -45,7 +45,7 @@ type
 		procedure SetActiveOnly(Value: BG);
 		procedure SetEnabled(Value: BG);
 		procedure SetEventStep(Value: TEventStep);
-		procedure SetInterval(Value: Cardinal);
+		procedure SetInterval(Value: UG);
 		procedure Suspend;
 	protected
 		procedure DoActivate; virtual;
@@ -65,10 +65,10 @@ type
 		property FrameRate: Integer read FFrameRate;
 		procedure Reset;
 	published
-		property ActiveOnly: BG read FActiveOnly write SetActiveOnly;
-		property Enabled: BG read FEnabled write SetEnabled;
-		property Interval: Cardinal read FInterval write SetInterval;
-		property EventStep: TEventStep read FEventStep write SetEventStep;
+		property ActiveOnly: BG read FActiveOnly write SetActiveOnly default False;
+		property Enabled: BG read FEnabled write SetEnabled default True;
+		property Interval: UG read FInterval write SetInterval default 1000;
+		property EventStep: TEventStep read FEventStep write SetEventStep default esInterval;
 		property OnTimer: TDTimerEvent read FOnTimer write FOnTimer;
 		property OnActivate: TNotifyEvent read FOnActivate write FOnActivate;
 		property OnDeactivate: TNotifyEvent read FOnDeactivate write FOnDeactivate;
@@ -244,7 +244,7 @@ end;
 constructor TDTimer.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
-	FActiveOnly := True;
+	FActiveOnly := False;
 	FEnabled := True;
 	Interval := 1000;
 	if (not (csDesigning in ComponentState)) then
@@ -291,7 +291,6 @@ end;
 function TDTimer.AppProc(var Message: TMessage): Boolean;
 begin
 	Result := False;
-	if Message.Msg = 0 then Exit;
 	case Message.Msg of
 	CM_ACTIVATE:
 	begin
@@ -304,7 +303,6 @@ begin
 		if FInitialized and FActiveOnly then Suspend;
 	end;
 	end;
-	// Application.ProcessMessages;
 end;
 
 procedure TDTimer.DoActivate;
@@ -429,7 +427,7 @@ begin
 	end;
 end;
 
-procedure TDTimer.SetInterval(Value: Cardinal);
+procedure TDTimer.SetInterval(Value: UG);
 begin
 	if FInterval <> Value then
 	begin

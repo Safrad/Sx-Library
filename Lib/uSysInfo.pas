@@ -86,7 +86,7 @@ var
 	NTSystem: Boolean;
 	RegCap: Boolean;
 
-function GetKey(Default: Word): Word;
+function GetKey(Default: U2): U2;
 function OSToStr(OS: TOSVersionInfo): string;
 function GetCPUUsage(IntTime: U8): SG;
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
@@ -97,10 +97,10 @@ implementation
 {$R *.DFM}
 uses
 	uGraph, uScreen, uStrings, uFormat,
-	rpVersionInfo,
+	uProjectInfo,
 	Registry, Math;
 
-function GetKey(Default: Word): Word;
+function GetKey(Default: U2): U2;
 label
 	LAgain;
 var
@@ -170,60 +170,60 @@ end;
 function GetProcessorTime : int64;
 type
  TPerfDataBlock = packed record
-   signature              : array [0..3] of wchar;
-	 littleEndian           : cardinal;
-   version                : cardinal;
-   revision               : cardinal;
-   totalByteLength        : cardinal;
-   headerLength           : cardinal;
-   numObjectTypes         : integer;
-   defaultObject          : cardinal;
+	 signature              : array [0..3] of wchar;
+	 littleEndian           : U4;
+   version                : U4;
+   revision               : U4;
+   totalByteLength        : U4;
+   headerLength           : U4;
+	 numObjectTypes         : S4;
+   defaultObject          : U4;
    systemTime             : TSystemTime;
-   perfTime               : comp;
-	 perfFreq               : comp;
-	 perfTime100nSec        : comp;
-	 systemNameLength       : cardinal;
-   systemnameOffset       : cardinal;
+   perfTime               : S8;
+	 perfFreq               : S8;
+	 perfTime100nSec        : S8;
+	 systemNameLength       : U4;
+   systemnameOffset       : U4;
  end;
  TPerfObjectType = packed record
-   totalByteLength        : cardinal;
-   definitionLength       : cardinal;
-   headerLength           : cardinal;
-   objectNameTitleIndex   : cardinal;
+   totalByteLength        : U4;
+   definitionLength       : U4;
+   headerLength           : U4;
+   objectNameTitleIndex   : U4;
    objectNameTitle        : PWideChar;
-   objectHelpTitleIndex   : cardinal;
+   objectHelpTitleIndex   : U4;
    objectHelpTitle        : PWideChar;
-   detailLevel            : cardinal;
-   numCounters            : integer;
-   defaultCounter         : integer;
-   numInstances           : integer;
-   codePage               : cardinal;
-   perfTime               : comp;
-   perfFreq               : comp;
+   detailLevel            : U4;
+   numCounters            : S4;
+   defaultCounter         : S4;
+   numInstances           : S4;
+   codePage               : U4;
+   perfTime               : S8;
+	 perfFreq               : S8;
  end;
  TPerfCounterDefinition = packed record
-   byteLength             : cardinal;
-   counterNameTitleIndex  : cardinal;
+   byteLength             : U4;
+   counterNameTitleIndex  : U4;
    counterNameTitle       : PWideChar;
-   counterHelpTitleIndex  : cardinal;
+   counterHelpTitleIndex  : U4;
    counterHelpTitle       : PWideChar;
-   defaultScale           : integer;
-   defaultLevel           : cardinal;
-   counterType            : cardinal;
-   counterSize            : cardinal;
-   counterOffset          : cardinal;
+   defaultScale           : S4;
+   defaultLevel           : U4;
+   counterType            : U4;
+   counterSize            : U4;
+   counterOffset          : U4;
  end;
  TPerfInstanceDefinition = packed record
-   byteLength             : cardinal;
-	 parentObjectTitleIndex : cardinal;
-	 parentObjectInstance   : cardinal;
-	 uniqueID               : integer;
-	 nameOffset             : cardinal;
-   nameLength             : cardinal;
+   byteLength             : U4;
+	 parentObjectTitleIndex : U4;
+	 parentObjectInstance   : U4;
+	 uniqueID               : S4;
+	 nameOffset             : U4;
+   nameLength             : U4;
  end;
 var
-	c1, c2, c3      : cardinal;
-	i1, i2          : integer;
+	c1, c2, c3      : U4;
+	i1, i2          : S4;
 	perfDataBlock   : ^TPerfDataBlock;
 	perfObjectType  : ^TPerfObjectType;
 	perfCounterDef  : ^TPerfCounterDefinition;
@@ -242,21 +242,21 @@ begin
 		 else Exit;
 		 end;
 	 end;
-	 perfObjectType := pointer(cardinal(perfDataBlock) + perfDataBlock^.headerLength);
+	 perfObjectType := Pointer(UG(perfDataBlock) + perfDataBlock^.headerLength);
 	 for i1 := 0 to perfDataBlock^.numObjectTypes - 1 do begin
 		 if perfObjectType^.objectNameTitleIndex = 238 then begin   // 238 -> "Processor"
-			 perfCounterDef := pointer(cardinal(perfObjectType) + perfObjectType^.headerLength);
+			 perfCounterDef := Pointer(UG(perfObjectType) + perfObjectType^.headerLength);
 			 for i2 := 0 to perfObjectType^.numCounters - 1 do begin
 				 if perfCounterDef^.counterNameTitleIndex = 6 then begin    // 6 -> "% Processor Time"
-					 perfInstanceDef := pointer(cardinal(perfObjectType) + perfObjectType^.definitionLength);
-					 result := PInt64(cardinal(perfInstanceDef) + perfInstanceDef^.byteLength + perfCounterDef^.counterOffset)^;
+					 perfInstanceDef := Pointer(UG(perfObjectType) + perfObjectType^.definitionLength);
+					 result := PS8(UG(perfInstanceDef) + perfInstanceDef^.byteLength + perfCounterDef^.counterOffset)^;
 					 break;
 				 end;
          inc(perfCounterDef);
        end;
 			 break;
      end;
-     perfObjectType := pointer(cardinal(perfObjectType) + perfObjectType^.totalByteLength);
+		 perfObjectType := Pointer(UG(perfObjectType) + perfObjectType^.totalByteLength);
    end;
  finally FreeMem(perfDataBlock) end;
 end; 
@@ -272,7 +272,7 @@ function GetCPUUsage(IntTime: U8): SG;
 var
 	tickCount     : U8;
 	processorTime : U8;
-	Dummy: array[0..1024] of Byte;
+	Dummy: array[0..KB] of U1;
 begin
 	if NTSystem then
 	begin
@@ -631,7 +631,7 @@ end;
 
 procedure Init;
 var
-	VersionInfo: TrpVersionInfo;
+	Info: TInfo;
 begin
 	GSysInfo.OS.dwOSVersionInfoSize := SizeOf(GSysInfo.OS);
 	GetVersionEx(GSysInfo.OS);
@@ -643,9 +643,9 @@ begin
 	FillSysInfoD(SysInfo);
 	PerformanceFrequency := SysInfo.CPUFrequency;}
 
-	VersionInfo := TrpVersionInfo.Create(nil);
-	GSysInfo.ProgramVersion := VersionInfo.FileVersion;
-	VersionInfo.Free;
+	Info := TInfo.Create(nil);
+	GSysInfo.ProgramVersion := Info.GetProjectInfo(piFileVersion);
+	Info.Free;
 
 	CPUUsage := 0 * CPUUsageMul;
 	GetCPUUsage(0);

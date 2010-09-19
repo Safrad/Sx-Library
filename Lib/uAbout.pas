@@ -25,13 +25,13 @@ type
 		LabelRunCount: TLabel;
 		LabelNowRunTime: TLabel;
 		LabelTotalRunTime: TLabel;
-		EditCreationDate: TEdit;
+    EditFirstRelease: TEdit;
 		PanelRC: TEdit;
 		PanelTRT: TEdit;
 		PanelNRT: TEdit;
 		ImageName: TDImage;
 		LabelAuthor: TLabel;
-		LabelCreated: TLabel;
+    LabelFirstRelease: TLabel;
 		LabelEMail: TLabel;
 		EditAuthor: TEdit;
 		EditWeb: TEdit;
@@ -46,8 +46,8 @@ type
 		SysInfo1: TDButton;
 		DButtonMemoryStatus: TDButton;
 		LabelCount: TLabel;
-		EditReleaseDate: TEdit;
-		LabelModified: TLabel;
+    EditRelease: TEdit;
+    LabelRelease: TLabel;
 		LabelVersion: TLabel;
 		EditVersion: TEdit;
 		procedure FormCreate(Sender: TObject);
@@ -69,8 +69,8 @@ type
 		procedure DButtonMemoryStatusClick(Sender: TObject);
 		procedure FormHide(Sender: TObject);
 	private
-		Effect: Byte;
-		Typ: Byte;
+		Effect: U1;
+		Typ: U1;
 		Reset: Boolean;
 		BmpAbout: TDBitmap;
 		procedure InitNRT;
@@ -97,7 +97,6 @@ procedure ExtOpenFile(FileName: TFileName); overload;
 procedure ExtOpenFile(FileName: TFileName; Parameters: string); overload;
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
 procedure AboutRW(const Save: Boolean);
-
 var
 	fAbout: TfAbout;
 
@@ -110,23 +109,27 @@ implementation
 {$R *.DFM}
 uses
 	ShellAPI, Dialogs,
-	rpVersionInfo,
+	uProjectInfo,
 	uGraph, uDIni, uScreen, uSysInfo, uFiles, uError, uData, uWave, {$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uFormat;
 var
 	LMemClock: U8;
 	RunProgramTime: U8;
 
-type
-	PFlash = ^TFlash;
-	TFlash = packed record // 16
-		X, Y: S4;
-		Power: S4;
-		Color: TRGBA;
-	end;
-var
-	Flashs: TData;
-const
-	MaxTyp = 13;
+
+procedure AddMenus;
+{var
+	MainMenu: TMainMenu;
+begin
+	if Assigned(Application) and Assigned(Application.MainForm) then
+	begin
+		MainMenu := Application.MainForm.FindComponent('MainMenu');
+		if Assigned(MainMenu) then
+		begin
+			MainMenu.
+		end;
+	end;}
+begin
+end;
 
 var
 	AcceptFile: BG;
@@ -274,22 +277,21 @@ end;
 
 procedure ExecuteAbout2(AOwner: TComponent; FileName: TFileName; const Modal: Boolean);
 var
-	VersionInfo: TrpVersionInfo;
+	Info: TInfo;
 begin
 	PlayWinSound(wsExclamation);
 	if not Assigned(fAbout) then
 	begin
-		VersionInfo := TrpVersionInfo.Create(nil);
-		BeginLongOperation;
+		Info := TInfo.Create(nil);
 		fAbout := TfAbout.Create(AOwner);
-		fAbout.EditAuthor.Text := VersionInfo.Author;
-//		fAbout.ImageVersion.Bitmap.Canvas.Font.Name := 'MS Sans Serif';
-		fAbout.EditVersion.Text := VersionInfo.FileVersion;
-		fAbout.EditCreationDate.Text := VersionInfo.LegalCopyright;
-		fAbout.EditReleaseDate.Text := VersionInfo.ReleaseDate;
+		fAbout.EditAuthor.Text := Info.GetProjectInfo(piAuthor);
+		fAbout.EditVersion.Text := Info.GetProjectInfo(piFileVersion);
+		fAbout.EditFirstRelease.Text := Info.GetProjectInfo(piFirstRelease);
+		fAbout.EditRelease.Text := Info.GetProjectInfo(piRelease);;
+		BeginLongOperation;
 		fAbout.LoadFile(FileName);
 		EndLongOperation(False);
-		VersionInfo.Free;
+		Info.Free;
 	end
 	else
 		fAbout.LoadFile(FileName);
@@ -331,21 +333,18 @@ begin
 end;
 
 procedure AboutRW(const Save: Boolean);
+const
+	IdStr: array[Boolean] of Char = ('S', 'F');
 var
 	FileName: TFileName;
-	s: string;
 begin
 	if Save then
-		RunTime := U8(GetTickCount - StartProgramTime) + RunProgramTime;
-
-	if Save then
-		s := 'F'
+		RunTime := U8(GetTickCount - StartProgramTime) + RunProgramTime
 	else
-		s := 'S';
+		AddMenus;
 
-	s := s + CharTab + DateTimeToS(Now) + CharCR + CharLF;
 	FileName := DelFileExt(ExeFileName) + '.log';
-	WriteStringToFile(FileName, s, True);
+	WriteStringToFile(FileName, IdStr[Save] + CharTab + DateTimeToS(Now) + FileSep, True);
 
 	if Assigned(MainIni) then
 	begin
@@ -456,6 +455,18 @@ begin
 	Close;
 end;
 
+type
+	PFlash = ^TFlash;
+	TFlash = packed record // 16
+		X, Y: S4;
+		Power: S4;
+		Color: TRGBA;
+	end;
+var
+	Flashs: TData;
+const
+	MaxTyp = 13;
+
 procedure TfAbout.ImageAboutMouseDown(Sender: TObject;
 	Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -507,9 +518,8 @@ begin
 		end;
 	end;
 
-	ImageAbout.Fill;
-	ImageName.Fill;
-//	ImageVersion.Fill;
+	ImageAbout.Invalidate;
+	ImageName.Invalidate;
 end;
 
 procedure TfAbout.EditIcqClick(Sender: TObject);
@@ -555,47 +565,16 @@ begin
 
 	BitmapName.Bar(clBtnFace, ef12);
 	BitmapName.Canvas.Font.Color := clWindowText;
+	BitmapName.Canvas.Brush.Style := bsClear;
 	DrawCutedText(BitmapName.Canvas, Rect(2, 2, BitmapName.Width - 2, BitmapName.Height - 2), taCenter, tlCenter,
 		Application.Title, True, 1);
-	{
-	BitmapName.Canvas.TextOut(
-		(BitmapName.Width -
-		BitmapName.Canvas.TextWidth(ProgramName)) div 2,
-		(BitmapName.Height -
-		BitmapName.Canvas.TextHeight(ProgramName)) div 2,
-		ProgramName);
-	}
 	BitmapName.Border(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clBlack, clWhite, 2, ef08);
 end;
-{
-procedure TfAbout.ImageVersionFill(Sender: TObject);
-var
-	BitmapVersion: TDBitmap;
-	Co: array[0..3] of TColor;
-	s: string;
-begin
-	BitmapVersion := ImageVersion.Bitmap;
-	BitmapVersion.Bar(clBtnFace, ef16);
-	BitmapVersion.Canvas.Font.Color := clBlack;
-	s := 'Version ' + GSysInfo.ProgramVersion;
-	BitmapVersion.Canvas.TextOut(
-		(BitmapVersion.Width -
-		BitmapVersion.Canvas.TextWidth(s)) div 2,
-		(BitmapVersion.Height -
-		BitmapVersion.Canvas.TextHeight(s)) div 2,
-		s);
-//	BitmapVersion.GenRGB(clBtnFace, gfSpecHorz, (32 * Timer1.Clock div PerformanceFrequency), ef16);
-
-	BitmapVersion.GenerateRGBEx(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, TGenFunc(Typ), Co, 0, ef08,
-		(32 * Timer1.Clock div PerformanceFrequency), nil);
-
-	BitmapVersion.Border(0, 0, BitmapVersion.Width - 1, BitmapVersion.Height - 1, clBlack, clWhite, 2, ef08);
-end;}
 
 procedure TfAbout.ImageAboutFill(Sender: TObject);
 var
 	BitmapAbout: TDBitmap;
-	HClock: Byte;
+	HClock: U1;
 	i: UG;
 	Flash: ^TFlash;
 begin
@@ -669,7 +648,6 @@ end;
 {var
 	MemCount, MemSize: SG;}
 {$endif}
-//P: Pointer;
 initialization
 {$ifopt d+}
 {	MemCount := AllocMemCount;
@@ -678,7 +656,6 @@ initialization
 	StartProgramTime := GetTickCount;
 	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
-//	GetMem(P, 1024);
 finalization
 	SetLength(Params, 0);
 	SetLength(DesParams, 0);

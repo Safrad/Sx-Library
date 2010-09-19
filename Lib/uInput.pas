@@ -14,7 +14,7 @@ uses
 	uTypes;
 
 // Str To Data
-function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: SG): SG;
+function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: UG): UG;
 
 function StrToValE(Line: AnsiString; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended): Extended;
@@ -49,7 +49,7 @@ uses
 	SysUtils, Dialogs,
 	uParser, uFormat, uStrings, uError;
 
-function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: SG): SG;
+function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: UG): UG;
 var Parser: TDParser;
 begin
 	Parser := TDParser.Create(Pointer(Line), Length(Line));
@@ -89,7 +89,7 @@ begin
 end;}
 
 {function StrToValI(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal, Denominator: Integer): Integer;
+	const MinVal, DefVal, MaxVal, Denominator: SG): SG;
 begin
 	Result := StrToValI(Line, UseWinFormat, MinVal, DefVal, MaxVal, Denominator);
 end;
@@ -101,7 +101,7 @@ begin
 end;}
 
 function StrToValI(Line: AnsiString; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal, Denominator: Integer): Integer;
+	const MinVal, DefVal, MaxVal, Denominator: SG): SG;
 begin
 	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator));
 end;

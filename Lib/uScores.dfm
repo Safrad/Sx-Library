@@ -71,9 +71,7 @@ object fScores: TfScores
       Top = 0
       Width = 485
       Height = 222
-      DrawFPS = False
-      HandScroll = False
-      HotTrack = True
+      Zoom = 1.000000000000000000
       OnFill = ImageHighFill
       Align = alClient
       TabOrder = 0

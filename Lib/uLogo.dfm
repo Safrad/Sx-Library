@@ -1,13 +1,13 @@
 object fLogo: TfLogo
   Left = 427
   Top = 333
-  Cursor = crAppStart
+  Cursor = crHourGlass
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
   AlphaBlend = True
-  AlphaBlendValue = 163
+  AlphaBlendValue = 191
   BorderIcons = []
   BorderStyle = bsNone
   ClientHeight = 384
@@ -28,10 +28,7 @@ object fLogo: TfLogo
   PixelsPerInch = 96
   TextHeight = 13
   object Timer1: TDTimer
-    ActiveOnly = False
     Enabled = False
-    Interval = 1000
-    EventStep = esInterval
     OnTimer = Timer1Timer
     Left = 16
     Top = 8

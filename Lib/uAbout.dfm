@@ -187,13 +187,13 @@ object fAbout: TfAbout
     Transparent = True
     Layout = tlCenter
   end
-  object LabelCreated: TLabel
+  object LabelFirstRelease: TLabel
     Left = 152
     Top = 104
     Width = 65
     Height = 18
     AutoSize = False
-    Caption = 'Creation Date'
+    Caption = 'FirstRelease'
     Color = clBtnFace
     ParentColor = False
     Transparent = True
@@ -212,13 +212,13 @@ object fAbout: TfAbout
     Transparent = True
     Layout = tlCenter
   end
-  object LabelModified: TLabel
+  object LabelRelease: TLabel
     Left = 152
     Top = 129
     Width = 65
     Height = 18
     AutoSize = False
-    Caption = 'Release Date'
+    Caption = 'Release'
     Color = clBtnFace
     ParentColor = False
     Transparent = True
@@ -254,7 +254,7 @@ object fAbout: TfAbout
     TabOrder = 0
     OnClick = ButtonOkClick
   end
-  object EditCreationDate: TEdit
+  object EditFirstRelease: TEdit
     Left = 224
     Top = 104
     Width = 65
@@ -376,7 +376,7 @@ object fAbout: TfAbout
     Top = 288
     Width = 97
     Height = 25
-    Caption = 'Memory Status...'
+    Caption = '&Memory Status...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -391,9 +391,7 @@ object fAbout: TfAbout
     Top = 16
     Width = 129
     Height = 129
-    DrawFPS = False
-    HandScroll = False
-    HotTrack = True
+    Zoom = 1.000000000000000000
     OnFill = ImageAboutFill
     ParentShowHint = False
     ShowHint = False
@@ -407,16 +405,14 @@ object fAbout: TfAbout
     Top = 16
     Width = 137
     Height = 57
-    DrawFPS = False
-    HandScroll = False
-    HotTrack = True
+    Zoom = 1.000000000000000000
     OnFill = ImageNameFill
     ParentShowHint = False
     ShowHint = False
     TabOrder = 2
     TabStop = False
   end
-  object EditReleaseDate: TEdit
+  object EditRelease: TEdit
     Left = 224
     Top = 129
     Width = 65

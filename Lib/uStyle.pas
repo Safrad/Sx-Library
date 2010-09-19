@@ -90,7 +90,7 @@ begin
 	NowVal.Effect := TEffect(ComboBoxEffect.ItemIndex);
 	NowVal.BorderSize := ComboBoxLineSize.ItemIndex + 1;
 
-	ImageSample.Fill;
+	ImageSample.Invalidate;
 end;
 
 procedure TfStyle.DataToForm(Sender: TObject);
@@ -115,7 +115,7 @@ begin
 	fStyle.Caption := DelCharsF(Prompt, '&');
 
 	fStyle.DataToForm(nil);
-	fStyle.ImageSample.Fill;
+	fStyle.ImageSample.Invalidate;
 
 {	fGetInt.TrackBar.OnChange := nil;
 	fGetInt.TrackBar.Frequency := (fGetInt.TMaxVal - fGetInt.TMinVal + 19) div 20;
