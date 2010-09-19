@@ -99,7 +99,7 @@ begin
 	VK_SUBTRACT: Result := 'Num -';
 	VK_DECIMAL: Result := 'Num ,';
 	VK_DIVIDE: Result := 'Num /';
-	112..112 + 23: Result := 'F' + NToS((Key and $ff)- 111, False);
+	112..112 + 23: Result := 'F' + IntToStr((Key and $ff)- 111);
 
 	VK_NUMLOCK: Result := 'Num Lock';
 	VK_SCROLL: Result := 'Scroll Lock';

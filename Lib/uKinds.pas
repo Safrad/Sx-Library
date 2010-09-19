@@ -15,7 +15,7 @@ uses
 	SysUtils, Menus, Graphics, Classes, Dialogs, ExtDlgs, Controls;
 
 type
-	TItem = packed record // 64
+	TKindItem = packed record // 64
 		FileName: TFileName; // 4
 		MenuItem: TMenuItem; // 4
 		PData: Pointer; // 4
@@ -32,7 +32,9 @@ type
 	TKinds = class(TObject)
 	private
 		Reopen: TReopen;
-		NewCount: UG;
+		FNewCount: UG;
+		FIndex,
+		FCount: SG;
 
 		Revert1,
 		Reopen1,
@@ -48,7 +50,7 @@ type
 
 		procedure FreeItem(i: SG);
 
-		procedure ChangeIndex(I: SG);
+		procedure SetIndex(Value: SG);
 		function AddKindItem: BG;
 		procedure KindInit;
 
@@ -78,12 +80,9 @@ type
 
 	public
 		AdvancedMenuDrawItemEvent: TAdvancedMenuDrawItemEvent;
-		Items: array of TItem;
+		Items: array of TKindItem;
 		ItemAddr: Pointer;
 		ItemSize: UG;
-
-		Index,
-		Count: SG;
 
 		MultiFiles: BG;
 		SkipStartup: BG;
@@ -100,7 +99,7 @@ type
 		SavePictureDialog1: TSavePictureDialog;
 
 		NewFile: function(const Kind: SG): BG;
-		FreeFile: procedure(const Kind: SG);
+		FreeFile: procedure(const Item: TKindItem);
 		LoadFromFile: function(const Kind: SG{FileName: TFileName}): BG;
 		SaveToFile: function(var FileName: TFileName): BG;
 
@@ -129,6 +128,9 @@ type
 		function KindSave(Kind: SG; SD: BG; SaveCopy: BG): BG;
 
 		{$ifopt d+}procedure OpenAll;{$endif}
+
+		property Index: SG read FIndex write SetIndex;
+		property Count: SG read FCount;
 	end;
 
 {
@@ -178,22 +180,22 @@ uses
 constructor TKinds.Create;
 begin
 	inherited Create;
+	FIndex := -1;
+	FCount := 0;
 	Reopen := TReopen.Create;
-	Index := -1;
-	Count := 0;
 end;
 
 procedure TKinds.FreeItem(i: SG);
 begin
 	try
-		if Assigned(FreeFile) then FreeFile(i);
+		if Assigned(FreeFile) then FreeFile(Items[i]);
 	except
 		on E: Exception do
 		begin
 		end;
 	end;
 	Items[i].FileName := '';
-	Items[i].MenuItem.Free; Items[i].MenuItem := nil;
+	FreeAndNil(Items[i].MenuItem);
 	FreeMem(Items[i].PData); Items[i].PData := nil;
 end;
 
@@ -202,6 +204,7 @@ var i: SG;
 begin
 	for i := 0 to Length(Items) - 1 do
 	begin
+		Index := i;
 		FreeItem(i);
 	end;
 	SetLength(Items, 0);
@@ -344,6 +347,7 @@ procedure TKinds.RWOptions(const Save: BG);
 var
 	FileName: string;
 	i, c, c2: SG;
+	NewIndex: SG;
 begin
 	Reopen.RWReopenNames('Reopen', Save);
 
@@ -373,7 +377,7 @@ begin
 	end;
 
 	if Save = True then
-		c := Count
+		c := FCount
 	else
 	begin
 		if SkipStartup then Exit;
@@ -389,10 +393,21 @@ begin
 			FileName := ShortDir(string(Items[i].FileName));
 			if Items[i].New <> 0 then Continue;
 		end;
-		MainIni.RWString('Opened Files', 'File ' + NToS(c2, False), FileName, Save);
+		MainIni.RWString('Opened Files', 'File ' + NToS(c2, ofIO), FileName, Save);
 		Inc(c2);
 		if Save = False then
 			KindLoadFromFile(FullDir(FileName));
+	end;
+
+	NewIndex := FIndex;
+	MainIni.RWNum('Opened Files', 'Index', NewIndex, Save);
+	if Save = False then
+	begin
+		Index := NewIndex;
+		// SetMenuItem(FIndex);
+		if Assigned(Items[FIndex].MenuItem) then
+			Items[FIndex].MenuItem.Checked := True;
+//		KindChangeFile(nil);
 	end;
 
 	if Save = True then
@@ -450,31 +465,34 @@ begin
 	Result := False;
 	if MultiFiles = False then
 	begin
-		if Count > 0 then
-			if KindClose(Index) = False then Exit;
+		if FCount > 0 then
+			if KindClose(FIndex) = False then Exit;
 	end;
 
-	SetLength(Items, Count + 1);
-	FillChar(Items[Count], SizeOf(TItem), 0);
-	Inc(Count);
+	SetLength(Items, FCount + 1);
+	FillChar(Items[FCount], SizeOf(TKindItem), 0);
+	Inc(FCount);
 
-	GetMem(Items[Count - 1].PData, ItemSize);
-	FillChar(Items[Count - 1].PData^, ItemSize, 0);
-	Items[Count - 1].New := High(Items[Count - 1].New);
+	GetMem(Items[FCount - 1].PData, ItemSize);
+	FillChar(Items[FCount - 1].PData^, ItemSize, 0);
+	Items[FCount - 1].New := High(Items[FCount - 1].New);
 	Result := True;
 end;
 
-procedure TKinds.ChangeIndex(I: SG);
+procedure TKinds.SetIndex(Value: SG);
 begin
-	if (ItemAddr <> nil) and (ItemSize <> 0) then
-	if (Index >= 0) and (Items[Index].PData <> nil) then
-		Move(ItemAddr^, Items[Index].PData^, ItemSize);
-	Index := I;
-	if (ItemAddr <> nil) and (ItemSize <> 0) then
-	if (Index >= 0) and (Items[Index].PData <> nil) then
-		Move(Items[Index].PData^, ItemAddr^, ItemSize)
-	else
-		FillChar(ItemAddr^, ItemSize, 0);
+//	if FIndex <> Value then
+	begin
+		if (ItemAddr <> nil) and (ItemSize <> 0) then
+		if (FIndex >= 0) and (Items[FIndex].PData <> nil) then
+			Move(ItemAddr^, Items[FIndex].PData^, ItemSize);
+		FIndex := Value;
+		if (ItemAddr <> nil) and (ItemSize <> 0) then
+		if (FIndex >= 0) and (Items[FIndex].PData <> nil) then
+			Move(Items[FIndex].PData^, ItemAddr^, ItemSize)
+		else
+			FillChar(ItemAddr^, ItemSize, 0);
+	end;
 end;
 
 procedure TKinds.KindNewFile(Sender: TObject; FileName: string = ''; CallNewFile: BG = True);
@@ -503,19 +521,19 @@ begin
 			Break;
 		end;
 	end;}
-	Inc(NewCount);
+	Inc(FNewCount);
 	if FileName = '' then
-		Items[Count - 1].FileName := 'NoName' + NToS(NewCount, False)
+		Items[FCount - 1].FileName := 'NoName' + NToS(FNewCount, ofIO)
 	else
-		Items[Count - 1].FileName := FileName;
+		Items[FCount - 1].FileName := FileName;
 
-	Items[Count - 1].New := NewCount;
-	LastIndex := Index;
-	ChangeIndex(Count - 1);
+	Items[FCount - 1].New := FNewCount;
+	LastIndex := FIndex;
+	Index := Count - 1;
 	if CallNewFile then
 	begin
 		try
-			Result := NewFile(Count - 1);
+			Result := NewFile(FCount - 1);
 		except
 			on E: Exception do
 			begin
@@ -525,17 +543,17 @@ begin
 	end
 	else
 		Result := True;
-	CreateMenuItem(Index);
+	CreateMenuItem(FIndex);
 	if Result = False then
 	begin
-		KindClose(Count - 1);
-		ChangeIndex(LastIndex);
+		KindClose(FCount - 1);
+		Index := LastIndex;
 	end
 	else
 	begin
-		Items[Index].Changed := False;
-		if Assigned(Items[Index].MenuItem) then
-			Items[Index].MenuItem.Checked := True;
+		Items[FIndex].Changed := False;
+		if Assigned(Items[FIndex].MenuItem) then
+			Items[FIndex].MenuItem.Checked := True;
 		KindChangeFile(Sender);
 	end;
 end;
@@ -552,11 +570,11 @@ begin
 	if Assigned(LoadFromFile) then
 	begin
 		if AddKindItem = False then Exit;
-		LastIndex := Index;
-		ChangeIndex(Count - 1);
-		Items[Count - 1].FileName := FileName;
+		LastIndex := FIndex;
+		Index := Count - 1;
+		Items[FCount - 1].FileName := FileName;
 		try
-			Result := LoadFromFile(Count - 1);
+			Result := LoadFromFile(FCount - 1);
 		except
 			on E: Exception do
 			begin
@@ -565,20 +583,20 @@ begin
 		end;
 		if Result = False then
 		begin
-			KindClose(Count - 1);
-			ChangeIndex(LastIndex);
+			Index := LastIndex;
+			KindClose(FCount - 1);
 		end
 		else
 		begin
 //			Index := Count - 1;
-			Items[Index].New := 0;
-			Items[Index].Changed := False;
-			Items[Index].ReadOnly := ReadOnly;
-			CreateMenuItem(Index);
-			if Assigned(Items[Index].MenuItem) then
-				Items[Index].MenuItem.Checked := True;
+			Items[FIndex].New := 0;
+			Items[FIndex].Changed := False;
+			Items[FIndex].ReadOnly := ReadOnly;
+			CreateMenuItem(FIndex);
+			if Assigned(Items[FIndex].MenuItem) then
+				Items[FIndex].MenuItem.Checked := True;
 
-			Reopen.AddReopenCaption(Items[Index].FileName);
+			Reopen.AddReopenCaption(Items[FIndex].FileName);
 		end;
 	end;
 end;
@@ -620,7 +638,7 @@ var
 	S: TFileName;
 	k: SG;
 begin
-	if Count = 0 then
+	if FCount = 0 then
 	begin
 		Result := False;
 		Exit;
@@ -655,8 +673,8 @@ begin
 	Inc(Items[Kind].SaveCount);
 	Items[Kind].Modified := Now;
 	Inc(Items[Kind].WorkTime, GetTickCount - Items[Kind].ModificationTime);
-	k := Index;
-	ChangeIndex(Kind);
+	k := FIndex;
+	Index := Kind;
 	try
 		Result := SaveToFile(S);
 	except
@@ -665,7 +683,7 @@ begin
 			Result := False;
 		end;
 	end;
-	ChangeIndex(k);
+	Index := k;
 	if SaveCopy = False then
 	if SD then
 	begin
@@ -678,7 +696,7 @@ function TKinds.KindSaveAll: BG;
 var i: SG;
 begin
 	Result := False;
-	for i := 0 to Count - 1 do
+	for i := 0 to FCount - 1 do
 	begin
 		if KindSave(i, False, False) then
 			Result := True
@@ -690,7 +708,7 @@ end;
 function TKinds.SaveAs(Kind: SG): BG;
 begin
 	Result := False;
-	if Count > 0 then
+	if FCount > 0 then
 	begin
 		if Items[Kind].Changed then
 		begin
@@ -721,7 +739,7 @@ var
 	LastIndex: SG;
 begin
 	Result := True;
-	if Kind >= Count then Exit;
+	if Kind >= FCount then Exit;
 	Result := SaveAs(Kind);
 
 	if Result = True then
@@ -736,22 +754,22 @@ begin
 			begin
 				FreeAndNil(Items[Kind].MenuItem);
 			end;
-			if Index <> Kind then
-				ChangeIndex(Kind);
+			if FIndex <> Kind then
+				Index := Kind;
 		end;
 		FreeItem(Kind);
-		for i := Kind to Count - 2 do
+		for i := Kind to FCount - 2 do
 		begin
 			Items[i] := Items[i + 1];
 		end;
-		Dec(Count); SetLength(Items, Count);
+		Dec(FCount); SetLength(Items, FCount);
 
-		if Index > Count - 1 then LastIndex := Count - 1 else LastIndex := Index;
-		Index := -1;
-		ChangeIndex(LastIndex);
-		if Index >= 0 then
-			if Assigned(Items[Index].MenuItem) then
-				 Items[Index].MenuItem.Checked := True;
+		if FIndex > FCount - 1 then LastIndex := FCount - 1 else LastIndex := FIndex;
+		FIndex := -1; // HACK No copy when set index
+		Index := LastIndex;
+		if FIndex >= 0 then
+			if Assigned(Items[FIndex].MenuItem) then
+				Items[FIndex].MenuItem.Checked := True;
 	end;
 end;
 
@@ -760,7 +778,7 @@ var i: SG;
 begin
 	Result := False;
 	i := 0;
-	while i < Count do
+	while i < FCount do
 	begin
 		if Items[i].Changed = True then
 		begin
@@ -777,7 +795,7 @@ begin
 			Inc(i);
 	end;
 	i := 0;
-	while i < Count do
+	while i < FCount do
 	begin
 		if Items[i].Changed = False then
 		begin
@@ -810,7 +828,7 @@ var i: SG;
 begin
 	Result := False;
 	i := 0;
-	while i < Count do
+	while i < FCount do
 	begin
 		if Items[i].Changed = True then
 		begin
@@ -820,7 +838,7 @@ begin
 			end
 			else
 			begin
-				if i = Index then
+				if i = FIndex then
 					KindInit;
 //				Result := True;
 			end;
@@ -843,8 +861,8 @@ procedure TKinds.KindInit;
 	begin
 		if Assigned(Save1) then
 		begin
-			if Count > 0 then
-				B := (Items[Index].Changed) and (Items[Index].New = 0)
+			if FCount > 0 then
+				B := (Items[FIndex].Changed) and (Items[FIndex].New = 0)
 			else
 				B := False;
 
@@ -852,15 +870,15 @@ procedure TKinds.KindInit;
 		end;
 
 		if Assigned(Revert1) then
-			Revert1.Enabled := (Count > 0) and (Items[Index].New = 0) and (Items[Index].Changed);
+			Revert1.Enabled := (FCount > 0) and (Items[FIndex].New = 0) and (Items[FIndex].Changed);
 		if Assigned(SaveAs1) then
-			SaveAs1.Enabled := Count > 0;
+			SaveAs1.Enabled := FCount > 0;
 		if Assigned(SaveCopyAs1) then
-			SaveCopyAs1.Enabled := (Count > 0) and (Items[Index].New = 0);
+			SaveCopyAs1.Enabled := (FCount > 0) and (Items[FIndex].New = 0);
 		if Assigned(SaveAll1) then
 		begin
 			B := False;
-			for i := 0 to Count - 1 do
+			for i := 0 to FCount - 1 do
 				if (Items[i].Changed) and (Items[i].New = 0) then
 				begin
 					B := True;
@@ -870,43 +888,43 @@ procedure TKinds.KindInit;
 		end;
 
 		if Assigned(Close1) then
-			Close1.Enabled := Count > 0;
+			Close1.Enabled := FCount > 0;
 		if Assigned(CloseAll1) then
-			CloseAll1.Enabled := Count > 0;
+			CloseAll1.Enabled := FCount > 0;
 		if Assigned(Delete1) then
-			Delete1.Enabled := (Count > 0) and (Items[Index].New = 0);
+			Delete1.Enabled := (FCount > 0) and (Items[FIndex].New = 0);
 	end;
 
 var
 	i: SG;
 begin
 	if Assigned(Application.MainForm) then
-	if (Count <= 0) or (Index < 0) then
+	if (FCount <= 0) or (FIndex < 0) then
 		Application.MainForm.Caption := Application.Title
 	else
-		Application.MainForm.Caption := GetCaption(Items[Index].FileName, Items[Index].Changed,
-			Items[Index].New, Items[Index].ReadOnly, Index, Count);
+		Application.MainForm.Caption := GetCaption(Items[FIndex].FileName, Items[FIndex].Changed,
+			Items[FIndex].New, Items[FIndex].ReadOnly, FIndex, FCount);
 
 	KindEnabled;
 	if Assigned(Window1) then
 	begin
 //		Window1.Enabled := Count > 0; Permanently change menu color
-		for i := 0 to Count - 1 do
+		for i := 0 to FCount - 1 do
 			SetMenuItem(i);
-		if Assigned(LastWindow1) then LastWindow1.Enabled := Count > 1;
-		if Assigned(NextWindow1) then NextWindow1.Enabled := Count > 1;
+		if Assigned(LastWindow1) then LastWindow1.Enabled := FCount > 1;
+		if Assigned(NextWindow1) then NextWindow1.Enabled := FCount > 1;
 
 	end;
 end;
 
 procedure TKinds.Change;
 begin
-	if Count > 0 then
+	if FCount > 0 then
 	begin
-		if Items[Index].Changed = False then
+		if Items[FIndex].Changed = False then
 		begin
-			Items[Index].Changed := True;
-			Items[Index].ModificationTime := GetTickCount;
+			Items[FIndex].Changed := True;
+			Items[FIndex].ModificationTime := GetTickCount;
 			KindInit;
 		end
 	end;
@@ -914,11 +932,11 @@ end;
 
 procedure TKinds.Unchange;
 begin
-	if Count > 0 then
+	if FCount > 0 then
 	begin
-		if Items[Index].Changed = True then
+		if Items[FIndex].Changed = True then
 		begin
-			Items[Index].Changed := False;
+			Items[FIndex].Changed := False;
 			KindInit;
 		end
 	end;
@@ -929,26 +947,26 @@ var FileName: TFileName;
 begin
 	if Assigned(OpenDialog1) then
 	begin
-		if Count <= 0 then
+		if FCount <= 0 then
 		begin
 			FileName := '';
 		end
 		else
 		begin
-			FileName := Items[Index].FileName;
+			FileName := Items[FIndex].FileName;
 		end;
 		if ExecuteDialog(OpenDialog1, FileName) then
 			KindOpenFiles(OpenDialog1.Files);
 	end;
 	if Assigned(OpenPictureDialog1) then
 	begin
-		if Count <= 0 then
+		if FCount <= 0 then
 		begin
 			FileName := '';
 		end
 		else
 		begin
-			FileName := Items[Index].FileName;
+			FileName := Items[FIndex].FileName;
 		end;
 		if ExecuteDialog(OpenPictureDialog1, FileName) then
 			KindOpenFiles(OpenPictureDialog1.Files, ofReadOnly in OpenPictureDialog1.Options);
@@ -957,19 +975,19 @@ end;
 
 procedure TKinds.Revert1Click(Sender: TObject);
 begin
-	if MessageD(Items[Index].FileName + LineSep + 'Lose all changes since your last save?',
+	if MessageD(Items[FIndex].FileName + LineSep + 'Lose all changes since your last save?',
 		mtConfirmation, [mbYes, mbNo]) = mbYes then
 	begin
 		try
-			if Assigned(FreeFile) then FreeFile(Index);
+			if Assigned(FreeFile) then FreeFile(Items[FIndex]);
 		except
 			on E: Exception do
 			begin
 			end;
 		end;
-		Items[Index].Changed := False;
+		Items[FIndex].Changed := False;
 		try
-			LoadFromFile(Index);
+			LoadFromFile(FIndex);
 		except
 			on E: Exception do
 			begin
@@ -981,18 +999,18 @@ end;
 
 procedure TKinds.Save1Click(Sender: TObject);
 begin
-	if Count > 0 then
-		if KindSave(Index, Items[Index].ReadOnly, False) then KindInit;
+	if FCount > 0 then
+		if KindSave(FIndex, Items[FIndex].ReadOnly, False) then KindInit;
 end;
 
 procedure TKinds.SaveAs1Click(Sender: TObject);
 begin
-	if KindSave(Index, True, False) then KindInit;
+	if KindSave(FIndex, True, False) then KindInit;
 end;
 
 procedure TKinds.SaveCopyAs1Click(Sender: TObject);
 begin
-	if KindSave(Index, True, True) then KindInit;
+	if KindSave(FIndex, True, True) then KindInit;
 end;
 
 procedure TKinds.SaveAll1Click(Sender: TObject);
@@ -1002,7 +1020,7 @@ end;
 
 procedure TKinds.Close1Click(Sender: TObject);
 begin
-	if KindClose(Index) then KindChangeFile(Sender);
+	if KindClose(FIndex) then KindChangeFile(Sender);
 end;
 
 procedure TKinds.CloseAll1Click(Sender: TObject);
@@ -1012,11 +1030,11 @@ end;
 
 procedure TKinds.Delete1Click(Sender: TObject);
 begin
-	if Count > 0 then
-		if MessageD(Items[Index].FileName + LineSep + 'Delete file?',
+	if FCount > 0 then
+		if MessageD(Items[FIndex].FileName + LineSep + 'Delete file?',
 			mtConfirmation, [mbYes, mbNo]) = mbYes then
 		begin
-			DeleteFileEx(Items[Index].FileName);
+			DeleteFileEx(Items[FIndex].FileName);
 			Close1Click(Sender);
 		end;
 end;
@@ -1024,19 +1042,19 @@ end;
 procedure TKinds.LastNextWindow1Click(Sender: TObject);
 var i: SG;
 begin
-	i := Index + TMenuItem(Sender).Tag;
-	if i >= Count then
+	i := FIndex + TMenuItem(Sender).Tag;
+	if i >= FCount then
 		i := 0
 	else if i < 0 then
-		i := Count - 1;
-	ChangeIndex(i);
+		i := FCount - 1;
+	Index := i;
 	Window1.Items[i].Checked := True;
 	KindChangeFile(Sender);
 end;
 
 procedure TKinds.WindowXClick(Sender: TObject);
 begin
-	ChangeIndex(TMenuItem(Sender).Tag);
+	Index := TMenuItem(Sender).Tag;
 	TMenuItem(Sender).Checked := True;
 	KindChangeFile(Sender);
 end;
@@ -1073,6 +1091,6 @@ end;
 
 {$ifopt d+}
 initialization
-	CheckExpSize(SizeOf(TItem));
+	CheckExpSize(SizeOf(TKindItem));
 {$endif}
 end.

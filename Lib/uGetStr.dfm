@@ -64,7 +64,7 @@ object fGetStr: TfGetStr
     Top = 11
     Width = 48
     Height = 18
-    Caption = 'Cur'
+    Caption = '&Cur'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -79,7 +79,7 @@ object fGetStr: TfGetStr
     Top = 11
     Width = 48
     Height = 18
-    Caption = 'Def'
+    Caption = '&Def'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11

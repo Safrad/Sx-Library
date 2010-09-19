@@ -286,17 +286,17 @@ end;
 
 procedure TDIniFile.WriteNum(const Section, Ident: string; Value: S4);
 begin
-	WriteString(Section, Ident, NToS(Value, False));
+	WriteString(Section, Ident, NToS(Value, ofIO));
 end;
 
 procedure TDIniFile.WriteNum(const Section, Ident: string; Value: S8);
 begin
-	WriteString(Section, Ident, NToS(Value, False));
+	WriteString(Section, Ident, NToS(Value, ofIO));
 end;
 
 procedure TDIniFile.WriteNum(const Section, Name: string; Value: FA);
 begin
-	WriteString(Section, Name, FToS(Value, False));
+	WriteString(Section, Name, FToS(Value, ofIO));
 end;
 
 {$ifndef NoGUI}
@@ -436,10 +436,15 @@ begin
 end;
 
 procedure TDIniFile.FreeData;
-var i: Integer;
+var i, j: SG;
 begin
 	for i := 0 to FSectionCount - 1 do
 	begin
+		for j := 0 to FSections[i].KeyCount - 1 do
+		begin
+			FSections[i].Keys[j].Name := '';
+			FSections[i].Keys[j].Value := '';
+		end;
 		SetLength(FSections[i].Keys, 0);
 	end;
 	SetLength(FSections, 0);
@@ -904,19 +909,19 @@ begin
 	begin
 		j := ReadNum(Section, 'LineCount', Val.Count);
 		for i := 0 to j - 1 do
-			Val.Add(ReadString(Section, 'Line' + NToS(i, False), ''));
+			Val.Add(ReadString(Section, 'Line' + NToS(i, ofIO), ''));
 	end
 	else
 	begin
 		WriteNum(Section, 'LineCount', Val.Count);
 		for i := 0 to Val.Count - 1 do
-			WriteString(Section, 'Line' + NToS(i, False), Val[i]);
+			WriteString(Section, 'Line' + NToS(i, ofIO), Val[i]);
 		// Remove deleted lines
 		i := Val.Count;
 		si := GetSectionIndex(Section);
 		while True do
 		begin
-			vi := GetValueIndex(si, 'Line' + NToS(i, False));
+			vi := GetValueIndex(si, 'Line' + NToS(i, ofIO));
 			if vi = -1 then Break;
 			Inc(i);
 			for j := vi to FSections[si].KeyCount - 2 do
@@ -999,8 +1004,8 @@ begin
 	DView.FSortBySwap := RWBGF(Section, 'SortBySwap', DView.FSortBySwap, DView.FSortBySwap, Save);
 	for i := 0 to DView.ColumnCount - 1 do
 	begin
-		DView.Columns[i].Width := RWSGF(Section, 'Width' + NToS(i, False), DView.Columns[i].Width, DView.Columns[i].Width, Save);
-		DView.ColumnOrder[i] := RWSGF(Section, 'Order' + NToS(i, False), DView.ColumnOrder[i], i, Save);
+		DView.Columns[i].Width := RWSGF(Section, 'Width' + NToS(i, ofIO), DView.Columns[i].Width, DView.Columns[i].Width, Save);
+		DView.ColumnOrder[i] := RWSGF(Section, 'Order' + NToS(i, ofIO), DView.ColumnOrder[i], i, Save);
 	end;
 
 	RWDImage(TDImage(DView), Save);
@@ -1011,12 +1016,12 @@ procedure TDIniFile.RWListView(ListView: TListView; const Save: BG);
 var i, j: Integer;
 begin
 	for i := 0 to ListView.Columns.Count - 1 do
-		ListView.Columns[i].Width := RWSGF(ListView.Name, 'Width' + NToS(i, False), ListView.Columns[i].Width, ListView.Columns[i].Width, Save);
+		ListView.Columns[i].Width := RWSGF(ListView.Name, 'Width' + NToS(i, ofIO), ListView.Columns[i].Width, ListView.Columns[i].Width, Save);
 	if ListView.FullDrag then
 	begin
 		for i := 0 to ListView.Columns.Count - 1 do
 		begin
-			j := RWSGF(ListView.Name, 'Index' + NToS(i, False), ListView.Columns.Items[i].ID, i, Save);
+			j := RWSGF(ListView.Name, 'Index' + NToS(i, ofIO), ListView.Columns.Items[i].ID, i, Save);
 			if Save = False then ListView.Columns.Items[i].Index := j;
 
 		end;

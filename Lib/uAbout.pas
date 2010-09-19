@@ -20,8 +20,8 @@ type
 		Timer1: TDTimer;
 		ButtonOk: TDButton;
 		BevelSep: TBevel;
-		Image1: TImage;
-		Image2: TImage;
+    ImageEMail: TImage;
+    ImageWeb: TImage;
 		LabelRunCount: TLabel;
 		LabelNowRunTime: TLabel;
 		LabelTotalRunTime: TLabel;
@@ -39,10 +39,8 @@ type
 		EditEMail: TEdit;
 		Bevel: TBevel;
 		ImageAbout: TDImage;
-		Image3: TImage;
 		LabelIcq: TLabel;
 		EditIcq: TEdit;
-		Image4: TImage;
 		SysInfo1: TDButton;
 		DButtonMemoryStatus: TDButton;
 		LabelCount: TLabel;
