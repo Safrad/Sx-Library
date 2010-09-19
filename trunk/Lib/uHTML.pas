@@ -513,7 +513,7 @@ end;
 
 function GetHTMLHead(HTMLFileName: TFileName; Head: string): string;
 begin
-	Replace(Head, '%root', RelativePath(HTMLFileName, RootDir));
+	Replace(Head, '%root%', RelativePath(HTMLFileName, RootDir));
 	if Head = '' then
 		Result := ''
 	else
@@ -522,7 +522,7 @@ end;
 
 function GetHTMLFoot(HTMLFileName: TFileName; Foot: string): string;
 begin
-	Replace(Foot, '%root', RelativePath(HTMLFileName, RootDir));
+	Replace(Foot, '%root%', RelativePath(HTMLFileName, RootDir));
 	if Foot = '' then
 		Result := ''
 	else

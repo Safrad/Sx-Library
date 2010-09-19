@@ -25,7 +25,7 @@ type
 		procedure ButtonCurClick(Sender: TObject);
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonDefClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
 	private
 		{ Private declarations }
 		CurS, DefS: string;
@@ -34,10 +34,8 @@ type
 		{ Public declarations }
 	end;
 
-function GetStr(Caption: string;
-	var CurVal: string; const DefVal: string; const MaxL: UG): Boolean;
-
-var StrMasked: Boolean;
+function GetStr(Caption: string; var CurVal: string; const DefVal: string; const MaxLength: UG = 0; StrMasked: BG = False): Boolean;
+function GetPassword(out Password: string): BG;
 
 implementation
 
@@ -52,15 +50,14 @@ begin
 	ButtonDef.Enabled :=  EditInput.Text <> DefS;
 end;
 
-function GetStr(Caption: string;
-	var CurVal: string; const DefVal: string; const MaxL: UG): Boolean;
+function GetStr(Caption: string; var CurVal: string; const DefVal: string; const MaxLength: UG = 0; StrMasked: BG = False): Boolean;
 begin
 	if not Assigned(fGetStr) then
 	begin
 		fGetStr := TfGetStr.Create(Application.MainForm);
 	end;
 	fGetStr.Caption := DelCharsF(Caption, '&');
-	fGetStr.EditInput.MaxLength := MaxL;
+	fGetStr.EditInput.MaxLength := MaxLength;
 	fGetStr.CurS := CurVal;
 	fGetStr.DefS := DefVal;
 	fGetStr.EditInput.OnChange := nil;
@@ -84,7 +81,6 @@ begin
 		Result := False;
 	end;
 end;
-
 
 procedure TfGetStr.ButtonCurClick(Sender: TObject);
 begin
@@ -112,6 +108,15 @@ end;
 procedure TfGetStr.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
+end;
+
+function GetPassword(out Password: string): BG;
+var RepeatedPassword: string;
+begin
+	if GetStr('Password', Password, '', 0, True) and GetStr('Re-enter Password', RepeatedPassword, '', 0, True) then
+	begin
+		Result := Password = RepeatedPassword;
+	end;
 end;
 
 end.

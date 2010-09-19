@@ -90,7 +90,7 @@ object fAbout: TfAbout
     Height = 9
     Shape = bsTopLine
   end
-  object Image1: TImage
+  object ImageEMail: TImage
     Left = 56
     Top = 177
     Width = 16
@@ -110,7 +110,7 @@ object fAbout: TfAbout
     Transparent = True
     OnClick = EditEMailClick
   end
-  object Image2: TImage
+  object ImageWeb: TImage
     Left = 56
     Top = 201
     Width = 16
@@ -129,24 +129,6 @@ object fAbout: TfAbout
       5555}
     Transparent = True
     OnClick = EditWebClick
-  end
-  object Image3: TImage
-    Left = 200
-    Top = 153
-    Width = 16
-    Height = 16
-    Cursor = crHandPoint
-    AutoSize = True
-    Transparent = True
-    OnClick = EditEMailClick
-  end
-  object Image4: TImage
-    Left = 40
-    Top = 153
-    Width = 16
-    Height = 16
-    AutoSize = True
-    Transparent = True
   end
   object LabelRunCount: TLabel
     Left = 16
@@ -193,7 +175,7 @@ object fAbout: TfAbout
     Width = 65
     Height = 18
     AutoSize = False
-    Caption = 'FirstRelease'
+    Caption = 'First Release'
     Color = clBtnFace
     ParentColor = False
     Transparent = True

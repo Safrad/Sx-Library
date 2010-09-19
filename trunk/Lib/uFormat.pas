@@ -14,6 +14,8 @@ uses
 	uTypes;
 
 // Format functions
+type
+	TOutputFormat = (ofIO, ofHTML, ofDisplay{Windows Locale});
 
 // Number Format
 var
@@ -79,21 +81,22 @@ const
 
 var UseNA: BG;
 
-function NToS(const Num: Int64): string; overload;
-function NToS(const Num: Int64; const Decimals: SG): string; overload;
 function NToS(const Num: Int64; const UseFormat: string): string; overload;
-function NToS(const Num: Int64; const UseWinFormat: BG): string; overload;
-function NToS(const Num: Int64; const UseWinFormat: BG; const Decimals: SG): string; overload;
+function NToS(const Num: Int64; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: Int64; const OutputFormat: TOutputFormat): string; overload;
 //function NToHS(Num: S8): string;
 
 //function NumToStr(Num: S8; const Base: SG): string;
 
-function FToS(Num: Extended): string; overload;
-function FToS(Num: Extended; const UseWinFormat: BG): string; overload;
+function FToS(Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
 
 function BToStr(const B: S4): string; overload;
 function BToStr(const B: S8): string; overload;
 function NodesToS(const Value: U8): string;
+const
+	ScoreOne = 100;
+function ScoreToStr(Score: UG; HTML: BG = True): string;
+function EloToStr(Elo: U2; const OutputFormat: TOutputFormat): string;
 
 procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: U4);
 type
@@ -132,11 +135,11 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uMath, uStrings;
+	uMath, uStrings, uHTML;
 
-procedure AddMinusStr(var Result: string; const UseWinFormat: BG);
+procedure AddMinusStr(var Result: string; const OutputFormat: TOutputFormat);
 begin
-	if UseWinFormat then
+	if OutputFormat = ofDisplay then
 	begin
 		case NegFormat of
 		0: Result := '(' + Result + ')';
@@ -281,23 +284,8 @@ begin
 	end;
 end;
 
-function NToS(const Num: Int64): string;
-begin
-	Result := NToS(Num, True, 0);
-end;
-
-function NToS(const Num: Int64; const Decimals: SG): string;
-begin
-	Result := NToS(Num, True, Decimals);
-end;
-
-function NToS(const Num: Int64; const UseWinFormat: BG): string;
-begin
-	Result := NToS(Num, UseWinFormat, 0);
-end;
-
 // 454,545,455.456465; 0.045
-function NToS(const Num: Int64; const UseWinFormat: BG; const Decimals: SG): string;
+function NToS(const Num: Int64; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 var
 	DecimalSep, ThousandSep: string[3];
 	ThousandGr, FractionGr: SG;
@@ -319,24 +307,28 @@ begin
 		Exit;
 	end;
 
-	if UseWinFormat then
+	case OutputFormat of
+	ofDisplay:
 	begin
 		DecimalSep := DecimalSeparator;
 		ThousandSep := ThousandSeparator;
 		ThousandGr := ThousandGroup;
 		FractionGr := FractionGroup;
-	end
-	else
+	end;
+	else {ofIO, ofHTML:}
 	begin
 		DecimalSep := '.';
 		ThousandSep := ',';
 		ThousandGr := 3;
 		FractionGr := 3;
 	end;
+	end;
 	if UseThousandSeparator = False then ThousandSep := '';
 
 	if Num = 0 then
-		Nums := ''
+	begin
+		if OutputFormat = ofHTML then Nums := nbsp else Nums := ''
+	end
 	else if NumericBase = 10 then
 		Nums := IntToStr(Abs(Num))
 	else
@@ -377,7 +369,7 @@ begin
 			FirstNotZero := True;
 			if i < 1 then
 			begin
-				if UseWinFormat then
+				if OutputFormat = ofDisplay then
 				begin
 					if LeadingZero = 1 then
 						Result := '0' + Result;
@@ -409,8 +401,13 @@ begin
 
 	if Num < 0 then
 	begin
-		AddMinusStr(Result, UseWinFormat);
+		AddMinusStr(Result, OutputFormat);
 	end;
+end;
+
+function NToS(const Num: Int64; const OutputFormat: TOutputFormat): string; overload;
+begin
+	Result := NToS(Num, 0, OutputFormat);
 end;
 
 {
@@ -426,7 +423,7 @@ begin
 	until Num = 0;
 end;}
 
-function FToS(Num: Extended; const UseWinFormat: BG): string;
+function FToS(Num: Extended; const OutputFormat: TOutputFormat): string;
 var
 	D: SG;
 	Nu, eps: Extended;
@@ -451,12 +448,7 @@ begin
 		Inc(D);
 	end;
 
-	Result := NToS(Round(Nu), UseWinFormat, D);
-end;
-
-function FToS(Num: Extended): string;
-begin
-	Result := FToS(Num, True);
+	Result := NToS(Round(Nu), D, OutputFormat);
 end;
 
 {
@@ -792,6 +784,49 @@ begin
 		Result := NToS(Value div G) + ' G'
 	else
 		Result := NToS(Value div T) + ' T';
+end;
+
+function ScoreToStr(Score: UG; HTML: BG = True): string;
+var
+	Res, Rem: U2;
+begin
+	DivModU4(Score, ScoreOne, Res, Rem);
+	if (Res > 0) or (Rem = 0) then
+		Result := NToS(Res)
+	else
+		Result := '';
+	if (Rem <> 0) or (HTML = False) then
+	begin
+		if HTML then
+		begin
+			if Rem = ScoreOne div 2 then
+				Result := Result + '&frac12;'
+			else if Rem = ScoreOne div 4 then
+				Result := Result + '&frac14;'
+			else if Rem = 3 * ScoreOne div 4 then
+				Result := Result + '&frac34;'
+			else
+				Result := Result + ',' + NToS(Rem, '00');
+		end
+		else
+			Result := Result + ',' + NToS(Rem, '00');
+	end;
+end;
+
+function EloToStr(Elo: U2; const OutputFormat: TOutputFormat): string;
+begin
+	if Elo = 0 then
+	begin
+		case OutputFormat of
+		ofHTML: Result := nbsp;
+		ofIO: Result := '0';
+		else Result := '';
+		end;
+	end
+	else
+	begin
+		Result := IntToStr(Elo);
+	end;
 end;
 
 procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: U4);

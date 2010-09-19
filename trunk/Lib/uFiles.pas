@@ -118,12 +118,15 @@ const
 	AllFiles = 'All Files (*.*)|*.*';
 	AllText = 'Text file (*.txt)|*.txt|' + AllFiles;
 var
-	StartDir, // Dir with Ini and configuratios files (read and write)
+	StartDir, // Not used
 	WorkDir, // Dir with exe file, data files (read only)
 	GraphDir,
 	SoundsDir,
 	DataDir,
-	SysDir, WinDir: string;
+	SysDir,
+	WinDir, // Dir with shared configuration files (read and write)
+//	UserDir, // Dir with user specific configuration files (read and write)
+	TempDir: string;
 	ExeFileName: TFileName;
 	ProgramFiles: string = 'C:\Program Files\';
 
@@ -160,7 +163,7 @@ function CopyDir(const Source, Dest: string): Boolean;
 
 function DeleteFileEx(const FileName: TFileName): Boolean;
 function DeleteDir(const DirName: string): Boolean;
-function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
+function DeleteDirs(DirName: string; DeleteSelf: Boolean = False): Boolean;
 
 
 function ReadBufferFromFile(var FileName: TFileName; var Buf; var Count: SG): BG;
@@ -221,7 +224,7 @@ begin
 		nil,
 		ErrorCode,
 		LANG_NEUTRAL or SUBLANG_DEFAULT shl 10,
-		@Result[1],
+		PChar(Result),
 		MAX_PATH,
 		nil);
 	SetLength(Result, NewLength);
@@ -702,25 +705,29 @@ procedure InitPaths;
 var
 	NewLength: SG;
 	i: SG;
+	AppName: string;
 begin
 	GetDir(0, StartDir);
 	CorrectDir(StartDir);
 
-	WorkDir := GetCommandLine;
-	if WorkDir[1] = '"' then
+	ExeFileName := GetCommandLine;
+	// Remove Parameters
+	if Length(ExeFileName) > 0 then
+	if ExeFileName[1] = '"' then
 	begin
-		Delete(WorkDir, 1, 1);
-		i := Pos('"', WorkDir);
-		if i > 0 then Delete(WorkDir, i, Length(WorkDir) - i + 1);
+		Delete(ExeFileName, 1, 1);
+		i := Pos('"', ExeFileName);
+		if i > 0 then Delete(ExeFileName, i, Length(ExeFileName) - i + 1);
 	end
 	else
 	begin
-		i := Pos(' ', WorkDir);
-		Delete(WorkDir, i, Length(WorkDir) - i + 1);
+		i := Pos(' ', ExeFileName);
+		Delete(ExeFileName, i, Length(ExeFileName) - i + 1);
 	end;
 
-	ExeFileName := WorkDir;
-
+	// Split ExeFileName to WorkDir and AppName
+	WorkDir := ExeFileName;
+	AppName := '_';
 	for i := Length(WorkDir) downto 0 do
 	begin
 		if i = 0 then
@@ -730,25 +737,32 @@ begin
 		end;
 		if (WorkDir[i] = '\') then
 		begin
+			AppName := Copy(WorkDir, i + 1, MaxInt);
 			SetLength(WorkDir, i);
 			Break;
 		end;
 	end;
-	if (WorkDir = '') then WorkDir := StartDir;
-//  SharedDir := BackDir(WorkDir) + 'Shared\';
+	if WorkDir = '' then WorkDir := StartDir;
 	GraphDir := WorkDir + 'Graphics\';
 	SoundsDir := WorkDir + 'Sounds\';
 	DataDir := WorkDir + 'Data\';
 
 	SetLength(SysDir, MAX_PATH);
-	NewLength := GetSystemDirectory(@SysDir[1], MAX_PATH);
+	NewLength := GetSystemDirectory(PChar(SysDir), MAX_PATH);
 	SetLength(SysDir, NewLength);
 	CorrectDir(SysDir);
 
 	SetLength(WinDir, MAX_PATH);
-	NewLength := GetWindowsDirectory(@WinDir[1], MAX_PATH);
+	NewLength := GetWindowsDirectory(PChar(WinDir), MAX_PATH);
 	SetLength(WinDir, NewLength);
 	CorrectDir(WinDir);
+
+	SetLength(TempDir, MAX_PATH);
+	NewLength := GetEnvironmentVariable('TEMP', PChar(TempDir), Max_PATH);
+	SetLength(TempDir, NewLength);
+	if TempDir = '' then TempDir := WinDir + 'Temp';
+	CorrectDir(TempDir);
+	TempDir := TempDir + '_' + AppName + '\';
 end;
 
 function ShortDir(const Dir: string): string;
@@ -774,15 +788,37 @@ begin
 end;
 
 function FullDir(Dir: string): string;
-{var
-	i: Integer;}
+var
+	i, Start: SG;
+	Variable, Value: string;
+	NewLength: SG;
 begin
-	if Dir = '' then
+	if Length(Dir) = 0 then
 		Result := ''
 	else
 	begin
-		// %HOMEDRIVE%%HOMEPATH%
-		Replace(Dir, '%SystemRoot%', Copy(WinDir, 1, Length(WinDir) - 1));
+		i := 1;
+		while i <= Length(Dir) do
+		begin
+			if Dir[i] = '%' then
+			begin
+				Start := i;
+				Inc(i);
+				Variable := ReadToChar(Dir, i, '%');
+				if (i > Length(Dir) + 1) then Break; // next % not found
+
+				SetLength(Value, MAX_PATH);
+				NewLength := GetEnvironmentVariable(PChar(Variable), PChar(Value), Max_PATH);
+				SetLength(Value, NewLength);
+
+				Delete(Dir, Start, i - Start);
+				Insert(Value, Dir, Start);
+				i := Start + Length(Value);
+			end
+			else
+				Inc(i);
+		end;
+
 {		for i := 1 to Length(Dir) do
 		begin
 			if Dir[i] = ':' then
@@ -791,7 +827,7 @@ begin
 				Exit;
 			end;
 		end;}
-		if (Dir[1] = '\') then
+		if (Length(Dir) > 0) and (Dir[1] = '\') then
 			Result := WorkDir[1] + WorkDir[2] + Dir
 		else if ((Length(Dir) > 1) and (Dir[2] = ':'))then
 		begin
@@ -1162,7 +1198,7 @@ begin
 		Result := True
 	else
 	begin
-		Result := CreateDirectory(@Dir[1], nil);
+		Result := CreateDirectory(PChar(Dir), nil);
 		{$ifndef NoGUI}
 		if Result = False then
 			IOError(Dir, GetLastError);
@@ -1274,14 +1310,14 @@ end;
 
 function DeleteDir(const DirName: string): Boolean;
 begin
-	Result := Windows.RemoveDirectory(@DirName[1]);
+	Result := Windows.RemoveDirectory(PChar(DirName));
 	{$ifndef NoGUI}
 	if Result = False then
 		IOError(DirName, GetLastError);
 	{$endif}
 end;
 
-function DeleteDirs(DirName: string; DeleteSelf: Boolean): Boolean;
+function DeleteDirs(DirName: string; DeleteSelf: Boolean = False): Boolean;
 var
 	SearchRec: TSearchRec;
 	ErrorCode: Integer;
@@ -1544,7 +1580,7 @@ var
 	Temp: TWIN32FindData;
 	SearchHandle: THandle;
 begin
-	SearchHandle := FindFirstFile(@ShortName[1], Temp);
+	SearchHandle := FindFirstFile(PChar(ShortName), Temp);
 	if SearchHandle <> ERROR_INVALID_HANDLE then begin
 		Result := string(Temp.cFileName);
 		if Result = '' then Result := string(Temp.cAlternateFileName);
@@ -1558,7 +1594,7 @@ var
 	Temp: TWIN32FindData;
 	SearchHandle: THandle;
 begin
-	SearchHandle := FindFirstFile(@LongName[1], Temp);
+	SearchHandle := FindFirstFile(PChar(LongName), Temp);
 	if SearchHandle <> ERROR_INVALID_HANDLE then begin
 		Result := string(Temp.cAlternateFileName);
 		if Result = '' then Result := string(Temp.cFileName);
@@ -1620,7 +1656,7 @@ begin
 		Exit;
 	end;
 	Result := '';
-	TempPathPtr := @ShortName[1];
+	TempPathPtr := ShortName;
 	LastSlash := StrRScan(TempPathPtr, '\');
 	while LastSlash <> nil do begin
 		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
@@ -1644,7 +1680,7 @@ begin
 		Exit;
 	end;
 	Result := '';
-	TempPathPtr := @LongName[1];
+	TempPathPtr := LongName;
 	LastSlash := StrRScan(TempPathPtr, '\');
 	while LastSlash <> nil do begin
 		Result := '\' + LongToShortFileName(TempPathPtr) + Result;

@@ -599,15 +599,15 @@ begin
 								Bitmap.Canvas.Font.Color := clWindowText;
 							if (RowIndex < 0) or (RowIndex >= FRowCount) then
 							begin
-								Data := '<Row out of range>';
+								Data := {$ifopt d+}'<Row out of range>'{$else}''{$endif};;
 							end
 							else if (ColIndex < 0) or (ColIndex >= FColumnCount) then
 							begin
-								Data := '<Coloumn out of range>';
+								Data := {$ifopt d+}'<Coloumn out of range>'{$else}''{$endif};;
 							end
 							else
 							begin
-								Data := '<Empty>';
+								Data := {$ifopt d+}'<Empty>'{$else}''{$endif};
 								try
 									FOnGetData(Self, Data, ColIndex, RowIndex, Rect(X + 1, Y + 1, X + Columns[IX].Width - 2, Y + RowHeight - 2));
 //									if Length(Data) > 255 then SetLength(Data, 255);
@@ -618,7 +618,7 @@ begin
 							end;
 						end
 						else
-							Data := '<No data event defined>';
+							Data := {$ifopt d+}'<No data event defined>'{$else}''{$endif};;
 
 						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 2 + 2 * Border + LeftOffset);
 						if IY = ActualRow then
