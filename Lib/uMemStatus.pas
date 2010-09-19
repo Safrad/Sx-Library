@@ -8,10 +8,12 @@
 
 unit uMemStatus {platform};
 
+{ WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDLabel, uDButton, uDTimer, uDForm;
 
 const

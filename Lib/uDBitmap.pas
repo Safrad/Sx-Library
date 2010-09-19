@@ -10,14 +10,14 @@ unit uDBitmap;
 
 // {$define BPP4}
 
-// D??? ToDo: Rotated-Grid Anti-Aliasing, Alpha blending
+{ TODO : Rotated-Grid Anti-Aliasing, Alpha blending }
 
 interface
 
 uses
-	Classes, Forms,
 	OpenGL12,
-	uTypes, uMath, Windows, Graphics, ExtCtrls, SysUtils;
+	uTypes, uMath, uColor,
+	Classes, Forms, Windows, Graphics, ExtCtrls, SysUtils;
 
 const
 	IconExt = '.png';
@@ -162,9 +162,6 @@ procedure GetPix(PD: Pointer; ByteXD: UG; X, Y: U4; out C: TRGBA);
 type
 	TDBitmap = class(TBitmap)
 	private
-//		FCanvas: TCanvas;
-//		HB: HBITMAP;
-
 		FWidth, FHeight: TCoor;
 		FByteX: TCoor;
 		FData: PPixel;
@@ -172,10 +169,6 @@ type
 		FPixelFormat: TPixelFormat;
 		procedure HistogramL(Limit: UG);
 		function CutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;
-
-//		function GetCanvas: TCanvas;
-	protected
-
 	public
 		GraphMinX, GraphMinY, GraphMaxX, GraphMaxY: TCoor;
 		ChangeRB: BG;
@@ -331,6 +324,8 @@ type
 		procedure SaveToFileDialog(var FileName: TFileName);
 		procedure DrawToDC(DC: HDC; Left, Top: SG);
 
+		procedure GetDirtyImage(out R: TRect);
+
 {		procedure RotatedTextOut(X, Y: SG; Text: string; Angle: SG);
 		procedure DataToGraph(Caption: string; Values: PArrayFA; MinValueX, MaxValueX, MinValueY, MaxValueY: FA; ValueCount: SG); overload;
 		procedure DataToGraph(Caption: string; Values: PArrayFA; MinValueX, MaxValueX, MinValueY, MaxValueY: FA; ValueCount: SG; ValuesX: TGraphNodes); overload;}
@@ -396,8 +391,8 @@ implementation
 
 uses
 	Jpeg, GifImage, PngImage, PPMImage, TGAImage,
-	Dialogs, Math, ClipBrd, ExtDlgs, StdCtrls,
-	uGraph, uError, uScreen, uFiles, uGetInt, uStrings, uSysInfo, uInput, uFind, uSystem;
+	Math, ClipBrd, ExtDlgs, StdCtrls, Dialogs,
+	uGraph, uMsg, uScreen, uFiles, uGetInt, uStrings, uSysInfo, uInput, uFind, uSystem;
 
 (*-------------------------------------------------------------------------*)
 function WidthToByteX4(const Width: UG): UG;
@@ -1473,7 +1468,7 @@ begin
 				SG(FGLData) := SG(FData) - FByteX * (FHeight - 1);
 			end;
 		except
-			on E: Exception do ErrorMessage(E.Message);
+			on E: Exception do ErrorMsg(E.Message);
 		end;
 {		HB := CreateBitmap(Width, Height, 1, 32, FGLData);
 		HB := SelectObject(FCanvas.Handle, HB);}
@@ -1691,7 +1686,7 @@ function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
 			except
 				on E: Exception do
 				begin
-					ErrorMessage(E.Message);
+					ErrorMsg(E.Message);
 				end;
 			end;
 		end;
@@ -1872,7 +1867,7 @@ begin
 	Result := False;
 	if FileExists(FileName) = False then
 	begin
-		IOErrorMessage(FileName, 'File not found');
+		IOErrorMessage(FileName, 'File not found.');
 		Exit;
 	end;
 	Ext := LowerCase(ExtractFileExt(FileName));
@@ -1901,7 +1896,7 @@ begin
 			except
 				on E: Exception do
 				begin
-					ErrorMessage(E.Message);
+					ErrorMsg(E.Message);
 				end;
 			end;
 			MyJPEG.Free;
@@ -1931,7 +1926,7 @@ begin
 			except
 				on E: Exception do
 				begin
-					ErrorMessage(E.Message);
+					ErrorMsg(E.Message);
 				end;
 			end;
 			MyGif.Free;
@@ -1958,7 +1953,7 @@ begin
 			except
 				on E: Exception do
 				begin
-					ErrorMessage(E.Message);
+					ErrorMsg(E.Message);
 				end;
 			end;
 			MyPng.Free;
@@ -1983,7 +1978,7 @@ begin
 			except
 				on E: Exception do
 				begin
-					ErrorMessage(E.Message);
+					ErrorMsg(E.Message);
 				end;
 			end;
 		end;
@@ -2007,7 +2002,7 @@ begin
 			except
 				on E: Exception do
 				begin
-					ErrorMessage(E.Message);
+					ErrorMsg(E.Message);
 				end;
 			end;
 		end;
@@ -2026,7 +2021,7 @@ begin
 		except
 			on E: Exception do
 			begin
-				ErrorMessage(E.Message);
+				ErrorMsg(E.Message);
 			end;
 		end;
 		Icon.Free;
@@ -2052,7 +2047,7 @@ begin
 	end
 	else
 	begin
-		MessageD('Picture Format not Supported' + LineSep + FileName, mtError, [mbOk]);
+		ErrorMsg('Picture Format not Supported' + LineSep + FileName);
 {			Picture := TPicture.Create;
 		try
 			Picture.LoadFromFile(FileName);
@@ -2107,7 +2102,7 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMessage(E.Message);
+			on E: Exception do ErrorMsg(E.Message);
 		end;
 	end
 	else if (Ext = 'jpg')
@@ -2130,7 +2125,7 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMessage(E.Message);
+			on E: Exception do ErrorMsg(E.Message);
 		end;
 		MyJPEG.Free;
 	end
@@ -2142,7 +2137,7 @@ begin
 
 //		ColorMapOptimizer := TColorMapOptimizer.Create;
 //		B := TBitmap.Create;
-//		B.LoadFromFile('C:\My Documents\www\~sachy.wz.cz\Icons\~Back.bmp');
+//		TODO: B.LoadFromFile('C:\My Documents\www\~sachy.wz.cz\Icons\~Back.bmp');
 {	 CreateOptimizedPaletteFromSingleBitmap(Self,
 			Colors, ColorBits: SG; Windows: boolean):}
 //		B.Assign(Self);
@@ -2176,7 +2171,7 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			FreeAndNil(Stream);
 		except
-			on E: Exception do ErrorMessage(E.Message);
+			on E: Exception do ErrorMsg(E.Message);
 		end;
 		FreeAndNil(MyBmp);
 		FreeAndNil(MyGif);
@@ -2213,7 +2208,7 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMessage(E.Message);
+			on E: Exception do ErrorMsg(E.Message);
 		end;
 		MyPng.Free;
 	end
@@ -2227,7 +2222,7 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMessage(E.Message);
+			on E: Exception do ErrorMsg(E.Message);
 		end;
 		MyPpm.Free;
 	end
@@ -2241,7 +2236,7 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMessage(E.Message);
+			on E: Exception do ErrorMsg(E.Message);
 		end;
 		MyTga.Free;
 	end
@@ -2260,7 +2255,7 @@ begin
 		end
 		else}
 	begin
-		MessageD('Picture Format not Supported' + LineSep + FileName, mtError, [mbOk]);
+		IOErrorMessage(FileName, 'Picture Format not Supported');
 	end;
 end;
 
@@ -2426,10 +2421,12 @@ end;
 (*-------------------------------------------------------------------------*)
 procedure BitmapCopy(var BmpD: TDBitmap; BmpS: TDBitmap);
 begin
+	{$ifopt d+}
 	if BmpS = nil then
-		MessageD('Source Bitmap Can Not Be Nil', mtError, [mbOk]);
+		IE('Source Bitmap Can Not Be Nil');
 	if BmpD <> nil then
-		MessageD('Destination Bitmap Can Not Be Nil', mtError, [mbOk]);
+		IE('Destination Bitmap Can Not Be Nil');
+	{$endif}
 	BmpD := TDBitmap.Create;
 	BmpD.SetSize(BmpS.Width, BmpS.Height);
 	BmpD.CopyBitmap(BmpS);
@@ -2437,8 +2434,10 @@ end;
 
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor);
 begin
+	{$ifopt d+}
 	if BmpD <> nil then
-		MessageD('Destination Bitmap Can Be Nil', mtError, [mbOk]);
+		IE('Destination Bitmap Can Be Nil');
+	{$endif}
 	BmpD := TDBitmap.Create;
 	BmpD.SetSize(Width, Height);
 end;
@@ -2759,8 +2758,10 @@ begin
 		for i := -((Width - 1) div 2) to Width div 2 do
 			Line(X1 - Abs(i), Y1 + i, X2 + Abs(i), Y2 + i, Color, Effect);
 	end
+	{$ifopt d+}
 	else
-		MessageD('Function Not Available', mtError, [mbOk]);
+		IE('Function Not Available');
+	{$endif}
 end;
 
 function TDBitmap.ColorToRGB(C: TColor): TRGBA;
@@ -9852,7 +9853,7 @@ var
 	C: TRGBA;
 	Co: array[0..3] of TColor;
 	i: SG;
-	HX1, HY1, HX2, HY2, H: SG;
+	HX1, HY1, HX2, HY2: SG;
 	SizeX, SizeY: SG;
 	Len: SG;
 begin
@@ -9915,9 +9916,7 @@ begin
 		case Orient of
 		1, 3:
 		begin
-			H := SizeY;
-			SizeY := SizeX;
-			SizeX := H;
+			Exchange(SizeX, SizeY);
 		end;
 		end;
 
@@ -9942,87 +9941,6 @@ begin
 			Line(X1 + HX1, Y1 + HY1, X1 + HX2, Y1 + HY2, C.L, ScrollEf);
 		end;
 	end;
-
-{	XM := X1 + X2;
-	Len := X2 - X1 + 1;
-	for i := 0 to Len div 3 - 1 do
-	begin
-		HX1 := (XM - 2 * i) div 2;
-		HY1 := Y1 + i + (Len + 2) div 3;
-		HX2 :=  (XM + 2 * i + 1) div 2;
-		HY2 := Y1 + i + (Len + 2) div 3;
-		case Orient of
-		1:
-		begin
-			H := HX1;
-			HX1 := (HY1 - Y1) + X1;
-			HY1 := (H - X1) + Y1;
-			H := HX2;
-			HX2 := (HY2 - Y1) + X1;
-			HY2 := (H - X1) + Y1;
-		end;
-		2:
-		begin
-			HY1 := Y2 - (HY1 - Y1);
-			HY2 := Y2 - (HY2 - Y1);
-		end;
-		3:
-		begin
-			H := HX1;
-			HX1 := X2 - (HY1 - Y1);
-			HY1 := (H - X1) + Y1;
-			H := HX2;
-			HX2 := X2 - (HY2 - Y1);
-			HY2 := (H - X1) + Y1;
-		end;
-		end;
-
-		Bitmap.Line(HX1, HY1, HX2, HY2, clBtnText, ef16);
-	end;}
-
-
-(*
-	Bitmap.Border(X1, Y1, X2, Y2, DepthColor(C1), DepthColor(C2), 1, ScrollEf);
-	if FHotTrack and Hot then C1 := clHighlight else C1 := clBtnFace;
-	Bitmap.Bar(clNone, X1 + 1 , Y1 + 1, X2 - 1, Y2 - 1, C1, ScrollEf);
-
-	XM := X1 + X2;
-	Len := X2 - X1 + 1;
-	for i := 0 to Len div 3 - 1 do
-	begin
-		HX1 := (XM - 2 * i) div 2;
-		HY1 := Y1 + i + (Len + 2) div 3;
-		HX2 :=  (XM + 2 * i + 1) div 2;
-		HY2 := Y1 + i + (Len + 2) div 3;
-		case Orient of
-		1:
-		begin
-			H := HX1;
-			HX1 := (HY1 - Y1) + X1;
-			HY1 := (H - X1) + Y1;
-			H := HX2;
-			HX2 := (HY2 - Y1) + X1;
-			HY2 := (H - X1) + Y1;
-		end;
-		2:
-		begin
-			HY1 := Y2 - (HY1 - Y1);
-			HY2 := Y2 - (HY2 - Y1);
-		end;
-		3:
-		begin
-			H := HX1;
-			HX1 := X2 - (HY1 - Y1);
-			HY1 := (H - X1) + Y1;
-			H := HX2;
-			HX2 := X2 - (HY2 - Y1);
-			HY2 := (H - X1) + Y1;
-		end;
-		end;
-
-		Bitmap.Line(HX1, HY1, HX2, HY2, clBtnText, ef16);
-	end;*)
-
 end;
 
 (*-------------------------------------------------------------------------*)
@@ -10128,7 +10046,7 @@ begin
 		FBmpText.SetSize(m, m);
 		FBmpText.Canvas.Font.Name := Canvas.Font.Name;
 		FBmpText.Canvas.Font.Size := Canvas.Font.Size;
-		// ToDo
+		// TODO : ?
 		FBmpText.Bar(clPurple, ef16);
 		FBmpText.Transparent := True;
 		FBmpText.TransparentColor := clPurple;
@@ -10478,6 +10396,47 @@ function TDBitmap.GetCanvas: TCanvas;
 begin
 	Result := Canvas;
 end;}
+
+procedure TDBitmap.GetDirtyImage(out R: TRect);
+var
+	x, y: SG;
+	C: TRGBA;
+	FirstDirtyLine: BG;
+	DirtyLine: BG;
+begin
+	R.Top := FHeight;
+	R.Bottom := -1;
+	R.Left := FWidth;
+	R.Right := -1;
+	FirstDirtyLine := True;
+
+	for x := 0 to FWidth - 1 do
+	begin
+		DirtyLine := False;
+		for y := 0 to FHeight - 1 do
+		begin
+			GetPix(FData, ByteX, x, y, C);
+			if C.L <> TransparentColor then
+			begin
+				DirtyLine := True;
+				
+				if y > R.Bottom then R.Bottom := y;
+				if y < R.Top then R.Top := y;
+			end;
+		end;
+
+		if DirtyLine then
+		begin
+			R.Right := x;
+			if FirstDirtyLine then
+			begin
+				FirstDirtyLine := False;
+				R.Left := x;
+			end;
+		end;
+
+	end;
+end;
 
 procedure TDBitmap.Init;
 begin

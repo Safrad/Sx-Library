@@ -2,21 +2,21 @@ package DComp;
 
 {$R *.res}
 {$ALIGN 4}
-{$ASSERTIONS OFF}
+{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO OFF}
+{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS OFF}
-{$LOCALSYMBOLS OFF}
+{$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
-{$OVERFLOWCHECKS OFF}
-{$RANGECHECKS OFF}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
 {$REFERENCEINFO OFF}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES OFF}
+{$STACKFRAMES ON}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
@@ -30,7 +30,10 @@ requires
   vclx,
   vcljpg,
   vclsmp,
-  dclusr;
+  dclusr,
+  rtl,
+  designide,
+  vclactnband;
 
 contains
   uDGauge in 'uDGauge.pas',
@@ -40,6 +43,9 @@ contains
   uDView in 'uDView.pas',
   uDButton in 'uDButton.pas',
   uDTimer in 'uDTimer.pas',
-  uDForm in 'uDForm.pas';
+  uDForm in 'uDForm.pas',
+  uCompLog in 'uCompLog.pas',
+  uOpenedFiles in 'uOpenedFiles.pas',
+  uDEdit in 'uDEdit.pas';
 
 end.

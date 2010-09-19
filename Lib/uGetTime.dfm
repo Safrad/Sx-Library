@@ -1,6 +1,6 @@
 object fGetTime: TfGetTime
-  Left = 157
-  Top = 107
+  Left = 254
+  Top = 147
   ActiveControl = EditInput
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
@@ -179,22 +179,22 @@ object fGetTime: TfGetTime
     TabOrder = 14
     OnClick = ButtonCancelClick
   end
-  object EditInput: TEdit
-    Left = 16
-    Top = 24
-    Width = 161
+  object EditInput: TDEdit
+    Left = 8
+    Top = 8
+    Width = 121
     Height = 19
-    AutoSize = False
     MaxLength = 15
     TabOrder = 0
+    WantReturns = False
     OnChange = EditInputChange
   end
   object ButtonMin: TDButton
-    Left = 192
-    Top = 24
+    Left = 136
+    Top = 8
     Width = 48
     Height = 18
-    Caption = 'Min'
+    Caption = '&Min'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -205,11 +205,11 @@ object fGetTime: TfGetTime
     OnClick = ButtonMinClick
   end
   object ButtonCur: TDButton
-    Left = 248
+    Left = 192
     Top = 8
     Width = 48
     Height = 18
-    Caption = 'Cur'
+    Caption = '&Cur'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -221,10 +221,10 @@ object fGetTime: TfGetTime
   end
   object ButtonMax: TDButton
     Left = 304
-    Top = 24
+    Top = 8
     Width = 48
     Height = 18
-    Caption = 'Max'
+    Caption = '&Max'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -280,10 +280,10 @@ object fGetTime: TfGetTime
   end
   object ButtonDef: TDButton
     Left = 248
-    Top = 32
+    Top = 8
     Width = 48
     Height = 18
-    Caption = 'Def'
+    Caption = '&Def'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -309,13 +309,14 @@ object fGetTime: TfGetTime
     Visible = False
   end
   object EditError: TMemo
-    Left = 16
-    Top = 48
-    Width = 339
+    Left = 8
+    Top = 40
+    Width = 345
     Height = 33
     ParentColor = True
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 16
+    WantReturns = False
   end
 end

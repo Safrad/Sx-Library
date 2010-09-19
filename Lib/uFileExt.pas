@@ -32,8 +32,6 @@ type
       RowIndex: Integer; Rect: TRect);
 	private
 		{ Private declarations }
-		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
-			ARect: TRect; State: TOwnerDrawState);
 		procedure Init(Sender: TObject);
 	public
 		{ Public declarations }
@@ -132,16 +130,10 @@ begin
 	DViewFileExtensions.Invalidate;
 end;
 
-procedure TfFileExt.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
-	ARect: TRect; State: TOwnerDrawState);
-begin
-	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
-end;
-
 procedure TfFileExt.FormCreate(Sender: TObject);
 begin
 	Background := baNone;
-	MenuSet(PopupMenuFE, AdvancedDraw);
+	MenuSet(PopupMenuFE);
 	DViewFileExtensions.ColumnCount := 2;
 	DViewFileExtensions.Columns[0].Caption := 'Extension';
 	DViewFileExtensions.Columns[0].Width := DViewFileExtensions.CellWidth('Folder');

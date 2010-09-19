@@ -21,7 +21,7 @@ type
 
 implementation
 
-uses uTypes, uMath, uDBitmap;
+uses uTypes, uMath, uDBitmap, uColor;
 
 type
 // Header type for TGA images

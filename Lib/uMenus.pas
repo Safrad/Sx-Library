@@ -23,9 +23,6 @@ procedure ComName(MenuItem: TMenuItem);
 function ComponentName(const Name: string): string;
 function ButtonNameToFileName(const Name: string): string;
 
-
-procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
-
 procedure MenuCreate(Src: TComponent; Dsc: TComponent);
 procedure MenuFree(Src: TMenuItem);
 procedure MenuUpdate(Src: TMenuItem; Dsc: TMenuItem);
@@ -38,13 +35,15 @@ procedure UpdateIcons(Menu: TComponent; Panel: TPanel);
 procedure IconsResize(PanelTool: TPanel);
 
 procedure FormatCaption(M: TMenuItem; Value: SG; AsTime: BG = False; Bullet: BG = False; Suffix: BG = True);
+procedure MenuSet(Menu: TComponent);
+procedure CommonFileMenu(const Menu: TMenu);
 
 implementation
 
 uses
-	Forms, Controls, ImgList, SysUtils,
-	uDButton, uStrings, uFormat,
-	uGraph, uDBitmap, uScreen, uFiles, uError, uAPI, uMath, uParser;
+	Forms, Controls, ImgList, SysUtils, ShellAPI,
+	uDButton, uStrings, uFormat, uColor, uTranslate, uError, uSounds, uSplash,
+	uGraph, uDBitmap, uScreen, uFiles, uMsg, uAPI, uMath, uParser, uAbout, uLog;
 
 var ImageList: TCustomImageList;
 
@@ -164,44 +163,6 @@ begin
 		ImgAdd(MenuItem.Bitmap, DelLastNumber(MenuItem.Name));
 end;
 
-procedure MenuSet(Menu: TComponent; OnAdvancedMenuDraw: TAdvancedMenuDrawItemEvent);
-var
-	i, c: SG;
-	M: TMenuItem;
-begin
-	CreateImg;
-
-	if (Menu is TMenu) or (Menu is TPopupMenu) then
-	begin
-		TMenu(Menu).OwnerDraw := False;
-		TMenu(Menu).Images := ImageList;
-		c := TMenu(Menu).Items.Count
-	end
-	else if Menu is TMenuItem then
-		c := TMenuItem(Menu).Count
-	else
-		Exit;
-
-	for i := 0 to c - 1 do
-	begin
-		if (Menu is TMenu) or (Menu is TPopupMenu) then
-		begin
-			M := TMenu(Menu).Items[i];
-		end
-		else if Menu is TMenuItem then
-			M := TMenuItem(Menu).Items[i]
-		else
-			 M := nil;
-
-		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
-		begin
-			M.OnAdvancedDrawItem := OnAdvancedMenuDraw;
-			ComName(M);
-		end;
-		MenuSet(M, OnAdvancedMenuDraw);
-	end;
-end;
-
 procedure MenuCreate(Src: TComponent; Dsc: TComponent);
 var
 	i, c: SG;
@@ -234,6 +195,7 @@ begin
 		M.Tag := Items[i].Tag;
 		M.ShortCut := Items[i].ShortCut;
 		M.OnClick := Items[i].OnClick;
+//		M.OnAdvancedDrawItem := Items[i].OnAdvancedDrawItem;
 
 		if (Dsc is TMenu) or (Dsc is TPopupMenu) then
 			TMenu(Dsc).Items.Add(M)
@@ -584,7 +546,7 @@ begin
 		s := KeyToStr(MenuItem.ShortCut);
 		if C2 <> clNone then
 		begin
-			DrawText(BCanvas.Handle, PChar(MenuItem.Caption), Length(MenuItem.Caption), Rec,
+			DrawText(BCanvas.Handle, PChar(Translate(MenuItem.Caption)), Length(MenuItem.Caption), Rec,
 				DT_SINGLELINE or DT_VCENTER or DT_NOCLIP);
 			Rec.Right := Rec.Right - 8;
 			DrawText(BCanvas.Handle, PChar(s), Length(s), Rec,
@@ -646,6 +608,7 @@ begin
 		begin
 			if M.Name <> '' then
 			if M.Count = 0 then
+			if Assigned(M.OnClick) then
 //			if M.Name <> 'Mark1' then
 			if (M.Bitmap <> nil) and (M.Bitmap.Empty = False) and (M.Name <> 'Exit1')
 			and (M.Name <> 'Register1') and (M.Name <> 'Unregister1') and (M.Name <> 'Delete1')
@@ -701,7 +664,6 @@ var
 	M: TMenuItem;
 begin
 	Result := nil;
-//TMenuItem(Menu.Items. FindComponent(
 	if (Menu is TMenu) or (Menu is TPopupMenu) then
 	begin
 		c := TMenu(Menu).Items.Count
@@ -745,6 +707,7 @@ procedure UpdateIcons(Menu: TComponent; Panel: TPanel);
 var
 	i: SG;
 	C: TControl;
+	B: TDButton;
 	M: TMenuItem;
 begin
 	for i := 0 to Panel.ControlCount - 1 do
@@ -753,8 +716,9 @@ begin
 		M := FindMenuItem(Menu, Copy(C.Name, 1, Length(C.Name) - Length(IconSuffix)));
 		if M <> nil then
 		begin
-			C.Enabled := M.Enabled;
-			(C as TDButton).Down := M.Checked;
+			B := C as TDButton;
+			B.Enabled := M.Enabled;
+			B.Down := M.Checked;
 		end;
 	end;
 end;
@@ -768,11 +732,13 @@ begin
 	y := 0;
 	for i := 0 to PanelTool.ComponentCount - 1 do
 	begin
-		if (TControl(PanelTool.Components[i]).Left <> x) or
-		(TControl(PanelTool.Components[i]).Top <> y) then
+		C := TControl(PanelTool.Components[i]);
+		if (C.Left <> x) or (C.Top <> y) then
 		begin
-			C := TControl(PanelTool.Components[i]);
-			C.SetBounds(x, y, C.Width, C.Height);
+			if PanelTool.Components[i] is TBevel then
+				C.SetBounds(x + C.Width div 2, y, C.Width, C.Height)
+			else
+				C.SetBounds(x, y, C.Width, C.Height);
 		end;
 
 		if x + TControl(PanelTool.Components[i]).Width + IconSize > PanelTool.Width then
@@ -805,7 +771,272 @@ begin
 //	M.Checked := Value <> 0;
 end;
 
+type
+	TOb = class(TObject)
+	private
+		ShowSplashScreen1: TMenuItem;
+		LoggingLevel1: TMenuItem;
+		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
+			ARect: TRect; State: TOwnerDrawState);
+		procedure Exit1Click(Sender: TObject);
+		procedure ReadMe1Click(Sender: TObject);
+		procedure Homepage1Click(Sender: TObject);
+		procedure ViewMessages1Click(Sender: TObject);
+		procedure About1Click(Sender: TObject);
+		procedure ShowSplashScreen1Click(Sender: TObject);
+		procedure ViewIniFile1Click(Sender: TObject);
+		procedure ViewLogFile1Click(Sender: TObject);
+		procedure ViewAllLogFiles1Click(Sender: TObject);
+		procedure Sounds1Click(Sender: TObject);
+		procedure SetLoggingLevel1Click(Sender: TObject);
+	end;
+var
+	Ob: TOb;
+
+procedure TOb.OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
+	ARect: TRect; State: TOwnerDrawState);
+begin
+	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
+end;
+
+procedure MenuSet(Menu: TComponent);
+var
+	i, c: SG;
+	M: TMenuItem;
+begin
+	CreateImg;
+
+	if (Menu is TMenu) or (Menu is TPopupMenu) then
+	begin
+		TMenu(Menu).OwnerDraw := False;
+		TMenu(Menu).Images := ImageList;
+		c := TMenu(Menu).Items.Count
+	end
+	else if Menu is TMenuItem then
+		c := TMenuItem(Menu).Count
+	else
+		Exit;
+
+	for i := 0 to c - 1 do
+	begin
+		if (Menu is TMenu) or (Menu is TPopupMenu) then
+		begin
+			M := TMenu(Menu).Items[i];
+		end
+		else if Menu is TMenuItem then
+			M := TMenuItem(Menu).Items[i]
+		else
+			 M := nil;
+
+		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
+		begin
+			M.OnAdvancedDrawItem := Ob.OnAdvancedMenuDraw;
+			ComName(M);
+		end;
+		MenuSet(M);
+	end;
+end;
+
+procedure TOb.Exit1Click(Sender: TObject);
+begin
+	if Assigned(Application.MainForm) then
+		Application.MainForm.Close;
+end;
+
+procedure TOb.ReadMe1Click(Sender: TObject);
+begin
+	ReadMe;
+end;
+
+procedure TOb.Homepage1Click(Sender: TObject);
+begin
+	Homepage;
+end;
+
+
+procedure TOb.ViewMessages1Click(Sender: TObject);
+begin
+	ShowMessages;
+end;
+
+procedure TOb.About1Click(Sender: TObject);
+begin
+	ExecuteAbout(Application.MainForm, False);
+end;
+
+procedure TOb.SetLoggingLevel1Click(Sender: TObject);
+begin
+	MainLog.LoggingLevel := TLogType(TMenuItem(Sender).Tag);
+	LoggingLevel1.Items[TMenuItem(Sender).Tag].Checked := True;
+end;
+
+procedure TOb.ShowSplashScreen1Click(Sender: TObject);
+begin
+	ShowSplashScreen1.Checked := not ShowSplashScreen1.Checked;
+	if ShowSplashScreen1.Checked then ShowSplashScreen(False) else HideSplashScreen(True);
+end;
+
+procedure TOb.ViewIniFile1Click(Sender: TObject);
+begin
+	APIOpen(MainIniFileName);
+end;
+
+procedure TOb.ViewLogFile1Click(Sender: TObject);
+begin
+	APIOpen(MainLogFileName);
+end;
+
+procedure TOb.ViewAllLogFiles1Click(Sender: TObject);
+begin
+	APIOpen(ExtractFilePath(MainLogFileName));
+end;
+
+procedure TOb.Sounds1Click(Sender: TObject);
+begin
+	FormSounds;
+end;
+
+procedure CommonFileMenu(const Menu: TMenu);
+var
+	File1, Options1, Help1, Log1: TMenuItem;
+	M: TMenuItem;
+	i: SG;
+begin
+	File1 := nil;
+	Options1 := nil;
+	Help1 := nil;
+	for i := 0 to Menu.Items.Count - 1 do
+	begin
+		if Menu.Items[i].Name = 'File1' then
+			File1 := Menu.Items[i];
+		if Menu.Items[i].Name = 'Options1' then
+			Options1 := Menu.Items[i];
+		if Menu.Items[i].Name = 'Help1' then
+			Help1 := Menu.Items[i];
+	end;
+
+	if Assigned(File1) then
+	begin
+		if File1.Count > 0 then
+		begin
+			M := TMenuItem.Create(File1);
+			M.Caption := cLineCaption;
+			File1.Add(M);
+		end;
+
+		M := TMenuItem.Create(File1);
+		M.Name := 'Exit1';
+		M.Caption := 'Exit';
+		M.ShortCut := ShortCut(VK_F4, [ssAlt]);
+		M.OnClick := Ob.Exit1Click;
+		File1.Add(M);
+	end;
+
+	if Assigned(Options1) then
+	begin
+		if Options1.Count > 0 then
+		begin
+			M := TMenuItem.Create(Options1);
+			M.Caption := cLineCaption;
+			Options1.Add(M);
+		end;
+
+		Ob.ShowSplashScreen1 := TMenuItem.Create(Options1);
+		Ob.ShowSplashScreen1.Name := 'ShowSplashScreen1';
+		Ob.ShowSplashScreen1.Caption := 'Show Splash Screen';
+		Ob.ShowSplashScreen1.OnClick := Ob.ShowSplashScreen1Click;
+		Options1.Add(Ob.ShowSplashScreen1);
+
+		M := TMenuItem.Create(Options1);
+		M.Name := 'ViewIniFile1';
+		M.Caption := 'View Ini File';
+		M.OnClick := Ob.ViewIniFile1Click;
+		Options1.Add(M);
+
+
+		Log1 := TMenuItem.Create(Options1);
+		Log1.Name := 'Log1';
+		Log1.Caption := 'Log';
+		Options1.Add(Log1);
+
+		M := TMenuItem.Create(Log1);
+		M.Name := 'ViewLogFile1';
+		M.Caption := 'View Log File';
+		M.OnClick := Ob.ViewLogFile1Click;
+		Log1.Add(M);
+
+		M := TMenuItem.Create(Log1);
+		M.Name := 'ViewAllLogFiles1';
+		M.Caption := 'View All Log Files';
+		M.OnClick := Ob.ViewAllLogFiles1Click;
+		Log1.Add(M);
+
+		Ob.LoggingLevel1 := TMenuItem.Create(Log1);
+		Ob.LoggingLevel1.Name := 'LoggingLevel1';
+		Ob.LoggingLevel1.Caption := 'Logging Level';
+		Log1.Add(Ob.LoggingLevel1);
+
+		M := TMenuItem.Create(Options1);
+		M.Name := 'Sounds1';
+		M.Caption := 'Sounds';
+		M.OnClick := Ob.Sounds1Click;
+		Options1.Add(M);
+
+		for i := 0 to Length(LogTypeStr) - 1 do
+		begin
+			M := TMenuItem.Create(Ob.LoggingLevel1);
+			M.Name := LogTypeStr[TLogType(i)] + '21';
+			M.Caption := LogTypeStr[TLogType(i)];
+			M.Tag:= i;
+			M.OnClick := Ob.SetLoggingLevel1Click;
+			M.RadioItem := True;
+			M.Checked := SG(MainLog.LoggingLevel) = i;
+			Ob.LoggingLevel1.Add(M);
+		end;
+	end;
+
+	if Assigned(Help1) then
+	begin
+		if Help1.Count > 0 then
+		begin
+			M := TMenuItem.Create(Help1);
+			M.Caption := cLineCaption;
+			Help1.Add(M);
+		end;
+
+		M := TMenuItem.Create(Help1);
+		M.Name := 'Homepage1';
+		M.Caption := 'Homepage';
+		M.OnClick := Ob.Homepage1Click;
+		Help1.Add(M);
+
+		M := TMenuItem.Create(Help1);
+		M.Name := 'ReadMe1';
+		M.Caption := 'Read Me';
+		M.ShortCut := VK_F1;
+		M.OnClick := Ob.ReadMe1Click;
+		Help1.Add(M);
+
+		M := TMenuItem.Create(Help1);
+		M.Name := 'Messages1';
+		M.Caption := 'View Messages...';
+		M.OnClick := Ob.ViewMessages1Click;
+		Help1.Add(M);
+
+		M := TMenuItem.Create(Help1);
+		M.Caption := cLineCaption;
+		Help1.Add(M);
+
+		M := TMenuItem.Create(Help1);
+		M.Name := 'About';
+		M.Caption := 'About' + cDialogSuffix;
+		M.OnClick := Ob.About1Click;
+		Help1.Add(M);
+	end;
+end;
+
 initialization
+	Ob := TOb.Create;
 	MenuBmp := TDBitmap.Create;
 	BCanvas := MenuBmp.Canvas;
 	BCanvas.Brush.Style := bsSolid;
@@ -817,4 +1048,5 @@ finalization
 	FreeAndNil(BmpCheck);
 	FreeAndNil(BmpD);
 	FreeAndNil(MenuBmp);
+	FreeAndNil(Ob);
 end.

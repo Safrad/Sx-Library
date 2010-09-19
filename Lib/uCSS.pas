@@ -11,8 +11,10 @@ unit uCSS;
 interface
 
 uses
-	uTypes,
+	uTypes, Graphics,
 	SysUtils;
+
+function ColorToHTML(Color: TColor): string;
 
 type
 	TProp = record
@@ -43,7 +45,17 @@ implementation
 
 uses
 	Math,
-	uStrings, uFiles, uParser;
+	uStrings, uFiles, uParser, uColor;
+
+function ColorToHTML(Color: TColor): string;
+var C: TRGBA;
+begin
+	C.L := ColorToRGB(Color);
+	Result := '#' +
+		IntToHex(C.R, 2) +
+		IntToHex(C.G, 2) +
+		IntToHex(C.B, 2);
+end;
 
 constructor TCSS.Create(FileName: TFileName);
 var

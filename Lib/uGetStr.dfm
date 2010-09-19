@@ -21,8 +21,7 @@ object fGetStr: TfGetStr
     Left = 8
     Top = 32
     Width = 249
-    Height = 19
-    AutoSize = False
+    Height = 21
     MaxLength = 16
     TabOrder = 0
     OnChange = EditInputChange

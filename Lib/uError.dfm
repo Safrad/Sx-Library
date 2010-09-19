@@ -1,6 +1,6 @@
 object fIOError: TfIOError
-  Left = 323
-  Top = 256
+  Left = 517
+  Top = 410
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   ClientHeight = 135
@@ -119,7 +119,7 @@ object fIOError: TfIOError
     OnMouseMove = FormMouseMove
   end
   object ButtonRetry: TDButton
-    Left = 256
+    Left = 264
     Top = 104
     Width = 81
     Height = 23
@@ -138,7 +138,7 @@ object fIOError: TfIOError
     OnMouseMove = FormMouseMove
   end
   object ButtonIgnore: TDButton
-    Left = 160
+    Left = 176
     Top = 104
     Width = 81
     Height = 23
@@ -170,7 +170,6 @@ object fIOError: TfIOError
     ParentFont = False
     TabOrder = 2
     Visible = False
-    OnClick = ButtonIgnoreAllClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
@@ -245,12 +244,11 @@ object fIOError: TfIOError
     OnMouseMove = FormMouseMove
     AutoChange = True
   end
-  object ButtonDown: TDButton
+  object ButtonLeft: TDButton
     Left = 16
     Top = 32
     Width = 19
     Height = 19
-    Caption = '&Left'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -258,30 +256,28 @@ object fIOError: TfIOError
     Font.Style = []
     ParentFont = False
     TabOrder = 7
-    OnClick = ButtonDownClick
+    OnClick = ButtonLeftClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
   end
-  object EditIndex: TEdit
+  object EditIndex: TDEdit
     Left = 40
     Top = 32
     Width = 37
     Height = 21
     TabOrder = 8
-    Text = '9,999'
     OnChange = EditIndexChange
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
   end
-  object ButtonUp: TDButton
+  object ButtonRight: TDButton
     Tag = 1
     Left = 80
     Top = 32
     Width = 19
     Height = 19
-    Caption = '&Right'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -289,7 +285,7 @@ object fIOError: TfIOError
     Font.Style = []
     ParentFont = False
     TabOrder = 9
-    OnClick = ButtonDownClick
+    OnClick = ButtonLeftClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove

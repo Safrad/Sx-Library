@@ -27,8 +27,6 @@ type
 		DenoCount: SG;
 		Negative: Boolean; // False: -, True: +
 		procedure Shortest;
-	protected
-
 	public
 		constructor Create;
 		destructor Destroy; override;

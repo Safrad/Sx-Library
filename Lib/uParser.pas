@@ -12,9 +12,11 @@ interface
 
 uses
 	Classes, StdCtrls, SysUtils, Controls,
-	uTypes, uData, uMath;
+	uTypes, uData, uMath, uVector;
 
 type
+	TFunction = function(const Args: array of TVector): TVector;
+
 	TKeyword = (
 		kwNone,
 		kwabstract, // V
@@ -168,73 +170,73 @@ const
 
 type
 	TMesId = (
-		// Hints
-		mtUserHint,
-		mtInsertSpaceBefore,
-		mtInsertSpaceAfter,
-		mtSpaceToTabInBegin,
-		mtTabToSpaceInMiddle,
-		mtRemoveBlanks,
-		mtCaseMishmash,
-		mtEmptyCommand,
+		// Info
+		mtIUserInfo,
+		mtIUnitSuccess,
+		mtIProgramSuccess,
+
+		// Notifications
+		mtNUserHint,
+		mtNInsertSpaceBefore,
+		mtNInsertSpaceAfter,
+		mtNSpaceToTabInBegin,
+		mtNTabToSpaceInMiddle,
+		mtNRemoveBlanks,
+		mtNCaseMishmash,
+		mtNEmptyCommand,
 
 		// Warnings
-		mtUserWarning,
-		mtVariableNotUsed,
-		mtTextAfterIgnored,
+		mtWUserWarning,
+		mtWVariableNotUsed,
+		mtWTextAfterIgnored,
 
 		// Errors
-		mtUserError,
-		mtUnterminatedString,
-		mtIllegalChar,
-		mtIdentifierExpected,
-		mtExpressionExpected,
-		mtStringExpected,
-		mtStrokeOrSemicolonExpected, // , ;
-		mtStrokeOrColonExpected, // , :
-		mtExpected,
-		mtInternal,
-		mtOrdinalExpected,
-		mtUndeclaredIdentifier,
-		mtMissingOperatorOrSemicolon,
-		mtSemicolonExpected,
-		mtIdentRedeclared,
-		mtUnitRecurse,
-		mtColonExpected,
-		mtStatementsNotAllowed,
-		mtBeginExpected,
-		mtDeclarationExpected,
-		mtProgramIdentifier,
-		mtProgramExpected,
-		mtUnitIdentifier,
-		mtUnitExpected,
-		mtInterfaceExpected,
-		mtPeriodExpected,
-		mtUnexpectedEndOfFile,
-		mtStatementExpected,
-		mtUnusedChars,
-		mtOverload,
+		mtEUserError,
+		mtEUnterminatedString,
+		mtEIllegalChar,
+		mtEIdentifierExpected,
+		mtEExpressionExpected,
+		mtEStringExpected,
+		mtEStrokeOrSemicolonExpected, // , ;
+		mtEStrokeOrColonExpected, // , :
+		mtEExpected,
+		mtEInternal,
+		mtEOrdinalExpected,
+		mtEUndeclaredIdentifier,
+		mtEMissingOperatorOrSemicolon,
+		mtESemicolonExpected,
+		mtEIdentRedeclared,
+		mtEUnitRecurse,
+		mtEColonExpected,
+		mtEStatementsNotAllowed,
+		mtEBeginExpected,
+		mtEDeclarationExpected,
+		mtEProgramIdentifier,
+		mtEProgramExpected,
+		mtEUnitIdentifier,
+		mtEUnitExpected,
+		mtEInterfaceExpected,
+		mtEPeriodExpected,
+		mtEUnexpectedEndOfFile,
+		mtEStatementExpected,
+		mtEUnusedChars,
+		mtEOverload,
 
-		// Fatal Errors
-		mtUserFatalError,
-		mtCouldNotCompileUnit,
-		mtCouldNotCompileProgram,
-		mtFileNotFound,
-		mtCompilationTerminated,
-		mtCompileTerminatedByUser,
-
-		// Info
-		mtUserInfo,
-		mtUnitSuccess,
-		mtProgramSuccess
+		// Critical Errors
+		mtCUserFatalError,
+		mtCCouldNotCompileUnit,
+		mtCCouldNotCompileProgram,
+		mtCFileNotFound,
+		mtCCompilationTerminated,
+		mtCCompileTerminatedByUser
 		);
 const
-	FirstWarning = mtUserWarning;
-	FirstError = mtUserError;
-	FirstFatalError = mtUserFatalError;
-	FirstInfo = mtUserInfo;
-
 	MesStrings: array[TMesId] of string = (
+		// Info
+		'%1',
+		'Unit ''%1'' successfully compiled',
+		'Program ''%1'' successfully compiled',
+
 		// Hints
 		'%1',
 		'Insert ''Space'' before ''%1''',
@@ -288,37 +290,21 @@ const
 		'Could not compile program ''%1''',
 		'File not found: ''%1''',
 		'Compilation terminated; too many errors',
-		'Compile terminated by user',
-
-		// Info
-		'%1',
-		'Unit ''%1'' successfully compiled',
-		'Program ''%1'' successfully compiled'
+		'Compile terminated by user'
 		);
 var
 	MesParam: array[TMesId] of U1;
 
-type
-	PCompileMes = ^TCompileMes;
-	TCompileMes = packed record // 32
-		Params: string; // 4
-		Line: U4; // 4
-		X0, X1: U4; // 8
-		FileNameIndex: U4; // 4
-		Param2Index: U2; // 2
-		MesId: TMesId; // 1
-		Reserve: array[0..8] of U1;
-//		MType: TMType; // 1
-//		Reserve0: array [0..1] of U1;
-	end;
-var
-	CompileMes: TData;
 
 type
 	TOperator = (opNone, opNumber, opIdent,
-//		opUnarMinus, implemented as opMinus with firts argument nil
+//		opUnarMinus - implemented as opMinus with firts argument nil
 		// Arithmetic
 		opPlus, opMinus, opMul, opDiv, opMod,
+		opFact, opPower,
+		// Logic
+		opNot, opShl, opShr, opAnd, opOr, opXor, opXnor);
+(*
 		// Single
 		opRound, opTrunc, opAbs, opNeg, opInv, opInc, opDec, opFact, opGCD, opLCM,
 		// Exponencial
@@ -329,8 +315,6 @@ type
 		opArcSin, opArcCos, opArcTan,
 		opSinh, opCosh, opTanh,
 		opArcSinh, opArcCosh, opArcTanh,
-		// Logic
-		opNot, opShl, opShr, opAnd, opOr, opXor, opXnor,
 		{
 		b	a	| 0 and or xor xnor 1
 		0	0	  0  0  0   0   1   1
@@ -338,10 +322,7 @@ type
 		1	0   0  0  1   1   0   1
 		1	1   0  1  1   0   1   1
 		}
-		// Chess
-		opElo, opArcElo, opEloC,
-		// Statistics
-		opAvg, opMin, opMax, opRandom);
+); *)
 var
 	FcNames: array[opPlus..High(TOperator)] of string;
 
@@ -361,13 +342,15 @@ type
 	TVF = packed record // 32
 		// Func, Var
 		Name: string; // 4
-		Typ: string; // 4 D??? PType
+		Typ: string; // 4
+		// TODO : PType
 		UsedCount: U4;
 		Line: U4;
 		// Func
 		VFs: TData; // 4 array of TVarFunc, nil for Variable
 		// Var
-		Value: FA; // D???
+		Value: TVector; // TODO : ?
+		Code: TFunction;
 		ParamCount: U2;
 	end;
 
@@ -387,14 +370,10 @@ type
 var
 	UnitSystem: PUnit;
 
-function GetElo(Fruitfulness: Extended): SG;
-function ArcElo(EloDifference: Extended): Extended;
-
-//procedure NodeNumber;
 function IsVarFunc(VarName: string; FuncLevel: SG; Uni: PUnit): PVF;
-function CalcTree: Extended;
+function CalcTree: TVector;
 
-function CompareS(OldS, NewS: string): Boolean;
+function CompareS(const OldS, NewS: string): Boolean;
 
 
 const
@@ -478,14 +457,13 @@ type
 		function NodeA2(Node: PNode): PNode;
 		function NodeA: PNode;
 
-		function NodeE(Node: PNode): PNode;
 		function EOI: BG;
 
 	public
 		// Output
 		InputType: TInput;
 		Id: string; // itIdent
-		InReal: Extended; // itReal
+		InReal: FA; // itReal
 		InInteger: SG; // itInteger
 		Keyword: TKeyword; // itKeyword
 
@@ -500,6 +478,8 @@ type
 		GlobalMarkF1: string;
 		MaxIdentSize: SG;
 		DecimalSep, ThousandSep: string[3];
+
+		function NodeE(Node: PNode): PNode;
 
 		constructor Create(Stream: TStream); overload;
 		constructor Create(Buffer: Pointer; Size: UG); overload;
@@ -516,7 +496,7 @@ type
 		function NextToken: string;
 		function SourcePos: SG;
 		function TokenComponentIdent: string;
-		function TokenFloat: Extended;
+		function TokenFloat: FA;
 		function TokenInt: Integer;
 		function TokenString: string;
 		function TokenWideString: WideString;
@@ -551,10 +531,8 @@ type
 		procedure SkipBlanks;
 		procedure Skip(CharCount: SG);
 		procedure ReadToChar(C: Char);
-//		procedure ReadToString(s: string);
 
-		procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
-		procedure AddMes2(MesId: TMesId; Params: array of string);
+		procedure AddMes(const MesId: TMesId; const Params: array of string);
 	end;
 
 type
@@ -567,27 +545,25 @@ var
 
 const
 	ConstE = 2.7182818284590452353602874713527;
+	ConstC = 297000000; // TODO : Exact?
 
 type
 	TGonFormat = (gfRad, gfGrad, gfCycle, gfDeg);
 var
 	GonFormat: TGonFormat;
 
-procedure DAddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
-function MesToString(M: PCompileMes): string;
-function MesToStrings: string;
-procedure MesToMemo(Memo: TMemo);
-{procedure CreateUnitSystem;
-		function CreateTree: PNode;}
 function FreeTree(var Node: PNode): BG;
 procedure LetterCharTable;
 procedure StdCharTable;
+
+function Calc(Node: PNode): TVector;
+procedure AddFunction(const UnitName,FunctionName: string; P: TFunction);
 
 implementation
 
 uses
 	Math, TypInfo,
-	uStrings, uFind, uError, uFiles, uFormat, uInput;
+	uStrings, uFind, uError, uFiles, uFormat, uInput, uParserMsg, uLog;
 
 
 constructor TDParser.Create(Stream: TStream);
@@ -644,9 +620,9 @@ begin
 	FreeMem(FBuffer);
 	BufString := '';
 //	if InputType <> itEOI then AddMes2(mtUnusedChars, []);
-	if BufRI > BufRC then AddMes2(mtStatementExpected, []);
-	if BufRI < BufRC then AddMes2(mtUnusedChars, []);
-	if Marks <> maNone then AddMes2(mtUnexpectedEndOfFile, []);
+	if BufRI > BufRC then AddMes(mtEStatementExpected, []);
+	if BufRI < BufRC then AddMes(mtEUnusedChars, []);
+	if Marks <> maNone then AddMes(mtEUnexpectedEndOfFile, []);
 	inherited Destroy;
 end;
 
@@ -685,10 +661,10 @@ label LNext;
 var
 	UnarExp: BG;
 	Per, Point: BG;
-	PointDiv: Extended;
+	PointDiv: FA;
 	Num: SG;
 	Base: SG;
-	Res, Exp: Extended;
+	Res, Exp: FA;
 	Where: (whNum, whExp);
 	B: BG;
 begin
@@ -720,7 +696,7 @@ begin
 					case BufR[BufRI] of
 					'%': Per := True;
 					'#': Base := 2;
-					'O', 'o': Base := 8; // D??? only 1o10 is ok
+					'O', 'o': Base := 8; // TODO : only 1o10 is ok
 					{'!': Base := 10;}
 					'$', 'x', 'X', 'h', 'H': Base := 16;
 					'*', '/', ':', '^', ')', '(': Break;
@@ -807,7 +783,7 @@ begin
 				if Abs(Exp) > 4932 then
 				begin
 					Exp := Sgn(Exp) * 4932;
-					AddMes2(mtUserError, ['Exponent out of range ']);
+					AddMes(mtEUserError, ['Exponent out of range.']);
 				end;
 				Exp := Power(10, Exp);
 				if Res <> 0 then
@@ -826,7 +802,7 @@ begin
 					else
 					begin
 						// Number out of range
-						AddMes2(mtUserError, ['Value out of range ']);
+						AddMes(mtEUserError, ['Value out of range.']);
 					end;
 				end;
 				InReal := Res;
@@ -967,8 +943,7 @@ begin
 	if BufRI > BufRC then BufRI := BufRC;
 end;
 
-{
-procedure TDParser.ReadToString(S: string);
+{ TODO : procedure TDParser.ReadToString(S: string);
 var StartIndex: SG;
 begin
 	StartIndex := LineIndex;
@@ -988,7 +963,7 @@ begin
 		end;
 		Inc(LineIndex);
 	end;
-end; D???}
+end; }
 
 procedure TDParser.ReadInput;
 label LSpaceToTab;
@@ -1080,7 +1055,7 @@ begin
 			maLocal: Marks := maNone;
 			maString:
 			begin
-				AddMes2(mtUnterminatedString, []);
+				AddMes(mtEUnterminatedString, []);
 {				Inc(CorrectL);
 				Inc(CorrectG);}
 				Marks := maNone;
@@ -1357,7 +1332,7 @@ begin
 						if InputType = itUnknown then
 						begin
 							Inc(BufRI);
-							AddMes2(mtIllegalChar, [BufR[BufRI - 1]]);
+							AddMes(mtEIllegalChar, [BufR[BufRI - 1]]);
 							Dec(BufRI);
 						end
 						else
@@ -1384,7 +1359,7 @@ begin
 	Inc(BufIW, BufRI - StartBufIR);}
 
 //		if TabCount <>
-	// Warning While/while D???
+	// TODO : Warning While/while
 {	Idents := Idents + 'F' + NToS(FuncLevel) + '<B' + NToS(BlockLevel) + '>' +
 		Id + LineSep;}
 end;
@@ -1405,7 +1380,7 @@ begin
 
 end;
 
-function TDParser.TokenFloat: Extended;
+function TDParser.TokenFloat: FA;
 begin
 	Result := ReadFA(-MaxExtended, 0, MaxExtended);
 end;
@@ -1434,7 +1409,7 @@ end;
 procedure TDParser.ReadKeyword(K: TKeyword);
 begin
 	if (InputType <> itKeyword) or (K <> Keyword) then
-		AddMes2(mtExpected, [KWs[Keyword], ''])
+		AddMes(mtEExpected, [KWs[Keyword], ''])
 	else
 		ReadInput;
 end;
@@ -1442,7 +1417,7 @@ end;
 procedure TDParser.ReadInputType(I: TInput);
 begin
 	if (InputType <> I) then
-		AddMes2(mtStrokeOrSemicolonExpected, [''])
+		AddMes(mtEStrokeOrSemicolonExpected, [''])
 	else
 		ReadInput;
 end;
@@ -1450,7 +1425,7 @@ end;
 procedure TDParser.ReadConstS;
 begin
 	if not (InputType in [itString, itChar]) then
-		AddMes2(mtStringExpected, [''])
+		AddMes(mtEStringExpected, [''])
 	else
 		ReadInput;
 end;
@@ -1466,7 +1441,7 @@ end;}
 procedure TDParser.ReadSemicolon;
 begin
 	if not (InputType in [itSemicolon]) then
-		AddMes2(mtSemicolonExpected, [''])
+		AddMes(mtESemicolonExpected, [''])
 	else
 		ReadInput;
 end;
@@ -1474,7 +1449,7 @@ end;
 procedure TDParser.ReadCommaSemicolon;
 begin
 	if not (InputType in [itComma, itSemicolon]) then
-		AddMes2(mtStrokeOrSemicolonExpected, [''])
+		AddMes(mtEStrokeOrSemicolonExpected, [''])
 	else
 		ReadInput;
 end;
@@ -1482,7 +1457,7 @@ end;
 procedure TDParser.ReadPeriod;
 begin
 	if not (InputType in [itPeriod]) then
-		AddMes2(mtPeriodExpected, [''])
+		AddMes(mtEPeriodExpected, [''])
 	else
 		ReadInput;
 end;
@@ -1490,7 +1465,7 @@ end;
 procedure TDParser.ReadColon;
 begin
 	if not (InputType in [itColon]) then
-		AddMes2(mtColonExpected, [''])
+		AddMes(mtEColonExpected, [''])
 	else
 		ReadInput;
 end;
@@ -1511,14 +1486,14 @@ begin
 end;}
 
 
-function CompareS(OldS, NewS: string): Boolean;
+function CompareS(const OldS, NewS: string): Boolean;
 begin
 	Result := UpperCase(OldS) = UpperCase(NewS);
-	if {FoundCase and} Result then // D??? move to ReadInput
+	if {FoundCase and} Result then // TODO : move to ReadInput
 	begin
 		if OldS <> NewS then
 		begin
-//			AddMes(mtCaseMishmash, [NewS, OldS]); D???
+// TODO : AddMes(mtCaseMishmash, [NewS, OldS]);
 //			Move(OldS[1], BufW[BufIW - Length(OldS)], Length(OldS));
 		end;
 	end;
@@ -1558,7 +1533,7 @@ begin
 		end;}
 		else
 		begin
-			AddMes2(mtExpressionExpected, ['']);
+			AddMes(mtEExpressionExpected, ['']);
 			Break;
 		end;
 		end;
@@ -1580,12 +1555,12 @@ begin
 	Result := RoundSG(V);
 	if Result < MinVal then
 	begin
-		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
+		AddMes(mtWUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
 		Result := MinVal;
 	end
 	else if Result > MaxVal then
 	begin
-		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
+		AddMes(mtWUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
 		Result := MaxVal;
 	end;
 end;
@@ -1593,158 +1568,6 @@ end;
 function TDParser.EOI: BG;
 begin
 	Result := BufRI >= BufRC;
-end;
-
-procedure DAddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
-var
-	M: PCompileMes;
-	i: SG;
-begin
-	M := CompileMes.Add;
-	M.Line := Line;
-	M.X0 := X0;
-	M.X1 := X1;
-	M.FileNameIndex := FileNameIndex;
-	M.MesId := MesId;
-
-	if Length(Params) >= 1 then
-		M.Params := Params[0]
-	else
-		M.Params := '';
-	if Length(Params) >= 2 then
-	begin
-		M.Param2Index := Length(M.Params) + 1;
-		M.Params := M.Params + Params[1];
-	end
-	else
-		M.Param2Index := 0;
-
-	{$ifopt d+}
-	Assert(Length(Params) <= MesParam[M.MesId]);
-	Assert(Length(Params) >= MesParam[M.MesId]);
-	{$endif}
-	for i := 0 to Length(Params) - 1 do
-	begin
-		Params[i] := '';
-	end;
-end;
-
-procedure TDParser.AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);
-var
-	M: PCompileMes;
-	i: SG;
-begin
-	Inc(ProblemCount);
-	if ProblemCount > 100 then Exit;
-
-	M := CompileMes.Add;
-	M.Line := Line;
-	M.X0 := X0;
-	M.X1 := X1;
-	M.FileNameIndex := FileNameIndex;
-	if ProblemCount = 100 then
-	begin
-		M.MesId := mtCompilationTerminated;
-		Exit;
-	end
-	else
-		M.MesId := MesId;
-
-	for i := 0 to Length(Params) - 1 do
-	begin
-		if Params[i] = '' then
-		begin
-			case InputType of
-			itIdent: Params[i] := Id;
-			itKeyword: Params[i] := KWs[Keyword];
-			else Params[i] :=  InputToStr[InputType];
-			end;
-		end;
-	end;
-	if Length(Params) >= 1 then
-		M.Params := Params[0]
-	else
-		M.Params := '';
-	if Length(Params) >= 2 then
-	begin
-		M.Param2Index := Length(M.Params) + 1;
-		M.Params := M.Params + Params[1];
-	end
-	else
-		M.Param2Index := 0;
-
-	{$ifopt d+}
-	Assert(Length(Params) <= MesParam[M.MesId]);
-	Assert(Length(Params) >= MesParam[M.MesId]);
-	{$endif}
-	for i := 0 to Length(Params) - 1 do
-	begin
-		Params[i] := '';
-	end;
-end;
-
-procedure TDParser.AddMes2(MesId: TMesId; Params: array of string);
-begin
-	AddMesEx2(MesId, Params, LinesL, Max(StartBufRI - LineStart, 0), BufRI - LineStart, 0);
-end;
-
-function MesToString(M: PCompileMes): string;
-var s: string;
-begin
-	case M.MesId of
-	TMesId(0)..TMesId(SG(FirstWarning) - 1): Result := '[Hint]';
-	FirstWarning..TMesId(SG(FirstError) - 1): Result := '[Warning]';
-	FirstError..TMesId(SG(FirstFatalError) - 1): Result := '[Error]';
-	FirstFatalError..TMesId(SG(FirstInfo) - 1): Result := '[Fatal Error]';
-	else Result := '[Info]';
-	end;
-	Result := Result + ' (' + NToS(M.Line + 1) + ', ' + NToS(M.X0 + 1) + '..' + NToS(M.X1 + 1) + '): ';
-
-	s := MesStrings[M.MesId];
-	if M.Param2Index > 0 then
-	begin
-		Replace(s, '%1', Copy(M.Params, 1, M.Param2Index - 1) );
-		Replace(s, '%2', Copy(M.Params, M.Param2Index, MaxInt));
-	end
-	else
-		Replace(s, '%1', Copy(M.Params, 1, MaxInt));
-	if M.MesId = mtIllegalChar then
-	begin
-		NumericBase := 16;
-		s := s + ' ($' + NToS(Ord(M.Params[1])) + ')';
-		NumericBase := 10;
-	end;
-
-	Result := Result + s;
-end;
-
-function MesToStrings: string;
-var
-	Mes: PCompileMes;
-	i: SG;
-begin
-	Mes := CompileMes.GetFirst;
-	for i := 0 to SG(CompileMes.Count) - 1 do
-	begin
-		Result := Result + MesToString(Mes) + LineSep;
-		Inc(Mes);
-	end;
-end;
-
-procedure MesToMemo(Memo: TMemo);
-var
-	Me: PCompileMes;
-	i: SG;
-begin
-	Memo.Lines.BeginUpdate;
-	Memo.Lines.Clear;
-	Me := CompileMes.GetFirst;
-	for i := 0 to SG(CompileMes.Count) - 1 do
-	begin
-		Memo.Lines.Add(MesToString(Me));
-		Inc(Me);
-	end;
-	Memo.Lines.EndUpdate;
 end;
 
 {
@@ -1771,7 +1594,7 @@ G2 ->
 
 P -> [Number, Const, Var] Q
 P -> Sin(E) Q
-P -> Avg(E, E, ...) Q
+P -> Avg(E, E, _) Q
 P -> Sin(E) Q
 ...
 P -> (E) Q
@@ -1902,7 +1725,7 @@ var Operation: TOperator;
 				case InputType of
 				itEOI:
 				begin
-					AddMes2(mtExpected, [''')'', '','' or expression', Id]);
+					AddMes(mtEExpected, [''')'', '','' or expression', Id]);
 					Exit;
 				end;
 				itRBracket:
@@ -1924,7 +1747,7 @@ var Operation: TOperator;
 					Result.Args[Result.ArgCount] := NodeE(nil);
 					if Result.Args[Result.ArgCount] = nil then
 					begin
-						AddMes2(mtExpressionExpected, [Id]);
+						AddMes(mtEExpressionExpected, [Id]);
 						ReadInput;
 					end;
 					Inc(Result.ArgCount);
@@ -1938,7 +1761,7 @@ var Operation: TOperator;
 			end;
 		end;
 		else
-			AddMes2(mtExpected, ['(', Id]);
+			AddMes(mtEExpected, ['(', Id]);
 		end;
 	end;
 
@@ -1962,11 +1785,11 @@ begin
 		Inc(BracketDepth); if BracketDepth > MaxBracketDepth then MaxBracketDepth := BracketDepth;
 		ReadInput;
 		Result := NodeE(nil);
-{		if Result = nil then
-			AddMes2(mtExpressionExpected, ['']); D???}
+{ TODO : if Result = nil then
+			AddMes2(mtExpressionExpected, ['']); }
 		if InputType <> itRBracket then
 		begin
-			AddMes2(mtExpected, [')', Id]);
+			AddMes(mtEExpected, [')', Id]);
 		end
 		else
 			ReadInput;
@@ -2002,7 +1825,7 @@ begin
 				Result.Operation := opNumber;
 				Result.Num := 0;}
 				Result := nil;
-				AddMes2(mtUndeclaredIdentifier, [Id]);
+				AddMes(mtEUndeclaredIdentifier, [Id]);
 			end;
 			ReadInput;
 		end;
@@ -2020,7 +1843,7 @@ begin
 		end
 		else
 		begin
-			AddMes2(mtExpressionExpected, [Id]);
+			AddMes(mtEExpressionExpected, [Id]);
 			Result := nil;
 		end;
 	end;
@@ -2178,55 +2001,16 @@ begin
 	Result := NodeE2(NodeA);
 end;}
 
-
-
-var
-	ELO: array[0..50] of SG = (
-		765{6},677,589,538,501,470,444,422,401,383,368,
-		351,336,322,309,296,284,273,262,251,240,
-		230,220,211,202,193,184,175,166,158,149,
-		141,133,125,117,110,102,95,87,80,
-		72,65,57,50,43,36,29,21,14,7,0);
-
-function GetElo(Fruitfulness: Extended): SG;
-begin
-	if Fruitfulness <= 0 then
-		Result := -ELO[0]
-	else if Fruitfulness >= 1 then
-		Result := ELO[0]
-	else if Fruitfulness < 0.5 then
-		Result := -ELO[Round(100 * Fruitfulness)]
-	else
-		Result := ELO[100 - Round(100 * Fruitfulness)];
-end;
-
-function ArcElo(EloDifference: Extended): Extended;
-var
-	i: SG;
-	e0, e1: Extended;
-begin
-	e0 := MaxInt;
-	Result := 0;
-	for i := 0 to 100 do
-	begin
-		e1 := Abs(GetElo(i / 100) - EloDifference);
-		if e1 < e0 then
-		begin
-			e0 := e1;
-			Result := i / 100;
-		end;
-	end;
-end;
-
 var Depth: SG;
 
-function Calc(Node: PNode): Extended;
+function Calc(Node: PNode): TVector;
 var
 	i, j: SG;
-	e, e0, e1, MyElo: Extended;
+	e, e0, e1, MyElo: FA;
 	R: U8;
+	V: TVector;
 begin
-	Result := 0;
+	SetLength(Result, 0);
 	if Node = nil then
 	begin
 		Exit;
@@ -2234,42 +2018,38 @@ begin
 	Inc(Depth); if Depth > TreeDepth then TreeDepth := Depth;
 	case Node.Operation of
 	opNumber:
-		Result := Node.Num;
+	begin
+		Result := NumToVector(Node.Num);
+	end;
 	opIdent:
+	begin
 		Result := Node.Ident.Value;
+	end;
 {		opUnarMinus:
 	begin
 		Result := -Calc(Node.Args[0]);
 	end;}
-	opPlus:
-	begin
-		Result := 0;
-		if Node.ArgCount > 0 then
-		begin
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				Result := Result + Calc(Node.Args[i]);
-			end;
-		end;
-	end;
-	opMinus:
+	opPlus, opMinus:
 	begin
 		if Node.ArgCount > 0 then
 		begin
 			Result := Calc(Node.Args[0]);
 			for i := 1 to Node.ArgCount - 1 do
-				Result := Result - Calc(Node.Args[i]);
-		end
-		else
-			Result := 0;
+			begin
+				V := Calc(Node.Args[i]);
+				if Node.Operation = opMinus then
+					V := NegVector(Calc(Node.Args[i]));
+				Result := PlusVector(Result, V);
+			end;
+		end;
 	end;
 	opMul:
 	begin
-		Result := 1;
+		Result := NumToVector(1);
 		for i := 0 to Node.ArgCount - 1 do
 		begin
 			if Node.Args[i] <> nil then
-				Result := Result * Calc(Node.Args[i]);
+				Result := MultiplyVector(Result, Calc(Node.Args[i]));
 		end;
 	end;
 	opDiv:
@@ -2281,7 +2061,8 @@ begin
 			begin
 				if Node.Args[i] <> nil then
 				begin
-					e := Calc(Node.Args[i]);
+					Result := DivideVector(Result, Calc(Node.Args[i]));
+{					e := Calc(Node.Args[i]);
 					if (e = 0) then
 					begin
 						if Result > 0 then
@@ -2290,12 +2071,10 @@ begin
 							Result := NegInfinity;
 					end
 					else
-						Result := Result / e;
+						Result := Result / e;}
 				end;
 			end;
-		end
-		else
-			Result := 0;
+		end;
 	end;
 	opMod:
 	begin
@@ -2304,17 +2083,18 @@ begin
 			Result := Calc(Node.Args[0]);
 			for i := 1 to Node.ArgCount - 1 do
 			begin
-				e := Calc(Node.Args[i]);
+				if Node.Args[i] <> nil then
+				begin
+					Result := ModuloVector(Result, Calc(Node.Args[i]));
+{				e := Calc(Node.Args[i]);
 				if e = 0 then
 				else
-					Result := ModE(Result, e);
-//					Result := Round(Result) mod Round(e);
+					Result := ModE(Result, e);}
+				end;
 			end;
-		end
-		else
-			Result := 0;
+		end;
 	end;
-	opTrunc:
+(*	opTrunc:
 	begin
 		Result := 0;
 		for i := 0 to Node.ArgCount - 1 do
@@ -2379,7 +2159,7 @@ begin
 		Result := 1;
 		for i := 0 to Node.ArgCount - 1 do
 		begin
-			e := Round(Calc(Node.Args[i])); // D??? Factor 1.5 =
+			e := Round(Calc(Node.Args[i])); // TODO : Factor 1.5 =
 			if e < 0 then
 			begin
 //				ShowError('Input -infinity..2000 for Fact')
@@ -2579,88 +2359,6 @@ begin
 			end;
 		end;
 	end;
-	opElo:
-	begin
-		if Node.ArgCount = 0 then
-			Result := 0
-		else if Node.ArgCount = 1 then
-			Result := GetELO(Calc(Node.Args[0]))
-		else if Node.ArgCount >= 2 then
-		begin
-			e := 0;
-			for i := 0 to Node.ArgCount - 2 do
-			begin
-				e := e + Calc(Node.Args[i]);
-			end;
-			Result := e / (Node.ArgCount - 1) +
-				GetELO(Calc(Node.Args[Node.ArgCount - 1]) / (Node.ArgCount - 1))
-		end;
-	end;
-	opEloC:
-	begin
-		if Node.ArgCount < 3 then
-			Result := 0
-		else
-		begin // Delta / Performance
-(*
-			e0 := Calc(Node.Args[1]
-			e := Calc(Node.Args[0]);
-			Result := 0;
-			for i := 1 to Node.ArgCount div 2 - 1 do
-			begin
-				e1 := ArcElo(e0) - Calc(Node.Args[2 * i]));
-				Result := Result + (1 * e * (Calc(Node.Args[2 * i + 1]) - e1)) / 1;
-			end;*)
-
-			if Node.ArgCount and 1 = 0 then
-				MyElo := Calc(Node.Args[1])
-			else
-				MyElo := 300;
-//			Calc(Node.Args[0]); // Skip your elo
-
-			e := 0; // Suma Elo
-			e1 := 0; // Suma Score
-			j := 0;
-			for i := 1 to (Node.ArgCount + 1) div 2 - 1 do
-			begin
-				e0 := Calc(Node.Args[2 * i - (Node.ArgCount and 1)]);
-				if e0 > 0 then
-				begin
-					if Node.ArgCount and 1 = 0 then
-						if e0 < MyElo - 300 then e0 := MyElo - 300; // New for year 2005
-					e := e + e0;
-					e1 := e1 + Calc(Node.Args[2 * i + 1 - (Node.ArgCount and 1)]); // Score
-					Inc(j);
-				end;
-			end;
-			if j > 0 then
-			begin
-				e0 := Round(e / j); // Avg opponets elo
-				if Node.ArgCount and 1 = 0 then
-					Result := Round(Calc(Node.Args[0]){Delta} * (e1 - Round(100 * j * ArcElo(MyElo - e0)) / 100))
-				else
-					Result := e0{Avg opponets elo} + GetELO(e1 / j);
-			end
-			else
-				Result := 0;
-		end;
-	end;
-	opArcElo:
-	begin
-		if Node.ArgCount = 0 then
-			e := 0
-		else if Node.ArgCount = 1 then
-			e := Calc(Node.Args[0])
-		else {if Node.ArgCount >= 2 then}
-		begin
-			e := 0;
-			for i := 0 to Node.ArgCount - 1 do
-			begin
-				e := e + Calc(Node.Args[i]);
-			end;
-		end;
-		Result := ArcElo(e);
-	end;
 	opAvg:
 	begin
 		e := 0;
@@ -2731,29 +2429,28 @@ begin
 		end
 		else
 			Result := 0;
-	end;
+	end; *)
 	else
-		Result := 0;
 		Assert(False);
 	end;
 	Dec(Depth);
 end;
 
-function CalcTree: Extended;
+function CalcTree: TVector;
 begin
 	Result := Calc(Root);
 end;
 
 procedure FreeUnitSystem;
 begin
-		if UnitSystem <> nil then
-		begin
-			UnitSystem.Units.Free;
-			UnitSystem.Types.Free;
-			UnitSystem.VFs.Free;
-			Dispose(UnitSystem);
-			UnitSystem := nil;
-		end;
+	if UnitSystem <> nil then
+	begin
+		UnitSystem.Units.Free;
+		UnitSystem.Types.Free;
+		UnitSystem.VFs.Free;
+		Dispose(UnitSystem);
+		UnitSystem := nil;
+	end;
 end;
 
 procedure CreateUnitSystem;
@@ -2761,10 +2458,13 @@ var
 	U: PUnit;
 	T: PType;
 	VF: PVF;
+	FileName: TFileName;
 begin
+{*	if FileExists(FileName) then
+		TODO : Parse(FileName);}
+
 	if UnitSystem = nil then
 	begin
-		// System.pas
 		New(UnitSystem);
 		U := UnitSystem;
 		U.Name := 'System';
@@ -2785,7 +2485,7 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := pi;
+		VF.Value := NumToVector(pi);
 		VF.ParamCount := 0;
 
 		VF := U.VFs.Add;
@@ -2794,7 +2494,16 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := ConstE;
+		VF.Value := NumToVector(ConstE);
+		VF.ParamCount := 0;
+
+		VF := U.VFs.Add;
+		VF.Name := 'c';
+		VF.Typ := '';
+		VF.UsedCount := 0;
+		VF.Line := 0;
+		VF.VFs := nil;
+		VF.Value := NumToVector(ConstC);
 		VF.ParamCount := 0;
 
 		VF := U.VFs.Add;
@@ -2803,7 +2512,7 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := Infinity;
+		VF.Value := NumToVector(Infinity);
 		VF.ParamCount := 0;
 
 		VF := U.VFs.Add;
@@ -2812,7 +2521,7 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := NegInfinity;
+		VF.Value := NumToVector(NegInfinity);
 		VF.ParamCount := 0;
 
 		VF := U.VFs.Add;
@@ -2821,7 +2530,7 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := Infinity;
+		VF.Value := NumToVector(Infinity);
 		VF.ParamCount := 0;
 
 		VF := U.VFs.Add;
@@ -2830,7 +2539,7 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := 0;
+		VF.Value := NumToVector(0);
 		VF.ParamCount := 0;
 
 		VF := U.VFs.Add;
@@ -2839,7 +2548,7 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := 0;
+		VF.Value := NumToVector(0);
 		VF.ParamCount := 0;
 
 		VF := U.VFs.Add;
@@ -2848,7 +2557,7 @@ begin
 		VF.UsedCount := 0;
 		VF.Line := 0;
 		VF.VFs := nil;
-		VF.Value := 1;
+		VF.Value := NumToVector(1);
 		VF.ParamCount := 0;
 
 		T := U.Types.Add;
@@ -3051,25 +2760,27 @@ begin
 end;
 
 function TDParser.ReadFA(MinVal, DefVal, MaxVal: FA): FA;
+var V: TVector;
 begin
 	ReadInput;
 	FreeTree(Root);
 	Root := NodeE(nil);
+	Result := DefVal;
 	if Root <> nil then
 	begin
-		Result := Calc(Root);
-	end
-	else
-		Result := DefVal;
+		V := Calc(Root);
+		if Length(V) >= 1 then
+			Result := V[0];
+	end;
 
 	if Result < MinVal then
 	begin
-		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
+		AddMes(mtWUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
 		Result := MinVal;
 	end
 	else if Result > MaxVal then
 	begin
-		AddMes2(mtUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
+		AddMes(mtWUserWarning, ['Value ' + FloatToStr(Result) + ' out of range ' + FloatToStr(MinVal) + '..' + FloatToStr(MaxVal)]);
 		Result := MaxVal;
 	end;
 end;
@@ -3154,7 +2865,7 @@ function TDParser.GetInt: SG;
 begin
 	if InputType <> itInteger then
 	begin
-		AddMes2(mtExpected, ['Integer', Id]);
+		AddMes(mtEExpected, ['Integer', Id]);
 		Result := 0;
 	end
 	else
@@ -3189,7 +2900,7 @@ procedure TDParser.NextLine;
 begin
 	if InputType <> itReturn then
 	begin
-		AddMes2(mtExpected, ['end of line', Id]);
+		AddMes(mtEExpected, ['end of line', Id]);
 	end;
 	ReadInput;
 end;
@@ -3210,7 +2921,25 @@ begin
 	ReadInput;
 end;
 
-procedure _initialization;
+procedure TDParser.AddMes(const MesId: TMesId; const Params: array of string);
+var
+	M: PCompileMes;
+	i: SG;
+begin
+	M := CompileMes.Add;
+//	FillChar(M^, SizeOf(M), 0);
+	M.MesId := MesId;
+	SetLength(M.Params, Length(Params));
+	for i := 0 to Length(Params) - 1 do
+		M.Params[i] := Params[i];
+
+	M.Line := LinesL;
+	M.X0 := Self.BufRI - LineStart - Length(Id);
+	M.X1 := Self.BufRI - LineStart;
+	M.LogType := ltError;
+end;
+
+procedure Initialize;
 var
 	MesId: TMesId;
 	i: SG;
@@ -3238,16 +2967,62 @@ begin
 	begin
 		FcNames[TOperator(i)] := UpperCase(Copy(GetEnumName(TypeInfo(TOperator), i), 3, MaxInt));
 	end;
+end;
 
+function FindUnit(const UnitName: string): PUnit;
+var
+	i: SG;
+	U: PUnit;
+begin
+	Result := nil;
+	for i := 0 to SG(UnitSystem.Units.Count) - 1 do
+	begin
+		U := UnitSystem.Units.Get(i);
+		if U.Name = UnitName then
+		begin
+			Result := U;
+			Break;
+		end;
+	end;
+end;
+
+procedure AddFunction(const UnitName, FunctionName: string; P: TFunction);
+var
+	U: PUnit;
+	VF: PVF;
+begin
+	U := FindUnit(UnitName);
+	if U = nil then
+	begin
+		New(U);
+		U.Name := UnitName;
+		U.FileNam := '';
+		U.Code := '';
+		U.Error := 0;
+		U.Units := TData.Create(True);
+		U.Units.ItemSize := SizeOf(PUnit);
+		U.Types := TData.Create(True);
+		U.Types.ItemSize := SizeOf(TType);
+		U.VFs := TData.Create(True);
+		U.VFs.ItemSize := SizeOf(TVF);
+		U.GlobalVF := 0;
+	end;
+
+	VF := UnitSystem.VFs.Add;
+	VF.Name := FunctionName;
+	VF.Typ := '';
+	VF.UsedCount := 0;
+	VF.Line := 0;
+	VF.VFs := nil;
+	VF.Value := nil;
+	VF.Code := P;
+	VF.ParamCount := 0;
 end;
 
 initialization
-	_initialization;
-	CompileMes := TData.Create(True);
-	CompileMes.ItemSize := SizeOf(TCompileMes);
+	Initialize;
 	CreateUnitSystem;
 finalization
 	FreeUnitSystem;
 	FreeTree(Root);
-	FreeAndNil(CompileMes);
 end.

@@ -10,7 +10,7 @@ unit uStrings;
 
 interface
 
-uses uTypes;
+uses SysUtils, uTypes;
 
 const
 	CharNul = #$00;
@@ -33,6 +33,7 @@ const
 	CharBell = #$07;
 	CharTimes = '×';
 	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
+	cDialogSuffix = '...';
 
 	FalseTrue: array[0..1] of string = ('false', 'true');
 
@@ -75,7 +76,6 @@ function DelLastNumber(const s: string): string;
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
-procedure RepairNewLine(var Line: string);
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
 function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
@@ -93,20 +93,28 @@ function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
 function StartStr(const SubStr: string; const Str: string): BG;
 function IsSubStr(const SubStr: string; const Str: string): BG;
+function OneLine(const s: string): string;
 procedure RemoveComment(var s: string);
+function CapitalCase(const s: string): string;
 
 function ReplaceF(const s: string; const WhatS, ToS: string): string;
-procedure Replace(var s: string; const WhatS, ToS: string);
+procedure Replace(var s: string; const WhatS, ToS: string); overload;
+procedure Replace(var s: string; const WhatS, ToS: array of string); overload;
 
 function Code(const s: string; const Decode: BG): string;
 
 function AddSpace(const s: string): string;
+procedure AppendStr(var Dest: TFileName; const Source: string); overload;
+procedure AppendStr(var Dest: string; const Source: string); overload;
+function Plural(Number: SG): string;
 procedure CorrectDir(var s: string);
 function RandomString(Size: SG): string;
 
 implementation
 
-uses Math;
+uses
+	Math,
+	uMath;
 
 function PosEx(SubStr, Str: string): SG;
 begin
@@ -392,12 +400,6 @@ begin
 		Inc(LineIndex);
 end;
 
-procedure RepairNewLine(var Line: string);
-begin
-	Replace(Line, FullSep, LineSep);
-	Replace(Line, CharCR, LineSep);
-end;
-
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 {$i StrToNum.inc}
 
@@ -559,11 +561,26 @@ begin
 	end;
 end;
 
+function OneLine(const s: string): string;
+begin
+	Result := s;
+	Replace(Result, FullSep, ' - ');
+	Replace(Result, CharCR, ' - ');
+	Replace(Result, CharLF, ' - ');
+	DelBESpace(Result);
+end;
+
 procedure RemoveComment(var s: string);
 var i: SG;
 begin
 	i := Pos(';', s);
 	if i <> 0 then SetLength(s, i - 1);
+end;
+
+function CapitalCase(const s: string): string;
+begin
+	if Length(s) > 1 then
+		Result := UpCase(s[1]) + LowerCase(Copy(s, 2, MaxInt));
 end;
 
 function ReplaceF(const s: string; const WhatS, ToS: string): string;
@@ -594,6 +611,52 @@ begin
 	end;
 end;
 
+procedure Replace(var s: string; const WhatS, ToS: array of string);
+var
+	WhatSLen: SG;
+	ActPos: array of SG;
+
+	procedure Clear;
+	begin
+		FillU4(ActPos[0], Length(ActPos), 1);
+	end;
+
+var
+	Index, j: SG;
+begin
+	WhatSLen := Length(WhatS);
+	if WhatSLen = 0 then Exit;
+	Assert(WhatSLen = Length(ToS));
+
+	SetLength(ActPos, WhatSLen);
+	Clear;
+	Index := 1;
+	while Index <= Length(s) do
+	begin
+		for j := 0 to WhatSLen - 1 do
+		begin
+			if s[Index] = WhatS[j][ActPos[j]] then
+			begin
+				if ActPos[j] = Length(WhatS[j]) then
+				begin // Found
+					Delete(s, Index - ActPos[j] + 1, ActPos[j]);
+					Insert(ToS[j], s, Index - ActPos[j] + 1);
+//					Index := ActPos[j] + Length(ToS[j]);
+					Inc(Index, Length(ToS[j]) - ActPos[j]);
+					Clear;
+//					ActPos[j] := 1;
+					Break;
+				end
+				else
+					Inc(ActPos[j]);
+			end
+			else
+				ActPos[j] := 1;
+		end;
+		Inc(Index);
+	end;
+end;
+
 function Code(const s: string; const Decode: BG): string;
 var i: Integer;
 begin
@@ -615,6 +678,23 @@ begin
 		if Result[Index] in ['A'..'Z'] then
 			if Result[Index - 1] in ['a'..'z'] then
 				Insert(' ', Result, Index);
+end;
+
+procedure AppendStr(var Dest: TFileName; const Source: string); overload;
+begin
+	Dest := Dest + Source;
+end;
+
+procedure AppendStr(var Dest: string; const Source: string); overload;
+begin
+	Dest := Dest + Source;
+end;
+
+function Plural(Number: SG): string;
+begin
+	Assert(Number >= 0);
+	if Number > 1 then
+		Result := 's';
 end;
 
 procedure CorrectDir(var s: string);

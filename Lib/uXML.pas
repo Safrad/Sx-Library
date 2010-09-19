@@ -93,7 +93,7 @@ begin
 		' ':
 		begin
 			FElementType := xeStartTag;
-			// Attribs D???
+			// TODO : Attribs
 			ReadToChar(Body, BodyIndex, '>');
 		end;
 		'>': FElementType := xeStartTag;

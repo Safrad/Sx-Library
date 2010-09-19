@@ -31,93 +31,48 @@ type
 		FItemMemSize: UG;
 		FItemCount: UG;
 		FItemAlloc: UG;
-		procedure Ins(Index: TIndex);
-		procedure SetItemSize(Value: UG);
-	protected
+		procedure NewData(const Index: TIndex);
+		procedure SetItemSize(const Value: UG);
 	public
-		constructor Create(ClearCreated: BG); overload;
+		constructor Create(const ClearCreated: BG); overload;
 		constructor Create; overload;
 		destructor Destroy; override;
 
+		// Data manipulation
 		procedure Clear;
 
-		procedure Add(var Value); overload;
+//		procedure Add(var Value); overload;
 		function Add: Pointer; overload;
+		function Add(const Index: TIndex): Pointer; overload;
 
-		procedure Delete(Index: TIndex);
 		procedure DeleteFirst;
 		procedure DeleteLast;
+		procedure Delete(const Index: TIndex);
 
-		procedure Insert(var Value; Index: TIndex); overload;
-		function Insert(Index: TIndex): Pointer; overload;
+//		procedure Insert(var Value; Index: TIndex); overload;
+		procedure Put(const Index: TIndex; const Item: Pointer);
 
-		procedure Replace(var Value; Index: TIndex);
+//		procedure Replace(var Value; Index: TIndex);
+		procedure Swap(const I1, I2: TIndex);
 
-		procedure Get(var Value; Index: TIndex); overload;
-		function Get(Index: TIndex): Pointer; overload;
-		procedure GetFirst(var Value); overload;
+		// Data query
+//		procedure Get(var Value; Index: TIndex); overload;
+		function Get(const Index: TIndex): Pointer; overload;
+//		procedure GetFirst(var Value); overload;
 		function GetFirst: Pointer; overload;
-		procedure GetLast(var Value); overload;
+//		procedure GetLast(var Value); overload;
 		function GetLast: Pointer; overload;
-
-		procedure Swap(I1, I2: UG);
 
 		function IsEmpty: Boolean;
 		function ToString: string;
 
 		property ItemSize: UG read FItemSize write SetItemSize;
-		property ItemSh: UG read FItemSh;
-		property ItemMemSize: UG read FItemMemSize;
+		property ItemSh: UG read FItemSh; // Binary shift
+		property ItemMemSize: UG read FItemMemSize; // Item size in memory
 		property Count: UG read FItemCount;
+		property Items[const Index: TIndex]: Pointer read Get write Put; default; // operator []
 	end;
 
-	TA4 = class(TObject)
-	private
-//		Data: PArrayS4;
-		FItemCount: UG;
-	public
-		constructor Create;
-		destructor Destroy; override;
-
-		procedure Clear;
-
-		procedure Add(var Value); overload;
-		function Add: Pointer; overload;
-
-		procedure Delete(Index: TIndex);
-		procedure DeleteFirst;
-		procedure DeleteLast;
-
-		procedure Insert(var Value; Index: TIndex); overload;
-		function Insert(Index: TIndex): Pointer; overload;
-
-		procedure Replace(var Value; Index: TIndex);
-
-		procedure Get(var Value; Index: TIndex); overload;
-		function Get(Index: TIndex): Pointer; overload;
-		procedure GetFirst(var Value); overload;
-		function GetFirst: Pointer; overload;
-		procedure GetLast(var Value); overload;
-		function GetLast: Pointer; overload;
-
-		function IsEmpty: Boolean;
-
-		property Count: UG read FItemCount;
-	end;
-
-	TDatas = class(TData)
-	private
-		FIndex: SG;
-		FItemAddr: Pointer;
-		procedure SetIndex(const Value: SG);
-	protected
-		constructor Create;
-	public
-		procedure BeginUpdate;
-		procedure EndUpdate;
-		property ItemAddr: Pointer read FItemAddr write FItemAddr;
-		property Index: SG read FIndex write SetIndex;
-	end;
 
 implementation
 
@@ -132,7 +87,7 @@ type
 
 { TData }
 
-constructor TData.Create(ClearCreated: BG);
+constructor TData.Create(const ClearCreated: BG);
 begin
 	inherited Create;
 	FClearCreated := ClearCreated;
@@ -183,7 +138,7 @@ begin
 	end;
 end;
 
-procedure TData.SetItemSize(Value: UG);
+procedure TData.SetItemSize(const Value: UG);
 begin
 	if FItemSize <> Value then
 	begin
@@ -202,15 +157,15 @@ end;
 
 function TData.Add: Pointer;
 begin
-	Result := Insert(FItemCount);
+	Result := Add(FItemCount);
 end;
 
-procedure TData.Add(var Value);
+{procedure TData.Add(var Value);
 begin
 	Insert(Value, FItemCount);
-end;
+end;}
 
-procedure TData.Delete(Index: TIndex);
+procedure TData.Delete(const Index: TIndex);
 var
 	It, It2: PItem;
 	i: TIndex;
@@ -255,7 +210,7 @@ begin
 	Delete(FItemCount - 1);
 end;
 
-procedure TData.Ins(Index: TIndex);
+procedure TData.NewData(const Index: TIndex);
 var NewSize: SG;
 begin
 	NewSize := FItemCount + 1;
@@ -274,6 +229,7 @@ begin
 	Inc(FItemCount);
 end;
 
+{
 procedure TData.Insert(var Value; Index: TIndex);
 var
 	It: PItem;
@@ -299,15 +255,15 @@ begin
 		It.Next := nil;
 		Inc(FItemCount);
 	end;
-end;
+end;}
 
-function TData.Insert(Index: TIndex): Pointer;
+function TData.Add(const Index: TIndex): Pointer;
 begin
 	if FFrag = False then
 	begin
 		if FItemSize <> 0 then
 		begin
-			Ins(Index);
+			NewData(Index);
 			Result := Pointer(UG(Data) + Index shl FItemSh);
 		end
 		else
@@ -320,6 +276,24 @@ begin
 	end;
 end;
 
+procedure TData.Put(const Index: TIndex; const Item: Pointer);
+var P: Pointer;
+begin
+	if FFrag = False then
+	begin
+		P := Get(Index);
+		if (P <> nil) then
+		begin
+			Move(Item, P, FItemSize);
+		end;
+	end
+	else
+	begin
+
+	end;
+end;
+
+{
 procedure TData.Replace(var Value; Index: TIndex);
 begin
 	if FFrag = False then
@@ -331,18 +305,18 @@ begin
 	begin
 
 	end;
-end;
+end;}
 
-procedure TData.Get(var Value; Index: TIndex);
+{procedure TData.Get(var Value; Index: TIndex);
 begin
 	if FFrag = False then
 	begin
 		if (Index < FItemCount) then
 			Move(Pointer(UG(Data) + Index shl FItemSh)^, Value, ItemSize);
 	end;
-end;
+end;}
 
-function TData.Get(Index: TIndex): Pointer;
+function TData.Get(const Index: TIndex): Pointer;
 var
 	It: PItem;
 	i: TIndex;
@@ -373,20 +347,20 @@ begin
 	end;
 end;
 
-procedure TData.GetFirst(var Value);
+{procedure TData.GetFirst(var Value);
 begin
 	Get(Value, 0);
-end;
+end;}
 
 function TData.GetFirst: Pointer;
 begin
 	Result := Get(0);
 end;
 
-procedure TData.GetLast(var Value);
+{procedure TData.GetLast(var Value);
 begin
 	Get(Value, FItemCount - 1)
-end;
+end;}
 
 function TData.GetLast: Pointer;
 begin
@@ -427,142 +401,9 @@ begin
 	end;
 end;
 
-procedure TData.Swap(I1, I2: UG);
+procedure TData.Swap(const I1, I2: TIndex);
 begin
 	Exchange(Pointer(TIndex(Data) + I1 shl FItemSh), Pointer(TIndex(Data) + I2 shl FItemSh), FItemSize);
-end;
-
-{ TA4 }
-
-constructor TA4.Create;
-begin
-	inherited;
-	FItemCount := 0;
-end;
-
-destructor TA4.Destroy;
-begin
-	Clear;
-	inherited;
-end;
-
-procedure TA4.Clear;
-begin
-
-end;
-
-procedure TA4.Add(var Value);
-begin
-
-end;
-
-function TA4.Add: Pointer;
-begin
-	Result := nil;
-end;
-
-procedure TA4.Delete(Index: TIndex);
-begin
-
-end;
-
-procedure TA4.DeleteFirst;
-begin
-
-end;
-
-procedure TA4.DeleteLast;
-begin
-
-end;
-
-procedure TA4.Insert(var Value; Index: TIndex);
-begin
-
-end;
-
-function TA4.Insert(Index: TIndex): Pointer;
-begin
-	Result := nil;
-
-end;
-
-procedure TA4.Replace(var Value; Index: TIndex);
-begin
-
-end;
-
-procedure TA4.Get(var Value; Index: TIndex);
-begin
-
-end;
-
-function TA4.Get(Index: TIndex): Pointer;
-begin
-	Result := nil;
-
-end;
-
-procedure TA4.GetFirst(var Value);
-begin
-
-end;
-
-function TA4.GetFirst: Pointer;
-begin
-	Result := nil;
-
-end;
-
-procedure TA4.GetLast(var Value);
-begin
-
-end;
-
-function TA4.GetLast: Pointer;
-begin
-	Result := nil;
-
-end;
-
-function TA4.IsEmpty: Boolean;
-begin
-	Result := True;
-
-end;
-
-{ TDatas }
-
-constructor TDatas.Create;
-begin
-	inherited;
-	FIndex := 0;
-end;
-
-procedure TDatas.SetIndex(const Value: SG);
-begin
-	if FIndex <> Value then
-	begin
-		BeginUpdate;
-		FIndex := Value;
-		EndUpdate;
-	end;
-end;
-
-procedure TDatas.BeginUpdate;
-begin
-	if (ItemAddr <> nil) and (ItemSize <> 0) then
-		if (FIndex >= 0) and (UG(FIndex) < Count) then
-			Move(ItemAddr^, Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemSize);
-end;
-
-procedure TDatas.EndUpdate;
-begin
-	if (ItemAddr <> nil) and (ItemSize <> 0) then
-		if (FIndex >= 0) and (UG(FIndex) < Count) then
-			Move(Pointer(UG(Data) + UG(FIndex) * ItemMemSize)^, ItemAddr^, ItemSize)
-		else
-			FillChar(ItemAddr^, ItemSize, 0);
 end;
 
 end.

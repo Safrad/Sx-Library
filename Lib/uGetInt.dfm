@@ -198,6 +198,7 @@ object fGetInt: TfGetInt
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 9
+    WantReturns = False
   end
   object UpDown: TUpDown
     Left = 144

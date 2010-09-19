@@ -13,7 +13,7 @@ interface
 {$R *.RES}
 uses
 	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms;
 
 type
 	TDTimerEvent = procedure(Sender: TObject) of object;
@@ -86,7 +86,7 @@ implementation
 
 uses
 	Math,
-	uSysInfo, uError;
+	uSysInfo, uMsg;
 
 type
 	TDIdleTimer = class(TComponent)
@@ -318,9 +318,10 @@ end;
 procedure TDTimer.DoTimer;
 begin
 	try
-		if Assigned(FOnTimer) then FOnTimer(Self);
+		if Assigned(FOnTimer) then
+			FOnTimer(Self);
 	except
-		on E: Exception do MessageD(E.Message, mtError, [mbOk]);
+		on E: Exception do ErrorMsg(E.Message);
 	end;
 end;
 

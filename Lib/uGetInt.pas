@@ -12,7 +12,7 @@ interface
 
 uses
 	uTypes,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm;
 
 type
@@ -45,7 +45,7 @@ type
 		procedure ButtonCancelClick(Sender: TObject);
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
-    procedure UpDownChangingEx(Sender: TObject; var AllowChange: Boolean;
+		procedure UpDownChangingEx(Sender: TObject; var AllowChange: Boolean;
       NewValue: Smallint; Direction: TUpDownDirection);
 	private
 		{ Private declarations }
@@ -79,7 +79,7 @@ implementation
 {$R *.DFM}
 uses
   Math,
-	uStrings, uInput, uError, uParser;
+	uStrings, uInput, uError, uParser, uParserMsg;
 
 var
 	fGetInt: TfGetInt;
@@ -189,8 +189,8 @@ procedure TfGetInt.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToValS8(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
-	MesToMemo(EditError);
-	ClearErrors;
+	MesToStrings(EditError.Lines);
+	ParserMsgClear;
 
 	InitButtons;
 	InitTrackBar;

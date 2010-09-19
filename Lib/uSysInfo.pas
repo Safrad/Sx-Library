@@ -12,24 +12,24 @@ interface
 
 uses
 	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-	ExtCtrls, StdCtrls, uDLabel, uDButton, uDForm;
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+	ExtCtrls, StdCtrls, uDLabel, uDButton, uDForm, uDEdit;
 
 type
 	TfSysInfo = class(TDForm)
 		Bevel1: TBevel;
     LabelTOperatingSystem: TLabel;
-		EditOS: TEdit;
+		EditOS: TDEdit;
 		Bevel4: TBevel;
     LabelUsed: TLabel;
     LabelFree: TLabel;
     LabelTotal: TLabel;
-    edMT: TEdit;
-    edMF: TEdit;
-    edFF: TEdit;
-    edFT: TEdit;
-    edMU: TEdit;
-    edFU: TEdit;
+    edMT: TDEdit;
+    edMF: TDEdit;
+    edFF: TDEdit;
+    edFT: TDEdit;
+    edMU: TDEdit;
+    edFU: TDEdit;
     LabelTPhysicalMemory: TLabel;
     LabelTPageFile: TLabel;
 		Bevel3: TBevel;
@@ -37,18 +37,18 @@ type
 		DLabel3: TLabel;
     LabelDisk: TLabel;
 		Bevel5: TBevel;
-		EditCPU: TEdit;
-    edDiskU: TEdit;
-    edDiskF: TEdit;
-    edDiskT: TEdit;
+		EditCPU: TDEdit;
+    edDiskU: TDEdit;
+    edDiskF: TDEdit;
+    edDiskT: TDEdit;
 		ButtonOk: TDButton;
     DLabelCPUFrequency: TLabel;
-		EditCPUFrequency: TEdit;
+		EditCPUFrequency: TDEdit;
     LabelAMDDuronCmp: TLabel;
-		EditDuron: TEdit;
+		EditDuron: TDEdit;
     DLabelCPUUsage: TLabel;
-		EditCPUUsage: TEdit;
-    EditCounter: TEdit;
+		EditCPUUsage: TDEdit;
+    EditCounter: TDEdit;
     LabelMBoardCounter: TLabel;
 		ComboBoxSize: TComboBox;
 		procedure ButtonOkClick(Sender: TObject);
@@ -96,7 +96,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uGraph, uScreen, uStrings, uFormat,
+	uGraph, uScreen, uStrings, uFormat, uSimulation,
 	uProjectInfo,
 	Registry, Math;
 
@@ -285,9 +285,9 @@ begin
 		end;
 		processorTime := GetProcessorTime;
 
-		if (LastTickCount <> 0) and (tickCount <> LastTickCount) and (processorTime >= LastProcessorTime) then
+		if (LastTickCount <> 0) and (tickCount > LastTickCount) and (processorTime >= LastProcessorTime) then
 		begin // 1 000*10 000 = 10 000 000 / sec
-			CPUUsage := 100 * CPUUsageMul - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1});
+			CPUUsage := 100 * CPUUsageMul - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1}) ;
 			if CPUUsage < 0 then CPUUsage := 0;
 		end;
 
@@ -301,17 +301,17 @@ begin
 		Result := CPUUsage;
 		if Reg = nil then
 		begin
-			Reg := TRegistry.Create;
+			Reg := TRegistry.Create(KEY_QUERY_VALUE);
 			Reg.RootKey := HKEY_DYN_DATA;
 //			Reg.CreateKey('PerfStats');
-			if Reg.OpenKey('PerfStats\StartStat', True) then
+			if Reg.OpenKeyReadOnly('PerfStats\StartStat') then
 			begin
 				Reg.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
 				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
 				Reg.CloseKey;
 			end;
 
-			if Reg.OpenKey('PerfStats\StatData', False) then
+			if Reg.OpenKeyReadOnly('PerfStats\StatData') then
 			begin
 				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
 				Result := CPUUsageMul * CPUUsage;
@@ -319,7 +319,7 @@ begin
 			end;
 		end;
 
-		if Reg.OpenKey('PerfStats\StatData', False) then
+		if Reg.OpenKeyReadOnly('PerfStats\StatData') then
 		begin
 			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
 			Result := CPUUsageMul * CPUUsage;
@@ -500,10 +500,10 @@ function GetCpuSpeed: string;
 var
 	Reg: TRegistry;
 begin
-	Reg := TRegistry.Create;
+	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 try
 	Reg.RootKey := HKEY_LOCAL_MACHINE;
-	if Reg.OpenKey('Hardware\Description\System\CentralProcessor\0', False) then
+	if Reg.OpenKeyReadOnly('Hardware\Description\System\CentralProcessor\0', False) then
 	begin
 		Result := IntToStr(Reg.ReadInteger('~MHz')) + ' MHz';
 		Reg.CloseKey;

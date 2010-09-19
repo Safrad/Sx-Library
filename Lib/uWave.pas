@@ -165,7 +165,7 @@ procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
 procedure WaveCreate(var Wave: PWave;
 	const Channels: U2; // 1, 2
 	const BitsPerSample: U2; // 8, 16
-	const SampleRate: U4; // 11025, 22050, 44100, 48000...
+	const SampleRate: U4; // 11025, 22050, 44100, 48000
 	const TotalSamples: U4); // 1 sec = SampleRate
 procedure WaveFree(var Wave: PWave);
 
@@ -275,12 +275,29 @@ type
 		property OnReciveBuffrer: TOnReciveBuffrerEvent read FOnReciveBuffrer write FOnReciveBuffrer;
 	end;
 
+// Midi
+function MidiMCICallBack: Boolean;
+procedure MidiMCIOpen(FileName: TFileName);
+procedure MidiMCISeek(const SeekTo: U4);
+function MidiMCIGetPos: U4;
+procedure MidiMCIPause;
+procedure MidiMCIStop;
+procedure MidiMCIResume;
+procedure MidiMCIPlay;
+procedure MidiMCIClose;
+
+var
+	MidiHandle: HWnd;
+	MidiPlaying: Boolean;
+	MidiOpened: Boolean;
+
 implementation
 
 uses
-	Registry, Dialogs,
-	uFiles, uError, uStrings, uFormat;
+	Registry,
+	uFiles, uMsg, uStrings, uFormat;
 
+// Wave
 procedure Beep;
 begin
 	PlayWinSound(wsDefaultSound);
@@ -310,10 +327,10 @@ begin
 			Result := True;
 		end
 		else
-			ErrorMessage('Invalid wave format');
+			ErrorMsg('Invalid wave format');
 	end
 	else
-		ErrorMessage('Wave is empty');
+		ErrorMsg('Wave is empty');
 end;
 
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
@@ -323,7 +340,6 @@ var
 begin
 	if Wave <> nil then
 	begin
-//		MessageD('Destination Wave Must Be Nil', mtError, [mbOk]);
 		WaveFree(Wave);
 	end;
 	F := TFile.Create;
@@ -410,16 +426,7 @@ begin
 	BitsPerSamples := Channels * BitsPerSample;
 	DataBytes := BitsToByte(BitsPerSamples * U8(TotalSamples));
 
-	if Wave <> nil then
-	begin
-//		MessageD('Destination Wave Must Be Nil', mtError, [mbOk]);
-{		if SG(Pointer(SG(Wave) - 4)^) - 6 < WaveHead + DataBytes then
-		begin
-			WaveFree(Wave);
-//			FreeMem(Wave);
-		end;}
-	end
-	else
+	if Wave = nil then
 		GetMem(Wave, WaveHead + DataBytes);
 	Wave.Marker1 := 'RIFF';
 	Wave.BytesFollowing := DataBytes + WaveHead - 8;
@@ -706,21 +713,22 @@ procedure PlayWinSound(WinSound: TWinSound);
 var
 	Reg: TRegistry;
 	Key: string;
-	SndName: TFileName;
 begin
-	Reg := TRegistry.Create;
-	Reg.RootKey := HKEY_CURRENT_USER;
-	Key := 'AppEvents\Schemes\Apps\.Default\' + WinSoundNames[WinSound] + '\.Current';
-	if Reg.OpenKey(Key, False) then
-	begin
-		if Reg.ValueExists('') then
+	Reg := TRegistry.Create(KEY_QUERY_VALUE);
+	try
+		Reg.RootKey := HKEY_CURRENT_USER;
+		Key := 'AppEvents\Schemes\Apps\.Default\' + WinSoundNames[WinSound] + '\.Current';
+		if Reg.OpenKeyReadOnly(Key) then
 		begin
-			SndName := ReplaceF(Reg.ReadString(''), '%SystemRoot%', WinDir);
-			PlayWaveFile(SndName);
+			if Reg.ValueExists('') then
+			begin
+				PlayWaveFile(FullDir(Reg.ReadString('')));
+			end;
+			Reg.CloseKey;
 		end;
-		Reg.CloseKey;
+	finally
+		Reg.Free;
 	end;
-	Reg.Free;
 end;
 
 function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;
@@ -789,7 +797,7 @@ begin
 		s := 'WaveOut: ' + s
 	else
 		s := 'WaveIn: ' + s;
-	if FError <> 0 then ErrorMessage(s + ' (' + WaveErrorText(FError) + ')');
+	if FError <> 0 then ErrorMsg(s + ' (' + WaveErrorText(FError) + ')');
 end;
 
 procedure MMOutDone(
@@ -957,7 +965,7 @@ begin
 {	if Self is TWavePlayer then
 		waveOutBreakLoop(FHWave);}
 		while FOutCount > 0 do
-			Sleep(40);
+			Sleep(LoopSleepTime);
 		FActive := False;
 		FCloseInvoked := False;
 	end;
@@ -1270,6 +1278,188 @@ destructor TWavePlayer.Destroy;
 begin
 	FreeAndNil(PlayItems);
 	inherited Destroy;
+end;
+
+// Midi
+var
+	OpenParm: TMCI_Open_Parms;
+	PlayParm: TMCI_Play_Parms;
+	GenParm: TMCI_Generic_Parms;
+	SeekParm: TMCI_Seek_Parms;
+
+function MCIErrorToStr(const ErrorCode: U4): string;
+begin
+	SetLength(Result, 255);
+	if mciGetErrorString(ErrorCode, PChar(Result), 255) then
+		Result := PChar(Result)
+	else
+		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' Unknown error';
+end;
+
+function MCIError(const ErrorCode: SG): Boolean;
+begin
+	if ErrorCode <> 0 then
+	begin
+		Result := ErrorRetry(MCIErrorToStr(ErrorCode));
+	end
+	else
+		Result := False;
+end;
+
+function MidiMCICallBack: Boolean;
+begin
+	Result := MidiPlaying;
+end;
+
+procedure MidiMCIOpen(FileName: TFileName);
+label LRetry, LRetrySend;
+var
+	FFlags: U4;
+	FError: SG;
+	F: file;
+	ErrorCode: SG;
+begin
+	MidiPlaying := False;
+	LRetry:
+	AssignFile(F, FileName);
+	FileMode := 0; Reset(F, 1);
+	ErrorCode := IOResult;
+	CloseFile(F);
+	IOResult;
+	if ErrorCode <> 0 then
+	begin
+		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
+		Exit;
+	end;
+	LRetrySend:
+	FillChar(OpenParm, SizeOf(TMCI_Open_Parms), 0);
+
+	OpenParm.dwCallback := 0;
+	OpenParm.lpstrDeviceType := 'WaveAudio';
+	OpenParm.lpstrElementName := PChar(FileName);
+	FFlags := MCI_OPEN_ELEMENT or MCI_NOTIFY;
+
+	FError := mciSendCommand(0, mci_Open, FFlags, U4(@OpenParm));
+	MidiOpened := FError = 0;
+	if MCIError(FError) then goto LRetrySend;
+end;
+
+procedure MidiMCISeek(const SeekTo: U4);
+label LRetrySend;
+var
+	FFlags: U4;
+	FError: SG;
+begin
+	if MidiOpened = False then Exit;
+	LRetrySend:
+	SeekParm.dwTo := SeekTo;
+	SeekParm.dwCallback := 0;
+	FFlags := 0;
+	FFlags := FFlags or mci_To;
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Seek, FFlags, U4(@SeekParm));
+	if MCIError(FError) then goto LRetrySend;
+end;
+
+function MidiMCIGetPos: U4;
+label LRetrySeek;
+var
+	FFlags: U4;
+	FError: SG;
+	StatusParm: TMCI_Status_Parms;
+begin
+	Result := 0;
+	if MidiOpened = False then Exit;
+	LRetrySeek:
+	StatusParm.dwItem := mci_Status_Position;
+	StatusParm.dwTrack := 0;
+	StatusParm.dwReturn := 0;
+	FFlags := mci_Wait or mci_Status_Item;
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Status, FFlags, U4(@StatusParm));
+	if MCIError(FError) then goto LRetrySeek;
+	Result := StatusParm.dwReturn;
+end;
+
+procedure MidiMCIPause;
+label LRetrySend;
+var
+	FFlags: U4;
+	FError: SG;
+begin
+	if MidiOpened = False then Exit;
+	LRetrySend:
+	FFlags := 0;
+	GenParm.dwCallback := 0;
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Pause, FFlags, U4(@GenParm));
+	if MCIError(FError) then goto LRetrySend;
+	MidiPlaying := False;
+end;
+
+procedure MidiMCIStop;
+label LRetrySend;
+var
+	FFlags: U4;
+	FError: SG;
+begin
+	if MidiOpened = False then Exit;
+	LRetrySend:
+	MidiPlaying := False;
+	FFlags := 0;
+	GenParm.dwCallback := 0;
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Stop, FFlags, U4(@GenParm));
+	if MCIError(FError) then goto LRetrySend;
+end;
+
+procedure MidiMCIResume;
+label LRetrySend;
+var
+	FFlags: U4;
+	FError: SG;
+begin
+	if MidiOpened = False then Exit;
+	LRetrySend:
+	FFlags := 0;
+	GenParm.dwCallback := MidiHandle;
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Resume, FFlags, U4(@GenParm));
+	if MCIError(FError) then goto LRetrySend;
+	MidiPlaying := False;
+	MidiMCIPlay; // Need for Callback
+end;
+
+procedure MidiMCIPlay;
+label LRetrySend;
+var
+	FFlags: U4;
+	FError: SG;
+begin
+	if MidiOpened = False then Exit;
+	if MidiPlaying = True then Exit;
+	LRetrySend:
+	MidiPlaying := True;
+	FFlags := mci_Notify;
+	PlayParm.dwCallback := MidiHandle;
+
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Play, FFlags, U4(@PlayParm));
+	if MCIError(FError) then goto LRetrySend;
+end;
+
+procedure MidiMCIClose;
+label LRetrySend;
+var
+	FFlags: U4;
+	FError: SG;
+begin
+	if MidiOpened = False then Exit;
+	LRetrySend:
+	FFlags := 0;
+	PlayParm.dwCallback := OpenParm.dwCallback;
+	GenParm.dwCallback := 0;
+	FError := mciSendCommand(OpenParm.wDeviceID, mci_Close, FFlags, U4(@GenParm));
+	if FError = 0 then
+	begin
+		MidiOpened := False;
+		MidiPlaying := False;
+	end;
+	if MCIError(FError) then goto LRetrySend;
 end;
 
 initialization

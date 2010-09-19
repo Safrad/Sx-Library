@@ -1,4 +1,4 @@
-object fLogo: TfLogo
+object fSplash: TfSplash
   Left = 427
   Top = 333
   Cursor = crHourGlass
@@ -22,13 +22,14 @@ object fLogo: TfLogo
   OldCreateOrder = False
   Position = poScreenCenter
   OnClose = FormClose
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnMouseDown = FormMouseDown
-  OnMouseMove = ImageLogoMouseMove
+  OnMouseMove = FormMouseMove
   PixelsPerInch = 96
   TextHeight = 13
-  object Timer1: TDTimer
-    Enabled = False
+  object Timer1: TTimer
+    Interval = 40
     OnTimer = Timer1Timer
     Left = 16
     Top = 8

@@ -52,8 +52,6 @@ type
 		procedure SetColorA(Value: TColor);
 		procedure SetColorD(Value: TColor);
 		procedure SetSize(Value: U1);
-	protected
-
 	public
 		constructor Create;
 		destructor Destroy; override;

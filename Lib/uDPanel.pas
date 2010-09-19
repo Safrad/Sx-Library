@@ -13,7 +13,7 @@ interface
 {$R *.RES}
 uses
 	uTypes, uDBitmap,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls;
 
 type
@@ -28,7 +28,6 @@ type
 
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 	protected
-		{ Protected declarations }
 		procedure Paint; override;
 	public
 		{ Public declarations }
@@ -46,7 +45,7 @@ procedure Register;
 
 implementation
 
-uses uGraph;
+uses uGraph, uColor;
 
 procedure TDPanel.SetLayout(Value: TTextLayout);
 begin

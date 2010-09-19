@@ -48,7 +48,7 @@ implementation
 
 uses
 	Dialogs,
-	uGraph, uDBitmap, uError;
+	uGraph, uDBitmap, uMsg;
 
 {
 procedure glBindTexture(target: GLenum; texture: GLuint); external opengl32 name 'glBindTexture';
@@ -125,8 +125,10 @@ begin
 {		else
 			ErrorMessage(ErrorMes(GetLastError));}
 	end
+	{$ifopt d+}
 	else
-		MessageD('OpenGL already created', mtError, [mbOk]);
+		IE('OpenGL already created');
+	{$endif}
 end;
 
 procedure BeforeDraw;
@@ -177,8 +179,10 @@ begin
 		wglDeleteContext(hrc); hrc := 0;
 		Canv := nil;
 	end
+	{$ifopt d+}
 	else
-		MessageD('OpenGL already freed', mtError, [mbOk]);
+		IE('OpenGL already destroyed');
+	{$endif}
 end;
 
 procedure glTextOutE(Canvas: TCanvas; Text: string);

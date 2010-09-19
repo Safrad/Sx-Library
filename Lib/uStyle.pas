@@ -13,7 +13,7 @@ interface
 uses
 	uTypes, uDForm, uDBitmap, uDIni,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, StdCtrls, uDButton, ExtCtrls, uDImage;
+	StdCtrls, uDButton, ExtCtrls, uDImage;
 
 type
 	TOnApplyStyle = procedure(Style: TDrawStyle);

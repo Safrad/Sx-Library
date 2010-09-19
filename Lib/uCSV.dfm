@@ -1,6 +1,6 @@
 object fFormats: TfFormats
-  Left = 344
-  Top = 175
+  Left = 550
+  Top = 280
   Width = 294
   Height = 117
   HorzScrollBar.Tracking = True

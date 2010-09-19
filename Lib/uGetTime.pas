@@ -13,7 +13,7 @@ interface
 uses
 	uTypes,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm;
+	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit;
 
 type
 	TOnApplyTime = procedure(Value: S8);
@@ -33,7 +33,7 @@ type
     LabelD: TLabel;
 		ButtonOk: TDButton;
 		ButtonCancel: TDButton;
-		EditInput: TEdit;
+		EditInput: TDEdit;
 		ButtonMin: TDButton;
 		ButtonCur: TDButton;
 		ButtonMax: TDButton;
@@ -54,8 +54,8 @@ type
     procedure ButtonOkClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure SpinButtonHMSDChangingEx(Sender: TObject;
-      var AllowChange: Boolean; NewValue: Smallint;
-      Direction: TUpDownDirection);
+			var AllowChange: Boolean; NewValue: Smallint;
+			Direction: TUpDownDirection);
 	private
 		{ Private declarations }
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: S8;
@@ -80,7 +80,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uStrings, uError, uInput, uParser, uFormat;
+	uStrings, uError, uInput, uParser, uFormat, uParserMsg;
 
 var
 	fGetTime: TfGetTime;
@@ -253,8 +253,8 @@ procedure TfGetTime.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal);
-	MesToMemo(EditError);
-	ClearErrors;
+	MesToStrings(EditError.Lines);
+	ParserMsgClear;
 
 	InitButtons;
 	InitTrackBar;

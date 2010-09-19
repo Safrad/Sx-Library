@@ -16,7 +16,6 @@ type
 	TMatrix = class(TObject)
 	private
 		FXC, FYC: SG;
-	protected
 	public
 		Data: array of array of F8; // [y, x]
 
@@ -133,7 +132,7 @@ begin
 		Result := Result + '(';
 		for x := 0 to FXC - 1 do
 		begin
-			Result := Result + FToS(Data[x, y], True) + ', ';
+			Result := Result + FToS(Data[x, y], ofDisplay) + ', ';
 		end;
 		if FXC > 0 then
 			SetLength(Result, Length(Result) - 2);

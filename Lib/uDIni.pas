@@ -13,7 +13,7 @@ interface
 uses
 	uTypes,
 	SysUtils
-	{$ifndef NoGUI}
+	{$ifndef Console}
 	, uDView, uDImage, uDButton,
 	Classes, Forms, ComCtrls, StdCtrls, Controls, Menus
 	{$endif};
@@ -55,7 +55,7 @@ type
 		procedure WriteNum(const Section, Ident: string; Value: S4); overload;
 		procedure WriteNum(const Section, Ident: string; Value: S8); overload;
 		procedure WriteNum(const Section, Name: string; Value: FA); overload;
-		{$ifndef NoGUI}
+		{$ifndef Console}
 		function ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteDate(const Section, Name: string; Value: TDateTime);
 		function ReadTime(const Section, Name: string; Default: TDateTime): TDateTime;
@@ -79,7 +79,7 @@ type
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: FG; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: FA; const Save: BG); overload;
-		{$ifndef NoGUI}
+		{$ifndef Console}
 		procedure RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		procedure RWTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
@@ -106,7 +106,7 @@ type
 		procedure SaveToFile(FileName: TFileName);
 		procedure Save;
 
-		{$ifndef NoGUI}
+		{$ifndef Console}
 		procedure ReadSection(const Section: string; Strings: TStrings);
 		procedure RWStrings(const Section: string; Val: TStrings; const Save: BG);
 		procedure RWFormPos(Form: TForm; const Save: BG);
@@ -145,7 +145,7 @@ implementation
 uses
 	Windows, Math,
 	uMath, uFiles, uStrings, uFormat
-	{$ifndef NoGUI}, uMenus, uError, uInput, uParser, uSystem{$endif};
+	{$ifndef Console}, uMenus, uInput, uParser, uSystem{$endif};
 
 procedure TDIniFile.AddSection(Section: string);
 var NewSize: Integer;
@@ -299,7 +299,7 @@ begin
 	WriteString(Section, Name, FToS(Value, ofIO));
 end;
 
-{$ifndef NoGUI}
+{$ifndef Console}
 function TDIniFile.ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 var
 	DateStr: string;
@@ -493,8 +493,11 @@ begin
 				else
 				begin
 					InLineIndex := 1;
-					AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
-					FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt); // D???
+					if FSectionCount > 0 then
+					begin
+						AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
+						FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt); // TODO  : ?
+					end;
 				end;
 			end;
 			FInMemory := True;
@@ -673,7 +676,7 @@ begin
 	end;
 end;
 
-{$ifndef NoGUI}
+{$ifndef Console}
 procedure TDIniFile.RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 begin
 	if Save = False then
@@ -798,7 +801,7 @@ begin
 		Reg := TRegistry.Create;
 		try
 			Reg.RootKey := HKEY_CURRENT_USER;
-			Key := 'Software\SafranekDavid\' + Application.Title;
+			Key := 'Software\Safrad\' + Application.Title;
 			if Reg.KeyExists(Key) then
 			begin
 				Reg.OpenKey(Key, False);
@@ -812,7 +815,7 @@ begin
 		end;
 		LIniFileName := IniFileName;
 	end;}
-	MainIni := TDIniFile.Create(DelFileExt(ExeFileName) + '.ini');
+	MainIni := TDIniFile.Create(MainIniFileName);
 end;
 
 procedure MainIniFree;
@@ -831,7 +834,7 @@ begin
 		Reg := TRegistry.Create;
 		try
 			Reg.RootKey := HKEY_CURRENT_USER;
-			Reg.OpenKey('Software\SafranekDavid\' + Application.Title, True);
+			Reg.OpenKey('Software\Safrad\' + Application.Title, True);
 			Reg.DeleteValue('IniFile');
 			Reg.CloseKey;
 		finally
@@ -843,7 +846,7 @@ begin
 		Reg := TRegistry.Create;
 		try
 			Reg.RootKey := HKEY_CURRENT_USER;
-			Reg.OpenKey('Software\SafranekDavid\' + Application.Title, True);
+			Reg.OpenKey('Software\Safrad\' + Application.Title, True);
 			Reg.WriteString('IniFile', ShortDir(IniFileName));
 			Reg.CloseKey;
 		finally
@@ -852,7 +855,7 @@ begin
 	end;}
 end;
 
-{$ifndef NoGUI}
+{$ifndef Console}
 
 procedure TDIniFile.ReadSection(const Section: string; Strings: TStrings);
 var
@@ -1009,7 +1012,7 @@ begin
 	end;
 
 	RWDImage(TDImage(DView), Save);
-	DView.ChangeColumns;
+	DView.ChangeColumnsWidth;
 end;
 
 procedure TDIniFile.RWListView(ListView: TListView; const Save: BG);
@@ -1169,4 +1172,8 @@ begin
 end;
 {$endif}
 
+initialization
+
+finalization
+	MainIniFree;
 end.
