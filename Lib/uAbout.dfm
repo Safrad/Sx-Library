@@ -169,13 +169,13 @@ object fAbout: TfAbout
     Transparent = True
     Layout = tlCenter
   end
-  object LabelFirstRelease: TLabel
+  object LabelFirstCopyright: TLabel
     Left = 152
-    Top = 104
+    Top = 128
     Width = 65
     Height = 18
     AutoSize = False
-    Caption = 'First Release'
+    Caption = 'Copyright'
     Color = clBtnFace
     ParentColor = False
     Transparent = True
@@ -196,11 +196,11 @@ object fAbout: TfAbout
   end
   object LabelRelease: TLabel
     Left = 152
-    Top = 129
+    Top = 105
     Width = 65
     Height = 18
     AutoSize = False
-    Caption = 'Release'
+    Caption = 'Release Date'
     Color = clBtnFace
     ParentColor = False
     Transparent = True
@@ -236,15 +236,18 @@ object fAbout: TfAbout
     TabOrder = 0
     OnClick = ButtonOkClick
   end
-  object EditFirstRelease: TDEdit
+  object EditCopyright: TDEdit
     Left = 224
-    Top = 104
+    Top = 128
     Width = 65
     Height = 18
     BevelKind = bkSoft
     BorderStyle = bsNone
+    Lines.Strings = (
+      '1999-2007')
     ParentColor = True
     TabOrder = 4
+    WantReturns = False
   end
   object PanelRC: TDEdit
     Left = 56
@@ -255,6 +258,7 @@ object fAbout: TfAbout
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 11
+    WantReturns = False
   end
   object PanelTRT: TDEdit
     Left = 152
@@ -265,6 +269,7 @@ object fAbout: TfAbout
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 12
+    WantReturns = False
   end
   object PanelNRT: TDEdit
     Left = 152
@@ -275,6 +280,7 @@ object fAbout: TfAbout
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 10
+    WantReturns = False
   end
   object EditAuthor: TDEdit
     Left = 56
@@ -286,6 +292,7 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 6
+    WantReturns = False
   end
   object EditWeb: TDEdit
     Left = 80
@@ -298,6 +305,7 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 9
+    WantReturns = False
     OnClick = EditWebClick
   end
   object EditEMail: TDEdit
@@ -311,6 +319,7 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 8
+    WantReturns = False
     OnClick = EditEMailClick
   end
   object EditIcq: TDEdit
@@ -324,6 +333,7 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 7
+    WantReturns = False
     OnClick = EditIcqClick
   end
   object SysInfo1: TDButton
@@ -384,13 +394,14 @@ object fAbout: TfAbout
   end
   object EditRelease: TDEdit
     Left = 224
-    Top = 129
+    Top = 105
     Width = 65
     Height = 18
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 5
+    WantReturns = False
   end
   object EditVersion: TDEdit
     Left = 200
@@ -403,6 +414,7 @@ object fAbout: TfAbout
     ParentBiDiMode = False
     ParentColor = True
     TabOrder = 3
+    WantReturns = False
   end
   object Timer1: TDTimer
     ActiveOnly = True

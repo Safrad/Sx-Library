@@ -2366,7 +2366,7 @@ begin
 			end;
 			if fxCount > 0 then
 			begin
-				SortS4(False, False, PArraySG(@AIndex[0]), PArrayS4(@AValue[0]), fxCount);
+				SortS4(False, False, PArraySG(AIndex), PArrayS4(AValue), fxCount);
 
 				// Draw
 				fx := 0;

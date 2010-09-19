@@ -1,9 +1,17 @@
+//* File:     Lib\uProjectInfo.pas
+//* Created:  2006-06-22
+//* Modified: 2007-02-17
+//* Version:  X.X.35.X
+//* Author:   Safranek David (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.webzdarma.cz
+
 unit uProjectInfo;
 
 interface
 
 uses
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+	Windows, Messages, SysUtils, Classes, Graphics,
 	TypInfo;
 
 type
@@ -13,7 +21,6 @@ type
 		piCompanyName,
 		piFileDescription,
 		piFileVersion,
-		piFirstRelease,
 		piInternalName,
 		piLegalCopyright,
 		piLegalTradeMark,
@@ -53,7 +60,7 @@ var
 	pcBuf: PWideChar;
 	pcValue: PChar;
 begin
-	sAppName := Application.ExeName;
+	sAppName := ParamStr(0);
 	iAppSize := GetFileVersionInfoSize(PChar(sAppName), iAppSize);
 	if iAppSize > 0 then
 	begin

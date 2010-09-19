@@ -14,7 +14,7 @@ uses
 	uTypes,
 	SysUtils;
 type
-	TIndex = UG;
+	TIndex = SG;
 
 	{ Warning!
 		Dynamic variables must be finalized before removed
@@ -29,7 +29,7 @@ type
 		FItemSize: UG;
 		FItemSh: UG;
 		FItemMemSize: UG;
-		FItemCount: UG;
+		FItemCount: TIndex;
 		FItemAlloc: UG;
 		procedure NewData(const Index: TIndex);
 		procedure SetItemSize(const Value: UG);
@@ -69,7 +69,7 @@ type
 		property ItemSize: UG read FItemSize write SetItemSize;
 		property ItemSh: UG read FItemSh; // Binary shift
 		property ItemMemSize: UG read FItemMemSize; // Item size in memory
-		property Count: UG read FItemCount;
+		property Count: TIndex read FItemCount;
 		property Items[const Index: TIndex]: Pointer read Get write Put; default; // operator []
 	end;
 
@@ -174,8 +174,8 @@ begin
 	begin
 		if (Index < FItemCount) then
 		begin
-			Move(Pointer(UG(Data) + (Index + 1) shl FItemSh)^,
-				Pointer(UG(Data) + Index shl FItemSh)^, (FItemCount - Index - 1) shl FItemSh);
+			Move(Pointer(TIndex(Data) + (Index + 1) shl FItemSh)^,
+				Pointer(TIndex(Data) + Index shl FItemSh)^, (FItemCount - Index - 1) shl FItemSh);
 			Dec(FItemCount);
 		end;
 	end
@@ -221,11 +221,11 @@ begin
 	end;
 	if Index < FItemCount then
 	begin
-		Move(Pointer(UG(Data) + Index shl FItemSh)^,
-			Pointer(UG(Data) + (Index + 1) shl FItemSh)^, (FItemCount - Index) shl FItemSh);
+		Move(Pointer(TIndex(Data) + Index shl FItemSh)^,
+			Pointer(TIndex(Data) + (Index + 1) shl FItemSh)^, (FItemCount - Index) shl FItemSh);
 	end;
 	if FClearCreated then
-		FillChar(Pointer(UG(Data) + Index shl FItemSh)^, ItemSize, 0);
+		FillChar(Pointer(TIndex(Data) + Index shl FItemSh)^, ItemSize, 0);
 	Inc(FItemCount);
 end;
 
@@ -264,7 +264,7 @@ begin
 		if FItemSize <> 0 then
 		begin
 			NewData(Index);
-			Result := Pointer(UG(Data) + Index shl FItemSh);
+			Result := Pointer(TIndex(Data) + Index shl FItemSh);
 		end
 		else
 			Result := nil;

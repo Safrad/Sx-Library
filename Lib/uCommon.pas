@@ -28,21 +28,12 @@ procedure CommonFree;
 implementation
 
 uses
-	uTypes, uDIni, uSplash, uMenus, MultiIns, uFiles, uAbout, uLog, uSounds, uFileExt,
+	uTypes, uDIni, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt,
 	Classes, Menus, Windows, ExtCtrls;
-
-var
-	ViewSplashScreen: BG;
 
 procedure CommonCreate(ReloadIni: TWatchFileChanged);
 begin
 	InitInstance;
-	if (FirstInst = False) then
-	begin
-		// TODO: Send command line arguments to first instance
-		// SendMessage();
-		Halt(1);
-	end;
 	InitializeLog;
 	MainIniCreate;
 	WatchAddFile(MainIniFileName, ReloadIni);
@@ -55,28 +46,29 @@ end;
 procedure CommonForm(const Form: TDForm);
 var
 	i: SG;
-	MainMenu1: TMainMenu;
+	MainMenu: TMainMenu;
 begin
-	MainMenu1 := nil;
+	MainMenu := nil;
 	if Form <> nil then
 		for i := 0 to Form.ComponentCount - 1 do
 		begin
-			if Form.Components[i] is TMenu then
+			if Form.Components[i] is TMainMenu then
 			begin
-				if Form.Components[i].Name = 'MainMenu1' then
-				begin
-					MainMenu1 := TMainMenu(Form.Components[i]);
-					CommonFileMenu(TMenu(Form.Components[i]));
-				end;
-				MenuSet(Form.Components[i]);
+				MainMenu := TMainMenu(Form.Components[i]);
+				CommonFileMenu(MainMenu);
+				MenuSet(MainMenu);
 			end;
+{			else if Form.Components[i] is TMenu then
+			begin
+				MenuSet(Form.Components[i]);
+			end;}
 		end;
 
-	if MainMenu1 <> nil then
+	if MainMenu <> nil then
 		for i := 0 to Form.ComponentCount - 1 do
 		begin
 			if (Form.Components[i] is TPanel) and (Form.Components[i].Name = 'PanelTool') then
-				IconsFromMenu(MainMenu1, TPanel(Form.Components[i]));
+				IconsFromMenu(MainMenu, TPanel(Form.Components[i]));
 		end;
 
 	HideSplashScreen;
@@ -86,7 +78,7 @@ procedure CommonFree;
 begin
 	WatchRemoveFile(MainIniFileName);
 	AboutRW(True);
-//	MainIni.WriteBool('Options', 'ViewSplashScreen', ViewSplashScreen);
+	MainIni.WriteBool('Options', 'ViewSplashScreen', ViewSplashScreen);
 	FreeSounds;
 	FreeFileExt;
 //	MainIniFree;

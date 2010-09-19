@@ -623,29 +623,37 @@
 		0: Exit;
 		1:
 		begin
+			{$ifopt d+}Inc(SortCompared);{$endif}
 			if AValue[iLo] > AValue[iHi] then
 			begin
 				Exchange(AValue[iLo], AValue[iHi]);
 				Exchange(AIndex[iLo], AIndex[iHi]);
+				{$ifopt d+}Inc(SortSwaped);{$endif}
 			end;
 			Exit;
 		end;
 		2:
 		begin
+				{$ifopt d+}Inc(SortCompared);{$endif}
 			if AValue[iLo] > AValue[iLo + 2] then
 			begin
 				Exchange(AValue[iLo], AValue[iLo + 2]);
 				Exchange(AIndex[iLo], AIndex[iLo + 2]);
+				{$ifopt d+}Inc(SortSwaped);{$endif}
 			end;
+			{$ifopt d+}Inc(SortCompared, 2);{$endif}
 			if AValue[iLo] > AValue[iLo + 1] then
 			begin
+				{$ifopt d+}Dec(SortCompared);{$endif}
 				Exchange(AValue[iLo], AValue[iLo + 1]);
 				Exchange(AIndex[iLo], AIndex[iLo + 1]);
+				{$ifopt d+}Inc(SortSwaped);{$endif}
 			end
 			else if AValue[iLo + 1] > AValue[iLo + 2] then
 			begin
 				Exchange(AValue[iLo + 1], AValue[iLo + 2]);
 				Exchange(AIndex[iLo + 1], AIndex[iLo + 2]);
+				{$ifopt d+}Inc(SortSwaped);{$endif}
 			end;
 			Exit;
 
@@ -691,8 +699,18 @@
 //    if D >= 3 then
 		Mid := AValue[(Lo + Hi) div 2];
 		repeat
-			while AValue[Lo] < Mid do Inc(Lo);
-			while AValue[Hi] > Mid do Dec(Hi);
+			while True do
+			begin
+				{$ifopt d+}Inc(SortCompared);{$endif}
+				if AValue[Lo] >= Mid then Break;
+				Inc(Lo);
+			end;
+			while True do
+			begin
+				{$ifopt d+}Inc(SortCompared);{$endif}
+				if AValue[Hi] <= Mid then Break;
+				Dec(Hi);
+			end;
 			if Lo > Hi then
 				Break
 			else
@@ -827,14 +845,24 @@
 					end;
 				end;
 			end;
+			{$ifopt d+}Inc(SortSwaped, M);{$endif}
 			for i := 0 to M - 1 do
 			begin
-				{$ifopt d+}Inc(SortSwaped);{$endif}
 				AValue[i + I1F] := MeV[i];
 				AIndex[i + I1F] := MeI[i];
 			end;
-{     Move(AValue[I1F], MeV[0], SizeOf(AValue[0]) * M);
-			Move(AIndex[I1F], MeI[0], SizeOf(AIndex[0]) * M);}
+			if M = 2 then
+			begin
+				AValue[I1F] := MeV[0];
+				AIndex[I1F] := MeI[0];
+				AValue[I1F + 1] := MeV[1];
+				AIndex[I1F + 1] := MeI[1];
+			end
+			else
+			begin
+				Move(MeV[0], AValue[I1F], SizeOf(AValue[0]) * M);
+				Move(MeI[0], AIndex[I1F], SizeOf(AIndex[0]) * M);
+			end;
 		end;
 
 		procedure Sort(F, T: SG);
@@ -842,7 +870,7 @@
 			I1F, I1T, I2F, I2T: SG;
 		begin
 			I1F := F;
-			I1T := (F + T) div 2;
+			I1T := F + (T - F) div 2; //(F + T) div 2;
 			I2F := I1T + 1;
 			I2T := T;
 
@@ -1015,11 +1043,11 @@ begin
 		begin
 		{$endif}
 			if Stability then
-//				case MaxIndex of
-//				1..70:
+				case MaxIndex of
+				1..70:
 					InsertionSort(AIndex, AValue, MaxIndex)
-//				else MergeSort; D??? DNW
-//				end
+				else MergeSort(AIndex, AValue, MaxIndex);
+				end
 			else
 				QuickSort(AIndex, AValue, MinIndex, MaxIndex);
 		{$ifopt d+}
@@ -1040,9 +1068,10 @@ begin
 	end;
 	if Reverse then
 	begin
+		Reverse4(AIndex[0], MaxIndex - MinIndex + 1);
 		for i := 0 to (MaxIndex - 1) div 2 do
 		begin
-			Exchange(AIndex[i], AIndex[MaxIndex - i]);
+///			Exchange(AIndex[i], AIndex[MaxIndex - i]);
 			Exchange(AValue[i], AValue[MaxIndex - i]);
 		end;
 	end;

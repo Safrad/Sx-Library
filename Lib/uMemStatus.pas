@@ -6,9 +6,9 @@
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.webzdarma.cz
 
-unit uMemStatus {platform};
+unit uMemStatus;
 
-{ WARN SYMBOL_PLATFORM OFF}
+{$WARN SYMBOL_PLATFORM OFF}
 
 interface
 

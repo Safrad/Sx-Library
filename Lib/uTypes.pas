@@ -10,11 +10,6 @@ unit uTypes;
 
 interface
 
-const
-	MyName = 'David Safranek (Safrad)';
-	MyEMail = 'safrad at email.cz';
-	MyWeb = 'http://safrad.webzdarma.cz';
-
 {$ifdef VER130} // Delphi = 5
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;

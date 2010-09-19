@@ -25,13 +25,13 @@ type
 		LabelRunCount: TLabel;
 		LabelNowRunTime: TLabel;
 		LabelTotalRunTime: TLabel;
-    EditFirstRelease: TDEdit;
+    EditCopyright: TDEdit;
 		PanelRC: TDEdit;
 		PanelTRT: TDEdit;
 		PanelNRT: TDEdit;
 		ImageName: TDImage;
 		LabelAuthor: TLabel;
-    LabelFirstRelease: TLabel;
+    LabelFirstCopyright: TLabel;
 		LabelEMail: TLabel;
 		EditAuthor: TDEdit;
 		EditWeb: TDEdit;
@@ -76,10 +76,8 @@ type
 		procedure LoadFile(AboutFile: TFileName);
 	end;
 
-procedure ReadMe;
-procedure Homepage;
-{procedure Help; overload;
-procedure Help(HRef: string); overload;}
+procedure OpenReadMe;
+procedure OpenHomepage;
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
 procedure AboutRW(const Save: Boolean);
 var
@@ -94,33 +92,22 @@ implementation
 {$R *.DFM}
 uses
 	uAPI, uSimulation,
-	uProjectInfo,
+	uProjectInfo, uUser,
 	uGraph, uDIni, uScreen, uSysInfo, uFiles, uMsg, uError, uData, uWave, uColor,
 	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uFormat, uLog;
 var
 	LMemClock: U8;
 	RunProgramTime: U8;
 
-procedure ReadMe;
+procedure OpenReadMe;
 begin
 	APIOpen(WorkDir + 'ReadMe.htm');
 end;
 
-procedure Homepage;
+procedure OpenHomepage;
 begin
-	APIOpen(MyWeb + '/Software/' + DelFileExt(ExtractFileName(ExeFileName)) + '.html');
+	APIOpen(HomePage);
 end;
-
-{
-procedure Help;
-begin
-	ExtOpenFile(WorkDir + 'Help.rtf');
-end;
-
-procedure Help(HRef: string);
-begin
-	ExtOpenFile(WorkDir + 'Help.htm#' + HRef);
-end;}
 
 procedure ExecuteAbout2(AOwner: TComponent; FileName: TFileName; const Modal: Boolean);
 var
@@ -133,12 +120,11 @@ begin
 		fAbout := TfAbout.Create(AOwner);
 		fAbout.EditAuthor.Text := Info.GetProjectInfo(piAuthor);
 		fAbout.EditVersion.Text := Info.GetProjectInfo(piFileVersion);
-		fAbout.EditFirstRelease.Text := Info.GetProjectInfo(piFirstRelease);
 		fAbout.EditRelease.Text := Info.GetProjectInfo(piRelease);;
+		Info.Free;
 		BeginLongOperation;
 		fAbout.LoadFile(FileName);
 		EndLongOperation(False);
-		Info.Free;
 	end
 	else
 		fAbout.LoadFile(FileName);
@@ -401,7 +387,7 @@ procedure TfAbout.ImageAboutFill(Sender: TObject);
 var
 	BitmapAbout: TDBitmap;
 	HClock: U1;
-	i: UG;
+	i: SG;
 	Flash: ^TFlash;
 begin
 	BitmapAbout := ImageAbout.Bitmap;
@@ -485,6 +471,7 @@ initialization
 finalization
 	FreeAndNil(Flashs);
 {$ifopt d+}
+// TODO: Memory Leaks
 {	if (MemCount + 22 < AllocMemCount) {or
 		(MemSize + 6508 < AllocMemSize) then
 			Warning('Memory Allocation Problem');}

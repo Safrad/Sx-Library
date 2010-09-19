@@ -1670,6 +1670,7 @@ begin
 end;
 
 function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
+label LRetry;
 
 	function ReadComp: Boolean;
 	var Stream: TMemoryStream;
@@ -1865,9 +1866,10 @@ var
 begin
 	FreeImage;
 	Result := False;
+	LRetry:
 	if FileExists(FileName) = False then
 	begin
-		IOErrorMessage(FileName, 'File not found.');
+		if IOErrorMessageRetry(FileName, 'File not found.') then goto LRetry;
 		Exit;
 	end;
 	Ext := LowerCase(ExtractFileExt(FileName));

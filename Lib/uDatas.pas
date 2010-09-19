@@ -49,14 +49,14 @@ end;
 procedure TDatas.BeginUpdate;
 begin
 	if (ItemAddr <> nil) and (ItemSize <> 0) then
-		if (FIndex >= 0) and (UG(FIndex) < Count) then
+		if (FIndex >= 0) and (FIndex < Count) then
 			Move(ItemAddr^, Pointer(UG(GetFirst) + UG(FIndex) * ItemMemSize)^, ItemSize);
 end;
 
 procedure TDatas.EndUpdate;
 begin
 	if (ItemAddr <> nil) and (ItemSize <> 0) then
-		if (FIndex >= 0) and (UG(FIndex) < Count) then
+		if (FIndex >= 0) and (FIndex < Count) then
 			Move(Pointer(UG(GetFirst) + UG(FIndex) * ItemMemSize)^, ItemAddr^, ItemSize)
 		else
 			FillChar(ItemAddr^, ItemSize, 0);

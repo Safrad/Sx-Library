@@ -83,17 +83,19 @@ uses
 
 type
 	PSound = ^TSound;
-	TSound = packed record // 512
+	TSound = packed record // 16
 		Wave: PWave; // 4
 		Enabled, Used: B1; // 2
-		Name: string[255 - 6]; // 250
-		FileName: string[255]; // 256
+		Reserved: array[0..1] of U1;
+		Name: string; // 4
+		FileName: TFileName; // 4
 	end;
 	PDSound = ^TDSound;
-	TDSound = packed record // 256
+	TDSound = packed record // 16
 		Wave: PWave; // 4
-		Enabled: B2; // 2
-		FileName: string[249]; // 250
+		Enabled: B1; // 1
+		Reserved: array[0..6] of U1; // 3
+		FileName: TFileName; // 4
 	end;
 
 var
@@ -152,7 +154,7 @@ begin
 	P := Sounds.GetFirst;
 	for i := 0 to Sounds.Count - 1 do
 	begin
-		P.FileName := ShortDir(MainIni.RWStringF(Section, P.Name, P.FileName, FullDir(P.FileName), Save));
+		MainIni.RWFileName(Section, P.Name, P.FileName, Save);
 		MainIni.RWBool(Section, P.Name + ' Enabled', P.Enabled, Save);
 		Inc(P);
 	end;
@@ -197,7 +199,7 @@ begin
 	for i := 0 to Sounds.Count - 1 do
 	begin
 		if P.FileName <> '' then
-			WaveReadFromFile(P.Wave, FullDir(P.FileName));
+			WaveReadFromFile(P.Wave, P.FileName);
 		Inc(P);
 	end;
 end;
@@ -242,7 +244,7 @@ begin
 		begin
 			P.Enabled := False;
 			if P.Wave = nil then
-				WaveReadFromFile(P.Wave, FullDir(P.FileName));
+				WaveReadFromFile(P.Wave, P.FileName);
 			if P.Wave <> nil then
 			begin
 				P.Enabled := True;
@@ -270,7 +272,7 @@ begin
 	if P.Enabled then
 	begin
 		if P.Wave = nil then
-			WaveReadFromFile(P.Wave, FullDir(P.FileName));
+			WaveReadFromFile(P.Wave, P.FileName);
 		if (P.Wave <> nil) then
 		begin
 			if WavePlayer = nil then
@@ -503,7 +505,7 @@ begin
 		else
 		begin
 			if Sound.FileName <> '' then
-				WaveReadFromFile(Sound.Wave, FullDir(Sound.FileName));
+				WaveReadFromFile(Sound.Wave, Sound.FileName);
 		end;
 
 		Sound.Enabled := DSound.Enabled;
@@ -580,7 +582,6 @@ var
 	P: PDSound;
 	P2: PSound;
 	SoundsC: BG;
-	F: TFileName;
 begin
 	SoundsC := False;
 	Tag := TDButton(Sender).Tag;
@@ -599,7 +600,7 @@ begin
 				begin
 					if P.Wave = nil then
 					begin
-						WaveReadFromFile(P.Wave, FullDir(P.FileName));
+						WaveReadFromFile(P.Wave, P.FileName);
 					end;
 					if P.Wave <> nil then
 						PlayWave(P.Wave);
@@ -617,11 +618,9 @@ begin
 			end;
 			3:
 			begin
-				F := FullDir(P.FileName);
-				if ExecuteDialog(OpenDialog1, F) then
+				if ExecuteDialog(OpenDialog1, P.FileName) then
 				begin
-					P.FileName := ShortDir(F);
-					WaveReadFromFile(P.Wave, FullDir(P.FileName));
+					WaveReadFromFile(P.Wave, P.FileName);
 					SoundsC := True;
 				end;
 			end;

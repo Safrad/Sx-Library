@@ -6,21 +6,23 @@ uses
 	uTypes,
 	SysUtils;
 
-function GetParamValue(const ParamName: string): string;
-function UsedAllParams: BG;
-
 const
-	paExit = -1;
-	paFile = -2;
+	paFile = '--file';
 var
 	AcceptFile: BG;
 	ParamFile: TFileName;
-	ParamIndex: SG = 0;
+type
+	TParamProcedure = procedure(const Value: string);
 
-procedure AddParams(const AParams: array of string; const ADesParams: array of string);
-function CompareParams: SG;
-procedure CloseParams;
-procedure HelpParams;
+procedure RegisterParam(const Param: string; const DesParam: string; const ParamProcedure: TParamProcedure);
+//function GetParamValue(const ParamName: string): string;
+//function UsedAllParams: BG;
+
+//procedure AddParams(const AParams: array of string; const ADesParams: array of string);
+{function CompareParams: SG;
+procedure CloseParams;}
+procedure HelpParams(const Value: string = '');
+procedure ReadCommandLine(const CmdLine: string);
 
 implementation
 
@@ -29,7 +31,7 @@ uses
 
 var
 	UsedParams: array of BG;
-
+{
 function GetParamValue(const ParamName: string): string;
 var
 	i: SG;
@@ -48,7 +50,8 @@ begin
 		end;
 	end;
 end;
-
+}
+{
 function UsedAllParams: BG;
 var i: SG;
 begin
@@ -61,14 +64,37 @@ begin
 		end;
 	end;
 	Result := True;
-end;
-
+end;}
 
 var
 	Params: array of string;
 	DesParams: array of string;
+	ParamProcedures: array of TParamProcedure;
+	paFileIndex: SG;
 	IllegalParam: BG = False;
 
+procedure RegisterParam(const Param: string; const DesParam: string; const ParamProcedure: TParamProcedure);
+var
+	j: SG;
+begin
+	Assert(Param <> '');
+
+	j := Length(Params);
+	if Param = paFile then
+		paFileIndex := j;
+	SetLength(Params, j + 1);
+	Params[j] := DelCharsF(Param, ' ');
+
+	j := Length(DesParams);
+	SetLength(DesParams, j + 1);
+	DesParams[j] := DesParam;
+
+	j := Length(ParamProcedures);
+	SetLength(ParamProcedures, j + 1);
+	ParamProcedures[j] := ParamProcedure;
+end;
+
+{
 procedure AddParams(const AParams: array of string; const ADesParams: array of string);
 var
 	i: SG;
@@ -86,91 +112,8 @@ begin
 	for i := 0 to Length(ADesParams) - 1 do
 		DesParams[i + j] := ADesParams[i];
 end;
-
-function CompareParams: SG;
-label LAgain;
-var
-	i: SG;
-	Par: string;
-	AF: BG;
-begin
-	LAgain:
-	if ParamIndex >= ParamCount then
-		Result := paExit
-	else
-	begin
-		Par := ParamStr(ParamIndex + 1);
-		AF := AcceptFile;
-		if Par[1] = '-' then
-		begin
-			Delete(Par, 1, 1);
-			AF := False;
-		end
-		else if Par[1] = '/' then
-		begin
-			Delete(Par, 1, 1);
-			AF := False;
-		end;
-		Result := paFile;
-		for i := 0 to Length(Params) - 1 do
-		begin
-			if StartStr(UpperCase(Par), UpperCase(Params[i])) then
-			begin
-				if i = 0 then
-				begin
-					HelpParams;
-					Inc(ParamIndex);
-					goto LAgain;
-				end;
-
-				if i = 1 then
-				begin
-					Inc(ParamIndex);
-					{$ifndef Console}
-					Application.ShowMainForm := False;
-					{$else}
-					// TODO: Minimize
-					{$endif}
-					goto LAgain;
-				end;
-
-				Result := i - 2 {Common parameters};
-				Break;
-			end;
-		end;
-		if Result = paFile then
-		begin
-			if AF then
-			begin
-				ParamFile := FullDir(Par);
-				if (not FileExists(ParamFile)) and (not DirectoryExists(ParamFile)) then
-				begin
-					Warning('Illegal command line parameter' + LineSep +
-						Par + LineSep +
-						'Command line file not found' + LineSep + ParamFile);
-					IllegalParam := True;
-					Inc(ParamIndex);
-					goto LAgain;
-				end;
-			end
-			else
-			begin
-				Warning('Illegal command line parameter' + LineSep + Par);
-				IllegalParam := True;
-				Inc(ParamIndex);
-				goto LAgain;
-			end;
-		end;
-	end;
-	Inc(ParamIndex)
-end;
-
-procedure CloseParams;
-begin
-	if IllegalParam then HelpParams;
-end;
-
-procedure HelpParams;
+}
+procedure HelpParams(const Value: string = '');
 var
 	i: SG;
 	s: string;
@@ -186,10 +129,134 @@ begin
 	Information(s);
 end;
 
+procedure ParamMinimized(const Value: string = '');
+begin
+	{$ifndef Console}
+	Application.ShowMainForm := False;
+	{$else}
+	// TODO: Minimize
+	{$endif}
+end;
+
+procedure ParamExit(const Value: string = '');
+begin
+	{$ifndef Console}
+	Application.Terminate;
+	{$else}
+	Halt;
+	{$endif}
+end;
+
+procedure ReadParam(Param: string);
+var
+	AF: BG;
+	IsFile: BG;
+	i: SG;
+begin
+	AF := AcceptFile;
+	DelQuote(Param);
+	if Param[1] = '-' then
+	begin
+		Delete(Param, 1, 1);
+		AF := False;
+	end
+	else if Param[1] = '/' then
+	begin
+		Delete(Param, 1, 1);
+		AF := False;
+	end;
+	IsFile := True;
+	for i := 0 to Length(Params) - 1 do
+	begin
+		if StartStr(UpperCase(Param), UpperCase(Params[i])) then
+		begin
+			IsFile := False;
+			ParamProcedures[i]('');
+			Break;
+		end;
+	end;
+	if IsFile then
+	begin
+		if AF then
+		begin
+			ParamFile := ExpandDir(Param);
+			if (not FileExists(ParamFile)) and (not DirectoryExists(ParamFile)) then
+			begin
+				Warning('Illegal command line parameter' + LineSep +
+					Param + LineSep +
+					'Command line file not found' + LineSep + ParamFile);
+				IllegalParam := True;
+				Exit;
+			end
+			else
+				ParamProcedures[paFileIndex](Param);
+		end
+		else
+		begin
+			Warning('Illegal command line parameter' + LineSep + Param);
+			IllegalParam := True;
+			Exit;
+		end;
+	end;
+end;
+{
+function CompareParams: SG;
+label LAgain;
+var
+	i: SG;
+begin
+	LAgain:
+	if ParamIndex >= ParamCount then
+		Result := paExit
+	else
+	begin
+		ReadParam(ParamStr(ParamIndex + 1));
+	end;
+	Inc(ParamIndex)
+end;}
+
+{procedure CloseParams;
+begin
+	if IllegalParam then HelpParams;
+end;}
+
+procedure ReadCommandLine(const CmdLine: string);
+var
+	InLineIndex: SG;
+	Quote: BG;
+	LastParam: SG;
+	ParamCount: UG;
+begin
+	ParamCount := 0;
+	Quote := False;
+	LastParam := 1;
+	InLineIndex := 1;
+	while InLineIndex <= Length(CmdLine) do
+	begin
+		case CmdLine[InLineIndex] of
+		'"': Quote := not Quote;
+		end;
+		if ((Quote = False) and (CmdLine[InLineIndex] = ' ')) or (InLineIndex = Length(CmdLine)) then
+		begin
+			if InLineIndex = Length(CmdLine) then
+				Inc(InLineIndex);
+			if (ParamCount > 0) and (LastParam < InLineIndex - 1) then
+			begin
+				ReadParam(Copy(CmdLine, LastParam, InLineIndex - LastParam));
+			end;
+			LastParam := InLineIndex + 1;
+			Inc(ParamCount);
+		end;
+		Inc(InLineIndex);
+	end;
+end;
+
 procedure Initialize;
 begin
 	SetLength(UsedParams, ParamCount);
-	AddParams(['Help', 'Minimized'], ['Display this help dialog', 'Start program minimized']);
+	RegisterParam('Help', 'Displays this help dialog', HelpParams);
+	RegisterParam('Minimized', 'Starts program minimized', ParamMinimized);
+	RegisterParam('Exit', 'Exits program', ParamExit);
 end;
 
 initialization

@@ -267,6 +267,7 @@ object fIOError: TfIOError
     Width = 37
     Height = 21
     TabOrder = 8
+    WantReturns = False
     OnChange = EditIndexChange
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp

@@ -31,7 +31,9 @@ const
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
-	CharTimes = '×';
+	CharTimes = #$D7; // ×
+	CharHyphen = #$96; // –
+	CharLongHyphen = #$97; // —
 	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
 	cDialogSuffix = '...';
 
@@ -44,9 +46,9 @@ type
 	TCharSet = set of Char;
 
 // Strings
-function PosEx(SubStr, Str: string): SG; overload;
-function PosEx(SubStr, Str: string; FromPos: SG): SG; overload;
-function PosEx(SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
+function PosEx(const SubStr, Str: string): SG; overload;
+function PosEx(const SubStr, Str: string; FromPos: SG): SG; overload;
+function PosEx(const SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
 
 function CharCount(const s: string; const C: Char): UG;
 function LowCase(ch: Char): Char;
@@ -70,8 +72,12 @@ function DelEndSpaceF(const s: string): string;
 procedure DelBESpace(var s: string);
 function DelBESpaceF(const s: string): string;
 
+function LastChar(const s: string): string;
 function DelLastChar(const s: string; Right: SG = 1): string;
 function DelLastNumber(const s: string): string;
+
+function FirstChar(const s: string): string;
+function CharAt(const s: string; const Index: SG): Char;
 
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
@@ -116,17 +122,17 @@ uses
 	Math,
 	uMath;
 
-function PosEx(SubStr, Str: string): SG;
+function PosEx(const SubStr, Str: string): SG;
 begin
 	Result := PosEx(SubStr, Str, 1, Length(Str));
 end;
 
-function PosEx(SubStr, Str: string; FromPos: SG): SG;
+function PosEx(const SubStr, Str: string; FromPos: SG): SG;
 begin
 	Result := PosEx(SubStr, Str, FromPos, Length(Str));
 end;
 
-function PosEx(SubStr, Str: string; FromPos, ToPos: SG): SG;
+function PosEx(const SubStr, Str: string; FromPos, ToPos: SG): SG;
 label LNFound;
 var
 	i, j: SG;
@@ -267,7 +273,7 @@ begin
 	if s = '' then Exit;
 	if s[1] = '"' then Delete(s, 1, 1);
 	if s = '' then Exit;
-	if s[Length(s)] = '"' then SetLength(s, Length(s) - 1);
+	if LastChar(s) = '"' then SetLength(s, Length(s) - 1);
 end;
 
 function DelQuoteF(const s: string): string;
@@ -279,15 +285,17 @@ end;
 procedure DelBeginSpace(var s: string);
 var i: Integer;
 begin
-	for i := 1 to Length(s) do
+	i := 1;
+	while i <= Length(s) do
 	begin
 		if not (s[i] in Space) then
 		begin
-			if i > 1 then
-				Delete(s, 1, i - 1);
-			Exit;
+			Break;
 		end;
+		Inc(i);
 	end;
+	if i > 1 then
+		Delete(s, 1, i - 1);
 end;
 
 function DelBeginSpaceF(const s: string): string;
@@ -298,16 +306,18 @@ end;
 
 procedure DelEndSpace(var s: string);
 var
-	i: Integer;
+	i: SG;
 begin
-	for i := Length(s) downto 1 do
+	i := Length(s);
+	while i > 0 do
 	begin
 		if not (s[i] in Space) then
 		begin
-			SetLength(s, i);
-			Exit;
+			Break;
 		end;
+		Dec(i);
 	end;
+	SetLength(s, i);
 end;
 
 function DelEndSpaceF(const s: string): string;
@@ -326,6 +336,12 @@ function DelBESpaceF(const s: string): string;
 begin
 	Result := s;
 	DelBESpace(Result);
+end;
+
+function LastChar(const s: string): string;
+begin
+	if Length(s) > 0 then
+		Result := s[Length(s)];
 end;
 
 function DelLastChar(const s: string; Right: SG = 1): string;
@@ -362,6 +378,20 @@ begin
 		Dec(i);
 	end;
 	Result := Copy(s, 1, i);
+end;
+
+function FirstChar(const s: string): string;
+begin
+	if Length(s) > 0 then
+		Result := s[1];
+end;
+
+function CharAt(const s: string; const Index: SG): Char;
+begin
+	if (Index <= 0) or (Index > Length(s)) then
+		Result := CharNul
+	else
+		Result := s[Index];
 end;
 
 function ReadToChar(const Line: string; const C: Char): string;

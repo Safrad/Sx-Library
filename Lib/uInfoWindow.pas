@@ -43,7 +43,7 @@ implementation
 
 {$R *.dfm}
 uses
-	uScreen, uMath, uStrings,
+	uScreen, uMath, uStrings, uSimulation,
 	Math;
 
 procedure ShowInfoWindow(const Text: string);
@@ -52,9 +52,10 @@ begin
 		fInfoWindow := TfInfoWindow.Create(nil);
 
 	fInfoWindow.Height := fInfoWindow.StartHeight;
-	fInfoWindow.StartTickCount := GetTickCount;
+	GetGTime;
+	fInfoWindow.StartTickCount := GTime;
 	fInfoWindow.LabelText.Caption := ReplaceF(Text, LineSep, LineSep + LineSep);
-	fInfoWindow.SendToBack;
+//	fInfoWindow.SendToBack;
 	fInfoWindow.Visible := True;
 end;
 
@@ -62,16 +63,21 @@ procedure TfInfoWindow.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
 	StartHeight := Height;
+	Caption := Application.Title;
 end;
 
 procedure TfInfoWindow.FormShow(Sender: TObject);
 var R: TRect;
 begin
 	GetDesktopRect(R);
-	fInfoWindow.Left := R.Right - fInfoWindow.Width;
-	fInfoWindow.Top := R.Bottom - fInfoWindow.Height;
-	Timer1.Enabled := True;
+	fInfoWindow.SetBounds(
+		R.Right - fInfoWindow.Width,
+		R.Bottom - fInfoWindow.Height,
+		fInfoWindow.Width,
+		fInfoWindow.Height);
+
 	Timer1Timer(Sender);
+	Timer1.Enabled := True;
 end;
 
 procedure TfInfoWindow.LabelTextMouseDown(Sender: TObject;
@@ -105,7 +111,7 @@ begin
 	else if TimeDifference(GTime, StartTickCount) > 4 * Second then
 	begin
 		GetDesktopRect(R);
-		H := StartHeight - RoundDivS8(TimeDifference(GTime, StartTickCount) - 4 * Second) * StartHeight, 1000);
+		H := StartHeight - RoundDivS8((S8(TimeDifference(GTime, StartTickCount)) - 4 * Second) * StartHeight, 1000);
 		if H <= 0 then
 			Close
 		else

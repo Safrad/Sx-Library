@@ -111,7 +111,7 @@ AutoIncBuild=1
 MajorVer=1
 MinorVer=0
 Release=0
-Build=7
+Build=8
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=Safrad's Components
-FileVersion=1.0.0.7
+FileVersion=1.0.0.8
 InternalName=DComp
 LegalCopyright=
 LegalTrademarks=

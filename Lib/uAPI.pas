@@ -16,14 +16,13 @@ uses
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 procedure PropertiesDialog(FileName: TFileName);
-function DropFiles(hDrop: U4): TStrings;
 function KeyToStr(Key: U2): string;
 
 implementation
 
 uses
 	Windows, ShellAPI,
-	uMsg;
+	uMsg, uFiles;
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 label LRetry;
@@ -31,7 +30,7 @@ var
 	ErrorCode: U4;
 begin
 	LRetry:
-	ErrorCode := ShellExecute(0, 'open', PChar('"' + FileName + '"'), PChar(Params), nil, SW_ShowNormal);
+	ErrorCode := ShellExecute(0, 'open', PChar('"' + ExpandDir(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
 	if ErrorCode <= 32 then
 		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
 end;
@@ -49,24 +48,6 @@ begin
 	sei.fMask  := SEE_MASK_INVOKEIDLIST;
 	if ShellExecuteEx(@sei) = False then
 		if IOErrorRetry(FileName, GetLastError) then goto LRetry;
-end;
-
-function DropFiles(hDrop: U4): TStrings;
-var
-	fName: array[0..4095] of Char;
-	NumberOfFiles: Integer;
-	fCounter: Integer;
-begin
-	NumberOfFiles := DragQueryFile(hDrop, $FFFFFFFF, fName, SizeOf(fName));
-	Result := TStringList.Create;
-	Result.BeginUpdate;
-	for fCounter := 0 to NumberOfFiles - 1 do
-	begin
-		DragQueryFile(hDrop, fCounter, fName, 254);
-		Result.Add(fName);
-	end;
-	Result.EndUpdate;
-	DragFinish(hDrop);
 end;
 
 function KeyToStr(Key: U2): string;

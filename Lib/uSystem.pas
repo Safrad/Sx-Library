@@ -129,9 +129,12 @@ begin
 	Result := ReadBufferFromFile(FileName, Buf, Count);
 {	Stream.SetSize(Count);
 	Stream.Seek(0, 0);}
-	Stream.WriteBuffer(Buf^, Count);
-	Stream.Seek(0, 0);
-	FreeMem(Buf);
+	if Buf <> nil then
+	begin
+		Stream.WriteBuffer(Buf^, Count);
+		Stream.Seek(0, 0);
+		FreeMem(Buf);
+	end;
 end;
 
 function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
@@ -212,7 +215,7 @@ var
 	folder: array[0..MAX_PATH] of char;
 	find_context: PItemIDList;
 begin
-	FillChar(browse_info,SizeOf(browse_info),#0);
+	FillChar(browse_info, SizeOf(browse_info),#0);
 	lg_StartFolder := RepairDirectory(Path);
 	browse_info.pszDisplayName := @folder[0];
 	if browseTitle <> '' then

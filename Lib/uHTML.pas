@@ -87,7 +87,7 @@ implementation
 
 uses
 	Math, Menus,
-	uStrings, uFiles, uDBitmap, uFormat, uMath, uCharset;
+	uStrings, uFiles, uDBitmap, uFormat, uMath, uCharset, uUser;
 
 function NToHTML(Value: SG; EnableZero: BG): string;
 begin

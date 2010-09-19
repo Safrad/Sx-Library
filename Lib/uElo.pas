@@ -6,6 +6,7 @@ uses uTypes, uVector, uFormat;
 
 const
 	ScoreOne = 100;
+	MinimalELO = 1250;
 
 function GetElo(Fruitfulness: FA): SG;
 function GetArcElo(EloDifference: FA): FA;

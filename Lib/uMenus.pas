@@ -13,6 +13,8 @@ interface
 uses
 	uTypes,
 	Windows, Graphics, Menus, Messages, Classes, ExtCtrls;
+var
+	ViewSplashScreen: BG;
 const
 	IconSize = 22;
 
@@ -190,10 +192,12 @@ begin
 			M.Name := Items[i].Name + '1';
 //		M.Caption := Src[i].Caption;
 //		M.Checked := Src[i].Checked;
+		M.Default := Items[i].Default;
 		M.GroupIndex := Items[i].GroupIndex;
 		M.RadioItem := Items[i].RadioItem;
 		M.Tag := Items[i].Tag;
 		M.ShortCut := Items[i].ShortCut;
+		M.Hint := Items[i].Hint;
 		M.OnClick := Items[i].OnClick;
 //		M.OnAdvancedDrawItem := Items[i].OnAdvancedDrawItem;
 
@@ -602,7 +606,7 @@ begin
 		else if Menu is TMenuItem then
 			M := TMenuItem(Menu).Items[i]
 		else
-			 M := nil;
+			M := nil;
 
 		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
 		begin
@@ -618,23 +622,27 @@ begin
 {				if Panel.FindComponent(Name) <> nil then
 					Name := M.Name + 'Icon2';}
 				B := TDButton.Create(Panel);
-				B.Name := Name;
+				try
+					B.Name := Name;
 
-				B.Caption := '';
-				B.ShowHint := True;
-				B.Hint := DelCharsF(M.Caption, '&');
-				if M.Shortcut <> 0 then
-					B.Hint := B.Hint + ' (' + KeyToStr(M.Shortcut) + ')';
-				B.SetBounds(IconX, IconY, IconSize, IconSize);
-				B.Color := Panel.Color;
-				B.Highlight := hlNone;
-				B.Tag := M.Tag;
-				Inc(IconX, B.Width + 1);
-				B.FGlyph := TDBitmap.Create;
-				B.FGlyph.CopyBitmap(M.Bitmap);
-				B.OnClick := M.OnClick;
+					B.Caption := '';
+					B.ShowHint := True;
+					B.Hint := DelCharsF(M.Caption, '&');
+					if M.Shortcut <> 0 then
+						B.Hint := B.Hint + ' (' + KeyToStr(M.Shortcut) + ')';
+					B.SetBounds(IconX, IconY, IconSize, IconSize);
+					B.Color := Panel.Color;
+					B.Highlight := hlNone;
+					B.Tag := M.Tag;
+					Inc(IconX, B.Width + 1);
+					B.FGlyph := TDBitmap.Create;
+					B.FGlyph.CopyBitmap(M.Bitmap);
+					B.OnClick := M.OnClick;
 
-				Panel.InsertControl(B);
+					Panel.InsertControl(B);
+				except
+					B.Free;
+				end;
 				Inc(Found);
 			end;
 		end
@@ -845,14 +853,13 @@ end;
 
 procedure TOb.ReadMe1Click(Sender: TObject);
 begin
-	ReadMe;
+	OpenReadMe;
 end;
 
 procedure TOb.Homepage1Click(Sender: TObject);
 begin
-	Homepage;
+	OpenHomepage;
 end;
-
 
 procedure TOb.ViewMessages1Click(Sender: TObject);
 begin
@@ -872,8 +879,9 @@ end;
 
 procedure TOb.ShowSplashScreen1Click(Sender: TObject);
 begin
-	ShowSplashScreen1.Checked := not ShowSplashScreen1.Checked;
-	if ShowSplashScreen1.Checked then ShowSplashScreen(False) else HideSplashScreen(True);
+	ViewSplashScreen := not ViewSplashScreen;
+	ShowSplashScreen1.Checked := ViewSplashScreen;
+	if ViewSplashScreen then ShowSplashScreen(False) else HideSplashScreen(True);
 end;
 
 procedure TOb.ViewIniFile1Click(Sender: TObject);
@@ -883,7 +891,10 @@ end;
 
 procedure TOb.ViewLogFile1Click(Sender: TObject);
 begin
-	APIOpen(MainLogFileName);
+	if Assigned(MainLog) then
+		APIOpen(MainLog.FileName)
+	else
+		APIOpen(MainLogFileName);
 end;
 
 procedure TOb.ViewAllLogFiles1Click(Sender: TObject);
@@ -945,6 +956,7 @@ begin
 		Ob.ShowSplashScreen1.Name := 'ShowSplashScreen1';
 		Ob.ShowSplashScreen1.Caption := 'Show Splash Screen';
 		Ob.ShowSplashScreen1.OnClick := Ob.ShowSplashScreen1Click;
+		Ob.ShowSplashScreen1.Checked := ViewSplashScreen;
 		Options1.Add(Ob.ShowSplashScreen1);
 
 		M := TMenuItem.Create(Options1);

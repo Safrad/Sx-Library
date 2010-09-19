@@ -40,18 +40,19 @@ type
 	end;
 
 	THLSColor = packed record // 4
-{		case Integer of
+		case Integer of
 		0:
-		(}
+		(
 		H: -1..MaxSpectrum; // 2
 		L: 0..255; // 1
 		S: 0..255; // 1
-(*		);
+		);
 		1: (
-		Hue: -1..MaxSpectrum; // 2
+		A: S4
+(*		Hue: -1..MaxSpectrum; // 2
 		Lightness{Lum(inary, inous)}: 0..255; // 1
-		Saturation{Sat(iety)}: 0..255; // 1
-		);*)
+		Saturation{Sat(iety)}: 0..255; // 1 *)
+		);
 	end;
 
 function RGBToHLS(C: TRGBA): THLSColor;
