@@ -28,9 +28,7 @@ var
 	SysDir,
 	WinDir, // Shared configuration files (Read and Write)
 	ProgramFilesDir,
-	{$ifndef Console}
 	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
-	{$endif}
 //	HomeDir, // User documnets (Read and Write)
 	CommonAppDataDir, // Application Data
 	TempDir,
@@ -48,9 +46,10 @@ function RemoveEV(Dir: string): string;
 function ExpandDir(Dir: string): string;
 function DelFileExt(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
-function BackDir(var Dir: string): BG;
-function BackDirF(Dir: string): string;
+function ParentDir(var Dir: string): BG;
+function ParentDirF(Dir: string): string;
 function LegalFileName(const FileName: string): string;
+function LegalPath(const Path: string): string;
 procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: BG);
 function HandleFileSize(FHandle: THandle): S8;
 function GetFileSizeU(const FileName: TFileName): S8;
@@ -190,8 +189,10 @@ begin
 	CorrectDir(CommonAppDataDir);
 	{$ifndef Console}
 	AppDataDir := CommonAppDataDir + GetProjectInfo(piCompanyName) + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
-	CreateDirsEx(AppDataDir);
+	{$else}
+	AppDataDir := CommonAppDataDir + 'Safrad' + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
 	{$endif}
+	CreateDirsEx(AppDataDir);
 
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
 //	CorrectDir(DocsDir);
@@ -314,7 +315,7 @@ begin
 	Result := DelFileExt(FName) + Text + ExtractFileExt(FName);
 end;
 
-function BackDir(var Dir: string): BG;
+function ParentDir(var Dir: string): BG;
 var i: Integer;
 begin
 	Result := False;
@@ -329,26 +330,31 @@ begin
 	end;
 end;
 
-function BackDirF(Dir: string): string;
+function ParentDirF(Dir: string): string;
 begin
 	Result := Dir;
-	BackDir(Result);
+	ParentDir(Result);
 end;
 
+const
+	DisabledChars: array[0..8] of string = ('\', '/', ':', '*', '?', '"', '<', '>', '|');
+
 function LegalFileName(const FileName: string): string;
+begin
+	Result := FileName;
+	DelStrings(Result, DisabledChars);
+end;
+
+function LegalPath(const Path: string): string;
 var
 	i: Integer;
 	StrLength: Integer;
 begin
-	Result := FileName;
+	Result := Path;
+	DelStrings(Result, DisabledChars);
 	if Length(Result) = 0 then
 	begin
-		Result := '';
 		Exit;
-	end
-	else if Length(Result) > 63 then
-	begin
-		SetLength(Result, 63);
 	end;
 
 	i := 1;
@@ -371,6 +377,11 @@ begin
 		end;
 		end;
 	end;
+
+{	if Length(Result) > 63 then
+	begin
+		SetLength(Result, 63);
+	end;}
 end;
 
 procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: BG);
@@ -1280,7 +1291,7 @@ begin
 	while True do
 	begin
 		if DirectoryExists(Result) then Break;
-		if BackDir(string(Result)) = False then Break;
+		if ParentDir(string(Result)) = False then Break;
 	end;
 end;
 

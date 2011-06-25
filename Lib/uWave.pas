@@ -91,8 +91,9 @@ function WaveLength(const FileName: TFileName): UG;
 
 	Min: 32768 $8000 -32768
 }
-{	Zero1 = $80;
-	Zero2 = $0000;}
+const
+	Zero8 = $80;
+	Zero16 = $0000;
 type
 	TBLR = record
 		L, R: U1;
@@ -129,10 +130,10 @@ type
 	TFormatTag = (
 		ftUnknown = 0,
 		ftPCM = 1, // PCM
-		ftADPCM = 2, // Microsoft ADPCM
+//		ftADPCM = 2, // Microsoft ADPCM
 		ftALAW = 6, // ALAW
 		ftMULAW = 7, // MULAW
-		ftDVIIMAADPCM = 17, // Intel's DVI/IMA ADPCM
+//		ftDVIIMAADPCM = 17, // Intel's DVI/IMA ADPCM
 //		MPEGLayerIII = 85, // MPEG Layer III
 		ftMax = 65535);
 {
@@ -249,6 +250,7 @@ type
 /*?#define WAVE_FORMAT_DIVX_AUDIO161	0x00000161 DivX Audio? */
 }
 
+	PWaveFormatChunk = ^TWaveFormatChunk;
 	TWaveFormatChunk = packed record // 16
 		FormatTag: TFormatTag; // 2; 1
 		Channels: U2; // 2; 2: stereo, 1: mono
@@ -272,6 +274,8 @@ type
 		DataChunk: TWaveChunk;
 	end;
 
+procedure FillWave(PWave: PCompleteWave; const FFormat: PWaveFormatChunk; const FDataBytes: SG);
+
 const
 	ConvertShr = 16;
 	ConvertPre = 1 shl ConvertShr;
@@ -285,6 +289,7 @@ type
 		FDataBytes: U8;
 		PWave: PCompleteWave;
 		FData: PWaveSample;
+		WithoutData: BG;
 		procedure ReadRIFFHeader(const F: TFile);
 		procedure ReadFormatChunk(const F: TFile);
 		procedure ReadDataChunk(const F: TFile);
@@ -292,24 +297,23 @@ type
 		function GetLength: UG;
 		procedure DecodeALAW(InData: PU1);
 		procedure DecodeMULAW(InData: PU1);
-		procedure DecodeADPCM(CompressedData: Pointer);
-		procedure DecodeIMA(CompressedData: Pointer);
+//		procedure DecodeADPCM(CompressedData: Pointer);
+//		procedure DecodeIMA(CompressedData: Pointer);
 		procedure Decode(CompressedData: Pointer);
+		procedure SetSampleCount(const Value: UG);
 	published
 		destructor Destroy; override;
 	public
-		WithoutData: BG;
 		constructor Create; overload;
 		constructor Create(
 			const Channels: U2;
 			const BitsPerSample: U2;
-			const SampleRate: U4;
-			const TotalSamples: U4); overload;
+			const SampleRate: U4); overload;
 		function Sample(Index: SG; const Channel: SG): SG; overload;
 		function Sample(const Index: SG): SG; overload;
 		function GetSample(const BitLength: SG; var BitIndex: SG): SG;
 		procedure AddSample(FPointer: PS2; const Value: S2);
-		property SampleCount: UG read FSampleCount;
+		property SampleCount: UG read FSampleCount write SetSampleCount;
 		property Format: TWaveFormatChunk read FFormat;
 		property Data: PWaveSample read FData;
 		procedure ReadFromFile(const FileName: TFileName);
@@ -424,9 +428,19 @@ begin
 		ErrorMsg('Invalid wave format.');}
 end;
 
-function BitsToByte(const Bits: U8): U4;
+procedure FillWave(PWave: PCompleteWave; const FFormat: PWaveFormatChunk; const FDataBytes: SG);
 begin
-	Result := (Bits + 7) shr 3;
+	PWave.Head.GroupID := 'RIFF';
+	PWave.Head.BytesFollowing := FDataBytes + SizeOf(TCompleteWave) - 8;
+	PWave.Head.RiffType := 'WAVE';
+	PWave.FormatChunk.ChunkId := 'fmt ';
+	PWave.FormatChunk.ChunkSize := SizeOf(PWave.Format);
+	PWave.Format := FFormat^;
+{		PWave.FactChunk.ChunkId := 'fact';
+	PWave.FactChunk.ChunkSize := SizeOf(PWave.Fact);
+	PWave.Fact := SampleCount;}
+	PWave.DataChunk.ChunkId := 'data';
+	PWave.DataChunk.ChunkSize := FDataBytes;
 end;
 
 procedure TWave.ReadDataChunk(const F: TFile);
@@ -456,22 +470,12 @@ begin
 		FFormat.BytesPerSample := BitsToByte(16);
 		FFormat.BitsPerSample := 16;
 
-		PWave.Head.GroupID := 'RIFF';
-		PWave.Head.BytesFollowing := FDataBytes + SizeOf(TCompleteWave) - 8;
-		PWave.Head.RiffType := 'WAVE';
-		PWave.FormatChunk.ChunkId := 'fmt ';
-		PWave.FormatChunk.ChunkSize := SizeOf(PWave.Format);
-		PWave.Format := FFormat;
-{		PWave.FactChunk.ChunkId := 'fact';
-		PWave.FactChunk.ChunkSize := SizeOf(PWave.Fact);
-		PWave.Fact := SampleCount;}
-		PWave.DataChunk.ChunkId := 'data';
-		PWave.DataChunk.ChunkSize := FDataBytes;
+		FillWave(PWave, @FFormat, FDataBytes);
 		FPreDataSize := SizeOf(TCompleteWave);
 		FData := PWaveSample(SG(PWave) + SizeOf(TCompleteWave));
 	end
 	else
-		FData := Pointer(SG(PWave) + FPreDataSize);
+		FData := Pointer(UG(PWave) + FPreDataSize);
 end;
 
 procedure TWave.ReadChunks(const F: TFile);
@@ -587,8 +591,7 @@ end;
 constructor TWave.Create(
 	const Channels: U2;
 	const BitsPerSample: U2;
-	const SampleRate: U4;
-	const TotalSamples: U4);
+	const SampleRate: U4);
 var
 	BitsPerSamples: U2;
 //	DataBytes: U4;
@@ -635,7 +638,7 @@ var
 begin
 { if WaveD = nil then
 	begin}
-	Result := TWave.Create(NewChannels, FFormat.BitsPerSample, FFormat.SampleRate, SampleCount);
+	Result := TWave.Create(NewChannels, FFormat.BitsPerSample, FFormat.SampleRate);
 { end
 	else
 	begin
@@ -821,7 +824,8 @@ var
 begin
 { if WaveD = nil then
 	begin}
-	Result := TWave.Create(FFormat.Channels, NewBitsPerSample, FFormat.SampleRate, SampleCount);
+	Result := TWave.Create(FFormat.Channels, NewBitsPerSample, FFormat.SampleRate);
+	Result.SampleCount := SampleCount;
 { end
 	else
 	begin
@@ -1066,6 +1070,7 @@ begin
 	end;
 end;
 
+(*
 procedure TWave.DecodeADPCM(CompressedData: Pointer); // TODO
 const
 	// Kodovane slovo -> Posun indexu
@@ -1159,14 +1164,14 @@ begin
 //			AddSample(FPointer, CurrentSample);
 	end;
 end;
-
+*)
 procedure TWave.Decode(CompressedData: Pointer);
 begin
 	case FFormat.FormatTag of
-	ftADPCM: DecodeADPCM(CompressedData);
+//	ftADPCM: DecodeADPCM(CompressedData);
 	ftALAW: DecodeALAW(CompressedData);
 	ftMULAW: DecodeMULAW(CompressedData);
-	ftDVIIMAADPCM: DecodeIMA(CompressedData);
+//	ftDVIIMAADPCM: DecodeIMA(CompressedData);
 	end;
 end;
 
@@ -1187,6 +1192,14 @@ end;
 procedure TWave.WriteToFile(const FileName: TFileName);
 begin
 	WriteBlockToFile(FileName, PWave, FDataBytes + FPreDataSize);
+end;
+
+procedure TWave.SetSampleCount(const Value: UG);
+begin
+	if Value <> FSampleCount then
+	begin
+		FSampleCount := Value;
+	end;
 end;
 
 end.

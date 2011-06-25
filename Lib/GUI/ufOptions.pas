@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\ufOptions.pas
 //* Created:  2005-09-25
 //* Modified: 2008-01-23
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

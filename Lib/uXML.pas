@@ -1,7 +1,7 @@
 //* File:     Lib\uXML.pas
 //* Created:  2005-06-21
 //* Modified: 2007-04-01
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

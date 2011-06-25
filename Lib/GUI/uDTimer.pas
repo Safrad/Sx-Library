@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDTimer.pas
 //* Created:  2000-08-01
-//* Modified: 2007-11-25
-//* Version:  1.1.39.8
+//* Modified: 2007-12-27
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

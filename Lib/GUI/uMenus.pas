@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uMenus.pas
 //* Created:  2000-08-01
 //* Modified: 2008-01-20
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -96,7 +96,7 @@ begin
 			begin
 				if Bmp.ColorCount(MaxColors) < MaxColors then
 				begin
-					Bmp.GenerateRGB(gfFade2x, Co, clBlack, ef06, nil);
+					Bmp.GenerateRGB(gfFade2x, Co, ef06, nil);
 				end;
 {				Bitmap.Width := 0;
 				Bitmap.Height := 0;
@@ -264,12 +264,12 @@ begin
 
 	BCanvas.Font := ACanvas.Font;
 
-	if NowBits <= 11 then
+{	if NowBits <= 11 then
 	begin
 		MenuBmp.Bar(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
 			clMenu, ef16);
 	end
-	else
+	else}
 		if TopLevel then
 		begin
 			Co[0] := ColorDiv(clMenu, 9 * 65536 div 8);
@@ -277,7 +277,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-				gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
+				gfFadeVert, Co, ef16, 0, nil);
 		end
 		else
 		begin
@@ -296,7 +296,7 @@ begin
 				Co[3] := Co[2];
 			end;
 			MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+				gfFade2x, Co, ef16, 0, nil);
 		end;
 
 	// Line
@@ -337,14 +337,14 @@ begin
 				Co[1] := ColorDiv(clMenu, 2 * 65536 div 3);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				if NowBits <= 11 then
+{				if NowBits <= 11 then
 				begin
 					MenuBmp.Bar(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2, clMenu, ef16);
 				end
 				else
-				begin
-					MenuBmp.GenerateRGBEx(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
-				end;
+				begin}
+					MenuBmp.GenerateRGBEx(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2, gfFade2x, Co, ef16, 0, nil);
+//				end;
 				MenuBmp.Border(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clDepth[1], clDepth[3], 1, ef16);
 			end
 			else
@@ -353,12 +353,12 @@ begin
 				Co[1] := ColorDiv(clHighLight, 2 * 65536 div 3);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				if NowBits <= 11 then
+{				if NowBits <= 11 then
 				begin
 					MenuBmp.Bar(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clHighLight, ef16);
 				end
-				else
-					MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
+				else}
+					MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, gfFade2x, Co, ef12, 0, nil);
 			end;
 		end
 		else

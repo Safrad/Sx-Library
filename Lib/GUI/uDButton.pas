@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDButton.pas
 //* Created:  1999-09-01
-//* Modified: 2007-05-27
-//* Version:  1.1.39.8
+//* Modified: 2008-01-19
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -373,7 +373,7 @@ begin
 	end
 	else
 		Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
-			gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+			gfFade2x, Co, ef16, 0, nil);
 //	{$else}
 //	Bitmap.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
 //	{$endif}
@@ -571,7 +571,7 @@ begin
 		Co[1] := clBlack;
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		Bitmap.GenerateRGB(gfFade2x, Co, $00000000, efAdd, nil);
+		Bitmap.GenerateRGB(gfFade2x, Co, efAdd, nil);
 	end;
 
 	if IsFocused and IsDefault then

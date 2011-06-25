@@ -20,7 +20,7 @@ const
 type
 	TParamProcedure = procedure(const Value: string);
 
-procedure RegisterParam(const Param: string; const DesParam: string; const ParamProcedure: TParamProcedure);
+procedure RegisterParam(const ParameterName: string; const ParameterDescription: string; const ParameterProcedure: TParamProcedure);
 procedure HelpParams(const Value: string = '');
 procedure ReadCommandLine(const CmdLine: string);
 
@@ -36,28 +36,28 @@ var
 	paFileIndex: SG = -1;
 	paNumberIndex: SG = -1;
 
-procedure RegisterParam(const Param: string; const DesParam: string; const ParamProcedure: TParamProcedure);
+procedure RegisterParam(const ParameterName: string; const ParameterDescription: string; const ParameterProcedure: TParamProcedure);
 var
 	j: SG;
 begin
-	Assert(Param <> '');
+	Assert(ParameterName <> '');
 
 	j := Length(Params);
-	if Param = paFile then
+	if ParameterName = paFile then
 		paFileIndex := j
-	else if Param = paNumber then
+	else if ParameterName = paNumber then
 		paNumberIndex := j;
 
 	SetLength(Params, j + 1);
-	Params[j] := DelCharsF(Param, ' ');
+	Params[j] := DelCharsF(ParameterName, ' ');
 
 	j := Length(DesParams);
 	SetLength(DesParams, j + 1);
-	DesParams[j] := DesParam;
+	DesParams[j] := ParameterDescription;
 
 	j := Length(ParamProcedures);
 	SetLength(ParamProcedures, j + 1);
-	ParamProcedures[j] := ParamProcedure;
+	ParamProcedures[j] := ParameterProcedure;
 end;
 
 procedure HelpParams(const Value: string = '');

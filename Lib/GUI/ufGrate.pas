@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\ufGrate.pas
 //* Created:  1999-08-01
 //* Modified: 2007-05-20
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -110,7 +110,7 @@ end;
 
 procedure TfGrate.Size1Click(Sender: TObject);
 begin
-	if GetNumber('Grate Size', GrateSize, 0, DefaultGrateSize, Max(NowWidth div 2, NowHeight div 2), OnApplyGrateSize) then
+	if GetNumber('Grate Size', GrateSize, 0, DefaultGrateSize, Max(NowScreenMode.Width div 2, NowScreenMode.Height div 2), OnApplyGrateSize) then
 end;
 
 procedure TfGrate.FormCreate(Sender: TObject);

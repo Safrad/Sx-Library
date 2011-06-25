@@ -149,7 +149,7 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 	begin
 		BmpAbout.SetSize(64, 64);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
-		BmpAbout.GenerateRGB(GenFunc[GetRunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
+		BmpAbout.GenerateRGB(GenFunc[GetRunCount mod (High(GenFunc) + 1)], AC, ef16, nil);
 		BmpAbout.Transparent := False;
 	end;
 	
@@ -328,7 +328,7 @@ begin
 //	BitmapAbout.Bar(clBtnFace, ef02);
 
 //	BitmapName.GenRGB(clNone, gfSpecHorz, (16 * Timer1.Clock div PerformanceFrequency), ef16);
-	BitmapAbout.GenerateRGBEx(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, TGenFunc(Typ), Co, 0, ef03,
+	BitmapAbout.GenerateRGBEx(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, TGenFunc(Typ), Co, ef03,
 		(16 * Timer1.Clock div PerformanceFrequency), nil);
 
 	HClock := (32 * Timer1.Clock div PerformanceFrequency) and $7f;

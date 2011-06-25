@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uPhysicsFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-12
-//* Version:  1.1.39.8
+//* Modified: 2007-12-24
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -17,6 +17,12 @@ uses uNamespace, uTypes, uVector;
 const
 	GravityConst = 9.80665; // in height 6378000 m
 	EarthRadius = 6378000;
+{
+const
+	LightSpeed = 299792458; // m/s
+	LightLMin = 390; // nm
+	LightLMax = 760; // nm
+}
 
 function Gravity(const Args: array of TVector): TVector;
 var
