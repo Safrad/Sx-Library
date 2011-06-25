@@ -114,8 +114,8 @@ IncludeVerInfo=1
 AutoIncBuild=0
 MajorVer=1
 MinorVer=1
-Release=39
-Build=8
+Release=40
+Build=9
 Debug=0
 PreRelease=0
 Special=0
@@ -123,20 +123,20 @@ Private=0
 DLL=0
 Locale=1033
 CodePage=1252
+[HistoryLists\hlUnitAliases]
+Count=1
+Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [Version Info Keys]
 FileDescription=Safrad's Components and Library
-FileVersion=1.1.39.8
-LegalCopyright=Copyright © 2007
+FileVersion=1.1.40.9
+LegalCopyright=Copyright © 2008
 CompanyName=Safrad
 InternalName=Lib
 LegalTrademarks=Freeware
 OriginalFilename=Lib.exe
 ProductName=Lib
-ProductVersion=1.1.39.8
+ProductVersion=1.1.40.9
 Author=David Safranek (Safrad)
 EMail=safrad at email.cz
-Release=2007-11-27 19:51:13
+Release=2008-03-02 14:16:42
 Web=http://safrad.own.cz/Software/Lib/
-[HistoryLists\hlUnitAliases]
-Count=1
-Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

@@ -1,7 +1,7 @@
 //* File:     Lib\uFormal.pas
 //* Created:  1999-06-01
-//* Modified: 2007-05-27
-//* Version:  1.1.39.8
+//* Modified: 2008-02-23
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -40,7 +40,7 @@ var
 	procedure AddMes(const MsgText: string);
 	begin
 		if Assigned(ParserMessages) then
-			ParserMessages.Add(0, LineIndex, ColumnIndex, ColumnIndex + 1{TODO}, MsgText, mtInformation);
+			ParserMessages.Add(0, LineIndex, ColumnIndex, ColumnIndex + 1{TODO}, MsgText, mlInformation);
 	end;
 
 

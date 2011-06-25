@@ -1,7 +1,7 @@
 //* File:     Lib\uTypes.pas
 //* Created:  1998-01-01
-//* Modified: 2007-08-14
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -10,13 +10,36 @@ unit uTypes;
 
 interface
 
-{$ifdef VER130} // Delphi = 5
 const
+{$ifdef VER130} // Delphi = 5
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
 	SwitchChars = ['-', '/'];
 {$endif}
+	MinInt = Low(Integer);
+
+	BitsPerByte = 8;
+	KB = 1024;
+	MB = 1024 * KB;
+	GB = 1024 * MB;
+
+	MiliSecond = 1;
+	Second = 1000;
+	Minute = 60 * Second;
+	Hour = 60 * Minute;
+	Day = 24 * Hour;
+	DaysInWeek = 7;
+	MonthsInYear = 12;
+
+// System
+	LoopSleepTime = 40; // 25 interrupts per second.
+	{$EXTERNALSYM WM_XBUTTONDOWN}
+	WM_XBUTTONDOWN      = $020B;
+	{$EXTERNALSYM WM_XBUTTONUP}
+	WM_XBUTTONUP        = $020C;
+	{$EXTERNALSYM WM_XBUTTONDBLCLK}
+	WM_XBUTTONDBLCLK    = $020D;
 
 type
 	SG = Integer; // LongInt for 32bit Delphi
@@ -148,16 +171,13 @@ type
 	B1 = ByteBool; // $00 / $FF
 	B2 = WordBool; // $0000 / $FFFF
 	B4 = LongBool; // $0000 / $FFFFFFFF
-const
-	KB = 1024;
-	MB = 1024 * KB;
-	GB = 1024 * MB;
-type
+
 	TIndex = SG;
 
 	// Dynamic Arrays
 	TArrayOfBG = array of BG;
 	TArrayOfSG = array of SG;
+	TArrayOfString = array of string;
 
 	// Static Arrays
 	TArrayS1 = array[0..GB - 1] of S1;
@@ -188,40 +208,17 @@ type
 	TArrayString = array[0..512 * MB - 2] of string;
 	PArrayString = ^TArrayString;
 
-// Time
-const
-	MiliSecond = 1;
-	Second = 1000;
-	Minute = 60 * Second;
-	Hour = 60 * Minute;
-	Day = 24 * Hour;
-	DaysInWeek = 7;
-	MonthsInYear = 12;
-
-	LoopSleepTime = 40; // 25 interrupts per second.
-
-const
-	MinInt = Low(Integer);
-
-	{$EXTERNALSYM WM_XBUTTONDOWN}
-	WM_XBUTTONDOWN      = $020B;
-	{$EXTERNALSYM WM_XBUTTONUP}
-	WM_XBUTTONUP        = $020C;
-	{$EXTERNALSYM WM_XBUTTONDBLCLK}
-	WM_XBUTTONDBLCLK    = $020D;
-
-type
-	TMsgType = (
-		mtConfirmation,
-		mtDebug, // Debug-level messages (Opening file)
-		mtInformation, // Informational (Started, Finished)
-//		ltNotice, // (ltHint) Normal but significant condition
-		mtWarning, // Warning conditions (File already opened)
-		mtError, // Error conditions (File not found)
-		mtFatalError, // (ltFatalError) Critical conditions
-		// ltAlert, // Action must be taken immediately
-		// ltEmerg, // Emergencies - system is unusable
-		mtNone);
+	TMessageLevel = (
+		mlConfirmation,
+		mlDebug, // Debug-level messages (Opening file)
+		mlInformation, // Informational (Started, Finished)
+//		mlNotice, // (ltHint) Normal but significant condition
+		mlWarning, // Warning conditions (File already opened)
+		mlError, // Error conditions (File not found)
+		mlFatalError, // (ltFatalError) Critical conditions
+		// lmAlert, // Action must be taken immediately
+		// lmEmerg, // Emergencies - system is unusable
+		mlNone);
 
 const
 	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".

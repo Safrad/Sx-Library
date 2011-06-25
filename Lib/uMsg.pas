@@ -1,7 +1,7 @@
 //* File:     Lib\uMsg.pas
 //* Created:  2000-08-01
-//* Modified: 2007-10-22
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -19,10 +19,10 @@ function ReplaceParam(const Text: string; const Param: array of string): string;
 function ReplaceParam(const Text: string; const Param: string): string; overload;
 
 var
-	MsgTypeStr: array[TMsgType] of string;
+	MessageLevelStr: array[TMessageLevel] of string;
 
-procedure ShowMessage(const MsgType: TMsgType; const ExpandedText: string); overload;
-procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: array of string); overload;
+procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
+procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string; const Param: array of string); overload;
 
 {$ifopt d+}
 procedure Debug(const Text: string); overload;
@@ -69,7 +69,7 @@ uses
 	uStrings, uLog{$ifndef Console}, uMsgDlg{$endif};
 
 const
-	MsgTypeNames: array[TMsgType] of string = (
+	MsgTypeNames: array[TMessageLevel] of string = (
 		SMsgDlgConfirm,
 		'Debug',
 		SMsgDlgInformation,
@@ -106,74 +106,74 @@ begin
 		Result := Text;
 end;
 
-procedure ShowMessage(const MsgType: TMsgType; const ExpandedText: string); overload;
+procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 begin
-	MainLogAdd(ExpandedText, MsgType);
+	MainLogAdd(ExpandedText, MessageLevel);
 	{$ifndef Console}
-	MessageD(ExpandedText, [], MsgType, [mbOk]);
+	MessageD(ExpandedText, [], MessageLevel, [mbOk]);
 	{$else}
-	Writeln(MsgTypeNames[MsgType] + ': ' + OneLine(ExpandedText));
+	Writeln(MsgTypeNames[MessageLevel] + ': ' + OneLine(ExpandedText));
 	{$endif}
 end;
 
-procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: array of string); overload;
+procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string; const Param: array of string); overload;
 var
 	ExpandedText: string;
 begin
 	ExpandedText := ReplaceParam(Text, Param);
-	MainLogAdd(ExpandedText, MsgType);
+	MainLogAdd(ExpandedText, MessageLevel);
 	{$ifndef Console}
-	MessageD(Text, Param, MsgType, [mbOk]);
+	MessageD(Text, Param, MessageLevel, [mbOk]);
 	{$else}
-	Writeln(MsgTypeNames[MsgType] + ': ' + OneLine(ExpandedText));
+	Writeln(MsgTypeNames[MessageLevel] + ': ' + OneLine(ExpandedText));
 	{$endif}
 end;
 
 {$ifopt d+}
 procedure Debug(const Text: string);
 begin
-	ShowMessage(mtDebug, Text, []);
+	ShowMessage(mlDebug, Text, []);
 end;
 
 procedure Debug(const Text: string; const Param: array of string);
 begin
-	ShowMessage(mtDebug, Text, Param);
+	ShowMessage(mlDebug, Text, Param);
 end;
 
 procedure IE(const Text: string);
 begin
-	ShowMessage(mtFatalError, Text);
+	ShowMessage(mlFatalError, 'Internal Error: ' + Text);
 end;
 {$endif}
 
 procedure Information(const Text: string); overload;
 begin
-	ShowMessage(mtInformation, Text, []);
+	ShowMessage(mlInformation, Text, []);
 end;
 
 procedure Information(const Text: string; const Param: array of string); overload;
 begin
-	ShowMessage(mtInformation, Text, Param);
+	ShowMessage(mlInformation, Text, Param);
 end;
 
 procedure Warning(const Text: string);
 begin
-	ShowMessage(mtWarning, Text, []);
+	ShowMessage(mlWarning, Text, []);
 end;
 
 procedure Warning(const Text: string; const Param: array of string);
 begin
-	ShowMessage(mtWarning, Text, Param);
+	ShowMessage(mlWarning, Text, Param);
 end;
 
 procedure ErrorMsg(const Text: string);
 begin
-	ShowMessage(mtError, Text, []);
+	ShowMessage(mlError, Text, []);
 end;
 
 procedure ErrorMsg(const Text: string; const Param: array of string);
 begin
-	ShowMessage(mtError, Text, Param);
+	ShowMessage(mlError, Text, Param);
 end;
 
 procedure ErrorMsg(const ErrorCode: SG);
@@ -189,14 +189,14 @@ begin
 		ExpandedText := E.Message
 	else
 		ExpandedText := ReplaceParam(E.Message + ' in class %1', C.ClassName);
-	MainLogAdd(ExpandedText, mtFatalError);
+	MainLogAdd(ExpandedText, mlFatalError);
 end;
 
 function ErrorRetry(const Text: string): BG;
 begin
-	MainLogAdd(Text, mtError);
+	MainLogAdd(Text, mlError);
 	{$ifndef Console}
-	Result := MessageD(Text, mtError, [mbRetry, mbIgnore]) <> mbIgnore;
+	Result := MessageD(Text, mlError, [mbRetry, mbIgnore]) <> mbIgnore;
 	{$else}
 	Result := False;
 	Writeln('Error: ' + Text);
@@ -226,7 +226,7 @@ end;
 {$ifndef Console}
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
-	Result := MessageD(Text, mtConfirmation, Buttons);
+	Result := MessageD(Text, mlConfirmation, Buttons);
 end;
 {$endif}
 
@@ -244,9 +244,9 @@ procedure IOErrorMessage(FileName: TFileName; const ErrorMsg: string);
 var Text: string;
 begin
 	Text := ErrorMsg + ': ' + FileName;
-	MainLogAdd(Text, mtError);
+	MainLogAdd(Text, mlError);
 	{$ifndef Console}
-	MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mtError, [SMsgDlgOK], DlgWait);
+	MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mlError, [SMsgDlgOK], DlgWait);
 	{$else}
 	Writeln('I/O Error: ' + OneLine(Text));
 	{$endif}
@@ -260,9 +260,9 @@ var
 	{$endif}
 begin
 	Text := ErrorMsg + ': ' + FileName;
-	MainLogAdd(Text, mtError);
+	MainLogAdd(Text, mlError);
 	{$ifndef Console}
-	Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mtError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
+	Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
 	{$else}
 	Writeln('I/O Error: ' + OneLine(Text));
 	Writeln('Press [R]etry or [I]gnore.');
@@ -272,5 +272,5 @@ begin
 end;
 
 initialization
-	EnumToStr(TypeInfo(TMsgType), MsgTypeStr);
+	EnumToStr(TypeInfo(TMessageLevel), MessageLevelStr);
 end.

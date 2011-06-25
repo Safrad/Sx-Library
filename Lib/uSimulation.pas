@@ -1,7 +1,7 @@
 //* File:     Lib\uSimulation.pas
 //* Created:  2000-05-01
-//* Modified: 2007-05-27
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -77,7 +77,7 @@ begin
 		MaximumTimeStep2 := {$ifdef Prec}RoundDivU8(MaximumTimeStep * PerformanceFrequency, Second){$else}MaximumTimeStep{$endif};
 		if (GTimeStep2 >= 2 * MaximumTimeStep2) then // Long lag and hibernation
 		begin
-			MainLogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO), mtWarning);
+			MainLogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO), mlWarning);
 			GTimeStep2 := MaximumTimeStep2;
 		end;
 	end;

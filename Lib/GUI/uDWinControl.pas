@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDWinControl.pas
 //* Created:  2007-05-27
-//* Modified: 2007-05-27
-//* Version:  1.1.39.8
+//* Modified: 2008-02-18
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -70,6 +70,7 @@ begin
 	{$ifopt d+}
 	Inc(FFillCount);
 	{$endif}
+	FBitmap.SetSize(Width, Height);
 end;
 
 procedure TDWinControl.Invalidate;
@@ -128,7 +129,7 @@ end;
 procedure TDWinControl.WMSize(var Message: TWMSize);
 begin
 	inherited;
-	FBitmap.SetSize(Width, Height);
+	FNeedFill := True;
 end;
 
 end.

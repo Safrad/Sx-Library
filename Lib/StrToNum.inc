@@ -1,5 +1,6 @@
 var
-	Code: SG;
+// Code: SG;
+	Minus: BG;
 begin
 	if Line = '' then
 	begin
@@ -23,26 +24,27 @@ begin
 	end
 	else
 	begin}
-		Val(Copy(Line, LineIndex, MaxInt), Result, Code);
+{		Val(Copy(Line, LineIndex, MaxInt), Result, Code); // DNW Result of '-17any text' is 17!
 		if Code > 0 then
 			Inc(LineIndex, Code - 1)
 		else
-			Inc(LineIndex, Length(Line));
+			Inc(LineIndex, Length(Line));}
 //	end;
 //end;
-
-{	Result := 0;
+  SkipSpace(Line, LineIndex);
+	Result := 0;
+	Minus := False;
 	while (LineIndex <= Length(Line)) do
 	begin
 		case Line[LineIndex] of
 		'0'..'9':
 		begin
-			if Abs(Result) >= High(Result) div 10 then
-				Break;
+{			if Abs(Result) >= High(Result) div 10 then
+				Break;}
 			Result := Result * 10;
 			Result := Result + Ord(Line[LineIndex]) - Ord('0');
 		end;
-		'-': Minus ;
+		'-': Minus := True;
 		',':
 		begin
 
@@ -51,5 +53,6 @@ begin
 			Break;
 		end;
 		Inc(LineIndex);
-	end;}
+	end;
+	if Minus then Result := -Result;
 end;

@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uEloFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2007-11-06
-//* Version:  1.1.39.8
+//* Modified: 2008-02-24
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -16,13 +16,15 @@ const
 	ScoreOne = 100;
 	MinimalELO = 1250;
 
-function GetElo(Fruitfulness: FA): SG;
-function GetArcElo(EloDifference: FA): FA;
+function GetElo(const Fruitfulness: FA): SG;
+function GetEloI(const Fruitfulness: SG): SG;
+function GetArcElo(const EloDifference: FA): FA;
 function ExpectedRes(Elo, OpElo: SG; Bonus: SG; Rounded: BG): SG;
 function DeltaElo(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): Extended;
+function DeltaEloI(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): SG;
 
-function ScoreToS(Score: UG; HTML: BG = True): string;
-function EloToStr(Elo: U2; const OutputFormat: TOutputFormat): string;
+function ScoreToS(const Score: UG; const HTML: BG = True): string;
+function EloToStr(const Elo: U2; const OutputFormat: TOutputFormat): string;
 
 implementation
 
@@ -30,8 +32,10 @@ uses
 	SysUtils,
 	uNamespace, uMath;
 
+const
+	EloTableCount = 100;
 var
-	EloTable: array[0..50] of SG = (
+	EloTable: array[0..EloTableCount div 2] of SG = (
 		765{6}, 677, 589, 538, 501, 470, 444, 422, 401, 383, 368,
 		351, 336, 322, 309, 296, 284, 273, 262, 251, 240,
 		230, 220, 211, 202, 193, 184, 175, 166, 158, 149,
@@ -39,19 +43,31 @@ var
 		72, 65, 57, 50, 43, 36, 29, 21, 14, 7, 0);
 // 0,5 + 1,4217 * 10^(-3) * x - 2,4336 * 10^(-7) * x * Abs(x) - 2,5140 * 10^(-9) * x * Abs(x)^2 + 1,9910 * 10^(-12) * x * Abs(x)^3
 
-function GetElo(Fruitfulness: FA): SG;
+function GetElo(const Fruitfulness: FA): SG;
 begin
 	if Fruitfulness <= 0 then
 		Result := -EloTable[0]
 	else if Fruitfulness >= 1 then
 		Result := EloTable[0]
 	else if Fruitfulness < 0.5 then
-		Result := -EloTable[Round(100 * Fruitfulness)]
+		Result := -EloTable[Round(EloTableCount * Fruitfulness)]
 	else
-		Result := EloTable[100 - Round(100 * Fruitfulness)];
+		Result := EloTable[EloTableCount - Round(EloTableCount * Fruitfulness)];
 end;
 
-function GetArcElo(EloDifference: FA): FA;
+function GetEloI(const Fruitfulness: SG): SG;
+begin
+	if Fruitfulness <= 0 then
+		Result := -EloTable[0]
+	else if Fruitfulness >= EloTableCount then
+		Result := EloTable[0]
+	else if Fruitfulness < EloTableCount div 2 then
+		Result := -EloTable[Fruitfulness]
+	else
+		Result := EloTable[EloTableCount - Fruitfulness];
+end;
+
+function GetArcElo(const EloDifference: FA): FA;
 var
 	i: SG;
 	e0, e1: FA;
@@ -65,6 +81,24 @@ begin
 		begin
 			e0 := e1;
 			Result := i / 100;
+		end;
+	end;
+end;
+
+function GetArcEloI(const EloDifference: SG): SG;
+var
+	i: SG;
+	e0, e1: SG;
+begin
+	e0 := MaxInt;
+	Result := 0;
+	for i := 0 to 100 do
+	begin
+		e1 := Abs(GetEloI(i) - EloDifference);
+		if e1 < e0 then
+		begin
+			e0 := e1;
+			Result := i;
 		end;
 	end;
 end;
@@ -159,6 +193,19 @@ begin
 	Result := Coef * (Score / ScoreOne - Round(100 * GameCount * GetArcElo(Elo - AvgElo)) / 100);
 end;
 
+function DeltaEloI(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): SG;
+var
+	Coef: SG;
+begin
+	if Elo >= 2400 then
+		Coef := 10
+	else if (Age < 20 * 365) and (Elo < 2200) then
+		Coef := 25
+	else
+		Coef := 15;
+	Result := Coef * (Score - GameCount * GetArcEloI(Elo - AvgElo));
+end;
+
 function EloC(const Args: array of TVector): TVector;
 var
 	i, j: SG;
@@ -212,7 +259,7 @@ begin
 	end;
 end;
 
-function ScoreToS(Score: UG; HTML: BG = True): string;
+function ScoreToS(const Score: UG; const HTML: BG = True): string;
 var
 	Res, Rem: U2;
 begin
@@ -239,7 +286,7 @@ begin
 	end;
 end;
 
-function EloToStr(Elo: U2; const OutputFormat: TOutputFormat): string;
+function EloToStr(const Elo: U2; const OutputFormat: TOutputFormat): string;
 begin
 	if Elo = 0 then
 	begin

@@ -1030,6 +1030,7 @@
 var
 	i: TIndex;
 begin
+	if Count <= 0 then Exit;
 //	Len := Min(Length(AIndex), Length(AValue));
 	MaxIndex := Count - 1;
 	{$ifopt d+}

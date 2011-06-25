@@ -1,7 +1,7 @@
 //* File:     Lib\uCharset.pas
 //* Created:  2001-12-01
-//* Modified: 2007-05-20
-//* Version:  1.1.39.8
+//* Modified: 2008-02-23
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -31,7 +31,7 @@ TODO: Unicode
 
 const
 	CodePageNames: array[TCodePage] of string =
-		('ASCII', 'windows-1250'{Central European, Windows Latin 2}, 'IBM852'{DOS code page for Central European}, 'ISO-8859-2'{Central European, ISO Latin 2}, 'UTF-8', 'UTF-16');
+		('ASCII', 'windows-1250'{Central European, Windows Latin 2}, 'IBM852'{DOS code page for Central European}, 'ISO-8859-2'{Central European, ISO Latin 2}, 'utf-8', 'utf-16');
 
 procedure ConvertCharset(var s: string; const FromCharset, ToCharset: TCodePage);
 function ConvertCharsetF(const s: string; const FromCharset, ToCharset: TCodePage): string;

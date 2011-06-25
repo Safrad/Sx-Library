@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uCommon.pas
 //* Created:  2004-01-06
-//* Modified: 2007-10-23
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -174,7 +174,7 @@ end;
 
 procedure TOb.SetLoggingLevel1Click(Sender: TObject);
 begin
-	MainLog.LoggingLevel := TMsgType(TMenuItem(Sender).Tag);
+	MainLog.LoggingLevel := TMessageLevel(TMenuItem(Sender).Tag);
 	LoggingLevel1.Items[TMenuItem(Sender).Tag].Checked := True;
 end;
 
@@ -294,11 +294,11 @@ begin
 		M.OnClick := Ob.Sounds1Click;
 		Options1.Add(M);
 
-		for i := 0 to Length(MsgTypeStr) - 1 do
+		for i := 0 to Length(MessageLevelStr) - 1 do
 		begin
 			M := TMenuItem.Create(Ob.LoggingLevel1);
-			M.Name := ComponentName(MsgTypeStr[TMsgType(i)]) + '21';
-			M.Caption := MsgTypeStr[TMsgType(i)];
+			M.Name := ComponentName(MessageLevelStr[TMessageLevel(i)]) + '21';
+			M.Caption := MessageLevelStr[TMessageLevel(i)];
 			M.Tag:= i;
 			M.OnClick := Ob.SetLoggingLevel1Click;
 			M.RadioItem := True;

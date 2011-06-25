@@ -1,7 +1,7 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2008-02-04
-//* Version:  1.1.39.8
+//* Modified: 2008-02-24
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -27,6 +27,7 @@ const
 	}
 	LineSep = CharLF; // Deafult
 	FullSep = CharCR + CharLF; // Required by some Windows components
+	FileSep = CharCR + CharLF;
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
@@ -60,6 +61,7 @@ function DelStrF(const s: string; const SubStr: string): string;
 
 function Ident(const Level: SG): string;
 
+function AddSingleQuoteF(const s: string): string;
 procedure AddQuote(var s: string);
 function AddQuoteF(const s: string): string;
 function CSVCell(const s: string): string;
@@ -287,6 +289,11 @@ begin
 		SetLength(Result, Level);
 		FillChar(Result[1], Level, CharTab);
 	end;
+end;
+
+function AddSingleQuoteF(const s: string): string;
+begin
+	Result := '''' + s + '''';
 end;
 
 procedure AddQuote(var s: string);
@@ -746,6 +753,19 @@ begin
 			begin
 				if ActPos[j] = Length(WhatS[j]) then
 				begin // Found
+{					if LongestCandidate then
+					begin
+						for k := 0 to WhatSLen - 1 do
+						begin
+							if (j <> k) and (ActPos[k] >= ActPos[j]) then
+							begin
+								for l := ActPos[k] to Length(WhatS[k])
+								begin
+									if ActPos[k]
+								end;
+							end;
+						end;
+					end;}
 					Delete(s, Index - ActPos[j] + 1, ActPos[j]);
 					Insert(ToS[j], s, Index - ActPos[j] + 1);
 //					Index := ActPos[j] + Length(ToS[j]);
@@ -835,6 +855,8 @@ begin
 end;
 
 procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string);
+const
+	EnumPrefixLength = 2;
 var
 	i: SG;
 	TypeData: PTypeData;
@@ -842,7 +864,7 @@ begin
 	TypeData := GetTypeData(TypeInfo);
 	for i := TypeData.MinValue to TypeData.MaxValue do
 	begin
-		AString[i] := AddSpace(Copy(GetEnumName(TypeInfo, i), 3, MaxInt));
+		AString[i] := AddSpace(Copy(GetEnumName(TypeInfo, i), 1 + EnumPrefixLength, MaxInt));
 	end;
 end;
 

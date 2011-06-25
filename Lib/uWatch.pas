@@ -1,7 +1,7 @@
 //* File:     Lib\uWatch.pas
 //* Created:  1998-07-01
-//* Modified: 2007-11-25
-//* Version:  1.1.39.8
+//* Modified: 2008-01-19
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -16,7 +16,7 @@ uses
 
 type
 	TWatchFileChanged = procedure(const FileName: TFileName);
-	TWatchFileChangedEx = procedure(const FileName: TFileName) of Object;
+	TWatchFileChangedEx = procedure(const FileName: TFileName) of object;
 
 procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChanged); overload;
 procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChangedEx); overload;
@@ -32,10 +32,11 @@ uses
 type
 	PWatchedFile = ^TWatchedFile;
 	TWatchedFile = packed record
-		LastWriteTime: TFileTime; // 8
-		FileName: TFileName; // 4
-		Changed: B4; // 4
+		LastWriteTime: TFileTime;
+		FileName: TFileName;
+		Changed: B4;
 		OnChange: TWatchFileChanged;
+		OnChangeEx: TWatchFileChangedEx;
 	end;
 var
 	WatchedFiles: TData;
@@ -43,6 +44,7 @@ var
 
 type
 	TOb = class(TObject)
+	private
 		function AppProc(var Message: TMessage): BG;
 	end;
 
@@ -97,8 +99,11 @@ begin
 								try
 									if Assigned(WatchedFile.OnChange) then
 										WatchedFile.OnChange(WatchedFile.FileName);
-								finally
-
+									if Assigned(WatchedFile.OnChangeEx) then
+										WatchedFile.OnChangeEx(WatchedFile.FileName);
+								except
+									on E: Exception do
+										Fatal(E, Self);
 								end;
 						end;
 					end;
@@ -149,12 +154,18 @@ begin
 end;
 
 procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChangedEx);
-//var
-//	OnChangeEx: TWatchFileChanged;
+var WatchedFile: PWatchedFile;
 begin
-// TODO:
-//	OnChangeEx := OnChange;
-//	WatchAddFile(FileName, OnChangeEx);
+	if not Initialized then
+		Initialize;
+	WatchedFile := WatchedFiles.Add;
+	WatchedFile.FileName := FileName;
+	WatchedFile.Changed := False;
+	WatchedFile.OnChangeEx := OnChange;
+	if FileExists(WatchedFile.FileName) then
+		GetFileModified(WatchedFile.FileName, WatchedFile.LastWriteTime)
+	else
+		U8(WatchedFile.LastWriteTime) := 0;
 end;
 
 procedure WatchChange(const FileName: TFileName; const Changed: BG);
@@ -163,7 +174,7 @@ begin
 	i := 0;
 	while i < WatchedFiles.Count do
 	begin
-		if PWatchedFile(WatchedFiles[i]).FileName = FileName then // TODO Upcase
+		if SameFileName(PWatchedFile(WatchedFiles[i]).FileName, FileName) then
 		begin
 			PWatchedFile(WatchedFiles[i]).Changed := Changed;
 		end;
@@ -177,7 +188,7 @@ begin
 	i := 0;
 	while i < WatchedFiles.Count do
 	begin
-		if PWatchedFile(WatchedFiles[i]).FileName = FileName then // TODO Upcase
+		if SameFileName(PWatchedFile(WatchedFiles[i]).FileName, FileName) then
 		begin
 			WatchedFiles.Delete(i);
 			Break;

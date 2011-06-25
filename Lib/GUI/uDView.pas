@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDView.pas
 //* Created:  2001-08-01
-//* Modified: 2008-01-27
-//* Version:  1.1.39.8
+//* Modified: 2008-02-23
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -35,7 +35,7 @@ type
 		Alignment: TAlignment; // 1
 		Click: B1; // 1
 		Visible: BG; // 1
-		Reserved: array[0..0] of U1; // 1
+		OwnDraw: BG; // 1
 	end;
 
 	TOnGetData = procedure(Sender: TObject; var Data: string;
@@ -79,6 +79,7 @@ type
 		procedure CopySelection;
 		function GetSelCount: SG;
 		procedure MoveColumn(const FromColumn, ToColumn: SG);
+		procedure NextRow(const Key: Char);
 
 		procedure LFill(Sender: TObject);
 
@@ -113,8 +114,8 @@ type
 
 		// Columns
 		property ColumnCount: SG read FColumnCount write SetColumnCount;
-		procedure SetColumn(const Index: SG; const Caption: string; const Width: SG = 0; const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True);
-		procedure AddColumn(const Caption: string; const Width: SG = 0; const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True);
+		procedure SetColumn(const Index: SG; const Caption: string; const Width: SG = 0; const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True; const OwnDraw: BG = False);
+		procedure AddColumn(const Caption: string; const Width: SG = 0; const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True; const OwnDraw: BG = False);
 		procedure AddColumns(const C: array of TColumnOptions);
 		procedure SetAllSortable(const Sortable: BG);
 
@@ -625,6 +626,15 @@ begin
 	else
 
 	end;
+	if Shift = [] then
+	begin
+		if FRowCount > 0 then
+		begin
+			NextRow(Char(Key and $ff));
+		end;
+//		Exit;
+	end;
+
 	inherited;
 end;
 
@@ -747,7 +757,7 @@ begin
 						else
 							Data := {$ifopt d+}'<No data event defined>'{$else}''{$endif};
 
-						if Assigned(FOnGetData) and (FColumns[FColumnOrder[IX]].Width > MinColumnWidth) then
+						if Assigned(FOnGetData) and (FColumns[FColumnOrder[IX]].Width > MinColumnWidth) and (FColumns[FColumnOrder[IX]].OwnDraw = False) then
 						begin
 							R.Left := X + Border + LeftOffset{Microsoft Sans Serif};
 							R.Top := Y + Border;
@@ -1119,7 +1129,7 @@ end;
 
 procedure TDView.SetColumn(const Index: SG; const Caption: string;
 	const Width: SG = 0; const Alignment: TAlignment = taLeftJustify;
-	const Sortable: BG = True);
+	const Sortable: BG = True; const OwnDraw: BG = False);
 begin
 	Assert(Index >= 0);
 	Assert(Index < FColumnCount);
@@ -1130,13 +1140,13 @@ begin
 	FColumns[Index].Width := Width;
 	FColumns[Index].Alignment := Alignment;
 	FColumns[Index].Click := Sortable;
+	FColumns[Index].OwnDraw := OwnDraw;
 end;
 
-procedure TDView.AddColumn(const Caption: string; const Width: SG;
-	const Alignment: TAlignment; const Sortable: BG);
+procedure TDView.AddColumn(const Caption: string; const Width: SG = 0; const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True; const OwnDraw: BG = False);
 begin
 	SetColumnCount(FColumnCount + 1);
-	SetColumn(FColumnCount - 1, Caption, Width, Alignment, Sortable);
+	SetColumn(FColumnCount - 1, Caption, Width, Alignment, Sortable, OwnDraw);
 end;
 
 procedure TDView.AddColumns(const C: array of TColumnOptions);
@@ -1276,6 +1286,35 @@ end;
 procedure Register;
 begin
 	RegisterComponents('DComp', [TDView]);
+end;
+
+procedure TDView.NextRow(const Key: Char);
+var
+	n, y: SG;
+	Data: string;
+begin
+	if Assigned(FOnGetData) then
+	begin
+		n := 0;
+		y := ActualRow;
+		while n < FRowCount do
+		begin
+			Inc(y);
+			if y >= RowCount then y := 0;
+			try
+				FOnGetData(Self, Data, ActualColumn, PhysicalRow(y), Rect(0, 0, 0, 0));
+			except
+				on E: Exception do
+					Fatal(E, Self);
+			end;
+			if (Length(Data) > 0) and (LowCase(Data[1]) = LowCase(Key)) then
+			begin
+				CellClick(ActualColumn, y, []); // TODO Shift
+				Exit;
+			end;
+			Inc(n);
+		end;
+	end;
 end;
 
 initialization

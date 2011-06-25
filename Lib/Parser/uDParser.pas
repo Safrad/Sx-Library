@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uDParser.pas
 //* Created:  2004-03-07
-//* Modified: 2007-10-21
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -1885,7 +1885,7 @@ begin
 			NumericBase := 10;
 		end;
 
-		Messages.Add(0, LinesL, Self.BufRI - LineStart - Length(Id), Self.BufRI - LineStart, s, mtError);
+		Messages.Add(0, LinesL, Self.BufRI - LineStart - Length(Id), Self.BufRI - LineStart, s, mlError);
 	end;
 end;
 

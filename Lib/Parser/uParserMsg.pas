@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uParserMsg.pas
 //* Created:  2004-03-07
-//* Modified: 2007-08-19
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -21,7 +21,7 @@ type
 		Line: U4; // 4
 		X0, X1: U4; // 8
 		Text: string; // 4
-		MsgType: TMsgType; // 1
+		MsgType: TMessageLevel; // 1
 		Reserve: array[0..2] of U1; // 3
 	end;
 
@@ -32,7 +32,7 @@ type
 	public
 		constructor Create;
 		destructor Destroy; override;
-		procedure Add(const FileNameIndex, Line, X0, X1: SG; const Text: string; const MsgType: TMsgType);
+		procedure Add(const FileNameIndex, Line, X0, X1: SG; const Text: string; const MsgType: TMessageLevel);
 		procedure Clear;
 		procedure ShowAndClear(const FileName: TFileName = '');
 		function ToString: string;
@@ -121,7 +121,7 @@ begin
 	inherited;
 end;
 
-procedure TParserMessages.Add(const FileNameIndex, Line, X0, X1: SG; const Text: string; const MsgType: TMsgType);
+procedure TParserMessages.Add(const FileNameIndex, Line, X0, X1: SG; const Text: string; const MsgType: TMessageLevel);
 var
 	M: PParserMessage;
 begin
@@ -165,7 +165,7 @@ end;
 
 function TParserMessages.MesToString(const M: PParserMessage): string;
 begin
-	Result := '[' + MsgTypeStr[M.MsgType] + ']' + ' (' + NToS(M.Line + 1) + ', ' + NToS(M.X0 + 1) + '..' + NToS(M.X1 + 1) + '): ' + M.Text;
+	Result := '[' + MessageLevelStr[M.MsgType] + ']' + ' (' + NToS(M.Line + 1) + ', ' + NToS(M.X0 + 1) + '..' + NToS(M.X1 + 1) + '): ' + M.Text;
 
 {	s := MesStrings[M.MesId];
 	if Length(M.Params) = 0 then

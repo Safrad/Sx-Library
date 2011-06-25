@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSystem.pas
 //* Created:  1998-01-01
-//* Modified: 2007-05-20
-//* Version:  1.1.39.8
+//* Modified: 2007-12-24
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -42,7 +42,7 @@ implementation
 
 uses
 	Windows, Math,
-	uStrings, uFiles, uDParser, uWave, uMath;
+	uStrings, uFiles, uDParser, uWave, uMath, uFile;
 
 function DriveTypeToStr(const DriveType: Integer): string;
 begin

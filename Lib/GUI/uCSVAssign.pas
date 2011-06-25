@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uCSVAssign.pas
 //* Created:  2004-01-04
 //* Modified: 2007-05-06
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -15,7 +15,7 @@ interface
 uses
 	uDForm, uTypes, uData,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, StdCtrls, uDButton, uDLabel, uMain;
+	ExtCtrls, StdCtrls, uDButton, uDLabel, uMain, uDWinControl;
 
 type
 	TfFormats = class(TDForm)

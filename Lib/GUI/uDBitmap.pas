@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDBitmap.pas
 //* Created:  1999-05-01
-//* Modified: 2007-11-26
-//* Version:  1.1.39.8
+//* Modified: 2007-12-30
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -388,7 +388,7 @@ implementation
 uses
 	Jpeg, GifImage, PngImage, PPMImage, TGAImage,
 	Math, ClipBrd, ExtDlgs, StdCtrls, Dialogs,
-	uGraph, uMsg, uScreen, uFiles, uGetInt, uStrings, uFind, uSystem;
+	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 function WidthToByteX4(const Width: UG): UG;
 begin
