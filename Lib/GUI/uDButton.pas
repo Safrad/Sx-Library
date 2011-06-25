@@ -64,6 +64,7 @@ type
 		procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 	protected
 		procedure CreateHandle; override;
 		procedure CreateParams(var Params: TCreateParams); override;
@@ -118,6 +119,11 @@ uses
 { TDButton }
 var
 	CDefault, CCancel, CDefaultCancel: TColor;
+
+procedure TDButton.WMEraseBkgnd(var Message: TWMEraseBkgnd);
+begin
+	Message.Result := 1;
+end;
 
 procedure TDButton.InitRect;
 var

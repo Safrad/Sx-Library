@@ -18,11 +18,11 @@ uses
 // File System
 const
 {
-	Best Performance
-	1..16 * KB: very low performance
-	32 * KB: lowest memory
-	64..128 * KB: optimal
-	32 * MB: Win API maximum
+	Buffer Size, Performance
+	1..16 * KB, low
+	32 * KB, acceptable
+	64..128 * KB, the best
+	32 * MB, Win API maximum
 }
 	DefFileBuffer = {$ifndef Console}64{$else}32{$endif} * KB;
 	FileSep = CharCR + CharLF;
@@ -90,7 +90,8 @@ type
 		function UnLock(From, Count: U8): BG;
 	end;
 
-function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 {
 	Result of Functions : False: Error, True: Ok
 	Example:
@@ -156,6 +157,8 @@ function CreateDirEx(const Dir: string): BG;
 function CreateDirsEx(const Dir: string): BG;
 function NewFileOrDir(var FileOrDir: string): BG;
 function NewFileOrDirEx(var FileOrDir: string): BG;
+function CopyFileDateTime(const Source, Dest: string): BG;
+function CopyDirOnly(const Source, Dest: string): BG;
 function CopyDir(const Source, Dest: string): BG;
 
 function DeleteFileEx(const FileName: TFileName): BG;
@@ -316,12 +319,12 @@ begin
 	Flags := Flags and (not FILE_FLAG_OVERLAPPED);
 	FHandle := CreateFile(
 		PChar(FTempFileName), // pointer to name of the file
-		DesiredAccess,  // access (read-write) mode
-		ShareMode,  // share mode
-		nil,  // pointer to security attributes
+		DesiredAccess, // access (read-write) mode
+		ShareMode, // share mode
+		nil, // pointer to security attributes
 		CreationDistribution, // how to create
 		FILE_ATTRIBUTE_NORMAL or Flags, // file attributes
-		0   // handle to file with attributes to copy
+		0 // handle to file with attributes to copy
 	);
 	if not IsOpened then
 	begin
@@ -362,7 +365,7 @@ begin
 	Result := Size >= 0;
 end;
 
-function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 label LRetry;
 var
 	FHandle: THANDLE;
@@ -373,16 +376,49 @@ begin
 	U8(LastWriteTime) := 0;
 	FHandle := CreateFile(
 		PChar(FileName),  // pointer to name of the file
-		0,  // access (read-write) mode
+		0, // access (read-write) mode
 		FILE_SHARE_READ or FILE_SHARE_WRITE,  // share mode
-		nil,  // pointer to security attributes
-		OPEN_EXISTING,  // how to create
-		FILE_ATTRIBUTE_NORMAL,  // file attributes
-		0   // handle to file with attributes to copy
+		nil, // pointer to security attributes
+		OPEN_EXISTING, // how to create
+		FILE_FLAG_BACKUP_SEMANTICS {FILE_ATTRIBUTE_NORMAL}, // file attributes
+		0 // handle to file with attributes to copy
 	);
 	if FHandle <> INVALID_HANDLE_VALUE then
 	begin
 		Result := GetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime);
+		if Result = False then
+			IOError(FileName, GetLastError);
+		if CloseHandle(FHandle) = False then
+		begin
+			IOError(FileName, GetLastError);
+		end;
+	end
+	else
+	begin
+		IOError(FileName, GetLastError);
+	end;
+end;
+
+function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+label LRetry;
+var
+	FHandle: THANDLE;
+begin
+	Result := False;
+	FHandle := CreateFile(
+		PChar(FileName),  // pointer to name of the file
+		GENERIC_WRITE, // access (read-write) mode
+		FILE_SHARE_READ or FILE_SHARE_WRITE,  // share mode
+		nil, // pointer to security attributes
+		OPEN_EXISTING, // how to create
+		FILE_FLAG_BACKUP_SEMANTICS {FILE_ATTRIBUTE_NORMAL}, // file attributes
+		0 // handle to file with attributes to copy
+	);
+	if FHandle <> INVALID_HANDLE_VALUE then
+	begin
+		Result := SetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime);
+		if Result = False then
+			IOError(FileName, GetLastError);
 		if CloseHandle(FHandle) = False then
 		begin
 			IOError(FileName, GetLastError);
@@ -763,8 +799,6 @@ begin
 			end;
 			if (ExeFileName[i] = PathDelim) then
 			begin
-				if FProjectInfo[piInternalName] = '' then // if not initialized in ProjectInfo
-					FProjectInfo[piInternalName] := DelFileExt(Copy(ExeFileName, i + 1, MaxInt));
 				WorkDir := Copy(ExeFileName, 1, i);
 				Break;
 			end;
@@ -793,13 +827,17 @@ begin
 	if CommonTempDir = '' then TempDir := WinDir + 'Temp';
 	CorrectDir(CommonTempDir);
 	TempDir := CommonTempDir + '_' + GetProjectInfo(piInternalName) + PathDelim;
-	CreateDirEx(TempDir);                                     
+	{$ifndef Console}
+	CreateDirEx(TempDir);
+	{$endif}
 
 	ApplicationDataDir := GetEnvironmentVariable( 'APPDATA');
 	if ApplicationDataDir = '' then ApplicationDataDir := WinDir + 'Application Data' + PathDelim;
 	CorrectDir(ApplicationDataDir);
 	AppDataDir := ApplicationDataDir + GetProjectInfo(piCompanyName) + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
+	{$ifndef Console}
 	CreateDirsEx(AppDataDir);
+	{$endif}
 
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
 //	CorrectDir(DocsDir);
@@ -1333,6 +1371,32 @@ begin
 	Result := NewFileOrDir(FileOrDir);
 end;
 
+function CopyFileDateTime(const Source, Dest: string): BG;
+var
+	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
+begin
+	if GetFileDateTime(Source, CreationTime, LastAccessTime, LastWriteTime) then
+	begin
+		SetFileDateTime(Dest, CreationTime, LastAccessTime, LastWriteTime);
+	end;
+end;
+
+function CopyDirOnly(const Source, Dest: string): BG;
+var
+//	hDir: THandle;
+	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
+begin
+	Result := True;
+	CreateDirectoryEx(PChar(Source), PChar(Dest), nil);
+//	if Result = then
+	begin
+		if GetFileDateTime(Source, CreationTime, LastAccessTime, LastWriteTime) then
+		begin
+			SetFileDateTime(Dest, CreationTime, LastAccessTime, LastWriteTime);
+		end;
+	end;
+end;
+
 function CopyDir(const Source, Dest: string): BG;
 var
 	SearchRec: TSearchRec;
@@ -1340,7 +1404,7 @@ var
 begin
 	Result := True;
 
-	CreateDirEx(Dest);
+	CopyDirOnly(Source, Dest);
 
 	// faReadOnly or faHidden or faSysFile or faArchive or faDirectory
 	ErrorCode := FindFirst(Source + '*.*', faAnyFile, SearchRec);

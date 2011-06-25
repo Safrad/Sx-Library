@@ -14,7 +14,8 @@ uses
 	uParserMsg,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
-	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit;
+	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,
+  uDWinControl;
 
 const
 	MaxColor = 6 * 4 + 3 * 4 - 1;

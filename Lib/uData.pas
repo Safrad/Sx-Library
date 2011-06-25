@@ -63,6 +63,7 @@ type
 		function GetFirst: Pointer; overload;
 //		procedure GetLast(var Value); overload;
 		function GetLast: Pointer; overload;
+		procedure Next(var P: Pointer);
 
 		function IsEmpty: Boolean;
 		function ToString: string;
@@ -326,6 +327,13 @@ begin
 		end;
 		SetLength(Result, Length(Result) - 1);
 	end;
+end;
+
+procedure TData.Next(var P: Pointer);
+begin
+	Inc(SG(P), ItemMemSize);
+	if SG(P) >= SG(Data) + FItemMemSize * FItemCount then
+		 P := nil;
 end;
 
 end.

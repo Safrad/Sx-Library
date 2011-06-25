@@ -163,7 +163,7 @@ begin
 	i := 0;
 	while i < WatchedFiles.Count do
 	begin
-		if PWatchedFile(WatchedFiles[i]).FileName = FileName then
+		if PWatchedFile(WatchedFiles[i]).FileName = FileName then // TODO Upcase
 		begin
 			PWatchedFile(WatchedFiles[i]).Changed := Changed;
 		end;
@@ -177,7 +177,7 @@ begin
 	i := 0;
 	while i < WatchedFiles.Count do
 	begin
-		if PWatchedFile(WatchedFiles[i]).FileName = FileName then
+		if PWatchedFile(WatchedFiles[i]).FileName = FileName then // TODO Upcase
 		begin
 			WatchedFiles.Delete(i);
 			Break;
