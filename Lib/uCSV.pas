@@ -1,10 +1,10 @@
 //* File:     Lib\uCSV.pas
 //* Created:  2007-03-10
-//* Modified: 2007-03-10
-//* Version:  X.X.37.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-05
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uCSV;
 
@@ -18,25 +18,24 @@ const
 	CSVSep = ',';
 
 type
-	TStringArray = array of string;
-
 	TCSVFile = class
 	private
 		{ Private declarations }
 		CSVFile: TFile;
 		CSVFileName: TFileName;
-//		FLine: TStringArray;
+		FColumnCount: SG;
+		FLineIndex: SG;
 	public
 		{ Public declarations }
-//		property Line: TStringArray read FLine;
-		constructor Create(var FileName: TFileName); overload;
-		constructor Create; overload;
+		constructor Create(const ColumnCount: SG);
 		destructor Destroy; override;
 
-		function ReadLine: TStringArray;
+		function ReadLine: TArrayOfString;
 		function Close: BG;
-		function Open(var FileName: TFileName): BG;
+		function Open(const FileName: TFileName): BG;
 		function EOF: BG;
+	property
+		LineIndex: SG read FLineIndex;
 	end;
 
 implementation
@@ -47,15 +46,10 @@ uses
 
 { TCSV }
 
-constructor TCSVFile.Create(var FileName: TFileName);
+constructor TCSVFile.Create(const ColumnCount: SG);
 begin
-	inherited Create;
-	CSVFile := TFile.Create;
-	Open(FileName);
-end;
-
-constructor TCSVFile.Create;
-begin
+	Assert(ColumnCount >= 0);
+	FColumnCount := ColumnCount;
 	CSVFile := TFile.Create;
 	inherited Create;
 end;
@@ -66,24 +60,19 @@ begin
 	inherited;
 end;
 
-function TCSVFile.Open(var FileName: TFileName): BG;
+function TCSVFile.Open(const FileName: TFileName): BG;
 begin
-	Result := CSVFile.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False);
+	Assert(FileName <> '');
+	FLineIndex := 0;
+	Result := CSVFile.Open(FileName, fmReadOnly);
 	CSVFileName := FileName;
 end;
 
-function TCSVFile.ReadLine: TStringArray;
-label LRetry;
-
-	procedure AddItem(var Result: TStringArray; NewItem: string);
-	begin
-		SetLength(Result, Length(Result) + 1);
-		Result[Length(Result) - 1] := NewItem;
-	end;
-
+function TCSVFile.ReadLine: TArrayOfString;
 var
 	Line: string;
 	InLineIndex: SG;
+	ColumnIndex: SG;
 	LastIndex: SG;
 	Quoted: BG;
 begin
@@ -94,8 +83,10 @@ begin
 		begin
 			if Line = '' then Continue; // Empty line
 			if Line[1] = '#' then Continue; // Remark line
+			SetLength(Result, FColumnCount);
 			LastIndex := 1;
 			InLineIndex := 1;
+			ColumnIndex := 0;
 			Quoted := False;
 			while InLineIndex <= Length(Line) do
 			begin
@@ -120,11 +111,20 @@ begin
 						Quoted := not Quoted;
 					end;
 				end;
-				',', ';', CharTab:
+				',', ';', CharTab: // Column separators
 				begin
 					if Quoted = False then
 					begin
-						AddItem(Result, Copy(Line, LastIndex, InLineIndex - LastIndex));
+						if FColumnCount = 0 then
+						begin
+							SetLength(Result, ColumnIndex + 1);
+							Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+						end
+						else if ColumnIndex < FColumnCount then
+						begin
+							Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+						end;
+						Inc(ColumnIndex);
 						LastIndex := InLineIndex + 1;
 					end;
 					// else char is part of value
@@ -133,8 +133,17 @@ begin
 
 				Inc(InLineIndex);
 			end;
-			AddItem(Result, Copy(Line, LastIndex, InLineIndex - LastIndex));
+			if FColumnCount = 0 then
+			begin
+				SetLength(Result, ColumnIndex + 1);
+				Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+			end
+			else if ColumnIndex < FColumnCount then
+			begin
+				Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+			end;
 
+			Inc(FLineIndex);
 			Break;
 		end;
 	end;
@@ -142,13 +151,13 @@ end;
 
 function TCSVFile.Close: BG;
 begin
+	Result := True;
 	if Assigned(CSVFile) then
 	begin
-		Result := CSVFile.Close;
+		if CSVFile.Opened then
+			Result := CSVFile.Close;
 		FreeAndNil(CSVFile);
-	end
-	else
-		Result := True;
+	end;
 	CSVFileName := '';
 end;
 

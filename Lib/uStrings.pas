@@ -1,16 +1,16 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2005-10-12
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uStrings;
 
 interface
 
-uses SysUtils, uTypes;
+uses SysUtils, TypInfo, uTypes;
 
 const
 	CharNul = #$00;
@@ -27,7 +27,6 @@ const
 	}
 	LineSep = CharLF; // Deafult
 	FullSep = CharCR + CharLF; // Required by some Windows components
-	HTMLSep = LineSep;
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
@@ -59,6 +58,8 @@ function DelCharsF(const s: string; const SubChar: Char): string;
 procedure DelStr(var s: string; const SubStr: string);
 function DelStrF(const s: string; const SubStr: string): string;
 
+function Ident(const Level: SG): string;
+
 procedure AddQuote(var s: string);
 procedure DelQuote(var s: string);
 function DelQuoteF(const s: string): string;
@@ -72,12 +73,13 @@ function DelEndSpaceF(const s: string): string;
 procedure DelBESpace(var s: string);
 function DelBESpaceF(const s: string): string;
 
-function LastChar(const s: string): string;
+function FirstChar(const s: string): Char;
+function LastChar(const s: string): Char;
+function CharAt(const s: string; const Index: SG): Char;
+function DelFirstChar(const s: string; Left: SG = 1): string;
 function DelLastChar(const s: string; Right: SG = 1): string;
 function DelLastNumber(const s: string): string;
 
-function FirstChar(const s: string): string;
-function CharAt(const s: string; const Index: SG): Char;
 
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
@@ -103,7 +105,8 @@ function OneLine(const s: string): string;
 procedure RemoveComment(var s: string);
 function CapitalCase(const s: string): string;
 
-function ReplaceF(const s: string; const WhatS, ToS: string): string;
+function ReplaceF(const s: string; const WhatS, ToS: string): string; overload;
+function ReplaceF(const s: string; const WhatS, ToS: array of string): string; overload;
 procedure Replace(var s: string; const WhatS, ToS: string); overload;
 procedure Replace(var s: string; const WhatS, ToS: array of string); overload;
 
@@ -116,11 +119,17 @@ function Plural(Number: SG): string;
 procedure CorrectDir(var s: string);
 function RandomString(Size: SG): string;
 
+procedure EnumToStr(TypeInfo: PTypeInfo; out AString: array of string);
+function ButtonNameToFileName(const Name: string): string;
+function ComponentName(const Name: string): string;
+
+function HashCode(const s: string): U4;
+
 implementation
 
 uses
 	Math,
-	uMath;
+	uMath, uCharTable;
 
 function PosEx(const SubStr, Str: string): SG;
 begin
@@ -263,6 +272,17 @@ begin
 	DelStr(Result, SubStr);
 end;
 
+function Ident(const Level: SG): string;
+begin
+	if Level = 0 then
+		Result := ''
+	else
+	begin
+		SetLength(Result, Level);
+		FillChar(Result[1], Level, CharTab);
+	end;
+end;
+
 procedure AddQuote(var s: string);
 begin
 	s := '"' + s + '"';
@@ -338,10 +358,16 @@ begin
 	DelBESpace(Result);
 end;
 
-function LastChar(const s: string): string;
+function DelFirstChar(const s: string; Left: SG = 1): string;
 begin
-	if Length(s) > 0 then
-		Result := s[Length(s)];
+	Result := Copy(s, Left + 1, MaxInt);
+{	Left := Min(Length(s), Left);
+	if Left > 0 then
+	begin
+		Result := Copy(s, Left, MaxInt);
+	end
+	else
+		Result := '';}
 end;
 
 function DelLastChar(const s: string; Right: SG = 1): string;
@@ -380,10 +406,20 @@ begin
 	Result := Copy(s, 1, i);
 end;
 
-function FirstChar(const s: string): string;
+function FirstChar(const s: string): Char;
 begin
-	if Length(s) > 0 then
+	if Length(s) <= 0 then
+		Result := CharNul
+	else
 		Result := s[1];
+end;
+
+function LastChar(const s: string): Char;
+begin
+	if Length(s) <= 0 then
+		Result := CharNul
+	else
+		Result := s[Length(s)];
 end;
 
 function CharAt(const s: string; const Index: SG): Char;
@@ -513,7 +549,7 @@ begin
 	if LineIndex <= Length(Line) then
 		LastChar := Line[LineIndex]
 	else
-		LastChar := #0;
+		LastChar := CharNul;
 	Inc(LineIndex);
 end;
 
@@ -614,6 +650,12 @@ begin
 end;
 
 function ReplaceF(const s: string; const WhatS, ToS: string): string;
+begin
+	Result := s;
+	Replace(Result, WhatS, ToS);
+end;
+
+function ReplaceF(const s: string; const WhatS, ToS: array of string): string;
 begin
 	Result := s;
 	Replace(Result, WhatS, ToS);
@@ -731,7 +773,7 @@ procedure CorrectDir(var s: string);
 var i: SG;
 begin
 	i := Length(s);
-	if (i > 0) and (s[i] <> '\') then s := s + '\';
+	if (i > 0) and (s[i] <> PathDelim) then s := s + PathDelim;
 end;
 
 function RandomString(Size: SG): string;
@@ -741,21 +783,117 @@ begin
 	for i := 1 to Size do
 		Result[i] := Char(Random(256));
 end;
-{
+
+procedure EnumToStr(TypeInfo: PTypeInfo; out AString: array of string);
 var
 	i: SG;
-	s, s2: string;
+	TypeData: PTypeData;
 begin
-	for i := 0 to 32767 do
+	TypeData := GetTypeData(TypeInfo);
+	for i := TypeData.MinValue to TypeData.MaxValue do
 	begin
-		s := RandomString(i);
-		s2 := AddEscape(s);
-		s2 := RemoveEscape(s2);
-		Assert(s = s2);
+		AString[i] := AddSpace(Copy(GetEnumName(TypeInfo, i), 3, MaxInt));
+	end;
+end;
+
+function ButtonNameToFileName(const Name: string): string;
+label LDel;
+var
+	Index, i: SG;
+	Found: BG;
+const
+	Names: array[0..4] of string = ('DBUTTON', 'BUTTON', 'COMBOBOX', 'EDIT', 'MEMO');
+begin
+	Result := Name;
+	Found := False;
+	for i := 0 to Length(Names) - 1 do
+	begin
+		Index := Pos(Names[i], UpperCase(Result));
+		if Index = 1 then
+		begin
+			Delete(Result, Index, Length(Names[i]));
+			Found := True;
+			Break;
+		end;
 	end;
 
+	if Found = False then
+		Result := DelLastNumber(Result);
 end;
-}
+
+function ComponentName(const Name: string): string;
+var i: SG;
+begin
+	Result := Name;
+	i := 1;
+	while i <= Length(Result) do
+	begin
+		if not (StdCharTable[Result[i]] in [ctLetter, ctNumber]) then
+			Delete(Result, i, 1)
+		else
+			Inc(i);
+	end;
+	if Result = '' then
+		Result := 'N'
+	else
+	begin
+		if StdCharTable[Result[1]] <> ctLetter then
+			Result := 'N' + Result;
+	end;
+end;
+
+// TODO: MD5
+
+{$IFOPT Q+}
+	{$DEFINE Q_PLUS}
+	{$OVERFLOWCHECKS OFF}
+{$ENDIF}
+// Java algorithm
+function HashCode(const s: string): U4;
+var
+	i: SG;
+begin
+	Result := 0;
+	for i := 1 to Length(s) do
+	begin
+		Result := 31 * Result + Ord(s[i]);
+	end;
+end;
+{$IFDEF Q_PLUS}
+	{$OVERFLOWCHECKS ON}
+	{$UNDEF Q_PLUS}
+{$ENDIF}
+
+{
+function HashCode(const s: string): U4;
+var
+	i: Integer;
+	res: Extended;
+
+	function RoundEx(const x: Extended): U4;
+	begin
+		Result := Trunc(x) + Trunc(Frac(x) * 2);
+	end;
+begin
+	res := 0;
+
+	for i := 1 to Length(s) do
+	begin
+		res := res + Ord(s[i]) * Power(31, Length(s) - (i - 1) - 1);
+	end;
+
+	Result := RoundEx(res);
+end;}
+
+{
+function HashCode(const s: string): U4;
+var i: SG;
+begin
+//	Result := Hash(s, Length(s));
+	Result := 0;
+	for i := 1 to Length(s) do
+		Result := Result + Ord(s[i]);
+end;}
 
 procedure FillHexValue;
 var

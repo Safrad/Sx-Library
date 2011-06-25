@@ -1,10 +1,10 @@
 //* File:     Lib\uScreen.pas
 //* Created:  1999-08-01
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uScreen;
 
@@ -12,14 +12,14 @@ interface
 
 uses
 	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, 
+	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, uDButton, uDForm;
 
 type
 	TfScreen = class(TDForm)
 		ComboBoxDriver: TComboBox;
 		ButtonOk: TDButton;
-    procedure FormCreate(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
 	private
 		{ Private declarations }
 	public
@@ -129,7 +129,7 @@ implementation
 {$R *.DFM}
 uses
 	Registry, Math, MMSystem,
-	uMsg, uError, uStrings, uWave, uFiles, uGetInt, uDIni, uInput, uFormat, uSystem;
+	uMsg, uStrings, uWave, uFiles, uGetInt, uDIniFile, uInputFormat, uOutputFormat, uSystem;
 var
 	SndBeep: PWave;
 	First: Boolean;
@@ -836,7 +836,7 @@ begin
 		and ((ScreenModes[ModeIndex].Bits <> 24) or (Bits <> 32)) then
 			ErrorMsg('Screen mode ' + ScreenModeToStr(Width, Height, Bits, RefreshRate) +
 				' can not be set, using ' +
-				ScreenModeToStr(ScreenModes[ModeIndex].Width, ScreenModes[ModeIndex].Height, ScreenModes[ModeIndex].Bits, ScreenModes[ModeIndex].RefreshRate));
+				ScreenModeToStr(ScreenModes[ModeIndex].Width, ScreenModes[ModeIndex].Height, ScreenModes[ModeIndex].Bits, ScreenModes[ModeIndex].RefreshRate) + '.');
 
 		DeviceMode.dmSize := SizeOf(DeviceMode);
 		DeviceMode.dmFields := DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT;
@@ -857,14 +857,14 @@ begin
 			0,  // vertical mouse position or position change
 			0,  // amount of wheel movement
 			0   // 32 bits of application-defined information
-		 );
+		);
 		mouse_event(
 			MOUSEEVENTF_MOVE,
 			MouseX div 2, // horizontal mouse position or position change
 			MouseY div 2, // vertical mouse position or position change
 			0,  // amount of wheel movement
 			0   // 32 bits of application-defined information
-		 );}
+		);}
 		SelfChange := True;
 		s := ScreenModeToStr(
 			ScreenModes[ModeIndex].Width,
@@ -894,7 +894,7 @@ begin
 				AddLastMode(NowWidth, NowHeight, NowBits, NowRefreshRate);
 		end
 		else
-			ErrorMsg('Can not change screen mode to ' + s);
+			ErrorMsg('Can not change screen mode to %1.', s);
 	end;
 end;
 

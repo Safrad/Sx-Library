@@ -1,12 +1,12 @@
 //* File:     Lib\uDb.pas
 //* Created:  1999-12-01
-//* Modified: 2005-09-15
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-06
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
-unit uDb; // Not developed
+unit uDb deprecated;
 
 interface
 
@@ -91,7 +91,7 @@ implementation
 
 uses
 	Controls, Windows,
-	uGetStr, uMsg, uError, uMath, uStrings;
+	uGetStr, uMsg, uMath, uStrings;
 
 procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: U4);
 begin
@@ -320,7 +320,7 @@ begin
 		begin
 			CloseFile(DbFile); IOResult;
 			if IOErrorMessageRetry(FName, 'Minimum size of file is ' +
-				IntToStr(PreHeadSize) + ' bytes') then goto LRetry;
+				IntToStr(PreHeadSize) + ' bytes.') then goto LRetry;
 			goto LExit;
 		end;
 		BlockRead(DbFile, HeadT, PreHeadSize);
@@ -328,7 +328,7 @@ begin
 		if HeadT.Id <> Id then
 		begin
 			CloseFile(DbFile); IOResult;
-			if IOErrorMessageRetry(FName, 'Is not Db file') then goto LRetry;
+			if IOErrorMessageRetry(FName, 'Is not Db file.') then goto LRetry;
 			goto LExit;
 		end;
 		HeadT.HeadSize := Range(PreHeadSize, HeadT.HeadSize, 65536);
@@ -364,8 +364,8 @@ begin
 		begin
 			CloseFile(DbFile); IOResult;
 			if IOErrorMessageRetry(FileName,
-				'File version ' + IntToStr(Head.Version) + LineSep +
-				'Required version ' + IntToStr(Version)) then goto LRetry;
+				'File version ' + IntToStr(Head.Version) + ', ' + LineSep +
+				'required version ' + IntToStr(Version) + '.') then goto LRetry;
 			goto LExit;
 		end;
 

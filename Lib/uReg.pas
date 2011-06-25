@@ -1,10 +1,10 @@
 //* File:     Lib\uReg.pas
 //* Created:  1999-11-01
-//* Modified: 2005-08-27
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-04-22
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uReg;
 
@@ -45,7 +45,7 @@ begin
 		end
 		else
 		begin
-			Warning('Can not delete key "%1" with subkeys.', Reg.CurrentPath + '\' + Key);
+			Warning('Can not delete key %1 with subkeys.', Reg.CurrentPath + '\' + Key);
 		end;
 	end;
 end;
@@ -405,12 +405,12 @@ begin
 	Result := True;
 	if High(MenuCaptions) <> High(OpenPrograms) then
 	begin
-		Warning('Registry: Illegal parameters');
+		Warning('Illegal filetype parameters.');
 		Exit;
 	end;
 	if FileType = '' then
 	begin
-		Warning('Registry: Illegal file extension');
+		Warning('Illegal file extension.');
 		Exit;
 	end;
 	case FileTypesOperation of
@@ -556,7 +556,8 @@ begin
 		if Reg.KeyExists(Key) then
 		begin
 			Reg.OpenKeyReadOnly(Key);
-			Result := Reg.ReadString(Name) + '\';
+			Result := Reg.ReadString(Name);
+			CorrectDir(Result);
 			Reg.CloseKey;
 		end;
 	finally

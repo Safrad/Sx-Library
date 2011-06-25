@@ -1,10 +1,10 @@
 //* File:     Lib\uDImage.pas
 //* Created:  2000-07-01
-//* Modified: 2005-11-26
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDImage;
 
@@ -14,7 +14,7 @@ interface
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Menus,
 	ExtCtrls, StdCtrls,
-	uDBitmap, uTypes, uMath, uDTimer, uSimulation;
+	uDBitmap, uTypes, uMath, uDTimer, uSimulation, uDIniFile, uDWinControl;
 
 type
 	TZoomMenu = (
@@ -31,21 +31,15 @@ type
 
 	TZoom = FG;
 
-	TDImage = class(TWinControl)
+	TDImage = class(TDWinControl)
 	private
 		FTimer: TTimer;
-		FBitmap: TDBitmap;
 
-		FNeedFill: BG;
 		FHandScroll: BG;
 
 		FIntervalFillCount: UG;
 		FIntervalStartTime: U4;
 		FFPS: UG;
-
-		{$ifopt d+}
-		FFillCount, FPaintCount: UG;
-		{$endif}
 
 		LMouseX, LMouseY: SG;
 		MouseX, MouseY: Integer;
@@ -63,7 +57,6 @@ type
 		SliderHX2,
 		SliderVY1,
 		SliderVY2: Integer;
-		FCanvas: TCanvas;
 		LCursor: TCursor;
 
 		// Zoom
@@ -83,24 +76,28 @@ type
 		procedure ZoomClick(Sender: TObject);
 
 		procedure InitScrolls;
-		procedure FillBitmap;
 		procedure FillUserBitmap;
 
 		procedure Timer1Timer(Sender: TObject);
 
 		function GetMouseWhere(const X, Y: Integer): TMouseAction;
-		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
-		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 		procedure CMMouseEnter(var Message: TWMMouse); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TWMMouse); message CM_MOUSELEAVE;
 		procedure CMWantSpecialKey(var Message: TCMWantSpecialKey); message CM_WANTSPECIALKEY;
 	protected
 		procedure CreateParams(var Params: TCreateParams); override;
 //		procedure PaintWindow(DC: HDC); override;
-		property Canvas: TCanvas read FCanvas;
 //		procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+		// override
+		procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+		procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+		procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+		function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
+		procedure PageDownUp(const n: SG); virtual;
+		procedure LineDownUp(const n: SG); virtual;
+		procedure FillBitmap; override;
 	public
 		{ Public declarations }
 
@@ -141,20 +138,12 @@ type
 		procedure OffsetRange(var NOfsX, NOfsY: Integer);
 		procedure ScrollTo(NOfsX, NOfsY: Integer);
 		procedure OffsetOnRect(const Rect: TRect);
-		procedure Invalidate; override; // Invalidate (Fill and Paint)
 
-		procedure PageDownUp(const n: SG); virtual;
-		procedure LineDownUp(const n: SG); virtual;
 		procedure CursorDownUp(const n: SG); virtual;
 		procedure ScrollHome; virtual;
 		procedure ScrollEnd; virtual;
 
-		// override
-		procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
-		procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-		procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
-		function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
-		property Bitmap: TDBitmap read FBitmap;
+		procedure Serialize(const IniFile: TDIniFile; const Save: BG);
 
 		property NowMaxWidth: SG read FNowMaxWidth;
 		property NowMaxHeight: SG read FNowMaxHeight;
@@ -228,8 +217,8 @@ implementation
 
 uses
 	Math, ClipBrd,
-	uMenus, uGraph, uSysInfo, uStrings, uGetInt, uGColor, uFormat, uMsg, uColor,
-  Types;
+	uGraph, uStrings, uGetInt, uGColor, uOutputFormat, uMsg, uColor, uMenus,
+	Types;
 
 const
 //	ZoomDiv = 2520;
@@ -408,9 +397,9 @@ begin
 	begin
 		ChangeZoom(TargetZoom / 2);
 	end;
-	zmFitImage: if UserBitmap <> nil then ChangeZoom(Min(FBitmap.Width / UserBitmap.Width, FBitmap.Height / UserBitmap.Height));
-	zmFitWidth: if UserBitmap <> nil then ChangeZoom(FBitmap.Width / UserBitmap.Width);
-	zmFitHeight: if UserBitmap <> nil then ChangeZoom(FBitmap.Height / UserBitmap.Height);
+	zmFitImage: if UserBitmap <> nil then ChangeZoom(Min(Bitmap.Width / UserBitmap.Width, Bitmap.Height / UserBitmap.Height));
+	zmFitWidth: if UserBitmap <> nil then ChangeZoom(Bitmap.Width / UserBitmap.Width);
+	zmFitHeight: if UserBitmap <> nil then ChangeZoom(Bitmap.Height / UserBitmap.Height);
 	zm12: ChangeZoom(1 / 2);
 	zm1: ChangeZoom(1);
 	zm2: ChangeZoom(2);
@@ -437,52 +426,6 @@ begin
 	zmCopy:
 		Clipboard.Assign(TBitmap(Bitmap));
 	end;
-end;
-
-procedure TDImage.WMPaint(var Message: TWMPaint);
-begin
-	inherited;
-	{$ifopt d+}
-	Inc(FPaintCount);
-	{$endif}
-	if FNeedFill then FillBitmap;
-
-	if FBitmap.Empty then
-	begin
-		FCanvas.Brush.Style := bsSolid;
-		FCanvas.Brush.Color := clAppWorkSpace;
-		PatBlt(
-			FCanvas.Handle,
-			0,
-			0,
-			Width,
-			Height,
-			PATCOPY
-		);
-	end
-	else
-	begin
-		FBitmap.DrawToDC(FCanvas.Handle, 0, 0);
-	end;
-	if Assigned(FOnPaint) then
-	begin
-		try
-			FOnPaint(Self);
-		except
-			on E: Exception do
-				ErrorMsg(E.Message);
-		end;
-	end;
-	{$ifopt d+}
-{	Canvas.Brush.Style := bsClear;
-	Canvas.Font.Color := clWhite;
-	Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));}
-	{$endif}
-end;
-
-procedure TDImage.WMEraseBkgnd(var Message: TWMEraseBkgnd);
-begin
-	Message.Result := 1;
 end;
 
 procedure TDImage.CMMouseEnter(var Message: TWMMouse);
@@ -521,25 +464,17 @@ begin
 	ActualZoom := 1;
 	TargetZoom := 1;
 
-	FCanvas := TControlCanvas.Create;
-	TControlCanvas(FCanvas).Control := Self;
-
 	FHotTrack := True;
-
-	FBitmap := TDBitmap.Create;
-	FBitmap.Canvas.Font := Font;
 
 	TabStop := True;
 	//	ControlStyle := [csDoubleClicks, csOpaque, csAcceptsControls, csMenuEvents, csDisplayDragImage, csReflector];
-	ControlStyle := ControlStyle + [csOpaque, csMenuEvents, csDisplayDragImage, csReflector] - [csSetCaption];
+	ControlStyle := ControlStyle {+ [csOpaque, csMenuEvents, csDisplayDragImage, csReflector]} - [csSetCaption];
 end;
 
 destructor TDImage.Destroy;
 begin
 	FreeAndNil(FTimer);
 
-	FreeAndNil(FCanvas);
-	FreeAndNil(FBitmap);
 	BmpS := nil;
 	UserBitmap := nil;
 	FreeAndNil(BmpSourceS);
@@ -564,13 +499,13 @@ end;
 
 function TDImage.GetMouseWhere(const X, Y: Integer): TMouseAction;
 begin
-	if (X < 0) or (X >= FBitmap.Width) or (Y < 0) or (Y >= FBitmap.Height) then
+	if (X < 0) or (X >= Bitmap.Width) or (Y < 0) or (Y >= Bitmap.Height) then
 		Result := mwScroll
 	else
 	begin
 		Result := mwScroll;
 		if VType <> 0 then
-		if X + ScrollBarVWidth > FBitmap.Width then
+		if X + ScrollBarVWidth > Bitmap.Width then
 		begin // V
 			if Y < ScrollBarHHeight then
 				Result := mwScrollVD
@@ -584,7 +519,7 @@ begin
 				Result := mwScrollVU;
 		end;
 		if HType <> 0 then
-		if Y + ScrollBarHHeight > FBitmap.Height then
+		if Y + ScrollBarHHeight > Bitmap.Height then
 		begin // H
 			if X < ScrollBarVWidth then
 				Result := mwScrollHD
@@ -881,7 +816,6 @@ end;
 function TDImage.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
 var i, L: UG;
 begin
-	Assert(WheelDelta <> 0);
 	inherited DoMouseWheel(Shift, WheelDelta, MousePos);
 	if [] = Shift then
 	begin
@@ -908,20 +842,20 @@ end;
 procedure TDImage.InitScrolls;
 begin
 	ScrollBarVWidth := GetSystemMetrics(SM_CXVSCROLL);
-	if UserWidth > FBitmap.Width then
+	if UserWidth > Bitmap.Width then
 		HType := 1
-	else if UserWidth > FBitmap.Width - ScrollBarVWidth then
+	else if UserWidth > Bitmap.Width - ScrollBarVWidth then
 		HType := 2
 	else
 		HType := 0;
 
 	ScrollBarHHeight := GetSystemMetrics(SM_CYHSCROLL);
-	if UserHeight > FBitmap.Height then
+	if UserHeight > Bitmap.Height then
 	begin
 		VType := 1;
 		if HType = 2 then HType := 1;
 	end
-	else if UserHeight > FBitmap.Height - ScrollBarHHeight then
+	else if UserHeight > Bitmap.Height - ScrollBarHHeight then
 	begin
 		case HType of
 		0:
@@ -941,8 +875,8 @@ begin
 		if HType = 2 then HType := 0;
 	end;
 
-	FNowMaxWidth := FBitmap.Width - ScrollBarVWidth * VType;
-	FNowMaxHeight := FBitmap.Height - ScrollBarHHeight * HType;
+	FNowMaxWidth := Bitmap.Width - ScrollBarVWidth * VType;
+	FNowMaxHeight := Bitmap.Height - ScrollBarHHeight * HType;
 	MaxOfsX := UserWidth - FNowMaxWidth;
 	MaxOfsY := UserHeight - FNowMaxHeight;
 //	OffsetRange(OfsX, OfsY);
@@ -1135,11 +1069,11 @@ begin
 	if UserBitmap <> nil then
 	begin
 		if Center then
-			FBitmap.AntiBar(DX, DY, DW - 1, DH - 1, clAppWorkSpace, ef16)
+			Bitmap.AntiBar(DX, DY, DW - 1, DH - 1, clAppWorkSpace, ef16)
 		else
-			FBitmap.Bar(DX, DY, DW - 1, DH - 1, clAppWorkSpace, ef16); // TODO : Temp
-		SetStretchBltMode(FBitmap.Canvas.Handle, COLORONCOLOR);
-		StretchBlt(FBitmap.Canvas.Handle,
+			Bitmap.Bar(DX, DY, DW - 1, DH - 1, clAppWorkSpace, ef16); // TODO : Temp
+		SetStretchBltMode(Bitmap.Canvas.Handle, COLORONCOLOR);
+		StretchBlt(Bitmap.Canvas.Handle,
 			DX, DY,
 			DW, DH,
 			BmpS.Canvas.Handle,
@@ -1155,7 +1089,7 @@ begin
 				i := Round(e);
 				while i < UserWidth do
 				begin
-					FBitmap.Line(i, 0, i, UserHeight - 1, GrateColor, ef12);
+					Bitmap.Line(i, 0, i, UserHeight - 1, GrateColor, ef12);
 					e := e + ActualZoom;
 					i := RoundSG(e);
 				end;
@@ -1163,20 +1097,13 @@ begin
 				i := RoundSG(e);
 				while i < UserHeight do
 				begin
-					FBitmap.Line(0, i, UserWidth - 1, i, GrateColor, ef12);
+					Bitmap.Line(0, i, UserWidth - 1, i, GrateColor, ef12);
 					e := e + ActualZoom;
 					i := Round(e);
 				end;
 			end;
 		end;
 	end;
-end;
-
-procedure TDImage.Invalidate;
-begin
-	FNeedFill := True;
-	FreeAndNil(BmpSourceS);
-	inherited Invalidate;
 end;
 
 procedure TDImage.FillBitmap;
@@ -1190,14 +1117,16 @@ var
 	s: string;
 	i, x, y: SG;
 	R: TRect;
+	{$ifopt d+}
 	StartTickCount: U4;
+	{$endif}
 begin
+	inherited;
 	{$ifopt d+}
 	GetGTime;
 	StartTickCount := GTime;
 	{$endif}
-	FNeedFill := False;
-	if (FBitmap.Width <> Width) or (FBitmap.Height <> Height) then
+	if (Bitmap.Width <> Width) or (Bitmap.Height <> Height) then
 		Bitmap.SetSize(Width, Height);
 
 	if FEnableZoom then
@@ -1236,7 +1165,7 @@ begin
 			FOnFill(Self);
 		except
 			on E: Exception do
-				ErrorMsg(E.Message);
+				Fatal(E, Self);
 		end;
 	end;
 	InitScrolls;
@@ -1520,9 +1449,8 @@ begin
 		begin
 			if s <> '' then
 				s := s + ', ';
-			s := s + MsToStr(StartTickCount, True, diSD, 3, False);
+			s := s + MsToStr(StartTickCount, diSD, 3, False);
 		end;
-		Inc(FFillCount);
 		{$endif}
 		DrawCutedText(Bitmap.Canvas, R, taRightJustify, tlBottom, s, True, 1);
 
@@ -1531,11 +1459,13 @@ begin
 		GetGTime;
 		if TimeDifference(GTime, FIntervalStartTime ) >= Second then
 		begin
-			FFPS := RoundDivS8(1000 * Second * FIntervalFillCount, TimeDifference(GTime, FIntervalStartTime));
+			if FIntervalStartTime > 0 then
+				FFPS := RoundDivS8(1000 * Second * FIntervalFillCount, TimeDifference(GTime, FIntervalStartTime));
 			FIntervalFillCount := 0;
 			FIntervalStartTime := GTime;
 		end;
-		DrawCutedText(Bitmap.Canvas, R, taRightJustify, tlTop, NToS(FFPS, 3), True, 1);
+		if FFPS > 0 then
+			DrawCutedText(Bitmap.Canvas, R, taRightJustify, tlTop, NToS(FFPS, 3), True, 1);
 
 		PopFont(Bitmap.Canvas.Font);
 	end;
@@ -1643,6 +1573,7 @@ begin
 	VK_HOME: ScrollHome;
 	VK_END: ScrollEnd;
 	end;
+	inherited;
 end;
 
 procedure TDImage.CMWantSpecialKey(var Message: TCMWantSpecialKey);
@@ -1656,6 +1587,21 @@ end;
 procedure Register;
 begin
 	RegisterComponents('DComp', [TDImage]);
+end;
+
+procedure TDImage.Serialize(const IniFile: TDIniFile; const Save: BG);
+var
+	Section: string;
+begin
+	Section := Name;
+
+	Zoom := IniFile.RWFGF(Section, 'Zoom', Zoom, 1, Save);
+	OfsX := IniFile.RWSGF(Section, 'OffsetX', OfsX, 0, Save);
+	OfsY := IniFile.RWSGF(Section, 'OffsetY', OfsY, 0, Save);
+
+	Center := IniFile.RWBGF(Section, 'Center', Center, Center, Save);
+	Grate := IniFile.RWBGF(Section, 'Grate', Grate, Grate, Save);
+	GrateColor := IniFile.RWSGF(Section, 'Grate', GrateColor, GrateColor, Save);
 end;
 
 initialization

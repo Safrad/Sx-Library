@@ -1,10 +1,10 @@
 //* File:     Lib\uAPI.pas
 //* Created:  1998-01-01
-//* Modified: 2005-10-31
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-19
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uAPI;
 
@@ -16,7 +16,7 @@ uses
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 procedure PropertiesDialog(FileName: TFileName);
-function KeyToStr(Key: U2): string;
+function KeyToStr(const Key: U2): string;
 
 implementation
 
@@ -30,7 +30,7 @@ var
 	ErrorCode: U4;
 begin
 	LRetry:
-	ErrorCode := ShellExecute(0, 'open', PChar('"' + ExpandDir(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
+	ErrorCode := ShellExecute(0, 'open', PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
 	if ErrorCode <= 32 then
 		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
 end;
@@ -50,7 +50,7 @@ begin
 		if IOErrorRetry(FileName, GetLastError) then goto LRetry;
 end;
 
-function KeyToStr(Key: U2): string;
+function KeyToStr(const Key: U2): string;
 begin
 	case Key and $ff of
 	0: Result := '';

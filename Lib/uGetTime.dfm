@@ -183,10 +183,9 @@ object fGetTime: TfGetTime
     Left = 8
     Top = 8
     Width = 121
-    Height = 19
+    Height = 21
     MaxLength = 15
     TabOrder = 0
-    WantReturns = False
     OnChange = EditInputChange
   end
   object ButtonMin: TDButton

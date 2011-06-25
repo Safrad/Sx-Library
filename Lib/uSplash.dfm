@@ -6,8 +6,6 @@ object fSplash: TfSplash
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
-  AlphaBlend = True
-  AlphaBlendValue = 191
   BorderIcons = []
   BorderStyle = bsNone
   ClientHeight = 384

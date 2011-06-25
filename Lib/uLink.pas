@@ -1,3 +1,11 @@
+//* File:     Lib\uLink.pas
+//* Created:  2001-12-01
+//* Modified: 2006-12-25
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uLink;
 
 interface

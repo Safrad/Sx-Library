@@ -1,10 +1,10 @@
 //* File:     Lib\uDTimer.pas
 //* Created:  2000-08-01
-//* Modified: 2005-11-26
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDTimer;
 
@@ -86,7 +86,7 @@ implementation
 
 uses
 	Math,
-	uSysInfo, uMsg;
+	uMsg;
 
 type
 	TDIdleTimer = class(TComponent)
@@ -321,7 +321,8 @@ begin
 		if Assigned(FOnTimer) then
 			FOnTimer(Self);
 	except
-		on E: Exception do ErrorMsg(E.Message);
+		on E: Exception do
+			Fatal(E, Self);
 	end;
 end;
 

@@ -236,9 +236,8 @@ object fGColor: TfGColor
     Left = 64
     Top = 8
     Width = 34
-    Height = 19
+    Height = 21
     TabOrder = 4
-    WantReturns = False
     OnChange = EditChange
   end
   object ButtonR: TDButton
@@ -310,9 +309,8 @@ object fGColor: TfGColor
     Left = 64
     Top = 32
     Width = 34
-    Height = 19
+    Height = 21
     TabOrder = 7
-    WantReturns = False
     OnChange = EditChange
   end
   object ButtonG: TDButton
@@ -336,9 +334,8 @@ object fGColor: TfGColor
     Left = 64
     Top = 56
     Width = 34
-    Height = 19
+    Height = 21
     TabOrder = 10
-    WantReturns = False
     OnChange = EditChange
   end
   object ButtonB: TDButton
@@ -362,9 +359,8 @@ object fGColor: TfGColor
     Left = 64
     Top = 152
     Width = 34
-    Height = 19
+    Height = 21
     TabOrder = 20
-    WantReturns = False
     OnChange = EditChange
   end
   object PanelH: TPanel
@@ -438,9 +434,8 @@ object fGColor: TfGColor
     Left = 64
     Top = 128
     Width = 34
-    Height = 19
+    Height = 21
     TabOrder = 18
-    WantReturns = False
     OnChange = EditChange
   end
   object LabelS: TDLabel
@@ -536,9 +531,8 @@ object fGColor: TfGColor
     Left = 64
     Top = 104
     Width = 34
-    Height = 19
+    Height = 21
     TabOrder = 16
-    WantReturns = False
     OnChange = EditChange
   end
   object PanelS: TPanel
@@ -584,9 +578,8 @@ object fGColor: TfGColor
     Left = 64
     Top = 80
     Width = 74
-    Height = 19
+    Height = 21
     TabOrder = 15
-    WantReturns = False
     OnChange = EditChange
   end
   object PopupMenu1: TPopupMenu

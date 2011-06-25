@@ -1,10 +1,10 @@
 //* File:     Lib\uSystem.pas
 //* Created:  1998-01-01
-//* Modified: 2005-08-29
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uSystem;
 
@@ -16,14 +16,11 @@ function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: U1): Integer;
 function ThreadPriority(const Prior: U1): Integer;
 
-function GetCaption(const FName: TFileName; const Changed: Boolean;
-	const New: Integer; const ReadOnly: BG; const Index, Count: Integer): string;
-
 procedure BeginLongOperation(const Background: BG = False);
 procedure EndLongOperation(const Sound: BG = True);
 
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
-function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
+//function WriteLinesToFile(var FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
 function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
 function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
 
@@ -45,7 +42,7 @@ implementation
 
 uses
 	Windows, Math,
-	uStrings, uInput, uFiles, uParser, uWave, uMath, uFormat, uError;
+	uStrings, uFiles, uDParser, uWave, uMath;
 
 function DriveTypeToStr(const DriveType: Integer): string;
 begin
@@ -88,23 +85,6 @@ begin
 	end;
 end;
 
-function GetCaption(const FName: TFileName; const Changed: Boolean;
-	const New: Integer; const ReadOnly: BG; const Index, Count: Integer): string;
-begin
-	Result := Application.Title;
-	if Count > 0 then
-	begin
-		if (Index >= 0) or (Count > 1) then
-			Result := Result + ' - ';
-		if Count > 1 then
-			Result := Result + '(' + NToS(Index + 1) + '/' + NToS(Count) + ')';
-		if Changed then Result := Result + ' *';
-		Result := Result + ' ' + ShortDir(FName);
-		if New <> 0 then Result := Result + ' (New)';
-		if ReadOnly then Result := Result + ' (Read Only)';
-	end;
-end;
-
 procedure BeginLongOperation(const Background: BG = False);
 begin
 	if Background then
@@ -120,35 +100,6 @@ begin
 	Screen.Cursor := crDefault;
 end;
 
-function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
-label LRetry;
-var
-	Buf: Pointer;
-	Count: SG;
-begin
-	Result := ReadBufferFromFile(FileName, Buf, Count);
-{	Stream.SetSize(Count);
-	Stream.Seek(0, 0);}
-	if Buf <> nil then
-	begin
-		Stream.WriteBuffer(Buf^, Count);
-		Stream.Seek(0, 0);
-		FreeMem(Buf);
-	end;
-end;
-
-function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
-label LRetry;
-var
-	Buf: Pointer;
-begin
-	GetMem(Buf, Stream.Size);
-	Stream.Seek(0, 0);
-	Stream.ReadBuffer(Buf^, Stream.Size);
-	Result := WriteBufferToFile(FileName, Buf, Stream.Size);
-	FreeMem(Buf);
-end;
-
 function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
 var
 	P: array[0..3] of Char;
@@ -158,8 +109,8 @@ begin
 	FillChar(Result, SizeOf(Result), 0);
 	Result.DriveLetter := Drive;
 	P[0] := Drive;
-	P[1] := ':';
-	P[2] := '\';
+	P[1] := DriveDelim;
+	P[2] := PathDelim;
 	P[3] := CharNul;
 	Result.DriveType := GetDriveType(P);
 	case Result.DriveType of
@@ -216,13 +167,13 @@ var
 	find_context: PItemIDList;
 begin
 	FillChar(browse_info, SizeOf(browse_info),#0);
-	lg_StartFolder := RepairDirectory(Path);
+	lg_StartFolder := ExpandDir(Path);
 	browse_info.pszDisplayName := @folder[0];
 	if browseTitle <> '' then
 		browse_info.lpszTitle := PChar('Select the folder ' + browseTitle + '.')
 	else
 		browse_info.lpszTitle := '';
-	browse_info.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI;
+	browse_info.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI or BIF_VALIDATE;
 	browse_info.hwndOwner := Application.Handle;
 	if Path <> '' then
 		browse_info.lpfn := BrowseForFolderCallBack;
@@ -239,57 +190,85 @@ begin
 end;
 
 function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
-label LRetry;
 var
 	F: TFile;
 	Line: string;
 begin
+	Assert(Lines <> nil);
 	Result := False;
-	{$ifopt d+}
-	if not Assigned(Lines) then
-	begin
-		Exit;
-	end;
-	{$endif}
 	Lines.Clear;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		while not F.Eof do
+	try
+		if F.Open(FileName, fmReadOnly) then
 		begin
-			if not F.Readln(Line) then goto LRetry;
-			Lines.Add(Line);
+			while not F.Eof do
+			begin
+				F.Readln(Line);
+				Lines.Add(Line);
+			end;
+			F.Close;
+			Result := True;
 		end;
-		F.Close;
-		Result := True;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function WriteLinesToFile(var FileName: TFileName; Lines: TStrings; Append: BG): BG;
-label LRetry;
+{
+function WriteLinesToFile(var FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
 var
 	F: TFile;
 	i: SG;
+	FileMode: TFileMode;
 begin
 	Result := False;
+	if Append then
+		FileMode := fmAppend
+	else
+		FileMode := fmRewrite;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if Append then F.SeekEnd;
-		i := 0;
-		while i < Lines.Count do
+	try
+		if F.Open(FileName, FileMode) then
 		begin
-			if not F.Write(Lines[i] + FileSep) then goto LRetry;
-			Inc(i);
+			i := 0;
+			while i < Lines.Count do
+			begin
+				F.Write(Lines[i] + FileSep);
+				Inc(i);
+			end;
+			F.Close;
+			Result := True;
 		end;
-		if Append = False then F.Truncate;
-		if not F.Close then goto LRetry;
-		Result := True;
+	finally
+		F.Free;
 	end;
-	F.Free;
+end;}
+
+function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+var
+	Buf: Pointer;
+	Count: SG;
+begin
+	Result := ReadBufferFromFile(FileName, Buf, Count);
+{	Stream.SetSize(Count);
+	Stream.Seek(0, 0);}
+	if Buf <> nil then
+	begin
+		Stream.WriteBuffer(Buf^, Count);
+		Stream.Seek(0, 0);
+		FreeMem(Buf);
+	end;
+end;
+
+function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+var
+	Buf: Pointer;
+begin
+	GetMem(Buf, Stream.Size);
+	Stream.Seek(0, 0);
+	Stream.ReadBuffer(Buf^, Stream.Size);
+	Result := WriteBufferToFile(FileName, Buf, Stream.Size);
+	FreeMem(Buf);
 end;
 
 end.

@@ -1,17 +1,17 @@
 //* File:     Lib\uGetTime.pas
 //* Created:  1999-05-01
-//* Modified: 2005-11-26
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uGetTime;
 
 interface
 
 uses
-	uTypes,
+	uTypes, uParserMsg,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit;
 
@@ -22,28 +22,28 @@ type
 		TrackBarH: TTrackBar;
 		TrackBarM: TTrackBar;
 		TrackBarS: TTrackBar;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
+		Label1: TLabel;
+		Label2: TLabel;
+		Label3: TLabel;
 		TrackBarD: TTrackBar;
-    Label4: TLabel;
-    LabelH: TLabel;
-    LabelM: TLabel;
-    LabelS: TLabel;
-    LabelD: TLabel;
+		Label4: TLabel;
+		LabelH: TLabel;
+		LabelM: TLabel;
+		LabelS: TLabel;
+		LabelD: TLabel;
 		ButtonOk: TDButton;
 		ButtonCancel: TDButton;
 		EditInput: TDEdit;
 		ButtonMin: TDButton;
 		ButtonCur: TDButton;
 		ButtonMax: TDButton;
-    SpinButtonH: TUpDown;
-    SpinButtonS: TUpDown;
-    SpinButtonM: TUpDown;
-    SpinButtonD: TUpDown;
+		SpinButtonH: TUpDown;
+		SpinButtonS: TUpDown;
+		SpinButtonM: TUpDown;
+		SpinButtonD: TUpDown;
 		ButtonDef: TDButton;
-    ButtonApply: TDButton;
-    EditError: TMemo;
+		ButtonApply: TDButton;
+		EditError: TMemo;
 		procedure EditInputChange(Sender: TObject);
 		procedure TrackBarHMSDChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
@@ -51,13 +51,14 @@ type
 		procedure ButtonMaxClick(Sender: TObject);
 		procedure ButtonDefClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
-    procedure ButtonOkClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
-    procedure SpinButtonHMSDChangingEx(Sender: TObject;
+		procedure ButtonOkClick(Sender: TObject);
+		procedure ButtonCancelClick(Sender: TObject);
+		procedure SpinButtonHMSDChangingEx(Sender: TObject;
 			var AllowChange: Boolean; NewValue: Smallint;
 			Direction: TUpDownDirection);
 	private
 		{ Private declarations }
+		Messages: TParserMessages;
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: S8;
 		OnApply: TOnApplyTime;
 		procedure ChangeTime;
@@ -66,6 +67,8 @@ type
 		procedure InitTrackBar;
 	public
 		{ Public declarations }
+		constructor Create(AOwner: TComponent); override;
+		destructor Destroy; override;
 	end;
 
 function GetTime(const Prompt: string;
@@ -80,7 +83,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uStrings, uError, uInput, uParser, uFormat, uParserMsg;
+	uStrings, uInputFormat, uDParser, uOutputFormat;
 
 var
 	fGetTime: TfGetTime;
@@ -223,9 +226,9 @@ procedure TfGetTime.InitEdit;
 begin
 	EditInput.OnChange := nil;
 	if TMaxVal >= Hour then
-		EditInput.Text := msToStr(NowVal, diMSD, -3, False)
+		EditInput.Text := MsToStr(NowVal, diMSD, -3, False)
 	else
-		EditInput.Text := msToStr(NowVal, diHMSD, -3, False);
+		EditInput.Text := MsToStr(NowVal, diHMSD, -3, False);
 	EditInput.SelectAll;
 	EditInput.OnChange := EditInputChange;
 end;
@@ -252,9 +255,9 @@ end;
 procedure TfGetTime.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
-	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal);
-	MesToStrings(EditError.Lines);
-	ParserMsgClear;
+	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal, Messages);
+	Messages.ToStrings(EditError.Lines);
+	Messages.Clear;
 
 	InitButtons;
 	InitTrackBar;
@@ -364,6 +367,18 @@ begin
 	InitEdit;
 	InitButtons;
 	ChangeTime;
+end;
+
+constructor TfGetTime.Create(AOwner: TComponent);
+begin
+	inherited;
+	Messages := TParserMessages.Create;
+end;
+
+destructor TfGetTime.Destroy;
+begin
+	FreeAndNil(Messages);
+	inherited;
 end;
 
 end.

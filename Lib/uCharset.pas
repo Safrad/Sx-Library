@@ -1,24 +1,45 @@
+//* File:     Lib\uCharset.pas
+//* Created:  2001-12-01
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uCharset;
 
 interface
 
 type
-	TCodePage = (cpAscii, cp1250, cp852, cpISO88592{, cpKeybCS2, cpMacCE,
+	TCodePage =
+		(cpAscii, cp1250, cp852, cpISO88592{, cpKeybCS2, cpMacCE,
 		cpKOI8CS, cpkodxx, cpWFW_311, cpISO88591, cpT1, cpMEXSK, cpw311_cw,
-		cpVavrusa, cpNavi});
-var
-	TableUpCaseCz{,
-	TableDelCz,
-	TableDosCzToWin,
-	TableWinCzSkToDos,
-	TableWinPlToDos,
-	TableWinHuToDos}: array[Char] of Char;
+		cpVavrusa, cpNavi}, cpUTF8, cpUnicode);
+{
+TODO: Unicode
+Á	00C1	Í	00CD		0164
+á	00E1	í	00ED		0165
+È	010C	Ò	0147	Ú	00DA
+è	010D	ò	0148	ú	00FA
+Ï	010E	Ó	00D3	Ù	016E
+ï	010F	ó	00F3	ù	016F
+É	00C9	Ø	0158	İ	00DD
+é	00E9	ø	0159	ı	00FD
+Ì	011A	Š	0160		017D
+ì	011B	š	0161		017E
+}
 
-procedure ConvertCharset(var s: string; FromCharset, ToCharset: TCodePage); overload;
-function ConvertCharsetF(const s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
+const
+	CodePageNames: array[TCodePage] of string =
+		('ASCII', 'windows-1250'{Central European, Windows Latin 2}, 'IBM852'{DOS code page for Central European}, 'ISO-8859-2'{Central European, ISO Latin 2}, 'UTF-8', 'UTF-16');
+
+procedure ConvertCharset(var s: string; const FromCharset, ToCharset: TCodePage);
+function ConvertCharsetF(const s: string; const FromCharset, ToCharset: TCodePage): string;
+
+var
+	TableUpCaseCz: array[Char] of Char;
 
 function UpCaseCz(const s: string): string;
-function DelCz(const s: string): string;
 
 implementation
 
@@ -26,8 +47,8 @@ uses uTypes;
 
 type
 {const
-	CZX: array[TCodePage] of TCzLetters =
-	 ('ACDEEINORSTUUYZacdeeinorstuuyz', // ASCII
+	CZX: array[TCodePage] of TCzLetters = (
+		'ACDEEINORSTUUYZacdeeinorstuuyz', // ASCII
 		'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı', // ANSI-CP1250
 		'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§', // OEM-CP852 (LATIN 2)
 		'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾', // ISO-8859-2
@@ -42,13 +63,13 @@ type
 		'Á%ÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı', // w311_ce
 		'ÁÈÏÉÌÍÒÓØŠÚ¡İáèïìéíòóøšú¡ı', // vavrusa
 		'ÁÈÏÉÌÍÒÓ+ŠÚ¡İ¡áèïéìíòóøšúùı'); // navi
-	 }
+	}
 
 	TUpAscii = array[#128..#255] of Char;
 
 var
 	// [to, from]
-	CodePage: array[TCodePage, cp1250..High(TCodePage)] of TUpAscii = (
+	CodePage: array[cpAscii..cpISO88592, cp1250..cpISO88592] of TUpAscii = (
 		(
 		// to ASCII
 		'E'+#$27+'ƒ".++ˆ%S<STZZ'+#$27+#$27+'"".--˜ts>stzz   LoA| cS<--RZ~+ l'+#$27+'u. as>L lzRAAAALCCCEEEEIIDDNNOOOOxRUUUUYTbraaaalccceeeeiiddnnoooo/ruuuuyt ', // from CP1250
@@ -77,63 +98,62 @@ var
 		'€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ' // from ISO-8859-2
 		)
 	);
-{
-Unicode
-Á	00C1	Í	00CD		0164
-á	00E1	í	00ED		0165
-È	010C	Ò	0147	Ú	00DA
-è	010D	ò	0148	ú	00FA
-Ï	010E	Ó	00D3	Ù	016E
-ï	010F	ó	00F3	ù	016F
-É	00C9	Ø	0158	İ	00DD
-é	00E9	ø	0159	ı	00FD
-Ì	011A	Š	0160		017D
-ì	011B	š	0161		017E
-}
 
-procedure ConvertCharset(var s: string; FromCharset: TCodePage; ToCharset: TCodePage); overload;
+procedure ConvertCharset(var s: string; const FromCharset, ToCharset: TCodePage);
 var
 	i: SG;
 {	c, d: Char;
 	CP: array[Char] of Char;}
 begin
 	Assert(FromCharset <> cpAscii);
-{	if ToCharset = cp1250 then
-	begin}
-		for i := 1 to Length(s) do
-		begin
-			if Ord(s[i]) >= $80 then
-				s[i] := CodePage[ToCharset, FromCharset][s[i]];
-		end;
-{	end
-	else
-	begin
-		// Fill
-		for c := Low(c) to High(c) do
-		begin
-			d := #0;
-			for i := Low(TCzLetters) to High(TCzLetters) do
-			begin
-				if CZX[FromCharset][i] = c then
-				begin
-					d := CZX[ToCharset][i];
-				end;
-			end;
-			CP[c] := d;
-		end;
+	if FromCharset = ToCharset then Exit;
 
-		// Convert
-		for i := 1 to Length(s) do
-		begin
-			s[i] := CP[s[i]];
-		end;
-	end;}
+	if (FromCharset = cpUTF8) then
+	begin
+		s := Utf8ToAnsi(s);
+		if (ToCharset <> cp1250) then
+			ConvertCharset(s, cp1250, ToCharset);
+		Exit;
+	end;
+
+	if (ToCharset = cpUTF8) then
+	begin
+		if (FromCharset <> cp1250) then
+			ConvertCharset(s, FromCharset, cp1250);
+		s := AnsiToUtf8(s);
+		Exit;
+	end;
+
+	if (FromCharset = cpUnicode) then
+	begin
+		UnicodeToUtf8(PAnsiChar(s), PWideChar(PChar(s)), 2 * Length(s)); // TODO Need test
+		if (ToCharset <> cpUTF8) then
+			ConvertCharset(s, cpUTF8, ToCharset);
+		Exit;
+	end;
+
+	if (ToCharset = cpUnicode) then
+	begin
+		if (FromCharset <> cpUTF8) then
+			ConvertCharset(s, FromCharset, cpUTF8);
+		Utf8ToUnicode(PWideChar(PChar(s)), PAnsiChar(s), 2 * Length(s)); // TODO, Buffer required?, Need test
+		Exit;
+	end;
+
+	for i := 1 to Length(s) do
+	begin
+		if Ord(s[i]) >= $80 then
+			s[i] := CodePage[ToCharset, FromCharset][s[i]];
+	end;
 end;
 
-function ConvertCharsetF(const s: string; FromCharset: TCodePage; ToCharset: TCodePage): string; overload;
-var
-	i: SG;
+function ConvertCharsetF(const s: string; const  FromCharset, ToCharset: TCodePage): string;
+{var
+	i: SG;}
 begin
+	Result := s;
+	ConvertCharset(Result, FromCharset, ToCharset);
+{	Assert(FromCharset <> cpAscii);
 	SetLength(Result, Length(s));
 	for i := 1 to Length(s) do
 	begin
@@ -141,12 +161,11 @@ begin
 			Result[i] := CodePage[ToCharset, FromCharset][s[i]]
 		else
 			Result[i] := s[i];
-	end;
+	end;}
 end;
 
 procedure FillCharsTable;
 var c, Result: Char;
-{$ifopt d+}s: string;{$endif}
 begin
 	for c := Low(c) to High(c) do
 	begin
@@ -172,48 +191,6 @@ begin
 		end;
 		TableUpCaseCz[c] := Result;
 	end;
-	{$ifopt d+}
-	// Tests
-	s := 'äáèïéìí¾òóôàøšúùı';
-	ConvertCharset(s, cp1250, cp852);
-	Assert(s = '„ ŸÔ‚Ø¡–å¢“êıçœ£…ì§');
-
-	s := 'ñ';
-	ConvertCharset(s, cp1250, cp852);
-	Assert(s = 'ä');
-
-	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
-	ConvertCharset(s, cp1250, cp852);
-	Assert(s = 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§');
-
-	s := 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§';
-	ConvertCharset(s, cp852, cp1250);
-	Assert(s = 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı');
-
-	s := 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾';
-	ConvertCharset(s, cpISO88592, cp1250);
-	Assert(s = 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı');
-
-	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
-	ConvertCharset(s, cp1250, cpISO88592);
-	Assert(s = 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾');
-
-	s := 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§';
-	ConvertCharset(s, cp852, cpISO88592);
-	Assert(s = 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾');
-
-	s := 'ÁÈÏÉÌÍÒÓØ©«ÚÙİ®áèïéìíòóø¹»úùı¾';
-	ConvertCharset(s, cpISO88592, cp852);
-	Assert(s = 'µ¬Ò·ÖÕàüæ›éŞí¦ ŸÔ‚Ø¡å¢ıçœ£…ì§');
-
-	s := 'ÁÈÏÉÌÍÒÓØŠÚÙİáèïéìíòóøšúùı';
-	s := DelCz(s);
-	Assert(s = 'ACDEEINORSTUUYZacdeeinorstuuyz');
-
-	s := 'Frühauf David';
-	s := DelCz(s);
-	Assert(s = 'Fruhauf David');
-	{$endif}
 end;
 
 function UpCaseCz(const s: string): string;
@@ -226,13 +203,6 @@ begin
 	end;
 end;
 
-function DelCz(const s: string): string;
-begin
-	Result := s;
-	ConvertCharset(Result, cp1250, cpAscii);
-end;
-
 initialization
 	FillCharsTable;
-end.
-
+end.                                                                          

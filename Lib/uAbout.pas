@@ -1,10 +1,10 @@
 //* File:     Lib\uAbout.pas
 //* Created:  1999-10-01
-//* Modified: 2006-01-25
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-22
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uAbout;
 
@@ -15,23 +15,23 @@ uses
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit;
 
-type
+type     
 	TfAbout = class(TDForm)
 		Timer1: TDTimer;
 		ButtonOk: TDButton;
 		BevelSep: TBevel;
-    ImageEMail: TImage;
-    ImageWeb: TImage;
+		ImageEMail: TImage;
+		ImageWeb: TImage;
 		LabelRunCount: TLabel;
 		LabelNowRunTime: TLabel;
 		LabelTotalRunTime: TLabel;
-    EditCopyright: TDEdit;
-		PanelRC: TDEdit;
-		PanelTRT: TDEdit;
-		PanelNRT: TDEdit;
+		EditCopyright: TDEdit;
+		PanelRunCount: TDEdit;
+		PanelTotalRunTime: TDEdit;
+		PanelNowRunTime: TDEdit;
 		ImageName: TDImage;
 		LabelAuthor: TLabel;
-    LabelFirstCopyright: TLabel;
+		LabelFirstCopyright: TLabel;
 		LabelEMail: TLabel;
 		EditAuthor: TDEdit;
 		EditWeb: TDEdit;
@@ -39,13 +39,13 @@ type
 		EditEMail: TDEdit;
 		Bevel: TBevel;
 		ImageAbout: TDImage;
-		LabelIcq: TLabel;
-		EditIcq: TDEdit;
-		SysInfo1: TDButton;
-		DButtonMemoryStatus: TDButton;
+		LabelCompany: TLabel;
+		EditCompany: TDEdit;
+		ButtonSysInfo1: TDButton;
+		ButtonMemoryStatus: TDButton;
 		LabelCount: TLabel;
-    EditRelease: TDEdit;
-    LabelRelease: TLabel;
+		EditRelease: TDEdit;
+		LabelRelease: TLabel;
 		LabelVersion: TLabel;
 		EditVersion: TDEdit;
 		procedure FormCreate(Sender: TObject);
@@ -58,73 +58,64 @@ type
 		procedure EditWebClick(Sender: TObject);
 		procedure EditEMailClick(Sender: TObject);
 		procedure DTimer1Timer(Sender: TObject);
-		procedure EditIcqClick(Sender: TObject);
-		procedure SysInfo1Click(Sender: TObject);
+		procedure ButtonSysInfo1Click(Sender: TObject);
 		procedure ImageAboutMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
 		procedure ImageNameFill(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
-		procedure DButtonMemoryStatusClick(Sender: TObject);
+		procedure ButtonMemoryStatusClick(Sender: TObject);
 		procedure FormHide(Sender: TObject);
 	private
 		Effect: U1;
 		Typ: U1;
 		Reset: Boolean;
 		BmpAbout: TDBitmap;
-		procedure InitNRT;
+		procedure UpdateNowRunTime;
 	public
 		procedure LoadFile(AboutFile: TFileName);
 	end;
 
-procedure OpenReadMe;
-procedure OpenHomepage;
+procedure OpenLocalHomepage;
+procedure OpenWebHomepage;
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
 procedure AboutRW(const Save: Boolean);
 var
 	fAbout: TfAbout;
 
-	RunCount: UG;
-	RunTime: U8;
-	StartProgramTime: U4;
-
 implementation
 
 {$R *.DFM}
 uses
-	uAPI, uSimulation,
-	uProjectInfo, uUser,
-	uGraph, uDIni, uScreen, uSysInfo, uFiles, uMsg, uError, uData, uWave, uColor,
-	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uFormat, uLog;
+	uAPI, uSimulation, uHTML, uStart,
+	uProjectInfo,
+	uGraph, uDIniFile, uScreen, uSysInfo, uFiles, uMsg, uData, uWave, uColor,
+	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
 var
-	LMemClock: U8;
-	RunProgramTime: U8;
+	LastNowTime: U8;
 
-procedure OpenReadMe;
+procedure OpenLocalHomepage;
 begin
-	APIOpen(WorkDir + 'ReadMe.htm');
+	APIOpen(WorkDir + 'ReadMe' + PathDelim + IndexFile);
 end;
 
-procedure OpenHomepage;
+procedure OpenWebHomepage;
 begin
-	APIOpen(HomePage);
+	APIOpen(GetProjectInfo(piWeb));
 end;
 
-procedure ExecuteAbout2(AOwner: TComponent; FileName: TFileName; const Modal: Boolean);
-var
-	Info: TInfo;
+procedure ExecuteAboutEx(AOwner: TComponent; const FileName: TFileName; const Modal: Boolean);
 begin
 	PlayWinSound(wsExclamation);
 	if not Assigned(fAbout) then
 	begin
-		Info := TInfo.Create(nil);
 		fAbout := TfAbout.Create(AOwner);
-		fAbout.EditAuthor.Text := Info.GetProjectInfo(piAuthor);
-		fAbout.EditVersion.Text := Info.GetProjectInfo(piFileVersion);
-		fAbout.EditRelease.Text := Info.GetProjectInfo(piRelease);;
-		Info.Free;
-		BeginLongOperation;
+		fAbout.EditAuthor.Text := GetProjectInfo(piAuthor);
+		fAbout.EditVersion.Text := GetProjectInfo(piProductVersion);
+		fAbout.EditRelease.Text := DateToS(SToDate(GetProjectInfo(piRelease), ifIO), ofDisplay);
+		fAbout.ImageName.ShowHint := True;
+		fAbout.ImageName.Hint := GetProjectInfo(piFileDescription);
+		fAbout.EditCopyright.Text := GetProjectInfo(piLegalCopyright);
 		fAbout.LoadFile(FileName);
-		EndLongOperation(False);
 	end
 	else
 		fAbout.LoadFile(FileName);
@@ -154,42 +145,25 @@ begin
 			if j <> 0 then
 				FileName := FileName + 'Logo'
 			else
-				FileName := FileName + Application.Title;
+				FileName := FileName + GetProjectInfo(piInternalName);
 			FileName := FileName + '.' + Ext[i];
 			if FileExists(FileName) then
 			begin
-				ExecuteAbout2(AOwner, FileName, Modal);
+				ExecuteAboutEx(AOwner, FileName, Modal);
 				Exit;
 			end;
 		end;
-	ExecuteAbout2(AOwner, '', Modal);
+	ExecuteAboutEx(AOwner, '', Modal);
 end;
 
 procedure AboutRW(const Save: Boolean);
 begin
-	if Save then
-		RunTime := U8(TimeDifference(GetTickCount, StartProgramTime)) + RunProgramTime;
-
-	if Assigned(MainIni) then
-	begin
-		MainIni.RWNum('Statistics', 'RunCount', RunCount, Save);
-		MainIni.RWNum('Statistics', 'RunTime', RunTime, Save);
-		MainIni.RWNum('Statistics', 'ReadCount', ReadCount, Save);
-		MainIni.RWNum('Statistics', 'ReadBytes', ReadBytes, Save);
-		MainIni.RWNum('Statistics', 'WriteCount', WriteCount, Save);
-		MainIni.RWNum('Statistics', 'WriteBytes', WriteBytes, Save);
-		if Save = False then
-		begin
-			Inc(RunCount);
-//			StartProgramTime := GetTickCount;
-			RunProgramTime := RunTime;
-		end;
-	end;
+	RWStart(MainIni, Save);
 end;
 
-procedure TfAbout.InitNRT;
+procedure TfAbout.UpdateNowRunTime;
 begin
-	PanelNRT.Text := msToStr(TimeDifference(GetTickCount, StartProgramTime) + Second div 2, diDHMSD, 0, False);
+	PanelNowRunTime.Text := MsToStr(TimeDifference(GetTickCount, GetStartProgramTime) + Second div 2, diDHMSD, 0, False);
 end;
 
 procedure TfAbout.LoadFile(AboutFile: TFileName);
@@ -202,9 +176,10 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 	begin
 		BmpAbout.SetSize(64, 64);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
-		BmpAbout.GenerateRGB(GenFunc[RunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
+		BmpAbout.GenerateRGB(GenFunc[GetRunCount mod (High(GenFunc) + 1)], AC, ScreenCorrectColor, ef16, nil);
 		BmpAbout.Transparent := False;
 	end;
+	
 begin
 	if not Assigned(BmpAbout) then
 	begin
@@ -230,15 +205,16 @@ end;
 procedure TfAbout.FormCreate(Sender: TObject);
 begin
 	{$ifdef LINUX}
-	DButtonMemoryStatus.Visible := False;
+	ButtonMemoryStatus.Visible := False;
 	{$endif}
 
 	Background := baGradient;
-	EditEMail.Text := MyEMail + '?subject=' + Application.Title;
-	EditWeb.Text := MyWeb;
+	EditEMail.Text := GetProjectInfo(piEmail) + '?subject=' + GetProjectInfo(piProductName);
+	EditWeb.Text := GetProjectInfo(piWeb);
+	EditCompany.Text := GetProjectInfo(piCompanyName);
 
-	PanelRC.Text := NToS(RunCount);
-	PanelTRT.Text := msToStr(RunTime, diDHMSD, 3, False);
+	PanelRunCount.Text := NToS(GetRunCount);
+	PanelTotalRunTime.Text := MsToStr(GetRunTime, diDHMSD, 3, False);
 
 	ImageName.Bitmap.Canvas.Brush.Style := bsClear;
 	ImageName.Bitmap.Canvas.Font.Style := [fsBold];
@@ -248,7 +224,7 @@ begin
 {	ImageVersion.Bitmap.Canvas.Brush.Style := bsClear;
 	ImageVersion.Bitmap.Canvas.Font.Style := [fsBold];}
 
-	InitNRT;
+	UpdateNowRunTime;
 
 	if Assigned(MainIni) then
 		MainIni.RWFormPos(Self, False);
@@ -264,7 +240,7 @@ end;
 
 procedure TfAbout.FormShow(Sender: TObject);
 begin
-	LMemClock := PerformanceCounter;
+	LastNowTime := PerformanceCounter;
 	Timer1.Enabled := True;
 	DTimer1Timer(Sender);
 end;
@@ -316,30 +292,26 @@ end;
 
 procedure TfAbout.DTimer1Timer(Sender: TObject);
 begin
-	if NowTime - LMemClock >= PerformanceFrequency then
+	if NowTime >= LastNowTime + PerformanceFrequency{1 second interval} then
 	begin
-		InitNRT;
+		UpdateNowRunTime;
 		if Assigned(fSysInfo) then
 			if fSysInfo.Visible then
 			begin
 				fSysInfo.FillComp;
 			end;
-		while NowTime - LMemClock >= PerformanceFrequency do
+{		while NowTime - LMemClock >= PerformanceFrequency do
 		begin
 			Inc(LMemClock, PerformanceFrequency);
-		end;
+		end;}
+		LastNowTime := NowTime;
 	end;
 
 	ImageAbout.Invalidate;
 	ImageName.Invalidate;
 end;
 
-procedure TfAbout.EditIcqClick(Sender: TObject);
-begin
-	APIOpen('icq.exe');
-end;
-
-procedure TfAbout.SysInfo1Click(Sender: TObject);
+procedure TfAbout.ButtonSysInfo1Click(Sender: TObject);
 begin
 	if not Assigned(fSysInfo) then fSysInfo := TfSysInfo.Create(Self);
 //	fSysInfo.FormStyle := fAbout.FormStyle;
@@ -379,7 +351,7 @@ begin
 	BitmapName.Canvas.Font.Color := clWindowText;
 	BitmapName.Canvas.Brush.Style := bsClear;
 	DrawCutedText(BitmapName.Canvas, Rect(2, 2, BitmapName.Width - 2, BitmapName.Height - 2), taCenter, tlCenter,
-		Application.Title, True, 1);
+		GetProjectInfo(piProductName), True, 1);
 	BitmapName.Border(0, 0, BitmapName.Width - 1, BitmapName.Height - 1, clBlack, clWhite, 2, ef08);
 end;
 
@@ -440,7 +412,7 @@ begin
 	BitmapAbout.Border(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 3, ef08);
 end;
 
-procedure TfAbout.DButtonMemoryStatusClick(Sender: TObject);
+procedure TfAbout.ButtonMemoryStatusClick(Sender: TObject);
 begin
 {$ifndef LINUX}
 	if not Assigned(fMemStatus) then fMemStatus := TfMemStatus.Create(Self);
@@ -465,7 +437,6 @@ initialization
 {	MemCount := AllocMemCount;
 	MemSize := AllocMemSize;}
 {$endif}
-	StartProgramTime := GetTickCount;
 	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization
@@ -474,6 +445,6 @@ finalization
 // TODO: Memory Leaks
 {	if (MemCount + 22 < AllocMemCount) {or
 		(MemSize + 6508 < AllocMemSize) then
-			Warning('Memory Allocation Problem');}
+			Warning('Memory allocation problem.');}
 {$endif}
 end.

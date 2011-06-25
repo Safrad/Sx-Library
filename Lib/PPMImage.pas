@@ -1,10 +1,10 @@
 //* File:     Lib\PPMImage.pas
 //* Created:  2003-12-20
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit PPMImage;
 
@@ -23,13 +23,12 @@ type
 implementation
 
 uses
-	uTypes, uMath, uParser, uParserMsg, uDBitmap, uInput, uStrings, uColor,
+	uTypes, uMath, uDParser, uParserMsg, uDBitmap, uStrings, uColor,
 	SysUtils;
 
 const MaxLineSize = 70;
 
 procedure TPPMImage.LoadFromStream(Stream: TStream);
-label LRetry;
 var
 	W, H, MaxVal, i, j, ci, cv: SG;
 	Buffer, Buf: Pointer;
@@ -73,7 +72,7 @@ begin
 	end
 	else
 	begin
-		raise EInvalidGraphic.Create('Only P3/P6 ppm picture is supported');
+		raise EInvalidGraphic.Create('Only P3/P6 ppm picture is supported.');
 	end;
 
 	if Parser.InputType = itInteger then
@@ -156,7 +155,6 @@ begin
 		Parser.Skip(W * H * BPC * 3);
 	end;
 	Parser.Free;
-	ParserMsgShowAndClear;
 	FreeMem(Buffer);
 end;
 

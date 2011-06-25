@@ -1,10 +1,10 @@
 //* File:     Lib\uSGL.pas
 //* Created:  2005-03-09
-//* Modified: 2005-08-27
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-13
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 // Support only 32bit RGBA buffer
 { TODO : Depth, Clipping bug }
@@ -64,11 +64,11 @@ const
 	ETM: TMatrix = ((1, 0 ,0), (0, 1, 0), (0, 0, 1));
 
 type
-(* Typ transformacni matice. *)
-sglEMatrixMode = (
- sglModelMatrix,
- sglTextureMatrix
-);
+	(* Typ transformacni matice. *)
+	sglEMatrixMode = (
+		sglModelMatrix,
+		sglTextureMatrix
+	);
 
 (* Datova struktura udrzujici informace o kreslici plose + dalsich pomocnych pametech.   *)
 (* Struktura take obsahuje aktualni nastaveni vsech parametru, transformacni matice, ... *)
@@ -109,14 +109,14 @@ type
 
 	sglSDrawable = record
 
- (* dalsi polozky dle vasi potreby *)
+	(* dalsi polozky dle vasi potreby *)
 
- _width, _height, _ByteX: SG;
+	_width, _height, _ByteX: SG;
 
- _frameBuffer: Pointer;
+	_frameBuffer: Pointer;
 	Ext: BG; // External/Internal Frame Buffer
- _frameBufferSize: UG; // _width * _height;
- _depthBuffer: PArraySG;
+	_frameBufferSize: UG; // _width * _height;
+	_depthBuffer: PArraySG;
 
 
 	// Transformation
@@ -162,18 +162,17 @@ end;
 
 (* Chybove kody. *)
 type
-sglEErrorCode = (
-
- sglOpOk,         (* operace probehla v poradku       *)
- (* operace probehla s chybou        *)
- (* sglOpError[1-N] urcuje typ chyby *)
- sglOpInvalidDrawable,
- sglOpInvalidTexture,
- sglOpOutOfMemory,
- sglOpBadParameters,
- sglOpBeginMissed
- (* ... *)
-);
+	sglEErrorCode = (
+		sglOpOk,         (* operace probehla v poradku       *)
+		(* operace probehla s chybou        *)
+		(* sglOpError[1-N] urcuje typ chyby *)
+		sglOpInvalidDrawable,
+		sglOpInvalidTexture,
+		sglOpOutOfMemory,
+		sglOpBadParameters,
+		sglOpBeginMissed
+		(* ... *)
+	);
 const
 	sglOpError: array[sglEErrorCode] of string = (
 		'Ok',
@@ -565,7 +564,7 @@ var
 
 implementation
 
-uses Math, uGraph, uError, uSorts, uMath;
+uses Math, uGraph, uSorts, uMath;
 
 // ***************************************************************************************************************************
 
@@ -2469,6 +2468,7 @@ begin
 			end;
 		end;
 		end;
+		SetLength(Drawable.WP, 0);
 		Drawable.LG.Pos.X := MinInt;
 		Drawable.LG.Pos.Y := MinInt;
 		Drawable.SG.Pos.X := MinInt;
@@ -3399,4 +3399,8 @@ begin
 	end;
 end;
 
+initialization
+	sglInit;
+finalization
+	sglFinish;
 end.

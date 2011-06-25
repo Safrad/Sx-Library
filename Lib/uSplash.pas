@@ -1,10 +1,10 @@
 //* File:     Lib\uSplash.pas
 //* Created:  1999-10-01
-//* Modified: 2005-09-14
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uSplash;
 
@@ -25,7 +25,7 @@ type
 		procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
 		procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 	private
 		{ Private declarations }
 		FirstX, FirstY: SG;
@@ -48,12 +48,11 @@ implementation
 uses
 	StdCtrls,
 	uProjectInfo,
-	uGraph, uDBitmap, uFiles, uMath, uSystem, uSimulation, uDIni;
+	uGraph, uDBitmap, uFiles, uMath, uSystem, uSimulation, uDIniFile, uOutputFormat, uInputFormat;
 var
 	fSplash: TfSplash;
 const
 	MinimumTime = 2 * Second;
-//	ShowTime = 1 * Second;
 	HideTime = 1500 * MiliSecond;
 	MaxAlphaBlendValue = 223;
 
@@ -64,16 +63,17 @@ var
 	x, y: SG;
 	Co: array[0..3] of TColor;
 	Bmp, BmpT: TDBitmap;
-	Info: TInfo;
 	s, LastFontName: string;
 //	i: SG;
 begin
-	if Application.MainForm <> nil then
-		fSplash := TfSplash.Create(Application.MainForm)
-	else
-		fSplash := TfSplash.Create(nil);
+	if fSplash = nil then
+	begin
+		if Application.MainForm <> nil then
+			fSplash := TfSplash.Create(Application.MainForm)
+		else
+			fSplash := TfSplash.Create(nil);
+	end;
 	fSplash.Cursor := crHourGlass;
-	fSplash.AlphaBlendValue := MaxAlphaBlendValue;
 
 	Bmp := fSplash.BackBitmap;
 
@@ -82,15 +82,8 @@ begin
 		fSplash.BackBitmap.LoadFromFile(FileName);
 		x := fSplash.BackBitmap.Width;
 		y := fSplash.BackBitmap.Height;
-		if (x > 0) and (y > 0) then
-		begin
-			while (x < 200) or (y < 3 * 256 div 4) do
-			begin
-				x := x * 2;
-				y := y * 2;
-			end;
-		end;
-		fSplash.BackBitmap.Resize(x, y);
+		if SetNormalSize(x, y, Screen.Width div 2, Screen.Height div 2) then
+			fSplash.BackBitmap.Resize(x, y);
 	end;
 	if (FileName = '') then
 	begin
@@ -118,9 +111,7 @@ begin
 	BmpT.Canvas.Font.Name := 'Times New Roman';
 	BmpT.Canvas.Font.Height := -38;
 
-	Info := TInfo.Create(nil);
-
-	s := Info.GetProjectInfo(piFileVersion);
+	s := GetProjectInfo(piProductVersion);
 {	for i := Length(s) downto 2 do
 	begin
 		if s[i] = '.' then
@@ -129,7 +120,7 @@ begin
 			Break;
 		end;
 	end;}
-	GoodText(BmpT.Canvas, Rect(16, 16, Bmp.Width - 16, Bmp.Height - 16), Application.Title + ' ' + s,
+	GoodText(BmpT.Canvas, Rect(16, 16, Bmp.Width - 16, Bmp.Height - 16), GetProjectInfo(piProductName) + ' ' + s,
 		clBlack, clWhite, clSilver, taCenter, tlCenter);
 
 	BmpT.Canvas.Font.Name := LastFontName;
@@ -137,27 +128,31 @@ begin
 	BmpT.Canvas.Font.Style := [];
 	BmpT.Canvas.Font.Height := 14;
 
-{	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), 'by ' + Info.GetProjectInfo(piAuthor),
+{	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), 'by ' + GetProjectInfo(piAuthor),
 		clNone, clNone, clWhite, taRightJustify, tlCenter);
-	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), Info.GetProjectInfo(piRelease),
+	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), GetProjectInfo(piRelease),
 		clNone, clNone, clWhite, taLeftJustify, tlCenter);}
-	ShadowText(BmpT.Canvas, BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, Info.GetProjectInfo(piRelease),
+	ShadowText(BmpT.Canvas, BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, DateToS(SToDate(GetProjectInfo(piRelease), ifIO), ofDisplay),
 		clWhite, clNone);
-	s := Info.GetProjectInfo(piAuthor);
+	s := GetProjectInfo(piAuthor);
 	if Length(s) > 0 then
 		s := 'by ' + s;
 	ShadowText(BmpT.Canvas, Bmp.Width - 1 - BmpT.Canvas.TextWidth(s) - BorderSize - 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, s,
 		clWhite, clNone);
-	Info.Free;
 
 	Bmp.Bmp(0, 0, BmpT, ef12);
 	Bmp.Border(clWhite, clBlack, BorderSize, ef08);
 
 	fSplash.ClientWidth := fSplash.BackBitmap.Width;
 	fSplash.ClientHeight := fSplash.BackBitmap.Height;
+
+	// Set alpha after window size (care black blink).
+	fSplash.AlphaBlendValue := MaxAlphaBlendValue;
+	fSplash.AlphaBlend := True;
+
 	fSplash.Show;
 	fSplash.Update;
-	Application.HandleMessage; // Change Mouse Cursor
+	Application.HandleMessage; // Process first queue even (change mouse cursor).
 
 	fSplash.State := stWait;
 	fSplash.StartTime := GetTickCount;
@@ -168,9 +163,6 @@ var i: SG;
 begin
 	if ChangeMouseCursor then
 		BeginLongOperation;
-{ TODO :	MainIniCreate;
-	MainIni.RWBoolM('Options', ); }
-
 	for i := Length(AllPictureExt) - 1 downto 0 do
 	begin
 		if FileExists(GraphDir + 'Logo.' + AllPictureExt[i]) then

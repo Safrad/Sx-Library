@@ -1,10 +1,10 @@
 //* File:     Lib\uSorts.pas
 //* Created:  2000-08-01
-//* Modified: 2005-10-08
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uSorts;
 
@@ -242,6 +242,7 @@ procedure RSort(const AIndex: PArraySG; const F, T: SG; const Compare: TCompare)
 var
 	I1F, I1T, I2F, I2T: SG;
 begin
+	Assert(F < T);
 	I1F := F;
 	I1T := F + (T - F) div 2; //(F + T) div 2;
 	I2F := I1T + 1;
@@ -274,15 +275,18 @@ end;
 
 procedure SortStr(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);
 begin
-	AStr := AString;
-	Sort(AIndex, Count, Compare, Reverse);
+	if Count > 1 then
+	begin
+		AStr := AString;
+		Sort(AIndex, Count, Compare, Reverse);
+	end;
 end;
 
 procedure Sort(const AIndex: PArraySG; const Count: SG; const Compare: TCompare; const Reverse: BG = False);
 begin
 	MergeSort(AIndex, Count - 1, Compare);
 	if Reverse then
-		Reverse4(AIndex[0], MaxIndex - MinIndex + 1);
+		Reverse4(AIndex[0], Count);
 end;
 
 initialization

@@ -1,16 +1,17 @@
 //* File:     Lib\uGColor.pas
 //* Created:  1999-09-01
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-23
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uGColor;
 
 interface
 
 uses
+	uParserMsg,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
 	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit;
@@ -21,19 +22,19 @@ type
 	TOnApplyColor = procedure(Color: TColor);
 
 	TfGColor = class(TDForm)
-    LabelR: TDLabel;
+		LabelR: TDLabel;
 		EditR: TDEdit;
 		ButtonR: TDButton;
 		ButtonOk: TDButton;
 		ButtonApply: TDButton;
 		ButtonCancel: TDButton;
-    LabelG: TDLabel;
-    EditG: TDEdit;
-    ButtonG: TDButton;
-    LabelB: TDLabel;
-    EditB: TDEdit;
-    ButtonB: TDButton;
-    EditS: TDEdit;
+		LabelG: TDLabel;
+		EditG: TDEdit;
+		ButtonG: TDButton;
+		LabelB: TDLabel;
+		EditB: TDEdit;
+		ButtonB: TDButton;
+		EditS: TDEdit;
 		PopupMenu1: TPopupMenu;
 		clScrollBar1: TMenuItem;
 		clBackground: TMenuItem;
@@ -61,41 +62,41 @@ type
 		clInfoText1: TMenuItem;
 		clInfoBk1: TMenuItem;
 		clNone1: TMenuItem;
-    PanelH: TPanel;
+		PanelH: TPanel;
 		PanelL: TPanel;
-    PanelPrevious: TDButton;
-    PanelCurrent: TDButton;
+		PanelPrevious: TDButton;
+		PanelCurrent: TDButton;
 		Bevel1: TBevel;
-    ImageH: TDImage;
+		ImageH: TDImage;
 		ImageL: TDImage;
 		PanelNowBitColor: TDButton;
-    PanelDefaultColor: TDButton;
-    LabelPrevious: TLabel;
-    LabelNowXBit: TLabel;
-    LabelDefault: TLabel;
-    LabelCurrent: TLabel;
+		PanelDefaultColor: TDButton;
+		LabelPrevious: TLabel;
+		LabelNowXBit: TLabel;
+		LabelDefault: TLabel;
+		LabelCurrent: TLabel;
 		Bevel2: TBevel;
 		ImageList1: TImageList;
-    BevelBasicColors: TBevel;
-    ShapeBorder: TShape;
+		BevelBasicColors: TBevel;
+		ShapeBorder: TShape;
 		ComboBoxBitDepth: TComboBox;
 		LabelH: TDLabel;
-    EditL: TDEdit;
-    LabelS: TDLabel;
-    LabelL: TDLabel;
-    PanelR: TPanel;
+		EditL: TDEdit;
+		LabelS: TDLabel;
+		LabelL: TDLabel;
+		PanelR: TPanel;
 		ImageR: TDImage;
-    PanelG: TPanel;
-    ImageG: TDImage;
-    PanelB: TPanel;
+		PanelG: TPanel;
+		ImageG: TDImage;
+		PanelB: TPanel;
 		ImageB: TDImage;
-    EditH: TDEdit;
-    PanelS: TPanel;
-    ImageS: TDImage;
-    ComboBoxNF: TComboBox;
-    EditRGBA: TDEdit;
-    LabelRGB: TLabel;
-    LabelFormat: TLabel;
+		EditH: TDEdit;
+		PanelS: TPanel;
+		ImageS: TDImage;
+		ComboBoxNF: TComboBox;
+		EditRGBA: TDEdit;
+		LabelRGB: TLabel;
+		LabelFormat: TLabel;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure ButtonRGBAClick(Sender: TObject);
@@ -114,17 +115,19 @@ type
 		procedure ImageMouseDown(Sender: TObject; Button: TMouseButton;
 			Shift: TShiftState; X, Y: Integer);
 		procedure ComboBoxNFChange(Sender: TObject);
-    procedure PanelPreviousClick(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+		procedure PanelPreviousClick(Sender: TObject);
+		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 	private
 		{ Private declarations }
+		Messages: TParserMessages;
+
 		CurColor, DefColor: TColor;
 		OnApply: TOnApplyColor;
 
 		FNowColor: TColor;
 		NowRGB: TRGBA;
 		NowHLS: THLSColor;
-		PanelColor: array[0..MaxColor] of TPanel;
+		PanelColor: array[0..MaxColor] of TDLabel;
 
 		procedure RWOptions(const Save: BG);
 		procedure InitReadOnly;
@@ -140,6 +143,8 @@ type
 		procedure PanelColorMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 	public
 		{ Public declarations }
+		constructor Create(AOwner: TComponent); override;
+		destructor Destroy; override;
 	end;
 
 procedure InitButton(Button: TDButton);
@@ -152,7 +157,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uMenus, uInput, uFormat, uParserMsg, uDIni;
+	uMenus, uInputFormat, uOutputFormat, uDIniFile;
 
 procedure InitButton(Button: TDButton);
 begin
@@ -321,7 +326,7 @@ begin
 		fGColor := TfGColor.Create(Application.MainForm);
 		for i := 0 to MaxColor do
 		begin
-			fGColor.PanelColor[i] := TPanel.Create(fGColor);
+			fGColor.PanelColor[i] := TDLabel.Create(fGColor);
 			case i of
 			0..23:
 			begin
@@ -536,7 +541,7 @@ end;
 
 procedure TfGColor.PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-	SetNowColor(IntToColor(TPanel(Sender).Tag).L);
+	SetNowColor(IntToColor(TComponent(Sender).Tag).L);
 	InitAll;
 end;
 
@@ -633,16 +638,16 @@ var
 	Changed: BG;
 begin
 	case TComponent(Sender).Tag of
-	-1: NowRGB.L := StrToValI(TDEdit(Sender).Text, True, MinInt, NowRGB.L, MaxInt, 1);
-	0: NowRGB.R := StrToValU1(TDEdit(Sender).Text, True, NowRGB.R);
-	1: NowRGB.G := StrToValU1(TDEdit(Sender).Text, True, NowRGB.G);
-	2: NowRGB.B := StrToValU1(TDEdit(Sender).Text, True, NowRGB.B);
-	3: NowHLS.H := StrToValI(TDEdit(Sender).Text, True, -1, NowHLS.H, MaxSpectrum, 1);
-	4: NowHLS.L := StrToValU1(TDEdit(Sender).Text, True, NowHLS.L);
-	5: NowHLS.S := StrToValU1(TDEdit(Sender).Text, True, NowHLS.S);
+	-1: NowRGB.L := StrToValI(TDEdit(Sender).Text, True, MinInt, NowRGB.L, MaxInt, 1, Messages);
+	0: NowRGB.R := StrToValU1(TDEdit(Sender).Text, True, NowRGB.R, Messages);
+	1: NowRGB.G := StrToValU1(TDEdit(Sender).Text, True, NowRGB.G, Messages);
+	2: NowRGB.B := StrToValU1(TDEdit(Sender).Text, True, NowRGB.B, Messages);
+	3: NowHLS.H := StrToValI(TDEdit(Sender).Text, True, -1, NowHLS.H, MaxSpectrum, 1, Messages);
+	4: NowHLS.L := StrToValU1(TDEdit(Sender).Text, True, NowHLS.L, Messages);
+	5: NowHLS.S := StrToValU1(TDEdit(Sender).Text, True, NowHLS.S, Messages);
 	end;
-	TDEdit(Sender).Hint := AllMesToString;
-	ParserMsgClear;
+	TDEdit(Sender).Hint := Messages.ToString;
+	Messages.Clear;
 	if TDEdit(Sender).Tag <= 2 then
 		Changed := SetNowRGB(NowRGB)
 	else
@@ -788,7 +793,7 @@ begin
 end;
 
 procedure TfGColor.ImageMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+	Shift: TShiftState; X, Y: Integer);
 begin
 	ImageMouseMove(Sender, Shift, X, Y);
 end;
@@ -807,6 +812,18 @@ end;
 procedure TfGColor.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
 	RWOptions(True);
+end;
+
+constructor TfGColor.Create(AOwner: TComponent);
+begin
+	inherited;
+	Messages := TParserMessages.Create;
+end;
+
+destructor TfGColor.Destroy;
+begin
+	FreeAndNil(Messages);
+	inherited;
 end;
 
 end.

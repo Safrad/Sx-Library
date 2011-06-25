@@ -1,81 +1,109 @@
 //* File:     Lib\uProjectInfo.pas
 //* Created:  2006-06-22
-//* Modified: 2007-02-17
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-08
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
+
+{$ifdef Console}
+// TODO: 'Error: Console does not contain any version info'
+{$endif}
 
 unit uProjectInfo;
 
 interface
 
-uses
-	Windows, Messages, SysUtils, Classes, Graphics,
-	TypInfo;
-
 type
 	TProjectInfo = (
-		piAuthor,
-		piComments,
-		piCompanyName,
-		piFileDescription,
-		piFileVersion,
+		piFileVersion, // Displayed twice in Windows file property
+		piFileDescription, // Displayed as "Description" in Windows file property
+		piLegalCopyright, // Displayed as "Copyright" in Windows file property
+
+		piCompanyName, // Displayed as "Company" in Windows file property
 		piInternalName,
-		piLegalCopyright,
-		piLegalTradeMark,
-		piOriginalFileName,
+//		piLanguage, // Automatic
+		piLegalTrademarks,
+		piOriginalFilename, // Displayed as "Original File name" in Windows file property
 		piProductName,
 		piProductVersion,
-		piRelease
+		piPrivateBuild, // Displayed as "Private Build Description" in Windows file property
+		piSpecialBuild, // Displayed as "Special Build Description" in Windows file property
+
+		piAuthor, // Custom
+		piEMail, // Custom
+		piRelease, // Custom
+		piWeb // Custom
 	);
 
-	TInfo = class(TComponent)
-	private
-		FProjectInfo : array [TProjectInfo] of string;
-	public
-		constructor Create(AOwner: TComponent); override;
-		function GetProjectInfo(const ProjectInfo: TProjectInfo): string;
-		procedure SetProjectInfo;
-	end;
+function GetProjectInfo(const ProjectInfo: TProjectInfo): string;
+
+var
+	ProjectInfoStr: array[TProjectInfo] of string;
+	FProjectInfo: array [TProjectInfo] of string;
 
 implementation
 
-constructor TInfo.Create(AOwner: TComponent);
-begin
-	inherited Create(AOwner);
-	SetProjectInfo;
-end;
+uses
+	uTypes,
+//	uFiles,
+	Windows, SysUtils,
+	TypInfo;
 
-function TInfo.GetProjectInfo(const ProjectInfo: TProjectInfo): string;
-begin
-	Result := FProjectInfo[ProjectInfo];
-end;
-
-procedure TInfo.SetProjectInfo;
 var
-	sAppName, sVersionType : string;
-	iAppSize, iLenOfValue: Cardinal;
+	Initialized: BG;
+
+procedure InitProjectInfoStr;
+var
 	i: TProjectInfo;
-	pcBuf: PWideChar;
-	pcValue: PChar;
 begin
-	sAppName := ParamStr(0);
-	iAppSize := GetFileVersionInfoSize(PChar(sAppName), iAppSize);
-	if iAppSize > 0 then
+	for i := Low(TProjectInfo) to High(TProjectInfo) do
 	begin
-		pcBuf := AllocMem(iAppSize);
-		if GetFileVersionInfo(PChar(sAppName), 0, iAppSize, pcBuf) then
-		for i := Low(TProjectInfo) to High(TProjectInfo) do
-		begin
-			sVersionType := GetEnumName(TypeInfo(TProjectInfo), Ord(i));
-			sVersionType := Copy(sVersionType, 3, Length(sVersionType));
-			if VerQueryValue(pcBuf, PChar('StringFileInfo\040904E4\' + sVersionType),
-				Pointer(pcValue), iLenOfValue) then
-				FProjectInfo[i] := pcValue;
-		end;
-		FreeMem(pcBuf, iAppSize);
+		ProjectInfoStr[i] := Copy(GetEnumName(TypeInfo(TProjectInfo), Ord(i)), 3, MaxInt);
 	end;
 end;
 
+procedure SetProjectInfo;
+var
+	AppFileName: string;
+	AppSize: UG;
+	i: TProjectInfo;
+	Buf: PWideChar;
+	Value: PChar;
+	// Unused
+	LenOfValue: UG;
+	Handle: THandle;
+begin
+	Initialized := True;
+	InitProjectInfoStr;
+
+	AppFileName := ParamStr(0);
+	AppSize := GetFileVersionInfoSize(PChar(AppFileName), Handle{ API function initialize always to 0 });
+	if AppSize > 0 then
+	begin
+		Buf := AllocMem(AppSize);
+		try
+			if GetFileVersionInfo(PChar(AppFileName), Handle{ Unused in API function }, AppSize, Buf) then
+			begin
+//				uFiles.WriteBufferToFile('C:\Temp.txt', Buf, AppSize);
+				for i := Low(TProjectInfo) to High(TProjectInfo) do
+				begin
+					if VerQueryValue(Buf, PChar('StringFileInfo\040904E4\' + ProjectInfoStr[i]), Pointer(Value), LenOfValue) then
+						FProjectInfo[i] := Value;
+				end;
+			end;
+		finally
+			FreeMem(Buf, AppSize);
+		end;
+	end;
+end;
+
+function GetProjectInfo(const ProjectInfo: TProjectInfo): string;
+begin
+	if not Initialized then
+		SetProjectInfo;
+	Result := FProjectInfo[ProjectInfo];
+end;
+
 end.
+

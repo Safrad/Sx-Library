@@ -1,10 +1,10 @@
 //* File:     Lib\uCSS.pas
 //* Created:  2005-04-03
-//* Modified: 2005-10-13
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-12
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uCSS;
 
@@ -45,7 +45,7 @@ implementation
 
 uses
 	Math,
-	uStrings, uFiles, uParser, uColor;
+	uStrings, uFiles, uDParser, uColor, uCharTable;
 
 function ColorToHTML(Color: TColor): string;
 var C: TRGBA;
@@ -68,8 +68,8 @@ begin
 
 	Parser := TDParser.Create(ReadStringFromFile(FileName));
 	Parser.EnableString := False;
-	CharsTable['-'] := ctLetter;
-	CharsTable[''''] := ctLetter;
+	Parser.CharTable['-'] := ctLetter;
+	Parser.CharTable[''''] := ctLetter;
 	Parser.ReadInput;
 	while Parser.InputType <> itEOI do
 	begin
@@ -127,7 +127,6 @@ begin
 			Parser.ReadInput;
 		end;
 	end;
-	StdCharTable;
 	Parser.Free;
 end;
 
@@ -165,7 +164,7 @@ end;
 function TCSS.GetProperty(Section, Prop: string): string;
 var i, j: SG;
 begin
-  Result := '';
+	Result := '';
 	for i := 0 to SectionCount - 1 do
 	begin
 		if Sections[i].Name = Section then
@@ -189,12 +188,12 @@ begin
 	s := '';
 	for i := 0 to SectionCount - 1 do
 	begin
-		s := s + Sections[i].Name + ' {' + HTMLSep;
+		s := s + Sections[i].Name + ' {' + FileSep;
 		for j := 0 to Sections[i].PropCount - 1 do
 		begin
-			s := s + CharTab + Sections[i].Props[j].Name + ': ' + ReplaceF(Sections[i].Props[j].Value, ',', ', ') + ';' + HTMLSep;
+			s := s + CharTab + Sections[i].Props[j].Name + ': ' + ReplaceF(Sections[i].Props[j].Value, ',', ', ') + ';' + FileSep;
 		end;
-		s := s + '}' + HTMLSep + HTMLSep;
+		s := s + '}' + FileSep + FileSep;
 	end;
 	WriteStringToFile(FileName, s, False);
 end;

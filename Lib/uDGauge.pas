@@ -1,10 +1,10 @@
 //* File:     Lib\uDGauge.pas
 //* Created:  1999-08-01
-//* Modified: 2005-07-10
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDGauge;
 
@@ -20,8 +20,6 @@ type
 	TDGauge = class(TDImage)
 	private
 		{ Private declarations }
-		FBmpOut: TDBitmap;
-
 		FBackEffect: TEffect;
 		FBackPaint: Boolean;
 		FFontShadow: SG;
@@ -84,12 +82,11 @@ procedure Register;
 
 implementation
 
-uses uGraph, uScreen, uFormat, uColor;
+uses uGraph, uScreen, uOutputFormat, uColor;
 
 constructor TDGauge.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
-	FBmpOut := nil;
 	FDispl := TDispl.Create;
 	FDispl.Enabled := False;
 	FDispl.Format := '88';
@@ -120,7 +117,6 @@ end;
 destructor TDGauge.Destroy;
 begin
 	FDispl.Free;
-	FreeAndNil(FBmpOut);
 	inherited Destroy;
 end;
 
@@ -248,21 +244,16 @@ begin
 	Recta.Top := 0;
 	Recta.Right := Width;
 	Recta.Bottom := Height;
-	if (not Assigned(FBmpOut)) then
-	begin
-		FBmpOut := TDBitmap.Create;
-	end;
-	FBmpOut.SetSize(Recta.Right - Recta.Left, Recta.Bottom - Recta.Top);
 
 	// Background
-	FBmpOut.Canvas.Brush := Parent.Brush;
-	FBmpOut.Canvas.FillRect(Recta);
+	Bitmap.Canvas.Brush := Parent.Brush;
+	Bitmap.Canvas.FillRect(Recta);
 
 // Border
 	if (FBorderStyle <> bsNone) then
 	begin
-		FBmpOut.Border(clBtnShadow, clBtnHighlight, 1, BackEffect);
-		FBmpOut.Border(1, 1, FBmpOut.Width - 2, FBmpOut.Height - 2,
+		Bitmap.Border(clBtnShadow, clBtnHighlight, 1, BackEffect);
+		Bitmap.Border(1, 1, Bitmap.Width - 2, Bitmap.Height - 2,
 			cl3DDkShadow, cl3DLight, 1, BackEffect);
 		InflateRect(Recta, -2, -2);
 	end;
@@ -278,14 +269,14 @@ begin
 			TopColor := clDepth[3];
 			BottomColor := clDepth[1];
 		end;
-		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		Bitmap.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
 	if Color <> clNone then
 	begin
 		for i := 0 to FBorderWidth - 1 do
-			FBmpOut.Rec(Recta.Left + i, Recta.Top + i,
+			Bitmap.Rec(Recta.Left + i, Recta.Top + i,
 				Recta.Right - i - 1, Recta.Bottom - i - 1,
 				Color, BackEffect);
 		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
@@ -303,7 +294,7 @@ begin
 			TopColor := clDepth[3];
 			BottomColor := clDepth[1];
 		end;
-		FBmpOut.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
+		Bitmap.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
 		InflateRect(Recta, -Integer(FBevelWidth) div 2, -Integer(FBevelWidth) div 2);
 		InflateRect(RectaS, -FBevelWidth, -FBevelWidth);
@@ -330,14 +321,14 @@ begin
 {		case FKind of
 		gkNormal:
 		begin
-			FBmpOut.Bar(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+			Bitmap.Bar(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				C, FBackEffect);
 		end;
 		gkSpectrum:
 		begin
 			for i := Recta.Left to X - 1 do
 			begin
-				FBmpOut.Line(i, Recta.Top, i, Recta.Bottom - 1,
+				Bitmap.Line(i, Recta.Top, i, Recta.Bottom - 1,
 					SpectrumColor(512 * i div (Recta.Right - Recta.Left)), FBackEffect);
 			end;
 		end;
@@ -347,7 +338,7 @@ begin
 			Co[1] := DarkerColor(clBtnFace);
 			Co[2] := Co[0];
 			Co[3] := Co[1];
-			FBmpOut.GenerateRGBEx(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
+			Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
 				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 {		end;
 		end;}
@@ -355,27 +346,27 @@ begin
 	if X < RectaS.Left then X := RectaS.Left;
 	if (X < RectaS.Right) then
 	begin
-		FBmpOut.Bar(X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
+		Bitmap.Bar(X, RectaS.Top, RectaS.Right - 1, RectaS.Bottom - 1,
 			Color, FBackEffect);
 	end;
 
 	Caption := NToS(FPercentage, 1) + '%';
 	if (Caption <> '') {and (FFontEffect<>ef00)} then
 	begin
-		FBmpOut.Canvas.Brush.Color := Color;
-		FBmpOut.Canvas.Brush.Style := bsClear;
-		FBmpOut.Canvas.Font := Font;
+		Bitmap.Canvas.Brush.Color := Color;
+		Bitmap.Canvas.Brush.Style := bsClear;
+		Bitmap.Canvas.Font := Font;
 		if Displ.Enabled then
 		begin
-			DisplDrawRect(FBmpOut, Caption, FDispl, Recta, taCenter, tlCenter, ef16);
+			DisplDrawRect(Bitmap, Caption, FDispl, Recta, taCenter, tlCenter, ef16);
 		end
 		else
 		begin
-			DrawCutedText(FBmpOut.Canvas, Recta, taCenter, tlCenter, Caption, True, FFontShadow);
+			DrawCutedText(Bitmap.Canvas, Recta, taCenter, tlCenter, Caption, True, FFontShadow);
 		end;
 	end;
 
-	FBmpOut.DrawToDC(Canvas.Handle, 0, 0);
+	Bitmap.DrawToDC(Canvas.Handle, 0, 0);
 end;
 
 procedure Register;

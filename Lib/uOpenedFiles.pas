@@ -1,10 +1,10 @@
 //* File:     Lib\uOpenedFiles.pas
 //* Created:  1999-12-01
-//* Modified: 2005-11-26
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uOpenedFiles;
 
@@ -26,10 +26,11 @@ type
 		Created, Modified: TDateTime; // 2 * 8 = 16
 		WorkTime: U8; // 8
 		ModificationTime: U4; // 4
+		SaveTime: U4;
 		New: U2; // 2
 		Changed: B1; // 1
 		ReadOnly: B1; // 1
-		Reserved: array[0..1] of U4; // 8
+		Reserved: array[0..0] of U4; // 4
 	end;
 
 	TOnNewFileEvent = function(Sender: TObject; const Item: POpenedFileItem): BG of object;
@@ -78,6 +79,9 @@ type
 		FOnChangeFile: TNotifyEvent; // Memory to Graphics (Actual File Changed)
 
 		// Methods
+		procedure SetCaption(const FName: TFileName; const Changed: BG;
+			const New: SG; const ReadOnly: BG; const Index, Count: SG);
+
 		procedure FreeItem(i: SG);
 
 		procedure SetIndex(Value: SG);
@@ -193,8 +197,7 @@ implementation
 
 uses
 	Forms, Math, ShellAPI, uWatch,
-	uMath, uFiles, uMsg, uError, uStrings, uDIni, uFormat, uSystem, uAPI, uParams, uSimulation;
-
+	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI, uParams, uSimulation, uProjectInfo;
 
 var
 	OpenedFileInstance: TOpenedFiles;
@@ -224,7 +227,7 @@ begin
 	end;
 	if OpenedFileInstance = nil then
 		OpenedFileInstance := Self;
-	RegisterParam(paFile, 'Filename', OpenedFileParam);
+	RegisterParam(paFile, 'Open this filename on startup', OpenedFileParam);
 	RegisterParam('NoOpen', 'Do not open last files', ParamNoOpen);
 end;
 
@@ -242,8 +245,7 @@ begin
 		if Assigned(FOnFreeFile) then FOnFreeFile(Self, @Items[i]);
 	except
 		on E: Exception do
-		begin
-		end;
+			Fatal(E, Self);
 	end;
 	Items[i].FileName := '';
 	FreeAndNil(Items[i].MenuItem);
@@ -598,7 +600,7 @@ begin
 	begin
 		Inc(FNewCount);
 		if FileName = '' then
-			Item.FileName := 'NoName' + NToS(FNewCount, ofIO)
+			Item.FileName := MyDocuments + 'NoName' + NToS(FNewCount, ofIO)
 		else
 			Item.FileName := FileName;
 
@@ -614,6 +616,7 @@ begin
 			except
 				on E: Exception do
 				begin
+					Fatal(E, Self);
 					Result := False;
 				end;
 			end;
@@ -701,6 +704,7 @@ begin
 				except
 					on E: Exception do
 					begin
+						Fatal(E, Self);
 						Result := False;
 					end;
 				end;
@@ -715,6 +719,7 @@ begin
 					Item.New := 0;
 					Item.Changed := False;
 					Item.ReadOnly := ReadOnly;
+					Item.SaveTime := GetTickCount;
 					CreateMenuItem(FIndex);
 					if Assigned(Item.MenuItem) then
 						Item.MenuItem.Checked := True;
@@ -752,7 +757,7 @@ begin
 			if FileName <> '' then
 			begin
 				if FileExists(FileName) = False then
-					FileName := FileName + '\';
+					FileName := FileName + PathDelim;
 				if OpenedFileLoadFromFile(FileName) then
 				begin
 					Result := True;
@@ -798,7 +803,7 @@ begin
 			begin
 				if RenameFileEx(Items[OpenedFile].FileName, NewFileName) then
 				begin
-          Result := True;
+					Result := True;
 					Items[OpenedFile].FileName := NewFileName;
 				end
 				else
@@ -841,6 +846,7 @@ begin
 		except
 			on E: Exception do
 			begin
+				Fatal(E, Self);
 				Result := False;
 			end;
 		end;
@@ -870,11 +876,12 @@ end;
 function TOpenedFiles.SaveAs(OpenedFile: SG): BG;
 begin
 	Result := False;
+	// TODO: Save Changes to the following files:
 	if FCount > 0 then
 	begin
 		if Items[OpenedFile].Changed then
 		begin
-			case Confirmation(Items[OpenedFile].FileName + LineSep + 'Save changes?', [mbYes, mbNo, mbCancel]) of
+			case Confirmation(Items[OpenedFile].FileName + LineSep + 'Save changes, you made before ' + MsToStr(TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime), diMSD, 0, False) + '?', [mbYes, mbNo, mbCancel]) of
 			mbYes:
 			begin
 				Result := OpenedFileSave(OpenedFile, Items[OpenedFile].New <> 0, False);
@@ -966,7 +973,7 @@ begin
 		begin
 			if OpenedFileClose(i) = False then
 			begin
-				ErrorMsg('OpenedFiles: Can not close unchanged file');
+				ErrorMsg('OpenedFiles: Can not close unchanged file.');
 				Exit;
 			end
 			else
@@ -975,7 +982,7 @@ begin
 			end;
 		end
 		else
-			ErrorMsg('OpenedFiles: Can not close changed file');
+			ErrorMsg('OpenedFiles: Can not close changed file.');
 	end;
 end;
 
@@ -1011,6 +1018,40 @@ begin
 	Result := True;
 end;
 
+procedure TOpenedFiles.SetCaption(const FName: TFileName; const Changed: BG;
+	const New: SG; const ReadOnly: BG; const Index, Count: SG);
+var Result: string;
+begin
+	Result := GetProjectInfo(piProductName);
+	if Count > 0 then
+	begin
+		// Application Title
+		if FName <> '' then
+			Application.Title := ExtractFileName(FName)
+		else
+			Application.Title := Result;
+
+		// Caption
+		if (Index >= 0) or (Count > 1) then
+			Result := Result + ' - ';
+		if Count > 1 then
+			Result := Result + '(' + NToS(Index + 1) + '/' + NToS(Count) + ')';
+		if Changed then Result := Result + ' *';
+		if New <> 0 then
+			Result := Result + ' ' + ExtractFileName(FName)
+		else
+			Result := Result + ' ' + ShortDir(FName);
+		if New <> 0 then Result := Result + ' (New)';
+		if ReadOnly then Result := Result + ' (Read Only)';
+	end
+	else
+	begin
+		Application.Title := Result;
+	end;
+	if Owner is TForm then
+		{Application.MainForm}TForm(Owner).Caption := Result;
+end;
+
 procedure TOpenedFiles.Init;
 var
 	i: SG;
@@ -1024,9 +1065,9 @@ begin
 		begin
 			DragAcceptFiles(Application.MainForm.Handle, True);
 			if Item = nil then
-				Application.MainForm.Caption := GetCaption('', False, 0, False, FIndex, FCount)
+				SetCaption('', False, 0, False, FIndex, FCount)
 			else
-				Application.MainForm.Caption := GetCaption(Item.FileName, Item.Changed, Item.New, Item.ReadOnly, FIndex, FCount);
+				SetCaption(Item.FileName, Item.Changed, Item.New, Item.ReadOnly, FIndex, FCount);
 		end;
 	end;
 
@@ -1078,7 +1119,9 @@ begin
 end;
 
 procedure TOpenedFiles.Change;
-var Item: POpenedFileItem;
+var
+	Item: POpenedFileItem;
+	FileName: TFileName;
 begin
 	Item := ActualItem;
 	if Item <> nil then
@@ -1087,9 +1130,17 @@ begin
 		begin
 			Item.Changed := True;
 			Item.ModificationTime := GetTickCount;
+			Item.SaveTime := GetTickCount;
 			Init;
 		end;
-		// TODO: Save to TempDir
+		// Automatic save after change
+		if TimeDifference(GetTickCount, Item.SaveTime) > Minute then
+		begin
+			Item.SaveTime := GetTickCount;
+			FileName := TempDir + ExtractFileName(Item.FileName);
+			DeleteFileEx(FileName);
+			FOnSaveToFile(Self, FileName);
+		end;
 	end;
 end;
 
@@ -1167,25 +1218,23 @@ var Item: POpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
-		if (Item.Changed = False) or (Confirmation(Item.FileName + LineSep + 'Lose all changes since your last save?',
+		if (Item.Changed = False) or (Confirmation(Item.FileName + LineSep + 'Lose all changes in during ' + MsToStr(TimeDifference(GetTickCount, Item.SaveTime), diMSD, 0, False) + '?',
 			[mbYes, mbNo]) = mbYes) then
 		begin
 			try
 				if Assigned(FOnFreeFile) then FOnFreeFile(Sender, Item);
 			except
 				on E: Exception do
-				begin
-				end;
+					Fatal(E, Self);
 			end;
 			Item.Changed := False;
 			try
 				if Assigned(FOnLoadFromFile) then
 					FOnLoadFromFile(Sender, Item.FileName);
-					GetFileModified(Item.FileName, Item.LastWriteTime);
+				GetFileModified(Item.FileName, Item.LastWriteTime);
 			except
 				on E: Exception do
-				begin
-				end;
+					Fatal(E, Self);
 			end;
 			OpenedFileChangeFile(Sender);
 		end;
@@ -1281,7 +1330,7 @@ procedure TOpenedFiles.OpenAll;
 		ReadDir(FileNames, FileNameCount, Dir, [], True, True, False, False);
 		for i := 0 to FileNameCount - 1 do
 		begin
-			if LastChar(FileNames[i]) = '\' then
+			if LastChar(FileNames[i]) = PathDelim then
 				Depth(Dir + FileNames[i])
 			else
 			begin
@@ -1297,7 +1346,7 @@ procedure TOpenedFiles.OpenAll;
 	end;
 
 begin
-	Depth('C:\');
+	Depth('C' + DriveDelim + PathDelim);
 end;
 {$endif}
 
@@ -1330,6 +1379,5 @@ end;
 {$ifopt d+}
 initialization
 	CheckExpSize(SizeOf(TOpenedFileItem));
-	AcceptFile := True;
 {$endif}
 end.

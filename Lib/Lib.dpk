@@ -1,0 +1,49 @@
+package Lib;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS OFF}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS OFF}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'Safrad''s Components'}
+{$IMPLICITBUILD ON}
+
+requires
+  vcl,
+  rtl,
+  vcljpg,
+  designide,
+  vclactnband,
+  vclx;
+
+contains
+  uDView in 'uDView.pas',
+  uDTimer in 'uDTimer.pas',
+  uDPanel in 'uDPanel.pas',
+  uDLabel in 'uDLabel.pas',
+  uDImage in 'uDImage.pas',
+  uDGauge in 'uDGauge.pas',
+  uDForm in 'uDForm.pas',
+  uDEdit in 'uDEdit.pas',
+  uDButton in 'uDButton.pas',
+  uOpenedFiles in 'uOpenedFiles.pas',
+  uCompLog in 'uCompLog.pas';
+
+end.

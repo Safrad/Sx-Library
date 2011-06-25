@@ -1,10 +1,10 @@
-//* File:     Lib\uData.pas
+//* File:     Lib\uDatas.pas
 //* Created:  2006-12-26
-//* Modified: 2006-12-26
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-03-11
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDatas;
 

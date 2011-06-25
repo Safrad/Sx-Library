@@ -1,10 +1,10 @@
 //* File:     Lib\uInfoWindow.pas
 //* Created:  2006-12-21
-//* Modified: 2006-12-21
-//* Version:  1.0.35.0
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-01-10
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uInfoWindow;
 
@@ -18,7 +18,7 @@ uses
 type
 	TfInfoWindow = class(TDForm)
 		Timer1: TTimer;
-    LabelText: TLabel;
+		LabelText: TLabel;
 		Bevel1: TBevel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormShow(Sender: TObject);

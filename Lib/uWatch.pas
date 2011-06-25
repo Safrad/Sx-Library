@@ -1,3 +1,11 @@
+//* File:     Lib\uWatch.pas
+//* Created:  1998-07-01
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uWatch;
 
 interface
@@ -6,15 +14,17 @@ uses SysUtils, Messages;
 
 type
 	TWatchFileChanged = procedure(const FileName: TFileName);
+	TWatchFileChangedEx = procedure(const FileName: TFileName) of Object;
 
-procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChanged);
+procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChanged); overload;
+procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChangedEx); overload;
 procedure WatchRemoveFile(const FileName: TFileName);
 
 implementation
 
 uses
 	Windows, Controls, Forms,
-	uTypes, uFiles, uStrings, uMsg, uError, uMath, uData;
+	uTypes, uFiles, uStrings, uMsg, uMath, uData, uOutputFormat;
 
 type
 	PWatchedFile = ^TWatchedFile;
@@ -67,7 +77,7 @@ begin
 								Reload := True
 							else
 							begin
-								s := WatchedFile.FileName + LineSep + 'has been modified ' + DateTimeToStr(FileTimeToDateTime(LastWriteTime)) + ' outside of the application';
+								s := WatchedFile.FileName + LineSep + 'has been modified ' + DateTimeToS(FileTimeToDateTime(LastWriteTime), 0, ofDisplay) + ' outside of the application';
 								if WatchedFile.Changed then
 									s := s + ' and with the application';
 								s := s + LineSep + 'Reload it?';
@@ -134,6 +144,15 @@ begin
 		GetFileModified(WatchedFile.FileName, WatchedFile.LastWriteTime)
 	else
 		U8(WatchedFile.LastWriteTime) := 0;
+end;
+
+procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChangedEx);
+//var
+//	OnChangeEx: TWatchFileChanged;
+begin
+// TODO:
+//	OnChangeEx := OnChange;
+//	WatchAddFile(FileName, OnChangeEx);
 end;
 
 procedure WatchRemoveFile(const FileName: TFileName);

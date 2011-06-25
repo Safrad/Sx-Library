@@ -1,10 +1,10 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2005-11-10
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uWave;
 
@@ -26,21 +26,21 @@ procedure Sound(const Hz: U2);
 	SampleRate: 1..512 * MB
 
 	8 bits
-			 U1   Hex S1
+	_____U1   Hex S1
 	Max: 255  $ff -1
 
 	Cen: 128  $80 -128
-			 127  $7f 127
+	_____127  $7f 127
 
 	Min:   0  $00 0
 
 
 	16 bits
-			 U2    Hex    S2
+	_____U2    Hex    S2
 	Max: 32767 $7fff  32767
 
 	Cen:     0 $0000      0
-			 65535 $ffff     -1
+	_____65535 $ffff     -1
 
 	Min: 32768 $8000 -32768
 }
@@ -105,9 +105,9 @@ type
 	TWinSound = (
 		wsAsterisk, // Done
 		wsCloseProgram,
-		wsCriticalStop, // uError
+		wsCriticalStop, // uMsgDlg
 		wsDefaultSound, // Beep
-		wsExclamation,
+		wsExclamation,  // uMsgDlg
 		wsExitWindows,
 		wsMaximize,
 		wsMenuCommand,
@@ -115,7 +115,7 @@ type
 		wsMinimize,
 		wsOpenProgram,
 		wsProgramError,
-		wsQuestion, // uError
+		wsQuestion, // uMsgDlg
 		wsRestoreDown,
 		wsRestoreUp,
 //		wsRingIn,
@@ -179,6 +179,8 @@ procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: U4);
 	const Channels: U2;
 	const BitsPerSample: U2;
 	const SampleRate: U4);}
+const
+	AllSounds = 'Sound Wave (*.wav)|*.wav';
 
 procedure PlayWave(Wave: PWave);
 procedure PlayWaveFile(const WaveName: TFileName);
@@ -295,7 +297,7 @@ implementation
 
 uses
 	Registry,
-	uFiles, uMsg, uStrings, uFormat;
+	uFiles, uMsg, uStrings, uOutputFormat;
 
 // Wave
 procedure Beep;
@@ -327,14 +329,14 @@ begin
 			Result := True;
 		end
 		else
-			ErrorMsg('Invalid wave format');
+			ErrorMsg('Invalid wave format.');
 	end
 	else
-		ErrorMsg('Wave is empty');
+		ErrorMsg('Wave is empty.');
 end;
 
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
-label LRetry, LFin;
+label LFin;
 var
 	F: TFile;
 begin
@@ -343,64 +345,67 @@ begin
 		WaveFree(Wave);
 	end;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if F.FileSize < WaveHead then
+	try
+		if F.Open(FName, fmReadOnly) then
 		begin
-			IOErrorMessage(FName, 'File truncated');
-			goto LFin;
-		end;
-		GetMem(Wave, F.FileSize);
-		if not F.BlockRead(Wave^, F.FileSize) then goto LFin;
-		if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
-			(Wave.Marker3 <> 'fmt ') {or
-			(Wave.BytesFollowing <> F.FileSize - 8) }then
-		begin
-			IOErrorMessage(FName, 'File is not wave');
-			WaveFree(Wave);
-		end
-		else
-		begin
-			if Wave.BytesFollowing <> F.FileSize - 8 then
+			if F.FileSize < WaveHead then
 			begin
-				IOErrorMessage(FName, 'Wave bytes following repaired');
-				Wave.BytesFollowing := F.FileSize - 8;
-			end;
-			if (Wave.BitsPerSample = 4) {Microsoft ADPCM} or (Wave.BitsPerSample = 0) {GSM 6.10} then goto LFin;
-			if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
-			begin
-				IOErrorMessage(FName, 'Wave format not supported');
-				WaveFree(Wave);
+				IOErrorMessage(FName, 'File truncated.');
 				goto LFin;
 			end;
-	{		if Wave.DataBytes > F.FileSize - 44 then
+			GetMem(Wave, F.FileSize);
+			if not F.BlockRead(Wave^, F.FileSize) then goto LFin;
+			if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
+				(Wave.Marker3 <> 'fmt ') {or
+				(Wave.BytesFollowing <> F.FileSize - 8) }then
 			begin
-				IOErrorMessage(FName, 'Wave data bytes repaired');
-				Wave.DataBytes := F.FileSize - 44;
-			end;}
+				IOErrorMessage(FName, 'File is not wave.');
+				WaveFree(Wave);
+			end
+			else
+			begin
+				if Wave.BytesFollowing <> F.FileSize - 8 then
+				begin
+					IOErrorMessage(FName, 'Wave bytes following repaired.');
+					Wave.BytesFollowing := F.FileSize - 8;
+				end;
+				if (Wave.BitsPerSample = 4) {Microsoft ADPCM} or (Wave.BitsPerSample = 0) {GSM 6.10} then goto LFin;
+				if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
+				begin
+					IOErrorMessage(FName, 'Wave format not supported.');
+					WaveFree(Wave);
+					goto LFin;
+				end;
+		{		if Wave.DataBytes > F.FileSize - 44 then
+				begin
+					IOErrorMessage(FName, 'Wave data bytes repaired.');
+					Wave.DataBytes := F.FileSize - 44;
+				end;}
+			end;
+			LFin:
+			F.Close;
 		end;
-		LFin:
-		F.Close;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
 procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
-label LRetry;
 var
 	F: TFile;
 begin
 	if Wave = nil then Exit;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if not F.BlockWrite(Wave^, Wave^.BytesFollowing + 8) then goto LRetry;
-		F.Truncate;
-		F.Close;
+	try
+		if F.Open(FName, fmReadOnly) then
+		begin
+			F.BlockWrite(Wave^, Wave^.BytesFollowing + 8);
+			F.Truncate;
+			F.Close;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
 function BitsToByte(const Bits: U8): U4;
@@ -688,7 +693,7 @@ procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
 	const BitsPerSample: U2;
 	const SampleRate: U4);
 begin
- ConvertBitsPerSample(WaveS, WaveD, BitsPerSample);
+	ConvertBitsPerSample(WaveS, WaveD, BitsPerSample);
 	ConvertChannels(WaveS, WaveD, Channels, ConvertPre, ConvertPre);
 	ConvertSampleRate(WaveD, SampleRate);
 end;}
@@ -717,7 +722,7 @@ begin
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
-		Key := 'AppEvents\Schemes\Apps\.Default\' + WinSoundNames[WinSound] + '\.Current';
+		Key := 'AppEvents' + PathDelim + 'Schemes' + PathDelim + 'Apps' + PathDelim + '.Default' + PathDelim + WinSoundNames[WinSound] + PathDelim + '.Current';
 		if Reg.OpenKeyReadOnly(Key) then
 		begin
 			if Reg.ValueExists('') then
@@ -786,7 +791,7 @@ begin
 		if Result <> '' then
 			if Result[Length(Result)] = #0 then SetLength(Result, Length(Result) - 1);
 //		Replace(Result, #0, ' ')
-  end
+	end
 	else
 		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' ' + 'Unknown error';
 end;
@@ -888,7 +893,7 @@ begin
 
 		WaveRecorder.FError := waveInUnPrepareHeader(WaveRecorder.FHWave, Header, SizeOf(TWaveHdr));
 		WaveRecorder.MMError('UnPrepare');
-		FreeMem(BufferIn); BufferIn := nil;
+		FreeMem(BufferIn);
 		Dispose(Header);
 
 		if WaveRecorder.FActive = False then Exit;

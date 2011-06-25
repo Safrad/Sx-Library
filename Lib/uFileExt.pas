@@ -1,10 +1,10 @@
 //* File:     Lib\uFileExt.pas
 //* Created:  2006-02-04
-//* Modified: 2006-02-04
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uFileExt;
 
@@ -17,19 +17,21 @@ uses
 
 type
 	TfFileExt = class(TDForm)
-    DViewFileExtensions: TDView;
+		DViewFileExtensions: TDView;
 		PopupMenuFE: TPopupMenu;
 		Register1: TMenuItem;
 		Unregister1: TMenuItem;
-    N1: TMenuItem;
-    RegisterAll1: TMenuItem;
-    UnregisterAll1: TMenuItem;
+		N1: TMenuItem;
+		RegisterAll1: TMenuItem;
+		UnregisterAll1: TMenuItem;
 		procedure Register1Click(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+		procedure FormCreate(Sender: TObject);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 		procedure PopupMenuFEPopup(Sender: TObject);
 		procedure DViewFileExtensionsGetData(Sender: TObject; var Data: String; ColIndex,
-      RowIndex: Integer; Rect: TRect);
+			RowIndex: Integer; Rect: TRect);
+		procedure FormKeyDown(Sender: TObject; var Key: Word;
+			Shift: TShiftState);
 	private
 		{ Private declarations }
 		procedure Init(Sender: TObject);
@@ -49,7 +51,7 @@ procedure FreeFileExt;
 implementation
 
 {$R *.dfm}
-uses uTypes, uReg, uDIni, uMenus;
+uses uTypes, uReg, uDIniFile, uMenus;
 
 type
 	TFileType = packed record // 24
@@ -69,7 +71,7 @@ begin
 	if not Assigned(fFileExt) then fFileExt := TfFileExt.Create(nil);
 	fFileExt.DViewFileExtensions.RowCount := FileTypeCount;
 	fFileExt.Init(nil);
-	fFileExt.Show;
+	fFileExt.ShowModal;
 end;
 
 procedure FreeFileExt;
@@ -117,7 +119,7 @@ begin
 	Tg := TComponent(Sender).Tag;
 	for i := 0 to FileTypeCount - 1 do
 	begin
-		if (Tg >= 2) or (DViewFileExtensions.SelRows[i]) then
+		if (Tg >= 2) or (DViewFileExtensions.SelectedRows[i]) then
 			CustomFileType(
 				TFileTypesOperation(Tg and 1),
 				FileTypes[i].FileType,
@@ -134,16 +136,13 @@ procedure TfFileExt.FormCreate(Sender: TObject);
 begin
 	Background := baNone;
 	MenuSet(PopupMenuFE);
-	DViewFileExtensions.ColumnCount := 2;
-	DViewFileExtensions.Columns[0].Caption := 'Extension';
-	DViewFileExtensions.Columns[0].Width := DViewFileExtensions.CellWidth('Folder');
-	DViewFileExtensions.Columns[1].Caption := 'Description';
-	DViewFileExtensions.Columns[1].Width := DViewFileExtensions.Width - DViewFileExtensions.Columns[0].Width;
+	DViewFileExtensions.AddColumn('Extension', DViewFileExtensions.CellWidth('Folder'));
+	DViewFileExtensions.AddColumn('Description', 0);
 
 	if Assigned(MainIni) then
 	begin
 		MainIni.RWFormPos(Self, False);
-		MainIni.RWDView(DViewFileExtensions, False);
+		DViewFileExtensions.Serialize(MainIni, False);
 	end;
 end;
 
@@ -152,7 +151,7 @@ begin
 	if Assigned(MainIni) then
 	begin
 		MainIni.RWFormPos(Self, True);
-		MainIni.RWDView(DViewFileExtensions, True);
+		DViewFileExtensions.Serialize(MainIni, True);
 	end;
 end;
 
@@ -179,7 +178,7 @@ begin
 end;
 
 procedure TfFileExt.DViewFileExtensionsGetData(Sender: TObject; var Data: String;
-  ColIndex, RowIndex: Integer; Rect: TRect);
+	ColIndex, RowIndex: Integer; Rect: TRect);
 begin
 	if FileTypes[RowIndex].Exists then
 		DViewFileExtensions.Bitmap.Canvas.Font.Style := []
@@ -189,6 +188,12 @@ begin
 	0: Data := FileTypes[RowIndex].FileType;
 	1: Data := FileTypes[RowIndex].FileTypeCaption;
 	end;
+end;
+
+procedure TfFileExt.FormKeyDown(Sender: TObject; var Key: Word;
+	Shift: TShiftState);
+begin
+	if Key = VK_ESCAPE then Close;
 end;
 
 initialization

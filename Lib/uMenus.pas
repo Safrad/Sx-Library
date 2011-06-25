@@ -1,10 +1,10 @@
 //* File:     Lib\uMenus.pas
 //* Created:  2000-08-01
-//* Modified: 2005-10-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-21
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uMenus;
 
@@ -16,14 +16,10 @@ uses
 var
 	ViewSplashScreen: BG;
 const
-	IconSize = 22;
+	IconSize = 22; // Size of button on toolbar.
 
 function TryFindIcon(Name: string; const Path: string): string;
-procedure ImgAdd(Bitmap: TBitmap; const Name: string);
-procedure ComName(MenuItem: TMenuItem);
-
-function ComponentName(const Name: string): string;
-function ButtonNameToFileName(const Name: string): string;
+procedure LoadMenuIcon(const Bitmap: TBitmap; const Name: string);
 
 procedure MenuCreate(Src: TComponent; Dsc: TComponent);
 procedure MenuFree(Src: TMenuItem);
@@ -38,21 +34,15 @@ procedure IconsResize(PanelTool: TPanel);
 
 procedure FormatCaption(M: TMenuItem; Value: SG; AsTime: BG = False; Bullet: BG = False; Suffix: BG = True);
 procedure MenuSet(Menu: TComponent);
-procedure CommonFileMenu(const Menu: TMenu);
 
 implementation
 
 uses
 	Forms, Controls, ImgList, SysUtils, ShellAPI,
-	uDButton, uStrings, uFormat, uColor, uTranslate, uError, uSounds, uSplash,
-	uGraph, uDBitmap, uScreen, uFiles, uMsg, uAPI, uMath, uParser, uAbout, uLog;
+	uDButton, uStrings, uColor, uTranslate, uSounds, uSplash, uParams,
+	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uAPI, uMath, uDParser, uLog, uOutputFormat;
 
 var ImageList: TCustomImageList;
-
-procedure CreateImg;
-begin
-	if not Assigned(ImageList) then ImageList := TCustomImageList.CreateSize(16, 16);
-end;
 
 function TryFindIcon(Name: string; const Path: string): string;
 label LAbort;
@@ -86,83 +76,38 @@ begin
 	LAbort:
 end;
 
-procedure ImgAdd(Bitmap: TBitmap; const Name: string);
+procedure LoadMenuIcon(const Bitmap: TBitmap; const Name: string);
+const
+	MaxColors = 16;
+	Co: array[0..3] of TColor = (clWhite, clBlack, clWhite, clBlack);
 var
-	Bmp: TDBitmap;
 	FileName: TFileName;
+	Bmp: TDBitmap;
 begin
-	FileName := TryFindIcon(Name, GraphDir + 'Images\');
+	FileName := TryFindIcon(Name, GraphDir + 'Images' + PathDelim);
 	if FileName <> '' then
 	begin
-		FileName := GraphDir + 'Images\' + FileName;
+		FileName := GraphDir + 'Images' + PathDelim + FileName;
 		if FileExists(FileName) then
 		begin
 			Bmp := TDBitmap.Create;
 			Bmp.LoadFromFile(FileName);
 			if Bmp.Empty = False then
 			begin
-				Bitmap.Width := 0;
+				if Bmp.ColorCount(MaxColors) < MaxColors then
+				begin
+					Bmp.GenerateRGB(gfFade2x, Co, clBlack, ef06, nil);
+				end;
+{				Bitmap.Width := 0;
 				Bitmap.Height := 0;
 				Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
-				Bitmap.Height := 16;
-				Bmp.Resize(Bitmap.Width, Bitmap.Height);
-				Bmp.GetBitmap(Bitmap);
+				Bitmap.Height := 16;}
+				Bmp.Resize(16, 16);
+				Bmp.ToBitmap(Bitmap);
 			end;
 			Bmp.Free;
 		end;
 	end;
-end;
-
-function ComponentName(const Name: string): string;
-var i: SG;
-begin
-	Result := Name;
-	i := 1;
-	while i <= Length(Result) do
-	begin
-		if not (CharsTable[Result[i]] in [ctLetter, ctNumber]) then
-			Delete(Result, i, 1)
-		else
-			Inc(i);
-	end;
-	if Result = '' then
-		Result := 'N'
-	else
-	begin
-		if CharsTable[Result[1]] <> ctLetter then
-			Result := 'N' + Result;
-	end;
-end;
-
-function ButtonNameToFileName(const Name: string): string;
-label LDel;
-var
-	Index, i: SG;
-	Found: BG;
-const
-	Names: array[0..4] of string = ('DBUTTON', 'BUTTON', 'COMBOBOX', 'EDIT', 'MEMO');
-begin
-	Result := Name;
-	Found := False;
-	for i := 0 to Length(Names) - 1 do
-	begin
-		Index := Pos(Names[i], UpperCase(Result));
-		if Index = 1 then
-		begin
-			Delete(Result, Index, Length(Names[i]));
-			Found := True;
-			Break;
-		end;
-	end;
-
-	if Found = False then
-		Result := DelLastNumber(Result);
-end;
-
-procedure ComName(MenuItem: TMenuItem);
-begin
-	if (MenuItem.Bitmap.Width = 0) and (MenuItem.ImageIndex = -1) then
-		ImgAdd(MenuItem.Bitmap, DelLastNumber(MenuItem.Name));
 end;
 
 procedure MenuCreate(Src: TComponent; Dsc: TComponent);
@@ -262,6 +207,7 @@ begin
 	end;
 end;
 
+// Temporary objects for menuitem creation.
 var
 	BmpCheck: TBitmap;
 	MenuBmp, BmpD: TDBitmap;
@@ -331,7 +277,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-			gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
+				gfFadeVert, Co, ScreenCorrectColor, ef16, 0, nil);
 		end
 		else
 		begin
@@ -458,11 +404,10 @@ begin
 		MenuB := False;
 		if (MenuItem.ImageIndex >= 0) and Assigned(ImageList) and (TopLevel = False) then
 		begin
-      // Not often uses
+			// Not often used
 			BmpD.Bar(clMenu, ef16);
 
-			ImageList.Draw(BmpD.Canvas, 0, 0, MenuItem.ImageIndex,
-				True);
+			ImageList.Draw(BmpD.Canvas, 0, 0, MenuItem.ImageIndex, True);
 			BmpD.Transparent := True;
 			if MenuItem.Enabled = False then
 				BmpD.Bar(clRed, ef12);
@@ -480,7 +425,7 @@ begin
 		else if Assigned(MenuItem.Bitmap) and (TopLevel = False) and
 			(MenuItem.Bitmap.Empty = False) then
 		begin
-			BmpD.CopyBitmap(MenuItem.Bitmap);
+			BmpD.FromBitmap(MenuItem.Bitmap);
 			if (MenuItem.Enabled = False) or (odInactive in State) then
 				BmpD.Bar(clMenu, ef12);
 
@@ -616,7 +561,8 @@ begin
 //			if M.Name <> 'Mark1' then
 			if (M.Bitmap <> nil) and (M.Bitmap.Empty = False) and (M.Name <> 'Exit1')
 			and (M.Name <> 'Register1') and (M.Name <> 'Unregister1') and (M.Name <> 'Delete1')
-			and (M.Name <> 'Logo1') and (M.Name <> 'PrinterSetup1') and (M.Name <> 'FileExtensions1') then
+			and (M.Name <> 'ShowSplashScreen1') and (M.Name <> 'PrinterSetup1') and (M.Name <> 'FileExtensions1')
+			and (M.Name <> 'Sounds1') then
 			begin
 				Name := M.Name + IconSuffix;
 {				if Panel.FindComponent(Name) <> nil then
@@ -636,7 +582,7 @@ begin
 					B.Tag := M.Tag;
 					Inc(IconX, B.Width + 1);
 					B.FGlyph := TDBitmap.Create;
-					B.FGlyph.CopyBitmap(M.Bitmap);
+					B.FGlyph.FromBitmap(M.Bitmap);
 					B.OnClick := M.OnClick;
 
 					Panel.InsertControl(B);
@@ -690,7 +636,7 @@ begin
 		else if Menu is TMenuItem then
 			M := TMenuItem(Menu).Items[i]
 		else
-			 M := nil;
+			M := nil;
 
 		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
 		begin
@@ -749,6 +695,8 @@ begin
 				C.SetBounds(x, y, C.Width, C.Height);
 		end;
 
+		if i = PanelTool.ComponentCount - 1 then Break;
+
 		if x + TControl(PanelTool.Components[i]).Width + IconSize > PanelTool.Width then
 		begin
 			x := 0;
@@ -757,6 +705,7 @@ begin
 		else
 			Inc(x, TControl(PanelTool.Components[i]).Width);
 	end;
+	PanelTool.Height := y + IconSize;
 end;
 
 procedure FormatCaption(M: TMenuItem; Value: SG; AsTime: BG = False; Bullet: BG = False; Suffix: BG = True);
@@ -768,7 +717,7 @@ begin
 		Result := '';
 	Result := Result + AddSpace(DelLastNumber(M.Name)) + ' (';
 	if AsTime then
-		Result := Result + MsToStr(Value, True, diSD, 3, False)
+		Result := Result + MsToStr(Value, diSD, 3, False)
 	else
 		Result := Result + NToS(Value);
 
@@ -782,21 +731,8 @@ end;
 type
 	TOb = class(TObject)
 	private
-		ShowSplashScreen1: TMenuItem;
-		LoggingLevel1: TMenuItem;
 		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas;
 			ARect: TRect; State: TOwnerDrawState);
-		procedure Exit1Click(Sender: TObject);
-		procedure ReadMe1Click(Sender: TObject);
-		procedure Homepage1Click(Sender: TObject);
-		procedure ViewMessages1Click(Sender: TObject);
-		procedure About1Click(Sender: TObject);
-		procedure ShowSplashScreen1Click(Sender: TObject);
-		procedure ViewIniFile1Click(Sender: TObject);
-		procedure ViewLogFile1Click(Sender: TObject);
-		procedure ViewAllLogFiles1Click(Sender: TObject);
-		procedure Sounds1Click(Sender: TObject);
-		procedure SetLoggingLevel1Click(Sender: TObject);
 	end;
 var
 	Ob: TOb;
@@ -812,7 +748,7 @@ var
 	i, c: SG;
 	M: TMenuItem;
 begin
-	CreateImg;
+	if not Assigned(ImageList) then ImageList := TCustomImageList.CreateSize(16, 16);
 
 	if (Menu is TMenu) or (Menu is TPopupMenu) then
 	begin
@@ -834,216 +770,15 @@ begin
 		else if Menu is TMenuItem then
 			M := TMenuItem(Menu).Items[i]
 		else
-			 M := nil;
+			M := nil;
 
 		if (not (Menu is TMenu)) or (Menu is TPopupMenu) then
 		begin
 			M.OnAdvancedDrawItem := Ob.OnAdvancedMenuDraw;
-			ComName(M);
+			if (M.Bitmap.Width = 0) and (M.ImageIndex = -1) then
+				LoadMenuIcon(M.Bitmap, DelLastNumber(M.Name));
 		end;
 		MenuSet(M);
-	end;
-end;
-
-procedure TOb.Exit1Click(Sender: TObject);
-begin
-	if Assigned(Application.MainForm) then
-		Application.MainForm.Close;
-end;
-
-procedure TOb.ReadMe1Click(Sender: TObject);
-begin
-	OpenReadMe;
-end;
-
-procedure TOb.Homepage1Click(Sender: TObject);
-begin
-	OpenHomepage;
-end;
-
-procedure TOb.ViewMessages1Click(Sender: TObject);
-begin
-	ShowMessages;
-end;
-
-procedure TOb.About1Click(Sender: TObject);
-begin
-	ExecuteAbout(Application.MainForm, False);
-end;
-
-procedure TOb.SetLoggingLevel1Click(Sender: TObject);
-begin
-	MainLog.LoggingLevel := TLogType(TMenuItem(Sender).Tag);
-	LoggingLevel1.Items[TMenuItem(Sender).Tag].Checked := True;
-end;
-
-procedure TOb.ShowSplashScreen1Click(Sender: TObject);
-begin
-	ViewSplashScreen := not ViewSplashScreen;
-	ShowSplashScreen1.Checked := ViewSplashScreen;
-	if ViewSplashScreen then ShowSplashScreen(False) else HideSplashScreen(True);
-end;
-
-procedure TOb.ViewIniFile1Click(Sender: TObject);
-begin
-	APIOpen(MainIniFileName);
-end;
-
-procedure TOb.ViewLogFile1Click(Sender: TObject);
-begin
-	if Assigned(MainLog) then
-		APIOpen(MainLog.FileName)
-	else
-		APIOpen(MainLogFileName);
-end;
-
-procedure TOb.ViewAllLogFiles1Click(Sender: TObject);
-begin
-	APIOpen(ExtractFilePath(MainLogFileName));
-end;
-
-procedure TOb.Sounds1Click(Sender: TObject);
-begin
-	FormSounds;
-end;
-
-procedure CommonFileMenu(const Menu: TMenu);
-var
-	File1, Options1, Help1, Log1: TMenuItem;
-	M: TMenuItem;
-	i: SG;
-begin
-	File1 := nil;
-	Options1 := nil;
-	Help1 := nil;
-	for i := 0 to Menu.Items.Count - 1 do
-	begin
-		if Menu.Items[i].Name = 'File1' then
-			File1 := Menu.Items[i];
-		if Menu.Items[i].Name = 'Options1' then
-			Options1 := Menu.Items[i];
-		if Menu.Items[i].Name = 'Help1' then
-			Help1 := Menu.Items[i];
-	end;
-
-	if Assigned(File1) then
-	begin
-		if File1.Count > 0 then
-		begin
-			M := TMenuItem.Create(File1);
-			M.Caption := cLineCaption;
-			File1.Add(M);
-		end;
-
-		M := TMenuItem.Create(File1);
-		M.Name := 'Exit1';
-		M.Caption := 'Exit';
-		M.ShortCut := ShortCut(VK_F4, [ssAlt]);
-		M.OnClick := Ob.Exit1Click;
-		File1.Add(M);
-	end;
-
-	if Assigned(Options1) then
-	begin
-		if Options1.Count > 0 then
-		begin
-			M := TMenuItem.Create(Options1);
-			M.Caption := cLineCaption;
-			Options1.Add(M);
-		end;
-
-		Ob.ShowSplashScreen1 := TMenuItem.Create(Options1);
-		Ob.ShowSplashScreen1.Name := 'ShowSplashScreen1';
-		Ob.ShowSplashScreen1.Caption := 'Show Splash Screen';
-		Ob.ShowSplashScreen1.OnClick := Ob.ShowSplashScreen1Click;
-		Ob.ShowSplashScreen1.Checked := ViewSplashScreen;
-		Options1.Add(Ob.ShowSplashScreen1);
-
-		M := TMenuItem.Create(Options1);
-		M.Name := 'ViewIniFile1';
-		M.Caption := 'View Ini File';
-		M.OnClick := Ob.ViewIniFile1Click;
-		Options1.Add(M);
-
-
-		Log1 := TMenuItem.Create(Options1);
-		Log1.Name := 'Log1';
-		Log1.Caption := 'Log';
-		Options1.Add(Log1);
-
-		M := TMenuItem.Create(Log1);
-		M.Name := 'ViewLogFile1';
-		M.Caption := 'View Log File';
-		M.OnClick := Ob.ViewLogFile1Click;
-		Log1.Add(M);
-
-		M := TMenuItem.Create(Log1);
-		M.Name := 'ViewAllLogFiles1';
-		M.Caption := 'View All Log Files';
-		M.OnClick := Ob.ViewAllLogFiles1Click;
-		Log1.Add(M);
-
-		Ob.LoggingLevel1 := TMenuItem.Create(Log1);
-		Ob.LoggingLevel1.Name := 'LoggingLevel1';
-		Ob.LoggingLevel1.Caption := 'Logging Level';
-		Log1.Add(Ob.LoggingLevel1);
-
-		M := TMenuItem.Create(Options1);
-		M.Name := 'Sounds1';
-		M.Caption := 'Sounds';
-		M.OnClick := Ob.Sounds1Click;
-		Options1.Add(M);
-
-		for i := 0 to Length(LogTypeStr) - 1 do
-		begin
-			M := TMenuItem.Create(Ob.LoggingLevel1);
-			M.Name := LogTypeStr[TLogType(i)] + '21';
-			M.Caption := LogTypeStr[TLogType(i)];
-			M.Tag:= i;
-			M.OnClick := Ob.SetLoggingLevel1Click;
-			M.RadioItem := True;
-			M.Checked := SG(MainLog.LoggingLevel) = i;
-			Ob.LoggingLevel1.Add(M);
-		end;
-	end;
-
-	if Assigned(Help1) then
-	begin
-		if Help1.Count > 0 then
-		begin
-			M := TMenuItem.Create(Help1);
-			M.Caption := cLineCaption;
-			Help1.Add(M);
-		end;
-
-		M := TMenuItem.Create(Help1);
-		M.Name := 'Homepage1';
-		M.Caption := 'Homepage';
-		M.OnClick := Ob.Homepage1Click;
-		Help1.Add(M);
-
-		M := TMenuItem.Create(Help1);
-		M.Name := 'ReadMe1';
-		M.Caption := 'Read Me';
-		M.ShortCut := VK_F1;
-		M.OnClick := Ob.ReadMe1Click;
-		Help1.Add(M);
-
-		M := TMenuItem.Create(Help1);
-		M.Name := 'Messages1';
-		M.Caption := 'View Messages...';
-		M.OnClick := Ob.ViewMessages1Click;
-		Help1.Add(M);
-
-		M := TMenuItem.Create(Help1);
-		M.Caption := cLineCaption;
-		Help1.Add(M);
-
-		M := TMenuItem.Create(Help1);
-		M.Name := 'About';
-		M.Caption := 'About' + cDialogSuffix;
-		M.OnClick := Ob.About1Click;
-		Help1.Add(M);
 	end;
 end;
 

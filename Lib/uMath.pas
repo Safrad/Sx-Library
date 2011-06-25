@@ -1,10 +1,10 @@
 //* File:     Lib\uMath.pas
 //* Created:  1998-01-01
-//* Modified: 2005-11-05
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-12
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uMath;
 
@@ -99,7 +99,7 @@ procedure FillU4(var Desc; Count: UG; Value: U4);
 procedure FillOrderU4(var Desc; Size: UG);
 procedure Reverse4(var Desc; Size: UG);
 function Checksum(var Desc; Size: UG): U4;
-function Hash(var Desc; Size: UG): U4;
+function Hash(const Desc; Size: UG): U4;
 procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
@@ -116,33 +116,12 @@ procedure DelayEx(const f: U8);
 function CalcShr(N: U4): S1;
 {$ifopt d+}procedure CheckExpSize(const Size: SG);{$endif}
 function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
+function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
+function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
 
 implementation
 
 uses Math, Windows;
-
-{
-Nìco k pøevodu RGB -> YUV, RGB -> YCbCr
-Oba pøevody (RGB -> YUV i RGB -> YCbCr) jsou jednoduše vyjádøitelné maticemi:
-|Y|   |0.299  0.587  0.114  | |R|
-|U| = |-0.141  -0.289 0.437 | |G|
-|V|   |0.615 -0.515 -0.1    | |B|
-
-
-|Y |   |0.299  0.587  0.114   | |R|
-|Cb| = |-0.1687  -0.3313 -0.5 | |G|
-|Cr|   |0.5 -0.4187 -0.0813   | |B|
-
-Zpìtný pøevod se provádí pomocí inverzní matice.
-
-Model HSV vykazuje nìkteré nedostatky, které sice nejsou zásadního charakteru,
-nicménì mohou ztìžovat práci s definováním barvy v prostoru HSV.
-Jedním z nedostatkù je jehlanovitý tvar, který zpùsobuje,
-že ve øezu se musí bod o konstantní hodnotì s pohybovat pøi zmìnì h po dráze ve tvaru šestiúhelníku,
-nikoliv po kružnici, jak by bylo pøirozené.
-Dalším záporným jevem je nesymetrie modelu z hlediska pøechodù ve stupních šedi od èerné k bílé.
-Tyto nedostatky odstraòuje model HLS zavedený firmou Tektronix
-}
 
 function Sgn(const I: S1): SG;
 begin
@@ -972,7 +951,7 @@ asm
 	@Exit:
 end;
 
-function Hash(var Desc; Size: UG): U4; register;
+function Hash(const Desc; Size: UG): U4; register;
 {const
 	Shift = 6;
 	Mask = 1 shl (8 * SizeOf(Result) - Shift);
@@ -1241,9 +1220,10 @@ function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
 	0 <= NewSize < 2^31
 }
 begin
+	Assert(NewSize >= 0);
 	{$ifopt d+}
 	if (OldSize < 0) or (OldSize > GB) then
-//		ErrorMessage('' + LineSep + BToStr(OldSize));
+//		ErrorMessage(LineSep + BToStr(OldSize));
 		Assert(False, 'Bad AllocBy block OldSize');
 	if (NewSize < 0) or (NewSize > GB) then
 //		ErrorMessage('Bad AllocBy block NewSize' + LineSep + BToStr(NewSize));
@@ -1271,6 +1251,38 @@ begin
 			if NewSize = 0 then Result := True;
 		end;
 
+	end;
+end;
+
+function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
+begin
+	Result := False;
+	if (x > 0) and (y > 0) then
+	begin
+		while (x >= MaxWidth) or (y >= MaxHeight) do
+		begin
+			x := x div 2;
+			y := y div 2;
+			Result := True;
+		end;
+	end;
+end;
+
+function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
+begin
+	Result := False;
+	if (x > 0) and (y > 0) then
+	begin
+		Result := SetSmallerSize(x, y, MaxWidth, MaxHeight);
+
+		if Result then Exit;
+
+		while (x < 200) or (y < 3 * 256 div 4) do
+		begin
+			x := x * 2;
+			y := y * 2;
+			Result := True;
+		end;
 	end;
 end;
 

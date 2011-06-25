@@ -1,19 +1,21 @@
 //* File:     Lib\uTypes.pas
 //* Created:  1998-01-01
-//* Modified: 2006-01-25
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uTypes;
 
 interface
 
 {$ifdef VER130} // Delphi = 5
+const
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
+	SwitchChars = ['-', '/'];
 {$endif}
 
 type
@@ -126,17 +128,17 @@ type
 			A: U8);
 	end;
 
-	FG = Real; // Double for Delphi 6
+	FG = Real; // Double
 	F4 = Single;
 //	F6 = Real48;
 	F8 = Double;
 	FA = Extended;
 
-{ CG = Char; // AnsiChar for Delphi 6
+{ CG = Char; // AnsiChar
 	C1 = AnsiChar;
 	C2 = WideChar;
 
-	TG = string; // AnsiString for Delphi 6
+	TG = string; // AnsiString
 	TA1 = ShortString;
 	T1 = AnsiString;
 	T2 = WideString;}
@@ -151,6 +153,13 @@ const
 	MB = 1024 * KB;
 	GB = 1024 * MB;
 type
+	TIndex = SG;
+
+	// Dynamic Arrays
+	TArrayOfBG = array of BG;
+	TArrayOfSG = array of SG;
+
+	// Static Arrays
 	TArrayS1 = array[0..GB - 1] of S1;
 	PArrayS1 = ^TArrayS1;
 	TArrayU1 = array[0..GB - 1] of U1;
@@ -179,8 +188,6 @@ type
 	TArrayString = array[0..512 * MB - 2] of string;
 	PArrayString = ^TArrayString;
 
-	TIndex = SG;
-
 // Time
 const
 	MiliSecond = 1;
@@ -188,8 +195,10 @@ const
 	Minute = 60 * Second;
 	Hour = 60 * Minute;
 	Day = 24 * Hour;
+	DaysInWeek = 7;
+	MonthsInYear = 12;
 
-	LoopSleepTime = 40;
+	LoopSleepTime = 40; // 25 interrupts per second.
 
 const
 	MinInt = Low(Integer);
@@ -201,7 +210,33 @@ const
 	{$EXTERNALSYM WM_XBUTTONDBLCLK}
 	WM_XBUTTONDBLCLK    = $020D;
 
+type
+	TMsgType = (
+		mtConfirmation,
+		mtDebug, // Debug-level messages (Opening file)
+		mtInformation, // Informational (Started, Finished)
+//		ltNotice, // (ltHint) Normal but significant condition
+		mtWarning, // Warning conditions (File already opened)
+		mtError, // Error conditions (File not found)
+		mtFatalError, // (ltFatalError) Critical conditions
+		// ltAlert, // Action must be taken immediately
+		// ltEmerg, // Emergencies - system is unusable
+		mtNone);
+
+procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
+procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
+
 implementation
+
+procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
+begin
+	Assert(ActualValue = ReferentialValue);
+end;
+
+procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
+begin
+	Assert((ActualValue >= MinValue) and (ActualValue <= MaxValue));
+end;
 
 initialization
 	{$ifndef LINUX}
