@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uMenus.pas
 //* Created:  2000-08-01
-//* Modified: 2007-10-21
+//* Modified: 2008-01-20
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -339,8 +339,7 @@ begin
 				Co[3] := Co[1];
 				if NowBits <= 11 then
 				begin
-					MenuBmp.Bar(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2,
-						clMenu, ef16);
+					MenuBmp.Bar(1, 1, MenuBmp.Width - 2, MenuBmp.Height - 2, clMenu, ef16);
 				end
 				else
 				begin
@@ -350,20 +349,16 @@ begin
 			end
 			else
 			begin
-				if (MenuItem.ImageIndex >= 0) or (MenuItem.Checked) then
-					X := 20
-				else
-					X := 0;
 				Co[0] := ColorDiv(clHighLight, 4 * 65536 div 3);
 				Co[1] := ColorDiv(clHighLight, 2 * 65536 div 3);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
 				if NowBits <= 11 then
 				begin
-					MenuBmp.Bar(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clHighLight, ef16);
+					MenuBmp.Bar(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clHighLight, ef16);
 				end
 				else
-					MenuBmp.GenerateRGBEx(X, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
+					MenuBmp.GenerateRGBEx(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, gfFade2x, Co, ScreenCorrectColor, ef12, 0, nil);
 			end;
 		end
 		else
@@ -392,14 +387,14 @@ begin
 
 		// Image
 		BmpWid := 16;
-		if MenuItem.Checked then
+{		if MenuItem.Checked then
 		begin
 			if (odSelected in State) then
 			begin
 				Y := (ARect.Bottom - ARect.Top - 18) div 2;
 				MenuBmp.Bar(1, Y + 1, 1 + 15, Y + 1 + 15, clDepth[1], ef08);
 			end;
-		end;
+		end;}
 
 		MenuB := False;
 		if (MenuItem.ImageIndex >= 0) and Assigned(ImageList) and (TopLevel = False) then

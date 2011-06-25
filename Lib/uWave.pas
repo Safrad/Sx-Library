@@ -1,6 +1,6 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2007-11-26
+//* Modified: 2008-01-20
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -367,7 +367,7 @@ begin
 				WaveFree(Wave);
 				goto LFin;
 			end;
-      Result := True;
+			Result := True;
 			LFin:
 			F.Close;
 		end;
@@ -751,7 +751,7 @@ begin
 {	WaveReadFromFile(Wave, WaveName);
 	PlayWave(Wave);
 	FreeMem(Wave);}
-	MainLogAdd('Play sound ' + WaveName, mtDebug);
+	MainLogAdd('Play sound ' + WaveName + '.', mtDebug);
 	if WaveName <> '' then
 		PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME});
 end;
@@ -761,7 +761,7 @@ var
 	Reg: TRegistry;
 	Key: string;
 begin
-	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound], mtDebug);
+	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.', mtDebug);
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
@@ -788,7 +788,7 @@ function WaveLength(const FileName: TFileName): UG;
 var
 	Wave: PWave;
 begin
-  Wave := nil;
+	Wave := nil;
 	if FileExists(FileName) and WaveReadHeadFromFile(Wave, FileName) then
 		Result := WaveLength(Wave)
 	else

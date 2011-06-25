@@ -1,6 +1,6 @@
-//* File:     Lib\uProjectInfo.pas
+//* File:     Lib\GUI\uProjectInfo.pas
 //* Created:  2006-06-22
-//* Modified: 2007-11-25
+//* Modified: 2008-01-19
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz

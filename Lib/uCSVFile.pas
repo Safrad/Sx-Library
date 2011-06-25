@@ -1,6 +1,6 @@
 //* File:     Lib\uCSVFile.pas
 //* Created:  2007-03-10
-//* Modified: 2007-10-21
+//* Modified: 2008-02-04
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -94,22 +94,52 @@ begin
 				case Line[InLineIndex] of
 				'"':
 				begin
-					if CharAt(Line, InLineIndex - 1) in ['"', '\'] then
+					if (Quoted = False) {and (LastIndex = InLineIndex)} {FirstColumnChar} then
 					begin
-						// Normal Char
-						Delete(Line, InLineIndex - 1, 1);
-						Dec(InLineIndex);
-					end
-					else
-					begin
+						Quoted := True;
 						if LastIndex = InLineIndex then
 							Inc(LastIndex) // Skip First Quote
 						else
 						begin
-							Delete(Line, InLineIndex, 1);
+							Delete(Line, InLineIndex, 1); // Delete quote
 							Dec(InLineIndex);
 						end;
-						Quoted := not Quoted;
+					end
+					else
+					begin
+						if Quoted then
+						begin
+							if CharAt(Line, InLineIndex + 1) in ['"'] then
+							begin // Convert two quotes to one.
+								Delete(Line, InLineIndex, 1);
+							end
+							else
+							begin
+//								Assert(CharAt(Line, InLineIndex + 1) in [',', ';', CharTab];
+								Quoted := False;
+								Delete(Line, InLineIndex, 1); // Delete last quote
+								Dec(InLineIndex);
+							end;
+						end;
+
+
+{						if CharAt(Line, InLineIndex - 1) in ['"', '\'] then
+						begin
+							// Normal Char
+							Delete(Line, InLineIndex - 1, 1);
+							Dec(InLineIndex);
+						end
+						else
+						begin
+							if LastIndex = InLineIndex then
+								Inc(LastIndex) // Skip First Quote
+							else
+							begin
+								Delete(Line, InLineIndex, 1);
+								Dec(InLineIndex);
+							end;
+							Quoted := not Quoted;
+						end;}
 					end;
 				end;
 				',', ';', CharTab: // Column separators

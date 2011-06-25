@@ -1,6 +1,6 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2007-11-26
+//* Modified: 2008-02-04
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -62,6 +62,7 @@ function Ident(const Level: SG): string;
 
 procedure AddQuote(var s: string);
 function AddQuoteF(const s: string): string;
+function CSVCell(const s: string): string;
 procedure DelQuote(var s: string);
 function DelQuoteF(const s: string): string;
 
@@ -296,6 +297,22 @@ end;
 function AddQuoteF(const s: string): string;
 begin
 	Result := '"' + s + '"';
+end;
+
+function CSVCell(const s: string): string;
+begin
+	if
+		(PosEx('"', s) = 0) and
+		(PosEx(';', s) = 0) and
+		(PosEx(',', s) = 0) and
+		(PosEx(CharTab, s) = 0) then
+	begin
+		Result := s
+	end
+	else
+	begin
+		Result := '"' + ReplaceF(s, '"', '""') + '"';
+	end;
 end;
 
 procedure DelQuote(var s: string);

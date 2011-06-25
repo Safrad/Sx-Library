@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uSounds.pas
 //* Created:  2000-05-01
-//* Modified: 2007-08-19
+//* Modified: 2007-12-28
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -14,7 +14,7 @@ uses
 	uTypes, uDForm, uWave,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs,
-  uDWinControl;
+	uDWinControl;
 
 type
 	TfSounds = class(TDForm)

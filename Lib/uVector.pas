@@ -1,6 +1,6 @@
 //* File:     Lib\uVector.pas
 //* Created:  2006-05-03
-//* Modified: 2007-11-27
+//* Modified: 2008-01-29
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -57,6 +57,11 @@ function SqrtVector(const V: TVector): TVector;
 function PowerVector(const V1, V2: TVector): TVector;
 function LogVector(const V1, V2: TVector): TVector;
 function LnVector(const V: TVector): TVector;
+function TruncVector(const V: TVector): TVector;
+function RoundVector(const V: TVector): TVector;
+function AbsVector(const V: TVector): TVector;
+function NotVector(const V: TVector): TVector;
+function ExpVector(const V: TVector): TVector;
 function CompareVector(const V1, V2: TVector): FA;
 function ShlVector(const V1, V2: TVector): TVector;
 function ShrVector(const V1, V2: TVector): TVector;
@@ -219,6 +224,31 @@ end;
 function LnVector(const V: TVector): TVector;
 begin
 	Result := NumToVector(Ln(VectorToNum(V)));
+end;
+
+function TruncVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(Trunc(VectorToNum(V)));
+end;
+
+function RoundVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(Round(VectorToNum(V)));
+end;
+
+function AbsVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(Abs(VectorToNum(V)));
+end;
+
+function NotVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(not Round(VectorToNum(V)));
+end;
+
+function ExpVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(Exp(VectorToNum(V)));
 end;
 
 function CompareVector(const V1, V2: TVector): FA;

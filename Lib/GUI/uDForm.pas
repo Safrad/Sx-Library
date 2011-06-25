@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2007-11-26
+//* Modified: 2008-02-05
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -496,14 +496,19 @@ begin
 end;
 
 procedure TDForm.CheckPos;
-var Rect: TRect;
+var
+	Rect: TRect;
 begin
-	GetDesktopRect(Rect);
-	if Left + Width > Rect.Right - Rect.Left then Left := Rect.Right - Rect.Left - Width;
-	if Top + Height > Rect.Bottom - Rect.Top then Top := Rect.Bottom - Rect.Top - Height;
-	if Left < Rect.Left then Left := Rect.Left;
-	if Top < Rect.Top then Top := Rect.Top;
+	if Screen.MonitorCount = 1 then // TODO Monitors...
+	begin
+		GetDesktopRect(Rect);
+		if Left + Width > Rect.Right - Rect.Left then Left := Rect.Right - Rect.Left - Width;
+		if Top + Height > Rect.Bottom - Rect.Top then Top := Rect.Bottom - Rect.Top - Height;
+		if Left < Rect.Left then Left := Rect.Left;
+		if Top < Rect.Top then Top := Rect.Top;
+	end;
 end;
+
 
 constructor TDForm.Create(AOwner: TComponent);
 var

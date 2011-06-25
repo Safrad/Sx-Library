@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\ufOpenedFiles.pas
 //* Created:  2007-11-25
-//* Modified: 2007-11-26
+//* Modified: 2008-01-20
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -23,13 +23,13 @@ type
 			Shift: TShiftState);
 		procedure DViewOpenedFilesGetData(Sender: TObject; var Data: String;
 			ColIndex, RowIndex: Integer; Rect: TRect);
-		procedure FormShow(Sender: TObject);
 		procedure DViewOpenedFilesKeyPress(Sender: TObject; var Key: Char);
 		procedure FormDestroy(Sender: TObject);
 		procedure DViewOpenedFilesKeyDown(Sender: TObject; var Key: Word;
 			Shift: TShiftState);
 		procedure DViewOpenedFilesColumnClick(Sender: TObject;
 			Column: TColumn);
+		procedure FormShow(Sender: TObject);
 	private
 		{ Private declarations }
 		FOpenedFiles: TOpenedFiles;
@@ -107,12 +107,6 @@ begin
 	FOpenedFiles := OpenedFiles;
 end;
 
-procedure TfOpenedFiles.FormShow(Sender: TObject);
-begin
-	DViewOpenedFiles.RowCount := FOpenedFiles.Count;
-	DViewOpenedFiles.DeselectAll;
-end;
-
 procedure TfOpenedFiles.DViewOpenedFilesKeyPress(Sender: TObject;
 	var Key: Char);
 begin
@@ -150,6 +144,7 @@ begin
 		i := MinValue
 	else if i < MinValue then
 		i := FOpenedFiles.Count - 1;
+	DViewOpenedFiles.RowCount := FOpenedFiles.Count;
 	DViewOpenedFiles.ActualRow := i;
 	DViewOpenedFiles.DataChanged;
 end;
@@ -195,6 +190,11 @@ begin
 	end;
 	SetLength(SortS, 0);
 	SetLength(SortN, 0);
+end;
+
+procedure TfOpenedFiles.FormShow(Sender: TObject);
+begin
+	DViewOpenedFiles.DeselectAll;
 end;
 
 end.

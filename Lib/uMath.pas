@@ -1,6 +1,6 @@
 //* File:     Lib\uMath.pas
 //* Created:  1998-01-01
-//* Modified: 2007-11-27
+//* Modified: 2008-01-21
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -61,6 +61,7 @@ function Range(const Min, Cur, Max: SG): SG; overload;
 function Range(const Min, Cur, Max, Def: SG): SG; overload;
 function Range(const Min, Cur, Max: UG): UG; overload;
 function Range(const Min, Cur, Max: FG): FG; overload;
+function RangeOverflow(const Min, Cur, Max: SG): SG; overload;
 
 procedure Exchange(var A, B: B1); register; overload;
 procedure Exchange(var A, B: B4); register; overload;
@@ -536,6 +537,15 @@ begin
 		Result := Min
 	else if Cur > Max then
 		Result := Max;
+end;
+
+function RangeOverflow(const Min, Cur, Max: SG): SG;
+begin
+	Result := Cur;
+	if Cur < Min then
+		Result := Max
+	else if Cur > Max then
+		Result := Min;
 end;
 
 function Random2(Range: SG): SG;
