@@ -26,14 +26,14 @@ type
 
 implementation
 
-uses uTypes, uFormat, uStrings;
+uses uTypes, uOutputFormat, uStrings, uCSVFile;
 
 procedure TAddInNotifier.AfterCompile(Succeeded: Boolean; IsCodeInsight: Boolean);
 var
 	F : TextFile;
-	ProjectDir, S, ProjectName : string;
+	ProjectDir, ProjectName : string;
 	FileName: TFileName;
-	CompileC: SG;
+//	CompileC: SG;
 begin
 	if ToolServices <> nil then
 	begin
@@ -43,7 +43,7 @@ begin
 		if ProjectDir = '' then Exit;
 
 		// Compile Count
-		FileName := ProjectDir + 'CompileC.log';
+{		FileName := ProjectDir + 'CompileC.log';
 		if FileExists(FileName) then
 		begin
 			AssignFile(F, FileName);
@@ -64,16 +64,27 @@ begin
 			Write(F, IntToStr(CompileC));
 		finally
 			CloseFile(F);
-		end;
+		end;}
 
 		// Compile History
-		FileName := ProjectDir + 'CompileH.log';
+{		FileName := ProjectDir + 'CompileH.log';
 		AssignFile(F, FileName);
 		if not FileExists(FileName) then
 			Rewrite(F)
 		else
 			Append(F);
 		WriteLn(F, DateTimeToS(Now, 3, ofIO) + CharTab + 'Succeeded: ' + FalseTrue[SG(Succeeded)] + ', IsCodeInsight: ' + FalseTrue[SG(IsCodeInsight)]);
+		CloseFile(F);}
+		FileName := ProjectDir + '_Compile.csv';
+		AssignFile(F, FileName);
+		if not FileExists(FileName) then
+		begin
+			Rewrite(F);
+			WriteLn(F, CSVRemark + 'DateTime' + CSVSep + 'Succeeded' + CSVSep + 'IsCodeInsight');
+		end
+		else
+			Append(F);
+		WriteLn(F, DateTimeToS(Now, 3, ofIO) + CSVSep + IntToStr(SG(Succeeded)) + CSVSep + IntToStr(SG(IsCodeInsight)));
 		CloseFile(F);
 	end;
 end;

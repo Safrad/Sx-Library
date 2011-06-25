@@ -13,17 +13,19 @@ interface
 uses
 	uTypes,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, StdCtrls, uDButton, uDForm, uDImage;
+	ExtCtrls, StdCtrls, uDButton, uDForm, uDImage, uDWinControl, uDView;
 
 type
 	TfScores = class(TDForm)
 		ButtonOk: TDButton;
-		ButtonCancel: TDButton;
-		PanelHigh: TPanel;
-		ImageHigh: TDImage;
+    DViewHighScores: TDView;
 		procedure FormCreate(Sender: TObject);
-		procedure ImageHighFill(Sender: TObject);
+//		procedure ImageHighFill(Sender: TObject);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure DViewHighScoresGetData(Sender: TObject; var Data: String;
+      ColIndex, RowIndex: Integer; Rect: TRect);
+    procedure FormShow(Sender: TObject);
+    procedure FormResize(Sender: TObject);
 	private
 		{ Private declarations }
 		procedure RWOptions(const Save: Boolean);
@@ -189,17 +191,21 @@ end;
 procedure TfScores.RWOptions(const Save: Boolean);
 begin
 	MainIni.RWFormPos(Self, Save);
-
-{	Left := MainIni.RWSGF('Options', 'ScoresLeft', Left, Left, Save);
-	Top := MainIni.RWSGF('Options', 'ScoresTop', Top, Top, Save);}
+	DViewHighScores.Serialize(MainIni, Save);
 end;
 
 procedure TfScores.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
+
+	DViewHighScores.AddColumn('Player', 192);
+	DViewHighScores.AddColumn('Score', 96, taRightJustify);
+	DViewHighScores.AddColumn('Date', 96);
+	DViewHighScores.AddColumn('Game Time', 64, taRightJustify);
+
 	RWOptions(False);
 end;
-
+{
 procedure TfScores.ImageHighFill(Sender: TObject);
 const
 	ColSize = 20;
@@ -253,6 +259,7 @@ begin
 		end;
 	end;
 end;
+}
 
 procedure ShowHighScores;
 begin
@@ -266,6 +273,36 @@ end;
 procedure TfScores.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
 	RWOptions(True);
+end;
+
+procedure TfScores.DViewHighScoresGetData(Sender: TObject;
+  var Data: String; ColIndex, RowIndex: Integer; Rect: TRect);
+begin
+	case ColIndex of
+	0: Data := Highs[RowIndex].Name;
+	1: Data := NToS(Highs[RowIndex].Score);
+	2: Data := DateTimeToS(Highs[RowIndex].DateTime, 0, ofDisplay);
+	3: Data := MsToStr(Highs[RowIndex].GameTime, diMSD, 0, False);
+	end;
+end;
+
+procedure TfScores.FormShow(Sender: TObject);
+var j: SG;
+begin
+  j := 0;
+	while j <= MaxHigh do
+	begin
+		if Highs[j].Score = 0 then Break;
+		Inc(j);
+	end;
+	DViewHighScores.RowCount := j;
+end;
+
+procedure TfScores.FormResize(Sender: TObject);
+begin
+	ButtonOk.Left := fScores.ClientWidth - ButtonOk.Width - FormBorder;
+	ButtonOk.Top := fScores.ClientHeight - ButtonOk.Height - FormBorder;
+	DViewHighScores.Height := ButtonOk.Top - FormBorder;
 end;
 
 end.

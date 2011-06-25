@@ -775,10 +775,14 @@ function AddSpace(const s: string): string;
 var Index: SG;
 begin
 	Result := s;
-	for Index := 2 to Length(Result) do
+	Index := 2;
+	while Index <= Length(Result) do
+	begin
 		if Result[Index] in ['A'..'Z'] then
 			if Result[Index - 1] in ['a'..'z'] then
 				Insert(' ', Result, Index);
+		Inc(Index);
+	end;
 end;
 
 procedure AppendStr(var Dest: TFileName; const Source: string); overload;

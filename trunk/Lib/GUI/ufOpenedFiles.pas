@@ -13,7 +13,7 @@ interface
 uses
 	uTypes,	uOpenedFiles,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, uDImage, uDView;
+	Dialogs, uDImage, uDView, uDWinControl;
 
 type
 	TfOpenedFiles = class(TForm)

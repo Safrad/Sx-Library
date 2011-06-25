@@ -1,11 +1,9 @@
 object fScores: TfScores
-  Left = 584
-  Top = 650
-  BorderIcons = [biSystemMenu, biMinimize]
-  BorderStyle = bsDialog
-  Caption = 'High scores'
-  ClientHeight = 265
-  ClientWidth = 489
+  Left = 542
+  Top = 442
+  Width = 497
+  Height = 292
+  Caption = 'High Scores'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,13 +13,16 @@ object fScores: TfScores
   OldCreateOrder = False
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnResize = FormResize
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOk: TDButton
-    Left = 304
+    Left = 400
     Top = 232
     Width = 81
     Height = 25
+    Cancel = True
     Caption = '&OK'
     Default = True
     Font.Charset = DEFAULT_CHARSET
@@ -33,49 +34,14 @@ object fScores: TfScores
     ParentFont = False
     TabOrder = 0
   end
-  object ButtonCancel: TDButton
-    Left = 400
-    Top = 232
-    Width = 81
-    Height = 25
-    Cancel = True
-    Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ModalResult = 2
-    ParentFont = False
-    TabOrder = 1
-  end
-  object PanelHigh: TPanel
+  object DViewHighScores: TDView
     Left = 0
     Top = 0
     Width = 489
-    Height = 226
+    Height = 225
+    Zoom = 1.000000000000000000
     Align = alTop
-    BevelOuter = bvNone
-    BorderStyle = bsSingle
-    FullRepaint = False
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentColor = True
-    ParentFont = False
-    TabOrder = 2
-    object ImageHigh: TDImage
-      Left = 0
-      Top = 0
-      Width = 485
-      Height = 222
-      Zoom = 1.000000000000000000
-      OnFill = ImageHighFill
-      Align = alClient
-      TabOrder = 0
-      TabStop = False
-    end
+    TabOrder = 1
+    OnGetData = DViewHighScoresGetData
   end
 end
