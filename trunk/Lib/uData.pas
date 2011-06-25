@@ -1,10 +1,10 @@
 //* File:     Lib\uData.pas
 //* Created:  1998-01-01
-//* Modified: 2005-10-02
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-12
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uData;
 
@@ -17,10 +17,10 @@ type
 	TIndex = SG;
 
 	{ Warning!
-		Dynamic variables must be finalized before removed
+		Dynamic variables must be finalized manually before removed
 	}
 
-	TData = class(TObject)
+	TData = class(TObject) // TArrayList
 	private
 		FFrag: Boolean;
 		Data: Pointer; // FFrag = False
@@ -30,7 +30,7 @@ type
 		FItemSh: UG;
 		FItemMemSize: UG;
 		FItemCount: TIndex;
-		FItemAlloc: UG;
+		FItemAlloc: SG; // FCapacity
 		procedure NewData(const Index: TIndex);
 		procedure SetItemSize(const Value: UG);
 	public
@@ -42,15 +42,17 @@ type
 		procedure Clear;
 
 //		procedure Add(var Value); overload;
+		function Add(P: Pointer): Pointer; overload;
 		function Add: Pointer; overload;
 		function Add(const Index: TIndex): Pointer; overload;
+		procedure SetCount(NewCount: SG);
 
 		procedure DeleteFirst;
 		procedure DeleteLast;
 		procedure Delete(const Index: TIndex);
 
 //		procedure Insert(var Value; Index: TIndex); overload;
-		procedure Put(const Index: TIndex; const Item: Pointer);
+		procedure Replace(const Index: TIndex; const Item: Pointer);
 
 //		procedure Replace(var Value; Index: TIndex);
 		procedure Swap(const I1, I2: TIndex);
@@ -70,13 +72,13 @@ type
 		property ItemSh: UG read FItemSh; // Binary shift
 		property ItemMemSize: UG read FItemMemSize; // Item size in memory
 		property Count: TIndex read FItemCount;
-		property Items[const Index: TIndex]: Pointer read Get write Put; default; // operator []
+		property Items[const Index: TIndex]: Pointer read Get write Replace; default; // operator []
 	end;
 
 
 implementation
 
-uses uMath;
+uses Math, uMath;
 
 type
 	PItem = ^TItem;
@@ -91,8 +93,7 @@ constructor TData.Create(const ClearCreated: BG);
 begin
 	inherited Create;
 	FClearCreated := ClearCreated;
-	FItemSize := 0;
-	FItemSh := 0;
+	ItemSize := SizeOf(TObject);
 	FItemCount := 0;
 	FitemAlloc := 0;
 	FFrag := False;
@@ -101,19 +102,6 @@ begin
 		New(Item);
 		FillChar(Item^, SizeOf(Item^), 0);
 	end;
-end;
-
-constructor TData.Create;
-begin
-	Create(True);
-end;
-
-destructor TData.Destroy;
-begin
-	Clear;
-	if FFrag then
-		Dispose(Item);
-	inherited;
 end;
 
 procedure TData.Clear;
@@ -138,26 +126,28 @@ begin
 	end;
 end;
 
-procedure TData.SetItemSize(const Value: UG);
+constructor TData.Create;
 begin
-	if FItemSize <> Value then
-	begin
-		FItemSize := Value;
-		Clear;
-		FItemSh := CalcShr(Value);
-		FItemMemSize := 1 shl FItemSh;
-		{$ifopt d+}
-{		if (1 shl Sh) <> Value then
-		begin
-			ErrorMessage('Bad AllocBy block size ' + NToS(Value) + ' bytes');
-		end;}
-		{$endif}
-	end;
+	Create(True);
+end;
+
+destructor TData.Destroy;
+begin
+	Clear;
+	if FFrag then
+		Dispose(Item);
+	inherited;
 end;
 
 function TData.Add: Pointer;
 begin
 	Result := Add(FItemCount);
+end;
+
+function TData.Add(P: Pointer): Pointer;
+begin
+	Result := Add;
+	PPointer(Result)^ := P;
 end;
 
 {procedure TData.Add(var Value);
@@ -210,23 +200,36 @@ begin
 	Delete(FItemCount - 1);
 end;
 
-procedure TData.NewData(const Index: TIndex);
-var NewSize: SG;
+procedure TData.SetCount(NewCount: SG);
 begin
-	NewSize := FItemCount + 1;
-	if AllocByExp(FItemAlloc, NewSize) then //if FItemCount mod AllocBy = 0 then
+	Assert(NewCount >= 0);
+	FItemCount := NewCount;
+	if AllocByExp(FItemAlloc, NewCount) then //if FItemCount mod AllocBy = 0 then
 	begin
-		ReallocMem(Data, NewSize shl FItemSh);
-		FItemAlloc := NewSize;
+		ReallocMem(Data, NewCount shl FItemSh);
+		if NewCount > FItemAlloc then
+		begin
+			if FClearCreated then
+				FillChar(Pointer(TIndex(Data) + FItemAlloc shl FItemSh)^, (NewCount - FItemAlloc) shl FItemSh, 0);
+		end;
+		FItemAlloc := NewCount;
 	end;
-	if Index < FItemCount then
+end;
+
+procedure TData.NewData(const Index: TIndex);
+var NewItemCount, OldItemCount: SG;
+begin
+	OldItemCount := FItemCount;
+	NewItemCount := Max(Index + 1, FItemCount);
+	SetCount(NewItemCount);
+	if Index < OldItemCount then
 	begin
 		Move(Pointer(TIndex(Data) + Index shl FItemSh)^,
-			Pointer(TIndex(Data) + (Index + 1) shl FItemSh)^, (FItemCount - Index) shl FItemSh);
+			Pointer(TIndex(Data) + (Index + 1) shl FItemSh)^, (OldItemCount - Index) shl FItemSh);
 	end;
+
 	if FClearCreated then
 		FillChar(Pointer(TIndex(Data) + Index shl FItemSh)^, ItemSize, 0);
-	Inc(FItemCount);
 end;
 
 {
@@ -276,7 +279,7 @@ begin
 	end;
 end;
 
-procedure TData.Put(const Index: TIndex; const Item: Pointer);
+procedure TData.Replace(const Index: TIndex; const Item: Pointer);
 var P: Pointer;
 begin
 	if FFrag = False then
@@ -284,7 +287,7 @@ begin
 		P := Get(Index);
 		if (P <> nil) then
 		begin
-			Move(Item, P, FItemSize);
+			Move(Item^, P^, FItemSize);
 		end;
 	end
 	else
@@ -375,6 +378,28 @@ begin
 	Result := FItemCount = 0;
 end;
 
+procedure TData.SetItemSize(const Value: UG);
+begin
+	if FItemSize <> Value then
+	begin
+		FItemSize := Value;
+		Clear;
+		FItemSh := CalcShr(Value);
+		FItemMemSize := 1 shl FItemSh;
+		{$ifopt d+}
+{		if (1 shl Sh) <> Value then
+		begin
+			ErrorMessage('Bad AllocBy block size ' + NToS(Value) + ' bytes');
+		end;}
+		{$endif}
+	end;
+end;
+
+procedure TData.Swap(const I1, I2: TIndex);
+begin
+	Exchange(Pointer(TIndex(Data) + I1 shl FItemSh), Pointer(TIndex(Data) + I2 shl FItemSh), FItemSize);
+end;
+
 function TData.ToString: string;
 var
 	i: SG;
@@ -399,11 +424,6 @@ begin
 		end;
 		SetLength(Result, Length(Result) - 1);
 	end;
-end;
-
-procedure TData.Swap(const I1, I2: TIndex);
-begin
-	Exchange(Pointer(TIndex(Data) + I1 shl FItemSh), Pointer(TIndex(Data) + I2 shl FItemSh), FItemSize);
 end;
 
 end.

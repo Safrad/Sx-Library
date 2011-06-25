@@ -1,10 +1,10 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2005-11-13
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uFiles;
 
@@ -26,19 +26,21 @@ const
 }
 	DefFileBuffer = {$ifndef Console}64{$else}32{$endif} * KB;
 	FileSep = CharCR + CharLF;
+	// For write FMode only, if enabled temporary file is used first
+	FProtection = True;
 type
 	TFileNames = array of TFileName;
 
-	TFileMode = (fmReadOnly, fmWriteOnly, fmReadAndWrite);
+	TFileMode = (fmReadOnly, fmRewrite, fmAppend, fmReadAndWrite);
 var
-	FileModeStr: array[TFileMode] of string = ('r', 'w', 'rw');
+	FileModeStr: array[TFileMode] of string;
 type
 	{
 		Flags:
 				FILE_FLAG_OVERLAPPED // Async read - not implemented yet
 
 				FILE_FLAG_RANDOM_ACCESS
-				FILE_FLAG_SEQUENTIAL_SCAN
+				FILE_FLAG_SEQUENTIAL_SCAN // Default value
 
 				FILE_FLAG_WRITE_THROUGH // For write only
 				FILE_FLAG_NO_BUFFERING // Be carefully for use this
@@ -51,8 +53,6 @@ type
 		FTempFileName:  TFileName;
 
 		FMode: TFileMode;
-		// For Write only
-		FProtection: Boolean;
 
 		// For Readln only
 		FBuffer: array of Char;
@@ -60,7 +60,7 @@ type
 		FBufferSize: U8;
 		FFilePos: U8;
 		FFileSize: U8;
-		function GetFileSize(var Size: U8): Boolean;
+		function GetFileSize(var Size: U8): BG;
 		function IsOpened: BG;
 		function ErrorRetry(const ErrorCode: U4): BG;
 	public
@@ -69,54 +69,50 @@ type
 		property Opened: BG read IsOpened;
 		constructor Create;
 		destructor Destroy; override;
-		function Open(const FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): Boolean; overload;
-		function Open(var FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: Boolean = False): Boolean; overload;
-		function Seek(const Pos: U8): Boolean;
-		function SeekStart: Boolean;
-		function SeekEnd: Boolean;
-		function BlockRead(var Buf; const Count: UG): Boolean;
-		function BlockWrite(var Buf; const Count: UG): Boolean;
-		function FillWrite(Count: UG): Boolean;
-		function Readln(out Line: string): Boolean;
-		function Write(Line: string): Boolean;
-//		function WriteF(Line: string): Boolean;
-		function Writeln(Line: string): Boolean;
-		function WritelnW(Line: WideString): Boolean;
-		function Close(ChangeDate: BG = True): Boolean;
-		function Truncate: Boolean;
-		function FlushFileBuffers: Boolean;
-		function Eof: Boolean;
-		function Lock(From, Count: U8): Boolean;
-		function UnLock(From, Count: U8): Boolean;
+		function Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG; overload;
+		function Seek(const Pos: U8): BG;
+		function SeekStart: BG;
+		function SeekEnd: BG;
+		function BlockRead(out Buf; const Count: UG): BG;
+		function BlockWrite(const Buf; const Count: UG): BG;
+		function FillWrite(Count: UG): BG;
+		function Readln(out Line: string): BG;
+		function Write(const Data: string): BG;
+//		function WriteF(Line: string): BG;
+		function Writeln(Line: string): BG;
+		function WritelnW(Line: WideString): BG;
+		function Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
+		function Truncate: BG;
+		function FlushFileBuffers: BG;
+		function Eof: BG;
+		function Lock(From, Count: U8): BG;
+		function UnLock(From, Count: U8): BG;
 	end;
 
-function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
+function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 {
 	Result of Functions : False: Error, True: Ok
 	Example:
-	label LRetry;
 	var
 		F: TFile;
-		FileName: TFileName;
 	begin
 		F := TFile.Create;
-		FileName := WorkDir + 'FileName.txt';
-		LRetry:
-		if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-		begin
-			if not F.BlockRead() then goto LRetry
-			if not F.Readln() then goto LRetry;
-
-			if not F.Close then goto LRetry;
+		try
+			if F.Open(WorkDir + 'FileName.txt', fmReadOnly) then
+			begin
+				F.BlockRead();
+				F.Readln();
+				F.Close
+			end;
+		finally
+			F.Free;
 		end;
-		F.Free;
 	end;
 }
 const
 	AllFiles = 'All Files (*.*)|*.*';
 	AllText = 'Text file (*.txt)|*.txt|' + AllFiles;
 var
-	AppName: string;
 	// Directories
 	StartDir, // Actual Dir
 	WorkDir, // EXE file, data files (Read only)
@@ -127,22 +123,24 @@ var
 	WinDir, // Shared configuration files (Read and Write)
 	ProgramFilesDir,
 	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
-	DocsDir, // User documnets (Read and Write)
+	MyDocuments, // User documnets (Read and Write)
+//	HomeDir, // User documnets (Read and Write)
 	ApplicationDataDir, // Application Data
-	TempDir: string;
+	CommonTempDir, TempDir: string;
 	ExeFileName, MainIniFileName, MainLogFileName: TFileName;
 
 	ReadCount, WriteCount: UG;
 	ReadBytes, WriteBytes: U8;
 
 function ShortDir(const Dir: string): string;
+function RemoveEV(Dir: string): string;
 function ExpandDir(Dir: string): string;
 function DelFileExt(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
 function BackDir(var Dir: string): BG;
 function BackDirF(Dir: string): string;
 function LegalFileName(const FileName: string): string;
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: Boolean);
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: BG);
 function GetFileSizeU(const FileName: TFileName): S8;
 function GetFileSizeS(const FileName: TFileName): string;
 function FileTimeToDateTime(F: TFileTime): TDateTime;
@@ -151,35 +149,34 @@ function GetFileModified(const FileName: TFileName): TFileTime; overload;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
 function RenameFileEx(const Source, Dest: TFileName): BG;
-function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): BG;
-function CopyFileToDir(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
-function CopyDamagedFile(Source, Dest: TFileName): Boolean;
-function DirectoryExists(const Directory: string): Boolean;
-function CreateDirEx(const Dir: string): Boolean;
-function CreateDirsEx(const Dir: string): Boolean;
-function NewFileOrDir(var FileOrDir: string): Boolean;
-function NewFileOrDirEx(var FileOrDir: string): Boolean;
-function CopyDir(const Source, Dest: string): Boolean;
+function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
+function CopyFileToDir(Source, Dest: TFileName; const FailExist: BG): BG;
+function CopyDamagedFile(Source, Dest: TFileName): BG;
+function CreateDirEx(const Dir: string): BG;
+function CreateDirsEx(const Dir: string): BG;
+function NewFileOrDir(var FileOrDir: string): BG;
+function NewFileOrDirEx(var FileOrDir: string): BG;
+function CopyDir(const Source, Dest: string): BG;
 
-function DeleteFileEx(const FileName: TFileName): Boolean;
-function RemoveDirEx(const DirName: string): Boolean;
-function RemoveDirsEx(DirName: string; DeleteSelf: Boolean = False): Boolean;
+function DeleteFileEx(const FileName: TFileName): BG;
+function RemoveDirEx(const DirName: string): BG;
+function RemoveDirsEx(DirName: string; DeleteSelf: BG = False): BG;
 
-function ReadBufferFromFile(var FileName: TFileName; out Buf; out Count: SG): BG;
-function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
+function ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG): BG;
+function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: SG): BG;
 
-function ReadBlockFromFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
-function WriteBlockToFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
 
 type
 	TArrayOfString = array of string;
 
-function ReadStringsFromFile(var FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
-function WriteStringsToFile(var FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; Append: BG): BG;
+function ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
+function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG): BG;
 
-function ReadStringFromFile(FileName: TFileName): string; overload;
-function ReadStringFromFile(var FileName: TFileName; out Line: string): BG; overload;
-function WriteStringToFile(var FileName: TFileName; const Line: string; Append: BG): BG;
+function ReadStringFromFile(const FileName: TFileName; out Data: string): BG; overload;
+function ReadStringFromFile(const FileName: TFileName): string; overload;
+function WriteStringToFile(const FileName: TFileName; const Data: string; const Append: BG): BG;
 
 { TODO:
 	MapViewOfFile
@@ -199,22 +196,26 @@ function RepairDirectory(const Dir: TFileName): TFileName;
 function ExecuteDialog(Dialog: TOpenDialog; var FileName: TFileName): BG; overload;
 {$endif}
 function TempFileName(const FileName: TFileName): TFileName;
-procedure ReplaceIfChanged(FileName: TFileName);
+procedure ReplaceIfChanged(const FileName: TFileName);
 function DialogStr(Ext, Des: array of string): string;
 procedure InitPaths;
+
+function DirectoryExistsEx(const DirName: TFileName): BG;
+function FileExistsEx(const FileName: TFileName): BG;
 function FileOrDirExists(const FileOrDirName: string): BG;
+function FileOrDirExistsEx(const FileOrDirName: string): BG;
+function LastLineFromFile(const FileName: TFileName): string;
 
 implementation
 
 uses
 	Math,
-	uMsg, {$ifndef Console}uError, {$endif}
-	uFormat, uMath, uLog;
+	uMsg, uProjectInfo,
+	uOutputFormat, uMath, uLog, uReg;
 
 constructor TFile.Create;
 begin
 	inherited Create;
-//	LineSeparator := CharCR + CharLF;
 	HFile := INVALID_HANDLE_VALUE;
 end;
 
@@ -222,8 +223,8 @@ destructor TFile.Destroy;
 begin
 	if IsOpened then
 	begin
-		Warning(FTempFileName + LineSep + 'Forcing close.');
-		Close;
+		Warning('Forcing close of file %1.', FTempFileName);
+		Close(True, True);
 	end;
 	inherited Destroy;
 end;
@@ -243,15 +244,16 @@ begin
 	Result := HFile <> INVALID_HANDLE_VALUE;
 end;
 
-function TFile.Open(const FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): Boolean;
+{
+function TFile.Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
 var
 	FileName2: TFileName;
 begin
 	FileName2 := FileName;
 	Result := Open(FileName2, Mode, Flags, False);
-end;
+end; }
 
-function TFile.Open(var FileName: TFileName; const Mode: TFileMode; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: Boolean = False): Boolean;
+function TFile.Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
 label LRetry;
 var
 	CreationDistribution: U4;
@@ -262,11 +264,9 @@ begin
 
 	if IsOpened then
 	begin
-		Warning('Forcing Close' + LineSep + FileName);
+		Warning('Forcing close file %1.', FileName);
 		Close;
 	end;
-
-	MainLogAdd('Opening for ' + FileModeStr[Mode] + ' ' + FileName, ltDebug);
 
 	FFileName := FileName;
 	FFilePos := 0;
@@ -275,21 +275,21 @@ begin
 	FBufferSize := DefFileBuffer;
 	FBufStart := High(FBufStart);
 	FBufEnd := 0;
-	FProtection := Protection;
 
-	if FProtection and (FMode <> fmReadOnly) then
+	if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) then
 	begin
-		FTempFileName := ExpandDir(TempFileName(FileName));
-{   if FileExists(FTempFileName) then
+		FTempFileName := TempDir + ExtractFileName(FileName);
+		if FileExists(FTempFileName) then
 		begin
-			DeleteFile(FTempFileName);
-		end;}
-		if FileExists(FileName) then
-			CopyFile(FileName, FTempFileName, False);
+			DeleteFileEx(FTempFileName);
+		end;
+		if FMode = fmReadAndWrite then
+			if FileExists(FileName) then
+				CopyFile(FileName, FTempFileName, False);
 	end
 	else
 		FTempFileName := ExpandDir(FileName);
-
+	MainLogAdd('Opening for ' + FileModeStr[Mode] + ' ' + FTempFileName, mtDebug);
 
 	LRetry:
 	ShareMode := FILE_SHARE_READ;
@@ -299,7 +299,7 @@ begin
 		DesiredAccess := GENERIC_READ;
 		ShareMode := ShareMode or FILE_SHARE_WRITE;
 	end;
-	fmWriteOnly:
+	fmRewrite, fmAppend:
 	begin
 		DesiredAccess := GENERIC_WRITE;
 	end;
@@ -318,6 +318,7 @@ begin
 	else
 		CreationDistribution := OPEN_EXISTING;
 
+	Flags := Flags and (not FILE_FLAG_OVERLAPPED);
 	HFile := CreateFile(
 		PChar(FTempFileName), // pointer to name of the file
 		DesiredAccess,  // access (read-write) mode
@@ -326,25 +327,20 @@ begin
 		CreationDistribution, // how to create
 		FILE_ATTRIBUTE_NORMAL or Flags, // file attributes
 		0   // handle to file with attributes to copy
-	 );
+	);
 	if not IsOpened then
 	begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
 			if ErrorRetry(ErrorCode) then goto LRetry;
-		end
-		else
-		begin
-			GetFileSize(FFileSize);
-			Result := True;
+			Exit;
 		end;
-	end
-	else
-	begin
-		GetFileSize(FFileSize);
-		Result := True;
 	end;
+	GetFileSize(FFileSize);
+	if Mode = fmAppend then SeekEnd;
+	if Mode = fmRewrite then Truncate;
+	Result := True;
 end;
 
 function HandleFileSize(HFile: THandle): S8;
@@ -365,13 +361,13 @@ begin
 	end;
 end;
 
-function TFile.GetFileSize(var Size: U8): Boolean;
+function TFile.GetFileSize(var Size: U8): BG;
 begin
 	Size :=  HandleFileSize(HFile);
 	Result := Size >= 0;
 end;
 
-function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): Boolean;
+function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 label LRetry;
 var
 	HFile: THANDLE;
@@ -388,7 +384,7 @@ begin
 		OPEN_EXISTING,  // how to create
 		FILE_ATTRIBUTE_NORMAL,  // file attributes
 		0   // handle to file with attributes to copy
-	 );
+	);
 	if HFile <> INVALID_HANDLE_VALUE then
 	begin
 		Result := GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
@@ -403,7 +399,7 @@ begin
 	end;
 end;
 
-function TFile.Seek(const Pos: U8): Boolean;
+function TFile.Seek(const Pos: U8): BG;
 label LRetry;
 var ErrorCode: U4;
 begin
@@ -414,7 +410,7 @@ begin
 		TU8(Pos).D0, // number of bytes to move file pointer
 		@TU8(Pos).D1,  // address of high-order word of distance to move
 		FILE_BEGIN    // how to move
-	 ) <> $FFFFFFFF then
+	) <> $FFFFFFFF then
 	begin
 		Result := True;
 		FFilePos := Pos;
@@ -431,18 +427,18 @@ begin
 	end;
 end;
 
-function TFile.SeekStart: Boolean;
+function TFile.SeekStart: BG;
 begin
 	Result := Seek(0);
 end;
 
-function TFile.SeekEnd: Boolean;
+function TFile.SeekEnd: BG;
 begin
 	Result := Seek(FFileSize);
 end;
 
-function TFile.BlockRead(var Buf; const Count: UG): Boolean;
-label LRetry, LError;
+function TFile.BlockRead(out Buf; const Count: UG): BG;
+label LRetry;
 var
 	Suc: U4;
 	ErrorCode: U4;
@@ -450,45 +446,16 @@ begin
 	LRetry:
 	if ReadFile(HFile, Buf, Count, Suc, nil) then
 	begin
-		Result := Suc = Count;
+		Result := True;
 		Inc(ReadCount);
 		Inc(ReadBytes, Suc);
 
-		MainLogAdd('Reading ' + BToStr(Suc, ofIO) + ' from ' + FFileName, ltDebug);
-
-		Inc(FFilePos, Count);
-	end
-	else
-	begin
-		LError:
-		ErrorCode := GetLastError;
-		if ErrorCode <> NO_ERROR then
-		begin
-			if ErrorRetry(ErrorCode) then goto LRetry;
-			Result := False;
-		end
+		if Suc <> Count then
+			Warning('Reading only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO) + ' from ' + FTempFileName)
 		else
-			Result := True;
-		Inc(FFilePos, Count);
-		Seek(FFilePos);
-	end;
-end;
+			MainLogAdd('Reading ' + BToStr(Suc, ofIO) + ' from ' + FTempFileName, mtDebug);
 
-function TFile.BlockWrite(var Buf; const Count: UG): Boolean;
-label LRetry;
-var
-	Suc: U4;
-	ErrorCode: U4;
-begin
-	LRetry:
-	if WriteFile(HFile, Buf, Count, Suc, nil) then
-	begin
-		Result := True;
-		Inc(WriteCount);
-		Inc(WriteBytes, Suc);
 		Inc(FFilePos, Suc);
-
-		MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FFileName, ltDebug);
 	end
 	else
 	begin
@@ -505,10 +472,50 @@ begin
 		else
 			Result := True;
 		Inc(FFilePos, Suc);
+		Seek(FFilePos);
 	end;
 end;
 
-function TFile.FillWrite(Count: UG): Boolean;
+function TFile.BlockWrite(const Buf; const Count: UG): BG;
+label LRetry;
+var
+	Suc: U4;
+	ErrorCode: U4;
+begin
+	LRetry:
+	if WriteFile(HFile, Buf, Count, Suc, nil) then
+	begin
+		Result := True;
+		Inc(WriteCount);
+		Inc(WriteBytes, Suc);
+
+		if Suc <> Count then
+			Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO) + ' to ' + FTempFileName)
+		else
+			MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName, mtDebug);
+
+		Inc(FFilePos, Suc);
+	end
+	else
+	begin
+		ErrorCode := GetLastError;
+		if ErrorCode <> NO_ERROR then
+		begin
+			if ErrorRetry(ErrorCode) then
+			begin
+				Seek(FFilePos);
+				goto LRetry;
+			end;
+			Result := False;
+		end
+		else
+			Result := True;
+		Inc(FFilePos, Suc);
+		Seek(FFilePos);
+	end;
+end;
+
+function TFile.FillWrite(Count: UG): BG;
 var
 	Buf: Pointer;
 	C: UG;
@@ -527,8 +534,13 @@ begin
 	FreeMem(Buf);
 end;
 
-function TFile.Readln(out Line: string): Boolean;
-var BufPos, LineIndex: SG;
+{
+	File   |********************************|
+	Buffer                 |*******|
+}
+
+function TFile.Readln(out Line: string): BG;
+var BufPos, InLineIndex: SG;
 begin
 	Line := '';
 	if Eof then
@@ -543,13 +555,13 @@ begin
 	end;
 
 	SetLength(Line, 256);
-	LineIndex := 1;
-	while True do
+	InLineIndex := 1;
+	while not Eof do
 	begin
 		if (FFilePos >= FBufStart) and (FFilePos <= FBufEnd) then
 		begin
 			BufPos := FFilePos - FBufStart;
-			if Eof or (FBuffer[BufPos] = CharLF) then
+			if {Eof or} (FBuffer[BufPos] = CharLF) then
 			begin
 				Inc(FFilePos);
 				Seek(FFilePos);
@@ -560,7 +572,7 @@ begin
 		begin
 			FBufStart := FBufferSize * (FFilePos div FBufferSize);
 			FBufEnd := FBufStart + FBufferSize - 1;
-			if FBufEnd > FFileSize then FBufEnd := FFileSize;
+			if FBufEnd >= FFileSize then FBufEnd := FFileSize - 1;
 			Seek(FBufStart);
 			BufPos := FFilePos;
 			BlockRead(FBuffer[0], FBufEnd - FBufStart + 1);
@@ -570,37 +582,40 @@ begin
 		end;
 		if FBuffer[BufPos] <> CharCR then
 		begin
-			if LineIndex > Length(Line) then
-				SetLength(Line, 2 * (LineIndex - 1));
-			Line[LineIndex] := FBuffer[BufPos];
-			Inc(LineIndex);
+			if InLineIndex > Length(Line) then
+				SetLength(Line, 2 * (InLineIndex - 1));
+			Line[InLineIndex] := FBuffer[BufPos];
+			Inc(InLineIndex);
 		end;
 		Inc(FFilePos);
 	end;
-	SetLength(Line, LineIndex - 1);
+	SetLength(Line, InLineIndex - 1);
 end;
 
-function TFile.Write(Line: string): Boolean;
+function TFile.Write(const Data: string): BG;
+var
+	DataLength: SG;
 begin
-	if Length(Line) > 0 then
-		Result := BlockWrite(Line[1], Length(Line))
+	DataLength := Length(Data);
+	if DataLength > 0 then
+		Result := BlockWrite(Data[1], DataLength)
 	else
 		Result := True;
 end;
 
-function TFile.Writeln(Line: string): Boolean;
+function TFile.Writeln(Line: string): BG;
 begin
 	Line := Line + FileSep;
 	Result := BlockWrite(Line[1], Length(Line));
 end;
 
-function TFile.WritelnW(Line: WideString): Boolean;
+function TFile.WritelnW(Line: WideString): BG;
 begin
 	Line := Line + CharNul + CharLF;
 	Result := BlockWrite(Line[1], 2 * Length(Line));
 end;
 
-function TFile.Close(ChangeDate: BG = True): Boolean;
+function TFile.Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
 label LRetry;
 var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
@@ -610,10 +625,10 @@ begin
 	Result := False;
 	if not IsOpened then
 	begin
-		Warning('Trying Re-Close' + LineSep + FTempFileName);
+		Warning('Trying re-close file %1.', FTempFileName);
 		Exit;
 	end;
-	MainLogAdd('Closing ' + FTempFileName, ltDebug);
+	MainLogAdd('Closing ' + FTempFileName, mtDebug);
 
 
 	SetLength(FBuffer, 0);
@@ -629,10 +644,16 @@ begin
 
 	if CloseHandle(HFile) then
 	begin
-		if FProtection and (FMode <> fmReadOnly) then
+		if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) and (Forced = False) then
 		begin
-			if CopyFile(PChar(FTempFileName), FFileName, False) then
-				DeleteFile(PChar(FTempFileName));
+//		RenameFileEx(FTempFileName, FFileName); only on same disk
+			if DirectoryExists(ExtractFileDir(FFileName)) = False then
+				IOError(FFileName, 3)
+			else
+			begin
+				CopyFile(FTempFileName, FFileName, False);
+				DeleteFileEx(FTempFileName);
+			end;
 		end;
 		Result := True;
 	end
@@ -650,7 +671,7 @@ begin
 	HFile := INVALID_HANDLE_VALUE;
 end;
 
-function TFile.Truncate: Boolean;
+function TFile.Truncate: BG;
 label LRetry;
 var ErrorCode: U4;
 begin
@@ -667,7 +688,7 @@ begin
 	end;
 end;
 
-function TFile.FlushFileBuffers: Boolean;
+function TFile.FlushFileBuffers: BG;
 label LRetry;
 var ErrorCode: U4;
 begin
@@ -680,12 +701,12 @@ begin
 	end;
 end;
 
-function TFile.Eof: Boolean;
+function TFile.Eof: BG;
 begin
 	Result := FFilePos >= FFileSize;
 end;
 
-function TFile.Lock(From, Count: U8): Boolean;
+function TFile.Lock(From, Count: U8): BG;
 label LRetry;
 var ErrorCode: U4;
 begin
@@ -698,7 +719,7 @@ begin
 	end;
 end;
 
-function TFile.UnLock(From, Count: U8): Boolean;
+function TFile.UnLock(From, Count: U8): BG;
 label LRetry;
 var ErrorCode: U4;
 begin
@@ -738,25 +759,26 @@ begin
 			Delete(ExeFileName, i, Length(ExeFileName) - i + 1);
 		end;
 
-		// Split ExeFileName to WorkDir and AppName
+		// Split ExeFileName to WorkDir and InternalName
 		for i := Length(ExeFileName) downto 0 do
 		begin
 			if i = 0 then
 			begin
 				Break;
 			end;
-			if (ExeFileName[i] = '\') then
+			if (ExeFileName[i] = PathDelim) then
 			begin
-				AppName := DelFileExt(Copy(ExeFileName, i + 1, MaxInt));
+				if FProjectInfo[piInternalName] = '' then // if not initialized in ProjectInfo
+					FProjectInfo[piInternalName] := DelFileExt(Copy(ExeFileName, i + 1, MaxInt));
 				WorkDir := Copy(ExeFileName, 1, i);
 				Break;
 			end;
 		end;
 	end;
 	if WorkDir = '' then WorkDir := StartDir;
-	GraphDir := WorkDir + 'Graphics\';
-	SoundsDir := WorkDir + 'Sounds\';
-	DataDir := WorkDir + 'Data\';
+	GraphDir := WorkDir + 'Graphics' + PathDelim;
+	SoundsDir := WorkDir + 'Sounds' + PathDelim;
+	DataDir := WorkDir + 'Data' + PathDelim;
 
 	SetLength(SysDir, MAX_PATH);
 	NewLength := GetSystemDirectory(PChar(SysDir), MAX_PATH);
@@ -769,32 +791,34 @@ begin
 	CorrectDir(WinDir);
 
 	ProgramFilesDir := GetEnvironmentVariable('ProgramFiles');
-	if ProgramFilesDir = '' then ProgramFilesDir := 'C:\Program Files\';
+	if ProgramFilesDir = '' then ProgramFilesDir := 'C' + DriveDelim + PathDelim + 'Program Files' + PathDelim;
 	CorrectDir(ProgramFilesDir);
 
-	TempDir := GetEnvironmentVariable('TEMP');
-	if TempDir = '' then TempDir := WinDir + 'Temp';
-	CorrectDir(TempDir);
-	TempDir := TempDir + '_' + AppName + '\';
-//	CreateDirEx(TempDir);
+	CommonTempDir := GetEnvironmentVariable('TEMP');
+	if CommonTempDir = '' then TempDir := WinDir + 'Temp';
+	CorrectDir(CommonTempDir);
+	TempDir := CommonTempDir + '_' + GetProjectInfo(piInternalName) + PathDelim;
+	CreateDirEx(TempDir);                                     
 
 	ApplicationDataDir := GetEnvironmentVariable( 'APPDATA');
-	if ApplicationDataDir = '' then ApplicationDataDir := WinDir + 'Application Data\';
+	if ApplicationDataDir = '' then ApplicationDataDir := WinDir + 'Application Data' + PathDelim;
 	CorrectDir(ApplicationDataDir);
-	AppDataDir := ApplicationDataDir + 'Safrad\' + AppName + '\';
+	AppDataDir := ApplicationDataDir + GetProjectInfo(piCompanyName) + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
 	CreateDirsEx(AppDataDir);
 
-	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
-	CorrectDir(DocsDir);
+//	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
+//	CorrectDir(DocsDir);
+	MyDocuments := ShellFolder('Personal');
+	CorrectDir(MyDocuments);
 
-	MainIniFileName := WorkDir + AppName + '.ini';
+	MainIniFileName := WorkDir + GetProjectInfo(piInternalName) + '.ini';
 	if not FileExists(MainIniFileName) then
 	begin
-		MainIniFileName := AppDataDir + AppName + '.ini';
-		MainLogFileName := AppDataDir + 'Log\' + AppName + '.log';
+		MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
+		MainLogFileName := AppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
 	end
 	else
-		MainLogFileName := WorkDir + 'Log\' + AppName + '.log';
+		MainLogFileName := WorkDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
 end;
 
 function ShortDir(const Dir: string): string;
@@ -821,37 +845,47 @@ begin
 	// TODO: C:\Windows -> %windir%
 end;
 
-function ExpandDir(Dir: string): string;
+function RemoveEV(Dir: string): string;
 var
 	i, Start: SG;
 	Variable, Value: string;
 	NewLength: SG;
 begin
-	if Length(Dir) = 0 then
-		Result := ''
-	else
+	i := 1;
+	while i <= Length(Dir) do
 	begin
-		i := 1;
-		while i <= Length(Dir) do
+		if Dir[i] = '%' then
 		begin
-			if Dir[i] = '%' then
-			begin
-				Start := i;
-				Inc(i);
-				Variable := ReadToChar(Dir, i, '%');
-				if (i > Length(Dir) + 1) then Break; // next % not found
+			Start := i;
+			Inc(i);
+			Variable := ReadToChar(Dir, i, '%');
+			if (i > Length(Dir) + 1) then Break; // next % not found
 
-				SetLength(Value, MAX_PATH);
-				NewLength := GetEnvironmentVariable(PChar(Variable), PChar(Value), Max_PATH);
-				SetLength(Value, NewLength);
+			SetLength(Value, MAX_PATH);
+			NewLength := GetEnvironmentVariable(PChar(Variable), PChar(Value), Max_PATH);
+			SetLength(Value, NewLength);
 
-				Delete(Dir, Start, i - Start);
-				Insert(Value, Dir, Start);
-				i := Start + Length(Value);
-			end
-			else
-				Inc(i);
-		end;
+			Delete(Dir, Start, i - Start);
+			Insert(Value, Dir, Start);
+			i := Start + Length(Value);
+		end
+		else
+			Inc(i);
+	end;
+	Result := Dir;
+end;
+
+function ExpandDir(Dir: string): string;
+begin
+	if Length(Dir) = 0 then
+		Result := WorkDir
+{	else if StartStr('http://', Dir) then
+		Result := Dir
+	else if (Pos('://', Dir) <> 0) then
+		Result := Dir}
+	else
+	begin // file://
+		Dir := RemoveEV(Dir);
 
 {		for i := 1 to Length(Dir) do
 		begin
@@ -861,12 +895,12 @@ begin
 				Exit;
 			end;
 		end;}
-		if (Length(Dir) > 1) and (Dir[1] = '\') and (Dir[2] = '\') then
+		if (Length(Dir) > 1) and (Dir[1] = PathDelim) and (Dir[2] = PathDelim) then
 		begin
 			// Network path
 			Result := Dir;
 		end
-		else if (Length(Dir) > 0) and (Dir[1] = '\') then
+		else if (Length(Dir) > 0) and (Dir[1] = PathDelim) then
 			Result := WorkDir[1] + WorkDir[2] + Dir
 		else if ((Length(Dir) > 1) and (Dir[2] = ':'))then
 		begin
@@ -901,7 +935,7 @@ begin
 	Result := False;
 	for i := Length(Dir) - 1 downto 3 do
 	begin
-		if Dir[i] = '\' then
+		if Dir[i] = PathDelim then
 		begin
 			SetLength(Dir, i);
 			Result := True;
@@ -941,7 +975,7 @@ begin
 		'+', '=', '`',
 		'~', '!', '@', '#', '$', '%', '^', '&', '(', ')',
 		'{', '}', '''', #180, ';', '[', ']', ',',
-		'\', ':': // 'C:\'
+		PathDelim, DriveDelim:
 		begin
 			Inc(i);
 		end
@@ -954,7 +988,7 @@ begin
 	end;
 end;
 
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: Boolean);
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: BG);
 var
 	NewSize: SG;
 	IsDir, IsFile: BG;
@@ -971,7 +1005,7 @@ var
 			while ErrorCode = NO_ERROR do
 			begin
 				IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
-				if IsDir and (Dirs or SubDirs) then SearchRec.Name := SearchRec.Name + '\';
+				if IsDir and (Dirs or SubDirs) then SearchRec.Name := SearchRec.Name + PathDelim;
 				IsFile := (SearchRec.Attr and faDirectory) = 0;
 
 				if (IsDir and Dirs)
@@ -1073,7 +1107,7 @@ begin
 		OPEN_EXISTING,  // how to create
 		FILE_ATTRIBUTE_NORMAL,  // file attributes
 		0 // handle to file with attributes to copy
-	 );
+	);
 	if HFile <> INVALID_HANDLE_VALUE then
 	begin
 		Result := HandleFileSize(HFile);
@@ -1125,31 +1159,32 @@ begin
 end;
 
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
-label LRetry;
 var
 	F: TFile;
 	ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime;
 begin
 	Result := False;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadAndWrite, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		Result := GetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @ALastWriteTime);
-		if Result then
+	try
+		if F.Open(FileName, fmReadAndWrite) then
 		begin
-			Result := SetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @LastWriteTime);
-			if Result = False then
+			Result := GetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @ALastWriteTime);
+			if Result then
+			begin
+				Result := SetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @LastWriteTime);
+				if Result = False then
+					IOError(FileName, GetLastError);
+			end
+			else
+			begin
 				IOError(FileName, GetLastError);
-		end
-		else
-		begin
-			IOError(FileName, GetLastError);
-		end;
+			end;
 
-		F.Close(False);
+			F.Close(False);
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
 function RenameFileEx(const Source, Dest: TFileName): BG;
@@ -1166,7 +1201,7 @@ begin
 	end;
 end;
 
-function CopyFile(const Source, Dest: TFileName; const FailExist: Boolean): BG;
+function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
 label LRetry;
 var ErrorCode: U4;
 begin
@@ -1180,13 +1215,12 @@ begin
 	end;
 end;
 
-function CopyFileToDir(Source, Dest: TFileName; const FailExist: Boolean): Boolean;
+function CopyFileToDir(Source, Dest: TFileName; const FailExist: BG): BG;
 begin
 	Result := CopyFile(Source, Dest + ExtractFileName(Source), FailExist);
 end;
 
-function CopyDamagedFile(Source, Dest: TFileName): Boolean;
-label LRetryS, LRetryD;
+function CopyDamagedFile(Source, Dest: TFileName): BG;
 const
 	Count = 512;
 var
@@ -1197,39 +1231,31 @@ begin
 	GetMem(Buf, Count);
 	FS := TFile.Create;
 	FD := TFile.Create;
-	LRetryS:
-	if FS.Open(Source, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		LRetryD:
-		if FD.Open(Dest, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	try
+		if FS.Open(Source, fmReadOnly) then
 		begin
-			while not FS.Eof do
+			if FD.Open(Dest, fmRewrite) then
 			begin
-				FillChar(Buf^, Count, 0);
-				if not FS.BlockRead(Buf^, Count) then
-					Result := False;
-				FD.BlockWrite(Buf^, Count);
-
+				while not FS.Eof do
+				begin
+					FillChar(Buf^, Count, 0);
+					if not FS.BlockRead(Buf^, Count) then
+						Result := False;
+					FD.BlockWrite(Buf^, Count);
+				end;
+				FD.Truncate;
+				FD.Close;
 			end;
-			FD.Truncate;
-			if not FD.Close then goto LRetryD;
+			FS.Close;
 		end;
-		if not FS.Close then goto LRetryS;
+	finally
+		FS.Free;
+		FD.Free;
+		FreeMem(Buf, Count);
 	end;
-	FS.Free;
-	FD.Free;
-	FreeMem(Buf, Count);
 end;
 
-function DirectoryExists(const Directory: string): Boolean;
-var
-	Code: U4;
-begin
-	Code := GetFileAttributes(PChar(Directory));
-	Result := (Code <> High(Code)) and (FILE_ATTRIBUTE_DIRECTORY and Code <> 0);
-end;
-
-function CreateDirEx(const Dir: string): Boolean;
+function CreateDirEx(const Dir: string): BG;
 begin
 	if Dir = '' then
 	begin
@@ -1246,7 +1272,7 @@ begin
 	end;
 end;
 
-function CreateDirsEx(const Dir: string): Boolean;
+function CreateDirsEx(const Dir: string): BG;
 var i: SG;
 begin
 	Result := False;
@@ -1254,14 +1280,14 @@ begin
 	i := 1;
 	while i < Length(Dir) do
 	begin
-		if Dir[i] = '\' then
+		if Dir[i] = PathDelim then
 			if CreateDirEx(Copy(Dir, 1, i)) = False then Exit;
 		Inc(i);
 	end;
 	Result := CreateDirEx(Dir);
 end;
 
-function NewFileOrDir(var FileOrDir: string): Boolean;
+function NewFileOrDir(var FileOrDir: string): BG;
 var
 	i: SG;
 	IsDir: BG;
@@ -1269,11 +1295,11 @@ var
 begin
 	Result := False;
 	if Length(FileOrDir) = 0 then Exit;
-	IsDir := LastChar(FileOrDir) = '\';
+	IsDir := LastChar(FileOrDir) = PathDelim;
 	if IsDir then
 	begin
 		DirS := Copy(FileOrDir, 1, Length(FileOrDir) - 1);
-		DirE := '\';
+		DirE := PathDelim;
 	end
 	else
 	begin
@@ -1308,13 +1334,13 @@ begin
 	end;
 end;
 
-function NewFileOrDirEx(var FileOrDir: string): Boolean;
+function NewFileOrDirEx(var FileOrDir: string): BG;
 begin
-	FileOrDir := DelFileExt(FileOrDir) + ' ' + ReplaceF(DateTimeToS(Now), ':', '_') + ExtractFileExt(FileOrDir);
+	FileOrDir := DelFileExt(FileOrDir) + ' ' + ReplaceF(DateTimeToS(Now, 0, ofIO), ':', '_') + ExtractFileExt(FileOrDir);
 	Result := NewFileOrDir(FileOrDir);
 end;
 
-function CopyDir(const Source, Dest: string): Boolean;
+function CopyDir(const Source, Dest: string): BG;
 var
 	SearchRec: TSearchRec;
 	ErrorCode: Integer;
@@ -1330,7 +1356,7 @@ begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
 		begin
 			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-				CopyDir(Source + SearchRec.Name + '\', Dest + SearchRec.Name + '\');
+				CopyDir(Source + SearchRec.Name + PathDelim, Dest + SearchRec.Name + PathDelim);
 		end
 		else
 		begin
@@ -1342,7 +1368,7 @@ begin
 	SysUtils.FindClose(SearchRec);
 end;
 
-function DeleteFileEx(const FileName: TFileName): Boolean;
+function DeleteFileEx(const FileName: TFileName): BG;
 begin
 	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
 	Result := DeleteFile(PChar(FileName));
@@ -1350,14 +1376,14 @@ begin
 		IOError(FileName, GetLastError);
 end;
 
-function RemoveDirEx(const DirName: string): Boolean;
+function RemoveDirEx(const DirName: string): BG;
 begin
 	Result := RemoveDirectory(PChar(DirName));
 	if Result = False then
 		IOError(DirName, GetLastError);
 end;
 
-function RemoveDirsEx(DirName: string; DeleteSelf: Boolean = False): Boolean;
+function RemoveDirsEx(DirName: string; DeleteSelf: BG = False): BG;
 var
 	SearchRec: TSearchRec;
 	ErrorCode: Integer;
@@ -1379,7 +1405,7 @@ begin
 		begin
 			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
 			begin
-				Result := RemoveDirsEx(DirName + SearchRec.Name + '\', True) and Result;
+				Result := RemoveDirsEx(DirName + SearchRec.Name + PathDelim, True) and Result;
 			end;
 		end
 		else
@@ -1396,8 +1422,7 @@ end;
 
 // TFile Read Write
 
-function ReadBufferFromFile(var FileName: TFileName; out Buf; out Count: SG): BG;
-label LRetry;
+function ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG): BG;
 var
 	F: TFile;
 begin
@@ -1405,98 +1430,104 @@ begin
 	Count := 0;
 	Pointer(Buf) := nil;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		GetMem(Pointer(Buf), F.FileSize);
-		if not F.BlockRead(Pointer(Buf)^, F.FileSize) then goto LRetry;
-		Count := F.FileSize;
-		F.Close;
-		Result := True;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			GetMem(Pointer(Buf), F.FileSize);
+			F.BlockRead(Pointer(Buf)^, F.FileSize);
+			Count := F.FileSize;
+			F.Close;
+			Result := True;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function WriteBufferToFile(var FileName: TFileName; var Buf; const Count: SG): BG;
-label LRetry;
+function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: SG): BG;
 var
 	F: TFile;
 begin
 	Result := False;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if not F.BlockWrite(Pointer(Buf)^, Count) then goto LRetry;
-		F.Truncate;
-		if not F.Close then goto LRetry;
-		Result := True;
+	try
+		if F.Open(FileName, fmRewrite) then
+		begin
+			F.BlockWrite(Pointer(Buf)^, Count);
+			F.Truncate;
+			F.Close;
+			Result := True;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function ReadBlockFromFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
-label LRetry;
+function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
 var
 	F: TFile;
 begin
 	Result := False;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if not F.BlockRead(Buf^, Min(Count, F.FileSize)) then goto LRetry;
-		F.Close;
-		Result := True;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			F.BlockRead(Buf^, Min(Count, F.FileSize));
+			F.Close;
+			Result := True;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function WriteBlockToFile(var FileName: TFileName; Buf: Pointer; const Count: SG): BG;
-label LRetry;
+function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
 var
 	F: TFile;
 begin
 	Result := False;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if not F.BlockWrite(Buf^, Count) then goto LRetry;
-		F.Truncate;
-		if not F.Close then goto LRetry;
-		Result := True;
+	try
+		if F.Open(FileName, fmRewrite) then
+		begin
+			F.BlockWrite(Buf^, Count);
+			F.Truncate;
+			F.Close;
+			Result := True;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function ReadStringFromFile(var FileName: TFileName; out Line: string): BG; overload;
-label LRetry;
+function ReadStringFromFile(const FileName: TFileName; out Data: string): BG; overload;
 var
 	F: TFile;
 begin
 	Result := False;
+	Data := '';
 	F := TFile.Create;
-	LRetry:
-	Line := '';
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		SetLength(Line, F.FileSize);
-		if Length(Line) >= 1 then
-			if not F.BlockRead(Line[1], F.FileSize) then goto LRetry;
-		F.Close;
-		Result := True;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			SetLength(Data, F.FileSize);
+			if Length(Data) >= 1 then
+				F.BlockRead(Data[1], F.FileSize);
+			F.Close;
+			Result := True;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function ReadStringFromFile(FileName: TFileName): string; overload;
+function ReadStringFromFile(const FileName: TFileName): string; overload;
 begin
 	ReadStringFromFile(FileName, Result);
 end;
 
-function SameDataInFile(var FileName: TFileName; const Line: string): BG;
-label LRetry, LClose;
+function SameDataInFile(const FileName: TFileName; const Line: string): BG;
+label LClose;
 var
 	F: TFile;
 	Buf, P: Pointer;
@@ -1507,58 +1538,63 @@ begin
 	begin
 		F := TFile.Create;
 		GetMem(Buf, DefFileBuffer);
-		LRetry:
-		if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-		begin
-			TotalBytes := F.FileSize;
-			if TotalBytes <> Length(Line) then goto LClose;
-			while TotalBytes > 0 do
+		try
+			if F.Open(FileName, fmReadOnly) then
 			begin
-				ReadBytes := DefFileBuffer;
-				if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
-				if not F.BlockRead(Buf^, ReadBytes) then
+				TotalBytes := F.FileSize;
+				if TotalBytes <> Length(Line) then goto LClose;
+				while TotalBytes > 0 do
 				begin
-					goto LClose;
+					ReadBytes := DefFileBuffer;
+					if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
+					if not F.BlockRead(Buf^, ReadBytes) then
+					begin
+						goto LClose;
+					end;
+					P := @Line[Length(Line) - TotalBytes + 1];
+					if SameData(Buf, P, ReadBytes) = False then goto LClose;
+					Dec(TotalBytes, ReadBytes);
 				end;
-				P := @Line[Length(Line) - TotalBytes + 1];
-				if SameData(Buf, P, ReadBytes) = False then goto LClose;
-				Dec(TotalBytes, ReadBytes);
+				Result := True;
+				LClose:
+				F.Close;
 			end;
-			Result := True;
-			LClose:
-			if not F.Close then goto LRetry;
+		finally
+			FreeMem(Buf);
+			F.Free;
 		end;
-		FreeMem(Buf);
-		F.Free;
 	end;
 end;
 
-function WriteStringToFile(var FileName: TFileName; const Line: string; Append: BG): BG;
-label LRetry;
+function WriteStringToFile(const FileName: TFileName; const Data: string; const Append: BG): BG;
 var
 	F: TFile;
+	FileMode: TFileMode;
 begin
-	if (Append = False) and SameDataInFile(FileName, Line) then
+	if (Append = False) and SameDataInFile(FileName, Data) then
 		Result := True
 	else
 	begin
 		Result := False;
+		if Append then
+			FileMode := fmAppend
+		else
+			FileMode := fmRewrite;
 		F := TFile.Create;
-		LRetry:
-		if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-		begin
-			if Append then F.SeekEnd;
-			if not F.Write(Line) then goto LRetry;
-			if Append = False then F.Truncate;
-			if not F.Close then goto LRetry;
-			Result := True;
+		try
+			if F.Open(FileName, FileMode) then
+			begin
+				F.Write(Data);
+				F.Close;
+				Result := True;
+			end;
+		finally
+			F.Free;
 		end;
-		F.Free;
 	end;
 end;
 
-function ReadStringsFromFile(var FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
-label LRetry;
+function ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
 var
 	F: TFile;
 	Line: string;
@@ -1566,47 +1602,53 @@ var
 begin
 	Result := False;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		while not F.Eof do
+	try
+		if F.Open(FileName, fmReadOnly) then
 		begin
-			if not F.Readln(Line) then goto LRetry;
-			NewSize := LineCount + 1;
-			if AllocByExp(Length(Lines), NewSize) then
-				SetLength(Lines, NewSize);
-			Lines[LineCount] := Line;
-			Inc(LineCount);
+			while not F.Eof do
+			begin
+				F.Readln(Line);
+				NewSize := LineCount + 1;
+				if AllocByExp(Length(Lines), NewSize) then
+					SetLength(Lines, NewSize);
+				Lines[LineCount] := Line;
+				Inc(LineCount);
+			end;
+			F.Close;
+			Result := True;
 		end;
-		F.Close;
-		Result := True;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function WriteStringsToFile(var FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; Append: BG): BG;
-label LRetry;
+function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG): BG;
 var
 	F: TFile;
 	i: SG;
+	FileMode: TFileMode;
 begin
 	Result := False;
+	if Append then
+		FileMode := fmAppend
+	else
+		FileMode := fmRewrite;
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if Append then F.SeekEnd;
-		i := 0;
-		while i < OpeningNameCount do
+	try
+		if F.Open(FileName, FileMode) then
 		begin
-			if not F.Write(Lines[i] + FileSep) then goto LRetry;
-			Inc(i);
+			i := 0;
+			while i < OpeningNameCount do
+			begin
+				F.Write(Lines[i] + FileSep);
+				Inc(i);
+			end;
+			F.Close;
+			Result := True;
 		end;
-		if Append = False then F.Truncate;
-		if not F.Close then goto LRetry;
-		Result := True;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
 {$IFDEF WIN32}
@@ -1661,10 +1703,8 @@ end;
 function ShortToLongPath(ShortName: string): string;
 var
 	LastSlash: string;
-	s: string;
 begin
-	s := ShortName;
-	if (FileExists(ShortName) = False) or (Length(ShortName) < 2) or (ShortName[1] = '\') then
+	if (FileExists(ShortName) = False) or (Length(ShortName) < 2) or (ShortName[1] = PathDelim) then
 	begin
 		Result := ShortName;
 		Exit;
@@ -1673,7 +1713,7 @@ begin
 	LastSlash := StrRScan(ShortName);
 	while LastSlash <> '' do
 	begin
-		Result := '\' + ShortToLongFileName(ShortName) + Result;
+		Result := PathDelim + ShortToLongFileName(ShortName) + Result;
 		if LastSlash <> '' then
 		begin
 			SetLength(ShortName, Length(ShortName) - Length(LastSlash));
@@ -1695,12 +1735,12 @@ begin
 	end;
 	Result := '';
 	TempPathPtr := ShortName;
-	LastSlash := StrRScan(TempPathPtr, '\');
+	LastSlash := StrRScan(TempPathPtr, PathDelim);
 	while LastSlash <> nil do begin
-		Result := '\' + ShortToLongFileName(TempPathPtr) + Result;
+		Result := PathDelim + ShortToLongFileName(TempPathPtr) + Result;
 		if LastSlash <> nil then begin
 			LastSlash^ := char(0);
-			LastSlash := StrRScan(TempPathPtr, '\');
+			LastSlash := StrRScan(TempPathPtr, PathDelim);
 		end;
 	end;
 	Result := TempPathPtr + Result;
@@ -1719,12 +1759,12 @@ begin
 	end;
 	Result := '';
 	TempPathPtr := LongName;
-	LastSlash := StrRScan(TempPathPtr, '\');
+	LastSlash := StrRScan(TempPathPtr, PathDelim);
 	while LastSlash <> nil do begin
-		Result := '\' + LongToShortFileName(TempPathPtr) + Result;
+		Result := PathDelim + LongToShortFileName(TempPathPtr) + Result;
 		if LastSlash <> nil then begin
 			LastSlash^ := char(0);
-			LastSlash := StrRScan(TempPathPtr, '\');
+			LastSlash := StrRScan(TempPathPtr, PathDelim);
 		end;
 	end;
 	Result := TempPathPtr + Result;
@@ -1735,6 +1775,7 @@ end;
 function RepairDirectory(const Dir: TFileName): TFileName;
 begin
 	Result := ShortToLongPath(ExpandDir(Dir));
+	if Result = '' then Exit;
 	while True do
 	begin
 		if DirectoryExists(Result) then Break;
@@ -1768,12 +1809,12 @@ begin
 	Buf2 := nil;
 
 	File1 := TFile.Create;
-	if not File1.Open(FileName1, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	if not File1.Open(FileName1, fmReadOnly) then
 	begin
 		goto LClose;
 	end;
 	File2 := TFile.Create;
-	if not File2.Open(FileName2, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	if not File2.Open(FileName2, fmReadOnly) then
 	begin
 		goto LClose;
 	end;
@@ -1819,7 +1860,7 @@ begin
 	FreeMem(Buf2);
 end;
 
-procedure ReplaceIfChanged(FileName: TFileName);
+procedure ReplaceIfChanged(const FileName: TFileName);
 var
 	OrigFileName: TFileName;
 begin
@@ -1865,16 +1906,80 @@ begin
 	Result := Result + AllFiles;
 end;
 
+function FileExistsEx(const FileName: TFileName): BG;
+begin
+	Result := FileExists(RemoveEV(FileName));
+end;
+{
+function DirectoryExists(const Directory: string): BG;
+var
+	Code: U4;
+begin
+	Code := GetFileAttributes(PChar(Directory));
+	Result := (Code <> High(Code)) and (FILE_ATTRIBUTE_DIRECTORY and Code <> 0);
+end;}
+
+function DirectoryExistsEx(const DirName: TFileName): BG;
+begin
+	Result := DirectoryExists(RemoveEV(DirName));
+end;
+
 function FileOrDirExists(const FileOrDirName: string): BG;
 begin
 	if Length(FileOrDirName) = 0 then
 		Result := False
-	else if LastChar(FileOrDirName) = '\' then
+	else if LastChar(FileOrDirName) = PathDelim then
 		Result := DirectoryExists(FileOrDirName)
 	else
 		Result := FileExists(FileOrDirName);
 end;
 
+function FileOrDirExistsEx(const FileOrDirName: string): BG;
+begin
+	if Length(FileOrDirName) = 0 then
+		Result := False
+	else if LastChar(FileOrDirName) = PathDelim then
+		Result := DirectoryExistsEx(FileOrDirName)
+	else
+		Result := FileExistsEx(FileOrDirName);
+end;
+
+function LastLineFromFile(const FileName: TFileName): string;
+var
+	i: SG;
+	F: TFile;
+	C: Char;
+begin
+	Result := '';
+	F := TFile.Create;
+	try
+		if F.Open(FileName, fmReadOnly, FILE_FLAG_RANDOM_ACCESS) then
+		begin
+			i := F.FileSize - 1;
+			while i >= 0 do
+			begin
+				F.Seek(i);
+				F.BlockRead(C, SizeOf(C));
+				if not (C in [CharCR, CharLF]) then Break;
+				Dec(i);
+			end;
+
+			while i >= 0 do
+			begin
+				F.Seek(i);
+				F.BlockRead(C, SizeOf(C));
+				if C in [CharCR, CharLF] then Break;
+				Result := c + Result;
+				Dec(i);
+			end;
+			F.Close;
+		end;
+	finally
+		F.Free;
+	end;
+end;
+
 initialization
 	InitPaths;
+	EnumToStr(TypeInfo(TFileMode), FileModeStr);
 end.

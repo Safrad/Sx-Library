@@ -1,10 +1,10 @@
 //* File:     Lib\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2005-12-05
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-23
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDForm;
 
@@ -105,7 +105,7 @@ implementation
 
 uses
 	Math,
-	uGraph, uFiles, OpenGL12, uScreen, uSysInfo, uFormat, uStrings, uColor;
+	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo;
 const
 	OneBuffer = False;
 var
@@ -231,7 +231,7 @@ begin
 
 (*	C.L := MixColors(CF, CB);
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos3d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1, 1); // Open GL FP Exception
+	glRasterPos3d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1, 1); // OpenGL FP Exception
 {	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
 	glTexCoord4d(1, 1, 1, 1);
 	glRasterPos4d(68, 0, 0, 1);
@@ -241,7 +241,7 @@ begin
 
 	C.L := CF;
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos3d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1, 0); // Open GL FP Exception
+	glRasterPos3d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1, 0); // OpenGL FP Exception
 	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
 
 end;
@@ -406,8 +406,7 @@ end;
 
 // Delphi <=5
 type
-	TFPUException = (exInvalidOp, exDenormalized, exZeroDivide,
-									 exOverflow, exUnderflow, exPrecision);
+	TFPUException = (exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision);
 	TFPUExceptionMask = set of TFPUException;
 
 function Get8087CW: U2;
@@ -483,8 +482,8 @@ begin
 			ActivateRenderingContext(Canvas.Handle,RC); // make context drawable
 			FontBase := glGenLists(256);
 			wglUseFontBitmaps(Canvas.Handle, 0, 255, FontBase);
-			DeactivateRenderingContext; // make context drawable
-			ResizeMessage;
+			ResizeMessage; // TODO Swap down?
+			DeactivateRenderingContext; // make context undrawable
 		end;
 		end;
 
@@ -518,16 +517,18 @@ begin
 	FBitmapB := TDBitmap.Create;
 	FBitmapB.SetSize(0, 0);
 
-	FileName := Name;
-	if Length(FileName) > 0 then
 	begin
-		if FileName[1] = 'f' then Delete(FileName, 1, 1);
-		if FileName = 'Main' then FileName := Application.Title;
-	end;
+		FileName := Name;
+		if Length(FileName) > 0 then
+		begin
+			if FileName[1] = 'f' then Delete(FileName, 1, 1);
+			if FileName = 'Main' then FileName := GetProjectInfo(piInternalName);
+		end;
 
-	FileName := GraphDir + FileName + '.ico';
-	if FileExists(FileName) then
-		Icon.LoadFromFile(FileName);
+		FileName := GraphDir + FileName + '.ico';
+		if FileExists(FileName) then
+			Icon.LoadFromFile(FileName);
+	end;
 
 	if Assigned(FOnRWOptions) then FOnRWOptions(Self, False);
 end;
@@ -620,11 +621,11 @@ begin
 
 
 		(*
-				 * Disable stuff that's likely to slow down
-				 * glDrawPixels.(Omit as much of this as possible,
-				 * when you know in advance that the OpenGL state is
-				 * already set correctly.)
-				 *)
+				* Disable stuff that's likely to slow down
+				* glDrawPixels.(Omit as much of this as possible,
+				* when you know in advance that the OpenGL state is
+				* already set correctly.)
+				*)
 				glDisable(GL_ALPHA_TEST);
 				glDisable(GL_BLEND);
 				glDisable(GL_DEPTH_TEST);
@@ -646,11 +647,11 @@ begin
 				glPixelTransferi(GL_ALPHA_BIAS, 0);
 
 				(*
-				 * Disable extensions that could slow down
-				 * glDrawPixels.(Actually, you should check for the
-				 * presence of the proper extension before making
-				 * these calls.I omitted that code for simplicity.)
-				 *)
+				* Disable extensions that could slow down
+				* glDrawPixels.(Actually, you should check for the
+				* presence of the proper extension before making
+				* these calls.I omitted that code for simplicity.)
+				*)
 
 				glDisable(GL_CONVOLUTION_1D_EXT);
 				glDisable(GL_CONVOLUTION_2D_EXT);
@@ -662,9 +663,9 @@ begin
 				glDisable(GL_TEXTURE_3D_EXT);
 
 				(*
-				 * The following is needed only when using a
-				 * multisample-capable visual.
-				 *)
+				* The following is needed only when using a
+				* multisample-capable visual.
+				*)
 
 //				glDisable(GL_MULTISAMPLE_SGIS);
 
@@ -672,7 +673,7 @@ begin
 	end;
 
 	if FBackground <> baUser then
-		inherited; // FOnPaint Method
+		inherited Paint; // FOnPaint Method
 
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:

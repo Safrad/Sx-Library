@@ -1,17 +1,17 @@
 //* File:     Lib\uStyle.pas
 //* Created:  2000-08-01
-//* Modified: 2005-09-22
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uStyle;
 
 interface
 
 uses
-	uTypes, uDForm, uDBitmap, uDIni,
+	uTypes, uDForm, uDBitmap, uDIniFile,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	StdCtrls, uDButton, ExtCtrls, uDImage;
 
@@ -23,20 +23,20 @@ type
 		ButtonOk: TDButton;
 		ButtonCancel: TDButton;
 		ButtonApply: TDButton;
-    ButtonColor0: TDButton;
-    ButtonSelectFile: TDButton;
-    ButtonColor1: TDButton;
-    ComboBoxEffect: TComboBox;
-    ComboBoxLineSize: TComboBox;
-    Bevel1: TBevel;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    ImageSample: TDImage;
+		ButtonColor0: TDButton;
+		ButtonSelectFile: TDButton;
+		ButtonColor1: TDButton;
+		ComboBoxEffect: TComboBox;
+		ComboBoxLineSize: TComboBox;
+		Bevel1: TBevel;
+		Label1: TLabel;
+		Label2: TLabel;
+		Label3: TLabel;
+		ImageSample: TDImage;
 		procedure FormCreate(Sender: TObject);
 		procedure FormToData(Sender: TObject);
-    procedure ButtonColor0Click(Sender: TObject);
-    procedure ImageSampleFill(Sender: TObject);
+		procedure ButtonColor0Click(Sender: TObject);
+		procedure ImageSampleFill(Sender: TObject);
 	private
 		{ Private declarations }
 		TCurVal, TDefVal, NowVal: TDrawStyle;
@@ -58,7 +58,7 @@ function GetStyle(Prompt: string;
 implementation
 
 {$R *.dfm}
-uses uGColor, uStrings, uFormat;
+uses uGColor, uStrings, uOutputFormat;
 
 procedure TfStyle.FormCreate(Sender: TObject);
 var i: SG;

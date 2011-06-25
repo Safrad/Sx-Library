@@ -1,10 +1,10 @@
 //* File:     Lib\uMapInfo.pas
 //* Created:  1998-01-01
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-04-21
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uMapInfo;
 
@@ -62,7 +62,6 @@ const
 	end;
 
 procedure ReadMidMif(const MiName: string);
-label LRetry;
 var
 	FIn: TFile;
 	DBFileName: TFileName;
@@ -74,7 +73,6 @@ var
 	Po: Integer;
 	FieldMIndex: Integer;
 begin
-	FIn := TFile.Create;
 	FileIndex := 0;
 	FieldMCount := 0; SetLength(FieldsM, 0);
 	while FileIndex <= 1 do
@@ -83,125 +81,127 @@ begin
 			DBFileName := DataDir + MiName + '.mif'
 		else
 			DBFileName := DataDir + MiName + '.mid';
-		LRetry:
-		if FIn.Open(DbFileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-		begin
-			FieldMIndex := 0;
-			WhereMif := wmNone;
-			while not FIn.Eof do
+		FIn := TFile.Create;
+		try
+			if FIn.Open(DbFileName, fmReadOnly) then
 			begin
-				FIn.Readln(Line);
-				RemoveComment(Line);
-				if Line = '' then Continue;
-				InLineIndex := 1;
-				if FileIndex and 1 = 0 then
-				begin // MIF
-					case WhereMif of
-					wmNone:
-					begin
-						Po := Pos('Columns', Line);
-						if Po = 1 then
-						begin
-							WhereMif := wmType;
-{							InLineIndex := Po + 7;
-							FormatCount := GetNextInt(Line, InLineIndex);
-							SetLength(Formats, FormatCount);
-							FormatIndex := 0;}
-						end;
-					end;
-					wmType:
-					begin
-						if Pos('Data', Line) = 1 then
-						begin
-							WhereMif := wmData;
-						end;
-					end;
-					wmData:
-					begin
-						Po := Pos('Point', Line);
-						if Po <> 0 then
-						begin
-							NewSize := FieldMCount + 1;
-							if AllocByExp(Length(FieldsM), NewSize) then
-								SetLength(FieldsM, NewSize);
-							FieldsM[FieldMCount].Point.X := GetNextFloat(Line, InLineIndex);
-							FieldsM[FieldMCount].Point.Y := GetNextFloat(Line, InLineIndex);
-
-							Inc(FieldMCount);
-						end;
-					end;
-					end;
-				end
-				else
+				FieldMIndex := 0;
+				WhereMif := wmNone;
+				while not FIn.Eof do
 				begin
-					FieldsM[FieldMIndex].Kod := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
+					FIn.Readln(Line);
+					RemoveComment(Line);
+					if Line = '' then Continue;
+					InLineIndex := 1;
+					if FileIndex and 1 = 0 then
+					begin // MIF
+						case WhereMif of
+						wmNone:
+						begin
+							Po := Pos('Columns', Line);
+							if Po = 1 then
+							begin
+								WhereMif := wmType;
+	{							InLineIndex := Po + 7;
+								FormatCount := GetNextInt(Line, InLineIndex);
+								SetLength(Formats, FormatCount);
+								FormatIndex := 0;}
+							end;
+						end;
+						wmType:
+						begin
+							if Pos('Data', Line) = 1 then
+							begin
+								WhereMif := wmData;
+							end;
+						end;
+						wmData:
+						begin
+							Po := Pos('Point', Line);
+							if Po <> 0 then
+							begin
+								NewSize := FieldMCount + 1;
+								if AllocByExp(Length(FieldsM), NewSize) then
+									SetLength(FieldsM, NewSize);
+								FieldsM[FieldMCount].Point.X := GetNextFloat(Line, InLineIndex);
+								FieldsM[FieldMCount].Point.Y := GetNextFloat(Line, InLineIndex);
 
-					FieldsM[FieldMIndex].Nazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
+								Inc(FieldMCount);
+							end;
+						end;
+						end;
+					end
+					else
+					begin
+						FieldsM[FieldMIndex].Kod := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
 
-					FieldsM[FieldMIndex].PSC := DelCharsF(DelCharsF(DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter)), '-'), ' ');
-					if (Length(FieldsM[FieldMIndex].PSC) <> 0) then
-						SetLength(FieldsM[FieldMIndex].PSC, 5);
-					FieldsM[FieldMIndex].Typ := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
-					FieldsM[FieldMIndex].Prior := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
+						FieldsM[FieldMIndex].Nazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
 
-					FieldsM[FieldMIndex].GNazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
-					FieldsM[FieldMIndex].Vojvod := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
+						FieldsM[FieldMIndex].PSC := DelCharsF(DelCharsF(DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter)), '-'), ' ');
+						if (Length(FieldsM[FieldMIndex].PSC) <> 0) then
+							SetLength(FieldsM[FieldMIndex].PSC, 5);
+						FieldsM[FieldMIndex].Typ := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
+						FieldsM[FieldMIndex].Prior := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
+
+						FieldsM[FieldMIndex].GNazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
+						FieldsM[FieldMIndex].Vojvod := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
 
 
-(*					s := ReadToChar(Line, InLineIndex, Delimiter);
-					DelQuote(s);
-					FieldsM[FieldMIndex].NazevCo := s;
+	(*					s := ReadToChar(Line, InLineIndex, Delimiter);
+						DelQuote(s);
+						FieldsM[FieldMIndex].NazevCo := s;
 
-					s := ReadToChar(Line, InLineIndex, Delimiter);
-					DelQuote(s);
-					FieldsM[FieldMIndex].NazevObc := s;
-					ReadToChar(Line, InLineIndex, Delimiter);
-					ReadToChar(Line, InLineIndex, Delimiter);
-					ReadToChar(Line, InLineIndex, Delimiter);
+						s := ReadToChar(Line, InLineIndex, Delimiter);
+						DelQuote(s);
+						FieldsM[FieldMIndex].NazevObc := s;
+						ReadToChar(Line, InLineIndex, Delimiter);
+						ReadToChar(Line, InLineIndex, Delimiter);
+						ReadToChar(Line, InLineIndex, Delimiter);
 
-					s := ReadToChar(Line, InLineIndex, Delimiter);
-					DelQuote(s);
-					FieldsM[FieldMIndex].PSC99 := s;*)
+						s := ReadToChar(Line, InLineIndex, Delimiter);
+						DelQuote(s);
+						FieldsM[FieldMIndex].PSC99 := s;*)
 
-//				FieldsM[FieldMIndex].KodObc := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));}
-					Inc(FieldMIndex);
-//				Inc(LineIndex);
+	//				FieldsM[FieldMIndex].KodObc := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));}
+						Inc(FieldMIndex);
+	//				Inc(LineIndex);
+					end;
 				end;
+				FIn.Close;
 			end;
-			FIn.Close;
+		finally
+			FIn.Free;
 		end;
 		Inc(FileIndex);
 	end;
-	FIn.Free;
 end;
 
 procedure WriteMid(const MiName: string);
-label LRetry;
 var
 	FIn: TFile;
-	DBFileName: TFileName;
 	FieldMIndex: Integer;
 begin
 	FIn := TFile.Create;
-	DBFileName := DataDir + MiName + '.mid';
-	LRetry:
-	if FIn.Open(DbFileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		for FieldMIndex := 0 to FieldMCount - 1 do
+	try
+		if FIn.Open(DataDir + MiName + '.mid', fmRewrite) then
 		begin
-			FIn.Write(
-				IntToStr(FieldsM[FieldMIndex].Kod) + ',' +
-				'"' + FieldsM[FieldMIndex].Nazev + '",' +
-				'"' + FieldsM[FieldMIndex].PSC + '",' +
-				IntToStr(FieldsM[FieldMIndex].Typ) + ',' +
-				IntToStr(FieldsM[FieldMIndex].Prior) + ',' +
-				'"' + FieldsM[FieldMIndex].GNazev + '",' +
-				'"' + FieldsM[FieldMIndex].Vojvod + '"' + FileSep);
+			for FieldMIndex := 0 to FieldMCount - 1 do
+			begin
+				FIn.Write(
+					IntToStr(FieldsM[FieldMIndex].Kod) + ',' +
+					'"' + FieldsM[FieldMIndex].Nazev + '",' +
+					'"' + FieldsM[FieldMIndex].PSC + '",' +
+					IntToStr(FieldsM[FieldMIndex].Typ) + ',' +
+					IntToStr(FieldsM[FieldMIndex].Prior) + ',' +
+					'"' + FieldsM[FieldMIndex].GNazev + '",' +
+					'"' + FieldsM[FieldMIndex].Vojvod + '"' + FileSep);
+			end;
+			FIn.Truncate;
+			FIn.Close;
 		end;
-		FIn.Truncate;
-		FIn.Close;
+	finally
+		FIn.Free;
 	end;
-	FIn.Free;
 end;
 
 procedure FillData;

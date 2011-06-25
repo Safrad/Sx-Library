@@ -1,10 +1,10 @@
 //* File:     Lib\uDBitmap.pas
 //* Created:  1999-05-01
-//* Modified: 2005-11-27
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDBitmap;
 
@@ -20,17 +20,17 @@ uses
 	Classes, Forms, Windows, Graphics, ExtCtrls, SysUtils;
 
 const
-	IconExt = '.png';
+	IconExt = '.png'; // Prefered graphic format
 	PictureTypeCount = 8;
 	AllPictureExt: array[0..PictureTypeCount - 1] of string = (
-		'bmp', // Uncompresssed
-		'jpg', // Compresssed, losing format
-		'jpeg', // Compresssed, losing format
-		'jfif', // Compresssed, losing format
-		'gif', // Compresssed, not supports truecolor
-		'png', // Compresssed better that gif
+		'bmp', // Uncompresssed, doesn't support transparency
+		'jpg', 'jpeg', 'jfif', // Losing compresssion, doesn't support transparency
+		'gif', // Compresssed, doesn't support truecolor
+		'png', // Compresssed
 		'ppm', // Uncompresssed
 		'tga');// Uncompresssed
+		//'tif', 'tiff'
+		//'rle'
 	AllPictureDes: array[0..PictureTypeCount - 1] of string = (
 		'Windows or OS/2 Bitmaps',
 		'JPEG Compilant',
@@ -136,7 +136,7 @@ type
 		Value: FA; // 10
 	end;
 	TGraphNodes = array of TGraphNode;}
-  PDrawStyle = ^TDrawStyle;
+	PDrawStyle = ^TDrawStyle;
 	TDrawStyle = packed record // 16
 //		GenFunc: TGenFunc; // gsGen
 		Colors: array[0..1] of TColor; // gsSolid, gsGradient
@@ -272,19 +272,19 @@ type
 			const Func: TGenFunc; const Clock: UG; const Effect: TEffect);}
 
 		procedure GenerateRGBEx(XD1, YD1, XD2, YD2: SG;
-			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
+			const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
 			const Effect: TEffect; const Clock: UG;
 			const InterruptProcedure: TInterruptProcedure);
 		procedure GenerateRGB(
-			const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
+			const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
 			const Effect: TEffect;
 			const InterruptProcedure: TInterruptProcedure);
 		procedure FullRect;
 		procedure SetRect(XMin, YMin, XMax, YMax: TCoor);
 		procedure FormBitmap(Color: TColor);
-		procedure CopyBitmap(BmpS: TDBitmap); overload;
-		procedure CopyBitmap(BmpS: TBitmap); overload;
-		procedure GetBitmap(BmpD: TBitmap);
+		procedure FromBitmap(BmpS: TDBitmap); overload;
+		procedure FromBitmap(BmpS: TBitmap); overload;
+		procedure ToBitmap(BmpD: TBitmap);
 		procedure TryTransparent;
 
 		procedure Colors(BmpS: TDBitmap;
@@ -302,7 +302,7 @@ type
 			const InterruptProcedure: TInterruptProcedure);
 
 		procedure FTextOut(X, Y: SG;
-			RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; Text: ShortString);
+			RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; const Text: ShortString);
 
 		procedure GBlur(Radius: Double; const Horz, Vert: Boolean;
 			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
@@ -333,8 +333,6 @@ type
 //		property Canvas: TCanvas read GetCanvas;
 	end;
 
-// Multicommands
-procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
 procedure BitmapCopy(var BmpD: TDBitmap; BmpS: TDBitmap); // Create + SetSize + CopyData
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor); // Create + SetSize
 
@@ -392,7 +390,7 @@ implementation
 uses
 	Jpeg, GifImage, PngImage, PPMImage, TGAImage,
 	Math, ClipBrd, ExtDlgs, StdCtrls, Dialogs,
-	uGraph, uMsg, uScreen, uFiles, uGetInt, uStrings, uSysInfo, uInput, uFind, uSystem;
+	uGraph, uMsg, uScreen, uFiles, uGetInt, uStrings, uFind, uSystem;
 
 (*-------------------------------------------------------------------------*)
 function WidthToByteX4(const Width: UG): UG;
@@ -1396,16 +1394,6 @@ asm
 	pop edi
 end;
 
-procedure BitmapLoadFromFile(Bitmap: TBitmap; FileName: TFileName);
-var B: TDBitmap;
-begin
-//	Bitmap.LoadFromFile(FileName);
-	B := TDBitmap.Create;
-	B.LoadFromFile(FileName);
-	B.GetBitmap(Bitmap);
-	B.Free;
-end;
-
 // TDBitmap
 
 constructor TDBitmap.Create;
@@ -1468,7 +1456,8 @@ begin
 				SG(FGLData) := SG(FData) - FByteX * (FHeight - 1);
 			end;
 		except
-			on E: Exception do ErrorMsg(E.Message);
+			on E: Exception do
+				Fatal(E, Self);
 		end;
 {		HB := CreateBitmap(Width, Height, 1, 32, FGLData);
 		HB := SelectObject(FCanvas.Handle, HB);}
@@ -1584,80 +1573,77 @@ var
 	M: UG;
 begin
 	BmpC := TDBitmap.Create;
-	BmpC.SetSize(Wid, Hei);
-	BmpC.Resize(Wid, Hei, Self);
-	BmpC.SwapUD;
+	try
+		BmpC.SetSize(Wid, Hei);
+		BmpC.Resize(Wid, Hei, Self);
+		BmpC.SwapUD;
 
-	BmpColor := TBitmap.Create;
-	case NowBits of
-	1: BmpColor.PixelFormat := pf1bit;
-	4: BmpColor.PixelFormat := pf4bit;
-	8: BmpColor.PixelFormat := pf8bit;
-	15: BmpColor.PixelFormat := pf15bit;
-	16: BmpColor.PixelFormat := pf16bit;
-	24: BmpColor.PixelFormat := pf24bit;
-	else
-	BmpColor.PixelFormat := pf32bit;
-	end;
-	BmpColor.Width := Wid;
-	BmpColor.Height := Hei;
-	BmpColor.Canvas.Draw(0, 0, BmpC);
+		BmpColor := TBitmap.Create;
+		try
+			case NowBits of
+			1: BmpColor.PixelFormat := pf1bit;
+			4: BmpColor.PixelFormat := pf4bit;
+			8: BmpColor.PixelFormat := pf8bit;
+			15: BmpColor.PixelFormat := pf15bit;
+			16: BmpColor.PixelFormat := pf16bit;
+			24: BmpColor.PixelFormat := pf24bit;
+			else
+			BmpColor.PixelFormat := pf32bit;
+			end;
+			BmpColor.Width := Wid;
+			BmpColor.Height := Hei;
+			BmpColor.Canvas.Draw(0, 0, BmpC);
 
-	BmpMaskSize := MaxDiv(Wid * Hei, 8);
-	BmpMask := AllocMem(BmpMaskSize);
-	S := Pointer(BmpMask);
-	M := 1 shl 7;
-	for y := Hei - 1 downto 0 do
-	for x := 0 to Wid - 1 do
-	begin
-		GetPix(BmpC.FData, BmpC.FByteX, x, y, C);
-		if C.L = clPurple then
-		begin
-			S^ := S^ or M;
-			BmpColor.Canvas.Pixels[x, y] := clBlack;
+			BmpMaskSize := MaxDiv(Wid * Hei, 8);
+			BmpMask := AllocMem(BmpMaskSize);
+			try
+				S := Pointer(BmpMask);
+				M := 1 shl 7;
+				for y := Hei - 1 downto 0 do
+				for x := 0 to Wid - 1 do
+				begin
+					GetPix(BmpC.FData, BmpC.FByteX, x, y, C);
+					if C.L = clPurple then
+					begin
+						S^ := S^ or M;
+						BmpColor.Canvas.Pixels[x, y] := clBlack;
+					end;
+					if M = 1 then
+					begin
+						M := 1 shl 7;
+						Inc(SG(S), SizeOf(S^));
+					end
+					else
+						M := M shr 1;
+				end;
+
+			{	IconInfo.fIcon := True;
+				IconInfo.xHotspot := 0;
+				IconInfo.yHotspot := 0;
+				IconInfo.hbmMask := BmpMask.Handle;
+				IconInfo.hbmColor := BmpColor.Handle;}
+
+				Result := TIcon.Create;
+			//	Result.Handle := CreateIconIndirect(IconInfo); // Do not support more that 4 bits!
+				Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, NowBits,
+					BmpMask,
+					BmpColor.ScanLine[BmpColor.Height - 1]);
+
+			{	GetIconInfo(Result.Handle, IconInfo);
+			//	IconInfo.hbmMask := 0;
+				BmpColor.Handle := IconInfo.hbmColor;
+				BmpColor.Canvas.Ellipse(0, 0, 8, 8);}
+			finally
+				FreeMem(BmpMask);
+			end;
+		finally
+			BmpColor.Free;
 		end;
-		if M = 1 then
-		begin
-			M := 1 shl 7;
-			Inc(SG(S), SizeOf(S^));
-		end
-		else
-			M := M shr 1;
+	finally
+		BmpC.Free;
 	end;
-
-{	IconInfo.fIcon := True;
-	IconInfo.xHotspot := 0;
-	IconInfo.yHotspot := 0;
-	IconInfo.hbmMask := BmpMask.Handle;
-	IconInfo.hbmColor := BmpColor.Handle;}
-
-	Result := TIcon.Create;
-//	Result.Handle := CreateIconIndirect(IconInfo); // !!! not support more that 4bit
-	Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, NowBits,
-		BmpMask,
-		BmpColor.ScanLine[BmpColor.Height - 1]);
-
-{	GetIconInfo(Result.Handle, IconInfo);
-//	IconInfo.hbmMask := 0;
-	BmpColor.Handle := IconInfo.hbmColor;
-	BmpColor.Canvas.Ellipse(0, 0, 8, 8);}
-
-
-	FreeMem(BmpMask);
-	BmpColor.Free;
-	BmpC.Free;
 //	BmpMask.Free; *)
 end;
-
-{procedure TDBitmap.ReplaceIcon(Icon: TIcon);
-var
-	IconInfo: _ICONINFO;
-	BmpMask, BmpColor: TBitmap;
-	BmpC: TDBitmap;
-begin
-
-
-end;}
 
 procedure TDBitmap.LoadFromIcon(Icon: TIcon);
 begin
@@ -1686,9 +1672,7 @@ label LRetry;
 				Result := True;
 			except
 				on E: Exception do
-				begin
-					ErrorMsg(E.Message);
-				end;
+					Fatal(E, Self);
 			end;
 		end;
 		Stream.Free;
@@ -1710,147 +1694,147 @@ label LRetry;
 	begin
 		Result := False;
 		F := TFile.Create;
-		LRetry:
-		ReadStd := False;
-		if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-		begin
-			FSize := F.FileSize;
-			BitmapHead := AllocMem(BitmapHeadSize);
-			if FSize < BitmapHeadSize then
+		try
+			ReadStd := False;
+			if F.Open(FileName, fmReadOnly) then
 			begin
-				IOErrorMessage(FileName, 'File is truncated');
-				goto LFin;
-			end;
-			if not F.BlockRead(BitmapHead^, BitmapHeadSize) then goto LFin;
-			if BitmapHead.Id <> 'BM' then
-			begin
-				IOErrorMessage(FileName, 'File is not bitmap');
-				goto LFin;
-			end;
-			SetSize(BitmapHead.Width, BitmapHead.Height);
-			if BitmapHead.Compression <> 0 then
-			begin
-				ReadStd := True;
-//				IOErrorMessage(FileName, 'is compressed');
-				goto LFin;
-			end;
-			case BitmapHead.Bits of
-			4:
-			begin
-				ReallocMem(BitmapHead, BitmapHead.FileSize);
-				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
-
-				for y := 0 to BitmapHead.Height - 1 do
+				FSize := F.FileSize;
+				BitmapHead := AllocMem(BitmapHeadSize);
+				if FSize < BitmapHeadSize then
 				begin
-					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-//					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * SG(WidthToByteX4(BitmapHead.Width)));
-					P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX4(BitmapHead.Width)));
-					for x := 0 to BitmapHead.Width - 1 do
+					IOErrorMessage(FileName, 'File is truncated.');
+					goto LFin;
+				end;
+				if not F.BlockRead(BitmapHead^, BitmapHeadSize) then goto LFin;
+				if BitmapHead.Id <> 'BM' then
+				begin
+					IOErrorMessage(FileName, 'File is not bitmap.');
+					goto LFin;
+				end;
+				SetSize(BitmapHead.Width, BitmapHead.Height);
+				if BitmapHead.Compression <> 0 then
+				begin
+					ReadStd := True;
+					goto LFin;
+				end;
+				case BitmapHead.Bits of
+				4:
+				begin
+					ReallocMem(BitmapHead, BitmapHead.FileSize);
+					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+
+					for y := 0 to BitmapHead.Height - 1 do
 					begin
-						if (x and 1) = 0 then
+						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+	//					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * SG(WidthToByteX4(BitmapHead.Width)));
+						P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX4(BitmapHead.Width)));
+						for x := 0 to BitmapHead.Width - 1 do
 						begin
-							ColorIndex := P1^ shr 4;
-						end
-						else
+							if (x and 1) = 0 then
+							begin
+								ColorIndex := P1^ shr 4;
+							end
+							else
+							begin
+								ColorIndex := P1^ and $f;
+								Inc(P1);
+							end;
+
+							PD.R := BitmapHead.Colors[ColorIndex].R;
+							PD.G := BitmapHead.Colors[ColorIndex].G;
+							PD.B := BitmapHead.Colors[ColorIndex].B;
+							{$ifdef BPP4}
+							PD.A := 0;
+							{$endif}
+							Inc(PD);
+						end;
+					end;
+				end;
+				8:
+				begin
+					ReallocMem(BitmapHead, BitmapHead.FileSize);
+					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+
+					for y := 0 to BitmapHead.Height - 1 do
+					begin
+						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+	//					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * SG(WidthToByteX8(BitmapHead.Width)));
+						P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX8(BitmapHead.Width)));
+						for x := 0 to BitmapHead.Width - 1 do
 						begin
-							ColorIndex := P1^ and $f;
+							PD.R := BitmapHead.Colors[P1^].R;
+							PD.G := BitmapHead.Colors[P1^].G;
+							PD.B := BitmapHead.Colors[P1^].B;
+							{$ifdef BPP4}
+							PD.A := 0;
+							{$endif}
+							Inc(PD);
 							Inc(P1);
 						end;
-
-						PD.R := BitmapHead.Colors[ColorIndex].R;
-						PD.G := BitmapHead.Colors[ColorIndex].G;
-						PD.B := BitmapHead.Colors[ColorIndex].B;
-						{$ifdef BPP4}
-						PD.A := 0;
-						{$endif}
-						Inc(PD);
 					end;
 				end;
-			end;
-			8:
-			begin
-				ReallocMem(BitmapHead, BitmapHead.FileSize);
-				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
-
-				for y := 0 to BitmapHead.Height - 1 do
+				24:
 				begin
-					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-//					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * SG(WidthToByteX8(BitmapHead.Width)));
-					P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX8(BitmapHead.Width)));
-					for x := 0 to BitmapHead.Width - 1 do
+					{$ifdef BPP4}
+					ReallocMem(BitmapHead, BitmapHead.FileSize);
+					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+					for y := 0 to BitmapHead.Height - 1 do
 					begin
-						PD.R := BitmapHead.Colors[P1^].R;
-						PD.G := BitmapHead.Colors[P1^].G;
-						PD.B := BitmapHead.Colors[P1^].B;
-						{$ifdef BPP4}
-						PD.A := 0;
-						{$endif}
-						Inc(PD);
-						Inc(P1);
+						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+	//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX24(BitmapHead.Width)));
+						PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX24(BitmapHead.Width)));
+						for x := 0 to BitmapHead.Width - 1 do
+						begin
+							PD^ := PS^;
+							PD.A := 0;
+							Inc(SG(PS), 3);
+							Inc(PD);
+						end;
 					end;
+					{$else}
+					if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
+						BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
+					F.BlockRead(GLData^, BitmapHead.DataBytes);
+					{$endif}
 				end;
-			end;
-			24:
-			begin
-				{$ifdef BPP4}
-				ReallocMem(BitmapHead, BitmapHead.FileSize);
-				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
-				for y := 0 to BitmapHead.Height - 1 do
+				32:
 				begin
-					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX24(BitmapHead.Width)));
-					PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX24(BitmapHead.Width)));
-					for x := 0 to BitmapHead.Width - 1 do
+					if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
+						BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
+					{$ifdef BPP4}
+					F.BlockRead(GLData^, BitmapHead.DataBytes);
+					{$else}
+					ReallocMem(BitmapHead, BitmapHead.FileSize);
+					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+					for y := 0 to BitmapHead.Height - 1 do
 					begin
-						PD^ := PS^;
-						PD.A := 0;
-						Inc(SG(PS), 3);
-						Inc(PD);
+						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+	//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX32(BitmapHead.Width)));
+						PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX32(BitmapHead.Width)));
+						for x := 0 to BitmapHead.Width - 1 do
+						begin
+							PD.RG := PS.RG;
+							PD.B := PS.B;
+							Inc(SG(PS), 4);
+							Inc(PD);
+						end;
 					end;
+					{$endif}
 				end;
-				{$else}
-				if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
-					BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
-				F.BlockRead(GLData^, BitmapHead.DataBytes);
-				{$endif}
-			end;
-			32:
-			begin
-				if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
-					BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
-				{$ifdef BPP4}
-				F.BlockRead(GLData^, BitmapHead.DataBytes);
-				{$else}
-				ReallocMem(BitmapHead, BitmapHead.FileSize);
-				F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
-				for y := 0 to BitmapHead.Height - 1 do
-				begin
-					PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX32(BitmapHead.Width)));
-					PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX32(BitmapHead.Width)));
-					for x := 0 to BitmapHead.Width - 1 do
-					begin
-						PD.RG := PS.RG;
-						PD.B := PS.B;
-						Inc(SG(PS), 4);
-						Inc(PD);
-					end;
+				else
+					ReadStd := True;
+					goto LFin;
 				end;
-				{$endif}
-			end;
-			else
-				ReadStd := True;
-//				IOErrorMessage(FileName, 'Invalid pixel format');
-				goto LFin;
-			end;
-			Result := True;
+				Result := True;
 
-			LFin:
-			F.Close;
-			F.Free;
+				LFin:
+				F.Close;
+			end;
 			if ReadStd then
 				Result := ReadComp;
 			FreeMem(BitmapHead);
+		finally
+			F.Free;
 		end;
 	end;
 
@@ -1869,7 +1853,7 @@ begin
 	LRetry:
 	if FileExists(FileName) = False then
 	begin
-		if IOErrorMessageRetry(FileName, 'File not found.') then goto LRetry;
+		if IOErrorMessageRetry(FileName, ErrorCodeToStr(3)) then goto LRetry;
 		Exit;
 	end;
 	Ext := LowerCase(ExtractFileExt(FileName));
@@ -1897,9 +1881,7 @@ begin
 				Result := True;
 			except
 				on E: Exception do
-				begin
-					ErrorMsg(E.Message);
-				end;
+					Fatal(E, Self);
 			end;
 			MyJPEG.Free;
 		end;
@@ -1927,9 +1909,7 @@ begin
 				Result := True;
 			except
 				on E: Exception do
-				begin
-					ErrorMsg(E.Message);
-				end;
+					Fatal(E, Self);
 			end;
 			MyGif.Free;
 		end;
@@ -1954,9 +1934,7 @@ begin
 				Result := True;
 			except
 				on E: Exception do
-				begin
-					ErrorMsg(E.Message);
-				end;
+					Fatal(E, Self);
 			end;
 			MyPng.Free;
 		end;
@@ -1971,7 +1949,7 @@ begin
 			MyPpm := TPpmImage.Create;
 			try
 			MyPpm.LoadFromStream(Stream);
-			Self.CopyBitmap(MyPpm);
+			FromBitmap(MyPpm);
 {			SetSize(MyPpm.Width, MyPpm.Height);
 			Assign(MyPpm);}
 			MyPpm.Free;
@@ -1979,9 +1957,7 @@ begin
 			Result := True;
 			except
 				on E: Exception do
-				begin
-					ErrorMsg(E.Message);
-				end;
+					Fatal(E, Self);
 			end;
 		end;
 		Stream.Free;
@@ -1995,7 +1971,7 @@ begin
 			try
 			MyTga := TTgaImage.Create;
 			MyTga.LoadFromStream(Stream);
-			Self.CopyBitmap(MyTga);
+			FromBitmap(MyTga);
 {			SetSize(MyPpm.Width, MyPpm.Height);
 			Assign(MyPpm);}
 			MyTga.Free;
@@ -2003,9 +1979,7 @@ begin
 			Result := True;
 			except
 				on E: Exception do
-				begin
-					ErrorMsg(E.Message);
-				end;
+					Fatal(E, Self);
 			end;
 		end;
 		Stream.Free;
@@ -2022,9 +1996,7 @@ begin
 			Canvas.Draw(0, 0, Icon);
 		except
 			on E: Exception do
-			begin
-				ErrorMsg(E.Message);
-			end;
+				Fatal(E, Self);
 		end;
 		Icon.Free;
 		Result := True;
@@ -2039,7 +2011,7 @@ begin
 			except
 				on E: Exception do
 				begin
-					ErrorMessage(E.Message);
+					Fatal(E, Self);
 					MakeDefault;
 				end;
 			end;
@@ -2049,7 +2021,7 @@ begin
 	end
 	else
 	begin
-		ErrorMsg('Picture Format not Supported' + LineSep + FileName);
+		ErrorMsg('Picture format of file %1 not supported.', FileName);
 {			Picture := TPicture.Create;
 		try
 			Picture.LoadFromFile(FileName);
@@ -2100,11 +2072,12 @@ begin
 	begin
 		try
 			Stream := TMemoryStream.Create;
-			Self.SaveToStream(Stream);
+			SaveToStream(Stream);
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMsg(E.Message);
+			on E: Exception do
+				Fatal(E, Self);
 		end;
 	end
 	else if (Ext = 'jpg')
@@ -2127,7 +2100,8 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMsg(E.Message);
+			on E: Exception do
+				Fatal(E, Self);
 		end;
 		MyJPEG.Free;
 	end
@@ -2139,7 +2113,7 @@ begin
 
 //		ColorMapOptimizer := TColorMapOptimizer.Create;
 //		B := TBitmap.Create;
-//		TODO: B.LoadFromFile('C:\My Documents\www\~sachy.wz.cz\Icons\~Back.bmp');
+//		TODO: B.LoadFromFile(MyDocuments + 'www\~sachy.wz.cz\Icons\~Back.bmp');
 {	 CreateOptimizedPaletteFromSingleBitmap(Self,
 			Colors, ColorBits: SG; Windows: boolean):}
 //		B.Assign(Self);
@@ -2153,7 +2127,7 @@ begin
 		//		MyGif.DitherMode :=
 		MyBmp := TBitmap.Create;
 		MyBmp.PixelFormat := pf24bit;
-		GetBitmap(MyBmp);
+		ToBitmap(MyBmp);
 		MyGif.Assign(MyBmp);
 {		MyGif.Transparent := MyBmp.Transparent;
 		MyGif.BackgroundColor := MyBmp.TransparentColor;}
@@ -2162,7 +2136,7 @@ begin
 //		MyGif.Pack;
 //		B.Free;
 //		MyGif.GlobalColorMap
-//		Self.PixelFormat := pf24bit;
+//		PixelFormat := pf24bit;
 ///		MyGif.BitsPerPixel;
 //MyGif.Optimize(
 //		MyGif.OptimizeColorMap;
@@ -2173,7 +2147,8 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			FreeAndNil(Stream);
 		except
-			on E: Exception do ErrorMsg(E.Message);
+			on E: Exception do
+				Fatal(E, Self);
 		end;
 		FreeAndNil(MyBmp);
 		FreeAndNil(MyGif);
@@ -2181,12 +2156,13 @@ begin
 	else if Ext = 'png' then
 	begin
 		MyPng := TPngObject.Create;
-		if Transparent{Internet Explorer does not support true color transparency or (ColorCount(256) <= 256)} then
+(*		if Transparent{Internet Explorer does not support true color transparency or (ColorCount(256) <= 256)} then
 		begin
-(*			// Save as 8bit
+			// Save as 8bit
 			MyGif := TGifImage.Create;
 			MyGif.ColorReduction := rmQuantize; //rmQuantize;
-			MyGif.DitherMode := dmNearest; // pixelate backgroud color if ColorCount > 256
+			MyGif.DitherMode := dmFloydSteinberg;
+//			MyGif.DitherMode := dmNearest; // pixelate backgroud color if ColorCount > 256
 			MyGif.Assign(Self);
 			MyBmp := TBitmap.Create;
 			MyBmp.Assign(MyGif);
@@ -2194,23 +2170,26 @@ begin
 			MyBmp.TransparentColor := TransparentColor;
 			MyGif.Free;
 			MyPng.Assign(MyBmp);
-			MyBmp.Free; *)
-
-			MyBmp := TBitmap.Create;
-			Self.GetBitmap(MyBmp);
-			MyBmp.PixelFormat := pf8bit;
-			MyPng.Assign(MyBmp);
+			MyPng.TransparentColor := TransparentColor; // DNW
 			MyBmp.Free;
+
+{			MyBmp := TBitmap.Create;
+			ToBitmap(MyBmp);
+//			MyBmp.PixelFormat := pf8bit; // Lose transparency!
+			MyPng.Assign(MyBmp);
+			MyBmp.Free;}
 		end
-		else
+		else *)
 			MyPng.Assign(Self);
 		try
+			MyPng.CompressionLevel := 9;
 			Stream := TMemoryStream.Create;
 			MyPng.SaveToStream(Stream);
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMsg(E.Message);
+			on E: Exception do
+				Fatal(E, Self);
 		end;
 		MyPng.Free;
 	end
@@ -2224,7 +2203,8 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMsg(E.Message);
+			on E: Exception do
+				Fatal(E, Self);
 		end;
 		MyPpm.Free;
 	end
@@ -2238,7 +2218,8 @@ begin
 			Result := WriteStreamToFile(FileName, Stream);
 			Stream.Free;
 		except
-			on E: Exception do ErrorMsg(E.Message);
+			on E: Exception do
+				Fatal(E, Self);
 		end;
 		MyTga.Free;
 	end
@@ -2257,7 +2238,7 @@ begin
 		end
 		else}
 	begin
-		IOErrorMessage(FileName, 'Picture Format not Supported');
+		IOErrorMessage(FileName, 'Picture format not supported.');
 	end;
 end;
 
@@ -2277,28 +2258,26 @@ begin
 end;
 
 (*-------------------------------------------------------------------------*)
-procedure TDBitmap.CopyBitmap(BmpS: TDBitmap);
+procedure TDBitmap.FromBitmap(BmpS: TDBitmap);
 begin
 	if BmpS = nil then Exit;
 	SetSize(BmpS.Width, BmpS.Height);
+	Move(BmpS.GLData^, FGLData^, FByteX * FHeight);//	Bmp(0, 0, BmpS, ef16);
 	Transparent := BmpS.Transparent;
 	TransparentColor := BmpS.TransparentColor;
-//	Bmp(0, 0, BmpS, clNone, ef16);
-
-	Move(BmpS.GLData^, FGLData^, FByteX * FHeight);
 end;
 
-procedure TDBitmap.CopyBitmap(BmpS: TBitmap);
+procedure TDBitmap.FromBitmap(BmpS: TBitmap);
 begin
 	if BmpS = nil then Exit;
 	SetSize(BmpS.Width, BmpS.Height);
-	Transparent := BmpS.Transparent;
-	TransparentColor := BmpS.TransparentColor;
 	BitBlt(Canvas.Handle, 0, 0, BmpS.Width, BmpS.Height,
 		BmpS.Canvas.Handle, 0, 0, SRCCOPY);
+	Transparent := BmpS.Transparent;
+	TransparentColor := BmpS.TransparentColor;
 end;
 
-procedure TDBitmap.GetBitmap(BmpD: TBitmap);
+procedure TDBitmap.ToBitmap(BmpD: TBitmap);
 begin
 	if Assigned(BmpD) then
 	begin
@@ -2307,7 +2286,7 @@ begin
 		BmpD.PixelFormat := FPixelFormat;
 		BitBlt(BmpD.Canvas.Handle, 0, 0, Width, Height, Canvas.Handle, 0, 0, SRCCOPY);
 		BmpD.Transparent := Transparent;
-		BmpD.TransparentColor := TransparentColor;
+		BmpD.TransparentColor := TransparentColor; // Bad transparency, and where? Required for Menu
 	end
 	else
 		Assert(False);
@@ -2431,7 +2410,7 @@ begin
 	{$endif}
 	BmpD := TDBitmap.Create;
 	BmpD.SetSize(BmpS.Width, BmpS.Height);
-	BmpD.CopyBitmap(BmpS);
+	BmpD.FromBitmap(BmpS);
 end;
 
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor);
@@ -4804,8 +4783,8 @@ begin
 
 	for i := 0 to Lines - 1 do
 	begin
-{		Pix(Self.FData, Self.ByteX, X1 + i, Y2 - i, @CR12, Effect);
-		Pix(Self.FData, Self.ByteX, X2 - i, Y1 + i, @CR12, Effect);}
+{		Pix(FData, ByteX, X1 + i, Y2 - i, @CR12, Effect);
+		Pix(FData, ByteX, X2 - i, Y1 + i, @CR12, Effect);}
 		Line(X1 + i,   Y1 + i,   X2 - i - 1, Y1 + i,   C1, Effect); //-
 		Line(X1 + i,   Y1 + i + 1, X1 + i,   Y2 - i - 1, C1, Effect); //|
 		Line(X1 + i + 1, Y2 - i,   X2 - i,   Y2 - i,   C2, Effect); //-
@@ -4905,7 +4884,7 @@ begin
 
 	if BmpS.Data = nil then Exit;
 
-	Assert((BmpS <> nil) and (BmpS.Data <> nil) and (Self <> nil) and (Self.Data <> nil));
+	Assert((BmpS <> nil) and (BmpS.Data <> nil) and (Self <> nil) and (FData <> nil));
 	if XS2 < BmpS.GraphMinX then Exit;
 	if YS2 < BmpS.GraphMinY then Exit;
 	if XS2 > BmpS.GraphMaxX then XS2 := BmpS.GraphMaxX;
@@ -7401,7 +7380,7 @@ begin
 	begin
 		if BmpS.Data <> Data then
 		begin
-			CopyBitmap(BmpS);
+			FromBitmap(BmpS);
 		end;
 		Exit;
 	end;
@@ -7521,7 +7500,7 @@ begin
 	if BmpS.Data = Data then
 	begin
 		SetSize(NewX, NewY);
-		CopyBitmap(BmpDe);
+		FromBitmap(BmpDe);
 		FreeAndNil(BmpDe);
 	end;
 end;
@@ -7551,7 +7530,7 @@ procedure TDBitmap.RotateRight(const Effect: TEffect);
 var BmpS: TDBitmap;
 begin
 	BmpS := TDBitmap.Create;
-	BmpS.CopyBitmap(Self);
+	BmpS.FromBitmap(Self);
 	SetSize(FHeight, FWidth);
 	RotateDef(Self, BmpS, 0, AngleCount div 4, Effect);
 	BmpS.Free;
@@ -7596,7 +7575,9 @@ end;
 function GetColors(Source: U1; Brig, Cont, Gamma: SG): U1;
 var W: SG;
 begin
-	if Gamma < 0 then Gamma := 0;
+	Assert(Gamma > 0);
+	if Gamma <= 0 then Gamma := 1;
+
 	if Source = 0 then
 		W := 0
 	else
@@ -7768,7 +7749,7 @@ var
 
 procedure TDBitmap.GenerateRGBEx(
 	XD1, YD1, XD2, YD2: SG;
-	const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
+	const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
 	const Effect: TEffect; const Clock: UG;
 	const InterruptProcedure: TInterruptProcedure);
 var
@@ -7900,26 +7881,26 @@ begin
 			gfTriaHorz:
 			begin
 				R := 355
-				 - SG(X shl 8 div MaxX)
-				 - SG(Y shl 8 div MaxY);
+					- SG(X shl 8 div MaxX)
+					- SG(Y shl 8 div MaxY);
 				G := 320
-				 - SG(((MaxYD - Y) shl 8) div MaxY)
-				 - SG((Abs(2 * X - MaxXD) shl 7) div MaxX);
+					- SG(((MaxYD - Y) shl 8) div MaxY)
+					- SG((Abs(2 * X - MaxXD) shl 7) div MaxX);
 				B := 355
-				 - ((MaxXD - X) shl 8) div MaxX
-				 - (Y shl 8) div MaxY;
+					- ((MaxXD - X) shl 8) div MaxX
+					- (Y shl 8) div MaxY;
 			end;
 			gfTriaVert:
 			begin
 				R := 355
-				 - (Y shl 8) div MaxY
-				 - (X shl 8) div MaxX;
+					- (Y shl 8) div MaxY
+					- (X shl 8) div MaxX;
 				G := 320
-				 - ((MaxXD - X) shl 8) div MaxX
-				 - (Abs(Y - MaxYD shr 1) shl 8) div MaxY;
+					- ((MaxXD - X) shl 8) div MaxX
+					- (Abs(Y - MaxYD shr 1) shl 8) div MaxY;
 				B := 355
-				 - ((MaxYD - Y) shl 8) div MaxY
-				 - (X shl 8) div MaxX;
+					- ((MaxYD - Y) shl 8) div MaxY
+					- (X shl 8) div MaxX;
 			end;
 			gfLineHorz:
 			begin
@@ -7978,20 +7959,20 @@ begin
 			gfFadeHorz:
 			begin
 				R :=
-				 ((C[1].R * X) + (C[0].R * (MaxXD - X))) div MaxX;
+					((C[1].R * X) + (C[0].R * (MaxXD - X))) div MaxX;
 				G :=
-				 ((C[1].G * X) + (C[0].G * (MaxXD - X))) div MaxX;
+					((C[1].G * X) + (C[0].G * (MaxXD - X))) div MaxX;
 				B :=
-				 ((C[1].B * X) + (C[0].B * (MaxXD - X))) div MaxX;
+					((C[1].B * X) + (C[0].B * (MaxXD - X))) div MaxX;
 			end;
 			gfFadeVert:
 			begin
 				R :=
-				 ((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div MaxY;
+					((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div MaxY;
 				G :=
-				 ((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div MaxY;
+					((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div MaxY;
 				B :=
-				 ((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div MaxY;
+					((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div MaxY;
 			end;
 			gfFade2x:
 			begin
@@ -7999,14 +7980,14 @@ begin
 				G := (LineX[X].G + LineY[Y].G) shr 1;
 				B := (LineX[X].B + LineY[Y].B) shr 1;
 {				R :=
-				 ((C[1].R * X) + (C[0].R * (MaxXD - X))) div (MaxX2D)
-				 + ((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div (MaxY2D);
+					((C[1].R * X) + (C[0].R * (MaxXD - X))) div (MaxX2D)
+					+ ((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div (MaxY2D);
 				G :=
-				 ((C[1].G * X) + (C[0].G * (MaxXD - X))) div (MaxX2D)
-				 + ((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div (MaxY2D);
+					((C[1].G * X) + (C[0].G * (MaxXD - X))) div (MaxX2D)
+					+ ((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div (MaxY2D);
 				B :=
-				 ((C[1].B * X) + (C[0].B * (MaxXD - X))) div (MaxX2D)
-				 + ((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div (MaxY2D);}
+					((C[1].B * X) + (C[0].B * (MaxXD - X))) div (MaxX2D)
+					+ ((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div (MaxY2D);}
 			end;
 			gfFadeIOH:
 			begin
@@ -8111,7 +8092,7 @@ begin
 end;
 
 procedure TDBitmap.GenerateRGB(
-	const Func: TGenFunc; var Co: array of TColor; RandEffect: TColor;
+	const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
 	const Effect: TEffect;
 	const InterruptProcedure: TInterruptProcedure);
 begin
@@ -9095,7 +9076,7 @@ begin
 	end;
 	if Same then
 	begin
-		BmpS.CopyBitmap(BmpD);
+		BmpS.FromBitmap(BmpD);
 		BmpD.Free;
 	end;
 end;
@@ -9251,7 +9232,7 @@ var
 	Letter: TDBitmap;
 
 procedure TDBitmap.FTextOut(X, Y: SG;
-	RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; Text: ShortString);
+	RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; const Text: ShortString);
 var
 	c, i, FX: SG;
 	CB: TColor;
@@ -9261,7 +9242,7 @@ begin
 	if FontReaded[RasterFontStyle] = False then
 	begin
 		FontBitmap[RasterFontStyle] := TDBitmap.Create;
-		FontBitmap[RasterFontStyle].LoadFromFile(GraphDir + FontNames[RasterFontStyle] + IconExt);
+		FontBitmap[RasterFontStyle].LoadFromFile(GraphDir + 'Font' + FontNames[RasterFontStyle] + IconExt);
 		FontBitmap[RasterFontStyle].Transparent := False;
 		FontReaded[RasterFontStyle] := True;
 	end;
@@ -9541,9 +9522,9 @@ type
 
 			temp := 0;
 			for j := Low(K.Weights) to High(K.Weights) do
-				 temp := temp + K.Weights[j];
+				temp := temp + K.Weights[j];
 			for j := Low(K.Weights) to High(K.Weights) do
-				 K.Weights[j] := K.Weights[j] / temp;
+				K.Weights[j] := K.Weights[j] / temp;
 
 
 		//now discard (or rather mark as ignorable by setting Size)
@@ -9740,7 +9721,7 @@ begin
 				yy := y;
 			end;
 			GetPix(BmpS.FData, BmpS.FByteX, xx, yy, C);
-			Pix(Self.FData, Self.FByteX, x, y, @C, ef16);
+			Pix(FData, FByteX, x, y, @C, ef16);
 		end;
 	end;
 end;
@@ -10332,9 +10313,9 @@ end; *)
 function TDBitmap.GetRect: TRect;
 begin
 	Result.Left := GraphMinX;
-	Result.Right := GraphMaxX;
+	Result.Right := GraphMaxX + 1;
 	Result.Top := GraphMinY;
-	Result.Bottom := GraphMaxY;
+	Result.Bottom := GraphMaxY + 1;
 end;
 
 procedure TDBitmap.Texturize;
@@ -10342,7 +10323,7 @@ var
 	B: TDBitmap;
 begin
 	B := TDBitmap.Create;
-	B.CopyBitmap(Self);
+	B.FromBitmap(Self);
 	SetSize(Width * 2, Height * 2);
 
 	Bmp(0, 0, B, ef16);
@@ -10365,7 +10346,7 @@ var
 	E: TEffect;
 begin
 	B := TDBitmap.Create;
-	B.CopyBitmap(Self);
+	B.FromBitmap(Self);
 
 	for i := 0 to 15 * Step - 1 do
 	begin
@@ -10393,11 +10374,6 @@ procedure TDBitmap.DrawToDC(DC: HDC; Left, Top: SG);
 begin
 	BitBlt(DC, Left, Top, Width, Height, Canvas.Handle, 0, 0, SRCCOPY);
 end;
-{
-function TDBitmap.GetCanvas: TCanvas;
-begin
-	Result := Canvas;
-end;}
 
 procedure TDBitmap.GetDirtyImage(out R: TRect);
 var
@@ -10436,7 +10412,6 @@ begin
 				R.Left := x;
 			end;
 		end;
-
 	end;
 end;
 

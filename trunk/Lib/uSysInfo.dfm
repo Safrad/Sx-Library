@@ -1,6 +1,6 @@
 object fSysInfo: TfSysInfo
-  Left = 593
-  Top = 173
+  Left = 953
+  Top = 306
   BorderStyle = bsDialog
   Caption = 'System Info'
   ClientHeight = 320
@@ -123,16 +123,6 @@ object fSysInfo: TfSysInfo
     Transparent = True
     Layout = tlCenter
   end
-  object LabelDisk: TLabel
-    Left = 8
-    Top = 248
-    Width = 89
-    Height = 19
-    AutoSize = False
-    Caption = 'Disk'
-    Transparent = True
-    Layout = tlCenter
-  end
   object DLabelCPUFrequency: TLabel
     Left = 8
     Top = 88
@@ -243,39 +233,6 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 11
   end
-  object edDiskU: TDEdit
-    Left = 112
-    Top = 248
-    Width = 57
-    Height = 19
-    BevelKind = bkSoft
-    BorderStyle = bsNone
-    Color = clBtnFace
-    ReadOnly = True
-    TabOrder = 12
-  end
-  object edDiskF: TDEdit
-    Left = 176
-    Top = 248
-    Width = 57
-    Height = 19
-    BevelKind = bkSoft
-    BorderStyle = bsNone
-    Color = clBtnFace
-    ReadOnly = True
-    TabOrder = 13
-  end
-  object edDiskT: TDEdit
-    Left = 240
-    Top = 248
-    Width = 57
-    Height = 19
-    BevelKind = bkSoft
-    BorderStyle = bsNone
-    Color = clBtnFace
-    ReadOnly = True
-    TabOrder = 14
-  end
   object EditOS: TDEdit
     Left = 64
     Top = 9
@@ -357,7 +314,7 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 15
+    TabOrder = 12
   end
   object ComboBoxSize: TComboBox
     Left = 216
@@ -366,6 +323,6 @@ object fSysInfo: TfSysInfo
     Height = 21
     Style = csDropDownList
     ItemHeight = 13
-    TabOrder = 16
+    TabOrder = 13
   end
 end

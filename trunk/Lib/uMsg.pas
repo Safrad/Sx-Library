@@ -1,22 +1,57 @@
+//* File:     Lib\uMsg.pas
+//* Created:  2000-08-01
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uMsg;
 
 interface
 
 uses
 	SysUtils,
-	uTypes{$ifndef Console}, uError{$endif};
+	Consts,
+	uTypes;
 
-procedure Information(const Text: string);
-procedure ErrorMsg(const Text: string); overload;
+function ReplaceParam(const Text, Param: string): string;
+
+var
+	MsgTypeStr: array[TMsgType] of string;
+
+procedure ShowMessage(const MsgType: TMsgType; const ExpandedText: string); overload;
+procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: string); overload;
+
+{$ifopt d+}
+procedure Debug(const Text: string; const Param: string = '');
+procedure IE(const Text: string); // Internal Error
+{$endif}
+procedure Information(const Text: string; const Param: string = '');
+procedure Warning(const Text: string; const Param: string = '');
+procedure ErrorMsg(const Text: string; const Param: string = ''); overload;
 procedure ErrorMsg(const ErrorCode: SG); overload;
+procedure Fatal(const E: Exception; const C: TObject);
+
 function ErrorRetry(const Text: string): BG;
 function ErrorCodeToStr(const ErrorCode: U4): string;
-procedure Warning(const Text: string; const Param: string = '');
-{$ifopt d+}
-procedure Debug(const Text: string);
-procedure IE(const Text: string);
+{$ifndef Console}
+type
+	TDlgBtn = (
+		mbOK, mbYes, mbYesToAll,
+		mbRetry, mbIgnore, mbAbort,
+		mbDelete, mbDeleteAll,
+		mbNo, mbNoToAll, mbCancel);
+	TDlgButtons = set of TDlgBtn;
+const
+	DlgBtnNames: array[TDlgBtn] of string = (
+		SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll,
+		SMsgDlgRetry, SMsgDlgIgnore, SMsgDlgAbort,
+		'&Delete', 'Delete All',
+		SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel);
+
+function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 {$endif}
-{$ifndef Console}function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;{$endif}
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 function IOErrorRetry(var FileName: TFileName; const ErrorCode: U4): BG;
 procedure IOErrorMessage(FileName: TFileName; const ErrorMsg: string);
@@ -26,28 +61,69 @@ implementation
 
 uses
 	Windows,
-	uStrings, uLog;
+	uStrings, uLog{$ifndef Console}, uMsgDlg{$endif};
 
-procedure Information(const Text: string);
+function ReplaceParam(const Text, Param: string): string;
 begin
-//	Log.Add(Text, ltInformation);
+	if Param <> '' then
+	begin
+		if Pos('%1', Text) = 0 then
+			Result := Text + LineSep + Param
+		else
+			Result := ReplaceF(Text, '%1', '''' + Param + '''')
+	end
+	else
+		Result := Text;
+end;
+
+procedure ShowMessage(const MsgType: TMsgType; const ExpandedText: string); overload;
+begin
+	MainLogAdd(ExpandedText, MsgType);
 	{$ifndef Console}
-	MessageD(Text, mtInformation, [mbOk]);
-//	MessageDlg(Text, mtInformation, [mbOk], 0);
+	MessageD(ExpandedText, '', MsgType, [mbOk]);
 	{$else}
-	Writeln('Information: ' + Text);
+	Writeln(MsgTypeNames[MsgType] + OneLine(Text));
 	{$endif}
 end;
 
-procedure ErrorMsg(const Text: string);
+procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: string); overload;
+var
+	ExpandedText: string;
 begin
-	MainLogAdd(Text, ltError);
+	ExpandedText := ReplaceParam(Text, Param);
+	MainLogAdd(ExpandedText, MsgType);
 	{$ifndef Console}
-	MessageD(Text, mtError, [mbAbort]);
-//	MessageDlg(Text, mtInformation, [mbAbort], 0);
+	MessageD(Text, Param, MsgType, [mbOk]);
 	{$else}
-	Writeln('Error: ' + Text);
+	Writeln(MsgTypeNames[MsgType] + OneLine(Text));
 	{$endif}
+end;
+
+{$ifopt d+}
+procedure Debug(const Text: string; const Param: string = '');
+begin
+	ShowMessage(mtDebug, Text, Param);
+end;
+
+procedure IE(const Text: string);
+begin
+	ShowMessage(mtFatalError, Text);
+end;
+{$endif}
+
+procedure Information(const Text: string; const Param: string = '');
+begin
+	ShowMessage(mtInformation, Text, Param);
+end;
+
+procedure Warning(const Text: string; const Param: string = '');
+begin
+	ShowMessage(mtWarning, Text, Param);
+end;
+
+procedure ErrorMsg(const Text: string; const Param: string = '');
+begin
+	ShowMessage(mtError, Text, Param);
 end;
 
 procedure ErrorMsg(const ErrorCode: SG);
@@ -55,9 +131,20 @@ begin
 	ErrorMsg(ErrorCodeToStr(ErrorCode));
 end;
 
+procedure Fatal(const E: Exception; const C: TObject);
+var
+	ExpandedText: string;
+begin
+	if C = nil then
+		ExpandedText := E.Message
+	else
+		ExpandedText := ReplaceParam(E.Message + ' in class %1', C.ClassName);
+	MainLogAdd(ExpandedText, mtFatalError);
+end;
+
 function ErrorRetry(const Text: string): BG;
 begin
-	MainLogAdd(Text, ltError);
+	MainLogAdd(Text, mtError);
 	{$ifndef Console}
 	Result := MessageD(Text, mtError, [mbRetry, mbIgnore]) <> mbIgnore;
 	{$else}
@@ -86,44 +173,6 @@ begin
 	Result := 'ErrorCode ' + IntToStr(ErrorCode) + ' - ' + Result;
 end;
 
-procedure Warning(const Text: string; const Param: string = ''); // TODO : Params for all and MessageD
-var
-	ExpandedText: string;
-begin
-	ExpandedText := ReplaceF(Text, '%1', Param);
-	MainLogAdd(ExpandedText, ltWarn);
-	{$ifndef Console}
-	MessageD(ExpandedText, mtWarning, [mbOk]);
-//	MessageDlg(Text, mtWarning, [mbOk], 0);
-	{$else}
-	Writeln('Warning: ' + ExpandedText);
-	{$endif}
-end;
-
-procedure Debug(const Text: string);
-begin
-	MainLogAdd(Text, ltDebug);
-	{$ifndef Console}
-	MessageD(Text, mtDebug, [mbOk]);
-//	MessageDlg(Text, mtDebug, [mbOk], 0);
-	{$else}
-	Writeln('Debug: ' + OneLine(Text));
-	{$endif}
-end;
-
-{$ifopt d+}
-procedure IE(const Text: string);
-begin
-	MainLogAdd(Text, ltDebug);
-	{$ifndef Console}
-	MessageD(Text, mtError, [mbOk]);
-//	MessageDlg(Text, mtDebug, [mbOk], 0);
-	{$else}
-	Writeln('Debug: ' + OneLine(Text));
-	{$endif}
-end;
-{$endif}
-
 {$ifndef Console}
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
@@ -145,9 +194,9 @@ procedure IOErrorMessage(FileName: TFileName; const ErrorMsg: string);
 var Text: string;
 begin
 	Text := ErrorMsg + ': ' + FileName;
-	MainLogAdd(Text, ltError);
+	MainLogAdd(Text, mtError);
 	{$ifndef Console}
-	DoForm(FileName, ErrorMsg, False, mtIO, [], DlgWait);
+	MsgDlg(ErrorMsg, FileName, False, mtError, [SMsgDlgOK], DlgWait);
 	{$else}
 	Writeln('I/O Error: ' + OneLine(Text));
 	{$endif}
@@ -161,9 +210,9 @@ var
 	{$endif}
 begin
 	Text := ErrorMsg + ': ' + FileName;
-	MainLogAdd(Text, ltError);
+	MainLogAdd(Text, mtError);
 	{$ifndef Console}
-	Result := DoForm(FileName, ErrorMsg, True, mtIO, [], DlgWait) > 1;
+	Result := MsgDlg(ErrorMsg, FileName, True, mtError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) <> 1;
 	{$else}
 	Writeln('I/O Error: ' + OneLine(Text));
 	Writeln('Press [R]etry or [I]gnore.');
@@ -172,4 +221,6 @@ begin
 	{$endif}
 end;
 
+initialization
+	EnumToStr(TypeInfo(TMsgType), MsgTypeStr);
 end.

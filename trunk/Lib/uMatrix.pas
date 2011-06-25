@@ -1,10 +1,10 @@
 //* File:     Lib\uMatrix.pas
 //* Created:  2004-03-19
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uMatrix;
 
@@ -39,7 +39,7 @@ type
 
 implementation
 
-uses uStrings, uFormat;
+uses uStrings, uOutputFormat;
 
 // TMatrix
 

@@ -1,10 +1,10 @@
 //* File:     Lib\uMemStatus.pas
 //* Created:  2000-05-01
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uMemStatus;
 
@@ -23,28 +23,28 @@ type
 	TfMemStatus = class(TDForm)
 		Timer1: TDTimer;
 		ButtonStart: TDButton;
-    LabelAllocMemCount: TDLabel;
-    LabelAllocMemSize: TDLabel;
-    LabelTotalAddrSpace: TDLabel;
-    LabelTotalUncommited: TDLabel;
-    LabelTotalAllocated: TDLabel;
-    LabelTotalFree: TDLabel;
-    LabelFreeSmall: TDLabel;
-    LabelFreeBig: TDLabel;
-    LabelUnused: TDLabel;
-    LabelOverhead: TDLabel;
-    LabelHeapErrorCode: TDLabel;
-    LabelTotalCommited: TDLabel;
+		LabelAllocMemCount: TDLabel;
+		LabelAllocMemSize: TDLabel;
+		LabelTotalAddrSpace: TDLabel;
+		LabelTotalUncommited: TDLabel;
+		LabelTotalAllocated: TDLabel;
+		LabelTotalFree: TDLabel;
+		LabelFreeSmall: TDLabel;
+		LabelFreeBig: TDLabel;
+		LabelUnused: TDLabel;
+		LabelOverhead: TDLabel;
+		LabelHeapErrorCode: TDLabel;
+		LabelTotalCommited: TDLabel;
 		Bevel1: TBevel;
 		Bevel2: TBevel;
-    ButtonOk: TDButton;
+		ButtonOk: TDButton;
 		procedure Timer1Timer(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure ButtonStartClick(Sender: TObject);
 		procedure ButtonStopClick(Sender: TObject);
-    procedure ButtonOkClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormHide(Sender: TObject);
+		procedure ButtonOkClick(Sender: TObject);
+		procedure FormShow(Sender: TObject);
+		procedure FormHide(Sender: TObject);
 	private
 		{ Private declarations }
 		LabelX: array[0..MaxHistory, 0..MaxLabel] of TDLabel;
@@ -59,7 +59,7 @@ var
 implementation
 
 {$R *.DFM}
-uses uTypes, uFormat;
+uses uTypes, uOutputFormat;
 
 procedure TfMemStatus.Timer1Timer(Sender: TObject);
 var

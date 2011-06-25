@@ -1,10 +1,10 @@
 //* File:     Lib\uScores.pas
 //* Created:  2000-10-01
-//* Modified: 2005-10-31
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uScores;
 
@@ -23,7 +23,7 @@ type
 		ImageHigh: TDImage;
 		procedure FormCreate(Sender: TObject);
 		procedure ImageHighFill(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 	private
 		{ Private declarations }
 		procedure RWOptions(const Save: Boolean);
@@ -39,7 +39,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uFormat, uFiles, uError, uDIni, uDBitmap, uGraph, uScreen, uGetStr, uColor;
+	uOutputFormat, uFiles, uDIniFile, uDBitmap, uGraph, uScreen, uGetStr, uColor;
 
 var
 	fScores: TfScores;
@@ -59,7 +59,6 @@ var
 	ScoresFileName: TFileName;
 
 procedure ReadScores(FileName: TFileName);
-label LRetry;
 var
 	F: TFile;
 begin
@@ -70,30 +69,32 @@ begin
 	end;
 
 	F := TFile.Create;
-	LRetry:
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if not F.BlockRead(Highs, SizeOf(Highs)) then goto LRetry;
-
-		if not F.Close then goto LRetry;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			F.BlockRead(Highs, SizeOf(Highs));
+			F.Close;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
 procedure WriteScores;
-label LRetry;
 var
 	F: TFile;
 begin
 	F := TFile.Create;
-	LRetry:
-	if F.Open(ScoresFileName, fmWriteOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		if not F.BlockWrite(Highs, SizeOf(Highs)) then goto LRetry;
-		F.Truncate;
-		if not F.Close then goto LRetry;
+	try
+		if F.Open(ScoresFileName, fmRewrite) then
+		begin
+			F.BlockWrite(Highs, SizeOf(Highs));
+			F.Truncate;
+			F.Close;
+		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
 procedure SetScoresFileName(FileName: TFileName);
@@ -248,9 +249,9 @@ begin
 			Bmp.Canvas.TextOut(RowX[1] + 3, ColSize * (i + 1) + 5,
 				Highs[i].Name);
 			Bmp.Canvas.TextOut(RowX[2] + 3, ColSize * (i + 1) + 5,
-				DTToStr(Highs[i].DateTime));
+				DateTimeToS(Highs[i].DateTime, 0, ofDisplay));
 			Bmp.Canvas.TextOut(RowX[3] + 3, ColSize * (i + 1) + 5,
-				msToStr(Highs[i].GameTime, diMSD, 0, False));
+				MsToStr(Highs[i].GameTime, diMSD, 0, False));
 		end;
 	end;
 end;

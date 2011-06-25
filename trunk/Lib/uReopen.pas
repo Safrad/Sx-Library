@@ -1,10 +1,10 @@
 //* File:     Lib\uReopen.pas
 //* Created:  1999-12-01
-//* Modified: 2005-09-12
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uReopen;
 
@@ -70,7 +70,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math,
-	uFiles, uDIni, uGetInt, uGraph, uDBitmap, uLog, uMenus, uStrings, uFormat;
+	uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uLog, uMenus, uStrings, uOutputFormat;
 
 var
 	ReopenBitmaps: array[TReopenExists] of TBitmap;
@@ -78,14 +78,15 @@ var
 constructor TReopen.Create;
 const
 	ReopenResNames: array[TReopenExists] of PChar = ('Cancel', 'Help', 'Ok');
-var i: SG;
+var
+	i: SG;
 begin
 	inherited Create;
 
 	for i := 0 to Length(ReopenBitmaps) - 1 do
 	begin
 		ReopenBitmaps[TReopenExists(i)] := TBitmap.Create;
-		ImgAdd(ReopenBitmaps[TReopenExists(i)], ReopenResNames[TReopenExists(i)]);
+		LoadMenuIcon(ReopenBitmaps[TReopenExists(i)], ReopenResNames[TReopenExists(i)]);
 	end;
 end;
 
@@ -361,7 +362,7 @@ begin
 		Exit;
 	end;
 
-	if FileName[1] = '\' then
+	if FileName[1] = PathDelim then
 		DriveType := DRIVE_REMOTE
 	else
 	begin
@@ -467,7 +468,7 @@ begin
 //		MenuAll.Caption := 'Open All (' + IntToStr(ReopenAllCount) + ')';
 		FMenuAll.Enabled := (ReopenAllCount > 0);
 		{$ifopt d-}
-		MenuAll.Visible := MultiFiles;
+		FMenuAll.Visible := MultiFiles;
 		{$endif}
 	end;
 end;

@@ -1,10 +1,10 @@
 //* File:     Lib\uRS232.pas
 //* Created:  2001-03-01
-//* Modified: 2005-07-10
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2006-06-02
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uRS232;
 

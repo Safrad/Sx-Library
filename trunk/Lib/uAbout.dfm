@@ -1,6 +1,6 @@
 object fAbout: TfAbout
-  Left = 423
-  Top = 273
+  Left = 413
+  Top = 263
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
@@ -20,20 +20,25 @@ object fAbout: TfAbout
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelIcq: TLabel
-    Left = 200
+  object Bevel: TBevel
+    Left = 8
+    Top = 8
+    Width = 289
+    Height = 273
+    Shape = bsFrame
+  end
+  object LabelCompany: TLabel
+    Left = 184
     Top = 152
-    Width = 25
+    Width = 49
     Height = 19
-    Cursor = crHandPoint
     AutoSize = False
-    Caption = 'ICQ'
+    Caption = 'Company'
     Color = clBtnFace
     FocusControl = EditEMail
     ParentColor = False
     Transparent = True
     Layout = tlCenter
-    OnClick = EditIcqClick
   end
   object LabelEMail: TLabel
     Left = 16
@@ -75,13 +80,6 @@ object fAbout: TfAbout
     FocusControl = EditAuthor
     Transparent = True
     Layout = tlCenter
-  end
-  object Bevel: TBevel
-    Left = 8
-    Top = 8
-    Width = 289
-    Height = 273
-    Shape = bsFrame
   end
   object BevelSep: TBevel
     Left = 16
@@ -138,7 +136,7 @@ object fAbout: TfAbout
     AutoSize = False
     Caption = 'Run:'
     Color = clBtnFace
-    FocusControl = PanelRC
+    FocusControl = PanelRunCount
     ParentColor = False
     Transparent = True
     Layout = tlCenter
@@ -151,7 +149,7 @@ object fAbout: TfAbout
     AutoSize = False
     Caption = 'Now'
     Color = clBtnFace
-    FocusControl = PanelNRT
+    FocusControl = PanelNowRunTime
     ParentColor = False
     Transparent = True
     Layout = tlCenter
@@ -164,7 +162,7 @@ object fAbout: TfAbout
     AutoSize = False
     Caption = 'Total'
     Color = clBtnFace
-    FocusControl = PanelTRT
+    FocusControl = PanelTotalRunTime
     ParentColor = False
     Transparent = True
     Layout = tlCenter
@@ -189,7 +187,7 @@ object fAbout: TfAbout
     AutoSize = False
     Caption = 'Count'
     Color = clBtnFace
-    FocusControl = PanelRC
+    FocusControl = PanelRunCount
     ParentColor = False
     Transparent = True
     Layout = tlCenter
@@ -243,13 +241,10 @@ object fAbout: TfAbout
     Height = 18
     BevelKind = bkSoft
     BorderStyle = bsNone
-    Lines.Strings = (
-      '1999-2007')
     ParentColor = True
     TabOrder = 4
-    WantReturns = False
   end
-  object PanelRC: TDEdit
+  object PanelRunCount: TDEdit
     Left = 56
     Top = 256
     Width = 45
@@ -258,9 +253,8 @@ object fAbout: TfAbout
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 11
-    WantReturns = False
   end
-  object PanelTRT: TDEdit
+  object PanelTotalRunTime: TDEdit
     Left = 152
     Top = 256
     Width = 137
@@ -269,9 +263,8 @@ object fAbout: TfAbout
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 12
-    WantReturns = False
   end
-  object PanelNRT: TDEdit
+  object PanelNowRunTime: TDEdit
     Left = 152
     Top = 232
     Width = 137
@@ -280,19 +273,17 @@ object fAbout: TfAbout
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 10
-    WantReturns = False
   end
   object EditAuthor: TDEdit
     Left = 56
     Top = 152
-    Width = 137
+    Width = 121
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     ReadOnly = True
     TabOrder = 6
-    WantReturns = False
   end
   object EditWeb: TDEdit
     Left = 80
@@ -305,7 +296,6 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 9
-    WantReturns = False
     OnClick = EditWebClick
   end
   object EditEMail: TDEdit
@@ -319,24 +309,20 @@ object fAbout: TfAbout
     ParentColor = True
     ReadOnly = True
     TabOrder = 8
-    WantReturns = False
     OnClick = EditEMailClick
   end
-  object EditIcq: TDEdit
-    Left = 224
+  object EditCompany: TDEdit
+    Left = 232
     Top = 152
-    Width = 65
+    Width = 57
     Height = 19
-    Cursor = crHandPoint
     BevelKind = bkSoft
     BorderStyle = bsNone
     ParentColor = True
     ReadOnly = True
     TabOrder = 7
-    WantReturns = False
-    OnClick = EditIcqClick
   end
-  object SysInfo1: TDButton
+  object ButtonSysInfo1: TDButton
     Left = 8
     Top = 288
     Width = 81
@@ -349,9 +335,9 @@ object fAbout: TfAbout
     Font.Style = []
     ParentFont = False
     TabOrder = 13
-    OnClick = SysInfo1Click
+    OnClick = ButtonSysInfo1Click
   end
-  object DButtonMemoryStatus: TDButton
+  object ButtonMemoryStatus: TDButton
     Left = 104
     Top = 288
     Width = 97
@@ -364,7 +350,7 @@ object fAbout: TfAbout
     Font.Style = []
     ParentFont = False
     TabOrder = 14
-    OnClick = DButtonMemoryStatusClick
+    OnClick = ButtonMemoryStatusClick
   end
   object ImageAbout: TDImage
     Left = 16
@@ -401,7 +387,6 @@ object fAbout: TfAbout
     BorderStyle = bsNone
     ParentColor = True
     TabOrder = 5
-    WantReturns = False
   end
   object EditVersion: TDEdit
     Left = 200
@@ -414,7 +399,6 @@ object fAbout: TfAbout
     ParentBiDiMode = False
     ParentColor = True
     TabOrder = 3
-    WantReturns = False
   end
   object Timer1: TDTimer
     ActiveOnly = True

@@ -1,9 +1,17 @@
+//* File:     Lib\uMultiIns.pas
+//* Created:  2000-05-01
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uMultiIns;
 
 interface
 
 uses
-	uTypes, uFormat,
+	uTypes,
 	Windows, SysUtils, Messages;
 
 var
@@ -13,7 +21,7 @@ procedure InitInstance;
 
 implementation
 
-uses uMsg, uStrings, uFiles, uParams, Forms, uError;
+uses uMsg, uStrings, uFiles, uParams, Forms;
 
 const
 	wmMainInstanceOpenFile = WM_USER + 3;
@@ -64,9 +72,8 @@ var
 	Atom: TAtom;
 	UniqueAppStr: string;
 begin
-	UniqueAppStr := DelCharsF(ShortToLongPath(ParamStr(0)), '\');
+	UniqueAppStr := DelCharsF(ShortToLongPath(ParamStr(0)), PathDelim);
 	MessageID := RegisterWindowMessage(PChar(UniqueAppStr));
-//	MessageD('OpenMutex(' + UniqueAppStr + ')', mtInformation, [], 0);
 	MutHandle := OpenMutex(MUTEX_ALL_ACCESS, False, PChar(UniqueAppStr));
 	if MutHandle = 0 then
 	begin
@@ -79,7 +86,6 @@ begin
 		if WProc = nil then
 			ErrorMsg(GetLastError);
 
-//		MessageD('CreateMutex(' + UniqueAppStr + ')', mtInformation, [], 0);
 		MutHandle := CreateMutex(nil, False, PChar(UniqueAppStr));
 		if MutHandle = 0 then
 			ErrorMsg(GetLastError);

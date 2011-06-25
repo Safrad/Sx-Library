@@ -1,10 +1,10 @@
 //* File:     Lib\uDGraph.pas
 //* Created:  2004-01-06
-//* Modified: 2005-10-05
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDGraph;
 
@@ -64,7 +64,7 @@ implementation
 
 uses
 	Math,
-	uFiles, uStrings, uError, uSysInfo, uFind, uInput, uFormat;
+	uFiles, uStrings, uFind, uInputFormat, uOutputFormat;
 
 const
 	NotOriented = True;

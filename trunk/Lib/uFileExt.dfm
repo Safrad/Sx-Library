@@ -7,7 +7,6 @@ object fFileExt: TfFileExt
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
-  BorderStyle = bsSizeToolWin
   Caption = 'File Extensions'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,6 +17,7 @@ object fFileExt: TfFileExt
   OldCreateOrder = False
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
   object DViewFileExtensions: TDView
@@ -30,6 +30,7 @@ object fFileExt: TfFileExt
     PopupMenu = PopupMenuFE
     TabOrder = 0
     TabStop = False
+    OnKeyDown = FormKeyDown
     OnGetData = DViewFileExtensionsGetData
   end
   object PopupMenuFE: TPopupMenu

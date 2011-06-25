@@ -1,10 +1,10 @@
 //* File:     Lib\uGraph.pas
 //* Created:  1999-05-01
-//* Modified: 2005-09-05
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-04-01
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uGraph;
 
@@ -51,7 +51,7 @@ implementation
 
 uses
 	Math, Menus,
-	uStrings, uError, uGetInt, uMath;
+	uStrings, uGetInt, uMath;
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 begin

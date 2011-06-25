@@ -1,10 +1,10 @@
 //* File:     Lib\uDayTip.pas
 //* Created:  2000-08-01
-//* Modified: 2005-11-25
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-04-21
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDayTip;
 
@@ -135,25 +135,28 @@ begin
 	ButtonShowTipsOnStartup.Down := ShowTips;
 	TipCount := 0;
 	F := TFile.Create;
-	if F.Open(DayTipFile, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		while not F.Eof do
+	try
+		if F.Open(DayTipFile, fmReadOnly) then
 		begin
-			F.Readln(Line);
-			NewSize := TipCount + 1;
-			if AllocByExp(Length(Tips), NewSize) then
-				SetLength(Tips, NewSize);
-			Tips[TipCount] := TStringList.Create;
-			InLineIndex := 1;
-			while InLineIndex < Length(Line) do
+			while not F.Eof do
 			begin
-				s := ReadToChar(Line, InLineIndex, '|');
-				Tips[TipCount].Add(s);
+				F.Readln(Line);
+				NewSize := TipCount + 1;
+				if AllocByExp(Length(Tips), NewSize) then
+					SetLength(Tips, NewSize);
+				Tips[TipCount] := TStringList.Create;
+				InLineIndex := 1;
+				while InLineIndex < Length(Line) do
+				begin
+					s := ReadToChar(Line, InLineIndex, '|');
+					Tips[TipCount].Add(s);
+				end;
+				Inc(TipCount);
 			end;
-			Inc(TipCount);
 		end;
+	finally
+		F.Free;
 	end;
-	F.Free;
 	if TipIndex >= TipCount then TipIndex := 0;
 	FillTip;
 end;

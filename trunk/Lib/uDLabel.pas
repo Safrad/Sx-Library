@@ -1,10 +1,10 @@
 //* File:     Lib\uDLabel.pas
 //* Created:  1999-08-01
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDLabel;
 
@@ -12,19 +12,14 @@ interface
 
 {$R *.RES}
 uses
-	uTypes, uMath,
+	uTypes, uMath, uDWinControl,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl;
 
 type
-	TDLabel = class(TWinControl)
+	TDLabel = class(TDWinControl)
 	private
-		FBitmap: TDBitmap;
 		FBmpText: TDBitmap;
-		FNeedPaint: BG;
-		{$ifopt d+}
-		FFillCount, FPaintCount: U4;
-		{$endif}
 
 		// Properties
 		FAlignment: TAlignment;
@@ -47,9 +42,6 @@ type
 
 		// Events
 		FOnPaint: TNotifyEvent;
-
-		procedure FillBitmap;
-
 		procedure SetCaption(Value: string);
 
 		procedure SetFontShadow(Value: SG);
@@ -67,23 +59,19 @@ type
 		procedure SetWordWrap(const Value: Boolean);
 		procedure SetLayout(const Value: TTextLayout);
 		procedure SetAlignment(const Value: TAlignment);
-
-		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
-		procedure WMSize(var Message: TWMSize); message WM_SIZE;
-		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 	protected
 		{ Protected declarations }
 		property Canvas: TCanvas read FCanvas;
+		procedure FillBitmap; override;
 	public
 		{ Public declarations }
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
-		procedure Invalidate; override;
 	published
 		{ Published declarations }
 		property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
 		property Caption: string read FCaption write SetCaption;
-		property Color;
+		property Color default clBtnFace;
 
 		property FocusControl: TWinControl read FFocusControl write FFocusControl;
 		property Font;
@@ -129,16 +117,13 @@ constructor TDLabel.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
 
-	DoubleBuffered := True;
+//	DoubleBuffered := True; // Blinks with black if DoubleBuffer enabled
 	
 	FCanvas := TControlCanvas.Create;
 	TControlCanvas(FCanvas).Control := Self;
 
 	FDispl := TDispl.Create;
 	FDispl.OnChange := DisplChanged;
-
-	FBitmap := TDBitmap.Create;
-	FBitmap.Canvas.Font := Font;
 
 	FBevelOuter := bvRaised;
 	FBevelWidth := 1;
@@ -154,7 +139,6 @@ destructor TDLabel.Destroy;
 begin
 	FreeAndNil(FCanvas);
 	FreeAndNil(FDispl);
-	FreeAndNil(FBitmap);
 	FreeAndNil(FBmpText);
 	inherited Destroy;
 end;
@@ -256,64 +240,6 @@ begin
 	end;
 end;
 
-procedure TDLabel.WMEraseBkgnd(var Message: TWMEraseBkgnd);
-begin
-	Message.Result := 1;
-end;
-
-procedure TDLabel.WMPaint(var Message: TWMPaint);
-begin
-	inherited;
-	{$ifopt d+}
-	Inc(FPaintCount);
-	{$endif}
-	if FNeedPaint then FillBitmap;
-
-	if FBitmap.Empty then
-	begin
-		FCanvas.Brush.Style := bsSolid;
-		FCanvas.Brush.Color := clAppWorkSpace;
-		PatBlt(
-			FCanvas.Handle,
-			0,
-			0,
-			Width,
-			Height,
-			PATCOPY
-		);
-	end
-	else
-	begin
-		FBitmap.DrawToDC(FCanvas.Handle, 0, 0);
-	end;
-	if Assigned(FOnPaint) then
-	begin
-		try
-			FOnPaint(Self);
-		except
-			on E: Exception do
-				ErrorMsg(E.Message);
-		end;
-	end;
-	{$ifopt d+}
-	Canvas.Brush.Style := bsClear;
-	Canvas.Font.Color := clWhite;
-	Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));
-	{$endif}
-end;
-
-procedure TDLabel.WMSize(var Message: TWMSize);
-begin
-	inherited;
-	Invalidate;
-end;
-
-procedure TDLabel.Invalidate;
-begin
-	FNeedPaint := True;
-	inherited;
-end;
-
 procedure TDLabel.FillBitmap;
 var
 	Recta: TRect;
@@ -321,23 +247,17 @@ var
 	i: Integer;
 	{$ifopt d-}Co: array[0..3] of TColor;{$endif}
 begin
-	FNeedPaint := False;
-
+	inherited;
 	Recta.Left := 0;
 	Recta.Top := 0;
 	Recta.Right := Width - 1;
 	Recta.Bottom := Height - 1;
-	if (not Assigned(FBitmap)) then
-	begin
-		Exit;
-	end;
-	FBitmap.SetSize(Width, Height);
 
 // Border
 	if (FBorderStyle <> bsNone) then
 	begin
-		FBitmap.Border(clBtnShadow, clBtnHighlight, 1, ef16);
-		FBitmap.Border(1, 1, FBitmap.Width - 2, FBitmap.Height - 2,
+		Bitmap.Border(clBtnShadow, clBtnHighlight, 1, ef16);
+		Bitmap.Border(1, 1, Bitmap.Width - 2, Bitmap.Height - 2,
 			cl3DDkShadow, cl3DLight, 1, ef16);
 		InflateRect(Recta, -2, -2);
 	end;
@@ -353,14 +273,14 @@ begin
 			TopColor := clDepth[3];
 			BottomColor := clDepth[1];
 		end;
-		FBitmap.Border(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
+		Bitmap.Border(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
 			TopColor, BottomColor, FBevelWidth, ef16);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
 	if (Color <> clNone) then
 	begin
 		for i := 0 to FBorderWidth - 1 do
-			FBitmap.Rec(Recta.Left + i, Recta.Top + i,
+			Bitmap.Rec(Recta.Left + i, Recta.Top + i,
 				Recta.Right - i, Recta.Bottom - i,
 				Color, ef16);
 		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
@@ -377,7 +297,7 @@ begin
 			TopColor := clDepth[3];
 			BottomColor := clDepth[1];
 		end;
-		FBitmap.Border(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
+		Bitmap.Border(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
 			TopColor, BottomColor, FBevelWidth, ef16);
 		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
 	end;
@@ -390,11 +310,11 @@ begin
 		Co[1] := DarkerColor(ColorToRGB(Color));
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		FBitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
+		Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
 			gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 //			FBmpOut.FormBitmap(Color);
 		{$else}
-		FBitmap.Bar(Recta, Color, ef16);
+		Bitmap.Bar(Recta, Color, ef16);
 		{$endif}
 	end;
 
@@ -406,17 +326,17 @@ begin
 			FBmpText := TDBitmap.Create;
 		end;
 
-		FBmpText.SetSize(FBitmap.Width, FBitmap.Height);
+		FBmpText.SetSize(Bitmap.Width, Bitmap.Height);
 		FBmpText.Bar(0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
 			Color, ef16);
 		FBmpText.TransparentColor := Color;
 
 		FBmpText.Canvas.Brush.Style := bsClear;
 		FBmpText.Canvas.Font := Font;
-		FBitmap.Canvas.Font := Font;
+		Bitmap.Canvas.Font := Font;
 
 		FBmpText.Canvas.Font := Font;
-		FBitmap.Canvas.Font := Font;
+		Bitmap.Canvas.Font := Font;
 		InflateRect(Recta, -1, -1);
 		if Displ.Enabled then
 		begin
@@ -424,16 +344,16 @@ begin
 				DisplDrawRect(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, FAlignment, FLayout,
 					ef16)
 			else
-				DisplDrawRect(FBitmap, DelCharsF(Caption, '&'), FDispl, Recta, FAlignment, FLayout,
+				DisplDrawRect(Bitmap, DelCharsF(Caption, '&'), FDispl, Recta, FAlignment, FLayout,
 					ef16);
 		end
 		else
 		begin
 			if (FFontAngle = 0) and (FFontEffect = ef16) then
 			begin
-				FBitmap.Canvas.Brush.Color := Color;
-				FBitmap.Canvas.Brush.Style := bsClear;
-				DrawCutedText(FBitmap.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
+				Bitmap.Canvas.Brush.Color := Color;
+				Bitmap.Canvas.Brush.Style := bsClear;
+				DrawCutedText(Bitmap.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
 			end
 			else
 			begin
@@ -444,15 +364,13 @@ begin
 		if FFontAngle = 0 then
 		begin
 			if FFontEffect <> ef16 then
-				FBitmap.Bmp(0, 0, FBmpText, FFontEffect);
+				Bitmap.Bmp(0, 0, FBmpText, FFontEffect);
 		end
 		else
 		begin
-			RotateDef(FBitmap, FBmpText, 0, FFontAngle, FFontEffect);
+			RotateDef(Bitmap, FBmpText, 0, FFontAngle, FFontEffect);
 		end;
 	end;
-
-	{$ifopt d+}Inc(FFillCount);{$endif}
 end;
 
 procedure TDLabel.SetAlignment(const Value: TAlignment);

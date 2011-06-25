@@ -1,10 +1,10 @@
 //* File:     Lib\uXML.pas
 //* Created:  2005-06-21
-//* Modified: 2005-10-09
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-04-01
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uXML;
 
@@ -43,7 +43,7 @@ type
 
 implementation
 
-uses uFiles, uStrings, uError;
+uses uFiles, uStrings;
 
 { TXML }
 

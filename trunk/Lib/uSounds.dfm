@@ -7,7 +7,6 @@ object fSounds: TfSounds
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
-  BorderStyle = bsSizeToolWin
   Caption = 'Sounds'
   Color = clBtnFace
   Constraints.MinHeight = 160
@@ -38,7 +37,7 @@ object fSounds: TfSounds
     Height = 17
     AutoSize = False
     Caption = '&Sound Quality:'
-    FocusControl = ButtonSound
+    FocusControl = ButtonSounds
     Transparent = True
     Layout = tlCenter
   end
@@ -192,12 +191,12 @@ object fSounds: TfSounds
     AutoChange = True
     Down = True
   end
-  object ButtonSound: TDButton
+  object ButtonSounds: TDButton
     Left = 8
     Top = 240
     Width = 75
     Height = 25
-    Caption = '&Sound'
+    Caption = '&Sounds'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11

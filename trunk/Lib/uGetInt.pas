@@ -1,17 +1,17 @@
 //* File:     Lib\uGetInt.pas
 //* Created:  1998-07-01
-//* Modified: 2005-09-23
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uGetInt;
 
 interface
 
 uses
-	uTypes,
+	uTypes, uParserMsg,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm;
 
@@ -26,14 +26,14 @@ type
 		ButtonMin: TDButton;
 		ButtonCur: TDButton;
 		ButtonMax: TDButton;
-    LabelMin: TLabel;
-    LabelMax: TLabel;
-    LabelNow: TLabel;
+		LabelMin: TLabel;
+		LabelMax: TLabel;
+		LabelNow: TLabel;
 		ButtonDef: TDButton;
 		ButtonApply: TDButton;
-    EditError: TMemo;
-    UpDown: TUpDown;
-    Bevel1: TBevel;
+		EditError: TMemo;
+		UpDown: TUpDown;
+		Bevel1: TBevel;
 		procedure EditInputChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
 		procedure ButtonCurClick(Sender: TObject);
@@ -46,9 +46,10 @@ type
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure UpDownChangingEx(Sender: TObject; var AllowChange: Boolean;
-      NewValue: Smallint; Direction: TUpDownDirection);
+			NewValue: Smallint; Direction: TUpDownDirection);
 	private
 		{ Private declarations }
+		Messages: TParserMessages;
 		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: S8;
 		OnApply: TOnApplyInt;
 		procedure ChangeInt;
@@ -57,6 +58,8 @@ type
 		procedure InitTrackBar;
 	public
 		{ Public declarations }
+		constructor Create(AOwner: TComponent); override;
+		destructor Destroy; override;
 	end;
 
 function GetNumber(Prompt: string;
@@ -78,8 +81,8 @@ implementation
 
 {$R *.DFM}
 uses
-  Math,
-	uStrings, uInput, uError, uParser, uParserMsg;
+	Math,
+	uStrings, uInputFormat, uDParser;
 
 var
 	fGetInt: TfGetInt;
@@ -188,9 +191,9 @@ end;
 procedure TfGetInt.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
-	NowVal := StrToValS8(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1);
-	MesToStrings(EditError.Lines);
-	ParserMsgClear;
+	NowVal := StrToValS8(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1, Messages);
+	Messages.ToStrings(EditError.Lines);
+	Messages.Clear;
 
 	InitButtons;
 	InitTrackBar;
@@ -363,6 +366,18 @@ begin
 	C := CurVal;
 	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
 	CurVal := C;
+end;
+
+constructor TfGetInt.Create(AOwner: TComponent);
+begin
+	inherited;
+	Messages := TParserMessages.Create;
+end;
+
+destructor TfGetInt.Destroy;
+begin
+	FreeAndNil(Messages);
+	inherited;
 end;
 
 end.

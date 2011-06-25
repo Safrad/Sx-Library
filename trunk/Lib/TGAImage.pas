@@ -1,10 +1,10 @@
 //* File:     Lib\TGAImage.pas
 //* Created:  2005-03-29
-//* Modified: 2005-08-28
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-06
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit TGAImage;
 
@@ -153,7 +153,7 @@ begin
 	end
 	{$ifopt d-}
 	else
-		raise EInvalidGraphic.Create('Only 24/32 bit color uncompressed tga image is supported');
+		raise EInvalidGraphic.Create('Only 24/32 bit color uncompressed tga image is supported.');
 	{$endif}
 end;
 
@@ -178,7 +178,7 @@ begin
 	header.Width := Width;
 	header.Height := Height;
 	ImageSize := Width * Height * (header.BPP div 8);
-  s.WriteBuffer(header, sizeof(header));
+	s.WriteBuffer(header, sizeof(header));
 	s.WriteBuffer(PU1(Scanline[height-1])^, ImageSize);
 end;
 

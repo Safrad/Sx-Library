@@ -1,10 +1,10 @@
 //* File:     Lib\uLang.pas
 //* Created:  1999-11-01
-//* Modified: 2005-10-12
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-12
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uLang;
 
@@ -13,11 +13,11 @@ interface
 uses SysUtils;
 
 //Alphabet
-procedure ReadAlphabet(FileName: TFileName);
-function AlphaStrToWideStr(Line: string): WideString;
+procedure ReadAlphabet(const FileName: TFileName);
+function AlphaStrToWideStr(const Line: string): WideString;
 
 // Dictionary
-procedure ReadDictionary(FileName: TFileName);
+procedure ReadDictionary(const FileName: TFileName);
 function Translate(Line: string): string; overload;
 procedure TranslateFile(FileName: TFileName); overload;
 
@@ -25,43 +25,44 @@ implementation
 
 uses
 	Windows,
-	uTypes, uError, uStrings, uFiles, uSorts, uFind, uParser, uMath, uCharset;
+	uTypes, uStrings, uFiles, uSorts, uFind, uDParser, uMath, uCharset, uCharTable;
 
 // Alphabet
 var
 	Alpha: array of string;
 	AlphaCount: Integer;
 
-procedure ReadAlphabet(FileName: TFileName);
-label LRetry;
+procedure ReadAlphabet(const FileName: TFileName);
 var
 	F: TFile;
 	s: string;
 	NewSize: SG;
 begin
 	F := TFile.Create;
-	LRetry:
-	AlphaCount := 0; SetLength(Alpha, 0);
-	if F.Open(FileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
-	begin
-		while not F.Eof do
+	try
+		AlphaCount := 0; SetLength(Alpha, 0);
+		if F.Open(FileName, fmReadOnly) then
 		begin
-			F.Readln(s);
-			if Length(s) > 0 then
+			while not F.Eof do
 			begin
-				NewSize := AlphaCount + 1;
-				if AllocByExp(Length(Alpha), NewSize) then
-					SetLength(Alpha, NewSize);
-				Alpha[AlphaCount] := s;
-				Inc(AlphaCount);
+				F.Readln(s);
+				if Length(s) > 0 then
+				begin
+					NewSize := AlphaCount + 1;
+					if AllocByExp(Length(Alpha), NewSize) then
+						SetLength(Alpha, NewSize);
+					Alpha[AlphaCount] := s;
+					Inc(AlphaCount);
+				end;
 			end;
+			F.Close;
 		end;
-		if not F.Close then goto LRetry;
+	finally
+		F.Free;
 	end;
-	F.Free;
 end;
 
-function AlphaCharToWord(Line: string; var InLineIndex: Integer): U2;
+function AlphaCharToWord(const Line: string; var InLineIndex: Integer): U2;
 var
 	i: Integer;
 	Found: Integer;
@@ -93,7 +94,7 @@ begin
 	end;
 end;
 
-function AlphaStrToWideStr(Line: string): WideString;
+function AlphaStrToWideStr(const Line: string): WideString;
 var i, j: Integer;
 begin
 	SetLength(Result, Length(Line));
@@ -116,7 +117,7 @@ var
 	AIndex: array of SG;
 	AValue: array of U4;
 
-procedure ReadDictionary(FileName: TFileName);
+procedure ReadDictionary(const FileName: TFileName);
 var
 	Line: string;
 	InLineIndex: SG;
@@ -162,8 +163,8 @@ begin
 
 			if (Po <> 0) then
 			begin
-				if (CharsTable[Line[Po - 1]] <> ctLetter)
-				and (CharsTable[Line[Po + Length(WhatS)]] <> ctLetter)
+				if (StdCharTable[Line[Po - 1]] <> ctLetter)
+				and (StdCharTable[Line[Po + Length(WhatS)]] <> ctLetter)
 				and (Line[Po - 1] <> '<')
 				and (Line[Po - 1] <> '/')
 				and (Ord(Line[Po - 1]) < 128)

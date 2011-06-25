@@ -1,10 +1,10 @@
 //* File:     Lib\uSounds.pas
 //* Created:  2000-05-01
-//* Modified: 2005-11-14
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uSounds;
 
@@ -23,23 +23,23 @@ type
 		ButtonCancel: TDButton;
 		OpenDialog1: TOpenDialog;
 		BevelSQ: TBevel;
-    LabelSQ: TLabel;
-    LabelFrequency: TLabel;
+		LabelSQ: TLabel;
+		LabelFrequency: TLabel;
 		ComboBoxFrequency: TComboBox;
 		Button16bits: TDButton;
 		ButtonStereo: TDButton;
 		ButtonReduce: TDButton;
 		ButtonMusic: TDButton;
-		ButtonSound: TDButton;
-    PopupMenuSounds: TPopupMenu;
-    Enable1: TMenuItem;
-    Disable1: TMenuItem;
-    N1: TMenuItem;
-    Preview1: TMenuItem;
-    N2: TMenuItem;
-    Select1: TMenuItem;
-    SetBeep1: TMenuItem;
-    SetDefault1: TMenuItem;
+		ButtonSounds: TDButton;
+		PopupMenuSounds: TPopupMenu;
+		Enable1: TMenuItem;
+		Disable1: TMenuItem;
+		N1: TMenuItem;
+		Preview1: TMenuItem;
+		N2: TMenuItem;
+		Select1: TMenuItem;
+		SetBeep1: TMenuItem;
+		SetDefault1: TMenuItem;
 		procedure FormResize(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
@@ -79,7 +79,7 @@ implementation
 
 {$R *.dfm}
 uses
-	uData, uFiles, uDIni, uInput, uError, uMath, uMenus;
+	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus;
 
 type
 	PSound = ^TSound;
@@ -173,7 +173,7 @@ begin
 		if P.Name = 'Warning' then
 			P.FileName := ''
 		else
-			P.FileName := 'Sounds\' + SoundNames[i] + '.wav';
+			P.FileName := 'Sounds' + PathDelim + SoundNames[i] + '.wav';
 //			P.FileName := ShortDir(SoundsDir + SoundNames[i] + '.wav');
 		P.Enabled := not Disabled;
 	end;
@@ -351,7 +351,7 @@ begin
 	end;
 	if not Assigned(fSounds) then fSounds := TfSounds.Create(nil);
 	fSounds.DViewSounds.RowCount := Sounds.Count;
-	fSounds.Show;
+	fSounds.ShowModal;
 end;
 
 procedure TfSounds.FormResize(Sender: TObject);
@@ -365,7 +365,7 @@ begin
 	ButtonApply.SetBounds(ButtonCancel.Left - 2 * FormBorder - ButtonApply.Width, Top, ButtonApply.Width, ButtonApply.Height);
 	ButtonOK.SetBounds(ButtonApply.Left - 2 * FormBorder - ButtonOK.Width, Top, ButtonOK.Width, ButtonOK.Height);
 
-	ButtonSound.Top := ButtonOK.Top;
+	ButtonSounds.Top := ButtonOK.Top;
 	ButtonMusic.Top := ButtonOK.Top;
 
 	if WavePlayer <> nil then
@@ -384,21 +384,18 @@ begin
 	Background := baGradient;
 	MenuSet(PopupMenuSounds);
 
-	OpenDialog1.Filter := 'Sound Wave (*.wav)|*.wav|Any file (*.*)|*.*';
+	OpenDialog1.Filter := AllSounds + '|' + AllFiles;
 
-	DViewSounds.ColumnCount := 2;
-	DViewSounds.Columns[0].Caption := 'Event';
-	DViewSounds.Columns[0].Width := 114;
-	DViewSounds.Columns[1].Caption := 'File Name';
-	DViewSounds.Columns[1].Width := 238;
+	DViewSounds.AddColumn('Event', 114);
+	DViewSounds.AddColumn('File Name', DViewSounds.Width - 114{ 238 });
 
 	if Assigned(MainIni) then
 	begin
 		MainIni.RWFormPos(Self, False);
-		MainIni.RWDView(DViewSounds, False);
+		DViewSounds.Serialize(MainIni, False);
 	end;
 
-	ButtonSound.Down := SoundEnabled;
+	ButtonSounds.Down := SoundEnabled;
 	ButtonReduce.Down := SoundReduce;
 	Button16bits.Down := Sound16bits;
 	ComboBoxFrequency.Text := IntToStr(SoundFrequency);
@@ -437,12 +434,12 @@ begin
 	begin
 		NewFrequency := StrToValI(ComboBoxFrequency.Text, True, 100, UG(22050), 100000, 1);
 		SoundReduce := ButtonReduce.Down;
-		if (SoundEnabled <> ButtonSound.Down)
+		if (SoundEnabled <> ButtonSounds.Down)
 		or (Sound16bits <> Button16bits.Down)
 		or (SoundFrequency <> NewFrequency)
 		or (SoundStereo <> ButtonStereo.Down) then
 		begin
-			SoundEnabled := ButtonSound.Down;
+			SoundEnabled := ButtonSounds.Down;
 //			BSounds := SoundEnabled;
 			Sound16bits := Button16bits.Down;
 			SoundFrequency := NewFrequency;
@@ -451,9 +448,9 @@ begin
 		end;
 	end;
 
-	if SoundEnabled <> ButtonSound.Down then
+	if SoundEnabled <> ButtonSounds.Down then
 	begin
-		SoundEnabled := ButtonSound.Down;
+		SoundEnabled := ButtonSounds.Down;
 //		BSounds := SoundEnabled;
 		if SoundEnabled then
 		begin
@@ -552,7 +549,7 @@ begin
 	if Assigned(MainIni) then
 	begin
 		MainIni.RWFormPos(Self, True);
-		MainIni.RWDView(DViewSounds, True);
+		DViewSounds.Serialize(MainIni, True);
 	end;
 end;
 
@@ -587,7 +584,7 @@ begin
 	Tag := TDButton(Sender).Tag;
 	for i := 0 to DViewSounds.RowCount - 1 do
 	begin
-		if DViewSounds.SelRows[i] then
+		if DViewSounds.SelectedRows[i] then
 		begin
 			P := DSounds.Get(i);
 			if P <> nil then
@@ -627,7 +624,7 @@ begin
 			4:
 			begin
 				P2 := PSound(Sounds.Get(i));
-				P.FileName := 'Sounds\' + P2.Name + '.wav';
+				P.FileName := 'Sounds' + PathDelim + P2.Name + '.wav';
 				SoundsC := True;
 			end;
 			5:

@@ -1,14 +1,14 @@
 //* File:     Lib\uCSVAssign.pas
 //* Created:  2004-01-04
-//* Modified: 2005-11-26
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-06
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 // TODO : DNW
 
-unit uCSVAssign;
+unit uCSVAssign; deprecated;
 
 interface
 
@@ -109,7 +109,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uDIni, uMsg, uError, uFiles, uStrings, uFormat;
+	uDIni, uMsg, uFiles, uStrings, uFormat;
 
 var
 	CSVFile: TFile;
@@ -131,8 +131,7 @@ begin
 	fFormats.CSVFileName := FileName;
 	CSVFormats.Clear;
 	CSVFile := TFile.Create;
-	LRetry:
-	if CSVFile.Open(CSVFileName, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN, False) then
+	if CSVFile.Open(CSVFileName, fmReadOnly) then
 	begin
 		if not CSVFile.Readln(Line) then goto LRetry;
 
@@ -346,14 +345,14 @@ begin
 	begin
 		if ComboBoxes[i].ItemIndex = -1 then
 		begin
-			Warning('Please select all columns');
+			Warning('Please select all columns.');
 			Exit;
 		end;
 
 		for j := i + 1 to CSVReqFormats.Count - 1 do
 			if Indexes[i] = Indexes[j] then
 			begin
-				Warning('Columns colision ' + NToS(i + 1) + ' - ' + NToS(j + 1));
+				Warning('Columns collision ' + NToS(i + 1) + ' - ' + NToS(j + 1) + '.');
 				Exit;
 			end;
 

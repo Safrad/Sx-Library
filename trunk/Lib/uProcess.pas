@@ -1,3 +1,11 @@
+//* File:     Lib\uProcess.pas
+//* Created:  1999-05-01
+//* Modified: 2007-05-08
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uProcess;
 
 interface
@@ -14,7 +22,9 @@ function ProcessStatusToCaption: string;
 
 implementation
 
-uses Forms, SysUtils;
+uses
+	uProjectInfo,
+	Forms, SysUtils;
 
 type
 	TProcessStatus = (psIdle, psRun{ning}, psPaused, psAborted);
@@ -79,7 +89,7 @@ end;
 
 function ProcessStatusToCaption: string;
 begin
-	Result := Application.Title + ' ' + ProcessStatusToStr;
+	Result := GetProjectInfo(piProductName) + ' ' + ProcessStatusToStr;
 end;
 
 end.

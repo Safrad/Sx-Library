@@ -1,10 +1,10 @@
 //* File:     Lib\uDView.pas
 //* Created:  2001-08-01
-//* Modified: 2005-10-08
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-27
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uDView;
 
@@ -12,28 +12,28 @@ interface
 
 {$R *.RES}
 uses
-	uTypes, uMath, uFiles, uDImage,
-	Classes, Controls, Windows, Graphics, SysUtils, Messages; 
+	uTypes, uMath, uFiles, uDImage, uDIniFile,
+	Classes, Controls, Windows, Graphics, SysUtils, Messages;
 
 const
 	RowHeight = 17;
 	MinColumnWidth = 3;
 
 type
-	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnMove);
+	TViewAction = (vaNone, vaRow, vaColumnClick{vaColumnMove}, vaColumnResize);
 
-	TColumnOptions = packed record // 16
+	TColumnOptions = record // 16
 		Caption: string; // 4
 		Width: S4; // 4
 		Alignment: TAlignment; // 1
-		Reserved: array[0..6] of U1; // 7
+//		Reserved: array[0..6] of U1; // 7
 	end;
 
 	TColumn = packed record // 16
 		Caption: string; // 4
 		Width, MaxWidth: S4; // 8
-		Click: B1; // 1
 		Alignment: TAlignment; // 1
+		Click: B1; // 1
 		Visible: BG; // 1
 		Reserved: array[0..0] of U1; // 1
 	end;
@@ -44,18 +44,27 @@ type
 
 	TDView = class(TDImage)
 	private
+		{ Private declarations }
 		ColumnMove, ColumnMoveX, ColumnMoveW: SG;
 
 		BDown: Boolean;
 		FOnGetData: TOnGetData;
 		FOnColumnClick: TLVColumnClickEvent;
 
-		DragColumns, DragX: SG;
+		DragColumn, DragFrom: SG;
 		HotRow, HotColumn: SG;
 		FStartShift: SG;
 
 		FColumnCount: SG;
 		FRowCount: SG;
+
+		FSortBy: SG;
+		FSortBySwap: BG;
+
+		FColumns: array of TColumn;
+
+		FColumnOrder, FRowOrder: TArrayOfSG;
+		FSelectedRows: TArrayOfBG;
 
 		procedure ScrollToActualCell;
 		function PosToItem(MX, MY: SG; var IX, IY: SG): TViewAction;
@@ -63,31 +72,24 @@ type
 		procedure SetColumnCount(Value: SG);
 		procedure SetRowCount(Value: SG);
 		procedure SortData;
+		procedure SetSortBy(Value: SG);
+		procedure SetSortBySwap(const Value: BG);
 		procedure CopySelection;
 		function GetSelCount: SG;
+		procedure MoveColumn(const FromColumn, ToColumn: SG);
+
+		procedure LFill(Sender: TObject);
+
+		procedure ChangeColumnsWidth;
+		procedure UpdateColumnVisibility;
 
 		procedure CellClick(const ColumnIndex, RowIndex: SG; const Shift: TShiftState);
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 		procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
 		procedure CMWantSpecialKey(var Message: TCMWantSpecialKey); message CM_WANTSPECIALKEY;
-	public
-		{ Public declarations }
-		Columns: array of TColumn;
-		FSortBySwap: BG;
-		ColumnOrder, RowOrder: array of SG;
-
-		SelRows: array of Boolean;
-
-		Where, LWhere: TViewAction;
-		IX, IY: SG; // MouseOnCellX,Y
-
-		ActualRow, ActualColumn: SG;
-		SortBy: SG;
-
-		constructor Create(AOwner: TComponent); override;
-		destructor Destroy; override;
-
+	protected
+		{ Protected declarations }
 		procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
 			X, Y: Integer); override;
 		procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -96,27 +98,44 @@ type
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 		procedure PageDownUp(const n: SG); override;
 		procedure LineDownUp(const n: SG); override;
+	public
+		{ Public declarations }
+		Where, LWhere: TViewAction;
+		IX, IY: SG; // MouseOnCellX,Y
+		ActualRow, ActualColumn: SG;
 
-		procedure LFill(Sender: TObject);
+		constructor Create(AOwner: TComponent); override;
+		destructor Destroy; override;
 
+		// Columns
+		property ColumnCount: SG read FColumnCount write SetColumnCount;
+		procedure SetColumn(const Index: SG; const Caption: string; const Width: SG = 0; const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True);
+		procedure AddColumn(const Caption: string; const Width: SG = 0; const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True);
 		procedure AddColumns(const C: array of TColumnOptions);
-		procedure AllClickable;
+		procedure SetAllSortable(const Sortable: BG);
 
-		procedure ChangeColumnsWidth;
-		procedure UpdateColumnVisibility;
+		// Rows
+		property RowCount: SG read FRowCount write SetRowCount;
+		property RowOrder: TArrayOfSG read FRowOrder;
+
+		// Selection
+		property SelCount: SG read GetSelCount;
+		property SelectedRows: TArrayOfBG read FSelectedRows;
 		procedure SelectAll;
 		procedure DeselectAll;
 		procedure SelectInvert;
 
-		property ColumnCount: SG read FColumnCount write SetColumnCount;
-		property RowCount: SG read FRowCount write SetRowCount;
-		property SelCount: SG read GetSelCount;
+		// Sorting
+		property SortBy: SG read FSortBy write SetSortBy;
+		property SortBySwap: BG read FSortBySwap write SetSortBySwap;
 
+		// Others
 		procedure DataChanged;
-		function CellWidth(Text: string): SG;
+		function CellWidth(const Text: string): SG;
 
+		procedure Serialize(const IniFile: TDIniFile; const Save: BG);
 	published
-
+		{ Published declarations }
 		property OnGetData: TOnGetData read FOnGetData write FOnGetData;
 		property OnColumnClick: TLVColumnClickEvent read FOnColumnClick write FOnColumnClick;
 	end;
@@ -127,7 +146,7 @@ implementation
 
 uses
 	Math, StdCtrls, ClipBrd,
-	uGraph, uDBitmap, uMsg, uError, uScreen, uStrings, uColor;
+	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uOutputFormat;
 
 var
 	ArrowU, ArrowD: TDBitmap;
@@ -136,20 +155,21 @@ constructor TDView.Create(AOwner: TComponent);
 begin
 	inherited;
 	OnFill := LFill;
-	DragColumns := -1;
+	DragColumn := -1;
 	ColumnMove := -1;
 	HotRow := -1;
 	HotColumn := -1;
-	SortBy := -1;
+	FSortBy := -1;
+	FSortBySwap := False;
 	ActualRow := -1;
 //	ShortStep := RowHeight;
 end;
 
 destructor TDView.Destroy;
 begin
-	SetLength(Columns, 0);
-	SetLength(ColumnOrder, 0);
-	SetLength(SelRows, 0);
+	SetLength(FColumns, 0);
+	SetLength(FColumnOrder, 0);
+	SetLength(FSelectedRows, 0);
 	inherited;
 end;
 
@@ -169,8 +189,8 @@ begin
 	X := 0;
 	for i := 0 to FColumnCount - 1 do
 	begin
-		if Columns[ColumnOrder[i]].Visible = False then Continue;
-		Inc(X, Columns[ColumnOrder[i]].Width);
+		if FColumns[FColumnOrder[i]].Visible = False then Continue;
+		Inc(X, FColumns[FColumnOrder[i]].Width);
 		if X >= MX then
 		begin
 			IX := i;
@@ -189,13 +209,13 @@ begin
 		BestDist := 3;
 		for i := 0 to FColumnCount - 1 do
 		begin
-			if Columns[ColumnOrder[i]].Visible = False then Continue;
-			Inc(w, Columns[ColumnOrder[i]].Width);
+			if FColumns[FColumnOrder[i]].Visible = False then Continue;
+			Inc(w, FColumns[FColumnOrder[i]].Width);
 			Dist := Abs(MX - w);
 			if Dist <= BestDist then
 			begin
 				BestDist := Dist;
-				Result := vaColumnMove;
+				Result := vaColumnResize;
 				IX := i;
 			end;
 		end;
@@ -204,7 +224,7 @@ begin
 	begin
 		Inc(MY, OfsY);
 		IY := (MY - RowHeight) div RowHeight;
-		if (IY >= 0) and (IY < FRowCount) then Result := vaRow;
+		if (IY >= 0) and (IY < FRowCount) then Result := vaRow else IY := -1;
 	end;
 end;
 
@@ -213,24 +233,24 @@ var i: SG;
 begin
 	if not (ssCtrl in Shift) then
 		for i := 0 to FRowCount - 1 do
-			SelRows[i] := False;
+			FSelectedRows[i] := False;
 	if (ssShift in Shift) and (ActualRow <> -1) then
 	begin
 		if FStartShift < RowIndex then
 		begin
 			for i := FStartShift to RowIndex do
-				SelRows[i] := True;
+				FSelectedRows[FRowOrder[i]] := True;
 		end
 		else
 		begin
 			for i := RowIndex to FStartShift do
-				SelRows[i] := True;
+				FSelectedRows[FRowOrder[i]] := True;
 		end;
 	end
 	else
 	begin
 		FStartShift := RowIndex;
-		SelRows[RowIndex] := not SelRows[RowIndex];
+		FSelectedRows[FRowOrder[RowIndex]] := not FSelectedRows[FRowOrder[RowIndex]];
 	end;
 	ActualRow := RowIndex;
 	ActualColumn := ColumnIndex;
@@ -255,22 +275,22 @@ begin
 			begin
 				if (Button = mbLeft) then
 				begin
-					DragColumns := IX;
-					DragX := X;
+					DragColumn := IX;
+					DragFrom := X;
 				end;
 			end;
-			vaColumnMove:
+			vaColumnResize:
 			begin
 				if (Button = mbLeft) then
 				begin
-					ColumnMove := IX;
-					ColumnMoveX := X - Columns[ColumnMove].Width;
-					ColumnMoveW := Columns[ColumnMove].Width;
+					ColumnMove := FColumnOrder[IX];
+					ColumnMoveX := X - FColumns[ColumnMove].Width;
+					ColumnMoveW := FColumns[ColumnMove].Width;
 				end;
 			end;
 			vaRow:
 			begin
-				if not ((Button = mbRight) and (SelRows[IY])) then
+				if not ((Button = mbRight) and (FSelectedRows[FRowOrder[IY]])) then
 				begin
 					CellClick(IX, IY, Shift);
 				end;
@@ -287,7 +307,7 @@ begin
 	inherited;
 	HotColumn := -1;
 
-	if (DragColumns = -1) and (ColumnMove = -1) then
+	if (DragColumn = -1) and (ColumnMove = -1) then
 	begin
 		if ActualCursor = -14 then
 			ActualCursor := crDefault;
@@ -303,7 +323,7 @@ begin
 				end;
 			end;
 		end;
-		vaColumnMove:
+		vaColumnResize:
 		begin
 			ActualCursor := -14;
 			Invalidate;
@@ -328,22 +348,10 @@ begin
 		end;
 	end;
 
-{	if DragColumns <> -1 then
-	begin
-				if BDown then
-				begin
-					Change(ColumnOrder[DragColumns], ColumnOrder[DragColumns + 1]);
-					// := X - ColumnMoveX;
-//					if Columns[ColumnMove].Width < MinColumnWidth then Columns[ColumnMove].Width := MinColumnWidth;
-					ChangeColumns;
-					Fill;
-				end;
-
-	end;}
 	if ColumnMove <> -1 then
 	begin
-		Columns[ColumnMove].Width := X - ColumnMoveX;
-		if Columns[ColumnMove].Width < MinColumnWidth then Columns[ColumnMove].Width := MinColumnWidth;
+		FColumns[ColumnMove].Width := X - ColumnMoveX;
+		if FColumns[ColumnMove].Width < MinColumnWidth then FColumns[ColumnMove].Width := MinColumnWidth;
 		ChangeColumnsWidth;
 		Invalidate;
 	end;
@@ -354,13 +362,35 @@ begin
 	end;
 end;
 
+procedure TDView.MoveColumn(const FromColumn, ToColumn: SG);
+var
+	OriginalColumn: SG;
+	f, t: SG;
+begin
+	Assert(FromColumn <> ToColumn);
+	OriginalColumn := FColumnOrder[FromColumn];
+
+	if FromColumn > ToColumn then
+	begin
+		f := ToColumn;
+		t := f + 1;
+	end
+	else
+	begin
+		t := FromColumn;
+		f := t + 1;
+	end;
+
+	Move(FColumnOrder[f], FColumnOrder[t], Abs(FromColumn - ToColumn) * SizeOf(FColumnOrder[0]));
+
+	FColumnOrder[ToColumn] := OriginalColumn;
+end;
+
 procedure TDView.MouseUp(Button: TMouseButton; Shift: TShiftState;
 	X, Y: Integer);
 begin
 	inherited;
 	BDown := False;
-	DragColumns := -1;
-	ColumnMove := -1;
 	case MouseAction of
 	mwNone, mwScroll:
 	begin
@@ -369,24 +399,35 @@ begin
 			case Where of
 			vaColumnClick:
 			begin
-				if (Abs(X - DragX) < MinColumnWidth) and (IX >= 0) then
-				if Columns[IX].Click then
+				PosToItem(X, Y, IX, IY);
+
+				if (DragColumn <> -1) and (IX >= 0) and (DragColumn <> IX) then
 				begin
-					if SortBy <> IX then
+					MoveColumn(DragColumn, IX);
+					Invalidate;
+				end
+				else if (ColumnMove = -1) then
+				begin
+					if (Abs(X - DragFrom) < MinColumnWidth) and (IX >= 0) then
+					if FColumns[FColumnOrder[IX]].Click then
 					begin
-						SortBy := IX;
-						FSortBySwap := False;
-					end
-					else
-						FSortBySwap := not FSortBySwap;
-					DataChanged;
+						if FSortBy <> FColumnOrder[IX] then
+						begin
+							FSortBy := FColumnOrder[IX];
+							FSortBySwap := False;
+						end
+						else
+							FSortBySwap := not FSortBySwap;
+						DataChanged;
+					end;
 				end;
-				Invalidate;
 			end;
 			end;
 		end;
 	end;
 	end;
+	ColumnMove := -1;
+	DragColumn := -1;
 end;
 
 procedure TDView.CMMouseEnter(var Message: TMessage);
@@ -423,10 +464,10 @@ begin
 	mwNone, mwScroll:
 	begin
 		case Where of
-		vaColumnMove:
+		vaColumnResize:
 		begin
 			if IX >= 0 then
-			Columns[IX].Width := Columns[IX].MaxWidth;
+			FColumns[IX].Width := FColumns[IX].MaxWidth;
 			ChangeColumnsWidth;
 			Invalidate;
 		end;
@@ -474,6 +515,7 @@ begin
 			SelRows[ActualRow] := True;
 			Inc(ActualRow);
 			Invalidate;
+			Exit;
 		end;}
 	end;
 	VK_ESCAPE:
@@ -481,11 +523,12 @@ begin
 		if ColumnMove <> -1 then
 		begin
 			BDown := False;
-			DragColumns := -1;
-			Columns[ColumnMove].Width := ColumnMoveW;
-			ChangeColumnsWidth;
+			DragColumn := -1;
+			FColumns[ColumnMove].Width := ColumnMoveW;
 			ColumnMove := -1;
+			ChangeColumnsWidth;
 			Invalidate;
+			Exit;
 		end;
 	end;
 	VK_UP:
@@ -499,6 +542,7 @@ begin
 		end
 		else
 			LineDownUp(-1);
+		Exit;
 	end;
 	VK_DOWN:
 	begin
@@ -511,6 +555,7 @@ begin
 		end
 		else
 			LineDownUp(1);
+		Exit;
 	end;
 {	VK_LEFT: ScrollTo(OfsX - HorizontalOffset, OfsY);
 	VK_RIGHT: ScrollTo(OfsX + HorizontalOffset, OfsY);}
@@ -523,6 +568,7 @@ begin
 		end
 		else
 			PageDownUp(-1);
+		Exit;
 	end;
 	VK_NEXT:
 	begin
@@ -533,6 +579,7 @@ begin
 		end
 		else
 			PageDownUp(1);
+		Exit;
 	end;
 	VK_HOME:
 	begin
@@ -543,6 +590,7 @@ begin
 		end
 		else
 			ScrollHome;
+		Exit;
 	end;
 	VK_END:
 	begin
@@ -553,10 +601,12 @@ begin
 		end
 		else
 			ScrollEnd;
-	end;
+		Exit;
+	end
 	else
-		inherited;
+
 	end;
+	inherited;
 end;
 
 var
@@ -566,12 +616,12 @@ procedure Init;
 var FileName: TFileName;
 begin
 	ImagesLoaded := True;
-	FileName := GraphDir + 'Images\ArrowU' + IconExt;
+	FileName := GraphDir + 'Images' + PathDelim + 'ArrowU' + IconExt;
 	if FileExists(FileName) then
 	begin
 		ArrowU := TDBitmap.Create(FileName);
 	end;
-	FileName := GraphDir + 'Images\ArrowD' + IconExt;
+	FileName := GraphDir + 'Images' + PathDelim + 'ArrowD' + IconExt;
 	if FileExists(FileName) then
 	begin
 		ArrowD := TDBitmap.Create(FileName);
@@ -604,17 +654,17 @@ begin
 	Wid := 0;
 	for i := 0 to FColumnCount - 1 do
 	begin
-		if Columns[i].Visible = False then Continue;
-		Inc(Wid, Columns[i].Width);
+		if FColumns[i].Visible = False then Continue;
+		Inc(Wid, FColumns[i].Width);
 	end;
 	for i := 0 to FColumnCount - 1 do
 	begin
-		if Columns[ColumnOrder[i]].Visible = False then Continue;
-		Inc(X, Columns[ColumnOrder[i]].Width);
+		if FColumns[FColumnOrder[i]].Visible = False then Continue;
+		Inc(X, FColumns[FColumnOrder[i]].Width);
 		if X > OfsX then
 		begin
 			IX := i;
-			X := X - Columns[ColumnOrder[i]].Width - OfsX;
+			X := X - FColumns[FColumnOrder[i]].Width - OfsX;
 			Break;
 		end;
 	end;
@@ -623,17 +673,17 @@ begin
 		while X < Bitmap.Width do
 		begin
 			if IX > FColumnCount then Break;
-			if (IX >= 0) and (IX < FColumnCount) and Columns[IX].Visible then
+			if (0 <= IX) and (IX < FColumnCount) and (FColumns[FColumnOrder[IX]].Visible) then
 			begin
 				if IX < FColumnCount then
-					Columns[IX].MaxWidth := MinColumnWidth;
+					FColumns[FColumnOrder[IX]].MaxWidth := MinColumnWidth;
 				Y := -OfsY mod RowHeight + RowHeight;
 				IY := OfsY div RowHeight;
 				while Y < Bitmap.Height do
 				begin
 					if (IY >= 0) and (IY < FRowCount) then
 					begin
-						if SelRows[IY] then
+						if FSelectedRows[FRowOrder[IY]] then
 						begin
 							Bitmap.Canvas.Brush.Color := clHighlight
 						end
@@ -644,12 +694,12 @@ begin
 							else
 								Bitmap.Canvas.Brush.Color := clWindow;
 						end;
-						Bitmap.Bar(X, Y, X + Columns[IX].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
+						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].Width - 2, Y + RowHeight - 2, Bitmap.Canvas.Brush.Color, ef16);
 						if Assigned(FOnGetData) then
 						begin
-							ColIndex := ColumnOrder[IX];
-							RowIndex := RowOrder[IY];
-							if SelRows[IY] then
+							ColIndex := FColumnOrder[IX];
+							RowIndex := FRowOrder[IY];
+							if FSelectedRows[FRowOrder[IY]] then
 								Bitmap.Canvas.Font.Color := clWindow
 							else if HotRow = IY then
 								Bitmap.Canvas.Font.Color := clHighlight
@@ -667,35 +717,35 @@ begin
 							begin
 								Data := {$ifopt d+}'<Empty>'{$else}''{$endif};
 								try
-									FOnGetData(Self, Data, ColIndex, RowIndex, Rect(X + 1, Y + 1, X + Columns[IX].Width - 2, Y + RowHeight - 2));
+									FOnGetData(Self, Data, ColIndex, RowIndex, Rect(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].Width - 2, Y + RowHeight - 2));
 								except
 									on E: Exception do
-										ErrorMsg(E.Message);
+										Fatal(E, Self);
 								end;
 							end;
 						end
 						else
 							Data := {$ifopt d+}'<No data event defined>'{$else}''{$endif};;
 
-						if Assigned(FOnGetData) then
+						if Assigned(FOnGetData) and (FColumns[FColumnOrder[IX]].Width > MinColumnWidth) then
 						begin
 							R.Left := X + Border + LeftOffset{Microsoft Sans Serif};
 							R.Top := Y + Border;
-							R.Right := X + Columns[IX].Width - 2 - Border;
+							R.Right := X + FColumns[FColumnOrder[IX]].Width - 2 - Border;
 							R.Bottom := Y + RowHeight - 2 - Border;
-							DrawCutedText(Bitmap.Canvas, R, Columns[IX].Alignment, tlCenter, Data, False, 0);
+							DrawCutedText(Bitmap.Canvas, R, FColumns[FColumnOrder[IX]].Alignment, tlCenter, Data, False, 0);
 						end;
 
-						Columns[IX].MaxWidth := Max(Columns[IX].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 2 + 2 * Border + LeftOffset);
+						FColumns[FColumnOrder[IX]].MaxWidth := Max(FColumns[FColumnOrder[IX]].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 2 + 2 * Border + LeftOffset);
 						if IY = ActualRow then
 							Bitmap.Border(X, Y, Wid - 1, Y + RowHeight - 1, clDepth[0], clDepth[3], 1, ef12);
-						Bitmap.Line(X, Y + RowHeight - 1, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
-						Bitmap.Line(X + Columns[IX].Width - 1, Y, X + Columns[IX].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
+						Bitmap.Line(X, Y + RowHeight - 1, X + FColumns[FColumnOrder[IX]].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
+						Bitmap.Line(X + FColumns[FColumnOrder[IX]].Width - 1, Y, X + FColumns[FColumnOrder[IX]].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
 
 					end
 					else
 					begin
-						Bitmap.Bar(X, Y, X + Columns[IX].Width - 1, Height - 1{Y + RowHeight - 2}, clAppWorkSpace, ef16);
+						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].Width - 1, Height - 1{Y + RowHeight - 2}, clAppWorkSpace, ef16);
 					end;
 					Inc(Y, RowHeight);
 					Inc(IY);
@@ -703,7 +753,7 @@ begin
 				if IX = FColumnCount then Break;
 
 				// Bar
-				if HotTrack and (HotColumn = IX) and Columns[IX].Click then
+				if HotTrack and (HotColumn = IX) and FColumns[FColumnOrder[IX]].Click then
 				begin
 					C1 := clHighlight;
 					C2 := clWindow;
@@ -717,12 +767,12 @@ begin
 				Co[1] := DarkerColor(C1);
 				Co[2] := Co[0];
 				Co[3] := Co[1];
-				Bitmap.GenerateRGBEx(x + 1, 1, x + Columns[IX].Width - 2, RowHeight - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+				Bitmap.GenerateRGBEx(x + 1, 1, x + FColumns[FColumnOrder[IX]].Width - 2, RowHeight - 2, gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
 
 				// Sort By
 				xx := x;
-				ww := Columns[IX].Width;
-				if IX = SortBy then
+				ww := FColumns[FColumnOrder[IX]].Width;
+				if FColumnOrder[IX] = FSortBy then
 				begin
 					if FSortBySwap then Arrow := ArrowU else Arrow := ArrowD;
 					if Arrow <> nil then
@@ -741,12 +791,12 @@ begin
 				R.Top := 0 + Border;
 				R.Right := xx + ww - 2 - Border;
 				R.Bottom := RowHeight - 2 - Border;
-				DrawCutedText(Bitmap.Canvas, R, Columns[IX].Alignment, tlCenter, Columns[IX].Caption, False, 1);
+				DrawCutedText(Bitmap.Canvas, R, FColumns[FColumnOrder[IX]].Alignment, tlCenter, FColumns[FColumnOrder[IX]].Caption, False, 1);
 
 				// Border
-				if Columns[IX].Click then
+				if FColumns[FColumnOrder[IX]].Click then
 				begin
-					if IX = SortBy then
+					if FColumnOrder[IX] = FSortBy then
 					begin
 						C1 := 0;
 						C2 := 2;
@@ -762,9 +812,9 @@ begin
 					C1 := 1;
 					C2 := 3;
 				end;
-				Bitmap.Border(x, 0, x + Columns[IX].Width - 1, RowHeight - 1, clDepth[C1], clDepth[C2], 1, ef16);
+				Bitmap.Border(x, 0, x + FColumns[FColumnOrder[IX]].Width - 1, RowHeight - 1, clDepth[C1], clDepth[C2], 1, ef16);
 
-				if Columns[IX].Width <= 0 then w := HorizontalOffset else w := Columns[IX].Width;
+				if FColumns[FColumnOrder[IX]].Width <= 0 then w := HorizontalOffset else w := FColumns[FColumnOrder[IX]].Width;
 				Inc(X, w);
 			end;
 
@@ -782,29 +832,29 @@ var
 	RowIndex, ColIndex: SG;
 	Rec: TRect;
 begin
-	if Assigned(FOnGetData) and (RowCount > 0) then
+	if Assigned(FOnGetData) and (FRowCount > 0) then
 	begin
 		// Automatic hides empty column
-		for i := 0 to Length(Columns) - 1 do
-			Columns[i].Visible := False;
+		for i := 0 to Length(FColumns) - 1 do
+			FColumns[i].Visible := False;
 
-		for ColIndex := 0 to Length(Columns) - 1 do
+		for ColIndex := 0 to Length(FColumns) - 1 do
 		begin
-			for RowIndex := 0 to RowCount - 1 do
+			for RowIndex := 0 to FRowCount - 1 do
 			begin
 				Data := '';
 				try
 					FOnGetData(Self, Data, ColIndex, RowIndex, Rec);
 				except
 					on E: Exception do
-						ErrorMsg(E.Message);
+						Fatal(E, Self);
 				end;
 
 				if Data <> '' then
 				begin
-					if Columns[ColIndex].Visible = False then
+					if FColumns[ColIndex].Visible = False then
 					begin
-						Columns[ColIndex].Visible := True;
+						FColumns[ColIndex].Visible := True;
 						Break;
 					end;
 				end;
@@ -813,8 +863,8 @@ begin
 	end
 	else
 	begin
-		for i := 0 to Length(Columns) - 1 do
-			Columns[i].Visible := True;
+		for i := 0 to Length(FColumns) - 1 do
+			FColumns[i].Visible := True;
 	end;
 end;
 
@@ -824,8 +874,10 @@ begin
 	UserWidth := 0;
 	for i := 0 to FColumnCount - 1 do
 	begin
-		if Columns[i].Visible = False then Continue;
-		Inc(UserWidth, Columns[i].Width);
+		if FColumns[i].Width = 0 then
+			FColumns[i].Width := Width div FColumnCount;
+		if FColumns[i].Visible = False then Continue;
+		Inc(UserWidth, FColumns[i].Width);
 	end;
 end;
 
@@ -834,7 +886,7 @@ var i: SG;
 begin
 	for i := 0 to FRowCount - 1 do
 	begin
-		SelRows[i] := True;
+		FSelectedRows[i] := True;
 	end;
 end;
 
@@ -843,7 +895,7 @@ var i: SG;
 begin
 	for i := 0 to FRowCount - 1 do
 	begin
-		SelRows[i] := False;
+		FSelectedRows[i] := False;
 	end;
 end;
 
@@ -852,7 +904,7 @@ var i: SG;
 begin
 	for i := 0 to FRowCount - 1 do
 	begin
-		SelRows[i] := not SelRows[i];
+		FSelectedRows[i] := not SelectedRows[i];
 	end;
 end;
 
@@ -861,16 +913,16 @@ var i: SG;
 begin
 	if Value <> FColumnCount then
 	begin
-		SetLength(Columns, Value);
-		SetLength(ColumnOrder, Value);
+		SetLength(FColumns, Value);
+		SetLength(FColumnOrder, Value);
 		for i := FColumnCount to Value - 1 do
 		begin
-			Columns[i].Caption := '<Empty>';
-			Columns[i].Width := 64;
-			Columns[i].Click := False;
-			Columns[i].Alignment := taLeftJustify;
-			Columns[i].Visible := True;
-			ColumnOrder[i] := i;
+			FColumns[i].Caption := '<Empty>';
+			FColumns[i].Width := 64;
+			FColumns[i].Click := True;
+			FColumns[i].Alignment := taLeftJustify;
+			FColumns[i].Visible := True;
+			FColumnOrder[i] := i;
 		end;
 		FColumnCount := Value;
 	end;
@@ -884,43 +936,63 @@ begin
 	if Value <> FRowCount then
 	begin
 		NewSize := Value;
-		if AllocByExp(Length(SelRows), NewSize) then
+		if AllocByExp(Length(FSelectedRows), NewSize) then
 		begin
-			SetLength(SelRows, NewSize);
-			SetLength(RowOrder, NewSize);
+			SetLength(FSelectedRows, NewSize);
+			SetLength(FRowOrder, NewSize);
 		end;
 		if FRowCount < Value then
 		begin
 			for i := FRowCount to Value - 1 do
 			begin
-				RowOrder[i] := i;
+				FRowOrder[i] := i;
 			end;
 		end
 		else
 		begin
 			for i := 0 to Value - 1 do
 			begin
-				RowOrder[i] := i;
+				FRowOrder[i] := i;
 			end;
 		end;
 		FRowCount := Value;
 		UserHeight := FRowCount * RowHeight + RowHeight;
+		Invalidate;
 	end;
 end;
 
 procedure TDView.SortData;
+var
+	i: SG;
+	AStr: array of string;
+	Rect: TRect;
 begin
-	if Assigned(FOnColumnClick) and (SortBy >= 0) then
+	if (FSortBy >= 0) and (FRowCount > 1) then // Need some sort
 	begin
-		try
-			FOnColumnClick(Self, Columns[SortBy]);
-		except
-			on E: Exception do
-				ErrorMsg(E.Message);
+		if Assigned(FOnColumnClick) then
+		begin // User sort
+			try
+				FOnColumnClick(Self, FColumns[FSortBy]);
+			except
+				on E: Exception do
+					Fatal(E, Self);
+			end;
+			if FSortBySwap then
+				Reverse4(FRowOrder[0], RowCount);
+		end
+		else
+		begin // Automatic (string) sort
+			SetLength(AStr, FRowCount);
+			Rect.Left := 0;
+			Rect.Top := 0;
+			Rect.Right := 0;
+			Rect.Bottom := 0;
+			for i := 0 to FRowCount - 1 do
+			begin
+				FOnGetData(Self, AStr[i], FSortBy, i, Rect);
+			end;
+			SortStr(PArraySG(FRowOrder), PArrayString(AStr), FRowCount, FSortBySwap);
 		end;
-		if FSortBySwap then
-			if RowCount > 1 then
-				Reverse4(RowOrder[0], RowCount);
 	end;
 end;
 
@@ -929,6 +1001,7 @@ begin
 	SortData;
 	UpdateColumnVisibility;
 	ChangeColumnsWidth;
+	Invalidate;
 end;
 
 function TDView.GetSelCount: SG;
@@ -936,10 +1009,10 @@ var i: SG;
 begin
 	Result := 0;
 	for i := 0 to FRowCount - 1 do
-		if SelRows[i] then Inc(Result);
+		if FSelectedRows[i] then Inc(Result);
 end;
 
-function TDView.CellWidth(Text: string): SG;
+function TDView.CellWidth(const Text: string): SG;
 const
 	CellBorder = 4;
 begin
@@ -972,26 +1045,25 @@ begin
 		Rec := Rect(0, 0, 0, 0);
 		for r := 0 to RowCount - 1 do
 		begin
-			RowIndex := RowOrder[r];
-			if SelRows[r] then
+			RowIndex := FRowOrder[r];
+			if FSelectedRows[RowIndex] then
 			begin
 				for c := 0 to ColumnCount - 1 do
 				begin
-					if Columns[c].Visible then
+					if FColumns[c].Visible then
 					begin
-						ColIndex := ColumnOrder[c];
+						ColIndex := FColumnOrder[c];
 						Data := '';
 						try
 							FOnGetData(Self, Data, ColIndex, RowIndex, Rec);
 							Buffer := Buffer + Data + CharTab;
 						except
 							on E: Exception do
-								ErrorMsg(E.Message);
+								Fatal(E, Self);
 						end;
 					end;
 				end;
-				DelLastChar(Buffer);
-				Buffer := Buffer + Data + FileSep;
+				Buffer := DelLastChar(Buffer) + FileSep;
 			end;
 		end;
 	end;
@@ -1014,22 +1086,37 @@ begin
 		Rect.Left := 0;
 		for i := 0 to ActualColumn - 1 do
 		begin
-			if Columns[ColumnOrder[i]].Visible then
-				Inc(Rect.Left, Columns[ColumnOrder[i]].Width);
+			if FColumns[FColumnOrder[i]].Visible then
+				Inc(Rect.Left, FColumns[FColumnOrder[i]].Width);
 		end;
 		Dec(Rect.Left, HorizontalOffset);
-		Rect.Right := Rect.Left + Columns[ColumnOrder[ActualColumn]].Width - 1 + HorizontalOffset;
+		Rect.Right := Rect.Left + FColumns[FColumnOrder[ActualColumn]].Width - 1 + HorizontalOffset;
 	end;
 	Rect.Top := RowHeight * ActualRow; // + RowHeight{Table head};
 	Rect.Bottom := Rect.Top + RowHeight - 1 + RowHeight{Table head};
 	OffsetOnRect(Rect);
 end;
 
-procedure TDView.AllClickable;
-var i: SG;
+procedure TDView.SetColumn(const Index: SG; const Caption: string;
+	const Width: SG = 0; const Alignment: TAlignment = taLeftJustify;
+	const Sortable: BG = True);
 begin
-	for i := 0 to ColumnCount - 1 do
-		Columns[i].Click := True;
+	Assert(Index >= 0);
+	Assert(Index < FColumnCount);
+	FColumns[Index].Caption := Caption;
+{	if Width = 0 then
+		FColumns[FColumnCount - 1].Width := CellWidth(Caption)
+	else}
+	FColumns[Index].Width := Width;
+	FColumns[Index].Alignment := Alignment;
+	FColumns[Index].Click := Sortable;
+end;
+
+procedure TDView.AddColumn(const Caption: string; const Width: SG;
+	const Alignment: TAlignment; const Sortable: BG);
+begin
+	SetColumnCount(FColumnCount + 1);
+	SetColumn(FColumnCount - 1, Caption, Width, Alignment, Sortable);
 end;
 
 procedure TDView.AddColumns(const C: array of TColumnOptions);
@@ -1038,7 +1125,71 @@ begin
 	for i := 0 to Length(C) - 1 do
 	begin
 		ColumnCount := ColumnCount + 1;
-		Columns[FColumnCount - 1].Caption := C[i].Caption;
+		FColumns[FColumnCount - 1].Caption := C[i].Caption;
+	end;
+end;
+
+procedure TDView.SetAllSortable(const Sortable: BG);
+var i: SG;
+begin
+	for i := 0 to ColumnCount - 1 do
+		FColumns[i].Click := Sortable;
+end;
+
+procedure TDView.Serialize(const IniFile: TDIniFile;
+	const Save: BG);
+var
+	i: SG;
+	Section: string;
+begin
+	inherited;
+
+	Section := Name;
+
+	SortBy := IniFile.RWSGF(Section, 'SortBy', FSortBy, FSortBy, Save);
+	SortBySwap := IniFile.RWBGF(Section, 'SortBySwap', FSortBySwap, FSortBySwap, Save);
+
+	for i := 0 to ColumnCount - 1 do
+	begin
+		FColumns[i].Width := IniFile.RWSGF(Section, 'Width' + NToS(i, ofIO), FColumns[i].Width, FColumns[i].Width, Save);
+		FColumnOrder[i] := IniFile.RWSGF(Section, 'Order' + NToS(i, ofIO), FColumnOrder[i], i, Save);
+	end;
+	if Save = False then
+		ChangeColumnsWidth;
+end;
+
+procedure TDView.SetSortBy(Value: SG);
+begin
+	if FSortBy <> Value then
+	begin
+		// Repair value
+		if (Value >= 0) and (Value < FColumnCount) then
+		begin
+			if FColumns[Value].Click = False then Value := -1;
+		end
+		else
+			Value := -1;
+
+		// Apply changes
+		if FSortBy <> Value then
+		begin
+			FSortBy := Value;
+			SortData;
+			Invalidate;
+		end;
+	end;
+end;
+
+procedure TDView.SetSortBySwap(const Value: BG);
+begin
+	if FSortBySwap <> Value then
+	begin
+		FSortBySwap := Value;
+		if FSortBy <> -1 then
+		begin
+			SortData;
+			Invalidate;
+		end;
 	end;
 end;
 

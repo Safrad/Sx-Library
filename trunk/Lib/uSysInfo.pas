@@ -1,10 +1,10 @@
 //* File:     Lib\uSysInfo.pas
 //* Created:  2000-07-01
-//* Modified: 2005-12-11
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-20
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uSysInfo;
 
@@ -18,38 +18,34 @@ uses
 type
 	TfSysInfo = class(TDForm)
 		Bevel1: TBevel;
-    LabelTOperatingSystem: TLabel;
+		LabelTOperatingSystem: TLabel;
 		EditOS: TDEdit;
 		Bevel4: TBevel;
-    LabelUsed: TLabel;
-    LabelFree: TLabel;
-    LabelTotal: TLabel;
-    edMT: TDEdit;
-    edMF: TDEdit;
-    edFF: TDEdit;
-    edFT: TDEdit;
-    edMU: TDEdit;
-    edFU: TDEdit;
-    LabelTPhysicalMemory: TLabel;
-    LabelTPageFile: TLabel;
+		LabelUsed: TLabel;
+		LabelFree: TLabel;
+		LabelTotal: TLabel;
+		edMT: TDEdit;
+		edMF: TDEdit;
+		edFF: TDEdit;
+		edFT: TDEdit;
+		edMU: TDEdit;
+		edFU: TDEdit;
+		LabelTPhysicalMemory: TLabel;
+		LabelTPageFile: TLabel;
 		Bevel3: TBevel;
 		Bevel2: TBevel;
 		DLabel3: TLabel;
-    LabelDisk: TLabel;
 		Bevel5: TBevel;
 		EditCPU: TDEdit;
-    edDiskU: TDEdit;
-    edDiskF: TDEdit;
-    edDiskT: TDEdit;
 		ButtonOk: TDButton;
-    DLabelCPUFrequency: TLabel;
+		DLabelCPUFrequency: TLabel;
 		EditCPUFrequency: TDEdit;
-    LabelAMDDuronCmp: TLabel;
+		LabelAMDDuronCmp: TLabel;
 		EditDuron: TDEdit;
-    DLabelCPUUsage: TLabel;
+		DLabelCPUUsage: TLabel;
 		EditCPUUsage: TDEdit;
-    EditCounter: TDEdit;
-    LabelMBoardCounter: TLabel;
+		EditCounter: TDEdit;
+		LabelMBoardCounter: TLabel;
 		ComboBoxSize: TComboBox;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
@@ -72,11 +68,12 @@ type
 		Reserved0: array[0..6] of S1; // 7
 		CPUFrequency: U8; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod)
 		CPUPower: U8;
-		DiskFree, DiskTotal: U8; // 16
+//		DiskFree, DiskTotal: U8; // 16
+		Reserved: array[0..3] of U4; // 16
 		CPUUsage: S4; // 4 (0..10000)
 		MS: TMemoryStatus; // 8 * 4 = 32
 		OS: TOSVersionInfo; // 148
-		ProgramVersion: string[15]; // 10.32.101.10000
+//		ProgramVersion: string[15]; // 10.32.101.10000
 //		Graph: string[127]; // 128
 //		Reserved1: array[0..15] of U1; // 16
 	end;
@@ -96,7 +93,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uGraph, uScreen, uStrings, uFormat, uSimulation,
+	uGraph, uScreen, uStrings, uOutputFormat, uSimulation,
 	uProjectInfo,
 	Registry, Math;
 
@@ -169,58 +166,58 @@ end;
 
 function GetProcessorTime : int64;
 type
- TPerfDataBlock = packed record
-	 signature              : array [0..3] of wchar;
-	 littleEndian           : U4;
-   version                : U4;
-   revision               : U4;
-   totalByteLength        : U4;
-   headerLength           : U4;
-	 numObjectTypes         : S4;
-   defaultObject          : U4;
-   systemTime             : TSystemTime;
-   perfTime               : S8;
-	 perfFreq               : S8;
-	 perfTime100nSec        : S8;
-	 systemNameLength       : U4;
-   systemnameOffset       : U4;
- end;
- TPerfObjectType = packed record
-   totalByteLength        : U4;
-   definitionLength       : U4;
-   headerLength           : U4;
-   objectNameTitleIndex   : U4;
-   objectNameTitle        : PWideChar;
-   objectHelpTitleIndex   : U4;
-   objectHelpTitle        : PWideChar;
-   detailLevel            : U4;
-   numCounters            : S4;
-   defaultCounter         : S4;
-   numInstances           : S4;
-   codePage               : U4;
-   perfTime               : S8;
-	 perfFreq               : S8;
- end;
- TPerfCounterDefinition = packed record
-   byteLength             : U4;
-   counterNameTitleIndex  : U4;
-   counterNameTitle       : PWideChar;
-   counterHelpTitleIndex  : U4;
-   counterHelpTitle       : PWideChar;
-   defaultScale           : S4;
-   defaultLevel           : U4;
-   counterType            : U4;
-   counterSize            : U4;
-   counterOffset          : U4;
- end;
- TPerfInstanceDefinition = packed record
-   byteLength             : U4;
-	 parentObjectTitleIndex : U4;
-	 parentObjectInstance   : U4;
-	 uniqueID               : S4;
-	 nameOffset             : U4;
-   nameLength             : U4;
- end;
+	TPerfDataBlock = packed record
+		signature              : array [0..3] of wchar;
+		littleEndian           : U4;
+		version                : U4;
+		revision               : U4;
+		totalByteLength        : U4;
+		headerLength           : U4;
+		numObjectTypes         : S4;
+		defaultObject          : U4;
+		systemTime             : TSystemTime;
+		perfTime               : S8;
+		perfFreq               : S8;
+		perfTime100nSec        : S8;
+		systemNameLength       : U4;
+		systemnameOffset       : U4;
+	end;
+	TPerfObjectType = packed record
+		totalByteLength        : U4;
+		definitionLength       : U4;
+		headerLength           : U4;
+		objectNameTitleIndex   : U4;
+		objectNameTitle        : PWideChar;
+		objectHelpTitleIndex   : U4;
+		objectHelpTitle        : PWideChar;
+		detailLevel            : U4;
+		numCounters            : S4;
+		defaultCounter         : S4;
+		numInstances           : S4;
+		codePage               : U4;
+		perfTime               : S8;
+		perfFreq               : S8;
+	end;
+	TPerfCounterDefinition = packed record
+		byteLength             : U4;
+		counterNameTitleIndex  : U4;
+		counterNameTitle       : PWideChar;
+		counterHelpTitleIndex  : U4;
+		counterHelpTitle       : PWideChar;
+		defaultScale           : S4;
+		defaultLevel           : U4;
+		counterType            : U4;
+		counterSize            : U4;
+		counterOffset          : U4;
+	end;
+	TPerfInstanceDefinition = packed record
+		byteLength             : U4;
+		parentObjectTitleIndex : U4;
+		parentObjectInstance   : U4;
+		uniqueID               : S4;
+		nameOffset             : U4;
+		nameLength             : U4;
+	end;
 var
 	c1, c2, c3      : U4;
 	i1, i2          : S4;
@@ -229,37 +226,44 @@ var
 	perfCounterDef  : ^TPerfCounterDefinition;
 	perfInstanceDef : ^TPerfInstanceDefinition;
 begin
- result := 0;
- perfDataBlock := nil;
- try
-	 c1 := $10000;
-	 while true do begin
-		 ReallocMem(perfDataBlock, c1);
-		 c2 := c1;
-		 case RegQueryValueEx(HKEY_PERFORMANCE_DATA, '238'{'Processor/Processor Time'}, nil, @c3, Pointer(perfDataBlock), @c2) of
-		 ERROR_MORE_DATA: c1 := c1 * 2;
-		 ERROR_SUCCESS: Break;
-		 else Exit;
-		 end;
-	 end;
-	 perfObjectType := Pointer(UG(perfDataBlock) + perfDataBlock^.headerLength);
-	 for i1 := 0 to perfDataBlock^.numObjectTypes - 1 do begin
-		 if perfObjectType^.objectNameTitleIndex = 238 then begin   // 238 -> "Processor"
-			 perfCounterDef := Pointer(UG(perfObjectType) + perfObjectType^.headerLength);
-			 for i2 := 0 to perfObjectType^.numCounters - 1 do begin
-				 if perfCounterDef^.counterNameTitleIndex = 6 then begin    // 6 -> "% Processor Time"
-					 perfInstanceDef := Pointer(UG(perfObjectType) + perfObjectType^.definitionLength);
-					 result := PS8(UG(perfInstanceDef) + perfInstanceDef^.byteLength + perfCounterDef^.counterOffset)^;
-					 break;
-				 end;
-         inc(perfCounterDef);
-       end;
-			 break;
-     end;
-		 perfObjectType := Pointer(UG(perfObjectType) + perfObjectType^.totalByteLength);
-   end;
- finally FreeMem(perfDataBlock) end;
-end; 
+	result := 0;
+	perfDataBlock := nil;
+	try
+		c1 := $10000;
+		while True do 
+		begin
+			ReallocMem(perfDataBlock, c1);
+			c2 := c1;
+			case RegQueryValueEx(HKEY_PERFORMANCE_DATA, '238'{'Processor/Processor Time'}, nil, @c3, Pointer(perfDataBlock), @c2) of
+			ERROR_MORE_DATA: c1 := c1 * 2;
+			ERROR_SUCCESS: Break;
+			else Exit;
+			end;
+		end;
+		perfObjectType := Pointer(UG(perfDataBlock) + perfDataBlock^.headerLength);
+		for i1 := 0 to perfDataBlock^.numObjectTypes - 1 do
+		begin
+			if perfObjectType^.objectNameTitleIndex = 238 then
+			begin   // 238 -> "Processor"
+				perfCounterDef := Pointer(UG(perfObjectType) + perfObjectType^.headerLength);
+				for i2 := 0 to perfObjectType^.numCounters - 1 do
+				begin
+					if perfCounterDef^.counterNameTitleIndex = 6 then
+					begin    // 6 -> "% Processor Time"
+						perfInstanceDef := Pointer(UG(perfObjectType) + perfObjectType^.definitionLength);
+						result := PS8(UG(perfInstanceDef) + perfInstanceDef^.byteLength + perfCounterDef^.counterOffset)^;
+						break;
+					end;
+					inc(perfCounterDef);
+				end;
+				break;
+			end;
+			perfObjectType := Pointer(UG(perfObjectType) + perfObjectType^.totalByteLength);
+		end;
+	finally
+		FreeMem(perfDataBlock);
+	end;
+end;
 
 var
 	LastTickCount, LastProcessorTime: U8;
@@ -346,120 +350,115 @@ asm
 @exit:
 end;
 
-procedure FillDiskInfo(var SysInfo: TSysInfo);
-const
-	P: array[0..3] of Char = ('C', ':', '\', CharNul);
-begin
-	GetDiskFreeSpaceEx(P, SysInfo.DiskFree, SysInfo.DiskTotal, nil);
-end;
-
 procedure FillCPUTest(var SysInfo: TSysInfo);
 var
 	TickCount: U8;
 	CPUTick: U8;
 const
-	P: array[0..3] of Char = ('C', ':', '\', CharNul);
 	Count = 1 shl 22;
 var
 	MaxMem4, MaxMem: UG;
 	PMem: Pointer;
 begin
-	if Assigned(fSysInfo) then
-		MaxMem4 :=  (1 shl Max(0, fSysInfo.ComboBoxSize.ItemIndex)){14 for Duron} - 1 {10 = 4kB; 14=64kB}
-	else
-		MaxMem4 :=  1 shl 14 - 1; {10 = 4kB; 14=64kB}
-	MaxMem := 4 * (MaxMem4 + 1) - 1;
 	if IsCPUID_Available and (CPUException = False) then
 	begin
+		if Assigned(fSysInfo) then
+			MaxMem4 :=  (1 shl Max(0, fSysInfo.ComboBoxSize.ItemIndex)){14 for Duron} - 1 {10 = 4kB; 14=64kB}
+		else
+			MaxMem4 :=  1 shl 14 - 1; {10 = 4kB; 14 = 64kB}
+		MaxMem := 4 * (MaxMem4 + 1) - 1;
 		GetMem(PMem, MaxMem + 1);
-		SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
 		try
-			SysInfo.CPUStr := '            '; // 12 spaces
-			asm
-			pushad
-			xor eax, eax
-			xor ebx, ebx
-			xor ecx, ecx
-			xor edx, edx
-			dw 0a20fh // cpuid
-			mov eax, SysInfo
-			add eax, 5
-			mov [eax], ebx
-			mov [eax+4], edx
-			mov [eax+8], ecx
+			SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
+			try
+				SysInfo.CPUStr := '            '; // 12 spaces
+				asm
+				pushad
+				xor eax, eax
+				xor ebx, ebx
+				xor ecx, ecx
+				xor edx, edx
+				dw 0a20fh // cpuid
+				mov eax, SysInfo
+				add eax, 5
+				mov [eax], ebx
+				mov [eax+4], edx
+				mov [eax+8], ecx
 
-			mov eax, 1
-			xor ebx, ebx
-			xor ecx, ecx
-			xor edx, edx
-			dw 0a20fh // cpuid
+				mov eax, 1
+				xor ebx, ebx
+				xor ecx, ecx
+				xor edx, edx
+				dw 0a20fh // cpuid
 
-			mov edx, SysInfo
-			mov [edx], eax
-			popad
-			end;
+				mov edx, SysInfo
+				mov [edx], eax
+				popad
+				end;
 
-			TickCount := PerformanceCounter;
-			CPUTick := GetCPUCounter.A;
-			asm
-			pushad
+				TickCount := PerformanceCounter;
+				CPUTick := GetCPUCounter.A;
+				asm
+				pushad
 
-{     mov ecx, 999 // 1M
+	{     mov ecx, 999 // 1M
 
-			@Loop:
-				mov edi, U4 ptr PMem
-				mov esi, U4 ptr PMem2
-				push ecx
-				mov ecx, 32768
-				shr ecx, 2
-				cld
-					rep movsd
-				pop ecx
-				sub ecx, 1
-			jnz @Loop}
-(*
-			mov ecx, 999998 // 1M
-//      mov edi, U4 ptr PMem
-			@Loop: // 3 - Duron, 4 - P4
-				mov esi, edi
-				mov ebx, ecx
-				and ebx, 32767
-				add esi, ebx
-//        mov [esi], cl
-				sub ecx, 1
-			jnz @Loop*)
+				@Loop:
+					mov edi, U4 ptr PMem
+					mov esi, U4 ptr PMem2
+					push ecx
+					mov ecx, 32768
+					shr ecx, 2
+					cld
+						rep movsd
+					pop ecx
+					sub ecx, 1
+				jnz @Loop}
+	(*
+				mov ecx, 999998 // 1M
+	//      mov edi, U4 ptr PMem
+				@Loop: // 3 - Duron, 4 - P4
+					mov esi, edi
+					mov ebx, ecx
+					and ebx, 32767
+					add esi, ebx
+	//        mov [esi], cl
+					sub ecx, 1
+				jnz @Loop*)
 
-			mov ecx, Count - 1 // 1M
-			mov edi, PMem
-			@Loop: // 4 clocks
-				mov eax, ecx
-				mov esi, edi
-				and eax, MaxMem4
-				sub ecx, 1
-				mov [esi+4*eax], ebx
-			jnz @Loop
+				mov ecx, Count - 1 // 1M
+				mov edi, PMem
+				@Loop: // 4 clocks
+					mov eax, ecx
+					mov esi, edi
+					and eax, MaxMem4
+					sub ecx, 1
+					mov [esi+4*eax], ebx
+				jnz @Loop
 
-			popad
-			end;
-			CPUTick := GetCPUCounter.A - CPUTick;
-			TickCount := PerformanceCounter - TickCount;
-			if TickCount > 0 then
-			begin
-				SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
-				SysInfo.CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
-			end
-			else
-			begin
+				popad
+				end;
+				CPUTick := GetCPUCounter.A - CPUTick;
+				TickCount := PerformanceCounter - TickCount;
+				if TickCount > 0 then
+				begin
+					SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
+					SysInfo.CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
+				end
+				else
+				begin
+					SysInfo.CPUFrequency := 0;
+					SysInfo.CPUPower := 0;
+				end;
+			except
+				CPUException := True;
 				SysInfo.CPUFrequency := 0;
 				SysInfo.CPUPower := 0;
 			end;
-		except
-			CPUException := True;
-			SysInfo.CPUFrequency := 0;
-			SysInfo.CPUPower := 0;
+		finally
+			SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
+			FreeMem(PMem);
 		end;
-		SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
-		FreeMem(PMem);
 	end;
 end;
 (*
@@ -480,7 +479,6 @@ end; *)
 
 procedure FillDynamicInfo(var SysInfo: TSysInfo);
 begin
-	FillDiskInfo(SysInfo);
 	FillMemoryStatus(SysInfo);
 	SysInfo.CPUUsage := GetCPUUsage(0);
 	FillCPUTest(SysInfo);
@@ -601,10 +599,6 @@ end;
 	EditDuron.Text := NToS(GSysInfo.CPUPower) + ' Hz';
 	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz';
 
-	edDiskU.Text := BToStr(GSysInfo.DiskTotal - GSysInfo.DiskFree);
-	edDiskF.Text := BToStr(GSysInfo.DiskFree);
-	edDiskT.Text := BToStr(GSysInfo.DiskTotal);
-
 	edMU.Text := BToStr(GSysInfo.MS.dwTotalPhys - GSysInfo.MS.dwAvailPhys);
 	edMF.Text := BToStr(GSysInfo.MS.dwAvailPhys);
 	edMT.Text := BToStr(GSysInfo.MS.dwTotalPhys);
@@ -612,7 +606,6 @@ end;
 	edFU.Text := BToStr(GSysInfo.MS.dwTotalPageFile - GSysInfo.MS.dwAvailPageFile);
 	edFF.Text := BToStr(GSysInfo.MS.dwAvailPageFile);
 	edFT.Text := BToStr(GSysInfo.MS.dwTotalPageFile);
-
 end;
 
 procedure TfSysInfo.ButtonOkClick(Sender: TObject);
@@ -630,8 +623,6 @@ begin
 end;
 
 procedure Init;
-var
-	Info: TInfo;
 begin
 	GSysInfo.OS.dwOSVersionInfoSize := SizeOf(GSysInfo.OS);
 	GetVersionEx(GSysInfo.OS);
@@ -643,13 +634,10 @@ begin
 	FillSysInfoD(SysInfo);
 	PerformanceFrequency := SysInfo.CPUFrequency;}
 
-	Info := TInfo.Create(nil);
-	GSysInfo.ProgramVersion := Info.GetProjectInfo(piFileVersion);
-	Info.Free;
+//	GSysInfo.ProgramVersion := GetProjectInfo(piProductVersion);
 
 	CPUUsage := 0 * CPUUsageMul;
 	GetCPUUsage(0);
-
 end;
 
 initialization

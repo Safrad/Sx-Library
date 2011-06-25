@@ -1,3 +1,11 @@
+//* File:     Lib\uColor.pas
+//* Created:  1999-10-01
+//* Modified: 2007-03-31
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uColor;
 
 interface
@@ -21,6 +29,7 @@ const
 	MaxSpectrum = 1529;
 	MaxSpectrum2 = 762;
 	MaxFireColor = 765;
+	MaxMixColor = 65536;
 
 type
 	PRGB = ^TRGB;
@@ -563,44 +572,44 @@ function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
 begin
 	C1 := ColorToRGB(C1);
 	C2 := ColorToRGB(C2);
-	TRGBA(Result).R := (Per1 * TRGBA(C1).R + Per2 * TRGBA(C2).R + 32768) shr 16;
-	TRGBA(Result).G := (Per1 * TRGBA(C1).G + Per2 * TRGBA(C2).G + 32768) shr 16;
-	TRGBA(Result).B := (Per1 * TRGBA(C1).B + Per2 * TRGBA(C2).B + 32768) shr 16;
+	TRGBA(Result).R := (Per1 * TRGBA(C1).R + Per2 * TRGBA(C2).R + MaxMixColor div 2) shr 16;
+	TRGBA(Result).G := (Per1 * TRGBA(C1).G + Per2 * TRGBA(C2).G + MaxMixColor div 2) shr 16;
+	TRGBA(Result).B := (Per1 * TRGBA(C1).B + Per2 * TRGBA(C2).B + MaxMixColor div 2) shr 16;
 	TRGBA(Result).A := 0;
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
 begin
-	Assert((Per1 >= 0) and (Per1 <= 65536));
-	Assert((Per2 >= 0) and (Per2 <= 65536));
-	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
-	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
-	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
-	Result.A := (Per1 * C1.A + Per2 * C2.A + 32768) shr 16;
+	Assert((Per1 >= 0) and (Per1 <= MaxMixColor));
+	Assert((Per2 >= 0) and (Per2 <= MaxMixColor));
+	Result.R := (Per1 * C1.R + Per2 * C2.R + MaxMixColor div 2) shr 16;
+	Result.G := (Per1 * C1.G + Per2 * C2.G + MaxMixColor div 2) shr 16;
+	Result.B := (Per1 * C1.B + Per2 * C2.B + MaxMixColor div 2) shr 16;
+	Result.A := (Per1 * C1.A + Per2 * C2.A + MaxMixColor div 2) shr 16;
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
 begin
-	Assert((Per1 >= 0) and (Per1 <= 65536));
-	Assert((Per2 >= 0) and (Per2 <= 65536));
-	Result.R := (Per1 * C1.R + Per2 * C2.R + 32768) shr 16;
-	Result.G := (Per1 * C1.G + Per2 * C2.G + 32768) shr 16;
-	Result.B := (Per1 * C1.B + Per2 * C2.B + 32768) shr 16;
+	Assert((Per1 >= 0) and (Per1 <= MaxMixColor));
+	Assert((Per2 >= 0) and (Per2 <= MaxMixColor));
+	Result.R := (Per1 * C1.R + Per2 * C2.R + MaxMixColor div 2) shr 16;
+	Result.G := (Per1 * C1.G + Per2 * C2.G + MaxMixColor div 2) shr 16;
+	Result.B := (Per1 * C1.B + Per2 * C2.B + MaxMixColor div 2) shr 16;
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 begin
-	Result := MixColors(C1, C2, Per, 65536 - Per);
+	Result := MixColors(C1, C2, Per, MaxMixColor - Per);
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
 begin
-	Result := MixColors(C1, C2, Per, 65536 - Per);
+	Result := MixColors(C1, C2, Per, MaxMixColor - Per);
 end;
 (*-------------------------------------------------------------------------*)
 function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
 begin
-	Result := MixColors(C1, C2, Per, 65536 - Per);
+	Result := MixColors(C1, C2, Per, MaxMixColor - Per);
 end;
 
 end.

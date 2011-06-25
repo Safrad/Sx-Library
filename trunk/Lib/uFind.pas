@@ -1,10 +1,10 @@
 //* File:     Lib\uFind.pas
 //* Created:  1999-05-01
-//* Modified: 2006-01-25
-//* Version:  X.X.35.X
-//* Author:   Safranek David (Safrad)
+//* Modified: 2007-05-11
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.webzdarma.cz
+//* Web:      http://safrad.own.cz
 
 unit uFind;
 
@@ -87,6 +87,13 @@ var
 	{$endif}
 begin
 	MaxIndex := Length(AValue) - 1;
+	if MaxIndex < 0 then
+	begin
+		Result := False;
+		FromV := -1;
+		ToV := -1;
+		Exit;
+	end;
 
 	{$ifopt d+}
 	for i := MinIndex to MaxIndex - 1 do

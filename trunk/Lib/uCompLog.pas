@@ -1,3 +1,11 @@
+//* File:     Lib\uCompLog.pas
+//* Created:  1998-01-01
+//* Modified: 2007-05-07
+//* Version:  1.1.37.8
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uCompLog;
 
 interface
@@ -27,38 +35,47 @@ var
 	FileName: TFileName;
 	CompileC: SG;
 begin
-	ProjectName := ToolServices.GetProjectName;
-	if ProjectName = '' then Exit; // No opened project
-	ProjectDir := ExtractFilePath(ProjectName);
-	if ProjectDir = '' then Exit;
-
-	// Compile Count
-	FileName := ProjectDir + 'CompileC.log';
-	if FileExists(FileName) then
+	if ToolServices <> nil then
 	begin
-		AssignFile(F, FileName);
-		Reset(F);
-		Read(F, S);
-		CloseFile(F);
-		CompileC := StrToInt(S);
-	end
-	else
-		CompileC := 0;
-	Inc(CompileC);
-	AssignFile(F, FileName);
-	Rewrite(F);
-	Write(F, IntToStr(CompileC));
-	CloseFile(F);
+		ProjectName := ToolServices.GetProjectName;
+		if ProjectName = '' then Exit; // No opened project
+		ProjectDir := ExtractFilePath(ProjectName);
+		if ProjectDir = '' then Exit;
 
-	// Compile History
-	FileName := ProjectDir + 'CompileH.log';
-	AssignFile(F, FileName);
-	if not FileExists(FileName) then
-		Rewrite(F)
-	else
-		Append(F);
-	WriteLn(F, DateTimeToS(Now, 3) + CharTab + 'Succeeded: ' + FalseTrue[SG(Succeeded)] + ', IsCodeInsight: ' + FalseTrue[SG(IsCodeInsight)]);
-	CloseFile(F);
+		// Compile Count
+		FileName := ProjectDir + 'CompileC.log';
+		if FileExists(FileName) then
+		begin
+			AssignFile(F, FileName);
+			try
+				Reset(F);
+				Read(F, S);
+			finally
+				CloseFile(F);
+			end;
+			CompileC := StrToInt(S);
+		end
+		else
+			CompileC := 0;
+		Inc(CompileC);
+		AssignFile(F, FileName);
+		try
+			Rewrite(F);
+			Write(F, IntToStr(CompileC));
+		finally
+			CloseFile(F);
+		end;
+
+		// Compile History
+		FileName := ProjectDir + 'CompileH.log';
+		AssignFile(F, FileName);
+		if not FileExists(FileName) then
+			Rewrite(F)
+		else
+			Append(F);
+		WriteLn(F, DateTimeToS(Now, 3, ofIO) + CharTab + 'Succeeded: ' + FalseTrue[SG(Succeeded)] + ', IsCodeInsight: ' + FalseTrue[SG(IsCodeInsight)]);
+		CloseFile(F);
+	end;
 end;
 
 procedure TAddInNotifier.AfterCompile(Succeeded: Boolean);
