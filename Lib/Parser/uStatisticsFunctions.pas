@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uStatisticsFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-12
-//* Version:  1.1.37.8
+//* Modified: 2007-09-27
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -13,19 +13,18 @@ interface
 uses
 	uTypes,
 	uVector;
-// Statistics
-{
-function CountData(const Data: array of FA): FA;
-function Minimum(const Data: array of FA): FA;
-function Maximum(const Data: array of FA): FA;
-function Sum(const Data: array of FA): FA;
-function Sumx(const Data: array of FA; x: SG): FA;
-function Avg(const Data: array of FA): FA;
-function _mx(const Data: array of FA; x: SG): FA;
-function ux(const Data: array of FA; x: SG): FA;
-function Variance0(const Data: array of FA): FA;
-function VarianceCoef(const Data: array of FA): FA;
-function Skew(const Data: array of FA): FA;}
+
+function CountData(const Data: array of TVector): TVector;
+function Minimum(const Data: array of TVector): TVector;
+function Maximum(const Data: array of TVector): TVector;
+function Sum(const Data: array of TVector): TVector;
+function Sumx(const Data: array of TVector; x: TVector): TVector;
+function Avg(const Data: array of TVector): TVector;
+function _mx(const Data: array of TVector; x: TVector): TVector;
+function ux(const Data: array of TVector; x: TVector): TVector;
+function Variance0(const Data: array of TVector): TVector;
+function VarianceCoef(const Data: array of TVector): TVector;
+function Skew(const Data: array of TVector): TVector;
 
 implementation
 

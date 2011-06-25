@@ -1,7 +1,7 @@
 //* File:     Lib\uVector.pas
 //* Created:  2006-05-03
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-11-27
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -58,6 +58,12 @@ function PowerVector(const V1, V2: TVector): TVector;
 function LogVector(const V1, V2: TVector): TVector;
 function LnVector(const V: TVector): TVector;
 function CompareVector(const V1, V2: TVector): FA;
+function ShlVector(const V1, V2: TVector): TVector;
+function ShrVector(const V1, V2: TVector): TVector;
+function AndVector(const V1, V2: TVector): TVector;
+function OrVector(const V1, V2: TVector): TVector;
+function XorVector(const V1, V2: TVector): TVector;
+function XnorVector(const V1, V2: TVector): TVector;
 
 function NumToVector(const Num: FA): TVector;
 function VectorToNum(const V: TVector): FA;
@@ -218,6 +224,54 @@ end;
 function CompareVector(const V1, V2: TVector): FA;
 begin
 	Result := VectorLength(V1) - VectorLength(V2);
+end;
+
+function ShlVector(const V1: TVector; const V2: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V1));
+	for i := 0 to Length(V1) - 1 do
+		Result[i] := Round(V1[i]) shl Round(VectorToNum(V2));
+end;
+
+function ShrVector(const V1: TVector; const V2: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V1));
+	for i := 0 to Length(V1) - 1 do
+		Result[i] := Round(V1[i]) shr Round(VectorToNum(V2));
+end;
+
+function AndVector(const V1: TVector; const V2: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V1));
+	for i := 0 to Length(V1) - 1 do
+		Result[i] := Round(V1[i]) and Round(VectorToNum(V2));
+end;
+
+function OrVector(const V1: TVector; const V2: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V1));
+	for i := 0 to Length(V1) - 1 do
+		Result[i] := Round(V1[i]) or Round(VectorToNum(V2));
+end;
+
+function XorVector(const V1: TVector; const V2: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V1));
+	for i := 0 to Length(V1) - 1 do
+		Result[i] := Round(V1[i]) xor Round(VectorToNum(V2));
+end;
+
+function XnorVector(const V1: TVector; const V2: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V1));
+	for i := 0 to Length(V1) - 1 do
+		Result[i] := not (Round(V1[i]) xor Round(VectorToNum(V2)));
 end;
 
 (*

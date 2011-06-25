@@ -1,7 +1,7 @@
 //* File:     Lib\uMultiIns.pas
 //* Created:  2000-05-01
-//* Modified: 2007-05-20
-//* Version:  1.1.37.8
+//* Modified: 2007-11-27
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -92,9 +92,12 @@ begin
 	end
 	else
 	begin
-		Atom := GlobalAddAtom(PChar(GetCommandLine));
-		BroadcastFocusMessage(Atom, 0);
-		Halt(1);
+// TODO if not RegisterParam(-NewInstance) then
+		begin
+			Atom := GlobalAddAtom(PChar(GetCommandLine));
+			BroadcastFocusMessage(Atom, 0);
+			Halt(1);
+		end;
 	end;
 end;
 

@@ -1,7 +1,7 @@
 //* File:     Lib\uWatch.pas
 //* Created:  1998-07-01
-//* Modified: 2007-05-20
-//* Version:  1.1.37.8
+//* Modified: 2007-11-25
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -10,7 +10,9 @@ unit uWatch;
 
 interface
 
-uses SysUtils, Messages;
+uses
+	uTypes,
+	SysUtils, Messages;
 
 type
 	TWatchFileChanged = procedure(const FileName: TFileName);
@@ -18,20 +20,20 @@ type
 
 procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChanged); overload;
 procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChangedEx); overload;
+procedure WatchChange(const FileName: TFileName; const Changed: BG);
 procedure WatchRemoveFile(const FileName: TFileName);
 
 implementation
 
 uses
 	Windows, Controls, Forms,
-	uTypes, uFiles, uStrings, uMsg, uMath, uData, uOutputFormat;
+	uFiles, uStrings, uMsg, uMath, uData, uOutputFormat;
 
 type
 	PWatchedFile = ^TWatchedFile;
 	TWatchedFile = packed record
 		LastWriteTime: TFileTime; // 8
 		FileName: TFileName; // 4
-		// TODO : Changed not used
 		Changed: B4; // 4
 		OnChange: TWatchFileChanged;
 	end;
@@ -153,6 +155,20 @@ begin
 // TODO:
 //	OnChangeEx := OnChange;
 //	WatchAddFile(FileName, OnChangeEx);
+end;
+
+procedure WatchChange(const FileName: TFileName; const Changed: BG);
+var i: SG;
+begin
+	i := 0;
+	while i < WatchedFiles.Count do
+	begin
+		if PWatchedFile(WatchedFiles[i]).FileName = FileName then
+		begin
+			PWatchedFile(WatchedFiles[i]).Changed := Changed;
+		end;
+		Inc(i);
+	end;
 end;
 
 procedure WatchRemoveFile(const FileName: TFileName);

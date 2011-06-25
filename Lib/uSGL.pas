@@ -1,7 +1,7 @@
 //* File:     Lib\uSGL.pas
 //* Created:  2005-03-09
-//* Modified: 2007-05-13
-//* Version:  1.1.37.8
+//* Modified: 2007-11-26
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -849,12 +849,11 @@ procedure sglClear(R, G, B, A: U1);
 begin
 	if Check then
 	begin
-		FillChar(Drawable._frameBuffer^, Drawable._frameBufferSize, 0);
-// TODO : if BPP = 4 then
-{			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
+		if BPP = 4 then
+			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
 				B or (G shl 8) or (R shl 16) or (A shl 24))
-{		else
-			FillChar(Drawable[_currentDrawable]._frameBuffer^, Drawable[_currentDrawable]._frameBufferSize, 255);}
+		else
+			FillChar(Drawable._frameBuffer^, Drawable._frameBufferSize, 0);
 	end;
 end;
 

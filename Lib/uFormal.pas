@@ -1,7 +1,7 @@
 //* File:     Lib\uFormal.pas
 //* Created:  1999-06-01
 //* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

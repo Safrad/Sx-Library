@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uParserMsg.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-08-19
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -156,9 +156,9 @@ begin
 	if Assigned(Data) and (Data.Count > 0) then
 	begin
 		if FileName <> '' then
-			ErrorMsg('Parsing file %1', FileName + LineSep + ToString())
+			ErrorMsg('Parsing file %1', [FileName + LineSep + ToString()])
 		else
-			ErrorMsg('Parsing' + LineSep + '%1', ToString);
+			ErrorMsg('Parsing' + LineSep + '%1', [ToString]);
 		Clear;
 	end;
 end;

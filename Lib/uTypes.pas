@@ -1,7 +1,7 @@
 //* File:     Lib\uTypes.pas
 //* Created:  1998-01-01
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-08-14
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -222,6 +222,11 @@ type
 		// ltAlert, // Action must be taken immediately
 		// ltEmerg, // Emergencies - system is unusable
 		mtNone);
+
+const
+	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
+	IndexFile = 'index' + HTMLExt;
+	nbsp = '&nbsp;'; // Non-dividable Blank SPace.
 
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);

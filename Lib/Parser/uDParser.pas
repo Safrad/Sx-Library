@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uDParser.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-10-21
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,7 +11,7 @@ unit uDParser;
 interface
 
 uses
-	Classes, StdCtrls, SysUtils, Controls,
+	SysUtils,
 	uTypes, uData, uMath, uVector, uCharTable, uParserMsg, uNamespace, uInputFormat;
 
 type
@@ -317,7 +317,7 @@ type
 
 		function NodeE(Node: PNode): PNode;
 
-		constructor Create(Stream: TStream); overload;
+//		constructor Create(Stream: TStream); overload;
 		constructor Create(Buffer: Pointer; Size: UG); overload;
 		constructor Create(Line: string); overload;
 		constructor CreateFromFile(FileName: TFileName);
@@ -327,7 +327,7 @@ type
 		procedure Error(const Ident: string);
 		procedure ErrorFmt(const Ident: string; const Args: array of const);
 		procedure ErrorStr(const Message: string);
-		procedure HexToBinary(Stream: TStream);
+//		procedure HexToBinary(Stream: TStream);
 		procedure ReadInput;
 		function NextToken: string;
 		function SourcePos: SG;
@@ -355,7 +355,7 @@ type
 		function GetInt: SG;
 		function GetIntE: SG;
 		function GetStr: string;
-		function GetDate: TDate;
+		function GetDate: TDateTime;
 		procedure NextLine;
 		procedure ReadToNewLine;
 		function ReadMs(MinVal, DefVal, MaxVal: UG): UG;
@@ -364,8 +364,8 @@ type
 		function ReadSGFast(MinVal, DefVal, MaxVal: SG): SG;
 		procedure SkipLine;
 		procedure SkipBlanks;
-		procedure Skip(CharCount: SG);
-		procedure ReadToChar(C: Char);
+		procedure Skip(const CharCount: SG);
+		procedure ReadToChar(const C: Char);
 		procedure LetterCharTable;
 
 		procedure AddMes(const MesId: TMesId; const Params: array of string);
@@ -381,12 +381,12 @@ uses
 	Math, TypInfo,
 	uStrings, uFind, uFiles, uLog, uOutputFormat;
 
-constructor TDParser.Create(Stream: TStream);
+{constructor TDParser.Create(Stream: TStream);
 begin
 	GetMem(FBuffer, Stream.Size);
 	Stream.Read(FBuffer, Stream.Size);
 	Create(FBuffer, Stream.Size);
-end;
+end;}
 
 constructor TDParser.Create(Buffer: Pointer; Size: UG);
 begin
@@ -468,10 +468,10 @@ begin
 
 end;
 
-procedure TDParser.HexToBinary(Stream: TStream);
+{procedure TDParser.HexToBinary(Stream: TStream);
 begin
 
-end;
+end;}
 
 procedure TDParser.NodeNumber;
 label LNext;
@@ -737,16 +737,27 @@ begin
 	end;
 end;
 
-procedure TDParser.Skip(CharCount: SG);
+procedure TDParser.Skip(const CharCount: SG);
 begin
 	Inc(BufRI, CharCount); if BufRI > BufRC then BufRI := BufRC;
 end;
 
-procedure TDParser.ReadToChar(C: Char);
+procedure TDParser.ReadToChar(const C: Char);
 begin
 	Id := '';
 	while not EOI do
 	begin
+		if CharTable[BufR[BufRI]] = ctReturn then
+		begin
+			Inc(LinesL);
+			Inc(LinesG);
+			LineBegin := True;
+			LineStart := BufRI + 1;
+
+			if BufR[BufRI] = CharCR then
+				if BufR[BufRI + 1] = CharLF then Inc(BufRI);
+		end;
+
 		if BufR[BufRI] = C then
 		begin
 			Break;
@@ -790,6 +801,7 @@ begin
 	Id := '';
 	InReal := 0;
 	InInteger := 0;
+	InputType := itEmpty;
 
 	if EOI then
 	begin
@@ -836,6 +848,11 @@ begin
 		end
 		else if (CharTable[BufR[BufRI]] = ctReturn) then
 		begin
+			Inc(LinesL);
+			Inc(LinesG);
+			LineBegin := True;
+			LineStart := BufRI + 1;
+
 			if EnableSpace = 1 then
 			begin
 				if InputType in [itSpaceTab, itReturn] then
@@ -857,12 +874,6 @@ begin
 				Marks := maNone;
 			end;
 			end;
-			Inc(LinesL);
-			Inc(LinesG);
-//				BufW[BufIW] := BufR[BufRI];
-//				Inc(BufIW);
-			LineBegin := True;
-			LineStart := BufRI + 1;
 			if EnableReturn then
 			begin
 				InputType := itReturn;
@@ -1398,6 +1409,10 @@ begin
 			begin
 				ReadInput;
 			end;
+			itEmpty:
+			begin
+				ReadInput;
+			end
 			else
 			//itInteger, itReal, itIdent, itMinus:
 			begin
@@ -1817,7 +1832,7 @@ begin
 	ReadInput;
 end;
 
-function TDParser.GetDate: TDate;
+function TDParser.GetDate: TDateTime;
 begin
 	Result := SToDate(Id, InputFormat);
 	ReadInput;

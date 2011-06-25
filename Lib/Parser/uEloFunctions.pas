@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uEloFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-20
-//* Version:  1.1.37.8
+//* Modified: 2007-11-06
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -19,6 +19,7 @@ const
 function GetElo(Fruitfulness: FA): SG;
 function GetArcElo(EloDifference: FA): FA;
 function ExpectedRes(Elo, OpElo: SG; Bonus: SG; Rounded: BG): SG;
+function DeltaElo(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): Extended;
 
 function ScoreToS(Score: UG; HTML: BG = True): string;
 function EloToStr(Elo: U2; const OutputFormat: TOutputFormat): string;
@@ -27,7 +28,7 @@ implementation
 
 uses
 	SysUtils,
-	uNamespace, uMath, uHTML;
+	uNamespace, uMath;
 
 var
 	EloTable: array[0..50] of SG = (
@@ -143,6 +144,19 @@ begin
 		end;
 	end;
 	Result := NumToVector(GetArcElo(e));
+end;
+
+function DeltaElo(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): Extended;
+var
+	Coef: SG;
+begin
+	if Elo >= 2400 then
+		Coef := 10
+	else if (Age < 20 * 365) and (Elo < 2200) then
+		Coef := 25
+	else
+		Coef := 15;
+	Result := Coef * (Score / ScoreOne - Round(100 * GameCount * GetArcElo(Elo - AvgElo)) / 100);
 end;
 
 function EloC(const Args: array of TVector): TVector;
