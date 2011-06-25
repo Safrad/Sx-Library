@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDayTip.pas
-//* Created:  2000-08-01
-//* Modified: 2007-04-21
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDayTip.pas
+// * Created:  2000-08-01
+// * Modified: 2009-08-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDayTip;
 
@@ -19,7 +19,7 @@ type
 	TfDayTip = class(TDForm)
 		Image1: TImage;
 		ButtonShowTipsOnStartup: TDButton;
-		MemoTip: TMemo;
+		MemoTip: TDMemo;
 		ButtonPreviousTip: TDButton;
 		ButtonNextTip: TDButton;
 		ButtonClose: TDButton;

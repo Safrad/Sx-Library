@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uMsgDlg.pas
-//* Created:  1999-12-01
-//* Modified: 2008-02-16
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uMsgDlg.pas
+// * Created:  1999-12-01
+// * Modified: 2009-12-13
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uMsgDlg;
 
@@ -13,15 +13,35 @@ interface
 uses
 	Dialogs, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Consts,
 	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel, uWave,
-	uDForm, uDTimer, uDEdit, uMsg, uTypes, uDWinControl;
+	uDForm, uDTimer, uDEdit, uMsg, uTypes, uDWinControl, uDMemo;
 
 type
+	TIgnoreAll = (iaNone, iaSame, iaAll);
+
+	PIgnore = ^TIgnore;
+	TIgnore = packed record // 32
+		MsgType: TMessageLevel; // 1
+		Retry: B1; // 1
+		Ignore: TIgnoreAll; // 1
+		Reserved: U1;
+
+		Text: string; // 4
+		Param: array of string; // 4
+//		ErrorFileName: TFileName; // 4
+		Res: S4; // 4
+
+		Buttons: array of string; // 4
+
+		DateTime: TDateTime; // 8
+		TimeLeft: U2; // 4
+	end;
+
 	TfMsgDlg = class(TDForm)
 		ButtonExit: TDButton;
 		OpenDialogFile: TOpenDialog;
-		MemoMsg: TMemo;
+		MemoMsg: TRichEdit;
 		LabelX: TLabel;
-		PanelCount: TDLabel;
+		PanelCount: TDEdit;
 		Timer1: TDTimer;
 		Image: TImage;
 		LabelTimeLeft: TDLabel;
@@ -62,6 +82,7 @@ type
 		procedure ShowMes;
 		procedure TryClose;
 		procedure ShowForm;
+		procedure FillMemo(const Ignore: PIgnore);
 	public
 		{ Public declarations }
 	end;
@@ -90,32 +111,12 @@ implementation
 
 {$R *.DFM}
 uses
-	uFiles,
+	uFiles, uColor, uDictionary,
 	uStrings, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uSimulation,
 	Registry, MMSystem, Math;
 
-type
-	TIgnoreAll = (iaNone, iaSame, iaAll);
 var
 	IgnoreAll: TIgnoreAll;
-type
-	PIgnore = ^TIgnore;
-	TIgnore = packed record // 32
-		MsgType: TMessageLevel; // 1
-		Retry: B1; // 1
-		Ignore: TIgnoreAll; // 1
-		Reserved: U1;
-
-		Text: string; // 4
-		Param: array of string; // 4
-//		ErrorFileName: TFileName; // 4
-		Res: S4; // 4
-
-		Buttons: array of ShortString; // 4
-
-		DateTime: TDateTime; // 8
-		TimeLeft: U2; // 4
-	end;
 
 var
 	fMsgDlg: TfMsgDlg;
@@ -139,6 +140,61 @@ end;
 const
 	IconIDs: array[TMessageLevel] of PChar = (IDI_QUESTION, IDI_WINLOGO, IDI_INFORMATION, IDI_WARNING, IDI_ERROR,
 		IDI_APPLICATION, '');
+
+procedure TfMsgDlg.FillMemo(const Ignore: PIgnore);
+var
+	i, LastPos, Id: SG;
+	Input, Output, p: string;
+	ParamStart: array of SG;
+begin
+//	MemoMsg.Lines.BeginUpdate;
+	try
+		SetLength(ParamStart, Length(Ignore.Param));
+		i := 1;
+		if StartStr(ErrorCodeStr, Ignore.Text) then
+			Input := Ignore.Text
+		else
+			Input := Translate(Ignore.Text);
+		while i <= Length(Input) do
+		begin
+			LastPos := i;
+			i := PosEx('%', Input, i);
+			if i = 0 then
+				i := MaxInt;
+			Output := Output + Copy(Input, LastPos, i - LastPos);// ReplaceF(Msg, CharLF, CharCR + CharLF);
+{			MemoMsg.SelStart := LastPos;
+			MemoMsg.SelLength := i - LastPos;
+			MemoMsg.SelAttributes.Color := clWindowText;}
+
+			if i = MaxInt then Break;
+
+			Inc(i); // Accept %
+			Id := uStrings.ReadSGFast(Input, i);
+			if (Id > 0) and (Id <= Length(Ignore.Param)) then
+			begin
+				ParamStart[Id - 1] := Length(Output) + 1;
+				p := '''' + Ignore.Param[Id - 1] + '''';
+				// Inc(i, Length(p));
+				Output := Output + p;
+			end;
+		end;
+		MemoMsg.Text := Output;
+		for i := 0 to Length(Ignore.Param) - 1 do
+		begin
+			if ParamStart[i] <> 0 then
+			begin
+				MemoMsg.SelStart := ParamStart[i];
+				MemoMsg.SelLength := Length(Ignore.Param[i]);
+				MemoMsg.SelAttributes.Color := MixColors(clWindowText, SpectrumColor(128 * i mod (MaxSpectrum + 1)));
+				MemoMsg.SelAttributes.Style := [fsBold];
+			end;
+		end;
+
+	finally
+//		MemoMsg.Lines.EndUpdate;
+	end;
+//	MemoMsg.Update;
+end;
 
 procedure TfMsgDlg.ShowMes;
 var
@@ -244,11 +300,7 @@ begin
 	MaxWid := Min(MaxWid, R.Right - R.Left - 2 * (Width - ClientWidth));
 	MemoMsg.SetBounds(MemoMsg.Left, MemoMsg.Top, MaxWid - MemoMsg.Left - FormBorder + 6, Hei);
 
-	MemoMsg.Lines.BeginUpdate;
-//	MemoMsg.Lines.Clear;
-//	MemoMsg.Lines.Insert(0, ReplaceF(Ignore.Msg, CharLF, CharCR + CharLF));
-	MemoMsg.Text := ReplaceF(Msg, CharLF, CharCR + CharLF);
-	MemoMsg.Lines.EndUpdate;
+	FillMemo(Ignore);
 //	Hei := Max(Hei, ButtonAll.Top + ButtonAll.Height + 6);
 	Inc(Hei, MemoMsg.Top + FormBorder);
 	ClientWidth := MaxWid;
@@ -265,6 +317,8 @@ begin
 		Inc(Wid, FButtons[i].Width + FormBorder);
 		FButtons[i].Visible := True;
 	end;
+	if Assigned(Dictionary) then
+		Dictionary.TranslateForm(Self);
 end;
 {
 procedure TfIOError.UpDown1ChangingEx(Sender: TObject;
@@ -302,8 +356,8 @@ begin
 	if (ShiftDown = False) and (Key = VK_SHIFT) then
 	begin
 		ShiftDown := True;
-		ButtonAll.Caption := 'Never Show';
-		ButtonExit.Caption := 'Terimante';
+		ButtonAll.Caption := Translate('Never Show');
+		ButtonExit.Caption := Translate('Terminate');
 	end;
 end;
 
@@ -313,8 +367,8 @@ begin
 	if (ShiftDown = True) and (Key = VK_SHIFT) then
 	begin
 		ShiftDown := False;
-		ButtonAll.Caption := 'Use Answer for All';
-		ButtonExit.Caption := 'Close Program';
+		ButtonAll.Caption := Translate('Use Answer for All');
+		ButtonExit.Caption := Translate('Close Program');
 	end;
 end;
 
@@ -338,7 +392,7 @@ end;
 procedure TfMsgDlg.ShowForm;
 var Ignore: PIgnore;
 begin
-	PanelCount.Caption := NToS(Ignores.Count);
+	PanelCount.Text := NToS(Ignores.Count);
 
 	if Visible = False then
 	begin
@@ -355,7 +409,7 @@ begin
 		DrawTimeLeft;
 
 		ModalResult := mrNone;
-		if Application.Terminated then
+{		if Application.Terminated then
 		begin
 			FormStyle := fsStayOnTop;
 			Timer1.Enabled := True;
@@ -367,18 +421,29 @@ begin
 			Hide;
 		end
 		else
-		begin
+		begin}
 			FormStyle := fsNormal;
 			Timer1.Enabled := True;
 			ShowModal;
-		end;
+{		end;}
 	end
 	else
 	begin
-		Ignore :=Ignores.Get(ActItem);
+		Ignore := Ignores.Get(ActItem);
 		Ignore.Res := -1;
 		Exit;
 	end;
+end;
+
+procedure ShowDlg;
+begin
+	if not Assigned(fMsgDlg) then
+	begin
+		fMsgDlg := TfMsgDlg.Create(nil{ActiveForm - fSplash destroys this form});
+		fMsgDlg.Background := baGradient;
+	end;
+	fMsgDlg.Center;
+	fMsgDlg.ShowForm;
 end;
 
 function MsgDlg(
@@ -417,13 +482,11 @@ begin
 
 
 	Result := -1; // If Window X is pressed (None of button pressed), then result is unknown.
-
 	if Ignores = nil then
 	begin
 		Ignores := TData.Create(True);
 		Ignores.ItemSize := SizeOf(TIgnore);
 	end;
-
 
 	FoundSame := False;
 	if IgnoreAll = iaSame then
@@ -492,13 +555,7 @@ begin
 			PlayWinSound(wsCriticalStop);
 		end;
 
-		if not Assigned(fMsgDlg) then
-		begin
-			fMsgDlg := TfMsgDlg.Create(ActiveForm);
-			fMsgDlg.Background := baGradient;
-		end;
-		fMsgDlg.Center;
-		fMsgDlg.ShowForm;
+		ShowDlg;
 		Ignore := Ignores.Get(fMsgDlg.ActItem);
 //		if ModalResult = mrNone then ModalResult := mrCancel;
 		if Ignore.Res = -1 then
@@ -510,8 +567,8 @@ begin
 			Result := Ignore.Res;
 //		if Ignore.ErrorFileName <> FName then FName := Ignore.ErrorFileName;
 
-		if IsMultiThread then
-			FreeAndNil(fMsgDlg);
+//		if IsMultiThread then
+		FreeAndNil(fMsgDlg); // Needed for MultiSaver crash in finalize units!
 	end
 	else
 		Ignore.Res := Result;
@@ -602,7 +659,7 @@ procedure ShowMessages;
 begin
 	if Assigned(Ignores) and (Ignores.Count > 0) then
 	begin
-		fMsgDlg.ShowForm;
+		ShowDlg;
 	end
 	else
 		MessageD('No message found.', mlInformation, [mbOk]);
@@ -699,8 +756,21 @@ begin
 		ActiveControl := FButtons[0];
 end;
 
+procedure FreeIgnores;
+var i: SG;
+begin
+	if Ignores <> nil then
+	begin
+		for i := 0 to Ignores.Count - 1 do
+		begin
+			Finalize(TIgnore(Ignores.Get(i)^));
+		end;
+		FreeAndNil(Ignores);
+	end;
+end;
+
 initialization
 
 finalization
-	FreeAndNil(Ignores);
+	FreeIgnores;
 end.

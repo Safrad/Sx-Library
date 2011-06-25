@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uSysInfo.pas
-//* Created:  2000-07-01
-//* Modified: 2009-01-07
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uSysInfo.pas
+// * Created:  2000-07-01
+// * Modified: 2009-11-07
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uSysInfo;
 
@@ -17,12 +17,16 @@ uses
 
 const
 	CPUUsageMul = 100;
+const
+	CPUStrOffset = 4 + 4 + 1;
 type
 	PSysInfo = ^TSysInfo;
 	TSysInfo = packed record // 256
 		CPU: U4;
+		CPU2: U4;
 		CPUStr: string[12]; // 13
-		Reserved0: array[0..6] of S1; // 7
+		LogicalProcessorCount: SG;
+		Reserved0: array[0..2] of S1; // 3
 		CPUFrequency: U8; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod)
 		CPUPower: U8;
 		PerformanceFrequency: U4;
@@ -89,20 +93,18 @@ function GetCPUUsage(IntTime: U8): SG;
 procedure FillDynamicInfo(var SysInfo: TSysInfo); // FillMemoryStatus + FillCPUTest
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
 procedure FillCPUTest(var SysInfo: TSysInfo);
-procedure DisplaySysInfo(SysInfo: PSysInfo);
+procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);
 procedure UpdateSysInfo(SysInfo: PSysInfo);
 
 implementation
 
 {$R *.DFM}
 uses
-	uGraph, uScreen, uStrings, uOutputFormat, uSimulation,
+	uGraph, uScreen, uStrings, uOutputFormat, uSimulation, uDictionary,
 	uProjectInfo,
 	Registry, Math;
 
 function GetKey(Default: U2): U2;
-label
-	LAgain;
 var
 	Keyboard: TKeyboardState;
 	i: Integer;
@@ -151,12 +153,12 @@ begin
 		end;
 	end;
 	else // 3
-		S := 'Unknown System ' + NToS(OS.dwPlatformId - VER_PLATFORM_WIN32_NT);
+		S := 'Unknown System ' + IntToStr(OS.dwPlatformId - VER_PLATFORM_WIN32_NT);
 	end;
 	S := S + ' (Build ' +
-		NToS(OS.dwMajorVersion) + '.' +
-		NToS(OS.dwMinorVersion) + '.' +
-		NToS(LoWord(OS.dwBuildNumber)) + ' ' +
+		IntToStr(OS.dwMajorVersion) + '.' +
+		IntToStr(OS.dwMinorVersion) + '.' +
+		IntToStr(LoWord(OS.dwBuildNumber)) + ' ' +
 		OS.szCSDVersion + ')';
 	Result := S;
 end;
@@ -358,6 +360,39 @@ asm
 @exit:
 end;
 
+procedure FillCPUID(var SysInfo: TSysInfo);
+begin
+	SysInfo.CPUStr := '            '; //StringOfChar(CharSpace, 12);
+	try
+		asm
+		pushad
+		xor eax, eax
+		xor ebx, ebx
+		xor ecx, ecx
+		xor edx, edx
+		dw 0a20fh // cpuid
+		mov eax, SysInfo
+		add eax, CPUStrOffset
+		mov [eax], ebx
+		mov [eax+4], edx
+		mov [eax+8], ecx
+
+		mov eax, 1
+		xor ebx, ebx
+		xor ecx, ecx
+		xor edx, edx
+		dw 0a20fh // cpuid
+
+		mov edx, SysInfo
+		mov [edx], eax
+		mov [edx+4], ebx
+		popad
+		end;
+	finally
+		SysInfo.LogicalProcessorCount := Max(1, Lo(SysInfo.CPU2 shr 16));
+	end;
+end;
+
 procedure FillCPUTest(var SysInfo: TSysInfo);
 var
 	TickCount: U8;
@@ -379,31 +414,6 @@ begin
 		try
 			SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
 			try
-				SysInfo.CPUStr := StringOfChar(CharSpace, 12);
-				asm
-				pushad
-				xor eax, eax
-				xor ebx, ebx
-				xor ecx, ecx
-				xor edx, edx
-				dw 0a20fh // cpuid
-				mov eax, SysInfo
-				add eax, 5
-				mov [eax], ebx
-				mov [eax+4], edx
-				mov [eax+8], ecx
-
-				mov eax, 1
-				xor ebx, ebx
-				xor ecx, ecx
-				xor edx, edx
-				dw 0a20fh // cpuid
-
-				mov edx, SysInfo
-				mov [edx], eax
-				popad
-				end;
-
 				TickCount := PerformanceCounter;
 				CPUTick := GetCPUCounter.A;
 				asm
@@ -601,10 +611,11 @@ begin
 		s := 'UMC ';
 
 	if s <> '' then
-		s := s + ', ';
-	s := s + 'Family: ' + NToS(Family) + ', ';
-	s := s + 'Model: ' + NToS(Model) + ', ';
-	s := s + 'Stepping: ' + NToS(SysInfo.CPU and $000000f);
+		s := s + ListSeparator;
+	s := s + 'Family: ' + NToS(Family) + ListSeparator;
+	s := s + 'Model: ' + NToS(Model) + ListSeparator;
+	s := s + 'Stepping: ' + NToS(SysInfo.CPU and $000000f) + ListSeparator;
+	s := s + 'Cores: ' + NToS(SysInfo.LogicalProcessorCount);
 	EditCPU.Text := s;
 
 	EditCPUUsage.Text := NToS(SysInfo.CPUUsage, 2) + '%';
@@ -632,13 +643,20 @@ var
 	m: UG;
 begin
 	Background := baGradient;
-	for i := 2 to 29 do
-	begin
-		m := 1 shl i;
-		if m >= GSysInfo.MS.dwAvailPhys div 2 then Break;
-		ComboBoxSize.Items.Add(BToStr(m));
+
+	ComboBoxSize.Items.BeginUpdate;
+	try
+		for i := 2 to 29 do
+		begin
+			m := 1 shl i;
+			if m >= GSysInfo.MS.dwAvailPhys div 2 then Break;
+			ComboBoxSize.Items.Add(BToStr(m));
+		end;
+		ComboBoxSize.ItemIndex := 14;
+	finally
+		ComboBoxSize.Items.EndUpdate;
 	end;
-	ComboBoxSize.ItemIndex := 14;
+	Dictionary.TranslateForm(Self);
 end;
 
 procedure Init;
@@ -649,6 +667,7 @@ begin
 	RegionCompatibily := not ((GSysInfo.OS.dwMajorVersion < 4) or ((GSysInfo.OS.dwMajorVersion = 4) and (GSysInfo.OS.dwMinorVersion < 10)));
 
 	InitPerformanceCounter;
+	FillCPUID(GSysInfo);
 {	PerformanceType := ptCPU;
 	FillCPUTest(GSysInfo);
 	PerformanceFrequency := GSysInfo.CPUFrequency;}
@@ -661,10 +680,10 @@ begin
 	GetCPUUsage(0);
 end;
 
-procedure DisplaySysInfo(SysInfo: PSysInfo);
+procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);
 begin
 	if not Assigned(fSysInfo) then
-		fSysInfo := TfSysInfo.Create(nil);
+		fSysInfo := TfSysInfo.Create(AOwner);
 	fSysInfo.FillComp(SysInfo);
 	fSysInfo.ShowModal;
 end;
@@ -678,6 +697,7 @@ end;
 initialization
 	Init;
 finalization
+//	FreeAndNil(fSysInfo);
 	if NTSystem = False then
 	begin
 		if Reg <> nil then

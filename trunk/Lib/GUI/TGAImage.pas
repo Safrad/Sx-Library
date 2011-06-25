@@ -1,10 +1,10 @@
-//* File:     Lib\TGAImage.pas
-//* Created:  2005-03-29
-//* Modified: 2007-05-06
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\TGAImage.pas
+// * Created:  2005-03-29
+// * Modified: 2009-09-21
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit TGAImage;
 
@@ -76,79 +76,82 @@ begin
 		else
 		begin
 			GetMem(CompImage, ImageSizeS);
-			s.ReadBuffer(CompImage^, ImageSizeS);
+			try
+				s.ReadBuffer(CompImage^, ImageSizeS);
 
-			PS := CompImage;
-			if Header.ImageInfo = $20 then
-				y := Header.Height
-			else
-				y := -1;
-			while True do
-			begin
-				LNextLine:
+				PS := CompImage;
 				if Header.ImageInfo = $20 then
-				begin
-					Dec(y); if (y < 0) then Break;
-				end
+					y := Header.Height
 				else
-				begin
-					Inc(y); if (y >= Header.Height) then Break;
-				end;
-
-				PD := ScanLine[Header.Height - 1 - y]; // Align for 24bit
-				MaxPS := SG(PS) + Header.Width * ColorDepth;
-				MaxPD := SG(PD) + Header.Width * BPP;
+					y := -1;
 				while True do
 				begin
-					if Header.ImageType = 10 then
-					begin // Compressed
-						C := PU1(PS)^;
-						Inc(SG(PS), 1);
-						if SG(PS) >= MaxPS then Break;
-						if C and $80 = 0 then
-						begin
-							while C >= 0 do
+					LNextLine:
+					if Header.ImageInfo = $20 then
+					begin
+						Dec(y); if (y < 0) then Break;
+					end
+					else
+					begin
+						Inc(y); if (y >= Header.Height) then Break;
+					end;
+
+					PD := ScanLine[Header.Height - 1 - y]; // Align for 24bit
+					MaxPS := SG(PS) + Header.Width * ColorDepth;
+					MaxPD := SG(PD) + Header.Width * BPP;
+					while True do
+					begin
+						if Header.ImageType = 10 then
+						begin // Compressed
+							C := PU1(PS)^;
+							Inc(SG(PS), 1);
+							if SG(PS) >= MaxPS then Break;
+							if C and $80 = 0 then
+							begin
+								while C >= 0 do
+								begin
+									PD^ := PS^;
+									Inc(SG(PS), ColorDepth);
+									Inc(SG(PD), BPP);
+									if SG(PS) >= MaxPS then goto LNextLine;
+									if SG(PD) >= MaxPD then goto LNextLine;
+									Dec(C);
+								end;
+							end
+							else
+							begin
+								C := C and $7F;
+								while C >= 0 do
+								begin
+									PD^ := PS^;
+									Inc(SG(PD), BPP);
+									if SG(PD) >= MaxPD then
+									begin
+										Inc(SG(PS), ColorDepth);
+										goto LNextLine;
+									end;
+									Dec(C);
+								end;
+								Inc(SG(PS), ColorDepth);
+							end;
+						end
+						else
+						begin // Uncompressed
+							while True do
 							begin
 								PD^ := PS^;
 								Inc(SG(PS), ColorDepth);
 								Inc(SG(PD), BPP);
 								if SG(PS) >= MaxPS then goto LNextLine;
 								if SG(PD) >= MaxPD then goto LNextLine;
-								Dec(C);
 							end;
-						end
-						else
-						begin
-							C := C and $7F;
-							while C >= 0 do
-							begin
-								PD^ := PS^;
-								Inc(SG(PD), BPP);
-								if SG(PD) >= MaxPD then
-								begin
-									Inc(SG(PS), ColorDepth);
-									goto LNextLine;
-								end;
-								Dec(C);
-							end;
-							Inc(SG(PS), ColorDepth);
+							Break;
 						end;
-					end
-					else
-					begin // Uncompressed
-						while True do
-						begin
-							PD^ := PS^;
-							Inc(SG(PS), ColorDepth);
-							Inc(SG(PD), BPP);
-							if SG(PS) >= MaxPS then goto LNextLine;
-							if SG(PD) >= MaxPD then goto LNextLine;
-						end;
-						Break;
 					end;
 				end;
+			finally
+				FreeMem(CompImage);
 			end;
-			FreeMem(CompImage);
 		end;
 	end
 	{$ifopt d-}

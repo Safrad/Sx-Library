@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uScreen.pas
-//* Created:  1999-08-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uScreen.pas
+// * Created:  1999-08-01
+// * Modified: 2009-09-02
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uScreen;
 
@@ -238,7 +238,7 @@ begin
 	Inc(ScreenModeCount);
 end;
 
-procedure TryToAddToList(DeviceMode: TDeviceMode);
+procedure TryToAddToList(DeviceMode: TDeviceModeA);
 var
 	I: Integer;
 	Found: Boolean;
@@ -302,7 +302,7 @@ procedure ReadScreenModes;
 var
 	ModeNumber: Integer;
 	done: Boolean;
-	DeviceMode: TDeviceMode;
+	DeviceMode: TDeviceModeA;
 	i, j: Integer;
 
 	Reg: TRegistry;
@@ -397,12 +397,17 @@ begin
 		if (ActualDriver = -1) and (DriverNameCount > 1) then
 		begin
 			fScreen := TfScreen.Create(nil);
-			fScreen.ComboBoxDriver.Items.Clear;
-			for i := 0 to DriverNameCount - 1 do
-			begin
-				fScreen.ComboBoxDriver.Items.Add(NToS(i) + ': ' + DriverNames[i]);
+			fScreen.ComboBoxDriver.Items.BeginUpdate;
+			try
+				fScreen.ComboBoxDriver.Items.Clear;
+				for i := 0 to DriverNameCount - 1 do
+				begin
+					fScreen.ComboBoxDriver.Items.Add(NToS(i) + ': ' + DriverNames[i]);
+				end;
+				fScreen.ComboBoxDriver.ItemIndex := 0;
+			finally
+				fScreen.ComboBoxDriver.Items.EndUpdate;
 			end;
-			fScreen.ComboBoxDriver.ItemIndex := 0;
 			fScreen.ShowModal;
 			ActualDriver := fScreen.ComboBoxDriver.ItemIndex;
 			if MainIni <> nil then

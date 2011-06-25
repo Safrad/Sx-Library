@@ -1,10 +1,10 @@
-//* File:     Lib\uParams.pas
-//* Created:  2006-02-04
-//* Modified: 2008-12-25
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uParams.pas
+// * Created:  2006-02-04
+// * Modified: 2009-09-09
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uParams;
 
@@ -26,6 +26,7 @@ var
 
 procedure RegisterParam(const ParameterName: string; const ParameterDescription: string; const ParameterProcedure: TParamProcedure);
 procedure HelpParams(const Value: string = '');
+procedure AddCommonParams;
 procedure ReadCommandLine(const CmdLine: string);
 
 implementation
@@ -117,7 +118,7 @@ begin
 	AN := paNumberIndex >= 0;
 	DelQuote(Param);
 	if Param = '' then Exit;
-	if Param[1] in SwitchChars then
+	if CharInSet(Param[1], SwitchChars) then
 	begin
 		Delete(Param, 1, 1);
 		if Param = '' then Exit;
@@ -160,7 +161,7 @@ begin
 				end;
 			end;
 		end
-		else if AN and (Param[1] in ['0'..'9']) then
+		else if AN and CharInSet(Param[1], ['0'..'9']) then
 		begin
 			try
 				ParamProcedures[paNumberIndex](Param);
@@ -191,7 +192,6 @@ var
 	LastParam: SG;
 	ParamCount: UG;
 begin
-	AddCommonParams;
 	MainLogAdd('Reading command line: ' + CmdLine, mlInformation);
 	ParamCount := 0;
 	Quote := False;

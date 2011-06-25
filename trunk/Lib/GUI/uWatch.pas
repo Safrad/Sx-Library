@@ -1,10 +1,10 @@
-//* File:     Lib\uWatch.pas
-//* Created:  1998-07-01
-//* Modified: 2008-03-13
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uWatch.pas
+// * Created:  1998-07-01
+// * Modified: 2009-10-12
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uWatch;
 
@@ -121,7 +121,7 @@ var
 	Initialized: BG;
 	Ob: TOb;
 
-procedure Initialize;
+procedure InitializeData;
 begin
 	Initialized := True;
 	Ob := TOb.Create;
@@ -129,7 +129,7 @@ begin
 	Application.HookMainWindow(Ob.AppProc);
 end;
 
-procedure Finalize;
+procedure FinalizeData;
 begin
 	if Initialized then
 	begin
@@ -144,7 +144,7 @@ procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChanged);
 var WatchedFile: PWatchedFile;
 begin
 	if not Initialized then
-		Initialize;
+		InitializeData;
 	WatchedFile := WatchedFiles.Add;
 	WatchedFile.FileName := FileName;
 	WatchedFile.Changed := False;
@@ -159,7 +159,7 @@ procedure WatchAddFile(const FileName: TFileName; OnChange: TWatchFileChangedEx)
 var WatchedFile: PWatchedFile;
 begin
 	if not Initialized then
-		Initialize;
+		InitializeData;
 	WatchedFile := WatchedFiles.Add;
 	WatchedFile.FileName := FileName;
 	WatchedFile.Changed := False;
@@ -187,11 +187,15 @@ end;
 procedure WatchRemoveFile(const FileName: TFileName);
 var i: SG;
 begin
+	if WatchedFiles = nil then
+		Exit;
+
 	i := 0;
 	while i < WatchedFiles.Count do
 	begin
 		if SameFileName(PWatchedFile(WatchedFiles[i]).FileName, FileName) then
 		begin
+			Finalize(PWatchedFile(WatchedFiles[i])^);
 			WatchedFiles.Delete(i);
 			Break;
 		end;
@@ -203,6 +207,6 @@ initialization
 	WatchedFiles := TData.Create;
 	WatchedFiles.ItemSize := SizeOf(TWatchedFile);
 finalization
-	Finalize;
+	FinalizeData;
 	FreeAndNil(WatchedFiles);
 end.

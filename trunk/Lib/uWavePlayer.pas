@@ -1,10 +1,10 @@
-//* File:     Lib\uWavePlayer.pas
-//* Created:  2008-06-03
-//* Modified: 2008-04-01
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uWavePlayer.pas
+// * Created:  2008-06-03
+// * Modified: 2009-09-02
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uWavePlayer;
 
@@ -109,8 +109,6 @@ type
 	private
 		FOnReciveBuffrer: TOnReciveBuffrerEvent;
 	public
-
-	published
 		property OnReciveBuffrer: TOnReciveBuffrerEvent read FOnReciveBuffrer write FOnReciveBuffrer;
 	end;
 
@@ -723,7 +721,6 @@ begin
 end;
 
 procedure MidiMCIOpen(FileName: TFileName);
-label LRetry, LRetrySend;
 var
 	FFlags: U4;
 	FError: SG;
@@ -731,28 +728,34 @@ var
 	ErrorCode: SG;
 begin
 	MidiPlaying := False;
-	LRetry:
-	AssignFile(F, FileName);
-	FileMode := 0; Reset(F, 1);
-	ErrorCode := IOResult;
-	CloseFile(F);
-	IOResult;
-	if ErrorCode <> 0 then
+	while True do
 	begin
-		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
-		Exit;
+		AssignFile(F, FileName);
+		FileMode := 0; Reset(F, 1);
+		ErrorCode := IOResult;
+		CloseFile(F);
+		IOResult;
+		if ErrorCode <> 0 then
+		begin
+			if IOErrorRetry(FileName, ErrorCode) then Continue;
+			Exit;
+		end;
+		Break;
 	end;
-	LRetrySend:
-	FillChar(OpenParm, SizeOf(TMCI_Open_Parms), 0);
+	while True do
+	begin
+		FillChar(OpenParm, SizeOf(TMCI_Open_Parms), 0);
 
-	OpenParm.dwCallback := 0;
-	OpenParm.lpstrDeviceType := 'WaveAudio';
-	OpenParm.lpstrElementName := PChar(FileName);
-	FFlags := MCI_OPEN_ELEMENT or MCI_NOTIFY;
+		OpenParm.dwCallback := 0;
+		OpenParm.lpstrDeviceType := 'WaveAudio';
+		OpenParm.lpstrElementName := PChar(FileName);
+		FFlags := MCI_OPEN_ELEMENT or MCI_NOTIFY;
 
-	FError := mciSendCommand(0, mci_Open, FFlags, U4(@OpenParm));
-	MidiOpened := FError = 0;
-	if MCIError(FError) then goto LRetrySend;
+		FError := mciSendCommand(0, mci_Open, FFlags, U4(@OpenParm));
+		MidiOpened := FError = 0;
+		if MCIError(FError) then Continue;
+		Break;
+	end;
 end;
 
 procedure MidiMCISeek(const SeekTo: U4);

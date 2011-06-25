@@ -1,12 +1,12 @@
 object fFileExt: TfFileExt
   Left = 355
   Top = 297
-  Width = 448
-  Height = 442
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
+  ClientHeight = 415
+  ClientWidth = 440
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

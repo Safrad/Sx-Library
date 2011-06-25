@@ -1,10 +1,10 @@
-//* File:     Lib\uStrings.pas
-//* Created:  2000-08-01
-//* Modified: 2008-12-25
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uStrings.pas
+// * Created:  2000-08-01
+// * Modified: 2009-12-03
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uStrings;
 
@@ -36,16 +36,18 @@ const
 	CharLongHyphen = #$97; // —
 	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
 	cDialogSuffix = '...';
+	RightArrow = {$ifdef UNICODE}Char($25BA){$else}'->'{$endif};
 
 	EnumPrefixLength = 2;
+	NAStr = 'N/A';
 	FalseTrue: array[0..1] of string = ('false', 'true');
 	NoYes: array[0..1] of string = ('No', 'Yes');
 
 var
-	HexValue: array[Char] of U1;
+	HexValue: array[AnsiChar] of U1;
 
 type
-	TCharSet = set of Char;
+	TCharSet = set of AnsiChar;
 
 // Strings
 function PosEx(const SubStr, Str: string): SG; overload;
@@ -53,7 +55,8 @@ function PosEx(const SubStr, Str: string; FromPos: SG): SG; overload;
 function PosEx(const SubStr, Str: string; FromPos, ToPos: SG): SG; overload;
 
 function CharCount(const s: string; const C: Char): UG;
-function LowCase(ch: Char): Char;
+function LowCase(ch: AnsiChar): AnsiChar; overload;
+function LowCase(ch: WideChar): WideChar; overload;
 
 procedure DelChars(var s: string; const SubChar: Char);
 procedure DelStrings(var s: string; const SubChar: array of string);
@@ -68,11 +71,16 @@ function Ident(const Level: SG): string;
 function AddSingleQuoteF(const s: string): string;
 procedure AddQuote(var s: string);
 function AddQuoteF(const s: string): string;
+//function AddCharLFAfterCRF(const s: string): string;
+function AddFullEnter(const s: string): string;
 function CSVCell(const s: string): string;
 procedure DelQuote(var s: string);
 function DelQuoteF(const s: string): string;
 
 function DelPathSep(const s: string): string;
+
+procedure DelBeginChars(var s: string; const C: TCharSet);
+procedure DelEndChars(var s: string; const C: TCharSet);
 
 procedure DelBeginSpace(var s: string);
 function DelBeginSpaceF(const s: string): string;
@@ -130,7 +138,7 @@ function Code(const s: string; const Decode: BG): string;
 function AddSpace(const s: string): string;
 procedure AppendStr(var Dest: TFileName; const Source: string); overload;
 procedure AppendStr(var Dest: string; const Source: string); overload;
-function Plural(Number: SG): string;
+function Plural(const Number: SG): string;
 procedure CorrectDir(var s: string);
 function CorrectDirF(const s: string): string;
 function RandomString(const Size: SG): string;
@@ -228,7 +236,7 @@ begin
 	end;
 end;
 
-function LowCase(ch : Char): Char;
+function LowCase(ch : AnsiChar): AnsiChar;
 {$IFDEF PUREPASCAL}
 begin
 	Result := ch;
@@ -249,6 +257,15 @@ asm
 @@exit:
 end;
 {$ENDIF}
+
+function LowCase(Ch: WideChar): WideChar;
+begin
+	Result := Ch;
+	case Ch of
+		'A'..'Z':
+			Result := WideChar(Word(Ch) or $0020);
+	end;
+end;
 
 procedure DelChars(var s: string; const SubChar: Char);
 var i: Integer;
@@ -309,14 +326,14 @@ end;
 
 function Ident(const Level: SG): string;
 begin
-//	Result := StringOfChar(CharTab, Level);
-	if Level = 0 then
+	Result := StringOfChar(CharTab, Level);
+{	if Level = 0 then
 		Result := ''
 	else
 	begin
 		SetLength(Result, Level);
-		FillChar(Result[1], Level, CharTab);
-	end;
+		FillChar(Result[1], Level * SizeOf(Result[1]), CharTab);
+	end;}
 end;
 
 function AddSingleQuoteF(const s: string): string;
@@ -332,6 +349,52 @@ end;
 function AddQuoteF(const s: string): string;
 begin
 	Result := '"' + s + '"';
+end;
+
+function AddCharLFAfterCRF(const s: string): string;
+var
+	i: SG;
+begin
+	Result := s;
+	i := 1;
+	while i < Length(Result) do
+	begin
+		if Result[i] = CharCR then
+		begin
+			if CharAt(Result, i + 1) <> CharLF then
+			begin
+				Insert(CharLF, Result, i + 1);
+				Inc(i);
+			end;
+		end;
+		Inc(i);
+	end;
+end;
+
+function AddCharCRBeforeLFF(const s: string): string;
+var
+	i: SG;
+begin
+	Result := s;
+	i := 1;
+	while i < Length(Result) do
+	begin
+		if Result[i] = CharLF then
+		begin
+			if CharAt(Result, i - 1) <> CharCR then
+			begin
+				Insert(CharCR, Result, i);
+				Inc(i);
+			end;
+		end;
+		Inc(i);
+	end;
+end;
+
+function AddFullEnter(const s: string): string;
+begin
+	Result := AddCharLFAfterCRF(s);
+	Result := AddCharCRBeforeLFF(Result);
 end;
 
 function CSVCell(const s: string): string;
@@ -366,19 +429,19 @@ end;
 
 function DelPathSep(const s: string): string;
 begin
-	if LastChar(s) in ['/', '\'] then
+	if CharInSet(LastChar(s), ['/', '\']) then
 		Result := DelLastChar(s)
 	else
 		Result := s;
 end;
 
-procedure DelBeginSpace(var s: string);
+procedure DelBeginChars(var s: string; const C: TCharSet);
 var i: Integer;
 begin
 	i := 1;
 	while i <= Length(s) do
 	begin
-		if not (s[i] in Space) then
+		if not CharInSet(s[i], C) then
 		begin
 			Break;
 		end;
@@ -388,6 +451,27 @@ begin
 		Delete(s, 1, i - 1);
 end;
 
+procedure DelEndChars(var s: string; const C: TCharSet);
+var
+	i: SG;
+begin
+	i := Length(s);
+	while i > 0 do
+	begin
+		if not CharInSet(s[i], C) then
+		begin
+			Break;
+		end;
+		Dec(i);
+	end;
+	SetLength(s, i);
+end;
+
+procedure DelBeginSpace(var s: string);
+begin
+	DelBeginChars(s, Space);
+end;
+
 function DelBeginSpaceF(const s: string): string;
 begin
 	Result := s;
@@ -395,19 +479,8 @@ begin
 end;
 
 procedure DelEndSpace(var s: string);
-var
-	i: SG;
 begin
-	i := Length(s);
-	while i > 0 do
-	begin
-		if not (s[i] in Space) then
-		begin
-			Break;
-		end;
-		Dec(i);
-	end;
-	SetLength(s, i);
+	DelEndChars(s, Space);
 end;
 
 function DelEndSpaceF(const s: string): string;
@@ -501,39 +574,51 @@ begin
 end;
 
 function ReadToChar(const Line: string; const C: Char): string;
-var LineIndex: SG;
+var
+	LineIndex: SG;
+	LineLength: SG;
 begin
 	LineIndex := 1;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> C) do
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) and (Line[LineIndex] <> C) do
 		Inc(LineIndex);
 	Result := Copy(Line, 1, LineIndex - 1);
 end;
 
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string;
-var StartIndex: SG;
+var
+	StartIndex: SG;
+	LineLength: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> C) do
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) and (Line[LineIndex] <> C) do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
 	Inc(LineIndex);
 end;
 
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
-var StartIndex: SG;
+var
+	StartIndex: SG;
+	LineLength: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF) do
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) and (Line[LineIndex] <> CharCR) and (Line[LineIndex] <> CharLF) do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
-	if (LineIndex <= Length(Line)) and (Line[LineIndex] = CharCR) then
+	if (LineIndex <= LineLength) then
 	begin
-		Inc(LineIndex);
-		while (LineIndex <= Length(Line)) and (Line[LineIndex] = CharLF)do
-			Inc(LineIndex);
-	end
-	else
-		Inc(LineIndex);
+		if (Line[LineIndex] = CharCR) then
+		begin
+			Inc(LineIndex); // Accept CR
+			if (LineIndex <= LineLength) and (Line[LineIndex] = CharLF) then
+				Inc(LineIndex); // Accept LF
+		end
+		else // if (Line[LineIndex] = CharLF) then
+			Inc(LineIndex); // Accept LF
+	end;
 end;
 
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
@@ -542,6 +627,7 @@ function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
 {$i StrToNum.inc}
 
+// Do not accept decimal point !!!
 function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
 {$i StrToNum.inc}
 
@@ -567,8 +653,11 @@ begin
 end;
 
 procedure SkipSpace(const Line: string; var LineIndex: SG);
+var
+	LineLength: SG;
 begin
-	while (LineIndex <= Length(Line)) and (Line[LineIndex] in [CharSpace, CharTab]) do
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) and CharInSet(Line[LineIndex], [CharSpace, CharTab]) do
 	begin
 		Inc(LineIndex);
 	end;
@@ -579,6 +668,19 @@ function ReadToString(const Line: string; var LineIndex: SG;
 var StartIndex: SG;
 begin
 	StartIndex := LineIndex;
+	LineIndex := PosEx(S, Line, LineIndex);
+	if LineIndex = 0 then
+	begin
+		LineIndex := Length(Line) + 1;
+		Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	end
+	else
+	begin
+		Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+		Inc(LineIndex, Length(S));
+	end;
+
+(*	StartIndex := LineIndex;
 	while True do
 	begin
 		if (LineIndex + Length(S) > Length(Line)) then
@@ -594,7 +696,7 @@ begin
 			Exit;
 		end;
 		Inc(LineIndex);
-	end;
+	end; *)
 end;
 
 function ReadToString(const Line: string;	const S: string): string;
@@ -606,10 +708,13 @@ end;
 
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string;
-var StartIndex: SG;
+var
+	StartIndex: SG;
+	LineLength: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (not (Line[LineIndex] in C)) do
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) and (not CharInSet(Line[LineIndex], C)) do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
 	Inc(LineIndex);
@@ -617,13 +722,16 @@ end;
 
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet; out LastChar: Char): string;
-var StartIndex: SG;
+var
+	StartIndex: SG;
+	LineLength: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) and (not (Line[LineIndex] in C)) do
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) and (not CharInSet(Line[LineIndex], C)) do
 		Inc(LineIndex);
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
-	if LineIndex <= Length(Line) then
+	if LineIndex <= LineLength then
 		LastChar := Line[LineIndex]
 	else
 		LastChar := CharNul;
@@ -632,14 +740,17 @@ end;
 
 function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
-var StartIndex: Integer;
+var
+	StartIndex: Integer;
+	LineLength: SG;
 begin
 	StartIndex := LineIndex;
-	while (LineIndex <= Length(Line)) do
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) do
 	begin
 		if (Line[LineIndex] = C) then
 		begin
-			if LineIndex + 1 <= Length(Line) then
+			if LineIndex + 1 <= LineLength then
 			begin
 				if (Line[LineIndex + 1] = C) then
 					Inc(LineIndex)
@@ -708,13 +819,15 @@ var
 	i: Integer;
 	Wor: string;
 	LastWordBegin: Integer;
+	StrLength: SG;
 begin
 	Result := False;
 	i := 1;
 	LastWordBegin := 0;
+	StrLength := Length(Str);
 	while True do
 	begin
-		if (i > Length(Str)) or (Str[i] in [' ', ',', '.', '-', '/', ';', '(', ')']) then
+		if (i > StrLength) or CharInSet(Str[i], [' ', ',', '.', '-', '/', ';', '(', ')']) then
 		begin
 			if (LastWordBegin <> 0) then
 			begin
@@ -731,7 +844,7 @@ begin
 		begin
 			if LastWordBegin = 0 then LastWordBegin := i;
 		end;
-		if i > Length(Str) then Exit;
+		if i > StrLength then Exit;
 		Inc(i);
 	end;
 end;
@@ -799,7 +912,7 @@ var
 
 	procedure Clear;
 	begin
-		FillU4(ActPos[0], Length(ActPos), 1);
+		FillU4(ActPos[0], WhatSLen, 1);
 	end;
 
 var
@@ -869,9 +982,9 @@ begin
 	for i := 1 to Length(s) do
 	begin
 		if Decode then
-			Result[i] := Chr(((Ord(s[i]) xor $ff) + $f) and $ff)
+			Result[i] := Char(((Ord(s[i]) xor $ff) + $f) and $ff)
 		else
-			Result[i] := Chr(((Ord(s[i]) - $f) and $ff) xor $ff);
+			Result[i] := Char(((Ord(s[i]) - $f) and $ff) xor $ff);
 	end;
 end;
 
@@ -882,8 +995,8 @@ begin
 	Index := 2;
 	while Index <= Length(Result) do
 	begin
-		if Result[Index] in ['A'..'Z'] then
-			if Result[Index - 1] in ['a'..'z'] then
+		if CharInSet(Result[Index], ['A'..'Z']) then
+			if CharInSet(Result[Index - 1], ['a'..'z']) then
 				Insert(' ', Result, Index);
 		Inc(Index);
 	end;
@@ -899,10 +1012,9 @@ begin
 	Dest := Dest + Source;
 end;
 
-function Plural(Number: SG): string;
+function Plural(const Number: SG): string;
 begin
-	Assert(Number >= 0);
-	if Number > 1 then
+	if Abs(Number) <> 1 then
 		Result := 's';
 end;
 
@@ -982,7 +1094,7 @@ begin
 	i := 1;
 	while i <= Length(Result) do
 	begin
-		if not (StdCharTable[Result[i]] in [ctLetter, ctNumber]) then
+		if not (CharType(Result[i], StdCharTable) in [ctLetter, ctNumber]) then
 			Delete(Result, i, 1)
 		else
 			Inc(i);
@@ -991,7 +1103,7 @@ begin
 		Result := 'N'
 	else
 	begin
-		if StdCharTable[Result[1]] <> ctLetter then
+		if CharType(Result[1], StdCharTable) <> ctLetter then
 			Result := 'N' + Result;
 	end;
 end;
@@ -1057,9 +1169,9 @@ end;
 
 procedure FillHexValue;
 var
-	c: Char;
+	c: AnsiChar;
 begin
-	for c := Low(Char) to High(Char) do
+	for c := Low(c) to High(c) do
 		case c of
 		'0'..'9': HexValue[c] := Ord(c) - Ord('0');
 		'A'..'Z': HexValue[c] := Ord(c) - Ord('A') + 10;

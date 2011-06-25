@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uFileExt.pas
-//* Created:  2006-02-04
-//* Modified: 2008-02-05
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uFileExt.pas
+// * Created:  2006-02-04
+// * Modified: 2009-11-07
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uFileExt;
 
@@ -41,8 +41,8 @@ type
 
 procedure AddFileType(
 	const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of ShortString;
-	const OpenPrograms: array of ShortString
+	const MenuCaptions: array of string;
+	const OpenPrograms: array of string
 	);
 
 procedure FormFileExt;
@@ -51,14 +51,14 @@ procedure FreeFileExt;
 implementation
 
 {$R *.dfm}
-uses uTypes, uReg, uDIniFile, uMenus, uOutputFormat;
+uses uTypes, uReg, uDIniFile, uMenus, uOutputFormat, uStrings, uDictionary;
 
 type
 	TFileType = packed record // 24
 		FileType, FileTypeCaption, Icon: string; // 12
 		Exists: B4;
-		MenuCaptions: array of ShortString; // 4
-		OpenPrograms: array of ShortString // 4
+		MenuCaptions: array of string; // 4
+		OpenPrograms: array of string // 4
 	end;
 var
 	FileTypes: array of TFileType;
@@ -70,6 +70,7 @@ procedure FormFileExt;
 begin
 	if not Assigned(fFileExt) then fFileExt := TfFileExt.Create(nil);
 	fFileExt.DViewFileExtensions.RowCount := FileTypeCount;
+	fFileExt.DViewFileExtensions.DataChanged;
 	fFileExt.Init(nil);
 	fFileExt.ShowModal;
 end;
@@ -83,8 +84,8 @@ end;
 
 procedure AddFileType(
 	const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of ShortString;
-	const OpenPrograms: array of ShortString
+	const MenuCaptions: array of string;
+	const OpenPrograms: array of string
 	);
 var j: SG;
 begin
@@ -119,7 +120,7 @@ begin
 			FileTypes[i].OpenPrograms);
 		if FileTypes[i].Exists then Inc(ExistCount);
 	end;
-	Caption := 'File Extensions ' + NToS(ExistCount) + ' / ' + NToS(FileTypeCount);
+	Caption := Translate('File Extensions') + CharSpace + NToS(ExistCount) + ' / ' + NToS(FileTypeCount);
 end;
 
 procedure TfFileExt.Register1Click(Sender: TObject);
@@ -156,6 +157,7 @@ begin
 		MainIni.RWFormPos(Self, False);
 		DViewFileExtensions.Serialize(MainIni, False);
 	end;
+	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfFileExt.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -192,7 +194,7 @@ end;
 procedure TfFileExt.DViewFileExtensionsGetData(Sender: TObject; var Data: String;
 	ColIndex, RowIndex: Integer; Rect: TRect);
 begin
-	if FileTypes[RowIndex].Exists then
+	if (ColIndex <> 0) or FileTypes[RowIndex].Exists then
 		DViewFileExtensions.Bitmap.Canvas.Font.Style := []
 	else
 		DViewFileExtensions.Bitmap.Canvas.Font.Style := [fsStrikeOut];

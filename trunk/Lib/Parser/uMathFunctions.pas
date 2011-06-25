@@ -1,10 +1,10 @@
-//* File:     Lib\Parser\uMathFunctions.pas
-//* Created:  2004-03-07
-//* Modified: 2009-03-22
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\Parser\uMathFunctions.pas
+// * Created:  2004-03-07
+// * Modified: 2009-09-22
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uMathFunctions;
 
@@ -26,6 +26,54 @@ uses uNamespace;
 function X: TVector;
 begin
 	Result := VariableX;
+end;
+
+function IfElse(const X, Y, Z: TVector): TVector;
+begin
+	if VectorToNum(X) <> 0 then
+		Result := Y
+	else
+		Result := Z;
+end;
+
+function Equal(const X, Y: TVector): TVector;
+begin
+	if VectorToNum(X)= VectorToNum(Y) then // TODO: Epsilon
+		Result := NumToVector(1)
+	else
+		Result := NumToVector(0);
+end;
+
+function Greater(const X, Y: TVector): TVector;
+begin
+	if VectorToNum(X) > VectorToNum(Y) then
+		Result := NumToVector(1)
+	else
+		Result := NumToVector(0);
+end;
+
+function Less(const X, Y: TVector): TVector;
+begin
+	if VectorToNum(X) < VectorToNum(Y) then
+		Result := NumToVector(1)
+	else
+		Result := NumToVector(0);
+end;
+
+function GreaterOrEqual(const X, Y: TVector): TVector;
+begin
+	if VectorToNum(X) >= VectorToNum(Y) then
+		Result := NumToVector(1)
+	else
+		Result := NumToVector(0);
+end;
+
+function LessOrEqual(const X, Y: TVector): TVector;
+begin
+	if VectorToNum(X) <= VectorToNum(Y) then
+		Result := NumToVector(1)
+	else
+		Result := NumToVector(0);
 end;
 
 function E: TVector;
@@ -98,9 +146,24 @@ begin
 	Result := TruncVector(X);
 end;
 
+function Floor(const X: TVector): TVector;
+begin
+	Result := FloorVector(X);
+end;
+
 function Round(const X: TVector): TVector;
 begin
 	Result := RoundVector(X);
+end;
+
+function Ceil(const X: TVector): TVector;
+begin
+	Result := CeilVector(X);
+end;
+
+function Frac(const X: TVector): TVector;
+begin
+	Result := FracVector(X);
 end;
 
 function Abs(const X: TVector): TVector;
@@ -111,6 +174,11 @@ end;
 function _Not(const X: TVector): TVector;
 begin
 	Result := NotVector(X);
+end;
+
+function Inv(const X: TVector): TVector;
+begin
+	Result := InvVector(X);
 end;
 
 function Inc(const X: TVector): TVector;
@@ -138,14 +206,7 @@ begin
 	Result := GammaVector(X);
 end;
 
-(*	opInv: TODO
-	begin
-		Result := 1;
-		for i := 0 to Node.ArgCount - 1 do
-		begin
-			Result := Result / Calc(Node.Args[i]);
-		end;
-	end;
+(* TODO :
 	opGCD: // Greatest Common Measure (Divident)
 	begin
 		if Node.ArgCount = 1 then
@@ -208,28 +269,38 @@ end;
 	end; *)
 
 initialization
-	AddFunction('Math', 'X', X, 'Variable X.');
-	AddFunction('Math', 'E', E, 'Euler''s number.');
-	AddFunction('Math', 'C', C, 'Speed of light.');
-	AddFunction('Math', 'neg', Neg, '');
-	AddFunction('Math', 'plus', Plus, '');
-	AddFunction('Math', 'minus', Minus, '');
-	AddFunction('Math', 'mul', Multiply, '');
-	AddFunction('Math', 'div', Divide, '');
-	AddFunction('Math', 'mod', Modulo, '');
-	AddFunction('Math', 'power', Power, '');
-	AddFunction('Math', 'log', Log, '');
-	AddFunction('Math', 'ln', Ln, '');
-	AddFunction('Math', 'sqr', Sqr, '');
-	AddFunction('Math', 'sqrt', Sqrt, '');
-	AddFunction('Math', 'trunc', Trunc, '');
-	AddFunction('Math', 'round', Round, '');
-	AddFunction('Math', 'abs', Abs, '');
-	AddFunction('Math', 'not', _Not, '');
-	AddFunction('Math', 'inc', Inc, '');
-	AddFunction('Math', 'dec', Dec, '');
-	AddFunction('Math', 'exp', Exp, '');
-	AddFunction('Math', 'fact', Fact, 'Factorial.');
-	AddFunction('Math', 'gamma', Gamma, 'Gamma.');
+	AddFunction('Variable', 'x', X, 'Variable X.');
+	AddFunction('Conditional Tests', 'IfElse', IfElse, 'http://en.wikipedia.org/wiki/Conditional_(programming)');
+	AddFunction('Arithmetic', 'Equal', Equal, 'http://en.wikipedia.org/wiki/Conditional_(programming)');
+	AddFunction('Arithmetic', 'Greater', Greater, 'http://en.wikipedia.org/wiki/Inequality');
+	AddFunction('Arithmetic', 'Less', Less, 'http://en.wikipedia.org/wiki/Inequality');
+	AddFunction('Arithmetic', 'GreaterOrEqual', GreaterOrEqual, 'http://en.wikipedia.org/wiki/Inequality');
+	AddFunction('Arithmetic', 'LessOrEqual', LessOrEqual, 'http://en.wikipedia.org/wiki/Inequality');
+	AddFunction('Arithmetic', 'E', E, 'http://en.wikipedia.org/wiki/Eulers_number');
+	AddFunction('Physics', 'C', C, 'http://en.wikipedia.org/wiki/Speed_of_light');
+	AddFunction('Arithmetic', 'neg', Neg, 'http://en.wikipedia.org/wiki/Additive_inverse');
+	AddFunction('Arithmetic', 'inv', Inv, 'http://en.wikipedia.org/wiki/Multiplicative_inverse');
+	AddFunction('Arithmetic', 'plus', Plus, 'http://en.wikipedia.org/wiki/Addition');
+	AddFunction('Arithmetic', 'minus', Minus, 'http://en.wikipedia.org/wiki/Subtraction');
+	AddFunction('Arithmetic', 'mul', Multiply, 'http://en.wikipedia.org/wiki/Multiply');
+	AddFunction('Arithmetic', 'div', Divide, '(Dividend;Divisor) http://en.wikipedia.org/wiki/Division_(mathematics)');
+	AddFunction('Arithmetic', 'mod', Modulo, '(Dividend;Divisor) http://en.wikipedia.org/wiki/Modular_arithmetic');           
+	AddFunction('Arithmetic', 'power', Power, '(Base;Exponent) http://en.wikipedia.org/wiki/Exponentiation');
+	AddFunction('Arithmetic', 'log', Log, '(Base;Exponent) http://en.wikipedia.org/wiki/Logarithm');
+	AddFunction('Arithmetic', 'ln', Ln, 'http://en.wikipedia.org/wiki/Natural_logarithm');
+	AddFunction('Arithmetic', 'sqr', Sqr, 'http://en.wikipedia.org/wiki/Squared');
+	AddFunction('Arithmetic', 'sqrt', Sqrt, 'http://en.wikipedia.org/wiki/Square_root');
+	AddFunction('Arithmetic', 'trunc', Trunc, 'http://en.wikipedia.org/wiki/Truncation');
+	AddFunction('Arithmetic', 'floor', Floor, 'http://en.wikipedia.org/wiki/Floor_function');
+	AddFunction('Arithmetic', 'round', Round, 'http://en.wikipedia.org/wiki/Round_number');
+	AddFunction('Arithmetic', 'ceil', Ceil, 'http://en.wikipedia.org/wiki/Ceil_function');
+	AddFunction('Arithmetic', 'frac', Frac, 'http://en.wikipedia.org/wiki/Fractional_part');
+	AddFunction('Arithmetic', 'abs', Abs, 'http://en.wikipedia.org/wiki/Absolute_value');
+	AddFunction('Arithmetic', 'not', _Not, 'http://en.wikipedia.org/wiki/Logical_negation');
+	AddFunction('Arithmetic', 'inc', Inc, 'http://en.wikipedia.org/wiki/Increment');
+	AddFunction('Arithmetic', 'dec', Dec, 'http://en.wikipedia.org/wiki/Decrement');
+	AddFunction('Arithmetic', 'exp', Exp, 'http://en.wikipedia.org/wiki/Exponential_function');
+	AddFunction('Arithmetic', 'fact', Fact, 'http://en.wikipedia.org/wiki/Factorial');
+	AddFunction('Arithmetic', 'gamma', Gamma, 'http://en.wikipedia.org/wiki/Gamma_function');
 end.
 

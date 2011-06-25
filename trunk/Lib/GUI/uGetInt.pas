@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uGetInt.pas
-//* Created:  1998-07-01
-//* Modified: 2007-05-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uGetInt.pas
+// * Created:  1998-07-01
+// * Modified: 2009-11-07
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uGetInt;
 
@@ -13,7 +13,7 @@ interface
 uses
 	uTypes, uParserMsg,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm;
+	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm, uDMemo;
 
 type
 	TOnApplyInt = procedure(Value: S8);
@@ -31,7 +31,7 @@ type
 		LabelNow: TLabel;
 		ButtonDef: TDButton;
 		ButtonApply: TDButton;
-		EditError: TMemo;
+		EditError: TDMemo;
 		UpDown: TUpDown;
 		Bevel1: TBevel;
 		procedure EditInputChange(Sender: TObject);
@@ -82,7 +82,8 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uStrings, uInputFormat, uDParser;
+	uDictionary,
+	uStrings, uInputFormat, uDParser, uLayout;
 
 var
 	fGetInt: TfGetInt;
@@ -109,7 +110,7 @@ begin
 	else if fGetInt.TCurVal > fGetInt.TMaxVal then
 		fGetInt.TCurVal := fGetInt.TMaxVal;
 	fGetInt.NowVal := fGetInt.TCurVal;
-	fGetInt.Caption := DelCharsF(Prompt, '&');
+	fGetInt.Caption := Translate(DelCharsF(Prompt, '&'));
 	fGetInt.LabelMin.Caption := IntToStr(fGetInt.TMinVal);
 	fGetInt.LabelMax.Caption := IntToStr(fGetInt.TMaxVal);
 	fGetInt.LabelNow.Caption := IntToStr(fGetInt.NowVal);
@@ -192,7 +193,7 @@ procedure TfGetInt.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToValS8(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1, Messages);
-	Messages.ToStrings(EditError.Lines);
+	EditError.Text := Messages.ToString;
 	Messages.Clear;
 
 	InitButtons;
@@ -288,6 +289,7 @@ end;
 procedure TfGetInt.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
+	LayoutControls([ButtonOk, ButtonCancel, ButtonApply], ClientWidth, ClientHeight);
 end;
 
 procedure TfGetInt.UpDownChangingEx(Sender: TObject;
@@ -372,6 +374,7 @@ constructor TfGetInt.Create(AOwner: TComponent);
 begin
 	inherited;
 	Messages := TParserMessages.Create;
+	Dictionary.TranslateForm(Self);
 end;
 
 destructor TfGetInt.Destroy;

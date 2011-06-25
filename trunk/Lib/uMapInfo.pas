@@ -1,10 +1,10 @@
-//* File:     Lib\uMapInfo.pas
-//* Created:  1998-01-01
-//* Modified: 2008-04-05
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uMapInfo.pas
+// * Created:  1998-01-01
+// * Modified: 2009-09-04
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uMapInfo;
 
@@ -34,7 +34,7 @@ var
 	FieldsM: array of TFieldM;
 	FieldMCount: Integer;
 
-	CharKind: array[Char] of (ckOthers, ckNum, ckDecimalSeparator, ckDelimeter);
+	CharKind: array[AnsiChar] of (ckOthers, ckNum, ckDecimalSeparator, ckDelimeter);
 
 procedure ReadMidMif(const MiName: string);
 procedure WriteMid(const MiName: string);
@@ -205,7 +205,7 @@ begin
 end;
 
 procedure FillData;
-var c: Char;
+var c: AnsiChar;
 begin
 	for c := Low(c) to High(c) do
 		case c of

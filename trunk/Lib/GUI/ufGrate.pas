@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\ufGrate.pas
-//* Created:  1999-08-01
-//* Modified: 2008-05-15
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\ufGrate.pas
+// * Created:  1999-08-01
+// * Modified: 2009-12-08
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit ufGrate;
 
@@ -26,6 +26,7 @@ type
 		N1: TMenuItem;
 		N2: TMenuItem;
 		ShowGrate1: TMenuItem;
+		FullScreen1: TMenuItem;
 		procedure FormHide(Sender: TObject);
 		procedure Close1Click(Sender: TObject);
 		procedure Color1Click(Sender: TObject);
@@ -39,6 +40,7 @@ type
 		procedure ShowGrate1Click(Sender: TObject);
 		procedure FormShow(Sender: TObject);
 		procedure FormPaint(Sender: TObject);
+		procedure FullScreen1Click(Sender: TObject);
 	private
 		{ Private declarations }
 		procedure RWOptions(const Save: Boolean);
@@ -55,7 +57,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uScreen, uGraph, uDBitmap, uGColor, uGetInt, uDIniFile, uMenus, uColor,
+	uScreen, uGraph, uDBitmap, uGColor, uGetInt, uDIniFile, uMenus, uColor, uDrawStyle, uDictionary,
 	Math;
 
 const
@@ -64,10 +66,18 @@ const
 procedure TfGrate.RWOptions(const Save: Boolean);
 const Section = 'Grate';
 begin
-	GrateColor := MainIni.RWSGF(Section, 'Grate Color', GrateColor, clWhite, Save);
-	BackgroundColor := MainIni.RWSGF(Section, 'Background Color', BackgroundColor, clBlack, Save);
-	GrateSize := MainIni.RWSGF(Section, 'Size', GrateSize, DefaultGrateSize, Save);
-	Centered1.Checked := MainIni.RWBGF(Section, 'Centered', Centered1.Checked, Centered1.Checked, Save);
+	if Save = False then
+	begin
+		GrateColor := clWhite;
+		BackgroundColor := clBlack;
+		GrateSize := DefaultGrateSize;
+	end;
+	MainIni.RWNum(Section, 'Grate Color', SG(GrateColor), Save);
+	MainIni.RWNum(Section, 'Background Color', SG(BackgroundColor), Save);
+	MainIni.RWMenuItem(Section, ShowGrate1, Save);
+	MainIni.RWNum(Section, 'Size', GrateSize, Save);
+	MainIni.RWMenuItem(Section, Centered1, Save);
+	MainIni.RWMenuItem(Section, FullScreen1, Save);
 end;
 
 procedure TfGrate.FormHide(Sender: TObject);
@@ -117,10 +127,11 @@ procedure TfGrate.FormCreate(Sender: TObject);
 begin
 	inherited;
 	Background := baUser;
-	FullScreen := True;
 	MenuSet(PopupMenu1);
 
 	MainIni.RegisterRW(RWOptions);
+	FullScreen := FullScreen1.Checked;
+	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfGrate.FormDestroy(Sender: TObject);
@@ -235,6 +246,12 @@ begin
 			end;
 		end;
 	end;
+end;
+
+procedure TfGrate.FullScreen1Click(Sender: TObject);
+begin
+	FullScreen1.Checked := not FullScreen1.Checked;
+	FullScreen := FullScreen1.Checked;
 end;
 
 end.

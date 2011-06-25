@@ -1,10 +1,10 @@
-//* File:     Lib\uFormal.pas
-//* Created:  1999-06-01
-//* Modified: 2008-02-23
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uFormal.pas
+// * Created:  1999-06-01
+// * Modified: 2009-08-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uFormal;
 
@@ -40,7 +40,7 @@ var
 	procedure AddMes(const MsgText: string);
 	begin
 		if Assigned(ParserMessages) then
-			ParserMessages.Add(0, LineIndex, ColumnIndex, ColumnIndex + 1{TODO}, MsgText, mlInformation);
+			ParserMessages.Add(0, LineIndex, ColumnIndex, ColumnIndex + 1{TODO : }, MsgText, mlInformation);
 	end;
 
 

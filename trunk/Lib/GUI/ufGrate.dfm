@@ -41,16 +41,22 @@ object fGrate: TfGrate
       OnClick = ShowGrate1Click
     end
     object Size1: TMenuItem
-      Caption = 'Grate Size...'
+      Caption = '|- Grate Size...'
       OnClick = Size1Click
     end
     object Centered1: TMenuItem
-      Caption = 'Centered'
+      Caption = '|-  Centered'
       Checked = True
       OnClick = Centered1Click
     end
     object N1: TMenuItem
       Caption = '-'
+    end
+    object FullScreen1: TMenuItem
+      Caption = 'Full Screen'
+      Checked = True
+      ShortCut = 32781
+      OnClick = FullScreen1Click
     end
     object Close1: TMenuItem
       Caption = 'Close'

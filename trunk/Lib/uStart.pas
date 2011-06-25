@@ -1,10 +1,10 @@
-//* File:     Lib\uStart.pas
-//* Created:  2007-05-22
-//* Modified: 2008-04-02
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uStart.pas
+// * Created:  2007-05-22
+// * Modified: 2009-09-11
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uStart;
 
@@ -21,10 +21,11 @@ procedure RWStart(const MainIni: TDIniFile; const Save: BG);
 implementation
 
 uses
-	uSimulation, uFile,
+	uSimulation, uFile, uProjectInfo,
 	Windows;
 
 var
+	LastProductVersion: string;
 	GRunCount: UG;
 	GRunTime: U8;
 	GStartProgramTime: U4;
@@ -61,6 +62,11 @@ begin
 
 	if Assigned(MainIni) then
 	begin
+		if Save then
+			LastProductVersion := GetProjectInfo(piProductVersion)
+		else
+			LastProductVersion := '';
+		MainIni.RWString(Section, 'Version', LastProductVersion, Save);
 		MainIni.RWNum(Section, 'RunCount', GRunCount, Save);
 		MainIni.RWNum(Section, 'RunTime', GRunTime, Save);
 		MainIni.RWNum(Section, 'ReadCount', ReadCount, Save);
@@ -79,3 +85,4 @@ end;
 initialization
 	GStartProgramTime := GetTickCount;
 end.
+

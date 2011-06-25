@@ -1,6 +1,6 @@
 object fMsgDlg: TfMsgDlg
-  Left = 514
-  Top = 363
+  Left = 452
+  Top = 340
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   ClientHeight = 135
@@ -36,29 +36,27 @@ object fMsgDlg: TfMsgDlg
     OnMouseMove = FormMouseMove
   end
   object LabelX: TLabel
-    Left = 96
-    Top = 32
-    Width = 16
-    Height = 19
+    Left = 102
+    Top = 35
+    Width = 5
+    Height = 13
     Alignment = taCenter
-    AutoSize = False
     Caption = '/'
     Transparent = True
     Layout = tlCenter
     OnMouseMove = FormMouseMove
   end
-  object PanelCount: TDLabel
+  object PanelCount: TDEdit
     Left = 112
     Top = 32
     Width = 33
-    Height = 19
-    Alignment = taRightJustify
-    Caption = '9,999'
-    FontShadow = 1
-    Displ.Format = '88'
+    Height = 21
     BevelOuter = bvNone
-    BorderStyle = bsSingle
+    Color = clBtnFace
+    ReadOnly = True
+    TabOrder = 6
     OnMouseMove = FormMouseMove
+    DoubleBuffered = True
   end
   object LabelTimeLeft: TDLabel
     Left = 200
@@ -108,7 +106,7 @@ object fMsgDlg: TfMsgDlg
   end
   object LabelMessage: TDLabel
     Left = 16
-    Top = 8
+    Top = 7
     Width = 129
     Height = 19
     Caption = 'Message'
@@ -136,18 +134,21 @@ object fMsgDlg: TfMsgDlg
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
   end
-  object MemoMsg: TMemo
+  object MemoMsg: TRichEdit
     Left = 160
     Top = 48
     Width = 273
     Height = 45
     Color = clBtnFace
-    Lines.Strings = (
-      '1'
-      '2'
-      '3')
+    Font.Charset = EASTEUROPE_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
     ReadOnly = True
     TabOrder = 1
+    WantReturns = False
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
@@ -197,6 +198,7 @@ object fMsgDlg: TfMsgDlg
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
+    DoubleBuffered = True
   end
   object ButtonRight: TDButton
     Tag = 1

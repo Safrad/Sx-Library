@@ -1,49 +1,45 @@
-//* File:     Lib\uCharset.pas
-//* Created:  2001-12-01
-//* Modified: 2008-02-23
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uCharset.pas
+// * Created:  2001-12-01
+// * Modified: 2009-11-08
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uCharset;
 
 interface
 
+uses uTypes;
+
 type
 	TCodePage =
 		(cpAscii, cp1250, cp852, cpISO88592{, cpKeybCS2, cpMacCE,
 		cpKOI8CS, cpkodxx, cpWFW_311, cpISO88591, cpT1, cpMEXSK, cpw311_cw,
-		cpVavrusa, cpNavi}, cpUTF8, cpUnicode);
-{
-TODO: Unicode
-¡	00C1	Õ	00CD	ç	0164
-·	00E1	Ì	00ED	ù	0165
-»	010C	“	0147	⁄	00DA
-Ë	010D	Ú	0148	˙	00FA
-œ	010E	”	00D3	Ÿ	016E
-Ô	010F	Û	00F3	˘	016F
-…	00C9	ÿ	0158	›	00DD
-È	00E9	¯	0159	˝	00FD
-Ã	011A	ä	0160	é	017D
-Ï	011B	ö	0161	û	017E
-}
+		cpVavrusa, cpNavi}, cpUTF8{, cpUnicode});
 
 const
 	CodePageNames: array[TCodePage] of string =
-		('ASCII', 'windows-1250'{Central European, Windows Latin 2}, 'IBM852'{DOS code page for Central European}, 'ISO-8859-2'{Central European, ISO Latin 2}, 'utf-8', 'utf-16');
+		('ASCII', 'windows-1250'{Central European, Windows Latin 2}, 'IBM852'{DOS code page for Central European}, 'ISO-8859-2'{Central European, ISO Latin 2}, 'utf-8'{, 'utf-16'});
 
-procedure ConvertCharset(var s: string; const FromCharset, ToCharset: TCodePage);
-function ConvertCharsetF(const s: string; const FromCharset, ToCharset: TCodePage): string;
+function ConvertUTF8ToUnicode(const s: AnsiString): UnicodeString;
+function ConvertUnicodeToUTF8(const s: UnicodeString): AnsiString;
+
+function ConvertToAscii(const s: AnsiString): AnsiString; overload;
+function ConvertToAscii(const s: UnicodeString): AnsiString; overload;
+
+procedure ConvertCharset(var s: AnsiString; const FromCharset, ToCharset: TCodePage);
+function ConvertCharsetF(const s: AnsiString; const FromCharset, ToCharset: TCodePage): AnsiString;
+
 
 var
-	TableUpCaseCz: array[Char] of Char;
+	TableUpCaseCz: array[AnsiChar] of AnsiChar;
 
 function UpCaseCz(const s: string): string;
 
 implementation
 
-uses uTypes;
+uses SysUtils{$ifopt d+}, uCharsetTest{$endif};
 
 type
 {const
@@ -65,7 +61,7 @@ type
 		'¡»œ…ÃÕ“”+äç⁄°›°·ËÔÈÏÌÚÛ¯öù˙˘˝û'); // navi
 	}
 
-	TUpAscii = array[#128..#255] of Char;
+	TUpAscii = array[#128..#255] of AnsiChar;
 
 var
 	// [to, from]
@@ -99,14 +95,62 @@ var
 		)
 	);
 
-procedure ConvertCharset(var s: string; const FromCharset, ToCharset: TCodePage);
+
+function ConvertUTF8ToUnicode(const s: AnsiString): UnicodeString;
+begin
+	SetLength(Result, 2 * Length(s));
+	SetLength(Result, Utf8ToUnicode(PWideChar(Result), PAnsiChar(s), 2 * Length(s)) - 1);
+end;
+
+function ConvertUnicodeToUTF8(const s: UnicodeString): AnsiString;
+var
+	l: SG;
+begin
+//	Result := StringTo UTF8ToString(s;
+	SetLength(Result, 2 * Length(s) + 1);
+	l := UnicodeToUtf8(PAnsiChar(Result), Length(Result), PWideChar(s), Length(s));
+	SetLength(Result, l - 1);
+end;
+
+function ConvertToAscii(const s: AnsiString): AnsiString;
+begin
+	Result := ConvertCharsetF(s, cp1250, cpAscii);
+end;
+
+function ConvertToAscii(const s: UnicodeString): AnsiString;
+begin
+	Result := ConvertToAscii(AnsiString(s));
+end;
+
+procedure ConvertCharset(var s: AnsiString; const FromCharset, ToCharset: TCodePage);
 var
 	i: SG;
-{	c, d: Char;
-	CP: array[Char] of Char;}
 begin
 	Assert(FromCharset <> cpAscii);
 	if FromCharset = ToCharset then Exit;
+
+{	if (ToCharset = cpUnicode) then
+	begin
+		if (FromCharset <> cpUTF8) then
+			ConvertCharset(s, FromCharset, cpUTF8);
+		Utf8ToUnicode(PWideChar(PChar(s)), PAnsiChar(s), 2 * Length(s));
+		Exit;
+	end;}
+{	if (ToCharset = cpUnicode) then
+	begin
+		if (FromCharset <> cpUTF8) then
+			ConvertCharset(s, FromCharset, cpUTF8);
+		s := PAnsiChar(ConvertUTF8ToUnicode(s));
+		Exit;
+	end;
+
+	if (FromCharset = cpUnicode) then
+	begin
+		UnicodeToUtf8(PAnsiChar(s), PWideChar(PChar(s)), 2 * Length(s));
+		if (ToCharset <> cpUTF8) then
+			ConvertCharset(s, cpUTF8, ToCharset);
+		Exit;
+	end;}
 
 	if (FromCharset = cpUTF8) then
 	begin
@@ -124,22 +168,6 @@ begin
 		Exit;
 	end;
 
-	if (FromCharset = cpUnicode) then
-	begin
-		UnicodeToUtf8(PAnsiChar(s), PWideChar(PChar(s)), 2 * Length(s)); // TODO Need test
-		if (ToCharset <> cpUTF8) then
-			ConvertCharset(s, cpUTF8, ToCharset);
-		Exit;
-	end;
-
-	if (ToCharset = cpUnicode) then
-	begin
-		if (FromCharset <> cpUTF8) then
-			ConvertCharset(s, FromCharset, cpUTF8);
-		Utf8ToUnicode(PWideChar(PChar(s)), PAnsiChar(s), 2 * Length(s)); // TODO, Buffer required?, Need test
-		Exit;
-	end;
-
 	for i := 1 to Length(s) do
 	begin
 		if Ord(s[i]) >= $80 then
@@ -147,7 +175,7 @@ begin
 	end;
 end;
 
-function ConvertCharsetF(const s: string; const  FromCharset, ToCharset: TCodePage): string;
+function ConvertCharsetF(const s: AnsiString; const  FromCharset, ToCharset: TCodePage): AnsiString;
 {var
 	i: SG;}
 begin
@@ -164,14 +192,15 @@ begin
 	end;}
 end;
 
+{$ifndef UNICODE}
 procedure FillCharsTable;
-var c, Result: Char;
+var c, Result: AnsiChar;
 begin
 	for c := Low(c) to High(c) do
 	begin
 		// UpCaseCz
 		case c of
-		'a'..'z': Result := Chr(Ord(c) - Ord('a') + Ord('A'));
+		'a'..'z': Result := AnsiChar(Ord(c) - Ord('a') + Ord('A'));
 		'·': Result := '¡';
 		'Ë': Result := '»';
 		'Ô': Result := 'œ';
@@ -192,17 +221,26 @@ begin
 		TableUpCaseCz[c] := Result;
 	end;
 end;
+{$endif}
 
 function UpCaseCz(const s: string): string;
+{$ifndef UNICODE}
 var i: Integer;
+{$endif}
 begin
+	{$ifdef UNICODE}
+	Result := Uppercase(s, loUserLocale);
+	{$else}
 	SetLength(Result, Length(s));
 	for i := 1 to Length(s) do
 	begin
-		Result[i] := TableUpCaseCz[s[i]];
+		Result[i] := Char(TableUpCaseCz[AnsiChar(s[i])])
 	end;
+	{$endif}
 end;
 
 initialization
+	{$ifndef UNICODE}
 	FillCharsTable;
-end.                                                                          
+	{$endif}
+end.

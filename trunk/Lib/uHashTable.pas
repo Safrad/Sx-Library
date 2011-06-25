@@ -1,10 +1,10 @@
-//* File:     Lib\uHashTable.pas
-//* Created:  2007-05-12
-//* Modified: 2007-08-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uHashTable.pas
+// * Created:  2007-05-12
+// * Modified: 2009-09-22
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uHashTable;
 
@@ -16,6 +16,8 @@ uses
 
 type
 	TKey = U4;
+
+	TArrayOfKey = array of TKey;
 
 	THashTable = class
 	private
@@ -35,6 +37,7 @@ type
 		function Get(const Index: SG): Pointer;
 
 		function LoadFactor: FA;
+		function GetUsedKeyIndexes: TArrayOfKey;
 
 		property Count: SG read FCount;
 		property Capacity: SG read FCapacity;
@@ -53,8 +56,8 @@ begin
 	if Count >= Capacity div 2 then DoubleSize;
 	Inc(FCount);
 	Index := Key mod UG(FCapacity);
-{	if SG(FKeys[Index]) <> 0 then
-		Beep;}
+	if U4(FKeys[Index]^) <> 0 then
+		Assert(False);
 	FKeys.Replace(Index, @Key);
 	FValues.Replace(Index, Data);
 end;
@@ -105,7 +108,7 @@ function THashTable.FindNext: Pointer;
 begin
 //	Assert(FindIndex <> 0);
 	Inc(FFindIndex);
-	Result := nil; // TODO FValues[FFindIndex];
+	Result := nil; // TODO : FValues[FFindIndex];
 end;
 
 function THashTable.Get(const Index: SG): Pointer;
@@ -114,6 +117,26 @@ begin
 		Result := FValues[Index]
 	else
 		Result := nil;
+end;
+
+function THashTable.GetUsedKeyIndexes: TArrayOfKey;
+var
+	Count: SG;
+	P: ^TKey;
+begin
+	SetLength(Result, FCapacity);
+	Count := 0;
+	P := FKeys.GetFirst;
+	while P <> nil do
+	begin
+		if P^ <> 0 then
+		begin
+			Result[Count] := FKeys.Index;
+			Inc(Count);
+		end;
+		FKeys.Next(P);
+	end;
+	SetLength(Result, Count);
 end;
 
 function THashTable.LoadFactor: FA;

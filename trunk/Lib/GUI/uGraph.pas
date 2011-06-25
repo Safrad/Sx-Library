@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uGraph.pas
-//* Created:  1999-05-01
-//* Modified: 2008-04-01
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uGraph.pas
+// * Created:  1999-05-01
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uGraph;
 
@@ -18,34 +18,45 @@ function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 
 procedure PushFont(const Font: TFont);
 procedure PopFont(const Font: TFont);
+procedure SmallFont(const Font: TFont);
+procedure IdealFont(const Text: string; const Canvas: TCanvas; const R: TRect; const Font: TFont);
 
+function IdealShadow(const Canvas: TCanvas): SG;
 procedure ShadowText(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const CF, CB: TColor);
 procedure GoodText(Canvas: TCanvas; R: TRect; Text: string;
 	const C1, C2, C3: TColor; const Alignment: TAlignment; const Layout: TTextLayout);
 procedure CanvasLine(Canvas: TCanvas;
-	const X1, Y1, X2, Y2: Integer);
+	const X1, Y1, X2, Y2: Integer); deprecated;
 procedure CanvasLineTo(Canvas: TCanvas;
-	const X, Y, OffsetX, OffsetY: Integer);
+	const X, Y, OffsetX, OffsetY: Integer); deprecated;
 procedure Rec(Canvas: TCanvas; const Rect: TRect;
-	const Color: TColor; const Width: Integer);
+	const Color: TColor; const Width: Integer); deprecated;
 procedure Border(Canvas: TCanvas; const Rect: TRect;
-	TopColor, BottomColor: TColor; const Width: Integer);
+	TopColor, BottomColor: TColor; const Width: Integer); deprecated;
 
 function CutText(const Canvas: TCanvas; const Text: string; const Width: SG): string;
-procedure DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: AnsiString; FontShadow: SG); overload;
-procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: AnsiString; FontShadow: SG); overload;
-procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: AnsiString; const WordWrap: BG; FontShadow: SG); overload;
+function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment: TAlignment = taLeftJustify): BG; overload;
+procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: string; const FontShadow: SG = 0); overload;
+function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect;
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG): BG;
 
+function FloPoint(const X, Y: Double): TFloPoint;
+function FloPointToPoint(const FloPoint: TFloPoint): TPoint;
 function Over(const SX1, SY1, SX2, SY2: Integer;
 	const DX1, DY1, DX2, DY2: Integer): Boolean; overload;
+function Over(const SX1, SY1, SX2, SY2: Extended;
+	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
+function Over(const SX1, SY1: SG; const DR: TRect): Boolean; overload;
+function Over(const S: TPoint; const DR: TRect): Boolean; overload;
+
 function Over3D(const SX1, SY1, SZ1, SX2, SY2, SZ2: Integer;
 	const DX1, DY1, DZ1, DX2, DY2, DZ2: Integer): Boolean; overload;
 {function OverE(const SX1, SY1, SX2, SY2: Extended;
 	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;}
-procedure InflatePoint(var P: TPoint; d: SG); overload;
-procedure InflatePoint(var P: TPoint; dx, dy: SG); overload;
+procedure InflatePoint(var P: TPoint; const d: SG); overload;
+procedure InflatePoint(var P: TPoint; const dx, dy: SG); overload;
+function CenterOfRect(const R: TRect): TPoint;
 
 implementation
 
@@ -55,7 +66,10 @@ uses
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 begin
-	Result := (((PixelFormat * X  + 31) and $FFFFFFE0) div 8) * Y;
+	if PixelFormat = 15 then
+		Result := 0
+	else
+		Result := (((PixelFormat * U8(X) + 31) and $FFFFFFFFFFFFFFE0) div 8) * Y;
 end;
 
 var
@@ -84,13 +98,56 @@ begin
 //	Font.Assign(FontStack);
 end;
 
+const
+	MinFontSize = 4;
+
+procedure SmallFont(const Font: TFont);
+var
+	NewHeight: SG;
+begin
+{	if Font.Height > 0 then
+		NewHeight := Font.Height - 3
+	else
+		NewHeight := Font.Height + 3;}
+	NewHeight := 3 * Font.Height div 4;
+	if Abs(NewHeight) >= MinFontSize then
+		Font.Height := NewHeight
+	else
+		Font.Height := MinFontSize * Sgn(Font.Height);
+end;
+
+procedure IdealFont(const Text: string; const Canvas: TCanvas; const R: TRect; const Font: TFont);
+var
+	FontSize: SG;
+	Size: TSize;
+begin
+	FontSize := Max(MinFontSize, Abs(-7 * (R.Right - R.Left) div 8));
+	while FontSize >= MinFontSize do
+	begin
+		Canvas.Font.Height := -FontSize;
+		Font.Height := -FontSize;
+		Size := Canvas.TextExtent(Text);
+		if (Size.cx <= R.Right - R.Left) and (Size.cy <= R.Bottom - R.Top) then Break;
+		Dec(FontSize);
+	end;
+end;
+
 procedure ShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: string; const CF, CB: TColor);
-var n: SG;
+var
+	n: SG;
+	HLS: THLSColor;
 begin
 	if CB = clNone then
 	begin
 		Canvas.Brush.Style := bsClear;
-		Canvas.Font.Color := DarkerColor(CF);
+		HLS := RGBToHLS(TRGBA(ColorToRGB(CF)));
+		if HLS.L >= 128 then
+			HLS.L := HLS.L - 64
+//			Canvas.Font.Color := DarkerColor(CF)
+		else
+			HLS.L := HLS.L + 64;
+//			Canvas.Font.Color := LighterColor(CF);
+		Canvas.Font.Color := TColor(HLSToRGB(HLS));
 	end
 	else
 	begin
@@ -111,23 +168,23 @@ procedure GoodText(Canvas: TCanvas; R: TRect; Text: string;
 	const C1, C2, C3: TColor; const Alignment: TAlignment; const Layout: TTextLayout);
 begin
 	Canvas.Font.Color := MixColors(C1, C2);
-	DrawCutedText(Canvas, Rect(R.Left + 1, R.Top - 1, R.Right + 1, R.Bottom - 1),
+	DrawCuttedText(Canvas, Rect(R.Left + 1, R.Top - 1, R.Right + 1, R.Bottom - 1),
 		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := MixColors(C1, C2);
-	DrawCutedText(Canvas, Rect(R.Left - 1, R.Top + 1, R.Right - 1, R.Bottom + 1),
+	DrawCuttedText(Canvas, Rect(R.Left - 1, R.Top + 1, R.Right - 1, R.Bottom + 1),
 		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := C1;
-	DrawCutedText(Canvas, Rect(R.Left + 1, R.Top + 1, R.Right + 1, R.Bottom + 1),
+	DrawCuttedText(Canvas, Rect(R.Left + 1, R.Top + 1, R.Right + 1, R.Bottom + 1),
 		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := C2;
-	DrawCutedText(Canvas, Rect(R.Left - 1, R.Top - 1, R.Right - 1, R.Bottom - 1),
+	DrawCuttedText(Canvas, Rect(R.Left - 1, R.Top - 1, R.Right - 1, R.Bottom - 1),
 		Alignment, Layout, Text, True, 0);
 
 	Canvas.Font.Color := C3;
-	DrawCutedText(Canvas, Rect(R.Left, R.Top, R.Right, R.Bottom),
+	DrawCuttedText(Canvas, Rect(R.Left, R.Top, R.Right, R.Bottom),
 		Alignment, Layout, Text, True, 0);
 end;
 
@@ -225,55 +282,104 @@ begin
 	end;
 end;
 
-procedure DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: AnsiString; FontShadow: SG);
+function IdealShadow(const Canvas: TCanvas): SG;
+begin
+	Result := Abs(RoundDiv(Canvas.Font.Height, 20));
+//	Result := Round(Abs(Canvas.Font.Size) div 16);
+end;
+
+function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment: TAlignment = taLeftJustify): BG; overload;
 var
 	C: TColor;
 	B: TBrushStyle;
+	TextOffset: SG;
+	TextWidth: SG;
+	CuttedText: string;
 begin
-	if FontShadow <> 0 then
+	CuttedText := CutText(Canvas, Text, R.Right - R.Left);
+	Result := Text <> CuttedText;
+
+	if Alignment <> taLeftJustify then
 	begin
+		TextWidth := Canvas.TextWidth(DelCharsF(CuttedText, '&')) + FontShadow;
+		case Alignment of
+//			taLeftJustify: CurX := R.Left;
+		taRightJustify: R.Left := R.Right + 1 - TextWidth;
+		else {taCenter} R.Left := R.Left + (R.Right - R.Left + 1 - TextWidth) div 2;
+		end;
+//		if CurX < Rect.Left + Border then CurX := Rect.Left + Border;
+	end;
+
+{	if FontShadow <> 0 then
+	begin}
 		B := Canvas.Brush.Style;
-		Canvas.Brush.Style := bsClear;
 		C := Canvas.Font.Color;
-		Canvas.Font.Color := $808080;
-		repeat
-			OffsetRect(R, FontShadow, FontShadow);
-//			ExtTextOut(Canvas.Handle, X, Y, 0, nil, PChar(Text), Length(Text), nil);
-			DrawText(Canvas.Handle, PChar(Text), Length(Text), R, DT_NOCLIP or DT_SINGLELINE);
-			OffsetRect(R, -FontShadow, -FontShadow);
-			if FontShadow > 0 then Dec(FontShadow) else Inc(FontShadow);
-		until FontShadow = 0;
-		Canvas.Font.Color := C;
-		Canvas.Brush.Style := B;
+//	end;
+	try
+		TextOffset := FontShadow;
+		while True do
+		begin
+			if FontShadow <> 0 then
+			begin
+				if TextOffset <> 0 then
+				begin
+					Canvas.Brush.Style := bsClear;
+					Canvas.Font.Color := $808080;
+				end
+				else
+				begin
+					Canvas.Brush.Style := B;
+					Canvas.Font.Color := C;
+				end;
+			end;
+
+			OffsetRect(R, TextOffset, TextOffset);
+	//			ExtTextOut(Canvas.Handle, X, Y, 0, nil, PChar(Text), Length(Text), nil);
+			DrawText(Canvas.Handle, PChar(CuttedText), Length(CuttedText), R, DT_NOCLIP or DT_SINGLELINE);
+			OffsetRect(R, -TextOffset, -TextOffset);
+
+			if TextOffset = 0 then Break;
+
+			if TextOffset > 0 then
+				Dec(TextOffset)
+			else
+				Inc(TextOffset);
+		end;
+	finally
+		if FontShadow <> 0 then
+		begin
+			Canvas.Font.Color := C;
+			Canvas.Brush.Style := B;
+		end;
 	end;
 //	ExtTextOut(Canvas.Handle, X, Y, 0, nil, PChar(Text), Length(Text), nil);
-	DrawText(Canvas.Handle, PChar(Text), Length(Text), R, DT_NOCLIP or DT_SINGLELINE);
+//	DrawText(Canvas.Handle, PChar(Text), Length(Text), R, DT_NOCLIP or DT_SINGLELINE);
 end;
 
-procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: AnsiString; FontShadow: SG);
+procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: string; const FontShadow: SG = 0); overload;
 var R: TRect;
 begin
 	R.Left := X;
 	R.Top := Y;
-	R.Right := High(R.Right);
-	R.Bottom := High(R.Bottom);
-	DrawShadowText(Canvas, R, Text, FontShadow);
+	R.Right := High(R.Right) div 2;
+	R.Bottom := High(R.Bottom) div 2;
+	DrawShadowText(Canvas, R, Text, FontShadow, taLeftJustify);
 end;
 
-procedure DrawCutedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: AnsiString; const WordWrap: BG; FontShadow: SG);
+function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect;
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG): BG;
 const Border = 0;
 var
 	i, LastSpace{, k}: Integer;
 	Lines: array of string;
 	LineCount: SG;
-	Text, TextR: string;
-	CurX, CurY: Integer;
+	CurY: Integer;
 	TextHeight: Integer;
 	MaxLines: Integer;
 	R: TRect;
 	NewSize: SG;
 begin
+	Result := False;
 	TextHeight := Max(Canvas.TextHeight('W'), 1);
 	MaxLines := (Rect.Bottom - Rect.Top) div TextHeight - 1;
 	SetLength(Lines, 1);
@@ -287,11 +393,11 @@ begin
 			LastSpace := i;
 		end;
 
-		if (Caption[i] in [CharCR, CharLF]) or
+		if CharInSet(Caption[i], [CharCR, CharLF]) or
 			((LineCount < MaxLines) and (i > 1) and
 			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left))) then
 		begin
-			if Caption[i] in [CharCR, CharLF] then
+			if CharInSet(Caption[i], [CharCR, CharLF]) then
 			begin
 				if (i <= Length(Caption)) and (Caption[i] = CharCR) and (Caption[i + 1] = CharLF) then
 					NewSize := 2
@@ -340,23 +446,27 @@ begin
 	begin
 		if Lines[i] <> '' then
 		begin
-			Text := CutText(Canvas, Lines[i], Rect.Right - Rect.Left - 2 * Border);
-			TextR := DelCharsF(Text, '&');
-			case Alignment of
-			taLeftJustify: CurX := Rect.Left + Border;
-			taRightJustify: CurX := Rect.Right - Border + 1 - Canvas.TextWidth(TextR);
-			else {taCenter} CurX := Rect.Left + (Rect.Right - Rect.Left + 1 - Canvas.TextWidth(TextR)) div 2;
-			end;
-			if CurX < Rect.Left + Border then CurX := Rect.Left + Border;
-
-			R.Left := CurX;
+			R.Left := Rect.Left;
 			R.Top :=  CurY;
 			R.Right := Rect.Right;
-			R.Bottom := Rect.Bottom;
-			DrawShadowText(Canvas, R, Text, FontShadow);
+			R.Bottom := CurY + TextHeight; //Rect.Bottom;
+			if DrawShadowText(Canvas, R, Lines[i], FontShadow, Alignment) then
+				Result := True;
 		end;
 		Inc(CurY, TextHeight);
 	end;
+end;
+
+function FloPoint(const X, Y: Double): TFloPoint;
+begin
+	Result.X := X;
+	Result.Y := Y;
+end;
+
+function FloPointToPoint(const FloPoint: TFloPoint): TPoint;
+begin
+	Result.X := Trunc(FloPoint.X);
+	Result.Y := Trunc(FloPoint.Y);
 end;
 
 function Over(const SX1, SY1, SX2, SY2: Integer;
@@ -368,6 +478,40 @@ begin
 	if (SX1 < DX1) and (SX2 < DX1) then Exit;
 	if (SY1 > DY2) and (SY2 > DY2) then Exit;
 	if (SY1 < DY1) and (SY2 < DY1) then Exit;
+	Result := True;
+end;
+
+function Over(const SX1, SY1, SX2, SY2: Extended;
+	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
+begin
+	Result := False;
+
+	if (SX1 > DX2) and (SX2 > DX2) then Exit;
+	if (SX1 < DX1) and (SX2 < DX1) then Exit;
+	if (SY1 > DY2) and (SY2 > DY2) then Exit;
+	if (SY1 < DY1) and (SY2 < DY1) then Exit;
+	Result := True;
+end;
+
+function Over(const SX1, SY1: SG; const DR: TRect): Boolean; overload;
+begin
+	Result := False;
+
+	if (SX1 > DR.Right) then Exit;
+	if (SX1 < DR.Left) then Exit;
+	if (SY1 > DR.Bottom) then Exit;
+	if (SY1 < DR.Top) then Exit;
+	Result := True;
+end;
+
+function Over(const S: TPoint; const DR: TRect): Boolean; overload;
+begin
+	Result := False;
+
+	if (S.X > DR.Right) then Exit;
+	if (S.X < DR.Left) then Exit;
+	if (S.Y > DR.Bottom) then Exit;
+	if (S.Y < DR.Top) then Exit;
 	Result := True;
 end;
 
@@ -397,16 +541,22 @@ begin
 	Result := True;
 end;}
 
-procedure InflatePoint(var P: TPoint; d: SG);
+procedure InflatePoint(var P: TPoint; const d: SG);
 begin
 	Inc(P.X, d);
 	Inc(P.Y, d);
 end;
 
-procedure InflatePoint(var P: TPoint; dx, dy: SG);
+procedure InflatePoint(var P: TPoint; const dx, dy: SG);
 begin
 	Inc(P.X, dx);
 	Inc(P.Y, dy);
+end;
+
+function CenterOfRect(const R: TRect): TPoint;
+begin
+	Result.X := (R.Right + R.Left) div 2;
+	Result.Y := (R.Bottom + R.Top) div 2;
 end;
 
 initialization

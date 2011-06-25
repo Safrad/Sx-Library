@@ -1,16 +1,17 @@
-//* File:     Lib\GUI\uDForm.pas
-//* Created:  2001-12-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.9
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDForm.pas
+// * Created:  2001-12-01
+// * Modified: 2009-12-27
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDForm;
 
 interface
 
 {$R *.RES}
+
 uses
 	uTypes, uDBitmap,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
@@ -18,6 +19,8 @@ uses
 
 type
 	TBackground = (baNone, baUser, baStandard, baGradient, baOpenGL, baOpenGLBitmap);
+
+	TPosition = (poUnknown = -1, poLeft, poRight, poTop, poBottom);
 
 	TRWOptionsEvent = procedure(Sender: TObject; Save: Boolean) of object;
 
@@ -46,10 +49,14 @@ type
 		procedure SetChangeMode(Value: Boolean);
 		procedure SetCaption(Value: string);
 
-		procedure WMSize(var Message: TWMSize); message WM_SIZE;
-		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
-		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;
-		procedure WMSysColorChange(var Message: TWMSysColorChange); message WM_SYSCOLORCHANGE;
+		procedure WMSize(var Message: TWMSize);
+		message WM_SIZE;
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd);
+		message WM_ERASEBKGND;
+		procedure WMShow(var Message: TWMShowWindow);
+		message WM_SHOWWINDOW;
+		procedure WMSysColorChange(var Message: TWMSysColorChange);
+		message WM_SYSCOLORCHANGE;
 	public
 		{ Public declarations }
 		RC: HGLRC;
@@ -57,44 +64,48 @@ type
 
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
-//		function CloseQuery: Boolean; override;
+		// function CloseQuery: Boolean; override;
 
 		procedure RestoreWindow;
 		procedure StoreWindow;
 
-//		procedure KeyDown(var Key: U2; Shift: TShiftState); override;
+		// procedure KeyDown(var Key: U2; Shift: TShiftState); override;
 
 		procedure Paint; override;
 		procedure ResizeScene;
 		procedure Center;
+		procedure SetVisible(const Value: Boolean);
+		procedure ChangeVisible;
 	published
 		{ published declarations }
 		property Caption: string read FCaption write SetCaption;
 		property BackBitmap: TDBitmap read FBitmapB;
-		property Background: TBackground read FBackground write SetBackground default baNone;
+		property Background: TBackground read FBackground write SetBackground default baGradient;
 		property FullScreen: Boolean read FFullScreen write SetFullScreen default False;
 		property ChangeMode: Boolean read FChangeMode write SetChangeMode default False;
 
 		property OnRWOptions: TRWOptionsEvent read FOnRWOptions write FOnRWOptions;
-//		property OnMouseMove;
+		// property OnMouseMove;
 	end;
 
 procedure FormFree(var Form: TDForm); overload;
 procedure FormFree(var Form: TForm); overload;
 function FormDraw(const Form: TForm): BG;
+procedure ActivateForm(Form: TForm);
 
-procedure glShadowText(Canvas: TCanvas;
-	const X, Y: Integer; const Text: string; const CF, CB: TColor; Shadow: SG);
-procedure glTextOut(Canvas: TCanvas;
-	const X, Y: Integer; const Text: string; const C: TColor);
+procedure glShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: AnsiString;
+	const CF, CB: TColor; const Shadow: SG);
+procedure glTextOut(Canvas: TCanvas; const X, Y: Integer; const Text: string; const C: TColor);
 procedure ShowTaskBar(Visible: Boolean);
-function GetDesktopRect(out Rect: TRect): SG; deprecated;
+function GetTaskBarPos: TPosition;
+// function GetDesktopRect(out Rect: TRect): SG; deprecated;
 
 procedure Register;
 
 const
-	FormBorder = 10;
+	FormBorder = 8;
 	FreeFormAfterClose = True;
+
 var
 	DesktopHWnd: HWnd;
 	DesktopDC: HDC;
@@ -107,8 +118,9 @@ procedure ReleaseDesktop;
 implementation
 
 uses
-	Math,
-	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, Types;
+	Types, Math,
+	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo;
+
 const
 	OneBuffer = False;
 
@@ -128,7 +140,8 @@ begin
 end;
 
 procedure SetControlEnabled(Component: TComponent; E: BG);
-var i: SG;
+var
+	i: SG;
 begin
 	for i := 0 to Component.ComponentCount - 1 do
 	begin
@@ -147,11 +160,12 @@ begin
 	end;
 	if (DesktopDC = 0) then
 	begin
-		DesktopHWnd := 0; //GetDesktopWindow;
+		DesktopHWnd := 0; // GetDesktopWindow;
 		if DesktopHWnd <> INVALID_HANDLE_VALUE then
 		begin
 			DesktopDC := GetDC(DesktopHWnd);
-			if DesktopDC <> 0 then Result := True;
+			if DesktopDC <> 0 then
+				Result := True;
 		end;
 	end
 	else
@@ -169,16 +183,18 @@ begin
 end;
 
 function FormDraw(const Form: TForm): BG;
-//var WindowLong: S4;
+// var WindowLong: S4;
 begin
 	Result := False;
-	if not Assigned(Form) then Exit;
+	if not Assigned(Form) then
+		Exit;
 
-{	WindowLong := GetWindowLong(Form.Handle, GWL_STYLE);
-	if WindowLong and WS_VISIBLE = 0 then Exit;}
-//	Assert(Form.Visible = True);
-	if Form.Visible = False then Exit;
-//	if Form.WindowState = wsMinimized then Exit; // DNW
+	{ WindowLong := GetWindowLong(Form.Handle, GWL_STYLE);
+		if WindowLong and WS_VISIBLE = 0 then Exit; }
+	// Assert(Form.Visible = True);
+	if Form.Visible = False then
+		Exit;
+	// if Form.WindowState = wsMinimized then Exit; // DNW
 	Result := True;
 end;
 
@@ -200,36 +216,38 @@ begin
 	end;
 end;
 
-procedure glTextOut(Canvas: TCanvas;
-	const X, Y: Integer; const Text: string; const C: TColor);
-var
-	Params: array[0..3] of SG;
+procedure glTextOut(Canvas: TCanvas; const X, Y: Integer; const Text: string; const C: TColor);
 begin
-	glGetIntegerv(GL_VIEWPORT, @Params[0]);
+	glShadowText(Canvas, X, Y, Text, C, clNone, 0);
+	{ glGetIntegerv(GL_VIEWPORT, @Params[0]);
 
-	if (Params[2] = 0) or (Params[3] = 0) then Exit;
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity;
+		if (Params[2] = 0) or (Params[3] = 0) then Exit;
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity;
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity;
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity;
 
-	glColor3ubv(PGLUByte(@C));
-	glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1);
-	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
+		glColor3ubv(PGLUByte(@C));
+		glRasterPos2d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1);
+		glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1]))); }
 end;
 
-procedure glShadowText(Canvas: TCanvas;
-	const X, Y: Integer; const Text: string; const CF, CB: TColor; Shadow: SG);
+procedure glShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: AnsiString;
+	const CF, CB: TColor; const Shadow: SG);
 var
-	Params: array[0..3] of SG;
+	Params: array [0 .. 3] of SG;
 	C: TRGBA;
 	sx, sy, wx, wy: Single;
-//	px: array[0..3] of Double;
+	// px: array[0..3] of Double;
 begin
+	if Text = '' then
+		Exit;
+
 	glGetIntegerv(GL_VIEWPORT, @Params[0]);
 
-	if (Params[2] = 0) or (Params[3] = 0) then Exit;
+	if (Params[2] = 0) or (Params[3] = 0) then
+		Exit;
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity;
@@ -239,44 +257,49 @@ begin
 
 	if CB <> clNone then
 	begin
-		sx := 2 * (X + 1) / Params[2] - 1;
+		sx := 2 * (X - 1) / Params[2] - 1;
 		sy := -2 * (Y + 1 + Canvas.TextHeight(Text)) / Params[3] + 1;
-		wx := 2 * (Canvas.TextWidth(Text) + 1) / Params[2];
-		wy := 2 * (Canvas.TextHeight(Text) + 1) / Params[3];
+		wx := 2 * (Canvas.TextWidth(Text) + 2) / Params[2];
+		wy := 2 * (Canvas.TextHeight(Text) + 2) / Params[3];
+		{ sx := 2 * (X + 1) / Params[2] - 1;
+			sy := -2 * (Y + 1 + Canvas.TextHeight(Text)) / Params[3] + 1;
+			wx := 2 * (Canvas.TextWidth(Text) + 1) / Params[2];
+			wy := 2 * (Canvas.TextHeight(Text) + 1) / Params[3]; }
 		C.L := CB;
-		C.A := $ff;
+		C.A := $FF;
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4ubv(PGLUByte(@C));
 		glBegin(GL_QUADS);
-			glVertex3f(sx, sy, 1);
-			glVertex3f(sx + wx, sy, 1);
-			glVertex3f(sx + wx, sy + wy, 0.5);
-			glVertex3f(sx, sy + wy , 0.5);
+		glVertex3f(sx, sy, 1);
+		glVertex3f(sx + wx, sy, 1);
+		glVertex3f(sx + wx, sy + wy, 0.5);
+		glVertex3f(sx, sy + wy, 0.5);
 		glEnd;
 		glDisable(GL_BLEND);
 	end;
 
-(*	C.L := MixColors(CF, CB);
-	glColor3ubv(PGLUByte(@C));
-	glRasterPos3d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1, 1); // OpenGL FP Exception
-{	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
-	glTexCoord4d(1, 1, 1, 1);
-	glRasterPos4d(68, 0, 0, 1);
-	glBitmap(0, 0, 0, 0, 0, 0, nil);}
-	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1]))); *)
-
+	(* C.L := MixColors(CF, CB);
+		glColor3ubv(PGLUByte(@C));
+		glRasterPos3d(2 * (X + 1) / Params[2] - 1, -2 * (Y + 1 + 11) / Params[3] + 1, 1); // OpenGL FP Exception
+		{	glGetDoublev(GL_CURRENT_RASTER_POSITION, @Px[0]);
+		glTexCoord4d(1, 1, 1, 1);
+		glRasterPos4d(68, 0, 0, 1);
+		glBitmap(0, 0, 0, 0, 0, 0, nil);}
+		glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1]))); *)
 
 	C.L := CF;
 	glColor3ubv(PGLUByte(@C));
 	glRasterPos3d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1, 0); // OpenGL FP Exception
-	glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@Text[1])));
-
+	// glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@AnsiString(Text)[1])));
+	glCallLists(Length(Text), {$IFDEF UNICODE} GL_UNSIGNED_BYTE {$ELSE} GL_UNSIGNED_BYTE
+{$ENDIF}, Pointer(Integer(@Text[1])));
 end;
 
 procedure ShowTaskBar(Visible: Boolean);
-var hTaskBar: HWND;
+var
+	hTaskBar: HWnd;
 begin
 	hTaskBar := FindWindow('Shell_TrayWnd', nil);
 	if Visible then
@@ -285,12 +308,43 @@ begin
 		ShowWindow(hTaskBar, SW_HIDE);
 end;
 
-function GetDesktopRect(out Rect: TRect): SG;
+function GetTaskBarPos: TPosition;
 var
-	hTaskBar: HWND;
+	hTaskBar: HWnd;
 	RectT: TRect;
 	w, h: SG;
 begin
+	hTaskBar := FindWindow('Shell_TrayWnd', nil);
+	GetWindowRect(hTaskBar, RectT);
+	w := Screen.Width;
+	h := Screen.Height;
+
+	if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Top <= 0) then
+	begin
+		Result := poTop;
+	end
+	else if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Bottom >= h) then
+	begin
+		Result := poBottom;
+	end
+	else if (RectT.Left <= 0) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
+	begin
+		Result := poLeft;
+	end
+	else if (RectT.Right >= w) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
+	begin
+		Result := poRight;
+	end
+	else
+		Result := poUnknown;
+end;
+
+{ function GetDesktopRect(out Rect: TRect): SG;
+	var
+	hTaskBar: HWND;
+	RectT: TRect;
+	w, h: SG;
+	begin
 	hTaskBar := FindWindow('Shell_TrayWnd', nil);
 	GetWindowRect(hTaskBar, RectT);
 	w := Screen.Width;
@@ -302,35 +356,35 @@ begin
 
 	if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Top <= 0) then
 	begin
-		Rect.Top := RectT.Bottom; // Up
-		Result := 0;
+	Rect.Top := RectT.Bottom; // Top
+	Result := 0;
 	end
 	else if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Bottom >= h) then
 	begin
-		Rect.Bottom := RectT.Top; // Down
-		Result := 1;
+	Rect.Bottom := RectT.Top; // Bottom
+	Result := 1;
 	end
 	else if (RectT.Left <= 0) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
 	begin
-		Rect.Left := RectT.Right; // Left
-		Result := 2;
+	Rect.Left := RectT.Right; // Left
+	Result := 2;
 	end
 	else if (RectT.Right >= w) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
 	begin
-		Rect.Right := RectT.Left; // Right
-		Result := 3;
+	Rect.Right := RectT.Left; // Right
+	Result := 3;
 	end
 	else
-		Result := -1;
-end;
-{
-procedure TDForm.AfterCreate;
-begin
+	Result := -1;
+	end;
+
+	procedure TDForm.AfterCreate;
+	begin
 	if Parent.WindowState = wsMDIForm then
 	begin
-		Form.Style := fsMDIChild;
+	Form.Style := fsMDIChild;
 	end;
-end;}
+	end; }
 
 procedure TDForm.Common(Value: Boolean);
 const
@@ -338,7 +392,9 @@ const
 var
 	Style: S4;
 	Rect: TRect;
+	// LActive: BG;
 begin
+	// LActive := Active;
 	if Value then
 	begin
 		StoreWindow;
@@ -352,10 +408,11 @@ begin
 		Style := Style and not WS_CAPTION;
 		Style := Style and not WS_THICKFRAME;
 		SetWindowLong(Handle, GWL_STYLE, Style);
-		WindowState := wsMaximized;
-
+		if Active then
+			WindowState := wsMaximized;
 		Rect := Screen.MonitorFromWindow(Handle).BoundsRect;
-		SetBounds(Rect.Left, Rect.Top, Rect.Right - Rect.Left, Rect.Bottom - Rect.Top); // -> PopupMenu is visibled
+		SetBounds(Rect.Left, Rect.Top, Rect.Right - Rect.Left, Rect.Bottom - Rect.Top);
+		// -> PopupMenu is visibled
 		InitBackground(False);
 	end
 	else
@@ -366,18 +423,19 @@ begin
 		Style := Style or (WS_CAPTION);
 		Style := Style or (WS_THICKFRAME);
 		SetWindowLong(Handle, GWL_STYLE, Style);
-		WindowState := wsNormal;
+		if Active then
+			WindowState := wsNormal;
 		RestoreWindow;
 	end;
+
+	{ if LActive = False then
+		SendToBack; }
 	ResizeMessage;
 end;
 
 function SameRect(const R1, R2: TRect): BG;
 begin
-	Result :=
-		(R1.Left = R2.Left) and
-		(R1.Right = R2.Right) and
-		(R1.Top = R2.Top) and
+	Result := (R1.Left = R2.Left) and (R1.Right = R2.Right) and (R1.Top = R2.Top) and
 		(R1.Bottom = R2.Bottom);
 end;
 
@@ -386,7 +444,8 @@ begin
 	if FFullScreen <> Value then
 	begin
 		FFullScreen := Value;
-		if not SameRect(Screen.MonitorFromWindow(Handle).WorkareaRect, Screen.MonitorFromWindow(Handle).BoundsRect) then
+		if not SameRect(Screen.MonitorFromWindow(Handle).WorkareaRect, Screen.MonitorFromWindow(Handle)
+				.BoundsRect) then
 			ShowTaskBar(not Value);
 		Common(Value);
 	end;
@@ -410,27 +469,29 @@ begin
 	begin
 		case FBackground of
 		baNone, baOpenGL:
-		begin
-			FBitmapB.SetSize(0, 0);
-			Exit;
-		end;
+			begin
+				FBitmapB.SetSize(0, 0, clNone);
+				Exit;
+			end;
 		end;
 		if Direct or (FBitmapB.Width <> ClientWidth) or (FBitmapB.Height <> ClientHeight) then
 		begin
-			FBitmapB.SetSize(ClientWidth, ClientHeight);
+			FBitmapB.SetSize(ClientWidth, ClientHeight, Color);
 			FBitmapB.ChangeRB := FBackground = baOpenGLBitmap;
 
 			if FBitmapB.Empty = False then
 			begin
 				case FBackground of
 				baStandard:
-				begin
-					FBitmapB.Bar(Color, ef16);
-				end;
+					begin
+						// FBitmapB.Bar(Color, ef16);
+					end;
 				baGradient:
-				begin
-					FBitmapB.FormBitmap(Color);
-				end;
+					begin
+						// {$ifopt d-}
+						FBitmapB.FormBitmap(Color);
+						// {$endif}
+					end;
 				end;
 			end;
 		end;
@@ -441,13 +502,6 @@ end;
 type
 	TFPUException = (exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision);
 	TFPUExceptionMask = set of TFPUException;
-
-function Get8087CW: U2;
-asm
-	PUSH 0
-	FNSTCW [ESP].U2
-	POP EAX
-end;
 
 function SetExceptionMask(const Mask: TFPUExceptionMask): TFPUExceptionMask;
 var
@@ -464,12 +518,13 @@ begin
 	begin
 		case FBackground of
 		baOpenGL, baOpenGLBitmap:
-		begin
-//			FreeOpenGL; Math
-			glDeleteLists(FontBase, 256);
-			DestroyRenderingContext(RC); RC := 0;
-			SetExceptionMask([exDenormalized, exUnderflow..exPrecision]);
-		end;
+			begin
+				// FreeOpenGL; Math
+				glDeleteLists(FontBase, 256);
+				DestroyRenderingContext(RC);
+				RC := 0;
+				SetExceptionMask([exDenormalized, exUnderflow .. exPrecision]);
+			end;
 		end;
 
 		FBackground := Value;
@@ -478,24 +533,26 @@ begin
 
 		case FBackground of
 		baOpenGL, baOpenGLBitmap:
-		begin
-			SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
-			if OneBuffer then
-				RC:=CreateRenderingContext(Canvas.Handle, [], 32, 0)
-			else
-				RC:=CreateRenderingContext(Canvas.Handle, [opDoubleBuffered], 32, 0);
-//			CreateOpenGL(Handle, Canvas);
-			SelectObject(Canvas.Handle, GetStockObject(ANSI_VAR_FONT));
+			begin
+				SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow,
+					exPrecision]);
+				if OneBuffer then
+					RC := CreateRenderingContext(Canvas.Handle, [], 32, 0)
+				else
+					RC := CreateRenderingContext(Canvas.Handle, [opDoubleBuffered], 32, 0);
+				// CreateOpenGL(Handle, Canvas);
+				// SelectObject(Canvas.Handle, GetStockObject(ANSI_VAR_FONT));
 				// create the bitmap display lists
 				// we're making images of glyphs 0 thru 255
 				// the display list numbering starts at 1000, an arbitrary choice
 
-			ActivateRenderingContext(Canvas.Handle,RC); // make context drawable
-			FontBase := glGenLists(256);
-			wglUseFontBitmaps(Canvas.Handle, 0, 255, FontBase);
-			ResizeMessage; 
-			DeactivateRenderingContext; // make context undrawable
-		end;
+				ActivateRenderingContext(Canvas.Handle, RC); // make context drawable
+				FontBase := glGenLists(256);
+				SelectObject(Canvas.Handle, Canvas.Font.Handle { GetStockObject (SYSTEM_FONT) } );
+				wglUseFontBitmaps(Canvas.Handle, 0, 255, FontBase);
+				ResizeMessage;
+				DeactivateRenderingContext; // make context undrawable
+			end;
 		end;
 
 		Invalidate;
@@ -506,53 +563,60 @@ procedure TDForm.CheckPos;
 var
 	Rect: TRect;
 begin
-{	if Screen.MonitorCount = 1 then
-	begin
-		GetDesktopRect(Rect);
-	end
-	else
-	begin}
-		Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;
-//	end;
-	if Left + Width > Rect.Right then Left := Rect.Right - Width;
-	if Top + Height > Rect.Bottom then Top := Rect.Bottom - Height;
-	if Left < Rect.Left then Left := Rect.Left;
-	if Top < Rect.Top then Top := Rect.Top;
+	Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;
+	if Left + Width > Rect.Right then
+		Left := Rect.Right - Width;
+	if Top + Height > Rect.Bottom then
+		Top := Rect.Bottom - Height;
+	if Left < Rect.Left then
+		Left := Rect.Left;
+	if Top < Rect.Top then
+		Top := Rect.Top;
 end;
-
 
 constructor TDForm.Create(AOwner: TComponent);
 var
 	FileName: TFileName;
 begin
+	DefaultMonitor := dmDesktop; // Replace dmActiveForm
+	Position := poDesigned; // Replace poDefaultPosOnly
+	// DoubleBuffered := True;
+
 	inherited Create(AOwner);
 
-	DefaultMonitor := dmDesktop;
-
+	CorrectFont(Font);
 	CheckPos;
-//	DoubleBuffered := True;
 
 	HorzScrollBar.Tracking := True;
 	VertScrollBar.Tracking := True;
-	FBackground := baNone;
+	FBackground := baGradient;
 
 	FBitmapB := TDBitmap.Create;
-	FBitmapB.SetSize(0, 0);
+	FBitmapB.Canvas.Font := Font;
+	FBitmapB.SetSize(0, 0, clNone);
 
+	if FormStyle <> fsMDIChild then
 	begin
 		FileName := Name;
 		if Length(FileName) > 0 then
 		begin
-			if FileName[1] = 'f' then Delete(FileName, 1, 1);
-			if FileName = 'Main' then FileName := GetProjectInfo(piInternalName);
+			if FileName[1] = 'f' then
+				Delete(FileName, 1, 1);
+			if FileName = 'Main' then
+				FileName := GetProjectInfo(piInternalName);
 		end;
 
 		FileName := GraphDir + FileName + '.ico';
 		if FileExists(FileName) then
 			Icon.LoadFromFile(FileName);
+	end
+	else
+	begin
+		// Icon := nil;
 	end;
 
-	if Assigned(FOnRWOptions) then FOnRWOptions(Self, False);
+	if Assigned(FOnRWOptions) then
+		FOnRWOptions(Self, False);
 end;
 
 destructor TDForm.Destroy;
@@ -566,60 +630,56 @@ begin
 	FreeAndNil(FBitmapB);
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
-	begin
-		glDeleteLists(FontBase, 256);
-		DestroyRenderingContext(RC); RC := 0;
-//		FreeOpenGL;
-	end;
+		begin
+			glDeleteLists(FontBase, 256);
+			DestroyRenderingContext(RC);
+			RC := 0;
+			// FreeOpenGL;
+		end;
 	end;
 	inherited Destroy;
 end;
 
-{function TDForm.CloseQuery: Boolean;
-begin
-//procedure TDForm.CloseQuery(Sender: TObject; var CanClose: Boolean);
+{ function TDForm.CloseQuery: Boolean;
+	begin
+	//procedure TDForm.CloseQuery(Sender: TObject; var CanClose: Boolean);
 	if inherited CloseQuery then
-		if Assigned(FOnRWOptions) then FOnRWOptions(Self, True);
-end;}
+	if Assigned(FOnRWOptions) then FOnRWOptions(Self, True);
+	end; }
 
-{procedure TDForm.KeyDown(var Key: Word; Shift: TShiftState);
-begin
+{ procedure TDForm.KeyDown(var Key: Word; Shift: TShiftState);
+	begin
 	if (Key = VK_RETURN) and (ssAlt in Shift) then
-		FullScreen := not FullScreen
+	FullScreen := not FullScreen
 	else
-		inherited KeyDown(Key, Shift);
-end;}
+	inherited KeyDown(Key, Shift);
+	end; }
 
 procedure TDForm.ResizeScene;
 begin
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity;
-		if (ClientHeight > 0) and (ClientWidth > 0) then
-			gluPerspective(60 {* Min(ClientHeight / Screen.Height, ClientWidth / Screen.Width)},
-				ClientWidth / ClientHeight,
-				0.1,
-				100000.0);
-		glViewport(0, 0, ClientWidth, ClientHeight);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity;
+	if (ClientHeight > 0) and (ClientWidth > 0) then
+		gluPerspective(60, ClientWidth / ClientHeight, 0.1, 100000.0);
+	glViewport(0, 0, ClientWidth, ClientHeight);
 end;
 
 procedure TDForm.Paint;
 begin
-	if FBackground = baUser then
+	if FBackground in [baUser, baOpenGLBitmap] then
 		inherited; // FOnPaint Method
 	case FBackground of
 	baNone:
-	begin
+		begin
 
-	end;
+		end;
 	baOpenGL, baOpenGLBitmap:
-	begin
-		ActivateRenderingContext(Canvas.Handle, RC);
-	end
+		begin
+			ActivateRenderingContext(Canvas.Handle, RC);
+		end
 	else
 	begin
-		BitBlt(Canvas.Handle, 0, 0, FBitmapB.Width, FBitmapB.Height,
-			FBitmapB.Canvas.Handle,
-			0, 0,
+		BitBlt(Canvas.Handle, 0, 0, FBitmapB.Width, FBitmapB.Height, FBitmapB.Canvas.Handle, 0, 0,
 			SRCCOPY);
 	end;
 	end;
@@ -627,89 +687,88 @@ begin
 	if FBackground = baOpenGLBitmap then
 	begin
 		glClear(GL_DEPTH_BUFFER_BIT); // TNT2 Error read at 0
-{		glClear(GL_CURRENT_BIT);
-		glClear(GL_TRANSFORM_BIT);
-		glClear(GL_ALL_ATTRIB_BITS);}
-{	glDisable(GL_LIGHT0);
-	glDisable(GL_LIGHT1);
-	glDisable(GL_LIGHTING);
-	glDisable(GL_COLOR_MATERIAL);
-	glDisable(GL_NORMALIZE);
-	glDisable(GL_POINT_SMOOTH);
-	glDisable(GL_POINT_SIZE);}
+		{ glClear(GL_CURRENT_BIT);
+			glClear(GL_TRANSFORM_BIT);
+			glClear(GL_ALL_ATTRIB_BITS); }
+		{ glDisable(GL_LIGHT0);
+			glDisable(GL_LIGHT1);
+			glDisable(GL_LIGHTING);
+			glDisable(GL_COLOR_MATERIAL);
+			glDisable(GL_NORMALIZE);
+			glDisable(GL_POINT_SMOOTH);
+			glDisable(GL_POINT_SIZE); }
 
-//		glDisable($ffff);
-//		glDrawPixels(16, 16, GL_RGB, GL_UNSIGNED_BYTE, FBitmapB.GLData);
-
+		// glDisable($ffff);
+		// glDrawPixels(16, 16, GL_RGB, GL_UNSIGNED_BYTE, FBitmapB.GLData);
 
 		(*
-				* Disable stuff that's likely to slow down
-				* glDrawPixels.(Omit as much of this as possible,
-				* when you know in advance that the OpenGL state is
-				* already set correctly.)
-				*)
-				glDisable(GL_ALPHA_TEST);
-				glDisable(GL_BLEND);
-				glDisable(GL_DEPTH_TEST);
-				glDisable(GL_DITHER);
-				glDisable(GL_FOG);
-				glDisable(GL_LIGHTING);
-				glDisable(GL_LOGIC_OP);
-				glDisable(GL_STENCIL_TEST);
-				glDisable(GL_TEXTURE_1D);
-				glDisable(GL_TEXTURE_2D);
-				glPixelTransferi(GL_MAP_COLOR, GL_FALSE);
-				glPixelTransferi(GL_RED_SCALE, 1);
-				glPixelTransferi(GL_RED_BIAS, 0);
-				glPixelTransferi(GL_GREEN_SCALE, 1);
-				glPixelTransferi(GL_GREEN_BIAS, 0);
-				glPixelTransferi(GL_BLUE_SCALE, 1);
-				glPixelTransferi(GL_BLUE_BIAS, 0);
-				glPixelTransferi(GL_ALPHA_SCALE, 1);
-				glPixelTransferi(GL_ALPHA_BIAS, 0);
+			* Disable stuff that's likely to slow down
+			* glDrawPixels.(Omit as much of this as possible,
+			* when you know in advance that the OpenGL state is
+			* already set correctly.)
+			*)
+		glDisable(GL_ALPHA_TEST);
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_DITHER);
+		glDisable(GL_FOG);
+		glDisable(GL_LIGHTING);
+		glDisable(GL_LOGIC_OP);
+		glDisable(GL_STENCIL_TEST);
+		glDisable(GL_TEXTURE_1D);
+		glDisable(GL_TEXTURE_2D);
+		glPixelTransferi(GL_MAP_COLOR, GL_FALSE);
+		glPixelTransferi(GL_RED_SCALE, 1);
+		glPixelTransferi(GL_RED_BIAS, 0);
+		glPixelTransferi(GL_GREEN_SCALE, 1);
+		glPixelTransferi(GL_GREEN_BIAS, 0);
+		glPixelTransferi(GL_BLUE_SCALE, 1);
+		glPixelTransferi(GL_BLUE_BIAS, 0);
+		glPixelTransferi(GL_ALPHA_SCALE, 1);
+		glPixelTransferi(GL_ALPHA_BIAS, 0);
 
-				(*
-				* Disable extensions that could slow down
-				* glDrawPixels.(Actually, you should check for the
-				* presence of the proper extension before making
-				* these calls.I omitted that code for simplicity.)
-				*)
+		(*
+			* Disable extensions that could slow down
+			* glDrawPixels.(Actually, you should check for the
+			* presence of the proper extension before making
+			* these calls.I omitted that code for simplicity.)
+			*)
 
-				glDisable(GL_CONVOLUTION_1D_EXT);
-				glDisable(GL_CONVOLUTION_2D_EXT);
-				glDisable(GL_SEPARABLE_2D_EXT);
+		glDisable(GL_CONVOLUTION_1D_EXT);
+		glDisable(GL_CONVOLUTION_2D_EXT);
+		glDisable(GL_SEPARABLE_2D_EXT);
 
-				glDisable(GL_HISTOGRAM_EXT);
-				glDisable(GL_MINMAX_EXT);
+		glDisable(GL_HISTOGRAM_EXT);
+		glDisable(GL_MINMAX_EXT);
 
-				glDisable(GL_TEXTURE_3D_EXT);
+		glDisable(GL_TEXTURE_3D_EXT);
 
-				(*
-				* The following is needed only when using a
-				* multisample-capable visual.
-				*)
+		(*
+			* The following is needed only when using a
+			* multisample-capable visual.
+			*)
 
-//				glDisable(GL_MULTISAMPLE_SGIS);
+		// glDisable(GL_MULTISAMPLE_SGIS);
 
 		glDrawPixels(FBitmapB.Width, FBitmapB.Height, GL_FORMAT, GL_UNSIGNED_BYTE, FBitmapB.GLData);
 	end;
 
-	if FBackground <> baUser then
+	if not(FBackground in [baUser, baOpenGLBitmap]) then
 		inherited Paint; // FOnPaint Method
 
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
-	begin
-		if OneBuffer then
-			glFlush
-		else
-			SwapBuffers(Canvas.Handle);
-		DeactivateRenderingContext; // make context drawable
-	end;
+		begin
+			if OneBuffer then
+				glFlush
+			else
+				SwapBuffers(Canvas.Handle);
+			DeactivateRenderingContext; // make context drawable
+		end;
 	end;
 end;
 
-procedure TDForm.WMEraseBkGnd;
+procedure TDForm.WMEraseBkgnd;
 begin
 	Message.Result := 1;
 end;
@@ -719,7 +778,10 @@ var
 	Message: TWMSize;
 begin
 	Message.Msg := WM_SIZE;
-	Message.SizeType := 0;
+	if FFullScreen then
+		Message.SizeType := SIZEFULLSCREEN
+	else
+		Message.SizeType := SIZENORMAL;
 	Message.Width := Width;
 	Message.Height := Height;
 	Message.Result := 0;
@@ -728,13 +790,14 @@ end;
 
 procedure TDForm.WMSize(var Message: TWMSize);
 begin
-	if (Visible = False) or (Message.Width = 0) or (Message.Height = 0) then Exit;
+	if (Visible = False) or (Message.Width = 0) or (Message.Height = 0) then
+		Exit;
 
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
-	begin
-		ActivateRenderingContext(Canvas.Handle,RC);
-	end;
+		begin
+			ActivateRenderingContext(Canvas.Handle, RC);
+		end;
 	end;
 	InitBackground(False);
 
@@ -742,9 +805,9 @@ begin
 
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
-	begin
-		DeactivateRenderingContext; // make context drawable
-	end;
+		begin
+			DeactivateRenderingContext; // make context drawable
+		end;
 	end;
 	Invalidate; // Required when new size is smaller
 end;
@@ -754,14 +817,15 @@ begin
 	if (Message.Show) and (Message.Status = 0) then
 	begin
 		CheckPos;
-		InitBackground(False);
+		ResizeMessage;
+		// InitBackground(False);
 	end;
 	inherited;
 end;
 
 procedure TDForm.WMSysColorChange;
 begin
-	if not (FBackground in [baUser, baOpenGLBitmap]) then
+	if not(FBackground in [baUser, baOpenGLBitmap]) then
 	begin
 		InitBackground(True);
 	end;
@@ -771,22 +835,22 @@ procedure TDForm.RestoreWindow;
 begin
 	if FStoreWindow then
 	begin
-//		SetWindowPlacement(Handle, @FWindowPlacement);
-{		SetWindowPos(Handle, 0,
+		// SetWindowPlacement(Handle, @FWindowPlacement);
+		{ SetWindowPos(Handle, 0,
 			FWindowPlacement.rcNormalPosition.Left,
 			FWindowPlacement.rcNormalPosition.Top,
 			FWindowPlacement.rcNormalPosition.Right - FWindowPlacement.rcNormalPosition.Left,
 			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top,
-			SWP_NOZORDER + SWP_NOACTIVATE);}
+			SWP_NOZORDER + SWP_NOACTIVATE); }
 		SetWindowLong(Handle, GWL_STYLE, FWindowLong);
 		SetWindowPlacement(Handle, @FWindowPlacement);
-{		SetBounds(
+		{ SetBounds(
 			FWindowPlacement.rcNormalPosition.Left,
 			FWindowPlacement.rcNormalPosition.Top,
 			FWindowPlacement.rcNormalPosition.Right - FWindowPlacement.rcNormalPosition.Left,
 			FWindowPlacement.rcNormalPosition.Bottom - FWindowPlacement.rcNormalPosition.Top); TaskBar problem }
 		FStoreWindow := False;
-		BringToFront;
+		// BringToFront;
 	end;
 end;
 
@@ -796,7 +860,7 @@ begin
 	FWindowLong := FWindowLong or WS_VISIBLE;
 	FWindowPlacement.Length := SizeOf(FWindowPlacement);
 	FStoreWindow := GetWindowPlacement(Handle, @FWindowPlacement);
-//	FStoreWindow := True;
+	// FStoreWindow := True;
 end;
 
 procedure TDForm.SetCaption(Value: string);
@@ -831,11 +895,63 @@ begin
 		X := Rect.Left + (Rect.Right - Rect.Left - Width) div 2;
 		Y := Rect.Top + (Rect.Bottom - Rect.Top - Height) div 2;
 	end;
-{	if X > Rect.Right - Width then X := Rect.Right - Width;
-	if Y > Rect.Bottom - Height then Y := Rect.Bottom - Height;
-	if X < Rect.Left then X := Rect.Left;
-	if Y < Rect.Top then Y := Rect.Top;}
+	{ if X > Rect.Right - Width then X := Rect.Right - Width;
+		if Y > Rect.Bottom - Height then Y := Rect.Bottom - Height;
+		if X < Rect.Left then X := Rect.Left;
+		if Y < Rect.Top then Y := Rect.Top; }
 	SetBounds(X, Y, Width, Height);
+end;
+
+procedure TDForm.ChangeVisible;
+begin
+	SetVisible(not Visible);
+end;
+
+procedure TDForm.SetVisible(const Value: Boolean);
+begin
+	// if FormStyle = fsMDIChild then
+	begin
+		if Value then
+		begin
+			Self.FormStyle := fsMDIChild;
+			Show;
+		end
+		else
+		begin
+			// Close;
+			Self.FormStyle := fsNormal;
+			Hide;
+			// FreeAndNil(Self);
+		end;
+	end
+	{ else
+		begin
+		if Value then
+		Show
+		else
+		Hide;
+		end; }
+end;
+
+function Get8087CW: U2;
+asm
+	PUSH 0
+	FNSTCW [ESP].U2
+	POP EAX
+end
+;
+
+procedure ActivateForm(Form: TForm);
+begin
+	if Form.Visible = False then
+		Form.Show
+	else
+	begin
+//		Form.SendToBack;
+		Form.BringToFront;
+//{			ShowWindow(Handle, SW_SHOW); // SW_NORMAL, SW_RESTORE break windows stay on top!
+			SetForegroundWindow(Form.Handle); // Blink Taskbar
+	end;
 end;
 
 end.

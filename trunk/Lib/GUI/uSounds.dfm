@@ -58,6 +58,7 @@ object fSounds: TfSounds
     Width = 257
     Height = 137
     Zoom = 1.000000000000000000
+    EnableZoom = True
     PopupMenu = PopupMenuSounds
     TabOrder = 9
     OnDblClick = DViewSoundsDblClick
@@ -80,7 +81,7 @@ object fSounds: TfSounds
     OnClick = ButtonOKClick
   end
   object ButtonApply: TDButton
-    Left = 280
+    Left = 368
     Top = 240
     Width = 75
     Height = 25
@@ -91,11 +92,11 @@ object fSounds: TfSounds
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 2
     OnClick = ButtonApplyClick
   end
   object ButtonCancel: TDButton
-    Left = 368
+    Left = 280
     Top = 240
     Width = 75
     Height = 25
@@ -107,7 +108,7 @@ object fSounds: TfSounds
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 2
+    TabOrder = 1
     OnClick = ButtonCancelClick
   end
   object ComboBoxFrequency: TComboBox

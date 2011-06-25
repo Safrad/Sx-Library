@@ -13,6 +13,7 @@ object fMemStatus: TfMemStatus
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  Position = poOwnerFormCenter
   OnCreate = FormCreate
   OnHide = FormHide
   OnShow = FormShow

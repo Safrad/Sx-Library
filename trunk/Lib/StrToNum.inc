@@ -1,3 +1,11 @@
+// * File:     Lib\StrToNum.inc
+// * Created:  2008-06-03
+// * Modified: 2009-12-10
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
 var
 // Code: SG;
 	Minus: BG;
@@ -31,9 +39,21 @@ begin
 			Inc(LineIndex, Length(Line));}
 //	end;
 //end;
-  SkipSpace(Line, LineIndex);
+	SkipSpace(Line, LineIndex);
 	Result := 0;
+
 	Minus := False;
+	while (LineIndex <= Length(Line)) do
+	begin
+		case Line[LineIndex] of
+		'-': Minus := not Minus;
+		'+':
+		else
+			Break;
+		end;
+		Inc(LineIndex);
+	end;
+
 	while (LineIndex <= Length(Line)) do
 	begin
 		case Line[LineIndex] of
@@ -42,12 +62,7 @@ begin
 {			if Abs(Result) >= High(Result) div 10 then
 				Break;}
 			Result := Result * 10;
-			Result := Result + Ord(Line[LineIndex]) - Ord('0');
-		end;
-		'-': Minus := True;
-		',':
-		begin
-
+			Result := Result - Ord('0') + Ord(Line[LineIndex]);
 		end;
 		else
 			Break;

@@ -1,17 +1,18 @@
-//* File:     Lib\uEscape.pas
-//* Created:  2007-05-20
-//* Modified: 2007-05-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uEscape.pas
+// * Created:  2007-05-20
+// * Modified: 2009-09-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uEscape;
 
 interface
 
+uses uTypes;
 {
-Escaped sequence is 2.8x larger for random data
+Escaped sequence is 2.8x larger for random ANSI data
 
 Standard Escape Sequences:
 \b       backspace
@@ -40,16 +41,18 @@ Sequence	Value	Char	What it does
 }
 
 function RemoveEscape(const s: string): string;
-function AddEscape(const s: string): string;
+function AddEscape(const s: string; const KeepCharser:BG = True): string;
 
 implementation
 
-uses uTypes, uStrings, uOutputFormat;
+uses uStrings, uOutputFormat;
 
 function RemoveEscape(const s: string): string;
 var
 	i, j: SG;
-	x, v: U1;
+	x: U1;
+	x2: U2;
+	v: U1;
 	Special: BG;
 begin
 	Result := '';
@@ -78,18 +81,42 @@ begin
 				'n': Result := Result + CharLF;
 				'r': Result := Result + CharCR;
 				't': Result := Result + CharHT;
-{				'u', 'U':
+				'u', 'U':
 				begin
-				end;}
-				'v': 	Result := Result + CharVT;
+					Inc(i);
+					x2 := 0;
+					j := 0;
+					while True do
+					begin
+						if (i <= Length(s)) {$ifdef UNICODE}and (Ord(s[i]) <= $ff){$endif} and (j < 4) then
+							v := HexValue[AnsiChar(s[i])]
+						else
+							v := 16;
+						if (v < 16) then
+						begin
+							x2 := (x2 shl 4) and $ffff;
+							x2 := (x2 + v) and $ffff;
+							Inc(i);
+						end
+						else
+						begin
+							Result := Result + Char(x2);
+							Dec(i);
+							Break;
+						end;
+						Inc(j);
+					end;
+				end;
+				'v': Result := Result + CharVT;
 				'x':
 				begin
 					Inc(i);
 					x := 0;
+					j := 0;
 					while True do
 					begin
-						if i <= Length(s) then
-							v := HexValue[s[i]]
+						if (i <= Length(s)) {$ifdef UNICODE}and (Ord(s[i]) <= $ff){$endif} and (j < 2) then
+							v := HexValue[AnsiChar(s[i])]
 						else
 							v := 16;
 						if (v < 16) then
@@ -104,6 +131,7 @@ begin
 							Dec(i);
 							Break;
 						end;
+						Inc(j);
 					end;
 				end;
 				'''': Result := Result + '''';
@@ -115,8 +143,8 @@ begin
 					j := 0;
 					while True do
 					begin
-						if (i <= Length(s)) and (j < 3) then
-							v := HexValue[s[i]]
+						if (i <= Length(s)) {$ifdef UNICODE}and (Ord(s[i]) <= $ff){$endif} and (j < 3) then
+							v := HexValue[AnsiChar(s[i])]
 						else
 							v := 8;
 						if (v < 8) then
@@ -146,7 +174,7 @@ begin
 
 end;
 
-function AddEscape(const s: string): string;
+function AddEscape(const s: string; const KeepCharser: BG = True): string;
 var i: SG;
 begin
 	Result := '';
@@ -169,9 +197,29 @@ begin
 			Result := Result + s[i];
 		else
 		begin
-			NumericBase := 8;
-			Result := Result + '\' + NToS(Ord(s[i]), '000');  // NumToStr(Ord(s[i]), 8);
-			NumericBase := 10;
+			if KeepCharser then
+			begin
+				Result := Result + s[i];
+			end
+			else
+			begin
+				{$ifdef UNICODE}
+				if Ord(s[i]) <= $ff then
+				begin
+				{$endif}
+					NumericBase := 8;
+					Result := Result + '\' + NToS(Ord(s[i]), '000');
+					NumericBase := 10;
+				{$ifdef UNICODE}
+				end
+				else
+				begin
+					NumericBase := 16;
+					Result := Result + '\u' + NToS(Ord(s[i]), '0000');
+					NumericBase := 10;
+				end;
+				{$endif}
+			end;
 		end;
 		end;
 		Inc(i);

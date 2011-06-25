@@ -1,3 +1,11 @@
+// * File:     Lib\Lib.dpk
+// * Created:  2008-06-03
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
 package Lib;
 
 {$R *.res}
@@ -11,12 +19,12 @@ package Lib;
 {$LOCALSYMBOLS OFF}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
 {$REFERENCEINFO OFF}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES ON}
+{$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
@@ -26,24 +34,26 @@ package Lib;
 {$IMPLICITBUILD ON}
 
 requires
-  vcl,
-  rtl,
-	vcljpg,
+	vcl,
+	rtl,
 	designide,
-  vclactnband,
-	vclx;
+	vclactnband,
+	vclx,
+	vclimg;
 
 contains
-  uDView in 'GUI\uDView.pas',
-  uDTimer in 'GUI\uDTimer.pas',
-  uDPanel in 'GUI\uDPanel.pas',
-  uDLabel in 'GUI\uDLabel.pas',
-  uDImage in 'GUI\uDImage.pas',
-  uDGauge in 'GUI\uDGauge.pas',
-  uDForm in 'GUI\uDForm.pas',
-  uDEdit in 'GUI\uDEdit.pas',
-  uDButton in 'GUI\uDButton.pas',
+	uDView in 'GUI\uDView.pas',
+	uDTimer in 'GUI\uDTimer.pas',
+	uDPanel in 'GUI\uDPanel.pas',
+	uDLabel in 'GUI\uDLabel.pas',
+	uDImage in 'GUI\uDImage.pas',
+	uDGauge in 'GUI\uDGauge.pas',
+	uDForm in 'GUI\uDForm.pas',
+	uDEdit in 'GUI\uDEdit.pas',
+	uDButton in 'GUI\uDButton.pas',
+	uNumericComboBox in 'GUI\uNumericComboBox.pas',
 	uOpenedFiles in 'GUI\uOpenedFiles.pas',
+	uDMemo in 'GUI\uDMemo.pas',
 	uCompLog in 'GUI\uCompLog.pas';
 
 end.

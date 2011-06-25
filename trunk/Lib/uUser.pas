@@ -1,10 +1,10 @@
-//* File:     Lib\uUser.pas
-//* Created:  2000-05-01
-//* Modified: 2007-10-01
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uUser.pas
+// * Created:  2000-05-01
+// * Modified: 2009-10-14
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uUser; // Contain user (personal) specific information
 
@@ -34,4 +34,5 @@ begin
 end;
 
 end.
+
 

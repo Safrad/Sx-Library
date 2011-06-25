@@ -1,10 +1,10 @@
-//* File:     Lib\uLogger.pas
-//* Created:  2009-01-14
-//* Modified: 2008-12-26
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uLogger.pas
+// * Created:  2009-01-14
+// * Modified: 2009-09-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uLogger;
 
@@ -20,7 +20,7 @@ type
 	TLogMessage = record
 		DateTime: TDateTime;
 		Level: TMessageLevel;
-		Text: string[255];
+		Text: string;
 	end;
 
 	TLogger = class

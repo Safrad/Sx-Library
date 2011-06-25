@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uAbout.pas
-//* Created:  1999-10-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uAbout.pas
+// * Created:  1999-10-01
+// * Modified: 2009-12-05
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uAbout;
 
@@ -24,7 +24,8 @@ type
 		ButtonSysInfo: TDButton;
 		ButtonMemoryStatus: TDButton;
 		DViewAbout: TDView;
-		ButtonStat: TDButton;
+		ButtonStatistics: TDButton;
+		ButtonVersionInfo: TDButton;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -40,13 +41,16 @@ type
 		procedure ButtonMemoryStatusClick(Sender: TObject);
 		procedure DViewAboutGetData(Sender: TObject; var Data: String;
 			ColIndex, RowIndex: Integer; Rect: TRect);
-		procedure ButtonStatClick(Sender: TObject);
+		procedure ButtonXClick(Sender: TObject);
 		procedure FormResize(Sender: TObject);
 	private
 		Effect: U1;
 		Typ: U1;
 		Reset: Boolean;
 		BmpAbout: TDBitmap;
+		ViewInfo: SG;
+		UsedValues: array of SG;
+		UsedValueCount: SG;
 		procedure UpdateView;
 		procedure RWOptions(const Save: BG);
 		procedure NewFlash;
@@ -54,6 +58,7 @@ type
 		procedure LoadFile(AboutFile: TFileName);
 	end;
 
+function GetLocalHomepage: TFileName;
 procedure OpenLocalHomepage;
 procedure OpenWebHomepage;
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
@@ -64,16 +69,22 @@ implementation
 
 {$R *.DFM}
 uses
-	uAPI, uSimulation, uHTML, uStart,
+	Messages,
+	uAPI, uSimulation, uHTML, uStart, uDictionary,
 	uProjectInfo,
-	uGraph, uDIniFile, uScreen, uSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor,
+	uGraph, uDIniFile, uScreen, uSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
 	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
 var
 	LastNowTime: U8;
 
+function GetLocalHomepage: TFileName;
+begin
+	Result := WorkDir + 'ReadMe' + PathDelim + IndexFile
+end;
+
 procedure OpenLocalHomepage;
 begin
-	APIOpen(WorkDir + 'ReadMe' + PathDelim + IndexFile);
+	APIOpen(GetLocalHomepage);
 end;
 
 procedure OpenWebHomepage;
@@ -125,7 +136,7 @@ function GetFileName: TFileName; overload;
 begin
 	Result := GetFileName('Logo');
 	if Result <> '' then Exit;
-	Result := GetProjectInfo(piInternalName);
+	Result := GetFileName(GetProjectInfo(piInternalName));
 end;
 
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean); overload;
@@ -141,7 +152,7 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 	var
 		AC: array[0..3] of TColor;
 	begin
-		BmpAbout.SetSize(64, 64);
+		BmpAbout.SetSize(64, 64, clNone);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
 		BmpAbout.GenerateRGB(GenFunc[GetRunCount mod (High(GenFunc) + 1)], AC, ef16, nil);
 		BmpAbout.Transparent := False;
@@ -170,13 +181,30 @@ begin
 end;
 
 procedure TfAbout.FormCreate(Sender: TObject);
+var
+	Id: SG;
 begin
+	Dictionary.TranslateForm(Self);
 	{$ifdef LINUX}
+	ButtonMemoryStatus.Visible := False;
+	{$endif}
+	{$ifopt d-}
 	ButtonMemoryStatus.Visible := False;
 	{$endif}
 
 	Background := baGradient;
 
+	UsedValueCount := 0;
+	SetLength(UsedValues, 0);
+	for Id := 0 to Length(ProjectInfoStr) - 1 do
+	begin
+		if GetProjectInfo(TProjectInfoName(Id)) <> '' then
+		begin
+			SetLength(UsedValues, UsedValueCount + 1);
+			UsedValues[UsedValueCount] := Id;
+			Inc(UsedValueCount);
+		end;
+	end;
 	MainIni.RegisterRW(RWOptions);
 end;
 
@@ -215,12 +243,13 @@ type
 	end;
 var
 	Flashs: TData;
-const
-	MaxTyp = 13;
 
 procedure TfAbout.ImageAboutMouseDown(Sender: TObject;
 	Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+const kSC_DragMove = $F012 ;
 begin
+	ReleaseCapture();
+	ImageAbout.Perform(WM_SYSCOMMAND, kSC_DragMove, 0);
 	if Button = mbLeft then
 	begin
 		if Typ >= MaxTyp then Typ := 0 else Inc(Typ);
@@ -259,7 +288,7 @@ end;
 procedure TfAbout.ButtonSysInfoClick(Sender: TObject);
 begin
 	FillDynamicInfo(GSysInfo);
-	DisplaySysInfo(@GSysInfo);
+	DisplaySysInfo(@GSysInfo, Self);
 end;
 
 procedure TfAbout.NewFlash;
@@ -357,11 +386,11 @@ end;
 procedure TfAbout.DViewAboutGetData(Sender: TObject; var Data: String;
 	ColIndex, RowIndex: Integer; Rect: TRect);
 begin
-	if ButtonStat.Down = False then
+	if ViewInfo = 0 then
 	begin
 		case ColIndex of
-		0: Data := AddSpace(ProjectInfoStr[TProjectInfoName(RowIndex)]);
-		1: Data := GetProjectInfo(TProjectInfoName(RowIndex));
+		0: Data := Translate(AddSpace(ProjectInfoStr[TProjectInfoName(UsedValues[RowIndex])]));
+		1: Data := GetProjectInfo(TProjectInfoName(UsedValues[RowIndex]));
 		end;
 	end
 	else
@@ -378,6 +407,7 @@ begin
 			5: Data := 'I/O Write Count';
 			6: Data := 'I/O Write Bytes';
 			end;
+			Data := Translate(Data);
 		end;
 		1:
 		begin
@@ -395,30 +425,31 @@ begin
 	end;
 end;
 
-procedure TfAbout.ButtonStatClick(Sender: TObject);
+procedure TfAbout.ButtonXClick(Sender: TObject);
 begin
+	ViewInfo := TDButton(Sender).Tag;
 	UpdateView;
 end;
 
 procedure TfAbout.UpdateView;
 begin
-	DViewAbout.OfsX := 0;
-	DViewAbout.OfsY := 0;
+	ButtonVersionInfo.Down := ViewInfo = 0;
+	ButtonStatistics.Down := ViewInfo = 1;
+
+	DViewAbout.ScrollTo(0, 0);
 	DViewAbout.DeselectAll;
-	if ButtonStat.Down = False then
+	if ViewInfo = 0 then
 	begin
-		DViewAbout.RowCount := Length(ProjectInfoStr);
+		DViewAbout.RowCount := UsedValueCount; // Length(ProjectInfoStr);
 		DViewAbout.ColumnCount := 0;
-		DViewAbout.AddColumn('Item Name', 1 * DViewAbout.Width div 3, taLeftJustify, True);
-		DViewAbout.AddColumn('Value', 2 * DViewAbout.Width div 3 - 24, taLeftJustify, True);
 	end
 	else
 	begin
 		DViewAbout.RowCount := 7;
 		DViewAbout.ColumnCount := 0;
-		DViewAbout.AddColumn('Item Name', 1 * DViewAbout.Width div 3, taLeftJustify, True);
-		DViewAbout.AddColumn('Value', 2 * DViewAbout.Width div 3 - 24, taLeftJustify, True);
 	end;
+	DViewAbout.AddColumn(Translate('Item Name'), 1 * DViewAbout.Width div 3, taLeftJustify, True);
+	DViewAbout.AddColumn(Translate('Value'), 2 * DViewAbout.Width div 3 - 24, taLeftJustify, True);
 	DViewAbout.DataChanged;
 end;
 
@@ -437,16 +468,17 @@ procedure TfAbout.FormResize(Sender: TObject);
 begin
 	// Height
 	ButtonOk.Top := ClientHeight - FormBorder - ButtonOk.Height;
-	ButtonStat.Top := ClientHeight - FormBorder - ButtonStat.Height;
 	ButtonSysInfo.Top := ClientHeight - FormBorder - ButtonSysInfo.Height;
 	ButtonMemoryStatus.Top := ClientHeight - FormBorder - ButtonMemoryStatus.Height;
 
 
 	DViewAbout.Height := DViewAbout.IdealHeight;
 	DViewAbout.Top := ButtonOk.Top - DViewAbout.Height - FormBorder;
+	ButtonVersionInfo.Top := DViewAbout.Top - ButtonVersionInfo.Height;
+	ButtonStatistics.Top := DViewAbout.Top - ButtonStatistics.Height;
 
 	ImageAbout.Top := FormBorder;
-	ImageAbout.Height := DViewAbout.Top - 2 * FormBorder;
+	ImageAbout.Height := DViewAbout.Top - 2 * FormBorder - ButtonVersionInfo.Height;
 
 	// Width
 	ImageAbout.Left := FormBorder;
@@ -456,6 +488,7 @@ begin
 	DViewAbout.Width := ClientWidth - 2 * DViewAbout.Left;
 
 	ButtonOk.Left := ClientWidth - FormBorder - ButtonOk.Width;
+	UpdateView;
 end;
 
 {$ifopt d+}
@@ -471,4 +504,5 @@ initialization
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization
 	FreeAndNil(Flashs);
+//	FreeAndNil(fAbout);
 end.

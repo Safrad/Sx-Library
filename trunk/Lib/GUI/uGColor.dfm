@@ -12,6 +12,7 @@ object fGColor: TfGColor
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  PopupMenu = PopupMenu1
   Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -55,17 +56,19 @@ object fGColor: TfGColor
     Width = 49
     Height = 19
     AutoSize = False
-    Caption = 'Previous'
+    Caption = '&Previous'
+    FocusControl = PanelPrevious
     Transparent = True
     Layout = tlCenter
   end
   object LabelNowXBit: TLabel
     Left = 8
     Top = 264
-    Width = 49
+    Width = 57
     Height = 19
     AutoSize = False
-    Caption = 'Reduced'
+    Caption = 'R&educed'
+    FocusControl = ComboBoxBitDepth
     Transparent = True
     Layout = tlCenter
   end
@@ -75,7 +78,8 @@ object fGColor: TfGColor
     Width = 49
     Height = 19
     AutoSize = False
-    Caption = 'Default'
+    Caption = '&Default'
+    FocusControl = PanelDefaultColor
     Transparent = True
     Layout = tlCenter
   end
@@ -85,7 +89,8 @@ object fGColor: TfGColor
     Width = 49
     Height = 19
     AutoSize = False
-    Caption = 'Current'
+    Caption = 'C&urrent'
+    FocusControl = PanelCurrent
     Transparent = True
     Layout = tlCenter
   end
@@ -96,6 +101,7 @@ object fGColor: TfGColor
     Height = 19
     AutoSize = False
     Caption = 'RGB'
+    FocusControl = EditRGBA
     Transparent = True
     Layout = tlCenter
   end
@@ -105,7 +111,8 @@ object fGColor: TfGColor
     Width = 41
     Height = 19
     AutoSize = False
-    Caption = 'Format'
+    Caption = '&Format'
+    FocusControl = ComboBoxNF
     Transparent = True
     Layout = tlCenter
   end
@@ -114,17 +121,11 @@ object fGColor: TfGColor
     Top = 8
     Width = 57
     Height = 19
-    Caption = 'Red'
+    Caption = '&Red'
     Color = clRed
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    FontShadow = 1
+    FocusControl = EditR
     Displ.Format = '88'
     ParentColor = False
-    ParentFont = False
     Transparent = True
   end
   object LabelG: TDLabel
@@ -132,17 +133,11 @@ object fGColor: TfGColor
     Top = 32
     Width = 57
     Height = 19
-    Caption = 'Green'
+    Caption = '&Green'
     Color = 50176
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlack
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    FontShadow = 1
+    FocusControl = EditG
     Displ.Format = '88'
     ParentColor = False
-    ParentFont = False
     Transparent = True
   end
   object LabelB: TDLabel
@@ -150,17 +145,11 @@ object fGColor: TfGColor
     Top = 56
     Width = 57
     Height = 19
-    Caption = 'Blue'
+    Caption = '&Blue'
     Color = clBlue
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    FontShadow = 1
+    FocusControl = EditB
     Displ.Format = '88'
     ParentColor = False
-    ParentFont = False
     Transparent = True
   end
   object PanelPrevious: TDButton
@@ -170,10 +159,9 @@ object fGColor: TfGColor
     Height = 19
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
+    Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
+    Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
@@ -188,12 +176,12 @@ object fGColor: TfGColor
     Height = 19
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
+    Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
+    Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    PopupMenu = PopupMenu1
     TabOrder = 24
     Color = clBlack
   end
@@ -204,10 +192,9 @@ object fGColor: TfGColor
     Height = 19
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
+    Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
+    Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
     PopupMenu = PopupMenu1
@@ -222,12 +209,12 @@ object fGColor: TfGColor
     Height = 19
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
+    Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'Courier New'
-    Font.Pitch = fpFixed
+    Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    PopupMenu = PopupMenu1
     TabOrder = 22
     OnClick = PanelDefaultColorClick
     Color = clBlack
@@ -237,6 +224,8 @@ object fGColor: TfGColor
     Top = 8
     Width = 34
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 4
     OnChange = EditChange
   end
@@ -245,7 +234,7 @@ object fGColor: TfGColor
     Top = 8
     Width = 55
     Height = 19
-    Caption = '&Invert'
+    Caption = 'Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -256,7 +245,7 @@ object fGColor: TfGColor
     OnClick = ButtonRGBAClick
   end
   object ButtonOk: TDButton
-    Left = 320
+    Left = 248
     Top = 280
     Width = 73
     Height = 25
@@ -269,11 +258,11 @@ object fGColor: TfGColor
     Font.Style = []
     ModalResult = 1
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 0
     OnClick = ButtonOkClick
   end
   object ButtonApply: TDButton
-    Left = 232
+    Left = 408
     Top = 280
     Width = 73
     Height = 25
@@ -284,11 +273,11 @@ object fGColor: TfGColor
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 0
+    TabOrder = 2
     Visible = False
   end
   object ButtonCancel: TDButton
-    Left = 408
+    Left = 328
     Top = 280
     Width = 73
     Height = 25
@@ -301,7 +290,7 @@ object fGColor: TfGColor
     Font.Style = []
     ModalResult = 2
     ParentFont = False
-    TabOrder = 2
+    TabOrder = 1
     OnClick = ButtonCancelClick
   end
   object EditG: TDEdit
@@ -310,6 +299,8 @@ object fGColor: TfGColor
     Top = 32
     Width = 34
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 7
     OnChange = EditChange
   end
@@ -319,7 +310,7 @@ object fGColor: TfGColor
     Top = 32
     Width = 55
     Height = 19
-    Caption = '&Invert'
+    Caption = 'Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -335,6 +326,8 @@ object fGColor: TfGColor
     Top = 56
     Width = 34
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 10
     OnChange = EditChange
   end
@@ -344,7 +337,7 @@ object fGColor: TfGColor
     Top = 56
     Width = 55
     Height = 19
-    Caption = '&Invert'
+    Caption = 'Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -360,13 +353,15 @@ object fGColor: TfGColor
     Top = 152
     Width = 34
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 20
     OnChange = EditChange
   end
   object PanelH: TPanel
     Left = 104
     Top = 104
-    Width = 377
+    Width = 310
     Height = 20
     BevelOuter = bvNone
     BorderStyle = bsSingle
@@ -375,7 +370,7 @@ object fGColor: TfGColor
       Tag = 3
       Left = 0
       Top = 0
-      Width = 373
+      Width = 306
       Height = 16
       Zoom = 1.000000000000000000
       OnFill = ImageFill
@@ -415,7 +410,7 @@ object fGColor: TfGColor
     Width = 57
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
+    PopupMenu = PopupMenu1
     TabOrder = 25
     OnChange = ComboBoxBitDepthChange
   end
@@ -424,7 +419,8 @@ object fGColor: TfGColor
     Top = 104
     Width = 57
     Height = 19
-    Caption = 'Hue'
+    Caption = '&Hue'
+    FocusControl = EditH
     FontShadow = 1
     Displ.Format = '88'
     Transparent = True
@@ -435,6 +431,8 @@ object fGColor: TfGColor
     Top = 128
     Width = 34
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 18
     OnChange = EditChange
   end
@@ -443,7 +441,8 @@ object fGColor: TfGColor
     Top = 152
     Width = 57
     Height = 19
-    Caption = 'Saturation'
+    Caption = '&Saturation'
+    FocusControl = EditS
     FontShadow = 1
     Displ.Format = '88'
     Transparent = True
@@ -453,7 +452,8 @@ object fGColor: TfGColor
     Top = 128
     Width = 57
     Height = 19
-    Caption = 'Lightness'
+    Caption = '&Lightness'
+    FocusControl = EditL
     FontShadow = 1
     Displ.Format = '88'
     Transparent = True
@@ -532,6 +532,8 @@ object fGColor: TfGColor
     Top = 104
     Width = 34
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 16
     OnChange = EditChange
   end
@@ -564,8 +566,8 @@ object fGColor: TfGColor
     Width = 97
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     ItemIndex = 0
+    PopupMenu = PopupMenu1
     TabOrder = 30
     Text = 'Decadic'
     OnChange = ComboBoxNFChange
@@ -577,8 +579,10 @@ object fGColor: TfGColor
     Tag = -1
     Left = 64
     Top = 80
-    Width = 74
+    Width = 81
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 15
     OnChange = EditChange
   end

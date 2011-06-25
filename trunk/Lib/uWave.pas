@@ -1,10 +1,10 @@
-//* File:     Lib\uWave.pas
-//* Created:  1999-07-01
-//* Modified: 2009-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uWave.pas
+// * Created:  1999-07-01
+// * Modified: 2009-09-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uWave;
 
@@ -115,7 +115,7 @@ type
 		5: (DLR: TDLR);
 	end;
 
-	TId = array[0..3] of Char;
+	TId = array[0..3] of AnsiChar;
 
 	TWaveRIFFHeader = packed record // 12
 		GroupID: TId; // 'RIFF'	Marker1: TId; // 4
@@ -301,14 +301,13 @@ type
 //		procedure DecodeIMA(CompressedData: Pointer);
 		procedure Decode(CompressedData: Pointer);
 		procedure SetSampleCount(const Value: UG);
-	published
-		destructor Destroy; override;
 	public
 		constructor Create; overload;
 		constructor Create(
 			const Channels: U2;
 			const BitsPerSample: U2;
 			const SampleRate: U4); overload;
+		destructor Destroy; override;
 		function Sample(Index: SG; const Channel: SG): SG; overload;
 		function Sample(const Index: SG): SG; overload;
 		function GetSample(const BitLength: SG; var BitIndex: SG): SG;
@@ -531,7 +530,7 @@ begin
 			F.BlockRead(s[1], Chunk.ChunkSize);}
 		end
 		else
-			Warning('Unknown chunk id %1 in file %2!', [Chunk.ChunkId, F.FileName]);
+			Warning('Unknown chunk id %1 in file %2!', [string(Chunk.ChunkId), F.FileName]);
 		end;
 		if Chunk.ChunkSize and 1 <> 0 then
 			F.Seek(FilePos + (Chunk.ChunkSize + 1) and $fffffffe) // Word align of chunks.
@@ -788,10 +787,13 @@ begin
 	if FileExists(FileName) then
 	begin
 		Wave := TWave.Create;
-		Wave.WithoutData := True;
-		Wave.ReadFromFile(FileName);
-		Result := Wave.Length;
-		Wave.Free;
+		try
+			Wave.WithoutData := True;
+			Wave.ReadFromFile(FileName);
+			Result := Wave.Length;
+		finally
+			Wave.Free;
+		end;
 	end
 	else
 		Result := 0;
@@ -945,7 +947,7 @@ begin
 end;
 
 (*
-procedure TWave.DecodeADPCM(CompressedData: Pointer); // TODO
+procedure TWave.DecodeADPCM(CompressedData: Pointer); // TODO :
 const
 	// Kodovane slovo -> Posun indexu
 	IMAIndex: array[0..15] of SG =
@@ -992,7 +994,7 @@ begin
 	end;
 end;
 
-procedure TWave.DecodeIMA(CompressedData: Pointer); // TODO
+procedure TWave.DecodeIMA(CompressedData: Pointer); // TODO :
 const
 	// Kodovane slovo -> Posun indexu
 	IMAIndex: array[0..15] of SG =
@@ -1085,3 +1087,4 @@ initialization
 	StopPlayWave; // First time takes long
 	{$endif}
 end.
+

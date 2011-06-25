@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uAPI.pas
-//* Created:  1998-01-01
-//* Modified: 2008-02-16
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uAPI.pas
+// * Created:  1998-01-01
+// * Modified: 2009-12-04
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uAPI;
 
@@ -22,33 +22,73 @@ implementation
 
 uses
 	Windows, ShellAPI,
-	uMsg, uFiles, uLog;
+	uMsg, uFiles, uLog, uStrings;
+
+type
+	TShellExecute = class(TThread)
+	private
+  	FAgain: BG;
+		ErrorCode: U4;
+		FFileName: TFileName;
+		FParams: string;
+		procedure Synchro;
+	protected
+		procedure Execute; override;
+	public
+		{ Public declarations }
+		constructor Create(FileName: TFileName; const Params: string = '');
+	end;
+
+{ TShellExecute }
+
+constructor TShellExecute.Create(FileName: TFileName; const Params: string = '');
+begin
+	FreeOnTerminate := True;
+	FFileName := FileName;
+	FParams := Params;
+	inherited Create(True);
+end;
+
+procedure TShellExecute.Execute;
+begin
+	FAgain := True;
+	while FAgain do
+	begin
+		ErrorCode := ShellExecute(0, 'open', PChar('"' + RemoveEV(FFileName) + '"'), PChar(FParams), nil, SW_ShowNormal);
+		Synchronize(Synchro);
+	end;
+end;
+
+procedure TShellExecute.Synchro;
+begin
+	FAgain := (ErrorCode <= 32) and IOErrorRetry(FFileName, ErrorCode);
+end;
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
-label LRetry;
 var
-	ErrorCode: U4;
+	ShellExecute: TShellExecute;
 begin
 	MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
-	LRetry:
-	ErrorCode := ShellExecute(0, 'open', PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
-	if ErrorCode <= 32 then
-		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
+	ShellExecute := TShellExecute.Create(FileName, Params);
+	ShellExecute.NameThreadForDebugging('ShellExecute');
+	ShellExecute.Start;
 end;
 
 procedure PropertiesDialog(FileName: TFileName);
-label LRetry;
 var
 	sei: TShellExecuteInfo;
 begin
-	LRetry:
-	FillChar(sei, SizeOf(sei), 0);
-	sei.cbSize := SizeOf(sei);
-	sei.lpFile := PChar(FileName);
-	sei.lpVerb := 'properties';
-	sei.fMask  := SEE_MASK_INVOKEIDLIST;
-	if ShellExecuteEx(@sei) = False then
-		if IOErrorRetry(FileName, GetLastError) then goto LRetry;
+	while True do
+	begin
+		FillChar(sei, SizeOf(sei), 0);
+		sei.cbSize := SizeOf(sei);
+		sei.lpFile := PChar(FileName);
+		sei.lpVerb := 'properties';
+		sei.fMask  := SEE_MASK_INVOKEIDLIST;
+		if ShellExecuteEx(@sei) = False then
+			if IOErrorRetry(FileName, GetLastError) then Continue;
+		Break;
+	end;
 end;
 
 function KeyToStr(const Key: U2): string;
@@ -59,7 +99,7 @@ begin
 	VK_RBUTTON: Result := 'R. Button';
 	VK_CANCEL: Result := 'Cancel';
 	VK_MBUTTON: Result := 'M.Button';
-	VK_BACK: Result := 'Back';
+	VK_BACK: Result := 'BkSp';
 	VK_TAB: Result := 'Tab';
 	VK_CLEAR: Result := 'Clear';
 	VK_RETURN: Result := 'Enter';
@@ -97,12 +137,12 @@ begin
 	VK_HELP: Result := 'Help';
 { VK_0 thru VK_9 are the same as ASCII '0' thru '9' ($30 - $39) }
 { VK_A thru VK_Z are the same as ASCII 'A' thru 'Z' ($41 - $5A) }
-	Ord('0')..Ord('9'): Result := Chr(Key and $ff);
-	Ord('A')..Ord('Z'): Result := Chr(Key and $ff);
+	Ord('0')..Ord('9'): Result := Char(Key and $ff);
+	Ord('A')..Ord('Z'): Result := Char(Key and $ff);
 	VK_LWIN: Result := 'L.Win';
 	VK_RWIN: Result := 'R.Win';
 	VK_APPS: Result := 'Apps';
-	96..96 + 9: Result := 'Num ' + Chr(Ord('0') + (Key and $ff) - 96);
+	96..96 + 9: Result := 'Num ' + Char(Ord('0') + (Key and $ff) - 96);
 	VK_MULTIPLY: Result := 'Num *';
 	VK_ADD: Result := 'Num +';
 	VK_SEPARATOR: Result := 'Separator';

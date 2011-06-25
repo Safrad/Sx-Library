@@ -1,10 +1,10 @@
-//* File:     Lib\uTests.pas
-//* Created:  2008-06-03
-//* Modified: 2008-03-09
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uTests.pas
+// * Created:  2008-06-03
+// * Modified: 2009-08-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uTests;
 
@@ -51,12 +51,12 @@ begin
 		try
 			T.Run;
 		except
-//			on E: Exception do TODO
+//			on E: Exception do TODO :
 				Inc(FErrorCount);
 		end;
 		Inc(FPassCount, T.PassCount);
 		Inc(FFailCount, T.FailCount);
-//		T := TTest(FTests.Next(T)); TODO
+//		T := TTest(FTests.Next(T)); TODO :
 		T := nil;
 	end;
 	Result := (FFailCount = 0) and (FErrorCount = 0);

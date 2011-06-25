@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDTimer.pas
-//* Created:  2000-08-01
-//* Modified: 2007-12-27
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDTimer.pas
+// * Created:  2000-08-01
+// * Modified: 2009-09-16
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDTimer;
 
@@ -29,7 +29,7 @@ type
 		FInitialized: BG;
 		FEventStep: TEventStep;
 		FInterval: UG;
-		FInterval12: UG;
+		FInterval12: U8;
 		FNowFrameRate: Integer;
 		FOldTime: U8;
 		FOldTime2: U8;
@@ -101,7 +101,7 @@ type
 	end;
 
 const
-	LagTime = 40;
+	LagTime = LoopSleepTime;
 
 var
 	DIdleTimer: TDIdleTimer;
@@ -353,7 +353,7 @@ end;
 procedure TDTimer.InitInterval;
 begin
 	case FEventStep of
-	esInterval: FInterval12 := RoundDivS8(FInterval * PerformanceFrequency, 1000);
+	esInterval: FInterval12 := RoundDivS8(U8(FInterval) * PerformanceFrequency, 1000);
 	esFrequency: FInterval12 := RoundDivS8(PerformanceFrequency, FInterval);
 	else FInterval12 := FInterval;
 	end;
@@ -428,6 +428,9 @@ begin
 
 			ElapsedTime := NowTime - FLastLeaveTime;
 			FLastLeaveTime := NowTime;
+
+{			esCPU: SetPriorityClass(GetCurrentProcess, HIGH);
+			else SetPriorityClass(GetCurrentProcess, NORMAL); TODO : }
 
 			DoTimer;
 

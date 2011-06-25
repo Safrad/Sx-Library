@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDb.pas
-//* Created:  1999-12-01
-//* Modified: 2007-11-25
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDb.pas
+// * Created:  1999-12-01
+// * Modified: 2009-09-02
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDb deprecated;
 
@@ -15,7 +15,7 @@ uses uTypes, uDButton, StdCtrls, Classes, SysUtils;
 const
 	PreHeadSize = 12;
 type
-	TFileId = array[0..3] of Char;
+	TFileId = array[0..3] of AnsiChar;
 	TFileVersion = U4;
 
 	TFileHead = class(TObject)
@@ -31,7 +31,7 @@ type
 		Name: string; // 4
 		PData: Pointer; // 4
 	end;
-	TDbHeadId = array[0..3] of Char;
+	TDbHeadId = array[0..3] of AnsiChar;
 	TDbHead = packed record // 32
 		Id: TDbHeadId; // 4
 		Version: U4; // 4
@@ -222,8 +222,13 @@ begin
 	DbItems[DbItemCount].Name := DbComboBoxItems.Text;
 	DbItemIndex := DbItemCount;
 	DbComboBoxItems.OnChange := nil;
-	DbComboBoxItems.Items.Add(DbItems[DbItemCount].Name);
-	DbComboBoxItems.OnChange := DbComboBoxItemsChange;
+	DbComboBoxItems.Items.BeginUpdate;
+	try
+		DbComboBoxItems.Items.Add(DbItems[DbItemCount].Name);
+	finally
+		DbComboBoxItems.Items.EndUpdate;
+		DbComboBoxItems.OnChange := DbComboBoxItemsChange;
+	end;
 	DbInitButtons;
 	DbInitPanels;
 	if DbItemsChanged = False then
@@ -289,17 +294,21 @@ procedure TDb.DbInitComboBoxItems;
 var i: Integer;
 begin
 	DbComboBoxItems.OnChange := nil;
-	DbComboBoxItems.Items.Clear;
-	for i := 1 to DbItemCount do
-	begin
-		DbComboBoxItems.Items.Add(DbItems[i].Name);
+	DbComboBoxItems.Items.BeginUpdate;
+	try
+		DbComboBoxItems.Items.Clear;
+		for i := 1 to DbItemCount do
+		begin
+			DbComboBoxItems.Items.Add(DbItems[i].Name);
+		end;
+		DbComboBoxItems.ItemIndex := DbItemIndex - 1;
+	finally
+		DbComboBoxItems.Items.EndUpdate;
+		DbComboBoxItems.OnChange := DbComboBoxItemsChange;
 	end;
-	DbComboBoxItems.ItemIndex := DbItemIndex - 1;
-	DbComboBoxItems.OnChange := DbComboBoxItemsChange;
 end;
 
 function TDb.LoadFromFile(FName: TFileName): Boolean;
-label LRetry, LCloseFile, LExit;
 var
 	DbFile: file;
 	ErrorCode: Integer;
@@ -307,87 +316,83 @@ var
 	HeadT: TDbHead;
 begin
 	Result := False;
-	LRetry:
 	AssignFile(DbFile, FName);
 	FileMode := 0; Reset(DbFile, 1);
 	ErrorCode := IOResult;
 	if ErrorCode <> 0 then
 	begin
-		if IOErrorRetry(FName, ErrorCode) then goto LRetry;
+		IOError(FName, ErrorCode);
 	end
 	else
 	begin
-		if FileSize(DbFile) < PreHeadSize then
-		begin
-			CloseFile(DbFile); IOResult;
-			if IOErrorMessageRetry(FName, 'Minimum size of file is ' +
-				IntToStr(PreHeadSize) + ' bytes.') then goto LRetry;
-			goto LExit;
-		end;
-		BlockRead(DbFile, HeadT, PreHeadSize);
-		ErrorCode := IOResult; if ErrorCode <> 0 then goto LCloseFile;
-		if HeadT.Id <> Id then
-		begin
-			CloseFile(DbFile); IOResult;
-			if IOErrorMessageRetry(FName, 'Is not Db file.') then goto LRetry;
-			goto LExit;
-		end;
-		HeadT.HeadSize := Range(PreHeadSize, HeadT.HeadSize, 65536);
-		BlockRead(DbFile, HeadT.ItemCount, HeadT.HeadSize - PreHeadSize);
-		ErrorCode := IOResult; if ErrorCode <> 0 then goto LCloseFile;
-		if HeadT.Version = Version then
-		begin
-			SetItems(0);
-			Head := HeadT;
-			IsNew := False;
-			DbItemsChanged := False;
-			Result := True;
-			FileName := FName;
-			if Head.ItemSize > DbItemSize then Head.ItemSize := DbItemSize;
-			Head.ItemCount := Range(0, Head.ItemCount, 256);
-			SetItems(Head.ItemCount);
-{     SetLength(DbItems, Head.ItemCount + 1);
-			for i := 1 to Head.ItemCount do
+		try
+			if FileSize(DbFile) < PreHeadSize then
 			begin
-				FillChar(DbItems[i], SizeOf(DbItems[i]), 0);
-				GetMem(DbItems[i].PData, DbItemSize);
-				FillChar(DbItems[i].PData^, DbItemSize, 0);
-			end;}
-			for i := 1 to Head.ItemCount do
-			begin
-				BlockRead(DbFile, j, 4);
-				SetLength(DbItems[i].Name, j);
-				BlockRead(DbFile, Pointer(DbItems[i].Name)^, j);
-				BlockRead(DbFile, DbItems[i].PData^, Head.ItemSize);
+				IOErrorMessage(FName, 'Minimum size of file is ' +
+					IntToStr(PreHeadSize) + ' bytes.');
+				Exit;
 			end;
-		end
-		else
-		begin
-			CloseFile(DbFile); IOResult;
-			if IOErrorMessageRetry(FileName,
-				'File version ' + IntToStr(Head.Version) + ', ' + LineSep +
-				'required version ' + IntToStr(Version) + '.') then goto LRetry;
-			goto LExit;
-		end;
+			BlockRead(DbFile, HeadT, PreHeadSize);
+			ErrorCode := IOResult; if ErrorCode <> 0 then Exit;
+			if HeadT.Id <> Id then
+			begin
+				IOErrorMessage(FName, 'Is not Db file.');
+				Exit;
+			end;
+			HeadT.HeadSize := Range(PreHeadSize, HeadT.HeadSize, 65536);
+			BlockRead(DbFile, HeadT.ItemCount, HeadT.HeadSize - PreHeadSize);
+			ErrorCode := IOResult; if ErrorCode <> 0 then Exit;
+			if HeadT.Version = Version then
+			begin
+				SetItems(0);
+				Head := HeadT;
+				IsNew := False;
+				DbItemsChanged := False;
+				Result := True;
+				FileName := FName;
+				if Head.ItemSize > DbItemSize then Head.ItemSize := DbItemSize;
+				Head.ItemCount := Range(0, Head.ItemCount, 256);
+				SetItems(Head.ItemCount);
+	{     SetLength(DbItems, Head.ItemCount + 1);
+				for i := 1 to Head.ItemCount do
+				begin
+					FillChar(DbItems[i], SizeOf(DbItems[i]), 0);
+					GetMem(DbItems[i].PData, DbItemSize);
+					FillChar(DbItems[i].PData^, DbItemSize, 0);
+				end;}
+				for i := 1 to Head.ItemCount do
+				begin
+					BlockRead(DbFile, j, 4);
+					SetLength(DbItems[i].Name, j);
+					BlockRead(DbFile, Pointer(DbItems[i].Name)^, j);
+					BlockRead(DbFile, DbItems[i].PData^, Head.ItemSize);
+				end;
+			end
+			else
+			begin
+				CloseFile(DbFile); IOResult;
+				IOErrorMessageRetry(FileName,
+					'File version ' + IntToStr(Head.Version) + ', ' + LineSep +
+					'required version ' + IntToStr(Version) + '.');
+				Exit;
+			end;
+			ErrorCode := IOResult;
 
-		ErrorCode := IOResult;
-		LCloseFile:
-		CloseFile(DbFile); IOResult;
-		if ErrorCode <> 0 then
-			if IOErrorRetry(FName, ErrorCode) then goto LRetry;
+		finally
+			CloseFile(DbFile); IOResult;
+			if ErrorCode <> 0 then
+				IOErrorRetry(FName, ErrorCode);
+		end;
 	end;
-	LExit:
 end;
 
 function TDb.SaveToFile(FName: TFileName): Boolean;
-label LRetry;
 var
 	DbFile: file;
 	ErrorCode: Integer;
 	i: Integer;
 begin
 	Result := False;
-	LRetry:
 	AssignFile(DbFile, FName);
 	if FileExists(FName) then
 	begin
@@ -398,7 +403,7 @@ begin
 	ErrorCode := IOResult;
 	if ErrorCode <> 0 then
 	begin
-		if IOErrorRetry(FName, ErrorCode) then goto LRetry;
+		IOErrorRetry(FName, ErrorCode);
 	end
 	else
 	begin
@@ -425,7 +430,7 @@ begin
 		CloseFile(DbFile);
 		IOResult;
 		if ErrorCode <> 0 then
-			if IOErrorRetry(FName, ErrorCode) then goto LRetry;
+			IOErrorRetry(FName, ErrorCode);
 	end;
 end;
 

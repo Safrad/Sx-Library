@@ -1,16 +1,18 @@
-//* File:     Lib\GUI\uSystem.pas
-//* Created:  1998-01-01
-//* Modified: 2009-05-13
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uSystem.pas
+// * Created:  1998-01-01
+// * Modified: 2009-12-08
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uSystem;
 
 interface
 
-uses uTypes, SysUtils, Forms, ShlObj, Controls, Classes;
+uses uTypes, SysUtils, Forms, ShlObj, Controls, Classes, uFile;
+
+procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
 
 function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: U1): Integer;
@@ -19,7 +21,8 @@ function ThreadPriority(const Prior: U1): Integer;
 procedure BeginLongOperation(const Background: BG = False);
 procedure EndLongOperation(const Sound: BG = True);
 
-function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings): BG;
+function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
+function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
 //function WriteLinesToFile(var FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
 function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 function WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream): BG;
@@ -43,7 +46,22 @@ implementation
 
 uses
 	Windows, Math, Dialogs,
-	uStrings, uFiles, uDParser, uWave, uMath, uFile;
+	uStrings, uFiles, uDParser, uWave, uMath, uDictionary;
+
+procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
+var
+	i: SG;
+begin
+	Strings.BeginUpdate;
+	try
+		for i := StartIndex to Length(StringArray) - 1 do
+		begin
+			Strings.Add(StringArray[i]);
+		end;
+	finally
+		Strings.EndUpdate;
+	end;
+end;
 
 function DriveTypeToStr(const DriveType: Integer): string;
 begin
@@ -63,9 +81,11 @@ function ProcessPriority(const Prior: U1): Integer;
 begin
 	case Prior of
 	0: Result := IDLE_PRIORITY_CLASS;
-	1: Result := NORMAL_PRIORITY_CLASS;
-	2: Result := HIGH_PRIORITY_CLASS;
-	3: Result := REALTIME_PRIORITY_CLASS;
+	1: Result := $00004000; //BELOW_NORMAL_PRIORITY_CLASS
+	2: Result := NORMAL_PRIORITY_CLASS;
+	3: Result := $00008000; //ABOVE_NORMAL_PRIORITY_CLASS
+	4: Result := HIGH_PRIORITY_CLASS;
+	5: Result := REALTIME_PRIORITY_CLASS;
 	else
 		Result := NORMAL_PRIORITY_CLASS;
 	end;
@@ -168,7 +188,7 @@ begin
 	lg_StartFolder := RepairDirectory(ExpandDir(Path));
 	browse_info.pszDisplayName := @folder[0];
 	if browseTitle <> '' then
-		browse_info.lpszTitle := PChar('Select the folder ' + browseTitle + '.')
+		browse_info.lpszTitle := PChar(Translate('Select the folder') + CharSpace + Translate(browseTitle) + '.')
 	else
 		browse_info.lpszTitle := '';
 	browse_info.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI or BIF_VALIDATE;
@@ -221,23 +241,39 @@ begin
 	end;
 end;
 
-function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings): BG;
+function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG;
 var
-	F: TFile;
 	Line: string;
 begin
 	Assert(Lines <> nil);
-	Result := False;
 	Lines.Clear;
+	while not F.Eof do
+	begin
+		F.Readln(Line);
+		Lines.Add(Line);
+	end;
+	Result := True;
+end;
+
+function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG;
+var
+	F: TFile;
+//	Line: string;
+begin
+	Assert(Lines <> nil);
+	Result := False;
+//	Lines.Clear;
 	F := TFile.Create;
 	try
+		F.DefaultCharset := DefaultCharset;
 		if F.Open(FileName, fmReadOnly) then
 		begin
-			while not F.Eof do
+			ReadLinesFromFile(F, Lines, DefaultCharset);
+{			while not F.Eof do
 			begin
 				F.Readln(Line);
 				Lines.Add(Line);
-			end;
+			end;}
 			F.Close;
 			Result := True;
 		end;
@@ -281,13 +317,16 @@ var
 	Buf: Pointer;
 	Count: SG;
 begin
-	Result := ReadBufferFromFile(FileName, Buf, Count);
-{	Stream.SetSize(Count);
-	Stream.Seek(0, 0);}
-	if Buf <> nil then
-	begin
-		Stream.WriteBuffer(Buf^, Count);
-		Stream.Seek(0, 0);
+	try
+		Result := ReadBufferFromFile(FileName, Buf, Count);
+	{	Stream.SetSize(Count);
+		Stream.Seek(0, 0);}
+		if Buf <> nil then
+		begin
+			Stream.WriteBuffer(Buf^, Count);
+			Stream.Seek(0, 0);
+		end;
+	finally
 		FreeMem(Buf);
 	end;
 end;

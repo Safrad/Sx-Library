@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uGColor.pas
-//* Created:  1999-09-01
-//* Modified: 2008-01-19
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uGColor.pas
+// * Created:  1999-09-01
+// * Modified: 2009-12-08
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uGColor;
 
@@ -19,6 +19,7 @@ uses
 
 const
 	MaxColor = 6 * 4 + 3 * 4 - 1;
+
 type
 	TOnApplyColor = procedure(Color: TColor);
 
@@ -101,20 +102,18 @@ type
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure ButtonRGBAClick(Sender: TObject);
-		procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
-			Y: Integer);
+		procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 		procedure EditChange(Sender: TObject);
 		procedure PanelDefaultColorClick(Sender: TObject);
 		procedure PanelNowBitColorClick(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
 		procedure ButtonOkClick(Sender: TObject);
-		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
-			State: TOwnerDrawState);
+		procedure AdvancedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect; State: TOwnerDrawState);
 		procedure FormCreate(Sender: TObject);
 		procedure ImageFill(Sender: TObject);
 		procedure ComboBoxBitDepthChange(Sender: TObject);
-		procedure ImageMouseDown(Sender: TObject; Button: TMouseButton;
-			Shift: TShiftState; X, Y: Integer);
+		procedure ImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+			X, Y: Integer);
 		procedure ComboBoxNFChange(Sender: TObject);
 		procedure PanelPreviousClick(Sender: TObject);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -128,7 +127,7 @@ type
 		FNowColor: TColor;
 		NowRGB: TRGBA;
 		NowHLS: THLSColor;
-		PanelColor: array[0..MaxColor] of TDLabel;
+		PanelColor: array [0 .. MaxColor] of TDLabel;
 
 		procedure RWOptions(const Save: BG);
 		procedure InitReadOnly;
@@ -139,8 +138,10 @@ type
 		function SetNowRGB(Color: TRGBA): BG;
 		function SetNowHLS(HLS: THLSColor): BG;
 
-		procedure PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-		procedure PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+		procedure PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+			X, Y: Integer);
+		procedure PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+			X, Y: Integer);
 		procedure PanelColorMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 	public
 		{ Public declarations }
@@ -150,15 +151,16 @@ type
 
 procedure InitButton(Button: TDButton);
 
-function GetColor(const prompt: string;
-	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
+function GetColor(const prompt: string; var CurrentColor: TColor; const DefaultColor: TColor;
+	OnApply: TOnApplyColor): Boolean;
 
 implementation
 
 {$R *.DFM}
+
 uses
 	Math,
-	uMenus, uInputFormat, uOutputFormat, uDIniFile;
+	uMenus, uInputFormat, uOutputFormat, uDIniFile, uLayout, uDrawStyle, uDictionary;
 
 procedure InitButton(Button: TDButton);
 begin
@@ -177,6 +179,7 @@ end;
 const
 	SpectrumPixel = 4;
 	LightPixel = 1;
+
 var
 	fGColor: TfGColor;
 
@@ -185,45 +188,50 @@ var
 	a: Integer;
 begin
 	case i of
-	0..23:
-	begin
-		Result.L := SpectrumColor(255 * (i mod 12) div 2);
-		if i > 11 then
+	0 .. 23:
 		begin
-			Result.R := (Result.R + 1) div 2;
-			Result.G := (Result.G + 1) div 2;
-			Result.B := (Result.B + 1) div 2;
+			Result.L := SpectrumColor((255 * (i mod 12) + 1 - ((i div 2) and 1)) div 2);
+			if i > 11 then
+			begin
+				Result.R := (Result.R + 1) div 2;
+				Result.G := (Result.G + 1) div 2;
+				Result.B := (Result.B + 1) div 2;
+			end;
 		end;
-	end;
 	24:
 		Result.L := 0;
-	25..31:
-	begin
-		a := 256 * (i - 23) div 8;
-		if a > 255 then a := 255;
-		Result.R := a;
-		Result.G := Result.R;
-		Result.B := Result.R;
-		Result.A := 0;
-	end;
-	32..35:
-	begin
-		case i of
-		32: Result.L := clMoneyGreen;
-		33: Result.L := clSkyBlue;
-		34: Result.L := clCream;
-		35: Result.L := clMedGray;
+	25 .. 31:
+		begin
+			a := 256 * (i - 23) div 8;
+			if a > 255 then
+				a := 255;
+			Result.R := a;
+			Result.G := Result.R;
+			Result.B := Result.R;
+			Result.a := 0;
 		end;
-	end;
+	32 .. 35:
+		begin
+			case i of
+			32:
+				Result.L := clMoneyGreen;
+			33:
+				Result.L := clSkyBlue;
+			34:
+				Result.L := clCream;
+			35:
+				Result.L := clMedGray;
+			end;
+		end;
 	end;
 end;
 
 function AbsoluteColor(C: TColor): TColor;
 var
-	CA: array[0..2] of U1;
+	CA: array [0 .. 2] of U1;
 	i: Integer;
 begin
-	Result := ColorToRGB(C) and $00ffffff;
+	Result := ColorToRGB(C) and $00FFFFFF;
 	CA[0] := TRGBA(Result).R;
 	CA[1] := TRGBA(Result).G;
 	CA[2] := TRGBA(Result).B;
@@ -251,22 +259,19 @@ end;
 
 function GetVGAPalete(C: TColor): TColor;
 const
-	VGAColors: array[0..15] of TColor =
-		(clBlack, clMaroon, clGreen, clOlive, clNavy, clPurple, clTeal, clGray,
-		clSilver, clRed, clLime, clYellow, clBlue, clFuchsia, clAqua, clWhite);
+	VGAColors: array [0 .. 15] of TColor = (clBlack, clMaroon, clGreen, clOlive, clNavy, clPurple,
+		clTeal, clGray, clSilver, clRed, clLime, clYellow, clBlue, clFuchsia, clAqua, clWhite);
 var
 	i: Integer;
 	Dif, BestDif: Integer;
 begin
 	BestDif := High(BestDif);
-	C := ColorToRGB(C) and $00ffffff;
+	C := ColorToRGB(C) and $00FFFFFF;
 	Result := clBlack;
 	for i := 0 to 15 do
 	begin
-		Dif :=
-			Abs(TRGBA(VGAColors[i]).R - TRGBA(C).R) +
-			Abs(TRGBA(VGAColors[i]).G - TRGBA(C).G) +
-			Abs(TRGBA(VGAColors[i]).B - TRGBA(C).B);
+		Dif := Abs(TRGBA(VGAColors[i]).R - TRGBA(C).R) + Abs(TRGBA(VGAColors[i]).G - TRGBA(C).G) + Abs
+			(TRGBA(VGAColors[i]).B - TRGBA(C).B);
 		if Dif <= BestDif then
 		begin
 			Result := VGAColors[i];
@@ -277,31 +282,36 @@ end;
 
 function BitColor(const C: TRGBA; const Bits: U1): TRGBA;
 begin
-	Result.A := 0;
+	Result.a := 0;
 	case Bits of
-	1: Result.L := NegMonoColor(NegMonoColor(C.L));
+	1:
+		Result.L := NegMonoColor(NegMonoColor(C.L));
 	4:
-	begin
-		Result.L := GetVGAPalete(C.L);
-	end;
+		begin
+			Result.L := GetVGAPalete(C.L);
+		end;
 	15:
-	begin
-		Result.R := C.R shr 3;
-		Result.R := 255 * Result.R div 31;
-		Result.G := C.G shr 3;
-		Result.G := 255 * Result.G div 31;
-		Result.B := C.B shr 3;
-		Result.B := 255 * Result.B div 31;
-	end;
+		begin
+			Result.R := C.R shr 3;
+			Result.R := 255 * Result.R div 31;
+			Result.G := C.G shr 3;
+			Result.G := 255 * Result.G div 31;
+			Result.B := C.B shr 3;
+			Result.B := 255 * Result.B div 31;
+		end;
 	18:
-	begin
-		Result.R := C.R shr 2;
-		Result.R := 255 * Result.R div 63;
-		Result.G := C.G shr 2;
-		Result.G := 255 * Result.G div 63;
-		Result.B := C.B shr 2;
-		Result.B := 255 * Result.B div 63;
-	end;
+		begin
+			Result.R := C.R shr 2;
+			Result.R := 255 * Result.R div 63;
+			Result.G := C.G shr 2;
+			Result.G := 255 * Result.G div 63;
+			Result.B := C.B shr 2;
+			Result.B := 255 * Result.B div 63;
+		end;
+	24:
+		begin
+			Result.L := C.L and $00FFFFFF;
+		end;
 	else
 		Result.L := C.L;
 	end;
@@ -318,9 +328,10 @@ begin
 	fGColor.PanelColor[i].OnMouseMove := fGColor.PanelColorMouseMove;
 end;
 
-function GetColor(const prompt: string;
-	var CurrentColor: TColor; const DefaultColor: TColor; OnApply: TOnApplyColor): Boolean;
-var i, L, T: Integer;
+function GetColor(const prompt: string; var CurrentColor: TColor; const DefaultColor: TColor;
+	OnApply: TOnApplyColor): Boolean;
+var
+	i, L, T: Integer;
 begin
 	if not Assigned(fGColor) then
 	begin
@@ -329,21 +340,21 @@ begin
 		begin
 			fGColor.PanelColor[i] := TDLabel.Create(fGColor);
 			case i of
-			0..23:
-			begin
-				L  := 8 + 20 * (i mod 12);
-				T :=  8 + 20 * (i div 12);
-			end;
-			24..31:
-			begin
-				L := 8 + 20 * (i - 24);
-				T := 64 - 8;
-			end;
+			0 .. 23:
+				begin
+					L := 8 + 20 * (i mod 12);
+					T := 8 + 20 * (i div 12);
+				end;
+			24 .. 31:
+				begin
+					L := 8 + 20 * (i - 24);
+					T := 64 - 8;
+				end;
 			else // 32..35:
-			begin
-				L := 8 + 20 * (i - 24);
-				T := 64 - 8;
-			end;
+				begin
+					L := 8 + 20 * (i - 24);
+					T := 64 - 8;
+				end;
 			end;
 			CreateBox(i, fGColor.BevelBasicColors.Left + L, fGColor.BevelBasicColors.Top + T);
 			fGColor.PanelColor[i].Color := IntToColor(i).L;
@@ -355,7 +366,7 @@ begin
 
 	fGColor.CurColor := CurrentColor;
 	fGColor.DefColor := DefaultColor;
-	fGColor.Caption := prompt;
+	fGColor.Caption := Translate(prompt);
 	fGColor.SetNowColor(CurrentColor);
 
 	fGColor.PanelPrevious.Color := fGColor.CurColor;
@@ -389,7 +400,8 @@ end;
 
 // TfGColor
 
-const ABits: array[0..4] of U1 = (1, 4, 15, 18, 24);
+const
+	ABits: array [0 .. 5] of U1 = (1, 4, 15, 18, 24, 32);
 
 procedure TfGColor.InitReadOnly;
 var
@@ -397,7 +409,7 @@ var
 	i: Integer;
 	Vis: Boolean;
 begin
-	PanelCurrent.Color := NowRGB.L;
+	PanelCurrent.Color := FNowColor; // NowRGB.L;
 	InitButton(PanelCurrent);
 	PanelCurrent.Update;
 
@@ -414,10 +426,11 @@ begin
 	Vis := False;
 	for i := 0 to MaxColor do
 	begin
-		if C.L = IntToColor(I).L then
+		if C.L = IntToColor(i).L then
 		begin
 			Vis := True;
-			ShapeBorder.SetBounds(PanelColor[i].Left - 2, PanelColor[i].Top - 2, ShapeBorder.Width, ShapeBorder.Height);
+			ShapeBorder.SetBounds(PanelColor[i].Left - 2, PanelColor[i].Top - 2, ShapeBorder.Width,
+				ShapeBorder.Height);
 			Break;
 		end;
 	end;
@@ -463,7 +476,7 @@ begin
 		end;
 		if SkipEdit <> EditRGBA then
 		begin
-			EditRGBA.Text := NumericPref + NToS(NowRGB.L);
+			EditRGBA.Text := NumericPref + NToS(U4(FNowColor) { NowRGB.L } );
 			EditRGBA.Update;
 		end;
 		if SkipEdit <> EditH then
@@ -497,7 +510,8 @@ end;
 
 procedure TfGColor.ChangeColor;
 begin
-	if Assigned(OnApply) then OnApply(FNowColor);
+	if Assigned(OnApply) then
+		OnApply(FNowColor);
 end;
 
 procedure TfGColor.InitAll;
@@ -510,7 +524,7 @@ end;
 procedure TfGColor.SetNowColor(Color: TColor);
 begin
 	FNowColor := Color;
-	NowRGB.L := ColorToRGB(FNowColor) and $00ffffff;
+	NowRGB.L := ColorToRGB(FNowColor) and $00FFFFFF;
 	NowHLS := RGBToHLS(NowRGB);
 end;
 
@@ -529,24 +543,26 @@ end;
 
 function TfGColor.SetNowHLS(HLS: THLSColor): BG;
 begin
-{	TODO: if NowHLS.A <> HLS.A then
-	begin}
+	if (NowHLS.a <> HLS.a) { or (FNowColor <> NowRGB.L) } then
+	begin
 		NowHLS := HLS;
 		NowRGB := HLSToRGB(HLS);
 		FNowColor := NowRGB.L;
 		Result := True;
-{	end
+	end
 	else
-		Result := False;}
+		Result := False;
 end;
 
-procedure TfGColor.PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TfGColor.PanelColorMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+	X, Y: Integer);
 begin
 	SetNowColor(IntToColor(TComponent(Sender).Tag).L);
 	InitAll;
 end;
 
-procedure TfGColor.PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TfGColor.PanelColorMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+	X, Y: Integer);
 begin
 end;
 
@@ -555,7 +571,8 @@ begin
 end;
 
 procedure TfGColor.FormDestroy(Sender: TObject);
-var i: Integer;
+var
+	i: Integer;
 begin
 	for i := 0 to MaxColor do
 	begin
@@ -572,65 +589,72 @@ begin
 	if TMenuItem(Sender).Tag < 0 then
 		SetNowColor(clNone)
 	else
-		SetNowColor(TColor(U4(TMenuItem(Sender).Tag) or $80000000));
+		SetNowColor(TColor(U4(TMenuItem(Sender).Tag) or clSystemColor));
 	InitAll;
 end;
 
 procedure TfGColor.ButtonRGBAClick(Sender: TObject);
 begin
 	case TButton(Sender).Tag of
-	0: NowRGB.R := 255 - NowRGB.R;
-	1: NowRGB.G := 255 - NowRGB.G;
-	2: NowRGB.B := 255 - NowRGB.B;
+	0:
+		NowRGB.R := 255 - NowRGB.R;
+	1:
+		NowRGB.G := 255 - NowRGB.G;
+	2:
+		NowRGB.B := 255 - NowRGB.B;
 	end;
 	if SetNowRGB(NowRGB) then
 		InitAll;
 end;
 
-procedure TfGColor.ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
-	Y: Integer);
+procedure TfGColor.ImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 var
 	B: U1;
 	Changed: BG;
+	NewHLS: THLSColor;
 begin
 	if TDImage(Sender).MouseL then
 	begin
 		X := Range(0, X, TDImage(Sender).Width - 1);
-		B := Range(0, RoundDiv(255 * X, (TDImage(Sender).Bitmap.Width - 1)), 255);
+		B := Range(0, RoundDiv(256 * X, (TDImage(Sender).Bitmap.Width)), 255);
 		Changed := False;
 		case TDImage(Sender).Tag of
 		0:
-		begin
-			NowRGB.R := B;
-			Changed := SetNowRGB(NowRGB);
-		end;
+			begin
+				NowRGB.R := B;
+				Changed := SetNowRGB(NowRGB);
+			end;
 		1:
-		begin
-			NowRGB.G := B;
-			Changed := SetNowRGB(NowRGB);
-		end;
+			begin
+				NowRGB.G := B;
+				Changed := SetNowRGB(NowRGB);
+			end;
 		2:
-		begin
-			NowRGB.B := B;
-			Changed := SetNowRGB(NowRGB);
-		end;
+			begin
+				NowRGB.B := B;
+				Changed := SetNowRGB(NowRGB);
+			end;
 		3:
-		begin
-			NowHLS.H := RoundDiv(MaxSpectrum * X, TDImage(Sender).Bitmap.Width - 1);
-			Changed := SetNowHLS(NowHLS);
-		end;
+			begin
+				NewHLS := NowHLS;
+				NewHLS.H := RoundDiv((MaxSpectrum + 1) * X, TDImage(Sender).Bitmap.Width);
+				Changed := SetNowHLS(NewHLS);
+			end;
 		4:
-		begin
-			NowHLS.L := B;
-			Changed := SetNowHLS(NowHLS);
-		end;
+			begin
+				NewHLS := NowHLS;
+				NewHLS.L := B;
+				Changed := SetNowHLS(NewHLS);
+			end;
 		5:
-		begin
-			NowHLS.S := B;
-			Changed := SetNowHLS(NowHLS);
+			begin
+				NewHLS := NowHLS;
+				NewHLS.S := B;
+				Changed := SetNowHLS(NewHLS);
+			end;
 		end;
-		end;
-		if Changed then InitAll;
+		if Changed then
+			InitAll;
 	end;
 end;
 
@@ -639,13 +663,20 @@ var
 	Changed: BG;
 begin
 	case TComponent(Sender).Tag of
-	-1: NowRGB.L := StrToValI(TDEdit(Sender).Text, True, MinInt, NowRGB.L, MaxInt, 1, Messages);
-	0: NowRGB.R := StrToValU1(TDEdit(Sender).Text, True, NowRGB.R, Messages);
-	1: NowRGB.G := StrToValU1(TDEdit(Sender).Text, True, NowRGB.G, Messages);
-	2: NowRGB.B := StrToValU1(TDEdit(Sender).Text, True, NowRGB.B, Messages);
-	3: NowHLS.H := StrToValI(TDEdit(Sender).Text, True, -1, NowHLS.H, MaxSpectrum, 1, Messages);
-	4: NowHLS.L := StrToValU1(TDEdit(Sender).Text, True, NowHLS.L, Messages);
-	5: NowHLS.S := StrToValU1(TDEdit(Sender).Text, True, NowHLS.S, Messages);
+	- 1:
+		NowRGB.L := StrToValS8(TDEdit(Sender).Text, True, MinInt, NowRGB.L, High(U4), 1, Messages);
+	0:
+		NowRGB.R := StrToValU1(TDEdit(Sender).Text, True, NowRGB.R, Messages);
+	1:
+		NowRGB.G := StrToValU1(TDEdit(Sender).Text, True, NowRGB.G, Messages);
+	2:
+		NowRGB.B := StrToValU1(TDEdit(Sender).Text, True, NowRGB.B, Messages);
+	3:
+		NowHLS.H := StrToValI(TDEdit(Sender).Text, True, -1, NowHLS.H, MaxSpectrum, 1, Messages);
+	4:
+		NowHLS.L := StrToValU1(TDEdit(Sender).Text, True, NowHLS.L, Messages);
+	5:
+		NowHLS.S := StrToValU1(TDEdit(Sender).Text, True, NowHLS.S, Messages);
 	end;
 	TDEdit(Sender).Hint := Messages.ToString;
 	Messages.Clear;
@@ -678,7 +709,8 @@ procedure TfGColor.ButtonCancelClick(Sender: TObject);
 begin
 	if Assigned(OnApply) then
 	begin
-		if FNowColor <> CurColor then OnApply(CurColor);
+		if FNowColor <> CurColor then
+			OnApply(CurColor);
 		Close;
 	end;
 end;
@@ -692,8 +724,8 @@ begin
 	end;
 end;
 
-procedure TfGColor.AdvancedDraw(Sender: TObject; ACanvas: TCanvas;
-	ARect: TRect; State: TOwnerDrawState);
+procedure TfGColor.AdvancedDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
+	State: TOwnerDrawState);
 var
 	Bmp: TBitmap;
 	Rec: TRect;
@@ -729,12 +761,25 @@ begin
 end;
 
 procedure TfGColor.FormCreate(Sender: TObject);
-var i: SG;
+var
+	i: SG;
 begin
 	Background := baGradient;
-	for i := 0 to Length(ABits) - 1 do
-		ComboBoxBitDepth.Items.Add(NToS(ABits[i]) + ' bit');
-	ComboBoxBitDepth.ItemIndex := Length(ABits) - 1;
+	LabelR.Color := MixColors(clBtnFace, clRed);
+	LabelG.Color := MixColors(clBtnFace, clLime);
+	LabelB.Color := MixColors(clBtnFace, clBlue);
+	LabelR.Font.Color := NegMonoColor(LabelR.Color);
+	LabelG.Font.Color := NegMonoColor(LabelG.Color);
+	LabelB.Font.Color := NegMonoColor(LabelB.Color);
+
+	ComboBoxBitDepth.Items.BeginUpdate;
+	try
+		for i := 0 to Length(ABits) - 1 do
+			ComboBoxBitDepth.Items.Add(NToS(ABits[i]) + ' bit');
+		ComboBoxBitDepth.ItemIndex := Length(ABits) - 1;
+	finally
+		ComboBoxBitDepth.Items.EndUpdate;
+	end;
 	RWOptions(False);
 end;
 
@@ -753,39 +798,50 @@ begin
 	begin
 		B := RoundDiv(SG(255 * i), (BmpD.Width - 1));
 		case TDImage(Sender).Tag of
-		0..2: C.I[TDImage(Sender).Tag] := B;
+		0 .. 2:
+			C.i[TDImage(Sender).Tag] := B;
 		3:
-		begin
-			if HLS.S <> 0 then
-				HLS.H := RoundDiv(MaxSpectrum * i, (BmpD.Width - 1))
-			else
-				HLS.H := -1;
-			C := HLSToRGB(HLS);
-		end;
+			begin
+				if HLS.S <> 0 then
+					HLS.H := RoundDiv(MaxSpectrum * i, (BmpD.Width - 1))
+				else
+					HLS.H := -1;
+				C := HLSToRGB(HLS);
+			end;
 		4:
-		begin
-			HLS.L := B;
-			C := HLSToRGB(HLS);
-		end;
+			begin
+				HLS.L := B;
+				C := HLSToRGB(HLS);
+			end;
 		5:
-		begin
-			HLS.S := B;
-			C := HLSToRGB(HLS);
-		end;
+			begin
+				HLS.S := B;
+				C := HLSToRGB(HLS);
+			end;
 		end;
 		BmpD.Line(i, 0, i, 15, C.L, ef16);
 	end;
 
 	i := -1;
 	case TDImage(Sender).Tag of
-	0: i := RoundDiv(SG(255 * NowRGB.R), (BmpD.Width - 1));
-	1: i := RoundDiv(SG(255 * NowRGB.G), (BmpD.Width - 1));
-	2: i := RoundDiv(SG(255 * NowRGB.B), (BmpD.Width - 1));
-	3: i := RoundDiv(SG((BmpD.Width - 1) * NowHLS.H), MaxSpectrum);
-	4: i := RoundDiv(SG(255 * NowHLS.L), (BmpD.Width - 1));
-	5: i := RoundDiv(SG(255 * NowHLS.S), (BmpD.Width - 1));
+	0:
+		i := RoundDiv(SG(255 * NowRGB.R), (BmpD.Width - 1));
+	1:
+		i := RoundDiv(SG(255 * NowRGB.G), (BmpD.Width - 1));
+	2:
+		i := RoundDiv(SG(255 * NowRGB.B), (BmpD.Width - 1));
+	3:
+		begin
+			if NowHLS.H >= 0 then
+				i := RoundDiv(SG((BmpD.Width) * NowHLS.H), (MaxSpectrum + 1));
+		end;
+	4:
+		i := RoundDiv(SG(255 * NowHLS.L), (BmpD.Width - 1));
+	5:
+		i := RoundDiv(SG(255 * NowHLS.S), (BmpD.Width - 1));
 	end;
-	BmpD.Line(i, 0, i, 15, NegMonoColor(FNowColor), ef16);
+	if i >= 0 then
+		BmpD.Line(i, 0, i, 15, NegMonoColor(FNowColor), ef16);
 end;
 
 procedure TfGColor.ComboBoxBitDepthChange(Sender: TObject);
@@ -793,8 +849,8 @@ begin
 	InitAll;
 end;
 
-procedure TfGColor.ImageMouseDown(Sender: TObject; Button: TMouseButton;
-	Shift: TShiftState; X, Y: Integer);
+procedure TfGColor.ImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+	X, Y: Integer);
 begin
 	ImageMouseMove(Sender, Shift, X, Y);
 end;
@@ -819,6 +875,8 @@ constructor TfGColor.Create(AOwner: TComponent);
 begin
 	inherited;
 	Messages := TParserMessages.Create;
+	LayoutControls([ButtonOk, ButtonCancel, ButtonApply], ClientWidth, ClientHeight);
+	Dictionary.TranslateForm(Self);
 end;
 
 destructor TfGColor.Destroy;
@@ -826,5 +884,11 @@ begin
 	FreeAndNil(Messages);
 	inherited;
 end;
+
+initialization
+
+finalization
+
+FreeAndNil(fGColor);
 
 end.

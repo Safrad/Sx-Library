@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uInfoWindow.pas
-//* Created:  2006-12-21
-//* Modified: 2007-01-10
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uInfoWindow.pas
+// * Created:  2006-12-21
+// * Modified: 2009-07-28
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uInfoWindow;
 
@@ -69,7 +69,7 @@ end;
 procedure TfInfoWindow.FormShow(Sender: TObject);
 var R: TRect;
 begin
-	Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;
+	R := Screen.MonitorFromWindow(Handle).WorkareaRect;
 	fInfoWindow.SetBounds(
 		R.Right - fInfoWindow.Width,
 		R.Bottom - fInfoWindow.Height,

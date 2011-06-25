@@ -1,10 +1,10 @@
-//* File:     Lib\uToHTML.pas
-//* Created:  2000-07-01
-//* Modified: 2008-03-14
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uToHTML.pas
+// * Created:  2000-07-01
+// * Modified: 2009-09-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uToHTML;
 
@@ -175,10 +175,10 @@ begin
 	end;
 end;
 
-// Returns file name in ascii code page and without spaces (replaced by "_").
+// Returns file name in ascii code page and without spaces (replaced by "-").
 function SafeFileName(const FileName: TFileName): TFileName;
 begin
-	Result := ExtractFilePath(FileName) + ReplaceF(ConvertCharsetF(DelFileExt(ExtractFileName(FileName)), cp1250, cpAscii), CharSpace, '_');
+	Result := ExtractFilePath(FileName) + ReplaceF(ConvertToAscii(DelFileExt(ExtractFileName(FileName))), CharSpace, '-');
 end;
 
 function GetLastLinePos(const s: string): SG;
@@ -189,7 +189,7 @@ begin
 	i := Length(s);
 	while i >= 1 do
 	begin
-		if s[i] in [CharCR, CharLF] then
+		if CharInSet(s[i], [CharCR, CharLF]) then
 		begin
 			Result := i;
 			Break;
@@ -202,7 +202,7 @@ end;
 function FileToHTML(const FileName: TFileName): TFileName;
 var
 	Ext: string;
-	Body :string;
+	Body: string;
 	HTML: THTML;
 	LastLinePos: SG;
 	LastLine: string;
@@ -222,42 +222,45 @@ begin
 	begin
 		Result := SafeFileName(DelFileExt(FileName)) + HTMLExt;
 		HTML := THTML.Create(Result);
-		HTML.Title := DelFileExt(ExtractFileName(FileName));
-		// if Line 2 is not empty
-		begin
-			HTML.AddCommand('h2');
-			HTML.AddBody(HTML.Title);
-			HTML.AddCommand('/h2');
-		end;
+		try
+			HTML.Title := DelFileExt(ExtractFileName(FileName));
+			// if Line 2 is not empty
+			begin
+				HTML.AddCommand('h2');
+				HTML.AddBody(HTML.Title);
+				HTML.AddCommand('/h2');
+			end;
 
-		LastLinePos := GetLastLinePos(Body);
-		LastLine := Copy(Body, LastLinePos, MaxInt);
-		if Pos(',', LastLine) <> 0 then
-		begin
-			// Correct sign
-			SetLength(Body, LastLinePos);
-		end
-		else
-		begin
-			LastLine := ''
+			LastLinePos := GetLastLinePos(Body);
+			LastLine := Copy(Body, LastLinePos, MaxInt);
+			if Pos(',', LastLine) <> 0 then
+			begin
+				// Correct sign
+				SetLength(Body, LastLinePos);
+			end
+			else
+			begin
+				LastLine := ''
+			end;
+			if (Ext = '.csv') then
+				HTML.AddTableFromCSV(Body)
+			else if (Ext = '.txt') {and (Pos(CharTab, Body) <> 0)} then
+			begin
+				HTML.AddBody(TextToHTML(Body));
+			end
+			else
+				HTML.AddBody(Body);
+			if LastLine <> '' then
+				HTML.AddBody('<div class="sign">' + LastLine + '</div>');
+		finally
+			HTML.Free;
 		end;
-		if (Ext = '.csv') then
-			HTML.AddTableFromCSV(Body)
-		else if (Ext = '.txt') {and (Pos(CharTab, Body) <> 0)} then
-		begin
-			HTML.AddBody(TextToHTML(Body));
-		end
-		else
-			HTML.AddBody(Body);
-		if LastLine <> '' then
-			HTML.AddBody('<div class="sign">' + LastLine + '</div>');
-		HTML.Free;
 	end;
 end;
 
 type
 	PItem = ^TItem;
-	TItem = class
+	TItem = record
 		FileName: TFileName;
 		Name: TFileName;
 		Author: string;
@@ -278,11 +281,24 @@ end;
 procedure AddFile(const FileName: TFileName; const Name: TFileName; const Author: string; const Created: TDateTime);
 var P: PItem;
 begin
-	P := Items.Add(Pointer(TItem.Create));
+	P := Items.Add;
 	P.FileName := FileName;
 	P.Name := Name;
 	P.Author := Author;
 	P.Created := Created;
+end;
+
+procedure FreeItems;
+var
+	Item: PItem;
+begin
+	Item := Items.GetFirst;
+	while Item <> nil do
+	begin
+		Finalize(Item^);
+		Items.Next(Item);
+	end;
+	FreeAndNil(Items);
 end;
 
 procedure DirToHTML(const Dir: string; const CreateHTMLIndexFile: BG);
@@ -298,78 +314,84 @@ var
 	Created: TDateTime;
 	P: PItem;
 	AIndex: array of SG;
+
 begin
 	Items := TData.Create;
-	Items.ItemSize := SizeOf(TItem);
+	try
+		Items.ItemSize := SizeOf(TItem);
 
-	FileNamesCount := 0;
-	ReadDir(FileNames, FileNamesCount, Dir, ['txt', 'body' {'rtf', 'xls'}], True, False, False, False);
-	for i := 0 to FileNamesCount - 1 do
-	begin
-		if ExtractFileName(FileNames[i]) <> 'robots.txt' then
-			try
-				FileName := FileToHTML(Dir + FileNames[i]);
-				if CreateHTMLIndexFile then
-				begin
-					InLineIndex := 1;
-					Line := LastLineFromFile(Dir + FileNames[i]);
-					Author := ReadToChar(Line, InLineIndex, ',');
-					Created := SToDate(ReadToChar(Line, InLineIndex, ','), ifIO);
-
-					AddFile(FileName, DelFileExt(ExtractFileName(Dir + FileNames[i])), Author, Created);
-				end;
-			except
-				on E: Exception do
-					Fatal(E, nil);
-			end;
-	end;
-
-	if CreateHTMLIndexFile then
-	begin
 		FileNamesCount := 0;
-		ReadDir(FileNames, FileNamesCount, Dir, ['doc', 'rtf', 'xls'], True, False, False, False);
+		ReadDir(FileNames, FileNamesCount, Dir, ['txt', 'body' {'rtf', 'xls'}], True, False, False, False);
 		for i := 0 to FileNamesCount - 1 do
 		begin
-			if (DelFileExt(ExtractFileName(FileNames[i])) <> 'index') then
-			begin
+			if ExtractFileName(FileNames[i]) <> 'robots.txt' then
+				try
+					FileName := FileToHTML(Dir + FileNames[i]);
+					if CreateHTMLIndexFile then
+					begin
+						InLineIndex := 1;
+						Line := LastLineFromFile(Dir + FileNames[i]);
+						Author := ReadToChar(Line, InLineIndex, ',');
+						Created := SToDate(ReadToChar(Line, InLineIndex, ','), ifIO);
 
-				AddFile(Dir + FileNames[i], FileNames[i], '', FileTimeToDateTime(GetFileModificationDateTime(Dir + FileNames[i])));
+						AddFile(FileName, DelFileExt(ExtractFileName(Dir + FileNames[i])), Author, Created);
+					end;
+				except
+					on E: Exception do
+						Fatal(E, nil);
+				end;
+		end;
+
+		if CreateHTMLIndexFile then
+		begin
+			FileNamesCount := 0;
+			ReadDir(FileNames, FileNamesCount, Dir, ['doc', 'rtf', 'xls'], True, False, False, False);
+			for i := 0 to FileNamesCount - 1 do
+			begin
+				if (DelFileExt(ExtractFileName(FileNames[i])) <> 'index') then
+				begin
+					AddFile(Dir + FileNames[i], FileNames[i], '', FileTimeToDateTime(GetFileModificationDateTime(Dir + FileNames[i])));
+				end;
+			end;
+
+			SetLength(AIndex, Items.Count);
+			FillOrderU4(AIndex[0], Items.Count);
+			Sort(PArraySG(AIndex), Items.Count, Compare);
+
+			HTML := THTML.Create(Dir + IndexFile);
+			try
+				HTML.Title := ExtractFileName(DelLastChar(Dir));
+				HTML.AddCommand('table');
+				for i := 0 to Items.Count - 1 do
+				begin
+					HTML.AddCommand('tr');
+					HTML.AddCommand('td');
+					P := Items[AIndex[i]];
+					HTML.AddRef(P.FileName, P.Name);
+					HTML.AddCommand('/td');
+					HTML.AddCommand('td');
+					HTML.AddBody(P.Author);
+					HTML.AddCommand('/td');
+					HTML.AddCommand('td');
+					if P.Created <> 0 then
+					begin
+		{				if P.Author <> '' then
+							HTML.AddBody(', ');}
+						HTML.AddBody(FormatDateTime('dd.mm.yyyy', P.Created));
+					end
+					else
+						HTML.AddBody(nbsp);
+					HTML.AddCommand('/td');
+					HTML.AddCommand('/tr');
+				end;
+				HTML.AddCommand('/table');
+			finally
+				HTML.Free;
 			end;
 		end;
-
-		SetLength(AIndex, Items.Count);
-		FillOrderU4(AIndex[0], Items.Count);
-		Sort(PArraySG(AIndex), Items.Count, Compare);
-
-		HTML := THTML.Create(Dir + IndexFile);
-		HTML.Title := ExtractFileName(DelLastChar(Dir));
-		HTML.AddCommand('table');
-		for i := 0 to Items.Count - 1 do
-		begin
-			HTML.AddCommand('tr');
-			HTML.AddCommand('td');
-			P := Items[AIndex[i]];
-			HTML.AddRef(P.FileName, P.Name);
-			HTML.AddCommand('/td');
-			HTML.AddCommand('td');
-			HTML.AddBody(P.Author);
-			HTML.AddCommand('/td');
-			HTML.AddCommand('td');
-			if P.Created <> 0 then
-			begin
-{				if P.Author <> '' then
-					HTML.AddBody(', ');}
-				HTML.AddBody(FormatDateTime('dd.mm.yyyy', P.Created));
-			end
-			else
-				HTML.AddBody(nbsp);
-			HTML.AddCommand('/td');
-		end;
-		HTML.AddCommand('/table');
-		HTML.Free;
+	finally
+		FreeItems;
 	end;
-
-	FreeAndNil(Items);
 end;
 
 end.

@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uScores.pas
-//* Created:  2000-10-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uScores.pas
+// * Created:  2000-10-01
+// * Modified: 2009-08-20
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uScores;
 
@@ -111,7 +111,6 @@ begin
 end;
 
 procedure AddNewScore(PlayerScore, GameTime: U4);
-label LResumeGame, LAgain;
 var
 	i, j: SG;
 	InsPlayer: SG;
@@ -121,10 +120,8 @@ begin
 	begin
 		if PlayerName = '' then
 			PlayerName := MainIni.ReadString('Options', 'PlayerName', 'Unknown');
-		LAgain:
 		if GetStr('Your Name', PlayerName, 'Unknown', 15) then
 		begin
-			if PlayerName = '' then goto LAgain;
 			MainIni.WriteString('Options', 'PlayerName', PlayerName);
 			InsPlayer := -1;
 			for i := MaxHigh downto 0 do
@@ -141,7 +138,7 @@ begin
 					end
 					else
 					begin
-						goto LResumeGame;
+						Exit;
 					end;
 					Break;
 				end;
@@ -184,7 +181,6 @@ begin
 			end;
 			fScores.ShowModal;
 		end;
-		LResumeGame:
 	end;
 end;
 

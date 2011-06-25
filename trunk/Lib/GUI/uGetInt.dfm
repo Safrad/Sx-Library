@@ -62,7 +62,7 @@ object fGetInt: TfGetInt
     AutoSize = False
     EditLabel.Width = 27
     EditLabel.Height = 13
-    EditLabel.Caption = 'Value'
+    EditLabel.Caption = '&Value'
     EditLabel.Transparent = True
     MaxLength = 15
     TabOrder = 0
@@ -70,7 +70,7 @@ object fGetInt: TfGetInt
     OnChange = EditInputChange
   end
   object ButtonOk: TDButton
-    Left = 168
+    Left = 96
     Top = 160
     Width = 73
     Height = 25
@@ -87,7 +87,7 @@ object fGetInt: TfGetInt
     OnClick = ButtonOkClick
   end
   object ButtonCancel: TDButton
-    Left = 256
+    Left = 176
     Top = 160
     Width = 73
     Height = 25
@@ -134,7 +134,7 @@ object fGetInt: TfGetInt
     Top = 6
     Width = 48
     Height = 18
-    Caption = '&Cur'
+    Caption = 'C&ur'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -149,7 +149,7 @@ object fGetInt: TfGetInt
     Top = 18
     Width = 48
     Height = 18
-    Caption = '&Max'
+    Caption = 'M&ax'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -175,7 +175,7 @@ object fGetInt: TfGetInt
     OnClick = ButtonDefClick
   end
   object ButtonApply: TDButton
-    Left = 8
+    Left = 256
     Top = 160
     Width = 73
     Height = 25
@@ -189,7 +189,7 @@ object fGetInt: TfGetInt
     TabOrder = 8
     Visible = False
   end
-  object EditError: TMemo
+  object EditError: TDMemo
     Left = 8
     Top = 62
     Width = 321

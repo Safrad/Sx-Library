@@ -1,10 +1,10 @@
-//* File:     Lib\uDBF.pas
-//* Created:  1999-12-01
-//* Modified: 2009-01-10
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uDBF.pas
+// * Created:  1999-12-01
+// * Modified: 2010-01-01
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDBF;
 
@@ -49,7 +49,7 @@ implementation
 
 uses
 	Windows, Variants,
-	uFile, uFiles, uStrings, uInputFormat, uMsg, uOutputFormat, uMath;
+	uFile, uFiles, uStrings, uInputFormat, uMsg, uOutputFormat, uMath, uCharset;
 
 procedure TDBF.Close;
 var i, j: SG;
@@ -72,7 +72,6 @@ begin
 end;
 
 function TDBF.LoadFromFile(const FName: TFileName): Boolean;
-label LExit;
 type
 	THead = packed record // 32
 		YearOffset: U1; // $03=1900, $30=2000
@@ -85,8 +84,8 @@ type
 		R1, R2, R3, R4, R5: U4;
 	end;
 	TColumn = packed record // 32
-		Name: array[0..10] of Char; // 11
-		Typ: Char; // 1
+		Name: array[0..10] of AnsiChar; // 11
+		Typ: AnsiChar; // 1
 		Offset: U4;
 		Width: U1;
 		Decimal: U1;
@@ -98,16 +97,16 @@ var
 	F: TFile;
 	j, k: SG;
 
-	DataWStr: WideString;
+	DataWStr: UnicodeString;
 	DataStr: ShortString;
-	s: string;
+	sa: AnsiString;
 
 	Head: THead;
 	Column: TColumn;
 	NewSize: SG;
 	Row, SRow, CRow: Pointer;
 	RowSize, RowsSize: SG;
-	FPT: string;
+	FPT: AnsiString;
 	FPTSize: UG;
 	Index: UG;
 	Year: SG;
@@ -121,7 +120,7 @@ begin
 	F := TFile.Create;
 	try
 		FFileName := FName;
-		SRow := nil;
+//		SRow := nil;
 		if F.Open(FFileName, fmReadOnly) then
 		begin
 			// Header
@@ -155,7 +154,7 @@ begin
 
 					Break;
 				end;
-				if F.Eof then goto LExit;
+				if F.Eof then Exit;
 
 				NewSize := FColumnCount + 1;
 				if AllocByExp(Length(FColumns), NewSize) then
@@ -207,126 +206,128 @@ begin
 
 
 			GetMem(SRow, RowsSize);
-			F.BlockRead(SRow^, RowsSize);
-			F.Close;
+			try
+				F.BlockRead(SRow^, RowsSize);
+				F.Close;
 
-			SetLength(Rows, Head.ItemsCount);
-			for j := 0 to FColumnCount - 1 do
-			begin
-				SetLength(FColumns[j].Items, Head.ItemsCount);
-			end;
-			FItemCount := 0;
-			CRow := SRow;
-			while SG(CRow) < SG(SRow) + RowsSize do
-			begin
-	(*			if F.FilePos >= F.FileSize then goto LExit; // All readed
-				if F.FilePos + RowSize > F.FileSize then
-				begin
-					{$ifopt d+}
-					IOErrorMessage(FileName, 'File is truncated.');
-					{$endif}
-	//				ErrorMsg('File too short.', FileName);
-					goto LExit; // Cutted file
-				end;
-	//			F.BlockRead(SRow^, RowsSize);*)
-
-	{			NewSize := DbItemCount + 1;
-				if AllocByExp(Length(Rows), NewSize) then
-					SetLength(Rows, NewSize);}
-
-				Rows[FItemCount] := Char(CRow^) = ' '; // 2A = Disabled
-				CRow := Pointer(SG(CRow) + 1);
+				SetLength(Rows, Head.ItemsCount);
 				for j := 0 to FColumnCount - 1 do
 				begin
-	{				NewSize := DbItemCount + 1;
-					if AllocByExp(Length(Columns[j].Items), NewSize) then
-						SetLength(Columns[j].Items, NewSize);}
-
-					Row := CRow;
-					case FColumns[j].Typ of
-					varOleStr:
-					begin
-						for k := 0 to FColumns[j].Width div 2 - 1 do
-						begin
-							if U2(Row^) = 0 then Break;
-							Inc(SG(Row), 2)
-						end;
-						DataWStr := '';
-						SetLength(DataWStr, k);
-						if k >= 1 then
-							Move(CRow^, DataWStr[1], 2 * k);
-					end;
-					varUnknown:
-					begin
-						Index := U4(Row^);
-					end
-					else
-					begin
-	{					DataStr[0] := Char(Columns[j].Width);
-						for k := 0 to Columns[j].Width - 1 do
-						begin
-							if Char(Row^) = #0 then Break;
-	//						DataStr[k + 1] := Char(Row^);
-							Inc(SG(Row));
-						end;}
-						k := FColumns[j].Width;
-						DataStr[0] := Char(k);
-						if k >= 1 then
-							Move(CRow^, DataStr[1], k);
-					end;
-					end;
-					CRow := Pointer(SG(CRow) + FColumns[j].Width);
-
-					case FColumns[j].Typ of
-					varString:
-					begin
-						FColumns[j].Items[FItemCount] := DataStr;
-					end;
-	{				varPointer:
-						FColumns[j].Items[FItemCount] := SG(s[1]) + SG(s[2]) shl 8 + SG(s[3]) shl 16 + SG(s[4]) shl 24;}
-					varInteger:
-					begin
-						if Pos('.', DataStr) <> 0 then
-						begin
-							FColumns[j].Typ := varDouble;
-							FColumns[j].Items[FItemCount] := StrToF8(DataStr, ifIO);
-						end
-						else
-							FColumns[j].Items[FItemCount] := StrToSG(DataStr, ifIO); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
-
-					end;
-					varDouble:
-						FColumns[j].Items[FItemCount] := StrToF8(DataStr, ifIO);
-					varBoolean: FColumns[j].Items[FItemCount] := (DataStr <> 'F');
-					varOleStr:
-					begin
-						FColumns[j].Items[FItemCount] := DataWStr;
-					end;
-					varUnknown:
-					begin
-						if Index <> 0 then
-						begin
-							{$ifopt d+}
-							Assert(SwapU4(PU4(@FPT[FPTSize * Index + 1])^) = 1);
-							{$endif}
-							k := SwapU4(PU4(@FPT[FPTSize * Index + 5])^);
-							SetLength(s, k);
-							FillChar(s[1], k, 0);
-							if k > 0 then
-								Move(FPT[FPTSize * Index + 9], s[1], k);
-						end
-						else
-							s := '';
-						FColumns[j].Items[FItemCount] := s;
-						s := '';
-					end;
-	//				varDate:
-					end;
+					SetLength(FColumns[j].Items, Head.ItemsCount);
 				end;
-				Inc(FItemCount);
+				FItemCount := 0;
+				CRow := SRow;
+				while SG(CRow) < SG(SRow) + RowsSize do
+				begin
+		(*			if F.FilePos >= F.FileSize then Exit; // All readed
+					if F.FilePos + RowSize > F.FileSize then
+					begin
+						{$ifopt d+}
+						IOErrorMessage(FileName, 'File is truncated.');
+						{$endif}
+		//				ErrorMsg('File too short.', FileName);
+						Exit; // Cutted file
+					end;
+		//			F.BlockRead(SRow^, RowsSize);*)
+
+		{			NewSize := DbItemCount + 1;
+					if AllocByExp(Length(Rows), NewSize) then
+						SetLength(Rows, NewSize);}
+
+					Rows[FItemCount] := AnsiChar(CRow^) = ' '; // 2A = Disabled
+					CRow := Pointer(SG(CRow) + 1);
+					for j := 0 to FColumnCount - 1 do
+					begin
+		{				NewSize := DbItemCount + 1;
+						if AllocByExp(Length(Columns[j].Items), NewSize) then
+							SetLength(Columns[j].Items, NewSize);}
+
+						Row := CRow;
+						case FColumns[j].Typ of
+						varOleStr:
+						begin
+							for k := 0 to FColumns[j].Width div 2 - 1 do
+							begin
+								if U2(Row^) = 0 then Break;
+								Inc(SG(Row), 2)
+							end;
+							DataWStr := '';
+							SetLength(DataWStr, k);
+							if k >= 1 then
+								Move(CRow^, DataWStr[1], 2 * k);
+						end;
+						varUnknown:
+						begin
+							Index := U4(Row^);
+						end
+						else
+						begin
+		{					DataStr[0] := AnsiChar(Columns[j].Width);
+							for k := 0 to Columns[j].Width - 1 do
+							begin
+								if AnsiChar(Row^) = #0 then Break;
+		//						DataStr[k + 1] := AnsiChar(Row^);
+								Inc(SG(Row));
+							end;}
+							k := FColumns[j].Width;
+							DataStr[0] := AnsiChar(k);
+							if k >= 1 then
+								Move(CRow^, DataStr[1], k);
+						end;
+						end;
+						CRow := Pointer(SG(CRow) + FColumns[j].Width);
+
+						case FColumns[j].Typ of
+						varString:
+						begin
+							FColumns[j].Items[FItemCount] := ConvertCharsetF(DataStr, cp852, cp1250);
+						end;
+		{				varPointer:
+							FColumns[j].Items[FItemCount] := SG(s[1]) + SG(s[2]) shl 8 + SG(s[3]) shl 16 + SG(s[4]) shl 24;}
+						varInteger:
+						begin
+							if Pos('.', DataStr) <> 0 then
+							begin
+								FColumns[j].Typ := varDouble;
+								FColumns[j].Items[FItemCount] := StrToF8(DataStr, ifIO);
+							end
+							else
+								FColumns[j].Items[FItemCount] := StrToSG(DataStr, ifIO); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
+
+						end;
+						varDouble:
+							FColumns[j].Items[FItemCount] := StrToF8(DataStr, ifIO);
+						varBoolean: FColumns[j].Items[FItemCount] := (DataStr <> 'F');
+						varOleStr:
+						begin
+							FColumns[j].Items[FItemCount] := DataWStr;
+						end;
+						varUnknown:
+						begin
+							if Index <> 0 then
+							begin
+								{$ifopt d+}
+								Assert(SwapU4(PU4(@FPT[FPTSize * Index + 1])^) = 1);
+								{$endif}
+								k := SwapU4(PU4(@FPT[FPTSize * Index + 5])^);
+								SetLength(sa, k);
+								FillChar(sa[1], SizeOf(sa[1]) * k, 0);
+								if k > 0 then
+									Move(FPT[FPTSize * Index + 9], sa[1], k);
+							end
+							else
+								sa := '';
+							FColumns[j].Items[FItemCount] := sa;
+							sa := '';
+						end;
+		//				varDate:
+						end;
+					end;
+					Inc(FItemCount);
+				end;
+			finally
+				FreeMem(SRow);
 			end;
-			LExit:
-			FreeMem(SRow);
 			FPT := '';
 			Result := True;
 		end;

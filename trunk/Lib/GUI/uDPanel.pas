@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDPanel.pas
-//* Created:  1999-08-01
-//* Modified: 2007-05-19
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDPanel.pas
+// * Created:  1999-08-01
+// * Modified: 2009-09-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDPanel deprecated;
 
@@ -126,7 +126,7 @@ begin
 	begin
 		Canvas.Brush.Style := bsClear;
 		Canvas.Font := Font;
-		DrawCutedText(Canvas, Recta, Alignment, Layout, Caption, True, FFontShadow);
+		DrawCuttedText(Canvas, Recta, Alignment, Layout, Caption, True, FFontShadow);
 	end;
 
 	if Assigned(FOnPaint) then FOnPaint(Self);

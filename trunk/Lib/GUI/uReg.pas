@@ -1,16 +1,18 @@
-//* File:     Lib\GUI\uReg.pas
-//* Created:  1999-11-01
-//* Modified: 2008-08-29
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uReg.pas
+// * Created:  1999-11-01
+// * Modified: 2009-11-08
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uReg;
 
 interface
 
-uses Windows;
+uses
+	uTypes,
+	Windows;
 
 type
 	TFileTypesOperation = (foCreate, foDelete, foExists);
@@ -24,17 +26,17 @@ function RegValue(const RootKey: HKEY; const Key: string; const Name: string): s
 function CustomFileType(
 	const FileTypesOperation: TFileTypesOperation;
 	const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of ShortString;
-	const OpenPrograms: array of ShortString
+	const MenuCaptions: array of string;
+	const OpenPrograms: array of string
 	): Boolean;
 
-function ShellFolder(const Name: string): string;
+function ShellFolder(const Name: string; const Common: BG = False): string;
 
 implementation
 
 uses
 	SysUtils, Registry,
-	uTypes, uStrings, uFiles, uMsg, uCSVFile;
+	uStrings, uFiles, uMsg, uCSVFile;
 
 function WinNTDeleteKey(const Reg: TRegistry; const Key: string): Boolean;
 	var CanDelete: Boolean;
@@ -317,7 +319,6 @@ end;
 
 procedure DeleteCommand(const FileType: string;
 	const MenuCaption: string);
-label Fin;
 var
 	Reg: TRegistry;
 	InternalName, Key, ShortMenuCaption: string;
@@ -342,7 +343,7 @@ begin
 				end;
 			end
 			else
-				goto Fin;
+				Exit;
 		end;
 
 		ShortMenuCaption := DelCharsF(MenuCaption, ' ');
@@ -352,7 +353,6 @@ begin
 			if WinNTDeleteKey(Reg, Key + '\command') then
 				WinNTDeleteKey(Reg, Key);
 		end;
-		Fin:
 	finally
 		Reg.Free;
 	end;
@@ -360,7 +360,6 @@ end;
 
 function ExistsCommand(const FileType: string;
 	const MenuCaption: string): Boolean;
-label Fin;
 var
 	Reg: TRegistry;
 	InternalName, Key, ShortMenuCaption: string;
@@ -384,7 +383,7 @@ begin
 				Reg.CloseKey;
 			end
 			else
-				goto Fin;
+				Exit;
 		end;
 
 		ShortMenuCaption := DelCharsF(MenuCaption, ' ');
@@ -393,7 +392,6 @@ begin
 		begin
 			Result := True;
 		end;
-		Fin:
 	finally
 		Reg.Free;
 	end;
@@ -402,8 +400,8 @@ end;
 function CustomFileType(
 	const FileTypesOperation: TFileTypesOperation;
 	const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of ShortString;
-	const OpenPrograms: array of ShortString
+	const MenuCaptions: array of string;
+	const OpenPrograms: array of string
 	): Boolean;
 var
 	i: SG;
@@ -491,14 +489,18 @@ begin
 	end;
 end;
 
-function ShellFolder(const Name: string): string;
+function ShellFolder(const Name: string; const Common: BG = False): string;
 var
 	Reg: TRegistry;
 	Key: string;
 begin
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
-		Reg.RootKey := HKEY_CURRENT_USER;
+		if Common then
+			Reg.RootKey := HKEY_LOCAL_MACHINE
+		else
+			Reg.RootKey := HKEY_CURRENT_USER;
+
 		Key := 'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders\';
 		if Reg.KeyExists(Key) then
 		begin

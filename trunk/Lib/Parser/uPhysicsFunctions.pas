@@ -1,10 +1,10 @@
-//* File:     Lib\Parser\uPhysicsFunctions.pas
-//* Created:  2004-03-07
-//* Modified: 2008-05-10
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\Parser\uPhysicsFunctions.pas
+// * Created:  2004-03-07
+// * Modified: 2009-08-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uPhysicsFunctions;
 
@@ -19,7 +19,6 @@ const
 	EarthRadius = 6378000;
 {
 const
-	LightSpeed = 299792458; // m/s
 	LightLMin = 390; // nm
 	LightLMax = 760; // nm
 }
@@ -41,5 +40,5 @@ begin
 end;
 
 initialization
-	AddFunction('Physics', 'Gravity', Gravity, 'Gravitation [m/s]. If no parameter is specified, it mean on surface on th Earth, otherwise parameter is height in [m].');
+	AddFunction('Physics', 'Gravity', Gravity, 'http://en.wikipedia.org/wiki/Earth''s_gravity'); //'Gravitation [m/s]. If no parameter is specified, it mean on surface on th Earth, otherwise parameter is height in [m].');
 end.

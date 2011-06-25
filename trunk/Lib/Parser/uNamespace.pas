@@ -1,10 +1,10 @@
-//* File:     Lib\Parser\uNamespace.pas
-//* Created:  2004-03-07
-//* Modified: 2007-05-12
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\Parser\uNamespace.pas
+// * Created:  2004-03-07
+// * Modified: 2009-09-22
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uNamespace;
 
@@ -20,27 +20,31 @@ type
 	TConstantFunction = function: TVector;
 	TUnaryFunction = function(const X: TVector): TVector;
 	TBinaryFunction = function(const X, Y: TVector): TVector;
+	TTernaryFunction = function(const X, Y, Z: TVector): TVector;
 	TNaryFunction = function(const X: array of TVector): TVector;
+
+	PFunction = ^TFunction;
+	TFunction = record
+		Name: string;
+		Group: string;
+		ArgCount: SG;
+		Address: Pointer;
+		Description: string;
+	end;
 
 procedure AddFunction(const UnitName, FunctionName: string; const ConstantFunction: TConstantFunction; const Description: string); overload;
 procedure AddFunction(const UnitName, FunctionName: string; const UnaryFunction: TUnaryFunction; const Description: string); overload;
 procedure AddFunction(const UnitName, FunctionName: string; const BinaryFunction: TBinaryFunction; const Description: string); overload;
+procedure AddFunction(const UnitName, FunctionName: string; const TernaryFunction: TTernaryFunction; const Description: string); overload;
 procedure AddFunction(const UnitName, FunctionName: string; const NaryFunction: TNaryFunction; const Description: string); overload;
 
 function CorrectParamCount(const UnitName, FunctionName: string; const ArgCount: SG): BG;
+function FindFunction(const UnitName, FunctionName: string; const ArgCount: SG): PFunction;
 function FunctionExists(const UnitName, FunctionName: string): BG;
 function CallFunction(const UnitName, FunctionName: string; const Args: array of TVector): TVector;
 
 var
 	Namespace: THashTable; // Read only
-type
-	PFunction = ^TFunction;
-	TFunction = record
-		Name: string;
-		ArgCount: SG;
-		Address: Pointer;
-		Description: string;
-	end;
 
 implementation
 
@@ -64,9 +68,10 @@ var
 	F: TFunction;
 begin
 	if Namespace = nil then
-		Namespace := THashTable.Create(512, SizeOf(TFunction));
+		Namespace := THashTable.Create(10240, SizeOf(TFunction));
 
 	F.Name := FunctionName;
+	F.Group := UnitName;
 	F.ArgCount := ArgCount;
 	F.Address := FunctionAddress;
 	F.Description := Description;
@@ -86,6 +91,11 @@ end;
 procedure AddFunction(const UnitName, FunctionName: string; const BinaryFunction: TBinaryFunction; const Description: string);
 begin
 	AddFunctionEx(UnitName, FunctionName, @BinaryFunction, 2, Description);
+end;
+
+procedure AddFunction(const UnitName, FunctionName: string; const TernaryFunction: TTernaryFunction; const Description: string);
+begin
+	AddFunctionEx(UnitName, FunctionName, @TernaryFunction, 3, Description);
 end;
 
 procedure AddFunction(const UnitName, FunctionName: string; const NaryFunction: TNaryFunction; const Description: string);
@@ -133,12 +143,14 @@ begin
 	if (F <> nil) and (F.Address <> nil) then
 	begin
 		case F.ArgCount of
+		-1: Result := TNaryFunction(F.Address)(Args);
 		0: Result := TConstantFunction(F.Address);
 		1: Result := TUnaryFunction(F.Address)(Args[0]);
 		2: Result := TBinaryFunction(F.Address)(Args[0], Args[1]);
+		3: Result := TTernaryFunction(F.Address)(Args[0], Args[1], Args[2]);
 		else
 		begin
-			Result := TNaryFunction(F.Address)(Args);
+			raise Exception.Create('Invalid number of function arguments.');
 		end;
 		end;
 	end

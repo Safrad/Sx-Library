@@ -1,42 +1,47 @@
+// * File:     Lib\uDFile.pas
+// * Created:  2009-07-05
+// * Modified: 2009-09-21
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
 unit uDFile;
 
 interface
 
 uses
 	SysUtils, ExtCtrls,
-	uTypes, uFile;
+	uTypes, uFile, uRWFile;
 
 type
-	TDFile = class
+	TDFile = class(TRWFile)
 	private
 		{ Private declarations }
 		FSaveInterval: U4;
 		FTimer: TTimer;
 		procedure OnChange(const FileName: TFileName);
 		procedure OnTimer(Sender: TObject);
-		procedure SetFileName(const FileName: TFileName);
 	protected
-		FFileName: TFileName;
-		procedure Read;
+		procedure SetFileName(const FileName: TFileName);
 		procedure Write;
-		procedure RWData(const Write: BG); virtual; abstract;
 	public
 		{ Public declarations }
 		constructor Create; overload;
 		constructor Create(const FileName: TFileName); overload;
 		destructor Destroy; override;
-		function Open(const FileName: TFileName): BG;
-		property FileName: TFileName read FFileName write SetFileName;
 	end;
 
 implementation
 
 uses uWatch;
 
-{ TCSVFile }
+{ TDFile }
 
 constructor TDFile.Create;
 begin
+	inherited;
+
 	FSaveInterval := Minute;
 
 	FTimer := TTimer.Create(nil);
@@ -68,17 +73,6 @@ begin
 	Write;
 end;
 
-function TDFile.Open(const FileName: TFileName): BG;
-begin
-	Result := True;
-	SetFileName(FileName);
-end;
-
-procedure TDFile.Read;
-begin
-	RWData(False);
-end;
-
 procedure TDFile.SetFileName(const FileName: TFileName);
 begin
 	Assert(FileName <> '');
@@ -96,8 +90,11 @@ end;
 procedure TDFile.Write;
 begin
 	WatchRemoveFile(FFileName);
-	RWData(True);
-	WatchAddFile(FFileName, OnChange);
+	try
+		RWData(True);
+	finally
+		WatchAddFile(FFileName, OnChange);
+	end;
 end;
 
 end.

@@ -1,10 +1,10 @@
-//* File:     Lib\uSGL.pas
-//* Created:  2005-03-09
-//* Modified: 2007-11-27
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uSGL.pas
+// * Created:  2005-03-09
+// * Modified: 2009-12-02
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 // Support only 32bit RGBA buffer
 { TODO : Depth, Clipping bug }
@@ -255,7 +255,7 @@ procedure sglFinish();
 (*   * jednoznacny identifikator vytvorene kreslici plochy (int)                   *)
 function sglCreateDrawable(width, height: SG): SG; overload;
 function sglCreateDrawable(width, height: SG; Data: Pointer): SG; overload;
-procedure sglRecreateDrawable(width, height: SG; Data: Pointer);
+procedure sglRecreateDrawable(i, width, height: SG; Data: Pointer);
 
 (* Zruseni kreslici plochy s identifikatorem id + zruseni dalsich pomocnych pameti *)
 (* VSTUP:                                                                          *)
@@ -409,7 +409,7 @@ procedure sglEnableClipping(clipping: BG);
 
 (* Definice obdelnikoveho orezavaciho okna v souradnicich okna. *)
 (* VSTUP:                                                       *)
-(*   * sX, sY - umísteni okna na kreslici plose                 *)
+(*   * sX, sY - umsteni okna na kreslici plose                 *)
 (*   * w, h   - sirka a vyska orezavaciho okna v pixelech       *)
 procedure sglClipRectangle(sX, sY, w, h: SG);
 
@@ -564,9 +564,10 @@ var
 
 implementation
 
-uses Math, uGraph, uSorts, uMath;
+uses
+	Math,
+	uGraph, uSorts, uMath, uStrings;
 
-// ***************************************************************************************************************************
 
 var
 	Drawable: sglSDrawable;
@@ -603,21 +604,26 @@ end;
 function sglGetErrorStrings: string;
 var i: SG;
 begin
-	for i := 0 to Length(sglErrors) - 1 do
-		Result := sglGetErrorString(sglErrors[i]);
+	Result := '';
+	for i := 0 to sglErrorCount - 1 do
+		Result := Result + sglGetErrorString(sglErrors[i]) + LineSep;
 	sglErrorCount := 0;
 	SetLength(sglErrors, 0);
 	_libStatus := sglOpOk;
 end;
 
 procedure AddError(sglError: sglEErrorCode);
+{$ifopt d+}
 var NewSize: SG;
+{$endif}
 begin
+	{$ifopt d+}
 	NewSize := sglErrorCount + 1;
 	if AllocByExp(Length(sglErrors), NewSize) then
 		SetLength(sglErrors, NewSize);
 	sglErrors[sglErrorCount] := sglError;
 	Inc(sglErrorCount);
+	{$endif}
 	_libStatus := sglError;
 end;
 
@@ -671,68 +677,16 @@ end;
 (*   * height - vyska kreslici plochy                                              *)
 (* VYSTUP:                                                                         *)
 (*   * jednoznacny identifikator vytvorene kreslici plochy (int)                   *)
-procedure sglRecreateDrawable(width, height: SG; Data: Pointer);
+procedure sglRecreateDrawable(i, width, height: SG; Data: Pointer);
 begin
-	if Check then
+//	if Check then
 	begin
-		Drawable._width := width;
-		Drawable._ByteX := WidthToByteX(width);
-		Drawable._height := height;
-		Drawable._frameBufferSize := Drawable._ByteX * height;
-		Drawable._frameBuffer := Pointer(SG(Data) - SG(Drawable._frameBufferSize) + Drawable._ByteX)
-	end;
-end;
-
-function sglCreateDrawable(width, height: SG): SG;
-begin
-	Result := sglCreateDrawable(width, height, nil);
-end;
-
-function sglCreateDrawable(width, height: SG; Data: Pointer): SG;
-var
-	i: SG;
-	NewSize: SG;
-begin
-	Result := -1;
-	if width * height > 32 * MB then
-	begin
-		AddError(sglOpOutOfMemory);
-		Exit;
-	end
-	else if (width <= 0) or (height <= 0) then
-	begin
-		AddError(sglOpBadParameters);
-		Exit;
-	end;
-
-	i := 0;
-	while True do
-	begin
-		if i >= DrawableCount then
-		begin
-			NewSize := i + 1;
-			if AllocByExp(Length(Drawables), NewSize) then
-				SetLength(Drawables, NewSize);
-			FillChar(Drawables[i], SizeOf(Drawables[i]), 0);
-			Inc(DrawableCount);
-		end;
-
-		if Drawables[i]._frameBuffer = nil then
+		if (Drawables[i]._width <> width) or (Drawables[i]._height <> height) then
 		begin
 			Drawables[i]._width := width;
 			Drawables[i]._ByteX := WidthToByteX(width);
 			Drawables[i]._height := height;
-			Drawables[i]._frameBufferSize := Drawables[i]._ByteX * height;
-			if Data = nil then
-			begin
-				GetMem(Drawables[i]._frameBuffer, Drawables[i]._frameBufferSize);
-				Drawables[i].Ext := False;
-			end
-			else
-			begin
-				Drawables[i]._frameBuffer := Pointer(SG(Data) - SG(Drawables[i]._frameBufferSize) + Drawables[i]._ByteX);
-				Drawables[i].Ext := True;
-			end;
+
 			// Full ViewPort
 			Drawables[i].MinG.X := 0;
 			Drawables[i].MinG.Y := 0;
@@ -755,17 +709,84 @@ begin
 			Drawables[i].ATeM := ETM;
 
 			// Options
-			Drawables[i].Color.RG := $ffff;
+			Drawables[i].Color.R := $ff;
+			Drawables[i].Color.G := $ff;
 			Drawables[i].Color.B := $ff;
 			Drawables[i].PointSize := 1;
 			Drawables[i].LineWidth := 1;
 			Drawables[i].AreaMode := SGL_AREA_MODE_FILL;
 			Drawables[i].ShadeModel := True;
 
+			Drawables[i]._frameBufferSize := Drawables[i]._ByteX * height;
+			if Data = nil then
+			begin
+				Drawables[i].Ext := False;
+				GetMem(Drawables[i]._frameBuffer, Drawables[i]._frameBufferSize);
+				if Drawables[i]._frameBuffer = nil then
+				begin
+					AddError(sglOpOutOfMemory);
+				end;
+			end
+			else
+			begin
+				Drawables[i].Ext := True;
+				Drawables[i]._frameBuffer := Pointer(SG(Data) - SG(Drawables[i]._frameBufferSize) + Drawables[i]._ByteX);
+			end;
+		end;
+		if _currentDrawable = i then
+			Move(Drawables[_currentDrawable], Drawable, SizeOf(Drawable))
+{		Drawable._width := width;
+		Drawable._ByteX := WidthToByteX(width);
+		Drawable._height := height;
+		Drawable._frameBufferSize := Drawable._ByteX * height;
+		Drawable._frameBuffer := Pointer(SG(Data) - SG(Drawable._frameBufferSize) + Drawable._ByteX)}
+	end;
+end;
+
+function sglCreateDrawable(width, height: SG): SG;
+begin
+	Result := sglCreateDrawable(width, height, nil);
+end;
+
+function sglCreateDrawable(width, height: SG; Data: Pointer): SG;
+var
+	i: SG;
+	NewSize: SG;
+begin
+	Result := -1;
+	if (width <= 0) or (height <= 0) then
+	begin
+		AddError(sglOpBadParameters);
+		Exit;
+	end;
+	if width * height > 512 * MB div 4 then
+	begin
+		AddError(sglOpOutOfMemory);
+		Exit;
+	end;
+
+	i := 0;
+	while True do
+	begin
+		if i >= DrawableCount then
+		begin
+			NewSize := DrawableCount + 1;
+			if AllocByExp(Length(Drawables), NewSize) then
+			begin
+				SetLength(Drawables, NewSize);
+//			FillChar(Drawables[i], SizeOf(Drawables[i]), 0);
+			end;
+			sglRecreateDrawable(i, width, height, Data);
+			Break;
+		end;
+		if Drawables[i]._width <> 0 then
+		begin
+			sglRecreateDrawable(i, width, height, Data);
 			Break;
 		end;
 		Inc(i);
 	end;
+	Inc(DrawableCount);
 
 	Result := i;
 //	sglSetDrawable(i);
@@ -1026,8 +1047,8 @@ var
 	tx, ty: UG;
 //	DM: SG;
 begin
-	Assert(SG(P) >= SG(Drawable._frameBuffer));
-	Assert(SG(P) + SizeOf(P) <= SG(Drawable._frameBuffer) + SG(Drawable._frameBufferSize));
+	if SG(P) < SG(Drawable._frameBuffer) then Exit;
+	if SG(P) + SizeOf(P) > SG(Drawable._frameBuffer) + SG(Drawable._frameBufferSize) then Exit;
 
 	if Drawable.EnableTexturing = True then
 	begin
@@ -1198,7 +1219,7 @@ begin
 		Result := True;
 		if ((KodA or KodB) and CMaxY) <> 0 then
 		begin
-			// úseèka protíná horní hranici
+			// seka protn horn hranici
 			x := P1.Pos.X + (Drawable.MaxB.Y - P1.Pos.Y) * (P2.Pos.X - P1.Pos.X) div (P2.Pos.Y - P1.Pos.Y);
 			if (KodA and CMaxY) <> 0 then
 			begin
@@ -1228,7 +1249,7 @@ begin
 		end;
 		if ((KodA or KodB) and CMinY) <> 0 then
 		begin
-			// úseèka protíná dolní hranici
+			// seka protn doln hranici
 			x := P1.Pos.X + RoundDiv((Drawable.MinB.Y - P1.Pos.Y) * (P2.Pos.X - P1.Pos.X), (P2.Pos.Y - P1.Pos.Y));
 			if (KodA and CMinY) <> 0 then
 			begin
@@ -1362,7 +1383,7 @@ var
 			PN := PPixel(SG(P) - SizeOf(TPixel) * (Size div 2));
 			for i := 1 to Size do
 			begin
-				Pix(PN, COut); // TODO : Check
+				Pix(PN, COut);
 				Inc(PN);
 			end;
 		end
@@ -1372,7 +1393,7 @@ var
 			n := Drawable._ByteX;
 			for i := 1 to -Size do
 			begin
-				Pix(PN, COut); // TODO : Check
+				Pix(PN, COut);
 				Inc(SG(PN), n);
 			end;
 		end;
@@ -1428,8 +1449,8 @@ begin
 		begin
 			if D <> 0 then
 			begin
-				DTX := ((P2.Tex.X - P1.Tex.X) {* PreM}) div (D + 0);
-				DTY := ((P2.Tex.Y - P1.Tex.Y) {* PreM}) div (D + 0); // TODO : ?
+				DTX := ((P2.Tex.X - P1.Tex.X) {* PreM}) div D;
+				DTY := ((P2.Tex.Y - P1.Tex.Y) {* PreM}) div D;
 			end;
 			TexX := P1.Tex.X{ shl Pre};
 			TexY := P1.Tex.Y{ shl Pre};
@@ -1793,11 +1814,8 @@ begin
 	end;
 end;
 
-var
-	Depth: SG;
-
-// INPUT: c - øídicí polygon køivky, e - pøesnost
-procedure DrawCurveUsingRecursiveSubdivision4(C: TWorldPoints);
+// INPUT: c - dic polygon kivky, e - pesnost
+procedure DrawCurveUsingRecursiveSubdivision4(const C: TWorldPoints; const Depth: SG);
 var
 	xy: TWorldPos;
 	GX0, GY0, GX1, GY1, GX2, GY2: TFloat;
@@ -1805,7 +1823,6 @@ var
 	L, R: TWorldPoints;
 	Divi: BG;
 begin
-	Inc(Depth);
 	Tran(C[0].Pos, GX0, GY0);
 	xy.X := (C[1].Pos.X + C[2].Pos.X) / 2;
 	xy.Y := (C[1].Pos.Y + C[2].Pos.Y) / 2;
@@ -1831,8 +1848,8 @@ begin
 	if Divi then
 	begin
 		SubDivide(C, L, R);
-		DrawCurveUsingRecursiveSubdivision4(L);
-		DrawCurveUsingRecursiveSubdivision4(R);
+		DrawCurveUsingRecursiveSubdivision4(L, Depth + 1);
+		DrawCurveUsingRecursiveSubdivision4(R, Depth + 1);
 	end
 	else
 	begin
@@ -1844,7 +1861,6 @@ begin
 		G1.C := C[3].C;
 		Lin(G0, G1);
 	end;
-	Dec(Depth);
 end;
 
 procedure BezierC;
@@ -1860,11 +1876,10 @@ begin
 		Lin(G0, G1);
 	end;}
 	{$endif}
-	DrawCurveUsingRecursiveSubdivision4(Drawable.WP);
+	DrawCurveUsingRecursiveSubdivision4(Drawable.WP, 1);
 end;
 
-procedure DrawCurveUsingRecursiveSubdivision(C: TWorldPoints);
-label LExit;
+procedure DrawCurveUsingRecursiveSubdivision(const C: TWorldPoints; const Depth: SG);
 var
 	GX0, GY0, GX1, GY1, GX2, GY2: TFloat;
 	G0, G1: TGraphicPoint;
@@ -1872,9 +1887,8 @@ var
 	i, l: SG;
 	Divi: BG;
 begin
-	Inc(Depth);
 	l := Length(C);
-	if l < 2 then goto LExit;
+	if l < 2 then Exit;
 
 	Tran(C[0].Pos, GX0, GY0);
 	Tran(C[l - 1].Pos, GX2, GY2);
@@ -1888,7 +1902,7 @@ begin
 		G1.Pos.Y := Round(GY2);
 		G1.C := C[l - 1].C;
 		Lin(G0, G1);
-		goto LExit;
+		Exit;
 	end;
 
 {	if l = 3 then
@@ -1935,12 +1949,12 @@ begin
 		if (Abs(GX0 - GX2) = 0) and (Abs(GY0 - GY2) <= 2) then
 			Divi := False;
 	end;
-	
+
 	if Divi or (Depth <= 1) then
 	begin
 		SubDivide(C, Left, Right);
-		DrawCurveUsingRecursiveSubdivision(Left);
-		DrawCurveUsingRecursiveSubdivision(Right);
+		DrawCurveUsingRecursiveSubdivision(Left, Depth + 1);
+		DrawCurveUsingRecursiveSubdivision(Right, Depth + 1);
 	end
 	else
 	begin
@@ -1952,8 +1966,6 @@ begin
 		G1.C := C[l - 1].C;
 		Lin(G0, G1);
 	end;
-	LExit:
-	Dec(Depth);
 end;
 
 procedure DrawWrap;
@@ -1975,7 +1987,7 @@ end;
 
 procedure BezierG;
 begin
-	DrawCurveUsingRecursiveSubdivision(Drawable.WP);
+	DrawCurveUsingRecursiveSubdivision(Drawable.WP, 1);
 	{$ifopt d+}
 //	DrawWrap;
 	{$endif}
@@ -2029,6 +2041,9 @@ begin
 	Result.Pos.W := 1;
 end;
 
+var
+	Depth: SG;
+	
 procedure CoonsFerguson(from, too: TFloat);
 var
 	mid: TFloat;
@@ -2115,10 +2130,6 @@ begin
 			end
 			else
 			begin
-{ TODO : DCR := RoundDiv((Integer(P2.C.R) - Integer(P1.C.R)) * PreM, D);
-				DCG := RoundDiv((Integer(P2.C.G) - Integer(P1.C.G)) * PreM, D);
-				DCB := RoundDiv((Integer(P2.C.B) - Integer(P1.C.B)) * PreM, D);
-				DCA := RoundDiv((Integer(P2.C.A) - Integer(P1.C.A)) * PreM, D); }
 				DCR := ((Integer(P2.C.R) - Integer(P1.C.R)) * PreM) div D;
 				DCG := ((Integer(P2.C.G) - Integer(P1.C.G)) * PreM) div D;
 				DCB := ((Integer(P2.C.B) - Integer(P1.C.B)) * PreM) div D;
@@ -2467,6 +2478,7 @@ begin
 			end;
 		end;
 		end;
+		Drawable.LastElement := sglNone;
 		SetLength(Drawable.WP, 0);
 		Drawable.LG.Pos.X := MinInt;
 		Drawable.LG.Pos.Y := MinInt;
@@ -2523,14 +2535,7 @@ begin
 	Divi := (Sqr((GX0 + GX2) - 2 * GX1)) + (Sqr((GY0 + GY2) - 2 * GY1)) > Max(sglPrecision, MinDouble);
 	if Divi then
 	begin
-{ TODO : DNW if (Abs(GX0 - GX2) <= 1) and (Abs(GY0 - GY2) <= 1) then
-			Divi := False;
-		if (Abs(GX0 - GX2) <= 2) and (Abs(GY0 - GY2) = 0) then
-			Divi := False;
-		if (Abs(GX0 - GX2) = 0) and (Abs(GY0 - GY2) <= 2) then
-			Divi := False;}
 		if (mid - from <= MinDouble) or (too - mid <= MinDouble) then Divi := False
-
 	end;
 	if Divi then
 	begin
@@ -3258,15 +3263,13 @@ begin
 		FillChar(Drawable, SizeOf(Drawable), 0);
 		_currentDrawable := -1;
 	end;
-	if Drawables[id].Ext then
-		Drawables[id]._frameBuffer := nil
-	else
+	if not Drawables[id].Ext then
 		FreeMem(Drawables[id]._frameBuffer);
+	Drawables[id]._frameBuffer := nil;
 	Drawables[id]._width := 0;
 	Drawables[id]._height := 0;
 	FreeMem(Drawables[id]._depthBuffer);
 	SetLength(Drawables[id].Stack, 0);
-
 
 	FillChar(Drawables[id], SizeOf(Drawables[id]), 0);
 	_libStatus := sglOpOk;

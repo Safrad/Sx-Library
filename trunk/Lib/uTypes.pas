@@ -1,14 +1,16 @@
-//* File:     Lib\uTypes.pas
-//* Created:  1998-01-01
-//* Modified: 2009-05-10
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uTypes.pas
+// * Created:  1998-01-01
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uTypes;
 
 interface
+
+uses TypInfo;
 
 const
 {$ifdef VER130} // Delphi = 5
@@ -140,14 +142,14 @@ type
 	F8 = Double;
 	FA = Extended;
 
-{ CG = Char; // AnsiChar
+{ CG = Char;
 	C1 = AnsiChar;
 	C2 = WideChar;
 
-	TG = string; // AnsiString
+	TG = string;
 	TA1 = ShortString;
 	T1 = AnsiString;
-	T2 = WideString;}
+	T2 = UnicodeString;}
 
 	BG = Boolean; // LongBool;
 	// Boolean // $00 / $01
@@ -161,7 +163,19 @@ type
 		Name: string; // or Key
 		Value: string;
 	end;
-	
+
+	PFloPoint = ^TFloPoint;
+	TFloPoint = packed record
+		X, Y: Double;
+	end;
+
+	PFloRect = ^TFloRect;
+	TFloRect = packed record
+		case Integer of
+			0: (Left, Top, Right, Bottom: Double);
+			1: (TopLeft, BottomRight: TFloPoint);
+	end;
+
 	// Dynamic Arrays
 	TArrayOfBG = array of BG;
 	TArrayOfSG = array of SG;
@@ -190,7 +204,7 @@ type
 	TArrayFA = array[0..128 * MB - 2] of FA;
 	PArrayFA = ^TArrayFA;
 
-	TArrayChar = array[0..GB - 1] of AnsiChar;
+	TArrayChar = array[0..512 * MB - 1] of Char;
 	PArrayChar = ^TArrayChar;
 
 	TArrayString = array[0..512 * MB - 2] of string;
@@ -220,7 +234,9 @@ const
 	MSecsPerYear = 365 * DaysInWeek * U8(Day);
 
 // System
-	LoopSleepTime = 40; // 25 interrupts per second.
+	LoopSleepTime = {$ifopt d-}40{$else}40{$endif}; // [ms], 25 interrupts per second.
+	MouseTolerance = 4; // 0=1 pixel..6=15 pixels, 3 pixels: Delphi panel, 13 pixels: Delphi Table
+
 	{$EXTERNALSYM WM_XBUTTONDOWN}
 	WM_XBUTTONDOWN      = $020B;
 	{$EXTERNALSYM WM_XBUTTONUP}
@@ -236,6 +252,22 @@ const
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
 
+{$ifdef VER150}
+procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
+{$endif}
+
+{$ifndef UNICODE}
+type
+	UnicodeString = WideString;
+
+{ Standard Character set type }
+
+	TSysCharSet = set of AnsiChar;
+
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; overload;
+function CharInSet(C: WideChar; const CharSet: TSysCharSet): Boolean; overload;
+{$endif}
+
 implementation
 
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
@@ -248,10 +280,35 @@ begin
 	Assert((ActualValue >= MinValue) and (ActualValue <= MaxValue));
 end;
 
+{$ifndef UNICODE}
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+begin
+	Result := C in CharSet;
+end;
+
+function CharInSet(C: WideChar; const CharSet: TSysCharSet): Boolean;
+begin
+	Result := (C < #$0100) and (AnsiChar(C) in CharSet);
+end;
+{$endif}
+
+{$ifdef VER150}
+procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
+begin
+	Move(Source^, Dest^, GetTypeData(T).elSize * Count);
+end;
+{$endif}
+
 initialization
 	{$ifndef LINUX}
 	{$ifopt d-}
 	NoErrMsg := True;
+	{$endif}
+	{$endif}
+
+	{$ifopt d+}
+	{$ifdef UNICODE}
+	ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
 	{$endif}
 	{$endif}
 end.

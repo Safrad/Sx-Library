@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uCommon.pas
-//* Created:  2004-01-06
-//* Modified: 2009-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uCommon.pas
+// * Created:  2004-01-06
+// * Modified: 2009-12-26
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uCommon;
 
@@ -15,21 +15,21 @@ uses
 	Menus;
 
 {
-Preconditions:
+	Preconditions:
 	MainMenu1 with submenus File1, Options1, Window1 and Help1
 
-Usability in "Project file" (*.dpr):
+	Usability in "Project file" (*.dpr):
 
-begin
+	begin
 	Application.Title := '...';
 	Application.Initialize;
-	CommonCreate(nil);
+	CommonCreate;
 	Application.CreateForm(TfMain, fMain);
 	CommonForm(fMain);
 	Application.Run;
 	CommonFree;
 	// Free forms
-end.
+	end.
 }
 
 procedure CommonCreate(const Special: BG = False);
@@ -38,58 +38,127 @@ procedure CommonFree;
 
 procedure CommonFileMenu(const Menu: TMenu);
 
+var
+	ForceClose: BG;
+
 implementation
 
 uses
-	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uMsgDlg, uMsg, uStart,
-	uStrings, uWebUpdate, uStartup,
+	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI,
+	uMsgDlg, uMsg, uStart, uOptions, ufOptions, uReg, uProjectInfo, uLink,
+	uStrings, uWebUpdate, uStartup, uDictionary,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
+
+// Executable file is smaller
+{$SETPEFLAGS IMAGE_FILE_RELOCS_STRIPPED}
 
 type
 	TCommonMenu = class(TObject)
 	private
-		AutomaticallyCheckForUpdate1: TMenuItem;
-		RegisterStartup1: TMenuItem;
-		ShowSplashScreen1: TMenuItem;
 		LoggingLevel1: TMenuItem;
+
+		procedure OptionChanged(const OptionIndex: SG);
+
 		procedure Exit1Click(Sender: TObject);
 		procedure LocalHomepage1Click(Sender: TObject);
 		procedure WebHomepage1Click(Sender: TObject);
 		procedure ViewMessages1Click(Sender: TObject);
 		procedure ViewParams1Click(Sender: TObject);
 		procedure CheckForUpdate1Click(Sender: TObject);
-		procedure AutomaticallyCheckForUpdate1Click(Sender: TObject);
 		procedure About1Click(Sender: TObject);
-		procedure ShowSplashScreen1Click(Sender: TObject);
-		procedure RegisterStartup1Click(Sender: TObject);
 		procedure ViewIniFile1Click(Sender: TObject);
 		procedure ViewLogFile1Click(Sender: TObject);
 		procedure ViewAllLogFiles1Click(Sender: TObject);
 		procedure Sounds1Click(Sender: TObject);
 		procedure SetLoggingLevel1Click(Sender: TObject);
+		procedure ShowOptions(Sender: TObject);
 	public
 		procedure RWCommon(const Save: BG);
 	end;
+
 var
 	CommonMenu: TCommonMenu;
+
+type
+	TGlobalOption = (goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon, goRunAfterStartUp,
+		goShowSplashScreenWhenApplicationStarts, goAutomaticallyCheckForUpdate,
+		goCheckForUpdateDaysPeriod);
+
 var
-	AutomaticallyCheckForUpdate: BG;
+	GlobalOptions: array [TGlobalOption] of TOption = (
+		(
+			Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1),
+		(Typ: vsCheck; Default: 0), (Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1),
+		(Typ: vsSpin; Default: 14; Minimum: 0; Maximum: 365));
+
+var
+	GlobalParams: array [TGlobalOption] of TParam;
+
+var
+	LastUpdate: TDateTime;
 
 procedure CommonCreate(const Special: BG = False);
 begin
 	if not Special then
 	begin
-		InitInstance;
+		if not InitInstance then
+			Halt(1);
 		InitializeLog;
 	end;
 	MainIni := TDIniFile.Create(MainIniFileName);
 	MainIni.RegisterRW(CommonMenu.RWCommon);
+	Dictionary := TDictionary.Create;
 	if not Special then
 	begin
-		if ViewSplashScreen then
+		if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool and
+			(Pos('-Minimized', GetCommandLine) = 0) then
+		begin
 			ShowSplashScreen;
-		if AutomaticallyCheckForUpdate then
+		end;
+		if GlobalParams[goAutomaticallyCheckForUpdate].Bool and (Now - LastUpdate > GlobalParams[goCheckForUpdateDaysPeriod].Num) then
+		begin
 			CheckForUpdate(False);
+			LastUpdate := Now;
+		end;
+	end;
+end;
+
+function LinkChange(const GlobalOption: TGlobalOption; const ObjectChange: TObjectChange): BG;
+var
+	LinkFileName: TFileName;
+	Dir: string;
+begin
+	Result := False;
+	case GlobalOption of
+	goStartMenuIcon:
+		begin
+			Dir := ShellFolder('Common Start Menu', True) + 'Programs' + PathDelim + GetProjectInfo
+				(piProductName) + PathDelim;
+			LinkFileName := Dir + GetProjectInfo(piProductName) + '.lnk';
+		end;
+	goDesktopIcon:
+		LinkFileName := ShellFolder('Common Desktop', True) + PathDelim + GetProjectInfo(piProductName) + '.lnk';
+	goQuickLaunchIcon:
+		LinkFileName := CommonAppDataDir + PathDelim + 'Microsoft' + PathDelim + 'Internet Explorer' +
+			PathDelim + 'Quick Launch' + PathDelim + GetProjectInfo(piProductName) + '.lnk';
+	end;
+	case ObjectChange of
+	ocTest:
+		Result := FileExists(LinkFileName);
+	ocCreate:
+		begin
+			CreateLink(LinkFileName, ExeFileName, '', WorkDir, 0, GetProjectInfo(piFileDescription),
+				ExeFileName, 0);
+		end;
+	ocRemove:
+		begin
+			if FileExists(LinkFileName) then
+				DeleteFile(LinkFileName);
+			case GlobalOption of
+			goStartMenuIcon:
+				RemoveDir(Dir);
+			end;
+		end;
 	end;
 end;
 
@@ -98,6 +167,7 @@ var
 	i: SG;
 	Menu: TMenu;
 begin
+	AddCommonParams;
 	ReadCommandLine(GetCommandLine);
 
 	Menu := nil;
@@ -131,9 +201,26 @@ begin
 			if (Form.Components[i] is TPanel) and (Form.Components[i].Name = 'PanelTool') then
 			begin
 				IconsFromMenu(Menu, TPanel(Form.Components[i]));
+				// IconsResize(TPanel(Form.Components[i]));
 				Break;
 			end;
 		end;
+	end;
+
+	if not Installed then
+	begin
+		LinkChange(goStartMenuIcon, ocCreate);
+	end;
+
+	GlobalParams[goStartMenuIcon].Bool := LinkChange(goStartMenuIcon, ocTest);
+	GlobalParams[goDesktopIcon].Bool := LinkChange(goDesktopIcon, ocTest);
+	GlobalParams[goQuickLaunchIcon].Bool := LinkChange(goQuickLaunchIcon, ocTest);
+	GlobalParams[goRunAfterStartUp].Bool := IsRegisteredStartup;
+
+	Dictionary.TranslateForm(Form);
+	if not Installed then
+	begin
+		CommonMenu.ShowOptions(Form);
 	end;
 
 	HideSplashScreen;
@@ -142,10 +229,14 @@ end;
 procedure CommonFree;
 begin
 	if MainIni <> nil then
+	begin
 		MainIni.UnregisterRW(CommonMenu.RWCommon);
+		MainIni.UnregisterRW(Dictionary.RWLanguage);
+	end;
 	FreeSounds;
 	FreeFileExt;
 	Application.MainForm.Free; // Do not use FreeAndNil
+	FreeAndNil(Dictionary);
 	FreeAndNil(MainIni);
 	FreeAndNil(MainLog);
 end;
@@ -156,17 +247,45 @@ procedure TCommonMenu.RWCommon(const Save: BG);
 const
 	Section = 'Options';
 begin
+	// Compatibility
+	if Save = False then
+	begin
+		if MainIni.ValueExists(Section, 'ViewSplashScreen') then
+		begin
+			GlobalOptions[goShowSplashScreenWhenApplicationStarts].Default := MainIni.ReadNum
+				(Section, 'ViewSplashScreen', 1);
+		end;
+		if MainIni.ValueExists(Section, 'AutomaticallyCheckForUpdate') then
+		begin
+			GlobalOptions[goAutomaticallyCheckForUpdate].Default := MainIni.ReadNum
+				(Section, 'AutomaticallyCheckForUpdate', 1);
+		end;
+	end
+	else
+	begin
+		MainIni.DeleteValue(Section, 'ViewSplashScreen');
+		MainIni.DeleteValue(Section, 'AutomaticallyCheckForUpdate');
+	end;
+
 	RWStart(MainIni, Save);
-	if Save = False then ViewSplashScreen := True;
-	MainIni.RWBool(Section, 'ViewSplashScreen', ViewSplashScreen, Save);
-	if Save = False then AutomaticallyCheckForUpdate := True;
-	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);
+
+	uOptions.RWOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalParams),
+		MainIni, 'Global Options', Save);
+
+{	if Save = False then
+		AutomaticallyCheckForUpdate := True;
+	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);}
+	MainIni.RWDateTime(Section, 'LastUpdate', LastUpdate, Save);
 end;
 
 procedure TCommonMenu.Exit1Click(Sender: TObject);
 begin
 	if Assigned(Application.MainForm) then
+	begin
+		ForceClose := True;
 		Application.MainForm.Close;
+		ForceClose := False;
+	end;
 end;
 
 procedure TCommonMenu.WebHomepage1Click(Sender: TObject);
@@ -177,6 +296,33 @@ end;
 procedure TCommonMenu.LocalHomepage1Click(Sender: TObject);
 begin
 	OpenLocalHomepage;
+end;
+
+procedure TCommonMenu.OptionChanged(const OptionIndex: SG);
+begin
+	case TGlobalOption(OptionIndex) of
+	goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon:
+		begin
+			if GlobalParams[TGlobalOption(OptionIndex)].Bool then
+				LinkChange(TGlobalOption(OptionIndex), ocCreate)
+			else
+				LinkChange(TGlobalOption(OptionIndex), ocRemove);
+		end;
+	goRunAfterStartUp:
+		begin
+			if GlobalParams[TGlobalOption(OptionIndex)].Bool then
+				RegisterStartup
+			else
+				UnregisterStartup;
+		end;
+	goShowSplashScreenWhenApplicationStarts:
+		begin
+			if GlobalParams[TGlobalOption(OptionIndex)].Bool then
+				ShowSplashScreen(False)
+			else
+				HideSplashScreen(True);
+		end;
+	end;
 end;
 
 procedure TCommonMenu.ViewMessages1Click(Sender: TObject);
@@ -191,13 +337,8 @@ end;
 
 procedure TCommonMenu.CheckForUpdate1Click(Sender: TObject);
 begin
+	LastUpdate := Now;
 	CheckForUpdate;
-end;
-
-procedure TCommonMenu.AutomaticallyCheckForUpdate1Click(Sender: TObject);
-begin
-	AutomaticallyCheckForUpdate := not AutomaticallyCheckForUpdate;
-	AutomaticallyCheckForUpdate1.Checked := AutomaticallyCheckForUpdate;
 end;
 
 procedure TCommonMenu.About1Click(Sender: TObject);
@@ -211,23 +352,10 @@ begin
 	LoggingLevel1.Items[TMenuItem(Sender).Tag].Checked := True;
 end;
 
-procedure TCommonMenu.ShowSplashScreen1Click(Sender: TObject);
+procedure TCommonMenu.ShowOptions(Sender: TObject);
 begin
-	ViewSplashScreen := not ViewSplashScreen;
-	ShowSplashScreen1.Checked := ViewSplashScreen;
-	if ViewSplashScreen then ShowSplashScreen(False) else HideSplashScreen(True);
-end;
-
-procedure TCommonMenu.RegisterStartup1Click(Sender: TObject);
-begin
-	if not IsRegisteredStartup then
-	begin
-		RegisterStartup1.Checked := RegisterStartup;
-	end
-	else
-	begin
-		RegisterStartup1.Checked := not UnregisterStartup;
-	end;
+	ufOptions.ShowOptions('Global Options', POptions(@GlobalOptions), Length(GlobalParams), PParams
+			(@GlobalParams), OptionChanged);
 end;
 
 procedure TCommonMenu.ViewIniFile1Click(Sender: TObject);
@@ -291,6 +419,7 @@ begin
 
 	if Assigned(Options1) then
 	begin
+		Dictionary.CreateLanguageMenu(Options1);
 		if Options1.Count > 0 then
 		begin
 			M := TMenuItem.Create(Options1);
@@ -299,8 +428,20 @@ begin
 		end;
 
 		M := TMenuItem.Create(Options1);
+		M.Name := 'GlobalOptions1';
+		M.Caption := 'Global Options...';
+		M.OnClick := CommonMenu.ShowOptions;
+		Options1.Add(M);
+
+		M := TMenuItem.Create(Options1);
+		M.Name := 'Sounds1';
+		M.Caption := 'Sounds...';
+		M.OnClick := CommonMenu.Sounds1Click;
+		Options1.Add(M);
+
+		M := TMenuItem.Create(Options1);
 		M.Name := 'ViewIniFile1';
-		M.Caption := 'View Ini File';
+		M.Caption := 'View Options File';
 		M.OnClick := CommonMenu.ViewIniFile1Click;
 		Options1.Add(M);
 
@@ -326,35 +467,15 @@ begin
 		CommonMenu.LoggingLevel1.Caption := 'Logging Level';
 		Log1.Add(CommonMenu.LoggingLevel1);
 
-		CommonMenu.RegisterStartup1 := TMenuItem.Create(Options1);
-		CommonMenu.RegisterStartup1.Name := 'RegisterStartup1';
-		CommonMenu.RegisterStartup1.Caption := 'Register Startup';
-		CommonMenu.RegisterStartup1.OnClick := CommonMenu.RegisterStartup1Click;
-		CommonMenu.RegisterStartup1.Checked := IsRegisteredStartup;
-		Options1.Add(CommonMenu.RegisterStartup1);
-
-		CommonMenu.ShowSplashScreen1 := TMenuItem.Create(Options1);
-		CommonMenu.ShowSplashScreen1.Name := 'ShowSplashScreen1';
-		CommonMenu.ShowSplashScreen1.Caption := 'Show Splash Screen';
-		CommonMenu.ShowSplashScreen1.OnClick := CommonMenu.ShowSplashScreen1Click;
-		CommonMenu.ShowSplashScreen1.Checked := ViewSplashScreen;
-		Options1.Add(CommonMenu.ShowSplashScreen1);
-
-		M := TMenuItem.Create(Options1);
-		M.Name := 'Sounds1';
-		M.Caption := 'Sounds...';
-		M.OnClick := CommonMenu.Sounds1Click;
-		Options1.Add(M);
-
 		for i := 0 to Length(MessageLevelStr) - 1 do
 		begin
 			M := TMenuItem.Create(CommonMenu.LoggingLevel1);
 			M.Name := ComponentName(MessageLevelStr[TMessageLevel(i)]) + '21';
 			M.Caption := MessageLevelStr[TMessageLevel(i)];
-			M.Tag:= i;
+			M.Tag := i;
 			M.OnClick := CommonMenu.SetLoggingLevel1Click;
 			M.RadioItem := True;
-			M.Checked := SG(MainLog.LoggingLevel) = i;
+			M.Checked := Assigned(MainLog) and (SG(MainLog.LoggingLevel) = i);
 			CommonMenu.LoggingLevel1.Add(M);
 		end;
 	end;
@@ -374,11 +495,14 @@ begin
 		M.OnClick := CommonMenu.WebHomepage1Click;
 		Help1.Add(M);
 
-		M := TMenuItem.Create(Help1);
-		M.Name := 'LocalHomepage1';
-		M.Caption := 'Local Homepage';
-		M.OnClick := CommonMenu.LocalHomepage1Click;
-		Help1.Add(M);
+		if FileExists(GetLocalHomepage) then
+		begin
+			M := TMenuItem.Create(Help1);
+			M.Name := 'LocalHomepage1';
+			M.Caption := 'Local Homepage';
+			M.OnClick := CommonMenu.LocalHomepage1Click;
+			Help1.Add(M);
+		end;
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'Messages1';
@@ -402,13 +526,6 @@ begin
 		M.OnClick := CommonMenu.CheckForUpdate1Click;
 		Help1.Add(M);
 
-		CommonMenu.AutomaticallyCheckForUpdate1 := TMenuItem.Create(Help1);
-		CommonMenu.AutomaticallyCheckForUpdate1.Name := 'AutomaticallyCheckForUpdate1';
-		CommonMenu.AutomaticallyCheckForUpdate1.Caption := 'Automatically Check For Update';
-		CommonMenu.AutomaticallyCheckForUpdate1.OnClick := CommonMenu.AutomaticallyCheckForUpdate1Click;
-		CommonMenu.AutomaticallyCheckForUpdate1.Checked := AutomaticallyCheckForUpdate;
-		Help1.Add(CommonMenu.AutomaticallyCheckForUpdate1);
-
 		M := TMenuItem.Create(Help1);
 		M.Name := 'About';
 		M.Caption := 'About' + cDialogSuffix;
@@ -418,7 +535,13 @@ begin
 end;
 
 initialization
-	CommonMenu := TCommonMenu.Create;
+
+InitOptionNames(TypeInfo(TGlobalOption), GlobalOptions);
+
+CommonMenu := TCommonMenu.Create;
+
 finalization
-	FreeAndNil(CommonMenu);
+
+FreeAndNil(CommonMenu);
+
 end.
