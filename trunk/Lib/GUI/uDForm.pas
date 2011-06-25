@@ -17,8 +17,7 @@ uses
 	ExtCtrls, StdCtrls;
 
 type
-	TBackground = (baNone, baUser, baStandard, baGradientOnly, baGradient,
-		baBitmap, baOpenGL, baOpenGLBitmap);
+	TBackground = (baNone, baUser, baStandard, baGradient, baOpenGL, baOpenGLBitmap);
 
 	TRWOptionsEvent = procedure(Sender: TObject; Save: Boolean) of object;
 
@@ -67,6 +66,7 @@ type
 
 		procedure Paint; override;
 		procedure ResizeScene;
+		procedure Center;
 	published
 		{ published declarations }
 		property Caption: string read FCaption write SetCaption;
@@ -79,7 +79,8 @@ type
 //		property OnMouseMove;
 	end;
 
-procedure FormFree(var Form: TForm);
+procedure FormFree(var Form: TDForm); overload;
+procedure FormFree(var Form: TForm); overload;
 function FormDraw(const Form: TForm): BG;
 
 procedure glShadowText(Canvas: TCanvas;
@@ -87,16 +88,18 @@ procedure glShadowText(Canvas: TCanvas;
 procedure glTextOut(Canvas: TCanvas;
 	const X, Y: Integer; const Text: string; const C: TColor);
 procedure ShowTaskBar(Visible: Boolean);
-function GetDesktopRect(var Rect: TRect): SG{Up, Down, Left, Right};
+function GetDesktopRect(out Rect: TRect): SG; deprecated;
 
 procedure Register;
 
 const
-	FormBorder = 8;
+	FormBorder = 10;
+	FreeFormAfterClose = True;
 var
 	DesktopHWnd: HWnd;
 	DesktopDC: HDC;
 
+function ActiveForm: TForm;
 procedure SetControlEnabled(Component: TComponent; E: BG);
 function GetDesktop: BG;
 procedure ReleaseDesktop;
@@ -105,11 +108,24 @@ implementation
 
 uses
 	Math,
-	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo;
+	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, Types;
 const
 	OneBuffer = False;
+
+function ActiveForm: TForm;
 var
-	FBitmapF: TDBitmap;
+	i: SG;
+begin
+	Result := Application.MainForm;
+	for i := 0 to Screen.FormCount - 1 do
+	begin
+		if Screen.Forms[i].Active then
+		begin
+			Result := Screen.Forms[i];
+			Break;
+		end;
+	end;
+end;
 
 procedure SetControlEnabled(Component: TComponent; E: BG);
 var i: SG;
@@ -153,17 +169,26 @@ begin
 end;
 
 function FormDraw(const Form: TForm): BG;
-var WindowLong: S4;
+//var WindowLong: S4;
 begin
 	Result := False;
 	if not Assigned(Form) then Exit;
 
-	WindowLong := GetWindowLong(Form.Handle, GWL_STYLE);
-	if WindowLong and WS_VISIBLE = 0 then Exit;
+{	WindowLong := GetWindowLong(Form.Handle, GWL_STYLE);
+	if WindowLong and WS_VISIBLE = 0 then Exit;}
 //	Assert(Form.Visible = True);
 	if Form.Visible = False then Exit;
 //	if Form.WindowState = wsMinimized then Exit; // DNW
 	Result := True;
+end;
+
+procedure FormFree(var Form: TDForm);
+begin
+	if Assigned(Form) then
+	begin
+		Form.Close; // Free does not call Close and CloseQuery events
+		FreeAndNil(Form);
+	end;
 end;
 
 procedure FormFree(var Form: TForm);
@@ -260,7 +285,7 @@ begin
 		ShowWindow(hTaskBar, SW_HIDE);
 end;
 
-function GetDesktopRect(var Rect: TRect): SG;
+function GetDesktopRect(out Rect: TRect): SG;
 var
 	hTaskBar: HWND;
 	RectT: TRect;
@@ -312,6 +337,7 @@ const
 	FullScreenMode: TScreenMode = (Width: 640; Height: 480; Bits: 32; RefreshRate: 0);
 var
 	Style: S4;
+	Rect: TRect;
 begin
 	if Value then
 	begin
@@ -327,7 +353,9 @@ begin
 		Style := Style and not WS_THICKFRAME;
 		SetWindowLong(Handle, GWL_STYLE, Style);
 		WindowState := wsMaximized;
-		SetBounds(0, 0, Screen.Width, Screen.Height); // -> PopupMenu is visibled
+
+		Rect := Screen.MonitorFromWindow(Handle).BoundsRect;
+		SetBounds(Rect.Left, Rect.Top, Rect.Right - Rect.Left, Rect.Bottom - Rect.Top); // -> PopupMenu is visibled
 		InitBackground(False);
 	end
 	else
@@ -344,12 +372,22 @@ begin
 	ResizeMessage;
 end;
 
+function SameRect(const R1, R2: TRect): BG;
+begin
+	Result :=
+		(R1.Left = R2.Left) and
+		(R1.Right = R2.Right) and
+		(R1.Top = R2.Top) and
+		(R1.Bottom = R2.Bottom);
+end;
+
 procedure TDForm.SetFullScreen(Value: Boolean);
 begin
 	if FFullScreen <> Value then
 	begin
 		FFullScreen := Value;
-		ShowTaskBar(not Value);
+		if not SameRect(Screen.MonitorFromWindow(Handle).WorkareaRect, Screen.MonitorFromWindow(Handle).BoundsRect) then
+			ShowTaskBar(not Value);
 		Common(Value);
 	end;
 end;
@@ -392,17 +430,6 @@ begin
 				baGradient:
 				begin
 					FBitmapB.FormBitmap(Color);
-					if FBitmapF <> nil then
-						FBitmapB.Texture(FBitmapF, ef04);
-				end;
-				baGradientOnly:
-				begin
-					FBitmapB.FormBitmap(Color);
-				end;
-				baBitmap:
-				begin
-					if FBitmapF <> nil then
-						FBitmapB.Texture(FBitmapF, ef16);
 				end;
 				end;
 			end;
@@ -432,8 +459,6 @@ begin
 end;
 
 procedure TDForm.SetBackground(Value: TBackground);
-var
-	FileName: TFileName;
 begin
 	if FBackground <> Value then
 	begin
@@ -448,26 +473,6 @@ begin
 		end;
 
 		FBackground := Value;
-
-		case FBackground of
-		baBitmap, baGradient:
-		begin
-			if FBitmapF = nil then
-			begin
-				FBitmapF := TDBitmap.Create;
-				FBitmapF.SetSize(0, 0);
-				FileName := GraphDir + 'Form.png';
-				if FileExists(FileName) then
-					FBitmapF.LoadFromFile(FileName)
-				else
-				begin
-					FileName := GraphDir + 'Form.jpg';
-					if FileExists(FileName) then
-						FBitmapF.LoadFromFile(FileName);
-				end;
-			end;
-		end;
-		end;
 
 		InitBackground(True);
 
@@ -501,14 +506,18 @@ procedure TDForm.CheckPos;
 var
 	Rect: TRect;
 begin
-	if Screen.MonitorCount = 1 then // TODO Monitors...
+{	if Screen.MonitorCount = 1 then
 	begin
 		GetDesktopRect(Rect);
-		if Left + Width > Rect.Right - Rect.Left then Left := Rect.Right - Rect.Left - Width;
-		if Top + Height > Rect.Bottom - Rect.Top then Top := Rect.Bottom - Rect.Top - Height;
-		if Left < Rect.Left then Left := Rect.Left;
-		if Top < Rect.Top then Top := Rect.Top;
-	end;
+	end
+	else
+	begin}
+		Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;
+//	end;
+	if Left + Width > Rect.Right then Left := Rect.Right - Width;
+	if Top + Height > Rect.Bottom then Top := Rect.Bottom - Height;
+	if Left < Rect.Left then Left := Rect.Left;
+	if Top < Rect.Top then Top := Rect.Top;
 end;
 
 
@@ -517,6 +526,8 @@ var
 	FileName: TFileName;
 begin
 	inherited Create(AOwner);
+
+	DefaultMonitor := dmDesktop;
 
 	CheckPos;
 //	DoubleBuffered := True;
@@ -583,8 +594,8 @@ procedure TDForm.ResizeScene;
 begin
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity;
-		if (ClientHeight > 0) and (Screen.Height > 0) then
-			gluPerspective(60 * ClientHeight / Screen.Height,
+		if (ClientHeight > 0) and (ClientWidth > 0) then
+			gluPerspective(60 {* Min(ClientHeight / Screen.Height, ClientWidth / Screen.Width)},
 				ClientWidth / ClientHeight,
 				0.1,
 				100000.0);
@@ -802,8 +813,29 @@ begin
 	RegisterComponents('DComp', [TDForm]);
 end;
 
-Initialization
+procedure TDForm.Center;
+var
+	CenterForm: TForm;
+	X, Y: SG;
+	Rect: TRect;
+begin
+	CenterForm := ActiveForm;
+	if Assigned(CenterForm) then
+	begin
+		X := ((CenterForm.Width - Width) div 2) + CenterForm.Left;
+		Y := ((CenterForm.Height - Height) div 2) + CenterForm.Top;
+	end
+	else
+	begin
+		Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;
+		X := Rect.Left + (Rect.Right - Rect.Left - Width) div 2;
+		Y := Rect.Top + (Rect.Bottom - Rect.Top - Height) div 2;
+	end;
+{	if X > Rect.Right - Width then X := Rect.Right - Width;
+	if Y > Rect.Bottom - Height then Y := Rect.Bottom - Height;
+	if X < Rect.Left then X := Rect.Left;
+	if Y < Rect.Top then Y := Rect.Top;}
+	SetBounds(X, Y, Width, Height);
+end;
 
-Finalization
-	FreeAndNil(FBitmapF);
 end.

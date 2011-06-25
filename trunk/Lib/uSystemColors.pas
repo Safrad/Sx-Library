@@ -1,7 +1,7 @@
 //* File:     Lib\uSystemColors.pas
 //* Created:  2000-05-01
 //* Modified: 2007-05-08
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

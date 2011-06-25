@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\ufGrate.pas
 //* Created:  1999-08-01
-//* Modified: 2007-05-20
-//* Version:  1.1.40.9
+//* Modified: 2008-05-15
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -115,16 +115,17 @@ end;
 
 procedure TfGrate.FormCreate(Sender: TObject);
 begin
+	inherited;
 	Background := baUser;
 	FullScreen := True;
 	MenuSet(PopupMenu1);
 
-	RWOptions(False);
+	MainIni.RegisterRW(RWOptions);
 end;
 
 procedure TfGrate.FormDestroy(Sender: TObject);
 begin
-	RWOptions(True);
+	MainIni.UnregisterRW(RWOptions);
 end;
 
 procedure TfGrate.Centered1Click(Sender: TObject);

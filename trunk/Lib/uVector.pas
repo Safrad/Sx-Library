@@ -1,7 +1,7 @@
 //* File:     Lib\uVector.pas
 //* Created:  2006-05-03
-//* Modified: 2008-09-03
-//* Version:  1.1.41.9
+//* Modified: 2009-03-22
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -63,6 +63,7 @@ function AbsVector(const V: TVector): TVector;
 function NotVector(const V: TVector): TVector;
 function ExpVector(const V: TVector): TVector;
 function FactVector(const V: TVector): TVector;
+function GammaVector(const V: TVector): TVector;
 function CompareVector(const V1, V2: TVector): FA;
 function ShlVector(const V1, V2: TVector): TVector;
 function ShrVector(const V1, V2: TVector): TVector;
@@ -78,7 +79,7 @@ function VectorToStr(const V: TVector; const OutputFormat: TOutputFormat): strin
 implementation
 
 uses
-	Math,
+	Math, GammaF,
 	uMath;
 
 function NullVector: TVector;
@@ -260,21 +261,37 @@ begin
 	x := 1;
 	for i := 0 to 0 do
 	begin
-		e := VectorToNum(V); // TODO : Factor 1.5 =
-		if e < 0 then
+		e := VectorToNum(V);
+		if Frac(e) = 0 then
 		begin
-//				ShowError('Input -infinity..2000 for Fact')
-		end
-		else if e <= 1754 then
-		begin
-			for j := 2 to Round(e) do
-				x := x * j;
+			if e < 0 then
+			begin
+			//				ShowError('Input -infinity..2000 for Fact')
+			end
+			else if e <= 1754 then
+			begin
+				for j := 2 to Round(e) do
+					x := x * j;
+			end
+			else
+			begin
+				if e > 1754 then x := Infinity;
+			end;
 		end
 		else
 		begin
-			if e > 1754 then x := Infinity;
+			x := Gamma(e + 1);
 		end;
 	end;
+	Result := NumToVector(x);
+end;
+
+function GammaVector(const V: TVector): TVector;
+var
+	e, x: FA;
+begin
+	e := VectorToNum(V);
+	x := Gamma(e);
 	Result := NumToVector(x);
 end;
 

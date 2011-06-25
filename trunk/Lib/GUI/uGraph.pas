@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uGraph.pas
 //* Created:  1999-05-01
-//* Modified: 2007-08-20
-//* Version:  1.1.40.9
+//* Modified: 2008-04-01
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -203,13 +203,25 @@ begin
 	if Canvas.TextWidth(DelCharsF(Result, '&')) > Width then
 	begin
 		w := Length(Result);
-		while w > 1 do
+		while w >= 1 do
 		begin
-			if Canvas.TextWidth(DelCharsF(Result, '&') + cDialogSuffix) <= Width then Break;
+			if Canvas.TextWidth(DelCharsF(Result, '&') + cDialogSuffix) <= Width then
+			begin
+				Result := Result + cDialogSuffix;
+				Exit;
+			end;
 			Dec(w);
 			SetLength(Result, w);
 		end;
-		Result := Result + cDialogSuffix;
+
+		Result := cDialogSuffix;
+		w := Length(Result);
+		while w >= 1 do
+		begin
+			if Canvas.TextWidth(Result) <= Width then Exit;
+			Dec(w);
+			SetLength(Result, w);
+		end;
 	end;
 end;
 

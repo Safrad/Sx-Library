@@ -1,7 +1,7 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2008-07-19
-//* Version:  1.1.41.9
+//* Modified: 2009-05-12
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -40,16 +40,11 @@ function GetFileModificationDateTime(const FileName: TFileName): TFileTime;
 function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 function ShortDir(const Dir: string): string;
 
-type
-	TStringPair = record
-		Variable: string;
-		Value: string;
-	end;
-
-function RemoveCustomEV(Dir: string; const Environment :array of TStringPair): string;
-function RemoveEV(Dir: string): string;
+function RemoveEV(const Dir: string): string; overload;
+function RemoveEV(Dir: string; const Environment: array of TStringPair): string; overload;
 function ExpandDir(Dir: string): string;
 function DelFileExt(const FName: string): string;
+function DelFileName(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
 function ParentDir(var Dir: string): BG;
 function ParentDirF(Dir: string): string;
@@ -76,6 +71,7 @@ function NewFileOrDirEx(var FileOrDir: string): BG;
 function CopyFileDateTime(const Source, Dest: string): BG;
 function CopyDirOnly(const Source, Dest: string): BG;
 function CopyDir(const Source, Dest: string): BG;
+procedure BackupFile(const FileName: TFileName);
 
 function DeleteFileEx(const FileName: TFileName): BG;
 function RemoveDirEx(const DirName: string): BG;
@@ -103,7 +99,7 @@ function LongToShortPath(const LongName: string): string;}
 
 function RepairDirectory(const Dir: TFileName): TFileName;
 {$ifndef Console}
-function ExecuteDialog(Dialog: TOpenDialog; var FileName: TFileName): BG; overload;
+function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG; overload;
 {$endif}
 function SameFiles(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
@@ -130,6 +126,49 @@ uses
 	Math,
 	uMsg, uProjectInfo, uFile, uSorts,
 	uOutputFormat, uMath, uLog;
+
+var
+	StartupEnvironment: array of TStringPair;
+
+procedure InitStartupEnvironment;
+var
+	EnvironmentBlock, EnvironmentBlock2: LPTSTR;
+	Line: string;
+	i: SG;
+	InlineIndex: SG;
+	NewSize: SG;
+begin
+	EnvironmentBlock := GetEnvironmentStrings;
+	try
+		if EnvironmentBlock = nil then
+		begin
+			Warning('GetEnvironmentStrings failed (%1)', [ErrorCodeToStr(GetLastError)]);
+			Exit;
+		end;
+
+		SetLength(StartupEnvironment, 0);
+		EnvironmentBlock2 := EnvironmentBlock;
+		i := 0;
+		while EnvironmentBlock2[1] <> #0 do
+		begin
+			Line := EnvironmentBlock2;
+			if Line = '' then Break;
+			NewSize := i + 1;
+			if AllocByExp(Length(StartupEnvironment), NewSize) then
+			begin
+				SetLength(StartupEnvironment, NewSize);
+			end;
+			InlineIndex := 1;
+			StartupEnvironment[i].Name := ReadToChar(Line, InlineIndex, '=');
+			StartupEnvironment[i].Value := Copy(Line, InlineIndex, MaxInt);
+			Inc(EnvironmentBlock2, Length(Line) + 1);
+			Inc(i);
+		end;
+		SetLength(StartupEnvironment, i);
+	finally
+		FreeEnvironmentStrings(EnvironmentBlock);
+	end;
+end;
 
 procedure InitPaths;
 var
@@ -209,6 +248,7 @@ begin
 
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
 //	CorrectDir(DocsDir);
+	InitStartupEnvironment;
 
 	MainIniFileName := WorkDir + GetProjectInfo(piInternalName) + '.ini';
 	if not FileExists(MainIniFileName) then
@@ -220,9 +260,30 @@ begin
 		MainLogFileName := WorkDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
 end;
 
-function ShortDir(const Dir: string): string;
+// i.e. C:\WINDOWS -> %systemroot%
+function InsertEnvironmentVariables(const Dir: string): string;
 var
-	i: Integer;
+	i: SG;
+	n: SG;
+begin
+	Result := Dir;
+	for i := 0 to Length(StartupEnvironment) - 1 do
+	begin
+		if Pos(':\', StartupEnvironment[i].Value) <> 0 then
+		begin
+			n := Pos(StartupEnvironment[i].Value, Result);
+			if n > 0 then
+			begin
+				Delete(Result, n, Length(StartupEnvironment[i].Value));
+				Insert('%' + StartupEnvironment[i].Name + '%', Result, n);
+			end;
+		end;
+	end;
+end;
+
+function RemoveWorkDir(const Dir: string): string;
+var
+	i: SG;
 begin
 	Result := Dir;
 	if Length(WorkDir) <= Length(Dir) then
@@ -240,8 +301,11 @@ begin
 		end;
 		SetLength(Result, Length(Dir) - Length(WorkDir));
 	end;
+end;
 
-	// TODO: C:\Windows -> %windir%
+function ShortDir(const Dir: string): string;
+begin
+	Result := InsertEnvironmentVariables(RemoveWorkDir(Dir));
 end;
 
 function FindEnvironmentVariable(const Variable: string; const Environment: array of TStringPair): string;
@@ -250,7 +314,7 @@ begin
 	Result := '';
 	for i := 0 to Length(Environment) - 1 do
 	begin
-		if Environment[i].Variable = Variable then
+		if Environment[i].Name = Variable then
 		begin
 			Result := Environment[i].Value;
 			Break;
@@ -258,38 +322,15 @@ begin
 	end;
 end;
 
-function RemoveCustomEV(Dir: string; const Environment: array of TStringPair): string;
-var
-	i, Start: SG;
-	Variable, Value: string;
+function RemoveEV(const Dir: string): string; overload;
 begin
-	i := 1;
-	while i <= Length(Dir) do
-	begin
-		if Dir[i] = '%' then
-		begin
-			Start := i;
-			Inc(i);
-			Variable := ReadToChar(Dir, i, '%');
-			if (i > Length(Dir) + 1) then Break; // next % not found
-
-			Value := FindEnvironmentVariable(Variable, Environment);
-
-			Delete(Dir, Start, i - Start);
-			Insert(Value, Dir, Start);
-			i := Start + Length(Value);
-		end
-		else
-			Inc(i);
-	end;
-	Result := Dir;
+	Result := RemoveEV(Dir, []);
 end;
 
-function RemoveEV(Dir: string): string;
+function RemoveEV(Dir: string; const Environment: array of TStringPair): string; overload;
 var
 	i, Start: SG;
 	Variable, Value: string;
-	NewLength: SG;
 begin
 	i := 1;
 	while i <= Length(Dir) do
@@ -301,9 +342,14 @@ begin
 			Variable := ReadToChar(Dir, i, '%');
 			if (i > Length(Dir) + 1) then Break; // next % not found
 
-			SetLength(Value, MAX_PATH);
-			NewLength := GetEnvironmentVariable(PChar(Variable), PChar(Value), Max_PATH);
-			SetLength(Value, NewLength);
+			if Length(Environment) > 0 then
+			begin
+				Value := FindEnvironmentVariable(Variable, Environment)
+			end
+			else
+			begin
+				Value := GetEnvironmentVariable(Variable);
+			end;
 
 			Delete(Dir, Start, i - Start);
 			Insert(Value, Dir, Start);
@@ -362,6 +408,20 @@ begin
 	Result := FName;
 	Ext := ExtractFileExt(FName);
 	if Length(Ext) > 0 then SetLength(Result, Length(Result) - Length(Ext));
+end;
+
+function DelFileName(const FName: string): string;
+var i: SG;
+begin
+	for i := Length(FName) downto 1 do
+	begin
+		if FName[i] in ['/', '\'] then
+		begin
+			Result := Copy(FName, 1, i);
+			Exit;
+		end;
+	end;
+	Result := '';
 end;
 
 function AddAfterName(const FName: string; const Text: string): string;
@@ -564,11 +624,11 @@ begin
 		IOError(Path + SubPath, ErrorCode);
 	SysUtils.FindClose(SearchRec);
 
-  if ListCount = 0 then Exit;
+	if ListCount = 0 then Exit;
 
 	SetLength(AIndex, ListCount);
 	FillOrderU4(AIndex[0], ListCount);
-  GList := @TSearchRecs(List);
+	GList := @TSearchRecs(List);
 	Sort(PArraySG(AIndex), ListCount, Compare);
 
 	NewSize := FilesCount + ListCount;
@@ -852,6 +912,7 @@ function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
 label LRetry;
 var ErrorCode: U4;
 begin
+	MainLogAdd('Copy file ' + AddQuoteF(Source) + ' to ' + AddQuoteF(Dest), mlDebug);
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
 	LRetry:
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
@@ -885,11 +946,77 @@ begin
 end;
 
 var
-  {Table of CRCs of all 8-bit messages}
-  crc_table: Array[0..255] of Cardinal;
-  {Flag: has the table been computed? Initially false}
-  crc_table_computed: Boolean;
-
+	{Table of CRCs of all 8-bit messages}
+	crc_table: Array[0..255] of Cardinal;
+	{Flag: has the table been computed? Initially false}
+	crc_table_computed: Boolean;
+(*
+const crc_table: Array[0..255] of DWord = // CRC-32-IEEE 802.3
+			($00000000, $77073096, $EE0E612C, $990951BA,
+			$076DC419, $706AF48F, $E963A535, $9E6495A3,
+			$0EDB8832, $79DCB8A4, $E0D5E91E, $97D2D988,
+			$09B64C2B, $7EB17CBD, $E7B82D07, $90BF1D91,
+			$1DB71064, $6AB020F2, $F3B97148, $84BE41DE,
+			$1ADAD47D, $6DDDE4EB, $F4D4B551, $83D385C7,
+			$136C9856, $646BA8C0, $FD62F97A, $8A65C9EC,
+			$14015C4F, $63066CD9, $FA0F3D63, $8D080DF5,
+			$3B6E20C8, $4C69105E, $D56041E4, $A2677172,
+			$3C03E4D1, $4B04D447, $D20D85FD, $A50AB56B,
+			$35B5A8FA, $42B2986C, $DBBBC9D6, $ACBCF940,
+			$32D86CE3, $45DF5C75, $DCD60DCF, $ABD13D59,
+			$26D930AC, $51DE003A, $C8D75180, $BFD06116,
+			$21B4F4B5, $56B3C423, $CFBA9599, $B8BDA50F,
+			$2802B89E, $5F058808, $C60CD9B2, $B10BE924,
+			$2F6F7C87, $58684C11, $C1611DAB, $B6662D3D,
+			$76DC4190, $01DB7106, $98D220BC, $EFD5102A,
+			$71B18589, $06B6B51F, $9FBFE4A5, $E8B8D433,
+			$7807C9A2, $0F00F934, $9609A88E, $E10E9818,
+			$7F6A0DBB, $086D3D2D, $91646C97, $E6635C01,
+			$6B6B51F4, $1C6C6162, $856530D8, $F262004E,
+			$6C0695ED, $1B01A57B, $8208F4C1, $F50FC457,
+			$65B0D9C6, $12B7E950, $8BBEB8EA, $FCB9887C,
+			$62DD1DDF, $15DA2D49, $8CD37CF3, $FBD44C65,
+			$4DB26158, $3AB551CE, $A3BC0074, $D4BB30E2,
+			$4ADFA541, $3DD895D7, $A4D1C46D, $D3D6F4FB,
+			$4369E96A, $346ED9FC, $AD678846, $DA60B8D0,
+			$44042D73, $33031DE5, $AA0A4C5F, $DD0D7CC9,
+			$5005713C, $270241AA, $BE0B1010, $C90C2086,
+			$5768B525, $206F85B3, $B966D409, $CE61E49F,
+			$5EDEF90E, $29D9C998, $B0D09822, $C7D7A8B4,
+			$59B33D17, $2EB40D81, $B7BD5C3B, $C0BA6CAD,
+			$EDB88320, $9ABFB3B6, $03B6E20C, $74B1D29A,
+			$EAD54739, $9DD277AF, $04DB2615, $73DC1683,
+			$E3630B12, $94643B84, $0D6D6A3E, $7A6A5AA8,
+			$E40ECF0B, $9309FF9D, $0A00AE27, $7D079EB1,
+			$F00F9344, $8708A3D2, $1E01F268, $6906C2FE,
+			$F762575D, $806567CB, $196C3671, $6E6B06E7,
+			$FED41B76, $89D32BE0, $10DA7A5A, $67DD4ACC,
+			$F9B9DF6F, $8EBEEFF9, $17B7BE43, $60B08ED5,
+			$D6D6A3E8, $A1D1937E, $38D8C2C4, $4FDFF252,
+			$D1BB67F1, $A6BC5767, $3FB506DD, $48B2364B,
+			$D80D2BDA, $AF0A1B4C, $36034AF6, $41047A60,
+			$DF60EFC3, $A867DF55, $316E8EEF, $4669BE79,
+			$CB61B38C, $BC66831A, $256FD2A0, $5268E236,
+			$CC0C7795, $BB0B4703, $220216B9, $5505262F,
+			$C5BA3BBE, $B2BD0B28, $2BB45A92, $5CB36A04,
+			$C2D7FFA7, $B5D0CF31, $2CD99E8B, $5BDEAE1D,
+			$9B64C2B0, $EC63F226, $756AA39C, $026D930A,
+			$9C0906A9, $EB0E363F, $72076785, $05005713,
+			$95BF4A82, $E2B87A14, $7BB12BAE, $0CB61B38,
+			$92D28E9B, $E5D5BE0D, $7CDCEFB7, $0BDBDF21,
+			$86D3D2D4, $F1D4E242, $68DDB3F8, $1FDA836E,
+			$81BE16CD, $F6B9265B, $6FB077E1, $18B74777,
+			$88085AE6, $FF0F6A70, $66063BCA, $11010B5C,
+			$8F659EFF, $F862AE69, $616BFFD3, $166CCF45,
+			$A00AE278, $D70DD2EE, $4E048354, $3903B3C2,
+			$A7672661, $D06016F7, $4969474D, $3E6E77DB,
+			$AED16A4A, $D9D65ADC, $40DF0B66, $37D83BF0,
+			$A9BCAE53, $DEBB9EC5, $47B2CF7F, $30B5FFE9,
+			$BDBDF21C, $CABAC28A, $53B39330, $24B4A3A6,
+			$BAD03605, $CDD70693, $54DE5729, $23D967BF,
+			$B3667A2E, $C4614AB8, $5D681B02, $2A6F2B94,
+			$B40BBE37, $C30C8EA1, $5A05DF1B, $2D02EF8D);
+*)
 {Make the table for a fast CRC.}
 procedure make_crc_table;
 var
@@ -904,38 +1031,39 @@ begin
 		for k := 0 to 7 do
 		begin
 			if Boolean(c and 1) then
-				c := $edb88320 xor (c shr 1)
+				c := $edb88320 xor (c shr 1) // CRC-32-IEEE 802.3
 			else
 				c := c shr 1;
 		end;
 		crc_table[n] := c;
-  end;
+	end;
 
-  {The table has already being computated}
-  crc_table_computed := true;
+	{The table has already being computated}
+	crc_table_computed := true;
 end;
 
-{Update a running CRC with the bytes buf[0..len-1]--the CRC
- should be initialized to all 1's, and the transmitted value
- is the 1's complement of the final running CRC (see the
- crc() routine below)).}
+{ Update a running CRC with the bytes buf[0..len-1]--the CRC
+	should be initialized to all 1's, and the transmitted value
+	is the 1's complement of the final running CRC (see the
+	crc() routine below)).}
+// CRC = Cyclic Redundency Check
 function CalcCRC(crc: U4; buf: pByteArray; len: Integer): Cardinal;
 var
-  c: Cardinal;
-  n: Integer;
+	c: Cardinal;
+	n: Integer;
 begin
-  c := crc;
+	c := crc;
 
-  {Create the crc table in case it has not being computed yet}
-  if not crc_table_computed then make_crc_table;
+	{Create the crc table in case it has not being computed yet}
+	if not crc_table_computed then make_crc_table;
 
 	{Update}
 	{$r-}
 	for n := 0 to len - 1 do
 		c := crc_table[(c XOR buf^[n]) and $FF] XOR (c shr 8);
 
-  {Returns}
-  Result := c;
+	{Returns}
+	Result := c;
 end;
 
 procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSize: U8 = GB; const CreateCRCFile: BG = False);
@@ -952,18 +1080,18 @@ var
 	CRC: U4;
 begin
 	SourceFileSize := GetFileSizeU(Source);
-	if MaxFileSize > SourceFileSize then
+(*	if MaxFileSize > SourceFileSize then
 	begin
 		CopyFileToDir(Source, Dest, True);
 		Exit;
-	end;
+	end; *)
 	Assert((MaxFileSize >= 1));
 
 	FileNamePrefix := Dest + DelFileExt(ExtractFileName(Source));
 	SourceFile := TFile.Create;
 	GetMem(Buf, DefFileBuffer);
 	try
-		CRC := 0;
+		CRC := $ffffffff;
 		if SourceFile.Open(Source, fmReadOnly) then
 		begin
 			RemainSource := SourceFileSize;
@@ -993,6 +1121,7 @@ begin
 			end;
 			SourceFile.Close;
 		end;
+		CRC := CRC xor $ffffffff;
 		if CreateCRCFile then
 			WriteCRCFile(ExtractFileName(Source), SourceFileSize, CRC, FileNamePrefix + '.crc');
 	finally
@@ -1088,7 +1217,7 @@ begin
 		DirE := ExtractFileExt(FileOrDir);
 	end;
 	i := 0;
-	while True do
+	while i <= 9999 do
 	begin
 		if i > 0 then
 		begin
@@ -1176,9 +1305,21 @@ begin
 	SysUtils.FindClose(SearchRec);
 end;
 
+procedure BackupFile(const FileName: TFileName);
+var FileNameD: TFileName;
+begin
+	if FileExists(FileName) = False then Exit;
+	FileNameD := TempDir;
+	if DirectoryExists(FileNameD) = False then
+		CreateDirEx(FileNameD);
+	FileNameD := FileNameD + ExtractFileName(FileName);
+	if NewFileOrDirEx(string(FileNameD)) then
+		uFiles.CopyFile(FileName, FileNameD, True);
+end;
+
 function DeleteFileEx(const FileName: TFileName): BG;
 begin
-	MainLog.Add('Delete file: ' + FileName, mlDebug);
+	MainLogAdd('Delete file ' + AddQuoteF(FileName), mlDebug);
 	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
 	Result := DeleteFile(PChar(FileName));
 	if Result = False then
@@ -1187,7 +1328,7 @@ end;
 
 function RemoveDirEx(const DirName: string): BG;
 begin
-	MainLog.Add('Remove directory: ' + DirName, mlDebug);
+	MainLogAdd('Remove directory ' + AddQuoteF(DirName), mlDebug);
 	Result := RemoveDirectory(PChar(DirName));
 	if Result = False then
 		IOError(DirName, GetLastError);
@@ -1594,13 +1735,13 @@ begin
 end;
 
 {$ifndef Console}
-function ExecuteDialog(Dialog: TOpenDialog; var FileName: TFileName): BG;
+function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG;
 begin
 	Dialog.FileName := ExtractFileName(FileName);
 	Dialog.InitialDir := RepairDirectory(ExtractFilePath(FileName));
 	Result := Dialog.Execute;
 	if Result then
-		FileName := {ShortDir(}Dialog.FileName{)};
+		FileName := ShortDir(Dialog.FileName);
 end;
 {$endif}
 
@@ -1803,7 +1944,6 @@ begin
 	Result := Result + AllFiles;
 end;
 
-//* @return i.e. 'Text file (*.txt;*.text)|*.txt;*.text'
 function GetFileNameFilter(const Description: string; const Extensions: array of string): string;
 var
 	i: SG;
@@ -1823,7 +1963,7 @@ begin
 			s := Extensions[i];
 		end;
 		ExtString := ExtString + s;
-		if i = Length(Extensions) - 1 then
+		if i < Length(Extensions) - 1 then
 		begin
 			ExtString := ExtString + ';';
 		end;

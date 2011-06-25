@@ -1,7 +1,7 @@
 //* File:     Lib\uDBF.pas
 //* Created:  1999-12-01
-//* Modified: 2008-04-05
-//* Version:  1.1.41.9
+//* Modified: 2009-01-10
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -29,6 +29,7 @@ type
 		FColumnCount: SG;
 		FFileDate: TDateTime;
 		FItemCount: SG;
+		procedure Close;
 	public
 		Rows: array of BG; // True if row is enabled
 
@@ -36,7 +37,6 @@ type
 		destructor Destroy; override;
 
 		function FindColumn(const Name: string): PColumn;
-		procedure Close;
 
 		function LoadFromFile(const FName: TFileName): Boolean;
 		function SaveToFile(const FName: TFileName): Boolean;
@@ -180,7 +180,7 @@ begin
 							FPTSize := 0;
 					end;
 				end;
-	  		'D': FColumns[FColumnCount].Typ := varString;
+				'D': FColumns[FColumnCount].Typ := varString;
 				else FColumns[FColumnCount].Typ := varNull;
 				end;
 				DelEndSpace(FColumns[FColumnCount].Name);

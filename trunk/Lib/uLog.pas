@@ -1,7 +1,7 @@
 //* File:     Lib\uLog.pas
 //* Created:  2006-05-03
-//* Modified: 2008-04-07
-//* Version:  1.1.41.9
+//* Modified: 2008-12-25
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -25,9 +25,10 @@ type
 		procedure WriteLine(const Line: string);
 	public
 		property FileName: TFileName read FFileName;
-		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG= True);
+		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True);
 		destructor Destroy; override;
-		procedure Add(const Line: string; const LogType: TMessageLevel); override;
+		procedure Add(const Line: string; const MessageLevel: TMessageLevel); override;
+		procedure Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel); override;
 		procedure Flush;
 		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
 	end;
@@ -51,20 +52,24 @@ uses
 procedure TLog.WriteLine(const Line: string);
 var LLog: TLog;
 begin
-	if FDirectWrite then
+	if Length(Line) > 0 then
 	begin
-		if not FFile.Opened then Exit;
-		LLog := MainLog;
-		MainLog := nil;
-		try
-			FFile.Write(Line);
-		finally
-			MainLog := LLog;
+		if FDirectWrite then
+		begin
+			if not FFile.Opened then Exit;
+			LLog := MainLog;
+			MainLog := nil;
+			try
+			//	FFile.Write(Line);
+				FFile.BlockWrite(Line[1], Length(Line))
+			finally
+				MainLog := LLog;
+			end;
+		end
+		else
+		begin
+			FData := FData + Line;
 		end;
-	end
-	else
-	begin
-		FData := FData + Line;
 	end;
 end;
 
@@ -110,6 +115,7 @@ begin
 	Add('Finished', mlInformation);
 	if Assigned(FFile) then
 	begin
+		Flush;
 		FFile.Close;
 		FreeAndNil(FFile);
 	end;
@@ -117,13 +123,18 @@ begin
 	inherited;
 end;
 
-procedure TLog.Add(const Line: string; const LogType: TMessageLevel);
+procedure TLog.Add(const Line: string; const MessageLevel: TMessageLevel);
 begin
-	Assert(LogType <> mlNone);
-	if LogType >= FLoggingLevel then
+	Add(Now, Line, MessageLevel);
+end;
+
+procedure TLog.Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel);
+begin
+	Assert(MessageLevel <> mlNone);
+	if MessageLevel >= FLoggingLevel then
 	begin
-		WriteLine(DateTimeToS(Now, 3, ofIO) + CharTab + FirstChar(MessageLevelStr[LogType]) + CharTab + AddEscape(Line) + FileSep);
-		Flush;
+		WriteLine(DateTimeToS(LogTime, 3, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line) + FileSep);
+//		Flush;
 	end;
 end;
 

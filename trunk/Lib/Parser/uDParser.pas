@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uDParser.pas
 //* Created:  2004-03-07
 //* Modified: 2008-09-03
-//* Version:  1.1.41.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -517,7 +517,8 @@ begin
 			{'!': Base := 10;}
 			'$', 'x', 'X', 'h', 'H': Base := 16;
 			'*', '/', ':', '^', ')', '(': Break;
-			'-', '+': if (Base <> 10) or (UpCase(BufR[BufRI - 1]) <> 'E') then Break else UnarExp := True;
+			'-': if (Base <> 10) or (UpCase(BufR[BufRI - 1]) <> 'E') then Break else UnarExp := True;
+			'+': if (Base <> 10) or (UpCase(BufR[BufRI - 1]) <> 'E') then Break;
 	{					',':
 			begin
 				if BufR[BufRI + 1] = ' ' then
@@ -549,6 +550,10 @@ begin
 							Num := 10 + Ord(UpCase(BufR[BufRI])) - Ord('A')
 						else if UpCase(BufR[BufRI]) = 'E' then
 						begin
+							if Where = whExp then
+							begin
+								Break;
+							end;
 							Where := whExp;
 							Base := 10;
 							Point := False;

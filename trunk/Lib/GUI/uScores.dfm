@@ -1,5 +1,5 @@
 object fScores: TfScores
-  Left = 542
+  Left = 2560
   Top = 442
   Width = 497
   Height = 292

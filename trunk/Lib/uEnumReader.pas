@@ -1,7 +1,7 @@
 //* File:     Lib\uEnumReader.pas
 //* Created:  2008-07-26
 //* Modified: 2008-07-19
-//* Version:  1.1.41.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

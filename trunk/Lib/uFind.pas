@@ -1,7 +1,7 @@
 //* File:     Lib\uFind.pas
 //* Created:  1999-05-01
 //* Modified: 2007-05-11
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -188,7 +188,7 @@ begin
 	while i <= Length(Str) - Length(SubStr) do
 	begin
 		for j := 0 to Length(SubStr) - 1 do
-			if  Str[i + j + 1] <> SubStr[j + 1] then goto LNFound;
+			if Str[i + j + 1] <> SubStr[j + 1] then goto LNFound;
 		Result := i + 1;
 		Exit;
 		LNFound:

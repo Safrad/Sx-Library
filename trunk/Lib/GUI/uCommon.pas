@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uCommon.pas
 //* Created:  2004-01-06
-//* Modified: 2008-09-20
-//* Version:  1.1.41.9
+//* Modified: 2009-05-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,7 +11,7 @@ unit uCommon;
 interface
 
 uses
-	uTypes, uWatch, uDForm,
+	uTypes, uDForm,
 	Menus;
 
 {
@@ -32,7 +32,7 @@ begin
 end.
 }
 
-procedure CommonCreate(const ReloadIni: TWatchFileChanged; const Special: BG = False);
+procedure CommonCreate(const Special: BG = False);
 procedure CommonForm(const Form: TDForm);
 procedure CommonFree;
 
@@ -41,35 +41,49 @@ procedure CommonFileMenu(const Menu: TMenu);
 implementation
 
 uses
-	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uMsgDlg, uMsg,
-	uStrings, uWebUpdate,
+	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uMsgDlg, uMsg, uStart,
+	uStrings, uWebUpdate, uStartup,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
 
+type
+	TCommonMenu = class(TObject)
+	private
+		AutomaticallyCheckForUpdate1: TMenuItem;
+		RegisterStartup1: TMenuItem;
+		ShowSplashScreen1: TMenuItem;
+		LoggingLevel1: TMenuItem;
+		procedure Exit1Click(Sender: TObject);
+		procedure LocalHomepage1Click(Sender: TObject);
+		procedure WebHomepage1Click(Sender: TObject);
+		procedure ViewMessages1Click(Sender: TObject);
+		procedure ViewParams1Click(Sender: TObject);
+		procedure CheckForUpdate1Click(Sender: TObject);
+		procedure AutomaticallyCheckForUpdate1Click(Sender: TObject);
+		procedure About1Click(Sender: TObject);
+		procedure ShowSplashScreen1Click(Sender: TObject);
+		procedure RegisterStartup1Click(Sender: TObject);
+		procedure ViewIniFile1Click(Sender: TObject);
+		procedure ViewLogFile1Click(Sender: TObject);
+		procedure ViewAllLogFiles1Click(Sender: TObject);
+		procedure Sounds1Click(Sender: TObject);
+		procedure SetLoggingLevel1Click(Sender: TObject);
+	public
+		procedure RWCommon(const Save: BG);
+	end;
+var
+	CommonMenu: TCommonMenu;
 var
 	AutomaticallyCheckForUpdate: BG;
 
-procedure RWCommon(const Save: BG);
-const
-	Section = 'Options';
-begin
-  if MainIni = nil then Exit;
-	AboutRW(Save);
-	if Save = False then ViewSplashScreen := True;
-	MainIni.RWBool(Section, 'ViewSplashScreen', ViewSplashScreen, Save);
-	if Save = False then AutomaticallyCheckForUpdate := True;
-	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);
-end;
-
-procedure CommonCreate(const ReloadIni: TWatchFileChanged; const Special: BG = False);
+procedure CommonCreate(const Special: BG = False);
 begin
 	if not Special then
 	begin
 		InitInstance;
 		InitializeLog;
 	end;
-	MainIniCreate;
-	WatchAddFile(MainIniFileName, ReloadIni);
-	RWCommon(False);
+	MainIni := TDIniFile.Create(MainIniFileName);
+	MainIni.RegisterRW(CommonMenu.RWCommon);
 	if not Special then
 	begin
 		if ViewSplashScreen then
@@ -127,100 +141,101 @@ end;
 
 procedure CommonFree;
 begin
-	WatchRemoveFile(MainIniFileName);
-	RWCommon(True);
+	if MainIni <> nil then
+		MainIni.UnregisterRW(CommonMenu.RWCommon);
 	FreeSounds;
 	FreeFileExt;
 	Application.MainForm.Free; // Do not use FreeAndNil
-	MainIniFree;
+	FreeAndNil(MainIni);
 	FreeAndNil(MainLog);
 end;
 
-type
-	TOb = class(TObject)
-	private
-		AutomaticallyCheckForUpdate1: TMenuItem;
-		ShowSplashScreen1: TMenuItem;
-		LoggingLevel1: TMenuItem;
-		procedure Exit1Click(Sender: TObject);
-		procedure LocalHomepage1Click(Sender: TObject);
-		procedure WebHomepage1Click(Sender: TObject);
-		procedure ViewMessages1Click(Sender: TObject);
-		procedure ViewParams1Click(Sender: TObject);
-		procedure CheckForUpdate1Click(Sender: TObject);
-		procedure AutomaticallyCheckForUpdate1Click(Sender: TObject);
-		procedure About1Click(Sender: TObject);
-		procedure ShowSplashScreen1Click(Sender: TObject);
-		procedure ViewIniFile1Click(Sender: TObject);
-		procedure ViewLogFile1Click(Sender: TObject);
-		procedure ViewAllLogFiles1Click(Sender: TObject);
-		procedure Sounds1Click(Sender: TObject);
-		procedure SetLoggingLevel1Click(Sender: TObject);
-	end;
-var
-	Ob: TOb;
+{ TCommonMenu }
 
-procedure TOb.Exit1Click(Sender: TObject);
+procedure TCommonMenu.RWCommon(const Save: BG);
+const
+	Section = 'Options';
+begin
+	RWStart(MainIni, Save);
+	if Save = False then ViewSplashScreen := True;
+	MainIni.RWBool(Section, 'ViewSplashScreen', ViewSplashScreen, Save);
+	if Save = False then AutomaticallyCheckForUpdate := True;
+	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);
+end;
+
+procedure TCommonMenu.Exit1Click(Sender: TObject);
 begin
 	if Assigned(Application.MainForm) then
 		Application.MainForm.Close;
 end;
 
-procedure TOb.WebHomepage1Click(Sender: TObject);
+procedure TCommonMenu.WebHomepage1Click(Sender: TObject);
 begin
 	OpenWebHomepage;
 end;
 
-procedure TOb.LocalHomepage1Click(Sender: TObject);
+procedure TCommonMenu.LocalHomepage1Click(Sender: TObject);
 begin
 	OpenLocalHomepage;
 end;
 
-procedure TOb.ViewMessages1Click(Sender: TObject);
+procedure TCommonMenu.ViewMessages1Click(Sender: TObject);
 begin
 	ShowMessages;
 end;
 
-procedure TOb.ViewParams1Click(Sender: TObject);
+procedure TCommonMenu.ViewParams1Click(Sender: TObject);
 begin
 	HelpParams;
 end;
 
-procedure TOb.CheckForUpdate1Click(Sender: TObject);
+procedure TCommonMenu.CheckForUpdate1Click(Sender: TObject);
 begin
 	CheckForUpdate;
 end;
 
-procedure TOb.AutomaticallyCheckForUpdate1Click(Sender: TObject);
+procedure TCommonMenu.AutomaticallyCheckForUpdate1Click(Sender: TObject);
 begin
 	AutomaticallyCheckForUpdate := not AutomaticallyCheckForUpdate;
 	AutomaticallyCheckForUpdate1.Checked := AutomaticallyCheckForUpdate;
 end;
 
-procedure TOb.About1Click(Sender: TObject);
+procedure TCommonMenu.About1Click(Sender: TObject);
 begin
 	ExecuteAbout(Application.MainForm, False);
 end;
 
-procedure TOb.SetLoggingLevel1Click(Sender: TObject);
+procedure TCommonMenu.SetLoggingLevel1Click(Sender: TObject);
 begin
 	MainLog.LoggingLevel := TMessageLevel(TMenuItem(Sender).Tag);
 	LoggingLevel1.Items[TMenuItem(Sender).Tag].Checked := True;
 end;
 
-procedure TOb.ShowSplashScreen1Click(Sender: TObject);
+procedure TCommonMenu.ShowSplashScreen1Click(Sender: TObject);
 begin
 	ViewSplashScreen := not ViewSplashScreen;
 	ShowSplashScreen1.Checked := ViewSplashScreen;
 	if ViewSplashScreen then ShowSplashScreen(False) else HideSplashScreen(True);
 end;
 
-procedure TOb.ViewIniFile1Click(Sender: TObject);
+procedure TCommonMenu.RegisterStartup1Click(Sender: TObject);
+begin
+	if not IsRegisteredStartup then
+	begin
+		RegisterStartup1.Checked := RegisterStartup;
+	end
+	else
+	begin
+		RegisterStartup1.Checked := not UnregisterStartup;
+	end;
+end;
+
+procedure TCommonMenu.ViewIniFile1Click(Sender: TObject);
 begin
 	APIOpen(MainIniFileName);
 end;
 
-procedure TOb.ViewLogFile1Click(Sender: TObject);
+procedure TCommonMenu.ViewLogFile1Click(Sender: TObject);
 begin
 	if Assigned(MainLog) then
 		APIOpen(MainLog.FileName)
@@ -228,12 +243,12 @@ begin
 		APIOpen(MainLogFileName);
 end;
 
-procedure TOb.ViewAllLogFiles1Click(Sender: TObject);
+procedure TCommonMenu.ViewAllLogFiles1Click(Sender: TObject);
 begin
 	APIOpen(ExtractFilePath(MainLogFileName));
 end;
 
-procedure TOb.Sounds1Click(Sender: TObject);
+procedure TCommonMenu.Sounds1Click(Sender: TObject);
 begin
 	FormSounds;
 end;
@@ -270,7 +285,7 @@ begin
 		M.Name := 'Exit1';
 		M.Caption := 'Exit';
 		M.ShortCut := ShortCut(VK_F4, [ssAlt]);
-		M.OnClick := Ob.Exit1Click;
+		M.OnClick := CommonMenu.Exit1Click;
 		File1.Add(M);
 	end;
 
@@ -286,7 +301,7 @@ begin
 		M := TMenuItem.Create(Options1);
 		M.Name := 'ViewIniFile1';
 		M.Caption := 'View Ini File';
-		M.OnClick := Ob.ViewIniFile1Click;
+		M.OnClick := CommonMenu.ViewIniFile1Click;
 		Options1.Add(M);
 
 		Log1 := TMenuItem.Create(Options1);
@@ -297,43 +312,50 @@ begin
 		M := TMenuItem.Create(Log1);
 		M.Name := 'ViewLogFile1';
 		M.Caption := 'View Log File';
-		M.OnClick := Ob.ViewLogFile1Click;
+		M.OnClick := CommonMenu.ViewLogFile1Click;
 		Log1.Add(M);
 
 		M := TMenuItem.Create(Log1);
 		M.Name := 'ViewAllLogFiles1';
 		M.Caption := 'View All Log Files';
-		M.OnClick := Ob.ViewAllLogFiles1Click;
+		M.OnClick := CommonMenu.ViewAllLogFiles1Click;
 		Log1.Add(M);
 
-		Ob.LoggingLevel1 := TMenuItem.Create(Log1);
-		Ob.LoggingLevel1.Name := 'LoggingLevel1';
-		Ob.LoggingLevel1.Caption := 'Logging Level';
-		Log1.Add(Ob.LoggingLevel1);
+		CommonMenu.LoggingLevel1 := TMenuItem.Create(Log1);
+		CommonMenu.LoggingLevel1.Name := 'LoggingLevel1';
+		CommonMenu.LoggingLevel1.Caption := 'Logging Level';
+		Log1.Add(CommonMenu.LoggingLevel1);
 
-		Ob.ShowSplashScreen1 := TMenuItem.Create(Options1);
-		Ob.ShowSplashScreen1.Name := 'ShowSplashScreen1';
-		Ob.ShowSplashScreen1.Caption := 'Show Splash Screen';
-		Ob.ShowSplashScreen1.OnClick := Ob.ShowSplashScreen1Click;
-		Ob.ShowSplashScreen1.Checked := ViewSplashScreen;
-		Options1.Add(Ob.ShowSplashScreen1);
+		CommonMenu.RegisterStartup1 := TMenuItem.Create(Options1);
+		CommonMenu.RegisterStartup1.Name := 'RegisterStartup1';
+		CommonMenu.RegisterStartup1.Caption := 'Register Startup';
+		CommonMenu.RegisterStartup1.OnClick := CommonMenu.RegisterStartup1Click;
+		CommonMenu.RegisterStartup1.Checked := IsRegisteredStartup;
+		Options1.Add(CommonMenu.RegisterStartup1);
+
+		CommonMenu.ShowSplashScreen1 := TMenuItem.Create(Options1);
+		CommonMenu.ShowSplashScreen1.Name := 'ShowSplashScreen1';
+		CommonMenu.ShowSplashScreen1.Caption := 'Show Splash Screen';
+		CommonMenu.ShowSplashScreen1.OnClick := CommonMenu.ShowSplashScreen1Click;
+		CommonMenu.ShowSplashScreen1.Checked := ViewSplashScreen;
+		Options1.Add(CommonMenu.ShowSplashScreen1);
 
 		M := TMenuItem.Create(Options1);
 		M.Name := 'Sounds1';
 		M.Caption := 'Sounds...';
-		M.OnClick := Ob.Sounds1Click;
+		M.OnClick := CommonMenu.Sounds1Click;
 		Options1.Add(M);
 
 		for i := 0 to Length(MessageLevelStr) - 1 do
 		begin
-			M := TMenuItem.Create(Ob.LoggingLevel1);
+			M := TMenuItem.Create(CommonMenu.LoggingLevel1);
 			M.Name := ComponentName(MessageLevelStr[TMessageLevel(i)]) + '21';
 			M.Caption := MessageLevelStr[TMessageLevel(i)];
 			M.Tag:= i;
-			M.OnClick := Ob.SetLoggingLevel1Click;
+			M.OnClick := CommonMenu.SetLoggingLevel1Click;
 			M.RadioItem := True;
 			M.Checked := SG(MainLog.LoggingLevel) = i;
-			Ob.LoggingLevel1.Add(M);
+			CommonMenu.LoggingLevel1.Add(M);
 		end;
 	end;
 
@@ -349,25 +371,25 @@ begin
 		M := TMenuItem.Create(Help1);
 		M.Name := 'WebHomepage1';
 		M.Caption := 'Web Homepage';
-		M.OnClick := Ob.WebHomepage1Click;
+		M.OnClick := CommonMenu.WebHomepage1Click;
 		Help1.Add(M);
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'LocalHomepage1';
 		M.Caption := 'Local Homepage';
-		M.OnClick := Ob.LocalHomepage1Click;
+		M.OnClick := CommonMenu.LocalHomepage1Click;
 		Help1.Add(M);
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'Messages1';
 		M.Caption := 'View Messages...';
-		M.OnClick := Ob.ViewMessages1Click;
+		M.OnClick := CommonMenu.ViewMessages1Click;
 		Help1.Add(M);
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'Parameters1';
 		M.Caption := 'View Parameters...';
-		M.OnClick := Ob.ViewParams1Click;
+		M.OnClick := CommonMenu.ViewParams1Click;
 		Help1.Add(M);
 
 		M := TMenuItem.Create(Help1);
@@ -377,26 +399,26 @@ begin
 		M := TMenuItem.Create(Help1);
 		M.Name := 'CheckForUpdate1';
 		M.Caption := 'Check For Update' + cDialogSuffix;
-		M.OnClick := Ob.CheckForUpdate1Click;
+		M.OnClick := CommonMenu.CheckForUpdate1Click;
 		Help1.Add(M);
 
-		Ob.AutomaticallyCheckForUpdate1 := TMenuItem.Create(Help1);
-		Ob.AutomaticallyCheckForUpdate1.Name := 'AutomaticallyCheckForUpdate1';
-		Ob.AutomaticallyCheckForUpdate1.Caption := 'Automatically Check For Update';
-		Ob.AutomaticallyCheckForUpdate1.OnClick := Ob.AutomaticallyCheckForUpdate1Click;
-		Ob.AutomaticallyCheckForUpdate1.Checked := AutomaticallyCheckForUpdate;
-		Help1.Add(Ob.AutomaticallyCheckForUpdate1);
+		CommonMenu.AutomaticallyCheckForUpdate1 := TMenuItem.Create(Help1);
+		CommonMenu.AutomaticallyCheckForUpdate1.Name := 'AutomaticallyCheckForUpdate1';
+		CommonMenu.AutomaticallyCheckForUpdate1.Caption := 'Automatically Check For Update';
+		CommonMenu.AutomaticallyCheckForUpdate1.OnClick := CommonMenu.AutomaticallyCheckForUpdate1Click;
+		CommonMenu.AutomaticallyCheckForUpdate1.Checked := AutomaticallyCheckForUpdate;
+		Help1.Add(CommonMenu.AutomaticallyCheckForUpdate1);
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'About';
 		M.Caption := 'About' + cDialogSuffix;
-		M.OnClick := Ob.About1Click;
+		M.OnClick := CommonMenu.About1Click;
 		Help1.Add(M);
 	end;
 end;
 
 initialization
-	Ob := TOb.Create;
+	CommonMenu := TCommonMenu.Create;
 finalization
-	FreeAndNil(Ob);
+	FreeAndNil(CommonMenu);
 end.

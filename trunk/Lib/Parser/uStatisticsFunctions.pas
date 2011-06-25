@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uStatisticsFunctions.pas
 //* Created:  2004-03-07
 //* Modified: 2007-09-27
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

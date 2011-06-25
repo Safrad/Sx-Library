@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uOpenedFiles.pas
 //* Created:  1999-12-01
-//* Modified: 2008-01-19
-//* Version:  1.1.40.9
+//* Modified: 2009-04-01
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -823,6 +823,8 @@ begin
 			begin
 				if RenameFileEx(Items[OpenedFile].FileName, NewFileName) then
 				begin
+					WatchRemoveFile(Items[OpenedFile].FileName);
+					WatchAddFile(NewFileName, FileChanged);
 					Result := True;
 				end
 				else
@@ -832,7 +834,10 @@ begin
 			if SaveCopy = False then
 			begin
 				if Items[OpenedFile].New = 0 then
+				begin
 					Reopen.CloseFile(Items[OpenedFile].FileName, GetFilePos(OpenedFile));
+					WatchRemoveFile(Items[OpenedFile].FileName);
+				end;
 				Items[OpenedFile].FileName := NewFileName;
 			end;
 		end
@@ -860,8 +865,11 @@ begin
 			Result := True;
 			if Assigned(FOnSaveToFile) then
 				Result := FOnSaveToFile(Self, NewFileName);
-				if Result then
+				if Result and (SaveCopy = False) then
+				begin
+					WatchAddFile(NewFileName, FileChanged);
 					GetFileModified(Items[OpenedFile].FileName, Items[OpenedFile].LastWriteTime);
+				end;
 		except
 			on E: Exception do
 			begin
@@ -1315,22 +1323,30 @@ begin
 end;
 
 procedure TOpenedFiles.PreviousNextWindow1Click(Sender: TObject);
-//const MinValue = -1;
-//var i: SG;
+const
+	MinValue = -1;
+var
+	i: SG;
 begin
-{	i := FIndex + TMenuItem(Sender).Tag;
-	if i >= FCount then
-		i := MinValue
-	else if i < MinValue then
-		i := FCount - 1;
-	Index := i;
-	Window1.Items[i + 1].Checked := True;
-	OpenedFileChangeFile(Sender);}
-	if Assigned(fOpenedFiles) = False then
-		fOpenedFiles := TfOpenedFiles.Create(Self);
-//	fOpenedFiles.DViewOpenedFiles.ActualRow := 0;
-	fOpenedFiles.TabKey(TMenuItem(Sender).Tag);
-	fOpenedFiles.ShowModal;
+	if GetKeyState(VK_CONTROL) < 0 then
+	begin
+		if Assigned(fOpenedFiles) = False then
+			fOpenedFiles := TfOpenedFiles.Create(Self);
+	//	fOpenedFiles.DViewOpenedFiles.ActualRow := 0;
+		fOpenedFiles.TabKey(TMenuItem(Sender).Tag);
+		fOpenedFiles.ShowModal;
+	end
+	else
+	begin
+		i := FIndex + TMenuItem(Sender).Tag;
+		if i >= FCount then
+			i := MinValue
+		else if i < MinValue then
+			i := FCount - 1;
+		Index := i;
+		Window1.Items[i + 1].Checked := True;
+		OpenedFileChangeFile(Sender);
+	end;
 end;
 
 procedure TOpenedFiles.WindowXClick(Sender: TObject);

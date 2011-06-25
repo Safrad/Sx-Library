@@ -1,7 +1,7 @@
 //* File:     Lib\uDictionary.pas
 //* Created:  2007-05-12
 //* Modified: 2007-10-21
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

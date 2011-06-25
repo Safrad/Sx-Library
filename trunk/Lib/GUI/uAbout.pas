@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uAbout.pas
 //* Created:  1999-10-01
-//* Modified: 2008-01-19
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -16,16 +16,15 @@ uses
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
 	uDWinControl;
 
-type     
+type
 	TfAbout = class(TDForm)
 		Timer1: TDTimer;
 		ButtonOk: TDButton;
 		ImageAbout: TDImage;
-		ButtonSysInfo1: TDButton;
+		ButtonSysInfo: TDButton;
 		ButtonMemoryStatus: TDButton;
 		DViewAbout: TDView;
 		ButtonStat: TDButton;
-		Bevel1: TBevel;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -36,15 +35,13 @@ type
 		procedure EditWebClick(Sender: TObject);
 		procedure EditEMailClick(Sender: TObject);
 		procedure DTimer1Timer(Sender: TObject);
-		procedure ButtonSysInfo1Click(Sender: TObject);
-		procedure ImageAboutMouseMove(Sender: TObject; Shift: TShiftState; X,
-			Y: Integer);
+		procedure ButtonSysInfoClick(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
 		procedure ButtonMemoryStatusClick(Sender: TObject);
-		procedure FormHide(Sender: TObject);
 		procedure DViewAboutGetData(Sender: TObject; var Data: String;
 			ColIndex, RowIndex: Integer; Rect: TRect);
 		procedure ButtonStatClick(Sender: TObject);
+		procedure FormResize(Sender: TObject);
 	private
 		Effect: U1;
 		Typ: U1;
@@ -60,7 +57,6 @@ type
 procedure OpenLocalHomepage;
 procedure OpenWebHomepage;
 procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean);
-procedure AboutRW(const Save: Boolean);
 var
 	fAbout: TfAbout;
 
@@ -87,20 +83,18 @@ end;
 
 procedure ExecuteAboutEx(AOwner: TComponent; const FileName: TFileName; const Modal: Boolean);
 begin
-	PlayWinSound(wsExclamation);
+//	PlayWinSound(wsExclamation);
 	if not Assigned(fAbout) then
 	begin
 		fAbout := TfAbout.Create(AOwner);
-{		fAbout.EditAuthor.Text := GetProjectInfo(piAuthor);
-		fAbout.EditVersion.Text := GetProjectInfo(piProductVersion);
-		fAbout.EditRelease.Text := DateToS(SToDate(GetProjectInfo(piRelease), ifIO), ofDisplay);
-		fAbout.EditCopyright.Text := GetProjectInfo(piLegalCopyright);}
 	end;
 	fAbout.LoadFile(FileName);
 	if Modal then
 	begin
 		fAbout.FormStyle := fsNormal;
 		fAbout.ShowModal;
+		if FreeFormAfterClose then
+			FreeAndNil(fAbout);
 	end
 	else
 	begin
@@ -109,34 +103,34 @@ begin
 	end;
 end;
 
-procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean); overload;
-const
-	Ext: array[0..3] of string = ('png', 'gif', 'jpg', 'jpeg');
+
+function GetFileName(const Base: string): TFileName; overload;
 var
-	i, j: SG;
+	i: SG;
 	FileName: TFileName;
 begin
-	for j := 0 to 1 do
-		for i := 0 to Length(Ext) - 1 do
+	Result := '';
+	for i := 0 to Length(PrefferedExt) - 1 do
+	begin
+		FileName := GraphDir + Base + '.' + PrefferedExt[i];
+		if FileExists(FileName) then
 		begin
-			FileName := GraphDir;
-			if j <> 0 then
-				FileName := FileName + 'Logo'
-			else
-				FileName := FileName + GetProjectInfo(piInternalName);
-			FileName := FileName + '.' + Ext[i];
-			if FileExists(FileName) then
-			begin
-				ExecuteAboutEx(AOwner, FileName, Modal);
-				Exit;
-			end;
+			Result := FileName;
+			Exit;
 		end;
-	ExecuteAboutEx(AOwner, '', Modal);
+	end;
 end;
 
-procedure AboutRW(const Save: Boolean);
+function GetFileName: TFileName; overload;
 begin
-	RWStart(MainIni, Save);
+	Result := GetFileName('Logo');
+	if Result <> '' then Exit;
+	Result := GetProjectInfo(piInternalName);
+end;
+
+procedure ExecuteAbout(AOwner: TComponent; const Modal: Boolean); overload;
+begin
+	ExecuteAboutEx(AOwner, GetFileName, Modal);
 end;
 
 procedure TfAbout.LoadFile(AboutFile: TFileName);
@@ -183,26 +177,12 @@ begin
 
 	Background := baGradient;
 
-{	EditEMail.Text := GetProjectInfo(piEmail) + '?subject=' + GetProjectInfo(piProductName);
-	EditWeb.Text := GetProjectInfo(piWeb);
-	EditCompany.Text := GetProjectInfo(piCompanyName);}
-
-{	ImageAbout.ShowHint := True;
-	ImageAbout.Hint := GetProjectInfo(piFileDescription);}
-
-{	PanelRunCount.Text := NToS(GetRunCount);
-	PanelTotalRunTime.Text := }
-
-{	ImageVersion.Bitmap.Canvas.Brush.Style := bsClear;
-	ImageVersion.Bitmap.Canvas.Font.Style := [fsBold];}
-
-	UpdateView;
-
-	RWOptions(False);
+	MainIni.RegisterRW(RWOptions);
 end;
 
 procedure TfAbout.FormDestroy(Sender: TObject);
 begin
+	MainIni.UnregisterRW(RWOptions);
 	if Assigned(BmpAbout) then
 	begin
 		FreeAndNil(BmpAbout);
@@ -265,34 +245,21 @@ procedure TfAbout.DTimer1Timer(Sender: TObject);
 begin
 	if NowTime >= LastNowTime + PerformanceFrequency{1 second interval} then
 	begin
-//		UpdateNowRunTime;
-		FillDynamicInfo(GSysInfo);
-		UpdateSysInfo(@GSysInfo);
-{		if Assigned(fSysInfo) then
-			if fSysInfo.Visible then
-			begin
-				fSysInfo.FillComp;
-			end;}
-{		while NowTime - LMemClock >= PerformanceFrequency do
+		if FormDraw(fSysInfo) then
 		begin
-			Inc(LMemClock, PerformanceFrequency);
-		end;}
+			FillDynamicInfo(GSysInfo);
+			UpdateSysInfo(@GSysInfo);
+		end;
 		LastNowTime := NowTime;
 	end;
-	NewFlash; // TODO Crash in DGames!
+	NewFlash;
 	ImageAbout.Invalidate;
-//	ImageName.Invalidate;
 end;
 
-procedure TfAbout.ButtonSysInfo1Click(Sender: TObject);
+procedure TfAbout.ButtonSysInfoClick(Sender: TObject);
 begin
 	FillDynamicInfo(GSysInfo);
 	DisplaySysInfo(@GSysInfo);
-{	if not Assigned(fSysInfo) then fSysInfo := TfSysInfo.Create(Self);
-//	fSysInfo.FormStyle := fAbout.FormStyle;
-	fSysInfo.SetBounds(fAbout.Left, fAbout.Top, fSysInfo.Width, fSysInfo.Height);
-	fSysInfo.FillComp;
-	fSysInfo.Show;}
 end;
 
 procedure TfAbout.NewFlash;
@@ -304,16 +271,6 @@ begin
 	Flash.Y := ImageAbout.LMouseY;
 	Flash.Power := 128 + 32 + Random(128 + 15 - 32);
 	Flash.Color.L := FireColor(256 + Random(256)); // SpectrumColor(Random(MaxSpectrum));
-//		Exchange(Flash.Color.R, Flash.Color.B);
-end;
-
-procedure TfAbout.ImageAboutMouseMove(Sender: TObject; Shift: TShiftState;
-	X, Y: Integer);
-begin
-//	if Random(10) = 0 then
-//	begin
-
-//	end;
 end;
 
 procedure TfAbout.ImageAboutFill(Sender: TObject);
@@ -325,9 +282,6 @@ var
 	Co: array[0..3] of TColor;
 begin
 	BitmapAbout := ImageAbout.Bitmap;
-//	BitmapAbout.Bar(clBtnFace, ef02);
-
-//	BitmapName.GenRGB(clNone, gfSpecHorz, (16 * Timer1.Clock div PerformanceFrequency), ef16);
 	BitmapAbout.GenerateRGBEx(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, TGenFunc(Typ), Co, ef03,
 		(16 * Timer1.Clock div PerformanceFrequency), nil);
 
@@ -369,29 +323,24 @@ begin
 		end
 		else
 		begin
-{					C.R := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
-			C.G := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
-			C.B := RoundDiv(Flashs[i].Color.R * Flashs[i].Power, 256);
-			C.T := 0;}
-			//Pix(BitmapAbout.Data, BitmapAbout.ByteX, Flash.X, Flash.Y, @Flash.Color, TEffect(Flash.Power div 16));
-
 			BitmapAbout.BarBorder(Flash.X - 1, Flash.Y - 1, Flash.X + 2, Flash.Y + 2, Flash.Color.L, TEffect(Flash.Power div 16));
 			Inc(i);
 		end;
 	end;
-	BitmapAbout.Border(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 3, ef08);
-
-
-	BitmapAbout.Canvas.Brush.Style := bsClear;
-	BitmapAbout.Canvas.Font.Style := [fsBold];
-	BitmapAbout.Canvas.Font.Size := -24;
-	BitmapAbout.Canvas.Font.Name := 'Times New Roman';
-	GoodText(BitmapAbout.Canvas, Rect(16, 16, BitmapAbout.Width - 16, BitmapAbout.Height - 16), GetProjectInfo(piProductName),
-		clBlack, clWhite, clSilver, taCenter, tlCenter);
-{	DrawCutedText(BitmapAbout.Canvas, Rect(2, 2, BitmapAbout.Width - 2, BitmapAbout.Height - 2), taCenter, tlCenter,
-		GetProjectInfo(piProductName), True, 1);}
-	BitmapAbout.Border(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 2, ef08);
-
+	if Timer1.TimerCount < 200 then
+	begin
+		BitmapAbout.Canvas.Brush.Style := bsClear;
+		BitmapAbout.Canvas.Font.Style := [fsBold];
+		BitmapAbout.Canvas.Font.Size := -24;
+		BitmapAbout.Canvas.Font.Name := 'Times New Roman';
+		GoodText(BitmapAbout.Canvas, Rect(16, 16, BitmapAbout.Width - 16, BitmapAbout.Height - 16), GetProjectInfo(piProductName),
+			clBlack, clWhite, clSilver, taCenter, tlCenter);
+	end;
+	BitmapAbout.Border(2, 2, BitmapAbout.Width - 3, BitmapAbout.Height - 3, clBlack, clWhite, 1, ef04);
+	BitmapAbout.Border(1, 1, BitmapAbout.Width - 2, BitmapAbout.Height - 2, clBlack, clWhite, 1, ef08);
+	BitmapAbout.Border(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 1, ef12);
+	if ImageAbout.IsFocused then
+		BitmapAbout.Border(clHighlight, clHighlight, 3, ef08);//Border(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 5, ef16);
 end;
 
 procedure TfAbout.ButtonMemoryStatusClick(Sender: TObject);
@@ -403,11 +352,6 @@ begin
 //	fMemStatus.SetBounds(fAbout.Left, fAbout.Top, fMemStatus.Width, fMemStatus.Height);
 	fMemStatus.Show;
 {$endif}
-end;
-
-procedure TfAbout.FormHide(Sender: TObject);
-begin
-	RWOptions(True);
 end;
 
 procedure TfAbout.DViewAboutGetData(Sender: TObject; var Data: String;
@@ -441,7 +385,6 @@ begin
 			0: Data := NToS(GetRunCount);
 			1: Data := MsToStr(TimeDifference(GetTickCount, GetStartProgramTime) + Second div 2, diDHMSD, 0, False);
 			2: Data := MsToStr(GetRunTime, diDHMSD, 3, False);
-//			GetStartProgramTime
 			3: Data := NToS(ReadCount);
 			4: Data := BToStr(ReadBytes);
 			5: Data := NToS(WriteCount);
@@ -459,6 +402,9 @@ end;
 
 procedure TfAbout.UpdateView;
 begin
+	DViewAbout.OfsX := 0;
+	DViewAbout.OfsY := 0;
+	DViewAbout.DeselectAll;
 	if ButtonStat.Down = False then
 	begin
 		DViewAbout.RowCount := Length(ProjectInfoStr);
@@ -483,6 +429,33 @@ begin
 		MainIni.RWFormPos(Self, Save);
 		DViewAbout.Serialize(MainIni, Save);
 	end;
+	if Save = False then
+		UpdateView;
+end;
+
+procedure TfAbout.FormResize(Sender: TObject);
+begin
+	// Height
+	ButtonOk.Top := ClientHeight - FormBorder - ButtonOk.Height;
+	ButtonStat.Top := ClientHeight - FormBorder - ButtonStat.Height;
+	ButtonSysInfo.Top := ClientHeight - FormBorder - ButtonSysInfo.Height;
+	ButtonMemoryStatus.Top := ClientHeight - FormBorder - ButtonMemoryStatus.Height;
+
+
+	DViewAbout.Height := DViewAbout.IdealHeight;
+	DViewAbout.Top := ButtonOk.Top - DViewAbout.Height - FormBorder;
+
+	ImageAbout.Top := FormBorder;
+	ImageAbout.Height := DViewAbout.Top - 2 * FormBorder;
+
+	// Width
+	ImageAbout.Left := FormBorder;
+	ImageAbout.Width := ClientWidth - 2 * ImageAbout.Left;
+
+	DViewAbout.Left := FormBorder;
+	DViewAbout.Width := ClientWidth - 2 * DViewAbout.Left;
+
+	ButtonOk.Left := ClientWidth - FormBorder - ButtonOk.Width;
 end;
 
 {$ifopt d+}

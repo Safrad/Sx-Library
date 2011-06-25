@@ -1,7 +1,7 @@
 //* File:     Lib\uExtProcess.pas
 //* Created:  2008-07-26
-//* Modified: 2008-07-20
-//* Version:  1.1.41.9
+//* Modified: 2009-05-13
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -16,7 +16,7 @@ uses
 (**
 	@return process exit code if success or High(UG)
 *)
-function RunAndWaitForApplication(const CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
+function RunAndWaitForApplication(CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
 
 
 var
@@ -36,7 +36,7 @@ begin
 	until not (Result = WAIT_TIMEOUT);
 end;
 
-function RunAndWaitForApplication(const CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
+function RunAndWaitForApplication(CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
 var
 	StartupInfo: TStartupInfo;
 begin
@@ -50,17 +50,17 @@ begin
 //			StartupInfo.dwY := R.Top;
 			StartupInfo.dwXCountChars := 128;
 			StartupInfo.dwYCountChars := 1024;
-			StartupInfo.dwXSize := {Screen.Width;} StartupInfo.dwXCountChars * 8;
+			StartupInfo.dwXSize := StartupInfo.dwXCountChars * 8;
 			StartupInfo.dwYSize := 400; // StartupInfo.dwYCountChars * 8;
 			StartupInfo.dwFillAttribute := FOREGROUND_INTENSITY or BACKGROUND_BLUE;
 
 	StartupInfo.wShowWindow := FWindowState;
 
-	MainLog.Add('CreateProcess: ' + CommandLine, mlDebug);
+	MainLogAdd('CreateProcess: ' + CommandLine, mlDebug);
 	if CreateProcess(
 		nil,
 		PChar(CommandLine),
-		nil,                
+		nil,
 		nil,
 		False,
 		CREATE_NEW_CONSOLE or
@@ -74,7 +74,7 @@ begin
 			IOError(CommandLine, GetLastError);
 		if not GetExitCodeProcess(ProcessInfo.hProcess, Result) then
 			IOError(CommandLine, GetLastError);
-		MainLog.Add('ExitCode: ' + IntToStr(Result), mlDebug);
+		MainLogAdd('ExitCode: ' + IntToStr(Result), mlDebug);
 	end
 	else
 	begin

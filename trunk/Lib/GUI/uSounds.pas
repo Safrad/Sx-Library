@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSounds.pas
 //* Created:  2000-05-01
-//* Modified: 2007-12-28
-//* Version:  1.1.40.9
+//* Modified: 2008-04-01
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -22,7 +22,6 @@ type
 		ButtonOK: TDButton;
 		ButtonApply: TDButton;
 		ButtonCancel: TDButton;
-		OpenDialog1: TOpenDialog;
 		BevelSQ: TBevel;
 		LabelSQ: TLabel;
 		LabelFrequency: TLabel;
@@ -49,14 +48,16 @@ type
 		procedure DViewSoundsDblClick(Sender: TObject);
 		procedure DViewSoundsGetData(Sender: TObject; var Data: String; ColIndex,
 			RowIndex: Integer; Rect: TRect);
-		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 		procedure FormShow(Sender: TObject);
 		procedure Select1Click(Sender: TObject);
 		procedure PopupMenuSoundsPopup(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
 	private
 		{ Private declarations }
+		procedure RWOptions(const Save: BG);
 	public
 		{ Public declarations }
+		procedure Init;
 	end;
 
 const
@@ -66,7 +67,8 @@ var
 	MusicEnabled: BG = True;
 	WavePlayer: TWavePlayer;
 
-procedure AddSounds(const SoundNames: array of string; const Disabled: BG = False);
+procedure AddSounds(const SoundNames: array of string; const Disabled: BG = False); overload;
+procedure AddSounds(const SoundNames: array of string; const DefaultFileNames: array of string); overload;
 procedure ReadSounds;
 procedure FreeSounds;
 
@@ -80,16 +82,17 @@ implementation
 
 {$R *.dfm}
 uses
-	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat;
+	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings;
 
 type
 	PSound = ^TSound; // Used Sounds
-	TSound = packed record // 16
+	TSound = record // 32
 		Wave: TWave; // 4
 		Enabled, Used: B1; // 2
 		Reserved: array[0..1] of U1; // 2
 		Name: string; // 4
 		FileName: TFileName; // 4
+		DefaultFileName: TFileName; // 4
 	end;
 	PDSound = ^TDSound; // Form Sounds
 	TDSound = packed record // 16
@@ -130,7 +133,14 @@ begin
 		WavePlayer.Open;
 end;
 
-procedure RWOptions(const Save: Boolean);
+type
+	TOb = class
+		procedure RWOptions(const Save: BG);
+	end;
+var
+	Ob: TOb;
+
+procedure TOb.RWOptions(const Save: Boolean);
 var
 	Section: string;
 	i: SG;
@@ -156,8 +166,12 @@ begin
 	begin
 		MainIni.RWFileName(Section, P.Name, P.FileName, Save);
 		MainIni.RWBool(Section, P.Name + ' Enabled', P.Enabled, Save);
-		Inc(P);
+		Sounds.Next(Pointer(P));
 	end;
+
+	if Save = False then
+		if Assigned(fSounds) then
+			fSounds.Init;
 end;
 
 procedure AddSounds(const SoundNames: array of string; const Disabled: BG = False);
@@ -171,17 +185,33 @@ begin
 		P := Sounds.Add;
 		P.Name := SoundNames[i];
 		if P.Name = 'Warning' then
-			P.FileName := ''
+			P.DefaultFileName := ''
 		else
-			P.FileName := 'Sounds' + PathDelim + SoundNames[i] + '.wav';
-//			P.FileName := ShortDir(SoundsDir + SoundNames[i] + '.wav');
+			P.DefaultFileName := 'Sounds' + PathDelim + SoundNames[i] + '.wav';
+		P.FileName := P.DefaultFileName;
 		P.Enabled := not Disabled;
 	end;
 end;
 
+procedure AddSounds(const SoundNames: array of string; const DefaultFileNames: array of string);
 var
-	SoundBuffer: TWave;
-//	SoundBufferSize: UG;
+	i: SG;
+	P: PSound;
+begin
+	for i := 0 to Length(SoundNames) - 1 do
+	begin
+		DSounds.Add;
+		P := Sounds.Add;
+		P.Name := SoundNames[i];
+		P.DefaultFileName := DefaultFileNames[i];
+		P.FileName := P.DefaultFileName;
+		P.Enabled := True;
+	end;
+end;
+
+
+var
+	WaveBuffer: TWave;
 	IniLoaded: BG;
 
 procedure ReadSounds;
@@ -192,7 +222,7 @@ begin
 	if IniLoaded = False then
 	begin
 		IniLoaded := True;
-		RWOptions(False);
+		MainIni.RegisterRW(Ob.RWOptions);
 	end;
 
 	P := Sounds.GetFirst;
@@ -203,7 +233,7 @@ begin
 			P.Wave := TWave.Create;
 			P.Wave.ReadFromFile(P.FileName);
 			end;
-		Inc(P);
+		Sounds.Next(Pointer(P));
 	end;
 end;
 
@@ -212,19 +242,25 @@ var
 	i: SG;
 	P: PSound;
 begin
+	{$ifopt d-}
+	StopPlayWave;
+	{$endif}
 	FormFree(TForm(fSounds));
 	if IniLoaded then
-		RWOptions(True);
+	begin
+		IniLoaded := False;
+		MainIni.UnregisterRW(Ob.RWOptions);
+	end;
 	if Sounds.Count = 0 then Exit;
 	P := Sounds.GetFirst;
 	for i := 0 to Sounds.Count - 1 do
 	begin
 		FreeAndNil(P.Wave);
-		Inc(P);
+		Sounds.Next(Pointer(P));
 	end;
 	Sounds.Clear;
 	DSounds.Clear;
-	FreeAndNil(SoundBuffer);
+	FreeAndNil(WaveBuffer);
 end;
 
 procedure PlaySound(const SoundKind: SG);
@@ -236,7 +272,7 @@ begin
 		if IniLoaded = False then
 		begin
 			IniLoaded := True;
-			RWOptions(False);
+			MainIni.RegisterRW(Ob.RWOptions);
 		end;
 
 		P := Sounds.Get(SoundKind);
@@ -267,16 +303,14 @@ var
 	P: PSound;
 	Pan: SG;
 	SoundLeft, SoundRight: SG;
-//	NewSize: UG;
-	NewWave: TWave;
 	Volume: TVolume;
 begin
 	if SoundEnabled and Assigned(Sounds) then
 	begin
-		if IniLoaded = False then
+		if Assigned(MainIni) and (IniLoaded = False) then
 		begin
 			IniLoaded := True;
-			RWOptions(False);
+			MainIni.RegisterRW(Ob.RWOptions);
 		end;
 
 		P := Sounds.Get(SoundKind);
@@ -291,17 +325,11 @@ begin
 			begin
 				if WavePlayer = nil then
 				begin
-	(*				NewSize := 2{Convert from Mono to Stereo} * (P.Wave.Format.BytesFollowing + 8);
-					if SoundBufferSize < NewSize then
-					begin
-						FreeMem(SoundBuffer);
-						SoundBufferSize := NewSize;
-						GetMem(SoundBuffer, SoundBufferSize);
-					end; TODO *)
 					SoundLR(SoundLeft, SoundRight, CX, CXCount);
-					NewWave := P.Wave.ConvertChannels(2, SoundLeft, SoundRight);
-					NewWave.Play;
-					NewWave.Free;
+					StopPlayWave;
+					WaveBuffer.Free;
+					WaveBuffer := P.Wave.ConvertChannels(2, SoundLeft, SoundRight);
+					WaveBuffer.Play;
 				end
 				else if ((SoundReduce = False) or (P.Used = False)) then
 				begin
@@ -334,7 +362,7 @@ begin
 	for i := 0 to Sounds.Count - 1 do
 	begin
 		P.Used := False;
-		Inc(P);
+		Sounds.Next(Pointer(P));
 	end;
 end;
 
@@ -343,11 +371,14 @@ begin
 	if IniLoaded = False then
 	begin
 		IniLoaded := True;
-		RWOptions(False);
+		MainIni.RegisterRW(Ob.RWOptions);
 	end;
-	if not Assigned(fSounds) then fSounds := TfSounds.Create(nil);
+	if not Assigned(fSounds) then
+		fSounds := TfSounds.Create(nil);
 	fSounds.DViewSounds.RowCount := Sounds.Count;
 	fSounds.ShowModal;
+	if FreeFormAfterClose then
+		FreeAndNil(fSounds);
 end;
 
 procedure TfSounds.FormResize(Sender: TObject);
@@ -358,11 +389,13 @@ begin
 	Top := ClientHeight - FormBorder - ButtonOK.Height;
 
 	ButtonCancel.SetBounds(ClientWidth - FormBorder - ButtonCancel.Width, Top, ButtonCancel.Width, ButtonCancel.Height);
-	ButtonApply.SetBounds(ButtonCancel.Left - 2 * FormBorder - ButtonApply.Width, Top, ButtonApply.Width, ButtonApply.Height);
-	ButtonOK.SetBounds(ButtonApply.Left - 2 * FormBorder - ButtonOK.Width, Top, ButtonOK.Width, ButtonOK.Height);
+	ButtonApply.SetBounds(ButtonCancel.Left - FormBorder - ButtonApply.Width, Top, ButtonApply.Width, ButtonApply.Height);
+	ButtonOK.SetBounds(ButtonApply.Left - FormBorder - ButtonOK.Width, Top, ButtonOK.Width, ButtonOK.Height);
 
 	ButtonSounds.Top := ButtonOK.Top;
+	ButtonSounds.Left := FormBorder;
 	ButtonMusic.Top := ButtonOK.Top;
+	ButtonMusic.Left := ButtonSounds.Left + ButtonSounds.Width + FormBorder;
 
 	if WavePlayer <> nil then
 		L := BevelSQ.Top + BevelSQ.Height + FormBorder
@@ -377,10 +410,9 @@ procedure TfSounds.FormCreate(Sender: TObject);
 var
 	B: BG;
 begin
+	inherited;
 	Background := baGradient;
 	MenuSet(PopupMenuSounds);
-
-	OpenDialog1.Filter := AllSounds + '|' + AllFiles;
 
 	DViewSounds.AddColumn('Event', 114);
 	DViewSounds.AddColumn('Enabled', 48);
@@ -389,16 +421,8 @@ begin
 
 	if Assigned(MainIni) then
 	begin
-		MainIni.RWFormPos(Self, False);
-		DViewSounds.Serialize(MainIni, False);
+		MainIni.RegisterRW(RWOptions);
 	end;
-
-	ButtonSounds.Down := SoundEnabled;
-	ButtonReduce.Down := SoundReduce;
-	Button16bits.Down := Sound16bits;
-	ComboBoxFrequency.Text := IntToStr(SoundFrequency);
-	ButtonStereo.Down := SoundStereo;
-	ButtonMusic.Down := MusicEnabled;
 
 	B := WavePlayer <> nil;
 	LabelSQ.Visible := B;
@@ -509,8 +533,8 @@ begin
 		Sound.Enabled := DSound.Enabled;
 		DSound.Wave := nil;
 
-		Inc(Sound);
-		Inc(DSound);
+		Sounds.Next(Pointer(Sound));
+		DSounds.Next(Pointer(DSound));
 	end;
 end;
 
@@ -542,7 +566,7 @@ begin
 			DViewSounds.Bitmap.Canvas.Font.Style := DViewSounds.Bitmap.Canvas.Font.Style + [fsStrikeOut];
 		Data := Sound.Name;
 	end;
-	1: Data := NToS(SG(DSound.Enabled));
+	1: Data := NoYes[Abs(SG(DSound.Enabled))];
 	2:
 	begin
 		if DSound.Exists = False then
@@ -556,40 +580,18 @@ begin
 	end;
 end;
 
-procedure TfSounds.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
-	if Assigned(MainIni) then
-	begin
-		MainIni.RWFormPos(Self, True);
-		DViewSounds.Serialize(MainIni, True);
-	end;
-end;
-
 procedure UpdateDSound(DSound: PDSound);
+var
+	FileName: TFileName;
 begin
-	DSound.Exists := FileExists(DSound.FileName);
-	DSound.Length := WaveLength(DSound.FileName);
+	FileName := ExpandDir(DSound.FileName);
+	DSound.Exists := FileExists(FileName);
+	DSound.Length := WaveLength(FileName);
 end;
 
 procedure TfSounds.FormShow(Sender: TObject);
-var
-	i: SG;
-	Sound: PSound;
-	DSound: PDSound;
 begin
-	Sound := Sounds.GetFirst;
-	DSound := DSounds.GetFirst;
-	for i := 0 to Sounds.Count - 1 do
-	begin
-		DSound.FileName := Sound.FileName;
-		DSound.Enabled := Sound.Enabled;
-		DSound.Wave := nil;
-		UpdateDSound(DSound);
-
-		Inc(Sound);
-		Inc(DSound);
-	end;
-	DViewSounds.Invalidate;
+	Init;
 end;
 
 procedure TfSounds.Select1Click(Sender: TObject);
@@ -636,9 +638,10 @@ begin
 			end;
 			3: // Select
 			begin
-				if ExecuteDialog(OpenDialog1, P.FileName) then
+				if SelectFile(P.FileName, '', AllSounds + '|' + AllFiles) then
 				begin
 					P.Wave.Free;
+					P.Wave := TWave.Create;
 					P.Wave.ReadFromFile(P.FileName);
 					UpdateDSound(P);
 					SoundsC := True;
@@ -647,7 +650,7 @@ begin
 			4: // Default
 			begin
 				P2 := PSound(Sounds.Get(i));
-				P.FileName := 'Sounds' + PathDelim + P2.Name + '.wav';
+				P.FileName := P2.DefaultFileName;
 				UpdateDSound(P);
 				SoundsC := True;
 			end;
@@ -689,6 +692,48 @@ begin
 	Disable1.Enabled := E;
 	Enable1.Checked := C;
 	Disable1.Checked := not C;
+end;
+
+procedure TfSounds.RWOptions(const Save: BG);
+begin
+	MainIni.RWFormPos(Self, Save);
+	DViewSounds.Serialize(MainIni, Save);
+end;
+
+procedure TfSounds.Init;
+var
+	i: SG;
+	Sound: PSound;
+	DSound: PDSound;
+begin
+	ButtonSounds.Down := SoundEnabled;
+	ButtonReduce.Down := SoundReduce;
+	Button16bits.Down := Sound16bits;
+	ComboBoxFrequency.Text := IntToStr(SoundFrequency);
+	ButtonStereo.Down := SoundStereo;
+	ButtonMusic.Down := MusicEnabled;
+
+	Sound := Sounds.GetFirst;
+	DSound := DSounds.GetFirst;
+	for i := 0 to Sounds.Count - 1 do
+	begin
+		DSound.FileName := Sound.FileName;
+		DSound.Enabled := Sound.Enabled;
+		DSound.Wave := nil;
+		UpdateDSound(DSound);
+
+		Sounds.Next(Pointer(Sound));
+		DSounds.Next(Pointer(DSound));
+	end;
+	DViewSounds.Invalidate;
+end;
+
+procedure TfSounds.FormDestroy(Sender: TObject);
+begin
+	if Assigned(MainIni) then
+	begin
+		MainIni.UnregisterRW(RWOptions);
+	end;
 end;
 
 initialization

@@ -1,7 +1,7 @@
 //* File:     Lib\uCharsetTest.pas
 //* Created:  2001-12-01
 //* Modified: 2007-05-06
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

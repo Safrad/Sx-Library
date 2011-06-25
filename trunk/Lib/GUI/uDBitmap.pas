@@ -29,6 +29,7 @@ const
 		'tga');// Uncompresssed
 		//'tif', 'tiff'
 		//'rle'
+	PrefferedExt: array[0..3] of string = ('png', 'gif', 'jpg', 'jpeg');
 	AllPictureDes: array[0..PictureTypeCount - 1] of string = (
 		'Windows or OS/2 Bitmaps',
 		'JPEG Compilant',
@@ -263,6 +264,7 @@ type
 
 		procedure SwapUD;
 		procedure Neg;
+		procedure RotateX(const Effect: TEffect; const Angle: SG);
 		procedure RotateRight(const Effect: TEffect);
 		procedure SwapHorz;
 		procedure SwapVert;
@@ -336,6 +338,7 @@ type
 
 procedure BitmapCopy(var BmpD: TDBitmap; BmpS: TDBitmap); // Create + SetSize + CopyData
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor); // Create + SetSize
+//function GetBackgroundBitmap: TDBitmap;
 
 function GetColors(Source: U1; Brig, Cont, Gamma: SG): U1;
 
@@ -7487,14 +7490,21 @@ begin
 	FreeMem(Line);
 end;
 
-procedure TDBitmap.RotateRight(const Effect: TEffect);
+procedure TDBitmap.RotateX(const Effect: TEffect; const Angle: SG);
 var BmpS: TDBitmap;
 begin
 	BmpS := TDBitmap.Create;
 	BmpS.FromBitmap(Self);
-	SetSize(FHeight, FWidth);
-	RotateDef(Self, BmpS, 0, AngleCount div 4, Effect);
+	if Angle = AngleCount div 4 then
+		SetSize(FHeight, FWidth);
+	BmpS.Transparent := False;
+	RotateDef(Self, BmpS, 0, Angle, Effect);
 	BmpS.Free;
+end;
+
+procedure TDBitmap.RotateRight(const Effect: TEffect);
+begin
+	RotateX(Effect, AngleCount div 4);
 end;
 
 procedure TDBitmap.SwapHorz;
@@ -8109,6 +8119,31 @@ begin
 	end;
 end;}
 
+var
+	FBitmapF: TDBitmap;
+
+function GetBackgroundBitmap: TDBitmap;
+var
+	i: SG;
+	FileName: TFileName;
+begin
+	if FBitmapF = nil then
+	begin
+		FBitmapF := TDBitmap.Create;
+		FBitmapF.SetSize(0, 0);
+		for i := 0 to Length(PrefferedExt) - 1 do
+		begin
+			FileName := GraphDir + 'Form' + '.' + PrefferedExt[i];
+			if FileExists(FileName) then
+			begin
+				FBitmapF.LoadFromFile(FileName);
+				Break;
+			end;
+		end;
+	end;
+	Result := FBitmapF;
+end;
+
 procedure TDBitmap.FormBitmap(Color: TColor);
 var
 	Co: array[0..3] of TColor;
@@ -8120,6 +8155,9 @@ begin
 	Co[2] := Co[0];
 	Co[3] := Co[1];
 	GenerateRGB(gfFade2x, Co, ef16, nil);
+	GetBackgroundBitmap;
+	if FBitmapF <> nil then
+		Texture(FBitmapF, ef04);
 end;
 
 procedure RotateBmp(
@@ -10377,6 +10415,7 @@ end;
 initialization
 	AllPictures := DialogStr(AllPictureExt, AllPictureDes);
 finalization
+	FreeAndNil(FBitmapF);
 	FreeFontBitmap;
 	if Sins <> nil then
 	begin

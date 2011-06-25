@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSysInfo.pas
 //* Created:  2000-07-01
-//* Modified: 2007-11-27
-//* Version:  1.1.40.9
+//* Modified: 2009-01-07
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -80,7 +80,8 @@ type
 var
 	GSysInfo: TSysInfo;
 	NTSystem: Boolean;
-	RegCap: Boolean;
+	RegionCompatibily: Boolean;
+	fSysInfo: TfSysInfo;
 
 function GetKey(Default: U2): U2;
 function OSToStr(const OS: TOSVersionInfo): string;
@@ -98,9 +99,6 @@ uses
 	uGraph, uScreen, uStrings, uOutputFormat, uSimulation,
 	uProjectInfo,
 	Registry, Math;
-
-var
-	fSysInfo: TfSysInfo;
 
 function GetKey(Default: U2): U2;
 label
@@ -585,7 +583,7 @@ begin
 			case Model of
 			0..5: s := 'Pentium 4';
 			else // 6
-			  s := 'Pentium(R) D CPU'; 
+				s := 'Pentium(R) D CPU'; 
 			end;
 		end
 		end;
@@ -629,11 +627,17 @@ begin
 end;
 
 procedure TfSysInfo.FormCreate(Sender: TObject);
-var i: SG;
+var
+	i: SG;
+	m: UG;
 begin
 	Background := baGradient;
-	for i := 2 to 24 do
-		ComboBoxSize.Items.Add(BToStr(1 shl i));
+	for i := 2 to 29 do
+	begin
+		m := 1 shl i;
+		if m >= GSysInfo.MS.dwAvailPhys div 2 then Break;
+		ComboBoxSize.Items.Add(BToStr(m));
+	end;
 	ComboBoxSize.ItemIndex := 14;
 end;
 
@@ -642,7 +646,7 @@ begin
 	GSysInfo.OS.dwOSVersionInfoSize := SizeOf(GSysInfo.OS);
 	GetVersionEx(GSysInfo.OS);
 	NTSystem := GSysInfo.OS.dwMajorVersion >= 5;
-	RegCap := not ((GSysInfo.OS.dwMajorVersion < 4) or ((GSysInfo.OS.dwMajorVersion = 4) and (GSysInfo.OS.dwMinorVersion < 10)));
+	RegionCompatibily := not ((GSysInfo.OS.dwMajorVersion < 4) or ((GSysInfo.OS.dwMajorVersion = 4) and (GSysInfo.OS.dwMinorVersion < 10)));
 
 	InitPerformanceCounter;
 {	PerformanceType := ptCPU;

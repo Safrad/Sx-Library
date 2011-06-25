@@ -1,7 +1,7 @@
 //* File:     Lib\uTypes.pas
 //* Created:  1998-01-01
-//* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Modified: 2009-05-10
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -23,23 +23,6 @@ const
 	KB = 1024;
 	MB = 1024 * KB;
 	GB = 1024 * MB;
-
-	MiliSecond = 1;
-	Second = 1000;
-	Minute = 60 * Second;
-	Hour = 60 * Minute;
-	Day = 24 * Hour;
-	DaysInWeek = 7;
-	MonthsInYear = 12;
-
-// System
-	LoopSleepTime = 40; // 25 interrupts per second.
-	{$EXTERNALSYM WM_XBUTTONDOWN}
-	WM_XBUTTONDOWN      = $020B;
-	{$EXTERNALSYM WM_XBUTTONUP}
-	WM_XBUTTONUP        = $020C;
-	{$EXTERNALSYM WM_XBUTTONDBLCLK}
-	WM_XBUTTONDBLCLK    = $020D;
 
 type
 	SG = Integer; // LongInt for 32bit Delphi
@@ -174,6 +157,11 @@ type
 
 	TIndex = SG;
 
+	TStringPair = record
+		Name: string; // or Key
+		Value: string;
+	end;
+	
 	// Dynamic Arrays
 	TArrayOfBG = array of BG;
 	TArrayOfSG = array of SG;
@@ -221,6 +209,26 @@ type
 		mlNone);
 
 const
+	MiliSecond = 1;
+	Second = 1000;
+	Minute = 60 * Second;
+	Hour = 60 * Minute;
+	Day = 24 * Hour;
+	DaysInWeek = 7;
+	MonthsInYear = 12;
+	MSecsPerWeek = DaysInWeek * Day;
+	MSecsPerYear = 365 * DaysInWeek * U8(Day);
+
+// System
+	LoopSleepTime = 40; // 25 interrupts per second.
+	{$EXTERNALSYM WM_XBUTTONDOWN}
+	WM_XBUTTONDOWN      = $020B;
+	{$EXTERNALSYM WM_XBUTTONUP}
+	WM_XBUTTONUP        = $020C;
+	{$EXTERNALSYM WM_XBUTTONDBLCLK}
+	WM_XBUTTONDBLCLK    = $020D;
+
+	const
 	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
 	IndexFile = 'index' + HTMLExt;
 	nbsp = '&nbsp;'; // Non-dividable Blank SPace.

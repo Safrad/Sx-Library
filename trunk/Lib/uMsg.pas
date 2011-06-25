@@ -1,7 +1,7 @@
 //* File:     Lib\uMsg.pas
 //* Created:  2000-08-01
-//* Modified: 2008-03-17
-//* Version:  1.1.41.9
+//* Modified: 2008-12-25
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -178,7 +178,8 @@ end;
 
 procedure ErrorMsg(const ErrorCode: SG);
 begin
-	ErrorMsg(ErrorCodeToStr(ErrorCode));
+	if ErrorCode <> 0 then
+		ErrorMsg(ErrorCodeToStr(ErrorCode));
 end;
 
 procedure Fatal(const E: Exception; const C: TObject);

@@ -1,6 +1,6 @@
 object fOptions: TfOptions
-  Left = 843
-  Top = 550
+  Left = 495
+  Top = 388
   HorzScrollBar.Tracking = True
   VertScrollBar.Tracking = True
   BorderIcons = [biSystemMenu, biMinimize]
@@ -12,9 +12,8 @@ object fOptions: TfOptions
   Constraints.MinWidth = 392
   ParentFont = True
   OldCreateOrder = False
-  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  OnHide = FormHide
+  OnDestroy = FormDestroy
   OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96

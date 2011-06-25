@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDImage.pas
 //* Created:  2000-07-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.9
+//* Modified: 2008-12-26
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -144,6 +144,8 @@ type
 		procedure ScrollEnd; virtual;
 
 		procedure Serialize(const IniFile: TDIniFile; const Save: BG);
+
+		procedure ToClipboard;
 
 		property NowMaxWidth: SG read FNowMaxWidth;
 		property NowMaxHeight: SG read FNowMaxHeight;
@@ -427,7 +429,7 @@ begin
 	zmGrateColor:
 		GetColor('Grate Color', GrateColor, clWhite, OnApplyColor);
 	zmCopy:
-		Clipboard.Assign(TBitmap(Bitmap));
+		ToClipboard;
 	end;
 end;
 
@@ -1563,6 +1565,17 @@ end;
 
 procedure TDImage.KeyDown(var Key: Word; Shift: TShiftState);
 begin
+	if Shift = [ssCtrl] then
+	begin
+		case Key of
+		Ord('C'):
+		begin
+			ToClipboard;
+			Exit;
+		end;
+		end;
+	end;
+
 	case Key of
 	VK_LEFT: ScrollTo(OfsX - HorizontalOffset, OfsY);
 	VK_RIGHT: ScrollTo(OfsX + HorizontalOffset, OfsY);
@@ -1573,6 +1586,7 @@ begin
 	VK_HOME: ScrollHome;
 	VK_END: ScrollEnd;
 	end;
+
 	inherited;
 end;
 
@@ -1595,13 +1609,20 @@ var
 begin
 	Section := Name;
 
-	Zoom := IniFile.RWFGF(Section, 'Zoom', Zoom, 1, Save);
-	OfsX := IniFile.RWSGF(Section, 'OffsetX', OfsX, 0, Save);
-	OfsY := IniFile.RWSGF(Section, 'OffsetY', OfsY, 0, Save);
+	if Save = False then
+		Zoom := 1;
+	IniFile.RWNum(Section, 'Zoom', TargetZoom, Save);
+	IniFile.RWNum(Section, 'OffsetX', OfsX, Save);
+	IniFile.RWNum(Section, 'OffsetY', OfsY, Save);
 
-	Center := IniFile.RWBGF(Section, 'Center', Center, Center, Save);
-	Grate := IniFile.RWBGF(Section, 'Grate', Grate, Grate, Save);
-	GrateColor := IniFile.RWSGF(Section, 'Grate', GrateColor, GrateColor, Save);
+	IniFile.RWBool(Section, 'Center', Center, Save);
+	IniFile.RWBool(Section, 'Grate', Grate, Save);
+	IniFile.RWNum(Section, 'Grate', S4(GrateColor), Save);
+end;
+
+procedure TDImage.ToClipboard;
+begin
+	Clipboard.Assign(TBitmap(Bitmap));
 end;
 
 initialization

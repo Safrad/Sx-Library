@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uInfoWindow.pas
 //* Created:  2006-12-21
 //* Modified: 2007-01-10
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -69,7 +69,7 @@ end;
 procedure TfInfoWindow.FormShow(Sender: TObject);
 var R: TRect;
 begin
-	GetDesktopRect(R);
+	Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;
 	fInfoWindow.SetBounds(
 		R.Right - fInfoWindow.Width,
 		R.Bottom - fInfoWindow.Height,
@@ -100,7 +100,7 @@ begin
 	GetGTime;
 	if TimeDifference(GTime, StartTickCount) <= 2 * Second then
 	begin
-		GetDesktopRect(R);
+		R := Screen.MonitorFromWindow(Handle).WorkareaRect;
 		H := RoundDivS8(Min(1000, TimeDifference(GTime, StartTickCount)) * StartHeight, 1000);
 		Self.SetBounds(
 			Left,
@@ -110,7 +110,7 @@ begin
 	end
 	else if TimeDifference(GTime, StartTickCount) > 4 * Second then
 	begin
-		GetDesktopRect(R);
+		R := Screen.MonitorFromWindow(Handle).WorkareaRect;
 		H := StartHeight - RoundDivS8((S8(TimeDifference(GTime, StartTickCount)) - 4 * Second) * StartHeight, 1000);
 		if H <= 0 then
 			Close

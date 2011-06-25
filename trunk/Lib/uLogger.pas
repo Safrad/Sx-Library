@@ -1,3 +1,11 @@
+//* File:     Lib\uLogger.pas
+//* Created:  2009-01-14
+//* Modified: 2008-12-26
+//* Version:  1.1.41.12
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uLogger;
 
 interface
@@ -16,7 +24,9 @@ type
 	end;
 
 	TLogger = class
-		procedure Add(const Line: string; const LogType: TMessageLevel); virtual; abstract;
+	public
+		procedure Add(const Line: string; const MessageLevel: TMessageLevel); overload; virtual; abstract;
+		procedure Add(const MessageDateTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel); overload; virtual; abstract;
 	end;
 
 (*

@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSystem.pas
 //* Created:  1998-01-01
-//* Modified: 2007-12-24
-//* Version:  1.1.40.9
+//* Modified: 2009-05-13
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -19,10 +19,10 @@ function ThreadPriority(const Prior: U1): Integer;
 procedure BeginLongOperation(const Background: BG = False);
 procedure EndLongOperation(const Sound: BG = True);
 
-function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
+function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings): BG;
 //function WriteLinesToFile(var FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
-function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
-function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
+function WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 
 type
 	TDriveLetter = 'A'..'Z';
@@ -36,12 +36,13 @@ type
 	end;
 function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
 
-function SelectFolder(var Path: string; browseTitle: string = ''): BG;
+function SelectFolder(var Path: string; const browseTitle: string = ''): BG;
+function SelectFile(var FileName: TFileName; const browseTitle: string = ''; const Filter: string = ''; const Save: BG = False): BG;
 
 implementation
 
 uses
-	Windows, Math,
+	Windows, Math, Dialogs,
 	uStrings, uFiles, uDParser, uWave, uMath, uFile;
 
 function DriveTypeToStr(const DriveType: Integer): string;
@@ -113,19 +114,15 @@ begin
 	P[2] := PathDelim;
 	P[3] := CharNul;
 	Result.DriveType := GetDriveType(P);
+	Result.FreeSpace := -1;
+	Result.DriveSize := -1;
 	case Result.DriveType of
 //  DRIVE_UNKNOWN:  Result := 4096;
 	DRIVE_NO_ROOT_DIR: Result.ClusterSize := 0;
-	DRIVE_REMOVABLE:
+	DRIVE_REMOVABLE, DRIVE_CDROM:
 	begin
-		Result.ClusterSize := 512;
-		Result.FreeSpace := -1;
-		Result.DriveSize := -1;
-	end;
-{ DRIVE_FIXED: Result := 4096;
-	DRIVE_REMOTE: Result := 4096;
-	DRIVE_CDROM: Result := 2048;
-	DRIVE_RAMDISK: Result := 4096;}
+		// Skip media
+	end
 	else
 	begin
 		SectorsPerCluster := 0;
@@ -135,15 +132,16 @@ begin
 			Result.ClusterSize := SectorsPerCluster * BytesPerSector;
 		Result.FreeSpace := Result.ClusterSize * U8(NumberOfFreeClusters);
 		Result.DriveSize := Result.ClusterSize * U8(TotalNumberOfClusters);
-		if Result.ClusterSize = 0 then
-			case Result.DriveType of
-			DRIVE_UNKNOWN:  Result.ClusterSize := 4096;
-			DRIVE_FIXED: Result.ClusterSize := 4096;
-			DRIVE_REMOTE: Result.ClusterSize := 4096;
-			DRIVE_CDROM: Result.ClusterSize := 2048;
-			end;
 	end;
 	end;
+	if Result.ClusterSize = 0 then
+		case Result.DriveType of
+		DRIVE_UNKNOWN:  Result.ClusterSize := 4096;
+		DRIVE_FIXED: Result.ClusterSize := 4096;
+		DRIVE_REMOTE: Result.ClusterSize := 4096;
+		DRIVE_CDROM: Result.ClusterSize := 2048;
+		DRIVE_REMOVABLE: Result.ClusterSize := 512;
+		end;
 end;
 
 var
@@ -160,7 +158,7 @@ begin
 	result := 0;
 end;
 
-function SelectFolder(var Path: string; browseTitle: string = ''): BG;
+function SelectFolder(var Path: string; const browseTitle: string = ''): BG;
 var
 	browse_info: TBrowseInfo;
 	folder: array[0..MAX_PATH] of char;
@@ -189,7 +187,41 @@ begin
 		result := False;
 end;
 
-function ReadLinesFromFile(var FileName: TFileName; Lines: TStrings): BG;
+var
+	OpenDialog: TOpenDialog;
+	SaveDialog: TSaveDialog;
+
+function SelectFile(var FileName: TFileName; const browseTitle: string = ''; const Filter: string = ''; const Save: BG = False): BG;
+begin
+	if Save then
+	begin
+		if SaveDialog = nil then
+			SaveDialog := TSaveDialog.Create(nil);
+		if Filter = '' then
+			SaveDialog.Filter := AllFiles
+		else
+			SaveDialog.Filter := Filter;
+		SaveDialog.Options := SaveDialog.Options + [ofPathMustExist];
+		SaveDialog.Options := SaveDialog.Options - [ofFileMustExist] + [ofOverwritePrompt];
+		SaveDialog.Title := browseTitle;
+		Result := ExecuteDialog(SaveDialog, FileName);
+	end
+	else
+	begin
+		if OpenDialog = nil then
+			OpenDialog := TOpenDialog.Create(nil);
+		if Filter = '' then
+			OpenDialog.Filter := AllFiles
+		else
+			OpenDialog.Filter := Filter;
+		OpenDialog.Options := OpenDialog.Options + [ofPathMustExist];
+		OpenDialog.Options := OpenDialog.Options + [ofFileMustExist];
+		OpenDialog.Title := browseTitle;
+		Result := ExecuteDialog(OpenDialog, FileName);
+	end;
+end;
+
+function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings): BG;
 var
 	F: TFile;
 	Line: string;
@@ -244,7 +276,7 @@ begin
 	end;
 end;}
 
-function ReadStreamFromFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 var
 	Buf: Pointer;
 	Count: SG;
@@ -260,7 +292,7 @@ begin
 	end;
 end;
 
-function WriteStreamToFile(var FileName: TFileName; Stream: TMemoryStream): BG;
+function WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 var
 	Buf: Pointer;
 begin
@@ -271,4 +303,8 @@ begin
 	FreeMem(Buf);
 end;
 
+initialization
+
+finalization
+	FreeAndNil(OpenDialog);
 end.

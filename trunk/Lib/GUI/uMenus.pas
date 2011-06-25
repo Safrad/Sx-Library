@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uMenus.pas
 //* Created:  2000-08-01
-//* Modified: 2008-01-20
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -198,6 +198,7 @@ begin
 			M.Caption := Src[i].Caption;
 			M.Checked := Src[i].Checked;
 			M.Enabled := Src[i].Enabled;
+			M.Visible := Src[i].Visible;
 			if Src[i].Count > 0 then
 			begin
 				MenuUpdate(Src[i], M);
@@ -667,6 +668,7 @@ begin
 		begin
 			B := C as TDButton;
 			B.Enabled := M.Enabled;
+			B.Visible := M.Visible;
 			B.Down := M.Checked;
 		end;
 	end;

@@ -1,7 +1,7 @@
 //* File:     Lib\uData.pas
 //* Created:  1998-01-01
-//* Modified: 2008-03-17
-//* Version:  1.1.41.9
+//* Modified: 2008-12-28
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -29,6 +29,7 @@ type
 		FItemMemSize: UG;
 		FItemCount: TIndex;
 		FItemAlloc: SG; // FCapacity
+		FObjectCounter: SG;
 		procedure NewData(const Index: TIndex);
 		procedure SetItemSize(const Value: UG);
 	public
@@ -42,13 +43,13 @@ type
 //		procedure Add(var Value); overload;
 		function Add(P: Pointer): Pointer; overload;
 		function Add: Pointer; overload;
-		function Add(const Index: TIndex): Pointer; overload;
+		function Insert(const Index: TIndex): Pointer; overload;
 		procedure Add(const NewObject: TObject); overload;
 		procedure SetCount(NewCount: SG);
 
 		procedure DeleteFirst;
 		procedure DeleteLast;
-		procedure Delete(const Index: TIndex);
+		procedure Delete(Index: TIndex);
 
 //		procedure Insert(var Value; Index: TIndex); overload;
 		procedure Replace(const Index: TIndex; const Item: Pointer);
@@ -57,15 +58,14 @@ type
 		procedure Swap(const I1, I2: TIndex);
 
 		// Data query
-//		procedure Get(var Value; Index: TIndex); overload;
 		function Get(const Index: TIndex): Pointer; overload;
-//		procedure GetFirst(var Value); overload;
 		function GetFirst: Pointer; overload;
-		function First: TObject;
-//		procedure GetLast(var Value); overload;
 		function GetLast: Pointer; overload;
-		procedure Next(var P: Pointer); overload;
-		function Next(Ob: TObject): TObject; overload;
+
+		procedure Next(var P); overload;
+
+		function First: TObject;
+		function Next: TObject; overload;
 
 		function IsEmpty: Boolean;
 		function ToString: string;
@@ -73,6 +73,7 @@ type
 		property ItemSize: UG read FItemSize write SetItemSize;
 		property ItemSh: UG read FItemSh; // Binary shift
 		property ItemMemSize: UG read FItemMemSize; // Item size in memory
+		property Index: SG read FObjectCounter;
 		property Count: TIndex read FItemCount;
 		property Items[const Index: TIndex]: Pointer read Get write Replace; default; // operator []
 
@@ -118,7 +119,7 @@ end;
 
 function TData.Add: Pointer;
 begin
-	Result := Add(FItemCount);
+	Result := Insert(FItemCount);
 end;
 
 function TData.Add(P: Pointer): Pointer;
@@ -137,7 +138,7 @@ begin
 	Insert(Value, FItemCount);
 end;}
 
-procedure TData.Delete(const Index: TIndex);
+procedure TData.Delete(Index: TIndex);
 begin
 	if (Index < FItemCount) then
 	begin
@@ -177,7 +178,7 @@ procedure TData.NewData(const Index: TIndex);
 var NewItemCount, OldItemCount: SG;
 begin
 	OldItemCount := FItemCount;
-	NewItemCount := Max(Index + 1, FItemCount);
+	NewItemCount := Max(Index, FItemCount) + 1;
 	SetCount(NewItemCount);
 	if Index < OldItemCount then
 	begin
@@ -217,7 +218,7 @@ begin
 	end;
 end;}
 
-function TData.Add(const Index: TIndex): Pointer;
+function TData.Insert(const Index: TIndex): Pointer;
 begin
 	if FItemSize <> 0 then
 	begin
@@ -267,6 +268,7 @@ end;}
 
 function TData.GetFirst: Pointer;
 begin
+	FObjectCounter := 0;
 	Result := Get(0);
 end;
 
@@ -336,25 +338,30 @@ begin
 	end;
 end;
 
-procedure TData.Next(var P: Pointer);
+procedure TData.Next(var P);
 begin
+	Inc(FObjectCounter);
 	Inc(SG(P), ItemMemSize);
 	if SG(P) >= SG(Data) + SG(FItemMemSize) * FItemCount then
-		P := nil;
+		Pointer(P) := nil;
 end;
 
 function TData.First: TObject;
 begin
-	if Count > 0 then
+	FObjectCounter := 0;
+	if FObjectCounter < FItemCount then
 		Result := TObject(GetFirst^)
 	else
 		Result := nil;
 end;
 
-function TData.Next(Ob: TObject): TObject;
+function TData.Next: TObject;
 begin
-	Result := Ob;
-	Next(Result);
+	Inc(FObjectCounter);
+	if FObjectCounter < FItemCount then
+		Result := TObject(Get(FObjectCounter)^)
+	else
+		Result := nil;
 end;
 
 (*procedure TData.Serialize(const IniFile: TDIniFile; const Save: BG);
