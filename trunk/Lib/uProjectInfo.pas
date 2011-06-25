@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uProjectInfo.pas
 //* Created:  2006-06-22
 //* Modified: 2008-01-19
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -66,16 +66,6 @@ uses
 var
 	ThisProjectInfo: TProjectInfo;
 
-procedure InitProjectInfoStr;
-var
-	i: TProjectInfoName;
-begin
-	for i := Low(TProjectInfoName) to High(TProjectInfoName) do
-	begin
-		ProjectInfoStr[i] := Copy(GetEnumName(TypeInfo(TProjectInfoName), Ord(i)), 3, MaxInt);
-	end;
-end;
-
 { TProjectInfo }
 
 procedure TProjectInfo.SetProjectInfo;
@@ -116,7 +106,7 @@ begin
 				end;
 				for i := Low(TProjectInfoName) to High(TProjectInfoName) do
 				begin
-					if VerQueryValue(Buf, PChar('StringFileInfo\' + Id + '\' + ProjectInfoStr[i]), Pointer(Value), LenOfValue) then
+					if VerQueryValue(Buf, PChar('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, '')), Pointer(Value), LenOfValue) then
 					begin
 						FProjectInfoNames[i] := Value;
 						if i in [piProductVersion, piFileVersion] then
@@ -156,6 +146,6 @@ begin
 end;
 
 initialization
-	InitProjectInfoStr;
+	EnumToStr(TypeInfo(TProjectInfoName), ProjectInfoStr);
 end.
 

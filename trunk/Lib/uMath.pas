@@ -1,7 +1,7 @@
 //* File:     Lib\uMath.pas
 //* Created:  1998-01-01
 //* Modified: 2008-01-21
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -97,6 +97,7 @@ procedure ReadMem(P: Pointer; Size: UG);
 function SameData(P0, P1: Pointer; Size: UG): BG;
 procedure FillU2(var Desc; Count: UG; Value: U2);
 procedure FillU4(var Desc; Count: UG; Value: U4);
+procedure FillOrderU1(var Desc; Size: UG);
 procedure FillOrderU4(var Desc; Size: UG);
 procedure Reverse4(var Desc; Size: UG);
 function Checksum(var Desc; Size: UG): U4;
@@ -897,6 +898,21 @@ asm
 	REP     STOSD
 @@exit:
 	POP     EDI
+end;
+
+procedure FillOrderU1(var Desc; Size: UG); register;
+asm
+	cmp Size, 0
+	je @Exit
+	add Size, Desc
+	xor ecx, ecx
+	@Loop:
+		mov [Desc], cl
+		inc Desc
+		cmp Desc, Size
+		inc cl
+	jb @Loop
+	@Exit:
 end;
 
 procedure FillOrderU4(var Desc; Size: UG); register;

@@ -1,7 +1,7 @@
 //* File:     Lib\uLog.pas
 //* Created:  2006-05-03
-//* Modified: 2007-10-28
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,11 +11,11 @@ unit uLog;
 interface
 
 uses
-	uTypes, uFiles, uMsg,
+	uTypes, uFile, uMsg,
 	SysUtils;
 
 const
-	DefaultLoggingLevel = mtInformation;
+	DefaultLoggingLevel = mlInformation;
 
 type
 	TLog = class(TObject)
@@ -24,19 +24,21 @@ type
 		FFileName: TFileName;
 		FFile: TFile;
 		FDirectWrite: BG;
-		FLoggingLevel: TMsgType;
-		procedure WriteLine(const Line: string; const FileBuffers: BG = False);
+		FLoggingLevel: TMessageLevel;
+		procedure WriteLine(const Line: string);
 	public
 		property FileName: TFileName read FFileName;
-		constructor Create(const FileName: TFileName; const LogLevel: TMsgType = DefaultLoggingLevel; const DirectWrite: BG= True);
+		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG= True);
 		destructor Destroy; override;
-		procedure Add(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
+		procedure Add(const Line: string; const LogType: TMessageLevel);
 		procedure Flush;
-		property LoggingLevel: TMsgType read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
+		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
 	end;
 
-// Add startup parameter -LogDebug for all debuging information
-	procedure MainLogAdd(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
+	TLogMessageProcedure = procedure(const Line: string; const LogType: TMessageLevel);
+
+	// Add startup parameter -LogDebug for all debuging information
+	procedure MainLogAdd(const Line: string; const LogType: TMessageLevel);
 	procedure InitializeLog;
 
 var
@@ -45,16 +47,16 @@ var
 implementation
 
 uses
-	uParams,
+	uParams, uFiles,
 	uOutputFormat, uEscape, uStrings, {$ifndef Console}uProjectInfo,{$endif}
 	Windows, TypInfo;
 
-procedure TLog.WriteLine(const Line: string; const FileBuffers: BG = False);
+procedure TLog.WriteLine(const Line: string);
 var LLog: TLog;
 begin
-	if not FFile.Opened then Exit;
 	if FDirectWrite then
 	begin
+		if not FFile.Opened then Exit;
 		LLog := MainLog;
 		MainLog := nil;
 		try
@@ -67,13 +69,12 @@ begin
 	begin
 		FData := FData + Line;
 	end;
-	if FileBuffers then Flush;
 end;
 
 const
 	IdLine = ';Local Date Time	Type	Message' + FileSep;
 
-constructor TLog.Create(const FileName: TFileName; const LogLevel: TMsgType = DefaultLoggingLevel; const DirectWrite: BG = True);
+constructor TLog.Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True);
 var
 	NewFileName: TFileName;
 	Instance: SG;
@@ -104,12 +105,13 @@ begin
 
 	if FFile.FileSize = 0 then
 		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
-	Add('Started'{$ifndef Console} + ' Version ' + GetProjectInfo(piFileVersion){$endif}, mtInformation, True);
+	Add('Started'{$ifndef Console} + ' Version ' + GetProjectInfo(piFileVersion){$endif}, mlInformation);
+	Flush;
 end;
 
 destructor TLog.Destroy;
 begin
-	Add('Finished', mtInformation, True);
+	Add('Finished', mlInformation);
 	Flush;
 	if Assigned(FFile) then
 	begin
@@ -120,12 +122,12 @@ begin
 	inherited;
 end;
 
-procedure TLog.Add(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
+procedure TLog.Add(const Line: string; const LogType: TMessageLevel);
 begin
-	Assert(LogType <> mtNone);
+	Assert(LogType <> mlNone);
 	if LogType >= FLoggingLevel then
 	begin
-		WriteLine(DateTimeToS(Now, 3, ofIO) + CharTab + FirstChar(MsgTypeStr[LogType]) + CharTab + AddEscape(Line) + FileSep, FileBuffers);
+		WriteLine(DateTimeToS(Now, 3, ofIO) + CharTab + FirstChar(MessageLevelStr[LogType]) + CharTab + AddEscape(Line) + FileSep);
 	end;
 end;
 
@@ -141,8 +143,9 @@ begin
 		end
 		else
 		begin
-			WriteStringToFile(FFileName, FData, True);
+			FFile.Write(FData);
 			FData := '';
+			FFile.FlushFileBuffers;
 		end;
 	finally
 		MainLog := LLog;
@@ -161,25 +164,25 @@ begin
 		end;
 end;
 
-function GetLoggingLevel(const s: string): TMsgType;
+function GetLoggingLevel(const s: string): TMessageLevel;
 var Index: SG;
 begin
 	Result := DefaultLoggingLevel;
 	if s = '' then Exit;
 	if (s[1] = '0') then
-		Result := mtNone
+		Result := mlNone
 	else
 	begin
-		Index := StrIndex(CapitalCase(s), MsgTypeStr);
+		Index := StrIndex(CapitalCase(s), MessageLevelStr);
 		if (Index >= SG(Low(Result))) and (Index <= SG(High(Result))) then
-			Result := TMsgType(Index);
+			Result := TMessageLevel(Index);
 	end;
 end;
 
-procedure MainLogAdd(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
+procedure MainLogAdd(const Line: string; const LogType: TMessageLevel);
 begin
 	if Assigned(MainLog) then
-		MainLog.Add(Line, LogType, FileBuffers);
+		MainLog.Add(Line, LogType);
 end;
 
 procedure SetLoggingLevel(const Value: string);
@@ -231,9 +234,9 @@ begin
 	end;
 
 	s := '';
-	for i := 0 to Length(MsgTypeStr) - 1 do
+	for i := 0 to Length(MessageLevelStr) - 1 do
 	begin
-		s := s + MsgTypeStr[TMsgType(i)] + '|';
+		s := s + MessageLevelStr[TMessageLevel(i)] + '|';
 	end;
 	s := DelLastChar(s);
 

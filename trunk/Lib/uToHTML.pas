@@ -1,7 +1,7 @@
 //* File:     Lib\uToHTML.pas
 //* Created:  2000-07-01
-//* Modified: 2007-08-21
-//* Version:  1.1.39.8
+//* Modified: 2008-02-23
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -23,6 +23,7 @@ function SToHTML(const Text: string): string;
 function TextToHTML(const Text: string): string;
 function FileToHTML(const FileName: TFileName): TFileName;
 procedure DirToHTML(const Dir: string; const CreateHTMLIndexFile: BG);
+function RepairCell(const Data: string): string;
 
 implementation
 
@@ -34,7 +35,9 @@ uses
 	uMsg,
 	uFiles,
 	uData,
-	uInputFormat;
+	uInputFormat,
+	uSorts,
+	uMath;
 
 function NToHTML(const Value: SG; const EnableZero: BG): string;
 begin
@@ -149,7 +152,7 @@ begin
 			if Line = '' then
 			begin
 				if TableOpened then
-					Result := Result + '<tr><td cellspan="' + IntToStr(LastTabCount + 1) + '"><hr /></td></tr>'
+					Result := Result + '<tr><td colspan="' + IntToStr(LastTabCount + 1) + '"><hr /></td></tr>'
 				else
 					Result := Result + '<br />'
 			end
@@ -261,20 +264,28 @@ type
 		Created: TDateTime;
 	end;
 
-procedure DirToHTML(const Dir: string; const CreateHTMLIndexFile: BG);
 var
 	Items: TData;
 
-	procedure AddFile(const FileName: TFileName; const Name: TFileName; const Author: string; const Created: TDateTime);
-	var P: PItem;
-	begin
-		P := Items.Add(Pointer(TItem.Create));
-		P.FileName := FileName;
-		P.Name := Name;
-		P.Author := Author;
-		P.Created := Created;
-	end;
+function Compare(const Index0, Index1: SG): SG;
+begin
+	if PItem(Items[Index0]).Created > PItem(Items[Index1]).Created then
+		Result := -1
+	else
+		Result := 1;
+end;
 
+procedure AddFile(const FileName: TFileName; const Name: TFileName; const Author: string; const Created: TDateTime);
+var P: PItem;
+begin
+	P := Items.Add(Pointer(TItem.Create));
+	P.FileName := FileName;
+	P.Name := Name;
+	P.Author := Author;
+	P.Created := Created;
+end;
+
+procedure DirToHTML(const Dir: string; const CreateHTMLIndexFile: BG);
 var
 	FileNames: TFileNames;
 	FileNamesCount: SG;
@@ -286,6 +297,7 @@ var
 	Author: string;
 	Created: TDateTime;
 	P: PItem;
+	AIndex: array of SG;
 begin
 	Items := TData.Create;
 	Items.ItemSize := SizeOf(TItem);
@@ -320,34 +332,44 @@ begin
 		begin
 			if (DelFileExt(ExtractFileName(FileNames[i])) <> 'index') then
 			begin
-				AddFile(Dir + FileNames[i], FileNames[i], '', Now);
+
+				AddFile(Dir + FileNames[i], FileNames[i], '', FileTimeToDateTime(GetFileModificationDateTime(Dir + FileNames[i])));
 			end;
 		end;
+
+		SetLength(AIndex, Items.Count);
+		FillOrderU4(AIndex[0], Items.Count);
+		Sort(PArraySG(AIndex), Items.Count, Compare);
 
 		HTML := THTML.Create(Dir + IndexFile);
 		HTML.Title := ExtractFileName(DelLastChar(Dir));
-		HTML.AddTitle;
-		HTML.AddCommand('ul');
+		HTML.AddCommand('table');
 		for i := 0 to Items.Count - 1 do
 		begin
-			HTML.AddCommand('li');
-			P := Items[i];
+			HTML.AddCommand('tr');
+			HTML.AddCommand('td');
+			P := Items[AIndex[i]];
 			HTML.AddRef(P.FileName, P.Name);
-			HTML.AddBody(' (' + P.Author);
+			HTML.AddCommand('/td');
+			HTML.AddCommand('td');
+			HTML.AddBody(P.Author);
+			HTML.AddCommand('/td');
+			HTML.AddCommand('td');
 			if P.Created <> 0 then
 			begin
-				if P.Author <> '' then
-					HTML.AddBody(', ');
-				HTML.AddBody(FormatDateTime('d.m.yyyy', P.Created));
-			end;
-			HTML.AddBody(')');
-			HTML.AddCommand('/li');
+{				if P.Author <> '' then
+					HTML.AddBody(', ');}
+				HTML.AddBody(FormatDateTime('dd.mm.yyyy', P.Created));
+			end
+			else
+				HTML.AddBody(nbsp);
+			HTML.AddCommand('/td');
 		end;
-		HTML.AddCommand('/ul');
+		HTML.AddCommand('/table');
 		HTML.Free;
 	end;
 
-	Items.Free;
+	FreeAndNil(Items);
 end;
 
 end.

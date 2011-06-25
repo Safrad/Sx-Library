@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2008-02-05
-//* Version:  1.1.39.8
+//* Modified: 2008-02-17
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -425,7 +425,7 @@ var
 	CtlWord: U2;
 begin
 	CtlWord := Get8087CW;
-	Set8087CW( (CtlWord and $FFC0) or U1(Mask) );
+	Set8087CW((CtlWord and $FFC0) or U1(Mask));
 	U1(Result) := CtlWord and $3F;
 end;
 

@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uScreen.pas
 //* Created:  1999-08-01
 //* Modified: 2007-08-19
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -131,7 +131,6 @@ uses
 	Registry, Math, MMSystem,
 	uMsg, uStrings, uWave, uFiles, uGetInt, uDIniFile, uInputFormat, uOutputFormat, uSystem;
 var
-	SndBeep: PWave;
 	First: Boolean;
 
 function GetVF(Height, HF: UG): UG;
@@ -323,9 +322,6 @@ begin
 
 	if First = False then
 	begin
-		if FileExists(SoundsDir + 'Question.wav') then
-			WaveReadFromFile(SndBeep, SoundsDir + 'Question.wav');
-
 		DriverNameCount := 0;
 		SetLength(DriverNames, 0);
 
@@ -875,7 +871,7 @@ begin
 		begin
 			if Confirm then
 			begin
-				PlayWave(SndBeep);
+				PlayWinSound(wsQuestion);
 				if LastModeIndex >= 0 then
 				if Confirmation('Use mode ' + s + '?', [mbYes, mbNo]) <> mbYes then
 				begin
@@ -1056,8 +1052,5 @@ initialization
 	RetraceDelay := DefaultRetraceDelay;
 	InitScreenCorectColor;
 finalization
-	if Assigned(SndBeep) then
-	begin
-		FreeMem(SndBeep); SndBeep := nil;
-	end;
+
 end.

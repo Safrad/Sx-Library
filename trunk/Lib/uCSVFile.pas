@@ -1,7 +1,7 @@
 //* File:     Lib\uCSVFile.pas
 //* Created:  2007-03-10
-//* Modified: 2008-02-04
-//* Version:  1.1.39.8
+//* Modified: 2008-02-08
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -12,7 +12,7 @@ interface
 
 uses
 	SysUtils,
-	uTypes, uFiles;
+	uTypes, uFile;
 
 const
 	CSVSep = ','; // ;
@@ -28,6 +28,7 @@ type
 		FLineIndex: SG;
 	public
 		{ Public declarations }
+		AcceptRemark: BG;
 		constructor Create(const ColumnCount: SG);
 		destructor Destroy; override;
 
@@ -52,6 +53,7 @@ begin
 	Assert(ColumnCount >= 0);
 	FColumnCount := ColumnCount;
 	CSVFile := TFile.Create;
+	AcceptRemark := False;
 	inherited Create;
 end;
 
@@ -83,7 +85,7 @@ begin
 		while CSVFile.Readln(Line) do
 		begin
 			if Line = '' then Continue; // Empty line
-			if Line[1] = CSVRemark then Continue; // Remark line
+			if (Line[1] = CSVRemark) and (AcceptRemark = False) then Continue; // Remark line
 			SetLength(Result, FColumnCount);
 			LastIndex := 1;
 			InLineIndex := 1;

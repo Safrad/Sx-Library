@@ -1,7 +1,7 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2008-01-20
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,95 +11,8 @@ unit uWave;
 interface
 
 uses
-	MMSystem, SysUtils, Windows,
-	uDTimer, uTypes, uData, uMath;
-
-{
-procedure NoSound;
-procedure Sound(const Hz: U2);
-}
-{
-	Supported Wave:
-	Format: PCM only
-	Channels: 1..2 (Mono, Stereo)
-	BitsPerSample: 8 or 16 bits
-	SampleRate: 1..512 * MB
-
-	8 bits
-	_____U1   Hex S1
-	Max: 255  $ff -1
-
-	Cen: 128  $80 -128
-	_____127  $7f 127
-
-	Min:   0  $00 0
-
-
-	16 bits
-	_____U2    Hex    S2
-	Max: 32767 $7fff  32767
-
-	Cen:     0 $0000      0
-	_____65535 $ffff     -1
-
-	Min: 32768 $8000 -32768
-}
-const
-	WaveHead = 44;
-	MaxVolume = 1024;
-	Zero1 = $80;
-	Zero2 = $0000;
-type
-	TBLR = record
-		L, R: U1;
-	end;
-	TWLR = record
-		L, R: S2;
-	end;
-	TDLR = record
-		L, R: S4;
-	end;
-	PWaveSample = ^TWaveSample;
-	TWaveSample = packed record
-		case Integer of
-		0: (B: U1);
-		1: (W: S2);
-		2: (D: S4);
-		3: (BLR: TBLR);
-		4: (WLR: TWLR);
-		5: (DLR: TDLR);
-	end;
-	PWaveData = ^TWaveData;
-	TWaveData = packed record
-		case Integer of
-		0: (B: array[0..GB - 1] of U1);
-		1: (W: array[0..512 * MB - 1] of S2);
-		2: (D: array[0..256 * MB - 1] of S4);
-		3: (BLR: array[0..512 * MB - 1] of TBLR);
-		4: (WLR: array[0..256 * MB - 1] of TWLR);
-		5: (DLR: array[0..128 * MB - 1] of TDLR);
-	end;
-
-	PWave = ^TWave;
-	TWave = packed record // 44
-		Marker1: array[0..3] of Char; // 4
-		BytesFollowing: U4; // 4; FileSize - 8
-		// Data
-		Marker2: array[0..3] of Char; // 4
-		// Format
-		Marker3: array[0..3] of Char; // 4
-		BlockAlign: U4; // 4; 16
-		FormatTag: U2; // 2; 1
-		Channels: U2; // 2; 2: stereo, 1: mono
-		SampleRate: U4; // 4; 11025, 22050, 44100
-		BytesPerSecond: U4; // 4; BytesPerSample * SampleRate
-		BytesPerSample: U2; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
-		BitsPerSample: U2; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
-		// Wave data
-		Marker4: array[0..3] of Char; // 4
-		DataBytes: U4; // 4; <= (FileSize - 44)
-		Data: TWaveData; // X
-	end;
+	SysUtils, Windows, MMSystem,
+	uTypes, uData, uMath, uFiles, uFile;
 
 type
 	TWinSound = (
@@ -150,162 +63,312 @@ const
 //		'SystemDefault'
 		);
 
+	AllSounds = 'Sound Wave (*.wav)|*.wav';
+
+procedure Beep;
+procedure PlayWinSound(WinSound: TWinSound);
+procedure PlayWaveFile(const WaveName: TFileName);
+// For screen Width 800 is NowPos 0..799, MaxPos 799
+procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
+function WaveLength(const FileName: TFileName): UG;
+{
+	8 bits
+	_____U1   Hex S1
+	Max: 255  $ff -1
+
+	Cen: 128  $80 -128
+	_____127  $7f 127
+
+	Min:   0  $00 0
+
+
+	16 bits
+	_____U2    Hex    S2
+	Max: 32767 $7fff  32767
+
+	Cen:     0 $0000      0
+	_____65535 $ffff     -1
+
+	Min: 32768 $8000 -32768
+}
+{	Zero1 = $80;
+	Zero2 = $0000;}
+type
+	TBLR = record
+		L, R: U1;
+	end;
+	TWLR = record
+		L, R: S2;
+	end;
+	TDLR = record
+		L, R: S4;
+	end;
+	PWaveSample = ^TWaveSample;
+	TWaveSample = packed record
+		case Integer of
+		0: (B: U1);
+		1: (W: S2);
+		2: (D: S4);
+		3: (BLR: TBLR);
+		4: (WLR: TWLR);
+		5: (DLR: TDLR);
+	end;
+
+	TId = array[0..3] of Char;
+
+	TWaveRIFFHeader = packed record // 12
+		GroupID: TId; // 'RIFF'	Marker1: TId; // 4
+		BytesFollowing: U4; // 4; FileSize - 8
+		RiffType: TId; // 'WAVE' //Marker2: TId; // 4
+	end;
+
+	TWaveChunk = packed record // 8
+		ChunkId: TId; // 4
+		ChunkSize: U4; // 4
+	end;
+	TFormatTag = (
+		ftUnknown = 0,
+		ftPCM = 1, // PCM
+		ftADPCM = 2, // Microsoft ADPCM
+		ftALAW = 6, // ALAW
+		ftMULAW = 7, // MULAW
+		ftDVIIMAADPCM = 17, // Intel's DVI/IMA ADPCM
+//		MPEGLayerIII = 85, // MPEG Layer III
+		ftMax = 65535);
+{
+#define WAVE_FORMAT_UNKNOWN		0x0000 /* Unknown Format */
+#define WAVE_FORMAT_PCM			0x0001 /* PCM */
+#define WAVE_FORMAT_ADPCM		0x0002 /* Microsoft ADPCM Format */
+#define WAVE_FORMAT_IEEE_FLOAT		0x0003 /* IEEE Float */
+#define WAVE_FORMAT_VSELP		0x0004 /* Compaq Computer's VSELP */
+#define WAVE_FORMAT_IBM_CSVD		0x0005 /* IBM CVSD */
+#define WAVE_FORMAT_ALAW		0x0006 /* ALAW */
+#define WAVE_FORMAT_MULAW		0x0007 /* MULAW */
+#define WAVE_FORMAT_OKI_ADPCM		0x0010 /* OKI ADPCM */
+#define WAVE_FORMAT_DVI_ADPCM		0x0011 /* Intel's DVI ADPCM */
+#define WAVE_FORMAT_MEDIASPACE_ADPCM	0x0012 /*Videologic's MediaSpace ADPCM*/
+#define WAVE_FORMAT_SIERRA_ADPCM	0x0013 /* Sierra ADPCM */
+#define WAVE_FORMAT_G723_ADPCM		0x0014 /* G.723 ADPCM */
+#define WAVE_FORMAT_DIGISTD		0x0015 /* DSP Solution's DIGISTD */
+#define WAVE_FORMAT_DIGIFIX		0x0016 /* DSP Solution's DIGIFIX */
+#define WAVE_FORMAT_DIALOGIC_OKI_ADPCM	0x0017 /* Dialogic OKI ADPCM */
+#define WAVE_FORMAT_MEDIAVISION_ADPCM	0x0018 /* MediaVision ADPCM */
+#define WAVE_FORMAT_CU_CODEC		0x0019 /* HP CU */
+#define WAVE_FORMAT_YAMAHA_ADPCM	0x0020 /* Yamaha ADPCM */
+#define WAVE_FORMAT_SONARC		0x0021 /* Speech Compression's Sonarc */
+#define WAVE_FORMAT_TRUESPEECH		0x0022 /* DSP Group's True Speech */
+#define WAVE_FORMAT_ECHOSC1		0x0023 /* Echo Speech's EchoSC1 */
+#define WAVE_FORMAT_AUDIOFILE_AF36	0x0024 /* Audiofile AF36 */
+#define WAVE_FORMAT_APTX		0x0025 /* APTX */
+#define WAVE_FORMAT_AUDIOFILE_AF10	0x0026 /* AudioFile AF10 */
+#define WAVE_FORMAT_PROSODY_1612	0x0027 /* Prosody 1612 */
+#define WAVE_FORMAT_LRC			0x0028 /* LRC */
+#define WAVE_FORMAT_AC2			0x0030 /* Dolby AC2 */
+#define WAVE_FORMAT_GSM610		0x0031 /* GSM610 */
+#define WAVE_FORMAT_MSNAUDIO		0x0032 /* MSNAudio */
+#define WAVE_FORMAT_ANTEX_ADPCME	0x0033 /* Antex ADPCME */
+#define WAVE_FORMAT_CONTROL_RES_VQLPC	0x0034 /* Control Res VQLPC */
+#define WAVE_FORMAT_DIGIREAL		0x0035 /* Digireal */
+#define WAVE_FORMAT_DIGIADPCM		0x0036 /* DigiADPCM */
+#define WAVE_FORMAT_CONTROL_RES_CR10	0x0037 /* Control Res CR10 */
+#define WAVE_FORMAT_VBXADPCM		0x0038 /* NMS VBXADPCM */
+#define WAVE_FORMAT_ROLAND_RDAC		0x0039 /* Roland RDAC */
+#define WAVE_FORMAT_ECHOSC3		0x003A /* EchoSC3 */
+#define WAVE_FORMAT_ROCKWELL_ADPCM	0x003B /* Rockwell ADPCM */
+#define WAVE_FORMAT_ROCKWELL_DIGITALK	0x003C /* Rockwell Digit LK */
+#define WAVE_FORMAT_XEBEC		0x003D /* Xebec */
+#define WAVE_FORMAT_G721_ADPCM		0x0040 /* Antex Electronics G.721 */
+#define WAVE_FORMAT_G728_CELP		0x0041 /* G.728 CELP */
+#define WAVE_FORMAT_MSG723		0x0042 /* MSG723 */
+#define WAVE_FORMAT_MPEG		0x0050 /* MPEG Layer 1,2 */
+#define WAVE_FORMAT_RT24		0x0051 /* RT24 */
+#define WAVE_FORMAT_PAC			0x0051 /* PAC */
+#define WAVE_FORMAT_MPEGLAYER3		0x0055 /* MPEG Layer 3 */
+#define WAVE_FORMAT_CIRRUS		0x0059 /* Cirrus */
+#define WAVE_FORMAT_ESPCM		0x0061 /* ESPCM */
+#define WAVE_FORMAT_VOXWARE		0x0062 /* Voxware (obsolete) */
+#define WAVE_FORMAT_CANOPUS_ATRAC	0x0063 /* Canopus Atrac */
+#define WAVE_FORMAT_G726_ADPCM		0x0064 /* G.726 ADPCM */
+#define WAVE_FORMAT_G722_ADPCM		0x0065 /* G.722 ADPCM */
+#define WAVE_FORMAT_DSAT		0x0066 /* DSAT */
+#define WAVE_FORMAT_DSAT_DISPLAY	0x0067 /* DSAT Display */
+#define WAVE_FORMAT_VOXWARE_BYTE_ALIGNED 0x0069 /* Voxware Byte Aligned (obsolete) */
+#define WAVE_FORMAT_VOXWARE_AC8		0x0070 /* Voxware AC8 (obsolete) */
+#define WAVE_FORMAT_VOXWARE_AC10	0x0071 /* Voxware AC10 (obsolete) */
+#define WAVE_FORMAT_VOXWARE_AC16	0x0072 /* Voxware AC16 (obsolete) */
+#define WAVE_FORMAT_VOXWARE_AC20	0x0073 /* Voxware AC20 (obsolete) */
+#define WAVE_FORMAT_VOXWARE_RT24	0x0074 /* Voxware MetaVoice (obsolete) */
+#define WAVE_FORMAT_VOXWARE_RT29	0x0075 /* Voxware MetaSound (obsolete) */
+#define WAVE_FORMAT_VOXWARE_RT29HW	0x0076 /* Voxware RT29HW (obsolete) */
+#define WAVE_FORMAT_VOXWARE_VR12	0x0077 /* Voxware VR12 (obsolete) */
+#define WAVE_FORMAT_VOXWARE_VR18	0x0078 /* Voxware VR18 (obsolete) */
+#define WAVE_FORMAT_VOXWARE_TQ40	0x0079 /* Voxware TQ40 (obsolete) */
+#define WAVE_FORMAT_SOFTSOUND		0x0080 /* Softsound */
+#define WAVE_FORMAT_VOXWARE_TQ60	0x0081 /* Voxware TQ60 (obsolete) */
+#define WAVE_FORMAT_MSRT24		0x0082 /* MSRT24 */
+#define WAVE_FORMAT_G729A		0x0083 /* G.729A */
+#define WAVE_FORMAT_MVI_MV12		0x0084 /* MVI MV12 */
+#define WAVE_FORMAT_DF_G726		0x0085 /* DF G.726 */
+#define WAVE_FORMAT_DF_GSM610		0x0086 /* DF GSM610 */
+#define WAVE_FORMAT_ISIAUDIO		0x0088 /* ISIAudio */
+#define WAVE_FORMAT_ONLIVE		0x0089 /* Onlive */
+#define WAVE_FORMAT_SBC24		0x0091 /* SBC24 */
+#define WAVE_FORMAT_DOLBY_AC3_SPDIF	0x0092 /* Dolby AC3 SPDIF */
+#define WAVE_FORMAT_ZYXEL_ADPCM		0x0097 /* ZyXEL ADPCM */
+#define WAVE_FORMAT_PHILIPS_LPCBB	0x0098 /* Philips LPCBB */
+#define WAVE_FORMAT_PACKED		0x0099 /* Packed */
+#define WAVE_FORMAT_RHETOREX_ADPCM	0x0100 /* Rhetorex ADPCM */
+#define WAVE_FORMAT_IRAT		0x0101 /* BeCubed Software's IRAT */
+#define WAVE_FORMAT_VIVO_G723		0x0111 /* Vivo G.723 */
+#define WAVE_FORMAT_VIVO_SIREN		0x0112 /* Vivo Siren */
+#define WAVE_FORMAT_DIGITAL_G723	0x0123 /* Digital G.723 */
+#define WAVE_FORMAT_CREATIVE_ADPCM	0x0200 /* Creative ADPCM */
+#define WAVE_FORMAT_CREATIVE_FASTSPEECH8 0x0202 /* Creative FastSpeech8 */
+#define WAVE_FORMAT_CREATIVE_FASTSPEECH10 0x0203 /* Creative FastSpeech10 */
+#define WAVE_FORMAT_QUARTERDECK		0x0220 /* Quarterdeck */
+#define WAVE_FORMAT_FM_TOWNS_SND	0x0300 /* FM Towns Snd */
+#define WAVE_FORMAT_BTV_DIGITAL		0x0400 /* BTV Digital */
+#define WAVE_FORMAT_VME_VMPCM		0x0680 /* VME VMPCM */
+#define WAVE_FORMAT_OLIGSM		0x1000 /* OLIGSM */
+#define WAVE_FORMAT_OLIADPCM		0x1001 /* OLIADPCM */
+#define WAVE_FORMAT_OLICELP		0x1002 /* OLICELP */
+#define WAVE_FORMAT_OLISBC		0x1003 /* OLISBC */
+#define WAVE_FORMAT_OLIOPR		0x1004 /* OLIOPR */
+#define WAVE_FORMAT_LH_CODEC		0x1100 /* LH Codec */
+#define WAVE_FORMAT_NORRIS		0x1400 /* Norris */
+#define WAVE_FORMAT_ISIAUDIO		0x1401 /* ISIAudio */
+#define WAVE_FORMAT_SOUNDSPACE_MUSICOMPRESS 0x1500 /* Soundspace Music Compression */
+#define WAVE_FORMAT_DVM			0x2000 /* DVM */
+#define WAVE_FORMAT_EXTENSIBLE		0xFFFE /* SubFormat */
+#define WAVE_FORMAT_DEVELOPMENT         0xFFFF /* Development */
+
+/*?#define WAVE_FORMAT_IBM_MULAW	0x0101 IBM MULAW? */
+/*?#define WAVE_FORMAT_IBM_ALAW		0x0102 IBM ALAW? */
+/*?#define WAVE_FORMAT_IBM_ADPCM	0x0103 IBM ADPCM? */
+/*?#define WAVE_FORMAT_DIVX_AUDIO160	0x00000160 DivX Audio? */
+/*?#define WAVE_FORMAT_DIVX_AUDIO161	0x00000161 DivX Audio? */
+}
+
+	TWaveFormatChunk = packed record // 16
+		FormatTag: TFormatTag; // 2; 1
+		Channels: U2; // 2; 2: stereo, 1: mono
+		SampleRate: U4; // 4; 11025, 22050, 44100
+		BytesPerSecond: U4; // 4; BytesPerSample * SampleRate
+		BytesPerSample: U2; // 2; 1, 2, 4; 4: 16 bit stereo, 2: 8 bit stereo
+		BitsPerSample: U2; // 2; 16: 16 bit mono/stereo, 8: 8 bit mono/stereo
+	end;
+	TIMADVIFormat = packed record
+		X: U4; // $0200F9F7
+	end;
+	TMicrosoftADPCMFormat = packed record
+		R: array[0..33] of U1;
+	end;
+
+	PCompleteWave = ^TCompleteWave;
+	TCompleteWave = packed record
+		Head: TWaveRIFFHeader;
+		FormatChunk: TWaveChunk;
+		Format: TWaveFormatChunk;
+		DataChunk: TWaveChunk;
+	end;
+
 const
 	ConvertShr = 16;
 	ConvertPre = 1 shl ConvertShr;
-procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
-// For screen Width 800 is NowPos 0..799, MaxPos 799
-
-function WaveLength(const Wave: PWave): UG; overload;
-function WaveLength(const FileName: TFileName): UG; overload;
-
-function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;
-function GetBufferSample(wBitsPerSample, BufferOutSize: SG): SG;
-
-procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
-procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
-
-procedure WaveCreate(var Wave: PWave;
-	const Channels: U2; // 1, 2
-	const BitsPerSample: U2; // 8, 16
-	const SampleRate: U4; // 11025, 22050, 44100, 48000
-	const TotalSamples: U4); // 1 sec = SampleRate
-procedure WaveFree(var Wave: PWave);
-
-// Left, Right (0..ConvertPre)
-procedure ConvertChannels(const WaveS: PWave; var WaveD: PWave;
-	const NewChannels: U2; const Left, Right: Integer);
-procedure ConvertBitsPerSample(const WaveS: PWave; var WaveD: PWave;
-	const NewBitsPerSample: Integer);
-procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: U4);
-{procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
-	const Channels: U2;
-	const BitsPerSample: U2;
-	const SampleRate: U4);}
-const
-	AllSounds = 'Sound Wave (*.wav)|*.wav';
-
-procedure PlayWave(Wave: PWave);
-procedure PlayWaveFile(const WaveName: TFileName);
-procedure PlayWinSound(WinSound: TWinSound);
-procedure Beep;
 
 type
-	PPlayItem = ^TPlayItem;
-	TPlayItem = packed record // 32
-		PlayAs: (paWave, paTone, paNoise, paSilent); // 1
-		R0: array[0..2] of U1;
-		SampleCount: U4;
-		SamplePos: U4;
-		Speed: U4;
-		Offset: U4; // Calculated from Speed
-		VolumeLeft: S4;
-		VolumeRight: S4;
-		Wave: PWave; // 4
-	end;
-
-	TWaveCommon = class
+	TWave = class
 	private
-		FHWave: HWave;
-		FWaveFormat: TWaveFormatEx;
-
-		FError: MMResult;
-		FActive: Boolean;
-		FCloseInvoked: Boolean;
-
-		FBufferOutSize: SG;
-		FBufferOutSamples: SG;
-		FOutCount: SG;
-
-		procedure SendBuffer;
-		procedure FillBuffer(Buffer: PWaveData); virtual; abstract; // WavePlayerOnly
-	public
-		// Options
-		VolumeLeft: SG;
-		VolumeRight: SG;
-
-		Bits: SG;
-		Frequency: SG;
-		Channels: 1..2;
-
-		BufferTime: UG;
-
-		function WaveErrorText(ErrorCode: U4): string;
-		procedure MMError(s: string);
-
-		constructor Create;
-		destructor Destroy; override;
-
-		procedure Open;
-		procedure Close;
-
-		procedure Pause;
-		procedure Resume;
-		procedure Stop;
-
-		property BufferSize: SG read FBufferOutSize;
-		property BufferSamples: SG read FBufferOutSamples;
-		property BufferOutCount: SG read FOutCount;
-		property Active: Boolean read FActive;
-	end;
-
-	TWavePlayer = class(TWaveCommon)
-	private
-		// Items to play
-		PlayItems: TData;
-
-		procedure FillBuffer(Buffer: PWaveData); override;
-	public
-		Speed: SG;
-		MaxItems: SG;
-
-		constructor Create;
-		destructor Destroy; override;
-
-		procedure Play(Wave: PWave);
-		procedure Beep;
-		procedure Silent(Tim: UG);
-		procedure Tone(Frequency, Tim: UG);
-		procedure Noise(Tim: UG);
-	end;
-
-	TOnReciveBuffrerEvent = procedure(Sender: TObject; Buffer: PWaveData) of object;
-
-	TWaveRecorder = class(TWaveCommon)
-	private
-		FOnReciveBuffrer: TOnReciveBuffrerEvent;
-	public
-
+		FFormat: TWaveFormatChunk;
+		FSampleCount: UG;
+		FPreDataSize: UG;
+		FDataBytes: U8;
+		PWave: PCompleteWave;
+		FData: PWaveSample;
+		procedure ReadRIFFHeader(const F: TFile);
+		procedure ReadFormatChunk(const F: TFile);
+		procedure ReadDataChunk(const F: TFile);
+		procedure ReadChunks(const F: TFile);
+		function GetLength: UG;
+		procedure DecodeALAW(InData: PU1);
+		procedure DecodeMULAW(InData: PU1);
+		procedure DecodeADPCM(CompressedData: Pointer);
+		procedure DecodeIMA(CompressedData: Pointer);
+		procedure Decode(CompressedData: Pointer);
 	published
-		property OnReciveBuffrer: TOnReciveBuffrerEvent read FOnReciveBuffrer write FOnReciveBuffrer;
+		destructor Destroy; override;
+	public
+		WithoutData: BG;
+		constructor Create; overload;
+		constructor Create(
+			const Channels: U2;
+			const BitsPerSample: U2;
+			const SampleRate: U4;
+			const TotalSamples: U4); overload;
+		function Sample(Index: SG; const Channel: SG): SG; overload;
+		function Sample(const Index: SG): SG; overload;
+		function GetSample(const BitLength: SG; var BitIndex: SG): SG;
+		procedure AddSample(FPointer: PS2; const Value: S2);
+		property SampleCount: UG read FSampleCount;
+		property Format: TWaveFormatChunk read FFormat;
+		property Data: PWaveSample read FData;
+		procedure ReadFromFile(const FileName: TFileName);
+		procedure WriteToFile(const FileName: TFileName);
+		property Length: UG read GetLength;
+		procedure Play;
+		// Left, Right (0..ConvertPre)
+		function ConvertChannels(const NewChannels: U2; const Left, Right: SG): TWave;
+		function ConvertBitsPerSample(const NewBitsPerSample: Integer): TWave;
+		procedure ConvertSampleRate(const SampleRate: U4);
+		{procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
+			const Channels: U2;
+			const BitsPerSample: U2;
+			const SampleRate: U4);}
 	end;
-
-// Midi
-function MidiMCICallBack: Boolean;
-procedure MidiMCIOpen(FileName: TFileName);
-procedure MidiMCISeek(const SeekTo: U4);
-function MidiMCIGetPos: U4;
-procedure MidiMCIPause;
-procedure MidiMCIStop;
-procedure MidiMCIResume;
-procedure MidiMCIPlay;
-procedure MidiMCIClose;
-
-var
-	MidiHandle: HWnd;
-	MidiPlaying: Boolean;
-	MidiOpened: Boolean;
 
 implementation
 
 uses
 	Registry,
-	uFiles, uMsg, uStrings, uOutputFormat, uLog;
+	uMsg, uStrings, uOutputFormat, uLog;
 
-// Wave
+procedure PlayWinSound(WinSound: TWinSound);
+var
+	Reg: TRegistry;
+	Key: string;
+begin
+	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.', mlDebug);
+	Reg := TRegistry.Create(KEY_QUERY_VALUE);
+	try
+		Reg.RootKey := HKEY_CURRENT_USER;
+		Key := 'AppEvents' + PathDelim + 'Schemes' + PathDelim + 'Apps' + PathDelim + '.Default' + PathDelim + WinSoundNames[WinSound] + PathDelim + '.Current';
+		if Reg.OpenKeyReadOnly(Key) then
+		begin
+			if Reg.ValueExists('') then
+			begin
+				PlayWaveFile(Reg.ReadString(''));
+			end;
+			Reg.CloseKey;
+		end;
+	finally
+		Reg.Free;
+	end;
+end;
+
 procedure Beep;
 begin
 	PlayWinSound(wsDefaultSound);
+end;
+
+procedure PlayWaveFile(const WaveName: TFileName);
+//var Wave: PWave;
+begin
+{	WaveReadFromFile(Wave, WaveName);
+	PlayWave(Wave);
+	FreeMem(Wave);}
+	MainLogAdd('Play sound ' + WaveName + '.', mlDebug);
+	if WaveName <> '' then
+		PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME});
 end;
 
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
@@ -322,131 +385,43 @@ begin
 		Right := ConvertPre;
 end;
 
-function CheckWave(Wave: PWave): Boolean;
+procedure TWave.ReadRIFFHeader(const F: TFile);
+var
+	Wave: TWaveRIFFHeader;
 begin
-	Result := False;
-	if Wave <> nil then
+	if F.FileSize < SizeOf(TWaveRIFFHeader) then
 	begin
-		if ((Wave.BitsPerSample = 8) or (Wave.BitsPerSample = 16)) then
-		begin
-			Result := True;
-		end
-		else
-			ErrorMsg('Invalid wave format.');
-	end
+		IOErrorMessage(F.FileName, 'File truncated.');
+	end;
+	if not F.BlockRead(Wave, SizeOf(TWaveRIFFHeader)) then
+	begin
+
+	end;
+	if (Wave.GroupID <> 'RIFF') or (Wave.RiffType <> 'WAVE') then
+	begin
+		IOErrorMessage(F.FileName, 'File is not wave.');
+	end;
+	if Wave.BytesFollowing <> F.FileSize - 8 then
+	begin
+		IOErrorMessage(F.FileName, 'Wave bytes following repaired.');
+		Wave.BytesFollowing := F.FileSize - 8;
+	end;
+end;
+
+procedure TWave.ReadFormatChunk(const F: TFile);
+begin
+	F.BlockRead(FFormat, SizeOf(FFormat));
+	case FFormat.FormatTag of
+	ftPCM, ftALAW, ftMULAW:
+//	ftADPCM, ftDVIIMAADPCM:
+	begin
+
+	end;
 	else
-		ErrorMsg('Wave is empty.');
-end;
-
-function WaveReadHeadFromFile(var Wave: PWave; FName: TFileName): BG;
-label LFin;
-var
-	F: TFile;
-begin
-	Result := False;
-	if Wave <> nil then
-	begin
-		WaveFree(Wave);
+		ErrorMsg('Invalid wave format.');
 	end;
-	F := TFile.Create;
-	try
-		if F.Open(FName, fmReadOnly) then
-		begin
-			if F.FileSize < WaveHead then
-			begin
-				IOErrorMessage(FName, 'File truncated.');
-				goto LFin;
-			end;
-			GetMem(Wave, WaveHead);
-			if not F.BlockRead(Wave^, WaveHead) then goto LFin;
-			if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
-				(Wave.Marker3 <> 'fmt ') {or
-				(Wave.BytesFollowing <> F.FileSize - 8) }then
-			begin
-				IOErrorMessage(FName, 'File is not wave.');
-				WaveFree(Wave);
-				goto LFin;
-			end;
-			Result := True;
-			LFin:
-			F.Close;
-		end;
-	finally
-		F.Free;
-	end;
-end;
-
-procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
-label LFin;
-var
-	F: TFile;
-begin
-	if Wave <> nil then
-	begin
-		WaveFree(Wave);
-	end;
-	F := TFile.Create;
-	try
-		if F.Open(FName, fmReadOnly) then
-		begin
-			if F.FileSize < WaveHead then
-			begin
-				IOErrorMessage(FName, 'File truncated.');
-				goto LFin;
-			end;
-			GetMem(Wave, F.FileSize);
-			if not F.BlockRead(Wave^, F.FileSize) then goto LFin;
-			if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
-				(Wave.Marker3 <> 'fmt ') {or
-				(Wave.BytesFollowing <> F.FileSize - 8) }then
-			begin
-				IOErrorMessage(FName, 'File is not wave.');
-				WaveFree(Wave);
-			end
-			else
-			begin
-				if Wave.BytesFollowing <> F.FileSize - 8 then
-				begin
-					IOErrorMessage(FName, 'Wave bytes following repaired.');
-					Wave.BytesFollowing := F.FileSize - 8;
-				end;
-				if (Wave.BitsPerSample = 4) {Microsoft ADPCM} or (Wave.BitsPerSample = 0) {GSM 6.10} then goto LFin;
-				if ((Wave.BitsPerSample <> 8) and (Wave.BitsPerSample <> 16)) then
-				begin
-					IOErrorMessage(FName, 'Wave format not supported.');
-					WaveFree(Wave);
-					goto LFin;
-				end;
-		{		if Wave.DataBytes > F.FileSize - 44 then
-				begin
-					IOErrorMessage(FName, 'Wave data bytes repaired.');
-					Wave.DataBytes := F.FileSize - 44;
-				end;}
-			end;
-			LFin:
-			F.Close;
-		end;
-	finally
-		F.Free;
-	end;
-end;
-
-procedure WaveWriteToFile(var Wave: PWave; FName: TFileName);
-var
-	F: TFile;
-begin
-	if Wave = nil then Exit;
-	F := TFile.Create;
-	try
-		if F.Open(FName, fmReadOnly) then
-		begin
-			F.BlockWrite(Wave^, Wave^.BytesFollowing + 8);
-			F.Truncate;
-			F.Close;
-		end;
-	finally
-		F.Free;
-	end;
+{	if not (FFormat.BitsPerSample in [8, 16]) then
+		ErrorMsg('Invalid wave format.');}
 end;
 
 function BitsToByte(const Bits: U8): U4;
@@ -454,39 +429,189 @@ begin
 	Result := (Bits + 7) shr 3;
 end;
 
-function GetTotalSamples(const BytesPerSample: U2;
-	const DataBytes: U4): U4;
+procedure TWave.ReadDataChunk(const F: TFile);
+//const
+//	WaveHead = SizeOf(TCompleteWave) + SizeOf(Pointer);
+var
+	PUncompressedData: Pointer;
 begin
-	Result := DataBytes div BytesPerSample;
+	if WithoutData then Exit;
+{	GetMem(PWave, FDataBytes + WaveHead);}
+	FPreDataSize := F.FilePos;
+	GetMem(PWave, FDataBytes + FPreDataSize);
+	F.SeekBegin;
+	F.BlockRead(PWave^, FDataBytes + FPreDataSize);
+
+	if FFormat.FormatTag in [ftALAW, ftMULAW] then
+	begin
+		FDataBytes := 2 * FSampleCount;
+		GetMem(PUncompressedData, FDataBytes + SizeOf(TCompleteWave));
+		FData := Pointer(SG(PUncompressedData) + SizeOf(TCompleteWave));
+		Decode(PWaveSample(UG(PWave) + FPreDataSize));
+		FreeMem(PWave); // Free compressed wave.
+		PWave := PUncompressedData;
+
+		FFormat.FormatTag := ftPCM;
+		FFormat.BytesPerSecond := BitsToByte(16 * U8(FFormat.SampleRate));
+		FFormat.BytesPerSample := BitsToByte(16);
+		FFormat.BitsPerSample := 16;
+
+		PWave.Head.GroupID := 'RIFF';
+		PWave.Head.BytesFollowing := FDataBytes + SizeOf(TCompleteWave) - 8;
+		PWave.Head.RiffType := 'WAVE';
+		PWave.FormatChunk.ChunkId := 'fmt ';
+		PWave.FormatChunk.ChunkSize := SizeOf(PWave.Format);
+		PWave.Format := FFormat;
+{		PWave.FactChunk.ChunkId := 'fact';
+		PWave.FactChunk.ChunkSize := SizeOf(PWave.Fact);
+		PWave.Fact := SampleCount;}
+		PWave.DataChunk.ChunkId := 'data';
+		PWave.DataChunk.ChunkSize := FDataBytes;
+		FPreDataSize := SizeOf(TCompleteWave);
+		FData := PWaveSample(SG(PWave) + SizeOf(TCompleteWave));
+	end
+	else
+		FData := Pointer(SG(PWave) + FPreDataSize);
 end;
 
-procedure WaveCreate(var Wave: PWave;
+procedure TWave.ReadChunks(const F: TFile);
+const
+	fmt = Ord('f') + Ord('m') shl 8 + Ord('t') shl 16 + Ord(' ') shl 24;
+	data = Ord('d') + Ord('a') shl 8 + Ord('t') shl 16 + Ord('a') shl 24;
+	fact = Ord('f') + Ord('a') shl 8 + Ord('c') shl 16 + Ord('t') shl 24;
+
+	list = Ord('L') + Ord('I') shl 8 + Ord('S') shl 16 + Ord('T') shl 24;
+	info = Ord('I') + Ord('N') shl 8 + Ord('F') shl 16 + Ord('O') shl 24;
+	icmt = Ord('I') + Ord('C') shl 8 + Ord('M') shl 16 + Ord('T') shl 24;
+	icrd = Ord('I') + Ord('C') shl 8 + Ord('R') shl 16 + Ord('D') shl 24;
+	isft = Ord('I') + Ord('S') shl 8 + Ord('F') shl 16 + Ord('T') shl 24;
+	ieng = Ord('I') + Ord('E') shl 8 + Ord('N') shl 16 + Ord('G') shl 24;
+	icop = Ord('I') + Ord('C') shl 8 + Ord('O') shl 16 + Ord('P') shl 24;
+	isbj = Ord('I') + Ord('S') shl 8 + Ord('B') shl 16 + Ord('J') shl 24;
+	disp = Ord('D') + Ord('I') shl 8 + Ord('S') shl 16 + Ord('P') shl 24;
+var
+	Chunk: TWaveChunk;
+	FilePos: U8;
+//	s: string;
+begin
+	while not F.Eof do
+	begin
+		F.BlockRead(Chunk, SizeOf(TWaveChunk));
+		FilePos := F.FilePos;
+		case SG(Chunk.ChunkId) of
+		fmt: ReadFormatChunk(F);
+		data:
+		begin
+			FDataBytes := Chunk.ChunkSize;
+			if FSampleCount = 0 then
+				FSampleCount := BitsPerByte * FDataBytes div FFormat.BitsPerSample; //DataBytes div BytesPerSample;
+
+			ReadDataChunk(F);
+		end;
+		fact:
+		begin
+			F.BlockRead(FSampleCount, SizeOf(FSampleCount));
+		end;
+		list:
+		begin
+			F.Seek(FilePos + 4); // Skip List Id
+			ReadChunks(F);
+		end;
+		icmt, icrd, isft, ieng, icop, isbj, disp:
+		begin
+//			ReadTextChunk(F);
+{			SetLength(s, Chunk.ChunkSize);
+			F.BlockRead(s[1], Chunk.ChunkSize);}
+		end
+		else
+			Warning('Unknown chunk id %1 in file %2!', [Chunk.ChunkId, F.FileName]);
+		end;
+		if Chunk.ChunkSize and 1 <> 0 then
+			F.Seek(FilePos + (Chunk.ChunkSize + 1) and $fffffffe) // Word align of chunks.
+		else
+			F.Seek(FilePos + Chunk.ChunkSize);
+	end;
+end;
+
+(*function TWave.ReadHeadFromFile(const FileName: TFileName): BG;
+var
+	F: TFile;
+begin
+	Result := False;
+{	if Wave <> nil then
+	begin
+		WaveFree(Wave);
+	end;}
+	F := TFile.Create;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			ReadRIFFHeader(F);
+			ReadFormatChunk(F);
+
+			Result := True;
+		end;
+	finally
+		F.Close;
+		F.Free;
+	end;
+end; *)
+
+procedure TWave.ReadFromFile(const FileName: TFileName);
+var
+	F: TFile;
+begin
+{	if Self <> nil then
+	begin
+		WaveFree(Wave);
+	end;}
+	F := TFile.Create;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			FSampleCount := 0;
+			ReadRIFFHeader(F);
+			ReadChunks(F);
+		end;
+	finally
+		F.Close;
+		F.Free;
+	end;
+end;
+
+constructor TWave.Create;
+begin
+	inherited;
+end;
+
+constructor TWave.Create(
 	const Channels: U2;
 	const BitsPerSample: U2;
 	const SampleRate: U4;
 	const TotalSamples: U4);
 var
 	BitsPerSamples: U2;
-	DataBytes: U4;
+//	DataBytes: U4;
 begin
-	BitsPerSamples := Channels * BitsPerSample;
-	DataBytes := BitsToByte(BitsPerSamples * U8(TotalSamples));
+	inherited Create;
 
-	if Wave = nil then
-		GetMem(Wave, WaveHead + DataBytes);
-	Wave.Marker1 := 'RIFF';
+	BitsPerSamples := Channels * BitsPerSample;
+//	DataBytes := BitsToByte(BitsPerSamples * U8(TotalSamples));
+
+{	if Wave = nil then
+		GetMem(Wave, WaveHead + DataBytes);}
+{	Wave.Marker1 := 'RIFF';
 	Wave.BytesFollowing := DataBytes + WaveHead - 8;
-	Wave.Marker2 := 'WAVE';
-	Wave.Marker3 := 'fmt ';
-	Wave.BlockAlign := 16;
-	Wave.FormatTag := 1;
-	Wave.Channels := Channels;
-	Wave.SampleRate := SampleRate;
-	Wave.BytesPerSecond := BitsToByte(BitsPerSamples * U8(SampleRate));
-	Wave.BytesPerSample := BitsToByte(BitsPerSamples); // 256 for 4 bit !!!
-	Wave.BitsPerSample := BitsPerSample;
-	Wave.Marker4 := 'data';
-	Wave.DataBytes := DataBytes;
+	Wave.Marker2 := 'WAVE';}
+	FFormat.FormatTag := ftPCM;
+	FFormat.Channels := Channels;
+	FFormat.SampleRate := SampleRate;
+	FFormat.BytesPerSecond := BitsToByte(BitsPerSamples * U8(SampleRate));
+	FFormat.BytesPerSample := BitsToByte(BitsPerSamples);
+	FFormat.BitsPerSample := BitsPerSample;
+	FSampleCount := BitsPerByte * FDataBytes div FFormat.BitsPerSample; //DataBytes div BytesPerSample;
+{	Wave.Marker4 := 'data';
+	Wave.DataBytes := DataBytes;}
 
 { case BitsPerSample of
 	8: FillChar(Wave.Data.B, Wave.DataBytes, 128);
@@ -494,26 +619,23 @@ begin
 	end;}
 end;
 
-procedure WaveFree(var Wave: PWave);
+destructor TWave.Destroy;
 begin
-	FreeMem(Wave); Wave := nil;
+	FillChar(FFormat, SizeOf(FFormat), 0);
+	FData := nil;
+	FreeMem(PWave);
+	inherited;
 end;
 
-procedure ConvertChannels(const WaveS: PWave; var WaveD: PWave;
-	const NewChannels: U2; const Left, Right: SG);
+function TWave.ConvertChannels(const NewChannels: U2; const Left, Right: SG): TWave;
 var
 	i: SG;
 //  WaveData: SG;
-	TotalSamples: SG;
+	P: PWaveSample;
 begin
-	if (WaveS = nil) or (WaveS = WaveD) then Exit;
-	TotalSamples :=
-		GetTotalSamples(WaveS.BytesPerSample, WaveS.DataBytes);
-
 { if WaveD = nil then
 	begin}
-		WaveCreate(WaveD, NewChannels, WaveS.BitsPerSample,
-		WaveS.SampleRate, TotalSamples);
+	Result := TWave.Create(NewChannels, FFormat.BitsPerSample, FFormat.SampleRate, SampleCount);
 { end
 	else
 	begin
@@ -526,24 +648,30 @@ begin
 		WaveD.BytesFollowing :=  WaveHead + WaveData - 8;
 	end;}
 
-	case WaveS.BitsPerSample of
+	case FFormat.BitsPerSample of
 	8:
-		case WaveS.Channels of
+	begin
+		case FFormat.Channels of
 		1:
-			case WaveD.Channels of
+			case Result.FFormat.Channels of
 			1:
-				for i := 0 to WaveD.DataBytes - 1 do
+			begin
+				Move(FData, Result.FData, FDataBytes);
+{				for i := 0 to Result.FDataBytes - 1 do
 				begin
 					WaveD.Data.B[i] := WaveS.Data.B[i];
-				end;
+				end;}
+			end;
 			2:
 			begin
-{       for i := 0 to WaveD.DataBytes div 2 - 1 do
+				P := Result.FData;
+				for i := 0 to Result.FDataBytes div 2 - 1 do
 				begin
-					WaveD.Data.B[i shl 1 + 0] := Left * S1(WaveS.Data.B[i] - 128) div ConvertPre + 128;
-					WaveD.Data.B[i shl 1 + 1] := Right * S1(WaveS.Data.B[i] - 128) div ConvertPre + 128;
-				end;}
-				asm
+					P^.BLR.L := Left * S1(Sample(i, 0) - 128) div ConvertPre + 128;
+					P^.BLR.R := Right * S1(Sample(i, 0) - 128) div ConvertPre + 128;
+					Inc(P, SizeOf(TBLR));
+				end;
+(*				asm
 				pushad
 				mov eax, WaveD
 				mov edi, [eax]
@@ -576,42 +704,56 @@ begin
 				jne @Loop
 				popad
 				end;
+			end; *)
 			end;
 			end;
 		2:
-			case WaveD.Channels of
+		begin
+			case Result.FFormat.Channels of
 			1:
-				for i := 0 to WaveD.DataBytes - 1 do
+			begin
+				P := Result.FData;
+				for i := 0 to Result.FDataBytes - 1 do
 				begin
-					WaveD.Data.B[i] :=
-						(Left * S1(WaveS.Data.B[i] - 128) div ConvertPre +
-						Right * S1(WaveS.Data.B[i] - 128) div ConvertPre) div 2 + 128;
-				end;
-			2:
-				for i := 0 to WaveD.DataBytes div 2 - 1 do
-				begin
-					WaveD.Data.B[i shl 1 + 0] := Left * S1(WaveS.Data.B[i shl 1 + 0] - 128) div ConvertPre + 128;
-					WaveD.Data.B[i shl 1 + 1] := Right * S1(WaveS.Data.B[i shl 1 + 1] - 128) div ConvertPre + 128;
+					P^.B :=
+						(Left * S1(Sample(i, 0) - 128) div ConvertPre +
+						Right * S1(Sample(i, 1) - 128) div ConvertPre) div 2 + 128;
+					Inc(P, 1);
 				end;
 			end;
-		end;
-	16:
-		case WaveS.Channels of
-		1:
-			case WaveD.Channels of
-			1:
-				for i := 0 to WaveD.DataBytes div 2 - 1 do
-				begin
-					WaveD.Data.W[i] := WaveS.Data.W[i];
-				end;
 			2:
 			begin
-{       for i := 0 to WaveD.DataBytes div 4 - 1 do
+				P := Result.FData;
+				for i := 0 to Result.FDataBytes div 2 - 1 do
 				begin
-					WaveD.Data.W[i shl 1 + 0] := Left * WaveS.Data.W[i] div ConvertPre;
-					WaveD.Data.W[i shl 1 + 1] := Right * WaveS.Data.W[i] div ConvertPre;
-				end;}
-				asm
+					P^.BLR.L := Left * S1(Sample(i, 0) - 128) div ConvertPre + 128;
+					P^.BLR.R := Right * S1(Sample(i, 1) - 128) div ConvertPre + 128;
+					Inc(P, SizeOf(TBLR));
+				end;
+			end;
+			end;
+		end;
+		end;
+	end;
+	16:
+	begin
+		case FFormat.Channels of
+		1:
+			case Result.FFormat.Channels of
+			1:
+			begin
+				Move(FData, Result.FData, FDataBytes);
+			end;
+			2:
+			begin
+				P := Result.FData;
+				for i := 0 to Result.FDataBytes div 4 - 1 do
+				begin
+					P^.WLR.L := Left * Sample(i, 0) div ConvertPre;
+					P^.WLR.R := Right * Sample(i, 0) div ConvertPre;
+					Inc(P, 4);
+				end;
+{				asm
 				pushad
 				mov eax, WaveD
 				mov edi, [eax]
@@ -640,42 +782,46 @@ begin
 				jne @Loop
 				popad
 				end;
+			end;}
 			end;
 			end;
 		2:
-			case WaveD.Channels of
+			case Result.FFormat.Channels of
 			1:
-				for i := 0 to WaveD.DataBytes div 2 - 1 do
+			begin
+				P := Result.FData;
+				for i := 0 to Result.FDataBytes div 2 - 1 do
 				begin
-					WaveD.Data.W[i] :=
-						(Left * WaveS.Data.W[i] div ConvertPre +
-						Right * WaveS.Data.W[i] div ConvertPre) div 2;
+					P^.W :=
+						(Left * Sample(i, 0) div ConvertPre +
+						Right * Sample(i, 1) div ConvertPre) div 2;
+					Inc(SG(P), 2);
 				end;
+			end;
 			2:
-				for i := 0 to WaveD.DataBytes div 4 - 1 do
+			begin
+				P := Result.FData;
+				for i := 0 to Result.FDataBytes div 4 - 1 do
 				begin
-					WaveD.Data.W[i shl 1 + 0] := Left * WaveS.Data.W[i shl 1 + 0] div ConvertPre;
-					WaveD.Data.W[i shl 1 + 1] := Right * WaveS.Data.W[i shl 1 + 1] div ConvertPre;
+					P^.WLR.L := Left * Sample(i, 0) div ConvertPre;
+					P^.WLR.R := Right * Sample(i, 1) div ConvertPre;
+					Inc(SG(P), 4);
 				end;
+			end;
 			end;
 		end;
 	end;
+	end;
 end;
 
-procedure ConvertBitsPerSample(const WaveS: PWave; var WaveD: PWave;
-	const NewBitsPerSample: Integer);
+function TWave.ConvertBitsPerSample(const NewBitsPerSample: Integer): TWave;
 var
 	i: Integer;
-	TotalSamples: U4;
+	P: PWaveSample;
 begin
-	if (WaveS = nil) or (WaveS = WaveD) then Exit;
-	TotalSamples :=
-		GetTotalSamples(WaveS.BytesPerSample, WaveS.DataBytes);
-
 { if WaveD = nil then
 	begin}
-		WaveCreate(WaveD, WaveS.Channels, NewBitsPerSample,
-		WaveS.SampleRate, TotalSamples);
+	Result := TWave.Create(FFormat.Channels, NewBitsPerSample, FFormat.SampleRate, SampleCount);
 { end
 	else
 	begin
@@ -688,44 +834,49 @@ begin
 		WaveD.BytesFollowing :=  WaveHead + WaveData - 8;
 	end;}
 
-	case WaveS.BitsPerSample of
+	case FFormat.BitsPerSample of
 	8:
 	begin
-		case WaveD.BitsPerSample of
+		case Result.FFormat.BitsPerSample of
 		8:
-			for i := 0 to WaveD.DataBytes - 1 do
-			begin
-				WaveD.Data.B[i] := WaveS.Data.B[i];
-			end;
+		begin
+			Move(FData, Result.FData, FDataBytes);
+		end;
 		16:
-			for i := 0 to WaveD.DataBytes div 2 - 1 do
+		begin
+			P := Result.FData;
+			for i := 0 to Result.FSampleCount - 1 do
 			begin
-				WaveD.Data.W[i] := 256 * (WaveS.Data.B[i] - 128);
+				P^.B := 256 * (Sample(i) - 128);
+				Inc(SG(P), 1);
 			end;
+		end;
 		end;
 	end;
 	16:
 	begin
-		case WaveD.BitsPerSample of
+		case Result.FFormat.BitsPerSample of
 		8:
-			for i := 0 to WaveD.DataBytes - 1 do
+		begin
+			P := Result.FData;
+			for i := 0 to Result.FSampleCount - 1 do
 			begin
-				WaveD.Data.B[i] := (WaveS.Data.W[i] div 256) + 128;
+				P^.B := (Sample(i) div 256) + 128;
 			end;
+		end;
 		16:
-			for i := 0 to WaveD.DataBytes div 2 - 1 do
-			begin
-				WaveD.Data.W[i] := WaveS.Data.W[i];
-			end;
+		begin
+			Move(FData, Result.FData, FDataBytes);
+		end;
 		end;
 	end;
 	end;
 end;
 
-procedure ConvertSampleRate(const WaveD: PWave; const SampleRate: U4);
+procedure TWave.ConvertSampleRate(const SampleRate: U4);
 begin
-	WaveD.SampleRate := SampleRate;
-	WaveD.BytesPerSecond := WaveD.BytesPerSample * WaveD.SampleRate;
+	FFormat.SampleRate := SampleRate;
+	FFormat.BytesPerSecond := FFormat.BytesPerSample * FFormat.SampleRate;
 //    BitsToByte(WaveD.Channels * WaveD.BitsPerSample * U8(SampleRate));
 end;
 {
@@ -739,799 +890,303 @@ begin
 	ConvertSampleRate(WaveD, SampleRate);
 end;}
 
-procedure PlayWave(Wave: PWave);
+procedure TWave.Play;
 begin
-	if Wave <> nil then
-		PlaySound(PChar(Wave), 0, SND_ASYNC or SND_MEMORY or SND_NODEFAULT)
-end;
-
-procedure PlayWaveFile(const WaveName: TFileName);
-//var Wave: PWave;
-begin
-{	WaveReadFromFile(Wave, WaveName);
-	PlayWave(Wave);
-	FreeMem(Wave);}
-	MainLogAdd('Play sound ' + WaveName + '.', mtDebug);
-	if WaveName <> '' then
-		PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME});
-end;
-
-procedure PlayWinSound(WinSound: TWinSound);
-var
-	Reg: TRegistry;
-	Key: string;
-begin
-	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.', mtDebug);
-	Reg := TRegistry.Create(KEY_QUERY_VALUE);
-	try
-		Reg.RootKey := HKEY_CURRENT_USER;
-		Key := 'AppEvents' + PathDelim + 'Schemes' + PathDelim + 'Apps' + PathDelim + '.Default' + PathDelim + WinSoundNames[WinSound] + PathDelim + '.Current';
-		if Reg.OpenKeyReadOnly(Key) then
-		begin
-			if Reg.ValueExists('') then
-			begin
-				PlayWaveFile(Reg.ReadString(''));
-			end;
-			Reg.CloseKey;
-		end;
-	finally
-		Reg.Free;
+	if PlaySound(PChar(PWave), 0, SND_ASYNC or SND_MEMORY or SND_NODEFAULT) = False then
+	begin
+		ErrorMsg(GetLastError);
 	end;
 end;
 
-function WaveLength(const Wave: PWave): UG;
+function TWave.GetLength: UG;
 begin
-	Result := RoundDiv(Second * Wave.DataBytes, Wave.BytesPerSecond);
+	Result := RoundDiv(Second * U8(FSampleCount), FFormat.SampleRate);
 end;
 
 function WaveLength(const FileName: TFileName): UG;
 var
-	Wave: PWave;
+	Wave: TWave;
 begin
-	Wave := nil;
-	if FileExists(FileName) and WaveReadHeadFromFile(Wave, FileName) then
-		Result := WaveLength(Wave)
+	if FileExists(FileName) then
+	begin
+		Wave := TWave.Create;
+		Wave.WithoutData := True;
+		Wave.ReadFromFile(FileName);
+		Result := Wave.Length;
+		Wave.Free;
+	end
 	else
 		Result := 0;
 end;
 
-function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;
+function TWave.Sample(Index: SG; const Channel: SG): SG;
 begin
-	Result := BufferOutSamples * ((wBitsPerSample * nChannels + 7) div 8);
-end;
-
-function GetBufferSample(wBitsPerSample, BufferOutSize: SG): SG;
-begin
-	case wBitsPerSample of
-	16: Result := BufferOutSize div 2;
-	else Result := BufferOutSize;
+	Assert(Channel < FFormat.Channels);
+	if Format.Channels = 2 then
+		Index := Index * 2
+	else if Format.Channels > 2 then
+		Index := Index * Channel;
+	case FFormat.BitsPerSample of
+	8: Result := PWaveSample(SG(Data) + Index + Channel).B;
+	16: Result := PWaveSample(SG(Data) + 2 * (Index + Channel)).W;
+	32: Result := PWaveSample(SG(Data) + 4 * (Index + Channel)).D;
+	else
+		Result := 0;
 	end;
 end;
 
-// TPlayerCommon
+function TWave.Sample(const Index: SG): SG;
+begin
+	case FFormat.BitsPerSample of
+	8: Result := PWaveSample(SG(Data) + Index).B;
+	16: Result := PWaveSample(SG(Data) + 2 * Index).W;
+	32: Result := PWaveSample(SG(Data) + 4 * Index).D;
+	else
+		Result := 0;
+	end;
+end;
+
+
+var
+	ALawInit, MULawInit: BG;
+	ALaw8To16, MULaw8To16: array[U1] of S2;
+
+procedure InitALaw;
+var
+	i: SG;
+	m: SG;
+	Step: SG;
+	Plus: SG;
+begin
+	if ALawInit = False then
+	begin
+		ALawInit := True;
+		ALaw8To16[0] := -5504;
+		ALaw8To16[16] := -2752;
+		ALaw8To16[32] := -22016;
+		ALaw8To16[48] := -11008;
+
+		ALaw8To16[64] := -344;
+		ALaw8To16[80] := -88;
+		ALaw8To16[96] := -1376;
+		ALaw8To16[112] := -688;
+
+		for m := 3 downto 0 do
+		begin
+			Plus := 1 shl m;
+			i := 0;
+			while i <= 127 do
+			begin
+				case Abs(ALaw8To16[i]) of
+				0..511: Step := 16;
+				512..1023: Step := 32;
+				1024..2047: Step := 64;
+				2048..4095: Step := 128;
+				4096..8191: Step := 256;
+				8192..16383: Step := 512;
+				else Step := 1024;
+				end;
+				Step := Step * Plus;
+				if m and 1 <> 0 then
+					Step := -Step;
+
+				ALaw8To16[i + Plus] := ALaw8To16[i] + Step;
+				Inc(i, 2 * Plus);
+			end;
+		end;
+		for i := 128 to 255 do
+			ALaw8To16[i] := -ALaw8To16[i - 128];
+		Assert(ALaw8To16[$00] = -5504);
+		Assert(ALaw8To16[$d5] = 8);
+	end;
+end;
+
+procedure InitMULaw;
+var
+	i: SG;
+	n: SG;
+begin
+	if MULawInit = False then
+	begin
+		MULawInit := True;
+		n := 0;
+		for i := 0 to 127 do
+		begin
+			MULaw8To16[$7f - i] := -n;
+			MULaw8To16[$ff - i] := n;
+			case i of
+			0..14: Inc(n, 8);
+			15: Inc(n, 12);
+			16..30: Inc(n, 16);
+			31: Inc(n, 24);
+			32..46: Inc(n, 32);
+			47: Inc(n, 48);
+			48..62: Inc(n, 64);
+			63: Inc(n, 96);
+			64..78: Inc(n, 128);
+			79: Inc(n, 192);
+			80..94: Inc(n, 256);
+			95: Inc(n, 384);
+			96..110: Inc(n, 512);
+			111: Inc(n, 768);
+			else Inc(n, 1024);
+			end;
+		end;
+		Assert(n = 32124 + 1024);
+	end;
+end;
+
+procedure TWave.DecodeALAW(InData: PU1);
+var
+	i: SG;
+	P: PS2;
+begin
+	InitALaw;
+	P := PS2(FData);
+	for i := 0 to SampleCount - 1 do
+	begin
+		AddSample(P, ALaw8To16[InData^]);
+		Inc(P);
+		Inc(InData);
+	end;
+end;
+
+procedure TWave.DecodeMULAW(InData: PU1);
+var
+	i: SG;
+	P: PS2;
+begin
+	InitMULaw;
+	P := PS2(FData);
+	for i := 0 to SampleCount - 1 do
+	begin
+		AddSample(P, MULaw8To16[InData^]);
+		Inc(P);
+		Inc(InData);
+	end;
+end;
+
+procedure TWave.DecodeADPCM(CompressedData: Pointer); // TODO
 const
-	SpeedDiv = 1024;
-
-constructor TWaveCommon.Create;
-begin
-	inherited Create;
-	FHWave := 0;
-	FActive := False;
-	FCloseInvoked := False;
-	VolumeLeft := MaxVolume;
-	VolumeRight := MaxVolume;
-
-	Bits := 16;
-	Frequency := 44100;
-	if Self is TWavePlayer then
-		Channels := 2
-	else
-		Channels := 1;
-	BufferTime := 200;
-end;
-
-destructor TWaveCommon.Destroy;
-begin
-	if FActive then Close;
-	FHWave := 0;
-	inherited Destroy;
-end;
-
-function TWaveCommon.WaveErrorText(ErrorCode: U4): string;
-var B: BG;
-begin
-	SetLength(Result, MAXERRORLENGTH);
-	if Self is TWavePlayer then
-		B:= waveOutGetErrorText(ErrorCode, @Result[1], MAXERRORLENGTH) = MMSYSERR_NOERROR
-	else
-		B:= waveInGetErrorText(ErrorCode, @Result[1], MAXERRORLENGTH) = MMSYSERR_NOERROR;
-	if B then
-	begin
-		if Result <> '' then
-			if Result[Length(Result)] = #0 then SetLength(Result, Length(Result) - 1);
-//		Replace(Result, #0, ' ')
-	end
-	else
-		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' ' + 'Unknown error';
-end;
-
-procedure TWaveCommon.MMError(s: string);
-begin
-	if Self is TWavePlayer then
-		s := 'WaveOut: ' + s
-	else
-		s := 'WaveIn: ' + s;
-	if FError <> 0 then ErrorMsg(s + ' (' + WaveErrorText(FError) + ')');
-end;
-
-procedure MMOutDone(
-	wo: HWAVEOUT;
-	Msg: UINT;
-	Instance: U4;
-	Param1: U4;
-	Param2: U4); stdcall;
+	// Kodovane slovo -> Posun indexu
+	IMAIndex: array[0..15] of SG =
+		(-1, -1, -1, -1, 2, 4, 6, 8,
+		-1, -1, -1, -1, 2, 4, 6, 8);
+	// Index -> Velikost kroku
+	IMAStep: array[0..88] of SG = (
+		7, 8, 9, 10, 11, 12, 13, 14, {B}16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55,
+		60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449,
+		494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552{E}, 1707, 1878, 2066, 2272, 2499, 2749, 3024,	3327, 3660,
+		4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818,
+		18500, 20350, 22358, 24623, 27086, 29794, 32767);
 var
-	Header: PWaveHdr;
-	BufferOut: PWaveData;
-//	BufferOutSize: SG;
-	WavePlayer: TWavePlayer;
+	i: SG;
+	StepSize: SG;
+	CurrentSample: SG;
+	BitIndex: SG;
+	Difference: SG;
+	FPointer: PS2;
 begin
-	if Msg = WOM_DONE then
+	StepSize := 64;
+	BitIndex := 0;
+	CurrentSample := GetSample(16, BitIndex);
+	FPointer := PS2(FData);
+	AddSample(FPointer, CurrentSample);
+	GetSample(16, BitIndex); // 0
+	StepSize := 0;
+	for i := 0 to SampleCount - 1 do
 	begin
-		WavePlayer := TWavePlayer(Instance);
-		Header := PWaveHdr(Param1);
-		BufferOut := Pointer(Header^.lpData);
-//		BufferOutSize := Header^.dwBufferLength;
-{		GetMem(Buffer, BufferSize);
-		Move(BufferOut^, Buffer^, BufferSize);}
+		CurrentSample := GetSample(4, BitIndex);
+		StepSize := StepSize + IMAIndex[CurrentSample];
+		Difference := IMAStep[StepSize];
+{				StepSize * ((CurrentSample shr 2) and 1) +
+			StepSize * ((CurrentSample shr 1) and 1) div 2 +
+			StepSize * ((CurrentSample) and 1) div 4 +
+			StepSize div 8;}
+		if (CurrentSample shr 3) and 1 <> 0 then
+			Difference := -Difference;
+//			Inc(CurrentSample, IMAStep[Difference]);
+		CurrentSample := Range(Low(S2), CurrentSample, High(S2));
+//			StepSize := IMAIndex
 
-		WavePlayer.FError := waveOutUnPrepareHeader(WavePlayer.FHWave, Header, SizeOf(TWaveHdr));
-		WavePlayer.MMError('UnPrepare');
-		FreeMem(BufferOut); //BufferOut := nil;
-		Dispose(Header);
-
-		if WavePlayer.FActive = False then Exit;
-		Dec(WavePlayer.FOutCount);
-		if WavePlayer.FCloseInvoked = False then
-			WavePlayer.SendBuffer
-		else
-		if WavePlayer.FOutCount = 0 then
-		begin
-			WavePlayer.FError := WaveOutClose(WavePlayer.FHWave);
-			WavePlayer.FHWave := 0;
-			WavePlayer.MMError('Close');
-			if WavePlayer.FError = 0 then
-				WavePlayer.FActive := False;
-		end;
+//			AddSample(FPointer, CurrentSample);
 	end;
 end;
 
-procedure MMInDone(
-	wi: HWAVEIN;
-	Msg: UINT;
-	Instance: U4;
-	Param1: U4;
-	Param2: U4); stdcall;
-var
-	Header: PWaveHdr;
-{	NewSize: SG;
-	WaveSample: PWaveSample;}
-
-	BufferIn: PWaveData;
-	WaveRecorder: TWaveRecorder;
-begin
-	if Msg = WIM_DATA then
-	begin
-		WaveRecorder := TWaveRecorder(Instance);
-
-		Dec(WaveRecorder.FOutCount);
-		Header := PWaveHdr(Param1);
-		BufferIn := Pointer(Header^.lpData);
-
-{		if Volume <> 100 then
-		begin
-			WaveSample := BufferIn;
-			while UG(WaveSample) < UG(BufferIn) + Header^.dwBytesRecorded do
-			begin
-				case WaveFormat^.wBitsPerSample of
-				16:
-				begin
-					WaveSample.W := Range(-32768, Volume * SG(WaveSample.W) div 100, 32767);
-					Inc(SG(WaveSample), 2);
-				end
-				else
-				begin
-					WaveSample.B := ((WaveSample.B - Zero1) * Volume div 100) + Zero1;
-					Inc(SG(WaveSample), 1);
-				end;
-				end;
-			end;
-		end; }
-		if Assigned(WaveRecorder.FOnReciveBuffrer) then
-			WaveRecorder.FOnReciveBuffrer(WaveRecorder, BufferIn);
-
-		WaveRecorder.FError := waveInUnPrepareHeader(WaveRecorder.FHWave, Header, SizeOf(TWaveHdr));
-		WaveRecorder.MMError('UnPrepare');
-		FreeMem(BufferIn);
-		Dispose(Header);
-
-		if WaveRecorder.FActive = False then Exit;
-		Dec(WaveRecorder.FOutCount);
-		if WaveRecorder.FCloseInvoked = False then
-			WaveRecorder.SendBuffer
-		else
-		if WaveRecorder.FOutCount = 0 then
-		begin
-			WaveRecorder.FError := WaveInClose(WaveRecorder.FHWave);
-			WaveRecorder.FHWave := 0;
-			WaveRecorder.MMError('Close');
-			if WaveRecorder.FError = 0 then
-				WaveRecorder.FActive := False;
-		end;
-	end;
-end;
-
-procedure TWaveCommon.Open;
-const BufferCount = 8;
-var i: SG;
-begin
-	if FActive then Close;
-	FActive := False;
-	FCloseInvoked := False;
-	FWaveFormat.WFormatTag := WAVE_FORMAT_PCM; // PCM format - the only option
-	FWaveFormat.nChannels := Channels;
-	FWaveFormat.nSamplesPerSec := Frequency;
-	FWaveFormat.wBitsPerSample := Bits;
-	FWaveFormat.nAvgBytesPerSec := FWaveFormat.wBitsPerSample * FWaveFormat.nSamplesPerSec div 8;
-	FWaveFormat.nBlockAlign := (FWaveFormat.wBitsPerSample * FWaveFormat.nChannels) div 8;
-	FWaveFormat.cbSize := SizeOf(FWaveFormat);
-
-	if Self is TWavePlayer then
-		FError := waveOutOpen(nil, 0, @FWaveFormat, 0, 0, WAVE_FORMAT_QUERY)
-	else
-		FError := waveInOpen(nil, 0, @FWaveFormat, 0, 0, WAVE_FORMAT_QUERY);
-	MMError('WaveOpen');
-	if FError <> 0 then Exit;
-
-	if Self is TWavePlayer then
-		FError := waveOutOpen(@FHWave, 0, @FWaveFormat, UG(@MMOutDone), UG(Self), CALLBACK_FUNCTION)
-	else
-		FError := waveInOpen(@FHWave, 0, @FWaveFormat, UG(@MMInDone), UG(Self), CALLBACK_FUNCTION);
-	MMError('WaveOpen');
-	if FError <> 0 then
-	begin
-		FHWave := 0;
-		Exit;
-	end;
-
-	FOutCount := 0;
-
-	FBufferOutSamples := RoundDiv(FWaveFormat.nSamplesPerSec * BufferTime, BufferCount * 1000);
-	FBufferOutSize := GetBufferSize(FWaveFormat.wBitsPerSample, FWaveFormat.nChannels, FBufferOutSamples);
-{	BufferOutSize := BufferSize;
-	BufferOutSamples := GetBufferSample(WaveFormat.wBitsPerSample, WaveFormat.nChannels, BufferOutSize);}
-
-	if not (Self is TWavePlayer) then
-	begin
-		FError := waveInStart(FHWave);
-		MMError('Start');
-	end;
-	FActive := True;
-	for i := 0 to BufferCount - 1 do
-		SendBuffer;
-end;
-
-procedure TWaveCommon.Close;
-begin
-	if FActive then
-	begin
-		FCloseInvoked := True;
-{	if Self is TWavePlayer then
-		waveOutBreakLoop(FHWave);}
-		while FOutCount > 0 do
-			Sleep(LoopSleepTime);
-		FActive := False;
-		FCloseInvoked := False;
-	end;
-end;
-
-procedure TWaveCommon.Pause;
-begin
-	if Self is TWavePlayer then
-	begin
-		FError := waveOutPause(FHWave);
-		MMError('Pause');
-	end
-	else
-	begin
-		MMError('Pause not supported by WinAPI');
-	end;
-end;
-
-procedure TWaveCommon.Resume;
-begin
-	if Self is TWavePlayer then
-	begin
-		FError := waveOutRestart(FHWave);
-		MMError('Restart');
-	end
-	else
-	begin
-		FError := waveInReset(FHWave);
-		MMError('Reset');
-		FError := waveInStart(FHWave);
-		MMError('Start');
-	end;
-end;
-
-procedure TWaveCommon.Stop;
-begin
-	Close;
-	Open;
-{
-	CloseInvoked := True;
-	if Self is TWavePlayer then
-		FError := waveOutReset(HWave)
-	else
-		FError := waveInReset(HWave);
-	MMError('Reset');
-}
-end;
-
-procedure TWaveCommon.SendBuffer;
-var
-	Header: PWaveHdr;
-	Buffer: PWaveData;
-begin
-	GetMem(Buffer, FBufferOutSize);
-	if Self is TWavePlayer then
-		FillBuffer(Buffer);
-
-	Header := New(PWaveHdr);
-	Header^.lpData := Pointer(Buffer);
-	Header^.dwBufferLength := FBufferOutSize;
-	Header^.dwBytesRecorded := 0;
-	Header^.dwUser := 0;
-	Header^.dwFlags := 0;
-	Header^.dwLoops := 0;
-	Header^.lpNext := nil;
-	Header^.reserved := 0;
-
-	if Self is TWavePlayer then
-		FError := waveOutPrepareHeader(FHWave, Header, SizeOf(TWaveHdr))
-	else
-		FError := waveInPrepareHeader(FHWave, Header, SizeOf(TWaveHdr));
-	MMError('Prepare');
-	if FError <> 0 then Exit;
-
-	if Self is TWavePlayer then
-		FError := waveOutWrite(FHWave, Header, SizeOf(TWaveHdr))
-	else
-		FError := waveInAddBuffer(FHWave, Header, SizeOf(TWaveHdr));
-	MMError('AddBuffer');
-	if FError <> 0 then Exit;
-
-	Inc(FOutCount);
-end;
-
-// TWavePlayer
-
+procedure TWave.DecodeIMA(CompressedData: Pointer); // TODO
 const
-	AngleCount = 4096;
-{type
-	PSinTable = ^TSinTable;
-	TSinTable = array[0..AngleCount - 1] of TAngle;}
+	// Kodovane slovo -> Posun indexu
+	IMAIndex: array[0..15] of SG =
+		(-1, -1, -1, -1, 2, 4, 6, 8,
+		-1, -1, -1, -1, 2, 4, 6, 8);
+	// Index -> Velikost kroku
+	IMAStep: array[0..88] of SG = (
+		7, 8, 9, 10, 11, 12, 13, 14, {B}16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55,
+		60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449,
+		494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552{E}, 1707, 1878, 2066, 2272, 2499, 2749, 3024,	3327, 3660,
+		4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818,
+		18500, 20350, 22358, 24623, 27086, 29794, 32767);
 var
-	Sins: PSinTable;
-
-procedure TWavePlayer.FillBuffer(Buffer: PWaveData);
-var
-	i, j: SG;
-	SampleP: UG;
-	ValueL, ValueR, ValueLS, ValueRS, Value: SG;
-	PlayItem: PPlayItem;
-
-	procedure WriteValue;
-	begin
-		case FWaveFormat.wBitsPerSample of
-		8:
-		begin
-			Value := (Value + 32768) div 256;
-			if Value < 0 then
-				Value := 0
-			else if Value > 255 then
-				Value := 255;
-			Buffer.B[i] := Value;
-		end;
-		16:
-		begin
-			if Value < -32768 then
-				Value := -32768
-			else if Value > 32767 then
-				Value := 32767;
-			Buffer.W[i] := Value;
-		end;
-		end;
-		Inc(i);
-	end;
-
+	i: SG;
+	StepSize: SG;
+	CurrentSample: SG;
+	BitIndex: SG;
+	Difference: SG;
+	FPointer: PS2;
 begin
-	if PlayItems <> nil then
+	StepSize := 64;
+	BitIndex := 0;
+	CurrentSample := GetSample(16, BitIndex);
+	FPointer := PS2(FData);
+	AddSample(FPointer, CurrentSample);
+	GetSample(16, BitIndex); // 0
+	StepSize := 0;
+	for i := 0 to SampleCount - 1 do
 	begin
-		j := 0;
-		while j < SG(PlayItems.Count) do
-		begin
-			if j >= MaxItems then Break;
-			PlayItem := PlayItems.Get(j);
-			case PlayItem.PlayAs of
-			paWave: PlayItem.Offset := PlayItem.Wave.Channels * PlayItem.Speed * UG(PlayItem.Wave.SampleRate) div UG(FWaveFormat.nSamplesPerSec);
-			else
-			begin
-				PlayItem.Offset := SpeedDiv;
-			end
-			end;
-			Inc(j);
-		end;
+		CurrentSample := GetSample(4, BitIndex);
+		StepSize := StepSize + IMAIndex[CurrentSample];
+		Difference := IMAStep[StepSize];
+{				StepSize * ((CurrentSample shr 2) and 1) +
+			StepSize * ((CurrentSample shr 1) and 1) div 2 +
+			StepSize * ((CurrentSample) and 1) div 4 +
+			StepSize div 8;}
+		if (CurrentSample shr 3) and 1 <> 0 then
+			Difference := -Difference;
+//			Inc(CurrentSample, IMAStep[Difference]);
+		CurrentSample := Range(Low(S2), CurrentSample, High(S2));
+//			StepSize := IMAIndex
 
-		// 16 bit Mixer
-		FillChar(Buffer^, FBufferOutSize, 0);
-		i := 0;
-		while i < FBufferOutSamples * FWaveFormat.nChannels do
-		begin
-			ValueLS := 0;
-			ValueRS := 0;
-			j := 0;
-			ValueL := 0;
-			ValueR := 0;
-			while j < SG(PlayItems.Count) do
-			begin
-				if j >= MaxItems then Break;
-				PlayItem := PlayItems.Get(j);
-				SampleP := PlayItem.SamplePos div SpeedDiv;
-				if SampleP >= PlayItem.SampleCount then
-				begin
-					PlayItems.Delete(j);
-					Continue;
-				end
-				else
-				begin
-					Inc(j);
-					case PlayItem.PlayAs of
-					paNoise:
-					begin
-						ValueL := Random2(32767);
-						ValueR := Random2(32767);
-					end;
-					paTone:
-					begin
-						ValueL := Sins[((U8(AngleCount) * U8(SampleP) * U8(PlayItem.Speed) div FWaveFormat.nSamplesPerSec)) and (AngleCount - 1)];
-						ValueR := ValueL;
-					end;
-					paSilent:
-					begin
-						ValueL := 0;
-						ValueR := 0;
-					end
-					else // paWave
-					begin
-						if PlayItem.Wave.Channels = 2 then
-							SampleP := SampleP and $fffffffe;
-						case PlayItem.Wave.BitsPerSample of
-						16: ValueL := PlayItem.Wave.Data.W[SampleP];
-						else ValueL := 256 * (SG(PlayItem.Wave.Data.B[SampleP]) - 128);
-						end;
-						if PlayItem.Wave.Channels = 2 then
-						begin
-							case PlayItem.Wave.BitsPerSample of
-							16: ValueR := PlayItem.Wave.Data.W[SampleP + 1];
-							else ValueR := 256 * (SG(PlayItem.Wave.Data.B[SampleP + 1]) - 128);
-							end;
-	//						Inc(PlayItem.SamplePos, PlayItem.Offset);
-						end
-						else
-						begin
-							ValueR := ValueL
-						end;
-					end;
-					end;
-					Inc(PlayItem.SamplePos, PlayItem.Offset);
-				end;
-
-				if (PlayItem.VolumeLeft <> MaxVolume) then
-					ValueL := ValueL * PlayItem.VolumeLeft div MaxVolume;
-				if (PlayItem.VolumeRight <> MaxVolume) then
-					ValueR := ValueR * PlayItem.VolumeRight div MaxVolume;
-				Inc(ValueLS, ValueL);
-				Inc(ValueRS, ValueR);
-			end;
-
-			if FWaveFormat.nChannels = 2 then
-			begin
-				Value := ValueLS * VolumeLeft div MaxVolume;
-				WriteValue;
-				Value := ValueRS * VolumeRight div MaxVolume;
-				WriteValue;
-			end
-			else
-			begin
-				Value := (VolumeLeft + VolumeRight) * (ValueLS + ValueRS) div (2 * 2 * MaxVolume);
-				WriteValue;
-			end;
-		end;
+//			AddSample(FPointer, CurrentSample);
 	end;
 end;
 
-procedure TWavePlayer.Play(Wave: PWave);
-var PlayItem: PPlayItem;
+procedure TWave.Decode(CompressedData: Pointer);
 begin
-	if CheckWave(Wave) then
-	begin
-		PlayItem := PlayItems.Add;
-		PlayItem.PlayAs := paWave;
-		PlayItem.Wave := Wave;
-		PlayItem.SampleCount := 8 * Wave.DataBytes div Wave.BitsPerSample;
-		PlayItem.SamplePos := 0;
-		PlayItem.VolumeLeft := VolumeLeft;
-		PlayItem.VolumeRight := VolumeRight;
-		PlayItem.Speed := Speed;
+	case FFormat.FormatTag of
+	ftADPCM: DecodeADPCM(CompressedData);
+	ftALAW: DecodeALAW(CompressedData);
+	ftMULAW: DecodeMULAW(CompressedData);
+	ftDVIIMAADPCM: DecodeIMA(CompressedData);
 	end;
 end;
 
-procedure TWavePlayer.Beep;
+function TWave.GetSample(const BitLength: SG; var BitIndex: SG): SG;
 begin
-	Tone(1000, 1000);
+	Result := PInt(SG(FData) + BitIndex div 8)^;
+	Result := Result shr ((8 - BitIndex) mod 8);
+	Result := Result and (1 shl BitLength - 1);
+	Inc(BitIndex, BitLength);
 end;
 
-procedure TWavePlayer.Silent(Tim: UG);
-var
-	PlayItem: PPlayItem;
+procedure TWave.AddSample(FPointer: PS2; const Value: S2);
 begin
-	PlayItem := PlayItems.Add;
-	PlayItem.PlayAs := paSilent;
-	PlayItem.Wave := nil;
-	PlayItem.SampleCount := FWaveFormat.nSamplesPerSec * Tim div 1000;
-	PlayItem.SamplePos := 0;
-	PlayItem.VolumeLeft := VolumeLeft;
-	PlayItem.VolumeRight := VolumeRight;
-	PlayItem.Speed := Speed;
+	FPointer^ := Value;
+	Inc(SG(FPointer), SizeOf(Value));
 end;
 
-procedure TWavePlayer.Tone(Frequency, Tim: UG);
-var
-	PlayItem: PPlayItem;
+procedure TWave.WriteToFile(const FileName: TFileName);
 begin
-	PlayItem := PlayItems.Add;
-	PlayItem.PlayAs := paTone;
-	if Sins = nil then
-	begin
-		GetMem(Sins, SizeOf(TAngle) * AngleCount);
-		FillSinTable(Sins, AngleCount, SinDiv);
-	end;
-	PlayItem.Wave := nil;
-	PlayItem.SampleCount := FWaveFormat.nSamplesPerSec * Tim div 1000;
-	PlayItem.SamplePos := 0;
-	PlayItem.VolumeLeft := VolumeLeft;
-	PlayItem.VolumeRight := VolumeRight;
-	PlayItem.Speed := Frequency;
+	WriteBlockToFile(FileName, PWave, FDataBytes + FPreDataSize);
 end;
 
-procedure TWavePlayer.Noise(Tim: UG);
-var
-	PlayItem: PPlayItem;
-begin
-	PlayItem := PlayItems.Add;
-	PlayItem.PlayAs := paNoise;
-	PlayItem.Wave := nil;
-	PlayItem.SampleCount := FWaveFormat.nSamplesPerSec * Tim div 1000;
-	PlayItem.SamplePos := 0;
-	PlayItem.VolumeLeft := VolumeLeft;
-	PlayItem.VolumeRight := VolumeRight;
-	PlayItem.Speed := Speed;
-end;
-
-constructor TWavePlayer.Create;
-begin
-	inherited Create;
-	PlayItems := TData.Create(True);
-	PlayItems.ItemSize := SizeOf(TPlayItem);
-	MaxItems := 16;
-	Speed := SpeedDiv;
-end;
-
-destructor TWavePlayer.Destroy;
-begin
-	FreeAndNil(PlayItems);
-	inherited Destroy;
-end;
-
-// Midi
-var
-	OpenParm: TMCI_Open_Parms;
-	PlayParm: TMCI_Play_Parms;
-	GenParm: TMCI_Generic_Parms;
-	SeekParm: TMCI_Seek_Parms;
-
-function MCIErrorToStr(const ErrorCode: U4): string;
-begin
-	SetLength(Result, 255);
-	if mciGetErrorString(ErrorCode, PChar(Result), 255) then
-		Result := PChar(Result)
-	else
-		Result := 'MMSYSTEM' + NToS(ErrorCode) + ' Unknown error';
-end;
-
-function MCIError(const ErrorCode: SG): Boolean;
-begin
-	if ErrorCode <> 0 then
-	begin
-		Result := ErrorRetry(MCIErrorToStr(ErrorCode));
-	end
-	else
-		Result := False;
-end;
-
-function MidiMCICallBack: Boolean;
-begin
-	Result := MidiPlaying;
-end;
-
-procedure MidiMCIOpen(FileName: TFileName);
-label LRetry, LRetrySend;
-var
-	FFlags: U4;
-	FError: SG;
-	F: file;
-	ErrorCode: SG;
-begin
-	MidiPlaying := False;
-	LRetry:
-	AssignFile(F, FileName);
-	FileMode := 0; Reset(F, 1);
-	ErrorCode := IOResult;
-	CloseFile(F);
-	IOResult;
-	if ErrorCode <> 0 then
-	begin
-		if IOErrorRetry(FileName, ErrorCode) then goto LRetry;
-		Exit;
-	end;
-	LRetrySend:
-	FillChar(OpenParm, SizeOf(TMCI_Open_Parms), 0);
-
-	OpenParm.dwCallback := 0;
-	OpenParm.lpstrDeviceType := 'WaveAudio';
-	OpenParm.lpstrElementName := PChar(FileName);
-	FFlags := MCI_OPEN_ELEMENT or MCI_NOTIFY;
-
-	FError := mciSendCommand(0, mci_Open, FFlags, U4(@OpenParm));
-	MidiOpened := FError = 0;
-	if MCIError(FError) then goto LRetrySend;
-end;
-
-procedure MidiMCISeek(const SeekTo: U4);
-label LRetrySend;
-var
-	FFlags: U4;
-	FError: SG;
-begin
-	if MidiOpened = False then Exit;
-	LRetrySend:
-	SeekParm.dwTo := SeekTo;
-	SeekParm.dwCallback := 0;
-	FFlags := 0;
-	FFlags := FFlags or mci_To;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Seek, FFlags, U4(@SeekParm));
-	if MCIError(FError) then goto LRetrySend;
-end;
-
-function MidiMCIGetPos: U4;
-label LRetrySeek;
-var
-	FFlags: U4;
-	FError: SG;
-	StatusParm: TMCI_Status_Parms;
-begin
-	Result := 0;
-	if MidiOpened = False then Exit;
-	LRetrySeek:
-	StatusParm.dwItem := mci_Status_Position;
-	StatusParm.dwTrack := 0;
-	StatusParm.dwReturn := 0;
-	FFlags := mci_Wait or mci_Status_Item;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Status, FFlags, U4(@StatusParm));
-	if MCIError(FError) then goto LRetrySeek;
-	Result := StatusParm.dwReturn;
-end;
-
-procedure MidiMCIPause;
-label LRetrySend;
-var
-	FFlags: U4;
-	FError: SG;
-begin
-	if MidiOpened = False then Exit;
-	LRetrySend:
-	FFlags := 0;
-	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Pause, FFlags, U4(@GenParm));
-	if MCIError(FError) then goto LRetrySend;
-	MidiPlaying := False;
-end;
-
-procedure MidiMCIStop;
-label LRetrySend;
-var
-	FFlags: U4;
-	FError: SG;
-begin
-	if MidiOpened = False then Exit;
-	LRetrySend:
-	MidiPlaying := False;
-	FFlags := 0;
-	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Stop, FFlags, U4(@GenParm));
-	if MCIError(FError) then goto LRetrySend;
-end;
-
-procedure MidiMCIResume;
-label LRetrySend;
-var
-	FFlags: U4;
-	FError: SG;
-begin
-	if MidiOpened = False then Exit;
-	LRetrySend:
-	FFlags := 0;
-	GenParm.dwCallback := MidiHandle;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Resume, FFlags, U4(@GenParm));
-	if MCIError(FError) then goto LRetrySend;
-	MidiPlaying := False;
-	MidiMCIPlay; // Need for Callback
-end;
-
-procedure MidiMCIPlay;
-label LRetrySend;
-var
-	FFlags: U4;
-	FError: SG;
-begin
-	if MidiOpened = False then Exit;
-	if MidiPlaying = True then Exit;
-	LRetrySend:
-	MidiPlaying := True;
-	FFlags := mci_Notify;
-	PlayParm.dwCallback := MidiHandle;
-
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Play, FFlags, U4(@PlayParm));
-	if MCIError(FError) then goto LRetrySend;
-end;
-
-procedure MidiMCIClose;
-label LRetrySend;
-var
-	FFlags: U4;
-	FError: SG;
-begin
-	if MidiOpened = False then Exit;
-	LRetrySend:
-	FFlags := 0;
-	PlayParm.dwCallback := OpenParm.dwCallback;
-	GenParm.dwCallback := 0;
-	FError := mciSendCommand(OpenParm.wDeviceID, mci_Close, FFlags, U4(@GenParm));
-	if FError = 0 then
-	begin
-		MidiOpened := False;
-		MidiPlaying := False;
-	end;
-	if MCIError(FError) then goto LRetrySend;
-end;
-
-initialization
-
-finalization
-	if Sins <> nil then
-	begin
-		FreeMem(Sins);
-		Sins := nil;
-	end;
 end.

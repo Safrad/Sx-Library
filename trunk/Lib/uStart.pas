@@ -1,7 +1,7 @@
 //* File:     Lib\uStart.pas
 //* Created:  2007-05-22
 //* Modified: 2007-05-27
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -21,7 +21,7 @@ procedure RWStart(const MainIni: TDIniFile; const Save: BG);
 implementation
 
 uses
-	uSimulation, uFiles,
+	uSimulation, uFile,
 	Windows;
 
 var

@@ -1,7 +1,7 @@
 //* File:     Lib\uFTP.pas
 //* Created:  2007-08-12
-//* Modified: 2007-11-25
-//* Version:  1.1.39.8
+//* Modified: 2008-02-21
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,14 +11,13 @@ unit uFTP;
 interface
 
 uses
-	uTypes,
+	uTypes, uLog,
 	IdFTP;
 
 type
 	TTg = (tgDownload, tgUpload);
-	TAddMessage = procedure(const Text: string);
 
-function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const AddMessage: TAddMessage; const Tg: TTg): BG;
+function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const AddMessage: TLogMessageProcedure; const Tg: TTg): BG;
 
 implementation
 
@@ -30,7 +29,7 @@ procedure Backup(const FileName: TFileName);
 var FileNameD: TFileName;
 begin
 	if FileExists(FileName) = False then Exit;
-	FileNameD := TempDir; // TargetDir + 'Backup' + PathDelim;
+	FileNameD := TempDir;
 	if DirectoryExists(FileNameD) = False then
 		CreateDirEx(FileNameD);
 	FileNameD := FileNameD + ExtractFileName(FileName);
@@ -38,7 +37,7 @@ begin
 		uFiles.CopyFile(FileName, FileNameD, True);
 end;
 
-function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const AddMessage: TAddMessage; const Tg: TTg): BG;
+function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const AddMessage: TLogMessageProcedure; const Tg: TTg): BG;
 label LRetry;
 const
 //	Alpha = 1 / (24 * 60); // 1 minute
@@ -89,7 +88,7 @@ begin
 		s := s + FileNameOrDir + ' ' + CharHyphen + '> ' + 'ftp://' + FTP.Host + '/' + RemoteDir
 	else
 		s := s + 'ftp://' + FTP.Host + '/' + RemoteDir + ' ' + CharHyphen + '> ' + FileNameOrDir;
-	AddMessage(s);
+	AddMessage(s, mlDebug);
 
 	AStrings := TStringList.Create;
 	LRetry:
@@ -98,10 +97,10 @@ begin
 		FTP.Connect(True, 30 * Second);
 //		FTP.Connect;
 //		FTP.Login;
-		AddMessage('Connected');
+		AddMessage('Connected ' + FTP.Host, mlInformation);
 		{$ifopt d+}
-		FTP.List(AStrings);
-		AddMessage(AStrings.Text);
+//		FTP.List(AStrings);
+//		AddMessage(AStrings.Text);
 		{$endif}
 //		RemoteDir := 'Upload/sh';
 //		FTP.ChangeDir('/');
@@ -156,7 +155,7 @@ begin
 					FileName := LI.Items[j].FileName;
 {					if Dir = False then
 						if FileName <> LocalFileName then Continue;}
-					if FileName = FileNames[i] then // TODO Upcase
+					if SameFileName(FileName, FileNames[i]) then
 					begin
 						FileDate := LI.Items[j].ModifiedDate;
 						New := False;
@@ -164,12 +163,14 @@ begin
 						Break;
 					end;
 				end;
-				s := 'Upload ';
-				if Copy = False then s := s + 'skipped ';
+				if Copy then
+					s := 'Uploading: '
+				else
+					s := 'Skipping upload: ';
 				s := s + FileNames[i] + ' ' + DateTimeToS(SystemTimeToDateTime(SystemTime), 0, ofDisplay);
-				if New = False then
-					s := s + ' -> ' + DateTimeToS(FileDate, 0, ofDisplay);
-				AddMessage(s);
+				if (New = False) and (Copy) then
+					s := s + ', remote old date: ' + DateTimeToS(FileDate, 0, ofDisplay);
+				AddMessage(s, mlInformation);
 				if Copy then
 				begin
 					FTP.Put(LocalDir + FileNames[i], FileNames[i], False);
@@ -222,15 +223,17 @@ begin
 					New := True;
 				end;
 
-				s := 'Download ';
-				if Copy = False then s := s + 'skipped ';
+				if Copy then
+					s := 'Downloading: '
+				else
+					s := 'Skipping download: ';
 				s := s + FileName + ' ' + DateTimeToS(FileDate, 0, ofDisplay);
-				if New = False then
-					s := s + ', replace ' + DateTimeToS(SystemTimeToDateTime(SystemTime), 0, ofDisplay);
-				AddMessage(s);
+				if (New = False) and (Copy) then
+					s := s + ', local old date: ' + DateTimeToS(SystemTimeToDateTime(SystemTime), 0, ofDisplay);
+				AddMessage(s, mlInformation);
 				if Copy then
 				begin
-					Backup(FileName);
+					Backup(LocalDir + FileName);
 					FTP.Get(FileName, LocalDir + FileName, True, False);
 //					if New = False then
 					begin
@@ -249,10 +252,6 @@ begin
 
 						SetFileModified(LocalDir + FileName, LastWriteTime);
 					end;
-				end
-				else
-				begin
-
 				end;
 			end;
 		end;
@@ -262,7 +261,7 @@ begin
 			if E.Message <> ' ' then
 			begin
 				Result := False;
-				AddMessage(DelEndSpaceF(E.Message) {+ NToS(FTP.LastCmdResult.NumericCode)} + ' (' +NToS(NowRetryCount + 1) + ' / ' + NToS(RetryCount + 1) + ')');
+				AddMessage(DelEndSpaceF(E.Message) {+ NToS(FTP.LastCmdResult.NumericCode)} + ' (' +NToS(NowRetryCount + 1) + ' / ' + NToS(RetryCount + 1) + ')', mlError);
 			end;
 		end;
 	end;
@@ -280,6 +279,7 @@ begin
 		goto LRetry;
 	end;
 	FTP.Disconnect;
+	AddMessage('Disconnect', mlInformation);
 	AStrings.Free;
 end;
 

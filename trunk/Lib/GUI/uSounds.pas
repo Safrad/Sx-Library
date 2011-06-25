@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSounds.pas
 //* Created:  2000-05-01
 //* Modified: 2007-12-28
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,7 +11,7 @@ unit uSounds;
 interface
 
 uses
-	uTypes, uDForm, uWave,
+	uTypes, uDForm, uWave, uWavePlayer,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs,
 	uDWinControl;
@@ -85,7 +85,7 @@ uses
 type
 	PSound = ^TSound; // Used Sounds
 	TSound = packed record // 16
-		Wave: PWave; // 4
+		Wave: TWave; // 4
 		Enabled, Used: B1; // 2
 		Reserved: array[0..1] of U1; // 2
 		Name: string; // 4
@@ -93,7 +93,7 @@ type
 	end;
 	PDSound = ^TDSound; // Form Sounds
 	TDSound = packed record // 16
-		Wave: PWave; // 4
+		Wave: TWave; // 4
 		Enabled: B1; // 1
 		Exists: B1; // 1
 		Reserved: array[0..1] of U1; // 2
@@ -126,9 +126,6 @@ begin
 		WavePlayer.Channels := 2
 	else
 		WavePlayer.Channels := 1;
-//	WavePlayer.BufferTime := 200;
-//	WavePlayer.VolumeLeft := 0; //MaxVolume div 2;
-//	WavePlayer.VolumeRight := 0; //MaxVolume div 2;
 	if SoundEnabled then
 		WavePlayer.Open;
 end;
@@ -183,8 +180,8 @@ begin
 end;
 
 var
-	SoundBuffer: PWave;
-	SoundBufferSize: UG;
+	SoundBuffer: TWave;
+//	SoundBufferSize: UG;
 	IniLoaded: BG;
 
 procedure ReadSounds;
@@ -202,7 +199,10 @@ begin
 	for i := 0 to Sounds.Count - 1 do
 	begin
 		if P.FileName <> '' then
-			WaveReadFromFile(P.Wave, P.FileName);
+		begin
+			P.Wave := TWave.Create;
+			P.Wave.ReadFromFile(P.FileName);
+			end;
 		Inc(P);
 	end;
 end;
@@ -219,39 +219,44 @@ begin
 	P := Sounds.GetFirst;
 	for i := 0 to Sounds.Count - 1 do
 	begin
-		WaveFree(P.Wave);
+		FreeAndNil(P.Wave);
 		Inc(P);
 	end;
 	Sounds.Clear;
 	DSounds.Clear;
-	FreeMem(SoundBuffer); SoundBuffer := nil;
+	FreeAndNil(SoundBuffer);
 end;
 
 procedure PlaySound(const SoundKind: SG);
 var
 	P: PSound;
 begin
-	if IniLoaded = False then
+	if SoundEnabled and Assigned(Sounds) then
 	begin
-		IniLoaded := True;
-		RWOptions(False);
-	end;
-
-	if SoundEnabled = False then Exit;
-	P := Sounds.Get(SoundKind);
-	if P.Enabled then
-	begin
-		if P.FileName = '' then
-			PlayWinSound(wsDefaultSound)
-		else
+		if IniLoaded = False then
 		begin
-			P.Enabled := False;
-			if P.Wave = nil then
-				WaveReadFromFile(P.Wave, P.FileName);
-			if P.Wave <> nil then
+			IniLoaded := True;
+			RWOptions(False);
+		end;
+
+		P := Sounds.Get(SoundKind);
+		if P.Enabled then
+		begin
+			if P.FileName = '' then
+				PlayWinSound(wsDefaultSound)
+			else
 			begin
-				P.Enabled := True;
-				PlayWave(P.Wave);
+				P.Enabled := False;
+				if P.Wave = nil then
+				begin
+					P.Wave := TWave.Create;
+					P.Wave.ReadFromFile(P.FileName);
+				end;
+				if P.Wave <> nil then
+				begin
+					P.Enabled := True;
+					P.Wave.Play;
+				end;
 			end;
 		end;
 	end;
@@ -262,51 +267,59 @@ var
 	P: PSound;
 	Pan: SG;
 	SoundLeft, SoundRight: SG;
-	NewSize: UG;
+//	NewSize: UG;
+	NewWave: TWave;
+	Volume: TVolume;
 begin
-	if IniLoaded = False then
+	if SoundEnabled and Assigned(Sounds) then
 	begin
-		IniLoaded := True;
-		RWOptions(False);
-	end;
-
-	if (SoundEnabled = False) or (not Assigned(Sounds)) then Exit;
-	P := Sounds.Get(SoundKind);
-	if P.Enabled then
-	begin
-		if P.Wave = nil then
-			WaveReadFromFile(P.Wave, P.FileName);
-		if (P.Wave <> nil) then
+		if IniLoaded = False then
 		begin
-			if WavePlayer = nil then
+			IniLoaded := True;
+			RWOptions(False);
+		end;
+
+		P := Sounds.Get(SoundKind);
+		if P.Enabled then
+		begin
+			if P.Wave = nil then
 			begin
-				NewSize := 2{Convert from Mono to Stereo} * (P.Wave.BytesFollowing + 8);
-				if SoundBufferSize < NewSize then
-				begin
-					FreeMem(SoundBuffer);
-					SoundBufferSize := NewSize;
-					GetMem(SoundBuffer, SoundBufferSize);
-				end;
-				SoundLR(SoundLeft, SoundRight, CX, CXCount);
-				ConvertChannels(P.Wave, SoundBuffer, 2, SoundLeft, SoundRight);
-				PlayWave(SoundBuffer);
-			end
-			else if ((SoundReduce = False) or (P.Used = False)) then
+				P.Wave := TWave.Create;
+				P.Wave.ReadFromFile(P.FileName);
+			end;
+			if (P.Wave <> nil) then
 			begin
-				if SoundStereo and (CX <> Center) then
+				if WavePlayer = nil then
 				begin
-		//			i := MaxVolume div 2;
-					Pan := RoundDiv(MaxVolume * CX, CXCount);
-					WavePlayer.VolumeLeft := (MaxVolume - Pan) div 2;
-					WavePlayer.VolumeRight := Pan div 2;
+	(*				NewSize := 2{Convert from Mono to Stereo} * (P.Wave.Format.BytesFollowing + 8);
+					if SoundBufferSize < NewSize then
+					begin
+						FreeMem(SoundBuffer);
+						SoundBufferSize := NewSize;
+						GetMem(SoundBuffer, SoundBufferSize);
+					end; TODO *)
+					SoundLR(SoundLeft, SoundRight, CX, CXCount);
+					NewWave := P.Wave.ConvertChannels(2, SoundLeft, SoundRight);
+					NewWave.Play;
+					NewWave.Free;
 				end
-				else
+				else if ((SoundReduce = False) or (P.Used = False)) then
 				begin
-					WavePlayer.VolumeLeft := MaxVolume div 2;
-					WavePlayer.VolumeRight := MaxVolume div 2;
+					if SoundStereo and (CX <> Center) then
+					begin
+			//			i := MaxVolume div 2;
+						Pan := RoundDiv(MaxVolume * CX, CXCount);
+						Volume.Left := (MaxVolume - Pan) div 2;
+						Volume.Right := Pan div 2;
+					end
+					else
+					begin
+						Volume.Left := MaxVolume div 2;
+						Volume.Right := MaxVolume div 2;
+					end;
+					WavePlayer.Play(P.Wave, Volume);
+					P.Used := True;
 				end;
-				WavePlayer.Play(P.Wave);
-				P.Used := True;
 			end;
 		end;
 	end;
@@ -487,7 +500,10 @@ begin
 		else
 		begin
 			if Sound.FileName <> '' then
-				WaveReadFromFile(Sound.Wave, Sound.FileName);
+			begin
+				Sound.Wave := TWave.Create;
+				Sound.Wave.ReadFromFile(Sound.FileName);
+			end;
 		end;
 
 		Sound.Enabled := DSound.Enabled;
@@ -598,12 +614,14 @@ begin
 					PlayWinSound(wsDefaultSound)
 				else
 				begin
-					if P.Wave = nil then
+					PlayWaveFile(P.FileName);
+{					if P.Wave = nil then
 					begin
-						WaveReadFromFile(P.Wave, P.FileName);
+						P.Wave := TWave.Create;
+						P.Wave.ReadFromFile(P.FileName);
 					end;
 					if P.Wave <> nil then
-						PlayWave(P.Wave);
+						P.Wave.Play;}
 				end;
 			end;
 			1:
@@ -620,7 +638,8 @@ begin
 			begin
 				if ExecuteDialog(OpenDialog1, P.FileName) then
 				begin
-					WaveReadFromFile(P.Wave, P.FileName);
+					P.Wave.Free;
+					P.Wave.ReadFromFile(P.FileName);
 					UpdateDSound(P);
 					SoundsC := True;
 				end;

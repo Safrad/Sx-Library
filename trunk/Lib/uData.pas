@@ -1,7 +1,7 @@
 //* File:     Lib\uData.pas
 //* Created:  1998-01-01
-//* Modified: 2008-02-07
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -61,9 +61,11 @@ type
 		function Get(const Index: TIndex): Pointer; overload;
 //		procedure GetFirst(var Value); overload;
 		function GetFirst: Pointer; overload;
+		function First: TObject;
 //		procedure GetLast(var Value); overload;
 		function GetLast: Pointer; overload;
-		procedure Next(var P: Pointer);
+		procedure Next(var P: Pointer); overload;
+		function Next(Ob: TObject): TObject; overload;
 
 		function IsEmpty: Boolean;
 		function ToString: string;
@@ -334,6 +336,20 @@ begin
 	Inc(SG(P), ItemMemSize);
 	if SG(P) >= SG(Data) + SG(FItemMemSize) * FItemCount then
 		P := nil;
+end;
+
+function TData.First: TObject;
+begin
+	if Count > 0 then
+		Result := TObject(GetFirst^)
+	else
+		Result := nil;
+end;
+
+function TData.Next(Ob: TObject): TObject;
+begin
+	Result := Ob;
+	Next(Result);
 end;
 
 end.

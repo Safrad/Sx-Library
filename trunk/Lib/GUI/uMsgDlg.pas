@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uMsgDlg.pas
 //* Created:  1999-12-01
-//* Modified: 2007-11-25
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -13,7 +13,7 @@ interface
 uses
 	Dialogs, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Consts,
 	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel, uWave,
-	uDForm, uDTimer, uDEdit, uMsg, uTypes;
+	uDForm, uDTimer, uDEdit, uMsg, uTypes, uDWinControl;
 
 type
 	TfMsgDlg = class(TDForm)
@@ -75,13 +75,13 @@ function MsgDlg(
 	const Text: string;
 	const Param: array of string;
 	const Retry: BG;
-	const MsgType: TMsgType;
+	const MsgType: TMessageLevel;
 	const Buttons: array of string; const TimeLeft: UG): SG;
 
-function MessageD(const Text: string; const MsgType: TMsgType;
+function MessageD(const Text: string; const MsgType: TMessageLevel;
 	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn; overload;
 
-function MessageD(const Text: string; const Param: array of string; const MsgType: TMsgType;
+function MessageD(const Text: string; const Param: array of string; const MsgType: TMessageLevel;
 	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn; overload;
 
 function DeleteFileDialog(const FileName: TFileName): Boolean;
@@ -101,7 +101,7 @@ var
 type
 	PIgnore = ^TIgnore;
 	TIgnore = packed record // 32
-		MsgType: TMsgType; // 1
+		MsgType: TMessageLevel; // 1
 		Retry: B1; // 1
 		Ignore: TIgnoreAll; // 1
 		Reserved: U1;
@@ -137,7 +137,7 @@ begin
 end;
 
 const
-	IconIDs: array[TMsgType] of PChar = (IDI_QUESTION, IDI_WINLOGO, IDI_INFORMATION, IDI_WARNING, IDI_ERROR,
+	IconIDs: array[TMessageLevel] of PChar = (IDI_QUESTION, IDI_WINLOGO, IDI_INFORMATION, IDI_WARNING, IDI_ERROR,
 		IDI_APPLICATION, '');
 
 procedure TfMsgDlg.ShowMes;
@@ -159,7 +159,7 @@ begin
 	EditIndex.Text:= NToS(ActItem + 1);
 	EditIndex.OnChange := EditIndexChange;
 	PanelCreated.Caption := DateTimeToS(Ignore.DateTime, 0, ofDisplay);
-	Caption := MsgTypeStr[Ignore.MsgType];
+	Caption := MessageLevelStr[Ignore.MsgType];
 
 	IconID := IconIDs[Ignore.MsgType];
 
@@ -383,7 +383,7 @@ function MsgDlg(
 	const Text: string;
 	const Param: array of string;
 	const Retry: BG;
-	const MsgType: TMsgType;
+	const MsgType: TMessageLevel;
 	const Buttons: array of string; const TimeLeft: UG): SG;
 var
 	i: SG;
@@ -479,14 +479,14 @@ begin
 	if (IgnoreAll <> iaAll) and (FoundSame = False) and (FormDraw(fMsgDlg) = False) then
 	begin
 		case MsgType of
-		mtConfirmation:
+		mlConfirmation:
 			PlayWinSound(wsQuestion);
-		mtDebug,
-		mtInformation,
-		mtWarning:
+		mlDebug,
+		mlInformation,
+		mlWarning:
 			PlayWinSound(wsExclamation);
-		mtError,
-		mtFatalError:
+		mlError,
+		mlFatalError:
 			PlayWinSound(wsCriticalStop);
 		end;
 
@@ -602,10 +602,10 @@ begin
 		fMsgDlg.ShowForm;
 	end
 	else
-		MessageD('No message found.', mtInformation, [mbOk]);
+		MessageD('No message found.', mlInformation, [mbOk]);
 end;
 
-function MessageD(const Text: string; const Param: array of string; const MsgType: TMsgType;
+function MessageD(const Text: string; const Param: array of string; const MsgType: TMessageLevel;
 	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn; overload;
 var
 	B: TDlgBtn;
@@ -640,7 +640,7 @@ begin
 		end;
 end;
 
-function MessageD(const Text: string; const MsgType: TMsgType;
+function MessageD(const Text: string; const MsgType: TMessageLevel;
 	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn; overload;
 begin
 	Result := MessageD(Text, [], MsgType, Buttons, TimeLeft);
@@ -683,7 +683,7 @@ end;
 function DeleteFileDialog(const FileName: TFileName): Boolean;
 begin
 	Result := False;
-	if MessageD('Delete file %1.', [FileName], mtConfirmation, [mbYes, mbNo]) = mbYes then
+	if MessageD('Delete file %1.', [FileName], mlConfirmation, [mbYes, mbNo]) = mbYes then
 		Result := DeleteFileEx(FileName);
 end;
 

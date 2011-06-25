@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uGraph.pas
 //* Created:  1999-05-01
 //* Modified: 2007-08-20
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -42,8 +42,8 @@ function Over(const SX1, SY1, SX2, SY2: Integer;
 	const DX1, DY1, DX2, DY2: Integer): Boolean; overload;
 function Over3D(const SX1, SY1, SZ1, SX2, SY2, SZ2: Integer;
 	const DX1, DY1, DZ1, DX2, DY2, DZ2: Integer): Boolean; overload;
-function OverE(const SX1, SY1, SX2, SY2: Extended;
-	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
+{function OverE(const SX1, SY1, SX2, SY2: Extended;
+	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;}
 procedure InflatePoint(var P: TPoint; d: SG); overload;
 procedure InflatePoint(var P: TPoint; dx, dy: SG); overload;
 
@@ -373,7 +373,7 @@ begin
 	Result := True;
 end;
 
-function OverE(const SX1, SY1, SX2, SY2: Extended;
+{function OverE(const SX1, SY1, SX2, SY2: Extended;
 	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
 begin
 	Result := False;
@@ -383,7 +383,7 @@ begin
 	if (SY1 > DY2) and (SY2 > DY2) then Exit;
 	if (SY1 < DY1) and (SY2 < DY1) then Exit;
 	Result := True;
-end;
+end;}
 
 procedure InflatePoint(var P: TPoint; d: SG);
 begin

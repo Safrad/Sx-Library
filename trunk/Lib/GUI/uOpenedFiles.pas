@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uOpenedFiles.pas
 //* Created:  1999-12-01
-//* Modified: 2007-11-26
-//* Version:  1.1.39.8
+//* Modified: 2008-01-19
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -934,6 +934,7 @@ begin
 		Index := -1;
 		if Items[OpenedFile].New <> High(Items[OpenedFile].New) then
 		begin
+			WatchRemoveFile(Items[OpenedFile].FileName);
 			if Assigned(Window1) then
 				if Window1.Count > OpenedFile then
 					Window1.Delete(OpenedFile + 1);

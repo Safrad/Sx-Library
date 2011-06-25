@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uAbout.pas
 //* Created:  1999-10-01
 //* Modified: 2008-01-19
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -70,7 +70,7 @@ implementation
 uses
 	uAPI, uSimulation, uHTML, uStart,
 	uProjectInfo,
-	uGraph, uDIniFile, uScreen, uSysInfo, uFiles, uMsg, uData, uWave, uColor,
+	uGraph, uDIniFile, uScreen, uSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor,
 	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
 var
 	LastNowTime: U8;

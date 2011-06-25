@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uAPI.pas
 //* Created:  1998-01-01
-//* Modified: 2007-11-26
-//* Version:  1.1.39.8
+//* Modified: 2008-02-16
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -29,7 +29,7 @@ label LRetry;
 var
 	ErrorCode: U4;
 begin
-	MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mtDebug);
+	MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
 	LRetry:
 	ErrorCode := ShellExecute(0, 'open', PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
 	if ErrorCode <= 32 then
