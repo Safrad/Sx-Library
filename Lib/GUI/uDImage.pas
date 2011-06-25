@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDImage.pas
 //* Created:  2000-07-01
-//* Modified: 2007-11-26
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -1119,12 +1119,12 @@ var
 	s: string;
 	i, x, y: SG;
 	R: TRect;
-	{$ifopt d+}
+	{$ifdef info}
 	StartTickCount: U4;
 	{$endif}
 begin
 	inherited;
-	{$ifopt d+}
+	{$ifdef info}
 	GetGTime;
 	StartTickCount := GTime;
 	{$endif}
@@ -1424,7 +1424,7 @@ begin
 	else
 		ScrollBarVHeight := 0;
 
-	{$ifopt d-}
+	{$ifndef info}
 	if FDrawFPS then
 	{$endif}
 	begin
@@ -1435,7 +1435,7 @@ begin
 
 		R := Rect(2, 2, Width - 1 - 2, Height - 1 - 2);
 
-		{$ifopt d+}
+		{$ifdef info}
 		if (OfsX <> 0) or (OfsY <> 0) then
 			s := NToS(OfsX) + CharTimes + NToS(OfsY)
 		else

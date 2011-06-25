@@ -1,7 +1,7 @@
 //* File:     Lib\uDBF.pas
 //* Created:  1999-12-01
-//* Modified: 2007-05-20
-//* Version:  1.1.40.9
+//* Modified: 2008-04-05
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -179,8 +179,8 @@ begin
 						else
 							FPTSize := 0;
 					end;
-				end
-	{ 		'D': Columns[ColumnCount].Typ := varDate;}
+				end;
+	  		'D': FColumns[FColumnCount].Typ := varString;
 				else FColumns[FColumnCount].Typ := varNull;
 				end;
 				DelEndSpace(FColumns[FColumnCount].Name);

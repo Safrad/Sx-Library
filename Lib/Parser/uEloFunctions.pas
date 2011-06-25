@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uEloFunctions.pas
 //* Created:  2004-03-07
 //* Modified: 2008-02-24
-//* Version:  1.1.40.9
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -24,7 +24,7 @@ function DeltaElo(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): 
 function DeltaEloI(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): SG;
 
 function ScoreToS(const Score: UG; const HTML: BG = True): string;
-function EloToStr(const Elo: U2; const OutputFormat: TOutputFormat): string;
+function EloToStr(const Elo: SG; const OutputFormat: TOutputFormat): string;
 
 implementation
 
@@ -286,7 +286,7 @@ begin
 	end;
 end;
 
-function EloToStr(const Elo: U2; const OutputFormat: TOutputFormat): string;
+function EloToStr(const Elo: SG; const OutputFormat: TOutputFormat): string;
 begin
 	if Elo = 0 then
 	begin

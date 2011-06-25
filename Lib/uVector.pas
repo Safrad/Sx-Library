@@ -1,7 +1,7 @@
 //* File:     Lib\uVector.pas
 //* Created:  2006-05-03
-//* Modified: 2008-01-29
-//* Version:  1.1.40.9
+//* Modified: 2008-09-03
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -62,6 +62,7 @@ function RoundVector(const V: TVector): TVector;
 function AbsVector(const V: TVector): TVector;
 function NotVector(const V: TVector): TVector;
 function ExpVector(const V: TVector): TVector;
+function FactVector(const V: TVector): TVector;
 function CompareVector(const V1, V2: TVector): FA;
 function ShlVector(const V1, V2: TVector): TVector;
 function ShrVector(const V1, V2: TVector): TVector;
@@ -249,6 +250,32 @@ end;
 function ExpVector(const V: TVector): TVector;
 begin
 	Result := NumToVector(Exp(VectorToNum(V)));
+end;
+
+function FactVector(const V: TVector): TVector;
+var
+	i, j: SG;
+	e, x: FA;
+begin
+	x := 1;
+	for i := 0 to 0 do
+	begin
+		e := VectorToNum(V); // TODO : Factor 1.5 =
+		if e < 0 then
+		begin
+//				ShowError('Input -infinity..2000 for Fact')
+		end
+		else if e <= 1754 then
+		begin
+			for j := 2 to Round(e) do
+				x := x * j;
+		end
+		else
+		begin
+			if e > 1754 then x := Infinity;
+		end;
+	end;
+	Result := NumToVector(x);
 end;
 
 function CompareVector(const V1, V2: TVector): FA;

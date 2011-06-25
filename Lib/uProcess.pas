@@ -1,7 +1,7 @@
 //* File:     Lib\uProcess.pas
 //* Created:  1999-05-01
 //* Modified: 2007-05-08
-//* Version:  1.1.40.9
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -12,6 +12,7 @@ interface
 
 uses uTypes;
 
+function ProcessRun: BG;
 function ProcessNotRun: BG;
 procedure ProcessDone;
 procedure ProcessPause;
@@ -30,6 +31,11 @@ type
 	TProcessStatus = (psIdle, psRun{ning}, psPaused, psAborted);
 var
 	ProcessStatus: TProcessStatus;
+
+function ProcessRun: BG;
+begin
+	Result := ProcessStatus in [psRun, psPaused];
+end;
 
 function ProcessNotRun: BG;
 begin

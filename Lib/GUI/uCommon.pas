@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uCommon.pas
 //* Created:  2004-01-06
-//* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Modified: 2008-09-20
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -42,14 +42,22 @@ implementation
 
 uses
 	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uMsgDlg, uMsg,
-	uStrings,
+	uStrings, uWebUpdate,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
 
+var
+	AutomaticallyCheckForUpdate: BG;
+
 procedure RWCommon(const Save: BG);
+const
+	Section = 'Options';
 begin
+  if MainIni = nil then Exit;
 	AboutRW(Save);
 	if Save = False then ViewSplashScreen := True;
-	MainIni.RWBool('Options', 'ViewSplashScreen', ViewSplashScreen, Save);
+	MainIni.RWBool(Section, 'ViewSplashScreen', ViewSplashScreen, Save);
+	if Save = False then AutomaticallyCheckForUpdate := True;
+	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);
 end;
 
 procedure CommonCreate(const ReloadIni: TWatchFileChanged; const Special: BG = False);
@@ -63,8 +71,12 @@ begin
 	WatchAddFile(MainIniFileName, ReloadIni);
 	RWCommon(False);
 	if not Special then
+	begin
 		if ViewSplashScreen then
 			ShowSplashScreen;
+		if AutomaticallyCheckForUpdate then
+			CheckForUpdate(False);
+	end;
 end;
 
 procedure CommonForm(const Form: TDForm);
@@ -127,6 +139,7 @@ end;
 type
 	TOb = class(TObject)
 	private
+		AutomaticallyCheckForUpdate1: TMenuItem;
 		ShowSplashScreen1: TMenuItem;
 		LoggingLevel1: TMenuItem;
 		procedure Exit1Click(Sender: TObject);
@@ -134,6 +147,8 @@ type
 		procedure WebHomepage1Click(Sender: TObject);
 		procedure ViewMessages1Click(Sender: TObject);
 		procedure ViewParams1Click(Sender: TObject);
+		procedure CheckForUpdate1Click(Sender: TObject);
+		procedure AutomaticallyCheckForUpdate1Click(Sender: TObject);
 		procedure About1Click(Sender: TObject);
 		procedure ShowSplashScreen1Click(Sender: TObject);
 		procedure ViewIniFile1Click(Sender: TObject);
@@ -169,6 +184,17 @@ end;
 procedure TOb.ViewParams1Click(Sender: TObject);
 begin
 	HelpParams;
+end;
+
+procedure TOb.CheckForUpdate1Click(Sender: TObject);
+begin
+	CheckForUpdate;
+end;
+
+procedure TOb.AutomaticallyCheckForUpdate1Click(Sender: TObject);
+begin
+	AutomaticallyCheckForUpdate := not AutomaticallyCheckForUpdate;
+	AutomaticallyCheckForUpdate1.Checked := AutomaticallyCheckForUpdate;
 end;
 
 procedure TOb.About1Click(Sender: TObject);
@@ -347,6 +373,19 @@ begin
 		M := TMenuItem.Create(Help1);
 		M.Caption := cLineCaption;
 		Help1.Add(M);
+
+		M := TMenuItem.Create(Help1);
+		M.Name := 'CheckForUpdate1';
+		M.Caption := 'Check For Update' + cDialogSuffix;
+		M.OnClick := Ob.CheckForUpdate1Click;
+		Help1.Add(M);
+
+		Ob.AutomaticallyCheckForUpdate1 := TMenuItem.Create(Help1);
+		Ob.AutomaticallyCheckForUpdate1.Name := 'AutomaticallyCheckForUpdate1';
+		Ob.AutomaticallyCheckForUpdate1.Caption := 'Automatically Check For Update';
+		Ob.AutomaticallyCheckForUpdate1.OnClick := Ob.AutomaticallyCheckForUpdate1Click;
+		Ob.AutomaticallyCheckForUpdate1.Checked := AutomaticallyCheckForUpdate;
+		Help1.Add(Ob.AutomaticallyCheckForUpdate1);
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'About';

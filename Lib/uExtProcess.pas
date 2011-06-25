@@ -1,20 +1,32 @@
+//* File:     Lib\uExtProcess.pas
+//* Created:  2008-07-26
+//* Modified: 2008-07-20
+//* Version:  1.1.41.9
+//* Author:   David Safranek (Safrad)
+//* E-Mail:   safrad at email.cz
+//* Web:      http://safrad.own.cz
+
 unit uExtProcess;
 
 interface
 
 uses
-	uTypes;
+	uTypes, Windows;
 
 (**
 	@return process exit code if success or High(UG)
 *)
 function RunAndWaitForApplication(const CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
 
+
+var
+	ProcessInfo: TProcessInformation;
+
 implementation
 
 uses
 	uMsg, uLog,
-	SysUtils, Windows;
+	SysUtils;
 
 function WaitForApplication(hProcess: UG): UG;
 begin
@@ -27,7 +39,6 @@ end;
 function RunAndWaitForApplication(const CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
 var
 	StartupInfo: TStartupInfo;
-	ProcessInfo: TProcessInformation;
 begin
 	Result := High(Result);
 

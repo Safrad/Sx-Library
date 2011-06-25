@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uReg.pas
 //* Created:  1999-11-01
-//* Modified: 2008-02-04
-//* Version:  1.1.40.9
+//* Modified: 2008-08-29
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -18,7 +18,8 @@ type
 var
 	MyDocuments: string; // User documnets (Read and Write)
 
-function RootKeyToStr(RootKey: HKEY): string;
+function RootKeyToStr(const RootKey: HKEY): string;
+function RegValue(const RootKey: HKEY; const Key: string; const Name: string): string;
 
 function CustomFileType(
 	const FileTypesOperation: TFileTypesOperation;
@@ -458,7 +459,7 @@ begin
 	end;
 end;
 
-function RootKeyToStr(RootKey: HKEY): string;
+function RootKeyToStr(const RootKey: HKEY): string;
 begin
 	case RootKey of
 	HKEY_CLASSES_ROOT: Result := 'HKEY_CLASSES_ROOT';
@@ -469,6 +470,24 @@ begin
 	HKEY_CURRENT_CONFIG: Result := 'HKEY_CURRENT_CONFIG';
 	HKEY_DYN_DATA: Result := 'HKEY_DYN_DATA';
 	else Result := '';
+	end;
+end;
+
+function RegValue(const RootKey: HKEY; const Key: string; const Name: string): string;
+var
+	Reg: TRegistry;
+begin
+	Reg := TRegistry.Create(KEY_QUERY_VALUE);
+	try
+		Reg.RootKey := RootKey;
+		if Reg.KeyExists(Key) then
+		begin
+			Reg.OpenKeyReadOnly(Key);
+			Result := Reg.ReadString(Name);
+			Reg.CloseKey;
+		end;
+	finally
+		Reg.Free;
 	end;
 end;
 

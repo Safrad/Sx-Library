@@ -1,7 +1,7 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -62,8 +62,6 @@ const
 		'SystemStart'
 //		'SystemDefault'
 		);
-
-	AllSounds = 'Sound Wave (*.wav)|*.wav';
 
 procedure Beep;
 procedure PlayWinSound(WinSound: TWinSound);
@@ -130,10 +128,10 @@ type
 	TFormatTag = (
 		ftUnknown = 0,
 		ftPCM = 1, // PCM
-//		ftADPCM = 2, // Microsoft ADPCM
+		ftADPCM = 2, // Microsoft ADPCM
 		ftALAW = 6, // ALAW
 		ftMULAW = 7, // MULAW
-//		ftDVIIMAADPCM = 17, // Intel's DVI/IMA ADPCM
+		ftDVIIMAADPCM = 17, // Intel's DVI/IMA ADPCM
 //		MPEGLayerIII = 85, // MPEG Layer III
 		ftMax = 65535);
 {
@@ -416,13 +414,13 @@ procedure TWave.ReadFormatChunk(const F: TFile);
 begin
 	F.BlockRead(FFormat, SizeOf(FFormat));
 	case FFormat.FormatTag of
-	ftPCM, ftALAW, ftMULAW:
-//	ftADPCM, ftDVIIMAADPCM:
+	ftPCM, ftALAW, ftMULAW,
+	ftADPCM, ftDVIIMAADPCM:
 	begin
 
 	end;
 	else
-		ErrorMsg('Invalid wave format.');
+		ErrorMsg('Invalid wave format. Chunk format tag is %1.', [IntToStr(SG(FFormat.FormatTag))]);
 	end;
 {	if not (FFormat.BitsPerSample in [8, 16]) then
 		ErrorMsg('Invalid wave format.');}

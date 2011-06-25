@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uHTML.pas
 //* Created:  2004-09-26
-//* Modified: 2008-03-02
-//* Version:  1.1.40.9
+//* Modified: 2008-03-14
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -13,7 +13,7 @@ interface
 uses
 	uTypes,
 	uCharset,
-	SysUtils, Classes{TAlignment};
+	SysUtils;
 
 function RelativePath(const Source, Target: string): string;
 function GetGeneratedBy: string;
@@ -23,6 +23,8 @@ type
 const
 	DistanceUnitNames: array[TDistanceUnit] of string = ('%', 'px', 'pt');
 type
+	TCellAlignment = (caLeftJustify, caRightJustify, caCenter);
+
 	THTML = class(TObject)
 	private
 		FFileName: TFileName;
@@ -50,18 +52,20 @@ type
 		procedure AddBody(const s: string);
 		procedure AddCommand(const s: string);
 		procedure HorizontalRule(const Width: SG = 100; const DistanceUnit: TDistanceUnit = duPercentage; const Size: SG = 2);
-		procedure AddDataCell(const CellData: string; const Align: TAlignment = taLeftJustify);
-		procedure AddHeadCell(const CellData: string; const Align: TAlignment = taLeftJustify);
+		procedure AddDataCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
+		procedure AddHeadCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
 		procedure ClosedTag(const Data: string; const Tag: string);
 		procedure AddTableFromCSV(const FileName: TFileName; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
 		procedure AddTableFromText(const Line: string; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
 		procedure AddTable(const FileName: TFileName; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
 		procedure AddRef(const FileName: TFileName); overload;
 		procedure AddRef(const FileName: TFileName; const Text: string); overload;
+		{$ifndef Console}
 		procedure AddImage(const FileName: TFileName; const Params: string); overload;
 		procedure AddImage(const FileName: TFileName); overload;
 		procedure AddSmallImage(const FileName: TFileName; const Params: string); overload;
 		procedure AddSmallImage(const FileName: TFileName); overload;
+	{$endif}
 //		procedure AddTitle; deprecated;
 		function GetRelativePath(const FileName: TFileName): string;
 	published
@@ -85,7 +89,7 @@ implementation
 
 uses
 	Math, Menus,
-	uStrings, uFiles, uDBitmap, uOutputFormat, uMath, uUser, uCSVFile, uProjectInfo, uToHTML;
+	uStrings, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uUser, uCSVFile, uProjectInfo, uToHTML;
 
 function RelativePath(const Source, Target: string): string;
 {
@@ -230,25 +234,25 @@ begin
 	AddBody(s);
 end;
 
-procedure THTML.AddDataCell(const CellData: string; const Align: TAlignment = taLeftJustify);
+procedure THTML.AddDataCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
 var s: string;
 begin
 	s := '<td';
-	if Align = taCenter then
+	if Align = caCenter then
 		s := s + ' align="center"'
-	else if Align = taRightJustify then
+	else if Align = caRightJustify then
 		s := s + ' align="right"';
 	s := s + '>' + CellData + '</td>';
 	AddBody(s);
 end;
 
-procedure THTML.AddHeadCell(const CellData: string; const Align: TAlignment = taLeftJustify);
+procedure THTML.AddHeadCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
 var s: string;
 begin
 	s := '<th';
-	if Align = taCenter then
+	if Align = caCenter then
 		s := s + ' align="center"'
-	else if Align = taRightJustify then
+	else if Align = caRightJustify then
 		s := s + ' align="right"';
 	s := s + '><b>' + CellData + '</b></th>';
 	AddBody(s);
@@ -282,6 +286,7 @@ begin
 	AddBody('<a href="' + URL(RelativePath(FFileName, FileName)) + '">' + Text + '</a>');
 end;
 
+{$ifndef Console}
 function AddImageEx(const SelfFileName, FileName: TFileName; const Params: string): string;
 var
 	B: TDBitmap;
@@ -348,6 +353,7 @@ procedure THTML.AddSmallImage(const FileName: TFileName);
 begin
 	AddSmallImage(FileName, '');
 end;
+{$endif}
 
 {procedure THTML.AddTitle;
 begin

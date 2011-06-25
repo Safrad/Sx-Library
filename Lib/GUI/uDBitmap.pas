@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDBitmap.pas
 //* Created:  1999-05-01
-//* Modified: 2007-12-30
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -219,6 +219,9 @@ type
 		procedure Bar(C: TColor; const Effect: TEffect); overload;
 		procedure Bar(Rect: TRect; C: TColor; const Effect: TEffect); overload;
 		procedure AntiBar(XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect); overload;
+
+		procedure Cross(
+			X1, Y1: TCoor; const Size: SG; const C: TColor; const Effect: TEffect);
 
 		procedure Border(
 			const X1, Y1, X2, Y2: TCoor;
@@ -2737,6 +2740,13 @@ begin
 	Line(X1, Y1 + 1, X1, Y2, C, Effect);
 	Line(X1 + 1, Y2, X2, Y2, C, Effect);
 	Line(X2, Y1, X2, Y2 - 1, C, Effect);
+end;
+
+procedure TDBitmap.Cross(
+	X1, Y1: TCoor; const Size: SG; const C: TColor; const Effect: TEffect);
+begin
+	Line(X1 - Size, Y1, X1 + Size, Y1, C, Effect);
+	Line(X1, Y1 - Size, X1, Y1 + Size, C, Effect);
 end;
 
 function TDBitmap.CutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;

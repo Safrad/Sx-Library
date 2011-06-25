@@ -1,7 +1,7 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2008-02-23
-//* Version:  1.1.40.9
+//* Modified: 2008-07-19
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -15,9 +15,6 @@ uses
 	{$ifndef Console}Dialogs,{$endif}
 	SysUtils, Windows;
 
-const
-	AllFiles = 'All Files (*.*)|*.*';
-	AllText = 'Text file (*.txt)|*.txt|' + AllFiles;
 var
 	// Directories
 	StartDir, // Actual Dir
@@ -42,6 +39,14 @@ function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccess
 function GetFileModificationDateTime(const FileName: TFileName): TFileTime;
 function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 function ShortDir(const Dir: string): string;
+
+type
+	TStringPair = record
+		Variable: string;
+		Value: string;
+	end;
+
+function RemoveCustomEV(Dir: string; const Environment :array of TStringPair): string;
 function RemoveEV(Dir: string): string;
 function ExpandDir(Dir: string): string;
 function DelFileExt(const FName: string): string;
@@ -50,7 +55,7 @@ function ParentDir(var Dir: string): BG;
 function ParentDirF(Dir: string): string;
 function LegalFileName(const FileName: string): string;
 function LegalPath(const Path: string): string;
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: BG);
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
 function HandleFileSize(FHandle: THandle): S8;
 function GetFileSizeU(const FileName: TFileName): S8;
 function GetFileSizeS(const FileName: TFileName): string;
@@ -62,6 +67,7 @@ function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 function RenameFileEx(const Source, Dest: TFileName): BG;
 function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
 function CopyFileToDir(Source, Dest: TFileName; const FailExist: BG): BG;
+procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSize: U8 = GB; const CreateCRCFile: BG = False);
 function CopyDamagedFile(Source, Dest: TFileName): BG;
 function CreateDirEx(const Dir: string): BG;
 function CreateDirsEx(const Dir: string): BG;
@@ -99,9 +105,9 @@ function RepairDirectory(const Dir: TFileName): TFileName;
 {$ifndef Console}
 function ExecuteDialog(Dialog: TOpenDialog; var FileName: TFileName): BG; overload;
 {$endif}
+function SameFiles(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
 procedure ReplaceIfChanged(const FileName: TFileName);
-function DialogStr(Ext, Des: array of string): string;
 procedure InitPaths;
 
 function DirectoryExistsEx(const DirName: TFileName): BG;
@@ -111,11 +117,18 @@ function FileOrDirExistsEx(const FileOrDirName: string): BG;
 function LastLineFromFile(const FileName: TFileName): string;
 function SameFileName(const FileName1, FileName2: TFileName): BG;
 
+function DialogStr(Ext, Des: array of string): string;
+function GetFileNameFilter(const Description: string; const Extensions: array of string): string;
+function GetExecutableFilter: string;
+function AllFiles: string;
+function AllText: string;
+function AllSounds: string;
+
 implementation
 
 uses
 	Math,
-	uMsg, uProjectInfo, uFile,
+	uMsg, uProjectInfo, uFile, uSorts,
 	uOutputFormat, uMath, uLog;
 
 procedure InitPaths;
@@ -229,6 +242,47 @@ begin
 	end;
 
 	// TODO: C:\Windows -> %windir%
+end;
+
+function FindEnvironmentVariable(const Variable: string; const Environment: array of TStringPair): string;
+var i: SG;
+begin
+	Result := '';
+	for i := 0 to Length(Environment) - 1 do
+	begin
+		if Environment[i].Variable = Variable then
+		begin
+			Result := Environment[i].Value;
+			Break;
+		end;
+	end;
+end;
+
+function RemoveCustomEV(Dir: string; const Environment: array of TStringPair): string;
+var
+	i, Start: SG;
+	Variable, Value: string;
+begin
+	i := 1;
+	while i <= Length(Dir) do
+	begin
+		if Dir[i] = '%' then
+		begin
+			Start := i;
+			Inc(i);
+			Variable := ReadToChar(Dir, i, '%');
+			if (i > Length(Dir) + 1) then Break; // next % not found
+
+			Value := FindEnvironmentVariable(Variable, Environment);
+
+			Delete(Dir, Start, i - Start);
+			Insert(Value, Dir, Start);
+			i := Start + Length(Value);
+		end
+		else
+			Inc(i);
+	end;
+	Result := Dir;
 end;
 
 function RemoveEV(Dir: string): string;
@@ -384,71 +438,177 @@ begin
 	end;}
 end;
 
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; Path: string; Extensions: array of string; Files, Dirs, SubDirs, Sort: BG);
+function IsDirectory(const SearchRec: TSearchRec): BG;
+begin
+	Result := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..')
+end;
+
+procedure ReadSubDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs: BG);
 var
-	NewSize: SG;
+	SearchRec: TSearchRec;
+	Read: BG;
+	i: SG;
+	ErrorCode: SG;
 	IsDir, IsFile: BG;
-	ErrorCode: Integer;
+	NewSize: SG;
+begin
+	// faReadOnly or faHidden or faSysFile or
+	ErrorCode := FindFirst(Path + SubPath + '*.*', faArchive or faReadOnly or faDirectory{faAnyFile}, SearchRec);
+	while ErrorCode = NO_ERROR do
+	begin
+		IsDir := IsDirectory(SearchRec);
+		if IsDir and (Dirs or SubDirs) then SearchRec.Name := SearchRec.Name + PathDelim;
+		IsFile := (SearchRec.Attr and faDirectory) = 0;
 
-		procedure ReadSubDir(SubPath: string);
-		var
-			SearchRec: TSearchRec;
-			Read: BG;
-			i: SG;
+		if (IsDir and Dirs)
+		or (IsFile and Files) then
 		begin
-			// faReadOnly or faHidden or faSysFile or
-			ErrorCode := FindFirst(Path + SubPath + '*.*', faArchive or faReadOnly or faDirectory{faAnyFile}, SearchRec);
-			while ErrorCode = NO_ERROR do
+			if Length(Extensions) = 0 then
+				Read := True
+			else
 			begin
-				IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
-				if IsDir and (Dirs or SubDirs) then SearchRec.Name := SearchRec.Name + PathDelim;
-				IsFile := (SearchRec.Attr and faDirectory) = 0;
-
-				if (IsDir and Dirs)
-				or (IsFile and Files) then
+				Read := False;
+				for i := 0 to Length(Extensions) - 1 do
 				begin
-					if Length(Extensions) = 0 then
-						Read := True
-					else
+					if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
 					begin
-						Read := False;
-						for i := 0 to Length(Extensions) - 1 do
-						begin
-							if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
-							begin
-								Read := True;
-								Break;
-							end;
-						end;
-					end;
-					if Read then
-					begin
-						NewSize := FilesCount + 1;
-						if AllocByExp(Length(FileNames), NewSize) then
-							SetLength(FileNames, NewSize);
-						if SubDirs then
-							FileNames[FilesCount] := SubPath + SearchRec.Name
-						else
-							FileNames[FilesCount] := SearchRec.Name;
-						Inc(FilesCount);
+						Read := True;
+						Break;
 					end;
 				end;
-
-				if IsDir and SubDirs then
-				begin
-					ReadSubDir(SubPath + SearchRec.Name);
-				end;
-				ErrorCode := FindNext(SearchRec);
 			end;
-			if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path + SubPath, ErrorCode);
-			SysUtils.FindClose(SearchRec);
+			if Read then
+			begin
+				NewSize := FilesCount + 1;
+				if AllocByExp(Length(FileNames), NewSize) then
+					SetLength(FileNames, NewSize);
+				if SubDirs then
+					FileNames[FilesCount] := SubPath + SearchRec.Name
+				else
+					FileNames[FilesCount] := SearchRec.Name;
+				Inc(FilesCount);
+			end;
 		end;
+
+		if IsDir and SubDirs then
+		begin
+			ReadSubDir(FileNames, FilesCount, Path, SubPath + SearchRec.Name, Extensions, Files, Dirs, SubDirs);
+		end;
+		ErrorCode := FindNext(SearchRec);
+	end;
+	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path + SubPath, ErrorCode);
+	SysUtils.FindClose(SearchRec);
+end;
+
+type
+	TSearchRecs = array of TSearchRec;
 var
-	i: Integer;
-	Offset: Integer;
+	GList: ^TSearchRecs;
+
+function Compare(const Index0, Index1: SG): SG;
+begin
+	Result := CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
+		PChar(GList^[Index0].Name), Length(GList^[Index0].Name),
+		PChar(GList^[Index1].Name), Length(GList^[Index1].Name)) - 2;
+end;
+
+procedure ReadSubDirSorted(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs: BG);
+var
+	SearchRec: TSearchRec;
+	Read: BG;
+	i, j: SG;
+	ErrorCode: SG;
+	IsDir, IsFile: BG;
+	NewSize: SG;
+	List: array of TSearchRec;
+	ListCount: SG;
+	AIndex: array of SG;
+begin
+	ListCount := 0;
+	// faReadOnly or faHidden or faSysFile or
+	ErrorCode := FindFirst(Path + SubPath + '*.*', faArchive or faReadOnly or faDirectory{faAnyFile}, SearchRec);
+	while ErrorCode = NO_ERROR do
+	begin
+		IsDir := IsDirectory(SearchRec);
+		IsFile := (SearchRec.Attr and faDirectory) = 0;
+
+		//if (IsDir and Dirs)
+		if IsDir or (IsFile and Files) then
+		begin
+			if IsDir or (Length(Extensions) = 0) then
+				Read := True
+			else
+			begin
+				Read := False;
+				for i := 0 to Length(Extensions) - 1 do
+				begin
+					if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
+					begin
+						Read := True;
+						Break;
+					end;
+				end;
+			end;
+			if Read then
+			begin
+				NewSize := ListCount + 1;
+				if AllocByExp(Length(List), NewSize) then
+					SetLength(List, NewSize);
+				List[ListCount] := SearchRec;
+				Inc(ListCount);
+			end;
+		end;
+		ErrorCode := FindNext(SearchRec);
+	end;
+	if ErrorCode <> ERROR_NO_MORE_FILES then
+		IOError(Path + SubPath, ErrorCode);
+	SysUtils.FindClose(SearchRec);
+
+  if ListCount = 0 then Exit;
+
+	SetLength(AIndex, ListCount);
+	FillOrderU4(AIndex[0], ListCount);
+  GList := @TSearchRecs(List);
+	Sort(PArraySG(AIndex), ListCount, Compare);
+
+	NewSize := FilesCount + ListCount;
+	if AllocByExp(Length(FileNames), NewSize) then
+		SetLength(FileNames, NewSize);
+
+	for i := 0 to ListCount - 1 do
+	begin
+		j := AIndex[i];
+		IsDir := IsDirectory(List[j]);
+		if IsDir then
+		begin
+			if Dirs then
+			begin
+				FileNames[FilesCount] := List[j].Name + PathDelim;
+				Inc(FilesCount);
+			end;
+		end
+		else
+		begin
+			FileNames[FilesCount] := List[j].Name;
+			Inc(FilesCount);
+		end;
+		if SubDirs and IsDir then
+		begin
+			ReadSubDir(FileNames, FilesCount, Path, SubPath + List[j].Name + PathDelim, Extensions, Files, Dirs, SubDirs);
+		end;
+	end;
+end;
+
+
+procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
+{$ifopt d+}
+var
+	i: SG;
+{$endif}
+(*	Offset: Integer;
 	MaxLimit: Integer;
 	Switch: Integer;
-	FileName: TFileName;
+	FileName: TFileName; *)
 begin
 	{$ifopt d+}
 	for i := 0 to Length(Extensions) - 1 do
@@ -461,11 +621,13 @@ begin
 	if Length(Extension) > 1 then
 		if (Extension <> '*') and (Extension <> '*.*') then
 			if Extension[1] <> '.' then Extension := '.' + Extension;}
-	CorrectDir(Path);
 
-	ReadSubDir('');
+	if not Sort then
+		ReadSubDir(FileNames, FilesCount, CorrectDirF(Path), '', Extensions, Files, Dirs, SubDirs)
+	else
+		ReadSubDirSorted(FileNames, FilesCount, CorrectDirF(Path), '', Extensions, Files, Dirs, SubDirs);
 
-	if Sort then
+(*	if Sort then
 	begin
 		Offset := FilesCount div 2;
 		while Offset > 0 do
@@ -487,7 +649,7 @@ begin
 			until Switch = 0;
 			Offset := 2 * Offset div 3;
 		end;
-	end;
+	end; *)
 end;
 
 function HandleFileSize(FHandle: THandle): S8;
@@ -705,6 +867,140 @@ begin
 	Result := CopyFile(Source, Dest + ExtractFileName(Source), FailExist);
 end;
 
+procedure WriteCRCFile(const FileName: string; const FileSize: U8; const CRC32: U8; const TargetFileName: TFileName);
+var
+	Data: string;
+begin
+	NumericBase := 16;
+	try
+		Data := 'crc32=' + NToS(CRC32, '00000000') + FileSep;
+	finally
+		NumericBase := 10;
+	end;
+
+	Data := 'filename=' + FileName + FileSep +
+		'size=' + IntToStr(FileSize) + FileSep +
+		Data;
+	WriteStringToFile(TargetFileName, Data, False);
+end;
+
+var
+  {Table of CRCs of all 8-bit messages}
+  crc_table: Array[0..255] of Cardinal;
+  {Flag: has the table been computed? Initially false}
+  crc_table_computed: Boolean;
+
+{Make the table for a fast CRC.}
+procedure make_crc_table;
+var
+	c: Cardinal;
+	n, k: Integer;
+begin
+
+	{fill the crc table}
+	for n := 0 to 255 do
+	begin
+		c := Cardinal(n);
+		for k := 0 to 7 do
+		begin
+			if Boolean(c and 1) then
+				c := $edb88320 xor (c shr 1)
+			else
+				c := c shr 1;
+		end;
+		crc_table[n] := c;
+  end;
+
+  {The table has already being computated}
+  crc_table_computed := true;
+end;
+
+{Update a running CRC with the bytes buf[0..len-1]--the CRC
+ should be initialized to all 1's, and the transmitted value
+ is the 1's complement of the final running CRC (see the
+ crc() routine below)).}
+function CalcCRC(crc: U4; buf: pByteArray; len: Integer): Cardinal;
+var
+  c: Cardinal;
+  n: Integer;
+begin
+  c := crc;
+
+  {Create the crc table in case it has not being computed yet}
+  if not crc_table_computed then make_crc_table;
+
+	{Update}
+	{$r-}
+	for n := 0 to len - 1 do
+		c := crc_table[(c XOR buf^[n]) and $FF] XOR (c shr 8);
+
+  {Returns}
+  Result := c;
+end;
+
+procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSize: U8 = GB; const CreateCRCFile: BG = False);
+var
+	SourceFile: TFile;
+	DestFile: TFile;
+	FileNamePrefix: string;
+	FileIndex: SG;
+	RemainSource: U8;
+	RemainDest: U8;
+	Count: SG;
+	Buf: Pointer;
+	SourceFileSize: U8;
+	CRC: U4;
+begin
+	SourceFileSize := GetFileSizeU(Source);
+	if MaxFileSize > SourceFileSize then
+	begin
+		CopyFileToDir(Source, Dest, True);
+		Exit;
+	end;
+	Assert((MaxFileSize >= 1));
+
+	FileNamePrefix := Dest + DelFileExt(ExtractFileName(Source));
+	SourceFile := TFile.Create;
+	GetMem(Buf, DefFileBuffer);
+	try
+		CRC := 0;
+		if SourceFile.Open(Source, fmReadOnly) then
+		begin
+			RemainSource := SourceFileSize;
+			FileIndex := 0;
+			while RemainSource > 0 do
+			begin
+				DestFile := TFile.Create;
+				RemainDest := Min(RemainSource, MaxFileSize);
+				try
+					if DestFile.Open(FileNamePrefix + '.' + NToS(FileIndex + 1, '000'), fmRewrite) then
+					begin
+						while RemainDest > 0 do
+						begin
+							Count := Min(DefFileBuffer, RemainDest);
+							SourceFile.BlockRead(Buf^, Count);
+							CRC := CalcCRC(CRC, Buf, Count);
+							DestFile.BlockWrite(Buf^, Count);
+							Dec(RemainDest, Count);
+						end;
+					end;
+					DestFile.Close;
+				finally
+					DestFile.Free;
+				end;
+				Dec(RemainSource, Min(RemainSource, MaxFileSize));
+				Inc(FileIndex);
+			end;
+			SourceFile.Close;
+		end;
+		if CreateCRCFile then
+			WriteCRCFile(ExtractFileName(Source), SourceFileSize, CRC, FileNamePrefix + '.crc');
+	finally
+		SourceFile.Free;
+		FreeMem(Buf);
+	end;
+end;
+
 function CopyDamagedFile(Source, Dest: TFileName): BG;
 const
 	Count = 512;
@@ -796,7 +1092,7 @@ begin
 	begin
 		if i > 0 then
 		begin
-			FileOrDir := DirS + ' (' + IntToStr(i) + ')' + DirE;
+			FileOrDir := DirS + '_' + NToS(i, '0000') + DirE;
 		end;
 
 		if IsDir then
@@ -882,6 +1178,7 @@ end;
 
 function DeleteFileEx(const FileName: TFileName): BG;
 begin
+	MainLog.Add('Delete file: ' + FileName, mlDebug);
 	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
 	Result := DeleteFile(PChar(FileName));
 	if Result = False then
@@ -890,6 +1187,7 @@ end;
 
 function RemoveDirEx(const DirName: string): BG;
 begin
+	MainLog.Add('Remove directory: ' + DirName, mlDebug);
 	Result := RemoveDirectory(PChar(DirName));
 	if Result = False then
 		IOError(DirName, GetLastError);
@@ -1306,70 +1604,74 @@ begin
 end;
 {$endif}
 
-function SameFiles(FileName1, FileName2: TFileName): BG;
+function CompareFiles(const File1, File2: TFile): BG;
 label LClose;
 var
 	TotalBytes: U8;
 	ReadBytes, FileBufferSize: UG;
-	File1, File2: TFile;
 	Buf1, Buf2: Pointer;
 begin
 	Result := False;
-	File1 := nil;
-	File2 := nil;
-	Buf1 := nil;
-	Buf2 := nil;
+	if File1.FileSize = File2.FileSize then
+	begin
+		if File1.FileName[1] = File2.FileName[1] then
+			FileBufferSize := 2 * MB // Same drive
+		else
+			FileBufferSize := DefFileBuffer;
 
+		GetMem(Buf1, FileBufferSize);
+		GetMem(Buf2, FileBufferSize);
+		try
+			TotalBytes := File1.FileSize;
+			while TotalBytes > 0 do
+			begin
+				ReadBytes := FileBufferSize;
+				if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
+				if not File1.BlockRead(Buf1^, ReadBytes) then
+				begin
+					goto LClose;
+				end;
+				if not File2.BlockRead(Buf2^, ReadBytes) then
+				begin
+					goto LClose;
+				end;
+				Dec(TotalBytes, ReadBytes);
+				if SameData(Buf1, Buf2, ReadBytes) = False then
+					goto LClose;
+			end;
+			Result := True;
+			LClose:
+		finally
+			FreeMem(Buf1);
+			FreeMem(Buf2);
+		end;
+	end;
+end;
+
+function SameFiles(const FileName1, FileName2: TFileName): BG;
+var
+	File1, File2: TFile;
+begin
+	Result := False;
 	File1 := TFile.Create;
-	if not File1.Open(FileName1, fmReadOnly) then
-	begin
-		goto LClose;
-	end;
-	File2 := TFile.Create;
-	if not File2.Open(FileName2, fmReadOnly) then
-	begin
-		goto LClose;
-	end;
-	if File1.FileSize <> File2.FileSize then goto LClose;
-	if FileName1[1] = FileName2[1] then
-		FileBufferSize := 2 * MB // Same drive
-	else
-		FileBufferSize := DefFileBuffer;
-
-	GetMem(Buf1, FileBufferSize);
-	GetMem(Buf2, FileBufferSize);
-
-	TotalBytes := File1.FileSize;
-	while TotalBytes > 0 do
-	begin
-		ReadBytes := FileBufferSize;
-		if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
-		if not File1.BlockRead(Buf1^, ReadBytes) then
+	try
+		if File1.Open(FileName1, fmReadOnly) then
 		begin
-			goto LClose;
+			File2 := TFile.Create;
+			try
+				if File2.Open(FileName2, fmReadOnly) then
+				begin
+					Result := CompareFiles(File1, File2);
+					File2.Close;
+				end;
+				File1.Close;
+			finally
+				File2.Free;
+			end;
 		end;
-		if not File2.BlockRead(Buf2^, ReadBytes) then
-		begin
-			goto LClose;
-		end;
-		Dec(TotalBytes, ReadBytes);
-		if SameData(Buf1, Buf2, ReadBytes) = False then goto LClose;
+	finally
+		File1.Free;
 	end;
-	Result := True;
-
-	LClose:
-	if Assigned(File1) then
-	begin
-		File1.Close;
-		FreeAndNil(File1);
-	end;
-	if Assigned(File2) then
-	begin
-		File2.Close;
-		FreeAndNil(File2);
-	end;
-	FreeMem(Buf1);
-	FreeMem(Buf2);
 end;
 
 function TempFileName(const FileName: TFileName): TFileName;
@@ -1394,33 +1696,6 @@ begin
 		CopyFile(FileName, OrigFileName, False);
 		DeleteFileEx(FileName);
 	end;
-end;
-
-function DialogStr(Ext, Des: array of string): string;
-var
-	i: SG;
-	s1, s2: string;
-begin
-	if Length(Ext) > 1 then
-	begin
-		for i := 0 to Length(Ext) - 1 do
-		begin
-			s1 := s1 + {'*.' +} Ext[i] + ', ';
-			s2 := s2 + '*.' + Ext[i] + ';';
-		end;
-		s1 := DelLastChar(s1);
-		s1[Length(s1)] := ')';
-		s2 := DelLastChar(s2);
-		Result := 'Any (' + s1 + '|' + s2 + '|';
-	end
-	else
-		Result := '';
-	for i := 0 to Length(Ext) - 1 do
-	begin
-		Result := Result + Des[i] + ' (*.' + Ext[i] + ')|*.' + Ext[i] + '|';
-	end;
-//	Result := DelLastChar(Result);
-	Result := Result + AllFiles;
 end;
 
 function FileExistsEx(const FileName: TFileName): BG;
@@ -1499,6 +1774,88 @@ end;
 function SameFileName(const FileName1, FileName2: TFileName): BG;
 begin
 	Result := ShortToLongPath(FileName1) = ShortToLongPath(FileName2);
+end;
+
+function DialogStr(Ext, Des: array of string): string;
+var
+	i: SG;
+	s1, s2: string;
+begin
+	if Length(Ext) > 1 then
+	begin
+		for i := 0 to Length(Ext) - 1 do
+		begin
+			s1 := s1 + {'*.' +} Ext[i] + ', ';
+			s2 := s2 + '*.' + Ext[i] + ';';
+		end;
+		s1 := DelLastChar(s1);
+		s1[Length(s1)] := ')';
+		s2 := DelLastChar(s2);
+		Result := 'Any (' + s1 + '|' + s2 + '|';
+	end
+	else
+		Result := '';
+	for i := 0 to Length(Ext) - 1 do
+	begin
+		Result := Result + Des[i] + ' (*.' + Ext[i] + ')|*.' + Ext[i] + '|';
+	end;
+//	Result := DelLastChar(Result);
+	Result := Result + AllFiles;
+end;
+
+//* @return i.e. 'Text file (*.txt;*.text)|*.txt;*.text'
+function GetFileNameFilter(const Description: string; const Extensions: array of string): string;
+var
+	i: SG;
+	ExtString: string;
+	s: string;
+begin
+	Result := Description + ' (';
+	ExtString := '';
+	for i := 0 to Length(Extensions) - 1 do
+	begin
+		if Pos('.', Extensions[i]) = 0 then
+		begin
+			s := '*.' + Extensions[i];
+		end
+		else
+		begin
+			s := Extensions[i];
+		end;
+		ExtString := ExtString + s;
+		if i = Length(Extensions) - 1 then
+		begin
+			ExtString := ExtString + ';';
+		end;
+	end;
+	Result := Result + ExtString + ')|' + ExtString;
+end;
+
+// @return 'All Files (*.*)|*.*'
+function AllFiles: string;
+begin
+	Result := GetFileNameFilter('All Files', ['*']);
+end;
+
+function GetTextFilter: string;
+begin
+	Result := GetFileNameFilter('Text file', ['txt']);
+end;
+
+function GetExecutableFilter: string;
+begin
+	Result := GetFileNameFilter('Executable files', ['exe', 'com', 'bat', 'cmd']);
+end;
+
+// @return 'Text file (*.txt)|*.txt|'
+function AllText: string;
+begin
+	Result := GetTextFilter + '|' + AllFiles;
+end;
+
+function AllSounds: string;
+begin
+	Result := GetFileNameFilter('Sound Wave', ['wav']);
 end;
 
 initialization

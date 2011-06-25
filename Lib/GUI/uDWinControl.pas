@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDWinControl.pas
 //* Created:  2007-05-27
 //* Modified: 2008-02-18
-//* Version:  1.1.40.9
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -24,7 +24,7 @@ type
 		FCanvas: TCanvas;
 		FBitmap: TDBitmap;
 		FNeedFill: BG;
-		{$ifopt d+}
+		{$ifdef info}
 		FFillCount, FPaintCount: UG;
 		{$endif}
 		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
@@ -67,7 +67,7 @@ end;
 procedure TDWinControl.FillBitmap;
 begin
 	FNeedFill := False;
-	{$ifopt d+}
+	{$ifdef info}
 	Inc(FFillCount);
 	{$endif}
 	FBitmap.SetSize(Width, Height);
@@ -87,7 +87,7 @@ end;
 procedure TDWinControl.WMPaint(var Message: TWMPaint);
 begin
 	inherited;
-	{$ifopt d+}
+	{$ifdef info}
 	Inc(FPaintCount);
 	{$endif}
 	if FNeedFill then FillBitmap;
@@ -119,7 +119,7 @@ begin
 		end;
 	end;}
 
-	{$ifopt d+}
+	{$ifdef info}
 {	Canvas.Brush.Style := bsClear;
 	Canvas.Font.Color := clWhite;
 	Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));}

@@ -1,7 +1,7 @@
 //* File:     Lib\uFile.pas
 //* Created:  1998-01-01
-//* Modified: 2008-02-23
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -304,7 +304,10 @@ begin
 		Inc(ReadBytes, Suc);
 
 		if Suc <> Count then
-			Warning('Reading only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO) + ' from ' + FTempFileName)
+		begin
+			Warning('Reading only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO) + ' from ' + FTempFileName);
+			Result := False;
+		end
 		else
 			MainLogAdd('Reading ' + BToStr(Suc, ofIO) + ' from ' + FTempFileName, mlDebug);
 

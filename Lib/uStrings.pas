@@ -1,7 +1,7 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2008-02-24
-//* Version:  1.1.40.9
+//* Modified: 2008-09-02
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -127,13 +127,17 @@ procedure AppendStr(var Dest: TFileName; const Source: string); overload;
 procedure AppendStr(var Dest: string; const Source: string); overload;
 function Plural(Number: SG): string;
 procedure CorrectDir(var s: string);
+function CorrectDirF(const s: string): string;
 function RandomString(const Size: SG): string;
 
 procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string);
+procedure EnumToStrEx(const TypeInfo: PTypeInfo; out AString: array of string);
 function ButtonNameToFileName(const Name: string): string;
 function ComponentName(const Name: string): string;
 
 function HashCode(const s: string): U4;
+
+function OddEven(const Index: SG): string;
 
 implementation
 
@@ -865,6 +869,12 @@ begin
 	if (i > 0) and (s[i] <> PathDelim) then s := s + PathDelim;
 end;
 
+function CorrectDirF(const s: string): string;
+begin
+	Result := s;
+	CorrectDir(Result);
+end;
+
 function RandomString(const Size: SG): string;
 var i: SG;
 begin
@@ -882,6 +892,18 @@ begin
 	for i := TypeData.MinValue to TypeData.MaxValue do
 	begin
 		AString[i] := AddSpace(Copy(GetEnumName(TypeInfo, i), 1 + EnumPrefixLength, MaxInt));
+	end;
+end;
+
+procedure EnumToStrEx(const TypeInfo: PTypeInfo; out AString: array of string);
+var
+	i: SG;
+	TypeData: PTypeData;
+begin
+	TypeData := GetTypeData(TypeInfo);
+	for i := TypeData.MinValue to TypeData.MaxValue do
+	begin
+		AString[i] := Copy(GetEnumName(TypeInfo, i), 1 + EnumPrefixLength, MaxInt);
 	end;
 end;
 
@@ -980,6 +1002,14 @@ begin
 	for i := 1 to Length(s) do
 		Result := Result + Ord(s[i]);
 end;}
+
+function OddEven(const Index: SG): string;
+begin
+	if Index mod 2 = 0 then
+		Result := 'even'
+	else
+		Result := 'odd';
+end;
 
 procedure FillHexValue;
 var
