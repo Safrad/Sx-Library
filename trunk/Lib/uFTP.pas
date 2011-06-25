@@ -1,7 +1,7 @@
 //* File:     Lib\uFTP.pas
 //* Created:  2007-08-12
 //* Modified: 2008-02-21
-//* Version:  1.1.40.9
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,13 +11,13 @@ unit uFTP;
 interface
 
 uses
-	uTypes, uLog,
+	uTypes, uLog, uLogger,
 	IdFTP;
 
 type
 	TTg = (tgDownload, tgUpload);
 
-function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const AddMessage: TLogMessageProcedure; const Tg: TTg): BG;
+function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const Logger: TLogger; const Tg: TTg): BG;
 
 implementation
 
@@ -37,7 +37,7 @@ begin
 		uFiles.CopyFile(FileName, FileNameD, True);
 end;
 
-function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const AddMessage: TLogMessageProcedure; const Tg: TTg): BG;
+function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const Logger: TLogger; const Tg: TTg): BG;
 label LRetry;
 const
 //	Alpha = 1 / (24 * 60); // 1 minute
@@ -88,7 +88,8 @@ begin
 		s := s + FileNameOrDir + ' ' + CharHyphen + '> ' + 'ftp://' + FTP.Host + '/' + RemoteDir
 	else
 		s := s + 'ftp://' + FTP.Host + '/' + RemoteDir + ' ' + CharHyphen + '> ' + FileNameOrDir;
-	AddMessage(s, mlDebug);
+	if Assigned(Logger) then
+		Logger.Add(s, mlDebug);
 
 	AStrings := TStringList.Create;
 	LRetry:
@@ -97,7 +98,8 @@ begin
 		FTP.Connect(True, 30 * Second);
 //		FTP.Connect;
 //		FTP.Login;
-		AddMessage('Connected ' + FTP.Host, mlInformation);
+		if Assigned(Logger) then
+			Logger.Add('Connected ' + FTP.Host, mlInformation);
 		{$ifopt d+}
 //		FTP.List(AStrings);
 //		AddMessage(AStrings.Text);
@@ -170,7 +172,8 @@ begin
 				s := s + FileNames[i] + ' ' + DateTimeToS(SystemTimeToDateTime(SystemTime), 0, ofDisplay);
 				if (New = False) and (Copy) then
 					s := s + ', remote old date: ' + DateTimeToS(FileDate, 0, ofDisplay);
-				AddMessage(s, mlInformation);
+				if Assigned(Logger) then
+					Logger.Add(s, mlInformation);
 				if Copy then
 				begin
 					FTP.Put(LocalDir + FileNames[i], FileNames[i], False);
@@ -230,7 +233,8 @@ begin
 				s := s + FileName + ' ' + DateTimeToS(FileDate, 0, ofDisplay);
 				if (New = False) and (Copy) then
 					s := s + ', local old date: ' + DateTimeToS(SystemTimeToDateTime(SystemTime), 0, ofDisplay);
-				AddMessage(s, mlInformation);
+				if Assigned(Logger) then
+					Logger.Add(s, mlInformation);
 				if Copy then
 				begin
 					Backup(LocalDir + FileName);
@@ -261,7 +265,8 @@ begin
 			if E.Message <> ' ' then
 			begin
 				Result := False;
-				AddMessage(DelEndSpaceF(E.Message) {+ NToS(FTP.LastCmdResult.NumericCode)} + ' (' +NToS(NowRetryCount + 1) + ' / ' + NToS(RetryCount + 1) + ')', mlError);
+				if Assigned(Logger) then
+					Logger.Add(DelEndSpaceF(E.Message) {+ NToS(FTP.LastCmdResult.NumericCode)} + ' (try ' +NToS(NowRetryCount + 1) + ' / ' + NToS(RetryCount + 1) + ')', mlError);
 			end;
 		end;
 	end;
@@ -279,7 +284,8 @@ begin
 		goto LRetry;
 	end;
 	FTP.Disconnect;
-	AddMessage('Disconnect', mlInformation);
+	if Assigned(Logger) then
+		Logger.Add('Disconnect', mlInformation);
 	AStrings.Free;
 end;
 

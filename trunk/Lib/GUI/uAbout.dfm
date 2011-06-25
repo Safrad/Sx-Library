@@ -1,6 +1,6 @@
 object fAbout: TfAbout
-  Left = 413
-  Top = 263
+  Left = 640
+  Top = 264
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True

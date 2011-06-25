@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uDParser.pas
 //* Created:  2004-03-07
-//* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Modified: 2008-09-03
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -1370,7 +1370,7 @@ begin
 		GetMem(Result, NodeFunction + 1 * SizeOf(Result.Args[0]));
 		Inc(TreeSize, NodeFunction + 1 * SizeOf(Result.Args[0]));
 		Inc(NodeCount);
-		Result.Operation := 'Factorial';
+		Result.Operation := 'fact';
 		Result.ArgCount := 1;
 		Result.Args[0] := Node;
 		ReadInput;

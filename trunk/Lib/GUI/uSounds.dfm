@@ -1,6 +1,6 @@
 object fSounds: TfSounds
-  Left = 409
-  Top = 260
+  Left = 640
+  Top = 261
   Width = 458
   Height = 298
   HorzScrollBar.Tracking = True

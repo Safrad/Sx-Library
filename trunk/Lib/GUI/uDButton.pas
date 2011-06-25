@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDButton.pas
 //* Created:  1999-09-01
-//* Modified: 2008-01-19
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -228,7 +228,7 @@ begin
 	s := Caption;
 	i := Pos('/', s);
 //	if (Length(s) > 0) and (s[1] = '/') then
-	if i <> 0 then
+	if i = 1 then
 	begin
 		Delete(s, i, 1);
 		Insert(AddSpace(ButtonNameToFileName(Name)), s, i);

@@ -1,7 +1,7 @@
 //* File:     Lib\uDIniFile.pas
 //* Created:  2000-07-01
 //* Modified: 2008-02-04
-//* Version:  1.1.40.9
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -23,11 +23,12 @@ type
 		Name: string; // 4
 		Value: string; // 4
 	end;
+	TKeys = array of TKey;
 	TSection = record // 16
 		Reserved: S4;
 		KeyCount: S4;
 		Name: string; // 4
-		Keys: array of TKey; // 4
+		Keys: TKeys; // 4
 	end;
 type
 	TDIniFile = class(TObject)
@@ -89,14 +90,13 @@ type
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		{$endif}
 
-		// Temp Begin
-		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: BG): string;
-		function RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: BG): SG;
-		function RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG): BG;
-		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
-		// Temp End
+		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: BG): string; deprecated;
+		function RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: BG): SG; deprecated;
+		function RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG): BG; deprecated;
+		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA; deprecated;
 
 		function GetSectionIndex(const Section: string): Integer;
+		function GetSection(const Section: string): TKeys;
 		function GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer;
 
 		function ValueExists(const Section, Ident: string): BG;
@@ -390,6 +390,21 @@ begin
 			Break;
 		end;
 end;
+
+function TDIniFile.GetSection(const Section: string): TKeys;
+var SectionIndex: SG;
+begin
+	SectionIndex := GetSectionIndex(Section);
+	if SectionIndex >= 0 then
+	begin
+		Result := FSections[SectionIndex].Keys;
+	end
+	else
+	begin
+//		Result := []; TODO
+	end;
+end;
+
 
 function TDIniFile.GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer;
 var i: Integer;

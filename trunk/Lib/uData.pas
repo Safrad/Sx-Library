@@ -1,7 +1,7 @@
 //* File:     Lib\uData.pas
 //* Created:  1998-01-01
-//* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Modified: 2008-03-17
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -75,12 +75,17 @@ type
 		property ItemMemSize: UG read FItemMemSize; // Item size in memory
 		property Count: TIndex read FItemCount;
 		property Items[const Index: TIndex]: Pointer read Get write Replace; default; // operator []
+
+		// Import & Export
+//		procedure Serialize(const IniFile: TDIniFile; const Save: BG);
 	end;
 
 
 implementation
 
-uses Math, uMath;
+uses
+	Math,
+	uMath;
 
 { TData }
 
@@ -351,5 +356,10 @@ begin
 	Result := Ob;
 	Next(Result);
 end;
+
+(*procedure TData.Serialize(const IniFile: TDIniFile; const Save: BG);
+begin
+	IniFile.RW
+end; *)
 
 end.

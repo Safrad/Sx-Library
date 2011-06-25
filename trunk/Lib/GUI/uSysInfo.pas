@@ -83,7 +83,7 @@ var
 	RegCap: Boolean;
 
 function GetKey(Default: U2): U2;
-function OSToStr(OS: TOSVersionInfo): string;
+function OSToStr(const OS: TOSVersionInfo): string;
 function GetCPUUsage(IntTime: U8): SG;
 procedure FillDynamicInfo(var SysInfo: TSysInfo); // FillMemoryStatus + FillCPUTest
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
@@ -125,7 +125,7 @@ begin
 	end;
 end;
 
-function OSToStr(OS: TOSVersionInfo): string;
+function OSToStr(const OS: TOSVersionInfo): string;
 var S: string;
 begin
 	case OS.dwPlatformId of
@@ -287,6 +287,11 @@ begin
 	begin
 //		tickCount := GetTickCount;
 		tickCount := PerformanceCounter;
+		if tickCount < LastTickCount then
+		begin
+			// Possible after hibernation or overflow
+			LastTickCount := tickCount; 
+		end;
 		if tickCount < LastTickCount + IntTime then
 		begin
 			Result := CPUUsage;
@@ -295,9 +300,9 @@ begin
 		processorTime := GetProcessorTime;
 
 		if (LastTickCount <> 0) and (tickCount > LastTickCount) and (processorTime >= LastProcessorTime) then
-		begin // 1 000*10 000 = 10 000 000 / sec
+		begin // 1 000 * 10 000 = 10 000 000 / sec
 			CPUUsage := 100 * CPUUsageMul - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1}) ;
-			if CPUUsage < 0 then CPUUsage := 0;
+			CPUUsage := Range(0, CPUUsage, 100 * CPUUsageMul);
 		end;
 
 		Result := CPUUsage;
@@ -580,7 +585,7 @@ begin
 			case Model of
 			0..5: s := 'Pentium 4';
 			else // 6
-			 s := 'Pentium(R) D CPU'; 
+			  s := 'Pentium(R) D CPU'; 
 			end;
 		end
 		end;

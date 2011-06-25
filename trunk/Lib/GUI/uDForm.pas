@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDForm.pas
 //* Created:  2001-12-01
-//* Modified: 2008-02-17
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -160,8 +160,8 @@ begin
 
 	WindowLong := GetWindowLong(Form.Handle, GWL_STYLE);
 	if WindowLong and WS_VISIBLE = 0 then Exit;
-	Assert(Form.Visible = True);
-//	if Form.Visible = False then Exit;
+//	Assert(Form.Visible = True);
+	if Form.Visible = False then Exit;
 //	if Form.WindowState = wsMinimized then Exit; // DNW
 	Result := True;
 end;

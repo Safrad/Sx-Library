@@ -1,7 +1,7 @@
 //* File:     Lib\uParams.pas
 //* Created:  2006-02-04
-//* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -61,12 +61,14 @@ begin
 end;
 
 procedure HelpParams(const Value: string = '');
+const
+	CONSOLE_WINDOW_WIDTH = 78;
 var
 	i: SG;
 	s: string;
 begin
 	s := 'Parameter' + CharTab + 'Description' + LineSep;
-	s := s + StringOfChar('—', 80) + LineSep;
+	s := s + StringOfChar('-', CONSOLE_WINDOW_WIDTH) + LineSep;
 	for i := 0 to Length(Params) - 1 do
 	begin
 		s := s + Params[i] + CharTab + CharTab + DesParams[i] + LineSep;
@@ -163,6 +165,13 @@ begin
 	end;
 end;
 
+procedure AddCommonParams;
+begin
+	RegisterParam('Help', 'Displays this help dialog', HelpParams);
+	RegisterParam('Minimized', 'Minimizes application', ParamMinimized);
+	RegisterParam('Exit', 'Exits program', ParamExit);
+end;
+
 procedure ReadCommandLine(const CmdLine: string);
 var
 	InLineIndex: SG;
@@ -170,6 +179,7 @@ var
 	LastParam: SG;
 	ParamCount: UG;
 begin
+	AddCommonParams;
 	MainLogAdd('Reading command line: ' + CmdLine, mlInformation);
 	ParamCount := 0;
 	Quote := False;
@@ -195,16 +205,8 @@ begin
 	end;
 end;
 
-procedure Initialize;
-begin
-	// Add common parameters
-	RegisterParam('Help', 'Displays this help dialog', HelpParams);
-	RegisterParam('Minimized', 'Minimizes application', ParamMinimized);
-	RegisterParam('Exit', 'Exits program', ParamExit);
-end;
-
 initialization
-	Initialize;
+
 finalization
 	SetLength(Params, 0);
 	SetLength(DesParams, 0);

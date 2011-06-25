@@ -1,7 +1,7 @@
 //* File:     Lib\uLog.pas
 //* Created:  2006-05-03
-//* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Modified: 2008-04-07
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -11,14 +11,11 @@ unit uLog;
 interface
 
 uses
-	uTypes, uFile, uMsg,
+	uTypes, uFile, uMsg, uLogger,
 	SysUtils;
 
-const
-	DefaultLoggingLevel = mlInformation;
-
 type
-	TLog = class(TObject)
+	TLog = class(TLogger)
 	private
 		FData: string;
 		FFileName: TFileName;
@@ -30,7 +27,7 @@ type
 		property FileName: TFileName read FFileName;
 		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG= True);
 		destructor Destroy; override;
-		procedure Add(const Line: string; const LogType: TMessageLevel);
+		procedure Add(const Line: string; const LogType: TMessageLevel); override;
 		procedure Flush;
 		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
 	end;

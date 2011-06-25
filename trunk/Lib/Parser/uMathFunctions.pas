@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uMathFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2008-01-29
-//* Version:  1.1.40.9
+//* Modified: 2008-09-03
+//* Version:  1.1.41.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -127,33 +127,18 @@ function Exp(const X: TVector): TVector;
 begin
 	Result := ExpVector(X);
 end;
-(*	opInv:
+
+function Fact(const X: TVector): TVector;
+begin
+	Result := FactVector(X);
+end;
+
+(*	opInv: TODO
 	begin
 		Result := 1;
 		for i := 0 to Node.ArgCount - 1 do
 		begin
 			Result := Result / Calc(Node.Args[i]);
-		end;
-	end;
-	opFact:
-	begin
-		Result := 1;
-		for i := 0 to Node.ArgCount - 1 do
-		begin
-			e := Round(Calc(Node.Args[i])); // TODO : Factor 1.5 =
-			if e < 0 then
-			begin
-//				ShowError('Input -infinity..2000 for Fact')
-			end
-			else if e <= 1754 then
-			begin
-				for j := 2 to Round(e) do
-					Result := Result * j;
-			end
-			else
-			begin
-				if e > 1754 then Result := Infinity;
-			end;
 		end;
 	end;
 	opGCD: // Greatest Common Measure (Divident)
@@ -239,5 +224,6 @@ initialization
 	AddFunction('Math', 'inc', Inc, '');
 	AddFunction('Math', 'dec', Dec, '');
 	AddFunction('Math', 'exp', Exp, '');
+	AddFunction('Math', 'fact', Fact, 'Factorial.');
 end.
 

@@ -1,6 +1,6 @@
 object fGetInt: TfGetInt
-  Left = 389
-  Top = 314
+  Left = 297
+  Top = 207
   ActiveControl = EditInput
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
