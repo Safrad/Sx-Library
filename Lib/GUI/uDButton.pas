@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDButton.pas
 //* Created:  1999-09-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.9
+//* Modified: 2009-03-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -46,6 +46,7 @@ type
 		FEllipseSize: SG;
 
 		procedure InitRect;
+		procedure PlayButtonSound(const IsDown: BG);
 		procedure SetColor(Value: TColor);
 //    procedure SetDefault(Value: Boolean);
 		procedure SetDown(Value: Boolean);
@@ -131,7 +132,7 @@ var
 //	Po: array[0..9] of tagPOINT;
 begin
 	FSmall := (Width <= IconSize) and (Height <= IconSize);
-	if RegCap = False then Exit;
+	if RegionCompatibily = False then Exit;
 	if not FSmall then
 	begin
 (*		Po[0].x := 0;
@@ -212,6 +213,7 @@ end;
 destructor TDButton.Destroy;
 begin
 	FGlyph.Free;
+	Bitmap.Free;
 	inherited;
 end;
 
@@ -332,13 +334,7 @@ begin
 		Bitmap := TDBitmap.Create;
 	Bitmap.SetSize(Recta.Right, Recta.Bottom);
 
-
-	// Sound
-	if (FLastDown <> IsDown) then
-	begin
-		PlaySound(SG(IsDown), Screen.ActiveForm.Left + Left + Width div 2, Screen.Width - 1);
-		FLastDown := IsDown;
-	end;
+	PlayButtonSound(IsDown);
 
 	// Glyph
 	if not Assigned(FGlyph) then
@@ -710,6 +706,23 @@ begin
 			Form.Perform(CM_FOCUSCHANGED, 0, Longint(Form.ActiveControl));
 	end;
 end;}
+
+procedure TDButton.PlayButtonSound(const IsDown: BG);
+var
+	MonitorRect, Rect: TRect;
+	P: TPoint;
+begin
+	if (FLastDown <> IsDown) then
+	begin
+		MonitorRect := Screen.MonitorFromWindow(Handle).WorkareaRect;
+		P.X := Left + Width div 2;
+		P.Y := Top + Height div 2;
+		Rect := Parent.BoundsRect;
+
+		PlaySound(SG(IsDown), P.X + Rect.Left - MonitorRect.Left, MonitorRect.Right - MonitorRect.Left - 1);
+		FLastDown := IsDown;
+	end;
+end;
 
 initialization
 	if (ColorToRGB(clBtnFace) = ColorToRGB(clActiveBorder)) or

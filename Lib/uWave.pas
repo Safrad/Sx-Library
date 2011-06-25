@@ -1,7 +1,7 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.9
+//* Modified: 2009-05-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -64,12 +64,14 @@ const
 		);
 
 procedure Beep;
-procedure PlayWinSound(WinSound: TWinSound);
+procedure StopPlayWave;
+function GetWinSoundFileName(const WinSound: TWinSound): TFileName;
+procedure PlayWinSound(const WinSound: TWinSound);
 procedure PlayWaveFile(const WaveName: TFileName);
 // For screen Width 800 is NowPos 0..799, MaxPos 799
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
 function WaveLength(const FileName: TFileName): UG;
-{
+{ Wave specification:
 	8 bits
 	_____U1   Hex S1
 	Max: 255  $ff -1
@@ -322,10 +324,6 @@ type
 		function ConvertChannels(const NewChannels: U2; const Left, Right: SG): TWave;
 		function ConvertBitsPerSample(const NewBitsPerSample: Integer): TWave;
 		procedure ConvertSampleRate(const SampleRate: U4);
-		{procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
-			const Channels: U2;
-			const BitsPerSample: U2;
-			const SampleRate: U4);}
 	end;
 
 implementation
@@ -334,12 +332,11 @@ uses
 	Registry,
 	uMsg, uStrings, uOutputFormat, uLog;
 
-procedure PlayWinSound(WinSound: TWinSound);
+function GetWinSoundFileName(const WinSound: TWinSound): TFileName;
 var
 	Reg: TRegistry;
 	Key: string;
 begin
-	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.', mlDebug);
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
@@ -348,7 +345,7 @@ begin
 		begin
 			if Reg.ValueExists('') then
 			begin
-				PlayWaveFile(Reg.ReadString(''));
+				Result := Reg.ReadString('');
 			end;
 			Reg.CloseKey;
 		end;
@@ -357,20 +354,33 @@ begin
 	end;
 end;
 
+procedure PlayWinSound(const WinSound: TWinSound);
+begin
+	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.', mlDebug);
+	PlayWaveFile(GetWinSoundFileName(WinSound));
+end;
+
 procedure Beep;
 begin
 	PlayWinSound(wsDefaultSound);
 end;
 
-procedure PlayWaveFile(const WaveName: TFileName);
-//var Wave: PWave;
+procedure StopPlayWave;
 begin
-{	WaveReadFromFile(Wave, WaveName);
-	PlayWave(Wave);
-	FreeMem(Wave);}
+	if MMSystem.PlaySound(nil, 0, SND_MEMORY or SND_NODEFAULT) = False then
+	begin
+		ErrorMsg(GetLastError);
+	end;
+end;
+
+procedure PlayWaveFile(const WaveName: TFileName);
+begin
 	MainLogAdd('Play sound ' + WaveName + '.', mlDebug);
 	if WaveName <> '' then
-		PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME});
+		if PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME}) = False then
+		begin
+			ErrorMsg(GetLastError);
+		end;
 end;
 
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
@@ -422,8 +432,6 @@ begin
 	else
 		ErrorMsg('Invalid wave format. Chunk format tag is %1.', [IntToStr(SG(FFormat.FormatTag))]);
 	end;
-{	if not (FFormat.BitsPerSample in [8, 16]) then
-		ErrorMsg('Invalid wave format.');}
 end;
 
 procedure FillWave(PWave: PCompleteWave; const FFormat: PWaveFormatChunk; const FDataBytes: SG);
@@ -442,13 +450,10 @@ begin
 end;
 
 procedure TWave.ReadDataChunk(const F: TFile);
-//const
-//	WaveHead = SizeOf(TCompleteWave) + SizeOf(Pointer);
 var
 	PUncompressedData: Pointer;
 begin
 	if WithoutData then Exit;
-{	GetMem(PWave, FDataBytes + WaveHead);}
 	FPreDataSize := F.FilePos;
 	GetMem(PWave, FDataBytes + FPreDataSize);
 	F.SeekBegin;
@@ -535,38 +540,10 @@ begin
 	end;
 end;
 
-(*function TWave.ReadHeadFromFile(const FileName: TFileName): BG;
-var
-	F: TFile;
-begin
-	Result := False;
-{	if Wave <> nil then
-	begin
-		WaveFree(Wave);
-	end;}
-	F := TFile.Create;
-	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			ReadRIFFHeader(F);
-			ReadFormatChunk(F);
-
-			Result := True;
-		end;
-	finally
-		F.Close;
-		F.Free;
-	end;
-end; *)
-
 procedure TWave.ReadFromFile(const FileName: TFileName);
 var
 	F: TFile;
 begin
-{	if Self <> nil then
-	begin
-		WaveFree(Wave);
-	end;}
 	F := TFile.Create;
 	try
 		if F.Open(FileName, fmReadOnly) then
@@ -574,9 +551,9 @@ begin
 			FSampleCount := 0;
 			ReadRIFFHeader(F);
 			ReadChunks(F);
+			F.Close;
 		end;
 	finally
-		F.Close;
 		F.Free;
 	end;
 end;
@@ -592,25 +569,23 @@ constructor TWave.Create(
 	const SampleRate: U4);
 var
 	BitsPerSamples: U2;
-//	DataBytes: U4;
 begin
 	inherited Create;
 
 	BitsPerSamples := Channels * BitsPerSample;
-//	DataBytes := BitsToByte(BitsPerSamples * U8(TotalSamples));
 
-{	if Wave = nil then
-		GetMem(Wave, WaveHead + DataBytes);}
-{	Wave.Marker1 := 'RIFF';
-	Wave.BytesFollowing := DataBytes + WaveHead - 8;
-	Wave.Marker2 := 'WAVE';}
 	FFormat.FormatTag := ftPCM;
 	FFormat.Channels := Channels;
 	FFormat.SampleRate := SampleRate;
 	FFormat.BytesPerSecond := BitsToByte(BitsPerSamples * U8(SampleRate));
 	FFormat.BytesPerSample := BitsToByte(BitsPerSamples);
 	FFormat.BitsPerSample := BitsPerSample;
-	FSampleCount := BitsPerByte * FDataBytes div FFormat.BitsPerSample; //DataBytes div BytesPerSample;
+{	if FFormat.BitsPerSample <> 0 then
+	begin
+		FSampleCount := BitsPerByte * FDataBytes div FFormat.BitsPerSample; //DataBytes div BytesPerSample
+	end
+	else
+		FSampleCount := 0;}
 {	Wave.Marker4 := 'data';
 	Wave.DataBytes := DataBytes;}
 
@@ -624,7 +599,7 @@ destructor TWave.Destroy;
 begin
 	FillChar(FFormat, SizeOf(FFormat), 0);
 	FData := nil;
-	FreeMem(PWave);
+	FreeMem(PWave); PWave := nil;
 	inherited;
 end;
 
@@ -634,20 +609,8 @@ var
 //  WaveData: SG;
 	P: PWaveSample;
 begin
-{ if WaveD = nil then
-	begin}
 	Result := TWave.Create(NewChannels, FFormat.BitsPerSample, FFormat.SampleRate);
-{ end
-	else
-	begin
-		WaveData := 2 * WaveS.DataBytes;
-		Move(WaveS^, WaveD^, WaveHead);
-		WaveD.Channels := 2;
-		WaveD.BytesPerSecond := WaveD.BytesPerSecond * 2;
-		WaveD.BytesPerSample := WaveD.BytesPerSample * 2;
-		WaveD.DataBytes := WaveData;
-		WaveD.BytesFollowing :=  WaveHead + WaveData - 8;
-	end;}
+	Result.SampleCount := SampleCount;
 
 	case FFormat.BitsPerSample of
 	8:
@@ -670,42 +633,8 @@ begin
 				begin
 					P^.BLR.L := Left * S1(Sample(i, 0) - 128) div ConvertPre + 128;
 					P^.BLR.R := Right * S1(Sample(i, 0) - 128) div ConvertPre + 128;
-					Inc(P, SizeOf(TBLR));
+					Inc(SG(P), SizeOf(TBLR));
 				end;
-(*				asm
-				pushad
-				mov eax, WaveD
-				mov edi, [eax]
-				add edi, WaveHead
-				mov esi, WaveS
-				mov ecx, [esi + WaveHead - 4]
-				add esi, WaveHead
-				add ecx, esi
-				@Loop:
-					xor ebx, ebx
-					mov bl, U1 ptr [esi] // 3
-					sub ebx, 128
-
-					mov eax, Left
-					imul eax, ebx // 10
-					sar eax, ConvertShr
-					add al, 128
-					mov [edi], al
-					inc edi
-
-					mov eax, Right
-					imul eax, ebx // 10
-					sar eax, ConvertShr
-					add al, 128
-					mov [edi], al
-					inc edi
-
-					inc esi
-				cmp esi, ecx
-				jne @Loop
-				popad
-				end;
-			end; *)
 			end;
 			end;
 		2:
@@ -719,7 +648,7 @@ begin
 					P^.B :=
 						(Left * S1(Sample(i, 0) - 128) div ConvertPre +
 						Right * S1(Sample(i, 1) - 128) div ConvertPre) div 2 + 128;
-					Inc(P, 1);
+					Inc(SG(P), 1);
 				end;
 			end;
 			2:
@@ -729,7 +658,7 @@ begin
 				begin
 					P^.BLR.L := Left * S1(Sample(i, 0) - 128) div ConvertPre + 128;
 					P^.BLR.R := Right * S1(Sample(i, 1) - 128) div ConvertPre + 128;
-					Inc(P, SizeOf(TBLR));
+					Inc(SG(P), SizeOf(TBLR));
 				end;
 			end;
 			end;
@@ -752,38 +681,8 @@ begin
 				begin
 					P^.WLR.L := Left * Sample(i, 0) div ConvertPre;
 					P^.WLR.R := Right * Sample(i, 0) div ConvertPre;
-					Inc(P, 4);
+					Inc(SG(P), SizeOf(TWLR));
 				end;
-{				asm
-				pushad
-				mov eax, WaveD
-				mov edi, [eax]
-				add edi, WaveHead
-				mov esi, WaveS
-				mov ecx, [esi + WaveHead - 4]
-				add esi, WaveHead
-				add ecx, esi
-				@Loop:
-					movsx ebx, S2 ptr [esi] // 3
-
-					mov eax, Left
-					imul eax, ebx // 10
-					sar eax, ConvertShr
-					mov [edi], ax
-					add edi, 2
-
-					mov eax, Right
-					imul eax, ebx // 10
-					sar eax, ConvertShr
-					mov [edi], ax
-					add edi, 2
-
-					add esi, 2
-				cmp esi, ecx
-				jne @Loop
-				popad
-				end;
-			end;}
 			end;
 			end;
 		2:
@@ -820,21 +719,8 @@ var
 	i: Integer;
 	P: PWaveSample;
 begin
-{ if WaveD = nil then
-	begin}
 	Result := TWave.Create(FFormat.Channels, NewBitsPerSample, FFormat.SampleRate);
 	Result.SampleCount := SampleCount;
-{ end
-	else
-	begin
-		WaveData := 2 * WaveS.DataBytes;
-		Move(WaveS^, WaveD^, WaveHead);
-		WaveD.Channels := 2;
-		WaveD.BytesPerSecond := WaveD.BytesPerSecond * 2;
-		WaveD.BytesPerSample := WaveD.BytesPerSample * 2;
-		WaveD.DataBytes := WaveData;
-		WaveD.BytesFollowing :=  WaveHead + WaveData - 8;
-	end;}
 
 	case FFormat.BitsPerSample of
 	8:
@@ -879,21 +765,11 @@ procedure TWave.ConvertSampleRate(const SampleRate: U4);
 begin
 	FFormat.SampleRate := SampleRate;
 	FFormat.BytesPerSecond := FFormat.BytesPerSample * FFormat.SampleRate;
-//    BitsToByte(WaveD.Channels * WaveD.BitsPerSample * U8(SampleRate));
 end;
-{
-procedure ConvertWave(const WaveS: PWave; var WaveD: PWave;
-	const Channels: U2;
-	const BitsPerSample: U2;
-	const SampleRate: U4);
-begin
-	ConvertBitsPerSample(WaveS, WaveD, BitsPerSample);
-	ConvertChannels(WaveS, WaveD, Channels, ConvertPre, ConvertPre);
-	ConvertSampleRate(WaveD, SampleRate);
-end;}
 
 procedure TWave.Play;
 begin
+	Assert(PWave <> nil);
 	if PlaySound(PChar(PWave), 0, SND_ASYNC or SND_MEMORY or SND_NODEFAULT) = False then
 	begin
 		ErrorMsg(GetLastError);
@@ -1197,7 +1073,15 @@ begin
 	if Value <> FSampleCount then
 	begin
 		FSampleCount := Value;
+		FDataBytes := BitsToByte(FFormat.BitsPerSample * FFormat.Channels * U8(FSampleCount));
+		ReallocMem(PWave, SizeOf(TCompleteWave) + FDataBytes);
+		FillWave(PWave, @FFormat, FDataBytes);
+		FData := PWaveSample(SG(PWave) + SizeOf(TCompleteWave));
 	end;
 end;
 
+initialization
+	{$ifopt d-}
+	StopPlayWave; // First time takes long
+	{$endif}
 end.

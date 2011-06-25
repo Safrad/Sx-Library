@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uMsgDlg.pas
 //* Created:  1999-12-01
 //* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -227,10 +227,12 @@ begin
 	Wid := BWid + MemoMsg.Left;
 	MaxWid := Max(MaxWid, Wid);
 
-	GetDesktopRect(R);
+	R := Screen.MonitorFromWindow(Handle).WorkareaRect;
 
 	Hei := Max(LineCount, 3) * Canvas.TextHeight(Msg) + 6;
-	Wid := Canvas.TextHeight('W') * ((R.Bottom - R.Top - 128{TaskBar} - 2 * (Height - ClientHeight)) div Canvas.TextHeight('W')) + 6;
+	i := Canvas.TextHeight('W');
+	if i = 0 then Exit;
+	Wid := Canvas.TextHeight('W') * ((R.Bottom - R.Top - 128{TaskBar} - 2 * (Height - ClientHeight)) div i) + 6;
 	if Hei > Wid then
 	begin
 		Hei := Wid;
@@ -289,8 +291,8 @@ begin
 		Application.MainForm.Close
 	else
 	begin
-		TerminateProcess(GetCurrentProcess, 1);
-//		Halt;
+		TerminateProcess(GetCurrentProcess, 1); // Immediate
+//		Halt; // Call finalize units
 	end;
 end;
 
@@ -492,9 +494,10 @@ begin
 
 		if not Assigned(fMsgDlg) then
 		begin
-			fMsgDlg := TfMsgDlg.Create(Application.MainForm);
+			fMsgDlg := TfMsgDlg.Create(ActiveForm);
 			fMsgDlg.Background := baGradient;
 		end;
+		fMsgDlg.Center;
 		fMsgDlg.ShowForm;
 		Ignore := Ignores.Get(fMsgDlg.ActItem);
 //		if ModalResult = mrNone then ModalResult := mrCancel;

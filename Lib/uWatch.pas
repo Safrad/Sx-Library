@@ -1,7 +1,7 @@
 //* File:     Lib\uWatch.pas
 //* Created:  1998-07-01
-//* Modified: 2008-01-19
-//* Version:  1.1.40.9
+//* Modified: 2008-03-13
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -85,6 +85,7 @@ begin
 								if WatchedFile.Changed then
 									s := s + ' and with the application';
 								s := s + LineSep + 'Reload it?';
+								{$ifndef Console}
 								case Confirmation(s, [mbYes, mbNo, mbYesToAll, mbNoToAll]) of
 								mbYes: Reload := True;
 								mbYesToAll:
@@ -94,6 +95,7 @@ begin
 								end;
 								mbNoToAll: Break;
 								end;
+								{$endif}
 							end;
 							if Reload then
 								try

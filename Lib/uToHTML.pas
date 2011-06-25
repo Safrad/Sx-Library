@@ -1,7 +1,7 @@
 //* File:     Lib\uToHTML.pas
 //* Created:  2000-07-01
-//* Modified: 2008-02-23
-//* Version:  1.1.40.9
+//* Modified: 2008-03-14
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

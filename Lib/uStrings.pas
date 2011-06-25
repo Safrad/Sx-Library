@@ -1,7 +1,7 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2008-09-02
-//* Version:  1.1.41.9
+//* Modified: 2008-12-25
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -39,6 +39,7 @@ const
 
 	EnumPrefixLength = 2;
 	FalseTrue: array[0..1] of string = ('false', 'true');
+	NoYes: array[0..1] of string = ('No', 'Yes');
 
 var
 	HexValue: array[Char] of U1;
@@ -101,7 +102,8 @@ function ReadS8Fast(const Line: string): S8; overload;
 function ReadFAFast(const Line: string): FA; overload;
 procedure SkipSpace(const Line: string; var LineIndex: SG);
 function ReadToString(const Line: string; var LineIndex: SG;
-	const S: string): string;
+	const S: string): string; overload;
+function ReadToString(const Line: string;	const S: string): string; overload;
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string; overload;
 function ReadToChars(const Line: string; var LineIndex: SG;
@@ -109,6 +111,9 @@ function ReadToChars(const Line: string; var LineIndex: SG;
 function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
 function StartStr(const SubStr: string; const Str: string): BG;
+function EndStr(const SubStr: string; const Str: string): BG;
+procedure RemoveSuffix(const SubStr: string; var Str: string);
+function RemoveSuffixF(const SubStr: string; const Str: string): string;
 function IsSubStr(const SubStr: string; const Str: string): BG;
 function OneLine(const s: string): string;
 procedure RemoveComment(var s: string);
@@ -204,7 +209,7 @@ begin
 		if SubStr[1] = Str[i] then
 		begin
 			for j := 2 to SubStrLen do
-				if  Str[i - 1 + j] <> SubStr[j] then goto LNFound;
+				if Str[i - 1 + j] <> SubStr[j] then goto LNFound;
 			Result := i;
 			Exit;
 			LNFound:
@@ -592,6 +597,13 @@ begin
 	end;
 end;
 
+function ReadToString(const Line: string;	const S: string): string;
+var LineIndex: SG;
+begin
+	LineIndex := 1;
+	Result := ReadToString(Line, LineIndex, S);
+end;
+
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string;
 var StartIndex: SG;
@@ -648,15 +660,47 @@ end;
 function StartStr(const SubStr: string; const Str: string): BG;
 var i: SG;
 begin
-	for i := 1 to Min(Length(SubStr), Length(Str)) do
+	Result := False;
+	if Length(SubStr) > Length(Str) then
+		Exit;
+	for i := 1 to Length(SubStr) do
 	begin
 		if SubStr[i] <> Str[i] then
 		begin
-			Result := False;
 			Exit;
 		end;
 	end;
 	Result := True;
+end;
+
+function EndStr(const SubStr: string; const Str: string): BG;
+var i, j: SG;
+begin
+	Result := False;
+	j := Length(Str);
+	if Length(SubStr) > j then
+		Exit;
+	for i := Length(SubStr) downto 1 do
+	begin
+		if SubStr[i] <> Str[j] then
+		begin
+			Exit;
+		end;
+		Dec(j);
+	end;
+	Result := True;
+end;
+
+procedure RemoveSuffix(const SubStr: string; var Str: string);
+begin
+	if EndStr(SubStr, Str) then
+		SetLength(Str, Length(Str) - Length(SubStr));
+end;
+
+function RemoveSuffixF(const SubStr: string; const Str: string): string;
+begin
+	Result := Str;
+	RemoveSuffix(SubStr, Result);
 end;
 
 function IsSubStr(const SubStr: string; const Str: string): BG;

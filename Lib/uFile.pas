@@ -1,7 +1,7 @@
 //* File:     Lib\uFile.pas
 //* Created:  1998-01-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.9
+//* Modified: 2009-03-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -378,16 +378,18 @@ var
 begin
 	C := Min(Count, DefFileBuffer);
 	Buf := AllocMem(C);
-	Result := True;
-	while Count > 0 do
-	begin
-		Result := Result and BlockWrite(Buf^, C);
-		Count := Count - C;
-		if C > Count then C := Count;
-		if Result = False then Break;
+	try
+		Result := True;
+		while Count > 0 do
+		begin
+			Result := Result and BlockWrite(Buf^, C);
+			Count := Count - C;
+			if C > Count then C := Count;
+			if Result = False then Break;
+		end;
+	finally
+		FreeMem(Buf);
 	end;
-
-	FreeMem(Buf);
 end;
 
 {
@@ -530,7 +532,7 @@ begin
 				IOError(FFileName, 3)
 			else
 			begin
-				CopyFile(FTempFileName, FFileName, False);
+        uFiles.CopyFile(FTempFileName, FFileName, False);
 				DeleteFileEx(FTempFileName);
 			end;
 		end;

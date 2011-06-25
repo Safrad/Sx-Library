@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uMathFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2008-09-03
-//* Version:  1.1.41.9
+//* Modified: 2009-03-22
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -133,6 +133,11 @@ begin
 	Result := FactVector(X);
 end;
 
+function Gamma(const X: TVector): TVector;
+begin
+	Result := GammaVector(X);
+end;
+
 (*	opInv: TODO
 	begin
 		Result := 1;
@@ -225,5 +230,6 @@ initialization
 	AddFunction('Math', 'dec', Dec, '');
 	AddFunction('Math', 'exp', Exp, '');
 	AddFunction('Math', 'fact', Fact, 'Factorial.');
+	AddFunction('Math', 'gamma', Gamma, 'Gamma.');
 end.
 

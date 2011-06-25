@@ -1,7 +1,7 @@
 //* File:     Lib\uParams.pas
 //* Created:  2006-02-04
-//* Modified: 2008-05-11
-//* Version:  1.1.41.9
+//* Modified: 2008-12-25
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -19,6 +19,10 @@ const
 	paNumber = '--number';
 type
 	TParamProcedure = procedure(const Value: string);
+{$ifndef Console}
+var
+	MinimizeToTrayIcon: BG = False;
+{$endif}
 
 procedure RegisterParam(const ParameterName: string; const ParameterDescription: string; const ParameterProcedure: TParamProcedure);
 procedure HelpParams(const Value: string = '');
@@ -81,7 +85,15 @@ end;
 procedure ParamMinimized(const Value: string = '');
 begin
 	{$ifndef Console}
-	Application.ShowMainForm := False;
+	if MinimizeToTrayIcon then
+	begin
+		Application.ShowMainForm := False
+	end
+	else
+	begin
+		if Assigned(Application.MainForm) then
+			Application.MainForm.WindowState := wsMinimized;
+	end;
 	{$endif}
 end;
 
@@ -115,7 +127,7 @@ begin
 	IsFile := True;
 	for i := 0 to Length(Params) - 1 do
 	begin
-		if StartStr(UpperCase(Param), UpperCase(Params[i])) then
+		if StartStr(UpperCase(Params[i]), UpperCase(Param)) then
 		begin
 			IsFile := False;
 			try

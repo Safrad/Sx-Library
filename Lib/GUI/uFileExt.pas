@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uFileExt.pas
 //* Created:  2006-02-04
 //* Modified: 2008-02-05
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

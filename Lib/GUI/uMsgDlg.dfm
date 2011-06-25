@@ -12,7 +12,7 @@ object fMsgDlg: TfMsgDlg
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poMainFormCenter
+  Position = poOwnerFormCenter
   OnClick = FormClick
   OnHide = FormHide
   OnKeyDown = FormKeyDown

@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSplash.pas
 //* Created:  1999-10-01
-//* Modified: 2007-05-20
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uParserMsg.pas
 //* Created:  2004-03-07
 //* Modified: 2008-02-16
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -194,8 +194,10 @@ begin
 	Mes := Data.GetFirst;
 	for i := 0 to SG(Data.Count) - 1 do
 	begin
-		Result := Result + MesToString(Mes) + LineSep;
-		Inc(SG(Mes), Data.ItemMemSize);
+		Result := Result + MesToString(Mes);
+		if i + 1 < Data.Count then
+			Result := Result + LineSep;
+		Data.Next(Pointer(Mes));
 	end;
 //	Result := Result + 'Done.';
 end;

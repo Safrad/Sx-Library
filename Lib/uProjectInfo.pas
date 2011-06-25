@@ -1,7 +1,7 @@
 //* File:     Lib\uProjectInfo.pas
 //* Created:  2006-06-22
 //* Modified: 2008-09-20
-//* Version:  1.1.41.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -93,8 +93,16 @@ begin
 				begin
 					Id := Value;
 				end;}
-//				uFiles.WriteBufferToFile('C:\Temp.txt', Buf, AppSize);
 				Id := '040904E4';
+				for i := Low(TProjectInfoName) to High(TProjectInfoName) do
+				begin
+					if VerQueryValue(Buf, PChar('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, '')), Pointer(Value), LenOfValue) then
+					begin
+						FProjectInfoNames[i] := Value;
+						if i in [piProductVersion, piFileVersion] then
+							Replace(FProjectInfoNames[i], ', ', '.');
+					end;
+				end;
 				if VerQueryValue(Buf, PChar('\VarFileInfo\Translation'), Pointer(Value), LenOfValue) then
 				begin
 					if LenOfValue = 4 then

@@ -1,6 +1,6 @@
 object fSysInfo: TfSysInfo
-  Left = 953
-  Top = 306
+  Left = 964
+  Top = 316
   BorderStyle = bsDialog
   Caption = 'System Info'
   ClientHeight = 320

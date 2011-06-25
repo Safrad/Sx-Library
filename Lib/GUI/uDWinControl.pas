@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDWinControl.pas
 //* Created:  2007-05-27
-//* Modified: 2008-02-18
-//* Version:  1.1.41.9
+//* Modified: 2008-12-26
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -27,9 +27,12 @@ type
 		{$ifdef info}
 		FFillCount, FPaintCount: UG;
 		{$endif}
+		FFocused: BG;
 		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+		procedure CMFocusEnter(var Message: TCMEnter); message CM_ENTER;
+		procedure CMFocusExit(var Message: TCMExit); message CM_EXIT;
 	protected
 		procedure FillBitmap; virtual;
 	public
@@ -37,8 +40,9 @@ type
 		destructor Destroy; override;
 		property Canvas: TCanvas read FCanvas;
 		procedure Invalidate; override;
-	property
-		Bitmap: TDBitmap read FBitmap;
+	published
+		property Bitmap: TDBitmap read FBitmap;
+		property IsFocused: Boolean read FFocused;
 	end;
 
 implementation
@@ -46,6 +50,20 @@ implementation
 uses SysUtils, Windows;
 
 { TDWinControl }
+
+// TODO Focus Enter/Leave
+
+procedure TDWinControl.CMFocusEnter(var Message: TCMEnter);
+begin
+	FFocused := True;
+	Invalidate;
+end;
+
+procedure TDWinControl.CMFocusExit(var Message: TCMExit);
+begin
+	FFocused := False;
+	Invalidate;
+end;
 
 constructor TDWinControl.Create(AOwner: TComponent);
 begin

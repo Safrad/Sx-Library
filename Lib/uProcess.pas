@@ -1,7 +1,7 @@
 //* File:     Lib\uProcess.pas
 //* Created:  1999-05-01
-//* Modified: 2007-05-08
-//* Version:  1.1.41.9
+//* Modified: 2009-03-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

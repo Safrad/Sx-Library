@@ -1,6 +1,6 @@
 object fSounds: TfSounds
-  Left = 640
-  Top = 261
+  Left = 472
+  Top = 280
   Width = 458
   Height = 298
   HorzScrollBar.Tracking = True
@@ -17,8 +17,8 @@ object fSounds: TfSounds
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
@@ -206,11 +206,6 @@ object fSounds: TfSounds
     TabOrder = 7
     AutoChange = True
     Down = True
-  end
-  object OpenDialog1: TOpenDialog
-    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 328
-    Top = 88
   end
   object PopupMenuSounds: TPopupMenu
     OnPopup = PopupMenuSoundsPopup

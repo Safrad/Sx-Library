@@ -1,7 +1,7 @@
-//* File:     Lib\GUI\uHTML.pas
+//* File:     Lib\uHTML.pas
 //* Created:  2004-09-26
-//* Modified: 2008-03-14
-//* Version:  1.1.41.9
+//* Modified: 2009-05-13
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -106,15 +106,16 @@ function RelativePath(const Source, Target: string): string;
 	Target	C:\HTTP\images\
 	Result  ../images
 }
-var
+(*var
 	i, j: SG;
-	LastDiv: SG;
+	LastDiv: SG; *)
 begin
+	Result := ExtractRelativePath(Source, Target);
 //	Assert(FileExists(Source));
 //	Assert(FileExists(Target));
 
-	Result := '';
-	LastDiv := 1;
+(*	Result := '';
+	LastDiv := 0;
 	for i := 1 to Max(Length(Source), Length(Target)) do
 	begin
 		if i > Length(Source) then
@@ -143,8 +144,9 @@ begin
 			Result := Result + Copy(Target, LastDiv + 1, MaxInt);
 			Break;
 		end;
-		if Source[i] in ['\', '/'] then LastDiv := i;
-	end;
+		if Source[i] in ['\', '/'] then
+			LastDiv := i;
+	end; *)
 	Replace(Result, '\', '/'); // W3C standard
 end;
 
@@ -505,8 +507,8 @@ begin
 		'" cellpadding="' + IntToStr(CellPadding) + '">' + HTMLSep;
 	LineIndex := 0;
 	CSV := TCSVFile.Create(0);
-	CSV.AcceptRemark := True;
 	try
+		CSV.AcceptRemark := True;
 		if CSV.Open(FileName) then
 		begin
 			while not CSV.EOF do

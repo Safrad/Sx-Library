@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDGraph.pas
 //* Created:  2004-01-06
 //* Modified: 2007-05-20
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -100,7 +100,7 @@ begin
 		Inc(NodesIndex[i]);
 	end;
 
-	Border := Borders.Add(NodesIndex[j + 1] - 1);
+	Border := Borders.Insert(NodesIndex[j + 1] - 1);
 	Border.ToNode := k;
 	Border.Len := l;
 end;
@@ -290,9 +290,9 @@ begin
 			else
 				Inc(ToV);
 
-			PItem := StackValue.Add(ToV);
+			PItem := StackValue.Insert(ToV);
 			PItem^ := BestLen;
-			PItem := StackNode.Add(ToV);
+			PItem := StackNode.Insert(ToV);
 			PItem^ := BestNode;
 			if ToNode >= 0 then
 				if NodesValue[ToNode] <= BestLen then Break;

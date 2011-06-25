@@ -1,7 +1,7 @@
 //* File:     Lib\uCSVFile.pas
 //* Created:  2007-03-10
-//* Modified: 2008-02-08
-//* Version:  1.1.40.9
+//* Modified: 2008-04-02
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -12,7 +12,7 @@ interface
 
 uses
 	SysUtils,
-	uTypes, uFile;
+	uTypes, uFile, uDFile;
 
 const
 	CSVSep = ','; // ;
@@ -22,8 +22,7 @@ type
 	TCSVFile = class
 	private
 		{ Private declarations }
-		CSVFile: TFile;
-		CSVFileName: TFileName;
+		FFile: TFile;
 		FColumnCount: SG;
 		FLineIndex: SG;
 	public
@@ -33,8 +32,8 @@ type
 		destructor Destroy; override;
 
 		function ReadLine: TArrayOfString;
-		function Close: BG;
 		function Open(const FileName: TFileName): BG;
+		function Close: BG;
 		function EOF: BG;
 	property
 		LineIndex: SG read FLineIndex;
@@ -52,23 +51,17 @@ constructor TCSVFile.Create(const ColumnCount: SG);
 begin
 	Assert(ColumnCount >= 0);
 	FColumnCount := ColumnCount;
-	CSVFile := TFile.Create;
 	AcceptRemark := False;
+	FFile := TFile.Create;
+
 	inherited Create;
 end;
 
 destructor TCSVFile.Destroy;
 begin
 	Close;
+	FreeAndNil(FFile);
 	inherited;
-end;
-
-function TCSVFile.Open(const FileName: TFileName): BG;
-begin
-	Assert(FileName <> '');
-	FLineIndex := 0;
-	Result := CSVFile.Open(FileName, fmReadOnly);
-	CSVFileName := FileName;
 end;
 
 function TCSVFile.ReadLine: TArrayOfString;
@@ -80,9 +73,9 @@ var
 	Quoted: BG;
 begin
 	Result := nil;
-	if Assigned(CSVFile) and (CSVFile.Opened) then
+	if Assigned(FFile) and (FFile.Opened) then
 	begin
-		while CSVFile.Readln(Line) do
+		while FFile.Readln(Line) do
 		begin
 			if Line = '' then Continue; // Empty line
 			if (Line[1] = CSVRemark) and (AcceptRemark = False) then Continue; // Remark line
@@ -182,23 +175,26 @@ begin
 	end;
 end;
 
+function TCSVFile.Open(const FileName: TFileName): BG;
+begin
+	Result := FFile.Open(FileName, fmReadOnly);
+end;
+
 function TCSVFile.Close: BG;
 begin
 	Result := True;
-	if Assigned(CSVFile) then
+	if Assigned(FFile) then
 	begin
-		if CSVFile.Opened then
-			Result := CSVFile.Close;
-		FreeAndNil(CSVFile);
+		if FFile.Opened then
+			Result := FFile.Close;
 	end;
-	CSVFileName := '';
 end;
 
 function TCSVFile.EOF: BG;
 begin
 	Result := True;
-	if Assigned(CSVFile) and (CSVFile.Opened) then
-		Result := CSVFile.Eof;
+	if Assigned(FFile) and (FFile.Opened) then
+		Result := FFile.Eof;
 end;
 
 end.

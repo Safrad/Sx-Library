@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\ufOpenedFiles.pas
 //* Created:  2007-11-25
 //* Modified: 2008-01-20
-//* Version:  1.1.40.9
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -33,11 +33,14 @@ type
 	private
 		{ Private declarations }
 		FOpenedFiles: TOpenedFiles;
+		procedure RWOptions(const Save: BG);
 	public
 		{ Public declarations }
-		constructor Create(const OpenedFiles: TOpenedFiles);
 		procedure TabKey(const Direction: SG);
+		{$WARNINGS OFF}
+		constructor Create(const OpenedFiles: TOpenedFiles);
 	end;
+	{$WARNINGS ON}
 
 var
 	fOpenedFiles: TfOpenedFiles;
@@ -60,8 +63,7 @@ begin
 	DViewOpenedFiles.AddColumn('WorkTime', DViewOpenedFiles.Width div 2, taLeftJustify, True);
 	DViewOpenedFiles.AddColumn('ModificationTime', DViewOpenedFiles.Width div 2, taLeftJustify, True);
 	DViewOpenedFiles.AddColumn('SaveTime', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	MainIni.RWFormPos(Self, False);
-	DViewOpenedFiles.Serialize(MainIni, False);
+	MainIni.RegisterRW(RWOptions);
 end;
 
 procedure TfOpenedFiles.DViewOpenedFilesKeyUp(Sender: TObject;
@@ -116,8 +118,7 @@ end;
 
 procedure TfOpenedFiles.FormDestroy(Sender: TObject);
 begin
-	MainIni.RWFormPos(Self, True);
-	DViewOpenedFiles.Serialize(MainIni, True);
+	MainIni.UnregisterRW(RWOptions);
 end;
 
 procedure TfOpenedFiles.DViewOpenedFilesKeyDown(Sender: TObject;
@@ -195,6 +196,12 @@ end;
 procedure TfOpenedFiles.FormShow(Sender: TObject);
 begin
 	DViewOpenedFiles.DeselectAll;
+end;
+
+procedure TfOpenedFiles.RWOptions(const Save: BG);
+begin
+	MainIni.RWFormPos(Self, Save);
+	DViewOpenedFiles.Serialize(MainIni, Save);
 end;
 
 end.

@@ -1,7 +1,7 @@
 //* File:     Lib\uMath.pas
 //* Created:  1998-01-01
-//* Modified: 2008-01-21
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -1264,6 +1264,8 @@ begin
 end;*)
 
 function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
+const
+	MinimumSize = 8;
 {
 	0 <= OldSize < 2^31
 	0 <= NewSize < 2^31
@@ -1284,22 +1286,22 @@ begin
 	begin
 		{$ifopt d+}
 		if OldSize > 0 then
-		if OldSize <> 1 shl CalcShr(OldSize) then
-		begin
-			Assert(False, 'Bad AllocBy block size');
-//			ErrorMessage('Bad AllocBy block size' + LineSep + BToStr(OldSize));
-		end;
+			if OldSize <> 1 shl CalcShr(OldSize) then
+			begin
+				Assert(False, 'Bad AllocBy block size');
+	//			ErrorMessage('Bad AllocBy block size' + LineSep + BToStr(OldSize));
+			end;
 		{$endif}
-		NewSize := Max(1 shl CalcShr(NewSize), 0{Minimum items});
+		NewSize := Max(1 shl CalcShr(NewSize), MinimumSize);
 		Result := True;
 	end
 	else
 	begin
 		if NewSize < OldSize then
 		begin
-			if NewSize = 0 then Result := True;
+			if NewSize = 0 then
+				Result := True;
 		end;
-
 	end;
 end;
 
@@ -1308,7 +1310,7 @@ begin
 	Result := False;
 	if (x > 0) and (y > 0) then
 	begin
-		while (x >= MaxWidth) or (y >= MaxHeight) do
+		while (x > MaxWidth) or (y > MaxHeight) do
 		begin
 			x := x div 2;
 			y := y div 2;

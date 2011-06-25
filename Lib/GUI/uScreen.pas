@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uScreen.pas
 //* Created:  1999-08-01
-//* Modified: 2007-08-19
-//* Version:  1.1.40.9
+//* Modified: 2008-05-11
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -391,7 +391,9 @@ begin
 	if (ActualDriver = -1) then
 	begin
 		if MainIni <> nil then
-			ActualDriver := MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, False);
+		begin
+			MainIni.ReadNum('Monitor', 'ActualDriver', ActualDriver);
+		end;
 		if (ActualDriver = -1) and (DriverNameCount > 1) then
 		begin
 			fScreen := TfScreen.Create(nil);
@@ -404,7 +406,7 @@ begin
 			fScreen.ShowModal;
 			ActualDriver := fScreen.ComboBoxDriver.ItemIndex;
 			if MainIni <> nil then
-				MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, True);
+				MainIni.WriteNum('Monitor', 'ActualDriver', ActualDriver);
 		end;
 	end;
 

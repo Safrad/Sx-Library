@@ -1,7 +1,7 @@
 //* File:     Lib\uSorts.pas
 //* Created:  2000-08-01
-//* Modified: 2008-03-15
-//* Version:  1.1.41.9
+//* Modified: 2009-02-26
+//* Version:  1.1.41.12
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
