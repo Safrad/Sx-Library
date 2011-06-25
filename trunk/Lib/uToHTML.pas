@@ -1,7 +1,7 @@
 //* File:     Lib\uToHTML.pas
 //* Created:  2000-07-01
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-08-21
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -86,12 +86,12 @@ end;
 
 procedure OpenTable(var Result: string);
 begin
-  Result := Result + '<table>';
+	Result := Result + '<table>';
 end;
 
 procedure CloseTable(var Result: string);
 begin
-  Result := Result + '</table>';
+	Result := Result + '</table>';
 end;
 
 function RepairCell(const Data: string): string;
@@ -268,7 +268,7 @@ var
 	procedure AddFile(const FileName: TFileName; const Name: TFileName; const Author: string; const Created: TDateTime);
 	var P: PItem;
 	begin
-		P := Items.Add(TItem.Create);
+		P := Items.Add(Pointer(TItem.Create));
 		P.FileName := FileName;
 		P.Name := Name;
 		P.Author := Author;

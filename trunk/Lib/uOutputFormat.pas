@@ -1,7 +1,7 @@
 //* File:     Lib\uOutputFormat.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-20
-//* Version:  1.1.37.8
+//* Modified: 2007-11-25
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -606,7 +606,7 @@ begin
 	Assert(B >= 0);
 	if B < KB then // 2^10 ($400)
 	begin
-		Result := NToS(B, 0, OutputFormat) + Sep + 'B';
+		Result := NToS(B, 0, OutputFormat) + Sep + 'byte' + Plural(B);
 	end
 	else if B < 10 * KB then
 	begin
@@ -642,7 +642,7 @@ begin
 	Assert(B >= 0);
 	if B < KB then // 2^10 ($400)
 	begin
-		Result := NToS(B, 0, OutputFormat) + Sep + 'B';
+		Result := NToS(B, 0, OutputFormat) + Sep + 'byte' + Plural(B);
 	end
 	else if B < 10 * KB then
 	begin
@@ -847,11 +847,11 @@ begin
 	begin
 		if h = 0 then
 		begin
-			if FixedWidth then Result := Result + '   '
+			if FixedWidth then Result := Result + StringOfChar(CharSpace, 3);
 		end
 		else if h < 10 then
 		begin
-			if (DT >= 0) and FixedWidth then Result := Result + ' ';
+			if (DT >= 0) and FixedWidth then Result := Result + CharSpace;
 			Result := Result + Chr(h + Ord('0')) + TimeSep
 		end
 		else if h < 100 then

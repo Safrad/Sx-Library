@@ -1,7 +1,7 @@
 //* File:     Lib\uMsg.pas
 //* Created:  2000-08-01
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-10-22
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -15,21 +15,26 @@ uses
 	Consts,
 	uTypes;
 
-function ReplaceParam(const Text, Param: string): string;
+function ReplaceParam(const Text: string; const Param: array of string): string; overload;
+function ReplaceParam(const Text: string; const Param: string): string; overload;
 
 var
 	MsgTypeStr: array[TMsgType] of string;
 
 procedure ShowMessage(const MsgType: TMsgType; const ExpandedText: string); overload;
-procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: string); overload;
+procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: array of string); overload;
 
 {$ifopt d+}
-procedure Debug(const Text: string; const Param: string = '');
+procedure Debug(const Text: string); overload;
+procedure Debug(const Text: string; const Param: array of string); overload;
 procedure IE(const Text: string); // Internal Error
 {$endif}
-procedure Information(const Text: string; const Param: string = '');
-procedure Warning(const Text: string; const Param: string = '');
-procedure ErrorMsg(const Text: string; const Param: string = ''); overload;
+procedure Information(const Text: string); overload;
+procedure Information(const Text: string; const Param: array of string); overload;
+procedure Warning(const Text: string);overload;
+procedure Warning(const Text: string; const Param: array of string); overload;
+procedure ErrorMsg(const Text: string); overload;
+procedure ErrorMsg(const Text: string; const Param: array of string); overload;
 procedure ErrorMsg(const ErrorCode: SG); overload;
 procedure Fatal(const E: Exception; const C: TObject);
 
@@ -63,7 +68,27 @@ uses
 	Windows,
 	uStrings, uLog{$ifndef Console}, uMsgDlg{$endif};
 
-function ReplaceParam(const Text, Param: string): string;
+const
+	MsgTypeNames: array[TMsgType] of string = (
+		SMsgDlgConfirm,
+		'Debug',
+		SMsgDlgInformation,
+		SMsgDlgWarning,
+		SMsgDlgError,
+		'Fatal Error',
+		'');
+
+function ReplaceParam(const Text: string; const Param: array of string): string; overload;
+var i: SG;
+begin
+	Result := Text;
+	for i := 1 to Length(Param) do
+	begin
+		Replace(Result, '%' + IntToStr(i), '''' + Param[i - 1] + '''');
+	end;
+end;
+
+function ReplaceParam(const Text: string; const Param: string): string; overload;
 begin
 	if Param <> '' then
 	begin
@@ -80,13 +105,13 @@ procedure ShowMessage(const MsgType: TMsgType; const ExpandedText: string); over
 begin
 	MainLogAdd(ExpandedText, MsgType);
 	{$ifndef Console}
-	MessageD(ExpandedText, '', MsgType, [mbOk]);
+	MessageD(ExpandedText, [], MsgType, [mbOk]);
 	{$else}
-	Writeln(MsgTypeNames[MsgType] + OneLine(Text));
+	Writeln(MsgTypeNames[MsgType] + ': ' + OneLine(ExpandedText));
 	{$endif}
 end;
 
-procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: string); overload;
+procedure ShowMessage(const MsgType: TMsgType; const Text: string; const Param: array of string); overload;
 var
 	ExpandedText: string;
 begin
@@ -95,12 +120,17 @@ begin
 	{$ifndef Console}
 	MessageD(Text, Param, MsgType, [mbOk]);
 	{$else}
-	Writeln(MsgTypeNames[MsgType] + OneLine(Text));
+	Writeln(MsgTypeNames[MsgType] + ': ' + OneLine(ExpandedText));
 	{$endif}
 end;
 
 {$ifopt d+}
-procedure Debug(const Text: string; const Param: string = '');
+procedure Debug(const Text: string);
+begin
+	ShowMessage(mtDebug, Text, []);
+end;
+
+procedure Debug(const Text: string; const Param: array of string);
 begin
 	ShowMessage(mtDebug, Text, Param);
 end;
@@ -111,17 +141,32 @@ begin
 end;
 {$endif}
 
-procedure Information(const Text: string; const Param: string = '');
+procedure Information(const Text: string); overload;
+begin
+	ShowMessage(mtInformation, Text, []);
+end;
+
+procedure Information(const Text: string; const Param: array of string); overload;
 begin
 	ShowMessage(mtInformation, Text, Param);
 end;
 
-procedure Warning(const Text: string; const Param: string = '');
+procedure Warning(const Text: string);
+begin
+	ShowMessage(mtWarning, Text, []);
+end;
+
+procedure Warning(const Text: string; const Param: array of string);
 begin
 	ShowMessage(mtWarning, Text, Param);
 end;
 
-procedure ErrorMsg(const Text: string; const Param: string = '');
+procedure ErrorMsg(const Text: string);
+begin
+	ShowMessage(mtError, Text, []);
+end;
+
+procedure ErrorMsg(const Text: string; const Param: array of string);
 begin
 	ShowMessage(mtError, Text, Param);
 end;
@@ -196,7 +241,7 @@ begin
 	Text := ErrorMsg + ': ' + FileName;
 	MainLogAdd(Text, mtError);
 	{$ifndef Console}
-	MsgDlg(ErrorMsg, FileName, False, mtError, [SMsgDlgOK], DlgWait);
+	MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mtError, [SMsgDlgOK], DlgWait);
 	{$else}
 	Writeln('I/O Error: ' + OneLine(Text));
 	{$endif}
@@ -212,7 +257,7 @@ begin
 	Text := ErrorMsg + ': ' + FileName;
 	MainLogAdd(Text, mtError);
 	{$ifndef Console}
-	Result := MsgDlg(ErrorMsg, FileName, True, mtError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) <> 1;
+	Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mtError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
 	{$else}
 	Writeln('I/O Error: ' + OneLine(Text));
 	Writeln('Press [R]etry or [I]gnore.');

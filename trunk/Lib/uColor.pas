@@ -1,7 +1,7 @@
 //* File:     Lib\uColor.pas
 //* Created:  1999-10-01
-//* Modified: 2007-03-31
-//* Version:  1.1.37.8
+//* Modified: 2007-08-16
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -278,7 +278,7 @@ begin
 	end;
 end;
 *)
-(*-------------------------------------------------------------------------*)
+
 {function ShadowColor(C: TColor): TColor;
 begin
 	case C of
@@ -307,7 +307,7 @@ begin
 	end;
 	end;
 end;}
-(*-------------------------------------------------------------------------*)
+
 {function ShadowColor2(C1, C2: TColor): TColor;
 begin
 	case C1 of
@@ -337,7 +337,7 @@ begin
 	end;
 	end;
 end; }
-(*-------------------------------------------------------------------------*)
+
 function ColorDiv(Color: TColor; const D: Integer): TColor;
 var R, G, B: Integer;
 {var
@@ -371,7 +371,7 @@ function DarkerColor(Color: TColor): TColor;
 begin
 	Result := ColorDiv(Color, 2 * 65536 div 3);
 end;
-(*-------------------------------------------------------------------------*)
+
 function ColorRB(C: TColor): TColor;
 begin
 	TRGBA(Result).R := TRGBA(C).B;
@@ -379,7 +379,7 @@ begin
 	TRGBA(Result).B := TRGBA(C).R;
 	TRGBA(Result).A := TRGBA(C).A;
 end;
-(*-------------------------------------------------------------------------*)
+
 function GrayColor(X: SG): TColor;
 begin
 	TRGBA(Result).R := X;
@@ -432,7 +432,7 @@ begin
 	end;
 	end;
 end;
-(*-------------------------------------------------------------------------*)
+
 function SpectrumColor2(X: Integer): TColor;
 //0..255..510..765..1020..1275..1529
 begin
@@ -477,7 +477,7 @@ begin
 	end;
 	end;
 end;
-(*-------------------------------------------------------------------------*)
+
 function FireColor(X: Integer): TColor;
 begin
 	TRGBA(Result).A := 0;
@@ -504,7 +504,7 @@ begin
 	end;
 	end;
 end;
-(*-------------------------------------------------------------------------*)
+
 function NegColor(C: TColor): TColor;
 begin
 	C := ColorToRGB(C);
@@ -513,7 +513,7 @@ begin
 	if TRGBA(C).G > 127 then TRGBA(Result).G := 0 else TRGBA(Result).G := 255;
 	if TRGBA(C).B > 127 then TRGBA(Result).B := 0 else TRGBA(Result).B := 255;
 end;
-(*-------------------------------------------------------------------------*)
+
 function NegMonoColor(C: TColor): TColor;
 begin
 	C := ColorToRGB(C);
@@ -522,7 +522,7 @@ begin
 	else
 		Result := $00FFFFFF;
 end;
-(*-------------------------------------------------------------------------*)
+
 function MixColors(C1, C2: TColor): TColor; overload;
 begin
 {	if C1 = C2 then
@@ -567,7 +567,7 @@ begin
 	Result.G := (C1.G + C2.G) shr 1;
 	Result.B := (C1.B + C2.B) shr 1;
 end;
-(*-------------------------------------------------------------------------*)
+
 function MixColors(C1, C2: TColor; Per1, Per2: Integer): TColor; overload;
 begin
 	C1 := ColorToRGB(C1);
@@ -577,7 +577,7 @@ begin
 	TRGBA(Result).B := (Per1 * TRGBA(C1).B + Per2 * TRGBA(C2).B + MaxMixColor div 2) shr 16;
 	TRGBA(Result).A := 0;
 end;
-(*-------------------------------------------------------------------------*)
+
 function MixColors(C1, C2: TRGBA; Per1, Per2: Integer): TRGBA; overload;
 begin
 	Assert((Per1 >= 0) and (Per1 <= MaxMixColor));
@@ -587,7 +587,7 @@ begin
 	Result.B := (Per1 * C1.B + Per2 * C2.B + MaxMixColor div 2) shr 16;
 	Result.A := (Per1 * C1.A + Per2 * C2.A + MaxMixColor div 2) shr 16;
 end;
-(*-------------------------------------------------------------------------*)
+
 function MixColors(C1, C2: TRGB; Per1, Per2: Integer): TRGB; overload;
 begin
 	Assert((Per1 >= 0) and (Per1 <= MaxMixColor));
@@ -596,17 +596,17 @@ begin
 	Result.G := (Per1 * C1.G + Per2 * C2.G + MaxMixColor div 2) shr 16;
 	Result.B := (Per1 * C1.B + Per2 * C2.B + MaxMixColor div 2) shr 16;
 end;
-(*-------------------------------------------------------------------------*)
+
 function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 begin
 	Result := MixColors(C1, C2, Per, MaxMixColor - Per);
 end;
-(*-------------------------------------------------------------------------*)
+
 function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
 begin
 	Result := MixColors(C1, C2, Per, MaxMixColor - Per);
 end;
-(*-------------------------------------------------------------------------*)
+
 function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
 begin
 	Result := MixColors(C1, C2, Per, MaxMixColor - Per);

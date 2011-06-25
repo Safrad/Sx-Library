@@ -1,7 +1,7 @@
 //* File:     Lib\uStrings.pas
 //* Created:  2000-08-01
-//* Modified: 2007-05-20
-//* Version:  1.1.37.8
+//* Modified: 2007-11-26
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -61,8 +61,11 @@ function DelStrF(const s: string; const SubStr: string): string;
 function Ident(const Level: SG): string;
 
 procedure AddQuote(var s: string);
+function AddQuoteF(const s: string): string;
 procedure DelQuote(var s: string);
 function DelQuoteF(const s: string): string;
+
+function DelPathSep(const s: string): string;
 
 procedure DelBeginSpace(var s: string);
 function DelBeginSpaceF(const s: string): string;
@@ -110,6 +113,7 @@ function ReplaceF(const s: string; const WhatS, ToS: array of string): string; o
 procedure Replace(var s: string; const WhatS, ToS: string); overload;
 procedure Replace(var s: string; const WhatS, ToS: array of string); overload;
 
+function DoubleBackSlash(const s: string): string;
 function Code(const s: string; const Decode: BG): string;
 
 function AddSpace(const s: string): string;
@@ -117,9 +121,9 @@ procedure AppendStr(var Dest: TFileName; const Source: string); overload;
 procedure AppendStr(var Dest: string; const Source: string); overload;
 function Plural(Number: SG): string;
 procedure CorrectDir(var s: string);
-function RandomString(Size: SG): string;
+function RandomString(const Size: SG): string;
 
-procedure EnumToStr(TypeInfo: PTypeInfo; out AString: array of string);
+procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string);
 function ButtonNameToFileName(const Name: string): string;
 function ComponentName(const Name: string): string;
 
@@ -274,6 +278,7 @@ end;
 
 function Ident(const Level: SG): string;
 begin
+//	Result := StringOfChar(CharTab, Level);
 	if Level = 0 then
 		Result := ''
 	else
@@ -288,6 +293,11 @@ begin
 	s := '"' + s + '"';
 end;
 
+function AddQuoteF(const s: string): string;
+begin
+	Result := '"' + s + '"';
+end;
+
 procedure DelQuote(var s: string);
 begin
 	if s = '' then Exit;
@@ -300,6 +310,14 @@ function DelQuoteF(const s: string): string;
 begin
 	Result := s;
 	DelQuote(Result);
+end;
+
+function DelPathSep(const s: string): string;
+begin
+	if LastChar(s) in ['/', '\'] then
+		Result := DelLastChar(s)
+	else
+		Result := s;
 end;
 
 procedure DelBeginSpace(var s: string);
@@ -729,6 +747,17 @@ begin
 	end;
 end;
 
+function DoubleBackSlash(const s: string): string;
+var i: SG;
+begin
+	Result := '';
+	for i := 1 to Length(s) do
+	begin
+		Result := Result + s[i];
+		if s[i] = '\' then Result := Result + '\';
+	end;
+end;
+
 function Code(const s: string; const Decode: BG): string;
 var i: Integer;
 begin
@@ -776,7 +805,7 @@ begin
 	if (i > 0) and (s[i] <> PathDelim) then s := s + PathDelim;
 end;
 
-function RandomString(Size: SG): string;
+function RandomString(const Size: SG): string;
 var i: SG;
 begin
 	SetLength(Result, Size);
@@ -784,7 +813,7 @@ begin
 		Result[i] := Char(Random(256));
 end;
 
-procedure EnumToStr(TypeInfo: PTypeInfo; out AString: array of string);
+procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string);
 var
 	i: SG;
 	TypeData: PTypeData;
@@ -797,7 +826,6 @@ begin
 end;
 
 function ButtonNameToFileName(const Name: string): string;
-label LDel;
 var
 	Index, i: SG;
 	Found: BG;
@@ -841,8 +869,6 @@ begin
 			Result := 'N' + Result;
 	end;
 end;
-
-// TODO: MD5
 
 {$IFOPT Q+}
 	{$DEFINE Q_PLUS}

@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uLogicFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-12
-//* Version:  1.1.37.8
+//* Modified: 2007-11-27
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -13,16 +13,6 @@ interface
 implementation
 
 uses uTypes, uVector, uNamespace;
-
-function ConstantFalse: TVector;
-begin
-	Result := NumToVector(0);
-end;
-
-function ConstantTrue: TVector;
-begin
-	Result := NumToVector(1);
-end;
 
 type
 	TOperation = (opShl, opShr, opAnd, opOr, opXor, opXnor);
@@ -37,22 +27,22 @@ begin
 		R := X[0];
 		for i := 1 to Length(X) - 1 do
 		begin
-{ TODO:			case Operation of
-			opShl: R := R shl Round(X[i]);
-			opShr: R := R shr Round(X[i]);
+			case Operation of
+			opShl: R := ShlVector(R, X[i]);
+			opShr: R := ShrVector(R, X[i]);
 			opAnd:
 			begin
-				if R = 0 then Break;
-				R := R and Round(X[i]);
+//				if R = 0 then Break;
+				R := AndVector(R, X[i]);
 			end;
 			opOr:
 			begin
-				if R = $ffffffffffffffff then Break;
-				R := R or Round(X[i]);
+//				if R = $ffffffffffffffff then Break;
+				R := OrVector(R, X[i]);
 			end;
-			opXor: R := R xor Round(X[i]);
-			opXnor: R := not (R xor Round(X[i]));
-			end;}
+			opXor: R := XorVector(R, X[i]);
+			opXnor: R := XnorVector(R, X[i]);
+			end;
 		end;
 		Result := R;
 	end
@@ -60,13 +50,53 @@ begin
 		Result := nil;
 end;
 
+function ConstantFalse: TVector;
+begin
+	Result := NumToVector(0);
+end;
+
+function ConstantTrue: TVector;
+begin
+	Result := NumToVector(1);
+end;
+
+function FunctionShl(const Data: array of TVector): TVector;
+begin
+	Result := Logic(opShl, Data);
+end;
+
+function FunctionShr(const Data: array of TVector): TVector;
+begin
+	Result := Logic(opShr, Data);
+end;
+
+function FunctionAnd(const Data: array of TVector): TVector;
+begin
+	Result := Logic(opAnd, Data);
+end;
+
+function FunctionOr(const Data: array of TVector): TVector;
+begin
+	Result := Logic(opOr, Data);
+end;
+
+function FunctionXor(const Data: array of TVector): TVector;
+begin
+	Result := Logic(opXor, Data);
+end;
+
+function FunctionXnor(const Data: array of TVector): TVector;
+begin
+	Result := Logic(opXnor, Data);
+end;
+
 initialization
 	AddFunction('Logic', 'false', ConstantFalse, '');
 	AddFunction('Logic', 'true', ConstantTrue, '');
-{	AddFunction('Logic', 'shl', FunctionShl, '');
+	AddFunction('Logic', 'shl', FunctionShl, '');
 	AddFunction('Logic', 'shr', FunctionShr, '');
 	AddFunction('Logic', 'and', FunctionAnd, '');
 	AddFunction('Logic', 'or', FunctionOr, '');
 	AddFunction('Logic', 'xor', FunctionXor, '');
-	AddFunction('Logic', 'xnor', FunctionXnor, '');}
+	AddFunction('Logic', 'xnor', FunctionXnor, '');
 end.

@@ -1,7 +1,7 @@
 //* File:     Lib\uCharTable.pas
 //* Created:  2000-05-01
 //* Modified: 2007-05-13
-//* Version:  1.1.37.8
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

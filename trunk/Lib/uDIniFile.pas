@@ -1,7 +1,7 @@
 //* File:     Lib\uDIniFile.pas
 //* Created:  2000-07-01
-//* Modified: 2007-05-20
-//* Version:  1.1.37.8
+//* Modified: 2007-11-26
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -39,7 +39,9 @@ type
 	public
 		FSections: array of TSection;
 		property FileSaved: BG read FFileSaved;
-		procedure AddSection(Section: string);
+		procedure AddSection(const Section: string);
+		procedure EmptySection(const Section: string);
+		procedure DeleteSection(const Section: string);
 		procedure AddValue(SectionIndex: Integer; Ident: string);
 
 		// Read & Write
@@ -149,7 +151,7 @@ uses
 	uMath, uFiles, uStrings, uOutputFormat, uEscape
 	{$ifndef Console}, uMenus, uInputFormat, uDParser, uSystem{$endif};
 
-procedure TDIniFile.AddSection(Section: string);
+procedure TDIniFile.AddSection(const Section: string);
 var NewSize: Integer;
 begin
 	Inc(FSectionCount);
@@ -159,6 +161,31 @@ begin
 	FSections[FSectionCount - 1].Name := Section;
 	FSections[FSectionCount - 1].Keys := nil;
 	FSections[FSectionCount - 1].KeyCount := 0;
+end;
+
+procedure TDIniFile.EmptySection(const Section: string);
+var SectionIndex: SG;
+begin
+	SectionIndex := GetSectionIndex(Section);
+	if SectionIndex >= 0 then
+	begin
+		SetLength(FSections[SectionIndex].Keys, 0);
+		FSections[SectionIndex].KeyCount := 0;
+	end;
+end;
+
+procedure TDIniFile.DeleteSection(const Section: string);
+var
+	SectionIndex: SG;
+	i: SG;
+begin
+	SectionIndex := GetSectionIndex(Section);
+	if SectionIndex >= 0 then
+	begin
+		for i := SectionIndex to FSectionCount - 2 do
+			FSections[i] := FSections[i + 1];
+		Dec(FSectionCount);
+	end;
 end;
 
 procedure TDIniFile.AddValue(SectionIndex: Integer; Ident: string);
@@ -328,7 +355,7 @@ end;
 
 procedure TDIniFile.WriteTime(const Section, Name: string; Value: TDateTime);
 begin
-	WriteString(Section, Name, TimeToS(Value, 3, ofIO));
+	WriteString(Section, Name, TimeToS(Value, -3, ofIO));
 end;
 
 function TDIniFile.ReadDateTime(const Section, Name: string; Default: TDateTime): TDateTime;
@@ -346,7 +373,7 @@ end;
 
 procedure TDIniFile.WriteDateTime(const Section, Name: string; Value: TDateTime);
 begin
-	WriteString(Section, Name, DateTimeToS(Value, 3, ofIO));
+	WriteString(Section, Name, DateTimeToS(Value, -3, ofIO));
 end;
 {$endif}
 
@@ -461,7 +488,6 @@ begin
 end;
 
 procedure TDIniFile.LoadFromFile(const FileName: TFileName);
-label LRetry;
 var
 	s, Line: string;
 	LineIndex, InLineIndex: Integer;
@@ -497,7 +523,8 @@ begin
 					if FSectionCount > 0 then
 					begin
 						AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
-						FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt); // TODO  : ?
+						if FSections[FSectionCount - 1].KeyCount > 0 then
+							FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt);
 					end;
 				end;
 			end;

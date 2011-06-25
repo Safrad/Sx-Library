@@ -1,7 +1,7 @@
 //* File:     Lib\uInputFormat.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-21
-//* Version:  1.1.37.8
+//* Modified: 2007-11-25
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -49,7 +49,6 @@ function StrToValS8(Line: string; const UseWinFormat: BG;
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1; const Messages: TParserMessages = nil): U1;
 
-// TODO: const Messages: TParserMessages = nil
 function SToDate(const Str: string; const InputFormat: TInputFormat): TDateTime;
 function SToDateTime(const Str: string; const InputFormat: TInputFormat): TDateTime;
 
@@ -279,7 +278,7 @@ begin
 		if Month > 50 then Dec(Month, 50); // Female offset
 		if TryEncodeDate(Year, Month, Day, TDateTime(Result)) = False then
 		begin
-			ErrorMsg('Invalid date %1' + '.', Str);
+			ErrorMsg('Invalid date %1' + '.', [Str]);
 			Result := 0;
 		end;
 	end;

@@ -1,7 +1,7 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-11-26
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -48,7 +48,7 @@ type
 
 	TFile = class(TObject)
 	private
-		HFile: THANDLE;
+		FHandle: THandle;
 		FFileName: TFileName;
 		FTempFileName:  TFileName;
 
@@ -64,6 +64,7 @@ type
 		function IsOpened: BG;
 		function ErrorRetry(const ErrorCode: U4): BG;
 	public
+		property Handle: THandle read FHandle;
 		property FilePos: U8 read FFilePos;
 		property FileSize: U8 read FFileSize;
 		property Opened: BG read IsOpened;
@@ -123,7 +124,6 @@ var
 	WinDir, // Shared configuration files (Read and Write)
 	ProgramFilesDir,
 	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
-	MyDocuments, // User documnets (Read and Write)
 //	HomeDir, // User documnets (Read and Write)
 	ApplicationDataDir, // Application Data
 	CommonTempDir, TempDir: string;
@@ -178,12 +178,6 @@ function ReadStringFromFile(const FileName: TFileName; out Data: string): BG; ov
 function ReadStringFromFile(const FileName: TFileName): string; overload;
 function WriteStringToFile(const FileName: TFileName; const Data: string; const Append: BG): BG;
 
-{ TODO:
-	MapViewOfFile
-	OpenFileMapping
-	CreateFileMapping
-}
-
 {$IFDEF WIN32}
 function ShortToLongFileName(const ShortName: string): string;
 function ShortToLongPath(ShortName: string): string;
@@ -205,25 +199,26 @@ function FileExistsEx(const FileName: TFileName): BG;
 function FileOrDirExists(const FileOrDirName: string): BG;
 function FileOrDirExistsEx(const FileOrDirName: string): BG;
 function LastLineFromFile(const FileName: TFileName): string;
+function SameFileName(const FileName1, FileName2: TFileName): BG;
 
 implementation
 
 uses
 	Math,
 	uMsg, uProjectInfo,
-	uOutputFormat, uMath, uLog, uReg;
+	uOutputFormat, uMath, uLog;
 
 constructor TFile.Create;
 begin
 	inherited Create;
-	HFile := INVALID_HANDLE_VALUE;
+	FHandle := INVALID_HANDLE_VALUE;
 end;
 
 destructor TFile.Destroy;
 begin
 	if IsOpened then
 	begin
-		Warning('Forcing close of file %1.', FTempFileName);
+		Warning('Forcing close of file %1.', [FTempFileName]);
 		Close(True, True);
 	end;
 	inherited Destroy;
@@ -241,7 +236,7 @@ end;
 
 function TFile.IsOpened: BG;
 begin
-	Result := HFile <> INVALID_HANDLE_VALUE;
+	Result := FHandle <> INVALID_HANDLE_VALUE;
 end;
 
 {
@@ -264,7 +259,7 @@ begin
 
 	if IsOpened then
 	begin
-		Warning('Forcing close file %1.', FileName);
+		Warning('Forcing close file %1.', [FileName]);
 		Close;
 	end;
 
@@ -278,7 +273,7 @@ begin
 
 	if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) then
 	begin
-		FTempFileName := TempDir + ExtractFileName(FileName);
+		FTempFileName := TempDir + '~' + ExtractFileName(FileName);
 		if FileExists(FTempFileName) then
 		begin
 			DeleteFileEx(FTempFileName);
@@ -319,7 +314,7 @@ begin
 		CreationDistribution := OPEN_EXISTING;
 
 	Flags := Flags and (not FILE_FLAG_OVERLAPPED);
-	HFile := CreateFile(
+	FHandle := CreateFile(
 		PChar(FTempFileName), // pointer to name of the file
 		DesiredAccess,  // access (read-write) mode
 		ShareMode,  // share mode
@@ -343,12 +338,12 @@ begin
 	Result := True;
 end;
 
-function HandleFileSize(HFile: THandle): S8;
+function HandleFileSize(FHandle: THandle): S8;
 label LRetry;
 var ErrorCode: U4;
 begin
 	LRetry:
-	TU8(Result).D0 := GetFileSize(HFile, @TU8(Result).D1);
+	TU8(Result).D0 := GetFileSize(FHandle, @TU8(Result).D1);
 
 	if TU8(Result).D0 = $FFFFFFFF then
 	begin
@@ -363,20 +358,20 @@ end;
 
 function TFile.GetFileSize(var Size: U8): BG;
 begin
-	Size :=  HandleFileSize(HFile);
+	Size :=  HandleFileSize(FHandle);
 	Result := Size >= 0;
 end;
 
 function GetFileDateTime(const FileName: TFileName; var CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 label LRetry;
 var
-	HFile: THANDLE;
+	FHandle: THANDLE;
 begin
 	Result := False;
 	U8(CreationTime) := 0;
 	U8(LastAccessTime) := 0;
 	U8(LastWriteTime) := 0;
-	HFile := CreateFile(
+	FHandle := CreateFile(
 		PChar(FileName),  // pointer to name of the file
 		0,  // access (read-write) mode
 		FILE_SHARE_READ or FILE_SHARE_WRITE,  // share mode
@@ -385,10 +380,10 @@ begin
 		FILE_ATTRIBUTE_NORMAL,  // file attributes
 		0   // handle to file with attributes to copy
 	);
-	if HFile <> INVALID_HANDLE_VALUE then
+	if FHandle <> INVALID_HANDLE_VALUE then
 	begin
-		Result := GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
-		if CloseHandle(HFile) = False then
+		Result := GetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime);
+		if CloseHandle(FHandle) = False then
 		begin
 			IOError(FileName, GetLastError);
 		end;
@@ -406,7 +401,7 @@ begin
 	LRetry:
 	Result := False;
 	if SetFilePointer(
-		HFile,  // handle of file
+		FHandle,  // handle of file
 		TU8(Pos).D0, // number of bytes to move file pointer
 		@TU8(Pos).D1,  // address of high-order word of distance to move
 		FILE_BEGIN    // how to move
@@ -444,7 +439,7 @@ var
 	ErrorCode: U4;
 begin
 	LRetry:
-	if ReadFile(HFile, Buf, Count, Suc, nil) then
+	if ReadFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
 		Inc(ReadCount);
@@ -483,7 +478,7 @@ var
 	ErrorCode: U4;
 begin
 	LRetry:
-	if WriteFile(HFile, Buf, Count, Suc, nil) then
+	if WriteFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
 		Inc(WriteCount);
@@ -625,7 +620,7 @@ begin
 	Result := False;
 	if not IsOpened then
 	begin
-		Warning('Trying re-close file %1.', FTempFileName);
+		Warning('Cannot again close file %1.', [FTempFileName]);
 		Exit;
 	end;
 	MainLogAdd('Closing ' + FTempFileName, mtDebug);
@@ -635,14 +630,14 @@ begin
 	if ChangeDate then
 		if FMode <> fmReadOnly then
 		begin
-			if GetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime) then
+			if GetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime) then
 			begin
 				GetSystemTimeAsFileTime(LastWriteTime);
-				SetFileTime(HFile, @CreationTime, @LastAccessTime, @LastWriteTime);
+				SetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime);
 			end;
 		end;
 
-	if CloseHandle(HFile) then
+	if CloseHandle(FHandle) then
 	begin
 		if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) and (Forced = False) then
 		begin
@@ -668,7 +663,7 @@ begin
 		else
 			Result := True;
 	end;
-	HFile := INVALID_HANDLE_VALUE;
+	FHandle := INVALID_HANDLE_VALUE;
 end;
 
 function TFile.Truncate: BG;
@@ -676,7 +671,7 @@ label LRetry;
 var ErrorCode: U4;
 begin
 	LRetry:
-	Result := SetEndOfFile(HFile);
+	Result := SetEndOfFile(FHandle);
 	if Result then
 	begin
 		FFileSize := FFilePos;
@@ -693,7 +688,7 @@ label LRetry;
 var ErrorCode: U4;
 begin
 	LRetry:
-	Result := Windows.FlushFileBuffers(HFile);
+	Result := Windows.FlushFileBuffers(FHandle);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
@@ -711,7 +706,7 @@ label LRetry;
 var ErrorCode: U4;
 begin
 	LRetry:
-	Result := LockFile(HFile, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
+	Result := LockFile(FHandle, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
@@ -724,7 +719,7 @@ label LRetry;
 var ErrorCode: U4;
 begin
 	LRetry:
-	Result := UnLockFile(HFile, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
+	Result := UnLockFile(FHandle, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
@@ -808,8 +803,6 @@ begin
 
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
 //	CorrectDir(DocsDir);
-	MyDocuments := ShellFolder('Personal');
-	CorrectDir(MyDocuments);
 
 	MainIniFileName := WorkDir + GetProjectInfo(piInternalName) + '.ini';
 	if not FileExists(MainIniFileName) then
@@ -1000,8 +993,8 @@ var
 			Read: BG;
 			i: SG;
 		begin
-			// faReadOnly or faHidden or faSysFile or faArchive or faDirectory
-			ErrorCode := FindFirst(Path + SubPath + '*.*', faAnyFile, SearchRec);
+			// faReadOnly or faHidden or faSysFile or
+			ErrorCode := FindFirst(Path + SubPath + '*.*', faArchive or faReadOnly or faDirectory{faAnyFile}, SearchRec);
 			while ErrorCode = NO_ERROR do
 			begin
 				IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
@@ -1018,7 +1011,7 @@ var
 						Read := False;
 						for i := 0 to Length(Extensions) - 1 do
 						begin
-							if UpperCase(ExtractFileExt(SearchRec.Name)) = '.' + UpperCase(Extensions[i]) then
+							if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
 							begin
 								Read := True;
 								Break;
@@ -1096,10 +1089,10 @@ end;
 
 function GetFileSizeU(const FileName: TFileName): S8;
 var
-	HFile: THandle;
+	FHandle: THandle;
 begin
 	Result := -1;
-	HFile := CreateFile(
+	FHandle := CreateFile(
 		PChar(FileName),  // pointer to name of the file
 		0,  // access (read-write) mode
 		0,  // share mode
@@ -1108,10 +1101,10 @@ begin
 		FILE_ATTRIBUTE_NORMAL,  // file attributes
 		0 // handle to file with attributes to copy
 	);
-	if HFile <> INVALID_HANDLE_VALUE then
+	if FHandle <> INVALID_HANDLE_VALUE then
 	begin
-		Result := HandleFileSize(HFile);
-		if CloseHandle(HFile) = False then
+		Result := HandleFileSize(FHandle);
+		if CloseHandle(FHandle) = False then
 		begin
 			IOError(FileName, GetLastError);
 		end;
@@ -1168,10 +1161,10 @@ begin
 	try
 		if F.Open(FileName, fmReadAndWrite) then
 		begin
-			Result := GetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @ALastWriteTime);
+			Result := GetFileTime(F.FHandle, @ACreationTime, @ALastAccessTime, @ALastWriteTime);
 			if Result then
 			begin
-				Result := SetFileTime(F.HFile, @ACreationTime, @ALastAccessTime, @LastWriteTime);
+				Result := SetFileTime(F.FHandle, @ACreationTime, @ALastAccessTime, @LastWriteTime);
 				if Result = False then
 					IOError(FileName, GetLastError);
 			end
@@ -1211,7 +1204,7 @@ begin
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCodeToStr(ErrorCode) + LineSep + Source + LineSep + Dest) then goto LRetry;
+		if ErrorRetry(ErrorCodeToStr(ErrorCode) + LineSep + 'During copying file ' + LineSep + Source + LineSep + 'to' + LineSep + Dest) then goto LRetry;
 	end;
 end;
 
@@ -1790,7 +1783,7 @@ begin
 	Dialog.InitialDir := RepairDirectory(ExtractFilePath(FileName));
 	Result := Dialog.Execute;
 	if Result then
-		FileName := ShortDir(Dialog.FileName);
+		FileName := {ShortDir(}Dialog.FileName{)};
 end;
 {$endif}
 
@@ -1891,9 +1884,9 @@ begin
 			s1 := s1 + {'*.' +} Ext[i] + ', ';
 			s2 := s2 + '*.' + Ext[i] + ';';
 		end;
-		DelLastChar(s1);
+		s1 := DelLastChar(s1);
 		s1[Length(s1)] := ')';
-		DelLastChar(s2);
+		s2 := DelLastChar(s2);
 		Result := 'Any (' + s1 + '|' + s2 + '|';
 	end
 	else
@@ -1902,13 +1895,13 @@ begin
 	begin
 		Result := Result + Des[i] + ' (*.' + Ext[i] + ')|*.' + Ext[i] + '|';
 	end;
-	DelLastChar(Result);
+//	Result := DelLastChar(Result);
 	Result := Result + AllFiles;
 end;
 
 function FileExistsEx(const FileName: TFileName): BG;
 begin
-	Result := FileExists(RemoveEV(FileName));
+	Result := FileExists(ExpandDir(FileName));
 end;
 {
 function DirectoryExists(const Directory: string): BG;
@@ -1921,7 +1914,7 @@ end;}
 
 function DirectoryExistsEx(const DirName: TFileName): BG;
 begin
-	Result := DirectoryExists(RemoveEV(DirName));
+	Result := DirectoryExists(ExpandDir(DirName));
 end;
 
 function FileOrDirExists(const FileOrDirName: string): BG;
@@ -1977,6 +1970,11 @@ begin
 	finally
 		F.Free;
 	end;
+end;
+
+function SameFileName(const FileName1, FileName2: TFileName): BG;
+begin
+	Result := ShortToLongPath(FileName1) = ShortToLongPath(FileName2);
 end;
 
 initialization

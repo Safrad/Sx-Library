@@ -1,7 +1,7 @@
 //* File:     Lib\uDatas.pas
 //* Created:  2006-12-26
-//* Modified: 2007-03-11
-//* Version:  1.1.37.8
+//* Modified: 2007-08-20
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -20,6 +20,7 @@ type
 		procedure SetIndex(const Value: SG);
 	public
 		constructor Create;
+		function GetActive: Pointer;
 		procedure BeginUpdate;
 		procedure EndUpdate;
 		property ItemAddr: Pointer read FItemAddr write FItemAddr;
@@ -60,6 +61,14 @@ begin
 			Move(Pointer(UG(GetFirst) + UG(FIndex) * ItemMemSize)^, ItemAddr^, ItemSize)
 		else
 			FillChar(ItemAddr^, ItemSize, 0);
+end;
+
+function TDatas.GetActive: Pointer;
+begin
+	if (FIndex >= 0) and (FIndex < Count) then
+		Result := Items[FIndex]
+	else
+		Result := nil
 end;
 
 end.

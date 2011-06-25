@@ -1,7 +1,7 @@
 //* File:     Lib\uWave.pas
 //* Created:  1999-07-01
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-11-26
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -297,7 +297,7 @@ implementation
 
 uses
 	Registry,
-	uFiles, uMsg, uStrings, uOutputFormat;
+	uFiles, uMsg, uStrings, uOutputFormat, uLog;
 
 // Wave
 procedure Beep;
@@ -710,6 +710,7 @@ begin
 {	WaveReadFromFile(Wave, WaveName);
 	PlayWave(Wave);
 	FreeMem(Wave);}
+	MainLogAdd('Play sound ' + WaveName, mtDebug);
 	if WaveName <> '' then
 		PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME});
 end;
@@ -719,6 +720,7 @@ var
 	Reg: TRegistry;
 	Key: string;
 begin
+	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound], mtDebug);
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;

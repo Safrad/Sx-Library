@@ -1,7 +1,7 @@
 //* File:     Lib\Parser\uNamespace.pas
 //* Created:  2004-03-07
 //* Modified: 2007-05-12
-//* Version:  1.1.37.8
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

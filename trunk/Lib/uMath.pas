@@ -1,7 +1,7 @@
 //* File:     Lib\uMath.pas
 //* Created:  1998-01-01
-//* Modified: 2007-05-12
-//* Version:  1.1.37.8
+//* Modified: 2007-11-27
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -104,7 +104,7 @@ procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
 var
-	PerformanceType: U1;
+	PerformanceType: (ptGetTickCount, ptPerformanceCounter, ptCPU);
 	PerformanceFrequency: U8;
 
 procedure InitPerformanceCounter;
@@ -1006,16 +1006,16 @@ procedure InitPerformanceCounter;
 begin
 	if QueryPerformanceFrequency(PerformanceFrequency) then
 	begin
-		PerformanceType := 1;
+		PerformanceType := ptPerformanceCounter;
 		if PerformanceFrequency < 1000 then
 		begin
-			PerformanceType := 0;
+			PerformanceType := ptGetTickCount;
 			PerformanceFrequency := 1000;
 		end;
 	end
 	else
 	begin
-		PerformanceType := 0;
+		PerformanceType := ptGetTickCount;
 		PerformanceFrequency := 1000;
 	end;
 end;
@@ -1033,9 +1033,9 @@ end;
 function PerformanceCounter: U8;
 begin
 	case PerformanceType of
-	0: Result := GetTickCount;
-	1: QueryPerformanceCounter(Result);
-	else Result := GetCPUCounter.A;
+	ptGetTickCount: Result := GetTickCount;
+	ptPerformanceCounter: QueryPerformanceCounter(Result);
+	{ptCPU}else Result := GetCPUCounter.A;
 	end;
 end;
 

@@ -1,7 +1,7 @@
 //* File:     Lib\uLog.pas
 //* Created:  2006-05-03
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-10-28
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -30,13 +30,13 @@ type
 		property FileName: TFileName read FFileName;
 		constructor Create(const FileName: TFileName; const LogLevel: TMsgType = DefaultLoggingLevel; const DirectWrite: BG= True);
 		destructor Destroy; override;
-		procedure Add(const Line: string; const LogType: TMsgType = DefaultLoggingLevel; const FileBuffers: BG = False);
+		procedure Add(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
 		procedure Flush;
 		property LoggingLevel: TMsgType read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
 	end;
 
 // Add startup parameter -LogDebug for all debuging information
-	procedure MainLogAdd(const Line: string; const LogType: TMsgType = DefaultLoggingLevel; const FileBuffers: BG = False);
+	procedure MainLogAdd(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
 	procedure InitializeLog;
 
 var
@@ -46,7 +46,7 @@ implementation
 
 uses
 	uParams,
-	uOutputFormat, uEscape, uStrings, uProjectInfo,
+	uOutputFormat, uEscape, uStrings, {$ifndef Console}uProjectInfo,{$endif}
 	Windows, TypInfo;
 
 procedure TLog.WriteLine(const Line: string; const FileBuffers: BG = False);
@@ -104,7 +104,7 @@ begin
 
 	if FFile.FileSize = 0 then
 		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
-	Add('Started Version ' + GetProjectInfo(piFileVersion), mtInformation, True);
+	Add('Started'{$ifndef Console} + ' Version ' + GetProjectInfo(piFileVersion){$endif}, mtInformation, True);
 end;
 
 destructor TLog.Destroy;
@@ -120,7 +120,7 @@ begin
 	inherited;
 end;
 
-procedure TLog.Add(const Line: string; const LogType: TMsgType = DefaultLoggingLevel; const FileBuffers: BG = False);
+procedure TLog.Add(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
 begin
 	Assert(LogType <> mtNone);
 	if LogType >= FLoggingLevel then
@@ -176,7 +176,7 @@ begin
 	end;
 end;
 
-procedure MainLogAdd(const Line: string; const LogType: TMsgType = DefaultLoggingLevel; const FileBuffers: BG = False);
+procedure MainLogAdd(const Line: string; const LogType: TMsgType; const FileBuffers: BG = False);
 begin
 	if Assigned(MainLog) then
 		MainLog.Add(Line, LogType, FileBuffers);
@@ -196,7 +196,7 @@ var
 	LineIndex, InLineIndex: SG;
 begin
 	CreateDirEx(ExtractFilePath(MainLogFileName));
-	OldFileName := WorkDir + GetProjectInfo(piInternalName) + '.log';
+	OldFileName := WorkDir + {$ifndef Console}GetProjectInfo(piInternalName){$else}''{$endif} + '.log';
 	if FileExists(OldFileName) then
 	begin
 		// Convert Old Format

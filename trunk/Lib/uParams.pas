@@ -1,7 +1,7 @@
 //* File:     Lib\uParams.pas
 //* Created:  2006-02-04
-//* Modified: 2007-05-27
-//* Version:  1.1.37.8
+//* Modified: 2007-08-19
+//* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -133,7 +133,7 @@ begin
 			if (not FileExists(ParamFile)) and (not DirectoryExists(ParamFile)) then
 			begin
 				Warning(//'Illegal "%1" command line parameter.', Param
-					'Command line file %1 not found.', ParamFile);
+					'Command line file %1 not found.', [ParamFile]);
 				Exit;
 			end
 			else
@@ -157,7 +157,7 @@ begin
 		end
 		else
 		begin
-			Warning('Illegal %1 command line parameter.', Param);
+			Warning('Illegal %1 command line parameter.', [Param]);
 			Exit;
 		end;
 	end;
