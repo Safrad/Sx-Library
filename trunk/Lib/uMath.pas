@@ -56,6 +56,7 @@ function RoundDivU8(const Dividend: U8; const Divisor: U8): S8; //overload;
 function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
+function RandomDiv(const Dividend: SG; const Divisor: SG): SG;
 
 function Range(const Min, Cur, Max: SG): SG; overload;
 function Range(const Min, Cur, Max, Def: SG): SG; overload;
@@ -120,6 +121,8 @@ function CalcShr(N: U4): S1;
 function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
 function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
 function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
+
+function BitsToByte(const Bits: S8): S4;
 
 implementation
 
@@ -502,6 +505,26 @@ begin
 		Result := (Dividend - Divisor + 1) div Divisor
 	else
 		Result := (Dividend + Divisor - 1) div Divisor;
+end;
+
+function RandomDiv(const Dividend: SG; const Divisor: SG): SG;
+// 0 div 4 is 0
+// 1 div 4 is 0 in 75%, 1 in 25%
+// 2 div 4 is 0 in 50%, 1 in 50%
+// 3 div 4 is 0 in 25%, 1 in 75%
+begin
+	{$ifopt d+}
+	if Divisor = 0 then
+	begin
+		Assert(False);
+		Result := 0;
+		Exit;
+	end;
+	{$endif}
+	if Dividend < 0 then
+		Result := (Dividend - Random(Divisor)) div Divisor
+	else
+		Result := (Dividend + Random(Divisor)) div Divisor;
 end;
 
 function Range(const Min, Cur, Max: SG): SG;
@@ -1310,6 +1333,11 @@ begin
 			Result := True;
 		end;
 	end;
+end;
+
+function BitsToByte(const Bits: S8): S4;
+begin
+	Result := (Bits + 7) shr 3;
 end;
 
 initialization

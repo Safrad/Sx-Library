@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSysInfo.pas
 //* Created:  2000-07-01
 //* Modified: 2007-11-27
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -518,7 +518,7 @@ begin
 	Family := SysInfo.CPU and $00000f00 shr 8;
 	Model := SysInfo.CPU and $000000f0 shr 4;
 
-	s := '';
+	s := 'Unknown';
 	if SysInfo.CPUStr = 'AuthenticAMD' then
 	begin
 		case Family of
@@ -570,14 +570,21 @@ begin
 			6: s := 'Celeron';
 			7: s := 'Pentium III';
 			8: s := 'Pentium III E';
-			else s := 'Pentium 4';
+			9..14: s := 'Pentium 4';
+			else // 15
+				s := 'Dual Core';
+			end;
+		end;
+		15:
+		begin
+			case Model of
+			0..5: s := 'Pentium 4';
+			else // 6
+			 s := 'Pentium(R) D CPU'; 
 			end;
 		end
-		else // 15
-			s := 'Pentium 4';
 		end;
-		if  s <> '' then s := ' ' + s;
-		s := 'Intel' + s;
+		s := 'Intel ' + s;
 	end
 	else if SysInfo.CPUStr = 'CyrixInstead' then
 		s := 'Cyrix '

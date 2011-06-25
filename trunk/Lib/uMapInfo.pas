@@ -1,7 +1,7 @@
 //* File:     Lib\uMapInfo.pas
 //* Created:  1998-01-01
 //* Modified: 2007-04-21
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -43,7 +43,7 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uFiles, uStrings, uMath;
+	uFile, uFiles, uStrings, uMath;
 
 const
 	Delimiter = ',';

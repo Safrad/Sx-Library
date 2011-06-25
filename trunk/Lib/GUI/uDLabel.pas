@@ -313,7 +313,7 @@ begin
 		Co[2] := Co[0];
 		Co[3] := Co[1];
 		Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
-			gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+			gfFade2x, Co, ef16, 0, nil);
 //			FBmpOut.FormBitmap(Color);
 		{$else}
 		Bitmap.Bar(Recta, Color, ef16);

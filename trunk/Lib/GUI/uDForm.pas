@@ -308,6 +308,8 @@ begin
 end;}
 
 procedure TDForm.Common(Value: Boolean);
+const
+	FullScreenMode: TScreenMode = (Width: 640; Height: 480; Bits: 32; RefreshRate: 0);
 var
 	Style: S4;
 begin
@@ -318,7 +320,7 @@ begin
 		if FChangeMode then
 		begin
 			ReadScreenModes;
-			SetScreenMode(640, 480, 32, 0, False, False, False, False, True);
+			SetScreenMode(FullScreenMode, False, False, False, False, True);
 		end;
 		Style := GetWindowLong(Handle, GWL_STYLE);
 		Style := Style and not WS_CAPTION;

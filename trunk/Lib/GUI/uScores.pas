@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uScores.pas
 //* Created:  2000-10-01
 //* Modified: 2007-12-29
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -41,7 +41,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uOutputFormat, uFiles, uDIniFile, uDBitmap, uGraph, uScreen, uGetStr, uColor;
+	uOutputFormat, uFile, uDIniFile, uDBitmap, uGraph, uScreen, uGetStr, uColor;
 
 var
 	fScores: TfScores;

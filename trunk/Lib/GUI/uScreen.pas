@@ -27,18 +27,18 @@ type
 	end;
 
 	TRefreshRateList = array of UG;
-	TScreenMode = packed record // 32
+	TScreenMode = packed record // 16
+		Width,
+		Height, Bits: UG; // 12
+		RefreshRate: UG; // 4
+	end;
+	TScreenModeEx = packed record // 32
 		Width,
 		Height, Bits: UG; // 12
 		RefreshRate: UG; // 4
 		RefreshRateList: TRefreshRateList; // 4
 		RefreshRateListCount: Integer; // 4
 		Reserved: array[0..1] of Integer; // 8
-	end;
-	TScreenModeS = packed record // 16
-		Width,
-		Height, Bits: UG; // 12
-		RefreshRate: UG; // 4
 	end;
 
 function GetVF(Height, HF: UG): UG; // Hz
@@ -48,40 +48,33 @@ function GetPixelRate(const Width, HF: UG): UG; // MHz
 function GetVideoMemory(const Width, Height, Bits: UG): UG; // Bytes
 function ScreenModeToStr(const Width, Height: UG): string; overload;
 function ScreenModeToStr(const Width, Height, Bits: UG): string; overload;
-function ScreenModeToStr(const Width, Height, Bits, VF: UG): string; overload;
+function ScreenModeToStr(const ScreenMode: TScreenMode): string; overload;
 
 procedure ReadScreenModes;
 procedure ReadNowMode;
 function RateListToStr(RefreshRateList: TRefreshRateList; RefreshRateListCount: Integer): string;
 function CorrectWidth(Width: UG): UG;
 function CorrectHeight(Height: UG): UG;
-procedure AddLastMode(Width, Height, Bits, RefreshRate: UG);
+procedure AddLastMode(const ScreenMode: TScreenMode);
 
 
-function SetScreenMode(Width, Height, Bits, RefreshRate: UG;
+function SetScreenMode(const ScreenMode: TScreenMode;
 	const Test, UpdateRegistry, Confirm, CanCreate, SaveLast: Boolean): Boolean;
 procedure SetSafeMode;
 function RestoreStartMode: Boolean;
 procedure FillRefreshRates(Index, VF: UG);
 function DeleteScreenMode(Width, Height, Bits: UG): Boolean;
-procedure InitScreenCorectColor;
 
-{
-const
-	LightSpeed = 299792458; // m/s
-	LightLMin = 390; // nm
-	LightLMax = 760; // nm
-}
 var
-	StartWidth, StartHeight, StartBits, StartRefreshRate: UG;
-	NowWidth, NowHeight, NowBits, NowRefreshRate: UG;
-	LastModes: array of TScreenModeS;
+	StartScreenMode: TScreenMode;
+	NowScreenMode: TScreenMode;
+	LastModes: array of TScreenMode;
 	LastModeCount, LastModeIndex: Integer;
 
 	DriverDesc, DriverDate: string;
 	DriverNames: array of string;
 	DriverNameCount: SG;
-	ScreenModes: array of TScreenMode;
+	ScreenModes: array of TScreenModeEx;
 	EnabledBits: array of U4; // 4, 8, 15, 16, 24, 32
 	EnabledBitsCount: SG;
 
@@ -91,7 +84,7 @@ var
 
 	ScreenModeIndex: Integer;
 	ScreenModeCount: Integer;
-	ScreenCorrectColor: TColor;
+//	ScreenCorrectColor: TColor;
 
 	ActualDriver: Integer;
 
@@ -187,10 +180,18 @@ begin
 	if Bits <> 0 then Result := Result + CharTimes + NToS(Bits) + ' bit';
 end;
 
-function ScreenModeToStr(const Width, Height, Bits, VF: UG): string;
+function ScreenModeToStr(const ScreenMode: TScreenMode): string; overload;
 begin
-	Result := ScreenModeToStr(Width, Height, Bits);
-	if VF <> 0 then Result := Result + '/' + NToS(VF) + ' Hz';
+	Result := ScreenModeToStr(ScreenMode.Width, ScreenMode.Height, ScreenMode.Bits);
+	if ScreenMode.RefreshRate <> 0 then
+		Result := Result + '/' + NToS(ScreenMode.RefreshRate) + ' Hz';
+end;
+
+function ScreenModeToStr(const ScreenMode: TScreenModeEx): string; overload;
+begin
+	Result := ScreenModeToStr(ScreenMode.Width, ScreenMode.Height, ScreenMode.Bits);
+	if ScreenMode.RefreshRate <> 0 then
+		Result := Result + '/' + NToS(ScreenMode.RefreshRate) + ' Hz';
 end;
 
 procedure AddMode(Width, Height, Bits: UG);
@@ -283,15 +284,15 @@ begin
 	AddMode(DeviceMode.dmPelsWidth, DeviceMode.dmPelsHeight, DeviceMode.dmBitsPerPel);
 end;
 
-procedure InitNowScreen;
+function GetNowScreenMode(): TScreenMode;
 var
 	DeskDC: HDC;
 begin
 	DeskDC := GetDC(0);
 	try
-		NowBits := GetDeviceCaps(DeskDC, BITSPIXEL);
-		NowWidth := GetSystemMetrics(SM_CXSCREEN);
-		NowHeight := GetSystemMetrics(SM_CYSCREEN);
+		Result.Bits := GetDeviceCaps(DeskDC, BITSPIXEL);
+		Result.Width := GetSystemMetrics(SM_CXSCREEN);
+		Result.Height := GetSystemMetrics(SM_CYSCREEN);
 	finally
 		ReleaseDC(0, DeskDC);
 	end;
@@ -391,7 +392,7 @@ begin
 	begin
 		if MainIni <> nil then
 			ActualDriver := MainIni.RWSGF('Monitor', 'ActualDriver', ActualDriver, -1, False);
-		if (ActualDriver = -1) then
+		if (ActualDriver = -1) and (DriverNameCount > 1) then
 		begin
 			fScreen := TfScreen.Create(nil);
 			fScreen.ComboBoxDriver.Items.Clear;
@@ -424,10 +425,10 @@ begin
 	end;
 
 	// For Check Only
-	InitNowScreen;
-	DeviceMode.dmPelsWidth := NowWidth;
-	DeviceMode.dmPelsHeight := NowHeight;
-	DeviceMode.dmBitsPerPel := NowBits;
+	NowScreenMode := GetNowScreenMode();
+	DeviceMode.dmPelsWidth := NowScreenMode.Width;
+	DeviceMode.dmPelsHeight := NowScreenMode.Height;
+	DeviceMode.dmBitsPerPel := NowScreenMode.Bits;
 	TryToAddToList(DeviceMode);
 
 	// Read RefreshRates
@@ -436,7 +437,7 @@ begin
 	MinHF := MaxInt;
 	MaxHF := 0;
 	MinPixelRate := MaxInt;
-	MaxPixelRate := 0;     
+	MaxPixelRate := 0;
 	MinMemory := MaxInt;
 	MaxMemory := 0;
 	Reg := TRegistry.Create;
@@ -548,10 +549,7 @@ begin
 	ReadNowMode;
 	if NotFirstTime = False then
 	begin
-		StartWidth := NowWidth;
-		StartHeight := NowHeight;
-		StartBits := NowBits;
-		StartRefreshRate := NowRefreshRate;
+		StartScreenMode := NowScreenMode;
 		NotFirstTime := True;
 	end;
 	EndLongOperation(False);
@@ -569,30 +567,31 @@ procedure ReadNowMode;
 var
 	i: Integer;
 begin
-	InitNowScreen;
+	NowScreenMode := GetNowScreenMode();
 
 	ScreenModeIndex := 0;
 	for i := 0 to ScreenModeCount - 1 do
 	begin
-		if (ScreenModes[i].Width = NowWidth)
-		and (ScreenModes[i].Height = NowHeight)
-		and (ScreenModes[i].Bits = NowBits)
+		if (ScreenModes[i].Width = NowScreenMode.Width)
+		and (ScreenModes[i].Height = NowScreenMode.Height)
+		and (ScreenModes[i].Bits = NowScreenMode.Bits)
 		then
 		begin
-			NowRefreshRate := ScreenModes[i].RefreshRate;
+			NowScreenMode.RefreshRate := ScreenModes[i].RefreshRate;
 			ScreenModeIndex := i;
 		end;
 	end;
 end;
 
 procedure SetSafeMode;
+var
+	ScreenMode: TScreenMode;
 begin
-	SetScreenMode(
-		800,
-		600,
-		16,
-		SafeVF,
-		False, True, False, True, True);
+	ScreenMode.Width := 800;
+	ScreenMode.Height := 600;
+	ScreenMode.Bits := 16;
+	ScreenMode.RefreshRate := SafeVF;
+	SetScreenMode(ScreenMode, False, True, False, True, True);
 end;
 
 function RestoreStartMode: Boolean;
@@ -600,7 +599,7 @@ function RestoreStartMode: Boolean;
 begin
 	// Since the first parameter must be a var, we cannot use nil directly. Instead
 	//  we use a variable with an absolute address of 0.
-	Result := SetScreenMode(StartWidth, StartHeight, StartBits, StartRefreshRate, False, True, False, True, True);
+	Result := SetScreenMode(StartScreenMode, False, True, False, True, True);
 	{ SelfChange := True;
 	Result := ChangeDisplaySettings(DeviceMode, CDS_FULLSCREEN) = DISP_CHANGE_SUCCESSFUL;
 	SelfChange := False;}
@@ -669,10 +668,9 @@ procedure CorrectWidthHeight(var Width, Height: UG);
 begin
 	Width := CorrectWidth(Width);
 	Height := CorrectHeight(Height);
-
 end;
 
-procedure AddLastMode(Width, Height, Bits, RefreshRate: UG);
+procedure AddLastMode(const ScreenMode: TScreenMode);
 var NewSize: SG;
 begin
 	Inc(LastModeIndex);
@@ -680,13 +678,10 @@ begin
 	NewSize := LastModeCount;
 	if AllocByExp(Length(LastModes), NewSize) then
 		SetLength(LastModes, NewSize);
-	LastModes[LastModeIndex].Width := Width;
-	LastModes[LastModeIndex].Height := Height;
-	LastModes[LastModeIndex].Bits := Bits;
-	LastModes[LastModeIndex].RefreshRate := RefreshRate;
+	LastModes[LastModeIndex] := ScreenMode;
 end;
 
-function SetScreenMode(Width, Height, Bits, RefreshRate: UG;
+function SetScreenMode(const ScreenMode: TScreenMode;
 	const Test, UpdateRegistry, Confirm, CanCreate, SaveLast: Boolean): Boolean;
 var
 	BestMode, ModeIndex: SG;
@@ -724,20 +719,20 @@ var
 		ModeIndex := BestMode;
 	end;
 begin
-	SetWidth := Width;
-	SetHeight := Height;
+	SetWidth := ScreenMode.Width;
+	SetHeight := ScreenMode.Height;
 	CorrectWidthHeight(SetWidth, SetHeight);
 
 	SetBits := EnabledBits[EnabledBitsCount - 1];
-	if Bits <> 0 then
+	if ScreenMode.Bits <> 0 then
 	begin
 		BestDif := MaxInt;
 		for i := 0 to EnabledBitsCount - 1 do
 		begin
-			if EnabledBits[i] >= Bits then
-				NowDif := EnabledBits[i] - Bits
+			if EnabledBits[i] >= ScreenMode.Bits then
+				NowDif := EnabledBits[i] - ScreenMode.Bits
 			else
-				NowDif := 4 * (Bits - EnabledBits[i]);
+				NowDif := 4 * (ScreenMode.Bits - EnabledBits[i]);
 			if NowDif < BestDif then
 			begin
 				SetBits := EnabledBits[i];
@@ -749,10 +744,10 @@ begin
 	FindMode;
 
 	VF := GetVF(SetHeight, UserMaxHF);
-	if RefreshRate = 0 then
+	if ScreenMode.RefreshRate = 0 then
 		SetRefreshRate := ScreenModes[ModeIndex].RefreshRate
 	else
-		SetRefreshRate := RefreshRate;
+		SetRefreshRate := ScreenMode.RefreshRate;
 	if SetRefreshRate < WorstVF then
 		SetRefreshRate := WorstVF
 	else if SetRefreshRate > VF then
@@ -813,7 +808,7 @@ begin
 			begin
 				AddMode(SetWidth, SetHeight, SetBits);
 				FindMode;
-				FillRefreshRates(ModeIndex, RefreshRate);
+				FillRefreshRates(ModeIndex, ScreenMode.RefreshRate);
 			end;
 			Reg.CloseKey;
 		finally
@@ -824,15 +819,15 @@ begin
 	Result := True;
 	if Test = False then
 	begin
-		if ((Width <> 0) and (ScreenModes[ModeIndex].Width <> Width))
-		or ((Height <> 0) and (ScreenModes[ModeIndex].Height <> Height))
-		or ((Bits <> 0) and (ScreenModes[ModeIndex].Bits <> Bits))
-		or ((RefreshRate <> 0) and (ScreenModes[ModeIndex].RefreshRate <> RefreshRate))
-		and ((ScreenModes[ModeIndex].Bits <> 32) or (Bits <> 24))
-		and ((ScreenModes[ModeIndex].Bits <> 24) or (Bits <> 32)) then
-			ErrorMsg('Screen mode ' + ScreenModeToStr(Width, Height, Bits, RefreshRate) +
+		if ((ScreenMode.Width <> 0) and (ScreenModes[ModeIndex].Width <> ScreenMode.Width))
+		or ((ScreenMode.Height <> 0) and (ScreenModes[ModeIndex].Height <> ScreenMode.Height))
+		or ((ScreenMode.Bits <> 0) and (ScreenModes[ModeIndex].Bits <> ScreenMode.Bits))
+		or ((ScreenMode.RefreshRate <> 0) and (ScreenModes[ModeIndex].RefreshRate <> ScreenMode.RefreshRate))
+		and ((ScreenModes[ModeIndex].Bits <> 32) or (ScreenMode.Bits <> 24))
+		and ((ScreenModes[ModeIndex].Bits <> 24) or (ScreenMode.Bits <> 32)) then
+			ErrorMsg('Screen mode ' + ScreenModeToStr(ScreenMode) +
 				' can not be set, using ' +
-				ScreenModeToStr(ScreenModes[ModeIndex].Width, ScreenModes[ModeIndex].Height, ScreenModes[ModeIndex].Bits, ScreenModes[ModeIndex].RefreshRate) + '.');
+				ScreenModeToStr(ScreenModes[ModeIndex]) + '.');
 
 		DeviceMode.dmSize := SizeOf(DeviceMode);
 		DeviceMode.dmFields := DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT;
@@ -844,29 +839,9 @@ begin
 		Flags := Flags or CDS_RESET; // For VF
 		if UpdateRegistry then Flags := Flags or CDS_UPDATEREGISTRY;
 		SelfChange := False;
-{   MouseX := Mouse.CursorPos.x;
-		MouseY := Mouse.CursorPos.y;}
 		Result := ChangeDisplaySettings(DeviceMode, Flags) = DISP_CHANGE_SUCCESSFUL;
-{   mouse_event(
-			MOUSEEVENTF_MOVE or MOUSEEVENTF_ABSOLUTE,
-			0,  // horizontal mouse position or position change
-			0,  // vertical mouse position or position change
-			0,  // amount of wheel movement
-			0   // 32 bits of application-defined information
-		);
-		mouse_event(
-			MOUSEEVENTF_MOVE,
-			MouseX div 2, // horizontal mouse position or position change
-			MouseY div 2, // vertical mouse position or position change
-			0,  // amount of wheel movement
-			0   // 32 bits of application-defined information
-		);}
 		SelfChange := True;
-		s := ScreenModeToStr(
-			ScreenModes[ModeIndex].Width,
-			ScreenModes[ModeIndex].Height,
-			ScreenModes[ModeIndex].Bits,
-			ScreenModes[ModeIndex].RefreshRate);
+		s := ScreenModeToStr(ScreenModes[ModeIndex]);
 		if Result then
 		begin
 			if Confirm then
@@ -875,19 +850,17 @@ begin
 				if LastModeIndex >= 0 then
 				if Confirmation('Use mode ' + s + '?', [mbYes, mbNo]) <> mbYes then
 				begin
-					SetScreenMode(LastModes[LastModeIndex].Width, LastModes[LastModeIndex].Height,
-						LastModes[LastModeIndex].Bits, LastModes[LastModeIndex].RefreshRate,
-						False, UpdateRegistry, False, True, False);
+					SetScreenMode(LastModes[LastModeIndex], False, UpdateRegistry, False, True, False);
 					Exit;
 				end;
 			end;
 			ScreenModeIndex := ModeIndex;
-			NowWidth := ScreenModes[ScreenModeIndex].Width;
-			NowHeight := ScreenModes[ScreenModeIndex].Height;
-			NowBits := ScreenModes[ScreenModeIndex].Bits;
-			NowRefreshRate := ScreenModes[ScreenModeIndex].RefreshRate;
+			NowScreenMode.Width := ScreenModes[ScreenModeIndex].Width;
+			NowScreenMode.Height := ScreenModes[ScreenModeIndex].Height;
+			NowScreenMode.Bits := ScreenModes[ScreenModeIndex].Bits;
+			NowScreenMode.RefreshRate := ScreenModes[ScreenModeIndex].RefreshRate;
 			if (Test = False) and SaveLast then
-				AddLastMode(NowWidth, NowHeight, NowBits, NowRefreshRate);
+				AddLastMode(NowScreenMode);
 		end
 		else
 			ErrorMsg('Can not change screen mode to %1.', [s]);
@@ -1030,16 +1003,16 @@ begin
 	end;
 end;
 
-procedure InitScreenCorectColor;
+{procedure InitScreenCorectColor;
 begin
-	InitNowScreen;
+	NowScreenMode := GetNowScreenMode();
 	case NowBits of
 	1..5: ScreenCorrectColor := $001f1f1f;
 	6..11: ScreenCorrectColor := $000f0f0f;
 	12..19: ScreenCorrectColor := $00030303;
 	else ScreenCorrectColor := $00000000;
 	end;
-end;
+end;}
 
 procedure TfScreen.FormCreate(Sender: TObject);
 begin
@@ -1050,7 +1023,6 @@ initialization
 	LastModeIndex := -1;
 	ActualDriver := -1;
 	RetraceDelay := DefaultRetraceDelay;
-	InitScreenCorectColor;
 finalization
 
 end.

@@ -37,6 +37,7 @@ const
 	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
 	cDialogSuffix = '...';
 
+	EnumPrefixLength = 2;
 	FalseTrue: array[0..1] of string = ('false', 'true');
 
 var
@@ -54,7 +55,9 @@ function CharCount(const s: string; const C: Char): UG;
 function LowCase(ch: Char): Char;
 
 procedure DelChars(var s: string; const SubChar: Char);
+procedure DelStrings(var s: string; const SubChar: array of string);
 function DelCharsF(const s: string; const SubChar: Char): string;
+function DelStringsF(const s: string; const SubChar: array of string): string;
 
 procedure DelStr(var s: string; const SubStr: string);
 function DelStrF(const s: string; const SubStr: string): string;
@@ -251,10 +254,26 @@ begin
 	end;
 end;
 
+procedure DelStrings(var s: string; const SubChar: array of string);
+var
+	Empty: array of string;
+begin
+	SetLength(Empty, Length(SubChar));
+	Replace(s, SubChar, Empty);
+end;
+
 function DelCharsF(const s: string; const SubChar: Char): string;
 begin
 	Result := s;
 	DelChars(Result, SubChar);
+end;
+
+function DelStringsF(const s: string; const SubChar: array of string): string;
+var
+	Empty: array of string;
+begin
+	SetLength(Empty, Length(SubChar));
+	Result := ReplaceF(s, SubChar, Empty);
 end;
 
 procedure DelStr(var s: string; const SubStr: string);
@@ -855,8 +874,6 @@ begin
 end;
 
 procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string);
-const
-	EnumPrefixLength = 2;
 var
 	i: SG;
 	TypeData: PTypeData;

@@ -1,7 +1,7 @@
 //* File:     Lib\uInputFormat.pas
 //* Created:  2004-03-07
 //* Modified: 2007-11-25
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -100,38 +100,38 @@ var
 	s: string;
 begin
 	Parser := TDParser.Create(Line);
-	if Messages = nil then
-		Parser.Messages := TParserMessages.Create
-	else
-		Parser.Messages := Messages;
-	if UseWinFormat then
-	begin
-		Parser.DecimalSep := DecimalSeparator;
-		Parser.ThousandSep := ThousandSeparator;
-	end
-	else
-	begin
-		Parser.DecimalSep := '.';
-		Parser.ThousandSep := ',';
-	end;
-	Result := Parser.ReadFA(MinVal, DefVal, MaxVal);
-	if Messages = nil then
-	begin
-		if Parser.Messages.Messages.Count > 0 then
+	try
+		if Messages = nil then
+			Parser.Messages := TParserMessages.Create
+		else
+			Parser.Messages := Messages;
+		if UseWinFormat then
 		begin
-			s := Parser.Messages.ToString;
-			FreeAndNil(Parser.Messages);
-			Parser.Free;
-			raise EConvertError.Create(s);
+			Parser.DecimalSep := DecimalSeparator;
+			Parser.ThousandSep := ThousandSeparator;
 		end
 		else
 		begin
-			FreeAndNil(Parser.Messages);
-			Parser.Free;
+			Parser.DecimalSep := '.';
+			Parser.ThousandSep := ',';
 		end;
-	end
-	else
+		Result := Parser.ReadFA(MinVal, DefVal, MaxVal);
+		if Messages = nil then
+		begin
+			if Parser.Messages.Messages.Count > 0 then
+			begin
+				s := Parser.Messages.ToString;
+				FreeAndNil(Parser.Messages);
+				raise EConvertError.Create(s);
+			end
+			else
+			begin
+				FreeAndNil(Parser.Messages);
+			end;
+		end
+	finally
 		Parser.Free;
+	end;
 end;
 {
 function StrToValE(Line: string; const UseWinFormat: BG;

@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uSplash.pas
 //* Created:  1999-10-01
 //* Modified: 2007-05-20
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -93,12 +93,12 @@ begin
 		Co[1] := clGreen;
 		Co[2] := clBlue;
 		Co[3] := clSilver;
-		Bmp.GenerateRGB(gfTriaHorz, Co, clBlack, ef16, nil);
+		Bmp.GenerateRGB(gfTriaHorz, Co, ef16, nil);
 		Co[0] := clWhite;
 		Co[1] := clBlack;
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		Bmp.GenerateRGB(gfFade2x, Co, clBlack, ef10, nil);
+		Bmp.GenerateRGB(gfFade2x, Co, ef10, nil);
 	end;
 
 	BmpT := TDBitmap.Create;

@@ -11,7 +11,7 @@ unit uCommon;
 interface
 
 uses
-	uWatch, uDForm,
+	uTypes, uWatch, uDForm,
 	Menus;
 
 {
@@ -32,7 +32,7 @@ begin
 end.
 }
 
-procedure CommonCreate(ReloadIni: TWatchFileChanged);
+procedure CommonCreate(const ReloadIni: TWatchFileChanged; const Special: BG = False);
 procedure CommonForm(const Form: TDForm);
 procedure CommonFree;
 
@@ -41,7 +41,7 @@ procedure CommonFileMenu(const Menu: TMenu);
 implementation
 
 uses
-	uTypes, uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uMsgDlg, uMsg,
+	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uMsgDlg, uMsg,
 	uStrings,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
 
@@ -52,15 +52,19 @@ begin
 	MainIni.RWBool('Options', 'ViewSplashScreen', ViewSplashScreen, Save);
 end;
 
-procedure CommonCreate(ReloadIni: TWatchFileChanged);
+procedure CommonCreate(const ReloadIni: TWatchFileChanged; const Special: BG = False);
 begin
-	InitInstance;
-	InitializeLog;
+	if not Special then
+	begin
+		InitInstance;
+		InitializeLog;
+	end;
 	MainIniCreate;
 	WatchAddFile(MainIniFileName, ReloadIni);
 	RWCommon(False);
-	if ViewSplashScreen then
-		ShowSplashScreen;
+	if not Special then
+		if ViewSplashScreen then
+			ShowSplashScreen;
 end;
 
 procedure CommonForm(const Form: TDForm);

@@ -270,11 +270,11 @@ type
 			const Func: TGenFunc; const Clock: UG; const Effect: TEffect);}
 
 		procedure GenerateRGBEx(XD1, YD1, XD2, YD2: SG;
-			const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
+			const Func: TGenFunc; const Co: array of TColor;
 			const Effect: TEffect; const Clock: UG;
 			const InterruptProcedure: TInterruptProcedure);
 		procedure GenerateRGB(
-			const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
+			const Func: TGenFunc; const Co: array of TColor;
 			const Effect: TEffect;
 			const InterruptProcedure: TInterruptProcedure);
 		procedure FullRect;
@@ -1575,7 +1575,7 @@ begin
 
 		BmpColor := TBitmap.Create;
 		try
-			case NowBits of
+			case NowScreenMode.Bits of
 			1: BmpColor.PixelFormat := pf1bit;
 			4: BmpColor.PixelFormat := pf4bit;
 			8: BmpColor.PixelFormat := pf8bit;
@@ -1614,7 +1614,7 @@ begin
 
 				Result := TIcon.Create;
 			//	Result.Handle := CreateIconIndirect(IconInfo); // Do not support more that 4 bits!
-				Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, NowBits,
+				Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, NowScreenMode.Bits,
 					BmpMask,
 					BmpColor.ScanLine[BmpColor.Height - 1]);
 			finally
@@ -7372,6 +7372,7 @@ begin
 	StpYU := SY;
 	StpXYU := StpXU * StpYU;
 
+	// Diverse resampling algorithm.
 	LDone := High(Done);
 	ry2U := 0;
 	for Y := 0 to NewY - 1 do
@@ -7699,7 +7700,7 @@ var
 
 procedure TDBitmap.GenerateRGBEx(
 	XD1, YD1, XD2, YD2: SG;
-	const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
+	const Func: TGenFunc; const Co: array of TColor;
 	const Effect: TEffect; const Clock: UG;
 	const InterruptProcedure: TInterruptProcedure);
 var
@@ -7718,7 +7719,7 @@ var
 	C: array[0..3] of TRGBA;
 	RColor: TPixel;
 	HidedColor: TColor;
-	HidedColorR, RandEffectR: TRGBA;
+	HidedColorR: TRGBA;
 begin
 	Assert(Self <> nil);
 	if Spe = False then InitRGB;
@@ -7735,7 +7736,7 @@ begin
 		HidedColor := TransparentColor;
 
 	HidedColorR := ColorToRGBStack(HidedColor);
-	RandEffectR := ColorToRGB(RandEffect);
+//	RandEffectR := ColorToRGB(RandEffect);
 
 	if CutWindow(XD1, YD1, XD2, YD2) then Exit;
 
@@ -7768,23 +7769,17 @@ begin
 		PDY := @LineX[0];
 		for X :=0 to MaxX - 1 do
 		begin
-				PDY.R :=
-					((C[1].R * X) + (C[0].R * (MaxXD - X))) div (MaxXD);
-				PDY.G :=
-					((C[1].G * X) + (C[0].G * (MaxXD - X))) div (MaxXD);
-				PDY.B :=
-					((C[1].B * X) + (C[0].B * (MaxXD - X))) div (MaxXD);
+			PDY.R := RandomDiv((C[1].R * X) + (C[0].R * (MaxXD - X)), MaxXD);
+			PDY.G := RandomDiv((C[1].G * X) + (C[0].G * (MaxXD - X)), MaxXD);
+			PDY.B := RandomDiv((C[1].B * X) + (C[0].B * (MaxXD - X)), MaxXD);
 			Inc(PDY);
 		end;
 		PDY := @LineY[0];
 		for Y :=0 to MaxY - 1 do
 		begin
-				PDY.R :=
-					((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div (MaxYD);
-				PDY.G :=
-					((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div (MaxYD);
-				PDY.B :=
-					((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div (MaxYD);
+			PDY.R := RandomDiv((C[3].R * Y) + (C[2].R * (MaxYD - Y)), MaxYD);
+			PDY.G := RandomDiv((C[3].G * Y) + (C[2].G * (MaxYD - Y)), MaxYD);
+			PDY.B := RandomDiv((C[3].B * Y) + (C[2].B * (MaxYD - Y)), MaxYD);
 			Inc(PDY);
 		end;
 	end;
@@ -7908,21 +7903,15 @@ begin
 			end;
 			gfFadeHorz:
 			begin
-				R :=
-					((C[1].R * X) + (C[0].R * (MaxXD - X))) div MaxX;
-				G :=
-					((C[1].G * X) + (C[0].G * (MaxXD - X))) div MaxX;
-				B :=
-					((C[1].B * X) + (C[0].B * (MaxXD - X))) div MaxX;
+				R := RandomDiv((C[1].R * X) + (C[0].R * (MaxXD - X)), MaxXD);
+				G := RandomDiv((C[1].G * X) + (C[0].G * (MaxXD - X)), MaxXD);
+				B := RandomDiv((C[1].B * X) + (C[0].B * (MaxXD - X)), MaxXD);
 			end;
 			gfFadeVert:
 			begin
-				R :=
-					((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div MaxY;
-				G :=
-					((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div MaxY;
-				B :=
-					((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div MaxY;
+				R := RandomDiv((C[3].R * Y) + (C[2].R * (MaxYD - Y)), MaxYD);
+				G := RandomDiv((C[3].G * Y) + (C[2].G * (MaxYD - Y)), MaxYD);
+				B := RandomDiv((C[3].B * Y) + (C[2].B * (MaxYD - Y)), MaxYD);
 			end;
 			gfFade2x:
 			begin
@@ -7942,38 +7931,38 @@ begin
 			gfFadeIOH:
 			begin
 				R :=
-				C[1].R * Abs(MaxX2D - X2) div MaxX2 +
-				C[0].R * Abs(MaxY2D - Y2) div MaxY2;
+					C[1].R * Abs(MaxX2D - X2) div MaxX2 +
+					C[0].R * Abs(MaxY2D - Y2) div MaxY2;
 				G :=
-				C[1].G * Abs(MaxX2D - X2) div MaxX2 +
-				C[0].G * Abs(MaxY2D - Y2) div MaxY2;
+					C[1].G * Abs(MaxX2D - X2) div MaxX2 +
+					C[0].G * Abs(MaxY2D - Y2) div MaxY2;
 				B :=
-				C[1].B * Abs(MaxX2D - X2) div MaxX2 +
-				C[0].B * Abs(MaxY2D - Y2) div MaxY2;
+					C[1].B * Abs(MaxX2D - X2) div MaxX2 +
+					C[0].B * Abs(MaxY2D - Y2) div MaxY2;
 			end;
 			gfFadeIOV:
 			begin
 				R :=
-				C[3].R * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
-				C[2].R * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
+					C[3].R * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
+					C[2].R * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
 				G :=
-				C[3].G * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
-				C[2].G * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
+					C[3].G * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
+					C[2].G * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
 				B :=
-				C[3].B * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
-				C[2].B * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
+					C[3].B * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
+					C[2].B * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
 			end;
 			gfFade2xx:
 			begin
 				R :=
-				(C[1].R * Abs(MaxX2D - X2) + C[3].R * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
-				(C[0].R * Abs(MaxY2D - Y2) + C[2].R * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
+					(C[1].R * Abs(MaxX2D - X2) + C[3].R * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
+					(C[0].R * Abs(MaxY2D - Y2) + C[2].R * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
 				G :=
-				(C[1].G * Abs(MaxX2D - X2) + C[3].G * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
-				(C[0].G * Abs(MaxY2D - Y) + C[2].G * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
+					(C[1].G * Abs(MaxX2D - X2) + C[3].G * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
+					(C[0].G * Abs(MaxY2D - Y) + C[2].G * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
 				B :=
-				(C[1].B * Abs(MaxX2D - X2) + C[3].B * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
-				(C[0].B * Abs(MaxY2D - Y2) + C[2].B * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
+					(C[1].B * Abs(MaxX2D - X2) + C[3].B * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
+					(C[0].B * Abs(MaxY2D - Y2) + C[2].B * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
 			end;
 			gfNone:
 			begin
@@ -7985,12 +7974,12 @@ begin
 				{$endif}
 			end;
 			end;
-			if RandEffect > 0 then
+{			if RandEffect > 0 then
 			begin
 				R := R + TRGBA(RandEffect).R shr 1 - Random(TRGBA(RandEffect).R + 1);
 				G := G + TRGBA(RandEffect).G shr 1 - Random(TRGBA(RandEffect).G + 1);
 				B := B + TRGBA(RandEffect).B shr 1 - Random(TRGBA(RandEffect).B + 1);
-			end;
+			end;}
 			if R < 0 then
 				RColor.R := 0
 			else if R > 255 then
@@ -8042,12 +8031,12 @@ begin
 end;
 
 procedure TDBitmap.GenerateRGB(
-	const Func: TGenFunc; const Co: array of TColor; RandEffect: TColor;
+	const Func: TGenFunc; const Co: array of TColor;
 	const Effect: TEffect;
 	const InterruptProcedure: TInterruptProcedure);
 begin
 	GenerateRGBEx(0, 0, FWidth - 1, FHeight - 1,
-		Func, Co, RandEffect, Effect, 0, InterruptProcedure);
+		Func, Co, Effect, 0, InterruptProcedure);
 end;
 {
 procedure TDBitmap.GenRGB(
@@ -8120,7 +8109,7 @@ begin
 	Co[1] := DarkerColor(CR.L);
 	Co[2] := Co[0];
 	Co[3] := Co[1];
-	GenerateRGB(gfFade2x, Co, ScreenCorrectColor, ef16, nil);
+	GenerateRGB(gfFade2x, Co, ef16, nil);
 end;
 
 procedure RotateBmp(
@@ -9827,7 +9816,7 @@ begin
 		Co[2] := Co[0];
 		Co[3] := Co[1];
 	end;
-	GenerateRGBEx(X1 + 2, Y1 + 2, X2 - 2, Y2 - 2, gfFade2x, Co, 0, ScrollEf, 0, nil);
+	GenerateRGBEx(X1 + 2, Y1 + 2, X2 - 2, Y2 - 2, gfFade2x, Co, ScrollEf, 0, nil);
 	if Down then
 	begin
 		Inc(X1);
@@ -9921,7 +9910,7 @@ begin
 		Co[1] := DarkerColor(C.L);
 		Co[2] := Co[0];
 		Co[3] := Co[1];
-		GenerateRGBEx(XS1, YS1, XS2, YS2, gfFade2x, Co, ScreenCorrectColor, DS.Effect, 0, nil);
+		GenerateRGBEx(XS1, YS1, XS2, YS2, gfFade2x, Co, DS.Effect, 0, nil);
 	end;
 //	gsBitmap: Bmp(XS1, YS1, FillStyle.Bitmap, ef16);
 	end;

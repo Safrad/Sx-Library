@@ -44,7 +44,6 @@ const
 }
 	DefFileBuffer = {$ifndef Console}64{$else}32{$endif} * KB;
 	// For write FMode only, if enabled temporary file is used first
-	FProtection = True;
 type
 	TFileMode = (fmReadOnly, fmRewrite, fmAppend, fmReadAndWrite);
 var
@@ -63,6 +62,7 @@ type
 
 	TFile = class(TObject)
 	private
+		FProtection: BG;
 		FHandle: THandle;
 		FFileName: TFileName;
 		FTempFileName:  TFileName;
@@ -84,7 +84,9 @@ type
 		procedure FillBuffer;
 		procedure DestroyBuffer;
 		function SaveBuffer: BG;
+		procedure SetProtection(const Value: BG);
 	public
+		property Protection: BG read FProtection write SetProtection;
 		property Handle: THandle read FHandle;
 		property FileName: TFileName read FFileName;
 		property FilePos: U8 read FFilePos;
@@ -125,6 +127,7 @@ constructor TFile.Create;
 begin
 	inherited Create;
 	FHandle := INVALID_HANDLE_VALUE;
+	FProtection := True;
 end;
 
 destructor TFile.Destroy;
@@ -465,6 +468,7 @@ begin
 			FNeedSaveBuffer := True;
 			Inc(FFilePos);
 			Inc(InLineIndex);
+			FFileSize := Max(FFileSize, FFilePos);
 		end
 		else
 		begin
@@ -475,7 +479,6 @@ begin
 			FBufEnd := FBufStart + FBufferSize - 1; //, LineLength - InLineIndex);
 		end;
 	end;
-	FFileSize := Max(FFileSize, FFilePos);
 end;
 
 function TFile.Writeln(const Line: string): BG;
@@ -639,6 +642,15 @@ begin
 	if FBufStart = High(FBufStart) then
 	begin
 		SetLength(FBuffer, FBufferSize);
+	end;
+end;
+
+procedure TFile.SetProtection(const Value: BG);
+begin
+	Assert(IsOpened = False);
+	if Value <> FProtection then
+	begin
+		FProtection := Value;
 	end;
 end;
 

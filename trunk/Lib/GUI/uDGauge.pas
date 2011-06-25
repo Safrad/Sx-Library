@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDGauge.pas
 //* Created:  1999-08-01
 //* Modified: 2007-10-21
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -339,7 +339,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 			Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, X - 1, Recta.Bottom - 1,
-				gfFade2x, Co, ScreenCorrectColor, ef16, 0, nil);
+				gfFade2x, Co, ef16, 0, nil);
 {		end;
 		end;}
 	end;

@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uCompLog.pas
 //* Created:  1998-01-01
-//* Modified: 2007-05-07
-//* Version:  1.1.39.8
+//* Modified: 2007-12-24
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz

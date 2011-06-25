@@ -106,13 +106,11 @@ begin
 	if FFile.FileSize = 0 then
 		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
 	Add('Started'{$ifndef Console} + ' Version ' + GetProjectInfo(piFileVersion){$endif}, mlInformation);
-	Flush;
 end;
 
 destructor TLog.Destroy;
 begin
 	Add('Finished', mlInformation);
-	Flush;
 	if Assigned(FFile) then
 	begin
 		FFile.Close;
@@ -128,6 +126,7 @@ begin
 	if LogType >= FLoggingLevel then
 	begin
 		WriteLine(DateTimeToS(Now, 3, ofIO) + CharTab + FirstChar(MessageLevelStr[LogType]) + CharTab + AddEscape(Line) + FileSep);
+		Flush;
 	end;
 end;
 

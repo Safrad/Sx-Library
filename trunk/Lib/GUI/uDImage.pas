@@ -1,7 +1,7 @@
 //* File:     Lib\GUI\uDImage.pas
 //* Created:  2000-07-01
 //* Modified: 2007-11-26
-//* Version:  1.1.39.8
+//* Version:  1.1.40.9
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
 //* Web:      http://safrad.own.cz
@@ -33,7 +33,7 @@ type
 
 	TDImage = class(TDWinControl)
 	private
-		FTimer: TTimer;
+//		FTimer: TTimer;
 
 		FHandScroll: BG;
 
@@ -59,8 +59,8 @@ type
 		LCursor: TCursor;
 
 		// Zoom
-		V, A: TZoom;
-		LastTickCount: U4;
+//		V, A: TZoom;
+//		LastTickCount: U4;
 		TargetZoom: TZoom;
 		FEnableZoom: BG;
 		ZoomMenu: TMenuItem;
@@ -77,7 +77,7 @@ type
 		procedure InitScrolls;
 		procedure FillUserBitmap;
 
-		procedure Timer1Timer(Sender: TObject);
+//		procedure Timer1Timer(Sender: TObject);
 
 		function GetMouseWhere(const X, Y: Integer): TMouseAction;
 		procedure WMSize(var Message: TWMSize); message WM_SIZE;
@@ -299,6 +299,7 @@ begin
 	Slf.Invalidate;
 end;
 
+(*
 procedure TDImage.Timer1Timer(Sender: TObject);
 const
 	A0 = 1;
@@ -340,7 +341,7 @@ begin
 	ActualZoom := ((MaxS - S) * StartZoom + S * NewZoom) / MaxS;}
 
 	Invalidate;
-end;
+end;      *)
 
 
 procedure TDImage.InitZoomMenu;
@@ -369,8 +370,9 @@ begin
 	if NewZoom <> TargetZoom then
 	begin
 		TargetZoom := NewZoom;
+		ActualZoom := NewZoom;
 		InitZoomMenu;
-		if FTimer = nil then
+{		if FTimer = nil then
 		begin
 			FTimer := TTimer.Create(Self);
 			FTimer.Enabled := False;
@@ -380,7 +382,8 @@ begin
 			FTimer.OnTimer := Timer1Timer;
 		end;
 		FTimer.Enabled := True;
-		LastTickCount := GetTickCount;
+		LastTickCount := GetTickCount;}
+		Invalidate;
 	end;
 end;
 
@@ -473,7 +476,7 @@ end;
 
 destructor TDImage.Destroy;
 begin
-	FreeAndNil(FTimer);
+//	FreeAndNil(FTimer);
 
 	BmpS := nil;
 	UserBitmap := nil;
@@ -609,7 +612,7 @@ begin
 		mwScrollVD2, mwScrollVU2:
 		begin
 			MouseAction := MouseA;
-			LastTickCount := GetTickCount;
+//			LastTickCount := GetTickCount;
 			case MouseA of
 			mwScrollHD2, mwScrollHU2: StepPix := FNowMaxWidth;
 			mwScrollVD2, mwScrollVU2: StepPix := FNowMaxHeight;
@@ -1224,7 +1227,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 		end;
-		Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
+		Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, ScrollEf, 0, nil);
 {		if MouseAction in [mwScrollH, mwScrollHD, mwScrollHU, mwScrollHD2, mwScrollHU2] then
 		begin
 			PushFont(Bitmap.Canvas.Font);
@@ -1350,7 +1353,7 @@ begin
 			Co[2] := Co[0];
 			Co[3] := Co[1];
 		end;
-		Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, 0, ScrollEf, 0, nil);
+		Bitmap.GenerateRGBEx(X1 + 1, Y1 + 1, X2 - 1, Y2 - 1, gfFade2x, Co, ScrollEf, 0, nil);
 {		if MouseAction in [mwScrollV, mwScrollVD, mwScrollVU, mwScrollVD2, mwScrollVU2] then
 		begin
 			PushFont(Bitmap.Canvas.Font);
@@ -1438,7 +1441,7 @@ begin
 		else
 			s := '';
 		if ActualZoom <> 1 then
-			s := s + 'Zoom=' + FToS(ActualZoom) + ':1' + LineSep + 'V=' + FToS(V) + LineSep + 'A=' + FToS(A);
+			s := s + 'Zoom=' + FToS(ActualZoom) + ':1'; // + LineSep + 'V=' + FToS(V) + LineSep + 'A=' + FToS(A);
 //		DrawCutedText(Bitmap.Canvas, R, taRightJustify, tlBottom, s, True, 1);
 
 		StartTickCount := IntervalFrom(StartTickCount);
