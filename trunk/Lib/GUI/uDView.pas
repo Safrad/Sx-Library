@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uDView.pas
 //* Created:  2001-08-01
-//* Modified: 2007-11-26
+//* Modified: 2008-01-27
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -718,6 +718,7 @@ begin
 						begin
 							ColIndex := FColumnOrder[IX];
 							RowIndex := FRowOrder[IY];
+							Bitmap.Canvas.Font.Style := [];
 							if FSelectedRows[FRowOrder[IY]] then
 								Bitmap.Canvas.Font.Color := clWindow
 							else if HotRow = IY then
@@ -1111,7 +1112,7 @@ begin
 		Dec(Rect.Left, HorizontalOffset);
 		Rect.Right := Rect.Left + FColumns[FColumnOrder[ActualColumn]].Width - 1 + HorizontalOffset;
 	end;
-	Rect.Top := RowHeight * FRowOrder[ActualRow]; // + RowHeight{Table head};
+	Rect.Top := RowHeight * PhysicalRow(ActualRow); // + RowHeight{Table head};
 	Rect.Bottom := Rect.Top + RowHeight - 1 + RowHeight{Table head};
 	OffsetOnRect(Rect);
 end;
@@ -1258,11 +1259,6 @@ begin
 	end;
 end;
 
-procedure Register;
-begin
-	RegisterComponents('DComp', [TDView]);
-end;
-
 function TDView.PhysicalRow(const Row: SG): SG;
 var i: SG;
 begin
@@ -1275,6 +1271,11 @@ begin
 			Exit;
 		end;
 	end;
+end;
+
+procedure Register;
+begin
+	RegisterComponents('DComp', [TDView]);
 end;
 
 initialization

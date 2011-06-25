@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uFileExt.pas
 //* Created:  2006-02-04
-//* Modified: 2007-05-20
+//* Modified: 2008-02-05
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -13,7 +13,7 @@ interface
 uses
 	uDForm,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, uDImage, uDView, Menus;
+	Dialogs, uDImage, uDView, Menus, uDWinControl;
 
 type
 	TfFileExt = class(TDForm)
@@ -51,7 +51,7 @@ procedure FreeFileExt;
 implementation
 
 {$R *.dfm}
-uses uTypes, uReg, uDIniFile, uMenus;
+uses uTypes, uReg, uDIniFile, uMenus, uOutputFormat;
 
 type
 	TFileType = packed record // 24
@@ -76,6 +76,8 @@ end;
 
 procedure FreeFileExt;
 begin
+	FileTypeCount := 0;
+	SetLength(FileTypes, 0);
 	FormFree(TForm(fFileExt));
 end;
 
@@ -101,9 +103,13 @@ begin
 end;
 
 procedure TfFileExt.Init(Sender: TObject);
-var i: SG;
+var
+	i: SG;
+	ExistCount: SG;
 begin
+	ExistCount := 0;
 	for i := 0 to FileTypeCount - 1 do
+	begin
 		FileTypes[i].Exists := CustomFileType(
 			foExists,
 			FileTypes[i].FileType,
@@ -111,6 +117,9 @@ begin
 			FileTypes[i].Icon,
 			FileTypes[i].MenuCaptions,
 			FileTypes[i].OpenPrograms);
+		if FileTypes[i].Exists then Inc(ExistCount);
+	end;
+	Caption := 'File Extensions ' + NToS(ExistCount) + ' / ' + NToS(FileTypeCount);
 end;
 
 procedure TfFileExt.Register1Click(Sender: TObject);
@@ -137,7 +146,10 @@ begin
 	Background := baNone;
 	MenuSet(PopupMenuFE);
 	DViewFileExtensions.AddColumn('Extension', DViewFileExtensions.CellWidth('Folder'));
-	DViewFileExtensions.AddColumn('Description', 0);
+	DViewFileExtensions.AddColumn('Description', 128);
+	DViewFileExtensions.AddColumn('Icon', 128);
+	DViewFileExtensions.AddColumn('Action Name', 128);
+	DViewFileExtensions.AddColumn('Action Filename', 128);
 
 	if Assigned(MainIni) then
 	begin
@@ -187,6 +199,9 @@ begin
 	case ColIndex of
 	0: Data := FileTypes[RowIndex].FileType;
 	1: Data := FileTypes[RowIndex].FileTypeCaption;
+	2: Data := FileTypes[RowIndex].Icon;
+	3: Data := FileTypes[RowIndex].MenuCaptions[0];
+	4: Data := FileTypes[RowIndex].OpenPrograms[0];
 	end;
 end;
 
@@ -199,5 +214,5 @@ end;
 initialization
 
 finalization
-	SetLength(FileTypes, 0);
+
 end.

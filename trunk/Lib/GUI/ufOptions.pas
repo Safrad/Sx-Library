@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\ufOptions.pas
 //* Created:  2005-09-25
-//* Modified: 2007-08-22
+//* Modified: 2008-01-23
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -372,7 +372,7 @@ begin
 	Assert(OptionCount >= 0);
 	Assert(Params <> nil);}
 	fOptions := TfOptions.Create(nil);
-	fOptions.Caption := Caption + ' Options';
+	fOptions.Caption := Caption;
 	fOptions.Options := Options;
 	fOptions.OptionCount := OptionCount;
 	fOptions.Params := Params;

@@ -1,6 +1,6 @@
 //* File:     Lib\uFiles.pas
 //* Created:  1998-01-01
-//* Modified: 2007-11-26
+//* Modified: 2008-01-21
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -58,6 +58,7 @@ type
 		FBuffer: array of Char;
 		FBufStart, FBufEnd: U8;
 		FBufferSize: U8;
+		FNeedSaveBuffer: BG;
 		FFilePos: U8;
 		FFileSize: U8;
 		function GetFileSize(var Size: U8): BG;
@@ -80,8 +81,9 @@ type
 		function Readln(out Line: string): BG;
 		function Write(const Data: string): BG;
 //		function WriteF(Line: string): BG;
-		function Writeln(Line: string): BG;
+		function Writeln(const Line: string): BG;
 		function WritelnW(Line: WideString): BG;
+		function WritelnUnbuffered(Line: string): BG;
 		function Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
 		function Truncate: BG;
 		function FlushFileBuffers: BG;
@@ -273,6 +275,7 @@ begin
 	FBufferSize := DefFileBuffer;
 	FBufStart := High(FBufStart);
 	FBufEnd := 0;
+	FNeedSaveBuffer := False;
 
 	if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) then
 	begin
@@ -601,6 +604,11 @@ begin
 		end
 		else
 		begin
+			if FNeedSaveBuffer then
+			begin
+				Seek(FBufStart);
+				BlockWrite(FBuffer[0], FBufEnd - FBufStart + 1);
+			end;
 			FBufStart := FBufferSize * (FFilePos div FBufferSize);
 			FBufEnd := FBufStart + FBufferSize - 1;
 			if FBufEnd >= FFileSize then FBufEnd := FFileSize - 1;
@@ -634,16 +642,59 @@ begin
 		Result := True;
 end;
 
-function TFile.Writeln(Line: string): BG;
+function TFile.Writeln(const Line: string): BG;
+var
+	InLineIndex, LineLength: SG; 
 begin
-	Line := Line + FileSep;
-	Result := BlockWrite(Line[1], Length(Line));
+	Result := False;
+
+	if FBufStart = High(FBufStart) then
+	begin
+		SetLength(FBuffer, FBufferSize);
+	end;
+
+	InLineIndex := 1;
+	LineLength := Length(Line);
+	while InLineIndex <= LineLength + Length(FileSep) do
+	begin
+		if (FFilePos >= FBufStart) and (FFilePos <= FBufEnd) then
+		begin
+			if InLineIndex > LineLength then
+				FBuffer[FFilePos - FBufStart] := FileSep[InLineIndex - LineLength]
+			else
+				FBuffer[FFilePos - FBufStart] := Line[InLineIndex];
+			Inc(FFilePos);
+			Inc(InLineIndex);
+			FNeedSaveBuffer := True;
+		end
+		else
+		begin
+			// Save previous buffer.
+			if FNeedSaveBuffer then
+			begin
+				Seek(FBufStart);
+				Result := BlockWrite(FBuffer[0], FBufEnd - FBufStart + 1);
+				if Result = False then Exit;
+			end;
+			// Create new buffer.
+			FBufStart := FBufferSize * (FFilePos div FBufferSize);
+			FBufEnd := FBufStart + FBufferSize - 1;
+			FFilePos := FBufStart;
+		end;
+	end;
+	FFileSize := FFilePos;
 end;
 
 function TFile.WritelnW(Line: WideString): BG;
 begin
 	Line := Line + CharNul + CharLF;
 	Result := BlockWrite(Line[1], 2 * Length(Line));
+end;
+
+function TFile.WritelnUnbuffered(Line: string): BG;
+begin
+	Line := Line + FileSep;
+	Result := BlockWrite(Line[1], Length(Line));
 end;
 
 function TFile.Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
@@ -661,7 +712,12 @@ begin
 	end;
 	MainLogAdd('Closing ' + FTempFileName, mtDebug);
 
-
+	// Save previous buffer.
+	if FNeedSaveBuffer then
+	begin
+		Seek(FBufStart);
+		BlockWrite(FBuffer[0], Min(FFileSize - 1, FBufEnd) - FBufStart + 1);
+	end;
 	SetLength(FBuffer, 0);
 	if ChangeDate then
 		if FMode <> fmReadOnly then
@@ -1375,9 +1431,10 @@ function CopyFileDateTime(const Source, Dest: string): BG;
 var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 begin
-	if GetFileDateTime(Source, CreationTime, LastAccessTime, LastWriteTime) then
+	Result := GetFileDateTime(Source, CreationTime, LastAccessTime, LastWriteTime);
+	if Result then
 	begin
-		SetFileDateTime(Dest, CreationTime, LastAccessTime, LastWriteTime);
+		Result := SetFileDateTime(Dest, CreationTime, LastAccessTime, LastWriteTime);
 	end;
 end;
 

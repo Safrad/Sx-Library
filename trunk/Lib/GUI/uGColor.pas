@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uGColor.pas
 //* Created:  1999-09-01
-//* Modified: 2007-05-23
+//* Modified: 2008-01-19
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -15,7 +15,7 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
 	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,
-  uDWinControl;
+	uDWinControl;
 
 const
 	MaxColor = 6 * 4 + 3 * 4 - 1;

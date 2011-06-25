@@ -1,6 +1,6 @@
 //* File:     Lib\Parser\uMathFunctions.pas
 //* Created:  2004-03-07
-//* Modified: 2007-05-27
+//* Modified: 2008-01-29
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -83,87 +83,50 @@ begin
 	Result := LnVector(X);
 end;
 
-(*	opPlus, opMinus:
-	begin
-		if Node.ArgCount > 0 then
-		begin
-			Result := Calc(Node.Args[0]);
-			for i := 1 to Node.ArgCount - 1 do
-			begin
-				V := Calc(Node.Args[i]);
-				if Node.Operation = opMinus then
-					V := NegVector(Calc(Node.Args[i]));
-				Result := PlusVector(Result, V);
-			end;
-		end;
-	end;
-	opMul:
-	begin
-		Result := NumToVector(1);
-		for i := 0 to Node.ArgCount - 1 do
-		begin
-			if Node.Args[i] <> nil then
-				Result := MultiplyVector(Result, Calc(Node.Args[i]));
-		end;
-	end;
-	opDiv:
-	begin
-		if Node.ArgCount > 0 then
-		begin
-			Result := Calc(Node.Args[0]);
-			for i := 1 to Node.ArgCount - 1 do
-			begin
-				if Node.Args[i] <> nil then
-				begin
-					Result := DivideVector(Result, Calc(Node.Args[i]));
-{					e := Calc(Node.Args[i]);
-					if (e = 0) then
-					begin
-						if Result > 0 then
-							Result := Infinity
-						else if Result < 0 then
-							Result := NegInfinity;
-					end
-					else
-						Result := Result / e;}
-				end;
-			end;
-		end;
-	end;
-	opMod:
-	begin
-		if Node.ArgCount > 0 then
-		begin
-			Result := Calc(Node.Args[0]);
-			for i := 1 to Node.ArgCount - 1 do
-			begin
-				if Node.Args[i] <> nil then
-				begin
-					Result := ModuloVector(Result, Calc(Node.Args[i]));
-{				e := Calc(Node.Args[i]);
-				if e = 0 then
-				else
-					Result := ModE(Result, e);}
-				end;
-			end;
-		end;
-	end;
-	// Unary
-	opNeg, opTrunc, opRound, opAbs, opNot, opInc, opDec, opExp, opLn, opSqr, opSqrt:
-	begin
-		if Node.ArgCount > 0 then
-		begin
-			Result := UnaryOperation(Calc(Node.Args[0]), Node.Operation);
-			for i := 1 to Node.ArgCount - 1 do
-			begin
-				if Node.Args[i] <> nil then
-				begin
-					Result := PlusVector(Result, UnaryOperation(Calc(Node.Args[i]), Node.Operation));
-				end;
-			end;
-		end;
-	end;
+function Sqr(const X: TVector): TVector;
+begin
+	Result := SqrVector(X);
+end;
 
+function Sqrt(const X: TVector): TVector;
+begin
+	Result := SqrtVector(X);
+end;
+
+function Trunc(const X: TVector): TVector;
+begin
+	Result := TruncVector(X);
+end;
+
+function Round(const X: TVector): TVector;
+begin
+	Result := RoundVector(X);
+end;
+
+function Abs(const X: TVector): TVector;
+begin
+	Result := AbsVector(X);
+end;
+
+function _Not(const X: TVector): TVector;
+begin
+	Result := NotVector(X);
+end;
+
+function Inc(const X: TVector): TVector;
+begin
+	Result := PlusVector(X, NumToVector(1));
+end;
+
+function Dec(const X: TVector): TVector;
+begin
+	Result := PlusVector(X, NumToVector(-1));
+end;
+
+function Exp(const X: TVector): TVector;
+begin
+	Result := ExpVector(X);
+end;
 (*	opInv:
 	begin
 		Result := 1;
@@ -267,5 +230,14 @@ initialization
 	AddFunction('Math', 'power', Power, '');
 	AddFunction('Math', 'log', Log, '');
 	AddFunction('Math', 'ln', Ln, '');
+	AddFunction('Math', 'sqr', Sqr, '');
+	AddFunction('Math', 'sqrt', Sqrt, '');
+	AddFunction('Math', 'trunc', Trunc, '');
+	AddFunction('Math', 'round', Round, '');
+	AddFunction('Math', 'abs', Abs, '');
+	AddFunction('Math', 'not', _Not, '');
+	AddFunction('Math', 'inc', Inc, '');
+	AddFunction('Math', 'dec', Dec, '');
+	AddFunction('Math', 'exp', Exp, '');
 end.
 

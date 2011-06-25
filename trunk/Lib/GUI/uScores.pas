@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uScores.pas
 //* Created:  2000-10-01
-//* Modified: 2007-08-20
+//* Modified: 2007-12-29
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -18,14 +18,14 @@ uses
 type
 	TfScores = class(TDForm)
 		ButtonOk: TDButton;
-    DViewHighScores: TDView;
+		DViewHighScores: TDView;
 		procedure FormCreate(Sender: TObject);
 //		procedure ImageHighFill(Sender: TObject);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure DViewHighScoresGetData(Sender: TObject; var Data: String;
-      ColIndex, RowIndex: Integer; Rect: TRect);
-    procedure FormShow(Sender: TObject);
-    procedure FormResize(Sender: TObject);
+		procedure DViewHighScoresGetData(Sender: TObject; var Data: String;
+			ColIndex, RowIndex: Integer; Rect: TRect);
+		procedure FormShow(Sender: TObject);
+		procedure FormResize(Sender: TObject);
 	private
 		{ Private declarations }
 		procedure RWOptions(const Save: Boolean);
@@ -276,7 +276,7 @@ begin
 end;
 
 procedure TfScores.DViewHighScoresGetData(Sender: TObject;
-  var Data: String; ColIndex, RowIndex: Integer; Rect: TRect);
+	var Data: String; ColIndex, RowIndex: Integer; Rect: TRect);
 begin
 	case ColIndex of
 	0: Data := Highs[RowIndex].Name;
@@ -289,7 +289,7 @@ end;
 procedure TfScores.FormShow(Sender: TObject);
 var j: SG;
 begin
-  j := 0;
+	j := 0;
 	while j <= MaxHigh do
 	begin
 		if Highs[j].Score = 0 then Break;

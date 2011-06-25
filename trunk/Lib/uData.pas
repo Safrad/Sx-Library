@@ -1,6 +1,6 @@
 //* File:     Lib\uData.pas
 //* Created:  1998-01-01
-//* Modified: 2007-08-20
+//* Modified: 2008-02-07
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -332,8 +332,8 @@ end;
 procedure TData.Next(var P: Pointer);
 begin
 	Inc(SG(P), ItemMemSize);
-	if SG(P) >= SG(Data) + FItemMemSize * FItemCount then
-		 P := nil;
+	if SG(P) >= SG(Data) + SG(FItemMemSize) * FItemCount then
+		P := nil;
 end;
 
 end.

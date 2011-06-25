@@ -1,6 +1,6 @@
 //* File:     Lib\GUI\uReg.pas
 //* Created:  1999-11-01
-//* Modified: 2007-08-19
+//* Modified: 2008-02-04
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -33,7 +33,7 @@ implementation
 
 uses
 	SysUtils, Registry,
-	uTypes, uStrings, uFiles, uMsg;
+	uTypes, uStrings, uFiles, uMsg, uCSVFile;
 
 function WinNTDeleteKey(const Reg: TRegistry; const Key: string): Boolean;
 	var CanDelete: Boolean;
@@ -407,9 +407,15 @@ function CustomFileType(
 	const OpenPrograms: array of ShortString
 	): Boolean;
 var
-	i: Integer;
+	i: SG;
 begin
 	Result := True;
+{	for i := 0 to Length(MenuCaptions) - 1 do
+	begin
+		WriteStringToFile(WorkDir + 't.csv', CSVCell(FileType) + CSVSep + CSVCell(FileTypeCaption) + CSVSep + CSVCell(Icon) + CSVSep + CSVCell(MenuCaptions[i]) + CSVSep + CSVCell(OpenPrograms[i]) + FileSep, True);
+	end;
+	Exit;}
+
 	if High(MenuCaptions) <> High(OpenPrograms) then
 	begin
 		Warning('Illegal filetype parameters.');

@@ -1,6 +1,6 @@
 //* File:     Lib\uDIniFile.pas
 //* Created:  2000-07-01
-//* Modified: 2007-11-26
+//* Modified: 2008-02-04
 //* Version:  1.1.39.8
 //* Author:   David Safranek (Safrad)
 //* E-Mail:   safrad at email.cz
@@ -1013,7 +1013,8 @@ begin
 			RWNum(Form.Name, 'Width', Width, Save);
 			RWNum(Form.Name, 'Height', Height, Save);
 		end;
-		Form.SetBounds(Left, Top, Width, Height);
+		if Save = False then
+			Form.SetBounds(Left, Top, Width, Height);
 	end;
 {	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 		Form.WindowState := TWindowState(RWSGF(Form.Name, 'WindowState', Integer(Form.WindowState), Integer(Form.WindowState), Save));}
