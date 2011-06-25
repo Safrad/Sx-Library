@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uStartup.pas
-//* Created:  2009-05-11
-//* Modified: 2009-05-13
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uStartup.pas
+// * Created:  2009-05-11
+// * Modified: 2009-10-12
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uStartup;
 
@@ -12,7 +12,10 @@ interface
 
 uses uTypes;
 
-function RegisterStartup: BG;
+type
+	TObjectChange = (ocTest, ocCreate, ocRemove);
+
+function RegisterStartup(const Params: string = ''): BG;
 function UnregisterStartup: BG;
 function IsRegisteredStartup: BG;
 
@@ -24,7 +27,7 @@ uses
 const
 	RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
 
-function RegExt(const T: SG): BG;
+function RegExt(const ObjectChange: TObjectChange; Params: string = ''): BG;
 var
 	Reg: TRegistry;
 begin
@@ -34,17 +37,19 @@ begin
 		Reg.RootKey := HKEY_CURRENT_USER;
 		if Reg.OpenKey(RunKey, False) then
 		begin
-			case T of
-			0:
+			case ObjectChange of
+			ocTest:
 			begin
 				Result := Reg.ValueExists(GetProjectInfo(piInternalName));
 			end;
-			1:
+			ocCreate:
 			begin
-				Reg.WriteString(GetProjectInfo(piInternalName), '"' + ExeFileName + '" -Minimized');
+				if Params = '' then
+					Params := '-Minimized';
+				Reg.WriteString(GetProjectInfo(piInternalName), '"' + ExeFileName + '" ' + Params);
 				Result := True;
 			end;
-			2:
+			ocRemove:
 			begin
 				if Reg.ValueExists(GetProjectInfo(piInternalName)) then
 				begin
@@ -59,19 +64,19 @@ begin
 	end;
 end;
 
-function RegisterStartup: BG;
+function RegisterStartup(const Params: string = ''): BG;
 begin
-	Result := RegExt(1);
+	Result := RegExt(ocCreate, Params);
 end;
 
 function UnregisterStartup: BG;
 begin
-	Result := RegExt(2);
+	Result := RegExt(ocRemove);
 end;
 
 function IsRegisteredStartup: BG;
 begin
-	Result := RegExt(0);
+	Result := RegExt(ocTest);
 end;
 
 end.

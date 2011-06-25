@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDGauge.pas
-//* Created:  1999-08-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDGauge.pas
+// * Created:  1999-08-01
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDGauge;
 
@@ -12,12 +12,12 @@ interface
 
 {$R *.RES}
 uses
-	uTypes, uDImage,
+	uTypes, uDWinControl, uDrawStyle,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDBitmap, uDispl;
 
 type
-	TDGauge = class(TDImage)
+	TDGauge = class(TDWinControl)
 	private
 		{ Private declarations }
 		FBackEffect: TEffect;
@@ -362,7 +362,7 @@ begin
 		end
 		else
 		begin
-			DrawCutedText(Bitmap.Canvas, Recta, taCenter, tlCenter, Caption, True, FFontShadow);
+			DrawCuttedText(Bitmap.Canvas, Recta, taCenter, tlCenter, Caption, True, FFontShadow);
 		end;
 	end;
 

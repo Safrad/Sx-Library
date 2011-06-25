@@ -58,13 +58,13 @@ object fGetTime: TfGetTime
     Layout = tlCenter
   end
   object LabelH: TLabel
-    Left = 312
+    Left = 304
     Top = 88
-    Width = 20
+    Width = 28
     Height = 17
     Alignment = taRightJustify
     AutoSize = False
-    Caption = '000'
+    Caption = '1 200'
     Transparent = True
     Layout = tlCenter
   end
@@ -75,7 +75,7 @@ object fGetTime: TfGetTime
     Height = 17
     Alignment = taRightJustify
     AutoSize = False
-    Caption = '000'
+    Caption = '59'
     Transparent = True
     Layout = tlCenter
   end
@@ -86,7 +86,7 @@ object fGetTime: TfGetTime
     Height = 17
     Alignment = taRightJustify
     AutoSize = False
-    Caption = '000'
+    Caption = '59'
     Transparent = True
     Layout = tlCenter
   end
@@ -97,7 +97,7 @@ object fGetTime: TfGetTime
     Height = 17
     Alignment = taRightJustify
     AutoSize = False
-    Caption = '000'
+    Caption = '59'
     Transparent = True
     Layout = tlCenter
   end
@@ -146,7 +146,7 @@ object fGetTime: TfGetTime
     OnChange = TrackBarHMSDChange
   end
   object ButtonOk: TDButton
-    Left = 192
+    Left = 120
     Top = 248
     Width = 73
     Height = 25
@@ -163,7 +163,7 @@ object fGetTime: TfGetTime
     OnClick = ButtonOkClick
   end
   object ButtonCancel: TDButton
-    Left = 280
+    Left = 200
     Top = 248
     Width = 73
     Height = 25
@@ -184,6 +184,7 @@ object fGetTime: TfGetTime
     Top = 8
     Width = 121
     Height = 21
+    DoubleBuffered = True
     MaxLength = 15
     TabOrder = 0
     OnChange = EditInputChange
@@ -293,7 +294,7 @@ object fGetTime: TfGetTime
     OnClick = ButtonDefClick
   end
   object ButtonApply: TDButton
-    Left = 8
+    Left = 280
     Top = 248
     Width = 73
     Height = 25
@@ -307,7 +308,7 @@ object fGetTime: TfGetTime
     TabOrder = 15
     Visible = False
   end
-  object EditError: TMemo
+  object EditError: TDMemo
     Left = 8
     Top = 40
     Width = 345

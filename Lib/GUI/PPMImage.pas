@@ -1,10 +1,10 @@
-//* File:     Lib\PPMImage.pas
-//* Created:  2003-12-20
-//* Modified: 2007-05-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\PPMImage.pas
+// * Created:  2003-12-20
+// * Modified: 2009-08-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit PPMImage;
 
@@ -165,29 +165,67 @@ var
 	P: Pointer;
 	Buffer, Buf: PRGB;
 	RGB: TRGB;
+	BPP: SG;
+	TempBmp: TBitmap;
 begin
+	case PixelFormat of
+	pf24bit:
+	begin
+		BPP := 3;
+		TempBmp := Self;
+	end;
+	pf32bit:
+	begin
+		BPP := 4;
+		TempBmp := Self;
+	end;
+	else
+	begin
+		BPP := 3;
+		TempBmp := TBitmap.Create;
+		TempBmp.PixelFormat := pf24bit;
+		TempBmp.Assign(Self);
+		TempBmp.PixelFormat := pf24bit;
+	end;
+	end;
+
 	Line := 'P6' + LineSep +
 		IntToStr(Width) + ' ' + IntToStr(Height) + LineSep;
 	Line := Line + '255' + LineSep;
 	Stream.WriteBuffer(Line[1], Length(Line));
 
 	GetMem(Buffer, Width * Height * 3);
-	Buf := Buffer;
-	for j := 0 to Height - 1 do
-	begin
-		P := ScanLine[j];
-		for i := 0 to Width - 1 do
+	try
+		Buf := Buffer;
+		for j := 0 to Height - 1 do
 		begin
-			RGB.R := PU1(SG(P) + 2)^;
-			RGB.G := PU1(SG(P) + 1)^;
-			RGB.B := PU1(SG(P) + 0)^;
-			Buf^ := RGB;
-			Inc(SG(Buf), 3);
-			Inc(SG(P), BPP);
+			P := TempBmp.ScanLine[j];
+			for i := 0 to Width - 1 do
+			begin
+				RGB.R := PU1(SG(P) + 2)^;
+				RGB.G := PU1(SG(P) + 1)^;
+				RGB.B := PU1(SG(P) + 0)^;
+				Buf^ := RGB;
+				Inc(SG(Buf), 3);
+				Inc(SG(P), BPP);
+			end;
 		end;
+		Stream.WriteBuffer(Buffer^, Width * Height * 3);
+	finally
+		FreeMem(Buffer);
 	end;
-	Stream.WriteBuffer(Buffer^, Width * Height * 3);
-	FreeMem(Buffer);
+	case PixelFormat of
+	pf24bit:
+	begin
+	end;
+	pf32bit:
+	begin
+	end;
+	else
+	begin
+		FreeAndNil(TempBmp);
+	end;
+	end;
 end;
 
 initialization

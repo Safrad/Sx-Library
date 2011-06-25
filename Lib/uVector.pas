@@ -1,10 +1,10 @@
-//* File:     Lib\uVector.pas
-//* Created:  2006-05-03
-//* Modified: 2009-03-22
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uVector.pas
+// * Created:  2006-05-03
+// * Modified: 2009-08-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uVector;
 
@@ -58,9 +58,13 @@ function PowerVector(const V1, V2: TVector): TVector;
 function LogVector(const V1, V2: TVector): TVector;
 function LnVector(const V: TVector): TVector;
 function TruncVector(const V: TVector): TVector;
+function FloorVector(const V: TVector): TVector;
 function RoundVector(const V: TVector): TVector;
+function CeilVector(const V: TVector): TVector;
+function FracVector(const V: TVector): TVector;
 function AbsVector(const V: TVector): TVector;
 function NotVector(const V: TVector): TVector;
+function InvVector(const V: TVector): TVector;
 function ExpVector(const V: TVector): TVector;
 function FactVector(const V: TVector): TVector;
 function GammaVector(const V: TVector): TVector;
@@ -233,9 +237,24 @@ begin
 	Result := NumToVector(Trunc(VectorToNum(V)));
 end;
 
+function FloorVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(Floor(VectorToNum(V)));
+end;
+
 function RoundVector(const V: TVector): TVector;
 begin
 	Result := NumToVector(Round(VectorToNum(V)));
+end;
+
+function CeilVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(Ceil(VectorToNum(V)));
+end;
+
+function FracVector(const V: TVector): TVector;
+begin
+	Result := NumToVector(Frac(VectorToNum(V)));
 end;
 
 function AbsVector(const V: TVector): TVector;
@@ -246,6 +265,11 @@ end;
 function NotVector(const V: TVector): TVector;
 begin
 	Result := NumToVector(not Round(VectorToNum(V)));
+end;
+
+function InvVector(const V: TVector): TVector;
+begin
+	Result := DivideVector(NumToVector(1), V);
 end;
 
 function ExpVector(const V: TVector): TVector;

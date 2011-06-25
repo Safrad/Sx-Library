@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDWinControl.pas
-//* Created:  2007-05-27
-//* Modified: 2008-12-26
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDWinControl.pas
+// * Created:  2007-05-27
+// * Modified: 2009-09-02
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDWinControl;
 
@@ -42,16 +42,65 @@ type
 		procedure Invalidate; override;
 	published
 		property Bitmap: TDBitmap read FBitmap;
+		property Font;
 		property IsFocused: Boolean read FFocused;
+		property ParentFont;
 	end;
+
+procedure CorrectFont(const Font: TFont);
+function GetSectionName(Control: TControl): string;
 
 implementation
 
-uses SysUtils, Windows;
+uses
+	SysUtils, Windows,
+	uSysInfo, uMsg;
+
+procedure CorrectFont(const Font: TFont);
+var
+	MyStruct: TNonClientMetricsA;
+begin
+//	MyStruct.cbSize := TNonClientMetricsA.SizeOf;
+//	MyStruct.cbSize := SizeOf(TNonClientMetricsA);
+	MyStruct.cbSize := 340;
+
+	if SystemParametersInfoA(
+		SPI_GETNONCLIENTMETRICS,
+		MyStruct.cbSize,
+		@MyStruct,
+		0) then
+	begin
+		MyStruct.lfMessageFont.lfHeight := -11; // TODO : Variable form and control size required
+		{$ifopt d+}
+//		MyStruct.lfMessageFont.lfHeight := -13;
+		{$endif}
+	(*	if NTSystem and (MyStruct.lfMessageFont.lfFaceName = 'MS Sans Serif') then
+		begin
+	//		{$ifopt d-}
+			MyStruct.lfMessageFont.lfFaceName := 	'Microsoft Sans Serif'; // OpenType Font (nicer)
+	//		{$else}
+	//		MyStruct.lfMessageFont.lfFaceName := 	'Lucida Console';//'Courier New CE';//'Tahoma'; // OpenType Font (nicer)
+	//		{$endif}
+		end; *)
+
+		Font.Handle := CreateFontIndirectA(MyStruct.lfMessageFont);
+	end;
+{	else
+		ErrorMsg(GetLastError()); // Hang - call CorrectFont again }
+end;
+
+function GetSectionName(Control: TControl): string;
+begin
+	if Assigned(Control.Parent) then
+		Result := Control.Parent.Name + '.'
+	else
+		Result := '';
+	Result := Result + Control.Name;
+end;
 
 { TDWinControl }
 
-// TODO Focus Enter/Leave
+// TODO : Focus Enter/Leave
 
 procedure TDWinControl.CMFocusEnter(var Message: TCMEnter);
 begin
@@ -68,8 +117,8 @@ end;
 constructor TDWinControl.Create(AOwner: TComponent);
 begin
 	inherited;
+
 	FBitmap := TDBitmap.Create;
-	FBitmap.Canvas.Font := Font;
 
 	FCanvas := TControlCanvas.Create;
 	TControlCanvas(FCanvas).Control := Self;
@@ -84,11 +133,14 @@ end;
 
 procedure TDWinControl.FillBitmap;
 begin
+{	if not Assigned(FBitmap) then
+		FBitmap := TDBitmap.Create;}
+	FBitmap.Canvas.Font := Font;
 	FNeedFill := False;
 	{$ifdef info}
 	Inc(FFillCount);
 	{$endif}
-	FBitmap.SetSize(Width, Height);
+	FBitmap.SetSize(Width, Height, Color);
 end;
 
 procedure TDWinControl.Invalidate;
@@ -138,9 +190,9 @@ begin
 	end;}
 
 	{$ifdef info}
-{	Canvas.Brush.Style := bsClear;
+	Canvas.Brush.Style := bsClear;
 	Canvas.Font.Color := clWhite;
-	Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));}
+	Canvas.TextOut(0, 0, IntToStr(FFillCount) + '/' + IntToStr(FPaintCount));
 	{$endif}
 end;
 

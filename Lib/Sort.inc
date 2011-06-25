@@ -1,3 +1,11 @@
+// * File:     Lib\Sort.inc
+// * Created:  2008-06-03
+// * Modified: 2009-11-05
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
 (*-------------------------------------------------------------------------*)
 	{$ifopt d+}
 	procedure SelectSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
@@ -134,13 +142,13 @@
 	{$endif}
 (*  procedure InsertionSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	{
-	 ============================= InsertionSort ================================
-		 The InsertionSort procedure compares the length of each successive
-		 element in SortArray with the lengths of all the preceding elements.
-		 When the procedure finds the appropriate place for the new element, it
-		 inserts the element in its new place, and moves all the other elements
-		 down one place.
-	 ============================================================================
+	============================= InsertionSort ================================
+		The InsertionSort procedure compares the length of each successive
+		element in SortArray with the lengths of all the preceding elements.
+		When the procedure finds the appropriate place for the new element, it
+		inserts the element in its new place, and moves all the other elements
+		down one place.
+	============================================================================
 	}
 	var
 		HValue: TValue;
@@ -263,14 +271,14 @@
 (*-------------------------------------------------------------------------*)
 	procedure ShellSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex); // XXXX
 	{
-	 =============================== ShellSort ==================================
+	=============================== ShellSort ==================================
 		The ShellSort procedure is similar to the BubbleSort procedure.  However,
 		ShellSort begins by comparing elements that are far apart (separated by
 		the value of the Offset variable, which is initially half the distance
 		between the first and last element), then comparing elements that are
 		closer together (when Offset is one, the last iteration of this procedure
 		is merely a bubble sort).
-	 ============================================================================
+	============================================================================
 	}
 	var
 		HValue: TValue;
@@ -433,10 +441,10 @@
 
 	procedure HeapSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);
 	{
-	 ============================== PercolateUp =================================
-		 The PercolateUp procedure converts the elements from 1 to MaxLevel in
-		 SortArray into a "heap" (see the diagram with the HeapSort procedure).
-	 ============================================================================
+	============================== PercolateUp =================================
+		The PercolateUp procedure converts the elements from 1 to MaxLevel in
+		SortArray into a "heap" (see the diagram with the HeapSort procedure).
+	============================================================================
 	}
 		procedure PercolateUp(const MaxLevel: Integer);
 		var
@@ -447,9 +455,9 @@
 		begin
 			I := MaxLevel;
 
-		 { Move the value in SortArray(MaxLevel) up the heap until it has
-			 reached its proper node (that is, until it is greater than either
-			 of its child nodes, or until it has reached 1, the top of the heap):}
+		{ Move the value in SortArray(MaxLevel) up the heap until it has
+			reached its proper node (that is, until it is greater than either
+			of its child nodes, or until it has reached 1, the top of the heap):}
 			repeat
 				Parent := (I + 1 - MinIndex) div 2 - 1 + MinIndex; // Get the subscript for the parent node.
 
@@ -477,10 +485,10 @@
 			until i = MinIndex;
 		end;
 	{
-	 ============================ PercolateDown =================================
-		 The PercolateDown procedure restores the elements of SortArray from 1 to
-		 MaxLevel to a "heap" (see the diagram with the HeapSort procedure).
-	 ============================================================================
+	============================ PercolateDown =================================
+		The PercolateDown procedure restores the elements of SortArray from 1 to
+		MaxLevel to a "heap" (see the diagram with the HeapSort procedure).
+	============================================================================
 	}
 		procedure PercolateDown(const MaxLevel: Integer);
 		var
@@ -534,16 +542,16 @@
 			until False;
 		end;
 	{
-	 =============================== HeapSort ===================================
+	=============================== HeapSort ===================================
 		The HeapSort procedure works by calling two other procedures - PercolateUp
 		and PercolateDown.  PercolateUp turns SortArray into a "heap," which has
 		the properties outlined in the diagram below:
 
-																 SortArray(1)
-																 /          \
+																SortArray(1)
+																/          \
 											SortArray(2)           SortArray(3)
-										 /          \            /          \
-					 SortArray(4)   SortArray(5)   SortArray(6)  SortArray(7)
+										/          \            /          \
+					SortArray(4)   SortArray(5)   SortArray(6)  SortArray(7)
 						/      \       /       \       /      \      /      \
 					...      ...   ...       ...   ...      ...  ...      ...
 
@@ -560,7 +568,7 @@
 		MaxRow - 1, then swaps the element in SortArray(1) with the element in
 		MaxRow - 1, rebuilds the heap for MaxRow - 2, and continues in this way
 		until the array is sorted.
-	 ============================================================================
+	============================================================================
 	}
 	var
 		HValue: TValue;

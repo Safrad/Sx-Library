@@ -1,10 +1,10 @@
-//* File:     Lib\uHTML.pas
-//* Created:  2004-09-26
-//* Modified: 2009-05-13
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uHTML.pas
+// * Created:  2004-09-26
+// * Modified: 2009-10-14
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uHTML;
 
@@ -38,7 +38,7 @@ type
 		function GetHTMLFoot: string;
 		procedure SaveToFile;
 	public
-		SourceCodePage: TCodePage;
+//		SourceCodePage: TCodePage;
 		HTMLCodePage: TCodePage;
 		Title: string;
 		RedirectURL: string;
@@ -68,12 +68,12 @@ type
 	{$endif}
 //		procedure AddTitle; deprecated;
 		function GetRelativePath(const FileName: TFileName): string;
-	published
 		property FileName: TFileName read FFileName;
 	end;
 
 function HTMLRedirect(const RedirectURL: string; const Temporarily: BG): string; overload;
 procedure HTMLRedirect(const SaveToFileName: TFileName; const RedirectURL: string; const Temporarily: BG); overload;
+procedure HTMLRedirectNoPHP(const SaveToFileName: TFileName; const RedirectURL: string);
 //function GetContent(const HTMLIndex, HTMLCount: SG; Refers: SG; const HTMLRef, Zeros: string): string; deprecated; // Create static navigation bar. Use PHP.
 
 var
@@ -89,7 +89,7 @@ implementation
 
 uses
 	Math, Menus,
-	uStrings, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uUser, uCSVFile, uProjectInfo, uToHTML;
+	uStrings, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML;
 
 function RelativePath(const Source, Target: string): string;
 {
@@ -177,7 +177,7 @@ begin
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cs" lang="cs">' + HTMLSep +
 		'<head>' + HTMLSep +
 		HTMLTab + '<meta http-equiv="Content-Type" content="text/xml; charset='{html} + CodePageNames[HTMLCodePage] + '" />' + HTMLSep +
-		HTMLTab + '<meta name="author" content="' + MyName + '; e-mail: ' + MyEmail + '" />' + HTMLSep;
+		HTMLTab + '<meta name="author" content="' + GetProjectInfo(piAuthor) + '; e-mail: ' + GetProjectInfo(piEMail) + '" />' + HTMLSep;
 //		HTMLTab + '<meta name="expires" content="' +  + '" />' + HTMLSep +
 	if RedirectURL = '' then
 		Result := Result +
@@ -198,7 +198,7 @@ begin
 	FSaved := False;
 	FBody := '';
 	Title := '';
-	SourceCodePage := cp1250;
+//	SourceCodePage := cp1250;
 	HTMLCodePage := cpUTF8;
 	FFrameset := False;
 	AddHeadAndFoot := UpperCase(DelFileExt(ExtractFileName(FileName))) <> 'MENU';
@@ -268,19 +268,40 @@ begin
 		AddRef(FileName, ExtractFileName(FileName) + ' (' + GetFileSizeS(FileName) + ')');
 end;
 
-function URL(const s: string): String;
-var i: SG;
+function URL(const Path: string): String;
+var
+	i: SG;
+	c: AnsiChar;
+	a: AnsiString;
+	s: string;
 begin
-	Result := '';
+	a := AnsiString(Path);
+	i := 1;
+	while i <= Length(a) do
+	begin
+		c := a[i];
+		if Ord(c) >= 128 then
+		begin
+			Delete(a, i, 1);
+			s := '';
+			FmtStr(s, '%.2x', [U1(AnsiChar(c))]);
+			Insert('%' + s, a, i);
+			Inc(i, 2);
+		end;
+		Inc(i);
+	end;
+	Result := a;
+
+{	Result := '';
 	NumericBase := 16;
 	for i := 1 to Length(s) do
 	begin
 		if Ord(s[i]) < 128 then
 			Result := Result + s[i]
 		else
-			Result := Result + '%' + LowerCase(NToS(Ord(s[i])));
+			Result := Result + '%' + LowerCase(NToS(Ord(s[i]))); ddd
 	end;
-	NumericBase := 10;
+	NumericBase := 10;}
 end;
 
 procedure THTML.AddRef(const FileName: TFileName; const Text: string);
@@ -429,7 +450,7 @@ begin
 	if SkipHTMLHead = False then
 		s := s + '</html>';
 
-	ConvertCharset(s, SourceCodePage, HTMLCodePage);
+//	ConvertCharset(s, SourceCodePage, HTMLCodePage);
 
 	if FileExists(FFileName) then
 	begin
@@ -501,6 +522,7 @@ var
 	CSV: TCSVFile;
 	Row: TArrayOfString;
 	Body: string;
+	Head: BG;
 begin
 	Row := nil;
 	Body := '<table border="' + IntToStr(Border) + '" cellspacing="' + IntToStr(CellSpacing) +
@@ -514,7 +536,8 @@ begin
 			while not CSV.EOF do
 			begin
 				Row := CSV.ReadLine;
-				if LineIndex = 0 then
+				Head := (Length(Row) > 0) and (FirstChar(Row[0]) = CSVRemark);
+				if Head then
 					Body := Body + '<thead>';
 				Body := Body + '<tr>';
 				for Wid := 0 to Length(Row) - 1 do
@@ -629,17 +652,6 @@ begin
 	if not Compressed then Result := CharTab;
 end;
 
-{procedure HTMLRedirect(const SaveToFileName: TFileName; const RedirectURL: string);
-var HTML: THTML;
-begin
-	HTML := THTML.Create(SaveToFileName);
-	HTML.Title := 'Redirection';
-	HTML.RedirectURL := RedirectURL;
-	HTML.AddBody('<p>I''m trying to redirect you. If it fails, you can follow this <a href="' + RedirectURL + '">link</a>.</p>');
-	HTML.SaveToFile;
-	HTML.Free;
-end;}
-
 function HTMLRedirect(const RedirectURL: string; const Temporarily: BG): string;
 begin
 	Result :=
@@ -659,6 +671,18 @@ procedure HTMLRedirect(const SaveToFileName: TFileName; const RedirectURL: strin
 begin
 	WriteStringToFile(SaveToFileName, HTMLRedirect(RedirectURL, Temporarily), False);
 end;
+
+procedure HTMLRedirectNoPHP(const SaveToFileName: TFileName; const RedirectURL: string);
+var HTML: THTML;
+begin
+	HTML := THTML.Create(SaveToFileName);
+	HTML.Title := 'Redirection';
+	HTML.RedirectURL := RedirectURL;
+	HTML.AddBody('<p>I''m trying to redirect you. If it fails, you can follow this <a href="' + RedirectURL + '">link</a>.</p>');
+	HTML.SaveToFile;
+	HTML.Free;
+end;
+
 {
 function GetContent(const HTMLIndex, HTMLCount: SG; Refers: SG; const HTMLRef, Zeros: string): string;
 

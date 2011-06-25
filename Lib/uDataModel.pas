@@ -1,3 +1,11 @@
+// * File:     Lib\uDataModel.pas
+// * Created:  2009-07-13
+// * Modified: 2009-11-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
 unit uDataModel;
 
 interface
@@ -45,7 +53,9 @@ begin
 					if ValueIndex >= 0 then
 					begin
 						SetCell(Row, Column, RemoveEscape(IniFile.GetKeyValue(SectionIndex, ValueIndex)));
-					end;
+					end
+					else
+						SetCell(Row, Column, '');
 				end;
 			end;
 		end;
@@ -57,7 +67,7 @@ begin
 		begin
 			for Column := 0 to ColumnCount - 1 do
 			begin
-				IniFile.WriteString(Section, GetColumnName(Column) + IntToStr(Row), AddEscape(GetCell(Row, Column)));
+				IniFile.WriteString(Section, GetColumnName(Column) + IntToStr(Row), AddEscape(GetCell(Row, Column), True));
 			end;
 		end;
 {		if IniFile.ValueExists(Section, 'Name' + IntToStr(Favorites.Count)) then

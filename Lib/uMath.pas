@@ -1,16 +1,16 @@
-//* File:     Lib\uMath.pas
-//* Created:  1998-01-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uMath.pas
+// * Created:  1998-01-01
+// * Modified: 2009-12-21
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uMath;
 
 interface
 
-uses uTypes;
+uses uTypes, Types;
 
 const
 	SinDiv = 32768; // 1.0 65536; // 1..128..MB
@@ -45,9 +45,12 @@ function ModE(x, y: Extended): Extended;
 
 function FastSqrt(A: SG): SG;
 function LinearMax(Clock, Maximum: UG): UG;
-procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
+procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG); overload;
+procedure Rotate(var X, Y: Double; MaxX, MaxY: Double; Angle: SG); overload;
 
-function RoundSG(Value: FA): SG;
+function RoundSG(Value: F4): SG; overload;
+function RoundSG(Value: F8): SG; overload;
+function RoundSG(Value: FA): SG; overload;
 function RoundS8(Value: FA): S8;
 function TruncS8(Value: FA): S8;
 function RangeS8(Value: FA): BG;
@@ -73,18 +76,20 @@ procedure Exchange(var A, B: S2); register; overload;
 procedure Exchange(var A, B: U4); register; overload;
 procedure Exchange(var A, B: S4); register; overload;
 procedure Exchange(var A, B: S8); register; overload;
+procedure Exchange(var A, B: F4); register; overload;
 procedure Exchange(var A, B: F8); register; overload;
 procedure Exchange(var A, B: FA); register; overload;
 procedure Exchange(var A, B: Pointer); register; overload;
 procedure Exchange(var P0, P1; Count: U4); register; overload;
 procedure Exchange(P0, P1: Pointer; Count: U4); register; overload;
 procedure Exchange(var s0, s1: string); overload;
+procedure Exchange(var A, B: TObject); overload;
 
 function Arg(X, Y: Extended): Extended; overload;
 
 function Random2(Range: SG): SG;
 function RandomU4: U4;
-function RandomM: U4;
+//function RandomM: U4;
 
 procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
@@ -96,6 +101,7 @@ procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
 procedure ReadMem(P: Pointer; Size: UG);
 function SameData(P0, P1: Pointer; Size: UG): BG;
+function SameRect(const R1, R2: TRect): BG;
 procedure FillU2(var Desc; Count: UG; Value: U2);
 procedure FillU4(var Desc; Count: UG; Value: U4);
 procedure FillOrderU1(var Desc; Size: UG);
@@ -114,7 +120,9 @@ procedure InitPerformanceCounter;
 function GetCPUCounter: TU8;
 function PerformanceCounter: U8;
 procedure Delay(const ms: U4);
+{$ifndef Console}
 procedure DelayEx(const f: U8);
+{$endif}
 
 function CalcShr(N: U4): S1;
 {$ifopt d+}procedure CheckExpSize(const Size: SG);{$endif}
@@ -126,7 +134,8 @@ function BitsToByte(const Bits: S8): S4;
 
 implementation
 
-uses Math, Windows;
+uses
+	Math, Windows{$ifndef Console}, uSysInfo{$endif};
 
 function Sgn(const I: S1): SG;
 begin
@@ -349,7 +358,7 @@ begin
 	if Result > Maximum then Result := 2 * Maximum - Result;
 end;
 
-procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG);
+procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG); overload;
 var T: SG;
 begin
 	case Angle and 3 of
@@ -372,6 +381,51 @@ begin
 		Y := T;
 	end;
 	end;
+end;
+
+procedure Rotate(var X, Y: Double; MaxX, MaxY: Double; Angle: SG); overload;
+var T: Double;
+begin
+	case Angle and 3 of
+	// Up
+	1: // Left
+	begin
+		T := X;
+		X := Y;
+		Y := MaxX - T;
+	end;
+	2: // Down
+	begin
+		X := MaxX - X;
+		Y := MaxY - Y;
+	end;
+	3: // Right
+	begin
+		T := X;
+		X := MaxY - Y;
+		Y := T;
+	end;
+	end;
+end;
+
+function RoundSG(Value: F4): SG;
+begin
+	if Value > MaxInt then
+		Result := MaxInt
+	else if Value < MinInt then
+		Result := MinInt
+	else
+		Result := Round(Value);
+end;
+
+function RoundSG(Value: F8): SG;
+begin
+	if Value > MaxInt then
+		Result := MaxInt
+	else if Value < MinInt then
+		Result := MinInt
+	else
+		Result := Round(Value);
 end;
 
 function RoundSG(Value: FA): SG;
@@ -577,6 +631,13 @@ begin
 	Result := Random(2 * Range + 1) - Range;
 end;
 
+function RandomU4: U4;
+begin
+	TU4(Result).W0 := U4(Random(65536));
+	TU4(Result).W1 := U4(Random(65536));
+end;
+
+(*
 var
 	InitJ: SG = 24 - 1;
 	InitK: SG = 55 - 1;
@@ -593,19 +654,12 @@ var
 		1960622036, 315685891, 1196037864, 804614524, 1421733266,
 		2017105031, 3882325900, 810735053, 384606609, 2393861397 );
 
-function RandomU4: U4;
-begin
-	TU4(Result).W0 := U4(Random(65536));
-	TU4(Result).W1 := U4(Random(65536));
-end;
-
+//	random numbers from Mathematica 2.0.
+//	SeedRandom = 1;
+//	Table[Random[SG, {0, 2^32 - 1}]
 function RandomM: U4;
-(*
-	random numbers from Mathematica 2.0.
-	SeedRandom = 1;
-	Table[Random[SG, {0, 2^32 - 1}]
-	*)
 begin
+//	{$Q-} // TODO :
 	Result := (InitX[InitJ] + InitX[InitK]);
 	InitX[InitJ] := Result;
 	if InitJ = 0 then
@@ -617,6 +671,7 @@ begin
 	else
 		Dec(InitK);
 end;
+*)
 
 procedure Exchange(var A, B: B1); register;
 asm
@@ -683,6 +738,14 @@ end;
 
 procedure Exchange(var A, B: S8);
 var C: S8;
+begin
+	C := A;
+	A := B;
+	B := C;
+end;
+
+procedure Exchange(var A, B: F4);
+var C: F8;
 begin
 	C := A;
 	A := B;
@@ -760,8 +823,17 @@ var
 	s: string;
 begin
 	s := s1;
-	s1 :=s0;
+	s1 := s0;
 	s0 := s;
+end;
+
+procedure Exchange(var A, B: TObject);
+var
+	T: TObject;
+begin
+	T := B;
+	B := A;
+	A := T;
 end;
 
 function Arg(X, Y: Extended): Extended; // <0..2pi)
@@ -827,12 +899,6 @@ begin
 	end;
 end;
 
-{
-procedure GetMem0(var P: Pointer; Size: UG);
-begin
-	GetMem(P, Size);
-	FillChar(P^, Size, 0);
-end;}
 
 procedure ReadMem(P: Pointer; Size: UG); register;
 asm
@@ -896,6 +962,11 @@ asm
 	pop edi
 	pop ebx
 	@Exit0:
+end;
+
+function SameRect(const R1, R2: TRect): BG;
+begin
+	Result := SameData(@R1, @R2, SizeOf(TRect));
 end;
 
 procedure FillU2(var Desc; Count: UG; Value: U2); register;
@@ -1096,13 +1167,24 @@ begin
 	while GetTickCount < TickCount do
 end;
 
+{$ifndef Console}
 procedure DelayEx(const f: U8);
 var
 	TickCount: U8;
+	i: SG;
 begin
 	TickCount := PerformanceCounter + f;
 	while PerformanceCounter < TickCount do
+	begin
+		for i:= 0 to GSysInfo.CPUFrequency div 40 - 1 do
+		begin
+			asm
+				nop
+			end;
+		end;
+	end;
 end;
+{$endif}
 
 function CalcShr(N: U4): S1;
 {
@@ -1334,6 +1416,8 @@ begin
 			y := y * 2;
 			Result := True;
 		end;
+		if Result then
+			SetSmallerSize(x, y, MaxWidth, MaxHeight);
 	end;
 end;
 

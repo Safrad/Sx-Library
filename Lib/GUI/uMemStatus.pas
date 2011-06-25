@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uMemStatus.pas
-//* Created:  2000-05-01
-//* Modified: 2007-05-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uMemStatus.pas
+// * Created:  2000-05-01
+// * Modified: 2009-11-08
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uMemStatus;
 
@@ -14,7 +14,7 @@ interface
 
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, StdCtrls, uDLabel, uDButton, uDTimer, uDForm;
+	ExtCtrls, StdCtrls, uDLabel, uDButton, uDTimer, uDForm, uDWinControl;
 
 const
 	MaxLabel = 11;
@@ -59,7 +59,7 @@ var
 implementation
 
 {$R *.DFM}
-uses uTypes, uOutputFormat;
+uses uTypes, uOutputFormat, uDictionary;
 
 procedure TfMemStatus.Timer1Timer(Sender: TObject);
 var
@@ -132,6 +132,7 @@ begin
 			InsertControl(LabelX[j, i]);
 		end;
 	end;
+	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfMemStatus.ButtonStartClick(Sender: TObject);

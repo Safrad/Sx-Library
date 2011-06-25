@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDispl.pas
-//* Created:  1999-07-01
-//* Modified: 2007-08-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDispl.pas
+// * Created:  1999-07-01
+// * Modified: 2009-08-31
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDispl;
 
@@ -12,7 +12,8 @@ interface
 
 uses
 	uTypes,
-	uDBitmap, Windows, Graphics, Classes, StdCtrls;
+	uDBitmap, uDrawStyle,
+	Windows, Graphics, Classes, StdCtrls;
 
 const
 	clAVideo = $009fff1f;

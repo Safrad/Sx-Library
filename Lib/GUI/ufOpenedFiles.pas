@@ -1,17 +1,17 @@
-//* File:     Lib\GUI\ufOpenedFiles.pas
-//* Created:  2007-11-25
-//* Modified: 2008-01-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\ufOpenedFiles.pas
+// * Created:  2007-11-25
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit ufOpenedFiles;
 
 interface
 
 uses
-	uTypes,	uOpenedFiles,
+	uTypes, uOpenedFiles,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, uDImage, uDView, uDWinControl;
 
@@ -49,21 +49,23 @@ implementation
 
 {$R *.dfm}
 uses
-	uDIniFile, uOutputFormat, uFiles, uSorts, uMath;
+	uDIniFile, uOutputFormat, uFiles, uSorts, uMath, uDictionary, uOpenedFileItem;
 
 procedure TfOpenedFiles.FormCreate(Sender: TObject);
 begin
 	inherited;
-	DViewOpenedFiles.AddColumn('File name', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('Path', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('LastWriteTime', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('SaveCount', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('Created', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('Modified', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('WorkTime', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('ModificationTime', DViewOpenedFiles.Width div 2, taLeftJustify, True);
-	DViewOpenedFiles.AddColumn('SaveTime', DViewOpenedFiles.Width div 2, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('#', 32, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('File name', DViewOpenedFiles.Width div 8, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Path', DViewOpenedFiles.Width div 3, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Last Write Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Save Count', DViewOpenedFiles.Width div 8, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Created', DViewOpenedFiles.Width div 8, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Modified', DViewOpenedFiles.Width div 8, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Work Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Modification Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
+	DViewOpenedFiles.AddColumn('Save Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
 	MainIni.RegisterRW(RWOptions);
+	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfOpenedFiles.DViewOpenedFilesKeyUp(Sender: TObject;
@@ -90,15 +92,16 @@ begin
 	else
 		DViewOpenedFiles.Bitmap.Canvas.Font.Style := [];
 	case ColIndex of
-	0: Data := ExtractFileName(FOpenedFiles.GetItem(RowIndex).FileName);
-	1: Data := ExtractFilePath(FOpenedFiles.GetItem(RowIndex).FileName);
-	2: Data := DateTimeToS(FileTimeToDateTime(FOpenedFiles.GetItem(RowIndex).LastWriteTime), 0, ofDisplay);
-	3: Data := NToS(FOpenedFiles.GetItem(RowIndex).SaveCount);
-	4: Data := DateTimeToS(FOpenedFiles.GetItem(RowIndex).Created, 0, ofDisplay);
-	5: Data := DateTimeToS(FOpenedFiles.GetItem(RowIndex).Modified, 0, ofDisplay);
-	6: Data := MsToStr(FOpenedFiles.GetItem(RowIndex).WorkTime, diSD);
-	7: Data := MsToStr(FOpenedFiles.GetItem(RowIndex).ModificationTime, diSD);
-	8: Data := MsToStr(FOpenedFiles.GetItem(RowIndex).SaveTime, diSD);
+	0: Data := NToS(RowIndex + 1);
+	1: Data := ExtractFileName(FOpenedFiles.GetItem(RowIndex).FileName);
+	2: Data := ExtractFilePath(FOpenedFiles.GetItem(RowIndex).FileName);
+	3: Data := DateTimeToS(FileTimeToDateTime(FOpenedFiles.GetItem(RowIndex).LastWriteTime), 0, ofDisplay);
+	4: Data := NToS(FOpenedFiles.GetItem(RowIndex).SaveCount);
+	5: Data := DateTimeToS(FOpenedFiles.GetItem(RowIndex).Created, 0, ofDisplay);
+	6: Data := DateTimeToS(FOpenedFiles.GetItem(RowIndex).Modified, 0, ofDisplay);
+	7: Data := MsToStr(FOpenedFiles.GetItem(RowIndex).WorkTime, diSD);
+	8: Data := MsToStr(FOpenedFiles.GetItem(RowIndex).ModificationTime, diSD);
+	9: Data := MsToStr(FOpenedFiles.GetItem(RowIndex).SaveTime, diSD);
 	end;
 end;
 
@@ -163,20 +166,20 @@ begin
 	else SetLength(SortN, DViewOpenedFiles.RowCount);
 	end;
 
-	FillOrderU4(DViewOpenedFiles.RowOrder[0], DViewOpenedFiles.RowCount);
+//	FillOrderU4(DViewOpenedFiles.RowOrder[0], DViewOpenedFiles.RowCount);
 	for i := 0 to DViewOpenedFiles.RowCount - 1 do
 	begin
 		Item := FOpenedFiles.GetItem(i);
 		case DViewOpenedFiles.SortBy of
-		0: SortS[i] := ExtractFileName(Item.FileName);
-		1: SortS[i] := ExtractFilePath(Item.FileName);
-		2: SortN[i] := FileTimeToDateTime(Item.LastWriteTime);
-		3: SortN[i] := Item.SaveCount;
-		4: SortN[i] := Item.Created;
-		5: SortN[i] := Item.Modified;
-		6: SortN[i] := Item.WorkTime;
-		7: SortN[i] := Item.ModificationTime;
-		8: SortN[i] := Item.SaveTime;
+		1: SortS[i] := ExtractFileName(Item.FileName);
+		2: SortS[i] := ExtractFilePath(Item.FileName);
+		3: SortN[i] := FileTimeToDateTime(Item.LastWriteTime);
+		4: SortN[i] := Item.SaveCount;
+		5: SortN[i] := Item.Created;
+		6: SortN[i] := Item.Modified;
+		7: SortN[i] := Item.WorkTime;
+		8: SortN[i] := Item.ModificationTime;
+		9: SortN[i] := Item.SaveTime;
 		end;
 	end;
 	case DViewOpenedFiles.SortBy of

@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uCSVAssign.pas
-//* Created:  2004-01-04
-//* Modified: 2008-03-14
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uCSVAssign.pas
+// * Created:  2004-01-04
+// * Modified: 2009-08-20
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 // TODO : DNW
 
@@ -115,7 +115,6 @@ var
 	CSVFile: TFile;
 
 function CSVRead(FileName: TFileName; Sep: Char): BG;
-label LRetry;
 var
 	i: SG;
 	Line: string;
@@ -133,7 +132,7 @@ begin
 	CSVFile := TFile.Create;
 	if CSVFile.Open(CSVFileName, fmReadOnly) then
 	begin
-		if not CSVFile.Readln(Line) then goto LRetry;
+		if not CSVFile.Readln(Line) then Exit;
 
 		InLineIndex := 1;
 		while InLineIndex < Length(Line) do
@@ -160,7 +159,6 @@ begin
 end;
 
 function CSVReadLine: BG;
-label LRetry;
 var
 	Line: string;
 	i, InLineIndex: SG;
@@ -168,19 +166,22 @@ begin
 	Result := False;
 	if Assigned(CSVFile) and (CSVFile.Opened) then
 	begin
-		LRetry:
-		if CSVFile.Readln(Line) then
+		while True do
 		begin
-			if Line = '' then goto LRetry;
-			InLineIndex := 1;
-			for i := 0 to CSVReqFormats.Count - 1 do
+			if CSVFile.Readln(Line) then
 			begin
-				if Indexes[i] >= 0 then
-					Columns[Indexes[i]] := DelQuoteF(ReadToChar(Line, InLineIndex, CSVSep))
-				else
-					ReadToChar(Line, InLineIndex, CSVSep);
+				if Line = '' then Continue;
+				InLineIndex := 1;
+				for i := 0 to CSVReqFormats.Count - 1 do
+				begin
+					if Indexes[i] >= 0 then
+						Columns[Indexes[i]] := DelQuoteF(ReadToChar(Line, InLineIndex, CSVSep))
+					else
+						ReadToChar(Line, InLineIndex, CSVSep);
+				end;
+				Result := True;
 			end;
-			Result := True;
+			Break;
 		end;
 	end;
 end;
@@ -279,7 +280,7 @@ begin
 			s := 'Char (' + NToS(ReqFormat.Size) + ')';
 		end;
 		else
-			s := 'N/A';
+			s := NAStr;
 		end;
 		PanelTypes[i].Caption := s;
 
@@ -288,37 +289,41 @@ begin
 		ComboBoxes[i].Style := csDropDownList;
 		ComboBoxes[i].DropDownCount := 24;
 
-
 		InsertControl(ComboBoxes[i]);
-		k := 0;
-		Format := CSVFormats.GetFirst;
-		for j := 0 to CSVFormats.Count - 1 do
-		begin
-			if IsSubTyp(Format, ReqFormat) then
+		try
+			ComboBoxes[i].Items.BeginUpdate;
+			k := 0;
+			Format := CSVFormats.GetFirst;
+			for j := 0 to CSVFormats.Count - 1 do
 			begin
-				ComboBoxes[i].Items.Add(Format.Name);
-
-				Found := False;
-				for l := 0 to i - 1 do
+				if IsSubTyp(Format, ReqFormat) then
 				begin
-					if Indexes[l] = j then
+					ComboBoxes[i].Items.Add(Format.Name);
+
+					Found := False;
+					for l := 0 to i - 1 do
 					begin
-						Found := True;
-						Break;
+						if Indexes[l] = j then
+						begin
+							Found := True;
+							Break;
+						end;
+					end;
+
+					if Found = False then
+					begin
+						if k = 0 then
+						begin
+							Indexes[i] := j;
+							ComboBoxes[i].ItemIndex := j;
+						end;
+						Inc(k);
 					end;
 				end;
-
-				if Found = False then
-				begin
-					if k = 0 then
-					begin
-						Indexes[i] := j;
-						ComboBoxes[i].ItemIndex := j;
-					end;
-					Inc(k);
-				end;
+				Inc(SG(Format), CSVFormats.ItemMemSize);
 			end;
-		Inc(SG(Format), CSVFormats.ItemMemSize);
+		finally
+			ComboBoxes[i].Items.EndUpdate;
 		end;
 
 		InsertControl(PanelNames[i]);

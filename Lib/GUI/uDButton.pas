@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDButton.pas
-//* Created:  1999-09-01
-//* Modified: 2009-03-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDButton.pas
+// * Created:  1999-09-01
+// * Modified: 2009-12-10
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDButton;
 
@@ -66,7 +66,7 @@ type
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
-	protected
+			protected
 		procedure CreateHandle; override;
 		procedure CreateParams(var Params: TCreateParams); override;
 		procedure SetButtonStyle(ADefault: Boolean); override;
@@ -114,8 +114,8 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uScreen, uStrings, uColor, uMenus,
-	uSounds, uSysInfo;
+	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle,
+	uSounds, uSysInfo, uDWinControl;
 
 { TDButton }
 var
@@ -227,6 +227,7 @@ var
 	i: SG;
 	s: string;
 begin
+	Font.Color := clBtnText;
 	s := Caption;
 	i := Pos('/', s);
 //	if (Length(s) > 0) and (s[1] = '/') then
@@ -241,7 +242,7 @@ begin
 	Caption := s;
 
 	inherited CreateParams(Params);
-	with Params do Style := Style or BS_OWNERDRAW;
+	Params.Style := Params.Style or BS_OWNERDRAW;
 end;
 
 procedure TDButton.SetButtonStyle(ADefault: Boolean);
@@ -268,11 +269,8 @@ end;
 
 procedure TDButton.CNMeasureItem(var Message: TWMMeasureItem);
 begin
-	with Message.MeasureItemStruct^ do
-	begin
-		itemWidth := Width;
-		itemHeight := Height;
-	end;
+	Message.MeasureItemStruct^.itemWidth := Width;
+	Message.MeasureItemStruct^.itemHeight := Height;
 end;
 
 procedure TDButton.CMMouseEnter(var Message: TMessage);
@@ -331,8 +329,11 @@ begin
 	Recta.Bottom := Rec.Bottom - Rec.Top;
 
 	if not Assigned(Bitmap) then
+	begin
 		Bitmap := TDBitmap.Create;
-	Bitmap.SetSize(Recta.Right, Recta.Bottom);
+		Bitmap.Canvas.Font := Font;
+	end;
+	Bitmap.SetSize(Recta.Right, Recta.Bottom, clBtnFace);
 
 	PlayButtonSound(IsDown);
 
@@ -365,7 +366,7 @@ begin
 		if IsDown then
 			Bitmap.Bar(Recta, LighterColor(FColor), ef16)
 		else
-			Bitmap.Bar(Recta, FColor, ef16)
+			Bitmap.Bar(Recta, FColor, ef16);
 	end
 	else
 		Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
@@ -375,7 +376,6 @@ begin
 //	{$endif}
 
 	if IsDown then OffsetRect(Recta, 1, 1);
-	Bitmap.Canvas.Font := Self.Font;
 	if FAutoChange then
 	begin
 		if FDown then
@@ -532,7 +532,19 @@ begin
 			Bitmap.Canvas.Font.Color := Font.Color;
 		end;
 		Bitmap.Canvas.Brush.Style := bsClear;
-		DrawCutedText(Bitmap.Canvas, Recta, TextA, TextL, s, True, 1);
+		if s <> '' then // TODO New Field Hint
+		begin
+			if DrawCuttedText(Bitmap.Canvas, Recta, TextA, TextL, s, True, IdealShadow(Bitmap.Canvas)) then
+			begin
+				Hint := DelCharsF(s, '&');
+				ShowHint := True;
+			end
+			else
+			begin
+				Hint := '';
+				ShowHint := False;
+			end;
+		end;
 	end;
 	Bitmap.Canvas.Brush.Style := bsClear;
 
@@ -612,6 +624,7 @@ end;
 procedure TDButton.CMEnabledChanged(var Message: TMessage);
 begin
 	inherited;
+	FEnabled := TWinControl(Self).Enabled;
 	Invalidate;
 end;
 

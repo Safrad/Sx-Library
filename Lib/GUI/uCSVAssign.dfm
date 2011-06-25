@@ -63,12 +63,6 @@ object fFormats: TfFormats
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 0
     OnClick = ButtonOKClick
   end
@@ -79,13 +73,7 @@ object fFormats: TfFormats
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
     ModalResult = 2
-    ParentFont = False
     TabOrder = 1
   end
 end

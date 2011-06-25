@@ -1,28 +1,29 @@
-//* File:     Lib\uFile.pas
-//* Created:  1998-01-01
-//* Modified: 2009-03-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uFile.pas
+// * Created:  1998-01-01
+// * Modified: 2009-11-15
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 {
-	Result of Functions : False: Error, True: Ok
+	Result of Functions : False is Error, True is Ok
 	Example:
 	var
-		F: TFile;
+	F: TFile;
 	begin
-		F := TFile.Create;
-		try
-			if F.Open(WorkDir + 'FileName.txt', fmReadOnly) then
-			begin
-				F.BlockRead();
-				F.Readln();
-				F.Close
-			end;
-		finally
-			F.Free;
-		end;
+	F := TFile.Create;
+	try
+	// F.Charset := fcUTF8;
+	if F.Open(WorkDir + 'FileName.txt', fmReadOnly) then
+	begin
+	F.BlockRead();
+	F.Readln();
+	F.Close
+	end;
+	finally
+	F.Free;
+	end;
 	end;
 }
 
@@ -35,46 +36,70 @@ uses
 	uTypes, uStrings;
 
 const
-{
-	Buffer Size, Performance
-	1..16 * KB, low
-	32 * KB, acceptable
-	64..128 * KB, the best
-	32 * MB, Win API maximum
-}
-	DefFileBuffer = {$ifndef Console}64{$else}32{$endif} * KB;
+	{
+		Buffer Size, Performance
+		1..16 * KB, low
+		32 * KB, acceptable
+		64..128 * KB, the best for AMD
+		128 * KB, the best for Intel
+		16 * MB, Win XP x64 API maximum
+		32 * MB, Win XP API maximum
+	}
+	DefFileBuffer = {$IFNDEF Console} 128 {$ELSE} 64 {$ENDIF} * KB;
+
 	// For write FMode only, if enabled temporary file is used first
 type
 	TFileMode = (fmReadOnly, fmRewrite, fmAppend, fmReadAndWrite);
+
 var
-	FileModeStr: array[TFileMode] of string;
+	FileModeStr: array [TFileMode] of string;
+
 type
 	{
 		Flags:
-				FILE_FLAG_OVERLAPPED // Async read - not implemented yet
+		FILE_FLAG_OVERLAPPED // Async read - not implemented yet
 
-				FILE_FLAG_RANDOM_ACCESS
-				FILE_FLAG_SEQUENTIAL_SCAN // Default value
+		FILE_FLAG_RANDOM_ACCESS
+		FILE_FLAG_SEQUENTIAL_SCAN // Default value
 
-				FILE_FLAG_WRITE_THROUGH // For write only
-				FILE_FLAG_NO_BUFFERING // Be carefully for use this
-	}
+		FILE_FLAG_WRITE_THROUGH // For write only
+		FILE_FLAG_NO_BUFFERING // Be carefully for use this
+		}
+	TFileCharset = (fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE { Windows } , fcUTF32BE, fcUTF32LE
+		{ Windows } , fcUTF7a, fcUTF7b, fcUTF7c, fcUTF7d, fcUTF1, fcUTFEBCDIC, fcSCSU, fcBOCU1,
+		fcBOCU1b, fcGB18030);
 
+const
+	FILE_FLAG_NO_PREFIX = $8;
+	DefaultFileCharset = fcUTF8;
+	MaxByteOrderMarkSize = 4;
+	ByteOrderMarks: array [TFileCharset] of AnsiString =
+		('', #$EF + #$BB + #$BF, #$FE + #$FF, #$FF + #$FE, #$00 + #$00 + #$FE + #$FF,
+		#$FF + #$FE + #$00 + #$00, #$2B + #$2F + #$76 + #$38, #$2B + #$2F + #$76 + #$39,
+		#$2B + #$2F + #$76 + #$2B, #$2B + #$2F + #$76 + #$2F, #$F7 + #$64 + #$4C,
+		#$DD + #$73 + #$66 + #$73, #$0E + #$FE + #$FF, #$FB + #$EE + #$28, #$FB + #$EE + #$28 + #$FF,
+		#$84 + #$31 + #$95 + #$33);
+
+type
 	TFile = class(TObject)
 	private
+		FCharset: TFileCharset;
 		FProtection: BG;
+		FDefaultCharset: TFileCharset; // Used if BOM not present.
+		FDeleteAfterClose: BG;
 		FHandle: THandle;
 		FFileName: TFileName;
-		FTempFileName:  TFileName;
+		FTempFileName: TFileName;
 
 		FMode: TFileMode;
 
-		// For Readln, Write(ln) only
-		FBuffer: array of Char;
+		// For Read(ln), Write(ln) only
+		FBuffer: array of AnsiChar;
 		FBufStart, FBufEnd: U8;
 		FBufferSize: U8;
 		FNeedSaveBuffer: BG;
 
+		FFileBegin: U8; // Size of Byte Order Mark
 		FFilePos: U8;
 		FFileSize: U8;
 		function GetFileSize(var Size: U8): BG;
@@ -85,8 +110,13 @@ type
 		procedure DestroyBuffer;
 		function SaveBuffer: BG;
 		procedure SetProtection(const Value: BG);
+		procedure ReadPrefix;
+		procedure WritePrefix;
 	public
+		property Charset: TFileCharset read FCharset write FCharset;
+		property DefaultCharset: TFileCharset read FDefaultCharset write FDefaultCharset;
 		property Protection: BG read FProtection write SetProtection;
+		property DeleteAfterClose: BG read FDeleteAfterClose write FDeleteAfterClose;
 		property Handle: THandle read FHandle;
 		property FileName: TFileName read FFileName;
 		property FilePos: U8 read FFilePos;
@@ -94,17 +124,23 @@ type
 		property Opened: BG read IsOpened;
 		constructor Create;
 		destructor Destroy; override;
-		function Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG; overload;
+		function Open(const FileName: TFileName; const Mode: TFileMode;
+			Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG; overload;
 		function Seek(const Pos: U8): BG;
 		function SeekBegin: BG;
 		function SeekEnd: BG;
 		function BlockRead(out Buf; const Count: UG): BG;
 		function BlockWrite(const Buf; const Count: UG): BG;
 		function FillWrite(Count: UG): BG;
-		function Readln(out Line: string): BG;
-		function Write(const Line: string): BG;
-		function Writeln(const Line: string): BG;
-		function WritelnW(Line: WideString): BG;
+		function ReadlnNoConversion(out Line: AnsiString): BG;
+		function Readln(out Line: AnsiString): BG; overload;
+		function Readln(out Line: UnicodeString): BG; overload;
+		function WriteNoConversion(const Line: PAnsiChar; const LineLength: SG): BG; overload;
+		function WriteNoConversion(const Line: AnsiString): BG; overload;
+		function Write(const Line: AnsiString): BG; overload;
+		function Write(const Line: UnicodeString): BG; overload;
+		function Writeln(const Line: AnsiString): BG; overload;
+		function Writeln(const Line: UnicodeString): BG; overload;
 		function Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
 		function Truncate: BG;
 		function FlushFileBuffers: BG;
@@ -121,13 +157,15 @@ implementation
 
 uses
 	Math,
-	uMsg, uFiles, uLog, uOutputFormat;
+	uMsg, uFiles, uLog, uOutputFormat, uCharset; // {$ifopt d+}, uFileTest{$endif};
 
 constructor TFile.Create;
 begin
 	inherited Create;
 	FHandle := INVALID_HANDLE_VALUE;
 	FProtection := True;
+	FDefaultCharset := fcAnsi;
+	FCharset := DefaultFileCharset;
 end;
 
 destructor TFile.Destroy;
@@ -151,15 +189,16 @@ begin
 end;
 
 {
-function TFile.Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
-var
+	function TFile.Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
+	var
 	FileName2: TFileName;
-begin
+	begin
 	FileName2 := FileName;
 	Result := Open(FileName2, Mode, Flags, False);
-end; }
+	end; }
 
-function TFile.Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
+function TFile.Open(const FileName: TFileName; const Mode: TFileMode;
+	Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
 label LRetry;
 var
 	CreationDistribution: U4;
@@ -194,22 +233,22 @@ begin
 		FTempFileName := ExpandDir(FileName);
 	MainLogAdd('Opening for ' + FileModeStr[Mode] + ' ' + FTempFileName, mlDebug);
 
-	LRetry:
+LRetry :
 	ShareMode := FILE_SHARE_READ;
 	case Mode of
 	fmReadOnly:
-	begin
-		DesiredAccess := GENERIC_READ;
-		ShareMode := ShareMode or FILE_SHARE_WRITE;
-	end;
+		begin
+			DesiredAccess := GENERIC_READ;
+			ShareMode := ShareMode or FILE_SHARE_WRITE;
+		end;
 	fmRewrite, fmAppend:
-	begin
-		DesiredAccess := GENERIC_WRITE;
-	end;
+		begin
+			DesiredAccess := GENERIC_WRITE;
+		end;
 	fmReadAndWrite:
-	begin
-		DesiredAccess := GENERIC_READ or GENERIC_WRITE;
-	end
+		begin
+			DesiredAccess := GENERIC_READ or GENERIC_WRITE;
+		end
 	else
 	begin
 		DesiredAccess := GENERIC_ALL;
@@ -222,48 +261,73 @@ begin
 		CreationDistribution := OPEN_EXISTING;
 
 	Flags := Flags and (not FILE_FLAG_OVERLAPPED);
-	FHandle := CreateFile(
-		PChar(FTempFileName), // pointer to name of the file
+	FHandle := CreateFile(PChar(FTempFileName), // pointer to name of the file
 		DesiredAccess, // access (read-write) mode
 		ShareMode, // share mode
 		nil, // pointer to security attributes
 		CreationDistribution, // how to create
 		FILE_ATTRIBUTE_NORMAL or Flags, // file attributes
 		0 // handle to file with attributes to copy
-	);
+		);
 	if not IsOpened then
 	begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then goto LRetry;
+			if ErrorRetry(ErrorCode) then
+				goto LRetry;
 			Exit;
 		end;
 	end;
 	GetFileSize(FFileSize);
-	if Mode = fmAppend then SeekEnd;
-	if Mode = fmRewrite then Truncate;
+	FFileBegin := 0;
+	case Mode of
+	fmReadOnly, fmReadAndWrite:
+		begin
+			if ((Flags and FILE_FLAG_NO_BUFFERING) = 0) and ((Flags and FILE_FLAG_NO_PREFIX) = 0) then
+				ReadPrefix;
+		end;
+	fmAppend:
+		begin
+			if FFileSize > 0 then
+			begin
+				// ReadPrefix;
+				SeekEnd;
+			end
+			else if (Flags and FILE_FLAG_NO_PREFIX) = 0 then
+				WritePrefix;
+		end;
+	fmRewrite:
+		begin
+			Truncate;
+			if (Flags and FILE_FLAG_NO_PREFIX) = 0 then
+				WritePrefix;
+		end;
+	end;
+
 	Result := True;
 end;
 
 function TFile.GetFileSize(var Size: U8): BG;
 begin
-	Size :=  HandleFileSize(FHandle);
+	Size := HandleFileSize(FHandle);
 	Result := Size >= 0;
 end;
 
 function TFile.Seek(const Pos: U8): BG;
 label LRetry;
-var ErrorCode: U4;
+var
+	ErrorCode: U4;
+	Pos2: U8;
 begin
-	LRetry:
+LRetry :
 	Result := False;
-	if SetFilePointer(
-		FHandle,  // handle of file
-		TU8(Pos).D0, // number of bytes to move file pointer
-		@TU8(Pos).D1,  // address of high-order word of distance to move
-		FILE_BEGIN    // how to move
-	) <> $FFFFFFFF then
+	Pos2 := Pos + FFileBegin;
+	if SetFilePointer(FHandle, // handle of file
+		TU8(Pos2).D0, // number of bytes to move file pointer
+		@TU8(Pos2).D1, // address of high-order word of distance to move
+		FILE_BEGIN // how to move
+		) <> $FFFFFFFF then
 	begin
 		Result := True;
 		FFilePos := Pos;
@@ -273,7 +337,8 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then goto LRetry;
+			if ErrorRetry(ErrorCode) then
+				goto LRetry;
 		end
 		else
 			Result := True;
@@ -296,7 +361,7 @@ var
 	Suc: U4;
 	ErrorCode: U4;
 begin
-	LRetry:
+LRetry :
 	if ReadFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
@@ -305,7 +370,8 @@ begin
 
 		if Suc <> Count then
 		begin
-			Warning('Reading only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO) + ' from ' + FTempFileName);
+			Warning('Reading only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
+					+ ' from ' + FTempFileName);
 			Result := False;
 		end
 		else
@@ -338,7 +404,7 @@ var
 	Suc: U4;
 	ErrorCode: U4;
 begin
-	LRetry:
+LRetry :
 	if WriteFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
@@ -346,7 +412,8 @@ begin
 		Inc(WriteBytes, Suc);
 
 		if Suc <> Count then
-			Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO) + ' to ' + FTempFileName)
+			Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
+					+ ' to ' + FTempFileName)
 		else
 			MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName, mlDebug);
 
@@ -384,8 +451,10 @@ begin
 		begin
 			Result := Result and BlockWrite(Buf^, C);
 			Count := Count - C;
-			if C > Count then C := Count;
-			if Result = False then Break;
+			if C > Count then
+				C := Count;
+			if Result = False then
+				Break;
 		end;
 	finally
 		FreeMem(Buf);
@@ -396,8 +465,7 @@ end;
 	File   |********************************|
 	Buffer                 |*******|
 }
-
-function TFile.Readln(out Line: string): BG;
+function TFile.ReadlnNoConversion(out Line: AnsiString): BG;
 var
 	BufPos: SG;
 	InLineIndex: SG;
@@ -420,11 +488,20 @@ begin
 		if (FFilePos >= FBufStart) and (FFilePos <= FBufEnd) then
 		begin
 			BufPos := FFilePos - FBufStart;
-			if {Eof or} (FBuffer[BufPos] = CharLF) then
+			if { Eof or } (FBuffer[BufPos] = CharLF) then
 			begin
-				Inc(FFilePos);
-//				Seek(FFilePos);
-				Break;
+				if (FCharset <> fcUTF16LE) or ((BufPos and 1 = 0) and (FBuffer[BufPos + 1] = #0)) then
+				begin
+					if FCharset = fcUTF16LE then
+					begin
+						Dec(InLineIndex);
+						Inc(FFilePos);
+					end;
+
+					Inc(FFilePos);
+					// Seek(FFilePos);
+					Break;
+				end;
 			end;
 		end
 		else
@@ -432,15 +509,17 @@ begin
 			SaveBuffer;
 			FBufStart := FBufferSize * (FFilePos div FBufferSize);
 			FBufEnd := FBufStart + FBufferSize - 1;
-			if FBufEnd >= FFileSize then FBufEnd := FFileSize - 1;
+			if FBufEnd >= FFileSize then
+				FBufEnd := FFileSize - 1;
 			Seek(FBufStart);
 			BufPos := FFilePos;
 			BlockRead(FBuffer[0], FBufEnd - FBufStart + 1);
 			FFilePos := BufPos;
-//      BufPos := FFilePos - FBufStart;
+			// BufPos := FFilePos - FBufStart;
 			Continue;
 		end;
-		if FBuffer[BufPos] <> CharCR then
+		if (FBuffer[BufPos] <> CharCR) or
+			((FCharset = fcUTF16LE) and ((BufPos and 1 <> 0) or (FBuffer[BufPos + 1] <> #0))) then
 		begin
 			if InLineIndex > LineLength then
 			begin
@@ -455,8 +534,104 @@ begin
 	SetLength(Line, InLineIndex - 1);
 end;
 
-function TFile.Write(const Line: string): BG;
+function TFile.Readln(out Line: AnsiString): BG;
+begin
+	Result := ReadLnNoConversion(Line);
+	case FCharset of
+	fcAnsi: ;
+	fcUTF8: Line := Utf8ToAnsi(Line);
+	else
+		Line := '';
+		Warning('Unsupported charset in file %1', [FFileName]);
+	end;
+end;
+
+function TFile.Readln(out Line: UnicodeString): BG;
 var
+	LineA: AnsiString;
+begin
+	Result := ReadlnNoConversion(LineA);
+	case FCharset of
+	fcAnsi:
+		Line := UnicodeString(LineA);
+	fcUTF8:
+		begin
+			Line := ConvertUtf8ToUnicode(LineA);
+		end;
+	{ fcUTF16BE, } fcUTF16LE:
+		begin
+			// {$ifdef VER150}
+			// SetLength(Line, Length(LineA) div SizeOf(WideChar));
+			// Move(LineA[1], Line[1], Length(LineA));
+			// {$else}
+			SetLength(Line, Length(LineA) div SizeOf(WideChar));
+			Move(LineA[1], Line[1], Length(LineA));
+			// {$endif}
+		end;
+	else
+		begin
+			Line := '';
+			Warning('Unsupported charset in file %1', [FFileName]);
+		end;
+	end;
+end;
+
+procedure TFile.ReadPrefix;
+var
+	ByteOrderMark: array [0 .. MaxByteOrderMarkSize - 1] of AnsiChar;
+	Charset: TFileCharset;
+begin
+	ByteOrderMark := '    ';
+	BlockRead(ByteOrderMark[0], Min(FFileSize, MaxByteOrderMarkSize));
+	FCharset := FDefaultCharset;
+	for Charset := Succ( Low(Charset)) to High(Charset) do
+	begin
+		if Copy(ByteOrderMark, 1, Length(ByteOrderMarks[Charset])) = ByteOrderMarks[Charset] then
+		begin
+			FCharset := Charset;
+			FFilePos := 0;
+			FFileBegin := Length(ByteOrderMarks[FCharset]);
+			Dec(FFileSize, FFileBegin);
+			Break;
+		end;
+	end;
+
+	SeekBegin;
+end;
+
+function TFile.WriteNoConversion(const Line: PAnsiChar; const LineLength: SG): BG;
+var
+	InLineIndex: SG;
+begin
+	Result := False;
+
+	FillBuffer;
+
+	InLineIndex := 0;
+	while InLineIndex < LineLength do
+	begin
+		if (FFilePos >= FBufStart) and (FFilePos <= FBufEnd) then
+		begin
+			FBuffer[FFilePos - FBufStart] := Line[InLineIndex];
+			FNeedSaveBuffer := True;
+			Inc(FFilePos);
+			Inc(InLineIndex);
+			FFileSize := Max(FFileSize, FFilePos);
+		end
+		else
+		begin
+			// Save previous buffer.
+			if not SaveBuffer then
+				Exit;
+			// Create new buffer.
+			FBufStart := FFilePos; // FBufferSize * (FFilePos div FBufferSize);
+			FBufEnd := FBufStart + FBufferSize - 1; // , LineLength - InLineIndex);
+		end;
+	end;
+end;
+
+function TFile.WriteNoConversion(const Line: AnsiString): BG;
+(*var
 	InLineIndex, LineLength: SG;
 begin
 	Result := False;
@@ -478,23 +653,91 @@ begin
 		else
 		begin
 			// Save previous buffer.
-			if not SaveBuffer then Exit;
+			if not SaveBuffer then
+				Exit;
 			// Create new buffer.
-			FBufStart := FFilePos; //FBufferSize * (FFilePos div FBufferSize);
-			FBufEnd := FBufStart + FBufferSize - 1; //, LineLength - InLineIndex);
+			FBufStart := FFilePos; // FBufferSize * (FFilePos div FBufferSize);
+			FBufEnd := FBufStart + FBufferSize - 1; // , LineLength - InLineIndex);
 		end;
+	end;*)
+begin
+	Result := WriteNoConversion(PAnsiChar(Line), Length(Line));
+end;
+
+function TFile.Write(const Line: AnsiString): BG;
+var
+	u: UnicodeString;
+begin
+	if Length(Line) = 0 then
+	begin
+		Result := True;
+		Exit;
+	end;
+
+	case FCharset of
+	fcUTF8:
+		begin
+			Result := WriteNoConversion(AnsiToUTF8(Line));
+		end;
+	{ fcUTF16BE, } fcUTF16LE:
+		begin
+			u:= UnicodeString(Line);
+			Result := WriteNoConversion(PAnsiChar(@u), Length(Line) * SizeOf(WideChar));
+		end;
+	fcAnsi:
+		begin
+			Result := WriteNoConversion(Line);
+		end;
+	else
+		Result := False;
+		Warning('Unsupported charset in file %1', [FFileName]);
 	end;
 end;
 
-function TFile.Writeln(const Line: string): BG;
+function TFile.Write(const Line: UnicodeString): BG;
+begin
+	if Length(Line) = 0 then
+	begin
+		Result := True;
+		Exit;
+	end;
+
+	case FCharset of
+	fcUTF8:
+		begin
+			Result := WriteNoConversion(AnsiString(ConvertUnicodeToUTF8(Line)));
+		end;
+	{ fcUTF16BE, } fcUTF16LE:
+		begin
+			Result := WriteNoConversion(PAnsiChar(@Line[1]), Length(Line) * SizeOf(WideChar));
+		end;
+	fcAnsi:
+		begin
+			Result := WriteNoConversion(AnsiString(Line));
+		end;
+	else
+		Result := False;
+		Warning('Unsupported charset in file %1', [FFileName]);
+	end;
+end;
+
+function TFile.Writeln(const Line: AnsiString): BG;
 begin
 	Result := Write(Line + FileSep);
 end;
 
-function TFile.WritelnW(Line: WideString): BG;
+function TFile.Writeln(const Line: UnicodeString): BG;
 begin
-	Line := Line + CharNul + CharLF;
-	Result := BlockWrite(Line[1], 2 * Length(Line));
+	Result := Write(Line + FileSep);
+end;
+
+procedure TFile.WritePrefix;
+var
+	L: SG;
+begin
+	L := Length(ByteOrderMarks[FCharset]);
+	if L > 0 then
+		BlockWrite(ByteOrderMarks[FCharset][1], L);
 end;
 
 function TFile.Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
@@ -503,7 +746,7 @@ var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 	ErrorCode: U4;
 begin
-	LRetry:
+LRetry :
 	Result := False;
 	if not IsOpened then
 	begin
@@ -527,15 +770,18 @@ begin
 	begin
 		if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) and (Forced = False) then
 		begin
-//		RenameFileEx(FTempFileName, FFileName); only on same disk
-			if DirectoryExists(ExtractFileDir(FFileName)) = False then
+			// RenameFileEx(FTempFileName, FFileName); only on same disk
+			if DirectoryExists(ExtractFileDir(ExpandDir(FFileName))) = False then
 				IOError(FFileName, 3)
 			else
 			begin
-        uFiles.CopyFile(FTempFileName, FFileName, False);
-				DeleteFileEx(FTempFileName);
+				if not FDeleteAfterClose then
+					uFiles.CopyFile(FTempFileName, FFileName, False);
 			end;
-		end;
+			DeleteFileEx(FTempFileName);
+		end
+		else if FDeleteAfterClose then
+			DeleteFileEx(FFileName);
 		Result := True;
 	end
 	else
@@ -543,7 +789,8 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then goto LRetry;
+			if ErrorRetry(ErrorCode) then
+				goto LRetry;
 			Result := False;
 		end
 		else
@@ -554,9 +801,10 @@ end;
 
 function TFile.Truncate: BG;
 label LRetry;
-var ErrorCode: U4;
+var
+	ErrorCode: U4;
 begin
-	LRetry:
+LRetry :
 	Result := SetEndOfFile(FHandle);
 	if Result then
 	begin
@@ -565,21 +813,24 @@ begin
 	else
 	begin
 		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then goto LRetry;
+		if ErrorRetry(ErrorCode) then
+			goto LRetry;
 	end;
 end;
 
 function TFile.FlushFileBuffers: BG;
 label LRetry;
-var ErrorCode: U4;
+var
+	ErrorCode: U4;
 begin
 	SaveBuffer;
-	LRetry:
+LRetry :
 	Result := Windows.FlushFileBuffers(FHandle);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then goto LRetry;
+		if ErrorRetry(ErrorCode) then
+			goto LRetry;
 	end;
 end;
 
@@ -590,27 +841,31 @@ end;
 
 function TFile.Lock(From, Count: U8): BG;
 label LRetry;
-var ErrorCode: U4;
+var
+	ErrorCode: U4;
 begin
-	LRetry:
+LRetry :
 	Result := LockFile(FHandle, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then goto LRetry;
+		if ErrorRetry(ErrorCode) then
+			goto LRetry;
 	end;
 end;
 
 function TFile.UnLock(From, Count: U8): BG;
 label LRetry;
-var ErrorCode: U4;
+var
+	ErrorCode: U4;
 begin
-	LRetry:
+LRetry :
 	Result := UnLockFile(FHandle, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then goto LRetry;
+		if ErrorRetry(ErrorCode) then
+			goto LRetry;
 	end;
 end;
 

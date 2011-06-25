@@ -1,10 +1,10 @@
-//* File:     Lib\uColor.pas
-//* Created:  1999-10-01
-//* Modified: 2007-08-16
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uColor.pas
+// * Created:  1999-10-01
+// * Modified: 2009-10-25
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uColor;
 
@@ -23,6 +23,7 @@ const
 	clFlesh = TColor($98ADFF);
 	clBaize = TColor($818000);
 	clWater = TColor($D1D856);
+	clPink = TColor($9A5DFF);
 
 	clDepth: array[0..3] of TColor = (cl3DDkShadow{Black}, clBtnShadow{Gray}, cl3DLight{Silver}, clBtnHighlight{White});
 
@@ -46,6 +47,7 @@ type
 		1: (L: S4);
 		2: (I: array[0..3] of U1);
 		3: (RG, BA: U2);
+		4: (C: U4);
 	end;
 
 	THLSColor = packed record // 4
@@ -142,6 +144,7 @@ function HLSToRGB(C: THLSColor): TRGBA;
 			Dec(hue, (MaxSpectrum + 1))
 		else if (hue < 0) then
 			Inc(hue, (MaxSpectrum + 1));
+
 		if (hue < ((MaxSpectrum + 1) div 6)) then
 			Result := RoundDiv(n1+(n2-n1)*hue div ((MaxSpectrum + 1) div 6), 255)
 		else if (hue < ((MaxSpectrum + 1) div 2)) then
@@ -161,7 +164,7 @@ begin
 	else
 		m2 := 255 * (C.L + C.S) - C.L * C.S;
 	m1 := 2 * 255 * C.L - m2;
-	if (C.S = 0) then
+	if (C.S = 0) or (C.H = -1) then
 	begin
 		Result.R := C.L;
 		Result.G := C.L;
@@ -363,13 +366,23 @@ begin
 end;
 
 function LighterColor(Color: TColor): TColor;
+var
+	HLS: THLSColor;
 begin
-	Result := ColorDiv(Color, 4 * 65536 div 3);
+	HLS := RGBToHLS(TRGBA(ColorToRGB(Color)));
+	HLS.L := Min(255, HLS.L + 64);
+	Result := TColor(HLSToRGB(HLS));
+//	Result := ColorDiv(Color, 4 * 65536 div 3);
 end;
 
 function DarkerColor(Color: TColor): TColor;
+var
+	HLS: THLSColor;
 begin
-	Result := ColorDiv(Color, 2 * 65536 div 3);
+	HLS := RGBToHLS(TRGBA(ColorToRGB(Color)));
+	HLS.L := Max(0, HLS.L - 64);
+	Result := TColor(HLSToRGB(HLS));
+//	Result := ColorDiv(Color, 2 * 65536 div 3);
 end;
 
 function ColorRB(C: TColor): TColor;

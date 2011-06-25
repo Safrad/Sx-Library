@@ -1,0 +1,58 @@
+// * File:     Lib\LibD7.dpk
+// * Created:  2009-09-17
+// * Modified: 2009-12-19
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
+package LibD7;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS OFF}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS OFF}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'Safrad''s Components'}
+{$IMPLICITBUILD ON}
+
+requires
+	vcl,
+	rtl,
+	designide,
+	vclactnband,
+	vclx,
+	vcljpg;
+
+contains
+	ufOpenedFiles in 'GUI\ufOpenedFiles.pas' {fOpenedFiles},
+	uDButton in 'GUI\uDButton.pas',
+	uDEdit in 'GUI\uDEdit.pas',
+	uDGauge in 'GUI\uDGauge.pas',
+	uDImage in 'GUI\uDImage.pas',
+	uDLabel in 'GUI\uDLabel.pas',
+	uDMemo in 'GUI\uDMemo.pas',
+	uDPanel in 'GUI\uDPanel.pas',
+	uDTimer in 'GUI\uDTimer.pas',
+	uDView in 'GUI\uDView.pas',
+	uCompLog7 in 'GUI\uCompLog7.pas',
+	uNumericComboBox in 'GUI\uNumericComboBox.pas';
+
+end.

@@ -1,17 +1,17 @@
-//* File:     Lib\uFiles.pas
-//* Created:  1998-01-01
-//* Modified: 2009-05-12
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uFiles.pas
+// * Created:  1998-01-01
+// * Modified: 2009-11-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uFiles;
 
 interface
 
 uses
-	uTypes, uStrings,
+	uTypes, uStrings, uFile,
 	{$ifndef Console}Dialogs,{$endif}
 	SysUtils, Windows;
 
@@ -50,7 +50,7 @@ function ParentDir(var Dir: string): BG;
 function ParentDirF(Dir: string): string;
 function LegalFileName(const FileName: string): string;
 function LegalPath(const Path: string): string;
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
+procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
 function HandleFileSize(FHandle: THandle): S8;
 function GetFileSizeU(const FileName: TFileName): S8;
 function GetFileSizeS(const FileName: TFileName): string;
@@ -86,9 +86,11 @@ function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: 
 function ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
 function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG): BG;
 
-function ReadStringFromFile(const FileName: TFileName; out Data: string): BG; overload;
-function ReadStringFromFile(const FileName: TFileName): string; overload;
-function WriteStringToFile(const FileName: TFileName; const Data: string; const Append: BG): BG;
+function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG; overload;
+function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
+function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
+function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG; overload;
+function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG; overload;
 
 {$IFDEF WIN32}
 function ShortToLongFileName(const ShortName: string): string;
@@ -110,25 +112,30 @@ function DirectoryExistsEx(const DirName: TFileName): BG;
 function FileExistsEx(const FileName: TFileName): BG;
 function FileOrDirExists(const FileOrDirName: string): BG;
 function FileOrDirExistsEx(const FileOrDirName: string): BG;
-function LastLineFromFile(const FileName: TFileName): string;
+function LastLineFromFile(const FileName: TFileName): AnsiString;
 function SameFileName(const FileName1, FileName2: TFileName): BG;
 
-function DialogStr(Ext, Des: array of string): string;
+function DialogStrWithoutAll(const Ext, Des: array of string): string;
+function DialogStr(const Ext, Des: array of string): string;
 function GetFileNameFilter(const Description: string; const Extensions: array of string): string;
 function GetExecutableFilter: string;
 function AllFiles: string;
 function AllText: string;
 function AllSounds: string;
 
+function SplitStr(const Source: string; const MaxStrings: SG): TArrayOfString;
+function Installed: BG;
+
 implementation
 
 uses
 	Math,
-	uMsg, uProjectInfo, uFile, uSorts,
+	uMsg, uProjectInfo, uSorts, uCharset,
 	uOutputFormat, uMath, uLog;
 
 var
 	StartupEnvironment: array of TStringPair;
+	GInstalled: BG;
 
 procedure InitStartupEnvironment;
 var
@@ -170,20 +177,60 @@ begin
 	end;
 end;
 
+function Installed: BG;
+begin
+	Result := GInstalled;
+end;
+
+function SplitStr(const Source: string; const MaxStrings: SG): TArrayOfString;
+var
+	i: SG;
+	EndIndex: SG;
+	ResultCount: SG;
+begin
+	SetLength(Result, MaxStrings);
+	if MaxStrings <= 0 then Exit;
+
+	ResultCount := 0;
+	i := 1;
+	while i < Length(Source) do
+	begin
+		if Source[i] = '"' then
+		begin
+			EndIndex := PosEx('"', Source, i + 1);
+		end
+		else
+		begin
+			EndIndex := PosEx(CharSpace, Source, i + 1);
+		end;
+		if EndIndex = 0 then EndIndex := MaxInt - 1;
+
+		Result[ResultCount] := Copy(Source, i + 1, EndIndex - 1 - i);
+		Inc(ResultCount);
+		if ResultCount >= MaxStrings then
+			Exit;
+
+		i := EndIndex + 1;
+	end;
+end;
+
 procedure InitPaths;
 var
 	NewLength: SG;
 	i: SG;
+	All: TArrayOfString;
 begin
 	if ExeFileName <> '' then Exit;
 
 	GetDir(0, StartDir);
 	CorrectDir(StartDir);
 
-	ExeFileName := GetCommandLine;
-	WorkDir := '';
 	// Remove Parameters
-	if Length(ExeFileName) > 0 then
+	All := SplitStr(GetCommandLine, 1);
+
+	ExeFileName := All[0];
+	WorkDir := '';
+{	if Length(ExeFileName) > 0 then
 	begin
 		if ExeFileName[1] = '"' then
 		begin
@@ -195,7 +242,7 @@ begin
 		begin
 			i := Pos(' ', ExeFileName);
 			Delete(ExeFileName, i, Length(ExeFileName) - i + 1);
-		end;
+		end;}
 
 		// Split ExeFileName to WorkDir and InternalName
 		for i := Length(ExeFileName) downto 0 do
@@ -210,7 +257,7 @@ begin
 				Break;
 			end;
 		end;
-	end;
+//	end;
 	if WorkDir = '' then WorkDir := StartDir;
 	GraphDir := WorkDir + 'Graphics' + PathDelim;
 	SoundsDir := WorkDir + 'Sounds' + PathDelim;
@@ -244,7 +291,15 @@ begin
 	{$else}
 	AppDataDir := CommonAppDataDir + 'Safrad' + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
 	{$endif}
-	CreateDirsEx(AppDataDir);
+	if DirectoryExists(AppDataDir) then
+	begin
+		GInstalled := True
+	end
+	else
+	begin
+		GInstalled := False;
+		CreateDirsEx(AppDataDir);
+	end;
 
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
 //	CorrectDir(DocsDir);
@@ -397,7 +452,7 @@ begin
 			// Relative path
 			Result := WorkDir + Dir;
 
-		// TODO: '..' like HTML (New Parameter WorkDir=ActualDir)
+		// TODO : '..' like HTML (New Parameter WorkDir=ActualDir)
 	end;
 end;
 
@@ -415,7 +470,7 @@ var i: SG;
 begin
 	for i := Length(FName) downto 1 do
 	begin
-		if FName[i] in ['/', '\'] then
+		if CharInSet(FName[i], ['/', '\']) then
 		begin
 			Result := Copy(FName, 1, i);
 			Exit;
@@ -503,6 +558,9 @@ begin
 	Result := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..')
 end;
 
+const
+	faAll = $00000031; // faArchive or faReadOnly or faDirectory;
+
 procedure ReadSubDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs: BG);
 var
 	SearchRec: TSearchRec;
@@ -513,7 +571,7 @@ var
 	NewSize: SG;
 begin
 	// faReadOnly or faHidden or faSysFile or
-	ErrorCode := FindFirst(Path + SubPath + '*.*', faArchive or faReadOnly or faDirectory{faAnyFile}, SearchRec);
+	ErrorCode := FindFirst(Path + SubPath + '*.*', faAll, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		IsDir := IsDirectory(SearchRec);
@@ -586,7 +644,7 @@ var
 begin
 	ListCount := 0;
 	// faReadOnly or faHidden or faSysFile or
-	ErrorCode := FindFirst(Path + SubPath + '*.*', faArchive or faReadOnly or faDirectory{faAnyFile}, SearchRec);
+	ErrorCode := FindFirst(Path + SubPath + '*.*', faAll, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		IsDir := IsDirectory(SearchRec);
@@ -660,7 +718,7 @@ begin
 end;
 
 
-procedure ReadDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
+procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
 {$ifopt d+}
 var
 	i: SG;
@@ -683,10 +741,12 @@ begin
 			if Extension[1] <> '.' then Extension := '.' + Extension;}
 
 	if not Sort then
-		ReadSubDir(FileNames, FilesCount, CorrectDirF(Path), '', Extensions, Files, Dirs, SubDirs)
+		ReadSubDir(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs)
 	else
-		ReadSubDirSorted(FileNames, FilesCount, CorrectDirF(Path), '', Extensions, Files, Dirs, SubDirs);
+		ReadSubDirSorted(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs);
 
+	if MainLogWrite(mlDebug) then
+		MainLogAdd(NToS(FileCount) + ' files found in folder ' + Path + '.', mlDebug);
 (*	if Sort then
 	begin
 		Offset := FilesCount div 2;
@@ -763,7 +823,7 @@ var FileSize: U8;
 begin
 	FileSize := GetFileSizeU(FileName);
 	if FileSize < 0 then
-		Result := 'N/A'
+		Result := NAStr
 	else
 		Result := BToStr(FileSize);
 end;
@@ -942,7 +1002,7 @@ begin
 	Data := 'filename=' + FileName + FileSep +
 		'size=' + IntToStr(FileSize) + FileSep +
 		Data;
-	WriteStringToFile(TargetFileName, Data, False);
+	WriteStringToFile(TargetFileName, Data, False, fcAnsi);
 end;
 
 var
@@ -1245,8 +1305,15 @@ begin
 end;
 
 function NewFileOrDirEx(var FileOrDir: string): BG;
+var
+	FileName, Name: string;
 begin
-	FileOrDir := DelFileExt(FileOrDir) + ' ' + ReplaceF(DateTimeToS(Now, 0, ofIO), ':', '_') + ExtractFileExt(FileOrDir);
+	FileName := ExtractFileName(FileOrDir);
+	Name := DelFileExt(FileName);
+	FileOrDir := DelFileName(FileOrDir);
+	if Name <> '' then
+		FileOrDir := FileOrDir + Name + ' ';
+	FileOrDir := FileOrDir + ReplaceF(DateTimeToS(Now, 0, ofIO), ':', '_') + ExtractFileExt(FileName);
 	Result := NewFileOrDir(FileOrDir);
 end;
 
@@ -1402,6 +1469,7 @@ begin
 	Result := False;
 	F := TFile.Create;
 	try
+		F.Charset := fcAnsi;
 		if F.Open(FileName, fmRewrite) then
 		begin
 			F.BlockWrite(Pointer(Buf)^, Count);
@@ -1451,7 +1519,7 @@ begin
 	end;
 end;
 
-function ReadStringFromFile(const FileName: TFileName; out Data: string): BG; overload;
+function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG; overload;
 var
 	F: TFile;
 begin
@@ -1463,7 +1531,11 @@ begin
 		begin
 			SetLength(Data, F.FileSize);
 			if Length(Data) >= 1 then
+			begin
 				F.BlockRead(Data[1], F.FileSize);
+				if F.Charset = fcUTF8 then
+					Data := UTF8ToAnsi(Data)
+			end;
 			F.Close;
 			Result := True;
 		end;
@@ -1472,12 +1544,41 @@ begin
 	end;
 end;
 
-function ReadStringFromFile(const FileName: TFileName): string; overload;
+function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
+var
+	F: TFile;
+	Data2: AnsiString;
+begin
+	Result := False;
+	Data := '';
+	F := TFile.Create;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			SetLength(Data2, F.FileSize);
+			if Length(Data2) >= 1 then
+			begin
+				F.BlockRead(Data2[1], F.FileSize);
+				if F.Charset = fcUTF8 then
+					Data := ConvertUTF8ToUnicode(Data2)
+				else
+					Data := UnicodeString(Data2);
+			end;
+			SetLength(Data2, 0);
+			F.Close;
+			Result := True;
+		end;
+	finally
+		F.Free;
+	end;
+end;
+
+function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
 begin
 	ReadStringFromFile(FileName, Result);
 end;
 
-function SameDataInFile(const FileName: TFileName; const Line: string): BG;
+function SameDataInFile(const FileName: TFileName; const Line: AnsiString): BG;
 label LClose;
 var
 	F: TFile;
@@ -1517,12 +1618,36 @@ begin
 	end;
 end;
 
-function WriteStringToFile(const FileName: TFileName; const Data: string; const Append: BG): BG;
+procedure ConvertFileCharset(const Source: AnsiString; out Dest: AnsiString; const FileCharset: TFileCharset); overload;
+begin
+	case FileCharset of
+	fcAnsi: Dest := Source;
+	fcUTF8: Dest := AnsiToUtf8(Source);
+//	fcUTF16LE: Dest := UnicodeString(Source);
+	else
+		Warning('Unsupported charset.');
+	end;
+end;
+
+procedure ConvertFileCharset(const Source: UnicodeString; out Dest: AnsiString; const FileCharset: TFileCharset); overload;
+begin
+	case FileCharset of
+	fcAnsi: Dest := AnsiString(Source);
+	fcUTF8: Dest := ConvertUnicodeToUtf8(Source);
+	else
+		Warning('Unsupported charset.');
+	end;
+end;
+
+function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG;
 var
 	F: TFile;
 	FileMode: TFileMode;
+	DataA: AnsiString;
 begin
-	if (Append = False) and SameDataInFile(FileName, Data) then
+	ConvertFileCharset(Data, DataA, FileCharset);
+
+	if (Append = False) and SameDataInFile(FileName, DataA) then
 		Result := True
 	else
 	begin
@@ -1532,10 +1657,42 @@ begin
 		else
 			FileMode := fmRewrite;
 		F := TFile.Create;
+		F.Charset := FileCharset;
 		try
 			if F.Open(FileName, FileMode) then
 			begin
-				F.Write(Data);
+				F.WriteNoConversion(DataA);
+				F.Close;
+				Result := True;
+			end;
+		finally
+			F.Free;
+		end;
+	end;
+end;
+
+function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG;
+var
+	F: TFile;
+	FileMode: TFileMode;
+	DataA: AnsiString;
+begin
+	ConvertFileCharset(Data, DataA, FileCharset);
+	if (Append = False) and SameDataInFile(FileName, DataA) then
+		Result := True
+	else
+	begin
+		Result := False;
+		if Append then
+			FileMode := fmAppend
+		else
+			FileMode := fmRewrite;
+		F := TFile.Create;
+		F.Charset := FileCharset;
+		try
+			if F.Open(FileName, FileMode) then
+			begin
+				F.WriteNoConversion(DataA);
 				F.Close;
 				Result := True;
 			end;
@@ -1642,7 +1799,7 @@ begin
 	Index := Length(Str);
 	while Index > 0 do
 	begin
-		while Str[Index] in ['\', '/'] do
+		while CharInSet(Str[Index], ['\', '/']) do
 		begin
 			Result := Copy(Str, Index, MaxInt);
 			Exit;
@@ -1877,11 +2034,11 @@ begin
 		Result := FileExistsEx(FileOrDirName);
 end;
 
-function LastLineFromFile(const FileName: TFileName): string;
+function LastLineFromFile(const FileName: TFileName): AnsiString;
 var
 	i: SG;
 	F: TFile;
-	C: Char;
+	C: AnsiChar;
 begin
 	Result := '';
 	F := TFile.Create;
@@ -1893,7 +2050,7 @@ begin
 			begin
 				F.Seek(i);
 				F.BlockRead(C, SizeOf(C));
-				if not (C in [CharCR, CharLF]) then Break;
+				if not CharInSet(C, [CharCR, CharLF]) then Break;
 				Dec(i);
 			end;
 
@@ -1901,7 +2058,7 @@ begin
 			begin
 				F.Seek(i);
 				F.BlockRead(C, SizeOf(C));
-				if C in [CharCR, CharLF] then Break;
+				if CharInSet(C, [CharCR, CharLF]) then Break;
 				Result := c + Result;
 				Dec(i);
 			end;
@@ -1917,7 +2074,7 @@ begin
 	Result := ShortToLongPath(FileName1) = ShortToLongPath(FileName2);
 end;
 
-function DialogStr(Ext, Des: array of string): string;
+function DialogStrWithoutAll(const Ext, Des: array of string): string;
 var
 	i: SG;
 	s1, s2: string;
@@ -1940,7 +2097,11 @@ begin
 	begin
 		Result := Result + Des[i] + ' (*.' + Ext[i] + ')|*.' + Ext[i] + '|';
 	end;
-//	Result := DelLastChar(Result);
+end;
+
+function DialogStr(const Ext, Des: array of string): string;
+begin
+	Result := DialogStrWithoutAll(Ext, Des);
 	Result := Result + AllFiles;
 end;
 

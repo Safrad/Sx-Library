@@ -1,10 +1,10 @@
-//* File:     Lib\Parser\uGoniometricFunctions.pas
-//* Created:  2004-03-07
-//* Modified: 2008-02-06
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\Parser\uGoniometricFunctions.pas
+// * Created:  2004-03-07
+// * Modified: 2009-08-31
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uGoniometricFunctions;
 
@@ -107,18 +107,18 @@ begin
 end;
 
 initialization
-	AddFunction('Goniometic', 'pi', PIConstant, 'http://en.wikipedia.org/wiki/Pi');
+	AddFunction('Goniometic', 'PI', PIConstant, 'http://en.wikipedia.org/wiki/Pi');
 	AddFunction('Goniometic', 'Sin', Sine, 'http://en.wikipedia.org/wiki/Sine');
 	AddFunction('Goniometic', 'Cos', Cosine, 'http://en.wikipedia.org/wiki/Cosine');
 	AddFunction('Goniometic', 'Tan', Tangent, 'http://en.wikipedia.org/wiki/Tangent');
-	AddFunction('Goniometic', 'ArcSin', ArcSin, 'http://en.wikipedia.org/wiki/ArcSine');
-	AddFunction('Goniometic', 'ArcCos', ArcCos, 'http://en.wikipedia.org/wiki/ArcCosine');
+	AddFunction('Goniometic', 'ArcSin', ArcSin, 'http://en.wikipedia.org/wiki/Arcsine');
+	AddFunction('Goniometic', 'ArcCos', ArcCos, 'http://en.wikipedia.org/wiki/Arccosine');
 
 	// Hyperbolic
-	AddFunction('Goniometic', 'Sinh', Sinh, 'http://en.wikipedia.org/wiki/Sineh');
-	AddFunction('Goniometic', 'Cosh', Cosh, 'http://en.wikipedia.org/wiki/Cosineh');
-	AddFunction('Goniometic', 'Tanh', Tanh, 'http://en.wikipedia.org/wiki/Tangenth');
-	AddFunction('Goniometic', 'ArcSinh', ArcSinh, 'http://en.wikipedia.org/wiki/ArcSineh');
-	AddFunction('Goniometic', 'ArcCosh', ArcCosh, 'http://en.wikipedia.org/wiki/ArcCosineh');
-	AddFunction('Goniometic', 'ArcTanh', ArcTanh, 'http://en.wikipedia.org/wiki/ArcTangenth');
+	AddFunction('Goniometic', 'Sinh', Sinh, 'http://en.wikipedia.org/wiki/Hyperbolic_sine');
+	AddFunction('Goniometic', 'Cosh', Cosh, 'http://en.wikipedia.org/wiki/Hyperbolic_cosine');
+	AddFunction('Goniometic', 'Tanh', Tanh, 'http://en.wikipedia.org/wiki/Hyperbolic_tangent');
+	AddFunction('Goniometic', 'ArcSinh', ArcSinh, 'http://en.wikipedia.org/wiki/Arcsinh');
+	AddFunction('Goniometic', 'ArcCosh', ArcCosh, 'http://en.wikipedia.org/wiki/Arccosh');
+	AddFunction('Goniometic', 'ArcTanh', ArcTanh, 'http://en.wikipedia.org/wiki/Arctanh');
 end.

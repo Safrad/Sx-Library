@@ -1,10 +1,10 @@
-//* File:     Lib\uSorts.pas
-//* Created:  2000-08-01
-//* Modified: 2009-02-26
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uSorts.pas
+// * Created:  2000-08-01
+// * Modified: 2009-09-25
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uSorts;
 
@@ -51,8 +51,8 @@ procedure SortS8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArra
 procedure SortF8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayF8; Count: UG);
 procedure SortFA(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayFA; Count: UG);
 
-procedure SortS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of string);
-procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of WideString);
+procedure SortS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of AnsiString); deprecated;
+procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of UnicodeString); deprecated;
 
 {
 Value	Meaning
@@ -142,13 +142,13 @@ type
 
 procedure SortS;
 type
-	TValue = type string;
+	TValue = type AnsiString;
 	TValue1 = U1;
 {$I SortS.inc}
 
 procedure SortWS;
 type
-	TValue = type WideString;
+	TValue = type UnicodeString;
 	TValue1 = U2;
 {$I SortS.inc}
 

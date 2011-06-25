@@ -1,22 +1,26 @@
-//* File:     Lib\uCharTable.pas
-//* Created:  2000-05-01
-//* Modified: 2007-05-13
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uCharTable.pas
+// * Created:  2000-05-01
+// * Modified: 2009-09-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uCharTable;
 
 interface
 
 type
-	TCharTable = array[Char] of (
-		{ctSpace, ctTab,} ctLetter, ctLastLetter, ctBlank, ctReturn, ctDollar, ctIllegal, ctNumber, ctNumber2,
+	TCharType = (
+		{ctSpace, ctTab,} ctLetter, ctLastLetter, ctBlank, ctReturn, ctDollar, ctIllegal, ctNumber, ctNumberPrefix,
 		ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose,
-		ctPoint, ctComma, ctComma2);
+		ctPoint, ctComma, ctSemicolon, ctPercent);
+
+	TCharTable = array[AnsiChar] of TCharType;
 var
 	StdCharTable: TCharTable;
+
+function CharType(const c: Char; const CharTable: TCharTable): TCharType;
 
 implementation
 
@@ -25,16 +29,16 @@ uses uStrings;
 // Fill CharTable with standard values.
 procedure FillStdCharTable(out CharTable: TCharTable);
 var
-	c: Char;
+	c: AnsiChar;
 begin
 	// Make Char Table
-	for c := Low(Char) to High(Char) do
+	for c := Low(c) to High(c) do
 		case c of
 		CharSpace, CharTab: CharTable[c] := ctBlank;
 		CharCR, CharLF: CharTable[c] := ctReturn;
 		'a'..'z', 'A'..'Z', '_'{, #$80..#$ff}: CharTable[c] := ctLetter;
 		'0'..'9': CharTable[c] := ctNumber;
-		{'!',} '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharTable[c] := ctNumber2;
+		{'!',} '#', '$' {'a'..'z', 'A'..'Z'}: CharTable[c] := ctNumberPrefix;
 		'+': CharTable[c] := ctPlus;
 		'-': CharTable[c] := ctMinus;
 		'^': CharTable[c] := ctExp;
@@ -44,18 +48,30 @@ begin
 		')': CharTable[c] := ctClose;
 		'.': CharTable[c] := ctPoint;
 		',': CharTable[c] := ctComma;
-		';': CharTable[c] := ctComma2;
+		';': CharTable[c] := ctSemicolon;
+		'%': CharTable[c] := ctPercent;
 		else
 			CharTable[c] := ctIllegal;
 		end;
 end;
 
+function CharType(const c: Char; const CharTable: TCharTable): TCharType;
+begin
+	{$ifdef UNICODE}
+	if Ord(c) <= $ff then
+	{$endif}
+		Result := CharTable[AnsiChar(c)]
+	{$ifdef UNICODE}
+	else
+		Result := ctIllegal;
+	{$endif}
+end;
 (*
 procedure FillCharsTable;
-var c: Char;
+var c: AnsiChar;
 begin
 	// Make Char Table
-	for c := Low(Char) to High(Char) do
+	for c := Low(c) to High(c) do
 		case c of
 		' ': CharsTable[c] := ctSpace;
 		'a'..'z', 'A'..'Z', '_': CharsTable[c] := ctLetter;

@@ -1,14 +1,14 @@
-//* File:     Lib\uDNumber.pas
-//* Created:  2001-03-01
-//* Modified: 2007-05-12
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uDNumber.pas
+// * Created:  2001-03-01
+// * Modified: 2009-08-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
-// TODO: DNW
+// TODO : DNW
 
-unit uDNumber;
+unit uDNumber deprecated;
 
 interface
 

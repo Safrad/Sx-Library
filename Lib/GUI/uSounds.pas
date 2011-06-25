@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uSounds.pas
-//* Created:  2000-05-01
-//* Modified: 2008-04-01
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uSounds.pas
+// * Created:  2000-05-01
+// * Modified: 2009-12-21
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uSounds;
 
@@ -51,7 +51,7 @@ type
 		procedure FormShow(Sender: TObject);
 		procedure Select1Click(Sender: TObject);
 		procedure PopupMenuSoundsPopup(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+		procedure FormDestroy(Sender: TObject);
 	private
 		{ Private declarations }
 		procedure RWOptions(const Save: BG);
@@ -82,7 +82,8 @@ implementation
 
 {$R *.dfm}
 uses
-	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings;
+	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings, uLayout,
+	uDictionary;
 
 type
 	PSound = ^TSound; // Used Sounds
@@ -241,6 +242,7 @@ procedure FreeSounds;
 var
 	i: SG;
 	P: PSound;
+	D: PDSound;
 begin
 	{$ifopt d-}
 	StopPlayWave;
@@ -255,10 +257,18 @@ begin
 	P := Sounds.GetFirst;
 	for i := 0 to Sounds.Count - 1 do
 	begin
-		FreeAndNil(P.Wave);
+		FreeAndNil(P.Wave); // Needed!!!
+		Finalize(P^);
 		Sounds.Next(Pointer(P));
 	end;
 	Sounds.Clear;
+
+	D := DSounds.GetFirst;
+	for i := 0 to DSounds.Count - 1 do
+	begin
+		Finalize(D^);
+		DSounds.Next(Pointer(D));
+	end;
 	DSounds.Clear;
 	FreeAndNil(WaveBuffer);
 end;
@@ -383,14 +393,11 @@ end;
 
 procedure TfSounds.FormResize(Sender: TObject);
 var
-	Top: SG;
 	L: SG;
 begin
-	Top := ClientHeight - FormBorder - ButtonOK.Height;
+//	Top := ClientHeight - FormBorder - ButtonOK.Height;
 
-	ButtonCancel.SetBounds(ClientWidth - FormBorder - ButtonCancel.Width, Top, ButtonCancel.Width, ButtonCancel.Height);
-	ButtonApply.SetBounds(ButtonCancel.Left - FormBorder - ButtonApply.Width, Top, ButtonApply.Width, ButtonApply.Height);
-	ButtonOK.SetBounds(ButtonApply.Left - FormBorder - ButtonOK.Width, Top, ButtonOK.Width, ButtonOK.Height);
+	LayoutControls([ButtonOk, ButtonCancel, ButtonApply], ClientWidth, ClientHeight);
 
 	ButtonSounds.Top := ButtonOK.Top;
 	ButtonSounds.Left := FormBorder;
@@ -427,11 +434,15 @@ begin
 	B := WavePlayer <> nil;
 	LabelSQ.Visible := B;
 	BevelSQ.Visible := B;
+	ButtonSounds.Visible := B;
+	ButtonMusic.Visible := B;
 	ButtonReduce.Visible := B;
 	Button16bits.Visible := B;
 	LabelFrequency.Visible := B;
 	ComboBoxFrequency.Visible := B;
 	ButtonStereo.Visible := B;
+
+	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfSounds.ButtonCancelClick(Sender: TObject);
@@ -566,7 +577,7 @@ begin
 			DViewSounds.Bitmap.Canvas.Font.Style := DViewSounds.Bitmap.Canvas.Font.Style + [fsStrikeOut];
 		Data := Sound.Name;
 	end;
-	1: Data := NoYes[Abs(SG(DSound.Enabled))];
+	1: Data := Translate(NoYes[Abs(SG(DSound.Enabled))]);
 	2:
 	begin
 		if DSound.Exists = False then
@@ -665,7 +676,8 @@ begin
 	end;
 	if SoundsC then
 	begin
-		DViewSounds.Invalidate;
+		DViewSounds.DataChanged;
+//		DViewSounds.Invalidate;
 		SoundsChanged := True;
 	end;
 end;
@@ -676,7 +688,7 @@ var
 	C, E: BG;
 	P: PDSound;
 begin
-	i := DViewSounds.RowOrder[DViewSounds.ActualRow];
+	i := DViewSounds.ActualRow;
 	if (i >= 0) and (i < SG(DSounds.Count)) then
 	begin
 		P := DSounds.Get(i);
@@ -742,6 +754,7 @@ initialization
 	DSounds := TData.Create(True);
 	DSounds.ItemSize := SizeOf(TDSound);
 finalization
+	FreeSounds;
 	FreeAndNil(DSounds);
 	FreeAndNil(Sounds);
 end.

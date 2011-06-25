@@ -1,10 +1,10 @@
-//* File:     Lib\uFind.pas
-//* Created:  1999-05-01
-//* Modified: 2007-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uFind.pas
+// * Created:  1999-05-01
+// * Modified: 2009-09-02
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uFind;
 
@@ -275,7 +275,7 @@ const
 	Empty = $FFFFFFFFFFFFFFFF;
 var
 	R: array[0..7] of U8;
-	D: array[Char] of U8;
+	D: array[AnsiChar] of U8;
 	L: U8;
 	i, j: SG;
 	c: Char;

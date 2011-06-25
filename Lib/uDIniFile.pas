@@ -1,63 +1,72 @@
-//* File:     Lib\uDIniFile.pas
-//* Created:  2000-07-01
-//* Modified: 2009-03-29
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uDIniFile.pas
+// * Created:  2000-07-01
+// * Modified: 2009-12-05
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDIniFile;
 
 interface
 
 uses
-	uTypes, uDFile, uData,
-	SysUtils, TypInfo
-	{$ifndef Console}
-	, uDButton,
+	uTypes, uData, uFiles,
+	SysUtils, TypInfo,
+	Types
+{$IFNDEF Console}
+	, uDFile, uDButton,
 	Classes, Forms, ComCtrls, StdCtrls, Controls, Menus
-	{$endif};
+{$ELSE}
+	, uRWFile
+{$ENDIF};
 
 type
 	TKey = TStringPair;
 
 	TKeys = array of TKey;
-	TSection = record // 16
-		Reserved: S4;
+	PIniSection = ^TIniSection;
+
+	TIniSection = record // 16
 		KeyCount: S4;
 		Name: string; // 4
 		Keys: TKeys; // 4
+		Reserved: S4;
 	end;
+
 	TRWOptions = procedure(const Save: BG) of object;
 
-	TDIniFile = class(TDFile)
+	TDIniFile = class({$IFDEF Console} TRWFile {$ELSE} TDFile {$ENDIF})
 	private
-//		FFileName: TFileName;
+		// FFileName: TFileName;
 		FInMemory: BG;
 		FFileSaved: BG;
 		FSectionCount: Integer;
-		FSections: array of TSection;
+		FSections: array of TIniSection;
 		FRWList: array of TRWOptions; // TData;
 		procedure SaveToFile(const FileName: TFileName);
 		procedure Save;
+		// function GetSectionKeys(const SectionIndex: SG): TKeys;
 	protected
 		procedure RWData(const Write: BG); override;
 	public
-		procedure RegisterRW(RWOptions: TRWOptions);
-		procedure UnregisterRW(RWOptions: TRWOptions);
+		procedure RegisterRW(const RWOptions: TRWOptions);
+		procedure UnregisterRW(const RWOptions: TRWOptions);
 
 		property FileSaved: BG read FFileSaved;
 		procedure AddSection(const Section: string);
 		procedure EmptySection(const Section: string);
 		procedure DeleteSection(const Section: string);
-		procedure AddValue(SectionIndex: Integer; Ident: string);
+		procedure DeleteValue(const Section: string; const Ident: string);
+		procedure AddValue(const SectionIndex: Integer; const Ident: string);
 
 		// Read & Write
-		function ReadString(Section, Ident, Default: string): string;
-		procedure WriteString(Section, Ident, Value: string);
+		function ReadString(const Section, Ident, Default: string): string;
+		procedure WriteString(const Section, Ident, Value: string);
 		function ReadBool(const Section, Ident: string; Default: BG): BG;
 		procedure WriteBool(const Section, Ident: string; Value: BG);
 
+//		function ReadNum(const Section, Ident: string; Default: SG): SG; overload;
 		function ReadNum(const Section, Ident: string; Default: S4): S4; overload;
 		function ReadNum(const Section, Ident: string; Default: S8): S8; overload;
 		function ReadNum(const Section, Name: string; Default: FA): FA; overload;
@@ -65,18 +74,19 @@ type
 		procedure WriteNum(const Section, Ident: string; Value: S4); overload;
 		procedure WriteNum(const Section, Ident: string; Value: S8); overload;
 		procedure WriteNum(const Section, Name: string; Value: FA); overload;
-		{$ifndef Console}
+{$IFNDEF Console}
 		function ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteDate(const Section, Name: string; Value: TDateTime);
 		function ReadTime(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteTime(const Section, Name: string; Value: TDateTime);
 		function ReadDateTime(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteDateTime(const Section, Name: string; Value: TDateTime);
-		{$endif}
-
+{$ENDIF}
 		// RW
 		procedure RWString(const Section, Ident: string; var Value: string; const Save: BG);
+		procedure RWMultilineString(const Section, Ident: string; var Value: string; const Save: BG);
 		procedure RWFileName(const Section, Ident: string; var Value: TFileName; const Save: BG);
+		procedure RWFileNames(const Section, Ident: string; var Values: TFileNames; const Save: BG);
 		procedure RWBool(const Section, Ident: string; var Value: B1; const Save: BG); overload;
 		procedure RWBool(const Section, Ident: string; var Value: BG; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: S1; const Save: BG); overload;
@@ -90,22 +100,29 @@ type
 		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: FG; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: FA; const Save: BG); overload;
-		procedure RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG); overload;
-
-		{$ifndef Console}
+		procedure RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
+			overload;
+		procedure RWPoint(const Section, Ident: string; var Value: TPoint; const Save: BG);
+{$IFNDEF Console}
 		procedure RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		procedure RWTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
-		{$endif}
-
-		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: BG): string; // deprecated;
-		function RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: BG): SG; // deprecated;
-		function RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG): BG; // deprecated;
-		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA; // deprecated;
+{$ENDIF}
+		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: BG)
+			: string; // deprecated;
+		function RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: BG): SG;
+		// deprecated;
+		function RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG): BG;
+		// deprecated;
+		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
+		// deprecated;
 
 		function GetSectionIndex(const Section: string): Integer;
-		function GetSection(const Section: string): TKeys;
-		function GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer;
+		// function GetSectionKeys(const Section: string): TKeys;
+		function GetSection(const Section: string): PIniSection;
+		function GetSectionName(const SectionIndex: SG): string;
+		function GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer; overload;
+		function GetValueIndex(const Section: PIniSection; const Ident: string): Integer; overload;
 		function GetKeyValue(const SectionIndex: Integer; const ValueIndex: Integer): string;
 
 		function ValueExists(const Section, Ident: string): BG;
@@ -116,32 +133,41 @@ type
 		destructor Destroy; override;
 
 		procedure LoadFromFile(const FileName: TFileName);
-
-		{$ifndef Console}
+{$IFNDEF Console}
 		procedure ReadSection(const Section: string; Strings: TStrings);
 		procedure RWStrings(const Section: string; Val: TStrings; const Save: BG);
-		procedure RWFormPos(Form: TForm; const Save: BG);
-		procedure RWFormPosV(Form: TForm; const Save: BG);
-		procedure RWListView(ListView: TListView; const Save: BG);
-		procedure RWListBox(ListBox: TListBox; const Save: BG);
+		procedure RWFormPos(const Form: TForm; const Save: BG);
+		procedure RWFormPosV(const Form: TForm; const Save: BG);
+		procedure RWListView(const ListView: TListView; const Save: BG);
+		procedure RWListBox(const ListBox: TListBox; const Save: BG);
 		// Menu
 		procedure RWBoolM(const Section: string; MenuItem: TMenuItem; const Save: BG); overload;
-		procedure RWBoolM(const Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S1; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U1; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S2; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U2; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S4; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U4; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S8; const Save: BG; SubMenu: BG = False); overload;
-		procedure RWEnumM(const Section: string; MenuItem: TMenuItem; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
+		procedure RWBoolM(const Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S1; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U1; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S2; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U2; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S4; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U4; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S8; const Save: BG;
+			SubMenu: BG = False); overload;
+		procedure RWEnumM(const Section: string; MenuItem: TMenuItem; TypeInfo: PTypeInfo;
+			var Value: U1; const Save: BG);
 		procedure RWMenuItem(const Section: string; MenuItem: TMenuItem; const Save: BG);
 
 		procedure RWComboBox(const Section: string; ComboBox: TComboBox; const Save: BG);
 		procedure RWEdit(const Section: string; Edit: TEdit; const Save: BG);
 		procedure RWButton(const Section: string; Button: TDButton; const Save: BG);
-		procedure RWMemo(const Section: string; Memo: TMemo; const Save: BG);
-		{$endif}
+		procedure RWCheckBox(const Section: string; CheckBox: TCheckBox; const Save: BG);
+		// procedure RWMemo(const Section: string; Memo: TMemo; const Save: BG);
+{$ENDIF}
 		property SectionCount: SG read FSectionCount;
 	end;
 
@@ -152,11 +178,12 @@ implementation
 
 uses
 	Windows, Math,
-	uMath, uFiles, uStrings, uOutputFormat, uEscape, uLog
-	{$ifndef Console}, uMenus, uInputFormat, uDParser, uSystem{$endif};
+	uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog
+{$IFNDEF Console}, uMenus, uDParser, uSystem {$ENDIF};
 
 procedure TDIniFile.AddSection(const Section: string);
-var NewSize: Integer;
+var
+	NewSize: Integer;
 begin
 	Inc(FSectionCount);
 	NewSize := FSectionCount;
@@ -168,7 +195,8 @@ begin
 end;
 
 procedure TDIniFile.EmptySection(const Section: string);
-var SectionIndex: SG;
+var
+	SectionIndex: SG;
 begin
 	SectionIndex := GetSectionIndex(Section);
 	if SectionIndex >= 0 then
@@ -192,8 +220,27 @@ begin
 	end;
 end;
 
-procedure TDIniFile.AddValue(SectionIndex: Integer; Ident: string);
-var i, NewSize: Integer;
+procedure TDIniFile.DeleteValue(const Section, Ident: string);
+var
+	SectionIndex, ValueIndex: SG;
+	i: SG;
+begin
+	SectionIndex := GetSectionIndex(Section);
+	if SectionIndex >= 0 then
+	begin
+		ValueIndex := GetValueIndex(SectionIndex, Ident);
+		if ValueIndex >= 0 then
+		begin
+			for i := ValueIndex to FSections[SectionIndex].KeyCount - 2 do
+				FSections[SectionIndex].Keys[i] := FSections[SectionIndex].Keys[i + 1];
+			Dec(FSections[SectionIndex].KeyCount);
+		end;
+	end;
+end;
+
+procedure TDIniFile.AddValue(const SectionIndex: Integer; const Ident: string);
+var
+	i, NewSize: Integer;
 begin
 	Inc(FSections[SectionIndex].KeyCount);
 	NewSize := FSections[SectionIndex].KeyCount;
@@ -204,64 +251,65 @@ begin
 	FSections[SectionIndex].Keys[i].Value := '';
 end;
 
-function TDIniFile.ReadString(Section, Ident, Default: string): string;
+function TDIniFile.ReadString(const Section, Ident, Default: string): string;
 var
-//	Buffer: array[0..BufferSize] of Char;
 	SectionIndex, ValueIndex: Integer;
 begin
-{	case FileMethod of
-	fmWindows:
+	{ case FileMethod of
+		fmWindows:
 		SetString(Result, Buffer, GetPrivateProfileString(PChar(Section),
-			PChar(Ident), PChar(Default), Buffer, BufferSize, PChar(FFileName)));
-	else
-	begin}
-		Result := Default;
-		if FInMemory = False then LoadFromFile(FFileName);
-		SectionIndex := GetSectionIndex(Section);
-		if SectionIndex >= 0 then
-		begin
-			ValueIndex := GetValueIndex(SectionIndex, Ident);
-			if ValueIndex >= 0 then
-				Result := FSections[SectionIndex].Keys[ValueIndex].Value;
-		end;
-{	end;
-	end;}
+		PChar(Ident), PChar(Default), Buffer, BufferSize, PChar(FFileName)));
+		else
+		begin }
+	Result := Default;
+	if FInMemory = False then
+		LoadFromFile(FFileName);
+	SectionIndex := GetSectionIndex(Section);
+	if SectionIndex >= 0 then
+	begin
+		ValueIndex := GetValueIndex(SectionIndex, Ident);
+		if ValueIndex >= 0 then
+			Result := FSections[SectionIndex].Keys[ValueIndex].Value;
+	end;
+	{ end;
+		end; }
 end;
 
-procedure TDIniFile.WriteString(Section, Ident, Value: string);
-var SectionIndex, ValueIndex: Integer;
+procedure TDIniFile.WriteString(const Section, Ident, Value: string);
+var
+	SectionIndex, ValueIndex: Integer;
 begin
-//	Value := AddEscape(Value);
 	Assert((Pos(CharCR, Value) = 0) and (Pos(CharLF, Value) = 0));
-{	if CheckAccess(FileStatus, Save) then
-	begin}
-{		case FileMethod of
+	{ if CheckAccess(FileStatus, Save) then
+		begin }
+	{ case FileMethod of
 		fmWindows:
 		begin
-			if not WritePrivateProfileString(PChar(Section), PChar(Ident),
-				PChar(Value), PChar(FFileName)) then
-					IOError(FFileName, GetLastError());
+		if not WritePrivateProfileString(PChar(Section), PChar(Ident),
+		PChar(Value), PChar(FFileName)) then
+		IOError(FFileName, GetLastError());
 		end
 		else
-		begin}
-			if FInMemory = False then LoadFromFile(FFileName);
-			FFileSaved := False;
-			SectionIndex := GetSectionIndex(Section);
-			if SectionIndex < 0 then
-			begin
-				AddSection(Section);
-				SectionIndex := FSectionCount - 1;
-			end;
-			ValueIndex := GetValueIndex(SectionIndex, Ident);
-			if ValueIndex < 0 then
-			begin
-				AddValue(SectionIndex, Ident);
-				ValueIndex := FSections[SectionIndex].KeyCount - 1;
-			end;
-			FSections[SectionIndex].Keys[ValueIndex].Value := Value;
-{		end;
-		end;}
-//	end;
+		begin }
+	if FInMemory = False then
+		LoadFromFile(FFileName);
+	FFileSaved := False;
+	SectionIndex := GetSectionIndex(Section);
+	if SectionIndex < 0 then
+	begin
+		AddSection(Section);
+		SectionIndex := FSectionCount - 1;
+	end;
+	ValueIndex := GetValueIndex(SectionIndex, Ident);
+	if ValueIndex < 0 then
+	begin
+		AddValue(SectionIndex, Ident);
+		ValueIndex := FSections[SectionIndex].KeyCount - 1;
+	end;
+	FSections[SectionIndex].Keys[ValueIndex].Value := Value;
+	{ end;
+		end; }
+	// end;
 end;
 
 function TDIniFile.ReadBool(const Section, Ident: string; Default: BG): BG;
@@ -271,12 +319,12 @@ end;
 
 procedure TDIniFile.WriteBool(const Section, Ident: string; Value: BG);
 const
-	Values: array[0..1] of string = ('0', '1');
+	Values: array [0 .. 1] of string = ('0', '1');
 begin
 	WriteString(Section, Ident, Values[SG(Value) and 1]);
 end;
 
-function TDIniFile.ReadNum(const Section, Ident: string; Default: SG): SG;
+function TDIniFile.ReadNum(const Section, Ident: string; Default: S4): S4;
 var
 	s: string;
 begin
@@ -287,7 +335,7 @@ begin
 	begin
 		Result := ReadSGFast(DelCharsF(s, ','));
 	end;
-//	Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
+	// Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
 end;
 
 function TDIniFile.ReadNum(const Section, Ident: string; Default: S8): S8;
@@ -301,7 +349,7 @@ begin
 	begin
 		Result := ReadS8Fast(DelCharsF(s, ','));
 	end;
-//	Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
+	// Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
 end;
 
 function TDIniFile.ReadNum(const Section, Name: string; Default: FA): FA;
@@ -309,11 +357,11 @@ var
 	s: string;
 begin
 	s := ReadString(Section, Name, '');
-	if s = '' then
+	{ if s = '' then
 		Result := Default
-	else
-		Result := ReadFAFast(DelCharsF(s, ','));
-//	Result := StrToValE(FloatStr, False, -MaxExtended, Default, MaxExtended);
+		else
+		Result := ReadFAFast(DelCharsF(s, ',')); }
+	Result := StrToValE(s, False, -MaxExtended, Default, MaxExtended);
 end;
 
 procedure TDIniFile.WriteNum(const Section, Ident: string; Value: S4);
@@ -330,8 +378,8 @@ procedure TDIniFile.WriteNum(const Section, Name: string; Value: FA);
 begin
 	WriteString(Section, Name, FToS(Value, ofIO));
 end;
+{$IFNDEF Console}
 
-{$ifndef Console}
 function TDIniFile.ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 var
 	DateStr: string;
@@ -379,13 +427,14 @@ procedure TDIniFile.WriteDateTime(const Section, Name: string; Value: TDateTime)
 begin
 	WriteString(Section, Name, DateTimeToS(Value, -3, ofIO));
 end;
-{$endif}
-
+{$ENDIF}
 
 function TDIniFile.GetSectionIndex(const Section: string): Integer;
-var i: Integer;
+var
+	i: Integer;
 begin
-	if FInMemory = False then LoadFromFile(FFileName);
+	if FInMemory = False then
+		LoadFromFile(FFileName);
 	Result := -1;
 	for i := 0 to FSectionCount - 1 do
 		if FSections[i].Name = Section then
@@ -395,24 +444,44 @@ begin
 		end;
 end;
 
-function TDIniFile.GetSection(const Section: string): TKeys;
-var SectionIndex: SG;
+function TDIniFile.GetSectionName(const SectionIndex: SG): string;
 begin
-	SectionIndex := GetSectionIndex(Section);
 	if SectionIndex >= 0 then
 	begin
-		Result := FSections[SectionIndex].Keys;
+		Result := FSections[SectionIndex].Name;
 	end
 	else
 	begin
-		Result := nil;
+		Result := '';
 	end;
 end;
 
-function TDIniFile.GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer;
-var i: Integer;
+{ function TDIniFile.GetSectionKeys(const SectionIndex: SG): TKeys;
+	begin
+	if SectionIndex >= 0 then
+	begin
+	Result := FSections[SectionIndex].Keys;
+	end
+	else
+	begin
+	Result := nil;
+	end;
+	end; }
+
+function TDIniFile.GetSection(const Section: string): PIniSection;
+var
+	SectionIndex: SG;
 begin
-	if FInMemory = False then LoadFromFile(FFileName);
+	SectionIndex := GetSectionIndex(Section);
+	Result := @FSections[SectionIndex];
+end;
+
+function TDIniFile.GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer;
+var
+	i: Integer;
+begin
+	if FInMemory = False then
+		LoadFromFile(FFileName);
 	Result := -1;
 	if SectionIndex >= 0 then
 	begin
@@ -426,65 +495,87 @@ begin
 	end;
 end;
 
-function TDIniFile.SectionExists(const Section: string): BG;
-{var
-	S: TStrings;}
+function TDIniFile.GetValueIndex(const Section: PIniSection; const Ident: string): Integer;
+var
+	i: Integer;
 begin
-{	case FileMethod of
-	fmWindows:
+	if FInMemory = False then
+		LoadFromFile(FFileName);
+	Result := -1;
+	if Section <> nil then
 	begin
+		Assert(Length(Section.Keys) >= Section.KeyCount);
+		for i := 0 to Section.KeyCount - 1 do
+			if Section.Keys[i].Name = Ident then
+			begin
+				Result := i;
+				Break;
+			end;
+	end;
+end;
+
+function TDIniFile.SectionExists(const Section: string): BG;
+{ var
+	S: TStrings; }
+begin
+	{ case FileMethod of
+		fmWindows:
+		begin
 		S := TStringList.Create;
 		try
-			ReadSection(Section, S);
-			Result := S.Count > 0;
+		ReadSection(Section, S);
+		Result := S.Count > 0;
 		finally
-			S.Free;
+		S.Free;
 		end;
-	end;
-	else
-	begin}
-		if FInMemory = False then LoadFromFile(FFileName);
-		Result := GetSectionIndex(Section) >= 0;
-{	end;
-	end;}
+		end;
+		else
+		begin }
+	if FInMemory = False then
+		LoadFromFile(FFileName);
+	Result := GetSectionIndex(Section) >= 0;
+	{ end;
+		end; }
 end;
 
 function TDIniFile.ValueExists(const Section, Ident: string): BG;
 var
-//	S: TStrings;
+	// S: TStrings;
 	SectionIndex: Integer;
 begin
-{	case FileMethod of
-	fmWindows:
-	begin
+	{ case FileMethod of
+		fmWindows:
+		begin
 		S := TStringList.Create;
 		try
-			ReadSection(Section, S);
-			Result := S.IndexOf(Ident) > -1;
+		ReadSection(Section, S);
+		Result := S.IndexOf(Ident) > -1;
 		finally
-			S.Free;
+		S.Free;
 		end;
-	end;
-	else
-	begin}
-		if FInMemory = False then LoadFromFile(FFileName);
-		SectionIndex := GetSectionIndex(Section);
-		Result := GetValueIndex(SectionIndex, Ident) >= 0;
-{	end;
-	end;}
+		end;
+		else
+		begin }
+	if FInMemory = False then
+		LoadFromFile(FFileName);
+	SectionIndex := GetSectionIndex(Section);
+	Result := GetValueIndex(SectionIndex, Ident) >= 0;
+	{ end;
+		end; }
 end;
 
 constructor TDIniFile.Create(const FileName: TFileName);
 begin
-//	FRWList := TData.Create;
-//	FRWList.ItemSize := SizeOf(TRWOptions);
+	// FRWList := TData.Create;
+	// FRWList.ItemSize := SizeOf(TRWOptions);
 	inherited Create(FileName);
-//	FFileName := FileName;
+	// FFileName := FileName;
 	FFileSaved := True;
 end;
 
 procedure TDIniFile.FreeData;
-var i, j: SG;
+var
+	i, j: SG;
 begin
 	for i := 0 to FSectionCount - 1 do
 	begin
@@ -503,10 +594,10 @@ end;
 
 destructor TDIniFile.Destroy;
 begin
-	{$ifopt d+}
+{$IFOPT d+}
 	if Length(FRWList) <> 0 then
 		Assert(Length(FRWList) = 0);
-	{$endif}
+{$ENDIF}
 	if FFileSaved = False then
 		Save;
 	inherited Destroy;
@@ -520,7 +611,8 @@ var
 	LineIndex, InLineIndex: Integer;
 	i: SG;
 begin
-	if FileName <> '' then FFileName := FileName;
+	if FileName <> '' then
+		FFileName := FileName;
 	if FileExists(FFileName) = False then
 	begin
 		FInMemory := True;
@@ -535,7 +627,8 @@ begin
 			while LineIndex <= Length(s) do
 			begin
 				Line := ReadToNewLine(s, LineIndex);
-				if Line = '' then Continue;
+				if Line = '' then
+					Continue;
 
 				if Line[1] = '[' then
 				begin
@@ -551,7 +644,8 @@ begin
 					begin
 						AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
 						if FSections[FSectionCount - 1].KeyCount > 0 then
-							FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value := Copy(Line, InLineIndex, MaxInt);
+							FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value :=
+								Copy(Line, InLineIndex, MaxInt);
 					end;
 				end;
 			end;
@@ -571,6 +665,7 @@ begin
 		FFileName := FileName;
 
 	s := '';
+	s := FileSep; // Ansi -> UTF8 Fix (old versions can not read UTF8 Byte Mark Order)
 	for i := 0 to FSectionCount - 1 do
 	begin
 		s := s + '[' + FSections[i].Name + ']' + FileSep;
@@ -745,13 +840,14 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
+procedure TDIniFile.RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1;
+	const Save: BG);
 var
 	Ident: string;
 	i: SG;
 	ValueStr: string;
 begin
-	Ident := TypeInfo.Name;
+	Ident := string(TypeInfo.Name);
 	if FirstChar(Ident) = 'T' then
 		Ident := DelFirstChar(Ident);
 	if Save = False then
@@ -760,14 +856,32 @@ begin
 		i := GetEnumValue(TypeInfo, ValueStr);
 		if i <> -1 then
 			Value := i
-		else if FirstChar(ValueStr) in ['0'..'9'] then
+		else if CharInSet(FirstChar(ValueStr), ['0' .. '9']) then
 			Value := ReadS8Fast(DelCharsF(ValueStr, ','));
 	end
 	else
 		WriteString(Section, Ident, GetEnumName(TypeInfo, Value));
 end;
 
-{$ifndef Console}
+procedure TDIniFile.RWPoint(const Section, Ident: string; var Value: TPoint; const Save: BG);
+const
+	PointSep = ';';
+var
+	Line: string;
+	InLineIndex: SG;
+begin
+	Line := NToS(Value.X, ofIO) + PointSep + NToS(Value.Y, ofIO);
+	RWString(Section, Ident, Line, Save);
+	if Save = False then
+	begin
+		InLineIndex := 1;
+		Value.X := ReadSGFast(Line, InLineIndex);
+		ReadToChar(Line, InLineIndex, PointSep);
+		Value.Y := ReadSGFast(Line, InLineIndex);
+	end;
+end;
+{$IFNDEF Console}
+
 procedure TDIniFile.RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 begin
 	if Save = False then
@@ -803,7 +917,7 @@ begin
 		WriteDateTime(Section, Ident, Value);
 	end;
 end;
-{$endif}
+{$ENDIF}
 
 procedure TDIniFile.RWString(const Section, Ident: string; var Value: string; const Save: BG);
 begin
@@ -817,15 +931,54 @@ begin
 	end;
 end;
 
+procedure TDIniFile.RWMultilineString(const Section, Ident: string; var Value: string;
+	const Save: BG);
+begin
+	if Save = False then
+		Value := RemoveEscape(ReadString(Section, Ident, ''))
+	else
+		WriteString(Section, Ident, AddEscape(Value, True));
+end;
+
 procedure TDIniFile.RWFileName(const Section, Ident: string; var Value: TFileName; const Save: BG);
 begin
-//	Value := FullDir(RWStringF(Section, Ident, ShortDir(Value), Value, Save)); Takes long time for network path
+	// Value := FullDir(RWStringF(Section, Ident, ShortDir(Value), Value, Save)); Takes long time for network path
 	RWString(Section, Ident, string(Value), Save);
 end;
 
-function TDIniFile.RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: BG): string;
+procedure TDIniFile.RWFileNames(const Section, Ident: string; var Values: TFileNames;
+	const Save: BG);
+var
+	Count: SG;
+	i: SG;
 begin
-	if Save then Result := SaveVal else Result := DefVal;
+	if Save = False then
+	begin
+		SetLength(Values, 0);
+		Count := 0;
+	end
+	else
+		Count := Length(Values);
+
+	MainIni.RWNum(Section, 'Count', Count, Save);
+	if Save = False then
+	begin
+		SetLength(Values, Count);
+	end;
+
+	for i := 0 to Count - 1 do
+	begin
+		MainIni.RWFileName(Section, IntToStr(i), Values[i], Save);
+	end;
+end;
+
+function TDIniFile.RWStringF(const Section, Ident: string; const SaveVal, DefVal: string;
+	const Save: BG): string;
+begin
+	if Save then
+		Result := SaveVal
+	else
+		Result := DefVal;
 	if Save = False then
 	begin
 		Result := ReadString(Section, Ident, DefVal);
@@ -836,9 +989,13 @@ begin
 	end;
 end;
 
-function TDIniFile.RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: BG): SG;
+function TDIniFile.RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: BG)
+	: SG;
 begin
-	if Save then Result := SaveVal else Result := DefVal;
+	if Save then
+		Result := SaveVal
+	else
+		Result := DefVal;
 	if Save = False then
 	begin
 		Result := ReadNum(Section, Ident, DefVal);
@@ -849,10 +1006,15 @@ begin
 	end;
 end;
 
-function TDIniFile.RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
-var CurrDecimalSeparator: string;
+function TDIniFile.RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG)
+	: FA;
+var
+	CurrDecimalSeparator: string;
 begin
-	if Save then Result := SaveVal else Result := DefVal;
+	if Save then
+		Result := SaveVal
+	else
+		Result := DefVal;
 	CurrDecimalSeparator := DecimalSeparator;
 	DecimalSeparator := '.';
 	if Save = False then
@@ -866,9 +1028,13 @@ begin
 	DecimalSeparator := CurrDecimalSeparator;
 end;
 
-function TDIniFile.RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG): BG;
+function TDIniFile.RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG)
+	: BG;
 begin
-	if Save then Result := SaveVal else Result := DefVal;
+	if Save then
+		Result := SaveVal
+	else
+		Result := DefVal;
 	if Save = False then
 	begin
 		Result := ReadBool(Section, Ident, DefVal);
@@ -878,59 +1044,59 @@ begin
 		WriteBool(Section, Ident, SaveVal);
 	end;
 end;
-
-{$ifndef Console}
+{$IFNDEF Console}
 
 procedure TDIniFile.ReadSection(const Section: string; Strings: TStrings);
 var
-{	Buffer: array[0..BufferSize] of Char;
-	P: PChar;}
 	i, SectionIndex: Integer;
 begin
-{	case FileMethod of
-	fmWindows:
-	begin
-//		GetMem(Buffer, BufferSize);
+	{ case FileMethod of
+		fmWindows:
+		begin
+		//		GetMem(Buffer, BufferSize);
 		try
-			Strings.BeginUpdate;
-			try
-				Strings.Clear;
-				if GetPrivateProfileString(PChar(Section), nil, nil, Buffer, BufferSize,
-					PChar(FFileName)) <> 0 then
-				begin
-					P := Buffer;
-					while P^ <> CharNul do
-					begin
-						Strings.Add(P);
-						Inc(P, StrLen(P) + 1);
-					end;
-				end;
-			finally
-				Strings.EndUpdate;
-			end;
-		finally
-//			FreeMem(Buffer);
-		end;
-	end
-	else
-	begin}
-		if FInMemory = False then LoadFromFile(FFileName);
 		Strings.BeginUpdate;
 		try
-			Strings.Clear;
-			SectionIndex := GetSectionIndex(Section);
-			if SectionIndex >= 0 then
-				for i := 0 to FSections[SectionIndex].KeyCount - 1 do
-					Strings.Add(FSections[SectionIndex].Keys[i].Name + '=' + FSections[SectionIndex].Keys[i].Value);
-		finally
-			Strings.EndUpdate;
+		Strings.Clear;
+		if GetPrivateProfileString(PChar(Section), nil, nil, Buffer, BufferSize,
+		PChar(FFileName)) <> 0 then
+		begin
+		P := Buffer;
+		while P^ <> CharNul do
+		begin
+		Strings.Add(P);
+		Inc(P, StrLen(P) + 1);
 		end;
-{	end;
-	end;}
+		end;
+		finally
+		Strings.EndUpdate;
+		end;
+		finally
+		//			FreeMem(Buffer);
+		end;
+		end
+		else
+		begin }
+	if FInMemory = False then
+		LoadFromFile(FFileName);
+	Strings.BeginUpdate;
+	try
+		Strings.Clear;
+		SectionIndex := GetSectionIndex(Section);
+		if SectionIndex >= 0 then
+			for i := 0 to FSections[SectionIndex].KeyCount - 1 do
+				Strings.Add(FSections[SectionIndex].Keys[i].Name + '=' + FSections[SectionIndex].Keys[i]
+						.Value);
+	finally
+		Strings.EndUpdate;
+	end;
+	{ end;
+		end; }
 end;
 
 procedure TDIniFile.RWStrings(const Section: string; Val: TStrings; const Save: BG);
-var i, j, si, vi: SG;
+var
+	i, j, si, vi: SG;
 begin
 	if Save = False then
 	begin
@@ -949,7 +1115,8 @@ begin
 		while True do
 		begin
 			vi := GetValueIndex(si, 'Line' + NToS(i, ofIO));
-			if vi = -1 then Break;
+			if vi = -1 then
+				Break;
 			Inc(i);
 			for j := vi to FSections[si].KeyCount - 2 do
 				FSections[si].Keys[j] := FSections[si].Keys[j + 1];
@@ -958,14 +1125,34 @@ begin
 	end;
 end;
 
-procedure TDIniFile.RWFormPos(Form: TForm; const Save: BG);
-var Left, Top, Width, Height: SG;
+procedure TDIniFile.RWFormPos(const Form: TForm; const Save: BG);
+var
+	Left, Top, Width, Height: SG;
+	WS: TWindowState;
+	{ R: TRect;
+		WindowLong: U4; }
 begin
 	if Save = False then
-		Form.Position := poDesigned; // Turbo Delphi fix
-//	Assert(Save or (Form.Position = poDesigned));
+		Form.Position := poDesigned; // poDefaultPos
+	// Assert(Save or (Form.Position = poDesigned));
+	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
+	begin
+		WS := Form.WindowState;
+		if Save then
+			if WS = wsMinimized then
+				WS := wsNormal;
+		RWEnum(Form.Name, TypeInfo(TWindowState), U1(WS), Save);
+	end;
 	if (Save = False) or (Form.WindowState <> wsMaximized) then
 	begin
+		{ if Save and (Form.WindowState = wsMaximized) then
+			begin
+			WindowLong := GetWindowLong(Form.Handle, GWL_STYLE);
+			WindowLong := WindowLong xor WS_MAXIMIZE;
+			SetWindowLong(Form.Handle, WindowLong, GWL_STYLE);
+			GetWindowRect(Form.Handle, R);
+			Form.WindowState := wsNormal; // DNW
+			end; }
 		Left := Form.Left;
 		Top := Form.Top;
 		Width := Form.Width;
@@ -975,66 +1162,81 @@ begin
 			RWNum(Form.Name, 'Left', Left, Save);
 			RWNum(Form.Name, 'Top', Top, Save);
 		end;
-		if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
-//		if (not (Form is TDForm)) or (TDForm(Form).FullScreen = False) then
-		begin
-			RWNum(Form.Name, 'Width', Width, Save);
-			RWNum(Form.Name, 'Height', Height, Save);
-		end;
+
+		if not(Form.Position in [poDefault, poDefaultSizeOnly]) then
+			if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
+			// if (not (Form is TDForm)) or (TDForm(Form).FullScreen = False) then
+			begin
+				RWNum(Form.Name, 'Width', Width, Save);
+				RWNum(Form.Name, 'Height', Height, Save);
+			end;
 		if Save = False then
 			Form.SetBounds(Left, Top, Width, Height);
 	end;
-{	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
-		Form.WindowState := TWindowState(RWSGF(Form.Name, 'WindowState', Integer(Form.WindowState), Integer(Form.WindowState), Save));}
+	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
+	begin
+		if Save = False then
+			Form.WindowState := WS;
+	end;
 end;
 
-procedure TDIniFile.RWFormPosV(Form: TForm; const Save: BG);
+procedure TDIniFile.RWFormPosV(const Form: TForm; const Save: BG);
 begin
 	RWFormPos(Form, Save);
 	Form.Visible := RWBGF(Form.Name, 'Visible', Form.Visible, True, Save);
 end;
 
-procedure TDIniFile.RWListView(ListView: TListView; const Save: BG);
-var i, j: Integer;
+procedure TDIniFile.RWListView(const ListView: TListView; const Save: BG);
+var
+	i, j: Integer;
 begin
 	for i := 0 to ListView.Columns.Count - 1 do
-		ListView.Columns[i].Width := RWSGF(ListView.Name, 'Width' + NToS(i, ofIO), ListView.Columns[i].Width, ListView.Columns[i].Width, Save);
+		ListView.Columns[i].Width := RWSGF(ListView.Name, 'Width' + NToS(i, ofIO),
+			ListView.Columns[i].Width, ListView.Columns[i].Width, Save);
 	if ListView.FullDrag then
 	begin
 		for i := 0 to ListView.Columns.Count - 1 do
 		begin
 			j := RWSGF(ListView.Name, 'Index' + NToS(i, ofIO), ListView.Columns.Items[i].ID, i, Save);
-			if Save = False then ListView.Columns.Items[i].Index := j;
+			if Save = False then
+				ListView.Columns.Items[i].Index := j;
 
 		end;
 	end;
 end;
 
-procedure TDIniFile.RWListBox(ListBox: TListBox; const Save: BG);
-var i: Integer;
+procedure TDIniFile.RWListBox(const ListBox: TListBox; const Save: BG);
+var
+	i: Integer;
 begin
 	for i := 0 to ListBox.Items.Count - 1 do
 	begin
-		ListBox.Selected[i] := RWBGF(ListBox.Name, 'Index' + NToS(i, ofIO), ListBox.Selected[i], ListBox.Selected[i], Save);
+		ListBox.Selected[i] := RWBGF(ListBox.Name, 'Index' + NToS(i, ofIO), ListBox.Selected[i],
+			ListBox.Selected[i], Save);
 	end;
 end;
 
 procedure TDIniFile.RWBoolM(const Section: string; MenuItem: TMenuItem; const Save: BG);
-var Value: BG;
+var
+	Value: BG;
 begin
 	Value := MenuItem.Checked;
 	RWBool(Section, DelLastNumber(MenuItem.Name), Value, Save);
-	if Save = False then MenuItem.Checked := Value;
+	if Save = False then
+		MenuItem.Checked := Value;
 end;
 
-procedure TDIniFile.RWBoolM(const Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWBoolM(const Section: string; MenuItem: TMenuItem; var Value: BG;
+	const Save: BG; SubMenu: BG = False);
 begin
 	Value := MenuItem.Checked;
 	RWBool(Section, DelLastNumber(MenuItem.Name), Value, Save);
-	if Save = False then MenuItem.Checked := Value;
+	if Save = False then
+		MenuItem.Checked := Value;
 end;
 
-procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S1; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S1;
+	const Save: BG; SubMenu: BG = False);
 begin
 	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
@@ -1043,7 +1245,8 @@ begin
 				MenuItem.Items[Value].Checked := True;
 end;
 
-procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U1; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U1;
+	const Save: BG; SubMenu: BG = False);
 begin
 	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
@@ -1052,7 +1255,8 @@ begin
 				MenuItem.Items[Value].Checked := True;
 end;
 
-procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U2; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U2;
+	const Save: BG; SubMenu: BG = False);
 begin
 	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
@@ -1061,7 +1265,8 @@ begin
 				MenuItem.Items[Value].Checked := True;
 end;
 
-procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S2; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S2;
+	const Save: BG; SubMenu: BG = False);
 begin
 	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
@@ -1070,7 +1275,8 @@ begin
 				MenuItem.Items[Value].Checked := True;
 end;
 
-procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S4; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S4;
+	const Save: BG; SubMenu: BG = False);
 begin
 	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
@@ -1079,7 +1285,8 @@ begin
 				MenuItem.Items[Value].Checked := True;
 end;
 
-procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U4; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: U4;
+	const Save: BG; SubMenu: BG = False);
 begin
 	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
@@ -1088,7 +1295,8 @@ begin
 				MenuItem.Items[Value].Checked := True;
 end;
 
-procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S8; const Save: BG; SubMenu: BG = False);
+procedure TDIniFile.RWNumM(const Section: string; MenuItem: TMenuItem; var Value: S8;
+	const Save: BG; SubMenu: BG = False);
 begin
 	RWNum(Section, DelLastNumber(MenuItem.Name), Value, Save);
 	if SubMenu then
@@ -1097,7 +1305,8 @@ begin
 				MenuItem.Items[Value].Checked := True;
 end;
 
-procedure TDIniFile.RWEnumM(const Section: string; MenuItem: TMenuItem; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
+procedure TDIniFile.RWEnumM(const Section: string; MenuItem: TMenuItem; TypeInfo: PTypeInfo;
+	var Value: U1; const Save: BG);
 begin
 	RWEnum(Section, TypeInfo, Value, Save);
 	if Save = False then
@@ -1107,7 +1316,8 @@ end;
 
 procedure TDIniFile.RWMenuItem(const Section: string; MenuItem: TMenuItem; const Save: BG);
 begin
-	MenuItem.Checked := RWBGF(Section, DelLastNumber(MenuItem.Name), MenuItem.Checked, MenuItem.Checked, Save);
+	MenuItem.Checked := RWBGF(Section, DelLastNumber(MenuItem.Name), MenuItem.Checked,
+		MenuItem.Checked, Save);
 end;
 
 procedure TDIniFile.RWComboBox(const Section: string; ComboBox: TComboBox; const Save: BG);
@@ -1151,22 +1361,34 @@ begin
 	Button.Down := MainIni.RWBGF(Section, Name, Button.Down, Button.Down, Save);
 end;
 
-procedure TDIniFile.RWMemo(const Section: string; Memo: TMemo; const Save: BG);
+procedure TDIniFile.RWCheckBox(const Section: string; CheckBox: TCheckBox; const Save: BG);
 var
 	Name: string;
-	NotifyEvent: TNotifyEvent;
 begin
+	Name := ButtonNameToFileName(CheckBox.Name);
+	CheckBox.Checked := MainIni.RWBGF(Section, Name, CheckBox.Checked, CheckBox.Checked, Save);
+end;
+
+{
+	procedure TDIniFile.RWMemo(const Section: string; Memo: TMemo; const Save: BG);
+	var
+	Name: string;
+	NotifyEvent: TNotifyEvent;
+	begin
 	Name := ButtonNameToFileName(Memo.Name);
 	NotifyEvent := Memo.OnChange;
+	try
 	Memo.OnChange := nil;
 	if Save = False then
-		Memo.Text := RemoveEscape(ReadString(Section, Name, ''))
+	Memo.Text := RemoveEscape(ReadString(Section, Name, ''))
 	else
-		WriteString(Section, Name, AddEscape(Memo.Text));
-//	MainIni.RWStrings(Section, Memo.Lines, Save);
+	WriteString(Section, Name, AddEscape(Memo.Text));
+	//	MainIni.RWStrings(Section, Memo.Lines, Save);
+	finally
 	Memo.OnChange := NotifyEvent;
-end;
-{$endif}
+	end;
+	end; }
+{$ENDIF}
 
 procedure TDIniFile.RWData(const Write: BG);
 var
@@ -1178,7 +1400,7 @@ begin
 		FInMemory := False;
 	end;
 
-//	RWOptions := FRWList.GetFirst;
+	// RWOptions := FRWList.GetFirst;
 	for i := 0 to Length(FRWList) - 1 do
 	begin
 		FRWList[i](Write);
@@ -1187,16 +1409,17 @@ begin
 		Save;
 end;
 
-procedure TDIniFile.RegisterRW(RWOptions: TRWOptions);
+procedure TDIniFile.RegisterRW(const RWOptions: TRWOptions);
 begin
-	if not Assigned(RWOptions) then Exit;
+	if not Assigned(RWOptions) then
+		Exit;
 	MainLogAdd('RegisterRW ' + NToS(UG(@RWOptions), ofIO), mlDebug);
 	SetLength(FRWList, Length(FRWList) + 1);
 	FRWList[Length(FRWList) - 1] := RWOptions;
 	RWOptions(False);
 end;
 
-procedure TDIniFile.UnregisterRW(RWOptions: TRWOptions);
+procedure TDIniFile.UnregisterRW(const RWOptions: TRWOptions);
 var
 	i, j, l: SG;
 begin
@@ -1220,8 +1443,7 @@ begin
 	end;
 end;
 
-function TDIniFile.GetKeyValue(const SectionIndex: Integer;
-	const ValueIndex: Integer): string;
+function TDIniFile.GetKeyValue(const SectionIndex: Integer; const ValueIndex: Integer): string;
 begin
 	Result := FSections[SectionIndex].Keys[ValueIndex].Value;
 end;

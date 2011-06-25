@@ -25,9 +25,10 @@ object fTableForm: TfTableForm
     Width = 440
     Height = 394
     Zoom = 1.000000000000000000
+    EnableZoom = True
     Align = alClient
     PopupMenu = PopupMenu
-    TabOrder = 0
+    TabOrder = 1
     TabStop = False
     OnKeyDown = FormKeyDown
     OnDblClick = DViewTableDblClick
@@ -39,7 +40,9 @@ object fTableForm: TfTableForm
     Width = 440
     Height = 21
     Panels = <>
+    ParentFont = True
     SimplePanel = True
+    UseSystemFont = False
   end
   object PopupMenu: TPopupMenu
     OnPopup = PopupMenuPopup

@@ -1,10 +1,10 @@
-//* File:     Lib\uMultiIns.pas
-//* Created:  2000-05-01
-//* Modified: 2007-11-27
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uMultiIns.pas
+// * Created:  2000-05-01
+// * Modified: 2009-12-27
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uMultiIns;
 
@@ -17,11 +17,14 @@ uses
 var
 	MessageId: UINT;
 
-procedure InitInstance;
+{
+	Return false if application instance already exists.
+}
+function InitInstance: BG;
 
 implementation
 
-uses uMsg, uStrings, uFiles, uParams, Forms;
+uses uMsg, uStrings, uFiles, uParams, Forms, uDForm;
 
 const
 	wmMainInstanceOpenFile = WM_USER + 3;
@@ -39,8 +42,7 @@ begin
 		Result := 0;
 		if IsIconic(Handle) = False then
 		begin
-			ShowWindow(Handle, SW_SHOW); // SW_NORMAL, SW_RESTORE break windows stay on top!
-			SetForegroundWindow(Handle);
+			ActivateForm(Application.MainForm);
 		end;
 
 		SetLength(CmdLine, MAX_PATH);
@@ -67,11 +69,12 @@ begin
 		@BSMRecipients, MessageID, wParam, lParam);
 end;
 
-procedure InitInstance;
+function InitInstance: BG;
 var
 	Atom: TAtom;
 	UniqueAppStr: string;
 begin
+	Result := True;
 	UniqueAppStr := DelCharsF(ShortToLongPath(ParamStr(0)), PathDelim);
 	MessageID := RegisterWindowMessage(PChar(UniqueAppStr));
 	MutHandle := OpenMutex(MUTEX_ALL_ACCESS, False, PChar(UniqueAppStr));
@@ -92,11 +95,11 @@ begin
 	end
 	else
 	begin
-// TODO if not RegisterParam(-NewInstance) then
+// TODO : if not RegisterParam(-NewInstance) then
 		begin
 			Atom := GlobalAddAtom(PChar(GetCommandLine));
 			BroadcastFocusMessage(Atom, 0);
-			Halt(1);
+			Result := False;
 		end;
 	end;
 end;

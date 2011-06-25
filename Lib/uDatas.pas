@@ -1,10 +1,10 @@
-//* File:     Lib\uDatas.pas
-//* Created:  2006-12-26
-//* Modified: 2007-08-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uDatas.pas
+// * Created:  2006-12-26
+// * Modified: 2009-08-27
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDatas;
 
@@ -39,6 +39,8 @@ end;
 
 procedure TDatas.SetIndex(const Value: SG);
 begin
+	if FIndex >= Count then
+		FIndex := -1;
 	if FIndex <> Value then
 	begin
 		BeginUpdate;

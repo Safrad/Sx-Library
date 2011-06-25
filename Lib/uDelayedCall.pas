@@ -1,3 +1,11 @@
+// * File:     Lib\uDelayedCall.pas
+// * Created:  2009-07-13
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
 unit uDelayedCall;
 
 interface
@@ -5,6 +13,7 @@ interface
 uses
 	uTypes;
 
+{$define Thread}
 
 type
 //	TProcedure = procedure(Sender: TObject) of object;
@@ -90,8 +99,7 @@ begin
 		GetGTime;
 		{$ifdef Thread}
 		Inc(Call.MissedCount);
-		Exit;
-		{$endif}
+		{$else}
 		if DelayedCallEnabled then
 		begin
 			if Call.NextDrawTime + DelayedCallTime > GTime then
@@ -101,6 +109,7 @@ begin
 			end
 		end;
 		CallProc(Call);
+		{$endif}
 	end
 	else
 		Assert(False);

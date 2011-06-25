@@ -1,10 +1,10 @@
-//* File:     Lib\Parser\uLogicFunctions.pas
-//* Created:  2004-03-07
-//* Modified: 2007-11-27
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\Parser\uLogicFunctions.pas
+// * Created:  2004-03-07
+// * Modified: 2009-08-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uLogicFunctions;
 
@@ -15,7 +15,7 @@ implementation
 uses uTypes, uVector, uNamespace;
 
 type
-	TOperation = (opShl, opShr, opAnd, opOr, opXor, opXnor);
+	TOperation = (opShl, opShr, opAnd, opOr, opNor, opXor, opXnor);
 
 function Logic(const Operation: TOperation; const X: array of TVector): TVector;
 var
@@ -39,6 +39,10 @@ begin
 			begin
 //				if R = $ffffffffffffffff then Break;
 				R := OrVector(R, X[i]);
+			end;
+			opNor:
+			begin
+				R := NotVector(OrVector(R, X[i]));
 			end;
 			opXor: R := XorVector(R, X[i]);
 			opXnor: R := XnorVector(R, X[i]);
@@ -80,6 +84,11 @@ begin
 	Result := Logic(opOr, Data);
 end;
 
+function FunctionNor(const Data: array of TVector): TVector;
+begin
+	Result := Logic(opNor, Data);
+end;
+
 function FunctionXor(const Data: array of TVector): TVector;
 begin
 	Result := Logic(opXor, Data);
@@ -91,12 +100,13 @@ begin
 end;
 
 initialization
-	AddFunction('Logic', 'false', ConstantFalse, '');
-	AddFunction('Logic', 'true', ConstantTrue, '');
-	AddFunction('Logic', 'shl', FunctionShl, '');
-	AddFunction('Logic', 'shr', FunctionShr, '');
-	AddFunction('Logic', 'and', FunctionAnd, '');
-	AddFunction('Logic', 'or', FunctionOr, '');
-	AddFunction('Logic', 'xor', FunctionXor, '');
-	AddFunction('Logic', 'xnor', FunctionXnor, '');
+	AddFunction('Logic', 'false', ConstantFalse, 'http://en.wikipedia.org/wiki/Boolean_algebras_canonically_defined');
+	AddFunction('Logic', 'true', ConstantTrue, 'http://en.wikipedia.org/wiki/Truth_value');
+	AddFunction('Logic', 'shl', FunctionShl, 'http://en.wikipedia.org/wiki/Logical_shift');
+	AddFunction('Logic', 'shr', FunctionShr, 'http://en.wikipedia.org/wiki/Logical_shift');
+	AddFunction('Logic', 'and', FunctionAnd, 'http://en.wikipedia.org/wiki/Logical_conjunction');
+	AddFunction('Logic', 'or', FunctionOr, 'http://en.wikipedia.org/wiki/Logical_disjunction');
+	AddFunction('Logic', 'nor', FunctionNor, 'http://en.wikipedia.org/wiki/Logical_NOR');
+	AddFunction('Logic', 'xor', FunctionXor, 'http://en.wikipedia.org/wiki/Exclusive_or');
+	AddFunction('Logic', 'xnor', FunctionXnor, 'http://en.wikipedia.org/wiki/Logical_equality');
 end.

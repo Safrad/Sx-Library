@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uGetTime.pas
-//* Created:  1999-05-01
-//* Modified: 2007-05-20
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uGetTime.pas
+// * Created:  1999-05-01
+// * Modified: 2009-11-09
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uGetTime;
 
@@ -13,7 +13,7 @@ interface
 uses
 	uTypes, uParserMsg,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit;
+	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit, uDMemo;
 
 type
 	TOnApplyTime = procedure(Value: S8);
@@ -43,7 +43,7 @@ type
 		SpinButtonD: TUpDown;
 		ButtonDef: TDButton;
 		ButtonApply: TDButton;
-		EditError: TMemo;
+		EditError: TDMemo;
 		procedure EditInputChange(Sender: TObject);
 		procedure TrackBarHMSDChange(Sender: TObject);
 		procedure ButtonMinClick(Sender: TObject);
@@ -83,7 +83,7 @@ implementation
 {$R *.DFM}
 uses
 	Math,
-	uStrings, uInputFormat, uDParser, uOutputFormat;
+	uStrings, uInputFormat, uDParser, uOutputFormat, uLayout, uDictionary;
 
 var
 	fGetTime: TfGetTime;
@@ -109,8 +109,8 @@ end;
 function GetTimeS8(const Prompt: string;
 	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyTime: TOnApplyTime): Boolean;
 begin
-	Assert(not ((MinVal > MaxVal) or (DefVal < MinVal) or (DefVal > MaxVal)
-		or (CurVal < MinVal) or (CurVal > MaxVal)));
+{	Assert(not ((MinVal > MaxVal) or (DefVal < MinVal) or (DefVal > MaxVal)
+		or (CurVal < MinVal) or (CurVal > MaxVal)));}
 
 	if not Assigned(fGetTime) then
 	begin
@@ -131,7 +131,7 @@ begin
 		else if TCurVal > TMaxVal then
 			TCurVal := TMaxVal;
 		NowVal := TCurVal;
-		Caption := DelCharsF(Prompt, '&');
+		Caption := Translate(DelCharsF(Prompt, '&'));
 	// H
 		TrackBarH.OnChange := nil;
 		TrackBarH.Min := TMinVal div Hour;
@@ -255,7 +255,7 @@ end;
 procedure TfGetTime.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
-	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal, Messages);
+	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal, True, Messages);
 	Messages.ToStrings(EditError.Lines);
 	Messages.Clear;
 
@@ -342,8 +342,9 @@ end;
 procedure TfGetTime.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
+	LayoutControls([ButtonOk, ButtonCancel, ButtonApply], ClientWidth, ClientHeight);
+	Dictionary.TranslateForm(Self);
 end;
-
 
 procedure TfGetTime.SpinButtonHMSDChangingEx(Sender: TObject;
 	var AllowChange: Boolean; NewValue: Smallint;

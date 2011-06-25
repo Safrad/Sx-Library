@@ -35,13 +35,7 @@ object fInfoWindow: TfInfoWindow
     Height = 16
     Caption = '&LabelText'
     Color = clInfoBk
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clInfoText
-    Font.Height = -13
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
     ParentColor = False
-    ParentFont = False
     Transparent = True
     WordWrap = True
     OnMouseDown = LabelTextMouseDown

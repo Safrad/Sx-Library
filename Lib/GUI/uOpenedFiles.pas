@@ -1,44 +1,28 @@
-//* File:     Lib\GUI\uOpenedFiles.pas
-//* Created:  1999-12-01
-//* Modified: 2009-04-01
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uOpenedFiles.pas
+// * Created:  1999-12-01
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uOpenedFiles;
 
 interface
 
 {$R *.RES}
+
 uses
-	uTypes, uReopen,
+	uTypes, uReopen, uOpenedFileItem,
 	Windows, SysUtils, Menus, Graphics, Classes, Controls, Messages, Dialogs;
 
 type
-	POpenedFileItem = ^TOpenedFileItem;
-	TOpenedFileItem = packed record // 64
-		LastWriteTime: TFileTime; // 8
-		FileName: TFileName; // 4
-		MenuItem: TMenuItem; // 4
-		PData: Pointer; // 4
-		SaveCount: U4; // 4
-		Created, Modified: TDateTime; // 2 * 8 = 16
-		WorkTime: U8; // 8
-		ModificationTime: U4; // 4
-		SaveTime: U4;
-		New: U2; // 2
-		FChanged: B1; // 1
-		ReadOnly: B1; // 1
-		Reserved: array[0..0] of U4; // 4
-	end;
-
 	TOnNewFileEvent = function(Sender: TObject; const Item: POpenedFileItem): BG of object;
 	TOnLoadFromFileEvent = function(Sender: TObject; var FileName: TFileName): BG of object;
 	TOnGetFilePosEvent = function(Sender: TObject; const Data: Pointer): string of object;
 	TOnSetFilePosEvent = procedure(Sender: TObject; FilePos: string) of object;
 
-	TOpenedFiles = class(TWinControl)
+	TOpenedFiles = class(TComponent)
 	private
 		// Options
 		FItemAddr: Pointer;
@@ -48,26 +32,11 @@ type
 
 		Reopen: TReopen;
 		FNewCount: UG;
-		FIndex,
-		FCount: SG;
+		FIndex, FCount: SG;
 		FSkipStartup: BG;
 
-		New1,
-		Open1,
-		OpenDirectory1,
-		Revert1,
-		Reopen1,
-		Save1,
-		SaveAs1,
-		SaveCopyAs1,
-		SaveAll1,
-		MoveAs1,
-		Close1,
-		CloseAll1,
-		Delete1,
-		Properties1,
-		PreviousWindow1,
-		NextWindow1: TMenuItem;
+		New1, Open1, OpenDirectory1, Revert1, Reopen1, Save1, SaveAs1, SaveCopyAs1, SaveAll1, MoveAs1,
+			Close1, CloseAll1, Delete1, Properties1, PreviousWindow1, NextWindow1: TMenuItem;
 
 		// Events
 		FOnNewFile: TOnNewFileEvent;
@@ -79,10 +48,10 @@ type
 		FOnChangeFile: TNotifyEvent; // Memory to Graphics (Actual File Changed)
 
 		// Methods
-		procedure SetCaption(const FName: TFileName; const Changed: BG;
-			const New: SG; const ReadOnly: BG; const Index, Count: SG);
+		procedure SetCaption(const FName: TFileName; const Changed: BG; const New: SG;
+			const ReadOnly: BG; const Index, Count: SG);
 
-		procedure FreeItem(i: SG);
+		procedure FreeItem(const i: SG);
 
 		procedure SetIndex(Value: SG);
 		function AddOpenedFileItem: POpenedFileItem;
@@ -121,8 +90,7 @@ type
 		procedure SetItemChange(const Item: POpenedFileItem; const Changed: BG);
 		function GetFilePos(const Index: SG): string;
 	public
-		File1,
-		Window1: TMenuItem;
+		File1, Window1: TMenuItem;
 
 		OpenDialog1: TOpenDialog;
 		SaveDialog1: TSaveDialog;
@@ -141,18 +109,18 @@ type
 		procedure Change;
 		procedure Unchange;
 
+
 		// For Reopen and Commandline Parameters
 		procedure OpenedFileNewFile(Sender: TObject; FileName: string = ''; CallNewFile: BG = True);
-		function OpenedFileLoadFromFile(const FileName: TFileName; const FilePos: string = ''; const ReadOnly: BG = False): BG;
+		function OpenedFileLoadFromFile(const FileName: TFileName; const ReadOnly: BG = False): BG;
 
 		procedure DropFiles(var Message: TWMDropFiles);
 		function OpenedFileOpenFiles(Files: TStrings; ReadOnly: BG = False): BG;
 		function CanClose: BG; // CanClose := OpenedFiles.CanClose;
 
-		function OpenedFileSave(const OpenedFile: SG; const SaveDialog: BG; const SaveCopy: BG; const RenameFile: BG = False): BG;
-
-		{$ifopt d+}procedure OpenAll;{$endif}
-
+		function OpenedFileSave(const OpenedFile: SG; const SaveDialog: BG; const SaveCopy: BG;
+			const RenameFile: BG = False): BG;
+{$IFOPT d+} procedure OpenAll; {$ENDIF}
 		// Properties
 		property ItemAddr: Pointer read FItemAddr write FItemAddr;
 		property ItemSize: UG read FItemSize write FItemSize;
@@ -173,34 +141,35 @@ type
 		property OnChangeFile: TNotifyEvent read FOnChangeFile write FOnChangeFile;
 	end;
 
-{
-	// OnCreate
-	OpenedFiles.ItemAddr := @OpenedFile; // FMultiFiles only
-	OpenedFiles.ItemSize := SizeOf(TOpenedFile); // FMultiFiles only
+	{
+		// OnCreate
+		OpenedFiles.ItemAddr := @OpenedFile; // FMultiFiles only
+		OpenedFiles.ItemSize := SizeOf(TOpenedFile); // FMultiFiles only
 
-	OpenedFiles.File1 := File1;
-	OpenedFiles.Window1 := Window1;
-	OpenedFiles.CreateMenuFile(True);
+		OpenedFiles.File1 := File1;
+		OpenedFiles.Window1 := Window1;
+		OpenedFiles.CreateMenuFile(True);
 
-	OpenedFiles.OpenDialog1 := OpenDialog1;
-	OpenedFiles.SaveDialog1 := SaveDialog1;
+		OpenedFiles.OpenDialog1 := OpenDialog1;
+		OpenedFiles.SaveDialog1 := SaveDialog1;
 
-	// OnShow
-	OpenedFiles.OpenedFileChangeFile(Sender);
+		// OnShow
+		OpenedFiles.OpenedFileChangeFile(Sender);
 
-	// OnFileChange
-	OpenedFiles.Change;
+		// OnFileChange
+		OpenedFiles.Change;
 
-	// OnCloseQuery
-	CanClose := OpenedFiles.CanClose;
-}
+		// OnCloseQuery
+		CanClose := OpenedFiles.CanClose;
+		}
 procedure Register;
 
 implementation
 
 uses
-	Forms, Math, ShellAPI, uWatch,
-	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI, uParams, uSimulation, uProjectInfo, uReg,
+	Forms, Math, ShellAPI, uWatch, uMsgDlg,
+	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI, uParams, uSimulation,
+	uProjectInfo, uReg, uFilePosCache,
 	ufOpenedFiles;
 
 var
@@ -225,7 +194,7 @@ begin
 	FIndex := -1;
 	FCount := 0;
 	FMultiFiles := True;
-	if not (csDesigning in ComponentState) then
+	if not(csDesigning in ComponentState) then
 	begin
 		Reopen := TReopen.Create;
 	end;
@@ -243,27 +212,33 @@ begin
 		Result := Items[i].PData;
 end;
 
-procedure TOpenedFiles.FreeItem(i: SG);
+procedure TOpenedFiles.FreeItem(const i: SG);
 begin
 	try
-		if Assigned(FOnFreeFile) then FOnFreeFile(Self, @Items[i]);
+		WatchRemoveFile(Items[i].FileName);
+		SetFileMetadata(Items[i].FileName, GetFilePos(i));
+		if Assigned(FOnFreeFile) then
+			FOnFreeFile(Self, @Items[i]);
 	except
 		on E: Exception do
 			Fatal(E, Self);
 	end;
-	Items[i].FileName := '';
-	FreeAndNil(Items[i].MenuItem);
-	FreeMem(Items[i].PData); Items[i].PData := nil;
+	FreeMem(Items[i].PData);
+	Items[i].PData := nil;
+	Finalize(Items[i]);
+	// Items[i].FileName := '';
+	// FreeAndNil(Items[i].MenuItem);
 end;
 
 destructor TOpenedFiles.Destroy;
-var i: SG;
+var
+	i: SG;
 begin
 	FreeAndNil(fOpenedFiles);
 	if Self = OpenedFileInstance then
 		OpenedFileInstance := nil;
 
-	if not (csDesigning in ComponentState) then
+	if not(csDesigning in ComponentState) then
 	begin
 		RWOptions(True);
 	end;
@@ -292,7 +267,8 @@ begin
 		New1.Name := 'New1';
 		New1.Caption := 'New';
 		New1.ShortCut := ShortCut(Ord('N'), [ssCtrl]);
-		if MenuNewSuffix then New1.Caption := New1.Caption + cDialogSuffix;
+		if MenuNewSuffix then
+			New1.Caption := New1.Caption + cDialogSuffix;
 		New1.OnClick := New1Click;
 		File1.Insert(i, New1);
 		Inc(i);
@@ -340,6 +316,7 @@ begin
 	if Assigned(OnSaveToFile) then
 	begin
 		Revert1 := TMenuItem.Create(File1);
+		Revert1.Name := 'Revert1';
 		Revert1.Caption := 'Revert' + cDialogSuffix;
 		Revert1.OnClick := Revert1Click;
 		File1.Insert(i, Revert1);
@@ -397,7 +374,7 @@ begin
 	Inc(i);
 
 	Delete1 := TMenuItem.Create(File1);
-	Delete1.Name := 'Delete1';
+	Delete1.Name := 'DeleteFile1';
 	Delete1.Caption := 'Delete' + cDialogSuffix;
 	Delete1.ShortCut := ShortCut(VK_DELETE, [ssShift, ssCtrl]);
 	Delete1.OnClick := Delete1Click;
@@ -432,7 +409,7 @@ begin
 		M := TMenuItem.Create(Window1);
 		M.Tag := -1;
 		M.Caption := 'Previous Window';
-		M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl, ssShift]);
+		M.ShortCut := ShortCut(Ord(CharTab), [ssCtrl, ssShift]);
 		M.OnClick := PreviousNextWindow1Click;
 		Window1.Add(M);
 		PreviousWindow1 := M;
@@ -440,7 +417,7 @@ begin
 		M := TMenuItem.Create(Window1);
 		M.Tag := +1;
 		M.Caption := 'Next Window';
-		M.ShortCut :=  ShortCut(Ord(CharTab), [ssCtrl]);
+		M.ShortCut := ShortCut(Ord(CharTab), [ssCtrl]);
 		M.OnClick := PreviousNextWindow1Click;
 		Window1.Add(M);
 		NextWindow1 := M;
@@ -450,28 +427,32 @@ begin
 end;
 
 procedure TOpenedFiles.RWOptions(const Save: BG);
-const Section = 'Opened Files';
+const
+	Section = 'Opened Files';
 var
 	FileName: string;
-	FilePos: string;
 	i, c, c2: SG;
 	NewIndex: SG;
 begin
-	Reopen.RWReopenNames('Reopen', Save);
-
-	if Save = False then
+	if Assigned(Reopen) then
 	begin
-		Reopen.MultiFiles := FMultiFiles;
-		Reopen.Reopen1 := Reopen1;
-		Reopen.LoadFromFile := OpenedFileLoadFromFile;
-		Reopen.ChangeFile := OpenedFileChangeFile;
+		Reopen.RWReopenNames('Reopen', Save);
+
+		if Save = False then
+		begin
+			Reopen.MultiFiles := FMultiFiles;
+			Reopen.Reopen1 := Reopen1;
+			Reopen.LoadFromFile := OpenedFileLoadFromFile;
+			Reopen.ChangeFile := OpenedFileChangeFile;
+		end;
 	end;
 
 	if Save = True then
 		c := FCount
 	else
 	begin
-		if SkipStartup then Exit;
+		if SkipStartup then
+			Exit;
 		c := 0;
 		MainIni.RWNum(Section, 'Count', c, Save);
 	end;
@@ -481,16 +462,14 @@ begin
 	begin
 		if Save = True then
 		begin
-			if Items[i].New <> 0 then Continue;
+			if Items[i].New <> 0 then
+				Continue;
 			FileName := ShortDir(Items[i].FileName);
-			FilePos := GetFilePos(i);
 		end;
 		MainIni.RWString(Section, NToS(c2, ofIO), FileName, Save);
-		if (Save = False) or (FilePos <> '') then
-			MainIni.RWString(Section, NToS(c2, ofIO) + 'Pos', FilePos, Save);
 		Inc(c2);
 		if Save = False then
-			OpenedFileLoadFromFile(ExpandDir(FileName), FilePos);
+			OpenedFileLoadFromFile(ExpandDir(FileName));
 	end;
 
 	NewIndex := FIndex;
@@ -502,47 +481,25 @@ begin
 			Index := NewIndex;
 		if Assigned(Window1) then
 			Window1.Items[Index + 1].Checked := True;
-{		if (FIndex >= 0) and (FIndex < FCount) then
+		{ if (FIndex >= 0) and (FIndex < FCount) then
 			if Assigned(Items[FIndex].MenuItem) then
-				Items[FIndex].MenuItem.Checked := True;}
+			Items[FIndex].MenuItem.Checked := True; }
 	end;
 
 	if Save = True then
 		MainIni.RWNum(Section, 'Count', c2, Save);
 end;
 
-function Shorter(const FileOrDir: string): string;
-var i: SG;
-begin
-	i := Length(FileOrDir) - 1;
-	while i > 0 do
-	begin
-		if FileOrDir[i] = PathDelim then Break;
-		Dec(i);
-	end;
-
-	Result := Copy(FileOrDir, i + 1, MaxInt);
-end;
-
 procedure TOpenedFiles.SetMenuItem(i: SG);
-var S: string;
 begin
-	S := '&' + NToS(i + 1);
-	if Items[i].FChanged then S := S + ' *';
-	S := S + ' ' + Shorter(Items[i].FileName);
-	if Items[i].FChanged then S := S + ' (' + MsToStr(TimeDifference(GetTickCount, Items[i].ModificationTime), diMSD, 0, False) + ')';
-	if Items[i].New <> 0 then S := S + ' (New)';
-	if Items[i].ReadOnly then S := S + ' (Read Only)';
-	if Items[i].MenuItem <> nil then
-	begin
-		Items[i].MenuItem.Caption := S;
-		Items[i].MenuItem.Tag := i;
-	end;
+	Items[i].SetMenuItemCaption;
+	Items[i].MenuItem.Tag := i;
 end;
 
 procedure TOpenedFiles.CreateMenuItem(i: SG);
 begin
-	if Assigned(Window1) = False then Exit;
+	if Assigned(Window1) = False then
+		Exit;
 	Items[i].MenuItem := TMenuItem.Create(Window1);
 	Items[i].MenuItem.OnAdvancedDrawItem := Window1.Items[0].OnAdvancedDrawItem;
 	SetMenuItem(i);
@@ -557,7 +514,8 @@ begin
 	if FMultiFiles = False then
 	begin
 		if ActualItem <> nil then
-			if OpenedFileClose(FIndex) = False then Exit;
+			if OpenedFileClose(FIndex) = False then
+				Exit;
 	end;
 
 	SetLength(Items, FCount + 1);
@@ -579,21 +537,22 @@ begin
 		Assert(FIndex >= -1);
 		Assert(FIndex < FCount);
 		if (FItemAddr <> nil) and (FItemSize <> 0) then
-		if (FIndex >= 0) and (Items[FIndex].PData <> nil) then
-			Move(FItemAddr^, Items[FIndex].PData^, FItemSize);
+			if (FIndex >= 0) and (Items[FIndex].PData <> nil) then
+				Move(FItemAddr^, Items[FIndex].PData^, FItemSize);
 		FIndex := Value;
 		if (FItemAddr <> nil) and (FItemSize <> 0) then
-		if (FIndex >= 0) and (FIndex < FCount) and (Items[FIndex].PData <> nil) then
-		begin
-			Move(Items[FIndex].PData^, FItemAddr^, FItemSize);
-			FillChar(Items[FIndex].PData^, FItemSize, 0); // Safety - no duplicit memory
-		end
-		else
-			FillChar(FItemAddr^, FItemSize, 0); // Safety - no duplicit memory
+			if (FIndex >= 0) and (FIndex < FCount) and (Items[FIndex].PData <> nil) then
+			begin
+				Move(Items[FIndex].PData^, FItemAddr^, FItemSize);
+				FillChar(Items[FIndex].PData^, FItemSize, 0); // Safety - no duplicit memory
+			end
+			else
+				FillChar(FItemAddr^, FItemSize, 0); // Safety - no duplicit memory
 	end;
 end;
 
-procedure TOpenedFiles.OpenedFileNewFile(Sender: TObject; FileName: string = ''; CallNewFile: BG = True);
+procedure TOpenedFiles.OpenedFileNewFile(Sender: TObject; FileName: string = '';
+	CallNewFile: BG = True);
 var
 	Result: BG;
 	LastIndex: SG;
@@ -635,11 +594,11 @@ begin
 		end
 		else
 		begin
-//			Items[FIndex].Changed := False;
+			// Items[FIndex].Changed := False;
 			if Assigned(Window1) then
 				Window1.Items[Index + 1].Checked := True;
-{			if Assigned(Items[FIndex].MenuItem) then
-				Items[FIndex].MenuItem.Checked := True;}
+			{ if Assigned(Items[FIndex].MenuItem) then
+				Items[FIndex].MenuItem.Checked := True; }
 			OpenedFileChangeFile(Sender);
 		end;
 	end;
@@ -651,12 +610,13 @@ begin
 end;
 
 function TOpenedFiles.GetItemIndexByName(const FileName: TFileName): SG;
-var i: SG;
+var
+	i: SG;
 begin
 	Result := -1;
 	for i := 0 to FCount - 1 do
 	begin
-		if FileName = Items[i].FileName then // TODO Upcase?
+		if SameFileName(FileName, Items[i].FileName) then
 		begin
 			Result := i;
 			Break;
@@ -665,7 +625,8 @@ begin
 end;
 
 function TOpenedFiles.GetItemByName(const FileName: TFileName): POpenedFileItem;
-var i: SG;
+var
+	i: SG;
 begin
 	i := GetItemIndexByName(FileName);
 	if i >= 0 then
@@ -681,18 +642,18 @@ begin
 	if Assigned(OpenedFileInstance) then
 	begin
 		NewIndex := OpenedFileInstance.GetItemIndexByName(FileName);
-		if NewIndex <> 1 then
+		if NewIndex <> -1 then
 		begin
-			begin
-				OpenedFileInstance.OpenedFileLoadFromFile(FileName);
-			end;
+			OpenedFileInstance.OpenedFileClose(NewIndex);
+			if OpenedFileInstance.OpenedFileLoadFromFile(FileName) then
+				OpenedFileInstance.OpenedFileChangeFile(nil);
 		end
 		else
 			WatchRemoveFile(FileName);
 	end;
 end;
 
-function TOpenedFiles.OpenedFileLoadFromFile(const FileName: TFileName; const FilePos: string = ''; const ReadOnly: BG = False): BG;
+function TOpenedFiles.OpenedFileLoadFromFile(const FileName: TFileName; const ReadOnly: BG = False): BG;
 var
 	LastIndex: SG;
 	Item: POpenedFileItem;
@@ -713,8 +674,18 @@ begin
 				try
 					Result := FOnLoadFromFile(Self, Item.FileName);
 					if Result then
-						if Assigned(FOnSetFilePos) then
-							FOnSetFilePos(Self, FilePos);
+						try
+							if Assigned(FOnSetFilePos) then
+							begin
+								FOnSetFilePos(Self, GetFileMetadata(Item.FileName));
+							end;
+						except
+							on E: Exception do
+							begin
+								Fatal(E, Self);
+//								Result := False;
+							end;
+						end;
 				except
 					on E: Exception do
 					begin
@@ -729,7 +700,7 @@ begin
 				end
 				else
 				begin
-		//			Index := FCount - 1;
+					// Index := FCount - 1;
 					Item.New := 0;
 					Item.FChanged := False;
 					Item.ReadOnly := ReadOnly;
@@ -742,7 +713,8 @@ begin
 						GetFileModified(Item.FileName, Item.LastWriteTime);
 
 					WatchAddFile(Item.FileName, FileChanged);
-					Reopen.AddReopenCaption(Item.FileName, FilePos);
+					if Assigned(Reopen) then
+						Reopen.AddReopenCaption(Item.FileName);
 				end;
 			end
 		end
@@ -803,7 +775,8 @@ begin
 	WatchChange(Item.FileName, Changed);
 end;
 
-function TOpenedFiles.OpenedFileSave(const OpenedFile: SG; const SaveDialog: BG; const SaveCopy: BG; const RenameFile: BG = False): BG;
+function TOpenedFiles.OpenedFileSave(const OpenedFile: SG; const SaveDialog: BG;
+	const SaveCopy: BG; const RenameFile: BG = False): BG;
 var
 	NewFileName: TFileName;
 	k: SG;
@@ -821,21 +794,25 @@ begin
 		begin
 			if RenameFile then
 			begin
+				WatchRemoveFile(Items[OpenedFile].FileName);
 				if RenameFileEx(Items[OpenedFile].FileName, NewFileName) then
 				begin
-					WatchRemoveFile(Items[OpenedFile].FileName);
-					WatchAddFile(NewFileName, FileChanged);
 					Result := True;
+					WatchAddFile(NewFileName, FileChanged);
 				end
 				else
+				begin
+					WatchAddFile(Items[OpenedFile].FileName, FileChanged);
 					Exit;
+				end;
 			end;
 
 			if SaveCopy = False then
 			begin
 				if Items[OpenedFile].New = 0 then
 				begin
-					Reopen.CloseFile(Items[OpenedFile].FileName, GetFilePos(OpenedFile));
+					if Assigned(Reopen) then
+						Reopen.CloseFile(Items[OpenedFile].FileName);
 					WatchRemoveFile(Items[OpenedFile].FileName);
 				end;
 				Items[OpenedFile].FileName := NewFileName;
@@ -849,7 +826,10 @@ begin
 	else
 	begin
 		if SaveCopy = False then
+		begin
+			WatchRemoveFile(Items[OpenedFile].FileName);
 			Items[OpenedFile].FileName := NewFileName;
+		end;
 	end;
 
 	if RenameFile = False then
@@ -858,18 +838,22 @@ begin
 		SetItemChange(@Items[OpenedFile], False);
 		Inc(Items[OpenedFile].SaveCount);
 		Items[OpenedFile].Modified := Now;
-		Inc(Items[OpenedFile].WorkTime, TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime));
+		Inc(Items[OpenedFile].WorkTime, TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime)
+			);
 		k := FIndex;
 		Index := OpenedFile;
 		try
 			Result := True;
 			if Assigned(FOnSaveToFile) then
+			begin
+				NewFileName := ExpandDir(NewFileName);
 				Result := FOnSaveToFile(Self, NewFileName);
 				if Result and (SaveCopy = False) then
 				begin
 					WatchAddFile(NewFileName, FileChanged);
-					GetFileModified(Items[OpenedFile].FileName, Items[OpenedFile].LastWriteTime);
+					GetFileModified(NewFileName, Items[OpenedFile].LastWriteTime);
 				end;
+			end;
 		except
 			on E: Exception do
 			begin
@@ -882,13 +866,17 @@ begin
 	if SaveCopy = False then
 		if SaveDialog then
 		begin
-			Reopen.AddReopenCaption(Items[OpenedFile].FileName, GetFilePos(OpenedFile));
-			Reopen.DrawReopenCaption;
+			if Assigned(Reopen) then
+			begin
+				Reopen.AddReopenCaption(Items[OpenedFile].FileName);
+				Reopen.DrawReopenCaption;
+			end;
 		end;
 end;
 
 function TOpenedFiles.OpenedFileSaveAll: BG;
-var i: SG;
+var
+	i: SG;
 begin
 	Result := False;
 	for i := 0 to FCount - 1 do
@@ -907,7 +895,10 @@ begin
 	begin
 		if Items[OpenedFile].FChanged then
 		begin
-			case Confirmation(Items[OpenedFile].FileName + LineSep + 'Save changes, you have made during last ' + MsToStr(TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime), diMSD, 0, False) + '?', [mbYes, mbNo, mbCancel]) of
+			case Confirmation(Items[OpenedFile].FileName + LineSep +
+					'Save changes, you have made during last ' + MsToStr
+					(TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime), diMSD, 0, False)
+					+ '?', [mbYes, mbNo, mbCancel]) of
 			mbYes:
 			begin
 				Result := OpenedFileSave(OpenedFile, Items[OpenedFile].New <> 0, False);
@@ -933,7 +924,13 @@ var
 	LastIndex: SG;
 begin
 	Result := True;
-	if OpenedFile >= FCount then Exit;
+	if OpenedFile >= FCount then
+		Exit;
+	if Items[OpenedFile].FLocked then
+	begin
+		Result := False;
+		Exit;
+	end;
 	Result := SaveAs(OpenedFile);
 
 	if Result = True then
@@ -947,56 +944,59 @@ begin
 				if Window1.Count > OpenedFile then
 					Window1.Delete(OpenedFile + 1);
 			if Items[OpenedFile].New = 0 then
-				Reopen.CloseFile(Items[OpenedFile].FileName, GetFilePos(OpenedFile));
+				if Assigned(Reopen) then
+					Reopen.CloseFile(Items[OpenedFile].FileName);
 			if Assigned(Items[OpenedFile].MenuItem) then
 			begin
 				FreeAndNil(Items[OpenedFile].MenuItem);
 			end;
-{			if FIndex <> OpenedFile then
-				Index := OpenedFile;}
+			{ if FIndex <> OpenedFile then
+				Index := OpenedFile; }
 		end;
 		FreeItem(OpenedFile);
 		for i := OpenedFile to FCount - 2 do
 		begin
 			Items[i] := Items[i + 1];
 		end;
-		Dec(FCount); SetLength(Items, FCount);
+		Dec(FCount);
+		SetLength(Items, FCount);
 
-//		if FIndex > FCount - 1 then LastIndex := FCount - 1 else LastIndex := FIndex;
-//		Index := FCount - 2;
+		// if FIndex > FCount - 1 then LastIndex := FCount - 1 else LastIndex := FIndex;
+		// Index := FCount - 2;
 		Index := Range(-1, LastIndex, FCount - 1);
-{		if Index >= 0 then
-			Index := Index - 1;}
+		{ if Index >= 0 then
+			Index := Index - 1; }
 
-//		FIndex := -1;
+		// FIndex := -1;
 		if Assigned(Window1) then
 			Window1.Items[Index + 1].Checked := True;
-{		if FIndex >= 0 then
+		{ if FIndex >= 0 then
 			if Assigned(Items[FIndex].MenuItem) then
-				Items[FIndex].MenuItem.Checked := True;}
+			Items[FIndex].MenuItem.Checked := True; }
 	end;
 end;
 
 function TOpenedFiles.OpenedFileCloseAll: BG;
-var i: SG;
+var
+	i: SG;
 begin
 	Result := False;
 	i := 0;
 	while i < FCount do
 	begin
-//		if Items[i].Changed = True then
-//		begin
-			if OpenedFileClose(0) = False then
-			begin
-				Exit;
-			end
-			else
-			begin
-				Result := True;
-			end;
-//		end
-//		else
-//			Inc(i);
+		// if Items[i].Changed = True then
+		// begin
+		if OpenedFileClose(0) = False then
+		begin
+			Exit;
+		end
+		else
+		begin
+			Result := True;
+		end;
+		// end
+		// else
+		// Inc(i);
 	end;
 	i := 0;
 	while i < FCount do
@@ -1020,14 +1020,16 @@ end;
 
 procedure TOpenedFiles.OpenedFileChangeFile(Sender: TObject);
 begin
-	Reopen.DrawReopenCaption;
+	if Assigned(Reopen) then
+		Reopen.DrawReopenCaption;
 	Init;
-	if Assigned(FONChangeFile) then
+	if Assigned(FOnChangeFile) then
 		FOnChangeFile(Sender);
 end;
 
 function TOpenedFiles.CanClose: BG;
-var i: SG;
+var
+	i: SG;
 begin
 	Result := False;
 	i := 0;
@@ -1050,9 +1052,10 @@ begin
 	Result := True;
 end;
 
-procedure TOpenedFiles.SetCaption(const FName: TFileName; const Changed: BG;
-	const New: SG; const ReadOnly: BG; const Index, Count: SG);
-var Result: string;
+procedure TOpenedFiles.SetCaption(const FName: TFileName; const Changed: BG; const New: SG;
+	const ReadOnly: BG; const Index, Count: SG);
+var
+	Result: string;
 begin
 	Result := GetProjectInfo(piProductName);
 	if Count > 0 then
@@ -1068,32 +1071,35 @@ begin
 			Result := Result + ' - ';
 		if Count > 1 then
 			Result := Result + '(' + NToS(Index + 1) + '/' + NToS(Count) + ')';
-		if Changed then Result := Result + ' *';
+		if Changed then
+			Result := Result + ' *';
 		if New <> 0 then
 			Result := Result + ' ' + ExtractFileName(FName)
 		else
 			Result := Result + ' ' + ShortDir(FName);
-		if New <> 0 then Result := Result + ' (New)';
-		if ReadOnly then Result := Result + ' (Read Only)';
+		if New <> 0 then
+			Result := Result + ' (New)';
+		if ReadOnly then
+			Result := Result + ' (Read Only)';
 	end
 	else
 	begin
 		Application.Title := Result;
 	end;
 	if Owner is TForm then
-		{Application.MainForm}TForm(Owner).Caption := Result;
+		{ Application.MainForm } TForm(Owner).Caption := Result;
 end;
 
 procedure TOpenedFiles.Init;
 var
 	i: SG;
-	B:BG;
+	B: BG;
 	Item: POpenedFileItem;
 begin
 	Item := ActualItem;
 	if Assigned(Application.MainForm) then
 	begin
-		if not (csDesigning in ComponentState) then
+		if not(csDesigning in ComponentState) then
 		begin
 			DragAcceptFiles(Application.MainForm.Handle, True);
 			if Item = nil then
@@ -1145,8 +1151,10 @@ begin
 	begin
 		for i := 0 to FCount - 1 do
 			SetMenuItem(i);
-		if Assigned(PreviousWindow1) then PreviousWindow1.Enabled := FCount > 0;
-		if Assigned(NextWindow1) then NextWindow1.Enabled := FCount > 0;
+		if Assigned(PreviousWindow1) then
+			PreviousWindow1.Enabled := FCount > 0;
+		if Assigned(NextWindow1) then
+			NextWindow1.Enabled := FCount > 0;
 	end;
 end;
 
@@ -1164,10 +1172,10 @@ begin
 			Item.ModificationTime := GetTickCount;
 			Item.SaveTime := GetTickCount;
 			Init;
-		end;
-		// Automatic save after change.
-		if TimeDifference(GetTickCount, Item.SaveTime) > Minute then
+		end
+		else if TimeDifference(GetTickCount, Item.SaveTime) > Minute then
 		begin
+			// Automatic save after change.
 			Item.SaveTime := GetTickCount;
 			FileName := TempDir + ExtractFileName(Item.FileName);
 			DeleteFile(FileName);
@@ -1177,7 +1185,8 @@ begin
 end;
 
 procedure TOpenedFiles.Unchange;
-var Item:POpenedFileItem;
+var
+	Item: POpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
@@ -1197,7 +1206,7 @@ begin
 	Result := False;
 	for i := 0 to Files.Count - 1 do
 	begin
-		if OpenedFileLoadFromFile(Files.Strings[i], '', ReadOnly) then
+		if OpenedFileLoadFromFile(Files.Strings[i], ReadOnly) then
 		begin
 			Result := True;
 		end;
@@ -1210,7 +1219,8 @@ begin
 end;
 
 procedure TOpenedFiles.Open1Click(Sender: TObject);
-var FileName: TFileName;
+var
+	FileName: TFileName;
 begin
 	if Assigned(OpenDialog1) then
 	begin
@@ -1228,7 +1238,8 @@ begin
 end;
 
 procedure TOpenedFiles.OpenDirectory1Click(Sender: TObject);
-var FileName: string;
+var
+	FileName: string;
 begin
 	if FIndex < 0 then
 	begin
@@ -1246,15 +1257,18 @@ begin
 end;
 
 procedure TOpenedFiles.Revert1Click(Sender: TObject);
-var Item: POpenedFileItem;
+var
+	Item: POpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
-		if (Item.FChanged = False) or (Confirmation(Item.FileName + LineSep + 'Lose all changes in during ' + MsToStr(TimeDifference(GetTickCount, Item.SaveTime), diMSD, 0, False) + '?',
-			[mbYes, mbNo]) = mbYes) then
+		if (Item.FChanged = False) or (Confirmation(Item.FileName + LineSep +
+					'Lose all changes in during ' + MsToStr(TimeDifference(GetTickCount, Item.SaveTime),
+					diMSD, 0, False) + '?', [mbYes, mbNo]) = mbYes) then
 		begin
 			try
-				if Assigned(FOnFreeFile) then FOnFreeFile(Sender, Item);
+				if Assigned(FOnFreeFile) then
+					FOnFreeFile(Sender, Item);
 			except
 				on E: Exception do
 					Fatal(E, Self);
@@ -1273,53 +1287,59 @@ begin
 end;
 
 procedure TOpenedFiles.Save1Click(Sender: TObject);
-var Item: POpenedFileItem;
+var
+	Item: POpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
-		if OpenedFileSave(FIndex, Item.ReadOnly or (Item.New <> 0), False) then Init;
+		if OpenedFileSave(FIndex, Item.ReadOnly or (Item.New <> 0), False) then
+			Init;
 end;
 
 procedure TOpenedFiles.SaveAs1Click(Sender: TObject);
 begin
-	if OpenedFileSave(FIndex, True, False) then Init;
+	if OpenedFileSave(FIndex, True, False) then
+		Init;
 end;
 
 procedure TOpenedFiles.SaveCopyAs1Click(Sender: TObject);
 begin
-	if OpenedFileSave(FIndex, True, True) then Init;
+	if OpenedFileSave(FIndex, True, True) then
+		Init;
 end;
 
 procedure TOpenedFiles.SaveAll1Click(Sender: TObject);
 begin
-	if OpenedFileSaveAll then Init;
+	if OpenedFileSaveAll then
+		Init;
 end;
 
 procedure TOpenedFiles.MoveAs1Click(Sender: TObject);
 begin
-	if OpenedFileSave(FIndex, True, False, True) then Init;
+	if OpenedFileSave(FIndex, True, False, True) then
+		Init;
 end;
 
 procedure TOpenedFiles.Close1Click(Sender: TObject);
 begin
-	if OpenedFileClose(FIndex) then OpenedFileChangeFile(Sender);
+	if OpenedFileClose(FIndex) then
+		OpenedFileChangeFile(Sender);
 end;
 
 procedure TOpenedFiles.CloseAll1Click(Sender: TObject);
 begin
-	if OpenedFileCloseAll then OpenedFileChangeFile(Sender);
+	if OpenedFileCloseAll then
+		OpenedFileChangeFile(Sender);
 end;
 
 procedure TOpenedFiles.Delete1Click(Sender: TObject);
-var Item: POpenedFileItem;
+var
+	Item: POpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
-		if Confirmation(Item.FileName + LineSep + 'Delete file?', [mbYes, mbNo]) = mbYes then
-		begin
-			DeleteFileEx(Item.FileName);
+		if DeleteFileDialog(Item.FileName) then
 			Close1Click(Sender);
-		end;
 end;
 
 procedure TOpenedFiles.PreviousNextWindow1Click(Sender: TObject);
@@ -1332,7 +1352,7 @@ begin
 	begin
 		if Assigned(fOpenedFiles) = False then
 			fOpenedFiles := TfOpenedFiles.Create(Self);
-	//	fOpenedFiles.DViewOpenedFiles.ActualRow := 0;
+		// fOpenedFiles.DViewOpenedFiles.ActualRow := 0;
 		fOpenedFiles.TabKey(TMenuItem(Sender).Tag);
 		fOpenedFiles.ShowModal;
 	end
@@ -1358,8 +1378,8 @@ begin
 		OpenedFileChangeFile(Sender);
 	end;
 end;
+{$IFOPT d+}
 
-{$ifopt d+}
 procedure TOpenedFiles.OpenAll;
 
 	procedure Depth(Dir: string);
@@ -1369,7 +1389,7 @@ procedure TOpenedFiles.OpenAll;
 		FileNameCount: SG;
 		FileName: TFileName;
 		OpenedFileItem: TOpenedFileItem;
-//		LeakCount: SG;
+		// LeakCount: SG;
 	begin
 		FileNameCount := 0;
 		ReadDir(FileNames, FileNameCount, Dir, [], True, True, False, False);
@@ -1380,12 +1400,12 @@ procedure TOpenedFiles.OpenAll;
 			else
 			begin
 				FileName := Dir + FileNames[i];
-//				LeakCount := AllocMemCount;
+				// LeakCount := AllocMemCount;
 				FOnLoadFromFile(Self, FileName);
 				OpenedFileItem.PData := FItemAddr;
 				FOnFreeFile(Self, @OpenedFileItem);
-//				LeakCount := AllocMemCount - LeakCount;
-//				Assert(LeakCount = 0);
+				// LeakCount := AllocMemCount - LeakCount;
+				// Assert(LeakCount = 0);
 			end;
 		end;
 	end;
@@ -1393,10 +1413,11 @@ procedure TOpenedFiles.OpenAll;
 begin
 	Depth('C' + DriveDelim + PathDelim);
 end;
-{$endif}
+{$ENDIF}
 
 procedure TOpenedFiles.Properties1Click(Sender: TObject);
-var Item: POpenedFileItem;
+var
+	Item: POpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
@@ -1429,8 +1450,12 @@ begin
 		Result := '';
 end;
 
-{$ifopt d+}
 initialization
-	CheckExpSize(SizeOf(TOpenedFileItem));
-{$endif}
+
+{$IFOPT d+}
+CheckExpSize(SizeOf(TOpenedFileItem));
+{$ELSE}
+;
+{$ENDIF}
+
 end.

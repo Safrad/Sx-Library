@@ -1,10 +1,10 @@
-//* File:     Lib\Parser\uEloFunctions.pas
-//* Created:  2004-03-07
-//* Modified: 2008-10-25
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\Parser\uEloFunctions.pas
+// * Created:  2004-03-07
+// * Modified: 2009-08-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uEloFunctions;
 
@@ -23,7 +23,7 @@ function ExpectedRes(Elo, OpElo: SG; Bonus: SG; Rounded: BG): SG;
 function DeltaElo(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): Extended;
 function DeltaEloI(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): SG;
 
-function ScoreToS(const Score: UG; const HTML: BG = True): string;
+function ScoreToS(const Score: SG; const HTML: BG = True): string;
 function EloToStr(const Elo: SG; const OutputFormat: TOutputFormat): string;
 
 implementation
@@ -259,10 +259,16 @@ begin
 	end;
 end;
 
-function ScoreToS(const Score: UG; const HTML: BG = True): string;
+function ScoreToS(const Score: SG; const HTML: BG = True): string;
 var
 	Res, Rem: U2;
 begin
+	if Score = -1 then
+	begin
+		Result := '?';
+		Exit;
+	end;
+
 	DivModU4(Score, ScoreOne, Res, Rem);
 	if (Res > 0) or (Rem = 0) then
 		Result := NToS(Res)
@@ -303,7 +309,9 @@ begin
 end;
 
 initialization
-	AddFunction('Chess', 'Elo', Elo, '...');
-	AddFunction('Chess', 'ArcElo', ArcElo, '...');
-	AddFunction('Chess', 'EloC', EloC, '...');
+	AddFunction('Chess', 'Elo', Elo, 'Probably Elo difference for result <0..1>. http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
+	AddFunction('Chess', 'ArcElo', ArcElo, 'Probably result <0..1> for Elo difference. http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
+	AddFunction('Chess', 'EloC', EloC, '([Coef.]; Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...)');
+	AddFunction('Chess', 'EloDif', EloC, 'Return elo difference (Coef.; Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...) http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
+	AddFunction('Chess', 'EloPerfo', EloC, 'Return Elo performance (Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...) http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
 end.

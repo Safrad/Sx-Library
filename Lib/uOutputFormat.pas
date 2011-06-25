@@ -1,10 +1,10 @@
-//* File:     Lib\uOutputFormat.pas
-//* Created:  2004-03-07
-//* Modified: 2009-05-10
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uOutputFormat.pas
+// * Created:  2004-03-07
+// * Modified: 2009-11-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uOutputFormat;
 
@@ -18,22 +18,22 @@ type
 
 // Number Format
 var
-	NativeSymbols: string[10];
+	NativeSymbols: string;
 
-	DecimalSeparator: string[3]; // Decimal symbol
+	DecimalSeparator: string; // Decimal symbol
 	DigitsAfterDecimal: SG; // No. of digits after decimal
-	ThousandSeparator: string[3]; // Digit grouping symbol
+	ThousandSeparator: string; // Digit grouping symbol
 	UseThousandSeparator: BG = True; // Custom
 	ThousandGroup: SG; // Digit grouping
 	FractionGroup: SG;
-	NegSymbol: string[4]; // Negatove sing symbol
-	PosSymbol: string[4]; // Negatove sing symbol
+	NegSymbol: string; // Negatove sing symbol
+	PosSymbol: string; // Negatove sing symbol
 	NegFormat: SG; // Negative number format
 	LeadingZero: SG; // Display leading zeros
-	ListSeparator: string[3]; // List separator
+	ListSeparator: string; // List separator
 
 // Time Format
-	TimeSeparator: string[3];
+	TimeSeparator: string;
 
 {
 NToS(S8, ...); <-> StrToValI(SG,UG), StrToValS8, U1(..., False, ...);
@@ -73,11 +73,12 @@ const
 		'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
 		'y', 'z', '-', '*'});
 
-var UseNA: BG;
+function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
 
-function NToS(const Num: Int64; const UseFormat: string): string; overload;
-function NToS(const Num: Int64; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
-function NToS(const Num: Int64; const OutputFormat: TOutputFormat): string; overload;
+function NToS(const Num: S8; const UseFormat: string): string; overload;
+function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: S8; const OutputFormat: TOutputFormat): string; overload;
 
 function FToS(Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
 
@@ -85,9 +86,9 @@ function BToStr(const Bytes: S4; const OutputFormat: TOutputFormat = ofDisplay):
 function BToStr(const Bytes: S8; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NodesToS(const Value: U8; const OutputFormat: TOutputFormat): string;
 
-procedure msToHMSD(const T: Int64; out GH, GM, GS, GD: U4);
+procedure msToHMSD(const T: S8; out GH, GM, GS, GD: U4);
 type
-	TDisplay = (diDHMSD, diHHMSD, diHMSD, diMSD, diSD);
+	TDisplay = (diSD, diMSD, diHMSD, diHHMSD, diDHMSD);
 
 {Decimals
 -3: 0:34.34
@@ -95,7 +96,7 @@ type
 }
 
 
-function MsToStr(DT: Int64; Display: TDisplay = diDHMSD;
+function MsToStr(DT: S8; Display: TDisplay = diDHMSD;
 	const Decimals: SG = -3; const FixedWidth: Boolean = False; const OutputFormat: TOutputFormat = ofDisplay): string;
 
 function DateToS(const Year, Month, Day: U2; const OutputFormat: TOutputFormat): string; overload;
@@ -108,7 +109,7 @@ implementation
 
 uses
 	SysUtils, Windows, Math,
-	uMath, uStrings;
+	uMath, uStrings, uDictionary;
 
 procedure AddMinusStr(var Result: string; const OutputFormat: TOutputFormat);
 begin
@@ -152,7 +153,7 @@ begin
 //	if Minus then AddMinusStr(Result);
 end;
 
-function NToS(const Num: Int64; const UseFormat: string): string;
+function NToS(const Num: S8; const UseFormat: string): string;
 var
 	Nums: string;
 	i, j: SG;
@@ -163,12 +164,6 @@ begin
 	if (Num = Low(Num)) or (Num = High(Num)) then
 	begin
 		Result := 'Out of 64-bit range';
-		Exit;
-	end;
-
-	if (UseNA) and (Num <= 0) then
-	begin
-		Result := 'N/A';
 		Exit;
 	end;
 
@@ -257,10 +252,40 @@ begin
 	end;
 end;
 
+function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
+begin
+	case OutputFormat of
+	ofDisplay:
+		Result := NToS(S8(Num), 0, OutputFormat);
+	ofIO:
+		if NumericBase = 10 then
+			Result := IntToStr(Num)
+		else
+			Result := NToS(S8(Num), 0, OutputFormat);
+	else
+		Result := NToS(S8(Num), 0, OutputFormat);
+	end;
+end;
+
+function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+begin
+	case OutputFormat of
+	ofDisplay:
+		Result := NToS(S8(Num), Decimals, OutputFormat);
+	ofIO:
+		if (NumericBase = 10) and (Decimals = 0) then
+			Result := IntToStr(Num)
+		else
+			Result := NToS(S8(Num), Decimals, OutputFormat);
+	else
+		Result := NToS(S8(Num), Decimals, OutputFormat);
+	end;
+end;
+
 // 454,545,455.456465; 0.045
-function NToS(const Num: Int64; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 var
-	DecimalSep, ThousandSep: string[3];
+	DecimalSep, ThousandSep: string;
 	ThousandGr, FractionGr: SG;
 
 	Nums: string;
@@ -274,11 +299,6 @@ begin
 		Result := 'Out of 64-bit range';
 		Exit;
 	end;
-	if (UseNA) and (Num <= 0) then
-	begin
-		Result := 'N/A';
-		Exit;
-	end;
 
 	case OutputFormat of
 	ofDisplay:
@@ -290,10 +310,18 @@ begin
 	end;
 	ofIO:
 	begin
-		DecimalSep := '.';
-		ThousandSep := '';
-		ThousandGr := 3;
-		FractionGr := 3;
+		if (NumericBase = 10) and (Decimals = 0) then
+		begin
+			Result := IntToStr(Num);
+			Exit;
+		end
+		else
+		begin
+			DecimalSep := '.';
+			ThousandSep := '';
+			ThousandGr := 3;
+			FractionGr := 3;
+		end;
 	end;
 	else {ofHTML:}
 	begin
@@ -386,7 +414,7 @@ begin
 	end;
 end;
 
-function NToS(const Num: Int64; const OutputFormat: TOutputFormat): string; overload;
+function NToS(const Num: S8; const OutputFormat: TOutputFormat): string; overload;
 begin
 	Result := NToS(Num, 0, OutputFormat);
 end;
@@ -396,6 +424,7 @@ var
 	D: SG;
 	Nu, eps: Extended;
 	LastThousandSeparator: string;
+	Sep: Char;
 begin
 {	if Num = NaN then
 		Result := 'Not a number'
@@ -424,13 +453,20 @@ begin
 			Inc(D);
 		end;
 
+		if OutputFormat = ofIO then
+			Sep := '.'
+		else
+			Sep := ',';
+
 		Result := NToS(Round(Nu), D, OutputFormat);
+		if Pos(Sep, Result) <> 0 then
+			DelEndChars(Result, ['0', Sep]);
 		ThousandSeparator := LastThousandSeparator;
 	end;
 end;
 
 {
-function Using(const Typ: string; const Num: Int64): string;
+function Using(const Typ: string; const Num: S8): string;
 var
 	inp: string;
 	inpP: Integer;
@@ -512,7 +548,7 @@ begin
 				Fra := True;
 			end;
 		end;
-		'~': 
+		'~':
 		begin
 			if i = 1 then
 			begin
@@ -617,7 +653,11 @@ begin
 	B := Abs(Bytes);
 	if B < KB then // 2^10 ($400)
 	begin
-		Result := NToS(B, 0, OutputFormat) + Sep + 'byte' + Plural(B);
+		Result := NToS(B, 0, OutputFormat) + Sep;
+		if OutputFormat = ofDisplay then
+			Result := Result + Translate('byte' + Plural(B))
+		else
+			Result := Result + 'byte' + Plural(B);
 	end
 	else if B < 10 * KB then
 	begin
@@ -746,7 +786,7 @@ begin
 		Result := NToS((Value + T div 2) div T, OutputFormat) + ' T';
 end;
 
-procedure MsToHMSD(const T: Int64; out GH, GM, GS, GD: U4);
+procedure MsToHMSD(const T: S8; out GH, GM, GS, GD: U4);
 var
 	DW: U4;
 begin
@@ -755,7 +795,7 @@ begin
 		GH := 999;
 		GM := 59;
 		GS := 59;
-		GD := 99;
+		GD := 999;
 	end
 	else
 	begin
@@ -783,14 +823,14 @@ begin
 	end;
 end;
 
-function MsToStr(DT: Int64; Display: TDisplay = diDHMSD;
+function MsToStr(DT: S8; Display: TDisplay = diDHMSD;
 	const Decimals: SG = -3; const FixedWidth: Boolean = False; const OutputFormat: TOutputFormat = ofDisplay): string;
 var
 	h, m, s, d: U4;
 	Year, Week, Day: SG;
 	Res, Rem: U1;
 
-	TimeSep, DecimalSep, ListSep: string[3];
+	TimeSep, DecimalSep, ListSep: string;
 begin
 	case OutputFormat of
 	ofDisplay:
@@ -836,19 +876,19 @@ begin
 		if DT >= MSecsPerYear then
 		begin
 			Year := DT div MSecsPerYear;
-			Result := Result + IntToStr(Year) + ' year' + Plural(Year) + ListSep;
+			Result := Result + IntToStr(Year) + CharSpace + Translate('year' + Plural(Year)) + ListSep;
 			DT := DT mod MSecsPerYear;
 		end;
 		if DT >= MSecsPerWeek then
 		begin
 			Week := DT div MSecsPerWeek;
-			Result := Result + IntToStr(Week) + ' week' + Plural(Week) + ListSep;
+			Result := Result + IntToStr(Week) + CharSpace + Translate('week' + Plural(Week)) + ListSep;
 			DT := DT mod MSecsPerWeek;
 		end;
 		if DT >= MSecsPerDay then
 		begin
 			Day := DT div MSecsPerDay;
-			Result := Result + IntToStr(Day) + ' day' + Plural(Day) + ListSep;
+			Result := Result + IntToStr(Day) + CharSpace + Translate('day' + Plural(Day)) + ListSep;
 			DT := DT mod MSecsPerDay;
 		end;
 	end;
@@ -862,12 +902,12 @@ begin
 		if (h < 10) and (Display <> diHHMSD) then
 		begin
 			if (DT >= 0) and FixedWidth then Result := Result + ' ';
-			Result := Result + Chr(h + Ord('0')) + TimeSep;
+			Result := Result + Char(h + Ord('0')) + TimeSep;
 		end
 		else if h < 100 then
 		begin
 			DivModU2(h, 10, Res, Rem);
-			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep
+			Result := Result + Char(Res + Ord('0')) + Char(Rem + Ord('0')) + TimeSep
 		end
 		else
 			Result := Result + IntToStr(h) + TimeSep;
@@ -881,12 +921,12 @@ begin
 		else if h < 10 then
 		begin
 			if (DT >= 0) and FixedWidth then Result := Result + CharSpace;
-			Result := Result + Chr(h + Ord('0')) + TimeSep
+			Result := Result + Char(h + Ord('0')) + TimeSep
 		end
 		else if h < 100 then
 		begin
 			DivModU2(h, 10, Res, Rem);
-			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep
+			Result := Result + Char(Res + Ord('0')) + Char(Rem + Ord('0')) + TimeSep
 		end
 		else
 			Result := Result + IntToStr(h) + TimeSep;
@@ -899,15 +939,15 @@ begin
 			if (h = 0) and (not (Display in [diHHMSD, diHMSD, diDHMSD])) then
 			begin
 				if FixedWidth then Result := Result + ' ';
-				Result := Result + Chr(m + Ord('0')) + TimeSep
+				Result := Result + Char(m + Ord('0')) + TimeSep
 			end
 			else
-				Result := Result + '0' + Chr(m + Ord('0')) + TimeSep;
+				Result := Result + '0' + Char(m + Ord('0')) + TimeSep;
 		end
 		else
 		begin
 			DivModU2(m, 10, Res, Rem);
-			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0')) + TimeSep;
+			Result := Result + Char(Res + Ord('0')) + Char(Rem + Ord('0')) + TimeSep;
 		end;
 
 	if Display = diSD then
@@ -917,20 +957,23 @@ begin
 	else
 		if s < 10 then
 		begin
-			Result := Result + '0' + Chr(s + Ord('0'));
+			Result := Result + '0' + Char(s + Ord('0'));
 		end
 		else
 		begin
 			DivModU2(s, 10, Res, Rem);
-			Result := Result + Chr(Res + Ord('0')) + Chr(Rem + Ord('0'));
+			Result := Result + Char(Res + Ord('0')) + Char(Rem + Ord('0'));
 		end;
+
+	if (d = 0) and (Decimals <= 0) then
+		Exit;
 
 	case Abs(Decimals) of
 	1:
 	begin
 		d := d div 100;
 		if (Decimals > 0) or (d <> 0) then
-			Result := Result + DecimalSep + Chr(d + Ord('0'));
+			Result := Result + DecimalSep + Char(d + Ord('0'));
 	end;
 	2:
 	begin
@@ -939,8 +982,8 @@ begin
 			Result := Result + DecimalSep + NToS(d, '00')
 		else
 		begin
-			Result := Result + NToS(d, '.##');
-			if FixedWidth = False then DelBESpace(Result);
+			Result := Result + DecimalSep + NToS(d, '00');
+			if FixedWidth = False then DelEndChars(Result, ['0']);
 		end;
 	end;
 	3:
@@ -949,8 +992,8 @@ begin
 			Result := Result + DecimalSep + NToS(d, '000')
 		else
 		begin
-			Result := Result + NToS(d, '.###');
-			if FixedWidth = False then DelBESpace(Result);
+			Result := Result + DecimalSep + NToS(d, '000');
+			if FixedWidth = False then DelEndChars(Result, ['0']);
 		end;
 	end;
 	end;

@@ -1,17 +1,17 @@
-//* File:     Lib\uInputFormat.pas
-//* Created:  2004-03-07
-//* Modified: 2008-07-19
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uInputFormat.pas
+// * Created:  2004-03-07
+// * Modified: 2009-09-17
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uInputFormat;
 
 interface
 
 uses
-	uTypes, uVector, uParserMsg;
+	uTypes, uVector, uParserMsg, uLogger;
 
 type
 	TInputFormat = (ifIO{Disk File Input/Output}, ifDisplay{Windows Locale});
@@ -25,17 +25,17 @@ function SToTime(const Str: string; const InputFormat: TInputFormat): TDateTime;
 function SToMs(const Str: string; const InputFormat: TInputFormat): SG; // MsToStr<-
 
 // Str To Data
-function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: UG; const Messages: TParserMessages = nil): UG;
+function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
 
-function StrToVector(Line: AnsiString; const UseWinFormat: BG; const Messages: TParserMessages = nil): TVector;
-function StrToValE(Line: AnsiString; const UseWinFormat: BG;
+function StrToVector(Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil): TVector;
+function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended; const Messages: TParserMessages = nil): Extended;
 {function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string): Extended; overload;}
 
-function StrToValI(Line: AnsiString; const UseWinFormat: BG;
+function StrToValI(Line:string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG; const Messages: TParserMessages = nil): SG; overload;
-function StrToValI(Line: AnsiString; const UseWinFormat: BG;
+function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: UG; const Messages: TParserMessages = nil): UG; overload;
 
 {function StrToValI(Line: string; const UseWinFormat: BG;
@@ -49,7 +49,7 @@ function StrToValS8(Line: string; const UseWinFormat: BG;
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1; const Messages: TParserMessages = nil): U1;
 
-function SToDate(const Str: string; const InputFormat: TInputFormat): TDateTime;
+function SToDate(const Str: string; const InputFormat: TInputFormat; const Logger: TLogger = nil): TDateTime;
 function SToDateTime(const Str: string; const InputFormat: TInputFormat): TDateTime;
 
 implementation
@@ -58,42 +58,61 @@ uses
 	SysUtils,
 	uDParser, uStrings, uMsg;
 
-function StrToMs(Line: AnsiString; const MinVal, DefVal, MaxVal: UG; const Messages: TParserMessages = nil): UG;
+function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
 var Parser: TDParser;
 begin
 	Parser := TDParser.Create(Pointer(Line), Length(Line));
-	Parser.Messages := Messages;
-	Result := Parser.ReadMs(MinVal, DefVal, MaxVal);
-	if Parser.InputType <> itEOI then Parser.AddMes(mtEUnusedChars, []);
-	Parser.Free;
+	try
+		Parser.Messages := Messages;
+		if UseWinFormat then
+		begin
+			Parser.DecimalSep := DecimalSeparator;
+			Parser.ThousandSep := ThousandSeparator;
+		end
+		else
+		begin
+			Parser.DecimalSep := '.';
+			Parser.ThousandSep := ',';
+		end;
+		Result := Parser.ReadMs(MinVal, DefVal, MaxVal);
+		if Parser.InputType <> itEOI then Parser.AddMes(mtEUnusedChars, []);
+	finally
+		Parser.Free;
+	end;
 end;
 
-function StrToVector(Line: AnsiString; const UseWinFormat: BG; const Messages: TParserMessages = nil): TVector;
+function StrToVector(Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil): TVector;
 var Parser: TDParser;
 begin
 	Parser := TDParser.Create(Line);
-	Parser.Messages := Messages;
-	if UseWinFormat then
-	begin
-		Parser.DecimalSep := DecimalSeparator;
-		Parser.ThousandSep := ThousandSeparator;
-	end
-	else
-	begin
-		Parser.DecimalSep := '.';
-		Parser.ThousandSep := ',';
+	try
+		Parser.Messages := Messages;
+		if UseWinFormat then
+		begin
+			Parser.DecimalSep := DecimalSeparator;
+			Parser.ThousandSep := ThousandSeparator;
+		end
+		else
+		begin
+			Parser.DecimalSep := '.';
+			Parser.ThousandSep := ',';
+		end;
+		Parser.ReadInput;
+		FreeTree(Root);
+		Root := Parser.NodeE(nil);
+		
+		if Root <> nil then
+		begin
+			Result := Calc(Root);
+		end
+		else
+			Result := nil;
+	finally
+		Parser.Free;
 	end;
-	Parser.ReadInput;
-	FreeTree(Root);
-	Root := Parser.NodeE(nil);
-	if Root <> nil then
-	begin
-		Result := Calc(Root);
-	end;
-	Parser.Free;
 end;
 
-function StrToValE(Line: AnsiString; const UseWinFormat: BG;
+function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended; const Messages: TParserMessages = nil): Extended;
 var
 	Parser: TDParser;
@@ -118,7 +137,7 @@ begin
 		Result := Parser.ReadFA(MinVal, DefVal, MaxVal);
 		if Messages = nil then
 		begin
-			if Parser.Messages.Messages.Count > 0 then
+			if Parser.Messages.Count > 0 then
 			begin
 				s := Parser.Messages.ToString;
 				FreeAndNil(Parser.Messages);
@@ -155,13 +174,13 @@ begin
 	Result := StrToValI(Line, UseWinFormat, MinVal, DefVal, MaxVal, Denominator);
 end;}
 
-function StrToValI(Line: AnsiString; const UseWinFormat: BG;
+function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG; const Messages: TParserMessages = nil): SG;
 begin
 	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
 end;
 
-function StrToValI(Line: AnsiString; const UseWinFormat: BG;
+function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: UG; const Messages: TParserMessages = nil): UG;
 begin
 	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
@@ -198,7 +217,7 @@ begin
 end;
 {$endif}
 
-function SToDate(const Str: string; const InputFormat: TInputFormat): TDateTime;
+function SToDate(const Str: string; const InputFormat: TInputFormat; const Logger: TLogger = nil): TDateTime;
 var
 	DateSep: Char;
 	Year, Month, Day: U2;
@@ -252,7 +271,10 @@ begin
 		else if Length(Str) = 6 then
 		begin
 			Year := ReadSGFast(Copy(Str, 1, 2));
-			if Year < 30{TODO : Get From API for ifDisplay} then Inc(Year, 2000) else Inc(Year, 1900);
+			if Year < 30{Get From API for ifDisplay} then
+				Inc(Year, 2000)
+			else
+				Inc(Year, 1900);
 			Month := ReadSGFast(Copy(Str, 3, 2));
 			Day := ReadSGFast(Copy(Str, 5, 2));
 	{		Year := StrToValI(Copy(Str, 1, 2), False, 00, UG(00), 99, 1);
@@ -278,7 +300,10 @@ begin
 		if Month > 50 then Dec(Month, 50); // Female offset
 		if TryEncodeDate(Year, Month, Day, TDateTime(Result)) = False then
 		begin
-			ErrorMsg('Invalid date %1' + '.', [Str]);
+			if Assigned(Logger) then
+				Logger.Add(ReplaceParam('Invalid date %1' + '.', [Str]), mlWarning)
+			else
+				ErrorMsg('Invalid date %1' + '.', [Str]);
 			Result := 0;
 		end;
 	end;
@@ -321,7 +346,7 @@ begin
 			F := 0;
 			for W := Length(Str) - 1 downto 1 do
 			begin
-				if Str[W] in ['.', ','] then
+				if CharInSet(Str[W], ['.', ',']) then
 				begin
 					F := W;
 					Break;

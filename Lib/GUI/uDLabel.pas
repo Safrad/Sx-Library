@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uDLabel.pas
-//* Created:  1999-08-01
-//* Modified: 2008-05-11
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uDLabel.pas
+// * Created:  1999-08-01
+// * Modified: 2009-11-15
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uDLabel;
 
@@ -14,7 +14,7 @@ interface
 uses
 	uTypes, uMath, uDWinControl,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl;
+	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl, uDrawStyle;
 
 type
 	TDLabel = class(TDWinControl)
@@ -59,6 +59,8 @@ type
 		procedure SetWordWrap(const Value: Boolean);
 		procedure SetLayout(const Value: TTextLayout);
 		procedure SetAlignment(const Value: TAlignment);
+
+		procedure CMDialogChar(var Message: TCMDialogChar); message CM_DIALOGCHAR;
 	protected
 		{ Protected declarations }
 		property Canvas: TCanvas read FCanvas;
@@ -247,9 +249,6 @@ var
 	i: Integer;
 	{$ifopt d-}Co: array[0..3] of TColor;{$endif}
 begin
-
-{	if Name = 'LabelMaterial' then
-		Beep;}
 	inherited;
 	Recta.Left := 0;
 	Recta.Top := 0;
@@ -328,9 +327,7 @@ begin
 			FBmpText := TDBitmap.Create;
 		end;
 
-		FBmpText.SetSize(Bitmap.Width, Bitmap.Height);
-		FBmpText.Bar(0, 0, FBmpText.Width - 1, FBmpText.Height - 1,
-			Color, ef16);
+		FBmpText.SetSize(Bitmap.Width, Bitmap.Height, Color);
 		FBmpText.TransparentColor := Color;
 
 		FBmpText.Canvas.Brush.Style := bsClear;
@@ -355,11 +352,11 @@ begin
 			begin
 				Bitmap.Canvas.Brush.Color := Color;
 				Bitmap.Canvas.Brush.Style := bsClear;
-				DrawCutedText(Bitmap.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
+				DrawCuttedText(Bitmap.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
 			end
 			else
 			begin
-				DrawCutedText(FBmpText.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
+				DrawCuttedText(FBmpText.Canvas, Recta, FAlignment, FLayout, Caption, FWordWrap, FFontShadow);
 			end;
 		end;
 
@@ -382,6 +379,18 @@ begin
 		FAlignment := Value;
 		Invalidate;
 	end;
+end;
+
+procedure TDLabel.CMDialogChar(var Message: TCMDialogChar);
+begin
+	if (FFocusControl <> nil) and Enabled {and ShowAccelChar} and
+		IsAccel(Message.CharCode, Caption) then
+		with FFocusControl do
+			if CanFocus then
+			begin
+				SetFocus;
+				Message.Result := 1;
+			end;
 end;
 
 procedure Register;

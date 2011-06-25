@@ -1,3 +1,11 @@
+// * File:     Lib\SortS.inc
+// * Created:  2008-06-03
+// * Modified: 2005-10-08
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
+
 var
 	AVal: array of TValue1;
 

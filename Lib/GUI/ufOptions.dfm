@@ -1,15 +1,14 @@
 object fOptions: TfOptions
-  Left = 495
-  Top = 388
+  Left = 586
+  Top = 268
   HorzScrollBar.Tracking = True
   VertScrollBar.Tracking = True
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsToolWindow
   Caption = 'Options'
   ClientHeight = 307
-  ClientWidth = 384
+  ClientWidth = 415
   Color = clBtnFace
-  Constraints.MinWidth = 392
   ParentFont = True
   OldCreateOrder = False
   OnCreate = FormCreate
@@ -20,13 +19,30 @@ object fOptions: TfOptions
   TextHeight = 13
   object Bevel1: TBevel
     Left = 8
-    Top = 256
+    Top = 34
+    Width = 369
+    Height = 8
+    Shape = bsTopLine
+  end
+  object LabelTemplate: TLabel
+    Left = 8
+    Top = 12
+    Width = 44
+    Height = 13
+    Caption = '&Template'
+    FocusControl = ComboBoxTemplate
+    Transparent = True
+    OnClick = LabelTemplateClick
+  end
+  object Bevel2: TBevel
+    Left = 7
+    Top = 264
     Width = 369
     Height = 8
     Shape = bsTopLine
   end
   object ButtonOk: TDButton
-    Left = 8
+    Left = 136
     Top = 272
     Width = 81
     Height = 25
@@ -35,7 +51,7 @@ object fOptions: TfOptions
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Tahoma'
     Font.Style = []
     ModalResult = 1
     ParentFont = False
@@ -43,7 +59,7 @@ object fOptions: TfOptions
     OnClick = ButtonOkClick
   end
   object ButtonCancel: TDButton
-    Left = 296
+    Left = 224
     Top = 272
     Width = 81
     Height = 25
@@ -52,29 +68,14 @@ object fOptions: TfOptions
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Tahoma'
     Font.Style = []
     ModalResult = 2
     ParentFont = False
-    TabOrder = 3
-  end
-  object ButtonDefault: TDButton
-    Left = 104
-    Top = 272
-    Width = 81
-    Height = 25
-    Caption = '&Default'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 1
-    OnClick = ButtonDefaultClick
   end
   object ButtonApply: TDButton
-    Left = 200
+    Left = 312
     Top = 272
     Width = 81
     Height = 25
@@ -82,10 +83,51 @@ object fOptions: TfOptions
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
     TabOrder = 2
     OnClick = ButtonApplyClick
+  end
+  object ComboBoxTemplate: TComboBox
+    Left = 64
+    Top = 8
+    Width = 217
+    Height = 21
+    Style = csDropDownList
+    TabOrder = 3
+    OnChange = ComboBoxTemplateChange
+  end
+  object DButton1: TDButton
+    Left = 288
+    Top = 8
+    Width = 41
+    Height = 21
+    Caption = '&Add'
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 4
+    Visible = False
+  end
+  object DButton2: TDButton
+    Left = 336
+    Top = 8
+    Width = 49
+    Height = 21
+    Caption = '&Delete'
+    Enabled = False
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 5
+    Visible = False
   end
 end

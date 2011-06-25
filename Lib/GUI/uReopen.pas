@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uReopen.pas
-//* Created:  1999-12-01
-//* Modified: 2007-11-25
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uReopen.pas
+// * Created:  1999-12-01
+// * Modified: 2009-12-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uReopen;
 
@@ -18,9 +18,8 @@ const
 	MaxReopen = 50;
 type
 	TReopenExists = (reNo, reUnknown, reYes);
-	TReopenItem = packed record // 16
+	TReopenItem = record // 16
 		FileName: TFileName; // 4
-		FilePos: string; // 4
 		MenuItem: TMenuItem; // 4
 		OpenedCount: U2; // 2
 		Exists: TReopenExists; // 1
@@ -46,16 +45,16 @@ type
 		procedure ReopenXClick(Sender: TObject);
 		procedure SetReopen1(Value: TMenuItem);
 	public
-		LoadFromFile: function(const FileName: TFileName; const FilePos: string; const ReadOnly: BG = False): BG of object;
+		LoadFromFile: function(const FileName: TFileName; const ReadOnly: BG = False): BG of object;
 		ChangeFile: TNotifyEvent;
 
 		constructor Create;
 		destructor Destroy; override;
 
-		procedure RWReopenNames(const Selection: string; const Save: BG);
+		procedure RWReopenNames(const Section: string; const Save: BG);
 
-		procedure AddReopenCaption(const FileName: TFileName; const FilePos: string);
-		procedure CloseFile(const FileName: TFileName; const FilePos: string);
+		procedure AddReopenCaption(const FileName: TFileName);
+		procedure CloseFile(const FileName: TFileName);
 		procedure Clear;
 
 		procedure DrawReopenCaption;
@@ -70,7 +69,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math,
-	uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uLog, uMenus, uStrings, uOutputFormat;
+	uEscape, uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uLog, uMenus, uStrings, uOutputFormat;
 
 var
 	ReopenBitmaps: array[TReopenExists] of TBitmap;
@@ -114,7 +113,7 @@ end;
 
 procedure TReopen.ReopenXClick(Sender: TObject);
 begin
-	if LoadFromFile(FReopenItems[TMenuItem(Sender).Tag].FileName, FReopenItems[TMenuItem(Sender).Tag].FilePos) then
+	if LoadFromFile(FReopenItems[TMenuItem(Sender).Tag].FileName) then
 	begin
 //		AddReopenCaption(ReopenItems[TMenuItem(Sender).Tag].FileName);
 		ChangeFile(Sender);
@@ -133,7 +132,7 @@ begin
 		begin
 			if Assigned(LoadFromFile) then
 			begin
-				if LoadFromFile(FReopenItems[i].FileName, FReopenItems[i].FilePos) then
+				if LoadFromFile(FReopenItems[i].FileName) then
 				begin
 					Opened := True;
 				end;
@@ -188,7 +187,10 @@ begin
 		if Assigned(FReopenItems[i].MenuItem) then
 		begin
 			if Assigned(Reopen1) then
-				Reopen1.Delete(MaxPos);
+			begin
+				if Reopen1.Count > MaxPos then
+					Reopen1.Delete(MaxPos);
+			end;
 			FreeAndNil(FReopenItems[i].MenuItem);
 		end;
 	end;
@@ -242,7 +244,7 @@ begin
 	end;
 end;
 
-procedure TReopen.RWReopenNames(const Selection: string; const Save: BG);
+procedure TReopen.RWReopenNames(const Section: string; const Save: BG);
 var
 	i: SG;
 begin
@@ -250,11 +252,11 @@ begin
 	begin
 		Clear;
 	end;
-	MainIni.RWNum(Selection, 'Count', FReopenCount, Save);
+	MainIni.RWNum(Section, 'Count', FReopenCount, Save);
 	if FReopenCount > MaxReopen then FReopenCount := MaxReopen;
 
 	if Save = False then FReopenLimit := 10;
-	MainIni.RWNum(Selection, 'Limit', FReopenLimit, Save);
+	MainIni.RWNum(Section, 'Limit', FReopenLimit, Save);
 	if FReopenLimit > MaxReopen then FReopenLimit := MaxReopen;
 
 	if Save = False then
@@ -269,12 +271,12 @@ begin
 	end;
 	for i := 0 to FReopenCount - 1 do
 	begin
-		MainIni.RWFileName(Selection, IntToStr(i), FReopenItems[i].FileName, Save);
-		MainIni.RWString(Selection, IntToStr(i) + 'Pos', FReopenItems[i].FilePos, Save);
+		MainIni.RWFileName(Section, IntToStr(i), FReopenItems[i].FileName, Save);
+//		MainIni.RWString(Section, IntToStr(i) + 'Pos', FReopenItems[i].FilePos, Save);
 	end;
 end;
 
-procedure TReopen.AddReopenCaption(const FileName: TFileName; const FilePos: string);
+procedure TReopen.AddReopenCaption(const FileName: TFileName);
 var
 	i, InsertPos: SG;
 	OpenedCount: UG;
@@ -311,21 +313,19 @@ begin
 	for i := InsertPos downto 1 do
 	begin
 		FReopenItems[i].FileName := FReopenItems[i - 1].FileName;
-		FReopenItems[i].FilePos := FilePos;
 		FReopenItems[i].Exists := FReopenItems[i - 1].Exists;
 		FReopenItems[i].OpenedCount := FReopenItems[i - 1].OpenedCount;
 	end;
 	if FReopenCount > 0 then
 	begin
 		FReopenItems[0].FileName := FileName;
-		FReopenItems[0].FilePos := FilePos;
 		FReopenItems[0].Exists := reUnknown;
 		FReopenItems[0].OpenedCount := OpenedCount;
 	end;
 	Inc(FOpenedFiles);
 end;
 
-procedure TReopen.CloseFile(const FileName: TFileName; const FilePos: string);
+procedure TReopen.CloseFile(const FileName: TFileName);
 var
 	j: SG;
 begin
@@ -335,7 +335,6 @@ begin
 	begin
 		if SameFileName(FReopenItems[j].FileName, FileName) then
 		begin
-			FReopenItems[j].FilePos := FilePos;
 			if FReopenItems[j].OpenedCount > 0 then
 			begin
 				Dec(FReopenItems[j].OpenedCount);
@@ -354,6 +353,7 @@ var
 	DriveType: SG;
 	P: array[0..3] of Char;
 begin
+	FileName := ExpandDir(FileName);
 	if Length(FileName) < 3 then
 	begin
 		Result := reNo;
@@ -417,7 +417,7 @@ begin
 				FReopenItems[i - 1].OpenedCount := FReopenItems[i].OpenedCount;
 				FReopenItems[i].FileName := ReopenItem.FileName;
 				FReopenItems[i].Exists := ReopenItem.Exists;
-				fReopenItems[i].OpenedCount := ReopenItem.OpenedCount
+				FReopenItems[i].OpenedCount := ReopenItem.OpenedCount
 			end;
 		end;
 	end;
@@ -439,8 +439,10 @@ begin
 			else
 				s := '';
 			s := s + IntToStr(i) + ' ' + FReopenItems[i].FileName;
-			if FReopenItems[i].OpenedCount > 1 then s := s + ' (' + NToS(FReopenItems[i].OpenedCount) + ')';
-			if FReopenItems[i].FilePos <> '' then s := s + ' [' + FReopenItems[i].FilePos + ']';
+			if FReopenItems[i].OpenedCount > 1 then
+				s := s + ' (' + NToS(FReopenItems[i].OpenedCount) + ')';
+{			if FReopenItems[i].FilePos <> '' then
+				s := s + ' [' + AddEscape(FReopenItems[i].FilePos, True) + ']';}
 
 			FReopenItems[i].MenuItem.Caption := s;
 

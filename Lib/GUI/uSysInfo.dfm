@@ -3,7 +3,7 @@ object fSysInfo: TfSysInfo
   Top = 316
   BorderStyle = bsDialog
   Caption = 'System Info'
-  ClientHeight = 320
+  ClientHeight = 297
   ClientWidth = 304
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -13,6 +13,7 @@ object fSysInfo: TfSysInfo
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  Position = poOwnerFormCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -34,7 +35,7 @@ object fSysInfo: TfSysInfo
     Left = 104
     Top = 172
     Width = 7
-    Height = 97
+    Height = 71
     Shape = bsLeftLine
   end
   object Bevel2: TBevel
@@ -46,7 +47,7 @@ object fSysInfo: TfSysInfo
   end
   object Bevel5: TBevel
     Left = 8
-    Top = 276
+    Top = 252
     Width = 289
     Height = 9
     Shape = bsTopLine
@@ -175,6 +176,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 6
   end
@@ -186,6 +188,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 7
   end
@@ -197,6 +200,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 8
   end
@@ -208,6 +212,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 9
   end
@@ -219,6 +224,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 10
   end
@@ -230,6 +236,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 11
   end
@@ -240,6 +247,7 @@ object fSysInfo: TfSysInfo
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
+    DoubleBuffered = True
     ParentColor = True
     ReadOnly = True
     TabOrder = 1
@@ -252,12 +260,13 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 2
   end
   object ButtonOk: TDButton
     Left = 216
-    Top = 288
+    Top = 264
     Width = 81
     Height = 25
     Cancel = True
@@ -280,6 +289,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 4
   end
@@ -291,6 +301,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 5
   end
@@ -302,6 +313,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 3
   end
@@ -313,6 +325,7 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
+    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 12
   end
@@ -322,7 +335,6 @@ object fSysInfo: TfSysInfo
     Width = 81
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 13
   end
 end

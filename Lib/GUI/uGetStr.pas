@@ -1,10 +1,10 @@
-//* File:     Lib\GUI\uGetStr.pas
-//* Created:  1998-07-01
-//* Modified: 2006-12-26
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uGetStr.pas
+// * Created:  1998-07-01
+// * Modified: 2009-11-07
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uGetStr;
 
@@ -40,7 +40,7 @@ function GetPassword(out Password: string): BG;
 implementation
 
 {$R *.DFM}
-uses uStrings, uMsg;
+uses uStrings, uMsg, uDictionary;
 
 var
 	fGetStr: TfGetStr;
@@ -57,7 +57,7 @@ begin
 	begin
 		fGetStr := TfGetStr.Create(Application.MainForm);
 	end;
-	fGetStr.Caption := DelCharsF(Caption, '&');
+	fGetStr.Caption := Translate(DelCharsF(Caption, '&'));
 	fGetStr.EditInput.MaxLength := MaxLength;
 	fGetStr.CurS := CurVal;
 	fGetStr.DefS := DefVal;
@@ -109,6 +109,7 @@ end;
 procedure TfGetStr.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
+	Dictionary.TranslateForm(Self);
 end;
 
 function GetPassword(out Password: string): BG;

@@ -1,10 +1,10 @@
-//* File:     Lib\Parser\uParserMsg.pas
-//* Created:  2004-03-07
-//* Modified: 2008-02-16
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\Parser\uParserMsg.pas
+// * Created:  2004-03-07
+// * Modified: 2009-08-29
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uParserMsg;
 
@@ -29,15 +29,17 @@ type
 	private
 		Data: TData;
 		function MesToString(const M: PParserMessage): string;
+		function GetCount: SG;
 	public
 		constructor Create;
 		destructor Destroy; override;
-		procedure Add(const FileNameIndex, Line, X0, X1: SG; const Text: string; const MsgType: TMessageLevel);
+		procedure Add(const FileNameIndex, Line, X0, X1: UG; const Text: string; const MsgType: TMessageLevel);
 		procedure Clear;
 		procedure ShowAndClear(const FileName: TFileName = '');
 		function ToString: string;
 		{$ifndef Console}procedure ToStrings(const Lines: TStrings);{$endif}
 		property Messages: TData read Data;
+		property Count: SG read GetCount;
 	end;
 
 
@@ -121,7 +123,7 @@ begin
 	inherited;
 end;
 
-procedure TParserMessages.Add(const FileNameIndex, Line, X0, X1: SG; const Text: string; const MsgType: TMessageLevel);
+procedure TParserMessages.Add(const FileNameIndex, Line, X0, X1: U4; const Text: string; const MsgType: TMessageLevel);
 var
 	M: PParserMessage;
 begin
@@ -144,7 +146,8 @@ begin
 		M := Data.GetFirst;
 		for i := 0 to SG(Data.Count) - 1 do
 		begin
-			SetLength(M.Text, 0);
+			Finalize(M^);
+//			SetLength(M.Text, 0);
 			Inc(SG(M), Data.ItemMemSize);
 		end;
 		Data.Clear;
@@ -196,7 +199,7 @@ begin
 	begin
 		Result := Result + MesToString(Mes);
 		if i + 1 < Data.Count then
-			Result := Result + LineSep;
+			Result := Result + FullSep;
 		Data.Next(Pointer(Mes));
 	end;
 //	Result := Result + 'Done.';
@@ -209,16 +212,24 @@ var
 	i: SG;
 begin
 	Lines.BeginUpdate;
-	Lines.Clear;
-	Me := Data.GetFirst;
-	for i := 0 to SG(Data.Count) - 1 do
-	begin
-		Lines.Add(MesToString(Me));
-		Inc(SG(Me), Data.ItemMemSize);
+	try
+		Lines.Clear;
+		Me := Data.GetFirst;
+		for i := 0 to SG(Data.Count) - 1 do
+		begin
+			Lines.Add(MesToString(Me));
+			Inc(SG(Me), Data.ItemMemSize);
+		end;
+	finally
+		Lines.EndUpdate;
 	end;
-	Lines.EndUpdate;
 end;
 {$endif}
+
+function TParserMessages.GetCount: SG;
+begin
+	Result := Data.Count;
+end;
 
 end.
 

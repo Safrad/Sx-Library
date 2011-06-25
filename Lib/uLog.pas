@@ -1,10 +1,10 @@
-//* File:     Lib\uLog.pas
-//* Created:  2006-05-03
-//* Modified: 2008-12-25
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uLog.pas
+// * Created:  2006-05-03
+// * Modified: 2009-09-04
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uLog;
 
@@ -36,6 +36,7 @@ type
 	TLogMessageProcedure = procedure(const Line: string; const LogType: TMessageLevel);
 
 	// Add startup parameter -LogDebug for all debuging information
+	function MainLogWrite(const MessageLevel: TMessageLevel): BG;
 	procedure MainLogAdd(const Line: string; const LogType: TMessageLevel);
 	procedure InitializeLog;
 
@@ -45,12 +46,14 @@ var
 implementation
 
 uses
-	uParams, uFiles,
+	uParams, uFiles, uCharset,
 	uOutputFormat, uEscape, uStrings, {$ifndef Console}uProjectInfo,{$endif}
 	Windows, TypInfo;
 
 procedure TLog.WriteLine(const Line: string);
-var LLog: TLog;
+var
+	LLog: TLog;
+	LineA: AnsiString;
 begin
 	if Length(Line) > 0 then
 	begin
@@ -61,7 +64,8 @@ begin
 			MainLog := nil;
 			try
 			//	FFile.Write(Line);
-				FFile.BlockWrite(Line[1], Length(Line))
+				LineA := ConvertUnicodeToUTF8(Line);
+				FFile.BlockWrite(LineA[1], Length(LineA));
 			finally
 				MainLog := LLog;
 			end;
@@ -133,7 +137,7 @@ begin
 	Assert(MessageLevel <> mlNone);
 	if MessageLevel >= FLoggingLevel then
 	begin
-		WriteLine(DateTimeToS(LogTime, 3, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line) + FileSep);
+		WriteLine(DateTimeToS(LogTime, 3, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line, True) + FileSep);
 //		Flush;
 	end;
 end;
@@ -184,6 +188,11 @@ begin
 		if (Index >= SG(Low(Result))) and (Index <= SG(High(Result))) then
 			Result := TMessageLevel(Index);
 	end;
+end;
+
+function MainLogWrite(const MessageLevel: TMessageLevel): BG;
+begin
+	Result := Assigned(MainLog) and (MessageLevel >= MainLog.LoggingLevel);
 end;
 
 procedure MainLogAdd(const Line: string; const LogType: TMessageLevel);

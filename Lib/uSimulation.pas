@@ -1,10 +1,10 @@
-//* File:     Lib\uSimulation.pas
-//* Created:  2000-05-01
-//* Modified: 2008-02-16
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\uSimulation.pas
+// * Created:  2000-05-01
+// * Modified: 2009-10-06
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uSimulation;
 
@@ -17,8 +17,10 @@ var
 	GTime, // Global time
 	GTimeStep: U4; // Time interval between GetGTime
 
-function TimeDifference(const NowTime, LastTime: U4): U4;
-function IntervalFrom(const StartTime: U4): U4;
+function TimeDifference(const NowTime, LastTime: U4): U4; overload;
+function TimeDifference(const NowTime, LastTime: U8): U8; overload;
+function IntervalFrom(const StartTime: U4): U4; overload;
+function IntervalFrom(const StartTime: U8): U8; overload;
 // procedure InitGTime; // Reset Timer, GTime counts from 0
 
 {
@@ -32,7 +34,7 @@ implementation
 
 uses
 	Windows,
-	uLog, uOutputFormat;
+	uMath, uLog, uOutputFormat;
 
 //{$define Prec} // Precision Timer, but slower (3%)
 
@@ -50,10 +52,20 @@ asm
 //	and Result, $0fff
 end;
 
+function TimeDifference(const NowTime, LastTime: U8): U8;
+begin
+	Result := NowTime - LastTime;
+end;
+
 function IntervalFrom(const StartTime: U4): U4;
 begin
 	GetGTime(0);
 	Result := TimeDifference(GTime, StartTime);
+end;
+
+function IntervalFrom(const StartTime: U8): U8;
+begin
+	Result := TimeDifference(PerformanceCounter, StartTime);
 end;
 
 var

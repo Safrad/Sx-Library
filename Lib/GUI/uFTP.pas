@@ -1,10 +1,10 @@
-//* File:     Lib\uFTP.pas
-//* Created:  2007-08-12
-//* Modified: 2009-05-13
-//* Version:  1.1.41.12
-//* Author:   David Safranek (Safrad)
-//* E-Mail:   safrad at email.cz
-//* Web:      http://safrad.own.cz
+// * File:     Lib\GUI\uFTP.pas
+// * Created:  2007-08-12
+// * Modified: 2009-09-30
+// * Version:  1.1.45.113
+// * Author:   David Safranek (Safrad)
+// * E-Mail:   safrad at email.cz
+// * Web:      http://safrad.own.cz
 
 unit uFTP;
 
@@ -22,8 +22,9 @@ function UploadDownload(const FileNameOrDir: string; TargetDir: string; const FT
 implementation
 
 uses
+	TypInfo,
 	uStrings, uFiles, uHTML, uOutputFormat, uMsg,
-	SysUtils, Classes, Windows, IdFTPList, TypInfo;
+	SysUtils, Classes, Windows, IdFTPList, IdException, {$ifndef VER150}IdAllFTPListParsers, {$endif}IdFTPCommon;
 
 function FTPTimeToUTC(const DT: TDateTime): TDateTime;
 var
@@ -62,6 +63,17 @@ begin
 	Item := GetFTPItem(LI, FileName);
 	if Item <> nil then
 		Result := FTPTimeToUTC(Item.ModifiedDate)
+	else
+		Result := 0;
+end;
+
+function GetFTPSize(const LI: TIdFTPListItems; const FileName: TFileName): U8;
+var
+	Item: TIdFTPListItem;
+begin
+	Item := GetFTPItem(LI, FileName);
+	if Item <> nil then
+		Result := Item.Size
 	else
 		Result := 0;
 end;
@@ -151,6 +163,11 @@ begin
 	begin
 		New := False;
 		Copy := DateTimeToFileDate(RemoteFileDate + Alpha) < DateTimeToFileDate(LocalFileDate);
+		if Copy and (GetFTPSize(FTP.DirectoryListing, RemoteFileName) = GetFileSizeU(LocalFileName)) then
+		begin
+			s := UpperCase(ExtractFileExt(LocalFileName));
+			Copy := (s <> '.JPG') and (s <> '.JPEG') and (s <> '.PNG') {and (e <> '.BMP')};
+		end;
 	end
 	else
 	begin
@@ -173,9 +190,12 @@ begin
 		// Set Local date like on Remote,
 		// Better is Set Remote date as Local !!!!! FTP support MDTM
 		AStrings2 := TStringList.Create;
-		FTP.List(AStrings2);
-		RemoteFileDate := GetFTPTime(FTP.DirectoryListing, RemoteFileName);
-		AStrings2.Free;
+		try
+			FTP.List(AStrings2);
+			RemoteFileDate := GetFTPTime(FTP.DirectoryListing, RemoteFileName);
+		finally
+			AStrings2.Free;
+		end;
 		if RemoteFileDate <> 0 then
 		begin
 			DateTimeToSystemTime(RemoteFileDate, SystemTime);
@@ -203,65 +223,77 @@ begin
 
 		end;
 	end; *)
-	FTP.ChangeDir('/' + RemoteDir);
+	try
+		FTP.ChangeDir('/' + RemoteDir);
+	except on E: EIdException do//EIdProtocolReplyError do
+	begin
+{		if E.ReplyErrorCode = 550 then
+		begin}
+			FTP.MakeDir('/' + RemoteDir);
+			FTP.ChangeDir('/' + RemoteDir);
+//		end; TODO :
+	end
+	end;
 
 	AStrings := TStringList.Create;
-	AStrings.Clear;
-	FTP.List(AStrings);
-	if Tg = tgUpload then
-	begin
-		FilesCount := 0;
-		ReadDir(FileNames, FilesCount, LocalDir, [], True, SubDir, False, True);
-		for i := 0 to FilesCount - 1 do
+	try
+		AStrings.Clear;
+		FTP.List(AStrings);
+		if Tg = tgUpload then
 		begin
-			if LastChar(FileNames[i]) <> PathDelim then
-			begin
-				UploadFile(FTP, LocalDir + FileNames[i], FileNames[i], Logger);
-			end;
-		end;
-		if SubDir then
-		begin
+			FilesCount := 0;
+			ReadDir(FileNames, FilesCount, LocalDir, [], True, SubDir, False, True);
 			for i := 0 to FilesCount - 1 do
 			begin
-				if LastChar(FileNames[i]) = PathDelim then
+				if LastChar(FileNames[i]) <> PathDelim then
 				begin
-					SynchroDir(FTP, Tg, LocalDir + FileNames[i], RemoteDir + ReplaceF(FileNames[i], '\', '/'), SubDir, Logger);
-					// FTP.ChangeDirUp;
-					// FTP.ChangeDir('/' + RemoteDir);
+					UploadFile(FTP, LocalDir + FileNames[i], FileNames[i], Logger);
 				end;
 			end;
-		end;
-	end
-	else if Tg = tgDownload then
-	begin
-		LI := FTP.DirectoryListing;
-		for i := 0 to LI.Count - 1 do
-		begin
-			if (LI.Items[i].FileName = '.') or (LI.Items[i].FileName = '..') then Continue;
-			if LI.Items[i].ItemType = ditFile then
+			if SubDir then
 			begin
-				DownloadFile(FTP, LI.Items[i], LocalDir + LI.Items[i].FileName, Logger);
+				for i := 0 to FilesCount - 1 do
+				begin
+					if LastChar(FileNames[i]) = PathDelim then
+					begin
+						SynchroDir(FTP, Tg, LocalDir + FileNames[i], RemoteDir + ReplaceF(FileNames[i], '\', '/'), SubDir, Logger);
+						// FTP.ChangeDirUp;
+						// FTP.ChangeDir('/' + RemoteDir);
+					end;
+				end;
 			end;
-		end;
-		if SubDir then
+		end
+		else if Tg = tgDownload then
 		begin
+			LI := FTP.DirectoryListing;
 			for i := 0 to LI.Count - 1 do
 			begin
 				if (LI.Items[i].FileName = '.') or (LI.Items[i].FileName = '..') then Continue;
-				if LI.Items[i].ItemType = ditDirectory then
+				if LI.Items[i].ItemType = ditFile then
 				begin
-					SynchroDir(FTP, Tg, LocalDir + LI.Items[i].FileName + '\', RemoteDir + LI.Items[i].FileName + '/', SubDir, Logger);
-					// FTP.ChangeDirUp;
-					// FTP.ChangeDir('/' + RemoteDir);
+					DownloadFile(FTP, LI.Items[i], LocalDir + LI.Items[i].FileName, Logger);
+				end;
+			end;
+			if SubDir then
+			begin
+				for i := 0 to LI.Count - 1 do
+				begin
+					if (LI.Items[i].FileName = '.') or (LI.Items[i].FileName = '..') then Continue;
+					if LI.Items[i].ItemType = ditDirectory then
+					begin
+						SynchroDir(FTP, Tg, LocalDir + LI.Items[i].FileName + '\', RemoteDir + LI.Items[i].FileName + '/', SubDir, Logger);
+						// FTP.ChangeDirUp;
+						// FTP.ChangeDir('/' + RemoteDir);
+					end;
 				end;
 			end;
 		end;
+	finally
+		AStrings.Free;
 	end;
-	AStrings.Free;
 end;
 
 function UploadDownload(const FileNameOrDir: string; TargetDir: string; const FTP: TIdFTP; const RetryCount, RetryInterval: SG; const Logger: TLogger; const Tg: TTg; const SubDir: BG): BG;
-label LRetry;
 const
 	FTPTimeOut = 30 * Second;
 var
@@ -270,9 +302,7 @@ var
 	NowRetryCount: SG;
 	AStrings: TStrings;
 begin
-	NowRetryCount := 0;
-	Result := True;
-
+	Result := False;
 	if FileNameOrDir = '' then Exit;
 	Dir := LastChar(FileNameOrDir) = PathDelim;
 
@@ -288,58 +318,70 @@ begin
 	if Assigned(Logger) then
 		Logger.Add(s, mlDebug);
 
-	LRetry:
-	try
-//		FTP.TransferType := ftBinary;
-		FTP.Connect(True, FTPTimeOut);
-		if Assigned(Logger) then
-			Logger.Add('Connected ' + FTP.Host, mlInformation);
-
-		if Dir then
-			SynchroDir(FTP, Tg, FileNameOrDir, TargetDir, SubDir, Logger)
-		else
-		begin
-			FTP.ChangeDir('/' + uFiles.DelFileName(TargetDir));
-
-			AStrings := TStringList.Create;
-			AStrings.Clear;
-			FTP.List(AStrings);
-			if Tg = tgDownload then
-			begin
-				DownloadFile(FTP, GetFTPItem(FTP.DirectoryListing, ExtractFileName(ReplaceF(TargetDir, '/', '\'))), FileNameOrDir, Logger)
-			end
-			else
-				UploadFile(FTP, FileNameOrDir, ExtractFileName(FileNameOrDir), Logger);
-			AStrings.Free;
-		end;
-
-	except
-		on E: Exception do
-		begin
-			if E.Message <> ' ' then
-			begin
-				Result := False;
-				if Assigned(Logger) then
-					Logger.Add(DelEndSpaceF(E.Message) {+ NToS(FTP.LastCmdResult.NumericCode)} + ' (try ' +NToS(NowRetryCount + 1) + ' / ' + NToS(RetryCount + 1) + ')', mlError);
-			end;
-		end;
-	end;
-	if (Result = False) and (NowRetryCount < RetryCount) then
+	NowRetryCount := 0;
+	while True do
 	begin
 		Result := True;
+		try
+			{$ifdef VER150} // TODO Indy Version
+			FTP.Connect(True, FTPTimeOut);
+			{$else}
+			FTP.TransferTimeout := FTPTimeOut;
+			FTP.Connect;
+			FTP.TransferType := ftBinary;
+			FTP.TransferType := ftASCII; // Indy 10 BUG!
+			FTP.IOHandler.DefStringEncoding := TEncoding.default; // ANSI, remove for UTF8
+			{$endif}
+			if Assigned(Logger) then
+				Logger.Add('Connected ' + FTP.Host, mlInformation);
+
+			if Dir then
+				SynchroDir(FTP, Tg, FileNameOrDir, TargetDir, SubDir, Logger)
+			else
+			begin
+				FTP.ChangeDir('/' + uFiles.DelFileName(TargetDir));
+
+				AStrings := TStringList.Create;
+				try
+					AStrings.Clear;
+					FTP.List(AStrings);
+					if Tg = tgDownload then
+					begin
+						DownloadFile(FTP, GetFTPItem(FTP.DirectoryListing, ExtractFileName(ReplaceF(TargetDir, '/', '\'))), FileNameOrDir, Logger)
+					end
+					else
+						UploadFile(FTP, FileNameOrDir, ExtractFileName(FileNameOrDir), Logger);
+				finally
+					AStrings.Free;
+				end;
+			end;
+
+		except
+			on E: Exception do
+			begin
+				if E.Message <> ' ' then
+				begin
+					Result := False;
+					if Assigned(Logger) then
+						Logger.Add(DelEndSpaceF(E.Message) {+ NToS(FTP.LastCmdResult.NumericCode)} + ' (try ' + NToS(NowRetryCount + 1) + ' / ' + NToS(RetryCount + 1) + ')', mlError);
+				end;
+			end;
+		end;
+		// All OK
+		NowRetryCount := 0;
+		if Assigned(Logger) then
+			Logger.Add('Disconnect', mlInformation);
 		try
 			FTP.Disconnect;
 		except
 			on E: Exception do
 				Fatal(E, nil);
 		end;
+		if Result or (NowRetryCount >= RetryCount) then Break;
 		Inc(NowRetryCount);
 		Sleep(RetryInterval);
-		goto LRetry;
 	end;
-	FTP.Disconnect;
-	if Assigned(Logger) then
-		Logger.Add('Disconnect', mlInformation);
 end;
 
 end.
+
