@@ -123,9 +123,6 @@ Private=0
 DLL=0
 Locale=1033
 CodePage=1252
-[HistoryLists\hlUnitAliases]
-Count=1
-Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [Version Info Keys]
 FileDescription=Safrad's Components and Library
 FileVersion=1.1.39.8
@@ -140,3 +137,6 @@ Author=David Safranek (Safrad)
 EMail=safrad at email.cz
 Release=2007-11-27 19:51:13
 Web=http://safrad.own.cz/Software/Lib/
+[HistoryLists\hlUnitAliases]
+Count=1
+Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

@@ -15,7 +15,7 @@ uses
 	uTypes, uFiles;
 
 const
-	CSVSep = ',';
+	CSVSep = ','; // ;
 	CSVRemark = '#';
 
 type

@@ -156,6 +156,9 @@ const
 procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
 // For screen Width 800 is NowPos 0..799, MaxPos 799
 
+function WaveLength(const Wave: PWave): UG; overload;
+function WaveLength(const FileName: TFileName): UG; overload;
+
 function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;
 function GetBufferSample(wBitsPerSample, BufferOutSize: SG): SG;
 
@@ -333,6 +336,44 @@ begin
 	end
 	else
 		ErrorMsg('Wave is empty.');
+end;
+
+function WaveReadHeadFromFile(var Wave: PWave; FName: TFileName): BG;
+label LFin;
+var
+	F: TFile;
+begin
+	Result := False;
+	if Wave <> nil then
+	begin
+		WaveFree(Wave);
+	end;
+	F := TFile.Create;
+	try
+		if F.Open(FName, fmReadOnly) then
+		begin
+			if F.FileSize < WaveHead then
+			begin
+				IOErrorMessage(FName, 'File truncated.');
+				goto LFin;
+			end;
+			GetMem(Wave, WaveHead);
+			if not F.BlockRead(Wave^, WaveHead) then goto LFin;
+			if (Wave.Marker1 <> 'RIFF') or (Wave.Marker2 <> 'WAVE') or
+				(Wave.Marker3 <> 'fmt ') {or
+				(Wave.BytesFollowing <> F.FileSize - 8) }then
+			begin
+				IOErrorMessage(FName, 'File is not wave.');
+				WaveFree(Wave);
+				goto LFin;
+			end;
+      Result := True;
+			LFin:
+			F.Close;
+		end;
+	finally
+		F.Free;
+	end;
 end;
 
 procedure WaveReadFromFile(var Wave: PWave; FName: TFileName);
@@ -736,6 +777,22 @@ begin
 	finally
 		Reg.Free;
 	end;
+end;
+
+function WaveLength(const Wave: PWave): UG;
+begin
+	Result := RoundDiv(Second * Wave.DataBytes, Wave.BytesPerSecond);
+end;
+
+function WaveLength(const FileName: TFileName): UG;
+var
+	Wave: PWave;
+begin
+  Wave := nil;
+	if FileExists(FileName) and WaveReadHeadFromFile(Wave, FileName) then
+		Result := WaveLength(Wave)
+	else
+		Result := 0;
 end;
 
 function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;

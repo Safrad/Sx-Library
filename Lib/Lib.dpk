@@ -34,16 +34,16 @@ requires
   vclx;
 
 contains
-  uDView in 'uDView.pas',
-  uDTimer in 'uDTimer.pas',
-  uDPanel in 'uDPanel.pas',
-  uDLabel in 'uDLabel.pas',
-  uDImage in 'uDImage.pas',
-  uDGauge in 'uDGauge.pas',
-  uDForm in 'uDForm.pas',
-  uDEdit in 'uDEdit.pas',
-  uDButton in 'uDButton.pas',
-  uOpenedFiles in 'uOpenedFiles.pas',
-  uCompLog in 'uCompLog.pas';
+  uDView in 'GUI\uDView.pas',
+	uDTimer in 'GUI\uDTimer.pas',
+	uDPanel in 'GUI\uDPanel.pas',
+	uDLabel in 'GUI\uDLabel.pas',
+	uDImage in 'GUI\uDImage.pas',
+	uDGauge in 'GUI\uDGauge.pas',
+	uDForm in 'GUI\uDForm.pas',
+	uDEdit in 'GUI\uDEdit.pas',
+	uDButton in 'GUI\uDButton.pas',
+	uOpenedFiles in 'GUI\uOpenedFiles.pas',
+  uCompLog in 'GUI\uCompLog.pas';
 
 end.

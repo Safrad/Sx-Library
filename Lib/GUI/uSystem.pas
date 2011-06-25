@@ -166,8 +166,8 @@ var
 	folder: array[0..MAX_PATH] of char;
 	find_context: PItemIDList;
 begin
-	FillChar(browse_info, SizeOf(browse_info),#0);
-	lg_StartFolder := ExpandDir(Path);
+	FillChar(browse_info, SizeOf(browse_info), #0);
+	lg_StartFolder := RepairDirectory(ExpandDir(Path));
 	browse_info.pszDisplayName := @folder[0];
 	if browseTitle <> '' then
 		browse_info.lpszTitle := PChar('Select the folder ' + browseTitle + '.')

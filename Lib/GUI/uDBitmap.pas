@@ -1558,7 +1558,6 @@ end;
 
 function TDBitmap.CreateIcon(const Wid, Hei: UG): TIcon;
 var
-//	IconInfo: _ICONINFO;
 	BmpColor: TBitmap;
 	BmpC: TDBitmap;
 	BmpMask: PPixel;
@@ -1613,22 +1612,11 @@ begin
 						M := M shr 1;
 				end;
 
-			{	IconInfo.fIcon := True;
-				IconInfo.xHotspot := 0;
-				IconInfo.yHotspot := 0;
-				IconInfo.hbmMask := BmpMask.Handle;
-				IconInfo.hbmColor := BmpColor.Handle;}
-
 				Result := TIcon.Create;
 			//	Result.Handle := CreateIconIndirect(IconInfo); // Do not support more that 4 bits!
 				Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, NowBits,
 					BmpMask,
 					BmpColor.ScanLine[BmpColor.Height - 1]);
-
-			{	GetIconInfo(Result.Handle, IconInfo);
-			//	IconInfo.hbmMask := 0;
-				BmpColor.Handle := IconInfo.hbmColor;
-				BmpColor.Canvas.Ellipse(0, 0, 8, 8);}
 			finally
 				FreeMem(BmpMask);
 			end;
@@ -1638,7 +1626,6 @@ begin
 	finally
 		BmpC.Free;
 	end;
-//	BmpMask.Free; *)
 end;
 
 procedure TDBitmap.LoadFromIcon(Icon: TIcon);
@@ -7366,6 +7353,8 @@ begin
 		BmpDe := Self;
 	end;
 
+	BmpDe.Transparent := BmpS.Transparent;
+	BmpDe.TransparentColor := BmpS.TransparentColor;
 	if Transparent then
 	begin
 		TranColor := BmpS.TransparentColor;

@@ -13,7 +13,8 @@ interface
 uses
 	uTypes, uDForm, uWave,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs;
+	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs,
+  uDWinControl;
 
 type
 	TfSounds = class(TDForm)
@@ -79,22 +80,24 @@ implementation
 
 {$R *.dfm}
 uses
-	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus;
+	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat;
 
 type
-	PSound = ^TSound;
+	PSound = ^TSound; // Used Sounds
 	TSound = packed record // 16
 		Wave: PWave; // 4
 		Enabled, Used: B1; // 2
-		Reserved: array[0..1] of U1;
+		Reserved: array[0..1] of U1; // 2
 		Name: string; // 4
 		FileName: TFileName; // 4
 	end;
-	PDSound = ^TDSound;
+	PDSound = ^TDSound; // Form Sounds
 	TDSound = packed record // 16
 		Wave: PWave; // 4
 		Enabled: B1; // 1
-		Reserved: array[0..6] of U1; // 3
+		Exists: B1; // 1
+		Reserved: array[0..1] of U1; // 2
+		Length: U4; // 4
 		FileName: TFileName; // 4
 	end;
 
@@ -367,7 +370,9 @@ begin
 	OpenDialog1.Filter := AllSounds + '|' + AllFiles;
 
 	DViewSounds.AddColumn('Event', 114);
-	DViewSounds.AddColumn('File Name', DViewSounds.Width - 114{ 238 });
+	DViewSounds.AddColumn('Enabled', 48);
+	DViewSounds.AddColumn('File Name', DViewSounds.Width - 114 - 64 - 48);
+	DViewSounds.AddColumn('Length', 64);
 
 	if Assigned(MainIni) then
 	begin
@@ -512,15 +517,26 @@ begin
 	DSound := DSounds.Get(RowIndex);
 
 	DViewSounds.Bitmap.Canvas.Font.Style := [];
-	if not DSound.Enabled then
-		DViewSounds.Bitmap.Canvas.Font.Style := DViewSounds.Bitmap.Canvas.Font.Style + [fsStrikeOut];
-	{$ifopt d+}
 	if Sound.Used then
 		DViewSounds.Bitmap.Canvas.Font.Style := DViewSounds.Bitmap.Canvas.Font.Style + [fsBold];
-	{$endif}
 	case ColIndex of
-	0: Data := Sound.Name;
-	1: Data := DSound.FileName;
+	0:
+	begin
+		if DSound.Enabled = False then
+			DViewSounds.Bitmap.Canvas.Font.Style := DViewSounds.Bitmap.Canvas.Font.Style + [fsStrikeOut];
+		Data := Sound.Name;
+	end;
+	1: Data := NToS(SG(DSound.Enabled));
+	2:
+	begin
+		if DSound.Exists = False then
+			DViewSounds.Bitmap.Canvas.Font.Style := DViewSounds.Bitmap.Canvas.Font.Style + [fsStrikeOut];
+		Data := DSound.FileName;
+	end;
+	3:
+	begin
+		Data := MsToStr(DSound.Length, diSD, 3, False, ofDisplay);
+	end;
 	end;
 end;
 
@@ -531,6 +547,12 @@ begin
 		MainIni.RWFormPos(Self, True);
 		DViewSounds.Serialize(MainIni, True);
 	end;
+end;
+
+procedure UpdateDSound(DSound: PDSound);
+begin
+	DSound.Exists := FileExists(DSound.FileName);
+	DSound.Length := WaveLength(DSound.FileName);
 end;
 
 procedure TfSounds.FormShow(Sender: TObject);
@@ -546,6 +568,7 @@ begin
 		DSound.FileName := Sound.FileName;
 		DSound.Enabled := Sound.Enabled;
 		DSound.Wave := nil;
+		UpdateDSound(DSound);
 
 		Inc(Sound);
 		Inc(DSound);
@@ -593,23 +616,26 @@ begin
 				P.Enabled := False;
 				SoundsC := True;
 			end;
-			3:
+			3: // Select
 			begin
 				if ExecuteDialog(OpenDialog1, P.FileName) then
 				begin
 					WaveReadFromFile(P.Wave, P.FileName);
+					UpdateDSound(P);
 					SoundsC := True;
 				end;
 			end;
-			4:
+			4: // Default
 			begin
 				P2 := PSound(Sounds.Get(i));
 				P.FileName := 'Sounds' + PathDelim + P2.Name + '.wav';
+				UpdateDSound(P);
 				SoundsC := True;
 			end;
-			5:
+			5: // Beep
 			begin
 				P.FileName := '';
+				UpdateDSound(P);
 				SoundsC := True;
 			end;
 			end;
@@ -628,7 +654,7 @@ var
 	C, E: BG;
 	P: PDSound;
 begin
-	i := DViewSounds.ActualRow;
+	i := DViewSounds.RowOrder[DViewSounds.ActualRow];
 	if (i >= 0) and (i < SG(DSounds.Count)) then
 	begin
 		P := DSounds.Get(i);

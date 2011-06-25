@@ -719,7 +719,7 @@ begin
 		i := GetEnumValue(TypeInfo, ValueStr);
 		if i <> -1 then
 			Value := i
-		else
+		else if FirstChar(ValueStr) in ['0'..'9'] then
 			Value := ReadS8Fast(DelCharsF(ValueStr, ','));
 	end
 	else

@@ -84,6 +84,11 @@ begin
 	Result := Text;
 	for i := 1 to Length(Param) do
 	begin
+		{$ifopt d+}
+		if Pos('%' + IntToStr(i), Text) = 0 then
+			Result := Result + LineSep + Param[i - 1]
+		else
+		{$endif}
 		Replace(Result, '%' + IntToStr(i), '''' + Param[i - 1] + '''');
 	end;
 end;

@@ -397,7 +397,7 @@ begin
 		if FEventStep = esCPU then
 		begin
 			if FInterval = 0 then FInterval := 1;
-			FInterval12 := Max(RoundDiv(100 * TimWork, FInterval), 1);
+			FInterval12 := Max(RoundDivU8(100 * TimWork, FInterval), 1);
 		end;
 		if (ElapsedTime > 0) and (ElapsedTime + RoundDivS8(PerformanceFrequency * LagTime, 2 * Second) >= FInterval12) then
 		begin

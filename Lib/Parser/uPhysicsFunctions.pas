@@ -15,7 +15,7 @@ implementation
 uses uNamespace, uTypes, uVector;
 
 const
-	GravityConst = 9.807;
+	GravityConst = 9.80665; // in height 6378000 m
 	EarthRadius = 6378000;
 
 function Gravity(const Args: array of TVector): TVector;

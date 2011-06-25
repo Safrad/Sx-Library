@@ -13,7 +13,8 @@ interface
 uses
 	uDForm, uTypes, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView;
+	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
+  uDWinControl;
 
 type     
 	TfAbout = class(TDForm)
@@ -278,7 +279,7 @@ begin
 		end;}
 		LastNowTime := NowTime;
 	end;
-	NewFlash;
+	NewFlash; // TODO Crash in DGames!
 	ImageAbout.Invalidate;
 //	ImageName.Invalidate;
 end;

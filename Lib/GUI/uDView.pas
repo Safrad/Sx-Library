@@ -253,8 +253,11 @@ begin
 	end
 	else
 	begin
-		FStartShift := RowIndex;
-		FSelectedRows[FRowOrder[RowIndex]] := not FSelectedRows[FRowOrder[RowIndex]];
+		if RowIndex <> -1 then
+		begin
+			FStartShift := RowIndex;
+			FSelectedRows[FRowOrder[RowIndex]] := not FSelectedRows[FRowOrder[RowIndex]];
+		end;
 	end;
 	ActualRow := RowIndex;
 	ActualColumn := ColumnIndex;
