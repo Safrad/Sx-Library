@@ -10,6 +10,11 @@ unit uSynchro;
 
 interface
 
+uses uTypes;
+
+var
+	FileCreated, DirCreated, FileDeleted, DirDeleted: SG;
+
 procedure Synchro(const Source, Dest: string);
 
 implementation
@@ -17,16 +22,10 @@ implementation
 uses
 	Windows,
 	SysUtils,
-	uTypes,
 	uFiles,
 	uData,
 	uMsg,
 	uStrings;
-
-var
-	FileCreated, DirCreated, FileDeleted, DirDeleted: SG;
-//	Level: SG;
-//	Display: BG;
 
 procedure Synchro(const Source, Dest: string);
 type
@@ -47,10 +46,11 @@ var
 	FileInfo: PFileInfo;
 //	Line: PMes;
 begin
-//	Inc(Level);
-	if DirectoryExistsEx(Dest) = False then
+{	if DirectoryExistsEx(Dest) = False then
+	begin
 		uFiles.CreateDirEx(Dest);
-
+	end;}
+//	Inc(Level);
 	FileNamesD := TData.Create(True);
 	FileNamesD.ItemSize := SizeOf(TFileInfo);
 
@@ -59,8 +59,7 @@ begin
 	begin
 		IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
 		IsFile := (SearchRec.Attr and faDirectory) = 0;
-		if (IsDir)
-		or (IsFile) then
+		if (IsDir) or (IsFile) then
 		begin
 			FileInfo := FileNamesD.Add;
 			FileInfo.Name := SearchRec.Name;
@@ -86,41 +85,45 @@ begin
 			if IsDir then SearchRec.Name := SearchRec.Name + '\';
 			for j := 0 to SG(FileNamesD.Count) - 1 do
 			begin
-				if SearchRec.Name = FileInfo.Name then
+				if UpperCase(SearchRec.Name) = UpperCase(FileInfo.Name) then
 				begin
 					if IsFile then
-						Found := (SearchRec.Time = FileInfo.DateTime) and (SearchRec.Size = FileInfo.Size)
+					begin
+						Found := (SearchRec.Time = FileInfo.DateTime) and (SearchRec.Size = FileInfo.Size);
+						if SearchRec.Time < FileInfo.DateTime then
+							Warning('Destination file %1 is newer!', [Source + SearchRec.Name]);
+					end
 					else
 						Found := True;
+					if Found and (SearchRec.Name <> FileInfo.Name) then
+					begin
+						uFiles.RenameFileEx(Dest + FileInfo.Name, Dest + SearchRec.Name);
+					end;
 					FileInfo.Found := True;
 					Break;
 				end;
-				Inc(FileInfo);
+				Inc(SG(FileInfo), FileNamesD.ItemMemSize);
 			end;
 
 			if IsDir then
 			begin
-{					if (SearchRec.Name <> 'Audio') and
-				(SearchRec.Name <> 'System Volume Information') then
-				(SearchRec.Name <> 'Video') then
-				(SearchRec.Name <> 'Windows') then}
+				if Found = False then
 				begin
-					if Found = False then
-					begin
 {						if Display then
-						begin
-							Line := Mess.Add;
-							Line.CommandLine := 'Create: ' + Dest + SearchRec.Name;
-						end
-						else}
-						begin
-							CreateDirEx(Dest + SearchRec.Name);
-						end;
-						Inc(DirCreated);
-					end;
-//					if {(Display = False) or} (Found = True) then
-						Synchro(Source + SearchRec.Name, Dest + SearchRec.Name);
+					begin
+						Line := Mess.Add;
+						Line.CommandLine := 'Create: ' + Dest + SearchRec.Name;
+					end
+					else}
+					CopyDirOnly(Source + SearchRec.Name, Dest + SearchRec.Name);
+					Inc(DirCreated);
+				end
+				else
+				begin
+					CopyFileDateTime(Source + SearchRec.Name, Dest + SearchRec.Name);
 				end;
+//					if {(Display = False) or} (Found = True) then
+				Synchro(Source + SearchRec.Name, Dest + SearchRec.Name);
 			end
 			else
 			begin
@@ -131,10 +134,10 @@ begin
 						Line := Mess.Add;
 						Line.CommandLine := 'Copy: ' + Dest + SearchRec.Name;
 					end
-					else}
-					begin
+					else
+					begin}
 						uFiles.CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False);
-					end;
+//					end;
 					Inc(FileCreated);
 				end;
 			end;

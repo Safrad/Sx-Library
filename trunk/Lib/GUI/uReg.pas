@@ -72,10 +72,12 @@ begin
 				InternalName := Reg.ReadString('');
 				Reg.CloseKey;
 			end;
-		end
-		else
+		end;
+
+		if InternalName = '' then
 		begin
 			InternalName := FileType + 'file';
+			Reg.Access := KEY_SET_VALUE; // BUG: OpenKeyReadOnly change Access!
 			if Reg.OpenKey(Key, True) then
 			begin
 				Reg.WriteString('', InternalName);
@@ -85,6 +87,7 @@ begin
 	finally
 		Reg.Free;
 	end;
+
 
 	Reg := TRegistry.Create;
 	try

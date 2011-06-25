@@ -66,6 +66,7 @@ type
 		FColumnOrder, FRowOrder: TArrayOfSG;
 		FSelectedRows: TArrayOfBG;
 
+		function PhysicalRow(const Row: SG): SG; 
 		procedure ScrollToActualCell;
 		function PosToItem(MX, MY: SG; var IX, IY: SG): TViewAction;
 
@@ -259,7 +260,7 @@ begin
 			FSelectedRows[FRowOrder[RowIndex]] := not FSelectedRows[FRowOrder[RowIndex]];
 		end;
 	end;
-	ActualRow := RowIndex;
+	ActualRow := FRowOrder[RowIndex];
 	ActualColumn := ColumnIndex;
 
 	ScrollToActualCell;
@@ -553,9 +554,9 @@ begin
 	begin
 		if GetKeyState(VK_Scroll) = 0 then
 		begin
-			if ActualRow > 0 then
+			if PhysicalRow(ActualRow) > 0 then
 			begin
-				CellClick(-1, ActualRow - 1, Shift);
+				CellClick(-1, PhysicalRow(ActualRow) - 1, Shift);
 			end;
 		end
 		else
@@ -566,9 +567,9 @@ begin
 	begin
 		if GetKeyState(VK_Scroll) = 0 then
 		begin
-			if ActualRow < FRowCount - 1 then
+			if PhysicalRow(ActualRow) < FRowCount - 1 then
 			begin
-				CellClick(-1, ActualRow + 1, Shift);
+				CellClick(-1, PhysicalRow(ActualRow) + 1, Shift);
 			end;
 		end
 		else
@@ -757,7 +758,7 @@ begin
 						FColumns[FColumnOrder[IX]].MaxWidth := Max(FColumns[FColumnOrder[IX]].MaxWidth, Bitmap.Canvas.TextWidth(Data) + 2 + 2 * Border + LeftOffset);
 						Bitmap.Line(X, Y + RowHeight - 1, X + FColumns[FColumnOrder[IX]].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // -
 						Bitmap.Line(X + FColumns[FColumnOrder[IX]].Width - 1, Y, X + FColumns[FColumnOrder[IX]].Width - 1, Y + RowHeight - 1, clBtnFace, ef16); // |
-						if IY = ActualRow then
+						if FRowOrder[IY] = ActualRow then
 							Bitmap.Border(X, Y, X + FColumns[FColumnOrder[IX]].Width - 2, Y + RowHeight - 2, clDepth[0], clDepth[0], 1, ef12);
 					end
 					else
@@ -1033,6 +1034,7 @@ function TDView.CellWidth(const Text: string): SG;
 const
 	CellBorder = 4;
 begin
+	Bitmap.Canvas.Font.Style := [];
 	Result := Max(MinColumnWidth, Bitmap.Canvas.TextWidth(Text) + CellBorder + 1);
 end;
 
@@ -1109,7 +1111,7 @@ begin
 		Dec(Rect.Left, HorizontalOffset);
 		Rect.Right := Rect.Left + FColumns[FColumnOrder[ActualColumn]].Width - 1 + HorizontalOffset;
 	end;
-	Rect.Top := RowHeight * ActualRow; // + RowHeight{Table head};
+	Rect.Top := RowHeight * FRowOrder[ActualRow]; // + RowHeight{Table head};
 	Rect.Bottom := Rect.Top + RowHeight - 1 + RowHeight{Table head};
 	OffsetOnRect(Rect);
 end;
@@ -1259,6 +1261,20 @@ end;
 procedure Register;
 begin
 	RegisterComponents('DComp', [TDView]);
+end;
+
+function TDView.PhysicalRow(const Row: SG): SG;
+var i: SG;
+begin
+	Result := -1;
+	for i := 0 to FRowCount - 1 do
+	begin
+		if Row = FRowOrder[i] then
+		begin
+			Result := i;
+			Exit;
+		end;
+	end;
 end;
 
 initialization

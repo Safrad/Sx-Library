@@ -15,7 +15,7 @@ uses
 	IdFTP;
 
 type
-	TTg = (tgDownload, tgUpload, tgTest);
+	TTg = (tgDownload, tgUpload);
 	TAddMessage = procedure(const Text: string);
 
 function UploadDownload(const FileNameOrDir: string; const TargetDir: string; const FTP: TIdFTP; const Servertlocal2h1: BG; const RetryCount, RetryInterval: SG; const AddMessage: TAddMessage; const Tg: TTg): BG;
@@ -24,7 +24,7 @@ implementation
 
 uses
 	uStrings, uFiles, uHTML, uOutputFormat, uMsg,
-	SysUtils, Classes, Windows, IdFTPList;
+	SysUtils, Classes, Windows, IdFTPList, TypInfo;
 
 procedure Backup(const FileName: TFileName);
 var FileNameD: TFileName;
@@ -43,7 +43,6 @@ label LRetry;
 const
 //	Alpha = 1 / (24 * 60); // 1 minute
 	Alpha = 1 / (24 * 60 * 20); // 3 secs
-	DUT: array[TTg] of string = ('Download', 'Upload', 'Test');
 var
 	AStrings: TStrings;
 	FileNames: TFileNames;
@@ -69,39 +68,28 @@ begin
 	Result := True;
 //	AddMessage(DUT[Tg] + ': ' + FileNameOrDir);
 
-	if Tg <> tgTest then
+	// Parser Parameter
+	if FileNameOrDir = '' then Exit;
+	Dir := LastChar(FileNameOrDir) = PathDelim;
+	if Dir then
 	begin
-		// Parser Parameter
-		if FileNameOrDir = '' then Exit;
-		Dir := LastChar(FileNameOrDir) = PathDelim;
-		if Dir then
-		begin
-			LocalDir := FileNameOrDir;
-			LocalFileName := '';
-		end
-		else
-		begin
-			LocalDir := ExtractFilePath(FileNameOrDir);
-			LocalFileName := ExtractFileName(FileNameOrDir);
-		end;
-
-		// Prepare
-		RemoteDir := RelativePath(TargetDir, LocalDir);
-		s := DUT[Tg] + ': ';
-		if Tg = tgUpload then
-			s := s + FileNameOrDir + ' ' + CharHyphen + '> ' + 'ftp://' + FTP.Host + '/' + RemoteDir
-		else
-			s := s + 'ftp://' + FTP.Host + '/' + RemoteDir + ' ' + CharHyphen + '> ' + FileNameOrDir;
-		AddMessage(s);
+		LocalDir := FileNameOrDir;
+		LocalFileName := '';
 	end
 	else
 	begin
-		AddMessage('Testing FTP');
-		LocalDir := '';
-		LocalFileName := '';
-		RemoteDir := '';
-		Dir := True;
+		LocalDir := ExtractFilePath(FileNameOrDir);
+		LocalFileName := ExtractFileName(FileNameOrDir);
 	end;
+
+	// Prepare
+	RemoteDir := RelativePath(TargetDir, LocalDir);
+	s := GetEnumName(TypeInfo(TTg), SG(Tg)) + ': ';
+	if Tg = tgUpload then
+		s := s + FileNameOrDir + ' ' + CharHyphen + '> ' + 'ftp://' + FTP.Host + '/' + RemoteDir
+	else
+		s := s + 'ftp://' + FTP.Host + '/' + RemoteDir + ' ' + CharHyphen + '> ' + FileNameOrDir;
+	AddMessage(s);
 
 	AStrings := TStringList.Create;
 	LRetry:
@@ -131,9 +119,7 @@ begin
 //		Memo.Lines.AddStrings(AStrings);
 		{$endif}
 		LI := FTP.DirectoryListing;
-		if Tg = tgTest then
-			FTP.Noop
-		else if Tg = tgUpload then
+		if Tg = tgUpload then
 		begin
 			if Dir then
 			begin
@@ -170,7 +156,7 @@ begin
 					FileName := LI.Items[j].FileName;
 {					if Dir = False then
 						if FileName <> LocalFileName then Continue;}
-					if FileName = FileNames[i] then
+					if FileName = FileNames[i] then // TODO Upcase
 					begin
 						FileDate := LI.Items[j].ModifiedDate;
 						New := False;
@@ -182,7 +168,7 @@ begin
 				if Copy = False then s := s + 'skipped ';
 				s := s + FileNames[i] + ' ' + DateTimeToS(SystemTimeToDateTime(SystemTime), 0, ofDisplay);
 				if New = False then
-					s := s + ', replace ' + DateTimeToS(FileDate, 0, ofDisplay);
+					s := s + ' -> ' + DateTimeToS(FileDate, 0, ofDisplay);
 				AddMessage(s);
 				if Copy then
 				begin

@@ -656,7 +656,7 @@ begin
 	Result := -1;
 	for i := 0 to FCount - 1 do
 	begin
-		if FileName = Items[i].FileName then
+		if FileName = Items[i].FileName then // TODO Upcase?
 		begin
 			Result := i;
 			Break;

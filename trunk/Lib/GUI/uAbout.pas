@@ -416,8 +416,8 @@ begin
 	if ButtonStat.Down = False then
 	begin
 		case ColIndex of
-		0: Data := AddSpace(ProjectInfoStr[TProjectInfo(RowIndex)]);
-		1: Data := GetProjectInfo(TProjectInfo(RowIndex));
+		0: Data := AddSpace(ProjectInfoStr[TProjectInfoName(RowIndex)]);
+		1: Data := GetProjectInfo(TProjectInfoName(RowIndex));
 		end;
 	end
 	else
