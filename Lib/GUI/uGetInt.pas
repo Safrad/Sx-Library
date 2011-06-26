@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uGetInt.pas
-// * Created:  1998-07-01
-// * Modified: 2009-11-07
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uGetInt;
 
 interface

@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uDGraph.pas
-// * Created:  2004-01-06
-// * Modified: 2009-09-09
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uDGraph deprecated;
 
 interface

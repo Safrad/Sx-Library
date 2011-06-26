@@ -1,11 +1,3 @@
-// * File:     Lib\uFileTest.pas
-// * Created:  2009-09-11
-// * Modified: 2009-11-15
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uFileTest;
 
 interface

@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uTextPos.pas
-// * Created:  2009-08-25
-// * Modified: 2009-09-17
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uTextPos;
 
 interface

@@ -1,11 +1,3 @@
-// * File:     Lib\uLog.pas
-// * Created:  2006-05-03
-// * Modified: 2009-09-04
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uLog;
 
 interface

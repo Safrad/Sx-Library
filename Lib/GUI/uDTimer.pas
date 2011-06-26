@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uDTimer.pas
-// * Created:  2000-08-01
-// * Modified: 2009-09-16
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uDTimer;
 
 interface

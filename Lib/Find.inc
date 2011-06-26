@@ -1,11 +1,3 @@
-// * File:     Lib\Find.inc
-// * Created:  2008-06-03
-// * Modified: 2006-03-14
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 var
 	L, R, M, M2: TIndex;
 //	MaxIndex: TIndex;

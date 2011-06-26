@@ -1,11 +1,3 @@
-// * File:     Lib\uHTML.pas
-// * Created:  2004-09-26
-// * Modified: 2009-10-14
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uHTML;
 
 interface

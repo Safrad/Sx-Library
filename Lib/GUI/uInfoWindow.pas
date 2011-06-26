@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uInfoWindow.pas
-// * Created:  2006-12-21
-// * Modified: 2009-07-28
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uInfoWindow;
 
 interface

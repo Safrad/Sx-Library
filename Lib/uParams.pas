@@ -1,11 +1,3 @@
-// * File:     Lib\uParams.pas
-// * Created:  2006-02-04
-// * Modified: 2009-09-09
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uParams;
 
 interface

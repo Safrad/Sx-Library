@@ -1,11 +1,3 @@
-// * File:     Lib\uSynchro.pas
-// * Created:  2007-08-12
-// * Modified: 2008-01-19
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uSynchro;
 
 interface

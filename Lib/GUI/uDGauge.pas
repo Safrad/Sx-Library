@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uDGauge.pas
-// * Created:  1999-08-01
-// * Modified: 2009-12-29
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uDGauge;
 
 interface

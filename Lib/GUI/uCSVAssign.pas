@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uCSVAssign.pas
-// * Created:  2004-01-04
-// * Modified: 2009-08-20
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 // TODO : DNW
 
 unit uCSVAssign; deprecated;

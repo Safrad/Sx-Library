@@ -1,11 +1,3 @@
-// * File:     Lib\uFormal.pas
-// * Created:  1999-06-01
-// * Modified: 2009-08-30
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uFormal;
 
 interface

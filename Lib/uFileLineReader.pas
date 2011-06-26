@@ -1,11 +1,3 @@
-// * File:     Lib\uFileLineReader.pas
-// * Created:  2008-07-26
-// * Modified: 2008-07-20
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uFileLineReader;
 
 interface

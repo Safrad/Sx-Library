@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uDBitmap.pas
-// * Created:  1999-05-01
-// * Modified: 2009-12-31
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uDBitmap;
 
 {$define BPP4} // Faster

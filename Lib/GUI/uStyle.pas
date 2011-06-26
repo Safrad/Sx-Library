@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uStyle.pas
-// * Created:  2000-08-01
-// * Modified: 2009-08-31
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uStyle;
 
 interface
