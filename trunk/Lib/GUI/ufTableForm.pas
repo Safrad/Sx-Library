@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\ufTableForm.pas
-// * Created:  2008-12-28
-// * Modified: 2009-12-27
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit ufTableForm;
 
 interface

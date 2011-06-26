@@ -1,11 +1,3 @@
-// * File:     Lib\uSimulation.pas
-// * Created:  2000-05-01
-// * Modified: 2009-10-06
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uSimulation;
 
 interface

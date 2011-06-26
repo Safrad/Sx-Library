@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uStartup.pas
-// * Created:  2009-05-11
-// * Modified: 2009-10-12
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uStartup;
 
 interface

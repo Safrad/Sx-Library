@@ -1,11 +1,3 @@
-// * File:     Lib\uToHTML.pas
-// * Created:  2000-07-01
-// * Modified: 2009-09-29
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uToHTML;
 
 interface

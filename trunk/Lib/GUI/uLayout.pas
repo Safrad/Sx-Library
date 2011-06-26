@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uLayout.pas
-// * Created:  2009-08-23
-// * Modified: 2009-08-23
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uLayout;
 
 interface

@@ -1,11 +1,3 @@
-// * File:     Lib\uFolder.pas
-// * Created:  2010-01-02
-// * Modified: 2010-01-02
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uFolder;
 
 interface

@@ -1,11 +1,3 @@
-// * File:     Lib\uFile.pas
-// * Created:  1998-01-01
-// * Modified: 2009-11-15
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 {
 	Result of Functions : False is Error, True is Ok
 	Example:

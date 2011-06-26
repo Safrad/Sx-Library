@@ -1,11 +1,3 @@
-// * File:     Lib\Sort.inc
-// * Created:  2008-06-03
-// * Modified: 2009-11-05
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 (*-------------------------------------------------------------------------*)
 	{$ifopt d+}
 	procedure SelectSort(AIndex: PArraySG; AValue: PArray; MaxIndex: TIndex);

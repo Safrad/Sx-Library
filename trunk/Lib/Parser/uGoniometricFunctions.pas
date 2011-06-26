@@ -1,11 +1,3 @@
-// * File:     Lib\Parser\uGoniometricFunctions.pas
-// * Created:  2004-03-07
-// * Modified: 2009-08-31
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uGoniometricFunctions;
 
 interface

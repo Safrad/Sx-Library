@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uSGL.pas
-// * Created:  2005-03-09
-// * Modified: 2009-12-02
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 // Support only 32bit RGBA buffer
 { TODO : Depth, Clipping bug }
 

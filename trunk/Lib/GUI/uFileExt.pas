@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uFileExt.pas
-// * Created:  2006-02-04
-// * Modified: 2009-11-07
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uFileExt;
 
 interface

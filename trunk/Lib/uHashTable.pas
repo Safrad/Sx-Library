@@ -1,11 +1,3 @@
-// * File:     Lib\uHashTable.pas
-// * Created:  2007-05-12
-// * Modified: 2009-09-22
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uHashTable;
 
 interface

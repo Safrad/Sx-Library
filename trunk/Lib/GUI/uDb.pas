@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uDb.pas
-// * Created:  1999-12-01
-// * Modified: 2009-09-02
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uDb deprecated;
 
 interface

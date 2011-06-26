@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uDView.pas
-// * Created:  2001-08-01
-// * Modified: 2009-12-27
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uDView;
 
 interface

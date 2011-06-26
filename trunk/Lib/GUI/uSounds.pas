@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uSounds.pas
-// * Created:  2000-05-01
-// * Modified: 2009-12-21
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uSounds;
 
 interface

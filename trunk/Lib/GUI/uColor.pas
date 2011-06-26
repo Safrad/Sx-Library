@@ -1,11 +1,3 @@
-// * File:     Lib\GUI\uColor.pas
-// * Created:  1999-10-01
-// * Modified: 2009-10-25
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uColor;
 
 interface

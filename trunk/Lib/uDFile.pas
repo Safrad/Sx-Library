@@ -1,11 +1,3 @@
-// * File:     Lib\uDFile.pas
-// * Created:  2009-07-05
-// * Modified: 2009-09-21
-// * Version:  1.1.45.113
-// * Author:   David Safranek (Safrad)
-// * E-Mail:   safrad at email.cz
-// * Web:      http://safrad.own.cz
-
 unit uDFile;
 
 interface
