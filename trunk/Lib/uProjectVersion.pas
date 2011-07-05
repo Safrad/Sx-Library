@@ -5,8 +5,10 @@ interface
 uses uTypes, uParserMsg;
 
 type
+	TVersionSuffix = (vsFinal, vsAlpha, vsBeta);
 	TSubVersion = (svMajor, svMinor, svRelease, svBuild);
 	TProjectVersion = record
+		VersionSuffix: TVersionSuffix;
 		case Integer of
 		0: (Major, Minor, Release, Build: SG);
 		1: (SubVersions: array[TSubVersion] of SG);
@@ -41,6 +43,7 @@ function CreateVersion(const Version: string; const Messages: TParserMessages = 
 var
 	InLineIndex: SG;
 begin
+	Result.VersionSuffix := vsFinal;
 	Result.Major := 0;
 	Result.Minor := 0;
 	Result.Release := 0;
@@ -74,6 +77,11 @@ begin
 	begin
 		Result := NAStr;
 	end;
+
+	if ProjectVersion.VersionSuffix = vsBeta then
+		Result := Result + CharSpace + 'beta'
+	else if ProjectVersion.VersionSuffix = vsAlpha then
+		Result := Result + CharSpace + 'alpha';
 end;
 (**
 * @return 0 if Version1 = Version2, 1 if Version1 > Version2, -1 if Version1 < Version2

@@ -528,7 +528,7 @@ begin
 		begin
 			if DrawCuttedText(Bitmap.Canvas, Recta, TextA, TextL, s, True, IdealShadow(Bitmap.Canvas)) then
 			begin
-				Hint := DelCharsF(s, '&');
+				Hint := RemoveSingleAmp(s);
 				ShowHint := True;
 			end
 			else
@@ -696,7 +696,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDButton]);
+	RegisterComponents(ComponentPageName, [TDButton]);
 end;
 
 {procedure TDButton.SetDefault(Value: Boolean);

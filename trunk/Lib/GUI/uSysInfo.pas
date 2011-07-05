@@ -118,6 +118,10 @@ begin
 end;
 
 function OSToStr(const OS: TOSVersionInfo): string;
+{$ifndef UNICODE}
+const
+	VER_PLATFORM_WIN32_CE = 3;
+{$endif}
 var S: string;
 begin
 	case OS.dwPlatformId of
@@ -136,14 +140,23 @@ begin
 		S := 'Windows ';
 		if OS.dwMajorVersion < 5 then
 			S := S + 'NT'
-		else
+		else if OS.dwMajorVersion < 6 then
 		begin
 			if OS.dwMinorVersion = 0 then
 				S := S + '2000'
 			else
 				S := S + 'XP';
+		end
+		else
+		begin
+			if OS.dwMinorVersion = 0 then
+				S := S + 'Vista'
+			else
+				S := S + '7';
 		end;
 	end;
+	VER_PLATFORM_WIN32_CE: // 3
+		S := 'Windows CE'
 	else // 3
 		S := 'Unknown System ' + IntToStr(OS.dwPlatformId - VER_PLATFORM_WIN32_NT);
 	end;

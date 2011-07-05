@@ -108,6 +108,9 @@ type
 			InterruptProcedure:  TInterruptProcedure);
 		function GetCutWindow: TRect;
 		procedure SetCutWindow(const Value: TRect);
+		{$ifdef GDIPlus}
+		function GetGPGraphic: IGPGraphics;
+		{$endif}
 	public
 		ChangeRB: BG;
 		Transparent: BG;
@@ -167,6 +170,7 @@ type
 		function ColorToRGB(C: TColor): TRGBA;
 		function ColorToRGBStack(C: TColor): TRGBA;
 		procedure Rec(const P1, P2: TPoint; const C: TColor; const Effect: TEffect); overload;
+		procedure Rec(const P1, P2: TFloPoint; const C: TColor; const Effect: TEffect; const Width: TFlo = 1); overload;
 		procedure Rec(X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect); overload;
 		procedure Rec(X1, Y1, X2, Y2: TFlo; const C: TColor; const Effect: TEffect; const Width: TFlo = 1); overload;
 
@@ -327,6 +331,9 @@ type
 		procedure DataToGraph(Caption: string; Values: PArrayFA; MinValueX, MaxValueX, MinValueY, MaxValueY: FA; ValueCount: SG; ValuesX: TGraphNodes); overload;}
 
 //		property Canvas: TCanvas read GetCanvas;
+		{$ifdef GDIPlus}
+		property GPGraphic: IGPGraphics read GetGPGraphic;
+		{$endif}
 	end;
 
 procedure BitmapCopy(var BmpD: TDBitmap; BmpS: TDBitmap); // Create + SetSize + CopyData
@@ -386,7 +393,10 @@ var
 implementation
 
 uses
-	Jpeg, GifImage, PngImage, PPMImage, TGAImage, GraphicEx,
+	Jpeg, GifImage, PngImage, PPMImage, TGAImage,
+	{$ifdef GDIPlus}
+	GraphicEx,
+	{$endif}
 	Math, ClipBrd, ExtDlgs, StdCtrls, Dialogs,
 	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
@@ -1456,15 +1466,18 @@ end;
 
 procedure TDBitmap.Ellipse(P1, P2: TFloPoint; Color: TColor; const Effect: TEffect;
 	const Width: TFlo);
+{$ifdef GDIPlus}
 var
 	CR: TRGBA;
 	Pen: IGPPen;
+{$endif}
 begin
 	{$ifdef GDIPlus}
 	CR := ColorToRGBStack(Color);
 	CR.A := 255;
 	InitGraphics;
 	Pen := TGPPen.Create(TGPColor.Create(CR.C));
+	Pen.Width := Width;
 	FGraphics.DrawEllipse(Pen, P1.X, P1.Y, P2.X - P1.X, P2.Y - P1.Y);
 	{$endif}
 end;
@@ -1562,6 +1575,8 @@ var
 	cy: TCoor;
 	ByteXD: UG;
 begin
+	if FData = nil then Exit;
+	
 	PD := Pointer(UG(FData) - UG(GraphMinY) * ByteXD);
 	ByteXD := FByteX;
 	for cy := GraphMinY to GraphMaxY do
@@ -1885,7 +1900,9 @@ var
 	MyPng: TPngImage;
 	MyPpm: TPpmImage;
 	MyTga: TTgaImage;
+	{$ifdef GDIPlus}
 	MyTIFF: TTIFFGraphic;
+	{$endif}
 //	My: TWICImage;
 	Icon: TIcon;
 begin
@@ -1968,20 +1985,9 @@ begin
 			MyTga.Free;
 		end;
 	end
+	{$ifdef GDIPlus}
 	else if (Ext = 'tif') or (Ext = 'tiff') then
 	begin
-(*		My := TWICImage.Create;
-		try
-//			My.LoadFromFile('C:\Net\dasa.tif');
-			if My.ImagingFactory <> nil then
-			begin
-				My.LoadFromStream(Stream);
-				SetSize(My.Width, My.Height);
-				Assign(My);
-			end;
-		finally
-			My.Free;
-		end; *)
 		MyTIFF := TTIFFGraphic.Create;
 		try
 			MyTIFF.LoadFromStream(Stream);
@@ -1990,6 +1996,7 @@ begin
 			MyTIFF.Free;
 		end;
 	end
+	{$endif}
 	else if Ext = 'ico' then
 	begin
 		Icon := TIcon.Create;
@@ -2900,6 +2907,11 @@ end;
 procedure TDBitmap.Rec(const P1, P2: TPoint; const C: TColor; const Effect: TEffect);
 begin
 	Rec(P1.X, P1.Y, P2.X, P2.Y, C, Effect);
+end;
+
+procedure TDBitmap.Rec(const P1, P2: TFloPoint; const C: TColor; const Effect: TEffect; const Width: TFlo = 1);
+begin
+	Rec(P1.X, P1.Y, P2.X, P2.Y, C, Effect, Width);
 end;
 
 procedure TDBitmap.Rec(X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect);
@@ -11135,6 +11147,14 @@ begin
 	Result.Top := GraphMinY;
 	Result.Bottom := GraphMaxY;
 end;
+
+{$ifdef GDIPlus}
+function TDBitmap.GetGPGraphic: IGPGraphics;
+begin
+	InitGraphics;
+	Result := FGraphics;
+end;
+{$endif}
 
 procedure TDBitmap.Texturize;
 var

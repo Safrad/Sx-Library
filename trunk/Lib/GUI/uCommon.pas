@@ -117,7 +117,7 @@ end;
 
 function LinkChange(const GlobalOption: TGlobalOption; const ObjectChange: TObjectChange): BG;
 var
-	LinkFileName: TFileName;
+	LinkFileName, LinkFileName2: TFileName;
 	Dir: string;
 begin
 	Result := False;
@@ -131,8 +131,14 @@ begin
 	goDesktopIcon:
 		LinkFileName := ShellFolder('Common Desktop', True) + PathDelim + GetProjectInfo(piProductName) + '.lnk';
 	goQuickLaunchIcon:
+	begin
 		LinkFileName := CommonAppDataDir + PathDelim + 'Microsoft' + PathDelim + 'Internet Explorer' +
-			PathDelim + 'Quick Launch' + PathDelim + GetProjectInfo(piProductName) + '.lnk';
+			PathDelim + 'Quick Launch' + PathDelim;
+		LinkFileName2 := LinkFileName + 'User Pinned\TaskBar\';
+		if DirectoryExists(LinkFileName2) then
+			LinkFileName := LinkFileName2;
+		LinkFileName := LinkFileName + GetProjectInfo(piProductName) + '.lnk';
+	end;
 	end;
 	case ObjectChange of
 	ocTest:

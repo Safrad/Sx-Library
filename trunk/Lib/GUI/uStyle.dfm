@@ -77,7 +77,6 @@ object fStyle: TfStyle
     Height = 21
     Style = csDropDownList
     DropDownCount = 24
-    ItemHeight = 13
     TabOrder = 0
     OnChange = ComboBoxStylesChange
   end
@@ -147,7 +146,6 @@ object fStyle: TfStyle
     Height = 21
     Style = csDropDownList
     DropDownCount = 24
-    ItemHeight = 13
     TabOrder = 7
     OnChange = FormToData
   end
@@ -157,7 +155,6 @@ object fStyle: TfStyle
     Width = 57
     Height = 21
     DropDownCount = 24
-    ItemHeight = 13
     TabOrder = 8
     OnChange = FormToData
   end
@@ -167,6 +164,7 @@ object fStyle: TfStyle
     Width = 104
     Height = 78
     Zoom = 1.000000000000000000
+    DisplayMode = dmCustom
     OnFill = ImageSampleFill
     TabOrder = 9
     TabStop = False
@@ -178,7 +176,6 @@ object fStyle: TfStyle
     Height = 21
     Style = csDropDownList
     DropDownCount = 24
-    ItemHeight = 13
     TabOrder = 10
     OnChange = FormToData
   end

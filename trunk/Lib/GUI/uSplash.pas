@@ -161,13 +161,17 @@ begin
 	finally
 		FreeAndNil(BmpT);
 	end;
-	Bmp.Border(clWhite, clBlack, BorderSize, ef08);
+	if AddSplashScreenProjectName then
+		Bmp.Border(clWhite, clBlack, BorderSize, ef08);
 
 	fSplash.ClientWidth := fSplash.BackBitmap.Width;
 	fSplash.ClientHeight := fSplash.BackBitmap.Height;
 
 	// Set alpha after window size (care black blink).
-	fSplash.AlphaBlendValue := MaxAlphaBlendValue;
+	if AddSplashScreenProjectName then
+		fSplash.AlphaBlendValue := MaxAlphaBlendValue
+	else
+		fSplash.AlphaBlendValue := High(fSplash.AlphaBlendValue);
 	fSplash.AlphaBlend := True;
 
 	fSplash.Show;

@@ -49,7 +49,7 @@ begin
 	begin
 		fGetStr := TfGetStr.Create(Application.MainForm);
 	end;
-	fGetStr.Caption := Translate(DelCharsF(Caption, '&'));
+	fGetStr.Caption := Translate(RemoveSingleAmp(Caption));
 	fGetStr.EditInput.MaxLength := MaxLength;
 	fGetStr.CurS := CurVal;
 	fGetStr.DefS := DefVal;

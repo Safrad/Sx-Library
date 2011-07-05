@@ -1420,7 +1420,7 @@ begin
 			Result.ArgCount := 2;
 			Result.Args[0] := Node;
 			ReadInput;
-			Result.Args[1] := NodeG2(NodeP);
+			Result.Args[1] := {NodeG2}(NodeP);
 		end
 	else
 		Result := Node;

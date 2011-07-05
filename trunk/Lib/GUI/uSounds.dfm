@@ -1,13 +1,13 @@
 object fSounds: TfSounds
   Left = 472
   Top = 280
-  Width = 458
-  Height = 298
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
   Caption = 'Sounds'
+  ClientHeight = 271
+  ClientWidth = 450
   Color = clBtnFace
   Constraints.MinHeight = 160
   Constraints.MinWidth = 458
@@ -59,6 +59,7 @@ object fSounds: TfSounds
     Height = 137
     Zoom = 1.000000000000000000
     EnableZoom = True
+    DisplayMode = dmCustom
     PopupMenu = PopupMenuSounds
     TabOrder = 9
     OnDblClick = DViewSoundsDblClick
@@ -117,7 +118,6 @@ object fSounds: TfSounds
     Width = 73
     Height = 21
     AutoComplete = False
-    ItemHeight = 13
     TabOrder = 6
     Items.Strings = (
       '11025'

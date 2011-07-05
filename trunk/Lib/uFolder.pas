@@ -33,6 +33,7 @@ type
 		SubDirs: BG;
 		SortBy: TSortBy;
 		SortOrder: TSortOrder;
+		AttributeMask: SG;
 
 		Files: TData;
 		property Count: SG read GetCount;
@@ -41,8 +42,9 @@ type
 		destructor Destroy; override;
 		procedure Read;
 		function FirstFileName: TFileName;
-
 		property OnAddFile: TOnAddFile read FOnAddFile write FOnAddFile;
+	published
+
 	end;
 
 implementation
@@ -108,7 +110,7 @@ var
 begin
 	ListCount := 0;
 	// faReadOnly or faHidden or faSysFile or
-	ErrorCode := FindFirst(Path + SubPath + Mask, faAll, SearchRec);
+	ErrorCode := FindFirst(Path + SubPath + Mask, AttributeMask, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		IsDir := IsDirectory(SearchRec);
@@ -227,6 +229,7 @@ begin
 	AcceptDirs := True;
 	SubDirs := True;
 	Mask := '*.*';
+	AttributeMask := faAll;
 	Files := TData.Create;
 end;
 

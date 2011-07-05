@@ -68,6 +68,10 @@ type
 		procedure Center;
 		procedure SetVisible(const Value: Boolean);
 		procedure ChangeVisible;
+		procedure AlignControl(const AControl: TControl; const AAnchors: TAnchors);
+		procedure AlignControlRight(const AControl: TControl);
+		procedure AlignControlTop(const AControl: TControl);
+		procedure AlignControlRightTop(const AControl: TControl);
 	published
 		{ published declarations }
 		property Caption: string read FCaption write SetCaption;
@@ -866,7 +870,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDForm]);
+	RegisterComponents(ComponentPageName, [TDForm]);
 end;
 
 procedure TDForm.Center;
@@ -944,6 +948,65 @@ begin
 //{			ShowWindow(Handle, SW_SHOW); // SW_NORMAL, SW_RESTORE break windows stay on top!
 			SetForegroundWindow(Form.Handle); // Blink Taskbar
 	end;
+end;
+
+procedure TDForm.AlignControlRight(const AControl: TControl);
+begin
+	AControl.Width := ClientWidth - AControl.Left - FormBorder;
+end;
+
+procedure TDForm.AlignControlTop(const AControl: TControl);
+begin
+	AControl.Height := ClientHeight - AControl.Top - FormBorder;
+end;
+
+procedure TDForm.AlignControlRightTop(const AControl: TControl);
+begin
+	AlignControlRight(AControl);
+end;
+
+procedure TDForm.AlignControl(const AControl: TControl;
+	const AAnchors: TAnchors);
+{var
+	Anchors: TAnchors;
+	FOriginalParentSize: TPoint;
+	FAnchorRules: TPoint;}
+begin
+(* TODO :	if not (csLoading in ComponentState) then
+	begin
+		Anchors := AAnchors;
+		if Anchors = [akLeft, akTop] then
+		begin
+			FOriginalParentSize.X := 0;
+			FOriginalParentSize.Y := 0;
+			Exit;
+		end;
+		if akRight in Anchors then
+			if akLeft in Anchors then
+				FAnchorRules.X := Width else
+        FAnchorRules.X := Left
+    else
+      FAnchorRules.X := Left + Width div 2;
+    if akBottom in Anchors then
+			if akTop in Anchors then
+				FAnchorRules.Y := Height else
+        FAnchorRules.Y := Top
+    else
+      FAnchorRules.Y := Top + Height div 2;
+    if Parent <> nil then
+      if csReading in Parent.ComponentState then
+      begin
+        if not (csDesigning in ComponentState) then
+					FOriginalParentSize := Parent.DesignSize
+      end
+      else if Parent.HandleAllocated then
+        FOriginalParentSize := Parent.ClientRect.BottomRight
+      else
+      begin
+				FOriginalParentSize.X := Parent.Width;
+        FOriginalParentSize.Y := Parent.Height;
+			end;
+	end; *)
 end;
 
 end.

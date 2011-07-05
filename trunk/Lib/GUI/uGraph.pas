@@ -54,7 +54,7 @@ implementation
 
 uses
 	Math, Menus,
-	uStrings, uGetInt, uMath;
+	uStrings, uMath;
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 begin
@@ -249,12 +249,12 @@ function CutText(const Canvas: TCanvas; const Text: string; const Width: SG): st
 var w: SG;
 begin
 	Result := Text;
-	if Canvas.TextWidth(DelCharsF(Result, '&')) > Width then
+	if Canvas.TextWidth(RemoveSingleAmp(Result)) > Width then
 	begin
 		w := Length(Result);
 		while w >= 1 do
 		begin
-			if Canvas.TextWidth(DelCharsF(Result, '&') + cDialogSuffix) <= Width then
+			if Canvas.TextWidth(RemoveSingleAmp(Result) + cDialogSuffix) <= Width then
 			begin
 				Result := Result + cDialogSuffix;
 				Exit;
@@ -293,7 +293,7 @@ begin
 
 	if Alignment <> taLeftJustify then
 	begin
-		TextWidth := Canvas.TextWidth(DelCharsF(CuttedText, '&')) + FontShadow;
+		TextWidth := Canvas.TextWidth(RemoveSingleAmp(CuttedText)) + FontShadow;
 		case Alignment of
 //			taLeftJustify: CurX := R.Left;
 		taRightJustify: R.Left := R.Right + 1 - TextWidth;
@@ -387,7 +387,7 @@ begin
 
 		if CharInSet(Caption[i], [CharCR, CharLF]) or
 			((LineCount < MaxLines) and (i > 1) and
-			(WordWrap and (Canvas.TextWidth(DelCharsF(Copy(Caption, 1, i), '&')) > Rect.Right - Rect.Left))) then
+			(WordWrap and (Canvas.TextWidth(RemoveSingleAmp(Copy(Caption, 1, i))) > Rect.Right - Rect.Left))) then
 		begin
 			if CharInSet(Caption[i], [CharCR, CharLF]) then
 			begin

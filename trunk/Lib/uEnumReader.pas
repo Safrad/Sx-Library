@@ -59,7 +59,7 @@ begin
 	begin
 		Enums2[i] := UpperCase(Enums2[i]);
 	end;
-	SortS(False, PArraySG(@Indexes[0]), Enums2);
+	SortStr(PArraySG(@Indexes[0]), PArrayString(Enums2), Count);
 	SetLength(Enums, Count);
 	for i := 0 to Count - 1 do
 	begin

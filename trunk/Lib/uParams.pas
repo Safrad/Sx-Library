@@ -105,6 +105,8 @@ var
 	IsFile: BG;
 	i: SG;
 	ParamFile: TFileName;
+	Value: string;
+	StartIndex: SG;
 begin
 	AF := paFileIndex >= 0;
 	AN := paNumberIndex >= 0;
@@ -123,8 +125,12 @@ begin
 		if StartStr(UpperCase(Params[i]), UpperCase(Param)) then
 		begin
 			IsFile := False;
+			StartIndex := Length(Params[i]) + 1;
+			if CharAt(Param, StartIndex) = '=' then
+				Inc(StartIndex);
+			Value := Copy(Param, StartIndex, MaxInt);
 			try
-				ParamProcedures[i](Copy(Param, Length(Params[i]) + 1, MaxInt));
+				ParamProcedures[i](Value);
 			except
 				on E: Exception do
 					Fatal(E, nil);

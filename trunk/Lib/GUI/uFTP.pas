@@ -295,6 +295,7 @@ var
 	AStrings: TStrings;
 begin
 	Result := False;
+	TargetDir := ReplaceF(TargetDir, '\', '/');
 	if FileNameOrDir = '' then Exit;
 	Dir := LastChar(FileNameOrDir) = PathDelim;
 

@@ -57,17 +57,28 @@ begin
 	Result := ReplaceF(Result, #160, nbsp{'&thinsp;' IE DNS});
 end;
 
+const
+	MarksCount = 5;
+	HTMLMarks: array[0..MarksCount - 1] of string = ('&gt;', '&lt;', '&amp;', '&quot;', '&#039;');
+	TextMarks: array[0..MarksCount - 1] of string = ('>', '<', '&', '"', '''');
+
 function XMLToStr(const s: string): string;
 begin
 	Result := s;
-	Replace(Result, ['&gt;', '&lt;', '&amp;'], ['>', '<', '&']);
+	Replace(Result, HTMLMarks, TextMarks);
 end;
 
 function StrToXML(const s: string): string;
 begin
 	Result := s;
-	Replace(Result, ['&', '<', '>'], ['&amp;', '&lt;', '&gt;']);
+	Replace(Result, TextMarks, HTMLMarks);
 end;
+
+{function HTMLSpecialChars(const s: string): string;
+begin
+	Result := s;
+	Replace(Result, ['&', '"', '''', '<', '>'], ['&amp;', '&quot;', '&#039;', '&lt;', '&gt;']);
+end;}
 
 function SToHTML(const Text: string): string;
 begin

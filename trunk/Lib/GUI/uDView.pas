@@ -106,7 +106,7 @@ type
 		message WM_LBUTTONDBLCLK;
 		procedure CMWantSpecialKey(var Message: TCMWantSpecialKey);
 		message CM_WANTSPECIALKEY;
-    procedure SetActualRow(const Value: SG);
+		procedure SetActualRow(const Value: SG);
 	protected
 		{ Protected declarations }
 		procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -1391,8 +1391,8 @@ begin
 	if FActualRow <> Value then
 	begin
 		FActualRow := Value;
-    ScrollToActualCell;
-  end;
+		ScrollToActualCell;
+	end;
 end;
 
 procedure TDView.SetAllSortable(const Sortable: BG);
@@ -1683,7 +1683,7 @@ begin
 		begin
 			FSearchText := FSearchText + Key;
 			FindText;
-    end;
+		end;
 
 		FLastKey := Key;
 	end;
@@ -1691,7 +1691,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDView]);
+	RegisterComponents(ComponentPageName, [TDView]);
 end;
 
 procedure TDView.InitTableHeight;

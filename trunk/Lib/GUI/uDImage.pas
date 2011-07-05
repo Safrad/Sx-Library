@@ -89,7 +89,7 @@ type
 		procedure SetUserArea(const Value: TRect);
 		procedure SetDisplayMode(const Value: TDisplayMode);
 		procedure SetUserBitmap(const Value: TDBitmap);
-    procedure SetAreaCursor(const Value: TCursor);
+		procedure SetAreaCursor(const Value: TCursor);
 	protected
 		UserWidth: SG;
 		UserHeight: SG;
@@ -825,7 +825,7 @@ begin
 							MouseAction := mwScroll;
 							MouseX := FOfsX + X;
 							MouseY := FOfsY + Y;
-              ChangeCursor;
+							ChangeCursor;
 						end
 						else
 						begin
@@ -1846,7 +1846,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDImage]);
+	RegisterComponents(ComponentPageName, [TDImage]);
 end;
 
 procedure TDImage.Serialize(const IniFile: TDIniFile; const Save: BG);
@@ -1885,6 +1885,11 @@ end;
 
 procedure TDImage.FitImage;
 begin
+	if (UserWidth2 > 0) and (UserHeight2 > 0) then
+	begin
+		ChangeZoom(Min(Bitmap.Width / UserWidth2, Bitmap.Height / UserHeight2));
+		Invalidate;
+	end;
 end;
 
 function TDImage.GetDisplayedArea: TRect;

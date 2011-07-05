@@ -8,9 +8,8 @@ uses
 	SysUtils;
 
 type
-	POpenedFileItem = ^TOpenedFileItem;
-
-	TOpenedFileItem = record // 64
+	TOpenedFileItem = class(TObject)
+	public
 		LastWriteTime: TFileTime;
 		FileName: TFileName;
 		MenuItem: TMenuItem;
@@ -24,12 +23,14 @@ type
 		New: U2;
 		FChanged: B1;
 		ReadOnly: B1;
-		FLocked: B1;
-
-		function Locked: BG;
-		procedure Lock;
-		procedure Unlock;
+		FLocked: BG;
+		procedure SetLocked(const Value: BG);
 		procedure SetMenuItemCaption;
+
+		constructor Create;
+		destructor Destroy; override;
+	published
+		property Locked: BG read FLocked write SetLocked;
 	end;
 
 implementation
@@ -38,11 +39,6 @@ uses
 	uOutputFormat, uSimulation;
 
 { TOpenedFileItem }
-
-function TOpenedFileItem.Locked: BG;
-begin
-	Result := FLocked;
-end;
 
 function Shorter(const FileOrDir: string): string;
 var
@@ -82,22 +78,25 @@ begin
 	end;
 end;
 
-procedure TOpenedFileItem.Lock;
+procedure TOpenedFileItem.SetLocked(const Value: BG);
 begin
-	if FLocked then
+	if FLocked <> Value then
 	begin
-		FLocked := True;
+		FLocked := Value;
 		SetMenuItemCaption;
 	end;
 end;
 
-procedure TOpenedFileItem.Unlock;
+constructor TOpenedFileItem.Create;
 begin
-	if FLocked then
-	begin
-		FLocked := False;
-		SetMenuItemCaption;
-	end;
+	inherited;
+
+end;
+
+destructor TOpenedFileItem.Destroy;
+begin
+
+	inherited;
 end;
 
 end.

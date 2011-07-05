@@ -601,7 +601,7 @@ begin
 
 								B.Caption := '';
 								B.ShowHint := True;
-								B.Hint := Translate(DelCharsF(M.Caption, '&'));
+								B.Hint := Translate(RemoveSingleAmp(M.Caption));
 								if M.ShortCut <> 0 then
 									B.Hint := B.Hint + ' (' + KeyToStr(M.ShortCut) + ')';
 								B.SetBounds(0, 0, IconSize, IconSize);
@@ -765,19 +765,64 @@ end;
 type
 	TOb = class(TObject)
 	private
-		procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
+		class procedure OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 			State: TOwnerDrawState);
+		class procedure OnMeasureItem(Sender: TObject; ACanvas: TCanvas;
+		var Width, Height: Integer);
 	end;
 
-var
-	Ob: TOb;
-
-procedure TOb.OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
+class procedure TOb.OnAdvancedMenuDraw(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 	State: TOwnerDrawState);
 begin
 	MenuAdvancedDrawItem(Sender, ACanvas, ARect, State);
 end;
 
+procedure MenuSet(Menu: TComponent);
+var
+	i, c: SG;
+	M: TMenuItem;
+begin
+{	if not Assigned(ImageList) then
+		ImageList := TCustomImageList.CreateSize(16, 16);}
+
+	if Menu is TMenu then
+	begin
+		TMenu(Menu).OwnerDraw := True;
+//		TMenu(Menu).Images := ImageList;
+		c := TMenu(Menu).Items.Count
+	end
+	else if Menu is TMenuItem then
+	begin
+		c := TMenuItem(Menu).Count
+	end
+	else
+		Exit;
+
+	for i := 0 to c - 1 do
+	begin
+		if (Menu is TMenu) then // or (Menu is TPopupMenu) then
+		begin
+			M := TMenu(Menu).Items[i];
+		end
+		else if Menu is TMenuItem then
+			M := TMenuItem(Menu).Items[i]
+		else
+			M := nil;
+
+		if (not(Menu is TMenu)) or (Menu is TPopupMenu) then
+		begin
+			M.OnAdvancedDrawItem := TOb.OnAdvancedMenuDraw;
+			M.OnMeasureItem := TOb.OnMeasureItem;
+			// {$ifopt d-}
+			if {(not (Parent is TMainMenu)) and} (M.Bitmap.Width = 0) and (M.ImageIndex = -1) then
+				LoadMenuIcon(M.Bitmap, DelLastNumber(M.Name));
+			// {$endif}
+		end;
+		MenuSet(M);
+	end;
+end;
+
+(*
 procedure MenuSet(Menu: TComponent);
 var
 	i, c: SG;
@@ -810,7 +855,7 @@ begin
 
 		if (not(Menu is TMenu)) or (Menu is TPopupMenu) then
 		begin
-			M.OnAdvancedDrawItem := Ob.OnAdvancedMenuDraw;
+			M.OnAdvancedDrawItem := TOb.OnAdvancedMenuDraw;
 			// {$ifopt d-}
 			if (M.Bitmap.Width = 0) and (M.ImageIndex = -1) then
 				LoadMenuIcon(M.Bitmap, DelLastNumber(M.Name));
@@ -819,10 +864,47 @@ begin
 		MenuSet(M);
 	end;
 end;
+*)
+class procedure TOb.OnMeasureItem(Sender: TObject; ACanvas: TCanvas;
+  var Width, Height: Integer);
+var
+  mMenuItem: TMenuItem;
+  KeyStr: string;
+  mParent: TObject;
+	mTopLevel: Boolean;
+begin
+	mMenuItem := (Sender as TMenuItem);
+	mParent := mMenuItem.GetParentComponent;
+	mTopLevel := (mParent is TMainMenu);
+	if not mTopLevel then
+	begin
+		Width := IconSize;
+  end
+  else
+  begin
+    Width := 0;
+  end;
+  Inc(Width, ACanvas.TextWidth(RemoveSingleAmp(mMenuItem.Caption)));
+  KeyStr := KeyToStr(mMenuItem.Shortcut);
+  if KeyStr <> '' then
+  begin
+    Inc(Width, 8 + ACanvas.TextWidth(KeyStr));
+  end;
+  if mMenuItem.Count > 0 then
+  begin
+    // Space for right arrow
+    Inc(Width, 8);
+	end;
+
+	Height := 5;
+	if mMenuItem.Caption = cLineCaption then
+		Inc(Height, 6)
+	else
+		Inc(Height, ACanvas.TextHeight('Wg'));
+end;
 
 initialization
 
-Ob := TOb.Create;
 MenuBmp := TDBitmap.Create;
 BCanvas := MenuBmp.Canvas;
 BCanvas.Brush.Style := bsSolid;
@@ -837,6 +919,5 @@ if Assigned(BmpCheck) then
 FreeAndNil(BmpCheck);
 FreeAndNil(BmpD);
 FreeAndNil(MenuBmp);
-FreeAndNil(Ob);
 
 end.

@@ -52,7 +52,7 @@ uses
 	uTypes,
 	uFiles,
 	Windows,
-	uOutputFormat, uStrings,
+	uOutputFormat, uStrings, uUser,
 	TypInfo;
 
 var
@@ -72,7 +72,7 @@ var
 	Handle: THandle;
 //	__VS_FIXEDFILEINFO: ^VS_FIXEDFILEINFO;
 begin
-	AppSize := GetFileVersionInfoSize(PChar(FApplicationFileName), Handle{ API function initialize always to 0 });
+	AppSize := GetFileVersionInfoSize(PChar(ExpandDir(FApplicationFileName)), Handle{ API function initialize always to 0 });
 	if AppSize > 0 then
 	begin
 		Buf := AllocMem(AppSize);
@@ -121,8 +121,15 @@ begin
 		end;
 	end;
 
+	if FProjectInfoNames[piCompanyName] = '' then // if not initialized in ProjectInfo
+		FProjectInfoNames[piCompanyName] := MyCompany;
 	if FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
 		FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(FApplicationFileName));
+
+	{$IFOPT D+}
+	AppendStr(FProjectInfoNames[piFileVersion], '+');
+	AppendStr(FProjectInfoNames[piProductVersion], '+');
+	{$ENDIF}
 end;
 
 constructor TProjectInfo.Create(const ApplicationFileName: TFileName);

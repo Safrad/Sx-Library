@@ -385,7 +385,7 @@ begin
 		O := First;
 		while O <> nil do
 		begin
-			Result := Result + O.ToString + ',';
+			Result := Result + O.{$ifdef UNICODE}ToString{$else}ClassName{$endif} + ',';
 			O := Next;
 		end;
 		SetLength(Result, Length(Result) - 1);

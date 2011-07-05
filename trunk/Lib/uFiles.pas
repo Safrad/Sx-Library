@@ -47,6 +47,7 @@ function HandleFileSize(FHandle: THandle): S8;
 function GetFileSizeU(const FileName: TFileName): S8;
 function GetFileSizeS(const FileName: TFileName): string;
 function FileTimeToDateTime(F: TFileTime): TDateTime;
+function DateTimeToFileTime(const D: TDateTime): TFileTime;
 function GetFileModified(const FileName: TFileName; var LastWriteTime: TFileTime): BG; overload;
 function GetFileModified(const FileName: TFileName): TFileTime; overload;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
@@ -68,6 +69,9 @@ procedure BackupFile(const FileName: TFileName);
 function DeleteFileEx(const FileName: TFileName): BG;
 function RemoveDirEx(const DirName: string): BG;
 function RemoveDirsEx(DirName: string; DeleteSelf: BG = False): BG;
+
+procedure FileLinesAndSize(const FileName: TFileName; out Size, Lines: U8);
+procedure CodeLinesAndSize(const Dir: string; out Size, Lines: U8);
 
 function ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG): BG;
 function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: SG): BG;
@@ -187,9 +191,15 @@ begin
 	i := 1;
 	while i < Length(Source) do
 	begin
+		if Source[i] = CharSpace then
+		begin
+    	Inc(i);
+			Continue;
+    end;
 		if Source[i] = '"' then
 		begin
-			EndIndex := PosEx('"', Source, i + 1);
+			Inc(i);
+			EndIndex := PosEx('"', Source, i);
 		end
 		else
 		begin
@@ -197,7 +207,7 @@ begin
 		end;
 		if EndIndex = 0 then EndIndex := MaxInt - 1;
 
-		Result[ResultCount] := Copy(Source, i + 1, EndIndex - 1 - i);
+		Result[ResultCount] := Copy(Source, i, EndIndex - i);
 		Inc(ResultCount);
 		if ResultCount >= MaxStrings then
 			Exit;
@@ -278,11 +288,7 @@ begin
 	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
 	if CommonAppDataDir = '' then CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
 	CorrectDir(CommonAppDataDir);
-	{$ifndef Console}
 	AppDataDir := CommonAppDataDir + GetProjectInfo(piCompanyName) + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
-	{$else}
-	AppDataDir := CommonAppDataDir + 'Safrad' + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
-	{$endif}
 	if DirectoryExists(AppDataDir) then
 	begin
 		GInstalled := True
@@ -829,6 +835,15 @@ begin
 	Result := SystemTimeToDateTime(SystemTime);
 end;
 
+function DateTimeToFileTime(const D: TDateTime): TFileTime;
+var
+	SystemTime: TSystemTime;
+begin
+	DateTimeToSystemTime(D, SystemTime);
+	SystemTimeToFileTime(SystemTime, Result);
+	LocalFileTimeToFileTime(Result, Result);
+end;
+
 function GetFileModified(const FileName: TFileName; var LastWriteTime: TFileTime): BG;
 var
 	ACreationTime, ALastAccessTime: TFileTime;
@@ -1184,26 +1199,35 @@ end;
 
 function CopyDamagedFile(Source, Dest: TFileName): BG;
 const
-	Count = 512;
+	MaxCount = 512;
 var
+	Total: U8;
+	Count: UG;
 	FS, FD: TFile;
 	Buf: Pointer;
 begin
 	Result := True;
-	GetMem(Buf, Count);
-	FS := TFile.Create;
-	FD := TFile.Create;
+	Buf := nil;
+	FS := nil;
+	FD := nil;
 	try
+		GetMem(Buf, MaxCount);
+		FS := TFile.Create;
+		FD := TFile.Create;
+		FD.Charset := fcAnsi;
 		if FS.Open(Source, fmReadOnly) then
 		begin
 			if FD.Open(Dest, fmRewrite) then
 			begin
-				while not FS.Eof do
+				Total := FS.FileSize;
+				while Total > 0 do
 				begin
+					Count := Min(Total, MaxCount);
 					FillChar(Buf^, Count, 0);
 					if not FS.BlockRead(Buf^, Count) then
 						Result := False;
 					FD.BlockWrite(Buf^, Count);
+					Dec(Total, Count);
 				end;
 				FD.Truncate;
 				FD.Close;
@@ -1211,9 +1235,9 @@ begin
 			FS.Close;
 		end;
 	finally
-		FS.Free;
-		FD.Free;
-		FreeMem(Buf, Count);
+		FreeAndNil(FS);
+		FreeAndNil(FD);
+		FreeMem(Buf);
 	end;
 end;
 
@@ -1428,6 +1452,49 @@ begin
 	SysUtils.FindClose(SearchRec);
 
 	if DeleteSelf then Result := RemoveDirEx(DirName) and Result;
+end;
+
+procedure FileLinesAndSize(const FileName: TFileName; out Size, Lines: U8);
+var
+	F: TFile;
+	Line: string;
+begin
+	Size := 0;
+	Lines := 0;
+	F := TFile.Create;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			Size := F.FileSize;
+			while not F.EOF do
+			begin
+				F.Readln(Line);
+				Inc(Lines);
+			end;
+			F.Close;
+		end;
+	finally
+		F.Free;
+	end;
+end;
+
+procedure CodeLinesAndSize(const Dir: string; out Size, Lines: U8);
+var
+	FileCount: SG;
+	Files: TFileNames;
+	i: SG;
+	FileLines, FileSize: U8;
+begin
+	Size := 0;
+	Lines := 0;
+	FileCount := 0;
+	ReadDir(Files, FileCount, Dir, ['pas', 'dpr', 'inc'{, 'dfm'}], True, True, True, False);
+	for i := 0 to FileCount - 1 do
+	begin
+		FileLinesAndSize(Dir + Files[i], FileSize, FileLines);
+		Inc(Size, FileSize);
+		Inc(Lines, FileLines);
+	end;
 end;
 
 // TFile Read Write

@@ -332,10 +332,10 @@ begin
 		if Displ.Enabled then
 		begin
 			if FFontEffect <> ef16 then
-				DisplDraw(FBmpText, DelCharsF(Caption, '&'), FDispl, Recta, FAlignment, FLayout,
+				DisplDraw(FBmpText, RemoveSingleAmp(Caption), FDispl, Recta, FAlignment, FLayout,
 					ef16)
 			else
-				DisplDraw(Bitmap, DelCharsF(Caption, '&'), FDispl, Recta, FAlignment, FLayout,
+				DisplDraw(Bitmap, RemoveSingleAmp(Caption), FDispl, Recta, FAlignment, FLayout,
 					ef16);
 		end
 		else
@@ -387,7 +387,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDLabel]);
+	RegisterComponents(ComponentPageName, [TDLabel]);
 end;
 
 end.

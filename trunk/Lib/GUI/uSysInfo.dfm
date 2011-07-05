@@ -176,9 +176,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 6
+    DoubleBuffered = True
   end
   object edMF: TDEdit
     Left = 176
@@ -188,9 +188,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 7
+    DoubleBuffered = True
   end
   object edFF: TDEdit
     Left = 176
@@ -200,9 +200,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 8
+    DoubleBuffered = True
   end
   object edFT: TDEdit
     Left = 240
@@ -212,9 +212,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 9
+    DoubleBuffered = True
   end
   object edMU: TDEdit
     Left = 112
@@ -224,9 +224,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 10
+    DoubleBuffered = True
   end
   object edFU: TDEdit
     Left = 112
@@ -236,9 +236,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 11
+    DoubleBuffered = True
   end
   object EditOS: TDEdit
     Left = 64
@@ -247,10 +247,10 @@ object fSysInfo: TfSysInfo
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
-    DoubleBuffered = True
     ParentColor = True
     ReadOnly = True
     TabOrder = 1
+    DoubleBuffered = True
   end
   object EditCPU: TDEdit
     Left = 64
@@ -260,9 +260,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 2
+    DoubleBuffered = True
   end
   object ButtonOk: TDButton
     Left = 216
@@ -289,9 +289,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 4
+    DoubleBuffered = True
   end
   object EditDuron: TDEdit
     Left = 104
@@ -301,9 +301,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 5
+    DoubleBuffered = True
   end
   object EditCPUUsage: TDEdit
     Left = 103
@@ -313,9 +313,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 3
+    DoubleBuffered = True
   end
   object EditCounter: TDEdit
     Left = 103
@@ -325,9 +325,9 @@ object fSysInfo: TfSysInfo
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
-    DoubleBuffered = True
     ReadOnly = True
     TabOrder = 12
+    DoubleBuffered = True
   end
   object ComboBoxSize: TComboBox
     Left = 216
@@ -335,6 +335,7 @@ object fSysInfo: TfSysInfo
     Width = 81
     Height = 21
     Style = csDropDownList
+    ItemHeight = 13
     TabOrder = 13
   end
 end

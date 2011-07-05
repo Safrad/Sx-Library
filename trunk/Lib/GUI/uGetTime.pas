@@ -123,7 +123,7 @@ begin
 		else if TCurVal > TMaxVal then
 			TCurVal := TMaxVal;
 		NowVal := TCurVal;
-		Caption := Translate(DelCharsF(Prompt, '&'));
+		Caption := Translate(RemoveSingleAmp(Prompt));
 	// H
 		TrackBarH.OnChange := nil;
 		TrackBarH.Min := TMinVal div Hour;

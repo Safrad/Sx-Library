@@ -186,6 +186,7 @@ object fGetTime: TfGetTime
     Height = 21
     DoubleBuffered = True
     MaxLength = 15
+    ParentDoubleBuffered = False
     TabOrder = 0
     OnChange = EditInputChange
   end

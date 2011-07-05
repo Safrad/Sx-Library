@@ -240,6 +240,7 @@ const
 	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
 	IndexFile = 'index' + HTMLExt;
 	nbsp = '&nbsp;'; // Non-dividable Blank SPace.
+	ComponentPageName = 'Safrad';
 
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
@@ -291,16 +292,4 @@ begin
 end;
 {$endif}
 
-initialization
-	{$ifndef LINUX}
-	{$ifopt d-}
-	NoErrMsg := True;
-	{$endif}
-	{$endif}
-
-	{$ifopt d+}
-	{$ifdef UNICODE}
-	ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
-	{$endif}
-	{$endif}
 end.

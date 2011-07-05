@@ -124,7 +124,7 @@ begin
 	fStyle.AppliedVal := CurVal;
 	fStyle.DefVal := DefVal;
 	fStyle.NowVal := CurVal;
-	fStyle.Caption := DelCharsF(Prompt, '&');
+	fStyle.Caption := RemoveSingleAmp(Prompt);
 
 	fStyle.DataToForm(nil);
 	fStyle.FormToData(nil);
