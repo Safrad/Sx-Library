@@ -21,7 +21,7 @@ function Skew(const Data: array of TVector): TVector;
 implementation
 
 uses
-	uNamespace,
+	uNamespace, uMath,
 	Math;
 
 function CountData(const Data: array of TVector): TVector;
@@ -243,11 +243,11 @@ begin
 	if Length(Data) = 0 then
 		Result := NumToVector(Random(MaxInt) / MaxInt)
 	else //if Length(Data) = 1 then
-		Result := NumToVector(Random(Round(VectorToNum(Data[0]))));
+		Result := NumToVector(Random(RoundN(VectorToNum(Data[0]))));
 {	else if Length(Data) >= 2 then
 	begin
 		e := Calc(Node.Args[0]);
-		Result := e + Random(Round(Calc(Node.Args[1]) - e))
+		Result := e + Random(RoundN(Calc(Node.Args[1]) - e))
 	end;}
 end;
 

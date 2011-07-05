@@ -31,7 +31,8 @@ requires
   designide,
   vclactnband,
   vclx,
-  vcljpg;
+  vcljpg,
+  indy;
 
 contains
   ufOpenedFiles in 'GUI\ufOpenedFiles.pas' {fOpenedFiles},
@@ -47,6 +48,7 @@ contains
   uCompLog7 in 'GUI\uCompLog7.pas',
   uNumericComboBox in 'GUI\uNumericComboBox.pas',
   uSxPathEdit in 'GUI\uSxPathEdit.pas',
-  uSxLabel in 'GUI\uSxLabel.pas';
+  uSxLabel in 'GUI\uSxLabel.pas',
+  uSxCheckBox in 'GUI\uSxCheckBox.pas';
 
 end.

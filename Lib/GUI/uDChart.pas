@@ -4,6 +4,7 @@ interface
 
 uses Chart, SysUtils;
 
+procedure AutoChartLimit(const Chart: TChart);
 procedure HTMLStyle(const Chart: TChart);
 procedure ChartToFile(const Chart: TChart; const FileName: TFileName);
 
@@ -11,10 +12,33 @@ implementation
 
 uses
 	Graphics,
-	Series, TeCanvas,
-	uDBitmap;
+	Series, TeCanvas, Math,
+	uDBitmap, uTypes, TeEngine;
 const
 	BackgroundColor = clSilver; // Best font border.
+
+procedure AutoChartLimit(const Chart: TChart);
+var
+	i: SG;
+	MinValue, MaxValue: Double;
+begin
+	MinValue := MaxInt;
+	MaxValue := MinInt;
+	for i := 0 to Chart.SeriesCount - 1 do
+	begin
+		if Chart.Series[i].Active then
+		begin
+			MinValue := Min(MinValue, Chart.Series[i].MinYValue);
+			MaxValue := Max(MaxValue, Chart.Series[i].MaxYValue);
+		end;
+	end;
+
+	Chart.LeftAxis.Maximum := MaxInt;
+	Chart.LeftAxis.Minimum := 100 * (Floor((MinValue - 0) / 100));
+	Chart.LeftAxis.Maximum := 100 * (Ceil((MaxValue + (MaxValue - MinValue) / 20) / 100));
+	Chart.LeftAxis.AutomaticMaximum := False;
+	Chart.LeftAxis.AutomaticMinimum := False;
+end;
 
 procedure HTMLStyle(const Chart: TChart);
 begin

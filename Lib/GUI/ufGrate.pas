@@ -140,8 +140,10 @@ end;
 procedure TfGrate.FormKeyDown(Sender: TObject; var Key: Word;
 	Shift: TShiftState);
 begin
-	if (Key = VK_F10) and (ssShift in Shift) then PopupMenu1.Popup(0, 0);
-	if Key = VK_ESCAPE then Close;
+	if (Key = VK_F10) and (ssShift in Shift) then
+		PopupMenu1.Popup(0, 0);
+	if Key = VK_ESCAPE then
+		Close;
 end;
 
 procedure TfGrate.ShowGrate1Click(Sender: TObject);

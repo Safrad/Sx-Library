@@ -1,6 +1,6 @@
 object fSysInfo: TfSysInfo
   Left = 964
-  Top = 316
+  Top = 291
   BorderStyle = bsDialog
   Caption = 'System Info'
   ClientHeight = 297
@@ -179,6 +179,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 6
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object edMF: TDEdit
     Left = 176
@@ -191,6 +192,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 7
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object edFF: TDEdit
     Left = 176
@@ -203,6 +205,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 8
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object edFT: TDEdit
     Left = 240
@@ -215,6 +218,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 9
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object edMU: TDEdit
     Left = 112
@@ -227,6 +231,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 10
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object edFU: TDEdit
     Left = 112
@@ -239,6 +244,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 11
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object EditOS: TDEdit
     Left = 64
@@ -251,6 +257,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 1
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object EditCPU: TDEdit
     Left = 64
@@ -263,6 +270,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 2
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object ButtonOk: TDButton
     Left = 216
@@ -292,6 +300,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 4
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object EditDuron: TDEdit
     Left = 104
@@ -304,6 +313,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 5
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object EditCPUUsage: TDEdit
     Left = 103
@@ -316,6 +326,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 3
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object EditCounter: TDEdit
     Left = 103
@@ -328,6 +339,7 @@ object fSysInfo: TfSysInfo
     ReadOnly = True
     TabOrder = 12
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object ComboBoxSize: TComboBox
     Left = 216

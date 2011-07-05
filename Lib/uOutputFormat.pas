@@ -450,7 +450,7 @@ begin
 		else
 			Sep := ',';
 
-		Result := NToS(Round(Nu), D, OutputFormat);
+		Result := NToS(RoundN(Nu), D, OutputFormat);
 		if Pos(Sep, Result) <> 0 then
 		begin
 			DelEndChar(Result, '0');
@@ -1040,7 +1040,7 @@ begin
 			Result := 'unknown';
 		end;
 	else
-		Result := MsToStr(Round(T * MSecsPerDay), diHHMSD, Decimals, False, OutputFormat);
+		Result := MsToStr(RoundN(T * MSecsPerDay), diHHMSD, Decimals, False, OutputFormat);
 	end;
 end;
 

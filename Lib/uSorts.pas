@@ -58,6 +58,8 @@ procedure SortStr(const AIndex: PArraySG; const AString: PArrayString; const Cou
 // Stable Megre sort used for strings (few comparison)
 procedure Sort(const AIndex: PArraySG; const Count: SG; const Compare: TCompare; const Reverse: BG = False);
 
+function LocaleCompareText(const S1, S2: string): SG;
+
 implementation
 
 uses
@@ -257,6 +259,13 @@ end;
 
 var
 	AStr: PArrayString;
+
+function LocaleCompareText(const S1, S2: string): SG;
+begin
+	Result := CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
+		PChar(S1), Length(S1),
+		PChar(S2), Length(S2)) - 2;
+end;
 
 function Compare(const Index0, Index1: SG): SG;
 begin

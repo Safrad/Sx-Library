@@ -317,7 +317,6 @@ var
 	Created: TDateTime;
 	P: PItem;
 	AIndex: array of SG;
-
 begin
 	Items := TData.Create;
 	try
@@ -353,7 +352,18 @@ begin
 			begin
 				if (DelFileExt(ExtractFileName(FileNames[i])) <> 'index') then
 				begin
-					AddFile(Dir + FileNames[i], FileNames[i], '', FileTimeToDateTime(GetFileModificationDateTime(Dir + FileNames[i])));
+					AddFile(Dir + FileNames[i], FileNames[i], 'David Šafránek', FileTimeToDateTime(GetFileModificationDateTime(Dir + FileNames[i])));
+				end;
+			end;
+
+			FileNamesCount := 0;
+			ReadDir(FileNames, FileNamesCount, Dir, [], False, True, False, False);
+			for i := 0 to FileNamesCount - 1 do
+			begin
+				FileName := Dir + FileNames[i] + IndexFile;
+				if FileExists(FileName) then
+				begin
+					AddFile(FileName, DelLastChar(FileNames[i]), 'David Šafránek', FileTimeToDateTime(GetFileModificationDateTime(FileName)));
 				end;
 			end;
 

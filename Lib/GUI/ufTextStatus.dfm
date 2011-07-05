@@ -1,10 +1,10 @@
-object fStatus: TfStatus
+object fTextStatus: TfTextStatus
   Left = 903
   Top = 715
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsToolWindow
   Caption = 'Status'
-  ClientHeight = 117
+  ClientHeight = 149
   ClientWidth = 275
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,14 +14,12 @@ object fStatus: TfStatus
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
-  OnClose = FormClose
   OnCreate = FormCreate
-  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object DGauge: TDGauge
     Left = 0
-    Top = 0
+    Top = 32
     Width = 275
     Height = 25
     FontShadow = 1
@@ -29,9 +27,48 @@ object fStatus: TfStatus
     Max = 1024
     Color = clAppWorkSpace
   end
+  object EditElapsedTime: TLabeledEdit
+    Left = 80
+    Top = 64
+    Width = 89
+    Height = 21
+    Color = clBtnFace
+    EditLabel.Width = 64
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Elapsed Time'
+    LabelPosition = lpLeft
+    ReadOnly = True
+    TabOrder = 1
+  end
+  object EditRemainTime: TLabeledEdit
+    Left = 80
+    Top = 88
+    Width = 89
+    Height = 21
+    Color = clBtnFace
+    EditLabel.Width = 62
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Remain Time'
+    LabelPosition = lpLeft
+    ReadOnly = True
+    TabOrder = 2
+  end
+  object EditTotalTime: TLabeledEdit
+    Left = 80
+    Top = 112
+    Width = 89
+    Height = 21
+    Color = clBtnFace
+    EditLabel.Width = 50
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Total Time'
+    LabelPosition = lpLeft
+    ReadOnly = True
+    TabOrder = 3
+  end
   object ButtonStop: TDButton
     Left = 177
-    Top = 85
+    Top = 117
     Width = 89
     Height = 25
     Caption = '&Stop'
@@ -41,12 +78,12 @@ object fStatus: TfStatus
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 4
     OnClick = ButtonStopClick
   end
   object ButtonPause: TDButton
     Left = 177
-    Top = 57
+    Top = 89
     Width = 89
     Height = 25
     Caption = '&Pause'
@@ -56,38 +93,12 @@ object fStatus: TfStatus
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 2
+    TabOrder = 5
     OnClick = ButtonPauseClick
-  end
-  object EditElapsedTime: TLabeledEdit
-    Left = 80
-    Top = 32
-    Width = 89
-    Height = 21
-    Color = clBtnFace
-    EditLabel.Width = 64
-    EditLabel.Height = 13
-    EditLabel.Caption = 'Elapsed Time'
-    LabelPosition = lpLeft
-    ReadOnly = True
-    TabOrder = 3
-  end
-  object EditRemainTime: TLabeledEdit
-    Left = 80
-    Top = 56
-    Width = 89
-    Height = 21
-    Color = clBtnFace
-    EditLabel.Width = 62
-    EditLabel.Height = 13
-    EditLabel.Caption = 'Remain Time'
-    LabelPosition = lpLeft
-    ReadOnly = True
-    TabOrder = 4
   end
   object ButtonResume: TDButton
     Left = 177
-    Top = 29
+    Top = 61
     Width = 89
     Height = 25
     Caption = '&Resume'
@@ -97,20 +108,26 @@ object fStatus: TfStatus
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 5
+    TabOrder = 6
     OnClick = ButtonResumeClick
   end
-  object EditTotalTime: TLabeledEdit
-    Left = 80
-    Top = 80
-    Width = 89
+  object edtAction: TLabeledEdit
+    Left = 40
+    Top = 8
+    Width = 225
     Height = 21
     Color = clBtnFace
-    EditLabel.Width = 50
+    EditLabel.Width = 30
     EditLabel.Height = 13
-    EditLabel.Caption = 'Total Time'
+    EditLabel.Caption = 'Action'
     LabelPosition = lpLeft
     ReadOnly = True
-    TabOrder = 6
+    TabOrder = 7
+  end
+  object Timer1: TTimer
+    Interval = 100
+    OnTimer = Timer1Timer
+    Left = 8
+    Top = 120
   end
 end

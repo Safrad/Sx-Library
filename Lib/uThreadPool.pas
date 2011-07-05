@@ -14,6 +14,7 @@ type
 	private
 		// Name: string;
 	protected
+		Thread: TThread;
 		procedure Execute; virtual; abstract;
 	end;
 
@@ -253,6 +254,7 @@ begin
 				{$endif}
 				Inc(FThreadPool.FWorking);
 				try
+				  Command.Thread := Self;
 					Command.Execute;
 				finally
 					Dec(FThreadPool.FWorking);

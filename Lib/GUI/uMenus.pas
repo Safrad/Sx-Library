@@ -33,7 +33,7 @@ implementation
 
 uses
 	Forms, Controls, SysUtils, ShellAPI,
-	uDButton, uStrings, uColor, uDictionary, uSounds, uSplash, uParams, uDrawStyle,
+	uDButton, uStrings, uColor, uDictionary, uSounds, uSplash, uParams, uDrawStyle, uCommon,
 	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uAPI, uMath, uDParser, uLog, uOutputFormat;
 
 var
@@ -263,13 +263,12 @@ begin
 
 	BCanvas.Font := ACanvas.Font;
 
-	{ if NowBits <= 11 then
-		begin
+	if not GetBackgroundWindowTexture then //NowBits <= 11 then
+	begin
 		MenuBmp.Bar(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1,
-		clMenu, ef16);
-		end
-		else }
-	if TopLevel then
+			clMenu, ef16);
+	end
+	else if TopLevel then
 	begin
 		Co[0] := ColorDiv(clMenu, 9 * 65536 div 8);
 		Co[1] := ColorDiv(clMenu, 7 * 65536 div 8);
@@ -329,7 +328,9 @@ begin
 				C2 := clDepth[3];
 			end;
 
-			if TopLevel then
+			if not GetBackgroundWindowTexture then
+				MenuBmp.Bar(0, 0, MenuBmp.Width - 1, MenuBmp.Height - 1, clHighLight, ef16)
+			else if TopLevel then
 			begin
 				Co[0] := ColorDiv(clMenu, 4 * 65536 div 3);
 				Co[1] := ColorDiv(clMenu, 2 * 65536 div 3);
@@ -559,7 +560,6 @@ var
 	Found: UG;
 	Name: string;
 begin
-	Found := 0;
 	if (Menu is TMenu) or (Menu is TPopupMenu) then
 	begin
 		c := TMenu(Menu).Items.Count
@@ -569,6 +569,7 @@ begin
 	else
 		Exit;
 
+	Found := 0;
 	for i := 0 to c - 1 do
 	begin
 		if (Menu is TMenu) or (Menu is TPopupMenu) then
@@ -592,6 +593,22 @@ begin
 							(M.Name <> 'FileExtensions1') and (M.Name <> 'Sounds1') and
 							(M.Name <> 'RegisterStartup1') and (not StartStr('View', M.Name)) then
 						begin
+							if (Found = 0) and (Panel.ControlCount > 0) then
+							begin
+								Bevel := TBevel.Create(Panel);
+								Bevel.Name := Menu.Name + 'Bevel';
+								Bevel.SetBounds(0, 0, BevelWidth, IconSize);
+								Bevel.Shape := bsLeftLine;
+								// Inc(IconX, BevelWidth);
+								{ if IconX >= Panel.Width - 4 * IconSize then
+									begin
+									IconX := 0;
+									Inc(IconY, Bevel.Height + 2);
+									end; }
+
+								Panel.InsertControl(Bevel);
+							end;
+
 							Name := M.Name + IconSuffix;
 							{ if Panel.FindComponent(Name) <> nil then
 								Name := M.Name + 'Icon2'; }
@@ -622,21 +639,6 @@ begin
 		end
 		else if M.Name <> 'Help1' then
 			IconsFromMenu(M, Panel);
-	end;
-	if Found > 0 then
-	begin
-		Bevel := TBevel.Create(Panel);
-		Bevel.Name := Menu.Name + 'Bevel';
-		Bevel.SetBounds(0, 0, BevelWidth, IconSize);
-		Bevel.Shape := bsLeftLine;
-		// Inc(IconX, BevelWidth);
-		{ if IconX >= Panel.Width - 4 * IconSize then
-			begin
-			IconX := 0;
-			Inc(IconY, Bevel.Height + 2);
-			end; }
-
-		Panel.InsertControl(Bevel);
 	end;
 end;
 
@@ -866,11 +868,11 @@ begin
 end;
 *)
 class procedure TOb.OnMeasureItem(Sender: TObject; ACanvas: TCanvas;
-  var Width, Height: Integer);
+	var Width, Height: Integer);
 var
-  mMenuItem: TMenuItem;
-  KeyStr: string;
-  mParent: TObject;
+	mMenuItem: TMenuItem;
+	KeyStr: string;
+	mParent: TObject;
 	mTopLevel: Boolean;
 begin
 	mMenuItem := (Sender as TMenuItem);
@@ -879,21 +881,21 @@ begin
 	if not mTopLevel then
 	begin
 		Width := IconSize;
-  end
-  else
-  begin
-    Width := 0;
-  end;
-  Inc(Width, ACanvas.TextWidth(RemoveSingleAmp(mMenuItem.Caption)));
-  KeyStr := KeyToStr(mMenuItem.Shortcut);
-  if KeyStr <> '' then
-  begin
-    Inc(Width, 8 + ACanvas.TextWidth(KeyStr));
-  end;
-  if mMenuItem.Count > 0 then
-  begin
-    // Space for right arrow
-    Inc(Width, 8);
+	end
+	else
+	begin
+		Width := 0;
+	end;
+	Inc(Width, ACanvas.TextWidth(RemoveSingleAmp(mMenuItem.Caption)));
+	KeyStr := KeyToStr(mMenuItem.Shortcut);
+	if KeyStr <> '' then
+	begin
+		Inc(Width, 8 + ACanvas.TextWidth(KeyStr));
+	end;
+	if mMenuItem.Count > 0 then
+	begin
+		// Space for right arrow
+		Inc(Width, 8);
 	end;
 
 	Height := 5;

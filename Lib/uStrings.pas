@@ -32,6 +32,8 @@ const
 
 	EnumPrefixLength = 2;
 	NAStr = 'N/A';
+	CharNone = CharHyphen;
+	CharError = '~';
 	FalseTrue: array[0..1] of string = ('false', 'true');
 	NoYes: array[0..1] of string = ('No', 'Yes');
 
@@ -107,6 +109,8 @@ function ReadToString(const Line: string; var LineIndex: SG;
 function ReadToString(const Line: string;	const S: string): string; overload;
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string; overload;
+function ReadToCharsEx(const Line: string; var LineIndex: SG;
+	const C: TCharSet): string; overload;
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet; out LastChar: Char): string; overload;
 function ReadToSingleChar(const Line: string; var LineIndex: Integer;
@@ -122,8 +126,10 @@ function CapitalCase(const s: string): string;
 
 function ReplaceF(const s: string; const WhatS, ToS: string): string; overload;
 function ReplaceF(const s: string; const WhatS, ToS: array of string): string; overload;
+function ReplacePatternF(const s: string; const Pattern: array of TStringPair): string;
 procedure Replace(var s: string; const WhatS, ToS: string); overload;
 procedure Replace(var s: string; const WhatS, ToS: array of string); overload;
+procedure ReplacePattern(var s: string; const Pattern: array of TStringPair);
 
 function DoubleBackSlash(const s: string): string;
 function RemoveSingleAmp(const s: string): string;
@@ -730,6 +736,20 @@ begin
 	Inc(LineIndex);
 end;
 
+function ReadToCharsEx(const Line: string; var LineIndex: SG;
+	const C: TCharSet): string;
+var
+	StartIndex: SG;
+	LineLength: SG;
+begin
+	StartIndex := LineIndex;
+	LineLength := Length(Line);
+	while (LineIndex <= LineLength) and (not CharInSet(Line[LineIndex], C)) do
+		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex + 1);
+	Inc(LineIndex);
+end;
+
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet; out LastChar: Char): string;
 var
@@ -893,6 +913,12 @@ begin
 	Replace(Result, WhatS, ToS);
 end;
 
+function ReplacePatternF(const s: string; const Pattern: array of TStringPair): string;
+begin
+	Result := s;
+	ReplacePattern(Result, Pattern);
+end;
+
 procedure Replace(var s: string; const WhatS, ToS: string);
 var
 	Po, Index: SG;
@@ -974,6 +1000,23 @@ begin
 	end;
 end;
 
+procedure ReplacePattern(var s: string; const Pattern: array of TStringPair);
+var
+	WhatS, ToS: array of string;
+	PatternLength: SG;
+	i: SG;
+begin
+	PatternLength := Length(Pattern);
+	SetLength(WhatS, PatternLength);
+	SetLength(ToS, PatternLength);
+	for i := 0 to PatternLength - 1 do
+	begin
+		WhatS[i] := Pattern[i].Name;
+		ToS[i] := Pattern[i].Value;
+	end;
+	Replace(s, WhatS, ToS);
+end;
+
 function DoubleBackSlash(const s: string): string;
 var i: SG;
 begin
@@ -987,30 +1030,30 @@ end;
 
 function RemoveSingleAmp(const s: string): string;
 var
-  SourceLength: Integer;
-  LastAmp: Boolean;
-  ResultLength: Integer;
-  i: Integer;
+	SourceLength: Integer;
+	LastAmp: Boolean;
+	ResultLength: Integer;
+	i: Integer;
 begin
-  SourceLength := Length(s);
-  SetLength(Result, SourceLength);
-  ResultLength := 0;
-  LastAmp := False;
-  for i := 1 to SourceLength do
-  begin
-    if s[i] = '&' then
-    begin
-      if not LastAmp then
-      begin
-        LastAmp := True;
-        Continue;
-      end;
-    end;
-    LastAmp := False;
-    Inc(ResultLength);
-    Result[ResultLength] := s[i];
-  end;
-  SetLength(Result, ResultLength);
+	SourceLength := Length(s);
+	SetLength(Result, SourceLength);
+	ResultLength := 0;
+	LastAmp := False;
+	for i := 1 to SourceLength do
+	begin
+		if s[i] = '&' then
+		begin
+			if not LastAmp then
+			begin
+				LastAmp := True;
+				Continue;
+			end;
+		end;
+		LastAmp := False;
+		Inc(ResultLength);
+		Result[ResultLength] := s[i];
+	end;
+	SetLength(Result, ResultLength);
 end;
 
 function Code(const s: string; const Decode: BG): string;
@@ -1060,7 +1103,8 @@ procedure CorrectDir(var s: string);
 var i: SG;
 begin
 	i := Length(s);
-	if (i > 0) and (s[i] <> PathDelim) then s := s + PathDelim;
+	if (i > 0) and (s[i] <> PathDelim) then
+		s := s + PathDelim;
 end;
 
 function CorrectDirF(const s: string): string;

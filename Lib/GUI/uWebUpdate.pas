@@ -10,13 +10,14 @@ const
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 function GetWebVersion(const Web: string): string;
-procedure CheckForUpdate(const ShowMessageIfSuccess: BG = True);
+procedure CheckForUpdate; overload;
+procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
 
 implementation
 
 uses
 	uLog,
-	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion,
+	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion, ufTextStatus,
 	Windows, Classes, IdHTTP, SysUtils;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
@@ -65,14 +66,24 @@ begin
 	end;
 end;
 
-procedure CheckForUpdate(const ShowMessageIfSuccess: BG = True);
+procedure CheckForUpdate; overload;
+begin
+	CheckForUpdate(True);
+end;
+
+procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
 var
 	WebVersion, LocalVersion: string;
 	Web: string;
 begin
 //	Web := MyWeb + '/Software/' + GetProjectInfo(piInternalName) + '/';
 	Web := GetProjectInfo(piWeb);
-	WebVersion := GetWebVersion(Web);
+//	ShowStatusWindow('Receiving project version from Web.');
+	try
+		WebVersion := GetWebVersion(Web);
+	finally
+//		HideStatusWindow;
+	end;
 	if WebVersion = '?' then
 		Exit;
 

@@ -881,6 +881,5 @@ initialization
 
 finalization
 
-FreeAndNil(fGColor);
-
+//FreeAndNil(fGColor); // TODO -oSafrad : Cause Runtime Error
 end.

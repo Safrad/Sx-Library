@@ -5,7 +5,7 @@ interface
 {$R *.RES}
 
 uses
-	uTypes, uMath, uFiles, uDImage, uDIniFile,
+	uTypes, uMath, uFiles, uDImage, uDIniFile, uTextFilter,
 	Classes, Controls, Windows, Graphics, SysUtils, Messages;
 
 const
@@ -36,6 +36,8 @@ type
 	TOnGetRowCount = function(Sender: TObject): SG of object;
 	TOnGetData = procedure(Sender: TObject; var Data: string; ColIndex, RowIndex: Integer;
 		Rect: TRect) of object;
+	TOnGetDataEx = procedure(Sender: TObject; var Data: Variant; ColIndex, RowIndex: Integer;
+		Rect: TRect) of object;
 	TLVColumnClickEvent = procedure(Sender: TObject; Column: TColumn) of object;
 	TOnCellClick = procedure(Sender: TObject; ColumnIndex, RowIndex: SG; Shift: TShiftState)
 		of object;
@@ -51,6 +53,7 @@ type
 		BDown: Boolean;
 		FOnGetRowCount: TOnGetRowCount;
 		FOnGetData: TOnGetData;
+		FOnGetDataEx: TOnGetDataEx;
 		FOnColumnClick: TLVColumnClickEvent;
 
 		DragColumn, DragFrom: SG;
@@ -59,7 +62,8 @@ type
 		FStartShift: SG;
 
 		FColumnCount: SG;
-		FRowCount: SG;
+		FAllRowCount: SG;
+		FFilteredRowCount: SG;
 
 		FActualRow: SG;
 		FActualColumn: SG;
@@ -74,6 +78,7 @@ type
 		FSortBy: SG;
 
 		FOnCellClick: TOnCellClick;
+		FTextFilter: TTextFilter;
 
 		function PhysicalRow(const Row: SG): SG;
 		procedure ScrollToActualCell;
@@ -107,6 +112,7 @@ type
 		procedure CMWantSpecialKey(var Message: TCMWantSpecialKey);
 		message CM_WANTSPECIALKEY;
 		procedure SetActualRow(const Value: SG);
+		procedure UpdateFilter(Sender: TObject);
 	protected
 		{ Protected declarations }
 		procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -141,7 +147,7 @@ type
 		procedure OptimalColumnsWidth;
 
 		// Rows
-		property RowCount: SG read FRowCount write SetRowCount;
+		property RowCount: SG read FAllRowCount write SetRowCount;
 		property RowOrder: TArrayOfSG read FRowOrder;
 		property RowHeight: SG read FRowHeight;
 		property ActualRow: SG read FActualRow write SetActualRow;
@@ -170,6 +176,7 @@ type
 		{ Published declarations }
 		property OnGetRowCount: TOnGetRowCount read FOnGetRowCount write FOnGetRowCount;
 		property OnGetData: TOnGetData read FOnGetData write FOnGetData;
+		property OnGetDataEx: TOnGetDataEx read FOnGetDataEx write FOnGetDataEx;
 		property OnColumnClick: TLVColumnClickEvent read FOnColumnClick write FOnColumnClick;
 		property OnCellClick: TOnCellClick read FOnCellClick write FOnCellClick;
 	end;
@@ -179,9 +186,10 @@ procedure Register;
 implementation
 
 uses
-	Math, StdCtrls, ClipBrd,
+	Math, StdCtrls, ClipBrd, Types, Forms,
 	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uOutputFormat, uDrawStyle,
-	uDWinControl, Types;
+	uDWinControl,
+	fFind, Variants;
 
 { TDView }
 
@@ -264,7 +272,7 @@ begin
 	begin
 		Inc(MY, OfsY);
 		IY := (MY - FRowHeight) div FRowHeight;
-		if (IY >= 0) and (IY < FRowCount) then
+		if (IY >= 0) and (IY < FFilteredRowCount) then
 			Result := vaRow
 		else
 			IY := -1;
@@ -276,7 +284,7 @@ var
 	i: SG;
 begin
 	if not(ssCtrl in Shift) then
-		for i := 0 to FRowCount - 1 do
+		for i := 0 to FAllRowCount - 1 do
 			FSelectedRows[i] := False;
 	if (ssShift in Shift) and (FActualRow <> -1) then
 	begin
@@ -479,12 +487,12 @@ begin
 							begin
 								if FColumns[FColumnOrder[IX]].Click then
 								begin
-									Id := GetSortIndex(IX);
+									Id := GetSortIndex(FColumnOrder[IX]);
 									if ssCtrl in Shift then
 									begin
 										if Id >= 0 then
 										begin
-											FSortByOrders[Id] := not FSortByOrders[Id]
+											FSortByOrders[Id] := not FSortByOrders[Id];
 										end
 										else
 										begin
@@ -591,6 +599,15 @@ begin
 				CopySelection;
 				Exit;
 			end;
+		Ord('F'):
+			begin
+				if not Assigned(FTextFilter) then
+					FTextFilter := TTextFilter.Create;
+				FTextFilter.OnUpdate := UpdateFilter;
+				FindDialog(FTextFilter);
+//				FreeAndNil(FTextFilter);
+				Exit;
+			end;
 		end;
 	end;
 
@@ -643,7 +660,7 @@ begin
 		begin
 			if GetKeyState(VK_Scroll) = 0 then
 			begin
-				if PhysicalRow(FActualRow) < FRowCount - 1 then
+				if PhysicalRow(FActualRow) < FFilteredRowCount - 1 then
 				begin
 					CellClick(-1, PhysicalRow(FActualRow) + 1, Shift);
 				end;
@@ -658,7 +675,7 @@ begin
 		begin
 			if GetKeyState(VK_Scroll) = 0 then
 			begin
-				if FRowCount > 0 then
+				if FFilteredRowCount > 0 then
 					CellClick(-1, Max(0, PhysicalRow(FActualRow) - (NowMaxHeight - FRowHeight) div FRowHeight)
 							, Shift);
 			end
@@ -670,8 +687,8 @@ begin
 		begin
 			if GetKeyState(VK_Scroll) = 0 then
 			begin
-				if FRowCount > 0 then
-					CellClick(-1, Min(FRowCount - 1, PhysicalRow(FActualRow) + (NowMaxHeight - FRowHeight)
+				if FFilteredRowCount > 0 then
+					CellClick(-1, Min(FFilteredRowCount - 1, PhysicalRow(FActualRow) + (NowMaxHeight - FRowHeight)
 								div FRowHeight), Shift);
 			end
 			else
@@ -682,7 +699,7 @@ begin
 		begin
 			if GetKeyState(VK_Scroll) = 0 then
 			begin
-				if FRowCount > 0 then
+				if FFilteredRowCount > 0 then
 					CellClick(-1, 0, Shift);
 			end
 			else
@@ -693,8 +710,8 @@ begin
 		begin
 			if GetKeyState(VK_Scroll) = 0 then
 			begin
-				if FRowCount > 0 then
-					CellClick(-1, FRowCount - 1, Shift);
+				if FFilteredRowCount > 0 then
+					CellClick(-1, FFilteredRowCount - 1, Shift);
 			end
 			else
 				ScrollEnd;
@@ -741,6 +758,7 @@ var
 	s: string;
 	ColIndex, RowIndex: SG;
 	SortIndex: SG;
+	VarData: Variant;
 begin
 	SetZoom(Zoom);
 	if Bitmap.Empty then
@@ -786,7 +804,7 @@ begin
 				IY := OfsY div FRowHeight;
 				while Y < Bitmap.Height do
 				begin
-					if (IY >= 0) and (IY < FRowCount) then
+					if (IY >= 0) and (IY < FFilteredRowCount) then
 					begin
 						if FSelectedRows[FRowOrder[IY]] then
 						begin
@@ -804,8 +822,8 @@ begin
 						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].RealWidth - 2, Y + FRowHeight - 2,
 							Bitmap.Canvas.Brush.Color, ef16);
 						if Assigned(FOnGetRowCount) then
-							FRowCount := FOnGetRowCount(Self);
-						if Assigned(FOnGetData) then
+							FAllRowCount := FOnGetRowCount(Self);
+						if Assigned(FOnGetData) or Assigned(FOnGetDataEx) then
 						begin
 							ColIndex := FColumnOrder[IX];
 							RowIndex := FRowOrder[IY];
@@ -821,7 +839,7 @@ begin
 								Bitmap.Canvas.Font.Color := clHotLight
 							else
 								Bitmap.Canvas.Font.Color := clWindowText;
-							if (RowIndex < 0) or (RowIndex >= FRowCount) then
+							if (RowIndex < 0) or (RowIndex >= FAllRowCount) then
 							begin
 								Data := {$IFOPT d+} '<Row out of range>' {$ELSE} '' {$ENDIF};
 							end
@@ -833,9 +851,19 @@ begin
 							begin
 								Data := {$IFOPT d+} '<Empty>' {$ELSE} '' {$ENDIF};
 								try
-									FOnGetData(Self, Data, ColIndex, RowIndex, Rect
-											(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].RealWidth - 2,
-											Y + FRowHeight - 2));
+									if Assigned(FOnGetData) then
+									begin
+										FOnGetData(Self, Data, ColIndex, RowIndex, Rect
+												(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].RealWidth - 2,
+												Y + FRowHeight - 2));
+									end
+									else
+									begin
+										FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rect
+												(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].RealWidth - 2,
+												Y + FRowHeight - 2));
+										Data := VarToStr(VarData);
+									end;
 								except
 									on E: Exception do
 										Fatal(E, Self);
@@ -845,7 +873,7 @@ begin
 						else
 							Data := {$IFOPT d+} '<No data event defined>' {$ELSE} '' {$ENDIF};
 
-						if Assigned(FOnGetData) and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth) and
+						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx))and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth) and
 							(FColumns[FColumnOrder[IX]].OwnDraw = False) then
 						begin
 							R.Left := X + Border + LeftOffset { Microsoft Sans Serif } ;
@@ -857,6 +885,7 @@ begin
 							begin
 								if (HotColumn = IX) and (HotRow = IY) then
 								begin
+									Application.ProcessMessages;
 									Hint := Data;
 									ShowHint := True;
 								end;
@@ -1004,10 +1033,11 @@ var
 	Data: string;
 	RowIndex, ColIndex: SG;
 	Rec: TRect;
+	VarData: Variant;
 begin
 	if Assigned(FOnGetRowCount) then
-		FRowCount := FOnGetRowCount(Self);
-	if Assigned(FOnGetData) and (FRowCount > 0) then
+		FAllRowCount := FOnGetRowCount(Self);
+	if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FAllRowCount > 0) then
 	begin
 		// Automatic hides empty column
 		for i := 0 to Length(FColumns) - 1 do
@@ -1015,11 +1045,19 @@ begin
 
 		for ColIndex := 0 to Length(FColumns) - 1 do
 		begin
-			for RowIndex := 0 to FRowCount - 1 do
+			for RowIndex := 0 to FAllRowCount - 1 do
 			begin
 				Data := '';
 				try
-					FOnGetData(Self, Data, ColIndex, RowIndex, Rec);
+					if Assigned(FOnGetData) then
+					begin
+						FOnGetData(Self, Data, ColIndex, RowIndex, Rec);
+					end
+					else
+					begin
+						FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rec);
+						Data := VarToStr(VarData);
+					end;
 				except
 					on E: Exception do
 						Fatal(E, Self);
@@ -1056,7 +1094,7 @@ begin
 			FColumns[i].RealWidth := Width div FColumnCount
 		else
 			FColumns[i].RealWidth := FColumns[i].Width;
-		FColumns[i].RealWidth := Round(Zoom * FColumns[i].RealWidth);
+		FColumns[i].RealWidth := RoundN(Zoom * FColumns[i].RealWidth);
 		if FColumns[i].Visible = False then
 			Continue;
 		Inc(TableWidth, FColumns[i].RealWidth);
@@ -1068,7 +1106,7 @@ end;
 
 procedure TDView.SelectRow(const Index: SG);
 begin
-	if (Index >= 0) and (Index < FRowCount) then
+	if (Index >= 0) and (Index < FAllRowCount) then
 	begin
 		FActualRow := FRowOrder[Index];
 		FSelectedRows[FActualRow] := True;
@@ -1081,7 +1119,7 @@ procedure TDView.SelectAll;
 var
 	i: SG;
 begin
-	for i := 0 to FRowCount - 1 do
+	for i := 0 to FAllRowCount - 1 do
 	begin
 		FSelectedRows[i] := True;
 	end;
@@ -1094,7 +1132,7 @@ procedure TDView.DeselectAll;
 var
 	i: SG;
 begin
-	for i := 0 to FRowCount - 1 do
+	for i := 0 to FAllRowCount - 1 do
 	begin
 		FSelectedRows[i] := False;
 	end;
@@ -1107,7 +1145,7 @@ procedure TDView.SelectInvert;
 var
 	i: SG;
 begin
-	for i := 0 to FRowCount - 1 do
+	for i := 0 to FAllRowCount - 1 do
 	begin
 		FSelectedRows[i] := not FSelectedRows[i];
 	end;
@@ -1143,7 +1181,7 @@ var
 	i: SG;
 	NewSize: SG;
 begin
-	if Value <> FRowCount then
+	if Value <> FAllRowCount then
 	begin
 		NewSize := Value;
 		if AllocByExp(Length(FSelectedRows), NewSize) then
@@ -1151,38 +1189,79 @@ begin
 			SetLength(FSelectedRows, NewSize);
 			SetLength(FRowOrder, NewSize);
 		end;
-		if FRowCount < Value then
+		if FAllRowCount < Value then
 		begin
-			for i := FRowCount to Value - 1 do
+			for i := FAllRowCount to Value - 1 do
 			begin
 				FRowOrder[i] := i;
 			end;
 		end
 		else
 		begin
-			for i := 0 to Value - 1 do
+			FillOrderU4(RowOrder[0], Value);
+{			for i := 0 to Value - 1 do
 			begin
 				FRowOrder[i] := i;
-			end;
+			end;}
 		end;
-		FRowCount := Value;
+		FAllRowCount := Value;
+		FFilteredRowCount := Value;
 		InitTableHeight;
-		// Invalidate;
+		SortData;
+		Invalidate;
 	end;
 end;
 
 procedure TDView.SortData;
 var
 	i, c: SG;
+	VarTyp: TVarType;
 	AStr: array of string;
+	AInteger: array of SG;
+	AFloat: array of FA;
+	AInt64: array of S8;
+	VarData: Variant;
 	Rect: TRect;
 	FSortBySwap2: TArrayOfBG;
 	Last: SG;
+	Data: string;
+	ColIndex: SG;
+	Accept: BG;
 begin
-	if FRowCount = 0 then Exit;
-	
-	FillOrderU4(FRowOrder[0], FRowCount);
-	if (FRowCount > 1) then // Need some sort
+	if FAllRowCount = 0 then
+		Exit; // No Data
+
+	// Filter
+	if (not Assigned(FTextFilter)) or (FTextFilter.IsEmpty) then
+	begin
+		FFilteredRowCount := FAllRowCount;
+		FillOrderU4(FRowOrder[0], FFilteredRowCount);
+	end
+	else
+	begin
+		FFilteredRowCount := 0;
+		for i := 0 to FAllRowCount - 1 do
+		begin
+			Accept := False;
+			for ColIndex := 0 to Length(FColumns) - 1 do
+			begin
+				FOnGetData(Self, Data, ColIndex{FActualColumn}, i, Rect);
+				if FTextFilter.Accept(Data) then
+				begin
+					Accept := True;
+					Break;
+				end;
+			end;
+			if Accept then
+			begin
+				FRowOrder[FFilteredRowCount] := i;
+				Inc(FFilteredRowCount);
+			end;
+		end;
+	end;
+
+	// Sort
+	if (FFilteredRowCount > 1) then // Need some sort
 	begin
 		SetLength(FSortBySwap2, Length(FSortByOrders));
 		Last := 0;
@@ -1204,25 +1283,73 @@ begin
 						Fatal(E, Self);
 				end;
 				if FSortBySwap2[c] then
-					Reverse4(FRowOrder[0], FRowCount);
+					Reverse4(FRowOrder[0], FFilteredRowCount);
 			end
 			else
-			begin // Automatic (string) sort
-				SetLength(AStr, FRowCount);
+			begin // Automatic sort
+				if not Assigned(FOnGetDataEx) then
+				begin
+					VarTyp := varOleStr;
+				end
+				else
+				begin
+					FOnGetDataEx(Self, VarData, FSortByIndexes[c], 0, Rect);
+					VarTyp := VarType(VarData);
+				end;
+				case VarTyp of
+				varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord:
+					 SetLength(AInteger, FAllRowCount);
+				varInt64:
+					SetLength(AInt64, FAllRowCount);
+				varSingle, varDouble, varCurrency, varDate:
+					SetLength(AFloat, FAllRowCount);
+				varOleStr, varString:
+					SetLength(AStr, FAllRowCount);
+				end;
+
 				Rect.Left := 0;
 				Rect.Top := 0;
 				Rect.Right := 0;
 				Rect.Bottom := 0;
-				for i := 0 to FRowCount - 1 do
+				for i := 0 to FAllRowCount - 1 do
 				begin
 					try
-						FOnGetData(Self, AStr[i], FSortByIndexes[c], i, Rect);
+						if Assigned(FOnGetDataEx) then
+						begin
+							case VarTyp of
+							varOleStr, varString:
+								FOnGetDataEx(Self, VarData, FSortByIndexes[c], i, Rect)
+							else
+								FOnGetDataEx(Self, VarData, FSortByIndexes[c], FRowOrder[i], Rect);
+							end;
+							case VarTyp of
+							varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord:
+								AInteger[i] := VarData;
+							varInt64:
+								AInt64[i] := VarData;
+							varSingle, varDouble, varCurrency, varDate:
+								AFloat[i] := VarData;
+							varOleStr, varString:
+								AStr[i] := VarData;
+							end;
+						end
+						else
+							FOnGetData(Self, AStr[i], FSortByIndexes[c], FRowOrder[i], Rect);
 					except
 						on E: Exception do
 							Fatal(E, Self);
 					end;
 				end;
-				SortStr(PArraySG(FRowOrder), PArrayString(AStr), FRowCount, FSortBySwap2[c]);
+				case VarTyp of
+				varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord:
+					SortS4(True, FSortBySwap2[c], PArraySG(FRowOrder), PArrayS4(AInteger), FFilteredRowCount);
+				varInt64:
+					SortS8(True, FSortBySwap2[c], PArraySG(FRowOrder), PArrayS8(AInt64), FFilteredRowCount);
+				varSingle, varDouble, varCurrency, varDate:
+					SortFA(True, FSortBySwap2[c], PArraySG(FRowOrder), PArrayFA(AFloat), FFilteredRowCount);
+				varOleStr, varString:
+					SortStr(PArraySG(FRowOrder), PArrayString(AStr), FFilteredRowCount, FSortBySwap2[c]);
+				end;
 			end;
 		end
 	end;
@@ -1241,7 +1368,7 @@ var
 	i: SG;
 begin
 	Result := 0;
-	for i := 0 to FRowCount - 1 do
+	for i := 0 to FAllRowCount - 1 do
 		if FSelectedRows[i] then
 			Inc(Result);
 end;
@@ -1293,7 +1420,7 @@ begin
 	if Assigned(FOnGetData) then
 	begin
 		Rec := Rect(0, 0, 0, 0);
-		for R := 0 to FRowCount - 1 do
+		for R := 0 to FAllRowCount - 1 do
 		begin
 			RowIndex := FRowOrder[R];
 			if FSelectedRows[RowIndex] then
@@ -1448,7 +1575,7 @@ begin
 	inherited Serialize(IniFile, Save);
 
 	if Save = False then
-		c := 1
+		c := 0
 	else
 		c := Length(FSortByIndexes);
 	IniFile.RWNum(Section, 'SortByCount', c, Save);
@@ -1540,7 +1667,7 @@ end;}
 procedure TDView.SetZoom(Value: TZoom);
 begin
 	inherited;
-	Bitmap.Canvas.Font.Height := Round(Zoom * Font.Height);
+	Bitmap.Canvas.Font.Height := RoundN(Zoom * Font.Height);
 	if Bitmap.Canvas.Font.Height = 0 then
 		Bitmap.Canvas.Font.Height := 1;
 
@@ -1555,7 +1682,7 @@ var
 	i: SG;
 begin
 	Result := -1;
-	for i := 0 to FRowCount - 1 do
+	for i := 0 to FAllRowCount - 1 do
 	begin
 		if Row = FRowOrder[i] then
 		begin
@@ -1572,10 +1699,10 @@ var
 begin
 		n := 0;
 		Y := PhysicalRow(FActualRow);
-		while n < FRowCount do
+		while n < FAllRowCount do
 		begin
 			Inc(Y);
-			if Y >= FRowCount then
+			if Y >= FAllRowCount then
 				Y := 0;
 			try
 				FOnGetData(Self, Data, FColumnOrder[FActualColumn], FRowOrder[Y], Rect(0, 0, 0, 0));
@@ -1601,10 +1728,10 @@ begin
 
 	n := 0;
 	Y := PhysicalRow(FActualRow);
-	while n < FRowCount do
+	while n < FAllRowCount do
 	begin
 		Inc(Y);
-		if Y >= FRowCount then
+		if Y >= FAllRowCount then
 			Y := 0;
 		try
 			FOnGetData(Self, Data, FColumnOrder[FActualColumn], FRowOrder[Y], Rect(0, 0, 0, 0));
@@ -1624,7 +1751,8 @@ end;
 
 function TDView.IdealHeight: SG;
 begin
-	Result := UserHeight2 + ScrollBarHHeight;
+//	Result := UserHeight2 + ScrollBarHHeight;
+	Result := (RowCount + 1) * RowHeight + ScrollBarHHeight + 2;
 end;
 
 procedure TDView.OptimalColumnsWidth;
@@ -1634,8 +1762,8 @@ var
 	Data: string;
 begin
 	if Assigned(FOnGetRowCount) then
-		FRowCount := FOnGetRowCount(Self);
-	if (FRowCount = 0) then
+		FAllRowCount := FOnGetRowCount(Self);
+	if (FAllRowCount = 0) then
 		Exit;
 	try
 		for ColIndex := 0 to ColumnCount - 1 do
@@ -1645,7 +1773,7 @@ begin
 				OptimalColumnWidth := MinColumnWidth;
 				if Assigned(FOnGetData) then
 				begin
-					for RowIndex := 0 to FRowCount - 1 do
+					for RowIndex := 0 to FAllRowCount - 1 do
 					begin
 						try
 							Data := '';
@@ -1675,7 +1803,7 @@ procedure TDView.KeyPress(var Key: Char);
 begin
 	inherited;
 
-	if Assigned(FOnGetData) and (FRowCount > 0) and (FActualColumn >= 0) then
+	if Assigned(FOnGetData) and (FFilteredRowCount > 0) and (FActualColumn >= 0) then
 	begin
 		if Key = FLastKey then
 			NextRow(Key)
@@ -1699,9 +1827,15 @@ var
 	R: TRect;
 begin
 	R := UserArea;
-	R.Bottom := (FRowCount + 1) * FRowHeight;
+	R.Bottom := (FFilteredRowCount + 1) * FRowHeight;
 	UserArea := R;
 //	UserHeight := (FRowCount + 1) * FRowHeight;
+end;
+
+procedure TDView.UpdateFilter;
+begin
+	SortData;
+	Invalidate;
 end;
 
 end.

@@ -106,7 +106,7 @@ implementation
 
 uses
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
-	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle,
+	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uCommon,
 	uSounds, uSysInfo, uDWinControl;
 
 { TDButton }
@@ -348,12 +348,7 @@ begin
 
 	// Draw
 	InflateRect(Recta, -2, -2);
-	Co[0] := ColorDiv(FColor, 5 * 16384);
-	Co[1] := ColorDiv(FColor, 3 * 16384);
-	Co[2] := Co[0];
-	Co[3] := Co[1];
-//	{$ifopt d-}
-	if FSmall then
+	if FSmall or (GetBackgroundWindowTexture = False) then
 	begin
 		if IsDown then
 			Bitmap.Bar(Recta, LighterColor(FColor), ef16)
@@ -361,11 +356,14 @@ begin
 			Bitmap.Bar(Recta, FColor, ef16);
 	end
 	else
+	begin
+		Co[0] := ColorDiv(FColor, 5 * 16384);
+		Co[1] := ColorDiv(FColor, 3 * 16384);
+		Co[2] := Co[0];
+		Co[3] := Co[1];
 		Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			gfFade2x, Co, ef16, 0, nil);
-//	{$else}
-//	Bitmap.Bar(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1, FColor, ef16);
-//	{$endif}
+	end;
 
 	if IsDown then OffsetRect(Recta, 1, 1);
 	if FAutoChange then
@@ -567,11 +565,18 @@ begin
 
 	if (Orient = -1) and FHighNow and FEnabled then
 	begin
-		Co[0] := ColorDiv(FColor, 21504);
-		Co[1] := clBlack;
-		Co[2] := Co[0];
-		Co[3] := Co[1];
-		Bitmap.GenerateRGB(gfFade2x, Co, efAdd, nil);
+		if (GetBackgroundWindowTexture = False) then
+		begin
+			Bitmap.Bar(ColorDiv(FColor, 21504), efAdd);
+		end
+		else
+		begin
+			Co[0] := ColorDiv(FColor, 21504);
+			Co[1] := clBlack;
+			Co[2] := Co[0];
+			Co[3] := Co[1];
+			Bitmap.GenerateRGB(gfFade2x, Co, efAdd, nil);
+		end;
 	end;
 
 	if IsFocused and IsDefault then

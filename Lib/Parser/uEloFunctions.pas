@@ -4,19 +4,23 @@ interface
 
 uses uTypes, uVector, uOutputFormat;
 
+type
+	TElo = SG; // 0..2999;
 const
 	ScoreOne = 100;
 	MinimalELO = 1250;
+	MaximalElo = 2850;
 
-function GetElo(const Fruitfulness: FA): SG;
-function GetEloI(const Fruitfulness: SG): SG;
+function GetElo(const Fruitfulness: FA): TElo;
+function GetEloI(const Fruitfulness: SG): TElo;
 function GetArcElo(const EloDifference: FA): FA;
-function ExpectedRes(Elo, OpElo: SG; Bonus: SG; Rounded: BG): SG;
-function DeltaElo(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): Extended;
-function DeltaEloI(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): SG;
+function ExpectedRes(Elo, OpElo: TElo; Bonus: SG; Rounded: BG): SG;
+function DeltaElo(const Elo, AvgElo: TElo; Age: TDateTime; Score, GameCount: SG): Extended;
+function DeltaEloI(const Elo, AvgElo: TElo; const Age: TDateTime; const Score, GameCount: SG): SG;
 
 function ScoreToS(const Score: SG; const HTML: BG = True): string;
-function EloToStr(const Elo: SG; const OutputFormat: TOutputFormat): string;
+function EloToStr(const Elo: TElo; const OutputFormat: TOutputFormat): string;
+function HaveElo(const AElo: TElo): BG;
 
 implementation
 
@@ -35,19 +39,19 @@ var
 		72, 65, 57, 50, 43, 36, 29, 21, 14, 7, 0);
 // 0,5 + 1,4217 * 10^(-3) * x - 2,4336 * 10^(-7) * x * Abs(x) - 2,5140 * 10^(-9) * x * Abs(x)^2 + 1,9910 * 10^(-12) * x * Abs(x)^3
 
-function GetElo(const Fruitfulness: FA): SG;
+function GetElo(const Fruitfulness: FA): TElo;
 begin
 	if Fruitfulness <= 0 then
 		Result := -EloTable[0]
 	else if Fruitfulness >= 1 then
 		Result := EloTable[0]
 	else if Fruitfulness < 0.5 then
-		Result := -EloTable[Round(EloTableCount * Fruitfulness)]
+		Result := -EloTable[RoundN(EloTableCount * Fruitfulness)]
 	else
-		Result := EloTable[EloTableCount - Round(EloTableCount * Fruitfulness)];
+		Result := EloTable[EloTableCount - RoundN(EloTableCount * Fruitfulness)];
 end;
 
-function GetEloI(const Fruitfulness: SG): SG;
+function GetEloI(const Fruitfulness: SG): TElo;
 begin
 	if Fruitfulness <= 0 then
 		Result := -EloTable[0]
@@ -95,7 +99,7 @@ begin
 	end;
 end;
 
-function ExpectedRes(Elo, OpElo: SG; Bonus: SG; Rounded: BG): SG;
+function ExpectedRes(Elo, OpElo: TElo; Bonus: SG; Rounded: BG): SG;
 const // Calibrate
 	WhitePlus = 193;
 	StartElo = 1350;
@@ -123,7 +127,7 @@ begin
 	end
 	else
 	begin
-		Result := Round(ScoreOne * GetArcElo(Elo - OpElo));
+		Result := RoundN(ScoreOne * GetArcElo(Elo - OpElo));
 	end;
 end;
 
@@ -172,7 +176,7 @@ begin
 	Result := NumToVector(GetArcElo(e));
 end;
 
-function DeltaElo(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): Extended;
+function DeltaElo(const Elo, AvgElo: TElo; Age: TDateTime; Score, GameCount: SG): Extended;
 var
 	Coef: SG;
 begin
@@ -182,10 +186,10 @@ begin
 		Coef := 25
 	else
 		Coef := 15;
-	Result := Coef * (Score / ScoreOne - Round(100 * GameCount * GetArcElo(Elo - AvgElo)) / 100);
+	Result := Coef * (Score / ScoreOne - RoundN(100 * GameCount * GetArcElo(Elo - AvgElo)) / 100);
 end;
 
-function DeltaEloI(const Elo, AvgElo: SG; Age: TDateTime; Score, GameCount: SG): SG;
+function DeltaEloI(const Elo, AvgElo: TElo; const Age: TDateTime; const Score, GameCount: SG): SG;
 var
 	Coef: SG;
 begin
@@ -242,9 +246,9 @@ begin
 		end;
 		if j > 0 then
 		begin
-			e0 := Round(e / j); // Avg opponets elo
+			e0 := RoundN(e / j); // Avg opponets elo
 			if ArgCount and 1 = 0 then
-				Result := NumToVector(Round(VectorToNum(Args[0])){Delta} * (e1 - Round(100 * j * GetArcElo(MyElo - e0)) / 100))
+				Result := NumToVector(RoundN(VectorToNum(Args[0])){Delta} * (e1 - RoundN(100 * j * GetArcElo(MyElo - e0)) / 100))
 			else
 				Result := NumToVector(e0{Avg opponets elo} + GetELO(e1 / j));
 		end;
@@ -284,7 +288,7 @@ begin
 	end;
 end;
 
-function EloToStr(const Elo: SG; const OutputFormat: TOutputFormat): string;
+function EloToStr(const Elo: TElo; const OutputFormat: TOutputFormat): string;
 begin
 	if Elo = 0 then
 	begin
@@ -298,6 +302,11 @@ begin
 	begin
 		Result := IntToStr(Elo);
 	end;
+end;
+
+function HaveElo(const AElo: TElo): BG;
+begin
+	Result := (AElo > 1250{MinimalELO}); //and (AElo <> 1000) and (AElo <> 1100) and (AElo <> 1250);
 end;
 
 initialization

@@ -21,6 +21,8 @@ function Search(Pattern, Text: string; ErrorLen: SG = 0): SG; // 10x slower that
 
 implementation
 
+uses uStrings, SysUtils, uCharset;
+
 function FindS2(AValue: PArrayS2; var FromV, ToV: SG; const Value: S2; FindGroup: BG): Boolean;
 {$I Find.inc}
 

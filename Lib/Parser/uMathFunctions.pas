@@ -202,14 +202,14 @@ end;
 	opGCD: // Greatest Common Measure (Divident)
 	begin
 		if Node.ArgCount = 1 then
-			Result := Round(Calc(Node.Args[0]))
+			Result := RoundN(Calc(Node.Args[0]))
 		else if Node.ArgCount >= 2 then
 		begin
-			Result := Round(Calc(Node.Args[0]));
+			Result := RoundN(Calc(Node.Args[0]));
 
 			for i := 1 to Node.ArgCount - 1 do
 			begin
-				e := Round(Calc(Node.Args[i]));
+				e := RoundN(Calc(Node.Args[i]));
 
 				while Result <> e do
 				begin
@@ -227,16 +227,16 @@ end;
 	opLCM: // Less Common Multipicator
 	begin
 		if Node.ArgCount = 1 then
-			Result := Round(Calc(Node.Args[0]))
+			Result := RoundN(Calc(Node.Args[0]))
 		else if Node.ArgCount >= 2 then
 		begin
-			e0 := Round(Calc(Node.Args[0]));
+			e0 := RoundN(Calc(Node.Args[0]));
 
 			Result := e0;
 
 			for i := 1 to Node.ArgCount - 1 do
 			begin
-				e1 := Round(Calc(Node.Args[i]));
+				e1 := RoundN(Calc(Node.Args[i]));
 				e := e1;
 				while Result <> e do
 				begin
@@ -253,7 +253,7 @@ end;
 			end;
 			{$ifopt c+}
 			for i := 0 to Node.ArgCount - 1 do
-				Assert(Frac(Result / Round(Calc(Node.Args[i]))) = 0);
+				Assert(Frac(Result / RoundN(Calc(Node.Args[i]))) = 0);
 			{$endif}
 		end
 		else

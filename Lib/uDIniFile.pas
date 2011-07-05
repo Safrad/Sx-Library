@@ -7,7 +7,7 @@ uses
 	SysUtils, TypInfo,
 	Types
 {$IFNDEF Console}
-	, uDFile, uDButton,
+	, uDFile, uDButton, uDForm,
 	Classes, Forms, ComCtrls, StdCtrls, Controls, Menus
 {$ELSE}
 	, uRWFile
@@ -1119,13 +1119,17 @@ end;
 
 procedure TDIniFile.RWFormPos(const Form: TForm; const Save: BG);
 var
-	Left, Top, Width, Height: SG;
+	FormOrigin: TPoint;
+	FormSize: TSize;
 	WS: TWindowState;
-	{ R: TRect;
+{	R: TRect;
 		WindowLong: U4; }
 begin
 	if Save = False then
+	begin
+		Form.DefaultMonitor := dmDesktop;
 		Form.Position := poDesigned; // poDefaultPos
+	end;
 	// Assert(Save or (Form.Position = poDesigned));
 	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 	begin
@@ -1145,31 +1149,40 @@ begin
 			GetWindowRect(Form.Handle, R);
 			Form.WindowState := wsNormal; // DNW
 			end; }
-		Left := Form.Left;
-		Top := Form.Top;
-		Width := Form.Width;
-		Height := Form.Height;
-		if (Form.Position in [poDesigned, poDefaultSizeOnly]) then
-		begin
-			RWNum(Form.Name, 'Left', Left, Save);
-			RWNum(Form.Name, 'Top', Top, Save);
-		end;
-
-		if not(Form.Position in [poDefault, poDefaultSizeOnly]) then
+		FormOrigin.X := Form.Left;
+		FormOrigin.Y := Form.Top;
+		FormSize.cx := Form.Width;
+		FormSize.cy := Form.Height;
+		if not (Form.Position in [poDefault, poDefaultSizeOnly]) then
 			if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 			// if (not (Form is TDForm)) or (TDForm(Form).FullScreen = False) then
 			begin
-				RWNum(Form.Name, 'Width', Width, Save);
-				RWNum(Form.Name, 'Height', Height, Save);
+				RWNum(Form.Name, 'Width', FormSize.cx, Save);
+				RWNum(Form.Name, 'Height', FormSize.cy, Save);
 			end;
+
+		if (Form.Position in [poDesigned, poDefaultSizeOnly]) then
+		begin
+			if Save = False then
+				FormOrigin := TDForm(Form).CenterPoint;
+			RWNum(Form.Name, 'Left', FormOrigin.X, Save);
+			RWNum(Form.Name, 'Top', FormOrigin.Y, Save);
+		end;
+
 		if Save = False then
-			Form.SetBounds(Left, Top, Width, Height);
+		begin
+			Form.SetBounds(FormOrigin.X, FormOrigin.Y, FormSize.cx, FormSize.cy);
+		end;
 	end;
 	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 	begin
 		if Save = False then
 			Form.WindowState := WS;
 	end;
+{	R.Left := FormOrigin.X;
+	R.Top := FormOrigin.Y;
+	R.Right := FormOrigin.X + FormSize.cx;
+	R.Bottom := FormOrigin.Y + FormSize.cy;}
 end;
 
 procedure TDIniFile.RWFormPosV(const Form: TForm; const Save: BG);

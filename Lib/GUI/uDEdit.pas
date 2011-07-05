@@ -19,7 +19,7 @@ type
 	published
 		{$ifdef VER150}
 		property DoubleBuffered;
-		property ParentDoubleBuffered: BG read FParentDoubleBuffered;
+		property ParentDoubleBuffered: BG read FParentDoubleBuffered write FParentDoubleBuffered;
 //		property WantReturns: BG read FWantReturns write FWantReturns;
 		{$endif}
 	end;
@@ -33,8 +33,8 @@ procedure SetControlDesign(C: TComboBox; const WrongData: BG); overload;
 implementation
 
 uses
-  uColor,
-  Graphics;
+	uColor,
+	Graphics;
 
 procedure Register;
 begin

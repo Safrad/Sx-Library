@@ -18,7 +18,9 @@ type
 
 implementation
 
-uses SysUtils, uLog;
+uses
+	Forms, SysUtils,
+	uLog;
 
 procedure TDViewLogger.Add(const Line: string; const LogType: TMessageLevel);
 var
@@ -32,6 +34,8 @@ begin
 	M.Text := Line;
 	FDViewLog.RowCount := Messages.Count;
 	FDViewLog.DataChanged;
+//	FDViewLog.Repaint;
+//	Application.ProcessMessages;
 	MainLogAdd(Line, LogType);
 end;
 

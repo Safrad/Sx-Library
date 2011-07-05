@@ -168,7 +168,7 @@ begin
 	end
 	else
 		Done := True;
-end;    
+end;
 
 constructor TDTimer.Create(AOwner: TComponent);
 begin

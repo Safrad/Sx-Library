@@ -6,12 +6,13 @@ uses uTypes, uParserMsg;
 
 type
 	TVersionSuffix = (vsFinal, vsAlpha, vsBeta);
-	TSubVersion = (svMajor, svMinor, svRelease, svBuild);
-	TProjectVersion = record
+	TSubVersion = (svBuild, svRelease, svMinor, svMajor);
+	TProjectVersion = packed record
 		VersionSuffix: TVersionSuffix;
 		case Integer of
-		0: (Major, Minor, Release, Build: SG);
-		1: (SubVersions: array[TSubVersion] of SG);
+		0: (Build, Release, Minor, Major: U2);
+		1: (SubVersions: array[TSubVersion] of U2);
+		2: (All: S8);
 	end;
 
 const
@@ -48,6 +49,7 @@ begin
 	Result.Minor := 0;
 	Result.Release := 0;
 	Result.Build := 0;
+	Result.VersionSuffix := vsFinal;
 	if Version <> NAStr then
 	begin
 		InLineIndex := 1;
@@ -55,7 +57,9 @@ begin
 			Result.Major := StrToValI(ReadToChar(Version, InLineIndex, '.'), False, 0, 0, MaxInt, 1, Messages);
 			Result.Minor := StrToValI(ReadToChar(Version, InLineIndex, '.'), False, 0, 0, MaxInt, 1, Messages);
 			Result.Release := StrToValI(ReadToChar(Version, InLineIndex, '.'), False, 0, 0, MaxInt, 1, Messages);
-			Result.Build := StrToValI(ReadToChar(Version, InLineIndex, '.'), False, 0, 0, MaxInt, 1, Messages);
+			Result.Build := StrToValI(ReadToChar(Version, InLineIndex, '+'), False, 0, 0, MaxInt, 1, Messages);
+			if Copy(Version, InLineIndex, MaxInt) = '+' then
+				Result.VersionSuffix := vsBeta;
 		except
 
 		end;

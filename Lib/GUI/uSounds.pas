@@ -412,8 +412,8 @@ begin
 	MenuSet(PopupMenuSounds);
 
 	DViewSounds.AddColumn('Event', 114);
-	DViewSounds.AddColumn('Enabled', 48);
-	DViewSounds.AddColumn('File Name', DViewSounds.Width - 114 - 64 - 48);
+	DViewSounds.AddColumn('Enabled', 56);
+	DViewSounds.AddColumn('File Name', DViewSounds.Width - 114 - 64 - 56);
 	DViewSounds.AddColumn('Length', 64);
 
 	if Assigned(MainIni) then

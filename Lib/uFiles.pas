@@ -48,6 +48,7 @@ function GetFileSizeU(const FileName: TFileName): S8;
 function GetFileSizeS(const FileName: TFileName): string;
 function FileTimeToDateTime(F: TFileTime): TDateTime;
 function DateTimeToFileTime(const D: TDateTime): TFileTime;
+function GetFileCreated(const FileName: TFileName): TFileTime; overload;
 function GetFileModified(const FileName: TFileName; var LastWriteTime: TFileTime): BG; overload;
 function GetFileModified(const FileName: TFileName): TFileTime; overload;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
@@ -80,13 +81,14 @@ function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count:
 function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
 
 function ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
-function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG): BG;
+function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
 
 function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG; overload;
 function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
 function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
-function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG; overload;
-function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG; overload;
+function ReadStringFromFile(const FileName: TFileName; const Limit: SG): string; overload;
+function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG; overload;
+function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG; overload;
 
 {$IFDEF WIN32}
 function ShortToLongFileName(const ShortName: string): string;
@@ -101,7 +103,8 @@ function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG; 
 {$endif}
 function SameFiles(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
-procedure ReplaceIfChanged(const FileName: TFileName);
+procedure ReplaceIfChanged(const OrigFileName, TempFileName: TFileName); overload;
+procedure ReplaceIfChanged(const TempFileName: TFileName); overload;
 procedure InitPaths;
 
 function DirectoryExistsEx(const DirName: TFileName): BG;
@@ -193,9 +196,9 @@ begin
 	begin
 		if Source[i] = CharSpace then
 		begin
-    	Inc(i);
+			Inc(i);
 			Continue;
-    end;
+		end;
 		if Source[i] = '"' then
 		begin
 			Inc(i);
@@ -402,6 +405,11 @@ begin
 			else
 			begin
 				Value := GetEnvironmentVariable(Variable);
+			end;
+			if Value = '' then
+			begin
+				i := Start + Length(Variable);
+				Continue;
 			end;
 
 			Delete(Dir, Start, i - Start);
@@ -849,6 +857,16 @@ var
 	ACreationTime, ALastAccessTime: TFileTime;
 begin
 	Result := GetFileDateTime(FileName, ACreationTime, ALastAccessTime, LastWriteTime);
+end;
+
+function GetFileCreated(const FileName: TFileName): TFileTime;
+var
+	ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime;
+begin
+	Result.dwLowDateTime := 0;
+	Result.dwHighDateTime := 0;
+	if GetFileDateTime(FileName, ACreationTime, ALastAccessTime, ALastWriteTime) then
+		Result := ACreationTime;
 end;
 
 function GetFileModified(const FileName: TFileName): TFileTime;
@@ -1566,7 +1584,7 @@ begin
 	Result := False;
 	F := TFile.Create;
 	try
-		if F.Open(FileName, fmRewrite) then
+		if F.Open(FileName, fmRewrite, FILE_FLAG_NO_PREFIX or FILE_FLAG_SEQUENTIAL_SCAN) then
 		begin
 			F.BlockWrite(Buf^, Count);
 			F.Truncate;
@@ -1637,6 +1655,33 @@ begin
 	ReadStringFromFile(FileName, Result);
 end;
 
+function ReadStringFromFile(const FileName: TFileName; const Limit: SG): string;
+var
+	F: TFile;
+	Data2: AnsiString;
+begin
+	Result := '';
+	F := TFile.Create;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			SetLength(Data2, Min(Limit, F.FileSize));
+			if Length(Data2) >= 1 then
+			begin
+				F.BlockRead(Data2[1], Min(Limit, F.FileSize));
+				if F.Charset = fcUTF8 then
+					Result := ConvertUTF8ToUnicode(Data2)
+				else
+					Result := UnicodeString(Data2);
+			end;
+			SetLength(Data2, 0);
+			F.Close;
+		end;
+	finally
+		F.Free;
+	end;
+end;
+
 function SameDataInFile(const FileName: TFileName; const Line: AnsiString): BG;
 label LClose;
 var
@@ -1698,7 +1743,7 @@ begin
 	end;
 end;
 
-function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG;
+function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
 var
 	F: TFile;
 	FileMode: TFileMode;
@@ -1718,7 +1763,7 @@ begin
 		F := TFile.Create;
 		F.Charset := FileCharset;
 		try
-			if F.Open(FileName, FileMode) then
+			if F.Open(FileName, FileMode, Flags) then
 			begin
 				F.WriteNoConversion(DataA);
 				F.Close;
@@ -1730,7 +1775,7 @@ begin
 	end;
 end;
 
-function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset): BG;
+function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
 var
 	F: TFile;
 	FileMode: TFileMode;
@@ -1749,7 +1794,7 @@ begin
 		F := TFile.Create;
 		F.Charset := FileCharset;
 		try
-			if F.Open(FileName, FileMode) then
+			if F.Open(FileName, FileMode, Flags) then
 			begin
 				F.WriteNoConversion(DataA);
 				F.Close;
@@ -1789,7 +1834,7 @@ begin
 	end;
 end;
 
-function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG): BG;
+function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
 var
 	F: TFile;
 	i: SG;
@@ -1802,7 +1847,7 @@ begin
 		FileMode := fmRewrite;
 	F := TFile.Create;
 	try
-		if F.Open(FileName, FileMode) then
+		if F.Open(FileName, FileMode, Flags) then
 		begin
 			i := 0;
 			while i < OpeningNameCount do
@@ -2036,23 +2081,28 @@ begin
 	Result := ExtractFilePath(FileName) + '~' + ExtractFileName(FileName);
 end;
 
-procedure ReplaceIfChanged(const FileName: TFileName);
+procedure ReplaceIfChanged(const OrigFileName, TempFileName: TFileName);
+begin
+	if FileExists(OrigFileName) and SameFiles(OrigFileName, TempFileName) then
+		DeleteFileEx(TempFileName)
+	else
+	begin
+		CopyFile(TempFileName, OrigFileName, False);
+		DeleteFileEx(TempFileName);
+	end;
+end;
+
+procedure ReplaceIfChanged(const TempFileName: TFileName);
 var
 	OrigFileName: TFileName;
 begin
-	OrigFileName := ExtractFileName(FileName);
+	OrigFileName := ExtractFileName(TempFileName);
 	if Length(OrigFileName) <= 0 then Exit;
 	if OrigFileName[1] <> '~' then Exit;
 	Delete(OrigFileName, 1, 1);
-	OrigFileName := ExtractFilePath(FileName) + OrigFileName;
+	OrigFileName := ExtractFilePath(TempFileName) + OrigFileName;
 
-	if FileExists(OrigFileName) and SameFiles(OrigFileName, FileName) then
-		DeleteFileEx(FileName)
-	else
-	begin
-		CopyFile(FileName, OrigFileName, False);
-		DeleteFileEx(FileName);
-	end;
+	ReplaceIfChanged(OrigFileName, TempFileName);
 end;
 
 function FileExistsEx(const FileName: TFileName): BG;

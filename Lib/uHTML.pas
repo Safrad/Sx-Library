@@ -9,6 +9,9 @@ uses
 
 function RelativePath(const Source, Target: string): string;
 function GetGeneratedBy: string;
+{$ifndef Console}
+function AddImageEx(const SelfFileName, FileName: TFileName; const Params: string): string;
+{$endif}
 
 type
 	TDistanceUnit = (duPercentage, duPixels, duPoints);
@@ -22,6 +25,7 @@ type
 		FFileName: TFileName;
 		FFrameset: BG;
 		FBody: string;
+		FContentStr: string;
 		FSaved: BG;
 		function HTMLSep: string;
 		function HTMLTab: string;
@@ -29,20 +33,29 @@ type
 		function GetHTMLHead: string;
 		function GetHTMLFoot: string;
 		procedure SaveToFile;
+		procedure AddHX(const Text: string; const HX: string);
 	public
 //		SourceCodePage: TCodePage;
 		HTMLCodePage: TCodePage;
 		Title: string;
 		RedirectURL: string;
 		AddHeadAndFoot: BG;
+		RowIndex: SG;
 
 		constructor Create(const FileName: TFileName = '');
 		destructor Destroy; override;
 
+		procedure AddContents;
 		procedure AddBodyFromFile;
 		procedure AddFramesetFromFile;
 		procedure AddBody(const s: string);
 		procedure AddCommand(const s: string);
+		procedure OpenCommand(const s: string);
+		procedure CloseCommand(const s: string);
+		procedure OpenCloseCommand(const s: string);
+		procedure NewLine;
+		procedure AddSpace;
+		procedure AddParagraph(const s: string);
 		procedure HorizontalRule(const Width: SG = 100; const DistanceUnit: TDistanceUnit = duPercentage; const Size: SG = 2);
 		procedure AddDataCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
 		procedure AddHeadCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
@@ -50,6 +63,7 @@ type
 		procedure AddTableFromCSV(const FileName: TFileName; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
 		procedure AddTableFromText(const Line: string; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
 		procedure AddTable(const FileName: TFileName; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
+		procedure AddTableRow(const Cells: array of string);
 		procedure AddRef(const FileName: TFileName); overload;
 		procedure AddRef(const FileName: TFileName; const Text: string); overload;
 		{$ifndef Console}
@@ -57,6 +71,11 @@ type
 		procedure AddImage(const FileName: TFileName); overload;
 		procedure AddSmallImage(const FileName: TFileName; const Params: string); overload;
 		procedure AddSmallImage(const FileName: TFileName); overload;
+		procedure AddH1(const Text: string);
+		procedure AddH2(const Text: string);
+		procedure AddH3(const Text: string);
+		procedure AddH4(const Text: string);
+		procedure AddH5(const Text: string);
 	{$endif}
 //		procedure AddTitle; deprecated;
 		function GetRelativePath(const FileName: TFileName): string;
@@ -81,7 +100,10 @@ implementation
 
 uses
 	Math, Menus,
-	uStrings, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML;
+	uStrings, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML, uFile;
+
+const
+	ContentMark = '%HTMLcontent%';
 
 function RelativePath(const Source, Target: string): string;
 {
@@ -402,7 +424,8 @@ var
 	HeadEnd, HeadSavedEnd: SG;
 begin
 	FSaved := True;
-	if Title = '' then Title := DelFileExt(ExtractFileName(FFileName));
+	if Title = '' then
+		Title := DelFileExt(ExtractFileName(FFileName));
 	if SkipHTMLHead = False then
 	begin
 		s := HeadStr;
@@ -430,6 +453,7 @@ begin
 	else
 		s := GetHTMLHead;
 	s := s + FBody;
+	Replace(s, ContentMark, '<ul>' + FContentStr + '</ul>');
 	if FFrameset = False then
 	begin
 		if AddHeadAndFoot then
@@ -459,7 +483,7 @@ begin
 		end;
 	end;
 
-	WriteStringToFile(FFileName, s, False);
+	WriteStringToFile(FFileName, s, False, fcUTF8, FILE_FLAG_NO_PREFIX);
 end;
 
 procedure THTML.AddBodyFromFile;
@@ -754,6 +778,91 @@ end;
 function THTML.GetRelativePath(const FileName: TFileName): string;
 begin
 	Result := RelativePath(FFileName, FileName);
+end;
+
+procedure THTML.CloseCommand(const s: string);
+begin
+	AddCommand('/' + s);
+end;
+
+procedure THTML.OpenCloseCommand(const s: string);
+begin
+	AddCommand(s + ' /');
+end;
+
+procedure THTML.OpenCommand(const s: string);
+begin
+	AddCommand(s);
+end;
+
+procedure THTML.NewLine;
+begin
+	OpenCloseCommand('br');
+end;
+
+procedure THTML.AddSpace;
+begin
+	AddBody(nbsp);
+end;
+
+procedure THTML.AddParagraph(const s: string);
+begin
+	AddBody('<p>' + s + '</p>');
+end;
+
+procedure THTML.AddContents;
+begin
+	AddBody(ContentMark);
+end;
+
+procedure THTML.AddH1(const Text: string);
+begin
+	AddHX(Text, 'h1');
+end;
+
+procedure THTML.AddH2(const Text: string);
+begin
+	AddHX(Text, 'h2');
+end;
+
+procedure THTML.AddH3(const Text: string);
+begin
+	AddHX(Text, 'h3');
+end;
+
+procedure THTML.AddH4(const Text: string);
+begin
+	AddHX(Text, 'h4');
+end;
+
+procedure THTML.AddH5(const Text: string);
+begin
+	AddHX(Text, 'h5');
+end;
+
+procedure THTML.AddHX(const Text, HX: string);
+var
+	Id: string;
+begin
+	Id := ConvertCharsetF(ReplaceF(Text, CharSpace, '-'), cp1250, cpAscii);
+	FContentStr := FContentStr + '<li>' + '<a href="#' + Id + '">' + Text + '</a>' + '</li>';
+	AddBody('<a name="' + Id + '"></a>');
+	ClosedTag(Text, HX);
+end;
+
+procedure THTML.AddTableRow(const Cells: array of string);
+var
+	i: SG;
+begin
+	OpenCommand('tr class="' + OddEven(RowIndex) + '"');
+	for i := 0 to Length(Cells) - 1 do
+	begin
+		OpenCommand('td');
+		AddBody(Cells[i]);
+		CloseCommand('td');
+	end;
+	CloseCommand('tr');
+	Inc(RowIndex);
 end;
 
 initialization

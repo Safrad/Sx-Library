@@ -41,10 +41,11 @@ begin
 	inherited Create(True);
 end;
 
-procedure TShellExecute.Execute;
 const
 	OpenString = 'open'; // XP
 //	OpenString = 'RunAs'; // Newer Windows
+
+procedure TShellExecute.Execute;
 begin
 	FAgain := True;
 	while FAgain do
@@ -61,15 +62,16 @@ end;
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 var
-	ShellExecute: TShellExecute;
+	ShellExecuteThread: TShellExecute;
 begin
 	MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
-	ShellExecute := TShellExecute.Create(FileName, Params);
+//	ShellExecute(0, OpenString, PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
+	ShellExecuteThread := TShellExecute.Create(FileName, Params);
 	{$ifdef UNICODE}
-	ShellExecute.NameThreadForDebugging('ShellExecute');
-	ShellExecute.Start;
+	ShellExecuteThread.NameThreadForDebugging('ShellExecute');
+	ShellExecuteThread.Start;
 	{$else}
-	ShellExecute.Resume;
+	ShellExecuteThread.Resume;
 	{$endif}
 end;
 

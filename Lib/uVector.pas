@@ -236,7 +236,7 @@ end;
 
 function RoundVector(const V: TVector): TVector;
 begin
-	Result := NumToVector(Round(VectorToNum(V)));
+	Result := NumToVector(RoundN(VectorToNum(V)));
 end;
 
 function CeilVector(const V: TVector): TVector;
@@ -256,7 +256,7 @@ end;
 
 function NotVector(const V: TVector): TVector;
 begin
-	Result := NumToVector(not Round(VectorToNum(V)));
+	Result := NumToVector(not RoundN(VectorToNum(V)));
 end;
 
 function InvVector(const V: TVector): TVector;
@@ -286,7 +286,7 @@ begin
 			end
 			else if e <= 1754 then
 			begin
-				for j := 2 to Round(e) do
+				for j := 2 to RoundN(e) do
 					x := x * j;
 			end
 			else
@@ -321,7 +321,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := Round(V1[i]) shl Round(VectorToNum(V2));
+		Result[i] := RoundN(V1[i]) shl RoundN(VectorToNum(V2));
 end;
 
 function ShrVector(const V1: TVector; const V2: TVector): TVector;
@@ -329,7 +329,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := Round(V1[i]) shr Round(VectorToNum(V2));
+		Result[i] := RoundN(V1[i]) shr RoundN(VectorToNum(V2));
 end;
 
 function AndVector(const V1: TVector; const V2: TVector): TVector;
@@ -337,7 +337,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := Round(V1[i]) and Round(VectorToNum(V2));
+		Result[i] := RoundN(V1[i]) and RoundN(VectorToNum(V2));
 end;
 
 function OrVector(const V1: TVector; const V2: TVector): TVector;
@@ -345,7 +345,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := Round(V1[i]) or Round(VectorToNum(V2));
+		Result[i] := RoundN(V1[i]) or RoundN(VectorToNum(V2));
 end;
 
 function XorVector(const V1: TVector; const V2: TVector): TVector;
@@ -353,7 +353,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := Round(V1[i]) xor Round(VectorToNum(V2));
+		Result[i] := RoundN(V1[i]) xor RoundN(VectorToNum(V2));
 end;
 
 function XnorVector(const V1: TVector; const V2: TVector): TVector;
@@ -361,7 +361,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := not (Round(V1[i]) xor Round(VectorToNum(V2)));
+		Result[i] := not (RoundN(V1[i]) xor Round(VectorToNum(V2)));
 end;
 
 (*

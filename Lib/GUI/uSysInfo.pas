@@ -81,7 +81,7 @@ var
 
 function GetKey(Default: U2): U2;
 function OSToStr(const OS: TOSVersionInfo): string;
-function GetCPUUsage(IntTime: U8): SG;
+function GetCPUUsage: SG;
 procedure FillDynamicInfo(var SysInfo: TSysInfo); // FillMemoryStatus + FillCPUTest
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
 procedure FillCPUTest(var SysInfo: TSysInfo);
@@ -174,6 +174,147 @@ begin
 	GlobalMemoryStatus(SysInfo.MS);
 end;
 
+const
+	SystemBasicInformation = 0;
+  SystemPerformanceInformation = 2;
+  SystemTimeInformation = 3;
+
+type
+  TPDWord = ^DWORD;
+
+	TSystem_Basic_Information = packed record
+    dwUnknown1: DWORD;
+    uKeMaximumIncrement: ULONG;
+    uPageSize: ULONG;
+		uMmNumberOfPhysicalPages: ULONG;
+		uMmLowestPhysicalPage: ULONG;
+		uMmHighestPhysicalPage: ULONG;
+		uAllocationGranularity: ULONG;
+		pLowestUserAddress: Pointer;
+		pMmHighestUserAddress: Pointer;
+		uKeActiveProcessors: ULONG;
+		bKeNumberProcessors: byte;
+		bUnknown2: byte;
+		wUnknown3: word;
+	end;
+
+type
+	TSystem_Performance_Information = packed record
+		liIdleTime: LARGE_INTEGER; {LARGE_INTEGER}
+		dwSpare: array[0..75] of DWORD;
+	end;
+
+type
+	TSystem_Time_Information = packed record
+		liKeBootTime: LARGE_INTEGER;
+		liKeSystemTime: LARGE_INTEGER;
+		liExpTimeZoneBias: LARGE_INTEGER;
+		uCurrentTimeZoneId: ULONG;
+		dwReserved: DWORD;
+	end;
+
+var
+	NtQuerySystemInformation: function(infoClass: DWORD;
+		buffer: Pointer;
+		bufSize: DWORD;
+		returnSize: TPDword): DWORD; stdcall = nil;
+
+
+	liOldIdleTime: LARGE_INTEGER = ();
+	liOldSystemTime: LARGE_INTEGER = ();
+
+{function Li2Double(x: LARGE_INTEGER): Double;
+begin
+	Result := x.HighPart * 4.294967296E9 + x.LowPart
+end;}
+
+function GetLogicalProcessorCount: SG;
+var
+	SysBaseInfo: TSystem_Basic_Information;
+	status: Longint; {long}
+begin
+	if @NtQuerySystemInformation = nil then
+		NtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'),
+			'NtQuerySystemInformation');
+
+	// get number of processors in the system
+
+	Result := 1;
+
+	status := NtQuerySystemInformation(SystemBasicInformation, @SysBaseInfo, SizeOf(SysBaseInfo), nil);
+	if status <> 0 then Exit;
+
+	Result := SysBaseInfo.bKeNumberProcessors;
+end;
+
+var
+	CPUUsage: SG;
+
+function GetCPUUsageForce: SG;
+var
+	SysBaseInfo: TSystem_Basic_Information;
+	SysPerfInfo: TSystem_Performance_Information;
+	SysTimeInfo: TSystem_Time_Information;
+	status: Longint; {long}
+	dbSystemTime: U8;
+	dbIdleTime: U8;
+//	s: string;
+begin
+	Result := 0;
+	if @NtQuerySystemInformation = nil then
+		NtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'),
+			'NtQuerySystemInformation');
+
+	// get number of processors in the system
+
+	status := NtQuerySystemInformation(SystemBasicInformation, @SysBaseInfo, SizeOf(SysBaseInfo), nil);
+	if status <> 0 then Exit;
+
+	// Show some information
+{	with SysBaseInfo do
+	begin
+			s :=
+			Format('uKeMaximumIncrement: %d'#13'uPageSize: %d'#13+
+			'uMmNumberOfPhysicalPages: %d'+#13+'uMmLowestPhysicalPage: %d'+#13+
+			'uMmHighestPhysicalPage: %d'+#13+'uAllocationGranularity: %d'#13+
+			'uKeActiveProcessors: %d'#13'bKeNumberProcessors: %d',
+			[uKeMaximumIncrement, uPageSize, uMmNumberOfPhysicalPages,
+			uMmLowestPhysicalPage, uMmHighestPhysicalPage, uAllocationGranularity,
+			uKeActiveProcessors, bKeNumberProcessors]);
+	end;}
+
+		// get new system time
+	status := NtQuerySystemInformation(SystemTimeInformation, @SysTimeInfo, SizeOf(SysTimeInfo), nil);
+	if status <> 0 then Exit;
+
+	// get new CPU's idle time
+	status := NtQuerySystemInformation(SystemPerformanceInformation, @SysPerfInfo, SizeOf(SysPerfInfo), nil);
+	if status <> 0 then Exit;
+
+	// if it's a first call - skip it
+	if (liOldIdleTime.QuadPart <> 0) then
+	begin
+
+		// CurrentValue = NewValue - OldValue
+		dbIdleTime := SysPerfInfo.liIdleTime.QuadPart - liOldIdleTime.QuadPart;
+		dbSystemTime := SysTimeInfo.liKeSystemTime.QuadPart - liOldSystemTime.QuadPart;
+
+		// CurrentCpuIdle = IdleTime / SystemTime
+
+		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
+		Result := Round(CPUUsageMul * (100.0 - (dbIdleTime / dbSystemTime) * 100.0 / SysBaseInfo.bKeNumberProcessors));
+		Result := Range(0, Result, 100 * CPUUsageMul);
+
+		// Show Percentage
+//		Result := RoundN(100 * dbIdleTime);
+	end;
+
+		// store new CPU's idle and system time
+		liOldIdleTime := SysPerfInfo.liIdleTime;
+		liOldSystemTime := SysTimeInfo.liKeSystemTime;
+end;
+
+(*
 function GetProcessorTime : int64;
 type
 	TPerfDataBlock = packed record
@@ -274,18 +415,17 @@ begin
 		FreeMem(perfDataBlock);
 	end;
 end;
-
+*)
 var
-	LastTickCount, LastProcessorTime: U8;
-	CPUUsage: SG;
-
-	CPUException: Boolean; // Cyrix
 	Reg: TRegistry;
+	LastTickCount{, LastProcessorTime}: U8;
 
-function GetCPUUsage(IntTime: U8): SG;
+function GetCPUUsage: SG;
+const
+	IntervalTime = Second div 2;
 var
 	tickCount     : U8;
-	processorTime : U8;
+//	processorTime : U8;
 	Dummy: array[0..KB] of U1;
 begin
 	if NTSystem then
@@ -295,25 +435,26 @@ begin
 		if tickCount < LastTickCount then
 		begin
 			// Possible after hibernation or overflow
-			LastTickCount := tickCount; 
+			LastTickCount := tickCount;
 		end;
-		if tickCount < LastTickCount + IntTime then
+		if tickCount < LastTickCount + IntervalTime then
 		begin
 			Result := CPUUsage;
 			Exit;
 		end;
-		processorTime := GetProcessorTime;
+//		processorTime := GetProcessorTime;
 
-		if (LastTickCount <> 0) and (tickCount > LastTickCount) and (processorTime >= LastProcessorTime) then
+		if {(LastTickCount <> 0) and} (tickCount > LastTickCount) {and (processorTime >= LastProcessorTime)} then
 		begin // 1 000 * 10 000 = 10 000 000 / sec
-			CPUUsage := 100 * CPUUsageMul - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1}) ;
-			CPUUsage := Range(0, CPUUsage, 100 * CPUUsageMul);
+(*			CPUUsage := 100 * CPUUsageMul - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1}) ;
+			CPUUsage := Range(0, CPUUsage, 100 * CPUUsageMul);}*)
+			CPUUsage := GetCPUUsageForce;
 		end;
 
 		Result := CPUUsage;
 
 		LastTickCount     := tickCount;
-		LastProcessorTime := processorTime;
+//		LastProcessorTime := processorTime;
 	end
 	else
 	begin
@@ -394,9 +535,13 @@ begin
 		popad
 		end;
 	finally
-		SysInfo.LogicalProcessorCount := Max(1, Lo(SysInfo.CPU2 shr 16));
+//		SysInfo.LogicalProcessorCount := Max(1, Lo(SysInfo.CPU2 shr 16));
+		SysInfo.LogicalProcessorCount := GetLogicalProcessorCount;
 	end;
 end;
+
+var
+	CPUException: Boolean; // Cyrix
 
 procedure FillCPUTest(var SysInfo: TSysInfo);
 var
@@ -503,7 +648,7 @@ end; *)
 procedure FillDynamicInfo(var SysInfo: TSysInfo);
 begin
 	FillMemoryStatus(SysInfo);
-	SysInfo.CPUUsage := GetCPUUsage(0);
+	SysInfo.CPUUsage := GetCPUUsage;
 	FillCPUTest(SysInfo);
 end;
 
@@ -584,7 +729,7 @@ begin
 			case Model of
 			0, 1: s := 'Pentium Pro';
 			3: s := 'Pentium II';
-			5: s := 'Pentium II';
+			5: s := 'Core™ i3'; //'Pentium II';
 			6: s := 'Celeron';
 			7: s := 'Pentium III';
 			8: s := 'Pentium III E';
@@ -682,7 +827,7 @@ begin
 //	GSysInfo.ProgramVersion := GetProjectInfo(piProductVersion);
 
 	CPUUsage := 0 * CPUUsageMul;
-	GetCPUUsage(0);
+	GetCPUUsage;
 end;
 
 procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);

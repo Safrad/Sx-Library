@@ -253,8 +253,6 @@ begin
 end;
 
 procedure TFolder.Read;
-var
-	FileItem: TFileItem;
 begin
 	ReadSubDirSorted('');
 end;

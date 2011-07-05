@@ -1,4 +1,4 @@
-unit uUser; // Contain user (personal) specific information
+unit uCustomUser; // Contain user (personal) specific information
 
 interface
 

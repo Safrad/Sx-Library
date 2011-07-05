@@ -128,7 +128,7 @@ begin
 			StartIndex := Length(Params[i]) + 1;
 			if CharAt(Param, StartIndex) = '=' then
 				Inc(StartIndex);
-			Value := Copy(Param, StartIndex, MaxInt);
+			Value := DelQuoteF(Copy(Param, StartIndex, MaxInt));
 			try
 				ParamProcedures[i](Value);
 			except
@@ -197,10 +197,14 @@ begin
 	InLineIndex := 1;
 	while InLineIndex <= Length(CmdLine) do
 	begin
-		case CmdLine[InLineIndex] of
-		'"': Quote := not Quote;
+//		if (LastParam = InLineIndex) or Quote then
+		begin
+			case CmdLine[InLineIndex] of
+			'"': Quote := not Quote;
+			end;
 		end;
-		if ((Quote = False) and (CmdLine[InLineIndex] = ' ')) or (InLineIndex = Length(CmdLine)) then
+		
+		if ((Quote = False) and (CmdLine[InLineIndex] = CharSpace)) or (InLineIndex = Length(CmdLine)) then
 		begin
 			if InLineIndex = Length(CmdLine) then
 				Inc(InLineIndex);

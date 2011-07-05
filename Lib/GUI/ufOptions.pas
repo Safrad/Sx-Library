@@ -636,7 +636,7 @@ begin
 		Assert(Options <> nil);
 		Assert(OptionCount >= 0);
 		Assert(Params <> nil); }
-	fOptions := TfOptions.Create(nil);
+	fOptions := TfOptions.Create(Application.MainForm);
 	try
 		fOptions.Caption := Caption;
 		fOptions.Options := Options;

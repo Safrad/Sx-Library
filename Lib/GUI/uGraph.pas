@@ -277,7 +277,7 @@ end;
 function IdealShadow(const Canvas: TCanvas): SG;
 begin
 	Result := Abs(RoundDiv(Canvas.Font.Height, 20));
-//	Result := Round(Abs(Canvas.Font.Size) div 16);
+//	Result := RoundN(Abs(Canvas.Font.Size) div 16);
 end;
 
 function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment: TAlignment = taLeftJustify): BG; overload;
