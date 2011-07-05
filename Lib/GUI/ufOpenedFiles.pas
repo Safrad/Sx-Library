@@ -78,14 +78,17 @@ end;
 
 procedure TfOpenedFiles.DViewOpenedFilesGetData(Sender: TObject;
 	var Data: String; ColIndex, RowIndex: Integer; Rect: TRect);
+var
+	Item: TOpenedFileItem;
 begin
 	if RowIndex = FOpenedFiles.Index then
 		DViewOpenedFiles.Bitmap.Canvas.Font.Style := [fsBold]
 	else
 		DViewOpenedFiles.Bitmap.Canvas.Font.Style := [];
+	Item := FOpenedFiles.GetItem(RowIndex);
 	case ColIndex of
 	0: Data := NToS(RowIndex + 1);
-	1: Data := ExtractFileName(FOpenedFiles.GetItem(RowIndex).FileName);
+	1: Data := ExtractFileName(Item.FileName);
 	2: Data := ExtractFilePath(FOpenedFiles.GetItem(RowIndex).FileName);
 	3: Data := DateTimeToS(FileTimeToDateTime(FOpenedFiles.GetItem(RowIndex).LastWriteTime), 0, ofDisplay);
 	4: Data := NToS(FOpenedFiles.GetItem(RowIndex).SaveCount);
@@ -151,7 +154,7 @@ var
 	i: SG;
 	SortS: array of string;
 	SortN: array of F8;
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	case DViewOpenedFiles.SortBy of
 	0, 1: SetLength(SortS, DViewOpenedFiles.RowCount);

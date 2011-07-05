@@ -357,7 +357,7 @@ begin
 		end;
 		if (Loaded = loYes) then
 		begin
-			DelChars(Line, '&');
+			Line := RemoveSingleAmp(Line);
 			for j := 0 to EntryCount - 1 do
 			begin
 				i := AIndex[j];
@@ -474,7 +474,8 @@ var
 begin
 	if Self = nil then Exit;
 	if (LanguageIndex < 0) then Exit;
-	Form.Caption := Translate(Form.Caption);
+	if Form.Name <> 'fMain' then
+		Form.Caption := Translate(Form.Caption);
 	for i := 0 to Form.ComponentCount - 1 do
 	begin
 		TranslateComponent(Form.Components[i]);

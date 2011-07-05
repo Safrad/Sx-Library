@@ -1,10 +1,10 @@
 object fOpenedFiles: TfOpenedFiles
   Left = 557
   Top = 169
+  Width = 289
+  Height = 439
   BorderIcons = []
   Caption = 'Opened Files'
-  ClientHeight = 412
-  ClientWidth = 281
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -25,8 +25,6 @@ object fOpenedFiles: TfOpenedFiles
     Width = 281
     Height = 412
     Zoom = 1.000000000000000000
-    EnableZoom = True
-    DisplayMode = dmCustom
     HotTrack = False
     Align = alClient
     TabOrder = 0

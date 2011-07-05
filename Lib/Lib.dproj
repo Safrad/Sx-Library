@@ -102,8 +102,8 @@
 					<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 					<VersionInfo Name="MajorVer">1</VersionInfo>
 					<VersionInfo Name="MinorVer">1</VersionInfo>
-					<VersionInfo Name="Release">45</VersionInfo>
-					<VersionInfo Name="Build">113</VersionInfo>
+					<VersionInfo Name="Release">46</VersionInfo>
+					<VersionInfo Name="Build">114</VersionInfo>
 					<VersionInfo Name="Debug">False</VersionInfo>
 					<VersionInfo Name="PreRelease">False</VersionInfo>
 					<VersionInfo Name="Special">False</VersionInfo>
@@ -115,13 +115,13 @@
 				<VersionInfoKeys>
 					<VersionInfoKeys Name="CompanyName">Safrad</VersionInfoKeys>
 					<VersionInfoKeys Name="FileDescription">Safrad's Components</VersionInfoKeys>
-					<VersionInfoKeys Name="FileVersion">1.1.45.113</VersionInfoKeys>
+					<VersionInfoKeys Name="FileVersion">1.1.46.114</VersionInfoKeys>
 					<VersionInfoKeys Name="InternalName">Lib</VersionInfoKeys>
 					<VersionInfoKeys Name="LegalCopyright">Copyright © 2010</VersionInfoKeys>
 					<VersionInfoKeys Name="LegalTrademarks">Freeware</VersionInfoKeys>
 					<VersionInfoKeys Name="OriginalFilename">Lib.exe</VersionInfoKeys>
 					<VersionInfoKeys Name="ProductName">Lib</VersionInfoKeys>
-					<VersionInfoKeys Name="ProductVersion">1.1.45.113</VersionInfoKeys>
+					<VersionInfoKeys Name="ProductVersion">1.1.46.114</VersionInfoKeys>
 					<VersionInfoKeys Name="Comments"/>
 				</VersionInfoKeys>
 			</Delphi.Personality>

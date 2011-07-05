@@ -93,7 +93,7 @@ begin
 	vsString, vsFilename, vsDirectory, vsStrings:
 		Result := Param.Str = Option.DefaultStr;
 	vsButton:
-  	Result := True;
+		Result := True;
 	else
 		raise Exception.Create('Invalid option type.');
 	end;

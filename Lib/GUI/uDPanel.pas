@@ -126,7 +126,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDPanel]);
+	RegisterComponents(ComponentPageName, [TDPanel]);
 end;
 
 end.

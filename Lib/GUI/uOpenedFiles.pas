@@ -9,7 +9,7 @@ uses
 	Windows, SysUtils, Menus, Graphics, Classes, Controls, Messages, Dialogs;
 
 type
-	TOnNewFileEvent = function(Sender: TObject; const Item: POpenedFileItem): BG of object;
+	TOnNewFileEvent = function(Sender: TObject; const Item: TOpenedFileItem): BG of object;
 	TOnLoadFromFileEvent = function(Sender: TObject; var FileName: TFileName): BG of object;
 	TOnGetFilePosEvent = function(Sender: TObject; const Data: Pointer): string of object;
 	TOnSetFilePosEvent = procedure(Sender: TObject; FilePos: string) of object;
@@ -46,7 +46,7 @@ type
 		procedure FreeItem(const i: SG);
 
 		procedure SetIndex(Value: SG);
-		function AddOpenedFileItem: POpenedFileItem;
+		function AddOpenedFileItem: TOpenedFileItem;
 		procedure Init;
 
 		procedure SetMenuItem(i: SG);
@@ -76,10 +76,10 @@ type
 		function SaveDialogP(var FileName: TFileName): BG;
 		function SaveAs(const OpenedFile: SG): BG;
 
-		function GetActualItem: POpenedFileItem;
+		function GetActualItem: TOpenedFileItem;
 
 		procedure RWOptions(const Save: BG);
-		procedure SetItemChange(const Item: POpenedFileItem; const Changed: BG);
+		procedure SetItemChange(const Item: TOpenedFileItem; const Changed: BG);
 		function GetFilePos(const Index: SG): string;
 	public
 		File1, Window1: TMenuItem;
@@ -91,7 +91,7 @@ type
 		destructor Destroy; override;
 
 		function GetItemIndexByName(const FileName: TFileName): SG;
-		function GetItemByName(const FileName: TFileName): POpenedFileItem;
+		function GetItemByName(const FileName: TFileName): TOpenedFileItem;
 		function GetItemData(i: SG): Pointer;
 
 		procedure CreateMenuFile(const MenuNewSuffix: BG);
@@ -119,8 +119,8 @@ type
 		property Index: SG read FIndex write SetIndex;
 		property Count: SG read FCount;
 		property SkipStartup: BG read FSkipStartup;
-		property ActualItem: POpenedFileItem read GetActualItem;
-		function GetItem(const Index: SG): POpenedFileItem;
+		property ActualItem: TOpenedFileItem read GetActualItem;
+		function GetItem(const Index: SG): TOpenedFileItem;
 	published
 		property MultiFiles: BG read FMultiFiles write FMultiFiles default True;
 
@@ -210,14 +210,14 @@ begin
 		WatchRemoveFile(Items[i].FileName);
 		SetFileMetadata(Items[i].FileName, GetFilePos(i));
 		if Assigned(FOnFreeFile) then
-			FOnFreeFile(Self, @Items[i]);
+			FOnFreeFile(Self, Items[i]);
 	except
 		on E: Exception do
 			Fatal(E, Self);
 	end;
 	FreeMem(Items[i].PData);
 	Items[i].PData := nil;
-	Finalize(Items[i]);
+	FreeAndNil(Items[i]);
 	// Items[i].FileName := '';
 	// FreeAndNil(Items[i].MenuItem);
 end;
@@ -500,7 +500,7 @@ begin
 	Window1.Insert(i + 1, Items[i].MenuItem);
 end;
 
-function TOpenedFiles.AddOpenedFileItem: POpenedFileItem;
+function TOpenedFiles.AddOpenedFileItem: TOpenedFileItem;
 begin
 	Result := nil;
 	if FMultiFiles = False then
@@ -511,8 +511,8 @@ begin
 	end;
 
 	SetLength(Items, FCount + 1);
-	Result := @Items[FCount];
-	FillChar(Result^, SizeOf(TOpenedFileItem), 0);
+	Result := TOpenedFileItem.Create;
+	Items[FCount] := Result;
 	Inc(FCount);
 
 	GetMem(Result.PData, FItemSize);
@@ -548,7 +548,7 @@ procedure TOpenedFiles.OpenedFileNewFile(Sender: TObject; FileName: string = '';
 var
 	Result: BG;
 	LastIndex: SG;
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	Item := AddOpenedFileItem;
 	if Item <> nil then
@@ -616,13 +616,13 @@ begin
 	end;
 end;
 
-function TOpenedFiles.GetItemByName(const FileName: TFileName): POpenedFileItem;
+function TOpenedFiles.GetItemByName(const FileName: TFileName): TOpenedFileItem;
 var
 	i: SG;
 begin
 	i := GetItemIndexByName(FileName);
 	if i >= 0 then
-		Result := @Items[i]
+		Result := Items[i]
 	else
 		Result := nil;
 end;
@@ -648,7 +648,7 @@ end;
 function TOpenedFiles.OpenedFileLoadFromFile(const FileName: TFileName; const ReadOnly: BG = False): BG;
 var
 	LastIndex: SG;
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 	NewIndex: SG;
 begin
 	Result := False;
@@ -761,7 +761,7 @@ begin
 	end;
 end;
 
-procedure TOpenedFiles.SetItemChange(const Item: POpenedFileItem; const Changed: BG);
+procedure TOpenedFiles.SetItemChange(const Item: TOpenedFileItem; const Changed: BG);
 begin
 	Item.FChanged := Changed;
 	WatchChange(Item.FileName, Changed);
@@ -827,7 +827,7 @@ begin
 	if RenameFile = False then
 	begin
 		Items[OpenedFile].New := 0;
-		SetItemChange(@Items[OpenedFile], False);
+		SetItemChange(Items[OpenedFile], False);
 		Inc(Items[OpenedFile].SaveCount);
 		Items[OpenedFile].Modified := Now;
 		Inc(Items[OpenedFile].WorkTime, TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime)
@@ -1086,7 +1086,7 @@ procedure TOpenedFiles.Init;
 var
 	i: SG;
 	B: BG;
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	Item := ActualItem;
 	if Assigned(Application.MainForm) then
@@ -1152,7 +1152,7 @@ end;
 
 procedure TOpenedFiles.Change;
 var
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 	FileName: TFileName;
 begin
 	Item := ActualItem;
@@ -1178,7 +1178,7 @@ end;
 
 procedure TOpenedFiles.Unchange;
 var
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
@@ -1250,7 +1250,7 @@ end;
 
 procedure TOpenedFiles.Revert1Click(Sender: TObject);
 var
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
@@ -1280,7 +1280,7 @@ end;
 
 procedure TOpenedFiles.Save1Click(Sender: TObject);
 var
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
@@ -1326,7 +1326,7 @@ end;
 
 procedure TOpenedFiles.Delete1Click(Sender: TObject);
 var
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
@@ -1383,22 +1383,27 @@ procedure TOpenedFiles.OpenAll;
 		OpenedFileItem: TOpenedFileItem;
 		// LeakCount: SG;
 	begin
-		FileNameCount := 0;
-		ReadDir(FileNames, FileNameCount, Dir, [], True, True, False, False);
-		for i := 0 to FileNameCount - 1 do
-		begin
-			if LastChar(FileNames[i]) = PathDelim then
-				Depth(Dir + FileNames[i])
-			else
+		OpenedFileItem := TOpenedFileItem.Create;
+		try
+			FileNameCount := 0;
+			ReadDir(FileNames, FileNameCount, Dir, [], True, True, False, False);
+			for i := 0 to FileNameCount - 1 do
 			begin
-				FileName := Dir + FileNames[i];
-				// LeakCount := AllocMemCount;
-				FOnLoadFromFile(Self, FileName);
-				OpenedFileItem.PData := FItemAddr;
-				FOnFreeFile(Self, @OpenedFileItem);
-				// LeakCount := AllocMemCount - LeakCount;
-				// Assert(LeakCount = 0);
+				if LastChar(FileNames[i]) = PathDelim then
+					Depth(Dir + FileNames[i])
+				else
+				begin
+					FileName := Dir + FileNames[i];
+					// LeakCount := AllocMemCount;
+					FOnLoadFromFile(Self, FileName);
+					OpenedFileItem.PData := FItemAddr;
+					FOnFreeFile(Self, OpenedFileItem);
+					// LeakCount := AllocMemCount - LeakCount;
+					// Assert(LeakCount = 0);
+				end;
 			end;
+		finally
+			OpenedFileItem.Free;
 		end;
 	end;
 
@@ -1409,29 +1414,29 @@ end;
 
 procedure TOpenedFiles.Properties1Click(Sender: TObject);
 var
-	Item: POpenedFileItem;
+	Item: TOpenedFileItem;
 begin
 	Item := ActualItem;
 	if Item <> nil then
 		PropertiesDialog(Item.FileName);
 end;
 
-function TOpenedFiles.GetItem(const Index: SG): POpenedFileItem;
+function TOpenedFiles.GetItem(const Index: SG): TOpenedFileItem;
 begin
 	if (Index >= 0) and (Index < FCount) then
-		Result := @Items[Index]
+		Result := Items[Index]
 	else
 		Result := nil;
 end;
 
-function TOpenedFiles.GetActualItem: POpenedFileItem;
+function TOpenedFiles.GetActualItem: TOpenedFileItem;
 begin
 	Result := GetItem(FIndex);
 end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TOpenedFiles]);
+	RegisterComponents(ComponentPageName, [TOpenedFiles]);
 end;
 
 function TOpenedFiles.GetFilePos(const Index: SG): string;

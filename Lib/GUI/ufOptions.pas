@@ -183,10 +183,10 @@ begin
 			L.Transparent := True;
 			L.Caption := Translate(AddSpace(Options[i].Name));
 			L.SetBounds(GX, GY + (RowHeight - L.Height) div 2, L.Width, L.Height);
+			L.OnClick := LabelXClick;
+			InsertControl(L); // Set New Width on Windows 7 (apply autosize)
 			Inc(GX, L.Width + FormBorder);
 			MaxWidth := Max(MaxWidth, L.Width);
-			L.OnClick := LabelXClick;
-			InsertControl(L);
 		end
 		else
 			L := nil;

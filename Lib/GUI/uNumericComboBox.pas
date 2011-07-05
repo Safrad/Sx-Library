@@ -60,7 +60,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TNumericComboBox]);
+	RegisterComponents(ComponentPageName, [TNumericComboBox]);
 end;
 
 constructor TNumericComboBox.Create(AOwner: TComponent);

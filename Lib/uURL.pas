@@ -63,7 +63,7 @@ begin
 	FPath := ReadToChar(uri, InLineIndex, #0);
 end;
 
-procedure TURL.DecodeURL(const url: String);
+procedure TURL.DecodeURL(const url: string);
 const
 	PROTOCOL_SEPARATOR = '//';
 var

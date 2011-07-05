@@ -37,10 +37,10 @@ var
 type
 	TOb = class(TObject)
 	private
-		function AppProc(var Message: TMessage): BG;
+		class function AppProc(var Message: TMessage): BG;
 	end;
 
-function TOb.AppProc(var Message: TMessage): BG;
+class function TOb.AppProc(var Message: TMessage): BG;
 var
 	i: SG;
 	LastWriteTime: TFileTime;
@@ -97,7 +97,7 @@ begin
 										WatchedFile.OnChangeEx(WatchedFile.FileName);
 								except
 									on E: Exception do
-										Fatal(E, Self);
+										Fatal(E, TOb.NewInstance);
 								end;
 						end;
 					end;
@@ -111,14 +111,12 @@ end;
 
 var
 	Initialized: BG;
-	Ob: TOb;
 
 procedure InitializeData;
 begin
 	Initialized := True;
-	Ob := TOb.Create;
 //	if (not (csDesigning in ComponentState)) then
-	Application.HookMainWindow(Ob.AppProc);
+	Application.HookMainWindow(TOb.AppProc);
 end;
 
 procedure FinalizeData;
@@ -127,8 +125,7 @@ begin
 	begin
 		Initialized := False;
 //		if (not (csDesigning in ComponentState)) then
-		Application.UnHookMainWindow(Ob.AppProc);
-		FreeAndNil(Ob);
+		Application.UnHookMainWindow(TOb.AppProc);
 	end;
 end;
 

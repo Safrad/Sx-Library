@@ -452,7 +452,15 @@ begin
 
 		Result := NToS(Round(Nu), D, OutputFormat);
 		if Pos(Sep, Result) <> 0 then
-			DelEndChars(Result, ['0', Sep]);
+		begin
+			DelEndChar(Result, '0');
+			case OutputFormat of
+			ofDisplay:
+				DelEndChar(Result, DecimalSeparator[1]);
+			else
+				DelEndChar(Result, '.');
+			end;
+		end;
 		ThousandSeparator := LastThousandSeparator;
 	end;
 end;

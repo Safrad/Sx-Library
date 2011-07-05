@@ -363,7 +363,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDGauge]);
+	RegisterComponents(ComponentPageName, [TDGauge]);
 end;
 
 end.

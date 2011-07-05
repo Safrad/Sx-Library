@@ -264,7 +264,7 @@ begin
 				Inc(P.CountOn);
 		end;
 	end;
-  SaveDatabase;
+	SaveDatabase;
 end;
 
 function TFileList.GetFileNames: TFileNames;

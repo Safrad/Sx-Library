@@ -11,6 +11,7 @@ type
 	private
 		{$ifdef VER150}
 //		FWantReturns: BG;
+		FParentDoubleBuffered: BG;
 		{$endif}
 	public
 		constructor Create(AOwner: TComponent); override;
@@ -18,6 +19,7 @@ type
 	published
 		{$ifdef VER150}
 		property DoubleBuffered;
+		property ParentDoubleBuffered: BG read FParentDoubleBuffered;
 //		property WantReturns: BG read FWantReturns write FWantReturns;
 		{$endif}
 	end;
@@ -30,11 +32,13 @@ procedure SetControlDesign(C: TComboBox; const WrongData: BG); overload;
 
 implementation
 
-uses Graphics;
+uses
+  uColor,
+  Graphics;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDEdit]);
+	RegisterComponents(ComponentPageName, [TDEdit]);
 end;
 
 procedure SetDesign(C: TComboBox; ParserMessages: TParserMessages);
@@ -74,8 +78,8 @@ begin
 	if WrongData then
 	begin
 //		TDEdit(C).Font.Style := [fsStrikeOut];
-		C.Font.Color := clHighlightText;
-		C.Color := clHotlight;
+		C.Font.Color := clGrayText; //clHighlightText;
+		C.Color := NegMonoColor(clGrayText);//clHotlight;
 	end
 	else
 	begin
@@ -90,8 +94,8 @@ begin
 	if WrongData then
 	begin
 //		TDEdit(C).Font.Style := [fsStrikeOut];
-		C.Font.Color := clHighlightText;
-		C.Color := clHotlight;
+		C.Font.Color := clGrayText;
+		C.Color := NegMonoColor(clGrayText);;
 	end
 	else
 	begin

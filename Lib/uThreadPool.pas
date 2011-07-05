@@ -161,8 +161,10 @@ begin
 		begin
 			OneThread := TOneThread.Create;
 			{$ifopt d+}
+			{$ifdef UNICODE}
 			RegisterExpectedMemoryLeak(OneThread);
 			OneThread.NameThreadForDebugging(AnsiString('Process ' + IntToStr(i)));
+			{$endif}
 			{$endif}
 			OneThread.Priority := tpLower;
 			OneThread.FThreadPool := Self;

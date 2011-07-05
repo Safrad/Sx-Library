@@ -102,7 +102,7 @@ begin
 	else if fGetInt.TCurVal > fGetInt.TMaxVal then
 		fGetInt.TCurVal := fGetInt.TMaxVal;
 	fGetInt.NowVal := fGetInt.TCurVal;
-	fGetInt.Caption := Translate(DelCharsF(Prompt, '&'));
+	fGetInt.Caption := Translate(RemoveSingleAmp(Prompt));
 	fGetInt.LabelMin.Caption := IntToStr(fGetInt.TMinVal);
 	fGetInt.LabelMax.Caption := IntToStr(fGetInt.TMaxVal);
 	fGetInt.LabelNow.Caption := IntToStr(fGetInt.NowVal);

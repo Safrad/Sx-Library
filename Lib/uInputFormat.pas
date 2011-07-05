@@ -242,7 +242,19 @@ begin
 		end
 		else if Pos('-', Str) <> 0 then
 		begin
+			// preffered
 			DateSep := '-';
+			Year := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));
+			Month := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));
+			Day := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));
+	{		Year := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1900, UG(1900), 9999, 1);
+			Month := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 12, 1);
+			Day := StrToValI(ReadToChar(Str, InLineIndex, DateSep), False, 1, UG(1), 31, 1);}
+		end
+		else if Pos(':', Str) <> 0 then
+		begin
+			 // exif
+			DateSep := ':';
 			Year := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));
 			Month := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));
 			Day := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));

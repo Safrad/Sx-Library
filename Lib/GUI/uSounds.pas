@@ -128,12 +128,10 @@ end;
 
 type
 	TOb = class
-		procedure RWOptions(const Save: BG);
+		class procedure RWOptions(const Save: BG);
 	end;
-var
-	Ob: TOb;
 
-procedure TOb.RWOptions(const Save: Boolean);
+class procedure TOb.RWOptions(const Save: Boolean);
 var
 	Section: string;
 	i: SG;
@@ -215,7 +213,7 @@ begin
 	if IniLoaded = False then
 	begin
 		IniLoaded := True;
-		MainIni.RegisterRW(Ob.RWOptions);
+		MainIni.RegisterRW(TOb.RWOptions);
 	end;
 
 	P := Sounds.GetFirst;
@@ -243,7 +241,7 @@ begin
 	if IniLoaded then
 	begin
 		IniLoaded := False;
-		MainIni.UnregisterRW(Ob.RWOptions);
+		MainIni.UnregisterRW(TOb.RWOptions);
 	end;
 	if Sounds.Count = 0 then Exit;
 	P := Sounds.GetFirst;
@@ -274,7 +272,7 @@ begin
 		if IniLoaded = False then
 		begin
 			IniLoaded := True;
-			MainIni.RegisterRW(Ob.RWOptions);
+			MainIni.RegisterRW(TOb.RWOptions);
 		end;
 
 		P := Sounds.Get(SoundKind);
@@ -312,7 +310,7 @@ begin
 		if Assigned(MainIni) and (IniLoaded = False) then
 		begin
 			IniLoaded := True;
-			MainIni.RegisterRW(Ob.RWOptions);
+			MainIni.RegisterRW(TOb.RWOptions);
 		end;
 
 		P := Sounds.Get(SoundKind);
@@ -373,7 +371,7 @@ begin
 	if IniLoaded = False then
 	begin
 		IniLoaded := True;
-		MainIni.RegisterRW(Ob.RWOptions);
+		MainIni.RegisterRW(TOb.RWOptions);
 	end;
 	if not Assigned(fSounds) then
 		fSounds := TfSounds.Create(nil);

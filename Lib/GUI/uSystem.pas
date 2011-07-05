@@ -180,7 +180,7 @@ begin
 	lg_StartFolder := RepairDirectory(ExpandDir(Path));
 	browse_info.pszDisplayName := @folder[0];
 	if browseTitle <> '' then
-		browse_info.lpszTitle := PChar(Translate('Select the folder') + CharSpace + Translate(browseTitle) + '.')
+		browse_info.lpszTitle := PChar(Translate('Select' + CharSpace + browseTitle) + '.')
 	else
 		browse_info.lpszTitle := '';
 	browse_info.ulFlags := BIF_RETURNONLYFSDIRS or BIF_USENEWUI or BIF_VALIDATE;

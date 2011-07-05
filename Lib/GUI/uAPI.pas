@@ -19,7 +19,7 @@ uses
 type
 	TShellExecute = class(TThread)
 	private
-  	FAgain: BG;
+		FAgain: BG;
 		ErrorCode: U4;
 		FFileName: TFileName;
 		FParams: string;
@@ -42,11 +42,14 @@ begin
 end;
 
 procedure TShellExecute.Execute;
+const
+	OpenString = 'open'; // XP
+//	OpenString = 'RunAs'; // Newer Windows
 begin
 	FAgain := True;
 	while FAgain do
 	begin
-		ErrorCode := ShellExecute(0, 'open', PChar('"' + RemoveEV(FFileName) + '"'), PChar(FParams), nil, SW_ShowNormal);
+		ErrorCode := ShellExecute(0, OpenString, PChar('"' + RemoveEV(FFileName) + '"'), PChar(FParams), nil, SW_ShowNormal);
 		Synchronize(Synchro);
 	end;
 end;
@@ -62,8 +65,12 @@ var
 begin
 	MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
 	ShellExecute := TShellExecute.Create(FileName, Params);
+	{$ifdef UNICODE}
 	ShellExecute.NameThreadForDebugging('ShellExecute');
 	ShellExecute.Start;
+	{$else}
+	ShellExecute.Resume;
+	{$endif}
 end;
 
 procedure PropertiesDialog(FileName: TFileName);

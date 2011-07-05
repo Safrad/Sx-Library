@@ -20,10 +20,9 @@ type
 		procedure FormCreate(Sender: TObject);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 		procedure PopupMenuFEPopup(Sender: TObject);
-		procedure DViewFileExtensionsGetData(Sender: TObject; var Data: String; ColIndex,
-			RowIndex: Integer; Rect: TRect);
-		procedure FormKeyDown(Sender: TObject; var Key: Word;
-			Shift: TShiftState);
+		procedure DViewFileExtensionsGetData(Sender: TObject; var Data: String;
+			ColIndex, RowIndex: Integer; Rect: TRect);
+		procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 	private
 		{ Private declarations }
 		procedure Init(Sender: TObject);
@@ -31,11 +30,8 @@ type
 		{ Public declarations }
 	end;
 
-procedure AddFileType(
-	const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of string;
-	const OpenPrograms: array of string
-	);
+procedure AddFileType(const FileType, FileTypeCaption, Icon: string;
+	const MenuCaptions: array of string; const OpenPrograms: array of string);
 
 procedure FormFileExt;
 procedure FreeFileExt;
@@ -43,6 +39,7 @@ procedure FreeFileExt;
 implementation
 
 {$R *.dfm}
+
 uses uTypes, uReg, uDIniFile, uMenus, uOutputFormat, uStrings, uDictionary;
 
 type
@@ -50,8 +47,9 @@ type
 		FileType, FileTypeCaption, Icon: string; // 12
 		Exists: B4;
 		MenuCaptions: array of string; // 4
-		OpenPrograms: array of string // 4
+		OpenPrograms: array of string; // 4
 	end;
+
 var
 	FileTypes: array of TFileType;
 	FileTypeCount: SG;
@@ -60,7 +58,8 @@ var
 
 procedure FormFileExt;
 begin
-	if not Assigned(fFileExt) then fFileExt := TfFileExt.Create(nil);
+	if not Assigned(fFileExt) then
+		fFileExt := TfFileExt.Create(nil);
 	fFileExt.DViewFileExtensions.RowCount := FileTypeCount;
 	fFileExt.DViewFileExtensions.DataChanged;
 	fFileExt.Init(nil);
@@ -74,12 +73,11 @@ begin
 	FormFree(TForm(fFileExt));
 end;
 
-procedure AddFileType(
-	const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of string;
-	const OpenPrograms: array of string
-	);
-var j: SG;
+procedure AddFileType(const FileType, FileTypeCaption, Icon: string;
+	const MenuCaptions: array of string; const OpenPrograms: array of string);
+
+var
+	j: SG;
 begin
 	SetLength(FileTypes, FileTypeCount + 1);
 	FileTypes[FileTypeCount].FileType := FileType;
@@ -96,6 +94,7 @@ begin
 end;
 
 procedure TfFileExt.Init(Sender: TObject);
+
 var
 	i: SG;
 	ExistCount: SG;
@@ -103,31 +102,27 @@ begin
 	ExistCount := 0;
 	for i := 0 to FileTypeCount - 1 do
 	begin
-		FileTypes[i].Exists := CustomFileType(
-			foExists,
-			FileTypes[i].FileType,
-			FileTypes[i].FileTypeCaption,
-			FileTypes[i].Icon,
-			FileTypes[i].MenuCaptions,
+		FileTypes[i].Exists := CustomFileType(foExists, FileTypes[i].FileType,
+			FileTypes[i].FileTypeCaption, FileTypes[i].Icon, FileTypes[i].MenuCaptions,
 			FileTypes[i].OpenPrograms);
-		if FileTypes[i].Exists then Inc(ExistCount);
+		if FileTypes[i].Exists then
+			Inc(ExistCount);
 	end;
-	Caption := Translate('File Extensions') + CharSpace + NToS(ExistCount) + ' / ' + NToS(FileTypeCount);
+	Caption := Translate('File Extensions') + CharSpace + NToS(ExistCount) + ' / ' + NToS
+		(FileTypeCount);
 end;
 
 procedure TfFileExt.Register1Click(Sender: TObject);
-var i, Tg: SG;
+
+var
+	i, Tg: SG;
 begin
 	Tg := TComponent(Sender).Tag;
 	for i := 0 to FileTypeCount - 1 do
 	begin
 		if (Tg >= 2) or (DViewFileExtensions.SelectedRows[i]) then
-			CustomFileType(
-				TFileTypesOperation(Tg and 1),
-				FileTypes[i].FileType,
-				FileTypes[i].FileTypeCaption,
-				FileTypes[i].Icon,
-				FileTypes[i].MenuCaptions,
+			CustomFileType(TFileTypesOperation(Tg and 1), FileTypes[i].FileType,
+				FileTypes[i].FileTypeCaption, FileTypes[i].Icon, FileTypes[i].MenuCaptions,
 				FileTypes[i].OpenPrograms);
 	end;
 	Init(Sender);
@@ -162,6 +157,7 @@ begin
 end;
 
 procedure TfFileExt.PopupMenuFEPopup(Sender: TObject);
+
 var
 	i: SG;
 	C, E: BG;
@@ -191,18 +187,25 @@ begin
 	else
 		DViewFileExtensions.Bitmap.Canvas.Font.Style := [fsStrikeOut];
 	case ColIndex of
-	0: Data := FileTypes[RowIndex].FileType;
-	1: Data := FileTypes[RowIndex].FileTypeCaption;
-	2: Data := FileTypes[RowIndex].Icon;
-	3: Data := FileTypes[RowIndex].MenuCaptions[0];
-	4: Data := FileTypes[RowIndex].OpenPrograms[0];
+	0:
+		Data := FileTypes[RowIndex].FileType;
+	1:
+		Data := FileTypes[RowIndex].FileTypeCaption;
+	2:
+		Data := FileTypes[RowIndex].Icon;
+	3:
+		if Length(FileTypes[RowIndex].MenuCaptions) > 0 then
+			Data := FileTypes[RowIndex].MenuCaptions[0];
+	4:
+		if Length(FileTypes[RowIndex].OpenPrograms) > 0 then
+			Data := FileTypes[RowIndex].OpenPrograms[0];
 	end;
 end;
 
-procedure TfFileExt.FormKeyDown(Sender: TObject; var Key: Word;
-	Shift: TShiftState);
+procedure TfFileExt.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-	if Key = VK_ESCAPE then Close;
+	if Key = VK_ESCAPE then
+		Close;
 end;
 
 initialization

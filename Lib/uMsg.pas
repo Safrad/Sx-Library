@@ -46,7 +46,8 @@ const
 	DlgBtnNames: array [TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry,
 		SMsgDlgIgnore, SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel);
 
-function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
+function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
+function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
 {$ENDIF}
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 function IOErrorRetry(var FileName: TFileName; const ErrorCode: U4): BG;
@@ -212,6 +213,12 @@ function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
 	Result := MessageD(Text, mlConfirmation, Buttons);
 end;
+
+function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn;
+begin
+	Result := MessageD(Text, Param, mlConfirmation, Buttons);
+end;
+
 {$ENDIF}
 
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);

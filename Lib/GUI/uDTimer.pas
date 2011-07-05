@@ -372,7 +372,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDTimer]);
+	RegisterComponents(ComponentPageName, [TDTimer]);
 end;
 
 procedure TDTimer.Step;

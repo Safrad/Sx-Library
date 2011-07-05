@@ -72,6 +72,7 @@ function DelQuoteF(const s: string): string;
 function DelPathSep(const s: string): string;
 
 procedure DelBeginChars(var s: string; const C: TCharSet);
+procedure DelEndChar(var s: string; const C: Char);
 procedure DelEndChars(var s: string; const C: TCharSet);
 
 procedure DelBeginSpace(var s: string);
@@ -125,6 +126,7 @@ procedure Replace(var s: string; const WhatS, ToS: string); overload;
 procedure Replace(var s: string; const WhatS, ToS: array of string); overload;
 
 function DoubleBackSlash(const s: string): string;
+function RemoveSingleAmp(const s: string): string;
 function Code(const s: string; const Decode: BG): string;
 
 function AddSpace(const s: string): string;
@@ -441,6 +443,22 @@ begin
 	end;
 	if i > 1 then
 		Delete(s, 1, i - 1);
+end;
+
+procedure DelEndChar(var s: string; const C: Char);
+var
+	i: SG;
+begin
+	i := Length(s);
+	while i > 0 do
+	begin
+		if s[i] <> C then
+		begin
+			Break;
+		end;
+		Dec(i);
+	end;
+	SetLength(s, i);
 end;
 
 procedure DelEndChars(var s: string; const C: TCharSet);
@@ -965,6 +983,34 @@ begin
 		Result := Result + s[i];
 		if s[i] = '\' then Result := Result + '\';
 	end;
+end;
+
+function RemoveSingleAmp(const s: string): string;
+var
+  SourceLength: Integer;
+  LastAmp: Boolean;
+  ResultLength: Integer;
+  i: Integer;
+begin
+  SourceLength := Length(s);
+  SetLength(Result, SourceLength);
+  ResultLength := 0;
+  LastAmp := False;
+  for i := 1 to SourceLength do
+  begin
+    if s[i] = '&' then
+    begin
+      if not LastAmp then
+      begin
+        LastAmp := True;
+        Continue;
+      end;
+    end;
+    LastAmp := False;
+    Inc(ResultLength);
+    Result[ResultLength] := s[i];
+  end;
+  SetLength(Result, ResultLength);
 end;
 
 function Code(const s: string; const Decode: BG): string;

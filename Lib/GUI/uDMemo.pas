@@ -11,7 +11,6 @@ type
 		{ Private declarations }
 	public
 		{ Public declarations }
-		constructor Create(AOwner: TComponent); override;
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 	published
 		{ Published declarations }
@@ -21,11 +20,7 @@ procedure Register;
 
 implementation
 
-constructor TDMemo.Create(AOwner: TComponent);
-begin
-	inherited Create(AOwner);
-
-end;
+uses uTypes;
 
 procedure TDMemo.KeyDown(var Key: Word; Shift: TShiftState);
 begin
@@ -37,7 +32,7 @@ end;
 
 procedure Register;
 begin
-	RegisterComponents('DComp', [TDMemo]);
+	RegisterComponents(ComponentPageName, [TDMemo]);
 end;
 
 end.
