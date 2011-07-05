@@ -168,7 +168,9 @@ begin
 				p := '''' + Ignore.Param[Id - 1] + '''';
 				// Inc(i, Length(p));
 				Output := Output + p;
-			end;
+			end
+			else
+				Output := Output + '%';
 		end;
 		MemoMsg.Text := Output;
 		for i := 0 to Length(Ignore.Param) - 1 do

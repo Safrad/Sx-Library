@@ -1,20 +1,19 @@
 object fAbout: TfAbout
   Left = 640
   Top = 264
+  Width = 344
+  Height = 480
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
   Caption = 'About'
-  ClientHeight = 453
-  ClientWidth = 336
   Color = clBtnFace
   Constraints.MinHeight = 451
   Constraints.MinWidth = 344
   ParentFont = True
   OldCreateOrder = False
-  Position = poDesigned
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -28,6 +27,7 @@ object fAbout: TfAbout
     Width = 320
     Height = 180
     Zoom = 1.000000000000000000
+    DisplayMode = dmCustom
     OnFill = ImageAboutFill
     ParentShowHint = False
     ShowHint = False
@@ -41,6 +41,7 @@ object fAbout: TfAbout
     Height = 201
     Zoom = 1.000000000000000000
     EnableZoom = True
+    DisplayMode = dmCustom
     TabOrder = 4
     OnGetData = DViewAboutGetData
   end

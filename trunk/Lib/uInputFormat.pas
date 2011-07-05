@@ -48,7 +48,7 @@ implementation
 
 uses
 	SysUtils,
-	uDParser, uStrings, uMsg;
+	uDParser, uStrings, uMsg, uMath;
 
 function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
 var Parser: TDParser;
@@ -169,19 +169,19 @@ end;}
 function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG; const Messages: TParserMessages = nil): SG;
 begin
-	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
+	Result := RoundN(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
 end;
 
 function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: UG; const Messages: TParserMessages = nil): UG;
 begin
-	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
+	Result := RoundN(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
 end;
 
 function StrToValS8(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: S8; const Messages: TParserMessages = nil): S8;
 begin
-	Result := Round(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
+	Result := RoundN(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
 end;
 
 function StrToValU1(Line: string; const UseWinFormat: BG;
@@ -253,7 +253,7 @@ begin
 		end
 		else if Pos(':', Str) <> 0 then
 		begin
-			 // exif
+			// exif
 			DateSep := ':';
 			Year := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));
 			Month := ReadSGFast(ReadToChar(Str, InLineIndex, DateSep));
@@ -340,7 +340,7 @@ begin
 	case InputFormat of
 	ifDisplay:
 	begin
-		Result := Round(StrToTime(Str) * MSecsPerDay);
+		Result := RoundN(StrToTime(Str) * MSecsPerDay);
 	end
 	else
 	begin

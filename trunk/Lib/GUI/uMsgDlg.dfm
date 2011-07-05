@@ -57,6 +57,7 @@ object fMsgDlg: TfMsgDlg
     TabOrder = 6
     OnMouseMove = FormMouseMove
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object LabelTimeLeft: TDLabel
     Left = 200
@@ -199,6 +200,7 @@ object fMsgDlg: TfMsgDlg
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
     DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object ButtonRight: TDButton
     Tag = 1

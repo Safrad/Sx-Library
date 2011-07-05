@@ -1023,8 +1023,8 @@ procedure TDImage.InitScrolls;
 begin
 	UserWidth2 := FUserArea.Right - FUserArea.Left + 1;
 	UserHeight2 := FUserArea.Bottom - FUserArea.Top + 1;
-	UserWidth := Round(Zoom * UserWidth2);
-	UserHeight := Round(Zoom * UserHeight2);
+	UserWidth := RoundN(Zoom * UserWidth2);
+	UserHeight := RoundN(Zoom * UserHeight2);
 
 	if UserWidth > Bitmap.Width then
 		HType := 1
@@ -1112,8 +1112,8 @@ begin
 	end
 	else
 	begin
-		SX := Round(Zoom * BmpSource.Width);
-		SY := Round(Zoom * BmpSource.Height);
+		SX := RoundN(Zoom * BmpSource.Width);
+		SY := RoundN(Zoom * BmpSource.Height);
 
 		DX1 := 0;
 		DY1 := 0;
@@ -1141,14 +1141,14 @@ begin
 		end
 		else
 		begin
-			DX1 := DX1 - Round(Zoom * Frac(OX / Zoom));
-			DY1 := DY1 - Round(Zoom * Frac(OY / Zoom));
+			DX1 := DX1 - RoundN(Zoom * Frac(OX / Zoom));
+			DY1 := DY1 - RoundN(Zoom * Frac(OY / Zoom));
 		end;
 
 		SXW := Ceil(VisX / Zoom - DX1);
 		SYH := Ceil(VisY / Zoom - DY1);
-		DXW := Round(Zoom * SXW);
-		DYH := Round(Zoom * SYH);
+		DXW := RoundN(Zoom * SXW);
+		DYH := RoundN(Zoom * SYH);
 
 		if Zoom <= 1 then
 		begin
@@ -1218,8 +1218,8 @@ end;
 
 function TDImage.GetPoint(const X, Y: FA): TPoint;
 begin
-	Result.X := Round(ActualZoom * (X - UserArea.Left) - FOfsX) + CenterOffset.X;
-	Result.Y := Round(ActualZoom * (Y - UserArea.Top) - FOfsY) + CenterOffset.Y;
+	Result.X := RoundN(ActualZoom * (X - UserArea.Left) - FOfsX) + CenterOffset.X;
+	Result.Y := RoundN(ActualZoom * (Y - UserArea.Top) - FOfsY) + CenterOffset.Y;
 end;
 
 function TDImage.GetFloPoint(const X, Y: FA): TFloPoint;
@@ -1266,7 +1266,7 @@ begin
 		begin // TODO bug offset on frac zoom
 			if ActualZoom >= 3 then
 			begin
-				e := (Round(ActualZoomX) - FOfsX) mod Round(ActualZoomX);
+				e := (RoundN(ActualZoomX) - FOfsX) mod RoundN(ActualZoomX);
 				i := Round(e);
 				while i < UserWidth do
 				begin
@@ -1274,13 +1274,13 @@ begin
 					e := e + ActualZoomX;
 					i := RoundSG(e);
 				end;
-				e := (Round(ActualZoomY) - FOfsY) mod Round(ActualZoomY);
+				e := (RoundN(ActualZoomY) - FOfsY) mod RoundN(ActualZoomY);
 				i := RoundSG(e);
 				while i < UserHeight do
 				begin
 					Bitmap.Line(0, i, UserWidth - 1, i, GrateColor, ef12);
 					e := e + ActualZoomY;
-					i := Round(e);
+					i := RoundN(e);
 				end;
 			end;
 		end;
@@ -1328,8 +1328,8 @@ begin
 			ZoomMake(UserBitmap, Width, Height, False, Center, ActualZoom, False, False
 				{ True } , FOfsX + Floor(Zoom * UserArea.Left), FOfsY + Floor(Zoom * UserArea.Top),
 				UserWidth, UserHeight, SX, SY, SW, SH, DX, DY, DW, DH, BmpSourceS);
-			UserWidth := Round(Zoom * UserWidth2);
-			UserHeight := Round(Zoom * UserHeight2);
+			UserWidth := RoundN(Zoom * UserWidth2);
+			UserHeight := RoundN(Zoom * UserHeight2);
 
 			if Assigned(BmpSourceS) then
 				BmpS := BmpSourceS

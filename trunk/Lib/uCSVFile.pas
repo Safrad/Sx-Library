@@ -17,6 +17,7 @@ type
 		FFile: TFile;
 		FColumnCount: SG;
 		FLineIndex: SG;
+		FColumnIndexes: TArrayOfSG;
 	public
 		{ Public declarations }
 		AcceptRemark: BG;
@@ -24,6 +25,7 @@ type
 		destructor Destroy; override;
 
 		function ReadLine: TArrayOfString;
+		procedure RemapColumns(const ColumnNames: array of string);
 		function Open(const FileName: TFileName): BG;
 		function Close: BG;
 		function EOF: BG;
@@ -36,8 +38,8 @@ procedure CreateCSVHead(const FileName: TFileName; const Head: array of string);
 implementation
 
 uses
-	Windows,
-	uStrings,
+	Windows, Math,
+	uStrings, uMath, uMsg,
 	uFiles;
 
 procedure CreateCSVHead(const FileName: TFileName; const Head: array of string);
@@ -73,16 +75,21 @@ begin
 	end;
 end;
 
+const
+  MaxColumn = 255;
+
 { TCSVFile }
 
 constructor TCSVFile.Create(const ColumnCount: SG);
 begin
-	Assert(ColumnCount >= 0);
-	FColumnCount := ColumnCount;
-	AcceptRemark := False;
-	FFile := TFile.Create;
+	SetLength(FColumnIndexes, MaxColumn);
+	FillOrderU4(FColumnIndexes[0], MaxColumn);
 
 	inherited Create;
+
+	Assert(ColumnCount >= 0);
+	FColumnCount := ColumnCount;
+	FFile := TFile.Create;
 end;
 
 destructor TCSVFile.Destroy;
@@ -171,12 +178,16 @@ begin
 					begin
 						if FColumnCount = 0 then
 						begin
-							SetLength(Result, ColumnIndex + 1);
-							Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+							if FColumnIndexes[ColumnIndex] >= 0 then
+							begin
+								SetLength(Result, Max(Length(Result), FColumnIndexes[ColumnIndex] + 1));
+								Result[FColumnIndexes[ColumnIndex]] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+							end;
 						end
 						else if ColumnIndex < FColumnCount then
 						begin
-							Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+							if FColumnIndexes[ColumnIndex] >= 0 then
+								Result[FColumnIndexes[ColumnIndex]] := Copy(Line, LastIndex, InLineIndex - LastIndex);
 						end;
 						Inc(ColumnIndex);
 						LastIndex := InLineIndex + 1;
@@ -189,12 +200,16 @@ begin
 			end;
 			if FColumnCount = 0 then
 			begin
-				SetLength(Result, ColumnIndex + 1);
-				Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+				if FColumnIndexes[ColumnIndex] >= 0 then
+				begin
+					SetLength(Result, Max(Length(Result), FColumnIndexes[ColumnIndex] + 1));
+					Result[FColumnIndexes[ColumnIndex]] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+				end;
 			end
 			else if ColumnIndex < FColumnCount then
 			begin
-				Result[ColumnIndex] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+				if FColumnIndexes[ColumnIndex] >= 0 then
+					Result[FColumnIndexes[ColumnIndex]] := Copy(Line, LastIndex, InLineIndex - LastIndex);
 			end;
 
 			Inc(FLineIndex);
@@ -216,6 +231,7 @@ begin
 		if FFile.Opened then
 			Result := FFile.Close;
 	end;
+	SetLength(FColumnIndexes, 0);
 end;
 
 function TCSVFile.EOF: BG;
@@ -223,6 +239,39 @@ begin
 	Result := True;
 	if Assigned(FFile) and (FFile.Opened) then
 		Result := FFile.Eof;
+end;
+
+procedure TCSVFile.RemapColumns(const ColumnNames: array of string);
+var
+	Row: TArrayOfString;
+	i, j: SG;
+begin
+  FColumnCount := Length(ColumnNames);
+	SetLength(FColumnIndexes, MaxColumn);
+	FillOrderU4(FColumnIndexes[0], MaxColumn);
+
+	AcceptRemark := True;
+	Row := ReadLine;
+	AcceptRemark := False;
+
+	if FirstChar(Row[0]) = CSVRemark then
+		Delete(Row[0], 1, 1);
+
+	SetLength(FColumnIndexes, Length(Row));
+	for i := 0 to Length(Row) - 1 do
+	begin
+		FColumnIndexes[i] := -1;
+		for j := 0 to Length(ColumnNames) - 1 do
+		begin
+			if ColumnNames[j] = Row[i] then
+			begin
+				FColumnIndexes[i] := j;
+				Break;
+			end;
+		end;
+		if (FColumnIndexes[i] = -1) and (Row[i] <> '') then
+			Warning('Column %1 not used.', [Row[i]]);
+	end;
 end;
 
 end.

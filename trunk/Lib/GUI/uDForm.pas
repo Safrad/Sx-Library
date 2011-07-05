@@ -25,6 +25,7 @@ type
 		FWindowLong: S4;
 
 		FBitmapB: TDBitmap;
+		FLastColor: TColor;
 
 		FBackground: TBackground;
 		FFullScreen: Boolean;
@@ -56,6 +57,7 @@ type
 
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
+		procedure CreateParams(var Params: TCreateParams); override;
 		// function CloseQuery: Boolean; override;
 
 		procedure RestoreWindow;
@@ -66,11 +68,12 @@ type
 		procedure Paint; override;
 		procedure ResizeScene;
 		procedure Center;
+		function CenterPoint: TPoint;
 		procedure SetVisible(const Value: Boolean);
 		procedure ChangeVisible;
 		procedure AlignControl(const AControl: TControl; const AAnchors: TAnchors);
 		procedure AlignControlRight(const AControl: TControl);
-		procedure AlignControlTop(const AControl: TControl);
+		procedure AlignControlBottom(const AControl: TControl; const KeepSize: BG);
 		procedure AlignControlRightTop(const AControl: TControl);
 	published
 		{ published declarations }
@@ -105,6 +108,7 @@ const
 var
 	DesktopHWnd: HWnd;
 	DesktopDC: HDC;
+	DisableShowHideTaskBar: BG;
 
 function ActiveForm: TForm;
 procedure SetControlEnabled(Component: TComponent; E: BG);
@@ -115,7 +119,7 @@ implementation
 
 uses
 	Types, Math,
-	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo;
+	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo, uCommon, uLog;
 
 const
 	OneBuffer = False;
@@ -297,11 +301,18 @@ procedure ShowTaskBar(Visible: Boolean);
 var
 	hTaskBar: HWnd;
 begin
+	if DisableShowHideTaskBar then Exit;
 	hTaskBar := FindWindow('Shell_TrayWnd', nil);
 	if Visible then
-		ShowWindow(hTaskBar, SW_SHOWNA)
+	begin
+		ShowWindow(hTaskBar, SW_SHOWNA);
+		MainLogAdd('ShowTaskBar', mlInformation);
+	end
 	else
+	begin
 		ShowWindow(hTaskBar, SW_HIDE);
+		MainLogAdd('HideTaskBar', mlInformation);
+	end;
 end;
 
 function GetTaskBarPos: TPosition;
@@ -470,10 +481,12 @@ begin
 				Exit;
 			end;
 		end;
-		if Direct or (FBitmapB.Width <> ClientWidth) or (FBitmapB.Height <> ClientHeight) then
+		if Direct or (FBitmapB.Width <> ClientWidth) or (FBitmapB.Height <> ClientHeight) or (Color <> FLastColor) then
 		begin
+			FBitmapB.SetSize(0, 0);
 			FBitmapB.SetSize(ClientWidth, ClientHeight, Color);
 			FBitmapB.ChangeRB := FBackground = baOpenGLBitmap;
+			FLastColor := Color;
 
 			if FBitmapB.Empty = False then
 			begin
@@ -485,7 +498,8 @@ begin
 				baGradient:
 					begin
 						// {$ifopt d-}
-						FBitmapB.FormBitmap(Color);
+						if GetBackgroundWindowTexture then
+							FBitmapB.FormBitmap(Color);
 						// {$endif}
 					end;
 				end;
@@ -580,6 +594,8 @@ begin
 
 	inherited Create(AOwner);
 
+	FLastColor := Color;
+	
 	CorrectFont(Font);
 	CheckPos;
 
@@ -675,6 +691,7 @@ begin
 		end
 	else
 	begin
+		InitBackground(False);
 		BitBlt(Canvas.Handle, 0, 0, FBitmapB.Width, FBitmapB.Height, FBitmapB.Canvas.Handle, 0, 0,
 			SRCCOPY);
 	end;
@@ -875,28 +892,31 @@ end;
 
 procedure TDForm.Center;
 var
+	P: TPoint;
+begin
+	P := CenterPoint;
+	SetBounds(P.X, P.Y, Width, Height);
+end;
+
+function TDForm.CenterPoint: TPoint;
+var
 	CenterForm: TForm;
-	X, Y: SG;
 	Rect: TRect;
 begin
 	CenterForm := ActiveForm;
-	if Assigned(CenterForm) then
+	if Assigned(CenterForm) and (CenterForm <> Self) then
 	begin
-		X := ((CenterForm.Width - Width) div 2) + CenterForm.Left;
-		Y := ((CenterForm.Height - Height) div 2) + CenterForm.Top;
+		Result.X := ((CenterForm.Width - Width) div 2) + CenterForm.Left;
+		Result.Y := ((CenterForm.Height - Height) div 2) + CenterForm.Top;
 	end
 	else
 	begin
 		Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;
-		X := Rect.Left + (Rect.Right - Rect.Left - Width) div 2;
-		Y := Rect.Top + (Rect.Bottom - Rect.Top - Height) div 2;
+		Result.X := Rect.Left + (Rect.Right - Rect.Left - Width) div 2;
+		Result.Y := Rect.Top + (Rect.Bottom - Rect.Top - Height) div 2;
 	end;
-	{ if X > Rect.Right - Width then X := Rect.Right - Width;
-		if Y > Rect.Bottom - Height then Y := Rect.Bottom - Height;
-		if X < Rect.Left then X := Rect.Left;
-		if Y < Rect.Top then Y := Rect.Top; }
-	SetBounds(X, Y, Width, Height);
 end;
+
 
 procedure TDForm.ChangeVisible;
 begin
@@ -944,7 +964,7 @@ begin
 	else
 	begin
 //		Form.SendToBack;
-		Form.BringToFront;
+			Form.BringToFront;
 //{			ShowWindow(Handle, SW_SHOW); // SW_NORMAL, SW_RESTORE break windows stay on top!
 			SetForegroundWindow(Form.Handle); // Blink Taskbar
 	end;
@@ -955,9 +975,12 @@ begin
 	AControl.Width := ClientWidth - AControl.Left - FormBorder;
 end;
 
-procedure TDForm.AlignControlTop(const AControl: TControl);
+procedure TDForm.AlignControlBottom(const AControl: TControl; const KeepSize: BG);
 begin
-	AControl.Height := ClientHeight - AControl.Top - FormBorder;
+	if KeepSize then
+		AControl.Top := ClientHeight - AControl.Height - FormBorder
+	else
+		AControl.Height := ClientHeight - AControl.Top - FormBorder;
 end;
 
 procedure TDForm.AlignControlRightTop(const AControl: TControl);
@@ -984,29 +1007,38 @@ begin
 		if akRight in Anchors then
 			if akLeft in Anchors then
 				FAnchorRules.X := Width else
-        FAnchorRules.X := Left
-    else
-      FAnchorRules.X := Left + Width div 2;
-    if akBottom in Anchors then
+				FAnchorRules.X := Left
+		else
+			FAnchorRules.X := Left + Width div 2;
+		if akBottom in Anchors then
 			if akTop in Anchors then
 				FAnchorRules.Y := Height else
-        FAnchorRules.Y := Top
-    else
-      FAnchorRules.Y := Top + Height div 2;
-    if Parent <> nil then
-      if csReading in Parent.ComponentState then
-      begin
-        if not (csDesigning in ComponentState) then
+				FAnchorRules.Y := Top
+		else
+			FAnchorRules.Y := Top + Height div 2;
+		if Parent <> nil then
+			if csReading in Parent.ComponentState then
+			begin
+				if not (csDesigning in ComponentState) then
 					FOriginalParentSize := Parent.DesignSize
-      end
-      else if Parent.HandleAllocated then
-        FOriginalParentSize := Parent.ClientRect.BottomRight
-      else
-      begin
+			end
+			else if Parent.HandleAllocated then
+				FOriginalParentSize := Parent.ClientRect.BottomRight
+			else
+			begin
 				FOriginalParentSize.X := Parent.Width;
-        FOriginalParentSize.Y := Parent.Height;
+				FOriginalParentSize.Y := Parent.Height;
 			end;
 	end; *)
+end;
+
+procedure TDForm.CreateParams(var Params: TCreateParams);
+begin
+	inherited;
+	if not (csDesigning in ComponentState) then
+		Color := GetBackgroundWindowColor;
+	
+//	Params.Style := Params.Style and not WS_CLIPCHILDREN;
 end;
 
 end.

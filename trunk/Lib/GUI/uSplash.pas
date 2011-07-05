@@ -78,14 +78,14 @@ begin
 		fSplash.BackBitmap.LoadFromFile(FileName);
 		x := fSplash.BackBitmap.Width;
 		y := fSplash.BackBitmap.Height;
-		if SetNormalSize(x, y, (R.Right - R.Left) div 2, (R.Bottom - R.Top) div 2) then
+		if SetNormalSize(x, y, 3 * (R.Right - R.Left) div 4, 3 * (R.Bottom - R.Top) div 4) then
 			fSplash.BackBitmap.Resize(x, y);
 	end
 	else if (FileName = '') then
 	begin
 		x := 512;
 		y := 384;
-		if SetSmallerSize(x, y, (R.Right - R.Left) div 2, (R.Bottom - R.Top) div 2) then
+		if SetSmallerSize(x, y, 3 * (R.Right - R.Left) div 4, 3 * (R.Bottom - R.Top) div 4) then
 		Bmp.SetSize(x, y, clNone);
 		Co[0] := clRed;
 		Co[1] := clGreen;

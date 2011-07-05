@@ -45,7 +45,8 @@ procedure THashTable.Add(const Key: U4; const Data: Pointer);
 var Index: SG;
 begin
 	Assert(FCount <= FCapacity);
-	if Count >= Capacity div 2 then DoubleSize;
+	if Count >= Capacity div 2 then
+		DoubleSize;
 	Inc(FCount);
 	Index := Key mod UG(FCapacity);
 	if U4(FKeys[Index]^) <> 0 then

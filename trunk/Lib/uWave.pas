@@ -273,6 +273,9 @@ const
 	ConvertPre = 1 shl ConvertShr;
 
 type
+	TWave = class;
+	TWaveArray = array of TWave;
+
 	TWave = class
 	private
 		FFormat: TWaveFormatChunk;
@@ -303,6 +306,7 @@ type
 		function Sample(Index: SG; const Channel: SG): SG; overload;
 		function Sample(const Index: SG): SG; overload;
 		function GetSample(const BitLength: SG; var BitIndex: SG): SG;
+		function GetSampleAddr(const ASample: SG): PWaveSample;
 		procedure AddSample(FPointer: PS2; const Value: S2);
 		property SampleCount: UG read FSampleCount write SetSampleCount;
 		property Format: TWaveFormatChunk read FFormat;
@@ -315,12 +319,14 @@ type
 		function ConvertChannels(const NewChannels: U2; const Left, Right: SG): TWave;
 		function ConvertBitsPerSample(const NewBitsPerSample: Integer): TWave;
 		procedure ConvertSampleRate(const SampleRate: U4);
+		function Split: TWaveArray;
+		function GetHearableRanges: TRangeArray;
 	end;
 
 implementation
 
 uses
-	Registry,
+	Registry, Math,
 	uMsg, uStrings, uOutputFormat, uLog;
 
 function GetWinSoundFileName(const WinSound: TWinSound): TFileName;
@@ -1043,6 +1049,11 @@ begin
 	end;
 end;
 
+function TWave.GetSampleAddr(const ASample: SG): PWaveSample;
+begin
+	Result := PWaveSample(SG(FData) + ASample * FFormat.BytesPerSample);
+end;
+
 function TWave.GetSample(const BitLength: SG; var BitIndex: SG): SG;
 begin
 	Result := PInt(SG(FData) + BitIndex div 8)^;
@@ -1071,6 +1082,97 @@ begin
 		ReallocMem(PWave, SizeOf(TCompleteWave) + FDataBytes);
 		FillWave(PWave, @FFormat, FDataBytes);
 		FData := PWaveSample(SG(PWave) + SizeOf(TCompleteWave));
+	end;
+end;
+
+function TWave.GetHearableRanges: TRangeArray;
+const
+//	SilentIntervalSize = 100; // ms
+	VoiceIntervalSize = 200; // ms
+	PrefixSize = 0; // ms
+	SuffixSize = 0; // ms
+	Threshold = 300;
+var
+	Silent: BG;
+	i: SG;
+	VoiceIntervalSamples,
+	PrefixSamples,
+	SuffixSamples: SG;
+	ActualRange: TRange;
+	Value: SG;
+	SilentCount: SG;
+	NewSize: SG;
+
+	procedure Add;
+	begin
+		SetLength(Result, NewSize + 1);
+		Result[NewSize] := ActualRange;
+		Inc(NewSize);
+	end;
+
+begin
+	Silent := True;
+
+	VoiceIntervalSamples := VoiceIntervalSize * FFormat.SampleRate div Second;
+	PrefixSamples := PrefixSize * FFormat.SampleRate div Second;
+	SuffixSamples := SuffixSize * FFormat.SampleRate div Second;
+
+	SilentCount := 0;
+	NewSize := 0;
+	ActualRange.F := 0;
+	ActualRange.T := 0;
+	for i := 0 to SampleCount - 1 do
+	begin
+		Value := Sample(i);
+		if Value < Threshold then
+		begin
+			Inc(SilentCount);
+			if (Silent = False) and (SilentCount > VoiceIntervalSamples) then
+			begin
+				Silent := True;
+				ActualRange.T := Max(i - VoiceIntervalSamples + SuffixSamples, ActualRange.F);
+				ActualRange.T := ActualRange.T;// - (ActualRange.T - ActualRange.F + 1) div 4;
+
+				Add;
+			end;
+		end
+		else // if Value >= Threshold then
+		begin
+			SilentCount := 0;
+			if Silent then
+			begin
+				ActualRange.F := Max(0, i - PrefixSamples);
+				Silent := False;
+			end;
+{			Inc(VoiceCount);
+			if VoiceCount > VoiceIntervalSamples then
+			begin
+				Silent := False;
+			end;}
+		end;
+	end;
+	if not Silent then
+	begin
+		ActualRange.T := SampleCount - 1;
+		Add;
+	end;
+end;
+
+function TWave.Split: TWaveArray;
+var
+	HearableRanges: TRangeArray;
+	i: SG;
+	Wave: TWave;
+begin
+	HearableRanges := GetHearableRanges;
+	SetLength(Result, System.Length(HearableRanges));
+	for i := 0 to System.Length(HearableRanges) - 1 do
+	begin
+		Wave := TWave.Create;
+		Wave.FFormat := FFormat;
+		Wave.SampleCount := HearableRanges[i].T - HearableRanges[i].F + 1;
+		Move(GetSampleAddr(HearableRanges[i].F)^, Wave.Data^, FFormat.BytesPerSample * (HearableRanges[i].T - HearableRanges[i].F + 1));
+		Result[i] := Wave;
 	end;
 end;
 

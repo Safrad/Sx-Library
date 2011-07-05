@@ -40,6 +40,7 @@ function LinearMax(Clock, Maximum: UG): UG;
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG); overload;
 procedure Rotate(var X, Y: Double; MaxX, MaxY: Double; Angle: SG); overload;
 
+function RoundN(const X: FA): S8;
 function RoundSG(Value: F4): SG; overload;
 function RoundSG(Value: F8): SG; overload;
 function RoundSG(Value: FA): SG; overload;
@@ -96,8 +97,8 @@ function SameData(P0, P1: Pointer; Size: UG): BG;
 function SameRect(const R1, R2: TRect): BG;
 procedure FillU2(var Desc; Count: UG; Value: U2);
 procedure FillU4(var Desc; Count: UG; Value: U4);
-procedure FillOrderU1(var Desc; Size: UG);
-procedure FillOrderU4(var Desc; Size: UG);
+procedure FillOrderU1(var Desc; const Count: UG);
+procedure FillOrderU4(var Desc; const Count: UG);
 procedure Reverse4(var Desc; Size: UG);
 function Checksum(var Desc; Size: UG): U4;
 function Hash(const Desc; Size: UG): U4;
@@ -400,6 +401,23 @@ begin
 	end;
 end;
 
+function RoundN(const X: FA): S8;
+// Rounds a number "normally": if the fractional
+// part is >= 0.5 the number is rounded up (see RoundUp)
+// Otherwise, if the fractional part is < 0.5, the
+// number is rounded down (see RoundDn).
+//   RoundN(3.5) = 4     RoundN(-3.5) = -4
+//   RoundN(3.1) = 3     RoundN(-3.1) = -3
+begin
+(*
+  if Abs(Frac(X)) >= 0.5 then
+    Result := RoundUp(X)
+  else
+    Result := RoundDn(X);
+*)
+	Result := Trunc(X) + Trunc(Frac(X) * 2);
+end;
+
 function RoundSG(Value: F4): SG;
 begin
 	if Value > MaxInt then
@@ -407,7 +425,7 @@ begin
 	else if Value < MinInt then
 		Result := MinInt
 	else
-		Result := Round(Value);
+		Result := RoundN(Value);
 end;
 
 function RoundSG(Value: F8): SG;
@@ -417,7 +435,7 @@ begin
 	else if Value < MinInt then
 		Result := MinInt
 	else
-		Result := Round(Value);
+		Result := RoundN(Value);
 end;
 
 function RoundSG(Value: FA): SG;
@@ -427,7 +445,7 @@ begin
 	else if Value < MinInt then
 		Result := MinInt
 	else
-		Result := Round(Value);
+		Result := RoundN(Value);
 end;
 
 function RoundS8(Value: FA): S8;
@@ -437,7 +455,7 @@ begin
 	else if Value < Low(Result) then
 		Result := Low(Result)
 	else
-		Result := Round(Value);
+		Result := RoundN(Value);
 end;
 
 function TruncS8(Value: FA): S8;
@@ -884,7 +902,7 @@ var i: TAngle;
 begin
 	for i := 0 to AngleCount - 1 do
 	begin
-		Sins[0] := Round((SinDiv - 1) * sin(2 * pi * i / AngleCount));
+		Sins[0] := RoundN((SinDiv - 1) * sin(2 * pi * i / AngleCount));
 		Inc(SG(Sins), SizeOf(TAngle));
 //  Sins[i]:=Trunc(127*(sin(pi*i/128))+127);
 //  Sins[i]:=Trunc(128*(sin(pi*i/128)+1))-128;
@@ -986,32 +1004,32 @@ asm
 	POP     EDI
 end;
 
-procedure FillOrderU1(var Desc; Size: UG); register;
+procedure FillOrderU1(var Desc; const Count: UG); register;
 asm
-	cmp Size, 0
+	cmp Count, 0
 	je @Exit
-	add Size, Desc
+	add Count, Desc
 	xor ecx, ecx
 	@Loop:
 		mov [Desc], cl
 		inc Desc
-		cmp Desc, Size
+		cmp Desc, Count
 		inc cl
 	jb @Loop
 	@Exit:
 end;
 
-procedure FillOrderU4(var Desc; Size: UG); register;
+procedure FillOrderU4(var Desc; const Count: UG); register;
 asm
-	cmp Size, 0
+	cmp Count, 0
 	je @Exit
-	shl Size, 2
-	add Size, Desc
+	shl Count, 2
+	add Count, Desc
 	xor ecx, ecx
 	@Loop:
 		mov [Desc], ecx
 		add Desc, 4
-		cmp Desc, Size
+		cmp Desc, Count
 		inc ecx
 	jb @Loop
 	@Exit:
@@ -1168,7 +1186,7 @@ begin
 	TickCount := PerformanceCounter + f;
 	while PerformanceCounter < TickCount do
 	begin
-		for i:= 0 to GSysInfo.CPUFrequency div 40 - 1 do
+		for i := 0 to Min(1000, GSysInfo.CPUFrequency div 40) - 1 do
 		begin
 			asm
 				nop

@@ -15,9 +15,9 @@ type
 
 	TData = class(TObject) // TArrayList
 	private
+		FObjects: BG;
 		Data: Pointer;
 		FClearCreated: BG;
-		FObjects: BG;
 		FItemSize: UG;
 		FItemSh: UG;
 		FItemMemSize: UG;
@@ -27,6 +27,7 @@ type
 		procedure NewData(const Index: TIndex);
 		procedure SetItemSize(const Value: UG);
 	public
+		FreeObjectsOnExit: BG;
 		constructor Create(const ClearCreated: BG); overload;
 		constructor Create; overload;
 		destructor Destroy; override;
@@ -96,13 +97,14 @@ begin
 	FObjects := True;
 	FItemCount := 0;
 	FItemAlloc := 0;
+  FreeObjectsOnExit := True;
 end;
 
 procedure TData.Clear;
 var
 	O: ^TObject;
 begin
-	if FObjects then
+	if FObjects and FreeObjectsOnExit then
 	begin
 		O := GetFirst;
 		while O <> nil do

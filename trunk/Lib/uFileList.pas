@@ -380,6 +380,7 @@ begin
 		try
 			if CSVFile.Open(CSVFileName) then
 			begin
+				CSVFile.RemapColumns(['Name', 'CountOn', 'TimeOn']);
 				while not CSVFile.EOF do
 				begin
 					Values := CSVFile.ReadLine;

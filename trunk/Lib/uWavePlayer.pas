@@ -22,7 +22,7 @@ type
 	PPlayItem = ^TPlayItem;
 	TPlayItem = packed record // 32
 		PlayAs: (paNone, paWave, paTone, paNoise, paSilent); // 1
-		R0: array[0..2] of U1;
+		StartDelay: S4;
 		SampleCount: U4;
 		SamplePos: U4;
 		Speed: U4;
@@ -55,6 +55,7 @@ type
 		Channels: 1..2;
 
 		BufferTime: UG;
+		property WaveFormat: TWaveFormatEx read FWaveFormat;
 
 		function WaveErrorText(const ErrorCode: U4): string;
 		procedure MMError(s: string);
@@ -67,7 +68,7 @@ type
 
 		procedure Pause;
 		procedure Resume;
-		procedure Stop;
+		procedure Stop; virtual;
 
 		property BufferSize: SG read FBufferOutSize;
 		property BufferSamples: SG read FBufferOutSamples;
@@ -88,11 +89,12 @@ type
 		constructor Create;
 		destructor Destroy; override;
 
-		procedure Play(const Wave: TWave; const Volume: TVolume; const Speed: UG = SpeedDiv);
+		procedure Play(const Wave: TWave; const Volume: TVolume; const Speed: UG = SpeedDiv; const StartDelay: SG = 0);
 		procedure Beep;
-		procedure Silent(const Tim: UG);
+		procedure Silent(const Tim: UG; const StartDelay: SG = 0);
 		procedure Tone(const Frequency, Tim: UG);
 		procedure Noise(const Tim: UG);
+		procedure Stop; override;
 	end;
 
 	TOnReciveBuffrerEvent = procedure(Sender: TObject; Buffer: PWaveSample) of object;
@@ -518,6 +520,12 @@ begin
 			begin
 				if j >= MaxItems then Break;
 				PlayItem := PlayItems.Get(j);
+				if PlayItem.StartDelay > 0 then
+				begin
+					Dec(PlayItem.StartDelay);
+					Inc(j);
+					Continue;
+				end;
 				SampleP := PlayItem.SamplePos div SpeedDiv;
 				if SampleP >= PlayItem.SampleCount then
 				begin
@@ -591,16 +599,16 @@ begin
 	end;
 end;
 
-procedure TWavePlayer.Play(const Wave: TWave; const Volume: TVolume; const Speed: UG = SpeedDiv);
+procedure TWavePlayer.Play(const Wave: TWave; const Volume: TVolume; const Speed: UG = SpeedDiv; const StartDelay: SG = 0);
 var
 	PlayItem: PPlayItem;
 begin
-	PlayItem := PlayItems.GetFirst;
+{	PlayItem := PlayItems.GetFirst;
 	while PlayItem <> nil do
 	begin
 		if PlayItem.Wave = Wave then Exit;
 		PlayItems.Next(Pointer(PlayItem));
-	end;
+	end;}
 	PlayItem := PlayItems.Add;
 	PlayItem.PlayAs := paWave;
 	PlayItem.Wave := Wave;
@@ -608,6 +616,7 @@ begin
 	PlayItem.SamplePos := 0;
 	PlayItem.Volume := Volume;
 	PlayItem.Speed := Speed;
+	PlayItem.StartDelay := StartDelay;
 end;
 
 procedure TWavePlayer.Beep;
@@ -615,7 +624,7 @@ begin
 	Tone(1000, 1000);
 end;
 
-procedure TWavePlayer.Silent(const Tim: UG);
+procedure TWavePlayer.Silent(const Tim: UG; const StartDelay: SG = 0);
 var
 	PlayItem: PPlayItem;
 begin
@@ -626,6 +635,7 @@ begin
 	PlayItem.SamplePos := 0;
 	PlayItem.Volume := Volume;
 	PlayItem.Speed := SpeedDiv;
+	PlayItem.StartDelay := StartDelay;
 end;
 
 procedure TWavePlayer.Tone(const Frequency, Tim: UG);
@@ -866,6 +876,13 @@ begin
 		MidiPlaying := False;
 	end;
 	if MCIError(FError) then goto LRetrySend;
+end;
+
+procedure TWavePlayer.Stop;
+begin
+	Close;
+	PlayItems.Clear;
+	Open;
 end;
 
 initialization

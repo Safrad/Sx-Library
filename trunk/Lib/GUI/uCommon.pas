@@ -3,6 +3,7 @@ unit uCommon;
 interface
 
 uses
+	Graphics,
 	uTypes, uDForm,
 	Menus;
 
@@ -30,13 +31,16 @@ procedure CommonFree;
 
 procedure CommonFileMenu(const Menu: TMenu);
 
+function GetBackgroundWindowTexture: BG;
+function GetBackgroundWindowColor: TColor;
+
 var
 	ForceClose: BG;
 
 implementation
 
 uses
-	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI,
+	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uNewThread,
 	uMsgDlg, uMsg, uStart, uOptions, ufOptions, uReg, uProjectInfo, uLink,
 	uStrings, uWebUpdate, uStartup, uDictionary,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
@@ -47,6 +51,7 @@ uses
 type
 	TCommonMenu = class(TObject)
 	private
+		CheckForUpdate1: TMenuItem;
 		LoggingLevel1: TMenuItem;
 
 		procedure OptionChanged(const OptionIndex: SG);
@@ -73,18 +78,34 @@ var
 
 type
 	TGlobalOption = (goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon, goRunAfterStartUp,
-		goShowSplashScreenWhenApplicationStarts, goAutomaticallyCheckForUpdate,
+		goShowSplashScreenWhenApplicationStarts,
+		goWindowBackgroundTexture,
+		goWindowBackgroundColor,
+		goAutomaticallyCheckForUpdate,
 		goCheckForUpdateDaysPeriod);
 
 var
 	GlobalOptions: array [TGlobalOption] of TOption = (
 		(
 			Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1),
-		(Typ: vsCheck; Default: 0), (Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1),
+		(Typ: vsCheck; Default: 0), (Typ: vsCheck; Default: 1),
+		(Typ: vsCheck; Default: 1),
+		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt),
+		(Typ: vsCheck; Default: 1),
 		(Typ: vsSpin; Default: 14; Minimum: 0; Maximum: 365));
 
 var
 	GlobalParams: array [TGlobalOption] of TParam;
+
+function GetBackgroundWindowTexture: BG;
+begin
+	Result := GlobalParams[goWindowBackgroundTexture].Bool;
+end;
+
+function GetBackgroundWindowColor: TColor;
+begin
+	Result := GlobalParams[goWindowBackgroundColor].Num;
+end;
 
 var
 	LastUpdate: TDateTime;
@@ -124,12 +145,14 @@ begin
 	case GlobalOption of
 	goStartMenuIcon:
 		begin
-			Dir := ShellFolder('Common Start Menu', True) + 'Programs' + PathDelim + GetProjectInfo
+{			Dir := ShellFolder('Common Start Menu', True) + 'Programs' + PathDelim + GetProjectInfo
+				(piProductName) + PathDelim; // Permision Denied if limited user! }
+			Dir := ShellFolder('Start Menu', False) + 'Programs' + PathDelim + GetProjectInfo
 				(piProductName) + PathDelim;
 			LinkFileName := Dir + GetProjectInfo(piProductName) + '.lnk';
 		end;
 	goDesktopIcon:
-		LinkFileName := ShellFolder('Common Desktop', True) + PathDelim + GetProjectInfo(piProductName) + '.lnk';
+		LinkFileName := ShellFolder('Common Desktop', True) + GetProjectInfo(piProductName) + '.lnk';
 	goQuickLaunchIcon:
 	begin
 		LinkFileName := CommonAppDataDir + PathDelim + 'Microsoft' + PathDelim + 'Internet Explorer' +
@@ -296,6 +319,34 @@ begin
 	OpenLocalHomepage;
 end;
 
+procedure SetBackgroundColor(const AComponent: TComponent);
+var
+	i: SG;
+begin
+	for i := 0 to AComponent.ComponentCount - 1 do
+	begin
+		if AComponent.Components[i] is TForm then
+		begin
+			TForm(AComponent.Components[i]).Color := GetBackgroundWindowColor;
+			SetBackgroundColor(AComponent.Components[i]);
+		end;
+	end;
+end;
+
+procedure SetBackgroundInvalidate(const AComponent: TComponent);
+var
+	i: SG;
+begin
+	for i := 0 to AComponent.ComponentCount - 1 do
+	begin
+		if AComponent.Components[i] is TForm then
+		begin
+			TForm(AComponent.Components[i]).Invalidate;
+			SetBackgroundColor(AComponent.Components[i]);
+		end;
+	end;
+end;
+
 procedure TCommonMenu.OptionChanged(const OptionIndex: SG);
 begin
 	case TGlobalOption(OptionIndex) of
@@ -316,9 +367,17 @@ begin
 	goShowSplashScreenWhenApplicationStarts:
 		begin
 			if GlobalParams[TGlobalOption(OptionIndex)].Bool then
-				ShowSplashScreen(False)
+//				ShowSplashScreen(False) Runtime 216 if application closed before splash hide
 			else
 				HideSplashScreen(True);
+		end;
+	goWindowBackgroundTexture:
+		begin
+			SetBackgroundInvalidate(Application);
+	end;
+	goWindowBackgroundColor:
+		begin
+			SetBackgroundColor(Application);
 		end;
 	end;
 end;
@@ -333,10 +392,23 @@ begin
 	HelpParams;
 end;
 
+procedure MenuCheckForUpdate(AThread: TThread);
+begin
+	CommonMenu.CheckForUpdate1.Enabled := False;
+	try
+		{$ifopt d+}
+		Sleep(5000);
+		{$endif}
+		CheckForUpdate;
+	finally
+		CommonMenu.CheckForUpdate1.Enabled := True;
+	end;
+end;
+
 procedure TCommonMenu.CheckForUpdate1Click(Sender: TObject);
 begin
 	LastUpdate := Now;
-	CheckForUpdate;
+	RunInNewThread(MenuCheckForUpdate);
 end;
 
 procedure TCommonMenu.About1Click(Sender: TObject);
@@ -460,10 +532,11 @@ begin
 		M.OnClick := CommonMenu.ViewAllLogFiles1Click;
 		Log1.Add(M);
 
-		CommonMenu.LoggingLevel1 := TMenuItem.Create(Log1);
-		CommonMenu.LoggingLevel1.Name := 'LoggingLevel1';
-		CommonMenu.LoggingLevel1.Caption := 'Logging Level';
-		Log1.Add(CommonMenu.LoggingLevel1);
+		M := TMenuItem.Create(Log1);
+		M.Name := 'LoggingLevel1';
+		M.Caption := 'Logging Level';
+		Log1.Add(M);
+		CommonMenu.LoggingLevel1 := M;
 
 		for i := 0 to Length(MessageLevelStr) - 1 do
 		begin
@@ -523,6 +596,7 @@ begin
 		M.Caption := 'Check For Update' + cDialogSuffix;
 		M.OnClick := CommonMenu.CheckForUpdate1Click;
 		Help1.Add(M);
+		CommonMenu.CheckForUpdate1 := M;
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'About';
@@ -535,6 +609,7 @@ end;
 initialization
 
 InitOptionNames(TypeInfo(TGlobalOption), GlobalOptions);
+DefaultOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalParams));
 
 CommonMenu := TCommonMenu.Create;
 

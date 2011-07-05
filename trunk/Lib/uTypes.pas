@@ -19,8 +19,8 @@ const
 	GB = 1024 * MB;
 
 type
-	SG = Integer; // LongInt for 32bit Delphi
-	UG = Cardinal; // LongWord for 32bit Delphi
+	SG = {$ifdef D11}Int64{$else}Integer{$endif}; // NativeInt
+	UG = {$ifdef D11}UInt64{$else}Cardinal{$endif}; // NativeUInt
 	S1 = ShortInt;
 	U1 = Byte;
 	S2 = SmallInt;
@@ -28,7 +28,7 @@ type
 	S4 = LongInt;
 	U4 = LongWord;
 	S8 = Int64;
-	U8 = Int64; // Car64 for 64bit Delphi?
+	U8 = {$ifdef D11}UInt64{$else}Int64{$endif};
 
 	PSG = ^SG;
 	PUG = ^UG;
@@ -168,7 +168,14 @@ type
 			1: (TopLeft, BottomRight: TFloPoint);
 	end;
 
+	PRange = ^TRange;
+	TRange = record
+		F, T: SG;
+	end;
+	TRangeArray = array of TRange;
+
 	// Dynamic Arrays
+	TArrayOfU4 = array of U4;
 	TArrayOfBG = array of BG;
 	TArrayOfSG = array of SG;
 	TArrayOfString = array of string;
@@ -239,6 +246,7 @@ const
 	const
 	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
 	IndexFile = 'index' + HTMLExt;
+	IndexPHPFile = 'index' + '.php';
 	nbsp = '&nbsp;'; // Non-dividable Blank SPace.
 	ComponentPageName = 'Safrad';
 

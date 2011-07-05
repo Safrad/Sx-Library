@@ -1,5 +1,5 @@
 {$ifdef Console}
-//'Warning: Console does not contain any version info!'
+//{$MESSAGE Warning 'Console does not contain any version info'!} // DoNotLocalize
 {$endif}
 
 unit uProjectInfo;
@@ -52,7 +52,7 @@ uses
 	uTypes,
 	uFiles,
 	Windows,
-	uOutputFormat, uStrings, uUser,
+	uOutputFormat, uStrings, uCustomUser,
 	TypInfo;
 
 var
@@ -62,6 +62,7 @@ var
 
 procedure TProjectInfo.SetProjectInfo;
 var
+	AppFileName: PChar;
 	AppSize: UG;
 	i: TProjectInfoName;
 	Buf: PWideChar;
@@ -72,12 +73,13 @@ var
 	Handle: THandle;
 //	__VS_FIXEDFILEINFO: ^VS_FIXEDFILEINFO;
 begin
-	AppSize := GetFileVersionInfoSize(PChar(ExpandDir(FApplicationFileName)), Handle{ API function initialize always to 0 });
+	AppFileName := PChar(ExpandDir(FApplicationFileName));
+	AppSize := GetFileVersionInfoSize(AppFileName, Handle{ API function initialize always to 0 });
 	if AppSize > 0 then
 	begin
 		Buf := AllocMem(AppSize);
 		try
-			if GetFileVersionInfo(PChar(FApplicationFileName), Handle{ Unused in API function }, AppSize, Buf) then
+			if GetFileVersionInfo(AppFileName, Handle{ Unused in API function }, AppSize, Buf) then
 			begin
 {				__VS_FIXEDFILEINFO := AllocMem(AppSize);
 				LenOfValue := 0;
@@ -120,16 +122,6 @@ begin
 			FreeMem(Buf, AppSize);
 		end;
 	end;
-
-	if FProjectInfoNames[piCompanyName] = '' then // if not initialized in ProjectInfo
-		FProjectInfoNames[piCompanyName] := MyCompany;
-	if FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
-		FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(FApplicationFileName));
-
-	{$IFOPT D+}
-	AppendStr(FProjectInfoNames[piFileVersion], '+');
-	AppendStr(FProjectInfoNames[piProductVersion], '+');
-	{$ENDIF}
 end;
 
 constructor TProjectInfo.Create(const ApplicationFileName: TFileName);
@@ -148,6 +140,15 @@ begin
 	if not Assigned(ThisProjectInfo) then
 	begin
 		ThisProjectInfo := TProjectInfo.Create(ParamStr(0));
+		if ThisProjectInfo.FProjectInfoNames[piCompanyName] = '' then // if not initialized in ProjectInfo
+			ThisProjectInfo.FProjectInfoNames[piCompanyName] := MyCompany;
+		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
+			ThisProjectInfo.FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(ThisProjectInfo.FApplicationFileName));
+
+		{$IFOPT D+}
+		AppendStr(ThisProjectInfo.FProjectInfoNames[piFileVersion], '+');
+		AppendStr(ThisProjectInfo.FProjectInfoNames[piProductVersion], '+');
+		{$ENDIF}
 	end;
 	Result := ThisProjectInfo.GetProjectInfo(ProjectInfo);
 end;

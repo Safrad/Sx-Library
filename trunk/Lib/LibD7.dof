@@ -130,9 +130,3 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
-[Excluded Packages]
-D:\Program Files\Borland\Delphi7\Projects\Bpl\dclusr70.bpl=Borland User Components
-c:\program files\borland\delphi7\Bin\dcloffice2k70.bpl=Microsoft Office 2000 Sample Automation Server Wrapper Components
-[HistoryLists\hlUnitAliases]
-Count=1
-Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

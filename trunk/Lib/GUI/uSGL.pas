@@ -946,16 +946,16 @@ procedure Tran(var Pos: TWorldPos; out GX, GY: SG); overload;
 var rx, ry: TFloat;
 begin
 	Tran(Pos, rx, ry);
-	GX := Round(rx);
-	GY := Round(ry);
+	GX := RoundN(rx);
+	GY := RoundN(ry);
 end;
 
 procedure Tran(var WP: TWorldPoint; out G: TGraphicPoint); overload;
 var rx, ry: TFloat;
 begin
 	Tran(WP.Pos, rx, ry);
-	G.Pos.X := Round(rx);
-	G.Pos.Y := Round(ry);
+	G.Pos.X := RoundN(rx);
+	G.Pos.Y := RoundN(ry);
 	G.C := WP.C;
 end;
 
@@ -1635,7 +1635,7 @@ end;
 
 procedure Lin(var P1, P2: TGraphicPoint); overload;
 begin
-	Lin(P1, P2, Round(Drawable.LineWidth), Drawable.LineStyle, 0);
+	Lin(P1, P2, RoundN(Drawable.LineWidth), Drawable.LineStyle, 0);
 end;
 
 {
@@ -1845,11 +1845,11 @@ begin
 	end
 	else
 	begin
-		G0.Pos.X := Round(GX0);
-		G0.Pos.Y := Round(GY0);
+		G0.Pos.X := RoundN(GX0);
+		G0.Pos.Y := RoundN(GY0);
 		G0.C := C[0].C;
-		G1.Pos.X := Round(GX2);
-		G1.Pos.Y := Round(GY2);
+		G1.Pos.X := RoundN(GX2);
+		G1.Pos.Y := RoundN(GY2);
 		G1.C := C[3].C;
 		Lin(G0, G1);
 	end;
@@ -1887,11 +1887,11 @@ begin
 
 	if l = 2 then
 	begin
-		G0.Pos.X := Round(GX0);
-		G0.Pos.Y := Round(GY0);
+		G0.Pos.X := RoundN(GX0);
+		G0.Pos.Y := RoundN(GY0);
 		G0.C := C[0].C;
-		G1.Pos.X := Round(GX2);
-		G1.Pos.Y := Round(GY2);
+		G1.Pos.X := RoundN(GX2);
+		G1.Pos.Y := RoundN(GY2);
 		G1.C := C[l - 1].C;
 		Lin(G0, G1);
 		Exit;
@@ -1950,11 +1950,11 @@ begin
 	end
 	else
 	begin
-		G0.Pos.X := Round(GX0);
-		G0.Pos.Y := Round(GY0);
+		G0.Pos.X := RoundN(GX0);
+		G0.Pos.Y := RoundN(GY0);
 		G0.C := C[0].C;
-		G1.Pos.X := Round(GX2);
-		G1.Pos.Y := Round(GY2);
+		G1.Pos.X := RoundN(GX2);
+		G1.Pos.Y := RoundN(GY2);
 		G1.C := C[l - 1].C;
 		Lin(G0, G1);
 	end;
@@ -2024,10 +2024,10 @@ begin
 		Result.Pos.X := Result.Pos.X / 6;
 		Result.Pos.Y := Result.Pos.Y / 6;
 		Result.Pos.W := Result.Pos.W / 6;
-		Result.C := MixColors(Drawable.WP[Drawable.Offset + 1].C, Drawable.WP[Drawable.Offset].C, Round(65536 * t));
+		Result.C := MixColors(Drawable.WP[Drawable.Offset + 1].C, Drawable.WP[Drawable.Offset].C, RoundN(65536 * t));
 	end
 	else
-		Result.C := MixColors(Drawable.WP[Drawable.Offset + 2].C, Drawable.WP[Drawable.Offset].C, Round(65536 * t));
+		Result.C := MixColors(Drawable.WP[Drawable.Offset + 2].C, Drawable.WP[Drawable.Offset].C, RoundN(65536 * t));
 	end;
 	Assert(Result.Pos.W = 1);
 	Result.Pos.W := 1;
@@ -2073,11 +2073,11 @@ begin
 	end
 	else
 	begin
-		G0.Pos.X := Round(GX0);
-		G0.Pos.Y := Round(GY0);
+		G0.Pos.X := RoundN(GX0);
+		G0.Pos.Y := RoundN(GY0);
 		G0.C := C0;
-		G1.Pos.X := Round(GX2);
-		G1.Pos.Y := Round(GY2);
+		G1.Pos.X := RoundN(GX2);
+		G1.Pos.Y := RoundN(GY2);
 		G1.C := C2;
 		Lin(G0, G1);
 	end;
@@ -2538,11 +2538,11 @@ begin
 	begin
 		if Drawable.AreaMode <> SGL_AREA_MODE_FILL then
 		begin
-			G0.Pos.X := Round(GX0);
-			G0.Pos.Y := Round(GY0);
+			G0.Pos.X := RoundN(GX0);
+			G0.Pos.Y := RoundN(GY0);
 			G0.C := Drawable.Color;
-			G1.Pos.X := Round(GX2);
-			G1.Pos.Y := Round(GY2);
+			G1.Pos.X := RoundN(GX2);
+			G1.Pos.Y := RoundN(GY2);
 			G1.C := Drawable.Color;
 			Lin(G0, G1);
 		end
@@ -2582,10 +2582,10 @@ begin
 		end;
 		sglPoints:        (* body                         *)
 		begin
-			case Round(Drawable.PointSize) of
+			case RoundN(Drawable.PointSize) of
 			1: PixCheck(G);
 			else
-				for i := 1 to Round(Drawable.PointSize) - 1 do
+				for i := 1 to RoundN(Drawable.PointSize) - 1 do
 					sglArc2(WP.X, WP.Y, i, i, 0, 360);
 			end;
 		end;

@@ -7,9 +7,19 @@ uses
 	IdFTP;
 
 type
+	TFTPServer = record
+		Host: string;
+		UserName: string;
+		Password: string;
+		Path: string;
+	end;
+
 	TTg = (tgDownload, tgUpload);
 
 function UploadDownload(const FileNameOrDir: string; TargetDir: string; const FTP: TIdFTP; const RetryCount, RetryInterval: SG; const Logger: TLogger; const Tg: TTg; const SubDir: BG): BG;
+
+var
+  SetLocalTime: BG = True;
 
 implementation
 
@@ -181,20 +191,23 @@ begin
 		FTP.Put(LocalFileName, RemoteFileName, False);
 		// Set Local date like on Remote,
 		// Better is Set Remote date as Local !!!!! FTP support MDTM
-		AStrings2 := TStringList.Create;
-		try
-			FTP.List(AStrings2);
-			RemoteFileDate := GetFTPTime(FTP.DirectoryListing, RemoteFileName);
-		finally
-			AStrings2.Free;
-		end;
-		if RemoteFileDate <> 0 then
+		if SetLocalTime then
 		begin
-			DateTimeToSystemTime(RemoteFileDate, SystemTime);
-			SystemTimeToFileTime(SystemTime, LastWriteTime);
-//					LocalFileTimeToFileTime(LastWriteTime, LastWriteTime);
+			AStrings2 := TStringList.Create;
+			try
+				FTP.List(AStrings2);
+				RemoteFileDate := GetFTPTime(FTP.DirectoryListing, RemoteFileName);
+			finally
+				AStrings2.Free;
+			end;
+			if RemoteFileDate <> 0 then
+			begin
+				DateTimeToSystemTime(RemoteFileDate, SystemTime);
+				SystemTimeToFileTime(SystemTime, LastWriteTime);
+	//					LocalFileTimeToFileTime(LastWriteTime, LastWriteTime);
 
-			SetFileModified(LocalFileName, LastWriteTime);
+				SetFileModified(LocalFileName, LastWriteTime);
+			end;
 		end;
 	end
 end;
@@ -361,7 +374,7 @@ begin
 			end;
 		end;
 		// All OK
-		NowRetryCount := 0;
+//		NowRetryCount := 0;
 		if Assigned(Logger) then
 			Logger.Add('Disconnect', mlInformation);
 		try

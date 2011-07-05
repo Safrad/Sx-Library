@@ -224,17 +224,17 @@ object fGColor: TfGColor
     Top = 8
     Width = 34
     Height = 21
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 4
     OnChange = EditChange
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object ButtonR: TDButton
     Left = 424
     Top = 8
     Width = 55
     Height = 19
-    Caption = 'Invert'
+    Caption = '&Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -299,10 +299,10 @@ object fGColor: TfGColor
     Top = 32
     Width = 34
     Height = 21
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 7
     OnChange = EditChange
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object ButtonG: TDButton
     Tag = 1
@@ -310,7 +310,7 @@ object fGColor: TfGColor
     Top = 32
     Width = 55
     Height = 19
-    Caption = 'Invert'
+    Caption = '&Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -326,10 +326,10 @@ object fGColor: TfGColor
     Top = 56
     Width = 34
     Height = 21
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 10
     OnChange = EditChange
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object ButtonB: TDButton
     Tag = 2
@@ -337,7 +337,7 @@ object fGColor: TfGColor
     Top = 56
     Width = 55
     Height = 19
-    Caption = 'Invert'
+    Caption = '&Invert'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
@@ -353,10 +353,10 @@ object fGColor: TfGColor
     Top = 152
     Width = 34
     Height = 21
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 20
     OnChange = EditChange
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object PanelH: TPanel
     Left = 104
@@ -373,6 +373,7 @@ object fGColor: TfGColor
       Width = 306
       Height = 16
       Zoom = 1.000000000000000000
+      DisplayMode = dmCustom
       OnFill = ImageFill
       Align = alClient
       TabOrder = 0
@@ -396,6 +397,7 @@ object fGColor: TfGColor
       Width = 256
       Height = 16
       Zoom = 1.000000000000000000
+      DisplayMode = dmCustom
       OnFill = ImageFill
       Align = alClient
       TabOrder = 0
@@ -410,6 +412,7 @@ object fGColor: TfGColor
     Width = 57
     Height = 21
     Style = csDropDownList
+    ItemHeight = 13
     PopupMenu = PopupMenu1
     TabOrder = 25
     OnChange = ComboBoxBitDepthChange
@@ -431,10 +434,10 @@ object fGColor: TfGColor
     Top = 128
     Width = 34
     Height = 21
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 18
     OnChange = EditChange
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object LabelS: TDLabel
     Left = 8
@@ -472,6 +475,7 @@ object fGColor: TfGColor
       Width = 256
       Height = 16
       Zoom = 1.000000000000000000
+      DisplayMode = dmCustom
       OnFill = ImageFill
       Align = alClient
       TabOrder = 0
@@ -495,6 +499,7 @@ object fGColor: TfGColor
       Width = 256
       Height = 16
       Zoom = 1.000000000000000000
+      DisplayMode = dmCustom
       OnFill = ImageFill
       Align = alClient
       TabOrder = 0
@@ -518,6 +523,7 @@ object fGColor: TfGColor
       Width = 256
       Height = 16
       Zoom = 1.000000000000000000
+      DisplayMode = dmCustom
       OnFill = ImageFill
       Align = alClient
       TabOrder = 0
@@ -532,10 +538,10 @@ object fGColor: TfGColor
     Top = 104
     Width = 34
     Height = 21
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 16
     OnChange = EditChange
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object PanelS: TPanel
     Left = 104
@@ -552,6 +558,7 @@ object fGColor: TfGColor
       Width = 256
       Height = 16
       Zoom = 1.000000000000000000
+      DisplayMode = dmCustom
       OnFill = ImageFill
       Align = alClient
       TabOrder = 0
@@ -566,6 +573,7 @@ object fGColor: TfGColor
     Width = 97
     Height = 21
     Style = csDropDownList
+    ItemHeight = 13
     ItemIndex = 0
     PopupMenu = PopupMenu1
     TabOrder = 30
@@ -581,10 +589,10 @@ object fGColor: TfGColor
     Top = 80
     Width = 81
     Height = 21
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
     TabOrder = 15
     OnChange = EditChange
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
   end
   object PopupMenu1: TPopupMenu
     Images = ImageList1

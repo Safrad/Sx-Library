@@ -66,8 +66,8 @@ function ColorRB(C: TColor): TColor;
 function LighterColor(Color: TColor): TColor;
 function DarkerColor(Color: TColor): TColor;
 function GrayColor(X: SG): TColor;
-function SpectrumColor(X: Integer): TColor;
-function SpectrumColor2(X: Integer): TColor;
+function SpectrumColor(X: SG): TColor;
+function SpectrumColor2(X: SG): TColor;
 function FireColor(X: Integer): TColor;
 function NegColor(C: TColor): TColor;
 function NegMonoColor(C: TColor): TColor;
@@ -123,7 +123,8 @@ begin
 			H := ((MaxSpectrum + 1) div 6) * 2 + RoundDiv(((MaxSpectrum + 1) div 6) * (C.B - C.R), delta)
 		else if (C.B = maxC) then
 			H := ((MaxSpectrum + 1) div 6) * 4 + RoundDiv(((MaxSpectrum + 1) div 6) * (C.R - C.G), delta);
-		if (H < 0) then Inc(H, (MaxSpectrum + 1));
+		if (H < 0) then
+			Inc(H, (MaxSpectrum + 1));
 		Result.H := H;
 	end;
 end;
@@ -438,7 +439,7 @@ begin
 	end;
 end;
 
-function SpectrumColor2(X: Integer): TColor;
+function SpectrumColor2(X: SG): TColor;
 //0..255..510..765..1020..1275..1529
 begin
 	TRGBA(Result).A := 0;
@@ -520,9 +521,12 @@ begin
 end;
 
 function NegMonoColor(C: TColor): TColor;
+var
+	HLS: THLSColor;
 begin
 	C := ColorToRGB(C);
-	if 2 * TRGBA(C).R + 4 * TRGBA(C).G + 1 * TRGBA(C).B > (8 * 255 div 2) then
+	HLS := RGBToHLS(TRGBA(C));
+	if HLS.L >= 128 then
 		Result := $00000000
 	else
 		Result := $00FFFFFF;

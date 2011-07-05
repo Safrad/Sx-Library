@@ -35,6 +35,9 @@ type
 		{ Public declarations }
 	end;
 
+var
+	Cancel: BG;
+
 procedure ShowStatusWindow(const ThreadPool: TThreadPool; const MenuItem: TMenuItem);
 procedure UpdateStatus(const Actual: SG);
 procedure UpdateMaximum(const Value: SG);
@@ -52,6 +55,7 @@ var
 
 procedure ShowStatusWindow(const ThreadPool: TThreadPool; const MenuItem: TMenuItem);
 begin
+	Cancel := False;
 	if not Assigned(fStatus) then
 	begin
 		fStatus := TfStatus.Create(nil);
@@ -79,7 +83,7 @@ begin
 			fStatus.ElapsedTime := 0;
 			fStatus.RemainTime := 0;
 			fStatus.ButtonResume.Enabled := False;
-			fStatus.ButtonPause.Enabled := True;
+			fStatus.ButtonPause.Enabled := fStatus.FThreadPool <> nil;
 		end
 		else
 		begin
@@ -96,6 +100,7 @@ procedure UpdateMaximum(const Value: SG);
 begin
 	if Assigned(fStatus) then
 	begin
+		fStatus.DGauge.Position := 0;
 		fStatus.DGauge.Max := Value;
 		fStatus.Init;
 	end;
@@ -111,7 +116,10 @@ end;
 
 procedure TfStatus.ButtonPauseClick(Sender: TObject);
 begin
-	FThreadPool.Pause;
+	if Assigned(FThreadPool) then
+	begin
+		FThreadPool.Pause;
+	end;
 	PauseTime := GetTickCount;
 	ButtonPause.Enabled := False;
 	ButtonResume.Enabled := True;
@@ -119,8 +127,13 @@ end;
 
 procedure TfStatus.ButtonStopClick(Sender: TObject);
 begin
-	FThreadPool.Clear;
-	FThreadPool.Resume;
+	if Assigned(FThreadPool) then
+	begin
+		FThreadPool.Clear;
+		FThreadPool.Resume;
+	end
+	else
+		Cancel := True;
 	Close;
 end;
 
@@ -144,7 +157,10 @@ end;
 
 procedure TfStatus.ButtonResumeClick(Sender: TObject);
 begin
-	FThreadPool.Resume;
+	if Assigned(FThreadPool) then
+	begin
+		FThreadPool.Resume;
+	end;
 	Inc(StartTime, TimeDifference(GetTickCount, PauseTime));
 	ButtonPause.Enabled := True;
 	ButtonResume.Enabled := False;
@@ -152,12 +168,14 @@ end;
 
 procedure TfStatus.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-	FMenuItem.Checked := False;
+	if Assigned(FMenuItem) then
+		FMenuItem.Checked := False;
 end;
 
 procedure TfStatus.FormShow(Sender: TObject);
 begin
-	FMenuItem.Checked := True;
+	if Assigned(FMenuItem) then
+		FMenuItem.Checked := True;
 end;
 
 initialization

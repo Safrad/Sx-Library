@@ -144,6 +144,7 @@ type
 		procedure SetSize(NewWidth, NewHeight: TCoor; const InitialColor: TColor = clNone);
 		procedure Sample(const Width, Height: TCoor);
 		procedure GLSetSize;
+		procedure SetAlpha;
 
 		procedure LoadFromIcon(Icon: TIcon);
 		procedure LoadFromFile(const Filename: string); override;
@@ -1390,10 +1391,10 @@ begin
 	dx := Frac(X);
 	dy := Frac(Y);
 
-	ELT := TEffect(Round(16 * (1 - dx) * (1 - dy)));
-	ELB := TEffect(Round(16 * dx * (1 - dy)));
-	ERT := TEffect(Round(16 * (1 - dx) * dy));
-	ERB := TEffect(Round(16 * dx * dy));
+	ELT := TEffect(RoundN(16 * (1 - dx) * (1 - dy)));
+	ELB := TEffect(RoundN(16 * dx * (1 - dy)));
+	ERT := TEffect(RoundN(16 * (1 - dx) * dy));
+	ERB := TEffect(RoundN(16 * dx * dy));
 
 	PixCheck(BmpD, RX, RY, C, ELT);
 	PixCheck(BmpD, RX + 1, RY, C, ERT);
@@ -2884,7 +2885,7 @@ begin
 //	Graphics.DrawEllipse(Pen, 10, 10, 50, 50);
 	FGraphics.DrawLine(Pen, X1, Y1, X2, Y2);
 	{$else}
-	LineFast(Round(X1), Round(Y1), Round(X2), Round(Y2), Color, Effect, Round(Width));
+	LineFast(RoundN(X1), RoundN(Y1), RoundN(X2), RoundN(Y2), Color, Effect, RoundN(Width));
 	{$endif}
 end;
 
@@ -4971,7 +4972,7 @@ begin
 	FGraphics.DrawRectangle(Pen, Rect);
 //	Line(Frac(X1) + 0.5, Y1+ 0.5, X2+ 0.5, Y2+ 0.5, Color, Effect);
 	{$else}
-	Bar(SG(Round(XD1)), SG(Round(YD1)), SG(Round(XD2)), SG(Round(YD2)), C, Effect);
+	Bar(SG(RoundN(XD1)), SG(RoundN(YD1)), SG(RoundN(XD2)), SG(RoundN(YD2)), C, Effect);
 	{$endif}
 end;
 
@@ -5209,9 +5210,9 @@ begin
 				dx := Cos(Bmp.Direction);
 				dy := Sin(Bmp.Direction);
 				D := Bmp.Intensity + 1;
-				CAdd.R := Min(255, Round(P.R / D));
-				CAdd.G := Min(255, Round(P.G / D));
-				CAdd.B := Min(255, Round(P.B / D));
+				CAdd.R := Min(255, RoundN(P.R / D));
+				CAdd.G := Min(255, RoundN(P.G / D));
+				CAdd.B := Min(255, RoundN(P.B / D));
 
 //				Line(x2 - 0.5, y2 - 0.5, x2 + 0.5 + Bmp.Intensity * dx , y2 + 0.5 + Bmp.Intensity * dy, CAdd.L, ef16);
 //				Continue;
@@ -5303,8 +5304,8 @@ begin
 					case Quality of
 					quLow:
 					begin
-						x2c := Round(x2);
-						y2c := Round(y2);
+						x2c := RoundN(x2);
+						y2c := RoundN(y2);
 {						if x2c < 0 then x2c := 0;
 						if y2c < 0 then y2c := 0;
 						if x2c >= BmpS.Width then x2c := BmpS.Width - 1;
@@ -5324,9 +5325,9 @@ begin
 					NowIntensity := Bmp.Intensity - i + 1;
 					if NowIntensity < 1 then
 					begin
-						R := R + Round(NowIntensity * C.R);
-						G := G + Round(NowIntensity * C.G);
-						B := B + Round(NowIntensity * C.B);
+						R := R + RoundN(NowIntensity * C.R);
+						G := G + RoundN(NowIntensity * C.G);
+						B := B + RoundN(NowIntensity * C.B);
 						Used := Used + NowIntensity;
 					end
 					else
@@ -5346,9 +5347,9 @@ begin
 				if Used > 0 then
 				begin
 					D := 1 / Used; // (Bmp.Intensity + 1);
-					P2.R := Round(D * R);
-					P2.G := Round(D * G);
-					P2.B := Round(D * B);
+					P2.R := RoundN(D * R);
+					P2.G := RoundN(D * G);
+					P2.B := RoundN(D * B);
 					P2.A := 0;
 				end;
 			end;
@@ -8216,7 +8217,7 @@ begin
 	if Source = 0 then
 		W := 0
 	else
-		W := Round(256 * Power(Source / 256, 256 / Gamma));
+		W := RoundN(256 * Power(Source / 256, 256 / Gamma));
 	W := Cont * SG(W - 127) div 256 + 127 + Brig;
 
 {	if W <= 127 then
@@ -10048,7 +10049,7 @@ type
 		for j := Low(K.Weights) to 0{High(K.Weights)} do
 		begin
 			temp := RoundDiv(Mult * j, Radius);
-			K.Weights[j] := Round(Mult * exp(-temp * temp / 2));
+			K.Weights[j] := RoundN(Mult * exp(-temp * temp / 2));
 			K.Weights[-j] := K.Weights[j];
 		end;
 
@@ -10319,9 +10320,9 @@ type
 				tg := 255;
 			if tr > 255 then
 				tr := 255;
-			Output.B := Round(tb);
-			Output.G := Round(tg);
-			Output.R := Round(tr);
+			Output.B := RoundN(tb);
+			Output.G := RoundN(tg);
+			Output.R := RoundN(tr);
 			{$ifdef BPP4}
 			Output.A := 0;
 			{$endif}
@@ -10453,7 +10454,7 @@ begin
 		// that CPU version
 		GBlurFPU(BmpD, Range, Radius, Horz, Vert, InterruptProcedure)
 	else
-		GBlurCPU(BmpD, Range, Round(Radius * Mult), Horz, Vert, InterruptProcedure);
+		GBlurCPU(BmpD, Range, RoundN(Radius * Mult), Horz, Vert, InterruptProcedure);
 end;
 
 procedure TDBitmap.GBlur(const Range: TRect; Radius: Double; const Horz, Vert: Boolean;
@@ -10550,7 +10551,7 @@ begin
 	Line(x, y, x2, y2, Color, Effect);
 	Bar(x - 1, y - 1, x + 1, y + 1, Color, Effect);
 
-	Len := Round(Sqrt(Sqr(X - X2) + Sqr(Y - Y2)));
+	Len := RoundN(Sqrt(Sqr(X - X2) + Sqr(Y - Y2)));
 	if Len > 0 then
 	begin
 		Len := Len * 8;
@@ -10898,7 +10899,7 @@ var
 		if ValueCount <= 1 then
 			Result := W div 2 - 1 + OfsX
 		else
-			Result := Round(W * (LX - MinValueX) / (MaxValueX - MinValueX)) + OfsX;
+			Result := RoundN(W * (LX - MinValueX) / (MaxValueX - MinValueX)) + OfsX;
 	end;
 
 	function LToGY(LY: FA): SG;
@@ -10906,7 +10907,7 @@ var
 		if MaxValueY <= MinValueY then
 			Result := H div 2 - 1 + OfsY
 		else
-			Result := H - 1 - Round(H * (LY - MinValueY) / (MaxValueY - MinValueY)) + OfsY;
+			Result := H - 1 - RoundN(H * (LY - MinValueY) / (MaxValueY - MinValueY)) + OfsY;
 	end;
 
 begin
@@ -10962,7 +10963,7 @@ begin
 	if ValueCount <= 1 then
 		StepMarkX := 1
 	else
-		StepMarkX := Max(1, Round(Power(10, Round(Log10((MaxValueX - MinValueX) * 32 / W)))));
+		StepMarkX := Max(1, RoundN(Power(10, RoundN(Log10((MaxValueX - MinValueX) * 32 / W)))));
 	if Custom then
 		GraphValueOffset := MinValueX
 	else
@@ -11011,7 +11012,7 @@ begin
 	if MaxValueY <= MinValueY then
 		StepMarkY := 1
 	else
-		StepMarkY := Max(1, Round(Power(10, Round(Log10((MaxValueY - MinValueY) * 32 / H)))));
+		StepMarkY := Max(1, RoundN(Power(10, RoundN(Log10((MaxValueY - MinValueY) * 32 / H)))));
 	GraphMinValue := MinValueY + ModE(-MinValueY, StepMarkY);
 
 	LastMarkY := GraphMinValue;
@@ -11070,7 +11071,7 @@ begin
 		end
 		else
 		begin
-			i := Round((LastMarkX - MinValueX) {/ StepMarkX});
+			i := RoundN((LastMarkX - MinValueX) {/ StepMarkX});
 			if i < 0 then
 				i := 0
 			else if i >= ValueCount then
@@ -11397,10 +11398,33 @@ begin
 		O.R := 0;
 
 
-	Result.R := Round(O.R);
-	Result.G := Round(O.G);
-	Result.B := Round(O.B);
-	Result.A := Round(O.A);
+	Result.R := RoundN(O.R);
+	Result.G := RoundN(O.G);
+	Result.B := RoundN(O.B);
+	Result.A := RoundN(O.A);
+end;
+
+procedure TDBitmap.SetAlpha;
+var
+	x, y: SG;
+	C: PRGBA;
+begin
+	for y := 0 to FHeight - 1 do
+	begin
+		C := Pointer(SG(FData) - SG(FByteX) * y);
+		for x := 0 to FWidth - 1 do
+		begin
+			if C.L <> TransparentColor then
+			begin
+				C.A := 255;
+			end
+			else
+			begin
+				C.A := 0;
+			end;
+			Inc(C);
+		end;
+	end;
 end;
 
 initialization

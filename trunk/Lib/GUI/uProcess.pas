@@ -133,6 +133,8 @@ constructor TProcess.Create(Form: TForm);
 begin
 	FForm := Form;
 	FOneTick := RoundDivU8(PerformanceFrequency, 1000 div LoopSleepTime);
+	if Assigned(FForm) then
+		FForm.Caption := StatusToCaption;
 end;
 
 function TProcess.GetTime: U8;
