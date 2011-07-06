@@ -23,7 +23,7 @@ begin
 	ProjectDir := ExtractFilePath(ProjectFileName);
 	if ProjectDir = '' then Exit;
 
-	FileName := ProjectDir + '_' + ProjectName + '-compile.csv';
+	FileName := ProjectDir + '$' + ProjectName + '-compile.csv';
 	AssignFile(F, FileName);
 	try
 		if not FileExists(FileName) then
