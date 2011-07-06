@@ -18,11 +18,12 @@ var
 	WinDir, // Shared configuration files (Read and Write)
 	ProgramFilesDir,
 	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
+	LocalAppDataDir,
 //	HomeDir, // User documnets (Read and Write)
 	CommonAppDataDir, // Application Data
 	TempDir,
 	CommonTempDir: string;
-	ExeFileName, MainIniFileName, MainLogFileName: TFileName;
+	ExeFileName, MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
 
 type
 	TFileNames = array of TFileName;
@@ -129,7 +130,7 @@ implementation
 
 uses
 	Math,
-	uMsg, uProjectInfo, uSorts, uCharset,
+	uMsg, uProjectInfo, uSorts, uCharset, uReg,
 	uOutputFormat, uMath, uLog;
 
 var
@@ -302,6 +303,13 @@ begin
 		CreateDirsEx(AppDataDir);
 	end;
 
+	LocalAppDataDir := ShellFolder('Local AppData');
+	if LocalAppDataDir = '' then
+		LocalAppDataDir := AppDataDir
+	else
+		LocalAppDataDir := LocalAppDataDir + GetProjectInfo(piCompanyName) + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
+	CreateDirsEx(LocalAppDataDir);
+
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
 //	CorrectDir(DocsDir);
 	InitStartupEnvironment;
@@ -314,6 +322,8 @@ begin
 	end
 	else
 		MainLogFileName := WorkDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
+
+	LocalIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
 end;
 
 // i.e. C:\WINDOWS -> %systemroot%
