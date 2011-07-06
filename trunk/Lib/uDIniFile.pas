@@ -165,6 +165,7 @@ type
 
 var
 	MainIni: TDIniFile;
+	LocalMainIni: TDIniFile;
 
 implementation
 
@@ -1137,7 +1138,7 @@ begin
 		if Save then
 			if WS = wsMinimized then
 				WS := wsNormal;
-		RWEnum(Form.Name, TypeInfo(TWindowState), U1(WS), Save);
+		LocalMainIni.RWEnum(Form.Name, TypeInfo(TWindowState), U1(WS), Save);
 	end;
 	if (Save = False) or (Form.WindowState <> wsMaximized) then
 	begin
@@ -1157,16 +1158,16 @@ begin
 			if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 			// if (not (Form is TDForm)) or (TDForm(Form).FullScreen = False) then
 			begin
-				RWNum(Form.Name, 'Width', FormSize.cx, Save);
-				RWNum(Form.Name, 'Height', FormSize.cy, Save);
+				LocalMainIni.RWNum(Form.Name, 'Width', FormSize.cx, Save);
+				LocalMainIni.RWNum(Form.Name, 'Height', FormSize.cy, Save);
 			end;
 
 		if (Form.Position in [poDesigned, poDefaultSizeOnly]) then
 		begin
 			if Save = False then
 				FormOrigin := TDForm(Form).CenterPoint;
-			RWNum(Form.Name, 'Left', FormOrigin.X, Save);
-			RWNum(Form.Name, 'Top', FormOrigin.Y, Save);
+			LocalMainIni.RWNum(Form.Name, 'Left', FormOrigin.X, Save);
+			LocalMainIni.RWNum(Form.Name, 'Top', FormOrigin.Y, Save);
 		end;
 
 		if Save = False then
@@ -1188,7 +1189,7 @@ end;
 procedure TDIniFile.RWFormPosV(const Form: TForm; const Save: BG);
 begin
 	RWFormPos(Form, Save);
-	Form.Visible := RWBGF(Form.Name, 'Visible', Form.Visible, True, Save);
+	Form.Visible := LocalMainIni.RWBGF(Form.Name, 'Visible', Form.Visible, True, Save);
 end;
 
 procedure TDIniFile.RWListView(const ListView: TListView; const Save: BG);
