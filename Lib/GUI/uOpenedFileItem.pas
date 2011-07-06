@@ -29,7 +29,6 @@ type
 
 		constructor Create;
 		destructor Destroy; override;
-	published
 		property Locked: BG read FLocked write SetLocked;
 	end;
 
