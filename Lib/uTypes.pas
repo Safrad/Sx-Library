@@ -19,8 +19,8 @@ const
 	GB = 1024 * MB;
 
 type
-	SG = {$ifdef D11}Int64{$else}Integer{$endif}; // NativeInt
-	UG = {$ifdef D11}UInt64{$else}Cardinal{$endif}; // NativeUInt
+	SG = {$if CompilerVersion >= 23}Int64{$else}Integer{$ifend}; // NativeInt
+	UG = {$if CompilerVersion >= 23}UInt64{$else}Cardinal{$ifend}; // NativeUInt
 	S1 = ShortInt;
 	U1 = Byte;
 	S2 = SmallInt;
@@ -28,7 +28,7 @@ type
 	S4 = LongInt;
 	U4 = LongWord;
 	S8 = Int64;
-	U8 = {$ifdef D11}UInt64{$else}Int64{$endif};
+	U8 = {$if CompilerVersion >= 23}UInt64{$else}Int64{$ifend};
 
 	PSG = ^SG;
 	PUG = ^UG;
@@ -253,9 +253,9 @@ const
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
 
-{$ifdef VER150}
+{$if CompilerVersion <= 15}
 procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
-{$endif}
+{$ifend}
 
 {$ifndef UNICODE}
 type
@@ -293,11 +293,11 @@ begin
 end;
 {$endif}
 
-{$ifdef VER150}
+{$if CompilerVersion <= 15}
 procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
 begin
 	Move(Source^, Dest^, GetTypeData(T).elSize * Count);
 end;
-{$endif}
+{$ifend}
 
 end.

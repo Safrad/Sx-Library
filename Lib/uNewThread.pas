@@ -42,11 +42,11 @@ begin
 	NewThread := TNewThread.Create;
 	NewThread.Priority := ThreadPriority;
 	NewThread.ExecuteProcedure := AExecuteProcedure;
-	{$ifdef VER150}
-	NewThread.Resume;
-	{$else}
+	{$if CompilerVersion >= 20}
 	NewThread.Start;
-	{$endif}
+	{$else}
+	NewThread.Resume;
+	{$ifend}
 	Result := NewThread;
 end;
 

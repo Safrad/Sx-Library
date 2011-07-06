@@ -25,9 +25,10 @@ function ConvertCharsetF(const s: AnsiString; const FromCharset, ToCharset: TCod
 
 
 var
-	TableUpCaseCz: array[AnsiChar] of AnsiChar;
+	TableUpCaseCz, TableLowCaseCz: array[AnsiChar] of AnsiChar;
 
 function UpCaseCz(const s: string): string;
+function LowCaseCz(const s: string): string;
 
 implementation
 
@@ -185,7 +186,7 @@ begin
 end;
 
 {$ifndef UNICODE}
-procedure FillCharsTable;
+procedure FillCharsTableCz;
 var c, Result: AnsiChar;
 begin
 	for c := Low(c) to High(c) do
@@ -213,6 +214,35 @@ begin
 		TableUpCaseCz[c] := Result;
 	end;
 end;
+
+procedure FillTableLowCaseCz;
+var c, Result: AnsiChar;
+begin
+	for c := Low(c) to High(c) do
+	begin
+		// UpCaseCz
+		case c of
+		'A'..'Z': Result := AnsiChar(Ord(c) - Ord('A') + Ord('a'));
+		'¡': Result := '·';
+		'»': Result := 'Ë';
+		'œ': Result := 'Ô';
+		'…': Result := 'È';
+		'Ã': Result := 'Ï';
+		'Õ': Result := 'Ì';
+		'“': Result := 'Ú';
+		'”': Result := 'Û';
+		'ÿ': Result := '¯';
+		'ä': Result := 'ö';
+		'ç': Result := 'ù';
+		'⁄': Result := '˙';
+		'Ÿ': Result := '˘';
+		'›': Result := '˝';
+		'é': Result := 'û';
+		else Result := c;
+		end;
+		TableLowCaseCz[c] := Result;
+	end;
+end;
 {$endif}
 
 function UpCaseCz(const s: string): string;
@@ -231,8 +261,25 @@ begin
 	{$endif}
 end;
 
+function LowCaseCz(const s: string): string;
+{$ifndef UNICODE}
+var i: Integer;
+{$endif}
+begin
+	{$ifdef UNICODE}
+	Result := Lowercase(s, loUserLocale);
+	{$else}
+	SetLength(Result, Length(s));
+	for i := 1 to Length(s) do
+	begin
+		Result[i] := Char(TableLowCaseCz[AnsiChar(s[i])])
+	end;
+	{$endif}
+end;
+
 initialization
 	{$ifndef UNICODE}
-	FillCharsTable;
+	FillTableUpCaseCz;
+	FillTableLowCaseCz
 	{$endif}
 end.

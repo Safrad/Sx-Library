@@ -152,6 +152,7 @@ begin
 			else
 			begin
 				try
+				if Assigned(ParamProcedures[paFileIndex]) then
 					ParamProcedures[paFileIndex](Param);
 				except
 					on E: Exception do

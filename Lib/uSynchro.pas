@@ -22,10 +22,10 @@ uses
 procedure Synchro(const Source, Dest: string);
 type
 	PFileInfo = ^TFileInfo;
-	TFileInfo = packed record // 16
+	TFileInfo = packed record // 20
 		Name: TFileName; // 4
-		DateTime: S4; // 4
 		Size: S4; // 4
+		DateTime: TDateTime; // 8
 		Found: B4; // 4
 	end;
 var
@@ -56,7 +56,7 @@ begin
 			FileInfo := FileNamesD.Add;
 			FileInfo.Name := SearchRec.Name;
 			if IsDir then FileInfo.Name := FileInfo.Name + '\';
-			FileInfo.DateTime := SearchRec.Time;
+			FileInfo.DateTime := SearchRec.TimeStamp;
 			FileInfo.Size := SearchRec.Size;
 			FileInfo.Found := False;
 		end;
@@ -81,8 +81,8 @@ begin
 				begin
 					if IsFile then
 					begin
-						Found := (SearchRec.Time = FileInfo.DateTime) and (SearchRec.Size = FileInfo.Size);
-						if SearchRec.Time < FileInfo.DateTime then
+						Found := (SearchRec.TimeStamp = FileInfo.DateTime) and (SearchRec.Size = FileInfo.Size);
+						if SearchRec.TimeStamp < FileInfo.DateTime then
 							Warning('Destination file %1 is newer!', [Source + SearchRec.Name]);
 					end
 					else
