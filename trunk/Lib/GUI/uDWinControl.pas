@@ -83,6 +83,8 @@ end;
 
 function GetSectionName(Control: TControl): string;
 begin
+  if Control = nil then Exit;
+  
 	if Assigned(Control.Parent) then
 		Result := Control.Parent.Name + '.'
 	else

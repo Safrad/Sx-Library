@@ -994,7 +994,14 @@ begin
 					Inc(ActPos[j]);
 			end
 			else
+      begin
+        if ActPos[j] > 1 then
+        begin
 				ActPos[j] := 1;
+          if s[Index] = WhatS[j][ActPos[j]] then
+            Inc(ActPos[j]);
+        end;
+      end;
 		end;
 		Inc(Index);
 	end;

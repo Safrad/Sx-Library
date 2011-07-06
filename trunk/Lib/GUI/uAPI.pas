@@ -4,8 +4,10 @@ interface
 
 uses
 	uTypes,
-	Classes, SysUtils;
+	Classes, SysUtils, Windows;
 
+procedure RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const WaitIfFinish: BG = True);
+procedure ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE; const WaitIfFinish: BG = True);
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 procedure PropertiesDialog(FileName: TFileName);
 function KeyToStr(const Key: U2): string;
@@ -13,8 +15,8 @@ function KeyToStr(const Key: U2): string;
 implementation
 
 uses
-	Windows, ShellAPI,
-	uMsg, uFiles, uLog, uStrings;
+	ShellAPI,
+	uMsg, uFiles, uLog, uStrings, uFile;
 
 type
 	TShellExecute = class(TThread)
@@ -44,6 +46,50 @@ end;
 const
 	OpenString = 'open'; // XP
 //	OpenString = 'RunAs'; // Newer Windows
+
+procedure RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const WaitIfFinish: BG = True);
+var
+	BatFileName: string;
+begin
+	BatFileName := TempDir + 'TempRun.bat';
+	WriteStringToFile(BatFileName, 'cd "' + CurrentDirectory + '"' + FileSep + 'call "' + FFileName + '"' + CharSpace + Params + LineSep, False, fcAnsi);
+	try
+		ShellExecuteDirect(BatFileName, '', CurrentDirectory, SW_NORMAL, WaitIfFinish);
+//		Sleep(200);
+	finally
+//		DeleteFileEx(BatFileName); ShellExecuteDirect is asynchronous
+	end;
+end;
+
+procedure ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE; const WaitIfFinish: BG = True);
+var
+	FAgain : BG;
+	ErrorCode: U4;
+	lpExecInfo: TShellExecuteInfo;
+	i: UG;
+begin
+	FAgain := True;
+	while FAgain do
+	begin
+//		ErrorCode := ShellExecute(0, OpenString, PChar('"' + RemoveEV(FFileName) + '"'), PChar(Params), PChar(CurrentDirectory), ShowCmd);
+		lpExecInfo.cbSize := SizeOf(lpExecInfo);
+		FillChar(lpExecInfo, SizeOf(lpExecInfo), 0);
+		lpExecInfo.lpFile := PChar(FFileName);
+		lpExecInfo.lpParameters := PChar(Params);
+		lpExecInfo.lpDirectory := PChar(CurrentDirectory);
+		lpExecInfo.fMask := 0;
+		lpExecInfo.Wnd := 0;
+		lpExecInfo.nShow := ShowCmd;
+		ShellExecuteEx(@lpExecInfo);
+			repeat
+				Sleep(LoopSleepTime);
+				i := WaitForSingleObject(lpExecInfo.hProcess, LoopSleepTime);
+			until not((i = WAIT_TIMEOUT));
+		GetExitCodeProcess(lpExecInfo.hProcess, ErrorCode);
+		FAgain := (ErrorCode <= 32) and IOErrorRetry(FFileName, ErrorCode);
+	end;
+	CloseHandle(lpExecInfo.hProcess);
+end;
 
 procedure TShellExecute.Execute;
 begin

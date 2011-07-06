@@ -124,6 +124,7 @@ function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
 function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
 
 function BitsToByte(const Bits: S8): S4;
+function GetActualYear: SG;
 
 implementation
 
@@ -1434,6 +1435,26 @@ end;
 function BitsToByte(const Bits: S8): S4;
 begin
 	Result := (Bits + 7) shr 3;
+end;
+
+{function GetActualYear: SG;
+var
+	Y: Word;
+	D: Word;
+	M: Word;
+	Date: TDateTime;
+begin
+	Date := Now;
+	DecodeDate(Date, Y, M, D);
+	Result := Y;
+end;}
+
+function GetActualYear: SG;
+var
+	SystemTime: TSystemTime;
+begin
+	GetLocalTime(SystemTime);
+	Result := SystemTime.wYear;
 end;
 
 initialization
