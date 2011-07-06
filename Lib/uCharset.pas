@@ -186,7 +186,7 @@ begin
 end;
 
 {$ifndef UNICODE}
-procedure FillCharsTableCz;
+procedure FillTableUpCaseCz;
 var c, Result: AnsiChar;
 begin
 	for c := Low(c) to High(c) do
