@@ -15,7 +15,7 @@ procedure EndLongOperation(const Sound: BG = True);
 
 function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
 function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
-//function WriteLinesToFile(var FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
+function WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
 function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 function WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 
@@ -274,8 +274,7 @@ begin
 	end;
 end;
 
-{
-function WriteLinesToFile(var FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
+function WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG): BG;
 var
 	F: TFile;
 	i: SG;
@@ -302,7 +301,7 @@ begin
 	finally
 		F.Free;
 	end;
-end;}
+end;
 
 function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 var
