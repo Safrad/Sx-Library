@@ -13,108 +13,14 @@ uses
 
 procedure PathsToReg;
 procedure RegistryToDcc32Cfg;
-function GetDelphiRegPath(const DelphiVersion: SG): string;
-function GetDelphiPath(const DelphiVersion: SG): string;
 
 implementation
 
 uses
+  uDelphi,
 	uMath, uMsg,
+  uLog,
 	Classes;
-
-const
-	DelphiToBDS = 7; // <= 7 Delphi
-	BorlandToCodeGear = 12; // <= 12 : Borland
-	CodeGearToEmbarcadero = 13; // = 13 CodeGear, > 13 Embarcadero
-
-(*	if DelphiVersion <= Break1 then
-		Result := ProgramFilesDir + 'Borland\Delphi' + IntToStr(DelphiVersion) + '\'
-	else if DelphiVersion <= Break2 then
-		Result := ProgramFilesDir + 'Borland\BDS\' + IntToStr(DelphiVersion - Break1) + '.0\'
-	else
-		Result := ProgramFilesDir + 'Embarcadero\RAD Studio\' + IntToStr(DelphiVersion - Break1) + '.0\'; *)
-
-
-function GetDelphiRegPath(const DelphiVersion: SG): string;
-var
-	RegPath: string;
-begin
-	RegPath := 'Software' + PathDelim;
-	if DelphiVersion <= BorlandToCodeGear then
-		RegPath := RegPath + 'Borland\'
-	else if DelphiVersion <= CodeGearToEmbarcadero then
-		RegPath := RegPath + 'CodeGear\'
-	else
-		RegPath := RegPath + 'Embarcadero\';
-
-	if DelphiVersion <= DelphiToBDS then
-		RegPath := RegPath + 'Delphi\' + IntToStr(DelphiVersion)
-	else
-		RegPath := RegPath + 'BDS\' + IntToStr(DelphiVersion - DelphiToBDS);
-	RegPath := RegPath + '.0' + PathDelim;
-	Result := RegPath;
-end;
-
-procedure ReplaceEnv(var Paths: string);
-const
-	Prefix = '$(';
-	Suffix = ')';
-var
-	i, p, p2: SG;
-	EnvName, EnvVar: string;
-begin
-	i := 1;
-	while i < Length(Paths) do
-	begin
-		p := PosEx(Prefix, Paths, i);
-		if p = 0 then Exit;
-		p2 := PosEx(Suffix, Paths, p);
-		EnvName := Copy(Paths, p + Length(Prefix), p2 - p - 2);
-
-		EnvVar := GetEnvironmentVariable(EnvName);
-		if EnvVar <> '' then
-		begin
-			Delete(Paths, p, p2 - p + Length(Suffix));
-			Insert(EnvVar, Paths, p);
-			i := p + Length(EnvVar);
-		end
-		else
-		begin
-			i := p + Length(EnvName);
-			Warning('Variable ' + EnvName + ' not found.');
-		end;
-	end;
-end;
-
-function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
-begin
-  if Reg.OpenKeyReadOnly(RegPath) then
-  begin
-    Writeln('Key ' + RegPath + ' found.');
-    Result := CorrectDirF(Reg.ReadString('RootDir'));
-    Reg.CloseKey;
-  end
-  else
-  begin
-    Writeln('Key ' + RegPath + ' not found.');
-    Result := '';
-  end;
-end;
-
-function GetDelphiPath(const DelphiVersion: SG): string;
-var
-	Reg: TRegistry;
-  RegPath: string;
-begin
-	Reg := TRegistry.Create(KEY_QUERY_VALUE);
-	try
-		Reg.RootKey := HKEY_CURRENT_USER;
-		RegPath := GetDelphiRegPath(DelphiVersion);
-    Result := GetDelphiPathOnly(Reg, RegPath);
-	finally
-		Reg.Free;
-	end;
-end;
 
 procedure RegistryToDcc32Cfg;
 var
@@ -125,7 +31,7 @@ var
 	SearchPaths: string;
 	RegPath: string;
 	Path: string;
-	DelphiPath, DelphiPath2: string;
+	DelphiPath: string;
 	DelphiVersion: Integer;
 begin
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
@@ -150,16 +56,8 @@ begin
 						s := s + '-u"C:\My Documents\Delphi\ExtLib\GraphicEx"' + FileSep;
 					end; *)
 
-					DelphiPath2 := DelLastChar(DelphiPath);
 					SearchPaths := Reg.ReadString('Search Path');
-					Replace(SearchPaths, '$(DELPHI)', DelphiPath2);
-					Replace(SearchPaths, '$(BDS)', DelphiPath2);
-					Replace(SearchPaths, '$(BDSLIB)', DelphiPath2 + '\Lib');
-					Replace(SearchPaths, '$(BDSBIN)', DelphiPath2 + '\Bin');
-					Replace(SearchPaths, '$(BDSINCLUDE)', DelphiPath2 + '\Include');
-					Replace(SearchPaths, '$(PLATFORM)', 'Win32');
-
-					ReplaceEnv(SearchPaths);
+          SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion);
 
 					InLineIndex := 1;
 					while InLineIndex < Length(SearchPaths) do
@@ -325,7 +223,6 @@ begin
 	finally
 		Reg.Free;
 	end;
-
 end;
 
 procedure PathsToReg;

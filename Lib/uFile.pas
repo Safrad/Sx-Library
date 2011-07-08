@@ -72,6 +72,8 @@ const
 		#$DD + #$73 + #$66 + #$73, #$0E + #$FE + #$FF, #$FB + #$EE + #$28, #$FB + #$EE + #$28 + #$FF,
 		#$84 + #$31 + #$95 + #$33);
 
+  CharsetSize : array [TFileCharset] of SG = (1, 1, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+
 type
 	TFile = class(TObject)
 	private
@@ -104,6 +106,7 @@ type
 		procedure SetProtection(const Value: BG);
 		procedure ReadPrefix;
 		procedure WritePrefix;
+    function UpdateBuffer: SG;
 	public
 		property Charset: TFileCharset read FCharset write FCharset;
 		property DefaultCharset: TFileCharset read FDefaultCharset write FDefaultCharset;
@@ -149,7 +152,7 @@ implementation
 
 uses
 	Math,
-	uMsg, uFiles, uLog, uOutputFormat, uCharset; // {$ifopt d+}, uFileTest{$endif};
+	uMsg, uFiles, uLog, uOutputFormat, uCharset{$ifopt d+}, uFileTest{$endif};
 
 constructor TFile.Create;
 begin
@@ -453,6 +456,25 @@ begin
 	end;
 end;
 
+function TFile.UpdateBuffer: SG;
+begin
+  if (FFilePos >= FBufStart) and (FFilePos <= FBufEnd) then
+  begin
+    Result := FFilePos - FBufStart;
+  end
+  else
+  begin
+    FBufStart := FBufferSize * (FFilePos div FBufferSize);
+    FBufEnd := FBufStart + FBufferSize - 1;
+    if FBufEnd >= FFileSize then
+      FBufEnd := FFileSize - 1;
+    Seek(FBufStart);
+    Result := FFilePos;
+    BlockRead(FBuffer[0], FBufEnd - FBufStart + 1);
+    FFilePos := Result;
+  end;
+end;
+
 {
 	File   |********************************|
 	Buffer                 |*******|
@@ -462,6 +484,8 @@ var
 	BufPos: SG;
 	InLineIndex: SG;
 	LineLength: SG;
+  CharSize: SG;
+  LastCharCR: BG;
 begin
 	Line := '';
 	if Eof then
@@ -472,6 +496,8 @@ begin
 	Result := True;
 	FillBuffer;
 
+  CharSize := CharsetSize[FCharset];
+
 	LineLength := 256;
 	SetLength(Line, LineLength);
 	InLineIndex := 1;
@@ -480,21 +506,80 @@ begin
 		if (FFilePos >= FBufStart) and (FFilePos <= FBufEnd) then
 		begin
 			BufPos := FFilePos - FBufStart;
-			if { Eof or } (FBuffer[BufPos] = CharLF) then
-			begin
+(*      if (FBuffer[BufPos] = CharCR) then
+      begin
 				if (FCharset <> fcUTF16LE) or ((BufPos and 1 = 0) and (FBuffer[BufPos + 1] = #0)) then
 				begin
 					if FCharset = fcUTF16LE then
 					begin
-						Dec(InLineIndex);
+//						Dec(InLineIndex);
 						Inc(FFilePos);
 					end;
-
 					Inc(FFilePos);
 					// Seek(FFilePos);
 					Break;
-				end;
-			end;
+        end;
+      end
+			else*)
+      case FCharset of
+      fcAnsi, fcUTF8:
+        if (FBuffer[BufPos] = CharCR) or (FBuffer[BufPos] = CharLF) then
+        begin
+          LastCharCR := FBuffer[BufPos] = CharCR;
+          Inc(FFilePos);
+          BufPos := UpdateBuffer;
+          if (LastCharCR) and (FBuffer[BufPos] = CharLF) then
+            Inc(FFilePos);
+          Break;
+        end;
+      fcUTF16BE:
+        if (FBuffer[BufPos + 1] = CharCR) or (FBuffer[BufPos + 1] = CharLF) then
+        begin
+          if (FBuffer[BufPos] = #0) then
+          begin
+            LastCharCR := FBuffer[BufPos + 1] = CharCR;
+//            Dec(InLineIndex, CharSize);
+            Inc(FFilePos, 2);
+            BufPos := UpdateBuffer;
+            if LastCharCR then
+            if (FBuffer[BufPos + 1] = CharLF) then
+            begin
+              if (FBuffer[BufPos] = #0) then
+              begin
+                Inc(FFilePos, 2); // Skip LF after CR
+              end;
+            end;
+
+            Break;
+          end;
+        end;
+      fcUTF16LE:
+        if (FBuffer[BufPos] = CharCR) or (FBuffer[BufPos] = CharLF) then
+        begin
+          if (FBuffer[BufPos + 1] = #0) then
+          begin
+            LastCharCR := FBuffer[BufPos] = CharCR;
+//            Dec(InLineIndex, CharSize);
+            Inc(FFilePos, 2);
+            BufPos := UpdateBuffer;
+            if LastCharCR then
+            if (FBuffer[BufPos] = CharLF) then
+            begin
+              if (FBuffer[BufPos + 1] = #0) then
+              begin
+                Inc(FFilePos, 2); // Skip LF after CR
+              end;
+            end;
+            Break;
+          end;
+        end;
+      else
+        if (FBuffer[BufPos] = CharLF) then
+        begin
+          Inc(FFilePos);
+          Break;
+        end;
+      end;
 		end
 		else
 		begin
@@ -510,18 +595,21 @@ begin
 			// BufPos := FFilePos - FBufStart;
 			Continue;
 		end;
-		if (FBuffer[BufPos] <> CharCR) or
+{		if (FBuffer[BufPos] <> CharCR) or
 			((FCharset = fcUTF16LE) and ((BufPos and 1 <> 0) or (FBuffer[BufPos + 1] <> #0))) then
-		begin
+		begin}
 			if InLineIndex > LineLength then
 			begin
 				LineLength := 2 * (InLineIndex - 1);
 				SetLength(Line, LineLength);
 			end;
 			Line[InLineIndex] := FBuffer[BufPos];
-			Inc(InLineIndex);
-		end;
-		Inc(FFilePos);
+      if CharSize > 1 then
+  			Line[InLineIndex + 1] := FBuffer[BufPos + 1];
+
+			Inc(InLineIndex, CharSize);
+//		end;
+		Inc(FFilePos, CharSize);
 	end;
 	SetLength(Line, InLineIndex - 1);
 end;
@@ -541,6 +629,7 @@ end;
 function TFile.Readln(out Line: UnicodeString): BG;
 var
 	LineA: AnsiString;
+  i: SG;
 begin
 	Result := ReadlnNoConversion(LineA);
 	case FCharset of
@@ -550,15 +639,21 @@ begin
 		begin
 			Line := ConvertUtf8ToUnicode(LineA);
 		end;
-	{ fcUTF16BE, } fcUTF16LE:
+	fcUTF16BE:
 		begin
-			// {$ifdef VER150}
-			// SetLength(Line, Length(LineA) div SizeOf(WideChar));
-			// Move(LineA[1], Line[1], Length(LineA));
-			// {$else}
 			SetLength(Line, Length(LineA) div SizeOf(WideChar));
 			Move(LineA[1], Line[1], Length(LineA));
-			// {$endif}
+      for i := 1 to Length(Line) do
+      begin
+        Line[i] := WideChar(Swap(Ord(Line[i])));
+      end;
+{      for i := 1 to Length(Line) do
+        Line[i] := WideChar(Ord(LineA[2 * i - 1]) + Ord(LineA[2 * i]) shl 8);}
+		end;
+  fcUTF16LE:
+		begin
+			SetLength(Line, Length(LineA) div SizeOf(WideChar));
+			Move(LineA[1], Line[1], Length(LineA));
 		end;
 	else
 		begin
@@ -659,6 +754,7 @@ end;
 function TFile.Write(const Line: AnsiString): BG;
 var
 	u: UnicodeString;
+  i: SG;
 begin
 	if Length(Line) = 0 then
 	begin
@@ -671,9 +767,18 @@ begin
 		begin
 			Result := WriteNoConversion(AnsiToUTF8(Line));
 		end;
-	{ fcUTF16BE, } fcUTF16LE:
+	 fcUTF16BE:
 		begin
-			u:= UnicodeString(Line);
+			u := UnicodeString(Line);
+      for i := 1 to Length(u) do
+      begin
+        u[i] := WideChar(Swap(Ord(u[i])));
+      end;
+			Result := WriteNoConversion(PAnsiChar(@u), Length(Line) * SizeOf(WideChar));
+		end;
+   fcUTF16LE:
+		begin
+			u := UnicodeString(Line);
 			Result := WriteNoConversion(PAnsiChar(@u), Length(Line) * SizeOf(WideChar));
 		end;
 	fcAnsi:
@@ -687,6 +792,9 @@ begin
 end;
 
 function TFile.Write(const Line: UnicodeString): BG;
+var
+  u: UnicodeString;
+  i: SG;
 begin
 	if Length(Line) = 0 then
 	begin
@@ -699,7 +807,16 @@ begin
 		begin
 			Result := WriteNoConversion(AnsiString(ConvertUnicodeToUTF8(Line)));
 		end;
-	{ fcUTF16BE, } fcUTF16LE:
+	 fcUTF16BE:
+		begin
+      u := Line;
+      for i := 1 to Length(u) do
+      begin
+        u[i] := WideChar(Swap(Ord(u[i])));
+      end;
+			Result := WriteNoConversion(PAnsiChar(@u[1]), Length(u) * SizeOf(WideChar));
+		end;
+   fcUTF16LE:
 		begin
 			Result := WriteNoConversion(PAnsiChar(@Line[1]), Length(Line) * SizeOf(WideChar));
 		end;
