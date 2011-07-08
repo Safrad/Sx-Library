@@ -56,7 +56,11 @@ begin
 			FileInfo := FileNamesD.Add;
 			FileInfo.Name := SearchRec.Name;
 			if IsDir then FileInfo.Name := FileInfo.Name + '\';
+			{$if CompilerVersion >= 21}
 			FileInfo.DateTime := SearchRec.TimeStamp;
+      {$else}
+			FileInfo.DateTime := SearchRec.Time;
+      {$ifend}
 			FileInfo.Size := SearchRec.Size;
 			FileInfo.Found := False;
 		end;
@@ -81,8 +85,8 @@ begin
 				begin
 					if IsFile then
 					begin
-						Found := (SearchRec.TimeStamp = FileInfo.DateTime) and (SearchRec.Size = FileInfo.Size);
-						if SearchRec.TimeStamp < FileInfo.DateTime then
+						Found := ({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} = FileInfo.DateTime) and (SearchRec.Size = FileInfo.Size);
+						if {$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} < FileInfo.DateTime then
 							Warning('Destination file %1 is newer!', [Source + SearchRec.Name]);
 					end
 					else
