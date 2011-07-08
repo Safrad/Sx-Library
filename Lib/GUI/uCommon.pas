@@ -119,6 +119,7 @@ begin
 		InitializeLog;
 	end;
 	MainIni := TDIniFile.Create(MainIniFileName);
+	LocalMainIni := TDIniFile.Create(LocalIniFileName);
 	MainIni.RegisterRW(CommonMenu.RWCommon);
 	Dictionary := TDictionary.Create;
 	if not Special then
@@ -259,6 +260,7 @@ begin
 	Application.MainForm.Free; // Do not use FreeAndNil
 	FreeAndNil(Dictionary);
 	FreeAndNil(MainIni);
+	FreeAndNil(LocalMainIni);
 	FreeAndNil(MainLog);
 end;
 
@@ -431,6 +433,7 @@ end;
 procedure TCommonMenu.ViewIniFile1Click(Sender: TObject);
 begin
 	APIOpen(MainIniFileName);
+	APIOpen(LocalIniFileName);
 end;
 
 procedure TCommonMenu.ViewLogFile1Click(Sender: TObject);
