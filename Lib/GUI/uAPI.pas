@@ -6,16 +6,24 @@ uses
 	uTypes,
 	Classes, SysUtils, Windows;
 
-procedure RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const WaitIfFinish: BG = True);
-procedure ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE; const WaitIfFinish: BG = True);
+// @Return process exit code
+function RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
+
+// @Return process exit code
+function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
+
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 procedure PropertiesDialog(FileName: TFileName);
 function KeyToStr(const Key: U2): string;
 
+
+var
+  AbortAPI: BG;
+
 implementation
 
 uses
-	ShellAPI,
+	ShellAPI, Forms,
 	uMsg, uFiles, uLog, uStrings, uFile;
 
 type
@@ -47,21 +55,21 @@ const
 	OpenString = 'open'; // XP
 //	OpenString = 'RunAs'; // Newer Windows
 
-procedure RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const WaitIfFinish: BG = True);
+function RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
 var
 	BatFileName: string;
 begin
 	BatFileName := TempDir + 'TempRun.bat';
 	WriteStringToFile(BatFileName, 'cd "' + CurrentDirectory + '"' + FileSep + 'call "' + FFileName + '"' + CharSpace + Params + LineSep, False, fcAnsi);
 	try
-		ShellExecuteDirect(BatFileName, '', CurrentDirectory, SW_NORMAL, WaitIfFinish);
+		Result := ShellExecuteDirect(BatFileName, '', CurrentDirectory, ShowCmd);
 //		Sleep(200);
 	finally
 //		DeleteFileEx(BatFileName); ShellExecuteDirect is asynchronous
 	end;
 end;
 
-procedure ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE; const WaitIfFinish: BG = True);
+function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
 var
 	FAgain : BG;
 	ErrorCode: U4;
@@ -71,22 +79,43 @@ begin
 	FAgain := True;
 	while FAgain do
 	begin
-//		ErrorCode := ShellExecute(0, OpenString, PChar('"' + RemoveEV(FFileName) + '"'), PChar(Params), PChar(CurrentDirectory), ShowCmd);
+ //		ErrorCode := ShellExecute(0, OpenString, PChar('"' + RemoveEV(FFileName) + '"'), PChar(Params), PChar(CurrentDirectory), ShowCmd);
 		lpExecInfo.cbSize := SizeOf(lpExecInfo);
 		FillChar(lpExecInfo, SizeOf(lpExecInfo), 0);
-		lpExecInfo.lpFile := PChar(FFileName);
+
+    lpExecInfo.cbSize := SizeOf(lpExecInfo);
+    lpExecInfo.fMask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
+    lpExecInfo.Wnd := GetActiveWindow();
+    lpExecInfo.lpVerb := 'open';
+    lpExecInfo.lpParameters := PChar(Params);
+    lpExecInfo.lpFile := PChar(FFileName);
+    lpExecInfo.nShow := ShowCmd; //SW_SHOWNORMAL;
+
+{		lpExecInfo.lpFile := PChar(FFileName);
 		lpExecInfo.lpParameters := PChar(Params);
+    lpExecInfo.lpVerb := PChar('open');
 		lpExecInfo.lpDirectory := PChar(CurrentDirectory);
-		lpExecInfo.fMask := 0;
-		lpExecInfo.Wnd := 0;
-		lpExecInfo.nShow := ShowCmd;
-		ShellExecuteEx(@lpExecInfo);
+		lpExecInfo.fMask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT; //SEE_MASK_CLASSNAME | SEE_MASK_IDLIST | SEE_MASK_FLAG_NO_UI;
+
+		lpExecInfo.Wnd := GetActiveWindow;
+		lpExecInfo.nShow := ShowCmd;}
+		if ShellExecuteEx(@lpExecInfo) then
+		begin
 			repeat
 				Sleep(LoopSleepTime);
+        Application.ProcessMessages;
 				i := WaitForSingleObject(lpExecInfo.hProcess, LoopSleepTime);
-			until not((i = WAIT_TIMEOUT));
-		GetExitCodeProcess(lpExecInfo.hProcess, ErrorCode);
-		FAgain := (ErrorCode <= 32) and IOErrorRetry(FFileName, ErrorCode);
+        if AbortAPI then Break;
+			until not((i <> WAIT_OBJECT_0)); //i = WAIT_TIMEOUT)); // WAIT_OBJECT_0
+  		GetExitCodeProcess(lpExecInfo.hProcess, Result);
+      FAgain := False;
+//  		FAgain := (ErrorCode <= 32) and IOErrorRetry(FFileName, ErrorCode);
+    end
+    else
+    begin
+      ErrorCode := GetLastError;
+			FAgain := (ErrorCode <= 32) and IOErrorRetry(FFileName, ErrorCode);
+    end;
 	end;
 	CloseHandle(lpExecInfo.hProcess);
 end;
