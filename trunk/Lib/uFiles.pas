@@ -23,7 +23,8 @@ var
 	CommonAppDataDir, // Application Data
 	TempDir,
 	CommonTempDir: string;
-	ExeFileName, MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
+	ExeFileName, RenamedExeFileName: TFileName;
+  MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
 
 type
 	TFileNames = array of TFileName;
@@ -43,7 +44,7 @@ function ParentDir(var Dir: string): BG;
 function ParentDirF(Dir: string): string;
 function LegalFileName(const FileName: string): string;
 function LegalPath(const Path: string): string;
-procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
+procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
 function HandleFileSize(FHandle: THandle): S8;
 function GetFileSizeU(const FileName: TFileName): S8;
 function GetFileSizeS(const FileName: TFileName): string;
@@ -462,13 +463,11 @@ begin
 		else if ((Length(Dir) > 1) and (Dir[2] = ':'))then
 		begin
 			// Absolute path
-			Result := Dir;
+			Result := ExpandFileName(Dir);
 		end
 		else
 			// Relative path
-			Result := WorkDir + Dir;
-
-		// TODO : '..' like HTML (New Parameter WorkDir=ActualDir)
+			Result := ExpandFileName(WorkDir + Dir);
 	end;
 end;
 
@@ -577,7 +576,7 @@ end;
 const
 	faAll = $00000031; // faArchive or faReadOnly or faDirectory;
 
-procedure ReadSubDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs: BG);
+procedure ReadSubDir(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs, FullPath: BG);
 var
 	SearchRec: TSearchRec;
 	Read: BG;
@@ -620,13 +619,15 @@ begin
 					FileNames[FilesCount] := SubPath + SearchRec.Name
 				else
 					FileNames[FilesCount] := SearchRec.Name;
+        if FullPath then
+          FileNames[FilesCount] := Path + FileNames[FilesCount];
 				Inc(FilesCount);
 			end;
 		end;
 
 		if IsDir and SubDirs then
 		begin
-			ReadSubDir(FileNames, FilesCount, Path, SubPath + SearchRec.Name, Extensions, Files, Dirs, SubDirs);
+			ReadSubDir(FileNames, FilesCount, Path, SubPath + SearchRec.Name, Extensions, Files, Dirs, SubDirs, FullPath);
 		end;
 		ErrorCode := FindNext(SearchRec);
 	end;
@@ -646,7 +647,7 @@ begin
 		PChar(GList^[Index1].Name), Length(GList^[Index1].Name)) - 2;
 end;
 
-procedure ReadSubDirSorted(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs: BG);
+procedure ReadSubDirSorted(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs, FullPath: BG);
 var
 	SearchRec: TSearchRec;
 	Read: BG;
@@ -724,17 +725,19 @@ begin
 		else
 		begin
 			FileNames[FilesCount] := List[j].Name;
+      if FullPath then
+        FileNames[FilesCount] := Path + FileNames[FilesCount];
 			Inc(FilesCount);
 		end;
 		if SubDirs and IsDir then
 		begin
-			ReadSubDir(FileNames, FilesCount, Path, SubPath + List[j].Name + PathDelim, Extensions, Files, Dirs, SubDirs);
+			ReadSubDir(FileNames, FilesCount, Path, SubPath + List[j].Name + PathDelim, Extensions, Files, Dirs, SubDirs, FullPath);
 		end;
 	end;
 end;
 
 
-procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG);
+procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
 {$ifopt d+}
 var
 	i: SG;
@@ -757,9 +760,9 @@ begin
 			if Extension[1] <> '.' then Extension := '.' + Extension;}
 
 	if not Sort then
-		ReadSubDir(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs)
+		ReadSubDir(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs, FullPath)
 	else
-		ReadSubDirSorted(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs);
+		ReadSubDirSorted(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs, FullPath);
 
 	if MainLogWrite(mlDebug) then
 		MainLogAdd(NToS(FileCount) + ' files found in folder ' + Path + '.', mlDebug);
@@ -1737,17 +1740,37 @@ begin
 	case FileCharset of
 	fcAnsi: Dest := Source;
 	fcUTF8: Dest := AnsiToUtf8(Source);
-//	fcUTF16LE: Dest := UnicodeString(Source);
 	else
 		Warning('Unsupported charset.');
 	end;
 end;
 
 procedure ConvertFileCharset(const Source: UnicodeString; out Dest: AnsiString; const FileCharset: TFileCharset); overload;
+var
+  Size: SG;
+  u: UnicodeString;
+  i: SG;
 begin
 	case FileCharset of
 	fcAnsi: Dest := AnsiString(Source);
 	fcUTF8: Dest := ConvertUnicodeToUtf8(Source);
+  fcUTF16BE:
+  begin
+    Size := Length(Source) * SizeOf(WideChar);
+    u := Source;
+    for i := 1 to Length(u) do
+    begin
+      u[i] := WideChar(Swap(Ord(u[i])));
+    end;
+		SetLength(Dest, Size);
+		Move(u[1], Dest[1], Size);
+  end;
+  fcUTF16LE:
+  begin
+    Size := Length(Source) * SizeOf(WideChar);
+		SetLength(Dest, Size);
+		Move(Source[1], Dest[1], Size);
+  end;
 	else
 		Warning('Unsupported charset.');
 	end;
