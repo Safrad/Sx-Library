@@ -8,7 +8,7 @@ uses
 	Types
 {$IFNDEF Console}
 	, uDFile, uDButton, uDForm,
-	Classes, Forms, ComCtrls, StdCtrls, Controls, Menus
+	Classes, Forms, ComCtrls, StdCtrls, Controls, Menus, CheckLst
 {$ELSE}
 	, uRWFile
 {$ENDIF};
@@ -132,6 +132,7 @@ type
 		procedure RWFormPosV(const Form: TForm; const Save: BG);
 		procedure RWListView(const ListView: TListView; const Save: BG);
 		procedure RWListBox(const ListBox: TListBox; const Save: BG);
+		procedure RWCheckListBox(const CheckListBox: TCheckListBox; const Save: BG);
 		// Menu
 		procedure RWBoolM(const Section: string; MenuItem: TMenuItem; const Save: BG); overload;
 		procedure RWBoolM(const Section: string; MenuItem: TMenuItem; var Value: BG; const Save: BG;
@@ -1219,6 +1220,17 @@ begin
 	begin
 		ListBox.Selected[i] := RWBGF(ListBox.Name, 'Index' + NToS(i, ofIO), ListBox.Selected[i],
 			ListBox.Selected[i], Save);
+	end;
+end;
+
+procedure TDIniFile.RWCheckListBox(const CheckListBox: TCheckListBox; const Save: BG);
+var
+	i: Integer;
+begin
+	for i := 0 to CheckListBox.Items.Count - 1 do
+	begin
+		CheckListBox.Checked[i] := RWBGF(CheckListBox.Name, 'Index' + NToS(i, ofIO), CheckListBox.Checked[i],
+			CheckListBox.Checked[i], Save);
 	end;
 end;
 
