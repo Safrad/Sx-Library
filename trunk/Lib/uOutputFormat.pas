@@ -65,6 +65,8 @@ const
 		'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
 		'y', 'z', '-', '*'});
 
+function NumToStr(Num: S8; const Base: SG): string;
+
 function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
 
