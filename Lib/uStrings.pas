@@ -15,7 +15,8 @@ const
 	{
 	DOSLineSep = CharCR + CharLF;
 	LinuxLineSep =  CharLF;
-	MacintoshLineSep = CharCR;
+	MacintoshLineSep =  CharLF;
+	ShortLineSep = CharCR;
 	}
 	LineSep = CharLF; // Deafult
 	FullSep = CharCR + CharLF; // Required by some Windows components
