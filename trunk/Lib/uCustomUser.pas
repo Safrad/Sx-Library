@@ -8,9 +8,9 @@ const
 	MyEMail: string = '';
 	MyCompany: string = '';}
 	MyName: string = 'David Safranek (Safrad)';
-	MyWeb: string = 'http://safrad.own.cz';
-	MyEMail: string = 'safrad at email.cz';
-	MyCompany: string = 'Safrad';
+	MyWeb: string = 'http://sx.heliohost.org';
+	MyEMail: string = 'info at sx.heliohost.org';
+	MyCompany: string = 'Sx Software';
 
 	function GetHomepage(const ProjectName: string): string;
 
@@ -22,9 +22,7 @@ uses
 
 function GetHomepage(const ProjectName: string): string;
 begin
-	Result := MyWeb + '/Software/' + ProjectName + '/';
+	Result := MyWeb + '/' + ProjectName + '/';
 end;
 
 end.
-
-
