@@ -32,12 +32,12 @@ var
 	RegPath: string;
 	Path: string;
 	DelphiPath: string;
-	DelphiVersion: Integer;
+	DelphiVersion: TDelphiVersion;
 begin
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
-		for DelphiVersion := 1 to (GetActualYear - 1995) do
+		for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 		begin
 			RegPath := GetDelphiRegPath(DelphiVersion);
       DelphiPath := GetDelphiPathOnly(Reg, RegPath);
@@ -49,13 +49,6 @@ begin
 				begin
 					s := '-aWinTypes=Windows' + LineSep;
 					s := s + '-r"' + DelphiPath + 'Lib"' + LineSep;
-(*					if (DelphiVersion > 7) then
-					begin
-						s := s + '-u"' + DelphiPath + 'Lib\Indy10"' + FileSep;
-						s := s + '-u"C:\My Documents\Delphi\ExtLib\GDIPlus\Lib"' + FileSep;
-						s := s + '-u"C:\My Documents\Delphi\ExtLib\GraphicEx"' + FileSep;
-					end; *)
-
 					SearchPaths := Reg.ReadString('Search Path');
           SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion);
 
@@ -63,7 +56,6 @@ begin
 					while InLineIndex < Length(SearchPaths) do
 					begin
 						Path := ReadToChar(SearchPaths, InLineIndex, ';');
-//						if (DelphiVersion <= 7) or (Pos('Delphi7', Path) = 0) then
 						if Path <> '' then
 							s := s + '-u"' + Path + '"' + LineSep;
 					end;
@@ -97,7 +89,7 @@ var
 	Lines: TArrayOfString;
 	LineCount: SG;
 	i, j: Integer;
-	DelphiVersion: SG;
+	DelphiVersion: TDelphiVersion;
 	Reg: TRegistry;
 	RegPath: string;
 	Paths: string;
@@ -119,7 +111,7 @@ begin
 	Reg := TRegistry.Create(KEY_ALL_ACCESS);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
-		for DelphiVersion := 1 to (GetActualYear - 1995) do
+		for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 		begin
 			RegPath := GetDelphiRegPath(DelphiVersion);
 				if Reg.OpenKey(RegPath + PathDelim + 'Library', False) then
@@ -138,6 +130,9 @@ begin
 					for i := 0 to LineCount - 1 do
 					begin
 						Path := Lines[i];
+            Replace(Path,
+              ['%DelphiShortName%', '%DelphiMajorVersion%'],
+              [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
 						if Path ='' then
 							Continue;
 
@@ -155,9 +150,6 @@ begin
 							RegPaths.Add(Path);
 						end;
 					end;
-{					RegPaths.Delimiter := ';';
-					RegPaths.QuoteChar := #0;
-					Paths := RegPaths.DelimitedText;}
 					Paths := '';
 					for i := 0 to RegPaths.Count - 1 do
 					begin
@@ -182,7 +174,7 @@ var
 	Lines: TArrayOfString;
 	LineCount: SG;
 	i, j: Integer;
-	DelphiVersion: SG;
+	DelphiVersion: TDelphiVersion;
 	Reg: TRegistry;
 	Strings: TStrings;
 	RegPath: string;
@@ -197,7 +189,7 @@ begin
 	Reg := TRegistry.Create(KEY_ALL_ACCESS);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
-		for DelphiVersion := 1 to (GetActualYear - 1995) do
+		for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 		begin
 			RegPath := GetDelphiRegPath(DelphiVersion);
 				if Reg.OpenKey(RegPath + PathDelim + 'Known Packages', False) then

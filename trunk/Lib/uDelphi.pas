@@ -5,64 +5,142 @@ interface
 uses
   uTypes, Registry;
 
-const
-  FirstUnicodeDelphi = 12; // Delphi 2009
+type
+  TDelphiVersion = (
+    dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
+    dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7,
+    dvDelphi8, dvDelphi2005, dvDelphi2006, dvDelphi2007,
+    dvDelphi2009, dvDelphi2010, dvDelphiXE {,..});
 
-function GetDelphiName(const AVersion: SG): string;
-function GetDelphiRegPath(const DelphiVersion: SG): string;
+const
+  ReleaseYear: array[TDelphiVersion] of string = (
+    '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
+    '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
+    '2003-12-17', '2004-10-22', '2005-11-11', '2007-03-19',
+    '2008-08-29', '2009-08-26', '2010-11-03');
+  FirstUnicodeDelphi = dvDelphi2009;
+
+// Delphi 7, BDS 7, BDS 8
+function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
+
+// 7, 14, 15
+function GetDelphiMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
+
+// 15, 21, 22
+function GetDelphiCompilerVersion(const ADelphiVersion: TDelphiVersion): SG;
+
+// 7, 2010, XE
+function GetDelphiShortName(const ADelphiVersion: TDelphiVersion): string;
+
+// XE (15, dcc 22)
+function GetDelphiFullName(const ADelphiVersion: TDelphiVersion): string;
+
+function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
 function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
-function GetDelphiPath(const DelphiVersion: SG): string;
-function ReplaceDelphiVariables(SearchPaths: string; const DelphiVersion: SG): string;
+function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
+function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion): string;
+function GetDelphiVersionCount: SG;
 function GetAvailableDelphiVersions: TArrayOfSG;
 
 implementation
 
 uses
+  uDelphiTest,
   Windows, SysUtils,
   uMath, uStrings, uLog;
 
 const
-	DelphiToBDS = 7; // <= 7 Delphi, >= 8 BDS
-	BorlandToCodeGear = 11; // <= 11 : Borland, >= 12 CodeGear
-  UnusedVersion = 13;
-	CodeGearToEmbarcadero = 12; // <= 12 CodeGear, >= 14 Embarcadero
+	FirstBDS = dvDelphi8;
+  BDSStartFrom = 2;
+	FirstCodeGear = dvDelphi2009;
+	FirstEmbarcadero = dvDelphi2010;
 
-(*	if DelphiVersion <= Break1 then
-		Result := ProgramFilesDir + 'Borland\Delphi' + IntToStr(DelphiVersion) + '\'
-	else if DelphiVersion <= Break2 then
-		Result := ProgramFilesDir + 'Borland\BDS\' + IntToStr(DelphiVersion - Break1) + '.0\'
-	else
-		Result := ProgramFilesDir + 'Embarcadero\RAD Studio\' + IntToStr(DelphiVersion - Break1) + '.0\'; *)
-
-
-function GetDelphiRegPath(const DelphiVersion: SG): string;
+function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
 var
 	RegPath: string;
 begin
+  if ADelphiVersion < dvDelphi1 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
 	RegPath := 'Software' + PathDelim;
-	if DelphiVersion <= BorlandToCodeGear then
+	if ADelphiVersion < FirstCodeGear then
 		RegPath := RegPath + 'Borland\'
-	else if DelphiVersion <= CodeGearToEmbarcadero then
+	else if ADelphiVersion < FirstEmbarcadero then
 		RegPath := RegPath + 'CodeGear\'
 	else
 		RegPath := RegPath + 'Embarcadero\';
 
-	if DelphiVersion <= DelphiToBDS then
-		RegPath := RegPath + 'Delphi\' + IntToStr(DelphiVersion)
+	if ADelphiVersion < FirstBDS then
+		RegPath := RegPath + 'Delphi\' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
 	else
-		RegPath := RegPath + 'BDS\' + IntToStr(DelphiVersion - DelphiToBDS);
+		RegPath := RegPath + 'BDS\' + IntToStr(SG(ADelphiVersion) - SG(FirstBDS) + BDSStartFrom);
 	RegPath := RegPath + '.0' + PathDelim;
 	Result := RegPath;
 end;
 
-
-function GetDelphiName(const AVersion: SG): string;
+function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
 begin
-	if AVersion <= DelphiToBDS then
-		Result := 'Delphi ' + IntToStr(AVersion)
+  if ADelphiVersion < dvDelphi1 then
+    Result := ''
+	else if ADelphiVersion < FirstBDS then
+		Result := 'Delphi ' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
 	else
-		Result := 'BDS ' + IntToStr(AVersion - DelphiToBDS);
-  Result := Result + ' (' + IntToStr(AVersion + 8) + ')';
+		Result := 'BDS ' + IntToStr(SG(ADelphiVersion) - SG(FirstBDS) + BDSStartFrom);
+end;
+
+function GetPascalMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
+begin
+  Result := SG(ADelphiVersion) - SG(dvPascal1) + 1;
+end;
+
+
+function GetDelphiMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
+begin
+  Result := SG(ADelphiVersion) - SG(dvDelphi1) + 1;
+  if ADelphiVersion >= dvDelphi2010 then
+    Inc(Result);
+end;
+
+function GetDelphiCompilerVersion(const ADelphiVersion: TDelphiVersion): SG;
+begin
+  Result := SG(ADelphiVersion) + 1;
+  if ADelphiVersion >= dvDelphi4 then
+    Inc(Result);
+end;
+
+function GetDelphiYear(const ADelphiVersion: TDelphiVersion): SG;
+begin
+  case ADelphiVersion of
+  dvDelphi2005: Result := 2005;
+  dvDelphi2006: Result := 2006;
+  dvDelphi2007: Result := 2007;
+  dvDelphi2009: Result := 2009;
+  dvDelphi2010: Result := 2010;
+  else Result := 0;
+  end;
+end;
+
+function GetDelphiShortName(const ADelphiVersion: TDelphiVersion): string;
+begin
+  if ADelphiVersion < dvDelphi1 then
+    Result := 'P' + IntToStr(GetPascalMajorVersion(ADelphiVersion))
+  else if ADelphiVersion <= dvDelphi8 then
+    Result := IntToStr(GetDelphiMajorVersion(ADelphiVersion))
+  else if ADelphiVersion < dvDelphiXE then
+    Result := IntToStr(GetDelphiYear(ADelphiVersion))
+  else if ADelphiVersion = dvDelphiXE then
+    Result := 'XE'
+  else if ADelphiVersion > dvDelphiXE then
+    Result := 'X' + Char(Ord('E') + SG(ADelphiVersion) - SG(dvDelphiXE));
+  // Add newer versions here
+end;
+
+function GetDelphiFullName(const ADelphiVersion: TDelphiVersion): string;
+begin
+  Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetDelphiMajorVersion(ADelphiVersion)) +', dcc' + IntToStr(GetDelphiCompilerVersion(ADelphiVersion)) + ')';
 end;
 
 function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
@@ -80,7 +158,7 @@ begin
   end;
 end;
 
-function GetDelphiPath(const DelphiVersion: SG): string;
+function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
 var
 	Reg: TRegistry;
   RegPath: string;
@@ -88,7 +166,7 @@ begin
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
-		RegPath := GetDelphiRegPath(DelphiVersion);
+		RegPath := GetDelphiRegPath(ADelphiVersion);
     Result := GetDelphiPathOnly(Reg, RegPath);
 	finally
 		Reg.Free;
@@ -126,12 +204,12 @@ begin
 	end;
 end;
 
-function ReplaceDelphiVariables(SearchPaths: string; const DelphiVersion: SG): string;
+function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion): string;
 var
   DelphiPath: string;
   DelphiPath2: string;
 begin
-  DelphiPath := GetDelphiPath(DelphiVersion);
+  DelphiPath := GetDelphiPath(ADelphiVersion);
 	DelphiPath2 := DelLastChar(DelphiPath);
   Replace(SearchPaths, '$(DELPHI)', DelphiPath2);
   Replace(SearchPaths, '$(BDS)', DelphiPath2);
@@ -145,20 +223,25 @@ begin
   Result := SearchPaths;
 end;
 
+function GetDelphiVersionCount: SG;
+begin
+  Result := GetActualYear - 1995 + 7;
+end;
+
 function GetAvailableDelphiVersions: TArrayOfSG;
 var
-  DelphiVersion: SG;
+  DelphiVersion: TDelphiVersion;
   Count: SG;
   DelphiPath: string;
 begin
   Count := 0;
-  for DelphiVersion := 1 to (GetActualYear - 1995) do
+  for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 	begin
     DelphiPath := GetDelphiPath(DelphiVersion);
     if DirectoryExists(DelphiPath) then
     begin
       SetLength(Result, Count + 1);
-      Result[Count] := DelphiVersion;
+      Result[Count] := SG(DelphiVersion);
       Inc(Count);
     end;
   end;
