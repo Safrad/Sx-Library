@@ -48,7 +48,6 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Clear;
     procedure ReadFromFile(const AFileName: TFileName);
     procedure ReplaceFromFile(const AFileName: TFileName);
     procedure Update;
@@ -247,11 +246,6 @@ begin
 end;
 *)
 
-procedure TProjectOptions.Clear;
-begin
-//	TODO : Version.CleanupInstance;
-end;
-
 constructor TProjectOptions.Create;
 begin
   MinStackSize := 16 * KB;
@@ -269,16 +263,28 @@ function TProjectOptions.GetExecutableType(
   const AFileName: TFileName): TExecutableType;
 var
   s: string;
+  FileExt: string;
 begin
+  FileExt := UpperCase(ExtractFileExt(AFileName));
+  if FileExt = '.DPK' then
+  begin
+    Result := etPackage;
+    Exit;
+  end;
+
   Result := etProgram;
   ReadStringFromFile(AFileName, s);
   s := LowerCase(s);
   if Pos('program', s) <> 0 then
     Result := etProgram
   else if Pos('library', s) <> 0 then
-    Result := etLibrary
-  else if Pos('package', s) <> 0 then
-    Result := etPackage;
+    Result := etLibrary;
+{  if Pos('program', s) <> 0 then
+    Result := etProgram
+  else if Pos('library', s) <> 0 then
+    Result := etLibrary;}
+{  else if Pos('package', s) <> 0 then
+    Result := etPackage;}
 end;
 
 function TProjectOptions.GetOutputFile: TFileName;
@@ -292,7 +298,6 @@ end;
 
 procedure TProjectOptions.ReadFromFile(const AFileName: TFileName);
 begin
-  Clear;
   FFileName := AFileName;
   ReplaceFromFile(AFileName);
   ExecutableType := GetExecutableType(DelFileExt(AFileName) + '.dpr');

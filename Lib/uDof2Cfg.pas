@@ -4,15 +4,15 @@ interface
 
 uses
   uTypes, uProjectOptions,
+  uDelphi,
 	SysUtils;
 
-procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: SG);
-procedure DofToCfg(const FileNamePrefix: string; const DelphiVersion: SG);
+procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: TDelphiVersion);
+procedure DofToCfg(const FileNamePrefix: string; const DelphiVersion: TDelphiVersion);
 
 implementation
 
 uses
-  uDelphi,
   uOutputFormat,
 	uStrings,
 	uFiles,
@@ -22,12 +22,12 @@ uses
 	IniFiles,
 	uMsg;
 
-procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: SG);
+procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: TDelphiVersion);
 var
 	Data: string;
   SearchPath: string;
   FileName: TFileName;
-  i: SG;
+  i: TDelphiVersion;
 begin
 	{$ifdef Console}
 	Information('Writing file %1.', [CfgFileName]);
@@ -65,9 +65,9 @@ begin
   FileName := DataDir + 'default.cfg';
   if FileExistsEx(FileName) then
 	  Data := Data +  ReadStringFromFile(FileName);
-	for i := 1 to DelphiVersion do
+	for i := dvDelphi1 to DelphiVersion do
   begin
-	  FileName := DataDir + 'default-D' + IntToStr(DelphiVersion) + '.cfg';
+	  FileName := DataDir + 'default-D' + GetDelphiShortName(DelphiVersion) + '.cfg';
 	  if FileExistsEx(FileName) then
 		  Data := Data +  ReadStringFromFile(FileName);
   end;
@@ -78,7 +78,7 @@ begin
 	{$endif}
 end;
 
-procedure DofToCfg(const FileNamePrefix: string; const DelphiVersion: SG);
+procedure DofToCfg(const FileNamePrefix: string; const DelphiVersion: TDelphiVersion);
 var
 	ProjectInfo: TProjectOptions;
 begin
