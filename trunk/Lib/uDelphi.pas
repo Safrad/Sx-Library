@@ -45,7 +45,6 @@ function GetAvailableDelphiVersions: TArrayOfSG;
 implementation
 
 uses
-  uDelphiTest,
   Windows, SysUtils,
   uMath, uStrings, uLog;
 
