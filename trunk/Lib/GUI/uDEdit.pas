@@ -9,19 +9,19 @@ uses
 type
 	TDEdit = class(TEdit) // TMemo cannot display whole line
 	private
-		{$ifdef CompilerVersion <= 15}
+		{$if CompilerVersion <= 15}
 //		FWantReturns: BG;
 		FParentDoubleBuffered: BG;
-		{$endif}
+		{$ifend}
 	public
 		constructor Create(AOwner: TComponent); override;
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 	published
-		{$ifdef CompilerVersion <= 15}
+		{$if CompilerVersion <= 15}
 		property DoubleBuffered;
 		property ParentDoubleBuffered: BG read FParentDoubleBuffered write FParentDoubleBuffered;
 //		property WantReturns: BG read FWantReturns write FWantReturns;
-		{$endif}
+		{$ifend}
 	end;
 
 procedure Register;
