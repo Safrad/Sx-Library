@@ -59,11 +59,10 @@ function RunBat(const FFileName: TFileName; const Params: string = ''; const Cur
 var
 	BatFileName: string;
 begin
-	BatFileName := TempDir + 'TempRun.bat';
+	BatFileName := InstanceTempDir + 'TempRun.bat';
 	WriteStringToFile(BatFileName, 'cd "' + CurrentDirectory + '"' + FileSep + 'call "' + FFileName + '"' + CharSpace + Params + LineSep, False, fcAnsi);
 	try
 		Result := ShellExecuteDirect(BatFileName, '', CurrentDirectory, ShowCmd);
-//		Sleep(200);
 	finally
 //		DeleteFileEx(BatFileName); ShellExecuteDirect is asynchronous
 	end;
