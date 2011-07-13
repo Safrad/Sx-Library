@@ -5,11 +5,14 @@ interface
 uses TypInfo;
 
 const
-{$if CompilerVersion <= 13}
+{$if CompilerVersion < 14}
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
 	SwitchChars = ['-', '/'];
+{$ifend}
+{$if CompilerVersion < 15}
+	clSystemColor = $FF000000;
 {$ifend}
 	MinInt = Low(Integer);
 
@@ -253,7 +256,7 @@ const
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
 
-{$if CompilerVersion <= 15}
+{$if CompilerVersion < 16}
 procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
 {$ifend}
 
@@ -293,7 +296,7 @@ begin
 end;
 {$endif}
 
-{$if CompilerVersion <= 15}
+{$if CompilerVersion < 16}
 procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
 begin
 	Move(Source^, Dest^, GetTypeData(T).elSize * Count);

@@ -26,7 +26,7 @@ implementation
 uses
 	TypInfo,
 	uStrings, uFiles, uHTML, uOutputFormat, uMsg,
-	SysUtils, Classes, Windows, IdFTPList, IdException, {$if CompilerVersion <= 15}IdAllFTPListParsers, {$ifend}IdFTPCommon;
+	SysUtils, Classes, Windows, IdFTPList, IdException, {$if CompilerVersion < 16}IdAllFTPListParsers, {$ifend}IdFTPCommon;
 
 function FTPTimeToUTC(const DT: TDateTime): TDateTime;
 var
@@ -329,7 +329,7 @@ begin
 	begin
 		Result := True;
 		try
-			{$if CompilerVersion <= 15} // TODO Indy Version
+			{$if CompilerVersion < 16} // TODO Indy Version
 			FTP.Connect(True, FTPTimeOut);
 			{$else}
 			FTP.TransferTimeout := FTPTimeOut;
