@@ -141,7 +141,7 @@ begin
 	MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
 //	ShellExecute(0, OpenString, PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
 	ShellExecuteThread := TShellExecute.Create(FileName, Params);
-	{$ifdef UNICODE}
+	{$ifdef CompilerVersion <= 18}
 	ShellExecuteThread.NameThreadForDebugging('ShellExecute');
 	ShellExecuteThread.Start;
 	{$else}

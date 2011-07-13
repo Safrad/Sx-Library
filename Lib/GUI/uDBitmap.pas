@@ -1,7 +1,7 @@
 unit uDBitmap;
 
 {$define BPP4} // Faster
-{$ifndef VER150}
+{$ifndef CompilerVersion <= 20}
 {$define GDIPlus} // Supported on Windows XP and newer
 {$endif}
 

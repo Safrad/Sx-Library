@@ -5,7 +5,8 @@ interface
 uses TypInfo;
 
 const
-{$ifdef VER130} // Delphi = 5
+{$if }
+{$ifdef CompilerVersion <= 13}
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
