@@ -141,12 +141,12 @@ begin
 	MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
 //	ShellExecute(0, OpenString, PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
 	ShellExecuteThread := TShellExecute.Create(FileName, Params);
-	{$ifdef CompilerVersion <= 18}
+	{$if CompilerVersion <= 18}
 	ShellExecuteThread.NameThreadForDebugging('ShellExecute');
 	ShellExecuteThread.Start;
 	{$else}
 	ShellExecuteThread.Resume;
-	{$endif}
+	{$ifend}
 end;
 
 procedure PropertiesDialog(FileName: TFileName);

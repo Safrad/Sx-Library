@@ -5,13 +5,12 @@ interface
 uses TypInfo;
 
 const
-{$if }
-{$ifdef CompilerVersion <= 13}
+{$if CompilerVersion <= 13}
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
 	NegInfinity = -1.0 / 0.0;
 	SwitchChars = ['-', '/'];
-{$endif}
+{$ifend}
 	MinInt = Low(Integer);
 
 	BitsPerByte = 8;
