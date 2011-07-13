@@ -819,8 +819,6 @@ begin
 						end;
 						if IY and 1 <> 0 then
 							Bitmap.Canvas.Brush.Color := ColorDiv(Bitmap.Canvas.Brush.Color, 63109);
-						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].RealWidth - 2, Y + FRowHeight - 2,
-							Bitmap.Canvas.Brush.Color, ef16);
 						if Assigned(FOnGetRowCount) then
 							FAllRowCount := FOnGetRowCount(Self);
 						if Assigned(FOnGetData) or Assigned(FOnGetDataEx) then
@@ -873,6 +871,8 @@ begin
 						else
 							Data := {$IFOPT d+} '<No data event defined>' {$ELSE} '' {$ENDIF};
 
+						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].RealWidth - 2, Y + FRowHeight - 2,
+							Bitmap.Canvas.Brush.Color, ef16);
 						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx))and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth) and
 							(FColumns[FColumnOrder[IX]].OwnDraw = False) then
 						begin
