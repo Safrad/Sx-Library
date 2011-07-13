@@ -171,6 +171,10 @@ begin
 end;
 
 function SelectFolder(var Path: string; const browseTitle: string = ''): BG;
+{$if CompilerVersion < 15}
+const
+	BIF_USENEWUI = $50;
+{$ifend}
 var
 	browse_info: TBrowseInfo;
 	folder: array[0..MAX_PATH] of char;
