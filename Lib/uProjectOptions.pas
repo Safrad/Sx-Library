@@ -141,7 +141,7 @@ begin
 	begin
 		// Default
 //		Result.Version.CleanupInstance;
-		ProjectInfos[piFileDescription] := '';
+//		ProjectInfos[piFileDescription] := '';
 	end;
 
 	if FileExists(AFileName) then
@@ -182,8 +182,7 @@ var
 begin
 	ProjectInfos[piFileVersion] := Version.ToStrictString;
 	// ProjectInfos[piFileDescription] := ProjectVersion.FileDescription;
-	ProjectInfos[piLegalCopyright] := 'Copyright © ' + NToS(GetActualYear, '0000');
-	// Right ®
+	ProjectInfos[piLegalCopyright] := ReplaceF(ProjectInfos[piLegalCopyright], '%year%', NToS(GetActualYear, '0000'));
 
   Name := DelFileExt(ExtractFileName(FFileName));
 	ProjectInfos[piInternalName] := Name;
@@ -264,6 +263,7 @@ function TProjectOptions.GetExecutableType(
 var
   s: string;
   FileExt: string;
+  ProgramPos, LibraryPos: SG;
 begin
   FileExt := UpperCase(ExtractFileExt(AFileName));
   if FileExt = '.DPK' then
@@ -275,10 +275,13 @@ begin
   Result := etProgram;
   ReadStringFromFile(AFileName, s);
   s := LowerCase(s);
-  if Pos('program', s) <> 0 then
-    Result := etProgram
-  else if Pos('library', s) <> 0 then
-    Result := etLibrary;
+  LibraryPos := Pos('library', s);
+  if (LibraryPos <> 0) then
+  begin
+    ProgramPos := Pos('program', s);
+    if (LibraryPos < ProgramPos) then
+      Result := etLibrary;
+  end;
 {  if Pos('program', s) <> 0 then
     Result := etProgram
   else if Pos('library', s) <> 0 then
@@ -290,9 +293,10 @@ end;
 function TProjectOptions.GetOutputFile: TFileName;
 begin
 	if Pos(':', OutputDir) <> 0 then
-		Result := OutputDir + '\'
+		Result := OutputDir
 	else
 		Result := ExpandFileName(ExtractFilePath(FFileName) + OutputDir); // ../
+	CorrectDir(string(Result));
 	Result := Result + DelFileExt(ExtractFileName(FFileName)) + '.' + ExecutableTypes[ExecutableType];
 end;
 
@@ -332,20 +336,19 @@ begin
   				('Version Info Keys', ProjectInfoStr[ProjectInfoName], ProjectInfos[ProjectInfoName]);
       end;
 
-			OutputDir := IniFile.ReadString(Directories, 'OutputDir', '');
-			UnitOutputDir := IniFile.ReadString(Directories, 'UnitOutputDir', '');
-			PackageDLLOutputDir := IniFile.ReadString(Directories, 'PackageDLLOutputDir', '');
-			PackageDCPOutputDir := IniFile.ReadString(Directories, 'PackageDCPOutputDir', '');
-			SearchPath := IniFile.ReadString(Directories, 'SearchPath', '');
-			Conditionals := IniFile.ReadString(Directories, 'Conditionals', '');
-      Conditionals := ExtractFileName(DelFileExt(AFileName)) + ';' + Conditionals;
+			OutputDir := IniFile.ReadString(Directories, 'OutputDir', OutputDir);
+			UnitOutputDir := IniFile.ReadString(Directories, 'UnitOutputDir', UnitOutputDir);
+			PackageDLLOutputDir := IniFile.ReadString(Directories, 'PackageDLLOutputDir', PackageDLLOutputDir);
+			PackageDCPOutputDir := IniFile.ReadString(Directories, 'PackageDCPOutputDir', PackageDCPOutputDir);
+			SearchPath := IniFile.ReadString(Directories, 'SearchPath', SearchPath);
+			Conditionals := IniFile.ReadString(Directories, 'Conditionals', Conditionals);
 
-			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', '');
+			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
 
 
-			MinStackSize := IniFile.ReadInteger(Linker, 'MinStackSize', 16 * KB);
-			MaxStackSize := IniFile.ReadInteger(Linker, 'MaxStackSize', 1 * MB);
-			ImageBase := IniFile.ReadInteger(Linker, 'ImageBase', 4 * MB);
+			MinStackSize := IniFile.ReadInteger(Linker, 'MinStackSize', MinStackSize);
+			MaxStackSize := IniFile.ReadInteger(Linker, 'MaxStackSize', MaxStackSize);
+			ImageBase := IniFile.ReadInteger(Linker, 'ImageBase', ImageBase);
 		finally
 			IniFile.Free;
 		end;
