@@ -190,7 +190,7 @@ begin
 	Result := StrToValI(Line, UseWinFormat, 0, UG(DefVal), 255, 1, Messages);
 end;
 
-{$ifdef VER130} // Delphi 5
+{$ifdef CompilerVersion <= 13} // Delphi 5
 function TryEncodeDate(Year, Month, Day: Word; out Date: TDateTime): Boolean;
 var
 	I: Integer;

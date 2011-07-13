@@ -9,7 +9,7 @@ uses
 type
 	TDEdit = class(TEdit) // TMemo cannot display whole line
 	private
-		{$ifdef VER150}
+		{$ifdef CompilerVersion <= 15}
 //		FWantReturns: BG;
 		FParentDoubleBuffered: BG;
 		{$endif}
@@ -17,7 +17,7 @@ type
 		constructor Create(AOwner: TComponent); override;
 		procedure KeyDown(var Key: Word; Shift: TShiftState); override;
 	published
-		{$ifdef VER150}
+		{$ifdef CompilerVersion <= 15}
 		property DoubleBuffered;
 		property ParentDoubleBuffered: BG read FParentDoubleBuffered write FParentDoubleBuffered;
 //		property WantReturns: BG read FWantReturns write FWantReturns;
