@@ -22,6 +22,7 @@ var
 //	HomeDir, // User documnets (Read and Write)
 	CommonAppDataDir, // Application Data
 	TempDir,
+  InstanceTempDir,
 	CommonTempDir: string;
 	ExeFileName, RenamedExeFileName: TFileName;
   MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
@@ -289,6 +290,9 @@ begin
 	CorrectDir(CommonTempDir);
 	TempDir := CommonTempDir + '_' + GetProjectInfo(piInternalName) + PathDelim;
 	CreateDirEx(TempDir);
+
+  Randomize;
+	InstanceTempDir := TempDir + NumToStr(Random(MaxInt), 16) + PathDelim;
 
 	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
 	if CommonAppDataDir = '' then CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
