@@ -67,7 +67,7 @@ function NewFileOrDir(var FileOrDir: string): BG;
 function NewFileOrDirEx(var FileOrDir: string): BG;
 function CopyFileDateTime(const Source, Dest: string): BG;
 function CopyDirOnly(const Source, Dest: string): BG;
-function CopyDir(const Source, Dest: string): BG;
+function CopyDir(const Source, Dest: string; const Attribute: SG = faAnyFile): BG;
 procedure BackupFile(const FileName: TFileName);
 
 function DeleteFileEx(const FileName: TFileName): BG;
@@ -1395,7 +1395,7 @@ begin
 	end;
 end;
 
-function CopyDir(const Source, Dest: string): BG;
+function CopyDir(const Source, Dest: string; const Attribute: SG = faAnyFile): BG;
 var
 	SearchRec: TSearchRec;
 	ErrorCode: Integer;
@@ -1405,13 +1405,13 @@ begin
 	CopyDirOnly(Source, Dest);
 
 	// faReadOnly or faHidden or faSysFile or faArchive or faDirectory
-	ErrorCode := FindFirst(Source + '*.*', faAnyFile, SearchRec);
+	ErrorCode := FindFirst(Source + '*.*', Attribute, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
 		begin
 			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
-				CopyDir(Source + SearchRec.Name + PathDelim, Dest + SearchRec.Name + PathDelim);
+				CopyDir(Source + SearchRec.Name + PathDelim, Dest + SearchRec.Name + PathDelim, Attribute);
 		end
 		else
 		begin
