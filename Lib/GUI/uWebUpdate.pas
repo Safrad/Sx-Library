@@ -78,6 +78,8 @@ var
 begin
 //	Web := MyWeb + '/Software/' + GetProjectInfo(piInternalName) + '/';
 	Web := GetProjectInfo(piWeb);
+  if Web = '' then Exit;
+  
 //	ShowStatusWindow('Receiving project version from Web.');
 	try
 		WebVersion := GetWebVersion(Web);

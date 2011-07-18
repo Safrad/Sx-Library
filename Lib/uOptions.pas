@@ -312,7 +312,11 @@ begin
 				end;
 				Inc(i);
 			end;
-			Result.Num := StrToValI(s, False, E.Minimum, E.Default, E.Maximum, 1);
+      try
+  			Result.Num := StrToValI(s, False, E.Minimum, E.Default, E.Maximum, 1);
+      except
+
+      end;
 		end;
 	vsString, vsFilename, vsDirectory, vsStrings:
 		begin
