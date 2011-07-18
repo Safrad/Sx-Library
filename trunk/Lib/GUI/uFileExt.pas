@@ -35,6 +35,7 @@ procedure AddFileType(const FileType, FileTypeCaption, Icon: string;
 
 procedure FormFileExt;
 procedure FreeFileExt;
+procedure RegisterAllFileTypes;
 
 implementation
 
@@ -112,8 +113,19 @@ begin
 		(FileTypeCount);
 end;
 
-procedure TfFileExt.Register1Click(Sender: TObject);
+procedure RegisterAllFileTypes;
+var
+	i: SG;
+begin
+	for i := 0 to FileTypeCount - 1 do
+	begin
+		CustomFileType(foCreate, FileTypes[i].FileType,
+			FileTypes[i].FileTypeCaption, FileTypes[i].Icon, FileTypes[i].MenuCaptions,
+			FileTypes[i].OpenPrograms);
+	end;
+end;
 
+procedure TfFileExt.Register1Click(Sender: TObject);
 var
 	i, Tg: SG;
 begin
