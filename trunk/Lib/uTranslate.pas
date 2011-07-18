@@ -7,7 +7,12 @@ function googleTranslate(source : string; langpair : string;
 
 implementation
 
-uses IdHTTP;
+uses
+  uCustomUser,
+  uProjectInfo,
+  uToHTML,
+  uStrings,
+  IdHTTP;
 
 function URLEncode(const S: RawByteString): RawByteString;
   const
@@ -74,8 +79,8 @@ begin
     url := 'http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q=' +
 		String(utfs) + '&langpair=' + langpair;
 
-    http.Request.Referer := 'http://sx.software.org';
-    http.Request.UserAgent := 'Release';
+    http.Request.Referer := MyWeb;
+    http.Request.UserAgent := ProjectInfoStr[piProductName];
     s := http.Get(url);
 
     status := Copy(s, pos('"responseStatus":', s)+18, length(s));
@@ -84,6 +89,8 @@ begin
     if (status = '200') then begin //status is OK
       s := Copy(s, pos('"translatedText":', s)+18, length(s));
       resultString := Copy(s, 0, pos('"}, "responseDetails"', s)-1);
+      Replace(resultString, ['\u0026', '&#39;'], ['&', '''']);
+      resultString := XMLToStr(resultString);
     end
     else begin //an error occurred
       s := Copy(s, pos('"responseDetails":', s)+20, length(s));
@@ -95,6 +102,5 @@ begin
     http.Free;
   end;
 end;
-
 
 end.

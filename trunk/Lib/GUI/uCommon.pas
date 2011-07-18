@@ -4,7 +4,7 @@ interface
 
 uses
 	Graphics,
-	uTypes, uDForm,
+	uTypes, uDForm, uOptions,
 	Menus;
 
 {
@@ -37,11 +37,37 @@ function GetBackgroundWindowColor: TColor;
 var
 	ForceClose: BG;
 
+type
+	TGlobalOption = (
+    goLanguage,
+    goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon, goRunAfterStartUp,
+		goShowSplashScreenWhenApplicationStarts,
+		goWindowBackgroundTexture,
+		goWindowBackgroundColor,
+		goAutomaticallyCheckForUpdate,
+		goCheckForUpdateDaysPeriod);
+
+var
+	GlobalOptions: array [TGlobalOption] of TOption = (
+		(Typ: vsCombo),
+		(Typ: vsCheck; Default: 1),
+    (Typ: vsCheck; Default: 1),
+    (Typ: vsCheck; Default: 1),
+		(Typ: vsCheck; Default: 0),
+    (Typ: vsCheck; Default: 1),
+		(Typ: vsCheck; Default: 1),
+		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt),
+		(Typ: vsCheck; Default: 1),
+		(Typ: vsSpin; Default: 14; Minimum: 0; Maximum: 365));
+
+var
+	GlobalParams: array [TGlobalOption] of TParam;
+
 implementation
 
 uses
 	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uNewThread,
-	uMsgDlg, uMsg, uStart, uOptions, ufOptions, uReg, uProjectInfo, uLink,
+	uMsgDlg, uMsg, uStart, ufOptions, uReg, uProjectInfo, uLink,
 	uStrings, uWebUpdate, uStartup, uDictionary,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
 
@@ -76,27 +102,6 @@ type
 var
 	CommonMenu: TCommonMenu;
 
-type
-	TGlobalOption = (goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon, goRunAfterStartUp,
-		goShowSplashScreenWhenApplicationStarts,
-		goWindowBackgroundTexture,
-		goWindowBackgroundColor,
-		goAutomaticallyCheckForUpdate,
-		goCheckForUpdateDaysPeriod);
-
-var
-	GlobalOptions: array [TGlobalOption] of TOption = (
-		(
-			Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1), (Typ: vsCheck; Default: 1),
-		(Typ: vsCheck; Default: 0), (Typ: vsCheck; Default: 1),
-		(Typ: vsCheck; Default: 1),
-		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt),
-		(Typ: vsCheck; Default: 1),
-		(Typ: vsSpin; Default: 14; Minimum: 0; Maximum: 365));
-
-var
-	GlobalParams: array [TGlobalOption] of TParam;
-
 function GetBackgroundWindowTexture: BG;
 begin
 	Result := GlobalParams[goWindowBackgroundTexture].Bool;
@@ -120,8 +125,8 @@ begin
 	end;
 	MainIni := TDIniFile.Create(MainIniFileName);
 	LocalMainIni := TDIniFile.Create(LocalIniFileName);
-	MainIni.RegisterRW(CommonMenu.RWCommon);
 	Dictionary := TDictionary.Create;
+	MainIni.RegisterRW(CommonMenu.RWCommon);
 	if not Special then
 	begin
 		if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool and
@@ -253,7 +258,7 @@ begin
 	if MainIni <> nil then
 	begin
 		MainIni.UnregisterRW(CommonMenu.RWCommon);
-		MainIni.UnregisterRW(Dictionary.RWLanguage);
+//		MainIni.UnregisterRW(Dictionary.RWLanguage);
 	end;
 	FreeSounds;
 	FreeFileExt;
@@ -352,6 +357,8 @@ end;
 procedure TCommonMenu.OptionChanged(const OptionIndex: SG);
 begin
 	case TGlobalOption(OptionIndex) of
+  goLanguage:
+    Dictionary.ChangeLanguage;
 	goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon:
 		begin
 			if GlobalParams[TGlobalOption(OptionIndex)].Bool then
@@ -492,7 +499,6 @@ begin
 
 	if Assigned(Options1) then
 	begin
-		Dictionary.CreateLanguageMenu(Options1);
 		if Options1.Count > 0 then
 		begin
 			M := TMenuItem.Create(Options1);
