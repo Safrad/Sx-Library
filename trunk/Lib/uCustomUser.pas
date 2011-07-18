@@ -8,8 +8,9 @@ const
 	MyEMail: string = '';
 	MyCompany: string = '';}
 	MyName: string = 'David Safranek (Safrad)';
-	MyWeb: string = 'http://sx.heliohost.org';
-	MyEMail: string = 'info at sx.heliohost.org';
+  MyWebBase = 'sx.rosada.cz'; //'sx.heliohost.org';
+	MyWeb: string = 'http://' + MyWebBase;
+	MyEMail: string = 'info at ' + MyWebBase;
 	MyCompany: string = 'Sx Software';
 
 	function GetHomepage(const ProjectName: string): string;
