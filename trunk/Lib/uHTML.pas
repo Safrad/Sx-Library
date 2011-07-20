@@ -71,12 +71,12 @@ type
 		procedure AddImage(const FileName: TFileName); overload;
 		procedure AddSmallImage(const FileName: TFileName; const Params: string); overload;
 		procedure AddSmallImage(const FileName: TFileName); overload;
+		{$endif}
 		procedure AddH1(const Text: string);
 		procedure AddH2(const Text: string);
 		procedure AddH3(const Text: string);
 		procedure AddH4(const Text: string);
 		procedure AddH5(const Text: string);
-	{$endif}
 //		procedure AddTitle; deprecated;
 		function GetRelativePath(const FileName: TFileName): string;
 		property FileName: TFileName read FFileName;
