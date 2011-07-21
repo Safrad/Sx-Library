@@ -42,6 +42,8 @@ function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelp
 function GetDelphiVersionCount: SG;
 function GetAvailableDelphiVersions: TArrayOfSG;
 
+function GetDelphiVersion(const AName: string): TDelphiVersion;
+
 implementation
 
 uses
@@ -242,6 +244,20 @@ begin
       SetLength(Result, Count + 1);
       Result[Count] := SG(DelphiVersion);
       Inc(Count);
+    end;
+  end;
+end;
+
+function GetDelphiVersion(const AName: string): TDelphiVersion;
+var
+  DelphiVersion: TDelphiVersion;
+begin
+  for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
+	begin
+    if CompareText(GetDelphiShortName(DelphiVersion), AName) = 0 then
+    begin
+      Result := DelphiVersion;
+      Break;
     end;
   end;
 end;
