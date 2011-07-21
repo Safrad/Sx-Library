@@ -82,6 +82,7 @@ type
 
 		procedure OptionChanged(const OptionIndex: SG);
 
+		procedure Restart1Click(Sender: TObject);
 		procedure Exit1Click(Sender: TObject);
 		procedure LocalHomepage1Click(Sender: TObject);
 		procedure WebHomepage1Click(Sender: TObject);
@@ -306,6 +307,12 @@ begin
 	MainIni.RWDateTime(Section, 'LastUpdate', LastUpdate, Save);
 end;
 
+procedure TCommonMenu.Restart1Click(Sender: TObject);
+begin
+  RestartAfterClose := True;
+  Exit1Click(Sender);
+end;
+
 procedure TCommonMenu.Exit1Click(Sender: TObject);
 begin
 	if Assigned(Application.MainForm) then
@@ -488,6 +495,12 @@ begin
 			M.Caption := cLineCaption;
 			File1.Add(M);
 		end;
+
+		M := TMenuItem.Create(File1);
+		M.Name := 'Restart1';
+		M.Caption := 'Restart';
+		M.OnClick := CommonMenu.Restart1Click;
+		File1.Add(M);
 
 		M := TMenuItem.Create(File1);
 		M.Name := 'Exit1';
