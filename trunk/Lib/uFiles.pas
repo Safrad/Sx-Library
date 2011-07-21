@@ -309,8 +309,16 @@ begin
 	end
 	else
 	begin
-		GInstalled := False;
 		CreateDirsEx(AppDataDir);
+    if DirectoryExists(CommonAppDataDir + 'Safrad') then
+    begin
+  		GInstalled := True;
+      CopyDir(CommonAppDataDir + 'Safrad', AppDataDir);
+    end
+    else
+    begin
+  		GInstalled := False;
+    end;
 	end;
 
   {$ifndef Console}
