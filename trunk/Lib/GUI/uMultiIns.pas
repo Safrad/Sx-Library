@@ -8,6 +8,7 @@ uses
 
 var
 	MessageId: UINT;
+  RestartAfterClose: BG;
 
 {
 	Return false if application instance already exists.
@@ -16,7 +17,7 @@ function InitInstance: BG;
 
 implementation
 
-uses uMsg, uStrings, uFiles, uParams, Forms, uDForm;
+uses uMsg, uStrings, uFiles, uParams, Forms, uDForm, uAPI;
 
 const
 	wmMainInstanceOpenFile = WM_USER + 3;
@@ -109,4 +110,6 @@ finalization
 		CloseHandle(MutHandle);
 		MutHandle := 0;
 	end;
+  if RestartAfterClose then
+    ShellExecuteDirect(ExeFileName, ExeParameters);
 end.

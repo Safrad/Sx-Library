@@ -25,6 +25,7 @@ var
   InstanceTempDir,
 	CommonTempDir: string;
 	ExeFileName, RenamedExeFileName: TFileName;
+  ExeParameters: string;
   MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
 
 type
@@ -125,14 +126,14 @@ function AllFiles: string;
 function AllText: string;
 function AllSounds: string;
 
-function SplitStr(const Source: string; const MaxStrings: SG): TArrayOfString;
+function SplitStr(const Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
 function Installed: BG;
 
 implementation
 
 uses
 	Math,
-	uMsg, uProjectInfo, uSorts, uCharset, uReg,
+	uMsg, uProjectInfo, uSorts, uCharset, {$ifndef Console}uReg,{$endif}
 	uOutputFormat, uMath, uLog;
 
 var
@@ -184,7 +185,7 @@ begin
 	Result := GInstalled;
 end;
 
-function SplitStr(const Source: string; const MaxStrings: SG): TArrayOfString;
+function SplitStr(const Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
 var
 	i: SG;
 	EndIndex: SG;
@@ -216,7 +217,10 @@ begin
 		Result[ResultCount] := Copy(Source, i, EndIndex - i);
 		Inc(ResultCount);
 		if ResultCount >= MaxStrings then
+    begin
+      Remain := Copy(Source, EndIndex + 1, MaxInt);
 			Exit;
+    end;
 
 		i := EndIndex + 1;
 	end;
@@ -227,6 +231,7 @@ var
 	NewLength: SG;
 	i: SG;
 	All: TArrayOfString;
+  CommandLine: string;
 begin
 	if ExeFileName <> '' then Exit;
 
@@ -234,9 +239,9 @@ begin
 	CorrectDir(StartDir);
 
 	// Remove Parameters
-	All := SplitStr(GetCommandLine, 1);
-
-	ExeFileName := All[0];
+  CommandLine := GetCommandLine;
+	All := SplitStr(CommandLine, 1, ExeParameters);
+  ExeFileName := All[0];
 	WorkDir := '';
 {	if Length(ExeFileName) > 0 then
 	begin
@@ -308,7 +313,9 @@ begin
 		CreateDirsEx(AppDataDir);
 	end;
 
+  {$ifndef Console}
 	LocalAppDataDir := ShellFolder('Local AppData');
+  {$endif}
 	if LocalAppDataDir = '' then
 		LocalAppDataDir := AppDataDir
 	else
