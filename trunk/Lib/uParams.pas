@@ -24,7 +24,7 @@ procedure ReadCommandLine(const CmdLine: string);
 implementation
 
 uses
-	uLog, uFiles, uStrings, uMsg{$ifndef Console}, Forms{$endif};
+	uLog, uFiles, uStrings, uMsg{$ifndef Console}, Forms, uCommon{$endif};
 
 var
 	Params: array of string;
@@ -78,6 +78,7 @@ end;
 procedure ParamMinimized(const Value: string = '');
 begin
 	{$ifndef Console}
+  DisableSplash := True;
 	if MinimizeToTrayIcon then
 	begin
 		Application.ShowMainForm := False
