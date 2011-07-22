@@ -60,6 +60,8 @@ var
 	BatFileName: string;
 begin
 	BatFileName := InstanceTempDir + 'TempRun.bat';
+	if FileExists(BatFileName) then
+	  DeleteFileEx(BatFileName);
 	WriteStringToFile(BatFileName, 'cd "' + CurrentDirectory + '"' + FileSep + 'call "' + FFileName + '"' + CharSpace + Params + LineSep, False, fcAnsi);
 	try
 		Result := ShellExecuteDirect(BatFileName, '', CurrentDirectory, ShowCmd);
