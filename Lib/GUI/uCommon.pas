@@ -36,6 +36,7 @@ function GetBackgroundWindowColor: TColor;
 
 var
 	ForceClose: BG;
+  DisableSplash: BG;
 
 type
 	TGlobalOption = (
@@ -131,7 +132,7 @@ begin
 	if not Special then
 	begin
 		if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool and
-			(Pos('-Minimized', GetCommandLine) = 0) then
+			(DisableSplash = False) then
 		begin
 			ShowSplashScreen;
 		end;
