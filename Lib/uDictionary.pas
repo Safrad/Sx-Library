@@ -9,7 +9,8 @@ uses
 
 type
 	TDictEntry = packed record
-		En, Other: string;
+		En: string;
+    Other: UnicodeString;
 	end;
 
   PLanguage = ^TLanguage;
@@ -83,7 +84,7 @@ const
 function GetLanguagesDir: string;
 begin
 {$ifopt d+}
-	Result := ParentDirF(WorkDir) + '_common' + PathDelim + 'Languages' + PathDelim
+	Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Languages' + PathDelim
 {$else}
 	Result := WorkDir + 'Languages' + PathDelim
 {$endif}
@@ -177,12 +178,22 @@ end;
 {$endif}
 
 function TDictionary.GetLanguage: PLanguage;
+var
+  Index: SG;
 begin
-  case GlobalParams[goLanguage].Num of
-  -2: Result := @AvailableLanguages[GetDefaultLanguageIndex];
-  -1: Result := nil;
-  else Result := @AvailableLanguages[GlobalParams[goLanguage].Num];
+  Result := nil;
+  if AvailableLanguageCount = 0 then
+  begin
+    Exit;
   end;
+  case GlobalParams[goLanguage].Num of
+  -2: Index := GetDefaultLanguageIndex;
+  -1: Index := -1;
+  else Index := GlobalParams[goLanguage].Num;
+  end;
+
+  if Index >= 0 then
+    Result := @AvailableLanguages[Index];
 end;
 
 function TDictionary.GetLanguageName(const Index: SG): string;
@@ -348,13 +359,14 @@ begin
 end;
 
 function TDictionary.GetDefaultLanguageIndex: SG;
-var
+{var
 	Lang: string;
 	i: SG;
 	ID: LangID;
-	Language: array [0..MAX_PATH - 1] of Char;
+	Language: array [0..MAX_PATH - 1] of Char;}
 begin
-	ID := GetSystemDefaultLangID;
+  Result := EnglishLanguageIndex;
+{	ID := GetSystemDefaultLangID;
 	VerLanguageName(ID, Language, MAX_PATH);
 	Lang := Language;
 	Result := -2;
@@ -368,7 +380,7 @@ begin
         Result := i;
         Break;
       end;
-    end;
+    end;}
 end;
 
 (*
@@ -456,6 +468,7 @@ var
   Trans, Trans2: string;
   AddSuffix: BG;
   Language: PLanguage;
+  OutS: UnicodeString;
 begin
   Result := Line;
   Language := GetLanguage;
@@ -490,15 +503,15 @@ begin
       if not FindInDictionary(Trans) then
       begin
   			Trans := Trans2;
-        googleTranslate(Trans, 'en|' + Language.Code, Result);
-        if Result = '' then
-          Result := Line;
+        googleTranslate(Trans, 'en|' + Language.Code, OutS);
+        if OutS = '' then
+          OutS := Line;
 
         NewSize := EntryCount + 1;
         if AllocByExp(Length(Entries), NewSize) then
           SetLength(Entries, NewSize);
         Entries[EntryCount].En := Trans;
-        Entries[EntryCount].Other := Result;
+        Entries[EntryCount].Other := OutS;
         Inc(EntryCount);
         RebuildAIndex;
       end
@@ -603,6 +616,9 @@ begin
       begin
         if (CharType(CharAt(Line, Po - 1), StdCharTable) <> ctLetter) and (CharType(CharAt(Line, Po + Length(WhatS)), StdCharTable) <> ctLetter) and {(CharAt(Line, Po - 1) <> '<') and} (CharAt(Line, Po - 1) <> '/') and (Ord(CharAt(Line, Po - 1)) < 128) and (Ord(CharAt(Line, Po + Length(WhatS))) < 128) then
         begin
+          {$IFNDEF UNICODE}
+          ToS := Entries[i].Other;
+          {$ELSE}
           if Line[Po] = Entries[i].Other[1] then
             ToS := Entries[i].Other
           else
@@ -613,6 +629,7 @@ begin
               ToS[1] := UpCaseCz(ToS[1])[1];
             end;
           end;
+          {$ENDIF}
           WhatS2 := Entries[i].En;
           Delete(Line, Po, Length(WhatS2));
           Insert(ToS, Line, Po);
