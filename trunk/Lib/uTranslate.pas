@@ -2,8 +2,11 @@ unit uTranslate;
 
 interface
 
+uses
+	uTypes;
+
 function googleTranslate(source : string; langpair : string;
-	var resultString : string) : string;
+	out resultString : UnicodeString) : string;
 
 implementation
 
@@ -14,7 +17,7 @@ uses
   uStrings,
   IdHTTP;
 
-function URLEncode(const S: RawByteString): RawByteString;
+  function URLEncode(const S: RawByteString): RawByteString;
   const
     NoConversion = ['A'..'Z', 'a'..'z', '*', '@', '.', '_', '-', '/', ':', '=', '?'];
   var
@@ -62,7 +65,7 @@ end; // URLEncode
 // result - the error message if any. Empty result means that
 //     the function has been executed successfully
 function googleTranslate(source : string; langpair : string;
-	var resultString : string) : string;
+	out resultString : UnicodeString) : string;
 var
   url, s, status : String;
   utfs : UTF8String;
@@ -71,7 +74,7 @@ var
 begin
   result := '';
 
-  http := TidHttp.Create;
+  http := TidHttp.Create(nil);
 
   try
     utfs := UTF8String(source);
@@ -89,7 +92,9 @@ begin
     if (status = '200') then begin //status is OK
       s := Copy(s, pos('"translatedText":', s)+18, length(s));
       resultString := Copy(s, 0, pos('"}, "responseDetails"', s)-1);
+      {$IFDEF UNICODE}
       Replace(resultString, ['\u0026', '&#39;'], ['&', '''']);
+      {$ENDIF}
       resultString := XMLToStr(resultString);
     end
     else begin //an error occurred
