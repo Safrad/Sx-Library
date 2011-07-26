@@ -119,6 +119,7 @@ implementation
 
 uses
 	Types, Math,
+  uDictionary,
 	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo, uCommon, uLog;
 
 const
@@ -629,6 +630,8 @@ begin
 
 	if Assigned(FOnRWOptions) then
 		FOnRWOptions(Self, False);
+
+	Dictionary.TranslateForm(Self);
 end;
 
 destructor TDForm.Destroy;
