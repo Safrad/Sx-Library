@@ -128,7 +128,12 @@ begin
 	MainIni := TDIniFile.Create(MainIniFileName);
 	LocalMainIni := TDIniFile.Create(LocalIniFileName);
 	Dictionary := TDictionary.Create;
+  GlobalOptions[goLanguage].Minimum := -2;
+  GlobalOptions[goLanguage].Maximum  := Dictionary.AvailableLanguageCount;
+  GlobalOptions[goLanguage].DefaultStr := Dictionary.GetLanguages;
+  GlobalOptions[goLanguage].Default  := -2;
 	MainIni.RegisterRW(CommonMenu.RWCommon);
+  Dictionary.LanguageIndex := GlobalParams[goLanguage].Num;
 	if not Special then
 	begin
 		if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool and
@@ -365,8 +370,8 @@ end;
 procedure TCommonMenu.OptionChanged(const OptionIndex: SG);
 begin
 	case TGlobalOption(OptionIndex) of
-  goLanguage:
-    Dictionary.ChangeLanguage;
+//  goLanguage:
+//    Dictionary.LanguageIndex := GlobalParams[TGlobalOption(OptionIndex)].Num;
 	goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon:
 		begin
 			if GlobalParams[TGlobalOption(OptionIndex)].Bool then
