@@ -638,7 +638,7 @@ begin
 		Assert(Params <> nil); }
 	fOptions := TfOptions.Create(Application.MainForm);
 	try
-		fOptions.Caption := Caption;
+		fOptions.Caption := Translate(Caption);
 		fOptions.Options := Options;
 		fOptions.OptionCount := OptionCount;
 		fOptions.Params := Params;
@@ -647,7 +647,6 @@ begin
 		fOptions.FTemplateCount := TemplateCount;
 		// RWOptions(Options, OptionCount, Params, IniFile, Caption, False);
 		fOptions.CreateComponents;
-		Dictionary.TranslateForm(fOptions);
 		Result := fOptions.ShowModal = mrOk;
 	finally
 		fOptions.Free;
@@ -759,8 +758,8 @@ begin
 	try
 		ComboBoxTemplate.Items.Clear;
 		ComboBoxTemplate.ItemIndex := 0;
-		ComboBoxTemplate.Items.Add('Previous');
-		ComboBoxTemplate.Items.Add('Default');
+		ComboBoxTemplate.Items.Add(Translate('Previous'));
+		ComboBoxTemplate.Items.Add(Translate('Default'));
 		Template := FTemplates;
 		for i := 0 to FTemplateCount - 1 do
 		begin
