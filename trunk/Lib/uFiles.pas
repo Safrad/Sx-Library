@@ -313,7 +313,7 @@ begin
     if DirectoryExists(CommonAppDataDir + 'Safrad') then
     begin
   		GInstalled := True;
-      CopyDir(CommonAppDataDir + 'Safrad', AppDataDir);
+      CopyDir(CommonAppDataDir + 'Safrad' + GetProjectInfo(piCompanyName) + PathDelim, AppDataDir);
     end
     else
     begin
