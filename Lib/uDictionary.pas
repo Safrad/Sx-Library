@@ -21,16 +21,15 @@ type
 
 	TDictionary = class(TObject)
 	private
+    FLanguageIndex: SG;
 		AvailableLanguages: array of TLanguage;
-		AvailableLanguageCount: SG;
+		FAvailableLanguageCount: SG;
 
 		Entries: array of TDictEntry;
 		EntryCount: SG;
 		Loaded: (loNo, loProcess, loYes);
 		AIndex: array of SG;
 		AValue: array of U4;
-
-    OldLanguage: PLanguage;
 
 //		LanguageMenuItem: TMenuItem;
 
@@ -46,13 +45,13 @@ type
 		procedure WriteDictionary(const Language: PLanguage);
     function FindInDictionary(var Line: string): BG;
     procedure RebuildAIndex;
+    procedure SetLanguageIndex(const Value: SG);
 //    procedure CreateLanguageMenu(const Menu: TMenuItem);
 	public
 		constructor Create;
 		destructor Destroy; override;
 
 		function GetLanguages: string;
-    procedure ChangeLanguage;
 //		procedure RWLanguage(const Save: BG);
 
 		function Translate(const Line: string): string;
@@ -64,6 +63,9 @@ type
 		procedure TranslateMenu(const Src: TMenuItem);
 		{$ENDIF}
 		procedure TranslateFile(FileName: TFileName);
+    property LanguageIndex: SG read FLanguageIndex write SetLanguageIndex;
+    property AvailableLanguageCount: SG read FAvailableLanguageCount;
+
 	end;
 
 var
@@ -75,7 +77,7 @@ implementation
 
 uses
 	Windows,
-  uTranslate, uCommon,
+  uTranslate,
 	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView,{$ENDIF} uMsg;
 
 const
@@ -105,23 +107,10 @@ end;}
 
 { TDictionary }
 
-procedure TDictionary.ChangeLanguage;
-begin
-	if (OldLanguage <> nil) and (Loaded = loYes) then
-  	WriteDictionary(OldLanguage);
-  Loaded := loNo;
-  SetLength(Entries, 0);
-  EntryCount := 0;
-  OldLanguage := GetLanguage;
-end;
-
 constructor TDictionary.Create;
 begin
+  FLanguageIndex := -2;
 	ReadAvailableLanguages;
-  GlobalOptions[goLanguage].Minimum := -2;
-  GlobalOptions[goLanguage].Maximum  := AvailableLanguageCount;
-  GlobalOptions[goLanguage].DefaultStr := GetLanguages;
-  GlobalOptions[goLanguage].Default  := -2;
 end;
 {
 procedure TDictionary.CreateLanguageMenu(const Menu: TMenuItem);
@@ -153,8 +142,7 @@ end;
 
 destructor TDictionary.Destroy;
 begin
-  ChangeLanguage;
-
+  WriteDictionary(GetLanguage);
 	SetLength(AIndex, 0);
 	SetLength(AValue, 0);
 	SetLength(Entries, 0);
@@ -186,10 +174,10 @@ begin
   begin
     Exit;
   end;
-  case GlobalParams[goLanguage].Num of
+  case FLanguageIndex of
   -2: Index := GetDefaultLanguageIndex;
   -1: Index := -1;
-  else Index := GlobalParams[goLanguage].Num;
+  else Index := FLanguageIndex;
   end;
 
   if Index >= 0 then
@@ -235,14 +223,17 @@ var
 	CSVFile: TCSVFile;
 	Row: TArrayOfString;
 	NewSize: SG;
+	FileName: TFileName;
 begin
-	AvailableLanguageCount := 0;
+	FAvailableLanguageCount := 0;
 	SetLength(AvailableLanguages, 0);
 
+	FileName := GetLanguagesDir + 'Codes.csv';
+	if not FileExists(FileName) then Exit;
 	Row := nil;
 	CSVFile := TCSVFile.Create(2);
 	try
-		if CSVFile.Open(GetLanguagesDir + 'Codes.csv') then
+		if CSVFile.Open(FileName) then
 		begin
 			while not CSVFile.EOF do
 			begin
@@ -256,7 +247,7 @@ begin
           if Row[1] ='' then
             Row[1] := Row[0];
           AvailableLanguages[AvailableLanguageCount].Name := Row[1];
-          Inc(AvailableLanguageCount);
+          Inc(FAvailableLanguageCount);
         end;
 			end;
 			CSVFile.Close;
@@ -351,11 +342,25 @@ begin
 	for i := 0 to EntryCount - 1 do
 	begin
 		AIndex[i] := i;
-		AValue[i] := Length(Entries[i].Other);
+		AValue[i] := Length(Entries[i].En);
 	end;
 
   if EntryCount > 0 then
   	SortU4(False, True, PArraySG(@AIndex[0]), PArrayU4(@AValue[0]), EntryCount);
+end;
+
+procedure TDictionary.SetLanguageIndex(const Value: SG);
+begin
+  if FLanguageIndex <> Value then
+  begin
+    WriteDictionary(GetLanguage);
+
+    Loaded := loNo;
+    SetLength(Entries, 0);
+    EntryCount := 0;
+
+    FLanguageIndex := Value;
+  end;
 end;
 
 function TDictionary.GetDefaultLanguageIndex: SG;
@@ -476,7 +481,6 @@ begin
 	begin
 		if Loaded = loNo then
 		begin
-      OldLanguage := Language;
   		Loaded := loProcess;
       EntryCount := 0;
 			ReadDictionary(WorkDir + Language.Name + '.csv');
@@ -500,6 +504,8 @@ begin
         AddSuffix := False;
 
       Trans := Trans2;
+      if Trans = 'Running' then
+        Trans := Trans;
       if not FindInDictionary(Trans) then
       begin
   			Trans := Trans2;
@@ -734,8 +740,10 @@ var
   s: string;
   FileName: TFileName;
 begin
+  if Language = nil then Exit;
+
   FileName := AppDataDir + 'Languages\' + Language.Name + '.csv';
-  s := '#en,' + Language.Code;
+  s := '#en,' + Language.Code + FileSep;
   for i := 0 to EntryCount - 1 do
   begin
     s := s + '"' + Entries[i].En + '","' + Entries[i].Other +  '"' + FileSep;
