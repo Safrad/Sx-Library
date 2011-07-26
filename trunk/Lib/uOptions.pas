@@ -247,7 +247,7 @@ begin
 		begin
 			if ComboNumber = False then
 			begin
-				i := 0;
+				i := E.Minimum;
 				InLineIndex := 1;
 				while InLineIndex <= Length(E.DefaultStr) do
 				begin
@@ -307,7 +307,7 @@ begin
 				item := ReadToChar(E.DefaultStr, InLineIndex, CharTab);
 				if item = s then
 				begin
-					Result.Num := i;
+					Result.Num := i + E.Minimum;
 					Exit;
 				end;
 				Inc(i);
