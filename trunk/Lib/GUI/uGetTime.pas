@@ -335,7 +335,6 @@ procedure TfGetTime.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
 	LayoutControls([ButtonOk, ButtonCancel, ButtonApply], ClientWidth, ClientHeight);
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfGetTime.SpinButtonHMSDChangingEx(Sender: TObject;

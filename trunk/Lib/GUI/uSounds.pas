@@ -431,8 +431,6 @@ begin
 	LabelFrequency.Visible := B;
 	ComboBoxFrequency.Visible := B;
 	ButtonStereo.Visible := B;
-
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfSounds.ButtonCancelClick(Sender: TObject);

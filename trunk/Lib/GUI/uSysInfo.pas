@@ -806,7 +806,6 @@ begin
 	finally
 		ComboBoxSize.Items.EndUpdate;
 	end;
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure Init;

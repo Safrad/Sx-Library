@@ -156,7 +156,6 @@ begin
 		MainIni.RWFormPos(Self, False);
 		DViewFileExtensions.Serialize(MainIni, False);
 	end;
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfFileExt.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

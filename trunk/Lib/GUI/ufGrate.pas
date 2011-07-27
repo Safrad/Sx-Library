@@ -123,7 +123,6 @@ begin
 
 	MainIni.RegisterRW(RWOptions);
 	FullScreen := FullScreen1.Checked;
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfGrate.FormDestroy(Sender: TObject);
