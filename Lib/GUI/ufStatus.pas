@@ -111,7 +111,6 @@ end;
 procedure TfStatus.FormCreate(Sender: TObject);
 begin
 	Background := baStandard;
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfStatus.ButtonPauseClick(Sender: TObject);

@@ -311,8 +311,6 @@ begin
 		Inc(Wid, FButtons[i].Width + FormBorder);
 		FButtons[i].Visible := True;
 	end;
-	if Assigned(Dictionary) then
-		Dictionary.TranslateForm(Self);
 end;
 {
 procedure TfIOError.UpDown1ChangingEx(Sender: TObject;

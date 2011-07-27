@@ -124,7 +124,6 @@ begin
 			InsertControl(LabelX[j, i]);
 		end;
 	end;
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfMemStatus.ButtonStartClick(Sender: TObject);

@@ -101,7 +101,6 @@ end;
 procedure TfGetStr.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
-	Dictionary.TranslateForm(Self);
 end;
 
 function GetPassword(out Password: string): BG;

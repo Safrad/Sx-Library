@@ -868,7 +868,6 @@ begin
 	inherited;
 	Messages := TParserMessages.Create;
 	LayoutControls([ButtonOk, ButtonCancel, ButtonApply], ClientWidth, ClientHeight);
-	Dictionary.TranslateForm(Self);
 end;
 
 destructor TfGColor.Destroy;

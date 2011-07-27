@@ -366,7 +366,6 @@ constructor TfGetInt.Create(AOwner: TComponent);
 begin
 	inherited;
 	Messages := TParserMessages.Create;
-	Dictionary.TranslateForm(Self);
 end;
 
 destructor TfGetInt.Destroy;

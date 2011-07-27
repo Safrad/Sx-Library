@@ -176,7 +176,6 @@ procedure TfAbout.FormCreate(Sender: TObject);
 var
 	Id: SG;
 begin
-	Dictionary.TranslateForm(Self);
 	{$ifdef LINUX}
 	ButtonMemoryStatus.Visible := False;
 	{$endif}

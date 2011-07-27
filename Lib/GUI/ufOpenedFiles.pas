@@ -57,7 +57,6 @@ begin
 	DViewOpenedFiles.AddColumn('Modification Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
 	DViewOpenedFiles.AddColumn('Save Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
 	MainIni.RegisterRW(RWOptions);
-	Dictionary.TranslateForm(Self);
 end;
 
 procedure TfOpenedFiles.DViewOpenedFilesKeyUp(Sender: TObject;
