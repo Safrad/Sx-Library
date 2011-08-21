@@ -17,7 +17,7 @@ uses
   uStrings,
   IdHTTP;
 
-  function URLEncode(const S: RawByteString): RawByteString;
+  function URLEncode(const S: AnsiString): AnsiString;
   const
     NoConversion = ['A'..'Z', 'a'..'z', '*', '@', '.', '_', '-', '/', ':', '=', '?'];
   var
