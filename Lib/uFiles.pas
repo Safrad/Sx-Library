@@ -232,6 +232,7 @@ var
 	i: SG;
 	All: TArrayOfString;
   CommandLine: string;
+  SrcDir: string;
 begin
 	if ExeFileName <> '' then Exit;
 
@@ -310,10 +311,11 @@ begin
 	else
 	begin
 		CreateDirsEx(AppDataDir);
-    if DirectoryExists(CommonAppDataDir + 'Safrad') then
+    SrcDir := CommonAppDataDir + 'Safrad' + '\' + GetProjectInfo(piCompanyName) + PathDelim;
+    if DirectoryExists(SrcDir) then
     begin
   		GInstalled := True;
-      CopyDir(CommonAppDataDir + 'Safrad' + GetProjectInfo(piCompanyName) + PathDelim, AppDataDir);
+      CopyDir(SrcDir, AppDataDir);
     end
     else
     begin
