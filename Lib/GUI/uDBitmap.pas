@@ -195,6 +195,7 @@ type
 			const C1, C2: TColor; const Lines: SG; const Effect: TEffect); overload;
 		procedure Border(Rect: TRect; const C1, C2: TColor; const Lines: SG; const Effect: TEffect); overload;
 		procedure Border(Rect: TFloRect; const C1, C2: TColor; const Lines: SG; const Effect: TEffect); overload;
+		procedure Border(const X1, Y1, X2, Y2: TCoor; const C1, C2: TColor; const Lines: TFlo); overload;
 		procedure BarBrg(
 			const X1, Y1, X2, Y2: TCoor);
 		procedure BarBorder(const X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect = ef16); overload;
@@ -11425,6 +11426,28 @@ begin
 			Inc(C);
 		end;
 	end;
+end;
+
+procedure TDBitmap.Border(const X1, Y1, X2, Y2: TCoor; const C1, C2: TColor;
+  const Lines: TFlo);
+var
+	i: SG;
+  Effect: TEffect;
+  Remain: TFlo;
+begin
+  Remain := Lines;
+
+  i := 0;
+  while Remain > 0 do
+  begin
+		if Remain < 1 then
+      Effect :=  TEffect(Round(16 * Remain))
+    else
+	    Effect := ef16;
+		Border(X1 + i, Y1 + i, X2 - i, Y2 - i, C1, C2, 1, Effect);
+    Remain := Remain - 1;
+    Inc(i);
+   end;
 end;
 
 initialization

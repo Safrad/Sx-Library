@@ -6,8 +6,9 @@ uses
 	uTypes,
 	Windows, Graphics, Menus, Messages, Classes, ExtCtrls, ImgList;
 
-const
-	IconSize = 22; // Size of button on toolbar.
+var
+	IconSize: SG; // Size of button on toolbar.
+  ImageSize: SG; // Size of image.
 
 function TryFindIcon(Name: string; const Path: string): string;
 procedure LoadMenuIcon(const Bitmap: TBitmap; const Name: string);
@@ -96,7 +97,7 @@ begin
 					Bitmap.Height := 0;
 					Bitmap.Width := RoundDiv(Bmp.Width * 16, Bmp.Height);
 					Bitmap.Height := 16; }
-				Bmp.Resize(16, 16);
+				Bmp.Resize(ImageSize, ImageSize);
 				Bmp.ToBitmap(Bitmap);
 			end;
 			Bmp.Free;
@@ -205,15 +206,27 @@ end;
 
 // Temporary objects for menuitem creation.
 var
-	BmpCheck: TBitmap;
+	BmpCheck: TDBitmap;
 	MenuBmp, BmpD: TDBitmap;
 	BCanvas: TCanvas;
 
 procedure LoadBmpCheck;
+var
+  x, y: SG;
+  Bmp: TBitmap;
 begin
-	BmpCheck := TBitmap.Create;
-	BmpCheck.Transparent := True;
-	BmpCheck.Handle := LoadBitmap(0, PChar(OBM_CHECK));
+	Bmp:= TBitmap.Create;
+	Bmp.Transparent := True;
+	Bmp.Handle := LoadBitmap(0, PChar(OBM_CHECK));
+  Bmp.PixelFormat := pf32bit;
+
+	BmpCheck := TDBitmap.Create;
+  BmpCheck.FromBitmap(Bmp);
+  Bmp.Free;
+  x := BmpCheck.Width;
+  y := BmpCheck.Height;
+  if SetSmallerSize(x, y, IconSize, IconSize) then
+	  BmpCheck.Resize(x, y);
 end;
 
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
@@ -388,7 +401,7 @@ begin
 		end;
 
 		// Image
-		BmpWid := 16;
+		BmpWid := ImageSize;
 		{ if MenuItem.Checked then
 			begin
 			if (odSelected in State) then
@@ -410,11 +423,11 @@ begin
 				BmpD.Bar(clRed, ef12);
 			BmpD.TransparentColor := clMenu;
 
-			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - 18) div 2 + 1, BmpD, ef16);
+			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - BmpD.Height - 2) div 2 + 1, BmpD, ef16);
 
 			if (TopLevel = False) and (MenuItem.Checked = False) and (odSelected in State) then
 			begin
-				Y := (ARect.Bottom - ARect.Top - 18) div 2;
+				Y := (ARect.Bottom - ARect.Top - BmpD.Height - 2) div 2;
 				MenuBmp.Border(0, Y, 17 + 1, Y + 17 + 1, clDepth[3], clDepth[1], 1, ef16);
 			end;
 			MenuB := True;
@@ -427,7 +440,7 @@ begin
 				BmpD.Bar(clMenu, ef12);
 
 			X := 1;
-			Y := (ARect.Bottom - ARect.Top - 18) div 2 + 1;
+			Y := (ARect.Bottom - ARect.Top - BmpD.Height - 2) div 2 + 1;
 			if TopLevel and (odSelected in State) then
 			begin
 				Inc(X);
@@ -468,16 +481,16 @@ begin
 			begin
 				if BmpCheck = nil then
 					LoadBmpCheck;
-				MenuBmp.Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, BmpCheck);
+//				MenuBmp.Bmp( Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, BmpCheck, ef16);
+				MenuBmp.Bmp((IconSize - BmpCheck.Width) div 2, (ARect.Bottom - ARect.Top -BmpCheck.Height) div 2, BmpCheck, ef16);
 				MenuB := True;
 			end;
 		end;
 
 		if MenuItem.Checked then
 		begin
-			Y := (ARect.Bottom - ARect.Top - 18) div 2;
-			MenuBmp.Border(1, Y + 1, 0 + 16 + 1, Y + 16 + 1, clDepth[1], clDepth[3], 1, ef06);
-			MenuBmp.Border(0, Y + 0, 1 + 16 + 1, Y + 1 + 16 + 1, clDepth[1], clDepth[3], 1, ef16);
+			Y := (ARect.Bottom - ARect.Top - ImageSize) div 2;
+      MenuBmp.Border(0, Y, ImageSize + 1, Y + ImageSize + 1, clDepth[1], clDepth[3], 1.35 * Screen.PixelsPerInch / 96);
 		end;
 
 		// Caption
@@ -785,7 +798,7 @@ var
 	M: TMenuItem;
 begin
 {	if not Assigned(ImageList) then
-		ImageList := TCustomImageList.CreateSize(16, 16);}
+		ImageList := TCustomImageList.CreateSize(ImageSize, ImageSize);}
 
 	if Menu is TMenu then
 	begin
@@ -831,7 +844,7 @@ var
 	M: TMenuItem;
 begin
 	if not Assigned(ImageList) then
-		ImageList := TCustomImageList.CreateSize(16, 16);
+		ImageList := TCustomImageList.CreateSize(ImageSize, ImageSize);
 
 	if (Menu is TMenu) or (Menu is TPopupMenu) then
 	begin
@@ -907,11 +920,13 @@ end;
 
 initialization
 
+IconSize := RoundDiv(22 * Screen.PixelsPerInch, 96);
+ImageSize := RoundDiv(16 * Screen.PixelsPerInch, 96);
 MenuBmp := TDBitmap.Create;
 BCanvas := MenuBmp.Canvas;
 BCanvas.Brush.Style := bsSolid;
 BmpD := TDBitmap.Create;
-BmpD.SetSize(16, 16, clMenu);
+BmpD.SetSize(ImageSize, ImageSize, clMenu);
 
 finalization
 
