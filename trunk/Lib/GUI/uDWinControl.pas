@@ -46,7 +46,7 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uSysInfo, uMsg;
+	uMath, uSysInfo, uMsg;
 
 procedure CorrectFont(const Font: TFont);
 var
@@ -62,10 +62,7 @@ begin
 		@MyStruct,
 		0) then
 	begin
-		MyStruct.lfMessageFont.lfHeight := -11; // TODO : Variable form and control size required
-		{$ifopt d+}
-//		MyStruct.lfMessageFont.lfHeight := -13;
-		{$endif}
+		MyStruct.lfMessageFont.lfHeight := -RoundDiv(Font.PixelsPerInch, 9);
 	(*	if NTSystem and (MyStruct.lfMessageFont.lfFaceName = 'MS Sans Serif') then
 		begin
 	//		{$ifopt d-}
