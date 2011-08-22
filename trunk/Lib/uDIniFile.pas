@@ -467,7 +467,10 @@ var
 	SectionIndex: SG;
 begin
 	SectionIndex := GetSectionIndex(Section);
-	Result := @FSections[SectionIndex];
+  if SectionIndex = -1 then
+	  Result := nil
+  else
+		Result := @FSections[SectionIndex];
 end;
 
 function TDIniFile.GetValueIndex(const SectionIndex: Integer; const Ident: string): Integer;
