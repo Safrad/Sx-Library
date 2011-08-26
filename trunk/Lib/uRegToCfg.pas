@@ -11,7 +11,7 @@ uses
 	Registry,
 	Windows;
 
-procedure PathsToReg;
+procedure CreatePathsToReg;
 procedure RegistryToDcc32Cfg;
 
 implementation
@@ -192,32 +192,35 @@ begin
 		for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 		begin
 			RegPath := GetDelphiRegPath(DelphiVersion);
-				if Reg.OpenKey(RegPath + PathDelim + 'Known Packages', False) then
-				begin
-					Reg.GetValueNames(Strings);
+      if Reg.OpenKey(RegPath + PathDelim + 'Known Packages', False) then
+      begin
+        Reg.GetValueNames(Strings);
 
-					for i := 0 to LineCount - 1 do
-					begin
-						Path := Lines[i];
-						FileName := ExtractFileName(Path);
-							for j := 0 to Strings.Count - 1 do
-							if ExtractFileName(Strings[j]) = FileName then
-							begin
-								Reg.DeleteValue(Strings[j]);
-								Break;
-							end;
-						Reg.WriteString(Path, IntToStr(i));
-					end;
+        for i := 0 to LineCount - 1 do
+        begin
+          Path := Lines[i];
+          Replace(Path,
+            ['%DelphiShortName%', '%DelphiMajorVersion%'],
+            [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
+          FileName := ExtractFileName(Path);
+          for j := 0 to Strings.Count - 1 do
+          if ExtractFileName(Strings[j]) = FileName then
+          begin
+            Reg.DeleteValue(Strings[j]);
+            Break;
+          end;
+          Reg.WriteString(Path, IntToStr(i));
+        end;
 
-					Reg.CloseKey;
-				end;
+        Reg.CloseKey;
+      end;
 		end;
 	finally
 		Reg.Free;
 	end;
 end;
 
-procedure PathsToReg;
+procedure CreatePathsToReg;
 begin
 	BplToReg;
 	LibToReg;
