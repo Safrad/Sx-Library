@@ -132,10 +132,12 @@ begin
     Result := IntToStr(GetDelphiMajorVersion(ADelphiVersion))
   else if ADelphiVersion < dvDelphiXE then
     Result := IntToStr(GetDelphiYear(ADelphiVersion))
-  else if ADelphiVersion = dvDelphiXE then
-    Result := 'XE'
-  else if ADelphiVersion > dvDelphiXE then
-    Result := 'X' + Char(Ord('E') + SG(ADelphiVersion) - SG(dvDelphiXE));
+  else if ADelphiVersion >= dvDelphiXE then
+  begin
+    Result := 'XE';
+    if ADelphiVersion > dvDelphiXE then
+    	Result := Result + IntToStr(SG(ADelphiVersion) - SG(dvDelphiXE) + 1);
+  end;
   // Add newer versions here
 end;
 
