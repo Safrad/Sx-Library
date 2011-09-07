@@ -12,6 +12,27 @@ const
 const
 	CPUStrOffset = 4 + 4 + 1;
 type
+  {$if CompilerVersion < 20}
+  DWORDLONG = S8;
+  PMemoryStatusEx = ^TMemoryStatusEx;
+  LPMEMORYSTATUSEX = PMemoryStatusEx;
+  {$EXTERNALSYM LPMEMORYSTATUSEX}
+  _MEMORYSTATUSEX = packed record
+    dwLength : DWORD;
+    dwMemoryLoad : DWORD;
+    ullTotalPhys : DWORDLONG;
+    ullAvailPhys : DWORDLONG;
+    ullTotalPageFile: DWORDLONG;
+    ullAvailPageFile: DWORDLONG;
+    ullTotalVirtual : DWORDLONG;
+    ullAvailVirtual : DWORDLONG;
+  end;
+  {$EXTERNALSYM _MEMORYSTATUSEX}
+  TMemoryStatusEx = _MEMORYSTATUSEX;
+  MEMORYSTATUSEX = _MEMORYSTATUSEX;
+  {$EXTERNALSYM MEMORYSTATUSEX}
+  {$ifend}
+
 	PSysInfo = ^TSysInfo;
 	TSysInfo = packed record // 256
 		CPU: U4;
@@ -25,7 +46,7 @@ type
 //		DiskFree, DiskTotal: U8; // 16
 //		Reserved: array[0..3] of U4; // 16
 		CPUUsage: S4; // 4 (0..10000)
-		MS: TMemoryStatus; // 8 * 4 = 32
+		MS: TMemoryStatusEx; // 8 * 8 = 64
 		OS: TOSVersionInfo; // 148
 //		ProgramVersion: string[15]; // 10.32.101.10000
 //		Graph: string[127]; // 128
@@ -95,6 +116,29 @@ uses
 	uGraph, uScreen, uStrings, uOutputFormat, uSimulation, uDictionary,
 	uProjectInfo,
 	Registry, Math;
+
+{$if CompilerVersion < 20}
+procedure GlobalMemoryStatus(var lpBuffer: TMemoryStatus); stdcall;
+  external kernel32;
+{$EXTERNALSYM GlobalMemoryStatus}
+
+function GlobalMemoryStatusEx(var lpBuffer: TMemoryStatusEx): BOOL; stdcall;
+type
+  TFNGlobalMemoryStatusEx = function(var msx: TMemoryStatusEx): BOOL; stdcall;
+var
+  FNGlobalMemoryStatusEx: TFNGlobalMemoryStatusEx;
+begin
+  FNGlobalMemoryStatusEx := TFNGlobalMemoryStatusEx(
+    GetProcAddress(GetModuleHandle(kernel32), 'GlobalMemoryStatusEx'));
+  if not Assigned(FNGlobalMemoryStatusEx) then
+  begin
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    Result := False;
+  end
+  else
+    Result := FNGlobalMemoryStatusEx(lpBuffer);
+end;
+{$ifend}
 
 function GetKey(Default: U2): U2;
 var
@@ -171,7 +215,7 @@ end;
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
 begin
 	SysInfo.MS.dwLength := SizeOf(SysInfo.MS);
-	GlobalMemoryStatus(SysInfo.MS);
+	GlobalMemoryStatusEx(SysInfo.MS);
 end;
 
 const
@@ -773,13 +817,13 @@ begin
 	EditDuron.Text := NToS(SysInfo.CPUPower) + ' Hz';
 	EditCounter.Text := NToS(SysInfo.PerformanceFrequency) + ' Hz';
 
-	edMU.Text := BToStr(SysInfo.MS.dwTotalPhys - SysInfo.MS.dwAvailPhys);
-	edMF.Text := BToStr(SysInfo.MS.dwAvailPhys);
-	edMT.Text := BToStr(SysInfo.MS.dwTotalPhys);
+	edMU.Text := BToStr(SysInfo.MS.ullTotalPhys - SysInfo.MS.ullAvailPhys);
+	edMF.Text := BToStr(SysInfo.MS.ullAvailPhys);
+	edMT.Text := BToStr(SysInfo.MS.ullTotalPhys);
 
-	edFU.Text := BToStr(SysInfo.MS.dwTotalPageFile - SysInfo.MS.dwAvailPageFile);
-	edFF.Text := BToStr(SysInfo.MS.dwAvailPageFile);
-	edFT.Text := BToStr(SysInfo.MS.dwTotalPageFile);
+	edFU.Text := BToStr(SysInfo.MS.ullTotalPageFile - SysInfo.MS.ullAvailPageFile);
+	edFF.Text := BToStr(SysInfo.MS.ullAvailPageFile);
+	edFT.Text := BToStr(SysInfo.MS.ullTotalPageFile);
 end;
 
 procedure TfSysInfo.ButtonOkClick(Sender: TObject);
@@ -799,7 +843,7 @@ begin
 		for i := 2 to 29 do
 		begin
 			m := 1 shl i;
-			if m >= GSysInfo.MS.dwAvailPhys div 2 then Break;
+			if m >= GSysInfo.MS.ullAvailPhys div 2 then Break;
 			ComboBoxSize.Items.Add(BToStr(m));
 		end;
 		ComboBoxSize.ItemIndex := 14;
