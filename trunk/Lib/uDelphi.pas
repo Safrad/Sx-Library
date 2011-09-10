@@ -10,14 +10,14 @@ type
     dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
     dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7,
     dvDelphi8, dvDelphi2005, dvDelphi2006, dvDelphi2007,
-    dvDelphi2009, dvDelphi2010, dvDelphiXE {,..});
+    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2 {,..});
 
 const
   ReleaseYear: array[TDelphiVersion] of string = (
     '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
     '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
     '2003-12-17', '2004-10-22', '2005-11-11', '2007-03-19',
-    '2008-08-29', '2009-08-26', '2010-11-03');
+    '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31');
   FirstUnicodeDelphi = dvDelphi2009;
 
 // Delphi 7, BDS 7, BDS 8
@@ -254,6 +254,7 @@ function GetDelphiVersion(const AName: string): TDelphiVersion;
 var
   DelphiVersion: TDelphiVersion;
 begin
+  Result := dvPascal1;
   for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 	begin
     if CompareText(GetDelphiShortName(DelphiVersion), AName) = 0 then
