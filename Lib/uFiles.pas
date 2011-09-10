@@ -128,6 +128,7 @@ function AllSounds: string;
 
 function SplitStr(const Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
 function Installed: BG;
+function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
 
 implementation
 
@@ -2320,6 +2321,30 @@ end;
 function AllSounds: string;
 begin
 	Result := GetFileNameFilter('Sound Wave', ['wav']);
+end;
+
+function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
+var
+  Dir: string;
+  FileNameOnly: string;
+  FileName: string;
+begin
+  Dir := ExtractFilePath(AFileName);
+  if StartInParentDir then
+    Dir := ParentDirF(Dir);
+  FileNameOnly := ExtractFileName(AFileName);
+  while True do
+  begin
+    FileName := Dir + FileNameOnly;
+    if FileExistsEx(FileName) then
+    begin
+      Result := FileName;
+      Exit;
+    end;
+    if (Length(Dir) <= 3) or (PosEx(PathDelim, Dir, 4) = 0) then
+      Break;
+    Dir := ParentDirF(Dir);
+  end;
 end;
 
 initialization
