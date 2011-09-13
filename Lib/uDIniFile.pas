@@ -61,6 +61,9 @@ type
 //		function ReadNum(const Section, Ident: string; Default: SG): SG; overload;
 		function ReadNum(const Section, Ident: string; Default: S4): S4; overload;
 		function ReadNum(const Section, Ident: string; Default: S8): S8; overload;
+    {$if CompilerVersion >= 23}
+		function ReadNum(const Section, Ident: string; Default: U8): U8; overload;
+    {$ifend}
 		function ReadNum(const Section, Name: string; Default: FA): FA; overload;
 
 		procedure WriteNum(const Section, Ident: string; Value: S4); overload;
@@ -88,6 +91,9 @@ type
 		procedure RWNum(const Section, Ident: string; var Value: S4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: U4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: S8; const Save: BG); overload;
+    {$if CompilerVersion >= 23}
+		procedure RWNum(const Section, Ident: string; var Value: U8; const Save: BG); overload;
+    {$ifend}
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: FG; const Save: BG); overload;
@@ -345,6 +351,22 @@ begin
 	end;
 	// Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
 end;
+
+{$if CompilerVersion >= 23}
+function TDIniFile.ReadNum(const Section, Ident: string; Default: U8): U8;
+var
+	s: string;
+begin
+	s := ReadString(Section, Ident, '');
+	if s = '' then
+		Result := Default
+	else
+	begin
+		Result := ReadS8Fast(DelCharsF(s, ','));
+	end;
+	// Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
+end;
+{$ifend}
 
 function TDIniFile.ReadNum(const Section, Name: string; Default: FA): FA;
 var
@@ -788,6 +810,20 @@ begin
 		WriteNum(Section, Ident, Value);
 	end;
 end;
+
+{$if CompilerVersion >= 23}
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: U8; const Save: BG);
+begin
+	if Save = False then
+	begin
+		Value := ReadNum(Section, Ident, Value);
+	end
+	else
+	begin
+		WriteNum(Section, Ident, Value);
+	end;
+end;
+{$ifend}
 
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F4; const Save: BG);
 begin

@@ -70,7 +70,7 @@ var
 	Id: string;
 	// Unused
 	LenOfValue: UG;
-	Handle: THandle;
+	Handle: Cardinal;
 //	__VS_FIXEDFILEINFO: ^VS_FIXEDFILEINFO;
 begin
 	AppFileName := PChar(ExpandDir(FApplicationFileName));
