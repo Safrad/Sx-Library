@@ -69,7 +69,7 @@ var i: SG;
 begin
 	ClearRedo;
 
-	if (FIndex >= UndoCountLimit) or (100 * (GetUndoSize + Undo.GetSize) > UndoSizePercentOfRAM * U8(GSysInfo.MS.dwTotalPhys)) then
+	if (FIndex >= UndoCountLimit) or (100 * (GetUndoSize + Undo.GetSize) > UndoSizePercentOfRAM * U8(GSysInfo.MS.ullTotalPhys)) then
 	begin
 		FUndos[0].Free;
 		for i := 0 to FCount - 2 do
