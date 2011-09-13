@@ -2,10 +2,10 @@ unit uFirst;
 
 interface
 
-{$ifndef UNICODE}
+{$if CompilerVersion < 18}
 uses
 	FastMM4;
-{$endif}
+{$ifend}
 
 implementation
 
@@ -17,8 +17,6 @@ initialization
 	{$endif}
 
 	{$ifopt d+}
-	{$ifdef UNICODE}
-	ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
-	{$endif}
+	// ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
 	{$endif}
 end.
