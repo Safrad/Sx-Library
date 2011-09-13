@@ -150,13 +150,17 @@ function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
 begin
   if Reg.OpenKeyReadOnly(RegPath) then
   begin
+    {$ifdef Console}
     Writeln('Key ' + RegPath + ' found.');
+    {$endif}
     Result := CorrectDirF(Reg.ReadString('RootDir'));
     Reg.CloseKey;
   end
   else
   begin
+    {$ifdef Console}
     Writeln('Key ' + RegPath + ' not found.');
+    {$endif}
     Result := '';
   end;
 end;
