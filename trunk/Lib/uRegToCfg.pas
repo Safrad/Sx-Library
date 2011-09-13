@@ -22,6 +22,14 @@ uses
   uLog,
 	Classes;
 
+function GetDelphiLibraryPath(const RegPath: string; const DelphiVersion: TDelphiVersion): string;
+begin
+  if DelphiVersion <= dvDelphiXE then
+    Result := RegPath + PathDelim + 'Library'
+  else
+    Result := RegPath + PathDelim + 'Library\Win32';
+end;
+
 procedure RegistryToDcc32Cfg;
 var
 	Reg: TRegistry;
@@ -43,11 +51,58 @@ begin
       DelphiPath := GetDelphiPathOnly(Reg, RegPath);
 			if DirectoryExists(DelphiPath) then
 			begin
-        FileName := DelphiPath + 'bin' + PathDelim + 'dcc32.cfg';
+        FileName := DelphiPath + 'bin' + PathDelim + 'dcc32.cfg'; // TODO : 64 bit
+        {$ifdef Console}
 				Writeln('Creating ' + FileName);
-				if Reg.OpenKey(RegPath + PathDelim + 'Library', False) then
+        {$endif}
+				if Reg.OpenKey(GetDelphiLibraryPath(RegPath, DelphiVersion), False) then
 				begin
-					s := '-aWinTypes=Windows' + LineSep;
+					s := '-aWinTypes=Windows';
+          if DelphiVersion > dvDelphiXE then
+          begin
+            s := s + ';Forms=Vcl.Forms';
+            s := s + ';Graphics=Vcl.Graphics';
+            s := s + ';Controls=Vcl.Controls';
+            s := s + ';ExtCtrls=Vcl.ExtCtrls';
+            s := s + ';StdCtrls=Vcl.StdCtrls';
+            s := s + ';Consts=Vcl.Consts';
+            s := s + ';Dialogs=Vcl.Dialogs';
+            s := s + ';ComCtrls=Vcl.ComCtrls';
+            s := s + ';Menus=Vcl.Menus';
+            s := s + ';ClipBrd=Vcl.ClipBrd';
+            s := s + ';ExtDlgs=Vcl.ExtDlgs';
+            s := s + ';ActnList=Vcl.ActnList';
+            s := s + ';ImgList=Vcl.ImgList';
+            s := s + ';CheckLst=Vcl.CheckLst';
+            s := s + ';Buttons=Vcl.Buttons';
+
+            s := s + ';Jpeg=Vcl.Imaging.Jpeg';
+            s := s + ';PngImage=Vcl.Imaging.PngImage';
+
+            s := s + ';Windows=Winapi.Windows';
+            s := s + ';Messages=Winapi.Messages';
+            s := s + ';ActiveX=Winapi.ActiveX';
+            s := s + ';mmsystem=Winapi.mmsystem';
+            s := s + ';CommCtrl=Winapi.CommCtrl';
+            s := s + ';ShellAPI=Winapi.ShellAPI';
+            s := s + ';ShlObj=Winapi.ShlObj';
+
+            s := s + ';TypInfo=System.TypInfo';
+            s := s + ';SysUtils=System.SysUtils';
+            s := s + ';Math=System.Math';
+            s := s + ';Types=System.Types';
+            s := s + ';Classes=System.Classes';
+            s := s + ';Variants=System.Variants';
+            s := s + ';IniFiles=System.IniFiles';
+
+            s := s + ';Registry=System.Win.Registry';
+            s := s + ';ComObj=System.Win.ComObj';
+
+
+            s := s + ';XMLDoc=XML.XMLDoc';
+            s := s + ';XMLIntf=XML.XMLIntf';
+          end;
+          s := s + LineSep;
 					s := s + '-r"' + DelphiPath + 'Lib"' + LineSep;
 					SearchPaths := Reg.ReadString('Search Path');
           SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion);
@@ -82,7 +137,7 @@ begin
 	end;
 end;
 
-procedure LibToReg;
+procedure LibToReg(ALibFileName: TFileName);
 const
 	SearchPathName = 'Search Path';
 var
@@ -97,11 +152,13 @@ var
 	RegPaths: TStrings;
 	InLineIndex: SG;
 	Found: BG;
+  FoundIndex: Integer;
+  DelphiRegPath: string;
 begin
 	RegPaths := TStringList.Create;
 	LineCount := 0;
 
-	ReadStringsFromFile(StartDir + 'lib.txt', Lines, LineCount);
+	ReadStringsFromFile(ALibFileName, Lines, LineCount);
 	for i := 0 to LineCount - 1 do
 	begin
 		if LastChar(Lines[i]) = '\' then
@@ -114,53 +171,72 @@ begin
 		for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 		begin
 			RegPath := GetDelphiRegPath(DelphiVersion);
-				if Reg.OpenKey(RegPath + PathDelim + 'Library', False) then
-				begin
-					Paths := Reg.ReadString(SearchPathName);
-					InLineIndex := 1;
-					RegPaths.Clear;
-					while InLineIndex <= Length(Paths) do
-					begin
-						Path := ReadToChar(Paths, InLineIndex, ';');
-						if Path <> '' then
-							RegPaths.Add(Path);
-					end;
-					CorrectPaths(RegPaths);
+      DelphiRegPath := GetDelphiLibraryPath(RegPath, DelphiVersion);
 
-					for i := 0 to LineCount - 1 do
-					begin
-						Path := Lines[i];
-            Replace(Path,
-              ['%DelphiShortName%', '%DelphiMajorVersion%'],
-              [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
-						if Path ='' then
-							Continue;
+      if Reg.OpenKey(DelphiRegPath, False) then
+      begin
+        Paths := Reg.ReadString(SearchPathName);
+        InLineIndex := 1;
+        RegPaths.Clear;
+        while InLineIndex <= Length(Paths) do
+        begin
+          Path := ReadToChar(Paths, InLineIndex, ';');
+          if Path <> '' then
+            RegPaths.Add(Path);
+        end;
+        CorrectPaths(RegPaths);
 
-						Found := False;
-						for j := 0 to RegPaths.Count - 1 do
-						begin
-							if UpperCase(RegPaths[j]) = UpperCase(Path) then
-							begin
-								Found:= True;
-								Break;
-							end;
-						end;
-						if not Found then
-						begin
-							RegPaths.Add(Path);
-						end;
-					end;
-					Paths := '';
-					for i := 0 to RegPaths.Count - 1 do
-					begin
-						Paths := Paths + RegPaths[i] + ';';
-					end;
-					Paths := DelLastChar(Paths);
+        for i := 0 to LineCount - 1 do
+        begin
+          Path := Lines[i];
+          Replace(Path,
+            ['%DelphiShortName%', '%DelphiMajorVersion%'],
+            [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
+          if Path ='' then
+            Continue;
 
-					Reg.WriteString(SearchPathName, Paths);
+          if FirstChar(Path) = '-' then
+          begin
+            Path := UpperCase(Copy(Path, 2, MaxInt));
+            j := 0;
+            while j < RegPaths.Count do
+            begin
+              if StartStr(Path, UpperCase(RegPaths[j])) then
+              begin
+                RegPaths.Delete(j);
+              end
+              else
+                Inc(j);
+            end;
+          end
+          else
+          begin
+            Found := False;
+            for j := 0 to RegPaths.Count - 1 do
+            begin
+              if UpperCase(RegPaths[j]) = UpperCase(Path) then
+              begin
+                Found := True;
+                Break;
+              end;
+            end;
+            if not Found then
+            begin
+              RegPaths.Add(Path);
+            end;
+          end;
+        end;
+        Paths := '';
+        for i := 0 to RegPaths.Count - 1 do
+        begin
+          Paths := Paths + RegPaths[i] + ';';
+        end;
+        Paths := DelLastChar(Paths);
 
-					Reg.CloseKey;
-				end;
+        Reg.WriteString(SearchPathName, Paths);
+
+        Reg.CloseKey;
+      end;
 		end;
 	finally
 		Reg.Free;
@@ -169,7 +245,7 @@ begin
 
 end;
 
-procedure BplToReg;
+procedure BplToReg(const ABplFileName: TFileName);
 var
 	Lines: TArrayOfString;
 	LineCount: SG;
@@ -184,7 +260,7 @@ begin
 	Strings := TStringList.Create;
 	LineCount := 0;
 
-	ReadStringsFromFile(StartDir + 'bpl.txt', Lines, LineCount);
+	ReadStringsFromFile(ABplFileName, Lines, LineCount);
 
 	Reg := TRegistry.Create(KEY_ALL_ACCESS);
 	try
@@ -221,9 +297,23 @@ begin
 end;
 
 procedure CreatePathsToReg;
+const
+  LibFileName = 'lib.txt';
+  BplFileName = 'bpl.txt';
+var
+  FileName: TFileName;
 begin
-	BplToReg;
-	LibToReg;
+  // Lib
+  FileName := StartDir +'$' + LibFileName;
+  if FileExists(FileName) then
+  	LibToReg(FileName);
+	LibToReg(StartDir + LibFileName);
+
+  // Bpl
+  FileName := StartDir + '$' + BplFileName;
+  if FileExists(FileName) then
+  	BplToReg(FileName);
+	BplToReg(StartDir + BplFileName);
 end;
 
 end.
