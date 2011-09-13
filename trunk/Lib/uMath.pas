@@ -48,7 +48,7 @@ function RoundS8(Value: FA): S8;
 function TruncS8(Value: FA): S8;
 function RangeS8(Value: FA): BG;
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
-function RoundDivU8(const Dividend: U8; const Divisor: U8): S8; //overload;
+function RoundDivU8(const Dividend: U8; const Divisor: U8): U8; //overload;
 function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
@@ -107,11 +107,11 @@ function SwapU4(D: U4): U4;
 
 var
 	PerformanceType: (ptGetTickCount, ptPerformanceCounter, ptCPU);
-	PerformanceFrequency: U8;
+	PerformanceFrequency: S8;
 
 procedure InitPerformanceCounter;
 function GetCPUCounter: TU8;
-function PerformanceCounter: U8;
+function PerformanceCounter: S8;
 procedure Delay(const ms: U4);
 {$ifndef Console}
 procedure DelayEx(const f: U8);
@@ -1161,7 +1161,7 @@ asm
 	mov [ecx + 4], edx
 end;
 
-function PerformanceCounter: U8;
+function PerformanceCounter: S8;
 begin
 	case PerformanceType of
 	ptGetTickCount: Result := GetTickCount;
