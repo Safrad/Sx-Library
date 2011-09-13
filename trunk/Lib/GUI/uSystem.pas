@@ -126,8 +126,8 @@ begin
 	P[2] := PathDelim;
 	P[3] := CharNul;
 	Result.DriveType := GetDriveType(P);
-	Result.FreeSpace := -1;
-	Result.DriveSize := -1;
+	Result.FreeSpace := 0;
+	Result.DriveSize := 0;
 	case Result.DriveType of
 //  DRIVE_UNKNOWN:  Result := 4096;
 	DRIVE_NO_ROOT_DIR: Result.ClusterSize := 0;

@@ -22,8 +22,8 @@ const
 	GB = 1024 * MB;
 
 type
-	SG = {$if CompilerVersion >= 23}Int64{$else}Integer{$ifend}; // NativeInt
-	UG = {$if CompilerVersion >= 23}UInt64{$else}Cardinal{$ifend}; // NativeUInt
+	SG = Integer; // NativeInt
+	UG = Cardinal; // NativeUInt
 	S1 = ShortInt;
 	U1 = Byte;
 	S2 = SmallInt;
