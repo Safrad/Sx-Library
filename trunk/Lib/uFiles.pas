@@ -2329,6 +2329,7 @@ var
   FileNameOnly: string;
   FileName: string;
 begin
+  Result := '';
   Dir := ExtractFilePath(AFileName);
   if StartInParentDir then
     Dir := ParentDirF(Dir);
