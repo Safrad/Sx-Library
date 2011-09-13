@@ -264,16 +264,24 @@ var
   s: string;
   FileExt: string;
   ProgramPos, LibraryPos: SG;
+  DPK, DPR: BG;
+  DPRFileName: TFileName;
 begin
-  FileExt := UpperCase(ExtractFileExt(AFileName));
-  if FileExt = '.DPK' then
+  DPK := FileExists(DelFileExt(AFileName) + '.dpk');
+  DPRFileName := DelFileExt(AFileName) + '.dpr';
+  DPR := FileExists(DPRFileName);
+  if DPK and DPR then
+  begin
+    Warning('DPR and DPK of same name exists!');
+  end;
+  if DPK then
   begin
     Result := etPackage;
     Exit;
   end;
 
   Result := etProgram;
-  ReadStringFromFile(AFileName, s);
+  ReadStringFromFile(DPRFileName, s);
   s := LowerCase(s);
   LibraryPos := Pos('library', s);
   if (LibraryPos <> 0) then
@@ -304,7 +312,8 @@ procedure TProjectOptions.ReadFromFile(const AFileName: TFileName);
 begin
   FFileName := AFileName;
   ReplaceFromFile(AFileName);
-  ExecutableType := GetExecutableType(DelFileExt(AFileName) + '.dpr');
+
+  ExecutableType := GetExecutableType(AFileName);
 end;
 
 procedure TProjectOptions.ReadProjectVersionFromDof(const AFileName: TFileName);
