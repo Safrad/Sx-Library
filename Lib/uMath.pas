@@ -231,14 +231,31 @@ procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1); register;
 asm
 	div dl // al := ax div dl; ah := ax mod dl
+{$ifdef CPUX64}
+	mov rdx, Remainder
+	mov [rcx], al
+	mov [rdx], ah
+{$else}
 	mov edx, Remainder
 	mov [ecx], al
 	mov [edx], ah
+{$endif}
 end;
 
 procedure DivModU4(const Dividend: U4; const Divisor: U2;
 	out Res, Remainder: U2); register;
 asm
+{$ifdef CPUX64}
+	push rbx
+	mov bx, dx
+	mov edx, eax
+	shr edx, 16
+	div bx // ax := dx&ax div bx; dx := dx&ax mod bx
+	mov rbx, Remainder
+	mov [rcx], ax
+	mov [rbx], dx
+	pop rbx
+{$else}
 	push ebx
 	mov bx, dx
 	mov edx, eax
@@ -248,11 +265,23 @@ asm
 	mov [ecx], ax
 	mov [ebx], dx
 	pop ebx
+{$endif}
 end;
 
 procedure DivModS4(const Dividend: S4; const Divisor: S2;
 	out Res, Remainder: S2); register;
 asm
+{$ifdef CPUX64}
+	push rbx
+	mov ebx, edx
+	mov edx, eax
+	shr edx, 16
+	idiv bx // ax := dx&ax div bx; dx := dx&ax mod bx
+	mov rbx, Remainder
+	mov [rcx], ax
+	mov [rbx], dx
+	pop rbx
+{$else}
 	push ebx
 	mov ebx, edx
 	mov edx, eax
@@ -262,10 +291,16 @@ asm
 	mov [ecx], ax
 	mov [ebx], dx
 	pop ebx
+{$endif}
 end;
 
 procedure DivModU8(const Dividend: U8; const Divisor: U4;
 	out Res, Remainder: U4); pascal;
+{$ifdef CPUX64}
+begin
+  Res := Dividend div Divisor;
+  Remainder := Dividend mod Divisor;
+{$else}
 asm
 	push ebx
 	mov eax, U4 ptr [Dividend] // Divident-lo
@@ -277,10 +312,16 @@ asm
 	mov ebx, Remainder
 	mov [ebx], edx
 	pop ebx
+{$endif}
 end;
 
 procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
+{$ifdef CPUX64}
+begin
+  Res := Dividend div Divisor;
+  Remainder := Dividend mod Divisor;
+{$else}
 asm
 	pushad
 	mov eax, U4 ptr [Dividend] // Divident-lo
@@ -292,6 +333,7 @@ asm
 	mov edi, Remainder
 	mov [edi], edx
 	popad
+{$endif}
 end;
 
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
@@ -789,6 +831,9 @@ end;
 
 procedure Exchange(var P0, P1; Count: U4); register;
 asm
+{$ifdef CPUX64}
+// TODO
+{$else}
 	push edi
 	push esi
 
@@ -806,10 +851,14 @@ asm
 
 	POP ESI
 	POP EDI
+{$endif}
 end;
 
 procedure Exchange(P0, P1: Pointer; Count: UG); register;
 asm
+{$ifdef CPUX64}
+// TODO
+{$else}
 	PUSH EDI
 	PUSH ESI
 
@@ -827,6 +876,7 @@ asm
 
 	POP ESI
 	POP EDI
+{$endif}
 end;
 
 procedure Exchange(var s0, s1: string);
@@ -904,7 +954,7 @@ begin
 	for i := 0 to AngleCount - 1 do
 	begin
 		Sins[0] := RoundN((SinDiv - 1) * sin(2 * pi * i / AngleCount));
-		Inc(SG(Sins), SizeOf(TAngle));
+		Inc(PByte(Sins), SizeOf(TAngle));
 //  Sins[i]:=Trunc(127*(sin(pi*i/128))+127);
 //  Sins[i]:=Trunc(128*(sin(pi*i/128)+1))-128;
 	end;
@@ -912,6 +962,17 @@ end;
 
 
 procedure ReadMem(P: Pointer; Size: UG); register;
+{$ifdef CPUX64}
+var
+  i: SG;
+  b: U1;
+begin
+  for i := 0 to Size - 1 do
+  begin
+    b := PByte(P)^;
+    Inc(PByte(P), 1);
+  end;
+{$else}
 asm
 	cmp Size, 0
 	je @Exit
@@ -922,9 +983,31 @@ asm
 		cmp P, Size
 	jb @Loop
 	@Exit:
+{$endif}
 end;
 
 function SameData(P0, P1: Pointer; Size: UG): BG; register;
+{$ifdef CPUX64}
+var
+  i: SG;
+  b0, b1: U1;
+begin
+  Result := True;
+  for i := 0 to Size - 1 do
+  begin
+    b0 := PByte(P0)^;
+    b1 := PByte(P1)^;
+    if b0 <> b1 then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+
+    Inc(PByte(P0), 1);
+    Inc(PByte(P1), 1);
+  end;
+{$else}
 asm
 {	push ebx
 	mov Result, 1
@@ -973,6 +1056,7 @@ asm
 	pop edi
 	pop ebx
 	@Exit0:
+{$endif}
 end;
 
 function SameRect(const R1, R2: TRect): BG;
@@ -982,6 +1066,8 @@ end;
 
 procedure FillU2(var Desc; Count: UG; Value: U2); register;
 asm
+{$ifdef CPUX64}
+{$else}
 	PUSH    EDI
 	MOV     EDI,EAX
 	MOV     EAX,ECX
@@ -992,10 +1078,13 @@ asm
 	REP     STOSD
 @@exit:
 	POP     EDI
+{$endif}
 end;
 
 procedure FillU4(var Desc; Count: UG; Value: U4); register;
 asm
+{$ifdef CPUX64}
+{$else}
 	PUSH    EDI
 	MOV     EDI,EAX
 	MOV     EAX,ECX
@@ -1003,10 +1092,13 @@ asm
 	REP     STOSD
 @@exit:
 	POP     EDI
+{$endif}
 end;
 
 procedure FillOrderU1(var Desc; const Count: UG); register;
 asm
+{$ifdef CPUX64}
+{$else}
 	cmp Count, 0
 	je @Exit
 	add Count, Desc
@@ -1018,10 +1110,13 @@ asm
 		inc cl
 	jb @Loop
 	@Exit:
+{$endif}
 end;
 
 procedure FillOrderU4(var Desc; const Count: UG); register;
 asm
+{$ifdef CPUX64}
+{$else}
 	cmp Count, 0
 	je @Exit
 	shl Count, 2
@@ -1034,10 +1129,13 @@ asm
 		inc ecx
 	jb @Loop
 	@Exit:
+{$endif}
 end;
 
 procedure Reverse4(var Desc; Size: UG); register;
 asm
+{$ifdef CPUX64}
+{$else}
 	push esi
 	push ebx
 	mov esi, Desc
@@ -1062,6 +1160,7 @@ asm
 	@Exit:
 	pop ebx
 	pop esi
+{$endif}
 end;
 
 function Checksum(var Desc; Size: UG): U4; register;
@@ -1113,7 +1212,11 @@ end;
 
 procedure Swap02(var Desc; Count: UG; Step: S4); register;
 asm
+{$ifdef CPUX64}
+  push rdi
+{$else}
 	PUSH    EDI
+{$endif}
 	MOV     EDI, EAX
 	add edx, edi
 	@Loop:
@@ -1124,7 +1227,11 @@ asm
 		add edi, ecx
 		cmp edi, edx
 	jb @Loop
+{$ifdef CPUX64}
+  pop rdi
+{$else}
 	POP EDI
+{$endif}
 end;
 
 function SwapU4(D: U4): U4; register;
@@ -1156,7 +1263,11 @@ asm
 	push Result
 	mov ecx, 10h
 	dw 310fh // RDTSC 10 clocks
+{$ifdef CPUX64}
+	pop rcx
+{$else}
 	pop ecx
+{$endif}
 	mov [ecx], eax
 	mov [ecx + 4], edx
 end;
@@ -1179,6 +1290,12 @@ begin
 end;
 
 {$ifndef Console}
+
+procedure Nop; assembler;
+asm
+  nop
+end;
+
 procedure DelayEx(const f: U8);
 var
 	TickCount: U8;
@@ -1189,9 +1306,7 @@ begin
 	begin
 		for i := 0 to Min(1000, GSysInfo.CPUFrequency div 40) - 1 do
 		begin
-			asm
-				nop
-			end;
+      Nop;
 		end;
 	end;
 end;

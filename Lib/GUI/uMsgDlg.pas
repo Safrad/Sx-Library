@@ -499,7 +499,7 @@ begin
 				end;}
 				Break;
 			end;
-			Dec(SG(Ignore), Ignores.ItemMemSize);
+			Dec(PByte(Ignore), Ignores.ItemMemSize);
 		end;
 	end;
 

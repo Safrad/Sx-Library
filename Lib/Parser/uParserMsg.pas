@@ -115,7 +115,7 @@ begin
 	inherited;
 end;
 
-procedure TParserMessages.Add(const FileNameIndex, Line, X0, X1: U4; const Text: string; const MsgType: TMessageLevel);
+procedure TParserMessages.Add(const FileNameIndex, Line, X0, X1: UG; const Text: string; const MsgType: TMessageLevel);
 var
 	M: PParserMessage;
 begin
@@ -140,7 +140,7 @@ begin
 		begin
 			Finalize(M^);
 //			SetLength(M.Text, 0);
-			Inc(SG(M), Data.ItemMemSize);
+			Inc(PByte(M), Data.ItemMemSize);
 		end;
 		Data.Clear;
 	end;
@@ -210,7 +210,7 @@ begin
 		for i := 0 to SG(Data.Count) - 1 do
 		begin
 			Lines.Add(MesToString(Me));
-			Inc(SG(Me), Data.ItemMemSize);
+			Inc(PByte(Me), Data.ItemMemSize);
 		end;
 	finally
 		Lines.EndUpdate;

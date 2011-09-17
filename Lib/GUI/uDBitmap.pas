@@ -1309,6 +1309,9 @@ const
 
 procedure PixFast(Dst{eax}: PPixel; Src{edx}: PPixel; Width{ecx}: SG; Effect: TEffect); register;
 asm
+{$ifdef CPUX64}
+// TODO
+{$else}
 	pushad
 	{$ifdef BPP4}
 	shl ecx, 2
@@ -1324,13 +1327,14 @@ asm
 	movzx eax, Effect
 	call Pointer(LEffect + 4*eax)
 	popad
+{$endif}
 end;
 
 procedure Pix(D: PRGBA; ByteXD: UG; X, Y: U4; C: PRGBA); register;
 var
 	A: U1;
 begin
-	Inc(SG(D), BPP * X - ByteXD * Y);
+	Inc(PByte(D), BPP * X - ByteXD * Y);
 	A := (255 - C.A);
 	D.R := (D.R * A + C.R * C.A + 128) div 256;
 	D.G := (D.G * A + C.G * C.A + 128) div 256;
@@ -1339,6 +1343,9 @@ end;
 
 procedure Pix(PD: Pointer; ByteXD: UG; X, Y: U4; C: PRGBA; Effect: TEffect); register;
 asm
+{$ifdef CPUX64}
+// TODO
+{$else}
 	pushad
 	mov edi, X
 	{$ifdef BPP4}
@@ -1362,6 +1369,7 @@ asm
 	movzx eax, Effect
 	call Pointer(LEffect + 4 * eax)
 	popad
+{$endif}
 end;
 
 procedure PixCheck(BmpD: TDBitmap;
@@ -1405,6 +1413,9 @@ end;
 
 procedure GetPix(PD: Pointer; ByteXD: UG; X, Y: U4; out C: TRGBA); register;
 asm
+{$ifdef CPUX64}
+// TODO
+{$else}
 	push edi
 
 	mov edi, X
@@ -1442,6 +1453,7 @@ asm
 	mov al, [edi + 2]
 	mov U1 ptr [esi + 0], al}
 	pop edi
+{$endif}
 end;
 
 { TDBitmap }
@@ -1583,6 +1595,8 @@ begin
 	ByteXD := FByteX;
 	for cy := GraphMinY to GraphMaxY do
 	begin
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov edi, PD
@@ -1603,6 +1617,7 @@ begin
 		mov PD, edi
 		popad
 		end;
+{$endif}
 	end;
 end;
 
@@ -1616,6 +1631,9 @@ begin
 	ByteXD := FByteX;
 	for cy := GraphMinY to GraphMaxY do
 	begin
+{$ifdef CPUX64}
+// TODO
+{$else}
 		asm
 		pushad
 		mov edi, PD
@@ -1637,6 +1655,7 @@ begin
 		mov PD, edi
 		popad
 		end;
+{$endif}
 	end;
 end;
 
@@ -1700,7 +1719,7 @@ begin
 					if M = 1 then
 					begin
 						M := 1 shl 7;
-						Inc(SG(S), SizeOf(S^));
+						Inc(PByte(S), SizeOf(S^));
 					end
 					else
 						M := M shr 1;
@@ -1843,7 +1862,7 @@ begin
 						begin
 							PD^ := PS^;
 							PD.A := 0;
-							Inc(SG(PS), 3);
+							Inc(PByte(PS), 3);
 							Inc(PD);
 						end;
 					end;
@@ -2547,6 +2566,8 @@ begin
 
 	EndPD := SG(PD) - SG(FByteX * FHeight);
 
+{$ifdef CPUX64}
+{$else}
 	asm
 	pushad
 	mov edi, PD
@@ -2575,6 +2596,7 @@ begin
 	jne @NextY
 	popad
 	end;
+{$endif}
 end;
 
 (*procedure Bmp24To15(BmpD: TBitmap; BmpS: TBitmap);
@@ -3033,6 +3055,8 @@ begin
 
 	if Transparent = False then
 	begin
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov edi, PD
@@ -3952,6 +3976,7 @@ begin
 		ja @NextY
 		popad
 		end;
+{$endif}
 	end
 	else
 	begin
@@ -3959,6 +3984,8 @@ begin
 		WordB := CR.R;
 		WordG := CR.G;
 		WordR := CR.B;
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov edi, PD
@@ -4935,6 +4962,7 @@ begin
 		ja @NextY
 		popad
 		end;
+{$endif}
 	end;
 end;
 
@@ -5126,8 +5154,8 @@ begin
 			Inc(PFrom);
 			Inc(x);
 		until SG(PFrom) > SG(PTo);
-		Dec(SG(PLineSource), Source.FByteX);
-		Dec(SG(PLineTarget), Target.FByteX);
+		Dec(PByte(PLineSource), Source.FByteX);
+		Dec(PByte(PLineTarget), Target.FByteX);
 	end;
 end;
 
@@ -5412,6 +5440,8 @@ begin
 	PD := GetPixelAddr(X1, Y2);
 	cy := Y1;
 	repeat
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 
@@ -5442,6 +5472,7 @@ begin
 		jb @L1
 		popad
 		end;
+{$endif}
 		Inc(cy);
 	until cy > Y2;
 end;
@@ -5537,6 +5568,8 @@ begin
 
 	if C = clNone then
 	begin
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov esi, PS
@@ -6480,10 +6513,13 @@ begin
 		ja @NextY
 		popad
 		end;
+{$endif}
 	end
 	else
 	begin
 		CR := ColorToRGB(C);
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov esi, PS
@@ -7520,6 +7556,7 @@ begin
 		ja @NextY
 		popad
 		end;
+{$endif}
 	end;
 end;
 
@@ -7609,7 +7646,7 @@ begin
 			end;
 			Inc(PD);
 		end;
-		Dec(SG(C2), ByteX);
+		Dec(PByte(C2), ByteX);
 	end;
 	SetLength(CColor, 0);
 	SetLength(CCount, 0);
@@ -7648,7 +7685,7 @@ begin
 			Inc(CColorCount[{$ifdef BPP4}C.L and $00ffffff{$else}SG(C.RG) + SG(C.B) shl 16{$endif}]);
 			Inc(C);
 		end;
-		Dec(SG(C2), ByteX);
+		Dec(PByte(C2), ByteX);
 	end;
 	SetLength(CColorCount, 0);
 end;
@@ -7707,6 +7744,8 @@ begin
 	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
 	for cy := Y1 to Y2 do
 	begin
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov edi, PD
@@ -7736,6 +7775,7 @@ begin
 		mov PD, edi
 		popad
 		end;
+{$endif}
 	end;
 end;
 
@@ -7772,6 +7812,8 @@ begin
 	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
 	for cy := Y1 to Y2 do
 	begin
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov edi, PD
@@ -7817,6 +7859,7 @@ begin
 		mov PD, edi
 		popad
 		end;
+{$endif}
 	end;
 end;
 
@@ -7845,6 +7888,8 @@ begin
 	ByteXD := FByteX;
 	for cy := GraphMinY to GraphMaxY do
 	begin
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		mov edi, PD
@@ -7879,6 +7924,7 @@ begin
 		mov PD, edi
 		popad
 		end;
+{$endif}
 	end;
 end;
 
@@ -7918,7 +7964,7 @@ begin
 			end;
 			Inc(PFrom);
 		until SG(PFrom) >= SG(PTo);
-		Dec(SG(PLine), FByteX)
+		Dec(PByte(PLine), FByteX)
 	end;
 end;
 
@@ -8146,8 +8192,8 @@ begin
 			Move(D^, Line^, FByteX);
 			Move(S^, D^, FByteX);
 			Move(Line^, S^, FByteX);
-			Dec(SG(S), FByteX);
-			Inc(SG(D), FByteX);
+			Dec(PByte(S), FByteX);
+			Inc(PByte(D), FByteX);
 		end;
 	finally
 		FreeMem(Line);
@@ -8182,7 +8228,7 @@ begin
 	begin
 //		HX := SG(PD) + BPP * SG(FWidth);
 		Reverse4(PData^, FWidth);
-		Dec(SG(PData), ByteX)
+		Dec(PByte(PData), ByteX)
 	end;
 end;
 
@@ -8202,8 +8248,8 @@ begin
 			Move(P0^, B^, Siz);
 			Move(P1^, P0^, Siz);
 			Move(B^, P1^, Siz);
-			Dec(SG(P0), ByteX);
-			Inc(SG(P1), ByteX);
+			Dec(PByte(P0), ByteX);
+			Inc(PByte(P1), ByteX);
 		end;
 	finally
 		FreeMem(B);
@@ -8336,8 +8382,8 @@ begin
 				PDest.B := PSource.B;
 				{$endif}
 			end;
-			Inc(SG(PSource), BPP);
-			Inc(SG(PDest), BPP);
+			Inc(PByte(PSource), BPP);
+			Inc(PByte(PDest), BPP);
 		end;
 	end;
 end;
@@ -8723,7 +8769,7 @@ begin
 			end;
 			if (HidedColor = clNone) then
 				PixFast(Pointer(UG(PDY) + BPP * UG(XD1)), LineA, MaxX, Effect);
-			Dec(UG(PDY), ByteX);
+			Dec(PByte(PDY), ByteX);
 		end;
 	finally
 		case Func of
@@ -8902,7 +8948,7 @@ begin
 
 	BmpSWidth := XS2 + XS1;
 	BmpSHeight := YS2 + YS1;
-	Dec(SG(PDataS), YS1 * SG(BmpS.ByteX));
+	Dec(PByte(PDataS), YS1 * SG(BmpS.ByteX));
 	for YS := YS1 to YS2 do
 	begin
 		PS := Pointer(SG(PDataS) + XS1 + XS1 + XS1);
@@ -8919,6 +8965,8 @@ begin
 			{$ifndef NoCheck}
 			if (YD < 0) or (YD >= SG(BmpD.Height)) then goto LNext;
 			{$endif}
+{$ifdef CPUX64}
+{$else}
 			asm
 			pushad
 
@@ -9743,10 +9791,11 @@ begin
 
 			popad
 			end;
+{$endif}
 			LNext:
-			Inc(SG(PS), BPP);
+			Inc(PByte(PS), BPP);
 		end;
-		Dec(SG(PDataS), ByteXS)
+		Dec(PByte(PDataS), ByteXS)
 	end;
 	if Same then
 	begin
@@ -10019,7 +10068,7 @@ type
 	TRow = array[0..256 * MB - 1] of TPixel;
 
 	PPRows = ^TPRows;
-	TPRows = array[0..256 * MB - 1] of PRow;
+	TPRows = array[0..{$ifdef CPUX64}128{$else}256{$endif} * MB - 1] of PRow;
 
 const
 	MaxKernelSize = 100;
@@ -10186,7 +10235,7 @@ begin
 					for Row := Range.Top to Range.Bottom do
 					begin
 						P2^ := P3^;
-						Dec(UG(P2), BmpD.FByteX);
+						Dec(PByte(P2), BmpD.FByteX);
 						Inc(P3);
 					end
 				end;
@@ -10391,7 +10440,7 @@ begin
 						for Row := Range.Top to Range.Bottom do
 						begin
 							P2^ := P3^;
-							Dec(UG(P2), BmpD.FByteX);
+							Dec(PByte(P2), BmpD.FByteX);
 							Inc(P3);
 	//						theRows[Row][Col] := ACol[Row];
 						end;

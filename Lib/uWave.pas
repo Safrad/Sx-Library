@@ -630,7 +630,7 @@ begin
 				begin
 					P^.BLR.L := Left * S1(Sample(i, 0) - 128) div ConvertPre + 128;
 					P^.BLR.R := Right * S1(Sample(i, 0) - 128) div ConvertPre + 128;
-					Inc(SG(P), SizeOf(TBLR));
+					Inc(PByte(P), SizeOf(TBLR));
 				end;
 			end;
 			end;
@@ -645,7 +645,7 @@ begin
 					P^.B :=
 						(Left * S1(Sample(i, 0) - 128) div ConvertPre +
 						Right * S1(Sample(i, 1) - 128) div ConvertPre) div 2 + 128;
-					Inc(SG(P), 1);
+					Inc(PByte(P), 1);
 				end;
 			end;
 			2:
@@ -655,7 +655,7 @@ begin
 				begin
 					P^.BLR.L := Left * S1(Sample(i, 0) - 128) div ConvertPre + 128;
 					P^.BLR.R := Right * S1(Sample(i, 1) - 128) div ConvertPre + 128;
-					Inc(SG(P), SizeOf(TBLR));
+					Inc(PByte(P), SizeOf(TBLR));
 				end;
 			end;
 			end;
@@ -678,7 +678,7 @@ begin
 				begin
 					P^.WLR.L := Left * Sample(i, 0) div ConvertPre;
 					P^.WLR.R := Right * Sample(i, 0) div ConvertPre;
-					Inc(SG(P), SizeOf(TWLR));
+					Inc(PByte(P), SizeOf(TWLR));
 				end;
 			end;
 			end;
@@ -692,7 +692,7 @@ begin
 					P^.W :=
 						(Left * Sample(i, 0) div ConvertPre +
 						Right * Sample(i, 1) div ConvertPre) div 2;
-					Inc(SG(P), 2);
+					Inc(PByte(P), 2);
 				end;
 			end;
 			2:
@@ -702,7 +702,7 @@ begin
 				begin
 					P^.WLR.L := Left * Sample(i, 0) div ConvertPre;
 					P^.WLR.R := Right * Sample(i, 1) div ConvertPre;
-					Inc(SG(P), 4);
+					Inc(PByte(P), 4);
 				end;
 			end;
 			end;
@@ -733,7 +733,7 @@ begin
 			for i := 0 to Result.FSampleCount - 1 do
 			begin
 				P^.B := 256 * (Sample(i) - 128);
-				Inc(SG(P), 1);
+				Inc(PByte(P), 1);
 			end;
 		end;
 		end;
@@ -1065,7 +1065,7 @@ end;
 procedure TWave.AddSample(FPointer: PS2; const Value: S2);
 begin
 	FPointer^ := Value;
-	Inc(SG(FPointer), SizeOf(Value));
+	Inc(PByte(FPointer), SizeOf(Value));
 end;
 
 procedure TWave.WriteToFile(const FileName: TFileName);

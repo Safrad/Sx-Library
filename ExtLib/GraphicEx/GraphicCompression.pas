@@ -1713,10 +1713,13 @@ procedure TCCITTDecoder.MakeStates;
     while BitLen > 0 do
     begin
       // determine next state according to the bit string
+{$ifdef CPUX64}
+{$else}
       asm
         SHL [Bits], 1
         SETC [Bit]
       end;
+{$endif}
       NewState := Target[State].NewState[Bit];
       // Is it a not yet assigned state?
       if NewState = 0 then
@@ -1832,6 +1835,8 @@ begin
   FillChar(Dest^, UnpackedSize, 0);
 
   // swap all bits here, in order to avoid frequent tests in the main loop
+{$ifdef CPUX64}
+{$else}
   if FSwapBits then
   asm
          PUSH EBX
@@ -1848,7 +1853,7 @@ begin
          JNZ @@1
          POP EBX
   end;
-
+{$endif}
   // setup initial states
   // a row always starts with a (possibly zero-length) white run
   FSource := Source;
@@ -1919,7 +1924,9 @@ begin
   FillChar(Dest^, UnpackedSize, 0);
 
   // swap all bits here, in order to avoid frequent tests in the main loop
-  if FSwapBits then 
+{$ifdef CPUX64}
+{$else}
+  if FSwapBits then
   asm
          PUSH EBX
          LEA EBX, ReverseTable
@@ -1935,7 +1942,7 @@ begin
          JNZ @@1
          POP EBX
   end;
-
+{$endif}
   // setup initial states
   // a row always starts with a (possibly zero-length) white run
   FIsWhite := True;
@@ -2637,6 +2644,8 @@ begin
         R.Sequence := (Accumulator and $FFFF) shl 16;
         PCDGetBits(8);
         R.Key := Accumulator and $FF;
+{$ifdef CPUX64}
+{$else}
         asm
           // R.Mask := not ((1 shl (32 - R.Length)) - 1);
           // asm implementation to avoid overflow errors and for faster execution
@@ -2649,6 +2658,7 @@ begin
           NOT EAX
           MOV [EDX].TPCDTable.Mask, EAX
         end;
+{$endif}
         Inc(R);
       end;
       PCDLength[I] := Length;

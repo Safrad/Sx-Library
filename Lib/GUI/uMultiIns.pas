@@ -68,7 +68,11 @@ var
 	UniqueAppStr: string;
 begin
 	Result := True;
+{$ifdef CPUX64}
+	UniqueAppStr := DelCharsF(ParamStr(0), PathDelim);
+{$else}
 	UniqueAppStr := DelCharsF(ShortToLongPath(ParamStr(0)), PathDelim);
+{$endif}
 	MessageID := RegisterWindowMessage(PChar(UniqueAppStr));
 	MutHandle := OpenMutex(MUTEX_ALL_ACCESS, False, PChar(UniqueAppStr));
 	if MutHandle = 0 then

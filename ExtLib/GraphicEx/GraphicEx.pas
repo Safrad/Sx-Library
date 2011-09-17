@@ -1028,7 +1028,7 @@ begin
         with ContributorList[I] do
         begin
           DestPixel^ := ApplyContributors(N, ContributorList[I].Contributors);
-          Inc(Integer(DestPixel), DestDelta);
+          Inc(PByte(DestPixel), DestDelta);
         end;
       Inc(SourceLine);
       Inc(DestLine);

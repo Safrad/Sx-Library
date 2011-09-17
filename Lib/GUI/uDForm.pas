@@ -956,7 +956,11 @@ function Get8087CW: U2;
 asm
 	PUSH 0
 	FNSTCW [ESP].U2
+{$ifdef CPUX64}
+	POP RAX
+{$else}
 	POP EAX
+{$endif}
 end
 ;
 

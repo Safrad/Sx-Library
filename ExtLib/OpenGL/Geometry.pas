@@ -323,6 +323,8 @@ function MakeAffineDblVector(V: array of Double): TAffineDblVector; register; as
 // EDX contains highest index of V
 
 asm
+{$ifdef CPUX64}
+{$else}
               PUSH EDI
               PUSH ESI
               MOV EDI,ECX
@@ -331,6 +333,7 @@ asm
               REP MOVSD
               POP ESI
               POP EDI
+{$endif}
 end;
 
 //------------------------------------------------------------------------------
@@ -343,6 +346,8 @@ function MakeDblVector(V: array of Double): THomogeneousDblVector; register; ass
 // EDX contains highest index of V
 
 asm
+{$ifdef CPUX64}
+{$else}
               PUSH EDI
               PUSH ESI
               MOV EDI,ECX
@@ -351,6 +356,7 @@ asm
               REP MOVSD
               POP ESI
               POP EDI
+{$endif}
 end;
 
 //------------------------------------------------------------------------------
@@ -363,6 +369,8 @@ function MakeAffineVector(V: array of Single): TAffineVector; register; assemble
 // EDX contains highest index of V
 
 asm
+{$ifdef CPUX64}
+{$else}
               PUSH EDI
               PUSH ESI
               MOV EDI,ECX
@@ -371,6 +379,7 @@ asm
               REP MOVSD
               POP ESI
               POP EDI
+{$endif}
 end;
 
 //------------------------------------------------------------------------------
@@ -383,6 +392,8 @@ function MakeVector(V: array of Single): TVector; register; assembler;
 // EDX contains highest index of V
 
 asm
+{$ifdef CPUX64}
+{$else}
               PUSH EDI
               PUSH ESI
               MOV EDI,ECX
@@ -391,6 +402,7 @@ asm
               REP MOVSD
               POP ESI
               POP EDI
+{$endif}
 end;
 
 //------------------------------------------------------------------------------
@@ -659,6 +671,8 @@ function VectorNormalize(V: array of Single): Single; assembler; register;
 // EDX contains the highest index in V
 
 asm
+{$ifdef CPUX64}
+{$else}
               PUSH EBX
               MOV ECX,EDX                   // save size of V
               CALL VectorLength             // calculate length of vector
@@ -678,6 +692,7 @@ asm
               LOOP @@1
               FSTP ST                       // remove reciprocal from FPU stack
 @@Finish:     POP EBX
+{$endif}
 end;
 
 //------------------------------------------------------------------------------
