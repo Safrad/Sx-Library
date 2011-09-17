@@ -12,7 +12,7 @@ uses
 	Windows;
 
 procedure CreatePathsToReg;
-procedure RegistryToDcc32Cfg;
+procedure RegistryToDccCfg;
 
 implementation
 
@@ -30,10 +30,73 @@ begin
     Result := RegPath + PathDelim + 'Library\Win32';
 end;
 
-procedure RegistryToDcc32Cfg;
+function CommonCfgText(const DelphiVersion: TDelphiVersion): string;
+var
+  s: string;
+begin
+  s := '-aWinTypes=Windows';
+  if DelphiVersion > dvDelphiXE then
+  begin
+    s := s + ';Forms=Vcl.Forms';
+    s := s + ';Graphics=Vcl.Graphics';
+    s := s + ';Controls=Vcl.Controls';
+    s := s + ';ExtCtrls=Vcl.ExtCtrls';
+    s := s + ';StdCtrls=Vcl.StdCtrls';
+    s := s + ';Consts=Vcl.Consts';
+    s := s + ';Dialogs=Vcl.Dialogs';
+    s := s + ';ComCtrls=Vcl.ComCtrls';
+    s := s + ';Menus=Vcl.Menus';
+    s := s + ';ClipBrd=Vcl.ClipBrd';
+    s := s + ';ExtDlgs=Vcl.ExtDlgs';
+    s := s + ';ActnList=Vcl.ActnList';
+    s := s + ';ImgList=Vcl.ImgList';
+    s := s + ';CheckLst=Vcl.CheckLst';
+    s := s + ';Buttons=Vcl.Buttons';
+
+    s := s + ';Jpeg=Vcl.Imaging.Jpeg';
+    s := s + ';PngImage=Vcl.Imaging.PngImage';
+
+    s := s + ';Windows=Winapi.Windows';
+    s := s + ';Messages=Winapi.Messages';
+    s := s + ';ActiveX=Winapi.ActiveX';
+    s := s + ';mmsystem=Winapi.mmsystem';
+    s := s + ';CommCtrl=Winapi.CommCtrl';
+    s := s + ';ShellAPI=Winapi.ShellAPI';
+    s := s + ';ShlObj=Winapi.ShlObj';
+
+    s := s + ';TypInfo=System.TypInfo';
+    s := s + ';SysUtils=System.SysUtils';
+    s := s + ';Math=System.Math';
+    s := s + ';Types=System.Types';
+    s := s + ';Classes=System.Classes';
+    s := s + ';Variants=System.Variants';
+    s := s + ';IniFiles=System.IniFiles';
+
+    s := s + ';Registry=System.Win.Registry';
+    s := s + ';ComObj=System.Win.ComObj';
+
+
+    s := s + ';XMLDoc=XML.XMLDoc';
+    s := s + ';XMLIntf=XML.XMLIntf';
+  end;
+  s := s + LineSep;
+  Result := s;
+end;
+
+procedure WriteDcc(const Data: string; const DelphiPath: string; const Bits: string);
+var
+	FileName: TFileName;
+begin
+  FileName := DelphiPath + 'bin' + PathDelim + 'dcc' + Bits + '.cfg';
+  {$ifdef Console}
+  Writeln('Creating ' + FileName);
+  {$endif}
+  WriteStringToFile(FileName, Data, False, fcAnsi);
+end;
+
+procedure RegistryToDccCfg;
 var
 	Reg: TRegistry;
-	FileName: TFileName;
 	s: string;
 	InLineIndex: SG;
 	SearchPaths: string;
@@ -51,58 +114,9 @@ begin
       DelphiPath := GetDelphiPathOnly(Reg, RegPath);
 			if DirectoryExists(DelphiPath) then
 			begin
-        FileName := DelphiPath + 'bin' + PathDelim + 'dcc32.cfg'; // TODO : 64 bit
-        {$ifdef Console}
-				Writeln('Creating ' + FileName);
-        {$endif}
 				if Reg.OpenKey(GetDelphiLibraryPath(RegPath, DelphiVersion), False) then
 				begin
-					s := '-aWinTypes=Windows';
-          if DelphiVersion > dvDelphiXE then
-          begin
-            s := s + ';Forms=Vcl.Forms';
-            s := s + ';Graphics=Vcl.Graphics';
-            s := s + ';Controls=Vcl.Controls';
-            s := s + ';ExtCtrls=Vcl.ExtCtrls';
-            s := s + ';StdCtrls=Vcl.StdCtrls';
-            s := s + ';Consts=Vcl.Consts';
-            s := s + ';Dialogs=Vcl.Dialogs';
-            s := s + ';ComCtrls=Vcl.ComCtrls';
-            s := s + ';Menus=Vcl.Menus';
-            s := s + ';ClipBrd=Vcl.ClipBrd';
-            s := s + ';ExtDlgs=Vcl.ExtDlgs';
-            s := s + ';ActnList=Vcl.ActnList';
-            s := s + ';ImgList=Vcl.ImgList';
-            s := s + ';CheckLst=Vcl.CheckLst';
-            s := s + ';Buttons=Vcl.Buttons';
-
-            s := s + ';Jpeg=Vcl.Imaging.Jpeg';
-            s := s + ';PngImage=Vcl.Imaging.PngImage';
-
-            s := s + ';Windows=Winapi.Windows';
-            s := s + ';Messages=Winapi.Messages';
-            s := s + ';ActiveX=Winapi.ActiveX';
-            s := s + ';mmsystem=Winapi.mmsystem';
-            s := s + ';CommCtrl=Winapi.CommCtrl';
-            s := s + ';ShellAPI=Winapi.ShellAPI';
-            s := s + ';ShlObj=Winapi.ShlObj';
-
-            s := s + ';TypInfo=System.TypInfo';
-            s := s + ';SysUtils=System.SysUtils';
-            s := s + ';Math=System.Math';
-            s := s + ';Types=System.Types';
-            s := s + ';Classes=System.Classes';
-            s := s + ';Variants=System.Variants';
-            s := s + ';IniFiles=System.IniFiles';
-
-            s := s + ';Registry=System.Win.Registry';
-            s := s + ';ComObj=System.Win.ComObj';
-
-
-            s := s + ';XMLDoc=XML.XMLDoc';
-            s := s + ';XMLIntf=XML.XMLIntf';
-          end;
-          s := s + LineSep;
+          s := CommonCfgText(DelphiVersion);
 					s := s + '-r"' + DelphiPath + 'Lib"' + LineSep;
 					SearchPaths := Reg.ReadString('Search Path');
           SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion);
@@ -115,7 +129,9 @@ begin
 							s := s + '-u"' + Path + '"' + LineSep;
 					end;
 
-					WriteStringToFile(FileName, s, False, fcAnsi);
+          WriteDcc(s, DelphiPath, '32');
+          if DelphiVersion > dvDelphiXE then
+            WriteDcc(s, DelphiPath, '64');
 
 					Reg.CloseKey;
 				end;
