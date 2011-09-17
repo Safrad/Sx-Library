@@ -22,12 +22,14 @@ uses
   uLog,
 	Classes;
 
-function GetDelphiLibraryPath(const RegPath: string; const DelphiVersion: TDelphiVersion): string;
+function GetDelphiLibraryPath(const RegPath: string; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
 begin
   if DelphiVersion <= dvDelphiXE then
     Result := RegPath + PathDelim + 'Library'
   else
-    Result := RegPath + PathDelim + 'Library\Win32';
+  begin
+    Result := RegPath + PathDelim + 'Library\Win' + SystemPlatformStr[SystemPlatform];
+  end;
 end;
 
 function CommonCfgText(const DelphiVersion: TDelphiVersion): string;
@@ -104,6 +106,7 @@ var
 	Path: string;
 	DelphiPath: string;
 	DelphiVersion: TDelphiVersion;
+  SystemPlatform: TSystemPlatform;
 begin
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
@@ -114,27 +117,32 @@ begin
       DelphiPath := GetDelphiPathOnly(Reg, RegPath);
 			if DirectoryExists(DelphiPath) then
 			begin
-				if Reg.OpenKey(GetDelphiLibraryPath(RegPath, DelphiVersion), False) then
-				begin
-          s := CommonCfgText(DelphiVersion);
-					s := s + '-r"' + DelphiPath + 'Lib"' + LineSep;
-					SearchPaths := Reg.ReadString('Search Path');
-          SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion);
+        for SystemPlatform := Low(SystemPlatform) to High(SystemPlatform) do
+        begin
+          if (SystemPlatform = spWin64) and (DelphiVersion < First64bitDelphi) then Continue;
 
-					InLineIndex := 1;
-					while InLineIndex < Length(SearchPaths) do
-					begin
-						Path := ReadToChar(SearchPaths, InLineIndex, ';');
-						if Path <> '' then
-							s := s + '-u"' + Path + '"' + LineSep;
-					end;
+          if Reg.OpenKey(GetDelphiLibraryPath(RegPath, DelphiVersion, SystemPlatform), False) then
+          begin
+            s := CommonCfgText(DelphiVersion);
+            s := s + '-r"' + DelphiPath + 'Lib"' + LineSep;
+            SearchPaths := Reg.ReadString('Search Path');
+            SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion);
 
-          WriteDcc(s, DelphiPath, '32');
-          if DelphiVersion > dvDelphiXE then
-            WriteDcc(s, DelphiPath, '64');
+            InLineIndex := 1;
+            while InLineIndex < Length(SearchPaths) do
+            begin
+              Path := ReadToChar(SearchPaths, InLineIndex, ';');
+              if Path <> '' then
+                s := s + '-u"' + Path + '"' + LineSep;
+            end;
 
-					Reg.CloseKey;
-				end;
+            WriteDcc(s, DelphiPath, '32');
+            if DelphiVersion > dvDelphiXE then
+              WriteDcc(s, DelphiPath, '64');
+
+            Reg.CloseKey;
+          end;
+        end;
 			end;
 		end;
 	finally
@@ -170,6 +178,7 @@ var
 	Found: BG;
   FoundIndex: Integer;
   DelphiRegPath: string;
+  SystemPlatform: TSystemPlatform;
 begin
 	RegPaths := TStringList.Create;
 	LineCount := 0;
@@ -187,71 +196,77 @@ begin
 		for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 		begin
 			RegPath := GetDelphiRegPath(DelphiVersion);
-      DelphiRegPath := GetDelphiLibraryPath(RegPath, DelphiVersion);
 
-      if Reg.OpenKey(DelphiRegPath, False) then
+      for SystemPlatform := Low(SystemPlatform) to High(SystemPlatform) do
       begin
-        Paths := Reg.ReadString(SearchPathName);
-        InLineIndex := 1;
-        RegPaths.Clear;
-        while InLineIndex <= Length(Paths) do
-        begin
-          Path := ReadToChar(Paths, InLineIndex, ';');
-          if Path <> '' then
-            RegPaths.Add(Path);
-        end;
-        CorrectPaths(RegPaths);
+        if (SystemPlatform = spWin64) and (DelphiVersion < First64bitDelphi) then
+          Continue;
+        DelphiRegPath := GetDelphiLibraryPath(RegPath, DelphiVersion, SystemPlatform);
 
-        for i := 0 to LineCount - 1 do
+        if Reg.OpenKey(DelphiRegPath, False) then
         begin
-          Path := Lines[i];
-          Replace(Path,
-            ['%DelphiShortName%', '%DelphiMajorVersion%'],
-            [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
-          if Path ='' then
-            Continue;
+          Paths := Reg.ReadString(SearchPathName);
+          InLineIndex := 1;
+          RegPaths.Clear;
+          while InLineIndex <= Length(Paths) do
+          begin
+            Path := ReadToChar(Paths, InLineIndex, ';');
+            if Path <> '' then
+              RegPaths.Add(Path);
+          end;
+          CorrectPaths(RegPaths);
 
-          if FirstChar(Path) = '-' then
+          for i := 0 to LineCount - 1 do
           begin
-            Path := UpperCase(Copy(Path, 2, MaxInt));
-            j := 0;
-            while j < RegPaths.Count do
+            Path := Lines[i];
+            Replace(Path,
+              ['%DelphiShortName%', '%DelphiMajorVersion%'],
+              [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
+            if Path ='' then
+              Continue;
+
+            if FirstChar(Path) = '-' then
             begin
-              if StartStr(Path, UpperCase(RegPaths[j])) then
+              Path := UpperCase(Copy(Path, 2, MaxInt));
+              j := 0;
+              while j < RegPaths.Count do
               begin
-                RegPaths.Delete(j);
-              end
-              else
-                Inc(j);
-            end;
-          end
-          else
-          begin
-            Found := False;
-            for j := 0 to RegPaths.Count - 1 do
+                if StartStr(Path, UpperCase(RegPaths[j])) then
+                begin
+                  RegPaths.Delete(j);
+                end
+                else
+                  Inc(j);
+              end;
+            end
+            else
             begin
-              if UpperCase(RegPaths[j]) = UpperCase(Path) then
+              Found := False;
+              for j := 0 to RegPaths.Count - 1 do
               begin
-                Found := True;
-                Break;
+                if UpperCase(RegPaths[j]) = UpperCase(Path) then
+                begin
+                  Found := True;
+                  Break;
+                end;
+              end;
+              if not Found then
+              begin
+                RegPaths.Add(Path);
               end;
             end;
-            if not Found then
-            begin
-              RegPaths.Add(Path);
-            end;
           end;
-        end;
-        Paths := '';
-        for i := 0 to RegPaths.Count - 1 do
-        begin
-          Paths := Paths + RegPaths[i] + ';';
-        end;
-        Paths := DelLastChar(Paths);
+          Paths := '';
+          for i := 0 to RegPaths.Count - 1 do
+          begin
+            Paths := Paths + RegPaths[i] + ';';
+          end;
+          Paths := DelLastChar(Paths);
 
-        Reg.WriteString(SearchPathName, Paths);
+          Reg.WriteString(SearchPathName, Paths);
 
-        Reg.CloseKey;
+          Reg.CloseKey;
+        end;
       end;
 		end;
 	finally
