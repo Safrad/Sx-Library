@@ -1,4 +1,4 @@
-package Lib;
+package LibDXE;
 
 {$R *.res}
 {$ALIGN 8}
