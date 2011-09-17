@@ -19,6 +19,7 @@ const
     '2003-12-17', '2004-10-22', '2005-11-11', '2007-03-19',
     '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31');
   FirstUnicodeDelphi = dvDelphi2009;
+  First64bitDelphi = dvDelphiXE2;
 
 // Delphi 7, BDS 7, BDS 8
 function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
