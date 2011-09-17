@@ -764,7 +764,7 @@ begin
 		for i := 0 to FTemplateCount - 1 do
 		begin
 			ComboBoxTemplate.Items.Add(Template.Name);
-			Inc(SG(Template), SizeOf(Template.Name) + SizeOf(TParam) * OptionCount);
+			Inc(PByte(Template), SizeOf(Template.Name) + SizeOf(TParam) * OptionCount);
 		end;
 	finally
 		ComboBoxTemplate.Items.EndUpdate;

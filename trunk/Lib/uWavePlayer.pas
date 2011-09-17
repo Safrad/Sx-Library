@@ -464,7 +464,7 @@ begin
 		else if Value > 255 then
 			Value := 255;
 		Buffer.B := Value;
-		Inc(SG(Buffer), 1);
+		Inc(PByte(Buffer), 1);
 	end;
 	16:
 	begin
@@ -473,7 +473,7 @@ begin
 		else if Value > 32767 then
 			Value := 32767;
 		Buffer.W := Value;
-		Inc(SG(Buffer), 2);
+		Inc(PByte(Buffer), 2);
 	end;
 	end;
 end;

@@ -2041,7 +2041,11 @@ end;
 
 function RepairDirectory(const Dir: TFileName): TFileName;
 begin
+{$ifdef CPUX64}
+	Result := ExpandDir(Dir);
+{$else}
 	Result := ShortToLongPath(ExpandDir(Dir));
+{$endif}
 	if Result = '' then Exit;
 	while True do
 	begin
@@ -2235,7 +2239,11 @@ end;
 
 function SameFileName(const FileName1, FileName2: TFileName): BG;
 begin
+{$ifdef CPUX64}
+	Result := FileName1 = FileName2;
+{$else}
 	Result := ShortToLongPath(FileName1) = ShortToLongPath(FileName2);
+{$endif}
 end;
 
 function DialogStrWithoutAll(const Ext, Des: array of string): string;

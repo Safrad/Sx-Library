@@ -451,6 +451,24 @@ end;
 
 function RootKeyToStr(const RootKey: HKEY): string;
 begin
+{$ifdef CPUX64}
+	if RootKey = HKEY_CLASSES_ROOT then
+    Result := 'HKEY_CLASSES_ROOT'
+  else if RootKey = HKEY_CURRENT_USER then
+    Result := 'HKEY_CURRENT_USER'
+  else if	RootKey = HKEY_LOCAL_MACHINE then
+    Result := 'HKEY_LOCAL_MACHINE'
+	else if	RootKey = HKEY_USERS then
+    Result := 'HKEY_USERS'
+	else if	RootKey = HKEY_PERFORMANCE_DATA then
+    Result := 'HKEY_PERFORMANCE_DATA'
+	else if	RootKey = HKEY_CURRENT_CONFIG then
+    Result := 'HKEY_CURRENT_CONFIG'
+	else if	RootKey = HKEY_DYN_DATA then
+    Result := 'HKEY_DYN_DATA'
+	else
+    Result := '';
+{$else}
 	case RootKey of
 	HKEY_CLASSES_ROOT: Result := 'HKEY_CLASSES_ROOT';
 	HKEY_CURRENT_USER: Result := 'HKEY_CURRENT_USER';
@@ -461,6 +479,7 @@ begin
 	HKEY_DYN_DATA: Result := 'HKEY_DYN_DATA';
 	else Result := '';
 	end;
+{$endif}
 end;
 
 function RegValue(const RootKey: HKEY; const Key: string; const Name: string): string;

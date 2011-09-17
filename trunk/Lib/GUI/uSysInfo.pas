@@ -533,6 +533,10 @@ begin
 end;
 
 function IsCPUID_Available : Boolean; register;
+{$ifdef CPUX64}
+begin
+  Result := False;
+{$else}
 const
 	ID_BIT	=	$200000;			// EFLAGS ID bit
 asm
@@ -548,12 +552,15 @@ asm
 	JZ      @exit				{no, CPUID not availavle}
 	MOV     AL,True			{Result=True}
 @exit:
+{$endif}
 end;
 
 procedure FillCPUID(var SysInfo: TSysInfo);
 begin
 	SysInfo.CPUStr := '            '; //StringOfChar(CharSpace, 12);
 	try
+{$ifdef CPUX64}
+{$else}
 		asm
 		pushad
 		xor eax, eax
@@ -578,6 +585,7 @@ begin
 		mov [edx+4], ebx
 		popad
 		end;
+{$endif}
 	finally
 //		SysInfo.LogicalProcessorCount := Max(1, Lo(SysInfo.CPU2 shr 16));
 		SysInfo.LogicalProcessorCount := GetLogicalProcessorCount;
@@ -610,6 +618,8 @@ begin
 			try
 				TickCount := PerformanceCounter;
 				CPUTick := GetCPUCounter.A;
+{$ifdef CPUX64}
+{$else}
 				asm
 				pushad
 
@@ -650,6 +660,7 @@ begin
 
 				popad
 				end;
+{$endif}
 				CPUTick := GetCPUCounter.A - CPUTick;
 				TickCount := PerformanceCounter - TickCount;
 				if TickCount > 0 then

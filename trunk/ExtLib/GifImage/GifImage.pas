@@ -2569,6 +2569,8 @@ var
     SysInfo: TSystemInfo;
   begin
     GetSystemInfo(SysInfo);
+{$ifdef CPUX64}
+{$else}
     asm
           MOV   EDX, Colors
           MOV   ECX, Count
@@ -2599,6 +2601,7 @@ var
           POP   EBX
       @@END:
     end;
+{$endif}
   end;
 {$ENDIF}
 begin
@@ -3376,14 +3379,14 @@ begin
   // Move on to next column
   if (Direction = 1) then
   begin
-    inc(longInt(ErrorR), sizeof(TErrorTerm));
-    inc(longInt(ErrorG), sizeof(TErrorTerm));
-    inc(longInt(ErrorB), sizeof(TErrorTerm));
+    inc(ErrorR, sizeof(TErrorTerm));
+    inc(ErrorG, sizeof(TErrorTerm));
+    inc(ErrorB, sizeof(TErrorTerm));
   end else
   begin
-    dec(longInt(ErrorR), sizeof(TErrorTerm));
-    dec(longInt(ErrorG), sizeof(TErrorTerm));
-    dec(longInt(ErrorB), sizeof(TErrorTerm));
+    dec(ErrorR, sizeof(TErrorTerm));
+    dec(ErrorG, sizeof(TErrorTerm));
+    dec(ErrorB, sizeof(TErrorTerm));
   end;
 end;
 {$IFDEF R_PLUS}
@@ -3530,26 +3533,26 @@ begin
   // Move on to next column
   if (Direction = 1) then
   begin
-    inc(longInt(ErrorR0), sizeof(TErrorTerm));
-    inc(longInt(ErrorG0), sizeof(TErrorTerm));
-    inc(longInt(ErrorB0), sizeof(TErrorTerm));
-    inc(longInt(ErrorR1), sizeof(TErrorTerm));
-    inc(longInt(ErrorG1), sizeof(TErrorTerm));
-    inc(longInt(ErrorB1), sizeof(TErrorTerm));
-    inc(longInt(ErrorR2), sizeof(TErrorTerm));
-    inc(longInt(ErrorG2), sizeof(TErrorTerm));
-    inc(longInt(ErrorB2), sizeof(TErrorTerm));
+    inc(ErrorR0, sizeof(TErrorTerm));
+    inc(ErrorG0, sizeof(TErrorTerm));
+    inc(ErrorB0, sizeof(TErrorTerm));
+    inc(ErrorR1, sizeof(TErrorTerm));
+    inc(ErrorG1, sizeof(TErrorTerm));
+    inc(ErrorB1, sizeof(TErrorTerm));
+    inc(ErrorR2, sizeof(TErrorTerm));
+    inc(ErrorG2, sizeof(TErrorTerm));
+    inc(ErrorB2, sizeof(TErrorTerm));
   end else
   begin
-    dec(longInt(ErrorR0), sizeof(TErrorTerm));
-    dec(longInt(ErrorG0), sizeof(TErrorTerm));
-    dec(longInt(ErrorB0), sizeof(TErrorTerm));
-    dec(longInt(ErrorR1), sizeof(TErrorTerm));
-    dec(longInt(ErrorG1), sizeof(TErrorTerm));
-    dec(longInt(ErrorB1), sizeof(TErrorTerm));
-    dec(longInt(ErrorR2), sizeof(TErrorTerm));
-    dec(longInt(ErrorG2), sizeof(TErrorTerm));
-    dec(longInt(ErrorB2), sizeof(TErrorTerm));
+    dec(ErrorR0, sizeof(TErrorTerm));
+    dec(ErrorG0, sizeof(TErrorTerm));
+    dec(ErrorB0, sizeof(TErrorTerm));
+    dec(ErrorR1, sizeof(TErrorTerm));
+    dec(ErrorG1, sizeof(TErrorTerm));
+    dec(ErrorB1, sizeof(TErrorTerm));
+    dec(ErrorR2, sizeof(TErrorTerm));
+    dec(ErrorG2, sizeof(TErrorTerm));
+    dec(ErrorB2, sizeof(TErrorTerm));
   end;
 end;
 {$IFDEF R_PLUS}
@@ -3898,32 +3901,32 @@ begin
   // Move on to next column
   if (Direction = 1) then
   begin
-    inc(longInt(ErrorR0), sizeof(TErrorTerm));
-    inc(longInt(ErrorG0), sizeof(TErrorTerm));
-    inc(longInt(ErrorB0), sizeof(TErrorTerm));
-    inc(longInt(ErrorR1), sizeof(TErrorTerm));
-    inc(longInt(ErrorG1), sizeof(TErrorTerm));
-    inc(longInt(ErrorB1), sizeof(TErrorTerm));
-    inc(longInt(ErrorR2), sizeof(TErrorTerm));
-    inc(longInt(ErrorG2), sizeof(TErrorTerm));
-    inc(longInt(ErrorB2), sizeof(TErrorTerm));
-    inc(longInt(ErrorR3), sizeof(TErrorTerm));
-    inc(longInt(ErrorG3), sizeof(TErrorTerm));
-    inc(longInt(ErrorB3), sizeof(TErrorTerm));
+    inc(ErrorR0, sizeof(TErrorTerm));
+    inc(ErrorG0, sizeof(TErrorTerm));
+    inc(ErrorB0, sizeof(TErrorTerm));
+    inc(ErrorR1, sizeof(TErrorTerm));
+    inc(ErrorG1, sizeof(TErrorTerm));
+    inc(ErrorB1, sizeof(TErrorTerm));
+    inc(ErrorR2, sizeof(TErrorTerm));
+    inc(ErrorG2, sizeof(TErrorTerm));
+    inc(ErrorB2, sizeof(TErrorTerm));
+    inc(ErrorR3, sizeof(TErrorTerm));
+    inc(ErrorG3, sizeof(TErrorTerm));
+    inc(ErrorB3, sizeof(TErrorTerm));
   end else
   begin
-    dec(longInt(ErrorR0), sizeof(TErrorTerm));
-    dec(longInt(ErrorG0), sizeof(TErrorTerm));
-    dec(longInt(ErrorB0), sizeof(TErrorTerm));
-    dec(longInt(ErrorR1), sizeof(TErrorTerm));
-    dec(longInt(ErrorG1), sizeof(TErrorTerm));
-    dec(longInt(ErrorB1), sizeof(TErrorTerm));
-    dec(longInt(ErrorR2), sizeof(TErrorTerm));
-    dec(longInt(ErrorG2), sizeof(TErrorTerm));
-    dec(longInt(ErrorB2), sizeof(TErrorTerm));
-    dec(longInt(ErrorR3), sizeof(TErrorTerm));
-    dec(longInt(ErrorG3), sizeof(TErrorTerm));
-    dec(longInt(ErrorB3), sizeof(TErrorTerm));
+    dec(ErrorR0, sizeof(TErrorTerm));
+    dec(ErrorG0, sizeof(TErrorTerm));
+    dec(ErrorB0, sizeof(TErrorTerm));
+    dec(ErrorR1, sizeof(TErrorTerm));
+    dec(ErrorG1, sizeof(TErrorTerm));
+    dec(ErrorB1, sizeof(TErrorTerm));
+    dec(ErrorR2, sizeof(TErrorTerm));
+    dec(ErrorG2, sizeof(TErrorTerm));
+    dec(ErrorB2, sizeof(TErrorTerm));
+    dec(ErrorR3, sizeof(TErrorTerm));
+    dec(ErrorG3, sizeof(TErrorTerm));
+    dec(ErrorB3, sizeof(TErrorTerm));
   end;
 end;
 {$IFDEF R_PLUS}
@@ -4109,20 +4112,20 @@ begin
   // Move on to next column
   if (Direction = 1) then
   begin
-    inc(longInt(ErrorR0), sizeof(TErrorTerm));
-    inc(longInt(ErrorG0), sizeof(TErrorTerm));
-    inc(longInt(ErrorB0), sizeof(TErrorTerm));
-    inc(longInt(ErrorR1), sizeof(TErrorTerm));
-    inc(longInt(ErrorG1), sizeof(TErrorTerm));
-    inc(longInt(ErrorB1), sizeof(TErrorTerm));
+    inc(ErrorR0, sizeof(TErrorTerm));
+    inc(ErrorG0, sizeof(TErrorTerm));
+    inc(ErrorB0, sizeof(TErrorTerm));
+    inc(ErrorR1, sizeof(TErrorTerm));
+    inc(ErrorG1, sizeof(TErrorTerm));
+    inc(ErrorB1, sizeof(TErrorTerm));
   end else
   begin
-    dec(longInt(ErrorR0), sizeof(TErrorTerm));
-    dec(longInt(ErrorG0), sizeof(TErrorTerm));
-    dec(longInt(ErrorB0), sizeof(TErrorTerm));
-    dec(longInt(ErrorR1), sizeof(TErrorTerm));
-    dec(longInt(ErrorG1), sizeof(TErrorTerm));
-    dec(longInt(ErrorB1), sizeof(TErrorTerm));
+    dec(ErrorR0, sizeof(TErrorTerm));
+    dec(ErrorG0, sizeof(TErrorTerm));
+    dec(ErrorB0, sizeof(TErrorTerm));
+    dec(ErrorR1, sizeof(TErrorTerm));
+    dec(ErrorG1, sizeof(TErrorTerm));
+    dec(ErrorB1, sizeof(TErrorTerm));
   end;
 end;
 {$IFDEF R_PLUS}
@@ -8240,7 +8243,7 @@ var
       t := ColorMap^[0].Red;
       ColorMap^[0].Red := ColorMap^[0].Blue;
       ColorMap^[0].Blue := t;
-      inc(integer(ColorMap), sizeof(TGIFColor));
+      inc(ColorMap, sizeof(TGIFColor));
       dec(i);
     end;
   end;
@@ -11469,6 +11472,8 @@ var
 
 	function Scan(Buf: PAnsiChar; Value: Byte; Count: integer): boolean; assembler;
   asm
+{$ifdef CPUX64}
+{$else}
     PUSH	EDI
     MOV		EDI, Buf
     MOV		ECX, Count
@@ -11478,6 +11483,7 @@ var
     JNE		@@1
     MOV		EAX, True
 @@1:POP		EDI
+{$endif}
   end;
 
 begin

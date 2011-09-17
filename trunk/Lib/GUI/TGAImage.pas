@@ -96,15 +96,15 @@ begin
 						if Header.ImageType = 10 then
 						begin // Compressed
 							C := PU1(PS)^;
-							Inc(SG(PS), 1);
+							Inc(PByte(PS), 1);
 							if SG(PS) >= MaxPS then Break;
 							if C and $80 = 0 then
 							begin
 								while C >= 0 do
 								begin
 									PD^ := PS^;
-									Inc(SG(PS), ColorDepth);
-									Inc(SG(PD), BPP);
+									Inc(PByte(PS), ColorDepth);
+									Inc(PByte(PD), BPP);
 									if SG(PS) >= MaxPS then goto LNextLine;
 									if SG(PD) >= MaxPD then goto LNextLine;
 									Dec(C);
@@ -116,15 +116,15 @@ begin
 								while C >= 0 do
 								begin
 									PD^ := PS^;
-									Inc(SG(PD), BPP);
+									Inc(PByte(PD), BPP);
 									if SG(PD) >= MaxPD then
 									begin
-										Inc(SG(PS), ColorDepth);
+										Inc(PByte(PS), ColorDepth);
 										goto LNextLine;
 									end;
 									Dec(C);
 								end;
-								Inc(SG(PS), ColorDepth);
+								Inc(PByte(PS), ColorDepth);
 							end;
 						end
 						else
@@ -132,8 +132,8 @@ begin
 							while True do
 							begin
 								PD^ := PS^;
-								Inc(SG(PS), ColorDepth);
-								Inc(SG(PD), BPP);
+								Inc(PByte(PS), ColorDepth);
+								Inc(PByte(PD), BPP);
 								if SG(PS) >= MaxPS then goto LNextLine;
 								if SG(PD) >= MaxPD then goto LNextLine;
 							end;

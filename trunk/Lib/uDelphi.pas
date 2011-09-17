@@ -21,6 +21,11 @@ const
   FirstUnicodeDelphi = dvDelphi2009;
   First64bitDelphi = dvDelphiXE2;
 
+type
+  TSystemPlatform = (spWin32, spWin64);
+const
+  SystemPlatformStr: array[TSystemPlatform] of string = ('32', '64');
+
 // Delphi 7, BDS 7, BDS 8
 function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
 

@@ -116,12 +116,12 @@ begin
 					if BPC = 2 then
 					begin
 						cv := PU1(Buf)^ + PU1(SG(Buf) + 1)^;
-						Inc(SG(Buf), 2);
+						Inc(PByte(Buf), 2);
 					end
 					else
 					begin
 						cv := PU1(Buf)^;
-						Inc(SG(Buf), 1);
+						Inc(PByte(Buf), 1);
 					end;
 				end
 				else
@@ -139,7 +139,7 @@ begin
 				end;
 			end;
 			PColor(P)^ := C.L;
-			Inc(SG(P), BPP);
+			Inc(PByte(P), BPP);
 		end;
 	end;
 	if Binary then
@@ -198,8 +198,8 @@ begin
 				RGB.G := PU1(SG(P) + 1)^;
 				RGB.B := PU1(SG(P) + 0)^;
 				Buf^ := RGB;
-				Inc(SG(Buf), 3);
-				Inc(SG(P), BPP);
+				Inc(PByte(Buf), 3);
+				Inc(PByte(P), BPP);
 			end;
 		end;
 		Stream.WriteBuffer(Buffer^, Width * Height * 3);

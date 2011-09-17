@@ -209,7 +209,7 @@ type
 	TArrayChar = array[0..512 * MB - 1] of Char;
 	PArrayChar = ^TArrayChar;
 
-	TArrayString = array[0..512 * MB - 2] of string;
+	TArrayString = array[0..{$ifdef CPUX64}256{$else}512{$endif} * MB - 2] of string;
 	PArrayString = ^TArrayString;
 
 	TMessageLevel = (
