@@ -304,7 +304,7 @@ var
 	DefVF: UG;
 
 	f: UG;
-	InLineIndex: Integer;
+	InLineIndex: SG;
 	Found: Boolean;
 	Index: Integer;
 	NewSize: SG;

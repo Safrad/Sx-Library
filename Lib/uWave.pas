@@ -61,7 +61,7 @@ function GetWinSoundFileName(const WinSound: TWinSound): TFileName;
 procedure PlayWinSound(const WinSound: TWinSound);
 procedure PlayWaveFile(const WaveName: TFileName);
 // For screen Width 800 is NowPos 0..799, MaxPos 799
-procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
+procedure SoundLR(var Left, Right: SG; const NowPos, MaxPos: SG);
 function WaveLength(const FileName: TFileName): UG;
 { Wave specification:
 	8 bits
@@ -380,7 +380,7 @@ begin
 		end;
 end;
 
-procedure SoundLR(var Left, Right: Integer; const NowPos, MaxPos: Integer);
+procedure SoundLR(var Left, Right: SG; const NowPos, MaxPos: SG);
 begin
 	Left := ConvertPre * (MaxPos - NowPos) div MaxPos;
 	if Left < 0 then
@@ -460,8 +460,8 @@ begin
 	begin
 		FDataBytes := 2 * FSampleCount;
 		GetMem(PUncompressedData, FDataBytes + SizeOf(TCompleteWave));
-		FData := Pointer(SG(PUncompressedData) + SizeOf(TCompleteWave));
-		Decode(PWaveSample(UG(PWave) + FPreDataSize));
+		FData := PWaveSample(TNative(PUncompressedData) + SizeOf(TCompleteWave));
+		Decode(PWaveSample(TNative(PWave) + TNative(FPreDataSize)));
 		FreeMem(PWave); // Free compressed wave.
 		PWave := PUncompressedData;
 
@@ -472,10 +472,10 @@ begin
 
 		FillWave(PWave, @FFormat, FDataBytes);
 		FPreDataSize := SizeOf(TCompleteWave);
-		FData := PWaveSample(SG(PWave) + SizeOf(TCompleteWave));
+		FData := PWaveSample(TNative(PWave) + SizeOf(TCompleteWave));
 	end
 	else
-		FData := Pointer(UG(PWave) + FPreDataSize);
+		FData := Pointer(TNative(PWave) + TNative(FPreDataSize));
 end;
 
 procedure TWave.ReadChunks(const F: TFile);
@@ -502,7 +502,7 @@ begin
 	begin
 		F.BlockRead(Chunk, SizeOf(TWaveChunk));
 		FilePos := F.FilePos;
-		case SG(Chunk.ChunkId) of
+		case S4(Chunk.ChunkId) of
 		fmt: ReadFormatChunk(F);
 		data:
 		begin
@@ -805,9 +805,9 @@ begin
 	else if Format.Channels > 2 then
 		Index := Index * Channel;
 	case FFormat.BitsPerSample of
-	8: Result := PWaveSample(SG(Data) + Index + Channel).B;
-	16: Result := PWaveSample(SG(Data) + 2 * (Index + Channel)).W;
-	32: Result := PWaveSample(SG(Data) + 4 * (Index + Channel)).D;
+	8: Result := PWaveSample(TNative(Data) + Index + Channel).B;
+	16: Result := PWaveSample(TNative(Data) + 2 * (Index + Channel)).W;
+	32: Result := PWaveSample(TNative(Data) + 4 * (Index + Channel)).D;
 	else
 		Result := 0;
 	end;
@@ -816,9 +816,9 @@ end;
 function TWave.Sample(const Index: SG): SG;
 begin
 	case FFormat.BitsPerSample of
-	8: Result := PWaveSample(SG(Data) + Index).B;
-	16: Result := PWaveSample(SG(Data) + 2 * Index).W;
-	32: Result := PWaveSample(SG(Data) + 4 * Index).D;
+	8: Result := PWaveSample(TNative(Data) + Index).B;
+	16: Result := PWaveSample(TNative(Data) + 2 * Index).W;
+	32: Result := PWaveSample(TNative(Data) + 4 * Index).D;
 	else
 		Result := 0;
 	end;
@@ -1051,12 +1051,12 @@ end;
 
 function TWave.GetSampleAddr(const ASample: SG): PWaveSample;
 begin
-	Result := PWaveSample(SG(FData) + ASample * FFormat.BytesPerSample);
+	Result := PWaveSample(TNative(FData) + ASample * FFormat.BytesPerSample);
 end;
 
 function TWave.GetSample(const BitLength: SG; var BitIndex: SG): SG;
 begin
-	Result := PInt(SG(FData) + BitIndex div 8)^;
+	Result := PInt(TNative(FData) + BitIndex div 8)^;
 	Result := Result shr ((8 - BitIndex) mod 8);
 	Result := Result and (1 shl BitLength - 1);
 	Inc(BitIndex, BitLength);
@@ -1081,7 +1081,7 @@ begin
 		FDataBytes := BitsToByte(FFormat.BitsPerSample * FFormat.Channels * U8(FSampleCount));
 		ReallocMem(PWave, SizeOf(TCompleteWave) + FDataBytes);
 		FillWave(PWave, @FFormat, FDataBytes);
-		FData := PWaveSample(SG(PWave) + SizeOf(TCompleteWave));
+		FData := PWaveSample(TNative(PWave) + SizeOf(TCompleteWave));
 	end;
 end;
 

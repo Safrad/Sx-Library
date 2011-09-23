@@ -160,7 +160,7 @@ begin
 	else SetLength(SortN, DViewOpenedFiles.RowCount);
 	end;
 
-//	FillOrderU4(DViewOpenedFiles.RowOrder[0], DViewOpenedFiles.RowCount);
+//	FillOrderUG(DViewOpenedFiles.RowOrder[0], DViewOpenedFiles.RowCount);
 	for i := 0 to DViewOpenedFiles.RowCount - 1 do
 	begin
 		Item := FOpenedFiles.GetItem(i);

@@ -263,7 +263,7 @@ begin
 		end;
 		Bitmap.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
-		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
+		InflateRect(Recta, -SG(FBevelWidth), -SG(FBevelWidth));
 	end;
 	if Color <> clNone then
 	begin
@@ -271,7 +271,7 @@ begin
 			Bitmap.Rec(Recta.Left + i, Recta.Top + i,
 				Recta.Right - i - 1, Recta.Bottom - i - 1,
 				Color, BackEffect);
-		InflateRect(Recta, -FBorderWidth, -FBorderWidth);
+		InflateRect(Recta, -SG(FBorderWidth), -SG(FBorderWidth));
 	end;
 	RectaS := Recta;
 	if FBevelInner <> bvNone then
@@ -288,8 +288,8 @@ begin
 		end;
 		Bitmap.Border(Recta.Left, Recta.Top, Recta.Right - 1, Recta.Bottom - 1,
 			TopColor, BottomColor, FBevelWidth, BackEffect);
-		InflateRect(Recta, -Integer(FBevelWidth) div 2, -Integer(FBevelWidth) div 2);
-		InflateRect(RectaS, -FBevelWidth, -FBevelWidth);
+		InflateRect(Recta, -SG(FBevelWidth) div 2, -SG(FBevelWidth) div 2);
+		InflateRect(RectaS, -SG(FBevelWidth), -SG(FBevelWidth));
 	end;
 
 // Status

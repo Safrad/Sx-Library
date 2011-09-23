@@ -53,7 +53,7 @@ function CenterOfRect(const R: TRect): TPoint;
 implementation
 
 uses
-	Math, Menus,
+	Math, Menus, {$if CompilerVersion >= 23}UITypes,{$ifend}
 	uStrings, uMath;
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;

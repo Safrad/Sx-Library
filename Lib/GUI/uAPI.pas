@@ -10,7 +10,7 @@ uses
 function RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
 
 // @Return process exit code
-function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
+function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): U4;
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 procedure PropertiesDialog(FileName: TFileName);
@@ -70,7 +70,7 @@ begin
 	end;
 end;
 
-function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
+function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): U4;
 var
 	FAgain : BG;
 	ErrorCode: U4;

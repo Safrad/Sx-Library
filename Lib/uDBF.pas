@@ -241,7 +241,7 @@ begin
 							for k := 0 to FColumns[j].Width div 2 - 1 do
 							begin
 								if U2(Row^) = 0 then Break;
-								Inc(SG(Row), 2)
+								Inc(PByte(Row), 2)
 							end;
 							DataWStr := '';
 							SetLength(DataWStr, k);

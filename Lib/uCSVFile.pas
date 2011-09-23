@@ -83,7 +83,7 @@ const
 constructor TCSVFile.Create(const ColumnCount: SG);
 begin
 	SetLength(FColumnIndexes, MaxColumn);
-	FillOrderU4(FColumnIndexes[0], MaxColumn);
+	FillOrderUG(FColumnIndexes[0], MaxColumn);
 
 	inherited Create;
 
@@ -248,7 +248,7 @@ var
 begin
   FColumnCount := Length(ColumnNames);
 	SetLength(FColumnIndexes, MaxColumn);
-	FillOrderU4(FColumnIndexes[0], MaxColumn);
+	FillOrderUG(FColumnIndexes[0], MaxColumn);
 
 	AcceptRemark := True;
 	Row := ReadLine;

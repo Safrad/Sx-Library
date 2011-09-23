@@ -93,7 +93,7 @@ type
 		FBufferSize: U8;
 		FNeedSaveBuffer: BG;
 
-		FFileBegin: U8; // Size of Byte Order Mark
+		FFileBegin: S8; // Size of Byte Order Mark
 		FFilePos: U8;
 		FFileSize: U8;
 		function GetFileSize(var Size: U8): BG;
@@ -152,7 +152,7 @@ implementation
 
 uses
 	Math,
-	uMsg, uFiles, uLog, uOutputFormat, uCharset{$ifopt d+}, uFileTest{$endif};
+	uMsg, uFiles, uLog, uOutputFormat, uCharset;
 
 constructor TFile.Create;
 begin

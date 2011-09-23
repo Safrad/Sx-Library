@@ -269,7 +269,7 @@ begin
 		end;
 		Bitmap.Border(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
 			TopColor, BottomColor, FBevelWidth, ef16);
-		InflateRect(Recta, -FBevelWidth, -FBevelWidth);
+		InflateRect(Recta, -SG(FBevelWidth), -SG(FBevelWidth));
 	end;
 	if (Color <> clNone) then
 	begin

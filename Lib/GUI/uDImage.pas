@@ -157,8 +157,8 @@ type
 		function GetImageOffset: TPoint;
 		function GetDisplayedArea: TRect;
 
-		procedure OffsetRange(var NOfsX, NOfsY: Integer);
-		procedure ScrollTo(NOfsX, NOfsY: Integer); overload;
+		procedure OffsetRange(var NOfsX, NOfsY: SG);
+		procedure ScrollTo(NOfsX, NOfsY: SG); overload;
 		procedure ScrollTo(Offset: TPoint); overload;
 		procedure OffsetOnRect(const Rect: TRect);
 
@@ -663,7 +663,7 @@ begin
 	Result.Y := FOfsY + CenterOffset.Y;
 end;
 
-procedure TDImage.OffsetRange(var NOfsX, NOfsY: Integer);
+procedure TDImage.OffsetRange(var NOfsX, NOfsY: SG);
 begin
 	if NOfsX > UserWidth - FNowMaxWidth then
 		NOfsX := UserWidth - FNowMaxWidth;
@@ -686,7 +686,7 @@ begin
 	Result := FOfsY + CenterOffset.Y;
 end;
 
-procedure TDImage.ScrollTo(NOfsX, NOfsY: Integer);
+procedure TDImage.ScrollTo(NOfsX, NOfsY: SG);
 begin
 	OffsetRange(NOfsX, NOfsY);
 	if (FOfsX <> NOfsX) or (FOfsY <> NOfsY) then
@@ -1069,7 +1069,7 @@ end;
 
 procedure ZoomMake(BmpSource: TDBitmap; VisX, VisY: Integer; AsWindow, Center: BG; Zoom: TZoom;
 	XYConst: Boolean; QualityResize: Boolean; const OX, OY: Integer; out SourceWidth,
-	SourceHeight: Integer; out SX1, SY1, SXW, SYH: Integer; out DX1, DY1, DXW, DYH: Integer;
+	SourceHeight: SG; out SX1, SY1, SXW, SYH: SG; out DX1, DY1, DXW, DYH: SG;
 	var BmpSource2: TDBitmap);
 var
 	SX, SY: Integer;

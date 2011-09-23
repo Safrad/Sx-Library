@@ -34,7 +34,7 @@ procedure RestoreSystemColors;
 var
 	StartNames: array[0..COLOR_ENDCOLORS] of SG;
 begin
-	FillOrderU4(StartNames, Length(StartNames));
+	FillOrderUG(StartNames, Length(StartNames));
 	SetSysColors(Length(StartColors), StartNames, StartColors);
 end;
 

@@ -26,7 +26,7 @@ var
 	WProc: TFNWndProc;
 	MutHandle: THandle;
 
-function NewWndProc(Handle: HWND; Msg: UINT; wParam, lParam: LongInt): LRESULT; stdcall;
+function NewWndProc(Handle: HWND; Msg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 var
 	CmdLine: string;
 begin
@@ -68,11 +68,7 @@ var
 	UniqueAppStr: string;
 begin
 	Result := True;
-{$ifdef CPUX64}
-	UniqueAppStr := DelCharsF(ParamStr(0), PathDelim);
-{$else}
 	UniqueAppStr := DelCharsF(ShortToLongPath(ParamStr(0)), PathDelim);
-{$endif}
 	MessageID := RegisterWindowMessage(PChar(UniqueAppStr));
 	MutHandle := OpenMutex(MUTEX_ALL_ACCESS, False, PChar(UniqueAppStr));
 	if MutHandle = 0 then
@@ -81,7 +77,7 @@ begin
 			Mutex object has not yet been created, meaning that no previous instance has been created.
 			We subclass Application window procedure so that Application.OnMessage remains available for user.
 		}
-		WProc := TFNWndProc(SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(@NewWndProc)));
+		WProc := TFNWndProc(SetWindowLong(Application.Handle, GWL_WNDPROC, Integer(@NewWndProc)));
 		{ Set appropriate error flag if error condition occurred }
 		if WProc = nil then
 			ErrorMsg(GetLastError);

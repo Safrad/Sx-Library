@@ -186,7 +186,7 @@ var
 begin
 	// Sort
 	SetLength(AIndex, Length(A));
-	FillOrderU4(AIndex[0], Length(AIndex));
+	FillOrderUG(AIndex[0], Length(AIndex));
 	SortS4(False, False, PArraySG(AIndex), PArrayS4(A), Length(AIndex));
 
 	// Add unsorted commands

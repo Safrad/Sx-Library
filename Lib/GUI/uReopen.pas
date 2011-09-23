@@ -173,7 +173,7 @@ end;
 procedure TReopen.SetReopenMenuItems(const Limit: UG);
 var i, MaxPos: SG;
 begin
-	MaxPos := Min(FReopenCount, Limit);
+	MaxPos := Min(FReopenCount, SG(Limit));
 	for i := MaxPos to FReopenCount - 1 do
 	begin
 		if Assigned(FReopenItems[i].MenuItem) then
@@ -186,7 +186,7 @@ begin
 			FreeAndNil(FReopenItems[i].MenuItem);
 		end;
 	end;
-	for i := 0 to Min(FReopenCount, Limit) - 1 do
+	for i := 0 to Min(FReopenCount, SG(Limit)) - 1 do
 	begin
 		if not Assigned(FReopenItems[i].MenuItem) then
 		begin
@@ -229,7 +229,7 @@ end;
 
 procedure TReopen.ReopenLimitClick(Sender: TObject);
 begin
-	if GetNumber('Reopen Limit', FReopenLimit, 0, 10, MaxReopen, nil) then
+	if GetNumber('Reopen Limit', S8(FReopenLimit), 0, 10, MaxReopen, nil) then
 	begin
 		SetReopenMenuItems(FReopenLimit);
 		DrawReopenCaption;

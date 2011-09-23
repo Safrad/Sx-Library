@@ -1198,7 +1198,7 @@ begin
 		end
 		else
 		begin
-			FillOrderU4(RowOrder[0], Value);
+			FillOrderUG(RowOrder[0], Value);
 {			for i := 0 to Value - 1 do
 			begin
 				FRowOrder[i] := i;
@@ -1235,7 +1235,7 @@ begin
 	if (not Assigned(FTextFilter)) or (FTextFilter.IsEmpty) then
 	begin
 		FFilteredRowCount := FAllRowCount;
-		FillOrderU4(FRowOrder[0], FFilteredRowCount);
+		FillOrderUG(FRowOrder[0], FFilteredRowCount);
 	end
 	else
 	begin

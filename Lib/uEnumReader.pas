@@ -53,7 +53,7 @@ begin
 	SetLength(Enums2, Count);
 	EnumToStr(TypeInfo, Enums2);
 	SetLength(Indexes, Count);
-	FillOrderU4(Indexes[0], Count);
+	FillOrderUG(Indexes[0], Count);
 
 	for i := 0 to Count - 1 do
 	begin
