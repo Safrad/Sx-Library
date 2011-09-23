@@ -92,7 +92,7 @@ procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
 procedure CheckBool(var Bool: LongBool); overload;
 
-{$if CompilerVersion >= 23}
+{$if CPUX64}
 procedure Order(var I1, I2: S4); overload;
 {$ifend}
 procedure Order(var I1, I2: SG); overload;
@@ -1048,7 +1048,7 @@ begin
 	Bool := B4(U4(Bool) and 1);
 end;
 
-{$if CompilerVersion >= 23}
+{$if CPUX64}
 procedure Order(var I1, I2: S4);
 var I: S4;
 begin
