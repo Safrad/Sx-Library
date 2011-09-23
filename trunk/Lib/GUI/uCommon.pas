@@ -4,7 +4,7 @@ interface
 
 uses
 	Graphics,
-	uTypes, uDForm, uOptions,
+	uTypes, uDForm, uOptions, uStrings,
 	Menus;
 
 {
@@ -45,6 +45,9 @@ type
 		goShowSplashScreenWhenApplicationStarts,
 		goWindowBackgroundTexture,
 		goWindowBackgroundColor,
+{$if CompilerVersion >= 23}
+		goVisualStyle,
+{$ifend}
 		goAutomaticallyCheckForUpdate,
 		goCheckForUpdateDaysPeriod);
 
@@ -58,6 +61,9 @@ var
     (Typ: vsCheck; Default: 1),
 		(Typ: vsCheck; Default: 1),
 		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt),
+{$if CompilerVersion >= 23}
+		(Typ: vsFilename; DefaultStr: ''),
+{$ifend}
 		(Typ: vsCheck; Default: 1),
 		(Typ: vsSpin; Default: 14; Minimum: 0; Maximum: 365));
 
@@ -67,9 +73,13 @@ var
 implementation
 
 uses
+{$if CompilerVersion >= 23}
+  Vcl.Themes,
+  Vcl.Styles,
+{$ifend}
 	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uNewThread,
 	uMsgDlg, uMsg, uStart, ufOptions, uReg, uProjectInfo, uLink,
-	uStrings, uWebUpdate, uStartup, uDictionary,
+	uWebUpdate, uStartup, uDictionary,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
 
 // Executable file is smaller
@@ -276,6 +286,17 @@ begin
 	FreeAndNil(MainLog);
 end;
 
+{$if CompilerVersion >= 23}
+function GetVisualStylesDir: string;
+begin
+{$ifopt d+}
+	Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Visual Styles' + PathDelim
+{$else}
+	Result := WorkDir + 'Visual Styles' + PathDelim
+{$endif}
+end;
+{$ifend}
+
 { TCommonMenu }
 
 procedure TCommonMenu.RWCommon(const Save: BG);
@@ -285,6 +306,7 @@ begin
 	// Compatibility
 	if Save = False then
 	begin
+  	GlobalOptions[goVisualStyle].DefaultStr := GetVisualStylesDir;
 		if MainIni.ValueExists(Section, 'ViewSplashScreen') then
 		begin
 			GlobalOptions[goShowSplashScreenWhenApplicationStarts].Default := MainIni.ReadNum
@@ -311,6 +333,13 @@ begin
 		AutomaticallyCheckForUpdate := True;
 	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);}
 	MainIni.RWDateTime(Section, 'LastUpdate', LastUpdate, Save);
+
+{$if CompilerVersion >= 23}
+  if Save = False then
+  begin
+    OptionChanged(SG(goVisualStyle));
+  end;
+{$ifend}
 end;
 
 procedure TCommonMenu.Restart1Click(Sender: TObject);
@@ -368,6 +397,10 @@ begin
 end;
 
 procedure TCommonMenu.OptionChanged(const OptionIndex: SG);
+{$if CompilerVersion >= 23}
+var
+  FileName: TFileName;
+{$ifend}
 begin
 	case TGlobalOption(OptionIndex) of
 //  goLanguage:
@@ -401,6 +434,31 @@ begin
 		begin
 			SetBackgroundColor(Application);
 		end;
+{$if CompilerVersion >= 23}
+  goVisualStyle:
+    begin
+      FileName := ExpandDir(GlobalParams[TGlobalOption(OptionIndex)].Str);
+      if (FileName <> '') and (FileExists(FileName)) then
+      begin
+        if ExtractFileName(FileName) = 'Windows.vsf' then
+          TStyleManager.TrySetStyle('Windows', False)
+        else if TStyleManager.IsValidStyle(FileName) then
+        begin
+          try
+            TStyleManager.LoadFromFile(FileName);
+          except
+            on E: EDuplicateStyleException do ;
+          end;
+          TStyleManager.TrySetStyle(AddSpace(DelFileExt(ExtractFileName(FileName))), False);
+        end
+        else
+        begin
+          TStyleManager.TrySetStyle('Windows', False);
+          ErrorMsg('Style %1 is not valid.', [FileName]);
+        end;
+      end;
+    end;
+{$ifend}
 	end;
 end;
 
