@@ -176,7 +176,6 @@ var
 	RegPaths: TStrings;
 	InLineIndex: SG;
 	Found: BG;
-  FoundIndex: Integer;
   DelphiRegPath: string;
   SystemPlatform: TSystemPlatform;
 begin

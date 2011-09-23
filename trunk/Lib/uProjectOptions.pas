@@ -262,7 +262,6 @@ function TProjectOptions.GetExecutableType(
   const AFileName: TFileName): TExecutableType;
 var
   s: string;
-  FileExt: string;
   ProgramPos, LibraryPos: SG;
   DPK, DPR: BG;
   DPRFileName: TFileName;
