@@ -68,7 +68,7 @@ function GetNumber(Prompt: string;
 	var CurVal: U1; const MinVal, DefVal, MaxVal: U1; OnApplyInt: TOnApplyInt): Boolean; overload;
 function GetNumber(Prompt: string;
 	var CurVal: S1; const MinVal, DefVal, MaxVal: S1; OnApplyInt: TOnApplyInt): Boolean; overload;
-{$if CompilerVersion >= 23}
+{$if CPUX64}
 function GetNumber(Prompt: string;
 	var CurVal: SG; const MinVal, DefVal, MaxVal: SG; OnApplyInt: TOnApplyInt): Boolean; overload;
 function GetNumber(Prompt: string;
@@ -368,7 +368,7 @@ begin
 	CurVal := C;
 end;
 
-{$if CompilerVersion >= 23}
+{$if CPUX64}
 function GetNumber(Prompt: string;
 	var CurVal: SG; const MinVal, DefVal, MaxVal: SG; OnApplyInt: TOnApplyInt): Boolean; overload;
 var C: S8;
