@@ -126,7 +126,7 @@ begin
             s := CommonCfgText(DelphiVersion);
             s := s + '-r"' + DelphiPath + 'Lib"' + LineSep;
             SearchPaths := Reg.ReadString('Search Path');
-            SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion);
+            SearchPaths := ReplaceDelphiVariables(SearchPaths, DelphiVersion, SystemPlatform);
 
             InLineIndex := 1;
             while InLineIndex < Length(SearchPaths) do

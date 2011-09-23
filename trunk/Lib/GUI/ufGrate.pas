@@ -64,8 +64,8 @@ begin
 		BackgroundColor := clBlack;
 		GrateSize := DefaultGrateSize;
 	end;
-	MainIni.RWNum(Section, 'Grate Color', SG(GrateColor), Save);
-	MainIni.RWNum(Section, 'Background Color', SG(BackgroundColor), Save);
+	MainIni.RWNum(Section, 'Grate Color', U4(GrateColor), Save);
+	MainIni.RWNum(Section, 'Background Color', U4(BackgroundColor), Save);
 	MainIni.RWMenuItem(Section, ShowGrate1, Save);
 	MainIni.RWNum(Section, 'Size', GrateSize, Save);
 	MainIni.RWMenuItem(Section, Centered1, Save);

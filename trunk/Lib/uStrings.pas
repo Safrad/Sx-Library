@@ -949,7 +949,7 @@ var
 
 	procedure Clear;
 	begin
-		FillU4(ActPos[0], WhatSLen, 1);
+		FillUG(ActPos[0], WhatSLen, 1);
 	end;
 
 var

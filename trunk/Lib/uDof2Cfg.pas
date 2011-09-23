@@ -7,7 +7,7 @@ uses
   uDelphi,
 	SysUtils;
 
-procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: TDelphiVersion);
+procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
 procedure DofToCfg(const FileNamePrefix: string; const DelphiVersion: TDelphiVersion);
 
 implementation
@@ -22,7 +22,7 @@ uses
 	IniFiles,
 	uMsg;
 
-procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: TDelphiVersion);
+procedure WriteProjectInfoToCfg(const CfgFileName: TFileName; const ProjectInfo: TProjectOptions; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
 var
 	Data: string;
   SearchPath: string;
@@ -41,13 +41,13 @@ begin
 //-LN"c:\program files\borland\delphi6\Projects\Bpl"
 
 	if ProjectInfo.UnitOutputDir <> '' then
-		Data := Data + '-N"' + ReplaceDelphiVariables(ProjectInfo.UnitOutputDir, DelphiVersion) + '"' + FileSep;
+		Data := Data + '-N"' + ReplaceDelphiVariables(ProjectInfo.UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 	if ProjectInfo.PackageDLLOutputDir <> '' then
-		Data := Data + '-LE"' + ReplaceDelphiVariables(ProjectInfo.PackageDLLOutputDir, DelphiVersion) + '"' + FileSep;
+		Data := Data + '-LE"' + ReplaceDelphiVariables(ProjectInfo.PackageDLLOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 	if ProjectInfo.PackageDCPOutputDir <> '' then
-		Data := Data + '-LN"' + ReplaceDelphiVariables(ProjectInfo.PackageDCPOutputDir, DelphiVersion) + '"' + FileSep;
+		Data := Data + '-LN"' + ReplaceDelphiVariables(ProjectInfo.PackageDCPOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 
-  SearchPath := ReplaceDelphiVariables(ProjectInfo.SearchPath, DelphiVersion);
+  SearchPath := ReplaceDelphiVariables(ProjectInfo.SearchPath, DelphiVersion, SystemPlatform);
 	if ProjectInfo.SearchPath <> '' then
 		Data := Data + '-U"' + SearchPath + '"' + FileSep;
 	if ProjectInfo.SearchPath <> '' then
@@ -85,7 +85,7 @@ begin
 	ProjectInfo := TProjectOptions.Create;
   try
     ProjectInfo.ReadFromFile(FileNamePrefix + '.dof');
-  	WriteProjectInfoToCfg(FileNamePrefix + '.cfg', ProjectInfo, DelphiVersion);
+  	WriteProjectInfoToCfg(FileNamePrefix + '.cfg', ProjectInfo, DelphiVersion, spWin32);
   finally
     ProjectInfo.Free;
   end;
