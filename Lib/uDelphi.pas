@@ -25,6 +25,7 @@ type
   TSystemPlatform = (spWin32, spWin64);
 const
   SystemPlatformStr: array[TSystemPlatform] of string = ('32', '64');
+  SystemPlatformXStr: array[TSystemPlatform] of string = ('x86', 'x64');
 
 // Delphi 7, BDS 7, BDS 8
 function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
@@ -44,7 +45,7 @@ function GetDelphiFullName(const ADelphiVersion: TDelphiVersion): string;
 function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
 function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
 function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
-function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion): string;
+function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
 function GetDelphiVersionCount: SG;
 function GetAvailableDelphiVersions: TArrayOfSG;
 
@@ -217,7 +218,7 @@ begin
 	end;
 end;
 
-function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion): string;
+function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
 var
   DelphiPath: string;
   DelphiPath2: string;
@@ -230,8 +231,8 @@ begin
   Replace(SearchPaths, '$(BDSBIN)', DelphiPath2 + '\Bin');
   Replace(SearchPaths, '$(BDSCOMMON)', DelphiPath2 + '\Bin');
   Replace(SearchPaths, '$(BDSINCLUDE)', DelphiPath2 + '\Include');
-  Replace(SearchPaths, '$(PLATFORM)', 'Win32');
-  Replace(SearchPaths, '$(Platform)', 'Win32');
+  Replace(SearchPaths, '$(PLATFORM)', 'Win' + SystemPlatformStr[SystemPlatform]);
+  Replace(SearchPaths, '$(Platform)', 'Win' + SystemPlatformStr[SystemPlatform]);
   ReplaceEnv(SearchPaths);
   Result := SearchPaths;
 end;

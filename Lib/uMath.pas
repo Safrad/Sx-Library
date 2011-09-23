@@ -104,6 +104,7 @@ function SameData(P0, P1: Pointer; Size: UG): BG;
 function SameRect(const R1, R2: TRect): BG;
 procedure FillU2(var Desc; Count: UG; Value: U2);
 procedure FillU4(var Desc; Count: UG; Value: U4);
+procedure FillUG(var Desc; Count: UG; Value: UG);
 procedure FillOrderU1(var Desc; const Count: UG);
 procedure FillOrderU4(var Desc; const Count: UG);
 procedure FillOrderUG(var Desc; const Count: UG);
@@ -1275,6 +1276,52 @@ begin
   else
   begin
     PB := PU4(@Desc);
+    Total := Count;
+  end;
+
+  for I := Total - 1 downto 0 do
+  begin
+    PB^ := Value;
+    Inc(PB);
+  end;
+{$else}
+asm
+	PUSH    EDI
+	MOV     EDI,EAX
+	MOV     EAX,ECX
+	MOV     ECX,EDX
+	REP     STOSD
+@@exit:
+	POP     EDI
+{$endif}
+end;
+
+procedure FillUG(var Desc; Count: UG; Value: UG); register;
+{$ifdef CPUX64}
+var
+  I: NativeInt;
+  V: UG;
+  PB: PUG;
+  P: PInt64;
+  Total: NativeInt;
+begin
+  if Count >= 8 then
+  begin
+    V := Value;
+    P := PInt64(@Desc);
+    Total := Count;
+
+    for I := 0 to Total - 1 do
+    begin
+      P^ := V;
+      Inc(P);
+    end;
+    PB := Pointer(P);
+    Total := Count;
+  end
+  else
+  begin
+    PB := PUG(@Desc);
     Total := Count;
   end;
 
