@@ -79,10 +79,10 @@ procedure FileLinesAndSize(const FileName: TFileName; out Size, Lines: U8);
 procedure CodeLinesAndSize(const Dir: string; out Size, Lines: U8);
 
 function ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG): BG;
-function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: SG): BG;
+function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: UG): BG;
 
-function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
-function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
+function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
 
 function ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
 function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
@@ -90,16 +90,14 @@ function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString
 function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG; overload;
 function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
 function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
-function ReadStringFromFile(const FileName: TFileName; const Limit: SG): string; overload;
+function ReadStringFromFile(const FileName: TFileName; const Limit: U8): string; overload;
 function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG; overload;
 function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG; overload;
 
-{$IFDEF WIN32}
 function ShortToLongFileName(const ShortName: string): string;
 function ShortToLongPath(ShortName: string): string;
 {function LongToShortFileName(const LongName: string): string;
 function LongToShortPath(const LongName: string): string;}
-{$ENDIF WIN32}
 
 function RepairDirectory(const Dir: TFileName): TFileName;
 {$ifndef Console}
@@ -724,7 +722,7 @@ begin
 	if ListCount = 0 then Exit;
 
 	SetLength(AIndex, ListCount);
-	FillOrderU4(AIndex[0], ListCount);
+	FillOrderUG(AIndex[0], ListCount);
 	GList := @TSearchRecs(List);
 	Sort(PArraySG(AIndex), ListCount, Compare);
 
@@ -1574,7 +1572,7 @@ begin
 	end;
 end;
 
-function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: SG): BG;
+function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: UG): BG;
 var
 	F: TFile;
 begin
@@ -1594,7 +1592,7 @@ begin
 	end;
 end;
 
-function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
 var
 	F: TFile;
 begin
@@ -1612,7 +1610,7 @@ begin
 	end;
 end;
 
-function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: SG): BG;
+function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
 var
 	F: TFile;
 begin
@@ -1690,7 +1688,7 @@ begin
 	ReadStringFromFile(FileName, Result);
 end;
 
-function ReadStringFromFile(const FileName: TFileName; const Limit: SG): string;
+function ReadStringFromFile(const FileName: TFileName; const Limit: U8): string;
 var
 	F: TFile;
 	Data2: AnsiString;
@@ -1918,8 +1916,6 @@ begin
 	end;
 end;
 
-{$IFDEF WIN32}
-
 function ShortToLongFileName(const ShortName: string): string;
 var
 	Temp: TWIN32FindData;
@@ -2037,15 +2033,10 @@ begin
 	Result := TempPathPtr + Result;
 end;
 *)
-{$ENDIF WIN32}
 
 function RepairDirectory(const Dir: TFileName): TFileName;
 begin
-{$ifdef CPUX64}
-	Result := ExpandDir(Dir);
-{$else}
 	Result := ShortToLongPath(ExpandDir(Dir));
-{$endif}
 	if Result = '' then Exit;
 	while True do
 	begin
@@ -2239,11 +2230,7 @@ end;
 
 function SameFileName(const FileName1, FileName2: TFileName): BG;
 begin
-{$ifdef CPUX64}
-	Result := FileName1 = FileName2;
-{$else}
 	Result := ShortToLongPath(FileName1) = ShortToLongPath(FileName2);
-{$endif}
 end;
 
 function DialogStrWithoutAll(const Ext, Des: array of string): string;
@@ -2360,3 +2347,4 @@ initialization
 	InitPaths;
 	EnumToStr(TypeInfo(TFileMode), FileModeStr);
 end.
+

@@ -151,7 +151,7 @@ begin
 	if ListCount = 0 then Exit;
 
 	SetLength(AIndex, ListCount);
-	FillOrderU4(AIndex[0], ListCount);
+	FillOrderUG(AIndex[0], ListCount);
 	if SortBy <> fsNone then
 	begin
 		GList := @TSearchRecs(List);

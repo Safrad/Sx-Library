@@ -942,7 +942,7 @@ begin
 	ry := ry + Drawable.MinG.Y;
 end;
 
-procedure Tran(var Pos: TWorldPos; out GX, GY: SG); overload;
+procedure Tran(var Pos: TWorldPos; out GX, GY: S4); overload;
 var rx, ry: TFloat;
 begin
 	Tran(Pos, rx, ry);
@@ -1386,7 +1386,7 @@ var
 			for i := 1 to -Size do
 			begin
 				Pix(PN, COut);
-				Inc(SG(PN), n);
+				Inc(PByte(PN), n);
 			end;
 		end;
 	end;
@@ -1565,7 +1565,7 @@ begin
 //						if y >= Drawable.MaxBY then Break;
 						Inc(y);
 					end;}
-					Inc(SG(P), D);
+					Inc(PByte(P), D);
 					Inc(e, k2);
 				end;
 			end;
@@ -1608,7 +1608,7 @@ begin
 				begin
 					Inc(y);
 				end;
-				Inc(SG(P), DXY);
+				Inc(PByte(P), DXY);
 				NextPix;
 				if e < 0 then
 					Inc(e, k1)
@@ -2161,7 +2161,7 @@ begin
 	begin
 		if GP.Pos.Y = XYEnd then Exit;
 		Inc(GP.Pos.Y);
-		Inc(SG(P), DXY);
+		Inc(PByte(P), DXY);
 		if Drawable.EnableTexturing = True then
 		begin
 			Inc(GP.Tex.X, DTX);
@@ -2183,7 +2183,7 @@ begin
 		X := (XL + PreS) div PreM;
 {		if GP.X <= Drawable.MinBX then Exit;
 		if GP.X >= Drawable.MaxBX then Exit;}
-		Inc(SG(P), SizeOf(TPixel) * (X - GP.Pos.X));
+		Inc(PByte(P), SizeOf(TPixel) * (X - GP.Pos.X));
 		GP.Pos.X := X;
 
 
@@ -2484,7 +2484,7 @@ var
 	xy: TWorldPos;
 	mid: TFloat;
 	GX0, GY0, GX1, GY1, GX2, GY2: TFloat;
-	GX, GY: SG;
+	GX, GY: S4;
 	G0, G1: TGraphicPoint;
 	Divi: BG;
 begin

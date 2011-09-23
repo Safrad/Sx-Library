@@ -22,8 +22,13 @@ const
 	GB = 1024 * MB;
 
 type
-	SG = Integer; // NativeInt
-	UG = Cardinal; // NativeUInt
+{$ifdef CPUX64}
+	SG = NativeInt;
+	UG = NativeUInt;
+{$else}
+	SG = Integer;
+	UG = Cardinal;
+{$endif}
 	S1 = ShortInt;
 	U1 = Byte;
 	S2 = SmallInt;
@@ -32,6 +37,7 @@ type
 	U4 = LongWord;
 	S8 = Int64;
 	U8 = {$if CompilerVersion >= 23}UInt64{$else}Int64{$ifend};
+  TNative = {$ifdef CPUX64}U8{$else}U4{$endif};
 
 	PSG = ^SG;
 	PUG = ^UG;

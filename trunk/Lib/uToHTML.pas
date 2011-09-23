@@ -368,7 +368,7 @@ begin
 			end;
 
 			SetLength(AIndex, Items.Count);
-			FillOrderU4(AIndex[0], Items.Count);
+			FillOrderUG(AIndex[0], Items.Count);
 			Sort(PArraySG(AIndex), Items.Count, Compare);
 
 			HTML := THTML.Create(Dir + IndexFile);

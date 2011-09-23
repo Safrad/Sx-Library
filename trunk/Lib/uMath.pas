@@ -69,12 +69,16 @@ procedure Exchange(var A, B: S2); register; overload;
 procedure Exchange(var A, B: U4); register; overload;
 procedure Exchange(var A, B: S4); register; overload;
 procedure Exchange(var A, B: S8); register; overload;
+{$if CompilerVersion >= 23}
+procedure Exchange(var A, B: NativeInt); register; overload;
+procedure Exchange(var A, B: NativeUInt); register; overload;
+{$ifend}
 procedure Exchange(var A, B: F4); register; overload;
 procedure Exchange(var A, B: F8); register; overload;
 procedure Exchange(var A, B: FA); register; overload;
 procedure Exchange(var A, B: Pointer); register; overload;
-procedure Exchange(var P0, P1; Count: U4); register; overload;
-procedure Exchange(P0, P1: Pointer; Count: U4); register; overload;
+procedure Exchange(var P0, P1; Count: UG); register; overload;
+procedure Exchange(P0, P1: Pointer; Count: UG); register; overload;
 procedure Exchange(var s0, s1: string); overload;
 procedure Exchange(var A, B: TObject); overload;
 
@@ -88,6 +92,9 @@ procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
 procedure CheckBool(var Bool: LongBool); overload;
 
+{$if CompilerVersion >= 23}
+procedure Order(var I1, I2: S4); overload;
+{$ifend}
 procedure Order(var I1, I2: SG); overload;
 procedure Order(var I1, I2: UG); overload;
 procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
@@ -99,9 +106,10 @@ procedure FillU2(var Desc; Count: UG; Value: U2);
 procedure FillU4(var Desc; Count: UG; Value: U4);
 procedure FillOrderU1(var Desc; const Count: UG);
 procedure FillOrderU4(var Desc; const Count: UG);
+procedure FillOrderUG(var Desc; const Count: UG);
 procedure Reverse4(var Desc; Size: UG);
-function Checksum(var Desc; Size: UG): U4;
-function Hash(const Desc; Size: UG): U4;
+function Checksum(var Desc; Size: U4): U4;
+function Hash(const Desc; Size: U4): U4;
 procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
@@ -229,13 +237,13 @@ end;}
 
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1); register;
+{$ifdef CPUX64}
+begin
+  Res := Dividend div Divisor;
+  Remainder := Dividend mod Divisor;
+{$else}
 asm
 	div dl // al := ax div dl; ah := ax mod dl
-{$ifdef CPUX64}
-	mov rdx, Remainder
-	mov [rcx], al
-	mov [rdx], ah
-{$else}
 	mov edx, Remainder
 	mov [ecx], al
 	mov [edx], ah
@@ -244,18 +252,12 @@ end;
 
 procedure DivModU4(const Dividend: U4; const Divisor: U2;
 	out Res, Remainder: U2); register;
-asm
 {$ifdef CPUX64}
-	push rbx
-	mov bx, dx
-	mov edx, eax
-	shr edx, 16
-	div bx // ax := dx&ax div bx; dx := dx&ax mod bx
-	mov rbx, Remainder
-	mov [rcx], ax
-	mov [rbx], dx
-	pop rbx
+begin
+  Res := Dividend div Divisor;
+  Remainder := Dividend mod Divisor;
 {$else}
+asm
 	push ebx
 	mov bx, dx
 	mov edx, eax
@@ -270,18 +272,12 @@ end;
 
 procedure DivModS4(const Dividend: S4; const Divisor: S2;
 	out Res, Remainder: S2); register;
-asm
 {$ifdef CPUX64}
-	push rbx
-	mov ebx, edx
-	mov edx, eax
-	shr edx, 16
-	idiv bx // ax := dx&ax div bx; dx := dx&ax mod bx
-	mov rbx, Remainder
-	mov [rcx], ax
-	mov [rbx], dx
-	pop rbx
+begin
+  Res := Dividend div Divisor;
+  Remainder := Dividend mod Divisor;
 {$else}
+asm
 	push ebx
 	mov ebx, edx
 	mov edx, eax
@@ -727,66 +723,147 @@ end;
 *)
 
 procedure Exchange(var A, B: B1); register;
+{$ifdef CPUX64}
+var
+  C: B1;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov cl, [A]
 	xchg cl, [B]
 	mov [A], cl
+{$endif}
 end;
 
 procedure Exchange(var A, B: U1); register;
+{$ifdef CPUX64}
+var
+  C: U1;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov cl, [A]
 	xchg cl, [B]
 	mov [A], cl
+{$endif}
 end;
 
 procedure Exchange(var A, B: S1); register;
+{$ifdef CPUX64}
+var
+  C: S1;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov cl, [A]
 	xchg cl, [B]
 	mov [A], cl
+{$endif}
 end;
 
 procedure Exchange(var A, B: U2); register;
+{$ifdef CPUX64}
+var
+  C: U2;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov cx, [A]
 	xchg cx, [B]
 	mov [A], cx
+{$endif}
 end;
 
 procedure Exchange(var A, B: S2); register;
+{$ifdef CPUX64}
+var
+  C: S2;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov cx, [A]
 	xchg cx, [B]
 	mov [A], cx
+{$endif}
 end;
 
 procedure Exchange(var A, B: B4); register;
+{$ifdef CPUX64}
+var
+  C: B4;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov ecx, [A]
 	xchg ecx, [B]
 	mov [A], ecx
+{$endif}
 end;
 
 procedure Exchange(var A, B: U4); register;
+{$ifdef CPUX64}
+var
+  C: U4;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov ecx, [A]
 	xchg ecx, [B]
 	mov [A], ecx
+{$endif}
 end;
 
 procedure Exchange(var A, B: S4); register;
+{$ifdef CPUX64}
+var
+  C: S4;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov ecx, [A]
 	xchg ecx, [B]
 	mov [A], ecx
+{$endif}
 end;
 
-procedure Exchange(var A, B: Pointer); register; // 32bit only
+procedure Exchange(var A, B: Pointer); register;
+{$ifdef CPUX64}
+var
+  C: Pointer;
+begin
+  C := A;
+  A := B;
+  B := C;
+{$else}
 asm
 	mov ecx, [A]
 	xchg ecx, [B]
 	mov [A], ecx
+{$endif}
 end;
 
 procedure Exchange(var A, B: S8);
@@ -796,6 +873,25 @@ begin
 	A := B;
 	B := C;
 end;
+
+{$if CompilerVersion >= 23}
+procedure Exchange(var A, B: NativeInt);
+var C: NativeInt;
+begin
+	C := A;
+	A := B;
+	B := C;
+end;
+
+procedure Exchange(var A, B: NativeUInt);
+var C: NativeInt;
+begin
+	C := A;
+	A := B;
+	B := C;
+end;
+
+{$ifend}
 
 procedure Exchange(var A, B: F4);
 var C: F8;
@@ -821,18 +917,27 @@ begin
 	B := C;
 end;
 
-{
-	push [A]
-	push [B]
-	pop [A]
-	pop [B]
-	+4
-}
-
-procedure Exchange(var P0, P1; Count: U4); register;
+procedure Exchange(var P0, P1; Count: UG); register;
 asm
 {$ifdef CPUX64}
-// TODO
+	push rdi
+	push rsi
+
+	MOV rSI,rAX
+	MOV rDI,rDX
+	ADD rDX,rCX
+	@Loop:
+		mov al, [esi]
+		xchg al, [rdi]
+		mov [rsi], al
+		add rdi, 1
+		add rsi, 1
+		cmp rdi, rdx
+	jb @Loop
+
+	POP rSI
+	POP rDI
+
 {$else}
 	push edi
 	push esi
@@ -857,7 +962,23 @@ end;
 procedure Exchange(P0, P1: Pointer; Count: UG); register;
 asm
 {$ifdef CPUX64}
-// TODO
+	PUSH rDI
+	PUSH rSI
+
+	MOV ESI,EAX
+	MOV EDI,EDX
+	ADD EDX,ECX
+	@Loop:
+		mov al, [esi]
+		xchg al, [edi]
+		mov [esi], al
+		add edi, 1
+		add esi, 1
+		cmp edi, edx
+	jb @Loop
+
+	POP rSI
+	POP rDI
 {$else}
 	PUSH EDI
 	PUSH ESI
@@ -892,9 +1013,9 @@ procedure Exchange(var A, B: TObject);
 var
 	T: TObject;
 begin
-	T := B;
-	B := A;
-	A := T;
+	T := A;
+	A := B;
+	B := T;
 end;
 
 function Arg(X, Y: Extended): Extended; // <0..2pi)
@@ -925,6 +1046,19 @@ procedure CheckBool(var Bool: B4);
 begin
 	Bool := B4(U4(Bool) and 1);
 end;
+
+{$if CompilerVersion >= 23}
+procedure Order(var I1, I2: S4);
+var I: S4;
+begin
+	if I1 > I2 then
+	begin
+		I := I1;
+		I1 := I2;
+		I2 := I;
+	end;
+end;
+{$ifend}
 
 procedure Order(var I1, I2: SG);
 var I: SG;
@@ -1003,7 +1137,6 @@ begin
       Exit;
     end;
 
-
     Inc(PByte(P0), 1);
     Inc(PByte(P1), 1);
   end;
@@ -1065,9 +1198,43 @@ begin
 end;
 
 procedure FillU2(var Desc; Count: UG; Value: U2); register;
-asm
 {$ifdef CPUX64}
+var
+  I: NativeInt;
+  V: Int64;
+  PB: PU2;
+  P: PInt64;
+  Total: NativeInt;
+begin
+  if Count >= 8 then
+  begin
+    V := Word(Value) or (Word(Value) shl 16);
+    V := V or (V shl 32);
+    P := PInt64(@Desc);
+    Total := Count shr 2;
+
+    for I := 0 to Total - 1 do
+    begin
+      P^ := V;
+      Inc(P);
+    end;
+    PB := Pointer(P);
+    { Get the remainder (mod 4) }
+    Total := Count and $03;
+  end
+  else
+  begin
+    PB := PU2(@Desc);
+    Total := Count;
+  end;
+
+  for I := Total - 1 downto 0 do
+  begin
+    PB^ := Value;
+    Inc(PB);
+  end;
 {$else}
+asm
 	PUSH    EDI
 	MOV     EDI,EAX
 	MOV     EAX,ECX
@@ -1082,9 +1249,42 @@ asm
 end;
 
 procedure FillU4(var Desc; Count: UG; Value: U4); register;
-asm
 {$ifdef CPUX64}
+var
+  I: NativeInt;
+  V: Int64;
+  PB: PU4;
+  P: PInt64;
+  Total: NativeInt;
+begin
+  if Count >= 8 then
+  begin
+    V := NativeInt(Value) or (NativeInt(Value) shl 32);
+    P := PInt64(@Desc);
+    Total := Count shr 1;
+
+    for I := 0 to Total - 1 do
+    begin
+      P^ := V;
+      Inc(P);
+    end;
+    PB := Pointer(P);
+    { Get the remainder (mod 4) }
+    Total := Count and $01;
+  end
+  else
+  begin
+    PB := PU4(@Desc);
+    Total := Count;
+  end;
+
+  for I := Total - 1 downto 0 do
+  begin
+    PB^ := Value;
+    Inc(PB);
+  end;
 {$else}
+asm
 	PUSH    EDI
 	MOV     EDI,EAX
 	MOV     EAX,ECX
@@ -1096,9 +1296,19 @@ asm
 end;
 
 procedure FillOrderU1(var Desc; const Count: UG); register;
-asm
 {$ifdef CPUX64}
+var
+  P: PU1;
+  i: SG;
+begin
+  P := PU1(@Desc);
+  for i := 0 to Count - 1 do
+  begin
+    P^ := i;
+    Inc(P);
+  end;
 {$else}
+asm
 	cmp Count, 0
 	je @Exit
 	add Count, Desc
@@ -1114,9 +1324,48 @@ asm
 end;
 
 procedure FillOrderU4(var Desc; const Count: UG); register;
-asm
 {$ifdef CPUX64}
+var
+  P: PU4;
+  i: SG;
+begin
+  P := PU4(@Desc);
+  for i := 0 to Count - 1 do
+  begin
+    P^ := i;
+    Inc(P);
+  end;
 {$else}
+asm
+	cmp Count, 0
+	je @Exit
+	shl Count, 2
+	add Count, Desc
+	xor ecx, ecx
+	@Loop:
+		mov [Desc], ecx
+		add Desc, 4
+		cmp Desc, Count
+		inc ecx
+	jb @Loop
+	@Exit:
+{$endif}
+end;
+
+procedure FillOrderUG(var Desc; const Count: UG); register;
+{$ifdef CPUX64}
+var
+  P: PUG;
+  i: SG;
+begin
+  P := PUG(@Desc);
+  for i := 0 to Count - 1 do
+  begin
+    P^ := i;
+    Inc(P);
+  end;
+{$else}
+asm
 	cmp Count, 0
 	je @Exit
 	shl Count, 2
@@ -1133,9 +1382,25 @@ asm
 end;
 
 procedure Reverse4(var Desc; Size: UG); register;
-asm
 {$ifdef CPUX64}
+var
+  P1, P2: PU4;
+  i: SG;
+  d1, d2: U4;
+begin
+  P1 := PU4(@Desc);
+  P2 := PU4(PByte(@Desc) + Size);
+  for i := 0 to Size div 2 - 1 do
+  begin
+    d1 := P1^;
+    d2 := P2^;
+    P1^ := d2;
+    P2^ := d1;
+    Inc(P1);
+    Inc(P2);
+  end;
 {$else}
+asm
 	push esi
 	push ebx
 	mov esi, Desc
@@ -1163,7 +1428,7 @@ asm
 {$endif}
 end;
 
-function Checksum(var Desc; Size: UG): U4; register;
+function Checksum(var Desc; Size: U4): U4; register;
 asm
 	mov Result, 0
 	and Size, $fffffffc
@@ -1181,7 +1446,7 @@ asm
 	@Exit:
 end;
 
-function Hash(const Desc; Size: UG): U4; register;
+function Hash(const Desc; Size: U4): U4; register;
 {const
 	Shift = 6;
 	Mask = 1 shl (8 * SizeOf(Result) - Shift);

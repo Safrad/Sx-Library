@@ -8,7 +8,7 @@ unit uDBitmap;
 interface
 
 uses
-	OpenGL12, {$ifdef GDIPlus}GdiPlus,{$endif}
+	Math, OpenGL12, {$ifdef GDIPlus}GdiPlus,{$endif}
 	uTypes, uMath, uColor, uDrawStyle, uBlur,
 	Classes, Forms, Windows, Graphics, ExtCtrls, SysUtils;
 
@@ -63,7 +63,7 @@ const
 	MaxTyp = 14;
 
 type
-	TCoor = S4;
+	TCoor = SG;
 
 	TInterruptProcedure = function(const Done: SG): BG;
 const
@@ -399,8 +399,68 @@ uses
 	{$ifdef GDIPlus}
 	GraphicEx,
 	{$endif}
-	Math, ClipBrd, ExtDlgs, StdCtrls, Dialogs,
+	ClipBrd, ExtDlgs, StdCtrls, Dialogs,
 	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
+
+{$ifdef CPUX64}
+function SameColor(const P: PPixel; const C: TRGBA): BG; inline;
+begin
+  Result := (P.RG = C.RG) and (P.B = C.B);
+end;
+
+function SubPixelEffect(const SC, DC: Integer; const Effect: TEffect): U1; {$ifopt d-}inline;{$endif}
+begin
+  case Effect of
+    ef00: Result := SC;
+    ef01: Result := (15 * SC + 01 * DC) div 16;
+    ef02: Result := (14 * SC + 02 * DC) div 16;
+    ef03: Result := (13 * SC + 03 * DC) div 16;
+    ef04: Result := (12 * SC + 04 * DC) div 16;
+    ef05: Result := (11 * SC + 05 * DC) div 16;
+    ef06: Result := (10 * SC + 06 * DC) div 16;
+    ef07: Result := (09 * SC + 07 * DC) div 16;
+    ef08: Result := (SC + DC) div 2;
+    ef09: Result := (07 * SC + 09 * DC) div 16;
+    ef10: Result := (06 * SC + 10 * DC) div 16;
+    ef11: Result := (05 * SC + 11 * DC) div 16;
+    ef12: Result := (04 * SC + 12 * DC) div 16;
+    ef13: Result := (03 * SC + 13 * DC) div 16;
+    ef14: Result := (02 * SC + 14 * DC) div 16;
+    ef15: Result := (01 * SC + 15 * DC) div 16;
+    ef16: Result := DC;
+    efAdd: Result := Min(255, SC + DC);
+    efSub: Result := Max(0, SC - DC);
+    efAdd127: Result := Range(0, SC + DC - 127, 255);
+    efSub127: Result := Range(0, SC - DC + 127, 255);
+    efXor: Result := SC xor DC;
+    efNeg:
+    begin
+      if SC <= 127 then
+        Result := 255
+      else
+        Result := 0;
+    end;
+    efDif: Result := SC;
+    else Result := SC;
+  end;
+end;
+
+procedure PutEffect(const P: PPixel; const C: TRGBA; const Effect: TEffect); {$ifopt d-}inline;{$endif}
+begin
+  if Effect = ef16 then
+  begin
+    P.RG := C.RG;
+    P.B := C.B;
+  end
+  else
+  begin
+    P.R := SubPixelEffect(P.R, C.R, Effect);
+    P.G := SubPixelEffect(P.G, C.G, Effect);
+    P.B := SubPixelEffect(P.B, C.B, Effect);
+  end;
+end;
+
+{$endif}
 
 function WidthToByteX4(const Width: UG): UG;
 begin
@@ -1299,6 +1359,7 @@ end;
 procedure LefDif;
 asm
 	{$i efBLoop.inc}
+  // TODO : Not implemented
 	{$i efELoop.inc}
 end;
 
@@ -1308,10 +1369,18 @@ const
 		LefAdd, LefSub, LefAdd127, LefSub127, LefXor, LefNeg, LefDif);
 
 procedure PixFast(Dst{eax}: PPixel; Src{edx}: PPixel; Width{ecx}: SG; Effect: TEffect); register;
-asm
 {$ifdef CPUX64}
-// TODO
+var
+  i: SG;
+begin
+  for i := 0 to Width - 1 do
+  begin
+    PutEffect(Dst, Src^, Effect);
+    Inc(Src);
+    Inc(Dst);
+  end;
 {$else}
+asm
 	pushad
 	{$ifdef BPP4}
 	shl ecx, 2
@@ -1342,10 +1411,14 @@ begin
 end;
 
 procedure Pix(PD: Pointer; ByteXD: UG; X, Y: U4; C: PRGBA; Effect: TEffect); register;
-asm
 {$ifdef CPUX64}
-// TODO
+var
+  Dst: PPixel;
+begin
+	Dst := PPixel(PByte(PD) - UG(Y) * UG(ByteXD) + {$ifdef BPP4}UG(X) shl 2{$else}UG(X) + UG(X) + UG(X){$endif});
+  PutEffect(Dst, C^, Effect);
 {$else}
+asm
 	pushad
 	mov edi, X
 	{$ifdef BPP4}
@@ -1412,10 +1485,14 @@ begin
 end;
 
 procedure GetPix(PD: Pointer; ByteXD: UG; X, Y: U4; out C: TRGBA); register;
-asm
 {$ifdef CPUX64}
-// TODO
+var
+  Dst: PPixel;
+begin
+	Dst := PPixel(PByte(PD) - UG(Y) * UG(ByteXD) + {$ifdef BPP4}UG(X) shl 2{$else}UG(X) + UG(X) + UG(X){$endif});
+  C := Dst^;
 {$else}
+asm
 	push edi
 
 	mov edi, X
@@ -1506,7 +1583,7 @@ begin
 	SetSize(0, 0, clNone);
 end;
 
-procedure TDBitmap.SetSize(NewWidth, NewHeight: SG; const InitialColor: TColor = clNone);
+procedure TDBitmap.SetSize(NewWidth, NewHeight: TCoor; const InitialColor: TColor = clNone);
 begin
 	NewWidth := Range(0, NewWidth, MaxBitmapWidth);
 	NewHeight := Range(0, NewHeight, MaxBitmapHeight);
@@ -1533,7 +1610,7 @@ begin
 			begin
 //				GetMem(FData, FByteX * Height);
 				FData := ScanLine[0]; // SG(FData) + FByteX * (FHeight - 1);
-				FGLData := PPixel(UG(FData) - UG(FByteX * (FHeight - 1)));
+				FGLData := PPixel(TNative(FData) - UG(FByteX * (FHeight - 1)));
 			end;
 		except
 			on E: Exception do
@@ -1564,7 +1641,7 @@ const
 	MaxHeight = 256;}
 var
 //	Sh: SG;
-	NewWidth, NewHeight: TCoor;
+	NewWidth, NewHeight: SG;
 begin
 (*	Sh := CalcShr(FWidth);
 	NewWidth := Min(1 shl Sh, MaxWidth);
@@ -1585,17 +1662,29 @@ end;
 
 procedure TDBitmap.SwapRB;
 var
-	PD: Pointer;
+	PD: PPixel;
 	cy: TCoor;
 	ByteXD: UG;
+{$ifdef CPUX64}
+	cx: TCoor;
+  R: U1;
+{$endif}
 begin
 	if FData = nil then Exit;
-	
-	PD := Pointer(UG(FData) - UG(GraphMinY) * ByteXD);
+
 	ByteXD := FByteX;
+	PD := Pointer(TNative(FData) - UG(GraphMinY) * ByteXD);
 	for cy := GraphMinY to GraphMaxY do
 	begin
 {$ifdef CPUX64}
+  	PD := GetPixelAddr(GraphMinX, cy);
+  	for cx := GraphMinX to GraphMaxX do
+  	begin
+      R := PD.R;
+      PD.R := PD.B;
+      PD.B := R;
+      Inc(PD);
+    end;
 {$else}
 		asm
 		pushad
@@ -1623,16 +1712,25 @@ end;
 
 procedure TDBitmap.Neg;
 var
-	PD: Pointer;
+	PD: PPixel;
 	cy: TCoor;
 	ByteXD: UG;
+{$ifdef CPUX64}
+	cx: TCoor;
+{$endif}
 begin
-	PD := Pointer(UG(FData) - UG(GraphMinY) * ByteXD);
 	ByteXD := FByteX;
+	PD := Pointer(TNative(FData) - UG(GraphMinY) * ByteXD);
 	for cy := GraphMinY to GraphMaxY do
 	begin
 {$ifdef CPUX64}
-// TODO
+  	PD := GetPixelAddr(GraphMinX, cy);
+  	for cx := GraphMinX to GraphMaxX do
+  	begin
+      PD.RG := PD.RG xor $ffff;
+      PD.B := PD.B xor $ff;
+      Inc(PD);
+    end;
 {$else}
 		asm
 		pushad
@@ -2556,6 +2654,9 @@ var
 	ByteXD: UG;
 	EndPD: SG;
 	CR: TRGBA;
+{$ifdef CPUX64}
+  cx, cy: TCoor;
+{$endif}
 begin
 	Result := 0;
 	CR := ColorToRGB(C);
@@ -2567,6 +2668,16 @@ begin
 	EndPD := SG(PD) - SG(FByteX * FHeight);
 
 {$ifdef CPUX64}
+	for cy := GraphMinY to GraphMaxY do
+	begin
+  	PD := GetPixelAddr(GraphMinX, cy);
+  	for cx := GraphMinX to GraphMaxX do
+  	begin
+      if (PD.RG = CR.RG) and (PD.B = CR.B) then
+        Inc(Result);
+      Inc(PD);
+    end;
+  end;
 {$else}
 	asm
 	pushad
@@ -3040,9 +3151,12 @@ var
 
 	WordR, WordG, WordB: U2;
 	BackColorR, CR: TRGBA;
+{$ifdef CPUX64}
+  cx, cy: TCoor;
+{$endif}
 begin
 	if (Effect = ef00) or (C = clNone) or (Data = nil) then Exit;
-	CR:= ColorToRGBStack(C);
+	CR := ColorToRGBStack(C);
 
 	if InternallCutWindow(XD1, YD1, XD2, YD2) then Exit;
 
@@ -3051,11 +3165,20 @@ begin
 	HX := XD2 - XD1 + 1;
 	{$ifdef BPP4}UseXS := HX shl 2{$else}UseXS := HX + HX + HX{$endif};
 	PD := GetPixelAddr(XD1, YD1);
-	EndPD := UG(PD) - UG(ByteXD * UG(YD2 - YD1 + 1));
+	EndPD := TNative(PD) - UG(ByteXD * UG(YD2 - YD1 + 1));
 
 	if Transparent = False then
 	begin
 {$ifdef CPUX64}
+    for cy := YD1 to YD2 do
+    begin
+    	PD := GetPixelAddr(XD1, cy);
+      for cx := XD1 to XD2 do
+      begin
+        PutEffect(PD, CR, Effect);
+        Inc(PD);
+      end;
+    end;
 {$else}
 		asm
 		pushad
@@ -3985,6 +4108,18 @@ begin
 		WordG := CR.G;
 		WordR := CR.B;
 {$ifdef CPUX64}
+    for cy := YD1 to YD2 do
+    begin
+    	PD := GetPixelAddr(XD1, cy);
+      for cx := XD1 to XD2 do
+      begin
+        if not SameColor(PD, BackColorR) then
+        begin
+          PutEffect(PD, CR, Effect);
+        end;
+        Inc(PD);
+      end;
+    end;
 {$else}
 		asm
 		pushad
@@ -5097,13 +5232,13 @@ begin
 	Tran := Source.Transparent;
 	TranC := Source.ColorToRGBStack(Source.TransparentColor);
 
-	PLineSource := PPixel(UG(Source.FData) - UG(Range.Top) * UG(Source.FByteX));
-	PLineTarget:= PPixel(UG(Target.FData) - UG(Range.Top) * UG(Target.FByteX));
+	PLineSource := PPixel(TNative(Source.FData) - UG(Range.Top) * UG(Source.FByteX));
+	PLineTarget:= PPixel(TNative(Target.FData) - UG(Range.Top) * UG(Target.FByteX));
 	for Y := Range.Top to Range.Bottom do
 	begin
-		PFrom := Pointer(UG(PLineSource) + BPP * UG(Range.Left));
-		PTo := Pointer(UG(PLineSource) + BPP * UG(Range.Right));
-		PTarget := Pointer(UG(PLineTarget) + BPP * UG(Range.Left));
+		PFrom := Pointer(TNative(PLineSource) + BPP * UG(Range.Left));
+		PTo := Pointer(TNative(PLineSource) + BPP * UG(Range.Right));
+		PTarget := Pointer(TNative(PLineTarget) + BPP * UG(Range.Left));
 		PLast := nil; // PFrom;
 		x := Range.Left;
 		repeat
@@ -5135,13 +5270,13 @@ begin
 					begin
 						if y < Source.Height - 1  then // y > 0 then
 						begin
-							Inc(Suma, PPixel(UG(PFrom) - UG(Source.FByteX)).I[j]);
+							Inc(Suma, PPixel(TNative(PFrom) - UG(Source.FByteX)).I[j]);
 							Inc(Divi);
 						end;
 
 						if y > 0 then // y < Source.Height - 1 then
 						begin
-							Inc(Suma, PPixel(UG(PFrom) + UG(Source.FByteX)).I[j]);
+							Inc(Suma, PPixel(TNative(PFrom) + UG(Source.FByteX)).I[j]);
 							Inc(Divi);
 						end;
 					end;
@@ -5432,8 +5567,13 @@ procedure TDBitmap.BarBrg(
 var
 	PD: PPixel;
 	cy: TCoor;
-	UseXS, ByteXD: TCoor;
+	UseXS: TCoor;
 	HX: TCoor;
+{$ifdef CPUX64}
+  cx: TCoor;
+{$else}
+  ByteXD: TCoor;
+{$endif}
 begin
 	HX := X2 - X1 + 1;
 	{$ifdef BPP4}UseXS := HX shl 2{$else}UseXS := HX + HX + HX{$endif};
@@ -5441,6 +5581,14 @@ begin
 	cy := Y1;
 	repeat
 {$ifdef CPUX64}
+    PD := GetPixelAddr(X1, cy);
+    for cx := X1 to X2 do
+    begin
+      PD.R := PD.R div 2;
+      PD.G := PD.G div 2;
+      PD.B := PD.B div 2;
+      Inc(PD);
+    end;
 {$else}
 		asm
 		pushad
@@ -5490,6 +5638,9 @@ var
 	EndPD: SG;
 	CR: TRGBA;
 	C: TColor;
+{$ifdef CPUX64}
+  cx, cy: TCoor;
+{$endif}
 begin
 	if (Effect = ef00) or (BmpS = nil) then Exit;
 
@@ -5562,13 +5713,25 @@ begin
 	PD := GetPixelAddr(XD1, YD1);
 	PS := BmpS.GetPixelAddr(XS1, YS1);
 
-	EndPD := SG(PD) - SG(ByteXD * UG(YS2 + 1 - YS1));
+	EndPD := TNative(PD) - UG(ByteXD * UG(YS2 + 1 - YS1));
 
 	if BmpS.Transparent = False then C := clNone else C := BmpS.TransparentColor;
 
 	if C = clNone then
 	begin
 {$ifdef CPUX64}
+    for cy := YD1 to YD1 + YS2 - YS1 do
+    begin
+    	PD := GetPixelAddr(XD1, cy);
+    	PS := BmpS.GetPixelAddr(XS1, YS1);
+      for cx := XS1 to XS2 do
+      begin
+        PutEffect(PD, PS^, Effect);
+        Inc(PD);
+        Inc(PS);
+      end;
+      Inc(YS1);
+    end;
 {$else}
 		asm
 		pushad
@@ -6519,6 +6682,21 @@ begin
 	begin
 		CR := ColorToRGB(C);
 {$ifdef CPUX64}
+    for cy := YD1 to YD1 + YS2 - YS1 do
+    begin
+    	PD := GetPixelAddr(XD1, cy);
+    	PS := BmpS.GetPixelAddr(XS1, YS1);
+      for cx := XS1 to XS2 do
+      begin
+        if not SameColor(PS, CR) then
+        begin
+          PutEffect(PD, PS^, Effect);
+        end;
+        Inc(PD);
+        Inc(PS);
+      end;
+      Inc(YS1);
+    end;
 {$else}
 		asm
 		pushad
@@ -7594,7 +7772,7 @@ begin
 
 	SetLength(CColor, 0);
 	SetLength(CCount, 0);
-	L := Min(Limit + 1, Width * Height);
+	L := Min(Limit + 1, UG(Width) * UG(Height));
 	SetLength(CColor, L);
 	SetLength(CCount, L);
 	C2 := Data;
@@ -7701,11 +7879,14 @@ procedure TDBitmap.ChangeColor(
 	X1, Y1, X2, Y2: SG;
 	const C1, C2: TColor);
 var
-	PD: Pointer;
+	PD: PPixel;
 	CC1, CC2: TRGBA;
 	cy: TCoor;
 	BmpDByteX: UG;
 	ByteXD: UG;
+{$ifdef CPUX64}
+  cx: TCoor;
+{$endif}
 begin
 	if X1 > TCoor(GraphMaxX) then Exit;
 	if X1 < GraphMinX then
@@ -7745,6 +7926,16 @@ begin
 	for cy := Y1 to Y2 do
 	begin
 {$ifdef CPUX64}
+  	PD := GetPixelAddr(GraphMinX, cy);
+  	for cx := X1 to X2 do
+  	begin
+      if (PD.RG = CC1.RG) and (PD.B = CC1.B) then
+      begin
+        PD.RG := CC2.RG;
+        PD.B := CC2.B;
+      end;
+      Inc(PD);
+    end;
 {$else}
 		asm
 		pushad
@@ -7796,11 +7987,14 @@ procedure TDBitmap.ChangeColor2(
 	const X1, Y1, X2, Y2: SG;
 	const CS1, CS2, CD1, CD2: TColor);
 var
-	PD: Pointer;
+	PD: PPixel;
 	S1, S2, D1, D2: TRGBA;
 	cy: TCoor;
 	BmpDByteX: UG;
 	ByteXD: UG;
+{$ifdef CPUX64}
+  cx: TCoor;
+{$endif}
 begin
 	S1 := ColorToRGB(CS1);
 	S2 := ColorToRGB(CS2);
@@ -7813,6 +8007,21 @@ begin
 	for cy := Y1 to Y2 do
 	begin
 {$ifdef CPUX64}
+  	PD := GetPixelAddr(X1, cy);
+  	for cx := X1 to X2 do
+  	begin
+      if (PD.RG = S1.RG) and (PD.B = S1.B) then
+      begin
+        PD.RG := D1.RG;
+        PD.B := D1.B;
+      end
+      else if (PD.RG = S2.RG) and (PD.B = S2.B) then
+      begin
+        PD.RG := D2.RG;
+        PD.B := D2.B;
+      end;
+      Inc(PD);
+    end;
 {$else}
 		asm
 		pushad
@@ -7878,17 +8087,28 @@ end;
 
 procedure TDBitmap.ChangeBW(const C: TColor);
 var
-	PD: Pointer;
+	PD: PPixel;
 	CR: TRGBA;
 	cy: TCoor;
 	ByteXD: UG;
+{$ifdef CPUX64}
+	cx: TCoor;
+{$endif}
 begin
 	CR := ColorToRGB(C);
-	PD := Pointer(UG(FData) - UG(GraphMinY) * ByteXD);
 	ByteXD := FByteX;
+	PD := Pointer(TNative(FData) - UG(GraphMinY) * ByteXD);
 	for cy := GraphMinY to GraphMaxY do
 	begin
 {$ifdef CPUX64}
+  	PD := GetPixelAddr(GraphMinX, cy);
+  	for cx := GraphMinX to GraphMaxX do
+  	begin
+      PD.R := PD.R * CR.R shr 8;
+      PD.G := PD.G * CR.G shr 8;
+      PD.B := PD.B * CR.B shr 8;
+      Inc(PD);
+    end;
 {$else}
 		asm
 		pushad
@@ -7944,8 +8164,8 @@ begin
 	PLine := PPixel(SG(FData) - Rect.Top * FByteX);
 	for Y := Rect.Top to Rect.Bottom do
 	begin
-		PFrom := Pointer(UG(PLine) + BPP * UG(Rect.Left));
-		PTo := Pointer(UG(PLine) + BPP * UG(Rect.Right));
+		PFrom := Pointer(TNative(PLine) + BPP * UG(Rect.Left));
+		PTo := Pointer(TNative(PLine) + BPP * UG(Rect.Right));
 		repeat
 			if (Tran = False) or
 			(PFrom.RG <> TranC.RG) or
@@ -8317,8 +8537,8 @@ begin
 			if InterruptProcedure((Y * MaxDone) div SY) then Break;
 		end;
 		SizeInBytes := UG(Y) * UG(ByteX) - BPP * UG(Rect.Left);
-		PSource := Pointer(UG(BmpS.Data) - SizeInBytes);
-		PDest := Pointer(UG(Data) - SizeInBytes);
+		PSource := Pointer(TNative(BmpS.Data) - SizeInBytes);
+		PDest := Pointer(TNative(Data) - SizeInBytes);
 		for X := Rect.Left to Rect.Right do
 		begin
 			if (TransparentColor.RG <> PSource.RG) or
@@ -8450,8 +8670,7 @@ var
 	CX, CY: SG;
 
 	R, G, B, A: SG;
-	Pixel: TPixel;
-	Done, LDone: U2;
+	LDone: U2;
 	C: array[0..3] of TRGBA;
 	RColor: TPixel;
 	HidedColor: TColor;
@@ -8532,8 +8751,8 @@ begin
 
 		if (HidedColor = clNone) then
 			GetMem(LineA, BPP * FWidth);
-		PDY := Pointer(SG(Data) - SG(ByteX) * YD1);
-		LDone := High(Done);
+		PDY := Pointer(TNative(Data) - UG(ByteX) * UG(YD1));
+		LDone := High(LDone);
 		for CY := YD1 to YD2 do
 		begin
 			Y := CY - YD1;
@@ -8656,8 +8875,8 @@ begin
 				end;
 				gfFade2x:
 				begin
-					PX := PPixel(UG(LineX) + UG(X) * BPP);
-					PY := PPixel(UG(LineY) + UG(Y) * BPP);
+					PX := PPixel(TNative(LineX) + UG(X) * BPP);
+					PY := PPixel(TNative(LineY) + UG(Y) * BPP);
 					R := (PX.R + PY.R) shr 1;
 					G := (PX.G + PY.G) shr 1;
 					B := (PX.B + PY.B) shr 1;
@@ -8765,10 +8984,12 @@ begin
 					PDXY^.L := clNone;}
 
 				Inc(PDXY);
-				Inc(X); if X >= MaxX then X := 0;
+				Inc(X);
+        if X >= MaxX then
+          X := 0;
 			end;
 			if (HidedColor = clNone) then
-				PixFast(Pointer(UG(PDY) + BPP * UG(XD1)), LineA, MaxX, Effect);
+				PixFast(Pointer(TNative(PDY) + BPP * UG(XD1)), LineA, MaxX, Effect);
 			Dec(PByte(PDY), ByteX);
 		end;
 	finally
@@ -8904,11 +9125,11 @@ var
 	XS, YS, XD, YD: SG;
 	TmpYSToXD, TmpYSToYD: SG;
 
-	PD, PS, PDataS: Pointer;
+	PD, PS, PDataS: PPixel;
 	ByteXD, ByteXS: UG;
 
 	BmpSWidth, BmpSHeight: SG;
-	TransparentColor: TColor;
+	TransparentColor: TRGBA;
 	Same: BG;
 begin
 	if Effect = ef00 then Exit;
@@ -8932,9 +9153,9 @@ begin
 
 
 	if BmpS.Transparent then
-		TransparentColor := ColorToRGB(BmpS.TransparentColor) and $00ffffff
+		TransparentColor.L := ColorToRGB(BmpS.TransparentColor)
 	else
-		TransparentColor := clNone;
+		TransparentColor.L := clNone;
 
 	DirXSToXD := DirXSToXD and (AngleCount - 1);
 	DirXSToYD := DirXSToYD and (AngleCount - 1);
@@ -8966,6 +9187,11 @@ begin
 			if (YD < 0) or (YD >= SG(BmpD.Height)) then goto LNext;
 			{$endif}
 {$ifdef CPUX64}
+      if not SameColor(PS, TransparentColor) then
+      begin
+        PD := BmpD.GetPixelAddr(XD, YD);
+        PutEffect(PD, PS^, Effect);
+      end;
 {$else}
 			asm
 			pushad
@@ -10588,7 +10814,7 @@ begin
 	end;
 end;
 
-procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: SG);
+procedure RAToXY(Len: SG; Angle: TAngle; out X, Y: S4);
 begin
 	X := RoundDiv(Len * (Sins[Angle mod AngleCount]), SinDiv);
 	Y := RoundDiv(Len * (Sins[(AngleCount div 4 + Angle) mod AngleCount]), SinDiv);
@@ -11306,7 +11532,7 @@ end;
 
 function TDBitmap.GetPixelAddr(const X, Y: TCoor): PPixel;
 begin
-	Result := PPixel(UG(FData) - UG(Y) * UG(FByteX) + {$ifdef BPP4}UG(X) shl 2{$else}UG(X) + UG(X) + UG(X){$endif});
+	Result := PPixel(TNative(FData) - UG(Y) * UG(FByteX) + {$ifdef BPP4}UG(X) shl 2{$else}UG(X) + UG(X) + UG(X){$endif});
 end;
 
 procedure TDBitmap.Init(const InitialColor: TColor);

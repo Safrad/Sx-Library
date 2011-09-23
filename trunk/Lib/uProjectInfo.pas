@@ -69,7 +69,7 @@ var
 	Value: PAnsiChar;
 	Id: string;
 	// Unused
-	LenOfValue: UG;
+	LenOfValue: U4;
 	Handle: Cardinal;
 //	__VS_FIXEDFILEINFO: ^VS_FIXEDFILEINFO;
 begin

@@ -1714,6 +1714,7 @@ procedure TCCITTDecoder.MakeStates;
     begin
       // determine next state according to the bit string
 {$ifdef CPUX64}
+      Bit := False;
 {$else}
       asm
         SHL [Bits], 1

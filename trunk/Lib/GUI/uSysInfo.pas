@@ -275,7 +275,7 @@ end;}
 function GetLogicalProcessorCount: SG;
 var
 	SysBaseInfo: TSystem_Basic_Information;
-	status: Longint; {long}
+	status: DWORD;
 begin
 	if @NtQuerySystemInformation = nil then
 		NtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'),
@@ -285,6 +285,7 @@ begin
 
 	Result := 1;
 
+  // TODO : x64 DNW
 	status := NtQuerySystemInformation(SystemBasicInformation, @SysBaseInfo, SizeOf(SysBaseInfo), nil);
 	if status <> 0 then Exit;
 
@@ -299,7 +300,7 @@ var
 	SysBaseInfo: TSystem_Basic_Information;
 	SysPerfInfo: TSystem_Performance_Information;
 	SysTimeInfo: TSystem_Time_Information;
-	status: Longint; {long}
+	status: DWORD;
 	dbSystemTime: U8;
 	dbIdleTime: U8;
 //	s: string;

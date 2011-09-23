@@ -33,7 +33,7 @@ type
 		// FFileName: TFileName;
 		FInMemory: BG;
 		FFileSaved: BG;
-		FSectionCount: Integer;
+		FSectionCount: SG;
 		FSections: array of TIniSection;
 		FRWList: array of TRWOptions; // TData;
 		procedure SaveToFile(const FileName: TFileName);
@@ -92,6 +92,8 @@ type
 		procedure RWNum(const Section, Ident: string; var Value: U4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: S8; const Save: BG); overload;
     {$if CompilerVersion >= 23}
+		procedure RWNum(const Section, Ident: string; var Value: NativeInt; const Save: BG); overload;
+		procedure RWNum(const Section, Ident: string; var Value: NativeUInt; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: U8; const Save: BG); overload;
     {$ifend}
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
@@ -183,7 +185,7 @@ uses
 
 procedure TDIniFile.AddSection(const Section: string);
 var
-	NewSize: Integer;
+	NewSize: SG;
 begin
 	Inc(FSectionCount);
 	NewSize := FSectionCount;
@@ -240,7 +242,7 @@ end;
 
 procedure TDIniFile.AddValue(const SectionIndex: Integer; const Ident: string);
 var
-	i, NewSize: Integer;
+	i, NewSize: SG;
 begin
 	Inc(FSections[SectionIndex].KeyCount);
 	NewSize := FSections[SectionIndex].KeyCount;
@@ -627,7 +629,7 @@ end;
 procedure TDIniFile.LoadFromFile(const FileName: TFileName);
 var
 	s, Line: string;
-	LineIndex, InLineIndex: Integer;
+	LineIndex, InLineIndex: SG;
 	i: SG;
 begin
 	if FileName <> '' then
@@ -812,6 +814,30 @@ begin
 end;
 
 {$if CompilerVersion >= 23}
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: NativeInt; const Save: BG);
+begin
+	if Save = False then
+	begin
+		Value := ReadNum(Section, Ident, Value);
+	end
+	else
+	begin
+		WriteNum(Section, Ident, Value);
+	end;
+end;
+
+procedure TDIniFile.RWNum(const Section, Ident: string; var Value: NativeUInt; const Save: BG);
+begin
+	if Save = False then
+	begin
+		Value := ReadNum(Section, Ident, Value);
+	end
+	else
+	begin
+		WriteNum(Section, Ident, Value);
+	end;
+end;
+
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: U8; const Save: BG);
 begin
 	if Save = False then

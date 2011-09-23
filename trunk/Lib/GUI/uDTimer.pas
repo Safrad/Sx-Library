@@ -21,9 +21,9 @@ type
 		FInitialized: BG;
 		FEventStep: TEventStep;
 		FInterval: UG;
-		FInterval12: U8;
+		FInterval12: S8;
 		FNowFrameRate: Integer;
-		FOldTime: U8;
+		FOldTime: S8;
 		FOldTime2: U8;
 		FOnActivate: TNotifyEvent;
 		FOnDeactivate: TNotifyEvent;
@@ -72,7 +72,7 @@ procedure TryTimer;
 procedure Register;
 
 var
-	NowTime: U8; // Actual PerformanceCounter Value
+	NowTime: S8; // Actual PerformanceCounter Value
 	// Statistic Values
 	TimLeave, TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U8;
 
@@ -450,7 +450,8 @@ begin
 
 			Inc(TimerCount);
 		end;
-		if MinTime > FInterval12 - NowTime + FOldTime then MinTime := FInterval12 - NowTime + FOldTime;
+		if (MinTime = High(MinTime)) or (MinTime + NowTime > FInterval12 + FOldTime) then
+      MinTime := FInterval12 - NowTime + FOldTime;
 	end;
 end;
 

@@ -547,7 +547,7 @@ begin
 end;
 
 procedure TfSounds.DViewSoundsGetData(Sender: TObject; var Data: String;
-	ColIndex, RowIndex: SG; Rect: TRect);
+	ColIndex, RowIndex: Integer; Rect: TRect);
 var
 	Sound: PSound;
 	DSound: PDSound;
