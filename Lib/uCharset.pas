@@ -32,7 +32,7 @@ function LowCaseCz(const s: string): string;
 
 implementation
 
-uses SysUtils{$ifopt d+}, uCharsetTest{$endif};
+uses SysUtils;
 
 type
 {const
