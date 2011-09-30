@@ -306,7 +306,9 @@ begin
 	// Compatibility
 	if Save = False then
 	begin
+{$if CompilerVersion >= 23}
   	GlobalOptions[goVisualStyle].DefaultStr := GetVisualStylesDir;
+{$ifend}
 		if MainIni.ValueExists(Section, 'ViewSplashScreen') then
 		begin
 			GlobalOptions[goShowSplashScreenWhenApplicationStarts].Default := MainIni.ReadNum
