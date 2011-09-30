@@ -2,14 +2,27 @@ unit uEscapeTest;
 
 interface
 
+uses TestFrameWork;
+
+type
+  TEscapeTest = class(TTestCase)
+  published
+    procedure Test;
+  end;
+
 implementation
 
-procedure Test;
+uses
+  uTypes, uStrings, uEscape;
+
+{ TEscapeTest }
+
+procedure TEscapeTest.Test;
 var
 	i: SG;
 	s, s2: string;
 begin
-	for i := 0 to 32767 do
+	for i := 0 to 99 do
 	begin
 		s := RandomString(i);
 		s2 := AddEscape(s);
@@ -19,5 +32,5 @@ begin
 end;
 
 initialization
-	Test;
+	RegisterTest('Escape Test', TEscapeTest.Suite);
 end.

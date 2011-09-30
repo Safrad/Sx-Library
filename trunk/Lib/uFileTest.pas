@@ -2,13 +2,24 @@ unit uFileTest;
 
 interface
 
+uses TestFrameWork;
+
+type
+  TFileTest = class(TTestCase)
+  published
+    procedure Test1;
+    procedure Test2;
+  end;
+
 implementation
 
 uses
 	SysUtils,
 	uTypes, uFile, uFiles, uStrings;
 
-procedure Test1;
+{ TFileTest }
+
+procedure TFileTest.Test1;
 const
 	Line1 = 'a è Šafránek David';
 	Line2 = 'a' {$IFDEF UNICODE} + #$03A9 {$ENDIF};
@@ -66,7 +77,7 @@ begin
 	end;
 end;
 
-procedure Test2;
+procedure TFileTest.Test2;
 var
 	Text: string;
 	FileName: TFileName;
@@ -93,10 +104,6 @@ begin
   end;
 end;
 
-
 initialization
-
-Test1;
-Test2;
-
+	RegisterTest('File Test', TFileTest.Suite);
 end.

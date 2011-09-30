@@ -2,6 +2,14 @@ unit uDelphiTest;
 
 interface
 
+uses TestFrameWork;
+
+type
+  TDelphiTest = class(TTestCase)
+  published
+    procedure Test;
+  end;
+
 implementation
 
 uses
@@ -12,7 +20,9 @@ uses
   uCSVFile,
   uDelphi;
 
-procedure Test;
+{ TDelphiTest }
+
+procedure TDelphiTest.Test;
 var
 //  Versions: TArrayOfSG;
   DelphiVersion: TDelphiVersion;
@@ -35,6 +45,5 @@ begin
 end;
 
 initialization
-  Test;
-
+	RegisterTest('DelphiTest', TDelphiTest.Suite);
 end.

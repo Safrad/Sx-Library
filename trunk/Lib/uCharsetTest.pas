@@ -2,11 +2,21 @@ unit uCharsetTest;
 
 interface
 
+uses TestFrameWork;
+
+type
+  TCharsetTest = class(TTestCase)
+  published
+    procedure Test;
+  end;
+
 implementation
 
 uses uTypes, uCharset;
 
-procedure Test;
+{ TCharsetTest }
+
+procedure TCharsetTest.Test;
 var
 	a: AnsiString;
 	w: UnicodeString;
@@ -63,5 +73,5 @@ begin
 end;
 
 initialization
-	Test;
+	RegisterTest('Charset Test', TCharsetTest.Suite);
 end.
