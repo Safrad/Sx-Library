@@ -119,7 +119,7 @@ begin
 		for j := 0 to MaxHistory do
 		begin
 			LabelX[j, i] := TDLabel.Create(Self);
-			LabelX[j, i].SetBounds(144 + 80 * j, 8 + 24 * i, 72, 16);
+			LabelX[j, i].SetBounds(LgToPx(144 + 80 * j), LgToPx(8 + 24 * i), LgToPx(72), LgToPx(16));
 			LabelX[j, i].Alignment := taRightJustify;
 			InsertControl(LabelX[j, i]);
 		end;

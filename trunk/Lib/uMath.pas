@@ -129,7 +129,7 @@ procedure DelayEx(const f: U8);
 function CalcShr(N: U4): S1;
 {$ifopt d+}procedure CheckExpSize(const Size: SG);{$endif}
 function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
-function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
+function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG; deprecated;
 function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
 
 function BitsToByte(const Bits: S8): S4;
