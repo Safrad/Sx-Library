@@ -518,6 +518,7 @@ asm
   push rbx
   push rcx
   push rdx
+  push rdi
   mov rdi, SysInfo{rcx}
   xor rax, rax
   xor rbx, rbx
@@ -539,18 +540,20 @@ asm
   mov rdx, rdi
   mov [rdx], eax
   mov [rdx+4], ebx
+  pop rdi
   pop rdx
   pop rcx
   pop rbx
   pop rax
 {$else}
   pushad
+  mov edi, SysInfo{ecx}
   xor eax, eax
   xor ebx, ebx
   xor ecx, ecx
   xor edx, edx
   dw 0a20fh // cpuid
-  mov eax, SysInfo
+  mov eax, edi{SysInfo}
   add eax, CPUStrOffset
   mov [eax], ebx
   mov [eax+4], edx
@@ -562,7 +565,7 @@ asm
   xor edx, edx
   dw 0a20fh // cpuid
 
-  mov edx, SysInfo
+  mov edx, edi{SysInfo}
   mov [edx], eax
   mov [edx+4], ebx
   popad
