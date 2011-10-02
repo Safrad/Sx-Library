@@ -224,13 +224,13 @@ begin
 end;
 
 const
-	SystemBasicInformation = 0;
+//	SystemBasicInformation = 0;
   SystemPerformanceInformation = 2;
   SystemTimeInformation = 3;
 
 type
   TPDWord = ^DWORD;
-
+{
 	TSystem_Basic_Information = packed record
     dwUnknown1: DWORD;
     uKeMaximumIncrement: ULONG;
@@ -245,11 +245,11 @@ type
 		bKeNumberProcessors: byte;
 		bUnknown2: byte;
 		wUnknown3: word;
-	end;
+	end;}
 
 type
 	TSystem_Performance_Information = packed record
-		liIdleTime: LARGE_INTEGER; {LARGE_INTEGER}
+		liIdleTime: LARGE_INTEGER;
 		dwSpare: array[0..75] of DWORD;
 	end;
 
@@ -279,22 +279,11 @@ end;}
 
 function GetLogicalProcessorCount: SG;
 var
-	SysBaseInfo: TSystem_Basic_Information;
-	status: DWORD;
+  SystemInfo: SYSTEM_INFO;
 begin
-	if @NtQuerySystemInformation = nil then
-		NtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'),
-			'NtQuerySystemInformation');
-
-	// get number of processors in the system
-
-	Result := 1;
-
-  // TODO : x64 DNW
-	status := NtQuerySystemInformation(SystemBasicInformation, @SysBaseInfo, SizeOf(SysBaseInfo), nil);
-	if status <> 0 then Exit;
-
-	Result := SysBaseInfo.bKeNumberProcessors;
+  // get number of processors in the system
+  GetSystemInfo(SystemInfo);
+  Result := SystemInfo.dwNumberOfProcessors;
 end;
 
 var
@@ -302,7 +291,7 @@ var
 
 function GetCPUUsageForce: SG;
 var
-	SysBaseInfo: TSystem_Basic_Information;
+  SystemInfo: SYSTEM_INFO;
 	SysPerfInfo: TSystem_Performance_Information;
 	SysTimeInfo: TSystem_Time_Information;
 	status: DWORD;
@@ -311,27 +300,11 @@ var
 //	s: string;
 begin
 	Result := 0;
+
 	if @NtQuerySystemInformation = nil then
-		NtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'),
-			'NtQuerySystemInformation');
+    Exit;
 
-	// get number of processors in the system
-
-	status := NtQuerySystemInformation(SystemBasicInformation, @SysBaseInfo, SizeOf(SysBaseInfo), nil);
-	if status <> 0 then Exit;
-
-	// Show some information
-{	with SysBaseInfo do
-	begin
-			s :=
-			Format('uKeMaximumIncrement: %d'#13'uPageSize: %d'#13+
-			'uMmNumberOfPhysicalPages: %d'+#13+'uMmLowestPhysicalPage: %d'+#13+
-			'uMmHighestPhysicalPage: %d'+#13+'uAllocationGranularity: %d'#13+
-			'uKeActiveProcessors: %d'#13'bKeNumberProcessors: %d',
-			[uKeMaximumIncrement, uPageSize, uMmNumberOfPhysicalPages,
-			uMmLowestPhysicalPage, uMmHighestPhysicalPage, uAllocationGranularity,
-			uKeActiveProcessors, bKeNumberProcessors]);
-	end;}
+  GetSystemInfo(SystemInfo);
 
 		// get new system time
 	status := NtQuerySystemInformation(SystemTimeInformation, @SysTimeInfo, SizeOf(SysTimeInfo), nil);
@@ -352,7 +325,7 @@ begin
 		// CurrentCpuIdle = IdleTime / SystemTime
 
 		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
-		Result := Round(CPUUsageMul * (100.0 - (dbIdleTime / dbSystemTime) * 100.0 / SysBaseInfo.bKeNumberProcessors));
+		Result := Round(CPUUsageMul * (100.0 - (dbIdleTime / dbSystemTime) * 100.0 / SystemInfo.dwNumberOfProcessors));
 		Result := Range(0, Result, 100 * CPUUsageMul);
 
 		// Show Percentage
@@ -538,68 +511,93 @@ begin
 	end;
 end;
 
-function IsCPUID_Available : Boolean; register;
-{$ifdef CPUX64}
-begin
-  Result := False;
-{$else}
-const
-	ID_BIT	=	$200000;			// EFLAGS ID bit
-asm
-	PUSHFD							{direct access to flags no possible, only via stack}
-	POP     EAX					{flags to EAX}
-	MOV     EDX,EAX			{save current flags}
-	XOR     EAX,ID_BIT	{not ID bit}
-	PUSH    EAX					{onto stack}
-	POPFD								{from stack to flags, with not ID bit}
-	PUSHFD							{back to stack}
-	POP     EAX					{get back to EAX}
-	XOR     EAX,EDX			{check if ID bit affected}
-	JZ      @exit				{no, CPUID not availavle}
-	MOV     AL,True			{Result=True}
-@exit:
-{$endif}
-end;
-
 procedure FillCPUID(var SysInfo: TSysInfo);
-begin
-	SysInfo.CPUStr := '            '; //StringOfChar(CharSpace, 12);
-	try
+asm
 {$ifdef CPUX64}
+  push rax
+  push rbx
+  push rcx
+  push rdx
+  mov rdi, SysInfo{rcx}
+  xor rax, rax
+  xor rbx, rbx
+  xor rcx, rcx
+  xor rdx, rdx
+  cpuid
+  mov rax, rdi
+  add rax, CPUStrOffset
+  mov [rax], ebx
+  mov [rax+4], edx
+  mov [rax+8], ecx
+
+  mov eax, 1
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
+  cpuid
+
+  mov rdx, rdi
+  mov [rdx], eax
+  mov [rdx+4], ebx
+  pop rdx
+  pop rcx
+  pop rbx
+  pop rax
 {$else}
-		asm
-		pushad
-		xor eax, eax
-		xor ebx, ebx
-		xor ecx, ecx
-		xor edx, edx
-		dw 0a20fh // cpuid
-		mov eax, SysInfo
-		add eax, CPUStrOffset
-		mov [eax], ebx
-		mov [eax+4], edx
-		mov [eax+8], ecx
+  pushad
+  xor eax, eax
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
+  dw 0a20fh // cpuid
+  mov eax, SysInfo
+  add eax, CPUStrOffset
+  mov [eax], ebx
+  mov [eax+4], edx
+  mov [eax+8], ecx
 
-		mov eax, 1
-		xor ebx, ebx
-		xor ecx, ecx
-		xor edx, edx
-		dw 0a20fh // cpuid
+  mov eax, 1
+  xor ebx, ebx
+  xor ecx, ecx
+  xor edx, edx
+  dw 0a20fh // cpuid
 
-		mov edx, SysInfo
-		mov [edx], eax
-		mov [edx+4], ebx
-		popad
-		end;
+  mov edx, SysInfo
+  mov [edx], eax
+  mov [edx+4], ebx
+  popad
 {$endif}
-	finally
-//		SysInfo.LogicalProcessorCount := Max(1, Lo(SysInfo.CPU2 shr 16));
-		SysInfo.LogicalProcessorCount := GetLogicalProcessorCount;
-	end;
 end;
 
-var
-	CPUException: Boolean; // Cyrix
+{$ifdef CPUX64}
+procedure Loop(PMem: Pointer; MaxMem4: NativeInt; Count: NativeInt);
+asm
+  push rax
+  push rbx
+  push rcx
+  push rdi
+  mov rdi, PMem{rcx}
+  mov rcx, Count
+  sub rcx, 1
+  @Loop:
+    mov rax, rcx
+    and rax, MaxMem4
+    mov [rdi+8*rax], rbx
+    sub rcx, 1
+  jnz @Loop
+  pop rdi
+  pop rcx
+  pop rbx
+  pop rax
+{
+      j := 0;
+      while j < Count do
+      begin
+        PDWORD(PByte(PMem) + (SizeOf(Pointer) * j) and MaxMem4)^ := j;
+        Inc(j);
+      end;}
+end;
+{$endif}
 
 procedure FillCPUTest(var SysInfo: TSysInfo);
 var
@@ -611,100 +609,82 @@ var
 	MaxMem4, MaxMem: UG;
 	PMem: Pointer;
 begin
-	if IsCPUID_Available and (CPUException = False) then
-	begin
-		if Assigned(fSysInfo) then
-			MaxMem4 :=  (1 shl Max(0, fSysInfo.ComboBoxSize.ItemIndex)){14 for Duron} - 1 {10 = 4kB; 14=64kB}
-		else
-			MaxMem4 :=  1 shl 14 - 1; {10 = 4kB; 14 = 64kB}
-		MaxMem := 4 * (MaxMem4 + 1) - 1;
-		GetMem(PMem, MaxMem + 1);
-		try
-			SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
-			try
-				TickCount := PerformanceCounter;
-				CPUTick := GetCPUCounter.A;
+  if Assigned(fSysInfo) then
+    MaxMem4 :=  (1 shl Max(0, fSysInfo.ComboBoxSize.ItemIndex)){14 for Duron} - 1 {10 = 4kB; 14=64kB}
+  else
+    MaxMem4 :=  1 shl 14 - 1; {10 = 4kB; 14 = 64kB}
+  MaxMem := SizeOf(Pointer) * (MaxMem4 + 1) - 1;
+  GetMem(PMem, MaxMem + 1);
+  try
+    SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
+    try
+      TickCount := PerformanceCounter;
+      CPUTick := GetCPUCounter.A;
 {$ifdef CPUX64}
+      Loop(PMem, MaxMem4, Count div 2);
 {$else}
-				asm
-				pushad
+      asm
+      pushad
 
-	{     mov ecx, 999 // 1M
+{     mov ecx, 999 // 1M
 
-				@Loop:
-					mov edi, U4 ptr PMem
-					mov esi, U4 ptr PMem2
-					push ecx
-					mov ecx, 32768
-					shr ecx, 2
-					cld
-						rep movsd
-					pop ecx
-					sub ecx, 1
-				jnz @Loop}
-	(*
-				mov ecx, 999998 // 1M
-	//      mov edi, U4 ptr PMem
-				@Loop: // 3 - Duron, 4 - P4
-					mov esi, edi
-					mov ebx, ecx
-					and ebx, 32767
-					add esi, ebx
-	//        mov [esi], cl
-					sub ecx, 1
-				jnz @Loop*)
+      @Loop:
+        mov edi, U4 ptr PMem
+        mov esi, U4 ptr PMem2
+        push ecx
+        mov ecx, 32768
+        shr ecx, 2
+        cld
+          rep movsd
+        pop ecx
+        sub ecx, 1
+      jnz @Loop}
+(*
+      mov ecx, 999998 // 1M
+//      mov edi, U4 ptr PMem
+      @Loop: // 3 - Duron, 4 - P4
+        mov esi, edi
+        mov ebx, ecx
+        and ebx, 32767
+        add esi, ebx
+//        mov [esi], cl
+        sub ecx, 1
+      jnz @Loop*)
 
-				mov ecx, Count - 1 // 1M
-				mov edi, PMem
-				@Loop: // 4 clocks
-					mov eax, ecx
-					mov esi, edi
-					and eax, MaxMem4
-					sub ecx, 1
-					mov [esi+4*eax], ebx
-				jnz @Loop
+      mov ecx, Count - 1 // 1M
+      mov edi, PMem
+      @Loop: // 4 clocks
+        mov eax, ecx
+        mov esi, edi
+        and eax, MaxMem4
+        sub ecx, 1
+        mov [esi+4*eax], ebx
+      jnz @Loop
 
-				popad
-				end;
+      popad
+      end;
 {$endif}
-				CPUTick := GetCPUCounter.A - CPUTick;
-				TickCount := PerformanceCounter - TickCount;
-				if TickCount > 0 then
-				begin
-					SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
-					SysInfo.CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
-				end
-				else
-				begin
-					SysInfo.CPUFrequency := 0;
-					SysInfo.CPUPower := 0;
-				end;
-			except
-				CPUException := True;
-				SysInfo.CPUFrequency := 0;
-				SysInfo.CPUPower := 0;
-			end;
-		finally
-			SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
-			FreeMem(PMem);
-		end;
+      CPUTick := GetCPUCounter.A - CPUTick;
+      TickCount := PerformanceCounter - TickCount;
+      if (TickCount > 0) and (CPUTick < High(Int64) div (2 * PerformanceFrequency)) then
+      begin
+        SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
+        SysInfo.CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
+      end
+      else
+      begin
+        SysInfo.CPUFrequency := 0;
+        SysInfo.CPUPower := 0;
+      end;
+    except
+      SysInfo.CPUFrequency := 0;
+      SysInfo.CPUPower := 0;
+    end;
+  finally
+    SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
+    FreeMem(PMem);
 	end;
 end;
-(*
-procedure FillOS(var SysInfo: TSysInfo);
-var VersionInfo: TrpVersionInfo;
-begin
-{	SysInfo.OS.dwOSVersionInfoSize := SizeOf(SysInfo.OS);
-	GetVersionEx(SysInfo.OS);}
-	SysInfo.OS := GSysInfo.OS;
-
-{	if DriverDesc = '' then
-	begin
-		DriverDesc := 'Not Available';
-		ReadScreenModes;
-	end;
-	SInfo.Graph := DriverDesc;}
-end; *)
 
 procedure FillDynamicInfo(var SysInfo: TSysInfo);
 begin
@@ -857,7 +837,7 @@ begin
 
 	ComboBoxSize.Items.BeginUpdate;
 	try
-		for i := 2 to 29 do
+		for i := {$ifdef CPUX64}3{$else}2{$endif} to 29 do
 		begin
 			m := 1 shl i;
 			if m >= GSysInfo.MS.ullAvailPhys div 2 then Break;
@@ -876,8 +856,12 @@ begin
 	NTSystem := GSysInfo.OS.dwMajorVersion >= 5;
 	RegionCompatibily := not ((GSysInfo.OS.dwMajorVersion < 4) or ((GSysInfo.OS.dwMajorVersion = 4) and (GSysInfo.OS.dwMinorVersion < 10)));
 
+	NtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQuerySystemInformation');
+
 	InitPerformanceCounter;
+	GSysInfo.CPUStr := '            '; //StringOfChar(CharSpace, 12);
 	FillCPUID(GSysInfo);
+	GSysInfo.LogicalProcessorCount := GetLogicalProcessorCount;
 {	PerformanceType := ptCPU;
 	FillCPUTest(GSysInfo);
 	PerformanceFrequency := GSysInfo.CPUFrequency;}

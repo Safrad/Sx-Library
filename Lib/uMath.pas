@@ -1572,16 +1572,21 @@ end;
 
 function GetCPUCounter: TU8; register;
 asm
+{$ifdef CPUX64}
+  push rcx
+	mov ecx, 10h
+  rdtsc
+  pop rcx
+  mov [Result.D0], eax
+  mov [Result.D1], edx
+{$else}
 	push Result
 	mov ecx, 10h
 	dw 310fh // RDTSC 10 clocks
-{$ifdef CPUX64}
-	pop rcx
-{$else}
 	pop ecx
-{$endif}
 	mov [ecx], eax
 	mov [ecx + 4], edx
+{$endif}
 end;
 
 function PerformanceCounter: S8;
