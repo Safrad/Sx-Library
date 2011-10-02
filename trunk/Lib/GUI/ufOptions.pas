@@ -106,13 +106,12 @@ begin
 end;
 
 procedure TfOptions.CreateComponents;
-const
-	RowWidth = 310;
-	// ControlWidth = 2 * LabelWidth + FormBorder;
-	RowHeight = 32;
-	SmallButtonWidth = 20;
-	SmallButtonHeight = 20;
 var
+	RowWidth: SG;
+	RowHeight: SG;
+	SmallButtonWidth: SG;
+	SmallButtonHeight: SG;
+
 	i, j: SG;
 	X, Y, ScreenXCount, ScreenYCount: SG;
 	XCount, YCount: SG;
@@ -133,6 +132,11 @@ var
 	w: SG;
 	MaxWidth: SG;
 begin
+  RowWidth := LgToPx(310); // TODO : automatic
+  RowHeight := LgToPx(32);
+	SmallButtonWidth := LgToPx(20);
+	SmallButtonHeight := LgToPx(20);
+
 	InitComboBoxTemplate;
 
 	Rect := Screen.MonitorFromWindow(Handle).WorkareaRect;

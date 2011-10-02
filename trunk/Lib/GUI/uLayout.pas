@@ -25,8 +25,8 @@ begin
 		Control := Controls[i];
 		if Control.Visible then
 		begin
-			W := 76;
-			H := 24;
+			W := LgToPx(76);
+			H := LgToPx(24);
 			Dec(X, W + FormBorder);
 			Control.SetBounds(X, Y - H, W, H);
 		end;
