@@ -132,6 +132,7 @@ end;
 const
 	IconIDs: array[TMessageLevel] of PChar = (IDI_QUESTION, IDI_WINLOGO, IDI_INFORMATION, IDI_WARNING, IDI_ERROR,
 		IDI_APPLICATION, '');
+  IconID2s: array[TMessageLevel] of SG = (102, 100, 104, 101, 103, 105, 0);
 
 procedure TfMsgDlg.FillMemo(const Ignore: PIgnore);
 var
@@ -198,10 +199,13 @@ var
 	R: TRect;
 	Ignore: PIgnore;
 	Msg: string;
-const
-	BMinWidth = 81;
-	BHeight = 23;
+
+	BMinWidth: SG;
+	BHeight: SG;
 begin
+  BMinWidth := LgToPx(81);
+  BHeight := LgToPx(23);
+
 	Ignore :=Ignores.Get(ActItem);
 
 	// Captions
@@ -217,7 +221,12 @@ begin
 	if IconID <> nil then
 	begin
 		Image.Name := 'Image';
-		Image.Picture.Icon.Handle := LoadIcon(0, IconID);
+//		Image.Picture.Icon.Handle := LoadIcon(0, IconID);
+    Image.Picture.Icon.Handle := LoadImage(GetModuleHandle('user32'), MAKEINTRESOURCE(IconID2s[Ignore.MsgType]), IMAGE_ICON, Image.Width, Image.Height, LR_DEFAULTCOLOR);
+                                                                             
+//    Image.Picture.Bitmap.
+
+//    Image.Picture.
 	end;
 
 	MaxWid := PanelCreated.Left + PanelCreated.Width + FormBorder;
@@ -230,8 +239,9 @@ begin
 		if (i = Length(Msg) + 1) or (Msg[i] = CharLF) then
 		begin
 			Inc(LineCount);
-			Wid := Canvas.TextWidth(Copy(Msg, LastLine, i - LastLine)) + 4 + FormBorder + MemoMsg.Left;
-			if Wid > MaxWid then MaxWid := Wid;
+			Wid := LgToPx(Canvas.TextWidth(Copy(Msg, LastLine, i - LastLine))) + 4 + FormBorder + MemoMsg.Left;
+			if Wid > MaxWid then
+        MaxWid := Wid;
 			LastLine := i + 1;
 		end;
 
