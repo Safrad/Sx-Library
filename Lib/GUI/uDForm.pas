@@ -99,10 +99,14 @@ procedure ShowTaskBar(Visible: Boolean);
 function GetTaskBarPos: TPosition;
 // function GetDesktopRect(out Rect: TRect): SG; deprecated;
 
+// Logical size to real pixels (depends on DPI)
+function LgToPx(const Value: SG): SG;
+
 procedure Register;
 
+var
+	FormBorder: SG = 8;
 const
-	FormBorder = 8;
 	FreeFormAfterClose = True;
 
 var
@@ -119,7 +123,7 @@ implementation
 
 uses
 	Types, Math,
-  uDictionary,
+  uMath, uDictionary,
 	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo, uCommon, uLog;
 
 const
@@ -1048,4 +1052,16 @@ begin
 //	Params.Style := Params.Style and not WS_CLIPCHILDREN;
 end;
 
+function LgToPx(const Value: SG): SG;
+const
+  DefaultDPI = 96;
+begin
+  if Screen.PixelsPerInch = DefaultDPI then
+    Result := Value
+  else
+    Result := RoundDiv(Value * Screen.PixelsPerInch, DefaultDPI);
+end;
+
+initialization
+  FormBorder := LgToPx(FormBorder);
 end.
