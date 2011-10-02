@@ -239,7 +239,7 @@ const
 	DaysInWeek = 7;
 	MonthsInYear = 12;
 	MSecsPerWeek = DaysInWeek * Day;
-	MSecsPerYear = 365 * DaysInWeek * U8(Day);
+	MSecsPerYear = 365 * U8(Day);
 
 // System
 	LoopSleepTime = {$ifopt d-}40{$else}40{$endif}; // [ms], 25 interrupts per second.
