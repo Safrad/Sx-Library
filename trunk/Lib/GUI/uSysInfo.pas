@@ -26,6 +26,7 @@ type
     ullAvailPageFile: DWORDLONG;
     ullTotalVirtual : DWORDLONG;
     ullAvailVirtual : DWORDLONG;
+    ullAvailExtendedVirtual : DWORDLONG;
   end;
   {$EXTERNALSYM _MEMORYSTATUSEX}
   TMemoryStatusEx = _MEMORYSTATUSEX;
@@ -113,6 +114,7 @@ implementation
 
 {$R *.DFM}
 uses
+  uMsg,
 	uGraph, uScreen, uStrings, uOutputFormat, uSimulation, uDictionary,
 	uProjectInfo,
 	Registry, Math;
@@ -136,7 +138,10 @@ begin
     Result := False;
   end
   else
+  begin
     Result := FNGlobalMemoryStatusEx(lpBuffer);
+		ErrorMsg(GetLastError);
+  end;
 end;
 {$ifend}
 
