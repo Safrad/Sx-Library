@@ -111,5 +111,5 @@ finalization
 		MutHandle := 0;
 	end;
   if RestartAfterClose then
-    ShellExecuteDirect(ExeFileName, ExeParameters);
+    ShellExecuteDirectNoExitCode(ExeFileName, ExeParameters);
 end.

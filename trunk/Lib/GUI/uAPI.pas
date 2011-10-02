@@ -12,6 +12,8 @@ function RunBat(const FFileName: TFileName; const Params: string = ''; const Cur
 // @Return process exit code
 function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): U4;
 
+procedure ShellExecuteDirectNoExitCode(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_NORMAL);
+
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 procedure PropertiesDialog(FileName: TFileName);
 function KeyToStr(const Key: U2): string;
@@ -118,6 +120,27 @@ begin
 			FAgain := (ErrorCode <= 32) and IOErrorRetry(FFileName, ErrorCode);
     end;
 	end;
+	CloseHandle(lpExecInfo.hProcess);
+end;
+
+procedure ShellExecuteDirectNoExitCode(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_NORMAL);
+var
+	ErrorCode: U4;
+	lpExecInfo: TShellExecuteInfo;
+	i: UG;
+begin
+  lpExecInfo.cbSize := SizeOf(lpExecInfo);
+  FillChar(lpExecInfo, SizeOf(lpExecInfo), 0);
+
+  lpExecInfo.cbSize := SizeOf(lpExecInfo);
+  lpExecInfo.fMask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
+  lpExecInfo.Wnd := GetActiveWindow();
+  lpExecInfo.lpVerb := 'open';
+  lpExecInfo.lpParameters := PChar(Params);
+  lpExecInfo.lpFile := PChar(FFileName);
+  lpExecInfo.nShow := ShowCmd;
+
+  ShellExecuteEx(@lpExecInfo);
 	CloseHandle(lpExecInfo.hProcess);
 end;
 
