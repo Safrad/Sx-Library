@@ -68,12 +68,12 @@ function GetNumber(Prompt: string;
 	var CurVal: U1; const MinVal, DefVal, MaxVal: U1; OnApplyInt: TOnApplyInt): Boolean; overload;
 function GetNumber(Prompt: string;
 	var CurVal: S1; const MinVal, DefVal, MaxVal: S1; OnApplyInt: TOnApplyInt): Boolean; overload;
-{$if CPUX64}
+{$ifdef CPUX64}
 function GetNumber(Prompt: string;
 	var CurVal: SG; const MinVal, DefVal, MaxVal: SG; OnApplyInt: TOnApplyInt): Boolean; overload;
 function GetNumber(Prompt: string;
 	var CurVal: UG; const MinVal, DefVal, MaxVal: UG; OnApplyInt: TOnApplyInt): Boolean; overload;
-{$ifend}
+{$endif}
 
 implementation
 
@@ -368,7 +368,7 @@ begin
 	CurVal := C;
 end;
 
-{$if CPUX64}
+{$ifdef CPUX64}
 function GetNumber(Prompt: string;
 	var CurVal: SG; const MinVal, DefVal, MaxVal: SG; OnApplyInt: TOnApplyInt): Boolean; overload;
 var C: S8;
@@ -386,7 +386,7 @@ begin
 	Result := GetNumber(Prompt, CurVal, MinVal, DefVal, MaxVal, OnApplyInt);
 	CurVal := C;
 end;
-{$ifend}
+{$endif}
 
 constructor TfGetInt.Create(AOwner: TComponent);
 begin
