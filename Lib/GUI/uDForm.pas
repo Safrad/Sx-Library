@@ -249,7 +249,7 @@ begin
 	if Text = '' then
 		Exit;
 
-	glGetIntegerv(GL_VIEWPORT, @Params[0]);
+	glGetIntegerv(GL_VIEWPORT, PGLInt(@Params[0]));
 
 	if (Params[2] = 0) or (Params[3] = 0) then
 		Exit;
