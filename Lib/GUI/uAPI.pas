@@ -125,9 +125,7 @@ end;
 
 procedure ShellExecuteDirectNoExitCode(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_NORMAL);
 var
-	ErrorCode: U4;
 	lpExecInfo: TShellExecuteInfo;
-	i: UG;
 begin
   lpExecInfo.cbSize := SizeOf(lpExecInfo);
   FillChar(lpExecInfo, SizeOf(lpExecInfo), 0);
