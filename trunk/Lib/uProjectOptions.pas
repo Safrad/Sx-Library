@@ -61,6 +61,11 @@ uses
   XMLDoc, XMLIntf, Variants, IniFiles,
   uInputFormat, uFiles, uMsg;
 
+const
+  DefaultMinStackSize = 16 * KB;
+  DefaultMaxStackSize = 1 * MB;
+  DefaultImageBase = 4 * MB;
+
 { TProjectOptions }
 
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
@@ -78,8 +83,50 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 		if Node = nil then
 			Exit;
 
-    // TODO : <DCC_
-		if Node.NodeName = 'VersionInfo' then
+{    if Node.NodeName = '
+
+    const
+  DCC_Names: array[0
+  DCC_ImageBase // hex
+  BplOutput}
+    Name := UpperCase(Node.NodeName);
+    if Name = UpperCase('DCC_BplOutput') then
+    begin
+      OutputDir := Node.NodeValue;
+    end
+    else if Name = UpperCase('DCC_ExeOutput') then
+    begin
+      OutputDir := Node.NodeValue;
+    end
+    else if Name = UpperCase('DCC_DcuOutput') then
+    begin
+      UnitOutputDir := Node.NodeValue;
+    end
+//		PackageDLLOutputDir: string;
+//		PackageDCPOutputDir: string;
+    else if Name = UpperCase('DCC_UnitSearchPath') then
+    begin
+      SearchPath := Node.NodeValue;
+    end
+    else if Name = UpperCase('DCC_Define') then
+    begin
+      Conditionals := Conditionals + ';' + Node.NodeValue;
+    end
+//		DebugSourceDirs: string; // Not in cfg
+//		 UsePackages
+		else if Name = UpperCase('DCC_MinStackSize') then
+    begin
+      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMinStackSize), 0, 1, nil);
+    end
+		else if Name = UpperCase('DCC_MaxStackSize') then
+    begin
+      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMaxStackSize), 0, 1, nil);
+    end
+		else if Name = UpperCase('DCC_Image') then
+    begin
+      ImageBase := StrToValS8('$' + Node.NodeValue, False, 0, S8(DefaultImageBase), 0, 1, nil);
+    end
+		else if Node.NodeName = 'VersionInfo' then
 		begin
 			if Node.HasAttribute(AttrName) then
 			begin
@@ -128,7 +175,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 		cNode := Node.ChildNodes.First;
 		while cNode <> nil do
 		begin
-			ProcessNode(cNode);
+ 			ProcessNode(cNode);
 			cNode := cNode.NextSibling;
 		end;
 	end;
@@ -136,6 +183,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 var
 	XML: IXMLDocument;
 	iNode: IXMLNode;
+  Name: string;
 begin
 	if Save = False then
 	begin
@@ -156,6 +204,18 @@ begin
 			iNode := XML.DocumentElement.ChildNodes.First;
 			while iNode <> nil do
 			begin
+        if (iNode.NodeName = 'PropertyGroup') then
+        begin
+          if iNode.HasAttribute('Condition') then
+          begin
+            Name := iNode.Attributes['Condition'];
+            if Name = '''$(Cfg_2)''!=''''' then // DEBUG
+            begin
+              iNode := iNode.NextSibling;
+              Continue;
+            end;
+          end;
+        end;
 				ProcessNode(iNode);
 				iNode := iNode.NextSibling;
 			end;
@@ -247,9 +307,9 @@ end;
 
 constructor TProjectOptions.Create;
 begin
-  MinStackSize := 16 * KB;
-  MaxStackSize := 64 * KB;
-  ImageBase := 4 * MB;
+  MinStackSize := DefaultMinStackSize;
+  MaxStackSize := DefaultMaxStackSize;
+  ImageBase := DefaultImageBase;
 end;
 
 destructor TProjectOptions.Destroy;
