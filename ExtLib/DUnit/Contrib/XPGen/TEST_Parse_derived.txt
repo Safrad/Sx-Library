@@ -1,0 +1,26 @@
+  (SomeBaseClass)
+    fNameClass: string;
+    fPubMethodList: TStringList;
+    fPrtMethodList: TStringList;
+    fPvtMethodList: TSTringList;
+  protected
+    procedure prtX; virtual;  
+    procedure prty(i : integer);
+    procedure prtz(i : integer);        
+  private  
+    procedure prvtX; virtual;  
+    procedure prvty(i : integer);
+    procedure prvtz(i : integer);    
+  public
+    constructor Create(newName: string); virtual;
+    destructor Destroy; override;
+    procedure pubX; virtual;  
+    procedure puby(i : integer);
+    procedure pubz(i : integer);    
+    property PubMethodList: TStringList read fpubMethodList write fpubMethodList;
+    property PrtMethodList: TStringList read fPrtMethodList write fPrtMethodList;
+    property PvtMethodList: TSTringList read fPvtMethodList write fPvtMethodList;
+    property NameClass: string read fNameClass write fNameClass;
+  published
+    procedure X; virtual;
+  end;

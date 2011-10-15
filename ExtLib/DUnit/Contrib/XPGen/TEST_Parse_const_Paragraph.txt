@@ -1,0 +1,20 @@
+const
+  errorColor = clRed;
+  
+  token_map : array[token_enum] of string =
+    (':','^','=','(', ')', '[', ']',
+    ';', '.', 'type', 'and', 'array',
+    'as', 'asm', 'begin', 'case', 'class',
+    'const', 'constructor', 'destructor', 'dispinterface', 'div',
+    'do', 'downto', 'else', 'end', 'except', 'exports',
+    'file', 'finalization', 'finally', 'for', 'function', 'goto',
+    'if', 'implementation', 'in', 'inherited', 'initialization', 'inline',
+    'interface', 'is', 'label', 'library', 'mod', 'nil',
+    'not', 'object', 'of', 'or', 'out', 'packed',
+    'procedure', 'program', 'property', 'raise', 'record', 'repeat',
+    'resourcestring', 'set', 'shl', 'shr', 'string', 'then',
+    'threadvar', 'to', 'try', 'unit', 'until',
+    'uses', 'var', 'while', 'with', 'xor', 'private',
+    'protected', 'public', 'published', 'automated', ''
+    );
+type

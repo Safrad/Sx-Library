@@ -1,0 +1,2 @@
+  TestFramework.RegisterTest('#UNITNAME Suite',
+    #CLASSNAME.Suite);

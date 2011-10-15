@@ -1,0 +1,76 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>XPGen mini FAQ</title>
+</head>
+
+<body>
+
+<pre><!--webbot bot="PurpleText" preview="$Id: readme.html,v 1.3 2008/04/18 02:32:57 judc Exp $" --></pre>
+<h1>XPGen mini FAQ</h1>
+<h2>What is XPGen?</h2>
+<p>XPGen is a code generation tool for generating test cases for Delph source
+code.&nbsp; XPGen is currently designed to read a Delph source file and generate
+a test skeleton for each class defined in the interface section. This tool
+should find use in helping to remediate code that wasn't created using XP
+principles as well as generate test cases for new code created in an XP process.</p>
+<h2>How Does XPGen Work?</h2>
+<p>XPGen is simply a recursive descent parser coupled with a simple code
+generator.&nbsp; The parser simply processes the interface section of a Delphi
+source file identifying the each complete class definition and defined methods
+for these classes. These definitions are then passed to a simple code generator
+that writes a complete source file based on the encountered definitions. This
+generated code can then be cut and pasted either into a separate external test
+file or included with the source file on which the generated code was based.</p>
+<h2>What do I need in order to work with XPGen?</h2>
+<p>I developed this with Delphi 5.01, but there is nothing magical in the code
+that should prevent it from compiling in Delphi 3 or 4.</p>
+<h2>What sucks about XPGen&nbsp;AKA future directions?</h2>
+<p>There are a number of limitations to XPgen as it currently stands that I hope
+to correct in the near future. Chief among them are:</p>
+<ol>
+  <li>The code generator generates code with a slant toward keeping the test in
+    an external module.&nbsp; That's why you have all the CRACK_* classes are
+    written so that you can have access to protected methods from inside the
+    external file.&nbsp; If you are embedding your test code in with the
+    production, this stuff doesn't need to be there obviously.&nbsp; Obviously,
+    it would be best to be able to optionally wrap this code inside inside some
+    user defined conditional symbol such as {$IFDEF XPTest} etc.</li>
+  <li>There isn't any option to control the naming convention!&nbsp; Currently,
+    the code generator uses TEST_ to the name of the test class ie
+    TEST_TTestcase would be generate for the class TTestCase. Certainly, some
+    user some where will want this to be CHECK_ or Verify_ or something without
+    an underscore.</li>
+  <li>Ditto item one for the test methods.</li>
+  <li>The code generates stubs for all modules in the source file it
+    processes.&nbsp; In the future, it should prompt you with a check list of
+    modules you want to generate skeletons for.</li>
+  <li>A Delphi expert for generating skeletons from inside the IDE is definitely
+    a must!</li>
+  <li>An optional code generator for generating Mock Objects would be nifty.</li>
+</ol>
+<h2>What about&nbsp;bugs in XPGen?</h2>
+<p>I'm sure that someone has a source file that XPGen can't cope with.&nbsp; I
+really did a lazy and sucky job of analyzing the follow sets for Delphi grammar,
+so if you hit a snag, send me the source file or better yet a test case
+demonstrating the issue.&nbsp;I've included a mostly complete set of unit tests
+to exercise the lexer and parser, there aren't nearly enough of them, but it's a
+start.&nbsp; The input stream for each tests follows the convention of
+testName.txt ie if the test method is called testGetToken, the input stream can
+be found in testGetToken.txt.&nbsp; The unit tests are also assume assert* for
+verification which may cause grief for some users. I will fix it as soon as the
+new version of DUnit comes out.</p>
+<p>The typography isn't as consistent as it could be, i.e., the class definition
+might say getToken and then be used in the source as GetToken.&nbsp; Also the
+naming convention isn't quite up to the standards of the group, ie sometimes I
+will use underscores out of habit in identifier names. I will work on cleaning
+up these issue RSN.</p>
+<p>-- mike<br>
+(Michael Johnson &lt;majohnson at users.sourceforge. net&gt;)</p>
+
+</body>
+
+</html>

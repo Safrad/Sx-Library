@@ -1,0 +1,16 @@
+unit #UNITNAME;
+
+interface
+
+uses
+#USESTESTEDUNIT
+  TestFrameWork;
+
+#TESTCLASSDECLBLOCK
+implementation
+
+initialization
+
+#TESTSUITEREGBLOCK
+
+end.

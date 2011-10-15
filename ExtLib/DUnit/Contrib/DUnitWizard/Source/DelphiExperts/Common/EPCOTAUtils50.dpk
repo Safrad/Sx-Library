@@ -1,0 +1,47 @@
+package EPCOTAUtils50;
+
+{$R *.RES}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'EPC Open Tools API utilities'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  vcl50,
+  Vclx50,
+  EPCCommon50;
+
+{%File '..\..\Common\JEDI.inc'}
+
+contains
+  XP_OTAWizards in 'XP_OTAWizards.pas',
+  XP_OTAUtils in 'XP_OTAUtils.pas',
+  XP_OTACreators in 'XP_OTACreators.pas',
+  XP_OTAEditorUtils in 'XP_OTAEditorUtils.pas',
+  XPKeyWords in 'XPKeyWords.pas',
+  XPPascalScanner in 'XPPascalScanner.pas',
+  XPToken in 'XPToken.pas',
+  XPTokenMulticaster in 'XPTokenMulticaster.pas';
+
+end.
+

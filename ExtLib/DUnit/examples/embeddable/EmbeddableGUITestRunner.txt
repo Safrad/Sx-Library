@@ -1,0 +1,105 @@
+inherited EmbeddableDUnitDialog: TEmbeddableDUnitDialog
+  Left = 75
+  Top = 90
+  Width = 577
+  PixelsPerInch = 96
+  TextHeight = 13
+  inherited BottomPanel: TPanel
+    Width = 569
+    inherited ButtonPanel: TPanel
+      Left = 407
+    end
+    object cbBreakOnFailures: TCheckBox
+      Left = 301
+      Top = 11
+      Width = 104
+      Height = 17
+      Action = BreakOnFailuresAction
+      Anchors = [akTop, akRight]
+      TabOrder = 4
+    end
+  end
+  inherited BodyPanel: TPanel
+    Width = 569
+    PopupMenu = pmHosted
+    inherited ErrorBoxSplitter: TSplitter
+      Width = 565
+    end
+    inherited TopPanel: TPanel
+      Width = 565
+      inherited ResultsSplitter: TSplitter
+        Width = 565
+      end
+      inherited TreePanel: TPanel
+        Width = 565
+        inherited lblTestTree: TLabel
+          Width = 561
+        end
+        inherited TestTree: TTreeView
+          Width = 561
+        end
+      end
+      inherited ResultsPanel: TPanel
+        Width = 565
+        inherited ProgressPanel: TPanel
+          Width = 561
+          inherited TopProgressPanel: TPanel
+            Width = 551
+            inherited ProgressBar: TProgressBar
+              Width = 498
+            end
+          end
+          inherited ScorePanel: TPanel
+            Width = 551
+            inherited ScoreBar: TProgressBar
+              Width = 498
+            end
+          end
+        end
+        inherited ResultsView: TListView
+          Width = 561
+        end
+        inherited FailureListView: TListView
+          Width = 561
+        end
+      end
+    end
+    inherited ErrorBoxPanel: TPanel
+      Width = 565
+      inherited ErrorMessageRTF: TRichEdit
+        Width = 561
+      end
+    end
+  end
+  object pmHosted: TPopupMenu
+    Left = 237
+    Top = 74
+    object pmiHostSave: TMenuItem
+      Action = SaveConfigurationAction
+    end
+    object pmiHostRestore: TMenuItem
+      Action = RestoreSavedAction
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object pmiHostAutoSave: TMenuItem
+      Action = AutoSaveAction
+    end
+    object pmiHostAutoFocus: TMenuItem
+      Action = AutoFocusAction
+    end
+    object pmiHostHideOnOpen: TMenuItem
+      Action = HideTestNodesOnOpenAction
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object pmiHostErrorBox: TMenuItem
+      Action = ErrorBoxVisibleAction
+    end
+    object pmiHostBreak: TMenuItem
+      Action = BreakOnFailuresAction
+    end
+  end
+end

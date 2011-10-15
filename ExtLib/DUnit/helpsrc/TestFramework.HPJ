@@ -1,0 +1,22 @@
+[OPTIONS]
+HCW=0
+TITLE=DUnit - Xtreme Unit Testing for Delphi
+COPYRIGHT=DUnit - Xtreme Unit Testing for Delphi   © The DUnit Group. Help file last compiled %date.
+HLP=.\TestFramework.hlp
+BMROOT=C:\dvl\pascal\time2help\Templates\Delphi\WinHelp\images
+BMROOT=WinHelp\images
+BMROOT=C:\home\dunit\helpsrc\WinHelp\images
+[FILES]
+C:\home\dunit\helpsrc\WinHelp\RTF\_#DUnit - Xtreme Unit Testing for Delphi_Overview.RTF
+C:\home\dunit\helpsrc\WinHelp\RTF\_#UnitDependencies.RTF
+C:\home\dunit\helpsrc\WinHelp\RTF\GUITesting.RTF
+C:\home\dunit\helpsrc\WinHelp\RTF\GUITestRunner.RTF
+C:\home\dunit\helpsrc\WinHelp\RTF\TestExtensions.RTF
+C:\home\dunit\helpsrc\WinHelp\RTF\TestFramework.RTF
+C:\home\dunit\helpsrc\WinHelp\RTF\TextTestRunner.RTF
+[WINDOWS]
+main="",(333,16,655,749),60676,(r14876671),,f2
+Example="Examples",(653,102,420,600),20736,(r14876671),(r12632256),f3
+pme="Properties, Methods and Events",(5,5,280,750),4,,(192,192,192),f2
+[CONFIG]
+BrowseButtons()

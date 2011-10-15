@@ -1,0 +1,10 @@
+var
+  oldLimit,
+  oldItems,
+  i        :Integer;
+  j        :IIterator;
+  o        :IUnknown;
+  t 
+  n :TTreeNode;
+  HitInfo   :THitTests;
+  Pos       :TPoint;  

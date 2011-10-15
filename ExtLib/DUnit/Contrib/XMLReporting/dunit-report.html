@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html>
+<head>
+  <title>Test Report</title>
+  <link rel="stylesheet" type="text/css" href="dunit-report.css" />
+  <script>
+    function Init() {
+      if (document.implementation && document.implementation.createDocument) {
+        importXMLMoz();
+      }
+      else if (window.ActiveXObject) {
+        importXMLIE();
+      }
+      else {
+        alert('Your browser cannot display this page !');
+	return;
+      }
+    }
+
+    function importXMLMoz() {
+      var xslStylesheet;
+      var xsltProcessor = new XSLTProcessor();
+      var myDOM;
+    
+      var xmlDoc;
+      // load the xslt file, example1.xsl
+      var myXMLHTTPRequest = new XMLHttpRequest();
+      myXMLHTTPRequest.open("GET", "dunit-report.xsl", false);
+      myXMLHTTPRequest.send(null);
+   
+      xslStylesheet = myXMLHTTPRequest.responseXML;
+      xsltProcessor.importStylesheet(xslStylesheet);
+
+      // load the xml file, example1.xml
+      myXMLHTTPRequest = new XMLHttpRequest();
+      myXMLHTTPRequest.open("GET", "dunit-report.xml", false);
+      myXMLHTTPRequest.send(null);
+      
+      xmlDoc = myXMLHTTPRequest.responseXML;
+        
+      var fragment = xsltProcessor.transformToFragment(xmlDoc, document);       
+
+      myDOM = fragment;
+      document.getElementById("dunitReport").appendChild(fragment);       
+    }
+    
+    function importXMLIE() {
+      var xml = new ActiveXObject("Microsoft.XMLDOM")
+      xml.async = false
+      xml.load("dunit-report.xml")
+
+      var xsl = new ActiveXObject("Microsoft.XMLDOM")
+      xsl.async = false
+      xsl.load("dunit-report.xsl")
+      document.getElementById("dunitReport").innerHTML = xml.transformNode(xsl);
+    }
+  </script>
+</head>
+
+<body onload="javascript:Init()">
+  <div id="dunitReport">
+  </div>
+</body>
+</html>

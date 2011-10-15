@@ -1,0 +1,61 @@
+<html>
+<body>
+<h2>Registry Example</h2>
+<h3>by <a href="http://sourceforge.net/users/chrismo/">Chris Morris</a></h3>
+<i>Sept. 2000</i><br>
+<br>
+<p>This example starts with some sample code that reads values from the registry, 
+and has a basic unit test. The code is then refactored to demonstrate the role 
+of unit tests in encouraging code change.</p>
+
+<p>There are only three source units: RegistryTest.dpr, RegistryUnit.pas & RegistryUnitTest.pas. This example only shows the production code (RegistryUnit.pas) from the test code perspective. Sample production code that uses RegistryUnit.pas is not included.</p>
+<p></p>
+Step 1<br>
+======<br>
+<p>RegistryUnit has one method (GetRegData) that reads and returns two string values from the registry. The unit test in RegistryUnitTest, sets up the registry with some sample values, calls GetRegData and verifies the output, then cleans up the registry.</p>
+<p></p>
+<p>The current GetRegData assumes anytime client code calls it, it requires both the InstallPath and ModData to be read from the registry.</p>
+<p></p>
+Step 2<br>
+======<br>
+<p>This step assumes that client needs have changed: instead of reading both registry values each time -- now there are instances where only the InstallPath is needed and the other code is wasteful. GetRegData has now been split into two calls, GetRegInstallPath & GetRegModData. GetRegData has been retained so existing client code can remain intact, it now calls the other two methods. A new unit test for GetRegInstallPath passes, but the original unit test now fails.</p>
+<p></p>
+<p>The problem is the r.OpenKey calls are relative. In the original code, the SampleApp key was opened first:</p>
+<p></p>
+<pre>
+HKEY_CURRENT_USER
+  Software
+    Sample Co.
+      SampleApp
+</pre>
+<p></p>
+<p>... then ModuleAData was opened. The key passed was relative, not absolute, so it opened ModuleAData under the current open key:</p>
+<p></p>
+<pre>
+HKEY_CURRENT_USER
+  Software
+    Sample Co.
+      SampleApp
+        ModuleAData
+</pre>
+<p></p>
+<p>When the 2 methods were split, the only OpenKey call in GetRegModData attempts to open the following key:</p>
+<p></p>
+<pre>
+HKEY_CURRENT_USER
+  ModuleAData
+</pre>
+<p></p>
+<p>... which, of course, doesn't exist.</p>
+<p></p>
+Step 3<br>
+======<br>
+<p>A simple fix is made in GetRegModData, and both tests now pass. </p>
+<p></p>
+<p></p>
+<p>Without unit tests in place, a simple refactoring like this can cause headaches. It could have been likely that this refactoring was made by a programmer who required only the InstallPath, and didn't want to mess with the rest of the original method. After the change, the code the programmer required worked fine -- but he'd inadvertantly broken the 2nd method. Without unit tests in place, a bug like this might not have been caught until later portions of the development cycle.</p>
+<p></p>
+<p>It's instances like this that scare off programmers from touching code that works. XP unit tests help remove the fear of touching working code by posting watches on each important piece of functionality. If anything changes, the programmer receives instant alerts to what's broken.</p>
+<p>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE DLHelpSource>
+<DLHelpSource>
+   <TopicBook Title="Introduction">
+      <TopicEx ID="IDH_Introduction">
+         <Title>Welcome to DUnit</Title>
+         <Body>
+	    <P>This is Body Text</P>
+         </Body>
+      </TopicEx>
+      <TopicEx ID="IDH_INSTALL">
+         <Title>Installing DUnit</Title>
+         <Body>
+	    <P>This is Body Text</P>
+         </Body>
+      </TopicEx>
+   </TopicBook>
+   <TopicBook Title="Common tasks">
+      <TopicEx ID="IDH_TASK_CREATETESTAPP">
+         <Title>Creating a Test Application</Title>
+         <Body>
+	    <P>This is Body Text</P>
+         </Body>
+      </TopicEx>
+      <TopicEx ID="IDH_TASK_CREATETESTENV">
+         <Title>Creating a Test Environment</Title>
+         <Body>
+	    <P>This is Body Text</P>
+         </Body>
+      </TopicEx>
+      <TopicEx ID="IDH_TASK_TESTCASE">
+         <Title>Creating a Test Case</Title>
+         <Body>
+	    <P>This is Body Text</P>
+         </Body>
+      </TopicEx>
+      <TopicEx ID="IDH_TASK_RUNNING">
+         <Title>Running Tests</Title>
+         <Body>
+	    <P>This is Body Text</P>
+         </Body>
+      </TopicEx>
+      <TopicEx ID="IDH_TASK_DEBUG">
+         <Title>Determining the cause of a test failure or error</Title>
+         <Body>
+	    <P>This is Body Text</P>
+         </Body>
+      </TopicEx>
+   </TopicBook>
+</DLHelpSource>
+

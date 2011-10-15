@@ -1,0 +1,64 @@
+package EPCDUnitWizard60;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'EPC DUnit Wizard'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  EPCOTAUtils60,
+  visualclx;
+
+{%File '..\..\Common\JEDI.inc'}
+{%File 'ProjectSource.txt'}
+{%File 'TestModule.txt'}
+{%File 'TestSuiteReg.txt'}
+{%File 'TestClassDecl.txt'}
+{%File 'UsesTestedUnit.txt'}
+{%File 'TestMethodDecl.txt'}
+{%RC 'XPDUnitProjectWizard.rc'}
+{%RC 'XPDUnitTestModuleWizard.rc'}
+{%RC 'XPDUnitTestClassWizard.rc'}
+{%RC 'XPTextTemplates.rc'}
+
+contains
+  XPDUnitWizard in 'XPDUnitWizard.pas',
+  XPDUnitProjectWizard in 'XPDUnitProjectWizard.pas',
+  XPDUnitMenuWizard in 'XPDUnitMenuWizard.pas',
+  XPDUnitSetup in 'XPDUnitSetup.pas' {XPDUnitSetupForm},
+  XPDUnitMacros in 'XPDUnitMacros.pas',
+  XPTemplateParser in 'XPTemplateParser.pas',
+  XPDUnitParameters in 'XPDUnitParameters.pas',
+  XPDUnitProject in 'XPDUnitProject.pas' {XPDUnitProjectForm},
+  XPDUnitCommon in 'XPDUnitCommon.pas',
+  XPTestedUnitUtils in 'XPTestedUnitUtils.pas',
+  XPTestedUnitParser in 'XPTestedUnitParser.pas',
+  XPDUnitTestModuleWizard in 'XPDUnitTestModuleWizard.pas',
+  XPDUnitTestModule in 'XPDUnitTestModule.pas' {XPDUnitTestModuleForm},
+  XPParserFilters in 'XPParserFilters.pas',
+  XPDUnitTestClassWizard in 'XPDUnitTestClassWizard.pas',
+  XPDUnitTestClass in 'XPDUnitTestClass.pas' {XPDUnitTestClassForm},
+  XPTextTemplates in 'XPTextTemplates.pas';
+
+end.

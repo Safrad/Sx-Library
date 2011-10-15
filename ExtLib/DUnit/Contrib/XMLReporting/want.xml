@@ -1,0 +1,47 @@
+<!-- 
+========================================================================
+ Copyright (c) 1999-2001 The DUnit Group. All rights reserved.
+ $Id: want.xml,v 1.3 2008/04/18 02:32:56 judc Exp $
+======================================================================== 
+ This is a Want build script.
+ See:
+  http://www.suigeneris.org/want/
+ for details.
+======================================================================== 
+
+-->
+<project name="xpgen"
+  default="test" 
+  basedir=".">
+
+  <property name="rootdir"        value="${basedir}/../.." />
+
+  <property name="src.dir"        value="${rootdir}/src" />
+  <property name="doc.dir"        value="${rootdir}/doc" />
+  <property name="test.dir"       value="${rootdir}/tests"/>
+  <property name="etc.dir"        value="${rootdir}/etc"/>
+  <property name="samp.dir"       value="${rootdir}/examples"/>
+  <property name="scratch.dir"    value="${rootdir}/scratch"/>
+  <property name="bin.dir"        value="${rootdir}/bin"/>
+  <property name="dist.dir"       value="${rootdir}/dist"/>
+  <property name="framework.dir"  value="${rootdir}/framework"/>
+  <property name="contrib.dir"    value="${rootdir}/contrib"/>
+ 
+  <target name="compile" >
+    <dcc source="*.pas"
+         dcuoutput="${scratch.dir}"
+         exeoutput="${bin.dir}"
+         debug="true"
+         build="true"
+         uselibrarypath="yes"
+         console="yes"
+    >
+      <unitpath path="${src.dir}" />
+      <resourcepath path="${src.dir}" />
+    </dcc>
+  </target>
+  
+  <target name="test" depends="compile" >
+  </target>
+
+</project>

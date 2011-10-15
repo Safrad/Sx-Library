@@ -1,0 +1,340 @@
+<!-- 
+ ***********************************************************************
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is DUnit.
+ *
+ * The Initial Developers of the Original is Juancarlo Añez
+ * and Juancarlo A±ez.
+ * Portions created The Initial Developers are Copyright (C) 1999-2003.
+ * Portions created by The DUnit Group are Copyright (C) 2000-2003.
+ * All rights reserved.
+ *
+ * Contributor(s):
+ * Juancarlo Añez <juanca@suigeneris.org>
+ * The DUnit group at SourceForge <http://dunit.sourceforge.net>
+ *                
+ ***********************************************************************
+ $Id: want.xml,v 1.41 2008/04/18 01:10:23 judc Exp $
+======================================================================== 
+ This build file specifies how to build DUnit using the Want build tool.
+ See:
+  http://www.suigeneris.org/want
+ for details.
+======================================================================== 
+
+-->
+<project name="DUnit Extreme Testing Framework for Delphi"
+  default="test" 
+  basedir=".">
+
+  <property name="dunit.release" value="%{DUNIT_RELEASE}" />
+ 
+  <property name="app.name"       value="dunit"   />
+  <property name="old.version"    value="?{release.ini:releases:current}" />
+  <regexp   property="old.build"  text="${old.version}" pattern="^.*\.([0-9]+)$" subst ="\1" />
+  
+  <property name="build" value="={1 + ${old.build}}" if="dunit.release" />
+  <property name="build" value="${old.build}"    unless="dunit.release" />
+  
+  <regexp property="version" text="${old.version}" pattern="\.[0-9]*$" subst=".${build}" />
+  <regexp property="comma.version" pattern="\." subst="," text="${version}" />
+
+  <tstamp>
+    <format property="when"      pattern="yyyy,mm,dd,HH,nn,ss" />
+    <format property="date.tag"  pattern="yyyy-mm-dd" />
+  </tstamp>
+
+  <regexp   property="cvs.tag" text="build_${version}" pattern="\." subst="_" />
+  
+  <property name="src.dir"        value="${basedir}/src" />
+  <property name="doc.dir"        value="${basedir}/doc" />
+  <property name="test.dir"       value="${basedir}/tests"/>
+  <property name="etc.dir"        value="${basedir}/etc"/>
+  <property name="samp.dir"       value="${basedir}/examples"/>
+  <property name="scratch.dir"    value="${basedir}/scratch"/>
+  <property name="bin.dir"        value="${basedir}/bin"/>
+  <property name="dist.dir"       value="${basedir}/dist"/>
+  <property name="framework.dir"  value="${basedir}/framework"/>
+  <property name="contrib.dir"    value="${basedir}/contrib"/>
+
+  <property name="zipfile" value="${dist.dir}/${app.name}-${version}.zip" />
+
+  <!--
+  To compile DUnit with JCL set this property to the JCL path, or use
+
+     -Djcl.lib=c:/jcl/path  
+
+  on the WAnt commandline.
+
+  <property name="jcl.lib" value=""  />
+  -->
+
+  <patternset id="source.code" >
+    <include name="**/*.pas" />
+    <include name="**/*.inc" />
+    <include name="**/*.dfm" />
+    <include name="**/*.nfm" />
+    <include name="**/*.xfm" />
+    <include name="**/*.dpr" />
+    <include name="**/*.dpk" />
+    <include name="**/*.bdsproj" />
+    <include name="**/*.bdsgroup" />
+    <include name="**/*.bpg" />
+    <include name="**/*.drc" />
+    <include name="**/*.rc" />
+    <include name="**/*.res" />
+    <include name="**/*.xml" />
+    <exclude name="**/*~" />
+    <exclude name="${basedir}/private/**/*" />
+    <exclude name="${basedir}/tools/**/*" />
+    <exclude name="${basedir}/helpsrc/**/*" />
+    <exclude name="${basedir}/scratch/**/*" />
+    <exclude name="${basedir}/dist/**/*" />
+    <exclude name="${basedir}/admin/**/*" />
+    <exclude name="${basedir}/backups/**/*" />
+    <exclude name="${basedir}/bin/**/*" />
+  </patternset>
+
+  <patternset id="docs" >
+    <include name="**/*.html" />
+    <include name="**/*.htm" />
+    <include name="**/*.css" />
+    <include name="**/*.xml" />
+    <include name="**/*.dtd" />
+    <include name="**/*.xsl" />
+    <include name="**/*.xsd" />
+    <include name="**/*.txt" />
+    <include name="**/*.png" />
+    <include name="**/*.jpg" />
+    <include name="**/*.jpeg" />
+    <include name="**/*.gif" />
+    <exclude name="**/*~" />
+    <exclude name="${basedir}/private/**/*" />
+    <exclude name="${basedir}/tools/**/*" />
+    <exclude name="${basedir}/helpsrc/**/*" />
+    <exclude name="${basedir}/dist/**/*" />
+    <exclude name="${basedir}/admin/**/*" />
+    <exclude name="${basedir}/bin/**/*" />
+  </patternset>
+
+  <patternset id="source.and.docs" >
+    <patternset refid="source.code" />
+    <patternset refid="docs" />
+  </patternset>
+
+  <target name="prepare" description="build directory structure" >
+    <mkdir dir="${scratch.dir}" />
+    <mkdir dir="${bin.dir}" />
+    <mkdir dir="${framework.dir}" />
+  </target>
+
+  <target name="clean">
+    <delete dir="${scratch.dir}" />
+    <delete dir="${bin.dir}" />
+    <delete dir="${framework.dir}" />
+  </target>
+
+  <property name="test.app" value="DUnitTestLib" />
+
+  <target name="versioninfo" depends="prepare">
+    <regexp property="comma.version" 
+            pattern="\.0*([1-9]*[0-9])" subst=",\1" 
+            text="${version}" />
+    <echo input="${etc.dir}/versioninfo.template.rc" 
+          file="${src.dir}/versioninfo.rc" 
+    />
+    <echo input="${etc.dir}/versioninfo.template.inc" 
+          file="${src.dir}/versioninfo.inc" 
+    />
+  </target>
+
+  <target name="compile" depends="prepare,versioninfo" >
+    <brcc file="${src.dir}/versioninfo.rc" 
+          output="${src.dir}/versioninfo.res" 
+     />
+    <echo message="building dunit with JCL" if="jcl.lib" />
+    <dcc basedir="${src.dir}" source="dunit.dpr" >
+      <dcuoutput path="${scratch.dir}" />
+      <exeoutput path="${bin.dir}"     />
+
+      <optimize value="true" />
+      <build    value="true" />
+
+      <define name="USE_JEDI_JCL" if="jcl.lib" />
+      <define name="DUNIT_DLL" />
+
+      <unitpath>
+        <include name="${src.dir}" />
+        <include name="${jcl.lib}" />
+      </unitpath>
+
+      <resourcepath path="${src.dir}" />
+    </dcc>
+  </target>
+
+  <target name="test_dunit" depends="compile" >
+    <dcc basedir="${test.dir}" source="${test.app}.dpr" >
+      <dcuoutput path="${scratch.dir}" />
+      <exeoutput path="${bin.dir}"     />
+      <debug value="true" />
+      <build value="true" />
+      
+      <define name="DUNIT_DLL" />
+
+      <unitpath path="${src.dir}" />
+      <resourcepath>
+        <include name="${src.dir}" />
+        <include name="${scratch.dir}" />
+      </resourcepath>
+    </dcc>
+
+    <dunit testlib="${bin.dir}/${test.app}" />
+    <!-- test again with standalone dunit.exe -->
+    <exec executable="${bin.dir}/dunit.exe" >
+      <arg  value="-c" />
+      <arg  path="${bin.dir}/${test.app}" />
+    </exec>
+  </target>
+
+  <target name="test_dunit_clx" depends="compile" >
+    <dcc basedir="${test.dir}" source="UnitTests.dpr" >
+      <dcuoutput path="${scratch.dir}" />
+      <exeoutput path="${bin.dir}"     />
+      <debug value="true" />
+      <build value="true" />
+
+      <console value="true" />
+      
+      <define name="DUNIT_CLX" />
+
+      <unitpath path="${src.dir}" />
+      <resourcepath>
+        <include name="${src.dir}" />
+        <include name="${scratch.dir}" />
+      </resourcepath>
+    </dcc>
+    <exec executable="${bin.dir}/UnitTests.exe" >
+      <arg  value="-text-mode" />
+    </exec>
+  </target>
+
+  <target name="examples"  
+          depends="xpgen,
+                   xmlrep,
+                   registration,
+                   registry,
+                   tlist,
+                   structure,
+                   cmdline,
+                   testexception
+                   " 
+                   > 
+                   <!-- list all example dirs here -->
+  </target>
+
+  <target name="test" depends="test_dunit,examples" />
+
+  <target name="dist" depends="clean,prepare,test,tag,package" >
+    <ini file="release.ini" if="dunit.release" >
+      <write section="releases" key="current" value="${version}" />
+      <write section="releases" key="last_date" value="${date.tag}" />
+    </ini>
+  </target>
+
+  <target name="tag">
+    <cvs command='commit -m "release ${version}" release.ini'/>
+    <cvs command="rtag -F ${cvs.tag} dunit" />
+  </target>
+
+ 
+  <target name="package" depends="prepare,compile" > 
+    <echo message="CVS tag='${cvs.tag}'" />
+
+
+    <delete file="${zipfile}" />
+	 <mkdir dir="${dist.dir}" />
+
+    <zip zipfile="${zipfile}" >
+      <fileset dir="." >
+        <patternset refid="source.and.docs" />
+        <exclude name="${basedir}/private/**" />
+        <exclude name="${basedir}/tools/**" />
+      </fileset>
+    </zip>
+  </target>
+
+
+  <target name="publish" depends="package" > 
+    <exec executable="ncftpput">
+      <arg value="upload.sourceforge.net" />
+      <arg value="incoming" />
+      <arg path="${zipfile}" />
+    </exec>
+  </target>
+
+  <target name="tarball" >
+    <exec executable="wget">
+      <arg value="--quiet" />
+      <arg value="--output-document=@{${app.name}-cvs-${date.tag}.tar.bz2" />
+      <arg value="http://cvs.sourceforge.net/cvstarballs/${app.name}-cvsroot.tar.bz2" />
+    </exec>
+  </target>
+  
+
+  <!-- EXAMPLES 
+       Each has its own want.xml or build.xml file.
+  -->
+  
+  <target name="xpgen" depends="prepare" >
+    <want dir="${contrib.dir}/xpgen" description="test compiler" />
+  </target>
+
+  <target name="xmlrep" depends="prepare" >
+    <want dir="${contrib.dir}/XMLReporting" description="test compiler" />
+  </target>
+
+  <target name="registration" depends="prepare" >
+    <want dir="${samp.dir}/registration" />
+  </target>
+
+  <target name="registry" depends="prepare" >
+    <want dir="${samp.dir}/registry" />
+  </target>
+
+  <target name="tlist" depends="prepare" >
+    <want dir="${samp.dir}/TListTest" />
+  </target>
+
+  <target name="structure" depends="prepare" >
+    <want dir="${samp.dir}/structure" />
+  </target>
+
+  <target name="cmdline" depends="prepare" >
+    <want dir="${samp.dir}/cmdline" />
+  </target>
+
+  <target name="testexception" depends="prepare" >
+    <want dir="${samp.dir}/testexception" />
+  </target>
+
+  <!-- ...add a target for each example... -->
+  <target name="changelog" >
+     <shell executable="perl tools/cvs2cl.pl" >
+         <arg value="--file ChangeLog" />
+         <arg value="--tags" />
+         <arg value="--utc" /> 
+         <arg value="--window 604800" />
+         <arg value="--prune" />
+      </shell>
+  </target>
+
+</project>

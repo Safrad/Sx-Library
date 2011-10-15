@@ -1,0 +1,16 @@
+type
+  #CLASSNAME = class(TTestCase)
+  private
+
+  protected
+
+//    procedure SetUp; override;
+//    procedure TearDown; override;
+
+  published
+
+    // Test methods
+#TESTMETHODDECLBLOCK
+
+  end;
+

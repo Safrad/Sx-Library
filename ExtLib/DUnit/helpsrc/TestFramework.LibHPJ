@@ -1,0 +1,40 @@
+<!DOCTYPE DLLibraryHelpProject>
+<DLLibraryHelpProject Version="1" Name="DUnit - Xtreme Unit Testing for Delphi" OutputFormat="0">
+   <Include HorizontalClassTrees="Yes" VerticalClassTrees="Yes">
+   <OutputEngine Name="WinHelp">
+      <Param Name="HPJFilename" Value="\home\dunit\helpsrc\TestFramework.HPJ">
+      <Param Name="KWF" Value="No">
+      <Param Name="Implementation" Value="Yes">
+      <Param Name="MaxVisibility" Value="PROTECTED">
+      <Param Name="IncludePMEKeywords" Value="Yes">
+      <Param Name="IncludeIntopicPMEList" Value="Yes">
+   </OutputEngine>
+   <OutputEngine Name="PlainHTML">
+      <Param Name="BGColor_Top" Value="#9FBFEF">
+      <Param Name="BGColor_Body" Value="#FFFFFF">
+      <Param Name="MaxVisibility" Value="PROTECTED">
+      <Param Name="Implementation" Value="Yes">
+      <Param Name="UsePNG" Value="Yes">
+   </OutputEngine>
+   <OutputEngine Name="XML">
+      <Param Name="Implementation" Value="Yes">
+      <Param Name="MaxVisibility" Value="Protected">
+   </OutputEngine>
+   <OutputEngine Name="HTMLHelp">
+      <Param Name="HHPFilename" Value="TestFramework.hhp">
+      <Param Name="MaxVisibility" Value="PROTECTED">
+      <Param Name="IncludePMEKeywords" Value="Yes">
+      <Param Name="Implementation" Value="Yes">
+   </OutputEngine>
+   <OutputEngine Name="PlainRTF">
+   </OutputEngine>
+   <FileGroups>
+      <FileGroup Name="Main" SourceDir="C:\home\dunit\src" DocDir="C:\home\dunit\doc">
+         <File Name="GUITesting.pas">
+         <File Name="GUITestRunner.pas">
+         <File Name="TestExtensions.pas">
+         <File Name="TestFramework.pas">
+         <File Name="TextTestRunner.pas">
+      </FileGroup>
+   </FileGroups>
+</DLLibraryHelpProject>
