@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <PersonalityInfo>
+    <Option>
+      <Option Name="Personality" Type="String">Default.Personality</Option>
+      <Option Name="ProjectType" Type="String"></Option>
+      <Option Name="Version" Type="String">1.0</Option>
+      <Option Name="GUID" Type="String">{AA4A906C-1AD4-410B-A80F-948203513C16}</Option>
+    </Option>
+  </PersonalityInfo>
+  <Default.Personality>
+    
+    <Projects ActiveProject="UnitTests4Net.exe">
+      <Projects Name="UnitTests4Net.exe" Type="String">..\tests\UnitTests4Net.bdsproj</Projects>
+      <Projects Name="Targets" Type="String">UnitTests4Net.exe</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+</BorlandProject>

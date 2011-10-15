@@ -1,0 +1,48 @@
+2001-02-16 00:56  juanco
+
+	Changed Makefiles to work with the Cygwin version of GNU Make as to
+	get rid of the many inconsistencies in Borland Make.
+
+2001-02-13 14:12  juanco
+
+	BUG: Makefile was leaving doc directory out of the distribution.
+
+2000-12-20 21:32  juanco
+
+	updated changelogs prior to release
+
+2000-12-05 20:43  juanco
+
+	Ready for 3.2.5.0 release.
+
+2000-12-01 02:30  juanco
+
+	Removed explicit references to framework's source directory to
+	allow compilation against DCUs or DCPs.
+	
+	Changed examples to use TTestCase.Suite instead of
+	SuiteOf(TTestCase).
+
+2000-11-30 20:27  juanco
+
+	Updated Makefile so it will create the framework directory.
+	
+	Updated ChangeLogs.
+
+2000-11-17 19:48  juanco
+
+	Added per-directory ChangeLog files
+
+2000-09-25 20:18  juanco
+
+	Changed TTestCase.assertXXX to TTestCase.checkXXX. Changed examples
+	and docs accordingly.  Steped version number to 3.2.4beta1.
+
+2000-09-19 22:25  juanco
+
+	Allow automated compilation and run from within a makefile
+
+2000-09-17 21:09  chrismo
+
+	Initial check-in of registry example.
+

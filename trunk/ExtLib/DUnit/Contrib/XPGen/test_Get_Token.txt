@@ -1,0 +1,22 @@
+unit TEST_xpParse;
+{
+Unit        : TEST_xpParse
+
+Description : A Big Nasty Comment that should be skipped
+
+Programmer  : mike
+
+Date        : 15-Jul-2000
+}
+()[]:=*/+
+interface
+(* This is an old school comment *)
+
+uses
+// This one of those brain dead CPP 
+  DUnit,
+  xpParse,
+  SysUtils;
+
+  
+

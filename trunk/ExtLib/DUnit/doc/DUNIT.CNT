@@ -1,0 +1,23 @@
+:Base DUnit.hlp>Main
+1 Welcome to DUnit=IDH_Introduction
+1 Installing DUnit=IDH_Install
+1 Using DUnit
+2 Creating a Test Application = IDH_TASK_CREATETESTAPP
+2 Creating a Test Environment = IDH_TASK_CREATETESTENV
+2 Creating a Test Case = IDH_TASK_TESTCASE
+2 Running Tests = IDH_TASK_RUNNING
+2 Determining the cause of a test failure or error = IDH_TASK_DEBUG
+1 Classes
+2 TTestCase = IDH_CLASS_TTestCase
+2 TTestSuite = IDH_CLASS_TTestSuite
+2 TTestFailure = IDH_CLASS_TTestFailure
+2 TTestResult = IDH_CLASS_TTestResult
+2 TTestSuite = IDH_CLASS_TTestSuite
+1 Interfaces
+2 ITestSuite = IDH_INTERFACE_ITestSuite
+2 ITest = IDH_INTERFACE_ITest
+2 ITestListener = IDH_INTERFACE_ITestListener
+1 Units
+2 TestFramework = IDH_UNIT_TestFramework
+2 TestRunner = IDH_UNIT_TestRunner
+

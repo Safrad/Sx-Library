@@ -1,0 +1,3 @@
+begin end 
+if(a = b) then do
+'this is a full string';

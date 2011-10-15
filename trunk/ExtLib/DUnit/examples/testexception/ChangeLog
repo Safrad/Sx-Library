@@ -1,0 +1,47 @@
+2001-02-13 14:12  juanco
+
+	BUG: Makefile was leaving doc directory out of the distribution.
+
+2000-12-20 21:32  juanco
+
+	updated changelogs prior to release
+
+2000-12-05 20:43  juanco
+
+	Ready for 3.2.5.0 release.
+
+2000-12-01 02:30  juanco
+
+	Removed explicit references to framework's source directory to
+	allow compilation against DCUs or DCPs.
+	
+	Changed examples to use TTestCase.Suite instead of
+	SuiteOf(TTestCase).
+
+2000-11-30 20:27  juanco
+
+	Updated Makefile so it will create the framework directory.
+	
+	Updated ChangeLogs.
+
+2000-11-17 19:48  juanco
+
+	Added per-directory ChangeLog files
+
+2000-10-25 20:37  juanco
+
+	Removed further references to TTestCase.RunBare
+
+2000-10-25 20:33  juanco
+
+	routine
+
+2000-10-25 20:28  juanco
+
+	RunBare has been removed. Implement exception checking by
+	overriding RunTest.
+
+2000-10-06 13:04  chrismo
+
+	Initial check-in of testexception example
+

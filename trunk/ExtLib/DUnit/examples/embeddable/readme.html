@@ -1,0 +1,37 @@
+<html>
+<head>
+  <title>DUnit - Embeddable GUI Test Runner Form Readme</title>
+</head>
+<body>
+
+<h3>Embeddable GUI Test Runner Form</h3>
+
+<p><font size=1>Peter Arrenbrecht, December 2000</font></p>
+
+<p>The <code>TEmbeddableDUnitDialog</code> class extends the <code>TDUnitDialog </code> class to make it embeddable into another form.  This is mainly useful if you want to add unit tests to an application or application framework that has a standard main form.  Using a <code>TEmbeddableDUnitDialog</code> you can simply embed the GUI test runner into your existing main form (for instance, on a separate tab page).</p>
+
+<p>Sample usage:</p>
+
+<pre class="sourcecode"><code
+><hr>  <b>procedure</b> TFormMain.FormCreate(Sender: TObject);
+  <b>begin</b>
+    <b>inherited</b>;
+    FTestDialog:= TEmbeddableDUnitDialog.CreateInto( Self, Self.TabPageTest );
+    FTestDialog.Suite:= RegisteredTests;
+  <b>end</b>;
+
+  <b>procedure</b> TFormMain.FormDestroy(Sender: TObject);
+  <b>begin</b>
+    <b>if</b> Assigned( FTestDialog ) <b>then</b> <b>begin</b>
+      FTestDialog.RemoveFrom( Self, Self.TabPageTest );
+      FreeAndNil( FTestDialog );
+    <b>end</b>;
+    <b>inherited</b>;
+  <b>end</b>;
+<hr></code></pre>
+
+<p><font size=1>CVS $Id: readme.html,v 1.3 2008/04/18 02:32:59 judc Exp $</font></p>
+
+</body>
+</html>
+

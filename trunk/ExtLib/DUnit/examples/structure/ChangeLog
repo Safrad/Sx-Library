@@ -1,0 +1,49 @@
+2001-02-16 00:56  juanco
+
+	Changed Makefiles to work with the Cygwin version of GNU Make as to
+	get rid of the many inconsistencies in Borland Make.
+
+2001-02-13 14:12  juanco
+
+	BUG: Makefile was leaving doc directory out of the distribution.
+
+2000-12-20 21:32  juanco
+
+	updated changelogs prior to release
+
+2000-12-07 02:28  chrismo
+
+	Updated readme.txt in structure and registry to readme.html -
+	updated links in main doc\readme.html
+
+2000-12-05 20:43  juanco
+
+	Ready for 3.2.5.0 release.
+
+2000-11-30 20:27  juanco
+
+	Updated Makefile so it will create the framework directory.
+	
+	Updated ChangeLogs.
+
+2000-11-17 19:48  juanco
+
+	Added per-directory ChangeLog files
+
+2000-11-15 16:48  juanco
+
+	Make sure unit tests are fully compiled by makefile
+
+2000-10-25 20:57  juanco
+
+	Changed some of the makefiles to make them work with older versions
+	of Borland Make.  Ready for 3.2.4.1 release.
+
+2000-09-19 22:25  juanco
+
+	Allow automated compilation and run from within a makefile
+
+2000-09-06 12:54  chrismo
+
+	no message
+

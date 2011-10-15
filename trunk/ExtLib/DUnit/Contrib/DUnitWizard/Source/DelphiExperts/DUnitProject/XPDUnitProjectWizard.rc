@@ -1,0 +1,4 @@
+DUNIT_PROJECT_ICON ICON dunit_project256.ico
+DUNIT_PROJECTSOURCE_TEXT RCDATA ProjectSource.txt
+DUNIT_PROJECT_MENU BITMAP dunit_project.bmp
+

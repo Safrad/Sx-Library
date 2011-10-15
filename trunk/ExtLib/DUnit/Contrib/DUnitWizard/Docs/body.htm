@@ -1,0 +1,819 @@
+<html>
+<head>
+<title>Untitled Document</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<div class="default"> <font size="-2">Document version: $Id: body.htm,v 1.3 2008/04/18 02:32:53 judc Exp $ </font> 
+  <h2><a name="Introduction"></a>Introduction</h2>
+  <p>DUnitWizard is a <a href="http://www.borland.com/delphi/" target="_blank">Delphi</a> 
+    plug-in that enables you to rapidly construct <a href="http://dunit.sourceforge.net/" target="_blank">DUnit</a> 
+    test suites. It generates the code for new DUnit projects, modules and class 
+    declarations. Tightly integrated into the Delphi IDE, it uses the environment 
+    of the active project for naming and location suggestions, and parses the 
+    topmost module to generate new test modules and class declarations. </p>
+  <p>This wizard is a supplement to the DUnit testing framework. To compile and 
+    run the test projects created by the wizard, you must first have installed 
+    the DUnit framework source, and it must be accessible through: </p>
+</div>
+<ul>
+  <li> 
+    <div class="default">The IDE's library path (<span class="ide">IDEMenu|Tools|EnvironmentOptions...|Library|Library 
+      path</span>), or..</div>
+  </li>
+  <li> 
+    <div class="default">The test project's search path (<span class="ide">IDEMenu|Project|Options...|Directories/Conditionals|Directories|Search 
+      path</span>) as described in the DUnit documentation. </div>
+  </li>
+</ul>
+<div class="default"> 
+  <p>Code generation is highly customisable, so the output looks the way<i> you</i> 
+    want it:</p>
+</div>
+<ul>
+  <li> 
+    <div class="default">There are user-defined parameters for method names, class 
+      names, module and project names and paths - all constructed from macros 
+      and/or static text. </div>
+  </li>
+  <li> 
+    <div class="default">You can control the addition of modules to unit and project 
+      uses clauses, and the inclusion of test methods based on visibility (<span class="dkeyword">protected</span>, 
+      <span class="dkeyword">public</span> etc). </div>
+  </li>
+  <li> 
+    <div class="default">You can override any of this behaviour from the wizard 
+      dialogues, and select or deselect individual methods, visibilities, classes 
+      and entire sections for testing from the graphical displays. </div>
+  </li>
+  <li> 
+    <div class="default">And finally, if you want to change the whitespace, indenting 
+      style or any other aspect of the generated code, the templates are simple 
+      text resources - you can edit the appropriate files in any text editor (including 
+      Delphi!), change a constant or two and recompile the wizard from the included 
+      source.</div>
+  </li>
+</ul>
+<div class="default">
+  <p>The goal is for the wizard to do all the grunt work, freeing you to concentrate 
+    on testing logic.</p>
+  <p> DUnitWizard comprises three packages:</p>
+  <ul>
+    <li><strong>EPCDUnitWizardXX<a name="Footnote1Reference"></a></strong><a href="#Footnote1"><font size="-2">[1]</font></a><strong>.bpl</strong>: 
+      A design-time package that contains separate wizards for DUnit project creation, 
+      test module creation, test class creation and a menu wizard that adds a 
+      DUnit menu to the IDE main menu.</li>
+    <li><strong>EPCOTAUtilsXX.bpl</strong>: A run-time package that provides base 
+      classes and functions which wrap the Open Tools API.</li>
+    <li><strong>EPCCommonXX.bpl</strong>: A run-time package that contains utility 
+      classes common to all <a href="http://xpro.com.au" target="_blank">EPC</a> 
+      wizards.</li>
+  </ul>
+  <p>The remainder of this document deals with the design-time package, <b>EPCDUnitWizardXX.bpl</b></p>
+  <h2><a name="Terminology"></a>Terminology</h2>
+  <p>Throughout this documentation you will find references to <b>test</b> classes 
+    and <b>test<i>ed</i></b> classes. Test classes are the DUnit classes that 
+    contain your testing logic. Tested classes are your original code; they are 
+    the subject of the DUnit tests. Another commonly used term for tested class 
+    is &quot;class under test&quot;.</p>
+  <h2><a name="TestingStrategies"></a>Testing strategies</h2>
+  <p>DUnit tests are contained in DUnit test projects. Use the <a href="#CreatingADUnitProject">project 
+    wizard</a> to create a DUnit <b>dpr</b> file. The test classes may be contained 
+    in their own modules (units), or embedded in the same module as the associated 
+    tested class. </p>
+  <p>Use the <a href="#CreatingADUnitTestModule">test module wizard</a> to create 
+    a new module and test classes based on an existing module you wish to test. 
+    Use the <a href="#CreatingADUnitTestClass">test class wizard</a> to add a 
+    new test class to an existing test module. Separate test modules mean we are 
+    limited to testing globally-scoped classes (declared in the <span class="dkeyword">interface</span> 
+    section of modules), and only the <span class="dkeyword">published</span> 
+    and <span class="dkeyword">public</span> methods of those classes, or also 
+    <span class="dkeyword">protected</span> methods using the well-known Delphi 
+    class-cracking hack<a name="Footnote2Reference"></a><font size="-2"><a href="#Footnote2">[2]</a></font>.</p>
+</div>
+<div class="default"> 
+  <p>Embedding a test class in the same module as the tested class gives us access 
+    to everything. We can test module-scoped classes (declared in the <span class="dkeyword">implementation</span> 
+    section) and <span class="dkeyword">private</span> and <span class="dkeyword">protected</span> 
+    methods of the tested class. Some would argue that you should only test the 
+    public interface of a class (ie <span class="dkeyword">published</span> and 
+    <span class="dkeyword">public</span> methods), but how you use the tool is 
+    your business. Use the <a href="#CreatingADUnitTestClass">test class wizard</a> 
+    to create embedded test classes.</p>
+</div>
+<div class="default"> 
+  <h2><a name="UsingDUnitWizard"></a>Using DUnitWizard</h2>
+  <p>After installing the wizard, the next time you start Delphi you will find 
+    a new menu item , <span class="ide">DUnit</span>, on the IDE's main menu.</p>
+  <p><img src="menu.jpg" width="729" height="203"> </p>
+  <p><img src="applet.png" width="298" height="247" align="left" hspace="20" vspace="0">There 
+    are also two new DUnit entries on the <font face="Arial, Helvetica, sans-serif" size="-1" class="ide">New</font> 
+    page of the <span class="ide">New</span> Items applet (<span class="ide">IDEMenu|File|New...</span> 
+    in D5, <span class="ide">IDEMenu|File|New|Other...</span> in D6+). <span class="ide">DUnitProject</span> 
+    and <span class="ide">DUnit TestModule</span> correspond to the first and 
+    second <span class="ide">DUnit</span> menu items respectively.</p>
+  <br clear="left">
+  <h3><a name="CreatingADUnitProject"></a>Creating a DUnit project</h3>
+  The first item on the DUnit menu, <span class="ide">New Project...</span> (Alt+U+P), 
+  opens a dialogue to create a new DUnit project. This is the .dpr file that binds 
+  your test modules to the DUnit framework code.<img src="newProject.png" width="357" height="210" align="left" vspace="20" hspace="20"> 
+  <p>The project name and path will be prefilled with suggestions based on the 
+    active project in the IDE - specifically, wizard parameters <code><a href="#ProjectName">PROJECTNAME</a></code> 
+    and <code><a href="#PROJECTPATH">PROJECTPATH</a></code> respectively. You 
+    can override these suggestions, or change the format of the parameters to 
+    your liking via the <a href="#Customisation">Options</a> dialogue.<br clear="left">
+    Stretch the dialogue sideways to accomodate long paths like this example. 
+    The new width will be remembered. The default value of <code>PROJECTNAME</code> 
+    is to take the current IDE project and append &quot;Tests&quot;. </p>
+</div>
+<blockquote> 
+  <p class="example">Example:<br>
+    The current project in the IDE is &quot;customdraw&quot; so the suggested 
+    project name becomes &quot;customdrawTests&quot;. </p>
+ </blockquote> 
+  <div class="default">
+  <p>The corresponding project filename is shown in a read-only edit field.The 
+    default value of <code>PROJECTPATH</code> is to take the path of the current 
+    project file and create a subdirectory called <code>dunit</code>. Any non-existent 
+    directories in the path will be automatically created.</p>
+  </div>
+  
+<blockquote> 
+  <p class="example">Example:<br>
+    The current project path is &quot;C:\ProgramFiles\Borland\Delphi6\Demos\CustomDraw\&quot;,<br>
+    so the suggested project path becomes &quot;C:\ProgramFiles\Borland\Delphi6\Demos\CustomDraw\dunit\&quot; 
+  </p>
+  </blockquote> 
+	
+  
+<div class="default">There is also a checkbox to add the new test project to the 
+  current IDE project group. The setting of this checkbox is remembered, and can 
+  also be set via the <a href="#Customisation">Options</a> dialogue. Note that 
+  a project group must have been previously created. The default project group 
+  in Delphi's &quot;bin&quot; directory is merely a placeholder. There is also 
+  a quirk/bug in the Delphi IDE which requires that you close the project group 
+  after initially creating it, to be able to add new projects. Saving the project 
+  group is not sufficient.</div>
+  
+<blockquote>
+  <div class="default"><font size="-1">I strongly suggest that you use project 
+    groups for DUnit testing. They allow convenient grouping of your project and 
+    associated DUnit test project and easy switching between the two via the Project 
+    Manager (MainMenu|View|Project Manager). I would also suggest that you use 
+    Delphi's &quot;desktops&quot; feature and dock the project manager so that 
+    it is always visible next to the editor pane. Then it is simply a double-click 
+    to switch between your project and DUnit test project, and its immediately 
+    obvious which project is active.</font></div>
+</blockquote>
+<div class="default"> 
+  <p>Clicking the dialogue's &quot;Create&quot; button will create a new DUnit 
+    test project and open the .dpr file in an IDE editor window. For our example, 
+    that code is reproduced below. Note that you can switch between the GUI and 
+    console modes of DUnit testing by commenting or uncommenting the third line 
+    of the file, ie the <code><i>{$APPTYPE CONSOLE}</i></code> directive. </p>
+</div>
+<blockquote> 
+  <blockquote> 
+    <div class="default"> 
+      <pre><i>// Uncomment the following directive to create a console application
+// or leave commented to create a GUI application... 
+// {$APPTYPE CONSOLE}</i></pre>
+    </div>
+    <div class="default"> 
+      <pre><b>program</b> customdrawTests;</pre>
+    </div>
+    <div class="default"> 
+      <pre><b>uses</b>
+  TestFramework <i>{$IFDEF LINUX}</i>,
+  QForms,
+  QGUITestRunner <i>{$ELSE}</i>,
+  Forms,
+  GUITestRunner <i>{$ENDIF}</i>,
+  TextTestRunner;</pre>
+    </div>
+    <div class="default"> 
+      <pre><i>{$R *.RES}</i></pre>
+    </div>
+    <div class="default"> 
+      <pre><b>begin</b>
+  Application.Initialize;</pre>
+    </div>
+    <div class="default"> 
+      <pre><i>{$IFDEF LINUX}</i>
+  QGUITestRunner.RunRegisteredTests;
+<i>{$ELSE}</i>
+  <b>if</b> System.IsConsole <b>then</b>
+    TextTestRunner.RunRegisteredTests
+  <b>else</b>
+    GUITestRunner.RunRegisteredTests;
+<i>{$ENDIF}</i></pre>
+    </div>
+    <div class="default"> 
+      <pre><b>end</b>.</pre>
+    </div>
+  </blockquote>
+</blockquote>
+<div class="default">
+  <p>The format of the generated code can be modifed by <a href="#CodeTemplates">editing</a> 
+    the project text template file compiled into the wizard as a text resource.<br>
+  </p>
+  </div>
+<div class="default"> 
+  <h3><a name="CreatingADUnitTestModule"></a>Creating a DUnit test module</h3>
+  <p>Now we have a test project, we can start creating test modules. The second 
+    item on the DUnit menu, <span class="ide">New TestModule...</span> (Alt+U+M), 
+    opens a dialogue to configure a test module, based on the topmost unit in 
+    the IDE. We will be creating a test module based on zero or more of the globally-scoped 
+    classes declared in the topmost (currently selected) unit. The new module 
+    will be added to the <i>currently</i> active IDE project, so check that your 
+    DUnit test project is active (the <b>bold</b> entry in the IDE Project Manager) 
+    before opening this dialogue.</p>
+  <img src="newTestModule.png" width="575" height="497" vspace="20" hspace="20">
+  <br clear="left">
+  <p>Stretch the dialogue to your liking in either direction and/or move the splitter 
+    between the treeviews. The new settings will be remembered.</p>
+  <p>The <span class="ide">Unit name</span> field is prefilled with a suggestion 
+    based on the <code><a href="#UNITNAME">UNITNAME</a></code> parameter, which 
+    defaults to the name of the current IDE unit with &quot;Tests&quot; appended. 
+    Of course, you can override the suggestion or change the <code>UNITNAME</code> 
+    parameter via the Options dialogue.</p>
+</div>
+<blockquote> 
+  
+    
+  <p class="example">Example:<br>
+      The currently selected IDE unit is &quot;CustomDrawTreeView&quot;, so the 
+      suggested test module name becomes &quot;CustomDrawTreeViewTests&quot;</p>
+  
+</blockquote>
+  <div class="default"> 
+    
+  <p>The <span class="ide">Unit path</span> field is prefilled with a suggestion 
+    based on the <a href="#UNITPATH"><code>UNITPATH</code></a> parameter, which 
+    defaults to the path of the current IDE unit with a subdirectory &quot;dunit&quot; 
+    appended. As above, you can override the suggestion or reformat the <code>UNITPATH</code> 
+    parameter. Any non-existent directories in the path will be automatically 
+    created.</p>
+</div>
+  
+<blockquote> 
+  <p class="example">Example:<br>
+    The path of the currently selected IDE unit is: &quot;C:\Program Files\Borland\Delphi6\Demos\CustomDraw\&quot;,<br>
+    so the suggested test module path becomes &quot;C:\Program Files\Borland\Delphi6\Demos\CustomDraw\dunit\&quot;</p>
+</blockquote>
+<div class="default"> 
+  <p>Next, we have a couple of checkboxes concerning <code><b>uses</b></code> 
+    clauses. The first one adds the current IDE unit, <code>CustomDrawTreeView</code> 
+    in our example to the (interface) <code><b>uses</b></code> clause in the new 
+    test module. The second checkbox adds the current IDE unit to the &quot;uses&quot; 
+    clause in the current project file (.dpr). The setting of these checkboxes 
+    will be remembered and can also be pre-configured from the <a href="#Customisation">Options</a> 
+    dialogue.</p>
+Following the checkboxes are two treeviews: </div>
+<ul>
+  <li> 
+    <div class="default">The left treeview displays all the classes declared in 
+      the interface section of the current IDE unit. The classes' methods are 
+      grouped by visibility (published, public, protected etc.). </div>
+  </li>
+  <li> 
+    <div class="default">The right treeview displays the corresponding test classes 
+      which will be declared in the interface section of the new test module.</div>
+  </li>
+</ul>
+<div class="default"> You will notice that every item in the left treeview has 
+  an associated checkbox. Clicking those checkboxes immediately adds/removes that 
+  item and any children to/from the right treeview, and consequently the generated 
+  test classes. There are a few points to note about the right treeview:</div>
+<ul>
+  <li> 
+    <div class="default">All the class methods are contained in the published 
+      section. This is a fundamental requirement of DUnit, as it leverages Delphi's 
+      RTTI facility. </div>
+  </li>
+  <li> 
+    <div class="default">The class and method names are derived from the corresponding 
+      entity in the left treeview. </div>
+  </li>
+  <li> 
+    <div class="default">The test class name derives from the <code><a href="#CLASSNAME">CLASSNAME</a></code> 
+      parameter, configurable from the <a href="#Customisation">Options</a> dialogue. 
+      The default value is the tested class name with &quot;Tests&quot; appended.<br>
+      <br>
+      <span class="example">Example: &quot;TCustomDrawForm&quot; becomes &quot;TCustomDrawFormTests&quot;<br>
+      </span><br>
+    </div>
+  </li>
+  <li> 
+    <div class="default">The test methodname derives from the <code><a href="#METHODNAME">METHODNAME</a></code> 
+      parameter, configurable as above. The default value is the tested method 
+      name with &quot;Test&quot; prepended.<br>
+      <br>
+      <span class="example">Example: &quot;FormCreate&quot; becomes &quot;TestFormCreate&quot;. 
+      </span></div>
+  </li>
+</ul>
+<div class="default"> 
+  <p>Clicking the &quot;Create&quot; button will generate the test module and 
+    open it as a new IDE editor window. The generated code for the example module 
+    is reproduced here. Note that <code>SetUp</code> and <code>TearDown</code> 
+    methods are declared but commented out initially, and that each declared class 
+    is registered with the DUnit test framework in the unit's initialization 
+    section. Place the text cursor (caret) within the class declaration and use 
+    Delphi's code completion feature (Ctrl+Shift+C) to generate the class method 
+    stubs in the implementation section of the unit.</p>
+</div>
+<blockquote> 
+  <blockquote> 
+    <div class="default"> 
+      <pre><b>unit</b> CustomDrawTreeViewTests;</pre>
+    </div>
+    <div class="default"> 
+      <pre><b>interface</b></pre>
+    </div>
+    <div class="default"> 
+      <pre><b>uses</b>
+  CustomDrawTreeView,
+  TestFrameWork;</pre>
+    </div>
+    <div class="default"> 
+      <pre><b>type</b>
+  TCustomDrawFormTests = <b>class</b>(TTestCase)
+  <b>private</b></pre>
+    </div>
+    <div class="default"> 
+      <pre>  <b>protected</b></pre>
+    </div>
+    <div class="default"> 
+      <pre><i>  //  procedure SetUp; override;
+  //  procedure TearDown; override;</i></pre>
+    </div>
+    <div class="default"> 
+      <pre>  <b>published</b></pre>
+    </div>
+    <div class="default"> 
+      <pre><i>    // Test methods
+</i>    <b>procedure</b> TestFormCreate;
+   <b> procedure</b> TestTVCustomDraw;
+   <b> procedure</b> TestTVCustomDrawItem;
+   <b> procedure</b> TestTVGetImageIndex;
+   <b> procedure</b> TestTVGetSelectedIndex;
+   <b> procedure</b> TestExit1Click;
+    <b>procedure</b> TestSelection1Click;
+    <b>procedure</b> TestColor1Click;
+   <b> procedure</b> TestSelectionBackground1Click;
+   <b> procedure</b> TestSolid1Click;
+   <b> procedure</b> TestNone1Click;
+   <b> procedure</b> TestOnCustomDraw1Click;
+   <b> procedure</b> TestOnCustomDrawItem1Click;
+   <b> procedure</b> TestTVExpanded;
+   <b> procedure</b> TestButtonColor1Click;
+   <b> procedure</b> TestButtonSize1Click;
+   <b> procedure</b> TestDrawing1Click;
+   <b> procedure</b> TestColor2Click;
+   <b> procedure</b> TestCustomDraw1Click;
+   <b> procedure</b> TestFont2Click;</pre>
+    </div>
+    <div class="default"> 
+      <pre> <b> end</b>;</pre>
+    </div>
+    <div class="default"> 
+      <pre><b>implementation</b></pre>
+    </div>
+    <div class="default"> 
+      <pre><b>initialization</b></pre>
+    </div>
+    <div class="default"> 
+      <pre>  TestFramework.RegisterTest('CustomDrawTreeViewTests Suite',
+    TCustomDrawFormTests.Suite);</pre>
+    </div>
+    <div class="default"> 
+      <pre><b>end</b>.</pre>
+    </div>
+  </blockquote>
+</blockquote>
+<div class="default"> 
+  <p>The format of the generated code can be modified by <a href="#CodeTemplates">editing</a> 
+    the relevant text template files compiled into the wizard as a text resource.</p>
+  <h3><a name="CreatingADUnitTestClass"></a>Creating a DUnit test class</h3>
+  <p>You can create a test class declaration for any class, by placing the text 
+    cursor anywhere within the class declaration, and selecting <span class="ide">New 
+    Test Class...</span> (Alt+U+C) from the DUnit menu. A dialogue similar to 
+    the test module dialogue appears:</p>
+  <p><img src="newClass.png" width="448" height="451" vspace="20" hspace="20"><br clear="left">
+    The left treeview displays the selected class declaration. Note that you also 
+    have the option of selecting <span class="dkeyword">private</span> methods. 
+  </p>
+  <p>The right treeview is a preview of the test class declaration, and changes 
+    dynamically in response to your manipulation of the left treeview. As before, 
+    you can preconfigure the selected class visibilities via the <a href="#Customisation">Options</a> 
+    dialogue - these selections are distinct from the test <i>module</i> choices. 
+  </p>
+  <p>Exit the dialogue by pressing the &quot;Copy to Clipboard&quot; button. Then 
+    paste the new test class declaration wherever you desire, by moving the text 
+    cursor to the insertion point and pressing Ctrl+V or selecting <span class="ide">IDEMenu|Edit|Paste</span>.<br>
+    <br clear="left">
+    The generated code for the example is shown here:</p>
+  </div>
+<blockquote> 
+  <blockquote> 
+    <div class="default"> 
+      <pre><b>  type
+</b>    TResourceItemTests = <b>class</b>(TTestCase)
+    <b>private</b><br>
+
+    <b>protected</b>
+
+<i>  //    procedure SetUp; override;
+  //    procedure TearDown; override;
+</i>
+    <b>published</b>
+
+  <i>    // Test methods</i>
+      <b>procedure</b> TestGetName;
+      <b>procedure</b> TestGetResourceList;
+      <b>procedure</b> TestCreateItem;
+      <b>procedure</b> TestIsList;
+      <b>procedure</b> TestOffset;
+      <b>procedure</b> TestSize;
+      <b>procedure</b> TestRawData;
+      <b>procedure</b> TestResTypeStr;
+      <b>procedure</b> TestSaveToFile;
+      <b>procedure</b> TestSaveToStream;
+
+    <b>end</b>;</pre>
+    </div>
+  </blockquote>
+</blockquote>
+<div class="default"> 
+  <h2><a name="Customisation"></a>Customisation</h2>
+  <p>You can customise the operation of the DUnitWizard via the Options dialogue 
+    and/or by editing the code templates used for code generation, described in 
+    the <a href="#CodeTemplates">next</a> section. </p>
+  <p>Let's start with the Options dialogue. Choose <span class="ide">Options...</span> 
+    (Alt+U+O) from the DUnit menu. The following tabbed dialogue appears:</p>
+  <p><img src="behaviour.png" width="536" height="380" vspace="20" hspace="20"> 
+    <br clear="left">
+    The three boxes represent each of the three wizards:</p>
+</div>
+<ul>
+  <li> 
+    <div class="default">The &quot;New TestModule&quot; behaviour controls the 
+      preselected values of the controls in the <a href="#CreatingADUnitTestModule">TestModule 
+      dialogue</a> - the checkboxes and the enabled visibilities in the left treeview. 
+    </div>
+  </li>
+  <li> 
+    <div class="default">The &quot;New TestClass&quot; behaviour controls the 
+      initially enabled visibilities of the left treeview in the <a href="#CreatingADUnitTestClass">TestClass 
+      dialogue</a>. </div>
+  </li>
+  <li>
+    <div class="default">The &quot;New TestProject&quot; behaviour controls the 
+      preselected value of the checkbox in the <a href="#CreatingADUnitProject">TestProject 
+      dialogue</a>.</div>
+  </li>
+</ul>
+<div class="default">
+  <p>All these settings can all be overriden from the respective wizard dialogues.<br clear="left">
+    <img src="parameters.png" width="536" height="380" vspace="20" hspace="20"> 
+    <br clear="left">
+    Clicking on the &quot;Parameters&quot; tab shows the second page, where you 
+    can edit the format of the parameters which substitute for their respective 
+    namesakes in the wizard-generated projects, modules and classes.</p>
+  <p>To operate this dialogue first select a <a href="#UserDefinedParameters">parameter</a> 
+    from the leftmost listbox. the desciption of the selection appears in the 
+    panel below the listbox. Then edit the content of the selected parameter in 
+    the edit control topmost on the righthand side. This may contain any combination 
+    of text and macros selected from the listbox below the edit control. </p>
+  <p>To insert a macro, place the cursor at the insertion point in the edit control 
+    and double-click a macro, or select a macro then press &quot;Insert&quot;. 
+    The description panel to the right of the listbox updates as the macro selection 
+    changes. The last five macros take an argument, which can be any combination 
+    of macros and fixed text. Macros can be nested within macros to any level 
+    you desire.</p>
+  <p>You can further customise DUnitWizard by editing the code templates used 
+    for code generation.<br clear="left">
+  </p>
+  <h2></h2>
+  <h2><a name="CodeTemplates"></a>Code templates</h2>
+  <p>The <a href="#CreatingADUnitProject">project</a>, <a href="#CreatingADUnitTestModule">test 
+    module</a> and <a href="#CreatingADUnitTestClass">test class</a> wizards all 
+    use code templates. These are parameterised code snippets that are stored 
+    as text resources in the design-time package. The project source template 
+    is stored in the text resource <code>DUNIT_PROJECTSOURCE_TEXT</code>, derived 
+    from <strong>ProjectSource.txt</strong>. The test module source is stored 
+    in the text resource <code>DUNIT_TESTMODULE_TEXT</code>, derived from <strong>TestModule.txt</strong>. 
+    The test module source contains references to <a href="#FixedParameters">fixed 
+    parameters</a> which in turn are substituted by other template files. All 
+    these templates can be modified by editing the respective text file. You must 
+    also modify the corresponding file length value (eg <code>ProjectTextLength</code> 
+    for <b>ProjectSource.txt</b>) in <b>DUnitCommon.pas</b>, then recompile and 
+    reinstall the design-time package.</p>
+  <p>Parameters in the code templates are immediately preceded by a hash character 
+    '#', eg<code> #UNITNAME</code>. They are all case-insensitive, but are upper-case 
+    by convention to highlight their presence. There are both fixed and user-defined 
+    parameters.</p>
+  <h3><a name="FixedParameters"></a>Fixed parameters<br>
+  </h3>
+</div>
+
+<div class="default">
+  <table width="95%" border="0" cellpadding="5" align="center" class="default">
+    <tr> 
+      <td width="17%"><code>USESTESTEDUNIT</code></td>
+      <td width="83%">The <code>uses</code> clause entry for the currently selected 
+        IDE unit in the new test module. The line containing this parameter is 
+        replaced by the text resource <code>DUNIT_USESTESTEDUNIT_TEXT</code> from 
+        the design-time package, following substitution for any parameters contained 
+        in the resource. The resource content can be modifed by editing <strong>UsesTestedUnit.txt</strong> 
+        and recompiling and installing the design-time package. </td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>TESTCLASSDECLBLOCK</code></td>
+      <td width="83%">The test class declaration(s) for the class(es) selected 
+        for testing (the <i>tested</i> classes) from the currently selected IDE 
+        unit. The line containing this parameter is replaced by one instance of 
+        text resource <code>DUNIT_TESTCLASSDECL_TEXT</code> from the design-time 
+        package for each test class, following substitution for any parameters 
+        contained in the resource. The resource content can be modifed by editing 
+        <strong>TestClassDecl.txt</strong> and recompiling and installing the 
+        design-time package. </td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>TESTMETHODBLOCK</code></td>
+      <td width="83%">Locates the position of the test class method declaration 
+        block within the <code>DUNIT_TESTMODULE_TEXT</code> resource. The line 
+        containing this parameter is replaced by one instance of text resource 
+        <code>DUNIT_TESTMETHODDECL_TEXT</code> from the design-time package for 
+        each test method, following substitution for any parameters contained 
+        in the resource. The resource content can be modifed by editing <strong>TestMethodDecl.txt</strong> 
+        and recompiling and installing the design-time package. </td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>TESTSUITEREGBLOCK</code></td>
+      <td width="83%">The test class registrations with DUnit in the new test 
+        module. The line containing this parameter is replaced by one instance 
+        of text resource <code>DUNIT_TESTSUITEREG_TEXT</code> from the design-time 
+        package for each test class, following substitution for any parameters 
+        contained in the resource. The resource content can be modifed by editing 
+        <strong>TestSuiteReg.txt</strong> and recompiling and installing the design-time 
+        package. </td>
+    </tr>
+    <tr> 
+      <td width="17%" height="2"><code>TESTEDUNITNAME</code></td>
+      <td width="83%" height="2">The name of the currently selected IDE unit (no 
+        path or extension)</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>TESTEDUNITPATH</code></td>
+      <td width="83%">The file system absolute path of the directory containing 
+        the currently selected IDE unit (includes trailing directory delimiter 
+        character)</td>
+    </tr>
+  </table>
+  <h3><a name="UserDefinedParameters"></a>User-defined parameters</h3>
+  <table width="95%" border="0" cellpadding="5" align="center" class="default">
+    <tr> 
+      <td width="17%"><code><a name="UNITNAME"></a>UNITNAME</code></td>
+      <td width="83%">The name of the new DUnit test module (no <var>.pas</var> 
+        extension)</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code><a name="UNITPATH"></a>UNITPATH</code></td>
+      <td width="83%">The file system absolute path of the directory containing 
+        the new test module (includes trailing directory delimiter character)</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code><a name="CLASSNAME"></a>CLASSNAME</code></td>
+      <td width="83%">The name of a DUnit test class</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code><a name="METHODNAME"></a>METHODNAME</code></td>
+      <td width="83%">The name of a DUnit test method</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code><a name="ProjectName"></a>PROJECTNAME</code></td>
+      <td width="83%">The name of the new DUnit test project (no <var>.dpr</var> 
+        extension)</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code> <a name="PROJECTPATH"></a>PROJECTPATH</code></td>
+      <td width="83%">The file system absolute path of the directory containing 
+        the new DUnit test project (includes trailing directory delimiter character)</td>
+    </tr>
+  </table>
+  <p>The user-defined parameters in turn are defined by templates, configured 
+    via the <a href="#Customisation">Options</a> dialogue. These templates can 
+    include macros. They are case-insensitive, but upper-cased by convention, 
+    and identified by a prefixed dollar character '$', eg <code>$CURRENTUNIT</code></p>
+  <h3><a name="ParameterMacros"></a>Parameter macros</h3>
+  <table width="95%" border="0" cellpadding="5" align="center" class="default">
+    <tr> 
+      <td width="17%"><code>TESTEDCLASSNAME</code></td>
+      <td width="83%">The name of a class from the currently selected IDE unit 
+        that is to be tested (no <var>.pas</var> extension). <br>
+        <i>Note:</i> This macro is only meaningful in the context of the definition 
+        of<code> </code>the <code>CLASSNAME</code> parameter.</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>TESTEDMETHODNAME</code></td>
+      <td width="83%">The name of a method from a tested class. <br>
+        <i>Note:</i> This macro is only meaningful in the context of the definition 
+        of<code> </code>the <code>METHODNAME</code> parameter.</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>CURRENTUNIT</code></td>
+      <td width="83%">The absolute file specification for the currently selected 
+        IDE unit (includes path and filename)</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>CURRENTPROJECT</code></td>
+      <td width="83%">The absolute file specification for the currently selected 
+        IDE project (includes path and filename for the Delphi project file, <var>.dpr</var>) 
+      </td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>PROJECTGROUP</code></td>
+      <td width="83%">The absolute file specification for the currently selected 
+        IDE project group (includes path and filename for the Delphi project group 
+        file, <var>.bpg</var>) </td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>FILEPATH()</code></td>
+      <td width="83%">This macro extracts the path (including trailing directory 
+        delimiter) from the filename expression passed as the argument. The expression 
+        can be any combination of literal text and other macros, with unlimited 
+        nesting.</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>FILENAME()</code></td>
+      <td width="83%">This macro function extracts the filename (including any 
+        extension) from the file specification expression passed as the argument. 
+        The expression can be any combination of literal text and other macros, 
+        with unlimited nesting.</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code> FILESTEM()</code></td>
+      <td width="83%">This macro function extracts the filestem (filename excluding 
+        extension) from the file specification expression passed as the argument. 
+        The expression can be any combination of literal text and other macros, 
+        with unlimited nesting.</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>FILEEXT()</code></td>
+      <td width="83%">This macro function extracts the filename extension (including 
+        leading period) from the file specification expression passed as the argument. 
+        The expression can be any combination of literal text and other macros, 
+        with unlimited nesting.</td>
+    </tr>
+    <tr> 
+      <td width="17%"><code>ENVIROVAR()</code></td>
+      <td width="83%">This macro returns the current value of the environment 
+        variable expression passed as the argument. The expression can be any 
+        combination of literal text and other macros, with unlimited nesting.</td>
+    </tr>
+  </table>
+  <p></p>
+  <h2><a name="SourceCodeGuide"></a>Source code guide</h2>
+  <p>The entry point for any design-time package is a global procedure named <code>Register</code> 
+    (case-sensitive). This is contained in <strong>XPDUnitWizard.pas</strong>. 
+    This procedure registers an instance of <code>IOTAWizard</code>, implemented 
+    by <code>TXPDUnitWizard</code>. This class creates the project, module, class 
+    and menu wizards mentioned earlier, and manages the registration and deregistration 
+    of these wizards with the IDE. </p>
+  <p>I recommend the use of a container wizard like this for OTA plug-ins. Interfaces 
+    registered via <code>ToolsAPI.RegisterPackageWizard()</code> must have a reference 
+    count of one to be destroyed by the IDE; otherwise, you will very likely get 
+    access violations whenever your design-time package is unloaded. Many wizards 
+    will implement more than one interface and will consequently have a reference 
+    count of two or more at times. Using a container wizard for IDE registration 
+    avoids this problem.</p>
+  <p>The project wizard is declared in <strong>XPDUnitProjectWizard.pas</strong>. 
+    The class <code>TProjectWizard</code> implements the necessary OTA wizard 
+    interfaces. The method <code>TProjectWizard.Execute</code> pops up the project 
+    dialogue. The dialogue, implemented in <strong><b>XPDUnitProject</b></strong><b>.pas</b>, 
+    loads the wizard parameters and persisted settings in <code>TXPDUnitProjectForm.FormCreate</code>. 
+    The wizard parameters are evaluated for the active project in <code>TXPDUnitProjectForm.FormShow</code>. 
+    If the 'Create' button is clicked, a new module is created. The class <code>TProjectCreator</code> 
+    implements the OTA module interfaces. <code>TProjectCreator.NewProjectSource</code> 
+    returns an interface, <code>IOTAFile</code>, implemented by <code>TProjectSource</code>, 
+    which provides the source for the <b>dpr</b> file. <code>TProjectSource.Create</code> 
+    extracts the template resource from the package, and <code>TProjectSource.GetSource</code> 
+    makes the substitutions based on the user's choices from the project dialogue.</p>
+  <p>The test module wizard is declared in <strong>XPDUnitTestModuleWizard.pas</strong>. 
+    The class <code>TTestModuleWizard</code> implements the necessary OTA wizard 
+    interfaces. The method <code>TTestModuleWizard.Execute</code> pops up the 
+    test module dialogue. The dialogue, implemented in <strong><b>XPDUnitTestModule</b></strong><b>.pas</b>, 
+    loads the current wizard parameters, persisted settings and creates a module 
+    parser and filters in <code>TXPDUnitProjectForm.FormCreate</code>. The module 
+    parser is implemented in <b>XPTestedUnitParser.pas</b>, the parser filters 
+    in <b>XPParserFilters.pas</b>. There is a parser filter for each of the treeviews 
+    in the dialogue. The wizard parameters are evaluated, the unit parsed, and 
+    the resultant parse tree filtered for the active module in the IDE in <code>TXPDUnitTestModuleForm.FormShow</code>. 
+    If the 'Create' button is clicked, a new module is created. The class <code>TTestModuleCreator</code> 
+    implements the OTA module interfaces. The filtered test class parser tree 
+    is passed into <code>TTestModuleCreator</code>. <code>TTestModuleCreator.NewImplSource</code> 
+    returns an interface, <code>IOTAFile</code>, implemented by <code>TTestModuleSource</code>, 
+    which provides the source for the new <b>pas</b> file. <code>TTestModuleSource.Create</code> 
+    creates an <code>IXPDUnitTextTemplates</code> interface, implemented in <b>XPTextTemplates.pas</b>, 
+    to extract the template resource from the package and make the substitutions 
+    based on the user's choices from the test module dialogue. </p>
+  <p>The test class wizard is declared in <strong>XPDUnitTestClassWizard.pas</strong>. 
+    The class <code>TTestClassWizard</code> implements the necessary OTA wizard 
+    interfaces. The method <code>TTestClassWizard.Execute</code> pops up the test 
+    module dialogue. The dialogue, implemented in <strong><b>XPDUnitTestClass</b></strong><b>.pas</b>, 
+    loads the current wizard parameters, persisted settings and creates a module 
+    parser and filters in <code>TXPDUnitTestClassForm.FormCreate</code>. The same 
+    parser as the test module wizard is used again, but different filters to extract 
+    only the current class declaration (enclosing the cursor postion in the current 
+    IDE unit). If the 'Copy to Clipboard' button is clicked, a new test class 
+    declaration is created and copied to the clipboard. <code>TTestClassWizard.Execute</code> 
+    creates an <code>IXPDUnitTextTemplates</code> interface, as used by the test 
+    module wizard, to extract the template resource from the package and make 
+    the substitutions based on the user's choices from the test class dialogue. 
+  </p>
+  <p></p>
+  <p>The menu wizard is declared in <strong>XPDUnitMenuWizard.pas</strong>. The 
+    class <code>TXPDUnitMenuWizard</code> implements a basic <code>IOTAWizard</code> 
+    interface, taking references to the project, test module and test class wizards 
+    as arguments to its constructor. <code>TXPDUnitMenuWizard.Create</code> creates 
+    the DUnit menu, wires up all the other wizards to their respective menu items 
+    and also wires up the Options dialogue and HTML documentation. The destructor 
+    <code>TXPDUnitMenuWizard.Destroy</code> reverses these operations.</p>
+  <h2><a name="FAQ"></a>Frequently asked questions (FAQ)</h2>
+  <p>Please feel free to ask questions via the EPC support <a href="http://xpro.com.au/support.htm">web 
+    page</a>.</p>
+  <p><b>Q: The wizard creates the test modules in a subdirectory below the tested 
+    module called 'dunit'. I keep them in the same directory as the tested modules. 
+    How can I set this up?</b></p>
+  <p>A: Choose <span class="ide">IDEMenu|DUnit|Options...</span> Click the <span class="ide">Parameters</span> 
+    tab and select the <code>UNITPATH</code> parameter. Change the default value 
+    <code>$FILEPATH($CURRENTUNIT)dunit\</code> to <code>$FILEPATH($CURRENTUNIT)</code></p>
+  <p><b>Q: All my source modules and project files are in a directory called 'Source'. 
+    All my test modules and test project files are in a directory at the same 
+    level called 'Tests'. How can I set this up?</b></p>
+  <p>A: Choose <span class="ide">IDEMenu|DUnit|Options...</span> Click the <span class="ide">Parameters</span> 
+    tab and select the <code>PROJECTPATH</code> parameter. Change the default 
+    value <code>$FILEPATH($CURRENTPROJECT)dunit\</code> to <code>$FILEPATH($CURRENTPROJECT)<b>..\Tests\. 
+    </b></code>Select the <code>UNITPATH</code> parameter. Change the default 
+    value <code>$FILEPATH($CURRENTUNIT)dunit\</code> to <code>$FILEPATH(<b>$CURRENTPROJECT)..\Tests\</b> 
+    </code></p>
+  <p><b>Q: I prefer to use a prefix of TEST_ for all my test method names. How 
+    can I set this up?</b></p>
+  <p>A: Choose <span class="ide">IDEMenu|DUnit|Options...</span> Click the <span class="ide">Parameters</span> 
+    tab and select the <code>METHODNAME</code> parameter. Change the default value 
+    <code>Test$TESTEDMETHODNAME</code> to <code><b>TEST_</b>$TESTEDMETHODNAME</code></p>
+  <p><b>Q: I always test protected methods as well as published and public. How 
+    can I set this up so I don't have to select the protected node each time in 
+    the 'New TestModule dialogue'?</b></p>
+  <p>A: Choose <span class="ide">IDEMenu|DUnit|Options...</span> Click the <span class="ide">Behaviour</span> 
+    tab and tick the <span class="ide">Add PROTECTED method tests</span> checkbox 
+    in the <span class="ide">New TestModule</span> group box.</p>
+  <hr>
+  <p>Footnotes:</p>
+  <p><a name="Footnote1"></a><font size="-1"><a href="#Footnote1Reference">[1]</a> 
+    (XX denotes the Delphi version: XX=50: Delphi 5, XX=60: Delphi 6, XX=70: Delphi 
+    7)</font> </p>
+  <div class="default"> 
+    <p><font size="-1"><a name="Footnote2"></a><a href="#Footnote2Reference">[2]</a> 
+      Class cracking example: <br>
+      There is a class TSample in a unit Sample.pas. You can access the protected 
+      methods of TSample from another unit, say Test.pas, by declaring an empty 
+      subclass of TSample in Test.pas, say TCrackedSample, and casting instances 
+      of TSample to TCrackedSample.<br>
+      </font></p>
+    <table width="100%" border="0" cellpadding="5" cellspacing="5">
+      <tr valign="top"> 
+        <td width="50%" height="177"> 
+          <div class="default"> <code>In <i>Sample.pas</i>: <b><br>
+            <br>
+            type</b> TSample = <b>class</b><br>
+            ... <br>
+            <b>protected</b> <b>procedure</b> AProtectedMethod;<br>
+            ... <br>
+            <b>end</b>; <br>
+            </code></div>
+        </td>
+        <td width="50%" height="177"> 
+          <div class="default"><code>In <i>Test.pas</i>:<br>
+            <br>
+            <b>uses</b> Sample;<br>
+            ...<br>
+            <b>type</b> TCrackedSample = <b>class</b>(TSample);<br>
+            ... <br>
+            <b>var</b> ASample: TSample;<br>
+            ...<br>
+            <i>// call protected method</i><br>
+            TCrackedSample(ASample).AProtectedMethod;</code></div>
+          <div class="default"> </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <p>&nbsp;</p>
+</div>  
+</body>
+</html>

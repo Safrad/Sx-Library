@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes" ?>
+<TestRun>
+<TestSuite name="UnitTests.exe">
+<TestSuite name="Framework Suites">
+<TestSuite name="TTestTest">
+<Test name="TestCheck" result="PASS">
+</Test>
+<Test name="TestCheckEqualsBinHexMessage" result="PASS">
+</Test>
+<Test name="TestError" result="PASS">
+</Test>
+<Test name="TestFailure" result="PASS">
+</Test>
+<Test name="TestRegisterTest" result="PASS">
+</Test>
+<Test name="TestRunAndTearDownFails" result="PASS">
+</Test>
+<Test name="TestSetupException" result="PASS">
+</Test>
+<Test name="TestSuccess" result="PASS">
+</Test>
+<Test name="TestTearDownAfterError" result="PASS">
+</Test>
+<Test name="TestTearDownFails" result="PASS">
+</Test>
+<Test name="TestTearDownSetupFails" result="PASS">
+</Test>
+<Test name="TestWasNotSuccessful" result="PASS">
+</Test>
+<Test name="TestWasSuccessful" result="PASS">
+</Test>
+<Test name="TestWasStopped" result="PASS">
+</Test>
+<Test name="TestEmptyTestFailure" result="PASS">
+</Test>
+<Test name="TestBoolToStr" result="PASS">
+</Test>
+<Test name="TestElapsedTestTime" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestTestResult">
+<Test name="TestRun" result="PASS">
+</Test>
+<Test name="TestElapsedTime" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestStatus">
+<Test name="testStatus" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestMethodEnumerator">
+<Test name="TestMethodEnumerator" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestExceptionChecks">
+<Test name="TestExpectedException" result="PASS">
+</Test>
+<Test name="TestChecksAfterException" result="PASS">
+</Test>
+<Test name="TestDifferentFromExpected" result="PASS">
+</Test>
+<Test name="TestInheritsFromExpected" result="PASS">
+</Test>
+<Test name="TestCheckException" result="PASS">
+</Test>
+<Test name="TestCheckWrongException" result="PASS">
+</Test>
+<Test name="TestNoExceptionRaised" result="PASS">
+</Test>
+<Test name="TestCheckAndNoExceptionRaised" result="PASS">
+</Test>
+<Test name="TestNotRaised" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestTestSuite">
+<Test name="TestSuiteSetupTearDown" result="PASS">
+</Test>
+</TestSuite>
+</TestSuite>
+<TestSuite name="T_TGUITestCase">
+<Test name="Test_IsFocused" result="PASS">
+</Test>
+<Test name="Test_Sleep" result="PASS">
+</Test>
+<Test name="Test_EnterKeyInto" result="PASS">
+</Test>
+<Test name="Test_EnterKey" result="PASS">
+</Test>
+<Test name="Test_EnterTextInto" result="PASS">
+</Test>
+<Test name="Test_Tab" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="GUI Tests">
+<TestSuite name="TGUITestRunnerTests">
+<Test name="Test_BooleanEvalOff" result="PASS">
+</Test>
+<Test name="TestTabOrder" result="PASS">
+</Test>
+<Test name="TestViewResult" result="PASS">
+</Test>
+<Test name="TestElapsedTime" result="PASS">
+</Test>
+<Test name="RunEmptySuite" result="PASS">
+</Test>
+<Test name="RunSuccessSuite" result="PASS">
+</Test>
+<Test name="RunFailureSuite" result="PASS">
+</Test>
+<Test name="TestStatus" result="PASS">
+</Test>
+<Test name="TestRunSelectedTestWithDecorator" result="PASS">
+</Test>
+<Test name="TestRunSelectedTestWithSetupDecorator" result="PASS">
+</Test>
+<Test name="TestGoToPrevNextSelectedNode" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestGUITestRunner">
+<Test name="TestDisplayOfDecorator" result="PASS">
+</Test>
+<Test name="Test_CopyTestNametoClipboard" result="PASS">
+</Test>
+</TestSuite>
+</TestSuite>
+<TestSuite name="TestExtensions Suite">
+<TestSuite name="TTestRepeatedTest">
+<Test name="testRepeatedTest" result="PASS">
+</Test>
+<Test name="testWithCounting" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestSetupTest">
+<Test name="TestSetupTest" result="PASS">
+</Test>
+<Test name="TestDecoratedEnabling" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestTestSetupExceptionInSetup">
+<Test name="testNoExecutionOfTests" result="PASS">
+</Test>
+</TestSuite>
+<TestSuite name="TTestTestSetupExceptionInTearDown">
+<Test name="testExecutionOfTests" result="PASS">
+</Test>
+</TestSuite>
+<Test name="CountTest" result="PASS">
+</Test>
+<Test name="CountTest" result="PASS">
+</Test>
+<Test name="CountTest" result="PASS">
+</Test>
+<Test name="CountTest" result="PASS">
+</Test>
+<Test name="CountTest" result="PASS">
+</Test>
+</TestSuite>
+</TestSuite>
+<Statistics>
+<Stat name="Tests" result="61" />
+<Stat name="Failures" result="0" />
+<Stat name="Errors" result="0" />
+<Stat name="Success Rate" result="100%" />
+<Stat name="Finished At" result="13/09/2004 08:56:24" />
+<Stat name="Runtime" result="00:00:18" />
+</Statistics>
+</TestRun>

@@ -1,0 +1,29 @@
+<!-- 
+========================================================================
+ Copyright (c) 1999-2001 The DUnit Group. All rights reserved.
+ $Id: want.xml,v 1.3 2008/04/18 02:32:58 judc Exp $
+======================================================================== 
+ This is a Want build script.
+ See:
+  http://www.suigeneris.org/want/
+ for details.
+======================================================================== 
+
+-->
+<project name="dunit.examples"
+  default="compile" 
+  basedir=".">
+ 
+  <target name="compile" >
+    <dcc source="*.dpr"
+         dcuoutput="${scratch.dir}"
+         exeoutput="${bin.dir}"
+         debug="true"
+         build="true"
+    >
+      <unitpath path="${src.dir}" />
+      <resourcepath path="${src.dir}" />
+    </dcc>
+  </target>
+
+</project>

@@ -1,0 +1,32 @@
+#------------------------------------------------------------------------------
+VERSION = BWS.01
+#------------------------------------------------------------------------------
+!ifndef ROOT
+ROOT = $(MAKEDIR)\..
+!endif
+#------------------------------------------------------------------------------
+MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
+DCC = $(ROOT)\bin\dcc32.exe $**
+BRCC = $(ROOT)\bin\brcc32.exe $**
+#------------------------------------------------------------------------------
+PROJECTS = EPCCommon70.bpl EPCOTAUtils70.bpl EPCDUnitWizard70.bpl \
+  EPCDUnitWizardTests.exe WizardFormsDemo.exe 
+#------------------------------------------------------------------------------
+default: $(PROJECTS)
+#------------------------------------------------------------------------------
+
+EPCDUnitWizard70.bpl: EPCDUnitWizard70.dpk
+  $(DCC)
+
+EPCOTAUtils70.bpl: ..\Common\EPCOTAUtils70.dpk
+  $(DCC)
+
+EPCDUnitWizardTests.exe: dunit\EPCDUnitWizardTests.dpr
+  $(DCC)
+
+WizardFormsDemo.exe: dunit\WizardFormsDemo.dpr
+  $(DCC)
+
+EPCCommon70.bpl: ..\..\Common\EPCCommon70.dpk
+  $(DCC)
+

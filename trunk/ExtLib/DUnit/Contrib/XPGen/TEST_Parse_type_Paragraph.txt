@@ -1,0 +1,58 @@
+type
+
+  EUnitIDExpected = class(Exception);
+  EEqualExpected = class(Exception);
+
+  lex_token = record
+    Str: string;
+    token_type: token_enum;
+  end;
+
+  TParseNodeClass = class
+    fNameClass: string;
+    fPubMethodList: TStringList;
+    fPrtMethodList: TStringList;
+    fPvtMethodList: TSTringList;
+  public
+    constructor Create(newName: string); virtual;
+    destructor Destroy; override;
+    property PubMethodList: TStringList read fpubMethodList write fpubMethodList;
+    property PrtMethodList: TStringList read fPrtMethodList write fPrtMethodList;
+    property PvtMethodList: TSTringList read fPvtMethodList write fPvtMethodList;
+    property NameClass: string read fNameClass write fNameClass;
+  published
+    procedure X; virtual;
+  end;
+
+  TXPStubParser = class
+  protected
+    funitName: string;
+    lex: TParser;
+    fSrcStream: TStream;
+    fParseNodeList: TList;
+    procedure SetSrcStream(NewStream: TStream);
+    procedure NewClassNode(NameOfNode: string);
+    procedure NewPubMethodIdent(NameOfMethod: string);
+    procedure NewPvtMethodIdent(NameOfMethod: string);
+    procedure NewPrtMethodIdent(NameOfMethod: string);
+    function Get_Token(lex: TParser): lex_token;
+    function Parse_Unit_Heading(lex: TParser): lex_token;
+    function Parse_const_Paragraph(lex: TParser): lex_token;
+    function Parse_type_Paragraph(lex: TParser): lex_token;
+    function Parse_var_paragraph(lex: TParser): lex_token;
+    function Parse_uses_clause(lex: TParser): lex_token;
+    function Parse_typedef(ident: string; lex: TParser): lex_token;
+    function Parse_tobject_derived(token: lex_token; lex: TParser): lex_token;
+    function Parse_derived(ident: string; lex: TParser): lex_token;
+    function SyncToken(target: token_enum; lex: TParser): lex_token;
+  public
+    constructor Create; virtual;
+    destructor Destroy; override;
+    procedure Parse;
+    property SrcStream: TStream read fSrcStream write SetSrcStream;
+    property unitName: string read funitName write funitName;
+    property ParseNodeList: TList read fParseNodeList write fParseNodeList;
+  end;
+
+var
+  

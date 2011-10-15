@@ -1,0 +1,5 @@
+
+SimpleEventDef = procedure (Sender: TObject) of object;
+
+ComplexEventDef = procedure (Sender: TObject;MyParam : double) of object;
+
