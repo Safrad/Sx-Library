@@ -45,6 +45,8 @@ type
     // Version Info Keys
 		ProjectInfos: TProjectInfos;
 
+    BuildVersions: string;
+
     constructor Create;
     destructor Destroy; override;
 
@@ -410,13 +412,13 @@ begin
 			PackageDCPOutputDir := IniFile.ReadString(Directories, 'PackageDCPOutputDir', PackageDCPOutputDir);
 			SearchPath := IniFile.ReadString(Directories, 'SearchPath', SearchPath);
 			Conditionals := IniFile.ReadString(Directories, 'Conditionals', Conditionals);
-
 			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
-
 
 			MinStackSize := IniFile.ReadInteger(Linker, 'MinStackSize', MinStackSize);
 			MaxStackSize := IniFile.ReadInteger(Linker, 'MaxStackSize', MaxStackSize);
 			ImageBase := IniFile.ReadInteger(Linker, 'ImageBase', ImageBase);
+
+      BuildVersions := IniFile.ReadString('Build', 'Versions', BuildVersions);
 		finally
 			IniFile.Free;
 		end;
