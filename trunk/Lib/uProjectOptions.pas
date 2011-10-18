@@ -118,15 +118,15 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 //		 UsePackages
 		else if Name = UpperCase('DCC_MinStackSize') then
     begin
-      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMinStackSize), 0, 1, nil);
+      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil);
     end
 		else if Name = UpperCase('DCC_MaxStackSize') then
     begin
-      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMaxStackSize), 0, 1, nil);
+      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMaxStackSize), MaxInt, 1, nil);
     end
 		else if Name = UpperCase('DCC_Image') then
     begin
-      ImageBase := StrToValS8('$' + Node.NodeValue, False, 0, S8(DefaultImageBase), 0, 1, nil);
+      ImageBase := StrToValS8('$' + Node.NodeValue, False, 0, S8(DefaultImageBase), MaxInt, 1, nil);
     end
 		else if Node.NodeName = 'VersionInfo' then
 		begin
