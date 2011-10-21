@@ -37,11 +37,11 @@ type
 		FSections: array of TIniSection;
 		FRWList: array of TRWOptions; // TData;
 		procedure SaveToFile(const FileName: TFileName);
-		procedure Save;
 		// function GetSectionKeys(const SectionIndex: SG): TKeys;
 	protected
 		procedure RWData(const Write: BG); override;
 	public
+		procedure Save;
 		procedure RegisterRW(const RWOptions: TRWOptions);
 		procedure UnregisterRW(const RWOptions: TRWOptions);
 
