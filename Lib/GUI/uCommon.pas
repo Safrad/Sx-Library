@@ -599,7 +599,7 @@ begin
 
 		M := TMenuItem.Create(Options1);
 		M.Name := 'ViewIniFile1';
-		M.Caption := 'View Options File';
+		M.Caption := 'View Options Files';
 		M.OnClick := CommonMenu.ViewIniFile1Click;
 		Options1.Add(M);
 
