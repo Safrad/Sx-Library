@@ -530,6 +530,13 @@ begin
 end;
 
 {$IFNDEF Console}
+
+type
+  TCustomButtonV = class(TCustomButton)
+  public
+    property Caption;
+  end;
+
 procedure TDictionary.TranslateComponent(const Component: TComponent);
 var
 	i: SG;
@@ -552,9 +559,9 @@ begin
 		TCheckBox(Component).Caption := Translate(TCheckBox(Component).Caption)
 	else if Component is TForm then
 		TranslateForm(TForm(Component))
-	else if Component is TButton then
+	else if Component is TCustomButton then
 	begin
-		TButton(Component).Caption := Translate(TButton(Component).Caption);
+		TCustomButtonV(Component).Caption := Translate(TCustomButtonV(Component).Caption);
 	end
 	else if Component is TPageControl then
 	begin
