@@ -78,7 +78,8 @@ implementation
 uses
 	Windows,
   uTranslate,
-	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView,{$ENDIF} uMsg;
+	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView,{$ENDIF} uMsg,
+  Buttons;
 
 const
 	EnglishLanguageIndex = -1;
@@ -531,12 +532,6 @@ end;
 
 {$IFNDEF Console}
 
-type
-  TCustomButtonV = class(TCustomButton)
-  public
-    property Caption;
-  end;
-
 procedure TDictionary.TranslateComponent(const Component: TComponent);
 var
 	i: SG;
@@ -559,9 +554,13 @@ begin
 		TCheckBox(Component).Caption := Translate(TCheckBox(Component).Caption)
 	else if Component is TForm then
 		TranslateForm(TForm(Component))
-	else if Component is TCustomButton then
+	else if Component is TButton then
 	begin
-		TCustomButtonV(Component).Caption := Translate(TCustomButtonV(Component).Caption);
+		TButton(Component).Caption := Translate(TButton(Component).Caption);
+	end
+	else if Component is TBitBtn then
+	begin
+		TBitBtn(Component).Caption := Translate(TBitBtn(Component).Caption);
 	end
 	else if Component is TPageControl then
 	begin
