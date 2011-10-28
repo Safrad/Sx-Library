@@ -18,6 +18,7 @@ type
 		DViewAbout: TDView;
 		ButtonStatistics: TDButton;
 		ButtonVersionInfo: TDButton;
+    ButtonBuildParams: TDButton;
 		procedure FormCreate(Sender: TObject);
 		procedure FormDestroy(Sender: TObject);
 		procedure FormShow(Sender: TObject);
@@ -35,6 +36,9 @@ type
 			ColIndex, RowIndex: Integer; Rect: TRect);
 		procedure ButtonXClick(Sender: TObject);
 		procedure FormResize(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure ButtonBuildParamsClick(Sender: TObject);
 	private
 		Effect: U1;
 		Typ: U1;
@@ -181,6 +185,7 @@ begin
 	{$endif}
 	{$ifopt d-}
 	ButtonMemoryStatus.Visible := False;
+	ButtonBuildParams.Visible := False;
 	{$endif}
 
 	Background := baGradient;
@@ -461,6 +466,7 @@ begin
 	ButtonOk.Top := ClientHeight - FormBorder - ButtonOk.Height;
 	ButtonSysInfo.Top := ClientHeight - FormBorder - ButtonSysInfo.Height;
 	ButtonMemoryStatus.Top := ClientHeight - FormBorder - ButtonMemoryStatus.Height;
+  ButtonBuildParams.Top := ButtonMemoryStatus.Top;
 
 
 	DViewAbout.Height := DViewAbout.IdealHeight;
@@ -486,6 +492,80 @@ end;
 {var
 	MemCount, MemSize: SG;}
 {$endif}
+procedure TfAbout.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Shift = [ssCtrl, ssAlt])then
+  begin
+    if Char(Key) = 'M' then
+      ButtonMemoryStatusClick(Sender);
+    if Char(Key) = 'B' then
+      ButtonBuildParamsClick(Sender);
+  end;
+end;
+
+procedure TfAbout.ButtonBuildParamsClick(Sender: TObject);
+var
+  s: string;
+begin
+  s := '';
+  s := s + 'Code generation:' + LineSep;
+  {$ifopt o+}
+  s := s + 'o+ (Optimization)' + LineSep;
+  {$endif}
+  {$ifopt w+}
+  s := s + 'w+ (Stack frames)' + LineSep;
+  {$endif}
+  {$ifopt u+}
+  s := s + 'u+ (Pentium-safe FDIV)' + LineSep;
+  {$endif}
+  {$ifopt a+}
+  s := s + 'a+ (Record field alignment)' + LineSep;
+  {$endif}
+
+  s := s + 'Runtime errors:' + LineSep;
+  {$ifopt r+}
+  s := s + 'r+ (Range checking)' + LineSep;
+  {$endif}
+  {$ifopt i+}
+  s := s + 'i+ (I/O checking)' + LineSep;
+  {$endif}
+  {$ifopt q+}
+  s := s + 'q+ (Overflow checking)' + LineSep;
+  {$endif}
+  s := s + 'Debugging:' + LineSep;
+  {$ifopt d+}
+  s := s + 'd+ (Debug information)' + LineSep;
+  {$endif}
+  {$ifopt l+}
+  s := s + 'l+ (Local symbols)' + LineSep;
+  {$endif}
+  {$ifopt y+}
+  s := s + 'y+ (Reference info)' + LineSep;
+  {$endif}
+  {$ifopt y-}
+  s := s + 'y- (Reference info)' + LineSep;
+  {$endif}
+  {$ifopt c+}
+  s := s + 'c+ (Assertions)' + LineSep;
+  {$endif}
+
+  {$ifopt h+}
+  s := s + 'h+ (Show Hints)' + LineSep;
+  {$endif}
+//  s := s + 'Syntax options:' + LineSep;
+
+  s := s + 'Definitions:' + LineSep;
+  {$IFDEF DEBUG}
+  s := s + 'DEBUG' + LineSep;
+  {$ENDIF}
+  {$IFDEF RELEASE}
+  s := s + 'RELEASE' + LineSep;
+  {$ENDIF}
+  Hint := s;
+  ShowHint := True;
+end;
+
 initialization
 {$ifopt d+}
 {	MemCount := AllocMemCount;

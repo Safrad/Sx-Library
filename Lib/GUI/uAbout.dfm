@@ -17,6 +17,7 @@ object fAbout: TfAbout
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
@@ -33,6 +34,7 @@ object fAbout: TfAbout
     ShowHint = False
     TabOrder = 1
     OnMouseDown = ImageAboutMouseDown
+    OnKeyDown = FormKeyDown
   end
   object DViewAbout: TDView
     Left = 8
@@ -43,6 +45,7 @@ object fAbout: TfAbout
     EnableZoom = True
     DisplayMode = dmCustom
     TabOrder = 4
+    OnKeyDown = FormKeyDown
     OnGetData = DViewAboutGetData
   end
   object ButtonOk: TDButton
@@ -62,6 +65,7 @@ object fAbout: TfAbout
     ParentFont = False
     TabOrder = 0
     OnClick = ButtonOkClick
+    OnKeyDown = FormKeyDown
   end
   object ButtonSysInfo: TDButton
     Left = 8
@@ -77,12 +81,14 @@ object fAbout: TfAbout
     ParentFont = False
     TabOrder = 5
     OnClick = ButtonSysInfoClick
+    OnKeyDown = FormKeyDown
   end
   object ButtonMemoryStatus: TDButton
     Left = 96
     Top = 424
-    Width = 89
+    Width = 65
     Height = 25
+    Hint = 'Memory Status...'
     Caption = '&Memory Status...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -90,8 +96,11 @@ object fAbout: TfAbout
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 6
     OnClick = ButtonMemoryStatusClick
+    OnKeyDown = FormKeyDown
   end
   object ButtonStatistics: TDButton
     Tag = 1
@@ -108,6 +117,7 @@ object fAbout: TfAbout
     ParentFont = False
     TabOrder = 3
     OnClick = ButtonXClick
+    OnKeyDown = FormKeyDown
   end
   object ButtonVersionInfo: TDButton
     Left = 8
@@ -123,6 +133,23 @@ object fAbout: TfAbout
     ParentFont = False
     TabOrder = 2
     OnClick = ButtonXClick
+    OnKeyDown = FormKeyDown
+  end
+  object ButtonBuildParams: TDButton
+    Left = 168
+    Top = 424
+    Width = 65
+    Height = 25
+    Caption = '&Build Params'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBtnText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 7
+    OnClick = ButtonBuildParamsClick
+    OnKeyDown = FormKeyDown
   end
   object Timer1: TDTimer
     ActiveOnly = True
