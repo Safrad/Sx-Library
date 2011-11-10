@@ -79,56 +79,60 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 	var
 		cNode: IXMLNode;
 		Name: string;
+    NodeValue: string;
 		SubVersion: TSubVersion;
 		p: TProjectInfoName;
 	begin
-		if Node = nil then
+		if (Node = nil) then
 			Exit;
+    NodeValue := '';
+    try
+      if VarIsNull(Node.NodeValue) then
+        NodeValue := ''
+      else
+        NodeValue := Node.NodeValue;
+    except
+      // No Value
+    end;
 
-{    if Node.NodeName = '
-
-    const
-  DCC_Names: array[0
-  DCC_ImageBase // hex
-  BplOutput}
     Name := UpperCase(Node.NodeName);
     if Name = UpperCase('DCC_BplOutput') then
     begin
-      OutputDir := Node.NodeValue;
+      OutputDir := NodeValue;
     end
     else if Name = UpperCase('DCC_ExeOutput') then
     begin
-      OutputDir := Node.NodeValue;
+      OutputDir := NodeValue;
     end
     else if Name = UpperCase('DCC_DcuOutput') then
     begin
-      UnitOutputDir := Node.NodeValue;
+      UnitOutputDir := NodeValue;
     end
 //		PackageDLLOutputDir: string;
 //		PackageDCPOutputDir: string;
     else if Name = UpperCase('DCC_UnitSearchPath') then
     begin
-      SearchPath := Node.NodeValue;
+      SearchPath := NodeValue;
     end
     else if Name = UpperCase('DCC_Define') then
     begin
-      Conditionals := Conditionals + ';' + Node.NodeValue;
+      Conditionals := Conditionals + ';' + NodeValue;
     end
 //		DebugSourceDirs: string; // Not in cfg
 //		 UsePackages
 		else if Name = UpperCase('DCC_MinStackSize') then
     begin
-      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil);
+      ImageBase := StrToValS8(NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil);
     end
 		else if Name = UpperCase('DCC_MaxStackSize') then
     begin
-      ImageBase := StrToValS8(Node.NodeValue, False, 0, S8(DefaultMaxStackSize), MaxInt, 1, nil);
+      ImageBase := StrToValS8(NodeValue, False, 0, S8(DefaultMaxStackSize), MaxInt, 1, nil);
     end
 		else if Name = UpperCase('DCC_Image') then
     begin
-      ImageBase := StrToValS8('$' + Node.NodeValue, False, 0, S8(DefaultImageBase), MaxInt, 1, nil);
+      ImageBase := StrToValS8('$' + NodeValue, False, 0, S8(DefaultImageBase), MaxInt, 1, nil);
     end
-		else if Node.NodeName = 'VersionInfo' then
+		else if Name = UpperCase('VersionInfo') then
 		begin
 			if Node.HasAttribute(AttrName) then
 			begin
@@ -140,13 +144,13 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 						if Save then
 							Node.NodeValue := Version.GetAsString(SubVersion)
 						else
-							Version.SetSubVersion(SubVersion, Node.NodeValue);
+							Version.SetSubVersion(SubVersion, NodeValue);
 						Break;
 					end
 				end;
 			end;
 		end
-		else if Node.NodeName = 'VersionInfoKeys' then
+		else if Name = UpperCase('VersionInfoKeys') then
 		begin
 			if Node.HasAttribute(AttrName) then
 			begin
@@ -161,8 +165,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 									Node.NodeValue := ProjectInfos[p]
 								else
 								begin
-									if not VarIsNull(Node.NodeValue) then
-										ProjectInfos[p] := Node.NodeValue;
+									ProjectInfos[p] := NodeValue;
 								end;
 							except
 
@@ -198,39 +201,44 @@ begin
 	begin
 		if Save then
 			BackupFile(AFileName);
-		XML := TXMLDocument.Create(AFileName);
-		XML.Active := True;
-		try
-			if XML.IsEmptyDoc then
-				Exit;
-			iNode := XML.DocumentElement.ChildNodes.First;
-			while iNode <> nil do
-			begin
-        if (iNode.NodeName = 'PropertyGroup') then
+    try
+      XML := TXMLDocument.Create(AFileName);
+      XML.Active := True;
+      try
+        if XML.IsEmptyDoc then
+          Exit;
+        iNode := XML.DocumentElement.ChildNodes.First;
+        while iNode <> nil do
         begin
-          if iNode.HasAttribute('Condition') then
+          if (iNode.NodeName = 'PropertyGroup') then
           begin
-            Name := iNode.Attributes['Condition'];
-            if Name = '''$(Cfg_2)''!=''''' then // DEBUG
+            if iNode.HasAttribute('Condition') then
             begin
-              iNode := iNode.NextSibling;
-              Continue;
+              Name := iNode.Attributes['Condition'];
+              if Name = '''$(Cfg_2)''!=''''' then // DEBUG
+              begin
+                iNode := iNode.NextSibling;
+                Continue;
+              end;
             end;
           end;
+          ProcessNode(iNode);
+          iNode := iNode.NextSibling;
         end;
-				ProcessNode(iNode);
-				iNode := iNode.NextSibling;
-			end;
-			iNode := nil;
-			if Save then
-			begin
-				// TODO : Missing Byte Order Mark
-				XML.SaveToFile(AFileName);
-			end;
-		finally
-			XML.Active := False;
-			XML := nil; // Release XML document
-		end;
+        iNode := nil;
+        if Save then
+        begin
+          // TODO : Missing Byte Order Mark
+          XML.SaveToFile(AFileName);
+        end;
+      finally
+        XML.Active := False;
+        XML := nil; // Release XML document
+      end;
+    except
+      on E: Exception do
+        ErrorMsg(E.Message);
+    end;
 	end
 	else
 	begin
@@ -348,7 +356,7 @@ begin
   if (LibraryPos <> 0) then
   begin
     ProgramPos := Pos('program', s);
-    if (LibraryPos < ProgramPos) then
+    if (ProgramPos = 0) or (LibraryPos < ProgramPos) then
       Result := etLibrary;
   end;
 {  if Pos('program', s) <> 0 then
