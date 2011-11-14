@@ -252,7 +252,7 @@ var
 begin
 	ProjectInfos[piFileVersion] := Version.ToStrictString;
 	// ProjectInfos[piFileDescription] := ProjectVersion.FileDescription;
-	ProjectInfos[piLegalCopyright] := ReplaceF(ProjectInfos[piLegalCopyright], '%year%', NToS(GetActualYear, '0000'));
+	ProjectInfos[piLegalCopyright] := ReplaceF(ProjectInfos[piLegalCopyright], '%year%', NToS(CurrentYear, '0000'));
 
   Name := DelFileExt(ExtractFileName(FFileName));
 	ProjectInfos[piInternalName] := Name;
