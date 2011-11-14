@@ -472,6 +472,7 @@ begin
     Result := FFilePos;
     BlockRead(FBuffer[0], FBufEnd - FBufStart + 1);
     FFilePos := Result;
+    Result := FFilePos - FBufStart;
   end;
 end;
 
