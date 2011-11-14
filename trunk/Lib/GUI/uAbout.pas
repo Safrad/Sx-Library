@@ -549,6 +549,9 @@ begin
   {$ifopt c+}
   s := s + 'c+ (Assertions)' + LineSep;
   {$endif}
+  {$ifopt m+}
+  s := s + 'm+ (Runtime type information)' + LineSep;
+  {$endif}
 
   {$ifopt h+}
   s := s + 'h+ (Show Hints)' + LineSep;
