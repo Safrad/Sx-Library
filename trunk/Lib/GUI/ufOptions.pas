@@ -804,7 +804,7 @@ begin
 				vsSpin:
 					n := StrToValI(TDEdit(C).Text, True, O.Minimum, O.Default, O.Maximum, 1, ParserMessages);
 				vsFloat:
-					f := StrToValE(TDEdit(C).Text, True, O.Minimum, O.Default, O.Maximum, ParserMessages);
+					f := StrToValE(TDEdit(C).Text, True, O.MinimumF, O.DefaultF, O.MaximumF, ParserMessages);
 				vsTime:
 					n := StrToMs(TDEdit(C).Text, O.Minimum, O.Default, O.Maximum, True, ParserMessages);
 				end;
@@ -816,8 +816,8 @@ begin
 						TDEdit(C).Hint := Prefix + NToS(O.Default) + ' [' + NToS(O.Minimum) + '..' + NToS
 							(O.Maximum) + ']';
 					vsFloat:
-						TDEdit(C).Hint := Prefix + FToS(O.Default) + ' [' + FToS(O.Minimum) + '..' + FToS
-							(O.Maximum) + ']';
+						TDEdit(C).Hint := Prefix + FToS(O.DefaultF) + ' [' + FToS(O.MinimumF) + '..' + FToS
+							(O.MaximumF) + ']';
 					vsTime:
 						TDEdit(C).Hint := Prefix + MsToStr(O.Default) + ' [' + MsToStr(O.Minimum)
 							+ '..' + MsToStr(O.Maximum) + ']';
