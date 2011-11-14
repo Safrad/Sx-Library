@@ -239,7 +239,7 @@ end;
 
 function GetDelphiVersionCount: SG;
 begin
-  Result := GetActualYear - 1995 + 7;
+  Result := CurrentYear - 1995 + 7;
 end;
 
 function GetAvailableDelphiVersions: TArrayOfSG;
