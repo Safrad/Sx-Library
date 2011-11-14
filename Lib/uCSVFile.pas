@@ -33,7 +33,7 @@ type
 		LineIndex: SG read FLineIndex;
 	end;
 
-procedure CreateCSVHead(const FileName: TFileName; const Head: array of string);
+procedure CreateCSVHead(const FileName: TFileName; const Head: array of string; const Delimeter: string = CSVSep);
 
 implementation
 
@@ -42,7 +42,7 @@ uses
 	uStrings, uMath, uMsg,
 	uFiles;
 
-procedure CreateCSVHead(const FileName: TFileName; const Head: array of string);
+procedure CreateCSVHead(const FileName: TFileName; const Head: array of string; const Delimeter: string = CSVSep);
 var
 	i: SG;
 	f, s: string;
@@ -53,7 +53,7 @@ begin
 	for i := 0 to Length(Head) - 1 do
 	begin
 		if i <> 0 then
-			s := s + CSVSep;
+			s := s + Delimeter;
 		s := s + '"' + Head[i] + '"';
 	end;
 	s := s + FileSep;
