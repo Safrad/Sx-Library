@@ -21,6 +21,9 @@ type
 		Default: S4;
 		Minimum: S4;
 		Maximum: S4;
+		DefaultF: F8;
+		MinimumF: F8;
+		MaximumF: F8;
 		DefaultStr: string;
 	end;
 
@@ -41,7 +44,7 @@ type
 		3:
 			(C: PChar);
 		4:
-			(Float: Double);
+			(Float: F8);
 	end;
 
 	PParams = ^TParams;
@@ -89,7 +92,7 @@ begin
 	vsSpin, vsCombo, vsTime, vsColor:
 			Result := Param.Num = Option.Default;
 	vsFloat:
-		Result := Param.Float = Option.Default;
+		Result := Param.Float = Option.DefaultF;
 	vsString, vsFilename, vsDirectory, vsStrings:
 		Result := Param.Str = Option.DefaultStr;
 	vsButton:
@@ -116,7 +119,7 @@ begin
 {$ENDIF}
 		end;
 	vsFloat:
-		Param.Float := Option.Default;
+		Param.Float := Option.DefaultF;
 	vsString, vsFilename, vsDirectory, vsStrings:
 		Param.Str := Option.DefaultStr;
 	vsButton:
@@ -175,7 +178,7 @@ begin
 		vsFloat:
 			begin
 				if Save = False then
-					Param.Float := Option.Default;
+					Param.Float := Option.DefaultF;
 				IniFile.RWNum(Section, Option.Name, Param.Float, Save);
 			end;
 		vsString, vsFilename, vsDirectory:
@@ -296,7 +299,7 @@ begin
 		end;
 	vsFloat:
 		begin
-			Result.Float := StrToValE(s, False, E.Minimum, E.Default, E.Maximum);
+			Result.Float := StrToValE(s, False, E.MinimumF, E.DefaultF, E.MaximumF);
 		end;
 	vsCombo:
 		begin
