@@ -2,7 +2,9 @@ unit uSunInfo;
 
 interface
 
-uses uTypes;
+uses
+  uTypes,
+  uColor;
 
 // 17.12.1999 sunrise at 7:52 -> 15, -49.7
 type TSunPos = (spUD, spU, spD, spUA, spDA);
@@ -13,9 +15,14 @@ procedure SunOnOff(const LongitudeX, LatitudeY, TimeZone: Extended;
 	var AzimuthOn, AzimuthOff: Extended;
 	var SunPos: TSunPos);
 
+function GetSunColor(const ActualTime, TimeOn, TimeOff: Extended): TRGBA; overload;
+function GetSunColor(const SunIntensity: Extended): TRGBA; overload;
+
 implementation
 
-uses uMath;
+uses
+  Math,
+  uMath, ColorMatchingFunctions;
 
 procedure SunOnOff(const LongitudeX, LatitudeY, TimeZone: Extended;
 	Year: Integer; Month, Day: U1;
@@ -185,6 +192,158 @@ begin
 		if M8 = 0 then SunPos := spU;
 		if W8 = 0 then SunPos := spD;
 	end;
+end;
+
+// ************************************************************************/
+function DMAX1(x, y, z: Extended): Extended;
+begin
+    Result:=x;
+    if(y>Result) then Result:=y;
+    if(z>Result) then Result:=z;
+end;
+
+
+(*
+ ****************************************************************************
+ *
+ *      XYZ VALUES FROM TEMPERATURE OF OBJECT
+ *
+ *       A black body approximation is used where the temperature,
+ *       T, is given in Kelvin.  The XYZ values are determined by
+ *      "integrating" the product of the wavelength distribution of
+ *       energy and the XYZ functions for a uniform source.
+ *)
+procedure BlackBody(temperature: Extended; out x, y, z: Extended);
+var
+  WaveLength: TWavelength;
+  XX, YY, ZZ: Extended;
+  con, dis, weight: Extended;
+  ColorMatchTriple: TColorMatchTriple;
+begin
+
+    XX:=0.0;
+    YY:=0.0;
+    ZZ:=0.0; // initialize accumulators
+
+     // loop over wavelength bands integration by trapezoid method
+    for WaveLength := Low(WaveLength) to High(WaveLength) do
+    begin
+        ColorMatchTriple := GetColorMatchTriple(CIESTandardObserver1964, WaveLength);
+        weight:=1.0;
+        if((WaveLength=Low(WaveLength)) or (WaveLength=High(WaveLength))) then
+           weight:=0.5;
+
+        // generate a black body spectrum
+        con:=1240.0/8.617e-5;
+
+        dis:=3.74183e-16*(1.0/Power(wavelength,5))/(exp(con/(wavelength*temperature))-1.0);
+// simple integration over bands
+        XX:=XX+weight*dis*ColorMatchTriple.xBar;
+        YY:=YY+weight*dis*ColorMatchTriple.yBar;
+        ZZ:=ZZ+weight*dis*ColorMatchTriple.zBar;
+    end;
+
+    // re-normalize the color scale
+    X:=XX/DMAX1(XX,YY,ZZ);
+    Y:=YY/DMAX1(XX,YY,ZZ);
+    Z:=ZZ/DMAX1(XX,YY,ZZ);
+end;
+
+procedure XYZ2RGB(
+  const xr, yr, zr,
+  xg, yg, zg,
+  xb, yb, zb,
+  xColor, yColor, zColor: Extended;
+  out red, green, blue: Extended);
+var
+  denominator: Extended;
+begin
+    denominator:=(xr*yg-xg*yr)*zb+(xb*yr-xr*yb)*zg+(xg*yb-xb*yg)*zr;
+
+    red:=((xColor*yg-xg*yColor)*zb+(xg*yb-xb*yg)*zColor
+        +(xb*yColor-xColor*yb)*zg)/denominator;
+    green:=((xr*yColor-xColor*yr)*zb+(xb*yr-xr*yb)*zColor
+        +(xColor*yb-xb*yColor)*zr)/denominator;
+    blue:=((xr*yg-xg*yr)*zColor+(xColor*yr-xr*yColor)*zg
+        +(xg*yColor-xColor*yg)*zr)/denominator;
+
+    if(red<0.0) then red:=0.0;
+    if(red>1.0) then red:=1.0;
+    if(green<0.0) then green:=0.0;
+    if(green>1.0) then green:=1.0;
+    if(blue<0.0) then blue:=0.0;
+    if(blue>1.0) then blue:=1.0;
+end;
+
+function RGB255(red, green, blue: Extended; gamma: Extended): TRGBA;
+const
+  colorDepth = 255;
+var
+  rangeMax: Extended;
+begin
+  rangeMax:=1.0e-10;
+            if(red>rangeMax) then rangeMax:=red;
+            if(green>rangeMax) then rangeMax:=green;
+            if(blue>rangeMax) then rangeMax:=blue;
+
+
+Result.R := Round(colorDepth*Power(red/rangeMax,gamma));
+Result.G := Round(colorDepth*Power(green/rangeMax,gamma));
+Result.B := Round(colorDepth*Power(blue/rangeMax,gamma));
+Result.A := 0;
+end;
+
+function TemperatureToColor(const Temperature: Extended): TRGBA;
+var
+  X, Y, Z: Extended;
+  XRed, XGreen, XBlue: Extended;
+  YRed, YGreen, YBlue: Extended;
+  ZRed, ZGreen, ZBlue: Extended;
+  r, g, b: Extended;
+begin
+  BlackBody(Temperature,X,Y,Z);
+
+(*
+ *      Chromaticity Coordinates for Red, Green, Blue and White
+ *)
+    XRed:=0.64;
+    YRed:=0.33;
+    XGreen:=0.29;
+    YGreen:=0.60;
+    XBlue:=0.15;
+    YBlue:=0.06;
+//    XWhite:=0.3127;
+//    YWhite:=0.3291;
+    ZRed    :=1.0-(XRed+YRed);
+    ZGreen  :=1.0-(XGreen+YGreen);
+    ZBlue   :=1.0-(XBlue+YBlue);
+//    ZWhite  :=1.0-(XWhite+YWhite);
+
+
+  XYZ2RGB(XRed,YRed,ZRed,XGreen,YGreen,ZGreen,XBlue,YBlue,ZBlue,
+    X,Y,Z,r, g, b);
+
+   Result := RGB255(r, g, b, 0.8);
+end;
+
+function GetSunColor(const ActualTime, TimeOn, TimeOff: Extended): TRGBA; overload;
+var
+  DayPos, SunIntensity: Extended;
+begin
+  DayPos := (ActualTime - TimeOn) / (TimeOff - TimeOn);
+  SunIntensity := 1 - 2 * Abs(DayPos - 0.5);
+  Result := GetSunColor(SunIntensity);
+end;
+
+function GetSunColor(const SunIntensity: Extended): TRGBA; overload
+begin
+  if SunIntensity < 0 then
+    Result.L := $000000
+  else
+    // 1700 flame
+    // 2000, 3500 after 1h
+   // 3200..10500
+    Result := TemperatureToColor(2000 + RoundSG(SunIntensity * 8500));
 end;
 
 end.
