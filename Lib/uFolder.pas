@@ -15,6 +15,7 @@ type
 		Name: string;
 		DateTime: TDateTime;
 		Size: U8;
+		Attr: SG;
 	end;
 
 	TOnAddFile = procedure(FileName: TFileName) of object;
