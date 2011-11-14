@@ -229,7 +229,7 @@ end;
 
 procedure TReopen.ReopenLimitClick(Sender: TObject);
 begin
-	if GetNumber('Reopen Limit', S8(FReopenLimit), 0, 10, MaxReopen, nil) then
+	if GetNumber('Reopen Limit', FReopenLimit, 0, 10, MaxReopen, nil) then
 	begin
 		SetReopenMenuItems(FReopenLimit);
 		DrawReopenCaption;
