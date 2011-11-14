@@ -185,6 +185,7 @@ begin
 					FileItem.Name := List[j].Name + PathDelim;
 					FileItem.DateTime := FileDateToDateTime(List[j].Time);
 					FileItem.Size := List[j].Size;
+					FileItem.Attr := List[j].Attr;
 					Files.SetCount(k + 1);
 					Files.ReplaceObject(k, FileItem);
 					Inc(k);
