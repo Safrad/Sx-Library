@@ -76,7 +76,7 @@ function RemoveDirEx(const DirName: string): BG;
 function RemoveDirsEx(DirName: string; DeleteSelf: BG = False): BG;
 
 procedure FileLinesAndSize(const FileName: TFileName; out Size, Lines: U8);
-procedure CodeLinesAndSize(const Dir: string; out Size, Lines: U8);
+procedure CodeLinesAndSize(const Dir: string; out Size, Lines, Files: U8);
 
 function ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG): BG;
 function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: UG): BG;
@@ -1529,20 +1529,21 @@ begin
 	end;
 end;
 
-procedure CodeLinesAndSize(const Dir: string; out Size, Lines: U8);
+procedure CodeLinesAndSize(const Dir: string; out Size, Lines, Files: U8);
 var
 	FileCount: SG;
-	Files: TFileNames;
+	FileNames: TFileNames;
 	i: SG;
 	FileLines, FileSize: U8;
 begin
 	Size := 0;
 	Lines := 0;
 	FileCount := 0;
-	ReadDir(Files, FileCount, Dir, ['pas', 'dpr', 'inc'{, 'dfm'}], True, True, True, False);
+	ReadDir(FileNames, FileCount, Dir, ['pas', 'dpr', 'inc'{, 'dfm'}], True, True, True, False);
+	Files := FileCount;
 	for i := 0 to FileCount - 1 do
 	begin
-		FileLinesAndSize(Dir + Files[i], FileSize, FileLines);
+		FileLinesAndSize(Dir + FileNames[i], FileSize, FileLines);
 		Inc(Size, FileSize);
 		Inc(Lines, FileLines);
 	end;
