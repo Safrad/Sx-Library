@@ -9,6 +9,7 @@ const
 	WebVersionFileName = 'version.txt';
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
+function GetWebFile(const Web: string): string;
 function GetWebVersion(const Web: string): string;
 procedure CheckForUpdate; overload;
 procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
@@ -62,6 +63,29 @@ begin
 		on E: Exception do
 		begin
 			Warning('%1, can not receive project version from %2!', [DelBESpaceF(E.Message), Web + WebVersionFileName]);
+		end;
+	end;
+end;
+
+function GetWebFile(const Web: string): string;
+var
+	TargetFileName: TFileName;
+begin
+	Result := '?';
+	try
+		TargetFileName := TempDir + 'a.txt';
+		try
+			DownloadFile(Web, TargetFileName);
+		// TODO : replace with IdHTTP.Get(FileName)
+			Result := ReadStringFromFile(TargetFileName);
+		finally
+			if FileExists(TargetFileName) then
+				DeleteFileEx(TargetFileName);
+		end;
+	except
+		on E: Exception do
+		begin
+			Warning('%1, can not receive file from %2!', [DelBESpaceF(E.Message), Web]);
 		end;
 	end;
 end;
