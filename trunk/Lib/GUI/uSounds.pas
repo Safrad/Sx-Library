@@ -66,6 +66,7 @@ procedure FreeSounds;
 
 procedure PlaySound(const SoundKind: SG); overload;
 procedure PlaySound(const SoundKind: SG; const CX, CXCount: SG); overload;
+function SoundExists(const SoundKind: SG): BG;
 procedure UnuseSounds;
 
 procedure FormSounds;
@@ -351,6 +352,14 @@ begin
 			end;
 		end;
 	end;
+end;
+
+function SoundExists(const SoundKind: SG): BG;
+var
+	P: PSound;
+begin
+	P := Sounds.Get(SoundKind);
+  Result := FileExists(WorkDir + P.FileName);
 end;
 
 procedure UnuseSounds;
