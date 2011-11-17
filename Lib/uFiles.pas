@@ -32,7 +32,6 @@ type
 	TFileNames = array of TFileName;
 
 function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
-function GetFileModificationDateTime(const FileName: TFileName): TFileTime;
 function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 function ShortDir(const Dir: string): string;
 
@@ -973,12 +972,6 @@ begin
 	begin
 		IOError(FileName, GetLastError);
 	end;
-end;
-
-function GetFileModificationDateTime(const FileName: TFileName): TFileTime;
-var CreationTime, LastAccessTime: TFileTime;
-begin
-	GetFileDateTime(FileName, CreationTime, LastAccessTime, Result);
 end;
 
 function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;

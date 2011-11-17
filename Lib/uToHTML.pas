@@ -352,7 +352,7 @@ begin
 			begin
 				if (DelFileExt(ExtractFileName(FileNames[i])) <> 'index') then
 				begin
-					AddFile(Dir + FileNames[i], FileNames[i], 'David Šafránek', FileTimeToDateTime(GetFileModificationDateTime(Dir + FileNames[i])));
+					AddFile(Dir + FileNames[i], FileNames[i], 'David Šafránek', FileTimeToDateTime(GetFileModified(Dir + FileNames[i])));
 				end;
 			end;
 
@@ -363,7 +363,7 @@ begin
 				FileName := Dir + FileNames[i] + IndexFile;
 				if FileExists(FileName) then
 				begin
-					AddFile(FileName, DelLastChar(FileNames[i]), 'David Šafránek', FileTimeToDateTime(GetFileModificationDateTime(FileName)));
+					AddFile(FileName, DelLastChar(FileNames[i]), 'David Šafránek', FileTimeToDateTime(GetFileModified(FileName)));
 				end;
 			end;
 
