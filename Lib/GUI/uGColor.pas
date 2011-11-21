@@ -10,7 +10,7 @@ uses
 	uDWinControl;
 
 const
-	MaxColor = 6 * 4 + 3 * 4 - 1;
+	MaxColor = 6 * 4 + 3 * 4 + 1 - 1;
 
 type
 	TOnApplyColor = procedure(Color: TColor);
@@ -202,7 +202,7 @@ begin
 			Result.B := Result.R;
 			Result.a := 0;
 		end;
-	32 .. 35:
+	32 .. 36:
 		begin
 			case i of
 			32:
@@ -213,6 +213,8 @@ begin
 				Result.L := clCream;
 			35:
 				Result.L := clMedGray;
+			36:
+				Result.L := clForestGreen;
 			end;
 		end;
 	end;
@@ -313,7 +315,7 @@ procedure CreateBox(const i, L, T: SG);
 begin
 	fGColor.PanelColor[i].BevelOuter := bvNone;
 	fGColor.PanelColor[i].BorderStyle := bsSingle;
-	fGColor.PanelColor[i].SetBounds(L, T, 16, 16);
+	fGColor.PanelColor[i].SetBounds(L, T, LgToPx(16), LgToPx(16));
 	fGColor.PanelColor[i].Tag := i;
 	fGColor.PanelColor[i].OnMouseDown := fGColor.PanelColorMouseDown;
 	fGColor.PanelColor[i].OnMouseUp := fGColor.PanelColorMouseUp;
@@ -335,20 +337,20 @@ begin
 			0 .. 23:
 				begin
 					L := 8 + 20 * (i mod 12);
-					T := 8 + 20 * (i div 12);
+					T := 4 + 18 * (i div 12);
 				end;
 			24 .. 31:
 				begin
 					L := 8 + 20 * (i - 24);
-					T := 64 - 8;
+					T := 64 - 4 - 18;
 				end;
-			else // 32..35:
+			else // 32..36:
 				begin
-					L := 8 + 20 * (i - 24);
-					T := 64 - 8;
+					L := 8 + 20 * (i - 32);
+					T := 64 - 4;
 				end;
 			end;
-			CreateBox(i, fGColor.BevelBasicColors.Left + L, fGColor.BevelBasicColors.Top + T);
+			CreateBox(i, fGColor.BevelBasicColors.Left + LgToPx(L), fGColor.BevelBasicColors.Top + LgToPx(T));
 			fGColor.PanelColor[i].Color := IntToColor(i).L;
 			fGColor.InsertControl(fGColor.PanelColor[i]);
 		end;
@@ -811,29 +813,29 @@ begin
 				C := HLSToRGB(HLS);
 			end;
 		end;
-		BmpD.Line(i, 0, i, 15, C.L, ef16);
+		BmpD.Line(i, 0, i, BmpD.Height - 1, C.L, ef16, LgToPx(1));
 	end;
 
 	i := -1;
 	case TDImage(Sender).Tag of
 	0:
-		i := RoundDiv(SG(255 * NowRGB.R), (BmpD.Width - 1));
+		i := RoundDiv(SG(BmpD.Width * NowRGB.R), (256 - 1));
 	1:
-		i := RoundDiv(SG(255 * NowRGB.G), (BmpD.Width - 1));
+		i := RoundDiv(SG(BmpD.Width * NowRGB.G), (256 - 1));
 	2:
-		i := RoundDiv(SG(255 * NowRGB.B), (BmpD.Width - 1));
+		i := RoundDiv(SG(BmpD.Width * NowRGB.B), (256 - 1));
 	3:
 		begin
 			if NowHLS.H >= 0 then
 				i := RoundDiv(SG((BmpD.Width) * NowHLS.H), (MaxSpectrum + 1));
 		end;
 	4:
-		i := RoundDiv(SG(255 * NowHLS.L), (BmpD.Width - 1));
+		i := RoundDiv(SG(BmpD.Width * NowHLS.L), (256 - 1));
 	5:
-		i := RoundDiv(SG(255 * NowHLS.S), (BmpD.Width - 1));
+		i := RoundDiv(SG(BmpD.Width * NowHLS.S), (256 - 1));
 	end;
 	if i >= 0 then
-		BmpD.Line(i, 0, i, 15, NegMonoColor(FNowColor), ef16);
+		BmpD.Line(i, 0, i, BmpD.Height - 1, NegMonoColor(FNowColor), ef16, LgToPx(1));
 end;
 
 procedure TfGColor.ComboBoxBitDepthChange(Sender: TObject);
