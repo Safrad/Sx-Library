@@ -144,14 +144,16 @@ procedure CorrectDir(var s: string);
 function CorrectDirF(const s: string): string;
 function RandomString(const Size: SG): string;
 
-procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string);
-procedure EnumToStrEx(const TypeInfo: PTypeInfo; out AString: array of string);
+procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
+procedure EnumToStrEx(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
 function ButtonNameToFileName(const Name: string): string;
 function ComponentName(const Name: string): string;
 
 function HashCode(const s: string): U4;
 
 function OddEven(const Index: SG): string;
+
+function IsNumber(const AText: string): Boolean;
 
 implementation
 
@@ -1129,7 +1131,7 @@ begin
 		Result[i] := Char(Random(256));
 end;
 
-procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string);
+procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
 var
 	i: SG;
 	TypeData: PTypeData;
@@ -1141,7 +1143,7 @@ begin
 	end;
 end;
 
-procedure EnumToStrEx(const TypeInfo: PTypeInfo; out AString: array of string);
+procedure EnumToStrEx(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
 var
 	i: SG;
 	TypeData: PTypeData;
@@ -1255,6 +1257,20 @@ begin
 		Result := 'even'
 	else
 		Result := 'odd';
+end;
+
+function IsNumber(const AText: string): Boolean;
+var
+	i: SG;
+begin
+	Result := False;
+	if Length(AText) = 0 then Exit;
+	for i := 1 to Length(AText) do
+	begin
+		if not ((AText[i] = '.') or (AText[i] in ['0'..'9'])) then
+			Exit
+	end;
+	Result := True;
 end;
 
 procedure FillHexValue;
