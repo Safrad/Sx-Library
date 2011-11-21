@@ -270,7 +270,7 @@ begin
 					j := 1;
 					// Call after InsertControl
 					while j <= Length(O.DefaultStr) do
-						CB.Items.Add(ReadToChar(O.DefaultStr, j, CharTab));
+						CB.Items.Add(Translate(ReadToChar(O.DefaultStr, j, CharTab)));
 					CB.ItemIndex := O.Default - O.Minimum;
 				finally
 					CB.Items.EndUpdate;
