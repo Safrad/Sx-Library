@@ -116,7 +116,7 @@ begin
 			LastFontName := BmpT.Canvas.Font.Name;
 			try
 				BmpT.Canvas.Font.Name := 'Times New Roman';
-				BmpT.Canvas.Font.Height := -38;
+				BmpT.Canvas.Font.Size := 20;
 
 				s := GetProjectInfo(piProductVersion);
 			{	for i := Length(s) downto 2 do
@@ -141,7 +141,7 @@ begin
 //		BmpT.Canvas.Font.Style := [];
 		BmpT.Canvas.Font.Name := 'Tahoma';
 		BmpT.Canvas.Font.Style := [fsBold];
-		BmpT.Canvas.Font.Height := 16;
+		BmpT.Canvas.Font.Size := 10;
 	{	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), 'by ' + GetProjectInfo(piAuthor),
 			clNone, clNone, clWhite, taRightJustify, tlCenter);
 		GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), GetProjectInfo(piRelease),
@@ -154,13 +154,9 @@ begin
 		ShadowText(BmpT.Canvas, BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, s,
 			clWhite, clNone);
 
-		s := GetProjectInfo(piAuthor);
-		if Length(s) > 0 then
-		begin
-			s := 'by ' + s;
-			ShadowText(BmpT.Canvas, Bmp.Width - 1 - BmpT.Canvas.TextWidth(s) - BorderSize - 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, s,
+		s := GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName);
+		ShadowText(BmpT.Canvas, Bmp.Width - 1 - BmpT.Canvas.TextWidth(s) - BorderSize - 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, s,
 				clWhite, clNone);
-		end;
 
 		Bmp.Bmp(0, 0, BmpT, ef12);
 	finally
