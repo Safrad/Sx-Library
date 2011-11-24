@@ -1,4 +1,5 @@
 program LibTest;
+
 uses
   Forms,
   TestFrameWork,
@@ -12,6 +13,7 @@ uses
 
 begin
   Application.Initialize;
+  Application.Title := 'Lib Test';
   GUITestRunner.RunRegisteredTests;
 end.
 
