@@ -70,6 +70,7 @@ type
 
 var
 	Dictionary: TDictionary;
+    UseGoogle: BG = False;
 
 function Translate(const Line: string): string;
 
@@ -487,7 +488,10 @@ begin
 			ReadDictionary(WorkDir + Language.Name + '.csv');
 			ReadDictionary(GetLanguagesDir + 'Common' + Language.Name + '.csv');
       CreateDirEx(AppDataDir + 'Languages\');
-			ReadDictionary(AppDataDir + 'Languages\' + Language.Name + '.csv');
+			if not UseGoogle then
+				ReadDictionary(GetLanguagesDir + Language.Name + '.csv')
+			else
+				ReadDictionary(AppDataDir + 'Languages\' + Language.Name + '.csv');
       RebuildAIndex;
       Loaded := loYes;
 		end;
@@ -505,22 +509,23 @@ begin
         AddSuffix := False;
 
       Trans := Trans2;
-      if Trans = 'Running' then
-        Trans := Trans;
       if not FindInDictionary(Trans) then
       begin
-  			Trans := Trans2;
-        googleTranslate(Trans, 'en|' + Language.Code, OutS);
-        if OutS = '' then
-          OutS := Line;
+        if UseGoogle then
+        begin
+          Trans := Trans2;
+          googleTranslate(Trans, 'en|' + Language.Code, OutS);
+          if OutS = '' then
+            OutS := Line;
 
-        NewSize := EntryCount + 1;
-        if AllocByExp(Length(Entries), NewSize) then
-          SetLength(Entries, NewSize);
-        Entries[EntryCount].En := Trans;
-        Entries[EntryCount].Other := OutS;
-        Inc(EntryCount);
-        RebuildAIndex;
+          NewSize := EntryCount + 1;
+          if AllocByExp(Length(Entries), NewSize) then
+            SetLength(Entries, NewSize);
+          Entries[EntryCount].En := Trans;
+          Entries[EntryCount].Other := OutS;
+          Inc(EntryCount);
+          RebuildAIndex;
+        end;
       end
       else
         Result := Trans;
