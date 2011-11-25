@@ -553,6 +553,8 @@ begin
 		TLabel(Component).Caption := Translate(TLabel(Component).Caption)
 	else if Component is TLabeledEdit then
 		TLabeledEdit(Component).EditLabel.Caption := Translate(TLabeledEdit(Component).EditLabel.Caption)
+	else if Component is TPanel then
+		TPanel(Component).Caption := Translate(TPanel(Component).Caption)
 	else if Component is TMenu then
 		TranslateMenu(TMenu(Component).Items)
 	else if Component is TCheckBox then
