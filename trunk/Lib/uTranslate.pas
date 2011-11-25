@@ -11,7 +11,6 @@ function googleTranslate(source : string; langpair : string;
 implementation
 
 uses
-  uCustomUser,
   uProjectInfo,
   uToHTML,
   uStrings,
@@ -82,8 +81,8 @@ begin
     url := 'http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q=' +
 		String(utfs) + '&langpair=' + langpair;
 
-    http.Request.Referer := MyWeb;
-    http.Request.UserAgent := ProjectInfoStr[piProductName];
+    http.Request.Referer := GetProjectInfo(piWeb);
+    http.Request.UserAgent := GetProjectInfo(piProductName);
     s := http.Get(url);
 
     status := Copy(s, pos('"responseStatus":', s)+18, length(s));

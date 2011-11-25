@@ -52,7 +52,7 @@ uses
 	uTypes,
 	uFiles,
 	Windows,
-	uOutputFormat, uStrings, uCustomUser,
+	uOutputFormat, uStrings,
 	TypInfo;
 
 var
@@ -140,8 +140,6 @@ begin
 	if not Assigned(ThisProjectInfo) then
 	begin
 		ThisProjectInfo := TProjectInfo.Create(ParamStr(0));
-		if ThisProjectInfo.FProjectInfoNames[piCompanyName] = '' then // if not initialized in ProjectInfo
-			ThisProjectInfo.FProjectInfoNames[piCompanyName] := MyCompany;
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
 			ThisProjectInfo.FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(ThisProjectInfo.FApplicationFileName));
 
