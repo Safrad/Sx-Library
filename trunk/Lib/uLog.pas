@@ -13,6 +13,7 @@ type
 		FFileName: TFileName;
 		FFile: TFile;
 		FDirectWrite: BG;
+    FInWrite: BG;
 		FLoggingLevel: TMessageLevel;
 		procedure WriteLine(const Line: string);
 	public
@@ -47,6 +48,9 @@ var
 	LLog: TLog;
 	LineA: AnsiString;
 begin
+  if FInWrite then Exit;
+  
+  FInWrite := True;
 	if Length(Line) > 0 then
 	begin
 		if FDirectWrite then
@@ -67,6 +71,7 @@ begin
 			FData := FData + Line;
 		end;
 	end;
+  FInWrite := False;
 end;
 
 const
@@ -195,8 +200,6 @@ procedure MainLogAdd(const Line: string; const LogType: TMessageLevel);
 begin
   if InitializingLog then Exit;
 
-	if not Assigned(MainLog) then
-    InitializeLog;
 	if Assigned(MainLog) then
 	  MainLog.Add(Line, LogType);
 end;
