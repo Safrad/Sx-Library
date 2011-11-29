@@ -81,7 +81,10 @@ type
 
 const
 	DlgNoTime = 0;
-	DlgWait = 15;
+	DlgWait = 15; // Default
+var
+  DisplayDialogs: Boolean = True;
+  UseWindowsDialog: Boolean;
 
 procedure ShowMessages;
 function MsgDlg(
@@ -448,6 +451,20 @@ begin
 	fMsgDlg.ShowForm;
 end;
 
+function MessageLevelToMsgDlgType(const AMessageLevel: TMessageLevel): TMsgDlgType;
+begin
+  case AMessageLevel of
+  mlConfirmation: Result := mtConfirmation;
+  mlDebug: Result := mtInformation;
+  mlInformation: Result := mtInformation;
+  mlWarning: Result := mtWarning;
+  mlError: Result := mtError;
+  mlFatalError: Result := mtError;
+  mlNone: Result := mtCustom;
+  else Result := mtCustom;
+  end;
+end;
+
 function MsgDlg(
 	const Text: string;
 	const Param: array of string;
@@ -460,6 +477,9 @@ var
 	Ignore: PIgnore;
 	B: SG;
 begin
+  Result := 0;
+  if DisplayDialogs = False then Exit;
+  
 	Ignore := nil;
 (*	{$ifopt d+}
 	Assert(Length(Text) > 0);
@@ -667,6 +687,32 @@ begin
 		MessageD('No message found.', mlInformation, [mbOk]);
 end;
 
+function MsgDlgBtnToDlgBtn(const AButton: TMsgDlgBtn): TDlgBtn;
+const
+  MsgDlgBtnToDlgBtnA: array[TMsgDlgBtn] of TDlgBtn = (mbYes, mbNo, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore,
+    mbAll, mbNoToAll, mbYesToAll, mbHelp, mbClose);
+begin
+  Result := MsgDlgBtnToDlgBtnA[AButton];
+end;
+
+function ModalResultToDlgBtn(const AModalResult: TModalResult): TDlgBtn;
+const
+  ModalResultToDlgBtnA: array[0..11] of TDlgBtn = (
+    mbHelp{None}, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore, mbYes, mbNo, mbAll, mbNoToAll, mbYesToAll, mbClose);
+begin
+  Result := ModalResultToDlgBtnA[AModalResult];
+end;
+
+function DlgButtonsToMsgDlgButtons(const AButtons: TDlgButtons) :TMsgDlgButtons;
+var
+  B: TMsgDlgBtn;
+begin
+  Result := [];
+  for B := Low(B) to High(B) do
+    if MsgDlgBtnToDlgBtn(B) in AButtons then
+      Result := Result + [B];
+end;
+
 function MessageD(const Text: string; const Param: array of string; const MsgType: TMessageLevel;
 	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn; overload;
 var
@@ -674,6 +720,15 @@ var
 	But: array of string;
 	Res, i: SG;
 begin
+	Result := mbCancel;
+	if not DisplayDialogs then Exit;
+
+  If UseWindowsDialog then
+  begin
+    Result := ModalResultToDlgBtn(Dialogs.MessageDlg(ReplaceParam(Text, Param), MessageLevelToMsgDlgType(MsgType), DlgButtonsToMsgDlgButtons(Buttons), 0));
+    Exit;
+  end;
+
 	i := 0;
 	for B := Low(B) to High(B) do
 		if B in Buttons then Inc(i);
