@@ -25,6 +25,7 @@ var
   InstanceTempDir,
 	CommonTempDir: string;
 	ExeFileName, RenamedExeFileName: TFileName;
+  ModuleFileName: TFileName;
   ExeParameters: string;
   MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
 
@@ -106,6 +107,7 @@ function SameFiles(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
 procedure ReplaceIfChanged(const OrigFileName, TempFileName: TFileName); overload;
 procedure ReplaceIfChanged(const TempFileName: TFileName); overload;
+function GetModuleFileNameFunc: string;
 procedure InitPaths;
 
 function DirectoryExistsEx(const DirName: TFileName): BG;
@@ -224,6 +226,15 @@ begin
 	end;
 end;
 
+function GetModuleFileNameFunc: string;
+var
+  NewLength: SG;
+begin
+	SetLength(Result, MAX_PATH);
+	NewLength := GetModuleFileName(HInstance, PChar(Result), MAX_PATH);
+	SetLength(Result, NewLength);
+end;
+
 procedure InitPaths;
 var
 	NewLength: SG;
@@ -241,6 +252,8 @@ begin
   CommandLine := GetCommandLine;
 	All := SplitStr(CommandLine, 1, ExeParameters);
   ExeFileName := All[0];
+  ModuleFileName := GetModuleFileNameFunc;
+
 	WorkDir := '';
 {	if Length(ExeFileName) > 0 then
 	begin
@@ -257,15 +270,15 @@ begin
 		end;}
 
 		// Split ExeFileName to WorkDir and InternalName
-		for i := Length(ExeFileName) downto 0 do
+		for i := Length(ModuleFileName) downto 0 do
 		begin
 			if i = 0 then
 			begin
 				Break;
 			end;
-			if (ExeFileName[i] = PathDelim) then
+			if (ModuleFileName[i] = PathDelim) then
 			begin
-				WorkDir := Copy(ExeFileName, 1, i);
+				WorkDir := Copy(ModuleFileName, 1, i);
 				Break;
 			end;
 		end;
