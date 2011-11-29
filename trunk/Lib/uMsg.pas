@@ -39,12 +39,13 @@ const
 {$IFNDEF Console}
 type
 	TDlgBtn = (mbOK, mbYes, mbYesToAll, mbRetry, mbIgnore, mbAbort, mbDelete, mbDeleteAll, mbNo,
-		mbNoToAll, mbCancel);
+		mbNoToAll, mbCancel, mbAll, mbHelp, mbClose);
 	TDlgButtons = set of TDlgBtn;
 
 const
 	DlgBtnNames: array [TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry,
-		SMsgDlgIgnore, SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel);
+		SMsgDlgIgnore, SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel,
+    SMsgDlgAll, SMsgDlgHelp, SMsgDlgClose);
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
