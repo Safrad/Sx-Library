@@ -142,6 +142,8 @@ begin
 		ThisProjectInfo := TProjectInfo.Create(GetModuleFileNameFunc);
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
 			ThisProjectInfo.FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(ThisProjectInfo.FApplicationFileName));
+		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then
+      ThisProjectInfo.FProjectInfoNames[piInternalName] := 'Unknown';
 
 		{$IFOPT D+}
 		AppendStr(ThisProjectInfo.FProjectInfoNames[piFileVersion], '+');

@@ -241,7 +241,7 @@ var
 	i: SG;
 	All: TArrayOfString;
   CommandLine: string;
-  SrcDir: string;
+  SrcDir, Suffix: string;
 begin
 	if ExeFileName <> '' then Exit;
 
@@ -314,7 +314,13 @@ begin
 	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
 	if CommonAppDataDir = '' then CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
 	CorrectDir(CommonAppDataDir);
-	AppDataDir := CommonAppDataDir + GetProjectInfo(piCompanyName) + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
+  Suffix := '';
+  if GetProjectInfo(piCompanyName) <> '' then
+    Suffix := Suffix + GetProjectInfo(piCompanyName) + PathDelim;
+  Suffix := Suffix + GetProjectInfo(piInternalName) + PathDelim;
+
+	AppDataDir := CommonAppDataDir + Suffix;
+
 	if DirectoryExists(AppDataDir) then
 	begin
 		GInstalled := True
@@ -322,7 +328,7 @@ begin
 	else
 	begin
 		CreateDirsEx(AppDataDir);
-    SrcDir := CommonAppDataDir + 'Safrad' + '\' + GetProjectInfo(piCompanyName) + PathDelim;
+    SrcDir := CommonAppDataDir + 'Safrad' + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
     if DirectoryExists(SrcDir) then
     begin
   		GInstalled := True;
