@@ -106,8 +106,12 @@ begin
 	Add('Started'{$ifndef Console} + ' Version ' + GetProjectInfo(piFileVersion){$endif}, mlInformation);
 end;
 
+var
+  InitializingLog: BG; // or DeinitializingLog
+
 destructor TLog.Destroy;
 begin
+  InitializingLog := True;
 	Add('Finished', mlInformation);
 	if Assigned(FFile) then
 	begin
@@ -189,8 +193,12 @@ end;
 
 procedure MainLogAdd(const Line: string; const LogType: TMessageLevel);
 begin
+  if InitializingLog then Exit;
+
+	if not Assigned(MainLog) then
+    InitializeLog;
 	if Assigned(MainLog) then
-		MainLog.Add(Line, LogType);
+	  MainLog.Add(Line, LogType);
 end;
 
 procedure SetLoggingLevel(const Value: string);
@@ -202,55 +210,20 @@ procedure InitializeLog;
 var
 	i: SG;
 	s: string;
-	OldFileName: TFileName;
-	OutStr, Line, IdStr, DTStr: string;
-	LineIndex, InLineIndex: SG;
 begin
-	CreateDirEx(ExtractFilePath(MainLogFileName));
-	OldFileName := WorkDir + {$ifndef Console}GetProjectInfo(piInternalName){$else}''{$endif} + '.log';
-	if FileExists(OldFileName) then
-	begin
-		// Convert Old Format
-		if ReadStringFromFile(OldFileName, s) then
-		begin
-			if (Length(s) > 0) and (s[1] <> ';') then
-			begin
-				OutStr := IdLine;
-				LineIndex := 1;
-				while LineIndex <= Length(s) do
-				begin
-					Line := ReadToNewLine(s, LineIndex);
-					if Line = '' then Continue;
-
-					InLineIndex := 1;
-					IdStr := ReadToChar(Line, InLineIndex, CharTab);
-					DTStr := Copy(Line, InLineIndex, MaxInt);
-
-					Replace(IdStr, ['S', 'F'], ['Started', 'Finished']);
-
-					OutStr := OutStr + DTStr + CharTab + 'I' + CharTab + IdStr + FileSep;
-				end;
-				if WriteStringToFile(MainLogFileName, OutStr, False) then
-					if OldFileName <> MainLogFileName then
-						DeleteFileEx(PChar(OldFileName));
-			end
-			else
-			begin
-				RenameFileEx(OldFileName, MainLogFileName);
-			end;
-		end;
-	end;
-
+  InitializingLog := True;
 	s := '';
 	for i := 0 to Length(MessageLevelStr) - 1 do
 	begin
 		s := s + MessageLevelStr[TMessageLevel(i)] + '|';
 	end;
 	s := DelLastChar(s);
-
-	MainLog := TLog.Create(MainLogFileName); //, GetLoggingLevel(GetParamValue('LOG')), True);
-
 	RegisterParam('Log', 'Logging level: Log[' + s + ']', SetLoggingLevel);
+
+  InitPaths;
+	CreateDirEx(ExtractFilePath(MainLogFileName));
+	MainLog := TLog.Create(MainLogFileName); //, GetLoggingLevel(GetParamValue('LOG')), True);
+  InitializingLog := False;
 end;
 
 initialization
