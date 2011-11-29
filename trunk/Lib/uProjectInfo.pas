@@ -139,7 +139,7 @@ function GetProjectInfo(const ProjectInfo: TProjectInfoName): string;
 begin
 	if not Assigned(ThisProjectInfo) then
 	begin
-		ThisProjectInfo := TProjectInfo.Create(ParamStr(0));
+		ThisProjectInfo := TProjectInfo.Create(GetModuleFileNameFunc);
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
 			ThisProjectInfo.FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(ThisProjectInfo.FApplicationFileName));
 
