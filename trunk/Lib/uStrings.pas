@@ -1267,7 +1267,7 @@ begin
 	if Length(AText) = 0 then Exit;
 	for i := 1 to Length(AText) do
 	begin
-		if not ((AText[i] = '.') or (AText[i] in ['0'..'9'])) then
+		if not ((AText[i] = '.') or (CharInSet(AText[i], ['0'..'9']))) then
 			Exit
 	end;
 	Result := True;
