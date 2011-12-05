@@ -690,7 +690,7 @@ end;
 function MsgDlgBtnToDlgBtn(const AButton: TMsgDlgBtn): TDlgBtn;
 const
   MsgDlgBtnToDlgBtnA: array[TMsgDlgBtn] of TDlgBtn = (mbYes, mbNo, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore,
-    mbAll, mbNoToAll, mbYesToAll, mbHelp, mbClose);
+    mbAll, mbNoToAll, mbYesToAll, mbHelp{$if CompilerVersion >=210}, mbClose{$ifend});
 begin
   Result := MsgDlgBtnToDlgBtnA[AButton];
 end;
@@ -698,7 +698,7 @@ end;
 function ModalResultToDlgBtn(const AModalResult: TModalResult): TDlgBtn;
 const
   ModalResultToDlgBtnA: array[0..11] of TDlgBtn = (
-    mbHelp{None}, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore, mbYes, mbNo, mbAll, mbNoToAll, mbYesToAll, mbClose);
+    mbHelp{None}, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore, mbYes, mbNo, mbAll, mbNoToAll, mbYesToAll, mbHelp{$if CompilerVersion >=210}, mbClose{$ifend});
 begin
   Result := ModalResultToDlgBtnA[AModalResult];
 end;
