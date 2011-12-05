@@ -14,7 +14,6 @@ uses
 	Usability in "Project file" (*.dpr):
 
 	begin
-	Application.Title := '...';
 	Application.Initialize;
 	CommonCreate;
 	Application.CreateForm(TfMain, fMain);
