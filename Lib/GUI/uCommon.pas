@@ -135,6 +135,9 @@ begin
 			Halt(1);
 		InitializeLog;
 	end;
+
+	Application.Title := GetProjectInfo(piProductName);
+
 	MainIni := TDIniFile.Create(MainIniFileName);
 	LocalMainIni := TDIniFile.Create(LocalIniFileName);
 	Dictionary := TDictionary.Create;
