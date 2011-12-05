@@ -45,7 +45,7 @@ type
 const
 	DlgBtnNames: array [TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry,
 		SMsgDlgIgnore, SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel,
-    SMsgDlgAll, SMsgDlgHelp, SMsgDlgClose);
+    SMsgDlgAll, SMsgDlgHelp, {$if CompilerVersion >=210}SMsgDlgClose{$else}SCloseButton{$ifend});
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
