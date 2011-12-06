@@ -9,7 +9,7 @@ const
 	WebVersionFileName = 'version.txt';
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
-function GetWebFile(const Web: string): string;
+function DownloadData(const AURL: string): string;
 function GetWebVersion(const Web: string): string;
 procedure CheckForUpdate; overload;
 procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
@@ -19,7 +19,7 @@ implementation
 uses
 	uLog,
 	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion, ufTextStatus,
-	Windows, Classes, IdHTTP, SysUtils;
+	Windows, Classes, IdHTTP, IdException, SysUtils;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 var
@@ -44,48 +44,32 @@ begin
 	end;
 end;
 
-function GetWebVersion(const Web: string): string;
+function DownloadData(const AURL: string): string;
 var
-	TargetFileName: TFileName;
+	IdHTTP1: TIdHTTP;
 begin
-	Result := '?';
+	MainLog.Add('Download data ' + AddQuoteF(AURL), mlDebug);
+	IdHTTP1 := TIdHTTP.Create(nil);
 	try
-		TargetFileName := TempDir + WebVersionFileName;
-		try
-			DownloadFile(Web + WebVersionFileName, TargetFileName);
-		// TODO : replace with IdHTTP.Get(FileName)
-			Result := ReadStringFromFile(TargetFileName);
-		finally
-			if FileExists(TargetFileName) then
-				DeleteFileEx(TargetFileName);
-		end;
-	except
-		on E: Exception do
-		begin
-			Warning('%1, can not receive project version from %2!', [DelBESpaceF(E.Message), Web + WebVersionFileName]);
-		end;
+		IdHTTP1.HandleRedirects := True;
+    Result := IdHTTP1.Get(AURL);
+	finally
+		IdHTTP1.Free;
 	end;
 end;
 
-function GetWebFile(const Web: string): string;
-var
-	TargetFileName: TFileName;
+function GetWebVersion(const Web: string): string;
 begin
 	Result := '?';
 	try
-		TargetFileName := TempDir + 'a.txt';
-		try
-			DownloadFile(Web, TargetFileName);
-		// TODO : replace with IdHTTP.Get(FileName)
-			Result := ReadStringFromFile(TargetFileName);
-		finally
-			if FileExists(TargetFileName) then
-				DeleteFileEx(TargetFileName);
-		end;
+		Result := DownloadData(Web + WebVersionFileName);
 	except
 		on E: Exception do
 		begin
-			Warning('%1, can not receive file from %2!', [DelBESpaceF(E.Message), Web]);
+      if (E is EIdSocketError) and (EIdSocketError(E).LastError = 11004) then
+  			Warning('No internet connection available!', [])
+      else
+  			ErrorMsg('%1, can not receive project version from %2!', [DelBESpaceF(E.Message), Web + WebVersionFileName]);
 		end;
 	end;
 end;
