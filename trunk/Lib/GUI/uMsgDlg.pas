@@ -690,7 +690,7 @@ end;
 function MsgDlgBtnToDlgBtn(const AButton: TMsgDlgBtn): TDlgBtn;
 const
   MsgDlgBtnToDlgBtnA: array[TMsgDlgBtn] of TDlgBtn = (mbYes, mbNo, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore,
-    mbAll, mbNoToAll, mbYesToAll, mbHelp{$if CompilerVersion >=210}, mbClose{$ifend});
+    mbAll, mbNoToAll, mbYesToAll, mbHelp{$if CompilerVersion >= 21}, mbClose{$ifend});
 begin
   Result := MsgDlgBtnToDlgBtnA[AButton];
 end;
