@@ -19,7 +19,7 @@ implementation
 uses
 	uLog,
 	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion, ufTextStatus,
-	Windows, Classes, IdHTTP, IdException, SysUtils;
+	Windows, Classes, IdHTTP, IdException, IdStack, SysUtils;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 var
