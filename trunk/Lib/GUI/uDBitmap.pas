@@ -123,7 +123,6 @@ type
 		{$WARNINGS OFF}
 		constructor Create(FileName: TFileName); overload;
 		destructor Destroy; override;
-		{$WARNINGS ON}
 
 		function Empty: Boolean;
 		procedure FreeImage; overload;
@@ -337,6 +336,7 @@ type
 		property GPGraphic: IGPGraphics read GetGPGraphic;
 		{$endif}
 	end;
+	{$WARNINGS ON}
 
 procedure BitmapCopy(var BmpD: TDBitmap; BmpS: TDBitmap); // Create + SetSize + CopyData
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor); // Create + SetSize
@@ -1592,10 +1592,14 @@ begin
 //		if FGLData <> nil then FreeMem(FGLData);
 		try
 			Init(InitialColor);
+			{$if CompilerVersion >= 20}
+			inherited SetSize(NewWidth, NewHeight);
+			{$else}
 			inherited Width := 0;
 			inherited Height := 0;
 			inherited Width := NewWidth;
 			inherited Height := NewHeight;
+			{$ifend}
 			FWidth := NewWidth;
 			FHeight := NewHeight;
 			FByteX := WidthToByte;
