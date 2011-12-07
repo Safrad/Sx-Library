@@ -1198,7 +1198,8 @@ begin
 		end
 		else
 		begin
-			FillOrderUG(RowOrder[0], Value);
+      if Value > 0 then
+  			FillOrderUG(RowOrder[0], Value);
 {			for i := 0 to Value - 1 do
 			begin
 				FRowOrder[i] := i;
