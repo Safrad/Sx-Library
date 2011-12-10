@@ -19,10 +19,12 @@ type
 	end;
 
 	TOnAddFile = procedure(FileName: TFileName) of object;
+	TOnAddFileP = procedure(FileName: TFileName);
 
 	TFolder = class
 	private
 		FOnAddFile: TOnAddFile;
+		FOnAddFileP: TOnAddFileP;
 		function GetCount: SG;
 		procedure ReadSubDirSorted(const SubPath: string);
 	public
@@ -44,6 +46,7 @@ type
 		procedure Read;
 		function FirstFileName: TFileName;
 		property OnAddFile: TOnAddFile read FOnAddFile write FOnAddFile;
+		property OnAddFileP: TOnAddFileP read FOnAddFileP write FOnAddFileP;
 	published
 
 	end;
@@ -176,9 +179,13 @@ begin
 		begin
 			if AcceptDirs then
 			begin
-				if Assigned(OnAddFile) then
+				if Assigned(FOnAddFile) then
 				begin
-					OnAddFile(SubPath + List[j].Name + PathDelim);
+					FOnAddFile(SubPath + List[j].Name + PathDelim);
+				end
+				else if Assigned(FOnAddFileP) then
+				begin
+					FOnAddFileP(SubPath + List[j].Name + PathDelim);
 				end
 				else
 				begin
@@ -195,9 +202,13 @@ begin
 		end
 		else
 		begin
-			if Assigned(OnAddFile) then
+			if Assigned(FOnAddFile) then
 			begin
-				OnAddFile(SubPath + List[j].Name);
+				FOnAddFile(SubPath + List[j].Name);
+			end
+			else if Assigned(FOnAddFileP) then
+			begin
+				FOnAddFileP(SubPath + List[j].Name);
 			end
 			else
 			begin
