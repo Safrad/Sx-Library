@@ -103,6 +103,8 @@ type
       procedure Init;
     function ReadLongIntValue(const Offset: Cardinal): LongInt;
     function GetDateTime: TDateTime;
+    function GetDateTimeDigitized: TDateTime;
+    function GetDateTimeOriginal: TDateTime;
     public
       constructor Create;
       procedure ReadFromFile(const FileName: AnsiString);
@@ -115,8 +117,8 @@ type
       property OrientationDesc: String read FOrientationDesc;
       property Copyright: String read FCopyright;
       property DateTime: TDateTime read GetDateTime;
-      property DateTimeOriginal: String read FDateTimeOriginal;
-      property DateTimeDigitized: String read FDateTimeDigitized;
+      property DateTimeOriginal: TDateTime read GetDateTimeOriginal;
+      property DateTimeDigitized: TDateTime read GetDateTimeDigitized;
       property UserComments: String read FUserComments;
       property Software: String read FSoftware;
       property Artist: String read FArtist;
@@ -193,6 +195,8 @@ var
   fp: LongInt;
   i: Word;
 begin
+  Result := '';
+  if Count > 1024 * 1024 then Exit;
   SetLength(Result,Count);
   fp:=FilePos(f); //Save file offset
   Seek(f, Offset);
@@ -218,7 +222,7 @@ begin
   Seek(f, Offset);
   try
     BlockRead(f, Result, sizeof(Result));
-    if FSwap then Result:=SwapLong(Result);
+    if FSwap then Result:=SwapLong(Cardinal(Result));
   except
     Result:=0;
   end;
@@ -240,7 +244,10 @@ begin
       denom := SwapLong(denom);
     end;
     if frac then begin
-      str((nom/denom):1:2, result);
+      if denom = 0 then
+        Result := ''
+      else
+        str((nom/denom):1:2, result);
       if (length(result)>0) and (result[length(result)]='0') then Result:=copy(Result,1,length(Result)-1);
     end else
       if denom<>1000000 then
@@ -463,7 +470,7 @@ begin
                      FShutterSpeed:='';
                    end;
   //ISO Speed
-            $8827: FISO:=Tag.Offset;
+            $8827: if Tag.Offset <65536 then FISO:=Tag.Offset;
   // Aperture
             $9202: FAperture:=ReadRatio(tag.Offset+off0, true);
   // Max Aperture
@@ -536,7 +543,26 @@ end;
 
 function TExif.GetDateTime: TDateTime;
 begin
-	Result := SToDateTime(FDateTime, ifIO);
+  if FDateTime = '0000-00-00 00:00:00' then
+    Result := 0
+   else
+  	Result := SToDateTime(FDateTime, ifIO);
+end;
+
+function TExif.GetDateTimeDigitized: TDateTime;
+begin
+  if FDateTimeDigitized = '0000:00:00 00:00:00' then
+    Result := 0
+   else
+	  Result := SToDateTime(FDateTimeDigitized, ifIO);
+end;
+
+function TExif.GetDateTimeOriginal: TDateTime;
+begin
+  if FDateTimeOriginal = '0000:00:00 00:00:00' then
+    Result := 0
+   else
+  	Result := SToDateTime(FDateTimeOriginal, ifIO);
 end;
 
 end.
