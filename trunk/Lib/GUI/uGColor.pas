@@ -164,7 +164,7 @@ begin
 	else
 	begin
 		Button.Font.Color := NegMonoColor(Button.Color);
-		Button.Caption := ColorToString(Button.Color);
+  		Button.Caption := ColorToString(Button.Color);
 	end;
 end;
 
@@ -402,6 +402,7 @@ var
 	C: TRGBA;
 	i: Integer;
 	Vis: Boolean;
+  CShapeBorder: SG;
 begin
 	PanelCurrent.Color := FNowColor; // NowRGB.L;
 	InitButton(PanelCurrent);
@@ -418,13 +419,17 @@ begin
 	ImageS.Invalidate;
 
 	Vis := False;
+  CShapeBorder := LgToPx(2);
 	for i := 0 to MaxColor do
 	begin
 		if C.L = IntToColor(i).L then
 		begin
 			Vis := True;
-			ShapeBorder.SetBounds(PanelColor[i].Left - 2, PanelColor[i].Top - 2, ShapeBorder.Width,
-				ShapeBorder.Height);
+			ShapeBorder.SetBounds(
+        PanelColor[i].Left - CShapeBorder,
+        PanelColor[i].Top - CShapeBorder,
+        PanelColor[i].Width + 2 * CShapeBorder - 1,
+        PanelColor[i].Height + 2 * CShapeBorder - 1);
 			Break;
 		end;
 	end;
