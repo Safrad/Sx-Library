@@ -916,7 +916,7 @@ var
 	LastIndex: SG;
 begin
 	Result := True;
-	if OpenedFile >= FCount then
+	if (FCount = 0) or (OpenedFile >= FCount) then
 		Exit;
 	if Items[OpenedFile].FLocked then
 	begin
