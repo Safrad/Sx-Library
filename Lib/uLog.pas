@@ -88,10 +88,11 @@ begin
 	FDirectWrite := DirectWrite;
 
 	FFile := TFile.Create;
+  NewFileName := FFileName;
 	for Instance := 1 to 9 do
 	begin
-		if FFile.Open(FFileName, fmAppend) then Break;
-		FFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
+		if FFile.Open(NewFileName, fmAppend) then Break;
+		NewFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
 		if Instance = 9 then Exit;
 	end;
 
