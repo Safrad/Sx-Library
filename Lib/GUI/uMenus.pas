@@ -33,7 +33,7 @@ procedure MenuSet(Menu: TComponent);
 implementation
 
 uses
-	Forms, Controls, SysUtils, ShellAPI,
+	Forms, Controls, SysUtils, ShellAPI, Math,
 	uDButton, uStrings, uColor, uDictionary, uSounds, uSplash, uParams, uDrawStyle, uCommon,
 	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uAPI, uMath, uDParser, uLog, uOutputFormat;
 
@@ -245,6 +245,10 @@ var
 	MenuB: Boolean;
 	BmpWid: SG;
 	Parent: TObject;
+{$IFNDEF UNICODE}
+  Size: SG;
+  Ofst: SG;
+{$ENDIF}
 begin
 	if not(Sender is TMenuItem) then
 		Exit;
@@ -469,12 +473,15 @@ begin
 				PopFont(MenuBmp.Canvas.Font);
 {$ELSE}
 				MenuBmp.Canvas.Pen.Color := C1;
+        Size := ARect.Bottom - ARect.Top;
+        Ofst := 5 * Size div 16;
+        MenuBmp.Canvas.Pen.Width := Max(1, 1 * Size div 16);
 				MenuBmp.Canvas.Brush.Color := C1;
 				if MenuItem.Checked then
 					MenuBmp.Canvas.Brush.Style := bsSolid
 				else
 					MenuBmp.Canvas.Brush.Style := bsClear;
-				MenuBmp.Canvas.Ellipse(7, 7, ARect.Bottom - ARect.Top - 7, ARect.Bottom - ARect.Top - 7);
+				MenuBmp.Canvas.Ellipse(Ofst - 1, Ofst + 1, Size - 1 - Ofst - 1, Size - 1 - Ofst + 1);
 {$ENDIF}
 			end
 			else if MenuItem.Checked then
