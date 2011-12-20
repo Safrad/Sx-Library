@@ -1278,7 +1278,8 @@ begin
 			begin // User sort
 				try
 					FSortBy := FSortByIndexes[c];
-					FOnColumnClick(Self, FColumns[c]);
+          if c <  Length(FColumns) then
+  					FOnColumnClick(Self, FColumns[c]);
 				except
 					on E: Exception do
 						Fatal(E, Self);
@@ -1726,6 +1727,7 @@ var
 	Data: string;
 begin
 	if FSearchText = '' then Exit;
+  if FActualColumn >= Length(FColumnOrder) then Exit;
 
 	n := 0;
 	Y := PhysicalRow(FActualRow);
