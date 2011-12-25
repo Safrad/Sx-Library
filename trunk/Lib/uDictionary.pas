@@ -608,7 +608,7 @@ begin
         if (CharType(CharAt(Line, Po - 1), StdCharTable) <> ctLetter) and (CharType(CharAt(Line, Po + Length(WhatS)), StdCharTable) <> ctLetter) and {(CharAt(Line, Po - 1) <> '<') and} (CharAt(Line, Po - 1) <> '/') and (Ord(CharAt(Line, Po - 1)) < 128) and (Ord(CharAt(Line, Po + Length(WhatS))) < 128) then
         begin
           ToS := Entries[i].Other;
-          if Line[Po] <> AnsiChar(Entries[i].Other[1]) then
+          if Line[Po] <> Char(Entries[i].Other[1]) then
           begin
             if (Po = 1) and (UpCase(Line[Po]) = Line[Po]) then
             begin
