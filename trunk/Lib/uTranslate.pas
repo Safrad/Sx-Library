@@ -1,4 +1,4 @@
-unit uTranslate;
+unit uTranslate deprecated; // works until 2011-12-01
 
 interface
 
