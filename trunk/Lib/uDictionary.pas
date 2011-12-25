@@ -478,9 +478,7 @@ begin
 		begin
   		Loaded := loProcess;
       EntryCount := 0;
-			ReadDictionary(WorkDir + Language.Name + '.csv');
 			ReadDictionary(GetLanguagesDir + 'Common' + Language.Name + '.csv');
-      CreateDirEx(AppDataDir + 'Languages\');
 			ReadDictionary(GetLanguagesDir + Language.Name + '.csv');
       RebuildAIndex;
       Loaded := loYes;
@@ -500,7 +498,9 @@ begin
 
       Trans := Trans2;
       if FindInDictionary(Trans) then
-        Result := Trans;
+        Result := Trans
+      else
+        AddSuffix := False;
       if AddSuffix then
         Result := Result + SuffixStr;
 		end;
@@ -607,20 +607,14 @@ begin
       begin
         if (CharType(CharAt(Line, Po - 1), StdCharTable) <> ctLetter) and (CharType(CharAt(Line, Po + Length(WhatS)), StdCharTable) <> ctLetter) and {(CharAt(Line, Po - 1) <> '<') and} (CharAt(Line, Po - 1) <> '/') and (Ord(CharAt(Line, Po - 1)) < 128) and (Ord(CharAt(Line, Po + Length(WhatS))) < 128) then
         begin
-          {$IFNDEF UNICODE}
           ToS := Entries[i].Other;
-          {$ELSE}
-          if Line[Po] = Entries[i].Other[1] then
-            ToS := Entries[i].Other
-          else
+          if Line[Po] <> AnsiChar(Entries[i].Other[1]) then
           begin
-            ToS := Entries[i].Other;
             if (Po = 1) and (UpCase(Line[Po]) = Line[Po]) then
             begin
               ToS[1] := UpCaseCz(ToS[1])[1];
             end;
           end;
-          {$ENDIF}
           WhatS2 := Entries[i].En;
           Delete(Line, Po, Length(WhatS2));
           Insert(ToS, Line, Po);
