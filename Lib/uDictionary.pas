@@ -42,7 +42,6 @@ type
     function GetLanguage: PLanguage;
 		function GetLanguageName(const Index: SG): string;
 		procedure ReadDictionary(const FileName: TFileName);
-		procedure WriteDictionary(const Language: PLanguage);
     function FindInDictionary(var Line: string): BG;
     procedure RebuildAIndex;
     procedure SetLanguageIndex(const Value: SG);
@@ -70,7 +69,6 @@ type
 
 var
 	Dictionary: TDictionary;
-    UseGoogle: BG = False;
 
 function Translate(const Line: string): string;
 
@@ -78,7 +76,6 @@ implementation
 
 uses
 	Windows,
-  uTranslate,
 	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView,{$ENDIF} uMsg,
   Buttons;
 
@@ -144,7 +141,6 @@ end;
 
 destructor TDictionary.Destroy;
 begin
-  WriteDictionary(GetLanguage);
 	SetLength(AIndex, 0);
 	SetLength(AValue, 0);
 	SetLength(Entries, 0);
@@ -355,7 +351,6 @@ procedure TDictionary.SetLanguageIndex(const Value: SG);
 begin
   if FLanguageIndex <> Value then
   begin
-    WriteDictionary(GetLanguage);
 
     Loaded := loNo;
     SetLength(Entries, 0);
@@ -471,11 +466,9 @@ function TDictionary.Translate(const Line: string): string;
 const
   SuffixStr = '...';
 var
-  NewSize: SG;
   Trans, Trans2: string;
   AddSuffix: BG;
   Language: PLanguage;
-  OutS: UnicodeString;
 begin
   Result := Line;
   Language := GetLanguage;
@@ -488,10 +481,7 @@ begin
 			ReadDictionary(WorkDir + Language.Name + '.csv');
 			ReadDictionary(GetLanguagesDir + 'Common' + Language.Name + '.csv');
       CreateDirEx(AppDataDir + 'Languages\');
-			if not UseGoogle then
-				ReadDictionary(GetLanguagesDir + Language.Name + '.csv')
-			else
-				ReadDictionary(AppDataDir + 'Languages\' + Language.Name + '.csv');
+			ReadDictionary(GetLanguagesDir + Language.Name + '.csv');
       RebuildAIndex;
       Loaded := loYes;
 		end;
@@ -509,25 +499,7 @@ begin
         AddSuffix := False;
 
       Trans := Trans2;
-      if not FindInDictionary(Trans) then
-      begin
-        if UseGoogle then
-        begin
-          Trans := Trans2;
-          googleTranslate(Trans, 'en|' + Language.Code, OutS);
-          if OutS = '' then
-            OutS := Line;
-
-          NewSize := EntryCount + 1;
-          if AllocByExp(Length(Entries), NewSize) then
-            SetLength(Entries, NewSize);
-          Entries[EntryCount].En := Trans;
-          Entries[EntryCount].Other := OutS;
-          Inc(EntryCount);
-          RebuildAIndex;
-        end;
-      end
-      else
+      if FindInDictionary(Trans) then
         Result := Trans;
       if AddSuffix then
         Result := Result + SuffixStr;
@@ -745,23 +717,6 @@ begin
 	begin
 		s[i] := Translate(s[i]);
 	end;
-end;
-
-procedure TDictionary.WriteDictionary(const Language: PLanguage);
-var
-  i: SG;
-  s: string;
-  FileName: TFileName;
-begin
-  if Language = nil then Exit;
-
-  FileName := AppDataDir + 'Languages\' + Language.Name + '.csv';
-  s := '#en,' + Language.Code + FileSep;
-  for i := 0 to EntryCount - 1 do
-  begin
-    s := s + '"' + Entries[i].En + '","' + Entries[i].Other +  '"' + FileSep;
-  end;
-  WriteStringToFile(FileName, s, False);
 end;
 
 initialization
