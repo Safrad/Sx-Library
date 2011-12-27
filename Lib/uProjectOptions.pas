@@ -21,7 +21,7 @@ type
   private
     FFileName: TFileName;
     procedure RWDproj(const AFileName: TFileName; const Save: BG);
-    procedure ReadProjectVersionFromDof(const AFileName: TFileName);
+    procedure ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
     function GetExecutableType(const AFileName: TFileName): TExecutableType;
   public
     ExecutableType: TExecutableType;
@@ -87,7 +87,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 			Exit;
     NodeValue := '';
     try
-      if VarIsNull(Node.NodeValue) then
+      if (Node.IsTextElement = False) or VarIsNull(Node.NodeValue) then
         NodeValue := ''
       else
         NodeValue := Node.NodeValue;
@@ -385,7 +385,7 @@ begin
   ExecutableType := GetExecutableType(AFileName);
 end;
 
-procedure TProjectOptions.ReadProjectVersionFromDof(const AFileName: TFileName);
+procedure TProjectOptions.ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
 const
 	Section = 'Version Info';
 	Directories = 'Directories';
@@ -414,13 +414,24 @@ begin
   				('Version Info Keys', ProjectInfoStr[ProjectInfoName], ProjectInfos[ProjectInfoName]);
       end;
 
-			OutputDir := IniFile.ReadString(Directories, 'OutputDir', OutputDir);
-			UnitOutputDir := IniFile.ReadString(Directories, 'UnitOutputDir', UnitOutputDir);
-			PackageDLLOutputDir := IniFile.ReadString(Directories, 'PackageDLLOutputDir', PackageDLLOutputDir);
-			PackageDCPOutputDir := IniFile.ReadString(Directories, 'PackageDCPOutputDir', PackageDCPOutputDir);
-			SearchPath := IniFile.ReadString(Directories, 'SearchPath', SearchPath);
-			Conditionals := IniFile.ReadString(Directories, 'Conditionals', Conditionals);
-			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
+      if Overwrite or (OutputDir = '') then
+  			OutputDir := IniFile.ReadString(Directories, 'OutputDir', OutputDir);
+      if Overwrite or (UnitOutputDir = '') then
+  			UnitOutputDir := IniFile.ReadString(Directories, 'UnitOutputDir', UnitOutputDir);
+      if Overwrite or (PackageDLLOutputDir = '') then
+  			PackageDLLOutputDir := IniFile.ReadString(Directories, 'PackageDLLOutputDir', PackageDLLOutputDir);
+      if Overwrite or (PackageDCPOutputDir = '') then
+  			PackageDCPOutputDir := IniFile.ReadString(Directories, 'PackageDCPOutputDir', PackageDCPOutputDir);
+
+      if SearchPath <> '' then
+        SearchPath := SearchPath + ';';
+ 			SearchPath := SearchPath + IniFile.ReadString(Directories, 'SearchPath', SearchPath);
+
+      if Conditionals <> '' then
+        Conditionals := Conditionals + ';';
+      Conditionals := Conditionals + IniFile.ReadString(Directories, 'Conditionals', Conditionals);
+      if Overwrite or (DebugSourceDirs = '') then
+  			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
 
 			MinStackSize := IniFile.ReadInteger(Linker, 'MinStackSize', MinStackSize);
 			MaxStackSize := IniFile.ReadInteger(Linker, 'MaxStackSize', MaxStackSize);
