@@ -994,7 +994,7 @@ procedure TDIniFile.RWMultilineString(const Section, Ident: string; var Value: s
 	const Save: BG);
 begin
 	if Save = False then
-		Value := RemoveEscape(ReadString(Section, Ident, ''))
+		Value := RemoveEscape(ReadString(Section, Ident, Value))
 	else
 		WriteString(Section, Ident, AddEscape(Value, True));
 end;
