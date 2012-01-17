@@ -98,6 +98,7 @@ type
 var
 	GSysInfo: TSysInfo;
 	NTSystem: Boolean;
+	Aero: Boolean;
 	RegionCompatibily: Boolean;
 	fSysInfo: TfSysInfo;
 
@@ -857,6 +858,7 @@ begin
 	GSysInfo.OS.dwOSVersionInfoSize := SizeOf(GSysInfo.OS);
 	GetVersionEx(GSysInfo.OS);
 	NTSystem := GSysInfo.OS.dwMajorVersion >= 5;
+  Aero := GSysInfo.OS.dwMajorVersion >= 6; // >= Vista
 	RegionCompatibily := not ((GSysInfo.OS.dwMajorVersion < 4) or ((GSysInfo.OS.dwMajorVersion = 4) and (GSysInfo.OS.dwMinorVersion < 10)));
 
 	NtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQuerySystemInformation');
