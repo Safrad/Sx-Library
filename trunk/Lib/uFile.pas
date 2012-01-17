@@ -672,6 +672,8 @@ begin
 	ByteOrderMark := '    ';
 	BlockRead(ByteOrderMark[0], Min(FFileSize, MaxByteOrderMarkSize));
 	FCharset := FDefaultCharset;
+  if UpperCase(ExtractFileExt(FFileName)) = '.XML' then
+    FCharset := fcUTF8;
 	for Charset := Succ( Low(Charset)) to High(Charset) do
 	begin
 		if Copy(ByteOrderMark, 1, Length(ByteOrderMarks[Charset])) = ByteOrderMarks[Charset] then
