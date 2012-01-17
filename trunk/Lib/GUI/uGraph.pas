@@ -112,8 +112,26 @@ procedure IdealFont(const Text: string; const Canvas: TCanvas; const R: TRect; c
 var
 	FontSize: SG;
 	Size: TSize;
+  WidthTouch: BG;
+  RectWidth, RectHeight: SG;
 begin
-	FontSize := Max(MinFontSize, Abs(-7 * (R.Right - R.Left) div 8));
+  if Text = '' then Exit;
+  RectWidth := R.Right - R.Left;
+  RectHeight := R.Bottom - R.Top;
+
+	FontSize := Max(MinFontSize, Abs(2 * (R.Right - R.Left) div Length(Text)));
+	Canvas.Font.Height := -FontSize;
+	Font.Height := -FontSize;
+
+	Size := Canvas.TextExtent(Text);
+
+  WidthTouch := Size.cx * RectHeight >= RectWidth * Size.cy;
+
+  if WidthTouch then
+    FontSize := FontSize * RectWidth div Size.cx
+  else
+    FontSize := FontSize * RectHeight div Size.cy;
+
 	while FontSize >= MinFontSize do
 	begin
 		Canvas.Font.Height := -FontSize;
