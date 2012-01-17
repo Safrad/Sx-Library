@@ -8,6 +8,7 @@ const
 	CharNul = #$00;
 	CharTab = #$09;
 	CharSpace = #$20;
+  CharUnbrokableSpace = #$A0;
 	CharHT = CharTab;
 	CharVT = #$0B;
 	CharLF = #$0A;// #10;
@@ -27,7 +28,7 @@ const
 	CharTimes = #$D7; // ×
 	CharHyphen = #$96; // –
 	CharLongHyphen = #$97; // —
-	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace];
+	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace, CharUnbrokableSpace];
 	cDialogSuffix = '...';
 	RightArrow = {$ifdef UNICODE}Char($25BA){$else}'->'{$endif};
 
