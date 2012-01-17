@@ -1047,8 +1047,16 @@ procedure TDForm.CreateParams(var Params: TCreateParams);
 begin
 	inherited;
 	if not (csDesigning in ComponentState) then
+  begin
 		Color := GetBackgroundWindowColor;
-	
+    if Aero then
+    begin
+      if BorderStyle = bsSizeToolWin then
+        BorderStyle := bsSizeable
+      else if BorderStyle = bsToolWindow then
+        BorderStyle := bsSingle;
+    end;
+  end;
 //	Params.Style := Params.Style and not WS_CLIPCHILDREN;
 end;
 
