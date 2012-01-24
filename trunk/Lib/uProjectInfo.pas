@@ -66,7 +66,7 @@ var
 	AppSize: UG;
 	i: TProjectInfoName;
 	Buf: PWideChar;
-	Value: PAnsiChar;
+	Value: {$ifdef UNICODE}PWideChar{$else}PAnsiChar{$endif};
 	Id: string;
 	// Unused
 	LenOfValue: U4;
@@ -90,7 +90,11 @@ begin
 				Id := '040904E4';
 				for i := Low(TProjectInfoName) to High(TProjectInfoName) do
 				begin
+{$ifdef UNICODE}
+					if VerQueryValueW(Buf, PWideChar(WideString('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, ''))), Pointer(Value), LenOfValue) then
+{$else}
 					if VerQueryValueA(Buf, PAnsiChar(AnsiString('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, ''))), Pointer(Value), LenOfValue) then
+{$endif}
 					begin
 						FProjectInfoNames[i] := string(Value);
 						if i in [piProductVersion, piFileVersion] then
@@ -102,13 +106,20 @@ begin
 					if LenOfValue = 4 then
 					begin
 						NumericBase := 16;
-						Id := NToS(SG(Value[1]), '00') + NToS(SG(Value[0]), '00') + NToS(SG(Value[3]), '00') + NToS(SG(Value[2]), '00');
-						NumericBase := 10;
+						try
+							Id := NToS(SG(Value[1]), '00') + NToS(SG(Value[0]), '00') + NToS(SG(Value[3]), '00') + NToS(SG(Value[2]), '00');
+						finally
+							NumericBase := 10;
+						end;
 					end;
 				end;
 				for i := Low(TProjectInfoName) to High(TProjectInfoName) do
 				begin
+{$ifdef UNICODE}
+					if VerQueryValueW(Buf, PWideChar(WideString('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, ''))), Pointer(Value), LenOfValue) then
+{$else}
 					if VerQueryValueA(Buf, PAnsiChar(AnsiString('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, ''))), Pointer(Value), LenOfValue) then
+{$endif}
 					begin
 						FProjectInfoNames[i] := string(Value);
 						if i in [piProductVersion, piFileVersion] then
@@ -127,6 +138,8 @@ end;
 constructor TProjectInfo.Create(const ApplicationFileName: TFileName);
 begin
 	FApplicationFileName := ApplicationFileName;
+	if ProjectInfoStr[piFileVersion] = '' then
+		EnumToStrEx(TypeInfo(TProjectInfoName), ProjectInfoStr);
 	SetProjectInfo;
 end;
 
@@ -154,7 +167,7 @@ begin
 end;
 
 initialization
-	EnumToStrEx(TypeInfo(TProjectInfoName), ProjectInfoStr);
+
 finalization
 	FreeAndNil(ThisProjectInfo);
 end.
