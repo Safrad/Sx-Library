@@ -1496,7 +1496,7 @@ procedure TDIniFile.RegisterRW(const RWOptions: TRWOptions);
 begin
 	if not Assigned(RWOptions) then
 		Exit;
-	MainLogAdd('RegisterRW ' + NToS(UG(@RWOptions), ofIO), mlDebug);
+	if LogDebug then LogAdd('RegisterRW ' + NToS(UG(@RWOptions), ofIO));
 	SetLength(FRWList, Length(FRWList) + 1);
 	FRWList[Length(FRWList) - 1] := RWOptions;
 	RWOptions(False);
@@ -1506,7 +1506,7 @@ procedure TDIniFile.UnregisterRW(const RWOptions: TRWOptions);
 var
 	i, j, l: SG;
 begin
-	MainLogAdd('UnregisterRW ' + NToS(UG(@RWOptions), ofIO), mlDebug);
+	if LogDebug then LogAdd('UnregisterRW ' + NToS(UG(@RWOptions), ofIO));
 	RWOptions(True);
 	i := 0;
 	while i < Length(FRWList) do

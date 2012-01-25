@@ -81,7 +81,7 @@ begin
 		MaximumTimeStep2 := {$ifdef Prec}RoundDivU8(MaximumTimeStep * PerformanceFrequency, Second){$else}MaximumTimeStep{$endif};
 		if (GTimeStep2 >= 2 * MaximumTimeStep2) then // Long lag and hibernation
 		begin
-			MainLogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO), mlWarning);
+			if LogWarning then LogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO));
 			GTimeStep2 := MaximumTimeStep2;
 		end;
 	end;
