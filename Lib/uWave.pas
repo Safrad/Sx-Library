@@ -353,7 +353,7 @@ end;
 
 procedure PlayWinSound(const WinSound: TWinSound);
 begin
-	MainLogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.', mlDebug);
+	if LogDebug then LogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.');
 	PlayWaveFile(GetWinSoundFileName(WinSound));
 end;
 
@@ -372,7 +372,7 @@ end;
 
 procedure PlayWaveFile(const WaveName: TFileName);
 begin
-	MainLogAdd('Play sound ' + WaveName + '.', mlDebug);
+	if LogDebug then LogAdd('Play sound ' + WaveName + '.');
 	if WaveName <> '' then
 		if PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME}) = False then
 		begin
@@ -766,7 +766,7 @@ end;
 
 procedure TWave.Play;
 begin
-	Assert(PWave <> nil);
+	if PWave = nil then Exit;
 	if PlaySound(PChar(PWave), 0, SND_ASYNC or SND_MEMORY or SND_NODEFAULT) = False then
 	begin
 		ErrorMsg(GetLastError);

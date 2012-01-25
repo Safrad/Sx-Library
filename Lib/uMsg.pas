@@ -97,7 +97,7 @@ end;
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 begin
-	MainLogAdd(ExpandedText, MessageLevel);
+	if MainLogWrite(MessageLevel) then LogAdd(ExpandedText);
 {$IFNDEF Console}
 	MessageD(ExpandedText, [], MessageLevel, [mbOK]);
 {$ELSE}
@@ -111,7 +111,7 @@ var
 	ExpandedText: string;
 begin
 	ExpandedText := ReplaceParam(Text, Param);
-	MainLogAdd(ExpandedText, MessageLevel);
+	if MainLogWrite(MessageLevel) then LogAdd(ExpandedText);
 {$IFNDEF Console}
 	MessageD(Text, Param, MessageLevel, [mbOK]);
 {$ELSE}
@@ -180,12 +180,12 @@ begin
 		ExpandedText := E.Message
 	else
 		ExpandedText := ReplaceParam(E.Message + ' in class %1', [C.ClassName]);
-	MainLogAdd(ExpandedText, mlFatalError);
+	if LogFatalError then LogAdd(ExpandedText);
 end;
 
 function ErrorRetry(const Text: string): BG;
 begin
-	MainLogAdd(Text, mlError);
+	if LogError then LogAdd(Text);
 {$IFNDEF Console}
 	// Result := MessageDlg(Text, mtError, [Dialogs.mbRetry, Dialogs.mbIgnore], 0) <> 1;
 	Result := MessageD(Text, mlError, [mbRetry, mbIgnore]) <> mbIgnore;
@@ -237,7 +237,7 @@ var
 	Text: string;
 begin
 	Text := ErrorMsg + ': ' + FileName;
-	MainLogAdd(Text, mlError);
+	if LogError then LogAdd(Text);
 {$IFNDEF Console}
 	MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mlError, [SMsgDlgOK], DlgWait);
 {$ELSE}
@@ -253,7 +253,7 @@ var
 {$ENDIF}
 begin
 	Text := ErrorMsg + ': ' + FileName;
-	MainLogAdd(Text, mlError);
+	if LogError then LogAdd(Text);
 {$IFNDEF Console}
 	Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError,
 		[SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;

@@ -36,7 +36,7 @@ begin
 	FDViewLog.DataChanged;
 //	FDViewLog.Repaint;
 //	Application.ProcessMessages;
-	MainLogAdd(Line, LogType);
+	if MainLogWrite(LogType) then LogAdd(Line);
 end;
 
 function TDViewLogger.Get(const Index: SG): PLogMessage;

@@ -48,7 +48,7 @@ begin
 
 	StartupInfo.wShowWindow := FWindowState;
 
-	MainLogAdd('CreateProcess: ' + CommandLine, mlDebug);
+	if LogDebug then LogAdd('CreateProcess: ' + CommandLine);
 	if CreateProcess(
 		nil,
 		PChar(CommandLine),
@@ -66,7 +66,7 @@ begin
 			IOError(CommandLine, GetLastError);
 		if not GetExitCodeProcess(ProcessInfo.hProcess, Result) then
 			IOError(CommandLine, GetLastError);
-		MainLogAdd('ExitCode: ' + IntToStr(Result), mlDebug);
+		if LogDebug then LogAdd('ExitCode: ' + IntToStr(Result));
 	end
 	else
 	begin

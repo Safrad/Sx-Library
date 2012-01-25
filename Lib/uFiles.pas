@@ -802,8 +802,7 @@ begin
 	else
 		ReadSubDirSorted(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs, FullPath);
 
-	if MainLogWrite(mlDebug) then
-		MainLogAdd(NToS(FileCount) + ' files found in folder ' + Path + '.', mlDebug);
+	if LogDebug then LogAdd(NToS(FileCount) + ' files found in folder ' + Path + '.');
 (*	if Sort then
 	begin
 		Offset := FilesCount div 2;
@@ -1042,7 +1041,7 @@ function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
 label LRetry;
 var ErrorCode: U4;
 begin
-	MainLogAdd('Copy file ' + AddQuoteF(Source) + ' to ' + AddQuoteF(Dest), mlDebug);
+	if LogDebug then LogAdd('Copy file ' + AddQuoteF(Source) + ' to ' + AddQuoteF(Dest));
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
 	LRetry:
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
@@ -1465,7 +1464,7 @@ end;
 
 function DeleteFileEx(const FileName: TFileName): BG;
 begin
-	MainLogAdd('Delete file ' + AddQuoteF(FileName), mlDebug);
+	if LogDebug then LogAdd('Delete file ' + AddQuoteF(FileName));
 	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
 	Result := DeleteFile(PChar(FileName));
 	if Result = False then
@@ -1474,7 +1473,7 @@ end;
 
 function RemoveDirEx(const DirName: string): BG;
 begin
-	MainLogAdd('Remove directory ' + AddQuoteF(DirName), mlDebug);
+	if LogDebug then LogAdd('Remove directory ' + AddQuoteF(DirName));
 	Result := RemoveDirectory(PChar(DirName));
 	if Result = False then
 		IOError(DirName, GetLastError);

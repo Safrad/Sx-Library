@@ -192,7 +192,7 @@ var
 	LastParam: SG;
 	ParamCount: UG;
 begin
-	MainLogAdd('Reading command line: ' + CmdLine, mlInformation);
+	if LogInformation then LogAdd('Reading command line: ' + CmdLine);
 	ParamCount := 0;
 	Quote := False;
 	LastParam := 1;

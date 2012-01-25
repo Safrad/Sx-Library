@@ -311,12 +311,12 @@ begin
 	if Visible then
 	begin
 		ShowWindow(hTaskBar, SW_SHOWNA);
-		MainLogAdd('ShowTaskBar', mlInformation);
+		if LogInformation then LogAdd('ShowTaskBar');
 	end
 	else
 	begin
 		ShowWindow(hTaskBar, SW_HIDE);
-		MainLogAdd('HideTaskBar', mlInformation);
+		if LogInformation then LogAdd('HideTaskBar');
 	end;
 end;
 

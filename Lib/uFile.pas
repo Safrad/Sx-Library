@@ -226,7 +226,7 @@ begin
 	end
 	else
 		FTempFileName := ExpandDir(FileName);
-	MainLogAdd('Opening for ' + FileModeStr[Mode] + ' ' + FTempFileName, mlDebug);
+	if LogDebug then LogAdd('Opening for ' + FileModeStr[Mode] + ' ' + FTempFileName);
 
 LRetry :
 	ShareMode := FILE_SHARE_READ;
@@ -370,7 +370,7 @@ LRetry :
 			Result := False;
 		end
 		else
-			MainLogAdd('Reading ' + BToStr(Suc, ofIO) + ' from ' + FTempFileName, mlDebug);
+			if LogDebug then LogAdd('Reading ' + BToStr(Suc, ofIO) + ' from ' + FTempFileName);
 
 		Inc(FFilePos, Suc);
 	end
@@ -410,7 +410,7 @@ LRetry :
 			Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
 					+ ' to ' + FTempFileName)
 		else
-			MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName, mlDebug);
+			if LogDebug then LogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName);
 
 		Inc(FFilePos, Suc);
 	end
@@ -865,7 +865,7 @@ LRetry :
 		Warning('Cannot again close file %1.', [FTempFileName]);
 		Exit;
 	end;
-	MainLogAdd('Closing ' + FTempFileName, mlDebug);
+	if LogDebug then LogAdd('Closing ' + FTempFileName);
 
 	DestroyBuffer;
 	if ChangeDate then
