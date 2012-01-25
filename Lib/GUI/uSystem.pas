@@ -34,10 +34,13 @@ function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
 function SelectFolder(var Path: string; const browseTitle: string = ''): BG;
 function SelectFile(var FileName: TFileName; const browseTitle: string = ''; const Filter: string = ''; const Save: BG = False): BG;
 
+function GetEnabledWinKeys: BG;
+procedure SetEnabledWinKeys(const AEnabled: BG);
+
 implementation
 
 uses
-	Windows, Math, Dialogs,
+	Windows, Math, Dialogs, Registry,
 	uStrings, uFiles, uDParser, uWave, uMath, uDictionary;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
@@ -331,10 +334,73 @@ var
 	Buf: Pointer;
 begin
 	GetMem(Buf, Stream.Size);
-	Stream.Seek(0, 0);
-	Stream.ReadBuffer(Buf^, Stream.Size);
-	Result := WriteBufferToFile(FileName, Buf, Stream.Size);
-	FreeMem(Buf);
+  try
+  	Stream.Seek(0, 0);
+  	Stream.ReadBuffer(Buf^, Stream.Size);
+  	Result := WriteBufferToFile(FileName, Buf, Stream.Size);
+  finally
+	  FreeMem(Buf);
+  end;
+end;
+
+const
+  ScancodeMapValueName = 'Scancode Map';
+  Key = 'SYSTEM\CurrentControlSet\Control\Keyboard Layout';
+
+function GetEnabledWinKeys: BG;
+var
+	Reg: TRegistry;
+begin
+  Result := True;
+	Reg := TRegistry.Create;
+	try
+		Reg.RootKey := HKEY_LOCAL_MACHINE;
+
+		if Reg.KeyExists(Key) then
+		begin
+      if Reg.OpenKeyReadOnly(Key) then
+        if Reg.ValueExists(ScancodeMapValueName) then
+          Result := False;
+    end;
+  finally
+    Reg.Free;
+  end;
+end;
+
+procedure SetEnabledWinKeys(const AEnabled: BG);
+var
+  Buffer: array[0..23] of U1;
+	Reg: TRegistry;
+begin
+  FillChar(Buffer, SizeOf(Buffer), 0);
+  Buffer[8] := $03;
+  Buffer[14] := $5B;
+  Buffer[15] := $E0;
+  Buffer[18] := $5C;
+  Buffer[19] := $E0;
+
+	Reg := TRegistry.Create;
+	try
+		Reg.RootKey := HKEY_LOCAL_MACHINE;
+
+		if Reg.KeyExists(Key) then
+		begin
+      if Reg.OpenKey(Key, False) then
+      begin
+        if not AEnabled then
+        begin
+          Reg.WriteBinaryData(ScancodeMapValueName, Buffer, SizeOf(Buffer));
+          Reg.CloseKey;
+        end
+        else
+        begin
+          Reg.DeleteValue(ScancodeMapValueName);
+        end;
+      end;
+    end;
+  finally
+    Reg.Free;
+  end;
 end;
 
 initialization
