@@ -242,6 +242,8 @@ var
 	All: TArrayOfString;
   CommandLine: string;
   SrcDir, Suffix: string;
+  OldMainIniFileName: TFileName;
+  NewLogPath, OldLogPath: string;
 begin
 	if ExeFileName <> '' then Exit;
 
@@ -353,14 +355,21 @@ begin
 //	CorrectDir(DocsDir);
 	InitStartupEnvironment;
 
-	MainIniFileName := WorkDir + GetProjectInfo(piInternalName) + '.ini';
-	if not FileExists(MainIniFileName) then
-	begin
-		MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
-		MainLogFileName := AppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
-	end
-	else
-		MainLogFileName := WorkDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
+	OldMainIniFileName := WorkDir + GetProjectInfo(piInternalName) + '.ini';
+	MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
+	if FileExists(OldMainIniFileName) and (not FileExists(MainIniFileName)) then
+  begin
+    RenameFile(OldMainIniFileName, MainIniFileName);
+  end;
+
+  OldLogPath := AppDataDir + 'Log' + PathDelim;
+  NewLogPath := LocalAppDataDir + 'Log' + PathDelim;
+  if DirectoryExists(OldLogPath) and (not DirectoryExists(NewLogPath)) then
+  begin
+    RenameFile(OldLogPath, NewLogPath);
+  end;
+
+	MainLogFileName := NewLogPath + GetProjectInfo(piInternalName) + '.log';
 
 	LocalIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
 end;
