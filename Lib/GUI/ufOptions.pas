@@ -131,7 +131,10 @@ var
 	GX, GY, StartGY: SG;
 	w: SG;
 	MaxWidth: SG;
+  StartControlCount: SG;
 begin
+  StartControlCount := 6; // Number of Controls with TabOrder
+
   RowWidth := LgToPx(310); // TODO : automatic
   RowHeight := LgToPx(32);
 	SmallButtonWidth := LgToPx(20);
@@ -293,6 +296,8 @@ begin
 			Control.Name := ComponentName(Options[i].Name);
 			if O.Typ <> vsCombo then
 				InsertControl(Control);
+
+      Control.TabOrder := i + StartControlCount;
 		end;
 
 		// '...' Component
