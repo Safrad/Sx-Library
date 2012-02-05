@@ -58,13 +58,13 @@ begin
 			LastProductVersion := GetProjectInfo(piProductVersion)
 		else
 			LastProductVersion := '';
-		MainIni.RWString(Section, 'Version', LastProductVersion, Save);
-		MainIni.RWNum(Section, 'RunCount', GRunCount, Save);
-		MainIni.RWNum(Section, 'RunTime', GRunTime, Save);
-		MainIni.RWNum(Section, 'ReadCount', ReadCount, Save);
-		MainIni.RWNum(Section, 'ReadBytes', ReadBytes, Save);
-		MainIni.RWNum(Section, 'WriteCount', WriteCount, Save);
-		MainIni.RWNum(Section, 'WriteBytes', WriteBytes, Save);
+		LocalMainIni.RWString(Section, 'Version', LastProductVersion, Save);
+		LocalMainIni.RWNum(Section, 'RunCount', GRunCount, Save);
+		LocalMainIni.RWNum(Section, 'RunTime', GRunTime, Save);
+		LocalMainIni.RWNum(Section, 'ReadCount', ReadCount, Save);
+		LocalMainIni.RWNum(Section, 'ReadBytes', ReadBytes, Save);
+		LocalMainIni.RWNum(Section, 'WriteCount', WriteCount, Save);
+		LocalMainIni.RWNum(Section, 'WriteBytes', WriteBytes, Save);
 		if Save = False then
 		begin
 			Inc(GRunCount);
