@@ -69,7 +69,7 @@ uses
 const
 	MinIndex = 0;
 type
-	TIndex = type SG;
+	TIndex = SG;
 var
 	MaxIndex: TIndex;
 {$ifopt d+}
@@ -78,49 +78,49 @@ var
 
 procedure SortS1;
 type
-	TValue = type S1;
+	TValue = S1;
 	PArray = PArrayS1;
 {$I Sort.inc}
 
 procedure SortU1;
 type
-	TValue = type U1;
+	TValue = U1;
 	PArray = PArrayU1;
 {$I Sort.inc}
 
 procedure SortS2;
 type
-	TValue = type S2;
+	TValue = S2;
 	PArray = PArrayS2;
 {$I Sort.inc}
 
 procedure SortU2;
 type
-	TValue = type U2;
+	TValue = U2;
 	PArray = PArrayU2;
 {$I Sort.inc}
 
 procedure SortS4;
 type
-	TValue = type S4;
+	TValue = S4;
 	PArray = PArrayS4;
 {$I Sort.inc}
 
 procedure SortU4;
 type
-	TValue = type U4;
+	TValue = U4;
 	PArray = PArrayU4;
 {$I Sort.inc}
 
 procedure SortS8;
 type
-	TValue = type S8;
+	TValue = S8;
 	PArray = PArrayS8;
 {$I Sort.inc}
 
 procedure SortF8;
 type
-	TValue = type F8;
+	TValue = F8;
 	PArray = PArrayF8;
 {$define F}
 {$I Sort.inc}
@@ -128,7 +128,7 @@ type
 
 procedure SortFA;
 type
-	TValue = type FA;
+	TValue = FA;
 	PArray = PArrayFA;
 {$define F}
 {$I Sort.inc}
@@ -136,13 +136,13 @@ type
 
 procedure SortS;
 type
-	TValue = type AnsiString;
+	TValue = AnsiString;
 	TValue1 = U1;
 {$I SortS.inc}
 
 procedure SortWS;
 type
-	TValue = type UnicodeString;
+	TValue = UnicodeString;
 	TValue1 = U2;
 {$I SortS.inc}
 
