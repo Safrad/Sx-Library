@@ -1,5 +1,7 @@
 unit uOutputFormat;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses
@@ -1090,7 +1092,6 @@ var
 {$endif}
 begin
 	{$ifndef LINUX}
-	{$WARNINGS OFF}
 	NativeSymbols := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNATIVEDIGITS, '0123456789');
 
 	DecimalSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SDECIMAL, '.');
@@ -1115,7 +1116,6 @@ begin
 {	s := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_ICENTURY, '0');
 	InLineIndex := 1;
 	ICentury := StrToIntDef(ReadToChar(s, InLineIndex, ';'), 3);}
-	{$WARNINGS ON}
 	{$ELSE}
 	NativeSymbols := '0123456789';
 
