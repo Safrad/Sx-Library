@@ -18,7 +18,7 @@ type
 const
 	DistanceUnitNames: array[TDistanceUnit] of string = ('%', 'px', 'pt');
 type
-	TCellAlignment = (caLeftJustify, caRightJustify, caCenter);
+	TCellAlignment = (caDefault, caLeftJustify, caRightJustify, caCenter);
 
 	THTML = class(TObject)
 	private
@@ -57,8 +57,8 @@ type
 		procedure AddSpace;
 		procedure AddParagraph(const s: string);
 		procedure HorizontalRule(const Width: SG = 100; const DistanceUnit: TDistanceUnit = duPercentage; const Size: SG = 2);
-		procedure AddDataCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
-		procedure AddHeadCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
+		procedure AddDataCell(const CellData: string; const Align: TCellAlignment = caDefault; const Attributes: string = '');
+		procedure AddHeadCell(const CellData: string; const Align: TCellAlignment = caDefault; const Attributes: string = '');
 		procedure ClosedTag(const Data: string; const Tag: string);
 		procedure AddTableFromCSV(const FileName: TFileName; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
 		procedure AddTableFromText(const Line: string; const Border: SG = 1; const CellSpacing: SG = 2; const CellPadding: SG = 2);
@@ -250,27 +250,31 @@ begin
 	AddBody(s);
 end;
 
-procedure THTML.AddDataCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
+procedure THTML.AddDataCell(const CellData: string; const Align: TCellAlignment = caDefault; const Attributes: string = '');
 var s: string;
 begin
 	s := '<td';
-	if Align = caCenter then
-		s := s + ' align="center"'
-	else if Align = caRightJustify then
-		s := s + ' align="right"';
+	case Align of
+  caLeftJustify: s := s + ' align="left"';
+  caCenter: s := s + ' align="center"';
+	caRightJustify: s := s + ' align="right"';
+  end;
 	s := s + '>' + CellData + '</td>';
 	AddBody(s);
 end;
 
-procedure THTML.AddHeadCell(const CellData: string; const Align: TCellAlignment = caLeftJustify);
+procedure THTML.AddHeadCell(const CellData: string; const Align: TCellAlignment = caDefault; const Attributes: string = '');
 var s: string;
 begin
 	s := '<th';
-	if Align = caCenter then
-		s := s + ' align="center"'
-	else if Align = caRightJustify then
-		s := s + ' align="right"';
-	s := s + '><b>' + CellData + '</b></th>';
+	case Align of
+  caLeftJustify: s := s + ' align="left"';
+  caCenter: s := s + ' align="center"';
+	caRightJustify: s := s + ' align="right"';
+  end;
+  if Attributes <> '' then
+    s := s + CharSpace + Attributes;
+	s := s + '>' + CellData + '</th>';
 	AddBody(s);
 end;
 
