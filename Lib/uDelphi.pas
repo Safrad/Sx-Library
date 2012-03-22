@@ -18,14 +18,23 @@ const
     '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
     '2003-12-17', '2004-10-22', '2005-11-11', '2007-03-19',
     '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31');
+  LastWin16Delphi = dvDelphi2;
+  FirstWin32Delphi = dvDelphi3;
   FirstUnicodeDelphi = dvDelphi2009;
-  First64bitDelphi = dvDelphiXE2;
+  FirstWin64Delphi = dvDelphiXE2;
 
 type
-  TSystemPlatform = (spWin32, spWin64);
+  TSystemPlatform = (spWin16, spWin32, spWin64);
 const
-  SystemPlatformStr: array[TSystemPlatform] of string = ('32', '64');
-  SystemPlatformXStr: array[TSystemPlatform] of string = ('x86', 'x64');
+  SystemPlatformStr: array[TSystemPlatform] of string = ('16', '32', '64');
+  SystemPlatformXStr: array[TSystemPlatform] of string = ('16', 'x86', 'x64');
+
+type
+  TCompiler = record
+    DelphiVersion: TDelphiVersion;
+    SystemPlatform: TSystemPlatform;
+  end;
+  TCompilers = array of TCompiler;
 
 // Delphi 7, BDS 7, BDS 8
 function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
@@ -42,14 +51,21 @@ function GetDelphiShortName(const ADelphiVersion: TDelphiVersion): string;
 // XE (15, dcc 22)
 function GetDelphiFullName(const ADelphiVersion: TDelphiVersion): string;
 
+function GetCompilerFullName(const ACompiler: TCompiler): string;
+
+function GetCompilers(const ADelphiVersion: TDelphiVersion): TCompilers;
+
 function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
 function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
 function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
+function GetDCCFileName(const Compiler: TCompiler): string;
 function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
 function GetDelphiVersionCount: SG;
 function GetAvailableDelphiVersions: TArrayOfSG;
+function GetAvailableCompilers: TCompilers;
 
 function GetDelphiVersion(const AName: string): TDelphiVersion;
+function GetDelphiCompiler(const AName: string): TCompiler;
 
 implementation
 
@@ -153,6 +169,42 @@ begin
   Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetDelphiMajorVersion(ADelphiVersion)) +', dcc' + IntToStr(GetDelphiCompilerVersion(ADelphiVersion)) + ')';
 end;
 
+function GetCompilerFullName(const ACompiler: TCompiler): string;
+begin
+  Result := GetDelphiFullName(ACompiler.DelphiVersion);
+  if ACompiler.SystemPlatform <> spWin32 then
+  begin
+    Result := Result + CharSpace + SystemPlatformXStr[ACompiler.SystemPlatform];
+  end;
+end;
+
+function GetCompilers(const ADelphiVersion: TDelphiVersion): TCompilers;
+var
+  c: SG;
+begin
+  c := 0;
+  if ADelphiVersion <= LastWin16Delphi then
+  begin
+    SetLength(Result, c + 1);
+    Result[c].DelphiVersion := ADelphiVersion;
+    Result[c].SystemPlatform := spWin16;
+    Inc(c);
+  end;
+  if ADelphiVersion >= FirstWin32Delphi then
+  begin
+    SetLength(Result, c + 1);
+    Result[c].DelphiVersion := ADelphiVersion;
+    Result[c].SystemPlatform := spWin32;
+    Inc(c);
+  end;
+  if ADelphiVersion >= FirstWin64Delphi then
+  begin
+    SetLength(Result, c + 1);
+    Result[c].DelphiVersion := ADelphiVersion;
+    Result[c].SystemPlatform := spWin64;
+  end;
+end;
+
 function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
 begin
   if Reg.OpenKeyReadOnly(RegPath) then
@@ -185,6 +237,11 @@ begin
 	finally
 		Reg.Free;
 	end;
+end;
+
+function GetDCCFileName(const Compiler: TCompiler): string;
+begin
+  Result := GetDelphiPath(Compiler.DelphiVersion) + 'Bin\dcc' + SystemPlatformStr[Compiler.SystemPlatform] + '.exe';
 end;
 
 procedure ReplaceEnv(var Paths: string);
@@ -261,6 +318,37 @@ begin
   end;
 end;
 
+function GetAvailableCompilers: TCompilers;
+var
+  DelphiVersion: TDelphiVersion;
+  SystemPlatform: TSystemPlatform;
+  Count: SG;
+  DelphiPath: string;
+  DCCFileName: string;
+  Compiler: TCompiler;
+begin
+  Count := 0;
+  for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
+	begin
+    DelphiPath := GetDelphiPath(DelphiVersion);
+    if DirectoryExists(DelphiPath) then
+    begin
+      for SystemPlatform := Low(SystemPlatform) to High(SystemPlatform) do
+      begin
+        Compiler.DelphiVersion := DelphiVersion;
+        Compiler.SystemPlatform := SystemPlatform;
+        DCCFileName := GetDCCFileName(Compiler);
+        if FileExists(DCCFileName) then
+        begin
+          SetLength(Result, Count + 1);
+          Result[Count] := Compiler;
+          Inc(Count);
+        end;
+      end;
+    end;
+  end;
+end;
+
 function GetDelphiVersion(const AName: string): TDelphiVersion;
 var
   DelphiVersion: TDelphiVersion;
@@ -272,6 +360,28 @@ begin
     begin
       Result := DelphiVersion;
       Break;
+    end;
+  end;
+end;
+
+function GetDelphiCompiler(const AName: string): TCompiler;
+var
+  DelphiVersion: TDelphiVersion;
+  sp: TSystemPlatform;
+begin
+  Result.DelphiVersion := dvDelphi1;
+  Result.SystemPlatform := spWin32;
+  for sp := Low(sp) to High(sp) do
+  begin
+    if Pos(SystemPlatformXStr[sp], AName) <> 0 then
+      Result.SystemPlatform := sp;
+  end;
+
+  for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
+	begin
+    if Pos(GetDelphiShortName(DelphiVersion), AName) <> 0 then
+    begin
+      Result.DelphiVersion := DelphiVersion;
     end;
   end;
 end;
