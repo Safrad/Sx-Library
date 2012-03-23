@@ -29,10 +29,8 @@ type
 	public
 		{ Public declarations }
 		procedure TabKey(const Direction: SG);
-		{$WARNINGS OFF}
-		constructor Create(const OpenedFiles: TOpenedFiles);
+		constructor Create(const OpenedFiles: TOpenedFiles); reintroduce;
 	end;
-	{$WARNINGS ON}
 
 var
 	fOpenedFiles: TfOpenedFiles;

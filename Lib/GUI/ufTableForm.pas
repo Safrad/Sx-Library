@@ -54,10 +54,8 @@ type
 		{ Public declarations }
 //		constructor Create(AOwner: TComponent); overload; override;
 		procedure AddAction(const Title: string; RowAction: TRowAction);
-		{$WARNINGS OFF}
-		constructor Create(const TableModel: TParamDataModel; const FormCaption: string; const ReadOnly: BG); overload;
+		constructor Create(const TableModel: TParamDataModel; const FormCaption: string; const ReadOnly: BG); reintroduce;
 	end;
-	{$WARNINGS ON}
 
 implementation
 

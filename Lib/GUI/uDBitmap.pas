@@ -119,9 +119,8 @@ type
 		function GetPixelAddr(const X, Y: TCoor): PPixel;
 		function GetMixedColor(const X, Y: TFlo): TRGBA;
 
-		constructor Create; overload;
-		{$WARNINGS OFF}
-		constructor Create(FileName: TFileName); overload;
+		constructor Create; overload; override;
+		constructor Create(FileName: TFileName); reintroduce; overload;
 		destructor Destroy; override;
 
 		function Empty: Boolean;
@@ -336,7 +335,6 @@ type
 		property GPGraphic: IGPGraphics read GetGPGraphic;
 		{$endif}
 	end;
-	{$WARNINGS ON}
 
 procedure BitmapCopy(var BmpD: TDBitmap; BmpS: TDBitmap); // Create + SetSize + CopyData
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor); // Create + SetSize
