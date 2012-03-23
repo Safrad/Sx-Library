@@ -250,7 +250,7 @@ begin
 			if Command <> nil then
 			begin
 				{$ifopt d+}
-				if LogDebug then LogAdd('Execute Command', mlDebug);
+				if LogDebug then LogAdd('Execute Command');
 				{$endif}
 				Inc(FThreadPool.FWorking);
 				try
