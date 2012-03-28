@@ -14,7 +14,7 @@ unit ExternalApp;
 // ************************************************ 
 
 // Component allows execution of external programs 
-// as new proccess managed by separate thread 
+// as new process managed by separate thread 
 // Just set CommandLine property to the adequate 
 // command and execute Run routine to start app 
 // The stdin, stdout, stderr properties exposed 
