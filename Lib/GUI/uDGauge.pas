@@ -146,7 +146,7 @@ begin
 	if FMax <= FMin then
 		FPerc := 0
 	else
-		FPerc:= 1000 * (FPosition - FMin) div (FMax - FMin);
+		FPerc:= 1000 * U8(FPosition - FMin) div (FMax - FMin);
 	if FPercentage <> FPerc then
 	begin
 		Result := True;
@@ -303,7 +303,7 @@ begin
 	end
 	else
 	begin
-		X := Recta.Left + (Recta.Right - Recta.Left) * Posit div MaxPosit;
+		X := Recta.Left + (Recta.Right - Recta.Left) * U8(Posit) div MaxPosit;
 		if X > Recta.Right then X := Recta.Right;
 //		C := SpectrumColor(512 * Posit div MaxPosit);
 	end;
