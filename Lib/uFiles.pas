@@ -466,7 +466,7 @@ begin
 			end;
 			if Value = '' then
 			begin
-				i := Start + Length(Variable);
+				i := Start + Length(Variable) + 2;
 				Continue;
 			end;
 
