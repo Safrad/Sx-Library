@@ -34,7 +34,8 @@ type
 		SearchPath: string;
 		Conditionals: string;
 		DebugSourceDirs: string; // Not in cfg
-//		TODO : UsePackages
+		UsePackages: UG;
+    Packages: string;
     // Linker
     MinStackSize: UG;
     MaxStackSize: UG;
@@ -432,6 +433,8 @@ begin
       Conditionals := Conditionals + IniFile.ReadString(Directories, 'Conditionals', Conditionals);
       if Overwrite or (DebugSourceDirs = '') then
   			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
+      UsePackages := IniFile.ReadInteger(Directories, 'UsePackages', UsePackages);
+      Packages := IniFile.ReadString(Directories, 'Packages', Packages);
 
 			MinStackSize := IniFile.ReadInteger(Linker, 'MinStackSize', MinStackSize);
 			MaxStackSize := IniFile.ReadInteger(Linker, 'MaxStackSize', MaxStackSize);
