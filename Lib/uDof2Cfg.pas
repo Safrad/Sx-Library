@@ -46,6 +46,8 @@ begin
 		Data := Data + '-LE"' + ReplaceDelphiVariables(ProjectInfo.PackageDLLOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 	if ProjectInfo.PackageDCPOutputDir <> '' then
 		Data := Data + '-LN"' + ReplaceDelphiVariables(ProjectInfo.PackageDCPOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
+	if ProjectInfo.UsePackages <> 0 then
+		Data := Data + '-LU' + ProjectInfo.Packages + FileSep;
 
   SearchPath := ReplaceDelphiVariables(ProjectInfo.SearchPath, DelphiVersion, SystemPlatform);
 	if ProjectInfo.SearchPath <> '' then
