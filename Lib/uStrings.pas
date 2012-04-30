@@ -1084,12 +1084,13 @@ function AddSpace(const s: string): string;
 var Index: SG;
 begin
 	Result := s;
+  Replace(Result, '_', CharSpace);
 	Index := 2;
 	while Index <= Length(Result) do
 	begin
 		if CharInSet(Result[Index], ['A'..'Z']) then
 			if CharInSet(Result[Index - 1], ['a'..'z']) then
-				Insert(' ', Result, Index);
+				Insert(CharSpace, Result, Index);
 		Inc(Index);
 	end;
 end;
