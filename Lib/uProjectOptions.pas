@@ -40,6 +40,7 @@ type
     MinStackSize: UG;
     MaxStackSize: UG;
     ImageBase: UG;
+    RuntimeThemes: UG; // Custom
 
     // Version Info
 		Version: TProjectVersion;
@@ -439,6 +440,7 @@ begin
 			MinStackSize := IniFile.ReadInteger(Linker, 'MinStackSize', MinStackSize);
 			MaxStackSize := IniFile.ReadInteger(Linker, 'MaxStackSize', MaxStackSize);
 			ImageBase := IniFile.ReadInteger(Linker, 'ImageBase', ImageBase);
+      RuntimeThemes := IniFile.ReadInteger(Linker, 'RuntimeThemes', RuntimeThemes);
 
       BuildVersions := IniFile.ReadString('Build', 'Versions', BuildVersions);
 		finally
