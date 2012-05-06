@@ -210,6 +210,8 @@ end;
 {$ifend}
 
 function SToDate(const Str: string; const InputFormat: TInputFormat; const Logger: TLogger = nil): TDateTime;
+const
+  FutureYears: array[TInputFormat] of SG = (0, 30{Get From API for ifDisplay});
 var
 	DateSep: Char;
 	Year, Month, Day: U2;
@@ -274,11 +276,9 @@ begin
 		end
 		else if Length(Str) = 6 then
 		begin
-			Year := ReadSGFast(Copy(Str, 1, 2));
-			if Year < 30{Get From API for ifDisplay} then
-				Inc(Year, 2000)
-			else
-				Inc(Year, 1900);
+			Year := 100 * ((CurrentYear + FutureYears[InputFormat]) div 100) + ReadSGFast(Copy(Str, 1, 2));
+      if Year > CurrentYear + FutureYears[InputFormat] then
+        Dec(Year, 100);
 			Month := ReadSGFast(Copy(Str, 3, 2));
 			Day := ReadSGFast(Copy(Str, 5, 2));
 	{		Year := StrToValI(Copy(Str, 1, 2), False, 00, UG(00), 99, 1);
