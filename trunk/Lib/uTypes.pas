@@ -5,6 +5,9 @@ interface
 uses TypInfo;
 
 const
+  IsDebug = {$ifopt d+}True{$else}False{$endif};
+  IsRelease = not IsDebug;
+
 {$if CompilerVersion < 14}
 	NaN         =  0.0 / 0.0;
 	Infinity    =  1.0 / 0.0;
@@ -244,7 +247,7 @@ const
 	MSecsPerYear = 365 * U8(Day);
 
 // System
-	LoopSleepTime = {$ifopt d-}40{$else}40{$endif}; // [ms], 25 interrupts per second.
+	LoopSleepTime = 40; // [ms], 25 interrupts per second.
 	MouseTolerance = 4; // 0=1 pixel..6=15 pixels, 3 pixels: Delphi panel, 13 pixels: Delphi Table
 
 	{$EXTERNALSYM WM_XBUTTONDOWN}
@@ -254,7 +257,7 @@ const
 	{$EXTERNALSYM WM_XBUTTONDBLCLK}
 	WM_XBUTTONDBLCLK    = $020D;
 
-	const
+const
 	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
 	IndexFile = 'index' + HTMLExt;
 	IndexPHPFile = 'index' + '.php';

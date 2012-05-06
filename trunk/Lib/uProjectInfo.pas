@@ -158,10 +158,11 @@ begin
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then
       ThisProjectInfo.FProjectInfoNames[piInternalName] := 'Unknown';
 
-		{$IFOPT D+}
-		AppendStr(ThisProjectInfo.FProjectInfoNames[piFileVersion], '+');
-		AppendStr(ThisProjectInfo.FProjectInfoNames[piProductVersion], '+');
-		{$ENDIF}
+		if IsDebug then
+    begin
+			AppendStr(ThisProjectInfo.FProjectInfoNames[piFileVersion], '+');
+			AppendStr(ThisProjectInfo.FProjectInfoNames[piProductVersion], '+');
+		end;
 	end;
 	Result := ThisProjectInfo.GetProjectInfo(ProjectInfo);
 end;

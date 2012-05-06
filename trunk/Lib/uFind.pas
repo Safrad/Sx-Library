@@ -41,18 +41,15 @@ type
 var
 	L, R, M: TIndex;
 	MaxIndex: TIndex;
-	{$ifopt d+}
 	i: SG;
-	{$endif}
 begin
 	MaxIndex := Length(AValue) - 1;
 
-	{$ifopt d+}
-	for i := MinIndex to MaxIndex - 1 do
-	begin
-		Assert(AValue[AIndex[i]] <= AValue[AIndex[i]]);
-	end;
-	{$endif}
+	if IsDebug then
+    for i := MinIndex to MaxIndex - 1 do
+    begin
+      Assert(AValue[AIndex[i]] <= AValue[AIndex[i]]);
+    end;
 
 	L := MinIndex;
 	R := MaxIndex;
@@ -76,9 +73,7 @@ type
 var
 	L, R, M: TIndex;
 	MaxIndex: TIndex;
-	{$ifopt d+}
 	i: SG;
-	{$endif}
 begin
 	MaxIndex := Length(AValue) - 1;
 	if MaxIndex < 0 then
@@ -89,12 +84,11 @@ begin
 		Exit;
 	end;
 
-	{$ifopt d+}
-	for i := MinIndex to MaxIndex - 1 do
-	begin
-		Assert(AValue[i] <= AValue[i + 1]);
-	end;
-	{$endif}
+	if IsDebug then
+    for i := MinIndex to MaxIndex - 1 do
+    begin
+      Assert(AValue[i] <= AValue[i + 1]);
+    end;
 
 	L := MinIndex;
 	R := MaxIndex;

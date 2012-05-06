@@ -460,9 +460,8 @@ begin
 		FormatCaption(FMenuAll, ReopenAllCount, False, False, False);
 //		MenuAll.Caption := 'Open All (' + IntToStr(ReopenAllCount) + ')';
 		FMenuAll.Enabled := (ReopenAllCount > 0);
-		{$ifopt d-}
-		FMenuAll.Visible := MultiFiles;
-		{$endif}
+		if IsRelease then
+			FMenuAll.Visible := MultiFiles;
 	end;
 end;
 

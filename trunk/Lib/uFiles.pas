@@ -785,22 +785,19 @@ end;
 
 
 procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
-{$ifopt d+}
 var
 	i: SG;
-{$endif}
 (*	Offset: Integer;
 	MaxLimit: Integer;
 	Switch: Integer;
 	FileName: TFileName; *)
 begin
-	{$ifopt d+}
-	for i := 0 to Length(Extensions) - 1 do
-	begin
-		Assert(Length(Extensions[i]) > 0);
-		Assert(Extensions[i, 1] <> '.');
-	end;
-	{$endif}
+	if IsDebug then
+    for i := 0 to Length(Extensions) - 1 do
+    begin
+      Assert(Length(Extensions[i]) > 0);
+      Assert(Extensions[i, 1] <> '.');
+    end;
 {						if (Extensions = '') or (Extension = '*') or (Extension = '*.*') or
 	if Length(Extension) > 1 then
 		if (Extension <> '*') and (Extension <> '*.*') then

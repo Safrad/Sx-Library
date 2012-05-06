@@ -110,13 +110,12 @@ begin
 	vsSpin, vsCombo, vsTime, vsColor:
 		begin
 			Param.Num := Option.Default;
-{$IFOPT d+}
-			if Option.Typ in [vsSpin, vsCombo, vsTime] then
-			begin
-				Assert(Option.Default >= Option.Minimum);
-				Assert(Option.Default <= Option.Maximum);
-			end;
-{$ENDIF}
+			if IsDebug then
+				if Option.Typ in [vsSpin, vsCombo, vsTime] then
+				begin
+					Assert(Option.Default >= Option.Minimum);
+					Assert(Option.Default <= Option.Maximum);
+				end;
 		end;
 	vsFloat:
 		Param.Float := Option.DefaultF;

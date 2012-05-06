@@ -214,9 +214,8 @@ begin
 		(*			if F.FilePos >= F.FileSize then Exit; // All readed
 					if F.FilePos + RowSize > F.FileSize then
 					begin
-						{$ifopt d+}
-						IOErrorMessage(FileName, 'File is truncated.');
-						{$endif}
+						if IsDebug then
+							IOErrorMessage(FileName, 'File is truncated.');
 		//				ErrorMsg('File too short.', FileName);
 						Exit; // Cutted file
 					end;
@@ -298,9 +297,8 @@ begin
 						begin
 							if Index <> 0 then
 							begin
-								{$ifopt d+}
-								Assert(SwapU4(PU4(@FPT[FPTSize * Index + 1])^) = 1);
-								{$endif}
+								if IsDebug then
+									Assert(SwapU4(PU4(@FPT[FPTSize * Index + 1])^) = 1);
 								k := SwapU4(PU4(@FPT[FPTSize * Index + 5])^);
 								SetLength(sa, k);
 								FillChar(sa[1], SizeOf(sa[1]) * k, 0);

@@ -16,11 +16,10 @@ var
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string;
 	const Param: array of string); overload;
-{$IFOPT d+}
 procedure Debug(const Text: string); overload;
 procedure Debug(const Text: string; const Param: array of string); overload;
 procedure IE(const Text: string); // Internal Error
-{$ENDIF}
+
 procedure Information(const Text: string); overload;
 procedure Information(const Text: string; const Param: array of string); overload;
 procedure Warning(const Text: string); overload;
@@ -72,11 +71,9 @@ begin
 	Result := Text;
 	for i := 1 to Length(Param) do
 	begin
-{$IFOPT d+}
-		if Pos('%' + IntToStr(i), Text) = 0 then
+		if IsDebug and (Pos('%' + IntToStr(i), Text) = 0) then
 			Result := Result + LineSep + Param[i - 1]
 		else
-{$ENDIF}
 			Replace(Result, '%' + IntToStr(i), '''' + Param[i - 1] + '''');
 	end;
 end;

@@ -11,12 +11,10 @@ implementation
 
 initialization
 	{$ifndef LINUX}
-	{$ifopt d-}
-	NoErrMsg := True;
-	{$endif}
+	if IsRelease then
+		NoErrMsg := True;
 	{$endif}
 
-	{$ifopt d+}
-	// ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
-	{$endif}
+//	if IsDebug then
+//		ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
 end.

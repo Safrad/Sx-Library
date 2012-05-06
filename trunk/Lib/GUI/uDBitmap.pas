@@ -2594,12 +2594,13 @@ end;
 
 procedure BitmapCopy(var BmpD: TDBitmap; BmpS: TDBitmap);
 begin
-	{$ifopt d+}
-	if BmpS = nil then
-		IE('Source Bitmap Can Not Be Nil');
-	if BmpD <> nil then
-		IE('Destination Bitmap Can Not Be Nil');
-	{$endif}
+	if IsDebug then
+  begin
+    if BmpS = nil then
+      IE('Source Bitmap Can Not Be Nil');
+    if BmpD <> nil then
+      IE('Destination Bitmap Can Not Be Nil');
+	end;
 	BmpD := TDBitmap.Create;
 	BmpD.SetSize(BmpS.Width, BmpS.Height, clNone);
 	BmpD.FromBitmap(BmpS);
@@ -2607,10 +2608,11 @@ end;
 
 procedure BitmapCreate(var BmpD: TDBitmap; Width, Height: TCoor);
 begin
-	{$ifopt d+}
-	if BmpD <> nil then
-		IE('Destination Bitmap Can Be Nil');
-	{$endif}
+	if IsDebug then
+  begin
+		if BmpD <> nil then
+			IE('Destination Bitmap Can Be Nil');
+	end;
 	BmpD := TDBitmap.Create;
 	BmpD.SetSize(Width, Height, clNone);
 end;
@@ -2958,11 +2960,9 @@ begin
 		for i := -((Width - 1) div 2) to Width div 2 do
 			Line(X1 - Abs(i), Y1 + i, X2 + Abs(i), Y2 + i, Color, Effect);
 	end
-	{$ifopt d+}
-	else
+	else if IsDebug then
 		Line(X1, Y1, X2, Y2, Color, Effect);
 		//IE('Function Not Available');
-	{$endif}
 end;
 
 // Antialiased

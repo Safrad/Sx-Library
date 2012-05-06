@@ -112,7 +112,7 @@ type
 
 		function OpenedFileSave(const OpenedFile: SG; const SaveDialog: BG; const SaveCopy: BG;
 			const RenameFile: BG = False): BG;
-{$IFOPT d+} procedure OpenAll; {$ENDIF}
+		procedure OpenAll;
 		// Properties
 		property ItemAddr: Pointer read FItemAddr write FItemAddr;
 		property ItemSize: UG read FItemSize write FItemSize;
@@ -1370,7 +1370,6 @@ begin
 		OpenedFileChangeFile(Sender);
 	end;
 end;
-{$IFOPT d+}
 
 procedure TOpenedFiles.OpenAll;
 
@@ -1410,7 +1409,6 @@ procedure TOpenedFiles.OpenAll;
 begin
 	Depth('C' + DriveDelim + PathDelim);
 end;
-{$ENDIF}
 
 procedure TOpenedFiles.Properties1Click(Sender: TObject);
 var
@@ -1449,10 +1447,7 @@ end;
 
 initialization
 
-{$IFOPT d+}
-CheckExpSize(SizeOf(TOpenedFileItem));
-{$ELSE}
-;
-{$ENDIF}
+if IsDebug then
+	CheckExpSize(SizeOf(TOpenedFileItem));
 
 end.

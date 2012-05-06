@@ -30,12 +30,10 @@ uses
 
 //{$define Prec} // Precision Timer, but slower (3%)
 
-{$ifopt d+}
 {function GetTickCount: U4;
 begin
 	Result := Windows.GetTickCount and $0fff;
 end;}
-{$endif}
 
 function TimeDifference(const NowTime, LastTime: U4): U4;
 asm

@@ -502,10 +502,8 @@ begin
 					end;
 				baGradient:
 					begin
-						// {$ifopt d-}
 						if GetBackgroundWindowTexture then
 							FBitmapB.FormBitmap(Color);
-						// {$endif}
 					end;
 				end;
 			end;
