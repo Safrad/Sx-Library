@@ -481,7 +481,7 @@ begin
   if DisplayDialogs = False then Exit;
   
 	Ignore := nil;
-(*	{$ifopt d+}
+(*
 	Assert(Length(Text) > 0);
 	s := LastChar(DelEndSpaceF(Text));
 	case DlgType of
@@ -492,15 +492,15 @@ begin
 	mtInternal, mtIO:
 	begin
 		if not (FirstChar(s) in ['.', '!']) then
-			Text := Text + {$ifopt d+}'.%'{$else}'.'{$endif};
+			Text := Text + '.';
 	end;
 	mtConfirmation:
 	begin
 		if FirstChar(s) <> '?' then
-			Text := Text + {$ifopt d+}'?%'{$else}'?'{$endif};
+			Text := Text + '?';
 	end;
 	end;
-	{$endif} *)
+*)
 
 
 	Result := -1; // If Window X is pressed (None of button pressed), then result is unknown.

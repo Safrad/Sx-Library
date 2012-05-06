@@ -239,7 +239,7 @@ var
 	Recta: TRect;
 	TopColor, BottomColor: TColor;
 	i: Integer;
-	{$ifopt d-}Co: array[0..3] of TColor;{$endif}
+	Co: array[0..3] of TColor;
 begin
 	inherited;
 	Recta.Left := 0;
@@ -298,17 +298,20 @@ begin
 // Background
 	if Color <> clNone then
 	begin
-		{$ifopt d-}
-		Co[0] := LighterColor(ColorToRGB(Color));
-		Co[1] := DarkerColor(ColorToRGB(Color));
-		Co[2] := Co[0];
-		Co[3] := Co[1];
-		Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
-			gfFade2x, Co, ef16, 0, nil);
-//			FBmpOut.FormBitmap(Color);
-		{$else}
-		Bitmap.Bar(Recta, Color, ef16);
-		{$endif}
+    Co[0] := LighterColor(ColorToRGB(Color));
+    Co[1] := DarkerColor(ColorToRGB(Color));
+    Co[2] := Co[0];
+    Co[3] := Co[1];
+		if IsRelease then
+    begin
+      Bitmap.GenerateRGBEx(Recta.Left, Recta.Top, Recta.Right, Recta.Bottom,
+        gfFade2x, Co, ef16, 0, nil);
+  //			FBmpOut.FormBitmap(Color);
+    end
+    else
+    begin
+			Bitmap.Bar(Recta, Color, ef16);
+    end;
 	end;
 
 //Caption

@@ -146,10 +146,8 @@ begin
 			end;
 		end;
 	end
-	{$ifopt d-}
-	else
+	else if IsRelease then
 		raise EInvalidGraphic.Create('Only 24/32 bit color uncompressed tga image is supported.');
-	{$endif}
 end;
 
 procedure TTgaImage.SaveToStream(s: TStream);

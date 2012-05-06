@@ -242,9 +242,8 @@ begin
 			else
 				Result := ' ' + Result;
 		end
-		{$ifopt d+}
-		else
-			Assert(False, 'Unknown char in format string'){$endif};
+		else if IsDebug then
+			Assert(False, 'Unknown char in format string');
 	end;
 end;
 

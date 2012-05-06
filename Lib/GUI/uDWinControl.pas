@@ -65,11 +65,10 @@ begin
 		MyStruct.lfMessageFont.lfHeight := -RoundDiv(Font.PixelsPerInch, 9);
 	(*	if NTSystem and (MyStruct.lfMessageFont.lfFaceName = 'MS Sans Serif') then
 		begin
-	//		{$ifopt d-}
-			MyStruct.lfMessageFont.lfFaceName := 	'Microsoft Sans Serif'; // OpenType Font (nicer)
-	//		{$else}
+	    if IsRelease then
+				MyStruct.lfMessageFont.lfFaceName := 	'Microsoft Sans Serif' // OpenType Font (nicer)
+      else
 	//		MyStruct.lfMessageFont.lfFaceName := 	'Lucida Console';//'Courier New CE';//'Tahoma'; // OpenType Font (nicer)
-	//		{$endif}
 		end; *)
 
 		Font.Handle := CreateFontIndirectA(MyStruct.lfMessageFont);

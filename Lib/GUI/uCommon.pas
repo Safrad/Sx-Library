@@ -291,11 +291,10 @@ end;
 {$if CompilerVersion >= 23}
 function GetVisualStylesDir: string;
 begin
-{$ifopt d+}
-	Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Visual Styles' + PathDelim
-{$else}
-	Result := WorkDir + 'Visual Styles' + PathDelim
-{$endif}
+	if IsDebug then
+		Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Visual Styles' + PathDelim
+	else
+		Result := WorkDir + 'Visual Styles' + PathDelim;
 end;
 {$ifend}
 
@@ -480,9 +479,8 @@ procedure MenuCheckForUpdate(AThread: TThread);
 begin
 	CommonMenu.CheckForUpdate1.Enabled := False;
 	try
-		{$ifopt d+}
-		Sleep(5000);
-		{$endif}
+		if IsDebug then
+			Sleep(5000);
 		CheckForUpdate;
 	finally
 		CommonMenu.CheckForUpdate1.Enabled := True;

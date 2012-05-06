@@ -353,12 +353,13 @@ begin
 		Clear;
 		FItemSh := CalcShr(Value);
 		FItemMemSize := 1 shl FItemSh;
-{$IFOPT d+}
-		{ if (1 shl Sh) <> Value then
+{		if IsDebug then
+			if (1 shl Sh) <> Value then
 			begin
-			ErrorMessage('Bad AllocBy block size ' + NToS(Value) + ' bytes');
-			end; }
-{$ENDIF}
+				ErrorMessage('Bad AllocBy block size ' + NToS(Value) + ' bytes');
+			end;
+    end;}
+
 	end;
 end;
 

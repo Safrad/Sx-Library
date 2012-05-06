@@ -765,9 +765,6 @@ begin
 		Exit;
 	{ if ImagesLoaded = False then
 		Init; }
-{$IFOPT d+}
-	// Bitmap.Bar(0, 0, Bitmap.Width - 1, Bitmap.Height - 1, clRed, ef16);
-{$ENDIF}
 	IX := 0;
 	X := 0;
 	{ Wid := 0;
@@ -839,15 +836,24 @@ begin
 								Bitmap.Canvas.Font.Color := clWindowText;
 							if (RowIndex < 0) or (RowIndex >= FAllRowCount) then
 							begin
-								Data := {$IFOPT d+} '<Row out of range>' {$ELSE} '' {$ENDIF};
+                if IsDebug then
+									Data := '<Row out of range>'
+                else
+                	Data := '';
 							end
 							else if (ColIndex < 0) or (ColIndex >= FColumnCount) then
 							begin
-								Data := {$IFOPT d+} '<Coloumn out of range>' {$ELSE} '' {$ENDIF};
+                if IsDebug then
+									Data := '<Coloumn out of range>'
+                else
+                 Data := '';
 							end
 							else
 							begin
-								Data := {$IFOPT d+} '<Empty>' {$ELSE} '' {$ENDIF};
+                if IsDebug then
+									Data := '<Empty>'
+                else
+                	Data := '';
 								try
 									if Assigned(FOnGetData) then
 									begin
@@ -869,7 +875,12 @@ begin
 							end;
 						end
 						else
-							Data := {$IFOPT d+} '<No data event defined>' {$ELSE} '' {$ENDIF};
+            begin
+							if IsDebug then
+              	Data := '<No data event defined>'
+              else
+              	Data := '';
+            end;
 
 						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].RealWidth - 2, Y + FRowHeight - 2,
 							Bitmap.Canvas.Brush.Color, ef16);

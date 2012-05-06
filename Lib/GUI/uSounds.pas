@@ -235,9 +235,8 @@ var
 	P: PSound;
 	D: PDSound;
 begin
-	{$ifopt d-}
-	StopPlayWave;
-	{$endif}
+	if IsRelease then
+		StopPlayWave;
 	FormFree(TForm(fSounds));
 	if IniLoaded then
 	begin

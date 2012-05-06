@@ -605,17 +605,16 @@ begin
 end;
 
 procedure AddError(sglError: sglEErrorCode);
-{$ifopt d+}
 var NewSize: SG;
-{$endif}
 begin
-	{$ifopt d+}
-	NewSize := sglErrorCount + 1;
-	if AllocByExp(Length(sglErrors), NewSize) then
-		SetLength(sglErrors, NewSize);
-	sglErrors[sglErrorCount] := sglError;
-	Inc(sglErrorCount);
-	{$endif}
+	if IsDebug then
+  begin
+    NewSize := sglErrorCount + 1;
+    if AllocByExp(Length(sglErrors), NewSize) then
+      SetLength(sglErrors, NewSize);
+    sglErrors[sglErrorCount] := sglError;
+    Inc(sglErrorCount);
+	end;
 	_libStatus := sglError;
 end;
 
@@ -1860,14 +1859,15 @@ procedure BezierC;
 	i: SG;
 	G0, G1: TGraphicPoint;}
 begin
-	{$ifopt d+}
-{	for i := 0 to Drawable.Index - 2 do
+{	if IsDebug then
+  begin
+	for i := 0 to Drawable.Index - 2 do
 	begin
 		Tran(Drawable.WP[i], G0);
 		Tran(Drawable.WP[i + 1], G1);
 		Lin(G0, G1);
-	end;}
-	{$endif}
+	end;
+  end;}
 	DrawCurveUsingRecursiveSubdivision4(Drawable.WP, 1);
 end;
 
@@ -1980,9 +1980,8 @@ end;
 procedure BezierG;
 begin
 	DrawCurveUsingRecursiveSubdivision(Drawable.WP, 1);
-	{$ifopt d+}
+//	if IsDebug then
 //	DrawWrap;
-	{$endif}
 end;
 
 function CoonsFergusonT(t: TFloat): TWorldPoint;

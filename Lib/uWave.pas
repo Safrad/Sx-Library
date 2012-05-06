@@ -1177,8 +1177,7 @@ begin
 end;
 
 initialization
-	{$ifopt d-}
-	StopPlayWave; // First time takes long
-	{$endif}
+	if IsRelease then
+		StopPlayWave; // First time takes long
 end.
 

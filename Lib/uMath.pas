@@ -127,7 +127,7 @@ procedure DelayEx(const f: U8);
 {$endif}
 
 function CalcShr(N: U4): S1;
-{$ifopt d+}procedure CheckExpSize(const Size: SG);{$endif}
+procedure CheckExpSize(const Size: SG);
 function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
 function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG; deprecated;
 function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
@@ -334,14 +334,13 @@ end;
 
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 begin
-	{$ifopt d+}
-	if Divisor = 0 then
-	begin
-		Assert(False);
-		Result := 0;
-		Exit;
-	end;
-	{$endif}
+	if IsDebug then
+    if Divisor = 0 then
+    begin
+      Assert(False);
+      Result := 0;
+      Exit;
+    end;
 	if Dividend >= 0 then
 		Result := Dividend mod Divisor
 	else
@@ -523,14 +522,13 @@ function RoundDiv(const Dividend: SG; const Divisor: SG): SG;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
-	{$ifopt d+}
-	if Divisor = 0 then
-	begin
-		Assert(False);
-		Result := 0;
-		Exit;
-	end;
-	{$endif}
+	if IsDebug then
+    if Divisor = 0 then
+    begin
+      Assert(False);
+      Result := 0;
+      Exit;
+    end;
 	if Dividend < 0 then
 		Result := (Dividend - (Divisor div 2)) div Divisor
 	else
@@ -539,14 +537,13 @@ end;
 
 function RoundDivU8(const Dividend: U8; const Divisor: U8): U8;
 begin
-	{$ifopt d+}
-	if Divisor = 0 then
-	begin
-		Assert(False);
-		Result := 0;
-		Exit;
-	end;
-	{$endif}
+	if IsDebug then
+    if Divisor = 0 then
+    begin
+      Assert(False);
+      Result := 0;
+      Exit;
+    end;
 	Result := (Dividend + (Divisor div 2)) div Divisor;
 end;
 
@@ -556,14 +553,13 @@ function RoundDivS8(const Dividend: S8; const Divisor: S8): S8;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
-	{$ifopt d+}
-	if Divisor = 0 then
-	begin
-		Assert(False);
-		Result := 0;
-		Exit;
-	end;
-	{$endif}
+	if IsDebug then
+    if Divisor = 0 then
+    begin
+      Assert(False);
+      Result := 0;
+      Exit;
+    end;
 	if Dividend < 0 then
 		Result := (Dividend - (Divisor div 2)) div Divisor
 	else
@@ -576,14 +572,13 @@ function MaxDiv(const Dividend: SG; const Divisor: SG): SG;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
-	{$ifopt d+}
-	if Divisor = 0 then
-	begin
-		Assert(False);
-		Result := 0;
-		Exit;
-	end;
-	{$endif}
+	if IsDebug then
+    if Divisor = 0 then
+    begin
+      Assert(False);
+      Result := 0;
+      Exit;
+    end;
 	if Dividend < 0 then
 		Result := (Dividend - Divisor + 1) div Divisor
 	else
@@ -596,14 +591,13 @@ function MaxDivS8(const Dividend: S8; const Divisor: S8): S8;
 // 2 div 4 is 1
 // 3 div 4 is 1
 begin
-	{$ifopt d+}
-	if Divisor = 0 then
-	begin
-		Assert(False);
-		Result := 0;
-		Exit;
-	end;
-	{$endif}
+	if IsDebug then
+    if Divisor = 0 then
+    begin
+      Assert(False);
+      Result := 0;
+      Exit;
+    end;
 	if Dividend < 0 then
 		Result := (Dividend - Divisor + 1) div Divisor
 	else
@@ -616,14 +610,13 @@ function RandomDiv(const Dividend: SG; const Divisor: SG): SG;
 // 2 div 4 is 0 in 50%, 1 in 50%
 // 3 div 4 is 0 in 25%, 1 in 75%
 begin
-	{$ifopt d+}
-	if Divisor = 0 then
-	begin
-		Assert(False);
-		Result := 0;
-		Exit;
-	end;
-	{$endif}
+	if IsDebug then
+    if Divisor = 0 then
+    begin
+      Assert(False);
+      Result := 0;
+      Exit;
+    end;
 	if Dividend < 0 then
 		Result := (Dividend - Random(Divisor)) div Divisor
 	else
@@ -1670,12 +1663,11 @@ begin
 		end;
 	end;
 end;
-{$ifopt d+}
+
 procedure CheckExpSize(const Size: SG);
 begin
 	Assert(Size = 1 shl CalcShr(Size), 'Bad type size');
 end;
-{$endif}
 
 (*
 function AllocByB(const OldSize: SG; var NewSize: SG;
@@ -1692,9 +1684,8 @@ begin
 	Sh := CalcShr(BlockSize);
 	if (1 shl Sh) <> BlockSize then
 	begin
-		{$ifopt d+}
-		ErrorMessage('Bad AllocBy block size' + LineSep + NToS(BlockSize) + ' bytes');
-		{$endif}
+    if IsDebug then
+			ErrorMessage('Bad AllocBy block size' + LineSep + NToS(BlockSize) + ' bytes');
 		if NewSize > OldSize then
 		begin
 			NewSize := (NewSize + BlockSize - 1) mod (BlockSize + 0);
@@ -1745,9 +1736,8 @@ begin
 	Sh := CalcShr(BlockSize);
 	if (1 shl Sh) <> BlockSize then
 	begin
-		{$ifopt d+}
-		ErrorMessage('Bad AllocBy block size' + LineSep + NToS(BlockSize) + ' bytes');
-		{$endif}
+		if IsDebug then
+			ErrorMessage('Bad AllocBy block size' + LineSep + NToS(BlockSize) + ' bytes');
 //		BlockSize := 1 shl CalcShr(DefMemBuffer div BlockSize);
 		BlockSize := DefMemBuffer;
 		if NewSize > OldSize then
@@ -1796,26 +1786,28 @@ const
 }
 begin
 	Assert(NewSize >= 0);
-	{$ifopt d+}
-	if (OldSize < 0) or (OldSize > GB) then
+	if IsDebug then
+  begin
+		if (OldSize < 0) or (OldSize > GB) then
 //		ErrorMessage(LineSep + BToStr(OldSize));
 		Assert(False, 'Bad AllocBy block OldSize');
 	if (NewSize < 0) or (NewSize > GB) then
 //		ErrorMessage('Bad AllocBy block NewSize' + LineSep + BToStr(NewSize));
 		Assert(False, 'Bad AllocBy block NewSize');
-	{$endif}
+	end;
 
 	Result := False;
 	if NewSize > OldSize then
 	begin
-		{$ifopt d+}
-		if OldSize > 0 then
-			if OldSize <> 1 shl CalcShr(OldSize) then
-			begin
-				Assert(False, 'Bad AllocBy block size');
-	//			ErrorMessage('Bad AllocBy block size' + LineSep + BToStr(OldSize));
-			end;
-		{$endif}
+		if IsDebug then
+    begin
+      if OldSize > 0 then
+        if OldSize <> 1 shl CalcShr(OldSize) then
+        begin
+          Assert(False, 'Bad AllocBy block size');
+    //			ErrorMessage('Bad AllocBy block size' + LineSep + BToStr(OldSize));
+        end;
+		end;
 		NewSize := Max(1 shl CalcShr(NewSize), MinimumSize);
 		Result := True;
 	end

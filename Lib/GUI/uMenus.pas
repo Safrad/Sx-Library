@@ -835,10 +835,8 @@ begin
 		begin
 			M.OnAdvancedDrawItem := TOb.OnAdvancedMenuDraw;
 			M.OnMeasureItem := TOb.OnMeasureItem;
-			// {$ifopt d-}
 			if {(not (Parent is TMainMenu)) and} (M.Bitmap.Width = 0) and (M.ImageIndex = -1) then
 				LoadMenuIcon(M.Bitmap, DelLastNumber(M.Name));
-			// {$endif}
 		end;
 		MenuSet(M);
 	end;
@@ -878,10 +876,8 @@ begin
 		if (not(Menu is TMenu)) or (Menu is TPopupMenu) then
 		begin
 			M.OnAdvancedDrawItem := TOb.OnAdvancedMenuDraw;
-			// {$ifopt d-}
 			if (M.Bitmap.Width = 0) and (M.ImageIndex = -1) then
 				LoadMenuIcon(M.Bitmap, DelLastNumber(M.Name));
-			// {$endif}
 		end;
 		MenuSet(M);
 	end;

@@ -615,10 +615,9 @@ end;
 
 destructor TDIniFile.Destroy;
 begin
-{$IFOPT d+}
-	if Length(FRWList) <> 0 then
+  if IsDebug then
+		if Length(FRWList) <> 0 then
 		Assert(Length(FRWList) = 0);
-{$ENDIF}
 	if FFileSaved = False then
 		Save;
 	inherited Destroy;

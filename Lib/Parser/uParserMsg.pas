@@ -83,10 +83,11 @@ begin
 	else
 		M.Param2Index := 0;
 
-	{$ifopt d+}
-	Assert(Length(Params) <= MesParam[M.MesId]);
-	Assert(Length(Params) >= MesParam[M.MesId]);
-	{$endif}
+	if IsDebug then
+  begin
+		Assert(Length(Params) <= MesParam[M.MesId]);
+		Assert(Length(Params) >= MesParam[M.MesId]);
+	end;
 	for i := 0 to Length(Params) - 1 do
 	begin
 		Params[i] := '';

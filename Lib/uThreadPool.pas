@@ -161,11 +161,12 @@ begin
 		for i := FRunThreads to Value - 1 do
 		begin
 			OneThread := TOneThread.Create;
-			{$ifopt d+}
 			{$ifdef UNICODE}
-			RegisterExpectedMemoryLeak(OneThread);
-			OneThread.NameThreadForDebugging(AnsiString('Process ' + IntToStr(i)));
-			{$endif}
+			if IsDebug then
+      begin
+				RegisterExpectedMemoryLeak(OneThread);
+				OneThread.NameThreadForDebugging(AnsiString('Process ' + IntToStr(i)));
+			end;
 			{$endif}
 			OneThread.Priority := tpLower;
 			OneThread.FThreadPool := Self;
@@ -249,9 +250,8 @@ begin
 			Synchronize(GetQueueCommand);
 			if Command <> nil then
 			begin
-				{$ifopt d+}
-				if LogDebug then LogAdd('Execute Command');
-				{$endif}
+				if IsDebug then
+					if LogDebug then LogAdd('Execute Command');
 				Inc(FThreadPool.FWorking);
 				try
 				  Command.Thread := Self;

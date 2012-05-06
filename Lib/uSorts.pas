@@ -26,11 +26,9 @@ type
 //  TAIndex = array of SG;
 var
 	SortType: TSortType = stAuto;
-{$ifopt d+}
 // Statistics
 	SortCompared, SortSwaped: U8;
 	SortMaxDepth: UG;
-{$endif}
 
 procedure SortS1(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS1; Count: UG);
 procedure SortU1(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayU1; Count: UG);
@@ -72,9 +70,7 @@ type
 	TIndex = SG;
 var
 	MaxIndex: TIndex;
-{$ifopt d+}
 	Depth: UG;
-{$endif}
 
 procedure SortS1;
 type
@@ -157,7 +153,8 @@ begin
 	M := 0;
 	while True do
 	begin
-		{$ifopt d+}Inc(SortCompared);{$endif}
+    if IsDebug then
+			Inc(SortCompared);
 		if Compare(AIndex[i], AIndex[j]) <= 0 then
 		begin
 			MeI[M] := AIndex[i];
@@ -217,10 +214,12 @@ begin
 			end;
 		end;
 	end;
-	{$ifopt d+}Inc(SortSwaped, M);{$endif}
+  if IsDebug then
+		Inc(SortSwaped, M);
 (*	for i := 0 to M - 1 do
 	begin
-		{$ifopt d+}Inc(SortSwaped);{$endif}
+    if IsDebug then
+			Inc(SortSwaped);
 		AIndex[i + I1F] := MeI[i];
 	end; *)
 	if M = 2 then

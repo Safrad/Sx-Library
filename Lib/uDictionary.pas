@@ -33,9 +33,7 @@ type
 
 //		LanguageMenuItem: TMenuItem;
 
-		{$ifopt d+}
 		function FindEntry(const EntryName: string): SG;
-		{$endif}
 //		procedure LanguageX1Click(Sender: TObject);
 		procedure ReadAvailableLanguages;
     function GetDefaultLanguageIndex: SG;
@@ -84,11 +82,10 @@ const
 
 function GetLanguagesDir: string;
 begin
-{$ifopt d+}
-	Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Languages' + PathDelim
-{$else}
-	Result := WorkDir + 'Languages' + PathDelim
-{$endif}
+	if IsDebug then
+		Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Languages' + PathDelim
+	else
+		Result := WorkDir + 'Languages' + PathDelim;
 end;
 
 function Translate(const Line: string): string;
@@ -146,7 +143,6 @@ begin
 	SetLength(Entries, 0);
 end;
 
-{$ifopt d+}
 function TDictionary.FindEntry(const EntryName: string): SG;
 var
 	i: SG;
@@ -161,7 +157,6 @@ begin
 		end;
 	end;
 end;
-{$endif}
 
 function TDictionary.GetLanguage: PLanguage;
 var
@@ -278,9 +273,7 @@ var
 	CSVFile: TCSVFile;
 	Row: TArrayOfString;
 	NewSize: SG;
-	{$ifopt d+}
 	EntryIndex: SG;
-	{$endif}
 begin
   if not FileExists(FileName) then
     Exit;
@@ -298,16 +291,17 @@ begin
 				NewSize := EntryCount + 1;
 				if AllocByExp(Length(Entries), NewSize) then
 					SetLength(Entries, NewSize);
-				{$ifopt d+}
-				EntryIndex := FindEntry(Row[0]);
-				if EntryIndex >= 0 then
-				begin
-//					Entries[EntryIndex].En := Row[0];
-//					Entries[EntryIndex].Other := Row[1];
-//					Warning('Duplicate entry %1', [Row[0]]);
-					Continue;
+				if IsDebug then
+        begin
+          EntryIndex := FindEntry(Row[0]);
+          if EntryIndex >= 0 then
+          begin
+  //					Entries[EntryIndex].En := Row[0];
+  //					Entries[EntryIndex].Other := Row[1];
+  //					Warning('Duplicate entry %1', [Row[0]]);
+            Continue;
+          end;
 				end;
-				{$endif}
 				Entries[EntryCount].En := Row[0];
 				Entries[EntryCount].Other := Row[1];
 

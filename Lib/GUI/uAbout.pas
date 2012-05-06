@@ -183,10 +183,11 @@ begin
 	{$ifdef LINUX}
 	ButtonMemoryStatus.Visible := False;
 	{$endif}
-	{$ifopt d-}
-	ButtonMemoryStatus.Visible := False;
-	ButtonBuildParams.Visible := False;
-	{$endif}
+	if IsRelease then
+  begin
+		ButtonMemoryStatus.Visible := False;
+		ButtonBuildParams.Visible := False;
+	end;
 
 	Background := baGradient;
 
@@ -488,10 +489,6 @@ begin
 	UpdateView;
 end;
 
-{$ifopt d+}
-{var
-	MemCount, MemSize: SG;}
-{$endif}
 procedure TfAbout.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -570,10 +567,6 @@ begin
 end;
 
 initialization
-{$ifopt d+}
-{	MemCount := AllocMemCount;
-	MemSize := AllocMemSize;}
-{$endif}
 	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
 finalization
