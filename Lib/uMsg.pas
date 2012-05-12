@@ -16,6 +16,7 @@ var
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string;
 	const Param: array of string); overload;
+
 procedure Debug(const Text: string); overload;
 procedure Debug(const Text: string; const Param: array of string); overload;
 procedure IE(const Text: string); // Internal Error
@@ -115,23 +116,24 @@ begin
 	Writeln(MsgTypeNames[MessageLevel] + ': ' + ExpandedText);
 {$ENDIF}
 end;
-{$IFOPT d+}
 
 procedure Debug(const Text: string);
 begin
-	ShowMessage(mlDebug, Text, []);
+	if IsDebug then
+		ShowMessage(mlDebug, Text, []);
 end;
 
 procedure Debug(const Text: string; const Param: array of string);
 begin
-	ShowMessage(mlDebug, Text, Param);
+	if IsDebug then
+		ShowMessage(mlDebug, Text, Param);
 end;
 
 procedure IE(const Text: string);
 begin
-	ShowMessage(mlFatalError, 'Internal Error: ' + Text);
+	if IsDebug then
+		ShowMessage(mlFatalError, 'Internal Error: ' + Text);
 end;
-{$ENDIF}
 
 procedure Information(const Text: string); overload;
 begin
