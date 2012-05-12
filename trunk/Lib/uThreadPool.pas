@@ -4,6 +4,7 @@ interface
 
 uses
 	uTypes,
+  Windows,
 	uQueue,
 	Classes;
 
@@ -25,6 +26,7 @@ type
 		FWorking: SG;
 		FThreads: array of TThread;
 		FQueue: TQueue; // array of TCommand;
+		FSection: TRTLCriticalSection;
 		procedure SetRunThreads(Value: SG);
 		procedure SetMaxThreads(Value: SG);
 		procedure QueueToThread;
@@ -39,17 +41,17 @@ type
 		procedure Resume;
 		procedure Stop;
 		property MaxThreads: SG read FMaxThreads write SetMaxThreads;
+    procedure WaitForEnd;
 	end;
 
 implementation
 
 uses
 	uLog,
-	uSysInfo,
 	uSorts,
 	uMath,
 	SysUtils,
-	Windows, uData;
+	uData;
 
 type
 	TOneThread = class(TThread)
@@ -77,21 +79,33 @@ begin
 	FQueue.Clear;
 end;
 
+function GetLogicalProcessorCount: SG;
+var
+  SystemInfo: SYSTEM_INFO;
+begin
+  // get number of processors in the system
+  GetSystemInfo(SystemInfo);
+  Result := SystemInfo.dwNumberOfProcessors;
+end;
+
 constructor TThreadPool.Create;
 begin
 	inherited;
 
 	FQueue := TQueue.Create;
+	InitializeCriticalSection(FSection);
 
 	FRunThreads := 0;
-	SetMaxThreads(GSysInfo.LogicalProcessorCount);
+	SetMaxThreads(GetLogicalProcessorCount);
 end;
 
 destructor TThreadPool.Destroy;
 begin
 	Pause;
 //	Stop;
+
 	FreeAndNil(FQueue);
+	DeleteCriticalSection(FSection);
 
 	inherited;
 end;
@@ -234,6 +248,14 @@ begin
 	end; *)
 end;
 
+procedure TThreadPool.WaitForEnd;
+begin
+  while (FQueue.Count > 0) or (FWorking > 0) do
+  begin
+		Sleep(LoopSleepTime);
+  end;
+end;
+
 { TOneThread }
 
 constructor TOneThread.Create;
@@ -247,7 +269,8 @@ begin
 	try
 		while FId < {FThreadPool.FRunThreads <=} FThreadPool.FMaxThreads do
 		begin
-			Synchronize(GetQueueCommand);
+//			Synchronize(GetQueueCommand);
+			GetQueueCommand;
 			if Command <> nil then
 			begin
 				if IsDebug then
@@ -275,10 +298,15 @@ end;
 
 procedure TOneThread.GetQueueCommand;
 begin
+	EnterCriticalSection(FThreadPool.FSection);
+  try
 {	if FThreadPool.FQueue = nil then
 		Command := nil
 	else // TODO Maybe Not Needed}
 		Command := FThreadPool.FQueue.GetAndDeleteFirst as TCommand;
+  finally
+	  LeaveCriticalSection(FThreadPool.FSection);
+  end;
 end;
 
 end.
