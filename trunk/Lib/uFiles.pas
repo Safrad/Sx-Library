@@ -224,6 +224,7 @@ begin
 
 		i := EndIndex + 1;
 	end;
+  SetLength(Result, ResultCount);
 end;
 
 function GetModuleFileNameFunc: string;
