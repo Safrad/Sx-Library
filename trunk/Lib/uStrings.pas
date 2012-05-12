@@ -155,6 +155,8 @@ function HashCode(const s: string): U4;
 function OddEven(const Index: SG): string;
 
 function IsNumber(const AText: string): Boolean;
+function Match(const Text: string; const Filter: string): BG;
+function FileMatch(const FileName: string; const Filter: string): BG;
 
 implementation
 
@@ -1273,6 +1275,36 @@ begin
 			Exit
 	end;
 	Result := True;
+end;
+
+function Match(const Text: string; const Filter: string): BG;
+begin
+  if Filter = '' then
+    Result := False
+  else if Filter = '*' then
+    Result := True
+  else if (FirstChar(Filter) = '*') and (LastChar(Filter) = '*') then
+  begin
+    Result := Pos(DelFirstChar(DelLastChar(Filter)), Text) <> 0;
+  end
+  else if LastChar(Filter) = '*' then
+  begin
+    Result := Pos(DelLastChar(Filter), Text) = 1;
+  end
+  else
+    Result := Filter = Text;
+end;
+
+function FileMatch(const FileName: string; const Filter: string): BG;
+var
+  FileNamePoint, FilterPoint: SG;
+begin
+  FileNamePoint := PosEx('.', FileName, MaxInt, 1);
+  FilterPoint := PosEx('.', Filter, MaxInt, 1);
+	Result :=
+  	Match(Copy(FileName, 1, FileNamePoint - 1), Copy(Filter, 1, FilterPoint - 1)) and
+  	Match(Copy(FileName, FileNamePoint + 1, MaxInt), Copy(Filter, FilterPoint + 1, MaxInt));
+
 end;
 
 procedure FillHexValue;
