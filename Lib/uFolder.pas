@@ -25,11 +25,14 @@ type
 	private
 		FOnAddFile: TOnAddFile;
 		FOnAddFileP: TOnAddFileP;
+    FDirMask: string;
+    FFileMask: string;
 		function GetCount: SG;
 		procedure ReadSubDirSorted(const SubPath: string);
+    procedure SetAllMask(const Value: string);
 	public
 		Path: string;
-		Mask: string;
+
 		Extensions: TArrayOfString; //array of string;
 		AcceptFiles: BG;
 		AcceptDirs: BG;
@@ -47,6 +50,9 @@ type
 		function FirstFileName: TFileName;
 		property OnAddFile: TOnAddFile read FOnAddFile write FOnAddFile;
 		property OnAddFileP: TOnAddFileP read FOnAddFileP write FOnAddFileP;
+    property FileMask: string read FFileMask write FFileMask;
+    property DirMask: string read FDirMask write FDirMask;
+    property AllMask: string write SetAllMask;
 	published
 
 	end;
@@ -55,7 +61,7 @@ implementation
 
 uses
 	Windows,
-	uMath, uMsg, uSorts;
+	uMath, uMsg, uSorts, uStrings;
 
 const
 	faAll = $00000031; // faArchive or faReadOnly or faDirectory;
@@ -114,13 +120,13 @@ var
 begin
 	ListCount := 0;
 	// faReadOnly or faHidden or faSysFile or
-	ErrorCode := FindFirst(Path + SubPath + Mask, AttributeMask, SearchRec);
+	ErrorCode := FindFirst(Path + SubPath + '*.*', AttributeMask, SearchRec);
 	while ErrorCode = NO_ERROR do
 	begin
 		IsDir := IsDirectory(SearchRec);
 		IsFile := (SearchRec.Attr and faDirectory) = 0;
 
-		//if (IsDir and Dirs)
+    if ((IsDir = False) or FileMatch(SearchRec.Name, FDirMask)) and ((IsFile = False) or FileMatch(SearchRec.Name, FFileMask)) then
 		if IsDir or (IsFile and AcceptFiles) then
 		begin
 			if IsDir or (Length(Extensions) = 0) then
@@ -213,7 +219,7 @@ begin
 			else
 			begin
 				FileItem := TFileItem.Create;
-				FileItem.Name := List[j].Name;
+				FileItem.Name := SubPath + List[j].Name;
 				FileItem.DateTime := FileDateToDateTime(List[j].Time);
 				FileItem.Size := List[j].Size;
 				Files.SetCount(k + 1);
@@ -241,7 +247,8 @@ begin
 	AcceptFiles := True;
 	AcceptDirs := True;
 	SubDirs := True;
-	Mask := '*.*';
+	FileMask := '*.*';
+	DirMask := '*.*';
 	AttributeMask := faAll;
 	Files := TData.Create;
 end;
@@ -268,6 +275,12 @@ end;
 procedure TFolder.Read;
 begin
 	ReadSubDirSorted('');
+end;
+
+procedure TFolder.SetAllMask(const Value: string);
+begin
+	FileMask := Value;
+  DirMask := Value;
 end;
 
 end.
