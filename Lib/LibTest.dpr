@@ -1,21 +1,33 @@
 program LibTest;
 
+{$ifopt d-}
+{$APPTYPE CONSOLE}
+{$define Console}
+{$endif}
+
 uses
+  uTypes,
   Forms,
   TestFrameWork,
+  TextTestRunner,
   GUITestRunner,
   uEscapeTest in 'uEscapeTest.pas',
   uCharsetTest in 'uCharsetTest.pas',
   uDelphiTest in 'uDelphiTest.pas',
   uFileTest in 'uFileTest.pas',
   uGeometryTest in 'uGeometryTest.pas',
-  uXYPolygonTest in 'uXYPolygonTest.pas';
+  uXYPolygonTest in 'uXYPolygonTest.pas',
+  uStringsTest in 'uStringsTest.pas';
 
 {$R *.RES}
 
 begin
   Application.Initialize;
   Application.Title := 'Lib Test';
-  GUITestRunner.RunRegisteredTests;
+  {$ifdef Console}
+  TextTestRunner.RunRegisteredTests;
+  {$else}
+  GUITestRunner.RunRegisteredTests
+  {$endif}
 end.
 

@@ -1,4 +1,4 @@
-// Unit test for uPolygon
+//* Unit test for uXYPolygon
 
 unit uXYPolygonTest;
 
@@ -36,25 +36,25 @@ begin
 
     Pt.X := 0;
     Pt.Y := 0;
-    Assert(Polygon.PtIn(Pt) = True);
+    Check(Polygon.PtIn(Pt) = True);
 
     Pt.X := 2;
     Pt.Y := 0;
-    Assert(Polygon.PtIn(Pt) = False);
+    Check(Polygon.PtIn(Pt) = False);
 
     Pt.X := 0;
     Pt.Y := 2;
-    Assert(Polygon.PtIn(Pt) = False);
+    Check(Polygon.PtIn(Pt) = False);
 
     // Border
     Pt.X := 1;
     Pt.Y := 0;
-    Assert(Polygon.PtIn(Pt) = False);
+    Check(Polygon.PtIn(Pt) = False);
 
     // Corner
     Pt.X := 1;
     Pt.Y := 1;
-    Assert(Polygon.PtIn(Pt) = False);
+    Check(Polygon.PtIn(Pt) = False);
   finally
     Polygon.Free;
   end;
