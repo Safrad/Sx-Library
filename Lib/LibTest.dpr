@@ -17,7 +17,9 @@ uses
   uFileTest in 'uFileTest.pas',
   uGeometryTest in 'uGeometryTest.pas',
   uXYPolygonTest in 'uXYPolygonTest.pas',
-  uStringsTest in 'uStringsTest.pas';
+  uStringsTest in 'uStringsTest.pas',
+  uCompareTest in 'uCompareTest.pas',
+  uFindTest in 'uFindTest.pas';
 
 {$R *.RES}
 

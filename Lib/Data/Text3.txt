@@ -1,0 +1,7 @@
+$D +cat
+$U +dog
+$A +pinguin
+$M -frog
+$U -bear
+$A +fish
+$M +aaad
