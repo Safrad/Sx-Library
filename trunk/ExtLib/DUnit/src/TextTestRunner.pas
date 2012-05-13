@@ -101,6 +101,7 @@ function RunRegisteredTests(exitBehavior: TRunnerExitBehavior = rxbContinue): TT
 
 implementation
 uses
+  uOutputFormat,
   SysUtils;
 
 const
@@ -229,12 +230,21 @@ end;
 
 procedure TTextTestListener.StartTest(test: ITest);
 begin
-  write('.');
+//  write('.');
 end;
 
 procedure TTextTestListener.EndTest(test: ITest);
+var
+  s: string;
 begin
-
+  if test.GetName <> 'Test' then
+  begin
+   	if test.GetName[1] = 'T' then
+    begin
+      s := MsToStr(test.ElapsedTestTime, diSD, 3, True, ofIO);
+			writeln(StringOfChar(' ', 6 - Length(s)) + s + ' : ' +  test.GetName);
+    end;
+  end;
 end;
 
 function TTextTestListener.TruncateString(s: string; len: integer): string;
@@ -253,16 +263,12 @@ begin
 end;
 
 procedure TTextTestListener.TestingEnds(testResult: TTestResult);
-var
-  h, m, s, l :Word;
 begin
   endTime := now;
   runTime := endTime-startTime;
   writeln;
-  DecodeTime(runTime, h,  m, s, l);
-  writeln(Format(sDecodeTime, [h, m, s, l]));
+  writeln('Total time: ' + MsToStr(Round(MSecsPerDay * runTime), diSD, 3, True, ofIO));
   writeln(Report(testResult));
-  writeln;
 end;
 
 class function TTextTestListener.RunTest(suite: ITest; exitBehavior: TRunnerExitBehavior = rxbContinue): TTestResult;

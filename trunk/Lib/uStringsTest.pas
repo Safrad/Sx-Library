@@ -2,25 +2,33 @@ unit uStringsTest;
 
 interface
 
+uses TestFrameWork;
+
+type
+  TStringsTest = class(TTestCase)
+  published
+    procedure TestMatch;
+  end;
+
 implementation
 
 uses uStrings;
 
-procedure TestMatch;
+procedure TStringsTest.TestMatch;
 begin
-	Assert(Match('dfd', '*') = True);
-	Assert(Match('', '*') = True);
-	Assert(Match('pefsd', 'p*') = True);
-	Assert(Match('epefsd', 'p*') = False);
-//	Assert(Match('pefsdp', '*p') = True);
-//	Assert(Match('pefsd', '*p') = False);
-	Assert(Match('apefsdp', '*pe*') = True);
-	Assert(Match('apfsd', '*pe*') = False);
+	Check(Match('dfd', '*') = True);
+	Check(Match('', '*') = True);
+	Check(Match('pefsd', 'p*') = True);
+	Check(Match('epefsd', 'p*') = False);
+//	Check(Match('pefsdp', '*p') = True);
+//	Check(Match('pefsd', '*p') = False);
+	Check(Match('apefsdp', '*pe*') = True);
+	Check(Match('apfsd', '*pe*') = False);
 
-	Assert(FileMatch('pefsd.txt', '*.*') = True);
-	Assert(FileMatch('pefsd.txt', '*') = False);
+	Check(FileMatch('pefsd.txt', '*.*') = True);
+	Check(FileMatch('pefsd.txt', '*') = False);
 end;
 
 initialization
-  TestMatch;
+	RegisterTest('Strings Test', TStringsTest.Suite);
 end.

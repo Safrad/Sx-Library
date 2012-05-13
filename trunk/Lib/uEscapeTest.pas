@@ -27,7 +27,7 @@ begin
 		s := RandomString(i);
 		s2 := AddEscape(s);
 		s2 := RemoveEscape(s2);
-		Assert(s = s2);
+    Check(s = s2, 'AddEscape & RemoveEscape is not compatible');
 	end;
 end;
 

@@ -61,12 +61,12 @@ begin
 				if F.Open(FileName, fmReadOnly) then
 				begin
 					F.Readln(Line);
-					Assert(Line = Line1);
+					Check(Line = Line1);
 					F.Readln(Line);
 					if fc <> fcAnsi then
-						Assert(Line = Line2)
+						Check(Line = Line2)
 					else
-						Assert(Line = AnsiString(Line2));
+						Check(Line = AnsiString(Line2));
 					F.Close;
 				end;
 			finally
@@ -84,6 +84,7 @@ var
 	Lines: TArrayOfString;
   Count: SG;
 	fc: TFileCharset;
+  i: SG;
 begin
 	Text := 'line1' + CharCR + 'line2' + CharLF + 'line3' + CharCR + CharLF + 'line4';
 	for fc := Low(fc) to High(fc) do
@@ -94,11 +95,9 @@ begin
       WriteStringToFile(FileName, Text, False, fc);
       Count := 0;
       ReadStringsFromFile(FileName, Lines, Count);
-      Assert(Count = 4);
-      Assert(Lines[0] = 'line1');
-      Assert(Lines[1] = 'line2');
-      Assert(Lines[2] = 'line3');
-      Assert(Lines[3] = 'line4');
+      Check(Count = 4, 'count');
+      for i := 0 to 3 do
+	      Check(Lines[i] = 'line' + IntToStr(i + 1), 'line ' + IntToStr(i + 1));
       DeleteFile(FileName);
     end;
   end;
