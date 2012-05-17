@@ -1299,8 +1299,15 @@ function FileMatch(const FileName: string; const Filter: string): BG;
 var
   FileNamePoint, FilterPoint: SG;
 begin
-  FileNamePoint := PosEx('.', FileName, MaxInt, 1);
   FilterPoint := PosEx('.', Filter, MaxInt, 1);
+  if FilterPoint = 0 then
+  begin
+  	Result := Match(FileName, Filter);
+    Exit;
+  end;
+  FileNamePoint := PosEx('.', FileName, MaxInt, 1);
+  if FileNamePoint = 0 then
+    FileNamePoint :=Length(FileName) + 1;
 	Result :=
   	Match(Copy(FileName, 1, FileNamePoint - 1), Copy(Filter, 1, FilterPoint - 1)) and
   	Match(Copy(FileName, FileNamePoint + 1, MaxInt), Copy(Filter, FilterPoint + 1, MaxInt));
