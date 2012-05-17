@@ -25,11 +25,11 @@ const
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
-	CharTimes = #$D7; // ×
+	CharTimes = {$ifdef UNICODE}Char($00D7){$else}'x'{$endif}; // × (#$D7) is not supported in Windows-1251!
 	CharHyphen = #$96; // –
 	CharLongHyphen = #$97; // —
 	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace, CharUnbrokableSpace];
-	cDialogSuffix = '...';
+	cDialogSuffix = {$ifdef UNICODE}Char($2026){$else}#$85{$endif}; //'...';
 	RightArrow = {$ifdef UNICODE}Char($25BA){$else}'->'{$endif};
 
 	EnumPrefixLength = 2;
