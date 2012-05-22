@@ -26,7 +26,7 @@ begin
 	Check(Match('apfsd', '*pe*') = False);
 
 	Check(FileMatch('pefsd.txt', '*.*') = True);
-	Check(FileMatch('pefsd.txt', '*') = False);
+	Check(FileMatch('pefsd.txt', '*') = True);
 end;
 
 initialization
