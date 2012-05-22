@@ -5,7 +5,8 @@ unit uOutputFormat;
 interface
 
 uses
-	uTypes;
+	uTypes,
+  SysUtils;
 
 type
 	TOutputFormat = (ofIO{Disk File Input/Output}, ofHTML{Disk HTML}, ofDisplay{Windows Locale});
@@ -29,6 +30,7 @@ var
 // Time Format
 	TimeSeparator: string;
 
+  IOFormatSettings: TFormatSettings; // English format settings
 {
 NToS(S8, ...); <-> StrToValI(SG,UG), StrToValS8, U1(..., False, ...);
 
@@ -76,7 +78,11 @@ function NToS(const Num: S8; const UseFormat: string): string; overload;
 function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NToS(const Num: S8; const OutputFormat: TOutputFormat): string; overload;
 
-function FToS(Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
+type
+  TFloatFormat= (ffAuto, ffScientic, ffNormal);
+
+function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
+function FToS(const Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
 
 function BToStr(const Bytes: S4; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function BToStr(const Bytes: S8; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
@@ -104,7 +110,7 @@ function PhoneToStr(const Phone: U8): string;
 implementation
 
 uses
-	SysUtils, Windows, Math,
+	Windows, Math,
 	uMath, uStrings, uDictionary;
 
 procedure AddMinusStr(var Result: string; const OutputFormat: TOutputFormat);
@@ -414,58 +420,138 @@ begin
 	Result := NToS(Num, 0, OutputFormat);
 end;
 
-function FToS(Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
+function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
 var
-	D: SG;
-	Nu, eps: Extended;
-	LastThousandSeparator: string;
-	Sep: Char;
+    digits: string;
+    s: string;
+    floatRec: TFloatRec;
+    Scientific: Boolean;
 begin
-{	if Num = NaN then
-		Result := 'Not a number'
-	else}
-	begin
-		LastThousandSeparator := ThousandSeparator;
-		if UseThousandSeparator = False then ThousandSeparator := '';
+    FloatToDecimal(floatRec, Value, fvExtended, Precision, 9999);
 
-		D := 0;
-		Nu := Num;
-		eps := 5.6e-18; // TODO : Round
-		while True do
-		begin
-			if Abs(Frac(Nu)) <= eps{MinExtended} then Break;
-			if Abs(Nu) < High(S8) div NumericBase then
-			begin
-				Nu := Nu * NumericBase;
-				eps := eps * NumericBase;
-			end
-			else
-			begin
-	{			Result := FloatToStr(Num);
-				Exit;}
-				Break;
-			end;
-			Inc(D);
-		end;
+  case FloatFormat of
+  ffScientic: Scientific := True;
+  ffNormal: Scientific := False;
+  else{ffAuto}
+    Scientific := Abs(floatRec.Exponent) > 10;
+  end;
 
-		if OutputFormat = ofIO then
-			Sep := '.'
-		else
-			Sep := ',';
+    //convert the array of char into an easy to access string
+    digits := PChar(Addr(floatRec.Digits[0]));
 
-		Result := NToS(RoundN(Nu), D, OutputFormat);
-		if Pos(Sep, Result) <> 0 then
-		begin
-			DelEndChar(Result, '0');
-			case OutputFormat of
-			ofDisplay:
-				DelEndChar(Result, DecimalSeparator[1]);
-			else
-				DelEndChar(Result, '.');
-			end;
-		end;
-		ThousandSeparator := LastThousandSeparator;
-	end;
+    if floatRec.Exponent > 0 then
+    begin
+        //Check for positive or negative infinity (exponent = 32767)
+        if floatRec.Exponent = 32767 then //David Heffernan says that currency can never be infinity. Even though i can't test it, i can at least try to handle it
+        begin
+            if floatRec.Negative = False then
+                Result := 'INF'
+            else
+                Result := '-INF';
+            Exit;
+        end;
+
+        {
+            digits:    1234567 89
+              exponent--------^ 7=7 digits on left of decimal mark
+        }
+        if Scientific then
+          s := s + digits + 'e' + IntToStr(floatRec.Exponent - Length(digits))
+        else
+        begin
+        {
+            for the value 10000:
+                digits:   "1"
+                exponent: 5
+            Add enough zero's to digits to pad it out to exponent digits
+        }
+        s := Copy(digits, 1, floatRec.Exponent);
+        if Length(s) < floatRec.Exponent then
+            s := s+StringOfChar('0', floatRec.Exponent-Length(s));
+
+        if Length(digits) > floatRec.Exponent then
+            s := s+'.'+Copy(digits, floatRec.Exponent+1, Decimals);
+        end;
+    end
+    else if floatRec.Exponent < 0 then
+    begin
+        //check for NaN (Exponent = -32768)
+        if floatRec.Exponent = -32768 then  //David Heffernan says that currency can never be NotANumber. Even though i can't test it, i can at least try to handle it
+        begin
+            Result := 'NAN';
+            Exit;
+        end;
+                        
+        {
+            digits:   .000123456789
+                         ^---------exponent
+        }
+        if Scientific then
+          s := s + digits + 'e' + IntToStr(floatRec.Exponent - Length(digits))
+        else
+        //Add zero, or more, "0"'s to the left
+        s := '0.'+Copy(StringOfChar('0', -floatRec.Exponent)+digits, 1, Decimals);
+    end
+    else { floatRec.Exponent = 0 }
+    begin
+        {
+            Exponent is zero.
+
+            digits:     .123456789
+                            ^
+        }
+        if length(digits) > 0 then
+            s := '0.'+Copy(digits, 1, Decimals)
+        else
+            s := '0';
+    end;
+
+    if floatRec.Negative then
+        s := '-'+s;
+
+    Result := s;
+end;
+
+function AddThrousandSeparator(const s: string): string;
+var
+	dp: SG;
+  i, M: SG;
+begin
+  Result := s;
+	if UseThousandSeparator then
+  begin
+    dp := Pos(DecimalSeparator, s);
+    if dp = 0 then
+    begin
+      if Pos('E', s) <> 0 then
+      begin
+      	Exit;
+      end
+      else
+      	dp := Length(s);
+    end
+    else
+    	Dec(dp);
+    M := 0;
+    for i := dp downto 2 do
+    begin
+    	if M = ThousandGroup - 1 then
+      begin
+        M := 0;
+        Insert(ThousandSeparator, Result, i);
+      end
+      else
+      	Inc(M);
+    end;
+  end;
+end;
+
+function FToS(const Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
+begin
+  if OutputFormat = ofIO then
+	  Result := FloatToStr(Num, IOFormatSettings)
+  else
+  	Result := AddThrousandSeparator(FloatToStr(Num)); //FloatToStrF(Num, ffNumber, 99, 99); // Format('%.99n', [Num]);//FloatToStr(Num);
 end;
 
 {
@@ -1137,6 +1223,72 @@ begin
 	{$ENDIF}
 end;
 
+function GetEnglishSetting: TFormatSettings;
+begin
+  Result.CurrencyFormat := $00; // 0 = '$1'
+  Result.NegCurrFormat := $00; //0 = '($1)'
+  Result.CurrencyString := '$';
+  Result.CurrencyDecimals := 2;
+
+  Result.ThousandSeparator := ',';
+  Result.DecimalSeparator := '.';
+
+  Result.DateSeparator := '/';
+  Result.ShortDateFormat := 'M/d/yyyy';
+  Result.LongDateFormat := 'dddd, MMMM dd, yyyy';
+
+  Result.TimeSeparator := ':';
+  Result.TimeAMString := 'AM';
+  Result.TimePMString := 'PM';
+  Result.LongTimeFormat := 'h:mm:ss AMPM';
+  Result.ShortTimeFormat := 'h:mm AMPM';
+
+  Result.ShortMonthNames[1] := 'Jan';
+  Result.ShortMonthNames[2] := 'Feb';
+  Result.ShortMonthNames[3] := 'Mar';
+  Result.ShortMonthNames[4] := 'Apr';
+  Result.ShortMonthNames[5] := 'May';
+  Result.ShortMonthNames[6] := 'Jun';
+  Result.ShortMonthNames[7] := 'Jul';
+  Result.ShortMonthNames[8] := 'Aug';
+  Result.ShortMonthNames[9] := 'Sep';
+  Result.ShortMonthNames[10] := 'Oct';
+  Result.ShortMonthNames[11] := 'Nov';
+  Result.ShortMonthNames[12] := 'Dec';
+
+  Result.LongMonthNames[1] := 'January';
+  Result.LongMonthNames[2] := 'February';
+  Result.LongMonthNames[3] := 'March';
+  Result.LongMonthNames[4] := 'April';
+  Result.LongMonthNames[5] := 'May';
+  Result.LongMonthNames[6] := 'June';
+  Result.LongMonthNames[7] := 'July';
+  Result.LongMonthNames[8] := 'August';
+  Result.LongMonthNames[9] := 'September';
+  Result.LongMonthNames[10] := 'October';
+  Result.LongMonthNames[11] := 'November';
+  Result.LongMonthNames[12] := 'December';
+
+  Result.ShortDayNames[1] := 'Sun';
+  Result.ShortDayNames[2] := 'Mon';
+  Result.ShortDayNames[3] := 'Tue';
+  Result.ShortDayNames[4] := 'Wed';
+  Result.ShortDayNames[5] := 'Thu';
+  Result.ShortDayNames[6] := 'Fri';
+  Result.ShortDayNames[7] := 'Sat';
+
+  Result.LongDayNames[1] := 'Sunday';
+  Result.LongDayNames[2] := 'Monday';
+  Result.LongDayNames[3] := 'Tuesday';
+  Result.LongDayNames[4] := 'Wednesday';
+  Result.LongDayNames[5] := 'Thursday';
+  Result.LongDayNames[6] := 'Friday';
+  Result.LongDayNames[7] := 'Saturday';
+
+  Result.ListSeparator := ',';
+end;
+
 initialization
 	GetLocale;
+  IOFormatSettings := GetEnglishSetting;
 end.
