@@ -19,7 +19,8 @@ uses
   uXYPolygonTest in 'uXYPolygonTest.pas',
   uStringsTest in 'uStringsTest.pas',
   uCompareTest in 'uCompareTest.pas',
-  uFindTest in 'uFindTest.pas';
+  uFindTest in 'uFindTest.pas',
+  uOutputFormatTest in 'uOutputFormatTest.pas';
 
 {$R *.RES}
 
