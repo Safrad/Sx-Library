@@ -17,7 +17,7 @@ function FindS(AValue: array of string;
 function FindBM(SubStr, Str: string): SG;
 function FindKMP(SubStr, Str: string): SG;
 *)
-function SearchHamming(const Pattern, Text: string; ErrorLen: SG = 0): SG; // 10x slower that Pos();
+function SearchHamming(const Pattern, Text: AnsiString; ErrorLen: SG = 0): SG; // 10x slower that Pos();
 function LevenshteinDistance(const A1, A2: string; const ACostInsert: integer = 1; const ACostDel: integer = 1; const ACostRep: integer = 1): integer;
 
 implementation
@@ -262,7 +262,7 @@ begin
 end;
 *)
 
-function SearchHamming(const Pattern, Text: string; ErrorLen: SG = 0): SG;
+function SearchHamming(const Pattern, Text: AnsiString; ErrorLen: SG = 0): SG;
 const
 	Empty = $FFFFFFFFFFFFFFFF;
 var
@@ -270,7 +270,7 @@ var
 	D: array[AnsiChar] of U8;
 	L: U8;
 	i, j: SG;
-	c: Char;
+	c: AnsiChar;
 begin
 	Result := 0;
 	// bit paralelism version Shift-Or
