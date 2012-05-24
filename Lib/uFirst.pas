@@ -2,10 +2,9 @@ unit uFirst;
 
 interface
 
-{$if CompilerVersion < 18}
 uses
-	FastMM4;
-{$ifend}
+	FastMM4,
+  uTypes;
 
 implementation
 
