@@ -6,6 +6,7 @@ program LibTest;
 {$endif}
 
 uses
+	uFirst,
   uTypes,
   Forms,
   TestFrameWork,
