@@ -67,6 +67,7 @@ var
 	i: TProjectInfoName;
 	Buf: PWideChar;
 	Value: {$ifdef UNICODE}PWideChar{$else}PAnsiChar{$endif};
+	ValueA: PAnsiChar;
 	Id: string;
 	// Unused
 	LenOfValue: U4;
@@ -101,13 +102,17 @@ begin
 							Replace(FProjectInfoNames[i], ', ', '.');
 					end;
 				end;
-				if VerQueryValueA(Buf, PAnsiChar(AnsiString('\VarFileInfo\Translation')), Pointer(Value), LenOfValue) then
+{$ifdef UNICODE}
+				if VerQueryValueW(Buf, PWideChar(WideString('\VarFileInfo\Translation')), Pointer(ValueA), LenOfValue) then
+{$else}
+				if VerQueryValueA(Buf, PAnsiChar(AnsiString('\VarFileInfo\Translation')), Pointer(ValueA), LenOfValue) then
+{$endif}
 				begin
 					if LenOfValue = 4 then
 					begin
 						NumericBase := 16;
 						try
-							Id := NToS(SG(Value[1]), '00') + NToS(SG(Value[0]), '00') + NToS(SG(Value[3]), '00') + NToS(SG(Value[2]), '00');
+							Id := NToS(SG(ValueA[1]), '00') + NToS(SG(ValueA[0]), '00') + NToS(SG(ValueA[3]), '00') + NToS(SG(ValueA[2]), '00');
 						finally
 							NumericBase := 10;
 						end;
