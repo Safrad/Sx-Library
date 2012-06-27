@@ -32,6 +32,7 @@ procedure DivModU8(const Dividend: U8; const Divisor: U4;
 	out Res, Remainder: U4); pascal;
 procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
+procedure UnsignedDivMod10(const n: S4; out q: S4; out r: S4);
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: Extended): Extended;
 
@@ -330,6 +331,16 @@ asm
 	mov [edi], edx
 	popad
 {$endif}
+end;
+
+procedure UnsignedDivMod10(const n: S4; out q: S4; out r: S4);
+const
+  remtable:array[0..15] of integer = (0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 7, 8, 8, 9, 0);
+
+begin
+    r := ($19999999*n + (n shr 1) + (n shr 3)) shr 28;
+    r := remtable[r];
+    q := ((n - r) shr 1)*$CCCCCCCD;
 end;
 
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
