@@ -1,0 +1,119 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{4d3e4067-e672-42bd-84c4-1e72a74282d2}</ProjectGuid>
+			<MainSource>BorlndMM.dpr</MainSource>
+			<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<DCC_DependencyCheckOutputName>..\BorlndMM.dll</DCC_DependencyCheckOutputName>
+			<ProjectVersion>12.0</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
+			<DCC_ImageBase>D20000</DCC_ImageBase>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_DependencyCheckOutputName>..\..\..\bin\BorlndMM.dll</DCC_DependencyCheckOutputName>
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_ExeOutput>$(TP)\bin</DCC_ExeOutput>
+			<DCC_DcuOutput>$(TP)\intermediate\debug\lib</DCC_DcuOutput>
+			<GenDll>true</GenDll>
+			<ImageDebugInfo>true</ImageDebugInfo>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_DebugInfoInExe>false</DCC_DebugInfoInExe>
+			<DCC_DebugDCUs>false</DCC_DebugDCUs>
+			<DCC_UnitSearchPath>$(TP)\intermediate\release\lib;$(TP)\intermediate\release\res;$(TP)\intermediate\release\dcp;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_DcuOutput>$(TP)\intermediate\release\lib</DCC_DcuOutput>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+			<Version>7.0</Version>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_Optimize>true</DCC_Optimize>
+			<DCC_GenerateStackFrames>false</DCC_GenerateStackFrames>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<Version>7.0</Version>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_Optimize>False</DCC_Optimize>
+			<DCC_GenerateStackFrames>True</DCC_GenerateStackFrames>
+		</PropertyGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">0</VersionInfo>
+						<VersionInfo Name="MinorVer">4</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">True</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">True</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">Ben Taylor</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">SafeMM Memory Manager</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.4.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName">BORLNDMM.DLL</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright © 2006,2007 Ben Taylor</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename">BORLNDMM.DLL</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductName">SafeMM Memory Manager</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">0.4</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+						<VersionInfoKeys Name="SpecialBuild">Internal Build for CodeGear Developers</VersionInfoKeys>
+						<VersionInfoKeys Name="PrivateBuild"/>
+					</VersionInfoKeys>
+					<Source>
+						<Source Name="MainSource">BorlndMM.dpr</Source>
+					</Source>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+		<ItemGroup>
+			<DelphiCompile Include="BorlndMM.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="SafeMM.pas"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+	</Project>
