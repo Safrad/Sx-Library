@@ -33,10 +33,11 @@ type
 	private
 		FProjectInfoNames: array[TProjectInfoName] of string;
 		FApplicationFileName: TFileName;
-		procedure SetProjectInfo;
+		procedure SetProjectInfos;
 	public
 		constructor Create(const ApplicationFileName: TFileName);
 		function GetProjectInfo(const ProjectInfoName: TProjectInfoName): string;
+		procedure SetProjectInfo(const ProjectInfoName: TProjectInfoName; const Value: string);
 	property
 		ApplicationFileName: TFileName read FApplicationFileName;
 	end;
@@ -44,6 +45,7 @@ type
 var
 	ProjectInfoStr: array[TProjectInfoName] of string;
 
+function ApplicationProjectInfo: TProjectInfo;
 function GetProjectInfo(const ProjectInfo: TProjectInfoName): string;
 
 implementation
@@ -60,7 +62,7 @@ var
 
 { TProjectInfo }
 
-procedure TProjectInfo.SetProjectInfo;
+procedure TProjectInfo.SetProjectInfos;
 var
 	AppFileName: PChar;
 	AppSize: UG;
@@ -145,7 +147,7 @@ begin
 	FApplicationFileName := ApplicationFileName;
 	if ProjectInfoStr[piFileVersion] = '' then
 		EnumToStrEx(TypeInfo(TProjectInfoName), ProjectInfoStr);
-	SetProjectInfo;
+	SetProjectInfos;
 end;
 
 function TProjectInfo.GetProjectInfo(const ProjectInfoName: TProjectInfoName): string;
@@ -153,7 +155,13 @@ begin
 	Result := FProjectInfoNames[ProjectInfoName];
 end;
 
-function GetProjectInfo(const ProjectInfo: TProjectInfoName): string;
+procedure TProjectInfo.SetProjectInfo(
+  const ProjectInfoName: TProjectInfoName; const Value: string);
+begin
+  FProjectInfoNames[ProjectInfoName] := Value;
+end;
+
+function ApplicationProjectInfo: TProjectInfo;
 begin
 	if not Assigned(ThisProjectInfo) then
 	begin
@@ -169,7 +177,12 @@ begin
 			AppendStr(ThisProjectInfo.FProjectInfoNames[piProductVersion], '+');
 		end;
 	end;
-	Result := ThisProjectInfo.GetProjectInfo(ProjectInfo);
+	Result := ThisProjectInfo;
+end;
+
+function GetProjectInfo(const ProjectInfo: TProjectInfoName): string;
+begin
+	Result := ApplicationProjectInfo.GetProjectInfo(ProjectInfo);
 end;
 
 initialization
