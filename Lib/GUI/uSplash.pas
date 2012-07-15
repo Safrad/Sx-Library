@@ -18,6 +18,7 @@ type
 			Shift: TShiftState; X, Y: Integer);
 		procedure FormClose(Sender: TObject; var Action: TCloseAction);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormDestroy(Sender: TObject);
 	private
 		{ Private declarations }
 		FirstX, FirstY: SG;
@@ -286,7 +287,7 @@ begin
 	EndLongOperation(False);
 	BackBitmap.SetSize(0, 0, clNone);
 	Timer1.Enabled := False;
-	FreeAndNil(fSplash);
+	Action := caFree;
 end;
 
 procedure TfSplash.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -296,6 +297,11 @@ begin
 		WantClose;
 		CanClose := False;
 	end;
+end;
+
+procedure TfSplash.FormDestroy(Sender: TObject);
+begin
+	fSplash := nil;
 end;
 
 initialization
