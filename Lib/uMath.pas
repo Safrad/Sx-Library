@@ -338,9 +338,9 @@ const
   remtable:array[0..15] of integer = (0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 7, 8, 8, 9, 0);
 
 begin
-    r := ($19999999*n + (n shr 1) + (n shr 3)) shr 28;
-    r := remtable[r];
-    q := ((n - r) shr 1)*$CCCCCCCD;
+  r := ($19999999*n + (n shr 1) + (n shr 3)) shr 28;
+  r := remtable[r];
+  q := U4((n - r) shr 1)*$CCCCCCCD;
 end;
 
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
