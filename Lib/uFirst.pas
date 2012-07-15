@@ -1,9 +1,15 @@
 unit uFirst;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses
+  {$ifopt d+}
+  SafeMMInstall,
+  {$else}
 	FastMM4,
+  {$endif}
   uTypes;
 
 implementation
