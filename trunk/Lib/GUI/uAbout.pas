@@ -6,7 +6,9 @@ uses
 	uDForm, uTypes, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
+  {$ifopt d-}
   FastMMUsageTracker,
+  {$endif}
 	uDWinControl;
 
 type
@@ -186,7 +188,6 @@ begin
 	{$endif}
 	if IsRelease then
   begin
-		ButtonMemoryStatus.Visible := False;
 		ButtonBuildParams.Visible := False;
 	end;
 
@@ -372,7 +373,9 @@ end;
 
 procedure TfAbout.ButtonMemoryStatusClick(Sender: TObject);
 begin
+  {$ifopt d-}
 	ShowFastMMUsageTracker;
+  {$endif}
 end;
 
 procedure TfAbout.DViewAboutGetData(Sender: TObject; var Data: String;
