@@ -2,7 +2,9 @@ unit SafeMMInstall;
 
 interface
 
-{$MESSAGE warn 'SafeMM on'}
+{.$MESSAGE warn 'SafeMM on'}
+{$WARN SYMBOL_PLATFORM OFF}
+
 
 implementation
 
