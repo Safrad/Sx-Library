@@ -325,8 +325,8 @@ begin
 	else
 	begin
 		InLineIndex := 1;
-		Result := SToDate(ReadToChar(Str, InLineIndex, ' '), InputFormat) +
-			SToTime(ReadToChar(Str, InLineIndex, CharCR), InputFormat);
+		Result := SToDate(ReadToChar(Str, InLineIndex, CharSpace), InputFormat) +
+			SToTime(ReadToChar(Str, InLineIndex, CharSpace), InputFormat);
 	end;
 	end;
 end;
