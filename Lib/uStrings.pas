@@ -25,6 +25,8 @@ const
 	CharBackspace = #$08;
 	CharFormfeed = #$0C;
 	CharBell = #$07;
+	CharACK = #$06; // Acknowledge
+	CharNAK = #$15; // Negatively acknowledge
 	CharTimes = {$ifdef UNICODE}Char($00D7){$else}'x'{$endif}; // × (#$D7) is not supported in Windows-1251!
 	CharHyphen = #$96; // –
 	CharLongHyphen = #$97; // —
