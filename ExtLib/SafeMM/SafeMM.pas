@@ -134,6 +134,8 @@ function SafeGetMem(Size: Integer): Pointer;
 function SafeFreeMem(P: Pointer): Integer;
 function SafeReallocMem(P: Pointer; Size: Integer): Pointer;
 function SafeAllocMem(ASize: Cardinal): Pointer;
+function SafeRegisterExpectedMemoryLeak(P: Pointer): Boolean;
+function SafeUnregisterExpectedMemoryLeak(P: Pointer): Boolean;
 
 {
 caller can specifically set protection on a block of memory.
@@ -157,8 +159,8 @@ const
    FreeMem: SafeFreeMem;
    ReallocMem: SafeReallocMem;
    AllocMem: SafeAllocMem;
-   RegisterExpectedMemoryLeak: nil;
-   UnregisterExpectedMemoryLeak: nil;
+   RegisterExpectedMemoryLeak: SafeRegisterExpectedMemoryLeak;
+   UnregisterExpectedMemoryLeak: SafeUnregisterExpectedMemoryLeak;
   );
 {$ELSE}
   SafeMemoryManager: TMemoryManager = (
@@ -596,6 +598,16 @@ function SafeAllocMem(ASize: Cardinal): Pointer;
 begin
   Assert(aSize>0);
   Result := SafeGetMem(ASize);
+end;
+
+function SafeRegisterExpectedMemoryLeak(P: Pointer): Boolean;
+begin
+  Result := False;
+end;
+
+function SafeUnregisterExpectedMemoryLeak(P: Pointer): Boolean;
+begin
+  Result := False;
 end;
 
 function Min(const i1, i2: Integer): Integer;
