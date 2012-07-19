@@ -132,6 +132,8 @@ procedure CheckExpSize(const Size: SG);
 function AllocByExp(const OldSize: SG; var NewSize: SG): BG;
 function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG; deprecated;
 function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
+function SetLargerSize(var x, y: SG; const MinWidth, MinHeight: SG): BG;
+procedure SetScale(var x, y: SG; const MaxWidth, MaxHeight: SG);
 
 function BitsToByte(const Bits: S8): S4;
 
@@ -1846,6 +1848,20 @@ begin
 	end;
 end;
 
+function SetLargerSize(var x, y: SG; const MinWidth, MinHeight: SG): BG;
+begin
+	Result := False;
+	if (x > 0) and (y > 0) then
+	begin
+		while (x < MinWidth) or (y < MinHeight) do
+		begin
+			x := x * 2;
+			y := y * 2;
+			Result := True;
+		end;
+	end;
+end;
+
 function SetNormalSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
 begin
 	Result := False;
@@ -1864,6 +1880,29 @@ begin
 		if Result then
 			SetSmallerSize(x, y, MaxWidth, MaxHeight);
 	end;
+end;
+
+procedure SetScale(var x, y: SG; const MaxWidth, MaxHeight: SG);
+var
+  D: SG;
+begin
+	if (x = 0) or (y = 0) then Exit;
+  D := x * MaxHeight - MaxWidth * y;
+  if D = 0 then
+  begin
+    x := MaxWidth;
+    y := MaxHeight;
+  end
+  else if D < 0 then
+  begin
+    x := RoundDiv(MaxHeight * x, y);
+    y := MaxHeight;
+  end
+  else
+  begin
+    y := RoundDiv(MaxWidth * y, x);
+    x := MaxWidth;
+  end;
 end;
 
 function BitsToByte(const Bits: S8): S4;

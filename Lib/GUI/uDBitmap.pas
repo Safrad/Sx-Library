@@ -234,6 +234,8 @@ type
 			BmpS: TDBitmap; const Effect: TEffect); overload;
 		procedure Texture(
 			BmpS: TDBitmap; const Range: TRect; const Effect: TEffect); overload;
+		procedure ResizeUp(
+			const NewX, NewY: UG; BmpS: TDBitmap = nil);
 		procedure Resize(const NewX, NewY: UG; BmpS: TDBitmap = nil; const InterruptProcedure: TInterruptProcedure = nil);
 		function PixelOnBitmap(const X, Y: TCoor): BG; overload;
 		function PixelOnBitmap(const Point: TPoint): BG;  overload;
@@ -8236,6 +8238,168 @@ begin
 	end;
 end;
 
+procedure TDBitmap.ResizeUp(
+	const NewX, NewY: UG; BmpS: TDBitmap = nil);
+var
+	PS, PD: PPixel;
+
+	X, Y: UG;
+	SX, SY: UG;
+  RX, RY: SG;
+	ByteSX, ByteDX: UG;
+
+	Suma24: array[0..2] of Int64;
+	StpXU:  UG; //W
+	StpYU:  UG; //W
+	StpXYU: UG;
+	RxU:    UG;
+	Rx1U:   UG;
+	Rx2U:   UG;
+	RyU:    UG;
+	Ry1U:   UG;
+	Ry2U:   UG;
+	ttxU:   UG; //W
+	ttyU:   UG; //W
+
+	HelpU: UG;
+
+	HY: UG;
+
+	BmpDe: TDBitmap;
+
+	Res, Remainder: U2;
+	TranColor: TColor;
+	TranColorR: TRGBA;
+	TranCount: UG;
+begin
+	// TODO optimalize
+	if (NewX = 0) or (NewY = 0) then Exit;
+
+	if BmpS = nil then BmpS := Self;
+	SX := BmpS.Width;
+	SY := BmpS.Height;
+
+	if (SX = NewX) and (SY = NewY) then
+	begin
+		if BmpS.Data <> Data then
+		begin
+			FromBitmap(BmpS);
+		end;
+		Exit;
+	end;
+
+	if (SX = 0) or (SY = 0) then
+	begin
+		SetSize(NewX, NewY, clNone);
+		Exit;
+	end;
+
+	if BmpS.Data = Data then
+	begin
+		BmpDe := TDBitmap.Create;
+		BmpDe.SetSize(NewX, NewY, clNone);
+		BmpDe.TransparentColor := TransparentColor;
+		BmpDe.Transparent := Transparent;
+	end
+	else
+	begin
+		SetSize(NewX, NewY, clNone);
+		BmpDe := Self;
+	end;
+
+	BmpDe.TransparentColor := BmpS.TransparentColor;
+	BmpDe.Transparent := BmpS.Transparent;
+	if Transparent then
+	begin
+		TranColor := BmpS.TransparentColor;
+		TranColorR := ColorToRGBStack(TranColor);
+	end
+	else
+	begin
+		TranColor := clNone;
+		TranColorR.L := 0;
+	end;
+
+	ByteSX := WidthToByteX(SX);
+	ByteDX := WidthToByteX(NewX);
+	StpXU := SX;
+	StpYU := SY;
+	StpXYU := StpXU * StpYU;
+
+	// Diverse resampling algorithm.
+	ry2U := 0;
+	for Y := 0 to NewY - 1 do
+	begin
+		ry1U := ry2U;
+		Inc(Ry2U, StpYU);
+		X := 0;
+		rx2U := 0;
+		repeat
+			Suma24[0] := 0;
+			Suma24[1] := 0;
+			Suma24[2] := 0;
+			TranCount := 0;
+			rx1U := rx2U;
+			Inc(Rx2U, StpXU);
+			ryU := ry1U;
+			repeat
+				DivModU4(ryU, NewY, Res, Remainder);
+				ttyU := NewY - Remainder;
+				if ryU + ttyU > ry2U then ttyU := ry2U - ryU;
+				rxU := rx1U;
+				HY := Res;
+				repeat
+					DivModU4(rxU, NewX, Res, Remainder);
+					ttxU := NewX - Remainder;
+					if rxU + ttxU > rx2U then ttxU := rx2U - rxU;
+					PS := BmpS.GetPixelAddr(Res, HY); // Pointer(SG(BmpS.Data) + SG({$ifdef BPP4}Res shl 2{$else}Res + Res + Res{$endif}) - SG(ByteSX * HY));
+					HelpU := ttxU * ttyU;
+					if TranColor <> clNone then
+					begin
+						if (PS.RG = TranColorR.RG)
+						and (PS.B = TranColorR.B) then
+						begin
+							Inc(TranCount, HelpU);
+						end;
+					end;
+					Inc(suma24[0], PS.R * HelpU);
+					Inc(suma24[1], PS.G * HelpU);
+					Inc(suma24[2], PS.B * HelpU);
+
+					Inc(rxU, ttxU);
+				until rxU = rx2U;
+				Inc(ryU, ttyU);
+			until ryU = ry2U;
+
+			PD := BmpDe.GetPixelAddr(X, Y); // Pointer(SG(BmpDe.Data) + SG({$ifdef BPP4}X shl 2{$else}X + X + X{$endif}) - SG(ByteDX * Y));
+			if (TranColor = clNone) or (TranCount <{<=} StpXYU div 2) then
+			begin
+				PD.R := RoundDivS8(Suma24[0], stpXYU);
+				PD.G := RoundDivS8(Suma24[1], stpXYU);
+				PD.B := RoundDivS8(Suma24[2], stpXYU);
+			end
+			else
+			begin
+				{$ifdef BPP4}
+				PD^ := TranColorR;
+				{$else}
+				PD.RG := TranColorR.RG;
+				PD.B := TranColorR.B;
+				{$endif}
+			end;
+
+			Inc(X);
+		until X = NewX;
+	end;
+
+	if BmpS.Data = Data then
+	begin
+		SetSize(NewX, NewY, clNone);
+		FromBitmap(BmpDe);
+		FreeAndNil(BmpDe);
+	end;
+end;
+
 procedure TDBitmap.Resize(
 	const NewX, NewY: UG; BmpS: TDBitmap = nil;
 	const InterruptProcedure: TInterruptProcedure = nil);
@@ -8244,6 +8408,7 @@ var
 
 	X, Y: UG;
 	SX, SY: UG;
+  RX, RY: SG;
 	ByteSX, ByteDX: UG;
 
 	Suma24: array[0..2] of Int64;
@@ -8275,6 +8440,17 @@ begin
 	if BmpS = nil then BmpS := Self;
 	SX := BmpS.Width;
 	SY := BmpS.Height;
+
+  if (NewX > SX) or (NewY > SY) then
+  begin
+    RX := SX;
+    RY := SY;
+    SetLargerSize(RX, RY, NewX, NewY);
+    ResizeUp(RX, RY, nil);
+    SX := RX;
+    SY := RY;
+  end;
+
 	if (SX = NewX) and (SY = NewY) then
 	begin
 		if BmpS.Data <> Data then
