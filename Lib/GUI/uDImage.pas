@@ -1927,7 +1927,8 @@ begin
 			Cursor := FAreaCursor;
 	end;
 	end;
-//	MainLog.Add('Set Cursor to ' + NToS(Cursor), mlDebug);
+//  if LogDebug then
+//    LogAdd('Set Cursor to ' + NToS(Cursor));
 end;
 
 procedure TDImage.SetAreaCursor(const Value: TCursor);

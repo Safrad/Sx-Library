@@ -26,7 +26,8 @@ var
 	IdHTTP1: TIdHTTP;
 	AResponseContent: TStream;
 begin
-	MainLog.Add('Download file ' + AddQuoteF(AURL), mlDebug);
+  if LogDebug then
+	  LogAdd('Download file ' + AddQuoteF(AURL));
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 		IdHTTP1.HandleRedirects := True;
@@ -48,7 +49,8 @@ function DownloadData(const AURL: string): string;
 var
 	IdHTTP1: TIdHTTP;
 begin
-	MainLog.Add('Download data ' + AddQuoteF(AURL), mlDebug);
+  if LogDebug then
+    LogAdd('Download data ' + AddQuoteF(AURL));
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 		IdHTTP1.HandleRedirects := True;
