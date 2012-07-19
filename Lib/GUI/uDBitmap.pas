@@ -2462,7 +2462,7 @@ procedure TDBitmap.ToBitmap(BmpD: TBitmap; DPixelFormat: TPixelFormat);
 begin
 	if not Assigned(BmpD) then
 	begin
-		BmpD := TBitmap.Create;
+		Exit;
 	end;
 	BmpD.Width := Width;
 	BmpD.Height := Height;
@@ -2476,7 +2476,7 @@ procedure TDBitmap.ToBitmap(BmpD: TBitmap);
 begin
 	if not Assigned(BmpD) then
 	begin
-		BmpD := TBitmap.Create;
+		Exit;
 	end;
 	BmpD.Width := Width;
 	BmpD.Height := Height;
