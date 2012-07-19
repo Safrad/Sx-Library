@@ -54,12 +54,18 @@ function TPictureFactory.GetBitmap(const Name: string; const Width,
   Height: SG; const KeepRatio: BG = True; const BackgroundColor: TColor = clNone): TDBitmap;
 var
   W, H: SG;
+  IsTransparent: BG;
 begin
   Result := GetBitmap(Name);
   if Result = nil then Exit;
 
-  if Result.Transparent and (BackgroundColor <> clNone) then
+  Result.TryTransparent;
+  IsTransparent := Result.Transparent and (BackgroundColor <> clNone);
+  if IsTransparent then
+  begin
+    Result.Transparent := False;
 	  Result.ChangeColor(Result.TransparentColor, BackgroundColor);
+  end;
 
 	if KeepRatio then
   begin
@@ -70,6 +76,12 @@ begin
   end
   else
 		Result.Resize(Width, Height);
+
+  if IsTransparent then
+  begin
+    Result.TransparentColor := BackgroundColor;
+    Result.Transparent := True;
+  end;
 end;
 
 end.
