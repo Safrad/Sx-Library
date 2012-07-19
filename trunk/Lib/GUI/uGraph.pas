@@ -116,10 +116,10 @@ var
   RectWidth, RectHeight: SG;
 begin
   if Text = '' then Exit;
-  RectWidth := R.Right - R.Left;
-  RectHeight := R.Bottom - R.Top;
+  RectWidth := R.Right - R.Left + 1;
+  RectHeight := R.Bottom - R.Top + 1;
 
-	FontSize := Max(MinFontSize, Abs(2 * (R.Right - R.Left) div Length(Text)));
+	FontSize := Max(MinFontSize, Abs(2 * RectWidth div Length(Text)));
 	Canvas.Font.Height := -FontSize;
 	Font.Height := -FontSize;
 
@@ -128,16 +128,16 @@ begin
   WidthTouch := Size.cx * RectHeight >= RectWidth * Size.cy;
 
   if WidthTouch then
-    FontSize := FontSize * RectWidth div Size.cx
+    FontSize := FontSize * RectWidth div Size.cx + 1
   else
-    FontSize := FontSize * RectHeight div Size.cy;
+    FontSize := FontSize * RectHeight div Size.cy + 1;
 
 	while FontSize >= MinFontSize do
 	begin
 		Canvas.Font.Height := -FontSize;
 		Font.Height := -FontSize;
 		Size := Canvas.TextExtent(Text);
-		if (Size.cx <= R.Right - R.Left) and (Size.cy <= R.Bottom - R.Top) then Break;
+		if (Size.cx <= RectWidth) and (Size.cy <= RectHeight) then Break;
 		Dec(FontSize);
 	end;
 end;
