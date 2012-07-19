@@ -306,7 +306,7 @@ var
 	TextWidth: SG;
 	CuttedText: string;
 begin
-	CuttedText := CutText(Canvas, Text, R.Right - R.Left);
+	CuttedText := CutText(Canvas, Text, R.Right - R.Left + 1);
 	Result := Text <> CuttedText;
 
 	if Alignment <> taLeftJustify then
@@ -405,7 +405,7 @@ begin
 
 		if CharInSet(Caption[i], [CharCR, CharLF]) or
 			((LineCount < MaxLines) and (i > 1) and
-			(WordWrap and (Canvas.TextWidth(RemoveSingleAmp(Copy(Caption, 1, i))) > Rect.Right - Rect.Left))) then
+			(WordWrap and (Canvas.TextWidth(RemoveSingleAmp(Copy(Caption, 1, i))) > Rect.Right - Rect.Left + 1))) then
 		begin
 			if CharInSet(Caption[i], [CharCR, CharLF]) then
 			begin
