@@ -6,7 +6,7 @@ interface
 
 uses
   {$ifopt d+}
-  SafeMMInstall,
+//  SafeMMInstall,
   {$else}
 	FastMM4,
   {$endif}
