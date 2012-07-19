@@ -4,6 +4,7 @@ interface
 
 uses
 	Graphics,
+  uPictureFactory,
 	uTypes, uDForm, uOptions, uStrings,
 	Menus;
 
@@ -34,6 +35,7 @@ function GetBackgroundWindowTexture: BG;
 function GetBackgroundWindowColor: TColor;
 
 var
+  PictureFactory: TPictureFactory;
 	ForceClose: BG;
   DisableSplash: BG;
 
@@ -701,8 +703,12 @@ DefaultOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalP
 
 CommonMenu := TCommonMenu.Create;
 
+PictureFactory := TPictureFactory.Create;
+PictureFactory.Path := GraphDir;
+
 finalization
 
+FreeAndNil(PictureFactory);
 FreeAndNil(CommonMenu);
 
 end.

@@ -26,10 +26,11 @@ type
     procedure ReleaseObject(AObject: TObject);
 //    procedure CreateObject(const Name: string); virtual; abstract;
     function FindOrCreate(const Name: string): TFactoryObject;
-    procedure FreeMemory;
+    procedure DeleteUnusedObjects;
     procedure DeleteOld(const Period: UG); // in [ms]
   public
-
+    constructor Create;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -55,6 +56,11 @@ end;
 
 { TObjectFactory }
 
+constructor TObjectFactory.Create;
+begin
+  Objects := TData.Create;
+end;
+
 procedure TObjectFactory.DeleteOld(const Period: UG);
 var
   FO: TFactoryObject;
@@ -69,6 +75,31 @@ begin
     else
       Inc(i);
   end;
+end;
+
+procedure TObjectFactory.DeleteUnusedObjects;
+var
+  FO: TFactoryObject;
+  i: SG;
+begin
+  i := 0;
+  while i < Objects.Count do
+  begin
+    FO := TFactoryObject(Objects.GetObject(i));
+    if FO.ReferenceCount <= 0 then
+    begin
+      Objects.Delete(i);
+    end
+    else
+      Inc(i);
+  end;
+end;
+
+destructor TObjectFactory.Destroy;
+begin
+  FreeAndNil(Objects);
+
+  inherited;
 end;
 
 function TObjectFactory.FindOrCreate(const Name: string): TFactoryObject;
@@ -98,24 +129,6 @@ begin
       Exit;
     end;
     Inc(i);
-  end;
-end;
-
-procedure TObjectFactory.FreeMemory;
-var
-  FO: TFactoryObject;
-  i: SG;
-begin
-  i := 0;
-  while i < Objects.Count do
-  begin
-    FO := TFactoryObject(Objects.GetObject(i));
-    if FO.ReferenceCount <= 0 then
-    begin
-      Objects.Delete(i);
-    end
-    else
-      Inc(i);
   end;
 end;
 
