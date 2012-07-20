@@ -415,9 +415,7 @@ begin
   if Msg.Msg = WM_TRAYNOTIFY then
   // Take action if a message from the tray icon comes through
   begin
-{$WARNINGS OFF}
     with TCoolTrayIcon(Msg.wParam) do  // Cast to a TCoolTrayIcon instance
-{$WARNINGS ON}
     begin
       case Msg.lParam of
 
@@ -706,9 +704,7 @@ begin
   inherited Create(AOwner);
 
   AddTrayIcon;               // Container management
-{$WARNINGS OFF}
   FIconID := Cardinal(Self); // Use Self object pointer as ID
-{$WARNINGS ON}
 
   SettingMDIForm := True;
   FEnabled := True;          // Enabled by default

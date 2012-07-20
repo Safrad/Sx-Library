@@ -400,7 +400,7 @@ begin
         Bitmap.Canvas.TextOut(Left, Top, Substr);
       end;
       for I := 0 to Strings.Count -1 do
-        StrDispose(Strings[I]);
+        StrDispose(PChar(Strings[I]));
       Strings.Free;
     end;
 

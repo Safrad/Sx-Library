@@ -148,9 +148,7 @@ var
 begin
   if Msg.Msg = WM_TIMER then
   begin
-{$WARNINGS OFF}
     Timer := TSimpleTimer(Msg.wParam);
-{$WARNINGS ON}
     if Timer.FAutoDisable then
       Timer.Stop(True);
     // Call OnTimer event method if assigned
@@ -213,9 +211,7 @@ end;
 
 procedure TSimpleTimer.Initialize(AInterval: Cardinal; AOnTimer: TNotifyEvent);
 begin
-{$WARNINGS OFF}
   FId := UINT(Self);         // Use Self as id in call to SetTimer and callback method
-{$WARNINGS ON}
   FAutoDisable := False;
   FEnabled := False;
   FInterval := AInterval;
