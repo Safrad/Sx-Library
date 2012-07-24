@@ -2,25 +2,45 @@ unit uFileFactory;
 
 interface
 
-uses uObjectFactory;
+uses
+  Classes,
+  uObjectFactory;
 
 type
   TFileFactory = class(TObjectFactory)
   private
-    FPath: string;
+    FPaths: TStringList;
     procedure SetPath(Value: string);
+    function GetPath: string;
+  public
+    constructor Create;
   published
-    property Path: string read FPath write SetPath;
+    property Path: string read GetPath write SetPath;
+    property Paths: TStringList read FPaths;
   end;
 
 implementation
 
 { TFileFactory }
 
+constructor TFileFactory.Create;
+begin
+  inherited;
+  FPaths := TStringList.Create;
+end;
+
+function TFileFactory.GetPath: string;
+begin
+  if FPaths.Count <= 0 then
+    Result := ''
+  else
+    Result := FPaths[0];
+end;
+
 procedure TFileFactory.SetPath(Value: string);
 begin
-  if Value <> FPath then
-    FPath := Value;
+  FPaths.Clear;
+  FPaths.Add(Value);
 end;
 
 end.
