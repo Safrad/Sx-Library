@@ -63,8 +63,8 @@ function HLSToRGB(C: THLSColor): TRGBA;
 
 function ColorDiv(Color: TColor; const D: Integer): TColor;
 function ColorRB(C: TColor): TColor;
-function LighterColor(Color: TColor): TColor;
-function DarkerColor(Color: TColor): TColor;
+function LighterColor(Color: TColor; const Offset: SG = 64): TColor;
+function DarkerColor(Color: TColor; const Offset: SG = 64): TColor;
 function GrayColor(X: SG): TColor;
 function SpectrumColor(X: SG): TColor;
 function SpectrumColor2(X: SG): TColor;
@@ -358,22 +358,22 @@ begin
 	TRGBA(Result).A := 0;
 end;
 
-function LighterColor(Color: TColor): TColor;
+function LighterColor(Color: TColor; const Offset: SG = 64): TColor;
 var
 	HLS: THLSColor;
 begin
 	HLS := RGBToHLS(TRGBA(ColorToRGB(Color)));
-	HLS.L := Min(255, HLS.L + 64);
+	HLS.L := Min(255, HLS.L + Offset);
 	Result := TColor(HLSToRGB(HLS));
 //	Result := ColorDiv(Color, 4 * 65536 div 3);
 end;
 
-function DarkerColor(Color: TColor): TColor;
+function DarkerColor(Color: TColor; const Offset: SG = 64): TColor;
 var
 	HLS: THLSColor;
 begin
 	HLS := RGBToHLS(TRGBA(ColorToRGB(Color)));
-	HLS.L := Max(0, HLS.L - 64);
+	HLS.L := Max(0, HLS.L - Offset);
 	Result := TColor(HLSToRGB(HLS));
 //	Result := ColorDiv(Color, 2 * 65536 div 3);
 end;
