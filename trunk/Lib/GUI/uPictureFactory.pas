@@ -105,12 +105,12 @@ begin
   begin
     C.R := Min($7F + Gradient, 254);
     C.G := C.R;
-    C.B := C.B;
+    C.B := C.R;
     C.A := 0;
     Co[0] := C.L;
     C.R := Max($7F - Gradient, 1);
     C.G := C.R;
-    C.B := C.B;
+    C.B := C.R;
     C.A := 0;
     Co[1] := C.L;
     Co[2] := Co[0];
