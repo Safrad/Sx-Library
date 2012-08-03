@@ -25,7 +25,8 @@ interface
 
 uses
 	SysUtils, Windows,
-	uTypes, uStrings;
+	uTypes, uStrings,
+  uBackup;
 
 const
 	{
@@ -86,6 +87,7 @@ type
 		FTempFileName: TFileName;
 
 		FMode: TFileMode;
+    FBackupFolder: TBackupFolder;
 
 		// For Read(ln), Write(ln) only
 		FBuffer: array of AnsiChar;
@@ -117,6 +119,7 @@ type
 		property FilePos: U8 read FFilePos;
 		property FileSize: U8 read FFileSize;
 		property Opened: BG read IsOpened;
+    property BackupFolder: TBackupFolder read FBackupFolder write FBackupFolder;
 		constructor Create;
 		destructor Destroy; override;
 		function Open(const FileName: TFileName; const Mode: TFileMode;
@@ -159,6 +162,7 @@ begin
 	inherited Create;
 	FHandle := INVALID_HANDLE_VALUE;
 	FProtection := True;
+  FBackupFolder := bfNone;
 	FDefaultCharset := fcAnsi;
 	FCharset := DefaultFileCharset;
 end;
@@ -888,7 +892,10 @@ LRetry :
 			else
 			begin
 				if not FDeleteAfterClose then
+        begin
+          BackupFile(FFileName, FBackupFolder);
 					uFiles.CopyFile(FTempFileName, FFileName, False);
+        end;
 			end;
 			DeleteFileEx(FTempFileName);
 		end
