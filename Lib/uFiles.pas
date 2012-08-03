@@ -69,7 +69,6 @@ function NewFileOrDirEx(var FileOrDir: string): BG;
 function CopyFileDateTime(const Source, Dest: string): BG;
 function CopyDirOnly(const Source, Dest: string): BG;
 function CopyDir(const Source, Dest: string; const Attribute: SG = faAnyFile): BG;
-procedure BackupFile(const FileName: TFileName);
 
 function DeleteFileEx(const FileName: TFileName): BG;
 function RemoveDirEx(const DirName: string): BG;
@@ -1455,18 +1454,6 @@ begin
 	end;
 	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Source, ErrorCode);
 	SysUtils.FindClose(SearchRec);
-end;
-
-procedure BackupFile(const FileName: TFileName);
-var FileNameD: TFileName;
-begin
-	if FileExists(FileName) = False then Exit;
-	FileNameD := TempDir;
-	if DirectoryExists(FileNameD) = False then
-		CreateDirEx(FileNameD);
-	FileNameD := FileNameD + ExtractFileName(FileName);
-	if NewFileOrDirEx(string(FileNameD)) then
-		uFiles.CopyFile(FileName, FileNameD, True);
 end;
 
 function DeleteFileEx(const FileName: TFileName): BG;
