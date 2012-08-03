@@ -45,6 +45,7 @@ begin
   CheckEquals('2' + ThousandSeparator + '451' + ThousandSeparator + '000' + DecimalSeparator + '789', FToS(2451000.789, ofDisplay));
   CheckEquals('1000', FToS(1000, ofIO));
   CheckEquals('2' + ThousandSeparator + '451' + ThousandSeparator + '000', FToS(2451000, ofDisplay));
+  Index := 0;
 	for i := 0 to MaxNumber do
   begin
     e := TestNumber;
