@@ -6,6 +6,7 @@ uses SysUtils;
 
 type
   TBackupFolder = (
+  	bfNone, // No action
   	bfSame, // *
     bfSub, // *
     bfSubEx, // preferred
@@ -26,7 +27,7 @@ var
 	FileNameD: TFileName;
   DeleteOptions: TDeleteOptions;
 begin
-	if FileExists(FileName) = False then Exit;
+	if (BackupFolder = bfNone) or (FileExists(FileName) = False) then Exit;
   case BackupFolder of
   bfSame: BackupPath := DelFileName(FileName);
   bfSub: BackupPath := DelFileName(FileName) + '~backup\';
