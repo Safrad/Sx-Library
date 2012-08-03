@@ -88,6 +88,7 @@ type
 
 		FMode: TFileMode;
     FBackupFolder: TBackupFolder;
+    FSkipSameData: BG;
 
 		// For Read(ln), Write(ln) only
 		FBuffer: array of AnsiChar;
@@ -113,6 +114,7 @@ type
 		property Charset: TFileCharset read FCharset write FCharset;
 		property DefaultCharset: TFileCharset read FDefaultCharset write FDefaultCharset;
 		property Protection: BG read FProtection write SetProtection;
+		property SkipSameData: BG read FSkipSameData write FSkipSameData;
 		property DeleteAfterClose: BG read FDeleteAfterClose write FDeleteAfterClose;
 		property Handle: THandle read FHandle;
 		property FileName: TFileName read FFileName;
@@ -162,6 +164,7 @@ begin
 	inherited Create;
 	FHandle := INVALID_HANDLE_VALUE;
 	FProtection := True;
+  FSkipSameData := True;
   FBackupFolder := bfNone;
 	FDefaultCharset := fcAnsi;
 	FCharset := DefaultFileCharset;
@@ -861,6 +864,7 @@ label LRetry;
 var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 	ErrorCode: U4;
+  OriginalFileExists: BG;
 begin
 LRetry :
 	Result := False;
@@ -893,8 +897,13 @@ LRetry :
 			begin
 				if not FDeleteAfterClose then
         begin
-          BackupFile(FFileName, FBackupFolder);
-					uFiles.CopyFile(FTempFileName, FFileName, False);
+          OriginalFileExists := FileExists(FFileName);
+          if (SkipSameData = False) or (OriginalFileExists = False) or (not SameFiles(FTempFileName, FFileName)) then
+          begin
+            if OriginalFileExists then
+		          BackupFile(FFileName, FBackupFolder);
+						uFiles.CopyFile(FTempFileName, FFileName, False);
+          end;
         end;
 			end;
 			DeleteFileEx(FTempFileName);

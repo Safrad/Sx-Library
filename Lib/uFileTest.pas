@@ -9,6 +9,7 @@ type
   published
     procedure Test1;
     procedure Test2;
+    procedure TestWriteSameData;
   end;
 
 implementation
@@ -32,7 +33,7 @@ begin
 	// Tests
 	for fc := Low(fc) to High(fc) do
 	begin
-		FileName := CommonTempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
+		FileName := TempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
 		F := TFile.Create;
 		if not (fc in [fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE]) then
 			F.DeleteAfterClose := True;
@@ -91,7 +92,7 @@ begin
 	begin
 		if fc in [fcAnsi, fcUTF8{$if CompilerVersion >= 21} , fcUTF16BE, fcUTF16LE{$ifend}] then
 		begin
-      FileName := CommonTempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
+      FileName := TempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
       WriteStringToFile(FileName, Text, False, fc);
       Count := 0;
       ReadStringsFromFile(FileName, Lines, Count);
@@ -101,6 +102,29 @@ begin
       DeleteFile(FileName);
     end;
   end;
+end;
+
+procedure TFileTest.TestWriteSameData;
+var
+	F: TFile;
+	FileName: TFileName;
+  i: SG;
+begin
+  FileName := TempDir + 'FileTest.txt';
+  for i := 0 to 1 do
+  begin
+    F := TFile.Create;
+    try
+      if F.Open(FileName, fmRewrite) then
+      begin
+        F.Writeln('text');
+        F.Close;
+      end;
+    finally
+      F.Free;
+    end;
+  end;
+  DeleteFile(fileName);
 end;
 
 initialization
