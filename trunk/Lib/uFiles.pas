@@ -1823,6 +1823,7 @@ begin
 		try
   		F.Charset := FileCharset;
       F.Protection := Protection;
+      F.SkipSameData := False;
 			if F.Open(FileName, FileMode, Flags) then
 			begin
 				F.WriteNoConversion(DataA);
@@ -1855,6 +1856,7 @@ begin
 		try
   		F.Charset := FileCharset;
       F.Protection := Protection;
+      F.SkipSameData := False;
 			if F.Open(FileName, FileMode, Flags) then
 			begin
 				F.WriteNoConversion(DataA);
