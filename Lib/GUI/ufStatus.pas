@@ -138,11 +138,11 @@ end;
 
 procedure TfStatus.Init;
 begin
-	EditElapsedTime.Text := MsToStr(ElapsedTime, diSD);
+	EditElapsedTime.Text := MsToStr(ElapsedTime, diSD, 0);
 	if (DGauge.Max > 0) and (DGauge.Position > 0) then
 	begin
-		EditRemainTime.Text := MsToStr(RemainTime, diSD);
-		EditTotalTime.Text := MsToStr(ElapsedTime + RemainTime, diSD);
+		EditRemainTime.Text := MsToStr(RemainTime, diSD, 0);
+		EditTotalTime.Text := MsToStr(ElapsedTime + RemainTime, diSD, 0);
 	end
 	else
 	begin
