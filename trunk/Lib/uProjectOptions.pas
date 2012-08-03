@@ -63,7 +63,7 @@ implementation
 uses
   uStrings, uMath, uOutputFormat,
   XMLDoc, XMLIntf, Variants, IniFiles,
-  uInputFormat, uFiles, uMsg;
+  uInputFormat, uFiles, uBackup, uMsg;
 
 const
   DefaultMinStackSize = 16 * KB;
@@ -202,7 +202,7 @@ begin
 	if FileExists(AFileName) then
 	begin
 		if Save then
-			BackupFile(AFileName);
+			BackupFile(AFileName, bfTemp);
     try
       XML := TXMLDocument.Create(AFileName);
       XML.Active := True;

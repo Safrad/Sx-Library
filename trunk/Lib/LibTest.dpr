@@ -6,7 +6,7 @@ program LibTest;
 {$endif}
 
 uses
-	uFirst,
+  uFirst,
   uTypes,
   Forms,
   TestFrameWork,
@@ -21,7 +21,8 @@ uses
   uStringsTest in 'uStringsTest.pas',
   uCompareTest in 'uCompareTest.pas',
   uFindTest in 'uFindTest.pas',
-  uOutputFormatTest in 'uOutputFormatTest.pas';
+  uOutputFormatTest in 'uOutputFormatTest.pas',
+  uBackupTest in 'uBackupTest.pas';
 
 {$R *.RES}
 
