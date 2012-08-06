@@ -20,6 +20,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Reset;
+    procedure WaitForNewForm;
     procedure SetFormSize(const Form: TForm; const Width, Height: SG);
     procedure SetFormClientSize(const Form: TForm; const Width, Height: SG);
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string = ''); overload;
@@ -187,6 +188,15 @@ begin
 	finally
     BmpD.Free;
   end;
+end;
+
+procedure TScreenshots.WaitForNewForm;
+begin
+  Application.ProcessMessages;
+// Required for Windows 7
+// run "adjust perf"
+// uncheck "Animate windows when minimizing and maximizing"
+//  Sleep(500);
 end;
 
 procedure TScreenshots.TakeScreenshot(const Form: TCustomForm;
