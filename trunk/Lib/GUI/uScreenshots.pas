@@ -5,6 +5,7 @@ interface
 uses
   uTypes,
   uDBitmap,
+  Windows, Graphics,
   Types,
   Controls,
   Forms;
@@ -23,6 +24,7 @@ type
     procedure WaitForNewForm;
     procedure SetFormSize(const Form: TForm; const Width, Height: SG);
     procedure SetFormClientSize(const Form: TForm; const Width, Height: SG);
+    procedure SetWindowColor(const AColor: TColor);
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string = ''); overload;
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string; const HighlightedControls: array of TControl); overload;
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string; const HighlightedControls: array of TControl; const HighlightedTexts: array of string); overload;
@@ -38,8 +40,8 @@ function TakeScreenshots: BG;
 implementation
 
 uses
-  SysUtils, Windows, Graphics,
-  uFiles, uSystemColors, uDrawStyle, uGraph, uDForm;
+  SysUtils,
+  uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uSysInfo;
 
 function TakeScreenshots: BG;
 begin
@@ -53,12 +55,14 @@ begin
 	inherited;
   FPath := AppDataDir + 'screenshots\';
 
-	SetSystemColors([COLOR_BTNFACE, COLOR_MENU], [clSilver, clSilver]);
+  if not Aero then
+    SetWindowColor(clSilver);
 end;
 
 destructor TScreenshots.Destroy;
 begin
-	RestoreSystemColors;
+  if not Aero then
+  	RestoreSystemColors;
 
   inherited;
 end;
@@ -120,10 +124,15 @@ begin
   Form.Height := Height;
 end;
 
+procedure TScreenshots.SetWindowColor(const AColor: TColor);
+begin
+	SetSystemColors([COLOR_BTNFACE, COLOR_MENU], [AColor, AColor]);
+end;
+
 procedure TScreenshots.TakeScreenshot(const Form: TCustomForm;
   const Name: string);
 begin
-   TakeScreenshot(Form, Name, []);
+  TakeScreenshot(Form, Name, []);
 end;
 
 function GetDesktopScreenshot(const R: TRect): TDBitmap;
@@ -153,6 +162,7 @@ var
   BmpD: TDBitmap;
   FileName: TFileName;
   R: TRect;
+  ShowAndClose: BG;
 begin
   CreateDirEx(FPath);
 
@@ -165,8 +175,18 @@ begin
   end
   else
   begin
+    ShowAndClose := Form.Visible = False;
+    if ShowAndClose then
+    begin
+      Form.Show;
+      Screenshots.WaitForNewForm;
+    end;
+
 		R := Form.BoundsRect;
     Bmp := GetDesktopScreenshot(R);
+
+    if ShowAndClose then
+      Form.Close;
   end;
 
   BmpD := TDBitmap.Create;
@@ -205,7 +225,7 @@ end;
 procedure TScreenshots.TakeScreenshot(const Form: TCustomForm;
   const Name: string; const HighlightedControls: array of TControl);
 begin
-   TakeScreenshot(Form, Name, HighlightedControls, []);
+  TakeScreenshot(Form, Name, HighlightedControls, []);
 end;
 
 end.
