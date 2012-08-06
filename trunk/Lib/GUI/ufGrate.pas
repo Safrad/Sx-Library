@@ -121,13 +121,15 @@ begin
 	Background := baUser;
 	MenuSet(PopupMenu1);
 
-	MainIni.RegisterRW(RWOptions);
+  if MainIni <> nil then
+  	MainIni.RegisterRW(RWOptions);
 	FullScreen := FullScreen1.Checked;
 end;
 
 procedure TfGrate.FormDestroy(Sender: TObject);
 begin
-	MainIni.UnregisterRW(RWOptions);
+  if MainIni <> nil then
+  	MainIni.UnregisterRW(RWOptions);
 end;
 
 procedure TfGrate.Centered1Click(Sender: TObject);
