@@ -30,6 +30,9 @@ type
     property Path: string read FPath write FPath;
   end;
 
+var
+  Screenshots: TScreenshots;
+
 function TakeScreenshots: BG;
 
 implementation
