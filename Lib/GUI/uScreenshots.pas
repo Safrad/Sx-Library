@@ -24,6 +24,7 @@ type
     procedure WaitForNewForm;
     procedure SetFormSize(const Form: TForm; const Width, Height: SG);
     procedure SetFormClientSize(const Form: TForm; const Width, Height: SG);
+    procedure SetBackgroundColor(const AColor: TColor);
     procedure SetWindowColor(const AColor: TColor);
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string = ''); overload;
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string; const HighlightedControls: array of TControl); overload;
@@ -41,7 +42,7 @@ implementation
 
 uses
   SysUtils,
-  uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uSysInfo;
+  uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uSysInfo, ufGrate;
 
 function TakeScreenshots: BG;
 begin
@@ -61,6 +62,8 @@ end;
 
 destructor TScreenshots.Destroy;
 begin
+  FreeAndNil(fGrate);
+
   if not Aero then
   	RestoreSystemColors;
 
@@ -109,6 +112,16 @@ end;
 procedure TScreenshots.Reset;
 begin
   FUnnamedIndex := 0;
+end;
+
+procedure TScreenshots.SetBackgroundColor(const AColor: TColor);
+begin
+  fGrate := TfGrate.Create(nil);
+	fGrate.GrateColor := AColor;
+	fGrate.BackgroundColor := AColor;
+	fGrate.Show;
+  fGrate.SendToBack;
+	fGrate.Repaint;
 end;
 
 procedure TScreenshots.SetFormClientSize(const Form: TForm; const Width,
