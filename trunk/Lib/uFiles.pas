@@ -195,7 +195,7 @@ begin
 
 	ResultCount := 0;
 	i := 1;
-	while i < Length(Source) do
+	while i <= Length(Source) do
 	begin
 		if Source[i] = CharSpace then
 		begin
