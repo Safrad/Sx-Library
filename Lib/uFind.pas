@@ -264,7 +264,7 @@ end;
 
 function SearchHamming(const Pattern, Text: AnsiString; ErrorLen: SG = 0): SG;
 const
-	Empty = $FFFFFFFFFFFFFFFF;
+	Empty = U8($FFFFFFFFFFFFFFFF);
 var
 	R: array[0..7] of U8;
 	D: array[AnsiChar] of U8;
