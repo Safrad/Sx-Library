@@ -53,8 +53,6 @@ type
     property FileMask: string read FFileMask write FFileMask;
     property DirMask: string read FDirMask write FDirMask;
     property AllMask: string write SetAllMask;
-	published
-
 	end;
 
 implementation

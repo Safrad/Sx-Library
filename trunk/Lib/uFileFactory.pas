@@ -16,7 +16,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-  published
+
     property Path: string read GetPath write SetPath;
     property Paths: TStringList read FPaths;
     property AllowedExtensions: TStringList read FAllowedExtensions;
