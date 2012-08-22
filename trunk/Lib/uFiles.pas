@@ -3,7 +3,7 @@ unit uFiles;
 interface
 
 uses
-	uTypes, uStrings, uFile,
+	uTypes, uStrings, uFile, uBackup,
 	{$ifndef Console}Dialogs,{$endif}
 	SysUtils, Windows;
 
@@ -90,8 +90,8 @@ function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG
 function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
 function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
 function ReadStringFromFile(const FileName: TFileName; const Limit: U8): string; overload;
-function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True): BG; overload;
-function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True): BG; overload;
+function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG; overload;
+function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG; overload;
 
 function ShortToLongFileName(const ShortName: string): string;
 function ShortToLongPath(ShortName: string): string;
@@ -1802,7 +1802,7 @@ begin
 	end;
 end;
 
-function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True): BG;
+function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG;
 var
 	F: TFile;
 	FileMode: TFileMode;
@@ -1824,6 +1824,7 @@ begin
   		F.Charset := FileCharset;
       F.Protection := Protection;
       F.SkipSameData := False;
+      F.BackupFolder := BackupFolder;
 			if F.Open(FileName, FileMode, Flags) then
 			begin
 				F.WriteNoConversion(DataA);
@@ -1836,7 +1837,7 @@ begin
 	end;
 end;
 
-function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True): BG;
+function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG;
 var
 	F: TFile;
 	FileMode: TFileMode;
@@ -1857,6 +1858,7 @@ begin
   		F.Charset := FileCharset;
       F.Protection := Protection;
       F.SkipSameData := False;
+      F.BackupFolder := BackupFolder;
 			if F.Open(FileName, FileMode, Flags) then
 			begin
 				F.WriteNoConversion(DataA);
