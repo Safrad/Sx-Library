@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{8b605f07-f33d-404c-a359-6cb6a89d9e57}</ProjectGuid>
 			<MainSource>CoolTrayIcon_XE.dpk</MainSource>
@@ -26,7 +26,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_BplOutput>$(IFER)\Delphi libraries\CoolTrayIcon</DCC_BplOutput>
+			<DCC_BplOutput>.</DCC_BplOutput>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Description>CoolTrayIcon and Friends</DCC_Description>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
@@ -42,7 +42,7 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_BplOutput>$(IFER)\Delphi libraries\CoolTrayIcon</DCC_BplOutput>
+			<DCC_BplOutput>.</DCC_BplOutput>
 			<Version>7.0</Version>
 		</PropertyGroup>
 		<ProjectExtensions>
