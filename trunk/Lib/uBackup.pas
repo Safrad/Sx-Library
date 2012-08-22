@@ -30,16 +30,27 @@ begin
 	if (BackupFolder = bfNone) or (FileExists(FileName) = False) then Exit;
   case BackupFolder of
   bfSame: BackupPath := DelFileName(FileName);
-  bfSub: BackupPath := DelFileName(FileName) + '~backup\';
-  bfSubEx: BackupPath := DelFileName(FileName) + '~backup\' + ExtractFileName(FileName) + '\';
+  bfSub:
+  begin
+    BackupPath := DelFileName(FileName) + '~backup\';
+  	if DirectoryExists(BackupPath) = False then
+	  	CreateDirEx(BackupPath);
+  end;
+  bfSubEx:
+  begin
+    BackupPath := DelFileName(FileName) + '~backup\';
+  	if DirectoryExists(BackupPath) = False then
+	  	CreateDirEx(BackupPath);
+    BackupPath := BackupPath + ExtractFileName(FileName) + '\';
+  	if DirectoryExists(BackupPath) = False then
+	  	CreateDirEx(BackupPath);
+  end;
   bfTemp: BackupPath := TempDir;
   end;
   OriginalFileName := ExtractFileName(FileName);
   if BackupFolder = bfSame then
 	  OriginalFileName := '~' + OriginalFileName;
 
-	if DirectoryExists(BackupPath) = False then
-		CreateDirEx(BackupPath);
 	FileNameD := BackupPath + OriginalFileName;
 	if NewFileOrDirEx(string(FileNameD)) then
 		uFiles.CopyFile(FileName, FileNameD, True);
