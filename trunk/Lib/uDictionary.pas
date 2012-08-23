@@ -58,6 +58,10 @@ type
 		procedure TranslateForm(const Form: TForm);
 		procedure TranslateComponent(const Component: TComponent);
 		procedure TranslateMenu(const Src: TMenuItem);
+    {$ELSE}
+		procedure TranslateForm(const Form: TObject);
+		procedure TranslateComponent(const Component: TObject);
+		procedure TranslateMenu(const Src: TObject);
 		{$ENDIF}
 		procedure TranslateFile(FileName: TFileName);
     property LanguageIndex: SG read FLanguageIndex write SetLanguageIndex;
@@ -693,6 +697,21 @@ begin
 			TranslateMenu(Src[i]);
 		end;
 	end;
+end;
+{$ELSE}
+procedure TDictionary.TranslateForm(const Form: TObject);
+begin
+  // No Code
+end;
+
+procedure TDictionary.TranslateComponent(const Component: TObject);
+begin
+  // No Code
+end;
+
+procedure TDictionary.TranslateMenu(const Src: TObject);
+begin
+  // No Code
 end;
 {$ENDIF}
 

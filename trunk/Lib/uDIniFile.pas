@@ -69,14 +69,14 @@ type
 		procedure WriteNum(const Section, Ident: string; Value: S4); overload;
 		procedure WriteNum(const Section, Ident: string; Value: S8); overload;
 		procedure WriteNum(const Section, Name: string; Value: FA); overload;
-{$IFNDEF Console}
+
 		function ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteDate(const Section, Name: string; Value: TDateTime);
 		function ReadTime(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteTime(const Section, Name: string; Value: TDateTime);
 		function ReadDateTime(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteDateTime(const Section, Name: string; Value: TDateTime);
-{$ENDIF}
+
 		// RW
 		procedure RWString(const Section, Ident: string; var Value: string; const Save: BG);
 		procedure RWMultilineString(const Section, Ident: string; var Value: string; const Save: BG);
@@ -103,11 +103,11 @@ type
 		procedure RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
 			overload;
 		procedure RWPoint(const Section, Ident: string; var Value: TPoint; const Save: BG);
-{$IFNDEF Console}
+
 		procedure RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		procedure RWTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		procedure RWDateTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
-{$ENDIF}
+
 		function RWStringF(const Section, Ident: string; const SaveVal, DefVal: string; const Save: BG)
 			: string; // deprecated;
 		function RWSGF(const Section, Ident: string; const SaveVal, DefVal: SG; const Save: BG): SG;
@@ -168,6 +168,14 @@ type
 		procedure RWButton(const Section: string; Button: TDButton; const Save: BG);
 		procedure RWCheckBox(const Section: string; CheckBox: TCheckBox; const Save: BG);
 		// procedure RWMemo(const Section: string; Memo: TMemo; const Save: BG);
+{$ELSE}
+		procedure RWFormPos(const Form: TObject; const Save: BG);
+		procedure RWFormPosV(const Form: TObject; const Save: BG);
+
+		procedure RWComboBox(const Section: string; ComboBox: TObject; const Save: BG);
+		procedure RWEdit(const Section: string; Edit: TObject; const Save: BG);
+		procedure RWButton(const Section: string; Button: TObject; const Save: BG);
+		procedure RWCheckBox(const Section: string; CheckBox: TObject; const Save: BG);
 {$ENDIF}
 		property SectionCount: SG read FSectionCount;
 	end;
@@ -396,7 +404,6 @@ procedure TDIniFile.WriteNum(const Section, Name: string; Value: FA);
 begin
 	WriteString(Section, Name, FToS(Value, ofIO));
 end;
-{$IFNDEF Console}
 
 function TDIniFile.ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 var
@@ -445,7 +452,6 @@ procedure TDIniFile.WriteDateTime(const Section, Name: string; Value: TDateTime)
 begin
 	WriteString(Section, Name, DateTimeToS(Value, -3, ofIO));
 end;
-{$ENDIF}
 
 function TDIniFile.GetSectionIndex(const Section: string): Integer;
 var
@@ -938,7 +944,6 @@ begin
 		Value.Y := ReadSGFast(Line, InLineIndex);
 	end;
 end;
-{$IFNDEF Console}
 
 procedure TDIniFile.RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 begin
@@ -975,7 +980,6 @@ begin
 		WriteDateTime(Section, Ident, Value);
 	end;
 end;
-{$ENDIF}
 
 procedure TDIniFile.RWString(const Section, Ident: string; var Value: string; const Save: BG);
 begin
@@ -1470,6 +1474,37 @@ end;
 	Memo.OnChange := NotifyEvent;
 	end;
 	end; }
+{$ELSE}
+procedure TDIniFile.RWFormPos(const Form: TObject; const Save: BG);
+begin
+  // No Code
+end;
+
+procedure TDIniFile.RWFormPosV(const Form: TObject; const Save: BG);
+begin
+  // No Code
+end;
+
+procedure TDIniFile.RWComboBox(const Section: string; ComboBox: TObject; const Save: BG);
+begin
+  // No Code
+end;
+
+procedure TDIniFile.RWEdit(const Section: string; Edit: TObject; const Save: BG);
+begin
+  // No Code
+end;
+
+procedure TDIniFile.RWButton(const Section: string; Button: TObject; const Save: BG);
+begin
+  // No Code
+end;
+
+procedure TDIniFile.RWCheckBox(const Section: string; CheckBox: TObject; const Save: BG);
+begin
+  // No Code
+end;
+
 {$ENDIF}
 
 procedure TDIniFile.RWData(const Write: BG);

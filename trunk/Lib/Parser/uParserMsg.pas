@@ -29,7 +29,11 @@ type
 		procedure Clear;
 		procedure ShowAndClear(const FileName: TFileName = '');
 		function ToString: string;
-		{$ifndef Console}procedure ToStrings(const Lines: TStrings);{$endif}
+		{$ifndef Console}
+    procedure ToStrings(const Lines: TStrings);
+    {$else}
+    procedure ToStrings(const Lines: TObject);
+    {$endif}
 		property Messages: TData read Data;
 		property Count: SG read GetCount;
 	end;
@@ -216,6 +220,11 @@ begin
 	finally
 		Lines.EndUpdate;
 	end;
+end;
+{$else}
+procedure TParserMessages.ToStrings(const Lines: TObject);
+begin
+  // No Code
 end;
 {$endif}
 
