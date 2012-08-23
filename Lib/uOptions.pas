@@ -67,7 +67,7 @@ implementation
 uses
 	SysUtils, Math,
 	uInputFormat, uOutputFormat,
-	uMath, uStrings, uColor;
+	uMath, uStrings{$ifndef Console}, uColor{$endif};
 
 procedure InitOptionNames(TypeInfo: PTypeInfo; var Options: array of TOption);
 var
@@ -232,6 +232,7 @@ begin
 		begin
 			Result := IntToStr(P.Num);
 		end;
+{$ifndef Console}
 	vsColor:
 		begin
 			try
@@ -243,6 +244,7 @@ begin
 				UseThousandSeparator := True;
 			end;
 		end;
+{$endif}
 	vsFloat:
 		Result := FToS(P.Float, ofIO);
 	vsCombo:
@@ -293,8 +295,10 @@ begin
 	vsSpin, vsTime, vsColor:
 		begin
 			Result.Num := StrToValI(s, False, E.Minimum, E.Default, E.Maximum, 1);
+{$ifndef Console}
 			if E.Typ = vsColor then
 				Result.Num := ColorRB(Result.Num);
+{$endif}
 		end;
 	vsFloat:
 		begin

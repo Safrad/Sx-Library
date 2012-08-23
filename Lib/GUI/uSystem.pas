@@ -212,6 +212,7 @@ var
 
 function SelectFile(var FileName: TFileName; const browseTitle: string = ''; const Filter: string = ''; const Save: BG = False): BG;
 begin
+{$ifndef Console}
 	if Save then
 	begin
 		if SaveDialog = nil then
@@ -238,6 +239,9 @@ begin
 		OpenDialog.Title := browseTitle;
 		Result := ExecuteDialog(OpenDialog, FileName);
 	end;
+{$else}
+  Result := False;
+{$endif}
 end;
 
 function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG;

@@ -36,7 +36,6 @@ function ErrorCodeToStr(const ErrorCode: U4): string;
 const
 	ErrorCodeStr = 'Error Code';
 
-{$IFNDEF Console}
 type
 	TDlgBtn = (mbOK, mbYes, mbYesToAll, mbRetry, mbIgnore, mbAbort, mbDelete, mbDeleteAll, mbNo,
 		mbNoToAll, mbCancel, mbAll, mbHelp, mbClose);
@@ -49,7 +48,7 @@ const
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
-{$ENDIF}
+
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 function IOErrorRetry(var FileName: TFileName; const ErrorCode: U4): BG;
 procedure IOErrorMessage(FileName: TFileName; const ErrorMsg: string);
@@ -207,19 +206,25 @@ begin
 	DelBESpace(Result);
 	Result := ErrorCodeStr + CharSpace + IntToStr(ErrorCode) + ' - ' + Result;
 end;
-{$IFNDEF Console}
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
+{$IFNDEF Console}
 	Result := MessageD(Text, mlConfirmation, Buttons);
+{$ELSE}
+  Result := mbCancel;
+{$ENDIF}
 end;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn;
 begin
+{$IFNDEF Console}
 	Result := MessageD(Text, Param, mlConfirmation, Buttons);
+{$ELSE}
+  Result := mbCancel;
+{$ENDIF}
 end;
 
-{$ENDIF}
 
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 begin
