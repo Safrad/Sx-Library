@@ -172,6 +172,8 @@ type
 		procedure RWFormPos(const Form: TObject; const Save: BG);
 		procedure RWFormPosV(const Form: TObject; const Save: BG);
 
+		procedure RWMenuItem(const Section: string; MenuItem: TObject; const Save: BG);
+
 		procedure RWComboBox(const Section: string; ComboBox: TObject; const Save: BG);
 		procedure RWEdit(const Section: string; Edit: TObject; const Save: BG);
 		procedure RWButton(const Section: string; Button: TObject; const Save: BG);
@@ -1481,6 +1483,11 @@ begin
 end;
 
 procedure TDIniFile.RWFormPosV(const Form: TObject; const Save: BG);
+begin
+  // No Code
+end;
+
+procedure TDIniFile.RWMenuItem(const Section: string; MenuItem: TObject; const Save: BG);
 begin
   // No Code
 end;
