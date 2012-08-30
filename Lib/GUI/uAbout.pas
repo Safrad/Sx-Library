@@ -1,12 +1,18 @@
 unit uAbout;
 
+{$ifndef Console}
+{$ifopt d-}
+  {$define FastMMUsageTracker}
+{$endif}
+{$endif}
+
 interface
 
 uses
 	uDForm, uTypes, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
-  {$ifopt d-}
+  {$ifdef FastMMUsageTracker}
   FastMMUsageTracker,
   {$endif}
 	uDWinControl;
@@ -373,7 +379,7 @@ end;
 
 procedure TfAbout.ButtonMemoryStatusClick(Sender: TObject);
 begin
-  {$ifopt d-}
+  {$ifdef FastMMUsageTracker}
 	ShowFastMMUsageTracker;
   {$endif}
 end;
