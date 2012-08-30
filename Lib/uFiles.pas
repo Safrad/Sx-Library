@@ -38,7 +38,8 @@ function ShortDir(const Dir: string): string;
 
 function RemoveEV(const Dir: string): string; overload;
 function RemoveEV(Dir: string; const Environment: array of TStringPair): string; overload;
-function ExpandDir(Dir: string): string;
+function ExpandDir(const Dir: string): string;
+function ExpandDirCmd(const Dir: string): string;
 function DelFileExt(const FName: string): string;
 function DelFileName(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
@@ -482,7 +483,7 @@ begin
 	Result := Dir;
 end;
 
-function ExpandDir(Dir: string): string;
+function ExpandCustomDir(Dir: string; const WorkDir: string): string;
 begin
 	if Length(Dir) = 0 then
 		Result := WorkDir
@@ -518,6 +519,16 @@ begin
 			// Relative path
 			Result := ExpandFileName(WorkDir + Dir);
 	end;
+end;
+
+function ExpandDir(const Dir: string): string;
+begin
+  Result := ExpandCustomDir(Dir, WorkDir);
+end;
+
+function ExpandDirCmd(const Dir: string): string;
+begin
+  Result := ExpandCustomDir(Dir, StartDir);
 end;
 
 function DelFileExt(const FName: string): string;
