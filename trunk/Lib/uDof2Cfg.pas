@@ -63,7 +63,7 @@ begin
 		Data := Data + '-D' + ProjectInfo.Conditionals + FileSep;
 
   Data := Data + '-$M' + IntToStr(ProjectInfo.MinStackSize) + ',' + IntToStr(ProjectInfo.MaxStackSize) + FileSep;
-  Data := Data + '-$K' + NumToStr(ProjectInfo.ImageBase, 16) + FileSep;
+  Data := Data + '-K$' + NumToStr(ProjectInfo.ImageBase, 16) + FileSep;
   FileName := DataDir + 'default.cfg';
   if FileExistsEx(FileName) then
 	  Data := Data +  ReadStringFromFile(FileName);
