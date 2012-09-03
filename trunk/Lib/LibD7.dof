@@ -92,7 +92,7 @@ ExeDescription=Safrad's Components
 [Directories]
 OutputDir=
 UnitOutputDir=
-PackageDLLOutputDir=
+PackageDLLOutputDir=.
 PackageDCPOutputDir=
 SearchPath=
 Packages=VCL50;VCLX50;VCLSMP50;VCLDB50;VCLADO50;ibevnt50;VCLBDE50;VCLDBX50;QRPT50;TEEUI50;TEEDB50;TEE50;DSS50;TEEQR50;VCLIB50;VCLMID50;VCLIE50;INETDB50;INET50;NMFAST50;WEBMID50;dclocx50;dclaxserver50
