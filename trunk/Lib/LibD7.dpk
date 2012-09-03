@@ -35,6 +35,7 @@ requires
   indy;
 
 contains
+	FastMM4,
   ufOpenedFiles in 'GUI\ufOpenedFiles.pas' {fOpenedFiles},
   uDButton in 'GUI\uDButton.pas',
   uDEdit in 'GUI\uDEdit.pas',
