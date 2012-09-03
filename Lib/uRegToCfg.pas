@@ -168,7 +168,6 @@ var
 	Lines: TArrayOfString;
 	LineCount: SG;
 	i, j: Integer;
-	DelphiVersion: TDelphiVersion;
 	Reg: TRegistry;
 	RegPath: string;
 	Paths: string;
@@ -220,7 +219,7 @@ begin
           Path := Lines[i];
           Replace(Path,
             ['%DelphiShortName%', '%DelphiMajorVersion%'],
-            [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
+            [GetDelphiShortName(Compiler.DelphiVersion), IntToStr(GetDelphiMajorVersion(Compiler.DelphiVersion))]);
           if Path ='' then
             Continue;
 
