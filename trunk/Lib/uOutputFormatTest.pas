@@ -36,7 +36,6 @@ end;
 
 procedure TOutputFormatTest.Test;
 var
-  d: Integer;
   s1, s2: string;
   e: Extended;
   i: Integer;
