@@ -15,7 +15,7 @@ type
 implementation
 
 uses
-  SysUtils,
+  
 	uTypes, uFind;
 
 { TFindTest }
