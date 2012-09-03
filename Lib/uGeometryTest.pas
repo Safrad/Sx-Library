@@ -16,7 +16,7 @@ type
 implementation
 
 uses
-  uGeometry, uXYPolygon;
+  uGeometry;
 
 function SameValue(const V1, V2: Extended): Boolean;
 begin
