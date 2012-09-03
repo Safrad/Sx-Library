@@ -1,5 +1,7 @@
 unit uDelete;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses
