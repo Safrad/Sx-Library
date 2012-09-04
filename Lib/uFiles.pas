@@ -130,6 +130,7 @@ function AllSounds: string;
 function SplitStr(const Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
 function Installed: BG;
 function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
+function FindFilesInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileNames;
 
 implementation
 
@@ -2370,6 +2371,34 @@ begin
     if (Length(Dir) <= 3) or (PosEx(PathDelim, Dir, 4) = 0) then
       Break;
     Dir := ParentDirF(Dir);
+  end;
+end;
+
+function FindFilesInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileNames;
+var
+  Dir: string;
+  Dir2: string;
+  FileNameOnly: string;
+  FileName: string;
+begin
+  SetLength(Result, 0);
+  Dir := ExtractFilePath(AFileName);
+  if StartInParentDir then
+    Dir := ParentDirF(Dir);
+  FileNameOnly := ExtractFileName(AFileName);
+  while True do
+  begin
+    FileName := Dir + FileNameOnly;
+    if FileExistsEx(FileName) then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[Length(Result) - 1] := FileName;
+    end;
+    if (Length(Dir) <= 3) or (PosEx(PathDelim, Dir, 4) = 0) then
+      Break;
+    Dir2 := ParentDirF(Dir);
+    if Dir = Dir2 then Break;
+    Dir := Dir2;
   end;
 end;
 
