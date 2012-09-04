@@ -50,7 +50,7 @@ Set the default options for FastMM here.
  freed - failure to do so will result in a large leak report followed by a lot
  of A/Vs. (See the FAQ for more detail.) You may have to combine this option
  with the NeverUninstall option.}
-{.$define UseRuntimePackages}
+{$define UseRuntimePackages}
 
 {-----------------------Concurrency Management Options------------------------}
 
