@@ -710,7 +710,7 @@ PictureFactory.Path := GraphDir;
 
 finalization
 
-{$IFNDEF NoFinalizaton}
+{$IFNDEF NoFinalization}
 FreeAndNil(PictureFactory);
 FreeAndNil(CommonMenu);
 {$ENDIF NoFinalization}

@@ -12665,7 +12665,7 @@ initialization
   DummyThread := TDummyThread.Create(True);
   {$ENDIF}  // 2001.07.23
 {$ENDIF}
-{$ENDIF NoFinalization}
+{$ENDIF NoInitialization}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
