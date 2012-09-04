@@ -17037,12 +17037,14 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-  Initialize;
+  if not IsLibrary then
+    Initialize;
 {$ENDIF NoInitialization}
 
 finalization
 {$IFNDEF NoFinalization}
-  Finalize;
+  if not IsLibrary then
+    Finalize;
 {$ENDIF NoFinalization}
 {$ENDREGION 'Initialization and Finalization'}
 
