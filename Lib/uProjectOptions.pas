@@ -8,7 +8,8 @@ uses
   uTypes,
   SysUtils,
   uProjectInfo, uNProjectVersion,
-  uDelphi;
+  uDelphi,
+  Classes;
 
 type
   TExecutableType = (etProgram, etLibrary, etPackage);
@@ -33,7 +34,7 @@ type
 		PackageDLLOutputDir: string;
 		PackageDCPOutputDir: string;
 		SearchPath: string;
-		Conditionals: string;
+		Conditionals: TStringList;
 		DebugSourceDirs: string; // Not in cfg
 		UsePackages: UG;
     Packages: string;
@@ -53,6 +54,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure AddConditionals(const AConditionals: string);
+
     procedure ReadFromFile(const AFileName: TFileName);
     procedure ReplaceFromFile(const AFileName: TFileName);
     procedure Update;
@@ -71,6 +74,8 @@ const
   DefaultMinStackSize = 16 * KB;
   DefaultMaxStackSize = 1 * MB;
   DefaultImageBase = 4 * MB;
+
+  ConditionalSeparator = ';';
 
 { TProjectOptions }
 
@@ -120,7 +125,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     end
     else if Name = UpperCase('DCC_Define') then
     begin
-      Conditionals := Conditionals + ';' + NodeValue;
+      AddConditionals(NodeValue);
     end
 //		DebugSourceDirs: string; // Not in cfg
 //		 UsePackages
@@ -324,10 +329,14 @@ begin
   MinStackSize := DefaultMinStackSize;
   MaxStackSize := DefaultMaxStackSize;
   ImageBase := DefaultImageBase;
+  Conditionals := TStringList.Create;
+  Conditionals.Duplicates := dupIgnore;
+  Conditionals.Delimiter := ConditionalSeparator;
 end;
 
 destructor TProjectOptions.Destroy;
 begin
+  FreeAndNil(Conditionals);
   FreeAndNil(Version);
   inherited;
 end;
@@ -431,9 +440,7 @@ begin
         SearchPath := SearchPath + ';';
  			SearchPath := SearchPath + IniFile.ReadString(Directories, 'SearchPath', SearchPath);
 
-      if Conditionals <> '' then
-        Conditionals := Conditionals + ';';
-      Conditionals := Conditionals + IniFile.ReadString(Directories, 'Conditionals', Conditionals);
+      AddConditionals(IniFile.ReadString(Directories, 'Conditionals', ''));
       if Overwrite or (DebugSourceDirs = '') then
   			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
       UsePackages := IniFile.ReadInteger(Directories, 'UsePackages', UsePackages);
@@ -513,8 +520,8 @@ begin
 	if SearchPath <> '' then
 		Data := Data + '-R"' + SearchPath + '"' + FileSep;
 
-	if Conditionals <> '' then
-		Data := Data + '-D' + Conditionals + FileSep;
+	if Conditionals.Count > 0 then
+		Data := Data + '-D' + Conditionals.DelimitedText + FileSep;
 
   Data := Data + '-$M' + IntToStr(MinStackSize) + ',' + IntToStr(MaxStackSize) + FileSep;
   Data := Data + '-K$' + NumToStr(ImageBase, 16) + FileSep;
@@ -532,6 +539,20 @@ begin
 	{$ifdef Console}
 	Information('Done.');
 	{$endif}
+end;
+
+procedure TProjectOptions.AddConditionals(const AConditionals: string);
+var
+  i: SG;
+  Conditional: string;
+begin
+  i := 1;
+  while i <= Length(AConditionals) do
+  begin
+    Conditional := ReadToChar(AConditionals, i, ConditionalSeparator);
+    if (Conditional <> '') and (Conditional <> '$(DCC_Define)') then
+			Conditionals.Add(Conditional);
+  end;
 end;
 
 end.
