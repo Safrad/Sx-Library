@@ -827,7 +827,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 	FreeIgnores;
+{$ENDIF NoFinalization}
 end.

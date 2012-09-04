@@ -92,6 +92,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	AddFunction('Logic', 'false', ConstantFalse, 'http://en.wikipedia.org/wiki/Boolean_algebras_canonically_defined');
 	AddFunction('Logic', 'true', ConstantTrue, 'http://en.wikipedia.org/wiki/Truth_value');
 	AddFunction('Logic', 'shl', FunctionShl, 'http://en.wikipedia.org/wiki/Logical_shift');
@@ -101,4 +102,5 @@ initialization
 	AddFunction('Logic', 'nor', FunctionNor, 'http://en.wikipedia.org/wiki/Logical_NOR');
 	AddFunction('Logic', 'xor', FunctionXor, 'http://en.wikipedia.org/wiki/Exclusive_or');
 	AddFunction('Logic', 'xnor', FunctionXnor, 'http://en.wikipedia.org/wiki/Logical_equality');
+{$ENDIF NoInitialization}
 end.

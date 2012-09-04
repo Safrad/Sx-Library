@@ -1069,5 +1069,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
   FormBorder := LgToPx(FormBorder);
+{$ENDIF NoInitialization}
 end.

@@ -5191,6 +5191,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
   {Initialize}
   ChunkClasses := nil;
   {crc table has not being computed yet}
@@ -5201,12 +5202,15 @@ initialization
   {$IFDEF UseDelphi}{$IFDEF RegisterGraphic}
     TPicture.RegisterFileFormat('PNG', 'Portable Network Graphics', TPngImage);
   {$ENDIF}{$ENDIF}
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
   {$IFDEF UseDelphi}{$IFDEF RegisterGraphic}
     TPicture.UnregisterGraphicClass(TPngImage);
   {$ENDIF}{$ENDIF}
   {Free chunk classes}
   FreeChunkClassList;
+{$ENDIF NoFinalization}
 end.
 
 

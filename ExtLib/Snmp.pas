@@ -882,9 +882,13 @@ function SNMP_DBG_realloc; external snmpapilib name 'SnmpUtilMemReAlloc';
 {$IFDEF SNMP_DYNAMIC_LINK}
 {$IFNDEF SNMP_DYNAMIC_LINK_EXPLICIT}
 initialization
+{$IFNDEF NoInitialization}
   LoadSnmp;
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
   UnloadSnmp;
+{$ENDIF NoFinalization}
 {$ENDIF SNMP_DYNAMIC_LINK_EXPLICIT}
 {$ENDIF SNMP_DYNAMIC_LINK}
 

@@ -1447,7 +1447,9 @@ end;
 
 initialization
 
+{$IFNDEF NoInitialization}
 if IsDebug then
 	CheckExpSize(SizeOf(TOpenedFileItem));
+{$ENDIF NoInitialization}
 
 end.

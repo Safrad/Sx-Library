@@ -1911,6 +1911,8 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	InitPerformanceCounter;
+{$ENDIF NoInitialization}
 end.
 

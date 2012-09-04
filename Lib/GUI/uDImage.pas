@@ -1968,7 +1968,9 @@ end;
 
 initialization
 
+{$IFNDEF NoInitialization}
 Screen.Cursors[crHandPoint] := LoadCursor(HInstance, PChar('HANDPOINT'));
 Screen.Cursors[crHandPointDown] := LoadCursor(HInstance, PChar('HANDPOINTDOWN'));
+{$ENDIF NoInitialization}
 
 end.

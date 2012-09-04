@@ -85,5 +85,7 @@ begin
 end;*)
 
 initialization
+{$IFNDEF NoInitialization}
 	FillStdCharTable(StdCharTable);
+{$ENDIF NoInitialization}
 end.

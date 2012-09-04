@@ -169,9 +169,13 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
   GStackCriticalSection := TCriticalSection.Create;
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
   // Dont Free. If shutdown is from another Init section, it can cause GPF when stack
   // tries to access it. App will kill it off anyways, so just let it leak
   FreeAndNil(GStackCriticalSection);
+{$ENDIF NoFinalization}
 end.

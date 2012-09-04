@@ -261,6 +261,7 @@ end;
 	end; *)
 
 initialization
+{$IFNDEF NoInitialization}
 	AddFunction('Variable', 'x', X, 'Variable X.');
 	AddFunction('Conditional Tests', 'IfElse', IfElse, 'http://en.wikipedia.org/wiki/Conditional_(programming)');
 	AddFunction('Arithmetic', 'Equal', Equal, 'http://en.wikipedia.org/wiki/Conditional_(programming)');
@@ -294,5 +295,6 @@ initialization
 	AddFunction('Arithmetic', 'exp', Exp, 'http://en.wikipedia.org/wiki/Exponential_function');
 	AddFunction('Arithmetic', 'fact', Fact, 'http://en.wikipedia.org/wiki/Factorial');
 	AddFunction('Arithmetic', 'gamma', Gamma, 'http://en.wikipedia.org/wiki/Gamma_function');
+{$ENDIF NoInitialization}
 end.
 

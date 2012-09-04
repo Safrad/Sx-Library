@@ -1643,6 +1643,7 @@ end;
 
 
 initialization
+{$IFNDEF NoInitialization}
 {$IFDEF DELPHI_4_UP}
   // Get shell version
   SHELL_VERSION := GetComCtlVersion;
@@ -1650,14 +1651,17 @@ initialization
   if SHELL_VERSION >= ComCtlVersionIE4 then
 {$ENDIF}
     WM_TASKBARCREATED := RegisterWindowMessage('TaskbarCreated');
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
   if Assigned(TrayIconHandler) then
   begin
     // Destroy handler
     TrayIconHandler.Free;
     TrayIconHandler := nil;
   end;
+{$ENDIF NoFinalization}
 
 end.
 

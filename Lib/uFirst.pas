@@ -15,6 +15,7 @@ uses
 implementation
 
 initialization
+{$IFNDEF NoInitialization}
 	{$ifndef LINUX}
 	if IsRelease then
 		NoErrMsg := True;
@@ -22,4 +23,5 @@ initialization
 
 //	if IsDebug then
 //		ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
+{$ENDIF NoInitialization}
 end.

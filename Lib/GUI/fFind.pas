@@ -157,6 +157,10 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(fFindDialog);
+{$ENDIF NoFinalization}
 end.

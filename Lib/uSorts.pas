@@ -295,5 +295,7 @@ end;
 initialization
 
 finalization
+{$IFNDEF NoFinalization}
 	SetLength(MeI, 0);
+{$ENDIF NoFinalization}
 end.

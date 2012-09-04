@@ -278,8 +278,10 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	{$ifndef UNICODE}
 	FillTableUpCaseCz;
 	FillTableLowCaseCz
 	{$endif}
+{$ENDIF NoInitialization}
 end.

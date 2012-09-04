@@ -32,5 +32,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	AddFunction('Physics', 'Gravity', Gravity, 'http://en.wikipedia.org/wiki/Earth''s_gravity'); //'Gravitation [m/s]. If no parameter is specified, it mean on surface on th Earth, otherwise parameter is height in [m].');
+{$ENDIF NoInitialization}
 end.

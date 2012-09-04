@@ -176,7 +176,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	TPicture.RegisterFileFormat('tga', 'Targa Graphics', TTGAImage);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	TPicture.UnregisterGraphicClass(TTGAImage);
+{$ENDIF NoFinalization}
 end.

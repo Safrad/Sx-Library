@@ -90,5 +90,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	InitGTime;
+{$ENDIF NoInitialization}
 end.

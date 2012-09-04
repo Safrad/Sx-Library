@@ -305,7 +305,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(fSplash);
+{$ENDIF NoFinalization}
 end.

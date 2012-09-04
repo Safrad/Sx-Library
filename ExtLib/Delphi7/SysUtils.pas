@@ -16579,6 +16579,7 @@ end;
 {$ENDIF}
 
 initialization
+{$IFNDEF NoInitialization}
   if ModuleIsCpp then HexDisplayPrefix := '0x';
   InitExceptions;
 
@@ -16594,8 +16595,10 @@ initialization
   InitDriveSpacePtr;
 {$ENDIF}
   GetFormatSettings; { Win implementation uses platform id }
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 {$IFDEF MSWINDOWS}
   FreeAndNil(FLanguages);
 {$ENDIF}
@@ -16605,5 +16608,6 @@ finalization
 {$ENDIF}
   FreeTerminateProcs;
   DoneExceptions;
+{$ENDIF NoFinalization}
 
 end.

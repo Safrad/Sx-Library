@@ -283,13 +283,17 @@ end;
 
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
   if Assigned(SimpleTimerHandler) then
   begin
     SimpleTimerHandler.Free;
     SimpleTimerHandler := nil;
   end;
+{$ENDIF NoFinalization}
 
 end.
 

@@ -98,8 +98,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 	if WProc <> nil then
 	begin
 		SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(WProc));
@@ -112,4 +115,5 @@ finalization
 	end;
   if RestartAfterClose then
     ShellExecuteDirectNoExitCode(ExeFileName, ExeParameters);
+{$ENDIF NoFinalization}
 end.

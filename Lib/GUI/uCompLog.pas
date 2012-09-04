@@ -62,10 +62,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	NotifierIndex := (BorlandIDEServices as IOTAServices50).AddNotifier(TAddInNotifier.Create);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	(BorlandIDEServices as IOTAServices50).RemoveNotifier(NotifierIndex);
+{$ENDIF NoFinalization}
 end.
-
-
-

@@ -75,6 +75,8 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	GStartProgramTime := GetTickCount;
+{$ENDIF NoInitialization}
 end.
 

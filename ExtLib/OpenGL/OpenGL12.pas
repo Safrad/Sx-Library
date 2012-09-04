@@ -3370,6 +3370,10 @@ end;
 //------------------------------------------------------------------------------
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
   CloseOpenGL;
+{$ENDIF NoFinalization}
 end.

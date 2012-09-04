@@ -870,5 +870,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	HTMLLastModified := DateTimeToS(Now, 0, ofHTML);
+{$ENDIF NoInitialization}
 end.

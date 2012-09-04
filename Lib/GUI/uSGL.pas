@@ -3393,7 +3393,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	sglInit;
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	sglFinish;
+{$ENDIF NoFinalization}
 end.

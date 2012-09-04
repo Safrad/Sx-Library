@@ -219,8 +219,4 @@ begin
 		Close;
 end;
 
-initialization
-
-finalization
-
 end.

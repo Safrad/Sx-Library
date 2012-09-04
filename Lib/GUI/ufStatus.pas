@@ -178,6 +178,10 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(fStatus);
+{$ENDIF NoFinalization}
 end.

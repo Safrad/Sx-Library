@@ -503,6 +503,8 @@ end;
 
 initialization
 
+{$IFNDEF NoInitialization}
 EnumToStr(TypeInfo(TFileChange), FileChangeNames);
+{$ENDIF NoInitialization}
 
 end.

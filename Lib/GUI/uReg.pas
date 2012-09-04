@@ -526,6 +526,8 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	MyDocuments := ShellFolder('Personal');
 	CorrectDir(MyDocuments);
+{$ENDIF NoInitialization}
 end.

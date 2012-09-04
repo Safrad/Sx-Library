@@ -209,5 +209,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	FillData;
+{$ENDIF NoInitialization}
 end.
