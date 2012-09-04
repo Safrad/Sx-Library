@@ -412,7 +412,7 @@ end;
 initialization
 
 finalization
-{$IFNDEF NoInitialization}
+{$IFNDEF NoFinalization}
 	FreeAndNil(MainLog);
-{$ENDIF NoInitialization}
+{$ENDIF NoFinalization}
 end.
