@@ -71,6 +71,7 @@ implementation
 
 uses
   Windows, SysUtils,
+  uFiles,
   uMath, uStrings, uLog;
 
 const
@@ -282,14 +283,25 @@ var
 begin
   DelphiPath := GetDelphiPath(ADelphiVersion);
 	DelphiPath2 := DelLastChar(DelphiPath);
+  // Tools|Options|Environment Options|Environmental Variables
   Replace(SearchPaths, '$(DELPHI)', DelphiPath2);
   Replace(SearchPaths, '$(BDS)', DelphiPath2);
+  Replace(SearchPaths, '$(BDSDIR)', DelphiPath2);
   Replace(SearchPaths, '$(BDSLIB)', DelphiPath2 + '\Lib');
   Replace(SearchPaths, '$(BDSBIN)', DelphiPath2 + '\Bin');
   Replace(SearchPaths, '$(BDSCOMMON)', DelphiPath2 + '\Bin');
   Replace(SearchPaths, '$(BDSINCLUDE)', DelphiPath2 + '\Include');
+
   Replace(SearchPaths, '$(PLATFORM)', 'Win' + SystemPlatformStr[SystemPlatform]);
   Replace(SearchPaths, '$(Platform)', 'Win' + SystemPlatformStr[SystemPlatform]);
+  Replace(SearchPaths, '$(CONFIG)', 'Release');
+  Replace(SearchPaths, '$(Config)', 'Release');
+
+  Replace(SearchPaths, '$(DCC_Define)', '');
+  Replace(SearchPaths, '$(DCC_UnitAlias)', '');
+
+  Replace(SearchPaths, '$(BDSUSERDIR)', TempDir);
+  Replace(SearchPaths, '$(BDSCOMMONDIR)', TempDir);
   ReplaceEnv(SearchPaths);
   Result := SearchPaths;
 end;
