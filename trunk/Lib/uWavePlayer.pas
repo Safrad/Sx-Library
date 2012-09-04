@@ -886,11 +886,15 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 	if Sins <> nil then
 	begin
 		FreeMem(Sins);
 		Sins := nil;
 	end;
+{$ENDIF NoFinalization}
 end.

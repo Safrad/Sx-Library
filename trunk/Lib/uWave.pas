@@ -1177,7 +1177,9 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	if IsRelease then
 		StopPlayWave; // First time takes long
+{$ENDIF NoInitialization}
 end.
 

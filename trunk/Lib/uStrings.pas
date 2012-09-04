@@ -1331,5 +1331,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	FillHexValue;
+{$ENDIF NoInitialization}
 end.

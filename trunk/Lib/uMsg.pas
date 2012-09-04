@@ -271,6 +271,8 @@ end;
 
 initialization
 
+{$IFNDEF NoInitialization}
 EnumToStr(TypeInfo(TMessageLevel), MessageLevelStr);
+{$ENDIF NoInitialization}
 
 end.

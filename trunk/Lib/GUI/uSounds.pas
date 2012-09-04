@@ -745,12 +745,16 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	Sounds := TData.Create(True);
 	Sounds.ItemSize := SizeOf(TSound);
 	DSounds := TData.Create(True);
 	DSounds.ItemSize := SizeOf(TDSound);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeSounds;
 	FreeAndNil(DSounds);
 	FreeAndNil(Sounds);
+{$ENDIF NoFinalization}
 end.

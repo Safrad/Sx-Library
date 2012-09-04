@@ -17036,10 +17036,14 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
   Initialize;
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
   Finalize;
+{$ENDIF NoFinalization}
 {$ENDREGION 'Initialization and Finalization'}
 
 end.

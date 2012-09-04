@@ -727,10 +727,15 @@ begin
 end;
 
 initialization
+//{$IFNDEF NoInitialization}
 //  Dictionary := TDictionary.Create;
+//{$ENDIF NoInitialization}
+
 
 finalization
 
+//{$IFNDEF NoFinalization}
 //_Finalize;
+//{$ENDIF NoFinalization}
 
 end.

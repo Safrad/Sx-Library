@@ -408,7 +408,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(OpenDialog);
+{$ENDIF NoFinalization}
 end.

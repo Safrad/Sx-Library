@@ -1857,9 +1857,13 @@ end;
 
 initialization
 
+//{$IFNDEF NoInitialization}
 // Initialize;
+//{$ENDIF NoInitialization}
 finalization
 
+{$IFNDEF NoFinalization}
 FreeTree(Root);
+{$ENDIF NoFinalization}
 
 end.

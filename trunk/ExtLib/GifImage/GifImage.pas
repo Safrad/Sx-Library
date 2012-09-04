@@ -12632,6 +12632,7 @@ var
 ////////////////////////////////////////////////////////////////////////////////
 
 initialization
+{$IFNDEF NoInitialization}
 {$IFDEF REGISTER_TGIFIMAGE}
   TPicture.RegisterFileFormat('GIF', sGIFImageFile, TGIFImage);
 	CF_GIF := RegisterClipboardFormat(PChar(sGIFImageFile));
@@ -12664,6 +12665,7 @@ initialization
   DummyThread := TDummyThread.Create(True);
   {$ENDIF}  // 2001.07.23
 {$ENDIF}
+{$ENDIF NoFinalization}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -12671,6 +12673,7 @@ initialization
 //
 ////////////////////////////////////////////////////////////////////////////////
 finalization
+{$IFNDEF NoFinalization}
   ExtensionList.Free;
   AppExtensionList.Free;
 {$IFNDEF VER9x}
@@ -12688,5 +12691,6 @@ finalization
     DummyThread.Free;
   {$ENDIF}  // 2001.07.23
 {$ENDIF}
+{$ENDIF NoFinalization}
 end.
 

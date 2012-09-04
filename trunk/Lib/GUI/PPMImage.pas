@@ -221,7 +221,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	TPicture.RegisterFileFormat('ppm', 'Portable Pixelmap', TPPMImage);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	TPicture.UnregisterGraphicClass(TPPMImage);
+{$ENDIF NoFinalization}
 end.

@@ -251,5 +251,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	FillMemoryStatus(GSysInfo);
+{$ENDIF NoInitialization}
 end.

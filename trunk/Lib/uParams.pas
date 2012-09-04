@@ -222,9 +222,13 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 	SetLength(Params, 0);
 	SetLength(DesParams, 0);
 	SetLength(ParamProcedures, 0);
+{$ENDIF NoFinalization}
 end.

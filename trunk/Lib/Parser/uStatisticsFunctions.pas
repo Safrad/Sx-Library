@@ -252,6 +252,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	AddFunction('Statistics', 'Avg', Avg, 'http://en.wikipedia.org/wiki/Arithmetic_mean');
 	AddFunction('Statistics', 'AvgG', GeometricMean, 'http://en.wikipedia.org/wiki/Geometric_mean');
 	AddFunction('Statistics', 'AvgH', HarmonicMean, 'http://en.wikipedia.org/wiki/Harmonic_mean');
@@ -272,7 +273,5 @@ initialization
 
 	AddFunction('Statistics', 'Random', RandomFunction, 'http://en.wikipedia.org/wiki/Random_function');
 	// http://en.wikipedia.org/wiki/Median
+{$ENDIF NoInitialization}
 end.
-
-
-

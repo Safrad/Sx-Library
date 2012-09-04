@@ -389,11 +389,15 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	CSVFormats := TData.Create;
 	CSVFormats.ItemSize := SizeOf(TCSVFormat);
 	CSVReqFormats := TData.Create;
 	CSVReqFormats.ItemSize := SizeOf(TCSVFormat);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(CSVReqFormats);
 	FreeAndNil(CSVFormats);
+{$ENDIF NoFinalization}
 end.

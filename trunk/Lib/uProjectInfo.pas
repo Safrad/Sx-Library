@@ -186,8 +186,12 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(ThisProjectInfo);
+{$ENDIF NoFinalization}
 end.
 

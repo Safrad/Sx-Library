@@ -547,7 +547,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	Reminder := TDNumber.Create;
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(Reminder);
+{$ENDIF NoFinalization}
 end.

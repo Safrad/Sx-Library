@@ -1289,6 +1289,8 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	GetLocale;
   IOFormatSettings := GetEnglishSetting;
+{$ENDIF NoInitialization}
 end.

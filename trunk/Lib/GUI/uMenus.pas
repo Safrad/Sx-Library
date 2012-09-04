@@ -923,6 +923,7 @@ end;
 
 initialization
 
+{$IFNDEF NoInitialization}
 IconSize := RoundDiv(22 * Screen.PixelsPerInch, 96);
 ImageSize := RoundDiv(16 * Screen.PixelsPerInch, 96);
 MenuBmp := TDBitmap.Create;
@@ -930,14 +931,17 @@ BCanvas := MenuBmp.Canvas;
 BCanvas.Brush.Style := bsSolid;
 BmpD := TDBitmap.Create;
 BmpD.SetSize(ImageSize, ImageSize, clMenu);
+{$ENDIF NoInitialization}
 
 finalization
 
+{$IFNDEF NoFinalization}
 FreeAndNil(ImageList);
 if Assigned(BmpCheck) then
 	DeleteObject(BmpCheck.Handle);
 FreeAndNil(BmpCheck);
 FreeAndNil(BmpD);
 FreeAndNil(MenuBmp);
+{$ENDIF NoFinalization}
 
 end.

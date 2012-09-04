@@ -1019,9 +1019,13 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	LastModeIndex := -1;
 	ActualDriver := -1;
 	RetraceDelay := DefaultRetraceDelay;
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
+{$ENDIF NoFinalization}
 
 end.

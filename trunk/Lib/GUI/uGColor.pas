@@ -884,8 +884,12 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
 
 finalization
 
+//{$IFNDEF NoFinalization}
 //FreeAndNil(fGColor); // TODO -oSafrad : Cause Runtime Error
+//{$ENDIF NoFinalization}
 end.

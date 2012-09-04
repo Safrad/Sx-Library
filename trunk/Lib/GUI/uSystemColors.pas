@@ -39,5 +39,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	StoreSystemColors;
+{$ENDIF NoInitialization}
 end.

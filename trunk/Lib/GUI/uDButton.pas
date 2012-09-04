@@ -735,6 +735,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	if (ColorToRGB(clBtnFace) = ColorToRGB(clActiveBorder)) or
 		(ColorToRGB(clBtnFace) = ColorToRGB(clInactiveBorder)) or
 		(ColorToRGB(clActiveBorder) = ColorToRGB(clInactiveBorder)) then
@@ -750,4 +751,5 @@ initialization
 		CDefaultCancel := MixColors(CDefault, CCancel)
 	end;
 	AddSounds(['BDown', 'BUp'], True);
+{$ENDIF NoInitialization}
 end.

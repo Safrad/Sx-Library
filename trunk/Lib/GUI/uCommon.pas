@@ -703,12 +703,16 @@ DefaultOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalP
 
 CommonMenu := TCommonMenu.Create;
 
+{$IFNDEF NoInitialization}
 PictureFactory := TPictureFactory.Create;
 PictureFactory.Path := GraphDir;
+{$ENDIF NoInitialization}
 
 finalization
 
+{$IFNDEF NoFinalizaton}
 FreeAndNil(PictureFactory);
 FreeAndNil(CommonMenu);
+{$ENDIF NoFinalization}
 
 end.

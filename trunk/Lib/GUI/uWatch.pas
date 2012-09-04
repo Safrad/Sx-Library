@@ -193,9 +193,13 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	WatchedFiles := TData.Create;
 	WatchedFiles.ItemSize := SizeOf(TWatchedFile);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FinalizeData;
 	FreeAndNil(WatchedFiles);
+{$ENDIF NoFinalization}
 end.

@@ -2374,7 +2374,9 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	InitPaths;
 	EnumToStr(TypeInfo(TFileMode), FileModeStr);
+{$ENDIF NoInitialization}
 end.
 

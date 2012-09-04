@@ -11904,9 +11904,12 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	AllPictures := DialogStr(AllPictureExt, AllPictureDes);
 	EnumToStr(TypeInfo(TGraphicStyle), GraphicStyleNames);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(FBitmapF);
 	FreeFontBitmap;
 	if Sins <> nil then
@@ -11914,4 +11917,5 @@ finalization
 		FreeMem(Sins);
 		Sins := nil;
 	end;
+{$ENDIF NoFinalization}
 end.

@@ -335,6 +335,8 @@ begin
 
 initialization
 
+{$IFNDEF NoInitialization}
 EnumToStr(TypeInfo(TVisualStyle), VisualStyleStr);
+{$ENDIF NoInitialization}
 
 end.

@@ -157,10 +157,14 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	InitializeCriticalSection(FCriticalSection);
 	Calls := TData.Create;
 	Calls.ItemSize := SizeOf(TCall);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(Calls);
 	DeleteCriticalSection(FCriticalSection);
+{$ENDIF NoFinalization}
 end.

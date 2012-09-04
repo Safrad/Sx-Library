@@ -894,8 +894,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	Init;
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 //	FreeAndNil(fSysInfo);
 	if NTSystem = False then
 	begin
@@ -910,4 +913,5 @@ finalization
 			FreeAndNil(Reg);
 		end;
 	end;
+{$ENDIF NoFinalization}
 end.

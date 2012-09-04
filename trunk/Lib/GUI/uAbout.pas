@@ -571,9 +571,13 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	Flashs := TData.Create(True);
 	Flashs.ItemSize := SizeOf(TFlash);
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(Flashs);
 //	FreeAndNil(fAbout);
+{$ENDIF NoFinalization}
 end.

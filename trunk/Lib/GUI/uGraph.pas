@@ -570,7 +570,11 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	FontStack := TFont.Create;
+{$ENDIF NoInitialization}
 finalization
+{$IFNDEF NoFinalization}
 	FreeAndNil(FontStack);
+{$ENDIF NoFinalization}
 end.

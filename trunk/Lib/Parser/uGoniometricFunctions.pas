@@ -99,6 +99,7 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
 	AddFunction('Goniometic', 'PI', PIConstant, 'http://en.wikipedia.org/wiki/Pi');
 	AddFunction('Goniometic', 'Sin', Sine, 'http://en.wikipedia.org/wiki/Sine');
 	AddFunction('Goniometic', 'Cos', Cosine, 'http://en.wikipedia.org/wiki/Cosine');
@@ -113,4 +114,5 @@ initialization
 	AddFunction('Goniometic', 'ArcSinh', ArcSinh, 'http://en.wikipedia.org/wiki/Arcsinh');
 	AddFunction('Goniometic', 'ArcCosh', ArcCosh, 'http://en.wikipedia.org/wiki/Arccosh');
 	AddFunction('Goniometic', 'ArcTanh', ArcTanh, 'http://en.wikipedia.org/wiki/Arctanh');
+{$ENDIF NoInitialization}
 end.
