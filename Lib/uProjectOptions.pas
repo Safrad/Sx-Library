@@ -7,7 +7,8 @@ interface
 uses
   uTypes,
   SysUtils,
-  uProjectInfo, uNProjectVersion;
+  uProjectInfo, uNProjectVersion,
+  uDelphi;
 
 type
   TExecutableType = (etProgram, etLibrary, etPackage);
@@ -56,6 +57,7 @@ type
     procedure ReplaceFromFile(const AFileName: TFileName);
     procedure Update;
     function GetOutputFile: TFileName;
+		procedure WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
 	end;
 
 implementation
@@ -63,7 +65,7 @@ implementation
 uses
   uStrings, uMath, uOutputFormat,
   XMLDoc, XMLIntf, Variants, IniFiles,
-  uInputFormat, uFiles, uBackup, uMsg;
+  uInputFormat, uFiles, uFile, uBackup, uMsg;
 
 const
   DefaultMinStackSize = 16 * KB;
@@ -470,6 +472,66 @@ begin
   		ReadProjectVersionFromDof(DelFileExt(AFileName) + '.dof');
 		RWDproj(DProjFileName, False);
   end;
+end;
+
+procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
+  const DelphiVersion: TDelphiVersion;
+  const SystemPlatform: TSystemPlatform);
+var
+	Data: string;
+  SearchPath: string;
+  FileName: TFileName;
+  i: TDelphiVersion;
+begin
+	{$ifdef Console}
+	Information('Writing file %1.', [CfgFileName]);
+	{$endif}
+
+	Data := '';
+
+	if OutputDir <> '' then
+		Data := Data + '-E"' + OutputDir + '"' + FileSep;
+//-LE"c:\program files\borland\delphi6\Projects\Bpl"
+//-LN"c:\program files\borland\delphi6\Projects\Bpl"
+
+	if UnitOutputDir <> '' then
+		Data := Data + '-N"' + ReplaceDelphiVariables(UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
+	if PackageDLLOutputDir <> '' then
+		Data := Data + '-LE"' + ReplaceDelphiVariables(PackageDLLOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
+	if PackageDCPOutputDir <> '' then
+		Data := Data + '-LN"' + ReplaceDelphiVariables(PackageDCPOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
+	if UsePackages <> 0 then
+		Data := Data + '-LU' + Packages + FileSep;
+
+  SearchPath := ReplaceDelphiVariables(SearchPath, DelphiVersion, SystemPlatform);
+	if SearchPath <> '' then
+		Data := Data + '-U"' + SearchPath + '"' + FileSep;
+	if SearchPath <> '' then
+		Data := Data + '-O"' + SearchPath + '"' + FileSep;
+	if SearchPath <> '' then
+		Data := Data + '-I"' + SearchPath + '"' + FileSep;
+	if SearchPath <> '' then
+		Data := Data + '-R"' + SearchPath + '"' + FileSep;
+
+	if Conditionals <> '' then
+		Data := Data + '-D' + Conditionals + FileSep;
+
+  Data := Data + '-$M' + IntToStr(MinStackSize) + ',' + IntToStr(MaxStackSize) + FileSep;
+  Data := Data + '-K$' + NumToStr(ImageBase, 16) + FileSep;
+  FileName := DataDir + 'default.cfg';
+  if FileExistsEx(FileName) then
+	  Data := Data +  ReadStringFromFile(FileName);
+	for i := dvDelphi1 to DelphiVersion do
+  begin
+	  FileName := DataDir + 'default-D' + GetDelphiShortName(DelphiVersion) + '.cfg';
+	  if FileExistsEx(FileName) then
+		  Data := Data +  ReadStringFromFile(FileName);
+  end;
+
+	WriteStringToFile(CfgFileName, Data, False, fcAnsi);
+	{$ifdef Console}
+	Information('Done.');
+	{$endif}
 end;
 
 end.
