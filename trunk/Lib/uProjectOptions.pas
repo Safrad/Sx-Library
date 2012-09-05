@@ -33,8 +33,8 @@ type
 		UnitOutputDir: string; // Replaced to Temp
 		PackageDLLOutputDir: string;
 		PackageDCPOutputDir: string;
-		SearchPath: string;
 		Conditionals: TStringList;
+		SearchPaths: TStringList;
 		DebugSourceDirs: string; // Not in cfg
 		UsePackages: UG;
     Packages: string;
@@ -55,6 +55,7 @@ type
     destructor Destroy; override;
 
     procedure AddConditionals(const AConditionals: string);
+    procedure AddSearchPaths(const ASearchPaths: string);
 
     procedure ReadFromFile(const AFileName: TFileName);
     procedure ReplaceFromFile(const AFileName: TFileName);
@@ -75,7 +76,7 @@ const
   DefaultMaxStackSize = 1 * MB;
   DefaultImageBase = 4 * MB;
 
-  ConditionalSeparator = ';';
+  ProjectListSeparator = ';';
 
 { TProjectOptions }
 
@@ -121,7 +122,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 //		PackageDCPOutputDir: string;
     else if Name = UpperCase('DCC_UnitSearchPath') then
     begin
-      SearchPath := NodeValue;
+      AddSearchPaths(NodeValue);
     end
     else if Name = UpperCase('DCC_Define') then
     begin
@@ -329,14 +330,21 @@ begin
   MinStackSize := DefaultMinStackSize;
   MaxStackSize := DefaultMaxStackSize;
   ImageBase := DefaultImageBase;
+
   Conditionals := TStringList.Create;
   Conditionals.Duplicates := dupIgnore;
   Conditionals.Sorted := True;
-  Conditionals.Delimiter := ConditionalSeparator;
+  Conditionals.Delimiter := ProjectListSeparator;
+
+  SearchPaths := TStringList.Create;
+  SearchPaths.Duplicates := dupIgnore;
+  SearchPaths.Sorted := True;
+  SearchPaths.Delimiter := ProjectListSeparator;
 end;
 
 destructor TProjectOptions.Destroy;
 begin
+  FreeAndNil(SearchPaths);
   FreeAndNil(Conditionals);
   FreeAndNil(Version);
   inherited;
@@ -437,11 +445,10 @@ begin
       if Overwrite or (PackageDCPOutputDir = '') then
   			PackageDCPOutputDir := IniFile.ReadString(Directories, 'PackageDCPOutputDir', PackageDCPOutputDir);
 
-      if SearchPath <> '' then
-        SearchPath := SearchPath + ';';
- 			SearchPath := SearchPath + IniFile.ReadString(Directories, 'SearchPath', SearchPath);
+ 			AddSearchPaths(IniFile.ReadString(Directories, 'SearchPath', ''));
 
       AddConditionals(IniFile.ReadString(Directories, 'Conditionals', ''));
+
       if Overwrite or (DebugSourceDirs = '') then
   			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
       UsePackages := IniFile.ReadInteger(Directories, 'UsePackages', UsePackages);
@@ -487,7 +494,7 @@ procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
   const SystemPlatform: TSystemPlatform);
 var
 	Data: string;
-  SearchPath: string;
+  CfgSearchPath: string;
   FileName: TFileName;
   i: TDelphiVersion;
 begin
@@ -511,15 +518,15 @@ begin
 	if UsePackages <> 0 then
 		Data := Data + '-LU' + Packages + FileSep;
 
-  SearchPath := ReplaceDelphiVariables(SearchPath, DelphiVersion, SystemPlatform);
-	if SearchPath <> '' then
-		Data := Data + '-U"' + SearchPath + '"' + FileSep;
-	if SearchPath <> '' then
-		Data := Data + '-O"' + SearchPath + '"' + FileSep;
-	if SearchPath <> '' then
-		Data := Data + '-I"' + SearchPath + '"' + FileSep;
-	if SearchPath <> '' then
-		Data := Data + '-R"' + SearchPath + '"' + FileSep;
+  CfgSearchPath := ReplaceDelphiVariables(SearchPaths.DelimitedText, DelphiVersion, SystemPlatform);
+	if CfgSearchPath <> '' then
+		Data := Data + '-U"' + CfgSearchPath + '"' + FileSep;
+	if CfgSearchPath <> '' then
+		Data := Data + '-O"' + CfgSearchPath + '"' + FileSep;
+	if CfgSearchPath <> '' then
+		Data := Data + '-I"' + CfgSearchPath + '"' + FileSep;
+	if CfgSearchPath <> '' then
+		Data := Data + '-R"' + CfgSearchPath + '"' + FileSep;
 
 	if Conditionals.Count > 0 then
 		Data := Data + '-D' + Conditionals.DelimitedText + FileSep;
@@ -550,9 +557,23 @@ begin
   i := 1;
   while i <= Length(AConditionals) do
   begin
-    Conditional := ReadToChar(AConditionals, i, ConditionalSeparator);
+    Conditional := ReadToChar(AConditionals, i, ProjectListSeparator);
     if (Conditional <> '') and (Conditional <> '$(DCC_Define)') then
 			Conditionals.Add(Conditional);
+  end;
+end;
+
+procedure TProjectOptions.AddSearchPaths(const ASearchPaths: string);
+var
+  i: SG;
+  SearchPath: string;
+begin
+  i := 1;
+  while i <= Length(ASearchPaths) do
+  begin
+    SearchPath := ReadToChar(ASearchPaths, i, ProjectListSeparator);
+    if (SearchPath <> '') and (SearchPath <> '$(DCC_UnitSearchPath)') then
+			SearchPaths.Add(SearchPath);
   end;
 end;
 
