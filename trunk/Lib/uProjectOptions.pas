@@ -331,6 +331,7 @@ begin
   ImageBase := DefaultImageBase;
   Conditionals := TStringList.Create;
   Conditionals.Duplicates := dupIgnore;
+  Conditionals.Sorted := True;
   Conditionals.Delimiter := ConditionalSeparator;
 end;
 
