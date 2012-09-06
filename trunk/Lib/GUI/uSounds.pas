@@ -243,23 +243,26 @@ begin
 		IniLoaded := False;
 		MainIni.UnregisterRW(TOb.RWOptions);
 	end;
-	if Sounds.Count = 0 then Exit;
-	P := Sounds.GetFirst;
-	for i := 0 to Sounds.Count - 1 do
-	begin
-		FreeAndNil(P.Wave); // Needed!!!
-		Finalize(P^);
-		Sounds.Next(Pointer(P));
-	end;
-	Sounds.Clear;
 
-	D := DSounds.GetFirst;
-	for i := 0 to DSounds.Count - 1 do
-	begin
-		Finalize(D^);
-		DSounds.Next(Pointer(D));
-	end;
-	DSounds.Clear;
+	if Assigned(Sounds) and (Sounds.Count = 0) then
+  begin
+    P := Sounds.GetFirst;
+    for i := 0 to Sounds.Count - 1 do
+    begin
+      FreeAndNil(P.Wave); // Needed!!!
+      Finalize(P^);
+      Sounds.Next(Pointer(P));
+    end;
+    Sounds.Clear;
+
+    D := DSounds.GetFirst;
+    for i := 0 to DSounds.Count - 1 do
+    begin
+      Finalize(D^);
+      DSounds.Next(Pointer(D));
+    end;
+    DSounds.Clear;
+  end;
 	FreeAndNil(WaveBuffer);
 end;
 
