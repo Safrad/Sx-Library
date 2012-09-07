@@ -89,7 +89,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Width = 533
         Height = 481
         DefaultColWidth = 83
-        DefaultRowHeight = 17
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine]
         PopupMenu = smMM4Allocation
         ScrollBars = ssVertical
@@ -192,7 +191,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Width = 533
         Height = 481
         DefaultColWidth = 83
-        DefaultRowHeight = 17
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine]
         PopupMenu = smVMDump
