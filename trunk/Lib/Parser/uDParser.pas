@@ -143,6 +143,7 @@ type
 
 var
 	Root: PNode;
+  KeepRoot: BG = False;
 	TreeSize, MaxBracketDepth, TreeDepth, NodeCount: SG;
 	LinesL, LinesG: SG;
 
@@ -320,6 +321,8 @@ end;
 
 destructor TDParser.Destroy;
 begin
+  if not KeepRoot then
+  	FreeTree(Root);
 	FreeMem(FBuffer);
 	BufString := '';
 	if BufRI > BufRC then
