@@ -466,9 +466,6 @@ var
 begin
  result:=nil;
 
- EnterCriticalSection(fcritical);
- try
-
  assert(FAvailCount<cMaxAvail);
 
  //is there an avail pool?
@@ -502,10 +499,6 @@ begin
   begin
   PushAvail(aPool);
   end;
-
- finally
- LeaveCriticalSection(fcritical);
- end;
 
  //we've acquired small block, can now prepare it outside of lock
  assert(result<>nil);
@@ -576,6 +569,8 @@ function SafeGetMem(Size: Integer): Pointer;
 var
  aBlock:PBlockInfo;
 begin
+  EnterCriticalSection(fcritical);
+  try
  Assert(Size>0);
 
  Result:=nil;
@@ -591,7 +586,9 @@ begin
 
  //and quit
  result:=BlockToPointer(aBlock);
-
+  finally
+   LeaveCriticalSection(fcritical);
+  end;
 end;
 
 function SafeAllocMem(ASize: Cardinal): Pointer;
@@ -642,6 +639,8 @@ function SafeFreeMem(P: Pointer): Integer;
 var
   aBlock:PBlockInfo;
 begin
+try
+  EnterCriticalSection(fcritical);
   Assert(p<>nil);
 
   //on free also check if it held a class. store classname as text in
@@ -661,6 +660,9 @@ begin
    begin
    Result:=FreeSmallBlock(aBlock);
    end;
+ finally
+ LeaveCriticalSection(fcritical);
+ end;
 
 end;
 
