@@ -14,6 +14,7 @@ type
 
 	TDButton = class(TButton)
 	private
+    FLoaded: BG;
 		Bitmap: TDBitmap;
 //    FDefault: Boolean;
 //    FCancel: Boolean;
@@ -105,9 +106,10 @@ procedure Register;
 implementation
 
 uses
+	uDForm,
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
 	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uCommon,
-	uSounds, uSysInfo, uDWinControl;
+	uPictureFactory, uSounds, uSysInfo, uDWinControl;
 
 { TDButton }
 var
@@ -295,8 +297,6 @@ procedure TDButton.CNDrawItem(var Message: TWMDrawItem);
 const
 	Border = 2;
 var
-	FileName: TFileName;
-
 	IsDown, IsDefault: BG;
 	Rec, Recta: TRect;
 	GlyphPos, GlyphSize: TPoint;
@@ -330,20 +330,12 @@ begin
 	PlayButtonSound(IsDown);
 
 	// Glyph
-	if not Assigned(FGlyph) then
+	if (not FLoaded) and (not Assigned(FGlyph)) then
 	begin
-		FGlyph := TDBitmap.Create;
-		FileName := GraphDir + 'Images' + PathDelim + ButtonNameToFileName(Name) + IconExt;
-		if FileExists(FileName) then
-		begin
-			FGlyph.LoadFromFile(FileName);
-			if FGlyph.Height > 0 then
-			if FGlyph.Height + 3 * Border > Height then
-			begin
-				v := Height - 3 * Border;
-				FGlyph.Resize(RoundDiv(FGlyph.Width * v, FGlyph.Height), v);
-			end;
-		end;
+    FLoaded := True;
+		// v := Height - 3 * Border;
+    v := LgToPx(16);
+    FGlyph := PictureFactory.GetBitmap('Images' + PathDelim + ButtonNameToFileName(Name) {+ IconExt}, v, v, True, Color);
 	end;
 
 	// Draw
@@ -394,7 +386,14 @@ begin
 		// Layout
 		// Spacing
 		// Margin
-		GlyphSize := Point(FGlyph.Width, FGlyph.Height);
+    if FGlyph <> nil then
+			GlyphSize := Point(FGlyph.Width, FGlyph.Height)
+    else
+    begin
+    	GlyphSize.X := 0;
+    	GlyphSize.Y := 0;
+    end;
+
 
 	(*	if Length(s) > 0 then
 		begin
@@ -469,10 +468,10 @@ begin
 		TextA := taCenter;
 		TextL := tlCenter;
 
-		if FGlyph.Empty = False then
+		if (FGlyph <> nil) and (FGlyph.Empty = False) then
 		begin
-			Margin := 6;
-			Spacing := 2;
+			Margin := LgToPx(6);
+			Spacing := LgToPx(2);
 
 			if s = '' then
 				GlyphPos.X := (Bitmap.Width - GlyphSize.X + 1) div 2
