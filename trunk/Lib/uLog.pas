@@ -75,7 +75,8 @@ uses
 	Windows, TypInfo;
 
 const
-  MaxLogFileSize = 4 * MB;
+  MinLogFileSize = 4 * MB;
+  MaxLogFileSize = 16 * MB; // > MinLogFileSize
 
 procedure TLog.WriteLine(const Line: string);
 var
@@ -90,6 +91,13 @@ begin
 		if FDirectWrite then
 		begin
 			if not FFile.Opened then Exit;
+
+      if FFile.FileSize + Length(Line) > MaxLogFileSize then
+      begin
+        FLoggingLevel := mlNone;
+      	Exit;
+      end;
+
 			LLog := MainLog;
 			MainLog := nil;
 			try
@@ -102,6 +110,11 @@ begin
 		end
 		else
 		begin
+      if Length(FData) + Length(Line) > MaxLogFileSize then
+      begin
+        FLoggingLevel := mlNone;
+      	Exit;
+      end;
 			FData := FData + Line;
 		end;
 	end;
@@ -133,7 +146,7 @@ begin
 		if Instance = 9 then Exit;
 	end;
 
-	if FFile.FileSize > MaxLogFileSize then
+	if FFile.FileSize >= MinLogFileSize then
 	begin
 		FFile.Close;
 		NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName)), ofIO) + ExtractFileExt(FFileName);
