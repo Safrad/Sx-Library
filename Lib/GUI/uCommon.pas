@@ -83,9 +83,6 @@ uses
 	uWebUpdate, uStartup, uDictionary,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
 
-// Executable file is smaller
-{$SETPEFLAGS IMAGE_FILE_RELOCS_STRIPPED}
-
 type
 	TCommonMenu = class(TObject)
 	private
