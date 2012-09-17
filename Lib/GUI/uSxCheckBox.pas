@@ -32,7 +32,7 @@ uses
 	uDForm;
 
 const
-	Border = 8;
+	Border = 2;
 
 procedure Register;
 begin
@@ -54,11 +54,13 @@ begin
 	if not (csDesigning in ComponentState) then
   begin
     FBorder := TSxLabel.Create(Self);
+    FBorder.AutoSize := False;
     FBorder.SetBounds(Left - LgToPx(Border), Top - LgToPx(Border), Width + 2 * LgToPx(Border), Height + 2 * LgToPx(Border));
     FBorder.Transparent := True;
     FBorder.OnClick := BorderClick;
 
-    Parent.InsertControl(FBorder);
+    if Parent <> nil then
+      Parent.InsertControl(FBorder);
   end;
 end;
 
