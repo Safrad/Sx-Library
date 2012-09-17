@@ -60,6 +60,7 @@ var
   i: SG;
 begin
 	inherited;
+  Contrast := 256;
 	AllowedExtensions.Clear;
 	for i := 0 to Length(PrefferedExt) - 1 do
 		AllowedExtensions.Add(PrefferedExt[i]);
