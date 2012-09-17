@@ -477,9 +477,9 @@ var
 	Ignore: PIgnore;
 	B: SG;
 begin
-  Result := 0;
-  if DisplayDialogs = False then Exit;
-  
+	Result := -1; // If Window X is pressed (None of button pressed), then result is unknown.
+  if not DisplayDialogs then Exit;
+
 	Ignore := nil;
 (*
 	Assert(Length(Text) > 0);
@@ -502,8 +502,6 @@ begin
 	end;
 *)
 
-
-	Result := -1; // If Window X is pressed (None of button pressed), then result is unknown.
 	if Ignores = nil then
 	begin
 		Ignores := TData.Create(True);
