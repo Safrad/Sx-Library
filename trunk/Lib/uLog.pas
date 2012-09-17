@@ -16,10 +16,11 @@ type
     FInWrite: BG;
 		FLoggingLevel: TMessageLevel;
     FLastMessageLevel: TMessageLevel;
+    FMaxLogFiles: SG;
 		procedure WriteLine(const Line: string);
 	public
 		property FileName: TFileName read FFileName;
-		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True);
+		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True; const MaxLogFiles: SG = 0);
 		destructor Destroy; override;
 		procedure Add(const Line: string); overload;
 		procedure Add(const LogTime: TDateTime; const Line: string); overload;
@@ -36,6 +37,7 @@ type
 
 		procedure Flush;
 		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
+		property MaxLogFiles: SG read FMaxLogFiles write FMaxLogFiles;
 	end;
 
 	TLogMessageProcedure = procedure(const ALine: string; const AMessageLevel: TMessageLevel);
@@ -69,7 +71,11 @@ implementation
 uses
 	uParams, uFiles, uCharset,
 	uOutputFormat, uEscape, uStrings, {$ifndef Console}uProjectInfo,{$endif}
+  uDelete,
 	Windows, TypInfo;
+
+const
+  MaxLogFileSize = 4 * MB;
 
 procedure TLog.WriteLine(const Line: string);
 var
@@ -105,16 +111,18 @@ end;
 const
 	IdLine = ';Local Date Time	Type	Message' + FileSep;
 
-constructor TLog.Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True);
+constructor TLog.Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True; const MaxLogFiles: SG = 0);
 var
 	NewFileName: TFileName;
 	Instance: SG;
+	DeleteOptions: TDeleteOptions;
 begin
 	inherited Create;
 	FLoggingLevel := LogLevel;
   FLastMessageLevel := mlNone;
 	FFileName := FileName;
 	FDirectWrite := DirectWrite;
+  FMaxLogFiles := MaxLogFiles;
 
 	FFile := TFile.Create;
   NewFileName := FFileName;
@@ -125,13 +133,23 @@ begin
 		if Instance = 9 then Exit;
 	end;
 
-	if FFile.FileSize > 4 * MB then
+	if FFile.FileSize > MaxLogFileSize then
 	begin
 		FFile.Close;
 		NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName)), ofIO) + ExtractFileExt(FFileName);
 		if FileExists(NewFileName) = False then
 		begin
 			RenameFileEx(FFileName, NewFileName);
+      if MaxLogFiles > 0 then
+      begin
+				DeleteOptions.Mask := '*.log';
+        DeleteOptions.MaxDirs := MaxLogFiles;
+        DeleteOptions.SelectionType := stOld;
+        DeleteOptions.AcceptFiles := True;
+        DeleteOptions.Test := False;
+        DeleteOptions.DisableLog := True;
+      	SxDeleteDirs(ExtractFilePath(FFileName), DeleteOptions);
+			end;
 		end;
 		FFile.Open(FFileName, fmAppend);
 	end;
@@ -405,7 +423,7 @@ begin
 
   InitPaths;
 	CreateDirEx(ExtractFilePath(MainLogFileName));
-	MainLog := TLog.Create(MainLogFileName); //, GetLoggingLevel(GetParamValue('LOG')), True);
+	MainLog := TLog.Create(MainLogFileName, mlInformation, True, 16); //, GetLoggingLevel(GetParamValue('LOG')), True);
   InitializingLog := False;
 end;
 
