@@ -22,6 +22,7 @@ type
 	TProjectOptions = class
   private
     FFileName: TFileName;
+    FEnabled: BG;
     procedure RWDproj(const AFileName: TFileName; const Save: BG);
     procedure ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
     function GetExecutableType(const AFileName: TFileName): TExecutableType;
@@ -29,10 +30,10 @@ type
     ExecutableType: TExecutableType;
 
 		// Directories
-		OutputDir: string;
+		OutputDir: string; // exe, dll
 		UnitOutputDir: string; // Replaced to Temp
-		PackageDLLOutputDir: string;
-		PackageDCPOutputDir: string;
+		PackageDLLOutputDir: string; // bpl
+		PackageDCPOutputDir: string; // dcp
 		Conditionals: TStringList;
 		SearchPaths: TStringList;
 		DebugSourceDirs: string; // Not in cfg
@@ -42,7 +43,8 @@ type
     MinStackSize: UG;
     MaxStackSize: UG;
     ImageBase: UG;
-    RuntimeThemes: UG; // Custom
+    // GUI
+    RuntimeThemes: BG; // New in Delphi 2007
 
     // Version Info
 		Version: TProjectVersion;
@@ -62,6 +64,8 @@ type
     procedure Update;
     function GetOutputFile: TFileName;
 		procedure WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
+
+    property Enabled: BG read FEnabled write FEnabled;
 	end;
 
 implementation
@@ -108,7 +112,11 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     Name := UpperCase(Node.NodeName);
     if Name = UpperCase('DCC_BplOutput') then
     begin
-      OutputDir := NodeValue;
+      PackageDLLOutputDir := NodeValue;
+    end
+    else if Name = UpperCase('DCC_DcpOutput') then
+    begin
+      PackageDCPOutputDir := NodeValue;
     end
     else if Name = UpperCase('DCC_ExeOutput') then
     begin
@@ -118,8 +126,11 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     begin
       UnitOutputDir := NodeValue;
     end
-//		PackageDLLOutputDir: string;
-//		PackageDCPOutputDir: string;
+{   TODO
+		else if Name = UpperCase('DCC_PackageDLLOutput') then
+    	PackageDLLOutput := NodeValue
+    else if Name = UpperCase('DCC_PackageDCPOutputDir') then
+	    PackageDCPOutputDir := NodeValue}
     else if Name = UpperCase('DCC_UnitSearchPath') then
     begin
       AddSearchPaths(NodeValue);
@@ -327,6 +338,11 @@ end;
 
 constructor TProjectOptions.Create;
 begin
+	inherited;
+
+  FEnabled := True;
+  RuntimeThemes := True;
+
   MinStackSize := DefaultMinStackSize;
   MaxStackSize := DefaultMaxStackSize;
   ImageBase := DefaultImageBase;
@@ -391,6 +407,7 @@ end;
 
 function TProjectOptions.GetOutputFile: TFileName;
 begin
+  // TODO PackageDLLOutput
 	if Pos(':', OutputDir) <> 0 then
 		Result := OutputDir
 	else
@@ -409,9 +426,10 @@ end;
 
 procedure TProjectOptions.ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
 const
-	Section = 'Version Info';
-	Directories = 'Directories';
-	Linker = 'Linker';
+	VersionInfoSection = 'Version Info';
+	DirectoriesSectionName = 'Directories';
+	LinkerSectionName = 'Linker';
+	BuildSectionName = 'Build';
 var
 	IniFile: TIniFile;
   ProjectInfoName: TProjectInfoName;
@@ -424,12 +442,18 @@ begin
 
 		IniFile := TIniFile.Create(AFileName);
 		try
+    	if IniFile.SectionExists(BuildSectionName) then
+      begin
+        Enabled := IniFile.ReadBool(BuildSectionName, 'Enabled', Enabled);
+        RuntimeThemes := IniFile.ReadBool(BuildSectionName, 'RuntimeThemes', RuntimeThemes);
+      end;
+
       if Version = nil then
         Version := TProjectVersion.Create;
-			Version.SetSubVersion(svMajor, IniFile.ReadString(Section, 'MajorVer', Version.Major));
-			Version.SetSubVersion(svMinor, IniFile.ReadString(Section, 'MinorVer', Version.Minor));
-			Version.SetSubVersion(svRelease, IniFile.ReadString(Section, 'Release', Version.Release));
-			Version.SetSubVersion(svBuild, IniFile.ReadString(Section, 'Build', Version.Build));
+			Version.SetSubVersion(svMajor, IniFile.ReadString(VersionInfoSection, 'MajorVer', Version.Major));
+			Version.SetSubVersion(svMinor, IniFile.ReadString(VersionInfoSection, 'MinorVer', Version.Minor));
+			Version.SetSubVersion(svRelease, IniFile.ReadString(VersionInfoSection, 'Release', Version.Release));
+			Version.SetSubVersion(svBuild, IniFile.ReadString(VersionInfoSection, 'Build', Version.Build));
       for ProjectInfoName := Low(ProjectInfoName) to High(ProjectInfoName) do
       begin
   			ProjectInfos[ProjectInfoName] := IniFile.ReadString
@@ -437,27 +461,26 @@ begin
       end;
 
       if Overwrite or (OutputDir = '') then
-  			OutputDir := IniFile.ReadString(Directories, 'OutputDir', OutputDir);
+  			OutputDir := IniFile.ReadString(DirectoriesSectionName, 'OutputDir', OutputDir);
       if Overwrite or (UnitOutputDir = '') then
-  			UnitOutputDir := IniFile.ReadString(Directories, 'UnitOutputDir', UnitOutputDir);
+  			UnitOutputDir := IniFile.ReadString(DirectoriesSectionName, 'UnitOutputDir', UnitOutputDir);
       if Overwrite or (PackageDLLOutputDir = '') then
-  			PackageDLLOutputDir := IniFile.ReadString(Directories, 'PackageDLLOutputDir', PackageDLLOutputDir);
+  			PackageDLLOutputDir := IniFile.ReadString(DirectoriesSectionName, 'PackageDLLOutputDir', PackageDLLOutputDir);
       if Overwrite or (PackageDCPOutputDir = '') then
-  			PackageDCPOutputDir := IniFile.ReadString(Directories, 'PackageDCPOutputDir', PackageDCPOutputDir);
+  			PackageDCPOutputDir := IniFile.ReadString(DirectoriesSectionName, 'PackageDCPOutputDir', PackageDCPOutputDir);
 
- 			AddSearchPaths(IniFile.ReadString(Directories, 'SearchPath', ''));
+ 			AddSearchPaths(IniFile.ReadString(DirectoriesSectionName, 'SearchPath', ''));
 
-      AddConditionals(IniFile.ReadString(Directories, 'Conditionals', ''));
+      AddConditionals(IniFile.ReadString(DirectoriesSectionName, 'Conditionals', ''));
 
       if Overwrite or (DebugSourceDirs = '') then
-  			DebugSourceDirs := IniFile.ReadString(Directories, 'DebugSourceDirs', DebugSourceDirs);
-      UsePackages := IniFile.ReadInteger(Directories, 'UsePackages', UsePackages);
-      Packages := IniFile.ReadString(Directories, 'Packages', Packages);
+  			DebugSourceDirs := IniFile.ReadString(DirectoriesSectionName, 'DebugSourceDirs', DebugSourceDirs);
+      UsePackages := IniFile.ReadInteger(DirectoriesSectionName, 'UsePackages', UsePackages);
+      Packages := IniFile.ReadString(DirectoriesSectionName, 'Packages', Packages);
 
-			MinStackSize := IniFile.ReadInteger(Linker, 'MinStackSize', MinStackSize);
-			MaxStackSize := IniFile.ReadInteger(Linker, 'MaxStackSize', MaxStackSize);
-			ImageBase := IniFile.ReadInteger(Linker, 'ImageBase', ImageBase);
-      RuntimeThemes := IniFile.ReadInteger(Linker, 'RuntimeThemes', RuntimeThemes);
+			MinStackSize := IniFile.ReadInteger(LinkerSectionName, 'MinStackSize', MinStackSize);
+			MaxStackSize := IniFile.ReadInteger(LinkerSectionName, 'MaxStackSize', MaxStackSize);
+			ImageBase := IniFile.ReadInteger(LinkerSectionName, 'ImageBase', ImageBase);
 
       BuildVersions := IniFile.ReadString('Build', 'Versions', BuildVersions);
 		finally
