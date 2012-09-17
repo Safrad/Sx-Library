@@ -264,7 +264,7 @@ Set the default options for FastMM here.
  files are initialized before the main application, so the main application may
  well end up sharing a statically loaded DLL's memory manager and not the other
  way around. }
-{.$define ShareMM}
+{$define ShareMM}
 
   {Allow sharing of the memory manager by a DLL with other DLLs (or the main
    application if this is a statically loaded DLL) that were also compiled with
@@ -284,7 +284,7 @@ Set the default options for FastMM here.
  memory manager, memory leaks caused by the sharer will not be freed
  automatically. Take into account that statically linked DLLs are initialized
  before the main application, so set the sharing options accordingly.}
-{.$define AttemptToUseSharedMM}
+{$define AttemptToUseSharedMM}
 
 {Define this to enable backward compatibility for the memory manager sharing
  mechanism used by Delphi 2006 and 2007, as well as older FastMM versions.}
