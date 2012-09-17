@@ -3,16 +3,22 @@ unit uSxCheckBox;
 interface
 
 uses
-	SysUtils, Classes, Controls, StdCtrls;
+  uSxLabel,
+	SysUtils, Classes, Controls, StdCtrls, ExtCtrls;
 
 type
 	TSxCheckBox = class(TCheckBox)
 	private
 		{ Private declarations }
+    FBorder: TSxLabel;
 	protected
 		{ Protected declarations }
-	public
+    procedure BorderClick(Sender: TObject);
+		procedure CreateParams(var Params: TCreateParams); override;
+  public
 		{ Public declarations }
+    constructor Create(AOwner: TComponent); override;
+
 	published
 		{ Published declarations }
 	end;
@@ -21,11 +27,44 @@ procedure Register;
 
 implementation
 
-uses uTypes;
+uses
+	uTypes,
+	uDForm;
+
+const
+	Border = 8;
 
 procedure Register;
 begin
 	RegisterComponents(ComponentPageName, [TSxCheckBox]);
+end;
+
+{ TSxCheckBox }
+
+constructor TSxCheckBox.Create(AOwner: TComponent);
+begin
+  inherited;
+
+end;
+
+procedure TSxCheckBox.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+
+	if not (csDesigning in ComponentState) then
+  begin
+    FBorder := TSxLabel.Create(Self);
+    FBorder.SetBounds(Left - LgToPx(Border), Top - LgToPx(Border), Width + 2 * LgToPx(Border), Height + 2 * LgToPx(Border));
+    FBorder.Transparent := True;
+    FBorder.OnClick := BorderClick;
+
+    Parent.InsertControl(FBorder);
+  end;
+end;
+
+procedure TSxCheckBox.BorderClick(Sender: TObject);
+begin
+  Toggle;
 end;
 
 end.
