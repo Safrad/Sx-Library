@@ -37,7 +37,7 @@ type
 		Conditionals: TStringList;
 		SearchPaths: TStringList;
 		DebugSourceDirs: string; // Not in cfg
-		UsePackages: UG;
+		UsePackages: BG;
     Packages: string;
     // Linker
     MinStackSize: UG;
@@ -81,6 +81,14 @@ const
   DefaultImageBase = 4 * MB;
 
   ProjectListSeparator = ';';
+
+function StrToBoolean(const Value: string): BG;
+begin
+  if UpperCase(Value) = 'TRUE' then
+  	Result := True
+  else
+  	Result := False;
+end;
 
 { TProjectOptions }
 
@@ -126,11 +134,6 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     begin
       UnitOutputDir := NodeValue;
     end
-{   TODO
-		else if Name = UpperCase('DCC_PackageDLLOutput') then
-    	PackageDLLOutput := NodeValue
-    else if Name = UpperCase('DCC_PackageDCPOutputDir') then
-	    PackageDCPOutputDir := NodeValue}
     else if Name = UpperCase('DCC_UnitSearchPath') then
     begin
       AddSearchPaths(NodeValue);
@@ -139,8 +142,15 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     begin
       AddConditionals(NodeValue);
     end
+    else if Name = UpperCase('UsePackages') then
+    begin
+      UsePackages := StrToBoolean(NodeValue);
+    end
+    else if Name = UpperCase('UsePackage') then
+    begin
+      Packages := NodeValue;
+    end
 //		DebugSourceDirs: string; // Not in cfg
-//		 UsePackages
 		else if Name = UpperCase('DCC_MinStackSize') then
     begin
       ImageBase := StrToValS8(NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil);
@@ -475,7 +485,7 @@ begin
 
       if Overwrite or (DebugSourceDirs = '') then
   			DebugSourceDirs := IniFile.ReadString(DirectoriesSectionName, 'DebugSourceDirs', DebugSourceDirs);
-      UsePackages := IniFile.ReadInteger(DirectoriesSectionName, 'UsePackages', UsePackages);
+      UsePackages := IniFile.ReadBool(DirectoriesSectionName, 'UsePackages', UsePackages);
       Packages := IniFile.ReadString(DirectoriesSectionName, 'Packages', Packages);
 
 			MinStackSize := IniFile.ReadInteger(LinkerSectionName, 'MinStackSize', MinStackSize);
@@ -538,7 +548,7 @@ begin
 		Data := Data + '-LE"' + ReplaceDelphiVariables(PackageDLLOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 	if PackageDCPOutputDir <> '' then
 		Data := Data + '-LN"' + ReplaceDelphiVariables(PackageDCPOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
-	if UsePackages <> 0 then
+	if UsePackages then
 		Data := Data + '-LU' + Packages + FileSep;
 
   CfgSearchPath := ReplaceDelphiVariables(SearchPaths.DelimitedText, DelphiVersion, SystemPlatform);
