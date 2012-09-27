@@ -229,6 +229,49 @@ begin
 	  BmpCheck.Resize(x, y);
 end;
 
+procedure CalcVisiblePos(const MenuItem: TMenuItem; out Index, Count: SG);
+var
+	i, c: SG;
+	M: TMenuItem;
+  Parent: TObject;
+begin
+	Index := -1;
+  Count := 0;
+
+  Parent := MenuItem.GetParentComponent;
+
+	if Parent is TMenu then
+	begin
+		c := TMenu(Parent).Items.Count
+	end
+	else if Parent is TMenuItem then
+	begin
+		c := TMenuItem(Parent).Count
+	end
+	else
+		Exit;
+
+	for i := 0 to c - 1 do
+	begin
+		if (Parent is TMenu) then
+		begin
+			M := TMenu(Parent).Items[i];
+		end
+		else if Parent is TMenuItem then
+			M := TMenuItem(Parent).Items[i]
+		else
+			M := nil;
+
+    if M = MenuItem then
+    	Index := Count;
+
+    if M.Visible then
+    begin
+      Inc(Count);
+    end;
+	end;
+end;
+
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 	State: TOwnerDrawState);
 var
@@ -255,26 +298,8 @@ begin
 	MenuItem := TMenuItem(Sender);
 	ImageList := MenuItem.GetImageList;
 
-	TopLevel := False;
-	MenuIndex := 0;
-	MenuCount := 0;
 	Parent := MenuItem.GetParentComponent;
-	if (Parent is TMainMenu) then
-	begin
-		TopLevel := True;
-		MenuIndex := MenuItem.IndexOf(MenuItem);
-		MenuCount := MenuItem.Count;
-	end
-	else if (Parent is TPopupMenu) then
-	begin
-		MenuIndex := TPopupMenu(Parent).Items.IndexOf(MenuItem);
-		MenuCount := TPopupMenu(Parent).Items.Count;
-	end
-	else if (Parent is TMenuItem) then
-	begin
-		MenuIndex := TMenuItem(Parent).IndexOf(MenuItem);
-		MenuCount := TMenuItem(Parent).Count;
-	end;
+	TopLevel := Parent is TMainMenu;
 
 	MenuBmp.SetSize(ARect.Right - ARect.Left, ARect.Bottom - ARect.Top, clMenu);
 
@@ -296,6 +321,7 @@ begin
 	end
 	else
 	begin
+	  CalcVisiblePos(MenuItem, MenuIndex, MenuCount);
 		// X
 		Co[0] := ColorDiv(clMenu, 5 * 65536 div 4);
 		Co[1] := ColorDiv(clMenu, 3 * 65536 div 4);
