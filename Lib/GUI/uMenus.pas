@@ -10,6 +10,8 @@ var
 	IconSize: SG; // Size of button on toolbar.
   ImageSize: SG; // Size of image.
 
+  LargeMenus: BG; // Support touch screens
+
 function TryFindIcon(Name: string; const Path: string): string;
 procedure LoadMenuIcon(const Bitmap: TBitmap; const Name: string);
 
@@ -35,7 +37,8 @@ implementation
 uses
 	Forms, Controls, SysUtils, ShellAPI, Math,
 	uDButton, uStrings, uColor, uDictionary, uSounds, uSplash, uParams, uDrawStyle, uCommon,
-	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uAPI, uMath, uDParser, uLog, uOutputFormat;
+	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uAPI, uMath, uDParser, uLog, uOutputFormat,
+  uDForm;
 
 var
 	ImageList: TCustomImageList;
@@ -344,7 +347,7 @@ begin
 	begin
 		Rec := ARect;
 		Rec.Bottom := Rec.Bottom - Rec.Top;
-		Rec.Top := 4;
+		Rec.Top := LgToPx(4);
 		DrawEdge(BCanvas.Handle, Rec, EDGE_ETCHED, BF_TOP);
 	end
 	else
@@ -476,8 +479,8 @@ begin
 				Inc(X);
 				Inc(Y);
 			end;
-			MenuBmp.Bmp(X, Y, BmpD, ef16);
-			BmpWid := BmpD.Width;
+			MenuBmp.Bmp(LgToPx(x + 2) - 2, Y, BmpD, ef16);
+//			BmpWid := BmpD.Width;
 			MenuB := True;
 		end
 		else
@@ -868,6 +871,14 @@ begin
 	end;
 end;
 
+function Scale(const Value: SG): SG;
+begin
+  if LargeMenus then
+    Result := RoundDiv(125 * Value, 100) // 25% zvetseni
+  else
+    Result := Value;
+end;
+
 (*
 procedure MenuSet(Menu: TComponent);
 var
@@ -945,13 +956,15 @@ begin
 		Inc(Height, 6)
 	else
 		Inc(Height, ACanvas.TextHeight('Wg'));
+
+  Height := Scale(Height);
 end;
 
 initialization
 
 {$IFNDEF NoInitialization}
-IconSize := RoundDiv(22 * Screen.PixelsPerInch, 96);
-ImageSize := RoundDiv(16 * Screen.PixelsPerInch, 96);
+IconSize := LgToPx(22);
+ImageSize := LgToPx(16);
 MenuBmp := TDBitmap.Create;
 BCanvas := MenuBmp.Canvas;
 BCanvas.Brush.Style := bsSolid;
