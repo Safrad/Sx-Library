@@ -277,6 +277,11 @@ end;
 
 procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 	State: TOwnerDrawState);
+const
+  DrawRadioAsText = {$IFDEF UNICODE}True{$ELSE}False{$ENDIF};
+  SpaceBeforeMenuCaption = 4;
+  FrameBorder = 2 * 1;
+  FrameBorderSize = 1.35;
 var
 	MenuItem: TMenuItem;
 	ImageList: TCustomImageList;
@@ -289,12 +294,8 @@ var
 	TopLevel: Boolean;
 	MenuIndex, MenuCount: Integer;
 	MenuB: Boolean;
-	BmpWid: SG;
 	Parent: TObject;
-{$IFNDEF UNICODE}
   Size: SG;
-  Ofst: SG;
-{$ENDIF}
 begin
 	if not(Sender is TMenuItem) then
 		Exit;
@@ -434,7 +435,6 @@ begin
 		end;
 
 		// Image
-		BmpWid := ImageSize;
 		{ if MenuItem.Checked then
 			begin
 			if (odSelected in State) then
@@ -472,61 +472,64 @@ begin
 			if (MenuItem.Enabled = False) or (odInactive in State) then
 				BmpD.Bar(clMenu, ef12);
 
-			X := 1;
-			Y := (ARect.Bottom - ARect.Top - BmpD.Height - 2) div 2 + 1;
+			X := (ImageSize + FrameBorder - BmpD.Width) div 2;
+			Y := (ARect.Bottom - ARect.Top - BmpD.Height) div 2;
 			if TopLevel and (odSelected in State) then
 			begin
 				Inc(X);
 				Inc(Y);
 			end;
-			MenuBmp.Bmp(LgToPx(x + 2) - 2, Y, BmpD, ef16);
-//			BmpWid := BmpD.Width;
+			MenuBmp.Bmp(X, Y, BmpD, ef16);
 			MenuB := True;
 		end
 		else
 		begin
 			if MenuItem.RadioItem then
 			begin
-{$IFDEF UNICODE}
-				if MenuItem.Checked then
-					s := #$25CF
-				else
-					s := #$25CB;
+        if DrawRadioAsText then
+        begin
+          if MenuItem.Checked then
+            s := #$25CF
+          else
+            s := #$25CB;
 
-				PushFont(MenuBmp.Canvas.Font);
-				MenuBmp.Canvas.Brush.Style := bsClear;
-				MenuBmp.Canvas.Font.Name := 'Courier New';
-				MenuBmp.Canvas.Font.Color := C1;
-				MenuBmp.Canvas.TextOut((20 - MenuBmp.Canvas.TextWidth(s)) div 2,
-					(MenuBmp.Height - MenuBmp.Canvas.TextHeight(s)) div 2, s);
-				PopFont(MenuBmp.Canvas.Font);
-{$ELSE}
-				MenuBmp.Canvas.Pen.Color := C1;
-        Size := ARect.Bottom - ARect.Top;
-        Ofst := 5 * Size div 16;
-        MenuBmp.Canvas.Pen.Width := Max(1, 1 * Size div 16);
-				MenuBmp.Canvas.Brush.Color := C1;
-				if MenuItem.Checked then
-					MenuBmp.Canvas.Brush.Style := bsSolid
-				else
-					MenuBmp.Canvas.Brush.Style := bsClear;
-				MenuBmp.Canvas.Ellipse(Ofst - 1, Ofst + 1, Size - 1 - Ofst - 1, Size - 1 - Ofst + 1);
-{$ENDIF}
+          PushFont(MenuBmp.Canvas.Font);
+          MenuBmp.Canvas.Brush.Style := bsClear;
+          MenuBmp.Canvas.Font.Name := 'Courier New';
+          MenuBmp.Canvas.Font.Color := C1;
+          MenuBmp.Canvas.TextOut((ImageSize + FrameBorder - MenuBmp.Canvas.TextWidth(s)) div 2,
+            (MenuBmp.Height - MenuBmp.Canvas.TextHeight(s)) div 2, s);
+          PopFont(MenuBmp.Canvas.Font);
+        end
+        else
+        begin
+          MenuBmp.Canvas.Pen.Color := C1;
+          Size := ImageSize div 2;
+          X := (ImageSize + FrameBorder - Size) div 2;
+          Y := (MenuBmp.Height - Size) div 2;
+          MenuBmp.Canvas.Pen.Width := Max(1, 1 * Size div 16);
+          MenuBmp.Canvas.Brush.Color := C1;
+          if MenuItem.Checked then
+            MenuBmp.Canvas.Brush.Style := bsSolid
+          else
+            MenuBmp.Canvas.Brush.Style := bsClear;
+          MenuBmp.Canvas.Ellipse(X, Y, X + Size, Y + Size);
+        end;
 			end
 			else if MenuItem.Checked then
 			begin
 				if BmpCheck = nil then
 					LoadBmpCheck;
 //				MenuBmp.Bmp( Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, BmpCheck, ef16);
-				MenuBmp.Bmp((IconSize - BmpCheck.Width) div 2, (ARect.Bottom - ARect.Top -BmpCheck.Height) div 2, BmpCheck, ef16);
+				MenuBmp.Bmp((IconSize - BmpCheck.Width) div 2, (ARect.Bottom - ARect.Top - BmpCheck.Height) div 2, BmpCheck, ef16);
 				MenuB := True;
 			end;
 		end;
 
 		if MenuItem.Checked then
 		begin
-			Y := (ARect.Bottom - ARect.Top - ImageSize) div 2;
-      MenuBmp.Border(0, Y, ImageSize + 1, Y + ImageSize + 1, clDepth[1], clDepth[3], 1.35 * Screen.PixelsPerInch / 96);
+			Y := (ARect.Bottom - ARect.Top - ImageSize) div 2 - 1;
+      MenuBmp.Border(0, Y, ImageSize + FrameBorder - 1, Y + ImageSize + FrameBorder - 1, clDepth[1], clDepth[3], FrameBorderSize * Screen.PixelsPerInch / 96);
 		end;
 
 		// Caption
@@ -539,9 +542,9 @@ begin
 		BCanvas.Font.Color := C2;
 
 		if (MenuB) or (TopLevel = False) then
-			Rec.Left := 6 + BmpWid
+			Rec.Left := LgToPx(SpaceBeforeMenuCaption) + ImageSize + FrameBorder
 		else
-			Rec.Left := 6;
+			Rec.Left := LgToPx(SpaceBeforeMenuCaption);
 
 		Rec.Right := MenuBmp.Width - 1;
 		Rec.Top := 0;
