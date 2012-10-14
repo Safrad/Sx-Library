@@ -102,6 +102,8 @@ function RunRegisteredTests(exitBehavior: TRunnerExitBehavior = rxbContinue): TT
 implementation
 uses
   uOutputFormat,
+  uTypes,
+  uLog,
   SysUtils;
 
 const
@@ -243,6 +245,8 @@ begin
     begin
       s := MsToStr(test.ElapsedTestTime, diSD, 3, True, ofIO);
 			writeln(StringOfChar(' ', 6 - Length(s)) + s + ' : ' +  test.GetName);
+      if MainLogWrite(mlInformation) then
+        LogAdd(test.GetName + ' ' + 'finished.');
     end;
   end;
 end;
@@ -259,6 +263,8 @@ procedure TTextTestListener.TestingStarts;
 begin
   writeln;
   writeln(sDUnitTesting);
+  if MainLogWrite(mlInformation) then
+    LogAdd('Testing Starts');
   startTime := now;
 end;
 
@@ -269,6 +275,8 @@ begin
   writeln;
   writeln('Total time: ' + MsToStr(Round(MSecsPerDay * runTime), diSD, 3, True, ofIO));
   writeln(Report(testResult));
+  if MainLogWrite(mlInformation) then
+    LogAdd('Testing Ends');
 end;
 
 class function TTextTestListener.RunTest(suite: ITest; exitBehavior: TRunnerExitBehavior = rxbContinue): TTestResult;
@@ -327,13 +335,23 @@ end;
 
 
 procedure TTextTestListener.Status(test: ITest; const Msg: string);
+var
+  s: string;
 begin
-  writeln(Format('%s: %s', [test.Name, Msg]));
+  Format('%s: %s', [test.Name, Msg]);
+  writeln(s);
+  if MainLogWrite(mlInformation) then
+    LogAdd(s);
 end;
 
 procedure TTextTestListener.Warning(test: ITest; const Msg: string);
+var
+  s: string;
 begin
-  writeln(Format('%s: %s', [test.Name, Msg]));
+  s := Format('%s: %s', [test.Name, Msg]);
+  writeln(s);
+  if MainLogWrite(mlWarning) then
+    LogAdd(s);
 end;
 
 function TTextTestListener.ShouldRunTest(test: ITest): boolean;
