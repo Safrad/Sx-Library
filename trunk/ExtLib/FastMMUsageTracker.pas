@@ -482,7 +482,8 @@ var
 
   procedure UpdateVMGraph(var AMemoryMap: TMemoryMapEx);
   var
-    LInd, LIndTop, I1: Integer;
+    LInd: Cardinal;
+    LIndTop, I1: Integer;
     LChunkState: TChunkStatusEx;
     LMBI: TMemoryBasicInformation;
     LA_Char: array[0..MAX_PATH] of Char;
@@ -595,7 +596,7 @@ var
     LU_StateLength: Cardinal;
     LPrevSBState, LSBState: ^TSmallBlockTypeState;
 
-    procedure UpdateBlockStatistics(c, r, current, prev: Integer);
+    procedure UpdateBlockStatistics(c, r: Integer; current, prev: Cardinal);
     var
       s : string;
     begin
@@ -605,7 +606,7 @@ var
       else if current < prev then
         s := s + ' (-' + IntToStr(prev - current) + ')';
       sgBlockStatistics.Cells[c, r] := s;
-      sgBlockStatistics.Objects[c, r] := Pointer(current - prev);
+      sgBlockStatistics.Objects[c, r] := Pointer(Integer(Int64(current) - Int64(prev)));
     end;
 
   begin
@@ -735,7 +736,7 @@ var
         GlobalMemoryStatus(LR_GlobalMemoryStatus);
       end;
 
-      LP_FreeVMList.Sort(@LocSort);
+      LP_FreeVMList.Sort(Pointer(@LocSort));
 
       GetProcessWorkingSetSize(GetCurrentProcess, LU_MinQuota, LU_MaxQuota);
       GetSystemInfo(LR_SystemInfo);
