@@ -3,6 +3,7 @@ unit uCommon;
 interface
 
 uses
+  AltGrCrash,
 	Graphics,
   uPictureFactory,
 	uTypes, uDForm, uOptions, uStrings,
