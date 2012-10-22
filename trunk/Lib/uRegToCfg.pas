@@ -231,6 +231,7 @@ begin
             begin
               if StartStr(Path, UpperCase(RegPaths[j])) then
               begin
+                Information(RegPaths[j] + ' deleted.');
                 RegPaths.Delete(j);
               end
               else
@@ -306,14 +307,34 @@ begin
           Replace(Path,
             ['%DelphiShortName%', '%DelphiMajorVersion%'],
             [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
-          FileName := ExtractFileName(Path);
-          for j := 0 to Strings.Count - 1 do
-          if ExtractFileName(Strings[j]) = FileName then
+          if FirstChar(Path) = '-' then
           begin
-            Reg.DeleteValue(Strings[j]);
-            Break;
+            Path := UpperCase(Copy(Path, 2, MaxInt));
+            j := 0;
+            while j < Strings.Count do
+            begin
+              if StartStr(Path, UpperCase(Strings[j])) then
+              begin
+                Reg.DeleteValue(Strings[j]);
+                Information(Strings[j] + ' deleted.');
+                Strings.Delete(j);
+              end
+              else
+                Inc(j);
+            end;
+          end
+          else
+          begin
+            FileName := ExtractFileName(Path);
+            for j := 0 to Strings.Count - 1 do
+              if ExtractFileName(Strings[j]) = FileName then
+              begin
+                Reg.DeleteValue(Strings[j]);
+                Information(Strings[j] + ' deleted.');
+                Break;
+              end;
+            Reg.WriteString(Path, IntToStr(i));
           end;
-          Reg.WriteString(Path, IntToStr(i));
         end;
 
         Reg.CloseKey;
