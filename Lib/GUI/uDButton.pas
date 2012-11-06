@@ -197,8 +197,8 @@ begin
 	FLastDown := False;
 	ControlStyle := [csSetCaption, csDoubleClicks];
 	ControlStyle := ControlStyle + [csReflector];
-	Width := 75;
-	Height := 25;
+	Width := LgToPx(75 + 16 + 2);
+	Height := LgToPx(25);
 	TabStop := True;
 
 	// Caption can not be changed there
