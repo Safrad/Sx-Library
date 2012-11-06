@@ -55,6 +55,13 @@
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_E>false</DCC_E>
 			<VerInfo_Locale>1029</VerInfo_Locale>
+			<DCC_IMPLICIT_STRING_CAST_LOSS>false</DCC_IMPLICIT_STRING_CAST_LOSS>
+			<DCC_NO_RETVAL>error</DCC_NO_RETVAL>
+			<DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
+			<DCC_COMBINING_SIGNED_UNSIGNED>false</DCC_COMBINING_SIGNED_UNSIGNED>
+			<DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
+			<DCC_USE_BEFORE_DEF>error</DCC_USE_BEFORE_DEF>
+			<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win64)'!=''">
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
