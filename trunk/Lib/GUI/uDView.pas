@@ -1123,6 +1123,7 @@ begin
 		FSelectedRows[FActualRow] := True;
 		if Assigned(FOnCellClick) then
 			FOnCellClick(Self, -1, Index, []);
+		Invalidate;
 	end;
 end;
 
