@@ -142,6 +142,7 @@ function Code(const s: string; const Decode: BG): string;
 function AddSpace(const s: string): string;
 procedure AppendStr(var Dest: TFileName; const Source: string); overload;
 procedure AppendStr(var Dest: string; const Source: string); overload;
+procedure AddPrefix(var Dest: string; const Source: string);
 function Plural(const Number: SG): string;
 procedure CorrectDir(var s: string);
 function CorrectDirF(const s: string): string;
@@ -1107,6 +1108,11 @@ end;
 procedure AppendStr(var Dest: string; const Source: string); overload;
 begin
 	Dest := Dest + Source;
+end;
+
+procedure AddPrefix(var Dest: string; const Source: string);
+begin
+	Dest := Source + Dest;
 end;
 
 function Plural(const Number: SG): string;
