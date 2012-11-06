@@ -1102,7 +1102,7 @@ begin
 	for i := 0 to FColumnCount - 1 do
 	begin
 		if FColumns[i].Width = 0 then
-			FColumns[i].RealWidth := Width div FColumnCount
+			FColumns[i].RealWidth := (Width - ScrollBarVWidth) div FColumnCount
 		else
 			FColumns[i].RealWidth := FColumns[i].Width;
 		FColumns[i].RealWidth := RoundN(Zoom * FColumns[i].RealWidth);
