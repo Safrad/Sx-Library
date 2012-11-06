@@ -9,7 +9,7 @@ uses
   SysUtils,
   uProjectInfo, uNProjectVersion,
   uDelphi,
-  Classes;
+  Classes, XMLIntf;
 
 type
   TExecutableType = (etProgram, etLibrary, etPackage);
@@ -104,6 +104,7 @@ type
   private
     FFileName: TFileName;
     FEnabled: BG;
+    procedure WriteWarningsToNode(const Node: IXMLNode);
     procedure ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
     function GetExecutableType(const AFileName: TFileName): TExecutableType;
   public
@@ -159,7 +160,7 @@ implementation
 uses
   TypInfo,
   uStrings, uMath, uOutputFormat,
-  XMLDoc, XMLIntf, Variants, IniFiles,
+  XMLDoc, Variants, IniFiles,
   uInputFormat, uFiles, uFile, uBackup, uMsg;
 
 const
@@ -189,6 +190,16 @@ begin
     Result := owDefault;
 end;
 
+function OutputWarningToStr(const Value: TOutputWarning): string;
+begin
+  case Value of
+  owTrue: Result := 'true';
+  owFalse: Result := 'false';
+  owError: Result := 'error';
+  else Result := '';
+  end;
+end;
+
 procedure RepairDProj(const AFileName: TFileName);
 var
   Data, Data2: string;
@@ -208,6 +219,49 @@ begin
 end;
 
 { TProjectOptions }
+
+function FindOrCreateNode(const RootNode: IXMLNode; const Name: string): IXMLNode;
+begin
+  Result := RootNode.ChildNodes.FindNode(Name);
+  if Result = nil then
+  begin
+    Result := RootNode.AddChild(Name);
+  end;
+end;
+
+procedure TProjectOptions.WriteWarningsToNode(const Node: IXMLNode);
+const
+  AttrName = 'Name';
+  VerStr: array [TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
+var
+  cNode: IXMLNode;
+  Name: string;
+  i: SG;
+begin
+  Name := UpperCase(Node.NodeName);
+  for i := 0 to Length(CompilerWarningsStr) - 1 do
+  begin
+    if Warnings[TCompilerWarning(i)] <> owDefault then
+    begin
+      cNode := FindOrCreateNode(Node, CompilerWarningsStr[TCompilerWarning(i)]);
+      cNode.NodeValue := OutputWarningToStr(Warnings[TCompilerWarning(i)]);
+    end
+    else
+    begin
+      cNode := Node.ChildNodes.FindNode(CompilerWarningsStr[TCompilerWarning(i)]);
+      if cNode <> nil then
+        Node.ChildNodes.Remove(cNode);
+    end;
+  end;
+
+
+{		cNode := Node.ChildNodes.First;
+  while cNode <> nil do
+  begin
+    ProcessNode(cNode);
+    cNode := cNode.NextSibling;
+  end;}
+end;
 
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 
@@ -291,7 +345,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 					if Name = VerStr[SubVersion] then
 					begin
 						if Save then
-							Node.NodeValue := Version.GetAsString(SubVersion)
+//							Node.NodeValue := Version.GetAsString(SubVersion)
 						else
 							Version.SetSubVersion(SubVersion, NodeValue);
 						Break;
@@ -345,7 +399,10 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
       for i := 0 to Length(CompilerWarningsStr) - 1 do
         if Name = CompilerWarningsStr[TCompilerWarning(i)] then
         begin
-          Warnings[TCompilerWarning(i)] := StrToOutputWarning(NodeValue);
+          if Save then
+//            Node.NodeValue := Warnings[TCompilerWarning(i)]
+          else
+            Warnings[TCompilerWarning(i)] := StrToOutputWarning(NodeValue);
           Break;
         end;
     end;
@@ -377,6 +434,8 @@ begin
     try
       XML := TXMLDocument.Create(AFileName);
       XML.Active := True;
+      XML.Options := XML.Options + [doNodeAutoIndent];
+      XML.NodeIndentStr := CharTab;
       try
         if XML.IsEmptyDoc then
           Exit;
@@ -392,6 +451,11 @@ begin
               begin
                 iNode := iNode.NextSibling;
                 Continue;
+              end
+              else if Name = '''$(Base)''!=''''' then
+              begin
+                if Save then
+                  WriteWarningsToNode(iNode);
               end;
             end;
           end;
