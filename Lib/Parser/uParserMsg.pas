@@ -28,7 +28,7 @@ type
 		procedure Add(const FileNameIndex, Line, X0, X1: UG; const Text: string; const MsgType: TMessageLevel);
 		procedure Clear;
 		procedure ShowAndClear(const FileName: TFileName = '');
-		function ToString: string;
+		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
 		{$ifndef Console}
     procedure ToStrings(const Lines: TStrings);
     {$else}

@@ -120,7 +120,7 @@ type
     {The current and previous memory manager states}
     FMemoryManagerState, FPrevMemoryManagerState: TMemoryManagerState;
     FMemoryMapEx: TMemoryMapEx;
-    AddressSpacePageCount: Integer;
+    AddressSpacePageCount: Cardinal;
     OR_VMDumpDownCell: TGridCoord;
     procedure HeaderClicked(AGrid: TStringgrid; const ACell: TGridCoord);
     procedure SortGrid(grid: TStringgrid; PB_Nummeric: Boolean; byColumn: Integer; ascending: Boolean);
