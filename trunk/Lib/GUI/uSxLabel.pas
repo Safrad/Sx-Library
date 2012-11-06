@@ -22,7 +22,7 @@ procedure Register;
 
 implementation
 
-uses Graphics, uTypes;
+uses Types, Graphics, uTypes;
 
 procedure TSxLabel.WMPaint(var Message: TWMPaint);
 var

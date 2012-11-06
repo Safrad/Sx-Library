@@ -488,6 +488,7 @@ begin
 			begin
         if DrawRadioAsText then
         begin
+          Size := ImageSize + FrameBorder;
           if MenuItem.Checked then
             s := #$25CF
           else
@@ -497,7 +498,7 @@ begin
           MenuBmp.Canvas.Brush.Style := bsClear;
           MenuBmp.Canvas.Font.Name := 'Courier New';
           MenuBmp.Canvas.Font.Color := C1;
-          MenuBmp.Canvas.TextOut((ImageSize + FrameBorder - MenuBmp.Canvas.TextWidth(s)) div 2,
+          MenuBmp.Canvas.TextOut((Size - MenuBmp.Canvas.TextWidth(s)) div 2,
             (MenuBmp.Height - MenuBmp.Canvas.TextHeight(s)) div 2, s);
           PopFont(MenuBmp.Canvas.Font);
         end

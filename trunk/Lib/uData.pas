@@ -68,7 +68,7 @@ type
 		function Next: TObject; overload;
 
 		function IsEmpty: Boolean;
-		function ToString: string;
+		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
 
 		property ItemSize: UG read FItemSize write SetItemSize;
 		property ItemSh: UG read FItemSh; // Binary shift

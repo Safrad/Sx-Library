@@ -1,5 +1,7 @@
 unit uFolder;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses
