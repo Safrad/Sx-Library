@@ -19,15 +19,99 @@ const
 type
 	TProjectInfos = array [TProjectInfoName] of string;
 
+  TOutputWarning = (owDefault, owTrue, owFalse, owError);
+
+  TCompilerWarning = (
+			cwCOMPARING_SIGNED_UNSIGNED,
+			cwXML_INVALID_NAME,
+			cwUNIT_DEPRECATED,
+			cwIMPLICIT_STRING_CAST_LOSS,
+			cwUNSAFE_TYPE,
+			cwLOCAL_PINVOKE,
+			cwUNSUPPORTED_CONSTRUCT,
+			cwXML_EXPECTED_CHARACTER,
+			cwCASE_LABEL_RANGE,
+			cwUNIT_INIT_SEQ,
+			cwTYPEINFO_IMPLICITLY_ADDED,
+			cwXML_UNKNOWN_ENTITY,
+			cwASG_TO_TYPED_CONST,
+			cwNO_RETVAL,
+			cwCVT_NARROWING_STRING_LOST,
+			cwSYMBOL_LIBRARY,
+			cwCVT_WCHAR_TO_ACHAR,
+			cwNO_CFG_FILE_FOUND,
+			cwCVT_ACHAR_TO_WCHAR,
+			cwIMPLICIT_STRING_CAST,
+			cwSTRING_CONST_TRUNCED,
+			cwDUPLICATE_CTOR_DTOR,
+			cwIMAGEBASE_MULTIPLE,
+			cwZERO_NIL_COMPAT,
+			cwCOMBINING_SIGNED_UNSIGNED,
+			cwUNIT_EXPERIMENTAL,
+			cwHPPEMIT_IGNORED,
+			cwFOR_LOOP_VAR_VARPAR,
+			cwMESSAGE_DIRECTIVE,
+			cwSYMBOL_PLATFORM,
+			cwUNIT_PLATFORM,
+			cwWIDECHAR_REDUCED,
+			cwXML_NO_PARM,
+			cwSUSPICIOUS_TYPECAST,
+			cwIMPLICIT_IMPORT,
+			cwGARBAGE,
+			cwCONSTRUCTING_ABSTRACT,
+			cwTYPED_CONST_VARPAR,
+			cwFILE_OPEN_UNITSRC,
+			cwXML_INVALID_NAME_START,
+			cwPRIVATE_PROPACCESSOR,
+			cwXML_CREF_NO_RESOLVE,
+			cwINVALID_DIRECTIVE,
+			cwSYMBOL_EXPERIMENTAL,
+			cwUNSAFE_CODE,
+			cwXML_WHITESPACE_NOT_ALLOWED,
+			cwDUPLICATES_IGNORED,
+			cwBAD_GLOBAL_SYMBOL,
+			cwHRESULT_COMPAT,
+			cwCOMPARISON_TRUE,
+			cwLOCALE_TO_UNICODE,
+			cwFOR_LOOP_VAR_UNDEF,
+			cwHIDING_MEMBER,
+			cwUNIT_NAME_MISMATCH,
+			cwHIDDEN_VIRTUAL,
+			cwXML_NO_MATCHING_PARM,
+			cwEXPLICIT_STRING_CAST_LOSS,
+			cwPACKAGED_THREADVAR,
+			cwIMPLICIT_VARIANTS,
+			cwEXPLICIT_STRING_CAST,
+			cwUNIT_LIBRARY,
+			cwOPTION_TRUNCATED,
+			cwFILE_OPEN,
+			cwBOUNDS_ERROR,
+			cwUSE_BEFORE_DEF,
+			cwFOR_VARIABLE,
+			cwSYMBOL_DEPRECATED,
+			cwPACKAGE_NO_LINK,
+			cwUNSAFE_CAST,
+			cwCOMPARISON_FALSE,
+			cwCVT_WIDENING_STRING_LOST,
+			cwUNICODE_TO_LOCALE,
+			cwRLINK_WARNING);
+
+var
+  CompilerWarningsStr: array[TCompilerWarning] of string;
+
+type
 	TProjectOptions = class
   private
     FFileName: TFileName;
     FEnabled: BG;
-    procedure RWDproj(const AFileName: TFileName; const Save: BG);
     procedure ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
     function GetExecutableType(const AFileName: TFileName): TExecutableType;
   public
     ExecutableType: TExecutableType;
+    // Compiler
+    ShowHints: BG;
+    ShowWarnings: BG;
+    Warnings: array[TCompilerWarning] of TOutputWarning;
 
 		// Directories
 		OutputDir: string; // exe, dll
@@ -56,6 +140,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure RWDproj(const AFileName: TFileName; const Save: BG);
+
     procedure AddConditionals(const AConditionals: string);
     procedure AddSearchPaths(const ASearchPaths: string);
 
@@ -71,6 +157,7 @@ type
 implementation
 
 uses
+  TypInfo,
   uStrings, uMath, uOutputFormat,
   XMLDoc, XMLIntf, Variants, IniFiles,
   uInputFormat, uFiles, uFile, uBackup, uMsg;
@@ -90,6 +177,36 @@ begin
   	Result := False;
 end;
 
+function StrToOutputWarning(const Value: string): TOutputWarning;
+begin
+  if Value = 'ERROR' then
+    Result := owError
+  else if Value = 'TRUE' then
+    Result := owTrue
+  else if Value = 'FALSE' then
+    Result := owFalse
+  else
+    Result := owDefault;
+end;
+
+procedure RepairDProj(const AFileName: TFileName);
+var
+  Data, Data2: string;
+  Line: string;
+  i: SG;
+begin
+  Data := ReadStringFromFile(AFileName);
+//  Replace(Data, [''''], ['&apos;']);
+
+  i := 1;
+  while i < Length(Data) do
+  begin
+    Line := ReadToNewLine(Data, i);
+    AppendStr(Data2, CharTab + Line + FullSep);
+  end;
+  WriteStringToFile(AFileName, Data2, False);
+end;
+
 { TProjectOptions }
 
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
@@ -104,6 +221,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     NodeValue: string;
 		SubVersion: TSubVersion;
 		p: TProjectInfoName;
+    i: SG;
 	begin
 		if (Node = nil) then
 			Exit;
@@ -153,11 +271,11 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 //		DebugSourceDirs: string; // Not in cfg
 		else if Name = UpperCase('DCC_MinStackSize') then
     begin
-      ImageBase := StrToValS8(NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil);
+      MinStackSize := StrToValS8(NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil);
     end
 		else if Name = UpperCase('DCC_MaxStackSize') then
     begin
-      ImageBase := StrToValS8(NodeValue, False, 0, S8(DefaultMaxStackSize), MaxInt, 1, nil);
+      MaxStackSize := StrToValS8(NodeValue, False, 0, S8(DefaultMaxStackSize), MaxInt, 1, nil);
     end
 		else if Name = UpperCase('DCC_Image') then
     begin
@@ -193,7 +311,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 						begin
 							try
 								if Save then
-									Node.NodeValue := ProjectInfos[p]
+//									Node.NodeValue := ProjectInfos[p]
 								else
 								begin
 									ProjectInfos[p] := NodeValue;
@@ -206,7 +324,31 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 					end;
 				end
 			end;
-		end;
+		end
+    else if Name = UpperCase('DCC_Hints') then
+    begin
+      if Save then
+        Node.NodeValue := ShowHints
+      else
+        ShowHints := StrToBoolean(NodeValue);
+    end
+    else if Name = UpperCase('DCC_Warnings') then
+    begin
+      if Save then
+        Node.NodeValue := ShowWarnings
+      else
+        ShowWarnings := StrToBoolean(NodeValue);
+    end
+    else
+    begin
+      NodeValue := UpperCase(NodeValue);
+      for i := 0 to Length(CompilerWarningsStr) - 1 do
+        if Name = CompilerWarningsStr[TCompilerWarning(i)] then
+        begin
+          Warnings[TCompilerWarning(i)] := StrToOutputWarning(NodeValue);
+          Break;
+        end;
+    end;
 
 		cNode := Node.ChildNodes.First;
 		while cNode <> nil do
@@ -259,8 +401,8 @@ begin
         iNode := nil;
         if Save then
         begin
-          // TODO : Missing Byte Order Mark
           XML.SaveToFile(AFileName);
+          RepairDproj(AFileName);
         end;
       finally
         XML.Active := False;
@@ -353,6 +495,9 @@ begin
   FEnabled := True;
   RuntimeThemes := True;
 
+  ShowHints := True;
+  ShowWarnings := True;
+
   MinStackSize := DefaultMinStackSize;
   MaxStackSize := DefaultMaxStackSize;
   ImageBase := DefaultImageBase;
@@ -366,6 +511,8 @@ begin
   SearchPaths.Duplicates := dupIgnore;
   SearchPaths.Sorted := True;
   SearchPaths.Delimiter := ProjectListSeparator;
+
+  Version := TProjectVersion.Create;
 end;
 
 destructor TProjectOptions.Destroy;
@@ -458,8 +605,6 @@ begin
         RuntimeThemes := IniFile.ReadBool(BuildSectionName, 'RuntimeThemes', RuntimeThemes);
       end;
 
-      if Version = nil then
-        Version := TProjectVersion.Create;
 			Version.SetSubVersion(svMajor, IniFile.ReadString(VersionInfoSection, 'MajorVer', Version.Major));
 			Version.SetSubVersion(svMinor, IniFile.ReadString(VersionInfoSection, 'MinorVer', Version.Minor));
 			Version.SetSubVersion(svRelease, IniFile.ReadString(VersionInfoSection, 'Release', Version.Release));
@@ -509,8 +654,6 @@ const
 var
 	DProjFileName: TFileName;
 begin
-  if Version = nil then
-    Version := TProjectVersion.Create;
 	DProjFileName := DelFileExt(AFileName) + '.dproj';
 	if {(DelphiVersion < DProjMinimalVersion) or} (FileExists(DProjFileName) = False) then
 		ReadProjectVersionFromDof(DelFileExt(AFileName) + '.dof')
@@ -610,4 +753,19 @@ begin
   end;
 end;
 
+procedure Init;
+var
+  i: SG;
+begin
+  EnumToStrEx(TypeInfo(TCompilerWarning), CompilerWarningsStr);
+  for i := 0 to Length(CompilerWarningsStr) - 1 do
+  begin
+    AddPrefix(CompilerWarningsStr[TCompilerWarning(i)], 'DCC_');
+  end;
+end;
+
+initialization
+{$IFNDEF NoInitialization}
+  Init;
+{$ENDIF NoInitialization}
 end.
