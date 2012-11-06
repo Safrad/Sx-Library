@@ -41,7 +41,10 @@ implementation
 
 uses
 	Windows, Math, Dialogs, Registry,
-	uStrings, uFiles, uDParser, uWave, uMath, uDictionary;
+	uStrings, uFiles, uDParser, uWave, uMath, uDictionary, uSimulation, uOutputFormat, uMsg;
+
+var
+  GStartTime: U4;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
 var
@@ -107,13 +110,20 @@ begin
 		Screen.Cursor := crAppStart
 	else
 		Screen.Cursor := crHourGlass;
+  GetGTime;
+  GStartTime := GTime;
 end;
 
 procedure EndLongOperation(const Sound: BG);
+var
+  TotalTime: U4;
 begin
-	if Sound then
+  TotalTime := IntervalFrom(GStartTime);
+	if Sound and (TotalTime >= Second) then
 		PlayWinSound(wsAsterisk);
 	Screen.Cursor := crDefault;
+  if IsDebug then
+    Information('Total time: ' + MsToStr(TotalTime, diSD, 3));
 end;
 
 function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
