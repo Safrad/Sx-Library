@@ -6,6 +6,7 @@ program LibTest;
 {$endif}
 
 uses
+  FastMM4,
   uFirst,
   uTypes,
   Forms,
@@ -22,7 +23,9 @@ uses
   uCompareTest in 'uCompareTest.pas',
   uFindTest in 'uFindTest.pas',
   uOutputFormatTest in 'uOutputFormatTest.pas',
-  uBackupTest in 'uBackupTest.pas';
+  uBackupTest in 'uBackupTest.pas',
+  uObjectFactoryTest in 'uObjectFactoryTest.pas',
+  uPictureFactoryTest in 'GUI\uPictureFactoryTest.pas';
 
 {$R *.RES}
 
