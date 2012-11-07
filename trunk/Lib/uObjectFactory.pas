@@ -23,7 +23,8 @@ type
     Objects: TData;
   protected
     function FoundObject(const Name: string): TFactoryObject;
-    procedure ReleaseObject(AObject: TObject);
+    procedure ReleaseObject(const AObject: TObject);
+    procedure ReplaceObject(const Name: string; const AObject: TObject);
 //    procedure CreateObject(const Name: string); virtual; abstract;
     function FindOrCreate(const Name: string): TFactoryObject;
     procedure DeleteUnusedObjects;
@@ -106,7 +107,11 @@ function TObjectFactory.FindOrCreate(const Name: string): TFactoryObject;
 begin
   Result := FoundObject(Name);
   if Result = nil then
+  begin
     Result := TFactoryObject.Create;
+    Result.Name := Name;
+    Objects.Add(Result);
+  end;
   Inc(Result.ReferenceCount);
   GetGTime;
   Result.LastUsed := GTime;
@@ -132,13 +137,26 @@ begin
   end;
 end;
 
-procedure TObjectFactory.ReleaseObject(AObject: TObject);
+procedure TObjectFactory.ReleaseObject(const AObject: TObject);
 begin
   // LazyRelease
 {  if AObject.ReferenceCount <= 0 then
 
   else
     Dec(AObject, ReferenceCount); TODO }
+end;
+
+procedure TObjectFactory.ReplaceObject(const Name: string;
+  const AObject: TObject);
+var
+  FO: TFactoryObject;
+begin
+  FO := FoundObject(Name);
+  if FO <> nil then
+  begin
+    FreeAndNil(FO.CustomObject);
+    FO.CustomObject := AObject;
+  end;
 end;
 
 end.
