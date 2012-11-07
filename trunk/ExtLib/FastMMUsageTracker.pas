@@ -94,6 +94,7 @@ type
     ChkSmallGraph: TCheckBox;
     sgBlockStatistics: TStringGrid;
     dgMemoryMap: TDrawGrid;
+    Panel1: TPanel;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tTimerTimer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -116,6 +117,7 @@ type
     procedure siMM4AllocationCopyAlltoClipboardClick(Sender: TObject);
     procedure sgBlockStatisticsDrawCell(Sender: TObject; ACol,
       ARow: Integer; Rect: TRect; State: TGridDrawState);
+    procedure FormResize(Sender: TObject);
   private
     {The current and previous memory manager states}
     FMemoryManagerState, FPrevMemoryManagerState: TMemoryManagerState;
@@ -293,6 +295,13 @@ begin
     Cells[3, 0] := 'State';
     Cells[4, 0] := 'EXE/DLL';
   end;
+end;
+
+procedure TfFastMMUsageTracker.FormResize(Sender: TObject);
+begin
+  pcUsageTracker.Width := ClientWidth;
+  pcUsageTracker.Height := ClientHeight - BClose.Height;
+//  LayoutControls([ChkAutoUpdate, bUpdate, bClose], ClientWidth, ClientHeight);
 end;
 
 procedure TfFastMMUsageTracker.FormClose(Sender: TObject; var Action: TCloseAction);
