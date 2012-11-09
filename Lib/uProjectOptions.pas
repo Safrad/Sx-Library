@@ -160,7 +160,8 @@ implementation
 uses
   TypInfo,
   uStrings, uMath, uOutputFormat,
-  XMLDoc, Variants, IniFiles,
+  XMLDoc, uSxXMLDocument,
+  Variants, IniFiles,
   uInputFormat, uFiles, uFile, uBackup, uMsg;
 
 const
@@ -432,9 +433,8 @@ begin
 		if Save then
 			BackupFile(AFileName, bfTemp);
     try
-      XML := TXMLDocument.Create(AFileName);
+      XML := TSxXMLDocument.Create(AFileName);
       XML.Active := True;
-      XML.Options := XML.Options + [doNodeAutoIndent];
       XML.NodeIndentStr := CharTab;
       try
         if XML.IsEmptyDoc then

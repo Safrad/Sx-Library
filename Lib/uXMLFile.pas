@@ -22,6 +22,8 @@ type
 
 implementation
 
+uses uSxXMLDocument;
+
 { TXMLFile }
 
 constructor TXMLFile.Create(const FileName: string);
@@ -38,8 +40,7 @@ end;
 procedure TXMLFile.LoadFromFile;
 begin
   inherited;
-  FXMLDoc := TXMLDocument.Create(nil);
-  FXMLDoc.Options := [doNodeAutoIndent];
+  FXMLDoc := TSxXMLDocument.Create(nil);
   if FileExists(FFileName) then
     FXMLDoc.LoadFromFile(FFileName)
   else
