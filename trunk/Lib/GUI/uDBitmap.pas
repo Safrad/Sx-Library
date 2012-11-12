@@ -83,6 +83,8 @@ procedure Pix(D: PRGBA; ByteXD: UG; X, Y: U4; C: PRGBA); overload;
 procedure GetPix(PD: Pointer; ByteXD: UG; X, Y: U4; out C: TRGBA);
 
 type
+  TProcessColor = function(const Color: TColor): TColor;
+
 	TDBitmap = class(TBitmap)
 	private
 		{$ifdef GDIPlus}
@@ -229,6 +231,8 @@ type
 		procedure ChangeColor2(
 			const CS1, CS2, CD1, CD2: TColor); overload;
 		procedure ChangeBW(const C: TColor);
+    procedure ProcessColor(const AProcessColor: TProcessColor; const Rect: TRect); overload;
+    procedure ProcessColor(const AProcessColor: TProcessColor); overload;
 		procedure Rand(const RandomColor: TColor; const Rect: TRect);
 		procedure Texture(
 			BmpS: TDBitmap; const Effect: TEffect); overload;
@@ -8150,6 +8154,54 @@ begin
 		end;
 {$endif}
 	end;
+end;
+
+procedure TDBitmap.ProcessColor(const AProcessColor: TProcessColor; const Rect: TRect);
+var
+	PFrom, PTo, PLine: PPixel;
+	Y: SG;
+	Tran: BG;
+	TranC: TRGBA;
+  C: TRGBA;
+begin
+	if not Assigned(AProcessColor) then Exit;
+	Tran := Transparent;
+	TranC := ColorToRGBStack(TransparentColor);
+
+	PLine := PPixel(SG(FData) - Rect.Top * FByteX);
+	for Y := Rect.Top to Rect.Bottom do
+	begin
+		PFrom := Pointer(TNative(PLine) + BPP * UG(Rect.Left));
+		PTo := Pointer(TNative(PLine) + BPP * UG(Rect.Right));
+		repeat
+			if (Tran = False) or
+			(PFrom.RG <> TranC.RG) or
+			(PFrom.B <> TranC.B) then
+			begin
+        {$ifdef BPP4}
+        C := PFrom^;
+        {$else}
+        C.A := 0;
+        C.RG := PFrom^.RG;
+        C.B := PFrom^.B;
+        {$endif}
+        C.L := AProcessColor(C.L);
+        {$ifdef BPP4}
+        PFrom^ := C;
+        {$else}
+        PFrom^.RG := C.RG;
+        PFrom^.B := C.B;
+        {$endif}
+			end;
+			Inc(PFrom);
+		until SG(PFrom) >= SG(PTo);
+		Dec(PByte(PLine), FByteX)
+	end;
+end;
+
+procedure TDBitmap.ProcessColor(const AProcessColor: TProcessColor);
+begin
+  ProcessColor(AProcessColor, GetFullRect);
 end;
 
 procedure TDBitmap.Rand(const RandomColor: TColor; const Rect: TRect);
