@@ -1,4 +1,4 @@
-package LibD7;
+﻿package LibD7;
 
 {$R *.res}
 {$ALIGN 8}
@@ -50,6 +50,7 @@ contains
   uNumericComboBox in 'GUI\uNumericComboBox.pas',
   uSxPathEdit in 'GUI\uSxPathEdit.pas',
   uSxLabel in 'GUI\uSxLabel.pas',
-  uSxCheckBox in 'GUI\uSxCheckBox.pas';
+  uSxCheckBox in 'GUI\uSxCheckBox.pas',
+  uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas';
 
 end.
