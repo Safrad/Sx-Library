@@ -1,4 +1,4 @@
-package LibDXE;
+﻿package LibDXE;
 
 {$R *.res}
 {$ALIGN 8}
@@ -52,6 +52,7 @@ contains
   uCompLog in 'GUI\uCompLog.pas',
   uSxPathEdit in 'GUI\uSxPathEdit.pas',
   uSxCheckBox in 'GUI\uSxCheckBox.pas',
-  uSxLabel in 'GUI\uSxLabel.pas';
+  uSxLabel in 'GUI\uSxLabel.pas',
+  uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas';
 
 end.
