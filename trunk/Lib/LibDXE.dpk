@@ -49,6 +49,9 @@ contains
   uNumericComboBox in 'GUI\uNumericComboBox.pas',
   uOpenedFiles in 'GUI\uOpenedFiles.pas',
   uDMemo in 'GUI\uDMemo.pas',
-  uCompLog in 'GUI\uCompLog.pas';
+  uCompLog in 'GUI\uCompLog.pas',
+  uSxPathEdit in 'GUI\uSxPathEdit.pas',
+  uSxCheckBox in 'GUI\uSxCheckBox.pas',
+  uSxLabel in 'GUI\uSxLabel.pas';
 
 end.
