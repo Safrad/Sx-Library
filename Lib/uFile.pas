@@ -675,11 +675,13 @@ procedure TFile.ReadPrefix;
 var
 	ByteOrderMark: array [0 .. MaxByteOrderMarkSize - 1] of AnsiChar;
 	Charset: TFileCharset;
+  FileExt: string;
 begin
 	ByteOrderMark := '    ';
 	BlockRead(ByteOrderMark[0], Min(FFileSize, MaxByteOrderMarkSize));
 	FCharset := FDefaultCharset;
-  if UpperCase(ExtractFileExt(FFileName)) = '.XML' then
+  FileExt := UpperCase(ExtractFileExt(FFileName));
+  if (FileExt = '.XML') or (FileExt = '.DPROJ') then
     FCharset := fcUTF8;
 	for Charset := Succ( Low(Charset)) to High(Charset) do
 	begin
