@@ -33,6 +33,7 @@ type
 		property Canvas: TCanvas read FCanvas;
 		procedure Invalidate; override;
 	published
+		property Align;
 		property Bitmap: TDBitmap read FBitmap;
 		property Font;
 		property IsFocused: Boolean read FFocused;
