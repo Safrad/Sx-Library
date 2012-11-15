@@ -522,7 +522,7 @@ begin
 				if BmpCheck = nil then
 					LoadBmpCheck;
 //				MenuBmp.Bmp( Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, BmpCheck, ef16);
-				MenuBmp.Bmp((IconSize - BmpCheck.Width) div 2, (ARect.Bottom - ARect.Top - BmpCheck.Height) div 2, BmpCheck, ef16);
+				MenuBmp.Bmp((ImageSize + FrameBorder + 1 - BmpCheck.Width) div 2, (ARect.Bottom - ARect.Top - BmpCheck.Height + 1) div 2, BmpCheck, ef16);
 				MenuB := True;
 			end;
 		end;
