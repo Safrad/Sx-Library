@@ -3,7 +3,9 @@ unit uCommon;
 interface
 
 uses
+{$if (CompilerVersion >= 17) and (CompilerVersion < 21)}
   AltGrCrash,
+{$ifend}
 	Graphics,
   uPictureFactory,
 	uTypes, uDForm, uOptions, uStrings,
