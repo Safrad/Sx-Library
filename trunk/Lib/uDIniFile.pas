@@ -103,6 +103,7 @@ type
 		procedure RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
 			overload;
 		procedure RWPoint(const Section, Ident: string; var Value: TPoint; const Save: BG);
+		procedure RWRect(const Section, Ident: string; var Value: TRect; const Save: BG);
 
 		procedure RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 		procedure RWTime(const Section, Ident: string; var Value: TDateTime; const Save: BG);
@@ -190,7 +191,7 @@ implementation
 
 uses
 	Windows, Math,
-	uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog
+	uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog, uRect, uWHRect
 {$IFNDEF Console}, uMenus, uDParser, uSystem {$ENDIF};
 
 procedure TDIniFile.AddSection(const Section: string);
@@ -947,6 +948,31 @@ begin
 	end;
 end;
 
+procedure TDIniFile.RWRect(const Section, Ident: string; var Value: TRect;
+  const Save: BG);
+const
+	RectSep = ';';
+var
+	Line: string;
+	InLineIndex: SG;
+begin
+	Line :=
+    NToS(Value.Left, ofIO) + RectSep + NToS(Value.Top, ofIO) + RectSep +
+    NToS(Value.Right, ofIO) + RectSep + NToS(Value.Bottom, ofIO);
+	RWString(Section, Ident, Line, Save);
+	if Save = False then
+	begin
+		InLineIndex := 1;
+		Value.Left := ReadSGFast(Line, InLineIndex);
+		ReadToChar(Line, InLineIndex, RectSep);
+		Value.Top := ReadSGFast(Line, InLineIndex);
+		ReadToChar(Line, InLineIndex, RectSep);
+		Value.Right := ReadSGFast(Line, InLineIndex);
+		ReadToChar(Line, InLineIndex, RectSep);
+		Value.Bottom := ReadSGFast(Line, InLineIndex);
+	end;
+end;
+
 procedure TDIniFile.RWDate(const Section, Ident: string; var Value: TDateTime; const Save: BG);
 begin
 	if Save = False then
@@ -1191,9 +1217,12 @@ end;
 
 procedure TDIniFile.RWFormPos(const Form: TForm; const Save: BG);
 var
-	FormOrigin: TPoint;
-	FormSize: TSize;
+  WHRect: TWHRect;
 	WS: TWindowState;
+  PixelsPerInch: Integer;
+  WorkAreaRect, NowWorkAreaRect: TRect;
+  NewWidth, OldWidth, NewHeight, OldHeight: SG;
+
 {	R: TRect;
 		WindowLong: U4; }
 begin
@@ -1221,29 +1250,52 @@ begin
 			GetWindowRect(Form.Handle, R);
 			Form.WindowState := wsNormal; // DNW
 			end; }
-		FormOrigin.X := Form.Left;
-		FormOrigin.Y := Form.Top;
-		FormSize.cx := Form.Width;
-		FormSize.cy := Form.Height;
+		WHRect.Left := Form.Left;
+		WHRect.Top := Form.Top;
+		WHRect.Width := Form.Width;
+		WHRect.Height := Form.Height;
+    PixelsPerInch := Screen.PixelsPerInch;
+		LocalMainIni.RWNum(Form.Name, 'PixelsPerInch', PixelsPerInch, Save);
 		if not (Form.Position in [poDefault, poDefaultSizeOnly]) then
 			if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
 			// if (not (Form is TDForm)) or (TDForm(Form).FullScreen = False) then
 			begin
-				LocalMainIni.RWNum(Form.Name, 'Width', FormSize.cx, Save);
-				LocalMainIni.RWNum(Form.Name, 'Height', FormSize.cy, Save);
+				LocalMainIni.RWNum(Form.Name, 'Width', WHRect.Width, Save);
+				LocalMainIni.RWNum(Form.Name, 'Height', WHRect.Height, Save);
+        WHRect.Width := LgToPx(WHRect.Width, PixelsPerInch);
+        WHRect.Height := LgToPx(WHRect.Height, PixelsPerInch);
 			end;
 
 		if (Form.Position in [poDesigned, poDefaultSizeOnly]) then
 		begin
 			if Save = False then
-				FormOrigin := TDForm(Form).CenterPoint;
-			LocalMainIni.RWNum(Form.Name, 'Left', FormOrigin.X, Save);
-			LocalMainIni.RWNum(Form.Name, 'Top', FormOrigin.Y, Save);
+				WHRect.TopLeft := TDForm(Form).CenterPoint;
+			LocalMainIni.RWNum(Form.Name, 'Left', WHRect.Left, Save);
+			LocalMainIni.RWNum(Form.Name, 'Top', WHRect.Top, Save);
 		end;
+
+    WorkAreaRect := Screen.MonitorFromWindow(Form.Handle).WorkareaRect;
+		LocalMainIni.RWRect(Form.Name, 'WorkArea', WorkAreaRect, Save);
+
+    NowWorkAreaRect := Screen.MonitorFromWindow(Form.Handle).WorkareaRect;
 
 		if Save = False then
 		begin
-			Form.SetBounds(FormOrigin.X, FormOrigin.Y, FormSize.cx, FormSize.cy);
+      if not SameRect(NowWorkAreaRect, WorkAreaRect) then
+      begin
+        NewWidth := RectWidth(NowWorkAreaRect);
+        OldWidth := RectWidth(WorkAreaRect);
+        NewHeight := RectHeight(NowWorkAreaRect);
+        OldHeight := RectHeight(WorkAreaRect);
+        WHRect.Left := RoundDivS8(NewWidth * WHRect.Left, OldWidth);
+        WHRect.Width :=  RoundDivS8(NewWidth * WHRect.Width, OldWidth);
+
+        WHRect.Top := RoundDivS8(NewHeight * WHRect.Top, OldHeight);
+        WHRect.Height := RoundDivS8(NewHeight * WHRect.Height, OldHeight);
+      end;
+
+      WHRect := RectToWHRect(MoveRectInside(WHRectToRect(WHRect), WorkAreaRect));
+			Form.SetBounds(WHRect.Left, WHRect.Top, WHRect.Width, WHRect.Height);
 		end;
 	end;
 	if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
