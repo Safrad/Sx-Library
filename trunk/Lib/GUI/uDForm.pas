@@ -99,8 +99,12 @@ procedure ShowTaskBar(Visible: Boolean);
 function GetTaskBarPos: TPosition;
 // function GetDesktopRect(out Rect: TRect): SG; deprecated;
 
-// Logical size to real pixels (depends on DPI)
-function LgToPx(const Value: SG): SG;
+// Logical size to real pixels (depends on current DPI)
+const
+  DefaultDPI = 96;
+
+function LgToPx(const Value: SG): SG; overload;
+function LgToPx(const Value: SG; const OriginalDPI: SG): SG; overload;
 
 procedure Register;
 
@@ -124,7 +128,7 @@ implementation
 uses
 	Types, Math,
   uMath, uDictionary,
-	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo, uCommon, uLog;
+	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo, uCommon, uLog, uRect;
 
 const
 	OneBuffer = False;
@@ -443,12 +447,6 @@ begin
 	{ if LActive = False then
 		SendToBack; }
 	ResizeMessage;
-end;
-
-function SameRect(const R1, R2: TRect): BG;
-begin
-	Result := (R1.Left = R2.Left) and (R1.Right = R2.Right) and (R1.Top = R2.Top) and
-		(R1.Bottom = R2.Bottom);
 end;
 
 procedure TDForm.SetFullScreen(Value: Boolean);
@@ -1058,14 +1056,20 @@ begin
 //	Params.Style := Params.Style and not WS_CLIPCHILDREN;
 end;
 
-function LgToPx(const Value: SG): SG;
-const
-  DefaultDPI = 96;
+function LgToPx(const Value: SG): SG; overload;
 begin
   if Screen.PixelsPerInch = DefaultDPI then
     Result := Value
   else
     Result := RoundDiv(Value * Screen.PixelsPerInch, DefaultDPI);
+end;
+
+function LgToPx(const Value: SG; const OriginalDPI: SG): SG; overload;
+begin
+  if Screen.PixelsPerInch = OriginalDPI then
+    Result := Value
+  else
+    Result := RoundDiv(Value * Screen.PixelsPerInch, OriginalDPI);
 end;
 
 initialization

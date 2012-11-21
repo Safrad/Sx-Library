@@ -102,7 +102,6 @@ procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
 procedure ReadMem(P: Pointer; Size: UG);
 function SameData(P0, P1: Pointer; Size: UG): BG;
-function SameRect(const R1, R2: TRect): BG;
 procedure FillU2(var Desc; Count: UG; Value: U2);
 procedure FillU4(var Desc; Count: UG; Value: U4);
 procedure FillUG(var Desc; Count: UG; Value: UG);
@@ -1196,11 +1195,6 @@ asm
 	pop ebx
 	@Exit0:
 {$endif}
-end;
-
-function SameRect(const R1, R2: TRect): BG;
-begin
-	Result := SameData(@R1, @R2, SizeOf(TRect));
 end;
 
 procedure FillU2(var Desc; Count: UG; Value: U2); register;

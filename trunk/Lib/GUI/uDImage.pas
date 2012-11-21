@@ -261,7 +261,7 @@ implementation
 uses
 	Math, ClipBrd,
 	uGraph, uStrings, uGetInt, uGColor, uOutputFormat, uMsg, uColor, uMenus, uDrawStyle, uDictionary,
-	uLog,
+	uLog, uRect,
 	Types;
 
 const
