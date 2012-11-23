@@ -141,7 +141,7 @@ type
 		property CutWindow: TRect read GetCutWindow write SetCutWindow;
 //		property PixelFormat: TPixelFormat read FPixelFormat;
 		procedure Init(const InitialColor: TColor);
-		procedure SetSize(NewWidth, NewHeight: TCoor; const InitialColor: TColor = clNone);
+		procedure SetSize(NewWidth, NewHeight: TCoor; const InitialColor: TColor = clNone); {$if CompilerVersion >= 20}reintroduce;{$ifend}
 		procedure Sample(const Width, Height: TCoor);
 		procedure GLSetSize;
 		procedure SetAlpha;
