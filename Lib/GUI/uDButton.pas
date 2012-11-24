@@ -206,7 +206,6 @@ end;
 
 destructor TDButton.Destroy;
 begin
-	FGlyph.Free;
 	Bitmap.Free;
 	inherited;
 end;
