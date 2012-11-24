@@ -100,6 +100,8 @@ var
   CompilerWarningsStr: array[TCompilerWarning] of string;
 
 type
+	TLibDirective = (ldPrefix, ldSuffix, ldVersion);
+
 	TProjectOptions = class
   private
     FFileName: TFileName;
@@ -107,6 +109,7 @@ type
     procedure WriteWarningsToNode(const Node: IXMLNode);
     procedure ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
     function GetExecutableType(const AFileName: TFileName): TExecutableType;
+    procedure ParseDPK;
   public
     ExecutableType: TExecutableType;
     // Compiler
@@ -130,6 +133,10 @@ type
     ImageBase: UG;
     // GUI
     RuntimeThemes: BG; // New in Delphi 2007
+
+    // in dpk
+    LibDirective: array[TLibDirective] of string;
+
 
     // Version Info
 		Version: TProjectVersion;
@@ -628,13 +635,31 @@ end;
 
 function TProjectOptions.GetOutputFile: TFileName;
 begin
-  // TODO PackageDLLOutput
-	if Pos(':', OutputDir) <> 0 then
-		Result := OutputDir
-	else
-		Result := ExpandFileName(ExtractFilePath(FFileName) + OutputDir); // ../
-	CorrectDir(string(Result));
-	Result := Result + DelFileExt(ExtractFileName(FFileName)) + '.' + ExecutableTypes[ExecutableType];
+	case ExecutableType of
+  etProgram, etLibrary:
+  	Result := OutputDir;
+  etPackage:
+  begin
+    	if PackageDLLOutputDir = '' then
+      begin
+        Result := ''; // TODO : Get "Package DCP Output" from, registry
+      end
+      else
+      	Result := PackageDLLOutputDir;
+		ParseDPK;
+  end;
+  end;
+
+  if Pos(':', Result) = 0 then
+    Result := ExpandFileName(ExtractFilePath(FFileName) + Result); // ../
+  CorrectDir(string(Result));
+
+	Result := Result +
+  	LibDirective[ldPrefix] + DelFileExt(ExtractFileName(FFileName)) + LibDirective[ldSuffix] +
+  	'.' +
+    ExecutableTypes[ExecutableType];
+    if LibDirective[ldVersion] <> '' then
+      Result := Result + '.' + LibDirective[ldVersion];
 end;
 
 procedure TProjectOptions.ReadFromFile(const AFileName: TFileName);
@@ -825,6 +850,27 @@ begin
   for i := 0 to Length(CompilerWarningsStr) - 1 do
   begin
     AddPrefix(CompilerWarningsStr[TCompilerWarning(i)], 'DCC_');
+  end;
+end;
+
+procedure TProjectOptions.ParseDPK;
+const
+  DirectiveName: array[TLibDirective] of string = ('LIBPREFIX', 'LIBSUFFIX', 'LIBVERSION');
+var
+  i: TLibDirective;
+  Data: string;
+  p: SG;
+begin
+  Data := ReadStringFromFile(DelFileExt(FFileName) + '.dpk');
+	for i := Low(TLibDirective) to High(TLibDirective) do
+  begin
+		LibDirective[i] := '';
+    p := Pos('{$' + DirectiveName[i], Data);
+    if p <> 0 then
+    begin
+      ReadToChar(Data, p, '''');
+      LibDirective[i] := ReadToChar(Data, p, '''');
+    end;
   end;
 end;
 
