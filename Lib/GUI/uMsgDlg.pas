@@ -831,5 +831,6 @@ initialization
 finalization
 {$IFNDEF NoFinalization}
 	FreeIgnores;
+  FreeAndNil(fMsgDlg);
 {$ENDIF NoFinalization}
 end.
