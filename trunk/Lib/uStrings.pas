@@ -147,6 +147,7 @@ function Plural(const Number: SG): string;
 procedure CorrectDir(var s: string);
 function CorrectDirF(const s: string): string;
 function RandomString(const Size: SG): string;
+function RandomText(const Size: SG): string;
 
 procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
 procedure EnumToStrEx(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
@@ -1141,6 +1142,16 @@ begin
 	SetLength(Result, Size);
 	for i := 1 to Size do
 		Result[i] := Char(Random(256));
+end;
+
+function RandomText(const Size: SG): string;
+const
+  FirstASCIIChar = Ord(' '); // 32
+var i: SG;
+begin
+	SetLength(Result, Size);
+	for i := 1 to Size do
+		Result[i] := Char(FirstASCIIChar + Random(128 - FirstASCIIChar));
 end;
 
 procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
