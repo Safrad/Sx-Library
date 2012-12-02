@@ -95,6 +95,7 @@ type
 		procedure MoveColumn(const FromColumn, ToColumn: SG);
 		procedure NextRow(const Key: Char);
 		procedure FindText;
+    function GetDataAsString(const ColIndex, RowIndex: SG): string;
 
 		procedure LFill(Sender: TObject);
 
@@ -1043,8 +1044,6 @@ var
 	i: SG;
 	Data: string;
 	RowIndex, ColIndex: SG;
-	Rec: TRect;
-	VarData: Variant;
 begin
 	if Assigned(FOnGetRowCount) then
 		FAllRowCount := FOnGetRowCount(Self);
@@ -1060,15 +1059,7 @@ begin
 			begin
 				Data := '';
 				try
-					if Assigned(FOnGetData) then
-					begin
-						FOnGetData(Self, Data, ColIndex, RowIndex, Rec);
-					end
-					else
-					begin
-						FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rec);
-						Data := VarToStr(VarData);
-					end;
+          Data := GetDataAsString(ColIndex, RowIndex);
 				except
 					on E: Exception do
 						Fatal(E, Self);
@@ -1258,7 +1249,7 @@ begin
 			Accept := False;
 			for ColIndex := 0 to Length(FColumns) - 1 do
 			begin
-				FOnGetData(Self, Data, ColIndex{FActualColumn}, i, Rect);
+				Data := GetDataAsString(ColIndex{FActualColumn}, i);
 				if FTextFilter.Accept(Data) then
 				begin
 					Accept := True;
@@ -1377,6 +1368,24 @@ begin
 	Invalidate;
 end;
 
+function TDView.GetDataAsString(const ColIndex, RowIndex: SG): string;
+var
+	VarData: Variant;
+	Rec: TRect;
+begin
+	Rec := Rect(0, 0, 0, 0);
+  if Assigned(FOnGetData) then
+  begin
+    FOnGetData(Self, Result, ColIndex, RowIndex, Rec);
+  end
+  else if Assigned(FOnGetDataEx) then
+  begin
+    FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rec);
+    Result := VarToStr(VarData);
+  end;
+
+end;
+
 function TDView.GetSelCount: SG;
 var
 	i: SG;
@@ -1429,11 +1438,9 @@ var
 	R, C, RowIndex, ColIndex: SG;
 	Buffer: string;
 	Data: string;
-	Rec: TRect;
 begin
-	if Assigned(FOnGetData) then
+	if Assigned(FOnGetData) or Assigned(FOnGetDataEx) then
 	begin
-		Rec := Rect(0, 0, 0, 0);
 		for R := 0 to FAllRowCount - 1 do
 		begin
 			RowIndex := FRowOrder[R];
@@ -1446,7 +1453,7 @@ begin
 						ColIndex := FColumnOrder[C];
 						Data := '';
 						try
-							FOnGetData(Self, Data, ColIndex, RowIndex, Rec);
+							Data := GetDataAsString(ColIndex, RowIndex);
 						except
 							on E: Exception do
 								Fatal(E, Self);
@@ -1719,7 +1726,7 @@ begin
 			if Y >= FAllRowCount then
 				Y := 0;
 			try
-				FOnGetData(Self, Data, FColumnOrder[FActualColumn], FRowOrder[Y], Rect(0, 0, 0, 0));
+				Data := GetDataAsString(FColumnOrder[FActualColumn], FRowOrder[Y]);
 			except
 				on E: Exception do
 					Fatal(E, Self);
@@ -1749,7 +1756,7 @@ begin
 		if Y >= FAllRowCount then
 			Y := 0;
 		try
-			FOnGetData(Self, Data, FColumnOrder[FActualColumn], FRowOrder[Y], Rect(0, 0, 0, 0));
+			Data := GetDataAsString(FColumnOrder[FActualColumn], FRowOrder[Y]);
 		except
 			on E: Exception do
 				Fatal(E, Self);
@@ -1786,13 +1793,12 @@ begin
 			if FColumns[ColIndex].Visible then
 			begin
 				OptimalColumnWidth := MinColumnWidth;
-				if Assigned(FOnGetData) then
+				if Assigned(FOnGetData) or Assigned(FOnGetDataEx) then
 				begin
 					for RowIndex := 0 to FAllRowCount - 1 do
 					begin
 						try
-							Data := '';
-							FOnGetData(Self, Data, ColIndex, RowIndex, Rect(0, 0, 0, 0));
+							Data := GetDataAsString(ColIndex, RowIndex);
 						except
 							on E: Exception do
 								Fatal(E, Self);
@@ -1818,7 +1824,7 @@ procedure TDView.KeyPress(var Key: Char);
 begin
 	inherited;
 
-	if Assigned(FOnGetData) and (FFilteredRowCount > 0) and (FActualColumn >= 0) then
+	if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FFilteredRowCount > 0) and (FActualColumn >= 0) then
 	begin
 		if Key = FLastKey then
 			NextRow(Key)
