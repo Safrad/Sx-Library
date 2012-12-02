@@ -188,7 +188,7 @@ implementation
 
 uses
 	Math, StdCtrls, ClipBrd, Types, Forms,
-	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uOutputFormat, uDrawStyle,
+	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
 	uDWinControl,
 	fFind, Variants;
 
@@ -1219,12 +1219,8 @@ end;
 procedure TDView.SortData;
 var
 	i, c: SG;
-	VarTyp: TVarType;
 	AStr: array of string;
-	AInteger: array of SG;
-	AFloat: array of FA;
-	AInt64: array of S8;
-	VarData: Variant;
+  AVariant: array of Variant;
 	Rect: TRect;
 	FSortBySwap2: TArrayOfBG;
 	Last: SG;
@@ -1292,69 +1288,29 @@ begin
 			end
 			else
 			begin // Automatic sort
-				if not Assigned(FOnGetDataEx) then
-				begin
-					VarTyp := varOleStr;
-				end
-				else
-				begin
-					FOnGetDataEx(Self, VarData, FSortByIndexes[c], 0, Rect);
-					VarTyp := VarType(VarData);
-				end;
-				case VarTyp of
-				varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord:
-					 SetLength(AInteger, FAllRowCount);
-				varInt64:
-					SetLength(AInt64, FAllRowCount);
-				varSingle, varDouble, varCurrency, varDate:
-					SetLength(AFloat, FAllRowCount);
-				varOleStr, varString{$ifdef UniCode}, varUString{$endif}:
-					SetLength(AStr, FAllRowCount);
-				end;
-
 				Rect.Left := 0;
 				Rect.Top := 0;
 				Rect.Right := 0;
 				Rect.Bottom := 0;
-				for i := 0 to FAllRowCount - 1 do
-				begin
-					try
-						if Assigned(FOnGetDataEx) then
-						begin
-							case VarTyp of
-							varOleStr, varString{$ifdef UniCode}, varUString{$endif}:
-								FOnGetDataEx(Self, VarData, FSortByIndexes[c], i, Rect)
-							else
-								FOnGetDataEx(Self, VarData, FSortByIndexes[c], FRowOrder[i], Rect);
-							end;
-							case VarTyp of
-							varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord:
-								AInteger[i] := VarData;
-							varInt64:
-								AInt64[i] := VarData;
-							varSingle, varDouble, varCurrency, varDate:
-								AFloat[i] := VarData;
-							varOleStr, varString{$ifdef UniCode}, varUString{$endif}:
-								AStr[i] := VarData;
-							end;
-						end
-						else
-							FOnGetData(Self, AStr[i], FSortByIndexes[c], FRowOrder[i], Rect);
-					except
-						on E: Exception do
-							Fatal(E, Self);
-					end;
-				end;
-				case VarTyp of
-				varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord:
-					SortS4(True, FSortBySwap2[c], PArraySG(FRowOrder), PArrayS4(AInteger), FFilteredRowCount);
-				varInt64:
-					SortS8(True, FSortBySwap2[c], PArraySG(FRowOrder), PArrayS8(AInt64), FFilteredRowCount);
-				varSingle, varDouble, varCurrency, varDate:
-					SortFA(True, FSortBySwap2[c], PArraySG(FRowOrder), PArrayFA(AFloat), FFilteredRowCount);
-				varOleStr, varString{$ifdef UniCode}, varUString{$endif}:
-					SortStr(PArraySG(FRowOrder), PArrayString(AStr), FFilteredRowCount, FSortBySwap2[c]);
-				end;
+        try
+          if not Assigned(FOnGetDataEx) then
+          begin
+            SetLength(AStr, FAllRowCount);
+            for i := 0 to FAllRowCount - 1 do
+              FOnGetData(Self, AStr[i], FSortByIndexes[c], FRowOrder[i], Rect);
+  					SortStr(PArraySG(FRowOrder), PArrayString(AStr), FFilteredRowCount, FSortBySwap2[c]);
+          end
+          else
+          begin
+  					SetLength(AVariant, FAllRowCount);
+            for i := 0 to FAllRowCount - 1 do
+              FOnGetDataEx(Self, AVariant[i], FSortByIndexes[c], FRowOrder[i], Rect);
+  					SortVariant(PArraySG(FRowOrder), AVariant, FFilteredRowCount, FSortBySwap2[c]);
+          end;
+        except
+          on E: Exception do
+            Fatal(E, Self);
+        end;
 			end;
 		end
 	end;
