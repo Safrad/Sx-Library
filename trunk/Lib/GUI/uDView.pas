@@ -73,6 +73,8 @@ type
 		FColumnOrder: TArrayOfSG;
 		FRowOrder: TArrayOfSG;
 		FSelectedRows: TArrayOfBG;
+    FEnableColumnSelection: BG;
+
 		FSortByIndexes: TArrayOfSG;
 		FSortByOrders: TArrayOfBG;
 		FSortBy: SG;
@@ -175,6 +177,7 @@ type
 		procedure Serialize(const IniFile: TDIniFile; const Save: BG);
 	published
 		{ Published declarations }
+		property EnableColumnSelection: BG read FEnableColumnSelection write FEnableColumnSelection default False;
 		property OnGetRowCount: TOnGetRowCount read FOnGetRowCount write FOnGetRowCount;
 		property OnGetData: TOnGetData read FOnGetData write FOnGetData;
 		property OnGetDataEx: TOnGetDataEx read FOnGetDataEx write FOnGetDataEx;
@@ -804,7 +807,7 @@ begin
 				begin
 					if (IY >= 0) and (IY < FFilteredRowCount) then
 					begin
-						if FSelectedRows[FRowOrder[IY]] then
+						if FSelectedRows[FRowOrder[IY]] and ((FEnableColumnSelection = False) or (IX = FActualColumn)) then
 						begin
 							if IsFocused then
 								Bitmap.Canvas.Brush.Color := clHighlight
@@ -824,7 +827,7 @@ begin
 							ColIndex := FColumnOrder[IX];
 							RowIndex := FRowOrder[IY];
 							Bitmap.Canvas.Font.Style := [];
-							if FSelectedRows[FRowOrder[IY]] then
+							if FSelectedRows[FRowOrder[IY]] and ((FEnableColumnSelection = False) or (IX = FActualColumn)) then
 							begin
 								if IsFocused then
 									Bitmap.Canvas.Font.Color := clWindow
