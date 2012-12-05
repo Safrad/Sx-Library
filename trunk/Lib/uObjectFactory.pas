@@ -50,8 +50,9 @@ end;
 
 destructor TFactoryObject.Destroy;
 begin
-  inherited;
   FreeAndNil(CustomObject);
+
+  inherited;
 end;
 
 

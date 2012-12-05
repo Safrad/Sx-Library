@@ -48,7 +48,8 @@ begin
           FO.CustomObject := TDBitmap.Create;
           Bmp := TDBitmap(FO.CustomObject);
           Bmp.LoadFromFile(FileName);
-          Break;
+          Result := TDBitmap(FO.CustomObject);
+          Exit;
         end;
       end;
   end;
