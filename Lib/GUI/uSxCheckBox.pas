@@ -66,7 +66,8 @@ end;
 
 procedure TSxCheckBox.BorderClick(Sender: TObject);
 begin
-  Toggle;
+  if Enabled then
+    Toggle;
 end;
 
 end.
