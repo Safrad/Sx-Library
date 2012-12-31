@@ -2903,7 +2903,9 @@ var
 begin
   LRect := ARect;
 
-  if (FInternalDrawingStyle = gdsThemed) and (gdFixed in AState) then
+// FIX -oSafrad : Title Color
+//  if (FInternalDrawingStyle = gdsThemed) and (gdFixed in AState) then
+  if (FInternalDrawingStyle = gdsThemed) and (gdFixed in AState) and (AColor = clBtnFace) then
   begin
     ClipRect := LRect;
     if Win32MajorVersion >= 6 then
@@ -2916,7 +2918,9 @@ begin
   end
   else
   begin
-    if (FInternalDrawingStyle = gdsGradient) and (gdFixed in AState) then
+// FIX -oSafrad : Title Color
+//    if (FInternalDrawingStyle = gdsGradient) and (gdFixed in AState) then
+    if (FInternalDrawingStyle = gdsGradient) and (gdFixed in AState) and (AColor = clBtnFace) then
     begin
       if not (goFixedVertLine in Options) then
         Inc(LRect.Right);
