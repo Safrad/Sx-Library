@@ -3168,7 +3168,15 @@ begin
           Canvas.Font.Color := LColor;
       end;
 
-      GradientFillCanvas(Canvas, LStartColor, LEndColor, LRect, gdVertical);
+// FIX -oSafrad : Column title color
+//      GradientFillCanvas(Canvas, LStartColor, LEndColor, LRect, gdVertical);
+      if AColor <> clBtnFace then
+        begin
+          Canvas.Brush.Color := AColor;
+          Canvas.FillRect(LRect);
+        end
+      else
+        GradientFillCanvas(Canvas, LStartColor, LEndColor, LRect, gdVertical);
       Canvas.Brush.Style := bsClear;
     end
     else
