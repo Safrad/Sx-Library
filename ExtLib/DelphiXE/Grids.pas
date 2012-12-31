@@ -1201,7 +1201,6 @@ begin
     Message.Result := Message.Result or DLGC_WANTTAB;
 end;
 
-[UIPermission(SecurityAction.LinkDemand, Clipboard=UIPermissionClipboard.AllClipboard)]
 procedure TInplaceEdit.WMPaste(var Message: TMessage);
 begin
   if not EditCanModify then Exit;
@@ -1459,7 +1458,6 @@ begin
   InternalMove(Loc, True);
 end;
 
-[UIPermission(SecurityAction.LinkDemand, Window=UIPermissionWindow.AllWindows)]
 procedure TInplaceEdit.SetFocus;
 begin
   if IsWindowVisible(Handle) then
@@ -2183,8 +2181,9 @@ var
           end;
           if PointInGridRect(CurCol, CurRow, Sel) then
             Include(DrawState, gdSelected);
-          if not (gdFocused in DrawState) or not (goEditing in Options) or
-            not FEditorMode or (csDesigning in ComponentState) then
+// FIX -oSafrad : Editable cell border
+//          if not (gdFocused in DrawState) or not (goEditing in Options) or
+//            not FEditorMode or (csDesigning in ComponentState) then
           begin
             if DefaultDrawing or (csDesigning in ComponentState) then
             begin
@@ -6334,7 +6333,6 @@ begin
   end;
 end;
 
-[UIPermission(SecurityAction.LinkDemand, Window=UIPermissionWindow.AllWindows)]
 procedure TPopupListbox.CreateWnd;
 begin
   inherited CreateWnd;
