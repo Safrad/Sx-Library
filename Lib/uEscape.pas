@@ -35,9 +35,11 @@ Sequence	Value	Char	What it does
 function RemoveEscape(const s: string): string;
 function AddEscape(const s: string; const KeepCharser:BG = True): string;
 
+function RemovePercentEscape(const Input: AnsiString): string;
+
 implementation
 
-uses uStrings, uOutputFormat;
+uses uStrings, uOutputFormat, SysUtils;
 
 function RemoveEscape(const s: string): string;
 var
@@ -216,6 +218,21 @@ begin
 		end;
 		Inc(i);
 	end;
+end;
+
+function RemovePercentEscape(const Input: AnsiString): string;
+var
+  u: string;
+  s: string;
+  i: SG;
+begin
+  u := Input;
+  for i := 0 to 255 do
+  begin
+    FmtStr(s, '%.2x', [i]);
+    Replace(u, '%' + s, AnsiChar(i));
+  end;
+  Result := UTF8ToString(u);
 end;
 
 end.
