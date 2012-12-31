@@ -30,7 +30,14 @@ begin
   begin
     SetLength(AInteger, Count);
     for i := 0 to Count - 1 do
-      AInteger[i] := AVariant[i];
+    begin
+      if VarType(AVariant[i]) = VarTyp then
+      begin
+        AInteger[i] := AVariant[i];
+      end
+      else
+        AInteger[i] := MaxInt;
+    end;
     SortS4(True, Reverse, AIndex, PArrayS4(AInteger), Count);
   end;
   varInt64:
