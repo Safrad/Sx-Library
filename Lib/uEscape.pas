@@ -232,7 +232,11 @@ begin
     FmtStr(s, '%.2x', [i]);
     Replace(u, '%' + s, AnsiChar(i));
   end;
+	{$if CompilerVersion < 20}
+  Result := UTF8Decode(u);
+  {$else}
   Result := UTF8ToString(u);
+  {$ifend}
 end;
 
 end.

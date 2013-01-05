@@ -224,6 +224,10 @@ type
 	TArrayString = array[0..{$ifdef CPUX64}256{$else}512{$endif} * MB - 2] of string;
 	PArrayString = ^TArrayString;
 
+{$if CompilerVersion < 20}
+  TDate = type TDateTime;
+{$ifend}
+
 	TMessageLevel = (
 		mlConfirmation,
 		mlDebug, // Debug-level messages (Opening file)
