@@ -11,6 +11,7 @@ implementation
 
 uses
   Variants,
+  Math,
   uSorts;
 
 procedure SortVariant(const AIndex: PArraySG; const AVariant: array of Variant; const Count: SG; const Reverse: BG = False);
@@ -51,7 +52,14 @@ begin
   begin
     SetLength(AFloat, Count);
     for i := 0 to Count - 1 do
-			AFloat[i] := AVariant[i];
+    begin
+      if VarType(AVariant[i]) = VarTyp then
+      begin
+  			AFloat[i] := AVariant[i];
+      end
+      else
+  			AFloat[i] := MaxExtended;
+    end;
 		SortFA(True, Reverse, AIndex, PArrayFA(AFloat), Count);
   end;
   varOleStr, varString{$ifdef UniCode}, varUString{$endif}:
