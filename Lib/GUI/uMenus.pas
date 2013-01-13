@@ -293,7 +293,7 @@ var
 
 	TopLevel: Boolean;
 	MenuIndex, MenuCount: Integer;
-	MenuB: Boolean;
+	MenuIcon: (miNone, miBitmap, miImageList);
 	Parent: TObject;
   Size: SG;
 begin
@@ -435,55 +435,41 @@ begin
 		end;
 
 		// Image
-		{ if MenuItem.Checked then
-			begin
-			if (odSelected in State) then
-			begin
-			Y := (ARect.Bottom - ARect.Top - 18) div 2;
-			MenuBmp.Bar(1, Y + 1, 1 + 15, Y + 1 + 15, clDepth[1], ef08);
-			end;
-			end; }
+		MenuIcon := miNone;
+    if TopLevel = False then
+    begin
+      if Assigned(MenuItem.Bitmap) and (MenuItem.Bitmap.Empty = False) then
+        MenuIcon := miBitmap
+      else if (MenuItem.ImageIndex >= 0) and Assigned(ImageList) then
+        MenuIcon := miImageList;
 
-		MenuB := False;
-		if (MenuItem.ImageIndex >= 0) and Assigned(ImageList) and (TopLevel = False) then
-		begin
-			// Not often used
-			BmpD.Bar(clMenu, ef16);
+      if MenuIcon <> miNone then
+      begin
+        case MenuIcon of
+        miImageList:
+        begin
+          BmpD.SetSize(ImageList.Width, ImageList.Height);
+          BmpD.Bar(clMenu, ef16);
+          ImageList.Draw(BmpD.Canvas, 0, 0, MenuItem.ImageIndex, True);
+          BmpD.Transparent := False;
+          BmpD.Resize(ImageSize, ImageSize);
+          BmpD.Transparent := True;
+          BmpD.TransparentColor := clMenu;
+        end;
+        miBitmap:
+        begin
+    			BmpD.FromBitmap(MenuItem.Bitmap);
+        end;
+        end;
 
-			ImageList.Draw(BmpD.Canvas, 0, 0, MenuItem.ImageIndex, True);
-			BmpD.Transparent := True;
-			if MenuItem.Enabled = False then
-				BmpD.Bar(clRed, ef12);
-			BmpD.TransparentColor := clMenu;
+        if (MenuItem.Enabled = False) or (odInactive in State) then
+          BmpD.Bar(clMenu, ef12);
 
-			MenuBmp.Bmp(1, (ARect.Bottom - ARect.Top - BmpD.Height - 2) div 2 + 1, BmpD, ef16);
-
-			if (TopLevel = False) and (MenuItem.Checked = False) and (odSelected in State) then
-			begin
-				Y := (ARect.Bottom - ARect.Top - BmpD.Height - 2) div 2;
-				MenuBmp.Border(0, Y, 17 + 1, Y + 17 + 1, clDepth[3], clDepth[1], 1, ef16);
-			end;
-			MenuB := True;
-		end
-		else if Assigned(MenuItem.Bitmap) and (TopLevel = False) and (MenuItem.Bitmap.Empty = False)
-			then
-		begin
-			BmpD.FromBitmap(MenuItem.Bitmap);
-			if (MenuItem.Enabled = False) or (odInactive in State) then
-				BmpD.Bar(clMenu, ef12);
-
-			X := (ImageSize + FrameBorder - BmpD.Width) div 2;
-			Y := (ARect.Bottom - ARect.Top - BmpD.Height) div 2;
-			if TopLevel and (odSelected in State) then
-			begin
-				Inc(X);
-				Inc(Y);
-			end;
-			MenuBmp.Bmp(X, Y, BmpD, ef16);
-			MenuB := True;
-		end
-		else
-		begin
+        X := (ImageSize + FrameBorder - BmpD.Width) div 2;
+        Y := (ARect.Bottom - ARect.Top - BmpD.Height) div 2;
+        MenuBmp.Bmp(X, Y, BmpD, ef16);
+       end
+       else
 			if MenuItem.RadioItem then
 			begin
         if DrawRadioAsText then
@@ -523,7 +509,6 @@ begin
 					LoadBmpCheck;
 //				MenuBmp.Bmp( Canvas.Draw(4, (ARect.Bottom - ARect.Top - 18) div 2 + 3, BmpCheck, ef16);
 				MenuBmp.Bmp((ImageSize + FrameBorder + 1 - BmpCheck.Width) div 2, (ARect.Bottom - ARect.Top - BmpCheck.Height + 1) div 2, BmpCheck, ef16);
-				MenuB := True;
 			end;
 		end;
 
@@ -542,7 +527,7 @@ begin
 		BCanvas.Brush.Style := bsClear;
 		BCanvas.Font.Color := C2;
 
-		if (MenuB) or (TopLevel = False) then
+		if not TopLevel then
 			Rec.Left := LgToPx(SpaceBeforeMenuCaption) + ImageSize + FrameBorder
 		else
 			Rec.Left := LgToPx(SpaceBeforeMenuCaption);
