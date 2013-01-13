@@ -2754,7 +2754,7 @@ var
         RestoreDC(Canvas.Handle, I);
       end;
     end;
-    DrawCellBackground(TitleRect, FixedColor, AState, ACol, ARow - FTitleOffset);
+    DrawCellBackground(TitleRect, MasterCol.Title.Color, AState, ACol, ARow - FTitleOffset);
 
     LFrameOffs := FrameOffs;
     if (gdPressed in AState) then
