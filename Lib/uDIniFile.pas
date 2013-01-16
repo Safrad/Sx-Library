@@ -1287,11 +1287,17 @@ begin
         OldWidth := RectWidth(WorkAreaRect);
         NewHeight := RectHeight(NowWorkAreaRect);
         OldHeight := RectHeight(WorkAreaRect);
-        WHRect.Left := RoundDivS8(NewWidth * WHRect.Left, OldWidth);
-        WHRect.Width :=  RoundDivS8(NewWidth * WHRect.Width, OldWidth);
+        if OldWidth <> 0 then
+        begin
+          WHRect.Left := RoundDivS8(NewWidth * WHRect.Left, OldWidth);
+          WHRect.Width :=  RoundDivS8(NewWidth * WHRect.Width, OldWidth);
+        end;
 
-        WHRect.Top := RoundDivS8(NewHeight * WHRect.Top, OldHeight);
-        WHRect.Height := RoundDivS8(NewHeight * WHRect.Height, OldHeight);
+        if OldHeight <> 0 then
+        begin
+          WHRect.Top := RoundDivS8(NewHeight * WHRect.Top, OldHeight);
+          WHRect.Height := RoundDivS8(NewHeight * WHRect.Height, OldHeight);
+        end;
       end;
 
       WHRect := RectToWHRect(MoveRectInside(WHRectToRect(WHRect), WorkAreaRect));
