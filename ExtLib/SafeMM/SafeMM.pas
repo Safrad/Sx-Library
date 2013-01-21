@@ -99,6 +99,16 @@ Change log:
     not have TMemoryManagerEx defined.
     Moved SafeMM_readme.txt contents into this file and added addition notes.
 
+ Version 0.5 (January 8, 2012)
+  - Jan Goyvaerts (Just Great Software): Ported to Delphi XE2.
+    Supports Win32 and Win64 targets.
+    
+ Version 0.6 (July 12, 2012)
+  - Jan Goyvaerts (Just Great Software): FreeLargeBlock is now thread-safe.
+    It was not thread-safe in versions 0.3, 0.4, and 0.5, causing an
+    assertion failure or a crash if two threads tried to free a large
+    block at the same time.
+
 Todo (from Ben):
  - Implement SafeMMMode again
  - store stack traces for the memory alloc/free calls
@@ -130,10 +140,15 @@ interface
 type
   TSafeProtect = (spReadWrite,spReadOnly,spNoAccess);
 
-function SafeGetMem(Size: Integer): Pointer;
+{$if CompilerVersion < 23}
+	NativeInt = Integer;
+	NativeUInt = Cardinal;
+{$ifend}
+
+function SafeGetMem(Size: NativeInt): Pointer;
 function SafeFreeMem(P: Pointer): Integer;
-function SafeReallocMem(P: Pointer; Size: Integer): Pointer;
-function SafeAllocMem(ASize: Cardinal): Pointer;
+function SafeReallocMem(P: Pointer; Size: NativeInt): Pointer;
+function SafeAllocMem(ASize: {$if CompilerVersion < 23}Cardinal{$else}NativeInt{$ifend}): Pointer;
 function SafeRegisterExpectedMemoryLeak(P: Pointer): Boolean;
 function SafeUnregisterExpectedMemoryLeak(P: Pointer): Boolean;
 
@@ -152,8 +167,6 @@ reused by the next memory request.
 procedure SafeMMPrepare;
 
 const
-
-{$IFDEF MEMORY_MANAGER_EX}
   SafeMemoryManager: TMemoryManagerEx = (
    GetMem: SafeGetMem;
    FreeMem: SafeFreeMem;
@@ -162,16 +175,6 @@ const
    RegisterExpectedMemoryLeak: SafeRegisterExpectedMemoryLeak;
    UnregisterExpectedMemoryLeak: SafeUnregisterExpectedMemoryLeak;
   );
-{$ELSE}
-  SafeMemoryManager: TMemoryManager = (
-   GetMem: SafeGetMem;
-   FreeMem: SafeFreeMem;
-   ReallocMem: SafeReallocMem;
-  );
-
-type
-  TMemoryManagerEx = TMemoryManager;  // Simple alias to avoid IFDEF in SafeMMInstall.
-{$ENDIF}
 
 type
 
@@ -228,7 +231,7 @@ type
     //
     Issued:Boolean;
     //requested size
-    RequestSize:Cardinal;
+    RequestSize: NativeInt;
     //pointer to returned memory
     Start:Pointer;
     //use a fixed size list of pointers for a stack
@@ -241,10 +244,10 @@ const
   //used to indicate if we're located at a valid location
   cMagic=123123;
   //how many small-block pools are allowed
-  cMaxAvail=30000;
+  cMaxAvail=100000;
 
 var
-  FHeap:cardinal;
+  FHeap: THandle;
   FAvailCount:cardinal;
   FAvailList:array[0..cMaxAvail] of PPoolInfo;
   //used to decrease reuse of large blocks
@@ -257,11 +260,11 @@ var
   //FTotalList:array[1..32000] of PPoolInfo;
   FCritical:TRTLCriticalSection;
 
-function offset(const p:pointer;const b:integer):Pointer;
+function offset(const p:pointer;const b: NativeUInt):Pointer;
 begin
  Assert(p<>nil);
  {$WARNINGS OFF}
- result:=pointer(cardinal(p)+b);
+ result:=pointer(NativeUInt(p)+b);
  {$WARNINGS ON}
 end;
 
@@ -348,12 +351,12 @@ function PointerToBlock(const p:Pointer):PBlockInfo;
 // info|guard|mem0|guard|mem1|guard...
 var
  aBase:Pointer;
- aIndex:Cardinal;
+ aIndex:NativeUInt;
 begin
  Assert(p<>nil);
- aBase:=Pointer((Cardinal(p) div (64*1024))*(64*1024));
+ aBase:=Pointer((NativeUInt(p) div (64*1024))*(64*1024));
  //which 4kblock are we in?
- aIndex:=(Cardinal(p)-Cardinal(aBase)) div (4*1024);
+ aIndex:=(NativeUInt(p)-NativeUInt(aBase)) div (4*1024);
  //convert that to info index: 2=0,4=1,6=2
  aIndex:=(aindex div 2)-1;
 
@@ -378,7 +381,7 @@ begin
  if aPool.Pool=nil then exit;
 
  //ensure 64k aligned. safemm routines depend on this.
- assert(cardinal(aPool.Pool) mod (64*1024)=0);
+ assert(NativeUInt(aPool.Pool) mod (64*1024)=0);
 
  for i:=Low(aPool.avail) to high(aPool.avail) do aPool.avail[i]:=True;
 
@@ -399,9 +402,9 @@ begin
 
 end;
 
-function GetLargeBlock(const aRequest:cardinal):PBlockInfo;
+function GetLargeBlock(const aRequest: NativeInt):PBlockInfo;
 var
- aActual:cardinal;
+ aActual: NativeInt;
  p:pointer;
  Old:cardinal;
 begin
@@ -435,19 +438,31 @@ begin
 
  lock(aBlock);
 
- Assert(FLargeList[FLargeIndex]=nil);
- FLargeList[FLargeIndex]:=ablock;
 
- if FLargeIndex=high(FLargeList) then FLargeIndex:=Low(FLargeList)
- else Inc(FLargeIndex);
+ if ablock.RequestSize > 40*1024*1024 then begin
+   // Free really large blocks ( > 40 MB) immediately
+   p := aBlock
+ end
+ else begin
+   // Keep a pool of large blocks ( > 4 kB)
+   EnterCriticalSection(fcritical);
+   try
+     Assert(FLargeList[FLargeIndex]=nil);
+     FLargeList[FLargeIndex]:=ablock;
 
- p:=FLargeList[FLargeIndex];
- if p<>nil then
-  begin
-  if VirtualFree(p, 0, MEM_RELEASE) then Result:=0
-  else Result:=-1;
-  FLargeList[FLargeIndex]:=nil;
-  end;
+     if FLargeIndex=high(FLargeList) then FLargeIndex:=Low(FLargeList)
+     else Inc(FLargeIndex);
+
+     p:=FLargeList[FLargeIndex];
+     FLargeList[FLargeIndex]:=nil;
+   finally
+     LeaveCriticalSection(fcritical);
+   end;
+ end;
+ if p<>nil then begin
+   if VirtualFree(p, 0, MEM_RELEASE) then Result:=0
+   else Result:=-1;
+ end;
 
 end;
 
@@ -459,7 +474,7 @@ begin
   InitPool(Result);
 end;
 
-function GetSmallBlock(const aSize:cardinal):PBlockInfo;
+function GetSmallBlock(const aSize: NativeInt):PBlockInfo;
 var
  aPool:PPoolInfo;
  i:integer;
@@ -548,7 +563,7 @@ end;
 
 function BlockToPointer(const aBlock:PBlockInfo):pointer;
 var
- aPartial,aoffset:integer;
+ aPartial,aoffset: NativeInt;
 begin
  Assert(ablock<>nil);
   assert(ablock.Magic=cMagic);
@@ -565,7 +580,7 @@ begin
 
 end;
 
-function SafeGetMem(Size: Integer): Pointer;
+function SafeGetMem(Size: NativeInt): Pointer;
 var
  aBlock:PBlockInfo;
 begin
@@ -591,7 +606,7 @@ begin
   end;
 end;
 
-function SafeAllocMem(ASize: Cardinal): Pointer;
+function SafeAllocMem(ASize: {$if CompilerVersion < 23}Cardinal{$else}NativeInt{$ifend}): Pointer;
 begin
   Assert(aSize>0);
   Result := SafeGetMem(ASize);
@@ -607,16 +622,16 @@ begin
   Result := False;
 end;
 
-function Min(const i1, i2: Integer): Integer;
+function Min(const i1, i2: NativeInt): NativeInt;
 begin
   Result := i1;
   if i2 < Result then Result := i2;
 end;
 
-function SafeReallocMem(P: Pointer; Size: Integer): Pointer;
+function SafeReallocMem(P: Pointer; Size: NativeInt): Pointer;
 //force-move realloc will help find invalid pointer usage
 var
-  aActual:Integer;
+  aActual:NativeInt;
   aSource:PBlockInfo;
 begin
   Assert(p<>nil);
@@ -639,8 +654,6 @@ function SafeFreeMem(P: Pointer): Integer;
 var
   aBlock:PBlockInfo;
 begin
-try
-  EnterCriticalSection(fcritical);
   Assert(p<>nil);
 
   //on free also check if it held a class. store classname as text in
@@ -660,9 +673,6 @@ try
    begin
    Result:=FreeSmallBlock(aBlock);
    end;
- finally
- LeaveCriticalSection(fcritical);
- end;
 
 end;
 
