@@ -19,6 +19,7 @@ type
     constructor Create;
     function GetBitmap(const Name: string): TDBitmap; overload;
     function GetBitmap(const Name: string; const Width, Height: SG; const KeepRatio: BG = True; const BackgroundColor: TColor = clNone): TDBitmap; overload;
+    function HasBitmap(const Name: string): BG;
   end;
 
 implementation
@@ -121,6 +122,24 @@ begin
   end;
   if (Brightness <> 0) or (Contrast <> 256) or (Gamma <> 0) or (Grayscale <> 0) then
     Result.Colors(Result, Result.GetFullRect, Brightness, Contrast, Gamma, Grayscale, True, True, True, nil);
+end;
+
+function TPictureFactory.HasBitmap(const Name: string): BG;
+var
+  i, j: SG;
+  FileName: TFileName;
+begin
+  Result := False;
+  for j := 0 to Paths.Count - 1 do
+    for i := 0 to  AllowedExtensions.Count - 1 do
+    begin
+      FileName := Paths[j] + Name + '.' + AllowedExtensions[i];
+      if FileExists(FileName) then
+      begin
+        Result := True;
+        Exit;
+      end;
+  end;
 end;
 
 end.
