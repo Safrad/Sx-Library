@@ -1,4 +1,4 @@
-﻿package LibD7;
+package LibD7;
 
 {$R *.res}
 {$ALIGN 8}
@@ -51,6 +51,8 @@ contains
   uSxPathEdit in 'GUI\uSxPathEdit.pas',
   uSxLabel in 'GUI\uSxLabel.pas',
   uSxCheckBox in 'GUI\uSxCheckBox.pas',
-  uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas';
+  uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas',
+  uSxGUI in 'GUI\uSxGUI.pas',
+  uSxToolBar in 'GUI\uSxToolBar.pas';
 
 end.

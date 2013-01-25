@@ -56,6 +56,8 @@ contains
   uSxPathEdit in 'GUI\uSxPathEdit.pas',
   uSxCheckBox in 'GUI\uSxCheckBox.pas',
   uSxLabel in 'GUI\uSxLabel.pas',
-  uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas';
+  uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas',
+  uSxGUI in 'GUI\uSxGUI.pas',
+  uSxToolBar in 'GUI\uSxToolBar.pas';
 
 end.
