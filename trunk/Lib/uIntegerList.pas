@@ -47,6 +47,7 @@ type
    function IndexOf(N:LongInt):Integer;virtual;
    procedure Insert(Index:Integer;Value:LongInt);virtual;
    procedure Move(CurIndex,NewIndex:Integer);virtual;
+   function First(const DefaultValue: Integer = 0): Integer;
 
    property Duplicates:TDuplicates read FDuplicates write FDuplicates;
    property Count:Integer read GetCount;
@@ -270,6 +271,14 @@ begin
    end; { if else }
  end; { while }
  Index:=L;
+end;
+
+function TIntegerList.First(const DefaultValue: Integer): Integer;
+begin
+  if Count <= 0 then
+    Result := DefaultValue
+  else
+    Result := Items[0];
 end;
 
 function TIntegerList.IndexOf(N:LongInt):Integer;
