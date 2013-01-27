@@ -42,6 +42,7 @@ uses
   uDBitmap,
   uMenus,
   uDForm,
+  uStrings,
   Controls;
 
 procedure Register;
@@ -95,7 +96,7 @@ begin
   Name := SxAction.Name + IconSuffix;
   B := TDButton.Create(Self);
   try
-    B.Name := Name;
+    B.Name := ComponentName(Name);
 
     B.Caption := '';
     B.ShowHint := True;
