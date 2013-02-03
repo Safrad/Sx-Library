@@ -284,9 +284,9 @@ end;
 
 procedure TfSplash.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+	Timer1.Enabled := False;
 	EndLongOperation(False);
 	BackBitmap.SetSize(0, 0, clNone);
-	Timer1.Enabled := False;
 	Action := caFree;
 end;
 
