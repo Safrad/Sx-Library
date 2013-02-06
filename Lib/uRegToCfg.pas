@@ -126,7 +126,7 @@ begin
           if Reg.OpenKey(GetDelphiLibraryPath(RegPath, Compiler.DelphiVersion, Compiler.SystemPlatform), False) then
           begin
             s := CommonCfgText(DelphiVersion);
-            s := s + '-r"' + DelphiPath + 'Lib"' + LineSep;
+            s := s + '-r"' + DelphiPath + DelphiLibSuffix(Compiler) + '"' + LineSep;
             SearchPaths := Reg.ReadString('Search Path');
             SearchPaths := ReplaceDelphiVariables(SearchPaths, Compiler.DelphiVersion, Compiler.SystemPlatform);
 

@@ -58,6 +58,7 @@ function GetCompilers(const ADelphiVersion: TDelphiVersion): TCompilers;
 function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
 function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
 function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
+function DelphiLibSuffix(const Compiler: TCompiler): string;
 function GetDCCFileName(const Compiler: TCompiler): string;
 function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
 function GetDelphiVersionCount: SG;
@@ -120,7 +121,6 @@ function GetPascalMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
 begin
   Result := SG(ADelphiVersion) - SG(dvPascal1) + 1;
 end;
-
 
 function GetDelphiMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
 begin
@@ -238,6 +238,13 @@ begin
 	finally
 		Reg.Free;
 	end;
+end;
+
+function DelphiLibSuffix(const Compiler: TCompiler): string;
+begin
+  Result := 'Lib';
+  if Compiler.DelphiVersion > dvDelphi7 then
+    Result := Result + 'Release' + PathDelim + 'win' + SystemPlatformStr[Compiler.SystemPlatform];
 end;
 
 function GetDCCFileName(const Compiler: TCompiler): string;
