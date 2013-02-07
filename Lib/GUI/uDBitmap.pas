@@ -11336,16 +11336,21 @@ procedure TDBitmap.SaveToFileDialog(var FileName: TFileName);
 var
 	Quality: SG;
 	SavePictureDialog: TSavePictureDialog;
+  FileName2: TFileName;
 begin
 	SavePictureDialog := TSavePictureDialog.Create(nil);
-	SavePictureDialog.Filter := AllPictures;
-	SavePictureDialog.Options := SavePictureDialog.Options + [ofOverwritePrompt, ofPathMustExist];
-	if ExecuteDialog(SavePictureDialog, FileName) then
-	begin
-		Quality := 90;
-		SaveToFileEx(FileName, Quality);
-	end;
-	SavePictureDialog.Free;
+  try
+    SavePictureDialog.Filter := AllPictures;
+    SavePictureDialog.Options := SavePictureDialog.Options + [ofOverwritePrompt, ofPathMustExist];
+    if ExecuteDialog(SavePictureDialog, FileName) then
+    begin
+      Quality := 90;
+      FileName2 := RemoveEV(FileName);
+      SaveToFileEx(FileName2, Quality);
+    end;
+  finally
+  	SavePictureDialog.Free;
+  end;
 end;
 
 (*
