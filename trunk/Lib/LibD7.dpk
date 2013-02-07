@@ -53,6 +53,7 @@ contains
   uSxCheckBox in 'GUI\uSxCheckBox.pas',
   uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas',
   uSxGUI in 'GUI\uSxGUI.pas',
-  uSxToolBar in 'GUI\uSxToolBar.pas';
+  uSxToolBar in 'GUI\uSxToolBar.pas',
+  uSxComboBox in 'GUI\uSxComboBox.pas';
 
 end.
