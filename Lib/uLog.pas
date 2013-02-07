@@ -78,47 +78,58 @@ const
   MinLogFileSize = 4 * MB;
   MaxLogFileSize = 16 * MB; // > MinLogFileSize
 
+var
+	FCriticalSection: TRTLCriticalSection;
+
 procedure TLog.WriteLine(const Line: string);
 var
 	LLog: TLog;
 	LineA: AnsiString;
 begin
-  if FInWrite then Exit;
-  
-  FInWrite := True;
-	if Length(Line) > 0 then
-	begin
-		if FDirectWrite then
-		begin
-			if not FFile.Opened then Exit;
+  EnterCriticalSection(FCriticalSection);
+  try
+    if FInWrite then
+    begin
+      Exit;
+    end;
 
-      if FFile.FileSize + Length(Line) > MaxLogFileSize then
+    FInWrite := True;
+    if Length(Line) > 0 then
+    begin
+      if FDirectWrite then
       begin
-        FLoggingLevel := mlNone;
-      	Exit;
-      end;
+        if not FFile.Opened then Exit;
 
-			LLog := MainLog;
-			MainLog := nil;
-			try
-			//	FFile.Write(Line);
-				LineA := ConvertUnicodeToUTF8(Line);
-				FFile.BlockWrite(LineA[1], Length(LineA));
-			finally
-				MainLog := LLog;
-			end;
-		end
-		else
-		begin
-      if Length(FData) + Length(Line) > MaxLogFileSize then
+        if FFile.FileSize + Length(Line) > MaxLogFileSize then
+        begin
+          FLoggingLevel := mlNone;
+          Exit;
+        end;
+
+        LLog := MainLog;
+        MainLog := nil;
+        try
+        //	FFile.Write(Line);
+          LineA := ConvertUnicodeToUTF8(Line);
+          FFile.BlockWrite(LineA[1], Length(LineA));
+        finally
+          MainLog := LLog;
+        end;
+      end
+      else
       begin
-        FLoggingLevel := mlNone;
-      	Exit;
+        if Length(FData) + Length(Line) > MaxLogFileSize then
+        begin
+          FLoggingLevel := mlNone;
+          Exit;
+        end;
+        FData := FData + Line;
       end;
-			FData := FData + Line;
-		end;
-	end;
-  FInWrite := False;
+    end;
+  finally
+    FInWrite := False;
+    LeaveCriticalSection(FCriticalSection);
+  end;
 end;
 
 const
@@ -177,7 +188,7 @@ var
 
 destructor TLog.Destroy;
 begin
-  InitializingLog := True;
+//  InitializingLog := True;
 	Add('Finished', mlInformation);
 	if Assigned(FFile) then
 	begin
@@ -441,9 +452,12 @@ begin
 end;
 
 initialization
-
+{$IFNDEF NoInitialization}
+	InitializeCriticalSection(FCriticalSection);
+{$ENDIF NoInitialization}
 finalization
 {$IFNDEF NoFinalization}
 	FreeAndNil(MainLog);
+	DeleteCriticalSection(FCriticalSection);
 {$ENDIF NoFinalization}
 end.
