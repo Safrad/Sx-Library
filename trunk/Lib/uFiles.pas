@@ -43,8 +43,8 @@ function ExpandDirCmd(const Dir: string): string;
 function DelFileExt(const FName: string): string;
 function DelFileName(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
-function ParentDir(var Dir: string): BG;
-function ParentDirF(Dir: string): string;
+function ParentDir(var Dir: string; Level: SG = 1): BG;
+function ParentDirF(const Dir: string; const Level: SG = 1): string;
 function LegalFileName(const FileName: string): string;
 function LegalPath(const Path: string): string;
 procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
@@ -560,7 +560,7 @@ begin
 	Result := DelFileExt(FName) + Text + ExtractFileExt(FName);
 end;
 
-function ParentDir(var Dir: string): BG;
+function ParentDir(var Dir: string; Level: SG = 1): BG;
 var i: Integer;
 begin
 	Result := False;
@@ -568,17 +568,22 @@ begin
 	begin
 		if Dir[i] = PathDelim then
 		begin
-			SetLength(Dir, i);
-			Result := True;
-			Exit;
+      Dec(Level);
+      if Level = 0 then
+      begin
+  			SetLength(Dir, i);
+  			Result := True;
+  			Exit;
+      end;
 		end;
 	end;
+//  raise Exception.Create('Could not build parent dir for ''' + Dir + '');
 end;
 
-function ParentDirF(Dir: string): string;
+function ParentDirF(const Dir: string; const Level: SG = 1): string;
 begin
 	Result := Dir;
-	ParentDir(Result);
+	ParentDir(Result, Level);
 end;
 
 const
