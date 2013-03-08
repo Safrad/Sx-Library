@@ -6,6 +6,13 @@ uses
 	uTypes, uColor,
 	Windows, Graphics, StdCtrls, Classes, SysUtils;
 
+type
+  TCutTextMode = (ctNone, ctEllipsis, ctTriangle);
+  // TODO : Implement ctTransparent
+
+var
+  CutTextMode: TCutTextMode = ctEllipsis;
+
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 
 procedure PushFont(const Font: TFont);
@@ -298,6 +305,20 @@ begin
 //	Result := RoundN(Abs(Canvas.Font.Size) div 16);
 end;
 
+procedure DrawLeftArrow(const Canvas: TCanvas; R: TRect);
+begin
+	Canvas.Font.Color := clRed;
+  Canvas.Brush.Style := bsClear;
+  DrawTextW(Canvas.Handle, LeftawardsArrow, Length(LeftawardsArrow), R, DT_NOCLIP or DT_SINGLELINE);
+end;
+
+procedure DrawRightArrow(const Canvas: TCanvas; R: TRect);
+begin
+	Canvas.Font.Color := clRed;
+  Canvas.Brush.Style := bsClear;
+  DrawTextW(Canvas.Handle, RightawardsArrow, Length(RightawardsArrow), R, DT_NOCLIP or DT_SINGLELINE or DT_RIGHT);
+end;
+
 function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment: TAlignment = taLeftJustify): BG; overload;
 var
 	C: TColor;
@@ -306,12 +327,16 @@ var
 	TextWidth: SG;
 	CuttedText: string;
 begin
-	CuttedText := CutText(Canvas, Text, R.Right - R.Left + 1);
+  case CutTextMode of
+  ctEllipsis: CuttedText := CutText(Canvas, Text, R.Right - R.Left + 1);
+  else CuttedText := Text;
+  end;
+
 	Result := Text <> CuttedText;
 
+  TextWidth := Canvas.TextWidth(RemoveSingleAmp(CuttedText)) + FontShadow;
 	if Alignment <> taLeftJustify then
 	begin
-		TextWidth := Canvas.TextWidth(RemoveSingleAmp(CuttedText)) + FontShadow;
 		case Alignment of
 //			taLeftJustify: CurX := R.Left;
 		taRightJustify: R.Left := R.Right + 1 - TextWidth;
@@ -355,6 +380,23 @@ begin
 			else
 				Inc(TextOffset);
 		end;
+
+    if CutTextMode = ctTriangle then
+    begin
+      if TextWidth > R.Right - R.Left + 1 then
+      begin
+        case Alignment of
+        taLeftJustify: DrawRightArrow(Canvas, R);
+        taRightJustify: DrawLeftArrow(Canvas, R);
+        taCenter:
+        begin
+          DrawLeftArrow(Canvas, R);
+          DrawRightArrow(Canvas, R);
+        end;
+        end;
+      end;
+    end;
+
 	finally
 		if FontShadow <> 0 then
 		begin
