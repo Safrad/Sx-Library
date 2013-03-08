@@ -32,7 +32,14 @@ const
 	CharLongHyphen = #$97; // —
 	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace, CharUnbrokableSpace];
 	cDialogSuffix = {$ifdef UNICODE}Char($2026){$else}#$85{$endif}; //'...';
+
+	LeftArrow = {$ifdef UNICODE}Char($25C4){$else}'<-'{$endif};
 	RightArrow = {$ifdef UNICODE}Char($25BA){$else}'->'{$endif};
+
+	LeftawardsArrow = {$ifdef UNICODE}Char($2190){$else}'<-'{$endif};
+	UpawardsArrow = {$ifdef UNICODE}Char($2191){$else}'^'{$endif};
+	RightawardsArrow = {$ifdef UNICODE}Char($2192){$else}'->'{$endif};
+	DownawardsArrow = {$ifdef UNICODE}Char($2193){$else}'\'{$endif};
 
 	EnumPrefixLength = 2;
 	NAStr = 'N/A';
