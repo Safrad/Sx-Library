@@ -8,6 +8,13 @@ uses
 	StdCtrls, ExtCtrls, uDButton, Buttons;
 
 type
+  // Label & Control
+  TControlAlignMode = (caLeftLeft, caLeftCenter, caCenterCenter);
+
+const
+  ControlAlignMode: TControlAlignMode = caLeftCenter;
+
+type
 	PTemplate = ^TTemplate;
 
 	TTemplate = record
@@ -165,26 +172,25 @@ begin
 		Inc(XCount);
 	end;
 
-	X := FormBorder;
 	Y := 0;
 	GX := FormBorder;
 	GY := StartGY;
 	MaxWidth := 0;
 	for i := 0 to OptionCount - 1 do
 	begin
+		O := Options[i];
+
 		if Y >= YCount then
 		begin
 			Y := 0;
 			GY := StartGY;
-			Inc(X, RowWidth + FormBorder);
 		end;
-		GX := X;
 
 		// Label
-		O := Options[i];
 		if O.Typ <> vsButton then
 		begin
 			L := TLabel.Create(Self);
+      L.Name := 'Label' + IntToStr(i);
 			L.AutoSize := True;
 			L.Layout := tlCenter;
 			L.Transparent := True;
@@ -192,12 +198,42 @@ begin
 			L.SetBounds(GX, GY + (RowHeight - L.Height) div 2, L.Width, L.Height);
 			L.OnClick := LabelXClick;
 			InsertControl(L); // Set New Width on Windows 7 (apply autosize)
-			Inc(GX, L.Width + FormBorder);
 			MaxWidth := Max(MaxWidth, L.Width);
-		end
-		else
-			L := nil;
+		end;
 
+		Inc(GY, RowHeight);
+		Inc(Y);
+  end;
+
+  if ControlAlignMode <> caLeftLeft then  
+    RowWidth := MaxWidth + LgToPx(155);
+  
+	X := FormBorder;
+	Y := 0;
+	GX := FormBorder;
+	GY := StartGY;
+	for i := 0 to OptionCount - 1 do
+	begin
+		O := Options[i];
+
+		if Y >= YCount then
+		begin
+			Y := 0;
+			GY := StartGY;
+			Inc(X, RowWidth + FormBorder);
+		end;
+		GX := X;
+    
+    L := FindComponent('Label' + IntToStr(i)) as TLabel;
+    if L <> nil then
+    begin
+      case ControlAlignMode of
+      caLeftLeft: Inc(GX, L.Width + FormBorder);
+      else Inc(GX, MaxWidth + FormBorder);
+      end;
+      if ControlAlignMode = caCenterCenter then
+        L.Left := FormBorder + MaxWidth - L.Width;
+    end;
 		// Control
 		Hint := '';
 		case O.Typ of
