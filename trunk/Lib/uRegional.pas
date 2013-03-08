@@ -2,7 +2,7 @@ unit uRegional;
 
 interface
 
-uses uTypes;
+uses uTypes, Controls;
 
 function DateToCS(const D: TDateTime): string; // Birthday, Players desription
 function DateToCSLong(const D: TDateTime): string; // Chart legend
