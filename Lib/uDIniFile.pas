@@ -41,6 +41,7 @@ type
 	protected
 		procedure RWData(const Write: BG); override;
 	public
+    function AsString: string;
 		procedure Save;
 		procedure RegisterRW(const RWOptions: TRWOptions);
 		procedure UnregisterRW(const RWOptions: TRWOptions);
@@ -129,11 +130,13 @@ type
 		function ValueExists(const Section, Ident: string): BG;
 		function SectionExists(const Section: string): BG;
 
-		constructor Create(const FileName: TFileName);
+    constructor Create; overload;
+		constructor Create(const FileName: TFileName); overload;
 		procedure FreeData;
 		destructor Destroy; override;
 
 		procedure LoadFromFile(const FileName: TFileName);
+    procedure ParseString(const Data: string);
 {$IFNDEF Console}
 		procedure ReadSection(const Section: string; Strings: TStrings);
 		procedure RWStrings(const Section: string; Val: TStrings; const Save: BG);
@@ -594,6 +597,12 @@ begin
 		end; }
 end;
 
+constructor TDIniFile.Create;
+begin
+	inherited Create;
+	FFileSaved := True;
+end;
+
 constructor TDIniFile.Create(const FileName: TFileName);
 begin
 	// FRWList := TData.Create;
@@ -634,11 +643,44 @@ begin
 	FreeData;
 end;
 
-procedure TDIniFile.LoadFromFile(const FileName: TFileName);
+procedure TDIniFile.ParseString(const Data: string);
 var
-	s, Line: string;
+	Line: string;
 	LineIndex, InLineIndex: SG;
 	i: SG;
+begin
+  LineIndex := 1;
+  while LineIndex <= Length(Data) do
+  begin
+    Line := ReadToNewLine(Data, LineIndex);
+    if Line = '' then
+      Continue;
+
+    if Line[1] = '[' then
+    begin
+      i := Length(Line);
+      if Line[i] = ']' then
+        Dec(i);
+      AddSection(Copy(Line, 2, i - 1));
+    end
+    else
+    begin
+      InLineIndex := 1;
+      if FSectionCount > 0 then
+      begin
+        AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
+        if FSections[FSectionCount - 1].KeyCount > 0 then
+          FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value :=
+            Copy(Line, InLineIndex, MaxInt);
+      end;
+    end;
+  end;
+  FInMemory := True;
+end;
+
+procedure TDIniFile.LoadFromFile(const FileName: TFileName);
+var
+  s: string;
 begin
 	if FileName <> '' then
 		FFileName := FileName;
@@ -652,40 +694,32 @@ begin
 		FFileSaved := True;
 		if ReadStringFromFile(FFileName, s) then
 		begin
-			LineIndex := 1;
-			while LineIndex <= Length(s) do
-			begin
-				Line := ReadToNewLine(s, LineIndex);
-				if Line = '' then
-					Continue;
-
-				if Line[1] = '[' then
-				begin
-					i := Length(Line);
-					if Line[i] = ']' then
-						Dec(i);
-					AddSection(Copy(Line, 2, i - 1));
-				end
-				else
-				begin
-					InLineIndex := 1;
-					if FSectionCount > 0 then
-					begin
-						AddValue(FSectionCount - 1, ReadToChar(Line, InLineIndex, '='));
-						if FSections[FSectionCount - 1].KeyCount > 0 then
-							FSections[FSectionCount - 1].Keys[FSections[FSectionCount - 1].KeyCount - 1].Value :=
-								Copy(Line, InLineIndex, MaxInt);
-					end;
-				end;
-			end;
-			FInMemory := True;
+      ParseString(s);
 		end;
 	end;
 end;
 
-procedure TDIniFile.SaveToFile(const FileName: TFileName);
+function TDIniFile.AsString: string;
 var
 	i, j: SG;
+begin
+	Result := '';
+	Result := FileSep; // Ansi -> UTF8 Fix (old versions can not read UTF8 Byte Mark Order)
+	for i := 0 to FSectionCount - 1 do
+	begin
+		Result := Result + '[' + FSections[i].Name + ']' + FileSep;
+		for j := 0 to FSections[i].KeyCount - 1 do
+		begin
+			Result := Result + FSections[i].Keys[j].Name + '=' + FSections[i].Keys[j].Value + FileSep;
+		end;
+		if i <> FSectionCount - 1 then
+			Result := Result + FileSep;
+	end;
+  FFileSaved := True;
+end;
+
+procedure TDIniFile.SaveToFile(const FileName: TFileName);
+var
 	s: string;
 begin
 	if FInMemory = False then
@@ -693,18 +727,7 @@ begin
 	if FileName <> '' then
 		FFileName := FileName;
 
-	s := '';
-	s := FileSep; // Ansi -> UTF8 Fix (old versions can not read UTF8 Byte Mark Order)
-	for i := 0 to FSectionCount - 1 do
-	begin
-		s := s + '[' + FSections[i].Name + ']' + FileSep;
-		for j := 0 to FSections[i].KeyCount - 1 do
-		begin
-			s := s + FSections[i].Keys[j].Name + '=' + FSections[i].Keys[j].Value + FileSep;
-		end;
-		if i <> FSectionCount - 1 then
-			s := s + FileSep;
-	end;
+  s := AsString;
 	FFileSaved := WriteStringToFile(FileName, s, False);
 end;
 
