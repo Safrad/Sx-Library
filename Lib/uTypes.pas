@@ -224,7 +224,7 @@ type
 	TArrayString = array[0..{$ifdef CPUX64}256{$else}512{$endif} * MB - 2] of string;
 	PArrayString = ^TArrayString;
 
-{$if CompilerVersion < 20}
+{$if CompilerVersion < 15}
   TDate = type TDateTime;
 {$ifend}
 
