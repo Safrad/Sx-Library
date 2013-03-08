@@ -114,6 +114,7 @@ procedure InitPaths;
 
 function DirectoryExistsEx(const DirName: TFileName): BG;
 function FileExistsEx(const FileName: TFileName): BG;
+function IsFileWritable(const AFileName: string): Boolean;
 function FileOrDirExists(const FileOrDirName: string): BG;
 function FileOrDirExistsEx(const FileOrDirName: string): BG;
 function LastLineFromFile(const FileName: TFileName): AnsiString;
@@ -2194,6 +2195,22 @@ end;
 function FileExistsEx(const FileName: TFileName): BG;
 begin
 	Result := FileExists(ExpandDir(FileName));
+end;
+
+function IsFileWritable(const AFileName: string): Boolean;
+var
+  H: THandle;
+begin
+//  if not FileExists(AFileName) then
+//  begin
+//    Result := True;
+//    Exit;
+//  end;
+
+  H := CreateFile(PChar(AFileName), GENERIC_READ or GENERIC_WRITE, 0, nil,
+    OPEN_ALWAYS, 0, 0);
+  Result := H <> INVALID_HANDLE_VALUE;
+  if Result then CloseHandle(H);
 end;
 {
 function DirectoryExists(const Directory: string): BG;

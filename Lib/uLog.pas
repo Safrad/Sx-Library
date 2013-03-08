@@ -152,11 +152,13 @@ begin
   NewFileName := FFileName;
 	for Instance := 1 to 9 do
 	begin
-		if FFile.Open(NewFileName, fmAppend) then Break;
-		NewFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
+		if IsFileWritable(NewFileName) then Break;
+
 		if Instance = 9 then Exit;
+		NewFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
 	end;
 
+  if not FFile.Open(NewFileName, fmAppend) then Exit;
 	if FFile.FileSize >= MinLogFileSize then
 	begin
 		FFile.Close;

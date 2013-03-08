@@ -5,7 +5,7 @@ interface
 uses
   uTypes;
 
-function IsDirectoryWriteable(const ADir: string): Boolean;
+function IsDirectoryWritable(const ADir: string): Boolean;
 
 function LockDir(const ADir: string): BG;
 function GetLocker(const ADir: string): string;
@@ -29,16 +29,12 @@ begin
   Result := IncludeTrailingPathDelimiter(ADir) + LockFileName;
 end;
 
-function IsDirectoryWriteable(const ADir: string): Boolean;
+function IsDirectoryWritable(const ADir: string): Boolean;
 var
   FileName: TFileName;
-  H: THandle;
 begin
   FileName := GetLockFileName(ADir);
-  H := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, nil,
-    CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
-  Result := H <> INVALID_HANDLE_VALUE;
-  if Result then CloseHandle(H);
+  IsFileWritable(FileName);
 end;
 
 var
