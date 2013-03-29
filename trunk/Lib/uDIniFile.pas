@@ -1241,6 +1241,7 @@ end;
 procedure TDIniFile.RWFormPos(const Form: TForm; const Save: BG);
 var
   WHRect: TWHRect;
+  SizeableForm: BG;
 	WS: TWindowState;
   PixelsPerInch: Integer;
   WorkAreaRect, NowWorkAreaRect: TRect;
@@ -1277,10 +1278,11 @@ begin
 		WHRect.Top := Form.Top;
 		WHRect.Width := Form.Width;
 		WHRect.Height := Form.Height;
+    SizeableForm := (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin);
     PixelsPerInch := Screen.PixelsPerInch;
 		LocalMainIni.RWNum(Form.Name, 'PixelsPerInch', PixelsPerInch, Save);
 		if not (Form.Position in [poDefault, poDefaultSizeOnly]) then
-			if (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin) then
+			if SizeableForm then
 			// if (not (Form is TDForm)) or (TDForm(Form).FullScreen = False) then
 			begin
 				LocalMainIni.RWNum(Form.Name, 'Width', WHRect.Width, Save);
@@ -1297,10 +1299,9 @@ begin
 			LocalMainIni.RWNum(Form.Name, 'Top', WHRect.Top, Save);
 		end;
 
-    WorkAreaRect := Screen.MonitorFromWindow(Form.Handle).WorkareaRect;
-		LocalMainIni.RWRect(Form.Name, 'WorkArea', WorkAreaRect, Save);
-
     NowWorkAreaRect := Screen.MonitorFromWindow(Form.Handle).WorkareaRect;
+    WorkAreaRect := NowWorkAreaRect;
+		LocalMainIni.RWRect(Form.Name, 'WorkArea', WorkAreaRect, Save);
 
 		if Save = False then
 		begin
@@ -1313,13 +1314,15 @@ begin
         if OldWidth <> 0 then
         begin
           WHRect.Left := RoundDivS8(NewWidth * WHRect.Left, OldWidth);
-          WHRect.Width :=  RoundDivS8(NewWidth * WHRect.Width, OldWidth);
+    			if SizeableForm then
+            WHRect.Width := RoundDivS8(NewWidth * WHRect.Width, OldWidth);
         end;
 
         if OldHeight <> 0 then
         begin
           WHRect.Top := RoundDivS8(NewHeight * WHRect.Top, OldHeight);
-          WHRect.Height := RoundDivS8(NewHeight * WHRect.Height, OldHeight);
+    			if SizeableForm then
+            WHRect.Height := RoundDivS8(NewHeight * WHRect.Height, OldHeight);
         end;
       end;
 
