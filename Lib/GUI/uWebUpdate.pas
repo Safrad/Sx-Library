@@ -82,7 +82,7 @@ begin
       try
         GetGTime;
         StartTime := GTime;
-        IdHTTP1.Request.UserAgent := 'VisitWebPage';
+        IdHTTP1.Request.UserAgent := GetProjectInfo(piInternalName);
         if Source.Count > 0 then
         begin
           if Encode then
