@@ -532,16 +532,17 @@ begin
 	for i := 0 to Sounds.Count - 1 do
 	begin
 		Sound.FileName := DSound.FileName;
-		if DSound.Wave <> nil then
-			Sound.Wave := DSound.Wave
-		else
-		begin
-			if Sound.FileName <> '' then
-			begin
-				Sound.Wave := TWave.Create;
-				Sound.Wave.ReadFromFile(Sound.FileName);
-			end;
-		end;
+    if DSound.Enabled then
+      if (DSound.Wave <> nil) then
+        Sound.Wave := DSound.Wave
+      else
+      begin
+        if Sound.FileName <> '' then
+        begin
+          Sound.Wave := TWave.Create;
+          Sound.Wave.ReadFromFile(Sound.FileName);
+        end;
+      end;
 
 		Sound.Enabled := DSound.Enabled;
 		DSound.Wave := nil;
