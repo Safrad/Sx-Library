@@ -349,11 +349,11 @@ begin
 
   {$ifndef Console}
 	LocalAppDataDir := ShellFolder('Local AppData');
+  {$else}
+  LocalAppDataDir := ParentDirF(CommonAppDataDir) + 'Local' + PathDelim;
   {$endif}
-	if LocalAppDataDir = '' then
-		LocalAppDataDir := AppDataDir
-	else
-		LocalAppDataDir := LocalAppDataDir + GetProjectInfo(piCompanyName) + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
+	LocalAppDataDir := LocalAppDataDir + Suffix;
+
 	CreateDirsEx(LocalAppDataDir);
 
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
