@@ -2,7 +2,8 @@ unit uWebUpdate;
 
 interface
 
-uses uTypes;
+uses
+  uTypes, Classes;
 
 const
 	LocalVersionFileName = 'version.txt';
@@ -10,6 +11,7 @@ const
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 function DownloadData(const AURL: string): string;
+procedure DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string);
 function GetWebVersion(const Web: string): string;
 procedure CheckForUpdate; overload;
 procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
@@ -18,8 +20,9 @@ implementation
 
 uses
 	uLog,
-	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion, ufTextStatus,
-	Windows, Classes, IdHTTP, IdException, IdStack, SysUtils;
+	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion, ufTextStatus, uSimulation, uOutputFormat,
+  IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack,
+	Windows, SysUtils;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 var
@@ -55,6 +58,75 @@ begin
 	try
 		IdHTTP1.HandleRedirects := True;
     Result := IdHTTP1.Get(AURL);
+	finally
+		IdHTTP1.Free;
+	end;
+end;
+
+procedure DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string);
+var
+	IdHTTP1: TIdHTTP;
+	AResponseContent: TStream;
+  StartTime: U4;
+  Stream: TIdMultiPartFormDataStream;
+  InLineIndex: SG;
+  FieldName, FieldValue: string;
+  i: SG;
+  PostData: string;
+begin
+	IdHTTP1 := TIdHTTP.Create(nil);
+	try
+//		IdHTTP1.HandleRedirects := True;
+	  AResponseContent := TFileStream.Create(TargetFileName, fmCreate or fmShareDenyNone);
+    try
+      try
+        GetGTime;
+        StartTime := GTime;
+        IdHTTP1.Request.UserAgent := 'VisitWebPage';
+        if Source.Count > 0 then
+        begin
+          if Encode then
+          begin
+//            IdHTTP1.Request.ContentType := 'application/x-www-form-urlencoded';
+            // Post do not work in Indy for Delphi 7!!!
+            IdHTTP1.Post(AURL, Source, AResponseContent);
+          end
+          else
+          begin
+            Stream := TIdMultiPartFormDataStream.Create;
+            try
+              for i := 0 to Source.Count - 1 do
+              begin
+                InLineIndex := 1;
+                PostData := Source[i];
+                FieldName := ReadToChar(PostData, InLineIndex, '=');
+                FieldValue := Copy(PostData, InLineIndex, MaxInt);
+                {$if CompilerVersion < 19}
+                FieldValue := ReplaceF(FieldValue, '%', '%%'); // Format function inside Stream.AddFormField
+                {$ifend}
+                Stream.AddFormField(FieldName, FieldValue{$if CompilerVersion >= 19}, 'utf-8'{$ifend});
+              end;
+//              IdHTTP1.Request.ContentType := 'multipart/form-data';
+              // Post do not work in Indy for Delphi 7!!!
+              IdHTTP1.Post(AURL, Stream, AResponseContent);
+            finally
+              Stream.Free;
+            end;
+          end;
+        end
+        else
+        begin
+          IdHTTP1.Get(AURL, AResponseContent);
+        end;
+        StartTime := IntervalFrom(StartTime);
+      	MainLog.Add('Download time: ' + MsToStr(StartTime, diSD, 3, False, ofIO) + 's', mlDebug);
+      except
+        on E: Exception do
+          MainLogAdd(E.Message, mlError);
+      end;
+		finally
+  		AResponseContent.Free;
+		end;
 	finally
 		IdHTTP1.Free;
 	end;
