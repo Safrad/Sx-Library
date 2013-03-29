@@ -11,8 +11,9 @@ type
   // Label & Control
   TControlAlignMode = (caLeftLeft, caLeftCenter, caCenterCenter);
 
-const
+var
   ControlAlignMode: TControlAlignMode = caLeftCenter;
+  LabelEndsWithColon: BG = True;
 
 type
 	PTemplate = ^TTemplate;
@@ -195,6 +196,8 @@ begin
 			L.Layout := tlCenter;
 			L.Transparent := True;
 			L.Caption := Translate(AddSpace(Options[i].Name));
+      if LabelEndsWithColon then
+        L.Caption := L.Caption + ':';
 			L.SetBounds(GX, GY + (RowHeight - L.Height) div 2, L.Width, L.Height);
 			L.OnClick := LabelXClick;
 			InsertControl(L); // Set New Width on Windows 7 (apply autosize)
