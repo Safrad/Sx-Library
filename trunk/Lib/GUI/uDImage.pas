@@ -1023,8 +1023,8 @@ procedure TDImage.InitScrolls;
 begin
 	UserWidth2 := FUserArea.Right - FUserArea.Left + 1;
 	UserHeight2 := FUserArea.Bottom - FUserArea.Top + 1;
-	UserWidth := RoundN(Zoom * UserWidth2);
-	UserHeight := RoundN(Zoom * UserHeight2);
+	UserWidth := UserWidth2;
+	UserHeight := UserHeight2;
 
 	if UserWidth > Bitmap.Width then
 		HType := 1
