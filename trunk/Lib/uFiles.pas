@@ -19,8 +19,11 @@ var
 	ProgramFilesDir,
 	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
 	LocalAppDataDir,
+  CompanyAppDataDir,
+  CompanyLocalAppDataDir,
 //	HomeDir, // User documnets (Read and Write)
 	CommonAppDataDir, // Application Data
+  CommonLocalAppDataDir, // Local Application Data
 	TempDir,
   InstanceTempDir,
 	CommonTempDir: string;
@@ -246,7 +249,7 @@ var
 	i: SG;
 	All: TArrayOfString;
   CommandLine: string;
-  SrcDir, Suffix: string;
+  SrcDir, Suffix, CompanySuffix: string;
   OldMainIniFileName: TFileName;
   NewLogPath, OldLogPath: string;
 begin
@@ -321,10 +324,12 @@ begin
 	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
 	if CommonAppDataDir = '' then CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
 	CorrectDir(CommonAppDataDir);
-  Suffix := '';
+
+  CompanySuffix := '';
   if GetProjectInfo(piCompanyName) <> '' then
-    Suffix := Suffix + GetProjectInfo(piCompanyName) + PathDelim;
-  Suffix := Suffix + GetProjectInfo(piInternalName) + PathDelim;
+    CompanySuffix := CompanySuffix + GetProjectInfo(piCompanyName) + PathDelim;
+  CompanyAppDataDir := CommonAppDataDir + CompanySuffix;
+  Suffix := CompanySuffix + GetProjectInfo(piInternalName) + PathDelim;
 
 	AppDataDir := CommonAppDataDir + Suffix;
 
@@ -348,11 +353,12 @@ begin
 	end;
 
   {$ifndef Console}
-	LocalAppDataDir := ShellFolder('Local AppData');
+	CommonLocalAppDataDir := ShellFolder('Local AppData');
   {$else}
-  LocalAppDataDir := ParentDirF(CommonAppDataDir) + 'Local' + PathDelim;
+  CommonLocalAppDataDir := ParentDirF(CommonAppDataDir) + 'Local' + PathDelim;
   {$endif}
-	LocalAppDataDir := LocalAppDataDir + Suffix;
+  CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
+	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
 
 	CreateDirsEx(LocalAppDataDir);
 
