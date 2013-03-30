@@ -2,6 +2,12 @@ unit uUsageInfo;
 
 interface
 
+uses
+  uTypes;
+
+var
+  DefaultAskedForUpload: BG = False;
+
 procedure TryUploadData;
 
 implementation
@@ -9,7 +15,6 @@ implementation
 uses
   SysUtils,
   Classes,
-  uTypes,
   uStrings,
   uDIniFile,
   uWebUpdate,
@@ -48,6 +53,8 @@ var
 
 procedure RWOptions(const Save: BG);
 begin
+  if Save = False then
+  	AskedForUpload := DefaultAskedForUpload;
   LocalMainIni.RWBool('Upload', 'AskedForUpload', AskedForUpload, Save);
   LocalMainIni.RWBool('Upload', 'UploadInfo', UploadInfo, Save);
   LocalMainIni.RWNum('Upload', 'LastUploadTime', LastUploadTime, Save);
