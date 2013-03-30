@@ -56,6 +56,8 @@ begin
   if Save = False then
   	AskedForUpload := DefaultAskedForUpload;
   LocalMainIni.RWBool('Upload', 'AskedForUpload', AskedForUpload, Save);
+  if Save = False then
+  	UploadInfo := True;
   LocalMainIni.RWBool('Upload', 'UploadInfo', UploadInfo, Save);
   LocalMainIni.RWNum('Upload', 'LastUploadTime', LastUploadTime, Save);
 end;
@@ -175,7 +177,9 @@ begin
           'It will help to improve application quality.', [mbYes, mbNo]) = mbYes then
         begin
           UploadInfo := True;
-        end;
+        end
+        else
+        	UploadInfo := False;
         AskedForUpload := True;
         RWOptions(True);
       end;
