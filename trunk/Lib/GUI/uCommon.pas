@@ -705,6 +705,8 @@ DefaultOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalP
 
 CommonMenu := TCommonMenu.Create;
 
+DefaultAskedForUpload := True;
+
 {$IFNDEF NoInitialization}
 PictureFactory := TPictureFactory.Create;
 PictureFactory.Path := GraphDir;
