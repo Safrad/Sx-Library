@@ -165,7 +165,7 @@ begin
       if AskedForUpload = False then
       begin
         if Confirmation('Would you like to send collected informations about your application usage?' + FullSep +
-          'I will help to improve application quality.', [mbYes, mbNo]) = mbYes then
+          'It will help to improve application quality.', [mbYes, mbNo]) = mbYes then
         begin
           UploadInfo := True;
         end;
