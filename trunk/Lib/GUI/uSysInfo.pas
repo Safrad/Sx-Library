@@ -141,7 +141,6 @@ begin
   else
   begin
     Result := FNGlobalMemoryStatusEx(lpBuffer);
-		ErrorMsg(GetLastError);
   end;
 end;
 {$ifend}
