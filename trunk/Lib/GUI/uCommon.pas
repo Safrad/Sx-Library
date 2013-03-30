@@ -83,7 +83,7 @@ uses
 {$ifend}
 	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uNewThread,
 	uMsgDlg, uMsg, uStart, ufOptions, uReg, uProjectInfo, uLink,
-	uWebUpdate, uStartup, uDictionary,
+	uWebUpdate, uStartup, uDictionary, uUsageInfo,
 	Classes, Windows, ExtCtrls, Forms, SysUtils;
 
 type
@@ -345,6 +345,8 @@ begin
     OptionChanged(SG(goVisualStyle));
   end;
 {$ifend}
+  if Save = False then
+    TryUploadData;
 end;
 
 procedure TCommonMenu.Restart1Click(Sender: TObject);
@@ -706,6 +708,7 @@ CommonMenu := TCommonMenu.Create;
 {$IFNDEF NoInitialization}
 PictureFactory := TPictureFactory.Create;
 PictureFactory.Path := GraphDir;
+AddSounds(['Open Program', 'Close Program'], True);
 {$ENDIF NoInitialization}
 
 finalization
@@ -716,3 +719,4 @@ FreeAndNil(CommonMenu);
 {$ENDIF NoFinalization}
 
 end.
+
