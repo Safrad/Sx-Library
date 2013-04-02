@@ -241,7 +241,8 @@ begin
 	if IniLoaded then
 	begin
 		IniLoaded := False;
-		MainIni.UnregisterRW(TOb.RWOptions);
+    if MainIni <> nil then
+  		MainIni.UnregisterRW(TOb.RWOptions);
 	end;
 
 	if Assigned(Sounds) and (Sounds.Count > 0) then
