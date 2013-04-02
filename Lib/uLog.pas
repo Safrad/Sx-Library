@@ -136,49 +136,56 @@ const
 	IdLine = ';Local Date Time	Type	Message' + FileSep;
 
 constructor TLog.Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True; const MaxLogFiles: SG = 0);
+
+  function GetLogWritableFileName: TFileName;
+  var
+    Instance: SG;
+    NewFileName: TFileName;
+  begin
+    Result := '';
+    NewFileName := FileName;
+    for Instance := 1 to 9 do
+    begin
+      if IsFileWritable(NewFileName) then Break;
+
+      if Instance = 9 then Exit;
+      NewFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
+    end;
+    Result := NewFileName;
+  end;
+
 var
 	NewFileName: TFileName;
-	Instance: SG;
-	DeleteOptions: TDeleteOptions;
+//	DeleteOptions: TDeleteOptions;
 begin
 	inherited Create;
 	FLoggingLevel := LogLevel;
   FLastMessageLevel := mlNone;
-	FFileName := FileName;
+	FFileName := GetLogWritableFileName;
 	FDirectWrite := DirectWrite;
   FMaxLogFiles := MaxLogFiles;
 
-	FFile := TFile.Create;
-  NewFileName := FFileName;
-	for Instance := 1 to 9 do
+	if GetFileSizeU(FFileName) >= MinLogFileSize then
 	begin
-		if IsFileWritable(NewFileName) then Break;
-
-		if Instance = 9 then Exit;
-		NewFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
-	end;
-
-  if not FFile.Open(NewFileName, fmAppend) then Exit;
-	if FFile.FileSize >= MinLogFileSize then
-	begin
-		FFile.Close;
 		NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName)), ofIO) + ExtractFileExt(FFileName);
 		if FileExists(NewFileName) = False then
 		begin
 			RenameFileEx(FFileName, NewFileName);
-      if MaxLogFiles > 0 then
-      begin
-				DeleteOptions.Mask := '*.log';
-        DeleteOptions.MaxDirs := MaxLogFiles;
-        DeleteOptions.SelectionType := stOld;
-        DeleteOptions.AcceptFiles := True;
-        DeleteOptions.Test := False;
-        DeleteOptions.DisableLog := True;
-      	SxDeleteDirs(ExtractFilePath(FFileName), DeleteOptions);
-			end;
+//      if MaxLogFiles > 0 then
+//      begin
+//				DeleteOptions.Mask := '*.log';
+//        DeleteOptions.MaxDirs := MaxLogFiles;
+//        DeleteOptions.SelectionType := stOld;
+//        DeleteOptions.AcceptFiles := True;
+//        DeleteOptions.Test := False;
+//        DeleteOptions.DisableLog := True;
+//      	SxDeleteDirs(ExtractFilePath(FFileName), DeleteOptions);
+//			end;
 		end;
-		FFile.Open(FFileName, fmAppend);
 	end;
+
+	FFile := TFile.Create;
+  if not FFile.Open(FFileName, fmAppend) then Exit;
 
 	if FFile.FileSize = 0 then
 		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
