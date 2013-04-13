@@ -173,8 +173,8 @@ begin
 
       if AskedForUpload = False then
       begin
-        if Confirmation('Would you like to send collected informations about your application usage?' + FullSep +
-          'It will help to improve application quality.', [mbYes, mbNo]) = mbYes then
+        if Confirmation('To improve future versions of ' + GetProjectInfo(piProductName) + ', we can collect statistics on which application features you use. No sensitive information will be collected.' + FullSep +
+          'Do you wish to contribute your usage statistics?', [mbYes, mbNo]) = mbYes then
         begin
           UploadInfo := True;
         end
