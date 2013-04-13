@@ -49,6 +49,13 @@ begin
   end;
 end;
 
+function OwnFiles(const Name: string): BG;
+begin
+	Result :=
+  	(Name = '_SxDelete.log') or
+  	(Name = '_delete.ini');
+end;
+
 procedure SxDeleteDirs(const Path: string; const DeleteOptions: TDeleteOptions);
 type
   TIntervalMode = (imDay, imWeek, imMonth, imYear);
@@ -145,14 +152,12 @@ begin
       i := 0;
       while i < Folder.Files.Count do
       begin
-        if (TFileItem(Folder.Files.GetObject(i)).Name = '_SxDelete.log')
-        or (TFileItem(Folder.Files.GetObject(i)).Name = '_delete.ini') then
+        if OwnFiles(TFileItem(Folder.Files.GetObject(i)).Name) then
         begin
           Folder.Files.Delete(i);
         end
         else
        		Inc(i);
-
       end;
 
       if DeleteOptions.SelectionType <> stDWMY then
