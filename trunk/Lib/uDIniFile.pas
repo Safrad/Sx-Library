@@ -638,9 +638,9 @@ begin
 //		  Assert(Length(FRWList) = 0);
 	if FFileSaved = False then
 		Save;
-	inherited Destroy;
 	FreeAndNil(FRWList);
 	FreeData;
+	inherited Destroy;
 end;
 
 procedure TDIniFile.ParseString(const Data: string);
