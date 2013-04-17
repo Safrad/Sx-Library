@@ -48,6 +48,9 @@ var
 function ApplicationProjectInfo: TProjectInfo;
 function GetProjectInfo(const ProjectInfo: TProjectInfoName): string;
 
+var
+	ThisProjectInfo: TProjectInfo;
+
 implementation
 
 uses
@@ -56,9 +59,6 @@ uses
 	Windows,
 	uOutputFormat, uStrings,
 	TypInfo;
-
-var
-	ThisProjectInfo: TProjectInfo;
 
 { TProjectInfo }
 
@@ -170,6 +170,9 @@ begin
 			ThisProjectInfo.FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(ThisProjectInfo.FApplicationFileName));
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then
       ThisProjectInfo.FProjectInfoNames[piInternalName] := 'Unknown';
+
+		if ThisProjectInfo.FProjectInfoNames[piCompanyName] = '' then
+      ThisProjectInfo.FProjectInfoNames[piCompanyName] := 'Sx Software';
 
 		if IsDebug then
     begin
