@@ -10,7 +10,7 @@ uses
 
 type
   TSelectionType = (stNone, stNew, stOld, stLinear, stLogarithmic, stClever,
-    stDWMY, stDifference, stDifferencePreferNew, stRandom); // Selection for Delete
+    stDWMY, stDifference, stDifferencePreferNew, stRandom, stTemp); // Selection for Delete
 
 	TDeleteOptions = record
     Mask: string;
@@ -19,6 +19,7 @@ type
     AcceptFiles: BG;
     Test: BG;
     DisableLog: BG;
+    TimeLimit: SG;
   end;
 
 function ReadOptions(const FileName: TFileName): TDeleteOptions;
@@ -27,8 +28,8 @@ procedure SxDeleteDirs(const Path: string; const DeleteOptions: TDeleteOptions);
 implementation
 
 uses
-  Math,
-  uDIniFile, uFolder, uFiles, uLog, uMath, uStrings, uSorts;
+  Math, Windows,
+  uDIniFile, uFolder, uFiles, uLog, uMath, uStrings, uSorts, uMsg;
 
 function ReadOptions(const FileName: TFileName): TDeleteOptions;
 const
@@ -44,6 +45,7 @@ begin
     Result.SelectionType := stLinear;
     IniFile.RWEnum(Section, TypeInfo(TSelectionType), U1(Result.SelectionType), False);
     Result.Test := IniFile.ReadBool(Section, 'Test', False);
+    Result.TimeLimit := IniFile.ReadNum(Section, 'TimeLimit', 0);
   finally
     IniFile.Free;
   end;
@@ -54,6 +56,62 @@ begin
 	Result :=
   	(Name = '_SxDelete.log') or
   	(Name = '_delete.ini');
+end;
+
+function DeleteTemp(const Path: string; const DateLimit: TDateTime): TDateTime;
+var
+  Folder: TFolder;
+  ItemDateTime, NewestDate: TDateTime;
+  i: SG;
+  CreationTime, LastAccessTime, ModifiedTime: TFileTime;
+  DirCreationTime, DirLastAccessTime, DirModifiedTime: TFileTime;
+  FileItem: TFileItem;
+begin
+  Folder := TFolder.Create;
+  try
+    Folder.Path := Path;
+    Folder.AcceptFiles := True;
+    Folder.AcceptDirs := True;
+    Folder.AttributeMask := faArchive or faReadOnly or faDirectory or faHidden;
+    Folder.SubDirs := False;
+    Folder.SortBy := fsNone;
+    Folder.Read;
+
+    GetFileDateTime(Path, DirCreationTime, DirLastAccessTime, DirModifiedTime);
+    NewestDate := Max(FileTimeToDateTime(DirCreationTime), FileTimeToDateTime(DirModifiedTime));
+
+    for i := 0 to Folder.Files.Count - 1 do
+    begin
+      FileItem := TFileItem(Folder.Files.GetObject(i));
+      if OwnFiles(FileItem.Name) then
+      begin
+        ItemDateTime := MaxInt;
+      end
+      else if LastChar(FileItem.Name) = '\' then
+      begin
+        ItemDateTime := DeleteTemp(Path + FileItem.Name, DateLimit);
+        Assert(ItemDateTime <> 0);
+        if (ItemDateTime < DateLimit) then
+          RemoveDirEx(Path + FileItem.Name);
+      end
+      else
+      begin
+        GetFileDateTime(Path + FileItem.Name, CreationTime, LastAccessTime, ModifiedTime);
+        ItemDateTime := Max(FileTimeToDateTime(CreationTime), FileItem.DateTime);
+        if (ItemDateTime < DateLimit) then
+          DeleteFileEx(Path + FileItem.Name);
+      end;
+
+      if ItemDateTime > NewestDate then
+        NewestDate := ItemDateTime;
+    end;
+    SetFileDateTime(Path, DirCreationTime, DirLastAccessTime, DirModifiedTime);
+
+
+    Result := NewestDate;
+  finally
+    Folder.Free;
+  end;
 end;
 
 procedure SxDeleteDirs(const Path: string; const DeleteOptions: TDeleteOptions);
@@ -138,6 +196,14 @@ begin
   try
     if DeleteOptions.SelectionType = stNone then Exit;
 
+    if DeleteOptions.SelectionType = stTemp then
+    begin
+      if DeleteOptions.TimeLimit = 0 then
+      	ErrorMsg('TimeLimit not specified.')
+      else
+	      DeleteTemp(Path, Now - DeleteOptions.TimeLimit);
+      Exit;
+    end;
     Folder := TFolder.Create;
     try
       Folder.Path := Path;
