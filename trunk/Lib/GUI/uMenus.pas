@@ -292,7 +292,7 @@ var
 	X, Y: Integer;
 
 	TopLevel: Boolean;
-	MenuIndex, MenuCount: Integer;
+	MenuIndex, MenuCount: SG;
 	MenuIcon: (miNone, miBitmap, miImageList);
 	Parent: TObject;
   Size: SG;
