@@ -164,10 +164,11 @@ end;
 
 procedure TryUploadData;
 const
-  UploadInterval = 30 * Minute;
+  MaxUploadInterval = 30 * Minute;
+  MaxUploadCount = 100;
 begin
   try
-    if (GetRunCount > 5) and (GetRunTime > UploadInterval) then
+    if ((GetRunTime > LastUploadTime + MaxUploadInterval) or (GetRunCount mod MaxUploadCount = 0)) then
     begin
       RWOptions(False);
 
@@ -184,7 +185,7 @@ begin
         RWOptions(True);
       end;
 
-      if UploadInfo and (GetRunTime > LastUploadTime + UploadInterval) then
+      if UploadInfo then
       begin
         UploadData;
         LastUploadTime := GetRunTime;
