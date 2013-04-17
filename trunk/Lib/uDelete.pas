@@ -89,10 +89,13 @@ begin
       end
       else if LastChar(FileItem.Name) = '\' then
       begin
-        ItemDateTime := DeleteTemp(Path + FileItem.Name, DateLimit);
-        Assert(ItemDateTime <> 0);
-        if (ItemDateTime < DateLimit) then
-          RemoveDirEx(Path + FileItem.Name);
+		    if not FileExists(Path + FileItem.Name + '_delete.ini') then
+        begin
+          ItemDateTime := DeleteTemp(Path + FileItem.Name, DateLimit);
+          Assert(ItemDateTime <> 0);
+          if (ItemDateTime < DateLimit) then
+            RemoveDirEx(Path + FileItem.Name);
+        end;
       end
       else
       begin
