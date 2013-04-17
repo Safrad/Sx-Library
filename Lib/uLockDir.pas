@@ -34,7 +34,7 @@ var
   FileName: TFileName;
 begin
   FileName := GetLockFileName(ADir);
-  IsFileWritable(FileName);
+  Result := IsFileWritable(FileName);
 end;
 
 var
