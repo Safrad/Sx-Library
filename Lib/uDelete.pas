@@ -95,7 +95,9 @@ begin
           Assert(ItemDateTime <> 0);
           if (ItemDateTime < DateLimit) then
             RemoveDirEx(Path + FileItem.Name);
-        end;
+        end
+        else
+	        ItemDateTime := MaxInt;
       end
       else
       begin
