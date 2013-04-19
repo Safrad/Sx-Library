@@ -11,7 +11,7 @@ const
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 function DownloadData(const AURL: string): string;
-procedure DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string);
+function DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string): BG;
 function GetWebVersion(const Web: string): string;
 procedure CheckForUpdate; overload;
 procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
@@ -63,7 +63,7 @@ begin
 	end;
 end;
 
-procedure DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string);
+function DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string): BG;
 var
 	IdHTTP1: TIdHTTP;
 	AResponseContent: TStream;
@@ -74,6 +74,7 @@ var
   i: SG;
   PostData: string;
 begin
+  Result := False;
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 //		IdHTTP1.HandleRedirects := True;
@@ -120,6 +121,7 @@ begin
         end;
         StartTime := IntervalFrom(StartTime);
       	MainLog.Add('Download time: ' + MsToStr(StartTime, diSD, 3, False, ofIO) + 's', mlDebug);
+        Result := True;
       except
         on E: Exception do
           MainLogAdd(E.Message, mlError);
