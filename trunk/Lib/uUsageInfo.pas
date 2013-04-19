@@ -49,7 +49,8 @@ type
 var
   AskedForUpload: BG;
   UploadInfo: BG;
-  LastUploadTime: SG;
+  LastUploadCount: UG;
+  LastUploadTime: U8;
 
 procedure RWOptions(const Save: BG);
 begin
@@ -59,6 +60,7 @@ begin
   if Save = False then
   	UploadInfo := True;
   LocalMainIni.RWBool('Upload', 'UploadInfo', UploadInfo, Save);
+  LocalMainIni.RWNum('Upload', 'LastUploadCount', LastUploadCount, Save);
   LocalMainIni.RWNum('Upload', 'LastUploadTime', LastUploadTime, Save);
 end;
 
@@ -141,7 +143,7 @@ begin
 	end;
 end;
 
-procedure UploadData;
+function UploadData: BG;
 var
   FileName, ResponseFileName: TFileName;
   Source: TStrings;
@@ -152,7 +154,7 @@ begin
   Source := TStringList.Create;
   try
     Source.Add('data=' + ReadStringFromFile(FileName));
-    DownloadFileWithPost('http://sx.rosada.cz/usage_info.php', Source, False, ResponseFileName);
+    Result := DownloadFileWithPost('http://sx.rosada.cz/usage_info.php', Source, False, ResponseFileName);
 //    if ReadStringFromFile(ResponseFileName) <> 'ok' then
 //      raise Exception.Create('Invalid resonse.');
   finally
@@ -165,13 +167,12 @@ end;
 procedure TryUploadData;
 const
   MaxUploadInterval = 30 * Minute;
-  MaxUploadCount = 100;
+  MaxUploadCount = 20;
 begin
   try
-    if ((GetRunTime > LastUploadTime + MaxUploadInterval) or (GetRunCount mod MaxUploadCount = 0)) then
+    RWOptions(False);
+    if ((GetRunTime >= LastUploadTime + MaxUploadInterval) or (GetRunCount >= LastUploadCount + MaxUploadCount)) then
     begin
-      RWOptions(False);
-
       if AskedForUpload = False then
       begin
         if Confirmation('To improve future versions of ' + GetProjectInfo(piProductName) + ', we can collect statistics on which application features you use. No sensitive information will be collected.' + FullSep +
@@ -187,8 +188,11 @@ begin
 
       if UploadInfo then
       begin
-        UploadData;
-        LastUploadTime := GetRunTime;
+        if UploadData then
+        begin
+	        LastUploadCount := GetRunCount;
+	        LastUploadTime := GetRunTime;
+        end;
         RWOptions(True);
       end;
     end;
