@@ -171,6 +171,7 @@ var
 	i: SG;
 	P: PSound;
 begin
+  if DSounds = nil then Exit;
 	for i := 0 to Length(SoundNames) - 1 do
 	begin
 		DSounds.Add;
