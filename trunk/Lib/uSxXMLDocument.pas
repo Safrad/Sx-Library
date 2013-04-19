@@ -3,7 +3,8 @@ unit uSxXMLDocument;
 interface
 
 uses
-  XMLDoc, XMLIntf, Classes;
+  XMLDoc, XMLIntf, Classes,
+  ActiveX;
 
 function FindOrAddChild(const XMLNode: IXMLNode; const NodeName: string): IXMLNode;
 procedure AddXMLHeader(const XML: IXMLDocument; const FileDescription: string);
@@ -57,4 +58,9 @@ begin
   inherited;
 end;
 
+
+initialization
+	CoInitialize(nil);
+finalization
+	CoUninitialize;
 end.
