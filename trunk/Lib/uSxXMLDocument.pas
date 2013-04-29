@@ -13,6 +13,7 @@ type
   TSxXMLDocument = class(TXMLDocument)
   protected
     procedure SetActive(const Value: Boolean); override;
+    procedure SaveToFile(const AFileName: string); override;
   end;
 
 implementation
@@ -50,10 +51,20 @@ end;
 
 { TSxXMLDocument }
 
+procedure TSxXMLDocument.SaveToFile(const AFileName: string);
+begin
+  if Active then
+  begin
+    XML.Text := FormatXMLData(XML.Text);
+    Active := True;
+  end;
+  inherited;
+end;
+
 procedure TSxXMLDocument.SetActive(const Value: Boolean);
 begin
   // Change default options
-  Options := Options + [doNodeAutoIndent];
+//  Options := Options + [doNodeAutoIndent];
 
   inherited;
 end;
