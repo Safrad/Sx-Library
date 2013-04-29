@@ -133,6 +133,7 @@ type
     ImageBase: UG;
     // GUI
     RuntimeThemes: BG; // New in Delphi 2007
+    IconFileName: TFileName; // New in Delphi XE2
 
     // in dpk
     LibDirective: array[TLibDirective] of string;
@@ -162,6 +163,8 @@ type
     property Enabled: BG read FEnabled write FEnabled;
 	end;
 
+function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const ProjectVersion: TProjectOptions): string;
+
 implementation
 
 uses
@@ -177,6 +180,27 @@ const
   DefaultImageBase = 4 * MB;
 
   ProjectListSeparator = ';';
+
+function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const ProjectVersion: TProjectOptions): string;
+begin
+  if FileExists(ProjectVersion.IconFileName) then // XE2 dproj
+    Result := ProjectName + '.ico'
+  else if FileExists(CurrentDir + ProjectName + '.ico') then // Default
+    Result := ProjectName + '.ico'
+  else if FileExists(CurrentDir + ProjectName + '_Icon.ico') then // XE2 default
+    Result := ProjectName + '_Icon.ico'
+  else if FileExists(CurrentDir + 'Graphics\' + ProjectName + '.ico') then // Sx Soft
+    Result := 'Graphics\' + ProjectName + '.ico'
+  else if FileExists(ProjectVersion.OutputDir + 'Graphics\' + ProjectName + '.ico') then // Sx Soft
+    Result := 'images\' + ProjectName + '.ico'
+  else if FileExists(CurrentDir + 'images\' + ProjectName + '.ico') then // HTML
+    Result := 'images\' + ProjectName + '.ico'
+  else
+  begin
+    // Common
+    Result := ExtractRelativePath(CurrentDir, FindFileInSubDir(CurrentDir + 'MAINICON.ico', False));
+  end;
+end;
 
 function StrToBoolean(const Value: string): BG;
 begin
@@ -208,7 +232,7 @@ begin
   end;
 end;
 
-procedure RepairDProj(const AFileName: TFileName);
+procedure RepairDproj(const AFileName: TFileName);
 var
   Data, Data2: string;
   Line: string;
@@ -330,6 +354,11 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     begin
       Packages := NodeValue;
     end
+    else if Name = UpperCase('Icon_MainIcon') then
+    begin
+      if Save =False then
+        IconFileName := NodeValue;
+    end
 //		DebugSourceDirs: string; // Not in cfg
 		else if Name = UpperCase('DCC_MinStackSize') then
     begin
@@ -425,7 +454,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 
 var
 	XML: IXMLDocument;
-	iNode: IXMLNode;
+	iNode, cNode: IXMLNode;
   Name: string;
 begin
 	if Save = False then
@@ -462,7 +491,11 @@ begin
               else if Name = '''$(Base)''!=''''' then
               begin
                 if Save then
+                begin
+                  cNode := FindOrCreateNode(iNode, 'Icon_MainIcon');
+                  cNode.NodeValue := IconFileName;
                   WriteWarningsToNode(iNode);
+                end;
               end;
             end;
           end;
