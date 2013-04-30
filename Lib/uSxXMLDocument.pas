@@ -3,7 +3,7 @@ unit uSxXMLDocument;
 interface
 
 uses
-  XMLDoc, XMLIntf, Classes,
+  XMLDoc, XMLIntf, Classes, XMLDom,
   ActiveX;
 
 function FindOrAddChild(const XMLNode: IXMLNode; const NodeName: string): IXMLNode;
@@ -13,7 +13,7 @@ type
   TSxXMLDocument = class(TXMLDocument)
   protected
     procedure SetActive(const Value: Boolean); override;
-    procedure SaveToFile(const AFileName: string); override;
+    procedure SaveToFile(const AFileName: DOMString = ''); override;
   end;
 
 implementation
@@ -51,7 +51,7 @@ end;
 
 { TSxXMLDocument }
 
-procedure TSxXMLDocument.SaveToFile(const AFileName: string);
+procedure TSxXMLDocument.SaveToFile(const AFileName: DOMString = '');
 begin
   if Active then
   begin
