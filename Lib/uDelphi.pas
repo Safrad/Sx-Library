@@ -234,6 +234,8 @@ begin
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
 		RegPath := GetDelphiRegPath(ADelphiVersion);
+    if not Reg.KeyExists(RegPath) then
+  		Reg.RootKey := HKEY_LOCAL_MACHINE;
     Result := GetDelphiPathOnly(Reg, RegPath);
 	finally
 		Reg.Free;
