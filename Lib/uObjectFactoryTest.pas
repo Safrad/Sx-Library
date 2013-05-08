@@ -28,7 +28,7 @@ begin
     ObjectFactory.Free;
   end;
 
-  CheckEquals(1, 1);
+  CheckTrue(True, '');
 end;
 
 initialization
