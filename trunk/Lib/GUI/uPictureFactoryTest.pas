@@ -17,7 +17,7 @@ uses
   uDBitmap,
   uFiles;
 
-{ TObjectFactoryTest }
+{ TPictureFactoryTest }
 
 procedure TPictureFactoryTest.Test;
 var
