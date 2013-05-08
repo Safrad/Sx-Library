@@ -25,7 +25,8 @@ uses
   uOutputFormatTest in 'uOutputFormatTest.pas',
   uBackupTest in 'uBackupTest.pas',
   uObjectFactoryTest in 'uObjectFactoryTest.pas',
-  uPictureFactoryTest in 'GUI\uPictureFactoryTest.pas';
+  uPictureFactoryTest in 'GUI\uPictureFactoryTest.pas',
+  uWebUpdateTest in 'GUI\uWebUpdateTest.pas';
 
 {$R *.RES}
 
