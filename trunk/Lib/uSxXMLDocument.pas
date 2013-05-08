@@ -13,6 +13,7 @@ type
   TSxXMLDocument = class(TXMLDocument)
   protected
     procedure SetActive(const Value: Boolean); override;
+  public
     procedure SaveToFile(const AFileName: DOMString = ''); override;
   end;
 
