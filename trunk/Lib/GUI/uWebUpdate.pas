@@ -3,12 +3,14 @@ unit uWebUpdate;
 interface
 
 uses
-  uTypes, Classes;
+  Windows, Classes, SysUtils,
+	uTypes;
 
 const
 	LocalVersionFileName = 'version.txt';
 	WebVersionFileName = 'version.txt';
 
+procedure DownloadFileEx(const AURL: string; const TargetFileName: string);
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 function DownloadData(const AURL: string): string;
 function DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string): BG;
@@ -22,12 +24,14 @@ uses
 	uLog,
 	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion, ufTextStatus, uSimulation, uOutputFormat,
   IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack,
-	Windows, SysUtils;
+  ufStatus,
+  ExtActns, Forms;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 var
 	IdHTTP1: TIdHTTP;
 	AResponseContent: TStream;
+  NotOk: BG;
 begin
   if LogDebug then
 	  LogAdd('Download file ' + AddQuoteF(AURL));
@@ -36,16 +40,75 @@ begin
 		IdHTTP1.HandleRedirects := True;
 		if (not FileExists(TargetFileName)) or DeleteFileEx(TargetFileName) then
 		begin
+      NotOk := True;
 			AResponseContent := TFileStream.Create(TargetFileName, fmCreate or fmShareDenyNone);
 			try
-				IdHTTP1.Get(AURL, AResponseContent);
+        try
+					IdHTTP1.Get(AURL, AResponseContent);
+          NotOk := False;
+        except
+          on E: Exception do
+          begin
+          	NotOk := True;
+            raise;
+          end;
+        end;
 			finally
 				AResponseContent.Free;
+        if NotOk then
+          DeleteFileEx(TargetFileName);
 			end;
 		end;
 	finally
 		IdHTTP1.Free;
 	end;
+end;
+
+type
+  TObj = class
+  public
+    procedure OnDownloadProgress(Sender: TDownLoadURL; Progress,
+        ProgressMax: Cardinal; StatusCode: TURLDownloadStatus; StatusText: String;
+        var Cancel: Boolean);
+  end;
+
+{ TObj }
+
+procedure TObj.OnDownloadProgress(Sender: TDownLoadURL; Progress,
+  ProgressMax: Cardinal; StatusCode: TURLDownloadStatus;
+  StatusText: String; var Cancel: Boolean);
+begin
+  Cancel := ufStatus.Cancel;
+  UpdateMaximum(ProgressMax);
+  UpdateStatus(Progress);
+  Application.ProcessMessages;
+  Sleep(10);
+end;
+
+var
+  Obj: TObj;
+
+procedure DownloadFileEx(const AURL: string; const TargetFileName: string);
+var
+	DownLoadURL: TDownLoadURL;
+begin
+  if LogDebug then
+		LogAdd('Download file ' + AddQuoteF(AURL));
+  if Obj = nil then
+    Obj := TObj.Create;
+
+  DownLoadURL := TDownLoadURL.Create(nil);
+  try
+    ShowStatusWindow(nil, nil);
+    DownLoadURL.URL := AURL;
+    DownLoadURL.Filename := TargetFileName;
+    DownLoadURL.OnDownloadProgress := Obj.OnDownloadProgress;
+    DownLoadURL.Visible := True;
+    DownLoadURL.ExecuteTarget(nil);
+  finally
+    HideStatusWindow;
+    DownLoadURL.Free;
+  end;
 end;
 
 function DownloadData(const AURL: string): string;
@@ -124,7 +187,8 @@ begin
         Result := True;
       except
         on E: Exception do
-          MainLogAdd(E.Message, mlError);
+          if LogError then
+          	LogAdd(E.Message);
       end;
 		finally
   		AResponseContent.Free;
@@ -163,7 +227,7 @@ begin
 //	Web := MyWeb + '/Software/' + GetProjectInfo(piInternalName) + '/';
 	Web := GetProjectInfo(piWeb);
   if Web = '' then Exit;
-  
+
 //	ShowStatusWindow('Receiving project version from Web.');
 	try
 		WebVersion := GetWebVersion(Web);
@@ -196,4 +260,8 @@ begin
 	end;
 end;
 
+initialization
+
+finalization
+  FreeAndNil(Obj);
 end.
