@@ -2,11 +2,12 @@ object fStatus: TfStatus
   Left = 903
   Top = 715
   BorderIcons = [biSystemMenu, biMinimize]
-  BorderStyle = bsToolWindow
+  BorderStyle = bsDialog
   Caption = 'Status'
   ClientHeight = 117
   ClientWidth = 275
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -18,6 +19,7 @@ object fStatus: TfStatus
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
+  Position = poDesktopCenter
   TextHeight = 13
   object DGauge: TDGauge
     Left = 0
@@ -29,40 +31,28 @@ object fStatus: TfStatus
     Max = 1024
     Color = clAppWorkSpace
   end
-  object ButtonStop: TDButton
+  object ButtonStop: TButton
     Left = 177
     Top = 85
     Width = 89
     Height = 25
     Caption = '&Stop'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 1
     OnClick = ButtonStopClick
   end
-  object ButtonPause: TDButton
+  object ButtonPause: TButton
     Left = 177
     Top = 57
     Width = 89
     Height = 25
     Caption = '&Pause'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 2
     OnClick = ButtonPauseClick
   end
   object EditElapsedTime: TLabeledEdit
-    Left = 80
+    Left = 100
     Top = 32
-    Width = 89
+    Width = 69
     Height = 21
     Color = clBtnFace
     EditLabel.Width = 64
@@ -73,9 +63,9 @@ object fStatus: TfStatus
     TabOrder = 3
   end
   object EditRemainTime: TLabeledEdit
-    Left = 80
+    Left = 100
     Top = 56
-    Width = 89
+    Width = 69
     Height = 21
     Color = clBtnFace
     EditLabel.Width = 62
@@ -85,25 +75,19 @@ object fStatus: TfStatus
     ReadOnly = True
     TabOrder = 4
   end
-  object ButtonResume: TDButton
+  object ButtonResume: TButton
     Left = 177
     Top = 29
     Width = 89
     Height = 25
     Caption = '&Resume'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 5
     OnClick = ButtonResumeClick
   end
   object EditTotalTime: TLabeledEdit
-    Left = 80
+    Left = 100
     Top = 80
-    Width = 89
+    Width = 69
     Height = 21
     Color = clBtnFace
     EditLabel.Width = 50

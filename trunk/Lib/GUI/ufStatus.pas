@@ -11,11 +11,11 @@ uses
 type
 	TfStatus = class(TDForm)
 		DGauge: TDGauge;
-		ButtonStop: TDButton;
-		ButtonPause: TDButton;
+		ButtonStop: TButton;
+		ButtonPause: TButton;
 		EditElapsedTime: TLabeledEdit;
 		EditRemainTime: TLabeledEdit;
-		ButtonResume: TDButton;
+		ButtonResume: TButton;
 		EditTotalTime: TLabeledEdit;
 		procedure FormCreate(Sender: TObject);
 		procedure ButtonPauseClick(Sender: TObject);
@@ -38,7 +38,7 @@ type
 var
 	Cancel: BG;
 
-procedure ShowStatusWindow(const ThreadPool: TThreadPool; const MenuItem: TMenuItem);
+procedure ShowStatusWindow(const ThreadPool: TThreadPool; const MenuItem: TMenuItem; const Caption: string);
 procedure UpdateStatus(const Actual: SG);
 procedure UpdateMaximum(const Value: SG);
 procedure HideStatusWindow;
@@ -53,7 +53,7 @@ uses
 var
 	fStatus: TfStatus;
 
-procedure ShowStatusWindow(const ThreadPool: TThreadPool; const MenuItem: TMenuItem);
+procedure ShowStatusWindow(const ThreadPool: TThreadPool; const MenuItem: TMenuItem; const Caption: string);
 begin
 	Cancel := False;
 	if not Assigned(fStatus) then
@@ -61,6 +61,7 @@ begin
 		fStatus := TfStatus.Create(nil);
 		fStatus.FThreadPool := ThreadPool;
 		fStatus.FMenuItem := MenuItem;
+    fStatus.Caption := Caption;
 	end;
 	fStatus.Show;
 end;
@@ -138,11 +139,11 @@ end;
 
 procedure TfStatus.Init;
 begin
-	EditElapsedTime.Text := MsToStr(ElapsedTime, diSD, 0);
+	EditElapsedTime.Text := MsToStr(ElapsedTime, diMSD, 0);
 	if (DGauge.Max > 0) and (DGauge.Position > 0) then
 	begin
-		EditRemainTime.Text := MsToStr(RemainTime, diSD, 0);
-		EditTotalTime.Text := MsToStr(ElapsedTime + RemainTime, diSD, 0);
+		EditRemainTime.Text := MsToStr(RemainTime, diMSD, 0);
+		EditTotalTime.Text := MsToStr(ElapsedTime + RemainTime, diMSD, 0);
 	end
 	else
 	begin
