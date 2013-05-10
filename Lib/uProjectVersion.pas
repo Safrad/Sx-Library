@@ -23,6 +23,7 @@ const
 function IsNAVersion(const ProjectVersion: TProjectVersion): BG;
 function CreateVersion(const Version: string; const Messages: TParserMessages = nil): TProjectVersion;
 function VersionToStr(const ProjectVersion: TProjectVersion): string;
+function MajorAndMinorVersionToStr(const ProjectVersion: TProjectVersion): string;
 function CompareVersion(const Version1, Version2: TProjectVersion): SG; overload;
 function CompareVersion(const Version1, Version2: string): SG; overload;
 
@@ -87,6 +88,25 @@ begin
 	else if ProjectVersion.VersionSuffix = vsAlpha then
 		Result := Result + CharSpace + 'alpha';
 end;
+
+function MajorAndMinorVersionToStr(const ProjectVersion: TProjectVersion): string;
+begin
+	if (ProjectVersion.Major <> 0) or (ProjectVersion.Minor <> 0) or
+			(ProjectVersion.Release <> 0) or (ProjectVersion.Build <> 0) then
+	begin
+		Result :=
+			IntToStr(ProjectVersion.Major);
+    if ProjectVersion.Minor <> 0 then
+  		Result := Result +
+  			'.' + IntToStr(ProjectVersion.Minor);
+	end
+	else
+	begin
+		Result := NAStr;
+	end;
+end;
+
+
 (**
 * @return 0 if Version1 = Version2, 1 if Version1 > Version2, -1 if Version1 < Version2
 *)
