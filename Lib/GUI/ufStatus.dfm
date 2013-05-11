@@ -7,7 +7,6 @@ object fStatus: TfStatus
   ClientHeight = 117
   ClientWidth = 275
   Color = clBtnFace
-  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -15,11 +14,11 @@ object fStatus: TfStatus
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  Position = poDesktopCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
-  Position = poDesktopCenter
   TextHeight = 13
   object DGauge: TDGauge
     Left = 0
