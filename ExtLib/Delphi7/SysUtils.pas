@@ -5153,7 +5153,7 @@ begin
     FileTimeToLocalFileTime(FindData.ftLastWriteTime, LocalFileTime);
     FileTimeToDosDateTime(LocalFileTime, LongRec(Time).Hi,
       LongRec(Time).Lo);
-    Size := FindData.nFileSizeLow;
+    Size := Integer(FindData.nFileSizeLow);
     Attr := FindData.dwFileAttributes;
     Name := FindData.cFileName;
   end;
