@@ -39,6 +39,7 @@ function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccess
 function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 function ShortDir(const Dir: string): string;
 
+function FindEnvironmentVariable(const Variable: string; const Environment: array of TStringPair): string;
 function RemoveEV(const Dir: string): string; overload;
 function RemoveEV(Dir: string; const Environment: array of TStringPair): string; overload;
 function ExpandDir(const Dir: string): string;
@@ -352,10 +353,11 @@ begin
     end;
 	end;
 
+	InitStartupEnvironment;
   {$ifndef Console}
 	CommonLocalAppDataDir := ShellFolder('Local AppData');
   {$else}
-  CommonLocalAppDataDir := ParentDirF(CommonAppDataDir) + 'Local' + PathDelim;
+  CommonLocalAppDataDir := FindEnvironmentVariable('localappdata', StartupEnvironment);
   {$endif}
   CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
@@ -364,7 +366,6 @@ begin
 
 //	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
 //	CorrectDir(DocsDir);
-	InitStartupEnvironment;
 
 	OldMainIniFileName := WorkDir + GetProjectInfo(piInternalName) + '.ini';
 	MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
