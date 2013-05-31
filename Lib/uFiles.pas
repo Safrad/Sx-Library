@@ -435,12 +435,15 @@ begin
 end;
 
 function FindEnvironmentVariable(const Variable: string; const Environment: array of TStringPair): string;
-var i: SG;
+var
+  i: SG;
+  UpperCaseVariable: string;
 begin
 	Result := '';
+  UpperCaseVariable := UpperCase(Variable);
 	for i := 0 to Length(Environment) - 1 do
 	begin
-		if Environment[i].Name = Variable then
+		if UpperCase(Environment[i].Name) = UpperCaseVariable then
 		begin
 			Result := Environment[i].Value;
 			Break;
