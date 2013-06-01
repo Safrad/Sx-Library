@@ -142,7 +142,7 @@ implementation
 uses
 	Math,
 	uMsg, uProjectInfo, uSorts, uCharset, {$ifndef Console}uReg,{$endif}
-	uOutputFormat, uMath, uLog;
+	uOutputFormat, uMath, uLog, uSysInfo;
 
 var
 	StartupEnvironment: array of TStringPair;
@@ -361,14 +361,14 @@ begin
 	if CommonLocalAppDataDir = '' then
 	begin
 		CommonLocalAppDataDir := FindEnvironmentVariable('UserProfile', StartupEnvironment);
-		
-		if WinXP then
+		CorrectDir(CommonLocalAppDataDir);
+		if not Aero then
 			CommonLocalAppDataDir := CommonLocalAppDataDir + 'Local Settings\Application Data\' // Used for Windows XP w/o Service Pack
 		else
 			CommonLocalAppDataDir := CommonLocalAppDataDir + 'AppData\Local\';
 	end;
-  {$endif}
-  CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
+	{$endif}
+	CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
 
 	CreateDirsEx(LocalAppDataDir);
