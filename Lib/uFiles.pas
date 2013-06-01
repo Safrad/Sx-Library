@@ -356,8 +356,17 @@ begin
 	InitStartupEnvironment;
   {$ifndef Console}
 	CommonLocalAppDataDir := ShellFolder('Local AppData');
-  {$else}
-  CommonLocalAppDataDir := FindEnvironmentVariable('localappdata', StartupEnvironment);
+	{$else}
+	CommonLocalAppDataDir := FindEnvironmentVariable('localappdata', StartupEnvironment);
+	if CommonLocalAppDataDir = '' then
+	begin
+		CommonLocalAppDataDir := FindEnvironmentVariable('UserProfile', StartupEnvironment);
+		
+		if WinXP then
+			CommonLocalAppDataDir := CommonLocalAppDataDir + 'Local Settings\Application Data\' // Used for Windows XP w/o Service Pack
+		else
+			CommonLocalAppDataDir := CommonLocalAppDataDir + 'AppData\Local\';
+	end;
   {$endif}
   CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
