@@ -14,6 +14,7 @@ var
 	R: TVector;
 	i: SG;
 begin
+  R := nil;
 	if Length(X) > 0 then
 	begin
 		R := X[0];

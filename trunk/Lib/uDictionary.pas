@@ -222,12 +222,12 @@ var
 	NewSize: SG;
 	FileName: TFileName;
 begin
+	Row := nil;
 	FAvailableLanguageCount := 0;
 	SetLength(AvailableLanguages, 0);
 
 	FileName := GetLanguagesDir + 'Codes.csv';
 	if not FileExists(FileName) then Exit;
-	Row := nil;
 	CSVFile := TCSVFile.Create(2);
 	try
 		if CSVFile.Open(FileName) then
@@ -279,10 +279,10 @@ var
 	NewSize: SG;
 	EntryIndex: SG;
 begin
+	Row := nil;
   if not FileExists(FileName) then
     Exit;
 
-	Row := nil;
 	CSVFile := TCSVFile.Create(2);
 	try
 		if CSVFile.Open(FileName) then
