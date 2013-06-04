@@ -167,6 +167,7 @@ var
 	i: SG;
 	A: TVector;
 begin
+  A := nil;
 	if Length(Data) <= 1 then
 		Result := nil
 	else
@@ -202,6 +203,7 @@ var
 	i: SG;
 	A: TVector;
 begin
+  A := nil;
 	if Length(Data) <= 1 then
 		Result := nil
 	else

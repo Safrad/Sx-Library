@@ -254,6 +254,7 @@ var
   OldMainIniFileName: TFileName;
   NewLogPath, OldLogPath: string;
 begin
+  All := nil;
 	if ExeFileName <> '' then Exit;
 
 	GetDir(0, StartDir);
