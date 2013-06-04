@@ -218,7 +218,9 @@ end;
 
 var
 	OpenDialog: TOpenDialog;
+{$ifndef Console}
 	SaveDialog: TSaveDialog;
+{$endif}
 
 function SelectFile(var FileName: TFileName; const browseTitle: string = ''; const Filter: string = ''; const Save: BG = False): BG;
 begin
