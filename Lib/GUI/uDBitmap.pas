@@ -330,7 +330,8 @@ type
 		procedure SaveToFileDialog(var FileName: TFileName);
 		procedure DrawToDC(DC: HDC; Left, Top: SG);
 
-		procedure GetDirtyImage(out R: TRect);
+		procedure GetDirtyImage(out R: TRect); overload;
+		procedure GetDirtyImage(out R: TRect; const Tolerance: SG; const Color: TColor); overload;
 
 {		procedure RotatedTextOut(X, Y: SG; Text: string; Angle: SG);
 		procedure DataToGraph(Caption: string; Values: PArrayFA; MinValueX, MaxValueX, MinValueY, MaxValueY: FA; ValueCount: SG); overload;
@@ -11763,6 +11764,117 @@ begin
 			end;
 		end;
 	end;
+end;
+procedure TDBitmap.GetDirtyImage(out R: TRect; const Tolerance: SG; const Color: TColor);
+
+var
+  ClearHLS: THLSColor;
+
+  function DirtyPixel(x, y: SG): BG;
+  var
+    ActualHLS: THLSColor;
+  	C: TRGBA;
+  begin
+    Result := False;
+
+    GetPix(FData, ByteX, x, y, C);
+
+    ActualHLS :=RGBToHLS(C);
+
+//    if Abs((ActualHLS.H - ClearHLS.H) mod 256) > Tolerance then
+//    begin
+//      Result := True;
+//      Exit;
+//    end;
+    if Abs(ActualHLS.L - ClearHLS.L) > Tolerance then
+    begin
+      Result := True;
+      Exit;
+    end;
+//    if Abs(ActualHLS.S - ClearHLS.S) > Tolerance then
+//    begin
+//      Result := True;
+//      Exit;
+//    end;
+  end;
+
+  const
+    MaxCount = 100;
+    
+  function DirtyHLine(FromX, ToX, Y: SG): BG;
+  var
+    x: SG;
+    Count: UG;
+  begin
+    Result := False;
+
+    Count := 0;
+    for x := FromX to ToX do
+    begin
+      if DirtyPixel(x, y) then
+      begin
+        Inc(Count);
+        if Count > MaxCount then
+        begin
+          Result := True;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+
+  function DirtyVLine(FromY, ToY, X: SG): BG;
+  var
+    y: SG;
+    Count: UG;
+  begin
+    Result := False;
+
+    Count := 0;
+    for y := FromY to ToY do
+    begin
+      if DirtyPixel(x, y) then
+      begin
+        Inc(Count);
+        if Count > MaxCount then
+        begin
+          Result := True;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+
+const
+  Border = 100;
+var
+	x, y: SG;
+begin
+	R.Top := 0;
+	R.Bottom := FHeight;
+	R.Left := 0;
+	R.Right := FWidth;
+  ClearHLS := RGBToHLS(ColorToRGB(Color));
+
+	for x := FWidth - 1 - Border downto 0 do
+	begin
+    if DirtyVLine(0, FHeight - 1, x) then
+    begin
+      if x < FWidth - 1 - Border then
+        R.Right := x;
+      Break;
+    end;
+  end;
+
+  for y := FHeight - 1 - Border downto 0 do
+	begin
+    if DirtyHLine(0, FWidth - 1, y) then
+    begin
+      if y < FHeight - 1 - Border then
+        R.Bottom := y;
+      Break;
+    end;
+  end;
 end;
 
 function TDBitmap.GetPixelAddr(const X, Y: TCoor): PPixel;
