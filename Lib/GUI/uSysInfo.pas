@@ -325,8 +325,13 @@ begin
 		// CurrentCpuIdle = IdleTime / SystemTime
 
 		// CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors
-		Result := Round(CPUUsageMul * (100.0 - (dbIdleTime / dbSystemTime) * 100.0 / SystemInfo.dwNumberOfProcessors));
-		Result := Range(0, Result, 100 * CPUUsageMul);
+    if dbSystemTime = 0 then
+      Result := 0
+    else
+    begin
+    		Result := Round(CPUUsageMul * (100.0 - (dbIdleTime / dbSystemTime) * 100.0 / SystemInfo.dwNumberOfProcessors));
+  		Result := Range(0, Result, 100 * CPUUsageMul);
+    end;
 
 		// Show Percentage
 //		Result := RoundN(100 * dbIdleTime);
