@@ -550,7 +550,7 @@ end;
 
 function ExpandDirCmd(const Dir: string): string;
 begin
-  Result := ExpandCustomDir(Dir, StartDir);
+  Result := CorrectDirF(ExpandCustomDir(Dir, StartDir));
 end;
 
 function DelFileExt(const FName: string): string;
