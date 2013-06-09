@@ -7,7 +7,7 @@ uses uTypes;
 var
 	FileCreated, DirCreated, FileDeleted, DirDeleted: SG;
 
-procedure Synchro(const Source, Dest: string);
+procedure Synchro(const Source, Dest: string; const DeleteTarget: BG);
 
 implementation
 
@@ -19,13 +19,13 @@ uses
 	uMsg,
 	uStrings;
 
-procedure Synchro(const Source, Dest: string);
+procedure Synchro(const Source, Dest: string; const DeleteTarget: BG);
 type
 	PFileInfo = ^TFileInfo;
 	TFileInfo = packed record // 20
 		Name: TFileName; // 4
 		Size: S4; // 4
-		DateTime: TDateTime; // 8
+		DateTime: {$if CompilerVersion >= 21}TDateTime{$else}S4{$ifend}; // 8
 		Found: B4; // 4
 	end;
 var
@@ -55,7 +55,8 @@ begin
 		begin
 			FileInfo := FileNamesD.Add;
 			FileInfo.Name := SearchRec.Name;
-			if IsDir then FileInfo.Name := FileInfo.Name + '\';
+			if IsDir then
+      	FileInfo.Name := FileInfo.Name + '\';
 			{$if CompilerVersion >= 21}
 			FileInfo.DateTime := SearchRec.TimeStamp;
       {$else}
@@ -87,7 +88,7 @@ begin
 					begin
 						Found := ({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} = FileInfo.DateTime) and (SearchRec.Size = FileInfo.Size);
 						if {$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} < FileInfo.DateTime then
-							Warning('Destination file %1 is newer!', [Source + SearchRec.Name]);
+							Warning('Destination file %1 (%2) is newer (%3)!', [Source + SearchRec.Name, DateTimeToStr({$if CompilerVersion < 21}FileDateToDateTime{$ifend}(FileInfo.DateTime)), DateTimeToStr({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}FileDateToDateTime(SearchRec.Time){$ifend})]);
 					end
 					else
 						Found := True;
@@ -119,7 +120,7 @@ begin
 					CopyFileDateTime(Source + SearchRec.Name, Dest + SearchRec.Name);
 				end;
 //					if {(Display = False) or} (Found = True) then
-				Synchro(Source + SearchRec.Name, Dest + SearchRec.Name);
+				Synchro(Source + SearchRec.Name, Dest + SearchRec.Name, DeleteTarget);
 			end
 			else
 			begin
@@ -144,6 +145,7 @@ begin
 	SysUtils.FindClose(SearchRec);
 
 //	if Level > 1 then
+	if DeleteTarget then
 	begin
 		FileInfo := FileNamesD.GetFirst;
 		for i := 0 to SG(FileNamesD.Count) - 1 do
@@ -178,7 +180,7 @@ begin
 					end;
 				end;
 			end;
-			Inc(FileInfo);
+			Inc(SG(FileInfo), FileNamesD.ItemMemSize);
 		end;
 	end;
 	FreeAndNil(FileNamesD);
