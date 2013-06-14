@@ -59,8 +59,8 @@ var
 	MusicEnabled: BG = True;
 	WavePlayer: TWavePlayer;
 
-procedure AddSounds(const SoundNames: array of string; const Disabled: BG = False); overload;
-procedure AddSounds(const SoundNames: array of string; const DefaultFileNames: array of string); overload;
+function AddSounds(const SoundNames: array of string; const Disabled: BG = False): SG; overload;
+function AddSounds(const SoundNames: array of string; const DefaultFileNames: array of string): SG; overload;
 procedure ReadSounds;
 procedure FreeSounds;
 
@@ -166,12 +166,14 @@ begin
 			fSounds.Init;
 end;
 
-procedure AddSounds(const SoundNames: array of string; const Disabled: BG = False);
+function AddSounds(const SoundNames: array of string; const Disabled: BG = False): SG;
 var
 	i: SG;
 	P: PSound;
 begin
+  Result := -1;
   if DSounds = nil then Exit;
+  Result := Sounds.Count;
 	for i := 0 to Length(SoundNames) - 1 do
 	begin
 		DSounds.Add;
@@ -186,11 +188,12 @@ begin
 	end;
 end;
 
-procedure AddSounds(const SoundNames: array of string; const DefaultFileNames: array of string);
+function AddSounds(const SoundNames: array of string; const DefaultFileNames: array of string): SG;
 var
 	i: SG;
 	P: PSound;
 begin
+  Result := Sounds.Count;
 	for i := 0 to Length(SoundNames) - 1 do
 	begin
 		DSounds.Add;
