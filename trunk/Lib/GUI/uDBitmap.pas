@@ -1568,7 +1568,7 @@ var
 begin
 	{$ifdef GDIPlus}
 	CR := ColorToRGBStack(Color);
-	CR.A := 255;
+	CR.A := EffectToAlpha(Effect);
 	InitGraphics;
 	Pen := TGPPen.Create(CR.C);
 	Pen.Width := Width;
@@ -2992,7 +2992,7 @@ begin
 	begin
 		{$ifdef GDIPlus}
 		CR := ColorToRGBStack(Color);
-		CR.A := 255;
+		CR.A := EffectToAlpha(Effect);
 		InitGraphics;
 		Pen := TGPPen.Create(CR.C);
 	//	Brush := TGPSolidBrush.Create(TGPColor.Create(200, 200, 200));
@@ -3017,7 +3017,7 @@ var
 begin
 	{$ifdef GDIPlus}
 	CR := ColorToRGBStack(Color);
-	CR.A := 255;
+	CR.A := EffectToAlpha(Effect);
 	InitGraphics;
 	Pen := TGPPen.Create(CR.C);
 	Pen.Width := Width;
@@ -5129,7 +5129,7 @@ var
 begin
 	{$ifdef GDIPlus}
 	CR := ColorToRGBStack(C);
-	CR.A := 255;
+	CR.A := EffectToAlpha(Effect);
 	InitGraphics;
 	Pen := TGPPen.Create(CR.C);
 //	Brush := TGPSolidBrush.Create(TGPColor.Create(200, 200, 200));
