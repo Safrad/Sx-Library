@@ -95,10 +95,23 @@ type
 		Texture: TBitmap; // gsBitmap
 	end;
 
+function EffectToAlpha(const Effect: TEffect): SG;
 function SameStyle(const S1, S2: TDrawStyle): BG;
 procedure FreeDrawStyle(var DrawStyle: TDrawStyle);
 
 implementation
+
+uses
+  uMath;
+
+function EffectToAlpha(const Effect: TEffect): SG;
+begin
+	case Effect of
+  ef00..ef16: Result := RoundDiv(255 * (SG(Effect) - SG(ef00)),  16);
+  else
+  	Result := 255;
+  end;
+end;
 
 function SameStyle(const S1, S2: TDrawStyle): BG;
 begin
