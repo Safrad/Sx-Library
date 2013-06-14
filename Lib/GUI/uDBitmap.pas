@@ -1,14 +1,12 @@
 unit uDBitmap;
 
 {$define BPP4} // Faster
-{$if CompilerVersion >= 20}
 {$define GDIPlus} // Supported on Windows XP and newer
-{$ifend}
 
 interface
 
 uses
-	Math, OpenGL12, {$ifdef GDIPlus}GdiPlus,{$endif}
+	Math, OpenGL12, {$ifdef GDIPlus}IGDIPlus,{$endif}
 	uTypes, uMath, uColor, uDrawStyle, uBlur,
 	Classes, Forms, Windows, Graphics, ExtCtrls, SysUtils;
 
@@ -1572,9 +1570,9 @@ begin
 	CR := ColorToRGBStack(Color);
 	CR.A := 255;
 	InitGraphics;
-	Pen := TGPPen.Create(TGPColor.Create(CR.C));
+	Pen := TGPPen.Create(CR.C);
 	Pen.Width := Width;
-	FGraphics.DrawEllipse(Pen, P1.X, P1.Y, P2.X - P1.X, P2.Y - P1.Y);
+	FGraphics.DrawEllipseF(Pen, P1.X, P1.Y, P2.X - P1.X, P2.Y - P1.Y);
 	{$endif}
 end;
 
@@ -2996,7 +2994,7 @@ begin
 		CR := ColorToRGBStack(Color);
 		CR.A := 255;
 		InitGraphics;
-		Pen := TGPPen.Create(TGPColor.Create(CR.C));
+		Pen := TGPPen.Create(CR.C);
 	//	Brush := TGPSolidBrush.Create(TGPColor.Create(200, 200, 200));
 	//	Graphics.FillEllipse(Brush, 10, 10, 50, 50);
 	//	Graphics.DrawEllipse(Pen, 10, 10, 50, 50);
@@ -3021,12 +3019,12 @@ begin
 	CR := ColorToRGBStack(Color);
 	CR.A := 255;
 	InitGraphics;
-	Pen := TGPPen.Create(TGPColor.Create(CR.C));
+	Pen := TGPPen.Create(CR.C);
 	Pen.Width := Width;
 //	Brush := TGPSolidBrush.Create(TGPColor.Create(200, 200, 200));
 //	Graphics.FillEllipse(Brush, 10, 10, 50, 50);
 //	Graphics.DrawEllipse(Pen, 10, 10, 50, 50);
-	FGraphics.DrawLine(Pen, X1, Y1, X2, Y2);
+	FGraphics.DrawLineF(Pen, X1, Y1, X2, Y2);
 	{$else}
 	LineFast(RoundN(X1), RoundN(Y1), RoundN(X2), RoundN(Y2), Color, Effect, RoundN(Width));
 	{$endif}
@@ -5133,7 +5131,7 @@ begin
 	CR := ColorToRGBStack(C);
 	CR.A := 255;
 	InitGraphics;
-	Pen := TGPPen.Create(TGPColor.Create(CR.C));
+	Pen := TGPPen.Create(CR.C);
 //	Brush := TGPSolidBrush.Create(TGPColor.Create(200, 200, 200));
 //	Graphics.FillEllipse(Brush, 10, 10, 50, 50);
 //	Graphics.DrawEllipse(Pen, 10, 10, 50, 50);
@@ -5142,7 +5140,7 @@ begin
 	Rect.Y := YD1;
 	Rect.Width := XD2 - XD1;
 	Rect.Height := YD2 - YD1;
-	FGraphics.DrawRectangle(Pen, Rect);
+	FGraphics.DrawRectangleF(Pen, Rect);
 //	Line(Frac(X1) + 0.5, Y1+ 0.5, X2+ 0.5, Y2+ 0.5, Color, Effect);
 	{$else}
 	Bar(SG(RoundN(XD1)), SG(RoundN(YD1)), SG(RoundN(XD2)), SG(RoundN(YD2)), C, Effect);
