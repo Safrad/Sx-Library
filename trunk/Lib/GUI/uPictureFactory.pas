@@ -75,9 +75,13 @@ var
   IsTransparent: BG;
   Co: array[0..3] of TColor;
   C: TRGBA;
+  Original: TDBitmap;
 begin
-  Result := GetBitmap(Name);
-  if Result = nil then Exit;
+  Result := nil;
+  Original := GetBitmap(Name);
+  if Original = nil then Exit;
+
+  BitmapCopy(Result, Original);
 
   if (BackgroundColor <> clNone) and (Result.Transparent = False) then
     Result.TryTransparent;
