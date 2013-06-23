@@ -42,6 +42,8 @@ function ShortDir(const Dir: string): string;
 function FindEnvironmentVariable(const Variable: string; const Environment: array of TStringPair): string;
 function RemoveEV(const Dir: string): string; overload;
 function RemoveEV(Dir: string; const Environment: array of TStringPair): string; overload;
+function ExpandFile(const FileName: TFileName): string;
+function ExpandFileCmd(const FileName: TFileName): string;
 function ExpandDir(const Dir: string): string;
 function ExpandDirCmd(const Dir: string): string;
 function DelFileExt(const FName: string): string;
@@ -553,14 +555,24 @@ begin
 	end;
 end;
 
+function ExpandFile(const FileName: TFileName): string;
+begin
+	Result := ExpandCustomDir(FileName, WorkDir);
+end;
+
+function ExpandFileCmd(const FileName: TFileName): string;
+begin
+	Result := ExpandCustomDir(FileName, StartDir);
+end;
+
 function ExpandDir(const Dir: string): string;
 begin
-  Result := ExpandCustomDir(Dir, WorkDir);
+	Result := CorrectDirF(ExpandCustomDir(Dir, WorkDir));
 end;
 
 function ExpandDirCmd(const Dir: string): string;
 begin
-  Result := CorrectDirF(ExpandCustomDir(Dir, StartDir));
+	Result := CorrectDirF(ExpandCustomDir(Dir, StartDir));
 end;
 
 function DelFileExt(const FName: string): string;
