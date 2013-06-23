@@ -132,7 +132,7 @@ function AllFiles: string;
 function AllText: string;
 function AllSounds: string;
 
-function SplitStr(const Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
+function SplitStr(Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
 function Installed: BG;
 function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
 function FindFilesInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileNames;
@@ -193,7 +193,7 @@ begin
 	Result := GInstalled;
 end;
 
-function SplitStr(const Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
+function SplitStr(Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
 var
 	i: SG;
 	EndIndex: SG;
@@ -214,7 +214,17 @@ begin
 		if Source[i] = '"' then
 		begin
 			Inc(i);
-			EndIndex := PosEx('"', Source, i);
+			EndIndex := i;
+			while True do
+			begin
+				EndIndex := PosEx('"', Source, EndIndex);
+				if CharAt(Source, EndIndex - 1) = '\' then
+				begin
+					Delete(Source, EndIndex - 1, 1);
+				end
+				else
+					Break;
+			end;
 		end
 		else
 		begin
