@@ -567,7 +567,7 @@ end;
 
 function ExpandDir(const Dir: string): string;
 begin
-	Result := CorrectDirF(ExpandCustomDir(Dir, WorkDir));
+	Result := ExpandCustomDir(Dir, WorkDir);
 end;
 
 function ExpandDirCmd(const Dir: string): string;
