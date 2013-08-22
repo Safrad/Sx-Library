@@ -6,7 +6,17 @@ uses uTypes;
 
 type
   TSynchroReport = record
-		FileSame, FileSameData, FileCopied, FileCopiedData, FileReplaced, FileReplacedData, FileRenamed, DirCreated, FileDeleted, FileDeletedData, DirDeleted: UG;
+		FileSame: UG;
+    FileSameData: U8;
+    FileCopied: UG;
+    FileCopiedData: U8;
+    FileReplaced: UG;
+    FileReplacedData: U8;
+    FileRenamed: UG;
+    DirCreated: UG;
+    FileDeleted: UG;
+    FileDeletedData: U8;
+    DirDeleted: UG;
   end;
 
 function SynchroReportToString(const SynchroReport: TSynchroReport): string;
