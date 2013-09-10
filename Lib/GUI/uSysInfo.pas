@@ -198,10 +198,11 @@ begin
 		end
 		else
 		begin
-			if OS.dwMinorVersion = 0 then
-				S := S + 'Vista'
+			case OS.dwMinorVersion of
+			0: S := S + 'Vista'
 			else
-				S := S + '7';
+				S := S + IntToStr(6 + OS.dwMinorVersion);
+			end;
 		end;
 	end;
 	VER_PLATFORM_WIN32_CE: // 3
