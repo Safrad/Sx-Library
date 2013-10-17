@@ -30,6 +30,11 @@ uses
 	SysUtils, Registry,
 	uStrings, uFiles, uMsg, uCSVFile;
 
+function IsFolder(const FileType: string): BG;
+begin
+	Result := (FileType = 'Folder') or (FileType = 'Directory');
+end;
+
 function WinNTDeleteKey(const Reg: TRegistry; const Key: string): Boolean;
 	var CanDelete: Boolean;
 begin
@@ -71,7 +76,10 @@ begin
 
 		if InternalName = '' then
 		begin
-			InternalName := FileType + 'file';
+			if IsFolder(FileType) then
+				InternalName := FileType
+			else
+				InternalName := FileType + 'file';
 			Reg.Access := KEY_SET_VALUE; // BUG: OpenKeyReadOnly change Access!
 			if Reg.OpenKey(Key, True) then
 			begin
@@ -134,7 +142,7 @@ begin
 			Reg.CreateKey(Key);
 		end;
 
-		// Commans
+		// Commands
 {   if OpenProgram <> '' then
 		begin
 			ProgramCaption := DelFileExt(ExtractFileName(OpenProgram));
@@ -199,11 +207,6 @@ begin
 	finally
 		Reg.Free;
 	end;
-end;
-
-function IsFolder(const FileType: string): BG;
-begin
-	Result := (FileType = 'Folder') or (FileType = 'Directory');
 end;
 
 function ExistsExt(const FileType: string): Boolean;
