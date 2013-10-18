@@ -27,370 +27,9 @@ function ShellFolder(const Name: string; const Common: BG = False): string;
 implementation
 
 uses
+	uRegistryClasses,
 	SysUtils, Registry,
 	uStrings, uFiles, uMsg, uCSVFile;
-
-function IsFolder(const FileType: string): BG;
-begin
-	Result := (FileType = 'Folder') or (FileType = 'Directory');
-end;
-
-function WinNTDeleteKey(const Reg: TRegistry; const Key: string): Boolean;
-	var CanDelete: Boolean;
-begin
-	Result := False;
-	if Reg.OpenKey(Key, False) then
-	begin
-		CanDelete := not Reg.HasSubKeys;
-		Reg.CloseKey;
-		if CanDelete then
-		begin
-			Result := Reg.DeleteKey(Key);
-		end
-		else
-		begin
-			Warning('Can not delete key %1 with subkeys.', [Reg.CurrentPath + '\' + Key]);
-		end;
-	end;
-end;
-
-procedure CreateExt(const FileType, FileTypeCaption, Icon: string);
-var
-	Reg: TRegistry;
-	InternalName, Key: string;
-begin
-	if FileType = '' then Exit;
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		Key := '.' + FileType;
-		if Reg.KeyExists(Key) then
-		begin
-			if Reg.OpenKeyReadOnly(Key) then
-			begin
-				InternalName := Reg.ReadString('');
-				Reg.CloseKey;
-			end;
-		end;
-
-		if InternalName = '' then
-		begin
-			if IsFolder(FileType) then
-				InternalName := FileType
-			else
-				InternalName := FileType + 'file';
-			Reg.Access := KEY_SET_VALUE; // BUG: OpenKeyReadOnly change Access!
-			if Reg.OpenKey(Key, True) then
-			begin
-				Reg.WriteString('', InternalName);
-				Reg.CloseKey;
-			end;
-		end;
-	finally
-		Reg.Free;
-	end;
-
-
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-		// Caption
-		if FileTypeCaption <> '' then // Folder or no change
-		begin
-			Key := InternalName;
-//      if (CanReplace) or (Reg.KeyExists(Key) = False) then
-			begin
-				if Reg.OpenKey(Key, True) then
-				begin
-					Reg.WriteString('', FileTypeCaption);
-					Reg.CloseKey;
-				end;
-			end;
-		end;
-	finally
-		Reg.Free;
-	end;
-
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-		// Icon
-		if Icon <> '' then
-		begin
-			Key := InternalName + '\DefaultIcon';
-//      if (CanReplace) or (Reg.KeyExists(Key) = False) then
-			begin
-				if Reg.OpenKey(Key, True) then
-				begin
-					Reg.WriteString('', Icon);
-					Reg.CloseKey;
-				end;
-			end;
-		end;
-	finally
-		Reg.Free;
-	end;
-
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		Key := InternalName + '\shell';
-		if not Reg.KeyExists(Key) then
-		begin
-			Reg.CreateKey(Key);
-		end;
-
-		// Commands
-{   if OpenProgram <> '' then
-		begin
-			ProgramCaption := DelFileExt(ExtractFileName(OpenProgram));
-
-			Key := InternalName + '\Shell\' + ProgramCaption;
-			if not Reg.KeyExists(Key) then
-			begin
-				Flags := $00000001;
-				Reg.OpenKey(Key, True);
-				Reg.WriteBinaryData('EditFlags', Flags, 4);
-				Reg.CloseKey;
-			end;
-
-			Key := InternalName + '\Shell\' + ProgramCaption + '\Command';
-			if not Reg.KeyExists(Key) then
-			begin
-				Reg.OpenKey(Key, True);
-				Reg.WriteString('', OpenProgram + ' "%1"'); // for Win, %1 for Dos !!!
-				Reg.CloseKey;
-			end;
-		end;}
-	finally
-		Reg.Free;
-	end;
-end;
-
-procedure DeleteExt(const FileType: string);
-var
-	Reg: TRegistry;
-	InternalName, Key: string;
-begin
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		Key := '.' + FileType;
-		if Reg.KeyExists(Key) then
-		begin
-			if Reg.OpenKeyReadOnly(Key) then
-			begin
-				InternalName := Reg.ReadString('');
-				Reg.CloseKey;
-				if Reg.KeyExists(InternalName) then
-				begin
-					Reg.OpenKeyReadOnly(InternalName + '\shell');
-					if Reg.HasSubKeys = False then
-					begin
-						Reg.CloseKey;
-						if WinNTDeleteKey(Reg, InternalName + '\shell') then
-						if WinNTDeleteKey(Reg, InternalName + '\DefaultIcon') then
-						if WinNTDeleteKey(Reg, InternalName) then
-						if Reg.KeyExists(Key) then
-						begin
-							WinNTDeleteKey(Reg, Key);
-						end;
-					end
-					else
-						Reg.CloseKey;
-				end;
-			end;
-		end;
-	finally
-		Reg.Free;
-	end;
-end;
-
-function ExistsExt(const FileType: string): Boolean;
-var
-	Reg: TRegistry;
-	InternalName, Key: string;
-begin
-	Result := False;
-	if IsFolder(FileType) then
-	begin
-		Result := True;
-		Exit;
-	end;
-	Reg := TRegistry.Create(KEY_QUERY_VALUE);
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		Key := '.' + FileType;
-		if Reg.KeyExists(Key) then
-		begin
-			if Reg.OpenKeyReadOnly(Key) then
-			begin
-				InternalName := Reg.ReadString('');
-				Reg.CloseKey;
-				if Reg.KeyExists(InternalName) then
-				begin
-					Result := True;
-				end;
-			end;
-		end;
-	finally
-		Reg.Free;
-	end;
-end;
-
-procedure CreateCommand(const FileType: string;
-	const MenuCaption: string; const OpenProgram: string);
-var
-	Reg: TRegistry;
-	InternalName, Key, ShortMenuCaption: string;
-	Flags: U4;
-begin
-	if MenuCaption = '' then Exit;
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		if IsFolder(FileType) then
-		begin
-			InternalName := FileType;
-		end
-		else
-		begin
-			Key := '.' + FileType;
-			if Reg.KeyExists(Key) then
-			begin
-				if Reg.OpenKeyReadOnly(Key) then
-				begin
-					InternalName := Reg.ReadString('');
-					Reg.CloseKey;
-				end;
-			end
-			else
-			begin
-				Exit;
-			end;
-		end;
-
-		Reg.Free;
-		Reg := TRegistry.Create;
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		if Reg.KeyExists(InternalName) then
-		begin
-			ShortMenuCaption := DelCharsF(MenuCaption, ' ');
-			Key := InternalName + '\shell\' + ShortMenuCaption;
-			if Reg.OpenKey(Key, True) then
-			begin
-				if ShortMenuCaption <> MenuCaption then
-					Reg.WriteString('', MenuCaption);
-
-				if IsFolder(FileType) then
-				begin
-					// Enable modification
-					Flags := $00000001;
-					Reg.WriteBinaryData('EditFlags', Flags, SizeOf(Flags));
-				end;
-				Reg.CloseKey;
-			end;
-			Reg.Free;
-			Reg := TRegistry.Create;
-			Reg.RootKey := HKEY_CLASSES_ROOT;
-
-			Key := InternalName + '\shell\' + ShortMenuCaption + '\command';
-			if Reg.OpenKey(Key, True) then
-			begin
-				Reg.WriteString('', OpenProgram);
-				Reg.CloseKey;
-			end;
-		end;
-	finally
-		Reg.Free;
-	end;
-end;
-
-procedure DeleteCommand(const FileType: string;
-	const MenuCaption: string);
-var
-	Reg: TRegistry;
-	InternalName, Key, ShortMenuCaption: string;
-begin
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		if IsFolder(FileType) then
-		begin
-			InternalName := FileType;
-		end
-		else
-		begin
-			Key := '.' + FileType;
-			if Reg.KeyExists(Key) then
-			begin
-				if Reg.OpenKeyReadOnly(Key) then
-				begin
-					InternalName := Reg.ReadString('');
-					Reg.CloseKey;
-				end;
-			end
-			else
-				Exit;
-		end;
-
-		ShortMenuCaption := DelCharsF(MenuCaption, ' ');
-		Key := InternalName + '\shell\' + ShortMenuCaption;
-		if Reg.KeyExists(Key) then
-		begin
-			if WinNTDeleteKey(Reg, Key + '\command') then
-				WinNTDeleteKey(Reg, Key);
-		end;
-	finally
-		Reg.Free;
-	end;
-end;
-
-function ExistsCommand(const FileType: string;
-	const MenuCaption: string): Boolean;
-var
-	Reg: TRegistry;
-	InternalName, Key, ShortMenuCaption: string;
-begin
-	Result := False;
-	Reg := TRegistry.Create;
-	try
-		Reg.RootKey := HKEY_CLASSES_ROOT;
-
-		if IsFolder(FileType) then
-		begin
-			InternalName := FileType;
-		end
-		else
-		begin
-			Key := '.' + FileType;
-			if Reg.KeyExists(Key) then
-			begin
-				Reg.OpenKeyReadOnly(Key);
-				InternalName := Reg.ReadString('');
-				Reg.CloseKey;
-			end
-			else
-				Exit;
-		end;
-
-		ShortMenuCaption := DelCharsF(MenuCaption, ' ');
-		Key := InternalName + '\shell\' + ShortMenuCaption;
-		if Reg.KeyExists(Key) then
-		begin
-			Result := True;
-		end;
-	finally
-		Reg.Free;
-	end;
-end;
 
 function CustomFileType(
 	const FileTypesOperation: TFileTypesOperation;
@@ -400,6 +39,7 @@ function CustomFileType(
 	): Boolean;
 var
 	i: SG;
+	RegistryClasses: TRegistryClasses;
 begin
 	Result := True;
 {	for i := 0 to Length(MenuCaptions) - 1 do
@@ -418,37 +58,43 @@ begin
 		Warning('Illegal file extension.');
 		Exit;
 	end;
-	case FileTypesOperation of
-	foCreate:
-	begin
-		CreateExt(FileType, FileTypeCaption, Icon);
-		for i := 0 to High(MenuCaptions) do
+
+	RegistryClasses := TRegistryClasses.Create;
+	try
+		case FileTypesOperation of
+		foCreate:
 		begin
-			CreateCommand(FileType, MenuCaptions[i], OpenPrograms[i]);
-		end;
-	end;
-	foDelete:
-	begin
-		for i := 0 to High(MenuCaptions) do
-		begin
-			DeleteCommand(FileType, MenuCaptions[i]);
-		end;
-		DeleteExt(FileType);
-	end;
-	foExists:
-	begin
-		if ExistsExt(FileType) = False then
-			Result := False
-		else
+			RegistryClasses.Associate(FileType, FileTypeCaption, Icon);
 			for i := 0 to High(MenuCaptions) do
 			begin
-				if ExistsCommand(FileType, MenuCaptions[i]) = False then
-				begin
-					Result := False;
-					Break;
-				end;
+				RegistryClasses.CreateCommand(FileType, MenuCaptions[i], OpenPrograms[i]);
 			end;
-	end;
+		end;
+		foDelete:
+		begin
+			for i := 0 to High(MenuCaptions) do
+			begin
+				RegistryClasses.DeleteCommand(FileType, MenuCaptions[i]);
+			end;
+			RegistryClasses.Dissociate(FileType);
+		end;
+		foExists:
+		begin
+			if RegistryClasses.IsAssociated(FileType) = False then
+				Result := False
+			else
+				for i := 0 to High(MenuCaptions) do
+				begin
+					if RegistryClasses.ExistsCommand(FileType, MenuCaptions[i]) = False then
+					begin
+						Result := False;
+						Break;
+					end;
+				end;
+		end;
+		end;
+	finally
+		RegistryClasses.Free;
 	end;
 end;
 
@@ -456,21 +102,21 @@ function RootKeyToStr(const RootKey: HKEY): string;
 begin
 {$ifdef CPUX64}
 	if RootKey = HKEY_CLASSES_ROOT then
-    Result := 'HKEY_CLASSES_ROOT'
-  else if RootKey = HKEY_CURRENT_USER then
-    Result := 'HKEY_CURRENT_USER'
-  else if	RootKey = HKEY_LOCAL_MACHINE then
-    Result := 'HKEY_LOCAL_MACHINE'
+		Result := 'HKEY_CLASSES_ROOT'
+	else if RootKey = HKEY_CURRENT_USER then
+		Result := 'HKEY_CURRENT_USER'
+	else if	RootKey = HKEY_LOCAL_MACHINE then
+		Result := 'HKEY_LOCAL_MACHINE'
 	else if	RootKey = HKEY_USERS then
-    Result := 'HKEY_USERS'
+		Result := 'HKEY_USERS'
 	else if	RootKey = HKEY_PERFORMANCE_DATA then
-    Result := 'HKEY_PERFORMANCE_DATA'
+		Result := 'HKEY_PERFORMANCE_DATA'
 	else if	RootKey = HKEY_CURRENT_CONFIG then
-    Result := 'HKEY_CURRENT_CONFIG'
+		Result := 'HKEY_CURRENT_CONFIG'
 	else if	RootKey = HKEY_DYN_DATA then
-    Result := 'HKEY_DYN_DATA'
+		Result := 'HKEY_DYN_DATA'
 	else
-    Result := '';
+		Result := '';
 {$else}
 	case RootKey of
 	HKEY_CLASSES_ROOT: Result := 'HKEY_CLASSES_ROOT';
