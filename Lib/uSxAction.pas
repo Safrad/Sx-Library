@@ -16,6 +16,7 @@ type
     FClickCount: SG;
     FShortCuts: TIntegerList;
     FName: string;
+    FOnExecute: TNotifyEvent;
 
     FItems: TObjectList;
     function GetCount: Integer;
@@ -39,6 +40,7 @@ type
     property ShortCuts: TIntegerList read FShortCuts write FShortCuts;
     property Items: TObjectList read FItems;
     property Count: Integer read GetCount;
+    property OnExecute: TNotifyEvent read FOnExecute write FOnExecute;
   end;
 
 implementation
@@ -73,7 +75,9 @@ end;
 
 procedure TSxAction.Execute(Sender: TObject);
 begin
-  Inc(FClickCount);
+	Inc(FClickCount);
+	if Assigned(FOnExecute) then
+		FOnExecute(Self);
 end;
 
 function TSxAction.GetCount: Integer;
