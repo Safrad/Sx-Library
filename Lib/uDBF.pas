@@ -97,7 +97,7 @@ var
 	Column: TColumn;
 	NewSize: SG;
 	Row, SRow, CRow: Pointer;
-	RowSize, RowsSize: SG;
+	RowSize, RowsSize: UG;
 	FPT: AnsiString;
 	FPTSize: UG;
 	Index: UG;
@@ -209,7 +209,7 @@ begin
 				end;
 				FItemCount := 0;
 				CRow := SRow;
-				while SG(CRow) < SG(SRow) + RowsSize do
+				while UG(CRow) < UG(SRow) + RowsSize do
 				begin
 		(*			if F.FilePos >= F.FileSize then Exit; // All readed
 					if F.FilePos + RowSize > F.FileSize then
