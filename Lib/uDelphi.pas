@@ -10,24 +10,36 @@ type
     dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
     dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7,
     dvDelphi8, dvDelphi2005, dvDelphi2006, dvDelphi2007,
-    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2 {,..});
+    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5 {,..});
 
 const
   ReleaseYear: array[TDelphiVersion] of string = (
     '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
     '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
     '2003-12-17', '2004-10-22', '2005-11-11', '2007-03-19',
-    '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31');
-  LastWin16Delphi = dvDelphi2;
-  FirstWin32Delphi = dvDelphi3;
+    '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31', '2013-09-03', '2013-04-22', '2013-09-10');
+
   FirstUnicodeDelphi = dvDelphi2009;
-  FirstWin64Delphi = dvDelphiXE2;
 
 type
-  TSystemPlatform = (spWin16, spWin32, spWin64);
+  TSystemPlatform = (spWin16, spWin32, spWin64, spMacOSX32, spIOSSimulator, spIOSDevice, spAndroid);
 const
-  SystemPlatformStr: array[TSystemPlatform] of string = ('16', '32', '64');
-  SystemPlatformXStr: array[TSystemPlatform] of string = ('16', 'x86', 'x64');
+  PlatformSince: array[TSystemPlatform] of TDelphiVersion = (dvPascal1{..dvDelphi2}, dvDelphi3, dvDelphiXE2, dvDelphiXE2, dvDelphiXE4, dvDelphiXE4, dvDelphiXE5);
+
+  // GUI
+  SystemPlatformGUIStr: array[TSystemPlatform] of string = ('16', 'x86', 'x64', 'OS X', 'iOS 32', 'iOS ARM', 'Android ARM');
+
+  // dcc*, User Input
+  SystemPlatformDCCStr: array[TSystemPlatform] of string = ('16', '32', '64', 'osx', 'ios32', 'iosarm', 'aarm');
+
+  // manifest
+  SystemPlatformManifestStr: array[TSystemPlatform] of string = ('16', 'x86', 'x64', 'OSX', 'iOS-sym', 'iOS', 'android');
+
+  // lib folder
+  SystemPlatformLibStr: array[TSystemPlatform] of string = ('win16', 'win32', 'win64', 'osx32', 'iossimulator', 'iosDevice', 'android');
+
+  // Library keys & cfg
+  SystemPlatformRegStr: array[TSystemPlatform] of string = ('Win16', 'Win32', 'Win64', 'OSX32', 'iOSSimulator', 'iOSDevice', 'Android32');
 
 type
   TCompiler = record
@@ -173,36 +185,26 @@ end;
 function GetCompilerFullName(const ACompiler: TCompiler): string;
 begin
   Result := GetDelphiFullName(ACompiler.DelphiVersion);
-  if ACompiler.SystemPlatform <> spWin32 then
-  begin
-    Result := Result + CharSpace + SystemPlatformXStr[ACompiler.SystemPlatform];
-  end;
+  Result := Result + CharSpace + SystemPlatformGUIStr[ACompiler.SystemPlatform];
+  if ACompiler.DelphiVersion < FirstUnicodeDelphi then
+    Result := Result + CharSpace + '(ansi)';
 end;
 
 function GetCompilers(const ADelphiVersion: TDelphiVersion): TCompilers;
 var
   c: SG;
+  SystemPlatform: TSystemPlatform;
 begin
   c := 0;
-  if ADelphiVersion <= LastWin16Delphi then
+  for SystemPlatform := Low(SystemPlatform) to High(SystemPlatform) do
   begin
-    SetLength(Result, c + 1);
-    Result[c].DelphiVersion := ADelphiVersion;
-    Result[c].SystemPlatform := spWin16;
-    Inc(c);
-  end;
-  if ADelphiVersion >= FirstWin32Delphi then
-  begin
-    SetLength(Result, c + 1);
-    Result[c].DelphiVersion := ADelphiVersion;
-    Result[c].SystemPlatform := spWin32;
-    Inc(c);
-  end;
-  if ADelphiVersion >= FirstWin64Delphi then
-  begin
-    SetLength(Result, c + 1);
-    Result[c].DelphiVersion := ADelphiVersion;
-    Result[c].SystemPlatform := spWin64;
+    if ADelphiVersion <= PlatformSince[SystemPlatform] then
+    begin
+      SetLength(Result, c + 1);
+      Result[c].DelphiVersion := ADelphiVersion;
+      Result[c].SystemPlatform := SystemPlatform;
+      Inc(c);
+    end;
   end;
 end;
 
@@ -245,13 +247,17 @@ end;
 function DelphiLibSuffix(const Compiler: TCompiler): string;
 begin
   Result := 'Lib';
-  if Compiler.DelphiVersion > dvDelphi7 then
-    Result := Result + 'Release' + PathDelim + 'win' + SystemPlatformStr[Compiler.SystemPlatform];
+  if Compiler.DelphiVersion <= dvDelphi7 then
+    // no code
+  else if Compiler.DelphiVersion <= dvDelphiXE then
+    Result := Result + PathDelim + 'Release' + PathDelim + SystemPlatformLibStr[Compiler.SystemPlatform]
+   else
+    Result := Result + PathDelim + SystemPlatformLibStr[Compiler.SystemPlatform] + PathDelim + 'release';
 end;
 
 function GetDCCFileName(const Compiler: TCompiler): string;
 begin
-  Result := GetDelphiPath(Compiler.DelphiVersion) + 'Bin\dcc' + SystemPlatformStr[Compiler.SystemPlatform] + '.exe';
+  Result := GetDelphiPath(Compiler.DelphiVersion) + 'Bin\dcc' + SystemPlatformDCCStr[Compiler.SystemPlatform] + '.exe';
 end;
 
 procedure ReplaceEnv(var Paths: string);
@@ -301,8 +307,8 @@ begin
   Replace(SearchPaths, '$(BDSCOMMON)', DelphiPath2 + '\Bin');
   Replace(SearchPaths, '$(BDSINCLUDE)', DelphiPath2 + '\Include');
 
-  Replace(SearchPaths, '$(PLATFORM)', 'Win' + SystemPlatformStr[SystemPlatform]);
-  Replace(SearchPaths, '$(Platform)', 'Win' + SystemPlatformStr[SystemPlatform]);
+  Replace(SearchPaths, '$(PLATFORM)', SystemPlatformRegStr[SystemPlatform]);
+  Replace(SearchPaths, '$(Platform)', SystemPlatformRegStr[SystemPlatform]);
   Replace(SearchPaths, '$(CONFIG)', 'Release');
   Replace(SearchPaths, '$(Config)', 'Release');
 
@@ -394,7 +400,7 @@ begin
   Result.SystemPlatform := spWin32;
   for sp := Low(sp) to High(sp) do
   begin
-    if Pos(SystemPlatformXStr[sp], AName) <> 0 then
+    if Pos(SystemPlatformDCCStr[sp], AName) <> 0 then
       Result.SystemPlatform := sp;
   end;
 

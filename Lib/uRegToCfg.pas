@@ -28,7 +28,7 @@ begin
     Result := RegPath + PathDelim + 'Library'
   else
   begin
-    Result := RegPath + PathDelim + 'Library\Win' + SystemPlatformStr[SystemPlatform];
+    Result := RegPath + PathDelim + 'Library\' + SystemPlatformRegStr[SystemPlatform];
   end;
 end;
 
@@ -54,6 +54,10 @@ begin
     s := s + ';ImgList=Vcl.ImgList';
     s := s + ';CheckLst=Vcl.CheckLst';
     s := s + ';Buttons=Vcl.Buttons';
+    s := s + ';Grids=Vcl.Grids';
+    s := s + ';ExtActns=Vcl.ExtActns';
+    s := s + ';AppEvnts=Vcl.AppEvnts';
+    s := s + ';Calendar=Vcl.Samples.Calendar';
 
     s := s + ';Jpeg=Vcl.Imaging.Jpeg';
     s := s + ';PngImage=Vcl.Imaging.PngImage';
@@ -65,6 +69,9 @@ begin
     s := s + ';CommCtrl=Winapi.CommCtrl';
     s := s + ';ShellAPI=Winapi.ShellAPI';
     s := s + ';ShlObj=Winapi.ShlObj';
+    s := s + ';SHFolder=Winapi.SHFolder';
+    s := s + ';PsAPI=Winapi.PsAPI';
+    s := s + ';RichEdit=Winapi.RichEdit';
 
     s := s + ';TypInfo=System.TypInfo';
     s := s + ';SysUtils=System.SysUtils';
@@ -73,13 +80,22 @@ begin
     s := s + ';Classes=System.Classes';
     s := s + ';Variants=System.Variants';
     s := s + ';IniFiles=System.IniFiles';
+    s := s + ';DateUtils=System.DateUtils';
+    s := s + ';Contnrs=System.Contnrs';
 
     s := s + ';Registry=System.Win.Registry';
     s := s + ';ComObj=System.Win.ComObj';
 
-
     s := s + ';XMLDoc=XML.XMLDoc';
     s := s + ';XMLIntf=XML.XMLIntf';
+    s := s + ';XMLDom=XML.XMLDom';
+
+    s := s + ';TeEngine=VCLTee.TeEngine';
+    s := s + ';Series=VCLTee.Series';
+    s := s + ';TeeProcs=VCLTee.TeeProcs';
+    s := s + ';Chart=VCLTee.Chart';
+    s := s + ';TeCanvas=VCLTee.TeCanvas';
+    s := s + ';TeeFunci=VCLTee.TeeFunci';
   end;
   s := s + LineSep;
   Result := s;
@@ -138,7 +154,7 @@ begin
                 s := s + '-u"' + Path + '"' + LineSep;
             end;
 
-            WriteDcc(s, DelphiPath, SystemPlatformStr[Compiler.SystemPlatform]);
+            WriteDcc(s, DelphiPath, SystemPlatformDccStr[Compiler.SystemPlatform]);
 
             Reg.CloseKey;
           end;

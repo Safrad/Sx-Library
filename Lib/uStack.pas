@@ -8,7 +8,7 @@ uses
 
 type
 	PPointerList = ^TPointerList;
-	TPointerList = array [0 .. 256 * MB - 1] of Pointer;
+	TPointerList = array [0 .. 128 * MB - 1] of Pointer;
 
 	TStack = class // TODO (TData)
 	private
