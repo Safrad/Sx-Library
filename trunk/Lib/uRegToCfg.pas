@@ -25,10 +25,10 @@ uses
 function GetDelphiLibraryPath(const RegPath: string; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
 begin
   if DelphiVersion <= dvDelphiXE then
-    Result := RegPath + PathDelim + 'Library'
+    Result := RegPath + 'Library'
   else
   begin
-    Result := RegPath + PathDelim + 'Library\' + SystemPlatformRegStr[SystemPlatform];
+    Result := RegPath + 'Library\' + SystemPlatformRegStr[SystemPlatform];
   end;
 end;
 
@@ -77,6 +77,7 @@ begin
     s := s + ';SysUtils=System.SysUtils';
     s := s + ';Math=System.Math';
     s := s + ';Types=System.Types';
+    s := s + ';UITypes=System.UITypes';
     s := s + ';Classes=System.Classes';
     s := s + ';Variants=System.Variants';
     s := s + ';IniFiles=System.IniFiles';
