@@ -185,6 +185,9 @@ begin
 		begin
 			Y := 0;
 			GY := StartGY;
+			Inc(GX, MaxWidth + FormBorder);
+    if ControlAlignMode <> caLeftLeft then
+      Inc(GX, LgToPx(155));
 		end;
 
 		// Label
@@ -208,9 +211,9 @@ begin
 		Inc(Y);
   end;
 
-  if ControlAlignMode <> caLeftLeft then  
+  if ControlAlignMode <> caLeftLeft then
     RowWidth := MaxWidth + LgToPx(155);
-  
+
 	X := FormBorder;
 	Y := 0;
 	GX := FormBorder;
