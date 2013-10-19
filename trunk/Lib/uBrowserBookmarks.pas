@@ -40,9 +40,6 @@ uses
   uBookmark,
 	uFile, uFiles, uStrings, uHTML, uCharset, uMath, uSorts, uMsg, uSystem, uOutputFormat, uBackup;
 
-
-
-
 function Count(const Bookmarks: TBookmarks; const CountFolder: BG): UG;
 var
 	Bookmark: PBookmark;
