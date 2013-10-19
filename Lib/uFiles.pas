@@ -27,7 +27,7 @@ var
 	TempDir,
   InstanceTempDir,
 	CommonTempDir: string;
-	ExeFileName, RenamedExeFileName: TFileName;
+	ExeFileName: TFileName;
   ModuleFileName: TFileName;
   ExeParameters: string;
   MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
