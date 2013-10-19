@@ -638,7 +638,7 @@ begin
 //		  Assert(Length(FRWList) = 0);
 	if FFileSaved = False then
 		Save;
-	FreeAndNil(FRWList);
+	SetLength(FRWList, 0);
 	FreeData;
 	inherited Destroy;
 end;
