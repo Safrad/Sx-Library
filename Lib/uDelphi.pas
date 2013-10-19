@@ -198,7 +198,7 @@ begin
   c := 0;
   for SystemPlatform := Low(SystemPlatform) to High(SystemPlatform) do
   begin
-    if ADelphiVersion <= PlatformSince[SystemPlatform] then
+    if PlatformSince[SystemPlatform] <= ADelphiVersion then
     begin
       SetLength(Result, c + 1);
       Result[c].DelphiVersion := ADelphiVersion;
@@ -307,8 +307,8 @@ begin
   Replace(SearchPaths, '$(BDSCOMMON)', DelphiPath2 + '\Bin');
   Replace(SearchPaths, '$(BDSINCLUDE)', DelphiPath2 + '\Include');
 
-  Replace(SearchPaths, '$(PLATFORM)', SystemPlatformRegStr[SystemPlatform]);
-  Replace(SearchPaths, '$(Platform)', SystemPlatformRegStr[SystemPlatform]);
+  Replace(SearchPaths, '$(PLATFORM)', SystemPlatformLibStr[SystemPlatform]);
+  Replace(SearchPaths, '$(Platform)', SystemPlatformLibStr[SystemPlatform]);
   Replace(SearchPaths, '$(CONFIG)', 'Release');
   Replace(SearchPaths, '$(Config)', 'Release');
 
