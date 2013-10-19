@@ -82,7 +82,8 @@ implementation
 
 uses
 	SysUtils,
-	uGraph;
+	uGraph,
+  uOutputFormat;
 const
 	MaxChar = 2 + 10 + 26 - 1;
 type

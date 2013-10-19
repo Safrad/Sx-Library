@@ -337,7 +337,9 @@ begin
 			FTP.Connect;
 			FTP.TransferType := ftBinary;
 			FTP.TransferType := ftASCII; // Indy 10 BUG!
+      {$if CompilerVersion < 26}
 			FTP.IOHandler.DefStringEncoding := TEncoding.default; // ANSI, remove for UTF8
+      {$ifend}
 			{$ifend}
 			if Assigned(Logger) then
 				Logger.Add('Connected ' + FTP.Host, mlInformation);

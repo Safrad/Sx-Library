@@ -48,7 +48,7 @@ implementation
 
 uses
 	SysUtils,
-	uDParser, uStrings, uMsg, uMath;
+	uDParser, uStrings, uMsg, uMath, uOutputFormat;
 
 function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
 var Parser: TDParser;
