@@ -196,7 +196,7 @@ var
   SystemPlatform: TSystemPlatform;
 begin
   c := 0;
-  for SystemPlatform := Low(SystemPlatform) to High(SystemPlatform) do
+  for SystemPlatform := spWin32 to High(SystemPlatform) do
   begin
     if PlatformSince[SystemPlatform] <= ADelphiVersion then
     begin

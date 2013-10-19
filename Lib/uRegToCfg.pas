@@ -34,72 +34,19 @@ end;
 
 function CommonCfgText(const DelphiVersion: TDelphiVersion): string;
 var
-  s: string;
+  FileName: TFileName;
+  i: TDelphiVersion;
 begin
-  s := '-aWinTypes=Windows';
-  if DelphiVersion > dvDelphiXE then
+  Result := '';
+  FileName := DataDir + 'default.cfg';
+  if FileExistsEx(FileName) then
+	  Result := Result + ReadStringFromFile(FileName) + FileSep;
+	for i := dvDelphi1 to DelphiVersion do
   begin
-    s := s + ';Forms=Vcl.Forms';
-    s := s + ';Graphics=Vcl.Graphics';
-    s := s + ';Controls=Vcl.Controls';
-    s := s + ';ExtCtrls=Vcl.ExtCtrls';
-    s := s + ';StdCtrls=Vcl.StdCtrls';
-    s := s + ';Consts=Vcl.Consts';
-    s := s + ';Dialogs=Vcl.Dialogs';
-    s := s + ';ComCtrls=Vcl.ComCtrls';
-    s := s + ';Menus=Vcl.Menus';
-    s := s + ';ClipBrd=Vcl.ClipBrd';
-    s := s + ';ExtDlgs=Vcl.ExtDlgs';
-    s := s + ';ActnList=Vcl.ActnList';
-    s := s + ';ImgList=Vcl.ImgList';
-    s := s + ';CheckLst=Vcl.CheckLst';
-    s := s + ';Buttons=Vcl.Buttons';
-    s := s + ';Grids=Vcl.Grids';
-    s := s + ';ExtActns=Vcl.ExtActns';
-    s := s + ';AppEvnts=Vcl.AppEvnts';
-    s := s + ';Calendar=Vcl.Samples.Calendar';
-
-    s := s + ';Jpeg=Vcl.Imaging.Jpeg';
-    s := s + ';PngImage=Vcl.Imaging.PngImage';
-
-    s := s + ';Windows=Winapi.Windows';
-    s := s + ';Messages=Winapi.Messages';
-    s := s + ';ActiveX=Winapi.ActiveX';
-    s := s + ';mmsystem=Winapi.mmsystem';
-    s := s + ';CommCtrl=Winapi.CommCtrl';
-    s := s + ';ShellAPI=Winapi.ShellAPI';
-    s := s + ';ShlObj=Winapi.ShlObj';
-    s := s + ';SHFolder=Winapi.SHFolder';
-    s := s + ';PsAPI=Winapi.PsAPI';
-    s := s + ';RichEdit=Winapi.RichEdit';
-
-    s := s + ';TypInfo=System.TypInfo';
-    s := s + ';SysUtils=System.SysUtils';
-    s := s + ';Math=System.Math';
-    s := s + ';Types=System.Types';
-    s := s + ';UITypes=System.UITypes';
-    s := s + ';Classes=System.Classes';
-    s := s + ';Variants=System.Variants';
-    s := s + ';IniFiles=System.IniFiles';
-    s := s + ';DateUtils=System.DateUtils';
-    s := s + ';Contnrs=System.Contnrs';
-
-    s := s + ';Registry=System.Win.Registry';
-    s := s + ';ComObj=System.Win.ComObj';
-
-    s := s + ';XMLDoc=XML.XMLDoc';
-    s := s + ';XMLIntf=XML.XMLIntf';
-    s := s + ';XMLDom=XML.XMLDom';
-
-    s := s + ';TeEngine=VCLTee.TeEngine';
-    s := s + ';Series=VCLTee.Series';
-    s := s + ';TeeProcs=VCLTee.TeeProcs';
-    s := s + ';Chart=VCLTee.Chart';
-    s := s + ';TeCanvas=VCLTee.TeCanvas';
-    s := s + ';TeeFunci=VCLTee.TeeFunci';
+	  FileName := DataDir + 'default-D' + GetDelphiShortName(i) + '.cfg';
+	  if FileExistsEx(FileName) then
+		  Result := Result + ReadStringFromFile(FileName) + FileSep;
   end;
-  s := s + LineSep;
-  Result := s;
 end;
 
 procedure WriteDcc(const Data: string; const DelphiPath: string; const Bits: string);

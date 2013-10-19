@@ -793,8 +793,6 @@ procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
 var
 	Data: string;
   CfgSearchPath: string;
-  FileName: TFileName;
-  i: TDelphiVersion;
 begin
 	{$ifdef Console}
 	Information('Writing file %1.', [CfgFileName]);
@@ -804,8 +802,6 @@ begin
 
 	if OutputDir <> '' then
 		Data := Data + '-E"' + OutputDir + '"' + FileSep;
-//-LE"c:\program files\borland\delphi6\Projects\Bpl"
-//-LN"c:\program files\borland\delphi6\Projects\Bpl"
 
 	if UnitOutputDir <> '' then
 		Data := Data + '-N"' + ReplaceDelphiVariables(UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
@@ -831,15 +827,6 @@ begin
 
   Data := Data + '-$M' + IntToStr(MinStackSize) + ',' + IntToStr(MaxStackSize) + FileSep;
   Data := Data + '-K$' + NumToStr(ImageBase, 16) + FileSep;
-  FileName := DataDir + 'default.cfg';
-  if FileExistsEx(FileName) then
-	  Data := Data +  ReadStringFromFile(FileName);
-	for i := dvDelphi1 to DelphiVersion do
-  begin
-	  FileName := DataDir + 'default-D' + GetDelphiShortName(DelphiVersion) + '.cfg';
-	  if FileExistsEx(FileName) then
-		  Data := Data +  ReadStringFromFile(FileName);
-  end;
 
 	WriteStringToFile(CfgFileName, Data, False, fcAnsi);
 	{$ifdef Console}
