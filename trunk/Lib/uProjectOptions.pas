@@ -124,9 +124,11 @@ type
 		PackageDCPOutputDir: string; // dcp
 		Conditionals: TStringList;
 		SearchPaths: TStringList;
+		Namespaces: TStringList; // New in Delphi XE2
 		DebugSourceDirs: string; // Not in cfg
 		UsePackages: BG;
     Packages: string;
+    Namespace: string;
     // Linker
     MinStackSize: UG;
     MaxStackSize: UG;
@@ -153,6 +155,7 @@ type
 
     procedure AddConditionals(const AConditionals: string);
     procedure AddSearchPaths(const ASearchPaths: string);
+    procedure AddNamespaces(const ANamespaces: string);
 
     procedure ReadFromFile(const AFileName: TFileName);
     procedure ReplaceFromFile(const AFileName: TFileName);
@@ -343,6 +346,10 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
       AddSearchPaths(NodeValue);
     end
     else if Name = UpperCase('DCC_Define') then
+    begin
+      AddConditionals(NodeValue);
+    end
+    else if Name = UpperCase('DCC_Namespace') then
     begin
       AddConditionals(NodeValue);
     end
@@ -616,11 +623,17 @@ begin
   SearchPaths.Sorted := True;
   SearchPaths.Delimiter := ProjectListSeparator;
 
+  Namespaces := TStringList.Create;
+  Namespaces.Duplicates := dupIgnore;
+  Namespaces.Sorted := True;
+  Namespaces.Delimiter := ProjectListSeparator;
+
   Version := TProjectVersion.Create;
 end;
 
 destructor TProjectOptions.Destroy;
 begin
+  FreeAndNil(Namespaces);
   FreeAndNil(SearchPaths);
   FreeAndNil(Conditionals);
   FreeAndNil(Version);
@@ -803,6 +816,8 @@ begin
 	if OutputDir <> '' then
 		Data := Data + '-E"' + OutputDir + '"' + FileSep;
 
+	if Namespaces.Count > 0 then
+		Data := Data + '-NE' + Namespaces.DelimitedText + FileSep;
 	if UnitOutputDir <> '' then
 		Data := Data + '-N"' + ReplaceDelphiVariables(UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 	if PackageDLLOutputDir <> '' then
@@ -859,6 +874,20 @@ begin
     SearchPath := ReadToChar(ASearchPaths, i, ProjectListSeparator);
     if (SearchPath <> '') and (SearchPath <> '$(DCC_UnitSearchPath)') then
 			SearchPaths.Add(SearchPath);
+  end;
+end;
+
+procedure TProjectOptions.AddNamespaces(const ANamespaces: string);
+var
+  i: SG;
+  Namespace: string;
+begin
+  i := 1;
+  while i <= Length(ANamespaces) do
+  begin
+    Namespace := ReadToChar(ANamespaces, i, ProjectListSeparator);
+    if (Namespace <> '') and (ANamespaces <> '$(DCC_Namespace)') then
+			Namespaces.Add(Namespace);
   end;
 end;
 
