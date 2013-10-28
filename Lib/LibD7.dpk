@@ -32,7 +32,8 @@ requires
   vclactnband,
   vclx,
   vcljpg,
-  indy;
+  indy,
+  xmlrtl;
 
 contains
   FastMM4,
