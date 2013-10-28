@@ -524,6 +524,9 @@ begin
 end;
 
 procedure TDForm.SetBackground(Value: TBackground);
+var
+  RCOptions: TRCOptions;
+  Palette: HPALETTE;
 begin
 	if FBackground <> Value then
 	begin
@@ -548,9 +551,10 @@ begin
 				SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow,
 					exPrecision]);
 				if OneBuffer then
-					RC := CreateRenderingContext(Canvas.Handle, [], 32, 0)
+          RCOptions := []
 				else
-					RC := CreateRenderingContext(Canvas.Handle, [opDoubleBuffered], 32, 0);
+          RCOptions := [opDoubleBuffered];
+				RC := CreateRenderingContext(Canvas.Handle, RCOptions, 32, 0, 0, 0, 0, 0, Palette);
 				// CreateOpenGL(Handle, Canvas);
 				// SelectObject(Canvas.Handle, GetStockObject(ANSI_VAR_FONT));
 				// create the bitmap display lists
