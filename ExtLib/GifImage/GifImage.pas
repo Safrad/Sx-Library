@@ -1,7 +1,5 @@
 unit GIFImage;
 
-{$WARNINGS OFF}
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 // Project:	GIF Graphics Object                                           //
