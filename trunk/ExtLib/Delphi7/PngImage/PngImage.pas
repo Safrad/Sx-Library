@@ -1,7 +1,5 @@
 {$T-}
 
-{$WARNINGS OFF}
-
 {Portable Network Graphics Delphi 1.4361   (8 March 2003)     }
 
 {This is the latest implementation for TPngImage component    }
