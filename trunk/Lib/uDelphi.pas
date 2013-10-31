@@ -249,8 +249,8 @@ begin
   Result := 'Lib';
   if Compiler.DelphiVersion <= dvDelphi7 then
     // no code
-  else if Compiler.DelphiVersion <= dvDelphiXE then
-    Result := Result + PathDelim + 'Release' + PathDelim + SystemPlatformLibStr[Compiler.SystemPlatform]
+  else if Compiler.DelphiVersion < dvDelphiXE then
+    Result := Result + PathDelim + 'release'
    else
     Result := Result + PathDelim + SystemPlatformLibStr[Compiler.SystemPlatform] + PathDelim + 'release';
 end;
