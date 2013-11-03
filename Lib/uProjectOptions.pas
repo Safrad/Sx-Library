@@ -803,6 +803,15 @@ end;
 procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
   const DelphiVersion: TDelphiVersion;
   const SystemPlatform: TSystemPlatform);
+
+  function Quoted(const s: string): string;
+  begin
+    if DelphiVersion >= dvDelphiXE4 then
+      Result := s
+    else
+      Result := QuotedStr(s);
+  end;
+
 var
 	Data: string;
   CfgSearchPath: string;
@@ -814,7 +823,7 @@ begin
 	Data := '';
 
 	if OutputDir <> '' then
-		Data := Data + '-E"' + OutputDir + '"' + FileSep;
+		Data := Data + '-E' + Quoted(OutputDir) + FileSep;
 
 	if Namespaces.Count > 0 then
 		Data := Data + '-NE' + Namespaces.DelimitedText + FileSep;
