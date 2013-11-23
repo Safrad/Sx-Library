@@ -501,10 +501,14 @@ begin
                 begin
                   cNode := FindOrCreateNode(iNode, 'Icon_MainIcon');
                   cNode.NodeValue := IconFileName;
+
+                  cNode := FindOrCreateNode(iNode, 'Namespace');
+                  cNode.NodeValue := Namespaces.DelimitedText;
+
                   WriteWarningsToNode(iNode);
                 end;
+              end;
             end;
-          end;
           end;
           ProcessNode(iNode);
           iNode := iNode.NextSibling;
