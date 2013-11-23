@@ -351,7 +351,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     end
     else if Name = UpperCase('DCC_Namespace') then
     begin
-      AddConditionals(NodeValue);
+      AddNamespaces(NodeValue);
     end
     else if Name = UpperCase('UsePackages') then
     begin
@@ -503,8 +503,8 @@ begin
                   cNode.NodeValue := IconFileName;
                   WriteWarningsToNode(iNode);
                 end;
-              end;
             end;
+          end;
           end;
           ProcessNode(iNode);
           iNode := iNode.NextSibling;
@@ -625,7 +625,7 @@ begin
 
   Namespaces := TStringList.Create;
   Namespaces.Duplicates := dupIgnore;
-  Namespaces.Sorted := True;
+//  Namespaces.Sorted := True;
   Namespaces.Delimiter := ProjectListSeparator;
 
   Version := TProjectVersion.Create;
