@@ -183,6 +183,7 @@ const
   DefaultImageBase = 4 * MB;
 
   ProjectListSeparator = ';';
+  XMLIndentStr = '    '; // CharTab; // <= XE4
 
 function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const ProjectVersion: TProjectOptions): string;
 begin
@@ -238,18 +239,21 @@ end;
 procedure RepairDproj(const AFileName: TFileName);
 var
   Data, Data2: string;
-  Line: string;
-  i: SG;
+//  Line: string;
+//  i: SG;
 begin
   Data := ReadStringFromFile(AFileName);
 //  Replace(Data, [''''], ['&apos;']);
 
+{ <= XE4
   i := 1;
   while i < Length(Data) do
   begin
     Line := ReadToNewLine(Data, i);
     AppendStr(Data2, CharTab + Line + FullSep);
   end;
+}
+  Data2 := ReplaceF(Data, CharTab, XMLIndentStr); // >= XE5
   WriteStringToFile(AFileName, Data2, False);
 end;
 
@@ -478,7 +482,7 @@ begin
     try
       XML := TSxXMLDocument.Create(AFileName);
       XML.Active := True;
-      XML.NodeIndentStr := CharTab;
+      XML.NodeIndentStr := XMLIndentStr;
       try
         if XML.IsEmptyDoc then
           Exit;
@@ -506,6 +510,15 @@ begin
                   cNode.NodeValue := Namespaces.DelimitedText;
 
                   WriteWarningsToNode(iNode);
+                end;
+              end
+              else
+              begin
+                if Save then
+                begin
+                  cNode := iNode.ChildNodes.FindNode('VerInfo_Keys');
+                  if cNode <> nil then
+                    iNode.ChildNodes.Remove(cNode);
                 end;
               end;
             end;
