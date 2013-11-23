@@ -502,7 +502,7 @@ begin
                   cNode := FindOrCreateNode(iNode, 'Icon_MainIcon');
                   cNode.NodeValue := IconFileName;
 
-                  cNode := FindOrCreateNode(iNode, 'Namespace');
+                  cNode := FindOrCreateNode(iNode, 'DCC_Namespace');
                   cNode.NodeValue := Namespaces.DelimitedText;
 
                   WriteWarningsToNode(iNode);
