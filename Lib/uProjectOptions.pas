@@ -830,9 +830,9 @@ begin
 	if UnitOutputDir <> '' then
 		Data := Data + '-N"' + ReplaceDelphiVariables(UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 	if PackageDLLOutputDir <> '' then
-		Data := Data + '-LE"' + ReplaceDelphiVariables(PackageDLLOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
+		Data := Data + '-LE' + Quoted(ReplaceDelphiVariables(PackageDLLOutputDir, DelphiVersion, SystemPlatform)) + FileSep;
 	if PackageDCPOutputDir <> '' then
-		Data := Data + '-LN"' + ReplaceDelphiVariables(PackageDCPOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
+		Data := Data + '-LN' + Quoted(ReplaceDelphiVariables(PackageDCPOutputDir, DelphiVersion, SystemPlatform)) + FileSep;
 	if UsePackages then
 		Data := Data + '-LU' + Packages + FileSep;
 
