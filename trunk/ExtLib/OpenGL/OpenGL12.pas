@@ -189,6 +189,11 @@ unit OpenGL12;
 
 interface
 
+{$IFDEF Win64}
+  {$DEFINE Win32}
+{$ENDIF}
+
+
 uses
   {$IFDEF Win32}
     Windows
