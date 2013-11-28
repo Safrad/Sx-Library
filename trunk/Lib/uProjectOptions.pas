@@ -136,6 +136,7 @@ type
     // GUI
     RuntimeThemes: BG; // New in Delphi 2007
     IconFileName: TFileName; // New in Delphi XE2
+    AdminRights: BG;
 
     // in dpk
     LibDirective: array[TLibDirective] of string;
@@ -622,6 +623,7 @@ begin
 
   FEnabled := True;
   RuntimeThemes := True;
+  AdminRights := False;
 
   ShowHints := True;
   ShowWarnings := True;
@@ -755,6 +757,7 @@ begin
       begin
         Enabled := IniFile.ReadBool(BuildSectionName, 'Enabled', Enabled);
         RuntimeThemes := IniFile.ReadBool(BuildSectionName, 'RuntimeThemes', RuntimeThemes);
+        AdminRights := IniFile.ReadBool(BuildSectionName, 'AdminRights', RuntimeThemes);
       end;
 
 			Version.SetSubVersion(svMajor, IniFile.ReadString(VersionInfoSection, 'MajorVer', Version.Major));
