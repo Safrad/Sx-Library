@@ -1235,7 +1235,6 @@ begin
   FTests := TInterfaceList.Create;
   LoadConfiguration;
 
-  TimeSeparator := ':';
   SetUpStateImages;
   SetupCustomShortcuts;
   TestTree.Items.Clear;
