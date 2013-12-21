@@ -193,6 +193,7 @@ type
 	TArrayOfBG = array of BG;
 	TArrayOfSG = array of SG;
 	TArrayOfString = array of string;
+	TArrayOfChar = array of Char;
 	TArrayOfVariant = array of Variant;
 
 	// Static Arrays
