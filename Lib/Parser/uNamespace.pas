@@ -72,27 +72,27 @@ end;
 
 procedure AddFunction(const UnitName, FunctionName: string; const ConstantFunction: TConstantFunction; const Description: string);
 begin
-	AddFunctionEx(UnitName, FunctionName, @ConstantFunction, 0, Description);
+	AddFunctionEx(UnitName, FunctionName, Pointer(@ConstantFunction), 0, Description);
 end;
 
 procedure AddFunction(const UnitName, FunctionName: string; const UnaryFunction: TUnaryFunction; const Description: string);
 begin
-	AddFunctionEx(UnitName, FunctionName, @UnaryFunction, 1, Description);
+	AddFunctionEx(UnitName, FunctionName, Pointer(@UnaryFunction), 1, Description);
 end;
 
 procedure AddFunction(const UnitName, FunctionName: string; const BinaryFunction: TBinaryFunction; const Description: string);
 begin
-	AddFunctionEx(UnitName, FunctionName, @BinaryFunction, 2, Description);
+	AddFunctionEx(UnitName, FunctionName, Pointer(@BinaryFunction), 2, Description);
 end;
 
 procedure AddFunction(const UnitName, FunctionName: string; const TernaryFunction: TTernaryFunction; const Description: string);
 begin
-	AddFunctionEx(UnitName, FunctionName, @TernaryFunction, 3, Description);
+	AddFunctionEx(UnitName, FunctionName, Pointer(@TernaryFunction), 3, Description);
 end;
 
 procedure AddFunction(const UnitName, FunctionName: string; const NaryFunction: TNaryFunction; const Description: string);
 begin
-	AddFunctionEx(UnitName, FunctionName, @NaryFunction, AnyParameters, Description);
+	AddFunctionEx(UnitName, FunctionName, Pointer(@NaryFunction), AnyParameters, Description);
 end;
 
 function FindFunction(const UnitName, FunctionName: string; const ArgCount: SG): PFunction;

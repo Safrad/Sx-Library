@@ -303,7 +303,7 @@ var
 begin
 	Result := 0;
 
-	if @NtQuerySystemInformation = nil then
+	if Pointer(@NtQuerySystemInformation) = nil then
     Exit;
 
   GetSystemInfo(SystemInfo);

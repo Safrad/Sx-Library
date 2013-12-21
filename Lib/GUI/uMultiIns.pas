@@ -59,7 +59,7 @@ begin
 	// Post message and inform other instance to focus itself
 	BSMRecipients := BSM_APPLICATIONS;
 	BroadCastSystemMessage(BSF_IGNORECURRENTTASK or BSF_POSTMESSAGE,
-		@BSMRecipients, MessageID, wParam, lParam);
+		PDWORD(@BSMRecipients), MessageID, wParam, lParam);
 end;
 
 function InitInstance: BG;
