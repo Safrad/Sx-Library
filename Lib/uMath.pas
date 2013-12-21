@@ -122,9 +122,6 @@ procedure InitPerformanceCounter;
 function GetCPUCounter: TU8;
 function PerformanceCounter: S8;
 procedure Delay(const ms: U4);
-{$ifndef Console}
-procedure DelayEx(const f: U8);
-{$endif}
 
 function CalcShr(N: U4): S1;
 procedure CheckExpSize(const Size: SG);
@@ -139,7 +136,7 @@ function BitsToByte(const Bits: S8): S4;
 implementation
 
 uses
-	Math, Windows{$ifndef Console}, uSysInfo{$endif};
+	Math, Windows;
 
 function Sgn(const I: S1): SG;
 begin
@@ -1604,29 +1601,6 @@ begin
 	TickCount := GetTickCount + ms;
 	while GetTickCount < TickCount do
 end;
-
-{$ifndef Console}
-
-procedure Nop; assembler;
-asm
-  nop
-end;
-
-procedure DelayEx(const f: U8);
-var
-	TickCount: U8;
-	i: SG;
-begin
-	TickCount := PerformanceCounter + f;
-	while PerformanceCounter < TickCount do
-	begin
-		for i := 0 to Min(1000, GSysInfo.CPUFrequency div 40) - 1 do
-		begin
-      Nop;
-		end;
-	end;
-end;
-{$endif}
 
 function CalcShr(N: U4): S1;
 {

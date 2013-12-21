@@ -110,6 +110,7 @@ procedure FillMemoryStatus(var SysInfo: TSysInfo);
 procedure FillCPUTest(var SysInfo: TSysInfo);
 procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);
 procedure UpdateSysInfo(SysInfo: PSysInfo);
+procedure DelayEx(const f: U8);
 
 implementation
 
@@ -896,6 +897,21 @@ procedure UpdateSysInfo(SysInfo: PSysInfo);
 begin
 	if FormDraw(fSysInfo) then
 		fSysInfo.FillComp(SysInfo);
+end;
+
+procedure DelayEx(const f: U8);
+var
+	TickCount: U8;
+	i: SG;
+begin
+	TickCount := PerformanceCounter + f;
+	while PerformanceCounter < TickCount do
+	begin
+		for i := 0 to Min(1000, GSysInfo.CPUFrequency div 40) - 1 do
+		begin
+      Nop;
+		end;
+	end;
 end;
 
 initialization
