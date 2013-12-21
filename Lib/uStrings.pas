@@ -71,7 +71,7 @@ function DelStringsF(const s: string; const SubChar: array of string): string;
 procedure DelStr(var s: string; const SubStr: string);
 function DelStrF(const s: string; const SubStr: string): string;
 
-function Ident(const Level: SG): string;
+function Indent(const Level: SG): string;
 
 function AddSingleQuoteF(const s: string): string;
 procedure AddQuote(var s: string);
@@ -341,7 +341,7 @@ begin
 	DelStr(Result, SubStr);
 end;
 
-function Ident(const Level: SG): string;
+function Indent(const Level: SG): string;
 begin
 	Result := StringOfChar(CharTab, Level);
 {	if Level = 0 then

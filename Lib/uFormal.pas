@@ -60,7 +60,7 @@ begin
 		ColumnIndex := 1;
 		Inc(LineIndex);
 
-		// Ident
+		// Indent
 //		LineLevel := 0;
 		while (Index <= Length(Text)) and (Text[Index] = CharTab) do
 		begin
@@ -87,11 +87,11 @@ begin
 			end;
 		end;
 		if NumSp <> 0 then
-			AddMes('Invalid ident.');
+			AddMes('Invalid indent.');
 
 //		if Abs(LineLevel - LastLineLevel) > 1 then
 //		if LineLevel > LastLineLevel + 1 then
-//			AddMes('Invalid ident.');
+//			AddMes('Invalid indent.');
 //		LastLineLevel := LineLevel;
 
 		// Line continue
