@@ -899,6 +899,11 @@ begin
 		fSysInfo.FillComp(SysInfo);
 end;
 
+procedure Nop; assembler;
+asm
+  nop
+end;
+
 procedure DelayEx(const f: U8);
 var
 	TickCount: U8;
