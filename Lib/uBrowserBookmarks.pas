@@ -132,7 +132,7 @@ begin
 				if Bookmark.ShortName <> '' then
 					s := '<strong>' + s + '</strong>';
 				if Bookmark.Description <> '' then
-					s := '<acronym title="' + Bookmark.Description + '">' + s + '</acronym>';
+					s := '<abbr title="' + Bookmark.Description + '">' + s + '</abbr>';
 (*				if Bookmark.Created <> 0 then
 					s := s + ' - ' + DateTimeToStr(Bookmark.Created); *)
 				if Bookmark.ItemType = itFolder then
