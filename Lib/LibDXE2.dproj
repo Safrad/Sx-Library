@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{8FC6E456-7132-40A0-A6C8-299299D87C22}</ProjectGuid>
 			<MainSource>LibDXE2.dpk</MainSource>
@@ -41,7 +41,7 @@
 			<DCC_UsePackage>rtl;IndyCore;IndySystem;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<DCC_Optimize>false</DCC_Optimize>
-			<DCC_Description>Safrad&apos;s Components</DCC_Description>
+			<DCC_Description>sx-library</DCC_Description>
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>

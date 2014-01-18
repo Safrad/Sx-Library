@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{9236363F-E31F-4CB2-9E8D-509F7F2E590C}</ProjectGuid>
 			<MainSource>LibDXE.dpk</MainSource>
@@ -29,7 +29,7 @@
 			<DCC_DcuOutput>.</DCC_DcuOutput>
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 			<DCC_IOChecking>false</DCC_IOChecking>
-			<DCC_Description>Safrad&apos;s Components</DCC_Description>
+			<DCC_Description>sx-library</DCC_Description>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Optimize>false</DCC_Optimize>
@@ -132,7 +132,7 @@
 					</VersionInfo>
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
-						<VersionInfoKeys Name="FileDescription">Safrad&apos;s Components</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">sx-library</VersionInfoKeys>
 						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
