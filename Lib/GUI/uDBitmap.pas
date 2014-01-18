@@ -100,7 +100,7 @@ type
 		procedure InitGraphics;
 		{$endif}
 		procedure HistogramL(Limit: UG);
-		function InternallCutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;
+		function InternalCutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;
 		function GetDataSize: UG;
 		procedure GBlurCPU(BmpD: TDBitmap; const Range: TRect; Radius: SG; const Horz, Vert: Boolean;
 			InterruptProcedure: TInterruptProcedure);
@@ -3112,7 +3112,7 @@ begin
 	Line(X1, Y1 - Size, X1, Y1 + Size, C, Effect);
 end;
 
-function TDBitmap.InternallCutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;
+function TDBitmap.InternalCutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;
 begin
 	Result := True;
 	if XD1 > XD2 then Exchange(XD1, XD2);
@@ -3165,7 +3165,7 @@ begin
 	if (Effect = ef00) or (C = clNone) or (Data = nil) then Exit;
 	CR := ColorToRGBStack(C);
 
-	if InternallCutWindow(XD1, YD1, XD2, YD2) then Exit;
+	if InternalCutWindow(XD1, YD1, XD2, YD2) then Exit;
 
 	ByteXD := ByteX;
 
@@ -8909,7 +8909,7 @@ var
 begin
 	Assert(Self <> nil);
 	if FData = nil then Exit;
-	if InternallCutWindow(XD1, YD1, XD2, YD2) then Exit;
+	if InternalCutWindow(XD1, YD1, XD2, YD2) then Exit;
 	if Spe = False then InitRGB;
 
 	C[0] := ColorToRGBStack(Co[0]);
