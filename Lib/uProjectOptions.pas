@@ -757,7 +757,7 @@ begin
       begin
         Enabled := IniFile.ReadBool(BuildSectionName, 'Enabled', Enabled);
         RuntimeThemes := IniFile.ReadBool(BuildSectionName, 'RuntimeThemes', RuntimeThemes);
-        AdminRights := IniFile.ReadBool(BuildSectionName, 'AdminRights', RuntimeThemes);
+        AdminRights := IniFile.ReadBool(BuildSectionName, 'AdminRights', AdminRights);
       end;
 
 			Version.SetSubVersion(svMajor, IniFile.ReadString(VersionInfoSection, 'MajorVer', Version.Major));
