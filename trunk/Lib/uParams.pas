@@ -143,7 +143,7 @@ begin
 	begin
 		if AF then
 		begin
-			ParamFile := ExpandDir(Param);
+			ParamFile := ExpandFileCmd(Param);
 			if (not FileExists(ParamFile)) and (not DirectoryExists(ParamFile)) then
 			begin
 				Warning(//'Illegal "%1" command line parameter.', Param
@@ -154,7 +154,7 @@ begin
 			begin
 				try
 				if Assigned(ParamProcedures[paFileIndex]) then
-					ParamProcedures[paFileIndex](Param);
+					ParamProcedures[paFileIndex](ParamFile);
 				except
 					on E: Exception do
 						Fatal(E, nil);
