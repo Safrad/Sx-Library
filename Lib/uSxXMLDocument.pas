@@ -3,6 +3,7 @@ unit uSxXMLDocument;
 interface
 
 uses
+  msxmldom,
   XMLDoc, XMLIntf, Classes, XMLDom,
   ActiveX;
 
@@ -73,6 +74,11 @@ end;
 
 initialization
 	CoInitialize(nil);
+{$if CompilerVersion >= 25}
+  MSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False);
+{$else}
+  MSXML6_ProhibitDTD := False;
+{$ifend}
 finalization
 	CoUninitialize;
 end.
