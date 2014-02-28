@@ -77,7 +77,9 @@ initialization
 {$if CompilerVersion >= 25}
   MSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False);
 {$else}
+{$if CompilerVersion >= 21}
   MSXML6_ProhibitDTD := False;
+{$ifend}
 {$ifend}
 finalization
 	CoUninitialize;
