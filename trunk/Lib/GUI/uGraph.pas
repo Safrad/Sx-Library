@@ -38,7 +38,7 @@ function CutText(const Canvas: TCanvas; const Text: string; const Width: SG): st
 function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment: TAlignment = taLeftJustify): BG; overload;
 procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: string; const FontShadow: SG = 0); overload;
 function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG): BG;
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; const FontShadow: SG; const MinimalFontSize: SG = 8): BG;
 
 function FloPoint(const X, Y: Double): TFloPoint;
 function FloPointToPoint(const FloPoint: TFloPoint): TPoint;
@@ -419,7 +419,7 @@ begin
 end;
 
 function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect;
-	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; FontShadow: SG): BG;
+	const Alignment: TAlignment; const Layout: TTextLayout; Caption: string; const WordWrap: BG; const FontShadow: SG; const MinimalFontSize: SG = 8): BG;
 const Border = 0;
 var
 	i, LastSpace{, k}: Integer;
