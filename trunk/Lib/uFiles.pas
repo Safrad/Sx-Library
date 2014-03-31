@@ -379,7 +379,9 @@ begin
 			CommonLocalAppDataDir := CommonLocalAppDataDir + 'Local Settings\Application Data\' // Used for Windows XP w/o Service Pack
 		else
 			CommonLocalAppDataDir := CommonLocalAppDataDir + 'AppData\Local\';
-	end;
+	end
+  else
+		CorrectDir(CommonLocalAppDataDir);
 	{$endif}
 	CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
