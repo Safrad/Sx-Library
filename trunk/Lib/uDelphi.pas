@@ -10,14 +10,14 @@ type
     dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
     dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7,
     dvDelphi8, dvDelphi2005, dvDelphi2006, dvDelphi2007,
-    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5 {,..});
+    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5, dvDelphiXE6 {,..});
 
 const
   ReleaseYear: array[TDelphiVersion] of string = (
     '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
     '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
     '2003-12-17', '2004-10-22', '2005-11-11', '2007-03-19',
-    '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31', '2013-09-03', '2013-04-22', '2013-09-10');
+    '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31', '2013-09-03', '2013-04-22', '2013-09-10', '2014-04-15');
 
   FirstUnicodeDelphi = dvDelphi2009;
 
@@ -88,10 +88,18 @@ uses
   uMath, uStrings, uLog;
 
 const
+  UnluckyNumber = 13;
 	FirstBDS = dvDelphi8;
   BDSStartFrom = 2;
 	FirstCodeGear = dvDelphi2009;
 	FirstEmbarcadero = dvDelphi2010;
+
+function GetBDSVersion(const ADelphiVersion: TDelphiVersion): SG;
+begin
+  Result := SG(ADelphiVersion) - SG(FirstBDS) + BDSStartFrom;
+  if Result >= UnluckyNumber then
+    Inc(Result);
+end;
 
 function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
 var
@@ -114,7 +122,7 @@ begin
 	if ADelphiVersion < FirstBDS then
 		RegPath := RegPath + 'Delphi\' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
 	else
-		RegPath := RegPath + 'BDS\' + IntToStr(SG(ADelphiVersion) - SG(FirstBDS) + BDSStartFrom);
+		RegPath := RegPath + 'BDS\' + IntToStr(GetBDSVersion(ADelphiVersion));
 	RegPath := RegPath + '.0' + PathDelim;
 	Result := RegPath;
 end;
@@ -126,7 +134,9 @@ begin
 	else if ADelphiVersion < FirstBDS then
 		Result := 'Delphi ' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
 	else
-		Result := 'BDS ' + IntToStr(SG(ADelphiVersion) - SG(FirstBDS) + BDSStartFrom);
+  begin
+		Result := 'BDS ' + IntToStr(GetBDSVersion(ADelphiVersion));
+  end;
 end;
 
 function GetPascalMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
