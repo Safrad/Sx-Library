@@ -12,6 +12,7 @@ function GetGeneratedBy: string;
 {$ifndef Console}
 function AddImageEx(const SelfFileName, FileName: TFileName; const Params: string): string;
 {$endif}
+function EncodeURL(const Path: string): string;
 
 type
 	TDistanceUnit = (duPercentage, duPixels, duPoints);
@@ -286,7 +287,7 @@ begin
 		AddRef(FileName, ExtractFileName(FileName) + ' (' + GetFileSizeS(FileName) + ')');
 end;
 
-function URL(const Path: string): String;
+function EncodeURL(const Path: string): string;
 var
 	i: SG;
 	c: AnsiChar;
@@ -298,7 +299,7 @@ begin
 	while i <= Length(a) do
 	begin
 		c := a[i];
-		if Ord(c) >= 128 then
+		if (Ord(c) >= 128) or (c in [CharSpace]) then
 		begin
 			Delete(a, i, 1);
 			s := '';
@@ -308,7 +309,7 @@ begin
 		end;
 		Inc(i);
 	end;
-	Result := a;
+	Result := ReplaceF(a, '&', '&amp;');
 
 {	Result := '';
 	NumericBase := 16;
@@ -324,7 +325,7 @@ end;
 
 procedure THTML.AddRef(const FileName: TFileName; const Text: string);
 begin
-	AddBody('<a href="' + URL(RelativePath(FFileName, FileName)) + '">' + Text + '</a>');
+	AddBody('<a href="' + EncodeURL(RelativePath(FFileName, FileName)) + '">' + Text + '</a>');
 end;
 
 {$ifndef Console}
