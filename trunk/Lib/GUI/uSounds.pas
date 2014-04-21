@@ -148,7 +148,8 @@ begin
 		MainIni.RWBool(Section, '16bits', Sound16bits, Save);
 		MainIni.RWNum(Section, 'Frequency', SoundFrequency, Save);
 		MainIni.RWBool(Section, 'Stereo', SoundStereo, Save);
-		InitSound;
+    if Save = False then
+  		InitSound;
 	end;
 
 	if Save and (SoundsChanged = False) then Exit;
