@@ -25,7 +25,6 @@ object fScreen: TfScreen
     Width = 377
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 0
   end
   object ButtonOk: TDButton
