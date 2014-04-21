@@ -80,7 +80,7 @@ begin
 		Head := '<?php' + FileSep +
 //					'$header = ''<meta name="robots" content="index,follow" />'';' +
 			'$page_title = ''%title%'';' + FileSep +
-			'include ''%root%full_header.inc'';' + FileSep +
+			'include ''%root%full_header.inc.php'';' + FileSep +
 			'?>' + FileSep;
 
 //				HTML.Style := WebDir + 'style.css';
@@ -111,10 +111,10 @@ begin
 			Assert(Length(AStr) = BookmarkCount);
 			Assert(Length(AIndex) = BookmarkCount);
 			SortStr(PArraySG(AIndex), PArrayString(AStr), BookmarkCount);
-			Body := '<table cellspacing="4">';
+			Body := '<table class="bookmarks" >';
 			if FolderName <> '' then
 			begin
-				Body := Body + '<tr><td><a href="' + '../' + IndexFile + '"><img alt="d" src="/images/Dir.png" width="16" height="16" align="middle" />' + nbsp + '..' + '</a></td></tr>';
+				Body := Body + '<tr><td><a href="' + '../' + IndexFile + '"><img alt="d" src="/images/Dir.png" width="16" height="16" class="bookmark" />' + nbsp + '..' + '</a></td><td></td></tr>';
 			end;
 			for i := 0 to BookmarkCount - 1 do
 			begin
@@ -124,11 +124,11 @@ begin
 				Body := Body + '<tr><td>';
 				if Bookmark.ItemType = itFolder then
 				begin
-					Name2 := LegalFileName(string(ConvertToAscii(Bookmark.Name)));
-					s := '<a href="' + Name2 + '/' + IndexFile + '"><img alt="d" src="/images/Dir.png" width="16" height="16" align="middle" />' + nbsp + Bookmark.Name + '</a>';
+					Name2 := EncodeURL(LegalFileName(ConvertToAscii(Bookmark.Name)));
+					s := '<a href="' + Name2 + '/' + IndexFile + '"><img alt="d" src="/images/Dir.png" width="16" height="16" class="bookmark" />' + nbsp + Bookmark.Name + '</a>';
 				end
 				else
-					s := '<a href="' + Bookmark.URL + '" target="_blank"><img alt="f" src="/images/Page.png" width="16" height="16" align="middle" />' + nbsp + Bookmark.Name + '</a>';
+					s := '<a href="' + EncodeURL(Bookmark.URL) + '" target="_blank"><img alt="f" src="/images/Page.png" width="16" height="16" class="bookmark" />' + nbsp + Bookmark.Name + '</a>';
 				if Bookmark.ShortName <> '' then
 					s := '<strong>' + s + '</strong>';
 				if Bookmark.Description <> '' then
