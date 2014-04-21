@@ -75,9 +75,11 @@ begin
 			begin
 				Bookmark.ItemType := itSeperator;
 			end
+			else if s = 'DELETED' then
+				Bookmark.ItemType := itFolder
 			else
 			begin
-				Warning('URL, FOLDER or SEPERATOR required but %1 found.', s);
+				Warning('URL, FOLDER, SEPERATOR OR DELETED required but %1 found.', s);
 				Continue;
 			end;
 		end
@@ -274,7 +276,6 @@ begin
 		n := OperaBookmarks.RemoveDuplicats;
 		if n <> 0 then
 			Information('Removed %1 duplicats.', [NToS(n)]);
-		// OperaBookmarks.WriteToFile('C:\Net\opera6.adr');
 		OperaBookmarks.WriteToFile(OperaBookmarksFileName);
 		OperaBookmarks.RemovePrivate;
 		OperaBookmarks.ExportToDir(WebDir);
