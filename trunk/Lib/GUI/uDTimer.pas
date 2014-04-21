@@ -50,7 +50,7 @@ type
 	public
 		TimerCount: UG;
 		Clock,
-		ElapsedTime: U8;
+		ElapsedTime: S8;
 		LagCount, LagCount2: UG;
 		TimLeave: U8;
 		TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U8;
