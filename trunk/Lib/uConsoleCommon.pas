@@ -17,7 +17,7 @@ interface
 uses
   uTypes;
 
-procedure CommonCreate(const ProductVersion: string; const OutputInfo: BG = True);
+procedure CommonCreate(const OutputInfo: BG = True);
 procedure CommonFree;
 
 implementation
@@ -27,13 +27,9 @@ uses
   uLog, uFiles, uDIniFile, uStart, uUsageInfo,
   uProjectInfo;
 
-procedure CommonCreate(const ProductVersion: string; const OutputInfo: BG = True);
+procedure CommonCreate(const OutputInfo: BG = True);
 begin
   InitializeLog;
-
-  ThisProjectInfo.SetProjectInfo(piProductName, ThisProjectInfo.GetProjectInfo(piInternalName));
-  ThisProjectInfo.SetProjectInfo(piProductVersion, ProductVersion);
-  ThisProjectInfo.SetProjectInfo(piFileVersion, ProductVersion);
 
   if OutputInfo then
     Writeln(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piFileVersion) + ']');
