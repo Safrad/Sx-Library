@@ -112,10 +112,17 @@ procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);
 procedure UpdateSysInfo(SysInfo: PSysInfo);
 procedure DelayEx(const f: U8);
 
+//function MMUsedMemory: U8;
+function MaxPhysicalMemorySize: U8;
+function ProcessAllocatedVirtualMemory: U4;
+function CanAllocateMemory(const Size: UG): BG;
+
 implementation
 
 {$R *.DFM}
 uses
+//  FastMM4,
+  PsAPI,
   uMsg,
 	uGraph, uScreen, uStrings, uOutputFormat, uSimulation, uDictionary,
 	uProjectInfo,
@@ -917,6 +924,66 @@ begin
       Nop;
 		end;
 	end;
+end;
+
+//function MMUsedMemory: U8;
+//var
+//    st: TMemoryManagerState;
+//    sb: TSmallBlockTypeState;
+//    i: SG;
+//begin
+//  GetMemoryManagerState(st);
+//  Result := st.TotalAllocatedMediumBlockSize + st.TotalAllocatedLargeBlockSize;
+//  for i := Low(st.SmallBlockTypeStates) to High(st.SmallBlockTypeStates) do
+//  begin
+//    sb := st.SmallBlockTypeStates[i];
+//      Inc(Result, sb.UseableBlockSize * sb.AllocatedBlockCount);
+//  end;
+//end;
+
+function ProcessAllocatedVirtualMemory: U4;
+var
+  MemCounters: TProcessMemoryCounters;
+begin
+  MemCounters.cb := SizeOf(MemCounters);
+  Result := 0;
+  if GetProcessMemoryInfo(GetCurrentProcess,
+      @MemCounters,
+      SizeOf(MemCounters)) then
+    Result := MemCounters.PagefileUsage
+  else
+    RaiseLastOSError;
+end;
+
+function MaxPhysicalMemorySize: U8;
+begin
+	FillMemoryStatus(GSysInfo);
+  Result := Min(2 * GSysInfo.MS.ullTotalPhys div 3 {66%}, GSysInfo.MS.ullTotalVirtual);
+end;
+
+function MaxAllocationSize: U8;
+begin
+	FillMemoryStatus(GSysInfo);
+  Result := Max(0, MaxPhysicalMemorySize - ProcessAllocatedVirtualMemory);
+
+  Result := 2 * Result div 3; // Fragmentation
+end;
+
+const
+  ReservedSize = 8 * MB;
+
+function CanAllocateMemory(const Size: UG): BG;
+var
+  P: Pointer;
+begin
+//  Result := Size + ReservedSize < MaxAllocationSize;
+  try
+    GetMem(P, Size + ReservedSize);
+    Result := P <> nil;
+    FreeMem(P);
+  except
+    Result := False;
+  end;
 end;
 
 initialization
