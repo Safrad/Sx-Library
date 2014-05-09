@@ -330,16 +330,18 @@ begin
 	begin
 		Result := True;
 		try
-			{$if CompilerVersion < 20} // TODO Indy Version
+			{$if CompilerVersion < 16} // TODO Indy Version
 			FTP.Connect(True, FTPTimeOut);
 			{$else}
 			FTP.TransferTimeout := FTPTimeOut;
 			FTP.Connect;
 			FTP.TransferType := ftBinary;
 			FTP.TransferType := ftASCII; // Indy 10 BUG!
+      {$ifdef UNICODE}
       {$if CompilerVersion < 26}
 			FTP.IOHandler.DefStringEncoding := TEncoding.default; // ANSI, remove for UTF8
       {$ifend}
+      {$endif}
 			{$ifend}
 			if Assigned(Logger) then
 				Logger.Add('Connected ' + FTP.Host, mlInformation);
