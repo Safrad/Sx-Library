@@ -330,7 +330,7 @@ begin
 	begin
 		Result := True;
 		try
-			{$if CompilerVersion < 16} // TODO Indy Version
+			{$if CompilerVersion < 20} // TODO Indy Version
 			FTP.Connect(True, FTPTimeOut);
 			{$else}
 			FTP.TransferTimeout := FTPTimeOut;
