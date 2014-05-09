@@ -52,7 +52,7 @@ type
 function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
 
 // 7, 14, 15
-function GetDelphiMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
+function GetMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
 
 // 15, 21, 22
 function GetDelphiCompilerVersion(const ADelphiVersion: TDelphiVersion): SG;
@@ -140,16 +140,16 @@ begin
   end;
 end;
 
-function GetPascalMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
+function GetMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
 begin
-  Result := SG(ADelphiVersion) - SG(dvPascal1) + 1;
-end;
-
-function GetDelphiMajorVersion(const ADelphiVersion: TDelphiVersion): SG;
-begin
-  Result := SG(ADelphiVersion) - SG(dvDelphi1) + 1;
-  if ADelphiVersion >= dvDelphi2010 then
-    Inc(Result);
+  if ADelphiVersion < dvDelphi1 then
+    Result := SG(ADelphiVersion) - SG(dvPascal1) + 1
+  else
+  begin
+    Result := SG(ADelphiVersion) - SG(dvDelphi1) + 1;
+    if ADelphiVersion >= dvDelphi2010 then
+      Inc(Result);
+  end;
 end;
 
 function GetDelphiCompilerVersion(const ADelphiVersion: TDelphiVersion): SG;
@@ -174,9 +174,9 @@ end;
 function GetDelphiShortName(const ADelphiVersion: TDelphiVersion): string;
 begin
   if ADelphiVersion < dvDelphi1 then
-    Result := 'P' + IntToStr(GetPascalMajorVersion(ADelphiVersion))
+    Result := 'P' + IntToStr(GetMajorVersion(ADelphiVersion))
   else if ADelphiVersion <= dvDelphi8 then
-    Result := IntToStr(GetDelphiMajorVersion(ADelphiVersion))
+    Result := IntToStr(GetMajorVersion(ADelphiVersion))
   else if ADelphiVersion < dvDelphiXE then
     Result := IntToStr(GetDelphiYear(ADelphiVersion))
   else if ADelphiVersion >= dvDelphiXE then
@@ -190,7 +190,7 @@ end;
 
 function GetDelphiFullName(const ADelphiVersion: TDelphiVersion): string;
 begin
-  Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetDelphiMajorVersion(ADelphiVersion)) +', dcc' + IntToStr(GetDelphiCompilerVersion(ADelphiVersion)) + ')';
+  Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetMajorVersion(ADelphiVersion)) +', dcc' + IntToStr(GetDelphiCompilerVersion(ADelphiVersion)) + ')';
 end;
 
 function GetCompilerFullName(const ACompiler: TCompiler): string;

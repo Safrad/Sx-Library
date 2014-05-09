@@ -37,7 +37,7 @@ begin
   for DelphiVersion := TDelphiVersion(0) to TDelphiVersion(GetDelphiVersionCount - 1) do
     s := s +
       GetDelphiShortName(DelphiVersion) + CSVSep +
-      IntToStr(GetDelphiMajorVersion(DelphiVersion)) + CSVSep +
+      IntToStr(GetMajorVersion(DelphiVersion)) + CSVSep +
       GetDelphiRegistryName(DelphiVersion) + CSVSep +
       IntToStr(GetDelphiCompilerVersion(DelphiVersion)) +
       FileSep;
