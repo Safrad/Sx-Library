@@ -183,7 +183,7 @@ begin
           Path := Lines[i];
           Replace(Path,
             ['%DelphiShortName%', '%DelphiMajorVersion%'],
-            [GetDelphiShortName(Compiler.DelphiVersion), IntToStr(GetDelphiMajorVersion(Compiler.DelphiVersion))]);
+            [GetDelphiShortName(Compiler.DelphiVersion), IntToStr(GetMajorVersion(Compiler.DelphiVersion))]);
           if Path ='' then
             Continue;
 
@@ -270,7 +270,7 @@ begin
           Path := Lines[i];
           Replace(Path,
             ['%DelphiShortName%', '%DelphiMajorVersion%'],
-            [GetDelphiShortName(DelphiVersion), IntToStr(GetDelphiMajorVersion(DelphiVersion))]);
+            [GetDelphiShortName(DelphiVersion), IntToStr(GetMajorVersion(DelphiVersion))]);
           if FirstChar(Path) = '-' then
           begin
             Path := UpperCase(Copy(Path, 2, MaxInt));
