@@ -91,7 +91,8 @@ const
   UnluckyNumber = 13;
 	FirstBDS = dvDelphi8;
   BDSStartFrom = 2;
-	FirstCodeGear = dvDelphi2009;
+	FirstCodeGear = dvDelphi2007;
+	FirstCodeGearInRegistry = dvDelphi2009;
 	FirstEmbarcadero = dvDelphi2010;
 
 function GetBDSVersion(const ADelphiVersion: TDelphiVersion): SG;
@@ -112,7 +113,7 @@ begin
   end;
 
 	RegPath := 'Software' + PathDelim;
-	if ADelphiVersion < FirstCodeGear then
+	if ADelphiVersion < FirstCodeGearInRegistry then
 		RegPath := RegPath + 'Borland\'
 	else if ADelphiVersion < FirstEmbarcadero then
 		RegPath := RegPath + 'CodeGear\'
