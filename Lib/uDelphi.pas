@@ -16,8 +16,8 @@ const
   ReleaseYear: array[TDelphiVersion] of string = (
     '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
     '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
-    '2003-12-17', '2004-10-22', '2005-11-11', '2007-03-19',
-    '2008-08-29', '2009-08-26', '2010-11-03', '2011-08-31', '2013-09-03', '2013-04-22', '2013-09-10', '2014-04-15');
+    '2003-12-22', '2004-10-12', '2005-11-23', '2007-03-16',
+    '2008-12-01', '2009-08-15', '2010-08-30', '2011-09-02', '2012-09-03', '2013-04-22', '2013-09-11', '2014-04-15');
 
   FirstUnicodeDelphi = dvDelphi2009;
 
@@ -84,7 +84,7 @@ implementation
 
 uses
   Windows, SysUtils,
-  uFiles,
+  uFiles, uOutputFormat,
   uMath, uStrings, uLog;
 
 const
@@ -157,6 +157,9 @@ begin
   Result := SG(ADelphiVersion) + 1;
   if ADelphiVersion >= dvDelphi4 then
     Inc(Result);
+  Result := Result * 10;
+  if ADelphiVersion = dvDelphi2007 then
+    Dec(Result, 5);
 end;
 
 function GetDelphiYear(const ADelphiVersion: TDelphiVersion): SG;
@@ -190,7 +193,7 @@ end;
 
 function GetDelphiFullName(const ADelphiVersion: TDelphiVersion): string;
 begin
-  Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetMajorVersion(ADelphiVersion)) +', dcc' + IntToStr(GetDelphiCompilerVersion(ADelphiVersion)) + ')';
+  Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetMajorVersion(ADelphiVersion)) +', dcc' + NToS(GetDelphiCompilerVersion(ADelphiVersion), 1, ofHTML) + ')';
 end;
 
 function GetCompilerFullName(const ACompiler: TCompiler): string;
