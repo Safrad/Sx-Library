@@ -1,8 +1,4 @@
-{$ifdef Console}
-//{$MESSAGE Warning 'Console does not contain any version info'!} // DoNotLocalize
-{$endif}
-
-unit uProjectInfo;
+﻿unit uProjectInfo;
 
 interface
 
