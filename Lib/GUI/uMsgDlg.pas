@@ -695,7 +695,7 @@ end;
 
 function ModalResultToDlgBtn(const AModalResult: TModalResult): TDlgBtn;
 const
-  ModalResultToDlgBtnA: array[0..11] of TDlgBtn = (
+  ModalResultToDlgBtnA: array[0..{$if CompilerVersion >= 21}12{$else}11{$ifend}] of TDlgBtn = (
     mbHelp{None}, mbOK, mbCancel, mbAbort, mbRetry, mbIgnore, mbYes, mbNo, mbAll, mbNoToAll, mbYesToAll, mbHelp{$if CompilerVersion >= 21}, mbClose{$ifend});
 begin
   Result := ModalResultToDlgBtnA[AModalResult];
