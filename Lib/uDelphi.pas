@@ -95,6 +95,10 @@ const
 	FirstCodeGearInRegistry = dvDelphi2009;
 	FirstEmbarcadero = dvDelphi2010;
 
+	FirstDof = dvDelphi1;
+	FirstBDSProj = dvDelphi8;
+	FirstDProj = dvDelphi2007;
+
 function GetBDSVersion(const ADelphiVersion: TDelphiVersion): SG;
 begin
   Result := SG(ADelphiVersion) - SG(FirstBDS) + BDSStartFrom;
