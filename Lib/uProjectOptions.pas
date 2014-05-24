@@ -1,4 +1,10 @@
-// Reading of *.dproj and earlier *.dof files.
+(*
+  Reading of Delphi project options
+
+  *.dproj:   Delphi 2007..
+  *.bdsproj: Delphi 8, 2005, 2006
+  *.dof:     Delphi 1..7
+*)
 
 unit uProjectOptions;
 
@@ -108,7 +114,7 @@ type
     FEnabled: BG;
     procedure WriteWarningsToNode(const Node: IXMLNode);
     procedure ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
-    function GetExecutableType(const AFileName: TFileName): TExecutableType;
+    function GetExecutableType(const FileNamePrefix: TFileName): TExecutableType;
     procedure ParseDPK;
   public
     ExecutableType: TExecutableType;
@@ -158,8 +164,8 @@ type
     procedure AddSearchPaths(const ASearchPaths: string);
     procedure AddNamespaces(const ANamespaces: string);
 
-    procedure ReadFromFile(const AFileName: TFileName);
-    procedure ReplaceFromFile(const AFileName: TFileName);
+    procedure ReadFromFile(const FileNamePrefix: TFileName);
+    procedure ReplaceFromFile(const FileNamePrefix: TFileName);
     procedure Update;
     function GetOutputFile: TFileName;
 		procedure WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
@@ -660,15 +666,15 @@ begin
 end;
 
 function TProjectOptions.GetExecutableType(
-  const AFileName: TFileName): TExecutableType;
+  const FileNamePrefix: TFileName): TExecutableType;
 var
   s: string;
   ProgramPos, LibraryPos: SG;
   DPK, DPR: BG;
   DPRFileName: TFileName;
 begin
-  DPK := FileExists(DelFileExt(AFileName) + '.dpk');
-  DPRFileName := DelFileExt(AFileName) + '.dpr';
+  DPK := FileExists(FileNamePrefix + '.dpk');
+  DPRFileName := FileNamePrefix + '.dpr';
   DPR := FileExists(DPRFileName);
   if DPK and DPR then
   begin
@@ -727,12 +733,12 @@ begin
       Result := Result + '.' + LibDirective[ldVersion];
 end;
 
-procedure TProjectOptions.ReadFromFile(const AFileName: TFileName);
+procedure TProjectOptions.ReadFromFile(const FileNamePrefix: TFileName);
 begin
-  FFileName := AFileName;
-  ReplaceFromFile(AFileName);
+  FFileName := FileNamePrefix;
+  ReplaceFromFile(FileNamePrefix);
 
-  ExecutableType := GetExecutableType(AFileName);
+  ExecutableType := GetExecutableType(FileNamePrefix);
 end;
 
 procedure TProjectOptions.ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
@@ -803,21 +809,36 @@ begin
 	end;
 end;
 
-procedure TProjectOptions.ReplaceFromFile(const AFileName: TFileName);
-const
-	DProjMinimalVersion = 9;
+procedure TProjectOptions.ReplaceFromFile(const FileNamePrefix: TFileName);
 var
 	DProjFileName: TFileName;
+	BDSProjFileName: TFileName;
+	DofFileName: TFileName;
 begin
-	DProjFileName := DelFileExt(AFileName) + '.dproj';
-	if {(DelphiVersion < DProjMinimalVersion) or} (FileExists(DProjFileName) = False) then
-		ReadProjectVersionFromDof(DelFileExt(AFileName) + '.dof')
-	else
+  // Select newest project options format
+
+	DProjFileName := FileNamePrefix + '.dproj';
+  if FileExists(DProjFileName) then
   begin
-    if FileExists(DelFileExt(AFileName) + '.dof') then
-  		ReadProjectVersionFromDof(DelFileExt(AFileName) + '.dof');
 		RWDproj(DProjFileName, False);
+    Exit;
   end;
+
+	BDSProjFileName := FileNamePrefix + '.bdsproj';
+  if FileExists(BDSProjFileName) then
+  begin
+//		RWBDSProj(BDSProjFileName, False); TODO
+    Exit;
+  end;
+
+	DofFileName := FileNamePrefix + '.dof';
+  if FileExists(DofFileName) then
+  begin
+		ReadProjectVersionFromDof(DofFileName);
+    Exit;
+  end;
+
+  Warning('No project options (dproj, bdsproj or dof) for %1!', [FileNamePrefix + '.dpr']);
 end;
 
 procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
