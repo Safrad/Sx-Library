@@ -902,7 +902,7 @@ begin
   begin
     SearchPath := ReadToChar(ASearchPaths, i, ProjectListSeparator);
     if (SearchPath <> '') and (SearchPath <> '$(DCC_UnitSearchPath)') then
-			SearchPaths.Add(SearchPath);
+			SearchPaths.Add(DelQuoteF(SearchPath));
   end;
 end;
 
