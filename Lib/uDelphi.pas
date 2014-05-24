@@ -24,7 +24,7 @@ const
     '', '', '', '', '', '', '',
     '', '', '', '', '', '6.0', '7.0', // dof
     '', '', '', '',
-    '12.0', '12.0', '12.3', '13.4', '14.4', '14.6', '15.3', '15.4'); // Project->PropertyGroup->ProjectVersion
+    '12.0', '12.0', '12.3' {12.2 without update 1}, '13.4', '14.4', '14.6', '15.3', '15.4'); // Project->PropertyGroup->ProjectVersion
 
   FirstUnicodeDelphi = dvDelphi2009;
 
