@@ -317,7 +317,7 @@ var
   FileName: TFileName;
 begin
   // Lib
-  FileName := StartDir +'$' + LibFileName;
+  FileName := StartDir + '$' + LibFileName;
   if FileExists(FileName) then
   	LibToReg(FileName);
 	LibToReg(StartDir + LibFileName);
