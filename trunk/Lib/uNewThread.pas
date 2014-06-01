@@ -1,5 +1,7 @@
 unit uNewThread;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses SysUtils, Classes;
