@@ -164,8 +164,8 @@ type
     procedure AddSearchPaths(const ASearchPaths: string);
     procedure AddNamespaces(const ANamespaces: string);
 
-    procedure ReadFromFile(const FileNamePrefix: TFileName);
-    procedure ReplaceFromFile(const FileNamePrefix: TFileName);
+    function ReadFromFile(const FileNamePrefix: TFileName): BG;
+    function ReplaceFromFile(const FileNamePrefix: TFileName): BG;
     procedure Update;
     function GetOutputFile: TFileName;
 		procedure WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
@@ -733,10 +733,10 @@ begin
       Result := Result + '.' + LibDirective[ldVersion];
 end;
 
-procedure TProjectOptions.ReadFromFile(const FileNamePrefix: TFileName);
+function TProjectOptions.ReadFromFile(const FileNamePrefix: TFileName): BG;
 begin
   FFileName := FileNamePrefix;
-  ReplaceFromFile(FileNamePrefix);
+  Result := ReplaceFromFile(FileNamePrefix);
 
   ExecutableType := GetExecutableType(FileNamePrefix);
 end;
@@ -809,7 +809,7 @@ begin
 	end;
 end;
 
-procedure TProjectOptions.ReplaceFromFile(const FileNamePrefix: TFileName);
+function TProjectOptions.ReplaceFromFile(const FileNamePrefix: TFileName): BG;
 var
 	DProjFileName: TFileName;
 	BDSProjFileName: TFileName;
@@ -821,6 +821,7 @@ begin
   if FileExists(DProjFileName) then
   begin
 		RWDproj(DProjFileName, False);
+    Result := True;
     Exit;
   end;
 
@@ -828,6 +829,7 @@ begin
   if FileExists(BDSProjFileName) then
   begin
 //		RWBDSProj(BDSProjFileName, False); TODO
+    Result := True;
     Exit;
   end;
 
@@ -835,10 +837,11 @@ begin
   if FileExists(DofFileName) then
   begin
 		ReadProjectVersionFromDof(DofFileName);
+    Result := True;
     Exit;
   end;
 
-  Warning('No project options (dproj, bdsproj or dof) for %1!', [FileNamePrefix + '.dpr']);
+  Result := False;
 end;
 
 procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
