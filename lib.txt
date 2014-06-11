@@ -3,7 +3,7 @@ $(sx-library)\ExtLib
 $(sx-library)\ExtLib\7z
 $(sx-library)\ExtLib\CoolTrayIcon
 $(sx-library)\ExtLib\DCPCrypt
-$(sx-library)\ExtLib\DCPCrypt\Cipher
+$(sx-library)\ExtLib\DCPCrypt\Ciphers
 $(sx-library)\ExtLib\DCPCrypt\Hashes
 $(sx-library)\ExtLib\Delphi%DelphiMajorVersion%
 $(sx-library)\ExtLib\Delphi%DelphiMajorVersion%\PngImage
