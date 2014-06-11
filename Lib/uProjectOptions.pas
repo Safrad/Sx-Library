@@ -103,7 +103,7 @@ type
 			cwRLINK_WARNING);
 
 var
-  CompilerWarningsStr: array[TCompilerWarning] of string;
+  CompilerWarningsStr, BDSProjCompilerWarningsStr: array[TCompilerWarning] of string;
 
 type
 	TLibDirective = (ldPrefix, ldSuffix, ldVersion);
@@ -165,6 +165,7 @@ type
     procedure AddNamespaces(const ANamespaces: string);
 
     function ReadFromFile(const FileNamePrefix: TFileName): BG;
+    procedure RWBDSProj(const AFileName: TFileName; const Save: BG);
     function ReplaceFromFile(const FileNamePrefix: TFileName): BG;
     procedure Update;
     function GetOutputFile: TFileName;
@@ -309,6 +310,210 @@ begin
   end;}
 end;
 
+function NodeToString(const Node: IXMLNode): string;
+begin
+  Result := '';
+  try
+    if (Node.IsTextElement = True) and (not VarIsNull(Node.NodeValue)) then
+      Result := Node.NodeValue;
+  except
+    // No Value
+  end;
+end;
+
+procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
+
+  function GetNameAttr(const Node: IXMLNode): string;
+  begin
+    Result := Node.Attributes['Name'];
+  end;
+
+	procedure ReadCompilerNode(const Node: IXMLNode);
+  var
+    NodeValue, AttrValue: string;
+    i: SG;
+  begin
+    NodeValue := NodeToString(Node);
+    AttrValue := UpperCase(GetNameAttr(Node));
+    if AttrValue = 'ShowHints' then
+      ShowHints := StrToBoolean(NodeValue)
+    else if AttrValue = 'ShowWarnings' then
+      ShowWarnings := StrToBoolean(NodeValue)
+    else
+    begin
+      for i := 0 to Length(CompilerWarningsStr) - 1 do
+      begin
+        if AttrValue = BDSProjCompilerWarningsStr[TCompilerWarning(i)] then
+        begin
+          Warnings[TCompilerWarning(i)] := StrToOutputWarning(UpperCase(NodeValue));
+          Break;
+        end;
+      end;
+    end;
+  end;
+
+	procedure ReadLinkerNode(const Node: IXMLNode);
+  var
+    NodeValue, AttrValue: string;
+  begin
+    NodeValue := NodeToString(Node);
+    AttrValue := GetNameAttr(Node);
+//    if AttrValue = 'MapFile' then
+//    else if AttrValue = 'OutputObjs' then
+//    else if AttrValue = 'GenerateHpps' then
+//    else if AttrValue = 'ConsoleApp' then
+//    else if AttrValue = 'DebugInfo' then
+//    else if AttrValue = 'RemoteSymbols' then
+//    else if AttrValue = 'GenerateDRC' then
+    if AttrValue = 'MinStackSize' then
+      MinStackSize := StrToValS8(NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil)
+    else if AttrValue = 'MaxStackSize' then
+      MaxStackSize := StrToValS8(NodeValue, False, 0, S8(DefaultMaxStackSize), MaxInt, 1, nil)
+    else if AttrValue = 'ImageBase' then
+      ImageBase := StrToValS8(NodeValue, False, 0, S8(DefaultImageBase), High(S8), 1, nil)
+//    else if AttrValue = 'ExeDescription' then
+    ;
+  end;
+
+	procedure ReadDirectoriesNode(const Node: IXMLNode);
+  var
+    NodeValue, AttrValue: string;
+  begin
+    NodeValue := NodeToString(Node);
+    AttrValue := GetNameAttr(Node);
+    if AttrValue = 'OutputDir' then
+      OutputDir := NodeValue
+    else if AttrValue = 'UnitOutputDir' then
+      UnitOutputDir := NodeValue
+    else if AttrValue = 'PackageDLLOutputDir' then
+      PackageDLLOutputDir := NodeValue
+    else if AttrValue = 'PackageDCPOutputDir' then
+      PackageDCPOutputDir := NodeValue
+    else if AttrValue = 'SearchPath' then
+      AddSearchPaths(NodeValue)
+    else if AttrValue = 'Packages' then
+      Packages := NodeValue
+    else if AttrValue = 'Conditionals' then
+      AddConditionals(NodeValue)
+    else if AttrValue = 'DebugSourceDirs' then
+      DebugSourceDirs := NodeValue
+    else if AttrValue = 'UsePackages' then
+      UsePackages := StrToBoolean(NodeValue)
+    ;
+  end;
+
+	procedure ReadVersionInfoNode(const Node: IXMLNode);
+	const
+		AttrName = 'Name';
+		VerStr: array [TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
+	var
+    NodeValue, AttrValue: string;
+		SubVersion: TSubVersion;
+	begin
+    NodeValue := NodeToString(Node);
+    AttrValue := GetNameAttr(Node);
+    for SubVersion := Low(SubVersion) to High(SubVersion) do
+    begin
+      if AttrValue = VerStr[SubVersion] then
+      begin
+        Version.SetSubVersion(SubVersion, NodeValue);
+        Break;
+      end;
+    end;
+  end;
+
+	procedure ReadDelphiPersonality(const ANode: IXMLNode);
+	var
+		iNode: IXMLNode;
+  begin
+    if (ANode.NodeName = 'Compiler') then
+    begin
+      iNode := ANode.ChildNodes.First;
+      while iNode <> nil do
+      begin
+        ReadCompilerNode(iNode);
+        iNode := iNode.NextSibling;
+      end;
+    end
+    else if (ANode.NodeName = 'Linker') then
+    begin
+      iNode := ANode.ChildNodes.First;
+      while iNode <> nil do
+      begin
+        ReadLinkerNode(iNode);
+        iNode := iNode.NextSibling;
+      end;
+    end
+    else if (ANode.NodeName = 'Directories') then
+    begin
+      iNode := ANode.ChildNodes.First;
+      while iNode <> nil do
+      begin
+        ReadDirectoriesNode(iNode);
+        iNode := iNode.NextSibling;
+      end;
+    end
+    else if (ANode.NodeName = 'VersionInfo') then
+    begin
+      iNode := ANode.ChildNodes.First;
+      while iNode <> nil do
+      begin
+        ReadVersionInfoNode(iNode);
+        iNode := iNode.NextSibling;
+      end;
+    end
+  end;
+
+	procedure ReadBorlandProject(const Node: IXMLNode);
+	var
+		iNode: IXMLNode;
+	begin
+    iNode := Node.ChildNodes.First;
+    while iNode <> nil do
+    begin
+      ReadDelphiPersonality(iNode);
+      iNode := iNode.NextSibling;
+    end;
+  end;
+
+var
+	XML: IXMLDocument;
+	iNode: IXMLNode;
+begin
+  if Save then
+    BackupFile(AFileName, bfTemp);
+  try
+    XML := TSxXMLDocument.Create(AFileName);
+    XML.Active := True;
+    XML.NodeIndentStr := XMLIndentStr;
+    try
+      if XML.IsEmptyDoc then
+        Exit;
+      iNode := XML.DocumentElement.ChildNodes.First;
+      while iNode <> nil do
+      begin
+        if (iNode.NodeName = 'Delphi.Personality') then
+        begin
+          ReadBorlandProject(iNode);
+        end;
+        iNode := iNode.NextSibling;
+      end;
+      iNode := nil;
+      if Save then
+      begin
+        XML.SaveToFile(AFileName);
+        RepairDproj(AFileName);
+      end;
+    finally
+      XML.Active := False;
+      XML := nil; // Release XML document
+    end;
+  except
+    on E: Exception do
+      ErrorMsg(E.Message);
+  end;
+end;
+
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 
 	procedure ProcessNode(const Node: IXMLNode);
@@ -325,15 +530,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 	begin
 		if (Node = nil) then
 			Exit;
-    NodeValue := '';
-    try
-      if (Node.IsTextElement = False) or VarIsNull(Node.NodeValue) then
-        NodeValue := ''
-      else
-        NodeValue := Node.NodeValue;
-    except
-      // No Value
-    end;
+    NodeValue := NodeToString(Node);
 
     Name := UpperCase(Node.NodeName);
     if Name = UpperCase('DCC_BplOutput') then
@@ -828,7 +1025,7 @@ begin
 	BDSProjFileName := FileNamePrefix + '.bdsproj';
   if FileExists(BDSProjFileName) then
   begin
-//		RWBDSProj(BDSProjFileName, False); TODO
+		RWBDSProj(BDSProjFileName, False);
     Result := True;
     Exit;
   end;
@@ -951,6 +1148,7 @@ begin
   EnumToStrEx(TypeInfo(TCompilerWarning), CompilerWarningsStr);
   for i := 0 to Length(CompilerWarningsStr) - 1 do
   begin
+    BDSProjCompilerWarningsStr[TCompilerWarning(i)] := DelCharsF(CompilerWarningsStr[TCompilerWarning(i)], '_');
     AddPrefix(CompilerWarningsStr[TCompilerWarning(i)], 'DCC_');
   end;
 end;
