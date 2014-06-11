@@ -37,7 +37,9 @@ type
 
 		procedure UpdateNextRun;
 		function NextRunToStr: string;
+    function IsActive: BG;
 		function ToString: string;
+    procedure Clone(const Source: TSchedule);
 
     procedure RWIni(const IniFile: TDIniFile; const Section: string; const Save: BG);
 
@@ -58,7 +60,7 @@ var
 begin
 	inherited;
 
-	ScheduleType := scOnce;
+	ScheduleType := scNever;
 
 	StartDT := Now;
 	EndDT := 0;
@@ -90,7 +92,7 @@ var
 	Week, Month: UG;
 	i: SG;
 begin
-	if Enabled = False then
+	if FEnabled = False then
 	begin
 		NextRun := 0;
 	end;
@@ -252,6 +254,12 @@ var
 	Count: UG;
 	NextOne: BG;
 begin
+  if FEnabled = False then
+  begin
+    Result := '';
+    Exit;
+  end;
+
 	case ScheduleType of
 	scOnce:
 	begin
@@ -343,7 +351,7 @@ begin
 	scUserLogOff:
 		Result :='Run at User Log Off';
 	scUserLock:
-		Result :='Run at User Log On';
+		Result :='Run at User Lock';
 	scUserUnlock:
 		Result :='Run at User Unlock';
 	scProgramStartup:
@@ -386,6 +394,9 @@ procedure TSchedule.RWIni(const IniFile: TDIniFile; const Section: string;
 var i: SG;
 begin
   IniFile.RWEnum(Section, TypeInfo(TScheduleType), U1(ScheduleType), Save);
+  if Save = False then
+    FEnabled := True;
+  IniFile.RWBool(Section, 'Enabled', FEnabled, Save);
   IniFile.RWDateTime(Section, 'StartDT', StartDT, Save);
   IniFile.RWDateTime(Section, 'EndDT', EndDT, Save);
   IniFile.RWNum(Section, 'Duration', Duration, Save);
@@ -401,6 +412,31 @@ begin
     IniFile.RWBool(Section, 'Day' + IntToStr(i), WeekDays[i], Save);
   for i := 0 to MonthsInYear - 1 do
     IniFile.RWBool(Section, 'Month' + IntToStr(i), Months[i], Save);
+  if Save = False then
+    UpdateNextRun;
+end;
+
+function TSchedule.IsActive: BG;
+begin
+  Result := FEnabled and (Now >= NextRun) and (NextRun > 0);
+end;
+
+procedure TSchedule.Clone(const Source: TSchedule);
+begin
+	ScheduleType := Source.ScheduleType;
+	StartDT := Source.StartDT;
+	EndDT := Source.EndDT;
+	Duration := Source.Duration;
+	EveryXDay := Source.EveryXDay;
+	EveryXWeek := Source.EveryXWeek;
+	EveryXMonth := Source.EveryXMonth;
+	EveryXYear := Source.EveryXYear;
+	EveryXIdle := Source.EveryXIdle;
+	EveryXOverload := Source.EveryXOverload;
+	WeekDays := Source.WeekDays;
+	Months := Source.Months;
+	FEnabled := Source.Enabled;
+  UpdateNextRun;
 end;
 
 end.
