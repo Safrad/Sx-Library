@@ -1,0 +1,61 @@
+package LibD8;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS OFF}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS OFF}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'sx-library'}
+{$IMPLICITBUILD ON}
+
+requires
+  vcl,
+  rtl,
+  designide,
+  vclactnband,
+  vclx,
+  vcljpg,
+  IndyCore,
+  IndySystem,
+  IndyProtocols;
+
+contains
+  uDView in 'GUI\uDView.pas',
+  uDTimer in 'GUI\uDTimer.pas',
+  uDPanel in 'GUI\uDPanel.pas',
+  uDLabel in 'GUI\uDLabel.pas',
+  uDImage in 'GUI\uDImage.pas',
+  uDGauge in 'GUI\uDGauge.pas',
+  uDForm in 'GUI\uDForm.pas',
+  uDEdit in 'GUI\uDEdit.pas',
+  uDButton in 'GUI\uDButton.pas',
+  uNumericComboBox in 'GUI\uNumericComboBox.pas',
+  uOpenedFiles in 'GUI\uOpenedFiles.pas',
+  uDMemo in 'GUI\uDMemo.pas',
+  uCompLog in 'GUI\uCompLog.pas',
+  uSxPathEdit in 'GUI\uSxPathEdit.pas',
+  uSxCheckBox in 'GUI\uSxCheckBox.pas',
+  uSxLabel in 'GUI\uSxLabel.pas',
+  uSxEmptyPanel in 'GUI\uSxEmptyPanel.pas',
+  uSxGUI in 'GUI\uSxGUI.pas',
+  uSxToolBar in 'GUI\uSxToolBar.pas',
+  uSxComboBox in 'GUI\uSxComboBox.pas';
+
+end.
