@@ -146,7 +146,12 @@ type
 	F4 = Single;
 //	F6 = Real48;
 	F8 = Double;
-	FA = Extended;
+{$ifdef CPUX64}
+  FA = Extended80;
+{$else}
+  FA = Extended;
+{$endif}
+
 
 { CG = Char;
 	C1 = AnsiChar;
