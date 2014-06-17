@@ -44,8 +44,8 @@ function FloPoint(const X, Y: Double): TFloPoint;
 function FloPointToPoint(const FloPoint: TFloPoint): TPoint;
 function Over(const SX1, SY1, SX2, SY2: Integer;
 	const DX1, DY1, DX2, DY2: Integer): Boolean; overload;
-function Over(const SX1, SY1, SX2, SY2: Extended;
-	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
+function Over(const SX1, SY1, SX2, SY2: Double;
+	const DX1, DY1, DX2, DY2: Double): Boolean; overload;
 function Over(const SX1, SY1: SG; const DR: TRect): Boolean; overload;
 function Over(const S: TPoint; const DR: TRect): Boolean; overload;
 
@@ -533,8 +533,8 @@ begin
 	Result := True;
 end;
 
-function Over(const SX1, SY1, SX2, SY2: Extended;
-	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
+function Over(const SX1, SY1, SX2, SY2: Double;
+	const DX1, DY1, DX2, DY2: Double): Boolean; overload;
 begin
 	Result := False;
 
