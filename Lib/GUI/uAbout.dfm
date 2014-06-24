@@ -47,6 +47,7 @@ object fAbout: TfAbout
     TabOrder = 4
     OnKeyDown = FormKeyDown
     OnGetData = DViewAboutGetData
+    OnCellClick = DViewAboutCellClick
   end
   object ButtonOk: TDButton
     Left = 248
