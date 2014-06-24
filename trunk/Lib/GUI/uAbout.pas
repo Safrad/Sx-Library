@@ -48,6 +48,8 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure ButtonBuildParamsClick(Sender: TObject);
+    procedure DViewAboutCellClick(Sender: TObject; ColumnIndex,
+      RowIndex: Integer; Shift: TShiftState);
 	private
 		Effect: U1;
 		Typ: U1;
@@ -568,6 +570,19 @@ begin
   {$ENDIF}
   Hint := s;
   ShowHint := True;
+end;
+
+procedure TfAbout.DViewAboutCellClick(Sender: TObject; ColumnIndex,
+  RowIndex: Integer; Shift: TShiftState);
+var
+  CellData: string;
+  Rect: TRect;
+begin
+  DViewAboutGetData(Sender, CellData, ColumnIndex, RowIndex, Rect);
+  if StartStr('http', CellData) then
+  begin
+    APIOpen(CellData);
+  end;
 end;
 
 initialization
