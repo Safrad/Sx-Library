@@ -64,7 +64,7 @@ begin
 	BatFileName := InstanceTempDir + 'TempRun.bat';
 	if FileExists(BatFileName) then
 	  DeleteFileEx(BatFileName);
-	WriteStringToFile(BatFileName, 'cd "' + CurrentDirectory + '"' + FileSep + 'call "' + FFileName + '"' + CharSpace + Params + LineSep, False, fcAnsi);
+	WriteStringToFile(BatFileName, Copy(CurrentDirectory, 1, 2) + FileSep + 'cd "' + CurrentDirectory + '"' + FileSep + 'call "' + FFileName + '"' + CharSpace + Params + LineSep, False, fcAnsi);
 	try
 		Result := ShellExecuteDirect(BatFileName, '', CurrentDirectory, ShowCmd);
 	finally
