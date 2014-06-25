@@ -1852,7 +1852,7 @@ end;
 procedure TDImage.Serialize(const IniFile: TDIniFile; const Save: BG);
 var
 	Section: string;
-	XZoom: Extended;
+	XZoom: FA;
 begin
 	Section := GetSectionName(Self);
 
