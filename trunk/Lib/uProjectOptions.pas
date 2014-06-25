@@ -13,6 +13,7 @@ interface
 uses
   uTypes,
   SysUtils,
+  uSxStringList,
   uProjectInfo, uNProjectVersion,
   uDelphi,
   Classes, XMLIntf;
@@ -128,9 +129,9 @@ type
 		UnitOutputDir: string; // Replaced to Temp
 		PackageDLLOutputDir: string; // bpl
 		PackageDCPOutputDir: string; // dcp
-		Conditionals: TStringList;
-		SearchPaths: TStringList;
-		Namespaces: TStringList; // New in Delphi XE2
+		Conditionals: TSxStringList;
+		SearchPaths: TSxStringList;
+		Namespaces: TSxStringList; // New in Delphi XE2
 		DebugSourceDirs: string; // Not in cfg
 		UsePackages: BG;
     Packages: string;
@@ -711,7 +712,7 @@ begin
                   cNode.NodeValue := IconFileName;
 
                   cNode := FindOrCreateNode(iNode, 'DCC_Namespace');
-                  cNode.NodeValue := Namespaces.DelimitedText;
+                  cNode.NodeValue := Namespaces.DelimitedTextWithoutQuotes;
 
                   WriteWarningsToNode(iNode);
                 end;
@@ -835,17 +836,17 @@ begin
   MaxStackSize := DefaultMaxStackSize;
   ImageBase := DefaultImageBase;
 
-  Conditionals := TStringList.Create;
+  Conditionals := TSxStringList.Create;
   Conditionals.Duplicates := dupIgnore;
   Conditionals.Sorted := True;
   Conditionals.Delimiter := ProjectListSeparator;
 
-  SearchPaths := TStringList.Create;
+  SearchPaths := TSxStringList.Create;
   SearchPaths.Duplicates := dupIgnore;
   SearchPaths.Sorted := True;
   SearchPaths.Delimiter := ProjectListSeparator;
 
-  Namespaces := TStringList.Create;
+  Namespaces := TSxStringList.Create;
   Namespaces.Duplicates := dupIgnore;
 //  Namespaces.Sorted := True;
   Namespaces.Delimiter := ProjectListSeparator;
@@ -1067,7 +1068,7 @@ begin
 		Data := Data + '-E' + Quoted(OutputDir) + FileSep;
 
 	if Namespaces.Count > 0 then
-		Data := Data + '-NE' + Namespaces.DelimitedText + FileSep;
+		Data := Data + '-NE' + Namespaces.DelimitedTextWithoutQuotes + FileSep;
 	if UnitOutputDir <> '' then
 		Data := Data + '-N"' + ReplaceDelphiVariables(UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
 	if PackageDLLOutputDir <> '' then
@@ -1077,7 +1078,7 @@ begin
 	if UsePackages then
 		Data := Data + '-LU' + Packages + FileSep;
 
-  CfgSearchPath := ReplaceDelphiVariables(SearchPaths.DelimitedText, DelphiVersion, SystemPlatform);
+  CfgSearchPath := ReplaceDelphiVariables(SearchPaths.DelimitedTextWithoutQuotes, DelphiVersion, SystemPlatform);
 	if CfgSearchPath <> '' then
 		Data := Data + '-U"' + CfgSearchPath + '"' + FileSep;
 	if CfgSearchPath <> '' then
@@ -1088,7 +1089,7 @@ begin
 		Data := Data + '-R"' + CfgSearchPath + '"' + FileSep;
 
 	if Conditionals.Count > 0 then
-		Data := Data + '-D' + Conditionals.DelimitedText + FileSep;
+		Data := Data + '-D' + Conditionals.DelimitedTextWithoutQuotes + FileSep;
 
   Data := Data + '-$M' + IntToStr(MinStackSize) + ',' + IntToStr(MaxStackSize) + FileSep;
   Data := Data + '-K$' + NumToStr(ImageBase, 16) + FileSep;
