@@ -40,7 +40,7 @@ const
   SystemPlatformDCCStr: array[TSystemPlatform] of string = ('16', '32', '64', 'osx', 'ios32', 'iosarm', 'aarm');
 
   // manifest
-  SystemPlatformManifestStr: array[TSystemPlatform] of string = ('16', 'x86', 'x64', 'OSX', 'iOS-sym', 'iOS', 'android');
+  SystemPlatformManifestStr: array[TSystemPlatform] of string = ('16', 'x86', 'ia64', 'OSX', 'iOS-sym', 'iOS', 'android');
 
   // lib folder
   SystemPlatformLibStr: array[TSystemPlatform] of string = ('win16', 'win32', 'win64', 'osx32', 'iossimulator', 'iosDevice', 'android');
