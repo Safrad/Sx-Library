@@ -623,7 +623,9 @@ begin
 		begin
 			if (M.Name <> '') and M.Visible then
 				if M.Count = 0 then
+        begin
 					if Assigned(M.OnClick) then
+          begin
 						// if M.Name <> 'Mark1' then
 						if (M.Bitmap <> nil) and (M.Bitmap.Empty = False) and (M.Name <> 'Exit1') and
 							(M.Name <> 'Register1') and (M.Name <> 'Unregister1') and (M.Name <> 'DeleteFile1') and
@@ -674,6 +676,12 @@ begin
 							end;
 							Inc(Found);
 						end;
+          end;
+        end
+        else
+        begin
+          IconsFromMenu(M, Panel);
+        end;
 		end
 		else if M.Name <> 'Help1' then
 			IconsFromMenu(M, Panel);
