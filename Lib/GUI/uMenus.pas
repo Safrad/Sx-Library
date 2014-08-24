@@ -871,7 +871,7 @@ end;
 function Scale(const Value: SG): SG;
 begin
   if LargeMenus then
-    Result := RoundDiv(125 * Value, 100) // 25% zvetseni
+    Result := RoundDiv(125 * Value, 100) // 25% increase of size
   else
     Result := Value;
 end;
