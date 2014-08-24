@@ -15,9 +15,14 @@ type
 		FForm: TForm;
 		FOneTick: U8;
 		StartTime, PauseTime, LastInterruptTime: U8;
+    FValue: S8;
+    FMaximalValue: S8;
 		function StatusToStr: string;
 		function StatusToCaption: string;
 		procedure StatusChanged(Value: TProcessStatus);
+    procedure SetMaximalValue(const Value: S8);
+    procedure SetValue(const Value: S8);
+    procedure UpdateProgress;
 	public
 		constructor Create(Form: TForm);
 		function Run: BG;
@@ -30,6 +35,8 @@ type
 		function Interrupt: BG;
 		procedure ResetTime;
 		property ProcessStatus: TProcessStatus read FProcessStatus write StatusChanged;
+    property Value: S8 read FValue write SetValue;
+    property MaximalValue: S8 read FMaximalValue write SetMaximalValue;
 	end;
 
 implementation
@@ -52,7 +59,7 @@ end;
 
 function TProcess.NotRun: BG;
 begin
-	Result := FProcessStatus = psIdle;
+	Result := FProcessStatus in [psIdle, psAborted];
 	if Result then
 	begin
 		BeginLongOperation(True);
@@ -64,7 +71,8 @@ end;
 
 procedure TProcess.Done;
 begin
-	ProcessStatus := psIdle;
+  if ProcessStatus <> psAborted then
+  	ProcessStatus := psIdle;
 	EndLongOperation(True);
 end;
 
@@ -122,7 +130,7 @@ begin
     psIdle: SetTaskbarProgressState(tbpsNone);
     psRun: SetTaskbarProgressState(tbpsIndeterminate);
     psPaused: SetTaskbarProgressState(tbpsPaused);
-    psAborted: SetTaskbarProgressState(tbpsNone);
+    psAborted: SetTaskbarProgressState(tbpsError);
     end;
 		if Assigned(FForm) then
 		begin
@@ -167,6 +175,30 @@ end;
 procedure TProcess.ResetTime;
 begin
 	StartTime := PerformanceCounter;
+end;
+
+procedure TProcess.SetMaximalValue(const Value: S8);
+begin
+  if FMaximalValue <> Value then
+  begin
+    FMaximalValue := Value;
+    UpdateProgress;
+  end;
+end;
+
+procedure TProcess.SetValue(const Value: S8);
+begin
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    UpdateProgress;
+  end;
+end;
+
+procedure TProcess.UpdateProgress;
+begin
+  InitializeTaskbarAPI;
+  SetTaskbarProgressValue(FValue, FMaximalValue);
 end;
 
 end.
