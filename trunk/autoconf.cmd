@@ -6,6 +6,6 @@ setx sx-library "%cd%"
 @IF NOT %ERRORLEVEL% EQU 0 PAUSE
 
 rem set user environment variable ifer to current path
-PathsToReg.exe
+SxConfDelphi.exe -l lib.txt -b bpl.txt
 
 @IF NOT %ERRORLEVEL% EQU 0 PAUSE
