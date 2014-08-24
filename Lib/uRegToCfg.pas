@@ -11,8 +11,13 @@ uses
 	Registry,
 	Windows;
 
-procedure CreatePathsToReg;
 procedure RegistryToDccCfg;
+
+const
+  RemovePrefix = '-';
+
+procedure LibToReg(const Lines: TArrayOfString);
+procedure BplToReg(const Lines: TArrayOfString);
 
 implementation
 
@@ -125,12 +130,10 @@ begin
 	end;
 end;
 
-procedure LibToReg(ALibFileName: TFileName);
+procedure LibToReg(const Lines: TArrayOfString);
 const
 	SearchPathName = 'Search Path';
 var
-	Lines: TArrayOfString;
-	LineCount: SG;
 	i, j: Integer;
 	Reg: TRegistry;
 	RegPath: string;
@@ -145,10 +148,8 @@ var
   ci: SG;
 begin
 	RegPaths := TStringList.Create;
-	LineCount := 0;
 
-	ReadStringsFromFile(ALibFileName, Lines, LineCount);
-	for i := 0 to LineCount - 1 do
+	for i := 0 to Length(Lines) - 1 do
 	begin
 		if LastChar(Lines[i]) = '\' then
 			Lines[i] := DelLastChar(Lines[i]);
@@ -178,7 +179,7 @@ begin
         end;
         CorrectPaths(RegPaths);
 
-        for i := 0 to LineCount - 1 do
+        for i := 0 to Length(Lines) - 1 do
         begin
           Path := Lines[i];
           Replace(Path,
@@ -187,7 +188,7 @@ begin
           if Path ='' then
             Continue;
 
-          if FirstChar(Path) = '-' then
+          if FirstChar(Path) = RemovePrefix then
           begin
             Path := UpperCase(Copy(Path, 2, MaxInt));
             j := 0;
@@ -238,10 +239,8 @@ begin
 
 end;
 
-procedure BplToReg(const ABplFileName: TFileName);
+procedure BplToReg(const Lines: TArrayOfString);
 var
-	Lines: TArrayOfString;
-	LineCount: SG;
 	i, j: Integer;
 	DelphiVersion: TDelphiVersion;
 	Reg: TRegistry;
@@ -251,9 +250,6 @@ var
 	FileName: string;
 begin
 	Strings := TStringList.Create;
-	LineCount := 0;
-
-	ReadStringsFromFile(ABplFileName, Lines, LineCount);
 
 	Reg := TRegistry.Create(KEY_ALL_ACCESS);
 	try
@@ -265,13 +261,13 @@ begin
       begin
         Reg.GetValueNames(Strings);
 
-        for i := 0 to LineCount - 1 do
+        for i := 0 to Length(Lines) - 1 do
         begin
           Path := Lines[i];
           Replace(Path,
             ['%DelphiShortName%', '%DelphiMajorVersion%'],
             [GetDelphiShortName(DelphiVersion), IntToStr(GetMajorVersion(DelphiVersion))]);
-          if FirstChar(Path) = '-' then
+          if FirstChar(Path) = RemovePrefix then
           begin
             Path := UpperCase(Copy(Path, 2, MaxInt));
             j := 0;
@@ -307,26 +303,6 @@ begin
 	finally
 		Reg.Free;
 	end;
-end;
-
-procedure CreatePathsToReg;
-const
-  LibFileName = 'lib.txt';
-  BplFileName = 'bpl.txt';
-var
-  FileName: TFileName;
-begin
-  // Lib
-  FileName := StartDir + '$' + LibFileName;
-  if FileExists(FileName) then
-  	LibToReg(FileName);
-	LibToReg(StartDir + LibFileName);
-
-  // Bpl
-  FileName := StartDir + '$' + BplFileName;
-  if FileExists(FileName) then
-  	BplToReg(FileName);
-	BplToReg(StartDir + BplFileName);
 end;
 
 end.
