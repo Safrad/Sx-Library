@@ -40,6 +40,7 @@ uses
 	uDictionary,
 	uProjectInfo,
 	uMath,
+  TaskBarAPI,
 	SysUtils;
 
 { TProcess }
@@ -63,8 +64,8 @@ end;
 
 procedure TProcess.Done;
 begin
-	EndLongOperation(True);
 	ProcessStatus := psIdle;
+	EndLongOperation(True);
 end;
 
 procedure TProcess.Pause;
@@ -116,6 +117,13 @@ begin
 	if FProcessStatus <> Value then
 	begin
 		FProcessStatus := Value;
+    InitializeTaskbarAPI;
+    case Value of
+    psIdle: SetTaskbarProgressState(tbpsNone);
+    psRun: SetTaskbarProgressState(tbpsIndeterminate);
+    psPaused: SetTaskbarProgressState(tbpsPaused);
+    psAborted: SetTaskbarProgressState(tbpsNone);
+    end;
 		if Assigned(FForm) then
 		begin
 			FForm.Caption := StatusToCaption;
