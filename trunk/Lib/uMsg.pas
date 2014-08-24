@@ -28,7 +28,8 @@ procedure Warning(const Text: string; const Param: array of string); overload;
 procedure ErrorMsg(const Text: string); overload;
 procedure ErrorMsg(const Text: string; const Param: array of string); overload;
 procedure ErrorMsg(const ErrorCode: SG); overload;
-procedure Fatal(const E: Exception; const C: TObject);
+procedure Fatal(const E: Exception); overload;
+procedure Fatal(const E: Exception; const C: TObject); overload;
 
 function ErrorRetry(const Text: string): BG;
 function ErrorCodeToStr(const ErrorCode: U4): string;
@@ -168,6 +169,14 @@ procedure ErrorMsg(const ErrorCode: SG);
 begin
 	if ErrorCode <> 0 then
 		ErrorMsg(ErrorCodeToStr(ErrorCode));
+end;
+
+procedure Fatal(const E: Exception);
+var
+	ExpandedText: string;
+begin
+  ExpandedText := E.Message + ' (' + E.ClassName + ')';
+	if LogFatalError then LogAdd(ExpandedText);
 end;
 
 procedure Fatal(const E: Exception; const C: TObject);
