@@ -76,7 +76,7 @@ object XPDUnitTestClassForm: TXPDUnitTestClassForm
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -12
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'Microsoft Sans Serif'
         Font.Pitch = fpVariable
         Font.Style = []
         Images = NodeImages
@@ -94,7 +94,7 @@ object XPDUnitTestClassForm: TXPDUnitTestClassForm
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -12
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'Microsoft Sans Serif'
         Font.Pitch = fpVariable
         Font.Style = []
         Images = NodeImages
