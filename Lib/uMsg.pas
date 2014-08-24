@@ -172,11 +172,8 @@ begin
 end;
 
 procedure Fatal(const E: Exception);
-var
-	ExpandedText: string;
 begin
-  ExpandedText := E.Message + ' (' + E.ClassName + ')';
-	if LogFatalError then LogAdd(ExpandedText);
+  ShowMessage(mlFatalError, E.Message + ' (' + E.ClassName + ')');
 end;
 
 procedure Fatal(const E: Exception; const C: TObject);
@@ -187,7 +184,7 @@ begin
 		ExpandedText := E.Message
 	else
 		ExpandedText := ReplaceParam(E.Message + ' in class %1', [C.ClassName]);
-	if LogFatalError then LogAdd(ExpandedText);
+  ShowMessage(mlFatalError, ExpandedText);
 end;
 
 function ErrorRetry(const Text: string): BG;
