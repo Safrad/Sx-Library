@@ -10,7 +10,7 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Name = 'Microsoft Sans Serif'
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
