@@ -36,7 +36,7 @@ object fGetStr: TfGetStr
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ModalResult = 1
     ParentFont = False
@@ -52,7 +52,7 @@ object fGetStr: TfGetStr
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ModalResult = 2
     ParentFont = False
@@ -67,7 +67,7 @@ object fGetStr: TfGetStr
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 3
@@ -82,7 +82,7 @@ object fGetStr: TfGetStr
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 4

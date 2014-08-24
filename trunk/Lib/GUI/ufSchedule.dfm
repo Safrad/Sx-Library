@@ -152,7 +152,7 @@ object fSchedule: TfSchedule
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ModalResult = 1
     ParentFont = False
@@ -169,7 +169,7 @@ object fSchedule: TfSchedule
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ModalResult = 2
     ParentFont = False
@@ -335,7 +335,7 @@ object fSchedule: TfSchedule
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     ParentShowHint = False

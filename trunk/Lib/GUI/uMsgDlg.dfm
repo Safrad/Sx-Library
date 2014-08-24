@@ -126,7 +126,7 @@ object fMsgDlg: TfMsgDlg
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 0
@@ -144,7 +144,7 @@ object fMsgDlg: TfMsgDlg
     Font.Charset = EASTEUROPE_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     ReadOnly = True
@@ -163,7 +163,7 @@ object fMsgDlg: TfMsgDlg
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 2
@@ -180,7 +180,7 @@ object fMsgDlg: TfMsgDlg
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 3
@@ -211,7 +211,7 @@ object fMsgDlg: TfMsgDlg
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 5

@@ -155,7 +155,7 @@ object fGetTime: TfGetTime
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ModalResult = 1
     ParentFont = False
@@ -172,7 +172,7 @@ object fGetTime: TfGetTime
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ModalResult = 2
     ParentFont = False
@@ -199,7 +199,7 @@ object fGetTime: TfGetTime
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 1
@@ -214,7 +214,7 @@ object fGetTime: TfGetTime
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 2
@@ -229,7 +229,7 @@ object fGetTime: TfGetTime
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 4
@@ -288,7 +288,7 @@ object fGetTime: TfGetTime
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 3
@@ -303,7 +303,7 @@ object fGetTime: TfGetTime
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Microsoft Sans Serif'
     Font.Style = []
     ParentFont = False
     TabOrder = 15
