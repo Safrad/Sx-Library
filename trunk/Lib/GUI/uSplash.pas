@@ -187,8 +187,6 @@ end;
 procedure ShowSplashScreen(const ChangeMouseCursor: BG = True);
 var i: SG;
 begin
-	if ChangeMouseCursor then
-		BeginLongOperation;
 	for i := Length(AllPictureExt) - 1 downto 0 do
 	begin
 		if FileExists(GraphDir + 'Logo.' + AllPictureExt[i]) then
@@ -216,7 +214,6 @@ begin
 	if Assigned(fSplash) and fSplash.Visible then
 	begin
 		fSplash.Cursor := crArrow;
-		EndLongOperation(False);
 
 		if Promptly then
 		begin
@@ -285,7 +282,6 @@ end;
 procedure TfSplash.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 	Timer1.Enabled := False;
-	EndLongOperation(False);
 	BackBitmap.SetSize(0, 0, clNone);
 	Action := caFree;
 end;
