@@ -110,6 +110,7 @@ begin
 		Screen.Cursor := crAppStart
 	else
 		Screen.Cursor := crHourGlass;
+  InitializeTaskbarAPI;
   SetTaskbarProgressState(tbpsIndeterminate);
   GetGTime;
   GStartTime := GTime;
@@ -123,6 +124,7 @@ begin
 	if Sound and (TotalTime >= Second) then
 		PlayWinSound(wsAsterisk);
 	Screen.Cursor := crDefault;
+  InitializeTaskbarAPI;
   SetTaskbarProgressState(tbpsNone);
   if IsDebug then
     Information('Total time: ' + MsToStr(TotalTime, diSD, 3));
