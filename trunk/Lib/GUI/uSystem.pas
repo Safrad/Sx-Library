@@ -40,7 +40,7 @@ procedure SetEnabledWinKeys(const AEnabled: BG);
 implementation
 
 uses
-	Windows, Math, Dialogs, Registry,
+	Windows, Math, Dialogs, Registry, TaskBarAPI,
 	uStrings, uFiles, uDParser, uWave, uMath, uDictionary, uSimulation, uOutputFormat, uMsg;
 
 var
@@ -110,6 +110,7 @@ begin
 		Screen.Cursor := crAppStart
 	else
 		Screen.Cursor := crHourGlass;
+  SetTaskbarProgressState(tbpsIndeterminate);
   GetGTime;
   GStartTime := GTime;
 end;
@@ -122,6 +123,7 @@ begin
 	if Sound and (TotalTime >= Second) then
 		PlayWinSound(wsAsterisk);
 	Screen.Cursor := crDefault;
+  SetTaskbarProgressState(tbpsNone);
   if IsDebug then
     Information('Total time: ' + MsToStr(TotalTime, diSD, 3));
 end;
