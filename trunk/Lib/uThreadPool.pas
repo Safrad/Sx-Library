@@ -4,8 +4,8 @@ interface
 
 uses
 	uTypes,
+  uData,
   Windows,
-	uQueue,
 	Classes;
 
 // TODO: Wait for command
@@ -25,7 +25,7 @@ type
 		FRunThreads: SG;
 		FWorking: SG;
 		FThreads: array of TThread;
-		FQueue: TQueue; // array of TCommand;
+		FQueue: TData; // array of TCommand;
 		FSection: TRTLCriticalSection;
 		procedure SetRunThreads(Value: SG);
 		procedure SetMaxThreads(Value: SG);
@@ -50,8 +50,7 @@ uses
 	uLog,
 	uSorts,
 	uMath,
-	SysUtils,
-	uData;
+	SysUtils;
 
 type
 	TOneThread = class(TThread)
@@ -92,7 +91,7 @@ constructor TThreadPool.Create;
 begin
 	inherited;
 
-	FQueue := TQueue.Create;
+	FQueue := TData.Create;
 	InitializeCriticalSection(FSection);
 
 	FRunThreads := 0;
@@ -195,7 +194,7 @@ end;
 procedure TThreadPool.SortCommands(const A: TArrayOfSG);
 var
 	AIndex: TArrayOfSG;
-	FQueue2: TQueue;
+	FQueue2: TData;
 	i: SG;
 	n: SG;
 begin
@@ -206,7 +205,7 @@ begin
 
 	// Add unsorted commands
 	n := FQueue.Count - Length(A);
-	FQueue2 := TQueue.Create;
+	FQueue2 := TData.Create;
 	for i := 0 to n - 1 do
 	begin
 		FQueue2.Add(TCommand(FQueue[i]^));
