@@ -3,9 +3,11 @@ unit uDictionary;
 interface
 
 uses
-	Forms, Controls, Classes, StdCtrls, ExtCtrls, ComCtrls,
+{$IFNDEF Console}
+	Forms, Controls, Classes, StdCtrls, ExtCtrls, ComCtrls, Menus
+{$ENDIF}
 	uTypes, uFiles,
-	SysUtils, Menus;
+	SysUtils;
 
 type
 	TDictEntry = packed record
@@ -78,8 +80,7 @@ implementation
 
 uses
 	Windows,
-	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView,{$ENDIF} uMsg,
-  Buttons;
+	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView, Buttons{$ENDIF} uMsg;
 
 const
 	EnglishLanguageIndex = -1;
