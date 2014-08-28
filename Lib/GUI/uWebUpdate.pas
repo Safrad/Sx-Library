@@ -10,22 +10,30 @@ const
 	LocalVersionFileName = 'version.txt';
 	WebVersionFileName = 'version.txt';
 
+{$ifndef Console}
 procedure DownloadFileEx(const AURL: string; const TargetFileName: string; const Caption: string);
+{$endif}
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 function DownloadData(const AURL: string): string;
 function DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string): BG;
 function GetWebVersion(const Web: string): string;
+{$ifndef Console}
 procedure CheckForUpdate; overload;
 procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
+{$endif}
 
 implementation
 
 uses
 	uLog,
-	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uAPI, uProjectVersion, ufTextStatus, uSimulation, uOutputFormat,
-  IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack,
+	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, ufTextStatus, uSimulation, uOutputFormat,
+  IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack
+  {$ifndef Console}
+  ,
+  uAPI,
   ufStatus,
-  ExtActns, Forms;
+  ExtActns, Forms
+  {$endif};
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 var
@@ -64,6 +72,7 @@ begin
 	end;
 end;
 
+{$ifndef Console}
 type
   TObj = class
   private
@@ -121,6 +130,7 @@ begin
     DownLoadURL.Free;
   end;
 end;
+{$endif}
 
 function DownloadData(const AURL: string): string;
 var
@@ -225,6 +235,7 @@ begin
 	end;
 end;
 
+{$ifndef Console}
 procedure CheckForUpdate; overload;
 begin
 	CheckForUpdate(True);
@@ -270,9 +281,12 @@ begin
 		end;
 	end;
 end;
+{$endif}
 
 initialization
 
 finalization
+{$ifndef Console}
   FreeAndNil(Obj);
+{$endif}
 end.
