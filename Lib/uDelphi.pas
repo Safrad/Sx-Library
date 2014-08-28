@@ -7,6 +7,7 @@ uses
 
 type
   TDelphiVersion = (
+    dvUnknown,
     dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
     dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7,
     dvDelphi8, dvDelphi2005, dvDelphi2006, dvDelphi2007,
@@ -14,6 +15,7 @@ type
 
 const
   ReleaseYear: array[TDelphiVersion] of string = (
+    '',
     '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
     '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
     '2003-12-22', '2004-10-12', '2005-11-23', '2007-03-16',
@@ -21,6 +23,7 @@ const
 
 const
   DProjDelphiId: array[TDelphiVersion] of string = (
+    '',
     '', '', '', '', '', '', '',
     '', '', '', '', '', '6.0', '7.0', // dof
     '', '', '', '',
@@ -86,6 +89,7 @@ function GetAvailableCompilers: TCompilers;
 
 function GetDelphiVersion(const AName: string): TDelphiVersion;
 function GetDelphiCompiler(const AName: string): TCompiler;
+function GetPackageVersion(const PackageFileName: string): TDelphiVersion;
 
 implementation
 
@@ -165,7 +169,7 @@ end;
 
 function GetDelphiCompilerVersion(const ADelphiVersion: TDelphiVersion): SG;
 begin
-  Result := SG(ADelphiVersion) + 1;
+  Result := SG(ADelphiVersion) - SG(dvPascal1) + 1;
   if ADelphiVersion >= dvDelphi4 then
     Inc(Result);
   Result := Result * 10;
@@ -348,7 +352,7 @@ end;
 
 function GetDelphiVersionCount: SG;
 begin
-  Result := CurrentYear - 1995 + 7;
+  Result := CurrentYear - 1995 + 7 + 1;
 end;
 
 function GetAvailableDelphiVersions: TArrayOfSG;
@@ -405,7 +409,7 @@ function GetDelphiVersion(const AName: string): TDelphiVersion;
 var
   DelphiVersion: TDelphiVersion;
 begin
-  Result := dvPascal1;
+  Result := dvUnknown;
   for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
 	begin
     if CompareText(GetDelphiShortName(DelphiVersion), AName) = 0 then
@@ -434,6 +438,53 @@ begin
     if Pos(GetDelphiShortName(DelphiVersion), AName) <> 0 then
     begin
       Result.DelphiVersion := DelphiVersion;
+    end;
+  end;
+end;
+
+function GetPackageVersion(const PackageFileName: string): TDelphiVersion;
+var
+  DelphiVersion: TDelphiVersion;
+  FixedPackageFileName: string;
+begin
+  FixedPackageFileName := RemoveSuffixF('+', RemoveSuffixF('plus', DelFileExt(PackageFileName)));
+
+  Result := dvUnknown;
+
+  for DelphiVersion := TDelphiVersion(GetDelphiVersionCount - 1) downto dvDelphi1 do
+  begin
+  end;
+
+  for DelphiVersion := TDelphiVersion(GetDelphiVersionCount - 1) downto dvDelphi1 do
+  begin
+  end;
+
+  for DelphiVersion := TDelphiVersion(GetDelphiVersionCount - 1) downto dvDelphi1 do
+  begin
+    if EndStr('_' + IntToStr(GetDelphiCompilerVersion(DelphiVersion)), FixedPackageFileName) then
+    begin
+      Result := DelphiVersion;
+      Exit;
+    end;
+    if EndStr(IntToStr(GetDelphiCompilerVersion(DelphiVersion)), FixedPackageFileName) then
+    begin
+      Result := DelphiVersion;
+      Exit;
+    end;
+    if EndStr('D' + GetDelphiShortName(DelphiVersion), FixedPackageFileName) then
+    begin
+      Result := DelphiVersion;
+      Exit;
+    end;
+    if EndStr(GetDelphiShortName(DelphiVersion), FixedPackageFileName) then
+    begin
+      Result := DelphiVersion;
+      Exit;
+    end;
+    if EndStr(IntToStr(GetMajorVersion(DelphiVersion)), FixedPackageFileName) then
+    begin
+      Result := DelphiVersion;
+      Exit;
     end;
   end;
 end;
