@@ -151,7 +151,7 @@ begin
 
   if CheckAPI then
   begin
-    Result := GlobalTaskBarInterface.SetOverlayIcon(Application.Handle, AIcon, PAnsiChar(ADescription)) = S_OK;
+    Result := GlobalTaskBarInterface.SetOverlayIcon(Application.Handle, AIcon, PChar(ADescription)) = S_OK;
   end;
 end;
 
