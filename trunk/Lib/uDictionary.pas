@@ -4,7 +4,7 @@ interface
 
 uses
 {$IFNDEF Console}
-	Forms, Controls, Classes, StdCtrls, ExtCtrls, ComCtrls, Menus
+	Forms, Controls, Classes, StdCtrls, ExtCtrls, ComCtrls, Menus,
 {$ENDIF}
 	uTypes, uFiles,
 	SysUtils;
@@ -80,7 +80,7 @@ implementation
 
 uses
 	Windows,
-	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView, Buttons{$ENDIF} uMsg;
+	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, {$IFNDEF Console}uDLabel, uDView, Buttons, {$ENDIF} uMsg;
 
 const
 	EnglishLanguageIndex = -1;
