@@ -353,6 +353,10 @@ end;
 function GetDelphiVersionCount: SG;
 begin
   Result := CurrentYear - 1995 + 7 + 1;
+  if CurrentYear > 2013 then
+  begin
+    Inc(Result, CurrentYear - 2013);
+  end;
 end;
 
 function GetAvailableDelphiVersions: TArrayOfSG;
