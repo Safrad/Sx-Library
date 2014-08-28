@@ -79,7 +79,7 @@ uses
 	Messages,
 	uAPI, uSimulation, uHTML, uStart, uDictionary,
 	uProjectInfo,
-	uGraph, uDIniFile, uScreen, uSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
+	uGraph, uDIniFile, uScreen, uSysInfo, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
 	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
 var
 	LastNowTime: U8;
