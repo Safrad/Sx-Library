@@ -26,12 +26,12 @@ implementation
 
 uses
 	uLog,
-	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, ufTextStatus, uSimulation, uOutputFormat,
+	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, uSimulation, uOutputFormat,
   IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack
   {$ifndef Console}
   ,
   uAPI,
-  ufStatus,
+  ufStatus, ufTextStatus,
   ExtActns, Forms
   {$endif};
 
