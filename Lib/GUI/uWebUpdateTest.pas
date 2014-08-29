@@ -69,7 +69,7 @@ begin
   FileName := TempDir + 'data.txt';
 	Success := False;
 	try
-		DownloadFileEx('http://software.rosada.cz/Skype2.zip', FileName);
+		DownloadFileEx('http://software.rosada.cz/Skype2.zip', FileName, '');
 		Success := True;
   except
     on E: Exception do
@@ -86,7 +86,7 @@ begin
 //	  CheckEquals(16, GetFileSizeU(FileName));
   end;
 
-	DownloadFileEx('http://software.rosada.cz/Skype.zip', FileName);
+	DownloadFileEx('http://software.rosada.cz/Skype.zip', FileName, '');
   CheckEquals(15548392, GetFileSizeU(FileName));
 end;
 
