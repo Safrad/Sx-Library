@@ -31,7 +31,7 @@ uses
   {$ifndef Console}
   ,
   uAPI,
-  ufStatus, ufTextStatus,
+  ufTextStatus, ufStatus,
   ExtActns, Forms
   {$endif};
 
