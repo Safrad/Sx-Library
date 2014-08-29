@@ -7,6 +7,7 @@ $(sx-library)\ExtLib\DCPCrypt\Ciphers
 $(sx-library)\ExtLib\DCPCrypt\Hashes
 $(sx-library)\ExtLib\Delphi%DelphiMajorVersion%
 $(sx-library)\ExtLib\Delphi%DelphiMajorVersion%\PngImage
+$(sx-library)\ExtLib\DUnit\src
 $(sx-library)\ExtLib\FastMM
 $(sx-library)\ExtLib\FFTs
 $(sx-library)\ExtLib\GammaF
