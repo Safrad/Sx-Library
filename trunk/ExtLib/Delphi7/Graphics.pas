@@ -2907,6 +2907,8 @@ begin
   end
   else
   begin
+    if ColorCount > 256 then
+      InvalidGraphic({$IFNDEF CLR}@{$ENDIF}SInvalidBitmap);
     Pal.palNumEntries := ColorCount;
     Move(ColorTable^, Pal.palPalEntry, ColorCount * 4);
   end;
