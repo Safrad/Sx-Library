@@ -7,7 +7,8 @@ uses TestFrameWork;
 type
   TDelphiTest = class(TTestCase)
   published
-    procedure Test;
+    procedure TestDelphiVersion;
+    procedure TestPackageVersion;
   end;
 
 implementation
@@ -22,7 +23,7 @@ uses
 
 { TDelphiTest }
 
-procedure TDelphiTest.Test;
+procedure TDelphiTest.TestDelphiVersion;
 var
 //  Versions: TArrayOfSG;
   DelphiVersion: TDelphiVersion;
@@ -42,6 +43,21 @@ begin
       IntToStr(GetDelphiCompilerVersion(DelphiVersion)) +
       FileSep;
   WriteStringToFile(TempDir + 'DelphiVersions.csv', s, False);
+end;
+
+procedure TDelphiTest.TestPackageVersion;
+  procedure AssertEquals(const V1, V2: TDelphiVersion);
+  begin
+    CheckEquals(Integer(V1), Integer(V2));
+  end;
+begin
+  AssertEquals(dvDelphi3, GetPackageVersion('aaa_100.dpk'));
+  AssertEquals(dvDelphi2006, GetPackageVersion('Cool2006.dpk'));
+  AssertEquals(dvDelphi6, GetPackageVersion('Cool6plus.dpk'));
+  AssertEquals(dvDelphiXE6, GetPackageVersion('CoolDXE6.dpk'));
+  AssertEquals(dvDelphiXE6, GetPackageVersion('CoolXE6.dpk'));
+  AssertEquals(dvDelphiXE5, GetPackageVersion('Cool_XE5.dpk'));
+  AssertEquals(dvDelphi2006, GetPackageVersion('Cool180.dpk'));
 end;
 
 initialization
