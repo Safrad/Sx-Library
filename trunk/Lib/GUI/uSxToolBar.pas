@@ -2,6 +2,7 @@ unit uSxToolBar;
 
 interface
 
+{$R *.RES}
 uses
   uTypes,
   uSxAction,
