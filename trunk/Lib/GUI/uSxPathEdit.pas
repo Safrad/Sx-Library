@@ -2,6 +2,7 @@ unit uSxPathEdit;
 
 interface
 
+{$R *.RES}
 uses
 	uTypes, uDEdit, uDButton,
 	Windows, Messages, SysUtils, Classes, Controls, StdCtrls, ExtCtrls;
