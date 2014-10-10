@@ -69,7 +69,7 @@ procedure DelayEx(const f: U8);
 
 //function MMUsedMemory: U8;
 function MaxPhysicalMemorySize: U8;
-function ProcessAllocatedVirtualMemory: U4;
+function ProcessAllocatedVirtualMemory: U8;
 function CanAllocateMemory(const Size: UG): BG;
 
 implementation
@@ -740,7 +740,7 @@ end;
 //  end;
 //end;
 
-function ProcessAllocatedVirtualMemory: U4;
+function ProcessAllocatedVirtualMemory: U8;
 var
   MemCounters: TProcessMemoryCounters;
 begin
@@ -749,7 +749,10 @@ begin
   if GetProcessMemoryInfo(GetCurrentProcess,
       @MemCounters,
       SizeOf(MemCounters)) then
-    Result := MemCounters.PagefileUsage
+  begin
+    // MemCounters.PagefileUsage is defined as SIZE_T (size is 4 bytes in 32 bit version and 8 bytes in 64 bit version)
+    Result := MemCounters.PagefileUsage;
+  end
   else
     RaiseLastOSError;
 end;
