@@ -65,6 +65,7 @@ function GetFileModified(const FileName: TFileName): TFileTime; overload;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
 function RenameFileEx(const Source, Dest: TFileName): BG;
+function RenameFileIfExistsEx(const Source, Dest: TFileName): BG;
 function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
 function CopyFileToDir(Source, Dest: TFileName; const FailExist: BG): BG;
 procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSize: U8 = GB; const CreateCRCFile: BG = False);
@@ -1105,6 +1106,14 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorRetry(ErrorCodeToStr(ErrorCode) + LineSep + Source + LineSep + Dest) then goto LRetry;
 	end;
+end;
+
+function RenameFileIfExistsEx(const Source, Dest: TFileName): BG;
+begin
+  if FileExists(Source) and (Source <> Dest) then
+  begin
+    Result := RenameFileEx(Source, Dest);
+  end;
 end;
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
