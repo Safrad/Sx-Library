@@ -6,9 +6,17 @@ uses uTypes, uParserMsg;
 
 type
 	TSubVersion = (svMajor, svMinor, svRelease, svBuild);
+
 	TProjectVersion = class
 	private
 		FSubVersions: array[TSubVersion] of string;
+    FDebug: BG;
+    FPreRelease: BG;
+    FSpecial: BG;
+    FPrivateBuild: BG;
+    FDLL: BG;
+    FLocale: U2;
+    FCodePage: U2;
 	public
 		constructor Create;
 
@@ -25,6 +33,14 @@ type
 		property Release: string read FSubVersions[svRelease];
 		property Minor: string read FSubVersions[svMinor];
 		property Major: string read FSubVersions[svMajor];
+
+    property Debug: Boolean read FDebug write FDebug;
+    property PreRelease: Boolean read FPreRelease write FPreRelease;
+    property Special: Boolean read FSpecial write FSpecial;
+    property PrivateBuild: Boolean read FPrivateBuild write FPrivateBuild;
+    property DLL: Boolean read FDLL write FDLL;
+    property Locale: U2 read FLocale write FLocale;
+    property CodePage: U2 read FCodePage write FCodePage;
 	end;
 
 const

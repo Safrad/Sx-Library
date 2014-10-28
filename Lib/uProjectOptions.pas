@@ -421,6 +421,34 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
         Break;
       end;
     end;
+    if AttrValue = 'Debug' then
+    begin
+      Version.Debug := StrToBoolean(NodeValue);
+    end
+    else if AttrValue = 'PreRelease' then
+    begin
+      Version.PreRelease := StrToBoolean(NodeValue);
+    end
+    else if AttrValue = 'Special' then
+    begin
+      Version.Special := StrToBoolean(NodeValue);
+    end
+    else if AttrValue = 'Private' then
+    begin
+      Version.PrivateBuild := StrToBoolean(NodeValue);
+    end
+    else if AttrValue = 'DLL' then
+    begin
+      Version.DLL := StrToBoolean(NodeValue);
+    end
+    else if AttrValue = 'Locale' then
+    begin
+      Version.Locale := StrToValS8(NodeValue, False, 0, 0, High(Version.Locale), 1, nil)
+    end
+    else if AttrValue = 'CodePage' then
+    begin
+      Version.CodePage := StrToValS8(NodeValue, False, 0, 0, High(Version.CodePage), 1, nil)
+    end;
   end;
 
 	procedure ReadDelphiPersonality(const ANode: IXMLNode);
@@ -604,6 +632,34 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 						Break;
 					end
 				end;
+        if Name = 'Debug' then
+        begin
+          Version.Debug := StrToBoolean(NodeValue);
+        end
+        else if Name = 'PreRelease' then
+        begin
+          Version.PreRelease := StrToBoolean(NodeValue);
+        end
+        else if Name = 'Special' then
+        begin
+          Version.Special := StrToBoolean(NodeValue);
+        end
+        else if Name = 'Private' then
+        begin
+          Version.PrivateBuild := StrToBoolean(NodeValue);
+        end
+        else if Name = 'DLL' then
+        begin
+          Version.DLL := StrToBoolean(NodeValue);
+        end
+        else if Name = 'Locale' then
+        begin
+          Version.Locale := StrToValS8(NodeValue, False, 0, 0, High(Version.Locale), 1, nil)
+        end
+        else if Name = 'CodePage' then
+        begin
+          Version.CodePage := StrToValS8(NodeValue, False, 0, 0, High(Version.CodePage), 1, nil)
+        end;
 			end;
 		end
 		else if Name = UpperCase('VersionInfoKeys') then
@@ -611,25 +667,23 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 			if Node.HasAttribute(AttrName) then
 			begin
 				Name := Node.GetAttribute(AttrName);
-				begin
-					for p := Low(TProjectInfoName) to High(TProjectInfoName) do
-					begin
-						if ProjectInfoStr[p] = Name then
-						begin
-							try
-								if Save then
+        for p := Low(TProjectInfoName) to High(TProjectInfoName) do
+        begin
+          if ProjectInfoStr[p] = Name then
+          begin
+            try
+              if Save then
 //									Node.NodeValue := ProjectInfos[p]
-								else
-								begin
-									ProjectInfos[p] := NodeValue;
-								end;
-							except
+              else
+              begin
+                ProjectInfos[p] := NodeValue;
+              end;
+            except
 
-							end;
-							Break;
-						end;
-					end;
-				end
+            end;
+            Break;
+          end;
+				end;
 			end;
 		end
     else if Name = UpperCase('DCC_Hints') then
@@ -968,6 +1022,13 @@ begin
 			Version.SetSubVersion(svMinor, IniFile.ReadString(VersionInfoSection, 'MinorVer', Version.Minor));
 			Version.SetSubVersion(svRelease, IniFile.ReadString(VersionInfoSection, 'Release', Version.Release));
 			Version.SetSubVersion(svBuild, IniFile.ReadString(VersionInfoSection, 'Build', Version.Build));
+      Version.Debug := IniFile.ReadBool(VersionInfoSection, 'Debug', Version.Debug);
+      Version.PreRelease := IniFile.ReadBool(VersionInfoSection, 'PreRelease', Version.PreRelease);
+      Version.Special := IniFile.ReadBool(VersionInfoSection, 'Special', Version.Special);
+      Version.PrivateBuild := IniFile.ReadBool(VersionInfoSection, 'Private', Version.PrivateBuild);
+      Version.DLL := IniFile.ReadBool(VersionInfoSection, 'DLL', Version.DLL);
+      Version.Locale := IniFile.ReadInteger(VersionInfoSection, 'Locale', Version.Locale);
+      Version.CodePage := IniFile.ReadInteger(VersionInfoSection, 'CodePage', Version.CodePage);
       for ProjectInfoName := Low(ProjectInfoName) to High(ProjectInfoName) do
       begin
   			ProjectInfos[ProjectInfoName] := IniFile.ReadString
