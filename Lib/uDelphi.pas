@@ -457,14 +457,6 @@ begin
 
   for DelphiVersion := TDelphiVersion(GetDelphiVersionCount - 1) downto dvDelphi1 do
   begin
-  end;
-
-  for DelphiVersion := TDelphiVersion(GetDelphiVersionCount - 1) downto dvDelphi1 do
-  begin
-  end;
-
-  for DelphiVersion := TDelphiVersion(GetDelphiVersionCount - 1) downto dvDelphi1 do
-  begin
     if EndStr('_' + IntToStr(GetDelphiCompilerVersion(DelphiVersion)), FixedPackageFileName) then
     begin
       Result := DelphiVersion;
