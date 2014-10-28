@@ -11,7 +11,7 @@ type
     dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
     dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7,
     dvDelphi8, dvDelphi2005, dvDelphi2006, dvDelphi2007,
-    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5, dvDelphiXE6 {,..});
+    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5, dvDelphiXE6, dvDelphiXE7 {,..});
 
 const
   ReleaseYear: array[TDelphiVersion] of string = (
@@ -19,7 +19,7 @@ const
     '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
     '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
     '2003-12-22', '2004-10-12', '2005-11-23', '2007-03-16',
-    '2008-12-01', '2009-08-15', '2010-08-30', '2011-09-02', '2012-09-03', '2013-04-22', '2013-09-11', '2014-04-15');
+    '2008-12-01', '2009-08-15', '2010-08-30', '2011-09-02', '2012-09-03', '2013-04-22', '2013-09-11', '2014-04-15', '2014-09-02');
 
 const
   DProjDelphiId: array[TDelphiVersion] of string = (
@@ -27,7 +27,7 @@ const
     '', '', '', '', '', '', '',
     '', '', '', '', '', '6.0', '7.0', // dof
     '', '', '', '',
-    '12.0', '12.0', '12.3' {12.2 without update 1}, '13.4', '14.4', '14.6', '15.3' {15.1, 15.2}, '15.4'); // Project->PropertyGroup->ProjectVersion
+    '12.0', '12.0', '12.3' {12.2 without update 1}, '13.4', '14.4', '14.6', '15.3' {15.1, 15.2}, '15.4', '16.0'); // Project->PropertyGroup->ProjectVersion
 
   FirstUnicodeDelphi = dvDelphi2009;
 
