@@ -351,11 +351,13 @@ begin
 end;
 
 function GetDelphiVersionCount: SG;
+const
+  TwoVersionsInYear = 2013;
 begin
   Result := CurrentYear - 1995 + 7 + 1;
-  if CurrentYear > 2013 then
+  if CurrentYear >= TwoVersionsInYear then
   begin
-    Inc(Result, CurrentYear - 2013);
+    Inc(Result, CurrentYear - TwoVersionsInYear + 1);
   end;
 end;
 
