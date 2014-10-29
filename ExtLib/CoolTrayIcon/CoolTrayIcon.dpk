@@ -1,4 +1,4 @@
-package CoolTrayIcon_XE;
+package CoolTrayIcon;
 
 {$R *.res}
 {$R 'CoolTrayIcon.dcr'}
