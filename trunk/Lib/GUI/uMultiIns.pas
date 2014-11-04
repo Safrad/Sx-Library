@@ -13,7 +13,7 @@ var
 {
 	Return false if application instance already exists.
 }
-function InitInstance: BG;
+function InitInstance(const AllowMultiInstance: BG): BG;
 
 implementation
 
@@ -62,7 +62,7 @@ begin
 		PDWORD(@BSMRecipients), MessageID, wParam, lParam);
 end;
 
-function InitInstance: BG;
+function InitInstance(const AllowMultiInstance: BG): BG;
 var
 	Atom: TAtom;
 	UniqueAppStr: string;
@@ -88,7 +88,7 @@ begin
 	end
 	else
 	begin
-// TODO : if not RegisterParam(-NewInstance) then
+    if not AllowMultiInstance then
 		begin
 			Atom := GlobalAddAtom(PChar(GetCommandLine));
 			BroadcastFocusMessage(Atom, 0);

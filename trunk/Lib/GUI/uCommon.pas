@@ -127,12 +127,25 @@ end;
 
 var
 	LastUpdate: TDateTime;
+  AllowMultiInstanceParam: BG;
+
+procedure AllowMultiInstanceProc(const Value: string);
+begin
+  AllowMultiInstanceParam := True;
+end;
+
+function InitAllowMultiInstance: BG;
+begin
+  RegisterParam('multiinst', 'Allow multi-instance run.', AllowMultiInstanceProc);
+  ReadCommandLine(GetCommandLine);
+end;
 
 procedure CommonCreate(const Special: BG = False);
 begin
 	if not Special then
 	begin
-		if not InitInstance then
+    InitAllowMultiInstance;
+		if not InitInstance(AllowMultiInstanceParam) then
 			Halt(1);
 		InitializeLog;
 	end;
