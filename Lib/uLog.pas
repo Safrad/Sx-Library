@@ -149,7 +149,7 @@ constructor TLog.Create(const FileName: TFileName; const LogLevel: TMessageLevel
       if IsFileWritable(NewFileName) then Break;
 
       if Instance = 9 then Exit;
-      NewFileName := DelFileExt(FFileName) +  IntToStr(Instance) + ExtractFileExt(FFileName);
+      NewFileName := DelFileExt(FileName) +  IntToStr(Instance) + ExtractFileExt(FileName);
     end;
     Result := NewFileName;
   end;
