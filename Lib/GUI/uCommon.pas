@@ -8,7 +8,7 @@ uses
 {$ifend}
 	Graphics,
   uPictureFactory,
-	uTypes, uDForm, uOptions, uStrings,
+	uTypes, Forms, uOptions, uStrings,
 	Menus;
 
 {
@@ -29,7 +29,7 @@ uses
 }
 
 procedure CommonCreate(const Special: BG = False);
-procedure CommonForm(const Form: TDForm);
+procedure CommonForm(const Form: TForm);
 procedure CommonFree;
 
 procedure CommonFileMenu(const Menu: TMenu);
@@ -84,7 +84,7 @@ uses
 	uDIniFile, uSplash, uMenus, uMultiIns, uFiles, uAbout, uLog, uSounds, uFileExt, uParams, uAPI, uNewThread,
 	uMsgDlg, uMsg, uStart, ufOptions, uReg, uProjectInfo, uLink,
 	uWebUpdate, uStartup, uDictionary, uUsageInfo,
-	Classes, Windows, ExtCtrls, Forms, SysUtils;
+	Classes, Windows, ExtCtrls, SysUtils;
 
 type
 	TCommonMenu = class(TObject)
@@ -210,7 +210,7 @@ begin
 	end;
 end;
 
-procedure CommonForm(const Form: TDForm);
+procedure CommonForm(const Form: TForm);
 var
 	i: SG;
 	Menu: TMenu;
