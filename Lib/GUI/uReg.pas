@@ -11,6 +11,7 @@ type
 
 var
 	MyDocuments: string; // User documnets (Read and Write)
+	DownloadsDir: string; // User downloads
 
 function RootKeyToStr(const RootKey: HKEY): string;
 function RegValue(const RootKey: HKEY; const Key: string; const Name: string): string;
@@ -177,5 +178,10 @@ end;
 initialization
 {$IFNDEF NoInitialization}
 	MyDocuments := ShellFolder('Personal');
+	DownloadsDir := ShellFolder('{374DE290-123F-4565-9164-39C4925E467B}');
+	if DownloadsDir = '' then
+	begin
+		DownloadsDir := UserProfileDir + 'Downloads';
+	end;
 {$ENDIF NoInitialization}
 end.
