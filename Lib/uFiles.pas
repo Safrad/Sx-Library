@@ -17,6 +17,7 @@ var
 	SysDir,
 	WinDir, // Shared configuration files (Read and Write)
 	ProgramFilesDir,
+	UserProfileDir,
 	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
 	LocalAppDataDir,
   CompanyAppDataDir,
@@ -368,13 +369,15 @@ begin
 	end;
 
 	InitStartupEnvironment;
+	UserProfileDir := FindEnvironmentVariable('UserProfile', StartupEnvironment);
+	CorrectDir(UserProfileDir);
   {$ifndef Console}
 	CommonLocalAppDataDir := ShellFolder('Local AppData');
 	{$else}
 	CommonLocalAppDataDir := FindEnvironmentVariable('localappdata', StartupEnvironment);
 	if CommonLocalAppDataDir = '' then
 	begin
-		CommonLocalAppDataDir := FindEnvironmentVariable('UserProfile', StartupEnvironment);
+		CommonLocalAppDataDir := UserProfileDir;
 		CorrectDir(CommonLocalAppDataDir);
 		if not Aero then
 			CommonLocalAppDataDir := CommonLocalAppDataDir + 'Local Settings\Application Data\' // Used for Windows XP w/o Service Pack
