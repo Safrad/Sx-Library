@@ -1113,7 +1113,9 @@ begin
   if FileExists(Source) and (Source <> Dest) then
   begin
     Result := RenameFileEx(Source, Dest);
-  end;
+  end
+  else
+    Result := False;
 end;
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
