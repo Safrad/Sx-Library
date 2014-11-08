@@ -453,7 +453,7 @@ var
   DelphiVersion: TDelphiVersion;
   FixedPackageFileName: string;
 begin
-  FixedPackageFileName := RemoveSuffixF('+', RemoveSuffixF('plus', DelFileExt(PackageFileName)));
+  FixedPackageFileName := RemoveSuffixF('+', RemoveSuffixF('plus', RemoveSuffixF('_R', DelFileExt(PackageFileName))));
 
   Result := dvUnknown;
 
