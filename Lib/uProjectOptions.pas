@@ -169,7 +169,7 @@ type
     procedure RWBDSProj(const AFileName: TFileName; const Save: BG);
     function ReplaceFromFile(const FileNamePrefix: TFileName): BG;
     procedure Update;
-    function GetOutputFile: TFileName;
+    function GetOutputFile(const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): TFileName;
 		procedure WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
 
     property Enabled: BG read FEnabled write FEnabled;
@@ -956,7 +956,7 @@ begin
     Result := etPackage;}
 end;
 
-function TProjectOptions.GetOutputFile: TFileName;
+function TProjectOptions.GetOutputFile(const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): TFileName;
 begin
 	case ExecutableType of
   etProgram, etLibrary:
@@ -972,6 +972,8 @@ begin
 		ParseDPK;
   end;
   end;
+
+  Result := ReplaceDelphiVariables(Result, DelphiVersion, SystemPlatform);
 
   if Pos(':', Result) = 0 then
     Result := ExpandFileName(ExtractFilePath(FFileName) + Result); // ../
