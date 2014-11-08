@@ -58,6 +58,15 @@ begin
   AssertEquals(dvDelphiXE6, GetPackageVersion('CoolXE6.dpk'));
   AssertEquals(dvDelphiXE5, GetPackageVersion('Cool_XE5.dpk'));
   AssertEquals(dvDelphi2006, GetPackageVersion('Cool180.dpk'));
+
+  AssertEquals(dvDelphi3, GetPackageVersion('aaa_100_R.dpk'));
+  AssertEquals(dvDelphi2006, GetPackageVersion('Cool2006_R.dpk'));
+  AssertEquals(dvDelphi6, GetPackageVersion('Cool6plus_R.dpk'));
+  AssertEquals(dvDelphiXE6, GetPackageVersion('CoolDXE6_R.dpk'));
+  AssertEquals(dvDelphiXE6, GetPackageVersion('CoolXE6_R.dpk'));
+  AssertEquals(dvDelphiXE5, GetPackageVersion('Cool_XE5_R.dpk'));
+  AssertEquals(dvDelphi2006, GetPackageVersion('Cool180_R.dpk'));
+  
 end;
 
 initialization
