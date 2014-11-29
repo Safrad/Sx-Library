@@ -46,6 +46,8 @@ begin
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 		IdHTTP1.HandleRedirects := True;
+		IdHTTP1.Request.UserAgent := GetProjectInfo(piProductName);
+		IdHTTP1.Request.Referer := GetProjectInfo(piWeb);
 		if (not FileExists(TargetFileName)) or DeleteFileEx(TargetFileName) then
 		begin
       NotOk := True;
