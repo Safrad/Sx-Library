@@ -156,7 +156,7 @@ begin
     Source.Add('data=' + ReadStringFromFile(FileName));
     Result := DownloadFileWithPost('http://sx.rosada.cz/usage_info.php', Source, False, ResponseFileName);
 //    if ReadStringFromFile(ResponseFileName) <> 'ok' then
-//      raise Exception.Create('Invalid resonse.');
+//      raise Exception.Create('Invalid response.');
   finally
     Source.Free;
     DeleteFile(FileName);
