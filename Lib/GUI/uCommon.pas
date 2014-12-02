@@ -127,25 +127,35 @@ end;
 
 var
 	LastUpdate: TDateTime;
-  AllowMultiInstanceParam: BG;
 
 procedure AllowMultiInstanceProc(const Value: string);
 begin
-  AllowMultiInstanceParam := True;
+  // Handled earlier or unhandled
 end;
 
-function InitAllowMultiInstance: BG;
+function FoundMultiInstanceParam: BG;
+var
+  i: SG;
+  Param: string;
 begin
-  RegisterParam('multiinst', 'Allow multi-instance run.', AllowMultiInstanceProc);
-  ReadCommandLine(GetCommandLine);
+  for i := 1 to ParamCount do
+  begin
+    Param := LowerCase(ParamStr(i)) ;
+    if (Param = '-multiinst') or (Param = '/multiinst') then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+  Result := False;
 end;
 
 procedure CommonCreate(const Special: BG = False);
 begin
 	if not Special then
 	begin
-    InitAllowMultiInstance;
-		if not InitInstance(AllowMultiInstanceParam) then
+    RegisterParam('multiinst', 'Allow multi-instance run.', AllowMultiInstanceProc);
+		if not InitInstance(FoundMultiInstanceParam) then
 			Halt(1);
 		InitializeLog;
 	end;
