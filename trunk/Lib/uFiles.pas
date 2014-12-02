@@ -145,8 +145,8 @@ implementation
 
 uses
 	Math,
-	uMsg, uProjectInfo, uSorts, uCharset, {$ifndef Console}uReg,{$endif}
-	uOutputFormat, uMath, uLog, uSysInfo;
+	uMsg, uProjectInfo, uSorts, uCharset,
+	uOutputFormat, uMath, uLog;
 
 var
 	StartupEnvironment: array of TStringPair;
@@ -371,22 +371,19 @@ begin
 	InitStartupEnvironment;
 	UserProfileDir := FindEnvironmentVariable('UserProfile', StartupEnvironment);
 	CorrectDir(UserProfileDir);
-  {$ifndef Console}
-	CommonLocalAppDataDir := ShellFolder('Local AppData');
-	{$else}
 	CommonLocalAppDataDir := FindEnvironmentVariable('localappdata', StartupEnvironment);
 	if CommonLocalAppDataDir = '' then
 	begin
 		CommonLocalAppDataDir := UserProfileDir;
 		CorrectDir(CommonLocalAppDataDir);
-		if not Aero then
+		CommonLocalAppDataDir := CommonLocalAppDataDir + 'AppData\Local\';
+		if not DirectoryExists(CommonLocalAppDataDir) then
 			CommonLocalAppDataDir := CommonLocalAppDataDir + 'Local Settings\Application Data\' // Used for Windows XP w/o Service Pack
 		else
 			CommonLocalAppDataDir := CommonLocalAppDataDir + 'AppData\Local\';
 	end
   else
 		CorrectDir(CommonLocalAppDataDir);
-	{$endif}
 	CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
 
