@@ -12,7 +12,9 @@ uses
 
 const
 	{$ifdef GDIPlus}
-	SmoothingMode = SmoothingModeHighQuality; // SmoothingModeAntiAlias;
+	SmoothingMode = SmoothingModeHighQuality; // = SmoothingModeAntiAlias;
+	InterpolationMode = InterpolationModeHighQuality; // = InterpolationModeHighQualityBicubic;
+	PixelOffsetMode = PixelOffsetModeHighQuality;
 	{$endif}
 	IconExt = '.png'; // Prefered graphic format
 	PictureTypeCount = 10;
@@ -11899,6 +11901,8 @@ begin
 		FGraphics := nil;
 		FGraphics := TGPGraphics.Create(Canvas.Handle);
 		FGraphics.SmoothingMode := SmoothingMode;
+		FGraphics.InterpolationMode := InterpolationMode;
+		FGraphics.PixelOffsetMode := PixelOffsetMode;
 {		GWidth := FWidth;
 		GHeight := FHeight;}
 		GHandle := Canvas.Handle;
