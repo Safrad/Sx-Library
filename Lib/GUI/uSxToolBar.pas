@@ -2,12 +2,13 @@ unit uSxToolBar;
 
 interface
 
-{$R *.RES}
 uses
   uTypes,
   uSxAction,
   Classes,
   ExtCtrls;
+
+{$R *.dcr}
 
 var
 	IconSize: SG; // Size of button on toolbar.

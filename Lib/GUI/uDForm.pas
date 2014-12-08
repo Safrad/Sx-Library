@@ -2,12 +2,12 @@ unit uDForm;
 
 interface
 
-{$R *.RES}
-
 uses
 	uTypes, uDBitmap,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls;
+
+{$R *.dcr}
 
 type
 	TBackground = (baNone, baUser, baStandard, baGradient, baOpenGL, baOpenGLBitmap);

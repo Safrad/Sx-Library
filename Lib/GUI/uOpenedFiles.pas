@@ -2,11 +2,11 @@ unit uOpenedFiles;
 
 interface
 
-{$R *.RES}
-
 uses
 	uTypes, uReopen, uOpenedFileItem,
 	Windows, SysUtils, Menus, Graphics, Classes, Controls, Messages, Dialogs;
+
+{$R *.dcr}
 
 type
 	TOnNewFileEvent = function(Sender: TObject; const Item: TOpenedFileItem): BG of object;

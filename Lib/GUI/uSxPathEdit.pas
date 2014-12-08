@@ -2,10 +2,11 @@ unit uSxPathEdit;
 
 interface
 
-{$R *.RES}
 uses
 	uTypes, uDEdit, uDButton,
 	Windows, Messages, SysUtils, Classes, Controls, StdCtrls, ExtCtrls;
+
+{$R *.dcr}
 
 type
 	// TODO -oSafrad : For Files Kind accept [files, dirs]
