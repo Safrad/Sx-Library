@@ -2,11 +2,12 @@ unit uDLabel;
 
 interface
 
-{$R *.RES}
 uses
 	uTypes, uMath, uDWinControl,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl, uDrawStyle;
+
+{$R *.dcr}
 
 type
 	TDLabel = class(TDWinControl)

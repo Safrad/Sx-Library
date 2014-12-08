@@ -2,10 +2,11 @@ unit uDTimer;
 
 interface
 
-{$R *.RES}
 uses
 	uTypes, uMath,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms;
+
+{$R *.dcr}
 
 type
 	TDTimerEvent = procedure(Sender: TObject) of object;

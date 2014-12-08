@@ -2,11 +2,12 @@ unit uDGauge;
 
 interface
 
-{$R *.RES}
 uses
 	uTypes, uDWinControl, uDrawStyle,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDBitmap, uDispl;
+
+{$R *.dcr}
 
 type
 	TDGauge = class(TDWinControl)

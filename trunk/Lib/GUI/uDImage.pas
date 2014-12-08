@@ -2,12 +2,12 @@ unit uDImage;
 
 interface
 
-{$R *.RES}
-
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Menus,
 	ExtCtrls, StdCtrls,
 	uDBitmap, uTypes, uMath, uDTimer, uSimulation, uDIniFile, uDWinControl;
+
+{$R *.dcr}
 
 type
 	TZoomMenu = (zmIn, zmOut, zm12, zm1, zm2, zmFitImage, zmFitWidth, zmFitHeight, zmCustom,

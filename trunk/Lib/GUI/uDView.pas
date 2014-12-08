@@ -2,11 +2,11 @@ unit uDView;
 
 interface
 
-{$R *.RES}
-
 uses
 	uTypes, uMath, uFiles, uDImage, uDIniFile, uTextFilter,
 	Classes, Controls, Windows, Graphics, SysUtils, Messages;
+
+{$R *.dcr}
 
 const
 	MinColumnWidth = 3;

@@ -2,11 +2,12 @@ unit uDButton;
 
 interface
 
-{$R *.RES}
 uses
 	uTypes, uMath, uFiles, uDBitmap,
 	Windows, Messages, Classes, Controls, Forms, Graphics, StdCtrls,
 	ExtCtrls, CommCtrl, uWave, uDTimer;
+
+{$R *.dcr}
 
 type
 	THighlight = (hlNone, hlRect, hlBar, hlRectMov, hlBarHorz, hlBarVert, hlUnderlight);
