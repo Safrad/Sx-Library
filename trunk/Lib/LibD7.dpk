@@ -46,7 +46,7 @@ contains
   uDEdit in 'GUI\uDEdit.pas',
   uDButton in 'GUI\uDButton.pas',
   uNumericComboBox in 'GUI\uNumericComboBox.pas',
-  ufOpenedFiles in 'GUI\ufOpenedFiles.pas' {fOpenedFiles},
+  uOpenedFiles in 'GUI\uOpenedFiles.pas',
   uDMemo in 'GUI\uDMemo.pas',
   uCompLog7 in 'GUI\uCompLog7.pas',
   uSxPathEdit in 'GUI\uSxPathEdit.pas',
