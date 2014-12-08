@@ -37,6 +37,7 @@ requires
   IndyProtocols;
 
 contains
+  FastMM4,
   uDView in 'GUI\uDView.pas',
   uDTimer in 'GUI\uDTimer.pas',
   uDPanel in 'GUI\uDPanel.pas',
