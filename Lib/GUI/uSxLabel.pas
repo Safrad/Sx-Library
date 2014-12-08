@@ -18,8 +18,6 @@ type
 		{ Published declarations }
 	end;
 
-procedure Register;
-
 implementation
 
 uses Types, Graphics, uTypes;
@@ -40,11 +38,6 @@ begin
 		Canvas.Pen.Style := ps ;
 		Canvas.Brush.Color := bc ;
 	end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TSxLabel]);
 end;
 
 end.

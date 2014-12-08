@@ -16,8 +16,6 @@ type
 		{ Published declarations }
 	end;
 
-procedure Register;
-
 implementation
 
 uses uTypes;
@@ -28,11 +26,6 @@ begin
 		SelectAll
 	else
 		inherited;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDMemo]);
 end;
 
 end.

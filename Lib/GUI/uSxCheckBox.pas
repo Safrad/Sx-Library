@@ -23,8 +23,6 @@ type
 		{ Published declarations }
 	end;
 
-procedure Register;
-
 implementation
 
 uses
@@ -33,11 +31,6 @@ uses
 
 const
 	Border = 2;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TSxCheckBox]);
-end;
 
 { TSxCheckBox }
 

@@ -7,8 +7,6 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls;
 
-{$R *.dcr}
-
 type
 	TBackground = (baNone, baUser, baStandard, baGradient, baOpenGL, baOpenGLBitmap);
 
@@ -105,8 +103,6 @@ const
 
 function LgToPx(const Value: SG): SG; overload;
 function LgToPx(const Value: SG; const OriginalDPI: SG): SG; overload;
-
-procedure Register;
 
 var
 	FormBorder: SG = 8;
@@ -890,11 +886,6 @@ begin
 		FCaption := Value;
 		inherited Caption := Value; // + ' (' + NToS(ClientWidth) + ' ' + CharTimes + ' ' + NToS(ClientHeight) + ')';
 	end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDForm]);
 end;
 
 procedure TDForm.Center;

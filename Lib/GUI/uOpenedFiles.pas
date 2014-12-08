@@ -6,8 +6,6 @@ uses
 	uTypes, uReopen, uOpenedFileItem,
 	Windows, SysUtils, Menus, Graphics, Classes, Controls, Messages, Dialogs;
 
-{$R *.dcr}
-
 type
 	TOnNewFileEvent = function(Sender: TObject; const Item: TOpenedFileItem): BG of object;
 	TOnLoadFromFileEvent = function(Sender: TObject; var FileName: TFileName): BG of object;
@@ -154,8 +152,6 @@ type
 		// OnCloseQuery
 		CanClose := OpenedFiles.CanClose;
 		}
-procedure Register;
-
 implementation
 
 uses
@@ -1430,11 +1426,6 @@ end;
 function TOpenedFiles.GetActualItem: TOpenedFileItem;
 begin
 	Result := GetItem(FIndex);
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TOpenedFiles]);
 end;
 
 function TOpenedFiles.GetFilePos(const Index: SG): string;

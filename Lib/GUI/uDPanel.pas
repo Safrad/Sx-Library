@@ -7,8 +7,6 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls;
 
-{$R *.dcr}
-
 type
 	TDPanel = class(TPanel)
 	private
@@ -33,8 +31,6 @@ type
 		property FontShadow: SG read FFontShadow write SetFontShadow default 0;
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
 	end;
-
-procedure Register;
 
 implementation
 
@@ -123,11 +119,6 @@ begin
 	end;
 
 	if Assigned(FOnPaint) then FOnPaint(Self);
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDPanel]);
 end;
 
 end.

@@ -273,7 +273,6 @@ const
 	IndexFile = 'index' + HTMLExt;
 	IndexPHPFile = 'index' + '.php';
 	nbsp = '&nbsp;'; // Non-dividable Blank SPace.
-	ComponentPageName = 'Sx';
 
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);

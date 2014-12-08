@@ -8,8 +8,6 @@ uses
   Classes,
   ExtCtrls;
 
-{$R *.dcr}
-
 var
 	IconSize: SG; // Size of button on toolbar.
 
@@ -35,8 +33,6 @@ type
     property TextButtons: BG read FTextButtons write SetTextButtons;
   end;
 
-procedure Register;
-
 implementation
 
 uses
@@ -46,11 +42,6 @@ uses
   uDForm,
   uStrings,
   Controls;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TSxToolBar]);
-end;
 
 { TSxToolBar }
 
