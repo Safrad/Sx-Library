@@ -18,4 +18,4 @@ $(sx-library)\ExtLib\OpenGL
 $(sx-library)\ExtLib\SafeMM
 $(sx-library)\Lib
 $(sx-library)\Lib\Parser
-$(sx-library)\Lib\GUI
+$(sx-library)\GUI
