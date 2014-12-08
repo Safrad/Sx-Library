@@ -24,7 +24,6 @@ type
 		{$ifend}
 	end;
 
-procedure Register;
 procedure SetDesign(C: TEdit; ParserMessages: TParserMessages); overload;
 procedure SetDesign(C: TComboBox; ParserMessages: TParserMessages); overload;
 procedure SetControlDesign(C: TEdit; const WrongData: BG); overload;
@@ -35,11 +34,6 @@ implementation
 uses
 	uColor,
 	Graphics;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDEdit]);
-end;
 
 procedure SetDesign(C: TComboBox; ParserMessages: TParserMessages);
 begin

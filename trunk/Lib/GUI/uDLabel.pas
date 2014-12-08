@@ -7,8 +7,6 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl, uDrawStyle;
 
-{$R *.dcr}
-
 type
 	TDLabel = class(TDWinControl)
 	private
@@ -101,8 +99,6 @@ type
 
 		property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
 	end;
-
-procedure Register;
 
 implementation
 
@@ -387,11 +383,6 @@ begin
 				SetFocus;
 				Message.Result := 1;
 			end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDLabel]);
 end;
 
 end.

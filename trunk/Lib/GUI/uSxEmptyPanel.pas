@@ -23,14 +23,7 @@ type
     property Caption : string read FCaption;
 end;
 
-procedure Register;
-
 implementation
-
-procedure Register;
-begin
-  RegisterComponents(ComponentPageName, [TSxEmptyPanel]);
-end;
 
 { TSxEmptyPanel }
 

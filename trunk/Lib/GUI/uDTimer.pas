@@ -6,8 +6,6 @@ uses
 	uTypes, uMath,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms;
 
-{$R *.dcr}
-
 type
 	TDTimerEvent = procedure(Sender: TObject) of object;
 
@@ -70,7 +68,6 @@ type
 	end;
 
 procedure TryTimer;
-procedure Register;
 
 var
 	NowTime: S8; // Actual PerformanceCounter Value
@@ -369,11 +366,6 @@ begin
 		FInterval := Max(Value, 1);
 		InitInterval;
 	end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDTimer]);
 end;
 
 procedure TDTimer.Step;

@@ -6,8 +6,6 @@ uses
 	uTypes, uDEdit, uDButton,
 	Windows, Messages, SysUtils, Classes, Controls, StdCtrls, ExtCtrls;
 
-{$R *.dcr}
-
 type
 	// TODO -oSafrad : For Files Kind accept [files, dirs]
 	// Combo with history
@@ -41,16 +39,9 @@ type
 		property OnChange: TOnChangeEvent read FOnChange write SetOnChange;
 	end;
 
-procedure Register;
-
 implementation
 
 uses Forms, uFiles, uSystem, uStrings;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TSxPathEdit]);
-end;
 
 { TSxPathEdit }
 

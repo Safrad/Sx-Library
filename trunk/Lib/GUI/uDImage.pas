@@ -7,8 +7,6 @@ uses
 	ExtCtrls, StdCtrls,
 	uDBitmap, uTypes, uMath, uDTimer, uSimulation, uDIniFile, uDWinControl;
 
-{$R *.dcr}
-
 type
 	TZoomMenu = (zmIn, zmOut, zm12, zm1, zm2, zmFitImage, zmFitWidth, zmFitHeight, zmCustom,
 		zmCenter, zmGrate, zmGrateColor, zmCopy);
@@ -253,8 +251,6 @@ const
 		out SX1, SY1, SXW, SYH: Integer;
 		out DX1, DY1, DXW, DYH: Integer;
 		var BmpSource2: TDBitmap); }
-
-procedure Register;
 
 implementation
 
@@ -1842,11 +1838,6 @@ begin
 	VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT:
 		Message.Result := 1;
 	end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDImage]);
 end;
 
 procedure TDImage.Serialize(const IniFile: TDIniFile; const Save: BG);

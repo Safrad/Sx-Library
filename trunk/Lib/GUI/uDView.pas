@@ -6,8 +6,6 @@ uses
 	uTypes, uMath, uFiles, uDImage, uDIniFile, uTextFilter,
 	Classes, Controls, Windows, Graphics, SysUtils, Messages;
 
-{$R *.dcr}
-
 const
 	MinColumnWidth = 3;
 
@@ -184,8 +182,6 @@ type
 		property OnColumnClick: TLVColumnClickEvent read FOnColumnClick write FOnColumnClick;
 		property OnCellClick: TOnCellClick read FOnCellClick write FOnCellClick;
 	end;
-
-procedure Register;
 
 implementation
 
@@ -1795,11 +1791,6 @@ begin
 
 		FLastKey := Key;
 	end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDView]);
 end;
 
 procedure TDView.InitTableHeight;

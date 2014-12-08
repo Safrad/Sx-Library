@@ -33,8 +33,6 @@ type
 		property Value: Extended read GetValue;
 	end;
 
-procedure Register;
-
 implementation
 
 uses uInputFormat, uParserMsg, uDEdit, uMath;
@@ -56,11 +54,6 @@ begin
 	end;
 
 //	inherited Change;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TNumericComboBox]);
 end;
 
 constructor TNumericComboBox.Create(AOwner: TComponent);

@@ -13,17 +13,10 @@ type
     procedure SetItemIndex(const AItemIndex: SG);
   end;
 
-procedure Register;
-
 implementation
 
 uses
   Classes;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TSxComboBox]);
-end;
 
 { TSxComboBox }
 

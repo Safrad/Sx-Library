@@ -7,8 +7,6 @@ uses
 	Windows, Messages, Classes, Controls, Forms, Graphics, StdCtrls,
 	ExtCtrls, CommCtrl, uWave, uDTimer;
 
-{$R *.dcr}
-
 type
 	THighlight = (hlNone, hlRect, hlBar, hlRectMov, hlBarHorz, hlBarVert, hlUnderlight);
 	TButtonLayout = (blGlyphLeft, blGlyphRight, blGlyphTop, blGlyphBottom);
@@ -101,8 +99,6 @@ type
 		property OnMouseMove;
 		property OnClick;}
 	end;
-
-procedure Register;
 
 implementation
 
@@ -696,11 +692,6 @@ begin
 		FHighLight := Value;
 		Invalidate;
 	end;
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDButton]);
 end;
 
 {procedure TDButton.SetDefault(Value: Boolean);

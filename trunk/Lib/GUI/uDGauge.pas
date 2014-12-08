@@ -7,8 +7,6 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDBitmap, uDispl;
 
-{$R *.dcr}
-
 type
 	TDGauge = class(TDWinControl)
 	private
@@ -70,8 +68,6 @@ type
 		property Enabled;
 		property Visible;
 	end;
-
-procedure Register;
 
 implementation
 
@@ -360,11 +356,6 @@ begin
 	end;
 
 	Bitmap.DrawToDC(Canvas.Handle, 0, 0);
-end;
-
-procedure Register;
-begin
-	RegisterComponents(ComponentPageName, [TDGauge]);
 end;
 
 end.
