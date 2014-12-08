@@ -1,2 +1,2 @@
 -$(sx-library)
-$(sx-library)\Lib\LibD%DelphiShortName%.bpl
+$(sx-library)\Packages\LibD%DelphiShortName%.bpl
