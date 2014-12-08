@@ -45,7 +45,6 @@ contains
   uDLabel in 'GUI\uDLabel.pas',
   uDImage in 'GUI\uDImage.pas',
   uDGauge in 'GUI\uDGauge.pas',
-  uDForm in 'GUI\uDForm.pas',
   uDEdit in 'GUI\uDEdit.pas',
   uDButton in 'GUI\uDButton.pas',
   uNumericComboBox in 'GUI\uNumericComboBox.pas',
