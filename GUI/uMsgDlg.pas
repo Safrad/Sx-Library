@@ -84,7 +84,6 @@ const
 	DlgWait = 15; // Default
 var
   DisplayDialogs: Boolean = True;
-  UseWindowsDialog: Boolean;
 
 procedure ShowMessages;
 function MsgDlg(
@@ -106,6 +105,8 @@ implementation
 
 {$R *.DFM}
 uses
+  uVisualOptions,
+  SynTaskDialog,
 	uFiles, uColor, uDictionary,
 	uStrings, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uSimulation,
 	Registry, MMSystem, Math;
@@ -465,6 +466,35 @@ begin
   end;
 end;
 
+procedure PlaySoundForMsgType(const MsgType: TMessageLevel);
+begin
+  case MsgType of
+  mlConfirmation:
+    PlayWinSound(wsQuestion);
+  mlDebug,
+  mlInformation,
+  mlWarning:
+    PlayWinSound(wsExclamation);
+  mlError,
+  mlFatalError:
+    PlayWinSound(wsCriticalStop);
+  end;
+end;
+
+const
+  MessageLevelToTaskDialog: array[TMessageLevel] of TTaskDialogIcon = (tiQuestion, tiShield, tiInformation, tiWarning, tiError, tiShield, tiBlank);
+
+function StringsToString(const AStrings: array of string; const Sepearator: string): string;
+var
+  i: SG;
+begin
+  Result := '';
+  for i := 0 to Length(AStrings) - 1 do
+  begin
+    Result := Result + AStrings[i] + Sepearator;
+  end;
+end;
+
 function MsgDlg(
 	const Text: string;
 	const Param: array of string;
@@ -476,9 +506,24 @@ var
 	FoundSame: BG;
 	Ignore: PIgnore;
 	B: SG;
+  TaskDialog: TTaskDialog;
 begin
 	Result := -1; // If Window X is pressed (None of button pressed), then result is unknown.
   if not DisplayDialogs then Exit;
+
+  case VisualOptions.DialogVisualStyle of
+  dsWindowsVista:
+  begin
+    PlaySoundForMsgType(MsgType);
+    TaskDialog.Inst := '';
+    TaskDialog.Content := ReplaceParam(Text, Param);
+    TaskDialog.Buttons := StringsToString(Buttons, FullSep);
+    Result := TaskDialog.Execute([], mrOk, [tdfAllowDialogCancellation, tdfUseCommandLinks], MessageLevelToTaskDialog[MsgType]) - 100;
+    if Result < -1 then
+      Result := -1;
+    Exit;
+  end;
+  end;
 
 	Ignore := nil;
 (*
@@ -563,17 +608,7 @@ begin
 
 	if (IgnoreAll <> iaAll) and (FoundSame = False) and (FormDraw(fMsgDlg) = False) then
 	begin
-		case MsgType of
-		mlConfirmation:
-			PlayWinSound(wsQuestion);
-		mlDebug,
-		mlInformation,
-		mlWarning:
-			PlayWinSound(wsExclamation);
-		mlError,
-		mlFatalError:
-			PlayWinSound(wsCriticalStop);
-		end;
+    PlaySoundForMsgType(MsgType);
 
 		ShowDlg;
 		Ignore := Ignores.Get(fMsgDlg.ActItem);
@@ -711,20 +746,71 @@ begin
       Result := Result + [B];
 end;
 
+function DlgButtonsToCommonButtons(const Buttons: TDlgButtons): TCommonButtons;
+begin
+  Result := [];
+(*  if mbOK in Buttons then
+    Result := Result + [cbOK];
+  if mbYes in Buttons then
+    Result := Result + [cbYes];
+  if mbRetry in Buttons then
+    Result := Result + [cbRetry];
+  if mbNo in Buttons then
+    Result := Result + [cbNo];
+  if mbCancel in Buttons then
+    Result := Result + [cbCancel];
+  if mbClose in Buttons then
+    Result := Result + [cbClose];*)
+end;
+
+function DlgButtonsToButtons(const Buttons: TDlgButtons): string;
+var
+  i: SG;
+begin
+  Result := '';
+  for i := 0 to Length(DlgBtnNames) - 1 do
+  begin
+    if TDlgBtn(i) in Buttons then
+      Result := Result + DlgBtnNames[TDlgBtn(i)] + FullSep;
+  end;
+end;
+
+function SynDialogIndexToDlgBtn(const Index: SG): TDlgBtn;
+const
+  SynDialogButtonOffset = 100;
+begin
+  if Index >= SynDialogButtonOffset then
+    Result := TDlgBtn(Index - SynDialogButtonOffset)
+  else
+    Result := mbCancel;
+end;
+
 function MessageD(const Text: string; const Param: array of string; const MsgType: TMessageLevel;
 	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn; overload;
 var
 	B: TDlgBtn;
 	But: array of string;
 	Res, i: SG;
+  TaskDialog: TTaskDialog;
 begin
 	Result := mbCancel;
 	if not DisplayDialogs then Exit;
 
-  If UseWindowsDialog then
+  case VisualOptions.DialogVisualStyle of
+  dsWindowsXP:
   begin
     Result := ModalResultToDlgBtn(Dialogs.MessageDlg(ReplaceParam(Text, Param), MessageLevelToMsgDlgType(MsgType), DlgButtonsToMsgDlgButtons(Buttons), 0));
     Exit;
+  end;
+  dsWindowsVista:
+  begin
+    PlaySoundForMsgType(MsgType);
+    TaskDialog.Inst := '';
+    TaskDialog.Content := ReplaceParam(Text, Param);
+    TaskDialog.Buttons := DlgButtonsToButtons(Buttons);
+    Result := SynDialogIndexToDlgBtn(TaskDialog.Execute(DlgButtonsToCommonButtons(Buttons), mrOk, [tdfAllowDialogCancellation, tdfUseCommandLinks], MessageLevelToTaskDialog[MsgType]));
+    Exit;
+  end;
   end;
 
 	i := 0;

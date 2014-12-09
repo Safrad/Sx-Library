@@ -32,7 +32,13 @@ function GetPassword(out Password: string): BG;
 implementation
 
 {$R *.DFM}
-uses uStrings, uMsg, uDictionary;
+uses
+  Windows,
+  Messages,
+  Dialogs,
+  SynTaskDialog,
+  uVisualOptions,
+  uStrings, uMsg, uDictionary;
 
 var
 	fGetStr: TfGetStr;
@@ -43,8 +49,39 @@ begin
 	ButtonDef.Enabled :=  EditInput.Text <> DefS;
 end;
 
+
 function GetStr(Caption: string; var CurVal: string; const DefVal: string; const MaxLength: UG = 0; StrMasked: BG = False): Boolean;
+var
+  TaskDialog: TTaskDialog;
+  TaskDialogFlags: TTaskDialogFlags;
 begin
+  case VisualOptions.DialogVisualStyle of
+  dsWindowsXP:
+  begin
+    if not StrMasked then
+    begin
+      Result := InputQuery(Caption, '', CurVal);
+
+      if UG(Length(CurVal)) > MaxLength then
+        SetLength(CurVal, MaxLength);
+      Exit;
+    end;
+  end;
+  dsWindowsVista:
+  begin
+    TaskDialog.Inst := Caption;
+    TaskDialog.Content := '';
+    TaskDialog.Query := CurVal;
+    TaskDialogFlags := [tdfAllowDialogCancellation, tdfQuery];
+    if StrMasked then
+      TaskDialogFlags := TaskDialogFlags + [tdfQueryMasked];
+    Result := TaskDialog.Execute([cbOk, cbCancel], 0, TaskDialogFlags, tiQuestion) = mrOk;
+    if Result then
+      CurVal := TaskDialog.Query;
+    Exit;
+  end;
+  end;
+
 	if not Assigned(fGetStr) then
 	begin
 		fGetStr := TfGetStr.Create(Application.MainForm);
