@@ -16,6 +16,6 @@ $(sx-library)\ExtLib\GraphicEx
 $(sx-library)\ExtLib\IGDIPlus
 $(sx-library)\ExtLib\OpenGL
 $(sx-library)\ExtLib\SafeMM
-$(sx-library)\Lib
+$(sx-library)\Core
 $(sx-library)\Parser
 $(sx-library)\GUI
