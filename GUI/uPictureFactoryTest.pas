@@ -31,12 +31,10 @@ begin
     Check(Bmp = nil);
     Bmp := PictureFactory.GetBitmap('my');
     Check(Bmp = nil);
-    Bmp := PictureFactory.GetBitmap('Lib');
+    Bmp := PictureFactory.GetBitmap('LibTest');
     Check(Bmp <> nil);
     Bmp := PictureFactory.GetBitmap('Lib');
-    Check(Bmp <> nil);
-    Bmp := PictureFactory.GetBitmap('SxLib');
-    Check(Bmp <> nil);
+    Check(Bmp = nil);
   finally
     PictureFactory.Free;
   end;
