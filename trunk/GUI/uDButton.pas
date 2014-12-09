@@ -58,7 +58,7 @@ type
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
-			protected
+	protected
 		procedure CreateHandle; override;
 		procedure CreateParams(var Params: TCreateParams); override;
 		procedure SetButtonStyle(ADefault: Boolean); override;
