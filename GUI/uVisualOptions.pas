@@ -20,6 +20,7 @@ function VisualOptions: TVisualOptions;
 implementation
 
 uses
+  SysUtils,
   uSysInfo;
 
 var
@@ -51,4 +52,10 @@ begin
   FDialogVisualStyle := Value;
 end;
 
+initialization
+
+finalization
+{$IFNDEF NoFinalization}
+  FreeAndNil(GVisualOptions);
+{$ENDIF NoFinalization}
 end.
