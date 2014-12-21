@@ -79,6 +79,7 @@ var
   Compiler: TCompiler;
   i: SG;
 begin
+  Compilers := nil;
 	Reg := TRegistry.Create(KEY_QUERY_VALUE);
 	try
 		Reg.RootKey := HKEY_CURRENT_USER;
