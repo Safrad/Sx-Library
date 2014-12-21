@@ -543,6 +543,14 @@ begin
   end;
 end;
 
+function IsDebugCondition(const Condition: string): BG;
+var
+  ReducedCondition: string;
+begin
+  ReducedCondition := DelBESpaceF(Condition);
+  Result := (ReducedCondition = '''$(Cfg_2)''!=''''') or (ReducedCondition = '''$(Configuration)|$(Platform)'' == ''Debug|AnyCPU''');
+end;
+
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 
 	procedure ProcessNode(const Node: IXMLNode);
@@ -753,7 +761,7 @@ begin
             if iNode.HasAttribute('Condition') then
             begin
               Name := iNode.Attributes['Condition'];
-              if Name = '''$(Cfg_2)''!=''''' then // DEBUG
+              if IsDebugCondition(Name) then
               begin
                 iNode := iNode.NextSibling;
                 Continue;
