@@ -763,37 +763,76 @@ begin
     Result := Result + [cbClose];*)
 end;
 
-function DlgButtonsToButtons(const Buttons: TDlgButtons): string;
+type
+   TArrayOfDlgBtn = array of TDlgBtn;
+
+function DlgButtonsToArray(const Buttons: TDlgButtons): TArrayOfDlgBtn;
 var
   i: SG;
+  Index: SG;
+  Count: SG;
 begin
-  Result := '';
+	Count := 0;
   for i := 0 to Length(DlgBtnNames) - 1 do
   begin
     if TDlgBtn(i) in Buttons then
-      Result := Result + DlgBtnNames[TDlgBtn(i)] + FullSep;
+    begin
+      Inc(Count);
+    end;
+  end;
+
+	SetLength(Result, Count);
+
+  Index := 0;
+  for i := 0 to Length(DlgBtnNames) - 1 do
+  begin
+    if TDlgBtn(i) in Buttons then
+    begin
+      Result[Index] := TDlgBtn(i);
+      Inc(Index);
+    end;
   end;
 end;
 
-function SynDialogIndexToDlgBtn(const Index: SG): TDlgBtn;
+function IndexToDlgBtn(const Index: SG; const Buttons: TArrayOfDlgBtn): TDlgBtn;
+begin
+  if Index >= 0 then
+    Result := Buttons[Index]
+  else
+    Result := mbCancel;
+end;
+
+function SynDialogIndexToDlgBtn(const Index: SG; const Buttons: TArrayOfDlgBtn): TDlgBtn;
 const
   SynDialogButtonOffset = 100;
 begin
   if Index >= SynDialogButtonOffset then
-    Result := TDlgBtn(Index - SynDialogButtonOffset)
+    Result := IndexToDlgBtn(Index - SynDialogButtonOffset, Buttons)
   else
     Result := mbCancel;
+end;
+
+function DlgButtonsToButtonNames(const Buttons: TArrayOfDlgBtn): TArrayOfString;
+var
+  i: SG;
+begin
+	SetLength(Result, Length(Buttons));
+  for i := 0 to Length(Buttons) - 1 do
+  begin
+    Result[i] := DlgBtnNames[Buttons[i]];
+  end;
 end;
 
 function MessageD(const Text: string; const Param: array of string; const MsgType: TMessageLevel;
 	const Buttons: TDlgButtons; const TimeLeft: UG = DlgWait): TDlgBtn; overload;
 var
-	B: TDlgBtn;
-	But: array of string;
-	Res, i: SG;
+	ButtonNames: TArrayOfString;
+  DlgButtons: TArrayOfDlgBtn;
   TaskDialog: TTaskDialog;
 begin
 	Result := mbCancel;
+  ButtonNames := nil;
+  DlgButtons := nil;
 	if not DisplayDialogs then Exit;
 
   case VisualOptions.DialogVisualStyle of
@@ -802,43 +841,25 @@ begin
     Result := ModalResultToDlgBtn(Dialogs.MessageDlg(ReplaceParam(Text, Param), MessageLevelToMsgDlgType(MsgType), DlgButtonsToMsgDlgButtons(Buttons), 0));
     Exit;
   end;
+  end;
+
+  DlgButtons := DlgButtonsToArray(Buttons);
+  ButtonNames := DlgButtonsToButtonNames(DlgButtons);
+
+  case VisualOptions.DialogVisualStyle of
   dsWindowsVista:
   begin
     PlaySoundForMsgType(MsgType);
     TaskDialog.Inst := '';
     TaskDialog.Content := ReplaceParam(Text, Param);
-    TaskDialog.Buttons := DlgButtonsToButtons(Buttons);
-    Result := SynDialogIndexToDlgBtn(TaskDialog.Execute(DlgButtonsToCommonButtons(Buttons), mrOk, [tdfAllowDialogCancellation, tdfUseCommandLinks], MessageLevelToTaskDialog[MsgType]));
-    Exit;
+    TaskDialog.Buttons := StringsToString(ButtonNames, FullSep);
+    Result := SynDialogIndexToDlgBtn(TaskDialog.Execute(DlgButtonsToCommonButtons(Buttons), mrOk, [tdfAllowDialogCancellation, tdfUseCommandLinks], MessageLevelToTaskDialog[MsgType]), DlgButtons);
+  end;
+  dsSxLibrary:
+  begin
+    Result := IndexToDlgBtn(MsgDlg(Text, Param, False, MsgType, ButtonNames, DlgWait), DlgButtons);
   end;
   end;
-
-	i := 0;
-	for B := Low(B) to High(B) do
-		if B in Buttons then Inc(i);
-	SetLength(But, i);
-	i := 0;
-	for B := Low(B) to High(B) do
-		if B in Buttons then
-		begin
-			But[i] := DlgBtnNames[B];
-			Inc(i);
-		end;
-
-	Res := MsgDlg(Text, Param, False, MsgType, But, DlgWait);
-
-	i := 0;
-	Result := mbCancel;
-	for B := Low(B) to High(B) do
-		if B in Buttons then
-		begin
-			if i = Res then
-			begin
-				Result := B;
-				Break;
-			end;
-			Inc(i);
-		end;
 end;
 
 function MessageD(const Text: string; const MsgType: TMessageLevel;
