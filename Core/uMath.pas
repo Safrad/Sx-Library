@@ -109,6 +109,7 @@ procedure FillOrderU1(var Desc; const Count: UG);
 procedure FillOrderU4(var Desc; const Count: UG);
 procedure FillOrderUG(var Desc; const Count: UG);
 procedure Reverse4(var Desc; Size: UG);
+procedure ReverseG(var Desc; Size: UG);
 function Checksum(var Desc; Size: U4): U4;
 function Hash(const Desc; Size: U4): U4;
 procedure Swap02(var Desc; Count: UG; Step: S4);
@@ -1469,6 +1470,25 @@ asm
 	pop ebx
 	pop esi
 {$endif}
+end;
+
+procedure ReverseG(var Desc; Size: UG);
+var
+  P1, P2: PSG;
+  i: SG;
+  d1, d2: SG;
+begin
+  P1 := PSG(@Desc);
+  P2 := PSG(PByte(@Desc) + SizeOf(SG) * (Size - 1));
+  for i := 0 to Size div 2 - 1 do
+  begin
+    d1 := P1^;
+    d2 := P2^;
+    P1^ := d2;
+    P2^ := d1;
+    Inc(P1);
+    Dec(P2);
+  end;
 end;
 
 function Checksum(var Desc; Size: U4): U4; register;
