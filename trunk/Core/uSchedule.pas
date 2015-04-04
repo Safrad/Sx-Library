@@ -38,7 +38,8 @@ type
 		procedure UpdateNextRun;
 		function NextRunToStr: string;
     function IsActive: BG;
-		function ToString: string;
+		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
+
     procedure Clone(const Source: TSchedule);
 
     procedure RWIni(const IniFile: TDIniFile; const Section: string; const Save: BG);
