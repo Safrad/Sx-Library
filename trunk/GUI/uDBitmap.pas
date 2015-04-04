@@ -8298,7 +8298,6 @@ var
 
 	X, Y: UG;
 	SX, SY: UG;
-  RX, RY: SG;
 	ByteSX, ByteDX: UG;
 
 	Suma24: array[0..2] of Int64;
