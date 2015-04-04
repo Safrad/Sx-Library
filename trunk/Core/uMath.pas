@@ -93,9 +93,9 @@ procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
 procedure CheckBool(var Bool: LongBool); overload;
 
-{$if CPUX64}
+{$ifdef CPUX64}
 procedure Order(var I1, I2: S4); overload;
-{$ifend}
+{$endif}
 procedure Order(var I1, I2: SG); overload;
 procedure Order(var I1, I2: UG); overload;
 procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
@@ -1049,7 +1049,7 @@ begin
 	Bool := B4(U4(Bool) and 1);
 end;
 
-{$if CPUX64}
+{$ifdef CPUX64}
 procedure Order(var I1, I2: S4);
 var I: S4;
 begin
@@ -1060,7 +1060,7 @@ begin
 		I2 := I;
 	end;
 end;
-{$ifend}
+{$endif}
 
 procedure Order(var I1, I2: SG);
 var I: SG;
