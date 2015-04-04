@@ -1432,7 +1432,7 @@ var
   d1, d2: U4;
 begin
   P1 := PU4(@Desc);
-  P2 := PU4(PByte(@Desc) + SizeOf(U4) * Size);
+  P2 := PU4(PByte(@Desc) + SizeOf(U4) * (Size - 1));
   for i := 0 to Size div 2 - 1 do
   begin
     d1 := P1^;
@@ -1440,7 +1440,7 @@ begin
     P1^ := d2;
     P2^ := d1;
     Inc(P1);
-    Inc(P2);
+    Dec(P2);
   end;
 {$else}
 asm
