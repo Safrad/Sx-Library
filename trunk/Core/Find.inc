@@ -24,7 +24,7 @@ begin
 			M := (L + R) div 2
 		else
 		begin
-			M := L + TIndex(Value - AValue[L]) * U8(R - L) div TIndex(AValue[R] - AValue[L]); // Calibrate
+			M := L + TIndex(Value - AValue[L]) * S8(R - L) div TIndex(AValue[R] - AValue[L]); // Calibrate
 			if M < L then M := L
 			else if M > R then M := R;
 		end;
