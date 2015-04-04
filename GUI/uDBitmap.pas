@@ -7891,10 +7891,11 @@ var
 	PD: PPixel;
 	CC1, CC2: TRGBA;
 	cy: TCoor;
-	BmpDByteX: UG;
-	ByteXD: UG;
 {$ifdef CPUX64}
   cx: TCoor;
+{$else}
+	BmpDByteX: UG;
+	ByteXD: UG;
 {$endif}
 begin
 	if X1 > TCoor(GraphMaxX) then Exit;
@@ -7925,16 +7926,9 @@ begin
 
 	CC1 := ColorToRGB(C1);
 	CC2 := ColorToRGB(C2);
-	CC1.A := CC1.G;
-	Exchange(CC1.G, CC1.B);
-	CC2.A := CC2.G;
-	PD := GetPixelAddr(X1, Y1);
-	ByteXD := ByteX;
-	BmpDByteX := X2 - X1 + 1;
-	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
+{$ifdef CPUX64}
 	for cy := Y1 to Y2 do
 	begin
-{$ifdef CPUX64}
   	PD := GetPixelAddr(GraphMinX, cy);
   	for cx := X1 to X2 do
   	begin
@@ -7946,6 +7940,15 @@ begin
       Inc(PD);
     end;
 {$else}
+	CC1.A := CC1.G;
+	Exchange(CC1.G, CC1.B);
+	CC2.A := CC2.G;
+	PD := GetPixelAddr(X1, Y1);
+	ByteXD := ByteX;
+	BmpDByteX := X2 - X1 + 1;
+	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
+	for cy := Y1 to Y2 do
+	begin
 		asm
 		pushad
 		mov edi, PD
