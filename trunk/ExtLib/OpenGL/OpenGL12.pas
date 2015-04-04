@@ -4470,11 +4470,11 @@ end;
 
 procedure LoadProcAddresses; 
 var
-  Handle: Cardinal;
+  Handle: THandle;
 begin
   if GLHandle <> INVALID_MODULEHANDLE then
   begin
-    Handle := Cardinal(GLHandle); // Kylix compatiblilty trick
+    Handle := GLHandle;
 
     glAccum := GetProcAddress(Handle, 'glAccum');
     glAlphaFunc := GetProcAddress(Handle, 'glAlphaFunc'); 
@@ -4933,7 +4933,7 @@ begin
 
   if GLUHandle <> INVALID_MODULEHANDLE then
   begin
-    Handle := Cardinal(GLUHandle); // Kylix compatiblilty trick
+    Handle := GLUHandle;
 
     gluBeginCurve := GetProcAddress(Handle, 'gluBeginCurve'); 
     gluBeginPolygon := GetProcAddress(Handle, 'gluBeginPolygon'); 
