@@ -21,7 +21,7 @@ type
 		constructor Create;
 
 		function ReadFromString(const Version: string; const Messages: TParserMessages = nil): BG;
-		function ToString: string;
+		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
 		function ToStrictString: string;
 
 		function Compare(const Version: TProjectVersion): SG;
