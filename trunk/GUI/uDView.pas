@@ -69,7 +69,7 @@ type
 		FColumns: TColumns;
 
 		FColumnOrder: TArrayOfSG;
-		FRowOrder: TArrayOfU4;
+		FRowOrder: TArrayOfSG;
 		FSelectedRows: TArrayOfBG;
     FEnableColumnSelection: BG;
 
@@ -149,7 +149,7 @@ type
 
 		// Rows
 		property RowCount: SG read FAllRowCount write SetRowCount;
-		property RowOrder: TArrayOfU4 read FRowOrder;
+		property RowOrder: TArrayOfSG read FRowOrder;
 		property RowHeight: SG read FRowHeight;
 		property ActualRow: SG read FActualRow write SetActualRow;
 
@@ -1283,7 +1283,7 @@ begin
 						Fatal(E, Self);
 				end;
 				if FSortBySwap2[c] then
-					Reverse4(FRowOrder[0], FFilteredRowCount);
+					ReverseG(FRowOrder[0], FFilteredRowCount);
 			end
 			else
 			begin // Automatic sort
