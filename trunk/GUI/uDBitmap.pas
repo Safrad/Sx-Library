@@ -8325,7 +8325,7 @@ var
 	TranColorR: TRGBA;
 	TranCount: UG;
 begin
-	// TODO optimalize
+	// TODO optimize
 	if (NewX = 0) or (NewY = 0) then Exit;
 
 	if BmpS = nil then BmpS := Self;
