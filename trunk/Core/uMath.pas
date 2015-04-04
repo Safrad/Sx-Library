@@ -1432,7 +1432,7 @@ var
   d1, d2: U4;
 begin
   P1 := PU4(@Desc);
-  P2 := PU4(PByte(@Desc) + Size);
+  P2 := PU4(PByte(@Desc) + SizeOf(U4) * Size);
   for i := 0 to Size div 2 - 1 do
   begin
     d1 := P1^;
