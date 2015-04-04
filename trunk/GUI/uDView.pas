@@ -69,7 +69,7 @@ type
 		FColumns: TColumns;
 
 		FColumnOrder: TArrayOfSG;
-		FRowOrder: TArrayOfSG;
+		FRowOrder: TArrayOfU4;
 		FSelectedRows: TArrayOfBG;
     FEnableColumnSelection: BG;
 
@@ -149,7 +149,7 @@ type
 
 		// Rows
 		property RowCount: SG read FAllRowCount write SetRowCount;
-		property RowOrder: TArrayOfSG read FRowOrder;
+		property RowOrder: TArrayOfU4 read FRowOrder;
 		property RowHeight: SG read FRowHeight;
 		property ActualRow: SG read FActualRow write SetActualRow;
 
@@ -1276,7 +1276,7 @@ begin
 			begin // User sort
 				try
 					FSortBy := FSortByIndexes[c];
-          if c <  Length(FColumns) then
+          if c < Length(FColumns) then
   					FOnColumnClick(Self, FColumns[c]);
 				except
 					on E: Exception do
