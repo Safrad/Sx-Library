@@ -11,7 +11,7 @@ type
     procedure SetDialogVisualStyle(const Value: TDialogVisualStyle);
   public
     constructor Create;
-  published
+
     property DialogVisualStyle: TDialogVisualStyle read FDialogVisualStyle write SetDialogVisualStyle;
   end;
 
