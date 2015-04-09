@@ -478,20 +478,38 @@ begin
 end;
 
 function WidthToByteX24(const Width: U4): U4;
+{$ifdef CPUX64}
+begin
+	Result := (3 * Width + 3) and (High(U4) - 3);
+{$else}
 asm
 	lea eax, [eax*2+eax]
 	add eax, 3
 	and eax, $fffffffc
 	mov Result, eax
+{$endif}
 end;
 
 function WidthToByteX32(const Width: U4): U4;
+{$ifdef CPUX64}
+begin
+	Result := 4 * Width;
+{$else}
 asm
 	shl eax, 2
 	mov Result, eax
+{$endif}
 end;
 
 function WidthToByteX(const Width: U4): U4;
+{$ifdef CPUX64}
+begin
+	{$ifdef BPP4}
+	Result := 4 * Width;
+	{$else}
+	Result := (3 * Width + 3) and (High(U4) - 3);
+	{$endif}
+{$else}
 asm
 	{$ifdef BPP4}
 	shl eax, 2
@@ -502,6 +520,7 @@ asm
 	and eax, $fffffffc
 	mov Result, eax
 	{$endif}
+{$endif}
 end;
 
 procedure Lef00;
