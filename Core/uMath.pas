@@ -1433,7 +1433,7 @@ var
   d1, d2: U4;
 begin
   P1 := PU4(@Desc);
-  P2 := PU4(PByte(@Desc) + SizeOf(U4) * (Size - 1));
+  P2 := PU4(SG(@Desc) + SizeOf(U4) * (Size - 1));
   for i := 0 to Size div 2 - 1 do
   begin
     d1 := P1^;
@@ -1479,7 +1479,7 @@ var
   d1, d2: SG;
 begin
   P1 := PSG(@Desc);
-  P2 := PSG(PByte(@Desc) + SizeOf(SG) * (Size - 1));
+  P2 := PSG(SG(@Desc) + SizeOf(SG) * (Size - 1));
   for i := 0 to Size div 2 - 1 do
   begin
     d1 := P1^;
