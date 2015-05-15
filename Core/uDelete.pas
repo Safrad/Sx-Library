@@ -31,6 +31,9 @@ uses
   Math, Windows,
   uDIniFile, uFolder, uFiles, uLog, uMath, uStrings, uSorts, uMsg;
 
+const
+  OptionsFile = '_delete.ini';
+
 function ReadOptions(const FileName: TFileName): TDeleteOptions;
 const
   Section = 'Delete';
@@ -55,7 +58,12 @@ function OwnFiles(const Name: string): BG;
 begin
 	Result :=
   	(Name = '_SxDelete.log') or
-  	(Name = '_delete.ini');
+  	(Name = OptionsFile);
+end;
+
+function HasOwnFiles(const FileName: string): BG;
+begin
+	Result := FileExistsEx(FileName + OptionsFile);
 end;
 
 function DeleteTemp(const Path: string; const DateLimit: TDateTime): TDateTime;
@@ -89,7 +97,7 @@ begin
       end
       else if LastChar(FileItem.Name) = '\' then
       begin
-		    if not FileExists(Path + FileItem.Name + '_delete.ini') then
+		    if not FileExists(Path + FileItem.Name + OptionsFile) then
         begin
           ItemDateTime := DeleteTemp(Path + FileItem.Name, DateLimit);
           Assert(ItemDateTime <> 0);
@@ -223,7 +231,7 @@ begin
       i := 0;
       while i < Folder.Files.Count do
       begin
-        if OwnFiles(TFileItem(Folder.Files.GetObject(i)).Name) then
+        if OwnFiles(TFileItem(Folder.Files.GetObject(i)).Name) or HasOwnFiles(Folder.Path + TFileItem(Folder.Files.GetObject(i)).Name) then
         begin
           Folder.Files.Delete(i);
         end
