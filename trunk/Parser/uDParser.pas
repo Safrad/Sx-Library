@@ -353,17 +353,16 @@ begin
 		end;
 	'0':
 		begin
-			Inc(BufRI);
-			case BufR[BufRI] of
+			case BufR[BufRI + 1] of
 			'x', 'X':
 				begin
 					Base := 16;
-					Inc(BufRI);
+					Inc(BufRI, 2);
 				end;
 			'o', 'O':
 				begin
 					Base := 8;
-					Inc(BufRI);
+					Inc(BufRI, 2);
 				end;
 			end;
 		end;
