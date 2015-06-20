@@ -56,7 +56,7 @@ type
 		FILE_FLAG_SEQUENTIAL_SCAN // Default value
 
 		FILE_FLAG_WRITE_THROUGH // For write only
-		FILE_FLAG_NO_BUFFERING // Be carefully for use this
+		FILE_FLAG_NO_BUFFERING // Be carefully for use this, causes "Error 87 Parameter Incorrect" on some computers
 		}
 	TFileCharset = (fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE { Windows } , fcUTF32BE, fcUTF32LE
 		{ Windows } , fcUTF7a, fcUTF7b, fcUTF7c, fcUTF7d, fcUTF1, fcUTFEBCDIC, fcSCSU, fcBOCU1,
