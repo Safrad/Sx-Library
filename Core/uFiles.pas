@@ -99,6 +99,8 @@ function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG
 function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
 function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
 function ReadStringFromFile(const FileName: TFileName; const Limit: U8): string; overload;
+function ReadStringFromFileEx(const FileName: TFileName; out Data: AnsiString): TFileCharset;
+
 function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG; overload;
 function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG; overload;
 
@@ -114,6 +116,7 @@ function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG; 
 function ExecuteDialog(const Dialog: TObject; var FileName: TFileName): BG; overload;
 {$endif}
 function SameFiles(const FileName1, FileName2: TFileName): BG;
+function SameFilesNoPrefix(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
 procedure ReplaceIfChanged(const OrigFileName, TempFileName: TFileName); overload;
 procedure ReplaceIfChanged(const TempFileName: TFileName); overload;
@@ -1710,6 +1713,31 @@ begin
 	end;
 end;
 
+function ReadStringFromFileEx(const FileName: TFileName; out Data: AnsiString): TFileCharset;
+var
+	F: TFile;
+begin
+	Result := fcUTF8;
+	Data := '';
+	F := TFile.Create;
+	try
+		if F.Open(FileName, fmReadOnly) then
+		begin
+			SetLength(Data, F.FileSize);
+			if Length(Data) >= 1 then
+			begin
+				F.BlockRead(Data[1], F.FileSize);
+				if F.Charset = fcUTF8 then
+					Data := UTF8ToAnsi(Data)
+			end;
+			Result := F.Charset;
+			F.Close;
+		end;
+	finally
+		F.Free;
+	end;
+end;
+
 function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG; overload;
 var
 	F: TFile;
@@ -2204,6 +2232,32 @@ begin
 			File2 := TFile.Create;
 			try
 				if File2.Open(FileName2, fmReadOnly) then
+				begin
+					Result := CompareFiles(File1, File2);
+					File2.Close;
+				end;
+				File1.Close;
+			finally
+				File2.Free;
+			end;
+		end;
+	finally
+		File1.Free;
+	end;
+end;
+
+function SameFilesNoPrefix(const FileName1, FileName2: TFileName): BG;
+var
+	File1, File2: TFile;
+begin
+	Result := False;
+	File1 := TFile.Create;
+	try
+		if File1.Open(FileName1, fmReadOnly, FILE_FLAG_NO_PREFIX) then
+		begin
+			File2 := TFile.Create;
+			try
+				if File2.Open(FileName2, fmReadOnly, FILE_FLAG_NO_PREFIX) then
 				begin
 					Result := CompareFiles(File1, File2);
 					File2.Close;
