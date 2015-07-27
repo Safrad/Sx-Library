@@ -17,6 +17,7 @@ type
     MaxDirs: SG;
     SelectionType: TSelectionType;
     AcceptFiles: BG;
+    Recursive: BG;
     Test: BG;
     DisableLog: BG;
     TimeLimit: SG;
@@ -45,6 +46,7 @@ begin
     Result.Mask := IniFile.ReadString(Section, 'Mask', '*');
     Result.MaxDirs := IniFile.ReadNum(Section, 'Max', MaxInt);
     Result.AcceptFiles := IniFile.ReadBool(Section, 'AcceptFiles', False);
+    Result.Recursive := IniFile.ReadBool(Section, 'Recursive', False);
     Result.SelectionType := stLinear;
     IniFile.RWEnum(Section, TypeInfo(TSelectionType), U1(Result.SelectionType), False);
     Result.Test := IniFile.ReadBool(Section, 'Test', False);
@@ -66,7 +68,7 @@ begin
 	Result := FileExistsEx(FileName + OptionsFile);
 end;
 
-function DeleteTemp(const Path: string; const DateLimit: TDateTime): TDateTime;
+function DeleteTemp(const Path: string; const DeleteOptions: TDeleteOptions; const LogFile: TLog; const DateLimit: TDateTime): TDateTime;
 var
   Folder: TFolder;
   ItemDateTime, NewestDate: TDateTime;
@@ -99,10 +101,22 @@ begin
       begin
 		    if not FileExists(Path + FileItem.Name + OptionsFile) then
         begin
-          ItemDateTime := DeleteTemp(Path + FileItem.Name, DateLimit);
+          if DeleteOptions.Recursive then
+            ItemDateTime := DeleteTemp(Path + FileItem.Name, DeleteOptions, LogFile, DateLimit)
+          else
+            ItemDateTime := FileItem.DateTime;
           Assert(ItemDateTime <> 0);
           if (ItemDateTime < DateLimit) then
-            RemoveDirEx(Path + FileItem.Name);
+          begin
+            if not DeleteOptions.Test then
+            begin
+              RemoveDirEx(Path + FileItem.Name);
+            end
+            else
+            begin
+              LogFile.Add(Path + FileItem.Name + ' selected.', mlInformation);
+            end;
+          end;
         end
         else
 	        ItemDateTime := MaxInt;
@@ -112,7 +126,16 @@ begin
         GetFileDateTime(Path + FileItem.Name, CreationTime, LastAccessTime, ModifiedTime);
         ItemDateTime := Max(FileTimeToDateTime(CreationTime), FileItem.DateTime);
         if (ItemDateTime < DateLimit) then
-          DeleteFileEx(Path + FileItem.Name);
+        begin
+          if not DeleteOptions.Test then
+          begin
+            DeleteFileEx(Path + FileItem.Name);
+          end
+          else
+          begin
+            LogFile.Add(Path + FileItem.Name + ' selected.', mlInformation);
+          end;
+        end;
       end;
 
       if ItemDateTime > NewestDate then
@@ -214,7 +237,7 @@ begin
       if DeleteOptions.TimeLimit = 0 then
       	ErrorMsg('TimeLimit not specified.')
       else
-	      DeleteTemp(Path, Now - DeleteOptions.TimeLimit);
+	      DeleteTemp(Path, DeleteOptions, LogFile, Now - DeleteOptions.TimeLimit);
       Exit;
     end;
     Folder := TFolder.Create;
