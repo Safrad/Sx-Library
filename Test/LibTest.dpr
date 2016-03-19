@@ -17,6 +17,7 @@ uses
   uCharsetTest in 'uCharsetTest.pas',
   uDelphiTest in 'uDelphiTest.pas',
   uFileTest in 'uFileTest.pas',
+  uFilesTest in 'uFilesTest.pas',
   uGeometryTest in 'uGeometryTest.pas',
   uXYPolygonTest in 'uXYPolygonTest.pas',
   uStringsTest in 'uStringsTest.pas',
