@@ -301,7 +301,9 @@ begin
 		end;
 	end;
 
-	if InsertPos > FReopenCount - 1 then InsertPos := FReopenCount - 1;
+	if InsertPos > FReopenCount - 1 then
+		InsertPos := FReopenCount - 1;
+
 	for i := InsertPos downto 1 do
 	begin
 		FReopenItems[i].FileName := FReopenItems[i - 1].FileName;
