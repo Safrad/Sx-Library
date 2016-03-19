@@ -6,12 +6,11 @@ uses
   Classes,
   Menus,
   uSxToolBar,
+  uSxRibbon,
   uSxAction;
 
 type
-  TGUIDesign = (gdMainMenu, gdToolbar, gdMainMenuAndToolbar
-// TODO : Implement    gdSxGUI
-  );
+  TGUIDesign = (gdMainMenu, gdToolbar, gdMainMenuAndToolbar, gdSxRibbon);
 
   TSxGUI = class(TComponent)
   private
@@ -20,6 +19,7 @@ type
     FGUIDesign: TGUIDesign;
     FMainMenu: TMainMenu;
     FSxToolBar: TSxToolBar;
+    FSxRibbon: TSxRibbon;
     procedure SetSxAction(const Value: TSxAction);
     procedure SxActionToMenu(const SxAction: TSxAction; const MenuItem: TMenuItem);
     procedure SxActionsToMenu; overload;
@@ -71,6 +71,14 @@ begin
 
     if FOwner is TCustomForm then
       TCustomForm(FOwner).InsertComponent(FMainMenu);
+  end;
+  gdSxRibbon:
+  begin
+    FSxRibbon := TSxRibbon.Create(FOwner);
+    FSxRibbon.SxAction := FSxAction;
+
+    if FOwner is TCustomForm then
+      TCustomForm(FOwner).InsertComponent(FSxRibbon);
   end;
   end;
 
