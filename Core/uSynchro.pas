@@ -21,7 +21,7 @@ type
 
 function SynchroReportToString(const SynchroReport: TSynchroReport): string;
 
-procedure Synchro(const Source, Dest: string; const DeleteTarget: BG; var SynchroReport: TSynchroReport);
+function Synchro(const Source, Dest: string; const DeleteTarget: BG; var SynchroReport: TSynchroReport): BG;
 
 implementation
 
@@ -46,7 +46,7 @@ begin
   Result := Result + 'File Deleted: ' + NToS(SynchroReport.FileDeleted) + ' (' + BToStr(SynchroReport.FileDeletedData) + ')' + LineSep;
 end;
 
-procedure Synchro(const Source, Dest: string; const DeleteTarget: BG; var SynchroReport: TSynchroReport);
+function Synchro(const Source, Dest: string; const DeleteTarget: BG; var SynchroReport: TSynchroReport): BG;
 type
 	PFileInfo = ^TFileInfo;
 	TFileInfo = packed record // 20
@@ -63,13 +63,8 @@ var
 	IsFile, IsDir: BG;
 	SearchRec: TSearchRec;
 	FileInfo: PFileInfo;
-//	Line: PMes;
 begin
-{	if DirectoryExistsEx(Dest) = False then
-	begin
-		uFiles.CreateDirEx(Dest);
-	end;}
-//	Inc(Level);
+  Result := True;
 	FileNamesD := TData.Create(True);
 	FileNamesD.ItemSize := SizeOf(TFileInfo);
 
@@ -94,8 +89,13 @@ begin
 		end;
 		ErrorCode := FindNext(SearchRec);
 	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Dest, ErrorCode);
 	SysUtils.FindClose(SearchRec);
+	if ErrorCode <> ERROR_NO_MORE_FILES then
+  begin
+    IOError(Dest, ErrorCode);
+    Result := False;
+    Exit
+  end;
 
 	ErrorCode := FindFirst(Source + '*.*', faAnyFile, SearchRec);
 	while ErrorCode = NO_ERROR do
@@ -136,12 +136,6 @@ begin
 			begin
 				if Copy then
 				begin
-{						if Display then
-					begin
-						Line := Mess.Add;
-						Line.CommandLine := 'Create: ' + Dest + SearchRec.Name;
-					end
-					else}
 					CopyDirOnly(Source + SearchRec.Name, Dest + SearchRec.Name);
 					Inc(SynchroReport.DirCreated);
 				end
@@ -149,22 +143,15 @@ begin
 				begin
 					CopyFileDateTime(Source + SearchRec.Name, Dest + SearchRec.Name);
 				end;
-//					if {(Display = False) or} (Found = True) then
-				Synchro(Source + SearchRec.Name, Dest + SearchRec.Name, DeleteTarget, SynchroReport);
+				if not Synchro(Source + SearchRec.Name, Dest + SearchRec.Name, DeleteTarget, SynchroReport) then
+          Result := False;
 			end
 			else
 			begin
 				if Copy then
 				begin
-{					if Display then
-					begin
-						Line := Mess.Add;
-						Line.CommandLine := 'Copy: ' + Dest + SearchRec.Name;
-					end
-					else
-					begin}
-						uFiles.CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False);
-//					end;
+					if not uFiles.CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False) then
+            Result := False;
 					if Found then
           begin
 						Inc(SynchroReport.FileReplaced);
@@ -185,10 +172,14 @@ begin
 		end;
 		ErrorCode := FindNext(SearchRec);
 	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Source, ErrorCode);
 	SysUtils.FindClose(SearchRec);
+	if ErrorCode <> ERROR_NO_MORE_FILES then
+  begin
+    IOError(Source, ErrorCode);
+    Result := False;
+    Exit;
+  end;
 
-//	if Level > 1 then
 	if DeleteTarget then
 	begin
 		FileInfo := FileNamesD.GetFirst;
@@ -196,37 +187,28 @@ begin
 		begin
 			if FileInfo.Found = False then
 			begin
-{					if Display then
+        if LastChar(FileInfo.Name) = '\' then
         begin
-          Line := Mess.Add;
-          Line.CommandLine := 'Delete: ' + Dest + FileInfo.Name;
-        end
-        else}
-        begin
-          if LastChar(FileInfo.Name) = '\' then
+          if not RemoveDirsEx(Dest + FileInfo.Name, True) then
           begin
-            RemoveDirsEx(Dest + FileInfo.Name, True);
-            Inc(SynchroReport.DirDeleted);
-          end
-          else
-          begin
-{							Line := Mess.Add;
-            Line.Index := 0;
-            Line.Count := 0;
-            Line.Time := NoTime;
-            Line.ExitCode := 0;
-            Line.CommandLine := Dest + FileInfo.Name;}
-            uFiles.DeleteFileEx(Dest + FileInfo.Name);
-            Inc(SynchroReport.FileDeleted);
-            Inc(SynchroReport.FileDeletedData, FileInfo.Size);
+            Result := False;
           end;
+          Inc(SynchroReport.DirDeleted);
+        end
+        else
+        begin
+          if not uFiles.DeleteFileEx(Dest + FileInfo.Name) then
+          begin
+            Result := False;
+          end;
+          Inc(SynchroReport.FileDeleted);
+          Inc(SynchroReport.FileDeletedData, FileInfo.Size);
         end;
 			end;
 			Inc(SG(FileInfo), FileNamesD.ItemMemSize);
 		end;
 	end;
 	FreeAndNil(FileNamesD);
-//	Dec(Level);
 end;
 
 end.
