@@ -10,7 +10,7 @@ uses
 type
   TRunState = (rsStoped, rsStarted);
 
-  TStopMode = (smNever {Green}, smAsPossible{Yellow}, smScheduled{Red});
+  TStopMode = (smNever{Green}, smAsPossible{Yellow}, smScheduled{Red});
 
   TSxServer = class
   private
@@ -39,7 +39,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Start;
+    procedure Start; virtual;
     procedure Stop;
     procedure ForceStop;
     procedure Restart(const Force: BG);

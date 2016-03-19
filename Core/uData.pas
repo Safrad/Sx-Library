@@ -4,6 +4,7 @@ interface
 
 uses
 	uTypes,
+  uInterator,
 	SysUtils;
 
 type
@@ -70,6 +71,8 @@ type
 		function IsEmpty: Boolean;
 		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
 
+    function GetInterator: TInterator;
+
 		property ItemSize: UG read FItemSize write SetItemSize;
 		property ItemSh: UG read FItemSh; // Binary shift
 		property ItemMemSize: UG read FItemMemSize; // Item size in memory
@@ -80,6 +83,15 @@ type
 		// Import & Export
 		// procedure Serialize(const IniFile: TDIniFile; const Save: BG);
 	end;
+
+  TDataInterator = class(TInterator)
+  private
+    FData: TData;
+  protected
+    function GetData(const Index: SG): TObject; override;
+  public
+  	constructor Create(const AData: TData);
+  end;
 
 implementation
 
@@ -437,5 +449,23 @@ end;
 	begin
 	IniFile.RW
 	end; *)
+
+function TData.GetInterator: TInterator;
+begin
+	Result := TDataInterator.Create(Self);
+end;
+
+{ TDataInterator }
+
+constructor TDataInterator.Create(const AData: TData);
+begin
+  FData := AData;
+  FCount := AData.Count;
+end;
+
+function TDataInterator.GetData(const Index: SG): TObject;
+begin
+	Result := FData.GetObject(Index);
+end;
 
 end.

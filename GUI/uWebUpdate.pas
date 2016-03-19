@@ -14,7 +14,8 @@ const
 procedure DownloadFileEx(const AURL: string; const TargetFileName: string; const Caption: string);
 {$endif}
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
-function DownloadData(const AURL: string): string;
+function DownloadData(const AURL: string): string; overload;
+function DownloadData(const AURL: string; const AUserName: string; const APassword: string): string; overload;
 function DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string): BG;
 function GetWebVersion(const Web: string): string;
 {$ifndef Console}
@@ -142,6 +143,26 @@ begin
     LogAdd('Download data ' + AddQuoteF(AURL));
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
+		IdHTTP1.HandleRedirects := True;
+    Result := IdHTTP1.Get(AURL);
+	finally
+		IdHTTP1.Free;
+	end;
+end;
+
+function DownloadData(const AURL: string; const AUserName: string; const APassword: string): string;
+var
+	IdHTTP1: TIdHTTP;
+begin
+  if LogDebug then
+    LogAdd('Download data ' + AddQuoteF(AURL));
+	IdHTTP1 := TIdHTTP.Create(nil);
+	try
+    IdHTTP1.Request.Clear;
+    IdHTTP1.Request.BasicAuthentication:= true;
+    IdHTTP1.Request.UserName := AUserName;
+    IdHTTP1.Request.Password := APassword;
+
 		IdHTTP1.HandleRedirects := True;
     Result := IdHTTP1.Get(AURL);
 	finally
