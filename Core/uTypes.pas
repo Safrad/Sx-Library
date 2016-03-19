@@ -147,7 +147,7 @@ type
 //	F6 = Real48;
 	F8 = Double;
 {$ifdef CPUX64}
-  FA = Extended80;
+  FA = {$if CompilerVersion >= 30}Extended{$else}Extended80{$ifend};
 {$else}
   FA = Extended;
 {$endif}
