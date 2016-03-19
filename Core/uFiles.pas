@@ -1005,30 +1005,40 @@ end;
 
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 var
-	F: TFile;
 	ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime;
+  FHandle: THandle;
 begin
 	Result := False;
-	F := TFile.Create;
-	try
-		if F.Open(FileName, fmReadAndWrite) then
+	FHandle := CreateFile(
+		PChar(FileName),  // pointer to name of the file
+		GENERIC_WRITE, // access (read-write) mode
+		FILE_SHARE_READ or FILE_SHARE_WRITE,  // share mode
+		nil, // pointer to security attributes
+		OPEN_EXISTING, // how to create
+		FILE_FLAG_BACKUP_SEMANTICS {FILE_ATTRIBUTE_NORMAL}, // file attributes
+		0 // handle to file with attributes to copy
+	);
+	if FHandle <> INVALID_HANDLE_VALUE then
+	begin
+    Result := GetFileTime(FHandle, @ACreationTime, @ALastAccessTime, @ALastWriteTime);
+    if Result then
+    begin
+      Result := SetFileTime(FHandle, @ACreationTime, @ALastAccessTime, @LastWriteTime);
+      if Result = False then
+        IOError(FileName, GetLastError);
+    end
+    else
+    begin
+      IOError(FileName, GetLastError);
+    end;
+		if CloseHandle(FHandle) = False then
 		begin
-			Result := GetFileTime(F.Handle, @ACreationTime, @ALastAccessTime, @ALastWriteTime);
-			if Result then
-			begin
-				Result := SetFileTime(F.Handle, @ACreationTime, @ALastAccessTime, @LastWriteTime);
-				if Result = False then
-					IOError(FileName, GetLastError);
-			end
-			else
-			begin
-				IOError(FileName, GetLastError);
-			end;
-
-			F.Close(False);
+			IOError(FileName, GetLastError);
 		end;
-	finally
-		F.Free;
+	end
+	else
+	begin
+		IOError(FileName, GetLastError);
 	end;
 end;
 
