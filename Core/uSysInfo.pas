@@ -157,14 +157,18 @@ begin
 			else
 				S := S + 'XP';
 		end
-		else
+		else if OS.dwMajorVersion = 6 then
 		begin
 			case OS.dwMinorVersion of
-			0: S := S + 'Vista'
-			else
-				S := S + IntToStr(6 + OS.dwMinorVersion);
-			end;
-		end;
+			0: S := S + 'Vista';
+      1: S := S + '7';
+      2: S := S + '8';
+      3: S := S + '8.1';
+      else S := S + '10';
+      end;
+		end
+		else // if OS.dwMajorVersion = 10 then
+      S := S + IntToStr(OS.dwMajorVersion);
 	end;
 	VER_PLATFORM_WIN32_CE: // 3
 		S := 'Windows CE'
