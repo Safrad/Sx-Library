@@ -25,7 +25,7 @@
 * Windows **10** (x86, x64)
 * Windows **8/8.1** (x86, x64)
 * Windows **7** (x86, x64)
-* Windows **XP* (x86, x64)
+* Windows **XP** (x86, x64)
 * Windows **Vista** (x86, x64)
 * Windows **Server 2003/2008/2012** (x86, x64)
 * Windows **2000** (not tested)
