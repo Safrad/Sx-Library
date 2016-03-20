@@ -39,3 +39,7 @@
 
 * Add all folders and subfolders into Delphi Library path.
 * Open and install "Packages\LibD{n}.dpk". Where {n} is you Delphi version.
+
+## License
+
+* GNU Lesser General Public License
