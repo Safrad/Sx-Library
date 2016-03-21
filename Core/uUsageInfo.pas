@@ -13,6 +13,7 @@ procedure TryUploadData;
 implementation
 
 uses
+  Windows,
   SysUtils,
   Classes,
   uStrings,

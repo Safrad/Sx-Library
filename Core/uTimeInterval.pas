@@ -36,7 +36,7 @@ type
     function ToPeriod: string;
     function ToYear: string;
     function Contains(const DateTime: TDateTime): BG;
-  published
+
     property FromDateTime: TDateTime read FFromDateTime write FFromDateTime;
     property ToDateTime: TDateTime read FToDateTime write FToDateTime;
   end;
