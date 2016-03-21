@@ -110,7 +110,7 @@ begin
           begin
             if not DeleteOptions.Test then
             begin
-              RemoveDirEx(Path + FileItem.Name);
+              RemoveDirsEx(Path + FileItem.Name, True);
             end
             else
             begin
