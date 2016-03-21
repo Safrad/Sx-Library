@@ -23,6 +23,7 @@ procedure CommonFree;
 implementation
 
 uses
+  uConsole,
   SysUtils,
   uLog, uFiles, uDIniFile, uStart, uUsageInfo,
   uProjectInfo;
@@ -32,7 +33,9 @@ begin
   InitializeLog;
 
   if OutputInfo then
-    Writeln(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piFileVersion) + ']');
+  begin
+    TConsole.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piFileVersion) + ']', ccWhite);
+  end;
 
 	MainIni := TDIniFile.Create(MainIniFileName);
 	LocalMainIni := TDIniFile.Create(LocalIniFileName);

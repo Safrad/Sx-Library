@@ -5,7 +5,8 @@ interface
 uses
 	SysUtils,
 	Consts,
-	uTypes;
+	uTypes,
+  uConsole;
 
 function ReplaceParam(const Text: string; const Param: array of string): string; overload;
 // function ReplaceParam(const Text: string; const Param: string): string; overload;
@@ -46,6 +47,9 @@ const
 	DlgBtnNames: array [TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry,
 		SMsgDlgIgnore, SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel,
     SMsgDlgAll, SMsgDlgHelp, {$if CompilerVersion >= 21}SMsgDlgClose{$else}SCloseButton{$ifend});
+
+const
+  ConsoleColor: array[TMessageLevel] of TConsoleColor = (ccLightAqua, ccLightBlue, ccLightGray, ccLightYellow, ccLightRed, ccLightPurple, ccGray);
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
@@ -99,7 +103,7 @@ begin
 {$IFNDEF Console}
 	MessageD(ExpandedText, [], MessageLevel, [mbOK]);
 {$ELSE}
-	Writeln(MsgTypeNames[MessageLevel] + ': ' + ExpandedText);
+	TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
 {$ENDIF}
 end;
 
@@ -113,7 +117,7 @@ begin
 {$IFNDEF Console}
 	MessageD(Text, Param, MessageLevel, [mbOK]);
 {$ELSE}
-	Writeln(MsgTypeNames[MessageLevel] + ': ' + ExpandedText);
+	TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
 {$ENDIF}
 end;
 
@@ -195,7 +199,7 @@ begin
 	Result := MessageD(Text, mlError, [mbRetry, mbIgnore]) <> mbIgnore;
 {$ELSE}
 	Result := False;
-	Writeln('Error: ' + Text);
+	TConsole.WriteLine('Error: ' + Text, ConsoleColor[mlError]);
 {$ENDIF}
 end;
 
@@ -251,7 +255,7 @@ begin
 {$IFNDEF Console}
 	MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mlError, [SMsgDlgOK], DlgWait);
 {$ELSE}
-	Writeln('I/O Error: ' + OneLine(Text));
+	TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError]);
 {$ENDIF}
 end;
 
@@ -268,8 +272,8 @@ begin
 	Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError,
 		[SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
 {$ELSE}
-	Writeln('I/O Error: ' + OneLine(Text));
-	Writeln('Press [R]etry or [I]gnore.');
+	TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError]);
+	TConsole.WriteLine('Press [R]etry or [I]gnore.', ConsoleColor[mlConfirmation]);
 	Readln(s);
 	Result := StartStr('R', UpperCase(s));
 {$ENDIF}
