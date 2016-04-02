@@ -1,35 +1,32 @@
 unit TaskBarAPI;
 
-
-//////////////////////////////////////////////////////////////////////////////
 interface
-//////////////////////////////////////////////////////////////////////////////
-
 
 uses
   Forms, Types, Windows, SysUtils, ComObj, Controls, Graphics;
 
-
 type
   TTaskBarProgressState = (tbpsNone, tbpsIndeterminate, tbpsNormal, tbpsError, tbpsPaused);
 
-
 function InitializeTaskbarAPI: Boolean;
+
+procedure FinalizeTaskbarAPI;
+
 function SetTaskbarProgressState(const AState: TTaskBarProgressState): Boolean;
-function SetTaskbarProgressValue(const ACurrent:Int64; const AMax: Int64): Boolean;
-function SetTaskbarOverlayIcon(const AIcon: THandle; const ADescription: String): Boolean; overload;
-function SetTaskbarOverlayIcon(const AIcon: TIcon; const ADescription: String): Boolean; overload;
-function SetTaskbarOverlayIcon(const AList: TImageList; const IconIndex: Integer; const ADescription: String): Boolean; overload;
 
+function SetTaskbarProgressValue(const ACurrent: Int64; const AMax: Int64): Boolean;
 
-//////////////////////////////////////////////////////////////////////////////
+function SetTaskbarOverlayIcon(const AIcon: THandle; const ADescription: string): Boolean; overload;
+
+function SetTaskbarOverlayIcon(const AIcon: TIcon; const ADescription: string): Boolean; overload;
+
+function SetTaskbarOverlayIcon(const AList: TImageList; const IconIndex: Integer; const ADescription: string): Boolean;
+  overload;
+
 implementation
-//////////////////////////////////////////////////////////////////////////////
-
 
 const
   TASKBAR_CID: TGUID = '{56FDF344-FD6D-11d0-958A-006097C9A090}';
-
 
 const
   TBPF_NOPROGRESS = 0;
@@ -38,10 +35,9 @@ const
   TBPF_ERROR = 4;
   TBPF_PAUSED = 8;
 
-
 type
   ITaskBarList3 = interface(IUnknown)
-  ['{EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}']
+    ['{EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}']
     function HrInit(): HRESULT; stdcall;
     function AddTab(hwnd: THandle): HRESULT; stdcall;
     function DeleteTab(hwnd: THandle): HRESULT; stdcall;
@@ -62,13 +58,8 @@ type
     function SetThumbnailClip(hwnd: THandle; var prcClip: TRect): HRESULT; stdcall;
   end;
 
-
-//////////////////////////////////////////////////////////////////////////////
-
-
 var
   GlobalTaskBarInterface: ITaskBarList3;
-
 
 function InitializeTaskbarAPI: Boolean;
 var
@@ -80,7 +71,6 @@ begin
     Result := True;
     Exit;
   end;
-
 
   try
     Unknown := CreateComObject(TASKBAR_CID);
@@ -96,19 +86,18 @@ begin
     GlobalTaskBarInterface := nil;
   end;
 
-
   Result := Assigned(GlobalTaskBarInterface);
 end;
 
+procedure FinalizeTaskbarAPI;
+begin
+  GlobalTaskBarInterface := nil;
+end;
 
-function CheckAPI:Boolean;
+function CheckAPI: Boolean;
 begin
   Result := Assigned(GlobalTaskBarInterface);
 end;
-
-
-//////////////////////////////////////////////////////////////////////////////
-
 
 function SetTaskbarProgressState(const AState: TTaskBarProgressState): Boolean;
 var
@@ -116,14 +105,17 @@ var
 begin
   Result := False;
 
-
   if CheckAPI then
   begin
     case AState of
-      tbpsIndeterminate: Flag := TBPF_INDETERMINATE;
-      tbpsNormal: Flag := TBPF_NORMAL;
-      tbpsError: Flag := TBPF_ERROR;
-      tbpsPaused: Flag := TBPF_PAUSED;
+      tbpsIndeterminate:
+        Flag := TBPF_INDETERMINATE;
+      tbpsNormal:
+        Flag := TBPF_NORMAL;
+      tbpsError:
+        Flag := TBPF_ERROR;
+      tbpsPaused:
+        Flag := TBPF_PAUSED;
     else
       Flag := TBPF_NOPROGRESS;
     end;
@@ -131,11 +123,9 @@ begin
   end;
 end;
 
-
-function SetTaskbarProgressValue(const ACurrent:Int64; const AMax: Int64): Boolean;
+function SetTaskbarProgressValue(const ACurrent: Int64; const AMax: Int64): Boolean;
 begin
   Result := False;
-
 
   if CheckAPI then
   begin
@@ -143,11 +133,9 @@ begin
   end;
 end;
 
-
-function SetTaskbarOverlayIcon(const AIcon: THandle; const ADescription: String): Boolean;
+function SetTaskbarOverlayIcon(const AIcon: THandle; const ADescription: string): Boolean;
 begin
   Result := False;
-
 
   if CheckAPI then
   begin
@@ -155,30 +143,28 @@ begin
   end;
 end;
 
-
-function SetTaskbarOverlayIcon(const AIcon: TIcon; const ADescription: String): Boolean;
+function SetTaskbarOverlayIcon(const AIcon: TIcon; const ADescription: string): Boolean;
 begin
   Result := False;
-
 
   if CheckAPI then
   begin
     if Assigned(AIcon) then
     begin
       Result := SetTaskbarOverlayIcon(AIcon.Handle, ADescription);
-    end else begin
+    end
+    else
+    begin
       Result := SetTaskbarOverlayIcon(THandle(nil), ADescription);
     end;
   end;
 end;
 
-
-function SetTaskbarOverlayIcon(const AList: TImageList; const IconIndex: Integer; const ADescription: String): Boolean;
+function SetTaskbarOverlayIcon(const AList: TImageList; const IconIndex: Integer; const ADescription: string): Boolean;
 var
   Temp: TIcon;
 begin
   Result := False;
-
 
   if CheckAPI then
   begin
@@ -191,25 +177,18 @@ begin
       finally
         Temp.Free;
       end;
-    end else begin
+    end
+    else
+    begin
       Result := SetTaskbarOverlayIcon(nil, ADescription);
     end;
   end;
 end;
 
-
-//////////////////////////////////////////////////////////////////////////////
-
-
 initialization
-  GlobalTaskBarInterface := nil;
-
 
 finalization
-  GlobalTaskBarInterface := nil;
-
-
-//////////////////////////////////////////////////////////////////////////////
-
+  FinalizeTaskbarAPI;
 
 end.
+
