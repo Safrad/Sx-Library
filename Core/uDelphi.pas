@@ -6,60 +6,56 @@ uses
   uTypes, Registry;
 
 type
-  TDelphiVersion = (
-    dvUnknown,
-    dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
-    dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7,
-    dvDelphi8, dvDelphi2005, dvDelphi2006, dvDelphi2007,
-    dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5, dvDelphiXE6, dvDelphiXE7,
-    dvDelphiXE8, dvDelphi10Seattle {,..});
+  TDelphiVersion = (dvUnknown, dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
+    dvDelphi1, dvDelphi2, dvDelphi3, dvDelphi4, dvDelphi5, dvDelphi6, dvDelphi7, dvDelphi8, dvDelphi2005, dvDelphi2006,
+    dvDelphi2007, dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5,
+    dvDelphiXE6, dvDelphiXE7, dvDelphiXE8, dvDelphi10Seattle {,..});
 
 const
-  ReleaseYear: array[TDelphiVersion] of string = (
-    '',
-    '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20', '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27',
-    '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17', '1999-08-10', '2001-05-21', '2002-08-09',
-    '2003-12-22', '2004-10-12', '2005-11-23', '2007-03-16',
-    '2008-12-01', '2009-08-15', '2010-08-30', '2011-09-02', '2012-09-03', '2013-04-22', '2013-09-11', '2014-04-15', '2014-09-02',
-    '2015-03-18', '2015-11-13'
-    );
+  ReleaseYear: array[TDelphiVersion] of string = ('', '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20',
+    '1988-08-24', {'1989-05-02',} '1990-10-23', '1992-10-27', '1995-02-14', '1996-02-10', '1997-08-05', '1998-06-17',
+    '1999-08-10', '2001-05-21', '2002-08-09', '2003-12-22', '2004-10-12', '2005-11-23', '2007-03-16', '2008-12-01',
+    '2009-08-15', '2010-08-30', '2011-09-02', '2012-09-03', '2013-04-22', '2013-09-11', '2014-04-15', '2014-09-02',
+    '2015-03-18', '2015-11-13');
 
 const
-  DProjDelphiId: array[TDelphiVersion] of string = (
-    '',
-    '', '', '', '', '', '', '',
-    '', '', '', '', '', '6.0', '7.0', // dof
-    '', '', '', '',
-    '12.0', '12.0', '12.3' {12.2 without update 1}, '13.4', '14.4', '14.6', '15.3' {15.1, 15.2}, '15.4', '16.0',
-    '17.2', '18.1.'); // Project->PropertyGroup->ProjectVersion
+  DProjDelphiId: array[TDelphiVersion] of string = ('', '', '', '', '', '', '', '', '', '', '', '', '', '6.0', '7.0',
+    // dof
+    '', '', '', '', '12.0', '12.0', '12.3' {12.2 without update 1}, '13.4', '14.4', '14.6', '15.3' {15.1, 15.2}, '15.4',
+    '16.0', '17.2', '18.1.'); // Project->PropertyGroup->ProjectVersion
 
   FirstUnicodeDelphi = dvDelphi2009;
 
 type
   TSystemPlatform = (spWin16, spWin32, spWin64, spMacOSX32, spIOSSimulator, spIOSDevice, spAndroid);
+
 const
-  PlatformSince: array[TSystemPlatform] of TDelphiVersion = (dvPascal1{..dvDelphi2}, dvDelphi3, dvDelphiXE2, dvDelphiXE2, dvDelphiXE4, dvDelphiXE4, dvDelphiXE5);
+  PlatformSince: array[TSystemPlatform] of TDelphiVersion = (dvPascal1{..dvDelphi2}, dvDelphi3, dvDelphiXE2, dvDelphiXE2,
+    dvDelphiXE4, dvDelphiXE4, dvDelphiXE5);
 
   // GUI
-  SystemPlatformGUIStr: array[TSystemPlatform] of string = ('16', 'x86', 'x64', 'OS X', 'iOS 32', 'iOS ARM', 'Android ARM');
+  SystemPlatformGUIStr: array[TSystemPlatform] of string = ('16', 'x86', 'x64', 'OS X', 'iOS 32', 'iOS ARM',
+    'Android ARM');
 
   // dcc*, User Input
   SystemPlatformDCCStr: array[TSystemPlatform] of string = ('16', '32', '64', 'osx', 'ios32', 'iosarm', 'aarm');
 
   // manifest
   SystemPlatformManifestStr: array[TSystemPlatform] of string = ('16', 'x86', 'ia64', 'OSX', 'iOS-sym', 'iOS', 'android');
-
-  // lib folder
-  SystemPlatformLibStr: array[TSystemPlatform] of string = ('win16', 'win32', 'win64', 'osx32', 'iossimulator', 'iosDevice', 'android');
+    // lib folder
+  SystemPlatformLibStr: array[TSystemPlatform] of string = ('win16', 'win32', 'win64', 'osx32', 'iossimulator',
+    'iosDevice', 'android');
 
   // Library keys & cfg
-  SystemPlatformRegStr: array[TSystemPlatform] of string = ('Win16', 'Win32', 'Win64', 'OSX32', 'iOSSimulator', 'iOSDevice', 'Android32');
+  SystemPlatformRegStr: array[TSystemPlatform] of string = ('Win16', 'Win32', 'Win64', 'OSX32', 'iOSSimulator',
+    'iOSDevice', 'Android32');
 
 type
   TCompiler = record
     DelphiVersion: TDelphiVersion;
     SystemPlatform: TSystemPlatform;
   end;
+
   TCompilers = array of TCompiler;
 
 // Delphi 7, BDS 7, BDS 8
@@ -82,37 +78,47 @@ function GetCompilerFullName(const ACompiler: TCompiler): string;
 function GetCompilers(const ADelphiVersion: TDelphiVersion): TCompilers;
 
 function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
+
 function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
+
 function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
+
 function DelphiLibSuffix(const Compiler: TCompiler): string;
+
 function GetDCCFileName(const Compiler: TCompiler): string;
-function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
+
+function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform:
+  TSystemPlatform): string;
+
 function GetDelphiVersionCount: SG;
+
+function GetLastDelphiVersion: TDelphiVersion;
+
 function GetAvailableDelphiVersions: TArrayOfSG;
+
 function GetAvailableCompilers: TCompilers;
 
 function GetDelphiVersion(const AName: string): TDelphiVersion;
+
 function GetDelphiCompiler(const AName: string): TCompiler;
+
 function GetPackageVersion(const PackageFileName: string): TDelphiVersion;
 
 implementation
 
 uses
-  Windows, SysUtils,
-  uFiles, uOutputFormat,
-  uMath, uStrings, uLog;
+  Windows, SysUtils, uFiles, uOutputFormat, uMath, uStrings, uLog;
 
 const
   UnluckyNumber = 13;
-	FirstBDS = dvDelphi8;
+  FirstBDS = dvDelphi8;
   BDSStartFrom = 2;
-	FirstCodeGear = dvDelphi2007;
-	FirstCodeGearInRegistry = dvDelphi2009;
-	FirstEmbarcadero = dvDelphi2010;
-
-	FirstDof = dvDelphi1;
-	FirstBDSProj = dvDelphi8;
-	FirstDProj = dvDelphi2007;
+  FirstCodeGear = dvDelphi2007;
+  FirstCodeGearInRegistry = dvDelphi2009;
+  FirstEmbarcadero = dvDelphi2010;
+  FirstDof = dvDelphi1;
+  FirstBDSProj = dvDelphi8;
+  FirstDProj = dvDelphi2007;
 
 function GetBDSVersion(const ADelphiVersion: TDelphiVersion): SG;
 begin
@@ -123,7 +129,7 @@ end;
 
 function GetDelphiRegPath(const ADelphiVersion: TDelphiVersion): string;
 var
-	RegPath: string;
+  RegPath: string;
 begin
   if ADelphiVersion < dvDelphi1 then
   begin
@@ -131,31 +137,31 @@ begin
     Exit;
   end;
 
-	RegPath := 'Software' + PathDelim;
-	if ADelphiVersion < FirstCodeGearInRegistry then
-		RegPath := RegPath + 'Borland\'
-	else if ADelphiVersion < FirstEmbarcadero then
-		RegPath := RegPath + 'CodeGear\'
-	else
-		RegPath := RegPath + 'Embarcadero\';
+  RegPath := 'Software' + PathDelim;
+  if ADelphiVersion < FirstCodeGearInRegistry then
+    RegPath := RegPath + 'Borland\'
+  else if ADelphiVersion < FirstEmbarcadero then
+    RegPath := RegPath + 'CodeGear\'
+  else
+    RegPath := RegPath + 'Embarcadero\';
 
-	if ADelphiVersion < FirstBDS then
-		RegPath := RegPath + 'Delphi\' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
-	else
-		RegPath := RegPath + 'BDS\' + IntToStr(GetBDSVersion(ADelphiVersion));
-	RegPath := RegPath + '.0' + PathDelim;
-	Result := RegPath;
+  if ADelphiVersion < FirstBDS then
+    RegPath := RegPath + 'Delphi\' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
+  else
+    RegPath := RegPath + 'BDS\' + IntToStr(GetBDSVersion(ADelphiVersion));
+  RegPath := RegPath + '.0' + PathDelim;
+  Result := RegPath;
 end;
 
 function GetDelphiRegistryName(const ADelphiVersion: TDelphiVersion): string;
 begin
   if ADelphiVersion < dvDelphi1 then
     Result := ''
-	else if ADelphiVersion < FirstBDS then
-		Result := 'Delphi ' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
-	else
+  else if ADelphiVersion < FirstBDS then
+    Result := 'Delphi ' + IntToStr(SG(ADelphiVersion) - SG(dvDelphi1) + 1)
+  else
   begin
-		Result := 'BDS ' + IntToStr(GetBDSVersion(ADelphiVersion));
+    Result := 'BDS ' + IntToStr(GetBDSVersion(ADelphiVersion));
   end;
 end;
 
@@ -184,12 +190,18 @@ end;
 function GetDelphiYear(const ADelphiVersion: TDelphiVersion): SG;
 begin
   case ADelphiVersion of
-  dvDelphi2005: Result := 2005;
-  dvDelphi2006: Result := 2006;
-  dvDelphi2007: Result := 2007;
-  dvDelphi2009: Result := 2009;
-  dvDelphi2010: Result := 2010;
-  else Result := 0;
+    dvDelphi2005:
+      Result := 2005;
+    dvDelphi2006:
+      Result := 2006;
+    dvDelphi2007:
+      Result := 2007;
+    dvDelphi2009:
+      Result := 2009;
+    dvDelphi2010:
+      Result := 2010;
+  else
+    Result := 0;
   end;
 end;
 
@@ -205,7 +217,7 @@ begin
   begin
     Result := 'XE';
     if ADelphiVersion > dvDelphiXE then
-    	Result := Result + IntToStr(SG(ADelphiVersion) - SG(dvDelphiXE) + 1);
+      Result := Result + IntToStr(SG(ADelphiVersion) - SG(dvDelphiXE) + 1);
   end
   else if ADelphiVersion = dvDelphi10Seattle then
   begin
@@ -220,7 +232,8 @@ end;
 
 function GetDelphiFullName(const ADelphiVersion: TDelphiVersion): string;
 begin
-  Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetMajorVersion(ADelphiVersion)) +', dcc' + NToS(GetDelphiCompilerVersion(ADelphiVersion), 1, ofHTML) + ')';
+  Result := GetDelphiShortName(ADelphiVersion) + ' (' + IntToStr(GetMajorVersion(ADelphiVersion)) + ', dcc' + NToS(GetDelphiCompilerVersion
+    (ADelphiVersion), 1, ofHTML) + ')';
 end;
 
 function GetCompilerFullName(const ACompiler: TCompiler): string;
@@ -270,19 +283,19 @@ end;
 
 function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
 var
-	Reg: TRegistry;
+  Reg: TRegistry;
   RegPath: string;
 begin
-	Reg := TRegistry.Create(KEY_QUERY_VALUE);
-	try
-		Reg.RootKey := HKEY_CURRENT_USER;
-		RegPath := GetDelphiRegPath(ADelphiVersion);
+  Reg := TRegistry.Create(KEY_QUERY_VALUE);
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    RegPath := GetDelphiRegPath(ADelphiVersion);
     if not Reg.KeyExists(RegPath) then
-  		Reg.RootKey := HKEY_LOCAL_MACHINE;
+      Reg.RootKey := HKEY_LOCAL_MACHINE;
     Result := GetDelphiPathOnly(Reg, RegPath);
-	finally
-		Reg.Free;
-	end;
+  finally
+    Reg.Free;
+  end;
 end;
 
 function DelphiLibSuffix(const Compiler: TCompiler): string;
@@ -290,9 +303,10 @@ begin
   Result := 'Lib';
   if Compiler.DelphiVersion <= dvDelphi7 then
     // no code
+
   else if Compiler.DelphiVersion < dvDelphiXE then
     Result := Result + PathDelim + 'release'
-   else
+  else
     Result := Result + PathDelim + SystemPlatformLibStr[Compiler.SystemPlatform] + PathDelim + 'release';
 end;
 
@@ -303,42 +317,45 @@ end;
 
 procedure ReplaceEnv(var Paths: string);
 const
-	Prefix = '$(';
-	Suffix = ')';
+  Prefix = '$(';
+  Suffix = ')';
 var
-	i, p, p2: SG;
-	EnvName, EnvVar: string;
+  i, p, p2: SG;
+  EnvName, EnvVar: string;
 begin
-	i := 1;
-	while i < Length(Paths) do
-	begin
-		p := PosEx(Prefix, Paths, i);
-		if p = 0 then Exit;
-		p2 := PosEx(Suffix, Paths, p);
-		EnvName := Copy(Paths, p + Length(Prefix), p2 - p - 2);
+  i := 1;
+  while i < Length(Paths) do
+  begin
+    p := PosEx(Prefix, Paths, i);
+    if p = 0 then
+      Exit;
+    p2 := PosEx(Suffix, Paths, p);
+    EnvName := Copy(Paths, p + Length(Prefix), p2 - p - 2);
 
-		EnvVar := GetEnvironmentVariable(EnvName);
-		if EnvVar <> '' then
-		begin
-			Delete(Paths, p, p2 - p + Length(Suffix));
-			Insert(EnvVar, Paths, p);
-			i := p + Length(EnvVar);
-		end
-		else
-		begin
-			i := p + Length(EnvName);
-			if LogWarning then LogAdd('Environment Variable ' + EnvName + ' not found.');
-		end;
-	end;
+    EnvVar := GetEnvironmentVariable(EnvName);
+    if EnvVar <> '' then
+    begin
+      Delete(Paths, p, p2 - p + Length(Suffix));
+      Insert(EnvVar, Paths, p);
+      i := p + Length(EnvVar);
+    end
+    else
+    begin
+      i := p + Length(EnvName);
+      if LogWarning then
+        LogAdd('Environment Variable ' + EnvName + ' not found.');
+    end;
+  end;
 end;
 
-function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
+function ReplaceDelphiVariables(SearchPaths: string; const ADelphiVersion: TDelphiVersion; const SystemPlatform:
+  TSystemPlatform): string;
 var
   DelphiPath: string;
   DelphiPath2: string;
 begin
   DelphiPath := GetDelphiPath(ADelphiVersion);
-	DelphiPath2 := DelLastChar(DelphiPath);
+  DelphiPath2 := DelLastChar(DelphiPath);
   // Tools|Options|Environment Options|Environmental Variables
   Replace(SearchPaths, '$(DELPHI)', DelphiPath2);
   Replace(SearchPaths, '$(BDS)', DelphiPath2);
@@ -373,6 +390,17 @@ begin
   end;
 end;
 
+function GetLastDelphiVersion: TDelphiVersion;
+var
+  DelphiVersions: TArrayOfSG;
+begin
+  DelphiVersions := GetAvailableDelphiVersions;
+  if Length(DelphiVersions) <= 0 then
+    Result := dvDelphi1
+  else
+    Result := TDelphiVersion(DelphiVersions[Length(DelphiVersions) - 1]);
+end;
+
 function GetAvailableDelphiVersions: TArrayOfSG;
 var
   DelphiVersion: TDelphiVersion;
@@ -381,7 +409,7 @@ var
 begin
   Count := 0;
   for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
-	begin
+  begin
     DelphiPath := GetDelphiPath(DelphiVersion);
     if DirectoryExists(DelphiPath) then
     begin
@@ -403,7 +431,7 @@ var
 begin
   Count := 0;
   for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
-	begin
+  begin
     DelphiPath := GetDelphiPath(DelphiVersion);
     if DirectoryExists(DelphiPath) then
     begin
@@ -429,7 +457,7 @@ var
 begin
   Result := dvUnknown;
   for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
-	begin
+  begin
     if CompareText(GetDelphiShortName(DelphiVersion), AName) = 0 then
     begin
       Result := DelphiVersion;
@@ -443,8 +471,8 @@ var
   DelphiVersion: TDelphiVersion;
   sp: TSystemPlatform;
 begin
-  Result.DelphiVersion := dvDelphi1;
-  Result.SystemPlatform := spWin32;
+  Result.DelphiVersion := dvUnknown;
+  Result.SystemPlatform := spWin32; // Default
   for sp := Low(sp) to High(sp) do
   begin
     if Pos(SystemPlatformDCCStr[sp], AName) <> 0 then
@@ -452,7 +480,7 @@ begin
   end;
 
   for DelphiVersion := dvDelphi1 to TDelphiVersion(GetDelphiVersionCount - 1) do
-	begin
+  begin
     if Pos(GetDelphiShortName(DelphiVersion), AName) <> 0 then
     begin
       Result.DelphiVersion := DelphiVersion;
@@ -500,3 +528,4 @@ begin
 end;
 
 end.
+
