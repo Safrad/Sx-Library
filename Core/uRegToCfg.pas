@@ -4,6 +4,7 @@ interface
 
 uses
 	uTypes,
+  uDelphi,
 	uStrings,
 	uFiles,
 	uFile,
@@ -11,7 +12,8 @@ uses
 	Registry,
 	Windows;
 
-procedure RegistryToDccCfg;
+procedure RegistryToDccCfg; overload;
+procedure RegistryToDccCfg(const Compiler: TCompiler); overload;
 
 const
   RemovePrefix = '-';
@@ -22,7 +24,6 @@ procedure BplToReg(const Lines: TArrayOfString);
 implementation
 
 uses
-  uDelphi,
 	uMath, uMsg,
   uLog,
 	Classes;
@@ -115,6 +116,48 @@ begin
         end;
 			end;
 		end;
+	finally
+		Reg.Free;
+	end;
+end;
+
+procedure RegistryToDccCfg(const Compiler: TCompiler);
+var
+	Reg: TRegistry;
+	s: string;
+	InLineIndex: SG;
+	SearchPaths: string;
+	RegPath: string;
+	Path: string;
+	DelphiPath: string;
+begin
+	Reg := TRegistry.Create(KEY_QUERY_VALUE);
+	try
+		Reg.RootKey := HKEY_CURRENT_USER;
+    RegPath := GetDelphiRegPath(Compiler.DelphiVersion);
+    DelphiPath := GetDelphiPathOnly(Reg, RegPath);
+    if DirectoryExists(DelphiPath) then
+    begin
+        if Reg.OpenKey(GetDelphiLibraryPath(RegPath, Compiler.DelphiVersion, Compiler.SystemPlatform), False) then
+        begin
+          s := CommonCfgText(Compiler.DelphiVersion);
+          s := s + '-r"' + DelphiPath + DelphiLibSuffix(Compiler) + '"' + LineSep;
+          SearchPaths := Reg.ReadString('Search Path');
+          SearchPaths := ReplaceDelphiVariables(SearchPaths, Compiler.DelphiVersion, Compiler.SystemPlatform);
+
+          InLineIndex := 1;
+          while InLineIndex < Length(SearchPaths) do
+          begin
+            Path := ReadToChar(SearchPaths, InLineIndex, ';');
+            if Path <> '' then
+              s := s + '-u"' + Path + '"' + LineSep;
+          end;
+
+          WriteDcc(s, DelphiPath, SystemPlatformDccStr[Compiler.SystemPlatform]);
+
+          Reg.CloseKey;
+        end;
+    end;
 	finally
 		Reg.Free;
 	end;
