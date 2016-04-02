@@ -73,7 +73,7 @@ end;
 
 
 initialization
-	CoInitialize(nil);
+	Assert(CoInitializeEx(nil, COINIT_MULTITHREADED or COINIT_SPEED_OVER_MEMORY) = S_OK);
 {$if CompilerVersion >= 25}
   MSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False);
 {$else}
