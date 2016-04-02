@@ -142,7 +142,6 @@ type
 			A: U8);
 	end;
 
-	FG = Real; // Double
 	F4 = Single;
 //	F6 = Real48;
 	F8 = Double;
@@ -151,6 +150,7 @@ type
 {$else}
   FA = Extended;
 {$endif}
+  FG = FA;
 
 
 { CG = Char;

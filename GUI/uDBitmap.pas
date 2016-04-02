@@ -42,7 +42,7 @@ const
 var
 	AllPictures: string;
 type
-	TFlo = F8;
+	TFlo = FG;
 
 	{	Windows	BGR/BGRA
 		OpenGL	RGB/RGBA }

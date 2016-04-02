@@ -99,7 +99,6 @@ type
     {$ifend}
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
-		procedure RWNum(const Section, Ident: string; var Value: FG; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: FA; const Save: BG); overload;
 		procedure RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
 			overload;
@@ -895,18 +894,6 @@ begin
 end;
 
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F8; const Save: BG);
-begin
-	if Save = False then
-	begin
-		Value := ReadNum(Section, Ident, Value);
-	end
-	else
-	begin
-		WriteNum(Section, Ident, Value);
-	end;
-end;
-
-procedure TDIniFile.RWNum(const Section, Ident: string; var Value: FG; const Save: BG);
 begin
 	if Save = False then
 	begin
