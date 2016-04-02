@@ -1,4 +1,6 @@
-unit uSimulation;
+// Not thread safe
+
+unit uSimulation deprecated;
 
 interface
 
@@ -79,7 +81,8 @@ begin
 		MaximumTimeStep2 := {$ifdef Prec}RoundDivU8(MaximumTimeStep * PerformanceFrequency, Second){$else}MaximumTimeStep{$endif};
 		if (GTimeStep2 >= 2 * MaximumTimeStep2) then // Long lag and hibernation
 		begin
-			if LogWarning then LogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO));
+			if LogWarning then
+        LogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO));
 			GTimeStep2 := MaximumTimeStep2;
 		end;
 	end;
