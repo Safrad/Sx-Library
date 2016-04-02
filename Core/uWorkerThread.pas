@@ -29,7 +29,7 @@ begin
   FreeOnTerminate := True;
   inherited Create(True);
 
-  Priority := tpLowest; // tpLower freezes other proccess
+  Priority := AThreadPool.ThreadPriority;
   Name := 'Worker Thread Id ' + IntToStr(AId);
   {$ifdef UNICODE}
   if IsDebug then

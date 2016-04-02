@@ -5,7 +5,7 @@ interface
 uses
   uTypes, uData, uAsyncTask, Windows, Classes;
 
-// TODO: Wait for task, Priority
+// TODO: Wait for task, task priority
 
 type
   TThreads = array of TThread;
@@ -18,10 +18,12 @@ type
     FThreads: TThreads;
     FQueue: TData; // array of TAsyncTask;
     FQueueCriticalSection: TRTLCriticalSection;
+    FThreadPriority: TThreadPriority;
     procedure SetRunThreads(Value: SG);
     procedure SetMaxThreads(Value: SG);
     procedure QueueToThread;
     procedure WorkerCreate(const Index: SG);
+    procedure SetThreadPriority(const Value: TThreadPriority);
   public
     constructor Create;
     destructor Destroy; override;
@@ -40,6 +42,7 @@ type
     procedure WorkerFinishWork;
     procedure WorkerDestroy(const Index: SG);
     property MaxThreads: SG read FMaxThreads write SetMaxThreads;
+    property ThreadPriority: TThreadPriority read FThreadPriority write SetThreadPriority;
   end;
 
 implementation
@@ -73,6 +76,8 @@ end;
 constructor TThreadPool.Create;
 begin
   inherited;
+
+  FThreadPriority := tpLowest; // tpLower freezes other proccesses;
 
   FQueue := TData.Create;
   InitializeCriticalSection(FQueueCriticalSection);
@@ -282,6 +287,19 @@ begin
     Result := FQueue.Count;
   finally
     LeaveCriticalSection(FQueueCriticalSection);
+  end;
+end;
+
+procedure TThreadPool.SetThreadPriority(const Value: TThreadPriority);
+var
+  i: SG;
+begin
+  if ThreadPriority <> Value then
+  begin
+    FThreadPriority := Value;
+    for i := 0 to Length(FThreads) - 1 do
+      if FThreads[i] <> nil then
+        FThreads[i].Priority := FThreadPriority;
   end;
 end;
 
