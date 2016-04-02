@@ -430,6 +430,7 @@ initialization
 
 finalization
 {$IFNDEF NoFinalization}
+  FinalizeTaskbarAPI;
 	FreeAndNil(OpenDialog);
 {$ENDIF NoFinalization}
 end.

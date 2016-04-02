@@ -206,9 +206,15 @@ begin
 end;
 
 initialization
+{$IFNDEF NoInitialization}
+{$ENDIF NoInitialization}
+
+
 
 finalization
+{$IFNDEF NoFinalization}
   FinalizeTaskbarAPI;
+{$ENDIF NoFinalization}
 
 end.
 
