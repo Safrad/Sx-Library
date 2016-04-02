@@ -293,6 +293,8 @@ function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; overload;
 function CharInSet(C: WideChar; const CharSet: TSysCharSet): Boolean; overload;
 {$endif}
 
+function CreateRange(const AF, AT: SG): TRange;
+
 implementation
 
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
@@ -323,5 +325,11 @@ begin
 	Move(Source^, Dest^, GetTypeData(T).elSize * Count);
 end;
 {$ifend}
+
+function CreateRange(const AF, AT: SG): TRange;
+begin
+  Result.F := AF;
+  Result.T := AT;
+end;
 
 end.
