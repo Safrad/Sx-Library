@@ -218,8 +218,6 @@ procedure TThreadPool.KillThreads;
 begin
   ClearTasks;
 
-  FMaxThreads := 0;
-  QueueToThread;
   WaitForNoThread;
 end;
 
@@ -234,6 +232,8 @@ end;
 
 procedure TThreadPool.WaitForNoThread;
 begin
+  FMaxThreads := 0;
+  QueueToThread;
   while (FRunThreads > 0) do
   begin
     Sleep(LoopSleepTime);
