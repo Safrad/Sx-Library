@@ -110,6 +110,7 @@ procedure FillOrderU4(var Desc; const Count: UG);
 procedure FillOrderUG(var Desc; const Count: UG);
 procedure Reverse4(var Desc; Size: UG);
 procedure ReverseG(var Desc; Size: UG);
+procedure Reverse(var Desc; const ItemSize: SG; const Count: SG);
 function Checksum(var Desc; Size: U4): U4;
 function Hash(const Desc; Size: U4): U4;
 procedure Swap02(var Desc; Count: UG; Step: S4);
@@ -1488,6 +1489,28 @@ begin
     P2^ := d1;
     Inc(P1);
     Dec(P2);
+  end;
+end;
+
+procedure Reverse(var Desc; const ItemSize: SG; const Count: SG);
+var
+  i: SG;
+  P1, P2, Tmp: Pointer;
+begin
+  GetMem(Tmp, ItemSize);
+  try
+    P1 := PSG(@Desc);
+    P2 := PSG(SG(@Desc) + ItemSize * SG(Count - 1));
+    for i := 0 to Count div 2 - 1 do
+    begin
+      Move(P1, Tmp, ItemSize);
+      Move(P2, P1, ItemSize);
+      Move(Tmp, P2, ItemSize);
+      Inc(SG(P1), ItemSize);
+      Dec(SG(P2), ItemSize);
+    end;
+  finally
+    FreeMem(Tmp);
   end;
 end;
 
