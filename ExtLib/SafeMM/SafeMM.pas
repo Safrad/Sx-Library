@@ -167,6 +167,7 @@ reused by the next memory request.
 procedure SafeMMPrepare;
 
 const
+{$IFDEF MEMORY_MANAGER_EX}
   SafeMemoryManager: TMemoryManagerEx = (
    GetMem: SafeGetMem;
    FreeMem: SafeFreeMem;
@@ -175,6 +176,16 @@ const
    RegisterExpectedMemoryLeak: SafeRegisterExpectedMemoryLeak;
    UnregisterExpectedMemoryLeak: SafeUnregisterExpectedMemoryLeak;
   );
+{$ELSE}
+  SafeMemoryManager: TMemoryManager = (
+   GetMem: SafeGetMem;
+   FreeMem: SafeFreeMem;
+   ReallocMem: SafeReallocMem;
+  );
+
+type
+  TMemoryManagerEx = TMemoryManager;  // Simple alias to avoid IFDEF in SafeMMInstall.
+{$ENDIF}
 
 type
 
