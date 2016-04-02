@@ -10,7 +10,7 @@ uses
   uFirst,
   uTypes,
   Forms,
-  TestFrameWork,
+  TestFramework,
   TextTestRunner,
   GUITestRunner,
   uEscapeTest in '..\Core\uEscapeTest.pas',
@@ -28,7 +28,8 @@ uses
   uObjectFactoryTest in '..\Core\uObjectFactoryTest.pas',
   uPictureFactoryTest in '..\GUI\uPictureFactoryTest.pas',
   uWebUpdateTest in '..\GUI\uWebUpdateTest.pas',
-  uProjectOptionsTest in '..\Core\uProjectOptionsTest.pas';
+  uProjectOptionsTest in '..\Core\uProjectOptionsTest.pas',
+  uDivideSpaceTest in '..\Core\uDivideSpaceTest.pas';
 
 {$R *.RES}
 
