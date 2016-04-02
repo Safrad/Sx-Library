@@ -11,105 +11,42 @@ unit uProjectOptions;
 interface
 
 uses
-  uTypes,
-  SysUtils,
-  uSxStringList,
-  uProjectInfo, uNProjectVersion,
-  uDelphi,
-  Classes, XMLIntf;
+  uTypes, SysUtils, uSxStringList, uProjectInfo, uNProjectVersion, uDelphi, Classes, XMLIntf;
 
 type
   TExecutableType = (etProgram, etLibrary, etPackage);
+
 const
   ExecutableTypes: array[TExecutableType] of string = ('exe', 'dll', 'bpl');
 
 type
-	TProjectInfos = array [TProjectInfoName] of string;
+  TProjectInfos = array[TProjectInfoName] of string;
 
   TOutputWarning = (owDefault, owTrue, owFalse, owError);
 
-  TCompilerWarning = (
-			cwCOMPARING_SIGNED_UNSIGNED,
-			cwXML_INVALID_NAME,
-			cwUNIT_DEPRECATED,
-			cwIMPLICIT_STRING_CAST_LOSS,
-			cwUNSAFE_TYPE,
-			cwLOCAL_PINVOKE,
-			cwUNSUPPORTED_CONSTRUCT,
-			cwXML_EXPECTED_CHARACTER,
-			cwCASE_LABEL_RANGE,
-			cwUNIT_INIT_SEQ,
-			cwTYPEINFO_IMPLICITLY_ADDED,
-			cwXML_UNKNOWN_ENTITY,
-			cwASG_TO_TYPED_CONST,
-			cwNO_RETVAL,
-			cwCVT_NARROWING_STRING_LOST,
-			cwSYMBOL_LIBRARY,
-			cwCVT_WCHAR_TO_ACHAR,
-			cwNO_CFG_FILE_FOUND,
-			cwCVT_ACHAR_TO_WCHAR,
-			cwIMPLICIT_STRING_CAST,
-			cwSTRING_CONST_TRUNCED,
-			cwDUPLICATE_CTOR_DTOR,
-			cwIMAGEBASE_MULTIPLE,
-			cwZERO_NIL_COMPAT,
-			cwCOMBINING_SIGNED_UNSIGNED,
-			cwUNIT_EXPERIMENTAL,
-			cwHPPEMIT_IGNORED,
-			cwFOR_LOOP_VAR_VARPAR,
-			cwMESSAGE_DIRECTIVE,
-			cwSYMBOL_PLATFORM,
-			cwUNIT_PLATFORM,
-			cwWIDECHAR_REDUCED,
-			cwXML_NO_PARM,
-			cwSUSPICIOUS_TYPECAST,
-			cwIMPLICIT_IMPORT,
-			cwGARBAGE,
-			cwCONSTRUCTING_ABSTRACT,
-			cwTYPED_CONST_VARPAR,
-			cwFILE_OPEN_UNITSRC,
-			cwXML_INVALID_NAME_START,
-			cwPRIVATE_PROPACCESSOR,
-			cwXML_CREF_NO_RESOLVE,
-			cwINVALID_DIRECTIVE,
-			cwSYMBOL_EXPERIMENTAL,
-			cwUNSAFE_CODE,
-			cwXML_WHITESPACE_NOT_ALLOWED,
-			cwDUPLICATES_IGNORED,
-			cwBAD_GLOBAL_SYMBOL,
-			cwHRESULT_COMPAT,
-			cwCOMPARISON_TRUE,
-			cwLOCALE_TO_UNICODE,
-			cwFOR_LOOP_VAR_UNDEF,
-			cwHIDING_MEMBER,
-			cwUNIT_NAME_MISMATCH,
-			cwHIDDEN_VIRTUAL,
-			cwXML_NO_MATCHING_PARM,
-			cwEXPLICIT_STRING_CAST_LOSS,
-			cwPACKAGED_THREADVAR,
-			cwIMPLICIT_VARIANTS,
-			cwEXPLICIT_STRING_CAST,
-			cwUNIT_LIBRARY,
-			cwOPTION_TRUNCATED,
-			cwFILE_OPEN,
-			cwBOUNDS_ERROR,
-			cwUSE_BEFORE_DEF,
-			cwFOR_VARIABLE,
-			cwSYMBOL_DEPRECATED,
-			cwPACKAGE_NO_LINK,
-			cwUNSAFE_CAST,
-			cwCOMPARISON_FALSE,
-			cwCVT_WIDENING_STRING_LOST,
-			cwUNICODE_TO_LOCALE,
-			cwRLINK_WARNING);
+  TCompilerWarning = (cwCOMPARING_SIGNED_UNSIGNED, cwXML_INVALID_NAME, cwUNIT_DEPRECATED, cwIMPLICIT_STRING_CAST_LOSS,
+    cwUNSAFE_TYPE, cwLOCAL_PINVOKE, cwUNSUPPORTED_CONSTRUCT, cwXML_EXPECTED_CHARACTER, cwCASE_LABEL_RANGE,
+    cwUNIT_INIT_SEQ, cwTYPEINFO_IMPLICITLY_ADDED, cwXML_UNKNOWN_ENTITY, cwASG_TO_TYPED_CONST, cwNO_RETVAL,
+    cwCVT_NARROWING_STRING_LOST, cwSYMBOL_LIBRARY, cwCVT_WCHAR_TO_ACHAR, cwNO_CFG_FILE_FOUND, cwCVT_ACHAR_TO_WCHAR,
+    cwIMPLICIT_STRING_CAST, cwSTRING_CONST_TRUNCED, cwDUPLICATE_CTOR_DTOR, cwIMAGEBASE_MULTIPLE, cwZERO_NIL_COMPAT,
+    cwCOMBINING_SIGNED_UNSIGNED, cwUNIT_EXPERIMENTAL, cwHPPEMIT_IGNORED, cwFOR_LOOP_VAR_VARPAR, cwMESSAGE_DIRECTIVE,
+    cwSYMBOL_PLATFORM, cwUNIT_PLATFORM, cwWIDECHAR_REDUCED, cwXML_NO_PARM, cwSUSPICIOUS_TYPECAST, cwIMPLICIT_IMPORT,
+    cwGARBAGE, cwCONSTRUCTING_ABSTRACT, cwTYPED_CONST_VARPAR, cwFILE_OPEN_UNITSRC, cwXML_INVALID_NAME_START,
+    cwPRIVATE_PROPACCESSOR, cwXML_CREF_NO_RESOLVE, cwINVALID_DIRECTIVE, cwSYMBOL_EXPERIMENTAL, cwUNSAFE_CODE,
+    cwXML_WHITESPACE_NOT_ALLOWED, cwDUPLICATES_IGNORED, cwBAD_GLOBAL_SYMBOL, cwHRESULT_COMPAT, cwCOMPARISON_TRUE,
+    cwLOCALE_TO_UNICODE, cwFOR_LOOP_VAR_UNDEF, cwHIDING_MEMBER, cwUNIT_NAME_MISMATCH, cwHIDDEN_VIRTUAL,
+    cwXML_NO_MATCHING_PARM, cwEXPLICIT_STRING_CAST_LOSS, cwPACKAGED_THREADVAR, cwIMPLICIT_VARIANTS,
+    cwEXPLICIT_STRING_CAST, cwUNIT_LIBRARY, cwOPTION_TRUNCATED, cwFILE_OPEN, cwBOUNDS_ERROR, cwUSE_BEFORE_DEF,
+    cwFOR_VARIABLE, cwSYMBOL_DEPRECATED, cwPACKAGE_NO_LINK, cwUNSAFE_CAST, cwCOMPARISON_FALSE,
+    cwCVT_WIDENING_STRING_LOST, cwUNICODE_TO_LOCALE, cwRLINK_WARNING);
 
 var
   CompilerWarningsStr, BDSProjCompilerWarningsStr: array[TCompilerWarning] of string;
 
 type
-	TLibDirective = (ldPrefix, ldSuffix, ldVersion);
+  TLibDirective = (ldPrefix, ldSuffix, ldVersion);
 
-	TProjectOptions = class
+  TProjectOptions = class
   private
     FFileName: TFileName;
     FEnabled: BG;
@@ -119,21 +56,22 @@ type
     procedure ParseDPK;
   public
     ExecutableType: TExecutableType;
+    MainSource: string;
     // Compiler
     ShowHints: BG;
     ShowWarnings: BG;
     Warnings: array[TCompilerWarning] of TOutputWarning;
 
 		// Directories
-		OutputDir: string; // exe, dll
-		UnitOutputDir: string; // Replaced to Temp
-		PackageDLLOutputDir: string; // bpl
-		PackageDCPOutputDir: string; // dcp
-		Conditionals: TSxStringList;
-		SearchPaths: TSxStringList;
-		Namespaces: TSxStringList; // New in Delphi XE2
-		DebugSourceDirs: string; // Not in cfg
-		UsePackages: BG;
+    OutputDir: string; // exe, dll
+    UnitOutputDir: string; // Replaced to Temp
+    PackageDLLOutputDir: string; // bpl
+    PackageDCPOutputDir: string; // dcp
+    Conditionals: TSxStringList;
+    SearchPaths: TSxStringList;
+    Namespaces: TSxStringList; // New in Delphi XE2
+    DebugSourceDirs: string; // Not in cfg
+    UsePackages: BG;
     Packages: string;
     Namespace: string;
     // Linker
@@ -150,53 +88,46 @@ type
 
 
     // Version Info
-		Version: TProjectVersion;
+    Version: TProjectVersion;
     // Version Info Keys
-		ProjectInfos: TProjectInfos;
-
+    ProjectInfos: TProjectInfos;
     BuildVersions: string;
-
     constructor Create;
     destructor Destroy; override;
-
     procedure RWDproj(const AFileName: TFileName; const Save: BG);
-
     procedure AddConditionals(const AConditionals: string);
     procedure AddSearchPaths(const ASearchPaths: string);
     procedure AddNamespaces(const ANamespaces: string);
-
     function ReadFromFile(const FileNamePrefix: TFileName): BG;
     procedure RWBDSProj(const AFileName: TFileName; const Save: BG);
     function ReplaceFromFile(const FileNamePrefix: TFileName): BG;
     procedure Update;
     function GetOutputFile(const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): TFileName;
-		procedure WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform);
-
+    procedure WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const SystemPlatform:
+      TSystemPlatform);
     property Enabled: BG read FEnabled write FEnabled;
-	end;
+  end;
 
-function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const ProjectVersion: TProjectOptions): string;
+function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const ProjectOptions: TProjectOptions):
+  string;
 
 implementation
 
 uses
-  TypInfo,
-  uStrings, uMath, uOutputFormat,
-  XMLDoc, uSxXMLDocument,
-  Variants, IniFiles,
-  uInputFormat, uFiles, uFile, uBackup, uMsg;
+  TypInfo, uStrings, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, IniFiles, uInputFormat, uFiles, uFile,
+  uBackup, uMsg;
 
 const
   DefaultMinStackSize = 16 * KB;
   DefaultMaxStackSize = 1 * MB;
   DefaultImageBase = 4 * MB;
-
   ProjectListSeparator = ';';
   XMLIndentStr = '    '; // CharTab; // <= XE4
 
-function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const ProjectVersion: TProjectOptions): string;
+function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const ProjectOptions: TProjectOptions):
+  string;
 begin
-  if FileExists(ProjectVersion.IconFileName) then // XE2 dproj
+  if FileExists(ProjectOptions.IconFileName) then // XE2 dproj
     Result := ProjectName + '.ico'
   else if FileExists(CurrentDir + ProjectName + '.ico') then // Default
     Result := ProjectName + '.ico'
@@ -204,7 +135,7 @@ begin
     Result := ProjectName + '_Icon.ico'
   else if FileExists(CurrentDir + 'Graphics\' + ProjectName + '.ico') then // Sx Soft
     Result := 'Graphics\' + ProjectName + '.ico'
-  else if FileExists(ProjectVersion.OutputDir + 'Graphics\' + ProjectName + '.ico') then // Sx Soft
+  else if FileExists(ProjectOptions.OutputDir + 'Graphics\' + ProjectName + '.ico') then // Sx Soft
     Result := 'images\' + ProjectName + '.ico'
   else if FileExists(CurrentDir + 'images\' + ProjectName + '.ico') then // HTML
     Result := 'images\' + ProjectName + '.ico'
@@ -218,9 +149,9 @@ end;
 function StrToBoolean(const Value: string): BG;
 begin
   if UpperCase(Value) = 'TRUE' then
-  	Result := True
+    Result := True
   else
-  	Result := False;
+    Result := False;
 end;
 
 function StrToOutputWarning(const Value: string): TOutputWarning;
@@ -238,10 +169,14 @@ end;
 function OutputWarningToStr(const Value: TOutputWarning): string;
 begin
   case Value of
-  owTrue: Result := 'true';
-  owFalse: Result := 'false';
-  owError: Result := 'error';
-  else Result := '';
+    owTrue:
+      Result := 'true';
+    owFalse:
+      Result := 'false';
+    owError:
+      Result := 'error';
+  else
+    Result := '';
   end;
 end;
 
@@ -280,7 +215,7 @@ end;
 procedure TProjectOptions.WriteWarningsToNode(const Node: IXMLNode);
 const
   AttrName = 'Name';
-  VerStr: array [TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
+  VerStr: array[TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
 var
   cNode: IXMLNode;
   Name: string;
@@ -329,7 +264,7 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     Result := Node.Attributes['Name'];
   end;
 
-	procedure ReadCompilerNode(const Node: IXMLNode);
+  procedure ReadCompilerNode(const Node: IXMLNode);
   var
     NodeValue, AttrValue: string;
     i: SG;
@@ -353,7 +288,7 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     end;
   end;
 
-	procedure ReadLinkerNode(const Node: IXMLNode);
+  procedure ReadLinkerNode(const Node: IXMLNode);
   var
     NodeValue, AttrValue: string;
   begin
@@ -373,10 +308,10 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     else if AttrValue = 'ImageBase' then
       ImageBase := StrToValS8(NodeValue, False, 0, S8(DefaultImageBase), High(S8), 1, nil)
 //    else if AttrValue = 'ExeDescription' then
-    ;
+;
   end;
 
-	procedure ReadDirectoriesNode(const Node: IXMLNode);
+  procedure ReadDirectoriesNode(const Node: IXMLNode);
   var
     NodeValue, AttrValue: string;
   begin
@@ -399,18 +334,17 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     else if AttrValue = 'DebugSourceDirs' then
       DebugSourceDirs := NodeValue
     else if AttrValue = 'UsePackages' then
-      UsePackages := StrToBoolean(NodeValue)
-    ;
+      UsePackages := StrToBoolean(NodeValue);
   end;
 
-	procedure ReadVersionInfoNode(const Node: IXMLNode);
-	const
-		AttrName = 'Name';
-		VerStr: array [TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
-	var
+  procedure ReadVersionInfoNode(const Node: IXMLNode);
+  const
+    AttrName = 'Name';
+    VerStr: array[TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
+  var
     NodeValue, AttrValue: string;
-		SubVersion: TSubVersion;
-	begin
+    SubVersion: TSubVersion;
+  begin
     NodeValue := NodeToString(Node);
     AttrValue := GetNameAttr(Node);
     for SubVersion := Low(SubVersion) to High(SubVersion) do
@@ -451,9 +385,9 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     end;
   end;
 
-	procedure ReadDelphiPersonality(const ANode: IXMLNode);
-	var
-		iNode: IXMLNode;
+  procedure ReadDelphiPersonality(const ANode: IXMLNode);
+  var
+    iNode: IXMLNode;
   begin
     if (ANode.NodeName = 'Compiler') then
     begin
@@ -493,10 +427,10 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     end
   end;
 
-	procedure ReadBorlandProject(const Node: IXMLNode);
-	var
-		iNode: IXMLNode;
-	begin
+  procedure ReadBorlandProject(const Node: IXMLNode);
+  var
+    iNode: IXMLNode;
+  begin
     iNode := Node.ChildNodes.First;
     while iNode <> nil do
     begin
@@ -506,8 +440,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
   end;
 
 var
-	XML: IXMLDocument;
-	iNode: IXMLNode;
+  XML: IXMLDocument;
+  iNode: IXMLNode;
 begin
   if Save then
     BackupFile(AFileName, bfTemp);
@@ -548,29 +482,35 @@ var
   ReducedCondition: string;
 begin
   ReducedCondition := DelBESpaceF(Condition);
-  Result := (ReducedCondition = '''$(Cfg_2)''!=''''') or (ReducedCondition = '''$(Configuration)|$(Platform)'' == ''Debug|AnyCPU''');
+  Result := (ReducedCondition = '''$(Cfg_2)''!=''''') or (ReducedCondition =
+    '''$(Configuration)|$(Platform)'' == ''Debug|AnyCPU''');
 end;
 
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 
-	procedure ProcessNode(const Node: IXMLNode);
-	const
-		AttrName = 'Name';
-		VerStr: array [TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
-	var
-		cNode: IXMLNode;
-		Name: string;
+  procedure ProcessNode(const Node: IXMLNode);
+  const
+    AttrName = 'Name';
+    VerStr: array[TSubVersion] of string = ('MajorVer', 'MinorVer', 'Release', 'Build');
+  var
+    cNode: IXMLNode;
+    Name: string;
     NodeValue: string;
-		SubVersion: TSubVersion;
-		p: TProjectInfoName;
+    SubVersion: TSubVersion;
+    p: TProjectInfoName;
     i: SG;
-	begin
-		if (Node = nil) then
-			Exit;
+  begin
+    if (Node = nil) then
+      Exit;
     NodeValue := NodeToString(Node);
 
     Name := UpperCase(Node.NodeName);
-    if Name = UpperCase('DCC_BplOutput') then
+    if Name = UpperCase('MainSource') then
+    begin
+      if NodeValue <> 'MainSource' then
+        MainSource := NodeValue;
+    end
+    else if Name = UpperCase('DCC_BplOutput') then
     begin
       PackageDLLOutputDir := NodeValue;
     end
@@ -608,38 +548,39 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     end
     else if Name = UpperCase('Icon_MainIcon') then
     begin
-      if Save =False then
+      if Save = False then
         IconFileName := NodeValue;
     end
 //		DebugSourceDirs: string; // Not in cfg
-		else if Name = UpperCase('DCC_MinStackSize') then
+    else if Name = UpperCase('DCC_MinStackSize') then
     begin
       MinStackSize := StrToValS8(NodeValue, False, 0, S8(DefaultMinStackSize), MaxInt, 1, nil);
     end
-		else if Name = UpperCase('DCC_MaxStackSize') then
+    else if Name = UpperCase('DCC_MaxStackSize') then
     begin
       MaxStackSize := StrToValS8(NodeValue, False, 0, S8(DefaultMaxStackSize), MaxInt, 1, nil);
     end
-		else if Name = UpperCase('DCC_Image') then
+    else if Name = UpperCase('DCC_Image') then
     begin
       ImageBase := StrToValS8('$' + NodeValue, False, 0, S8(DefaultImageBase), MaxInt, 1, nil);
     end
-		else if Name = UpperCase('VersionInfo') then
-		begin
-			if Node.HasAttribute(AttrName) then
-			begin
-				Name := Node.GetAttribute(AttrName);
-				for SubVersion := Low(SubVersion) to High(SubVersion) do
-				begin
-					if Name = VerStr[SubVersion] then
-					begin
-						if Save then
+    else if Name = UpperCase('VersionInfo') then
+    begin
+      if Node.HasAttribute(AttrName) then
+      begin
+        Name := Node.GetAttribute(AttrName);
+        for SubVersion := Low(SubVersion) to High(SubVersion) do
+        begin
+          if Name = VerStr[SubVersion] then
+          begin
+            if Save then
 //							Node.NodeValue := Version.GetAsString(SubVersion)
-						else
-							Version.SetSubVersion(SubVersion, NodeValue);
-						Break;
-					end
-				end;
+
+            else
+              Version.SetSubVersion(SubVersion, NodeValue);
+            Break;
+          end
+        end;
         if Name = 'Debug' then
         begin
           Version.Debug := StrToBoolean(NodeValue);
@@ -668,13 +609,13 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
         begin
           Version.CodePage := StrToValS8(NodeValue, False, 0, 0, High(Version.CodePage), 1, nil)
         end;
-			end;
-		end
-		else if Name = UpperCase('VersionInfoKeys') then
-		begin
-			if Node.HasAttribute(AttrName) then
-			begin
-				Name := Node.GetAttribute(AttrName);
+      end;
+    end
+    else if Name = UpperCase('VersionInfoKeys') then
+    begin
+      if Node.HasAttribute(AttrName) then
+      begin
+        Name := Node.GetAttribute(AttrName);
         for p := Low(TProjectInfoName) to High(TProjectInfoName) do
         begin
           if ProjectInfoStr[p] = Name then
@@ -682,6 +623,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
             try
               if Save then
 //									Node.NodeValue := ProjectInfos[p]
+
               else
               begin
                 ProjectInfos[p] := NodeValue;
@@ -691,9 +633,9 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
             end;
             Break;
           end;
-				end;
-			end;
-		end
+        end;
+      end;
+    end
     else if Name = UpperCase('DCC_Hints') then
     begin
       if Save then
@@ -716,36 +658,37 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
         begin
           if Save then
 //            Node.NodeValue := Warnings[TCompilerWarning(i)]
+
           else
             Warnings[TCompilerWarning(i)] := StrToOutputWarning(NodeValue);
           Break;
         end;
     end;
 
-		cNode := Node.ChildNodes.First;
-		while cNode <> nil do
-		begin
- 			ProcessNode(cNode);
-			cNode := cNode.NextSibling;
-		end;
-	end;
+    cNode := Node.ChildNodes.First;
+    while cNode <> nil do
+    begin
+      ProcessNode(cNode);
+      cNode := cNode.NextSibling;
+    end;
+  end;
 
 var
-	XML: IXMLDocument;
-	iNode, cNode: IXMLNode;
+  XML: IXMLDocument;
+  iNode, cNode: IXMLNode;
   Name: string;
 begin
-	if Save = False then
-	begin
+  if Save = False then
+  begin
 		// Default
 //		Result.Version.CleanupInstance;
 //		ProjectInfos[piFileDescription] := '';
-	end;
+  end;
 
-	if FileExists(AFileName) then
-	begin
-		if Save then
-			BackupFile(AFileName, bfTemp);
+  if FileExists(AFileName) then
+  begin
+    if Save then
+      BackupFile(AFileName, bfTemp);
     try
       XML := TSxXMLDocument.Create(AFileName);
       XML.Active := True;
@@ -807,33 +750,33 @@ begin
       on E: Exception do
         ErrorMsg(E.Message);
     end;
-	end
-	else
-	begin
-		Warning('Dproj file %1 not found!', [AFileName]);
-	end;
+  end
+  else
+  begin
+    Warning('Dproj file %1 not found!', [AFileName]);
+  end;
 end;
 
 procedure TProjectOptions.Update;
 var
   Name: string;
 begin
-	ProjectInfos[piFileVersion] := Version.ToStrictString;
+  ProjectInfos[piFileVersion] := Version.ToStrictString;
 	// ProjectInfos[piFileDescription] := ProjectVersion.FileDescription;
-	ProjectInfos[piLegalCopyright] := ReplaceF(ProjectInfos[piLegalCopyright], '%year%', NToS(CurrentYear, '0000'));
+  ProjectInfos[piLegalCopyright] := ReplaceF(ProjectInfos[piLegalCopyright], '%year%', NToS(CurrentYear, '0000'));
 
   Name := DelFileExt(ExtractFileName(FFileName));
-	ProjectInfos[piInternalName] := Name;
-	ProjectInfos[piOriginalFileName] := Name + '.exe';
-	if ProjectInfos[piProductName] = '' then
-		ProjectInfos[piProductName] := AddSpace(Name);
+  ProjectInfos[piInternalName] := Name;
+  ProjectInfos[piOriginalFileName] := Name + '.' + ExecutableTypes[ExecutableType];
+  if ProjectInfos[piProductName] = '' then
+    ProjectInfos[piProductName] := AddSpace(Name);
 {	if Edition <> '' then
 		ProjectVersion.ProjectInfos[piProductName] := ProjectVersion.ProjectInfos[piProductName] + CharSpace + Edition;}
 
-	ProjectInfos[piProductVersion] := Version.ToString;
+  ProjectInfos[piProductVersion] := Version.ToString;
 
-	ProjectInfos[piRelease] := DateTimeToS(Now, 0, ofIO);
-	ProjectInfos[piWeb] := ReplaceF(ProjectInfos[piWeb], '%ProjectName%', Name);
+  ProjectInfos[piRelease] := DateTimeToS(Now, 0, ofIO);
+  ProjectInfos[piWeb] := ReplaceF(ProjectInfos[piWeb], '%ProjectName%', Name);
 end;
 
 (*
@@ -885,7 +828,7 @@ end;
 
 constructor TProjectOptions.Create;
 begin
-	inherited;
+  inherited;
 
   FEnabled := True;
   RuntimeThemes := True;
@@ -925,8 +868,7 @@ begin
   inherited;
 end;
 
-function TProjectOptions.GetExecutableType(
-  const FileNamePrefix: TFileName): TExecutableType;
+function TProjectOptions.GetExecutableType(const FileNamePrefix: TFileName): TExecutableType;
 var
   s: string;
   ProgramPos, LibraryPos: SG;
@@ -964,21 +906,22 @@ begin
     Result := etPackage;}
 end;
 
-function TProjectOptions.GetOutputFile(const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): TFileName;
+function TProjectOptions.GetOutputFile(const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform):
+  TFileName;
 begin
-	case ExecutableType of
-  etProgram, etLibrary:
-  	Result := OutputDir;
-  etPackage:
-  begin
-    	if PackageDLLOutputDir = '' then
+  case ExecutableType of
+    etProgram, etLibrary:
+      Result := OutputDir;
+    etPackage:
       begin
-        Result := ''; // TODO : Get "Package DCP Output" from, registry
-      end
-      else
-      	Result := PackageDLLOutputDir;
-		ParseDPK;
-  end;
+        if PackageDLLOutputDir = '' then
+        begin
+          Result := ''; // TODO : Get "Package DCP Output" from, registry
+        end
+        else
+          Result := PackageDLLOutputDir;
+        ParseDPK;
+      end;
   end;
 
   Result := ReplaceDelphiVariables(Result, DelphiVersion, SystemPlatform);
@@ -987,12 +930,10 @@ begin
     Result := ExpandFileName(ExtractFilePath(FFileName) + Result); // ../
   CorrectDir(string(Result));
 
-	Result := Result +
-  	LibDirective[ldPrefix] + DelFileExt(ExtractFileName(FFileName)) + LibDirective[ldSuffix] +
-  	'.' +
+  Result := Result + LibDirective[ldPrefix] + DelFileExt(ExtractFileName(FFileName)) + LibDirective[ldSuffix] + '.' +
     ExecutableTypes[ExecutableType];
-    if LibDirective[ldVersion] <> '' then
-      Result := Result + '.' + LibDirective[ldVersion];
+  if LibDirective[ldVersion] <> '' then
+    Result := Result + '.' + LibDirective[ldVersion];
 end;
 
 function TProjectOptions.ReadFromFile(const FileNamePrefix: TFileName): BG;
@@ -1005,33 +946,33 @@ end;
 
 procedure TProjectOptions.ReadProjectVersionFromDof(const AFileName: TFileName; const Overwrite: BG = False);
 const
-	VersionInfoSection = 'Version Info';
-	DirectoriesSectionName = 'Directories';
-	LinkerSectionName = 'Linker';
-	BuildSectionName = 'Build';
+  VersionInfoSection = 'Version Info';
+  DirectoriesSectionName = 'Directories';
+  LinkerSectionName = 'Linker';
+  BuildSectionName = 'Build';
 var
-	IniFile: TIniFile;
+  IniFile: TIniFile;
   ProjectInfoName: TProjectInfoName;
 begin
-	if FileExists(AFileName) then
-	begin
+  if FileExists(AFileName) then
+  begin
 		{$ifdef Console}
-		Information('Reading file %1.', [AFileName]);
+    Information('Reading file %1.', [AFileName]);
 		{$endif}
 
-		IniFile := TIniFile.Create(AFileName);
-		try
-    	if IniFile.SectionExists(BuildSectionName) then
+    IniFile := TIniFile.Create(AFileName);
+    try
+      if IniFile.SectionExists(BuildSectionName) then
       begin
         Enabled := IniFile.ReadBool(BuildSectionName, 'Enabled', Enabled);
         RuntimeThemes := IniFile.ReadBool(BuildSectionName, 'RuntimeThemes', RuntimeThemes);
         AdminRights := IniFile.ReadBool(BuildSectionName, 'AdminRights', AdminRights);
       end;
 
-			Version.SetSubVersion(svMajor, IniFile.ReadString(VersionInfoSection, 'MajorVer', Version.Major));
-			Version.SetSubVersion(svMinor, IniFile.ReadString(VersionInfoSection, 'MinorVer', Version.Minor));
-			Version.SetSubVersion(svRelease, IniFile.ReadString(VersionInfoSection, 'Release', Version.Release));
-			Version.SetSubVersion(svBuild, IniFile.ReadString(VersionInfoSection, 'Build', Version.Build));
+      Version.SetSubVersion(svMajor, IniFile.ReadString(VersionInfoSection, 'MajorVer', Version.Major));
+      Version.SetSubVersion(svMinor, IniFile.ReadString(VersionInfoSection, 'MinorVer', Version.Minor));
+      Version.SetSubVersion(svRelease, IniFile.ReadString(VersionInfoSection, 'Release', Version.Release));
+      Version.SetSubVersion(svBuild, IniFile.ReadString(VersionInfoSection, 'Build', Version.Build));
       Version.Debug := IniFile.ReadBool(VersionInfoSection, 'Debug', Version.Debug);
       Version.PreRelease := IniFile.ReadBool(VersionInfoSection, 'PreRelease', Version.PreRelease);
       Version.Special := IniFile.ReadBool(VersionInfoSection, 'Special', Version.Special);
@@ -1041,71 +982,71 @@ begin
       Version.CodePage := IniFile.ReadInteger(VersionInfoSection, 'CodePage', Version.CodePage);
       for ProjectInfoName := Low(ProjectInfoName) to High(ProjectInfoName) do
       begin
-  			ProjectInfos[ProjectInfoName] := IniFile.ReadString
-  				('Version Info Keys', ProjectInfoStr[ProjectInfoName], ProjectInfos[ProjectInfoName]);
+        ProjectInfos[ProjectInfoName] := IniFile.ReadString('Version Info Keys', ProjectInfoStr[ProjectInfoName],
+          ProjectInfos[ProjectInfoName]);
       end;
 
       if Overwrite or (OutputDir = '') then
-  			OutputDir := IniFile.ReadString(DirectoriesSectionName, 'OutputDir', OutputDir);
+        OutputDir := IniFile.ReadString(DirectoriesSectionName, 'OutputDir', OutputDir);
       if Overwrite or (UnitOutputDir = '') then
-  			UnitOutputDir := IniFile.ReadString(DirectoriesSectionName, 'UnitOutputDir', UnitOutputDir);
+        UnitOutputDir := IniFile.ReadString(DirectoriesSectionName, 'UnitOutputDir', UnitOutputDir);
       if Overwrite or (PackageDLLOutputDir = '') then
-  			PackageDLLOutputDir := IniFile.ReadString(DirectoriesSectionName, 'PackageDLLOutputDir', PackageDLLOutputDir);
+        PackageDLLOutputDir := IniFile.ReadString(DirectoriesSectionName, 'PackageDLLOutputDir', PackageDLLOutputDir);
       if Overwrite or (PackageDCPOutputDir = '') then
-  			PackageDCPOutputDir := IniFile.ReadString(DirectoriesSectionName, 'PackageDCPOutputDir', PackageDCPOutputDir);
+        PackageDCPOutputDir := IniFile.ReadString(DirectoriesSectionName, 'PackageDCPOutputDir', PackageDCPOutputDir);
 
- 			AddSearchPaths(IniFile.ReadString(DirectoriesSectionName, 'SearchPath', ''));
+      AddSearchPaths(IniFile.ReadString(DirectoriesSectionName, 'SearchPath', ''));
 
       AddConditionals(IniFile.ReadString(DirectoriesSectionName, 'Conditionals', ''));
 
       if Overwrite or (DebugSourceDirs = '') then
-  			DebugSourceDirs := IniFile.ReadString(DirectoriesSectionName, 'DebugSourceDirs', DebugSourceDirs);
+        DebugSourceDirs := IniFile.ReadString(DirectoriesSectionName, 'DebugSourceDirs', DebugSourceDirs);
       UsePackages := IniFile.ReadBool(DirectoriesSectionName, 'UsePackages', UsePackages);
       Packages := IniFile.ReadString(DirectoriesSectionName, 'Packages', Packages);
 
-			MinStackSize := IniFile.ReadInteger(LinkerSectionName, 'MinStackSize', MinStackSize);
-			MaxStackSize := IniFile.ReadInteger(LinkerSectionName, 'MaxStackSize', MaxStackSize);
-			ImageBase := IniFile.ReadInteger(LinkerSectionName, 'ImageBase', ImageBase);
+      MinStackSize := IniFile.ReadInteger(LinkerSectionName, 'MinStackSize', MinStackSize);
+      MaxStackSize := IniFile.ReadInteger(LinkerSectionName, 'MaxStackSize', MaxStackSize);
+      ImageBase := IniFile.ReadInteger(LinkerSectionName, 'ImageBase', ImageBase);
 
       BuildVersions := IniFile.ReadString('Build', 'Versions', BuildVersions);
-		finally
-			IniFile.Free;
-		end;
-	end
-	else
-	begin
-		Warning('Dof file %1 not found!', [AFileName]);
-	end;
+    finally
+      IniFile.Free;
+    end;
+  end
+  else
+  begin
+    Warning('Dof file %1 not found!', [AFileName]);
+  end;
 end;
 
 function TProjectOptions.ReplaceFromFile(const FileNamePrefix: TFileName): BG;
 var
-	DProjFileName: TFileName;
-	BDSProjFileName: TFileName;
-	DofFileName: TFileName;
+  DProjFileName: TFileName;
+  BDSProjFileName: TFileName;
+  DofFileName: TFileName;
 begin
   // Select newest project options format
 
-	DProjFileName := FileNamePrefix + '.dproj';
+  DProjFileName := FileNamePrefix + '.dproj';
   if FileExists(DProjFileName) then
   begin
-		RWDproj(DProjFileName, False);
+    RWDproj(DProjFileName, False);
     Result := True;
     Exit;
   end;
 
-	BDSProjFileName := FileNamePrefix + '.bdsproj';
+  BDSProjFileName := FileNamePrefix + '.bdsproj';
   if FileExists(BDSProjFileName) then
   begin
-		RWBDSProj(BDSProjFileName, False);
+    RWBDSProj(BDSProjFileName, False);
     Result := True;
     Exit;
   end;
 
-	DofFileName := FileNamePrefix + '.dof';
+  DofFileName := FileNamePrefix + '.dof';
   if FileExists(DofFileName) then
   begin
-		ReadProjectVersionFromDof(DofFileName);
+    ReadProjectVersionFromDof(DofFileName);
     Result := True;
     Exit;
   end;
@@ -1113,9 +1054,8 @@ begin
   Result := False;
 end;
 
-procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
-  const DelphiVersion: TDelphiVersion;
-  const SystemPlatform: TSystemPlatform);
+procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName; const DelphiVersion: TDelphiVersion; const
+  SystemPlatform: TSystemPlatform);
 
   function Quoted(const s: string): string;
   begin
@@ -1126,48 +1066,48 @@ procedure TProjectOptions.WriteToCfg(const CfgFileName: TFileName;
   end;
 
 var
-	Data: string;
+  Data: string;
   CfgSearchPath: string;
 begin
 	{$ifdef Console}
-	Information('Writing file %1.', [CfgFileName]);
+  Information('Writing file %1.', [CfgFileName]);
 	{$endif}
 
-	Data := '';
+  Data := '';
 
-	if OutputDir <> '' then
-		Data := Data + '-E' + Quoted(OutputDir) + FileSep;
+  if OutputDir <> '' then
+    Data := Data + '-E' + Quoted(OutputDir) + FileSep;
 
-	if Namespaces.Count > 0 then
-		Data := Data + '-NE' + Namespaces.DelimitedTextWithoutQuotes + FileSep;
-	if UnitOutputDir <> '' then
-		Data := Data + '-N"' + ReplaceDelphiVariables(UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
-	if PackageDLLOutputDir <> '' then
-		Data := Data + '-LE' + Quoted(ReplaceDelphiVariables(PackageDLLOutputDir, DelphiVersion, SystemPlatform)) + FileSep;
-	if PackageDCPOutputDir <> '' then
-		Data := Data + '-LN' + Quoted(ReplaceDelphiVariables(PackageDCPOutputDir, DelphiVersion, SystemPlatform)) + FileSep;
-	if UsePackages then
-		Data := Data + '-LU' + Packages + FileSep;
+  if Namespaces.Count > 0 then
+    Data := Data + '-NE' + Namespaces.DelimitedTextWithoutQuotes + FileSep;
+  if UnitOutputDir <> '' then
+    Data := Data + '-N"' + ReplaceDelphiVariables(UnitOutputDir, DelphiVersion, SystemPlatform) + '"' + FileSep;
+  if PackageDLLOutputDir <> '' then
+    Data := Data + '-LE' + Quoted(ReplaceDelphiVariables(PackageDLLOutputDir, DelphiVersion, SystemPlatform)) + FileSep;
+  if PackageDCPOutputDir <> '' then
+    Data := Data + '-LN' + Quoted(ReplaceDelphiVariables(PackageDCPOutputDir, DelphiVersion, SystemPlatform)) + FileSep;
+  if UsePackages then
+    Data := Data + '-LU' + Packages + FileSep;
 
   CfgSearchPath := ReplaceDelphiVariables(SearchPaths.DelimitedTextWithoutQuotes, DelphiVersion, SystemPlatform);
-	if CfgSearchPath <> '' then
-		Data := Data + '-U"' + CfgSearchPath + '"' + FileSep;
-	if CfgSearchPath <> '' then
-		Data := Data + '-O"' + CfgSearchPath + '"' + FileSep;
-	if CfgSearchPath <> '' then
-		Data := Data + '-I"' + CfgSearchPath + '"' + FileSep;
-	if CfgSearchPath <> '' then
-		Data := Data + '-R"' + CfgSearchPath + '"' + FileSep;
+  if CfgSearchPath <> '' then
+    Data := Data + '-U"' + CfgSearchPath + '"' + FileSep;
+  if CfgSearchPath <> '' then
+    Data := Data + '-O"' + CfgSearchPath + '"' + FileSep;
+  if CfgSearchPath <> '' then
+    Data := Data + '-I"' + CfgSearchPath + '"' + FileSep;
+  if CfgSearchPath <> '' then
+    Data := Data + '-R"' + CfgSearchPath + '"' + FileSep;
 
-	if Conditionals.Count > 0 then
-		Data := Data + '-D' + Conditionals.DelimitedTextWithoutQuotes + FileSep;
+  if Conditionals.Count > 0 then
+    Data := Data + '-D' + Conditionals.DelimitedTextWithoutQuotes + FileSep;
 
   Data := Data + '-$M' + IntToStr(MinStackSize) + ',' + IntToStr(MaxStackSize) + FileSep;
   Data := Data + '-K$' + NumToStr(ImageBase, 16) + FileSep;
 
-	WriteStringToFile(CfgFileName, Data, False, fcAnsi);
+  WriteStringToFile(CfgFileName, Data, False, fcAnsi);
 	{$ifdef Console}
-	Information('Done.');
+  Information('Done.');
 	{$endif}
 end;
 
@@ -1181,7 +1121,7 @@ begin
   begin
     Conditional := ReadToChar(AConditionals, i, ProjectListSeparator);
     if (Conditional <> '') and (Conditional <> '$(DCC_Define)') then
-			Conditionals.Add(Conditional);
+      Conditionals.Add(Conditional);
   end;
 end;
 
@@ -1195,7 +1135,7 @@ begin
   begin
     SearchPath := ReadToChar(ASearchPaths, i, ProjectListSeparator);
     if (SearchPath <> '') and (SearchPath <> '$(DCC_UnitSearchPath)') then
-			SearchPaths.Add(DelQuoteF(SearchPath));
+      SearchPaths.Add(DelQuoteF(SearchPath));
   end;
 end;
 
@@ -1209,7 +1149,7 @@ begin
   begin
     Namespace := ReadToChar(ANamespaces, i, ProjectListSeparator);
     if (Namespace <> '') and (ANamespaces <> '$(DCC_Namespace)') then
-			Namespaces.Add(Namespace);
+      Namespaces.Add(Namespace);
   end;
 end;
 
@@ -1234,9 +1174,9 @@ var
   p: SG;
 begin
   Data := ReadStringFromFile(DelFileExt(FFileName) + '.dpk');
-	for i := Low(TLibDirective) to High(TLibDirective) do
+  for i := Low(TLibDirective) to High(TLibDirective) do
   begin
-		LibDirective[i] := '';
+    LibDirective[i] := '';
     p := Pos('{$' + DirectiveName[i], Data);
     if p <> 0 then
     begin
@@ -1250,4 +1190,6 @@ initialization
 {$IFNDEF NoInitialization}
   Init;
 {$ENDIF NoInitialization}
+
 end.
+
