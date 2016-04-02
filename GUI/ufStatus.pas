@@ -129,8 +129,7 @@ procedure TfStatus.ButtonStopClick(Sender: TObject);
 begin
 	if Assigned(FThreadPool) then
 	begin
-		FThreadPool.Clear;
-		FThreadPool.Resume;
+		FThreadPool.ClearTasks;
 	end
 	else
 		Cancel := True;

@@ -29,6 +29,7 @@ uses
   uPictureFactoryTest in '..\GUI\uPictureFactoryTest.pas',
   uWebUpdateTest in '..\GUI\uWebUpdateTest.pas',
   uProjectOptionsTest in '..\Core\uProjectOptionsTest.pas',
+  uThreadPoolTest in '..\Core\uThreadPoolTest.pas',
   uDivideSpaceTest in '..\Core\uDivideSpaceTest.pas';
 
 {$R *.RES}
