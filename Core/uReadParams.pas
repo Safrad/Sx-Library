@@ -6,7 +6,8 @@ uses
   uTypes,
 	uOptions;
 
-function ReadParams(const Options: array of TOption; var Params: array of TParam): BG;
+function ReadParams(const Options: array of TOption; var Params: array of TParam): BG; overload;
+function ReadParams(const Options: array of TOption; var Params: array of TParam; const CommandLine: string): BG; overload;
 
 implementation
 
@@ -34,53 +35,56 @@ end;
 function ReadParams(const Options: array of TOption; var Params: array of TParam): BG;
 var
   CommandLine: string;
+begin
+  CommandLine := GetCommandLine;
+  Result := ReadParams(Options, Params, CommandLine);
+end;
+
+function ReadParams(const Options: array of TOption; var Params: array of TParam; const CommandLine: string): BG;
+var
   i: SG;
 	All: TArrayOfString;
   LastParam: SG;
   Param: string;
 begin
   Result := True;
-	if ParamCount > 0 then
-	begin
-		CommandLine := GetCommandLine;
-		All := SplitStr(CommandLine, 256, ExeParameters);
+  All := SplitStr(CommandLine, 256, ExeParameters);
 //	  ExeFileName := All[0];
-		LastParam := -1;
-  	for i := 1 to Length(All) - 1 do
+  LastParam := -1;
+  for i := 1 to Length(All) - 1 do
+  begin
+    Param := All[i];
+    if Length(Param) = 0 then
     begin
-      Param := All[i];
-      if Length(Param) = 0 then
+      LastParam := -1;
+      Continue;
+    end;
+    if CharInSet(Param[1], ['/', '-']) then
+    begin
+      LastParam := FindOptionIndex(UpperCase(Copy(Param, 2, MaxInt)), Options);
+      if LastParam = -1 then
       begin
+        ErrorMsg('Invalid argument/option - ''' + Param + '''');
+        Result := False;
+      end
+      else if Options[LastParam].Typ = vsCheck then
+      begin
+        Params[LastParam].Bool := True;
         LastParam := -1;
-      	Continue;
       end;
-      if CharInSet(Param[1], ['/', '-']) then
+    end
+    else
+    begin
+      if LastParam <> -1 then
       begin
-        LastParam := FindOptionIndex(UpperCase(Copy(Param, 2, MaxInt)), Options);
-        if LastParam = -1 then
-        begin
-        	ErrorMsg('Invalid argument/option - ''' + Param + '''');
-          Result := False;
-        end
-        else if Options[LastParam].Typ = vsCheck then
-        begin
-          Params[LastParam].Bool := True;
-          LastParam := -1;
-        end;
+        Params[LastParam] := StrToParam(@Options[LastParam], Param);
       end
       else
       begin
-        if LastParam <> -1 then
-        begin
-          Params[LastParam] := StrToParam(@Options[LastParam], Param);
-        end
-        else
-        begin
-        	ErrorMsg('Invalid argument/option - ''' + Param + '''');
-          Result := False;
-        end;
-//        	Error('Invalid syntax. Value expected for ''/' +  + ''''.)
+        ErrorMsg('Invalid argument/option - ''' + Param + '''');
+        Result := False;
       end;
+//        	Error('Invalid syntax. Value expected for ''/' +  + ''''.)
     end;
   end;
 end;
