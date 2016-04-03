@@ -64,7 +64,11 @@ begin
             // Task failed
             on E: Exception do
             begin
-              AsyncTask.SynchronizedFail;
+              try
+                AsyncTask.SynchronizedFail;
+              except
+                // No code
+              end;
             end;
           end;
         finally
@@ -77,7 +81,13 @@ begin
           if not FThreadPool.Working then
           begin
             if Assigned(FThreadPool.OnTasksFinished) then
-              AsyncTask.Synchronize(FThreadPool.InternalTasksFinished);
+            begin
+              try
+                AsyncTask.Synchronize(FThreadPool.InternalTasksFinished);
+              except
+                // No code
+              end;
+            end;
           end;
           try
             AsyncTask.Free;
