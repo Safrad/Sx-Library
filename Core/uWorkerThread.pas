@@ -98,7 +98,7 @@ begin
       end
       else
       begin
-        // No command available, add new command can wake up thread
+        // No task available, "ThreadPool.AddTask" can wake up thread
         Suspend;
 //          Exit; // Can be used for debbuging
 //         Sleep(FThreadPool.RunThreads * LoopSleepTime); // Can be used for debbuging
