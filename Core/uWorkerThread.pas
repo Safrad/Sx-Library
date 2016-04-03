@@ -58,10 +58,32 @@ begin
         FThreadPool.WorkerStartWork;
         try
           AsyncTask.Thread := Self;
-          AsyncTask.Execute;
+          try
+            AsyncTask.Execute;
+          except
+            // Task failed
+            on E: Exception do
+            begin
+              AsyncTask.SynchronizedFail;
+            end;
+          end;
         finally
+          try
+            AsyncTask.SynchronizedFinish;
+          except
+            // No code
+          end;
           FThreadPool.WorkerFinishWork;
-          AsyncTask.Free;
+          if not FThreadPool.Working then
+          begin
+            if Assigned(FThreadPool.OnTasksFinished) then
+              AsyncTask.Synchronize(FThreadPool.InternalTasksFinished);
+          end;
+          try
+            AsyncTask.Free;
+          except
+            // No code
+          end;
         end;
       end
       else

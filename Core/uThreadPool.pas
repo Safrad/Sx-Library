@@ -22,9 +22,13 @@ type
     procedure SetRunThreads(Value: SG);
     procedure SetMaxThreads(Value: SG);
     procedure QueueToThread;
+    procedure WaitForWorkers;
     procedure WorkerCreate(const Index: SG);
     procedure SetThreadPriority(const Value: TThreadPriority);
   public
+    OnTasksFinished: TNotifyEvent;
+    procedure InternalTasksFinished;
+    
     constructor Create;
     destructor Destroy; override;
     procedure AddTask(const AAsyncTask: TAsyncTask);
@@ -32,6 +36,7 @@ type
     procedure SortTasks(const A: TArrayOfSG);
     function PopAsyncTask: TAsyncTask;
     procedure ClearTasks;
+    function Working: BG;
     function RemainTaskCount: UG;
     procedure Pause;
     procedure Resume;
@@ -223,10 +228,9 @@ end;
 
 procedure TThreadPool.WaitForNoWork;
 begin
-  while (FQueue.Count > 0) or (FWorking > 0) do
+  while Working do
   begin
-    Sleep(LoopSleepTime);
-    Application.ProcessMessages;
+    WaitForWorkers;
   end;
 end;
 
@@ -236,9 +240,15 @@ begin
   QueueToThread;
   while (FRunThreads > 0) do
   begin
-    Sleep(LoopSleepTime);
-    Application.ProcessMessages;
+    WaitForWorkers;
   end;
+end;
+
+procedure TThreadPool.WaitForWorkers;
+begin
+  Sleep(LoopSleepTime);
+  Application.ProcessMessages;
+  CheckSynchronize; // If not called deadlock can appear
 end;
 
 procedure TThreadPool.WorkerFinishWork;
@@ -301,6 +311,17 @@ begin
       if FThreads[i] <> nil then
         FThreads[i].Priority := FThreadPriority;
   end;
+end;
+
+function TThreadPool.Working: BG;
+begin
+  Result := (FQueue.Count > 0) or (FWorking > 0);
+end;
+
+procedure TThreadPool.InternalTasksFinished;
+begin
+  if Assigned(OnTasksFinished) then
+    OnTasksFinished(Self);
 end;
 
 end.
