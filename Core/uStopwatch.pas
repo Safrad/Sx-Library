@@ -26,6 +26,9 @@ type
     // Gets the total elapsed time measured by the current instance, in milliseconds.
     function ElapsedMilliseconds: U8;
 
+    // Gets the total elapsed time measured by the current instance, in microseconds.
+    function ElapsedMicroseconds: U8;
+
     // Gets the total elapsed time measured by the current instance, in timer ticks.
     function ElapsedTicks: U8;
 
@@ -42,6 +45,11 @@ uses
   uMath, SysUtils, Classes;
 
 { TStopwatch }
+
+function TStopwatch.ElapsedMicroseconds: U8;
+begin
+  Result := RoundDivU8(1000 * Second * ElapsedTicks, PerformanceFrequency);
+end;
 
 function TStopwatch.ElapsedMilliseconds: U8;
 begin
