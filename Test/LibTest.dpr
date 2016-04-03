@@ -37,10 +37,9 @@ uses
 begin
   Application.Initialize;
   Application.Title := 'Lib Test';
-  {$ifdef Console}
-  TextTestRunner.RunRegisteredTests;
-  {$else}
-  GUITestRunner.RunRegisteredTests
-  {$endif}
+  if IsConsole then
+	TextTestRunner.RunRegisteredTests
+  else
+	GUITestRunner.RunRegisteredTests;
 end.
 
