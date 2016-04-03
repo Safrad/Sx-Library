@@ -211,7 +211,7 @@ begin
 				CRow := SRow;
 				while UG(CRow) < UG(SRow) + RowsSize do
 				begin
-		(*			if F.FilePos >= F.FileSize then Exit; // All readed
+		(*			if F.FilePos >= F.FileSize then Exit; // All read
 					if F.FilePos + RowSize > F.FileSize then
 					begin
 						if IsDebug then

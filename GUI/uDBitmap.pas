@@ -10436,7 +10436,7 @@ const
 	FontNames: array[TRasterFontStyle] of string = ('06x08', '08x08', '08x16');
 var
 	FontBitmap: array[TRasterFontStyle] of TDBitmap;
-	FontReaded: array[TRasterFontStyle] of Boolean;
+	FontRead: array[TRasterFontStyle] of Boolean;
 	Letter: TDBitmap;
 
 procedure TDBitmap.FTextOut(X, Y: SG;
@@ -10447,12 +10447,12 @@ var
 	FontColorR: TRGBA;
 begin
 	FontColorR := ColorToRGB(FontColor);
-	if FontReaded[RasterFontStyle] = False then
+	if FontRead[RasterFontStyle] = False then
 	begin
 		FontBitmap[RasterFontStyle] := TDBitmap.Create;
 		FontBitmap[RasterFontStyle].LoadFromFile(GraphDir + 'Font' + FontNames[RasterFontStyle] + IconExt);
 		FontBitmap[RasterFontStyle].Transparent := False;
-		FontReaded[RasterFontStyle] := True;
+		FontRead[RasterFontStyle] := True;
 	end;
 	if FontBitmap[RasterFontStyle] = nil then Exit;
 	if FontBitmap[RasterFontStyle].Data = nil then Exit;
@@ -10517,7 +10517,7 @@ procedure FreeFontBitmap;
 var i: TRasterFontStyle;
 begin
 	for i := Low(i) to High(i) do
-		if FontReaded[i] then FreeAndNil(FontBitmap[i]);
+		if FontRead[i] then FreeAndNil(FontBitmap[i]);
 	FreeAndNil(Letter);
 end;
 
