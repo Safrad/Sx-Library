@@ -10,7 +10,7 @@ function DateToCSShort(const D: TDateTime): string; // Events
 
 function IsNewYear(const ADate: TDate): BG;
 function IsChristmas(const ADate: TDate): BG;
-function IsPublicHolidayDay(const Date: TDateTime): BG;
+function IsCzechPublicHolidayDay(const Date: TDateTime): BG;
 
 function IsNewYearOnStartup: BG;
 function IsChristmasOnStartup: BG;
@@ -72,21 +72,88 @@ begin
   Result := GIsChristmasOnStartup;
 end;
 
-function IsPublicHolidayDay(const Date: TDateTime): BG;
+function IsCzechPublicHolidayDay(const Date: TDateTime): BG;
 var
   Day, Month, Year: U2;
 begin
   Result := False; // TODO
   DecodeDate(Date, Year, Month, Day);
+
   case Month of
   1:
   begin
     if Day in [1] then
       Result := True;
   end;
-  4:
+  3, 4:
   begin
-    // TODO : Easter
+    // TODO : Add Easter
+    case Year of
+    2020:
+    begin
+      if Month = 4 then
+      begin
+        if (Day = 10) or (Day = 13) then
+          Result := True;
+      end;
+    end;
+    2019:
+    begin
+      if Month = 4 then
+      begin
+        if (Day = 19) or (Day = 22) then
+          Result := True;
+      end;
+    end;
+    2018:
+    begin
+      if (Month = 3) and (Day = 30) then
+        Result := True;
+      if (Month = 4) and (Day = 2) then
+        Result := True;
+    end;
+    2017:
+    begin
+      if Month = 4 then
+      begin
+        if (Day = 14) or (Day = 17) then
+          Result := True;
+      end;
+    end;
+    2016: // Newly two days
+    begin
+      if Month = 3 then
+      begin
+        if (Day = 25) or (Day = 28) then
+          Result := True;
+      end;
+    end;
+    2015:
+    begin
+      if (Month = 4) and (Day = 6) then
+        Result := True;
+    end;
+    2014:
+    begin
+      if (Month = 4) and (Day = 21) then
+        Result := True;
+    end;
+    2013:
+    begin
+      if (Month = 4) and (Day = 1) then
+        Result := True;
+    end;
+    2012:
+    begin
+      if (Month = 4) and (Day = 9) then
+        Result := True;
+    end;
+    2011:
+    begin
+      if (Month = 4) and (Day = 25) then
+        Result := True;
+    end;
+    end;
   end;
   5:
   begin
