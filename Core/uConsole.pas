@@ -16,18 +16,23 @@ implementation
 
 uses
   uTypes,
+  uCharset,
   Windows;
 
 class procedure TConsole.WriteLine(const Text: string);
 begin
+  {$ifdef UNICODE}
   Writeln(Text);
+  {$else}
+  Writeln(ConvertAnsiToOem(Text));
+  {$endif}
 end;
 
 class procedure TConsole.WriteLine(const Text: string; const ForegroundColor, BackgroundColor: TConsoleColor);
 begin
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), U2(ForegroundColor) or U2(BackgroundColor) shl 4);
     try
-      Writeln(Text);
+      WriteLine(Text);
     finally
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), U2(ccLightGray)); // Default
     end;

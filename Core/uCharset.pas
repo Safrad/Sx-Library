@@ -23,6 +23,7 @@ function ConvertToAscii(const s: UnicodeString): AnsiString; overload;
 procedure ConvertCharset(var s: AnsiString; const FromCharset, ToCharset: TCodePage);
 function ConvertCharsetF(const s: AnsiString; const FromCharset, ToCharset: TCodePage): AnsiString;
 
+function ConvertAnsiToOem(const s: string): string;
 
 var
 	TableUpCaseCz, TableLowCaseCz: array[AnsiChar] of AnsiChar;
@@ -32,7 +33,7 @@ function LowCaseCz(const s: string): string;
 
 implementation
 
-uses SysUtils;
+uses SysUtils, Windows;
 
 type
 {const
@@ -183,6 +184,23 @@ begin
 		else
 			Result[i] := s[i];
 	end;}
+end;
+
+function ConvertAnsiToOem(const s: string): string;
+var
+  sBuffer: AnsiString;
+begin
+  if s = '' then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  SetLength(sBuffer, Length(s));
+  if CharToOem(PChar(s), PAnsiChar(sBuffer)) then
+    Result := string(sBuffer)
+  else
+    Result := s;
 end;
 
 {$ifndef UNICODE}
