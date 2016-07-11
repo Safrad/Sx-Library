@@ -106,19 +106,25 @@ var
 	ColumnIndex: SG;
 	LastIndex: SG;
 	Quoted: BG;
+  FirstOrAfterSeparator: BG;
 begin
 	Result := nil;
 	if Assigned(FFile) and (FFile.Opened) then
 	begin
 		SetLength(Result, FColumnCount);
+		Quoted := False;
+		ColumnIndex := 0;
 		while FFile.Readln(Line) do
 		begin
-			if Line = '' then Continue; // Empty line
-			if (Line[1] = CSVRemark) and (AcceptRemark = False) then Continue; // Remark line
+      if not Quoted then
+      begin
+  			if Line = '' then Continue; // Empty line
+  			if (Line[1] = CSVRemark) and (AcceptRemark = False) then Continue; // Remark line
+  			ColumnIndex := 0;
+      end;
 			LastIndex := 1;
 			InLineIndex := 1;
-			ColumnIndex := 0;
-			Quoted := False;
+      FirstOrAfterSeparator := True;
 			while InLineIndex <= Length(Line) do
 			begin
 				case Line[InLineIndex] of
@@ -126,74 +132,64 @@ begin
 				begin
 					if (Quoted = False) {and (LastIndex = InLineIndex)} {FirstColumnChar} then
 					begin
-						Quoted := True;
-						if LastIndex = InLineIndex then
-							Inc(LastIndex) // Skip First Quote
-						else
-						begin
-							Delete(Line, InLineIndex, 1); // Delete quote
-							Dec(InLineIndex);
-						end;
+            if FirstOrAfterSeparator then
+            begin
+              Quoted := True;
+              if LastIndex = InLineIndex then
+                Inc(LastIndex) // Skip First Quote
+              else
+              begin
+                Delete(Line, InLineIndex, 1); // Delete quote
+                Dec(InLineIndex);
+              end;
+            end;
 					end
-					else
-					begin
-						if Quoted then
-						begin
-							if CharAt(Line, InLineIndex + 1) = '"' then
-							begin // Convert two quotes to one.
-								Delete(Line, InLineIndex, 1);
-							end
-							else
-							begin
+					else if Quoted then
+          begin
+            if CharAt(Line, InLineIndex + 1) = '"' then
+            begin // Convert two quotes to one.
+              Delete(Line, InLineIndex, 1);
+            end
+            else
+            begin
 //								Assert(CharAt(Line, InLineIndex + 1) in [',', ';', CharTab];
-								Quoted := False;
-								Delete(Line, InLineIndex, 1); // Delete last quote
-								Dec(InLineIndex);
-							end;
-						end;
-
-
-{						if CharAt(Line, InLineIndex - 1) in ['"', '\'] then
-						begin
-							// Normal Char
-							Delete(Line, InLineIndex - 1, 1);
-							Dec(InLineIndex);
-						end
-						else
-						begin
-							if LastIndex = InLineIndex then
-								Inc(LastIndex) // Skip First Quote
-							else
-							begin
-								Delete(Line, InLineIndex, 1);
-								Dec(InLineIndex);
-							end;
-							Quoted := not Quoted;
-						end;}
-					end;
+              Quoted := False;
+              Delete(Line, InLineIndex, 1); // Delete last quote
+              Dec(InLineIndex);
+            end;
+          end;
 				end;
 				',', ';', CharTab: // Column separators
 				begin
 					if Quoted = False then
 					begin
+            FirstOrAfterSeparator := True;
 						if FColumnCount = 0 then
 						begin
 							if FColumnIndexes[ColumnIndex] >= 0 then
 							begin
 								SetLength(Result, Max(Length(Result), FColumnIndexes[ColumnIndex] + 1));
-								Result[FColumnIndexes[ColumnIndex]] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+								Result[FColumnIndexes[ColumnIndex]] := Result[FColumnIndexes[ColumnIndex]] + Copy(Line, LastIndex, InLineIndex - LastIndex);
 							end;
 						end
 						else if ColumnIndex < FColumnCount then
 						begin
 							if FColumnIndexes[ColumnIndex] >= 0 then
-								Result[FColumnIndexes[ColumnIndex]] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+								Result[FColumnIndexes[ColumnIndex]] := Result[FColumnIndexes[ColumnIndex]] + Copy(Line, LastIndex, InLineIndex - LastIndex);
 						end;
 						Inc(ColumnIndex);
 						LastIndex := InLineIndex + 1;
 					end;
 					// else char is part of value
 				end;
+        ' ':
+        begin
+        
+        end
+        else
+        begin
+          FirstOrAfterSeparator := False;
+        end;
 				end;
 
 				Inc(InLineIndex);
@@ -209,11 +205,14 @@ begin
 			else if ColumnIndex < FColumnCount then
 			begin
 				if FColumnIndexes[ColumnIndex] >= 0 then
-					Result[FColumnIndexes[ColumnIndex]] := Copy(Line, LastIndex, InLineIndex - LastIndex);
+					Result[FColumnIndexes[ColumnIndex]] := Result[FColumnIndexes[ColumnIndex]] + Copy(Line, LastIndex, InLineIndex - LastIndex);
 			end;
 
 			Inc(FLineIndex);
-			Break;
+      if not Quoted then
+  			Break
+      else
+        Result[FColumnIndexes[ColumnIndex]] := Result[FColumnIndexes[ColumnIndex]] + FullSep;
 		end;
 	end;
 end;

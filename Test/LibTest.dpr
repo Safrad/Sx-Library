@@ -30,7 +30,9 @@ uses
   uWebUpdateTest in '..\GUI\uWebUpdateTest.pas',
   uProjectOptionsTest in '..\Core\uProjectOptionsTest.pas',
   uThreadPoolTest in '..\Core\uThreadPoolTest.pas',
-  uDivideSpaceTest in '..\Core\uDivideSpaceTest.pas';
+  uDivideSpaceTest in '..\Core\uDivideSpaceTest.pas',
+  uProjectOptionsTest in '..\Core\uProjectOptionsTest.pas',
+  uCSVFileTest in '..\Core\uCSVFileTest.pas';
 
 {$R *.RES}
 
