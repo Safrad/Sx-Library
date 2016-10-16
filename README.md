@@ -42,4 +42,4 @@
 
 ## License
 
-* GNU Lesser General Public License
+* GNU Lesser General Public License v3.0
