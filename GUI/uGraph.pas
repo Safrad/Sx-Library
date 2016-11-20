@@ -701,7 +701,7 @@ end;
 function SortRectArray(const ASource: TRectArray; const Selection: TPoint; const FarerFirst: BG): TRectArray;
 var
   AIndex: TArrayOfSG;
-  SquaredDistanceFormSelection: TArrayOfSG;
+  SquaredDistanceFormSelection: TArrayOfS4;
   i: SG;
 begin
   SetLength(AIndex, Length(ASource));
