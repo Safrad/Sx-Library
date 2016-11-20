@@ -41,7 +41,7 @@ begin
   ThreadNameInfo.FFlags := 0;
 
   try
-    RaiseException($406D1388, 0, SizeOf(ThreadNameInfo) div SizeOf(LongWord), PDWORD(@ThreadNameInfo));
+    RaiseException($406D1388, 0, SizeOf(ThreadNameInfo) div SizeOf(LongWord), Pointer(@ThreadNameInfo));
   except
     // No Code
   end;

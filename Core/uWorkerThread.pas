@@ -31,13 +31,6 @@ begin
 
   Priority := AThreadPool.ThreadPriority;
   Name := 'Worker Thread Id ' + IntToStr(AId);
-  {$ifdef UNICODE}
-  if IsDebug then
-  begin
-    RegisterExpectedMemoryLeak(WorkerThread);
-    NameThreadForDebugging(AnsiString('Process ' + IntToStr(i)));
-  end;
-  {$endif}
 
   FId := AId;
   FThreadPool := AThreadPool;

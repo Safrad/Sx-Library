@@ -13,8 +13,8 @@ type
   TThreadPool = class
   private
     FMaxThreads: SG;
-    FRunThreads: SG;
-    FWorking: SG;
+    FRunThreads: S4;
+    FWorking: S4;
     FThreads: TThreads;
     FQueue: TData; // array of TAsyncTask;
     FQueueCriticalSection: TRTLCriticalSection;
@@ -33,7 +33,7 @@ type
     destructor Destroy; override;
     procedure AddTask(const AAsyncTask: TAsyncTask);
     procedure RandomizeTaskOrder;
-    procedure SortTasks(const A: TArrayOfSG);
+    procedure SortTasks(const A: TArrayOfS4);
     function PopAsyncTask: TAsyncTask;
     procedure ClearTasks;
     function Working: BG;
@@ -180,7 +180,7 @@ begin
   end;
 end;
 
-procedure TThreadPool.SortTasks(const A: TArrayOfSG);
+procedure TThreadPool.SortTasks(const A: TArrayOfS4);
 var
   AIndex: TArrayOfSG;
   FQueue2: TData;
