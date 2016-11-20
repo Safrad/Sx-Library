@@ -194,9 +194,11 @@ type
 	TRangeArray = array of TRange;
 
 	// Dynamic Arrays
-	TArrayOfU4 = array of U4;
 	TArrayOfBG = array of BG;
+	TArrayOfS4 = array of S4;
+	TArrayOfU4 = array of U4;
 	TArrayOfSG = array of SG;
+	TArrayOfUG = array of UG;
 	TArrayOfString = array of string;
 	TArrayOfChar = array of Char;
 	TArrayOfVariant = array of Variant;
