@@ -20,7 +20,8 @@ function CustomFileType(
 	const FileTypesOperation: TFileTypesOperation;
 	const FileType, FileTypeCaption, Icon: string;
 	const MenuCaptions: array of string;
-	const OpenPrograms: array of string
+	const OpenPrograms: array of string;
+  const Icons: array of string
 	): Boolean;
 
 function ShellFolder(const Name: string; const Common: BG = False): string;
@@ -36,7 +37,8 @@ function CustomFileType(
 	const FileTypesOperation: TFileTypesOperation;
 	const FileType, FileTypeCaption, Icon: string;
 	const MenuCaptions: array of string;
-	const OpenPrograms: array of string
+	const OpenPrograms: array of string;
+  const Icons: array of string
 	): Boolean;
 var
 	i: SG;
@@ -68,7 +70,7 @@ begin
 			RegistryClasses.Associate(FileType, FileTypeCaption, Icon);
 			for i := 0 to High(MenuCaptions) do
 			begin
-				RegistryClasses.CreateCommand(FileType, MenuCaptions[i], OpenPrograms[i]);
+				RegistryClasses.CreateCommand(FileType, MenuCaptions[i], OpenPrograms[i], Icons[i]);
 			end;
 		end;
 		foDelete:

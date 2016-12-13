@@ -31,7 +31,7 @@ type
 	end;
 
 procedure AddFileType(const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of string; const OpenPrograms: array of string);
+	const MenuCaptions: array of string; const OpenPrograms: array of string; const Icons: array of string);
 
 procedure FormFileExt;
 procedure FreeFileExt;
@@ -49,6 +49,7 @@ type
 		Exists: B4;
 		MenuCaptions: array of string; // 4
 		OpenPrograms: array of string; // 4
+    Icons: array of string; // 4
 	end;
 
 var
@@ -75,8 +76,7 @@ begin
 end;
 
 procedure AddFileType(const FileType, FileTypeCaption, Icon: string;
-	const MenuCaptions: array of string; const OpenPrograms: array of string);
-
+	const MenuCaptions: array of string; const OpenPrograms: array of string; const Icons: array of string);
 var
 	j: SG;
 begin
@@ -84,6 +84,7 @@ begin
 	FileTypes[FileTypeCount].FileType := FileType;
 	FileTypes[FileTypeCount].FileTypeCaption := FileTypeCaption;
 	FileTypes[FileTypeCount].Icon := Icon;
+
 	SetLength(FileTypes[FileTypeCount].MenuCaptions, Length(MenuCaptions));
 	for j := 0 to Length(MenuCaptions) - 1 do
 		FileTypes[FileTypeCount].MenuCaptions[j] := MenuCaptions[j];
@@ -91,11 +92,15 @@ begin
 	SetLength(FileTypes[FileTypeCount].OpenPrograms, Length(OpenPrograms));
 	for j := 0 to Length(OpenPrograms) - 1 do
 		FileTypes[FileTypeCount].OpenPrograms[j] := OpenPrograms[j];
+
+	SetLength(FileTypes[FileTypeCount].Icons, Length(Icons));
+	for j := 0 to Length(Icons) - 1 do
+		FileTypes[FileTypeCount].Icons[j] := Icons[j];
+
 	Inc(FileTypeCount);
 end;
 
 procedure TfFileExt.Init(Sender: TObject);
-
 var
 	i: SG;
 	ExistCount: SG;
@@ -105,7 +110,7 @@ begin
 	begin
 		FileTypes[i].Exists := CustomFileType(foExists, FileTypes[i].FileType,
 			FileTypes[i].FileTypeCaption, FileTypes[i].Icon, FileTypes[i].MenuCaptions,
-			FileTypes[i].OpenPrograms);
+			FileTypes[i].OpenPrograms, FileTypes[i].Icons);
 		if FileTypes[i].Exists then
 			Inc(ExistCount);
 	end;
@@ -121,7 +126,7 @@ begin
 	begin
 		CustomFileType(foCreate, FileTypes[i].FileType,
 			FileTypes[i].FileTypeCaption, FileTypes[i].Icon, FileTypes[i].MenuCaptions,
-			FileTypes[i].OpenPrograms);
+			FileTypes[i].OpenPrograms, FileTypes[i].Icons);
 	end;
 end;
 
@@ -135,7 +140,7 @@ begin
 		if (Tg >= 2) or (DViewFileExtensions.SelectedRows[i]) then
 			CustomFileType(TFileTypesOperation(Tg and 1), FileTypes[i].FileType,
 				FileTypes[i].FileTypeCaption, FileTypes[i].Icon, FileTypes[i].MenuCaptions,
-				FileTypes[i].OpenPrograms);
+				FileTypes[i].OpenPrograms, FileTypes[i].Icons);
 	end;
 	Init(Sender);
 	DViewFileExtensions.Invalidate;
@@ -168,7 +173,6 @@ begin
 end;
 
 procedure TfFileExt.PopupMenuFEPopup(Sender: TObject);
-
 var
 	i: SG;
 	C, E: BG;

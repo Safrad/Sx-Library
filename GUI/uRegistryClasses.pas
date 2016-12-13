@@ -21,7 +21,7 @@ type
 		destructor Destroy; override;
 
 		procedure CreateCommand(const FileType: string;
-			const MenuCaption: string; const OpenProgram: string);
+			const MenuCaption: string; const OpenProgram: string; const Icon: string);
 		procedure DeleteCommand(const FileType: string;
 			const MenuCaption: string);
 		function ExistsCommand(const FileType: string;
@@ -88,7 +88,7 @@ begin
 end;
 
 procedure TRegistryClasses.CreateCommand(const FileType: string;
-	const MenuCaption: string; const OpenProgram: string);
+	const MenuCaption: string; const OpenProgram: string; const Icon: string);
 var
 	InternalName, Key0, Key, ShortMenuCaption: string;
 	Flags: U4;
@@ -133,6 +133,11 @@ begin
 			Flags := $00000001;
 			FRegistry.WriteBinaryData('EditFlags', Flags, SizeOf(Flags));
 		end;
+		FRegistry.CloseKey;
+
+		Key := Prefixed(InternalName + '\shell\' + ShortMenuCaption);
+		OpenOrCreateKey(Key);
+		FRegistry.WriteString('Icon', Icon);
 		FRegistry.CloseKey;
 
 		Key := Prefixed(InternalName + '\shell\' + ShortMenuCaption + '\command');
