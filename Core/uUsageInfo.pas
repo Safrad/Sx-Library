@@ -200,7 +200,7 @@ begin
   except
     on E: Exception do
       if LogError then
-        LogAdd(E.Message);
+        MainLogAdd(E.Message, mlError);
   end;
 end;
 

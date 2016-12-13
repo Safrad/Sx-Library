@@ -43,7 +43,7 @@ var
   NotOk: BG;
 begin
   if LogDebug then
-	  LogAdd('Download file ' + AddQuoteF(AURL));
+	  MainLogAdd('Download file ' + AddQuoteF(AURL), mlDebug);
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 		IdHTTP1.HandleRedirects := True;
@@ -115,7 +115,7 @@ var
 	DownLoadURL: TDownLoadURL;
 begin
   if LogDebug then
-		LogAdd('Download file ' + AddQuoteF(AURL));
+		MainLogAdd('Download file ' + AddQuoteF(AURL), mlDebug);
   if Obj = nil then
     Obj := TObj.Create;
   Obj.Again := False;
@@ -140,7 +140,7 @@ var
 	IdHTTP1: TIdHTTP;
 begin
   if LogDebug then
-    LogAdd('Download data ' + AddQuoteF(AURL));
+    MainLogAdd('Download data ' + AddQuoteF(AURL), mlDebug);
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 		IdHTTP1.HandleRedirects := True;
@@ -155,7 +155,7 @@ var
 	IdHTTP1: TIdHTTP;
 begin
   if LogDebug then
-    LogAdd('Download data ' + AddQuoteF(AURL));
+    MainLogAdd('Download data ' + AddQuoteF(AURL), mlDebug);
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
     IdHTTP1.Request.Clear;
@@ -232,7 +232,7 @@ begin
       except
         on E: Exception do
           if LogError then
-          	LogAdd(E.Message);
+          	MainLogAdd(E.Message, mlError);
       end;
 		finally
   		AResponseContent.Free;

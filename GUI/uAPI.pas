@@ -161,7 +161,8 @@ procedure APIOpen(FileName: TFileName; const Params: string = '');
 var
 	ShellExecuteThread: TShellExecute;
 begin
-	if LogDebug then LogAdd('ShellExecute ' + FileName + ' ' + Params);
+	if LogDebug then
+    MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
 //	ShellExecute(0, OpenString, PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
 	ShellExecuteThread := TShellExecute.Create(FileName, Params);
 	{$if CompilerVersion >= 20}

@@ -343,7 +343,7 @@ begin
     begin
       i := p + Length(EnvName);
       if LogWarning then
-        LogAdd('Environment Variable ' + EnvName + ' not found.');
+        MainLogAdd('Environment Variable ' + EnvName + ' not found.', mlWarning);
     end;
   end;
 end;

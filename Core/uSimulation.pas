@@ -82,7 +82,7 @@ begin
 		if (GTimeStep2 >= 2 * MaximumTimeStep2) then // Long lag and hibernation
 		begin
 			if LogWarning then
-        LogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO));
+        MainLogAdd('Time Lag ' + MsToStr(GTimeStep2, diDHMSD, 3, False, ofIO), mlWarning);
 			GTimeStep2 := MaximumTimeStep2;
 		end;
 	end;

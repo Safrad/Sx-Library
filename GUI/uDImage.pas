@@ -1919,7 +1919,7 @@ begin
 	end;
 	end;
 //  if LogDebug then
-//    LogAdd('Set Cursor to ' + NToS(Cursor));
+//    MainLogAdd('Set Cursor to ' + NToS(Cursor), mlDebug);
 end;
 
 procedure TDImage.SetAreaCursor(const Value: TCursor);

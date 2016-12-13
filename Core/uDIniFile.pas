@@ -1609,7 +1609,7 @@ begin
 	if not Assigned(RWOptions) then
 		Exit;
 	if LogDebug then
-		LogAdd('RegisterRW');
+		MainLogAdd('RegisterRW', mlDebug);
 	SetLength(FRWList, Length(FRWList) + 1);
 	FRWList[Length(FRWList) - 1] := RWOptions;
 	RWOptions(False);
@@ -1620,7 +1620,7 @@ var
 	i, j, l: SG;
 begin
 	if LogDebug then
-		LogAdd('UnregisterRW');
+		MainLogAdd('UnregisterRW', mlDebug);
 	RWOptions(True);
 	i := 0;
 	while i < Length(FRWList) do

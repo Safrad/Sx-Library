@@ -15,18 +15,15 @@ type
 		FDirectWrite: BG;
     FInWrite: BG;
 		FLoggingLevel: TMessageLevel;
-    FLastMessageLevel: TMessageLevel;
     FMaxLogFiles: SG;
 		procedure WriteLine(const Line: string);
 	public
 		property FileName: TFileName read FFileName;
 		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True; const MaxLogFiles: SG = 0);
 		destructor Destroy; override;
-		procedure Add(const Line: string); overload;
-		procedure Add(const LogTime: TDateTime; const Line: string); overload;
 
-		procedure Add(const Line: string; const MessageLevel: TMessageLevel); override; deprecated;
-		procedure Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel); override; deprecated;
+		procedure Add(const Line: string; const MessageLevel: TMessageLevel); override;
+		procedure Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel); override;
 
     function FatalError: BG;
     function Error: BG;
@@ -40,19 +37,11 @@ type
 		property MaxLogFiles: SG read FMaxLogFiles write FMaxLogFiles;
 	end;
 
-	TLogMessageProcedure = procedure(const ALine: string; const AMessageLevel: TMessageLevel);
 
-	// Add startup parameter -LogDebug for all debuging information
+	procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel);
 
-//  function LogDebug
+  // Optimization purposes only
 	function MainLogWrite(const AMessageLevel: TMessageLevel): BG;
-
-   // Use LogAdd with one of LogFatalError, LogError, LogWarning, LogInformation, LogDebug, LogConfirmation
-   // i.e. "MainLogAdd('Log message.', mlError);" is equivalent of "if LogError then LogAdd('Log message.');"
-	procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel); deprecated;
-
-  procedure LogAdd(const AMessage: string);
-
   function LogFatalError: BG;
   function LogError: BG;
   function LogWarning: BG;
@@ -160,7 +149,6 @@ var
 begin
 	inherited Create;
 	FLoggingLevel := LogLevel;
-  FLastMessageLevel := mlNone;
 	FFileName := GetLogWritableFileName;
 	FDirectWrite := DirectWrite;
   FMaxLogFiles := MaxLogFiles;
@@ -246,22 +234,11 @@ begin
 	end;
 end;
 
-procedure TLog.Add(const Line: string);
-begin
-  Add(Line, FLastMessageLevel);
-end;
-
-procedure TLog.Add(const LogTime: TDateTime; const Line: string);
-begin
-  Add(LogTime, Line, FLastMessageLevel);
-end;
-
 function TLog.FatalError: BG;
 begin
   Result := False;
   if mlFatalError >= MainLog.FLoggingLevel then
   begin
-    MainLog.FLastMessageLevel := mlFatalError;
     Result := True;
   end;
 end;
@@ -271,7 +248,6 @@ begin
   Result := False;
   if mlError >= MainLog.FLoggingLevel then
   begin
-    MainLog.FLastMessageLevel := mlError;
     Result := True;
   end;
 end;
@@ -281,7 +257,6 @@ begin
   Result := False;
   if mlWarning >= MainLog.FLoggingLevel then
   begin
-    FLastMessageLevel := mlWarning;
     Result := True;
   end;
 end;
@@ -291,7 +266,6 @@ begin
   Result := False;
   if mlInformation >= MainLog.FLoggingLevel then
   begin
-    FLastMessageLevel := mlInformation;
     Result := True;
   end;
 end;
@@ -301,7 +275,6 @@ begin
   Result := False;
   if mlDebug >= MainLog.FLoggingLevel then
   begin
-    FLastMessageLevel := mlDebug;
     Result := True;
   end;
 end;
@@ -311,7 +284,6 @@ begin
   Result := False;
   if mlConfirmation >= MainLog.FLoggingLevel then
   begin
-    FLastMessageLevel := mlConfirmation;
     Result := True;
   end;
 end;
@@ -343,17 +315,6 @@ begin
 	end;
 end;
 
-function MainLogWrite(const AMessageLevel: TMessageLevel): BG;
-begin
-	Result := False;
-  if Assigned(MainLog) then
-    if (AMessageLevel >= MainLog.LoggingLevel) then
-    begin
-      MainLog.FLastMessageLevel := AMessageLevel;
-      Result := True;
-    end;
-end;
-
 procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel);
 begin
   if InitializingLog then Exit;
@@ -368,76 +329,39 @@ begin
 	MainLog.LoggingLevel := GetLoggingLevel(Value);
 end;
 
-procedure LogAdd(const AMessage: string);
+function MainLogWrite(const AMessageLevel: TMessageLevel): BG;
 begin
-  if Assigned(MainLog) then
-    MainLog.Add(AMessage, MainLog.FLastMessageLevel);
+	Result := Assigned(MainLog) and (MainLog.LoggingLevel <= AMessageLevel);
 end;
 
 function LogFatalError: BG;
 begin
-  Result := False;
-  if Assigned(MainLog) then
-  	if mlFatalError >= MainLog.FLoggingLevel then
-    begin
-      MainLog.FLastMessageLevel := mlFatalError;
-      Result := True;
-    end;
+  Result := Assigned(MainLog) and (MainLog.FLoggingLevel <= mlFatalError);
 end;
 
 function LogError: BG;
 begin
-  Result := False;
-  if Assigned(MainLog) then
-  	if mlError >= MainLog.FLoggingLevel then
-    begin
-      MainLog.FLastMessageLevel := mlError;
-      Result := True;
-    end;
+  Result := Assigned(MainLog) and (MainLog.FLoggingLevel <= mlError);
 end;
 
 function LogWarning: BG;
 begin
-  Result := False;
-  if Assigned(MainLog) then
-  	if mlWarning >= MainLog.FLoggingLevel then
-    begin
-      MainLog.FLastMessageLevel := mlWarning;
-      Result := True;
-    end;
+  Result := Assigned(MainLog) and (MainLog.FLoggingLevel <= mlWarning);
 end;
 
 function LogInformation: BG;
 begin
-  Result := False;
-  if Assigned(MainLog) then
-  	if mlInformation >= MainLog.FLoggingLevel then
-    begin
-      MainLog.FLastMessageLevel := mlInformation;
-      Result := True;
-    end;
+  Result := Assigned(MainLog) and (MainLog.FLoggingLevel <= mlInformation);
 end;
 
 function LogDebug: BG;
 begin
-  Result := False;
-  if Assigned(MainLog) then
-  	if mlDebug >= MainLog.FLoggingLevel then
-    begin
-      MainLog.FLastMessageLevel := mlDebug;
-      Result := True;
-    end;
+  Result := Assigned(MainLog) and (MainLog.FLoggingLevel <= mlDebug);
 end;
 
 function LogConfirmation: BG;
 begin
-  Result := False;
-  if Assigned(MainLog) then
-  	if mlConfirmation >= MainLog.FLoggingLevel then
-    begin
-      MainLog.FLastMessageLevel := mlConfirmation;
-      Result := True;
-    end;
+  Result := Assigned(MainLog) and (MainLog.FLoggingLevel <= mlConfirmation);
 end;
 
 procedure InitializeLog;

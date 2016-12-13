@@ -128,7 +128,7 @@ end;
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 begin
   if MainLogWrite(MessageLevel) then
-    LogAdd(ExpandedText);
+    MainLogAdd(ExpandedText, MessageLevel);
 
   if not IsMainThread then
   begin
@@ -148,7 +148,7 @@ var
 begin
   ExpandedText := ReplaceParam(Text, Param);
   if MainLogWrite(MessageLevel) then
-    LogAdd(ExpandedText);
+    MainLogAdd(ExpandedText, MessageLevel);
 
   if not IsMainThread then
   begin
@@ -235,7 +235,7 @@ end;
 function ErrorRetry(const Text: string): BG;
 begin
   if LogError then
-    LogAdd(Text);
+    MainLogAdd(Text, mlError);
 
   if not IsMainThread then
   begin
@@ -309,7 +309,7 @@ var
 begin
   Text := ErrorMsg + ': ' + FileName;
   if LogError then
-    LogAdd(Text);
+    MainLogAdd(Text, mlError);
 
   if not IsMainThread then
   begin
@@ -336,7 +336,7 @@ begin
 
   Text := ErrorMsg + ': ' + FileName;
   if LogError then
-    LogAdd(Text);
+    MainLogAdd(Text, mlError);
 {$IFNDEF Console}
   Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
 {$ELSE}
