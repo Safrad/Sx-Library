@@ -1293,11 +1293,11 @@ var
 	Co: array [0 .. 3] of TColor;
 	I1, I2: SG;
 	SliderC1, SliderC2: TColor;
-	s: string;
 	i, X, Y: SG;
 	R: TRect;
 {$IFDEF info}
 	StartTickCount: U4;
+	s: string;
 {$ENDIF}
 begin
 	OffsetRange(FOfsX, FOfsY);
@@ -1636,9 +1636,9 @@ begin
 					s := s + ', ';
 				s := s + MsToStr(StartTickCount, diSD, 3, False);
 			end;
-{$ENDIF}
 			DrawCuttedText(Bitmap.Canvas, R, taRightJustify, tlBottom, s, True, IdealShadow(Bitmap.Canvas)
 				);
+{$ENDIF}
 
 			Inc(FIntervalFillCount);
 			GetGTime;
