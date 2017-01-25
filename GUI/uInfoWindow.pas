@@ -44,8 +44,7 @@ begin
 		fInfoWindow := TfInfoWindow.Create(nil);
 
 	fInfoWindow.Height := fInfoWindow.StartHeight;
-	GetGTime;
-	fInfoWindow.StartTickCount := GTime;
+	fInfoWindow.StartTickCount := GetTickCount;
 	fInfoWindow.LabelText.Caption := ReplaceF(Text, LineSep, LineSep + LineSep);
 //	fInfoWindow.SendToBack;
 	fInfoWindow.Visible := True;
@@ -89,21 +88,20 @@ var
 	R: TRect;
 	H: SG;
 begin
-	GetGTime;
-	if TimeDifference(GTime, StartTickCount) <= 2 * Second then
+	if TimeDifference(GetTickCount, StartTickCount) <= 2 * Second then
 	begin
 		R := Screen.MonitorFromWindow(Handle).WorkareaRect;
-		H := RoundDivS8(Min(1000, TimeDifference(GTime, StartTickCount)) * StartHeight, 1000);
+		H := RoundDivS8(Min(1000, TimeDifference(GetTickCount, StartTickCount)) * StartHeight, 1000);
 		Self.SetBounds(
 			Left,
 			R.Bottom - H,
 			Width,
 			H);
 	end
-	else if TimeDifference(GTime, StartTickCount) > 4 * Second then
+	else if TimeDifference(GetTickCount, StartTickCount) > 4 * Second then
 	begin
 		R := Screen.MonitorFromWindow(Handle).WorkareaRect;
-		H := StartHeight - RoundDivS8((S8(TimeDifference(GTime, StartTickCount)) - 4 * Second) * StartHeight, 1000);
+		H := StartHeight - RoundDivS8((S8(TimeDifference(GetTickCount, StartTickCount)) - 4 * Second) * StartHeight, 1000);
 		if H <= 0 then
 			Close
 		else

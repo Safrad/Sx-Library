@@ -38,14 +38,14 @@ implementation
 
 uses
   uSimulation,
+  Windows,
   SysUtils;
 
 { TFactoryObject }
 
 constructor TFactoryObject.Create;
 begin
-//  GetGTime;
-//  LastUsed := GTime;
+
 end;
 
 destructor TFactoryObject.Destroy;
@@ -114,8 +114,7 @@ begin
     Objects.Add(Result);
   end;
   Inc(Result.ReferenceCount);
-  GetGTime;
-  Result.LastUsed := GTime;
+  Result.LastUsed := GetTickCount;
 end;
 
 function TObjectFactory.FoundObject(const Name: string): TFactoryObject;

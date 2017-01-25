@@ -75,8 +75,7 @@ begin
 		end;
 	end;
 	Call.MissedCount := 0;
-	GetGTime;
-	Call.NextDrawTime := GTime;
+	Call.NextDrawTime := GetTickCount;
 end;
 
 procedure DelayedCall(const Index: SG);
@@ -88,13 +87,12 @@ begin
 	Call := Calls.Get(Index);
 	if Call <> nil then
 	begin
-		GetGTime;
 		{$ifdef Thread}
 		Inc(Call.MissedCount);
 		{$else}
 		if DelayedCallEnabled then
 		begin
-			if Call.NextDrawTime + DelayedCallTime > GTime then
+			if Call.NextDrawTime + DelayedCallTime > GetTickCount then
 			begin
 				Inc(Call.MissedCount);
 				Exit;
@@ -123,10 +121,8 @@ var
 	Call: PCall;
 	HTime: U4;
 begin
-	GetGTime;
-
 	if DelayedCallEnabled then
-		HTime := GTime
+		HTime := GetTickCount
 	else
 		HTime := High(HTime);
 

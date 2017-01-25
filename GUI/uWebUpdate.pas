@@ -188,8 +188,7 @@ begin
 	  AResponseContent := TFileStream.Create(TargetFileName, fmCreate or fmShareDenyNone);
     try
       try
-        GetGTime;
-        StartTime := GTime;
+        StartTime := GetTickCount;
         IdHTTP1.Request.UserAgent := GetProjectInfo(piInternalName);
         if Source.Count > 0 then
         begin
@@ -226,8 +225,7 @@ begin
         begin
           IdHTTP1.Get(AURL, AResponseContent);
         end;
-        StartTime := IntervalFrom(StartTime);
-      	MainLog.Add('Download time: ' + MsToStr(StartTime, diSD, 3, False, ofIO) + 's', mlDebug);
+      	MainLog.Add('Download time: ' + MsToStr(IntervalFrom(StartTime), diSD, 3, False, ofIO) + 's', mlDebug);
         Result := True;
       except
         on E: Exception do

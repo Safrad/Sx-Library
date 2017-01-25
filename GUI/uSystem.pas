@@ -10,9 +10,6 @@ function DriveTypeToStr(const DriveType: Integer): string;
 function ProcessPriority(const Prior: U1): Integer;
 function ThreadPriority(const Prior: U1): Integer;
 
-procedure BeginLongOperation(const Background: BG = False);
-procedure EndLongOperation(const Sound: BG = True);
-
 function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
 function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
 function WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG; const Charset: TFileCharset = DefaultFileCharset): BG;
@@ -40,7 +37,7 @@ procedure SetEnabledWinKeys(const AEnabled: BG);
 implementation
 
 uses
-	Windows, Math, Dialogs, Registry, TaskBarAPI,
+	Windows, Math, Dialogs, Registry,
 	uStrings, uFiles, uDParser, uWave, uMath, uDictionary, uSimulation, uOutputFormat, uMsg;
 
 var
@@ -102,32 +99,6 @@ begin
 	else
 		Result := THREAD_PRIORITY_NORMAL;
 	end;
-end;
-
-procedure BeginLongOperation(const Background: BG = False);
-begin
-	if Background then
-		Screen.Cursor := crAppStart
-	else
-		Screen.Cursor := crHourGlass;
-  InitializeTaskbarAPI;
-  SetTaskbarProgressState(tbpsIndeterminate);
-  GetGTime;
-  GStartTime := GTime;
-end;
-
-procedure EndLongOperation(const Sound: BG);
-var
-  TotalTime: U4;
-begin
-  TotalTime := IntervalFrom(GStartTime);
-	if Sound and (TotalTime >= Second) then
-		PlayWinSound(wsAsterisk);
-	Screen.Cursor := crDefault;
-  InitializeTaskbarAPI;
-  SetTaskbarProgressState(tbpsNone);
-  if IsDebug then
-    Information('Total time: ' + MsToStr(TotalTime, diSD, 3));
 end;
 
 function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
@@ -430,7 +401,6 @@ initialization
 
 finalization
 {$IFNDEF NoFinalization}
-  FinalizeTaskbarAPI;
 	FreeAndNil(OpenDialog);
 {$ENDIF NoFinalization}
 end.

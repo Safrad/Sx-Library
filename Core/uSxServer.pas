@@ -138,7 +138,7 @@ begin
     raise Exception.Create('Error reported but server is stopped!');
   if FErrorTime = 0 then
   begin
-    FErrorTime := GTime;
+    FErrorTime := GetTickCount;
     if IsDebug then
       Increment := 5 * Second
     else

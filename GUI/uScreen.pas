@@ -311,8 +311,6 @@ var
 
 	Ram: UG;
 begin
-	BeginLongOperation;
-
 	if First = False then
 	begin
 		DriverNameCount := 0;
@@ -551,7 +549,6 @@ begin
 		StartScreenMode := NowScreenMode;
 		NotFirstTime := True;
 	end;
-	EndLongOperation(False);
 	if First = False then
 	begin
 		First := True;

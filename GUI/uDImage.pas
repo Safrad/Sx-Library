@@ -1295,6 +1295,7 @@ var
 	SliderC1, SliderC2: TColor;
 	i, X, Y: SG;
 	R: TRect;
+  PeriodTime: U4;
 {$IFDEF info}
 	StartTickCount: U4;
 	s: string;
@@ -1303,8 +1304,7 @@ begin
 	OffsetRange(FOfsX, FOfsY);
 	inherited;
 {$IFDEF info}
-	GetGTime;
-	StartTickCount := GTime;
+	StartTickCount := GetTickCount;
 {$ENDIF}
 	if (Bitmap.Width <> Width) or (Bitmap.Height <> Height) then
 		Bitmap.SetSize(Width, Height, Color);
@@ -1641,14 +1641,13 @@ begin
 {$ENDIF}
 
 			Inc(FIntervalFillCount);
-			GetGTime;
-			if TimeDifference(GTime, FIntervalStartTime) >= Second then
+      PeriodTime := IntervalFrom(FIntervalStartTime);
+			if PeriodTime >= Second then
 			begin
 				if FIntervalStartTime > 0 then
-					FFPS := RoundDivS8(1000 * Second * FIntervalFillCount, TimeDifference
-							(GTime, FIntervalStartTime));
+					FFPS := RoundDivS8(1000 * Second * FIntervalFillCount, PeriodTime);
 				FIntervalFillCount := 0;
-				FIntervalStartTime := GTime;
+				FIntervalStartTime := GetTickCount;
 			end;
 			if FFPS > 0 then
 				DrawCuttedText(Bitmap.Canvas, R, taRightJustify, tlTop, NToS(FFPS, 3), True, IdealShadow

@@ -3,7 +3,9 @@ unit uProcess;
 interface
 
 uses
-  uTypes, Forms;
+  uTypes,
+  uLongOperation,
+  Forms;
 
 type
   TProcessStatus = (psIdle, psRun{ning}, psPaused, psAborted);
@@ -16,6 +18,7 @@ type
     StartTime, PauseTime, LastInterruptTime: U8;
     FValue: S8;
     FMaximalValue: S8;
+    FLongOperation: TLongOperation;
     function StatusToStr: string;
     function StatusToCaption: string;
     procedure StatusChanged(Value: TProcessStatus);
@@ -24,6 +27,8 @@ type
     procedure UpdateProgress;
   public
     constructor Create(Form: TForm);
+    destructor Destroy; override;
+
     function Run: BG;
     function NotRun: BG;
     procedure Done;
@@ -55,7 +60,7 @@ begin
   Result := FProcessStatus in [psIdle, psAborted];
   if Result then
   begin
-    BeginLongOperation(True);
+    FLongOperation.Start;
     ProcessStatus := psRun
   end
   else if FProcessStatus = psPaused then
@@ -66,7 +71,7 @@ procedure TProcess.Done;
 begin
   if ProcessStatus <> psAborted then
     ProcessStatus := psIdle;
-  EndLongOperation(True);
+  FLongOperation.Stop;
 end;
 
 procedure TProcess.Pause;
@@ -151,6 +156,9 @@ end;
 
 constructor TProcess.Create(Form: TForm);
 begin
+  FLongOperation := TLongOperation.Create;
+  FLongOperation.Background := True;
+
   FForm := Form;
   FOneTick := RoundDivU8(PerformanceFrequency, 1000 div LoopSleepTime);
   if Assigned(FForm) then
@@ -203,6 +211,13 @@ procedure TProcess.UpdateProgress;
 begin
   InitializeTaskbarAPI;
   SetTaskbarProgressValue(FValue, FMaximalValue);
+end;
+
+destructor TProcess.Destroy;
+begin
+  FreeAndNil(FLongOperation);
+
+  inherited;
 end;
 
 initialization
