@@ -10,6 +10,9 @@ function DateToCSShort(const D: TDateTime): string; // Events
 
 function IsNewYear(const ADate: TDate): BG;
 function IsChristmas(const ADate: TDate): BG;
+function GetEasterSunday(const AYear: SG): TDateTime;
+function GetEasterMonday(const AYear: SG): TDateTime;
+function IsEaster(const ADate: TDate): BG;
 function IsCzechPublicHolidayDay(const Date: TDateTime): BG;
 
 function IsNewYearOnStartup: BG;
@@ -72,11 +75,96 @@ begin
   Result := GIsChristmasOnStartup;
 end;
 
+function GetEasterSundayGaussian(const AYear: SG): TDateTime;
+var
+  A, BC, D, E, K, P, Q, M, N, MarchDay: Integer;
+begin
+  A := AYear mod 19;
+  BC := (AYear + AYear div 4) mod 7;
+  K := AYear div 100;
+  P := (13 + 8 * K) div 25;
+  Q := K div 4;
+  M := 15 - P + K - Q;
+  N := 4 + K - Q;
+  D := (19 * A + M) mod 30;
+
+  if D = 29 then
+    Dec(D);
+  if (D = 28) and (A > 10) then
+    Dec(D);
+
+  E := (35 + N - BC - D) mod 7;
+
+  MarchDay := D + E + 22;
+  if MarchDay <= 31 then
+    Result := EncodeDate(AYear, 3, MarchDay)
+  else
+    Result := EncodeDate(AYear, 4, MarchDay - 31);
+end;
+
+function GetEasterSundayGaussianOld(const AYear: SG): TDateTime;
+const
+  M = 24;
+  N = 5;
+var
+  A, B, C, D, E, AprilDay: Integer;
+begin
+  A := AYear mod 19;
+  B := AYear mod 4;
+  C := AYear mod 7;
+  D := (19 * A + M) mod 30;
+  E := (N + 2 * B + 4 * C + 6 * D) mod 7;
+  AprilDay := D + E - 9;
+
+  if (AprilDay = 25) and (D = 28) and (E = 6) and (A > 10) then
+  begin
+    Result := EncodeDate(AYear, 4, 18)
+  end
+  else if (AprilDay >= 1) and (AprilDay <= 25) then
+  begin
+    Result := EncodeDate(AYear, 4, AprilDay);
+  end
+  else if AprilDay > 25 then
+  begin
+    Result := EncodeDate(AYear, 4, AprilDay - 7);
+  end
+  else // if AprilDay < 0
+  begin
+    Result := EncodeDate(AYear, 3, AprilDay + 31);
+  end;
+end;
+
+function GetEasterSunday(const AYear: SG): TDateTime;
+begin
+  Result := GetEasterSundayGaussian(AYear);
+//  Result := GetEasterSundayGaussianOld(AYear);
+end;
+
+function GetEasterMonday(const AYear: SG): TDateTime;
+begin
+  Result := GetEasterSunday(AYear) + 1;
+end;
+
+function IsEaster(const ADate: TDate): BG;
+var
+  EasterMonday: TDateTime;
+  Year: SG;
+begin
+  Year := YearOf(ADate);
+  EasterMonday := GetEasterMonday(Year);
+  Result := ADate = EasterMonday;
+  if (Result = False) and (Year >= 2016) then
+  begin
+    // Newly Easter Friday
+    Result := ADate = EasterMonday - 3;
+  end;
+end;
+
 function IsCzechPublicHolidayDay(const Date: TDateTime): BG;
 var
   Day, Month, Year: U2;
 begin
-  Result := False; // TODO
+  Result := False;
   DecodeDate(Date, Year, Month, Day);
 
   case Month of
@@ -87,73 +175,7 @@ begin
   end;
   3, 4:
   begin
-    // TODO : Add Easter
-    case Year of
-    2020:
-    begin
-      if Month = 4 then
-      begin
-        if (Day = 10) or (Day = 13) then
-          Result := True;
-      end;
-    end;
-    2019:
-    begin
-      if Month = 4 then
-      begin
-        if (Day = 19) or (Day = 22) then
-          Result := True;
-      end;
-    end;
-    2018:
-    begin
-      if (Month = 3) and (Day = 30) then
-        Result := True;
-      if (Month = 4) and (Day = 2) then
-        Result := True;
-    end;
-    2017:
-    begin
-      if Month = 4 then
-      begin
-        if (Day = 14) or (Day = 17) then
-          Result := True;
-      end;
-    end;
-    2016: // Newly two days
-    begin
-      if Month = 3 then
-      begin
-        if (Day = 25) or (Day = 28) then
-          Result := True;
-      end;
-    end;
-    2015:
-    begin
-      if (Month = 4) and (Day = 6) then
-        Result := True;
-    end;
-    2014:
-    begin
-      if (Month = 4) and (Day = 21) then
-        Result := True;
-    end;
-    2013:
-    begin
-      if (Month = 4) and (Day = 1) then
-        Result := True;
-    end;
-    2012:
-    begin
-      if (Month = 4) and (Day = 9) then
-        Result := True;
-    end;
-    2011:
-    begin
-      if (Month = 4) and (Day = 25) then
-        Result := True;
-    end;
-    end;
+    Result := IsEaster(Date);
   end;
   5:
   begin
@@ -186,7 +208,6 @@ begin
       Result := True;
   end;
   end;
-
 end;
 
 initialization
