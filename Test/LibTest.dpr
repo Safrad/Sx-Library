@@ -31,7 +31,8 @@ uses
   uProjectOptionsTest in '..\Core\uProjectOptionsTest.pas',
   uThreadPoolTest in '..\Core\uThreadPoolTest.pas',
   uDivideSpaceTest in '..\Core\uDivideSpaceTest.pas',
-  uCSVFileTest in '..\Core\uCSVFileTest.pas';
+  uCSVFileTest in '..\Core\uCSVFileTest.pas',
+  uRegionalTest in '..\Core\uRegionalTest.pas';
 
 {$R *.RES}
 
