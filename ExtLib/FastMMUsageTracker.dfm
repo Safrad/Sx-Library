@@ -30,14 +30,12 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
     ActivePage = tsAllocation
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 641
     object tsAllocation: TTabSheet
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = 'FastMM4 Allocation'
-      ExplicitHeight = 610
       object sgBlockStatistics: TStringGrid
         Left = 0
         Top = 0
@@ -54,10 +52,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         ScrollBars = ssVertical
         TabOrder = 0
         OnDrawCell = sgBlockStatisticsDrawCell
-        ExplicitLeft = 5
-        ExplicitTop = 5
-        ExplicitWidth = 656
-        ExplicitHeight = 592
         ColWidths = (
           83
           104
@@ -73,7 +67,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       Margins.Bottom = 4
       Caption = 'VM Graph'
       ImageIndex = 1
-      ExplicitHeight = 610
       object Label1: TLabel
         Left = 10
         Top = 542
@@ -182,9 +175,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         TabOrder = 4
         OnDrawCell = dgMemoryMapDrawCell
         OnSelectCell = dgMemoryMapSelectCell
-        ExplicitLeft = 5
-        ExplicitTop = 5
-        ExplicitWidth = 656
       end
     end
     object tsVMDump: TTabSheet
@@ -194,7 +184,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       Margins.Bottom = 4
       Caption = 'VM Dump'
       ImageIndex = 2
-      ExplicitHeight = 610
       object sgVMDump: TStringGrid
         Left = 0
         Top = 0
@@ -214,10 +203,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         OnDrawCell = sgVMDumpDrawCell
         OnMouseDown = sgVMDumpMouseDown
         OnMouseUp = sgVMDumpMouseUp
-        ExplicitLeft = 5
-        ExplicitTop = 5
-        ExplicitWidth = 656
-        ExplicitHeight = 592
         ColWidths = (
           83
           96
@@ -233,7 +218,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       Margins.Bottom = 4
       Caption = 'General Information'
       ImageIndex = 3
-      ExplicitHeight = 610
       object mVMStatistics: TMemo
         Left = 0
         Top = 0
@@ -254,10 +238,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitLeft = 5
-        ExplicitTop = 5
-        ExplicitWidth = 656
-        ExplicitHeight = 592
       end
     end
   end
@@ -269,9 +249,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = 88
-    ExplicitTop = 635
-    ExplicitWidth = 185
     object bClose: TBitBtn
       Left = 583
       Top = 6
