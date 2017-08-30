@@ -120,7 +120,7 @@ function SameFilesNoPrefix(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
 procedure ReplaceIfChanged(const OrigFileName, TempFileName: TFileName); overload;
 procedure ReplaceIfChanged(const TempFileName: TFileName); overload;
-function GetModuleFileNameFunc: string;
+function GetModuleFileNameFunc(const AHandle: THandle): string;
 procedure InitPaths;
 
 function DirectoryExistsEx(const DirName: TFileName): BG;
@@ -252,12 +252,12 @@ begin
   SetLength(Result, ResultCount);
 end;
 
-function GetModuleFileNameFunc: string;
+function GetModuleFileNameFunc(const AHandle: THandle): string;
 var
   NewLength: SG;
 begin
 	SetLength(Result, MAX_PATH);
-	NewLength := GetModuleFileName(HInstance, PChar(Result), MAX_PATH);
+	NewLength := GetModuleFileName(AHandle, PChar(Result), MAX_PATH);
 	SetLength(Result, NewLength);
 end;
 
@@ -281,7 +281,7 @@ begin
   CommandLine := GetCommandLine;
 	All := SplitStr(CommandLine, 1, ExeParameters);
   ExeFileName := All[0];
-  ModuleFileName := GetModuleFileNameFunc;
+  ModuleFileName := GetModuleFileNameFunc(HInstance);
 
 	WorkDir := '';
 {	if Length(ExeFileName) > 0 then

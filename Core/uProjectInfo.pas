@@ -161,7 +161,7 @@ function ApplicationProjectInfo: TProjectInfo;
 begin
 	if not Assigned(ThisProjectInfo) then
 	begin
-		ThisProjectInfo := TProjectInfo.Create(GetModuleFileNameFunc);
+		ThisProjectInfo := TProjectInfo.Create(GetModuleFileNameFunc(HInstance));
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
 			ThisProjectInfo.FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(ThisProjectInfo.FApplicationFileName));
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then
