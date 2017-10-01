@@ -26,10 +26,10 @@ implementation
 
 uses
 	ShellAPI, Forms,
-	uMsg, uFiles, uLog, uStrings, uFile;
+	uMsg, uFiles, uLog, uStrings, uFile, uSxThread;
 
 type
-	TShellExecute = class(TThread)
+	TShellExecute = class(TSxThread)
 	private
 		FAgain: BG;
 		ErrorCode: U4;
@@ -165,12 +165,8 @@ begin
     MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
 //	ShellExecute(0, OpenString, PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
 	ShellExecuteThread := TShellExecute.Create(FileName, Params);
-	{$if CompilerVersion >= 20}
-	ShellExecuteThread.NameThreadForDebugging('ShellExecute');
+	ShellExecuteThread.Name := 'ShellExecute';
 	ShellExecuteThread.Start;
-	{$else}
-	ShellExecuteThread.Resume;
-	{$ifend}
 end;
 
 procedure PropertiesDialog(FileName: TFileName);

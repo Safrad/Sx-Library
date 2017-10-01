@@ -13,6 +13,9 @@ type
   protected
     procedure Execute; override;
   public
+    {$if CompilerVersion < 20}
+    procedure Start;
+    {$ifend}
     property Name: string read FName write SetName;
   end;
 
@@ -21,6 +24,7 @@ implementation
 uses
   Windows;
 
+{$if CompilerVersion < 20}
 const
   ActualThread = $FFFFFFFF;
 
@@ -46,6 +50,7 @@ begin
     // No Code
   end;
 end;
+{$ifend}
 
 { TSxThread }
 
@@ -53,7 +58,10 @@ procedure TSxThread.Execute;
 begin
   inherited;
 
-  SetThreadName(FName);
+  {$if CompilerVersion < 20}
+  if FName <> '' then
+    SetThreadName(FName);
+  {$ifend}
 end;
 
 procedure TSxThread.SetName(const Value: string);
@@ -61,8 +69,18 @@ begin
   if FName <> Value then
   begin
     FName := Value;
+    {$if CompilerVersion >= 20}
+    NameThreadForDebugging(FName);
+    {$ifend}
   end;
 end;
+
+{$if CompilerVersion < 20}
+procedure TSxThread.Start;
+begin
+  Resume;
+end;
+{$ifend}
 
 initialization
 {$IFNDEF NoInitialization}
