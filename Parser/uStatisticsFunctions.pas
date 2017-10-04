@@ -101,7 +101,7 @@ begin
 	end;
 end;
 
-// m1 = EX - Average Value (stedn hodnota)
+// m1 = EX - Average Value
 function Avg(const Data: array of TVector): TVector;
 begin
 	if Length(Data) <= 0 then
