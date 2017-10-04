@@ -8,28 +8,26 @@ uses
 type
   TContinuousStatistics = class
   private
-    FSum: FG;
+    FSuma: FG;
     FCount: U8;
-    FMin: FG;
-    FMax: FG;
+    FMinimum: FG;
+    FMaximum: FG;
 
-    function GetAvg: FG;
+    function GetAverage: FG;
  public
     procedure Add(const ANumber: FG);
     procedure Reset;
-    function ResultAsLines(const AUnit: string): string;
 
-    property Min: FG read FMin;
-    property Max: FG read FMax;
-    property Avg: FG read GetAvg;
+    property Count: U8 read FCount;
+    property Minimum: FG read FMinimum;
+    property Maximum: FG read FMaximum;
+    property Average: FG read GetAverage;
   end;
 
 implementation
 
 uses
-  Math,
-  uStrings,
-  uOutputFormat;
+  Math;
 
 { TStatistics }
 
@@ -37,25 +35,25 @@ procedure TContinuousStatistics.Add(const ANumber: FG);
 begin
   if FCount = 0 then
   begin
-    FMin := ANumber;
-    FMax := ANumber;
+    FMinimum := ANumber;
+    FMaximum := ANumber;
   end
   else
   begin
-    if FMin > ANumber then
-      FMin := ANumber;
-    if FMax < ANumber then
-      FMax := ANumber;
+    if FMinimum > ANumber then
+      FMinimum := ANumber;
+    if FMaximum < ANumber then
+      FMaximum := ANumber;
   end;
 
-  FSum := FSum + ANumber;
+  FSuma := FSuma + ANumber;
   Inc(FCount);
 end;
 
-function TContinuousStatistics.GetAvg: FG;
+function TContinuousStatistics.GetAverage: FG;
 begin
   if FCount > 0 then
-    Result := FSum / FCount
+    Result := FSuma / FCount
   else
     Result := NaN;
 end;
@@ -63,24 +61,9 @@ end;
 procedure TContinuousStatistics.Reset;
 begin
   FCount := 0;
-  FSum := 0;
-  FMin := 0;
-  FMax := 0;
-end;
-
-function TContinuousStatistics.ResultAsLines(const AUnit: string): string;
-begin
-  if FCount = 0 then
-  begin
-    Result := NAStr;
-  end
-  else
-  begin
-    Result :=
-      'Minimum: ' + FToS(Min) + CharSpace + AUnit + LineSep +
-      'Maximum: ' + FToS(Max) + CharSpace + AUnit + LineSep +
-      'Average: ' + FToS(Avg) + CharSpace + AUnit + LineSep;
-  end;
+  FSuma := 0;
+  FMinimum := 0;
+  FMaximum := 0;
 end;
 
 end.
