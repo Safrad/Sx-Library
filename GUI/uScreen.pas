@@ -34,9 +34,9 @@ type
 	end;
 
 function GetVF(Height, HF: UG): UG; // Hz
-function GetHF(Height, RefreshRate: UG): UG; // KHz
+function GetHF(Height, RefreshRate: UG): UG; // Hz
 function GetHeight(RefreshRate, HF: UG): UG; // Pixels
-function GetPixelRate(const Width, HF: UG): UG; // MHz
+function GetPixelRate(const Width, HF: UG): UG; // Hz
 function GetVideoMemory(const Width, Height, Bits: UG): UG; // Bytes
 function ScreenModeToStr(const Width, Height: UG): string; overload;
 function ScreenModeToStr(const Width, Height, Bits: UG): string; overload;
@@ -140,7 +140,6 @@ begin
 	else
 //    Result := Floor(Height / ((1 / RefreshRate) - UG(RetraceDelay) / 1000000));
 		Result := MaxDivS8((S8(Height) * S8(RefreshRate) * 1000000), (1000000 - S8(RetraceDelay) * S8(RefreshRate)));
-
 end;
 
 function GetHeight(RefreshRate, HF: UG): UG;
