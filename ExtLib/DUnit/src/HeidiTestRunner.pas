@@ -19,7 +19,7 @@ type
     procedure TestingEnds(testResult: TTestResult); override;
   end;
 
-  TFileLoadFormater = class(TLogFormatter)
+  TFileLoadFormatter = class(TLogFormatter)
   public
     function FormatOutput(T: TEventType; const Desc, Expect, Recv: string; const Expected: Boolean=true): string; override;
   end;
@@ -92,7 +92,7 @@ begin
     end;
 
     aHandler := LogManager.Handlers.Add(TWebServiceLogHandler);
-    aHandler.Formatter := LogManager.Formatters.Add(TFileLoadFormater);
+    aHandler.Formatter := LogManager.Formatters.Add(TFileLoadFormatter);
 
     try
       LogManager.BeginLogging;
@@ -118,9 +118,9 @@ begin
 end;
 
 
-{ TFileLoadFormater }
+{ TFileLoadFormatter }
 
-function TFileLoadFormater.FormatOutput(T: TEventType; const Desc, Expect,
+function TFileLoadFormatter.FormatOutput(T: TEventType; const Desc, Expect,
   Recv: string; const Expected: Boolean): string;
 var
   fileContents : TStringList;
