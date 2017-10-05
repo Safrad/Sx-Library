@@ -8,8 +8,6 @@ uses
 
 const
 	CPUUsageMul = 100;
-const
-	CPUStrOffset = 4 + 4 + 1;
 type
   {$if CompilerVersion < 20}
   DWORDLONG = S8;
@@ -482,6 +480,9 @@ begin
 	end;
 end;
 
+const
+	CPUStrOffset = 4 + 4 + 1;
+
 procedure FillCPUID(var SysInfo: TSysInfo);
 asm
 {$ifdef CPUX64}
@@ -775,10 +776,9 @@ begin
   Result := 2 * Result div 3; // Fragmentation
 end;
 
+function CanAllocateMemory(const Size: UG): BG;
 const
   ReservedSize = 8 * MB;
-
-function CanAllocateMemory(const Size: UG): BG;
 var
   P: Pointer;
 begin
