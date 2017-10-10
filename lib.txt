@@ -14,6 +14,7 @@ $(sx-library)\ExtLib\GammaF
 $(sx-library)\ExtLib\GifImage
 $(sx-library)\ExtLib\GraphicEx
 $(sx-library)\ExtLib\IGDIPlus
+$(sx-library)\ExtLib\NLDJoystick
 $(sx-library)\ExtLib\OpenGL
 $(sx-library)\ExtLib\SafeMM
 $(sx-library)\Core
