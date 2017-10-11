@@ -3,28 +3,34 @@ unit uParams;
 interface
 
 uses
-	uTypes,
-	SysUtils;
+  uTypes, SysUtils;
 
 const
   paFile = '--file';
   paNumber = '--number';
+
 type
   TParamProcedure = procedure(const Value: string);
 {$ifndef Console}
+
 var
   MinimizeToTrayIcon: BG = False;
 {$endif}
 
-procedure RegisterParam(const ParameterName: string; const ParameterDescription: string; const ParameterProcedure: TParamProcedure);
+procedure RegisterParam(const ParameterName: string; const ParameterDescription: string; const ParameterProcedure:
+  TParamProcedure);
+
 procedure HelpParams(const Value: string = '');
+
 procedure AddCommonParams;
+
 procedure ReadCommandLine(const CmdLine: string);
 
 implementation
 
 uses
-	uLog, uFiles, uStrings, uMsg{$ifndef Console}, Forms, uCommon{$endif};
+  Windows,
+  uLog, uFiles, uStrings, uConsole, uTable, uRow, uCell, uMsg{$ifndef Console}, Forms, uCommon{$endif}, Classes;
 
 var
   Params: array of string;
@@ -57,7 +63,26 @@ begin
   ParamProcedures[j] := ParameterProcedure;
 end;
 
-procedure HelpParams(const Value: string = '');
+function PreviewTableArgument(const AParamIndex: SG): TRow;
+var
+  Cell: TCell;
+begin
+  FillChar(Cell, SizeOf(TCell), 0);
+  Result := TRow.Create(2);
+
+  Cell.Text := Params[AParamIndex];
+  Cell.HorizontalAlign := taLeftJustify;
+  Result.Columns[0] := Cell;
+
+  Cell.Text := DesParams[AParamIndex];
+  Cell.HorizontalAlign := taLeftJustify;
+  Result.Columns[1] := Cell;
+//            row.Columns.Add(new Cell { Text = argument.GetArgumentShortcutAndSyntax() });
+//            row.Columns.Add(new Cell { Text = argument.Description });
+//            row.Columns.Add(new Cell { Text = argument.GetRequiredOrOptional() + argument.GetRequireList() });
+end;
+
+procedure HelpParamsAsMessage;
 const
 	CONSOLE_WINDOW_WIDTH = 78;
 var
@@ -70,9 +95,49 @@ begin
 	begin
 		s := s + Params[i] + CharTab + CharTab + DesParams[i] + LineSep;
 	end;
-{	if AcceptFile then
-		s := s + 'Filename' + CharTab + 'Open this filename on startup' + LineSep;}
 	Information(s + '.');
+end;
+
+procedure HelpParamsToConsole;
+var
+  i: SG;
+  Table: TTable;
+  Row: TRow;
+  Cell: TCell;
+begin
+  FillChar(Cell, SizeOf(TCell), 0);
+
+  Row := TRow.Create(2);
+
+  Cell.Text := 'Parameter';
+  Cell.HorizontalAlign := taCenter;
+  Row.Columns[0] := Cell;
+
+  Cell.Text := 'Description';
+  Cell.HorizontalAlign := taCenter;
+  Row.Columns[1] := Cell;
+
+//  Cell.Text := 'Required';
+//  Cell.HorizontalAlign := taCenter;
+//  Row.Columns[2] := Cell;
+
+  Table := TTable.Create(1 + Length(Params));
+  Table.Data[0] := Row;
+  for i := 0 to Length(Params) - 1 do
+  begin
+    Row := PreviewTableArgument(i);
+    Table.Data[i + 1] := Row;
+  end;
+
+  Table.WriteToConsole
+end;
+
+procedure HelpParams(const Value: string = '');
+begin
+  if IsConsole then
+    HelpParamsToConsole
+  else
+    HelpParamsAsMessage;
 end;
 
 procedure ParamMinimized(const Value: string = '');
@@ -112,11 +177,13 @@ begin
   AF := paFileIndex >= 0;
   AN := paNumberIndex >= 0;
   DelQuote(Param);
-	if Param = '' then Exit;
+  if Param = '' then
+    Exit;
   if CharInSet(Param[1], SwitchChars) then
   begin
     Delete(Param, 1, 1);
-		if Param = '' then Exit;
+    if Param = '' then
+      Exit;
     AF := False;
     AN := False;
   end;
@@ -203,7 +270,8 @@ begin
 //		if (LastParam = InLineIndex) or Quote then
     begin
       case CmdLine[InLineIndex] of
-			'"': Quote := not Quote;
+        '"':
+          Quote := not Quote;
       end;
     end;
 
@@ -226,10 +294,14 @@ initialization
 {$IFNDEF NoInitialization}
 {$ENDIF NoInitialization}
 
+
+
 finalization
 {$IFNDEF NoFinalization}
   SetLength(Params, 0);
   SetLength(DesParams, 0);
   SetLength(ParamProcedures, 0);
 {$ENDIF NoFinalization}
+
 end.
+
