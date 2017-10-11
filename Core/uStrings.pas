@@ -152,6 +152,10 @@ function FileMatch(const FileName: string; const Filter: string): BG;
 
 function SplitStringEx(const AText, ADelimiter: string): TArrayOfString;
 
+function PadLeft(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
+function PadCenter(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
+function PadRight(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
+
 implementation
 
 uses
@@ -1354,6 +1358,45 @@ begin
     Result[Length(Result) - 1] := ns;
     txt := Copy(txt,dx+delta,MaxInt);
   end;
+end;
+
+function PadLeft(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
+var
+  restLength: SG;
+begin
+  restLength := ACharCount - Length(AText);
+  if (restLength >= 1) then
+  begin
+    Result := StringOfChar(AFillChar, restLength) + AText;
+  end
+  else
+    Result  := AText;
+end;
+
+function PadCenter(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
+var
+  restLength: SG;
+begin
+  restLength := ACharCount - Length(AText);
+  if (restLength >= 1) then
+  begin
+    Result := StringOfChar(AFillChar, restLength div 2) + AText + StringOfChar(AFillChar, restLength - restLength div 2);
+  end
+  else
+    Result  := AText;
+end;
+
+function PadRight(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
+var
+  restLength: SG;
+begin
+  restLength := ACharCount - Length(AText);
+  if (restLength >= 1) then
+  begin
+    Result := AText + StringOfChar(AFillChar, restLength);
+  end
+  else
+    Result  := AText;
 end;
 
 initialization
