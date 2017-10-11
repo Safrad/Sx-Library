@@ -172,6 +172,8 @@ function IsNumber(const AText: string): Boolean;
 function Match(const Text: string; const Filter: string): BG;
 function FileMatch(const FileName: string; const Filter: string): BG;
 
+function SplitStringEx(const AText, ADelimiter: string): TArrayOfString;
+
 implementation
 
 uses
@@ -1355,6 +1357,25 @@ begin
 		else
 			HexValue[c] := 0;
 		end;
+end;
+
+function SplitStringEx(const AText, ADelimiter: string): TArrayOfString;
+var
+  dx : integer;
+  ns : string;
+  txt : string;
+  delta : integer;
+begin
+  delta := Length(ADelimiter);
+  txt := AText + ADelimiter;
+  while Length(txt) > 0 do
+  begin
+    dx := Pos(ADelimiter, txt);
+    ns := Copy(txt,0,dx-1);
+    SetLength(Result, Length(Result) + 1);
+    Result[Length(Result) - 1] := ns;
+    txt := Copy(txt,dx+delta,MaxInt);
+  end;
 end;
 
 initialization
