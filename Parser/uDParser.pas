@@ -267,7 +267,7 @@ implementation
 
 uses
 	Math, TypInfo,
-	uStrings, uFind, uFiles, uLog, uOutputFormat;
+	uStrings, uFind, uFiles, uLog, uOutputFormat, uChar;
 
 { constructor TDParser.Create(Stream: TStream);
 	begin
