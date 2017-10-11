@@ -82,7 +82,7 @@ implementation
 
 uses
   Math, Menus, {$if CompilerVersion >= 23}System.UITypes, {$ifend}
-  uStrings, uMath, uSorts;
+  uStrings, uChar, uMath, uSorts;
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
 begin
@@ -327,14 +327,14 @@ procedure DrawLeftArrow(const Canvas: TCanvas; R: TRect);
 begin
   Canvas.Font.Color := clRed;
   Canvas.Brush.Style := bsClear;
-  DrawTextW(Canvas.Handle, LeftawardsArrow, Length(LeftawardsArrow), R, DT_NOCLIP or DT_SINGLELINE);
+  DrawTextW(Canvas.Handle, CharLeftawardsArrow, Length(CharLeftawardsArrow), R, DT_NOCLIP or DT_SINGLELINE);
 end;
 
 procedure DrawRightArrow(const Canvas: TCanvas; R: TRect);
 begin
   Canvas.Font.Color := clRed;
   Canvas.Brush.Style := bsClear;
-  DrawTextW(Canvas.Handle, RightawardsArrow, Length(RightawardsArrow), R, DT_NOCLIP or DT_SINGLELINE or DT_RIGHT);
+  DrawTextW(Canvas.Handle, CharRightawardsArrow, Length(CharRightawardsArrow), R, DT_NOCLIP or DT_SINGLELINE or DT_RIGHT);
 end;
 
 function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment:

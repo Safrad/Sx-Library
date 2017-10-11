@@ -38,7 +38,7 @@ implementation
 
 uses
 	Windows, Math, Dialogs, Registry,
-	uStrings, uFiles, uDParser, uWave, uMath, uDictionary, uSimulation, uOutputFormat, uMsg;
+	uStrings, uChar, uFiles, uDParser, uWave, uMath, uDictionary, uSimulation, uOutputFormat, uMsg;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
 var
@@ -109,7 +109,7 @@ begin
 	P[0] := Drive;
 	P[1] := DriveDelim;
 	P[2] := PathDelim;
-	P[3] := CharNul;
+	P[3] := CharNull;
 	Result.DriveType := GetDriveType(P);
 	Result.FreeSpace := 0;
 	Result.DriveSize := 0;

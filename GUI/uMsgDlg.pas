@@ -108,7 +108,7 @@ uses
   uVisualOptions,
   SynTaskDialog,
 	uFiles, uColor, uDictionary,
-	uStrings, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uSimulation,
+	uStrings, uChar, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uSimulation,
 	Registry, MMSystem, Math;
 
 var

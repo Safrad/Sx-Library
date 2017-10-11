@@ -38,7 +38,7 @@ uses
   Dialogs,
   SynTaskDialog,
   uVisualOptions,
-  uStrings, uMsg, uDictionary;
+  uStrings, uChar, uMsg, uDictionary;
 
 var
 	fGetStr: TfGetStr;
@@ -94,7 +94,7 @@ begin
 	if StrMasked then
 		fGetStr.EditInput.PasswordChar := '*'
 	else
-		fGetStr.EditInput.PasswordChar := CharNul;
+		fGetStr.EditInput.PasswordChar := CharNull;
 	fGetStr.EditInput.Text := CurVal;
 	fGetStr.EditInput.SelectAll;
 	fGetStr.EditInput.OnChange := fGetStr.EditInputChange;

@@ -22,6 +22,7 @@ implementation
 uses
 	uHTML,
 	uStrings,
+  uChar,
 	uOutputFormat,
 	uCharset,
 	uMsg,
