@@ -18,5 +18,6 @@ $(sx-library)\ExtLib\NLDJoystick
 $(sx-library)\ExtLib\OpenGL
 $(sx-library)\ExtLib\SafeMM
 $(sx-library)\Core
+$(sx-library)\Table
 $(sx-library)\Parser
 $(sx-library)\GUI
