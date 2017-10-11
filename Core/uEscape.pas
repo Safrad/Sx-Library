@@ -39,7 +39,8 @@ function RemovePercentEscape(const Input: AnsiString): string;
 
 implementation
 
-uses uStrings, uOutputFormat, SysUtils;
+uses
+  uChar, uStrings, uOutputFormat, SysUtils;
 
 function RemoveEscape(const s: string): string;
 var
@@ -68,7 +69,7 @@ begin
 			if Special then
 			begin
 				case s[i] of
-				'a': Result := Result + CharBell;
+				'a': Result := Result + CharBEL;
 				'b': Result := Result + CharBackspace;
 				'e', 'E': Result := Result + #$1B;
 				'f': Result := Result + CharFormfeed;
@@ -177,7 +178,7 @@ begin
 	begin
 		case s[i] of
 		'\': Result := Result + '\\';
-		CharBell: Result := Result + '\a';
+		CharBEL: Result := Result + '\a';
 		CharBackspace: Result := Result + '\b';
 		#$1B: Result := Result + '\e'; // 'E'
 		CharFormfeed: Result := Result + '\f';

@@ -25,7 +25,7 @@ interface
 
 uses
 	SysUtils, Windows,
-	uTypes, uStrings,
+	uTypes, uStrings, uChar,
   uBackup;
 
 const

@@ -193,7 +193,7 @@ implementation
 
 uses
 	Windows, Math,
-	uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog, uRect, uWHRect
+	uChar, uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog, uRect, uWHRect
 {$IFNDEF Console}, uMenus, uDParser, uSystem {$ENDIF};
 
 procedure TDIniFile.AddSection(const Section: string);

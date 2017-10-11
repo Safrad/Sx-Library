@@ -148,7 +148,7 @@ implementation
 
 uses
 	Math,
-	uMsg, uProjectInfo, uSorts, uCharset,
+	uChar, uMsg, uProjectInfo, uSorts, uCharset,
 	uOutputFormat, uMath, uLog;
 
 var

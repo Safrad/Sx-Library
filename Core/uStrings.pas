@@ -2,47 +2,25 @@ unit uStrings;
 
 interface
 
-uses SysUtils, TypInfo, uTypes;
+uses
+  SysUtils, TypInfo,
+  uTypes, uChar;
 
 const
-	CharNul = #$00;
-	CharTab = #$09;
-	CharSpace = #$20;
-  CharUnbrokableSpace = #$A0;
-	CharHT = CharTab;
-	CharVT = #$0B;
-	CharLF = #$0A;// #10;
-	CharCR = #$0D;// #13;
-	{
-	DOSLineSep = CharCR + CharLF;
-	LinuxLineSep =  CharLF;
-	MacintoshLineSep =  CharLF;
-	ShortLineSep = CharCR;
-	}
-	LineSep = CharLF; // Deafult
-	FullSep = CharCR + CharLF; // Required by some Windows components
-	FileSep = CharCR + CharLF;
-	CharBackspace = #$08;
-	CharFormfeed = #$0C;
-	CharBell = #$07;
-	CharACK = #$06; // Acknowledge
-	CharNAK = #$15; // Negatively acknowledge
-	CharTimes = {$ifdef UNICODE}Char($00D7){$else}'x'{$endif}; // × (#$D7) is not supported in Windows-1251!
-	CharHyphen = #$96; // –
-	CharLongHyphen = #$97; // —
-	Space = [CharNul, CharHT, CharLF, CharVT, CharCR, CharSpace, CharUnbrokableSpace];
-	cDialogSuffix = {$ifdef UNICODE}Char($2026){$else}#$85{$endif}; //'...';
+	WindowsSep = CharCR + CharLF; // Windows, DOS
+  LinuxSep = CharLF; // Linux, Macintosh
 
-	LeftArrow = {$ifdef UNICODE}Char($25C4){$else}'<-'{$endif};
-	RightArrow = {$ifdef UNICODE}Char($25BA){$else}'->'{$endif};
+	LineSep = LinuxSep; // Default
+  FullSep = WindowsSep; // Required by some Windows components
+	FileSep = WindowsSep;
 
-	LeftawardsArrow = {$ifdef UNICODE}Char($2190){$else}'<-'{$endif};
-	UpawardsArrow = {$ifdef UNICODE}Char($2191){$else}'^'{$endif};
-	RightawardsArrow = {$ifdef UNICODE}Char($2192){$else}'->'{$endif};
-	DownawardsArrow = {$ifdef UNICODE}Char($2193){$else}'\'{$endif};
+  CharSpace = uChar.CharSpace; // Backward compatibility
 
-  LeftPointingDoubleAngleQuotationMark = '«';
-  RightPointingDoubleAngleQuotationMark = '»';
+	CharTab = CharHT;
+  CharTimes = CharMultiplicationSign;
+
+	Space = [CharNull, CharHT, CharLF, CharVT, CharCR, CharSpace, CharUnbrokableSpace];
+	cDialogSuffix = CharHorizontalEllipsis;
 
 	EnumPrefixLength = 2;
 	NAStr = 'N/A';
@@ -590,7 +568,7 @@ end;
 function FirstChar(const s: string): Char;
 begin
 	if Length(s) <= 0 then
-		Result := CharNul
+		Result := CharNull
 	else
 		Result := s[1];
 end;
@@ -598,7 +576,7 @@ end;
 function LastChar(const s: string): Char;
 begin
 	if Length(s) <= 0 then
-		Result := CharNul
+		Result := CharNull
 	else
 		Result := s[Length(s)];
 end;
@@ -606,7 +584,7 @@ end;
 function CharAt(const s: string; const Index: SG): Char;
 begin
 	if (Index <= 0) or (Index > Length(s)) then
-		Result := CharNul
+		Result := CharNull
 	else
 		Result := s[Index];
 end;
@@ -786,7 +764,7 @@ begin
 	if LineIndex <= LineLength then
 		LastChar := Line[LineIndex]
 	else
-		LastChar := CharNul;
+		LastChar := CharNull;
 	Inc(LineIndex);
 end;
 

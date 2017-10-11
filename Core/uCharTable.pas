@@ -16,7 +16,7 @@ function CharType(const c: Char; const CharTable: TCharTable): TCharType;
 
 implementation
 
-uses uStrings;
+uses uChar;
 
 // Fill CharTable with standard values.
 procedure FillStdCharTable(out CharTable: TCharTable);
@@ -26,7 +26,7 @@ begin
 	// Make Char Table
 	for c := Low(c) to High(c) do
 		case c of
-		CharSpace, CharTab: CharTable[c] := ctBlank;
+		CharSpace, CharHT: CharTable[c] := ctBlank;
 		CharCR, CharLF: CharTable[c] := ctReturn;
 		'a'..'z', 'A'..'Z', '_'{, #$80..#$ff}: CharTable[c] := ctLetter;
 		'0'..'9': CharTable[c] := ctNumber;
