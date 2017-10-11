@@ -41,6 +41,9 @@ const
 	RightawardsArrow = {$ifdef UNICODE}Char($2192){$else}'->'{$endif};
 	DownawardsArrow = {$ifdef UNICODE}Char($2193){$else}'\'{$endif};
 
+  LeftPointingDoubleAngleQuotationMark = '«';
+  RightPointingDoubleAngleQuotationMark = '»';
+
 	EnumPrefixLength = 2;
 	NAStr = 'N/A';
 	CharNone = CharHyphen;
