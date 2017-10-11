@@ -9419,8 +9419,8 @@ begin
 	ByteXD := BmpD.ByteX;
 	ByteXS := BmpS.ByteX;
 
-	BmpSWidth := XS2 + XS1;
-	BmpSHeight := YS2 + YS1;
+	BmpSWidth := XS2 - XS1;
+	BmpSHeight := YS2 - YS1;
 	Dec(PByte(PDataS), YS1 * SG(BmpS.ByteX));
 	for YS := YS1 to YS2 do
 	begin
@@ -9429,7 +9429,7 @@ begin
 		TmpYSToYD := (2 * YS - BmpSHeight) * Sins[DirYSToYD];
 		for XS := XS1 to XS2 do
 		begin
-			XD := (2 * SinDiv * XD12 + TmpYSToXD + (2 * XS - BmpSWidth) * Sins[DirXSToXD]) div (2 * SinDiv);
+			XD := (2 * SinDiv * XD12 + TmpYSToXD + (2 * XS - BmpSWidth) * SG(Sins[DirXSToXD])) div (2 * SinDiv);
 			{$ifndef NoCheck}
 			if (XD < 0) or (XD >= SG(BmpD.Width)) then goto LNext;
 			{$endif}
