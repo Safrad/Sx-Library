@@ -61,7 +61,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math,
-	uEscape, uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uLog, uMenus, uStrings, uOutputFormat;
+	uEscape, uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uLog, uMenus, uStrings, uOutputFormat, uChar;
 
 var
 	ReopenBitmaps: array[TReopenExists] of TBitmap;
@@ -361,7 +361,7 @@ begin
 		P[0] := FileName[1];
 		P[1] := FileName[2];
 		P[2] := FileName[3];
-		P[3] := CharNul;
+		P[3] := CharNull;
 		DriveType := GetDriveType(P);
 	end;
 
