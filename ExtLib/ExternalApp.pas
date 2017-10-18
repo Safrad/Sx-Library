@@ -250,6 +250,8 @@ var
   _res: boolean; 
   _pmodulename, _pcommandline: pchar; 
 begin 
+  inherited;
+
 	if IsNT then
 	begin
 		_sd := pointer(GlobalAlloc(GPTR, SECURITY_DESCRIPTOR_MIN_LENGTH));

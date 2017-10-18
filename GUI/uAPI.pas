@@ -144,6 +144,8 @@ end;
 
 procedure TShellExecute.Execute;
 begin
+  inherited;
+
 	FAgain := True;
 	while FAgain do
 	begin

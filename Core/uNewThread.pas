@@ -38,6 +38,8 @@ end;
 
 procedure TNewThread.Execute;
 begin
+  inherited;
+
   if Assigned(ExecuteProcedure) then
   	ExecuteProcedure(Self);
   if Assigned(ExecuteProcedureOfObject) then
