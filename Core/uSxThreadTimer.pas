@@ -14,6 +14,8 @@ type
     FEnabled: BG;
     FInterval: SG;
     FOnTimer: TNotifyEvent;
+    FWorkingTime: U8;
+    FIdleTime: U8;
     procedure SetOnTimer(const Value: TNotifyEvent);
     procedure SetEnabled(const Value: BG);
     procedure SetInterval(const Value: SG);
@@ -30,13 +32,16 @@ type
     property Enabled: BG read FEnabled write SetEnabled;
     property Interval: SG read FInterval write SetInterval;
     property OnTimer: TNotifyEvent read FOnTimer write SetOnTimer;
+
+    property WorkingTime: U8 read FWorkingTime;
+    property IdleTime: U8 read FIdleTime;
   end;
 
 implementation
 
 uses
-  uMsg, uStopwatch,
-  Windows, Forms, SysUtils;
+  uMsg, uStopwatch, uMath,
+  Windows, Forms, SysUtils, Math;
 
 { TSxThreadTimer }
 
@@ -62,16 +67,26 @@ end;
 procedure TSxThreadTimer.InternalExecute;
 var
   StopWatch: TStopWatch;
+  StartTime, SleepTime: U8;
 begin
   StopWatch := TStopwatch.Create;
   try
-      while FRun and (not Application.Terminated) do
-      begin
-        StopWatch.Start;
-        FOnTimer(Self);
-        StopWatch.Stop;
-        Sleep(FInterval - StopWatch.ElapsedMilliseconds);
-      end;
+    StartTime := PerformanceCounter;
+    while FRun and (not Application.Terminated) do
+    begin
+      StopWatch.Start;
+      FOnTimer(Self);
+      StopWatch.Stop;
+      Inc(FWorkingTime, StopWatch.ElapsedTicks);
+
+
+
+      SleepTime := Interval - RoundDivU8((PerformanceCounter - StartTime) * 1000, PerformanceFrequency) mod Interval;
+      StopWatch.Start;
+      Sleep(Max(0, SleepTime));
+      StopWatch.Stop;
+      Inc(FIdleTime, StopWatch.ElapsedTicks);
+    end;
   finally
     StopWatch.Free;
   end;
