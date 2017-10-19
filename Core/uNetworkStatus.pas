@@ -73,7 +73,6 @@ end;
 
 constructor TNetworkStatus.Create;
 begin
-  FURLAddress := 'http://sx.rosada.cz/data/32.txt';
   FStopwatch := TStopwatch.Create;
 end;
 
