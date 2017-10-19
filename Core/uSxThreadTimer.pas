@@ -66,29 +66,27 @@ end;
 
 procedure TSxThreadTimer.InternalExecute;
 var
-  StopWatch: TStopWatch;
+  Stopwatch: TStopwatch;
   StartTime, SleepTime: U8;
 begin
-  StopWatch := TStopwatch.Create;
+  Stopwatch := TStopwatch.Create;
   try
     StartTime := PerformanceCounter;
     while FRun and (not Application.Terminated) do
     begin
-      StopWatch.Start;
+      Stopwatch.Start;
       FOnTimer(Self);
-      StopWatch.Stop;
-      Inc(FWorkingTime, StopWatch.ElapsedTicks);
-
-
+      Stopwatch.Stop;
+      Inc(FWorkingTime, Stopwatch.ElapsedTicks);
 
       SleepTime := Interval - RoundDivU8((PerformanceCounter - StartTime) * 1000, PerformanceFrequency) mod Interval;
-      StopWatch.Start;
+      Stopwatch.Start;
       Sleep(Max(0, SleepTime));
-      StopWatch.Stop;
-      Inc(FIdleTime, StopWatch.ElapsedTicks);
+      Stopwatch.Stop;
+      Inc(FIdleTime, Stopwatch.ElapsedTicks);
     end;
   finally
-    StopWatch.Free;
+    Stopwatch.Free;
   end;
 end;
 
