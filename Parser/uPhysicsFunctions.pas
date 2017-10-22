@@ -4,7 +4,8 @@ interface
 
 implementation
 
-uses uNamespace, uTypes, uVector;
+uses
+  uNamespace, uTypes, uVector, uStrings;
 
 const
 	GravityConst = 9.80665; // in height 6378000 m
@@ -33,6 +34,6 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-	AddFunction('Physics', 'Gravity', Gravity, 'http://en.wikipedia.org/wiki/Earth''s_gravity'); //'Gravitation [m/s]. If no parameter is specified, it mean on surface on th Earth, otherwise parameter is height in [m].');
+	AddFunction('Physics', 'Gravity', Gravity, WikipediaURLPrefix + 'Earth''s_gravity'); //'Gravitation [m/s]. If no parameter is specified, it mean on surface on th Earth, otherwise parameter is height in [m].');
 {$ENDIF NoInitialization}
 end.

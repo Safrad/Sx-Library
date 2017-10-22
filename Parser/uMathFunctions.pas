@@ -13,7 +13,8 @@ var
 
 implementation
 
-uses uNamespace;
+uses
+  uNamespace, uStrings;
 
 function X: TVector;
 begin
@@ -263,38 +264,38 @@ end;
 initialization
 {$IFNDEF NoInitialization}
 	AddFunction('Variable', 'x', X, 'Variable X.');
-	AddFunction('Conditional Tests', 'IfElse', IfElse, 'http://en.wikipedia.org/wiki/Conditional_(programming)');
-	AddFunction('Arithmetic', 'Equal', Equal, 'http://en.wikipedia.org/wiki/Conditional_(programming)');
-	AddFunction('Arithmetic', 'Greater', Greater, 'http://en.wikipedia.org/wiki/Inequality');
-	AddFunction('Arithmetic', 'Less', Less, 'http://en.wikipedia.org/wiki/Inequality');
-	AddFunction('Arithmetic', 'GreaterOrEqual', GreaterOrEqual, 'http://en.wikipedia.org/wiki/Inequality');
-	AddFunction('Arithmetic', 'LessOrEqual', LessOrEqual, 'http://en.wikipedia.org/wiki/Inequality');
-	AddFunction('Arithmetic', 'E', E, 'http://en.wikipedia.org/wiki/Eulers_number');
-	AddFunction('Physics', 'C', C, 'http://en.wikipedia.org/wiki/Speed_of_light');
-	AddFunction('Arithmetic', 'neg', Neg, 'http://en.wikipedia.org/wiki/Additive_inverse');
-	AddFunction('Arithmetic', 'inv', Inv, 'http://en.wikipedia.org/wiki/Multiplicative_inverse');
-	AddFunction('Arithmetic', 'plus', Plus, 'http://en.wikipedia.org/wiki/Addition');
-	AddFunction('Arithmetic', 'minus', Minus, 'http://en.wikipedia.org/wiki/Subtraction');
-	AddFunction('Arithmetic', 'mul', Multiply, 'http://en.wikipedia.org/wiki/Multiply');
-	AddFunction('Arithmetic', 'div', Divide, '(Dividend;Divisor) http://en.wikipedia.org/wiki/Division_(mathematics)');
-	AddFunction('Arithmetic', 'mod', Modulo, '(Dividend;Divisor) http://en.wikipedia.org/wiki/Modular_arithmetic');           
-	AddFunction('Arithmetic', 'power', Power, '(Base;Exponent) http://en.wikipedia.org/wiki/Exponentiation');
-	AddFunction('Arithmetic', 'log', Log, '(Base;Exponent) http://en.wikipedia.org/wiki/Logarithm');
-	AddFunction('Arithmetic', 'ln', Ln, 'http://en.wikipedia.org/wiki/Natural_logarithm');
-	AddFunction('Arithmetic', 'sqr', Sqr, 'http://en.wikipedia.org/wiki/Squared');
-	AddFunction('Arithmetic', 'sqrt', Sqrt, 'http://en.wikipedia.org/wiki/Square_root');
-	AddFunction('Arithmetic', 'trunc', Trunc, 'http://en.wikipedia.org/wiki/Truncation');
-	AddFunction('Arithmetic', 'floor', Floor, 'http://en.wikipedia.org/wiki/Floor_function');
-	AddFunction('Arithmetic', 'round', Round, 'http://en.wikipedia.org/wiki/Round_number');
-	AddFunction('Arithmetic', 'ceil', Ceil, 'http://en.wikipedia.org/wiki/Ceil_function');
-	AddFunction('Arithmetic', 'frac', Frac, 'http://en.wikipedia.org/wiki/Fractional_part');
-	AddFunction('Arithmetic', 'abs', Abs, 'http://en.wikipedia.org/wiki/Absolute_value');
-	AddFunction('Arithmetic', 'not', _Not, 'http://en.wikipedia.org/wiki/Logical_negation');
-	AddFunction('Arithmetic', 'inc', Inc, 'http://en.wikipedia.org/wiki/Increment');
-	AddFunction('Arithmetic', 'dec', Dec, 'http://en.wikipedia.org/wiki/Decrement');
-	AddFunction('Arithmetic', 'exp', Exp, 'http://en.wikipedia.org/wiki/Exponential_function');
-	AddFunction('Arithmetic', 'fact', Fact, 'http://en.wikipedia.org/wiki/Factorial');
-	AddFunction('Arithmetic', 'gamma', Gamma, 'http://en.wikipedia.org/wiki/Gamma_function');
+	AddFunction('Conditional Tests', 'IfElse', IfElse, WikipediaURLPrefix + 'Conditional_(programming)');
+	AddFunction('Arithmetic', 'Equal', Equal, WikipediaURLPrefix + 'Conditional_(programming)');
+	AddFunction('Arithmetic', 'Greater', Greater, WikipediaURLPrefix + 'Inequality');
+	AddFunction('Arithmetic', 'Less', Less, WikipediaURLPrefix + 'Inequality');
+	AddFunction('Arithmetic', 'GreaterOrEqual', GreaterOrEqual, WikipediaURLPrefix + 'Inequality');
+	AddFunction('Arithmetic', 'LessOrEqual', LessOrEqual, WikipediaURLPrefix + 'Inequality');
+	AddFunction('Arithmetic', 'E', E, WikipediaURLPrefix + 'Eulers_number');
+	AddFunction('Physics', 'C', C, WikipediaURLPrefix + 'Speed_of_light');
+	AddFunction('Arithmetic', 'neg', Neg, WikipediaURLPrefix + 'Additive_inverse');
+	AddFunction('Arithmetic', 'inv', Inv, WikipediaURLPrefix + 'Multiplicative_inverse');
+	AddFunction('Arithmetic', 'plus', Plus, WikipediaURLPrefix + 'Addition');
+	AddFunction('Arithmetic', 'minus', Minus, WikipediaURLPrefix + 'Subtraction');
+	AddFunction('Arithmetic', 'mul', Multiply, WikipediaURLPrefix + 'Multiply');
+	AddFunction('Arithmetic', 'div', Divide, '(Dividend;Divisor) ' + WikipediaURLPrefix + 'Division_(mathematics)');
+	AddFunction('Arithmetic', 'mod', Modulo, '(Dividend;Divisor) ' + WikipediaURLPrefix + 'Modular_arithmetic');
+	AddFunction('Arithmetic', 'power', Power, '(Base;Exponent) ' + WikipediaURLPrefix + 'Exponentiation');
+	AddFunction('Arithmetic', 'log', Log, '(Base;Exponent) ' + WikipediaURLPrefix + 'Logarithm');
+	AddFunction('Arithmetic', 'ln', Ln, WikipediaURLPrefix + 'Natural_logarithm');
+	AddFunction('Arithmetic', 'sqr', Sqr, WikipediaURLPrefix + 'Squared');
+	AddFunction('Arithmetic', 'sqrt', Sqrt, WikipediaURLPrefix + 'Square_root');
+	AddFunction('Arithmetic', 'trunc', Trunc, WikipediaURLPrefix + 'Truncation');
+	AddFunction('Arithmetic', 'floor', Floor, WikipediaURLPrefix + 'Floor_function');
+	AddFunction('Arithmetic', 'round', Round, WikipediaURLPrefix + 'Round_number');
+	AddFunction('Arithmetic', 'ceil', Ceil, WikipediaURLPrefix + 'Ceil_function');
+	AddFunction('Arithmetic', 'frac', Frac, WikipediaURLPrefix + 'Fractional_part');
+	AddFunction('Arithmetic', 'abs', Abs, WikipediaURLPrefix + 'Absolute_value');
+	AddFunction('Arithmetic', 'not', _Not, WikipediaURLPrefix + 'Logical_negation');
+	AddFunction('Arithmetic', 'inc', Inc, WikipediaURLPrefix + 'Increment');
+	AddFunction('Arithmetic', 'dec', Dec, WikipediaURLPrefix + 'Decrement');
+	AddFunction('Arithmetic', 'exp', Exp, WikipediaURLPrefix + 'Exponential_function');
+	AddFunction('Arithmetic', 'fact', Fact, WikipediaURLPrefix + 'Factorial');
+	AddFunction('Arithmetic', 'gamma', Gamma, WikipediaURLPrefix + 'Gamma_function');
 {$ENDIF NoInitialization}
 end.
 

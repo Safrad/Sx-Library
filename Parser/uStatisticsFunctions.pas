@@ -21,7 +21,7 @@ function Skew(const Data: array of TVector): TVector;
 implementation
 
 uses
-	uNamespace, uMath,
+	uNamespace, uMath, uStrings,
 	Math;
 
 function CountData(const Data: array of TVector): TVector;
@@ -255,25 +255,25 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-	AddFunction('Statistics', 'Avg', Avg, 'http://en.wikipedia.org/wiki/Arithmetic_mean');
-	AddFunction('Statistics', 'AvgG', GeometricMean, 'http://en.wikipedia.org/wiki/Geometric_mean');
-	AddFunction('Statistics', 'AvgH', HarmonicMean, 'http://en.wikipedia.org/wiki/Harmonic_mean');
-	// http://en.wikipedia.org/wiki/Arithmetic-geometric_mean
-	AddFunction('Statistics', 'Count', CountData, 'http://en.wikipedia.org/wiki/Count_data');
-	AddFunction('Statistics', 'Min', Minimum, 'http://en.wikipedia.org/wiki/Minimum');
-	AddFunction('Statistics', 'Max', Maximum, 'http://en.wikipedia.org/wiki/Maximum');
-	AddFunction('Statistics', 'Skew', Skew, 'http://en.wikipedia.org/wiki/Skewness');
-	AddFunction('Statistics', 'Sum', Sum, 'http://en.wikipedia.org/wiki/Sum');
+	AddFunction('Statistics', 'Avg', Avg, WikipediaURLPrefix + 'Arithmetic_mean');
+	AddFunction('Statistics', 'AvgG', GeometricMean, WikipediaURLPrefix + 'Geometric_mean');
+	AddFunction('Statistics', 'AvgH', HarmonicMean, WikipediaURLPrefix + 'Harmonic_mean');
+	// WikipediaURLPrefix + 'Arithmetic-geometric_mean'
+	AddFunction('Statistics', 'Count', CountData, WikipediaURLPrefix + 'Count_data');
+	AddFunction('Statistics', 'Min', Minimum, WikipediaURLPrefix + 'Minimum');
+	AddFunction('Statistics', 'Max', Maximum, WikipediaURLPrefix + 'Maximum');
+	AddFunction('Statistics', 'Skew', Skew, WikipediaURLPrefix + 'Skewness');
+	AddFunction('Statistics', 'Sum', Sum, WikipediaURLPrefix + 'Sum');
 //	AddFunction('Statistics', 'Sumx', Sumx, '');
 //	AddFunction('Statistics', 'ux', ux, '');
 //	AddFunction('Statistics', 'mx', _mx, '');
-	AddFunction('Statistics', 'dx', AbsoluteDeviation, 'http://en.wikipedia.org/wiki/Absolute_deviation');
-	AddFunction('Statistics', 'Variance0', Variance0, 'http://en.wikipedia.org/wiki/Variance');
-	AddFunction('Statistics', 'ex', StandardDeviation, 'http://en.wikipedia.org/wiki/Standard_deviation');
+	AddFunction('Statistics', 'dx', AbsoluteDeviation, WikipediaURLPrefix + 'Absolute_deviation');
+	AddFunction('Statistics', 'Variance0', Variance0, WikipediaURLPrefix + 'Variance');
+	AddFunction('Statistics', 'ex', StandardDeviation, WikipediaURLPrefix + 'Standard_deviation');
 	AddFunction('Statistics', 'VarianceCoef', VarianceCoef, '');
 
 
-	AddFunction('Statistics', 'Random', RandomFunction, 'http://en.wikipedia.org/wiki/Random_function');
-	// http://en.wikipedia.org/wiki/Median
+	AddFunction('Statistics', 'Random', RandomFunction, WikipediaURLPrefix + 'Random_function');
+	// WikipediaURLPrefix + 'Median'
 {$ENDIF NoInitialization}
 end.

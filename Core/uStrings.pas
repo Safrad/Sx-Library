@@ -29,6 +29,8 @@ const
 	FalseTrue: array[0..1] of string = ('false', 'true');
 	NoYes: array[0..1] of string = ('No', 'Yes');
 
+  WikipediaURLPrefix = 'https://en.wikipedia.org/wiki/';
+
 var
 	HexValue: array[AnsiChar] of U1;
 

@@ -17,7 +17,7 @@ const
 {$if CompilerVersion < 15}
 	clSystemColor = $FF000000;
 {$ifend}
-  clForestGreen = $00228B22; // http://en.wikipedia.org/wiki/Variations_of_green#Forest_green
+  clForestGreen = $00228B22; // https://en.wikipedia.org/wiki/Variations_of_green#Forest_green
 
 	MinInt = Low(Integer);
 

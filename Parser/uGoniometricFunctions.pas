@@ -11,7 +11,7 @@ implementation
 
 uses
 	Math,
-	uNamespace, uVector;
+	uNamespace, uVector, uStrings;
 
 function CorrectFormat(const X: TVector): TVector; // XToRad
 begin
@@ -100,19 +100,19 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-	AddFunction('Goniometic', 'PI', PIConstant, 'http://en.wikipedia.org/wiki/Pi');
-	AddFunction('Goniometic', 'Sin', Sine, 'http://en.wikipedia.org/wiki/Sine');
-	AddFunction('Goniometic', 'Cos', Cosine, 'http://en.wikipedia.org/wiki/Cosine');
-	AddFunction('Goniometic', 'Tan', Tangent, 'http://en.wikipedia.org/wiki/Tangent');
-	AddFunction('Goniometic', 'ArcSin', ArcSin, 'http://en.wikipedia.org/wiki/Arcsine');
-	AddFunction('Goniometic', 'ArcCos', ArcCos, 'http://en.wikipedia.org/wiki/Arccosine');
+	AddFunction('Goniometic', 'PI', PIConstant, WikipediaURLPrefix + 'Pi');
+	AddFunction('Goniometic', 'Sin', Sine, WikipediaURLPrefix + 'Sine');
+	AddFunction('Goniometic', 'Cos', Cosine, WikipediaURLPrefix + 'Cosine');
+	AddFunction('Goniometic', 'Tan', Tangent, WikipediaURLPrefix + 'Tangent');
+	AddFunction('Goniometic', 'ArcSin', ArcSin, WikipediaURLPrefix + 'Arcsine');
+	AddFunction('Goniometic', 'ArcCos', ArcCos, WikipediaURLPrefix + 'Arccosine');
 
 	// Hyperbolic
-	AddFunction('Goniometic', 'Sinh', Sinh, 'http://en.wikipedia.org/wiki/Hyperbolic_sine');
-	AddFunction('Goniometic', 'Cosh', Cosh, 'http://en.wikipedia.org/wiki/Hyperbolic_cosine');
-	AddFunction('Goniometic', 'Tanh', Tanh, 'http://en.wikipedia.org/wiki/Hyperbolic_tangent');
-	AddFunction('Goniometic', 'ArcSinh', ArcSinh, 'http://en.wikipedia.org/wiki/Arcsinh');
-	AddFunction('Goniometic', 'ArcCosh', ArcCosh, 'http://en.wikipedia.org/wiki/Arccosh');
-	AddFunction('Goniometic', 'ArcTanh', ArcTanh, 'http://en.wikipedia.org/wiki/Arctanh');
+	AddFunction('Goniometic', 'Sinh', Sinh, WikipediaURLPrefix + 'Hyperbolic_sine');
+	AddFunction('Goniometic', 'Cosh', Cosh, WikipediaURLPrefix + 'Hyperbolic_cosine');
+	AddFunction('Goniometic', 'Tanh', Tanh, WikipediaURLPrefix + 'Hyperbolic_tangent');
+	AddFunction('Goniometic', 'ArcSinh', ArcSinh, WikipediaURLPrefix + 'Arcsinh');
+	AddFunction('Goniometic', 'ArcCosh', ArcCosh, WikipediaURLPrefix + 'Arccosh');
+	AddFunction('Goniometic', 'ArcTanh', ArcTanh, WikipediaURLPrefix + 'Arctanh');
 {$ENDIF NoInitialization}
 end.

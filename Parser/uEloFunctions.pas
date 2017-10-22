@@ -26,6 +26,7 @@ implementation
 
 uses
 	SysUtils,
+  uStrings,
 	uNamespace, uMath;
 
 const
@@ -311,10 +312,10 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-	AddFunction('Chess', 'Elo', Elo, 'Probably Elo difference for result <0..1>. http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
-	AddFunction('Chess', 'ArcElo', ArcElo, 'Probably result <0..1> for Elo difference. http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
+	AddFunction('Chess', 'Elo', Elo, 'Probably Elo difference for result <0..1>. ' + WikipediaURLPrefix + 'Elo_rating_system#Performance_rating');
+	AddFunction('Chess', 'ArcElo', ArcElo, 'Probably result <0..1> for Elo difference. ' + WikipediaURLPrefix + 'Elo_rating_system#Performance_rating');
 	AddFunction('Chess', 'EloC', EloC, '([Coef.]; Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...)');
-	AddFunction('Chess', 'EloDif', EloC, 'Return elo difference (Coef.; Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...) http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
-	AddFunction('Chess', 'EloPerfo', EloC, 'Return Elo performance (Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...) http://en.wikipedia.org/wiki/Elo_rating_system#Performance_rating');
+	AddFunction('Chess', 'EloDif', EloC, 'Return elo difference (Coef.; Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...) ' + WikipediaURLPrefix + 'Elo_rating_system#Performance_rating');
+	AddFunction('Chess', 'EloPerfo', EloC, 'Return Elo performance (Your elo; 1st opponent elo; 1st opponent result; 2nd opponent elo; 2nd opponent result...) ' + WikipediaURLPrefix + 'Elo_rating_system#Performance_rating');
 {$ENDIF NoInitialization}
 end.

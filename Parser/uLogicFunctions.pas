@@ -4,7 +4,8 @@ interface
 
 implementation
 
-uses uTypes, uVector, uNamespace;
+uses
+  uTypes, uVector, uNamespace, uStrings;
 
 type
 	TOperation = (opShl, opShr, opAnd, opOr, opNor, opXor, opXnor);
@@ -94,14 +95,14 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-	AddFunction('Logic', 'false', ConstantFalse, 'http://en.wikipedia.org/wiki/Boolean_algebras_canonically_defined');
-	AddFunction('Logic', 'true', ConstantTrue, 'http://en.wikipedia.org/wiki/Truth_value');
-	AddFunction('Logic', 'shl', FunctionShl, 'http://en.wikipedia.org/wiki/Logical_shift');
-	AddFunction('Logic', 'shr', FunctionShr, 'http://en.wikipedia.org/wiki/Logical_shift');
-	AddFunction('Logic', 'and', FunctionAnd, 'http://en.wikipedia.org/wiki/Logical_conjunction');
-	AddFunction('Logic', 'or', FunctionOr, 'http://en.wikipedia.org/wiki/Logical_disjunction');
-	AddFunction('Logic', 'nor', FunctionNor, 'http://en.wikipedia.org/wiki/Logical_NOR');
-	AddFunction('Logic', 'xor', FunctionXor, 'http://en.wikipedia.org/wiki/Exclusive_or');
-	AddFunction('Logic', 'xnor', FunctionXnor, 'http://en.wikipedia.org/wiki/Logical_equality');
+	AddFunction('Logic', 'false', ConstantFalse, WikipediaURLPrefix + 'Boolean_algebras_canonically_defined');
+	AddFunction('Logic', 'true', ConstantTrue, WikipediaURLPrefix + 'Truth_value');
+	AddFunction('Logic', 'shl', FunctionShl, WikipediaURLPrefix + 'Logical_shift');
+	AddFunction('Logic', 'shr', FunctionShr, WikipediaURLPrefix + 'Logical_shift');
+	AddFunction('Logic', 'and', FunctionAnd, WikipediaURLPrefix + 'Logical_conjunction');
+	AddFunction('Logic', 'or', FunctionOr, WikipediaURLPrefix + 'Logical_disjunction');
+	AddFunction('Logic', 'nor', FunctionNor, WikipediaURLPrefix + 'Logical_NOR');
+	AddFunction('Logic', 'xor', FunctionXor, WikipediaURLPrefix + 'Exclusive_or');
+	AddFunction('Logic', 'xnor', FunctionXnor, WikipediaURLPrefix + 'Logical_equality');
 {$ENDIF NoInitialization}
 end.
