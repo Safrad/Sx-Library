@@ -57,7 +57,6 @@ var
 	Aero: Boolean;
 	RegionCompatibily: Boolean;
 
-function GetKey(Default: U2): U2;
 function OSToStr(const OS: TOSVersionInfo): string;
 function GetCPUUsage: SG;
 procedure FillDynamicInfo(var SysInfo: TSysInfo); // FillMemoryStatus + FillCPUTest
@@ -73,7 +72,6 @@ function CanAllocateMemory(const Size: UG): BG;
 implementation
 
 uses
-//  FastMM4,
   PsAPI,
   uMsg,
 	uStrings, uOutputFormat, uSimulation, uDictionary,
@@ -104,26 +102,6 @@ begin
   end;
 end;
 {$ifend}
-
-function GetKey(Default: U2): U2;
-var
-	Keyboard: TKeyboardState;
-	i: Integer;
-begin
-	while True do
-	begin
-		GetKeyboardState(Keyboard);
-		for i := Low(Keyboard) to High(Keyboard) do
-		begin
-			if (Keyboard[i] and $80 <> 0) and (i <> VK_LBUTTON) and (i <> VK_RBUTTON)
-			and (i <> VK_MBUTTON) then
-			begin
-				Result := i;
-				if (not NTSystem) or (not (i in [VK_SHIFT, VK_CONTROL, VK_MENU])) then Exit;
-			end;
-		end;
-	end;
-end;
 
 function OSToStr(const OS: TOSVersionInfo): string;
 {$ifndef UNICODE}
