@@ -20,6 +20,8 @@ type
     FResultType: TResultType;
     FPingTime: U8;
     FErrorMessage: string;
+    FSentTime: TDateTime;
+    FDataSize: U8;
 
     procedure SetURLAddress(const Value: string);
   public
@@ -30,6 +32,8 @@ type
     property URLAddress: string read FURLAddress write SetURLAddress;
     property ResultType: TResultType read FResultType;
     property PingTime: U8 read FPingTime;
+    property DataSize: U8 read FDataSize;
+    property SentTime: TDateTime read FSentTime;
     property ErrorMessage: string read FErrorMessage;
   end;
 
@@ -47,23 +51,28 @@ begin
   Self := TNetworkStatus(AInstance);
   Self.FUpdating := True;
   try
+    Self.FSentTime := Now;
     Self.FStopwatch.Restart;
     try
       Data := DownloadData(Self.URLAddress);
-      if Data = '' then
-        raise Exception.Create('Wrong data');
+      if Length(Data) = 0 then
+        raise Exception.Create('No data received.');
+
+      Self.FStopwatch.Stop;
+      Self.FDataSize := Length(Data);
+      Self.FResultType := rtPingTime;
+      Self.FPingTime := Self.FStopwatch.ElapsedMilliseconds;
+      Self.FErrorMessage := '';
     except
       on E: Exception do
       begin
+        Self.FStopwatch.Stop;
+        Self.FDataSize := 0;
         Self.FResultType := rtError;
-        Self.FErrorMessage := E.Message;
         Self.FPingTime := 0;
-        Exit;
+        Self.FErrorMessage := E.Message;
       end;
     end;
-    Self.FStopwatch.Stop;
-    Self.FResultType := rtPingTime;
-    Self.FPingTime := Self.FStopwatch.ElapsedMilliseconds;
   finally
     Self.FUpdating := False;
   end;
