@@ -69,7 +69,7 @@ begin
   end;
 end;
 
-{ TComputerState }
+{ TNetworkStatus }
 
 constructor TNetworkStatus.Create;
 begin
