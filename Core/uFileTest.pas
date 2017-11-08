@@ -16,7 +16,7 @@ implementation
 
 uses
   Windows, SysUtils,
-	uTypes, uFile, uFiles, uStrings;
+	uTypes, uFile, uFiles, uStrings, uChar;
 
 { TFileTest }
 
