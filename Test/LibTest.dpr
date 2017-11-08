@@ -32,7 +32,8 @@ uses
   uThreadPoolTest in '..\Core\uThreadPoolTest.pas',
   uDivideSpaceTest in '..\Core\uDivideSpaceTest.pas',
   uCSVFileTest in '..\Core\uCSVFileTest.pas',
-  uRegionalTest in '..\Core\uRegionalTest.pas';
+  uRegionalTest in '..\Core\uRegionalTest.pas',
+  uMathTest in '..\Core\uMathTest.pas';
 
 {$R *.RES}
 
