@@ -81,7 +81,7 @@ begin
 
       SleepTime := Interval - RoundDivU8((PerformanceCounter - StartTime) * 1000, PerformanceFrequency) mod Interval;
       Stopwatch.Start;
-      Sleep(Max(0, SleepTime));
+      PreciseSleep(SleepTime);
       Stopwatch.Stop;
       Inc(FIdleTime, Stopwatch.ElapsedTicks);
     end;

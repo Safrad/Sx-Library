@@ -32,11 +32,11 @@ procedure DivModU8(const Dividend: U8; const Divisor: U4;
 	out Res, Remainder: U4); pascal;
 procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
-procedure UnsignedDivMod10(const n: S4; out q: S4; out r: S4);
+procedure UnsignedDivMod10(const Dividend: U4; out Result: U4; out Reminder: U4);
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: Extended): Extended;
 
-function FastSqrt(A: SG): SG;
+function FastSqrt(A: UG): UG;
 function LinearMax(Clock, Maximum: UG): UG;
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG); overload;
 procedure Rotate(var X, Y: Double; MaxX, MaxY: Double; Angle: SG); overload;
@@ -123,7 +123,10 @@ var
 procedure InitPerformanceCounter;
 function GetCPUCounter: TU8;
 function PerformanceCounter: S8;
+procedure Nop; assembler;
+procedure Pause; assembler;
 procedure Delay(const ms: U4);
+procedure PreciseSleep(const ms: U4);
 
 function CalcShr(N: U4): S1;
 procedure CheckExpSize(const Size: SG);
@@ -133,12 +136,12 @@ function SetSmallerSize(var x, y: SG; const MaxWidth, MaxHeight: SG): BG;
 function SetLargerSize(var x, y: SG; const MinWidth, MinHeight: SG): BG;
 procedure SetScale(var x, y: SG; const MaxWidth, MaxHeight: SG);
 
-function BitsToByte(const Bits: S8): S4;
+function BitsToByte(const Bits: U8): U8;
 
 implementation
 
 uses
-	Math, Windows;
+  Math, Windows, Classes;
 
 function Sgn(const I: S1): SG;
 begin
@@ -333,14 +336,17 @@ asm
 {$endif}
 end;
 
-procedure UnsignedDivMod10(const n: S4; out q: S4; out r: S4);
+// Divisor = 10
+procedure UnsignedDivMod10(const Dividend: U4; out Result: U4; out Reminder: U4);
 const
-  remtable:array[0..15] of integer = (0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 7, 8, 8, 9, 0);
-
+  ReminderTable: array[0..15] of SG = (0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 7, 8, 8, 9, 0);
+var
+  Index: SG;
 begin
-  r := ($19999999*n + (n shr 1) + (n shr 3)) shr 28;
-  r := remtable[r];
-  q := U4((n - r) shr 1)*$CCCCCCCD;
+  {$Q-}
+  Index := ($19999999 * Dividend + (Dividend shr 1) + (Dividend shr 3)) shr 28;
+  Reminder := ReminderTable[Index];
+  Result := U4((Dividend - Reminder) shr 1)*$CCCCCCCD;
 end;
 
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
@@ -365,14 +371,15 @@ begin
 	Result := x - {Trunc}Floor(x / y) * y;
 end;
 
-function FastSqrt(A: SG): SG;
+function FastSqrt(A: UG): UG;
 const
 	Base = 16;
 	BaseS = 4;
 	Base2 = Base * Base; // 256
 	BaseS2 = 8;
 var
-	AX, B, k, Pow: SG;
+	AX, B, k: UG;
+  Pow: SG;
 begin
 	B := 0;
 	AX := 0;
@@ -381,7 +388,7 @@ begin
 	begin
 		B := B shl BaseS;
 		k := B shl 1 + 1;
-		AX := AX shl BaseS2 + (A shr Pow) and (Base2 - 1);
+		AX := AX shl BaseS2 + (A shr UG(Pow)) and (Base2 - 1);
 		while True do
 		begin
 			if AX < k then Break;
@@ -1637,12 +1644,45 @@ begin
 	end;
 end;
 
+procedure Nop; assembler;
+asm
+  nop
+end;
+
+procedure Pause; assembler;
+asm
+  pause // Same opcode F390h as "rep nop"
+end;
+
 procedure Delay(const ms: U4);
 var
-	TickCount: U4;
+	TickCount: U8;
 begin
-	TickCount := GetTickCount + ms;
-	while GetTickCount < TickCount do
+	TickCount := PerformanceCounter + RoundDivU8(PerformanceFrequency * ms, 1000);
+  // busy-wait loop (spin-wait loop)
+	while PerformanceCounter < TickCount do
+  begin
+    Pause;
+  end;
+end;
+
+procedure PreciseSleep(const ms: U4);
+const
+  // Thread swap minimal time
+  // Unix and new Windows: 1 ms
+  // Old Windows: 15 ms!
+  MinSleepTime = 1; // ms TODO: Detect old Windows 15 ms
+var
+	TickCount: U8;
+begin
+  TickCount := PerformanceCounter + RoundDivU8(PerformanceFrequency * ms, 1000);
+  if ms > MinSleepTime then
+    Sleep(ms - MinSleepTime); // Sleep a bit longer then specified (max plus MinSleepTime)
+  // busy-wait loop (spin-wait loop)
+  while PerformanceCounter < TickCount do
+  begin
+    Pause;
+  end;
 end;
 
 function CalcShr(N: U4): S1;
@@ -1916,7 +1956,7 @@ begin
   end;
 end;
 
-function BitsToByte(const Bits: S8): S4;
+function BitsToByte(const Bits: U8): U8;
 begin
 	Result := (Bits + 7) shr 3;
 end;

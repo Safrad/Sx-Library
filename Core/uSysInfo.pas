@@ -688,11 +688,6 @@ begin
 	GetCPUUsage;
 end;
 
-procedure Nop; assembler;
-asm
-  nop
-end;
-
 procedure DelayEx(const f: U8);
 var
 	TickCount: U8;
@@ -703,7 +698,7 @@ begin
 	begin
 		for i := 0 to Min(1000, GSysInfo.CPUFrequency div 40) - 1 do
 		begin
-      Nop;
+      Pause;
 		end;
 	end;
 end;
