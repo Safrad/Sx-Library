@@ -1668,16 +1668,16 @@ end;
 
 procedure PreciseSleep(const ms: U4);
 const
-  // Thread swap minimal time
+  // Thread swap time
   // Unix and new Windows: 1 ms
   // Old Windows: 15 ms!
-  MinSleepTime = 1; // ms TODO: Detect old Windows 15 ms
+  MaximalAddedSleepTime = 1; // ms TODO: Detect old Windows 15 ms
 var
 	TickCount: U8;
 begin
   TickCount := PerformanceCounter + RoundDivU8(PerformanceFrequency * ms, 1000);
-  if ms > MinSleepTime then
-    Sleep(ms - MinSleepTime); // Sleep a bit longer then specified (max plus MinSleepTime)
+  if ms >= MaximalAddedSleepTime then
+    Sleep(ms - MaximalAddedSleepTime); // Sleep a bit longer then specified (max plus MinSleepTime)
   // busy-wait loop (spin-wait loop)
   while PerformanceCounter < TickCount do
   begin
