@@ -1654,6 +1654,7 @@ asm
   pause // Same opcode F390h as "rep nop"
 end;
 
+// CPU usage is 100% if used in loop
 procedure Delay(const ms: U4);
 var
 	TickCount: U8;
@@ -1666,6 +1667,15 @@ begin
   end;
 end;
 
+// CPU usage if used in loop
+// Sleep Time [ms] CPU [%]
+// 0  100
+// 1  100
+// 2   25
+// 3   16
+// 4   12
+// 5    9
+// 10   5
 procedure PreciseSleep(const ms: U4);
 const
   // Thread swap time
