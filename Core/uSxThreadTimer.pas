@@ -49,7 +49,7 @@ constructor TSxThreadTimer.Create;
 begin
   inherited Create(CreateSuspended);
 
-  FEnabled := True;
+  FEnabled := False;
 end;
 
 procedure TSxThreadTimer.Execute;
