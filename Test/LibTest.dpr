@@ -33,7 +33,8 @@ uses
   uDivideSpaceTest in '..\Core\uDivideSpaceTest.pas',
   uCSVFileTest in '..\Core\uCSVFileTest.pas',
   uRegionalTest in '..\Core\uRegionalTest.pas',
-  uMathTest in '..\Core\uMathTest.pas';
+  uMathTest in '..\Core\uMathTest.pas',
+  uMidiPlayerTest in '..\Core\uMidiPlayerTest.pas';
 
 {$R *.RES}
 
