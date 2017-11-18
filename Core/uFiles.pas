@@ -125,6 +125,7 @@ procedure InitPaths;
 
 function DirectoryExistsEx(const DirName: TFileName): BG;
 function FileExistsEx(const FileName: TFileName): BG;
+procedure TestFileReadable(const AFileName: string);
 function IsFileWritable(const AFileName: string): Boolean;
 function FileOrDirExists(const FileOrDirName: string): BG;
 function FileOrDirExistsEx(const FileOrDirName: string): BG;
@@ -2320,20 +2321,29 @@ begin
 	Result := FileExists(ExpandDir(FileName));
 end;
 
+procedure TestFileReadable(const AFileName: string);
+var
+  H: THandle;
+begin
+  H := CreateFile(PChar(AFileName), GENERIC_READ, 0, nil, OPEN_EXISTING, 0, 0);
+  if H <> INVALID_HANDLE_VALUE then
+  begin
+    CloseHandle(H);
+  end
+  else
+  begin
+    raise Exception.Create(ReplaceParam(ErrorCodeToStr(GetLastError) + LineSep + '%1', [AFileName]));
+  end;
+end;
+
 function IsFileWritable(const AFileName: string): Boolean;
 var
   H: THandle;
 begin
-//  if not FileExists(AFileName) then
-//  begin
-//    Result := True;
-//    Exit;
-//  end;
-
-  H := CreateFile(PChar(AFileName), GENERIC_READ or GENERIC_WRITE, 0, nil,
-    OPEN_ALWAYS, 0, 0);
+  H := CreateFile(PChar(AFileName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_ALWAYS, 0, 0);
   Result := H <> INVALID_HANDLE_VALUE;
-  if Result then CloseHandle(H);
+  if Result then
+    CloseHandle(H);
 end;
 {
 function DirectoryExists(const Directory: string): BG;
