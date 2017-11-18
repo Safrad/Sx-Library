@@ -45,8 +45,9 @@ const
 
   // Extended ASCII characters
   CharUnbrokableSpace = #$A0;
-  CharHyphen = #$96; // –
-  CharLongHyphen = #$97; // —
+  CharHyphen = '-';
+  CharEnDash = #$96; // –
+  CharEmDash = #$97; // —
   CharLeftPointingDoubleAngleQuotationMark = '«';
   CharRightPointingDoubleAngleQuotationMark = '»'; 
   CharHorizontalEllipsis = {$ifdef UNICODE}Char($2026){$else}#$85{$endif}; // ...
