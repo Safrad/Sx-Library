@@ -80,7 +80,7 @@ destructor TLongOperation.Destroy;
 begin
   if FStopwatch.IsRunning then
     Stop;
-
+  FStopwatch.Free;
   inherited;
 end;
 
