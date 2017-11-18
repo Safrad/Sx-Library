@@ -682,16 +682,6 @@ begin
 	Open;
 end;
 
-function TWavePlayer.GetPlayItemCount: SG;
-begin
-  Result := PlayItems.Count;
-end;
-
-procedure TWavePlayer.SetPlayItemCount(const Value: SG);
-begin
-
-end;
-
 initialization
 {$IFNDEF NoInitialization}
 {$ENDIF NoInitialization}
