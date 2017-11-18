@@ -81,7 +81,7 @@ function IOErrorMessageRetry(var FileName: TFileName; const ErrorMsg: string): B
 implementation
 
 uses
-  Windows, uStrings, uLog {$IFNDEF Console}, uMsgDlg, Dialogs {$ENDIF};
+  Windows, uStrings, uLog {$IFNDEF Console}, uMsgDlg, Dialogs {$ENDIF}, uChar;
 
 const
   MsgTypeNames: array[TMessageLevel] of string = (SMsgDlgConfirm, 'Debug', SMsgDlgInformation, SMsgDlgWarning,
@@ -262,7 +262,7 @@ begin
     {LANG_NEUTRAL or SUBLANG_DEFAULT shl 10}, PChar(Result), MAX_PATH, nil);
   SetLength(Result, NewLength);
   DelBESpace(Result);
-  Result := ErrorCodeStr + CharSpace + IntToStr(ErrorCode) + ' - ' + Result;
+  Result := ErrorCodeStr + CharSpace + IntToStr(ErrorCode) + ' ' + CharEnDash + ' ' + Result;
 end;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;

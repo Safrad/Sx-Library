@@ -319,9 +319,9 @@ begin
 	// Prepare
 	s := GetEnumName(TypeInfo(TTg), SG(Tg)) + ': ';
 	if Tg = tgUpload then
-		s := s + FileNameOrDir + ' ' + CharHyphen + '> ' + 'ftp://' + FTP.Host + '/' + TargetDir
+		s := s + FileNameOrDir + ' ' + CharEnDash + '> ' + 'ftp://' + FTP.Host + '/' + TargetDir
 	else
-		s := s + 'ftp://' + FTP.Host + '/' + TargetDir + ' ' + CharHyphen + '> ' + FileNameOrDir;
+		s := s + 'ftp://' + FTP.Host + '/' + TargetDir + ' ' + CharEnDash + '> ' + FileNameOrDir;
 	if Assigned(Logger) then
 		Logger.Add(s, mlDebug);
 

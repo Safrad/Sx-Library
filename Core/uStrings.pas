@@ -24,7 +24,7 @@ const
 
 	EnumPrefixLength = 2;
 	NAStr = 'N/A';
-	CharNone = CharHyphen;
+	CharNone = CharEmDash;
 	CharError = '~';
 	FalseTrue: array[0..1] of string = ('false', 'true');
 	NoYes: array[0..1] of string = ('No', 'Yes');
