@@ -2,7 +2,10 @@ unit uMath;
 
 interface
 
-uses uTypes, Types;
+uses
+  uTypes,
+  uTimeSpan,
+  Types;
 
 const
 	SinDiv = 32768; // 1.0 65536; // 1..128..MB
@@ -125,8 +128,8 @@ function GetCPUCounter: TU8;
 function PerformanceCounter: S8;
 procedure Nop; assembler;
 procedure Pause; assembler;
-procedure Delay(const ms: U4);
-procedure PreciseSleep(const ms: U4);
+procedure Delay(const ATimeSpan: TTimeSpan);
+procedure PreciseSleep(const ATimeSpan: TTimeSpan);
 
 function CalcShr(N: U4): S1;
 procedure CheckExpSize(const Size: SG);
@@ -1655,13 +1658,13 @@ asm
 end;
 
 // CPU usage is 100% if used in loop
-procedure Delay(const ms: U4);
+procedure Delay(const ATimeSpan: TTimeSpan);
 var
-	TickCount: U8;
+	StartTickCount: U8;
 begin
-	TickCount := PerformanceCounter + RoundDivU8(PerformanceFrequency * ms, 1000);
+	StartTickCount := PerformanceCounter;
   // busy-wait loop (spin-wait loop)
-	while PerformanceCounter < TickCount do
+	while PerformanceCounter < StartTickCount + ATimeSpan.Ticks do
   begin
     Pause;
   end;
@@ -1676,20 +1679,22 @@ end;
 // 4   12
 // 5    9
 // 10   5
-procedure PreciseSleep(const ms: U4);
+procedure PreciseSleep(const ATimeSpan: TTimeSpan);
 const
   // Thread swap time
   // Unix and new Windows: 1 ms
   // Old Windows: 15 ms!
   MaximalAddedSleepTime = 1; // ms TODO: Detect old Windows 15 ms
 var
-	TickCount: U8;
+	StartTickCount: U8;
+  ms: FG;
 begin
-  TickCount := PerformanceCounter + RoundDivU8(PerformanceFrequency * ms, 1000);
+  StartTickCount := PerformanceCounter;
+  ms := ATimeSpan.Milliseconds;
   if ms >= MaximalAddedSleepTime then
-    Sleep(ms - MaximalAddedSleepTime); // Sleep a bit longer then specified (max plus MinSleepTime)
+    Sleep(Trunc(ms - MaximalAddedSleepTime)); // Sleep a bit longer then specified (max plus MinSleepTime)
   // busy-wait loop (spin-wait loop)
-  while PerformanceCounter < TickCount do
+  while PerformanceCounter < StartTickCount + ATimeSpan.Ticks do
   begin
     Pause;
   end;

@@ -5,6 +5,7 @@ interface
 uses
   uTypes,
   Classes,
+  uTimeSpan,
   uSxThread;
 
 type
@@ -12,25 +13,24 @@ type
   private
     FRun: BG;
     FEnabled: BG;
-    FInterval: SG;
+    FInterval: TTimeSpan;
     FOnTimer: TNotifyEvent;
     FWorkingTime: U8;
     FIdleTime: U8;
     procedure SetOnTimer(const Value: TNotifyEvent);
     procedure SetEnabled(const Value: BG);
-    procedure SetInterval(const Value: SG);
 
     procedure InternalExecute;
   protected
     procedure Execute; override;
-
-
   public
     constructor Create(CreateSuspended: Boolean);
+    destructor Destroy; override;
+
     procedure StopAndDestroy;
 
     property Enabled: BG read FEnabled write SetEnabled;
-    property Interval: SG read FInterval write SetInterval;
+    property Interval: TTimeSpan read FInterval;
     property OnTimer: TNotifyEvent read FOnTimer write SetOnTimer;
 
     property WorkingTime: U8 read FWorkingTime;
@@ -45,11 +45,19 @@ uses
 
 { TSxThreadTimer }
 
-constructor TSxThreadTimer.Create;
+constructor TSxThreadTimer.Create(CreateSuspended: Boolean);
 begin
   inherited Create(CreateSuspended);
 
-  FEnabled := False;
+  FEnabled := not CreateSuspended;
+  FInterval := TTimeSpan.Create;
+end;
+
+destructor TSxThreadTimer.Destroy;
+begin
+  FreeAndNil(FInterval);
+
+  inherited;
 end;
 
 procedure TSxThreadTimer.Execute;
@@ -67,9 +75,11 @@ end;
 procedure TSxThreadTimer.InternalExecute;
 var
   Stopwatch: TStopwatch;
-  StartTime, SleepTime: U8;
+  StartTime: U8;
+  SleepTime: TTimeSpan;
 begin
   Stopwatch := TStopwatch.Create;
+  SleepTime := TTimeSpan.Create;
   try
     StartTime := PerformanceCounter;
     while FRun and (not Application.Terminated) do
@@ -77,15 +87,16 @@ begin
       Stopwatch.Start;
       FOnTimer(Self);
       Stopwatch.Stop;
-      Inc(FWorkingTime, Stopwatch.ElapsedTicks);
+      Inc(FWorkingTime, Stopwatch.Elapsed.Ticks);
 
-      SleepTime := Interval - RoundDivU8((PerformanceCounter - StartTime) * 1000, PerformanceFrequency) mod Interval;
+      SleepTime.Ticks := FInterval.Ticks - (PerformanceCounter - StartTime) mod FInterval.Ticks;
       Stopwatch.Start;
       PreciseSleep(SleepTime);
       Stopwatch.Stop;
-      Inc(FIdleTime, Stopwatch.ElapsedTicks);
+      Inc(FIdleTime, Stopwatch.Elapsed.Ticks);
     end;
   finally
+    SleepTime.Free;
     Stopwatch.Free;
   end;
 end;
@@ -100,11 +111,6 @@ begin
     else
       Suspend;
   end;
-end;
-
-procedure TSxThreadTimer.SetInterval(const Value: SG);
-begin
-  FInterval := Value;
 end;
 
 procedure TSxThreadTimer.SetOnTimer(const Value: TNotifyEvent);

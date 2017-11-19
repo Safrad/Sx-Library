@@ -3,14 +3,23 @@ unit uStopwatch;
 interface
 
 uses
-  uTypes, Windows;
+  uTypes,
+  uTimeSpan,
+  Windows;
 
 type
   TStopwatch = class
   private
     FStartTime: U8;
     FStopTime: U8;
+    FElapsed: TTimeSpan;
+    function GetIsRunning: BG;
+    function GetElapsedTicks: U8;
+    function GetElapsed: TTimeSpan;
   public
+    constructor Create;
+    destructor Destroy; override;
+
     // Stops time interval measurement and resets the elapsed time to zero.
     procedure Reset;
 
@@ -23,20 +32,11 @@ type
     // Stops measuring elapsed time for an interval.
     procedure Stop;
 
-    // Gets the total elapsed time measured by the current instance, in milliseconds.
-    function ElapsedMilliseconds: U8;
-
-    // Gets the total elapsed time measured by the current instance, in microseconds.
-    function ElapsedMicroseconds: U8;
-
-    // Gets the total elapsed time measured by the current instance, in timer ticks.
-    function ElapsedTicks: U8;
-
     // Gets the total elapsed time measured by the current instance.
-    function ElapsedTime: TDateTime;
+    property Elapsed: TTimeSpan read GetElapsed;
 
     // Gets a value indicating whether the Stopwatch timer is running.
-    function IsRunning: BG;
+    property IsRunning: BG read GetIsRunning;
   end;
 
 implementation
@@ -46,17 +46,7 @@ uses
 
 { TStopwatch }
 
-function TStopwatch.ElapsedMicroseconds: U8;
-begin
-  Result := RoundDivU8(1000 * Second * ElapsedTicks, PerformanceFrequency);
-end;
-
-function TStopwatch.ElapsedMilliseconds: U8;
-begin
-  Result := RoundDivU8(Second * ElapsedTicks, PerformanceFrequency);
-end;
-
-function TStopwatch.ElapsedTicks: U8;
+function TStopwatch.GetElapsedTicks: U8;
 begin
   if FStopTime = 0 then
     Result := PerformanceCounter - FStartTime
@@ -64,12 +54,13 @@ begin
     Result := FStopTime - FStartTime;
 end;
 
-function TStopwatch.ElapsedTime: TDateTime;
+function TStopwatch.GetElapsed: TTimeSpan;
 begin
-  Result := ElapsedTicks / (PerformanceFrequency * (Day div Second));
+  FElapsed.Ticks := GetElapsedTicks;
+  Result := FElapsed;
 end;
 
-function TStopwatch.IsRunning: BG;
+function TStopwatch.GetIsRunning: BG;
 begin
   Result := (FStartTime > 0) and (FStopTime = 0);
 end;
@@ -117,6 +108,20 @@ begin
     raise Exception.Create('Stopwatch is not started.');
   end;
   FStopTime := PerformanceCounter;
+end;
+
+constructor TStopwatch.Create;
+begin
+  inherited;
+
+  FElapsed := TTimeSpan.Create;
+end;
+
+destructor TStopwatch.Destroy;
+begin
+  FreeAndNil(FElapsed);
+
+  inherited;
 end;
 
 end.
