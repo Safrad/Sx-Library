@@ -25,7 +25,7 @@ implementation
 
 uses
 	TypInfo,
-	uStrings, uFiles, uHTML, uOutputFormat, uMsg,
+	uChar, uStrings, uFiles, uHTML, uOutputFormat, uMsg,
 	SysUtils, Classes, Windows, IdFTPList, IdException, {$if CompilerVersion >= 16}IdAllFTPListParsers, {$ifend}IdFTPCommon,
   uBackup;
 
