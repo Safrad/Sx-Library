@@ -64,7 +64,7 @@ procedure TLongOperation.Stop;
 begin
   FStopwatch.Stop;
 
-	if FSound and (FStopwatch.ElapsedMilliseconds >= Second) then
+	if FSound and (FStopwatch.Elapsed.Seconds >= 1) then
 		PlayWinSound(wsAsterisk);
 
 	Screen.Cursor := crDefault;
@@ -73,7 +73,7 @@ begin
   SetTaskbarProgressState(tbpsNone);
 
   if IsDebug then
-    Information('Total time: ' + MsToStr(FStopwatch.ElapsedMilliseconds, diSD, 3));
+    Information('Total time: ' + MsToStr(Round(FStopwatch.Elapsed.Milliseconds), diSD, 3));
 end;
 
 destructor TLongOperation.Destroy;
