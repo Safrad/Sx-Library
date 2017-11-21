@@ -201,6 +201,10 @@ type
 		procedure BarBorder(const X1, Y1, X2, Y2: TCoor; const C: TColor; const Effect: TEffect = ef16); overload;
 		procedure BarBorder(const Rect: TRect; const C: TColor; const Effect: TEffect = ef16); overload;
 
+    procedure Bmp(
+      XD: TPoint;
+      BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
+      const Effect: TEffect); overload;
 		procedure Bmp(
 			XD1, YD1: TCoor;
 			BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
@@ -209,6 +213,10 @@ type
 			const XD1, YD1: TCoor;
 			const BmpS: TDBitmap; const RectS: TRect;
 			const Effect: TEffect); overload;
+    procedure Bmp(
+      XD: TPoint;
+      BmpS: TDBitmap;
+      const Effect: TEffect); overload;
 		procedure Bmp(
 			const XD1, YD1: TCoor;
 			BmpS: TDBitmap;
@@ -5654,6 +5662,14 @@ begin
 end;
 
 procedure TDBitmap.Bmp(
+	XD: TPoint;
+	BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
+	const Effect: TEffect);
+begin
+  Bmp(XD.X, XD.Y, BmpS, XS1, YS1, XS2, YS2, Effect);
+end;
+
+procedure TDBitmap.Bmp(
 	XD1, YD1: TCoor;
 	BmpS: TDBitmap; XS1, YS1, XS2, YS2: TCoor;
 	const Effect: TEffect);
@@ -7764,6 +7780,14 @@ begin
 		end;
 {$endif}
 	end;
+end;
+
+procedure TDBitmap.Bmp(
+	XD: TPoint;
+	BmpS: TDBitmap;
+	const Effect: TEffect);
+begin
+  Bmp(XD.X, XD.Y, BmpS, Effect);
 end;
 
 procedure TDBitmap.Bmp(
