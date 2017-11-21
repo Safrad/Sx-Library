@@ -49,7 +49,7 @@ var
 	fSplash: TfSplash;
 const
 	MinimumTime = 2 * Second;
-	HideTime = 1500 * MiliSecond;
+	HideTime = 1500 * MilliSecond;
 	MaxAlphaBlendValue = 240; //223;
 
 procedure ShowSplashScreen(const FileName: TFileName); overload;
