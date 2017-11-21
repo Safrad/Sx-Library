@@ -15,6 +15,22 @@ type
 	PSinTable = ^TSinTable;
 	TSinTable = array[0..32767] of TAngle;
 
+procedure Increment(var X: F4; const N: F4 = 1); overload;
+procedure Increment(var X: F8; const N: F8 = 1); overload;
+procedure Increment(var X: FA; const N: FA = 1); overload;
+
+procedure Decrement(var X: F4; const N: F4 = 1); overload;
+procedure Decrement(var X: F8; const N: F8 = 1); overload;
+procedure Decrement(var X: FA; const N: FA = 1); overload;
+
+procedure Multiply(var X: F4; const N: F4); overload;
+procedure Multiply(var X: F8; const N: F8); overload;
+procedure Multiply(var X: FA; const N: FA); overload;
+
+procedure Divide(var X: F4; const N: F4); overload;
+procedure Divide(var X: F8; const N: F8); overload;
+procedure Divide(var X: FA; const N: FA); overload;
+
 function Sgn(const I: S1): SG; overload;
 function Sgn(const I: S2): SG; overload;
 function Sgn(const I: S4): SG; overload;
@@ -145,6 +161,66 @@ implementation
 
 uses
   Math, Windows, Classes;
+
+procedure Increment(var X: F4; const N: F4 = 1); overload;
+begin
+  X := X + N;
+end;
+
+procedure Increment(var X: F8; const N: F8 = 1); overload;
+begin
+  X := X + N;
+end;
+
+procedure Increment(var X: FA; const N: FA = 1); overload;
+begin
+  X := X + N;
+end;
+
+procedure Decrement(var X: F4; const N: F4 = 1); overload;
+begin
+  X := X - N;
+end;
+
+procedure Decrement(var X: F8; const N: F8 = 1); overload;
+begin
+  X := X - N;
+end;
+
+procedure Decrement(var X: FA; const N: FA = 1); overload;
+begin
+  X := X - N;
+end;
+
+procedure Multiply(var X: F4; const N: F4); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: F8; const N: F8); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: FA; const N: FA); overload;
+begin
+  X := X * N;
+end;
+
+procedure Divide(var X: F4; const N: F4); overload;
+begin
+  X := X / N;
+end;
+
+procedure Divide(var X: F8; const N: F8); overload;
+begin
+  X := X / N;
+end;
+
+procedure Divide(var X: FA; const N: FA); overload;
+begin
+  X := X / N;
+end;
 
 function Sgn(const I: S1): SG;
 begin
