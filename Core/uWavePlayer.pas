@@ -83,6 +83,7 @@ type
 
 		procedure WriteValue(Value: SG; var Buffer: PWaveSample);
 		procedure FillBuffer(Buffer: PWaveSample); override;
+    function GetPlayItemCount: SG;
 	public
 		MaxItems: SG;
 
@@ -95,6 +96,7 @@ type
 		procedure Tone(const Frequency, Tim: UG);
 		procedure Noise(const Tim: UG);
 		procedure Stop; override;
+    property PlayItemCount: SG read GetPlayItemCount;
 	end;
 
 	TOnReciveBuffrerEvent = procedure(Sender: TObject; Buffer: PWaveSample) of object;
@@ -200,7 +202,7 @@ begin
 
 		WavePlayer.FError := waveOutUnPrepareHeader(WavePlayer.FHWave, Header, SizeOf(TWaveHdr));
 		WavePlayer.MMError('UnPrepare');
-		FreeMem(BufferOut); //BufferOut := nil;
+		FreeMem(BufferOut); // BufferOut := nil;
 		Dispose(Header);
 
 		if WavePlayer.FActive = False then Exit;
@@ -680,6 +682,11 @@ begin
 	Close;
 	PlayItems.Clear;
 	Open;
+end;
+
+function TWavePlayer.GetPlayItemCount: SG;
+begin
+  Result := PlayItems.Count;
 end;
 
 initialization
