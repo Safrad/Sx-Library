@@ -20,4 +20,5 @@ $(sx-library)\ExtLib\SafeMM
 $(sx-library)\Core
 $(sx-library)\Table
 $(sx-library)\Parser
+$(sx-library)\Geometry
 $(sx-library)\GUI
