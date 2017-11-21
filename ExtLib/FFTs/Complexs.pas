@@ -116,7 +116,7 @@ end;
 function ComplexMag(const C: TComplex): TFloat;
 // Get the magnitude of the complex number C
 begin
-  Result := sqrt(sqr(C.Re) + sqr(C.Im));
+  Result := Hypot(C.Re, C.Im);
 end;
 
 function ComplexPhase(const C: TComplex): TFloat;

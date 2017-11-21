@@ -11099,7 +11099,7 @@ const
 var
 	Len: TFlo;
 begin
-	Len := Sqrt(Sqr(X - X2) + Sqr(Y - Y2));
+	Len := Hypot(X - X2, Y - Y2);
 	if 4 * Width > Len then
 		Width := 1;
 
