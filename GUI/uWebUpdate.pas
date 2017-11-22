@@ -27,7 +27,7 @@ implementation
 
 uses
 	uLog,
-	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, uSimulation, uOutputFormat,
+	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, uOutputFormat, uMath,
   IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack
   {$ifndef Console}
   ,

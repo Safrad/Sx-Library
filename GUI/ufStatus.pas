@@ -48,7 +48,7 @@ implementation
 {$R *.dfm}
 
 uses
-	uSimulation, uOutputFormat, uMath, uStrings, uDictionary;
+	uOutputFormat, uMath, uStrings, uDictionary;
 
 var
 	fStatus: TfStatus;

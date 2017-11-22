@@ -35,7 +35,7 @@ end;
 
 function TOutputInfo.GetTime: U8;
 begin
-	Result := PerformanceCounter - FStartTime;
+	Result := IntervalFrom(FStartTime);
 end;
 
 procedure TOutputInfo.Info(const AMessage: string);

@@ -156,7 +156,7 @@ implementation
 
 uses
 	Forms, Math, ShellAPI, uWatch, uMsgDlg,
-	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI, uParams, uSimulation,
+	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI, uParams,
 	uProjectInfo, uReg, uFilePosCache,
 	ufOpenedFiles;
 

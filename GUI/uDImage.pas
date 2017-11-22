@@ -5,7 +5,7 @@ interface
 uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Menus,
 	ExtCtrls, StdCtrls,
-	uDBitmap, uTypes, uMath, uDTimer, uSimulation, uDIniFile, uDWinControl;
+	uDBitmap, uTypes, uMath, uDTimer, uDIniFile, uDWinControl;
 
 type
 	TZoomMenu = (zmIn, zmOut, zm12, zm1, zm2, zmFitImage, zmFitWidth, zmFitHeight, zmCustom,

@@ -27,7 +27,6 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uSimulation,
 	uData;
 
 type

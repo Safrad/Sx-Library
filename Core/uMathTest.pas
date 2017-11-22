@@ -129,7 +129,7 @@ begin
       PreciseSleep(TimeInMs)
     else
       Delay(TimeInMs);
-    Tick := PerformanceCounter - Tick;
+    Tick := IntervalFrom(Tick);
     MeasuredTime := 1000 * Tick / PerformanceFrequency;
     Dif := MeasuredTime - TimeInMs;
     // 1 ms tolerance

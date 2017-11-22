@@ -49,9 +49,9 @@ uses
 function TStopwatch.GetElapsedTicks: U8;
 begin
   if FStopTime = 0 then
-    Result := PerformanceCounter - FStartTime
+    Result := IntervalFrom(FStartTime)
   else
-    Result := FStopTime - FStartTime;
+    Result := TimeDifference(FStopTime, FStartTime);
 end;
 
 function TStopwatch.GetElapsed: TTimeSpan;

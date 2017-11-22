@@ -62,7 +62,7 @@ uses
 //  FastMM4,
   PsAPI,
   uMsg,
-	uGraph, uScreen, uStrings, uOutputFormat, uSimulation, uDictionary,
+	uGraph, uScreen, uStrings, uOutputFormat, uDictionary,
 	uProjectInfo,
 	Registry, Math;
 

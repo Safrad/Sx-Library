@@ -35,7 +35,7 @@ type
 implementation
 
 uses
-	uOutputFormat, uSimulation;
+	uOutputFormat, uMath;
 
 { TOpenedFileItem }
 
@@ -65,7 +65,7 @@ begin
 			S := S + ' *';
 		S := S + ' ' + Shorter(FileName);
 		if FChanged then
-			S := S + ' (' + MsToStr(TimeDifference(GetTickCount, ModificationTime), diMSD, 0,
+			S := S + ' (' + MsToStr(IntervalFrom(ModificationTime), diMSD, 0,
 				False) + ')';
 		if New <> 0 then
 			S := S + ' (New)';

@@ -37,9 +37,9 @@ type
 implementation
 
 uses
-  uSimulation,
   Windows,
-  SysUtils;
+  SysUtils,
+  uMath;
 
 { TFactoryObject }
 

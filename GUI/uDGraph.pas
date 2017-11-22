@@ -289,7 +289,7 @@ begin
 			if ToNode >= 0 then
 				if NodesValue[ToNode] <= BestLen then Break;
 		end;
-		Tim := PerformanceCounter - Tim;
+		Tim := IntervalFrom(Tim);
 		StackValue.Free;
 		StackNode.Free;
 	end
@@ -338,7 +338,7 @@ begin
 			if ToNode >= 0 then
 				if NodesValue[ToNode] <= BestLen then Break;
 		until not ((Stack1Count>0));
-		Tim := PerformanceCounter - Tim;
+		Tim := IntervalFrom(Tim);
 		SetLength(Stack2, 0);
 		SetLength(Stack1, 0);
 	end;

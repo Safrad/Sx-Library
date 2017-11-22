@@ -75,7 +75,6 @@ implementation
 uses
   Forms,
   SysUtils,
-  uSimulation,
   uSchedule,
   uMultiIns;
 

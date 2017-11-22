@@ -89,7 +89,7 @@ begin
       Stopwatch.Stop;
       Inc(FWorkingTime, Stopwatch.Elapsed.Ticks);
 
-      SleepTime.Ticks := FInterval.Ticks - (PerformanceCounter - StartTime) mod FInterval.Ticks;
+      SleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
       Stopwatch.Start;
       PreciseSleep(SleepTime);
       Stopwatch.Stop;

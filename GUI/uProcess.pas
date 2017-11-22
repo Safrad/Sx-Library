@@ -107,7 +107,7 @@ begin
     Sleep(LoopSleepTime);
     Application.ProcessMessages;
   end;
-  Inc(StartTime, PerformanceCounter - PauseTime);
+  Inc(StartTime, IntervalFrom(PauseTime));
   Result := ProcessStatus <> psRun;
 end;
 
@@ -167,7 +167,7 @@ end;
 
 function TProcess.GetTime: U8;
 begin
-  Result := PerformanceCounter - StartTime;
+  Result := IntervalFrom(StartTime);
 end;
 
 function TProcess.Interrupt: BG;

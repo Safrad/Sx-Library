@@ -13,7 +13,7 @@ procedure RWStart(const MainIni: TDIniFile; const Save: BG);
 implementation
 
 uses
-	uSimulation, uFile, uProjectInfo,
+	uFile, uProjectInfo, uMath,
 	Windows;
 
 var
@@ -50,7 +50,7 @@ const
 	Section = 'Statistics';
 begin
 	if Save then
-		GRunTime := U8(TimeDifference(GetTickCount, GStartProgramTime)) + GRunProgramTime;
+		GRunTime := U8(IntervalFrom(GStartProgramTime)) + GRunProgramTime;
 
 	if Assigned(MainIni) then
 	begin

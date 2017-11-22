@@ -31,8 +31,8 @@ object fInfoWindow: TfInfoWindow
   object LabelText: TLabel
     Left = 8
     Top = 8
-    Width = 60
-    Height = 16
+    Width = 47
+    Height = 13
     Caption = '&LabelText'
     Color = clInfoBk
     ParentColor = False

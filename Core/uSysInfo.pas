@@ -74,7 +74,7 @@ implementation
 uses
   PsAPI,
   uMsg,
-	uStrings, uOutputFormat, uSimulation, uDictionary,
+	uStrings, uOutputFormat, uDictionary,
 	uProjectInfo,
 	Registry, Math;
 
@@ -615,7 +615,7 @@ begin
       end;
 {$endif}
       CPUTick := GetCPUCounter.A - CPUTick;
-      TickCount := PerformanceCounter - TickCount;
+      TickCount := IntervalFrom(TickCount);
       if (TickCount > 0) and (CPUTick < High(Int64) div (2 * PerformanceFrequency)) then
       begin
         SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);

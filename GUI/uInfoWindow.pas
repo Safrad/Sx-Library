@@ -35,7 +35,7 @@ implementation
 
 {$R *.dfm}
 uses
-	uScreen, uMath, uStrings, uSimulation,
+	uScreen, uMath, uStrings, 
 	Math;
 
 procedure ShowInfoWindow(const Text: string);
