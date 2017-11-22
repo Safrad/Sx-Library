@@ -29,7 +29,7 @@ type
     // Starts, or resumes, measuring elapsed time for an interval.
     procedure Start;
 
-    // Stops measuring elapsed time for an interval.
+    // Stops or pauses measuring elapsed time for an interval.
     procedure Stop;
 
     // Gets the total elapsed time measured by the current instance.
