@@ -38,7 +38,8 @@ function Sgn(const I: S8): SG; overload;
 function Sgn(const I: F4): SG; overload;
 function Sgn(const I: F8): SG; overload;
 function Sgn(const I: FA): SG; overload;
-function SgnMul(const Signum, Num: SG): SG;
+function SgnMul(const Signum, Num: SG): SG; overload;
+function SgnMul(const Signum, Num: FG): FG; overload;
 function AbsMin(const A, B: SG): SG;
 
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
@@ -292,7 +293,17 @@ begin
 		Result := -1;
 end;
 
-function SgnMul(const Signum, Num: SG): SG;
+function SgnMul(const Signum, Num: SG): SG; overload;
+begin
+	if Signum = 0 then
+		Result := 0
+	else if Signum > 0 then
+		Result := Num
+	else
+		Result := -Num;
+end;
+
+function SgnMul(const Signum, Num: FG): FG; overload;
 begin
 	if Signum = 0 then
 		Result := 0
