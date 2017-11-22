@@ -195,8 +195,14 @@ type
 
 	// Dynamic Arrays
 	TArrayOfBG = array of BG;
+	TArrayOfS1 = array of S1;
+	TArrayOfU1 = array of U1;
+	TArrayOfS2 = array of S2;
+	TArrayOfU2 = array of U2;
 	TArrayOfS4 = array of S4;
 	TArrayOfU4 = array of U4;
+	TArrayOfS8 = array of S8;
+	TArrayOfU8 = array of U8;
 	TArrayOfSG = array of SG;
 	TArrayOfUG = array of UG;
 	TArrayOfString = array of string;
