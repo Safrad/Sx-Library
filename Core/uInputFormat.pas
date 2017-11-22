@@ -3,7 +3,7 @@ unit uInputFormat;
 interface
 
 uses
-	uTypes, uVector, uParserMsg, uLogger;
+	uTypes, uVector, uParserMsg, uLogger, uLapStopwatch;
 
 type
 	TInputFormat = (ifIO{Disk File Input/Output}, ifDisplay{Windows Locale});
@@ -19,7 +19,7 @@ function SToMs(const Str: string; const InputFormat: TInputFormat): SG; // MsToS
 // Str To Data
 function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
 
-function StrToVector(Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil): TVector;
+function StrToVector(const Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil; const LapStopwatch: TLapStopwatch = nil): TVector;
 function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended; const Messages: TParserMessages = nil): Extended;
 {function StrToValE(Line: string; const UseWinFormat: BG;
@@ -73,8 +73,9 @@ begin
 	end;
 end;
 
-function StrToVector(Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil): TVector;
-var Parser: TDParser;
+function StrToVector(const Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil; const LapStopwatch: TLapStopwatch = nil): TVector;
+var
+  Parser: TDParser;
 begin
 	Parser := TDParser.Create(Line);
 	try
@@ -89,16 +90,20 @@ begin
 			Parser.DecimalSep := '.';
 			Parser.ThousandSep := ',';
 		end;
-		Parser.ReadInput;
 		FreeTree(Root);
-		Root := Parser.NodeE(nil);
-		
-		if Root <> nil then
-		begin
-			Result := Calc(Root);
-		end
-		else
-			Result := nil;
+
+    LapStopwatch.Restart;
+    Parser.ReadInput;
+    Root := Parser.NodeE(nil);
+    LapStopwatch.StoreLap;
+    if Root <> nil then
+    begin
+      Result := Calc(Root);
+    end
+    else
+      Result := nil;
+    LapStopwatch.Stop;
+    LapStopwatch.StoreLap;
 	finally
 		Parser.Free;
 	end;
