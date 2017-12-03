@@ -23,11 +23,13 @@ type
     procedure PauseTest;
     procedure DelayTest;
     procedure PreciseSleepTest;
+    procedure TimeDifferenceTest;
   end;
 
 implementation
 
 uses
+  uTimeSpan,
   uMath;
 
 procedure TMathTest.SgnTest;
@@ -115,25 +117,30 @@ const
 
 procedure TMathTest.DelayAndPresiceSleepTest(const APreciseSleep: BG);
 var
-  TimeInMs: SG;
+  TestTime: TTimeSpan;
   i: SG;
   Tick: U8;
   Dif: FG;
   MeasuredTime: FG;
 begin
-  for i := Low(TestTimeInMs) to High(TestTimeInMs) do
-  begin
-    TimeInMs := TestTimeInMs[i];
-    Tick := PerformanceCounter;
-    if APreciseSleep then
-      PreciseSleep(TimeInMs)
-    else
-      Delay(TimeInMs);
-    Tick := IntervalFrom(Tick);
-    MeasuredTime := 1000 * Tick / PerformanceFrequency;
-    Dif := MeasuredTime - TimeInMs;
-    // 1 ms tolerance
-    Check(Abs(Dif) <= 0.1, 'Out of time tolerance ' + IntToStr(TimeInMs) + ' -> ' + FloatToStr(MeasuredTime));
+  TestTime := TTimeSpan.Create;
+  try
+    for i := Low(TestTimeInMs) to High(TestTimeInMs) do
+    begin
+      TestTime.Milliseconds := TestTimeInMs[i];
+      Tick := PerformanceCounter;
+      if APreciseSleep then
+        PreciseSleep(TestTime)
+      else
+        Delay(TestTime);
+      Tick := IntervalFrom(Tick);
+      MeasuredTime := 1000 * Tick / PerformanceFrequency;
+      Dif := MeasuredTime - TestTimeInMs[i];
+      // 1 ms tolerance
+      Check(Abs(Dif) <= 0.1, 'Out of time tolerance ' + IntToStr(TestTimeInMs[i]) + ' -> ' + FloatToStr(MeasuredTime));
+    end;
+  finally
+    TestTime.Free;
   end;
 end;
 
@@ -145,6 +152,13 @@ end;
 procedure TMathTest.PreciseSleepTest;
 begin
   DelayAndPresiceSleepTest(True);
+end;
+
+procedure TMathTest.TimeDifferenceTest;
+begin
+  CheckEquals(20, TimeDifference(100, 80));
+  CheckEquals(10, TimeDifference(9, High(U4)));
+  CheckEquals(100, TimeDifference(99, $FFFFFFFFFFFFFFFF));
 end;
 
 initialization
