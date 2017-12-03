@@ -1,13 +1,13 @@
-//* Unit test for uXYPolygon
+//* Unit test for uPolygon2D
 
-unit uXYPolygonTest;
+unit uPolygon2DTest;
 
 interface
 
 uses TestFrameWork;
 
 type
-  TXYPolygonTest = class(TTestCase)
+  TPolygon2DTest = class(TTestCase)
   published
     procedure Test;
   end;
@@ -15,52 +15,52 @@ type
 implementation
 
 uses
-  uGeometry, uXYPolygon;
+  uGeometry2D, uPolygon2D;
 
 { TPolygonTest }
 
-procedure TXYPolygonTest.Test;
+procedure TPolygon2DTest.Test;
 var
-  Polygon: TPolygon;
-  Pt: TXYPt;
+  Polygon: TPolygon2D;
+  Pt: TPoint2D;
 begin
-  Polygon := TPolygon.Create;
+  Polygon := TPolygon2D.Create;
   try
-    Polygon.AddVertex(CreatePt(-1, -1));
+    Polygon.AddVertex(CreatePoint2D(-1, -1));
 
-    Polygon.AddVertex(CreatePt(1, -1));
+    Polygon.AddVertex(CreatePoint2D(1, -1));
 
-    Polygon.AddVertex(CreatePt(1, 1));
+    Polygon.AddVertex(CreatePoint2D(1, 1));
 
-    Polygon.AddVertex(CreatePt(-1, 1));
+    Polygon.AddVertex(CreatePoint2D(-1, 1));
 
     Pt.X := 0;
     Pt.Y := 0;
-    Check(Polygon.PtIn(Pt) = True);
+    Check(Polygon.ContainPoint(Pt) = True);
 
     Pt.X := 2;
     Pt.Y := 0;
-    Check(Polygon.PtIn(Pt) = False);
+    Check(Polygon.ContainPoint(Pt) = False);
 
     Pt.X := 0;
     Pt.Y := 2;
-    Check(Polygon.PtIn(Pt) = False);
+    Check(Polygon.ContainPoint(Pt) = False);
 
     // Border
     Pt.X := 1;
     Pt.Y := 0;
-    Check(Polygon.PtIn(Pt) = False);
+    Check(Polygon.ContainPoint(Pt) = False);
 
     // Corner
     Pt.X := 1;
     Pt.Y := 1;
-    Check(Polygon.PtIn(Pt) = False);
+    Check(Polygon.ContainPoint(Pt) = False);
   finally
     Polygon.Free;
   end;
 end;
 
 initialization
-	RegisterTest('XYPolygon Test', TXYPolygonTest.Suite);
+	RegisterTest('Polygon2D Test', TPolygon2DTest.Suite);
 end.
 
