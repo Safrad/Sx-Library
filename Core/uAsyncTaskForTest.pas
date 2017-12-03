@@ -31,7 +31,7 @@ begin
     Period := Random(100);
     while True do
     begin
-      if Stopwatch.ElapsedMilliseconds >= Period then
+      if Stopwatch.Elapsed.Milliseconds >= Period then
         Break;
     end;
   finally
