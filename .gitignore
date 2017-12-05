@@ -45,3 +45,5 @@ __history
 *.com
 thumbs.db
 *.2007
+*.stat
+*.vlb
