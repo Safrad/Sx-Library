@@ -14,6 +14,7 @@ type
     procedure Execute; override;
   public
     {$if CompilerVersion < 20}
+    class procedure NameThreadForDebugging(const Value: AnsiString; const ThreadId: LongWord = $FFFFFFF{ActualThread});
     procedure Start;
     {$ifend}
     property Name: string read FName write SetName;
@@ -24,34 +25,6 @@ implementation
 uses
   Windows;
 
-{$if CompilerVersion < 20}
-const
-  ActualThread = $FFFFFFFF;
-
-procedure SetThreadName(const Value: string; const ThreadId: LongWord = ActualThread);
-type
-  TThreadNameInfo = record
-    FType: LongWord;     // must be 0x1000
-    FName: PChar;        // pointer to name (in user address space)
-    FThreadID: LongWord; // thread ID ($FFFFFFFF indicates caller thread)
-    FFlags: LongWord;    // reserved for future use, must be zero
-  end;
-var
-  ThreadNameInfo: TThreadNameInfo;
-begin
-  ThreadNameInfo.FType := $1000;
-  ThreadNameInfo.FName := PChar(Value);
-  ThreadNameInfo.FThreadID := ThreadId;
-  ThreadNameInfo.FFlags := 0;
-
-  try
-    RaiseException($406D1388, 0, SizeOf(ThreadNameInfo) div SizeOf(LongWord), Pointer(@ThreadNameInfo));
-  except
-    // No Code
-  end;
-end;
-{$ifend}
-
 { TSxThread }
 
 procedure TSxThread.Execute;
@@ -60,7 +33,7 @@ begin
 
   {$if CompilerVersion < 20}
   if FName <> '' then
-    SetThreadName(FName);
+    NameThreadForDebugging(FName);
   {$ifend}
 end;
 
@@ -76,6 +49,29 @@ begin
 end;
 
 {$if CompilerVersion < 20}
+class procedure TSxThread.NameThreadForDebugging(const Value: AnsiString; const ThreadId: LongWord = $FFFFFFF{ActualThread});
+type
+  TThreadNameInfo = record
+    FType: LongWord;     // must be 0x1000
+    FName: PAnsiChar;    // pointer to name (in user address space)
+    FThreadID: LongWord; // thread ID ($FFFFFFFF indicates caller thread)
+    FFlags: LongWord;    // reserved for future use, must be zero
+  end;
+var
+  ThreadNameInfo: TThreadNameInfo;
+begin
+  ThreadNameInfo.FType := $1000;
+  ThreadNameInfo.FName := PAnsiChar(Value);
+  ThreadNameInfo.FThreadID := ThreadId;
+  ThreadNameInfo.FFlags := 0;
+
+  try
+    RaiseException($406D1388, 0, SizeOf(ThreadNameInfo) div SizeOf(LongWord), Pointer(@ThreadNameInfo));
+  except
+    // No Code
+  end;
+end;
+
 procedure TSxThread.Start;
 begin
   Resume;
@@ -84,7 +80,7 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-  SetThreadName('Main');
+  TSxThread.NameThreadForDebugging('Main');
 {$ENDIF NoInitialization}
 
 end.
