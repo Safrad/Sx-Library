@@ -3,7 +3,7 @@ unit uSxXMLDocument;
 interface
 
 uses
-  msxmldom,
+  {$if CompilerVersion >= 25}Xml.Win.msxmldom{$else}msxmldom{$endif},
   XMLDoc, XMLIntf, Classes, XMLDom,
   ActiveX;
 
