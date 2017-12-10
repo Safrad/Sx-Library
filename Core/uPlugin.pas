@@ -149,7 +149,6 @@ begin
   if not IsLoaded then
   begin
     raise Exception.Create('Can not get procedure address because library is not loaded.');
-    Exit;
   end;
   Result := GetProcAddress(FHandle, PChar(ProcedureName));
 end;
