@@ -61,7 +61,7 @@ begin
       Self.FStopwatch.Stop;
       Self.FDataSize := Length(Data);
       Self.FResultType := rtPingTime;
-      Self.FPingTime := Self.FStopwatch.ElapsedMilliseconds;
+      Self.FPingTime := Round(Self.FStopwatch.Elapsed.Milliseconds);
       Self.FErrorMessage := '';
     except
       on E: Exception do
@@ -103,7 +103,7 @@ begin
     RunInNewThread(Self, GetData)
   else
   begin
-    if FStopwatch.ElapsedMilliseconds > 2 * FPingTime then
+    if FStopwatch.Elapsed.Milliseconds > 2 * FPingTime then
       FResultType := rtWait;
   end;
 end;
