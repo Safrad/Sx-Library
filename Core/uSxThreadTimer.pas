@@ -11,7 +11,6 @@ uses
 type
   TSxThreadTimer = class(TSxThread)
   private
-    FRun: BG;
     FEnabled: BG;
     FInterval: TTimeSpan;
     FOnTimer: TNotifyEvent;
@@ -27,8 +26,6 @@ type
     constructor Create(CreateSuspended: Boolean);
     destructor Destroy; override;
 
-    procedure StopAndDestroy;
-
     property Enabled: BG read FEnabled write SetEnabled;
     property Interval: TTimeSpan read FInterval;
     property OnTimer: TNotifyEvent read FOnTimer write SetOnTimer;
@@ -41,7 +38,7 @@ implementation
 
 uses
   uMsg, uStopwatch, uMath,
-  Windows, Forms, SysUtils, Math;
+  Windows, SysUtils, Math;
 
 { TSxThreadTimer }
 
@@ -62,7 +59,6 @@ end;
 
 procedure TSxThreadTimer.Execute;
 begin
-  FRun := True;
   inherited;
   try
     InternalExecute;
@@ -82,7 +78,7 @@ begin
   SleepTime := TTimeSpan.Create;
   try
     StartTime := PerformanceCounter;
-    while FRun and (not Application.Terminated) do
+    while not Terminated do
     begin
       Stopwatch.Start;
       FOnTimer(Self);
@@ -116,11 +112,6 @@ end;
 procedure TSxThreadTimer.SetOnTimer(const Value: TNotifyEvent);
 begin
   FOnTimer := Value;
-end;
-
-procedure TSxThreadTimer.StopAndDestroy;
-begin
-  FRun := False;
 end;
 
 end.
