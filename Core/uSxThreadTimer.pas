@@ -48,6 +48,7 @@ begin
 
   FEnabled := not CreateSuspended;
   FInterval := TTimeSpan.Create;
+  FInterval.Seconds := 1;
 end;
 
 destructor TSxThreadTimer.Destroy;
@@ -78,14 +79,17 @@ begin
   SleepTime := TTimeSpan.Create;
   try
     StartTime := PerformanceCounter;
-    while not Terminated do
+    while (not Terminated) do
     begin
       Stopwatch.Start;
       FOnTimer(Self);
       Stopwatch.Stop;
       Inc(FWorkingTime, Stopwatch.Elapsed.Ticks);
 
-      SleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
+      if FInterval.Ticks <= 0 then
+        SleepTime.Ticks := 0
+      else
+        SleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
       Stopwatch.Start;
       PreciseSleep(SleepTime);
       Stopwatch.Stop;
