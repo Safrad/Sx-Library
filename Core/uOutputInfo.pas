@@ -6,56 +6,199 @@ uses
   uTypes;
 
 type
-	TOutputInfo = class
-  private
-    FAborted: BG;
-    FStartTime: U8;
-  public
-    procedure SetProgressValue(const AValue: SG); virtual;
-    procedure SetProgressMaximum(const AMaximum: SG); virtual;
-    procedure Info(const AMessage: string); virtual;
-    procedure Abort;
-    procedure ResetTime;
-    function GetTime: U8;
+  IOutputInfo = interface(IInterface)
+    procedure AddCaption(const ACaption: string);
+    procedure Start;
+    procedure Stop;
+    function GetLastCaption: string;
+    function GetProgressValue: SG;
+    procedure SetProgressValue(const Value: SG);
+    procedure IncrementProgressValue;
+    function GetProgressMaximum: SG;
+    procedure SetProgressMaximum(const Value: SG);
+    function GetAborted: BG;
+    procedure SetAborted(const Value: BG);
 
-    property Aborted: BG read FAborted;
+    property LastCaption: string read GetLastCaption;
+    property ProgressValue: SG read GetProgressValue write SetProgressMaximum;
+    property ProgressMaximum: SG read GetProgressMaximum write SetProgressMaximum;
+    property Aborted: BG read GetAborted write SetAborted;
+  end;
+
+	TConsoleOutputInfo = class(TInterfacedObject, IOutputInfo)
+  private
+    // From interface
+    procedure Start;
+    procedure Stop;
+    function GetLastCaption: string;
+    function GetProgressValue: SG;
+    procedure SetProgressValue(const Value: SG);
+    procedure IncrementProgressValue;
+    function GetProgressMaximum: SG;
+    procedure SetProgressMaximum(const Value: SG);
+    function GetAborted: BG;
+    procedure SetAborted(const Value: BG);
+  public
+    // From interface
+    procedure AddCaption(const ACaption: string);
+  end;
+
+	TOutputInfo = class(TInterfacedObject, IOutputInfo)
+  private
+    FLastCaption: string;
+    FProgressValue: SG;
+    FProgressMaximum: SG;
+    FAborted: BG;
+
+    // From interface
+    function GetLastCaption: string;
+    function GetProgressValue: SG;
+    procedure SetProgressValue(const Value: SG);
+    function GetProgressMaximum: SG;
+    procedure SetProgressMaximum(const Value: SG);
+    function GetAborted: BG;
+    procedure SetAborted(const Value: BG);
+  public
+    // From interface
+    procedure AddCaption(const ACaption: string);
+    procedure Start;
+    procedure Stop;
+    property LastCaption: string read GetLastCaption;
+    property ProgressValue: SG read GetProgressValue write SetProgressValue;
+    property ProgressMaximum: SG read GetProgressMaximum write SetProgressMaximum;
+    procedure IncrementProgressValue;
+    property Aborted: BG read GetAborted write SetAborted;
   end;
 
 implementation
 
 uses
-  uMath;
+  uConsole;
 
 { TOutputInfo }
 
-procedure TOutputInfo.Abort;
+procedure TOutputInfo.AddCaption(const ACaption: string);
 begin
-	FAborted := True;
+  FLastCaption := ACaption;
 end;
 
-function TOutputInfo.GetTime: U8;
+function TOutputInfo.GetAborted: BG;
 begin
-	Result := IntervalFrom(FStartTime);
+  Result := FAborted;
 end;
 
-procedure TOutputInfo.Info(const AMessage: string);
+function TOutputInfo.GetLastCaption: string;
 begin
-	// Implement in descendant
+  Result := FLastCaption;
 end;
 
-procedure TOutputInfo.ResetTime;
+function TOutputInfo.GetProgressMaximum: SG;
 begin
-	FStartTime := PerformanceCounter;
+  Result := FProgressMaximum;
 end;
 
-procedure TOutputInfo.SetProgressMaximum(const AMaximum: SG);
+function TOutputInfo.GetProgressValue: SG;
 begin
-	// Implement in descendant
+  Result := FProgressValue;
 end;
 
-procedure TOutputInfo.SetProgressValue(const AValue: SG);
+procedure TOutputInfo.IncrementProgressValue;
 begin
-	// Implement in descendant
+  Inc(FProgressValue);
+end;
+
+procedure TOutputInfo.SetAborted(const Value: BG);
+begin
+  if Value <> FAborted then
+  begin
+    FAborted := Value;
+  end;
+end;
+
+procedure TOutputInfo.SetProgressMaximum(const Value: SG);
+begin
+  if Value <> FProgressMaximum then
+  begin
+    FProgressMaximum := Value;
+  end;
+end;
+
+procedure TOutputInfo.SetProgressValue(const Value: SG);
+begin
+  if Value <> FProgressValue then
+  begin
+    FProgressValue := Value;
+  end;
+end;
+
+procedure TOutputInfo.Start;
+begin
+  FAborted := False;
+  FProgressValue := 0;
+  FProgressMaximum := 0;
+end;
+
+procedure TOutputInfo.Stop;
+begin
+  FLastCaption := '';
+  FAborted := False;
+end;
+
+{ TConsoleOutputInfo }
+
+procedure TConsoleOutputInfo.AddCaption(const ACaption: string);
+begin
+  TConsole.WriteLine(ACaption);
+end;
+
+function TConsoleOutputInfo.GetAborted: BG;
+begin
+  Result := False;
+end;
+
+function TConsoleOutputInfo.GetLastCaption: string;
+begin
+  Result := '';
+end;
+
+function TConsoleOutputInfo.GetProgressMaximum: SG;
+begin
+  Result := 0;
+end;
+
+function TConsoleOutputInfo.GetProgressValue: SG;
+begin
+  Result := 0;
+end;
+
+procedure TConsoleOutputInfo.IncrementProgressValue;
+begin
+  // No code
+end;
+
+procedure TConsoleOutputInfo.SetAborted(const Value: BG);
+begin
+  // No code
+end;
+
+procedure TConsoleOutputInfo.SetProgressMaximum(const Value: SG);
+begin
+  // No code
+end;
+
+procedure TConsoleOutputInfo.SetProgressValue(const Value: SG);
+begin
+  // No code
+end;
+
+procedure TConsoleOutputInfo.Start;
+begin
+  // No code
+end;
+
+procedure TConsoleOutputInfo.Stop;
+begin
+  // No code
 end;
 
 end.
