@@ -32,6 +32,10 @@ type
     function Debug: BG;
     function Confirmation: BG;
 
+    procedure LogEnter(const AName: string);
+    procedure LogLeave(const AName: string);
+    procedure LogException(const E: Exception);
+
 		procedure Flush;
 		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
 		property MaxLogFiles: SG read FMaxLogFiles write FMaxLogFiles;
@@ -49,6 +53,7 @@ type
   function LogDebug: BG;
   function LogConfirmation: BG;
 
+  procedure LogException(const E: Exception);
 
 	procedure InitializeLog;
 
@@ -270,6 +275,25 @@ begin
   end;
 end;
 
+procedure TLog.LogEnter(const AName: string);
+const
+  EnterPrefix = '>';
+begin
+  Add(EnterPrefix + AName, mlDebug);
+end;
+
+procedure TLog.LogLeave(const AName: string);
+const
+  LeavePrefix = '<';
+begin
+  Add(LeavePrefix + AName, mlDebug);
+end;
+
+procedure TLog.LogException(const E: Exception);
+begin
+  Add(E.Message + ' (' + E.ClassName + ')', mlFatalError);
+end;
+
 function TLog.Debug: BG;
 begin
   Result := False;
@@ -362,6 +386,12 @@ end;
 function LogConfirmation: BG;
 begin
   Result := Assigned(MainLog) and (MainLog.FLoggingLevel <= mlConfirmation);
+end;
+
+procedure LogException(const E: Exception);
+begin
+  if Assigned(MainLog) and (MainLog.FLoggingLevel <= mlFatalError) then
+    MainLog.LogException(E);
 end;
 
 procedure InitializeLog;
