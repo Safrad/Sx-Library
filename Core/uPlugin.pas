@@ -78,13 +78,13 @@ begin
     if FHandle = 0 then
     begin
       if LogInformation then
-        MainLogAdd('>LoadLibrary', mlDebug);
+        MainLogAdd('>LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
       M := ProcessAllocatedVirtualMemory;
       FHandle := LoadLibrary(PChar(FileName));
       LastError := GetLastError;
       FStartupMemory := ProcessAllocatedVirtualMemory - M;
       if LogInformation then
-        MainLogAdd('<LoadLibrary', mlDebug);
+        MainLogAdd('<LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
       if not IsLoaded then
         raise Exception.Create(ReplaceParam('%1 can not be loaded.' + LineSep + '%2', [FileName, ErrorCodeToStr(LastError)]));
     end;
@@ -107,14 +107,14 @@ begin
   if IsLoaded then
   begin
     if LogInformation then
-      MainLogAdd('>FreeLibrary', mlDebug);
+      MainLogAdd('>FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
 
     M := ProcessAllocatedVirtualMemory;
     Result := FreeLibrary(Handle);
     LastError := GetLastError;
     FCleanUpMemory := M - ProcessAllocatedVirtualMemory;
     if LogInformation then
-      MainLogAdd('<FreeLibrary', mlDebug);
+      MainLogAdd('<FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
 
     if Result then
     begin
@@ -149,6 +149,7 @@ begin
   if not IsLoaded then
   begin
     raise Exception.Create('Can not get procedure address because library is not loaded.');
+    Exit;
   end;
   Result := GetProcAddress(FHandle, PChar(ProcedureName));
 end;
