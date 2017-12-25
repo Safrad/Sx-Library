@@ -17,8 +17,6 @@ type
     class procedure NameThreadForDebugging(const Value: AnsiString; const ThreadId: LongWord = $FFFFFFF{ActualThread});
     procedure Start;
     {$ifend}
-    procedure Stop;
-
     property Name: string read FName write SetName;
   end;
 
@@ -79,13 +77,6 @@ begin
   Resume;
 end;
 {$ifend}
-
-procedure TSxThread.Stop;
-begin
-  Terminate;
-  Resume;
-  WaitFor;
-end;
 
 initialization
 {$IFNDEF NoInitialization}
