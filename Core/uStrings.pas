@@ -158,6 +158,8 @@ function PadLeft(const AText: string; const ACharCount: SG; const AFillChar: Cha
 function PadCenter(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
 function PadRight(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
 
+function PropertiesToString(const Keys: array of string; const Values: array of string): string;
+
 implementation
 
 uses
@@ -1399,6 +1401,18 @@ begin
   end
   else
     Result  := AText;
+end;
+
+function PropertiesToString(const Keys: array of string; const Values: array of string): string;
+var
+  i: Integer;
+begin
+  Assert(Length(Keys) = Length(Values));
+  Result := '';
+  for i := 0 to Length(Keys) - 1 do
+  begin
+    Result := Result + Keys[i] + '=' + Values[i] + ';';
+  end;
 end;
 
 initialization
