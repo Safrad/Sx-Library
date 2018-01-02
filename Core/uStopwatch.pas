@@ -48,8 +48,10 @@ uses
 
 function TStopwatch.GetElapsedTicks: U8;
 begin
-  if FStopTime = 0 then
-    Result := IntervalFrom(FStartTime)
+  if FStartTime = 0 then
+    Result := 0 // Start method no called
+  else if FStopTime = 0 then
+    Result := IntervalFrom(FStartTime) // Stop method no called
   else
     Result := TimeDifference(FStopTime, FStartTime);
 end;
