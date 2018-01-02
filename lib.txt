@@ -19,6 +19,7 @@ $(sx-library)\ExtLib\OpenGL
 $(sx-library)\ExtLib\SafeMM
 $(sx-library)\Core
 $(sx-library)\Table
+$(sx-library)\Formatter
 $(sx-library)\Parser
 $(sx-library)\Geometry
 $(sx-library)\Benchmark
