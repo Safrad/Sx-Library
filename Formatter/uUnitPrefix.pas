@@ -35,6 +35,7 @@ var
 begin
   Result.Value := AValue;
   Result.Prefix := '';
+  if AValue <> 0 then
   for i := MinPrefix to MaxPrefix do
   begin
     NewValue := AValue * PrefixMult[PrefixType, i];
