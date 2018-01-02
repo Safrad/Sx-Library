@@ -36,13 +36,15 @@ var
   PrefixedResult: TPrefixedResult;
 begin
   PrefixedResult := PrefixedValue(AValue, uUnitPrefix.ptMetric);
-  Decimals := 20;
   Result := inherited Format(PrefixedResult.Value) + CharSpace + PrefixedResult.Prefix + UnitName;
 end;
 
 function TUnitFormatter.Format(const AValue: FG): string;
+var
+  PrefixedResult: TPrefixedResult;
 begin
-  Result := inherited Format(AValue) + CharSpace + UnitName;
+  PrefixedResult := PrefixedValue(AValue, uUnitPrefix.ptMetric);
+  Result := inherited Format(PrefixedResult.Value) + CharSpace + PrefixedResult.Prefix + UnitName;
 end;
 
 procedure TUnitFormatter.SetPrefixType(const Value: TPrefixType);

@@ -9,36 +9,45 @@ uses
 type
   TNumberFormatter = class(TFormatter)
   private
-    FDecimals: SG;
-    procedure SetDecimals(const Value: SG);
+    FPrecision: SG;
+    procedure SetPrecision(const Value: SG);
   public
+    constructor Create;
+    
     function Format(const AValue: S8): string; override;
     function Format(const AValue: FG): string; override;
 
-    property Decimals: SG read FDecimals write SetDecimals;
+    property Precision: SG read FPrecision write SetPrecision;
   end;
 
 implementation
 
 uses
+  SysUtils,
   uOutputFormat;
 
 { TNumberFormatter }
 
+constructor TNumberFormatter.Create;
+begin
+  inherited;
+
+  FPrecision := 3;
+end;
+
 function TNumberFormatter.Format(const AValue: FG): string;
 begin
-//  Result := FToS(AValue, Decimals);
-  Result := FloatToDecimalString(AValue, 16, Decimals);
+  Result := FloatToStrF(AValue, ffGeneral, FPrecision, 20);
 end;
 
 function TNumberFormatter.Format(const AValue: S8): string;
 begin
-  Result := NToS(AValue, Decimals);
+  Result := NToS(AValue, FPrecision);
 end;
 
-procedure TNumberFormatter.SetDecimals(const Value: SG);
+procedure TNumberFormatter.SetPrecision(const Value: SG);
 begin
-  FDecimals := Value;
+  FPrecision := Value;
 end;
 
 end.
