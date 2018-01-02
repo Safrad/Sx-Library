@@ -76,6 +76,7 @@ end;
 function StrToVector(const Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil; const LapStopwatch: TLapStopwatch = nil): TVector;
 var
   Parser: TDParser;
+  Root: PNode;
 begin
 	Parser := TDParser.Create(Line);
 	try
@@ -90,7 +91,6 @@ begin
 			Parser.DecimalSep := '.';
 			Parser.ThousandSep := ',';
 		end;
-		FreeTree(Root);
 
     LapStopwatch.Restart;
     Parser.ReadInput;
@@ -99,6 +99,7 @@ begin
     if Root <> nil then
     begin
       Result := Calc(Root);
+      FreeTree(Root);
     end
     else
       Result := nil;
