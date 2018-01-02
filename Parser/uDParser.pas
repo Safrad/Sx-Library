@@ -1,3 +1,5 @@
+// TODO : optimize concurrent - remove GetMem, use linked list
+
 unit uDParser;
 
 interface
@@ -116,8 +118,6 @@ const
 		'File not found: ''%1''', 'Compilation terminated; too many errors',
 		'Compile terminated by user');
 
-function CalcTree: TVector;
-
 type
 	TFunctionName = string[15];
 
@@ -140,12 +140,6 @@ type
 			(ArgCount: S4;
 				Args: array [0 .. 65534] of PNode; );
 	end;
-
-var
-	Root: PNode;
-  KeepRoot: BG = False;
-	TreeSize, MaxBracketDepth, TreeDepth, NodeCount: SG;
-	LinesL, LinesG: SG;
 
 type
 	TCommentMark = (maNone, maString, maLocal, // //
@@ -204,6 +198,9 @@ type
 		StringSep, LineMark, GlobalMarkS0, GlobalMarkS1, GlobalMarkF0, GlobalMarkF1: string;
 		MaxIdentSize: SG;
 		DecimalSep, ThousandSep: string;
+
+    // Result
+    TreeSize, MaxBracketDepth, TreeDepth, NodeCount: SG;
 
 		function NodeE(Node: PNode): PNode;
 
@@ -296,7 +293,6 @@ begin
 	EnableSpace := 0;
 	CharTable := StdCharTable;
 
-	FreeTree(Root);
 	LinesL := 0;
 	LineBegin := True;
 	LineStart := 0;
@@ -321,8 +317,6 @@ end;
 
 destructor TDParser.Destroy;
 begin
-  if not KeepRoot then
-  	FreeTree(Root);
 	FreeMem(FBuffer);
 	BufString := '';
 	if BufRI > BufRC then
@@ -563,7 +557,6 @@ begin
 		if CharType(BufR[BufRI], CharTable) = ctReturn then
 		begin
 			Inc(LinesL);
-			Inc(LinesG);
 			LineBegin := True;
 
 			if BufR[BufRI] = CharCR then
@@ -686,7 +679,6 @@ begin
 		else if (CharType(BufR[BufRI], CharTable) = ctReturn) then
 		begin
 			Inc(LinesL);
-			Inc(LinesG);
 			LineBegin := True;
 
 			LineStart := BufRI + 1;
@@ -1592,9 +1584,6 @@ end;
 	Result := NodeE2(NodeA);
 	end; }
 
-var
-	Depth: SG;
-
 function Calc(const Node: PNode): TVector;
 var
 	I: SG;
@@ -1607,31 +1596,19 @@ begin
 	begin
 		Exit;
 	end;
-	Inc(Depth);
-	if Depth > TreeDepth then
-		TreeDepth := Depth;
-	try
-		{ if Node.Operation = opUnknown then
-			Result := nil
-			else } if Node.Operation = opNumber then
-			Result := NumToVector(Node.Num)
-		else
-		begin
-			// Calculate arguments
-			SetLength(X, Node.ArgCount);
-			for I := 0 to Node.ArgCount - 1 do
-				X[I] := Calc(Node.Args[I]);
+  { if Node.Operation = opUnknown then
+    Result := nil
+    else } if Node.Operation = opNumber then
+    Result := NumToVector(Node.Num)
+  else
+  begin
+    // Calculate arguments
+    SetLength(X, Node.ArgCount);
+    for I := 0 to Node.ArgCount - 1 do
+      X[I] := Calc(Node.Args[I]);
 
-			Result := CallFunction('' { TODO : Node.UnitName } , Node.Operation, X);
-		end;
-	finally
-		Dec(Depth);
+    Result := CallFunction('' { TODO : Node.UnitName } , Node.Operation, X);
 	end;
-end;
-
-function CalcTree: TVector;
-begin
-	Result := Calc(Root);
 end;
 
 function FreeTreeR(var Node: PNode): BG;
@@ -1644,7 +1621,7 @@ begin
 		if Node.Operation = opNumber then
 		begin
 			FreeMem(Node);
-			Dec(TreeSize, NodeNum);
+//			Dec(TreeSize, NodeNum);
 		end
 		else
 		begin
@@ -1654,7 +1631,7 @@ begin
 				FreeTreeR(Node.Args[I]);
 			end;
 
-			Dec(TreeSize, NodeFunction + Node.ArgCount * SizeOf(Node.Args[0]));
+//			Dec(TreeSize, NodeFunction + Node.ArgCount * SizeOf(Node.Args[0]));
 			FreeMem(Node);
 		end;
 	end;
@@ -1664,18 +1641,18 @@ end;
 function FreeTree(var Node: PNode): BG;
 begin
 	Result := FreeTreeR(Node);
-	TreeDepth := 0;
-	NodeCount := 0;
-	Assert(TreeSize = 0);
+//	TreeDepth := 0;
+//	NodeCount := 0;
+//	Assert(TreeSize = 0);
 end;
 
 function TDParser.ReadFA(MinVal, DefVal, MaxVal: FA): FA;
 var
 	V: TVector;
+  Root: PNode;
 begin
 	V := nil;
 	ReadInput;
-	FreeTree(Root);
 	if UpperCase(Id) = 'MIN' then
 	begin
 		Result := MinVal;
@@ -1693,6 +1670,7 @@ begin
 		if Root <> nil then
 		begin
 			V := Calc(Root);
+      FreeTree(Root);
 			if Length(V) >= 1 then
 				Result := V[0];
 		end;
@@ -1791,7 +1769,6 @@ begin
 	if (BufRI <= BufRC) then
 	begin
 		Inc(LinesL);
-		Inc(LinesG);
 		if (BufR[BufRI] = CharCR) then
 		begin
 			Inc(BufRI); // Accept CR
@@ -1865,7 +1842,7 @@ initialization
 finalization
 
 {$IFNDEF NoFinalization}
-FreeTree(Root);
+//FreeTree(Root);
 {$ENDIF NoFinalization}
 
 end.
