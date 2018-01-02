@@ -135,17 +135,6 @@ object fSysInfo: TfSysInfo
     Transparent = True
     Layout = tlCenter
   end
-  object LabelAMDDuronCmp: TLabel
-    Left = 8
-    Top = 112
-    Width = 89
-    Height = 19
-    AutoSize = False
-    Caption = 'AMD Duron Cmp'
-    FocusControl = EditDuron
-    Transparent = True
-    Layout = tlCenter
-  end
   object DLabelCPUUsage: TLabel
     Left = 8
     Top = 64
@@ -164,7 +153,6 @@ object fSysInfo: TfSysInfo
     Height = 19
     AutoSize = False
     Caption = 'M-Board Counter'
-    FocusControl = EditDuron
     Transparent = True
     Layout = tlCenter
   end
@@ -177,7 +165,7 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 6
+    TabOrder = 5
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end
@@ -190,7 +178,7 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 7
+    TabOrder = 6
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end
@@ -203,7 +191,7 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 8
+    TabOrder = 7
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end
@@ -216,7 +204,7 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 9
+    TabOrder = 8
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end
@@ -229,7 +217,7 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 10
+    TabOrder = 9
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end
@@ -242,7 +230,7 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 11
+    TabOrder = 10
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end
@@ -302,19 +290,6 @@ object fSysInfo: TfSysInfo
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end
-  object EditDuron: TDEdit
-    Left = 104
-    Top = 113
-    Width = 105
-    Height = 19
-    BevelKind = bkSoft
-    BorderStyle = bsNone
-    Color = clBtnFace
-    ReadOnly = True
-    TabOrder = 5
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-  end
   object EditCPUUsage: TDEdit
     Left = 103
     Top = 65
@@ -337,17 +312,8 @@ object fSysInfo: TfSysInfo
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
-    TabOrder = 12
+    TabOrder = 11
     DoubleBuffered = True
     ParentDoubleBuffered = False
-  end
-  object ComboBoxSize: TComboBox
-    Left = 216
-    Top = 112
-    Width = 81
-    Height = 21
-    Style = csDropDownList
-    ItemHeight = 13
-    TabOrder = 13
   end
 end

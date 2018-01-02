@@ -39,7 +39,6 @@ type
 		LogicalProcessorCount: SG;
 		Reserved0: array[0..2] of S1; // 3
 		CPUFrequency: U8; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod)
-		CPUPower: U8;
 		PerformanceFrequency: U4;
 //		DiskFree, DiskTotal: U8; // 16
 //		Reserved: array[0..3] of U4; // 16
@@ -61,7 +60,6 @@ function OSToStr(const OS: TOSVersionInfo): string;
 function GetCPUUsage: SG;
 procedure FillDynamicInfo(var SysInfo: TSysInfo); // FillMemoryStatus + FillCPUTest
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
-procedure FillCPUTest(var SysInfo: TSysInfo);
 procedure DelayEx(const f: U8);
 
 //function MMUsedMemory: U8;
@@ -522,125 +520,10 @@ asm
 {$endif}
 end;
 
-{$ifdef CPUX64}
-procedure Loop(PMem: Pointer; MaxMem4: NativeInt; Count: NativeInt);
-asm
-  push rax
-  push rbx
-  push rcx
-  push rdi
-  mov rdi, PMem{rcx}
-  mov rcx, Count
-  sub rcx, 1
-  @Loop:
-    mov rax, rcx
-    and rax, MaxMem4
-    mov [rdi+8*rax], rbx
-    sub rcx, 1
-  jnz @Loop
-  pop rdi
-  pop rcx
-  pop rbx
-  pop rax
-{
-      j := 0;
-      while j < Count do
-      begin
-        PDWORD(PByte(PMem) + (SizeOf(Pointer) * j) and MaxMem4)^ := j;
-        Inc(j);
-      end;}
-end;
-{$endif}
-
-procedure FillCPUTest(var SysInfo: TSysInfo);
-var
-	TickCount: U8;
-	CPUTick: U8;
-const
-	Count = 1 shl 22;
-var
-	MaxMem4, MaxMem: UG;
-	PMem: Pointer;
-begin
-  MaxMem4 :=  1 shl 14 - 1; {10 = 4kB; 14 = 64kB}
-  MaxMem := SizeOf(Pointer) * (MaxMem4 + 1) - 1;
-  GetMem(PMem, MaxMem + 1);
-  try
-    SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
-    try
-      TickCount := PerformanceCounter;
-      CPUTick := GetCPUCounter.A;
-{$ifdef CPUX64}
-      Loop(PMem, MaxMem4, Count div 2);
-{$else}
-      asm
-      pushad
-
-{     mov ecx, 999 // 1M
-
-      @Loop:
-        mov edi, U4 ptr PMem
-        mov esi, U4 ptr PMem2
-        push ecx
-        mov ecx, 32768
-        shr ecx, 2
-        cld
-          rep movsd
-        pop ecx
-        sub ecx, 1
-      jnz @Loop}
-(*
-      mov ecx, 999998 // 1M
-//      mov edi, U4 ptr PMem
-      @Loop: // 3 - Duron, 4 - P4
-        mov esi, edi
-        mov ebx, ecx
-        and ebx, 32767
-        add esi, ebx
-//        mov [esi], cl
-        sub ecx, 1
-      jnz @Loop*)
-
-      mov ecx, Count - 1 // 1M
-      mov edi, PMem
-      @Loop: // 4 clocks
-        mov eax, ecx
-        mov esi, edi
-        and eax, MaxMem4
-        sub ecx, 1
-        mov [esi+4*eax], ebx
-      jnz @Loop
-
-      popad
-      end;
-{$endif}
-      CPUTick := GetCPUCounter.A - CPUTick;
-      TickCount := IntervalFrom(TickCount);
-      if (TickCount > 0) and (CPUTick < High(Int64) div (2 * PerformanceFrequency)) then
-      begin
-        SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
-        SysInfo.CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
-      end
-      else
-      begin
-        SysInfo.CPUFrequency := 0;
-        SysInfo.CPUPower := 0;
-      end;
-    except
-      SysInfo.CPUFrequency := 0;
-      SysInfo.CPUPower := 0;
-    end;
-  finally
-    SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
-    FreeMem(PMem);
-	end;
-end;
-
 procedure FillDynamicInfo(var SysInfo: TSysInfo);
 begin
 	FillMemoryStatus(SysInfo);
 	SysInfo.CPUUsage := GetCPUUsage;
-	FillCPUTest(SysInfo);
 end;
 
 {

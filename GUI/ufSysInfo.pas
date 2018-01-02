@@ -32,13 +32,10 @@ type
 		ButtonOk: TDButton;
 		DLabelCPUFrequency: TLabel;
 		EditCPUFrequency: TDEdit;
-		LabelAMDDuronCmp: TLabel;
-		EditDuron: TDEdit;
 		DLabelCPUUsage: TLabel;
 		EditCPUUsage: TDEdit;
 		EditCounter: TDEdit;
 		LabelMBoardCounter: TLabel;
-		ComboBoxSize: TComboBox;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
@@ -167,7 +164,6 @@ begin
 
 	EditCPUUsage.Text := NToS(SysInfo.CPUUsage, 2) + '%';
 	EditCPUFrequency.Text := NToS(SysInfo.CPUFrequency) + ' Hz';
-	EditDuron.Text := NToS(SysInfo.CPUPower) + ' Hz';
 	EditCounter.Text := NToS(SysInfo.PerformanceFrequency) + ' Hz';
 
 	edMU.Text := BToStr(SysInfo.MS.ullTotalPhys - SysInfo.MS.ullAvailPhys);
@@ -185,24 +181,8 @@ begin
 end;
 
 procedure TfSysInfo.FormCreate(Sender: TObject);
-var
-	i: SG;
-	m: UG;
 begin
 	Background := baGradient;
-
-	ComboBoxSize.Items.BeginUpdate;
-	try
-		for i := {$ifdef CPUX64}3{$else}2{$endif} to 29 do
-		begin
-			m := 1 shl i;
-			if m >= GSysInfo.MS.ullAvailPhys div 2 then Break;
-			ComboBoxSize.Items.Add(BToStr(m));
-		end;
-		ComboBoxSize.ItemIndex := 14;
-	finally
-		ComboBoxSize.Items.EndUpdate;
-	end;
 end;
 
 

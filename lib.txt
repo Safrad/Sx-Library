@@ -21,4 +21,5 @@ $(sx-library)\Core
 $(sx-library)\Table
 $(sx-library)\Parser
 $(sx-library)\Geometry
+$(sx-library)\Benchmark
 $(sx-library)\GUI
