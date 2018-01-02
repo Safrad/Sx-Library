@@ -303,10 +303,10 @@ type
 			const BitsPerSample: U2;
 			const SampleRate: U4); overload;
 		destructor Destroy; override;
-		function Sample(Index: SG; const Channel: SG): SG; overload;
-		function Sample(const Index: SG): SG; overload;
-		function GetSample(const BitLength: SG; var BitIndex: SG): SG;
-		function GetSampleAddr(const ASample: SG): PWaveSample;
+		function Sample(Index: UG; const Channel: UG): SG; overload;
+		function Sample(const Index: UG): SG; overload;
+		function GetSample(const BitLength: UG; var BitIndex: UG): SG;
+		function GetSampleAddr(const ASample: UG): PWaveSample;
 		procedure AddSample(FPointer: PS2; const Value: S2);
 		property SampleCount: UG read FSampleCount write SetSampleCount;
 		property Format: TWaveFormatChunk read FFormat;
@@ -799,7 +799,7 @@ begin
 		Result := 0;
 end;
 
-function TWave.Sample(Index: SG; const Channel: SG): SG;
+function TWave.Sample(Index: UG; const Channel: UG): SG;
 begin
 	Assert(Channel < FFormat.Channels);
 	if Format.Channels = 2 then
@@ -815,7 +815,7 @@ begin
 	end;
 end;
 
-function TWave.Sample(const Index: SG): SG;
+function TWave.Sample(const Index: UG): SG;
 begin
 	case FFormat.BitsPerSample of
 	8: Result := PWaveSample(TNative(Data) + Index).B;
@@ -1051,12 +1051,12 @@ begin
 	end;
 end;
 
-function TWave.GetSampleAddr(const ASample: SG): PWaveSample;
+function TWave.GetSampleAddr(const ASample: UG): PWaveSample;
 begin
 	Result := PWaveSample(TNative(FData) + ASample * FFormat.BytesPerSample);
 end;
 
-function TWave.GetSample(const BitLength: SG; var BitIndex: SG): SG;
+function TWave.GetSample(const BitLength: UG; var BitIndex: UG): SG;
 begin
 	Result := PInt(TNative(FData) + BitIndex div 8)^;
 	Result := Result shr ((8 - BitIndex) mod 8);
