@@ -331,12 +331,16 @@ var
 {$ENDIF}
 begin
   Result := False;
-  if not IsMainThread then
-    Exit;
-
   Text := ErrorMsg + ': ' + FileName;
   if LogError then
     MainLogAdd(Text, mlError);
+
+  if not IsMainThread then
+  begin
+    raise Exception.Create(Text);
+    Exit;
+  end;
+
 {$IFNDEF Console}
   Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
 {$ELSE}
