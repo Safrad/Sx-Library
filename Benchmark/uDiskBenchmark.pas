@@ -32,6 +32,7 @@ type
     function GetVersion: TProjectVersion; override;
   public
     constructor Create;
+    destructor Destroy; override;
     procedure Execute; override;
 
     // Input
@@ -68,7 +69,7 @@ begin
   FBlockSize := 128 * KB;
   FFileSize := 128 * MB;
   FAccess := daWrite;
-  FFileName := TempDir + 'test.tmp';
+  FFileName := TempDir + 'test' + IntToStr(ThreadID) + '.tmp';
 end;
 
 procedure FillBuffer(const Buffer: PArrayU1; const Size: S4);
@@ -81,6 +82,13 @@ begin
     Buffer[i] := i and $ff;
     Inc(i);
   end;
+end;
+
+destructor TDiskBenchmark.Destroy;
+begin
+  DeleteFileEx(FFileName);
+
+  inherited;
 end;
 
 procedure TDiskBenchmark.Execute;
