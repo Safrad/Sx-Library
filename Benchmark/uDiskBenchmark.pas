@@ -34,6 +34,7 @@ type
     constructor Create;
     procedure Execute; override;
 
+    // Input
     property Access: TAccess read FAccess write SetAccess;
     property FileName: TFileName read FFileName write SetFileName;
     property BlockSize: SG read FBlockSize write SetBlockSize;
@@ -89,7 +90,7 @@ var
 	F: TFile;
 	FName: TFileName;
 
-	FileSiz, i, mi, BS: U8;
+	FileSiz, i, mi: U8;
 
 	Buffer: PArrayU1;
 

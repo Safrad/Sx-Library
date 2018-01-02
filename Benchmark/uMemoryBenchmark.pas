@@ -10,11 +10,7 @@ uses
 type
   TMemoryBenchmark = class(TBenchmark)
   private
-    FCPUPower: U8;
-    FCPUFrequency: U8;
     FBlockSize: UG;
-    procedure SetCPUFrequency(const Value: U8);
-    procedure SetCPUPower(const Value: U8);
     procedure SetBlockSize(const Value: UG);
   protected
     function GetVersion: TProjectVersion; override;
@@ -22,8 +18,7 @@ type
     constructor Create;
     procedure Execute; override;
 
-    property CPUFrequency: U8 read FCPUFrequency write SetCPUFrequency;
-    property CPUPower: U8 read FCPUPower write SetCPUPower;
+    // Input
     property BlockSize: UG read FBlockSize write SetBlockSize;
   end;
 
@@ -91,14 +86,13 @@ asm
     sub ecx, 1
   jnz @Loop*)
 
-  mov ecx, Count - 1 // 1M
-  mov edi, PMem
+  mov ecx, U4 ptr Count
+  mov edi, U4 ptr PMem
   @Loop: // 4 clocks
     mov eax, ecx
-    mov esi, edi
     and eax, MaxMem4
     sub ecx, 1
-    mov [esi+4*eax], ebx
+    mov [edi+4*eax], ebx
   jnz @Loop
 
   popad
@@ -116,42 +110,26 @@ begin
 end;
 
 procedure TMemoryBenchmark.Execute;
-var
-	TickCount: U8;
-	CPUTick: U8;
 const
-	Count = 1 shl 22;
+  TotalStored = 64 * MB;
 var
-	MaxMem4: UG;
-	PMem: Pointer;
+	Count, MaxMemoryAddress: UG;
+	PData: Pointer;
 begin
-  MaxMem4 := MaxDiv(FBlockSize, SizeOf(Pointer)) - 1;
-  GetMem(PMem, FBlockSize);
-  try
-    try
-      TickCount := PerformanceCounter;
-      CPUTick := GetCPUCounter.A;
-      Loop(PMem, MaxMem4, Count div 2);
+  inherited;
 
-      CPUTick := GetCPUCounter.A - CPUTick;
-      TickCount := IntervalFrom(TickCount);
-      if (TickCount > 0) and (CPUTick < High(Int64) div (2 * PerformanceFrequency)) then
-      begin
-        CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
-        CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
-      end
-      else
-      begin
-        CPUFrequency := 0;
-        CPUPower := 0;
-      end;
-    except
-      CPUFrequency := 0;
-      CPUPower := 0;
+  MaxMemoryAddress := MaxDiv(FBlockSize, SizeOf(Pointer)) - 1;
+  GetMem(PData, FBlockSize);
+  try
+    CalculatedItems := 0;
+    while not Terminated do
+    begin
+      Count := TotalStored div SizeOf(Pointer);
+      Loop(PData, MaxMemoryAddress, Count);
+      CalculatedItems := CalculatedItems + TotalStored;
     end;
   finally
-    CalculatedItems := CPUPower;
-    FreeMem(PMem);
+    FreeMem(PData);
 	end;
 end;
 
@@ -168,28 +146,4 @@ begin
   FBlockSize := Value;
 end;
 
-procedure TMemoryBenchmark.SetCPUFrequency(const Value: U8);
-begin
-  FCPUFrequency := Value;
-end;
-
-procedure TMemoryBenchmark.SetCPUPower(const Value: U8);
-begin
-  FCPUPower := Value;
-end;
-
 end.
-
-	ComboBoxSize.Items.BeginUpdate;
-	try
-		for i := {$ifdef CPUX64}3{$else}2{$endif} to 29 do
-		begin
-			m := 1 shl i;
-			if m >= GSysInfo.MS.ullAvailPhys div 2 then Break;
-			ComboBoxSize.Items.Add(BToStr(m));
-		end;
-		ComboBoxSize.ItemIndex := 14;
-	finally
-		ComboBoxSize.Items.EndUpdate;
-	end;
-

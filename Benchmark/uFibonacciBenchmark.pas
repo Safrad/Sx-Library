@@ -19,21 +19,6 @@ implementation
 uses
   uTypes;
 
-{ TODO :
-function Fibonacci(aNumber: Integer): Integer;
-begin
-  if aNumber < 0 then
-    raise Exception.Create('The Fibonacci sequence is not defined for negative integers.');
-
-  case aNumber of
-  0: Result:= 0;
-  1: Result:= 1;
-  else
-    Result:= Fibonacci(aNumber - 1) + Fibonacci(aNumber - 2);
-  end;
-end;
-}
-
 function Fibonacci(const aNumber: Integer): Integer;
 begin
   if aNumber <= 1 then

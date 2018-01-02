@@ -32,9 +32,10 @@ uses
   uMemoryBenchmark,
   uDiskBenchmark,
 
+  Math,
   Windows,
   SysUtils,
-  uSysInfo,
+  uUnitFormatter,
   uMath,
   uStrings,
   uNewThread,
@@ -55,8 +56,22 @@ begin
     case ATestType of
     0: Benchmarks[i] := TFibonacciBenchmark.Create;
     1: Benchmarks[i] := TCalculationBenchmark.Create;
-    2: Benchmarks[i] := TMemoryBenchmark.Create;
-    3: Benchmarks[i] := TDiskBenchmark.Create;
+    2:
+    begin
+      Benchmarks[i] := TMemoryBenchmark.Create;
+      TMemoryBenchmark(Benchmarks[i]).BlockSize := 64;
+    end;
+    3:
+    begin
+      Benchmarks[i] := TMemoryBenchmark.Create;
+      TMemoryBenchmark(Benchmarks[i]).BlockSize := 64 * KB;
+    end;
+    4:
+    begin
+      Benchmarks[i] := TMemoryBenchmark.Create;
+      TMemoryBenchmark(Benchmarks[i]).BlockSize := 64 * MB;
+    end;
+    5: Benchmarks[i] := TDiskBenchmark.Create;
     end;
 //    Benchmarks[i].Priority := tpTimeCritical;
     Benchmarks[i].OutputInfo := OutputInfo;
@@ -80,18 +95,31 @@ end;
 procedure THardwareBenchmark.Run;
 var
   TestType, Core: SG;
-  Performance, LastPerformance: FG;
+  Performance, Performance1Core, LastPerformance: FG;
+  UnitFormatter: TUnitFormatter;
 begin
+  UnitFormatter := TUnitFormatter.Create;
+  UnitFormatter.UnitName := '';
+  UnitFormatter.PrefixType := ptMetric;
   FResultAsString := '';
 //  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
-  for TestType := 0 to 3 do
+  for TestType := 0 to 5 do
   begin
     FResultAsString := FResultAsString + 'Test' + CharSpace + IntToStr(TestType) + ':' + CharSpace;
     LastPerformance := 0;
+    Performance1Core := 0;
     for Core := 1 to 64 do //64 do // GSysInfo.LogicalProcessorCount  do
     begin
       Performance := DoTest(TestType, Core);
-      FResultAsString := FResultAsString + NToS(Core) + ' thread(s): ' + FToS(Performance) + ';';
+      if Core = 1 then
+        Performance1Core := Performance;
+      if Performance < LastPerformance * 1.05 then
+      begin
+        if Performance1Core > 0 then
+          FResultAsString := FResultAsString + 'Speedup ratio: ' + FloatToStrF(Max(Performance, LastPerformance) / Performance1Core, ffGeneral, 4, 5) + CharTimes;
+        Break;
+      end;
+      FResultAsString := FResultAsString + NToS(Core) + ' thread(s): ' + UnitFormatter.Format(Performance) + '; ';
 {      if Elapsed.Seconds > 0 then
       begin
         OutputInfo.AddCaption(Translate('Success:') + CharSpace + NToS(CalculatedItems, ofIO) + ' B (' + BToStr(CalculatedItems) + ')');
@@ -105,12 +133,11 @@ begin
       else
         OutputInfo.AddCaption(Translate('Too fast, can not measure.') + CharSpace + s);}
 
-      if Performance < LastPerformance * 1.05 then
-        Break;
       LastPerformance := Performance;
     end;
     FResultAsString := FResultAsString + LineSep;
   end;
+  UnitFormatter.Free;
 //     SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
 end;
 
