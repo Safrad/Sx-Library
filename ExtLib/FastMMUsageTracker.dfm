@@ -23,28 +23,16 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
     Top = 0
     Width = 681
     Height = 643
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
     ActivePage = tsAllocation
     Align = alClient
     TabOrder = 0
     object tsAllocation: TTabSheet
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = 'FastMM4 Allocation'
       object sgBlockStatistics: TStringGrid
         Left = 0
         Top = 0
         Width = 673
         Height = 612
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Align = alClient
         DefaultColWidth = 83
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine]
@@ -61,10 +49,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       end
     end
     object tsVMGraph: TTabSheet
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = 'VM Graph'
       ImageIndex = 1
       object Label1: TLabel
@@ -72,10 +56,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 542
         Width = 51
         Height = 16
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Caption = 'Address'
       end
       object Label2: TLabel
@@ -83,10 +63,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 542
         Width = 31
         Height = 16
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Caption = 'State'
       end
       object Label3: TLabel
@@ -94,10 +70,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 576
         Width = 53
         Height = 16
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Caption = 'Exe/DLL'
       end
       object eAddress: TEdit
@@ -105,10 +77,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 537
         Width = 100
         Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Enabled = False
         TabOrder = 0
         Text = '$00000000'
@@ -118,10 +86,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 537
         Width = 130
         Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Enabled = False
         TabOrder = 1
         Text = 'Unallocated'
@@ -131,10 +95,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 571
         Width = 587
         Height = 24
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         ReadOnly = True
         TabOrder = 2
       end
@@ -143,10 +103,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 537
         Width = 120
         Height = 25
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Caption = 'Small Map'
         Checked = True
         State = cbChecked
@@ -158,10 +114,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 0
         Width = 673
         Height = 523
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Align = alTop
         ColCount = 64
         DefaultColWidth = 8
@@ -178,10 +130,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       end
     end
     object tsVMDump: TTabSheet
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = 'VM Dump'
       ImageIndex = 2
       object sgVMDump: TStringGrid
@@ -189,10 +137,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 0
         Width = 673
         Height = 612
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Align = alClient
         DefaultColWidth = 83
         FixedCols = 0
@@ -212,10 +156,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       end
     end
     object tsGeneralInformation: TTabSheet
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = 'General Information'
       ImageIndex = 3
       object mVMStatistics: TMemo
@@ -223,10 +163,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
         Top = 0
         Width = 673
         Height = 612
-        Margins.Left = 4
-        Margins.Top = 4
-        Margins.Right = 4
-        Margins.Bottom = 4
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -254,10 +190,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       Top = 6
       Width = 92
       Height = 31
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = 'Close'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -281,10 +213,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       Top = 12
       Width = 119
       Height = 21
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = 'Auto Update'
       TabOrder = 1
       OnClick = ChkAutoUpdateClick
@@ -294,10 +222,6 @@ object fFastMMUsageTracker: TfFastMMUsageTracker
       Top = 6
       Width = 93
       Height = 31
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
       Caption = 'Update'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
