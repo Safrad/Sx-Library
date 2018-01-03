@@ -12,10 +12,11 @@ type
   private
     FStopwatch: TStopwatch;
     function GetElapsed: TTimeSpan;
+  protected
+    procedure Execute; override;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Execute; override;
     procedure DoTerminate; override;
     property Elapsed: TTimeSpan read GetElapsed;
   end;
