@@ -25,37 +25,10 @@ var
 implementation
 
 uses
-	ShellAPI, Forms,
+  uShellExecute,
+  ShellAPI,
+	Forms,
 	uMsg, uFiles, uLog, uStrings, uFile, uSxThread;
-
-type
-	TShellExecute = class(TSxThread)
-	private
-		FAgain: BG;
-		ErrorCode: U4;
-		FFileName: TFileName;
-		FParams: string;
-		procedure Synchro;
-	protected
-		procedure Execute; override;
-	public
-		{ Public declarations }
-		constructor Create(FileName: TFileName; const Params: string = '');
-	end;
-
-{ TShellExecute }
-
-constructor TShellExecute.Create(FileName: TFileName; const Params: string = '');
-begin
-	FreeOnTerminate := True;
-	FFileName := FileName;
-	FParams := Params;
-	inherited Create;
-end;
-
-const
-	OpenString = 'open'; // XP
-//	OpenString = 'RunAs'; // Newer Windows
 
 function RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
 var
@@ -142,23 +115,6 @@ begin
 	CloseHandle(lpExecInfo.hProcess);
 end;
 
-procedure TShellExecute.Execute;
-begin
-  inherited;
-
-	FAgain := True;
-	while FAgain do
-	begin
-		ErrorCode := ShellExecute(0, OpenString, PChar('"' + RemoveEV(FFileName) + '"'), PChar(FParams), nil, SW_ShowNormal);
-		Synchronize(Synchro);
-	end;
-end;
-
-procedure TShellExecute.Synchro;
-begin
-	FAgain := (ErrorCode <= 32) and IOErrorRetry(FFileName, ErrorCode);
-end;
-
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 var
 	ShellExecuteThread: TShellExecute;
@@ -166,8 +122,10 @@ begin
 	if LogDebug then
     MainLogAdd('ShellExecute ' + FileName + ' ' + Params, mlDebug);
 //	ShellExecute(0, OpenString, PChar('"' + RemoveEV(FileName) + '"'), PChar(Params), nil, SW_ShowNormal);
-	ShellExecuteThread := TShellExecute.Create(FileName, Params);
+	ShellExecuteThread := TShellExecute.Create;
 	ShellExecuteThread.Name := 'ShellExecute';
+  ShellExecuteThread.FileName := FileName;
+  ShellExecuteThread.Params := Params;
 	ShellExecuteThread.Start;
 end;
 
