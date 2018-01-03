@@ -21,7 +21,8 @@ type
     function GetVersion: TProjectVersion; virtual; abstract;
   public
     constructor Create;
-    property Name: string read GetName;
+
+    property Description: string read GetName;
     property Version: TProjectVersion read GetVersion;
     property CalculatedItems: U8 read FCalculatedItems write SetCalculatedItems;
     property Performace: FG read GetPerformace;
@@ -36,7 +37,7 @@ uses Classes;
 
 constructor TBenchmark.Create;
 begin
-  inherited Create(True);
+  inherited Create;
   FreeOnTerminate := False;
 end;
 

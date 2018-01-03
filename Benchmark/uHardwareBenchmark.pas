@@ -5,6 +5,7 @@ interface
 uses
   Classes,
   uTypes,
+  uSxThread,
   uOutputInfo,
   uBenchmark;
 
@@ -12,8 +13,9 @@ const
   TestCount = 9;
 
 type
-  THardwareBenchmark = class
+  THardwareBenchmark = class(TSxThread)
   private
+    FEmptyOutputInfo: TOutputInfo;
     FScores: array[0..TestCount - 1] of FG;
     FResultAsString: string;
     FOutputInfo: TOutputInfo;
@@ -23,7 +25,9 @@ type
     function GetOverallScore: FG;
 
   public
-    procedure Run;
+    constructor Create;
+    destructor Destroy; override;
+    procedure Execute; override;
 
     property ResultAsString: string read FResultAsString;
     property OverallScore: FG read GetOverallScore;
@@ -42,6 +46,7 @@ uses
   Math,
   Windows,
   SysUtils,
+  uSysInfo,
   uUnitFormatter,
   uMath,
   uStrings,
@@ -69,9 +74,10 @@ begin
     if ATestType = 5 then
       TDiskBenchmark(Benchmarks[i]).CreateFile;
     if AThreadCount = 1 then
-      FResultAsString := FResultAsString + Benchmarks[i].Name + ':' + CharSpace;
+      FResultAsString := FResultAsString + Benchmarks[i].Description + ':' + CharSpace;
 
-    Benchmarks[i].OutputInfo := OutputInfo;
+    Benchmarks[i].OutputInfo := FEmptyOutputInfo;
+    OutputInfo.AddCaption('Running test ' + Benchmarks[i].Description + ' for ' + NToS(AThreadCount) + ' thread(s)…');
     Benchmarks[i].Start;
   end;
   if IsRelease then
@@ -150,7 +156,7 @@ begin
 //    Benchmarks[i].Priority := tpTimeCritical;
 end;
 
-function THardwareBenchmark.GetOverAllScore: FG;
+function THardwareBenchmark.GetOverallScore: FG;
 var
   Score: FG;
   Count: UG;
@@ -172,23 +178,31 @@ begin
     Result := Power(Score, 1 / Count);
 end;
 
-procedure THardwareBenchmark.Run;
+procedure THardwareBenchmark.Execute;
 var
   TestType, Core: SG;
   Performance, Performance1Core, LastPerformance: FG;
   UnitFormatter: TUnitFormatter;
 begin
+  Name := 'Hardware Benchmarks';
+
+  inherited;
+
   UnitFormatter := TUnitFormatter.Create;
   try
     UnitFormatter.UnitName := '';
     UnitFormatter.PrefixType := ptMetric;
     FResultAsString := '';
   //  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
+    OutputInfo.ProgressMaximum := TestCount;
+    Sleep(100);
     for TestType := 0 to TestCount - 1 do
     begin
+      OutputInfo.ProgressValue := TestType + 1;
       LastPerformance := 0;
       Performance1Core := 0;
-      for Core := 1 to 32 do // GSysInfo.LogicalProcessorCount  do
+      Performance := 0;
+      for Core := 1 to GSysInfo.LogicalProcessorCount + 2 do
       begin
         Performance := DoTest(TestType, Core);
         if Core = 1 then
@@ -199,7 +213,7 @@ begin
             FResultAsString := FResultAsString + 'Speedup ratio: ' + FloatToStrF(Max(Performance, LastPerformance) / Performance1Core, ffGeneral, 4, 5) + CharTimes;
           Break;
         end;
-        FResultAsString := FResultAsString + NToS(Core) + ' thread(s): ' + UnitFormatter.Format(Performance) + '|';
+        FResultAsString := FResultAsString + NToS(Core) + ' thread(s): ' + UnitFormatter.Format(Performance) + ' | ';
   {      if Elapsed.Seconds > 0 then
         begin
           OutputInfo.AddCaption(Translate('Success:') + CharSpace + NToS(CalculatedItems, ofIO) + ' B (' + BToStr(CalculatedItems) + ')');
@@ -214,11 +228,19 @@ begin
           OutputInfo.AddCaption(Translate('Too fast, can not measure.') + CharSpace + s);}
 
         LastPerformance := Performance;
+
+        if Terminated then
+          Break;
       end;
       FScores[TestType] := Performance;
       FResultAsString := FResultAsString + LineSep;
+      if Terminated then
+      begin
+        FResultAsString := FResultAsString + 'Aborted by user!' + LineSep;
+        Break;
+      end;
     end;
-    FResultAsString := FResultAsString + 'OverallScore: ' + UnitFormatter.Format(OverallScore) + LineSep;
+    FResultAsString := FResultAsString + 'Overall mark: ' + UnitFormatter.Format(OverallScore) + LineSep;
   finally
     UnitFormatter.Free;
   end;
@@ -228,6 +250,20 @@ end;
 procedure THardwareBenchmark.SetOutputInfo(const Value: TOutputInfo);
 begin
   FOutputInfo := Value;
+end;
+
+constructor THardwareBenchmark.Create;
+begin
+  inherited Create;
+
+  FEmptyOutputInfo := TOutputInfo.Create;
+end;
+
+destructor THardwareBenchmark.Destroy;
+begin
+  FreeAndNil(FEmptyOutputInfo);
+
+  inherited;
 end;
 
 end.

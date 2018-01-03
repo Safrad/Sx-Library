@@ -155,7 +155,7 @@ begin
 
   i := 0;
   mi := RoundDivS8(FileSiz, Clu);
-  FileSiz := Clu * mi;
+{  FileSiz := Clu * mi;
 
   OutputInfo.AddCaption(Translate('FileName:') + CharSpace + FFileName);
 
@@ -163,7 +163,7 @@ begin
   if FAccess = daRead then
     OutputInfo.AddCaption(Translate('Reading:') + CharSpace + s)
   else
-    OutputInfo.AddCaption(Translate('Writing:') + CharSpace + s);
+    OutputInfo.AddCaption(Translate('Writing:') + CharSpace + s);}
 
   GetMem(Buffer, Clu);
   try
@@ -206,8 +206,8 @@ begin
             if not F.BlockWrite(Buffer^, Clu) then
               Break;
           end;
-          OutputInfo.ProgressValue := i;
           Inc(i);
+          OutputInfo.ProgressValue := i;
           if OutputInfo.Aborted or Terminated then
             Break;
         end;
