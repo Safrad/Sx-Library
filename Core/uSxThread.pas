@@ -83,6 +83,7 @@ end;
 constructor TSxThread.Create;
 begin
   inherited Create(True); // Create suspended
+  Name := ClassName; // Set thread name for debugging purposes
 end;
 
 initialization
