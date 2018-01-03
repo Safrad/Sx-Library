@@ -17,9 +17,11 @@ type
     function GetPerformace: FG;
     procedure SetOutputInfo(const Value: TOutputInfo);
   protected
+    function GetName: string; virtual; abstract;
     function GetVersion: TProjectVersion; virtual; abstract;
   public
     constructor Create;
+    property Name: string read GetName;
     property Version: TProjectVersion read GetVersion;
     property CalculatedItems: U8 read FCalculatedItems write SetCalculatedItems;
     property Performace: FG read GetPerformace;

@@ -14,13 +14,16 @@ type
 
   TDiskBenchmark = class(TBenchmark)
   private
+    FAccess: TAccess;
+    FBlockSize: SG;
+    FFileName: TFileName;
+    FFileSize: SG;
+    FRandomMode: BG;
     FUseBuffer: BG;
     FWriteThrough: BG;
-    FRandomMode: BG;
-    FBlockSize: SG;
-    FFileSize: SG;
-    FAccess: TAccess;
-    FFileName: TFileName;
+
+    function GetFlag: U4;
+
     procedure SetAccess(const Value: TAccess);
     procedure SetBlockSize(const Value: SG);
     procedure SetFileName(const Value: TFileName);
@@ -30,15 +33,19 @@ type
     procedure SetWriteThrough(const Value: BG);
   protected
     function GetVersion: TProjectVersion; override;
+    function GetName: string; override;
   public
     constructor Create;
     destructor Destroy; override;
+    procedure CreateFile;
+    procedure DeleteFile;
+
     procedure Execute; override;
 
     // Input
     property Access: TAccess read FAccess write SetAccess;
-    property FileName: TFileName read FFileName write SetFileName;
     property BlockSize: SG read FBlockSize write SetBlockSize;
+    property FileName: TFileName read FFileName write SetFileName;
     property FileSize: SG read FFileSize write SetFileSize;
     property RandomMode: BG read FRandomMode write SetRandomMode;
     property UseBuffer: BG read FUseBuffer write SetUseBuffer;
@@ -68,8 +75,8 @@ begin
   FRandomMode := False;
   FBlockSize := 128 * KB;
   FFileSize := 128 * MB;
-  FAccess := daWrite;
-  FFileName := TempDir + 'test' + IntToStr(ThreadID) + '.tmp';
+  FAccess := daRead;
+//  FFileName := TempDir + 'test' + IntToStr(ThreadID) + '.tmp';
 end;
 
 procedure FillBuffer(const Buffer: PArrayU1; const Size: S4);
@@ -84,9 +91,42 @@ begin
   end;
 end;
 
-destructor TDiskBenchmark.Destroy;
+procedure TDiskBenchmark.CreateFile;
+var
+  F: TFile;
+	Flag: U4;
+	Buffer: PArrayU1;
+begin
+  F := TFile.Create;
+  try
+    F.Protection := False;
+    F.Charset := fcAnsi;
+    Flag := FILE_FLAG_NO_PREFIX or FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_RANDOM_ACCESS or FILE_FLAG_WRITE_THROUGH;
+    if F.Open(FFileName, fmReadAndWrite, Flag) then
+    begin
+//      F.Seek(FFileSize);
+//      F.Truncate;
+      F.Seek(FFileSize - FBlockSize);
+      Buffer := AllocMem(FBlockSize);
+      try
+        F.BlockWrite(Buffer^, FBlockSize);
+      finally
+        FreeMem(Buffer);
+      end;
+      F.Close;
+    end;
+  finally
+    F.Free;
+  end;
+end;
+
+procedure TDiskBenchmark.DeleteFile;
 begin
   DeleteFileEx(FFileName);
+end;
+
+destructor TDiskBenchmark.Destroy;
+begin
 
   inherited;
 end;
@@ -139,30 +179,22 @@ begin
       OutputInfo.ProgressMaximum := mi;
 
       case FAccess of
-      daWrite: FM := fmRewrite;
-      else FM := fmReadOnly;
-      end;
-      Flag := FILE_FLAG_NO_PREFIX or FILE_ATTRIBUTE_TEMPORARY;
-      if FRandomMode = False then
-        Flag := Flag or FILE_FLAG_SEQUENTIAL_SCAN
+      daWrite:
+      begin
+        FM := fmReadAndWrite;
+      end
       else
-        Flag := Flag or FILE_FLAG_RANDOM_ACCESS;
-
-      if (FRandomMode = False) and (FUseBuffer = False) then Flag := Flag or FILE_FLAG_NO_BUFFERING;
-      if FWriteThrough and (FAccess  <> daRead) then Flag := Flag or FILE_FLAG_WRITE_THROUGH;
+        FM := fmReadOnly;
+      end;
+      Flag := GetFlag;
       if F.Open(FName, FM, Flag) then
       begin
-        if FRandomMode and (FAccess  <> daRead) then
-        begin
-          F.Seek(FileSiz - Clu);
-          F.BlockWrite(Buffer^, Clu);
-        end;
         i := 0;
         while i < mi do
         begin
           if FRandomMode then
           begin
-            F.Seek(Random(FileSiz - Clu));
+            F.Seek(Clu * Random(mi)); // must be aligned
           end;
           if FAccess = daRead then
           begin
@@ -175,9 +207,9 @@ begin
               Break;
           end;
           OutputInfo.ProgressValue := i;
+          Inc(i);
           if OutputInfo.Aborted or Terminated then
             Break;
-          Inc(i);
         end;
         OutputInfo.ProgressValue := i;
         F.Close;
@@ -190,6 +222,34 @@ begin
   end;
 
   CalculatedItems := U8(Clu) * U8(i);
+end;
+
+function TDiskBenchmark.GetFlag: U4;
+begin
+  Result := FILE_FLAG_NO_PREFIX or FILE_ATTRIBUTE_TEMPORARY;
+  if FRandomMode = False then
+    Result := Result or FILE_FLAG_SEQUENTIAL_SCAN
+  else
+    Result := Result or FILE_FLAG_RANDOM_ACCESS;
+
+  if (FUseBuffer = False) then
+    Result := Result or FILE_FLAG_NO_BUFFERING;
+  if FWriteThrough and (FAccess <> daRead) then
+    Result := Result or FILE_FLAG_WRITE_THROUGH;
+end;
+
+function TDiskBenchmark.GetName: string;
+begin
+  Result := '';
+  if FRandomMode then
+    Result := Result + 'Random '
+  else
+    Result := Result + 'Sequential ';
+
+  if FAccess = daRead then
+    Result := Result + 'read'
+  else
+    Result := Result + 'write';
 end;
 
 function TDiskBenchmark.GetVersion: TProjectVersion;

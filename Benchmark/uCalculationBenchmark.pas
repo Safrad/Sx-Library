@@ -9,8 +9,10 @@ uses
 type
   TCalculationBenchmark = class(TBenchmark)
   protected
+    function GetName: string; override;
     function GetVersion: TProjectVersion; override;
   public
+    constructor Create;
     procedure Execute; override;
   end;
 
@@ -23,6 +25,11 @@ uses
   uLapStopwatch;
 
 { TCalculationBenchmark }
+
+constructor TCalculationBenchmark.Create;
+begin
+  inherited Create;
+end;
 
 procedure TCalculationBenchmark.Execute;
 const
@@ -44,6 +51,11 @@ begin
   end;
   CalculatedItems := i;
   LapStopwatch.Free;
+end;
+
+function TCalculationBenchmark.GetName: string;
+begin
+  Result := 'Calculation';
 end;
 
 function TCalculationBenchmark.GetVersion: TProjectVersion;

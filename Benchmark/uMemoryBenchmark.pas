@@ -13,6 +13,7 @@ type
     FBlockSize: UG;
     procedure SetBlockSize(const Value: UG);
   protected
+    function GetName: string; override;
     function GetVersion: TProjectVersion; override;
   public
     constructor Create;
@@ -25,8 +26,8 @@ type
 implementation
 
 uses
+  uOutputFormat,
   uMath;
-
 
 {$ifdef CPUX64}
 procedure Loop(PMem: Pointer; MaxMem4: NativeInt; Count: NativeInt);
@@ -131,6 +132,11 @@ begin
   finally
     FreeMem(PData);
 	end;
+end;
+
+function TMemoryBenchmark.GetName: string;
+begin
+  Result := 'Memory block ' + BToStr(FBlockSize);
 end;
 
 function TMemoryBenchmark.GetVersion: TProjectVersion;

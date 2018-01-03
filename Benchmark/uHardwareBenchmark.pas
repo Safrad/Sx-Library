@@ -8,18 +8,25 @@ uses
   uOutputInfo,
   uBenchmark;
 
+const
+  TestCount = 9;
+
 type
   THardwareBenchmark = class
   private
+    FScores: array[0..TestCount - 1] of FG;
     FResultAsString: string;
     FOutputInfo: TOutputInfo;
+    function GetBenchmark(const ATestType: SG): TBenchmark;
     function DoTest(const ATestType: SG; const AThreadCount: SG): FG;
     procedure SetOutputInfo(const Value: TOutputInfo);
+    function GetOverallScore: FG;
 
   public
     procedure Run;
 
     property ResultAsString: string read FResultAsString;
+    property OverallScore: FG read GetOverallScore;
     property OutputInfo: TOutputInfo read FOutputInfo write SetOutputInfo;
   end;
 
@@ -40,7 +47,8 @@ uses
   uStrings,
   uNewThread,
   uStopwatch,
-  uOutputFormat;
+  uOutputFormat,
+  uFiles;
 
 { THardwareBenchmark }
 
@@ -53,31 +61,23 @@ begin
   SetLength(Benchmarks, AThreadCount);
   for i := 0 to AThreadCount - 1 do
   begin
+    Benchmarks[i] := GetBenchmark(ATestType);
     case ATestType of
-    0: Benchmarks[i] := TFibonacciBenchmark.Create;
-    1: Benchmarks[i] := TCalculationBenchmark.Create;
-    2:
-    begin
-      Benchmarks[i] := TMemoryBenchmark.Create;
-      TMemoryBenchmark(Benchmarks[i]).BlockSize := 64;
+    5..8:
+      TDiskBenchmark(Benchmarks[i]).FileName := TempDir + 'Test' + IntToStr(i) + '.tmp';
     end;
-    3:
-    begin
-      Benchmarks[i] := TMemoryBenchmark.Create;
-      TMemoryBenchmark(Benchmarks[i]).BlockSize := 64 * KB;
-    end;
-    4:
-    begin
-      Benchmarks[i] := TMemoryBenchmark.Create;
-      TMemoryBenchmark(Benchmarks[i]).BlockSize := 64 * MB;
-    end;
-    5: Benchmarks[i] := TDiskBenchmark.Create;
-    end;
-//    Benchmarks[i].Priority := tpTimeCritical;
+    if ATestType = 5 then
+      TDiskBenchmark(Benchmarks[i]).CreateFile;
+    if AThreadCount = 1 then
+      FResultAsString := FResultAsString + Benchmarks[i].Name + ':' + CharSpace;
+
     Benchmarks[i].OutputInfo := OutputInfo;
     Benchmarks[i].Start;
   end;
-  Sleep(500);
+  if IsRelease then
+    Sleep(700)
+  else
+    Sleep(350);
   for i := 0 to AThreadCount - 1 do
   begin
     Benchmarks[i].Terminate;
@@ -92,6 +92,86 @@ begin
   Result := Performance;
 end;
 
+function THardwareBenchmark.GetBenchmark(const ATestType: SG): TBenchmark;
+begin
+  case ATestType of
+  0:
+  begin
+    Result := TFibonacciBenchmark.Create;
+    TFibonacciBenchmark(Result).Number := 21;
+  end;
+  1: Result := TCalculationBenchmark.Create;
+  2:
+  begin
+    Result := TMemoryBenchmark.Create;
+    TMemoryBenchmark(Result).BlockSize := 64;
+  end;
+  3:
+  begin
+    Result := TMemoryBenchmark.Create;
+    TMemoryBenchmark(Result).BlockSize := 64 * KB;
+  end;
+  4:
+  begin
+    Result := TMemoryBenchmark.Create;
+    TMemoryBenchmark(Result).BlockSize := 64 * MB;
+  end;
+  5:
+  begin
+    Result := TDiskBenchmark.Create;
+    TDiskBenchmark(Result).Access := daRead;
+    TDiskBenchmark(Result).UseBuffer := False; // Required
+  end;
+  6:
+  begin
+    Result := TDiskBenchmark.Create;
+    TDiskBenchmark(Result).Access := daRead;
+    TDiskBenchmark(Result).RandomMode := True;
+    TDiskBenchmark(Result).UseBuffer := False; // Required
+  end;
+  7:
+  begin
+    Result := TDiskBenchmark.Create;
+    TDiskBenchmark(Result).Access := daWrite;
+    TDiskBenchmark(Result).UseBuffer := True;
+    TDiskBenchmark(Result).WriteThrough := True; // Required
+  end;
+  8:
+  begin
+    Result := TDiskBenchmark.Create;
+    TDiskBenchmark(Result).Access := daWrite;
+    TDiskBenchmark(Result).RandomMode := True;
+    TDiskBenchmark(Result).UseBuffer := True;
+    TDiskBenchmark(Result).WriteThrough := True; // Required
+  end;
+  else
+    Result := nil;
+  end;
+//    Benchmarks[i].Priority := tpTimeCritical;
+end;
+
+function THardwareBenchmark.GetOverAllScore: FG;
+var
+  Score: FG;
+  Count: UG;
+  i: SG;
+begin
+	Score := 1;
+	Count := 0;
+  for i := 0 to Length(FScores) - 1 do
+  begin
+    if FScores[i] > 0 then
+    begin
+      Score := Score * FScores[i];
+      Inc(Count);
+    end;
+  end;
+  if Count = 0 then
+    Result := 0
+  else
+    Result := Power(Score, 1 / Count);
+end;
+
 procedure THardwareBenchmark.Run;
 var
   TestType, Core: SG;
@@ -99,45 +179,49 @@ var
   UnitFormatter: TUnitFormatter;
 begin
   UnitFormatter := TUnitFormatter.Create;
-  UnitFormatter.UnitName := '';
-  UnitFormatter.PrefixType := ptMetric;
-  FResultAsString := '';
-//  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
-  for TestType := 0 to 5 do
-  begin
-    FResultAsString := FResultAsString + 'Test' + CharSpace + IntToStr(TestType) + ':' + CharSpace;
-    LastPerformance := 0;
-    Performance1Core := 0;
-    for Core := 1 to 64 do //64 do // GSysInfo.LogicalProcessorCount  do
+  try
+    UnitFormatter.UnitName := '';
+    UnitFormatter.PrefixType := ptMetric;
+    FResultAsString := '';
+  //  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
+    for TestType := 0 to TestCount - 1 do
     begin
-      Performance := DoTest(TestType, Core);
-      if Core = 1 then
-        Performance1Core := Performance;
-      if Performance < LastPerformance * 1.05 then
+      LastPerformance := 0;
+      Performance1Core := 0;
+      for Core := 1 to 32 do // GSysInfo.LogicalProcessorCount  do
       begin
-        if Performance1Core > 0 then
-          FResultAsString := FResultAsString + 'Speedup ratio: ' + FloatToStrF(Max(Performance, LastPerformance) / Performance1Core, ffGeneral, 4, 5) + CharTimes;
-        Break;
+        Performance := DoTest(TestType, Core);
+        if Core = 1 then
+          Performance1Core := Performance;
+        if Performance < LastPerformance * 1.05 then
+        begin
+          if Performance1Core > 0 then
+            FResultAsString := FResultAsString + 'Speedup ratio: ' + FloatToStrF(Max(Performance, LastPerformance) / Performance1Core, ffGeneral, 4, 5) + CharTimes;
+          Break;
+        end;
+        FResultAsString := FResultAsString + NToS(Core) + ' thread(s): ' + UnitFormatter.Format(Performance) + '|';
+  {      if Elapsed.Seconds > 0 then
+        begin
+          OutputInfo.AddCaption(Translate('Success:') + CharSpace + NToS(CalculatedItems, ofIO) + ' B (' + BToStr(CalculatedItems) + ')');
+
+          OutputInfo.AddCaption(Translate('Time:') + CharSpace + MsToStr(Round(Elapsed.Milliseconds), diSD, 3, False) + CharSpace + Sec);
+
+          BS := Round(CalculatedItems / Elapsed.Seconds);
+          s := NToS(BS, ofIO) + ' B/' + Sec + ' (' + BToStr(BS) + '/' + Sec + ')';
+          OutputInfo.AddCaption(Translate('Speed:') + CharSpace + s);
+        end
+        else
+          OutputInfo.AddCaption(Translate('Too fast, can not measure.') + CharSpace + s);}
+
+        LastPerformance := Performance;
       end;
-      FResultAsString := FResultAsString + NToS(Core) + ' thread(s): ' + UnitFormatter.Format(Performance) + '; ';
-{      if Elapsed.Seconds > 0 then
-      begin
-        OutputInfo.AddCaption(Translate('Success:') + CharSpace + NToS(CalculatedItems, ofIO) + ' B (' + BToStr(CalculatedItems) + ')');
-
-        OutputInfo.AddCaption(Translate('Time:') + CharSpace + MsToStr(Round(Elapsed.Milliseconds), diSD, 3, False) + CharSpace + Sec);
-
-        BS := Round(CalculatedItems / Elapsed.Seconds);
-        s := NToS(BS, ofIO) + ' B/' + Sec + ' (' + BToStr(BS) + '/' + Sec + ')';
-        OutputInfo.AddCaption(Translate('Speed:') + CharSpace + s);
-      end
-      else
-        OutputInfo.AddCaption(Translate('Too fast, can not measure.') + CharSpace + s);}
-
-      LastPerformance := Performance;
+      FScores[TestType] := Performance;
+      FResultAsString := FResultAsString + LineSep;
     end;
-    FResultAsString := FResultAsString + LineSep;
+    FResultAsString := FResultAsString + 'OverallScore: ' + UnitFormatter.Format(OverallScore) + LineSep;
+  finally
+    UnitFormatter.Free;
   end;
-  UnitFormatter.Free;
 //     SetPriorityClass(GetCurrentProcess, NORMAL_PRIORITY_CLASS);
 end;
 
