@@ -1,4 +1,4 @@
-unit uFormatters;
+unit uFormatters deprecated;
 
 interface
 
@@ -21,6 +21,8 @@ function FrequencyFormatter: TFrequencyFormatter;
 
 implementation
 
+uses
+  SysUtils;
 var
   GNumberFormatter: TNumberFormatter;
   GTwoDigitFormatter: TTwoDigitFormatter;
@@ -79,4 +81,14 @@ begin
   Result := GFrequencyFormatter;
 end;
 
+initialization
+
+finalization
+  FreeAndNil(GNumberFormatter);
+  FreeAndNil(GTwoDigitFormatter);
+  FreeAndNil(GByteFormatter);
+  FreeAndNil(GPercentFormatter);
+  FreeAndNil(GTimeFormatter);
+  FreeAndNil(GUnitFormatter);
+  FreeAndNil(GFrequencyFormatter);
 end.
