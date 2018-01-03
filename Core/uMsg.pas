@@ -330,7 +330,6 @@ var
   s: string;
 {$ENDIF}
 begin
-  Result := False;
   Text := ErrorMsg + ': ' + FileName;
   if LogError then
     MainLogAdd(Text, mlError);
