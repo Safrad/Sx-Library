@@ -7,14 +7,15 @@ uses
   uFormatter;
 
 type
-  TMaskFormatter = class(TFormatter)
+  TMaskFormatter = class(TInterfacedObject, IFormatter)
   private
     FMask: string;
     procedure SetMask(const Value: string);
   public
     property Mask: string read FMask write SetMask;
 
-    function Format(const AValue: S8): string; override;
+    function Format(const AValue: S8): string; overload;
+    function Format(const AValue: FG): string; overload;
   end;
 
 implementation
@@ -27,6 +28,11 @@ uses
 function TMaskFormatter.Format(const AValue: S8): string;
 begin
   Result := NToS(AValue, Mask);
+end;
+
+function TMaskFormatter.Format(const AValue: FG): string;
+begin
+  // TODO : not implemented
 end;
 
 procedure TMaskFormatter.SetMask(const Value: string);

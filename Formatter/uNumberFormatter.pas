@@ -13,7 +13,7 @@ type
     procedure SetPrecision(const Value: SG);
   public
     constructor Create;
-    
+
     function Format(const AValue: S8): string; overload;
     function Format(const AValue: FG): string; overload;
 
