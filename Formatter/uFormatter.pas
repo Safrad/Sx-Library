@@ -5,11 +5,9 @@ interface
 uses uTypes;
 
 type
-  TFormatter = class
-
-  public
-    function Format(const AValue: S8): string; overload; virtual; abstract;
-    function Format(const AValue: FG): string; overload; virtual; abstract;
+  IFormatter = interface(IInterface)
+    function Format(const AValue: S8): string; overload;
+    function Format(const AValue: FG): string; overload;
   end;
 
 implementation
