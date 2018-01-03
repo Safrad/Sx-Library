@@ -14,7 +14,7 @@ type
     procedure Execute; override;
   public
     {$if CompilerVersion < 20}
-    class procedure NameThreadForDebugging(const Value: AnsiString; const ThreadId: LongWord = $FFFFFFF{ActualThread});
+    class procedure NameThreadForDebugging(const AName: AnsiString; const AThreadId: LongWord);
     procedure Start;
     {$ifend}
     property Name: string read FName write SetName;
@@ -33,7 +33,7 @@ begin
 
   {$if CompilerVersion < 20}
   if FName <> '' then
-    NameThreadForDebugging(FName);
+    NameThreadForDebugging(FName, ThreadID);
   {$ifend}
 end;
 
@@ -43,13 +43,13 @@ begin
   begin
     FName := Value;
     {$if CompilerVersion >= 20}
-    NameThreadForDebugging(FName);
+    NameThreadForDebugging(FName, ThreadId);
     {$ifend}
   end;
 end;
 
 {$if CompilerVersion < 20}
-class procedure TSxThread.NameThreadForDebugging(const Value: AnsiString; const ThreadId: LongWord = $FFFFFFF{ActualThread});
+class procedure TSxThread.NameThreadForDebugging(const AName: AnsiString; const AThreadId: LongWord);
 type
   TThreadNameInfo = record
     FType: LongWord;     // must be 0x1000
@@ -61,8 +61,8 @@ var
   ThreadNameInfo: TThreadNameInfo;
 begin
   ThreadNameInfo.FType := $1000;
-  ThreadNameInfo.FName := PAnsiChar(Value);
-  ThreadNameInfo.FThreadID := ThreadId;
+  ThreadNameInfo.FName := PAnsiChar(AName);
+  ThreadNameInfo.FThreadID := AThreadId;
   ThreadNameInfo.FFlags := 0;
 
   try
@@ -80,7 +80,7 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-  TSxThread.NameThreadForDebugging('Main');
+  TSxThread.NameThreadForDebugging('Main', MainThreadID);
 {$ENDIF NoInitialization}
 
 end.
