@@ -7,7 +7,7 @@ uses
 
 type
   TAsyncTaskForTest = class(TAsyncTask)
-  protected
+  public
     procedure Execute; override;
   end;
 
