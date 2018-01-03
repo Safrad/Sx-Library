@@ -23,11 +23,11 @@ type
     function DoTest(const ATestType: SG; const AThreadCount: SG): FG;
     procedure SetOutputInfo(const Value: TOutputInfo);
     function GetOverallScore: FG;
-
+  protected
+    procedure Execute; override;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Execute; override;
 
     property ResultAsString: string read FResultAsString;
     property OverallScore: FG read GetOverallScore;

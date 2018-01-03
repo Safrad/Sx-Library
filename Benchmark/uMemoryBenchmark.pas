@@ -15,9 +15,9 @@ type
   protected
     function GetName: string; override;
     function GetVersion: TProjectVersion; override;
+    procedure Execute; override;
   public
     constructor Create;
-    procedure Execute; override;
 
     // Input
     property BlockSize: UG read FBlockSize write SetBlockSize;

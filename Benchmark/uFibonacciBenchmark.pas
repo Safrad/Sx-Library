@@ -15,9 +15,8 @@ type
   protected
     function GetName: string; override;
     function GetVersion: TProjectVersion; override;
-  public
     procedure Execute; override;
-
+  public
     property Number: SG read FNumber write SetNumber;
   end;
 
