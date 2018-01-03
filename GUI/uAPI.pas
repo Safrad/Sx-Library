@@ -50,7 +50,7 @@ begin
 	FreeOnTerminate := True;
 	FFileName := FileName;
 	FParams := Params;
-	inherited Create(True);
+	inherited Create;
 end;
 
 const

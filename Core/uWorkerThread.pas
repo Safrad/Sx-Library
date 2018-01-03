@@ -27,7 +27,7 @@ uses
 constructor TWorkerThread.Create(const AId: SG; const AThreadPool: TThreadPool);
 begin
   FreeOnTerminate := True;
-  inherited Create(True);
+  inherited Create;
 
   Priority := AThreadPool.ThreadPriority;
   Name := 'Worker Thread Id ' + IntToStr(AId);

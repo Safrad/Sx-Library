@@ -13,7 +13,7 @@ type
     FStopwatch: TStopwatch;
     function GetElapsed: TTimeSpan;
   public
-    constructor Create(CreateSuspended: Boolean);
+    constructor Create;
     destructor Destroy; override;
     procedure Execute; override;
     procedure DoTerminate; override;
@@ -27,9 +27,9 @@ uses
 
 { TSxMeasuredThread }
 
-constructor TSxMeasuredThread.Create(CreateSuspended: Boolean);
+constructor TSxMeasuredThread.Create;
 begin
-  inherited Create(CreateSuspended);
+  inherited Create;
   FStopwatch := TStopwatch.Create;
 end;
 

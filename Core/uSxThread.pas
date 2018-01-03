@@ -13,6 +13,8 @@ type
   protected
     procedure Execute; override;
   public
+    constructor Create;
+
     {$if CompilerVersion < 20}
     class procedure NameThreadForDebugging(const AName: AnsiString; const AThreadId: LongWord);
     procedure Start;
@@ -77,6 +79,11 @@ begin
   Resume;
 end;
 {$ifend}
+
+constructor TSxThread.Create;
+begin
+  inherited Create(True); // Create suspended
+end;
 
 initialization
 {$IFNDEF NoInitialization}
