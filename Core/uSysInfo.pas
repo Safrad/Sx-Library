@@ -60,7 +60,6 @@ function OSToStr(const OS: TOSVersionInfo): string;
 function GetCPUUsage: SG;
 procedure FillDynamicInfo(var SysInfo: TSysInfo); // FillMemoryStatus + FillCPUTest
 procedure FillMemoryStatus(var SysInfo: TSysInfo);
-procedure DelayEx(const f: U8);
 
 //function MMUsedMemory: U8;
 function MaxPhysicalMemorySize: U8;
@@ -569,21 +568,6 @@ begin
 
 	CPUUsage := 0 * CPUUsageMul;
 	GetCPUUsage;
-end;
-
-procedure DelayEx(const f: U8);
-var
-	TickCount: U8;
-	i: SG;
-begin
-	TickCount := PerformanceCounter + f;
-	while PerformanceCounter < TickCount do
-	begin
-		for i := 0 to Min(1000, GSysInfo.CPUFrequency div 40) - 1 do
-		begin
-      Pause;
-		end;
-	end;
 end;
 
 //function MMUsedMemory: U8;
