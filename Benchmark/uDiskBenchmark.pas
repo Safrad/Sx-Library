@@ -34,13 +34,12 @@ type
   protected
     function GetVersion: TProjectVersion; override;
     function GetName: string; override;
+    procedure Execute; override;
   public
     constructor Create;
     destructor Destroy; override;
     procedure CreateFile;
     procedure DeleteFile;
-
-    procedure Execute; override;
 
     // Input
     property Access: TAccess read FAccess write SetAccess;
@@ -61,8 +60,12 @@ uses
   uOutputFormat,
   uStrings,
   uDictionary,
+  uAlignedMemory,
   uFiles,
   uMath;
+
+const
+  SectorSize = 4 * KB;
 
 { TDiskBenchmark }
 
@@ -95,7 +98,7 @@ procedure TDiskBenchmark.CreateFile;
 var
   F: TFile;
 	Flag: U4;
-	Buffer: PArrayU1;
+	AlignedMemory: TAlignedMemory;
 begin
   F := TFile.Create;
   try
@@ -106,12 +109,16 @@ begin
     begin
 //      F.Seek(FFileSize);
 //      F.Truncate;
-      F.Seek(FFileSize - FBlockSize);
-      Buffer := AllocMem(FBlockSize);
+
+      // Write data of size "SectorSize" to the end of file
+      F.Seek(FFileSize - SectorSize);
+      AlignedMemory := TAlignedMemory.Create;
+      AlignedMemory.AlignSize := SectorSize;
+      AlignedMemory.Size := SectorSize;
       try
-        F.BlockWrite(Buffer^, FBlockSize);
+        F.BlockWrite(AlignedMemory.Data^, SectorSize);
       finally
-        FreeMem(Buffer);
+        AlignedMemory.Free;
       end;
       F.Close;
     end;
@@ -140,13 +147,12 @@ var
 
 	FileSiz, i, mi: U8;
 
-	Buffer: PArrayU1;
-
 	Clu: S4;
 
 	FM: TFileMode;
 	Flag: U4;
 	s: string;
+  AlignedMemory: TAlignedMemory;
 begin
   inherited;
 
@@ -155,7 +161,7 @@ begin
 
   i := 0;
   mi := RoundDivS8(FileSiz, Clu);
-{  FileSiz := Clu * mi;
+  FileSiz := Clu * mi;
 
   OutputInfo.AddCaption(Translate('FileName:') + CharSpace + FFileName);
 
@@ -163,12 +169,14 @@ begin
   if FAccess = daRead then
     OutputInfo.AddCaption(Translate('Reading:') + CharSpace + s)
   else
-    OutputInfo.AddCaption(Translate('Writing:') + CharSpace + s);}
+    OutputInfo.AddCaption(Translate('Writing:') + CharSpace + s);
 
-  GetMem(Buffer, Clu);
+  AlignedMemory := TAlignedMemory.Create;
+  AlignedMemory.AlignSize := SectorSize;
+  AlignedMemory.Size := Clu;
   try
     if FAccess = daWrite then
-      FillBuffer(Buffer, Clu);
+      FillBuffer(AlignedMemory.Data, Clu);
 
     F := TFile.Create;
     F.Protection := False;
@@ -198,12 +206,12 @@ begin
           end;
           if FAccess = daRead then
           begin
-            if not F.BlockRead(Buffer^, Clu) then
+            if not F.BlockRead(AlignedMemory.Data^, Clu) then
               Break;
           end
           else
           begin
-            if not F.BlockWrite(Buffer^, Clu) then
+            if not F.BlockWrite(AlignedMemory.Data^, Clu) then
               Break;
           end;
           Inc(i);
@@ -218,7 +226,7 @@ begin
       F.Free;
     end;
   finally
-    FreeMem(Buffer);
+    AlignedMemory.Free;
   end;
 
   CalculatedItems := U8(Clu) * U8(i);
