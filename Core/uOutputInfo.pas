@@ -20,7 +20,7 @@ type
     procedure SetAborted(const Value: BG);
 
     property LastCaption: string read GetLastCaption;
-    property ProgressValue: SG read GetProgressValue write SetProgressMaximum;
+    property ProgressValue: SG read GetProgressValue write SetProgressValue;
     property ProgressMaximum: SG read GetProgressMaximum write SetProgressMaximum;
     property Aborted: BG read GetAborted write SetAborted;
   end;
