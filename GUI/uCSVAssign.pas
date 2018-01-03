@@ -1,6 +1,6 @@
 // TODO : DNW
 
-unit uCSVAssign; deprecated;
+unit uCSVAssign deprecated;
 
 interface
 
