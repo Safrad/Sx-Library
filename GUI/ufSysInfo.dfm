@@ -127,7 +127,7 @@ object fSysInfo: TfSysInfo
   object DLabelCPUFrequency: TLabel
     Left = 8
     Top = 88
-    Width = 89
+    Width = 97
     Height = 19
     AutoSize = False
     Caption = 'CPU Frequency'
@@ -137,8 +137,8 @@ object fSysInfo: TfSysInfo
   end
   object DLabelCPUUsage: TLabel
     Left = 8
-    Top = 64
-    Width = 89
+    Top = 136
+    Width = 97
     Height = 19
     AutoSize = False
     Caption = 'CPU Usage'
@@ -148,11 +148,22 @@ object fSysInfo: TfSysInfo
   end
   object LabelMBoardCounter: TLabel
     Left = 8
-    Top = 136
-    Width = 89
+    Top = 112
+    Width = 97
     Height = 19
     AutoSize = False
     Caption = 'M-Board Counter'
+    Transparent = True
+    Layout = tlCenter
+  end
+  object LabelThreads: TLabel
+    Left = 8
+    Top = 64
+    Width = 97
+    Height = 19
+    AutoSize = False
+    Caption = 'Threads'
+    FocusControl = EditThreads
     Transparent = True
     Layout = tlCenter
   end
@@ -235,9 +246,9 @@ object fSysInfo: TfSysInfo
     ParentDoubleBuffered = False
   end
   object EditOS: TDEdit
-    Left = 64
+    Left = 56
     Top = 9
-    Width = 233
+    Width = 241
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
@@ -248,9 +259,9 @@ object fSysInfo: TfSysInfo
     ParentDoubleBuffered = False
   end
   object EditCPU: TDEdit
-    Left = 64
+    Left = 56
     Top = 41
-    Width = 233
+    Width = 241
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
@@ -278,9 +289,9 @@ object fSysInfo: TfSysInfo
     OnClick = ButtonOkClick
   end
   object EditCPUFrequency: TDEdit
-    Left = 104
+    Left = 112
     Top = 89
-    Width = 193
+    Width = 185
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
@@ -291,9 +302,9 @@ object fSysInfo: TfSysInfo
     ParentDoubleBuffered = False
   end
   object EditCPUUsage: TDEdit
-    Left = 103
-    Top = 65
-    Width = 193
+    Left = 112
+    Top = 137
+    Width = 184
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
@@ -304,15 +315,28 @@ object fSysInfo: TfSysInfo
     ParentDoubleBuffered = False
   end
   object EditCounter: TDEdit
-    Left = 103
-    Top = 137
-    Width = 193
+    Left = 112
+    Top = 113
+    Width = 184
     Height = 19
     BevelKind = bkSoft
     BorderStyle = bsNone
     Color = clBtnFace
     ReadOnly = True
     TabOrder = 11
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
+  end
+  object EditThreads: TDEdit
+    Left = 112
+    Top = 65
+    Width = 184
+    Height = 19
+    BevelKind = bkSoft
+    BorderStyle = bsNone
+    Color = clBtnFace
+    ReadOnly = True
+    TabOrder = 12
     DoubleBuffered = True
     ParentDoubleBuffered = False
   end

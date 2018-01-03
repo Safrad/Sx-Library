@@ -283,7 +283,7 @@ begin
 	begin
 		if FormDraw(fSysInfo) then
 		begin
-			FillDynamicInfo(GSysInfo);
+			FillMemoryStatus(GSysInfo);
 			UpdateSysInfo(@GSysInfo);
 		end;
 		LastNowTime := NowTime;
@@ -294,7 +294,7 @@ end;
 
 procedure TfAbout.ButtonSysInfoClick(Sender: TObject);
 begin
-	FillDynamicInfo(GSysInfo);
+	FillMemoryStatus(GSysInfo);
 	DisplaySysInfo(@GSysInfo, Self);
 end;
 
@@ -568,8 +568,8 @@ begin
   {$IFDEF RELEASE}
   s := s + 'RELEASE' + LineSep;
   {$ENDIF}
-  Hint := s;
-  ShowHint := True;
+
+  Information(s);
 end;
 
 procedure TfAbout.DViewAboutCellClick(Sender: TObject; ColumnIndex,

@@ -36,6 +36,8 @@ type
 		EditCPUUsage: TDEdit;
 		EditCounter: TDEdit;
 		LabelMBoardCounter: TLabel;
+    LabelThreads: TLabel;
+    EditThreads: TDEdit;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 	private
@@ -56,115 +58,33 @@ implementation
 
 {$R *.DFM}
 uses
-//  FastMM4,
+  uCPU,
   PsAPI,
   uMsg,
 	uGraph, uScreen, uStrings, uOutputFormat, uDictionary,
 	uProjectInfo,
 	Registry, Math;
 
-
-
 procedure TfSysInfo.FillComp(SysInfo: PSysInfo);
 var
 	s: string;
-	Family, Model: SG;
 begin
+  GCPU.Update;
+
 	EditOS.Text := OSToStr(SysInfo.OS);
 
-	Family := SysInfo.CPU and $00000f00 shr 8;
-	Model := SysInfo.CPU and $000000f0 shr 4;
-
-	s := 'Unknown';
-	if SysInfo.CPUStr = 'AuthenticAMD' then
-	begin
-		case Family of
-		5:
-		begin
-			case Model of
-			0, 1, 2, 3: s := 'K5';
-			6, 7: s := 'K6';
-			8: s := 'K6-II';
-			9: s := 'K6-III';
-			end;
-		end;
-		6:
-		begin
-			case Model of
-			0, 1, 2: s := 'Athlon';
-			4, 5: s := 'Thunderbird';
-			else {3, 6, 7:}s := 'Duron';
-			end;
-		end;
-		end;
-		s := 'AMD ' + s;
-	end
-	else if SysInfo.CPUStr = 'GenuineIntel' then
-	begin
-		case Family of
-		0..3: s := '';
-		4:
-		begin
-			case Model of
-			0: s := 'i486DX';
-			3: s := 'i486DX2';
-			8: s := 'i486DX4';
-			end;
-		end;
-		5:
-		begin
-			case Model of
-			0, 1, 2, 7: s := 'Pentium';
-			4, 8: s := 'Pentium MMX';
-			end;
-		end;
-		6:
-		begin
-			case Model of
-			0, 1: s := 'Pentium Pro';
-			3: s := 'Pentium II';
-			5: s := 'Core™ i3'; //'Pentium II';
-			6: s := 'Celeron';
-			7: s := 'Pentium III';
-			8: s := 'Pentium III E';
-			9..14: s := 'Pentium 4';
-			else // 15
-				s := 'Dual Core';
-			end;
-		end;
-		15:
-		begin
-			case Model of
-			0..5: s := 'Pentium 4';
-			else // 6
-				s := 'Pentium(R) D CPU'; 
-			end;
-		end
-		end;
-		s := 'Intel ' + s;
-	end
-	else if SysInfo.CPUStr = 'CyrixInstead' then
-		s := 'Cyrix '
-	else if SysInfo.CPUStr = 'NexGenDriven' then
-		s := 'NexGen '
-	else if SysInfo.CPUStr = 'CentaurHauls' then
-		s := 'Centaur '
-	else if SysInfo.CPUStr = 'RiseRiseRise' then
-		s := 'Rise '
-	else if SysInfo.CPUStr = 'UMC UMC UMC ' then
-		s := 'UMC ';
-
+  s := GCPU.Name;
 	if s <> '' then
 		s := s + ListSeparator;
-	s := s + 'Family: ' + NToS(Family) + ListSeparator;
-	s := s + 'Model: ' + NToS(Model) + ListSeparator;
-	s := s + 'Stepping: ' + NToS(SysInfo.CPU and $000000f) + ListSeparator;
-	s := s + 'Cores: ' + NToS(SysInfo.LogicalProcessorCount);
+	s := s + 'Family: ' + NToS(GCPU.Family) + ListSeparator;
+	s := s + 'Model: ' + NToS(GCPU.Model) + ListSeparator;
+	s := s + 'Stepping: ' + NToS(GCPU.Stepping) + ListSeparator;
 	EditCPU.Text := s;
 
-	EditCPUUsage.Text := NToS(SysInfo.CPUUsage, 2) + '%';
-	EditCPUFrequency.Text := NToS(SysInfo.CPUFrequency) + ' Hz';
-	EditCounter.Text := NToS(SysInfo.PerformanceFrequency) + ' Hz';
+  EditThreads.Text := NToS(GCPU.LogicalProcessorCount);
+	EditCPUUsage.Text := NToS(Round(GCPU.Usage), 2) + '%';
+	EditCPUFrequency.Text := NToS(Round(GCPU.Frequency)) + ' Hz';
+	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz';
 
 	edMU.Text := BToStr(SysInfo.MS.ullTotalPhys - SysInfo.MS.ullAvailPhys);
 	edMF.Text := BToStr(SysInfo.MS.ullAvailPhys);
@@ -184,7 +104,6 @@ procedure TfSysInfo.FormCreate(Sender: TObject);
 begin
 	Background := baGradient;
 end;
-
 
 procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);
 begin

@@ -24,6 +24,7 @@ uses
   uFile,
   uFiles,
   uStart,
+  uCPU,
   uLog,
   uMsg,
   uSxXMLDocument,
@@ -99,7 +100,7 @@ var
   end;
 
 begin
-  FillDynamicInfo(GSysInfo);
+  FillMemoryStatus(GSysInfo);
   GUID := GetComputerGUID;
 
 	XML := TSxXMLDocument.Create(nil);
@@ -128,10 +129,9 @@ begin
     SaveData('OSBuild', IntToStr(GSysInfo.OS.dwBuildNumber));
 
     // Hardware
-    SaveData('CPU', IntToStr(GSysInfo.CPU));
-    SaveData('CPUStr', GSysInfo.CPUStr);
-    SaveData('CPUFrequency', IntToStr(GSysInfo.CPUFrequency));
-    SaveData('LogicalProcessorCount', IntToStr(GSysInfo.LogicalProcessorCount));
+    SaveData('CPU', GCPU.Name);
+    SaveData('CPUFrequency', FloatToStr(GCPU.Frequency));
+    SaveData('LogicalProcessorCount', IntToStr(GCPU.LogicalProcessorCount));
 
     SaveData('MemoryTotalPhys', IntToStr(GSysInfo.MS.ullTotalPhys));
     SaveData('MemoryTotalPageFile', IntToStr(GSysInfo.MS.ullTotalPageFile));

@@ -137,7 +137,7 @@ procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
 var
-	PerformanceType: (ptGetTickCount, ptPerformanceCounter, ptCPU);
+	PerformanceType: (ptGetTickCount, ptPerformanceCounter);
 	PerformanceFrequency: S8;
 
 procedure InitPerformanceCounter;

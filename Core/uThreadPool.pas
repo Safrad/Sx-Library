@@ -53,7 +53,7 @@ type
 implementation
 
 uses
-  Forms, uLog, uSorts, uMath, uSysInfo, uWorkerThread, SysUtils;
+  Forms, uLog, uSorts, uMath, uCPU, uWorkerThread, SysUtils;
 
 { TThreadPool }
 
@@ -88,7 +88,7 @@ begin
   InitializeCriticalSection(FQueueCriticalSection);
 
   FRunThreads := 0;
-  SetMaxThreads(GSysInfo.LogicalProcessorCount);
+  SetMaxThreads(GCPU.LogicalProcessorCount);
 end;
 
 destructor TThreadPool.Destroy;

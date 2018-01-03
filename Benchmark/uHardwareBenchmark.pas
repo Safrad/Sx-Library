@@ -46,7 +46,7 @@ uses
   Math,
   Windows,
   SysUtils,
-  uSysInfo,
+  uCPU,
   uUnitFormatter,
   uMath,
   uStrings,
@@ -202,7 +202,7 @@ begin
       LastPerformance := 0;
       Performance1Core := 0;
       Performance := 0;
-      for Core := 1 to GSysInfo.LogicalProcessorCount + 2 do
+      for Core := 1 to GCPU.LogicalProcessorCount + 2 do
       begin
         Performance := DoTest(TestType, Core);
         if Core = 1 then
