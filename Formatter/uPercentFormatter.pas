@@ -9,8 +9,8 @@ uses
 type
   TPercentFormatter = class(TNumberFormatter)
   public
-    function Format(const AValue: S8): string; override;
-    function Format(const AValue: FG): string; override;
+    function Format(const AValue: S8): string; overload;
+    function Format(const AValue: FG): string; overload;
   end;
 
 implementation
