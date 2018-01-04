@@ -7,9 +7,6 @@ uses
   Registry,
   uTypes;
 
-const
-  CPUUsageMul = 100; // TODO : remove
-
 type
   TPDWord = ^DWORD;
   TNtQuerySystemInformation = function(infoClass: DWORD; buffer: Pointer; bufSize: DWORD; returnSize: TPDWord): DWORD; stdcall;
@@ -45,7 +42,7 @@ type
     function GetDefaultFrequency: U8;
   public
     constructor Create;
-    destructor Destroy; override; 
+    destructor Destroy; override;
 
     procedure Update; // changing over time
 
@@ -56,18 +53,30 @@ type
     property LogicalProcessorCount: SG read FLogicalProcessorCount write SetLogicalProcessorCount;
     property Frequency: FG read FFrequency; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod)
     property DefaultFrequency: U8 read GetDefaultFrequency;
-    property Usage: FG read FUsage; // 4 (0..10000)
+    property Usage: FG read FUsage; // 0..1
   end;
 
-var
-  GCPU: TCPU;
+function GCPU: TCPU;
 
 implementation
 
 uses
   uMath,
+  uLog,
   uSysInfo,
   SysUtils;
+
+var
+  GlobalCPU: TCPU;
+
+function GCPU: TCPU;
+begin
+  if GlobalCPU = nil then
+  begin
+    GlobalCPU := TCPU.Create;
+  end;
+  Result := GlobalCPU;
+end;
 
 var
   // Result od CPUID instruction
@@ -140,8 +149,8 @@ begin
   inherited;
 
   // Static
-  UpdateSystemInfo;
   CallCPUID;
+  UpdateSystemInfo;
   UpdateName;
   if NTSystem then
     FNtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQuerySystemInformation');
@@ -305,6 +314,10 @@ var
 begin
   GetSystemInfo(SystemInfo);
   FLogicalProcessorCount := SystemInfo.dwNumberOfProcessors;
+  Assert(SystemInfo.dwPageSize = 4096);
+  Assert(SystemInfo.dwAllocationGranularity = 65536);
+  Assert(SystemInfo.wProcessorLevel = Family);
+  Assert(SystemInfo.wProcessorRevision = 256 * Model + Stepping);
 end;
 
 function TCPU.GetDefaultFrequency: U8;
@@ -365,7 +378,6 @@ type
 
 function TCPU.GetCPUUsageForce: FG;
 var
-  SystemInfo: SYSTEM_INFO;
 	SysPerfInfo: TSystem_Performance_Information;
 	SysTimeInfo: TSystem_Time_Information;
 	status: DWORD;
@@ -377,8 +389,6 @@ begin
 
 	if not Assigned(FNtQuerySystemInformation) then
     Exit;
-
-  GetSystemInfo(SystemInfo);
 
 		// get new system time
 	status := FNtQuerySystemInformation(SystemTimeInformation, @SysTimeInfo, SizeOf(SysTimeInfo), nil);
@@ -403,12 +413,10 @@ begin
       Result := 0
     else
     begin
-    		Result := Round(CPUUsageMul * (100.0 - (dbIdleTime / dbSystemTime) * 100.0 / SystemInfo.dwNumberOfProcessors));
-  		Result := Range(0, Result, 100 * CPUUsageMul);
+      Result := 1 - (dbIdleTime / dbSystemTime) / LogicalProcessorCount;
+  		Result := Range(0, Result, 1);
     end;
-
-		// Show Percentage
-//		Result := RoundN(100 * dbIdleTime);
+    MainLogAdd('GetCPUUsageForce=' + FloatToStr(Result), mlDebug);
 	end;
 
 		// store new CPU's idle and system time
@@ -528,6 +536,7 @@ var
 	Dummy: array[0..KB] of U1;
   CPUUsage: Integer;
 begin
+  MainLogAdd('GetCPUUsage', mlDebug);
 	if NTSystem then
 	begin
 //		tickCount := GetTickCount;
@@ -546,8 +555,8 @@ begin
 
 		if {(LastTickCount <> 0) and} (tickCount > LastTickCount) {and (processorTime >= LastProcessorTime)} then
 		begin // 1 000 * 10 000 = 10 000 000 / sec
-(*			CPUUsage := 100 * CPUUsageMul - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1}) ;
-			CPUUsage := Range(0, CPUUsage, 100 * CPUUsageMul);}*)
+(*			CPUUsage := 100 - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1}) ;
+			CPUUsage := Range(0, CPUUsage, 1);}*)
 			FUsage := GetCPUUsageForce;
 		end;
 
@@ -575,7 +584,7 @@ begin
 			if Reg.OpenKeyReadOnly('PerfStats\StatData') then
 			begin
 				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-				Result := CPUUsageMul * CPUUsage;
+				Result := CPUUsage;
 				Reg.CloseKey;
 			end;
 		end;
@@ -583,7 +592,7 @@ begin
 		if Reg.OpenKeyReadOnly('PerfStats\StatData') then
 		begin
 			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-			Result := CPUUsageMul * CPUUsage;
+			Result := CPUUsage;
 			Reg.CloseKey;
 		end;
 	end;
@@ -611,7 +620,7 @@ begin
 end;
 
 initialization
-  GCPU := TCPU.Create;
+
 finalization
-  FreeAndNil(GCPU);
+  FreeAndNil(GlobalCPU);
 end.

@@ -15,6 +15,7 @@ type
 implementation
 
 uses
+  Windows,
   uCPU;
 
 procedure TCPUTest.Test;
@@ -28,6 +29,10 @@ begin
   CheckTrue(GCPU.Frequency <> 0);
   CheckTrue(GCPU.DefaultFrequency <> 0);
   CheckTrue(Abs(GCPU.Frequency / GCPU.DefaultFrequency - 1) < 1);
+  CheckTrue(GCPU.Usage <> 0);
+
+  Sleep(1000);
+  GCPU.Update;
   CheckTrue(GCPU.Usage <> 0);
 end;
 

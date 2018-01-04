@@ -82,7 +82,7 @@ begin
 	EditCPU.Text := s;
 
   EditThreads.Text := NToS(GCPU.LogicalProcessorCount);
-	EditCPUUsage.Text := NToS(Round(GCPU.Usage), 2) + '%';
+	EditCPUUsage.Text := NToS(Round(100 * 100 * GCPU.Usage), 2) + '%';
 	EditCPUFrequency.Text := NToS(Round(GCPU.Frequency)) + ' Hz';
 	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz';
 
