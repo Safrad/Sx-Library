@@ -42,11 +42,11 @@ uses
 
 { TSxThreadTimer }
 
-constructor TSxThreadTimer.Create(CreateSuspended: Boolean);
+constructor TSxThreadTimer.Create;
 begin
-  inherited Create(CreateSuspended);
+  inherited Create;
 
-  FEnabled := not CreateSuspended;
+  FEnabled := False;
   FInterval := TTimeSpan.Create;
   FInterval.Seconds := 1;
 end;
