@@ -14,7 +14,7 @@ type
   TCPU = class
   private
     // Properties
-    FName: string; // from CPUID
+    FName: string;
     FFrequency: FG;
     FLastTickCount: U8;
     FLastCPUTick: U8;
@@ -30,7 +30,7 @@ type
     function GetCPUUsageForce: FG;
 
     procedure UpdateName;
-    procedure UpdateSystemInfo;
+    procedure UpdateLogicalProcessorCount;
 
     procedure UpdateFrequency;
     procedure UpdateUsage;
@@ -38,19 +38,20 @@ type
     function GetFamily: SG;
     function GetModel: SG;
     function GetStepping: SG;
-    procedure SetLogicalProcessorCount(const Value: SG);
     function GetDefaultFrequency: U8;
+    function GetName: string;
+    function GetLogicalProcessorCount: SG;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure Update; // changing over time
 
-    property Name: string read FName;
+    property Name: string read GetName;
     property Family: SG read GetFamily;
     property Model: SG read GetModel;
     property Stepping: SG read GetStepping;
-    property LogicalProcessorCount: SG read FLogicalProcessorCount write SetLogicalProcessorCount;
+    property LogicalProcessorCount: SG read GetLogicalProcessorCount;
     property Frequency: FG read FFrequency; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod)
     property DefaultFrequency: U8 read GetDefaultFrequency;
     property Usage: FG read FUsage; // 0..1
@@ -61,6 +62,9 @@ function GCPU: TCPU;
 implementation
 
 uses
+  uChar,
+  uStrings,
+  uAPI,
   uMath,
   uLog,
   uSysInfo,
@@ -78,10 +82,16 @@ begin
   Result := GlobalCPU;
 end;
 
+type
+  TCPUIDB = record
+    CLFLUSH: U2;
+    LogicalProcessorCount: U1;
+    APICID: U1;
+  end;
 var
-  // Result od CPUID instruction
-  FCPUID1: U4;
-  FCPUID2: U4;
+  // Result of CPUID instruction
+  FCPUIDA: U4;
+  FCPUIDB: TCPUIDB;
   FCPUIDStr: string[12] = '            ';
 
 procedure CallCPUID;
@@ -107,9 +117,9 @@ asm
   xor ecx, ecx
   xor edx, edx
   cpuid
-  mov rdx, FCPUID1
+  mov rdx, FCPUIDA
   mov [rdx], eax
-  mov rdx, FCPUID2
+  mov rdx, FCPUIDB
   mov [rdx], ebx
 
   pop rdi
@@ -134,8 +144,8 @@ asm
   xor ecx, ecx
   xor edx, edx
   dw 0a20fh // cpuid
-  mov FCPUID1, eax
-  mov FCPUID2, ebx
+  mov FCPUIDA, eax
+  mov FCPUIDB, ebx
 
   popad
 {$endif}
@@ -148,15 +158,6 @@ constructor TCPU.Create;
 begin
   inherited;
 
-  // Static
-  CallCPUID;
-  UpdateSystemInfo;
-  UpdateName;
-  if NTSystem then
-    FNtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQuerySystemInformation');
-
-  // Dynamic
-  Update;
 end;
 
 procedure TCPU.UpdateFrequency;
@@ -198,89 +199,19 @@ end;
 
 procedure TCPU.UpdateName;
 var
-  s: string;
+  Output: string;
+  InLineIndex: SG;
 begin
-	s := 'Unknown';
-	if FCPUIDStr = 'AuthenticAMD' then
-	begin
-		case Family of
-		5:
-		begin
-			case Model of
-			0, 1, 2, 3: s := 'K5';
-			6, 7: s := 'K6';
-			8: s := 'K6-II';
-			9: s := 'K6-III';
-			end;
-		end;
-		6:
-		begin
-			case Model of
-			0, 1, 2: s := 'Athlon';
-			4, 5: s := 'Thunderbird';
-			else {3, 6, 7:}s := 'Duron';
-			end;
-		end;
-		end;
-		s := 'AMD ' + s;
-	end
-	else if FCPUIDStr = 'GenuineIntel' then
-	begin
-		case Family of
-		0..2: s := '';
-    3: s := 'i386';
-		4:
-		begin
-			case Model of
-			0: s := 'i486DX';
-			3: s := 'i486DX2';
-			8: s := 'i486DX4';
-			end;
-		end;
-		5:
-		begin
-			case Model of
-			0, 1, 2, 7: s := 'Pentium';
-			4, 8: s := 'Pentium MMX';
-			end;
-		end;
-		6:
-		begin
-			case Model of
-			0, 1: s := 'Pentium Pro';
-			3: s := 'Pentium II';
-			5: s := 'Core™ i3'; //'Pentium II';
-			6: s := 'Celeron';
-			7: s := 'Pentium III';
-			8: s := 'Pentium III E';
-			9..14: s := 'Pentium 4';
-			else // 15
-				s := 'Dual Core';
-			end;
-		end;
-		15:
-		begin
-			case Model of
-			0..5: s := 'Pentium 4';
-			else // 6
-				s := 'Pentium(R) D CPU';
-			end;
-		end
-		end;
-		s := 'Intel ' + s;
-	end
-	else if FCPUIDStr = 'CyrixInstead' then
-		s := 'Cyrix '
-	else if FCPUIDStr = 'NexGenDriven' then
-		s := 'NexGen '
-	else if FCPUIDStr = 'CentaurHauls' then
-		s := 'Centaur '
-	else if FCPUIDStr = 'RiseRiseRise' then
-		s := 'Rise '
-	else if FCPUIDStr = 'UMC UMC UMC ' then
-		s := 'UMC ';
-
-  FName := s;
+  try
+    Output := GetDosOutput('wmic cpu get name', 'C:\');
+    InLineIndex := 1;
+    ReadToChar(Output, InLineIndex, CharLF);
+    FName := DelBESpaceF(ReadToChar(Output, InLineIndex, CharLF));
+    if FName = '' then
+      FName := '?';
+  except
+    FName := '?';
+  end;
 end;
 
 procedure TCPU.UpdateUsage;
@@ -290,34 +221,39 @@ end;
 
 function TCPU.GetFamily: SG;
 begin
-  Result := FCPUID1 and $00000f00 shr 8;
+  if FCPUIDA = 0 then
+    CallCPUID;
+  Result := FCPUIDA and $00000f00 shr 8;
 end;
 
 function TCPU.GetModel: SG;
 begin
-  Result := FCPUID1 and $000000f0 shr 4;
+  if FCPUIDA = 0 then
+    CallCPUID;
+  Result := FCPUIDA and $000000f0 shr 4;
 end;
 
 function TCPU.GetStepping: SG;
 begin
-  Result := FCPUID1 and $000000f;
+  if FCPUIDA = 0 then
+    CallCPUID;
+  Result := FCPUIDA and $000000f;
 end;
 
-procedure TCPU.SetLogicalProcessorCount(const Value: SG);
-begin
-  FLogicalProcessorCount := Value;
-end;
-
-procedure TCPU.UpdateSystemInfo;
+procedure TCPU.UpdateLogicalProcessorCount;
 var
   SystemInfo: SYSTEM_INFO;
 begin
-  GetSystemInfo(SystemInfo);
-  FLogicalProcessorCount := SystemInfo.dwNumberOfProcessors;
-  Assert(SystemInfo.dwPageSize = 4096);
-  Assert(SystemInfo.dwAllocationGranularity = 65536);
-  Assert(SystemInfo.wProcessorLevel = Family);
-  Assert(SystemInfo.wProcessorRevision = 256 * Model + Stepping);
+  FLogicalProcessorCount := 1;
+  try
+    GetSystemInfo(SystemInfo);
+    FLogicalProcessorCount := SystemInfo.dwNumberOfProcessors;
+    Assert(SystemInfo.dwPageSize = 4096);
+    Assert(SystemInfo.dwAllocationGranularity = 65536);
+    Assert(SystemInfo.wProcessorLevel = Family);
+    Assert(SystemInfo.wProcessorRevision = 256 * Model + Stepping);
+  except
+  end;
 end;
 
 function TCPU.GetDefaultFrequency: U8;
@@ -338,7 +274,7 @@ begin
 	end;
 end;
 
-
+function TCPU.GetCPUUsageForce: FG;
 const
 //	SystemBasicInformation = 0;
   SystemPerformanceInformation = 2;
@@ -375,8 +311,6 @@ type
 		uCurrentTimeZoneId: ULONG;
 		dwReserved: DWORD;
 	end;
-
-function TCPU.GetCPUUsageForce: FG;
 var
 	SysPerfInfo: TSystem_Performance_Information;
 	SysTimeInfo: TSystem_Time_Information;
@@ -387,6 +321,7 @@ var
 begin
 	Result := 0;
 
+  FNtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQuerySystemInformation');
 	if not Assigned(FNtQuerySystemInformation) then
     Exit;
 
@@ -617,6 +552,20 @@ begin
 	end;
 
   inherited;
+end;
+
+function TCPU.GetName: string;
+begin
+  if FName = '' then
+    UpdateName;
+  Result := FName;
+end;
+
+function TCPU.GetLogicalProcessorCount: SG;
+begin
+  if FLogicalProcessorCount = 0 then
+    UpdateLogicalProcessorCount;
+  Result := FLogicalProcessorCount;
 end;
 
 initialization

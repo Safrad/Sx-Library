@@ -18,6 +18,9 @@ uses
   Windows,
   uCPU;
 
+var
+  FirstCall: BG = True;
+  
 procedure TCPUTest.Test;
 begin
   GCPU.Update;
@@ -29,9 +32,13 @@ begin
   CheckTrue(GCPU.Frequency <> 0);
   CheckTrue(GCPU.DefaultFrequency <> 0);
   CheckTrue(Abs(GCPU.Frequency / GCPU.DefaultFrequency - 1) < 1);
-  CheckTrue(GCPU.Usage <> 0);
+  if FirstCall then
+    CheckTrue(GCPU.Usage = 0)
+  else
+    CheckTrue(GCPU.Usage <> 0);
 
-  Sleep(1000);
+  FirstCall := False;
+  Sleep(100);
   GCPU.Update;
   CheckTrue(GCPU.Usage <> 0);
 end;
