@@ -15,11 +15,10 @@ type
 		FDirectWrite: BG;
     FInWrite: BG;
 		FLoggingLevel: TMessageLevel;
-    FMaxLogFiles: SG;
 		procedure WriteLine(const Line: string);
+    procedure UpdateLoggingLevelFromEnvironmentVariable;
 	public
-		property FileName: TFileName read FFileName;
-		constructor Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True; const MaxLogFiles: SG = 0);
+		constructor Create(const FileName: TFileName);
 		destructor Destroy; override;
 
 		procedure Add(const Line: string; const MessageLevel: TMessageLevel); override;
@@ -37,8 +36,9 @@ type
     procedure LogException(const E: Exception);
 
 		procedure Flush;
-		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel default DefaultLoggingLevel;
-		property MaxLogFiles: SG read FMaxLogFiles write FMaxLogFiles;
+
+		property FileName: TFileName read FFileName;
+		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel;
 	end;
 
 
@@ -65,7 +65,6 @@ implementation
 uses
 	uParams, uFiles, uCharset,
 	uOutputFormat, uEscape, uStrings, {$ifndef Console}uProjectInfo,{$endif}
-  uDelete,
 	Windows, TypInfo;
 
 const
@@ -129,7 +128,7 @@ end;
 const
 	IdLine = ';Local Date Time	Type	Message' + FileSep;
 
-constructor TLog.Create(const FileName: TFileName; const LogLevel: TMessageLevel = DefaultLoggingLevel; const DirectWrite: BG = True; const MaxLogFiles: SG = 0);
+constructor TLog.Create(const FileName: TFileName);
 
   function GetLogWritableFileName: TFileName;
   var
@@ -153,10 +152,13 @@ var
 //	DeleteOptions: TDeleteOptions;
 begin
 	inherited Create;
-	FLoggingLevel := LogLevel;
 	FFileName := GetLogWritableFileName;
-	FDirectWrite := DirectWrite;
-  FMaxLogFiles := MaxLogFiles;
+	FDirectWrite := True;
+  if IsDebug then
+    FLoggingLevel := mlDebug
+  else
+    FLoggingLevel := mlInformation;
+  UpdateLoggingLevelFromEnvironmentVariable;
 
 	if GetFileSizeU(FFileName) >= MinLogFileSize then
 	begin
@@ -327,7 +329,7 @@ end;
 function GetLoggingLevel(const s: string): TMessageLevel;
 var Index: SG;
 begin
-	Result := DefaultLoggingLevel;
+	Result := mlDebug;
 	if s = '' then Exit;
 	if (s[1] = '0') then
 		Result := mlNone
@@ -410,8 +412,17 @@ begin
 
   InitPaths;
 	CreateDirEx(ExtractFilePath(MainLogFileName));
-	MainLog := TLog.Create(MainLogFileName, mlInformation, True, 16); //, GetLoggingLevel(GetParamValue('LOG')), True);
+	MainLog := TLog.Create(MainLogFileName);
   InitializingLog := False;
+end;
+
+procedure TLog.UpdateLoggingLevelFromEnvironmentVariable;
+var
+  Value: string;
+begin
+  Value := GetEnvironmentVariable('LoggingLevel');
+  if Value <> '' then
+    FLoggingLevel := GetLoggingLevel(Value);
 end;
 
 initialization

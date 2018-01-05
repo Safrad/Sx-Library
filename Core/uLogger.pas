@@ -4,9 +4,6 @@ interface
 
 uses uTypes;
 
-const
-	DefaultLoggingLevel = mlInformation;
-
 type
 	PLogMessage = ^TLogMessage;
 	TLogMessage = record
