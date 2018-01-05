@@ -8,8 +8,7 @@ uses
   uTypes;
 
 type
-  TPDWord = ^DWORD;
-  TNtQuerySystemInformation = function(infoClass: DWORD; buffer: Pointer; bufSize: DWORD; returnSize: TPDWord): DWORD; stdcall;
+  TNtQuerySystemInformation = function(infoClass: DWORD; buffer: Pointer; bufSize: DWORD; returnSize: PDWORD): DWORD; stdcall;
 
   TCPU = class
   private
