@@ -35,7 +35,8 @@ uses
   uRegionalTest in '..\Core\uRegionalTest.pas',
   uMathTest in '..\Core\uMathTest.pas',
   uMidiPlayerTest in '..\Core\uMidiPlayerTest.pas',
-  uCPUTest in '..\Core\uCPUTest.pas';
+  uCPUTest in '..\Core\uCPUTest.pas',
+  uDParserTest in '..\Parser\uDParserTest.pas';
 
 {$R *.RES}
 
