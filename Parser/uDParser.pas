@@ -206,8 +206,8 @@ type
 
 		// constructor Create(Stream: TStream); overload;
 		constructor Create(Buffer: Pointer; Size: UG); overload;
-		constructor Create(Line: string); overload;
-		constructor CreateFromFile(FileName: TFileName);
+		constructor Create(const Line: string); overload;
+		constructor CreateFromFile(const FileName: TFileName);
 		destructor Destroy; override;
 		{ procedure CheckToken(T: Char);
 			procedure CheckTokenSymbol(const S: string);
@@ -215,6 +215,7 @@ type
 			procedure ErrorFmt(const Ident: string; const Args: array of const);
 			procedure ErrorStr(const Message: string); }
 		procedure ReadInput;
+    procedure StopReading;
 		function NextToken: string;
 		function SourcePos: SG;
 		function TokenFloat: FA;
@@ -304,12 +305,12 @@ begin
 	ProblemCount := 0;
 end;
 
-constructor TDParser.Create(Line: string);
+constructor TDParser.Create(const Line: string);
 begin
 	Create(Pointer(Line), Length(Line));
 end;
 
-constructor TDParser.CreateFromFile(FileName: TFileName);
+constructor TDParser.CreateFromFile(const FileName: TFileName);
 begin
 	BufString := ReadStringFromFile(FileName);
 	Create(BufString);
@@ -317,15 +318,9 @@ end;
 
 destructor TDParser.Destroy;
 begin
+  StopReading;
 	FreeMem(FBuffer);
 	BufString := '';
-	if BufRI > BufRC then
-		AddMes(mtEStatementExpected, []);
-	if (InputType <> itEOI) or (BufRI < BufRC) then
-		AddMes(mtEUnusedChars, []); // Need for Calc
-	// if  then AddMes(mtEUnusedChars, []); // Need for Calc
-	if Marks <> maNone then
-		AddMes(mtEUnexpectedEndOfFile, []);
 	inherited Destroy;
 end;
 
@@ -1833,6 +1828,16 @@ end;
 	else MesParam[MesId] := 2
 	end;
 	end; }
+
+procedure TDParser.StopReading;
+begin
+	if BufRI > BufRC then
+		AddMes(mtEStatementExpected, []);
+	if (InputType <> itEOI) or (BufRI < BufRC) then
+		AddMes(mtEUnusedChars, []); // Need for Calc
+	if Marks <> maNone then
+		AddMes(mtEUnexpectedEndOfFile, []);
+end;
 
 initialization
 
