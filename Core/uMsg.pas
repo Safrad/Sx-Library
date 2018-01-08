@@ -133,7 +133,6 @@ begin
   if not IsMainThread then
   begin
     raise Exception.Create(ExpandedText);
-    Exit;
   end;
 {$IFNDEF Console}
   MessageD(ExpandedText, [], MessageLevel, [mbOK]);
@@ -153,7 +152,6 @@ begin
   if not IsMainThread then
   begin
     raise Exception.Create(ExpandedText);
-    Exit;
   end;
 {$IFNDEF Console}
   MessageD(Text, Param, MessageLevel, [mbOK]);
@@ -240,7 +238,6 @@ begin
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
-    Exit;
   end;
 {$IFNDEF Console}
 	// Result := MessageDlg(Text, mtError, [Dialogs.mbRetry, Dialogs.mbIgnore], 0) <> 1;
@@ -271,7 +268,6 @@ begin
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
-    Exit;
   end;
   Result := MessageD(Text, mlConfirmation, Buttons);
 {$ELSE}
@@ -285,7 +281,6 @@ begin
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
-    Exit;
   end;
   Result := MessageD(Text, Param, mlConfirmation, Buttons);
 {$ELSE}
@@ -314,7 +309,6 @@ begin
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
-    Exit;
   end;
 {$IFNDEF Console}
   MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mlError, [SMsgDlgOK], DlgWait);
@@ -337,7 +331,6 @@ begin
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
-    Exit;
   end;
 
 {$IFNDEF Console}
