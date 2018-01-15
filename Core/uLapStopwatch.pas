@@ -33,7 +33,10 @@ end;
 
 function TLapStopwatch.LapTicks(const ALapNumber: SG): U8;
 begin
-  Result := FLapTicks[ALapNumber];
+  if ALapNumber < Length(FLapTicks) then
+    Result := FLapTicks[ALapNumber]
+  else
+    Result := 0;
 end;
 
 procedure TLapStopwatch.StoreLap;
