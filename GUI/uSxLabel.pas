@@ -8,35 +8,39 @@ uses
 type
 	TSxLabel = class(TLabel)
 	private
-		{ Private declarations }
-	protected
-		{ Protected declarations }
+    procedure WMClick(var Message: TWMMouse); message WM_LBUTTONDOWN;
 		procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
-	public
-		{ Public declarations }
-	published
-		{ Published declarations }
 	end;
 
 implementation
 
 uses Types, Graphics, uTypes;
 
+procedure TSxLabel.WMClick(var Message: TWMMouse);
+begin
+  inherited;
+  if FocusControl <> nil then
+    FocusControl.SetFocus;
+end;
+
 procedure TSxLabel.WMPaint(var Message: TWMPaint);
 var
-	ps : TPenStyle;
-	bc : TColor ;
+	PenStyle : TPenStyle;
+	BrushColor : TColor ;
 begin
-	inherited ;
+	inherited;
 	if csDesigning in ComponentState then
 	begin
-		ps := Canvas.Pen.Style ;
-		bc := Canvas.Brush.Color ;
-		Canvas.Pen.Style := psDot;
-		Canvas.Brush.Color := Color;
-		Canvas.PolyLine([Point(0, 0), Point(Width - 1, 0), Point(Width - 1, Height - 1),Point(0, Height - 1), Point(0, 0)]);
-		Canvas.Pen.Style := ps ;
-		Canvas.Brush.Color := bc ;
+		PenStyle := Canvas.Pen.Style;
+		BrushColor := Canvas.Brush.Color;
+    try
+      Canvas.Pen.Style := psDot;
+      Canvas.Brush.Color := Color;
+      Canvas.PolyLine([Point(0, 0), Point(Width - 1, 0), Point(Width - 1, Height - 1),Point(0, Height - 1), Point(0, 0)]);
+    finally
+  		Canvas.Pen.Style := PenStyle;
+  		Canvas.Brush.Color := BrushColor;
+    end;
 	end;
 end;
 
