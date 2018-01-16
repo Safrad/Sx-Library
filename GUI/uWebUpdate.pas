@@ -282,7 +282,7 @@ begin
 
 	LocalVersion := GetProjectInfo(piProductVersion);
 	case CompareVersion(WebVersion, LocalVersion) of
-		FirstGreater:
+		crFirstGreater:
 			begin
 				if Confirmation('New version ' + WebVersion + ' is available. Your version is ' +
 						LocalVersion + '. Do you want to download it?', [mbYes, mbNo]) = mbYes then
@@ -290,7 +290,7 @@ begin
 					APIOpen(Web + GetProjectInfo(piInternalName) + '.zip');
 				end;
 			end;
-		FirstLess:
+		crFirstLess:
 			begin
 				Warning('You are using newer version ' + LocalVersion + ' that version ' + WebVersion +
 						' on the web!');
