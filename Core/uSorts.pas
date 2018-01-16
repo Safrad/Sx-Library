@@ -44,13 +44,7 @@ procedure SortFA(const Stability: Boolean; const Reverse: Boolean; AIndex: PArra
 procedure SortS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of AnsiString); deprecated;
 procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of UnicodeString); deprecated;
 
-{
-Value	Meaning
--1 The string pointed to by the Index0 parameter is less in lexical value than the string pointed to by the Index1 parameter.
-0  The string pointed to by Index0 is equal in lexical value to the string pointed to by Index1.
-+1 The string pointed to by Index0 is greater in lexical value than the string pointed to by Index1.
-}
-type TCompare = function(const Index0, Index1: SG): SG;
+type TCompare = function(const Index0, Index1: SG): TCompareResult;
 
 procedure SortStr(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);
 // Stable Megre sort used for strings (few comparison)
@@ -62,6 +56,7 @@ implementation
 
 uses
 	uMath,
+  uStrings,
 	Windows;
 
 const
@@ -155,7 +150,7 @@ begin
 	begin
     if IsDebug then
 			Inc(SortCompared);
-		if Compare(AIndex[i], AIndex[j]) <= 0 then
+		if Compare(AIndex[i], AIndex[j]) = crFirstGreater then
 		begin
 			MeI[M] := AIndex[i];
 			Inc(M);
@@ -266,11 +261,12 @@ begin
 		PChar(S2), Length(S2)) - 2;
 end;
 
-function Compare(const Index0, Index1: SG): SG;
+function Compare(const Index0, Index1: SG): TCompareResult;
 begin
-	Result := CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
+	Result := CompareStringLogical(AStr[Index0], AStr[Index1]);
+{	Result := TCompareResult(CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
 		PChar(AStr[Index0]), Length(AStr[Index0]),
-		PChar(AStr[Index1]), Length(AStr[Index1])) - 2;
+		PChar(AStr[Index1]), Length(AStr[Index1])) - 2);}
 end;
 
 procedure SortStr(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);

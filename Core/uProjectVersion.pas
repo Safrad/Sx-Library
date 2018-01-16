@@ -15,18 +15,13 @@ type
 		2: (All: S8);
 	end;
 
-const
-	FirstGreater = 1;
-	FirstLess = -1;
-	BothSame = 0;
-
 function IsNAVersion(const ProjectVersion: TProjectVersion): BG;
 function CreateVersion(const Version: string; const Messages: TParserMessages = nil): TProjectVersion;
 function VersionToStr(const ProjectVersion: TProjectVersion): string;
 function MajorAndMinorVersionToStr(const ProjectVersion: TProjectVersion): string;
 function MajorMinorAndReleaseVersionToStr(const ProjectVersion: TProjectVersion): string;
-function CompareVersion(const Version1, Version2: TProjectVersion): SG; overload;
-function CompareVersion(const Version1, Version2: string): SG; overload;
+function CompareVersion(const Version1, Version2: TProjectVersion): TCompareResult; overload;
+function CompareVersion(const Version1, Version2: string): TCompareResult; overload;
 
 implementation
 
@@ -126,7 +121,7 @@ end;
 (**
 * @return 0 if Version1 = Version2, 1 if Version1 > Version2, -1 if Version1 < Version2
 *)
-function CompareVersion(const Version1, Version2: TProjectVersion): SG; overload;
+function CompareVersion(const Version1, Version2: TProjectVersion): TCompareResult; overload;
 begin
 	if Version1.Major = Version2.Major then
 	begin
@@ -136,30 +131,30 @@ begin
 			begin
 				if Version1.Build = Version2.Build then
 				begin
-					Result := BothSame;
+					Result := crBothSame;
 				end
 				else if Version1.Build > Version2.Build then
-					Result := FirstGreater
+					Result := crFirstGreater
 				else
-					Result := FirstLess;
+					Result := crFirstLess;
 			end
 			else if Version1.Release > Version2.Release then
-				Result := FirstGreater
+				Result := crFirstGreater
 			else
-				Result := FirstLess;
+				Result := crFirstLess;
 		end
 		else if Version1.Minor > Version2.Minor then
-			Result := FirstGreater
+			Result := crFirstGreater
 		else
-			Result := FirstLess;
+			Result := crFirstLess;
 	end
 	else if Version1.Major > Version2.Major then
-		Result := FirstGreater
+		Result := crFirstGreater
 	else
-		Result := FirstLess;
+		Result := crFirstLess;
 end;
 
-function CompareVersion(const Version1, Version2: string): SG; overload;
+function CompareVersion(const Version1, Version2: string): TCompareResult; overload;
 var
 	Version1a, Version2a: TProjectVersion;
 begin

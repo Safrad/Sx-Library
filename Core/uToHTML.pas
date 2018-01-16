@@ -274,12 +274,12 @@ type
 var
 	Items: TData;
 
-function Compare(const Index0, Index1: SG): SG;
+function Compare(const Index0, Index1: SG): TCompareResult;
 begin
 	if PItem(Items[Index0]).Created > PItem(Items[Index1]).Created then
-		Result := -1
+		Result := crFirstLess
 	else
-		Result := 1;
+		Result := crFirstGreater;
 end;
 
 procedure AddFile(const FileName: TFileName; const Name: TFileName; const Author: string; const Created: TDateTime);

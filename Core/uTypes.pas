@@ -242,6 +242,14 @@ type
   TDate = type TDateTime;
 {$ifend}
 
+{
+Value	Meaning
+-1 The string pointed to by the Index0 parameter is less in lexical value than the string pointed to by the Index1 parameter.
+0  The string pointed to by Index0 is equal in lexical value to the string pointed to by Index1.
++1 The string pointed to by Index0 is greater in lexical value than the string pointed to by Index1.
+}
+  TCompareResult = (crFirstLess = -1, crBothSame = 0, crFirstGreater = 1);
+
 	TMessageLevel = (
 		mlConfirmation,
 		mlDebug, // Debug-level messages (Opening file)

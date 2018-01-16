@@ -756,11 +756,12 @@ type
 var
 	GList: ^TSearchRecs;
 
-function Compare(const Index0, Index1: SG): SG;
+function Compare(const Index0, Index1: SG): TCompareResult;
 begin
-	Result := CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
+	Result := CompareStringLogical(GList^[Index0].Name, GList^[Index1].Name);
+{	Result := TCompareResult(CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
 		PChar(GList^[Index0].Name), Length(GList^[Index0].Name),
-		PChar(GList^[Index1].Name), Length(GList^[Index1].Name)) - 2;
+		PChar(GList^[Index1].Name), Length(GList^[Index1].Name)) - 2);}
 end;
 
 procedure ReadSubDirSorted(var FileNames: TFileNames; var FilesCount: SG; const Path: string; const SubPath: string; const Extensions: array of string; const Files, Dirs, SubDirs, FullPath: BG);
