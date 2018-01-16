@@ -49,6 +49,8 @@ function MaxPhysicalMemorySize: U8;
 function ProcessAllocatedVirtualMemory: U8;
 function CanAllocateMemory(const Size: UG): BG;
 
+function GetComputerName: string;
+
 implementation
 
 uses
@@ -215,6 +217,16 @@ begin
   except
     Result := False;
   end;
+end;
+
+function GetComputerName: string;
+var
+  ComputerName: array[0..MAX_COMPUTERNAME_LENGTH] of Char;
+  Size: DWORD;
+begin
+  Size := MAX_COMPUTERNAME_LENGTH + 1;
+  Windows.GetComputerName( ComputerName, Size );
+  Result := ComputerName;
 end;
 
 initialization

@@ -110,6 +110,7 @@ begin
 
     // Key
     SaveData('GUID', GUIDToString(GUID));
+    SaveData('ComputerName', GetComputerName);
     SaveData('ProjectName', GetProjectInfo(piInternalName));
 
     // Version
