@@ -3,8 +3,8 @@ object fGColor: TfGColor
   Top = 153
   BorderStyle = bsDialog
   Caption = 'Enter color'
-  ClientHeight = 314
-  ClientWidth = 489
+  ClientHeight = 348
+  ClientWidth = 693
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,26 +22,19 @@ object fGColor: TfGColor
   object Bevel1: TBevel
     Left = 8
     Top = 180
-    Width = 481
+    Width = 425
     Height = 9
     Shape = bsTopLine
   end
-  object Bevel2: TBevel
-    Left = 216
-    Top = 184
-    Width = 9
-    Height = 121
-    Shape = bsLeftLine
-  end
   object BevelBasicColors: TBevel
-    Left = 224
-    Top = 192
+    Left = 432
+    Top = 8
     Width = 253
-    Height = 81
+    Height = 297
   end
   object ShapeBorder: TShape
-    Left = 232
-    Top = 192
+    Left = 432
+    Top = 8
     Width = 20
     Height = 20
     Brush.Style = bsClear
@@ -50,7 +43,7 @@ object fGColor: TfGColor
     Pen.Width = 2
     Shape = stSquare
   end
-  object LabelPrevious: TLabel
+  object LabelPrevious: TSxLabel
     Left = 8
     Top = 216
     Width = 49
@@ -61,9 +54,9 @@ object fGColor: TfGColor
     Transparent = True
     Layout = tlCenter
   end
-  object LabelNowXBit: TLabel
+  object LabelNowXBit: TSxLabel
     Left = 8
-    Top = 264
+    Top = 272
     Width = 57
     Height = 19
     AutoSize = False
@@ -72,7 +65,7 @@ object fGColor: TfGColor
     Transparent = True
     Layout = tlCenter
   end
-  object LabelDefault: TLabel
+  object LabelDefault: TSxLabel
     Left = 8
     Top = 192
     Width = 49
@@ -83,9 +76,9 @@ object fGColor: TfGColor
     Transparent = True
     Layout = tlCenter
   end
-  object LabelCurrent: TLabel
+  object LabelCurrent: TSxLabel
     Left = 8
-    Top = 240
+    Top = 248
     Width = 49
     Height = 19
     AutoSize = False
@@ -94,7 +87,7 @@ object fGColor: TfGColor
     Transparent = True
     Layout = tlCenter
   end
-  object LabelRGB: TLabel
+  object LabelRGB: TSxLabel
     Left = 8
     Top = 80
     Width = 49
@@ -105,16 +98,23 @@ object fGColor: TfGColor
     Transparent = True
     Layout = tlCenter
   end
-  object LabelFormat: TLabel
-    Left = 8
-    Top = 288
-    Width = 41
+  object LabelFormat: TSxLabel
+    Left = 160
+    Top = 80
+    Width = 49
     Height = 19
     AutoSize = False
     Caption = '&Format'
     FocusControl = ComboBoxNF
     Transparent = True
     Layout = tlCenter
+  end
+  object Bevel3: TBevel
+    Left = 8
+    Top = 304
+    Width = 681
+    Height = 9
+    Shape = bsTopLine
   end
   object LabelR: TDLabel
     Left = 8
@@ -153,10 +153,10 @@ object fGColor: TfGColor
     Transparent = True
   end
   object PanelPrevious: TDButton
-    Left = 64
-    Top = 216
-    Width = 145
-    Height = 19
+    Left = 120
+    Top = 213
+    Width = 192
+    Height = 25
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -170,10 +170,10 @@ object fGColor: TfGColor
     Color = clBlack
   end
   object PanelCurrent: TDButton
-    Left = 64
-    Top = 240
-    Width = 145
-    Height = 19
+    Left = 120
+    Top = 245
+    Width = 192
+    Height = 25
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -187,9 +187,9 @@ object fGColor: TfGColor
   end
   object PanelNowBitColor: TDButton
     Left = 120
-    Top = 264
-    Width = 89
-    Height = 19
+    Top = 269
+    Width = 192
+    Height = 25
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -203,10 +203,10 @@ object fGColor: TfGColor
     Color = clBlack
   end
   object PanelDefaultColor: TDButton
-    Left = 64
-    Top = 192
-    Width = 145
-    Height = 19
+    Left = 120
+    Top = 189
+    Width = 192
+    Height = 25
     Caption = '&$00000000'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBtnText
@@ -230,7 +230,7 @@ object fGColor: TfGColor
     ParentDoubleBuffered = False
   end
   object ButtonR: TDButton
-    Left = 424
+    Left = 368
     Top = 8
     Width = 55
     Height = 19
@@ -245,8 +245,8 @@ object fGColor: TfGColor
     OnClick = ButtonRGBAClick
   end
   object ButtonOk: TDButton
-    Left = 248
-    Top = 280
+    Left = 448
+    Top = 312
     Width = 73
     Height = 25
     Caption = '&OK'
@@ -262,8 +262,8 @@ object fGColor: TfGColor
     OnClick = ButtonOkClick
   end
   object ButtonApply: TDButton
-    Left = 408
-    Top = 280
+    Left = 608
+    Top = 312
     Width = 73
     Height = 25
     Caption = '&Apply'
@@ -277,8 +277,8 @@ object fGColor: TfGColor
     Visible = False
   end
   object ButtonCancel: TDButton
-    Left = 328
-    Top = 280
+    Left = 528
+    Top = 312
     Width = 73
     Height = 25
     Cancel = True
@@ -306,7 +306,7 @@ object fGColor: TfGColor
   end
   object ButtonG: TDButton
     Tag = 1
-    Left = 424
+    Left = 368
     Top = 32
     Width = 55
     Height = 19
@@ -333,7 +333,7 @@ object fGColor: TfGColor
   end
   object ButtonB: TDButton
     Tag = 2
-    Left = 424
+    Left = 368
     Top = 56
     Width = 55
     Height = 19
@@ -372,10 +372,10 @@ object fGColor: TfGColor
       Top = 0
       Width = 306
       Height = 16
+      Align = alClient
       Zoom = 1.000000000000000000
       DisplayMode = dmCustom
       OnFill = ImageFill
-      Align = alClient
       TabOrder = 0
       TabStop = False
       OnMouseDown = ImageMouseDown
@@ -396,10 +396,10 @@ object fGColor: TfGColor
       Top = 0
       Width = 256
       Height = 16
+      Align = alClient
       Zoom = 1.000000000000000000
       DisplayMode = dmCustom
       OnFill = ImageFill
-      Align = alClient
       TabOrder = 0
       TabStop = False
       OnMouseDown = ImageMouseDown
@@ -408,7 +408,7 @@ object fGColor: TfGColor
   end
   object ComboBoxBitDepth: TComboBox
     Left = 64
-    Top = 264
+    Top = 272
     Width = 57
     Height = 21
     Style = csDropDownList
@@ -474,10 +474,10 @@ object fGColor: TfGColor
       Top = 0
       Width = 256
       Height = 16
+      Align = alClient
       Zoom = 1.000000000000000000
       DisplayMode = dmCustom
       OnFill = ImageFill
-      Align = alClient
       TabOrder = 0
       TabStop = False
       OnMouseDown = ImageMouseDown
@@ -498,10 +498,10 @@ object fGColor: TfGColor
       Top = 0
       Width = 256
       Height = 16
+      Align = alClient
       Zoom = 1.000000000000000000
       DisplayMode = dmCustom
       OnFill = ImageFill
-      Align = alClient
       TabOrder = 0
       TabStop = False
       OnMouseDown = ImageMouseDown
@@ -522,10 +522,10 @@ object fGColor: TfGColor
       Top = 0
       Width = 256
       Height = 16
+      Align = alClient
       Zoom = 1.000000000000000000
       DisplayMode = dmCustom
       OnFill = ImageFill
-      Align = alClient
       TabOrder = 0
       TabStop = False
       OnMouseDown = ImageMouseDown
@@ -557,10 +557,10 @@ object fGColor: TfGColor
       Top = 0
       Width = 256
       Height = 16
+      Align = alClient
       Zoom = 1.000000000000000000
       DisplayMode = dmCustom
       OnFill = ImageFill
-      Align = alClient
       TabOrder = 0
       TabStop = False
       OnMouseDown = ImageMouseDown
@@ -568,8 +568,8 @@ object fGColor: TfGColor
     end
   end
   object ComboBoxNF: TComboBox
-    Left = 64
-    Top = 288
+    Left = 216
+    Top = 80
     Width = 97
     Height = 21
     Style = csDropDownList
@@ -577,11 +577,12 @@ object fGColor: TfGColor
     ItemIndex = 0
     PopupMenu = PopupMenu1
     TabOrder = 30
-    Text = 'Decadic'
+    Text = 'HTML'
     OnChange = ComboBoxNFChange
     Items.Strings = (
-      'Decadic'
-      'Hexadecimal')
+      'HTML'
+      'Hexadecimal'
+      'Decadic')
   end
   object EditRGBA: TDEdit
     Tag = -1
@@ -597,8 +598,8 @@ object fGColor: TfGColor
   object PopupMenu1: TPopupMenu
     Images = ImageList1
     OwnerDraw = True
-    Left = 240
-    Top = 216
+    Left = 32
+    Top = 272
     object clScrollBar1: TMenuItem
       Caption = 'ScrollBar'
       ImageIndex = 0
@@ -784,7 +785,7 @@ object fGColor: TfGColor
   end
   object ImageList1: TImageList
     AllocBy = 1
-    Left = 272
-    Top = 216
+    Left = 64
+    Top = 272
   end
 end

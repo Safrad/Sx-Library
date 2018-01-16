@@ -7,10 +7,7 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
 	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,
-	uDWinControl;
-
-const
-	MaxColor = 6 * 4 + 3 * 4 + 1 - 1;
+	uDWinControl, uNamedColors, uSxLabel;
 
 type
 	TOnApplyColor = procedure(Color: TColor);
@@ -65,11 +62,10 @@ type
 		ImageL: TDImage;
 		PanelNowBitColor: TDButton;
 		PanelDefaultColor: TDButton;
-		LabelPrevious: TLabel;
-		LabelNowXBit: TLabel;
-		LabelDefault: TLabel;
-		LabelCurrent: TLabel;
-		Bevel2: TBevel;
+    LabelPrevious: TSxLabel;
+    LabelNowXBit: TSxLabel;
+    LabelDefault: TSxLabel;
+    LabelCurrent: TSxLabel;
 		ImageList1: TImageList;
 		BevelBasicColors: TBevel;
 		ShapeBorder: TShape;
@@ -89,8 +85,9 @@ type
 		ImageS: TDImage;
 		ComboBoxNF: TComboBox;
 		EditRGBA: TDEdit;
-		LabelRGB: TLabel;
-		LabelFormat: TLabel;
+    LabelRGB: TSxLabel;
+    LabelFormat: TSxLabel;
+    Bevel3: TBevel;
 		procedure FormDestroy(Sender: TObject);
 		procedure ColorClick(Sender: TObject);
 		procedure ButtonRGBAClick(Sender: TObject);
@@ -119,12 +116,13 @@ type
 		FNowColor: TColor;
 		NowRGB: TRGBA;
 		NowHLS: THLSColor;
-		PanelColor: array [0 .. MaxColor] of TDLabel;
+		PanelColor: array of TDLabel;
 
 		procedure RWOptions(const Save: BG);
 		procedure InitReadOnly;
 		procedure InitEdits(const SkipEdit: TDEdit);
 		procedure ChangeColor;
+    procedure InitButton(Button: TDButton);
 		procedure InitAll;
 		procedure SetNowColor(Color: TColor);
 		function SetNowRGB(Color: TRGBA): BG;
@@ -139,9 +137,10 @@ type
 		{ Public declarations }
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
-	end;
 
-procedure InitButton(Button: TDButton);
+    function ColorToString(const AColor: TColor): string;
+    function ColorToStringNamed(const AColor: TColor): string;
+	end;
 
 function GetColor(const prompt: string; var CurrentColor: TColor; const DefaultColor: TColor;
 	OnApply: TOnApplyColor): Boolean;
@@ -152,21 +151,7 @@ implementation
 
 uses
 	Math,
-	uMenus, uInputFormat, uOutputFormat, uDIniFile, uLayout, uDrawStyle, uDictionary;
-
-procedure InitButton(Button: TDButton);
-begin
-	if Button.Color = clNone then
-	begin
-		Button.Font.Color := clWindowText;
-		Button.Caption := ColorToString(clNone);
-	end
-	else
-	begin
-		Button.Font.Color := NegMonoColor(Button.Color);
-  		Button.Caption := ColorToString(Button.Color);
-	end;
-end;
+	uMenus, uInputFormat, uOutputFormat, uDIniFile, uLayout, uDrawStyle, uDictionary, uStrings;
 
 const
 	SpectrumPixel = 4;
@@ -202,21 +187,8 @@ begin
 			Result.B := Result.R;
 			Result.a := 0;
 		end;
-	32 .. 36:
-		begin
-			case i of
-			32:
-				Result.L := clMoneyGreen;
-			33:
-				Result.L := clSkyBlue;
-			34:
-				Result.L := clCream;
-			35:
-				Result.L := clMedGray;
-			36:
-				Result.L := clForestGreen;
-			end;
-		end;
+  else
+		Result.L := TNamedColors.GetColor(TNamedColorEnum(i - 32));
 	end;
 end;
 
@@ -324,34 +296,41 @@ end;
 
 function GetColor(const prompt: string; var CurrentColor: TColor; const DefaultColor: TColor;
 	OnApply: TOnApplyColor): Boolean;
+const
+  XCount = 12;
 var
 	i, L, T: Integer;
+  ColorCount: SG;
 begin
 	if not Assigned(fGColor) then
 	begin
 		fGColor := TfGColor.Create(Application.MainForm);
-		for i := 0 to MaxColor do
+    ColorCount := 32 + SG(High(TNamedColorEnum)) + 1;
+    SetLength(fGColor.PanelColor, ColorCount);
+		for i := 0 to ColorCount - 1 do
 		begin
 			fGColor.PanelColor[i] := TDLabel.Create(fGColor);
 			case i of
 			0 .. 23:
 				begin
-					L := 8 + 20 * (i mod 12);
-					T := 4 + 18 * (i div 12);
+					L := 8 + 20 * (i mod XCount);
+					T := 4 + 18 * (i div XCount);
 				end;
 			24 .. 31:
 				begin
 					L := 8 + 20 * (i - 24);
-					T := 64 - 4 - 18;
+					T := 4 + 18 * 2 + 9;
 				end;
-			else // 32..36:
+			else
 				begin
-					L := 8 + 20 * (i - 32);
-					T := 64 - 4;
+					L := 8 + 20 * ((i - 32) mod XCount);
+					T := 4 + 18 * (4 + (i - 32) div XCount);
 				end;
 			end;
 			CreateBox(i, fGColor.BevelBasicColors.Left + LgToPx(L), fGColor.BevelBasicColors.Top + LgToPx(T));
 			fGColor.PanelColor[i].Color := IntToColor(i).L;
+			fGColor.PanelColor[i].Hint := fGColor.ColorToStringNamed(fGColor.PanelColor[i].Color);
+			fGColor.PanelColor[i].ShowHint := True;
 			fGColor.InsertControl(fGColor.PanelColor[i]);
 		end;
 	end;
@@ -364,10 +343,10 @@ begin
 	fGColor.SetNowColor(CurrentColor);
 
 	fGColor.PanelPrevious.Color := fGColor.CurColor;
-	InitButton(fGColor.PanelPrevious);
+	fGColor.InitButton(fGColor.PanelPrevious);
 
 	fGColor.PanelDefaultColor.Color := fGColor.DefColor;
-	InitButton(fGColor.PanelDefaultColor);
+	fGColor.InitButton(fGColor.PanelDefaultColor);
 
 	fGColor.InitAll;
 
@@ -420,7 +399,7 @@ begin
 
 	Vis := False;
   CShapeBorder := LgToPx(2);
-	for i := 0 to MaxColor do
+	for i := 0 to Length(PanelColor) - 1 do
 	begin
 		if C.L = IntToColor(i).L then
 		begin
@@ -449,15 +428,29 @@ begin
 	EditL.OnChange := nil;
 	EditS.OnChange := nil;
 
+  if SkipEdit <> EditRGBA then
+  begin
+    EditRGBA.Text := ColorToString(FNowColor);
+    EditRGBA.Update;
+  end;
+
 	try
-		if ComboBoxNF.ItemIndex = 1 then
+		case ComboBoxNF.ItemIndex of
+    0:
+		begin
+			NumericBase := 16;
+			UseThousandSeparator := False;
+			NumericPref := '#'
+		end;
+    1:
 		begin
 			NumericBase := 16;
 			UseThousandSeparator := False;
 			NumericPref := '$'
-		end
-		else
+		end;
+		2:
 			NumericPref := '';
+    end;
 		if SkipEdit <> EditR then
 		begin
 			EditR.Text := NumericPref + NToS(NowRGB.R);
@@ -472,11 +465,6 @@ begin
 		begin
 			EditB.Text := NumericPref + NToS(NowRGB.B);
 			EditB.Update;
-		end;
-		if SkipEdit <> EditRGBA then
-		begin
-			EditRGBA.Text := NumericPref + NToS(U4(FNowColor) { NowRGB.L } );
-			EditRGBA.Update;
 		end;
 		if SkipEdit <> EditH then
 		begin
@@ -542,7 +530,7 @@ end;
 
 function TfGColor.SetNowHLS(HLS: THLSColor): BG;
 begin
-	if (NowHLS.a <> HLS.a) { or (FNowColor <> NowRGB.L) } then
+	if (NowHLS.A <> HLS.A) or (FNowColor <> NowHLS.L) then
 	begin
 		NowHLS := HLS;
 		NowRGB := HLSToRGB(HLS);
@@ -573,7 +561,7 @@ procedure TfGColor.FormDestroy(Sender: TObject);
 var
 	i: Integer;
 begin
-	for i := 0 to MaxColor do
+	for i := 0 to Length(PanelColor) - 1 do
 	begin
 		if PanelColor[i] <> nil then
 		begin
@@ -660,24 +648,32 @@ end;
 procedure TfGColor.EditChange(Sender: TObject);
 var
 	Changed: BG;
+  s: string;
 begin
+  s := TDEdit(Sender).Text;
+  s := ReplaceF(s, '#', '$');
 	case TComponent(Sender).Tag of
 	- 1:
-		NowRGB.L := StrToValS8(TDEdit(Sender).Text, True, MinInt, NowRGB.L, High(U4), 1, Messages);
+  begin
+		NowRGB.L := StrToValS8(s, True, MinInt, NowRGB.L, High(U4), 1, Messages);
+    if ComboBoxNF.ItemIndex = 0 then
+      Exchange(NowRGB.R, NowRGB.B);
+  end;
 	0:
-		NowRGB.R := StrToValU1(TDEdit(Sender).Text, True, NowRGB.R, Messages);
+		NowRGB.R := StrToValU1(s, True, NowRGB.R, Messages);
 	1:
-		NowRGB.G := StrToValU1(TDEdit(Sender).Text, True, NowRGB.G, Messages);
+		NowRGB.G := StrToValU1(s, True, NowRGB.G, Messages);
 	2:
-		NowRGB.B := StrToValU1(TDEdit(Sender).Text, True, NowRGB.B, Messages);
+		NowRGB.B := StrToValU1(s, True, NowRGB.B, Messages);
 	3:
-		NowHLS.H := StrToValI(TDEdit(Sender).Text, True, -1, NowHLS.H, MaxSpectrum, 1, Messages);
+		NowHLS.H := StrToValI(s, True, -1, NowHLS.H, MaxSpectrum, 1, Messages);
 	4:
-		NowHLS.L := StrToValU1(TDEdit(Sender).Text, True, NowHLS.L, Messages);
+		NowHLS.L := StrToValU1(s, True, NowHLS.L, Messages);
 	5:
-		NowHLS.S := StrToValU1(TDEdit(Sender).Text, True, NowHLS.S, Messages);
+		NowHLS.S := StrToValU1(s, True, NowHLS.S, Messages);
 	end;
 	TDEdit(Sender).Hint := Messages.ToString;
+	TDEdit(Sender).ShowHint := True;
 	Messages.Clear;
 	if TDEdit(Sender).Tag <= 2 then
 		Changed := SetNowRGB(NowRGB)
@@ -857,6 +853,10 @@ end;
 procedure TfGColor.ComboBoxNFChange(Sender: TObject);
 begin
 	InitEdits(nil);
+	InitButton(PanelDefaultColor);
+	InitButton(PanelPrevious);
+	InitButton(PanelCurrent);
+	InitButton(PanelNowBitColor);
 end;
 
 procedure TfGColor.PanelPreviousClick(Sender: TObject);
@@ -881,6 +881,39 @@ destructor TfGColor.Destroy;
 begin
 	FreeAndNil(Messages);
 	inherited;
+end;
+
+function TfGColor.ColorToString(const AColor: TColor): string;
+begin
+  case ComboBoxNF.ItemIndex of
+  0: Result := '#' + IntToHex(TRGBA(AColor).R, 2) + IntToHex(TRGBA(AColor).G, 2) + IntToHex(TRGBA(AColor).B, 2);
+  1: Result := '$' + IntToHex(TRGBA(AColor).B, 2) + IntToHex(TRGBA(AColor).G, 2) + IntToHex(TRGBA(AColor).R, 2);
+  else
+  begin
+    Result := NToS(U4(AColor));
+  end;
+  end;
+end;
+
+procedure TfGColor.InitButton(Button: TDButton);
+begin
+	if Button.Color = clNone then
+	begin
+		Button.Font.Color := clWindowText;
+		Button.Caption := 'None';
+	end
+	else
+	begin
+		Button.Font.Color := NegMonoColor(Button.Color);
+		Button.Caption := ColorToStringNamed(Button.Color);
+	end;
+end;
+
+function TfGColor.ColorToStringNamed(const AColor: TColor): string;
+begin
+	Result := TNamedColors.GetName(AColor);
+  if Result = '' then
+    Result := ColorToString(AColor);
 end;
 
 initialization

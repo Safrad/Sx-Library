@@ -7,15 +7,9 @@ uses
 	Graphics;
 
 const
-	clMoneyGreen = TColor($C0DCC0);
-	clSkyBlue = TColor($F0CAA6);
-	clCream = TColor($F0FBFF);
-	clMedGray = TColor($A4A0A0);
-
-	clFlesh = TColor($98ADFF);
-	clBaize = TColor($818000);
-	clWater = TColor($D1D856);
-	clPink = TColor($9A5DFF);
+{$if CompilerVersion < 15}
+	clSystemColor = $FF000000;
+{$ifend}
 
 	clDepth: array[0..3] of TColor = (cl3DDkShadow{Black}, clBtnShadow{Gray}, cl3DLight{Silver}, clBtnHighlight{White});
 
