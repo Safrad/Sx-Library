@@ -19,9 +19,6 @@ implementation
 
 uses uMsg, uStrings, uFiles, uParams, Forms, uDForm, uAPI;
 
-const
-	wmMainInstanceOpenFile = WM_USER + 3;
-
 var
 	WProc: TFNWndProc;
 	MutHandle: THandle;
@@ -35,7 +32,8 @@ begin
 		Result := 0;
 		if IsIconic(Handle) = False then
 		begin
-			ActivateForm(Application.MainForm);
+      if Assigned(Application) and Application.ShowMainForm then
+  			ActivateForm(Application.MainForm);
 		end;
 
 		SetLength(CmdLine, MAX_PATH);
