@@ -158,7 +158,7 @@ function PadLeft(const AText: string; const ACharCount: SG; const AFillChar: Cha
 function PadCenter(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
 function PadRight(const AText: string; const ACharCount: SG; const AFillChar: Char = CharSpace): string;
 
-function PropertiesToString(const Keys: array of string; const Values: array of string): string;
+function PropertiesToString(const Keys: array of string; const Values: array of string; const ASeparator: string = ';'): string;
 
 function CompareStringLogical(AValue1, AValue2: AnsiString): TCompareResult; overload;
 function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
@@ -1406,7 +1406,7 @@ begin
     Result  := AText;
 end;
 
-function PropertiesToString(const Keys: array of string; const Values: array of string): string;
+function PropertiesToString(const Keys: array of string; const Values: array of string; const ASeparator: string = ';'): string;
 var
   i: Integer;
 begin
@@ -1414,7 +1414,9 @@ begin
   Result := '';
   for i := 0 to Length(Keys) - 1 do
   begin
-    Result := Result + Keys[i] + '=' + Values[i] + ';';
+    Result := Result + Keys[i] + '=' + Values[i];
+    if i < Length(Keys) - 1 then
+      Result := Result + ASeparator;
   end;
 end;
 
