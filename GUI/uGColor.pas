@@ -922,7 +922,7 @@ initialization
 
 finalization
 
-//{$IFNDEF NoFinalization}
-//FreeAndNil(fGColor); // TODO -oSafrad : Cause Runtime Error
-//{$ENDIF NoFinalization}
+{$IFNDEF NoFinalization}
+FreeAndNil(fGColor);
+{$ENDIF NoFinalization}
 end.
