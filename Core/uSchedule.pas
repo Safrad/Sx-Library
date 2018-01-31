@@ -371,10 +371,10 @@ begin
 	if NextRun = 0 then
 	begin
 		case ScheduleType of
-		scWhenIdle, scWhenOverload, scWindowsStartup, scUserLogOn, scUserLogOff, scUserLock, scUserUnlock, scProgramStartup, scBeforeHibernation, scAfterHibernation:
-			Result := 'Unknown'
+		scNever, scOnce, scInterval, scDaily, scWeekly, scMonthly, scYearly:
+			Result := 'Never'
 		else
-			Result := 'Never';
+			Result := 'Unknown';
 		end;
 	end
 	else
