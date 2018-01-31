@@ -72,7 +72,7 @@ var
 
 	NotFirstTime: Boolean;
 
-	SelfChange: Boolean;
+	SelfChange: Boolean = True;
 
 	ScreenModeIndex: Integer;
 	ScreenModeCount: Integer;
