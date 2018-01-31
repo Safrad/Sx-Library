@@ -6,8 +6,7 @@ uses
 	uSchedule, uData, uTypes, SysUtils;
 
 type
-	TTaskAction = (taNone, taSound, taNormal, taMore, taChangeWallpaper, taChangeWindowsColors,
-		taHibernate, taSuspend, taPowerOff, taReboot, taShutdown, taLogOff, taDownloadWebPage);
+	TTaskAction = (taNone, taSound, taNormal, taMore, taHibernate, taSuspend, taPowerOff, taReboot, taShutdown, taLogOff, taDownloadWebPage);
 var
 	ActionToStr: array[TTaskAction] of string;
 type
