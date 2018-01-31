@@ -17,6 +17,8 @@ implementation
 
 constructor TFrequencyFormatter.Create;
 begin
+  inherited;
+  
   UnitName := 'Hz';
 end;
 
