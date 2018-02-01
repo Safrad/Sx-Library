@@ -971,9 +971,9 @@ begin
 						Dec(ww, Arrow.Width);
 						end; }
 					if FSortByOrders[SortIndex] then
-						s := {$IFDEF UNICODE} WideChar($25BC){$ELSE} '\' {$ENDIF} // Down Arrow
+						s := {$IFDEF UNICODE} WideChar($25BC){$ELSE} '\' {$ENDIF} // Down Arrow, Descending
 					else
-						s := {$IFDEF UNICODE} WideChar($25B2){$ELSE} '^' {$ENDIF}; // Up Arrow
+						s := {$IFDEF UNICODE} WideChar($25B2){$ELSE} '^' {$ENDIF}; // Up Arrow, Ascending
 {$IFDEF UNICODE} PushFont(Bitmap.Canvas.Font);
 					try
 						Bitmap.Canvas.Font.Name := 'Courier New';
