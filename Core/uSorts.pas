@@ -150,7 +150,7 @@ begin
 	begin
     if IsDebug then
 			Inc(SortCompared);
-		if Compare(AIndex[i], AIndex[j]) = crFirstGreater then
+		if Compare(AIndex[i], AIndex[j]) <> crFirstGreater then
 		begin
 			MeI[M] := AIndex[i];
 			Inc(M);
