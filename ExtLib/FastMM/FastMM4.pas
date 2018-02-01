@@ -1,6 +1,6 @@
 (*
 
-Fast Memory Manager 4.991
+Fast Memory Manager 4.992
 
 Description:
  A fast replacement memory manager for Embarcadero Delphi Win32 applications
@@ -835,7 +835,7 @@ Change log:
     do linger longer than they should.
   - OS X support added by Sebastian Zierer
   - Compatible with Delphi XE3
-  Version 4.??? (? ??? 2016)
+  Version 4.992 (21 October 2016)
   - OS X full debug mode added by Sebastian Zierer
   - Included the average block size in the memory state log file. (Thanks to
     Hallvard Vassbotn)
@@ -849,7 +849,16 @@ Change log:
     immediately during a FreeMem call the block will added to a list of blocks
     that will be freed later, either in the background cleanup thread or during
     the next call to FreeMem.
-
+  Version 4.??? (unreleased)
+  - Added some "address space slack" under FullDebugMode. This reserves a
+    block of address space on startup (currently 5MB) that is released just
+    before the first time an EOutOfMemory exception is raised, allowing some
+    GetMem calls following the initial EOutOfMemory to succeed. This allows
+    the application to perform any error logging and other shutdown operations
+    successfully that would have failed it the address space was actually
+    completely exhausted. (Under FullDebugMode address space is never released
+    back to the operating system so once the address space has been exhausted
+    there is very little room to manoeuvre.)
 *)
 
 unit FastMM4;
@@ -958,9 +967,6 @@ interface
   {$undef ASMVersion}
   {$ifdef FullDebugMode}
   {$message error 'UseReleaseStack is not compatible with FullDebugMode'}
-  {$endif}
-  {$ifdef LogLockContention}
-  {$message error 'UseReleaseStack is not compatible with LogLockContention'}
   {$endif}
 {$endif}
 
@@ -1172,6 +1178,9 @@ type
   PNativeUInt = ^Cardinal;
   IntPtr = Integer;
   UIntPtr = Cardinal;
+  {$else}
+  NativeUInt = PtrUInt;
+  PNativeUInt = ^PtrUInt;
   {$endif}
 {$endif}
 
@@ -1461,6 +1470,11 @@ const
 {$else}
   DebugFillPattern = $8080808080808080;
 {$endif}
+  {The number of bytes of address space that cannot be allocated under FullDebugMode.  This block is reserved on
+  startup and freed the first time the system runs out of address space.  This allows some subsequent memory allocation
+  requests to succeed in order to allow the application to allocate some memory for error handling, etc. in response to
+  the first EOutOfMemory exception.}
+  FullDebugModeAddressSpaceSlack = 5 * 1024 * 1024;
 
 {-------------------------FullDebugMode structures--------------------}
 type
@@ -1573,6 +1587,9 @@ uses
   FastMM4Messages;
 
 {$ifdef fpc}
+const
+  clib = 'c';
+
 function valloc(__size:size_t):pointer;cdecl;external clib name 'valloc';
 procedure free(__ptr:pointer);cdecl;external clib name 'free';
 function usleep(__useconds:dword):longint;cdecl;external clib name 'usleep';
@@ -2125,6 +2142,10 @@ var
   {The 64K block of reserved memory used to trap invalid memory accesses using
    fields in a freed object.}
   ReservedBlock: Pointer;
+  {Points to a block of size FullDebugModeAddressSpaceSlack that is freed the first time the system runs out of memory.
+  Memory is never release under FullDebugMode, so this allows the application to continue to function for a short while
+  after the first EOutOfMemory exception.}
+  AddressSpaceSlackPtr: Pointer;
   {The virtual method index count - used to get the virtual method index for a
    virtual method call on a freed object.}
   VMIndex: Integer;
@@ -2306,7 +2327,7 @@ end;
 {Compare [AAddress], CompareVal:
  If Equal: [AAddress] := NewVal and result = CompareVal
  If Unequal: Result := [AAddress]}
-function LockCmpxchg(CompareVal, NewVal: Byte; AAddress: PByte): Byte; {$ifdef fpc64bit}nostackframe;{$endif}
+function LockCmpxchg(CompareVal, NewVal: Byte; AAddress: PByte): Byte; {$ifdef fpc64bit}assembler; nostackframe;{$endif}
 asm
 {$ifdef 32Bit}
   {On entry:
@@ -2337,7 +2358,7 @@ end;
 
 {$ifndef ASMVersion}
 {Gets the first set bit in the 32-bit number, returning the bit index}
-function FindFirstSetBit(ACardinal: Cardinal): Cardinal; {$ifdef fpc64bit} nostackframe; {$endif}
+function FindFirstSetBit(ACardinal: Cardinal): Cardinal; {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 64Bit}
   {$ifndef unix}
@@ -2495,7 +2516,7 @@ end;
 {Fixed size move operations ignore the size parameter. All moves are assumed to
  be non-overlapping.}
 
-procedure Move4(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move4(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   mov eax, [eax]
@@ -2513,7 +2534,7 @@ asm
 end;
 
 {$ifdef 64Bit}
-procedure Move8(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move8(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifndef unix}
 .noframe
@@ -2526,7 +2547,7 @@ asm
 end;
 {$endif}
 
-procedure Move12(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move12(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   mov ecx, [eax]
@@ -2551,7 +2572,7 @@ asm
 {$endif}
 end;
 
-procedure Move20(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move20(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   mov ecx, [eax]
@@ -2581,7 +2602,7 @@ asm
 end;
 
 {$ifdef 64Bit}
-procedure Move24(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move24(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
   {$ifndef unix}
 .noframe
@@ -2598,7 +2619,7 @@ asm
 end;
 {$endif}
 
-procedure Move28(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move28(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   mov ecx, [eax]
@@ -2635,7 +2656,7 @@ asm
 {$endif}
 end;
 
-procedure Move36(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move36(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   fild qword ptr [eax]
@@ -2669,7 +2690,7 @@ asm
 end;
 
 {$ifdef 64Bit}
-procedure Move40(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move40(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
   {$ifndef unix}
 .noframe
@@ -2690,7 +2711,7 @@ asm
 end;
 {$endif}
 
-procedure Move44(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move44(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   fild qword ptr [eax]
@@ -2729,7 +2750,7 @@ asm
 {$endif}
 end;
 
-procedure Move52(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move52(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   fild qword ptr [eax]
@@ -2771,7 +2792,7 @@ asm
 end;
 
 {$ifdef 64Bit}
-procedure Move56(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move56(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
   {$ifndef unix}
 .noframe
@@ -2796,7 +2817,7 @@ asm
 end;
 {$endif}
 
-procedure Move60(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move60(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   fild qword ptr [eax]
@@ -2843,7 +2864,7 @@ asm
 {$endif}
 end;
 
-procedure Move68(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure Move68(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   fild qword ptr [eax]
@@ -2896,7 +2917,7 @@ end;
  SizeOf(Pointer). Important note: Always moves at least 16 - SizeOf(Pointer)
  bytes (the minimum small block size with 16 byte alignment), irrespective of
  ACount.}
-procedure MoveX16LP(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure MoveX16LP(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   {Make the counter negative based: The last 12 bytes are moved separately}
@@ -3022,7 +3043,7 @@ end;
  SizeOf(Pointer). Important note: Always moves at least 8 - SizeOf(Pointer)
  bytes (the minimum small block size with 8 byte alignment), irrespective of
  ACount.}
-procedure MoveX8LP(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure MoveX8LP(const ASource; var ADest; ACount: NativeInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   {Make the counter negative based: The last 4 bytes are moved separately}
@@ -3196,7 +3217,7 @@ end;
 
 {Fills a block of memory with the given dword (32-bit) or qword (64-bit).
  Always fills a multiple of SizeOf(Pointer) bytes}
-procedure DebugFillMem(var AAddress; AByteCount: NativeInt; AFillValue: NativeUInt); {$ifdef fpc64bit} nostackframe; {$endif}
+procedure DebugFillMem(var AAddress; AByteCount: NativeInt; AFillValue: NativeUInt); {$ifdef fpc64bit} assembler; nostackframe; {$endif}
 asm
 {$ifdef 32Bit}
   {On Entry:
@@ -3791,7 +3812,7 @@ end;
  preserve all registers except eax.}
 {$ifndef Use32BitAsm}
 procedure LockMediumBlocks(
-  {$ifdef LogLockContention}var ADidSleep: Boolean{$endif}
+  {$ifdef LogLockContention}var ADidSleep: Boolean{$ifdef UseReleaseStack};{$endif}{$endif}
   {$ifdef UseReleaseStack}APointer: Pointer = nil; APDelayRelease: PBoolean = nil{$endif});
 {$ifdef UseReleaseStack}
 var
@@ -4338,7 +4359,7 @@ end;
 {-----------------Large Block Management------------------}
 
 {Locks the large blocks}
-procedure LockLargeBlocks({$ifdef LogLockContention}var ADidSleep: Boolean{$endif}
+procedure LockLargeBlocks({$ifdef LogLockContention}var ADidSleep: Boolean{$ifdef UseReleaseStack};{$endif}{$endif}
   {$ifdef UseReleaseStack}APointer: Pointer = nil; APDelayRelease: PBoolean = nil{$endif});
 {$ifdef UseReleaseStack}
 var
@@ -4460,7 +4481,7 @@ begin
   if not ACleanupOperation then
   begin
 {$endif}
-    LockLargeBlocks({$ifdef LogLockContention}LDidSleep{$endif}
+    LockLargeBlocks({$ifdef LogLockContention}LDidSleep{$ifdef UseReleaseStack},{$endif}{$endif}
       {$ifdef UseReleaseStack}APointer, @LDelayRelease{$endif});
 {$ifdef UseReleaseStack}
     if LDelayRelease then
@@ -5041,6 +5062,15 @@ begin
 {$endif}
           {Done}
           MediumBlocksLocked := False;
+{$ifdef LogLockContention}
+{$ifndef FullDebugMode}
+          if Assigned(ACollector) then
+          begin
+            GetStackTrace(@LStackTrace, StackTraceDepth, 1);
+            ACollector.Add(@LStackTrace[0], StackTraceDepth);
+          end;
+{$endif}
+{$endif}
           Exit;
 {$ifndef FullDebugMode}
         end;
@@ -5122,7 +5152,7 @@ begin
     else
     begin
       {Allocate a Large block}
-      if ASize > 0 then 
+      if ASize > 0 then
       begin
         Result := AllocateLargeBlock(ASize {$ifdef LogLockContention}, LDidSleep{$endif});
 {$ifdef LogLockContention}
@@ -5136,10 +5166,10 @@ begin
   end;
 {$ifdef LogLockContention}
 {$ifndef FullDebugMode}
-  if Assigned(ACollector) then 
+  if Assigned(ACollector) then
   begin
     GetStackTrace(@LStackTrace, StackTraceDepth, 1);
-    MediumBlockCollector.Add(@LStackTrace[0], StackTraceDepth);
+    ACollector.Add(@LStackTrace[0], StackTraceDepth);
   end;
 {$endif}
 {$endif}
@@ -6020,7 +6050,7 @@ begin
 {$endif}
     {Lock the medium blocks}
     LockMediumBlocks(
-      {$ifdef LogLockContention}LDidSleep{$endif}
+      {$ifdef LogLockContention}LDidSleep{$ifdef UseReleaseStack},{$endif}{$endif}
       {$ifdef UseReleaseStack}APointer, @LDelayRelease{$endif});
 {$ifdef UseReleaseStack}
     if LDelayRelease then
@@ -9632,13 +9662,23 @@ begin
       else
       begin
 {$ifdef LogLockContention}
-        if assigned(LCollector) then 
+        if assigned(LCollector) then
         begin
           GetStackTrace(@LStackTrace, StackTraceDepth, 1);
           LCollector.Add(@LStackTrace[0], StackTraceDepth);
         end;
 {$endif LogLockContention}
         Result := nil;
+      end;
+    end
+    else
+    begin
+      {The process ran out of address space:  Release the address space slack so that some subsequent GetMem calls will
+      succeed in order for any error logging, etc. to complete successfully.}
+      if AddressSpaceSlackPtr <> nil then
+      begin
+        VirtualFree(AddressSpaceSlackPtr, 0, MEM_RELEASE);
+        AddressSpaceSlackPtr := nil;
       end;
     end;
   finally
@@ -12039,13 +12079,13 @@ begin
   LargeBlockCollector.GetData(mergedData, mergedCount);
   MediumBlockCollector.GetData(data, count);
   LargeBlockCollector.Merge(mergedData, mergedCount, data, count);
-  for i := 0 to High(SmallBlockTypes) do 
+  for i := 0 to High(SmallBlockTypes) do
   begin
     SmallBlockTypes[i].BlockCollector.GetData(data, count);
     LargeBlockCollector.Merge(mergedData, mergedCount, data, count);
   end;
 
-  if mergedCount > 0 then 
+  if mergedCount > 0 then
   begin
     FillChar(LErrorMessage, SizeOf(LErrorMessage), 0);
     FillChar(LMessageTitleBuffer, SizeOf(LMessageTitleBuffer), 0);
@@ -12070,7 +12110,7 @@ begin
     end;
     AppendStringToModuleName(LockingReportTitle, LMessageTitleBuffer);
     ShowMessageBox(LErrorMessage, LMessageTitleBuffer);
-    for i := 4 to 10 do 
+    for i := 4 to 10 do
     begin
       if i > mergedCount then
         break; //for i
@@ -12371,6 +12411,14 @@ var
   LInd, LSizeInd, LMinimumPoolSize, LOptimalPoolSize, LGroupNumber,
     LBlocksPerPool, LPreviousBlockSize: Cardinal;
   LPMediumFreeBlock: PMediumFreeBlock;
+{$ifdef FullDebugMode}
+  {$ifdef LoadDebugDLLDynamically}
+    {$ifdef RestrictDebugDLLLoadPath}
+    LModuleHandle: HModule;
+    LFullFileName: array[0..2047] of Char;
+    {$endif}
+  {$endif}
+{$endif}
 {$ifdef UseReleaseStack}
   LSlot: Integer;
 {$endif}
@@ -12378,7 +12426,35 @@ begin
 {$ifdef FullDebugMode}
   {$ifdef LoadDebugDLLDynamically}
   {Attempt to load the FullDebugMode DLL dynamically.}
+
+{$ifdef RestrictDebugDLLLoadPath}
+  FullDebugModeDLL := 0;
+  LModuleHandle := 0;
+{$ifndef borlndmmdll}
+  if IsLibrary then
+    LModuleHandle := HInstance;
+{$endif}
+
+  LSizeInd := GetModuleFileName(LModuleHandle, LFullFileName, Sizeof(LFullFileName) div SizeOf(Char));
+  while LSizeInd > 0 do
+  begin
+    Dec(LSizeInd);
+    if LFullFileName[LSizeInd] = '\' then
+      Break;
+  end;
+  if (LSizeInd > 0) and (LSizeInd + Cardinal(Length(FullDebugModeLibraryName)) + 1 < Sizeof(LFullFileName) div SizeOf(Char)) then
+  begin
+    LInd := 1;
+    repeat
+      LFullFileName[LSizeInd + LInd] := FullDebugModeLibraryName[LInd];
+      Inc(LInd);
+    until LInd > Cardinal(Length(FullDebugModeLibraryName));
+    LFullFileName[LSizeInd + LInd] := #0;
+    FullDebugModeDLL := LoadLibrary(LFullFileName);
+  end;
+{$else}
   FullDebugModeDLL := LoadLibrary(FullDebugModeLibraryName);
+{$endif}
   if FullDebugModeDLL <> 0 then
   begin
     GetStackTrace := GetProcAddress(FullDebugModeDLL,
@@ -12553,6 +12629,8 @@ begin
   {$ifdef 32Bit}
     {Try to reserve the 64K block covering address $80808080}
     ReservedBlock := VirtualAlloc(Pointer(DebugReservedAddress), 65536, MEM_RESERVE, PAGE_NOACCESS);
+    {Allocate the address space slack.}
+    AddressSpaceSlackPtr := VirtualAlloc(nil, FullDebugModeAddressSpaceSlack, MEM_RESERVE or MEM_TOP_DOWN, PAGE_NOACCESS);
   {$endif}
 {$endif}
 {$ifdef MMSharingEnabled}
@@ -12755,6 +12833,12 @@ begin
       VirtualFree(ReservedBlock, 0, MEM_RELEASE);
       ReservedBlock := nil;
     end;
+    {Release the address space slack}
+    if AddressSpaceSlackPtr <> nil then
+    begin
+      VirtualFree(AddressSpaceSlackPtr, 0, MEM_RELEASE);
+      AddressSpaceSlackPtr := nil;
+    end;
 {$endif}
   end;
 {$ifndef DetectMMOperationsAfterUninstall}
@@ -12868,8 +12952,8 @@ begin
   if FastMMIsInstalled then
   begin
 {$ifdef UseReleaseStack}
-  CleanupReleaseStacks;
   DestroyCleanupThread;
+  CleanupReleaseStacks;
 {$endif}
 {$ifndef NeverUninstall}
     {Uninstall FastMM}
@@ -12906,11 +12990,13 @@ begin
         and DelphiIsRunning
     {$endif}
     {$ifdef RequireDebuggerPresenceForLeakReporting}
+        {$ifndef fpc}
         and ((DebugHook <> 0)
         {$ifdef PatchBCBTerminate}
         or (Assigned(pCppDebugHook) and (pCppDebugHook^ <> 0))
         {$endif PatchBCBTerminate}
         )
+        {$endif}
     {$endif}
     {$ifdef ManualLeakReportingControl}
         and ReportMemoryLeaksOnShutdown
