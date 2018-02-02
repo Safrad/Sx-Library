@@ -230,8 +230,8 @@ begin
 	VK_MODECHANGE: Result := 'Mode Change';
 	VK_ESCAPE: Result := 'ESC';
 	VK_SPACE: Result := 'Space';
-	VK_PRIOR: Result := 'PgUp';//'Page Up';
-	VK_NEXT: Result := 'PgDn';//'Page Down';
+	VK_PRIOR: Result := 'PgUp'; // Page Up
+	VK_NEXT: Result := 'PgDn'; // Page Down
 	VK_END: Result := 'End';
 	VK_HOME: Result := 'Home';
 	VK_LEFT: Result := 'Left';
@@ -303,11 +303,17 @@ begin
 	VK_NONAME: Result := 'Noname';
 	VK_PA1: Result := 'PA1';
 	VK_OEM_CLEAR: Result := 'OEM Clear';
+  255: Result := 'None'; // No VK mapping
 	else Result := 'SC: ' + IntToStr(Key);
 	end;
-	if Key and scAlt <> 0 then Result := 'Alt+' + Result;
-	if Key and scCtrl <> 0 then Result := 'Ctrl+' + Result;
-	if Key and scShift <> 0 then Result := 'Shift+' + Result;
+
+  // Prefix
+	if Key and scAlt <> 0 then
+    Result := 'Alt+' + Result;
+	if Key and scCtrl <> 0 then
+    Result := 'Ctrl+' + Result;
+	if Key and scShift <> 0 then
+    Result := 'Shift+' + Result;
 end;
 
 end.
