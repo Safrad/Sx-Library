@@ -1779,7 +1779,7 @@ var
 begin
 	StartTickCount := PerformanceCounter;
   // busy-wait loop (spin-wait loop)
-	while PerformanceCounter < StartTickCount + ATimeSpan.Ticks do
+	while IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
   begin
     Pause;
   end;
@@ -1796,20 +1796,33 @@ end;
 // 10   5
 procedure PreciseSleep(const ATimeSpan: TTimeSpan);
 const
+  MaximalSleepTime = 250; // ms
+
   // Thread swap time
   // Unix and new Windows: 1 ms
   // Old Windows: 15 ms!
   MaximalAddedSleepTime = 1; // ms TODO: Detect old Windows 15 ms
 var
 	StartTickCount: U8;
-  ms: FG;
+  RemainTimeInMs: FG;
 begin
   StartTickCount := PerformanceCounter;
-  ms := ATimeSpan.Milliseconds;
-  if ms >= MaximalAddedSleepTime then
-    Sleep(Trunc(ms - MaximalAddedSleepTime)); // Sleep a bit longer then specified (max plus MinSleepTime)
+
+  // sleep-wait loop
+  while True do
+  begin
+    RemainTimeInMs := Second * (ATimeSpan.Ticks - IntervalFrom(StartTickCount)) / PerformanceFrequency;
+    if RemainTimeInMs >= MaximalAddedSleepTime then
+    begin
+      // Method Sleep sleeps a bit longer then specified
+      Sleep(Min(Trunc(RemainTimeInMs - MaximalAddedSleepTime), MaximalSleepTime));
+    end
+    else
+      Break;
+  end;
+
   // busy-wait loop (spin-wait loop)
-  while PerformanceCounter < StartTickCount + ATimeSpan.Ticks do
+  while IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
   begin
     Pause;
   end;
