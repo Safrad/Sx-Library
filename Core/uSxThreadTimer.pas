@@ -16,6 +16,7 @@ type
     FOnTimer: TNotifyEvent;
     FWorkingTime: U8;
     FIdleTime: U8;
+    FSleepTime: TTimeSpan;
     procedure SetOnTimer(const Value: TNotifyEvent);
     procedure SetEnabled(const Value: BG);
 
@@ -23,8 +24,10 @@ type
   protected
     procedure Execute; override;
   public
-    constructor Create(CreateSuspended: Boolean);
+    constructor Create;
     destructor Destroy; override;
+
+    procedure Terminate; reintroduce;
 
     property Enabled: BG read FEnabled write SetEnabled;
     property Interval: TTimeSpan read FInterval;
@@ -49,10 +52,13 @@ begin
   FEnabled := False;
   FInterval := TTimeSpan.Create;
   FInterval.Seconds := 1;
+
+  FSleepTime := TTimeSpan.Create;
 end;
 
 destructor TSxThreadTimer.Destroy;
 begin
+  FreeAndNil(FSleepTime);
   FreeAndNil(FInterval);
 
   inherited;
@@ -73,10 +79,8 @@ procedure TSxThreadTimer.InternalExecute;
 var
   Stopwatch: TStopwatch;
   StartTime: U8;
-  SleepTime: TTimeSpan;
 begin
   Stopwatch := TStopwatch.Create;
-  SleepTime := TTimeSpan.Create;
   try
     StartTime := PerformanceCounter;
     while (not Terminated) do
@@ -87,16 +91,15 @@ begin
       Inc(FWorkingTime, Stopwatch.Elapsed.Ticks);
 
       if FInterval.Ticks <= 0 then
-        SleepTime.Ticks := 0
+        FSleepTime.Ticks := 0
       else
-        SleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
+        FSleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
       Stopwatch.Start;
-      PreciseSleep(SleepTime);
+      PreciseSleep(FSleepTime);
       Stopwatch.Stop;
       Inc(FIdleTime, Stopwatch.Elapsed.Ticks);
     end;
   finally
-    SleepTime.Free;
     Stopwatch.Free;
   end;
 end;
@@ -116,6 +119,13 @@ end;
 procedure TSxThreadTimer.SetOnTimer(const Value: TNotifyEvent);
 begin
   FOnTimer := Value;
+end;
+
+procedure TSxThreadTimer.Terminate;
+begin
+  inherited Terminate;
+
+  FSleepTime.Ticks := 0; // For fast leaving of PreciseSleep method 
 end;
 
 end.
