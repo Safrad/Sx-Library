@@ -44,9 +44,6 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure FormShow(Sender: TObject);
 	private
-		{ Private declarations }
-	public
-		{ Public declarations }
 		procedure FillComp;
 	end;
 
@@ -64,12 +61,6 @@ uses
   uOperatingSystem,
   uSystemMemory,
   uOutputFormat;
-  {
-  PsAPI,
-  uMsg,
-	uGraph, uScreen, uStrings, , uDictionary,
-	uProjectInfo,
-	Registry, Math;}
 
 procedure TfSysInfo.FillComp;
 var
