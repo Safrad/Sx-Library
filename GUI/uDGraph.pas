@@ -56,6 +56,7 @@ implementation
 
 uses
 	Math,
+  uChar,
 	uFiles, uStrings, uFind, uInputFormat, uOutputFormat;
 
 const
