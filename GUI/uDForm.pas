@@ -124,7 +124,7 @@ implementation
 uses
 	Types, Math,
   uMath, uDictionary,
-	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uSysInfo, uCommon, uLog, uRect;
+	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uOperatingSystem, uCommon, uLog, uRect;
 
 const
 	OneBuffer = False;
@@ -1042,7 +1042,7 @@ begin
 	if not (csDesigning in ComponentState) then
   begin
 		Color := GetBackgroundWindowColor;
-    if Aero then
+    if OperatingSystem.IsAero then
     begin
       if BorderStyle = bsSizeToolWin then
         BorderStyle := bsSizeable

@@ -152,12 +152,12 @@ object fAbout: TfAbout
     OnClick = ButtonBuildParamsClick
     OnKeyDown = FormKeyDown
   end
-  object Timer1: TDTimer
+  object TimerFlash: TDTimer
     ActiveOnly = True
     Enabled = False
     Interval = 25
     EventStep = esFrequency
-    OnTimer = DTimer1Timer
+    OnTimer = DTimerFlashTimer
     Left = 24
     Top = 24
   end

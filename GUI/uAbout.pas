@@ -19,7 +19,7 @@ uses
 
 type
 	TfAbout = class(TDForm)
-		Timer1: TDTimer;
+    TimerFlash: TDTimer;
 		ButtonOk: TDButton;
 		ImageAbout: TDImage;
 		ButtonSysInfo: TDButton;
@@ -37,7 +37,7 @@ type
 			Shift: TShiftState; X, Y: Integer);
 		procedure EditWebClick(Sender: TObject);
 		procedure EditEMailClick(Sender: TObject);
-		procedure DTimer1Timer(Sender: TObject);
+		procedure DTimerFlashTimer(Sender: TObject);
 		procedure ButtonSysInfoClick(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
 		procedure ButtonMemoryStatusClick(Sender: TObject);
@@ -79,10 +79,8 @@ uses
 	Messages,
 	uAPI, uHTML, uStart, uDictionary,
 	uProjectInfo,
-	uGraph, uDIniFile, uScreen, uSysInfo, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
+	uGraph, uDIniFile, uScreen, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
 	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
-var
-	LastNowTime: U8;
 
 function GetLocalHomepage: TFileName;
 begin
@@ -226,14 +224,12 @@ end;
 
 procedure TfAbout.FormShow(Sender: TObject);
 begin
-	LastNowTime := PerformanceCounter;
-	Timer1.Enabled := True;
-	DTimer1Timer(Sender);
+	TimerFlash.Enabled:= True;
 end;
 
 procedure TfAbout.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-	Timer1.Enabled := False;
+	TimerFlash.Enabled:= False;
 end;
 
 procedure TfAbout.ButtonOkClick(Sender: TObject);
@@ -277,25 +273,15 @@ begin
 	APIOpen('mailto: ' + GetProjectInfo(piEMail));
 end;
 
-procedure TfAbout.DTimer1Timer(Sender: TObject);
+procedure TfAbout.DTimerFlashTimer(Sender: TObject);
 begin
-	if NowTime >= LastNowTime + PerformanceFrequency{1 second interval} then
-	begin
-		if FormDraw(fSysInfo) then
-		begin
-			FillMemoryStatus(GSysInfo);
-			UpdateSysInfo(@GSysInfo);
-		end;
-		LastNowTime := NowTime;
-	end;
 	NewFlash;
 	ImageAbout.Invalidate;
 end;
 
 procedure TfAbout.ButtonSysInfoClick(Sender: TObject);
 begin
-	FillMemoryStatus(GSysInfo);
-	DisplaySysInfo(@GSysInfo, Self);
+	DisplaySysInfo(Self);
 end;
 
 procedure TfAbout.NewFlash;
@@ -319,9 +305,9 @@ var
 begin
 	BitmapAbout := ImageAbout.Bitmap;
 	BitmapAbout.GenerateRGBEx(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, TGenFunc(Typ), Co, ef03,
-		(16 * Timer1.Clock div PerformanceFrequency), nil);
+		(16 * TimerFlash.Clock div PerformanceFrequency), nil);
 
-	HClock := (32 * Timer1.Clock div PerformanceFrequency) and $7f;
+	HClock := (32 * TimerFlash.Clock div PerformanceFrequency) and $7f;
 	if HClock <= 32 then
 	begin
 		Effect := HClock shr 1;
@@ -343,7 +329,7 @@ begin
 
 	if (Effect > 0) and (BmpAbout <> nil) then
 	begin
-		RotateDef(BitmapAbout, BmpAbout, Typ, (U8(AngleCount) * U8(Timer1.Clock) div (8 * PerformanceFrequency)) and (AngleCount - 1), TEffect(Effect));
+		RotateDef(BitmapAbout, BmpAbout, Typ, (U8(AngleCount) * U8(TimerFlash.Clock) div (8 * PerformanceFrequency)) and (AngleCount - 1), TEffect(Effect));
 	end;
 	
 	i := 0;
@@ -363,7 +349,7 @@ begin
 			Inc(i);
 		end;
 	end;
-	if Timer1.TimerCount < 200 then
+	if TimerFlash.TimerCount < 200 then
 	begin
 		BitmapAbout.Canvas.Brush.Style := bsClear;
 		BitmapAbout.Canvas.Font.Style := [fsBold];

@@ -21,7 +21,7 @@ implementation
 
 uses
   SysUtils,
-  uSysInfo;
+  uOperatingSystem;
 
 var
   GVisualOptions: TVisualOptions;
@@ -40,7 +40,7 @@ constructor TVisualOptions.Create;
 begin
   inherited;
 
-  if Aero then
+  if OperatingSystem.IsAero then
     FDialogVisualStyle := dsWindowsVista
   else
     FDialogVisualStyle := dsWindowsXP;

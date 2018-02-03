@@ -59,7 +59,7 @@ var
 implementation
 
 uses
-	uDictionary, uSysInfo,
+	uDictionary, uSystemMemory,
 	SysUtils;
 
 { TUndoRedo }
@@ -69,7 +69,7 @@ var i: SG;
 begin
 	ClearRedo;
 
-	if (FIndex >= UndoCountLimit) or (100 * (GetUndoSize + Undo.GetSize) > UndoSizePercentOfRAM * U8(GSysInfo.MS.ullTotalPhys)) then
+	if (FIndex >= UndoCountLimit) or (100 * (GetUndoSize + Undo.GetSize) > UndoSizePercentOfRAM * SystemMemory.Physical.Total) then
 	begin
 		FUndos[0].Free;
 		for i := 0 to FCount - 2 do
@@ -250,8 +250,4 @@ begin
 	end;
 end;
 
-initialization
-{$IFNDEF NoInitialization}
-	FillMemoryStatus(GSysInfo);
-{$ENDIF NoInitialization}
 end.

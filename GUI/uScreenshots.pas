@@ -42,7 +42,7 @@ implementation
 
 uses
   SysUtils,
-  uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uSysInfo, ufGrate;
+  uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uOperatingSystem, ufGrate;
 
 function TakeScreenshots: BG;
 begin
@@ -56,7 +56,7 @@ begin
 	inherited;
   FPath := AppDataDir + 'screenshots\';
 
-  if not Aero then
+  if not OperatingSystem.IsAero then
     SetWindowColor(clSilver);
 end;
 
@@ -64,7 +64,7 @@ destructor TScreenshots.Destroy;
 begin
   FreeAndNil(fGrate);
 
-  if not Aero then
+  if not OperatingSystem.IsAero then
   	RestoreSystemColors;
 
   inherited;

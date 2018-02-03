@@ -47,7 +47,7 @@ implementation
 
 uses
 	SysUtils, Windows,
-	uMath, uSysInfo, uMsg;
+	uMath, uMsg;
 
 procedure CorrectFont(const Font: TFont);
 var

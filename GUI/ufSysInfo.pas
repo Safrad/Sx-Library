@@ -3,7 +3,7 @@ unit ufSysInfo;
 interface
 
 uses
-	uTypes, uMath, uSysInfo,
+	uTypes, uMath,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDLabel, uDButton, uDForm, uDEdit;
 
@@ -38,40 +38,46 @@ type
 		LabelMBoardCounter: TLabel;
     LabelThreads: TLabel;
     EditThreads: TDEdit;
+    Timer1: TTimer;
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure FormShow(Sender: TObject);
 	private
 		{ Private declarations }
 	public
 		{ Public declarations }
-		procedure FillComp(SysInfo: PSysInfo);
+		procedure FillComp;
 	end;
 
 var
 	fSysInfo: TfSysInfo;
 
-procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);
-procedure UpdateSysInfo(SysInfo: PSysInfo);
-
+procedure DisplaySysInfo(const AOwner: TComponent = nil);
+procedure UpdateSysInfo;
 
 implementation
 
 {$R *.DFM}
 uses
   uCPU,
+  uOperatingSystem,
+  uSystemMemory,
+  uOutputFormat;
+  {
   PsAPI,
   uMsg,
-	uGraph, uScreen, uStrings, uOutputFormat, uDictionary,
+	uGraph, uScreen, uStrings, , uDictionary,
 	uProjectInfo,
-	Registry, Math;
+	Registry, Math;}
 
-procedure TfSysInfo.FillComp(SysInfo: PSysInfo);
+procedure TfSysInfo.FillComp;
 var
 	s: string;
 begin
   GCPU.Update;
 
-	EditOS.Text := OSToStr(SysInfo.OS);
+	EditOS.Text := OperatingSystem.Name;
 
   s := GCPU.Name;
 	if s <> '' then
@@ -86,13 +92,15 @@ begin
 	EditCPUFrequency.Text := NToS(Round(GCPU.Frequency)) + ' Hz';
 	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz';
 
-	edMU.Text := BToStr(SysInfo.MS.ullTotalPhys - SysInfo.MS.ullAvailPhys);
-	edMF.Text := BToStr(SysInfo.MS.ullAvailPhys);
-	edMT.Text := BToStr(SysInfo.MS.ullTotalPhys);
+  SystemMemory.Update;
 
-	edFU.Text := BToStr(SysInfo.MS.ullTotalPageFile - SysInfo.MS.ullAvailPageFile);
-	edFF.Text := BToStr(SysInfo.MS.ullAvailPageFile);
-	edFT.Text := BToStr(SysInfo.MS.ullTotalPageFile);
+	edMU.Text := BToStr(SystemMemory.Physical.Used);
+	edMF.Text := BToStr(SystemMemory.Physical.Remain);
+	edMT.Text := BToStr(SystemMemory.Physical.Total);
+
+	edFU.Text := BToStr(SystemMemory.Virtual.Used);
+	edFF.Text := BToStr(SystemMemory.Virtual.Remain);
+	edFT.Text := BToStr(SystemMemory.Virtual.Total);
 end;
 
 procedure TfSysInfo.ButtonOkClick(Sender: TObject);
@@ -105,18 +113,31 @@ begin
 	Background := baGradient;
 end;
 
-procedure DisplaySysInfo(SysInfo: PSysInfo; const AOwner: TComponent = nil);
+procedure DisplaySysInfo(const AOwner: TComponent = nil);
 begin
 	if not Assigned(fSysInfo) then
 		fSysInfo := TfSysInfo.Create(AOwner);
-	fSysInfo.FillComp(SysInfo);
+	fSysInfo.FillComp;
 	fSysInfo.ShowModal;
 end;
 
-procedure UpdateSysInfo(SysInfo: PSysInfo);
+procedure UpdateSysInfo;
 begin
 	if FormDraw(fSysInfo) then
-		fSysInfo.FillComp(SysInfo);
+		fSysInfo.FillComp;
+end;
+
+procedure TfSysInfo.Timer1Timer(Sender: TObject);
+begin
+  if FormDraw(fSysInfo) then
+  begin
+    UpdateSysInfo;
+  end;
+end;
+
+procedure TfSysInfo.FormShow(Sender: TObject);
+begin
+  UpdateSysInfo;
 end;
 
 end.

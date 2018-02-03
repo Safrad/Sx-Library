@@ -15,6 +15,7 @@ object fSysInfo: TfSysInfo
   OldCreateOrder = False
   Position = poOwnerFormCenter
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -162,7 +163,7 @@ object fSysInfo: TfSysInfo
     Width = 97
     Height = 19
     AutoSize = False
-    Caption = 'Threads'
+    Caption = 'CPU Threads'
     FocusControl = EditThreads
     Transparent = True
     Layout = tlCenter
@@ -339,5 +340,10 @@ object fSysInfo: TfSysInfo
     TabOrder = 12
     DoubleBuffered = True
     ParentDoubleBuffered = False
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 8
+    Top = 8
   end
 end

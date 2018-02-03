@@ -48,7 +48,7 @@ uses
   uMsg,
   uLog,
   uProjectInfo,
-  uSysInfo,
+  uSystemMemory,
   uFiles;
 
 { TPlugin }
@@ -79,10 +79,10 @@ begin
     begin
       if LogInformation then
         MainLogAdd('>LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
-      M := ProcessAllocatedVirtualMemory;
+      M := SystemMemory.ProcessAllocatedVirtualMemory;
       FHandle := LoadLibrary(PChar(FileName));
       LastError := GetLastError;
-      FStartupMemory := ProcessAllocatedVirtualMemory - M;
+      FStartupMemory := SystemMemory.ProcessAllocatedVirtualMemory - M;
       if LogInformation then
         MainLogAdd('<LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
       if not IsLoaded then
@@ -109,10 +109,10 @@ begin
     if LogInformation then
       MainLogAdd('>FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
 
-    M := ProcessAllocatedVirtualMemory;
+    M := SystemMemory.ProcessAllocatedVirtualMemory;
     Result := FreeLibrary(Handle);
     LastError := GetLastError;
-    FCleanUpMemory := M - ProcessAllocatedVirtualMemory;
+    FCleanUpMemory := M - SystemMemory.ProcessAllocatedVirtualMemory;
     if LogInformation then
       MainLogAdd('<FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
 

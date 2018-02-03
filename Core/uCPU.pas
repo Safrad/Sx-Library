@@ -66,7 +66,7 @@ uses
   uAPI,
   uMath,
   uLog,
-  uSysInfo,
+  uOperatingSystem,
   SysUtils;
 
 var
@@ -471,7 +471,7 @@ var
   CPUUsage: Integer;
 begin
   MainLogAdd('GetCPUUsage', mlDebug);
-	if NTSystem then
+	if OperatingSystem.IsNT then
 	begin
 //		tickCount := GetTickCount;
 		tickCount := PerformanceCounter;
@@ -536,7 +536,7 @@ destructor TCPU.Destroy;
 var
   CPUUsage: Integer;
 begin
-	if NTSystem = False then
+	if OperatingSystem.IsNT = False then
 	begin
 		if Reg <> nil then
 		begin

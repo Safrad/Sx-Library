@@ -29,7 +29,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uSysInfo;
+  uOperatingSystem;
 
 { TfGetKey }
 
@@ -50,7 +50,7 @@ begin
     if (Keyboard[i] and $80 <> 0) and (i <> VK_LBUTTON) and (i <> VK_RBUTTON)
     and (i <> VK_MBUTTON) then
     begin
-      if (not NTSystem) or (not (i in [VK_SHIFT, VK_CONTROL, VK_MENU])) then
+      if (not OperatingSystem.IsNT) or (not (i in [VK_SHIFT, VK_CONTROL, VK_MENU])) then
       begin
         Key := i;
         ModalResult := mrOk;

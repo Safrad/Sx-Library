@@ -20,7 +20,8 @@ uses
   uDIniFile,
   uWebUpdate,
   uProjectInfo,
-  uSysInfo,
+  uOperatingSystem,
+  uSystemMemory,
   uFile,
   uFiles,
   uStart,
@@ -100,7 +101,6 @@ var
   end;
 
 begin
-  FillMemoryStatus(GSysInfo);
   GUID := GetComputerGUID;
 
 	XML := TSxXMLDocument.Create(nil);
@@ -110,7 +110,7 @@ begin
 
     // Key
     SaveData('GUID', GUIDToString(GUID));
-    SaveData('ComputerName', GetComputerName);
+    SaveData('ComputerName', OperatingSystem.ComputerName);
     SaveData('ProjectName', GetProjectInfo(piInternalName));
 
     // Version
@@ -125,17 +125,18 @@ begin
     SaveData('WriteBytes', IntToStr(WriteBytes));
 
     // OS
-    SaveData('OSMajor', IntToStr(GSysInfo.OS.dwMajorVersion));
-    SaveData('OSMinor', IntToStr(GSysInfo.OS.dwMinorVersion));
-    SaveData('OSBuild', IntToStr(GSysInfo.OS.dwBuildNumber));
+    SaveData('OSName', OperatingSystem.Name);
+    SaveData('OSMajor', IntToStr(Win32MajorVersion));
+    SaveData('OSMinor', IntToStr(Win32MinorVersion));
+    SaveData('OSBuild', IntToStr(Win32BuildNumber));
 
     // Hardware
     SaveData('CPU', GCPU.Name);
     SaveData('CPUFrequency', FloatToStr(GCPU.Frequency));
     SaveData('LogicalProcessorCount', IntToStr(GCPU.LogicalProcessorCount));
 
-    SaveData('MemoryTotalPhys', IntToStr(GSysInfo.MS.ullTotalPhys));
-    SaveData('MemoryTotalPageFile', IntToStr(GSysInfo.MS.ullTotalPageFile));
+    SaveData('MemoryTotalPhys', IntToStr(SystemMemory.Physical.Total));
+    SaveData('MemoryTotalPageFile', IntToStr(SystemMemory.PageFile.Total));
 
 		XML.SaveToFile(FileName);
 	finally

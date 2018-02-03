@@ -10,7 +10,14 @@ type
 
   TOperatingSystem = class
   private
+    FName: string;
     class function GetFlag(const APowerForce: TPowerForce): SG;
+    function GetIsNT: BG;
+    function GetIsAero: BG;
+    function GetIsRegionCompatible: BG;
+    procedure SetName(const Value: string);
+    class function GetNameInternall: string;
+    function GetName: string;
   public
     class procedure Hibernate;
     class procedure Sleep;
@@ -32,15 +39,27 @@ type
     class procedure DisplayProperties;
 
     class procedure RepaintScreen;
+    class procedure SetPrivilege;
+
+    class function ComputerName: string;
+
+    property IsNT: BG read GetIsNT;
+    property IsAero: BG read GetIsAero;
+    property IsRegionCompatible: BG read GetIsRegionCompatible;
+    property Name: string read GetName write SetName;
   end;
+
+function OperatingSystem: TOperatingSystem;
 
 implementation
 
 uses
   Windows,
   Messages,
+  ActiveX,
+  ComObj,
   uMsg,
-  uAPI;
+  uAPI, SysUtils;
 
 resourcestring
   rsHibernate = 'Really hibernate?';
@@ -50,7 +69,25 @@ resourcestring
   rsShutDown = 'Really shut down?';
   rsSleep = 'Really sleep?';
 
+var
+  GOperatingSystem: TOperatingSystem;
+
+function OperatingSystem: TOperatingSystem;
+begin
+  Result := GOperatingSystem;
+end;
+
 { TOperatingSystem }
+
+class function TOperatingSystem.ComputerName: string;
+var
+  ComputerName: array[0..MAX_COMPUTERNAME_LENGTH] of Char;
+  Size: DWORD;
+begin
+  Size := MAX_COMPUTERNAME_LENGTH + 1;
+  Windows.GetComputerName( ComputerName, Size );
+  Result := ComputerName;
+end;
 
 class procedure TOperatingSystem.DisplayProperties;
 begin
@@ -68,10 +105,44 @@ begin
   end;
 end;
 
+function TOperatingSystem.GetIsAero: BG;
+begin
+  // Windows Vista and newer
+  Result := Win32MajorVersion >= 6;
+end;
+
+function TOperatingSystem.GetIsNT: BG;
+begin
+  // Windows 2000, XP and newer
+	Result := Win32Platform >= VER_PLATFORM_WIN32_NT; // GSysInfo.OS.dwMajorVersion >= 5
+end;
+
+function TOperatingSystem.GetIsRegionCompatible: BG;
+begin
+  // Windows Me and newer
+  Result := not ((Win32MajorVersion < 4) or ((Win32MajorVersion = 4) and (Win32MinorVersion < 10)));
+end;
+
+function TOperatingSystem.GetName: string;
+begin
+  if FName = '' then
+  begin
+    try
+      FName := GetNameInternall;
+      if FName = '' then
+        FName := '?';
+    except
+      FName := '?';
+    end;
+  end;
+  Result := FName;
+end;
+
 class procedure TOperatingSystem.Hibernate;
 begin
-		if SetSystemPowerState(False, True) = False then
-			ErrorMsg(GetLastError);
+  SetPrivilege;
+	if SetSystemPowerState(False, True) = False then
+		ErrorMsg(GetLastError);
 end;
 
 class procedure TOperatingSystem.HibernateConfirmation;
@@ -82,6 +153,7 @@ end;
 
 class procedure TOperatingSystem.LogOff(const APowerForce: TPowerForce);
 begin
+  SetPrivilege;
 	if ExitWindowsEx(EWX_LOGOFF or GetFlag(APowerForce), 0) = False then
 		ErrorMsg(GetLastError);
 end;
@@ -92,8 +164,36 @@ begin
     LogOff(APowerForce);
 end;
 
+class function TOperatingSystem.GetNameInternall: string;
+var
+  objWMIService : OLEVariant;
+  colItems      : OLEVariant;
+  colItem       : OLEVariant;
+  oEnum         : IEnumvariant;
+  iValue        : LongWord;
+
+  function GetWMIObject(const objectName: String): IDispatch;
+  var
+    chEaten: Integer;
+    BindCtx: IBindCtx;
+    Moniker: IMoniker;
+  begin
+    OleCheck(CreateBindCtx(0, bindCtx));
+    OleCheck(MkParseDisplayName(BindCtx, StringToOleStr(objectName), chEaten, Moniker));
+    OleCheck(Moniker.BindToObject(BindCtx, nil, IDispatch, Result));
+  end;
+
+begin
+  objWMIService := GetWMIObject('winmgmts:\\localhost\root\cimv2');
+  colItems      := objWMIService.ExecQuery('SELECT Caption FROM Win32_OperatingSystem','WQL',0);
+  oEnum         := IUnknown(colItems._NewEnum) as IEnumVariant;
+  if oEnum.Next(1, colItem, iValue) = 0 then
+  Result:=colItem.Caption; //The caption property return an  string  wich includes the operating system version. For example, "Microsoft Windows XP Professional Version = 5.1.2500".
+end;
+
 class procedure TOperatingSystem.PowerOff(const APowerForce: TPowerForce);
 begin
+  SetPrivilege;
 	if ExitWindowsEx(EWX_POWEROFF or GetFlag(APowerForce), 0) = False then
 		ErrorMsg(GetLastError);
 end;
@@ -111,6 +211,7 @@ end;
 
 class procedure TOperatingSystem.Restart(const APowerForce: TPowerForce);
 begin
+  SetPrivilege;
 	if ExitWindowsEx(EWX_REBOOT or GetFlag(APowerForce), 0) = False then
 		ErrorMsg(GetLastError);
 end;
@@ -119,6 +220,40 @@ class procedure TOperatingSystem.RestartConfirmation(const APowerForce: TPowerFo
 begin
 	if Confirmation(rsRestart, [mbYes, mbNo]) = mbYes then
     Restart(APowerForce);
+end;
+
+procedure TOperatingSystem.SetName(const Value: string);
+begin
+  FName := Value;
+end;
+
+class procedure TOperatingSystem.SetPrivilege;
+var
+  hToken, hProcess: THandle;
+  tp, prev_tp: TTokenPrivileges;
+  Len: DWORD;
+begin
+  if OperatingSystem.IsNT then
+  begin
+    hProcess := OpenProcess(PROCESS_ALL_ACCESS, True, GetCurrentProcessID);
+    try
+      if not OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY,hToken) then
+        Exit;
+    finally
+      CloseHandle(hProcess);
+    end;
+
+    try
+      if not LookupPrivilegeValue('', 'SeShutdownPrivilege',tp.Privileges[0].Luid) then
+        Exit;
+      tp.PrivilegeCount := 1;
+      tp.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
+      if not AdjustTokenPrivileges(hToken, False, tp, SizeOf(prev_tp),prev_tp, Len) then
+        Exit;
+    finally
+      CloseHandle(hToken);
+    end;
+  end;
 end;
 
 class procedure TOperatingSystem.ShutDown(const APowerForce: TPowerForce);
@@ -135,6 +270,7 @@ end;
 
 class procedure TOperatingSystem.Sleep;
 begin
+  SetPrivilege;
 	if SetSystemPowerState(True, True) = False then
 		ErrorMsg(GetLastError);
 end;
@@ -150,4 +286,13 @@ begin
 	APIOpen('CONTROL.EXE', 'Sysdm.cpl, System,1');
 end;
 
+initialization
+{$IFNDEF NoInitialization}
+  GOperatingSystem := TOperatingSystem.Create;
+{$ENDIF NoInitialization}
+
+finalization
+{$IFNDEF NoFinalization}
+  FreeAndNil(GOperatingSystem);
+{$ENDIF NoFinalization}
 end.
