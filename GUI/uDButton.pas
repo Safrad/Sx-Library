@@ -106,7 +106,7 @@ uses
 	uDForm,
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
 	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uCommon,
-	uPictureFactory, uSounds, uSysInfo, uDWinControl;
+	uPictureFactory, uSounds, uOperatingSystem, uDWinControl;
 
 { TDButton }
 var
@@ -123,7 +123,7 @@ var
 //	Po: array[0..9] of tagPOINT;
 begin
 	FSmall := (Width <= IconSize) and (Height <= IconSize);
-	if RegionCompatibily = False then Exit;
+	if OperatingSystem.IsRegionCompatible = False then Exit;
 	if not FSmall then
 	begin
 (*		Po[0].x := 0;
