@@ -591,7 +591,7 @@ begin
 
 		M := TMenuItem.Create(File1);
 		M.Name := 'Restart1';
-		M.Caption := 'Restart';
+		M.Caption := 'Restart Application';
 		M.OnClick := CommonMenu.Restart1Click;
 		File1.Add(M);
 
