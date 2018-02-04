@@ -10,7 +10,7 @@ type
 	PPointerList = ^TPointerList;
 	TPointerList = array [0 .. 128 * MB - 1] of Pointer;
 
-	TStack = class // TODO (TData)
+	TStack = class
 	private
 		FList: PPointerList;
 		FCapacity, FCount: Cardinal;

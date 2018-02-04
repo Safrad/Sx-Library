@@ -268,7 +268,7 @@ const
 		'Fit Image', 'Fit Width', 'Fit Height', 'Zoom To' + cDialogSuffix, 'Center', 'Grate',
 		'Grate Color' + cDialogSuffix, 'Copy');
 	MenuShort: array [TZoomMenu] of Char = ('I', 'U', #0, 'Q', #0, #0, #0, #0, #0, #0, #0, #0, #0
-		{ 'C' - Ctrl+C dnw in edits } );
+		{ 'C' - Ctrl+C do not work in edits } );
 
 procedure TDImage.CreateZoom(Zoom1: TMenuItem);
 var

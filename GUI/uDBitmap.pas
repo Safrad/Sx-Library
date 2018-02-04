@@ -2370,7 +2370,7 @@ begin
 				MyBmp.TransparentColor := TransparentColor;
 				MyGif.Free;
 				MyPng.Assign(MyBmp);
-				MyPng.TransparentColor := TransparentColor; // DNW
+				MyPng.TransparentColor := TransparentColor; // Do not work
 				MyBmp.Free;
 
 	{			MyBmp := TBitmap.Create;

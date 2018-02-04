@@ -199,7 +199,7 @@ begin
 	// Assert(Form.Visible = True);
 	if Form.Visible = False then
 		Exit;
-	// if Form.WindowState = wsMinimized then Exit; // DNW
+	// if Form.WindowState = wsMinimized then Exit; // Do not work
 	Result := True;
 end;
 

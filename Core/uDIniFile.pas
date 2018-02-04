@@ -1259,7 +1259,7 @@ begin
 			WindowLong := WindowLong xor WS_MAXIMIZE;
 			SetWindowLong(Form.Handle, WindowLong, GWL_STYLE);
 			GetWindowRect(Form.Handle, R);
-			Form.WindowState := wsNormal; // DNW
+			Form.WindowState := wsNormal; // Do not work
 			end; }
 		WHRect.Left := Form.Left;
 		WHRect.Top := Form.Top;

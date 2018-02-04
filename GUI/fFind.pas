@@ -63,7 +63,7 @@ begin
 	fFindDialog := TfFindDialog.Create(nil);
 	try
 		fFindDialog.FTextFilter := TextFilter;
-		fFindDialog.ShowModal; // Escape DNW for Show
+		fFindDialog.ShowModal; // Escape do not work for Show
 	finally
 		FreeAndNil(fFindDialog);
 	end;
