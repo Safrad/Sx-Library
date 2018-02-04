@@ -9045,220 +9045,222 @@ begin
 			X := SG(Clock) mod MaxX;
 			for CX := XD1 to XD2 do
 			begin
-				X2 := 2 * X;
-				case Func of
-				gfSpecHorz:
-				begin
-					R := aSpe[(6 * 256 * X div MaxX)];
-					G := aSpe[((6 * 256 * X div MaxX) + 1024)];
-					B := aSpe[((6 * 256 * X div MaxX) + 512)];
-				end;
-				gfSpecVert:
-				begin
-					R := aSpe[(6 * 256 * Y div MaxY)];
-					G := aSpe[(6 * 256 * Y div MaxY) + 1024];
-					B := aSpe[(6 * 256 * Y div MaxY) + 512];
-				end;
-				gfTriaHorz:
-				begin
-					R := 355
-						- SG(X shl 8 div MaxX)
-						- SG(Y shl 8 div MaxY);
-					G := 320
-						- SG(((MaxYD - Y) shl 8) div MaxY)
-						- SG((Abs(2 * X - MaxXD) shl 7) div MaxX);
-					B := 355
-						- ((MaxXD - X) shl 8) div MaxX
-						- (Y shl 8) div MaxY;
-				end;
-				gfTriaVert:
-				begin
-					R := 355
-						- (Y shl 8) div MaxY
-						- (X shl 8) div MaxX;
-					G := 320
-						- ((MaxXD - X) shl 8) div MaxX
-						- (Abs(Y - MaxYD shr 1) shl 8) div MaxY;
-					B := 355
-						- ((MaxYD - Y) shl 8) div MaxY
-						- (X shl 8) div MaxX;
-				end;
-				gfLineHorz:
-				begin
-					R := aLin[(Y shl 3) and MaxLin];
-					G := aLin[(X shl 3) and MaxLin];
-					B := ((MaxYD - Y) shl 8) div MaxY;
-				end;
-				gfLineVert:
-				begin
-					R := aLin[(X shl 3) and MaxLin];
-					G := aLin[(Y shl 3) and MaxLin];
-					B := ((MaxXD - X) shl 8) div MaxX;
-				end;
-				gfCLineHorz:
-				begin
-					R :=
-						C[0].R * aLin[(Y shl 3) and MaxLin] shr 8 +
-						C[1].R * aLin[(X shl 3) and MaxLin] shr 8 +
-						C[2].R * (((MaxYD - Y) shl 8) div MaxY) shr 8;
-					G :=
-						C[0].G * aLin[(Y shl 3) and MaxLin] shr 8 +
-						C[1].G * aLin[(X shl 3) and MaxLin] shr 8 +
-						C[2].G * (((MaxYD - Y) shl 8) div MaxY) shr 8;
-					B :=
-						C[0].B * aLin[(Y shl 3) and MaxLin] shr 8 +
-						C[1].B * aLin[(X shl 3) and MaxLin] shr 8 +
-						C[2].B * (((MaxYD - Y) shl 8) div MaxY) shr 8;
-				end;
-				gfCLineVert:
-				begin
-					R :=
-						C[0].R * aLin[(X shl 3) and MaxLin] shr 8 +
-						C[1].R * aLin[(Y shl 3) and MaxLin] shr 8 +
-						C[2].R * (((MaxXD - X) shl 8) div MaxY) shr 8;
-					G :=
-						C[0].G * aLin[(X shl 3) and MaxLin] shr 8 +
-						C[1].G * aLin[(Y shl 3) and MaxLin] shr 8 +
-						C[2].G * (((MaxXD - X) shl 8) div MaxY) shr 8;
-					B :=
-						C[0].B * aLin[(X shl 3) and MaxLin] shr 8 +
-						C[1].B * aLin[(Y shl 3) and MaxLin] shr 8 +
-						C[2].B * (((MaxXD - X) shl 8) div MaxY) shr 8;
-				end;
-				gfRandomLines:
-				begin
-					R := R + C[0].R - Random(C[0].R shl 1 + 1);
-					G := G + C[0].G - Random(C[0].G shl 1 + 1);
-					B := B + C[0].B - Random(C[0].B shl 1 + 1);
-				end;
-				gfRandom:
-				begin
-					R := Random(C[0].R + 1);
-					G := Random(C[0].G + 1);
-					B := Random(C[0].B + 1);
-				end;
-				gfFadeHorz:
-				begin
-					R := RandomDiv((C[1].R * X) + (C[0].R * (MaxXD - X)), MaxXD);
-					G := RandomDiv((C[1].G * X) + (C[0].G * (MaxXD - X)), MaxXD);
-					B := RandomDiv((C[1].B * X) + (C[0].B * (MaxXD - X)), MaxXD);
-				end;
-				gfFadeVert:
-				begin
-					R := RandomDiv((C[3].R * Y) + (C[2].R * (MaxYD - Y)), MaxYD);
-					G := RandomDiv((C[3].G * Y) + (C[2].G * (MaxYD - Y)), MaxYD);
-					B := RandomDiv((C[3].B * Y) + (C[2].B * (MaxYD - Y)), MaxYD);
-				end;
-				gfFade2x:
-				begin
-					PX := PPixel(TNative(LineX) + UG(X) * BPP);
-					PY := PPixel(TNative(LineY) + UG(Y) * BPP);
-					R := (PX.R + PY.R) shr 1;
-					G := (PX.G + PY.G) shr 1;
-					B := (PX.B + PY.B) shr 1;
-	{				R :=
-						((C[1].R * X) + (C[0].R * (MaxXD - X))) div (MaxX2D)
-						+ ((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div (MaxY2D);
-					G :=
-						((C[1].G * X) + (C[0].G * (MaxXD - X))) div (MaxX2D)
-						+ ((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div (MaxY2D);
-					B :=
-						((C[1].B * X) + (C[0].B * (MaxXD - X))) div (MaxX2D)
-						+ ((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div (MaxY2D);}
-				end;
-				gfFadeIOH:
-				begin
-					R :=
-						C[1].R * Abs(MaxX2D - X2) div MaxX2 +
-						C[0].R * Abs(MaxY2D - Y2) div MaxY2;
-					G :=
-						C[1].G * Abs(MaxX2D - X2) div MaxX2 +
-						C[0].G * Abs(MaxY2D - Y2) div MaxY2;
-					B :=
-						C[1].B * Abs(MaxX2D - X2) div MaxX2 +
-						C[0].B * Abs(MaxY2D - Y2) div MaxY2;
-				end;
-				gfFadeIOV:
-				begin
-					R :=
-						C[3].R * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
-						C[2].R * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
-					G :=
-						C[3].G * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
-						C[2].G * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
-					B :=
-						C[3].B * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
-						C[2].B * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
-				end;
-				gfFade2xx:
-				begin
-					R :=
-						(C[1].R * Abs(MaxX2D - X2) + C[3].R * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
-						(C[0].R * Abs(MaxY2D - Y2) + C[2].R * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
-					G :=
-						(C[1].G * Abs(MaxX2D - X2) + C[3].G * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
-						(C[0].G * Abs(MaxY2D - Y) + C[2].G * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
-					B :=
-						(C[1].B * Abs(MaxX2D - X2) + C[3].B * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
-						(C[0].B * Abs(MaxY2D - Y2) + C[2].B * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
-				end;
-				gfNone:
-				begin
-					R := C[0].R;
-					G := C[0].G;
-					B := C[0].B;
-					{$ifdef BPP4}
-					A := C[0].A;
-					{$endif}
-				end;
-				end;
-	{			if RandEffect > 0 then
-				begin
-					R := R + TRGBA(RandEffect).R shr 1 - Random(TRGBA(RandEffect).R + 1);
-					G := G + TRGBA(RandEffect).G shr 1 - Random(TRGBA(RandEffect).G + 1);
-					B := B + TRGBA(RandEffect).B shr 1 - Random(TRGBA(RandEffect).B + 1);
-				end;}
-				if R < 0 then
-					RColor.R := 0
-				else if R > 255 then
-					RColor.R := 255
-				else
-					RColor.R := R;
-
-				if G < 0 then
-					RColor.G := 0
-				else if G > 255 then
-					RColor.G := 255
-				else
-					RColor.G := G;
-
-				if B < 0 then
-					RColor.B := 0
-				else if B > 255 then
-					RColor.B := 255
-				else
-					RColor.B := B;
-				if (HidedColor = clNone) then
-				begin
-					{$ifdef BPP4}
-					PDXY^ := RColor;
-					{$else}
-					PDXY^.RG := RColor.RG;
-					PDXY^.B := RColor.B;
-					{$endif}
-				end
-				else
-				begin
-					if (PDXY.RG <> HidedColorR.RG)
+				if (HidedColor <> clNone)
+					or (PDXY.RG <> HidedColorR.RG)
 					or (PDXY.B <> HidedColorR.B) then
-					begin
-						PixFast(PDXY, @RColor, 1, Effect);
-					end;
-				end;
-	{			end
-				else
-					PDXY^.L := clNone;}
+  			begin
+          case Func of
+          gfSpecHorz:
+          begin
+            R := aSpe[(6 * 256 * X div MaxX)];
+            G := aSpe[((6 * 256 * X div MaxX) + 1024)];
+            B := aSpe[((6 * 256 * X div MaxX) + 512)];
+          end;
+          gfSpecVert:
+          begin
+            R := aSpe[(6 * 256 * Y div MaxY)];
+            G := aSpe[(6 * 256 * Y div MaxY) + 1024];
+            B := aSpe[(6 * 256 * Y div MaxY) + 512];
+          end;
+          gfTriaHorz:
+          begin
+            R := 355
+              - SG(X shl 8 div MaxX)
+              - SG(Y shl 8 div MaxY);
+            G := 320
+              - SG(((MaxYD - Y) shl 8) div MaxY)
+              - SG((Abs(2 * X - MaxXD) shl 7) div MaxX);
+            B := 355
+              - ((MaxXD - X) shl 8) div MaxX
+              - (Y shl 8) div MaxY;
+          end;
+          gfTriaVert:
+          begin
+            R := 355
+              - (Y shl 8) div MaxY
+              - (X shl 8) div MaxX;
+            G := 320
+              - ((MaxXD - X) shl 8) div MaxX
+              - (Abs(Y - MaxYD shr 1) shl 8) div MaxY;
+            B := 355
+              - ((MaxYD - Y) shl 8) div MaxY
+              - (X shl 8) div MaxX;
+          end;
+          gfLineHorz:
+          begin
+            R := aLin[(Y shl 3) and MaxLin];
+            G := aLin[(X shl 3) and MaxLin];
+            B := ((MaxYD - Y) shl 8) div MaxY;
+          end;
+          gfLineVert:
+          begin
+            R := aLin[(X shl 3) and MaxLin];
+            G := aLin[(Y shl 3) and MaxLin];
+            B := ((MaxXD - X) shl 8) div MaxX;
+          end;
+          gfCLineHorz:
+          begin
+            R :=
+              C[0].R * aLin[(Y shl 3) and MaxLin] shr 8 +
+              C[1].R * aLin[(X shl 3) and MaxLin] shr 8 +
+              C[2].R * (((MaxYD - Y) shl 8) div MaxY) shr 8;
+            G :=
+              C[0].G * aLin[(Y shl 3) and MaxLin] shr 8 +
+              C[1].G * aLin[(X shl 3) and MaxLin] shr 8 +
+              C[2].G * (((MaxYD - Y) shl 8) div MaxY) shr 8;
+            B :=
+              C[0].B * aLin[(Y shl 3) and MaxLin] shr 8 +
+              C[1].B * aLin[(X shl 3) and MaxLin] shr 8 +
+              C[2].B * (((MaxYD - Y) shl 8) div MaxY) shr 8;
+          end;
+          gfCLineVert:
+          begin
+            R :=
+              C[0].R * aLin[(X shl 3) and MaxLin] shr 8 +
+              C[1].R * aLin[(Y shl 3) and MaxLin] shr 8 +
+              C[2].R * (((MaxXD - X) shl 8) div MaxY) shr 8;
+            G :=
+              C[0].G * aLin[(X shl 3) and MaxLin] shr 8 +
+              C[1].G * aLin[(Y shl 3) and MaxLin] shr 8 +
+              C[2].G * (((MaxXD - X) shl 8) div MaxY) shr 8;
+            B :=
+              C[0].B * aLin[(X shl 3) and MaxLin] shr 8 +
+              C[1].B * aLin[(Y shl 3) and MaxLin] shr 8 +
+              C[2].B * (((MaxXD - X) shl 8) div MaxY) shr 8;
+          end;
+          gfRandomLines:
+          begin
+            R := R + C[0].R - Random(C[0].R shl 1 + 1);
+            G := G + C[0].G - Random(C[0].G shl 1 + 1);
+            B := B + C[0].B - Random(C[0].B shl 1 + 1);
+          end;
+          gfRandom:
+          begin
+            R := Random(C[0].R + 1);
+            G := Random(C[0].G + 1);
+            B := Random(C[0].B + 1);
+          end;
+          gfFadeHorz:
+          begin
+            R := RandomDiv((C[1].R * X) + (C[0].R * (MaxXD - X)), MaxXD);
+            G := RandomDiv((C[1].G * X) + (C[0].G * (MaxXD - X)), MaxXD);
+            B := RandomDiv((C[1].B * X) + (C[0].B * (MaxXD - X)), MaxXD);
+          end;
+          gfFadeVert:
+          begin
+            R := RandomDiv((C[3].R * Y) + (C[2].R * (MaxYD - Y)), MaxYD);
+            G := RandomDiv((C[3].G * Y) + (C[2].G * (MaxYD - Y)), MaxYD);
+            B := RandomDiv((C[3].B * Y) + (C[2].B * (MaxYD - Y)), MaxYD);
+          end;
+          gfFade2x:
+          begin
+            PX := PPixel(TNative(LineX) + UG(X) * BPP);
+            PY := PPixel(TNative(LineY) + UG(Y) * BPP);
+            R := (PX.R + PY.R) shr 1;
+            G := (PX.G + PY.G) shr 1;
+            B := (PX.B + PY.B) shr 1;
+    {				R :=
+              ((C[1].R * X) + (C[0].R * (MaxXD - X))) div (MaxX2D)
+              + ((C[3].R * Y) + (C[2].R * (MaxYD - Y))) div (MaxY2D);
+            G :=
+              ((C[1].G * X) + (C[0].G * (MaxXD - X))) div (MaxX2D)
+              + ((C[3].G * Y) + (C[2].G * (MaxYD - Y))) div (MaxY2D);
+            B :=
+              ((C[1].B * X) + (C[0].B * (MaxXD - X))) div (MaxX2D)
+              + ((C[3].B * Y) + (C[2].B * (MaxYD - Y))) div (MaxY2D);}
+          end;
+          gfFadeIOH:
+          begin
+            X2 := 2 * X;
+            R :=
+              C[1].R * Abs(MaxX2D - X2) div MaxX2 +
+              C[0].R * Abs(MaxY2D - Y2) div MaxY2;
+            G :=
+              C[1].G * Abs(MaxX2D - X2) div MaxX2 +
+              C[0].G * Abs(MaxY2D - Y2) div MaxY2;
+            B :=
+              C[1].B * Abs(MaxX2D - X2) div MaxX2 +
+              C[0].B * Abs(MaxY2D - Y2) div MaxY2;
+          end;
+          gfFadeIOV:
+          begin
+            X2 := 2 * X;
+            R :=
+              C[3].R * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
+              C[2].R * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
+            G :=
+              C[3].G * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
+              C[2].G * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
+            B :=
+              C[3].B * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
+              C[2].B * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
+          end;
+          gfFade2xx:
+          begin
+            X2 := 2 * X;
+            R :=
+              (C[1].R * Abs(MaxX2D - X2) + C[3].R * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
+              (C[0].R * Abs(MaxY2D - Y2) + C[2].R * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
+            G :=
+              (C[1].G * Abs(MaxX2D - X2) + C[3].G * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
+              (C[0].G * Abs(MaxY2D - Y) + C[2].G * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
+            B :=
+              (C[1].B * Abs(MaxX2D - X2) + C[3].B * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
+              (C[0].B * Abs(MaxY2D - Y2) + C[2].B * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
+          end;
+          gfNone:
+          begin
+            R := C[0].R;
+            G := C[0].G;
+            B := C[0].B;
+            {$ifdef BPP4}
+            A := C[0].A;
+            {$endif}
+          end;
+          end;
+    {			if RandEffect > 0 then
+          begin
+            R := R + TRGBA(RandEffect).R shr 1 - Random(TRGBA(RandEffect).R + 1);
+            G := G + TRGBA(RandEffect).G shr 1 - Random(TRGBA(RandEffect).G + 1);
+            B := B + TRGBA(RandEffect).B shr 1 - Random(TRGBA(RandEffect).B + 1);
+          end;}
+          if R < 0 then
+            RColor.R := 0
+          else if R > 255 then
+            RColor.R := 255
+          else
+            RColor.R := R;
 
+          if G < 0 then
+            RColor.G := 0
+          else if G > 255 then
+            RColor.G := 255
+          else
+            RColor.G := G;
+
+          if B < 0 then
+            RColor.B := 0
+          else if B > 255 then
+            RColor.B := 255
+          else
+            RColor.B := B;
+          if (HidedColor = clNone) then
+          begin
+            {$ifdef BPP4}
+            PDXY^ := RColor;
+            {$else}
+            PDXY^.RG := RColor.RG;
+            PDXY^.B := RColor.B;
+            {$endif}
+          end
+          else
+          begin
+            PixFast(PDXY, @RColor, 1, Effect);
+          end;
+    {			end
+          else
+            PDXY^.L := clNone;}
+        end;
 				Inc(PDXY);
 				Inc(X);
         if X >= MaxX then
