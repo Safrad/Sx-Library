@@ -217,7 +217,6 @@ var
 	i: SG;
 	s: string;
 begin
-	Font.Color := clBtnText;
 	s := Caption;
 	i := Pos('/', s);
 //	if (Length(s) > 0) and (s[1] = '/') then
