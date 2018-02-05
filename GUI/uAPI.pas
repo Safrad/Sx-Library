@@ -209,6 +209,8 @@ begin
 	VK_RBUTTON: Result := 'R. Button';
 	VK_CANCEL: Result := 'Cancel';
 	VK_MBUTTON: Result := 'M.Button';
+  5: Result := 'X Button 1';
+  6: Result := 'X Button 2';
 	VK_BACK: Result := 'BkSp';
 	VK_TAB: Result := 'Tab';
 	VK_CLEAR: Result := 'Clear';
@@ -292,6 +294,12 @@ begin
 	180: Result := 'Mail';
 	170: Result := 'Search';
 
+  182: Result := 'Launch 1';
+  183: Result := 'Launch 2';
+
+  173: Result := 'Volume Mute';
+  174: Result := 'Volume Down';
+  175: Result := 'Volume Up';
 
 	VK_PROCESSKEY: Result := 'Process Key';
 	VK_ATTN: Result := 'Attn';
