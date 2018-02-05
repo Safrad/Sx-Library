@@ -48,11 +48,6 @@ object fOptions: TfOptions
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
     ModalResult = 1
     ParentFont = False
     TabOrder = 0
@@ -65,13 +60,7 @@ object fOptions: TfOptions
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
     ModalResult = 2
-    ParentFont = False
     TabOrder = 1
   end
   object ButtonApply: TDButton
@@ -80,12 +69,6 @@ object fOptions: TfOptions
     Width = 81
     Height = 25
     Caption = '&Apply'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 2
     OnClick = ButtonApplyClick
   end
@@ -106,12 +89,6 @@ object fOptions: TfOptions
     Height = 21
     Caption = '&Add'
     Enabled = False
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 4
     Visible = False
   end
@@ -122,12 +99,6 @@ object fOptions: TfOptions
     Height = 21
     Caption = '&Delete'
     Enabled = False
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 5
     Visible = False
   end

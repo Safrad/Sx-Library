@@ -9,11 +9,7 @@ object fGetKey: TfGetKey
   ClientHeight = 36
   ClientWidth = 227
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'MS Sans Serif'
-  Font.Style = []
+  ParentFont = True
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poOwnerFormCenter
@@ -28,12 +24,6 @@ object fGetKey: TfGetKey
     Alignment = taCenter
     AutoSize = False
     Caption = 'Please press a key'#8230
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Tahoma'
-    Font.Style = [fsBold]
-    ParentFont = False
     Transparent = True
     Layout = tlCenter
   end
