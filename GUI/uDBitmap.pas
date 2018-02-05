@@ -8927,7 +8927,7 @@ procedure TDBitmap.GenerateRGBEx(
 begin
 	GenerateRGBEx(
 		Rect.Left, Rect.Top, Rect.Right, Rect.Bottom,
-		Func, Co, Effect, Clock,InterruptProcedure);
+		Func, Co, Effect, Clock, InterruptProcedure);
 end;
 
 procedure TDBitmap.GenerateRGBEx(
@@ -9045,7 +9045,6 @@ begin
 			X := SG(Clock) mod MaxX;
 			for CX := XD1 to XD2 do
 			begin
-
 				case Func of
 				gfSpecHorz:
 				begin
