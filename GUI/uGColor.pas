@@ -875,7 +875,7 @@ end;
 function TfGColor.ColorToString(const AColor: TColor): string;
 begin
   case ComboBoxNF.ItemIndex of
-  0: Result := '#' + IntToHex(TRGBA(AColor).R, 2) + IntToHex(TRGBA(AColor).G, 2) + IntToHex(TRGBA(AColor).B, 2);
+  0: Result := ColorToHTMLString(AColor);
   1: Result := '$' + IntToHex(TRGBA(AColor).B, 2) + IntToHex(TRGBA(AColor).G, 2) + IntToHex(TRGBA(AColor).R, 2);
   else
   begin

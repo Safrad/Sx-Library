@@ -78,11 +78,14 @@ function MixColors(C1, C2: TColor; Per: Integer): TColor; overload;
 function MixColors(C1, C2: TRGBA; Per: Integer): TRGBA; overload;
 function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
 
+function ColorToHTMLString(const AColor: TColor): string;
+
 implementation
 
 uses
 	uMath,
-	Math;
+	Math,
+  SysUtils;
 
 function RGBToHLS(C: TRGBA): THLSColor;
 var
@@ -613,6 +616,11 @@ end;
 function MixColors(C1, C2: TRGB; Per: Integer): TRGB; overload;
 begin
 	Result := MixColors(C1, C2, Per, MaxMixColor - Per);
+end;
+
+function ColorToHTMLString(const AColor: TColor): string;
+begin
+  Result := '#' + IntToHex(TRGBA(AColor).R, 2) + IntToHex(TRGBA(AColor).G, 2) + IntToHex(TRGBA(AColor).B, 2);
 end;
 
 end.

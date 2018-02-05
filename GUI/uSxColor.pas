@@ -31,7 +31,7 @@ function TSxColor.ColorToStringNamed: string;
 begin
 	Result := TNamedColors.GetName(Color);
   if Result = '' then
-    Result := '#' + IntToHex(TRGBA(Color).R, 2) + IntToHex(TRGBA(Color).G, 2) + IntToHex(TRGBA(Color).B, 2)
+    Result := ColorToHTMLString(Color);
 end;
 
 procedure TSxColor.Init;
