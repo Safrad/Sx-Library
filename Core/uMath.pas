@@ -1811,7 +1811,7 @@ begin
   // sleep-wait loop
   while True do
   begin
-    RemainTimeInMs := Second * (ATimeSpan.Ticks - IntervalFrom(StartTickCount)) / PerformanceFrequency;
+    RemainTimeInMs := Second * (S8(ATimeSpan.Ticks) - S8(IntervalFrom(StartTickCount))) / PerformanceFrequency;
     if RemainTimeInMs >= MaximalAddedSleepTime then
     begin
       // Method Sleep sleeps a bit longer then specified
