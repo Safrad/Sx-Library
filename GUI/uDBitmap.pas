@@ -261,7 +261,7 @@ type
 		procedure Texturize; overload;
 		procedure Texturize(Size: SG); overload;
 
-{		procedure GenRGB(HidedColor: TColor;
+{		procedure GenRGB(HiddenColor: TColor;
 			const Func: TGenFunc; const Clock: UG; const Effect: TEffect);}
 
 		procedure GenerateRGBEx(
@@ -8949,8 +8949,8 @@ var
 	LDone: U2;
 	C: array[0..3] of TRGBA;
 	RColor: TPixel;
-	HidedColor: TColor;
-	HidedColorR: TRGBA;
+	HiddenColor: TColor;
+	HiddenColorR: TRGBA;
 	LineX, LineY, LineA: PPixel;
 	PX, PY: PPixel;
 begin
@@ -8965,12 +8965,12 @@ begin
 	C[3] := ColorToRGBStack(Co[3]);
 	if (Transparent = False) or (TransparentColor = $02000000) then
 	begin
-		HidedColor := clNone
+		HiddenColor := clNone
 	end
 	else
-		HidedColor := TransparentColor;
+		HiddenColor := TransparentColor;
 
-	HidedColorR := ColorToRGBStack(HidedColor);
+	HiddenColorR := ColorToRGBStack(HiddenColor);
 //	RandEffectR := ColorToRGB(RandEffect);
 
 	MaxX := XD2 - XD1 + 1;
@@ -9025,7 +9025,7 @@ begin
 		end;
 		end;
 
-		if (HidedColor = clNone) then
+		if (HiddenColor = clNone) then
 			GetMem(LineA, BPP * FWidth);
 		PDY := Pointer(TNative(Data) - UG(ByteX) * UG(YD1));
 		LDone := High(LDone);
@@ -9038,7 +9038,7 @@ begin
 			begin
 				if InterruptProcedure((Y * MaxDone) div MaxY) then Break;
 			end;
-			if (HidedColor = clNone) then
+			if (HiddenColor = clNone) then
 				PDXY := LineA
 			else
 				PDXY := Pointer(SG(PDY) + BPP * XD1);
@@ -9168,7 +9168,7 @@ begin
 				end;
 				gfFadeIOH:
 				begin
-            X2 := 2 * X;
+          X2 := 2 * X;
 					R :=
 						C[1].R * Abs(MaxX2D - X2) div MaxX2 +
 						C[0].R * Abs(MaxY2D - Y2) div MaxY2;
@@ -9181,7 +9181,7 @@ begin
 				end;
 				gfFadeIOV:
 				begin
-            X2 := 2 * X;
+          X2 := 2 * X;
 					R :=
 						C[3].R * (MaxX2 - Abs(MaxX2D - X2)) div MaxX2 +
 						C[2].R * (MaxY2 - Abs(MaxY2D - Y2)) div MaxY2;
@@ -9194,6 +9194,7 @@ begin
 				end;
 				gfFade2xx:
 				begin
+          X2 := 2 * X;
 					R :=
 						(C[1].R * Abs(MaxX2D - X2) + C[3].R * (MaxX2 - Abs(MaxX2D - X2))) div MaxX2 +
 						(C[0].R * Abs(MaxY2D - Y2) + C[2].R * (MaxY2 - Abs(MaxY2D - Y2))) div MaxY2;
@@ -9240,7 +9241,7 @@ begin
 					RColor.B := 255
 				else
 					RColor.B := B;
-				if (HidedColor = clNone) then
+				if (HiddenColor = clNone) then
 				begin
 					{$ifdef BPP4}
 					PDXY^ := RColor;
@@ -9251,8 +9252,8 @@ begin
 				end
 				else
 				begin
-					if (PDXY.RG <> HidedColorR.RG)
-					or (PDXY.B <> HidedColorR.B) then
+					if (PDXY.RG <> HiddenColorR.RG)
+					or (PDXY.B <> HiddenColorR.B) then
 					begin
 						PixFast(PDXY, @RColor, 1, Effect);
 					end;
@@ -9266,7 +9267,7 @@ begin
         if X >= MaxX then
           X := 0;
 			end;
-			if (HidedColor = clNone) then
+			if (HiddenColor = clNone) then
 				PixFast(Pointer(TNative(PDY) + BPP * UG(XD1)), LineA, MaxX, Effect);
 			Dec(PByte(PDY), ByteX);
 		end;
@@ -9278,7 +9279,7 @@ begin
 			FreeMem(LineY);
 		end;
 		end;
-		if (HidedColor = clNone) then
+		if (HiddenColor = clNone) then
 			FreeMem(LineA);
 	end;
 end;
@@ -9293,7 +9294,7 @@ begin
 end;
 {
 procedure TDBitmap.GenRGB(
-	HidedColor: TColor;
+	HiddenColor: TColor;
 	const Func: TGenFunc; const Clock: UG; const Effect: TEffect);
 var
 	i: SG;
@@ -9302,7 +9303,7 @@ var
 	Co: TRGBA;
 begin
 	c := ((ColorSpeed * Clock) mod (MaxSpectrum + 1));
-	if HidedColor = clNone then
+	if HiddenColor = clNone then
 	begin
 		case Func of
 		gfSpecHorz:
@@ -9323,7 +9324,7 @@ begin
 	end
 	else
 	begin
-		HidedColor := ColorToRGB(HidedColor);
+		HiddenColor := ColorToRGB(HiddenColor);
 		case Func of
 		gfSpecHorz:
 			for x := 0 to FWidth - 1 do
@@ -9332,7 +9333,7 @@ begin
 				begin
 					Co.L := 7;
 					GetPix(Data, ByteX, x, y, Co);
-					if Co.L <> HidedColor then
+					if Co.L <> HiddenColor then
 						Pix(Data, ByteX, x, y, TRGBA(SpectrumColor(c)), ef16);
 				end;
 				Dec(c, ColorStep); if c < 0  then c := MaxSpectrum;
@@ -9343,7 +9344,7 @@ begin
 				for x := 0 to FWidth - 1 do
 				begin
 					GetPix(Data, ByteX, x, y, Co);
-					if Co.L <> HidedColor then
+					if Co.L <> HiddenColor then
 						Pix(Data, ByteX, x, y, TRGBA(SpectrumColor(c)), ef16);
 				end;
 				Dec(c, ColorStep); if c < 0  then c := MaxSpectrum;
