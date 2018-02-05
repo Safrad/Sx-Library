@@ -7,7 +7,7 @@ uses
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
 	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,
-	uDWinControl, uNamedColors, uSxLabel;
+	uDWinControl, uNamedColors, uSxLabel, uSxColor;
 
 type
 	TOnApplyColor = procedure(Color: TColor);
@@ -55,13 +55,13 @@ type
 		clNone1: TMenuItem;
 		PanelH: TPanel;
 		PanelL: TPanel;
-		PanelPrevious: TDButton;
-		PanelCurrent: TDButton;
+    PanelPrevious: TSxColor;
+    PanelCurrent: TSxColor;
 		Bevel1: TBevel;
 		ImageH: TDImage;
 		ImageL: TDImage;
-		PanelNowBitColor: TDButton;
-		PanelDefaultColor: TDButton;
+    PanelNowBitColor: TSxColor;
+    PanelDefaultColor: TSxColor;
     LabelPrevious: TSxLabel;
     LabelNowXBit: TSxLabel;
     LabelDefault: TSxLabel;
@@ -122,7 +122,6 @@ type
 		procedure InitReadOnly;
 		procedure InitEdits(const SkipEdit: TDEdit);
 		procedure ChangeColor;
-    procedure InitButton(Button: TDButton);
 		procedure InitAll;
 		procedure SetNowColor(Color: TColor);
 		function SetNowRGB(Color: TRGBA): BG;
@@ -343,10 +342,7 @@ begin
 	fGColor.SetNowColor(CurrentColor);
 
 	fGColor.PanelPrevious.Color := fGColor.CurColor;
-	fGColor.InitButton(fGColor.PanelPrevious);
-
 	fGColor.PanelDefaultColor.Color := fGColor.DefColor;
-	fGColor.InitButton(fGColor.PanelDefaultColor);
 
 	fGColor.InitAll;
 
@@ -384,12 +380,9 @@ var
   CShapeBorder: SG;
 begin
 	PanelCurrent.Color := FNowColor; // NowRGB.L;
-	InitButton(PanelCurrent);
 	PanelCurrent.Update;
 
 	PanelNowBitColor.Color := BitColor(NowRGB, ABits[ComboBoxBitDepth.ItemIndex]).L;
-	InitButton(PanelNowBitColor);
-	PanelNowBitColor.Update;
 	ImageR.Invalidate;
 	ImageG.Invalidate;
 	ImageB.Invalidate;
@@ -853,10 +846,6 @@ end;
 procedure TfGColor.ComboBoxNFChange(Sender: TObject);
 begin
 	InitEdits(nil);
-	InitButton(PanelDefaultColor);
-	InitButton(PanelPrevious);
-	InitButton(PanelCurrent);
-	InitButton(PanelNowBitColor);
 end;
 
 procedure TfGColor.PanelPreviousClick(Sender: TObject);
@@ -893,20 +882,6 @@ begin
     Result := NToS(U4(AColor));
   end;
   end;
-end;
-
-procedure TfGColor.InitButton(Button: TDButton);
-begin
-	if Button.Color = clNone then
-	begin
-		Button.Font.Color := clWindowText;
-		Button.Caption := 'None';
-	end
-	else
-	begin
-		Button.Font.Color := NegMonoColor(Button.Color);
-		Button.Caption := ColorToStringNamed(Button.Color);
-	end;
 end;
 
 function TfGColor.ColorToStringNamed(const AColor: TColor): string;

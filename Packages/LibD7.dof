@@ -9,7 +9,7 @@ E=0
 F=0
 G=1
 H=1
-I=1
+I=0
 J=0
 K=0
 L=0
@@ -88,7 +88,7 @@ RemoteSymbols=0
 MinStackSize=16384
 MaxStackSize=1048576
 ImageBase=4194304
-ExeDescription=
+ExeDescription=sx-library
 [Directories]
 OutputDir=
 UnitOutputDir=

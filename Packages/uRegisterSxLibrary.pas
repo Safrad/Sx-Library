@@ -27,7 +27,8 @@ uses
   uSxEmptyPanel,
   uSxGUI,
   uSxToolBar,
-  uSxComboBox;
+  uSxComboBox,
+  uSxColor;
 
 {$R 'uDView.dcr'}
 {$R 'uDTimer.dcr'}
@@ -47,6 +48,7 @@ uses
 //{$R 'uSxGUI.dcr'}
 {$R 'uSxToolBar.dcr'}
 //{$R 'uSxComboBox.dcr'}
+//{$R 'uSxColor.dcr'}
 
 procedure Register;
 const
@@ -71,7 +73,8 @@ begin
     TSxEmptyPanel,
     TSxGUI,
     TSxToolBar,
-    TSxComboBox  
+    TSxComboBox,
+    TSxColor
     ]);
 end;
 

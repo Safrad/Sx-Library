@@ -152,68 +152,44 @@ object fGColor: TfGColor
     ParentColor = False
     Transparent = True
   end
-  object PanelPrevious: TDButton
+  object PanelPrevious: TSxColor
     Left = 120
     Top = 213
     Width = 192
     Height = 25
     Caption = '&$00000000'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 23
     OnClick = PanelPreviousClick
     Color = clBlack
   end
-  object PanelCurrent: TDButton
+  object PanelCurrent: TSxColor
     Left = 120
     Top = 245
     Width = 192
     Height = 25
     Caption = '&$00000000'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 24
     Color = clBlack
   end
-  object PanelNowBitColor: TDButton
+  object PanelNowBitColor: TSxColor
     Left = 120
     Top = 269
     Width = 192
     Height = 25
     Caption = '&$00000000'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 29
     OnClick = PanelNowBitColorClick
     Color = clBlack
   end
-  object PanelDefaultColor: TDButton
+  object PanelDefaultColor: TSxColor
     Left = 120
     Top = 189
     Width = 192
     Height = 25
     Caption = '&$00000000'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     PopupMenu = PopupMenu1
     TabOrder = 22
     OnClick = PanelDefaultColorClick
@@ -235,12 +211,6 @@ object fGColor: TfGColor
     Width = 55
     Height = 19
     Caption = '&Invert'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 12
     OnClick = ButtonRGBAClick
   end
@@ -251,13 +221,7 @@ object fGColor: TfGColor
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
     ModalResult = 1
-    ParentFont = False
     TabOrder = 0
     OnClick = ButtonOkClick
   end
@@ -267,12 +231,6 @@ object fGColor: TfGColor
     Width = 73
     Height = 25
     Caption = '&Apply'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 2
     Visible = False
   end
@@ -283,13 +241,7 @@ object fGColor: TfGColor
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
     ModalResult = 2
-    ParentFont = False
     TabOrder = 1
     OnClick = ButtonCancelClick
   end
@@ -311,12 +263,6 @@ object fGColor: TfGColor
     Width = 55
     Height = 19
     Caption = '&Invert'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 13
     OnClick = ButtonRGBAClick
   end
@@ -338,12 +284,6 @@ object fGColor: TfGColor
     Width = 55
     Height = 19
     Caption = '&Invert'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 14
     OnClick = ButtonRGBAClick
   end

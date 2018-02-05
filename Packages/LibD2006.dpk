@@ -58,6 +58,7 @@ contains
   uSxGUI in '..\GUI\uSxGUI.pas',
   uSxToolBar in '..\GUI\uSxToolBar.pas',
   uSxComboBox in '..\GUI\uSxComboBox.pas',
+  uSxColor in '..\GUI\uSxColor.pas',
   uRegisterSxLibrary in 'uRegisterSxLibrary.pas';
 
 end.
