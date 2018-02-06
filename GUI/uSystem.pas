@@ -38,7 +38,7 @@ implementation
 
 uses
 	Windows, Math, Dialogs, Registry,
-	uStrings, uChar, uFiles, uDParser, uWave, uMath, uDictionary, uOutputFormat, uMsg;
+	uStrings, uChar, uFiles, uDictionary;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
 var
