@@ -1429,10 +1429,8 @@ end;
 
 function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
 begin
-  Result := TCompareResult(StrCmpLogicalW(PWideChar(AValue1), PWideChar(AValue2)) - 2);
+  Result := TCompareResult(StrCmpLogicalW(PWideChar(AValue1), PWideChar(AValue2)));
 end;
-
-
 
 initialization
 {$IFNDEF NoInitialization}
