@@ -12,11 +12,7 @@ object fFormats: TfFormats
   Constraints.MaxWidth = 294
   Constraints.MinHeight = 64
   Constraints.MinWidth = 294
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate

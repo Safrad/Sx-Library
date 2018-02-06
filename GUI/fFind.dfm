@@ -6,11 +6,7 @@ object fFindDialog: TfFindDialog
   ClientHeight = 196
   ClientWidth = 244
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnClose = FormClose
@@ -99,12 +95,6 @@ object fFindDialog: TfFindDialog
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 5
     OnClick = ButtonOkClick
   end
@@ -115,12 +105,6 @@ object fFindDialog: TfFindDialog
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 6
     OnClick = ButtonCancelClick
   end

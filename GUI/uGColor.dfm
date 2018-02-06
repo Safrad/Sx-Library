@@ -6,14 +6,10 @@ object fGColor: TfGColor
   ClientHeight = 348
   ClientWidth = 693
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   OldCreateOrder = False
   PopupMenu = PopupMenu1
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy

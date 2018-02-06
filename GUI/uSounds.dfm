@@ -11,11 +11,7 @@ object fSounds: TfSounds
   Color = clBtnFace
   Constraints.MinHeight = 160
   Constraints.MinWidth = 458
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -72,12 +68,6 @@ object fSounds: TfSounds
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 0
     OnClick = ButtonOKClick
   end
@@ -87,12 +77,6 @@ object fSounds: TfSounds
     Width = 75
     Height = 25
     Caption = '&Apply'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 2
     OnClick = ButtonApplyClick
   end
@@ -103,12 +87,6 @@ object fSounds: TfSounds
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 1
     OnClick = ButtonCancelClick
   end
@@ -134,12 +112,6 @@ object fSounds: TfSounds
     Width = 89
     Height = 33
     Caption = '&Use 16 bits Samples'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 5
     AutoChange = True
     Down = True
@@ -150,12 +122,6 @@ object fSounds: TfSounds
     Width = 73
     Height = 33
     Caption = '&Stereo Channels'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 4
     AutoChange = True
     Down = True
@@ -166,12 +132,6 @@ object fSounds: TfSounds
     Width = 105
     Height = 33
     Caption = '&Reduce More Sounds at Time'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 3
     AutoChange = True
     Down = True
@@ -182,12 +142,6 @@ object fSounds: TfSounds
     Width = 75
     Height = 25
     Caption = '&Music'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 8
     AutoChange = True
     Down = True
@@ -198,12 +152,6 @@ object fSounds: TfSounds
     Width = 75
     Height = 25
     Caption = '&Sounds'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 7
     AutoChange = True
     Down = True

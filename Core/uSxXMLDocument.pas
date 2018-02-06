@@ -16,6 +16,8 @@ type
     procedure SetActive(const Value: Boolean); override;
   public
     procedure SaveToFile(const AFileName: DOMString = ''); override;
+    class procedure InitializeCOM;
+    class procedure FinalizeCOM;
   end;
 
 implementation
@@ -53,6 +55,23 @@ end;
 
 { TSxXMLDocument }
 
+class procedure TSxXMLDocument.FinalizeCOM;
+begin
+	CoUninitialize;
+end;
+
+class procedure TSxXMLDocument.InitializeCOM;
+begin
+	Assert(CoInitializeEx(nil, COINIT_MULTITHREADED or COINIT_SPEED_OVER_MEMORY) <> S_FALSE);
+{$if CompilerVersion >= 25}
+  MSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False);
+{$else}
+{$if CompilerVersion >= 21}
+  MSXML6_ProhibitDTD := False;
+{$ifend}
+{$ifend}
+end;
+
 procedure TSxXMLDocument.SaveToFile(const AFileName: DOMString = '');
 begin
   if Active then
@@ -71,16 +90,4 @@ begin
   inherited;
 end;
 
-
-initialization
-	Assert(CoInitializeEx(nil, COINIT_MULTITHREADED or COINIT_SPEED_OVER_MEMORY) <> S_FALSE);
-{$if CompilerVersion >= 25}
-  MSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False);
-{$else}
-{$if CompilerVersion >= 21}
-  MSXML6_ProhibitDTD := False;
-{$ifend}
-{$ifend}
-finalization
-	CoUninitialize;
 end.
