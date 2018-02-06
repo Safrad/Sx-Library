@@ -9,13 +9,9 @@ object fScreen: TfScreen
   ClientHeight = 57
   ClientWidth = 377
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -35,13 +31,7 @@ object fScreen: TfScreen
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
     ModalResult = 1
-    ParentFont = False
     TabOrder = 1
   end
 end

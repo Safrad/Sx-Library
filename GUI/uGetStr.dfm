@@ -7,13 +7,9 @@ object fGetStr: TfGetStr
   ClientHeight = 105
   ClientWidth = 266
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -33,13 +29,7 @@ object fGetStr: TfGetStr
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
     ModalResult = 1
-    ParentFont = False
     TabOrder = 1
   end
   object ButtonCancel: TDButton
@@ -49,13 +39,7 @@ object fGetStr: TfGetStr
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
     ModalResult = 2
-    ParentFont = False
     TabOrder = 2
   end
   object ButtonCur: TDButton
@@ -64,12 +48,6 @@ object fGetStr: TfGetStr
     Width = 48
     Height = 18
     Caption = '&Cur'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 3
     OnClick = ButtonCurClick
   end
@@ -79,12 +57,6 @@ object fGetStr: TfGetStr
     Width = 48
     Height = 18
     Caption = '&Def'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 4
     OnClick = ButtonDefClick
   end

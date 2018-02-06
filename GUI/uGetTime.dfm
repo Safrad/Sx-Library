@@ -7,13 +7,9 @@ object fGetTime: TfGetTime
   ClientHeight = 283
   ClientWidth = 362
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -152,13 +148,7 @@ object fGetTime: TfGetTime
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
     ModalResult = 1
-    ParentFont = False
     TabOrder = 13
     OnClick = ButtonOkClick
   end
@@ -169,13 +159,7 @@ object fGetTime: TfGetTime
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
     ModalResult = 2
-    ParentFont = False
     TabOrder = 14
     OnClick = ButtonCancelClick
   end
@@ -196,12 +180,6 @@ object fGetTime: TfGetTime
     Width = 48
     Height = 18
     Caption = '&Min'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 1
     OnClick = ButtonMinClick
   end
@@ -211,12 +189,6 @@ object fGetTime: TfGetTime
     Width = 48
     Height = 18
     Caption = '&Cur'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 2
     OnClick = ButtonCurClick
   end
@@ -226,12 +198,6 @@ object fGetTime: TfGetTime
     Width = 48
     Height = 18
     Caption = '&Max'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 4
     OnClick = ButtonMaxClick
   end
@@ -285,12 +251,6 @@ object fGetTime: TfGetTime
     Width = 48
     Height = 18
     Caption = '&Def'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 3
     OnClick = ButtonDefClick
   end
@@ -300,12 +260,6 @@ object fGetTime: TfGetTime
     Width = 73
     Height = 25
     Caption = '&Apply'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 15
     Visible = False
   end

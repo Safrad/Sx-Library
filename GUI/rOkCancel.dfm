@@ -19,12 +19,6 @@ object FrameOkCancel: TFrameOkCancel
     Height = 25
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 0
   end
   object ButtonCancel: TDButton
@@ -34,12 +28,6 @@ object FrameOkCancel: TFrameOkCancel
     Height = 25
     Cancel = True
     Caption = '&Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 1
   end
 end

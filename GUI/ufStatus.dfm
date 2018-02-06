@@ -7,14 +7,10 @@ object fStatus: TfStatus
   ClientHeight = 117
   ClientWidth = 275
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   FormStyle = fsStayOnTop
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow

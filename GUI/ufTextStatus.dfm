@@ -7,13 +7,10 @@ object fTextStatus: TfTextStatus
   ClientHeight = 149
   ClientWidth = 275
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  Position = poOwnerFormCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -72,12 +69,6 @@ object fTextStatus: TfTextStatus
     Width = 89
     Height = 25
     Caption = '&Stop'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 4
     OnClick = ButtonStopClick
   end
@@ -87,12 +78,6 @@ object fTextStatus: TfTextStatus
     Width = 89
     Height = 25
     Caption = '&Pause'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 5
     OnClick = ButtonPauseClick
   end
@@ -102,12 +87,6 @@ object fTextStatus: TfTextStatus
     Width = 89
     Height = 25
     Caption = '&Resume'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 6
     OnClick = ButtonResumeClick
   end

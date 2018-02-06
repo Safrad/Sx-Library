@@ -49,7 +49,6 @@ object fOptions: TfOptions
     Caption = '&OK'
     Default = True
     ModalResult = 1
-    ParentFont = False
     TabOrder = 0
     OnClick = ButtonOkClick
   end

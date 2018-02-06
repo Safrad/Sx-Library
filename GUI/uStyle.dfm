@@ -10,11 +10,7 @@ object fStyle: TfStyle
   ClientHeight = 202
   ClientWidth = 278
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   OldCreateOrder = False
   OnCreate = FormCreate
   PixelsPerInch = 96

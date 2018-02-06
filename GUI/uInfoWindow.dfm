@@ -9,11 +9,7 @@ object fInfoWindow: TfInfoWindow
   ClientHeight = 156
   ClientWidth = 196
   Color = clWindow
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnCloseQuery = FormCloseQuery

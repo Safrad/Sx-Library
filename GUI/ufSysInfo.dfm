@@ -6,11 +6,7 @@ object fSysInfo: TfSysInfo
   ClientHeight = 297
   ClientWidth = 304
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poOwnerFormCenter
@@ -280,12 +276,6 @@ object fSysInfo: TfSysInfo
     Cancel = True
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 0
     OnClick = ButtonOkClick
   end

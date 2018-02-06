@@ -6,11 +6,7 @@ object fMemStatus: TfMemStatus
   ClientHeight = 329
   ClientWidth = 384
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Microsoft Sans Serif'
-  Font.Style = []
+  ParentFont = True
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poOwnerFormCenter
@@ -229,12 +225,6 @@ object fMemStatus: TfMemStatus
     Width = 81
     Height = 25
     Caption = '&Run'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 0
     TabStop = False
     OnClick = ButtonStartClick
@@ -249,12 +239,6 @@ object fMemStatus: TfMemStatus
     Cancel = True
     Caption = '&OK'
     Default = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBtnText
-    Font.Height = -11
-    Font.Name = 'Microsoft Sans Serif'
-    Font.Style = []
-    ParentFont = False
     TabOrder = 1
     OnClick = ButtonOkClick
   end
