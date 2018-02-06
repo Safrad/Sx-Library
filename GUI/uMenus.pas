@@ -37,7 +37,7 @@ implementation
 uses
 	Forms, Controls, SysUtils, ShellAPI, Math,
 	uDButton, uStrings, uColor, uDictionary, uSounds, uSplash, uParams, uDrawStyle, uCommon,
-	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uAPI, uMath, uDParser, uLog, uOutputFormat,
+	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath, uDParser, uLog, uOutputFormat,
   uDForm;
 
 var
@@ -540,7 +540,7 @@ begin
 			OffsetRect(Rec, 1, 1);
 
 		OffsetRect(Rec, 0, 1);
-		s := KeyToStr(MenuItem.ShortCut);
+		s := VirtualKeyCodeToString (MenuItem.ShortCut);
 		s2 := MenuItem.Caption;
 		if C2 <> clNone then
 		begin
@@ -660,7 +660,7 @@ begin
 								B.ShowHint := True;
 								B.Hint := Translate(RemoveSingleAmp(M.Caption));
 								if M.ShortCut <> 0 then
-									B.Hint := B.Hint + ' (' + KeyToStr(M.ShortCut) + ')';
+									B.Hint := B.Hint + ' (' + VirtualKeyCodeToString(M.ShortCut) + ')';
 								B.SetBounds(0, 0, IconSize, IconSize);
 								B.Color := Panel.Color;
 								B.Highlight := hlNone;
@@ -937,7 +937,7 @@ begin
 		Width := 0;
 	end;
 	Inc(Width, ACanvas.TextWidth(RemoveSingleAmp(mMenuItem.Caption)));
-	KeyStr := KeyToStr(mMenuItem.Shortcut);
+	KeyStr := VirtualKeyCodeToString(mMenuItem.Shortcut);
 	if KeyStr <> '' then
 	begin
 		Inc(Width, 8 + ACanvas.TextWidth(KeyStr));
