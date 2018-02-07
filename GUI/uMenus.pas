@@ -540,7 +540,7 @@ begin
 			OffsetRect(Rec, 1, 1);
 
 		OffsetRect(Rec, 0, 1);
-		s := VirtualKeyCodeToString (MenuItem.ShortCut);
+		s := VirtualKeyCodeToString(MenuItem.ShortCut);
 		s2 := MenuItem.Caption;
 		if C2 <> clNone then
 		begin
