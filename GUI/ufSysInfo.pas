@@ -60,7 +60,8 @@ uses
   uCPU,
   uOperatingSystem,
   uSystemMemory,
-  uOutputFormat;
+  uOutputFormat,
+  uProjectVersion;
 
 procedure TfSysInfo.FillComp;
 var
@@ -68,7 +69,11 @@ var
 begin
   GCPU.Update;
 
-	EditOS.Text := OperatingSystem.Name;
+	EditOS.Text := OperatingSystem.Name + ' [' +
+    IntToStr(OperatingSystem.Version.Major) + '.' +
+    IntToStr(OperatingSystem.Version.Minor) + '.' +
+    IntToStr(OperatingSystem.Version.Release) +
+    ']';
 
   s := GCPU.Name;
 	if s <> '' then

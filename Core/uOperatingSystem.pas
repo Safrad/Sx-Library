@@ -3,7 +3,8 @@ unit uOperatingSystem;
 interface
 
 uses
-  uTypes;
+  uTypes,
+  uProjectVersion;
 
 type
   TPowerForce = (pfNone, pfForceIfHang, pfForce);
@@ -18,6 +19,7 @@ type
     procedure SetName(const Value: string);
     class function GetNameInternall: string;
     function GetName: string;
+    function GetVersion: TProjectVersion;
   public
     class procedure Hibernate;
     class procedure Sleep;
@@ -47,6 +49,7 @@ type
     property IsAero: BG read GetIsAero;
     property IsRegionCompatible: BG read GetIsRegionCompatible;
     property Name: string read GetName write SetName;
+    property Version: TProjectVersion read GetVersion;
   end;
 
 function OperatingSystem: TOperatingSystem;
@@ -284,6 +287,14 @@ end;
 class procedure TOperatingSystem.SystemProperties;
 begin
 	APIOpen('CONTROL.EXE', 'Sysdm.cpl, System,1');
+end;
+
+function TOperatingSystem.GetVersion: TProjectVersion;
+begin
+  Result.Major := Win32MajorVersion;
+  Result.Minor := Win32MinorVersion;
+  Result.Release := Win32BuildNumber;
+  Result.Build := 0;
 end;
 
 initialization
