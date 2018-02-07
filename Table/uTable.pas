@@ -30,6 +30,9 @@ type
   public
     constructor Create(const ARowCount: SG);
     destructor Destroy; override;
+
+    procedure Clear;
+
     procedure WriteToConsole;
     property Data: TRows read FData;
     property ColumnCount: SG read GetColumnCount;
@@ -115,6 +118,17 @@ begin
   CalculateMaximalWidthOfRows(Result);
 end;
 
+procedure TTable.Clear;
+var
+  row: Integer;
+begin
+  for row := 0 to Length(FData) - 1 do
+  begin
+    FData[row].Free;
+  end;
+  SetLength(FData, 0);
+end;
+
 constructor TTable.Create(const ARowCount: SG);
 begin
   SetLength(FData, ARowCount);
@@ -145,7 +159,8 @@ end;
 
 destructor TTable.Destroy;
 begin
-//  FreeAndNil(FData);
+  Clear;
+  FTableBorderSet.Free;
 
   inherited;
 end;
