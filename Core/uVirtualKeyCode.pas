@@ -57,14 +57,14 @@ const
     'Final', // VK_FINAL
     'Hanja/Kanji', // VK_HANJA, VK_KANJI
     '', // Undefined
-    'ESC', // VK_ESCAPE
+    'Esc', // VK_ESCAPE
     'Convert', // VK_CONVERT
     'Nonconvert', // VK_NONCONVERT
     'Accept', // VK_ACCEPT
     'Mode Change', // VK_MODECHANGE
     'Space', // VK_SPACE
-    'PgUp', // VK_PRIOR
-    'PgDn', // VK_NEXT
+    'Page Up', // VK_PRIOR
+    'Page Down', // VK_NEXT
     'End', // VK_END
     'Home', // VK_HOME
     'Left', // VK_LEFT
@@ -290,7 +290,7 @@ const
 begin
   Result := KeyCodeToString[AVirtualKeyCode and $ff];
 
-	if Result = '' then
+	if (Result = '') and (AVirtualKeyCode <> 0) then
     Result := 'Virtual key code: ' + '0x' + IntToHex(AVirtualKeyCode and $ff, 2);
 
   // Prefix
@@ -375,8 +375,10 @@ end;
 
 function VirtualKeyCodeToString(const AVirtualKeyCode: U2): string;
 begin
+  {$ifdef Unicode}
   Result := VirtualKeyCodeToUnicodeSymbol(AVirtualKeyCode);
   if Result = '' then
+  {$endif}
     Result := VirtualKeyCodeToText(AVirtualKeyCode)
 end;
 

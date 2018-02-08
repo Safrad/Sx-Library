@@ -17207,10 +17207,10 @@ end;
 
 {$IFNDEF NO_IGDI_SELFINIT}
 initialization
-  StartIGDIPlus();
+  //StartIGDIPlus();
 
 finalization
-  StopIGDIPlus();
+  //StopIGDIPlus();
 
 {$ENDIF}
 end.

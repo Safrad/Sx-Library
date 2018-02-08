@@ -1,14 +1,14 @@
 object fAbout: TfAbout
   Left = 640
   Top = 264
-  Width = 344
-  Height = 480
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
   BorderIcons = [biSystemMenu]
   Caption = 'About'
+  ClientHeight = 441
+  ClientWidth = 328
   Color = clBtnFace
   Constraints.MinHeight = 451
   Constraints.MinWidth = 344
