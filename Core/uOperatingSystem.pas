@@ -11,13 +11,17 @@ type
   TOperatingSystem = class
   private
     FName: string;
-    class function GetFlag(const APowerForce: TPowerForce): SG;
+
     function GetIsNT: BG;
     function GetIsAero: BG;
     function GetIsRegionCompatible: BG;
     procedure SetName(const Value: string);
-    class function GetNameInternall: string;
     function GetName: string;
+    procedure SetUptimeInMs(const Value: U8);
+    function GetUptimeInMs: U8;
+
+    class function GetFlag(const APowerForce: TPowerForce): SG;
+    class function GetNameInternall: string;
   public
     class procedure Hibernate;
     class procedure Sleep;
@@ -47,6 +51,7 @@ type
     property IsAero: BG read GetIsAero;
     property IsRegionCompatible: BG read GetIsRegionCompatible;
     property Name: string read GetName write SetName;
+    property UptimeInMs: U8 read GetUptimeInMs;
   end;
 
 function OperatingSystem: TOperatingSystem;
@@ -191,6 +196,11 @@ begin
   Result:=colItem.Caption; //The caption property return an  string  wich includes the operating system version. For example, "Microsoft Windows XP Professional Version = 5.1.2500".
 end;
 
+function TOperatingSystem.GetUptimeInMs: U8;
+begin
+  Result := GetTickCount;
+end;
+
 class procedure TOperatingSystem.PowerOff(const APowerForce: TPowerForce);
 begin
   SetPrivilege;
@@ -254,6 +264,11 @@ begin
       CloseHandle(hToken);
     end;
   end;
+end;
+
+procedure TOperatingSystem.SetUptimeInMs(const Value: U8);
+begin
+
 end;
 
 class procedure TOperatingSystem.ShutDown(const APowerForce: TPowerForce);
