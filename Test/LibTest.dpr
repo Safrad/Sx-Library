@@ -36,7 +36,9 @@ uses
   uMathTest in '..\Core\uMathTest.pas',
   uMidiPlayerTest in '..\Core\uMidiPlayerTest.pas',
   uCPUTest in '..\Core\uCPUTest.pas',
-  uDParserTest in '..\Parser\uDParserTest.pas';
+  uDParserTest in '..\Parser\uDParserTest.pas',
+  uArgumentsForTest in '..\Arguments\uArgumentsForTest.pas',
+  uArgumentsTest in '..\Arguments\uArgumentsTest.pas';
 
 {$R *.RES}
 
