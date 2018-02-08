@@ -2,7 +2,7 @@ unit uAbout;
 
 {$ifndef Console}
 {$ifopt d-}
-  {$define FastMMUsageTracker}
+  {.$define FastMMUsageTracker}
 {$endif}
 {$endif}
 
