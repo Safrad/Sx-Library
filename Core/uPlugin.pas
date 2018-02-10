@@ -47,6 +47,7 @@ uses
   uStrings,
   uMsg,
   uLog,
+  uOutputFormat,
   uProjectInfo,
   uSystemMemory,
   uFiles;
@@ -118,11 +119,19 @@ begin
 
     if Result then
     begin
+      if StartupMemory > CleanupMemory then
+      begin
+        MainLogAdd('Memory leak of ' + NToS(StartupMemory - CleanupMemory) + ' bytes detected in ' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlWarning);
+      end
+      else if StartupMemory < CleanupMemory then
+      begin
+        Warning(NToS(CleanupMemory - StartupMemory) + ' bytes more memory cleaned up in ' + CharSpace + QuotedStr(ExtractFileName(FileName)));
+      end;
+
       FHandle := 0;
       FName := '';
       FVersion := '';
       FDescription := '';
-      FStartupMemory := 0;
     end
     else
     begin
@@ -139,7 +148,7 @@ end;
 
 destructor TPlugin.Destroy;
 begin
-  Unload;
+  Unload;   
 
   inherited;
 end;
