@@ -129,7 +129,7 @@ begin
     Table.Data[i + 1] := Row;
   end;
 
-  Table.WriteToConsole
+  Table.WriteToConsole;
 end;
 
 procedure HelpParams(const Value: string = '');
