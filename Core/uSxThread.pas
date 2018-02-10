@@ -88,7 +88,8 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-  TSxThread.NameThreadForDebugging('Main', MainThreadID);
+  if not IsLibrary then
+    TSxThread.NameThreadForDebugging('Main', MainThreadID);
 {$ENDIF NoInitialization}
 
 end.
