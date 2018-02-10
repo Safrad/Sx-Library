@@ -64,7 +64,7 @@ implementation
 
 uses
 	uParams, uFiles, uCharset,
-	uOutputFormat, uEscape, uStrings, {$ifndef Console}uProjectInfo,{$endif}
+	uOutputFormat, uEscape, uStrings, uProjectInfo,
 	Windows, TypInfo;
 
 const
@@ -184,7 +184,7 @@ begin
 
 	if FFile.FileSize = 0 then
 		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
-	Add('Started'{$ifndef Console} + ' Version ' + GetProjectInfo(piFileVersion){$endif}, mlInformation);
+	Add('Started Version ' + GetProjectInfo(piFileVersion), mlInformation);
 end;
 
 var
