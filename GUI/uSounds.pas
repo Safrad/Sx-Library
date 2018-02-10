@@ -99,8 +99,6 @@ type
 	end;
 
 var
-	fSounds: TfSounds;
-
 	Sounds: TData;
 	DSounds: TData;
 	SoundsChanged: BG;
@@ -161,10 +159,6 @@ begin
 		MainIni.RWBool(Section, P.Name + ' Enabled', P.Enabled, Save);
 		Sounds.Next(Pointer(P));
 	end;
-
-	if Save = False then
-		if Assigned(fSounds) then
-			fSounds.Init;
 end;
 
 function AddSounds(const SoundNames: array of string; const Disabled: BG = False): SG;
@@ -242,7 +236,6 @@ var
 begin
 	if IsRelease then
 		StopPlayWave;
-	FormFree(TForm(fSounds));
 	if IniLoaded then
 	begin
 		IniLoaded := False;
@@ -387,18 +380,21 @@ begin
 end;
 
 procedure FormSounds;
+var
+	fSounds: TfSounds;
 begin
 	if IniLoaded = False then
 	begin
 		IniLoaded := True;
 		MainIni.RegisterRW(TOb.RWOptions);
 	end;
-	if not Assigned(fSounds) then
-		fSounds := TfSounds.Create(nil);
-	fSounds.DViewSounds.RowCount := Sounds.Count;
-	fSounds.ShowModal;
-	if FreeFormAfterClose then
+	fSounds := TfSounds.Create(nil);
+	try
+		fSounds.DViewSounds.RowCount := Sounds.Count;
+		fSounds.ShowModal;
+	finally
 		FreeAndNil(fSounds);
+  end;
 end;
 
 procedure TfSounds.FormResize(Sender: TObject);

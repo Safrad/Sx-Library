@@ -106,8 +106,6 @@ function LgToPx(const Value: SG; const OriginalDPI: SG): SG; overload;
 
 var
 	FormBorder: SG = 8;
-const
-	FreeFormAfterClose = True;
 
 var
 	DesktopHWnd: HWnd;
