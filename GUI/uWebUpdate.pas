@@ -10,31 +10,21 @@ const
 	LocalVersionFileName = 'version.txt';
 	WebVersionFileName = 'version.txt';
 
-{$ifndef Console}
-procedure DownloadFileEx(const AURL: string; const TargetFileName: string; const Caption: string);
-{$endif}
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 function DownloadData(const AURL: string): string; overload;
 function DownloadData(const AURL: string; const AUserName: string; const APassword: string): string; overload;
 function DownloadFileWithPost(const AURL: string; const Source: TStrings; const Encode: BG; TargetFileName: string): BG;
 function GetWebVersion(const Web: string): string;
-{$ifndef Console}
+
 procedure CheckForUpdate; overload;
 procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
-{$endif}
 
 implementation
 
 uses
 	uLog,
-	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, uOutputFormat, uMath,
-  IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack
-  {$ifndef Console}
-  ,
-  uAPI,
-  ufTextStatus, ufStatus,
-  ExtActns, Forms
-  {$endif};
+	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, uOutputFormat, uMath, uAPI,
+  IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 var
@@ -74,66 +64,6 @@ begin
 		IdHTTP1.Free;
 	end;
 end;
-
-{$ifndef Console}
-type
-  TObj = class
-  private
-    Again: BG;
-  public
-    procedure OnDownloadProgress(Sender: TDownLoadURL; Progress,
-        ProgressMax: Cardinal; StatusCode: TURLDownloadStatus; StatusText: String;
-        var Cancel: Boolean);
-  end;
-
-{ TObj }
-
-procedure TObj.OnDownloadProgress(Sender: TDownLoadURL; Progress,
-  ProgressMax: Cardinal; StatusCode: TURLDownloadStatus;
-  StatusText: String; var Cancel: Boolean);
-begin
-  Cancel := ufStatus.Cancel;
-  if (ProgressMax > 0) and (Again = False) then
-  begin
-    Again := True;
-    UpdateMaximum(ProgressMax);
-    UpdateStatus(0);
-  end;
-  if (Again = True) and (Progress <> 0) then
-  begin
-    UpdateStatus(Progress);
-  end;
-  Application.ProcessMessages;
-  Sleep(10);
-end;
-
-var
-  Obj: TObj;
-
-procedure DownloadFileEx(const AURL: string; const TargetFileName: string; const Caption: string);
-var
-	DownLoadURL: TDownLoadURL;
-begin
-  if LogDebug then
-		MainLogAdd('Download file ' + AddQuoteF(AURL), mlDebug);
-  if Obj = nil then
-    Obj := TObj.Create;
-  Obj.Again := False;
-
-  DownLoadURL := TDownLoadURL.Create(nil);
-  try
-    ShowStatusWindow(nil, nil, Caption);
-    DownLoadURL.URL := AURL;
-    DownLoadURL.Filename := TargetFileName;
-    DownLoadURL.OnDownloadProgress := Obj.OnDownloadProgress;
-    DownLoadURL.Visible := True;
-    DownLoadURL.ExecuteTarget(nil);
-  finally
-    HideStatusWindow;
-    DownLoadURL.Free;
-  end;
-end;
-{$endif}
 
 function DownloadData(const AURL: string): string;
 var
@@ -256,7 +186,6 @@ begin
 	end;
 end;
 
-{$ifndef Console}
 procedure CheckForUpdate; overload;
 begin
 	CheckForUpdate(True);
@@ -302,12 +231,5 @@ begin
 		end;
 	end;
 end;
-{$endif}
 
-initialization
-
-finalization
-{$ifndef Console}
-  FreeAndNil(Obj);
-{$endif}
 end.

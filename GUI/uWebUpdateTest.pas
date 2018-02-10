@@ -15,7 +15,7 @@ type
 implementation
 
 uses
-  uTypes, SysUtils, IdHTTP, IdException, uFiles, uWebUpdate;
+  uTypes, SysUtils, IdHTTP, IdException, uFiles, uWebUpdate, uDownloadEx;
 
 { TWebUpdateTest }
 
