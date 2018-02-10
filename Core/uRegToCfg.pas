@@ -60,9 +60,6 @@ var
 	FileName: TFileName;
 begin
   FileName := DelphiPath + 'bin' + PathDelim + 'dcc' + Bits + '.cfg';
-  {$ifdef Console}
-  Writeln('Creating ' + FileName);
-  {$endif}
   WriteStringToFile(FileName, Data, False, fcAnsi);
 end;
 
