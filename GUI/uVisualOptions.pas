@@ -40,7 +40,7 @@ constructor TVisualOptions.Create;
 begin
   inherited;
 
-  if OperatingSystem.IsAero then
+  if OperatingSystem.IsAero and (not IsLibrary) then
     FDialogVisualStyle := dsWindowsVista
   else
     FDialogVisualStyle := dsWindowsXP;
