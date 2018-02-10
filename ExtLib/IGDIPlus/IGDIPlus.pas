@@ -17207,10 +17207,12 @@ end;
 
 {$IFNDEF NO_IGDI_SELFINIT}
 initialization
-  StartIGDIPlus();
+  if not IsLibrary then
+    StartIGDIPlus();
 
 finalization
-  StopIGDIPlus();
+  if not IsLibrary then
+    StopIGDIPlus();
 
 {$ENDIF}
 end.
