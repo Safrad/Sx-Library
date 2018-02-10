@@ -956,10 +956,6 @@ var
 begin
   if FileExists(AFileName) then
   begin
-		{$ifdef Console}
-    Information('Reading file %1.', [AFileName]);
-		{$endif}
-
     IniFile := TIniFile.Create(AFileName);
     try
       if IniFile.SectionExists(BuildSectionName) then
@@ -1069,10 +1065,6 @@ var
   Data: string;
   CfgSearchPath: string;
 begin
-	{$ifdef Console}
-  Information('Writing file %1.', [CfgFileName]);
-	{$endif}
-
   Data := '';
 
   if OutputDir <> '' then
@@ -1106,9 +1098,6 @@ begin
   Data := Data + '-K$' + NumToStr(ImageBase, 16) + FileSep;
 
   WriteStringToFile(CfgFileName, Data, False, fcAnsi);
-	{$ifdef Console}
-  Information('Done.');
-	{$endif}
 end;
 
 procedure TProjectOptions.AddConditionals(const AConditionals: string);
