@@ -38,7 +38,8 @@ uses
   uCPUTest in '..\Core\uCPUTest.pas',
   uDParserTest in '..\Parser\uDParserTest.pas',
   uArgumentsForTest in '..\Arguments\uArgumentsForTest.pas',
-  uArgumentsTest in '..\Arguments\uArgumentsTest.pas';
+  uArgumentsTest in '..\Arguments\uArgumentsTest.pas',
+  uLoadDllTest in 'DllForTest\uLoadDllTest.pas';
 
 {$R *.RES}
 
