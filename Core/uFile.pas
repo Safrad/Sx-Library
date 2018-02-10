@@ -33,12 +33,11 @@ const
 		Buffer Size, Performance
 		1..16 * KB, low
 		32 * KB, acceptable
-		64..128 * KB, the best for AMD
-		128 * KB, the best for Intel
+		>= 64 * KB optimal
 		16 * MB, Win XP x64 API maximum
 		32 * MB, Win XP API maximum
 	}
-	DefFileBuffer = {$IFNDEF Console} 128 {$ELSE} 64 {$ENDIF} * KB;
+	DefFileBuffer = 256 * KB;
 
 	// For write FMode only, if enabled temporary file is used first
 type
