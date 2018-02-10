@@ -18,7 +18,6 @@ type
     function GetIsRegionCompatible: BG;
     procedure SetName(const Value: string);
     function GetName: string;
-    procedure SetUptimeInMs(const Value: U8);
     function GetUptimeInMs: U8;
 
     class function GetFlag(const APowerForce: TPowerForce): SG;
@@ -267,11 +266,6 @@ begin
       CloseHandle(hToken);
     end;
   end;
-end;
-
-procedure TOperatingSystem.SetUptimeInMs(const Value: U8);
-begin
-
 end;
 
 class procedure TOperatingSystem.ShutDown(const APowerForce: TPowerForce);
