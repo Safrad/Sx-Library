@@ -2,7 +2,7 @@ unit uSystem;
 
 interface
 
-uses uTypes, SysUtils, Forms, ShlObj, Controls, Classes, uFile;
+uses uTypes, SysUtils, Forms, ShlObj, Controls, Classes, Dialogs, uFile;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
 
@@ -30,6 +30,7 @@ function GetDriveInfo(const Drive: TDriveLetter): TDriveInfo;
 
 function SelectFolder(var Path: string; const browseTitle: string = ''): BG;
 function SelectFile(var FileName: TFileName; const browseTitle: string = ''; const Filter: string = ''; const Save: BG = False): BG;
+function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG; overload;
 
 function GetEnabledWinKeys: BG;
 procedure SetEnabledWinKeys(const AEnabled: BG);
@@ -37,7 +38,7 @@ procedure SetEnabledWinKeys(const AEnabled: BG);
 implementation
 
 uses
-	Windows, Math, Dialogs, Registry,
+	Windows, Math, Registry,
 	uStrings, uChar, uFiles, uDictionary;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
@@ -226,6 +227,15 @@ begin
 {$else}
   Result := False;
 {$endif}
+end;
+
+function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG;
+begin
+	Dialog.FileName := ExtractFileName(FileName);
+	Dialog.InitialDir := RepairDirectory(ExtractFilePath(FileName));
+	Result := Dialog.Execute;
+	if Result then
+		FileName := ShortDir(Dialog.FileName);
 end;
 
 function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG;

@@ -4,7 +4,6 @@ interface
 
 uses
 	uTypes, uStrings, uFile, uBackup,
-	{$ifndef Console}Dialogs,{$endif}
 	SysUtils, Windows;
 
 var
@@ -110,11 +109,6 @@ function ShortToLongPath(ShortName: string): string;
 function LongToShortPath(const LongName: string): string;}
 
 function RepairDirectory(const Dir: TFileName): TFileName;
-{$ifndef Console}
-function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG; overload;
-{$else}
-function ExecuteDialog(const Dialog: TObject; var FileName: TFileName): BG; overload;
-{$endif}
 function SameFiles(const FileName1, FileName2: TFileName): BG;
 function SameFilesNoPrefix(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
@@ -2175,22 +2169,6 @@ begin
 		if ParentDir(string(Result)) = False then Break;
 	end;
 end;
-
-{$ifndef Console}
-function ExecuteDialog(const Dialog: TOpenDialog; var FileName: TFileName): BG;
-begin
-	Dialog.FileName := ExtractFileName(FileName);
-	Dialog.InitialDir := RepairDirectory(ExtractFilePath(FileName));
-	Result := Dialog.Execute;
-	if Result then
-		FileName := ShortDir(Dialog.FileName);
-end;
-{$else}
-function ExecuteDialog(const Dialog: TObject; var FileName: TFileName): BG; overload;
-begin
-  Result := False;
-end;
-{$endif}
 
 function CompareFiles(const File1, File2: TFile): BG;
 label LClose;
