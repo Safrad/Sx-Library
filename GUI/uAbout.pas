@@ -1,20 +1,11 @@
 unit uAbout;
 
-{$ifndef Console}
-{$ifopt d-}
-  {$define FastMMUsageTracker}
-{$endif}
-{$endif}
-
 interface
 
 uses
 	uDForm, uTypes, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
-  {$ifdef FastMMUsageTracker}
-  FastMMUsageTracker,
-  {$endif}
 	uDWinControl;
 
 type
@@ -23,7 +14,6 @@ type
 		ButtonOk: TDButton;
 		ImageAbout: TDImage;
 		ButtonSysInfo: TDButton;
-		ButtonMemoryStatus: TDButton;
 		DViewAbout: TDView;
 		ButtonStatistics: TDButton;
 		ButtonVersionInfo: TDButton;
@@ -40,7 +30,6 @@ type
 		procedure DTimerFlashTimer(Sender: TObject);
 		procedure ButtonSysInfoClick(Sender: TObject);
 		procedure ImageAboutFill(Sender: TObject);
-		procedure ButtonMemoryStatusClick(Sender: TObject);
 		procedure DViewAboutGetData(Sender: TObject; var Data: String;
 			ColIndex, RowIndex: Integer; Rect: TRect);
 		procedure ButtonXClick(Sender: TObject);
@@ -80,7 +69,7 @@ uses
 	uAPI, uHTML, uStart, uDictionary,
 	uProjectInfo,
 	uGraph, uDIniFile, uScreen, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
-	{$ifndef LINUX}uMemStatus,{$endif} uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
+	uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
 
 function GetLocalHomepage: TFileName;
 begin
@@ -109,8 +98,6 @@ begin
 	begin
 		fAbout.FormStyle := fsNormal;
 		fAbout.ShowModal;
-		if FreeFormAfterClose then
-			FreeAndNil(fAbout);
 	end
 	else
 	begin
@@ -118,7 +105,6 @@ begin
 		fAbout.Show;
 	end;
 end;
-
 
 function GetFileName(const Base: string): TFileName; overload;
 var
@@ -189,13 +175,7 @@ procedure TfAbout.FormCreate(Sender: TObject);
 var
 	Id: SG;
 begin
-	{$ifdef LINUX}
-	ButtonMemoryStatus.Visible := False;
-	{$endif}
-	if IsRelease then
-  begin
-		ButtonBuildParams.Visible := False;
-	end;
+	ButtonBuildParams.Visible := IsDebug;
 
 	Background := baGradient;
 
@@ -365,13 +345,6 @@ begin
 		BitmapAbout.Border(clHighlight, clHighlight, 3, ef08);//Border(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, clBlack, clWhite, 5, ef16);
 end;
 
-procedure TfAbout.ButtonMemoryStatusClick(Sender: TObject);
-begin
-  {$ifdef FastMMUsageTracker}
-	ShowFastMMUsageTracker;
-  {$endif}
-end;
-
 procedure TfAbout.DViewAboutGetData(Sender: TObject; var Data: String;
 	ColIndex, RowIndex: Integer; Rect: TRect);
 begin
@@ -458,8 +431,7 @@ begin
 	// Height
 	ButtonOk.Top := ClientHeight - FormBorder - ButtonOk.Height;
 	ButtonSysInfo.Top := ClientHeight - FormBorder - ButtonSysInfo.Height;
-	ButtonMemoryStatus.Top := ClientHeight - FormBorder - ButtonMemoryStatus.Height;
-  ButtonBuildParams.Top := ButtonMemoryStatus.Top;
+  ButtonBuildParams.Top := ClientHeight - FormBorder - ButtonBuildParams.Height;
 
 
 	DViewAbout.Height := DViewAbout.IdealHeight;
@@ -486,8 +458,6 @@ procedure TfAbout.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   if (Shift = [ssCtrl, ssAlt])then
   begin
-    if Char(Key) = 'M' then
-      ButtonMemoryStatusClick(Sender);
     if Char(Key) = 'B' then
       ButtonBuildParamsClick(Sender);
   end;
@@ -496,64 +466,38 @@ end;
 procedure TfAbout.ButtonBuildParamsClick(Sender: TObject);
 var
   s: string;
+
+  procedure Append(const ABuildParam: string; const ATurnedOn: BG);
+  begin
+    s := s + ABuildParam;
+    if ATurnedOn then
+      s := s + '+'
+    else
+      s := s + '-';
+    s := s + LineSep;
+  end;
+
 begin
   s := '';
+
   s := s + 'Code generation:' + LineSep;
-  {$ifopt o+}
-  s := s + 'o+ (Optimization)' + LineSep;
-  {$endif}
-  {$ifopt w+}
-  s := s + 'w+ (Stack frames)' + LineSep;
-  {$endif}
-  {$ifopt u+}
-  s := s + 'u+ (Pentium-safe FDIV)' + LineSep;
-  {$endif}
-  {$ifopt a+}
-  s := s + 'a+ (Record field alignment)' + LineSep;
-  {$endif}
+  Append('o (Optimization)', {$ifopt o+}True{$else}False{$endif});
+  Append('w (Stack frames)', {$ifopt w+}True{$else}False{$endif});
+  Append('u (Pentium-safe FDIV)', {$ifopt u+}True{$else}False{$endif});
+  Append('a (Record field alignment)', {$ifopt a+}True{$else}False{$endif});
 
   s := s + 'Runtime errors:' + LineSep;
-  {$ifopt r+}
-  s := s + 'r+ (Range checking)' + LineSep;
-  {$endif}
-  {$ifopt i+}
-  s := s + 'i+ (I/O checking)' + LineSep;
-  {$endif}
-  {$ifopt q+}
-  s := s + 'q+ (Overflow checking)' + LineSep;
-  {$endif}
+  Append('r (Range checking)', {$ifopt r+}True{$else}False{$endif});
+  Append('i (I/O checking)', {$ifopt i+}True{$else}False{$endif});
+  Append('q (Overflow checking)', {$ifopt q+}True{$else}False{$endif});
+
   s := s + 'Debugging:' + LineSep;
-  {$ifopt d+}
-  s := s + 'd+ (Debug information)' + LineSep;
-  {$endif}
-  {$ifopt l+}
-  s := s + 'l+ (Local symbols)' + LineSep;
-  {$endif}
-  {$ifopt y+}
-  s := s + 'y+ (Reference info)' + LineSep;
-  {$endif}
-  {$ifopt y-}
-  s := s + 'y- (Reference info)' + LineSep;
-  {$endif}
-  {$ifopt c+}
-  s := s + 'c+ (Assertions)' + LineSep;
-  {$endif}
-  {$ifopt m+}
-  s := s + 'm+ (Runtime type information)' + LineSep;
-  {$endif}
-
-  {$ifopt h+}
-  s := s + 'h+ (Show Hints)' + LineSep;
-  {$endif}
-//  s := s + 'Syntax options:' + LineSep;
-
-  s := s + 'Definitions:' + LineSep;
-  {$IFDEF DEBUG}
-  s := s + 'DEBUG' + LineSep;
-  {$ENDIF}
-  {$IFDEF RELEASE}
-  s := s + 'RELEASE' + LineSep;
-  {$ENDIF}
+  Append('d (Debug information)', {$ifopt d+}True{$else}False{$endif});
+  Append('l (Local symbols)', {$ifopt l+}True{$else}False{$endif});
+  Append('y (Reference info)', {$ifopt y+}True{$else}False{$endif});
+  Append('c (Assertions)', {$ifopt c+}True{$else}False{$endif});
+  Append('m (Runtime type information)', {$ifopt m+}True{$else}False{$endif});
+  Append('h (Show Hints)', {$ifopt h+}True{$else}False{$endif});
 
   Information(s);
 end;

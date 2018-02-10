@@ -72,19 +72,6 @@ object fAbout: TfAbout
     OnClick = ButtonSysInfoClick
     OnKeyDown = FormKeyDown
   end
-  object ButtonMemoryStatus: TDButton
-    Left = 96
-    Top = 424
-    Width = 65
-    Height = 25
-    Hint = 'Memory Status...'
-    Caption = '&Memory Status...'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 6
-    OnClick = ButtonMemoryStatusClick
-    OnKeyDown = FormKeyDown
-  end
   object ButtonStatistics: TDButton
     Tag = 1
     Left = 88
@@ -112,7 +99,7 @@ object fAbout: TfAbout
     Width = 65
     Height = 25
     Caption = '&Build Params'
-    TabOrder = 7
+    TabOrder = 6
     OnClick = ButtonBuildParamsClick
     OnKeyDown = FormKeyDown
   end
