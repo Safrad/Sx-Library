@@ -1,4 +1,4 @@
-unit uMemStatus;
+unit uMemStatus deprecated;
 
 {$WARN SYMBOL_PLATFORM OFF}
 
@@ -59,11 +59,7 @@ var
 	i, j: SG;
 	B: BG;
 begin
-	{$ifndef LINUX}
 	HS := GetHeapStatus;
-	{$else}
-	FillChar(HS, SizeOf(HS), 0);
-	{$endif}
 	for i := 0 to MaxLabel do
 	begin
 		for j := MaxHistory downto 1 do
