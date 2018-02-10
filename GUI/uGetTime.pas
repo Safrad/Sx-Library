@@ -248,7 +248,7 @@ procedure TfGetTime.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
 	NowVal := StrToMs(EditInput.Text, TMinVal, TDefVal, TMaxVal, True, Messages);
-	Messages.ToStrings(EditError.Lines);
+  EditError.Lines.Text := Messages.ToString;
 	Messages.Clear;
 
 	InitButtons;

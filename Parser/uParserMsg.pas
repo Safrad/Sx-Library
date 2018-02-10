@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes, uData, uLog,
-	SysUtils{$ifndef Console}, Classes{$endif};
+	SysUtils;
 
 type
 	PParserMessage = ^TParserMessage;
@@ -29,11 +29,6 @@ type
 		procedure Clear;
 		procedure ShowAndClear(const FileName: TFileName = '');
 		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
-		{$ifndef Console}
-    procedure ToStrings(const Lines: TStrings);
-    {$else}
-    procedure ToStrings(const Lines: TObject);
-    {$endif}
 		property Messages: TData read Data;
 		property Count: SG read GetCount;
 	end;
@@ -156,7 +151,7 @@ begin
 	if Assigned(Data) and (Data.Count > 0) then
 	begin
 		if FileName <> '' then
-			ErrorMsg('Parsing file %1', [FileName + LineSep + ToString()])
+			ErrorMsg('Parsing file %1', [FileName + LineSep + ToString])
 		else
 			ErrorMsg('Parsing' + LineSep + '%1', [ToString]);
 		Clear;
@@ -201,32 +196,6 @@ begin
 	end;
 //	Result := Result + 'Done.';
 end;
-
-{$ifndef Console}
-procedure TParserMessages.ToStrings(const Lines: TStrings);
-var
-	Me: PParserMessage;
-	i: SG;
-begin
-	Lines.BeginUpdate;
-	try
-		Lines.Clear;
-		Me := Data.GetFirst;
-		for i := 0 to SG(Data.Count) - 1 do
-		begin
-			Lines.Add(MesToString(Me));
-			Inc(PByte(Me), Data.ItemMemSize);
-		end;
-	finally
-		Lines.EndUpdate;
-	end;
-end;
-{$else}
-procedure TParserMessages.ToStrings(const Lines: TObject);
-begin
-  // No Code
-end;
-{$endif}
 
 function TParserMessages.GetCount: SG;
 begin
