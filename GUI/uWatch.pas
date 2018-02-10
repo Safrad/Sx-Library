@@ -77,7 +77,6 @@ begin
 								if WatchedFile.Changed then
 									s := s + ' and with the application';
 								s := s + LineSep + 'Reload it?';
-								{$ifndef Console}
 								case Confirmation(s, [mbYes, mbNo, mbYesToAll, mbNoToAll]) of
 								mbYes: Reload := True;
 								mbYesToAll:
@@ -87,7 +86,6 @@ begin
 								end;
 								mbNoToAll: Break;
 								end;
-								{$endif}
 							end;
 							if Reload then
 								try
