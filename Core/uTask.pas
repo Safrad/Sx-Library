@@ -58,6 +58,7 @@ var
 	NoStartup: BG;
 
 function GetRunningTaskCount: UG;
+function FindTaskByName(const AName: string): TTask;
 
 implementation
 
@@ -72,6 +73,21 @@ var
 function GetRunningTaskCount: UG;
 begin
 	Result := RunnedTaskCount;
+end;
+
+function FindTaskByName(const AName: string): TTask;
+var
+  i: SG;
+begin
+ Result := nil;
+ for i := 0 to Tasks.Count - 1 do
+ begin
+   if TTask(Tasks[i]).Name = AName then
+   begin
+     Result := TTask(Tasks[i]);
+     Exit;
+   end;
+ end;
 end;
 
 { TTask}
