@@ -7,10 +7,10 @@ uses
   uFormatter;
 
 type
-  TByteFormatter = class(TInterfacedObject, IFormatter)
+  TByteFormatter = class(TFormatter)
   public
-    function Format(const AValue: S8): string; overload;
-    function Format(const AValue: FG): string; overload;
+    function Format(const AValue: S8): string; override;
+    function Format(const AValue: FG): string; override;
   end;
 
 implementation

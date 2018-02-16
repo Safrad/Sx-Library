@@ -16,8 +16,8 @@ type
     procedure SetUnitName(const Value: string);
     procedure SetPrefixType(const Value: TPrefixType);
   public
-    function Format(const AValue: S8): string; overload;
-    function Format(const AValue: FG): string; overload;
+    function Format(const AValue: S8): string; override;
+    function Format(const AValue: FG): string; override;
 
     property UnitName: string read FUnitName write SetUnitName;
     property PrefixType: TPrefixType read FPrefixType write SetPrefixType;

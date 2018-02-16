@@ -7,15 +7,15 @@ uses
   uFormatter;
 
 type
-  TNumberFormatter = class(TInterfacedObject, IFormatter)
+  TNumberFormatter = class(TFormatter)
   private
     FPrecision: SG;
     procedure SetPrecision(const Value: SG);
   public
     constructor Create;
 
-    function Format(const AValue: S8): string; overload;
-    function Format(const AValue: FG): string; overload;
+    function Format(const AValue: S8): string; override;
+    function Format(const AValue: FG): string; override;
 
     property Precision: SG read FPrecision write SetPrecision;
   end;
