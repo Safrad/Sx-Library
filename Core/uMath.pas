@@ -56,6 +56,9 @@ procedure UnsignedDivMod10(const Dividend: U4; out Result: U4; out Reminder: U4)
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: Extended): Extended;
 
+function EqualRelative(const A, B, MaxRelativeError: FA): BG;
+function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG;
+function Factorial(const AValue: SG): SG;
 function FastSqrt(A: UG): UG;
 function LinearMax(Clock, Maximum: UG): UG;
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG); overload;
@@ -466,6 +469,36 @@ end;
 function ModE(x, y: Extended): Extended;
 begin
 	Result := x - {Trunc}Floor(x / y) * y;
+end;
+
+function EqualRelative(const A, B, MaxRelativeError: FA): BG;
+var
+  RelativeError: FA;
+begin
+  if Abs(B) > Abs(A) then
+    RelativeError := Abs((A - B) / B)
+  else
+    RelativeError := Abs((A - B) / A);
+
+  Result := RelativeError <= MaxRelativeError;
+end;
+
+function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG;
+var
+  AbsoluteError: FA;
+begin
+  AbsoluteError := Abs(A - B);
+  Result := AbsoluteError <= MaxAbsoluteError;
+end;
+
+function Factorial(const AValue: SG): SG; overload;
+const
+  FactorialTable: array[0..12] of SG = (
+    1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600);
+begin
+  if (AValue < Low(FactorialTable)) or (AValue > High(FactorialTable)) then
+    raise EInvalidArgument.Create('Factorial argument not in 0..12 range.');
+  Result := FactorialTable[AValue];
 end;
 
 function FastSqrt(A: UG): UG;
@@ -1201,7 +1234,6 @@ begin
 //  Sins[i]:=Trunc(128*(sin(pi*i/128)+1))-128;
 	end;
 end;
-
 
 procedure ReadMem(P: Pointer; Size: UG); register;
 {$ifdef CPUX64}

@@ -16,6 +16,7 @@ type
     procedure AbsMinTest;
     procedure UnsignedDivMod10Test;
     procedure UnsignedModTest;
+    procedure FactorialTest;
     procedure FastSqrtTest;
     procedure RoundNTest;
     procedure BitsToByteTest;
@@ -29,6 +30,7 @@ type
 implementation
 
 uses
+  GammaF,
   uTimeSpan,
   uMath;
 
@@ -159,6 +161,26 @@ begin
   CheckEquals(20, TimeDifference(100, 80));
   CheckEquals(10, TimeDifference(9, High(U4)));
   CheckEquals(100, TimeDifference(99, $FFFFFFFFFFFFFFFF));
+end;
+
+procedure TMathTest.FactorialTest;
+const
+  Factorial99: FA =  9.3326215443944152681E155; // 20 digits
+  Factorial999: FA = 4.0238726007709377354E2564; // 20 digits
+begin
+  CheckEquals(1, Factorial(0));
+  CheckEquals(1, Factorial(1));
+  CheckEquals(2, Factorial(2));
+  CheckEquals(6, Factorial(3));
+  CheckEquals(24, Factorial(4));
+
+  CheckEquals(1, Gamma(1));
+  CheckEquals(1, Gamma(2));
+  CheckEquals(2, Gamma(3));
+  CheckEquals(6, Gamma(4));
+  CheckEquals(24, Gamma(5));
+  CheckTrue(EqualRelative(Gamma(100), Factorial99, 1e-17));
+  CheckTrue(EqualRelative(Gamma(1000), Factorial999, 1e-15));
 end;
 
 initialization
