@@ -39,7 +39,9 @@ uses
   uDParserTest in '..\Parser\uDParserTest.pas',
   uArgumentsForTest in '..\Arguments\uArgumentsForTest.pas',
   uArgumentsTest in '..\Arguments\uArgumentsTest.pas',
-  uLoadDllTest in 'DllForTest\uLoadDllTest.pas';
+  uLoadDllTest in 'DllForTest\uLoadDllTest.pas',
+  uPermutationTest in '..\Core\uPermutationTest.pas',
+  uPermutationList in '..\Core\uPermutationList.pas';
 
 {$R *.RES}
 
