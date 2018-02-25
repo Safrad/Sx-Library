@@ -59,7 +59,7 @@ type
 
 implementation
 
-uses WinTypes, SysUtils;
+uses SysUtils;
 
 constructor TIntegerList.Create;
 begin
