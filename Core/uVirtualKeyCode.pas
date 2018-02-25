@@ -31,10 +31,10 @@ function VirtualKeyCodeToText(const AVirtualKeyCode: U2): string;
 const
   KeyCodeToString: array[U1] of string = (
     '', // 0
-    'L. Button', // VK_LBUTTON
-    'R. Button', // VK_RBUTTON
+    'Left Mouse', // VK_LBUTTON
+    'Right Mouse', // VK_RBUTTON
     'Cancel', // VK_CANCEL
-    'M. Button', // VK_MBUTTON
+    'Middle Mouse', // VK_MBUTTON
     'X Button 1',
     'X Button 2',
     '', // Undefined
@@ -121,8 +121,8 @@ const
     'X',
     'Y',
     'Z',
-    'L. Win', // VK_LWIN
-    'R. Win', // VK_RWIN
+    'Left Win', // VK_LWIN
+    'Right Win', // VK_RWIN
     'Apps', // VK_APPS
     '', // Reserved
     'Sleep', // VK_SLEEP
@@ -190,12 +190,12 @@ const
     '', // Unassigned
     '', // Unassigned
     '', // Unassigned
-    'L. Shift', // VK_LSHIFT
-    'R. Shift', // VK_RSHIFT
-    'L. Control', // VK_LCONTROL
-    'R. Control', // VK_RCONTROL
-    'L. Alt', // VK_LMENU
-    'R. Alt', // VK_RMENU
+    'Left Shift', // VK_LSHIFT
+    'Right Shift', // VK_RSHIFT
+    'Left Ctrl', // VK_LCONTROL
+    'Right Ctrl', // VK_RCONTROL
+    'Left Alt', // VK_LMENU
+    'Right Alt', // VK_RMENU
     'Back', // VK_BROWSER_BACK
     'Forward', // VK_BROWSER_FORWARD
     'Refresh', // VK_BROWSER_REFRESH
