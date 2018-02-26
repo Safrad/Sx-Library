@@ -13,6 +13,7 @@ implementation
 uses
 	SysUtils,
 	uLog,
+  uChar,
 	uStrings;
 
 function RepairText(var Text: string; const ParserMessages: TParserMessages): BG;
