@@ -295,18 +295,25 @@ begin
 		exit;
 	end;
 
-	Synchronize(SetRunning);
+  if IsConsole then
+    SetRunning
+  else
+  	Synchronize(SetRunning); // Do not work in console
 
 	while WaitForSingleObject(fExternalApp.fProcessInformation.hProcess, 40) = WAIT_TIMEOUT do
 	begin
-		if Terminated then break;
+		if Terminated then
+      Break;
 		if Assigned(fOnEventBreak) then
 			EventBreak;
 {		if Assigned(fOnSynchronizedEventBreak) then
 			Synchronize(SynchronizedEventBreak);}
 	end;
 
-	Synchronize(SetNotRunning);
+  if IsConsole then
+    SetNotRunning
+  else
+  	Synchronize(SetNotRunning);
 end;
 
 procedure TExternalAppThread.SetNotRunning;
