@@ -198,6 +198,7 @@ begin
 
 //	fRunning := true;
 	fInvokerThread := TExternalAppThread.Create(self);
+  fInvokerThread.FreeOnTerminate := True;
 	fInvokerThread.fOnEventBreak := fOnEventBreak; 
 end; 
 
