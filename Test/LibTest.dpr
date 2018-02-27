@@ -41,7 +41,8 @@ uses
   uArgumentsTest in '..\Arguments\uArgumentsTest.pas',
   uLoadDllTest in 'DllForTest\uLoadDllTest.pas',
   uPermutationTest in '..\Core\uPermutationTest.pas',
-  uPermutationList in '..\Core\uPermutationList.pas';
+  uPermutationList in '..\Core\uPermutationList.pas',
+  uStopwatchTest in '..\Core\uStopwatchTest.pas';
 
 {$R *.RES}
 
