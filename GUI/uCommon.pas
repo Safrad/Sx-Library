@@ -98,7 +98,6 @@ type
 		procedure Exit1Click(Sender: TObject);
 		procedure LocalHomepage1Click(Sender: TObject);
 		procedure WebHomepage1Click(Sender: TObject);
-		procedure ViewMessages1Click(Sender: TObject);
 		procedure ViewParams1Click(Sender: TObject);
 		procedure CheckForUpdate1Click(Sender: TObject);
 		procedure About1Click(Sender: TObject);
@@ -492,11 +491,6 @@ begin
 	end;
 end;
 
-procedure TCommonMenu.ViewMessages1Click(Sender: TObject);
-begin
-	ShowMessages;
-end;
-
 procedure TCommonMenu.ViewParams1Click(Sender: TObject);
 begin
 	HelpParams;
@@ -689,12 +683,6 @@ begin
 			M.OnClick := CommonMenu.LocalHomepage1Click;
 			Help1.Add(M);
 		end;
-
-		M := TMenuItem.Create(Help1);
-		M.Name := 'Messages1';
-		M.Caption := 'View Messages...';
-		M.OnClick := CommonMenu.ViewMessages1Click;
-		Help1.Add(M);
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'Parameters1';
