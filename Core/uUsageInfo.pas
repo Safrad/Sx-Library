@@ -151,6 +151,7 @@ var
   FileName, ResponseFileName: TFileName;
   Source: TStrings;
 begin
+  CreateDirEx(TempDir);
   FileName := TempDir + 'log.xml';
   ResponseFileName := TempDir + 'response.txt';
   CreateXML(FileName);
