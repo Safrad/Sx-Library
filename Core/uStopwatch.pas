@@ -80,14 +80,11 @@ begin
 end;
 
 procedure TStopwatch.Start;
-var
-  LastSleepInterval: U8;
 begin
   if FStopTime <> 0 then
   begin
     Assert(FStartTime <> 0);
-    LastSleepInterval := FStopTime - FStartTime;
-    Inc(FStartTime, LastSleepInterval);
+    Inc(FStartTime, IntervalFrom(FStopTime));
     FStopTime := 0;
   end
   else
