@@ -1142,7 +1142,7 @@ var i: SG;
 begin
 	SetLength(Result, Size);
 	for i := 1 to Size do
-		Result[i] := Char(Random(256));
+		Result[i] := Char(1 + Random(255));
 end;
 
 function RandomText(const Size: SG): string;
