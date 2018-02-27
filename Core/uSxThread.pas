@@ -15,6 +15,9 @@ type
   public
     constructor Create;
 
+    procedure Terminate; reintroduce;
+    function TerminateAndWaitFor: LongWord;
+
     {$if CompilerVersion < 20}
     class procedure NameThreadForDebugging(const AName: AnsiString; const AThreadId: LongWord);
     procedure Start;
@@ -84,6 +87,19 @@ constructor TSxThread.Create;
 begin
   inherited Create(True); // Create suspended
   Name := ClassName; // Set thread name for debugging purposes
+end;
+
+procedure TSxThread.Terminate;
+begin
+  inherited Terminate;
+
+  Resume; // if suspended
+end;
+
+function TSxThread.TerminateAndWaitFor: LongWord;
+begin
+  Terminate;
+  Result := WaitFor;
 end;
 
 initialization
