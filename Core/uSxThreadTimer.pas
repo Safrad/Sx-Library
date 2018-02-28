@@ -6,6 +6,7 @@ uses
   uTypes,
   Classes,
   uTimeSpan,
+  uStopwatch,
   uSxThread;
 
 type
@@ -14,13 +15,15 @@ type
     FEnabled: BG;
     FInterval: TTimeSpan;
     FOnTimer: TNotifyEvent;
-    FWorkingTime: U8;
-    FIdleTime: U8;
+    FWorkingStopwatch: TStopwatch;
+    FIdleStopwatch: TStopwatch;
     FSleepTime: TTimeSpan;
     procedure SetOnTimer(const Value: TNotifyEvent);
     procedure SetEnabled(const Value: BG);
 
     procedure InternalExecute;
+    function GetIdleTime: TTimeSpan;
+    function GetWorkingTime: TTimeSpan;
   protected
     procedure Execute; override;
   public
@@ -33,14 +36,14 @@ type
     property Interval: TTimeSpan read FInterval;
     property OnTimer: TNotifyEvent read FOnTimer write SetOnTimer;
 
-    property WorkingTime: U8 read FWorkingTime;
-    property IdleTime: U8 read FIdleTime;
+    property WorkingTime: TTimeSpan read GetWorkingTime;
+    property IdleTime: TTimeSpan read GetIdleTime;
   end;
 
 implementation
 
 uses
-  uMsg, uStopwatch, uMath,
+  uMsg, uMath,
   Windows, SysUtils, Math;
 
 { TSxThreadTimer }
@@ -53,11 +56,15 @@ begin
   FInterval := TTimeSpan.Create;
   FInterval.Seconds := 1;
 
+  FWorkingStopwatch := TStopwatch.Create;
+  FIdleStopwatch := TStopwatch.Create;
   FSleepTime := TTimeSpan.Create;
 end;
 
 destructor TSxThreadTimer.Destroy;
 begin
+  FreeAndNil(FWorkingStopwatch);
+  FreeAndNil(FIdleStopwatch);
   FreeAndNil(FSleepTime);
   FreeAndNil(FInterval);
 
@@ -75,32 +82,34 @@ begin
   end;
 end;
 
+function TSxThreadTimer.GetIdleTime: TTimeSpan;
+begin
+  Result := FIdleStopwatch.Elapsed;
+end;
+
+function TSxThreadTimer.GetWorkingTime: TTimeSpan;
+begin
+  Result := FWorkingStopwatch.Elapsed;
+end;
+
 procedure TSxThreadTimer.InternalExecute;
 var
-  Stopwatch: TStopwatch;
   StartTime: U8;
 begin
-  Stopwatch := TStopwatch.Create;
-  try
-    StartTime := PerformanceCounter;
-    while (not Terminated) do
-    begin
-      Stopwatch.Start;
-      FOnTimer(Self);
-      Stopwatch.Stop;
-      Inc(FWorkingTime, Stopwatch.Elapsed.Ticks);
+  StartTime := PerformanceCounter;
+  while (not Terminated) do
+  begin
+    FWorkingStopwatch.Start;
+    FOnTimer(Self);
+    FWorkingStopwatch.Stop;
 
-      if FInterval.Ticks <= 0 then
-        FSleepTime.Ticks := 0
-      else
-        FSleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
-      Stopwatch.Start;
-      PreciseSleep(FSleepTime);
-      Stopwatch.Stop;
-      Inc(FIdleTime, Stopwatch.Elapsed.Ticks);
-    end;
-  finally
-    Stopwatch.Free;
+    if FInterval.Ticks <= 0 then
+      FSleepTime.Ticks := 0
+    else
+      FSleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
+    FIdleStopwatch.Start;
+    PreciseSleep(FSleepTime);
+    FIdleStopwatch.Stop;
   end;
 end;
 
