@@ -104,7 +104,7 @@ implementation
 
 uses
 	uDForm,
-	Consts, SysUtils, ActnList, ImgList, MMSystem, Math,
+	Consts, SysUtils, ActnList, ImgList, MMSystem, Math, Types,
 	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uCommon,
 	uPictureFactory, uSounds, uOperatingSystem, uDWinControl;
 
