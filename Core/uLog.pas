@@ -41,7 +41,7 @@ type
 		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel;
 	end;
 
-
+  function GetLoggingLevel(const s: string): TMessageLevel;
 	procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel);
 
   // Optimization purposes only
