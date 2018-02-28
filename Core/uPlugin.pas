@@ -26,7 +26,7 @@ type
     procedure Unload;
     function GetAddress(const ProcedureName: string): Pointer;
     function GetAddressOptional(const ProcedureName: string): Pointer;
-  published
+
     property FileName: string read FFileName write SetFileName;
 
     property Handle: THandle read FHandle;
@@ -121,11 +121,11 @@ begin
     begin
       if StartupMemory > CleanupMemory then
       begin
-        MainLogAdd('Memory leak of ' + NToS(StartupMemory - CleanupMemory) + ' bytes detected in ' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlWarning);
+        MainLogAdd('Memory leak of ' + NToS(StartupMemory - CleanupMemory) + ' bytes detected in ' + QuotedStr(ExtractFileName(FileName)), mlWarning);
       end
       else if StartupMemory < CleanupMemory then
       begin
-        Warning(NToS(CleanupMemory - StartupMemory) + ' bytes more memory cleaned up in ' + CharSpace + QuotedStr(ExtractFileName(FileName)));
+        MainLogAdd(NToS(CleanupMemory - StartupMemory) + ' bytes more memory cleaned up in ' + QuotedStr(ExtractFileName(FileName)), mlDebug);
       end;
 
       FHandle := 0;
