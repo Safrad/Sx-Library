@@ -14,13 +14,13 @@ type
 
 // * Backuping 'data.txt' (delete mask '~data*.txt' can delete backups of i.e. 'data2.txt'
 
-procedure BackupFile(const FileName: TFileName; const BackupFolder: TBackupFolder);
+procedure BackupFile(const FileName: TFileName; const BackupFolder: TBackupFolder; const MaxBackups: Integer = 100);
 
 implementation
 
 uses uFiles, uDelete;
 
-procedure BackupFile(const FileName: TFileName; const BackupFolder: TBackupFolder);
+procedure BackupFile(const FileName: TFileName; const BackupFolder: TBackupFolder; const MaxBackups: Integer = 100);
 var
   BackupPath: string;
   OriginalFileName: string;
@@ -56,11 +56,12 @@ begin
 		uFiles.CopyFile(FileName, FileNameD, True);
 
   // Delete old
+  FillChar(DeleteOptions, SizeOf(DeleteOptions), 0);
   if BackupFolder = bfSubEx then
     DeleteOptions.Mask := '*.*'
   else
     DeleteOptions.Mask := DelFileExt(OriginalFileName) + '*' + ExtractFileExt(OriginalFileName);
-  DeleteOptions.MaxDirs := 100;
+  DeleteOptions.MaxDirs := MaxBackups;
   DeleteOptions.SelectionType := stDifference;
   DeleteOptions.AcceptFiles := True;
   DeleteOptions.Test := False;
