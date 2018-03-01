@@ -332,8 +332,7 @@ begin
 	TempDir := CommonTempDir + '_' + GetProjectInfo(piInternalName) + PathDelim;
 	CreateDirEx(TempDir);
 
-  Randomize;
-	InstanceTempDir := TempDir + NumToStr(Random(MaxInt), 16) + PathDelim;
+	InstanceTempDir := TempDir + NumToStr(GetCurrentProcessID, 16) + PathDelim;
 
 	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
 	if CommonAppDataDir = '' then CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
