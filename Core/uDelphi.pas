@@ -24,7 +24,7 @@ const
   DProjDelphiId: array[TDelphiVersion] of string = ('', '', '', '', '', '', '', '', '', '', '', '', '', '6.0', '7.0',
     // dof
     '', '', '', '', '12.0', '12.0', '12.3' {12.2 without update 1}, '13.4', '14.4', '14.6', '15.3' {15.1, 15.2}, '15.4',
-    '16.0', '17.2', '18.1' {18.0 without update}, '19.0', '20.0'); // Project->PropertyGroup->ProjectVersion
+    '16.0', '17.2', '18.1' {18.0 without update}, '18.2', '18.3'); // Project->PropertyGroup->ProjectVersion
   // Add newer versions here
 
   FirstUnicodeDelphi = dvDelphi2009;
@@ -228,11 +228,11 @@ begin
   end
   else if ADelphiVersion = dvDelphi101Berlin then
   begin
-    Result := '10 Berlin';
+    Result := '10.1 Berlin';
   end
   else if ADelphiVersion = dvDelphi102Tokyo then
   begin
-    Result := '10 Tokyo';
+    Result := '10.2 Tokyo';
   end
   // Add newer versions here
   else
