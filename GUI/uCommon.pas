@@ -47,6 +47,7 @@ type
     goLanguage,
     goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon, goRunAfterStartUp,
 		goShowSplashScreenWhenApplicationStarts,
+		goMenuItemHeightScale,
 		goWindowBackgroundTexture,
 		goWindowBackgroundColor,
 {$if CompilerVersion >= 23}
@@ -63,6 +64,7 @@ var
     (Typ: vsCheck; Default: 1),
 		(Typ: vsCheck; Default: 0),
     (Typ: vsCheck; Default: 1),
+		(Typ: vsSpin; Default: 100; Minimum: 100; Maximum: 400),
 		(Typ: vsCheck; Default: 1),
 		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt),
 {$if CompilerVersion >= 23}
@@ -232,6 +234,33 @@ begin
 	end;
 end;
 
+function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
+var
+	i: SG;
+begin
+	Result := nil;
+	if Form <> nil then
+	begin
+		for i := 0 to Form.ComponentCount - 1 do
+		begin
+			if Form.Components[i] is TMainMenu then
+			begin
+				Result := TMainMenu(Form.Components[i]);
+				Break;
+			end;
+		end;
+		if Result = nil then
+			for i := 0 to Form.ComponentCount - 1 do
+			begin
+				if Form.Components[i] is TPopupMenu then
+				begin
+					Result := TMainMenu(Form.Components[i]);
+					Break;
+				end;
+			end;
+	end;
+end;
+
 procedure CommonForm(const Form: TForm);
 var
 	i: SG;
@@ -240,27 +269,7 @@ begin
 	AddCommonParams;
 	ReadCommandLine(GetCommandLine);
 
-	Menu := nil;
-	if Form <> nil then
-	begin
-		for i := 0 to Form.ComponentCount - 1 do
-		begin
-			if Form.Components[i] is TMainMenu then
-			begin
-				Menu := TMainMenu(Form.Components[i]);
-				Break;
-			end;
-		end;
-		if Menu = nil then
-			for i := 0 to Form.ComponentCount - 1 do
-			begin
-				if Form.Components[i] is TPopupMenu then
-				begin
-					Menu := TMainMenu(Form.Components[i]);
-					Break;
-				end;
-			end;
-	end;
+  Menu := GetMainMenuOrPopupMenu(Form);
 
 	if Menu <> nil then
 	begin
@@ -361,12 +370,13 @@ begin
 	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);}
 	MainIni.RWDateTime(Section, 'LastUpdate', LastUpdate, Save);
 
-{$if CompilerVersion >= 23}
   if Save = False then
   begin
+{$if CompilerVersion >= 23}
     OptionChanged(SG(goVisualStyle));
-  end;
 {$ifend}
+    OptionChanged(SG(goMenuItemHeightScale));
+  end;
   if Save = False then
     TryUploadData;
 end;
@@ -455,6 +465,10 @@ begin
 			else
 				HideSplashScreen(True);
 		end;
+  goMenuItemHeightScale:
+  begin
+    MenuItemHeightScale := GlobalParams[TGlobalOption(OptionIndex)].Num;
+  end;
 	goWindowBackgroundTexture:
 		begin
 			SetBackgroundInvalidate(Application);
