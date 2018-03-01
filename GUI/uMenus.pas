@@ -10,7 +10,9 @@ var
 	IconSize: SG; // Size of button on toolbar.
   ImageSize: SG; // Size of image.
 
-  LargeMenus: BG; // Support touch screens
+  // Supports touch screen
+  UseMenuItemHeightScale: BG = True;
+  MenuItemHeightScale: SG = 100;
 
 function TryFindIcon(Name: string; const Path: string): string;
 procedure LoadMenuIcon(const Bitmap: TBitmap; const Name: string);
@@ -868,12 +870,12 @@ begin
 	end;
 end;
 
-function Scale(const Value: SG): SG;
+function ScaleMenuItemHeight(const AValue: SG): SG;
 begin
-  if LargeMenus then
-    Result := RoundDiv(125 * Value, 100) // 25% increase of size
+  if UseMenuItemHeightScale then
+    Result := RoundDiv(MenuItemHeightScale * AValue, 100) // increase of size
   else
-    Result := Value;
+    Result := AValue;
 end;
 
 (*
@@ -952,9 +954,10 @@ begin
 	if mMenuItem.Caption = cLineCaption then
 		Inc(Height, 6)
 	else
+  begin
 		Inc(Height, ACanvas.TextHeight('Wg'));
-
-  Height := Scale(Height);
+    Height := ScaleMenuItemHeight(Height);
+  end;
 end;
 
 initialization
