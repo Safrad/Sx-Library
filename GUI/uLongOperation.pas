@@ -57,7 +57,7 @@ begin
   InitializeTaskbarAPI;
   SetTaskbarProgressState(tbpsIndeterminate);
 
-  FStopwatch.Start;
+  FStopwatch.Restart;
 end;
 
 procedure TLongOperation.Stop;
