@@ -114,8 +114,8 @@ function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const
 implementation
 
 uses
-  TypInfo, uStrings, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, IniFiles, uInputFormat, uFiles, uFile,
-  uBackup, uMsg;
+  TypInfo, uStrings, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, uInputFormat, uFiles, uFile,
+  uBackup, uMsg, uDIniFile;
 
 const
   DefaultMinStackSize = 16 * KB;
@@ -951,12 +951,12 @@ const
   LinkerSectionName = 'Linker';
   BuildSectionName = 'Build';
 var
-  IniFile: TIniFile;
+  IniFile: TDIniFile;
   ProjectInfoName: TProjectInfoName;
 begin
   if FileExists(AFileName) then
   begin
-    IniFile := TIniFile.Create(AFileName);
+    IniFile := TDIniFile.Create(AFileName);
     try
       if IniFile.SectionExists(BuildSectionName) then
       begin
@@ -974,8 +974,8 @@ begin
       Version.Special := IniFile.ReadBool(VersionInfoSection, 'Special', Version.Special);
       Version.PrivateBuild := IniFile.ReadBool(VersionInfoSection, 'Private', Version.PrivateBuild);
       Version.DLL := IniFile.ReadBool(VersionInfoSection, 'DLL', Version.DLL);
-      Version.Locale := IniFile.ReadInteger(VersionInfoSection, 'Locale', Version.Locale);
-      Version.CodePage := IniFile.ReadInteger(VersionInfoSection, 'CodePage', Version.CodePage);
+      Version.Locale := IniFile.ReadNum(VersionInfoSection, 'Locale', Version.Locale);
+      Version.CodePage := IniFile.ReadNum(VersionInfoSection, 'CodePage', Version.CodePage);
       for ProjectInfoName := Low(ProjectInfoName) to High(ProjectInfoName) do
       begin
         ProjectInfos[ProjectInfoName] := IniFile.ReadString('Version Info Keys', ProjectInfoStr[ProjectInfoName],
@@ -1000,9 +1000,9 @@ begin
       UsePackages := IniFile.ReadBool(DirectoriesSectionName, 'UsePackages', UsePackages);
       Packages := IniFile.ReadString(DirectoriesSectionName, 'Packages', Packages);
 
-      MinStackSize := IniFile.ReadInteger(LinkerSectionName, 'MinStackSize', MinStackSize);
-      MaxStackSize := IniFile.ReadInteger(LinkerSectionName, 'MaxStackSize', MaxStackSize);
-      ImageBase := IniFile.ReadInteger(LinkerSectionName, 'ImageBase', ImageBase);
+      MinStackSize := IniFile.ReadNum(LinkerSectionName, 'MinStackSize', MinStackSize);
+      MaxStackSize := IniFile.ReadNum(LinkerSectionName, 'MaxStackSize', MaxStackSize);
+      ImageBase := IniFile.ReadNum(LinkerSectionName, 'ImageBase', ImageBase);
 
       BuildVersions := IniFile.ReadString('Build', 'Versions', BuildVersions);
     finally
