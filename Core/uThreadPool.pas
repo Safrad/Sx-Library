@@ -247,7 +247,6 @@ end;
 procedure TThreadPool.WaitForWorkers;
 begin
   Sleep(LoopSleepTime);
-  Application.ProcessMessages;
   CheckSynchronize; // If not called deadlock can appear
 end;
 
