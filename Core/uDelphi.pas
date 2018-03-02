@@ -11,6 +11,7 @@ type
     dvDelphi2007, dvDelphi2009, dvDelphi2010, dvDelphiXE, dvDelphiXE2, dvDelphiXE3, dvDelphiXE4, dvDelphiXE5,
     dvDelphiXE6, dvDelphiXE7, dvDelphiXE8, dvDelphi10Seattle, dvDelphi101Berlin, dvDelphi102Tokyo);
   // Add newer versions here
+  TDelphiVersions = array of TDelphiVersion;
 
 const
   ReleaseYear: array[TDelphiVersion] of string = ('', '1983-11-20', '1984-04-17', '1986-09-17', '1987-11-20',
@@ -86,6 +87,8 @@ function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
 
 function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
 
+function GetDelphiResourceBuilder(const ADelphiVersion: TDelphiVersion): string;
+
 function DelphiLibSuffix(const Compiler: TCompiler): string;
 
 function GetDCCFileName(const Compiler: TCompiler): string;
@@ -97,7 +100,7 @@ function GetDelphiVersionCount: SG;
 
 function GetLastDelphiVersion: TDelphiVersion;
 
-function GetAvailableDelphiVersions: TArrayOfSG;
+function GetAvailableDelphiVersions: TDelphiVersions;
 
 function GetAvailableCompilers: TCompilers;
 
@@ -303,6 +306,15 @@ begin
   end;
 end;
 
+function GetDelphiResourceBuilder(const ADelphiVersion: TDelphiVersion): string;
+begin
+  Result := GetDelphiPath(ADelphiVersion);
+  if ADelphiVersion >= FirstUnicodeDelphi then
+    Result := Result + 'Bin\cgrc.exe'
+  else
+    Result := Result + 'Bin\brcc32.exe';
+end;
+
 function DelphiLibSuffix(const Compiler: TCompiler): string;
 begin
   Result := 'Lib';
@@ -397,16 +409,16 @@ end;
 
 function GetLastDelphiVersion: TDelphiVersion;
 var
-  DelphiVersions: TArrayOfSG;
+  DelphiVersions: TDelphiVersions;
 begin
   DelphiVersions := GetAvailableDelphiVersions;
   if Length(DelphiVersions) <= 0 then
     Result := dvDelphi1
   else
-    Result := TDelphiVersion(DelphiVersions[Length(DelphiVersions) - 1]);
+    Result := DelphiVersions[Length(DelphiVersions) - 1];
 end;
 
-function GetAvailableDelphiVersions: TArrayOfSG;
+function GetAvailableDelphiVersions: TDelphiVersions;
 var
   DelphiVersion: TDelphiVersion;
   Count: SG;
@@ -419,7 +431,7 @@ begin
     if DirectoryExists(DelphiPath) then
     begin
       SetLength(Result, Count + 1);
-      Result[Count] := SG(DelphiVersion);
+      Result[Count] := DelphiVersion;
       Inc(Count);
     end;
   end;
