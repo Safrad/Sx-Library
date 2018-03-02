@@ -72,6 +72,7 @@ procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSi
 function CopyDamagedFile(Source, Dest: TFileName): BG;
 function CreateDirEx(const Dir: string): BG;
 function CreateDirsEx(const Dir: string): BG;
+function CreateLockedDir(const ADirectoryName: string): THandle;
 function NewFileOrDir(var FileOrDir: string): BG;
 function NewFileOrDirEx(var FileOrDir: string): BG;
 function CopyFileDateTime(const Source, Dest: string): BG;
@@ -149,6 +150,7 @@ uses
 var
 	StartupEnvironment: array of TStringPair;
 	GInstalled: BG;
+  TempDirHandle: THandle;
 
 procedure InitStartupEnvironment;
 var
@@ -330,7 +332,10 @@ begin
 	if CommonTempDir = '' then TempDir := WinDir + 'Temp';
 	CorrectDir(CommonTempDir);
 	TempDir := CommonTempDir + '_' + GetProjectInfo(piInternalName) + PathDelim;
-	CreateDirEx(TempDir);
+
+  // Windows 10 hotfix
+  // Windows automatically delete files and folders in CommonTempDir
+	TempDirHandle := CreateLockedDir(TempDir);
 
 	InstanceTempDir := TempDir + NumToStr(GetCurrentProcessID, 16) + PathDelim;
 
@@ -1424,6 +1429,35 @@ begin
 		Inc(i);
 	end;
 	Result := CreateDirEx(Dir);
+end;
+
+function CreateLockedDir(const ADirectoryName: string): THandle;
+var
+  DirectoryName: string;
+begin
+  DirectoryName := ADirectoryName;
+  SetLength(DirectoryName, Length(DirectoryName) - 1);
+
+	if ADirectoryName = '' then
+	begin
+		Result := INVALID_HANDLE_VALUE;
+		Exit;
+	end;
+
+  CreateDirEx(ADirectoryName);
+	Result := CreateFile(PChar(DirectoryName), // pointer to name of the file
+		GENERIC_ALL, // access (read-write) mode
+		FILE_SHARE_READ or FILE_SHARE_WRITE, // share mode
+		nil, // pointer to security attributes
+		OPEN_EXISTING, // creation disposition
+    FILE_FLAG_BACKUP_SEMANTICS,
+//		FILE_ATTRIBUTE_NORMAL or FILE_ATTRIBUTE_DIRECTORY or FILE_FLAG_BACKUP_SEMANTICS or FILE_FLAG_DELETE_ON_CLOSE, // file attributes
+		0 // handle to file with attributes to copy
+		);
+	if Result = INVALID_HANDLE_VALUE then
+	begin
+		IOError(DirectoryName, GetLastError);
+	end;
 end;
 
 function NewFileOrDir(var FileOrDir: string): BG;
@@ -2540,5 +2574,6 @@ initialization
 	InitPaths;
 	EnumToStr(TypeInfo(TFileMode), FileModeStr);
 {$ENDIF NoInitialization}
+finalization
+  CloseHandle(TempDirHandle);
 end.
-
