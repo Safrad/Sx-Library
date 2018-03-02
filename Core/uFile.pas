@@ -221,10 +221,6 @@ begin
 
 	if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) then
 	begin
-    // Windows 10 hotfix
-    // Windows automatically delete files and folders in CommonTempDir
-    CreateDirEx(TempDir);
-
 		FTempFileName := TempDir + '~' + ExtractFileName(FileName);
 		if FileExists(FTempFileName) then
 		begin
