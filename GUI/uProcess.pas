@@ -135,7 +135,7 @@ begin
       psIdle:
         SetTaskbarProgressState(tbpsNone);
       psRun:
-        SetTaskbarProgressState(tbpsIndeterminate);
+          SetTaskbarProgressState(tbpsIndeterminate);
       psPaused:
         SetTaskbarProgressState(tbpsPaused);
       psAborted:
@@ -158,6 +158,7 @@ constructor TProcess.Create(Form: TForm);
 begin
   FLongOperation := TLongOperation.Create;
   FLongOperation.Background := True;
+  FValue := -1;
 
   FForm := Form;
   FOneTick := RoundDivU8(PerformanceFrequency, 1000 div LoopSleepTime);
