@@ -742,6 +742,21 @@ end;
 	end;
 	end; }
 
+function VarToStrGUI(const VarData: Variant): string;
+var
+  VarTyp: TVarType;
+begin
+  VarTyp := VarType(VarData);
+  case VarTyp of
+  varSmallint, varInteger, varInt64, varShortInt, varByte, varWord, varLongWord:
+  begin
+    Result := NToS(VarData);
+  end
+  else
+    Result := VarToStr(VarData);
+  end;
+end;
+
 procedure TDView.LFill(Sender: TObject);
 const
 	Border = 1;
@@ -866,7 +881,7 @@ begin
 										FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rect
 												(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].RealWidth - 2,
 												Y + FRowHeight - 2));
-										Data := VarToStr(VarData);
+										Data := VarToStrGUI(VarData);
 									end;
 								except
 									on E: Exception do
@@ -1336,9 +1351,8 @@ begin
   else if Assigned(FOnGetDataEx) then
   begin
     FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rec);
-    Result := VarToStr(VarData);
+    Result := VarToStrGUI(VarData);
   end;
-
 end;
 
 function TDView.GetSelCount: SG;
