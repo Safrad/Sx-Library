@@ -284,7 +284,7 @@ begin
 	begin
 		MergeSort(AIndex, Count - 1, Compare);
 		if Reverse then
-			Reverse4(AIndex[0], Count);
+			ReverseG(AIndex[0], Count);
 	end;
 end;
 

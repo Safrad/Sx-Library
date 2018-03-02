@@ -1069,10 +1069,10 @@ begin
 	end;
 	if Reverse then
 	begin
-		Reverse4(AIndex[0], MaxIndex - MinIndex + 1);
+		ReverseG(AIndex[0], MaxIndex - MinIndex + 1);
 		for i := 0 to (MaxIndex - 1) div 2 do
 		begin
-///			Exchange(AIndex[i], AIndex[MaxIndex - i]);
+//			Exchange(AIndex[i], AIndex[MaxIndex - i]);
 			Exchange(AValue[i], AValue[MaxIndex - i]);
 		end;
 	end;

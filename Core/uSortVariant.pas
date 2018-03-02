@@ -18,7 +18,7 @@ procedure SortVariant(const AIndex: PArraySG; const AVariant: array of Variant; 
 var
 	VarTyp: TVarType;
 	AStr: array of string;
-	AInteger: array of SG;
+	AInteger: array of S4;
 	AFloat: array of FA;
 	AInt64: array of S8;
   i: SG;
