@@ -198,14 +198,15 @@ end;
 
 procedure TCPU.UpdateName;
 var
-  Output: string;
+  Output: TProcessOutput;
   InLineIndex: SG;
 begin
   try
-    Output := GetDosOutput('wmic cpu get name', 'C:\');
+    ExecuteProcess(Output, 'wmic', 'cpu get name', '');
+    Assert(Output.ExitCode = 0);
     InLineIndex := 1;
-    ReadToChar(Output, InLineIndex, CharLF);
-    FName := DelBESpaceF(ReadToChar(Output, InLineIndex, CharLF));
+    ReadToChar(Output.OutputText, InLineIndex, CharLF);
+    FName := DelBESpaceF(ReadToChar(Output.OutputText, InLineIndex, CharLF));
     if FName = '' then
       FName := '?';
   except

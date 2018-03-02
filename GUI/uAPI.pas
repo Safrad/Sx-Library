@@ -6,8 +6,11 @@ uses
 	uTypes,
 	SysUtils, Windows;
 
-// @Return process exit code
-function RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
+type
+  TProcessOutput = record
+    ExitCode: DWORD;
+    OutputText: string;
+  end;
 
 // @Return process exit code
 function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): U4;
@@ -16,7 +19,8 @@ procedure ShellExecuteDirectNoExitCode(FFileName: TFileName; const Params: strin
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 
-function GetDosOutput(const ACommandLine: string; const AWorkDir: string = ''): string;
+// @Return process exit code and output
+procedure ExecuteProcess(out ProcessOutput: TProcessOutput; const AFileName: TFileName; AParams: string = ''; const ACurrentDirectory: string = ''; const AShowCmd: Word = SW_HIDE);
 
 procedure PropertiesDialog(FileName: TFileName);
 
@@ -28,23 +32,7 @@ implementation
 uses
   uShellExecute,
   ShellAPI,
-	Forms,
 	uMsg, uFiles, uLog, uStrings, uFile, uSxThread;
-
-function RunBat(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): UG;
-var
-	BatFileName: string;
-begin
-	BatFileName := InstanceTempDir + 'TempRun.bat';
-	if FileExists(BatFileName) then
-	  DeleteFileEx(BatFileName);
-	WriteStringToFile(BatFileName, Copy(CurrentDirectory, 1, 2) + FileSep + 'cd "' + CurrentDirectory + '"' + FileSep + 'call "' + FFileName + '"' + CharSpace + Params + LineSep, False, fcAnsi);
-	try
-		Result := ShellExecuteDirect(BatFileName, '', CurrentDirectory, ShowCmd);
-	finally
-//		DeleteFileEx(BatFileName); ShellExecuteDirect is asynchronous
-	end;
-end;
 
 function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): U4;
 var
@@ -80,7 +68,6 @@ begin
 		begin
 			repeat
 				Sleep(LoopSleepTime);
-        Application.ProcessMessages;
 				i := WaitForSingleObject(lpExecInfo.hProcess, LoopSleepTime);
         if AbortAPI then Break;
 			until not((i <> WAIT_OBJECT_0)); //i = WAIT_TIMEOUT)); // WAIT_OBJECT_0
@@ -130,7 +117,7 @@ begin
 	ShellExecuteThread.Start;
 end;
 
-function GetDosOutput(const ACommandLine: string; const AWorkDir: string): string;
+procedure ExecuteProcess(out ProcessOutput: TProcessOutput; const AFileName: TFileName; AParams: string = ''; const ACurrentDirectory: string = ''; const AShowCmd: Word = SW_HIDE);
 var
   SA: TSecurityAttributes;
   SI: TStartupInfo;
@@ -140,44 +127,59 @@ var
   Buffer: array[0..255] of AnsiChar;
   BytesRead: Cardinal;
   Handle: Boolean;
+  WaitResult: DWORD;
+  CurrentDirectory: string;
 begin
-  Result := '';
-  with SA do begin
-    nLength := SizeOf(SA);
-    bInheritHandle := True;
-    lpSecurityDescriptor := nil;
-  end;
+  FillChar(ProcessOutput, SizeOf(ProcessOutput), 0);
+  SA.nLength := SizeOf(SA);
+  SA.bInheritHandle := True;
+  SA.lpSecurityDescriptor := nil;
+
   CreatePipe(StdOutPipeRead, StdOutPipeWrite, @SA, 0);
   try
-    with SI do
-    begin
-      FillChar(SI, SizeOf(SI), 0);
-      cb := SizeOf(SI);
-      dwFlags := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
-      wShowWindow := SW_HIDE;
-      hStdInput := GetStdHandle(STD_INPUT_HANDLE); // don't redirect stdin
-      hStdOutput := StdOutPipeWrite;
-      hStdError := StdOutPipeWrite;
-    end;
-    Handle := CreateProcess(nil, PChar('cmd.exe /C ' + ACommandLine),
+    FillChar(SI, SizeOf(SI), 0);
+    SI.cb := SizeOf(SI);
+    SI.dwFlags := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
+    SI.wShowWindow := AShowCmd;
+    SI.hStdInput := GetStdHandle(STD_INPUT_HANDLE); // don't redirect stdin
+    SI.hStdOutput := StdOutPipeWrite;
+    SI.hStdError := StdOutPipeWrite;
+    if ACurrentDirectory = '' then
+      CurrentDirectory := GetCurrentDir
+    else
+      CurrentDirectory := ACurrentDirectory;
+//    Replace(AParams, '"', '');
+    Handle := CreateProcess(nil, PChar('"' + AFileName + '" ' + AParams),
                             nil, nil, True, 0, nil,
-                            PChar(AWorkDir), SI, PI);
+                            PChar(CurrentDirectory), SI, PI);
+{    Handle := CreateProcess(nil, PChar('cmd.exe /C "' + AFileName + '" ' + AParams),
+                            nil, nil, True, 0, nil,
+                            PChar(CurrentDirectory), SI, PI);}
     CloseHandle(StdOutPipeWrite);
-    if Handle then
-      try
-        repeat
-          WasOK := ReadFile(StdOutPipeRead, Buffer, Length(Buffer) - 1, BytesRead, nil);
-          if BytesRead > 0 then
-          begin
-            Buffer[BytesRead] := #0;
-            Result := Result + Buffer;
-          end;
-        until not WasOK or (BytesRead = 0);
-        WaitForSingleObject(PI.hProcess, INFINITE);
-      finally
-        CloseHandle(PI.hThread);
-        CloseHandle(PI.hProcess);
-      end;
+    if not Handle then
+      Exit;
+    try
+      repeat
+        WasOK := ReadFile(StdOutPipeRead, Buffer, Length(Buffer) - 1, BytesRead, nil);
+        if BytesRead > 0 then
+        begin
+          Buffer[BytesRead] := #0;
+          ProcessOutput.OutputText := ProcessOutput.OutputText + Buffer;
+        end;
+      until not WasOK or (BytesRead = 0);
+
+      // WaitForSingleObject(PI.hProcess, INFINITE);
+      repeat
+        Sleep(LoopSleepTime);
+        WaitResult := WaitForSingleObject(PI.hProcess, LoopSleepTime);
+        if AbortAPI then Break;
+      until not((WaitResult <> WAIT_OBJECT_0));
+
+      GetExitCodeProcess(PI.hProcess, ProcessOutput.ExitCode);
+    finally
+      CloseHandle(PI.hThread);
+      CloseHandle(PI.hProcess);
+    end;
   finally
     CloseHandle(StdOutPipeRead);
   end;
@@ -195,7 +197,8 @@ begin
 		sei.lpVerb := 'properties';
 		sei.fMask  := SEE_MASK_INVOKEIDLIST;
 		if ShellExecuteEx(@sei) = False then
-			if IOErrorRetry(FileName, GetLastError) then Continue;
+			if IOErrorRetry(FileName, GetLastError) then
+        Continue;
 		Break;
 	end;
 end;
