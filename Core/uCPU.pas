@@ -107,19 +107,17 @@ asm
   xor rcx, rcx
   xor rdx, rdx
   cpuid
-  mov qword ptr [FCPUIDStr+1], ebx
-  mov qword ptr [FCPUIDStr+5], edx
-  mov qword ptr [FCPUIDStr+9], ecx
+  mov dword ptr [FCPUIDStr+1], ebx
+  mov dword ptr [FCPUIDStr+5], edx
+  mov dword ptr [FCPUIDStr+9], ecx
 
   mov eax, 1
   xor ebx, ebx
   xor ecx, ecx
   xor edx, edx
   cpuid
-  mov rdx, FCPUIDA
-  mov [rdx], eax
-  mov rdx, FCPUIDB
-  mov [rdx], ebx
+  mov [FCPUIDA], eax
+  mov [FCPUIDB], ebx
 
   pop rdi
   pop rdx
