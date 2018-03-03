@@ -115,7 +115,7 @@ implementation
 
 uses
   TypInfo, uStrings, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, uInputFormat, uFiles, uFile,
-  uBackup, uMsg, uDIniFile;
+  uMsg, uDIniFile;
 
 const
   DefaultMinStackSize = 16 * KB;
@@ -443,8 +443,6 @@ var
   XML: IXMLDocument;
   iNode: IXMLNode;
 begin
-  if Save then
-    BackupFile(AFileName, bfTemp);
   try
     XML := TSxXMLDocument.Create(AFileName);
     XML.Active := True;
@@ -687,8 +685,6 @@ begin
 
   if FileExists(AFileName) then
   begin
-    if Save then
-      BackupFile(AFileName, bfTemp);
     try
       XML := TSxXMLDocument.Create(AFileName);
       XML.Active := True;

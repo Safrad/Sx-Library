@@ -9,8 +9,8 @@ type
   	bfNone, // No action
   	bfSame, // *
     bfSub, // *
-    bfSubEx, // preferred
-    bfTemp); // preferred
+    bfSubEx // preferred
+  );
 
 // * Backuping 'data.txt' (delete mask '~data*.txt' can delete backups of i.e. 'data2.txt'
 
@@ -45,7 +45,6 @@ begin
   	if DirectoryExists(BackupPath) = False then
 	  	CreateDirEx(BackupPath);
   end;
-  bfTemp: BackupPath := TempDir;
   end;
   OriginalFileName := ExtractFileName(FileName);
   if BackupFolder = bfSame then
