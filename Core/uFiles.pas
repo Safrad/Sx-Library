@@ -23,10 +23,7 @@ var
   CompanyLocalAppDataDir,
 //	HomeDir, // User documnets (Read and Write)
 	CommonAppDataDir, // Application Data
-  CommonLocalAppDataDir, // Local Application Data
-	TempDir,
-  InstanceTempDir,
-	CommonTempDir: string;
+  CommonLocalAppDataDir: string; // Local Application Data
 	ExeFileName: TFileName;
   ModuleFileName: TFileName;
   ExeParameters: string;
@@ -150,7 +147,6 @@ uses
 var
 	StartupEnvironment: array of TStringPair;
 	GInstalled: BG;
-  TempDirHandle: THandle;
 
 procedure InitStartupEnvironment;
 var
@@ -327,17 +323,6 @@ begin
 	ProgramFilesDir := GetEnvironmentVariable('ProgramFiles');
 	if ProgramFilesDir = '' then ProgramFilesDir := 'C' + DriveDelim + PathDelim + 'Program Files' + PathDelim;
 	CorrectDir(ProgramFilesDir);
-
-	CommonTempDir := GetEnvironmentVariable('TEMP');
-	if CommonTempDir = '' then TempDir := WinDir + 'Temp';
-	CorrectDir(CommonTempDir);
-	TempDir := CommonTempDir + '_' + GetProjectInfo(piInternalName) + PathDelim;
-
-  // Windows 10 hotfix
-  // Windows automatically delete files and folders in CommonTempDir
-	TempDirHandle := CreateLockedDir(TempDir);
-
-	InstanceTempDir := TempDir + NumToStr(GetCurrentProcessID, 16) + PathDelim;
 
 	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
 	if CommonAppDataDir = '' then CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
@@ -1444,7 +1429,7 @@ begin
 		Exit;
 	end;
 
-  CreateDirEx(ADirectoryName);
+  CreateDirsEx(ADirectoryName);
 	Result := CreateFile(PChar(DirectoryName), // pointer to name of the file
 		GENERIC_ALL, // access (read-write) mode
 		FILE_SHARE_READ or FILE_SHARE_WRITE, // share mode
@@ -2574,6 +2559,4 @@ initialization
 	InitPaths;
 	EnumToStr(TypeInfo(TFileMode), FileModeStr);
 {$ENDIF NoInitialization}
-finalization
-  CloseHandle(TempDirHandle);
 end.

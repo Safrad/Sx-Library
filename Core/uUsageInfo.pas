@@ -150,7 +150,9 @@ function UploadData: BG;
 var
   FileName, ResponseFileName: TFileName;
   Source: TStrings;
+  TempDir: string;
 begin
+  TempDir := OperatingSystem.TemporaryDirectory.ProcessTempDir;
   FileName := TempDir + 'log.xml';
   ResponseFileName := TempDir + 'response.txt';
   CreateXML(FileName);

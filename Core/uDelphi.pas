@@ -113,7 +113,7 @@ function GetPackageVersion(const PackageFileName: string): TDelphiVersion;
 implementation
 
 uses
-  Windows, SysUtils, uFiles, uOutputFormat, uMath, uStrings, uLog;
+  Windows, SysUtils, uFiles, uOutputFormat, uMath, uStrings, uLog, uOperatingSystem;
 
 const
   UnluckyNumber = 13;
@@ -390,8 +390,8 @@ begin
   Replace(SearchPaths, '$(DCC_Define)', '');
   Replace(SearchPaths, '$(DCC_UnitAlias)', '');
 
-  Replace(SearchPaths, '$(BDSUSERDIR)', TempDir);
-  Replace(SearchPaths, '$(BDSCOMMONDIR)', TempDir);
+  Replace(SearchPaths, '$(BDSUSERDIR)', OperatingSystem.TemporaryDirectory.ProcessTempDir);
+  Replace(SearchPaths, '$(BDSCOMMONDIR)', OperatingSystem.TemporaryDirectory.ProcessTempDir);
   ReplaceEnv(SearchPaths);
   Result := SearchPaths;
 end;

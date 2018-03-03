@@ -4,6 +4,7 @@ interface
 
 uses
   uTypes,
+  uTemporaryDirectory,
   uProjectVersion;
 
 type
@@ -12,6 +13,7 @@ type
   TOperatingSystem = class
   private
     FName: string;
+    FTemporaryDirectory: TTemporaryDirectory;
 
     function GetIsNT: BG;
     function GetIsAero: BG;
@@ -24,6 +26,9 @@ type
     class function GetNameInternall: string;
     function GetVersion: TProjectVersion;
   public
+    constructor Create;
+    destructor Destroy; override;
+
     class procedure Hibernate;
     class procedure Sleep;
 
@@ -48,6 +53,7 @@ type
 
     class function ComputerName: string;
 
+    property TemporaryDirectory: TTemporaryDirectory read FTemporaryDirectory;
     property IsNT: BG read GetIsNT;
     property IsAero: BG read GetIsAero;
     property IsRegionCompatible: BG read GetIsRegionCompatible;
@@ -94,6 +100,20 @@ begin
   Size := MAX_COMPUTERNAME_LENGTH + 1;
   Windows.GetComputerName( ComputerName, Size );
   Result := ComputerName;
+end;
+
+constructor TOperatingSystem.Create;
+begin
+  inherited;
+
+  FTemporaryDirectory := TTemporaryDirectory.Create;
+end;
+
+destructor TOperatingSystem.Destroy;
+begin
+  FTemporaryDirectory.Free;
+
+  inherited;
 end;
 
 class procedure TOperatingSystem.DisplayProperties;

@@ -156,6 +156,7 @@ implementation
 
 uses
 	Math,
+  uOperatingSystem,
 	uMsg, uFiles, uLog, uOutputFormat, uCharset;
 
 constructor TFile.Create;
@@ -221,7 +222,7 @@ begin
 
 	if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) then
 	begin
-		FTempFileName := TempDir + '~' + ExtractFileName(FileName);
+		FTempFileName := OperatingSystem.TemporaryDirectory.ThreadTempDir + '~' + ExtractFileName(FileName);
 		if FileExists(FTempFileName) then
 		begin
 			DeleteFileEx(FTempFileName);
