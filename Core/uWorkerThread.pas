@@ -10,17 +10,20 @@ type
   private
     FId: SG;
     FThreadPool: TThreadPool;
+    FUseCoInitialize: BG;
+    procedure SetUseCoInitialize(const Value: BG);
   protected
     procedure Execute; override;
   public
     constructor Create(const AId: SG; const AThreadPool: TThreadPool);
     property ThreadPool: TThreadPool read FThreadPool write FThreadPool;
+    property UseCoInitialize: BG read FUseCoInitialize write SetUseCoInitialize;
   end;
 
 implementation
 
 uses
-  Windows, SysUtils, Classes;
+  Windows, SysUtils, Classes, uSxXMLDocument;
 
 { TWorkerThread }
 
@@ -41,6 +44,8 @@ var
   AsyncTask: TAsyncTask;
 begin
   inherited;
+  if FUseCoInitialize then
+    TSxXMLDocument.InitializeCOM;
 
   try
     while FId < {FThreadPool.FRunThreads <=} FThreadPool.MaxThreads do // Read shared object
@@ -99,7 +104,14 @@ begin
     end;
   finally
     FThreadPool.WorkerDestroy(FId);
+    if FUseCoInitialize then
+      TSxXMLDocument.FinalizeCOM;
   end;
+end;
+
+procedure TWorkerThread.SetUseCoInitialize(const Value: BG);
+begin
+  FUseCoInitialize := Value;
 end;
 
 end.

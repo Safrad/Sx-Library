@@ -19,18 +19,20 @@ type
     FQueue: TData; // array of TAsyncTask;
     FQueueCriticalSection: TRTLCriticalSection;
     FThreadPriority: TThreadPriority;
+    FOnTasksFinished: TNotifyEvent;
+    FUseCoInitialize: BG;
     procedure SetRunThreads(Value: SG);
     procedure SetMaxThreads(Value: SG);
     procedure QueueToThread;
     procedure WaitForWorkers;
     procedure WorkerCreate(const Index: SG);
     procedure SetThreadPriority(const Value: TThreadPriority);
+    procedure SetOnTasksFinished(const Value: TNotifyEvent);
+    procedure SetUseCoInitialize(const Value: BG);
   public
-    OnTasksFinished: TNotifyEvent;
-    procedure InternalTasksFinished;
-    
     constructor Create;
     destructor Destroy; override;
+
     procedure AddTask(const AAsyncTask: TAsyncTask);
     procedure RandomizeTaskOrder;
     procedure SortTasks(const A: TArrayOfS4);
@@ -46,8 +48,12 @@ type
     procedure WorkerStartWork;
     procedure WorkerFinishWork;
     procedure WorkerDestroy(const Index: SG);
+    procedure InternalTasksFinished;
+
     property MaxThreads: SG read FMaxThreads write SetMaxThreads;
     property ThreadPriority: TThreadPriority read FThreadPriority write SetThreadPriority;
+    property OnTasksFinished: TNotifyEvent read FOnTasksFinished write SetOnTasksFinished;
+    property UseCoInitialize: BG read FUseCoInitialize write SetUseCoInitialize;
   end;
 
 implementation
@@ -165,6 +171,11 @@ begin
   end;
 end;
 
+procedure TThreadPool.SetOnTasksFinished(const Value: TNotifyEvent);
+begin
+  FOnTasksFinished := Value;
+end;
+
 procedure TThreadPool.SetRunThreads(Value: SG);
 var
   i: SG;
@@ -265,6 +276,7 @@ var
   WorkerThread: TWorkerThread;
 begin
   WorkerThread := TWorkerThread.Create(Index, Self);
+  WorkerThread.UseCoInitialize := UseCoInitialize;
   InterlockedIncrement(FRunThreads);
   FThreads[Index] := WorkerThread;
   WorkerThread.Resume;
@@ -310,6 +322,11 @@ begin
       if FThreads[i] <> nil then
         FThreads[i].Priority := FThreadPriority;
   end;
+end;
+
+procedure TThreadPool.SetUseCoInitialize(const Value: BG);
+begin
+  FUseCoInitialize := Value;
 end;
 
 function TThreadPool.Working: BG;
