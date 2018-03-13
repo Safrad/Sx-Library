@@ -1,4 +1,4 @@
-unit uDragFilesForm;
+unit uDropFilesForm;
 
 interface
 
@@ -7,9 +7,9 @@ uses
   Windows, Messages, SysUtils, Classes, Forms;
 
 type
-  TDragFilesForm = class(TDForm)
+  TDropFilesForm = class(TDForm)
   strict protected
-    procedure DragFile(const AFileName: TFileName); virtual; abstract;
+    procedure DropFile(const AFileName: TFileName); virtual; abstract;
   public
     procedure CreateWnd; override;
     procedure DestroyWnd; override;
@@ -23,9 +23,9 @@ implementation
 uses
   ShellAPI;
 
-{ TDragFilesForm }
+{ TDropFilesForm }
 
-procedure TDragFilesForm.CopyData(var Msg: TWMCopyData);
+procedure TDropFilesForm.CopyData(var Msg: TWMCopyData);
 var
   FileName: string;
 begin
@@ -38,24 +38,24 @@ begin
   StrCopy(PChar(FileName), Msg.CopyDataStruct.lpData);
 
   if FileName <> '' then
-    DragFile(FileName);
+    DropFile(FileName);
 end;
 
-procedure TDragFilesForm.CreateWnd;
+procedure TDropFilesForm.CreateWnd;
 begin
   inherited;
 
   DragAcceptFiles(Handle, True);
 end;
 
-procedure TDragFilesForm.DestroyWnd;
+procedure TDropFilesForm.DestroyWnd;
 begin
   DragAcceptFiles(Handle, False);
 
   inherited;
 end;
 
-procedure TDragFilesForm.DropFiles(var Msg: TWMDropFiles);
+procedure TDropFilesForm.DropFiles(var Msg: TWMDropFiles);
 var
   FileCount, FileIndex: Integer;
   FileName: string;
@@ -68,7 +68,7 @@ begin
       DragQueryFile(Msg.Drop, FileIndex, PChar(FileName), MAX_PATH);
 
       if FileName <> '' then
-        DragFile(FileName);
+        DropFile(FileName);
     end;
   finally
     DragFinish(Msg.Drop);
