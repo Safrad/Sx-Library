@@ -29,7 +29,7 @@
 * Windows **7** (x86, x64)
 * Windows **XP** (x86, x64)
 * Windows **Vista** (x86, x64)
-* Windows **Server 2003/2008/2012** (x86, x64)
+* Windows **Server 2003/2008/2012/2016** (x86, x64)
 * Windows **2000** (not tested)
 * Windows **95/98** (some functions do not work due new Windows API functions)
 * Separated into **GUI** and **Console** (non-GUI) parts
