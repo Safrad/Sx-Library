@@ -42,7 +42,7 @@ begin
       GetDelphiRegistryName(DelphiVersion) + CSVSep +
       IntToStr(GetDelphiCompilerVersion(DelphiVersion)) +
       FileSep;
-  WriteStringToFile(TempDir + 'DelphiVersions.csv', s, False);
+  WriteStringToFile(LocalAppDataDir + 'DelphiVersions.csv', s, False);
 end;
 
 procedure TDelphiTest.TestPackageVersion;

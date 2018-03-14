@@ -376,11 +376,11 @@ begin
 	if FileExists(CSVFileName) then
 	begin
 		WatchRemoveFile(CSVFileName);
-		CSVFile := TCSVFile.Create(4);
+		CSVFile := TCSVFile.Create;
+    CSVFile.SetColumnNames(['Name', 'CountOn', 'TimeOn', 'Exists']);
 		try
 			if CSVFile.Open(CSVFileName) then
 			begin
-				CSVFile.RemapColumns(['Name', 'CountOn', 'TimeOn']);
 				while not CSVFile.EOF do
 				begin
 					Values := CSVFile.ReadLine;

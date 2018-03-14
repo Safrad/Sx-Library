@@ -229,24 +229,22 @@ begin
 
 	FileName := GetLanguagesDir + 'Codes.csv';
 	if not FileExists(FileName) then Exit;
-	CSVFile := TCSVFile.Create(2);
+	CSVFile := TCSVFile.Create;
+  CSVFile.SetColumnNames(['Code', 'Title']);
 	try
 		if CSVFile.Open(FileName) then
 		begin
 			while not CSVFile.EOF do
 			begin
 				Row := CSVFile.ReadLine;
-        if Row[0] <> '' then
-        begin
-          NewSize := AvailableLanguageCount + 1;
-          if AllocByExp(Length(AvailableLanguages), NewSize) then
-            SetLength(AvailableLanguages, NewSize);
-          AvailableLanguages[AvailableLanguageCount].Code := Row[0];
-          if Row[1] ='' then
-            Row[1] := Row[0];
-          AvailableLanguages[AvailableLanguageCount].Name := Row[1];
-          Inc(FAvailableLanguageCount);
-        end;
+        NewSize := AvailableLanguageCount + 1;
+        if AllocByExp(Length(AvailableLanguages), NewSize) then
+          SetLength(AvailableLanguages, NewSize);
+        AvailableLanguages[AvailableLanguageCount].Code := Row[0];
+        if Row[1] = '' then
+          Row[1] := Row[0];
+        AvailableLanguages[AvailableLanguageCount].Name := Row[1];
+        Inc(FAvailableLanguageCount);
 			end;
 			CSVFile.Close;
 		end;
@@ -284,7 +282,8 @@ begin
   if not FileExists(FileName) then
     Exit;
 
-	CSVFile := TCSVFile.Create(2);
+	CSVFile := TCSVFile.Create;
+  CSVFile.SetColumnNames(['original', 'translated']);
 	try
 		if CSVFile.Open(FileName) then
 		begin

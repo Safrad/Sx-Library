@@ -32,7 +32,8 @@ begin
 	FailCount := 0;
 //	PassCount := 0;
 
-	CSVFile := TCSVFile.Create(3);
+	CSVFile := TCSVFile.Create;
+  CSVFile.SetColumnNames(['Input', 'Result', 'Errors']);
 	try
 		if CSVFile.Open(DataDir + 'DParser.csv') then
 		begin

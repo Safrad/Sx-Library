@@ -16,7 +16,8 @@ implementation
 uses
   SysUtils,
   Windows,
-  uFiles;
+  uFiles,
+  uOperatingSystem;
 
 { TFilesTest }
 
@@ -26,7 +27,7 @@ var
   FileName: TFileName;
   Expected, Actual: TFileTime;
 begin
-  FileName := TempDir + 'Test.txt';
+  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test.txt';
 
   WriteStringToFile(FileName, 'data', False);
 
@@ -43,7 +44,7 @@ var
 	ExpectedCreationTime, ExpectedLastAccessTime, ExpectedLastWriteTime: TFileTime;
   ActualCreationTime, ActualLastAccessTime, ActualLastWriteTime: TFileTime;
 begin
-  FileName := TempDir + 'Test.txt';
+  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test.txt';
 
   WriteStringToFile(FileName, 'data', False);
 

@@ -16,7 +16,8 @@ implementation
 
 uses
   Windows, SysUtils,
-	uTypes, uFile, uFiles, uStrings, uChar;
+	uTypes, uFile, uFiles, uStrings, uChar, uOperatingSystem,
+  uTemporaryDirectory;
 
 { TFileTest }
 
@@ -33,7 +34,7 @@ begin
 	// Tests
 	for fc := Low(fc) to High(fc) do
 	begin
-		FileName := TempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
+		FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
 		F := TFile.Create;
 		if not (fc in [fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE]) then
 			F.DeleteAfterClose := True;
@@ -92,7 +93,7 @@ begin
 	begin
 		if fc in [fcAnsi, fcUTF8{$if CompilerVersion >= 21} , fcUTF16BE, fcUTF16LE{$ifend}] then
 		begin
-      FileName := TempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
+      FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
       WriteStringToFile(FileName, Text, False, fc);
       Count := 0;
       ReadStringsFromFile(FileName, Lines, Count);
@@ -110,7 +111,7 @@ var
 	FileName: TFileName;
   i: SG;
 begin
-  FileName := TempDir + 'FileTest.txt';
+  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'FileTest.txt';
   for i := 0 to 1 do
   begin
     F := TFile.Create;

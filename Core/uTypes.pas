@@ -237,7 +237,9 @@ type
 {$if CompilerVersion < 15}
   TDate = type TDateTime;
 {$ifend}
-
+{$if CompilerVersion < 22}
+  TThreadID = Cardinal;
+{$ifend}
 {
 Value	Meaning
 -1 The string pointed to by the Index0 parameter is less in lexical value than the string pointed to by the Index1 parameter.

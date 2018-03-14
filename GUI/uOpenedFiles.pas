@@ -1165,8 +1165,8 @@ begin
 		begin
 			// Automatic save after change.
 			Item.SaveTime := GetTickCount;
-			FileName := TempDir + ExtractFileName(Item.FileName);
-			DeleteFile(FileName);
+{			FileName := TempDir + ExtractFileName(Item.FileName);
+			DeleteFile(FileName);}
 			FOnSaveToFile(Self, FileName);
 		end;
 	end;

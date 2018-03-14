@@ -549,7 +549,7 @@ begin
 	Body := '<table border="' + IntToStr(Border) + '" cellspacing="' + IntToStr(CellSpacing) +
 		'" cellpadding="' + IntToStr(CellPadding) + '">' + HTMLSep;
 	LineIndex := 0;
-	CSV := TCSVFile.Create(0);
+	CSV := TCSVFile.Create;
 	try
 		CSV.AcceptRemark := True;
 		if CSV.Open(FileName) then
