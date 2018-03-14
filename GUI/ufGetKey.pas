@@ -48,7 +48,7 @@ begin
   for i := Low(Keyboard) to High(Keyboard) do
   begin
     if (Keyboard[i] and $80 <> 0) and (i <> VK_LBUTTON) and (i <> VK_RBUTTON)
-    and (i <> VK_MBUTTON) then
+    and (i <> VK_MBUTTON) and (i <> VK_CANCEL) then
     begin
       if (not OperatingSystem.IsNT) or (not (i in [VK_SHIFT, VK_CONTROL, VK_MENU])) then
       begin
