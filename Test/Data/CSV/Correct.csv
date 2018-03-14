@@ -1,0 +1,9 @@
+#Length,Text
+0,
+0,""
+5,a dog
+5,"a dog"
+5,"a""b""c"
+7,"a""b""c""d"
+10,a""b""c""d
+5,""abc""

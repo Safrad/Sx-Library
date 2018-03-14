@@ -3,33 +3,34 @@ unit uCSVFileTest;
 interface
 
 uses
+  uTypes,
   SysUtils,
   TestFrameWork;
 
 type
   TCSVFileTest = class(TTestCase)
   private
-    procedure ReadCSV(const AFileName: TFileName);
+    function ReadCSV(const AFileName: TFileName): SG;
   published
-    procedure OkTest;
-    procedure WrongTest;
+    procedure CorrectDataTest;
+    procedure IncorrectDataTest;
   end;
 
 implementation
 
 uses
-  uTypes,
   uFiles,
   uCSVFile;
 
-procedure TCSVFileTest.OkTest;
+procedure TCSVFileTest.CorrectDataTest;
 var
   FileName: TFileName;
   CSVFile: TCSVFile;
   Line: TArrayOfString;
 begin
-  FileName := DataDir + 'CSV' + PathDelim + 'Ok.csv';
-  CSVFile := TCSVFile.Create(2);
+  FileName := DataDir + 'CSV' + PathDelim + 'Correct.csv';
+  CSVFile := TCSVFile.Create;
+  CSVFile.SetColumnNames(['Length', 'Text']);
   try
     if CSVFile.Open(FileName) then
     begin
@@ -39,6 +40,7 @@ begin
 
         CheckEquals(StrToInt(Line[0]), Length(Line[1]), 'Text: ''' + Line[1] + '''');
       end;
+      CheckTrue(CSVFile.Errors = '');
       CSVFile.Close;
     end;
   finally
@@ -46,19 +48,22 @@ begin
   end;
 end;
 
-procedure TCSVFileTest.ReadCSV(const AFileName: TFileName);
+function TCSVFileTest.ReadCSV(const AFileName: TFileName): SG;
 var
   CSVFile: TCSVFile;
   Line: TArrayOfString;
 begin
-  CSVFile := TCSVFile.Create(2);
+  Result := 0;
+  CSVFile := TCSVFile.Create;
   try
     if CSVFile.Open(AFileName) then
     begin
       while not CSVFile.EOF do
       begin
         Line := CSVFile.ReadLine;
+        Inc(Result);
       end;
+      CheckTrue(CSVFile.Errors <> '');
       CSVFile.Close;
     end;
   finally
@@ -66,21 +71,19 @@ begin
   end;
 end;
 
-procedure TCSVFileTest.WrongTest;
+procedure TCSVFileTest.IncorrectDataTest;
 var
   FileName: TFileName;
   i: SG;
+  LineCount: SG;
 begin
-  for i := 1 to 99 do
+  for i := 0 to 99 do
   begin
-    FileName := DataDir + 'CSV' + PathDelim + 'Wrong' + IntToStr(i) + '.csv';
+    FileName := DataDir + 'CSV' + PathDelim + 'Incorrect' + IntToStr(i) + '.csv';
     if not FileExistsEx(FileName) then
       Break;
-    try
-      ReadCSV(FileName);
-    except
-      // Must be called
-    end;
+    LineCount := ReadCSV(FileName);
+    CheckEquals(i, LineCount);
   end;
 end;
 
