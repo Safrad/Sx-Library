@@ -915,7 +915,6 @@ begin
 	end;
 end;
 
-
 procedure TDForm.ChangeVisible;
 begin
 	SetVisible(not Visible);
@@ -956,8 +955,7 @@ asm
 {$else}
 	POP EAX
 {$endif}
-end
-;
+end;
 
 procedure ActivateForm(Form: TForm);
 begin
