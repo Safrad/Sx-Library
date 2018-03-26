@@ -57,6 +57,7 @@ contains
   uSxToolBar in '..\GUI\uSxToolBar.pas',
   uSxComboBox in '..\GUI\uSxComboBox.pas',
   uSxColor in '..\GUI\uSxColor.pas',
-  uRegisterSxLibrary in 'uRegisterSxLibrary.pas';
+  uRegisterSxLibrary in 'uRegisterSxLibrary.pas',
+  AdjustObjectInspectorFont in '..\IDE\AdjustObjectInspectorFont.pas';
 
 end.
