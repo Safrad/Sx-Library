@@ -63,6 +63,7 @@ implementation
 uses
   uStrings,
   uAPI,
+  uVirtualKeyCode,
   uCommon,
   SysUtils;
 
@@ -168,7 +169,7 @@ var
 begin
   Result := '';
   for i := 0 to FShortCuts.Count - 1 do
-    Result := Result + KeyToStr(FShortCuts[i]) + ' ,';
+    Result := Result + VirtualKeyCodeToText(FShortCuts[i]) + ' ,';
   DelLastChar(Result, 2);
 end;
 
