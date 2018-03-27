@@ -25,7 +25,7 @@ type
 		{ Public declarations }
 	end;
 
-procedure SetScoresFileName(FileName: TFileName);
+procedure SetScoresFileName(const FileName: TFileName);
 procedure AddNewScore(PlayerScore, GameTime: U4);
 procedure ShowHighScores;
 
@@ -91,7 +91,7 @@ begin
 	end;
 end;
 
-procedure SetScoresFileName(FileName: TFileName);
+procedure SetScoresFileName(const FileName: TFileName);
 begin
 	if ScoresFileName <> FileName then
 	begin
@@ -167,11 +167,7 @@ begin
 				end;
 			end;
 			WriteScores;
-			if not Assigned(fScores) then
-			begin
-				fScores := TfScores.Create(Application.MainForm);
-			end;
-			fScores.ShowModal;
+      ShowHighScores;
 		end;
 	end;
 end;
@@ -293,4 +289,8 @@ begin
 	DViewHighScores.Height := ButtonOk.Top - FormBorder;
 end;
 
+initialization
+
+finalization
+  FreeAndNil(fScores);
 end.

@@ -38,7 +38,6 @@ begin
   FKey := Value;
 end;
 
-
 procedure TfGetKey.TimerTimer(Sender: TObject);
 var
 	Keyboard: TKeyboardState;
