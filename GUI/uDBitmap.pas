@@ -105,9 +105,9 @@ type
 		function InternalCutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;
 		function GetDataSize: UG;
 		procedure GBlurCPU(BmpD: TDBitmap; const Range: TRect; Radius: SG; const Horz, Vert: Boolean;
-			InterruptProcedure: TInterruptProcedure);
+			const InterruptProcedure: TInterruptProcedure);
 		procedure GBlurFPU(BmpD: TDBitmap; const Range: TRect; Radius: Double; const Horz, Vert: Boolean;
-			InterruptProcedure:  TInterruptProcedure);
+			const InterruptProcedure:  TInterruptProcedure);
 		function GetCutWindow: TRect;
 		procedure SetCutWindow(const Value: TRect);
 		{$ifdef GDIPlus}
@@ -308,8 +308,8 @@ type
 			InterruptProcedure: TInterruptProcedure); overload;}
 		procedure BoxBlur(const BmpS: TDBitmap; const Range: TRect; const Interactions: UG; const Horz, Vert: Boolean;
 			InterruptProcedure: TInterruptProcedure); overload;
-		procedure GBlurTo(BmpD: TDBitmap; const Range: TRect; Radius: Double; const Horz, Vert: Boolean;
-			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
+		procedure GBlurTo(BmpD: TDBitmap; Range: TRect; const Radius: Double; const Horz, Vert: Boolean;
+			const InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
 		procedure GBlur(const Range: TRect; Radius: Double; const Horz, Vert: Boolean;
 			InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
 		procedure ApplyDirectionBitmap(const BmpS: TDBitmap; const Range: TRect; const Quality: TQuality; Bmp2: TBlurArray;
@@ -10584,7 +10584,7 @@ const
 	Mult = 16384;
 
 procedure TDBitmap.GBlurCPU(BmpD: TDBitmap; const Range: TRect; Radius: SG; const Horz, Vert: Boolean;
-	InterruptProcedure: TInterruptProcedure);
+	const InterruptProcedure: TInterruptProcedure);
 type
 	TKernel = record
 		Size: TKernelSize;
@@ -10778,7 +10778,7 @@ begin
 end;
 
 procedure TDBitmap.GBlurFPU(BmpD: TDBitmap; const Range: TRect; Radius: Double; const Horz, Vert: Boolean;
-	InterruptProcedure:  TInterruptProcedure);
+	const InterruptProcedure:  TInterruptProcedure);
 type
 {	TRange = record
 		Low: SG
@@ -10998,10 +10998,14 @@ begin
 	end;
 end;
 
-procedure TDBitmap.GBlurTo(BmpD: TDBitmap; const Range: TRect; Radius: Double; const Horz, Vert: Boolean;
-	InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
+procedure TDBitmap.GBlurTo(BmpD: TDBitmap; Range: TRect; const Radius: Double; const Horz, Vert: Boolean;
+	const InterruptProcedure: TInterruptProcedure; const UseFPU: Boolean);
 begin
-	if Empty or (radius <= 0) then Exit;
+	if Empty or (Radius <= 0) then
+    Exit;
+	if InternalCutWindow(Range.Left, Range.Top, Range.Right, Range.Bottom) then
+    Exit;
+
 	if UseFPU then
 		// ~1.3x slower Pentium Dualcore
 		// ~2x slower od AMD Duron
