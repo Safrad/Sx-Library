@@ -1097,7 +1097,10 @@ begin
 	begin
 		if CharInSet(Result[Index], ['A'..'Z']) then
 			if CharInSet(Result[Index - 1], ['a'..'z']) then
-				Insert(CharSpace, Result, Index);
+				Insert(CharSpace, Result, Index)
+			else if CharInSet(Result[Index - 1], ['A'..'Z']) then
+	  		if CharInSet(CharAt(Result, Index + 1), ['a'..'z']) then
+  				Insert(CharSpace, Result, Index);
 		Inc(Index);
 	end;
 end;
