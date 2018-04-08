@@ -15,40 +15,6 @@ const
 
   Amplitude = Amplitude24; // Used apmlitude
 
-const
-  // Speach
-  SampleRateTelephone = 8000;
-  SampleRateVoIP = 16000;
-  SampleRateMiniDV = 32000;
-
-  // CD / PC
-  SampleRateQuaterCD = 11025;
-  SampleRateHalfCD = 22100;
-  SampleRateCD = 44100; // Most used
-  SampleRateDoubleCD = 88200;
-  SampleRateHDCD = 176400;
-  SampleRateDXD = 352800; // Digital eXtreme Definition
-
-  // DVD
-  SampleRateHalfDVD = 48000;
-  SampleRateDVD = 96000;
-  SampleRateHDDVD = 192000;
-
-  // Special
-  SampleRateCDXA = 37800;
-  SampleRateNTSC = 44056;
-  SampleRateNipponColumbia = 47250;
-  SampleRate3MAndSoundStream = 50000;
-  SampleRateMitsubishiX80 = 50400;
-
-  // Direct Stream Digital
-  SampleRateDSD = 2822400;
-  SampleRateDoubleDSD = 5644800;
-  SampleRateQuadDSD = 11289600;
-  SampleRateOctupleDSD = 22579200;
-
-  DefaultSampleRate = SampleRateDVD;
-
 type
   TSampleRate = S4;
 
@@ -58,35 +24,47 @@ type
     FSampleRate: TSampleRate;
     FAmplitude: FG;
     FSampleId: U8;
+    FAmplitudeFade: FG;
     procedure SetSampleRate(const Value: TSampleRate);
     procedure SetAmplitude(const Value: FG);
     procedure SetSampleId(const Value: U8);
     function GetTime: TTimeSpan;
+    procedure SetAmplitudeFade(const Value: FG);
   protected
-    function GetSample(const ASampleIndex: SG): TSample; virtual;
+    FSampleIndex: SG;
   public
     constructor Create;
     destructor Destroy; override;
 
+    procedure Reset; virtual;
+
+    function GetSample: TSampleF4; virtual;
     property SampleRate: TSampleRate read FSampleRate write SetSampleRate;
     property Amplitude: FG read FAmplitude write SetAmplitude;
+    property AmplitudeFade: FG read FAmplitudeFade write SetAmplitudeFade;
     property SampleId: U8 read FSampleId write SetSampleId;
     property Time: TTimeSpan read GetTime;
   end;
+
+  TSoundItems = array of TSoundItem;
 
 implementation
 
 uses
   SysUtils,
+  uSampleRates,
   uMath;
 
 { TSoundItem }
 
 constructor TSoundItem.Create;
 begin
+  inherited;
+  
   FTime := TTimeSpan.Create;
 
   FSampleRate := DefaultSampleRate;
+  Reset;
 end;
 
 destructor TSoundItem.Destroy;
@@ -96,9 +74,10 @@ begin
   inherited;
 end;
 
-function TSoundItem.GetSample(const ASampleIndex: SG): TSample;
+function TSoundItem.GetSample: TSampleF4;
 begin
   Result := 0;
+  FAmplitude := FAmplitude * (1 - FAmplitudeFade / FSampleRate);
 end;
 
 function TSoundItem.GetTime: TTimeSpan;
@@ -108,9 +87,20 @@ begin
   Result := FTime;
 end;
 
+procedure TSoundItem.Reset;
+begin
+  Amplitude := 1;
+  FSampleIndex := 0;
+end;
+
 procedure TSoundItem.SetAmplitude(const Value: FG);
 begin
   FAmplitude := Value;
+end;
+
+procedure TSoundItem.SetAmplitudeFade(const Value: FG);
+begin
+  FAmplitudeFade := Value;
 end;
 
 procedure TSoundItem.SetSampleId(const Value: U8);

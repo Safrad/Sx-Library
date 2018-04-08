@@ -40,7 +40,7 @@ constructor TEngineSound.Create;
 begin
   inherited;
 
-  SetLength(FSounds, 5);
+{  SetLength(FSounds, 5);
   FSounds[0] := TTone.Create;
   TTone(FSounds[0]).Frequency := 77;
   TTone(FSounds[0]).Amplitude := 0.5;
@@ -55,7 +55,7 @@ begin
   FSounds[3].Amplitude := 0.5;
 
   FSounds[4] := TTone.Create;
-  FSounds[4].Amplitude := 0.2;
+  FSounds[4].Amplitude := 0.2;}
 
   Speed := PetrolIdleSpeed;
 end;
@@ -66,24 +66,24 @@ begin
   inherited;
 end;
 
-function TEngineSound.GetSample: TSample;
+function TEngineSound.GetSample(const ASampleIndex: SG): TSample;
 var
   i: SG;
 begin
   Result := 0;
-  for i := 0 to Length(FSounds) - 1 do
+{  for i := 0 to Length(FSounds) - 1 do
   begin
     Inc(Result, FSounds
-  end;
+  end;}
 end;
 
 procedure TEngineSound.SetSpeed(const Value: FG);
 begin
   FSpeed := Value;
-  FSounds[1].Frequency := Value;
+{  FSounds[1].Frequency := Value;
   FSounds[2].Frequency := 2 * Value;
   FSounds[3].Frequency := Value / 3;
-  FSounds[4].Frequency := 7 * Value;
+  FSounds[4].Frequency := 7 * Value;}
 end;
 
 end.
