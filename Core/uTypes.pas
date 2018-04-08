@@ -223,6 +223,8 @@ type
 	TArraySG = array[0..256 * MB - 2] of SG;
 	PArraySG = ^TArraySG;
 
+	TArrayF4 = array[0..512 * MB - 2] of F4;
+	PArrayF4 = ^TArrayF4;
 	TArrayF8 = array[0..256 * MB - 2] of F8;
 	PArrayF8 = ^TArrayF8;
 	TArrayFA = array[0..128 * MB - 2] of FA;
