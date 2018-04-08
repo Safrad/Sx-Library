@@ -8,7 +8,7 @@ uses
 	Dialogs, uDImage, uDView, Menus, uDWinControl, ComCtrls;
 
 type
-	TRowAction = procedure(Index: SG) of object;
+	TRowAction = procedure(const ASelectedRows: TArrayOfBG) of object;
 
 	TfTableForm = class(TDForm)
 		DViewTable: TDView;
@@ -200,8 +200,8 @@ end;
 
 procedure TfTableForm.OnMenuClick(Sender: TObject);
 begin
-	if (Length(FRowActions) > 0) and (DViewTable.ActualRow >= 0) then
-		FRowActions[TMenuItem(Sender).Tag](DViewTable.ActualRow);
+	if (Length(FRowActions) > 0) and (DViewTable.SelCount > 0) then
+		FRowActions[TMenuItem(Sender).Tag](DViewTable.SelectedRows);
 end;
 
 procedure TfTableForm.AddAction(const Title: string; RowAction: TRowAction);
@@ -230,8 +230,8 @@ end;
 
 procedure TfTableForm.DViewTableDblClick(Sender: TObject);
 begin
-	if (Length(FRowActions) > 0) and (DViewTable.ActualRow >= 0) then
-		FRowActions[0](DViewTable.ActualRow);
+	if (Length(FRowActions) > 0) and (DViewTable.SelCount >= 0) then
+		FRowActions[0](DViewTable.SelectedRows);
 end;
 
 procedure TfTableForm.PopupMenuPopup(Sender: TObject);
