@@ -42,7 +42,8 @@ uses
   uLoadDllTest in 'DllForTest\uLoadDllTest.pas',
   uPermutationTest in '..\Core\uPermutationTest.pas',
   uPermutationList in '..\Core\uPermutationList.pas',
-  uStopwatchTest in '..\Core\uStopwatchTest.pas';
+  uStopwatchTest in '..\Core\uStopwatchTest.pas',
+  uWavePlayerTest in '..\Sound\uWavePlayerTest.pas';
 
 {$R *.RES}
 
