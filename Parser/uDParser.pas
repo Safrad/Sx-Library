@@ -920,7 +920,9 @@ begin
 										InputType := itMul;
 									end;
 								end;
-							'/':
+              '×':
+								InputType := itMul;
+							'/', '÷':
 								InputType := itDiv;
 							'^':
 								InputType := itPower;
