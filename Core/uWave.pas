@@ -373,7 +373,7 @@ end;
 
 procedure StopPlayWave;
 begin
-	if MMSystem.PlaySound(nil, 0, SND_MEMORY or SND_NODEFAULT) = False then
+	if PlaySound(nil, 0, SND_MEMORY or SND_NODEFAULT) = False then
 	begin
 		ErrorMsg(GetLastError);
 	end;
