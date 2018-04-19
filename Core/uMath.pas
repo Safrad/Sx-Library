@@ -1617,7 +1617,7 @@ var
 begin
   P1 := PSG(@Desc);
   P2 := PSG(SG(@Desc) + SizeOf(SG) * SG(Size - 1));
-  for i := 0 to Size div 2 - 1 do
+  for i := 0 to SG(Size div 2) - 1 do
   begin
     d1 := P1^;
     d2 := P2^;
