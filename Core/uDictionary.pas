@@ -290,6 +290,8 @@ begin
 			while not CSVFile.EOF do
 			begin
 				Row := CSVFile.ReadLine;
+        if Length(Row) < 2 then
+          Continue;
 				{ if (CSV.LineIndex < Length(MonthColors)) then
 					MonthColors[CSV.LineIndex - 1] := StringToColor(Row[0]); }
 				NewSize := EntryCount + 1;
