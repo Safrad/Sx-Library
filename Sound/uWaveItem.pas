@@ -13,11 +13,13 @@ type
   TWaveItem = class(TSoundItem)
   private
     FWave: TWave;
+    procedure SetWave(const Value: TWave);
   public
     destructor Destroy; override;
 
     procedure ReadFromFile(const AFileName: TFileName);
     function GetSample: TSampleF4; override;
+    property Wave: TWave read FWave write SetWave;
   end;
 
 implementation
@@ -55,6 +57,11 @@ begin
   finally
     TmpWave.Free;
   end;
+end;
+
+procedure TWaveItem.SetWave(const Value: TWave);
+begin
+  FWave := Value;
 end;
 
 end.
