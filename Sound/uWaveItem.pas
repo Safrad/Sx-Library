@@ -13,15 +13,11 @@ type
   TWaveItem = class(TSoundItem)
   private
     FWave: TWave;
-    FFrequency: FG;
-    procedure SetFrequency(const Value: FG);
   public
     destructor Destroy; override;
 
     procedure ReadFromFile(const AFileName: TFileName);
     function GetSample: TSampleF4; override;
-
-    property Frequency: FG read FFrequency write SetFrequency;
   end;
 
 implementation
@@ -41,7 +37,7 @@ begin
   Amplitude := Amplitude * (1 - AmplitudeFade / SampleRate);
 
   Inc(FSampleIndex);
-  if FSampleIndex >= FWave.SampleCount div 2 {Stereo} then
+  if FSampleIndex >= SG(FWave.SampleCount div 2) {Stereo} then
   begin
     FSampleIndex := 0;
     Amplitude := 0;
@@ -49,15 +45,16 @@ begin
 end;
 
 procedure TWaveItem.ReadFromFile(const AFileName: TFileName);
+var
+  TmpWave: TWave;
 begin
-  FWave := TWave.Create;
-  FWave.ReadFromFile(AFileName);
-//  FWave.ConvertSampleRate(SampleRate);
-end;
-
-procedure TWaveItem.SetFrequency(const Value: FG);
-begin
-  FFrequency := Value;
+  TmpWave := TWave.Create;
+  try
+    TmpWave.ReadFromFile(AFileName);
+    FWave := TmpWave.ConvertSampleRate(SampleRate);
+  finally
+    TmpWave.Free;
+  end;
 end;
 
 end.

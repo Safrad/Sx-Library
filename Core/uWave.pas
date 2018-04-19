@@ -285,6 +285,7 @@ type
 		PWave: PCompleteWave;
 		FData: PWaveSample;
 		WithoutData: BG;
+    FSampleRate: U4;
 		procedure ReadRIFFHeader(const F: TFile);
 		procedure ReadFormatChunk(const F: TFile);
 		procedure ReadDataChunk(const F: TFile);
@@ -296,6 +297,7 @@ type
 //		procedure DecodeIMA(CompressedData: Pointer);
 		procedure Decode(CompressedData: Pointer);
 		procedure SetSampleCount(const Value: UG);
+    procedure SetSampleRate(const Value: U4);
 	public
 		constructor Create; overload;
 		constructor Create(
@@ -308,19 +310,25 @@ type
 		function GetSample(const BitLength: UG; var BitIndex: UG): SG;
 		function GetSampleAddr(const ASample: UG): PWaveSample;
 		procedure AddSample(FPointer: PS2; const Value: S2);
-		property SampleCount: UG read FSampleCount write SetSampleCount;
-		property Format: TWaveFormatChunk read FFormat;
-		property Data: PWaveSample read FData;
 		procedure ReadFromFile(const FileName: TFileName);
 		procedure WriteToFile(const FileName: TFileName);
-		property Length: UG read GetLength;
+
 		procedure Play;
 		// Left, Right (0..ConvertPre)
 		function ConvertChannels(const NewChannels: U2; const Left, Right: SG): TWave;
 		function ConvertBitsPerSample(const NewBitsPerSample: Integer): TWave;
-		procedure ConvertSampleRate(const SampleRate: U4);
+		function ConvertSampleRate(const ANewSampleRate: U4): TWave;
+
 		function Split: TWaveArray;
 		function GetHearableRanges: TRangeArray;
+
+    // Properties
+		property Data: PWaveSample read FData;
+		property Format: TWaveFormatChunk read FFormat;
+    property SampleRate: U4 read FSampleRate write SetSampleRate;
+
+		property SampleCount: UG read FSampleCount write SetSampleCount;
+		property Length: UG read GetLength;
 	end;
 
 implementation
@@ -760,10 +768,61 @@ begin
 	end;
 end;
 
-procedure TWave.ConvertSampleRate(const SampleRate: U4);
+function TWave.ConvertSampleRate(const ANewSampleRate: U4): TWave;
+var
+	i, c: Integer;
+	Source, Target: PWaveSample;
+  LastSource: S2;
+  OriginalPos: FG;
+  OriginalPosTrunc, LastOriginalPosTrunc: SG;
+  W0, W1: FG;
 begin
-	FFormat.SampleRate := SampleRate;
-	FFormat.BytesPerSecond := FFormat.BytesPerSample * FFormat.SampleRate;
+	Result := TWave.Create(FFormat.Channels, FFormat.BitsPerSample, ANewSampleRate);
+	Result.SampleCount := SampleCount;
+
+	case FFormat.BitsPerSample of
+	8:
+	begin
+    // raise NotImplemented
+	end;
+	16:
+	begin
+    // TODO : Improve resample quality
+    LastSource := 0; // Not used in first interaction
+    LastOriginalPosTrunc := -1;
+    for c := 0 to Result.FFormat.Channels - 1 do
+    begin
+      Source := PWaveSample(SG(FData) + SizeOf(S2) * c);
+      Target := PWaveSample(SG(Result.FData) + SizeOf(S2) * c);
+      for i := 0 to Result.FSampleCount div Result.FFormat.Channels - 1 do
+      begin
+        OriginalPos := UG(i) * FFormat.SampleRate / ANewSampleRate;
+        OriginalPosTrunc := Trunc(OriginalPos);
+        if OriginalPosTrunc <> LastOriginalPosTrunc then
+        begin
+          LastSource := Source^.W;
+          Inc(PByte(Source), SizeOf(S2) * Result.FFormat.Channels);
+          LastOriginalPosTrunc := OriginalPosTrunc;
+        end;
+
+        W1 := Frac(OriginalPos);
+        W0 := 1 - W1;
+        Target^.W := Round(W0 * LastSource + W1 * Source^.W);
+        Inc(PByte(Target), SizeOf(S2) * Result.FFormat.Channels);
+      end;
+    end;
+	end;
+	end;
+  Result.WriteToFile('C:\Net\Test.wav');
+end;
+
+procedure TWave.SetSampleRate(const Value: U4);
+begin
+  if FFormat.SampleRate <> Value then
+  begin
+    FFormat.SampleRate := Value;
+    FFormat.BytesPerSecond := FFormat.BytesPerSample * FFormat.SampleRate;
+  end;
 end;
 
 procedure TWave.Play;
@@ -777,7 +836,10 @@ end;
 
 function TWave.GetLength: UG;
 begin
-	Result := RoundDiv(Second * U8(FSampleCount), FFormat.SampleRate);
+	if FSampleCount = 0 then
+	Result := 0
+	else
+		Result := RoundDiv(Second * U8(FSampleCount - 1), FFormat.SampleRate);
 end;
 
 function WaveLength(const FileName: TFileName): UG;
