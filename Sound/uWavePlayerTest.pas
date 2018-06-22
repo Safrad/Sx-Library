@@ -41,7 +41,6 @@ end;
 procedure TWavePlayerTest.TestTone;
 var
   WavePlayer: TWavePlayer;
-  Mixer
 begin
   WavePlayer := TWavePlayer.Create;
   WavePlayer.Bits := 16;

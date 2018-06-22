@@ -13,16 +13,6 @@ const
   KSDATAFORMAT_SUBTYPE_PCM = '{00000001-0000-0010-8000-00aa00389b71}';
 
 type
-  tWAVEFORMATEX = packed record
-    wFormatTag: Word; { format type }
-    nChannels: Word; { number of channels (i.e. mono, stereo, etc.) }
-    nSamplesPerSec: DWORD; { sample rate }
-    nAvgBytesPerSec: DWORD; { for buffer estimation }
-    nBlockAlign: Word; { block size of data }
-    wBitsPerSample: Word; { number of bits per sample of mono data }
-    cbSize: Word; { the count in bytes of the size of }
-  end;
-
   TSamples = packed record
     case word of
       0: (wValidBitsPerSample: word); // bits of precision
@@ -274,16 +264,16 @@ begin
   FWaveFormat.SubFormat := StringToGUID(KSDATAFORMAT_SUBTYPE_PCM);
 
 	if IsWavePlayer then
-		FError := waveOutOpen(nil, WAVE_MAPPER, @FWaveFormat, 0, 0, WAVE_FORMAT_QUERY)
+		FError := waveOutOpen(nil, WAVE_MAPPER, @FWaveFormat.Format, 0, 0, WAVE_FORMAT_QUERY)
 	else
-		FError := waveInOpen(nil, WAVE_MAPPER, @FWaveFormat, 0, 0, WAVE_FORMAT_QUERY);
+		FError := waveInOpen(nil, WAVE_MAPPER, @FWaveFormat.Format, 0, 0, WAVE_FORMAT_QUERY);
 	MMError(FError, 'WaveOpen');
 	if FError <> 0 then Exit;
 
 	if IsWavePlayer then
-		FError := waveOutOpen(@FHWave, WAVE_MAPPER, @FWaveFormat, UG(@MMOutDone), UG(Self), CALLBACK_FUNCTION)
+		FError := waveOutOpen(@FHWave, WAVE_MAPPER, @FWaveFormat.Format, UG(@MMOutDone), UG(Self), CALLBACK_FUNCTION)
 	else
-		FError := waveInOpen(@FHWave, WAVE_MAPPER, @FWaveFormat, UG(@MMInDone), UG(Self), CALLBACK_FUNCTION);
+		FError := waveInOpen(@FHWave, WAVE_MAPPER, @FWaveFormat.Format, UG(@MMInDone), UG(Self), CALLBACK_FUNCTION);
 	MMError(FError, 'WaveOpen');
 	if FError <> 0 then
 	begin
