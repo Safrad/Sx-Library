@@ -201,6 +201,7 @@ type
 	TArrayOfU8 = array of U8;
 	TArrayOfSG = array of SG;
 	TArrayOfUG = array of UG;
+	TArrayOfFG = array of FG;
 	TArrayOfString = array of string;
 	TArrayOfChar = array of Char;
 	TArrayOfVariant = array of Variant;
