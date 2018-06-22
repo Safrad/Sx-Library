@@ -43,7 +43,8 @@ uses
   uPermutationTest in '..\Core\uPermutationTest.pas',
   uPermutationList in '..\Core\uPermutationList.pas',
   uStopwatchTest in '..\Core\uStopwatchTest.pas',
-  uWavePlayerTest in '..\Sound\uWavePlayerTest.pas';
+  uWavePlayerTest in '..\Sound\uWavePlayerTest.pas',
+  uTicksTest in '..\Core\uTicksTest.pas';
 
 {$R *.RES}
 
