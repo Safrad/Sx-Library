@@ -6,10 +6,10 @@ uses
   uTypes;
 
 type
-  TSample = S4;
+  TSampleF4 = F4;
 
   ISoundItem = interface(IInterface)
-    function GetSample(const ASampleIndex: SG): TSample;
+    function GetSample: TSampleF4;
   end;
 
 implementation
