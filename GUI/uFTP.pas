@@ -26,8 +26,7 @@ implementation
 uses
 	TypInfo,
 	uChar, uStrings, uFiles, uHTML, uOutputFormat, uMsg,
-	SysUtils, Classes, Windows, IdFTPList, IdException, {$if CompilerVersion >= 16}IdAllFTPListParsers, {$ifend}IdFTPCommon,
-  uBackup;
+	SysUtils, Classes, Windows, IdFTPList, IdException, {$if CompilerVersion >= 16}IdAllFTPListParsers, {$ifend}IdFTPCommon;
 
 function FTPTimeToUTC(const DT: TDateTime): TDateTime;
 var
@@ -131,7 +130,6 @@ begin
 		Logger.Add(s, mlInformation);
 	if Copy then
 	begin
-		BackupFile(LocalFileName, bfTemp);
 		FTP.Get(Item.FileName, LocalFileName, True, False);
 //					if New = False then
 		begin
