@@ -2,14 +2,15 @@ unit uPhysicsFunctions;
 
 interface
 
+const
+	GravityConst = 9.80665; // in height 6378000 m
+	EarthRadius = 6378000;
+
 implementation
 
 uses
   uNamespace, uTypes, uVector, uStrings;
 
-const
-	GravityConst = 9.80665; // in height 6378000 m
-	EarthRadius = 6378000;
 {
 const
 	LightLMin = 390; // nm
@@ -27,8 +28,10 @@ begin
 	else
 	begin
 		e := VectorToNum(Args[0]);
-		if e > 0 then
-			Result := NumToVector(GravityConst / (e / EarthRadius));
+		if e > EarthRadius then
+			Result := NumToVector(GravityConst / (e / EarthRadius))
+    else if e > 0 then
+      Result := NumToVector(GravityConst * (e / EarthRadius));
 	end;
 end;
 
