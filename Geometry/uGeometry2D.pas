@@ -30,6 +30,11 @@ type
     T: TPoint2D;
   end;
 
+  TRect2D = record
+    F: TPoint2D;
+    T: TPoint2D;
+  end;
+
 	TRectVertex = (rvLT, rvRT, rvRB, rvLB); // LeftTop, RightTop, RightBottom, LeftBottom
 
 const
@@ -93,6 +98,8 @@ function TwoLineSegmentsDistance2D(const ALineSegment1, ALineSegment2: TLineSegm
 function Oriented2D(const Pt: TPoint2D; const Size: TPoint2D; const Orientation: TRectVertex; const Precision: TGeometryFloat2D): TPoint2D;
 function OrientedEx2D(const Pt: TPoint2D; const Size: TPoint2D; const Orientation: TRectVertex): TPoint2D;
 
+function Rect2DWidth(const ARect: TRect2D): TGeometryFloat2D;
+function Rect2DHeight(const ARect: TRect2D): TGeometryFloat2D;
 
 implementation
 
@@ -400,6 +407,16 @@ end;
 function TwoLineSegmentsDistance2D(const ALineSegment1, ALineSegment2: TLineSegment2D): TGeometryFloat2D;
 begin
   Result := TwoLineSegmentsDistance2D(ALineSegment1.F, ALineSegment1.T, ALineSegment2.F, ALineSegment2.T);
+end;
+
+function Rect2DWidth(const ARect: TRect2D): TGeometryFloat2D;
+begin
+  Result := ARect.T.X - ARect.F.X;
+end;
+
+function Rect2DHeight(const ARect: TRect2D): TGeometryFloat2D;
+begin
+  Result := ARect.T.Y - ARect.F.Y;
 end;
 
 end.
