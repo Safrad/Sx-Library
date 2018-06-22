@@ -3,7 +3,7 @@ unit uInputFormat;
 interface
 
 uses
-	uTypes, uVector, uParserMsg, uLogger, uLapStopwatch;
+	uTypes, uVector, uParserMsg, uLapStopwatch;
 
 type
 	TInputFormat = (ifIO{Disk File Input/Output}, ifDisplay{Windows Locale});
@@ -41,14 +41,14 @@ function StrToValS8(Line: string; const UseWinFormat: BG;
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1; const Messages: TParserMessages = nil): U1;
 
-function SToDate(const Str: string; const InputFormat: TInputFormat; const Logger: TLogger = nil): TDateTime;
+function SToDate(const Str: string; const InputFormat: TInputFormat): TDateTime;
 function SToDateTime(const Str: string; const InputFormat: TInputFormat): TDateTime;
 
 implementation
 
 uses
 	SysUtils,
-	uDParser, uStrings, uMsg, uMath, uOutputFormat;
+	uDParser, uStrings, uMath, uOutputFormat;
 
 function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
 var Parser: TDParser;
@@ -215,7 +215,7 @@ begin
 end;
 {$ifend}
 
-function SToDate(const Str: string; const InputFormat: TInputFormat; const Logger: TLogger = nil): TDateTime;
+function SToDate(const Str: string; const InputFormat: TInputFormat): TDateTime;
 const
   FutureYears: array[TInputFormat] of SG = (0, 30{Get From API for ifDisplay});
 var
@@ -307,14 +307,17 @@ begin
 			Result := 0; //StrToValI(Str, False, 0, 0, MaxInt, 1);
 			Exit;
 		end;
-		if Month > 50 then Dec(Month, 50); // Female offset
+		if Month > 50 then
+      Dec(Month, 50); // Female offset
+    if (Day = 0) and (Month = 0) then
+    begin
+      Day := 1;
+      Month := 1;
+    end;
 		if TryEncodeDate(Year, Month, Day, TDateTime(Result)) = False then
 		begin
-			if Assigned(Logger) then
-				Logger.Add(ReplaceParam('Invalid date %1' + '.', [Str]), mlWarning)
-			else
-				ErrorMsg('Invalid date %1' + '.', [Str]);
-			Result := 0;
+//			raise EConvertError.Create('Invalid date ' + AddSingleQuoteF(Str) + '.');
+      Result := 0;
 		end;
 	end;
 	end;
