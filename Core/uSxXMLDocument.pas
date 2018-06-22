@@ -7,6 +7,7 @@ uses
   XMLDoc, XMLIntf, Classes, XMLDom,
   ActiveX;
 
+function ReadChildNode(const XMLNode: IXMLNode; const NodeName: string): string;
 function FindOrAddChild(const XMLNode: IXMLNode; const NodeName: string): IXMLNode;
 procedure AddXMLHeader(const XML: IXMLDocument; const FileDescription: string);
 
@@ -25,6 +26,17 @@ implementation
 uses
   uStrings,
   uProjectInfo;
+
+function ReadChildNode(const XMLNode: IXMLNode; const NodeName: string): string;
+var
+  Node: IXMLNode;
+begin
+  Node := XMLNode.ChildNodes.FindNode(NodeName);
+  if Node <> nil then
+    Result := Node.NodeValue
+  else
+    Result := '';
+end;
 
 function FindOrAddChild(const XMLNode: IXMLNode; const NodeName: string): IXMLNode;
 begin
