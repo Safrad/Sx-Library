@@ -6,7 +6,7 @@ uses
   Windows, Classes;
 
 type
-  TConsoleColor = (ccBlack, ccBlue, ccGreen, ccAquq, ccRed, ccPurple, ccYellow, ccLightGray, ccGray, ccLightBlue,
+  TConsoleColor = (ccBlack, ccBlue, ccGreen, ccAqua, ccRed, ccPurple, ccYellow, ccLightGray, ccGray, ccLightBlue,
     ccLightGreen, ccLightAqua, ccLightRed, ccLightPurple, ccLightYellow, ccWhite);
 
   TConsole = class
@@ -26,12 +26,17 @@ type
     class procedure SetSize(const AValue: TCoord);
 
     class function GetCursorPosition: TCoord;
+
+    class procedure SetUnicodeOutput;
   end;
 
 implementation
 
 uses
   uTypes, uCharset, uChar, uStrings;
+
+var
+  ConsoleCodePage: SG;
 
 class procedure TConsole.WriteLine(const AText: string);
 begin
@@ -44,7 +49,8 @@ begin
     {$ifdef UNICODE}
     System.Writeln(AText);
     {$else}
-    System.Writeln(ConvertAnsiToOem(AText));
+    if ConsoleCodePage = CP_OEMCP then
+      System.Writeln(ConvertAnsiToOem(AText));
     {$endif}
   end;
 end;
@@ -54,7 +60,8 @@ begin
   {$ifdef UNICODE}
   System.Write(AText);
   {$else}
-  System.Write(ConvertAnsiToOem(AText));
+  if ConsoleCodePage = CP_OEMCP then
+    System.Write(ConvertAnsiToOem(AText));
   {$endif}
 end;
 
@@ -96,6 +103,12 @@ begin
       csbi.dwSize := AValue;
       SetConsoleScreenBufferSize(handle, csbi.dwSize);
     end;
+end;
+
+class procedure TConsole.SetUnicodeOutput;
+begin
+  SetConsoleOutputCP(CP_UTF8); // Default is CP_OEMCP
+  ConsoleCodePage := GetConsoleOutputCP;
 end;
 
 class procedure TConsole.WriteLine(const AText: string; const AForegroundColor, ABackgroundColor: TConsoleColor);
