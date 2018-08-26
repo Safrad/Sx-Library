@@ -78,6 +78,10 @@ function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function RandomDiv(const Dividend: SG; const Divisor: SG): SG;
 
+function IsInRange(const Min, Cur, Max: SG): BG; overload;
+function IsInRange(const Min, Cur, Max, Def: SG): BG; overload;
+function IsInRange(const Min, Cur, Max: UG): BG; overload;
+function IsInRange(const Min, Cur, Max: FG): BG; overload;
 function Range(const Min, Cur, Max: SG): SG; overload;
 function Range(const Min, Cur, Max, Def: SG): SG; overload;
 function Range(const Min, Cur, Max: UG): UG; overload;
@@ -771,6 +775,26 @@ begin
 		Result := (Dividend + Random(Divisor)) div Divisor;
 end;
 
+function IsInRange(const Min, Cur, Max: SG): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max, Def: SG): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: UG): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: FG): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
 function Range(const Min, Cur, Max: SG): SG;
 begin
 	Result := Cur;
@@ -1239,11 +1263,11 @@ procedure ReadMem(P: Pointer; Size: UG); register;
 {$ifdef CPUX64}
 var
   i: SG;
-  b: U1;
 begin
   for i := 0 to Size - 1 do
   begin
-    b := PByte(P)^;
+    if (PByte(P)^ = 0) then
+      ; // No Code
     Inc(PByte(P), 1);
   end;
 {$else}
@@ -1570,7 +1594,7 @@ var
   d1, d2: U4;
 begin
   P1 := PU4(@Desc);
-  P2 := PU4(SG(@Desc) + SizeOf(U4) * (Size - 1));
+  P2 := PU4(SG(@Desc) + SizeOf(U4) * SG(Size - 1));
   for i := 0 to Size div 2 - 1 do
   begin
     d1 := P1^;
