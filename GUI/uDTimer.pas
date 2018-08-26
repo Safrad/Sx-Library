@@ -67,8 +67,6 @@ type
 		property OnDeactivate: TNotifyEvent read FOnDeactivate write FOnDeactivate;
 	end;
 
-procedure TryTimer;
-
 var
 	NowTime: S8; // Actual PerformanceCounter Value
 	// Statistic Values
@@ -96,14 +94,8 @@ const
 var
 	DIdleTimer: TDIdleTimer;
 
-procedure TryTimer;
-var Done: Boolean;
-begin
-	Done := False;
-	if Assigned(DIdleTimer) then
-		DIdleTimer.AppIdle(nil, Done);
-end;
-
+{ TDIdleTimer }	
+	
 constructor TDIdleTimer.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
@@ -167,6 +159,8 @@ begin
 	else
 		Done := True;
 end;
+
+{ TDTimer }
 
 constructor TDTimer.Create(AOwner: TComponent);
 begin
