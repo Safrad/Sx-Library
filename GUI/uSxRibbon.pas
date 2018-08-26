@@ -40,6 +40,7 @@ type
     destructor Destroy; override;
 
     procedure Update; override;
+    procedure OnItemClick(Sender: TObject);
 
     property SxAction: TSxAction read FSxAction write SetSxAction;
     property TextButtons: BG read FTextButtons write SetTextButtons;
@@ -102,6 +103,7 @@ begin
 //  RibbonItem.Parent := ;
   RibbonItem.SxAction := SxAction;
   FRibbonItems.Add(RibbonItem);
+  RibbonItem.OnClick := OnItemClick;
   InsertControl(RibbonItem);
 end;
 
@@ -244,6 +246,11 @@ begin
 	Height := Y + IconSize;
 end;
 
+procedure TSxRibbon.OnItemClick(Sender: TObject);
+begin
+  Update;
+end;
+
 procedure TSxRibbon.Resize;
 begin
   inherited;
@@ -285,7 +292,7 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-  IconSize := LgToPx(22);
+  IconSize := LgToPx(22 + 64);
   IconMargin := LgToPx(8);
 {$ENDIF NoInitialization}
 end.

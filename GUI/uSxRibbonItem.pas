@@ -23,19 +23,16 @@ type
   private
     FItems: TObjectList;
     FBitmap: TDBitmap;
-    FActive: BG;
-    FActiveItem: TSxRibbonItem;
-    FParent: TSxRibbonItem;
     FSxAction: TSxAction;
     FDisplayStyle: TDisplayStyle;
     FBackgroundColor: TColor;
+    FOnClick: TNotifyEvent;
     procedure DrawBackground;
     procedure DrawUsage;
     procedure DrawIcon;
     procedure DrawText;
     procedure SetSxAction(const Value: TSxAction);
-    procedure SetActive(const Value: BG);
-    procedure SetActiveItem(const Value: TSxRibbonItem);
+    procedure SetOnClick(const Value: TNotifyEvent);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -47,8 +44,7 @@ type
 
     property SxAction: TSxAction read FSxAction write SetSxAction;
     property DisplayStyle: TDisplayStyle read FDisplayStyle write FDisplayStyle;
-    property Active: BG read FActive write SetActive;
-    property ActiveItem: TSxRibbonItem read FActiveItem write SetActiveItem;
+    property OnClick: TNotifyEvent read FOnClick write SetOnClick;
   end;
 
 implementation
@@ -56,8 +52,10 @@ implementation
 uses
   Math,
   SysUtils,
+  StdCtrls,
   uDForm,
   uStrings,
+  uMath,
   uColor,
   uGraph,
   uDrawStyle, Controls;
@@ -91,7 +89,7 @@ end;
 
 procedure TSxRibbonItem.Paint;
 begin
-  FBackgroundColor := TextToColor(SxAction.Name);
+  FBackgroundColor := clBtnFace; // TextToColor(SxAction.Name);
 
   FBitmap.SetSize(ClientWidth, ClientHeight);
 
@@ -112,8 +110,7 @@ begin
   Co[2] := DarkerColor(FBackgroundColor);
   Co[3] := Co[2];
 
-  //if FSxAction.Parent.ActiveItem = Self.SxAction then
-  if FActive then
+  if FSxAction.Parent.ActiveChild = SxAction then
   begin
     Co[0] := LighterColor(Co[0]);
     Co[1] := Co[0];
@@ -133,7 +130,7 @@ end;
 
 procedure TSxRibbonItem.DrawText;
 begin
-  DrawShadowText(FBitmap.Canvas, FBitmap.GetFullRect, SxAction.Name, 1);
+  DrawCuttedText(FBitmap.Canvas, FBitmap.GetFullRect, taCenter, tlCenter, SxAction.Name, False, 1);
 end;
 
 procedure TSxRibbonItem.DrawUsage;
@@ -141,7 +138,7 @@ begin
   if IsDebug then
   begin
     FBitmap.Canvas.Brush.Style := bsClear;
-    FBitmap.Canvas.TextOut(0, 0, IntToStr(FSxAction.Used));
+    FBitmap.Canvas.TextOut(0, 0, IntToStr(RoundDiv(FSxAction.ClickCountWithChildren * 100, FSxAction.Parent.ClickCountWithChildren)));
   end;
 end;
 
@@ -185,32 +182,16 @@ end;
 procedure TSxRibbonItem.Click;
 begin
   inherited;
-  Assert(FParent <> nil);
-  FParent.ActiveItem := Self;
+  Assert(FSxAction.Parent <> nil);
   FSxAction.Execute(Self);
+  if Assigned(OnClick) then
+    OnClick(Self);
 end;
 
-procedure TSxRibbonItem.SetActive(const Value: BG);
-begin
-  if FActive <> Value then
-  begin
-    FActive := Value;
-    Invalidate;
-  end;
-end;
 
-procedure TSxRibbonItem.SetActiveItem(const Value: TSxRibbonItem);
-var
-  i: SG;
+procedure TSxRibbonItem.SetOnClick(const Value: TNotifyEvent);
 begin
-  if FActiveItem <> Value then
-  begin
-    FActiveItem := Value;
-    for i := 0 to FItems.Count - 1 do
-    begin
-      TSxRibbonItem(FItems[i]).Active := TSxRibbonItem(FItems[i]) = FActiveItem;
-    end;
-  end;
+  FOnClick := Value;
 end;
 
 end.
