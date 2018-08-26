@@ -325,7 +325,7 @@ var
 begin
 LRetry :
 	Result := False;
-	Pos2 := Pos + FFileBegin;
+	Pos2 := Pos + U8(FFileBegin);
 	if SetFilePointer(FHandle, // handle of file
 		TU8(Pos2).D0, // number of bytes to move file pointer
 		@TU8(Pos2).D1, // address of high-order word of distance to move
@@ -630,7 +630,7 @@ begin
 	Result := ReadLnNoConversion(Line);
 	case FCharset of
 	fcAnsi: ;
-	fcUTF8: Line := Utf8ToAnsi(Line);
+	fcUTF8: Line := AnsiString(Utf8ToAnsi(Line));
 	else
 		Line := '';
 		Warning('Unsupported charset in file %1', [FFileName]);
@@ -780,7 +780,7 @@ begin
 	case FCharset of
 	fcUTF8:
 		begin
-			Result := WriteNoConversion(AnsiToUTF8(Line));
+			Result := WriteNoConversion(AnsiToUTF8(string(Line)));
 		end;
 	 fcUTF16BE:
 		begin

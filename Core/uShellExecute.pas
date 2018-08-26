@@ -31,6 +31,7 @@ implementation
 uses
   Windows,
   ShellAPI,
+  Classes,
   uMsg,
   uFiles;
 

@@ -227,16 +227,16 @@ var
   s: string;
   i: SG;
 begin
-  u := Input;
+  u := string(Input);
   for i := 0 to 255 do
   begin
     FmtStr(s, '%.2x', [i]);
-    Replace(u, '%' + s, AnsiChar(i));
+    Replace(u, '%' + s, string(AnsiChar(i)));
   end;
 	{$if CompilerVersion < 20}
   Result := UTF8Decode(u);
   {$else}
-  Result := UTF8ToString(u);
+  Result := UTF8ToString(RawByteString(u));
   {$ifend}
 end;
 

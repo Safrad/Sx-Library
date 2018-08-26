@@ -966,9 +966,9 @@ begin
 	begin
 		if DT >= MSecsPerYear then
 		begin
-			Year := DT div MSecsPerYear;
+			Year := DT div S8(MSecsPerYear);
 			Result := Result + IntToStr(Year) + CharSpace + Translate('year' + Plural(Year)) + ListSep;
-			DT := DT mod MSecsPerYear;
+			DT := DT mod S8(MSecsPerYear);
 		end;
 		if DT >= MSecsPerWeek then
 		begin

@@ -20,12 +20,12 @@ type
     FName: string;
     FOnExecute: TNotifyEvent;
 
-    FItems: TObjectList;
-    FActiveItem: TSxAction;
+    FItems: TObjectList; // Childs
     FParent: TSxAction;
+    FActiveChild: TSxAction;
     function GetCount: Integer;
-    function GetInGroup: SG;
-    function GetUsed: SG;
+    function GetClickCountWithChildren: SG;
+    procedure SetActiveChild(const Value: TSxAction);
   public
     Tag: SG;
     RadioItem: BG;
@@ -50,9 +50,9 @@ type
     property Items: TObjectList read FItems;
     property Count: Integer read GetCount;
     property OnExecute: TNotifyEvent read FOnExecute write FOnExecute;
-    property InGroup: SG read GetInGroup;
-    property Used: SG read GetUsed;
+    property ClickCountWithChildren: SG read GetClickCountWithChildren;
     property Parent: TSxAction read FParent write FParent;
+    property ActiveChild: TSxAction read FActiveChild write SetActiveChild;
   end;
 
 var
@@ -152,17 +152,6 @@ begin
   RWToIniFile(IniFile, 'SxActions', Save);
 end;
 
-function TSxAction.GetInGroup: SG;
-var
-  i: SG;
-begin
-  Result := FClickCount;
-  for i := 0 to FItems.Count - 1 do
-  begin
-    Inc(Result, TSxAction(FItems[i]).FClickCount);
-  end;
-end;
-
 function TSxAction.ShortCutsToString: string;
 var
   i: SG;
@@ -173,15 +162,25 @@ begin
   DelLastChar(Result, 2);
 end;
 
-function TSxAction.GetUsed: SG;
+procedure TSxAction.SetActiveChild(const Value: TSxAction);
 var
-  InGroup: SG;
+  i: SG;
 begin
-  InGroup := GetInGroup;
-  if InGroup = 0 then
-    Result := 0
-  else
-    Result := RoundDiv(100 * FClickCount, InGroup);
+  if FActiveChild <> Value then
+  begin
+    FActiveChild := Value;
+  end;
+end;
+
+function TSxAction.GetClickCountWithChildren: SG;
+var
+  i: SG;
+begin
+  Result := FClickCount;
+  for i := 0 to FItems.Count - 1 do
+  begin
+    Inc(Result, TSxAction(FItems[i]).ClickCountWithChildren);
+  end;
 end;
 
 end.

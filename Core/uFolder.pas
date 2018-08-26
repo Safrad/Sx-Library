@@ -1,6 +1,7 @@
 unit uFolder;
 
 {$WARN SYMBOL_PLATFORM OFF}
+{$WARN SYMBOL_DEPRECATED OFF}
 
 interface
 

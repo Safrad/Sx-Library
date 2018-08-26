@@ -164,7 +164,7 @@ begin
         if BytesRead > 0 then
         begin
           Buffer[BytesRead] := #0;
-          ProcessOutput.OutputText := ProcessOutput.OutputText + Buffer;
+          ProcessOutput.OutputText := ProcessOutput.OutputText + string(Buffer);
         end;
       until not WasOK or (BytesRead = 0);
 

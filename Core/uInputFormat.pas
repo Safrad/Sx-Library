@@ -21,7 +21,9 @@ function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFor
 
 function StrToVector(const Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil; const LapStopwatch: TLapStopwatch = nil): TVector;
 function StrToValE(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal: Extended; const Messages: TParserMessages = nil): Extended;
+	const MinVal, DefVal, MaxVal: Extended; const Messages: TParserMessages = nil): Extended; overload;
+function StrToValE(Line: string; const UseWinFormat: BG;
+	const DefVal: Extended; const Messages: TParserMessages = nil): Extended; overload;
 {function StrToValE(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string): Extended; overload;}
 
@@ -149,6 +151,12 @@ begin
 	finally
 		Parser.Free;
 	end;
+end;
+
+function StrToValE(Line: string; const UseWinFormat: BG;
+	const DefVal: Extended; const Messages: TParserMessages = nil): Extended;
+begin
+  Result := StrToValE(Line, UseWinFormat, DefVal, Messages);
 end;
 {
 function StrToValE(Line: string; const UseWinFormat: BG;

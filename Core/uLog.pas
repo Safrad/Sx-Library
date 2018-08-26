@@ -93,7 +93,7 @@ begin
       begin
         if not FFile.Opened then Exit;
 
-        if FFile.FileSize + Length(Line) > MaxLogFileSize then
+        if FFile.FileSize + U8(Length(Line)) > MaxLogFileSize then
         begin
           FLoggingLevel := mlNone;
           Exit;

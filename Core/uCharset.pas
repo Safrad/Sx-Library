@@ -1,5 +1,7 @@
 unit uCharset;
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 interface
 
 uses uTypes;
@@ -148,7 +150,7 @@ begin
 
 	if (FromCharset = cpUTF8) then
 	begin
-		s := Utf8ToAnsi(s);
+		s := AnsiString(Utf8ToAnsi(s));
 		if (ToCharset <> cp1250) then
 			ConvertCharset(s, cp1250, ToCharset);
 		Exit;
@@ -158,7 +160,7 @@ begin
 	begin
 		if (FromCharset <> cp1250) then
 			ConvertCharset(s, FromCharset, cp1250);
-		s := AnsiToUtf8(s);
+		s := AnsiToUtf8(string(s));
 		Exit;
 	end;
 

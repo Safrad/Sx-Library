@@ -175,7 +175,7 @@ end;
 procedure IE(const Text: string);
 begin
   if IsDebug then
-    ShowMessage(mlFatalError, 'Internal Error: ' + Text);
+    ShowMessage(mlFatalError, 'Internal – ' + Text);
 end;
 
 procedure Information(const Text: string); overload;

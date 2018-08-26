@@ -1756,7 +1756,7 @@ begin
 			begin
 				F.BlockRead(Data[1], F.FileSize);
 				if F.Charset = fcUTF8 then
-					Data := UTF8ToAnsi(Data)
+					Data := AnsiString(UTF8ToAnsi(Data));
 			end;
 			Result := F.Charset;
 			F.Close;
@@ -1781,7 +1781,7 @@ begin
 			begin
 				F.BlockRead(Data[1], F.FileSize);
 				if F.Charset = fcUTF8 then
-					Data := UTF8ToAnsi(Data)
+					Data := AnsiString(UTF8ToAnsi(Data));
 			end;
 			F.Close;
 			Result := True;
@@ -1896,7 +1896,7 @@ procedure ConvertFileCharset(const Source: AnsiString; out Dest: AnsiString; con
 begin
 	case FileCharset of
 	fcAnsi: Dest := Source;
-	fcUTF8: Dest := AnsiToUtf8(Source);
+	fcUTF8: Dest := AnsiToUtf8(string(Source));
 	else
 		Warning('Unsupported charset.');
 	end;

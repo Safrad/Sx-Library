@@ -191,7 +191,7 @@ begin
 	else if Index >= AvailableLanguageCount then
 		Result := 'Unknown'
 	else
-		Result := AvailableLanguages[Index].Name;
+		Result := string(AvailableLanguages[Index].Name);
 end;
 
 function TDictionary.GetLanguages: string;
@@ -240,10 +240,10 @@ begin
         NewSize := AvailableLanguageCount + 1;
         if AllocByExp(Length(AvailableLanguages), NewSize) then
           SetLength(AvailableLanguages, NewSize);
-        AvailableLanguages[AvailableLanguageCount].Code := Row[0];
+        AvailableLanguages[AvailableLanguageCount].Code := ShortString(Row[0]);
         if Row[1] = '' then
           Row[1] := Row[0];
-        AvailableLanguages[AvailableLanguageCount].Name := Row[1];
+        AvailableLanguages[AvailableLanguageCount].Name := ShortString(Row[1]);
         Inc(FAvailableLanguageCount);
 			end;
 			CSVFile.Close;
@@ -478,8 +478,8 @@ begin
 		begin
   		Loaded := loProcess;
       EntryCount := 0;
-			ReadDictionary(GetLanguagesDir + 'Common' + Language.Name + '.csv');
-			ReadDictionary(GetLanguagesDir + Language.Name + '.csv');
+			ReadDictionary(GetLanguagesDir + 'Common' + string(Language.Name) + '.csv');
+			ReadDictionary(GetLanguagesDir + string(Language.Name) + '.csv');
       RebuildAIndex;
       Loaded := loYes;
 		end;

@@ -1,5 +1,7 @@
 unit uSxThread;
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 interface
 
 uses

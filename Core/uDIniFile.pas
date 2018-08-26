@@ -392,7 +392,7 @@ begin
 		Result := Default
 		else
 		Result := ReadFAFast(DelCharsF(s, ',')); }
-	Result := StrToValE(s, False, -MaxExtended, Default, MaxExtended);
+	Result := StrToValE(s, False, Default);
 end;
 
 procedure TDIniFile.WriteNum(const Section, Ident: string; Value: S4);

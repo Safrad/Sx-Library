@@ -60,8 +60,6 @@ begin
 end;
 
 procedure TSxGUI.Start;
-var
-  Item: TMenuItem;
 begin
   case FGUIDesign of
   gdMainMenu, gdMainMenuAndToolbar:

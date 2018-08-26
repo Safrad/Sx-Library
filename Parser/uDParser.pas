@@ -380,9 +380,9 @@ begin
 			B := True;
 			if (Exp > 1) then
 				if Res > 1 then
-					B := (MaxExtended / Abs(Res) > Exp)
+					B := (MaxExtended80 / Abs(Res) > Exp)
 				else
-					B := (MaxExtended > Abs(Res) * Exp);
+					B := (MaxExtended80 > Abs(Res) * Exp);
 
 			if B then
 			begin
@@ -413,7 +413,6 @@ begin
 
 	Result := 0;
 	Num := 0;
-	DigitValue := 0;
 	Minus := False;
 
 	case BufR[BufRI] of
@@ -1010,7 +1009,7 @@ end;
 
 function TDParser.TokenFloat: FA;
 begin
-	Result := ReadFA(-MaxExtended, 0, MaxExtended);
+	Result := ReadFA(-MaxExtended80, 0, MaxExtended80);
 end;
 
 function TDParser.TokenInt: Integer;
@@ -1299,7 +1298,7 @@ begin
 	{ else // Without parameters
 		// AddMes(mtEExpected, ['(', Id]); }
 	end;
-	if CorrectParamCount('', Result.Operation, Result.ArgCount) = False then
+	if CorrectParamCount('', string(Result.Operation), Result.ArgCount) = False then
 	begin
 		AddMes(mtWIllegalNumberOfParameters, [NToS(Result.ArgCount)]);
 	end;
@@ -1338,7 +1337,7 @@ begin
 			Result := nil;
 			if FunctionExists('', Id) then
 			begin
-				Result := NodeArg(Id);
+				Result := NodeArg(TFunctionName(Id));
 			end;
 
 			if Result = nil then
@@ -1350,7 +1349,7 @@ begin
 					GetMem(Result, NodeFunction);
 					Inc(TreeSize, NodeFunction);
 					Inc(NodeCount);
-					Result.Operation := Id;
+					Result.Operation := TFunctionName(Id);
 					Result.ArgCount := 0;
 				end
 				else
@@ -1479,7 +1478,7 @@ begin
 				GetMem(Result, NodeFunction + 2 * SizeOf(Result.Args[0]));
 				Inc(TreeSize, NodeFunction + 2 * SizeOf(Result.Args[0]));
 				Inc(NodeCount);
-				Result.Operation := Id;
+				Result.Operation := TFunctionName(Id);
 				Result.ArgCount := 2;
 				Result.Args[0] := Node;
 				ReadInput;
@@ -1604,7 +1603,7 @@ begin
     for I := 0 to Node.ArgCount - 1 do
       X[I] := Calc(Node.Args[I]);
 
-    Result := CallFunction('' { TODO : Node.UnitName } , Node.Operation, X);
+    Result := CallFunction('' { TODO : Node.UnitName } , string(Node.Operation), X);
 	end;
 end;
 
