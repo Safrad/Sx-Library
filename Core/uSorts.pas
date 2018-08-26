@@ -46,6 +46,7 @@ procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of 
 
 type TCompare = function(const Index0, Index1: SG): TCompareResult;
 
+procedure SortStrBinary(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);
 procedure SortStr(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);
 // Stable Megre sort used for strings (few comparison)
 procedure Sort(const AIndex: PArraySG; const Count: SG; const Compare: TCompare; const Reverse: BG = False);
@@ -250,15 +251,24 @@ begin
 		SetLength(MeI, 0);
 end;
 
-
-var
-	AStr: PArrayString;
-
 function LocaleCompareText(const S1, S2: string): SG;
 begin
 	Result := CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
 		PChar(S1), Length(S1),
 		PChar(S2), Length(S2)) - 2;
+end;
+
+var
+	AStr: PArrayString;
+
+function BinaryCompareText(const Index0, Index1: SG): TCompareResult;
+begin
+  if AStr[Index0] > AStr[Index1] then
+    Result := crFirstGreater
+  else if AStr[Index0] < AStr[Index1] then
+    Result := crFirstLess
+  else
+    Result := crBothSame;
 end;
 
 function Compare(const Index0, Index1: SG): TCompareResult;
@@ -275,6 +285,15 @@ begin
 	begin
 		AStr := AString;
 		Sort(AIndex, Count, Compare, Reverse);
+	end;
+end;
+
+procedure SortStrBinary(const AIndex: PArraySG; const AString: PArrayString; const Count: SG; const Reverse: BG = False);
+begin
+	if Count > 1 then
+	begin
+		AStr := AString;
+		Sort(AIndex, Count, BinaryCompareText, Reverse);
 	end;
 end;
 
