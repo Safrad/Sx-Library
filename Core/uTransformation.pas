@@ -25,6 +25,8 @@ type
     property Zoom: FG read FZoom write SetZoom;
     property Offset: TPoint2D read FOffset write SetOffset;
 
+    function FontSize(const ASize: FG): SG;
+
     function Transform(const APoint: TPoint2D): TPoint2D;
     function TransformToInt(const APoint: TPoint2D): TPoint;
     function InverseTransform(const APoint: TPoint2D): TPoint2D;
@@ -86,6 +88,11 @@ function TTransformation.TransformToInt(const APoint: TPoint2D): TPoint;
 begin
 	Result.X := Round(CXToSX(APoint.X));
 	Result.Y := Round(CYToSY(APoint.Y));
+end;
+
+function TTransformation.FontSize(const ASize: FG): SG;
+begin
+  Result := Trunc(ASize * Zoom);
 end;
 
 end.
