@@ -41,7 +41,9 @@ type
     destructor Destroy; override;
 
     procedure Update;
-    function MaxPhysicalMemorySize: U8;
+    function MaxPhysicalMemorySize: U8; // On 32bit system can be maximal 3 GB
+    function MaxPhysicalMemorySize64: U8;
+    function ReservedPhysicalMemoryForOthers: U8;
     function ProcessAllocatedVirtualMemory: U8;
     function CanAllocateMemory(const Size: UG): BG;
 
@@ -139,10 +141,22 @@ begin
   inherited;
 end;
 
-function TSystemMemory.MaxPhysicalMemorySize: U8;
+function TSystemMemory.MaxPhysicalMemorySize64: U8;
 begin
 	Update;
-  Result := Min(2 * Physical.Used div 3 {66%}, Virtual.Total);
+  Result := U8(Min(Physical.Total, Virtual.Total)) - ReservedPhysicalMemoryForOthers;
+end;
+
+function TSystemMemory.MaxPhysicalMemorySize: U8;
+begin
+  Result := MaxPhysicalMemorySize64;
+
+  {$ifdef CPUX86}
+  if Result > 3 * U8(GB) then
+  begin
+    Result := 3 * U8(GB);
+  end;
+  {$endif}
 end;
 
 function TSystemMemory.ProcessAllocatedVirtualMemory: U8;
@@ -160,6 +174,31 @@ begin
   end
   else
     RaiseLastOSError;
+end;
+
+{ OS Name                  Default minimal RAM [MB]
+  Windows 95                  8 (4 running minimal)
+  Windows 98                 24 (16 running minimal)
+  Windows XP Home Edition   128 (64 running minimal)
+  Windows Vista Home Basic  512
+  Windows Vista others:    1024
+  Win7/8/10:               1024
+  Win7/8/10 x64:           2048
+}
+function TSystemMemory.ReservedPhysicalMemoryForOthers: U8;
+begin
+  if Physical.Total < 96 * MB then
+    Result := 4 * Physical.Total div 5 // 80 %
+  else if Physical.Total < 384 * MB then
+    Result := 3 * Physical.Total div 4 // 75 %
+  else if Physical.Total < 1536 * MB then
+    Result := 3 * Physical.Total div 5 // 60 %
+  else if Physical.Total < 6 * U8(GB) then
+    Result := Physical.Total div 2 // 50 %
+  else
+    Result := 3 * U8(GB); // < 50 %
+
+  Result := Min(U8(Physical.Used), Result);
 end;
 
 procedure TSystemMemory.SetPageFile(const Value: TRatioValue);
