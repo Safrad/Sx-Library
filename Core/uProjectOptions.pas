@@ -114,7 +114,7 @@ function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const
 implementation
 
 uses
-  TypInfo, uStrings, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, uInputFormat, uFiles, uFile,
+  TypInfo, uStrings, uChar, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, uInputFormat, uFiles, uFile,
   uMsg, uDIniFile;
 
 const
@@ -486,6 +486,41 @@ end;
 
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 
+  procedure AddVersionInfo(const Name: string; const Value: string);
+  var
+    p: TProjectInfoName;
+  begin
+    for p := Low(TProjectInfoName) to High(TProjectInfoName) do
+    begin
+      if ProjectInfoStr[p] = Name then
+      begin
+        try
+          ProjectInfos[p] := Value;
+        except
+
+        end;
+        Break;
+      end;
+    end;
+  end;
+
+  procedure AddVersionInfos(const Infos: string);
+  var
+    VersionInfos: TArrayOfString;
+    VersionInfo, Name, Value: string;
+    i, InLineIndex: SG;
+  begin
+    VersionInfos := SplitStringEx(Infos, ';');
+    for i := 0 to Length(VersionInfos) - 1 do
+    begin
+      VersionInfo := VersionInfos[i];
+      InLineIndex := 1;
+      Name := ReadToChar(VersionInfo, InLineIndex, '=');
+      Value := ReadToChar(VersionInfo, InLineIndex, CharNull);
+      AddVersionInfo(Name, Value);
+    end;
+  end;
+
   procedure ProcessNode(const Node: IXMLNode);
   const
     AttrName = 'Name';
@@ -495,7 +530,6 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     Name: string;
     NodeValue: string;
     SubVersion: TSubVersion;
-    p: TProjectInfoName;
     i: SG;
   begin
     if (Node = nil) then
@@ -609,29 +643,16 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
         end;
       end;
     end
+    else if Name = UpperCase('VerInfo_Keys') then
+    begin
+      AddVersionInfos(NodeValue);
+    end
     else if Name = UpperCase('VersionInfoKeys') then
     begin
       if Node.HasAttribute(AttrName) then
       begin
         Name := Node.GetAttribute(AttrName);
-        for p := Low(TProjectInfoName) to High(TProjectInfoName) do
-        begin
-          if ProjectInfoStr[p] = Name then
-          begin
-            try
-              if Save then
-//									Node.NodeValue := ProjectInfos[p]
-
-              else
-              begin
-                ProjectInfos[p] := NodeValue;
-              end;
-            except
-
-            end;
-            Break;
-          end;
-        end;
+        AddVersionInfo(Name, NodeValue);
       end;
     end
     else if Name = UpperCase('DCC_Hints') then
