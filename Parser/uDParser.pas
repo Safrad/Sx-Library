@@ -405,8 +405,20 @@ var
 	Minus: BG;
 	Point: BG;
 	PointDiv: FA;
-	DigitValue: SG;
 	Num: FA;
+
+  procedure ApplyDigitValue(const ADigitValue: SG);
+  begin
+    if Point = False then
+    begin
+      Num := Num * Base + ADigitValue;
+    end
+    else
+    begin
+      PointDiv := PointDiv * Base;
+      Num := Num + ADigitValue / PointDiv;
+    end;
+  end;
 begin
 	Point := False;
 	PointDiv := 1;
@@ -442,11 +454,13 @@ begin
 		begin
 			case UpCase(BufR[BufRI]) of
 			'0' .. '9':
-				DigitValue := Ord(BufR[BufRI]) - Ord('0');
+				ApplyDigitValue(Ord(BufR[BufRI]) - Ord('0'));
 			'A' .. 'F':
 				begin
 					if Base = 16 then
-						DigitValue := 10 + Ord(UpCase(BufR[BufRI])) - Ord('A')
+          begin
+						ApplyDigitValue(10 + Ord(UpCase(BufR[BufRI])) - Ord('A'))
+          end
 					else if UpCase(BufR[BufRI]) = 'E' then
 					begin
 						Break;
@@ -458,20 +472,9 @@ begin
 				begin
 					Result := 60 * (Result + Num);
 					Num := 0;
-					Inc(BufRI);
-					Continue;
 				end
 			else
 				Break;
-			end;
-			if Point = False then
-			begin
-				Num := Num * Base + DigitValue;
-			end
-			else
-			begin
-				PointDiv := PointDiv * Base;
-				Num := Num + DigitValue / PointDiv;
 			end;
 		end;
 		Inc(BufRI);

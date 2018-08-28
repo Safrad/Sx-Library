@@ -2,7 +2,8 @@ unit uTypes;
 
 interface
 
-uses TypInfo;
+uses
+  TypInfo, Math;
 
 const
   IsDebug = {$ifopt d+}True{$else}False{$endif};
@@ -16,6 +17,9 @@ const
 {$ifend}
 
 	MinInt = Low(Integer);
+{$if CompilerVersion < 32}
+  MaxExtended80 = MaxExtended;
+{$endif}
 
 	BitsPerByte = 8;
 	KB = 1024;
