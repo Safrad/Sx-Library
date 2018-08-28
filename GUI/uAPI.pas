@@ -17,6 +17,8 @@ function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; con
 
 procedure ShellExecuteDirectNoExitCode(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_NORMAL);
 
+function ShellExecuteHandle(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_NORMAL): THandle;
+
 procedure APIOpen(FileName: TFileName; const Params: string = '');
 
 // @Return process exit code and output
@@ -101,6 +103,26 @@ begin
 
   ShellExecuteEx(@lpExecInfo);
 	CloseHandle(lpExecInfo.hProcess);
+end;
+
+function ShellExecuteHandle(const FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_NORMAL): THandle;
+var
+	lpExecInfo: TShellExecuteInfo;
+begin
+  lpExecInfo.cbSize := SizeOf(lpExecInfo);
+  FillChar(lpExecInfo, SizeOf(lpExecInfo), 0);
+
+  lpExecInfo.cbSize := SizeOf(lpExecInfo);
+  lpExecInfo.fMask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
+  lpExecInfo.Wnd := GetActiveWindow();
+  lpExecInfo.lpVerb := 'open';
+  lpExecInfo.lpParameters := PChar(Params);
+  lpExecInfo.lpFile := PChar(FFileName);
+  lpExecInfo.nShow := ShowCmd;
+  lpExecInfo.hProcess := INVALID_HANDLE_VALUE;
+
+  ShellExecuteEx(@lpExecInfo);
+  Result := lpExecInfo.hProcess;
 end;
 
 procedure APIOpen(FileName: TFileName; const Params: string = '');
