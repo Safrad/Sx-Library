@@ -102,7 +102,8 @@ type
 		procedure InitGraphics;
 		{$endif}
 		procedure HistogramL(Limit: UG);
-		function InternalCutWindow(var XD1, YD1, XD2, YD2: TCoor): BG;
+		function InternalCutWindow(var XD1, YD1, XD2, YD2: TCoor): BG; overload;
+    function InternalCutWindow(var Range: TRect): BG; overload;
 		function GetDataSize: UG;
 		procedure GBlurCPU(BmpD: TDBitmap; const Range: TRect; Radius: SG; const Horz, Vert: Boolean;
 			const InterruptProcedure: TInterruptProcedure);
@@ -269,7 +270,7 @@ type
 			const Func: TGenFunc; const Co: array of TColor;
 			const Effect: TEffect; const Clock: UG;
 			const InterruptProcedure: TInterruptProcedure); overload;
-		procedure GenerateRGBEx(XD1, YD1, XD2, YD2: SG;
+		procedure GenerateRGBEx(XD1, YD1, XD2, YD2: TCoor;
 			const Func: TGenFunc; const Co: array of TColor;
 			const Effect: TEffect; const Clock: UG;
 			const InterruptProcedure: TInterruptProcedure); overload;
@@ -3172,6 +3173,41 @@ begin
 		YD2 := TCoor(GraphMaxY);
 	end;
 	if YD1 > YD2 then Exit;
+
+	Result := False;
+end;
+
+function TDBitmap.InternalCutWindow(var Range: TRect): BG;
+begin
+	Result := True;
+	if Range.Left > Range.Right then Exchange(Range.Left, Range.Right);
+	if Range.Top > Range.Bottom then Exchange(Range.Top, Range.Bottom);
+
+	if Range.Left > TCoor(GraphMaxX) then Exit;
+	if Range.Left < GraphMinX then
+	begin
+		Range.Left := GraphMinX;
+	end;
+
+	if Range.Top > TCoor(GraphMaxY) then Exit;
+	if Range.Top < GraphMinY then
+	begin
+		Range.Top := GraphMinY;
+	end;
+
+	if Range.Right < GraphMinX then Exit;
+	if Range.Right > TCoor(GraphMaxX) then
+	begin
+		Range.Right := TCoor(GraphMaxX);
+	end;
+	if Range.Left > Range.Right then Exit;
+
+	if Range.Bottom < GraphMinY then Exit;
+	if Range.Bottom > TCoor(GraphMaxY) then
+	begin
+		Range.Bottom := TCoor(GraphMaxY);
+	end;
+	if Range.Top > Range.Bottom then Exit;
 
 	Result := False;
 end;
@@ -8931,7 +8967,7 @@ begin
 end;
 
 procedure TDBitmap.GenerateRGBEx(
-	XD1, YD1, XD2, YD2: SG;
+	XD1, YD1, XD2, YD2: TCoor;
 	const Func: TGenFunc; const Co: array of TColor;
 	const Effect: TEffect; const Clock: UG;
 	const InterruptProcedure: TInterruptProcedure);
@@ -11003,7 +11039,7 @@ procedure TDBitmap.GBlurTo(BmpD: TDBitmap; Range: TRect; const Radius: Double; c
 begin
 	if Empty or (Radius <= 0) then
     Exit;
-	if InternalCutWindow(Range.Left, Range.Top, Range.Right, Range.Bottom) then
+	if InternalCutWindow(Range) then
     Exit;
 
 	if UseFPU then
