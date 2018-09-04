@@ -167,7 +167,7 @@ begin
     CPUTick := TimeDifference(GetCPUCounter.A, FLastCPUTick);
     TickCount := TimeDifference(PerformanceCounter, FLastTickCount);
     if (TickCount > 0) and (CPUTick > 0) then
-      FFrequency := PerformanceFrequency * CPUTick / TickCount;
+      FFrequency := U8(PerformanceFrequency) * CPUTick / TickCount;
   end
   else
     FFrequency := DefaultFrequency;
