@@ -18,7 +18,6 @@ type
     FDeletePathsList: TStringList;
     FCanCreateTargetDir: BG;
     FDeleteInexistingPathsInDestDir: BG;
-    FElapsedTime: TStopwatch;
     procedure DeleteFiles;
     procedure Synchro(const Source, Dest: string);
     procedure SetDestDir(const Value: string);
@@ -59,18 +58,17 @@ begin
   inherited;
 
   FDeletePathsList := TStringList.Create;
-  FElapsedTime := TStopwatch.Create;
 end;
 
 procedure TSynchro.DeleteFiles;
 var
-  Size: U8;
+  Size: S8;
   Path: string;
   i: SG;
 begin
   for i := 0 to FDeletePathsList.Count - 1 do
   begin
-    Path := FDestDir + FDeletePathsList[i];
+    Path := FDeletePathsList[i];
     if LastChar(Path) = '\' then
     begin
       if RemoveDirsEx(Path, True) then
@@ -92,15 +90,12 @@ end;
 destructor TSynchro.Destroy;
 begin
   FDeletePathsList.Free;
-  FElapsedTime.Free;
 
   inherited;
 end;
 
 procedure TSynchro.Proccess;
 begin
-  FElapsedTime.Start;
-
   if not DirectoryExists(FSourceDir) then
   begin
     raise EDirectoryNotFoundException.Create(ReplaceParam('Source directory %1 not found.', [FSourceDir]));
@@ -122,7 +117,6 @@ begin
     Synchro(FSourceDir, FDestDir);
   finally
     DeleteFiles;
-    FElapsedTime.Stop;
   end;
 end;
 
@@ -288,6 +282,12 @@ begin
 		end;
 	end;
 
+  FileInfo := FileNamesD.GetFirst;
+  for i := 0 to SG(FileNamesD.Count) - 1 do
+  begin
+    Finalize(FileInfo^);
+    Inc(SG(FileInfo), FileNamesD.ItemMemSize);
+  end;
 	FreeAndNil(FileNamesD);
 end;
 
