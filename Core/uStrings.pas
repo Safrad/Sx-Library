@@ -125,6 +125,8 @@ procedure Replace(var s: string; const WhatS, ToS: string); overload;
 procedure Replace(var s: string; const WhatS, ToS: array of string); overload;
 procedure ReplacePattern(var s: string; const Pattern: array of TStringPair);
 
+function ReplaceParam(const Text: string; const Param: array of string): string; overload;
+
 function DoubleBackSlash(const s: string): string;
 function RemoveSingleAmp(const s: string): string;
 function Code(const s: string; const Decode: BG): string;
@@ -1033,6 +1035,20 @@ begin
 		ToS[i] := Pattern[i].Value;
 	end;
 	Replace(s, WhatS, ToS);
+end;
+
+function ReplaceParam(const Text: string; const Param: array of string): string; overload;
+var
+  i: SG;
+begin
+  Result := Text;
+  for i := 1 to Length(Param) do
+  begin
+    if IsDebug and (Pos('%' + IntToStr(i), Text) = 0) then
+      Result := Result + LineSep + Param[i - 1]
+    else
+      Replace(Result, '%' + IntToStr(i), '''' + Param[i - 1] + '''');
+  end;
 end;
 
 function DoubleBackSlash(const s: string): string;

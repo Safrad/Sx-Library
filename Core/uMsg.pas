@@ -5,9 +5,6 @@ interface
 uses
   SysUtils, Consts, uTypes, uConsole;
 
-function ReplaceParam(const Text: string; const Param: array of string): string; overload;
-// function ReplaceParam(const Text: string; const Param: string): string; overload;
-
 var
   MessageLevelStr: array[TMessageLevel] of string;
 
@@ -44,7 +41,7 @@ function ErrorRetry(const Text: string): BG;
 function ErrorCodeToStr(const ErrorCode: U4): string;
 
 const
-  ErrorCodeStr = 'Error Code';
+  ErrorCodeStr = 'I/O Error';
 
 type
   TDlgBtn = (mbOK, mbYes, mbYesToAll, mbRetry, mbIgnore, mbAbort, mbDelete, mbDeleteAll, mbNo, mbNoToAll, mbCancel,
@@ -96,34 +93,6 @@ begin
   else
     Result := True;
 end;
-
-function ReplaceParam(const Text: string; const Param: array of string): string; overload;
-var
-  i: SG;
-begin
-  Result := Text;
-  for i := 1 to Length(Param) do
-  begin
-    if IsDebug and (Pos('%' + IntToStr(i), Text) = 0) then
-      Result := Result + LineSep + Param[i - 1]
-    else
-      Replace(Result, '%' + IntToStr(i), '''' + Param[i - 1] + '''');
-  end;
-end;
-
-{
-	function ReplaceParam(const Text: string; const Param: string): string; overload;
-	begin
-	if Param <> '' then
-	begin
-	if Pos('%1', Text) = 0 then
-	Result := Text + LineSep + Param
-	else
-	Result := ReplaceF(Text, '%1', '''' + Param + '''')
-	end
-	else
-	Result := Text;
-	end; }
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 begin
