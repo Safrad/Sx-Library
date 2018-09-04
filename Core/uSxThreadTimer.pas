@@ -20,12 +20,15 @@ type
     FWorkingStopwatch: TStopwatch;
     FIdleStopwatch: TStopwatch;
     FSleepTime: TTimeSpan;
+    FStartTime: U8;
+    FElapsedTime: TTimeSpan;
     procedure SetOnTimer(const Value: TNotifyEvent);
     procedure SetEnabled(const Value: BG);
 
     procedure InternalExecute;
     function GetIdleTime: TTimeSpan;
     function GetWorkingTime: TTimeSpan;
+    function GetElapsedTime: TTimeSpan;
   protected
     procedure Execute; override;
     procedure ExecuteOnTimer; virtual;
@@ -39,8 +42,10 @@ type
     property Interval: TTimeSpan read FInterval;
     property OnTimer: TNotifyEvent read FOnTimer write SetOnTimer;
 
+    property StartTime: U8 read FStartTime;
     property WorkingTime: TTimeSpan read GetWorkingTime;
     property IdleTime: TTimeSpan read GetIdleTime;
+    property ElapsedTime: TTimeSpan read GetElapsedTime;
   end;
 
 implementation
@@ -62,10 +67,12 @@ begin
   FWorkingStopwatch := TStopwatch.Create;
   FIdleStopwatch := TStopwatch.Create;
   FSleepTime := TTimeSpan.Create;
+  FElapsedTime := TTimeSpan.Create;
 end;
 
 destructor TSxThreadTimer.Destroy;
 begin
+  FreeAndNil(FElapsedTime);
   FreeAndNil(FWorkingStopwatch);
   FreeAndNil(FIdleStopwatch);
   FreeAndNil(FSleepTime);
@@ -85,6 +92,12 @@ begin
   end;
 end;
 
+function TSxThreadTimer.GetElapsedTime: TTimeSpan;
+begin
+  FElapsedTime.Ticks := IntervalFrom(StartTime);
+  Result := FElapsedTime;
+end;
+
 function TSxThreadTimer.GetIdleTime: TTimeSpan;
 begin
   Result := FIdleStopwatch.Elapsed;
@@ -96,10 +109,8 @@ begin
 end;
 
 procedure TSxThreadTimer.InternalExecute;
-var
-  StartTime: U8;
 begin
-  StartTime := PerformanceCounter;
+  FStartTime := PerformanceCounter;
   while (not Terminated) do
   begin
     FWorkingStopwatch.Start;
@@ -109,7 +120,7 @@ begin
     if FInterval.Ticks <= 0 then
       FSleepTime.Ticks := 0
     else
-      FSleepTime.Ticks := FInterval.Ticks - IntervalFrom(StartTime) mod FInterval.Ticks;
+      FSleepTime.Ticks := FInterval.Ticks - ElapsedTime.Ticks mod FInterval.Ticks;
     FIdleStopwatch.Start;
     PreciseSleep(FSleepTime);
     FIdleStopwatch.Stop;
