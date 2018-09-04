@@ -54,7 +54,7 @@ begin
     try
       DivideSpace.Divide2D(ExampleRect, DivideSpaceOptions);
     except
-      on E: EInvalidArgument do
+      on E: EArgumentException do
         ; // Expected exception
       else
         raise;

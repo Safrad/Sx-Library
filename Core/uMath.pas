@@ -175,7 +175,7 @@ function BitsToByte(const Bits: U8): U8;
 implementation
 
 uses
-  Math, Windows, Classes;
+  Math, Windows, SysUtils;
 
 procedure Increment(var X: F4; const N: F4 = 1); overload;
 begin
@@ -501,7 +501,7 @@ const
     1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600);
 begin
   if (AValue < Low(FactorialTable)) or (AValue > High(FactorialTable)) then
-    raise EInvalidArgument.Create('Factorial argument not in 0..12 range.');
+    raise EArgumentOutOfRangeException.Create('Factorial argument not in 0..12 range.');
   Result := FactorialTable[AValue];
 end;
 

@@ -81,9 +81,9 @@ end;
 procedure TDivideSpace.CheckDivideSpaceOptions(const Value: TDivideSpaceOptions);
 begin
   if (Value.Horizontal.Divided) and (Value.Horizontal.Size <= 0) then
-    raise EInvalidArgument.Create('Invalid Horizontal.Size');
+    raise EArgumentException.Create('Invalid Horizontal.Size');
   if (Value.Vertical.Divided) and (Value.Vertical.Size <= 0) then
-    raise EInvalidArgument.Create('Invalid Vertical.Size');
+    raise EArgumentException.Create('Invalid Vertical.Size');
 end;
 
 end.
