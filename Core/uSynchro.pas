@@ -28,7 +28,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Proccess;
+    procedure Process;
 
     // Input
     property SourceDir: string read FSourceDir write SetSourceDir;
@@ -94,7 +94,7 @@ begin
   inherited;
 end;
 
-procedure TSynchro.Proccess;
+procedure TSynchro.Process;
 begin
   if not DirectoryExists(FSourceDir) then
   begin
