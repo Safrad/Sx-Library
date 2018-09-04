@@ -1,5 +1,7 @@
 unit uSxThreadTimer;
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 interface
 
 uses
@@ -26,11 +28,12 @@ type
     function GetWorkingTime: TTimeSpan;
   protected
     procedure Execute; override;
+    procedure ExecuteOnTimer; virtual;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure Terminate; reintroduce;
+    procedure Terminate; override;
 
     property Enabled: BG read FEnabled write SetEnabled;
     property Interval: TTimeSpan read FInterval;
@@ -100,7 +103,7 @@ begin
   while (not Terminated) do
   begin
     FWorkingStopwatch.Start;
-    FOnTimer(Self);
+    ExecuteOnTimer;
     FWorkingStopwatch.Stop;
 
     if FInterval.Ticks <= 0 then
@@ -111,6 +114,12 @@ begin
     PreciseSleep(FSleepTime);
     FIdleStopwatch.Stop;
   end;
+end;
+
+procedure TSxThreadTimer.ExecuteOnTimer;
+begin
+  if Assigned(FOnTimer) then
+    FOnTimer(Self);
 end;
 
 procedure TSxThreadTimer.SetEnabled(const Value: BG);
@@ -134,7 +143,7 @@ procedure TSxThreadTimer.Terminate;
 begin
   inherited Terminate;
 
-  FSleepTime.Ticks := 0; // For fast leaving of PreciseSleep method 
+  FSleepTime.Ticks := 0; // For fast leaving of PreciseSleep method
 end;
 
 end.

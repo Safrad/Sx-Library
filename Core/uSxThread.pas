@@ -17,7 +17,7 @@ type
   public
     constructor Create;
 
-    procedure Terminate; reintroduce;
+    procedure Terminate; reintroduce; virtual;
     function TerminateAndWaitFor: LongWord;
 
     {$if CompilerVersion < 20}
