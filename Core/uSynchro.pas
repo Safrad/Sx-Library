@@ -107,9 +107,15 @@ begin
   begin
     raise EDirectoryNotFoundException.Create(ReplaceParam('Target directory %1 not found.', [FDestDir]));
   end;
+
   if SameFileName(FSourceDir, FDestDir) then
   begin
     raise EArgumentException.Create('Source and Target are the same.');
+  end;
+
+  if StartStr(FSourceDir, FDestDir) then
+  begin
+    raise EArgumentException.Create(ReplaceParam('Target directory %1 can not be in source directory %2.', [FDestDir, FSourceDir]));
   end;
 
   FDeletePathsList.Clear;
