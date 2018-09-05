@@ -221,7 +221,7 @@ function TCPU.GetFamily: SG;
 begin
   if FCPUIDA = 0 then
     CallCPUID;
-  Result := FCPUIDA and $00000f00 shr 8;
+  Result := (FCPUIDA shr 8 and $0000000f) or (FCPUIDA shr 16 and $000000f0);
 end;
 
 function TCPU.GetModel: SG;
