@@ -67,7 +67,7 @@ type
     procedure UnprepareHeader(const Header: PWaveHdr);
     procedure WriteBuffer(const Header: PWaveHdr);
 
-		property BufferOutCount: SG read FBufferOutCount;
+		property BufferOutCount: S4 read FBufferOutCount;
 		property Active: Boolean read FActive;
 
 		property Bits: SG read FBits write SetBits;
