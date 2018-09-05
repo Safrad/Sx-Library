@@ -228,7 +228,7 @@ function TCPU.GetModel: SG;
 begin
   if FCPUIDA = 0 then
     CallCPUID;
-  Result := FCPUIDA and $000000f0 shr 4;
+  Result := (FCPUIDA shr 4 and $0000000f) or (FCPUIDA shr 12 and $000000f0);
 end;
 
 function TCPU.GetStepping: SG;
