@@ -64,12 +64,15 @@ type
   TJoyPOVChangedEvent = procedure(Sender: TNLDJoystick;
     Degrees: Single) of object;
 
-  TMMJoyMsg = packed record
+  TMMJoyMsg = record
     Msg: Cardinal;
-    Buttons: Cardinal; {wParam}
+    Buttons: WPARAM; {wParam}
     XZPos: Word;       {LoWord(lParam)}
     YPos: Word;        {HiWord(lParam)}
-    Result: Longint;
+{$ifdef CPUX64}
+    Reserved: LongWord;
+{$endif}
+    Result: LRESULT;
   end;
 
   TJoyRanges = packed record
@@ -605,9 +608,14 @@ begin
 end;
 
 procedure TNLDJoystick.WndProc(var Message: TMessage);
+var
+  MMJoyMsg: TMMJoyMsg absolute Message;
 begin
+  Assert(SizeOf(TMMJoyMsg) = SizeOf(TMessage));
   if not FAdvanced then
-    ProcessSimple(TMMJoyMsg(Message))
+  begin
+    ProcessSimple(MMJoyMsg)
+  end
   else if Message.Msg = WM_TIMER then
     ProcessAdvanced
   else
