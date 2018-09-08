@@ -11,9 +11,7 @@ type
   private
     FMustExists: BG;
 
-    FValue: string;
     procedure SetMustExists(const Value: BG);
-    function GetValue: string;
   protected
     function GetSyntax: string; override;
   public
@@ -21,13 +19,13 @@ type
     procedure SetValueFromString(const AValue: string); override;
 
     property MustExists: BG read FMustExists write SetMustExists;
-    property Value: string read GetValue;
   end;
 
 implementation
 
 uses
-  SysUtils;
+  SysUtils,
+  uFiles;
 
 { TDirectoryArgument }
 
@@ -43,13 +41,6 @@ begin
   Result := '<directory>';
 end;
 
-function TDirectoryArgument.GetValue: string;
-begin
-  Used := True;
-  // TODO : Full path
-  Result := FValue;
-end;
-
 procedure TDirectoryArgument.SetMustExists(const Value: BG);
 begin
   FMustExists := Value;
@@ -57,14 +48,12 @@ end;
 
 procedure TDirectoryArgument.SetValueFromString(const AValue: string);
 begin
-  inherited;
-
-  FValue := AValue;
+  FValue := ExpandDirCmd(AValue);
   if FMustExists then
   begin
-    if not DirectoryExists(Value) then
+    if not DirectoryExists(FValue) then
     begin
-      raise EInOutError.Create('Directory ' + Value + ' not found.');
+      raise EDirectoryNotFoundException.Create('Directory ' + FValue + ' not found.');
     end;
   end;
 end;

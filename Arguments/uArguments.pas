@@ -61,16 +61,11 @@ end;
 
 function TArguments.Check: string;
 var
-  ErrorMessage: string;
   i: SG;
 begin
   for i := 0 to FArguments.Count - 1 do
   begin
     Result := Result + TCustomArgument(FArguments[i]).Check;
-  end;
-  if (Result = '') then
-  begin
-    // No error
   end;
 end;
 
@@ -94,7 +89,7 @@ var
 begin
   for i := 0 to FArguments.Count - 1 do
   begin
-    if (TCustomArgument(FArguments[i]).Shortcut = AArgumentShortcut) then
+    if SameText(TCustomArgument(FArguments[i]).Shortcut, AArgumentShortcut) then
     begin
         Result := TCustomArgument(FArguments[i]);
         Exit;
@@ -185,6 +180,8 @@ end;
 
 procedure TArguments.ParseArguments(const AParser: TDParser);
 begin
+  AParser.ReadToChar(' '); // Skip executable file name
+
   while (AParser.InputType <> itEOI) do
   begin
     ParseArgument(AParser);

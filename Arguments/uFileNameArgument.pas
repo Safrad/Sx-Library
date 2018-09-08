@@ -12,7 +12,6 @@ type
   private
     FMustExists: BG;
     procedure SetMustExists(const AValue: BG);
-    procedure SetValue(const AValue: TFileName);
     function GetValue: TFileName;
   protected
     function GetSyntax: string; override;
@@ -20,14 +19,14 @@ type
     constructor Create;
     procedure SetValueFromString(const AValue: string); override;
 
-    property Value: TFileName read GetValue write SetValue;
+    property Value: TFileName read GetValue;
     property MustExists: BG read FMustExists write SetMustExists;
   end;
 
 implementation
 
 uses
-  Classes;
+  uFiles;
 
 { TFileNameArgument }
 
@@ -44,8 +43,7 @@ end;
 function TFileNameArgument.GetValue: TFileName;
 begin
   Used := True;
-  // TODO : Full path
-  Result := Value;
+  Result := FValue;
 end;
 
 procedure TFileNameArgument.SetMustExists(const AValue: BG);
@@ -53,21 +51,14 @@ begin
   FMustExists := AValue;
 end;
 
-procedure TFileNameArgument.SetValue(const AValue: TFileName);
-begin
-  Value := Value;
-end;
-
 procedure TFileNameArgument.SetValueFromString(const AValue: string);
 begin
-  inherited;
-
-  Value := AValue;
+  FValue := ExpandFileCmd(AValue);
   if MustExists then
   begin
-    if not FileExists(Value) then
+    if not FileExists(FValue) then
     begin
-      raise Exception.Create('File ' + Value + ' not found.');
+      raise EFileNotFoundException.Create('File ' + FValue + ' not found.');
     end;
   end;
 end;

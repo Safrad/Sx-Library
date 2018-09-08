@@ -8,10 +8,10 @@ uses
 type
 	TStringArgument = class(TCustomArgument)
   private
-    FValue: string;
     procedure SetValue(const Value: string);
     function GetValue: string;
   protected
+    FValue: string;
     function GetSyntax: string; override;
   public
     procedure SetValueFromString(const AValue: string); override;
