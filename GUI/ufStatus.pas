@@ -90,7 +90,7 @@ begin
 		begin
 			fStatus.ElapsedTime := TimeDifference(GetTickCount, fStatus.StartTime);
 			if (fStatus.DGauge.Max > 0) then
-				fStatus.RemainTime := RoundDivS8((fStatus.DGauge.Max - Actual) * fStatus.ElapsedTime, Actual);
+				fStatus.RemainTime := RoundDivS8((fStatus.DGauge.Max - Actual) * S8(fStatus.ElapsedTime), Actual);
 		end;
 		fStatus.DGauge.Position := Actual;
 		fStatus.Init;
