@@ -221,7 +221,7 @@ begin
   end;
   Move(rk,drk,Sizeof(rk));
   for r:= 1 to (numrounds-1) do
-    InvMixColumn(@drk[r],BC);
+    InvMixColumn(PByteArray(@drk[r]),BC);
 end;
 
 procedure TDCP_rijndael.Burn;
