@@ -20,7 +20,7 @@ type
 implementation
 
 uses
-  uDivideSpace, uGraph, Math, Windows, Types;
+  uDivideSpace, uGraph, Math, Windows, Types, SysUtils;
 
 function ExampleRect: TRect;
 begin

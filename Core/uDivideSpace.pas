@@ -17,7 +17,7 @@ type
 implementation
 
 uses
-  Types, Math;
+  Types, Math, SysUtils;
 
 function Separators(const F, T: SG; const AMaxParts: SG): TRangeArray;
 var
