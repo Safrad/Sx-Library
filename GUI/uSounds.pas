@@ -746,6 +746,7 @@ initialization
 	Sounds.ItemSize := SizeOf(TSound);
 	DSounds := TData.Create(True);
 	DSounds.ItemSize := SizeOf(TDSound);
+  AddSounds(['Open Program', 'Close Program'], True);
 {$ENDIF NoInitialization}
 finalization
 {$IFNDEF NoFinalization}

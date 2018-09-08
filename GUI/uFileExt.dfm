@@ -20,10 +20,10 @@ object fFileExt: TfFileExt
     Top = 0
     Width = 440
     Height = 415
+    Align = alClient
     Zoom = 1.000000000000000000
     EnableZoom = True
     DisplayMode = dmCustom
-    Align = alClient
     PopupMenu = PopupMenuFE
     TabOrder = 0
     TabStop = False

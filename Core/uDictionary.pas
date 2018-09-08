@@ -730,14 +730,13 @@ end;
 
 initialization
 //{$IFNDEF NoInitialization}
-//  Dictionary := TDictionary.Create;
+	Dictionary := TDictionary.Create;
 //{$ENDIF NoInitialization}
-
 
 finalization
 
 //{$IFNDEF NoFinalization}
-//_Finalize;
+	FreeAndNil(Dictionary);
 //{$ENDIF NoFinalization}
 
 end.

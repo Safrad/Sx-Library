@@ -122,7 +122,7 @@ implementation
 uses
 	Types, Math,
   uMath, uDictionary,
-	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uOperatingSystem, uCommon, uLog, uRect;
+	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uOperatingSystem, uGlobalOptions, uLog, uRect;
 
 const
 	OneBuffer = False;

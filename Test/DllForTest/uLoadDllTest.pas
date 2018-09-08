@@ -57,7 +57,6 @@ uses
   uNewThread,
   uOptions,
   uOutputFormat,
-  uParams,
   uProjectInfo,
   uRegional,
   uSorts,

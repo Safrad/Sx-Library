@@ -63,7 +63,7 @@ var
 implementation
 
 uses
-	uParams, uFiles, uCharset,
+	uFiles, uCharset,
 	uOutputFormat, uEscape, uStrings, uProjectInfo,
 	Windows, TypInfo;
 
@@ -397,18 +397,8 @@ begin
 end;
 
 procedure InitializeLog;
-var
-	i: SG;
-	s: string;
 begin
   InitializingLog := True;
-	s := '';
-	for i := 0 to Length(MessageLevelStr) - 1 do
-	begin
-		s := s + MessageLevelStr[TMessageLevel(i)] + '|';
-	end;
-	s := DelLastChar(s);
-	RegisterParam('Log', 'Logging level: Log[' + s + ']', SetLoggingLevel);
 
   InitPaths;
 	CreateDirEx(ExtractFilePath(MainLogFileName));

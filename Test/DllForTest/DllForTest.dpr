@@ -36,7 +36,6 @@ uses
   uMsg,
   uOptions,
   uOutputFormat,
-  uParams,
   uProjectInfo,
   uRegional,
   uSorts,

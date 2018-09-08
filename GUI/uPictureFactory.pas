@@ -22,10 +22,14 @@ type
     function HasBitmap(const Name: string): BG;
   end;
 
+var
+  PictureFactory: TPictureFactory;
+
 implementation
 
 uses
-  uObjectFactory, uMath, uDrawStyle, uColor, SysUtils, Math;
+  uObjectFactory, uMath, uDrawStyle, uColor, uFiles,
+  SysUtils, Math;
 
 { TPictureFactory }
 
@@ -146,5 +150,17 @@ begin
   end;
 end;
 
+initialization
+
+{$IFNDEF NoInitialization}
+PictureFactory := TPictureFactory.Create;
+PictureFactory.Path := GraphDir;
+{$ENDIF NoInitialization}
+
+finalization
+
+{$IFNDEF NoFinalization}
+FreeAndNil(PictureFactory);
+{$ENDIF NoFinalization}
 end.
 

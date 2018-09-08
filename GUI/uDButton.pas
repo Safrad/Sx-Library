@@ -105,7 +105,7 @@ implementation
 uses
 	uDForm,
 	Consts, SysUtils, ActnList, ImgList, MMSystem, Math, Types,
-	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uCommon,
+	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uGlobalOptions,
 	uPictureFactory, uSounds, uOperatingSystem, uDWinControl;
 
 { TDButton }

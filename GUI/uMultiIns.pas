@@ -8,7 +8,6 @@ uses
 
 var
 	MessageId: UINT;
-  RestartAfterClose: BG;
 
 {
 	Return false if application instance already exists.
@@ -17,7 +16,7 @@ function InitInstance(const AllowMultiInstance: BG): BG;
 
 implementation
 
-uses uMsg, uStrings, uFiles, uParams, Forms, uDForm, uAPI;
+uses uMsg, uStrings, uFiles, Forms, uDForm, uAPI;
 
 var
 	WProc: TFNWndProc;
@@ -42,7 +41,7 @@ begin
 			ErrorMsg(GetLastError)
 		else
 		begin
-			ReadCommandLine(CmdLine);
+			// ReadCommandLine(CmdLine); TODO :
 			GlobalDeleteAtom(wParam);
 		end;
 	end
@@ -111,7 +110,5 @@ finalization
 		CloseHandle(MutHandle);
 		MutHandle := 0;
 	end;
-  if RestartAfterClose then
-    ShellExecuteDirectNoExitCode(ExeFileName, ExeParameters);
 {$ENDIF NoFinalization}
 end.

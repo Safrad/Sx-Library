@@ -223,4 +223,8 @@ begin
 		Close;
 end;
 
+initialization
+
+finalization
+  FreeFileExt;
 end.
