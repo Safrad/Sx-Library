@@ -8091,10 +8091,6 @@ begin
 	S2 := ColorToRGB(CS2);
 	D1 := ColorToRGB(CD1);
 	D2 := ColorToRGB(CD2);
-	PD := GetPixelAddr(X1, Y1);
-	ByteXD := ByteX;
-	BmpDByteX := X2 - X1 + 1;
-	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
 	for cy := Y1 to Y2 do
 	begin
 {$ifdef CPUX64}
@@ -8114,6 +8110,10 @@ begin
       Inc(PD);
     end;
 {$else}
+	PD := GetPixelAddr(X1, Y1);
+	ByteXD := ByteX;
+	BmpDByteX := X2 - X1 + 1;
+	BmpDByteX := {$ifdef BPP4}BmpDByteX shl 2{$else}BmpDByteX + BmpDByteX + BmpDByteX{$endif};
 		asm
 		pushad
 		mov edi, PD
