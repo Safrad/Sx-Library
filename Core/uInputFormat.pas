@@ -50,6 +50,7 @@ implementation
 
 uses
 	SysUtils,
+  Math,
 	uDParser, uStrings, uMath, uOutputFormat;
 
 function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
@@ -156,7 +157,7 @@ end;
 function StrToValE(Line: string; const UseWinFormat: BG;
 	const DefVal: Extended; const Messages: TParserMessages = nil): Extended;
 begin
-  Result := StrToValE(Line, UseWinFormat, DefVal, Messages);
+  Result := StrToValE(Line, UseWinFormat, -MaxExtended80, DefVal, MaxExtended80, Messages);
 end;
 {
 function StrToValE(Line: string; const UseWinFormat: BG;
