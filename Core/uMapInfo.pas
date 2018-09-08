@@ -48,7 +48,7 @@ const
 			Result := 0;
 	end;
 
-	function GetNextFloat(Line: string; var InLineIndex: Integer): TFlo;
+	function GetNextFloat(Line: string; var InLineIndex: SG): TFlo;
 	begin
 		Result := StrToFlo(ReadToChar(Line, InLineIndex, ' '));
 	end;
@@ -58,8 +58,8 @@ var
 	FIn: TFile;
 	DBFileName: TFileName;
 	Line: string;
-	InLineIndex: Integer;
-	NewSize: Integer;
+	InLineIndex: SG;
+	NewSize: SG;
 	FileIndex: Integer;
 	WhereMif: (wmNone, wmType, wmData);
 	Po: Integer;
