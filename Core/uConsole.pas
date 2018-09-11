@@ -3,7 +3,7 @@ unit uConsole;
 interface
 
 uses
-  Windows, Classes;
+  Windows, SysUtils, Classes;
 
 type
   TConsoleColor = (ccBlack, ccBlue, ccGreen, ccAqua, ccRed, ccPurple, ccYellow, ccLightGray, ccGray, ccLightBlue,
@@ -66,11 +66,13 @@ begin
 end;
 
 class function TConsole.GetSize: TCoord;
+const
+  MaximalPipeWidth = 256;
 var
   csbi: CONSOLE_SCREEN_BUFFER_INFO;
   handle: THandle;
 begin
-  Result.X := 0;
+  Result.X := MaximalPipeWidth;
   Result.Y := 0;
   handle := GetStdHandle(STD_OUTPUT_HANDLE);
   if handle <> INVALID_HANDLE_VALUE  then
