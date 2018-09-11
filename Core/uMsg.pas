@@ -63,6 +63,8 @@ const
   ConsoleColor: array[TMessageLevel] of TConsoleColor = (ccLightAqua, ccLightBlue, ccLightGray, ccLightYellow,
     ccLightRed, ccLightPurple, ccGray);
 
+function AddMessagePrefix(const AMessage: string; const AMessageLevel: TMessageLevel): string;
+
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
@@ -81,8 +83,16 @@ uses
   Windows, uStrings, uLog {$IFNDEF Console}, uMsgDlg, Dialogs {$ENDIF}, uChar;
 
 const
-  MsgTypeNames: array[TMessageLevel] of string = (SMsgDlgConfirm, 'Debug', SMsgDlgInformation, SMsgDlgWarning,
+  MsgTypeNames: array[TMessageLevel] of string = (SMsgDlgConfirm, 'Debug', '', SMsgDlgWarning,
     SMsgDlgError, 'Fatal Error', '');
+
+function AddMessagePrefix(const AMessage: string; const AMessageLevel: TMessageLevel): string;
+begin
+  if MsgTypeNames[AMessageLevel] = '' then
+    Result := AMessage
+  else
+    Result := MsgTypeNames[AMessageLevel] + ': ' + AMessage;
+end;
 
 function IsMainThread: BG;
 begin
@@ -99,11 +109,11 @@ begin
   if MainLogWrite(MessageLevel) then
     MainLogAdd(ExpandedText, MessageLevel);
 
+{$IFNDEF Console}
   if not IsMainThread then
   begin
     raise Exception.Create(ExpandedText);
   end;
-{$IFNDEF Console}
   MessageD(ExpandedText, [], MessageLevel, [mbOK]);
 {$ELSE}
   TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
@@ -118,14 +128,14 @@ begin
   if MainLogWrite(MessageLevel) then
     MainLogAdd(ExpandedText, MessageLevel);
 
+{$IFNDEF Console}
   if not IsMainThread then
   begin
     raise Exception.Create(ExpandedText);
   end;
-{$IFNDEF Console}
   MessageD(Text, Param, MessageLevel, [mbOK]);
 {$ELSE}
-  TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
+  TConsole.WriteLine(AddMessagePrefix(ExpandedText, MessageLevel), ConsoleColor[MessageLevel]);
 {$ENDIF}
 end;
 
@@ -192,10 +202,9 @@ procedure Fatal(const E: Exception; const C: TObject);
 var
   ExpandedText: string;
 begin
-  if C = nil then
-    ExpandedText := E.Message
-  else
-    ExpandedText := ReplaceParam(E.Message + ' in class %1', [C.ClassName]);
+  ExpandedText := E.Message;
+  if IsDebug and (C <> nil) then
+    ExpandedText := ExpandedText + ' (Class ' + C.ClassName + ')';
   ShowMessage(mlFatalError, ExpandedText);
 end;
 
@@ -204,11 +213,11 @@ begin
   if LogError then
     MainLogAdd(Text, mlError);
 
+{$IFNDEF Console}
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
   end;
-{$IFNDEF Console}
 	// Result := MessageDlg(Text, mtError, [Dialogs.mbRetry, Dialogs.mbIgnore], 0) <> 1;
   Result := MessageD(Text, mlError, [mbRetry, mbIgnore]) <> mbIgnore;
 {$ELSE}
@@ -275,11 +284,11 @@ begin
   if LogError then
     MainLogAdd(Text, mlError);
 
+{$IFNDEF Console}
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
   end;
-{$IFNDEF Console}
   MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mlError, [SMsgDlgOK], DlgWait);
 {$ELSE}
   TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError]);
@@ -297,12 +306,11 @@ begin
   if LogError then
     MainLogAdd(Text, mlError);
 
+{$IFNDEF Console}
   if not IsMainThread then
   begin
     raise Exception.Create(Text);
   end;
-
-{$IFNDEF Console}
   Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
 {$ELSE}
   TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError]);

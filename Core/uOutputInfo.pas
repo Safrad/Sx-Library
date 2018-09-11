@@ -8,6 +8,12 @@ uses
 type
   IOutputInfo = interface(IInterface)
     procedure AddCaption(const ACaption: string);
+    procedure AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
+    procedure AddFatalError(const AFatalMessage: string);
+    procedure AddError(const AErrorMessage: string);
+    procedure AddWarning(const AWarningMessage: string);
+    procedure AddInfo(const AInfoMessage: string);
+    procedure AddDebug(const ADebugMessage: string);
     procedure Start;
     procedure Stop;
     function GetLastCaption: string;
@@ -41,6 +47,12 @@ type
   public
     // From interface
     procedure AddCaption(const ACaption: string);
+    procedure AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
+    procedure AddFatalError(const AFatalMessage: string);
+    procedure AddError(const AErrorMessage: string);
+    procedure AddWarning(const AWarningMessage: string);
+    procedure AddInfo(const AInfoMessage: string);
+    procedure AddDebug(const ADebugMessage: string);
   end;
 
 	TOutputInfo = class(TInterfacedObject, IOutputInfo)
@@ -61,6 +73,12 @@ type
   public
     // From interface
     procedure AddCaption(const ACaption: string);
+    procedure AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
+    procedure AddFatalError(const AFatalMessage: string);
+    procedure AddError(const AErrorMessage: string);
+    procedure AddWarning(const AWarningMessage: string);
+    procedure AddInfo(const AInfoMessage: string);
+    procedure AddDebug(const ADebugMessage: string);
     procedure Start;
     procedure Stop;
     property LastCaption: string read GetLastCaption;
@@ -73,6 +91,7 @@ type
 implementation
 
 uses
+  uMsg,
   uConsole;
 
 { TOutputInfo }
@@ -80,6 +99,36 @@ uses
 procedure TOutputInfo.AddCaption(const ACaption: string);
 begin
   FLastCaption := ACaption;
+end;
+
+procedure TOutputInfo.AddDebug(const ADebugMessage: string);
+begin
+
+end;
+
+procedure TOutputInfo.AddError(const AErrorMessage: string);
+begin
+
+end;
+
+procedure TOutputInfo.AddFatalError(const AFatalMessage: string);
+begin
+
+end;
+
+procedure TOutputInfo.AddInfo(const AInfoMessage: string);
+begin
+
+end;
+
+procedure TOutputInfo.AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
+begin
+
+end;
+
+procedure TOutputInfo.AddWarning(const AWarningMessage: string);
+begin
+
 end;
 
 function TOutputInfo.GetAborted: BG;
@@ -149,6 +198,36 @@ end;
 procedure TConsoleOutputInfo.AddCaption(const ACaption: string);
 begin
   TConsole.WriteLine(ACaption);
+end;
+
+procedure TConsoleOutputInfo.AddDebug(const ADebugMessage: string);
+begin
+  AddMessage(ADebugMessage, mlDebug);
+end;
+
+procedure TConsoleOutputInfo.AddError(const AErrorMessage: string);
+begin
+  AddMessage(AErrorMessage, mlError);
+end;
+
+procedure TConsoleOutputInfo.AddFatalError(const AFatalMessage: string);
+begin
+  AddMessage(AFatalMessage, mlFatalError);
+end;
+
+procedure TConsoleOutputInfo.AddInfo(const AInfoMessage: string);
+begin
+  AddMessage(AInfoMessage, mlInformation);
+end;
+
+procedure TConsoleOutputInfo.AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
+begin
+  TConsole.WriteLine(AddMessagePrefix(AMessage, AMessageLevel), ConsoleColor[AMessageLevel]);
+end;
+
+procedure TConsoleOutputInfo.AddWarning(const AWarningMessage: string);
+begin
+  AddMessage(AWarningMessage, mlWarning);
 end;
 
 function TConsoleOutputInfo.GetAborted: BG;
