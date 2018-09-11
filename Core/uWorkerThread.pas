@@ -33,7 +33,7 @@ begin
   inherited Create;
 
   Priority := AThreadPool.ThreadPriority;
-  Name := 'Worker Thread Id ' + IntToStr(AId);
+  Name := 'Worker Id ' + IntToStr(AId);
 
   FId := AId;
   FThreadPool := AThreadPool;
