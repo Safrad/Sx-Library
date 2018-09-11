@@ -252,7 +252,7 @@ begin
   begin
     if (TCustomArgument(FArguments[i]).RequiredNotFound) then
     begin
-      Result := Result + 'Error: Argument "' + TCustomArgument(FArguments[i]).Shortcut + '" required' + LineSep;
+      Result := Result + LineSep + '  Argument "' + TCustomArgument(FArguments[i]).Shortcut + '" required';
     end;
   end;
 end;
@@ -268,14 +268,18 @@ begin
     Argument := TCustomArgument(FArguments[i]);
     if ((not Argument.Used) and (Argument.RequireCheck = rcRequired)) then
     begin
-      Result := Result + 'Warning: Argument ''' + Argument.Shortcut + ''' from command line is not used in program' + LineSep;
+      Result := Result + LineSep + '  Argument ''' + Argument.Shortcut + ''' from command line is not used in program';
     end;
   end;
 end;
 
 procedure TArguments.WriteUnused;
+var
+  Text: string;
 begin
-  TConsole.Write(ShowUnused, ccYellow);
+  Text := ShowUnused;
+  if Text <> '' then
+    Warning(ShowUnused);
 end;
 
 end.
