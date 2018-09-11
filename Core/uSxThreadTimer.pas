@@ -88,7 +88,7 @@ begin
     InternalExecute;
   except
     on E: Exception do
-      ErrorMsg(E.Message);
+      Fatal(E, Self);
   end;
 end;
 
