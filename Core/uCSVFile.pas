@@ -40,7 +40,7 @@ type
 		function Close: BG;
 		function EOF: BG;
 
-    procedure WriteCSVHead(const Delimeter: string = CSVSep);
+    procedure WriteCSVData(const AFileName: TFileName; const AData: string; const ADelimeter: string = CSVSep);
     procedure SetColumnNames(const Value: array of string);
 
 		property AcceptRemark: BG read FAcceptRemark write SetAcceptRemark;
@@ -200,7 +200,6 @@ begin
 		if FFile.Opened then
 			Result := FFile.Close;
 	end;
-	SetLength(FColumnIndexes, 0);
 end;
 
 function TCSVFile.EOF: BG;
@@ -259,25 +258,27 @@ begin
   end;
 end;
 
-procedure TCSVFile.WriteCSVHead(const Delimeter: string = CSVSep);
+procedure TCSVFile.WriteCSVData(const AFileName: TFileName; const AData: string; const ADelimeter: string = CSVSep);
 var
-	i: SG;
-	s: string;
+  i: SG;
+  Head: string;
 begin
-	s := CSVRemark;
-	for i := 0 to Length(FColumnNames) - 1 do
+	if FileExists(AFileName) = False then
 	begin
-		if i <> 0 then
-			s := s + Delimeter;
-		s := s + '"' + FColumnNames[i] + '"';
-	end;
-	s := s + FileSep;
-	if FileExists(FFile.FileName) = False then
-	begin
-		WriteStringToFile(FFile.FileName, s, False);
+    Head := CSVRemark;
+    for i := 0 to Length(FColumnNames) - 1 do
+    begin
+      if i <> 0 then
+        Head := Head + ADelimeter;
+      Head := Head + '"' + FColumnNames[i] + '"';
+    end;
+    Head := Head + FileSep;
+		WriteStringToFile(AFileName, Head + AData, False);
 	end
 	else
 	begin
+		WriteStringToFile(AFileName, AData, True);
+
     // TODO : Remap data
 {		f := ReadStringFromFile(FFile.FileName);
 		LineIndex := 1;
@@ -289,6 +290,7 @@ begin
 			WriteStringToFile(FileName, f, False);
 		end;}
 	end;
+
 end;
 
 procedure TCSVFile.SetColumnNames(const Value: array of string);
