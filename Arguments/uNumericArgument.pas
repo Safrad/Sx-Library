@@ -19,6 +19,8 @@ type
   protected
     function GetSyntax: string; override;
   public
+    constructor Create;
+
     procedure SetValueFromString(const AValue: string); override;
     property Value: S8 read GetValue write SetValue;
     property MinimalValue: S8 read FMinimalValue write SetMinimalValue;
@@ -30,6 +32,14 @@ implementation
 uses SysUtils;
 
 { TNumericArgument }
+
+constructor TNumericArgument.Create;
+begin
+  inherited;
+
+  FMinimalValue := Low(FMinimalValue);
+  FMaximalValue := High(FMaximalValue);
+end;
 
 function TNumericArgument.GetSyntax: string;
 begin
@@ -63,7 +73,7 @@ begin
 
   if (FValue < FMinimalValue) or (FValue > FMaximalValue) then
   begin
-    raise Exception.Create('Argument ' + Shortcut + ' out of range.');
+    raise EArgumentOutOfRangeException.Create('Argument ' + Shortcut + ' value ' + IntToStr(FValue) + ' out of range [' + IntToStr(FMinimalValue) + '..' + IntToStr(FMaximalValue) + '].');
   end;
 end;
 
