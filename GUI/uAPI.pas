@@ -24,6 +24,10 @@ procedure APIOpen(FileName: TFileName; const Params: string = '');
 // @Return process exit code and output
 procedure ExecuteProcess(out ProcessOutput: TProcessOutput; const AFileName: TFileName; AParams: string = ''; const ACurrentDirectory: string = ''; const AShowCmd: Word = SW_HIDE);
 
+// @Return process output
+// @raise exception if Exit Code <> 0
+procedure ExecuteProcessCheckExitCode(out ProcessOutput: TProcessOutput; const AFileName: TFileName; AParams: string = ''; const ACurrentDirectory: string = ''; const AShowCmd: Word = SW_HIDE);
+
 procedure PropertiesDialog(FileName: TFileName);
 
 var
@@ -33,7 +37,9 @@ implementation
 
 uses
   uShellExecute,
+  uEIOException,
   ShellAPI,
+  uEExternalApplication,
 	uMsg, uFiles, uLog, uStrings, uFile, uSxThread;
 
 function ShellExecuteDirect(FFileName: TFileName; const Params: string = ''; const CurrentDirectory: string = ''; const ShowCmd: Word = SW_HIDE): U4;
@@ -177,9 +183,11 @@ begin
 {    Handle := CreateProcess(nil, PChar('cmd.exe /C "' + AFileName + '" ' + AParams),
                             nil, nil, True, 0, nil,
                             PChar(CurrentDirectory), SI, PI);}
-    CloseHandle(StdOutPipeWrite);
     if not Handle then
-      Exit;
+    begin
+      raise EIOException.Create(AFileName, GetLastError);
+    end;
+    CloseHandle(StdOutPipeWrite);
     try
       repeat
         WasOK := ReadFile(StdOutPipeRead, Buffer, Length(Buffer) - 1, BytesRead, nil);
@@ -203,7 +211,17 @@ begin
       CloseHandle(PI.hProcess);
     end;
   finally
+    CloseHandle(StdOutPipeWrite);
     CloseHandle(StdOutPipeRead);
+  end;
+end;
+
+procedure ExecuteProcessCheckExitCode(out ProcessOutput: TProcessOutput; const AFileName: TFileName; AParams: string = ''; const ACurrentDirectory: string = ''; const AShowCmd: Word = SW_HIDE);
+begin
+  ExecuteProcess(ProcessOutput, AFilename, AParams, ACurrentDirectory, AShowCmd);
+  if ProcessOutput.ExitCode <> 0 then
+  begin
+    raise EExternalApplication.Create(AFilename + ' ' + AParams, ProcessOutput.ExitCode, ProcessOutput.OutputText);
   end;
 end;
 

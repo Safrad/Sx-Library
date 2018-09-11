@@ -9,7 +9,7 @@ uses
 type
   EIOException = class(EInOutError)
   public
-    constructor Create(const AErrorCode: U4; const APath: string);
+    constructor Create(const APath: string; const AErrorCode: U4);
   end;
 
 implementation
@@ -19,7 +19,7 @@ uses
 
 { EIOException }
 
-constructor EIOException.Create(const AErrorCode: U4; const APath: string);
+constructor EIOException.Create(const APath: string; const AErrorCode: U4);
 begin
   Message := ErrorCodeToStr(AErrorCode) + ': ' + APath;
 end;

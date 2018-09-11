@@ -141,6 +141,7 @@ implementation
 
 uses
 	Math,
+  uEIOException,
 	uChar, uMsg, uProjectInfo, uSorts, uCharset,
 	uOutputFormat, uMath, uLog;
 
@@ -1567,7 +1568,7 @@ begin
 	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
 	Result := DeleteFile(PChar(FileName));
 	if Result = False then
-		IOError(FileName, GetLastError);
+		raise EIOException.Create(FileName, GetLastError);
 end;
 
 function RemoveDirEx(const DirName: string): BG;
@@ -1576,7 +1577,7 @@ begin
     MainLogAdd('Remove directory ' + AddQuoteF(DirName), mlDebug);
 	Result := RemoveDirectory(PChar(DirName));
 	if Result = False then
-		IOError(DirName, GetLastError);
+		raise EIOException.Create(DirName, GetLastError);
 end;
 
 function RemoveDirsEx(DirName: string; DeleteSelf: BG = False): BG;
