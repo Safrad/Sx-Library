@@ -16,7 +16,8 @@ var
 begin
   Main := TMain.Create;
   try
-  	Application.CreateForm(TfMain, fMain);
+    Main.Initialize;
+    Application.CreateForm(TfMain, fMain);
     Main.Run;
   finally
     Main.Free;
@@ -44,12 +45,10 @@ type
     procedure AddArguments; override;
     procedure OnRun; override;
 
-    procedure Init;
     function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
     procedure CommonForm(const Form: TForm);
   public
-    constructor Create;
-    destructor Destroy; override;
+    procedure Initialize; override;
 
     property ShowSplashScreen: BG read FShowSplashScreen write SetShowSplashScreen;
   end;
@@ -107,19 +106,6 @@ begin
 	end;
 end;
 
-constructor TGUIApplication.Create;
-begin
-  inherited;
-
-  Init;
-end;
-
-destructor TGUIApplication.Destroy;
-begin
-
-  inherited;
-end;
-
 function TGUIApplication.GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
 var
 	i: SG;
@@ -171,8 +157,10 @@ begin
   Result := False;
 end;
 
-procedure TGUIApplication.Init;
+procedure TGUIApplication.Initialize;
 begin
+  inherited;
+
   // RegisterParam('multiinst', 'Allow multi-instance run.', AllowMultiInstanceProc); TODO :
   if not uMultiIns.InitInstance(FoundMultiInstanceParam) then
     Halt(1);

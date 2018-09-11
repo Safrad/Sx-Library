@@ -15,13 +15,13 @@ type
   protected
     FArguments: TArguments;
     procedure AddArguments; virtual; abstract;
-    procedure Initialize; virtual;
     procedure Finalize; virtual;
     procedure OnRun; virtual; abstract;
   public
     constructor Create;
     destructor Destroy; override;
 
+    procedure Initialize; virtual;
     procedure Run;
 
     /// <summary>
@@ -41,7 +41,6 @@ uses
   uLog,
   uDefaultArguments,
   uStart,
-  uLicense,
   uConsole,
   uProjectInfo,
   uMsg,
@@ -55,9 +54,9 @@ uses
 
 constructor TCommonApplication.Create;
 begin
-  inherited;
+  ExitCode := 1;
 
-  Initialize;
+  inherited;
 end;
 
 destructor TCommonApplication.Destroy;
@@ -90,9 +89,6 @@ begin
   RWStart(MainIni, False);
   TryUploadData;
 
-  if not ValidLicense then
-    Exit;
-
   FArguments := TDefaultArguments.Create;
   AddArguments;
   FArguments.Parse;
@@ -106,10 +102,11 @@ procedure TCommonApplication.Run;
 begin
   try
     OnRun;
+    ExitCode := 0;
+    FArguments.WriteUnused;
   except
     on E: Exception do
     begin
-      ExitCode := 1;
       Fatal(E);
     end;
   end;

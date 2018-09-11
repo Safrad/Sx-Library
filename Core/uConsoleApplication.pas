@@ -17,6 +17,7 @@ var
 begin
   Main := TMain.Create;
   try
+    Main.Initialize;
     Main.Run;
   finally
     Main.Free;
@@ -40,13 +41,13 @@ type
     FShowVersionInfo: BG;
     procedure WriteVersionInfo;
     procedure SetShowVersionInfo(const Value: BG);
-    procedure Wait;
   protected
-    procedure Initialize; override;
-    procedure Finalize; override;
+    procedure Wait; virtual;
   public
     constructor Create;
     destructor Destroy; override;
+
+    procedure Initialize; override;
 
     property ShowVersionInfo: BG read FShowVersionInfo write SetShowVersionInfo;
   end;
@@ -83,13 +84,6 @@ begin
   Wait;
 end;
 
-procedure TConsoleApplication.Finalize;
-begin
-  FArguments.WriteUnused;
-
-  inherited;
-end;
-
 procedure TConsoleApplication.Initialize;
 begin
   WriteVersionInfo;
@@ -104,8 +98,13 @@ end;
 
 procedure TConsoleApplication.Wait;
 begin
-  if IsDebug then
+  if DebugHook <> 0 then
+  begin
+    // Run from IDE
+    TConsole.WriteLine('');
+    TConsole.Write('Press Enter to continue...');
     Readln;
+  end;
 end;
 
 procedure TConsoleApplication.WriteVersionInfo;
