@@ -129,7 +129,7 @@ type
 		function SeekBegin: BG;
 		function SeekEnd: BG;
 		function BlockRead(out Buf; const Count: UG): BG;
-		function BlockWrite(const Buf; const Count: UG): BG;
+		function BlockWrite(const Buf; const Count: UG; const AWriteLog: BG = True): BG;
 		function FillWrite(Count: UG): BG;
 		function ReadlnNoConversion(out Line: AnsiString): BG;
 		function Readln(out Line: AnsiString): BG; overload;
@@ -402,7 +402,7 @@ LRetry :
 	end;
 end;
 
-function TFile.BlockWrite(const Buf; const Count: UG): BG;
+function TFile.BlockWrite(const Buf; const Count: UG; const AWriteLog: BG = True): BG;
 label LRetry;
 var
 	Suc: U4;
@@ -415,12 +415,15 @@ LRetry :
 		Inc(WriteCount);
 		Inc(WriteBytes, Suc);
 
-		if Suc <> Count then
-			Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
-					+ ' to ' + FTempFileName)
-		else
-			if LogDebug then
-        MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName, mlDebug);
+    if AWriteLog then
+    begin
+      if Suc <> Count then
+        Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
+            + ' to ' + FTempFileName)
+      else
+        if LogDebug then
+          MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName, mlDebug);
+    end;
 
 		Inc(FFilePos, Suc);
 	end

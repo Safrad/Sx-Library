@@ -13,7 +13,6 @@ type
 		FFileName: TFileName;
 		FFile: TFile;
 		FDirectWrite: BG;
-    FInWrite: BG;
 		FLoggingLevel: TMessageLevel;
 		procedure WriteLine(const Line: string);
     procedure UpdateLoggingLevelFromEnvironmentVariable;
@@ -76,17 +75,10 @@ var
 
 procedure TLog.WriteLine(const Line: string);
 var
-	LLog: TLog;
 	LineA: AnsiString;
 begin
   EnterCriticalSection(FCriticalSection);
   try
-    if FInWrite then
-    begin
-      Exit;
-    end;
-
-    FInWrite := True;
     if Length(Line) > 0 then
     begin
       if FDirectWrite then
@@ -99,15 +91,9 @@ begin
           Exit;
         end;
 
-        LLog := MainLog;
-        MainLog := nil;
-        try
-        //	FFile.Write(Line);
-          LineA := ConvertUnicodeToUTF8(Line);
-          FFile.BlockWrite(LineA[1], Length(LineA));
-        finally
-          MainLog := LLog;
-        end;
+      //	FFile.Write(Line);
+        LineA := ConvertUnicodeToUTF8(Line);
+        FFile.BlockWrite(LineA[1], Length(LineA), False);
       end
       else
       begin
@@ -120,7 +106,6 @@ begin
       end;
     end;
   finally
-    FInWrite := False;
     LeaveCriticalSection(FCriticalSection);
   end;
 end;
