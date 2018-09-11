@@ -191,7 +191,7 @@ begin
 	SysUtils.FindClose(SearchRec);
 	if ErrorCode <> ERROR_NO_MORE_FILES then
   begin
-    raise EIOException.Create(ErrorCode, Dest);
+    raise EIOException.Create(Dest, ErrorCode);
   end;
 
 	ErrorCode := FindFirst(Source + '*.*', faAnyFile, SearchRec);
@@ -272,7 +272,7 @@ begin
 	SysUtils.FindClose(SearchRec);
 	if ErrorCode <> ERROR_NO_MORE_FILES then
   begin
-    raise EIOException.Create(ErrorCode, Source);
+    raise EIOException.Create(Source, ErrorCode);
   end;
 
 	if FDeleteInexistingPathsInDestDir then
