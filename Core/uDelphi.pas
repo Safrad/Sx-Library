@@ -390,8 +390,8 @@ begin
   Replace(SearchPaths, '$(DCC_Define)', '');
   Replace(SearchPaths, '$(DCC_UnitAlias)', '');
 
-  Replace(SearchPaths, '$(BDSUSERDIR)', OperatingSystem.TemporaryDirectory.ProcessTempDir);
-  Replace(SearchPaths, '$(BDSCOMMONDIR)', OperatingSystem.TemporaryDirectory.ProcessTempDir);
+  Replace(SearchPaths, '$(BDSUSERDIR)', OperatingSystem.TemporaryDirectory.ThreadTempDir);
+  Replace(SearchPaths, '$(BDSCOMMONDIR)', OperatingSystem.TemporaryDirectory.ThreadTempDir);
   ReplaceEnv(SearchPaths);
   Result := SearchPaths;
 end;
