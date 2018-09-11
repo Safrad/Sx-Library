@@ -134,7 +134,15 @@ function TTemporaryDirectory.GetApplicationTempDir: string;
 begin
   Result := FApplicationTempDir;
   if FApplicationTempDirHandle = 0 then
-    FApplicationTempDirHandle := CreateLockedDir(Result);
+  begin
+    EnterCriticalSection(FCriticalSection);
+    try
+      if FApplicationTempDirHandle = 0 then // Double-checked locking
+        FApplicationTempDirHandle := CreateLockedDir(Result);
+    finally
+      LeaveCriticalSection(FCriticalSection);
+    end;
+  end;
 end;
 
 function TTemporaryDirectory.GetDirectoryForThread(const AThreadId: TThreadId): string;
@@ -161,7 +169,15 @@ function TTemporaryDirectory.GetProcessTempDir: string;
 begin
   Result := FProcessTempDir;
   if FProcessTempDirHandle = 0 then
-    FProcessTempDirHandle := CreateLockedDir(Result);
+  begin
+    EnterCriticalSection(FCriticalSection);
+    try
+      if FProcessTempDirHandle = 0 then // Double-checked locking
+        FProcessTempDirHandle := CreateLockedDir(Result);
+    finally
+      LeaveCriticalSection(FCriticalSection);
+    end;
+  end;
 end;
 
 end.
