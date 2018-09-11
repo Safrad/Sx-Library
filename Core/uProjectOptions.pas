@@ -115,7 +115,7 @@ implementation
 
 uses
   TypInfo, uStrings, uChar, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, uInputFormat, uFiles, uFile,
-  uMsg, uDIniFile;
+  uDIniFile, uMsg;
 
 const
   DefaultMinStackSize = 16 * KB;
@@ -471,7 +471,7 @@ begin
     end;
   except
     on E: Exception do
-      ErrorMsg(E.Message);
+      Fatal(E, Self);
   end;
 end;
 
@@ -765,12 +765,12 @@ begin
       end;
     except
       on E: Exception do
-        ErrorMsg(E.Message);
+        Fatal(E, Self);
     end;
   end
   else
   begin
-    Warning('Dproj file %1 not found!', [AFileName]);
+    raise Exception.Create(ReplaceParam('Dproj file %1 not found!', [AFileName]));
   end;
 end;
 
@@ -897,7 +897,7 @@ begin
   DPR := FileExists(DPRFileName);
   if DPK and DPR then
   begin
-    Warning('DPR and DPK of same name exists!');
+    raise Exception.Create('DPR and DPK of same name exists! (' + FileNamePrefix + ')');
   end;
   if DPK then
   begin
