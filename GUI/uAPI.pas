@@ -188,6 +188,7 @@ begin
       raise EIOException.Create(AFileName, GetLastError);
     end;
     CloseHandle(StdOutPipeWrite);
+    StdOutPipeWrite := 0;
     try
       repeat
         WasOK := ReadFile(StdOutPipeRead, Buffer, Length(Buffer) - 1, BytesRead, nil);
