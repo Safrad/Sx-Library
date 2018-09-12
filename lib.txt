@@ -23,6 +23,7 @@ $(sx-library)\Formatter
 $(sx-library)\Parser
 $(sx-library)\Geometry
 $(sx-library)\Arguments
+$(sx-library)\Commands
 $(sx-library)\Benchmark
 $(sx-library)\Sound
 $(sx-library)\Input
