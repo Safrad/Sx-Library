@@ -16,7 +16,6 @@ var
 begin
   Main := TMain.Create;
   try
-    Main.Initialize;
     Application.CreateForm(TfMain, fMain);
     Main.Run;
   finally
@@ -51,6 +50,7 @@ type
   public
 
     property ShowSplashScreen: BG read FShowSplashScreen write SetShowSplashScreen;
+    procedure Terminate; override;
   end;
 
 var
@@ -219,6 +219,13 @@ end;
 procedure TGUIApplication.SetShowSplashScreen(const Value: BG);
 begin
   FShowSplashScreen := Value;
+end;
+
+procedure TGUIApplication.Terminate;
+begin
+  inherited;
+
+  Application.Terminate;
 end;
 
 end.

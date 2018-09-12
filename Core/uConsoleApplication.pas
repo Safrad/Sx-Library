@@ -17,7 +17,6 @@ var
 begin
   Main := TMain.Create;
   try
-    Main.Initialize;
     Main.Run;
   finally
     Main.Free;
@@ -44,12 +43,11 @@ type
     procedure WriteVersionInfo;
     procedure SetShowVersionInfo(const Value: BG);
   protected
+    procedure Initialize; override;
     procedure Wait; virtual;
   public
     constructor Create;
     destructor Destroy; override;
-
-    procedure Initialize; override;
 
     property ShowVersionInfo: BG read FShowVersionInfo write SetShowVersionInfo;
   end;
@@ -58,10 +56,10 @@ implementation
 
 uses
   SysUtils,
+  Windows,
   uLog,
   uDefaultArguments,
   uStart,
-  uLicense,
   uConsole,
   uProjectInfo,
   uMsg,
@@ -72,8 +70,16 @@ uses
 
 { TConsoleApplication }
 
+function ConsoleCtrlHandler(dwCtrlType: DWORD): BOOL; stdcall;
+begin
+  Result := True;
+	if LogWarning then
+    MainLogAdd('Aborted by user.', mlWarning);
+end;
+
 constructor TConsoleApplication.Create;
 begin
+  SetConsoleCtrlHandler(@ConsoleCtrlHandler, True { add } );
   FShowVersionInfo := True;
 
   inherited;
@@ -84,6 +90,7 @@ begin
   inherited;
 
   Wait;
+  SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
 end;
 
 procedure TConsoleApplication.Initialize;

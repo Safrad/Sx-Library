@@ -8,13 +8,15 @@ uses
 
 type
   TCommonApplication = class
-  private
+  strict private
+    FArguments: TArguments;
     FRestartAfterClose: BG;
     FInitialized: BG;
+    FTerminated: BG;
+
     procedure SetArguments(const Value: TArguments);
     procedure SetRestartAfterClose(const Value: BG);
   protected
-    FArguments: TArguments;
     procedure AddArguments; virtual; abstract;
     procedure Initialize; virtual;
     procedure Finalize; virtual;
@@ -23,17 +25,22 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Run;
+    procedure Run; virtual;
+    procedure Terminate; virtual;
 
     /// <summary>
     /// Runs the with exception. For testing purposes.
     /// </summary>
     procedure RunWithException;
 
-    property RestartAfterClose: BG read FRestartAfterClose write SetRestartAfterClose;
-
     property Arguments: TArguments read FArguments write SetArguments;
+    property RestartAfterClose: BG read FRestartAfterClose write SetRestartAfterClose;
+    property Initialized: BG read FInitialized;
+    property Terminated: BG read FTerminated;
   end;
+
+var
+  CommonApplication: TCommonApplication;
 
 implementation
 
@@ -55,11 +62,16 @@ uses
 
 constructor TCommonApplication.Create;
 begin
+  CommonApplication := Self;
+
   ExitCode := 1;
 
   inherited;
 
   try
+    if IsDebug then
+      Finalize; // For testing
+
     Initialize;
     FInitialized := True;
   except
@@ -77,6 +89,8 @@ end;
 
 procedure TCommonApplication.Finalize;
 begin
+  FInitialized := False;
+
   FArguments.Free;
 
   RWStart(MainIni, True);
@@ -137,6 +151,11 @@ end;
 procedure TCommonApplication.SetRestartAfterClose(const Value: BG);
 begin
   FRestartAfterClose := Value;
+end;
+
+procedure TCommonApplication.Terminate;
+begin
+  FTerminated := True;
 end;
 
 end.
