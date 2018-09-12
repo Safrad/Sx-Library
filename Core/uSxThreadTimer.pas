@@ -117,6 +117,9 @@ begin
     ExecuteOnTimer;
     FWorkingStopwatch.Stop;
 
+    if Terminated then
+      Break;
+
     if FInterval.Ticks <= 0 then
       FSleepTime.Ticks := 0
     else
