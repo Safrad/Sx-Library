@@ -1,5 +1,7 @@
 unit uWorkerThread;
 
+{$WARN SYMBOL_DEPRECATED OFF}
+
 interface
 
 uses
