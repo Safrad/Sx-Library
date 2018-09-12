@@ -9,11 +9,10 @@ function CompareTexts(const s1, s2: string; const AddUnchanged: BG = False; cons
 implementation
 
 uses
+  uColor,
 	uStrings,
   uFind,
-  uHTML,
-  uCSS,
-  Graphics,
+  UITypes,
   SysUtils;
 
 type
@@ -82,7 +81,7 @@ var
       if Id = 'A' then
       begin
         if Line1[1] = '+' then
-					C := clBlack
+					C := $00000000
         else
         	C := $00640064;
       end
@@ -98,12 +97,12 @@ var
         if Line1[1] = '+' then
 	        C := $00006400
         else
-        	C := clRed;
+        	C := $000000FF;
       end
       else
-      	C := clBlack;
+      	C := $00000000;
 
-      style := '<font color="' + ColorToHTML(C) + '">';
+      style := '<font color="' + ColorToHTMLString(C) + '">';
 	    Result := Result + '<tr><td><strong>' + style + Id + Line1[1] + '</strong></font></td><td>' + Copy(Line1, 2, MaxInt) + '</td></tr>' + LineSep;
     end;
   end;

@@ -62,7 +62,7 @@ type
 implementation
 
 uses
-  Forms, uLog, uSorts, uMath, uCPU, uWorkerThread, SysUtils;
+  uLog, uSorts, uMath, uCPU, uWorkerThread, SysUtils;
 
 { TThreadPool }
 

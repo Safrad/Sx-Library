@@ -44,7 +44,7 @@ implementation
 uses
 	StdCtrls,
 	uProjectInfo, uStrings,
-	uGraph, uDBitmap, uFiles, uMath, uSystem, uDIniFile, uOutputFormat, uInputFormat, uDrawStyle;
+	uGraph, uDBitmap, uFiles, uMath, uDIniFile, uOutputFormat, uInputFormat, uDrawStyle;
 var
 	fSplash: TfSplash;
 const

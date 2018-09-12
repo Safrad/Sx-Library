@@ -4,15 +4,9 @@ interface
 
 uses
 	uTypes,
-	Graphics;
+  UITypes;
 
 const
-{$if CompilerVersion < 15}
-	clSystemColor = $FF000000;
-{$ifend}
-
-	clDepth: array[0..3] of TColor = (cl3DDkShadow{Black}, clBtnShadow{Gray}, cl3DLight{Silver}, clBtnHighlight{White});
-
 	MaxSpectrum = 1529;
 	MaxSpectrum2 = 762;
 	MaxFireColor = 765;
@@ -52,6 +46,14 @@ type
 		);
 	end;
 
+const
+{$if CompilerVersion < 15}
+	clSystemColor = $FF000000;
+{$ifend}
+
+	clDepth: array[0..3] of TColor = (TColors.c3DDkShadow{Black}, TColors.cBtnShadow{Gray}, TColors.c3DLight{Silver}, TColors.cBtnHighlight{White});
+
+function ColorToRGB(Color: TColor): Longint;
 function RGBToHLS(C: TRGBA): THLSColor;
 function HLSToRGB(C: THLSColor): TRGBA;
 
@@ -85,7 +87,15 @@ implementation
 uses
 	uMath,
 	Math,
-  SysUtils;
+  SysUtils,
+  Windows;
+
+function ColorToRGB(Color: TColor): Longint;
+begin
+  if Color < 0 then
+    Result := GetSysColor(Color and $000000FF) else
+    Result := Color;
+end;
 
 function RGBToHLS(C: TRGBA): THLSColor;
 var
@@ -536,13 +546,13 @@ begin
 		Result := C1;
 		Exit;
 	end;}
-	if ((C1 = clBtnShadow) and (C2 = clBtnHighlight)) or
-		((C2 = clBtnShadow) and (C1 = clBtnHighlight)) then
-		Result := cl3DLight
+	if ((C1 = TColors.cBtnShadow) and (C2 = TColors.cBtnHighlight)) or
+		((C2 = TColors.cBtnShadow) and (C1 = TColors.cBtnHighlight)) then
+		Result := TColors.c3DLight
 	else
-	if ((C1 = cl3DDkShadow) and (C2 = cl3DLight)) or
-		((C2 = cl3DDkShadow) and (C1 = cl3DLight)) then
-		Result := clBtnShadow
+	if ((C1 = TColors.c3DDkShadow) and (C2 = TColors.c3DLight)) or
+		((C2 = TColors.c3DDkShadow) and (C1 = TColors.c3DLight)) then
+		Result := TColors.cBtnShadow
 	else
 	begin
 		C1 := ColorToRGB(C1);
