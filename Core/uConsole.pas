@@ -3,9 +3,12 @@ unit uConsole;
 interface
 
 uses
-  Windows, SysUtils, Classes;
+  Windows, SysUtils;
 
 type
+  TAlignment = (taLeftJustify, taRightJustify, taCenter);
+  TTextLayout = (tlTop, tlCenter, tlBottom);
+
   TConsoleColor = (ccBlack, ccBlue, ccGreen, ccAqua, ccRed, ccPurple, ccYellow, ccLightGray, ccGray, ccLightBlue,
     ccLightGreen, ccLightAqua, ccLightRed, ccLightPurple, ccLightYellow, ccWhite);
 
