@@ -316,7 +316,7 @@ begin
   begin
     Text := ReadStringFromFile(ARcFileName);
     // Compatible if does not contain single quote
-    Result := Pos('''', Text) > 0;
+    Result := Pos('''', Text) = 0;
   end
   else
     Result := True; // No file specified
