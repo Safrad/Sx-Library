@@ -3,7 +3,8 @@ unit uCell;
 interface
 
 uses
-  Classes, StdCtrls, uTypes;
+  uTypes,
+  uConsole;
 
 type
   TCell = packed record
@@ -22,6 +23,7 @@ function GetCellLine(const ACell: TCell; const ALineIndex: SG; const ALineCount:
 implementation
 
 uses
+  uChar,
   uStrings, uFiles;
 
 procedure DefaultCell(var ACell: TCell);
@@ -73,6 +75,8 @@ begin
   if ((index >= 0) and (index < Length(separate))) then
   begin
     Result := separate[index];
+    while LastChar(Result) = CharCR do
+      SetLength(Result, Length(Result) - 1);
   end
   else
     Result := '';

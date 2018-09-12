@@ -4,7 +4,7 @@ interface
 
 uses
   uConsole,
-  Graphics, uTypes, uRow, uCell, uTableBorderSet;
+  uTypes, uRow, uCell, uTableBorderSet;
 
 const
   BorderColor = ccWhite;
