@@ -3,7 +3,9 @@ unit uDelphi;
 interface
 
 uses
-  uTypes, Registry;
+  uTypes,
+  SysUtils,
+  Registry;
 
 type
   TDelphiVersion = (dvUnknown, dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
@@ -87,7 +89,7 @@ function GetDelphiPathOnly(const Reg: TRegistry; const RegPath: string): string;
 
 function GetDelphiPath(const ADelphiVersion: TDelphiVersion): string;
 
-function GetDelphiResourceBuilder(const ADelphiVersion: TDelphiVersion): string;
+function GetDelphiResourceBuilder(const ADelphiVersion: TDelphiVersion; const ARcFileName: TFileName = ''): string;
 
 function DelphiLibSuffix(const Compiler: TCompiler): string;
 
@@ -113,7 +115,7 @@ function GetPackageVersion(const PackageFileName: string): TDelphiVersion;
 implementation
 
 uses
-  Windows, SysUtils, uFiles, uOutputFormat, uMath, uStrings, uLog, uOperatingSystem;
+  Windows, uFiles, uOutputFormat, uMath, uStrings, uLog, uOperatingSystem;
 
 const
   UnluckyNumber = 13;
@@ -306,10 +308,24 @@ begin
   end;
 end;
 
-function GetDelphiResourceBuilder(const ADelphiVersion: TDelphiVersion): string;
+function NewResourceBuilderCompatible(const ARcFileName: TFileName): BG;
+var
+  Text: string;
+begin
+  if ARcFileName <> '' then
+  begin
+    Text := ReadStringFromFile(ARcFileName);
+    // Compatible if does not contain single quote
+    Result := Pos('''', Text) > 0;
+  end
+  else
+    Result := True; // No file specified
+end;
+
+function GetDelphiResourceBuilder(const ADelphiVersion: TDelphiVersion; const ARcFileName: TFileName = ''): string;
 begin
   Result := GetDelphiPath(ADelphiVersion);
-  if ADelphiVersion >= FirstUnicodeDelphi then
+  if (ADelphiVersion >= FirstUnicodeDelphi) and NewResourceBuilderCompatible(ARcFileName) then
     Result := Result + 'Bin\cgrc.exe'
   else
     Result := Result + 'Bin\brcc32.exe';
