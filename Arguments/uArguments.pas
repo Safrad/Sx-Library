@@ -87,12 +87,13 @@ function TArguments.FindByString(
 var
   i: SG;
 begin
+  // TODO : optimize
   for i := 0 to FArguments.Count - 1 do
   begin
     if SameText(TCustomArgument(FArguments[i]).Shortcut, AArgumentShortcut) then
     begin
-        Result := TCustomArgument(FArguments[i]);
-        Exit;
+      Result := TCustomArgument(FArguments[i]);
+      Exit;
     end;
   end;
   Result := nil;

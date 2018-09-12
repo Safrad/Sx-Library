@@ -12,7 +12,6 @@ type
     FHelpArgument: TSwitchArgument;
   public
     constructor Create;
-    destructor Destroy; override;
 
     procedure Parse(const ACommandLine: string); override;
 
@@ -33,20 +32,12 @@ begin
   Add(FHelpArgument);
 end;
 
-destructor TDefaultArguments.Destroy;
-begin
-//  FHelpArgument.Free;
-
-  inherited;
-end;
-
 procedure TDefaultArguments.Parse(const ACommandLine: string);
 begin
   inherited;
 
   if HelpArgunment.Exists or ((Count = 0) and (RequiredArgumentCount > 0)) then
   begin
-      // ConsoleApplication.WriteLine(ConsoleColor.DarkYellow, ConsoleColor.Black, PreviewAsString());
     PreviewTable;
   end;
 end;       
