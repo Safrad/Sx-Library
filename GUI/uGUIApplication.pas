@@ -44,11 +44,11 @@ type
   protected
     procedure AddArguments; override;
     procedure OnRun; override;
+    procedure Initialize; override;
 
     function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
     procedure CommonForm(const Form: TForm);
   public
-    procedure Initialize; override;
 
     property ShowSplashScreen: BG read FShowSplashScreen write SetShowSplashScreen;
   end;
@@ -92,7 +92,7 @@ begin
 
 	if Menu <> nil then
 	begin
-//		CommonFileMenu(Menu); TODO :
+//		CommonFileMenu(Menu); TODO
 		MenuSet(Menu);
 		for i := 0 to Form.ComponentCount - 1 do
 		begin

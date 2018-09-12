@@ -28,6 +28,8 @@ end.
 
 unit uConsoleApplication;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses

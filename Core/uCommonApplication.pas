@@ -10,18 +10,19 @@ type
   TCommonApplication = class
   private
     FRestartAfterClose: BG;
+    FInitialized: BG;
     procedure SetArguments(const Value: TArguments);
     procedure SetRestartAfterClose(const Value: BG);
   protected
     FArguments: TArguments;
     procedure AddArguments; virtual; abstract;
+    procedure Initialize; virtual;
     procedure Finalize; virtual;
     procedure OnRun; virtual; abstract;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure Initialize; virtual;
     procedure Run;
 
     /// <summary>
@@ -57,6 +58,14 @@ begin
   ExitCode := 1;
 
   inherited;
+
+  try
+    Initialize;
+    FInitialized := True;
+  except
+    on E: Exception do
+      Fatal(E, Self);
+  end;
 end;
 
 destructor TCommonApplication.Destroy;
@@ -100,6 +109,8 @@ end;
 
 procedure TCommonApplication.Run;
 begin
+  if not FInitialized then
+    Exit;
   try
     OnRun;
     ExitCode := 0;
