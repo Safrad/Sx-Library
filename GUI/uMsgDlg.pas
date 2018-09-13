@@ -482,7 +482,7 @@ begin
 end;
 
 const
-  MessageLevelToTaskDialog: array[TMessageLevel] of TTaskDialogIcon = (tiQuestion, tiShield, tiInformation, tiWarning, tiError, tiShield, tiBlank);
+  MessageLevelToTaskDialog: array[TMessageLevel] of TTaskDialogIcon = (tiQuestion, tiShield, tiInformation, tiWarning, tiError, tiError, tiBlank);
 
 function StringsToString(const AStrings: array of string; const Sepearator: string): string;
 var
