@@ -21,6 +21,7 @@ uses
   uHelpCommand,
   uAboutCommand,
   uStateCommand,
+  uSystemInfoCommand,
   uShowFileCommand;
 
 { TDefaultCommands }
@@ -33,6 +34,7 @@ var
   FRestartCommand: TRestartCommand;
   FAboutCommand: TAboutCommand;
   FStateCommand: TStateCommand;
+  FSystemInfoCommand: TSystemInfoCommand;
   FShowLogCommand,
   FShowIniCommand,
   FShowLocalIniCommand: TShowFileCommand;
@@ -57,6 +59,9 @@ begin
 
   FStateCommand := TStateCommand.Create;
   Add(FStateCommand);
+
+  FSystemInfoCommand := TSystemInfoCommand.Create;
+  Add(FSystemInfoCommand);
 
   FShowLogCommand := TShowFileCommand.Create;
   FShowLogCommand.Shortcut := 'ShowLog';
