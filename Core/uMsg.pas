@@ -32,9 +32,7 @@ procedure ErrorMsg(const Text: string; const Param: array of string); overload;
 
 procedure ErrorMsg(const ErrorCode: SG); overload;
 
-procedure Fatal(const E: Exception); overload;
-
-procedure Fatal(const E: Exception; const C: TObject); overload;
+procedure Fatal(const AException: Exception; const C: TObject = nil);
 
 function ErrorRetry(const Text: string): BG;
 
@@ -193,18 +191,32 @@ begin
     ErrorMsg(ErrorCodeToStr(ErrorCode));
 end;
 
-procedure Fatal(const E: Exception);
-begin
-  ShowMessage(mlFatalError, E.Message + ' (' + E.ClassName + ')');
-end;
-
-procedure Fatal(const E: Exception; const C: TObject);
+procedure Fatal(const AException: Exception; const C: TObject = nil);
 var
   ExpandedText: string;
+  Ex: Exception;
 begin
-  ExpandedText := E.Message;
+  ExpandedText := '';
+  Ex := AException;
+  repeat
+    ExpandedText := ExpandedText + Ex.Message;
+    if IsDebug then
+      ExpandedText := ExpandedText + ' (' + Ex.ClassName + ')';
+    ExpandedText := ExpandedText + LineSep;
+    {$if CompilerVersion >= 20}
+    Ex := Ex.InnerException;
+    {$else}
+    Ex := nil;
+    {$ifend}
+  until Ex = nil;
+
   if IsDebug and (C <> nil) then
-    ExpandedText := ExpandedText + ' (Class ' + C.ClassName + ')';
+  begin
+    ExpandedText := ExpandedText + '(in class ' + C.ClassName + ')';
+  end
+  else
+    ExpandedText := DelLastChar(ExpandedText);
+
   ShowMessage(mlFatalError, ExpandedText);
 end;
 
