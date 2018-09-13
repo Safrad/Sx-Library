@@ -57,15 +57,17 @@ end;
 
 procedure TCommandConsoleApplication.Finalize;
 begin
-  if FConsoleReader <> nil then
-  begin
-    FConsoleReader.TerminateAndWaitFor;
-    FreeAndNil(FConsoleReader);
+  try
+    if FConsoleReader <> nil then
+    begin
+      FConsoleReader.TerminateAndWaitFor;
+      FreeAndNil(FConsoleReader);
+    end;
+
+    FCommands.Free;
+  finally
+    inherited;
   end;
-
-  FCommands.Free;
-
-  inherited;
 end;
 
 procedure TCommandConsoleApplication.Initialize;

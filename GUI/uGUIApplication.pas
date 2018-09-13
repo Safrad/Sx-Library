@@ -44,6 +44,7 @@ type
     procedure AddArguments; override;
     procedure OnRun; override;
     procedure Initialize; override;
+    procedure Finalize; override;
 
     function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
     procedure CommonForm(const Form: TForm);
@@ -104,6 +105,21 @@ begin
 			end;
 		end;
 	end;
+end;
+
+procedure TGUIApplication.Finalize;
+begin
+  try
+    if MainIni <> nil then
+    begin
+  //		MainIni.UnregisterRW(GlobalOptions.RWCommon); TODO :
+  //		MainIni.UnregisterRW(Dictionary.RWLanguage);
+    end;
+
+    Application.MainForm.Free; // Do not use FreeAndNil
+  finally
+    inherited;
+  end;
 end;
 
 function TGUIApplication.GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
@@ -207,13 +223,6 @@ begin
 
 	HideSplashScreen;
 	Application.Run; // Blocking
-
-	if MainIni <> nil then
-	begin
-//		MainIni.UnregisterRW(GlobalOptions.RWCommon); TODO :
-//		MainIni.UnregisterRW(Dictionary.RWLanguage);
-	end;
-	Application.MainForm.Free; // Do not use FreeAndNil
 end;
 
 procedure TGUIApplication.SetShowSplashScreen(const Value: BG);
