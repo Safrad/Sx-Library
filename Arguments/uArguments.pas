@@ -5,7 +5,6 @@ interface
 uses
   Contnrs,
   uTypes,
-  uDParser,
   uRow,
   uCustomArgument;
 
@@ -14,8 +13,7 @@ type
   private
     FArguments: TObjectList;
 
-    procedure ParseArgument(const AParser: TDParser);
-    procedure ParseArguments(const AParser: TDParser);
+    procedure ParseArguments(const AArguments: TArrayOfString);
     function FindByString(const AArgumentShortcut: string): TCustomArgument;
 
     function GetCount: SG;
@@ -44,9 +42,9 @@ implementation
 uses
   Windows,
   SysUtils,
-  Classes,
   uSwitchArgument,
   uTable,
+  uFiles,
   uMsg,
   uChar,
   uStrings,
@@ -129,63 +127,50 @@ end;
 
 procedure TArguments.Parse(const ACommandLine: string);
 var
-  Parser: TDParser;
+	Arguments: TArrayOfString;
+  Remain: string;
 begin
-  Parser := TDParser.Create(ACommandLine);
-  try
-    ParseArguments(Parser);
-  finally
-    Parser.Free;
-  end;
+	Arguments := SplitStr(ACommandLine, 1024, Remain);
+  ParseArguments(Arguments);
 end;
-
 
 procedure TArguments.Parse;
 begin
   Parse(GetCommandLine);
 end;
 
-procedure TArguments.ParseArgument(const AParser: TDParser);
+procedure TArguments.ParseArguments(const AArguments: TArrayOfString);
 var
+  Index: SG;
   Name: string;
   Argument: TCustomArgument;
-  Value: string;
 begin
-  AParser.ReadInput;
-
-  AParser.ReadToChar(' ');
-  Name := AParser.Id;
-  if (Name = '') then
-    Exit; // TODO : Hotfix
-  if (FirstChar(Name) = '-') then
+  Index := 1; // Skip executable file name
+  while Index < Length(AArguments) do
   begin
-    Delete(Name, 1, 1);
-  end;
+    Name := AArguments[Index];
+    if (FirstChar(Name) in ['-', '/']) then
+    begin
+      Delete(Name, 1, 1);
+    end;
 
-  Argument := FindByString(Name);
-  if (Argument = nil) then
-  begin
-    //raise InvalidArgumentException.Create;
-    raise Exception.Create('Unknown command line argument ''' + Name + '''.');
-  end;
-  Argument.Exists := True;
-  if (not (Argument is TSwitchArgument)) then
-  begin
-    AParser.ReadToChar(' ');
-    Value := AParser.Id;
-    // TODO : "Program Files"
+    Argument := FindByString(Name);
+    if (Argument = nil) then
+    begin
+      raise EArgumentException.Create('Unknown command line argument ''' + Name + '''.');
+    end;
+    Argument.Exists := True;
+    Inc(Index);
+    if Index >= Length(AArguments) then
+    begin
+      raise EArgumentException.Create('Argument value expected.');
+    end;
 
-    Argument.SetValueFromString(Value);
-  end;
-end;
-
-procedure TArguments.ParseArguments(const AParser: TDParser);
-begin
-  AParser.ReadToChar(' '); // Skip executable file name
-
-  while (AParser.InputType <> itEOI) do
-  begin
-    ParseArgument(AParser);
+    if (not (Argument is TSwitchArgument)) then
+    begin
+      Argument.SetValueFromString(AArguments[Index]);
+      Inc(Index);
+    end;
   end;
 end;
 
