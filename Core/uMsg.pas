@@ -196,6 +196,9 @@ var
   ExpandedText: string;
   Ex: Exception;
 begin
+  if AException is EAbort then
+    Exit; // EAbort is the exception class for errors that should not display an error message dialog box.
+
   ExpandedText := '';
   Ex := AException;
   repeat
