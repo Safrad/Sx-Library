@@ -28,7 +28,7 @@ begin
 
   FHelpArgument := TSwitchArgument.Create;
   FHelpArgument.Shortcut := 'h';
-  FHelpArgument.Description := 'Display this help';
+  FHelpArgument.Description := 'Display this help.';
   Add(FHelpArgument);
 end;
 
