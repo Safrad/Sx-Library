@@ -34,7 +34,10 @@ procedure THelpCommand.ExecuteNoParam;
 begin
   inherited;
 
-  Commands.PreviewTable;
+  if IsConsole then
+    Commands.PreviewToConsole
+  else
+    Response := Commands.PreviewAsString;
 end;
 
 procedure THelpCommand.SetCommands(const Value: TCommands);

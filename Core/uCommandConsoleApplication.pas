@@ -39,6 +39,7 @@ uses
   uAPI,
   uStrings,
   uCustomArgument,
+  uCustomCommand,
   uDefaultCommands;
 
 { TCommandConsoleApplication }
@@ -82,8 +83,19 @@ begin
 end;
 
 procedure TCommandConsoleApplication.ParseText(const AText: string);
+var
+  CommandAsText: string;
+  Command: TCustomCommand;
+  InLineIndex: SG;
 begin
-  FCommands.Parse(AText);
+  InLineIndex := 1;
+  while InLineIndex <= Length(AText) do
+  begin
+    CommandAsText := ReadToChars(AText, InLineIndex, [CharSpace, CharCR]);
+    Command := Commands.FindByStringException(CommandAsText);
+    Command.Execute(ReadToNewLine(AText, InLineIndex));
+    Information(Command.Response);
+  end;
 end;
 
 procedure TCommandConsoleApplication.Run;

@@ -14,18 +14,19 @@ type
   private
     FCommands: TObjectList;
 
-    function FindByString(const ACommandShortcut: string): TCustomCommand;
-
     function PreviewTableCommand(const ACommand: TCustomCommand): TRow;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure Parse(const AText: string);
-    procedure PreviewTable;
+    function FindByString(const ACommandShortcut: string): TCustomCommand;
+    function FindByStringException(const ACommandShortcut: string): TCustomCommand;
+
+    procedure PreviewToConsole;
     function PreviewAsString: string;
 
     procedure Add(const ACustomCommand: TCustomCommand);
+    property List: TObjectList read FCommands;
   end;
 
 implementation
@@ -78,22 +79,11 @@ begin
   Result := nil;
 end;
 
-procedure TCommands.Parse(const AText: string);
-var
-  CommandAsText: string;
-  Command: TCustomCommand;
-  InLineIndex: SG;
+function TCommands.FindByStringException(const ACommandShortcut: string): TCustomCommand;
 begin
-  InLineIndex := 1;
-  while InLineIndex <= Length(AText) do
-  begin
-    CommandAsText := ReadToChars(AText, InLineIndex, [CharSpace, CharCR]);
-    Command := FindByString(CommandAsText);
-    if Command = nil then
-      raise EArgumentException.Create('Unknown command: ' + CommandAsText);
-
-    Command.Execute(ReadToNewLine(AText, InLineIndex));
-  end;
+  Result := FindByString(ACommandShortcut);
+  if Result = nil then
+    raise EArgumentException.Create('Unknown command: ' + ACommandShortcut);
 end;
 
 function TCommands.PreviewAsString: string;
@@ -103,11 +93,11 @@ begin
   Result := '';
   for i := 0 to FCommands.Count - 1 do
   begin
-    Result := Result + TCustomCommand(FCommands[i]).GetShortcutAndSyntax + LineSep;
+    Result := Result + TCustomCommand(FCommands[i]).GetShortcutAndSyntax + ' ' + TCustomCommand(FCommands[i]).Description + LineSep;
   end;
 end;
 
-procedure TCommands.PreviewTable;
+procedure TCommands.PreviewToConsole;
 var
   Table: TTable;
   Row: TRow;
@@ -127,11 +117,7 @@ begin
       Row := PreviewTableCommand(TCustomCommand(FCommands[i]));
       Table.Data[i + 1] := Row;
     end;
-    {$ifdef Console}
     Table.WriteToConsole;
-    {$else}
-    // TODO
-    {$endif}
   finally
     Table.Free;
   end;

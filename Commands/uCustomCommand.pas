@@ -10,8 +10,10 @@ type
   private
     FDescription: string;
     FShortcut: string;
+    FResponse: string;
     procedure SetDescription(const Value: string);
     procedure SetShortcut(const Value: string);
+    procedure SetResponse(const Value: string);
   protected
     function GetSyntax: string; virtual; abstract;
   public
@@ -23,6 +25,7 @@ type
 
     property Shortcut: string read FShortcut write SetShortcut;
     property Description: string read FDescription write SetDescription;
+    property Response: string read FResponse write SetResponse;
   end;
 
 implementation
@@ -33,20 +36,23 @@ uses
 { TCustomCommand }
 
 function TCustomCommand.GetShortcutAndSyntax: string;
-const
-  Prefix = '-';
 var
   Syntax: string;
 begin
+  Result := Shortcut;
   Syntax := GetSyntax();
   if Syntax <> '' then
-      Syntax := ' ' + Syntax;
-  Result := Prefix + Shortcut + Syntax;
+    Result := Result + ' ' + Syntax;
 end;
 
 procedure TCustomCommand.SetDescription(const Value: string);
 begin
   FDescription := Value;
+end;
+
+procedure TCustomCommand.SetResponse(const Value: string);
+begin
+  FResponse := Value;
 end;
 
 procedure TCustomCommand.SetShortcut(const Value: string);

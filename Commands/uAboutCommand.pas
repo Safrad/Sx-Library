@@ -40,7 +40,7 @@ begin
   s := '';
 	for Id := 0 to Length(ProjectInfoStr) - 1 do
     s := s + AddSpace(ProjectInfoStr[TProjectInfoName(Id)]) + '=' + GetProjectInfo(TProjectInfoName(Id)) +  LineSep;
-  Information(s);
+  Response := s;
 end;
 
 end.
