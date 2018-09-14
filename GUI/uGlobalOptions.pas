@@ -47,6 +47,7 @@ function GetBackgroundWindowTexture: BG;
 function GetBackgroundWindowColor: TColor;
 
 procedure RWCommon(const Save: BG);
+procedure OptionChanged(const OptionIndex: SG);
 function LinkChange(const GlobalOption: TGlobalOption; const ObjectChange: TObjectChange): BG;
 
 implementation

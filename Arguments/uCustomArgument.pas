@@ -116,8 +116,10 @@ begin
   if (RequireCheck = rcDisabled) then
     Exit;
 
-  Result := Result +  GetArgumentShortcutAndSyntax() + ' ' + Description;
-  Result := Result + '(' + GetRequiredOrOptional() + ')' + LineSep;
+  Result := Result + GetArgumentShortcutAndSyntax + CharSpace + Description;
+  if GetRequiredOrOptional <> '' then
+    Result := Result + ' (' + GetRequiredOrOptional + ')';
+  Result := Result + LineSep;
   if Length(FRequires) > 0 then
   begin
     Result := Result  + '  ' + 'Requires: ';

@@ -12,7 +12,6 @@ type
 	private
 		CheckForUpdate1: TMenuItem;
 		LoggingLevel1: TMenuItem;
-    FGUIApplication: TGUIApplication;
 
 		procedure Restart1Click(Sender: TObject);
 		procedure Exit1Click(Sender: TObject);
@@ -27,10 +26,10 @@ type
 		procedure Sounds1Click(Sender: TObject);
 		procedure SetLoggingLevel1Click(Sender: TObject);
 		procedure ShowOptions(Sender: TObject);
-    procedure SetGUIApplication(const Value: TGUIApplication);
-	public
-    property GUIApplication: TGUIApplication read FGUIApplication write SetGUIApplication;
+    procedure OptionChanged(const OptionIndex: SG);
 	end;
+
+procedure CommonFileMenu(const Menu: TMenu);
 
 var
   CommonMenu: TCommonMenu;
@@ -54,6 +53,7 @@ uses
   uStrings,
   uMsg,
   uSounds,
+  uProjectInfo,
   uGlobalOptions;
 
 { TCommonMenu }
@@ -82,9 +82,14 @@ begin
 	OpenLocalHomepage;
 end;
 
+procedure TCommonMenu.OptionChanged(const OptionIndex: SG);
+begin
+  uGlobalOptions.OptionChanged(OptionIndex);
+end;
+
 procedure TCommonMenu.ViewParams1Click(Sender: TObject);
 begin
-//	HelpParams; TODO :
+	Information(GUIApplication.Arguments.PreviewAsString);
 end;
 
 procedure MenuCheckForUpdate(AThread: TThread);
@@ -108,11 +113,6 @@ begin
 	ExecuteAbout(Application.MainForm, False);
 end;
 
-procedure TCommonMenu.SetGUIApplication(const Value: TGUIApplication);
-begin
-  FGUIApplication := Value;
-end;
-
 procedure TCommonMenu.SetLoggingLevel1Click(Sender: TObject);
 begin
 	MainLog.LoggingLevel := TMessageLevel(TMenuItem(Sender).Tag);
@@ -122,7 +122,7 @@ end;
 procedure TCommonMenu.ShowOptions(Sender: TObject);
 begin
 	ufOptions.ShowOptions('Global Options', POptions(@GlobalOptions), Length(GlobalParams), PParams
-			(@GlobalParams), nil); // TODO : OptionChanged
+			(@GlobalParams), OptionChanged);
 end;
 
 procedure TCommonMenu.ViewIniFile1Click(Sender: TObject);
@@ -263,11 +263,14 @@ begin
 			Help1.Add(M);
 		end;
 
-		M := TMenuItem.Create(Help1);
-		M.Name := 'WebHomepage1';
-		M.Caption := 'Web Homepage';
-		M.OnClick := CommonMenu.WebHomepage1Click;
-		Help1.Add(M);
+    if GetProjectInfo(piWeb) <> '' then
+    begin
+      M := TMenuItem.Create(Help1);
+      M.Name := 'WebHomepage1';
+      M.Caption := 'Web Homepage';
+      M.OnClick := CommonMenu.WebHomepage1Click;
+      Help1.Add(M);
+    end;
 
 		if FileExists(GetLocalHomepage) then
 		begin
@@ -288,12 +291,15 @@ begin
 		M.Caption := cLineCaption;
 		Help1.Add(M);
 
-		M := TMenuItem.Create(Help1);
-		M.Name := 'CheckForUpdate1';
-		M.Caption := 'Check For Update' + cDialogSuffix;
-		M.OnClick := CommonMenu.CheckForUpdate1Click;
-		Help1.Add(M);
-		CommonMenu.CheckForUpdate1 := M;
+    if GetProjectInfo(piWeb) <> '' then
+    begin
+      M := TMenuItem.Create(Help1);
+      M.Name := 'CheckForUpdate1';
+      M.Caption := 'Check For Update' + cDialogSuffix;
+      M.OnClick := CommonMenu.CheckForUpdate1Click;
+      Help1.Add(M);
+      CommonMenu.CheckForUpdate1 := M;
+    end;
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'About';

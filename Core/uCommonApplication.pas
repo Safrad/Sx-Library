@@ -73,6 +73,7 @@ begin
       Finalize; // For testing
 
     Initialize;
+    FInitialized := True;
   except
     on E: Exception do
       Fatal(E, Self);
@@ -82,6 +83,7 @@ end;
 destructor TCommonApplication.Destroy;
 begin
   try
+    FInitialized := False;
     Finalize;
   except
     on E: Exception do
@@ -93,8 +95,6 @@ end;
 
 procedure TCommonApplication.Finalize;
 begin
-  FInitialized := False;
-
   FArguments.Free;
 
   RWStart(MainIni, True);
@@ -123,8 +123,6 @@ begin
     raise EArgumentException.Create(FArguments.ShowRequired);
   if FArguments.Check <> '' then
     raise EArgumentException.Create(FArguments.Check);
-
-  FInitialized := True;
 end;
 
 procedure TCommonApplication.Run;

@@ -32,14 +32,16 @@ interface
 uses
   uTypes,
   uCommonApplication,
+  uSwitchArgument,
   Menus,
   Forms;
 
 type
   TGUIApplication = class(TCommonApplication)
   private
-    FShowSplashScreen: BG;
-    procedure SetShowSplashScreen(const Value: BG);
+    FAllowMultipleInstance: TSwitchArgument;
+    procedure RWCommon(const Save: BG);
+    procedure OptionChanged(const OptionIndex: SG);
   protected
     procedure AddArguments; override;
     procedure OnRun; override;
@@ -49,8 +51,6 @@ type
     function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
     procedure CommonForm(const Form: TForm);
   public
-
-    property ShowSplashScreen: BG read FShowSplashScreen write SetShowSplashScreen;
     procedure Terminate; override;
   end;
 
@@ -71,9 +71,10 @@ uses
   ufOptions,
   uStartup,
   uSplash,
-  uLog,
   uWebUpdate,
-  uProjectInfo;
+  uProjectInfo,
+  uCommonMenu,
+  uCustomArgument;
 
 { TGUIApplication }
 
@@ -81,7 +82,11 @@ procedure TGUIApplication.AddArguments;
 begin
   inherited;
 
-  // TODO Multiinst
+  FAllowMultipleInstance := TSwitchArgument.Create;
+  FAllowMultipleInstance.Shortcut := 'multiinst';
+  FAllowMultipleInstance.Description := 'Allow multi-instance run.';
+  FAllowMultipleInstance.RequireCheck := rcOptional;
+  Arguments.Add(FAllowMultipleInstance);
 end;
 
 procedure TGUIApplication.CommonForm(const Form: TForm);
@@ -93,7 +98,7 @@ begin
 
 	if Menu <> nil then
 	begin
-//		CommonFileMenu(Menu); TODO
+		CommonFileMenu(Menu);
 		MenuSet(Menu);
 		for i := 0 to Form.ComponentCount - 1 do
 		begin
@@ -112,7 +117,7 @@ begin
   try
     if MainIni <> nil then
     begin
-  //		MainIni.UnregisterRW(GlobalOptions.RWCommon); TODO :
+  		MainIni.UnregisterRW(RWCommon);
   //		MainIni.UnregisterRW(Dictionary.RWLanguage);
     end;
 
@@ -149,47 +154,21 @@ begin
 	end;
 end;
 
-{ TODO
-procedure AllowMultiInstanceProc(const Value: string);
-begin
-  // Handled earlier or unhandled
-end;
-}
-
-function FoundMultiInstanceParam: BG;
-var
-  i: SG;
-  Param: string;
-begin
-  for i := 1 to ParamCount do
-  begin
-    Param := LowerCase(ParamStr(i)) ;
-    if (Param = '-multiinst') or (Param = '/multiinst') then
-    begin
-      Result := True;
-      Exit;
-    end;
-  end;
-  Result := False;
-end;
-
 procedure TGUIApplication.Initialize;
 begin
   inherited;
 
-  // RegisterParam('multiinst', 'Allow multi-instance run.', AllowMultiInstanceProc); TODO :
-  if not uMultiIns.InitInstance(FoundMultiInstanceParam) then
-    Halt(1);
+  if not uMultiIns.InitInstance(FAllowMultipleInstance.Exists) then
+    raise EAbort.Create('Another instance found.');
 
   Application.Initialize;
 	Application.Title := GetProjectInfo(piProductName);
 
-//	MainIni.RegisterRW(CommonMenu.RWCommon); TODO :
+	MainIni.RegisterRW(RWCommon);
 
-  if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool and
-    FShowSplashScreen then
+  if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool then
   begin
-    uSplash.ShowSplashScreen;
+    ShowSplashScreen;
   end;
   if GlobalParams[goAutomaticallyCheckForUpdate].Bool and (Now - LastUpdate > GlobalParams[goCheckForUpdateDaysPeriod].Num) then
   begin
@@ -211,7 +190,7 @@ begin
 	if not Installed then
 	begin
     ufOptions.ShowOptions('Global Options', POptions(@GlobalOptions), Length(GlobalParams), PParams
-        (@GlobalParams), nil); // TODO : OptionChanged
+        (@GlobalParams), OptionChanged);
 	end;
 end;
 
@@ -225,9 +204,14 @@ begin
 	Application.Run; // Blocking
 end;
 
-procedure TGUIApplication.SetShowSplashScreen(const Value: BG);
+procedure TGUIApplication.OptionChanged(const OptionIndex: SG);
 begin
-  FShowSplashScreen := Value;
+  uGlobalOptions.OptionChanged(OptionIndex);
+end;
+
+procedure TGUIApplication.RWCommon(const Save: BG);
+begin
+  uGlobalOptions.RWCommon(Save);
 end;
 
 procedure TGUIApplication.Terminate;

@@ -161,13 +161,13 @@ begin
     end;
     Argument.Exists := True;
     Inc(Index);
-    if Index >= Length(AArguments) then
-    begin
-      raise EArgumentException.Create('Argument value expected.');
-    end;
 
     if (not (Argument is TSwitchArgument)) then
     begin
+      if Index >= Length(AArguments) then
+      begin
+        raise EArgumentException.Create('Argument value expected.');
+      end;
       Argument.SetValueFromString(AArguments[Index]);
       Inc(Index);
     end;
@@ -175,10 +175,14 @@ begin
 end;
 
 function TArguments.PreviewAsString: string;
+const
+	LineWidth = 16;
 var
   i: SG;
+  s: string;
 begin
-  Result := '';
+	Result := 'Parameter' + CharSpace + 'Description' + LineSep;
+	Result := Result + StringOfChar(CharEmDash, LineWidth) + LineSep;
   for i := 0 to FArguments.Count - 1 do
   begin
     Result := Result + TCustomArgument(FArguments[i]).Preview;
@@ -210,7 +214,7 @@ begin
     {$ifdef Console}
     Table.WriteToConsole;
     {$else}
-    // TODO
+    Information(PreviewAsString);
     {$endif}
   finally
     Table.Free;
