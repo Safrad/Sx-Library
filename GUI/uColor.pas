@@ -51,7 +51,7 @@ const
 	clSystemColor = $FF000000;
 {$ifend}
 
-	clDepth: array[0..3] of TColor = (TColors.c3DDkShadow{Black}, TColors.cBtnShadow{Gray}, TColors.c3DLight{Silver}, TColors.cBtnHighlight{White});
+	clDepth: array[0..3] of TColor = (TColors.Sys3DDkShadow{Black}, TColors.SysBtnShadow{Gray}, TColors.Sys3DLight{Silver}, TColors.SysBtnHighlight{White});
 
 function ColorToRGB(Color: TColor): Longint;
 function RGBToHLS(C: TRGBA): THLSColor;
@@ -546,12 +546,12 @@ begin
 		Result := C1;
 		Exit;
 	end;}
-	if ((C1 = TColors.cBtnShadow) and (C2 = TColors.cBtnHighlight)) or
-		((C2 = TColors.cBtnShadow) and (C1 = TColors.cBtnHighlight)) then
-		Result := TColors.c3DLight
+	if ((C1 = TColors.SysBtnShadow) and (C2 = TColors.SysBtnHighlight)) or
+		((C2 = TColors.SysBtnShadow) and (C1 = TColors.SysBtnHighlight)) then
+		Result := TColors.Sys3DLight
 	else
-	if ((C1 = TColors.c3DDkShadow) and (C2 = TColors.c3DLight)) or
-		((C2 = TColors.c3DDkShadow) and (C1 = TColors.c3DLight)) then
+	if ((C1 = TColors.Sys3DDkShadow) and (C2 = TColors.Sys3DLight)) or
+		((C2 = TColors.Sys3DDkShadow) and (C1 = TColors.Sys3DLight)) then
 		Result := TColors.cBtnShadow
 	else
 	begin
