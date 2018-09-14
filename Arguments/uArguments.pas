@@ -25,7 +25,7 @@ type
 
     procedure Parse; overload;
     procedure Parse(const ACommandLine: string); overload; virtual;
-    procedure PreviewTable;
+    procedure PreviewToConsole;
     function PreviewAsString: string;
     procedure WriteUnused;
     function ShowUnused: string;
@@ -189,7 +189,7 @@ begin
   end;
 end;
 
-procedure TArguments.PreviewTable;
+procedure TArguments.PreviewToConsole;
 var
   Table: TTable;
   Row: TRow;
@@ -211,11 +211,7 @@ begin
       Row := PreviewTableArgument(TCustomArgument(FArguments[i]));
       Table.Data[i + 1] := Row;
     end;
-    {$ifdef Console}
     Table.WriteToConsole;
-    {$else}
-    Information(PreviewAsString);
-    {$endif}
   finally
     Table.Free;
   end;

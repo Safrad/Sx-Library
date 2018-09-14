@@ -20,6 +20,9 @@ type
 
 implementation
 
+uses
+  uMsg;
+
 { TDefaultArguments }
 
 constructor TDefaultArguments.Create;
@@ -38,7 +41,10 @@ begin
 
   if HelpArgunment.Exists or ((Count = 0) and (RequiredArgumentCount > 0)) then
   begin
-    PreviewTable;
+    if IsConsole then
+      PreviewToConsole
+    else
+      Information(PreviewAsString);
   end;
 end;       
 
