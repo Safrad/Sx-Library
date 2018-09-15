@@ -4,12 +4,14 @@ interface
 
 uses
   uTypes,
-  uArguments;
+  uArguments,
+  uApplicationStatistics;
 
 type
   TCommonApplication = class
   strict private
     FArguments: TArguments;
+    FStatistics: TApplicationStatistics;
     FRestartAfterClose: BG;
     FInitialized: BG;
     FTerminated: BG;
@@ -37,6 +39,7 @@ type
     property RestartAfterClose: BG read FRestartAfterClose write SetRestartAfterClose;
     property Initialized: BG read FInitialized;
     property Terminated: BG read FTerminated;
+    property Statistics: TApplicationStatistics read FStatistics;
   end;
 
 var
@@ -48,7 +51,6 @@ uses
   SysUtils,
   uLog,
   uDefaultArguments,
-  uStart,
   uConsole,
   uProjectInfo,
   uMsg,
@@ -97,7 +99,7 @@ procedure TCommonApplication.Finalize;
 begin
   FArguments.Free;
 
-  RWStart(MainIni, True);
+  FStatistics.Free;
 
   FreeAndNil(MainIni);
   FreeAndNil(LocalMainIni);
@@ -113,7 +115,7 @@ begin
   MainIni := TDIniFile.Create(MainIniFileName);
   LocalMainIni := TDIniFile.Create(LocalIniFileName);
 
-  RWStart(MainIni, False);
+  FStatistics := TApplicationStatistics.Create;
   TryUploadData;
 
   FArguments := TDefaultArguments.Create;

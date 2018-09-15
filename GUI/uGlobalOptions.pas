@@ -64,7 +64,7 @@ uses
 {$ifend}
   Forms,
 	uSplash, uMenus, uMultiIns, uAbout, uLog, uSounds, uFileExt, uAPI, uNewThread,
-	uMsgDlg, uMsg, uStart, ufOptions, uReg, uProjectInfo, uLink,
+	uMsgDlg, uMsg, ufOptions, uReg, uProjectInfo, uLink,
 	uWebUpdate, uDictionary, uUsageInfo,
 	Classes, Windows, ExtCtrls;
 

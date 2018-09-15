@@ -148,9 +148,16 @@ type
 		function UnLock(From, Count: U8): BG;
 	end;
 
+type
+  TFileStatistics = record
+  	ReadCount: UG;
+    WriteCount: UG;
+  	ReadBytes: U8;
+    WriteBytes: U8;
+  end;
+
 var
-	ReadCount, WriteCount: UG;
-	ReadBytes, WriteBytes: U8;
+  FileStatistics: TFileStatistics;
 
 implementation
 
@@ -368,8 +375,8 @@ LRetry :
 	if ReadFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
-		Inc(ReadCount);
-		Inc(ReadBytes, Suc);
+		Inc(FileStatistics.ReadCount);
+		Inc(FileStatistics.ReadBytes, Suc);
 
 		if Suc <> Count then
 		begin
@@ -412,8 +419,8 @@ LRetry :
 	if WriteFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
-		Inc(WriteCount);
-		Inc(WriteBytes, Suc);
+		Inc(FileStatistics.WriteCount);
+		Inc(FileStatistics.WriteBytes, Suc);
 
     if AWriteLog then
     begin

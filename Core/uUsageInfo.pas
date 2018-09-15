@@ -24,7 +24,7 @@ uses
   uSystemMemory,
   uFile,
   uFiles,
-  uStart,
+  uCommonApplication,
   uCPU,
   uLog,
   uMsg,
@@ -117,12 +117,12 @@ begin
     SaveData('ProjectVersion', GetProjectInfo(piFileVersion));
 
     // Statistics
-    SaveData('RunCount', IntToStr(GetRunCount));
-    SaveData('RunTime', IntToStr(GetRunTime));
-    SaveData('ReadCount', IntToStr(ReadCount));
-    SaveData('WriteCount', IntToStr(WriteCount));
-    SaveData('ReadBytes', IntToStr(ReadBytes));
-    SaveData('WriteBytes', IntToStr(WriteBytes));
+    SaveData('RunCount', IntToStr(CommonApplication.Statistics.RunCount));
+    SaveData('RunTime', IntToStr(Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds)));
+    SaveData('ReadCount', IntToStr(FileStatistics.ReadCount));
+    SaveData('WriteCount', IntToStr(FileStatistics.WriteCount));
+    SaveData('ReadBytes', IntToStr(FileStatistics.ReadBytes));
+    SaveData('WriteBytes', IntToStr(FileStatistics.WriteBytes));
 
     // OS
     SaveData('OSName', OperatingSystem.Name);
@@ -176,7 +176,7 @@ const
 begin
   try
     RWOptions(False);
-    if ((GetRunTime >= LastUploadTime + MaxUploadInterval) or (GetRunCount >= LastUploadCount + MaxUploadCount)) then
+    if ((CommonApplication.Statistics.TotalElapsedTime.Milliseconds >= LastUploadTime + MaxUploadInterval) or (CommonApplication.Statistics.RunCount >= LastUploadCount + MaxUploadCount)) then
     begin
       if AskedForUpload = False then
       begin
@@ -195,8 +195,8 @@ begin
       begin
         if UploadData then
         begin
-	        LastUploadCount := GetRunCount;
-	        LastUploadTime := GetRunTime;
+	        LastUploadCount := CommonApplication.Statistics.RunCount;
+	        LastUploadTime := Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds);
         end;
         RWOptions(True);
       end;

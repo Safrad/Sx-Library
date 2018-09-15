@@ -66,7 +66,8 @@ implementation
 {$R *.DFM}
 uses
 	Messages,
-	uAPI, uHTML, uStart, uDictionary,
+  uCommonApplication,
+	uAPI, uHTML, uDictionary,
 	uProjectInfo,
 	uGraph, uDIniFile, uScreen, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
 	uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
@@ -145,7 +146,7 @@ procedure TfAbout.LoadFile(AboutFile: TFileName);
 	begin
 		BmpAbout.SetSize(64, 64, clNone);
 		AC[0] := clBtnFace; AC[1] := clBlack; AC[2] := clBtnFace; AC[3] := clWhite;
-		BmpAbout.GenerateRGB(GenFunc[GetRunCount mod (High(GenFunc) + 1)], AC, ef16, nil);
+		BmpAbout.GenerateRGB(GenFunc[CommonApplication.Statistics.RunCount mod (High(GenFunc) + 1)], AC, ef16, nil);
 		BmpAbout.Transparent := False;
 	end;
 	
@@ -374,13 +375,13 @@ begin
 		1:
 		begin
 			case RowIndex of
-			0: Data := NToS(GetRunCount);
-			1: Data := MsToStr(TimeDifference(GetTickCount, GetStartProgramTime) + Second div 2, diDHMSD, 0, False);
-			2: Data := MsToStr(GetRunTime, diDHMSD, 3, False);
-			3: Data := NToS(ReadCount);
-			4: Data := BToStr(ReadBytes);
-			5: Data := NToS(WriteCount);
-			6: Data := BToStr(WriteBytes);
+			0: Data := NToS(CommonApplication.Statistics.RunCount);
+			1: Data := MsToStr(Round(CommonApplication.Statistics.ElapsedTime.Milliseconds), diDHMSD, 0, False);
+			2: Data := MsToStr(Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds), diDHMSD, 3, False);
+			3: Data := NToS(FileStatistics.ReadCount);
+			4: Data := BToStr(FileStatistics.ReadBytes);
+			5: Data := NToS(FileStatistics.WriteCount);
+			6: Data := BToStr(FileStatistics.WriteBytes);
 			end;
 		end;
 		end;
