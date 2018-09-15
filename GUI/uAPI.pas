@@ -72,6 +72,8 @@ begin
 
 		lpExecInfo.Wnd := GetActiveWindow;
 		lpExecInfo.nShow := ShowCmd;}
+  	if LogDebug then
+      MainLogAdd('ShellExecuteEx ' + FFileName + ' ' + Params, mlDebug);
 		if ShellExecuteEx(@lpExecInfo) then
 		begin
 			repeat
@@ -107,6 +109,8 @@ begin
   lpExecInfo.lpFile := PChar(FFileName);
   lpExecInfo.nShow := ShowCmd;
 
+	if LogDebug then
+    MainLogAdd('ShellExecuteEx ' + FFileName + ' ' + Params, mlDebug);
   ShellExecuteEx(@lpExecInfo);
 	CloseHandle(lpExecInfo.hProcess);
 end;
@@ -127,6 +131,8 @@ begin
   lpExecInfo.nShow := ShowCmd;
   lpExecInfo.hProcess := INVALID_HANDLE_VALUE;
 
+	if LogDebug then
+    MainLogAdd('ShellExecuteEx ' + FFileName + ' ' + Params, mlDebug);
   ShellExecuteEx(@lpExecInfo);
   Result := lpExecInfo.hProcess;
 end;
@@ -177,6 +183,8 @@ begin
     else
       CurrentDirectory := ACurrentDirectory;
 //    Replace(AParams, '"', '');
+  	if LogDebug then
+      MainLogAdd('CreateProcess ' + AFileName + ' ' + AParams, mlDebug);
     Handle := CreateProcess(nil, PChar('"' + AFileName + '" ' + AParams),
                             nil, nil, True, 0, nil,
                             PChar(CurrentDirectory), SI, PI);
