@@ -59,7 +59,6 @@ uses
   Windows,
   uLog,
   uDefaultArguments,
-  uStart,
   uConsole,
   uProjectInfo,
   uMsg,

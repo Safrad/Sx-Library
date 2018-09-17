@@ -17,9 +17,9 @@ implementation
 
 uses
   uMath,
-  uStart,
   uFile,
   uMsg,
+  uCommonApplication,
   uSystemMemory,
   uOutputFormat,
   uStrings;
@@ -51,16 +51,16 @@ begin
         'Proccess memory'
       ],
       [
-			  NToS(GetRunCount),
-        MsToStr(IntervalFrom(GetStartProgramTime), diDHMSD, 0, False),
-			  MsToStr(GetRunTime, diDHMSD, 3, False),
-			  NToS(ReadCount),
-			  BToStr(ReadBytes),
-			  NToS(WriteCount),
-			  BToStr(WriteBytes),
+			  NToS(CommonApplication.Statistics.RunCount),
+        MsToStr(Round(CommonApplication.Statistics.ElapsedTime.Milliseconds), diDHMSD, 0, False),
+			  MsToStr(Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds), diDHMSD, 3, False),
+			  NToS(FileStatistics.ReadCount),
+			  BToStr(FileStatistics.ReadBytes),
+			  NToS(FileStatistics.WriteCount),
+			  BToStr(FileStatistics.WriteBytes),
         BToStr(SystemMemory.ProcessAllocatedVirtualMemory)
       ], LineSep);
-  Information(s);
+  Response := s;
 end;
 
 end.
