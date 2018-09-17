@@ -40,8 +40,10 @@ type
   TGUIApplication = class(TCommonApplication)
   private
     FAllowMultipleInstance: TSwitchArgument;
+    FMinimizeToTrayIcon: BG;
     procedure RWCommon(const Save: BG);
     procedure OptionChanged(const OptionIndex: SG);
+    procedure SetMinimizeToTrayIcon(const Value: BG);
   protected
     procedure AddArguments; override;
     procedure OnRun; override;
@@ -52,6 +54,7 @@ type
     procedure CommonForm(const Form: TForm);
   public
     procedure Terminate; override;
+    property MinimizeToTrayIcon: BG read FMinimizeToTrayIcon write SetMinimizeToTrayIcon;
   end;
 
 var
@@ -166,7 +169,7 @@ begin
 
 	MainIni.RegisterRW(RWCommon);
 
-  if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool then
+  if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool and (not FMinimizedArgument.Exists) then
   begin
     ShowSplashScreen;
   end;
@@ -198,6 +201,18 @@ procedure TGUIApplication.OnRun;
 begin
   inherited;
 
+  if FMinimizedArgument.Exists then
+  begin
+    if MinimizeToTrayIcon then
+    begin
+      Application.ShowMainForm := False
+    end
+    else
+    begin
+      if Assigned(Application.MainForm) then
+        Application.MainForm.WindowState := wsMinimized;
+    end;
+  end;
   CommonForm(Application.MainForm);
 
 	HideSplashScreen;
@@ -212,6 +227,11 @@ end;
 procedure TGUIApplication.RWCommon(const Save: BG);
 begin
   uGlobalOptions.RWCommon(Save);
+end;
+
+procedure TGUIApplication.SetMinimizeToTrayIcon(const Value: BG);
+begin
+  FMinimizeToTrayIcon := Value;
 end;
 
 procedure TGUIApplication.Terminate;

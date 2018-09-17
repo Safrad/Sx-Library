@@ -5,6 +5,7 @@ interface
 uses
   uTypes,
   uArguments,
+  uSwitchArgument,
   uApplicationStatistics;
 
 type
@@ -19,7 +20,8 @@ type
     procedure SetArguments(const Value: TArguments);
     procedure SetRestartAfterClose(const Value: BG);
   protected
-    procedure AddArguments; virtual; abstract;
+    FMinimizedArgument: TSwitchArgument;
+    procedure AddArguments; virtual;
     procedure Initialize; virtual;
     procedure Finalize; virtual;
     procedure OnRun; virtual; abstract;
@@ -51,6 +53,7 @@ uses
   SysUtils,
   uLog,
   uDefaultArguments,
+  uCustomArgument,
   uConsole,
   uProjectInfo,
   uMsg,
@@ -61,6 +64,15 @@ uses
   uUsageInfo;
 
 { TCommonApplication }
+
+procedure TCommonApplication.AddArguments;
+begin
+  FMinimizedArgument := TSwitchArgument.Create;
+  FMinimizedArgument.Shortcut := 'minimized';
+  FMinimizedArgument.Description := 'Minimizes application';
+  FMinimizedArgument.RequireCheck := rcOptional;
+  Arguments.Add(FMinimizedArgument);
+end;
 
 constructor TCommonApplication.Create;
 begin

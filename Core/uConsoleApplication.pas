@@ -67,6 +67,8 @@ uses
   uDIniFile,
   uUsageInfo;
 
+function GetConsoleWindow: HWND; stdcall; external kernel32;
+
 { TConsoleApplication }
 
 function ConsoleCtrlHandler(dwCtrlType: DWORD): BOOL; stdcall;
@@ -94,6 +96,9 @@ end;
 
 procedure TConsoleApplication.Initialize;
 begin
+  if FMinimizedArgument.Exists then
+    ShowWindow(GetConsoleWindow, SW_MINIMIZE);
+
   WriteVersionInfo;
 
   inherited;
