@@ -78,10 +78,18 @@ function MaxDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function MaxDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
 function RandomDiv(const Dividend: SG; const Divisor: SG): SG;
 
-function IsInRange(const Min, Cur, Max: SG): BG; overload;
-function IsInRange(const Min, Cur, Max, Def: SG): BG; overload;
-function IsInRange(const Min, Cur, Max: UG): BG; overload;
-function IsInRange(const Min, Cur, Max: FG): BG; overload;
+function IsInRange(const Min, Cur, Max: S1): BG; overload;
+function IsInRange(const Min, Cur, Max: U1): BG; overload;
+function IsInRange(const Min, Cur, Max: S2): BG; overload;
+function IsInRange(const Min, Cur, Max: U2): BG; overload;
+function IsInRange(const Min, Cur, Max: S4): BG; overload;
+function IsInRange(const Min, Cur, Max: U4): BG; overload;
+function IsInRange(const Min, Cur, Max: S8): BG; overload;
+function IsInRange(const Min, Cur, Max: U8): BG; overload;
+function IsInRange(const Min, Cur, Max: F4): BG; overload;
+function IsInRange(const Min, Cur, Max: F8): BG; overload;
+function IsInRange(const Min, Cur, Max: FA): BG; overload;
+
 function Range(const Min, Cur, Max: SG): SG; overload;
 function Range(const Min, Cur, Max, Def: SG): SG; overload;
 function Range(const Min, Cur, Max: UG): UG; overload;
@@ -775,22 +783,57 @@ begin
 		Result := (Dividend + Random(Divisor)) div Divisor;
 end;
 
-function IsInRange(const Min, Cur, Max: SG): BG;
+function IsInRange(const Min, Cur, Max: S1): BG;
 begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
 
-function IsInRange(const Min, Cur, Max, Def: SG): BG;
+function IsInRange(const Min, Cur, Max: U1): BG;
 begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
 
-function IsInRange(const Min, Cur, Max: UG): BG;
+function IsInRange(const Min, Cur, Max: S2): BG;
 begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
 
-function IsInRange(const Min, Cur, Max: FG): BG;
+function IsInRange(const Min, Cur, Max: U2): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: S4): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: U4): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: S8): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: U8): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: F4): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: F8): BG;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+
+function IsInRange(const Min, Cur, Max: FA): BG;
 begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
