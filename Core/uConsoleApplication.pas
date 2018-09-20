@@ -96,12 +96,12 @@ end;
 
 procedure TConsoleApplication.Initialize;
 begin
-  if FMinimizedArgument.Exists then
-    ShowWindow(GetConsoleWindow, SW_MINIMIZE);
-
   WriteVersionInfo;
 
   inherited;
+
+  if FMinimizedArgument.Exists then
+    ShowWindow(GetConsoleWindow, SW_MINIMIZE);
 end;
 
 procedure TConsoleApplication.SetShowVersionInfo(const Value: BG);
