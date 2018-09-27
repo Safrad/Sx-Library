@@ -81,7 +81,9 @@ begin
 
 		LocalMainIni.RWNum(Section, 'RunCount', FRunCount, Save);
     if Save then
-      TotalElapsedTime := Round(FTotalElapsedTime.Milliseconds);
+      TotalElapsedTime := Round(FTotalElapsedTime.Milliseconds)
+    else
+      TotalElapsedTime := 0;
 		LocalMainIni.RWNum(Section, 'RunTime', TotalElapsedTime, Save);
     if Save = False then
       FTotalElapsedTime.Milliseconds := TotalElapsedTime;
