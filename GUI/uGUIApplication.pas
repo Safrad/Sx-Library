@@ -1,25 +1,13 @@
 {
 	Usability in "Project file" (*.dpr):
 
-type
-  TMain = class(TGUIApplication)
-  private
-    ...: TDirectoryArgument;
-    ...: TSwitchArgument;
-    ...
-  protected
-    procedure AddArguments; override;
-  end;
-
-var
-  Main: TMain;
 begin
-  Main := TMain.Create;
+  GUIApplication := TGUIApplication.Create;
   try
     Application.CreateForm(TfMain, fMain);
-    Main.Run;
+    GUIApplication.Run;
   finally
-    Main.Free;
+    GUIApplication.Free;
   end;
 end.
 
