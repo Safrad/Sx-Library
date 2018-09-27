@@ -16,7 +16,7 @@ const
 	InterpolationMode = InterpolationModeHighQuality; // = InterpolationModeHighQualityBicubic;
 	PixelOffsetMode = PixelOffsetModeHighQuality;
 	{$endif}
-	IconExt = '.png'; // Prefered graphic format
+	IconExt = '.png'; // Preferred graphic format
 	PictureTypeCount = 10;
 	AllPictureExt: array[0..PictureTypeCount - 1] of string = (
 		'bmp', // Uncompresssed, doesn't support transparency
