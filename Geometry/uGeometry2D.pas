@@ -33,6 +33,8 @@ type
   TRect2D = record
     F: TPoint2D;
     T: TPoint2D;
+    procedure Inflate(AX, AY: TGeometryFloat2D);
+    function CenterPoint: TPoint2D;
   end;
 
 	TRectVertex = (rvLT, rvRT, rvRB, rvLB); // LeftTop, RightTop, RightBottom, LeftBottom
@@ -104,7 +106,8 @@ function Rect2DHeight(const ARect: TRect2D): TGeometryFloat2D;
 implementation
 
 uses
-	Math;
+	Math,
+  uMath;
 
 function CreatePoint2D(const X, Y: TGeometryFloat2D): TPoint2D;
 begin
@@ -417,6 +420,22 @@ end;
 function Rect2DHeight(const ARect: TRect2D): TGeometryFloat2D;
 begin
   Result := ARect.T.Y - ARect.F.Y;
+end;
+
+{ TRect2D }
+
+function TRect2D.CenterPoint: TPoint2D;
+begin
+  Result.X := (F.X + T.X) / 2;
+  Result.Y := (F.Y + T.Y) / 2;
+end;
+
+procedure TRect2D.Inflate(AX, AY: TGeometryFloat2D);
+begin
+  Decrement(F.X, AX);
+  Increment(F.X, AX);
+  Decrement(F.Y, AY);
+  Increment(F.Y, AY);
 end;
 
 end.
