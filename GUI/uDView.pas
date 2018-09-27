@@ -215,6 +215,8 @@ begin
 	SetLength(FColumns, 0);
 	SetLength(FColumnOrder, 0);
 	SetLength(FSelectedRows, 0);
+  FreeAndNil(FTextFilter);
+
 	inherited;
 end;
 
