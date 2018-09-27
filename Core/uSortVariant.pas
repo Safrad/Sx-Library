@@ -58,7 +58,7 @@ begin
   			AFloat[i] := AVariant[i];
       end
       else
-  			AFloat[i] := MaxExtended;
+  			AFloat[i] := MaxExtended80;
     end;
 		SortFA(True, Reverse, AIndex, PArrayFA(AFloat), Count);
   end;
