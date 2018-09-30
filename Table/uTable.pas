@@ -148,7 +148,7 @@ begin
     for columnIndex := 0 to ColumnCount - 1 do
     begin
         cell := AColumns[columnIndex];
-        TConsole.WriteAligned(GetCellLine(cell, lineIndex, ARowHeight), ASizes[columnIndex], cell.HorizontalAlign,
+        TConsole.WriteAligned(GetCellLine(cell, lineIndex, ARowHeight), ASizes[columnIndex], cell.HorizontalAlignment,
           ccLightGray, ABackgroundColor);
         if columnIndex < ColumnCount - 1 then
           TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);

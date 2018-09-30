@@ -3,7 +3,9 @@ unit uGraph;
 interface
 
 uses
-  uTypes, uColor, Windows, Graphics, StdCtrls, Classes, SysUtils;
+  uTypes, uColor,
+  uTextAlignment,
+  Windows, Graphics, StdCtrls, Classes, SysUtils;
 
 type
   TRectArray = array of TRect;
@@ -44,10 +46,16 @@ function CutText(const Canvas: TCanvas; const Text: string; const Width: SG): st
 function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment:
   TAlignment = taLeftJustify): BG; overload;
 
+function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const AHorizontalAlignment:
+  THorizontalAlignment = haLeft): BG; overload;
+
 procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: string; const FontShadow: SG = 0); overload;
 
+function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const ATextAlignment: TTextAlignment;
+  Caption: string; const FontShadow: SG): BG; overload;
+
 function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const Alignment: TAlignment; const Layout: TTextLayout;
-  Caption: string; const WordWrap: BG; const FontShadow: SG; const MinimalFontSize: SG = 8): BG;
+  Caption: string; const WordWrap: BG; const FontShadow: SG): BG; overload;
 
 function FloPoint(const X, Y: Double): TFloPoint;
 
@@ -337,6 +345,19 @@ begin
   DrawTextW(Canvas.Handle, CharRightawardsArrow, Length(CharRightawardsArrow), R, DT_NOCLIP or DT_SINGLELINE or DT_RIGHT);
 end;
 
+function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const AHorizontalAlignment:
+  THorizontalAlignment = haLeft): BG; overload;
+var
+  Alignment: TAlignment;
+begin
+  case AHorizontalAlignment of
+  haLeft: Alignment := taLeftJustify;
+  haCenter: Alignment := taCenter;
+  else {haRight:} Alignment := taRightJustify;
+  end;
+  Result := DrawShadowText(Canvas, R, Text, FontShadow, Alignment);
+end;
+
 function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; const FontShadow: SG = 0; const Alignment:
   TAlignment = taLeftJustify): BG; overload;
 var
@@ -375,6 +396,18 @@ begin
 //	end;
   try
     TextOffset := FontShadow;
+  	if FontShadow <> 0 then
+    begin
+      Canvas.Brush.Style := bsClear;
+      Canvas.Font.Color := $808080;
+      OffsetRect(R, TextOffset, TextOffset);
+      DrawText(Canvas.Handle, PChar(CuttedText), Length(CuttedText), R, DT_NOCLIP or DT_SINGLELINE);
+      OffsetRect(R, -TextOffset, -TextOffset);
+    end;
+    Canvas.Brush.Style := B;
+    Canvas.Font.Color := C;
+    DrawText(Canvas.Handle, PChar(CuttedText), Length(CuttedText), R, DT_NOCLIP or DT_SINGLELINE);
+(* Font depth
     while True do
     begin
       if FontShadow <> 0 then
@@ -404,7 +437,7 @@ begin
       else
         Inc(TextOffset);
     end;
-
+*)
     if CutTextMode = ctTriangle then
     begin
       if TextWidth > R.Right - R.Left + 1 then
@@ -446,7 +479,7 @@ begin
 end;
 
 function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const Alignment: TAlignment; const Layout: TTextLayout;
-  Caption: string; const WordWrap: BG; const FontShadow: SG; const MinimalFontSize: SG = 8): BG;
+  Caption: string; const WordWrap: BG; const FontShadow: SG): BG;
 const
   Border = 0;
 var
@@ -532,6 +565,99 @@ begin
       R.Right := Rect.Right;
       R.Bottom := CurY + TextHeight; //Rect.Bottom;
       if DrawShadowText(Canvas, R, Lines[i], FontShadow, Alignment) then
+        Result := True;
+    end;
+    Inc(CurY, TextHeight);
+  end;
+end;
+
+function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const ATextAlignment: TTextAlignment;
+  Caption: string; const FontShadow: SG): BG;
+const
+  Border = 0;
+var
+  i, LastSpace{, k}: Integer;
+  Lines: array of string;
+  LineCount: SG;
+  CurY: Integer;
+  TextHeight: Integer;
+  MaxLines: Integer;
+  R: TRect;
+  NewSize: SG;
+begin
+  Result := False;
+  TextHeight := Max(Canvas.TextHeight('W'), 1);
+  MaxLines := (Rect.Bottom - Rect.Top) div TextHeight - 1;
+  SetLength(Lines, 1);
+  LineCount := 0;
+  i := 1;
+  LastSpace := 0;
+  while i <= Length(Caption) do
+  begin
+    if Caption[i] = CharSpace then
+    begin
+      LastSpace := i;
+    end;
+
+    if CharInSet(Caption[i], [CharCR, CharLF]) or ((LineCount < MaxLines) and (i > 1) and (ATextAlignment.WordWrap and (Canvas.TextWidth
+      (RemoveSingleAmp(Copy(Caption, 1, i))) > Rect.Right - Rect.Left + 1))) then
+    begin
+      if CharInSet(Caption[i], [CharCR, CharLF]) then
+      begin
+        if (i <= Length(Caption)) and (Caption[i] = CharCR) and (Caption[i + 1] = CharLF) then
+          NewSize := 2
+        else
+          NewSize := 1;
+        Lines[LineCount] := Copy(Caption, 1, i - 1);
+        Delete(Caption, NewSize, i);
+      end
+      else if LastSpace = 0 then
+      begin
+        Lines[LineCount] := Copy(Caption, 1, i - 1);
+        Delete(Caption, 1, i - 1);
+      end
+      else
+      begin
+        Lines[LineCount] := Copy(Caption, 1, LastSpace - 1);
+        Delete(Caption, 1, LastSpace);
+      end;
+      LastSpace := 0;
+      NewSize := LineCount + 2;
+      if AllocByExp(Length(Lines), NewSize) then
+        SetLength(Lines, NewSize);
+      Inc(LineCount);
+      i := 0;
+    end;
+    Inc(i);
+    if (i = Length(Caption) + 1) then
+    begin
+      NewSize := LineCount + 2;
+      if AllocByExp(Length(Lines), NewSize) then
+        SetLength(Lines, NewSize);
+      Lines[LineCount] := Caption;
+      Inc(LineCount);
+      Break;
+    end;
+  end;
+
+  case ATextAlignment.VerticalAlignment of
+    vaTop:
+      CurY := Rect.Top;
+    vaBottom:
+      CurY := Rect.Bottom + 1 - TextHeight * LineCount;
+  else {vaCenter}
+    CurY := Rect.Top + (Rect.Bottom - Rect.Top + 1 - TextHeight * LineCount) div 2;
+  end;
+
+  for i := 0 to LineCount - 1 do
+  begin
+    if Lines[i] <> '' then
+    begin
+      R.Left := Rect.Left;
+      R.Top := CurY;
+      R.Right := Rect.Right;
+      R.Bottom := CurY + TextHeight; //Rect.Bottom;
+      if DrawShadowText(Canvas, R, Lines[i], FontShadow, ATextAlignment.HorizontalAlignment) then
         Result := True;
     end;
     Inc(CurY, TextHeight);

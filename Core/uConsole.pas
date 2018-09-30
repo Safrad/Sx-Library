@@ -3,12 +3,10 @@ unit uConsole;
 interface
 
 uses
+  uTextAlignment,
   Windows, SysUtils;
 
 type
-  TAlignment = (taLeftJustify, taRightJustify, taCenter);
-  TTextLayout = (tlTop, tlCenter, tlBottom);
-
   TConsoleColor = (ccBlack, ccBlue, ccGreen, ccAqua, ccRed, ccPurple, ccYellow, ccLightGray, ccGray, ccLightBlue,
     ccLightGreen, ccLightAqua, ccLightRed, ccLightPurple, ccLightYellow, ccWhite);
 
@@ -22,7 +20,7 @@ type
     class procedure WriteLine(const AText: string; const AForegroundColor: TConsoleColor; const ABackgroundColor:
       TConsoleColor = ccBlack); overload;
 
-    class procedure WriteAligned(const AText: string; const AFixedWidth: Integer; const AHorizontalAlign: TAlignment;
+    class procedure WriteAligned(const AText: string; const AFixedWidth: Integer; const AHorizontalAlignment: THorizontalAlignment;
       AForegroundColor: TConsoleColor; ABackgroundColor: TConsoleColor);
 
     class function GetSize: TCoord;
@@ -137,7 +135,7 @@ begin
 end;
 
 class procedure TConsole.WriteAligned(const AText: string;
-  const AFixedWidth: Integer; const AHorizontalAlign: TAlignment;
+  const AFixedWidth: Integer; const AHorizontalAlignment: THorizontalAlignment;
   AForegroundColor, ABackgroundColor: TConsoleColor);
 const
   HorizontalEllipsis = CharRightPointingDoubleAngleQuotationMark;
@@ -149,12 +147,12 @@ begin
   end
   else
   begin
-    case AHorizontalAlign of
-    taLeftJustify:
+    case AHorizontalAlignment of
+    haLeft:
       Write(PadRight(AText, AFixedWidth), AForegroundColor, ABackgroundColor);
-    taRightJustify:
+    haRight:
       Write(PadLeft(AText, AFixedWidth), AForegroundColor, ABackgroundColor);
-    taCenter:
+    haCenter:
       Write(PadCenter(AText, AFixedWidth), AForegroundColor, ABackgroundColor);
     end;
   end;

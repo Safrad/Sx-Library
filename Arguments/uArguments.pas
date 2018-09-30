@@ -43,12 +43,12 @@ uses
   Windows,
   SysUtils,
   uSwitchArgument,
+  uTextAlignment,
   uTable,
   uFiles,
   uMsg,
   uChar,
-  uStrings,
-  uConsole;
+  uStrings;
 
 { TArguments }
 
@@ -149,7 +149,7 @@ begin
   while Index < Length(AArguments) do
   begin
     Name := AArguments[Index];
-    if (FirstChar(Name) in ['-', '/']) then
+    if CharInSet(FirstChar(Name), ['-', '/']) then
     begin
       Delete(Name, 1, 1);
     end;
@@ -179,7 +179,6 @@ const
 	LineWidth = 16;
 var
   i: SG;
-  s: string;
 begin
 	Result := 'Parameter' + CharSpace + 'Description' + LineSep;
 	Result := Result + StringOfChar(CharEmDash, LineWidth) + LineSep;
@@ -199,11 +198,11 @@ begin
   try
     Row := TRow.Create(3);
     Row.Columns[0].Text := 'Parameter';
-    Row.Columns[0].HorizontalAlign := taCenter;
+    Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Description';
-    Row.Columns[1].HorizontalAlign := taCenter;
+    Row.Columns[1].HorizontalAlignment := haCenter;
     Row.Columns[2].Text := 'Required';
-    Row.Columns[2].HorizontalAlign := taCenter;
+    Row.Columns[2].HorizontalAlignment := haCenter;
     Table.Data[0] := Row;
 
     for i := 0 to FArguments.Count - 1 do

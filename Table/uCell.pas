@@ -4,13 +4,13 @@ interface
 
 uses
   uTypes,
-  uConsole;
+  uTextAlignment;
 
 type
   TCell = packed record
     Text: string;
-    HorizontalAlign: TAlignment;
-    VerticalAlign: TTextLayout;
+    HorizontalAlignment: THorizontalAlignment;
+    VerticalAlignment: TVerticalAlignment;
   end;
 
 procedure DefaultCell(var ACell: TCell);
@@ -28,7 +28,7 @@ uses
 
 procedure DefaultCell(var ACell: TCell);
 begin
-  ACell.VerticalAlign := tlCenter;
+  ACell.VerticalAlignment := vaCenter;
 end;
 
 function GetCellWidth(const AText: string): SG;
@@ -64,12 +64,12 @@ var
 begin
   separate := SplitStringEx(ACell.Text, LineSep);
   index := 0;
-  case ACell.VerticalAlign of
-    tlTop:
+  case ACell.VerticalAlignment of
+    vaTop:
       index := ALineIndex;
-    tlCenter:
+    vaCenter:
       index := ALineIndex - (ALineCount - Length(separate)) div 2;
-    tlBottom:
+    vaBottom:
       index := ALineIndex - (ALineCount - Length(separate));
   end;
   if ((index >= 0) and (index < Length(separate))) then

@@ -34,7 +34,7 @@ implementation
 uses
   Windows,
   SysUtils,
-  Classes,
+  uTextAlignment,
   uTable,
   uChar,
   uStrings,
@@ -107,9 +107,9 @@ begin
   try
     Row := TRow.Create(2);
     Row.Columns[0].Text := 'Parameter';
-    Row.Columns[0].HorizontalAlign := taCenter;
+    Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Description';
-    Row.Columns[1].HorizontalAlign := taCenter;
+    Row.Columns[1].VerticalAlignment := vaCenter;
     Table.Data[0] := Row;
 
     for i := 0 to FCommands.Count - 1 do
