@@ -44,7 +44,8 @@ uses
   uPermutationList in '..\Core\uPermutationList.pas',
   uStopwatchTest in '..\Core\uStopwatchTest.pas',
   uWavePlayerTest in '..\Sound\uWavePlayerTest.pas',
-  uTicksTest in '..\Core\uTicksTest.pas';
+  uTicksTest in '..\Core\uTicksTest.pas',
+  uRandomGeneratorTest in '..\RandomGenerator\uRandomGeneratorTest.pas';
 
 {$R *.RES}
 

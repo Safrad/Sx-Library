@@ -128,10 +128,6 @@ procedure Exchange(var A, B: TObject); overload;
 
 function Arg(X, Y: Extended): Extended; overload;
 
-function Random2(Range: SG): SG;
-function RandomU4: U4;
-//function RandomM: U4;
-
 procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
 procedure CheckBool(var Bool: LongBool); overload;
@@ -947,53 +943,6 @@ begin
 	else if Cur > Max then
 		Result := Min;
 end;
-
-function Random2(Range: SG): SG;
-begin
-	Result := Random(2 * Range + 1) - Range;
-end;
-
-function RandomU4: U4;
-begin
-	TU4(Result).W0 := U4(Random(65536));
-	TU4(Result).W1 := U4(Random(65536));
-end;
-
-(*
-var
-	InitJ: SG = 24 - 1;
-	InitK: SG = 55 - 1;
-	InitX: array[0..54] of U4 = (
-		1410651636, 3012776752, 3497475623, 2892145026, 1571949714,
-		3253082284, 3489895018, 387949491, 2597396737, 1981903553,
-		3160251843, 129444464, 1851443344, 4156445905, 224604922,
-		1455067070, 3953493484, 1460937157, 2528362617, 317430674,
-		3229354360, 117491133, 832845075, 1961600170, 1321557429,
-		747750121, 545747446, 810476036, 503334515, 4088144633,
-		2824216555, 3738252341, 3493754131, 3672533954, 29494241,
-		1180928407, 4213624418, 33062851, 3221315737, 1145213552,
-		2957984897, 4078668503, 2262661702, 65478801, 2527208841,
-		1960622036, 315685891, 1196037864, 804614524, 1421733266,
-		2017105031, 3882325900, 810735053, 384606609, 2393861397 );
-
-//	random numbers from Mathematica 2.0.
-//	SeedRandom = 1;
-//	Table[Random[SG, {0, 2^32 - 1}]
-function RandomM: U4;
-begin
-//	{$Q-} // TODO :
-	Result := (InitX[InitJ] + InitX[InitK]);
-	InitX[InitJ] := Result;
-	if InitJ = 0 then
-		InitJ := High(InitX)
-	else
-		Dec(InitJ);
-	if InitK = 0 then
-		InitK := High(InitX)
-	else
-		Dec(InitK);
-end;
-*)
 
 procedure Exchange(var A, B: B1); register;
 {$ifdef CPUX64}
