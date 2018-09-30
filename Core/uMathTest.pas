@@ -25,6 +25,8 @@ type
     procedure DelayTest;
     procedure PreciseSleepTest;
     procedure TimeDifferenceTest;
+    procedure MultiplyTest;
+    procedure MultiplyAndReturnMostSignificantHalfTest;
   end;
 
 implementation
@@ -77,6 +79,55 @@ begin
   CheckEquals(69, FastSqrt(4761));
   CheckEquals(46340, FastSqrt(MaxInt));
   CheckEquals(65535, FastSqrt(High(U4)));
+end;
+
+procedure TMathTest.MultiplyAndReturnMostSignificantHalfTest;
+var
+  ValueA, ValueB: U8;
+  Result: U8;
+begin
+  ValueA := 50000000000;
+  ValueB := 60000000000;
+  Result := MultiplyAndReturnMostSignificantHalf(ValueA, ValueB);
+  CheckEquals(162, Result);
+
+  ValueA := $BA43B7400;
+  ValueB := $DF8475800;
+  Result := MultiplyAndReturnMostSignificantHalf(ValueA, ValueB);
+  CheckEquals(162, Result);
+
+  ValueA := 5000000000;
+  ValueB := 6000000000;
+  Result := MultiplyAndReturnMostSignificantHalf(ValueA, ValueB);
+  CheckEquals(1, Result);
+
+  ValueA := $200000000;
+  ValueB := $300000000;
+  Result := MultiplyAndReturnMostSignificantHalf(ValueA, ValueB);
+  CheckEquals($6, Result);
+
+  ValueA := $2000000000;
+  ValueB := $3000000000;
+  Result := MultiplyAndReturnMostSignificantHalf(ValueA, ValueB);
+  CheckEquals($600, Result);
+end;
+
+procedure TMathTest.MultiplyTest;
+var
+  ValueA, ValueB: U8;
+  HighResult, LowResult: U8;
+begin
+  ValueA := 97448;
+  ValueB := 41548;
+  Multiply(ValueA, ValueB, HighResult, LowResult);
+  CheckEquals(ValueA * ValueB, LowResult);
+  CheckEquals(0, HighResult);
+
+  ValueA := $200000000;
+  ValueB := $300000000;
+  Multiply(ValueA, ValueB, HighResult, LowResult);
+  CheckEquals(0, LowResult);
+  CheckEquals($6, HighResult);
 end;
 
 procedure TMathTest.RoundNTest;

@@ -42,6 +42,12 @@ function SgnMul(const Signum, Num: SG): SG; overload;
 function SgnMul(const Signum, Num: FG): FG; overload;
 function AbsMin(const A, B: SG): SG;
 
+// Result := Value1 * Value2;
+procedure Multiply(const ValueA, ValueB: U8; out HighResult, LowResult: U8); overload;
+
+// Result := (Value1 * Value2) shr 64;
+function MultiplyAndReturnMostSignificantHalf(const ValueA, ValueB: U8): U8;
+
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1);
 procedure DivModU4(const Dividend: U4; const Divisor: U2;
@@ -352,6 +358,54 @@ begin
 	else
 		Result := B;
 end;}
+
+// Result := Value1 * Value2;
+{$ifdef CPUx64}
+procedure Multiply(const ValueA, ValueB: U8; out HighResult, LowResult: U8); assembler; register;
+asm
+  mov rax, ValueA {rcx}
+  mul ValueB {rdx} // Unsigned multiply (RDX:RAX = RAX * operand).
+  mov qword ptr [HighResult], rdx
+  mov qword ptr [LowResult], rax
+{$else}
+procedure Multiply(const ValueA, ValueB: U8; out HighResult, LowResult: U8);
+var
+  Total, R0, R1, R2, R3: TU8;
+begin
+  R0.A := U8(TU8(ValueA).D0) * U8(TU8(ValueB).D0);
+  R1.A := U8(TU8(ValueA).D1) * U8(TU8(ValueB).D0);
+  R2.A := U8(TU8(ValueA).D0) * U8(TU8(ValueB).D1);
+  Total.A := U8(R0.D1) + U8(R1.D0) + U8(R2.D0);
+  TU8(LowResult).D0 := R0.D0;
+  TU8(LowResult).D1 := Total.D0;
+  R3.A := U8(TU8(ValueA).D1) * U8(TU8(ValueB).D1);
+  HighResult := U8(Total.D1) + U8(R1.D1) + U8(R2.D1) + U8(R3.D0);
+  Inc(TU8(HighResult).D1, R3.D1);
+{$endif}
+end;
+
+// Result := (Value1 * Value2) shr 64;
+{$ifdef CPUx64}
+function MultiplyAndReturnMostSignificantHalf(const ValueA, ValueB: U8): U8; assembler; register;
+asm
+  mov rax, ValueA {rcx}
+  mul ValueB {rdx} // Unsigned multiply (RDX:RAX = RAX * operand).
+  mov Result, rdx {rax}
+{$else}
+function MultiplyAndReturnMostSignificantHalf(const ValueA, ValueB: U8): U8;
+var
+  Total, R0, R1, R2, R3: TU8;
+begin
+  R0.A := U8(TU8(ValueA).D0) * U8(TU8(ValueB).D0);
+  R1.A := U8(TU8(ValueA).D1) * U8(TU8(ValueB).D0);
+  R2.A := U8(TU8(ValueA).D0) * U8(TU8(ValueB).D1);
+  Total.A := U8(R0.D1) + U8(R1.D0) + U8(R2.D0);
+  // Least Significant Half is in R.D0:R0.D0
+  R3.A := U8(TU8(ValueA).D1) * U8(TU8(ValueB).D1);
+  Result := U8(Total.D1) + U8(R1.D1) + U8(R2.D1) + U8(R3.D0);
+  Inc(TU8(Result).D1, R3.D1);
+{$endif}
+end;
 
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1); register;
