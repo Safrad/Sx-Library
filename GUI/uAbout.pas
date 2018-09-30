@@ -6,6 +6,7 @@ uses
 	uDForm, uTypes, uDBitmap,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
+  uSxRandomGenerator,
 	uDWinControl;
 
 type
@@ -47,6 +48,7 @@ type
 		ViewInfo: SG;
 		UsedValues: array of SG;
 		UsedValueCount: SG;
+    FSxRandomGenerator: TSxRandomGenerator;
 		procedure UpdateView;
 		procedure RWOptions(const Save: BG);
 		procedure NewFlash;
@@ -177,6 +179,7 @@ var
 	Id: SG;
 begin
 	ButtonBuildParams.Visible := IsDebug;
+  FSxRandomGenerator := TSxRandomGenerator.Create;
 
 	Background := baGradient;
 
@@ -196,6 +199,7 @@ end;
 
 procedure TfAbout.FormDestroy(Sender: TObject);
 begin
+  FSxRandomGenerator.Free;
 	MainIni.UnregisterRW(RWOptions);
 	if Assigned(BmpAbout) then
 	begin
@@ -319,7 +323,7 @@ begin
 		Flash := Flashs.Get(i);
 		Dec(Flash.Power, 10);
 		Inc(Flash.Y, 2);
-		Inc(Flash.X, Random2(2));
+		Inc(Flash.X, FSxRandomGenerator.RandomZeroDistance(2));
 		if (Flash.Y > SG(BitmapAbout.Height)) or (Flash.Power <= 0) then
 		begin
 			Flashs.Delete(i);
