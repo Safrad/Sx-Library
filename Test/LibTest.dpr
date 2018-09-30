@@ -45,6 +45,7 @@ uses
   uStopwatchTest in '..\Core\uStopwatchTest.pas',
   uWavePlayerTest in '..\Sound\uWavePlayerTest.pas',
   uTicksTest in '..\Core\uTicksTest.pas',
+  uColorSequenceTest in '..\GUI\uColorSequenceTest.pas',
   uRandomGeneratorTest in '..\RandomGenerator\uRandomGeneratorTest.pas';
 
 {$R *.RES}

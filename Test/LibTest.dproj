@@ -157,6 +157,7 @@
         <DCCReference Include="..\Core\uStopwatchTest.pas"/>
         <DCCReference Include="..\Sound\uWavePlayerTest.pas"/>
         <DCCReference Include="..\Core\uTicksTest.pas"/>
+        <DCCReference Include="..\GUI\uColorSequenceTest.pas"/>
         <DCCReference Include="..\RandomGenerator\uRandomGeneratorTest.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
