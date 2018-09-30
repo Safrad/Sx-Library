@@ -56,6 +56,8 @@ procedure UnsignedDivMod10(const Dividend: U4; out Result: U4; out Reminder: U4)
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: Extended): Extended;
 
+function GetAbsoluteError(const A, B: FA): FA;
+function GetRelativeError(const A, B: FA): FA;
 function EqualRelative(const A, B, MaxRelativeError: FA): BG;
 function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG;
 function Factorial(const AValue: SG): SG;
@@ -483,15 +485,24 @@ begin
 	Result := x - {Trunc}Floor(x / y) * y;
 end;
 
+function GetAbsoluteError(const A, B: FA): FA;
+begin
+  Result := Abs(A - B);
+end;
+
+function GetRelativeError(const A, B: FA): FA;
+begin
+  if Abs(B) > Abs(A) then
+    Result := Abs((A - B) / B)
+  else
+    Result := Abs((A - B) / A);
+end;
+
 function EqualRelative(const A, B, MaxRelativeError: FA): BG;
 var
   RelativeError: FA;
 begin
-  if Abs(B) > Abs(A) then
-    RelativeError := Abs((A - B) / B)
-  else
-    RelativeError := Abs((A - B) / A);
-
+  RelativeError := GetRelativeError(A, B);
   Result := RelativeError <= MaxRelativeError;
 end;
 
@@ -499,7 +510,7 @@ function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG;
 var
   AbsoluteError: FA;
 begin
-  AbsoluteError := Abs(A - B);
+  AbsoluteError := GetAbsoluteError(A, B);
   Result := AbsoluteError <= MaxAbsoluteError;
 end;
 
