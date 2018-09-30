@@ -28,4 +28,5 @@ $(sx-library)\Commands
 $(sx-library)\Benchmark
 $(sx-library)\Sound
 $(sx-library)\Input
+$(sx-library)\VersionSystem
 $(sx-library)\GUI
