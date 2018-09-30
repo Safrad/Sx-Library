@@ -6,7 +6,7 @@ uses
   uDefaultArguments,
   uCustomArgument,
   uByteArgument,
-  uNumericArgument,
+  uNumericalIntervalArgument,
   uDirectoryArgument,
   uFileNameArgument,
   uSwitchArgument,
@@ -19,7 +19,7 @@ type
     FByteArgument: TByteArgument;
     FDir: TDirectoryArgument;
     FSource: TFileNameArgument;
-    FNumericArgument: TNumericArgument;
+    FNumericArgument: TNumericalIntervalArgument;
     FNA: TNumericArrayArgument;
     FSA: TStringArrayArgument;
     FD2: TSwitchArgument;
@@ -28,7 +28,7 @@ type
   public
     constructor Create;
 
-    property NumericArgument: TNumericArgument read FNumericArgument;
+    property NumericArgument: TNumericalIntervalArgument read FNumericArgument;
     property ByteArgument: TByteArgument read FByteArgument;
     property D1: TSwitchArgument read FD1;
     property D2: TSwitchArgument read FD2;
@@ -76,10 +76,10 @@ begin
   FDir.MustExists := False;
   Add(FDir);
 
-  FNumericArgument := TNumericArgument.Create;
+  FNumericArgument := TNumericalIntervalArgument.Create;
   FNumericArgument.Shortcut := 'number';
-  FNumericArgument.MinimalValue := 0;
-  FNumericArgument.MaximalValue := 10;
+  FNumericArgument.NumericalInterval.MinimalValue := 0;
+  FNumericArgument.NumericalInterval.MaximalValue := 10;
   FNumericArgument.RequireCheck := rcOptional;
   FNumericArgument.Require(FDir);
   Add(FNumericArgument);

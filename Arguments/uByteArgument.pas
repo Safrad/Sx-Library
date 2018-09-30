@@ -3,10 +3,10 @@ unit uByteArgument;
 interface
 
 uses
-	uNumericArgument;
+	uNumericalIntervalArgument;
 
 type
-  TByteArgument = class(TNumericArgument)
+  TByteArgument = class(TNumericalIntervalArgument)
   public
     constructor Create;
   end;
@@ -19,8 +19,8 @@ constructor TByteArgument.Create;
 begin
   inherited;
 
-  MinimalValue := High(Byte);
-  MaximalValue := High(Byte);
+  NumericalInterval.MinimalValue := Low(Byte);
+  NumericalInterval.MaximalValue := High(Byte);
 end;
 
 end.
