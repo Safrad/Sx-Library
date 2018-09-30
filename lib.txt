@@ -18,6 +18,7 @@ $(sx-library)\ExtLib\NLDJoystick
 $(sx-library)\ExtLib\OpenGL
 $(sx-library)\ExtLib\SafeMM
 $(sx-library)\Core
+$(sx-library)\RandomGenerator
 $(sx-library)\Table
 $(sx-library)\Formatter
 $(sx-library)\Parser
