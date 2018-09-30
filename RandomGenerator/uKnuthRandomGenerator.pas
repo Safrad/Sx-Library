@@ -1,4 +1,6 @@
-// A 32 bit random number generator. An implementation in C of the algorithm given by Knuth, the art of computer programming, vol. 2
+// A 32 bit random number generator.
+// An implementation in C of the algorithm given by Knuth, the art of computer programming, vol. 2, pp. 26-27.
+// We use e=32, so we have to evaluate y(n) = y(n-24) + y(n-55) mod 2^32, which is implicitly done by unsigned arithmetic.
 
 unit uKnuthRandomGenerator;
 
@@ -25,6 +27,9 @@ type
 
 implementation
 
+//	random numbers from Mathematica 2.0.
+//	SeedRandom = 1;
+//	Table[Random[SG, {0, 2^32 - 1}]
 var
   cInitX: array[0..54] of U4 = (
     1410651636, 3012776752, 3497475623, 2892145026, 1571949714,
@@ -38,11 +43,9 @@ var
     2957984897, 4078668503, 2262661702, 65478801, 2527208841,
     1960622036, 315685891, 1196037864, 804614524, 1421733266,
     2017105031, 3882325900, 810735053, 384606609, 2393861397);
+
 { TKnutRandomGenenrator }
 
-//	random numbers from Mathematica 2.0.
-//	SeedRandom = 1;
-//	Table[Random[SG, {0, 2^32 - 1}]
 constructor TKnutRandomGenerator.Create;
 begin
   inherited;
