@@ -27,8 +27,12 @@ type
 
     function FontSize(const ASize: FG): SG;
 
-    function Transform(const APoint: TPoint2D): TPoint2D;
-    function TransformToInt(const APoint: TPoint2D): TPoint;
+    function Transform(const APoint: TPoint2D): TPoint2D; overload;
+    function Transform(const ARect2D: TRect2D): TRect2D; overload;
+
+    function TransformToInt(const APoint: TPoint2D): TPoint; overload;
+    function TransformToInt(const ARect2D: TRect2D): TRect; overload;
+
     function InverseTransform(const APoint: TPoint2D): TPoint2D;
   end;
 
@@ -93,6 +97,18 @@ end;
 function TTransformation.FontSize(const ASize: FG): SG;
 begin
   Result := Trunc(ASize * Zoom);
+end;
+
+function TTransformation.Transform(const ARect2D: TRect2D): TRect2D;
+begin
+  Result.F := Transform(ARect2D.F);
+  Result.T := Transform(ARect2D.T);
+end;
+
+function TTransformation.TransformToInt(const ARect2D: TRect2D): TRect;
+begin
+  Result.TopLeft := TransformToInt(ARect2D.F);
+  Result.BottomRight := TransformToInt(ARect2D.T);
 end;
 
 end.
