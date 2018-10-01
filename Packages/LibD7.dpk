@@ -58,6 +58,6 @@ contains
   uSxComboBox in '..\GUI\uSxComboBox.pas',
   uSxColor in '..\GUI\uSxColor.pas',
   uRegisterSxLibrary in 'uRegisterSxLibrary.pas',
-  AdjustObjectInspectorFont in '..\IDE\AdjustObjectInspectorFont.pas';
+  AdjustObjectInspectorFont in '..\Configure IDE\AdjustObjectInspectorFont.pas';
 
 end.
