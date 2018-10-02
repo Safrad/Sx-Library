@@ -10,6 +10,8 @@ type
 	TLog = class(TLogger)
 	private
 		FData: string;
+    FCreatedTicks: U8;
+    FCreatedDataTime: TDateTime;
 		FFileName: TFileName;
 		FFile: TFile;
 		FDirectWrite: BG;
@@ -63,6 +65,7 @@ implementation
 
 uses
 	uFiles, uCharset,
+  uMainTimer,
 	uOutputFormat, uEscape, uStrings, uProjectInfo,
 	Windows, TypInfo;
 
@@ -137,6 +140,9 @@ var
 //	DeleteOptions: TDeleteOptions;
 begin
 	inherited Create;
+
+  FCreatedDataTime := Now;
+  FCreatedTicks := MainTimer.Value.Ticks;
 	FFileName := GetLogWritableFileName;
 	FDirectWrite := True;
   if IsDebug then
@@ -192,7 +198,7 @@ end;
 procedure TLog.Add(const Line: string; const MessageLevel: TMessageLevel);
 begin
 	if MessageLevel >= FLoggingLevel then
-  	Add(Now, Line, MessageLevel);
+  	Add(FCreatedDataTime + MainTimer.IntervalFrom(FCreatedTicks) / (MainTimer.Frequency * MSecsPerDay / 1000), Line, MessageLevel);
 end;
 
 procedure TLog.Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel);
@@ -200,7 +206,7 @@ begin
 	Assert(MessageLevel <> mlNone);
 	if MessageLevel >= FLoggingLevel then
 	begin
-		WriteLine(DateTimeToS(LogTime, 3, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line, True) + FileSep);
+		WriteLine(DateTimeToS(LogTime, MainTimer.PrecisionDigits, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line, True) + FileSep);
 //		Flush;
 	end;
 end;
