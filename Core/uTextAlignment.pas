@@ -10,37 +10,14 @@ type
 
   TVerticalAlignment = (vaTop, vaCenter, vaBottom);
 
-  TTextAlignment = class
-  private
-    FHorizontalAlignment: THorizontalAlignment;
-    FVerticalAlignment: TVerticalAlignment;
-    FWordWrap: BG;
-    procedure SetHorizontalAlignment(const Value: THorizontalAlignment);
-    procedure SetVerticalAlignment(const Value: TVerticalAlignment);
-    procedure SetWordWrap(const Value: BG);
-  public
-    property HorizontalAlignment: THorizontalAlignment read FHorizontalAlignment write SetHorizontalAlignment;
-    property VerticalAlignment: TVerticalAlignment read FVerticalAlignment write SetVerticalAlignment;
-    property WordWrap: BG read FWordWrap write SetWordWrap;
+  TTextAlignment = record
+    Horizontal: THorizontalAlignment;
+    Vertical: TVerticalAlignment;
   end;
 
+var
+  CenterAlignment: TTextAlignment = (Horizontal: haCenter; Vertical: vaCenter);
+
 implementation
-
-{ TTextAlignment }
-
-procedure TTextAlignment.SetHorizontalAlignment(const Value: THorizontalAlignment);
-begin
-  FHorizontalAlignment := Value;
-end;
-
-procedure TTextAlignment.SetVerticalAlignment(const Value: TVerticalAlignment);
-begin
-  FVerticalAlignment := Value;
-end;
-
-procedure TTextAlignment.SetWordWrap(const Value: BG);
-begin
-  FWordWrap := Value;
-end;
 
 end.

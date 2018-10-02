@@ -4,82 +4,51 @@ interface
 
 uses
   uTypes,
+  uTextLines,
   uTextAlignment;
 
 type
-  TCell = packed record
-    Text: string;
-    HorizontalAlignment: THorizontalAlignment;
-    VerticalAlignment: TVerticalAlignment;
+  TCell = class(TTextLines)
+  private
+    FTextAlignment: TTextAlignment;
+    procedure SetTextAlignment(const Value: TTextAlignment);
+    procedure SetHorizontalAlignment(const Value: THorizontalAlignment);
+    procedure SetVerticalAlignment(const Value: TVerticalAlignment);
+    function GetHorizontalAlignment: THorizontalAlignment;
+    function GetVerticalAlignment: TVerticalAlignment;
+  public
+    property TextAlignment: TTextAlignment read FTextAlignment write SetTextAlignment;
+    property HorizontalAlignment: THorizontalAlignment read GetHorizontalAlignment write SetHorizontalAlignment;
+    property VerticalAlignment: TVerticalAlignment read GetVerticalAlignment write SetVerticalAlignment;
   end;
-
-procedure DefaultCell(var ACell: TCell);
-
-function GetCellWidth(const AText: string): SG;
-function GetCellHeight(const AText: string): SG;
-
-function GetCellLine(const ACell: TCell; const ALineIndex: SG; const ALineCount: SG): string;
 
 implementation
 
-uses
-  uChar,
-  uStrings, uFiles;
+{ TCell }
 
-procedure DefaultCell(var ACell: TCell);
+function TCell.GetHorizontalAlignment: THorizontalAlignment;
 begin
-  ACell.VerticalAlignment := vaCenter;
+  Result := TextAlignment.Horizontal;
 end;
 
-function GetCellWidth(const AText: string): SG;
-var
-  separate: TArrayOfString;
-  Width: SG;
-  i: SG;
+function TCell.GetVerticalAlignment: TVerticalAlignment;
 begin
-  Result := 0;
-  separate := SplitStringEx(AText, LineSep);
-  for i := 0 to Length(separate) - 1 do
-  begin
-    Width := Length(separate[i]);
-    if Width > Result then
-      Result := Width;
-  end;
+  Result := TextAlignment.Vertical;
 end;
 
-function GetCellHeight(const AText: string): SG;
+procedure TCell.SetHorizontalAlignment(const Value: THorizontalAlignment);
 begin
-  if Length(AText) = 0 then
-  begin
-    Result := 0;
-  end
-  else
-    Result := CharCount(AText, LineSep) + 1;
+  FTextAlignment.Horizontal := Value;
 end;
 
-function GetCellLine(const ACell: TCell; const ALineIndex: SG; const ALineCount: SG): string;
-var
-  separate: TArrayOfString;
-  index: SG;
+procedure TCell.SetTextAlignment(const Value: TTextAlignment);
 begin
-  separate := SplitStringEx(ACell.Text, LineSep);
-  index := 0;
-  case ACell.VerticalAlignment of
-    vaTop:
-      index := ALineIndex;
-    vaCenter:
-      index := ALineIndex - (ALineCount - Length(separate)) div 2;
-    vaBottom:
-      index := ALineIndex - (ALineCount - Length(separate));
-  end;
-  if ((index >= 0) and (index < Length(separate))) then
-  begin
-    Result := separate[index];
-    while LastChar(Result) = CharCR do
-      SetLength(Result, Length(Result) - 1);
-  end
-  else
-    Result := '';
+  FTextAlignment := Value;
+end;
+
+procedure TCell.SetVerticalAlignment(const Value: TVerticalAlignment);
+begin
+  FTextAlignment.Vertical := Value;
 end;
 
 end.

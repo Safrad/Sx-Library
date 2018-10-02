@@ -51,8 +51,8 @@ function DrawShadowText(const Canvas: TCanvas; R: TRect; const Text: string; con
 
 procedure DrawShadowText(const Canvas: TCanvas; X, Y: SG; const Text: string; const FontShadow: SG = 0); overload;
 
-function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const ATextAlignment: TTextAlignment;
-  Caption: string; const FontShadow: SG): BG; overload;
+function DrawCuttedText(const ACanvas: TCanvas; const ARect: TRect; const ATextAlignment: TTextAlignment;
+  ACaption: string; const AWordWrap: BG; const AFontShadow: SG): BG; overload;
 
 function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const Alignment: TAlignment; const Layout: TTextLayout;
   Caption: string; const WordWrap: BG; const FontShadow: SG): BG; overload;
@@ -480,99 +480,26 @@ end;
 
 function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const Alignment: TAlignment; const Layout: TTextLayout;
   Caption: string; const WordWrap: BG; const FontShadow: SG): BG;
-const
-  Border = 0;
 var
-  i, LastSpace{, k}: Integer;
-  Lines: array of string;
-  LineCount: SG;
-  CurY: Integer;
-  TextHeight: Integer;
-  MaxLines: Integer;
-  R: TRect;
-  NewSize: SG;
+  TextAlignment: TTextAlignment;
 begin
-  Result := False;
-  TextHeight := Max(Canvas.TextHeight('W'), 1);
-  MaxLines := (Rect.Bottom - Rect.Top) div TextHeight - 1;
-  SetLength(Lines, 1);
-  LineCount := 0;
-  i := 1;
-  LastSpace := 0;
-  while i <= Length(Caption) do
-  begin
-    if Caption[i] = CharSpace then
-    begin
-      LastSpace := i;
-    end;
-
-    if CharInSet(Caption[i], [CharCR, CharLF]) or ((LineCount < MaxLines) and (i > 1) and (WordWrap and (Canvas.TextWidth
-      (RemoveSingleAmp(Copy(Caption, 1, i))) > Rect.Right - Rect.Left + 1))) then
-    begin
-      if CharInSet(Caption[i], [CharCR, CharLF]) then
-      begin
-        if (i <= Length(Caption)) and (Caption[i] = CharCR) and (Caption[i + 1] = CharLF) then
-          NewSize := 2
-        else
-          NewSize := 1;
-        Lines[LineCount] := Copy(Caption, 1, i - 1);
-        Delete(Caption, NewSize, i);
-      end
-      else if LastSpace = 0 then
-      begin
-        Lines[LineCount] := Copy(Caption, 1, i - 1);
-        Delete(Caption, 1, i - 1);
-      end
-      else
-      begin
-        Lines[LineCount] := Copy(Caption, 1, LastSpace - 1);
-        Delete(Caption, 1, LastSpace);
-      end;
-      LastSpace := 0;
-      NewSize := LineCount + 2;
-      if AllocByExp(Length(Lines), NewSize) then
-        SetLength(Lines, NewSize);
-      Inc(LineCount);
-      i := 0;
-    end;
-    Inc(i);
-    if (i = Length(Caption) + 1) then
-    begin
-      NewSize := LineCount + 2;
-      if AllocByExp(Length(Lines), NewSize) then
-        SetLength(Lines, NewSize);
-      Lines[LineCount] := Caption;
-      Inc(LineCount);
-      Break;
-    end;
+  case Alignment of
+    taLeftJustify: TextAlignment.Horizontal := haLeft;
+    taCenter: TextAlignment.Horizontal := haCenter;
+    else {taRightJustify} TextAlignment.Horizontal := haRight;
   end;
 
   case Layout of
-    tlTop:
-      CurY := Rect.Top;
-    tlBottom:
-      CurY := Rect.Bottom + 1 - TextHeight * LineCount;
-  else {tlCenter}
-    CurY := Rect.Top + (Rect.Bottom - Rect.Top + 1 - TextHeight * LineCount) div 2;
+    tlTop: TextAlignment.Vertical := vaTop;
+    tlCenter: TextAlignment.Vertical := vaCenter;
+    else {tlBottom} TextAlignment.Vertical := vaBottom;
   end;
 
-  for i := 0 to LineCount - 1 do
-  begin
-    if Lines[i] <> '' then
-    begin
-      R.Left := Rect.Left;
-      R.Top := CurY;
-      R.Right := Rect.Right;
-      R.Bottom := CurY + TextHeight; //Rect.Bottom;
-      if DrawShadowText(Canvas, R, Lines[i], FontShadow, Alignment) then
-        Result := True;
-    end;
-    Inc(CurY, TextHeight);
-  end;
+  Result := DrawCuttedText(Canvas, Rect, TextAlignment, Caption, WordWrap, FontShadow);
 end;
 
-function DrawCuttedText(const Canvas: TCanvas; const Rect: TRect; const ATextAlignment: TTextAlignment;
-  Caption: string; const FontShadow: SG): BG;
+function DrawCuttedText(const ACanvas: TCanvas; const ARect: TRect; const ATextAlignment: TTextAlignment;
+  ACaption: string; const AWordWrap: BG; const AFontShadow: SG): BG; overload;
 const
   Border = 0;
 var
@@ -586,40 +513,40 @@ var
   NewSize: SG;
 begin
   Result := False;
-  TextHeight := Max(Canvas.TextHeight('W'), 1);
-  MaxLines := (Rect.Bottom - Rect.Top) div TextHeight - 1;
+  TextHeight := Max(ACanvas.TextHeight('W'), 1);
+  MaxLines := (ARect.Bottom - ARect.Top) div TextHeight - 1;
   SetLength(Lines, 1);
   LineCount := 0;
   i := 1;
   LastSpace := 0;
-  while i <= Length(Caption) do
+  while i <= Length(ACaption) do
   begin
-    if Caption[i] = CharSpace then
+    if ACaption[i] = CharSpace then
     begin
       LastSpace := i;
     end;
 
-    if CharInSet(Caption[i], [CharCR, CharLF]) or ((LineCount < MaxLines) and (i > 1) and (ATextAlignment.WordWrap and (Canvas.TextWidth
-      (RemoveSingleAmp(Copy(Caption, 1, i))) > Rect.Right - Rect.Left + 1))) then
+    if CharInSet(ACaption[i], [CharCR, CharLF]) or ((LineCount < MaxLines) and (i > 1) and (AWordWrap and (ACanvas.TextWidth
+      (RemoveSingleAmp(Copy(ACaption, 1, i))) > ARect.Right - ARect.Left + 1))) then
     begin
-      if CharInSet(Caption[i], [CharCR, CharLF]) then
+      if CharInSet(ACaption[i], [CharCR, CharLF]) then
       begin
-        if (i <= Length(Caption)) and (Caption[i] = CharCR) and (Caption[i + 1] = CharLF) then
+        if (i <= Length(ACaption)) and (ACaption[i] = CharCR) and (ACaption[i + 1] = CharLF) then
           NewSize := 2
         else
           NewSize := 1;
-        Lines[LineCount] := Copy(Caption, 1, i - 1);
-        Delete(Caption, NewSize, i);
+        Lines[LineCount] := Copy(ACaption, 1, i - 1);
+        Delete(ACaption, NewSize, i);
       end
       else if LastSpace = 0 then
       begin
-        Lines[LineCount] := Copy(Caption, 1, i - 1);
-        Delete(Caption, 1, i - 1);
+        Lines[LineCount] := Copy(ACaption, 1, i - 1);
+        Delete(ACaption, 1, i - 1);
       end
       else
       begin
-        Lines[LineCount] := Copy(Caption, 1, LastSpace - 1);
-        Delete(Caption, 1, LastSpace);
+        Lines[LineCount] := Copy(ACaption, 1, LastSpace - 1);
+        Delete(ACaption, 1, LastSpace);
       end;
       LastSpace := 0;
       NewSize := LineCount + 2;
@@ -629,35 +556,35 @@ begin
       i := 0;
     end;
     Inc(i);
-    if (i = Length(Caption) + 1) then
+    if (i = Length(ACaption) + 1) then
     begin
       NewSize := LineCount + 2;
       if AllocByExp(Length(Lines), NewSize) then
         SetLength(Lines, NewSize);
-      Lines[LineCount] := Caption;
+      Lines[LineCount] := ACaption;
       Inc(LineCount);
       Break;
     end;
   end;
 
-  case ATextAlignment.VerticalAlignment of
+  case ATextAlignment.Vertical of
     vaTop:
-      CurY := Rect.Top;
+      CurY := ARect.Top;
     vaBottom:
-      CurY := Rect.Bottom + 1 - TextHeight * LineCount;
+      CurY := ARect.Bottom + 1 - TextHeight * LineCount;
   else {vaCenter}
-    CurY := Rect.Top + (Rect.Bottom - Rect.Top + 1 - TextHeight * LineCount) div 2;
+    CurY := ARect.Top + (ARect.Bottom - ARect.Top + 1 - TextHeight * LineCount) div 2;
   end;
 
   for i := 0 to LineCount - 1 do
   begin
     if Lines[i] <> '' then
     begin
-      R.Left := Rect.Left;
+      R.Left := ARect.Left;
       R.Top := CurY;
-      R.Right := Rect.Right;
+      R.Right := ARect.Right;
       R.Bottom := CurY + TextHeight; //Rect.Bottom;
-      if DrawShadowText(Canvas, R, Lines[i], FontShadow, ATextAlignment.HorizontalAlignment) then
+      if DrawShadowText(ACanvas, R, Lines[i], AFontShadow, ATextAlignment.Horizontal) then
         Result := True;
     end;
     Inc(CurY, TextHeight);

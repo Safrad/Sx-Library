@@ -29,12 +29,21 @@ uses
 { TRow }
 
 constructor TRow.Create(const AColumnCount: SG);
+var
+  i: SG;
 begin
   SetLength(FColumns, AColumnCount);
+  for i := 0 to Length(FColumns) - 1 do
+    FColumns[i] := TCell.Create;
 end;
 
 destructor TRow.Destroy;
+var
+  i: SG;
 begin
+  for i := 0 to Length(FColumns) - 1 do
+    FColumns[i].Free;
+
   SetLength(FColumns, 0);
 
   inherited;
@@ -47,7 +56,7 @@ begin
   Result := 0;
   for i := 0 to Length(FColumns) - 1 do
   begin
-    Result := Max(uCell.GetCellHeight(FColumns[i].Text), Result);
+    Result := Max(FColumns[i].LineCount, Result);
   end;
 end;
 
