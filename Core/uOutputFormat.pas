@@ -1120,6 +1120,8 @@ begin
 end;
 
 function TimeToS(const T: TDateTime; const Decimals: SG; const OutputFormat: TOutputFormat): string;
+var
+  TimeInMs: FA;
 begin
 	case OutputFormat of
 	ofDisplay:
@@ -1129,7 +1131,12 @@ begin
 			Result := 'unknown';
 		end;
 	else
-		Result := MsToStr(RoundN(T * MSecsPerDay), diHHMSD, Decimals, False, OutputFormat);
+  begin
+    TimeInMs := T * MSecsPerDay + Power(10, -Decimals) / 2;
+		Result := MsToStr(Trunc(TimeInMs), diHHMSD, Min(Decimals, 3), False, OutputFormat);
+    if Decimals > 3 then
+      Result := Result + NToS(Trunc(Frac(TimeInMs) * Power(10, Decimals - 3)), StringOfChar('0', Decimals - 3));
+  end;
 	end;
 end;
 
