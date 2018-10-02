@@ -20,6 +20,7 @@ const
   CharTimes = CharMultiplicationSign;
 
 	Space = [CharNull, CharHT, CharLF, CharVT, CharCR, CharSpace, CharUnbrokableSpace];
+ 	BreakableSpace = [CharNull, CharHT, CharLF, CharVT, CharCR, CharSpace];
 	cDialogSuffix = CharHorizontalEllipsis;
 
 	EnumPrefixLength = 2;
