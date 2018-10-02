@@ -101,8 +101,6 @@ type
 function MsToStr(DT: S8; Display: TDisplay = diDHMSD;
 	const Decimals: SG = -3; const FixedWidth: Boolean = False; const OutputFormat: TOutputFormat = ofDisplay): string;
 
-function TicksToString(const ATicks: U8): string;
-
 function DateToS(const Year, Month, Day: U2; const OutputFormat: TOutputFormat): string; overload;
 function DateToS(const D: TDateTime; const OutputFormat: TOutputFormat): string; overload;
 function TimeToS(const T: TDateTime; const Decimals: SG; const OutputFormat: TOutputFormat): string;
@@ -1088,11 +1086,6 @@ begin
 		end;
 	end;
 	end;
-end;
-
-function TicksToString(const ATicks: U8): string;
-begin
-  Result := NToS(RoundDivS8(1000000 * ATicks, PerformanceFrequency), 6) + CharSpace + Translate('seconds');
 end;
 
 function DateToS(const Year, Month, Day: U2; const OutputFormat: TOutputFormat): string; overload;
