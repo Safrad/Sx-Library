@@ -25,7 +25,7 @@ interface
 
 uses
 	SysUtils, Windows,
-	uTypes, uStrings, uChar,
+	uTypes, uStrings, uChar, uLogger, uDateTimeLogger,
   uBackup;
 
 const
@@ -98,6 +98,7 @@ type
 		FFileBegin: S8; // Size of Byte Order Mark
 		FFilePos: U8;
 		FFileSize: U8;
+    FLogger: TDateTimeLogger;
 		function GetFileSize(var Size: U8): BG;
 		function IsOpened: BG;
 		function ErrorRetry(const ErrorCode: U4): BG;
@@ -109,6 +110,7 @@ type
 		procedure ReadPrefix;
 		procedure WritePrefix;
     function UpdateBuffer: SG;
+    procedure SetLogger(const Value: TDateTimeLogger);
 	public
 		property Charset: TFileCharset read FCharset write FCharset;
 		property DefaultCharset: TFileCharset read FDefaultCharset write FDefaultCharset;
@@ -129,7 +131,7 @@ type
 		function SeekBegin: BG;
 		function SeekEnd: BG;
 		function BlockRead(out Buf; const Count: UG): BG;
-		function BlockWrite(const Buf; const Count: UG; const AWriteLog: BG = True): BG;
+		function BlockWrite(const Buf; const Count: UG): BG;
 		function FillWrite(Count: UG): BG;
 		function ReadlnNoConversion(out Line: AnsiString): BG;
 		function Readln(out Line: AnsiString): BG; overload;
@@ -146,6 +148,7 @@ type
 		function Eof: BG;
 		function Lock(From, Count: U8): BG;
 		function UnLock(From, Count: U8): BG;
+    property Logger: TDateTimeLogger read FLogger write SetLogger;
 	end;
 
 type
@@ -164,7 +167,7 @@ implementation
 uses
 	Math,
   uOperatingSystem,
-	uMsg, uFiles, uLog, uOutputFormat, uCharset;
+	uFiles, uOutputFormat, uCharset, uLog, uMsg;
 
 constructor TFile.Create;
 begin
@@ -175,6 +178,7 @@ begin
   FBackupFolder := bfNone;
 	FDefaultCharset := fcAnsi;
 	FCharset := DefaultFileCharset;
+  FLogger := MainLog;
 end;
 
 destructor TFile.Destroy;
@@ -196,15 +200,6 @@ function TFile.IsOpened: BG;
 begin
 	Result := FHandle <> INVALID_HANDLE_VALUE;
 end;
-
-{
-	function TFile.Open(const FileName: TFileName; const Mode: TFileMode; Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
-	var
-	FileName2: TFileName;
-	begin
-	FileName2 := FileName;
-	Result := Open(FileName2, Mode, Flags, False);
-	end; }
 
 function TFile.Open(const FileName: TFileName; const Mode: TFileMode;
 	Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
@@ -240,8 +235,8 @@ begin
 	end
 	else
 		FTempFileName := ExpandDir(FileName);
-	if LogDebug then
-    MainLogAdd('Opening for ' + FileModeStr[Mode] + ' ' + FTempFileName, mlDebug);
+	if FLogger.IsLoggerFor(mlDebug) then
+    FLogger.Add('Opening for ' + FileModeStr[Mode] + ' ' + FTempFileName, mlDebug);
 
 LRetry :
 	ShareMode := FILE_SHARE_READ;
@@ -385,8 +380,8 @@ LRetry :
 			Result := False;
 		end
 		else
-			if LogDebug then
-        MainLogAdd('Reading ' + BToStr(Suc, ofIO) + ' from ' + FTempFileName, mlDebug);
+			if FLogger.IsLoggerFor(mlDebug) then
+        FLogger.Add('Reading ' + BToStr(Suc, ofIO) + ' from ' + FTempFileName, mlDebug);
 
 		Inc(FFilePos, Suc);
 	end
@@ -409,7 +404,7 @@ LRetry :
 	end;
 end;
 
-function TFile.BlockWrite(const Buf; const Count: UG; const AWriteLog: BG = True): BG;
+function TFile.BlockWrite(const Buf; const Count: UG): BG;
 label LRetry;
 var
 	Suc: U4;
@@ -422,15 +417,15 @@ LRetry :
 		Inc(FileStatistics.WriteCount);
 		Inc(FileStatistics.WriteBytes, Suc);
 
-    if AWriteLog then
+    if Suc <> Count then
     begin
-      if Suc <> Count then
-        Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
-            + ' to ' + FTempFileName)
-      else
-        if LogDebug then
-          MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName, mlDebug);
-    end;
+      if FLogger.IsLoggerFor(mlWarning) then
+        FLogger.Add('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
+          + ' to ' + FTempFileName, mlWarning);
+    end
+    else
+      if FLogger.IsLoggerFor(mlDebug) then
+        FLogger.Add('Writing ' + BToStr(Suc, ofIO) + ' to ' + FTempFileName, mlDebug);
 
 		Inc(FFilePos, Suc);
 	end
@@ -888,8 +883,8 @@ LRetry :
 		Warning('Cannot again close file %1.', [FTempFileName]);
 		Exit;
 	end;
-	if LogDebug then
-    MainLogAdd('Closing ' + FTempFileName, mlDebug);
+	if FLogger.IsLoggerFor(mlDebug) then
+    FLogger.Add('Closing ' + FTempFileName, mlDebug);
 
 	DestroyBuffer;
 	if ChangeDate then
@@ -970,7 +965,7 @@ begin
 	SaveBuffer;
 LRetry :
 	Result := Windows.FlushFileBuffers(FHandle);
-	if Result = False then
+	if (Result = False) and Assigned(FLogger) then
 	begin
 		ErrorCode := GetLastError;
 		if ErrorRetry(ErrorCode) then
@@ -1047,6 +1042,11 @@ begin
 	begin
 		SetLength(FBuffer, FBufferSize);
 	end;
+end;
+
+procedure TFile.SetLogger(const Value: TDateTimeLogger);
+begin
+  FLogger := Value;
 end;
 
 procedure TFile.SetProtection(const Value: BG);
