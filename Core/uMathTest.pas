@@ -27,6 +27,8 @@ type
     procedure TimeDifferenceTest;
     procedure MultiplyTest;
     procedure MultiplyAndReturnMostSignificantHalfTest;
+    procedure BitScanReverseTest;
+    procedure CountDigitsTest;
   end;
 
 implementation
@@ -139,6 +141,23 @@ begin
   CheckEquals(-3, RoundN(-3.1));
 end;
 
+procedure TMathTest.BitScanReverseTest;
+begin
+  CheckEquals(0, BitScanReverse(0));
+  CheckEquals(0, BitScanReverse(1));
+  CheckEquals(1, BitScanReverse(2));
+  CheckEquals(1, BitScanReverse(3));
+  CheckEquals(2, BitScanReverse(4));
+  CheckEquals(2, BitScanReverse(5));
+  CheckEquals(2, BitScanReverse(6));
+  CheckEquals(2, BitScanReverse(7));
+  CheckEquals(3, BitScanReverse(8));
+  CheckEquals(3, BitScanReverse(9));
+  CheckEquals(3, BitScanReverse(15));
+  CheckEquals(4, BitScanReverse(16));
+  CheckEquals(31, BitScanReverse($FFFFFFFF));
+end;
+
 procedure TMathTest.BitsToByteTest;
 begin
   CheckEquals(0, BitsToByte(0));
@@ -147,6 +166,19 @@ begin
   CheckEquals(1, BitsToByte(8));
   CheckEquals(2, BitsToByte(9));
   CheckEquals(1186, BitsToByte(9485));
+end;
+
+procedure TMathTest.CountDigitsTest;
+begin
+  CheckEquals(1, CountDigits(0));
+  CheckEquals(1, CountDigits(1));
+  CheckEquals(1, CountDigits(9));
+  CheckEquals(2, CountDigits(10));
+  CheckEquals(2, CountDigits(99));
+  CheckEquals(3, CountDigits(100));
+  CheckEquals(3, CountDigits(999));
+  CheckEquals(4, CountDigits(1000));
+  CheckEquals(10, CountDigits($FFFFFFFF));
 end;
 
 procedure TMathTest.NopTest;

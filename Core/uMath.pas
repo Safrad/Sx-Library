@@ -155,19 +155,17 @@ function Hash(const Desc; Size: U4): U4;
 procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
-var
-	PerformanceType: (ptGetTickCount, ptPerformanceCounter);
-	PerformanceFrequency: S8;
+function BitScanReverse(AValue: U4): U4;
+function CountDigits(AValue: U4): U4;
 
-procedure InitPerformanceCounter;
-function GetCPUCounter: TU8;
-function PerformanceCounter: S8;
+function PerformanceFrequency: S8; deprecated 'Use MainTimer';
+function PerformanceCounter: S8; deprecated 'Use MainTimer';
 
 function TimeDifference(const NowTime, LastTime: U4): U4; overload;
 function TimeDifference(const NowTime, LastTime: U8): U8; overload;
 
-function IntervalFrom(const StartTime: U4): U4; overload;
-function IntervalFrom(const StartTime: U8): U8; overload;
+function IntervalFrom(const StartTime: U4): U4; overload deprecated 'Use MainTimer';
+function IntervalFrom(const StartTime: U8): U8; overload deprecated 'Use MainTimer';
 
 procedure Nop; assembler;
 procedure Pause; assembler;
@@ -187,6 +185,7 @@ function BitsToByte(const Bits: U8): U8;
 implementation
 
 uses
+  uMainTimer,
   Math, Windows, SysUtils;
 
 procedure Increment(var X: F4; const N: F4 = 1); overload;
@@ -1808,50 +1807,41 @@ asm
 	mov Result, D
 end;
 
-procedure InitPerformanceCounter;
-begin
-	if QueryPerformanceFrequency(PerformanceFrequency) then
-	begin
-		PerformanceType := ptPerformanceCounter;
-		if PerformanceFrequency < 1000 then
-		begin
-			PerformanceType := ptGetTickCount;
-			PerformanceFrequency := 1000;
-		end;
-	end
-	else
-	begin
-		PerformanceType := ptGetTickCount;
-		PerformanceFrequency := 1000;
-	end;
+function BitScanReverse(AValue: U4): U4; register;
+asm // Highest bit set
+  BSR EAX, EAX
 end;
 
-function GetCPUCounter: TU8; register;
-asm
-{$ifdef CPUX64}
-  push rcx
-	mov ecx, 10h
-  rdtsc
-  pop rcx
-  mov [Result.D0], eax
-  mov [Result.D1], edx
-{$else}
-	push Result
-	mov ecx, 10h
-	dw 310fh // RDTSC 10 clocks
-	pop ecx
-	mov [ecx], eax
-	mov [ecx + 4], edx
-{$endif}
+function CountDigits(AValue: U4): U4;
+const
+  Powers: array[0..9] of U4 = (
+    0,
+    10,
+    100,
+    1000,
+    10000,
+    100000,
+    1000000,
+    10000000,
+    100000000,
+    1000000000);
+  MaxDigits: array[0..32] of U4 =
+    (1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5,
+     6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10);
+begin
+  Result := MaxDigits[BitScanReverse(AValue)];
+  if (AValue < Powers[Result - 1]) then
+    Dec(Result);
+end;
+
+function PerformanceFrequency: S8;
+begin
+  Result := MainTimer.Frequency;
 end;
 
 function PerformanceCounter: S8;
 begin
-	case PerformanceType of
-	ptGetTickCount: Result := GetTickCount;
-	ptPerformanceCounter: QueryPerformanceCounter(Result);
-	{ptCPU}else Result := GetCPUCounter.A;
-	end;
+  Result := MainTimer.Value.Ticks;
 end;
 
 function TimeDifference(const NowTime, LastTime: U4): U4;
@@ -1890,9 +1880,9 @@ procedure Delay(const ATimeSpan: TTimeSpan);
 var
 	StartTickCount: U8;
 begin
-	StartTickCount := PerformanceCounter;
+	StartTickCount := MainTimer.Value.Ticks;
   // busy-wait loop (spin-wait loop)
-	while IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
+	while MainTimer.IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
   begin
     Pause;
   end;
@@ -1919,12 +1909,12 @@ var
 	StartTickCount: U8;
   RemainTimeInMs: FG;
 begin
-  StartTickCount := PerformanceCounter;
+  StartTickCount := MainTimer.Value.Ticks;
 
   // sleep-wait loop
   while True do
   begin
-    RemainTimeInMs := Second * (S8(ATimeSpan.Ticks) - S8(IntervalFrom(StartTickCount))) / PerformanceFrequency;
+    RemainTimeInMs := Second * (S8(ATimeSpan.Ticks) - S8(MainTimer.IntervalFrom(StartTickCount))) / MainTimer.Frequency;
     if RemainTimeInMs >= MaximalAddedSleepTime then
     begin
       // Method Sleep sleeps a bit longer then specified
@@ -1935,7 +1925,7 @@ begin
   end;
 
   // busy-wait loop (spin-wait loop)
-  while IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
+  while MainTimer.IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
   begin
     Pause;
   end;
@@ -2217,9 +2207,5 @@ begin
 	Result := (Bits + 7) shr 3;
 end;
 
-initialization
-{$IFNDEF NoInitialization}
-	InitPerformanceCounter;
-{$ENDIF NoInitialization}
 end.
 

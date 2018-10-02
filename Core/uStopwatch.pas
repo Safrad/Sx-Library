@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  uMath, SysUtils, Classes;
+  uMath, uMainTimer, SysUtils, Classes;
 
 { TStopwatch }
 
@@ -51,7 +51,7 @@ begin
   if FStartTime = 0 then
     Result := 0 // Start method no called
   else if FStopTime = 0 then
-    Result := IntervalFrom(FStartTime) // Stop method no called
+    Result := MainTimer.IntervalFrom(FStartTime) // Stop method no called
   else
     Result := TimeDifference(FStopTime, FStartTime);
 end;
@@ -84,7 +84,7 @@ begin
   if FStopTime <> 0 then
   begin
     Assert(FStartTime <> 0);
-    Inc(FStartTime, IntervalFrom(FStopTime));
+    Inc(FStartTime, MainTimer.IntervalFrom(FStopTime));
     FStopTime := 0;
   end
   else
@@ -93,7 +93,7 @@ begin
     if FStartTime = 0 then
     begin
       // Start method not called
-      FStartTime := PerformanceCounter;
+      FStartTime := MainTimer.Value.Ticks;
     end
     else
       raise Exception.Create('Stopwatch already started.');
@@ -106,7 +106,7 @@ begin
   begin
     raise Exception.Create('Stopwatch is not started.');
   end;
-  FStopTime := PerformanceCounter;
+  FStopTime := MainTimer.Value.Ticks;
 end;
 
 constructor TStopwatch.Create;

@@ -5,7 +5,8 @@ interface
 uses
   Windows,
   Registry,
-  uTypes;
+  uTypes,
+  uMainTimer;
 
 type
   TNtQuerySystemInformation = function(infoClass: DWORD; buffer: Pointer; bufSize: DWORD; returnSize: PDWORD): DWORD; stdcall;
@@ -15,6 +16,8 @@ type
     // Properties
     FName: string;
     FFrequency: FG;
+
+    FCPUTimer: TMainTimer;
     FLastTickCount: U8;
     FLastCPUTick: U8;
     FLogicalProcessorCount: SG;
@@ -64,8 +67,8 @@ uses
   uChar,
   uStrings,
   uAPI,
-  uMath,
   uLog,
+  uMath,
   uOperatingSystem,
   SysUtils;
 
@@ -155,6 +158,30 @@ constructor TCPU.Create;
 begin
   inherited;
 
+  FCPUTimer := TMainTimer.Create;
+  FCPUTimer.MeasureType := mtTSC;
+end;
+
+destructor TCPU.Destroy;
+var
+  CPUUsage: Integer;
+begin
+	if OperatingSystem.IsNT = False then
+	begin
+		if Reg <> nil then
+		begin
+			if Reg.OpenKey('PerfStats\StopStat', False) then
+			begin
+				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+				Reg.CloseKey;
+			end;
+
+			FreeAndNil(Reg);
+		end;
+	end;
+
+  FCPUTimer.Free;
+  inherited;
 end;
 
 procedure TCPU.UpdateFrequency;
@@ -164,16 +191,16 @@ var
 begin
   if FLastCPUTick <> 0 then
   begin
-    CPUTick := TimeDifference(GetCPUCounter.A, FLastCPUTick);
-    TickCount := TimeDifference(PerformanceCounter, FLastTickCount);
+    CPUTick := FCPUTimer.IntervalFrom(FLastCPUTick);
+    TickCount := MainTimer.IntervalFrom(FLastTickCount);
     if (TickCount > 0) and (CPUTick > 0) then
-      FFrequency := U8(PerformanceFrequency) * CPUTick / TickCount;
+      FFrequency := MainTimer.Frequency * CPUTick / TickCount;
   end
   else
     FFrequency := DefaultFrequency;
 
-  FLastCPUTick := GetCPUCounter.A;
-  FLastTickCount := PerformanceCounter;
+  FLastCPUTick := FCPUTimer.Value.Ticks;
+  FLastTickCount := MainTimer.Value.Ticks;
 
   {
       if (TickCount > 0) and (CPUTick < High(Int64) div (2 * PerformanceFrequency)) then
@@ -529,27 +556,6 @@ begin
 			Reg.CloseKey;
 		end;
 	end;
-end;
-
-destructor TCPU.Destroy;
-var
-  CPUUsage: Integer;
-begin
-	if OperatingSystem.IsNT = False then
-	begin
-		if Reg <> nil then
-		begin
-			if Reg.OpenKey('PerfStats\StopStat', False) then
-			begin
-				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-				Reg.CloseKey;
-			end;
-
-			FreeAndNil(Reg);
-		end;
-	end;
-
-  inherited;
 end;
 
 function TCPU.GetName: string;

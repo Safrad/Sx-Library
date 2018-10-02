@@ -37,48 +37,51 @@ type
     property Time: TDateTime read GetTime write SetTime;
 
     property Frequency: FG read GetFrequency write SetFrequency;
+
+    function ToStringInSeconds: string;
   end;
 
 implementation
 
 uses
-  uMath;
+  uMainTimer,
+  uOutputFormat;
 
 { TTimeSpan }
 
 function TTimeSpan.GetFrequency: FG;
 begin
-  Result := PerformanceFrequency / FTicks;
+  Result := MainTimer.Frequency / FTicks;
 end;
 
 function TTimeSpan.GetMicroseconds: FG;
 begin
-  Result := 1000 * Second * FTicks / PerformanceFrequency;
+  Result := 1000 * Second * FTicks / MainTimer.Frequency;
 end;
 
 function TTimeSpan.GetMilliseconds: FG;
 begin
-  Result := Second * FTicks / PerformanceFrequency;
+  Result := Second * FTicks / MainTimer.Frequency;
 end;
 
 function TTimeSpan.GetSeconds: FG;
 begin
-  Result := FTicks / PerformanceFrequency;
+  Result := FTicks / MainTimer.Frequency;
 end;
 
 function TTimeSpan.GetTime: TDateTime;
 begin
-  Result := FTicks / (PerformanceFrequency * (Day div Second));
+  Result := FTicks / (MainTimer.Frequency * (Day div Second));
 end;
 
 procedure TTimeSpan.SetFrequency(const Value: FG);
 begin
-  SetTicks(Round(PerformanceFrequency / Value));
+  SetTicks(Round(MainTimer.Frequency / Value));
 end;
 
 procedure TTimeSpan.SetMicroseconds(const Value: FG);
 begin
-  SetTicks(Round(PerformanceFrequency * Value / (1000 * Second)));
+  SetTicks(Round(MainTimer.Frequency * Value / (1000 * Second)));
 end;
 
 procedure TTimeSpan.SetMilliseconds(const Value: FG);
@@ -98,7 +101,15 @@ end;
 
 procedure TTimeSpan.SetTime(const Value: TDateTime);
 begin
-  SetTicks(Round(Value * (Day / Second) * PerformanceFrequency));
+  SetTicks(Round(Value * (Day / Second) * MainTimer.Frequency));
+end;
+
+function TTimeSpan.ToStringInSeconds: string;
+var
+  PrecisionDigits: SG;
+begin
+  PrecisionDigits := MainTimer.PrecisionDigits;
+  Result := FloatToDecimalString(Seconds, PrecisionDigits);
 end;
 
 end.
