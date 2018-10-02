@@ -57,7 +57,7 @@ begin
       ],
       [
         OperatingSystem.ComputerName,
-        OperatingSystem.Name,
+        OperatingSystem.NameAndVersion,
 			  MsToStr(OperatingSystem.UptimeInMs, diDHMSD, 3, False),
         GCPU.Name,
 			  NToS(GCPU.LogicalProcessorCount),

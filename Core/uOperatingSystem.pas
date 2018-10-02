@@ -25,6 +25,7 @@ type
     class function GetFlag(const APowerForce: TPowerForce): SG;
     class function GetNameInternall: string;
     function GetVersion: TProjectVersion;
+    function GetNameAndVersion: string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -59,6 +60,7 @@ type
     property IsRegionCompatible: BG read GetIsRegionCompatible;
     property Name: string read GetName write SetName;
     property Version: TProjectVersion read GetVersion;
+    property NameAndVersion: string read GetNameAndVersion;
     property UptimeInMs: U8 read GetUptimeInMs;
   end;
 
@@ -163,6 +165,15 @@ begin
     end;
   end;
   Result := FName;
+end;
+
+function TOperatingSystem.GetNameAndVersion: string;
+begin
+  Result := Name + ' [' +
+    IntToStr(Version.Major) + '.' +
+    IntToStr(Version.Minor) + '.' +
+    IntToStr(Version.Release) +
+    ']'
 end;
 
 class procedure TOperatingSystem.Hibernate;

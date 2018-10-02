@@ -69,11 +69,7 @@ var
 begin
   GCPU.Update;
 
-	EditOS.Text := OperatingSystem.Name + ' [' +
-    IntToStr(OperatingSystem.Version.Major) + '.' +
-    IntToStr(OperatingSystem.Version.Minor) + '.' +
-    IntToStr(OperatingSystem.Version.Release) +
-    ']';
+	EditOS.Text := OperatingSystem.NameAndVersion;
 
   s := GCPU.Name;
 	if s <> '' then
