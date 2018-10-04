@@ -130,7 +130,6 @@ function ReplaceParam(const Text: string; const Param: array of string): string;
 
 function DoubleBackSlash(const s: string): string;
 function RemoveSingleAmp(const s: string): string;
-function Code(const s: string; const Decode: BG): string;
 
 function AddSpace(const s: string): string;
 procedure AppendStr(var Dest: TFileName; const Source: string); overload;
@@ -1089,19 +1088,6 @@ begin
 		Result[ResultLength] := s[i];
 	end;
 	SetLength(Result, ResultLength);
-end;
-
-function Code(const s: string; const Decode: BG): string;
-var i: Integer;
-begin
-	SetLength(Result, Length(s));
-	for i := 1 to Length(s) do
-	begin
-		if Decode then
-			Result[i] := Char(((Ord(s[i]) xor $ff) + $f) and $ff)
-		else
-			Result[i] := Char(((Ord(s[i]) - $f) and $ff) xor $ff);
-	end;
 end;
 
 function AddSpace(const s: string): string;
