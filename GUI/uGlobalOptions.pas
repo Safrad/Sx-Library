@@ -11,6 +11,7 @@ uses
 type
 	TGlobalOption = (
     goLanguage,
+    goMaxThreads,
     goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon, goRunAfterStartUp,
 		goShowSplashScreenWhenApplicationStarts,
 		goMenuItemHeightScale,
@@ -25,6 +26,7 @@ type
 var
 	GlobalOptions: array [TGlobalOption] of TOption = (
 		(Typ: vsCombo),
+		(Typ: vsSpin; Default: 1; Minimum: 1; Maximum: 256),
 		(Typ: vsCheck; Default: 1),
     (Typ: vsCheck; Default: 1),
     (Typ: vsCheck; Default: 1),
@@ -54,8 +56,11 @@ implementation
 
 uses
   SysUtils,
+  Math,
   uFiles,
+  uStartState,
   uDIniFile,
+  uCPU,
   uStrings,
   // TODO
 {$if CompilerVersion >= 23}
@@ -284,6 +289,11 @@ end;
 initialization
 
 InitOptionNames(TypeInfo(TGlobalOption), GlobalOptions);
+
+if TStartState.RunFromIDE then
+  GlobalOptions[goMaxThreads].Maximum := 4; // CreateThread is too slow if run from IDE
+
+GlobalOptions[goMaxThreads].Default := Min(GCPU.LogicalProcessorCount, GlobalOptions[goMaxThreads].Maximum);
 DefaultOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalParams));
 
 end.
