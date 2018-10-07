@@ -143,36 +143,41 @@ procedure TFileLogger.WriteLine(const Line: string);
 var
 	LineA: AnsiString;
 begin
-  EnterCriticalSection(FCriticalSection);
-  try
-    if Length(Line) > 0 then
+  if Length(Line) > 0 then
+  begin
+    if FDirectWrite then
     begin
-      if FDirectWrite then
+      if not FFile.Opened then Exit;
+
+      if FFile.FileSize + U8(Length(Line)) > MaxLogFileSize then
       begin
-        if not FFile.Opened then Exit;
+        LoggingLevel := mlNone;
+        Exit;
+      end;
 
-        if FFile.FileSize + U8(Length(Line)) > MaxLogFileSize then
-        begin
-          LoggingLevel := mlNone;
-          Exit;
-        end;
-
-      //	FFile.Write(Line);
-        LineA := ConvertUnicodeToUTF8(Line);
+    //	FFile.Write(Line);
+      LineA := ConvertUnicodeToUTF8(Line);
+      EnterCriticalSection(FCriticalSection);
+      try
         FFile.BlockWrite(LineA[1], Length(LineA));
-      end
-      else
+      finally
+        LeaveCriticalSection(FCriticalSection);
+      end;
+    end
+    else
+    begin
+      if Length(FData) + Length(Line) > MaxLogFileSize then
       begin
-        if Length(FData) + Length(Line) > MaxLogFileSize then
-        begin
-          LoggingLevel := mlNone;
-          Exit;
-        end;
+        LoggingLevel := mlNone;
+        Exit;
+      end;
+      EnterCriticalSection(FCriticalSection);
+      try
         FData := FData + Line;
+      finally
+        LeaveCriticalSection(FCriticalSection);
       end;
     end;
-  finally
-    LeaveCriticalSection(FCriticalSection);
   end;
 end;
 
