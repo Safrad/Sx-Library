@@ -27,8 +27,6 @@ end.
 
 unit uConsoleApplication;
 
-{$WARN SYMBOL_PLATFORM OFF}
-
 interface
 
 uses
@@ -58,6 +56,7 @@ uses
   SysUtils,
   Windows,
   uLog,
+  uStartState,
   uDefaultArguments,
   uConsole,
   uProjectInfo,
@@ -111,9 +110,8 @@ end;
 
 procedure TConsoleApplication.Wait;
 begin
-  if DebugHook <> 0 then
+  if TStartState.RunFromIDE then
   begin
-    // Run from IDE
     TConsole.WriteLine('');
     TConsole.Write('Press Enter to continue...');
     Readln;
