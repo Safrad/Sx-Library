@@ -40,8 +40,8 @@ type
 implementation
 
 uses
-  Windows,
   SysUtils,
+  uStartState,
   uSwitchArgument,
   uTextAlignment,
   uTable,
@@ -136,7 +136,7 @@ end;
 
 procedure TArguments.Parse;
 begin
-  Parse(GetCommandLine);
+  Parse(TStartState.CommandLine);
 end;
 
 procedure TArguments.ParseArguments(const AArguments: TArrayOfString);
