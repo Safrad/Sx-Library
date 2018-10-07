@@ -22,6 +22,8 @@ type
     procedure SynchronizeOrSkip(const AThreadMethod: TThreadMethod);
   end;
 
+  TAsyncTasks = array of TAsyncTask;
+
 implementation
 
 uses uTypes, Windows;

@@ -37,6 +37,7 @@ type
     destructor Destroy; override;
 
     procedure AddTask(const AAsyncTask: TAsyncTask);
+    procedure AddTasks(const AAsyncTasks: TAsyncTasks);
     procedure RandomizeTaskOrder;
     procedure SortTasks(const A: TArrayOfS4);
     function PopAsyncTask: TAsyncTask;
@@ -77,6 +78,20 @@ begin
   QueueToThread;
 end;
 
+procedure TThreadPool.AddTasks(const AAsyncTasks: TAsyncTasks);
+var
+  i: SG;
+begin
+  EnterCriticalSection(FQueueCriticalSection);
+  try
+    for i := 0 to Length(AAsyncTasks) - 1 do
+      FQueue.Add(AAsyncTasks[i]);
+  finally
+    LeaveCriticalSection(FQueueCriticalSection);
+  end;
+  QueueToThread;
+end;
+
 procedure TThreadPool.ClearTasks;
 begin
   EnterCriticalSection(FQueueCriticalSection);
@@ -97,7 +112,7 @@ begin
   InitializeCriticalSection(FQueueCriticalSection);
 
   FRunThreads := 0;
-  SetMaxThreads(GCPU.LogicalProcessorCount);
+  FMaxThreads := GCPU.LogicalProcessorCount;
 end;
 
 destructor TThreadPool.Destroy;
