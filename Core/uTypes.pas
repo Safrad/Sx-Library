@@ -141,6 +141,80 @@ type
 		3: (
 			A: U8);
 	end;
+	TS16 = record
+	case Integer of
+		0: (
+				B0: U1;
+				B1: U1;
+				B2: U1;
+				B3: U1;
+				B4: U1;
+				B5: U1;
+				B6: U1;
+				B7: U1;
+				B8: U1;
+				B9: U1;
+				B10: U1;
+				B11: U1;
+				B12: U1;
+				B13: U1;
+				B14: U1;
+				B15: S1);
+		1: (
+				W0: U2;
+				W1: U2;
+				W2: U2;
+				W3: U2;
+				W4: U2;
+				W5: U2;
+				W6: U2;
+				W7: S2);
+		2: (
+			D0: U4;
+			D1: U4;
+			D2: U4;
+			D3: S4);
+		3: (
+			Q0: U8;
+			Q1: S8);
+	end;
+	TU16 = record
+	case Integer of
+		0: (
+				B0: U1;
+				B1: U1;
+				B2: U1;
+				B3: U1;
+				B4: U1;
+				B5: U1;
+				B6: U1;
+				B7: U1;
+				B8: U1;
+				B9: U1;
+				B10: U1;
+				B11: U1;
+				B12: U1;
+				B13: U1;
+				B14: U1;
+				B15: U1);
+		1: (
+				W0: U2;
+				W1: U2;
+				W2: U2;
+				W3: U2;
+				W4: U2;
+				W5: U2;
+				W6: U2;
+				W7: U2);
+		2: (
+			D0: U4;
+			D1: U4;
+			D2: U4;
+			D3: U4);
+		3: (
+			Q0: U8;
+			Q1: U8);
+	end;
 
 	F4 = Single;
 //	F6 = Real48;
