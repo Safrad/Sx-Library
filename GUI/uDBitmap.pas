@@ -2998,9 +2998,8 @@ begin
 		for i := -((Width - 1) div 2) to Width div 2 do
 			Line(X1 - Abs(i), Y1 + i, X2 + Abs(i), Y2 + i, Color, Effect);
 	end
-	else if IsDebug then
-		Line(X1, Y1, X2, Y2, Color, Effect);
-		//IE('Function Not Available');
+	else
+		IE('Function Not Available');
 end;
 
 // Antialiased
