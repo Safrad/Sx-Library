@@ -2386,7 +2386,10 @@ begin
 				MyPng.TransparentColor := TransparentColor;
 //			MyPng.Transparent := Transparent;
 			try
-				MyPng.CompressionLevel := 9;
+        if IsDebug then
+  				MyPng.CompressionLevel := 1
+        else
+  				MyPng.CompressionLevel := 9;
 				Stream := TMemoryStream.Create;
 				try
 					MyPng.SaveToStream(Stream);
