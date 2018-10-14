@@ -46,9 +46,10 @@ type
 
 		procedure DeleteFirst;
 		procedure DeleteLast;
-		procedure Delete(Index: TIndex);
+		procedure Delete(const Index: TIndex);
 
 		function GetAndDeleteFirst: TObject; // Queue
+		function GetAndDeleteLast: TObject; // Queue
 
 		// procedure Insert(var Value; Index: TIndex); overload;
 		procedure Replace(const Index: TIndex; const Item: Pointer);
@@ -66,6 +67,7 @@ type
 		procedure Next(var P); overload;
 
 		function First: TObject;
+		function Last: TObject;
 		function Next: TObject; overload;
 
 		function IsEmpty: Boolean;
@@ -163,12 +165,12 @@ end;
 	Insert(Value, FItemCount);
 	end; }
 
-procedure TData.Delete(Index: TIndex);
+procedure TData.Delete(const Index: TIndex);
 begin
 	if (Index < FItemCount) then
 	begin
-		Move(Pointer(TIndex(Data) + (Index + 1) shl FItemSh)^, Pointer(TIndex(Data) + Index shl FItemSh)
-				^, (FItemCount - Index - 1) shl FItemSh);
+		Move(Pointer(TIndex(Data) + (Index + 1) shl FItemSh)^, Pointer(TIndex(Data) + Index shl FItemSh)^,
+      (FItemCount - 1 - Index) shl FItemSh);
 		Dec(FItemCount);
 	end;
 end;
@@ -327,6 +329,13 @@ begin
 		DeleteFirst;
 end;
 
+function TData.GetAndDeleteLast: TObject;
+begin
+	Result := Last;
+	if Result <> nil then
+		DeleteLast;
+end;
+
 { procedure TData.GetFirst(var Value);
 	begin
 	Get(Value, 0);
@@ -432,6 +441,15 @@ begin
 	FObjectCounter := 0;
 	if FObjectCounter < FItemCount then
 		Result := TObject(GetFirst^)
+	else
+		Result := nil;
+end;
+
+function TData.Last: TObject;
+begin
+	FObjectCounter := 0;
+	if FObjectCounter < FItemCount then
+		Result := TObject(GetLast^)
 	else
 		Result := nil;
 end;
