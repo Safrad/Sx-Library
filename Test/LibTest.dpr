@@ -47,7 +47,11 @@ uses
   uTicksTest in '..\Core\uTicksTest.pas',
   uColorSequenceTest in '..\GUI\uColorSequenceTest.pas',
   uRandomGeneratorTest in '..\RandomGenerator\uRandomGeneratorTest.pas',
-  uMainTimerTest in '..\Core\uMainTimerTest.pas';
+  uMainTimerTest in '..\Core\uMainTimerTest.pas',
+  uDTimerTest in '..\GUI\uDTimerTest.pas',
+  uSxThreadTimerTest in '..\Core\uSxThreadTimerTest.pas',
+  uTextMacroTest in '..\Core\uTextMacroTest.pas',
+  uStartupEnvironmentTest in '..\Core\uStartupEnvironmentTest.pas';
 
 {$R *.RES}
 
