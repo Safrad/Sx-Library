@@ -41,6 +41,7 @@ type
     procedure RandomizeTaskOrder;
     procedure SortTasks(const A: TArrayOfS4);
     function PopAsyncTask: TAsyncTask;
+    function PopAsyncTasks(const ACount: SG): TAsyncTasks;
     procedure ClearTasks;
     function Working: BG;
     function RemainTaskCount: UG;
@@ -314,6 +315,29 @@ begin
       Result := nil
     else
       Result := FQueue.GetAndDeleteFirst as TAsyncTask;
+//      Result := FQueue.GetAndDeleteLast as TAsyncTask;
+  finally
+    LeaveCriticalSection(FQueueCriticalSection);
+  end;
+end;
+
+function TThreadPool.PopAsyncTasks(const ACount: SG): TAsyncTasks;
+var
+  i: SG;
+begin
+  EnterCriticalSection(FQueueCriticalSection);
+  try
+    if FQueue = nil then
+      Result := nil
+    else
+    begin
+      SetLength(Result, ACount);
+      for i := 0 to ACount - 1 do
+      begin
+        Result[i] := FQueue.GetAndDeleteFirst as TAsyncTask;
+//        Result[i] := FQueue.GetAndDeleteLast as TAsyncTask;
+      end;
+    end;
   finally
     LeaveCriticalSection(FQueueCriticalSection);
   end;
