@@ -414,6 +414,7 @@ uses
 	GraphicEx,
 	{$endif}
 	ClipBrd, ExtDlgs, StdCtrls, Dialogs,
+  uStartupEnvironment,
 	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
@@ -11435,7 +11436,7 @@ begin
     if ExecuteDialog(SavePictureDialog, FileName) then
     begin
       Quality := 90;
-      FileName2 := RemoveEV(FileName);
+      FileName2 := StartupEnvironment.RemoveVariables(FileName);
       SaveToFileEx(FileName2, Quality);
     end;
   finally

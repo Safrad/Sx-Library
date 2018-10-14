@@ -36,9 +36,6 @@ function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccess
 function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 function ShortDir(const Dir: string): string;
 
-function FindEnvironmentVariable(const Variable: string; const Environment: array of TStringPair): string;
-function RemoveEV(const Dir: string): string; overload;
-function RemoveEV(Dir: string; const Environment: array of TStringPair): string; overload;
 function ExpandFile(const FileName: TFileName): string;
 function ExpandFileCmd(const FileName: TFileName): string;
 function ExpandDir(const Dir: string): string;
@@ -142,52 +139,12 @@ implementation
 uses
 	Math,
   uEIOException,
+  uStartupEnvironment,
 	uChar, uMsg, uProjectInfo, uSorts, uCharset,
 	uOutputFormat, uMath, uLog;
 
 var
-	StartupEnvironment: array of TStringPair;
 	GInstalled: BG;
-
-procedure InitStartupEnvironment;
-var
-	EnvironmentBlock, EnvironmentBlock2: LPTSTR;
-	Line: string;
-	i: SG;
-	InlineIndex: SG;
-	NewSize: SG;
-begin
-	EnvironmentBlock := GetEnvironmentStrings;
-	try
-		if EnvironmentBlock = nil then
-		begin
-			Warning('GetEnvironmentStrings failed (%1)', [ErrorCodeToStr(GetLastError)]);
-			Exit;
-		end;
-
-		SetLength(StartupEnvironment, 0);
-		EnvironmentBlock2 := EnvironmentBlock;
-		i := 0;
-		while EnvironmentBlock2[1] <> #0 do
-		begin
-			Line := EnvironmentBlock2;
-			if Line = '' then Break;
-			NewSize := i + 1;
-			if AllocByExp(Length(StartupEnvironment), NewSize) then
-			begin
-				SetLength(StartupEnvironment, NewSize);
-			end;
-			InlineIndex := 1;
-			StartupEnvironment[i].Name := ReadToChar(Line, InlineIndex, '=');
-			StartupEnvironment[i].Value := Copy(Line, InlineIndex, MaxInt);
-			Inc(EnvironmentBlock2, Length(Line) + 1);
-			Inc(i);
-		end;
-		SetLength(StartupEnvironment, i);
-	finally
-		FreeEnvironmentStrings(EnvironmentBlock);
-	end;
-end;
 
 function Installed: BG;
 begin
@@ -356,10 +313,9 @@ begin
     end;
 	end;
 
-	InitStartupEnvironment;
-	UserProfileDir := FindEnvironmentVariable('UserProfile', StartupEnvironment);
+	UserProfileDir := StartupEnvironment.FindValue('UserProfile');
 	CorrectDir(UserProfileDir);
-	CommonLocalAppDataDir := FindEnvironmentVariable('localappdata', StartupEnvironment);
+	CommonLocalAppDataDir := StartupEnvironment.FindValue('localappdata');
 	if CommonLocalAppDataDir = '' then
 	begin
 		CommonLocalAppDataDir := UserProfileDir;
@@ -399,27 +355,6 @@ begin
 	LocalIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
 end;
 
-// i.e. C:\WINDOWS -> %systemroot%
-function InsertEnvironmentVariables(const Dir: string): string;
-var
-	i: SG;
-	n: SG;
-begin
-	Result := Dir;
-	for i := 0 to Length(StartupEnvironment) - 1 do
-	begin
-		if Pos(':\', StartupEnvironment[i].Value) <> 0 then
-		begin
-			n := Pos(StartupEnvironment[i].Value, Result);
-			if n > 0 then
-			begin
-				Delete(Result, n, Length(StartupEnvironment[i].Value));
-				Insert('%' + StartupEnvironment[i].Name + '%', Result, n);
-			end;
-		end;
-	end;
-end;
-
 function RemoveWorkDir(const Dir: string): string;
 var
 	i: SG;
@@ -444,68 +379,7 @@ end;
 
 function ShortDir(const Dir: string): string;
 begin
-	Result := InsertEnvironmentVariables(RemoveWorkDir(Dir));
-end;
-
-function FindEnvironmentVariable(const Variable: string; const Environment: array of TStringPair): string;
-var
-  i: SG;
-  UpperCaseVariable: string;
-begin
-	Result := '';
-  UpperCaseVariable := UpperCase(Variable);
-	for i := 0 to Length(Environment) - 1 do
-	begin
-		if UpperCase(Environment[i].Name) = UpperCaseVariable then
-		begin
-			Result := Environment[i].Value;
-			Break;
-		end;
-	end;
-end;
-
-function RemoveEV(const Dir: string): string; overload;
-begin
-	Result := RemoveEV(Dir, []);
-end;
-
-function RemoveEV(Dir: string; const Environment: array of TStringPair): string; overload;
-var
-	i, Start: SG;
-	Variable, Value: string;
-begin
-	i := 1;
-	while i <= Length(Dir) do
-	begin
-		if Dir[i] = '%' then
-		begin
-			Start := i;
-			Inc(i);
-			Variable := ReadToChar(Dir, i, '%');
-			if (i > Length(Dir) + 1) then Break; // next % not found
-
-			if Length(Environment) > 0 then
-			begin
-				Value := FindEnvironmentVariable(Variable, Environment)
-			end
-			else
-			begin
-				Value := GetEnvironmentVariable(Variable);
-			end;
-			if Value = '' then
-			begin
-				i := Start + Length(Variable) + 1;
-				Continue;
-			end;
-
-			Delete(Dir, Start, i - Start);
-			Insert(Value, Dir, Start);
-			i := Start + Length(Value);
-		end
-		else
-			Inc(i);
-	end;
-	Result := Dir;
+	Result := StartupEnvironment.InsertVariablesFromStart(RemoveWorkDir(Dir));
 end;
 
 function ExpandCustomDir(Dir: string; const WorkDir: string): string;
@@ -518,7 +392,7 @@ begin
 		Result := Dir}
 	else
 	begin // file://
-		Dir := RemoveEV(Dir);
+		Dir := StartupEnvironment.RemoveVariables(Dir);
 
 {		for i := 1 to Length(Dir) do
 		begin

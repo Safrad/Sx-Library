@@ -33,7 +33,7 @@ uses
   ShellAPI,
   Classes,
   uMsg,
-  uFiles;
+  uStartupEnvironment;
 
 { TShellExecute }
 
@@ -53,7 +53,7 @@ begin
 	FAgain := True;
 	while FAgain do
 	begin
-		ErrorCode := ShellExecute(0, OpenString, PChar('"' + RemoveEV(FFileName) + '"'), PChar(FParams), nil, SW_ShowNormal);
+		ErrorCode := ShellExecute(0, OpenString, PChar('"' + StartupEnvironment.RemoveVariables(FFileName) + '"'), PChar(FParams), nil, SW_ShowNormal);
 		Synchronize(Synchro);
 	end;
 end;
