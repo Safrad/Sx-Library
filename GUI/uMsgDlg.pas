@@ -109,7 +109,7 @@ uses
   SynTaskDialog,
 	uFiles, uColor, uDictionary,
 	uStrings, uChar, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uMath,
-	Registry, MMSystem, Math;
+	Registry, MMSystem, Math, UITypes;
 
 var
 	IgnoreAll: TIgnoreAll;
