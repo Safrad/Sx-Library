@@ -244,6 +244,7 @@ type
 
 	TIndex = SG;
 
+ 	PStringPair = ^TStringPair;
 	TStringPair = record
 		Name: string; // or Key
 		Value: string;
