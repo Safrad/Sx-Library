@@ -1,15 +1,17 @@
+// Precise GUI Timer
 unit uDTimer;
 
 interface
 
 uses
-	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms;
+	uTypes,
+  uTimeSpan,
+  SysUtils, Classes, Messages;
 
 type
 	TDTimerEvent = procedure(Sender: TObject) of object;
 
-	TEventStep = (esInterval, esFrequency, esCPU);
+	TEventStep = (esInterval {in milliseconds}, esIntervalInSeconds, esFrequency, esCPU);
 
 	TDTimer = class(TComponent)
 	private
@@ -20,7 +22,7 @@ type
 		FInitialized: BG;
 		FEventStep: TEventStep;
 		FInterval: UG;
-		FInterval12: S8;
+		FPreciseInterval: TTimeSpan;
 		FNowFrameRate: Integer;
 		FOldTime: S8;
 		FOldTime2: U8;
@@ -29,6 +31,7 @@ type
 		FOnTimer: TDTimerEvent;
 		FLastLeaveTime: U8;
 		TotalLags: UG;
+    FIntervalInSeconds: FG;
 
 		function AppProc(var Message: TMessage): Boolean;
 		procedure Finalize;
@@ -39,7 +42,7 @@ type
 		procedure SetEventStep(Value: TEventStep);
 		procedure SetInterval(Value: UG);
 		procedure Suspend;
-		procedure Step;
+    procedure SetIntervalInSeconds(const Value: FG);
 	protected
 		procedure DoActivate; virtual;
 		procedure DoDeactivate; virtual;
@@ -57,156 +60,67 @@ type
 		destructor Destroy; override;
 		property FrameRate: Integer read FFrameRate;
 		procedure Reset;
+		procedure Step;
 	published
 		property ActiveOnly: BG read FActiveOnly write SetActiveOnly default False;
 		property Enabled: BG read FEnabled write SetEnabled default True;
 		property Interval: UG read FInterval write SetInterval default 1000;
+		property IntervalInSeconds: FG read FIntervalInSeconds write SetIntervalInSeconds;
 		property EventStep: TEventStep read FEventStep write SetEventStep default esInterval;
 		property OnTimer: TDTimerEvent read FOnTimer write FOnTimer;
 		property OnActivate: TNotifyEvent read FOnActivate write FOnActivate;
 		property OnDeactivate: TNotifyEvent read FOnDeactivate write FOnDeactivate;
 	end;
 
-var
-	NowTime: S8; // Actual PerformanceCounter Value
-	// Statistic Values
-	TimLeave, TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U8;
-
 implementation
 
 uses
-	Math,
-	uMsg;
-
-type
-	TDIdleTimer = class(TComponent)
-	private
-		Timers: array of TDTimer;
-		procedure AppIdle(Sender: TObject; var Done: Boolean);
-	public
-		constructor Create(AOwner: TComponent); override;
-		destructor Destroy; override;
-	end;
-
-const
-	LagTime = LoopSleepTime;
-
-var
-	DIdleTimer: TDIdleTimer;
-
-{ TDIdleTimer }	
-	
-constructor TDIdleTimer.Create(AOwner: TComponent);
-begin
-	inherited Create(AOwner);
-//	Application.HookMainWindow(AppProc);
-	Application.OnIdle := AppIdle;
-	TimLeave := PerformanceCounter;
-end;
-
-destructor TDIdleTimer.Destroy;
-begin
-//	SetLength(Timers, 0);
-//	Application.UnHookMainWindow(AppProc);
-	Application.OnIdle := nil;
-	inherited Destroy;
-end;
-
-var
-	MinTime: S8;
-
-procedure TDIdleTimer.AppIdle(Sender: TObject; var Done: Boolean);
-var
-	i: SG;
-	t: S8;
-	StartTime: U8;
-begin
-	MinTime := High(MinTime);
-
-	StartTime := PerformanceCounter;
-	TimSleep := StartTime - TimLeave;
-	i := 0;
-	while i < Length(Timers) do
-	begin
-		DIdleTimer.Timers[i].Step;
-		Inc(i);
-	end;
-
-	TimLeave := PerformanceCounter;
-	TimWork := TimLeave - StartTime;
-	t := TimWork + TimSleep;
-	if t > 0 then
-	begin
-		CPUUsage := RoundDivS8(1000 * TimWork, t);
-	end;
-	Inc(TimWork2, TimWork);
-	Inc(TimSleep2, TimSleep);
-	t := TimWork2 + TimSleep2;
-	if t >= PerformanceFrequency then
-	begin
-		CPUUsage2 := RoundDivS8(1000 * TimWork2, t);
-		TimWork2 := 0;
-		TimSleep2 := 0;
-	end;
-
-	if MinTime <> High(MinTime) then
-	begin
-		Done := False;
-		t := 1000 div 2 * MinTime div PerformanceFrequency;
-		if t >= 2 then
-			Sleep(Min(t, LagTime));
-	end
-	else
-		Done := True;
-end;
+  uDIdleTimer,
+  uMainTimer,
+  Controls,
+  Forms,
+  Math,
+  uMath,
+  uMsg;
 
 { TDTimer }
 
 constructor TDTimer.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
+  FPreciseInterval := TTimeSpan.Create;
 	FActiveOnly := False;
 	FEnabled := True;
-	Interval := 1000;
+	FInterval := 1000;
+  FIntervalInSeconds := 1;
+  InitInterval;
 	if (not (csDesigning in ComponentState)) then
 	begin
-		if not Assigned(DIdleTimer) then DIdleTimer := TDIdleTimer.Create(nil);
-		SetLength(DIdleTimer.Timers, Length(DIdleTimer.Timers) + 1);
-		DIdleTimer.Timers[Length(DIdleTimer.Timers) - 1] := Self;
+		DIdleTimer.AddTimer(Self);
 		Application.HookMainWindow(AppProc);
-		TimLeave := PerformanceCounter;
+		TimLeave := MainTimer.Value.Ticks;
 	end;
 end;
 
 destructor TDTimer.Destroy;
-var i, j: SG;
 begin
-	if (not (csDesigning in ComponentState)) then
-	begin
-		Application.UnHookMainWindow(AppProc);
-		if Assigned(DIdleTimer) then
-			for i := 0 to Length(DIdleTimer.Timers) - 1 do
-			begin
-				if DIdleTimer.Timers[i] = Self then
-				begin
-					for j := i to Length(DIdleTimer.Timers) - 2 do
-						DIdleTimer.Timers[j] := DIdleTimer.Timers[j + 1];
-					SetLength(DIdleTimer.Timers, Length(DIdleTimer.Timers) - 1);
-					Break;
-				end;
-			end;
-		Finalize;
-	end;
+  try
+    if (not (csDesigning in ComponentState)) then
+    begin
+      Application.UnHookMainWindow(AppProc);
+      DIdleTimer.RemoveTimer(Self);
+      Finalize;
 
-	if (not (csDesigning in ComponentState)) then // Free DIdleTimers when contains no Timers
-	begin
-		if Assigned(DIdleTimer) then
-		if Length(DIdleTimer.Timers) = 0 then
-		begin
-			FreeAndNil(DIdleTimer);
-		end;
-	end;
-	inherited Destroy;
+      // Free DIdleTimers when contains no Timers
+      if DIdleTimer.TimerCount = 0 then
+      begin
+        FreeDIdleTimer;
+      end;
+    end;
+    FPreciseInterval.Free;
+  finally
+  	inherited Destroy;
+  end;
 end;
 
 function TDTimer.AppProc(var Message: TMessage): Boolean;
@@ -284,7 +198,7 @@ begin
 	FNowFrameRate := 0;
 	FOldTime := 0;
 	FOldTime2 := 0;
-	FLastLeaveTime := PerformanceCounter;
+	FLastLeaveTime := MainTimer.Value.Ticks;
 	TotalLags := 0;
 
 	TimerCount := 0;
@@ -308,7 +222,7 @@ end;
 
 procedure TDTimer.Resume;
 begin
-	FOldTime := PerformanceCounter;
+	FOldTime := MainTimer.Value.Ticks;
 	FOldTime2 := FOldTime;
 	FSuspended := False;
 end;
@@ -337,11 +251,15 @@ end;
 procedure TDTimer.InitInterval;
 begin
 	case FEventStep of
-	esInterval: FInterval12 := RoundDivS8(U8(FInterval) * PerformanceFrequency, 1000);
-	esFrequency: FInterval12 := RoundDivS8(PerformanceFrequency, FInterval);
-	else FInterval12 := FInterval;
+	esInterval:
+    FPreciseInterval.Milliseconds := FInterval;
+	esIntervalInSeconds:
+    FPreciseInterval.Seconds := FIntervalInSeconds;
+	esFrequency:
+    FPreciseInterval.Frequency := FInterval;
+	else
+    FPreciseInterval.Ticks := 0;
 	end;
-	if FInterval12 <= 0 then FInterval12 := 1;
 end;
 
 procedure TDTimer.SetEventStep(Value: TEventStep);
@@ -362,45 +280,56 @@ begin
 	end;
 end;
 
+procedure TDTimer.SetIntervalInSeconds(const Value: FG);
+begin
+  if FIntervalInSeconds <> Value then
+  begin
+    FIntervalInSeconds := Value;
+    InitInterval;
+  end;
+end;
+
 procedure TDTimer.Step;
 var
+	NowTime: S8; // Actual PerformanceCounter Value
 	NTime: S8;
 	t: S8;
 begin
 	if (FEnabled) and ((FSuspended = False) or (FActiveOnly = False)) then
 	begin
-		NowTime := PerformanceCounter;
+		NowTime := MainTimer.Value.Ticks;
 		TimSleep := NowTime - TimLeave;
 		ElapsedTime := NowTime - FOldTime;
 //				if MinTime > FInterval12 then MinTime := FInterval12;
 		if FEventStep = esCPU then
 		begin
-			if FInterval = 0 then FInterval := 1;
-			FInterval12 := Max(RoundDivU8(100 * TimWork, FInterval), 1);
+			if FInterval = 0 then
+        FInterval := 1;
+			FPreciseInterval.Ticks := Max(RoundDivU8(100 * TimWork, FInterval), 1);
 		end;
-		if (ElapsedTime > 0) and (ElapsedTime + RoundDivS8(PerformanceFrequency * LagTime, 2 * Second) >= FInterval12) then
+		if (ElapsedTime > 0) and (ElapsedTime + RoundDivS8(MainTimer.Frequency * LagTime, 2 * Second) >= FPreciseInterval.Ticks) then
 		begin
 			// Frame Rate
 			Inc(FNowFrameRate);
 			t := NowTime - FOldTime2;
-			if t >= PerformanceFrequency then
+			if t >= MainTimer.Frequency then
 			begin
 				if t = 0 then
 					FFrameRate := High(FFrameRate)
 				else
-					FFrameRate := RoundDivS8(FNowFrameRate * PerformanceFrequency * Second, t);
+					FFrameRate := RoundDivS8(FNowFrameRate * MainTimer.Frequency * Second, t);
 				FNowFrameRate := 0;
-{						LagCount := ElapsedTime div PerformanceFrequency;
+{						LagCount := ElapsedTime div MainTimer.Frequency;
 				if LagCount < 1 then LagCount := 1;
-				Inc(FOldTime2, LagCount * PerformanceFrequency);}
+				Inc(FOldTime2, LagCount * MainTimer.Frequency);}
 				FOldTime2 := NowTime;
 			end;
 
 			// Lags
-			LagCount := ElapsedTime div FInterval12;
+			LagCount := ElapsedTime div FPreciseInterval.Ticks;
 			if LagCount < 1 then LagCount := 1;
 			if LagCount > 1 then Inc(TotalLags, LagCount - 1);
-			t := U8(LagCount) * FInterval12;
+			t := U8(LagCount) * FPreciseInterval.Ticks;
 			Inc(FOldTime, t);
 
 			Inc(Clock, ElapsedTime + t);
@@ -413,7 +342,7 @@ begin
 
 			DoTimer;
 
-			NTime := PerformanceCounter;
+			NTime := MainTimer.Value.Ticks;
 			TimLeave := NTime;
 			TimWork := TimLeave - NowTime;
 			NowTime := NTime;
@@ -437,8 +366,9 @@ begin
 
 			Inc(TimerCount);
 		end;
-		if (MinTime = High(MinTime)) or (MinTime + NowTime > FInterval12 + FOldTime) then
-      MinTime := FInterval12 - NowTime + FOldTime;
+    t := S8(FPreciseInterval.Ticks + FOldTime) - NowTime;
+		if DIdleTimer.MinTime > t then
+      DIdleTimer.MinTime := t;
 	end;
 end;
 
