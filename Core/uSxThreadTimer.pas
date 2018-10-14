@@ -72,6 +72,9 @@ end;
 
 destructor TSxThreadTimer.Destroy;
 begin
+  // Can not free memory of running thread
+  TerminateAndWaitFor;
+
   FreeAndNil(FElapsedTime);
   FreeAndNil(FWorkingStopwatch);
   FreeAndNil(FIdleStopwatch);
