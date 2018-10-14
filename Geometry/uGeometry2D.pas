@@ -33,6 +33,7 @@ type
   TRect2D = record
     F: TPoint2D;
     T: TPoint2D;
+    procedure Normalize;
     procedure Inflate(AX, AY: TGeometryFloat2D);
     function CenterPoint: TPoint2D;
   end;
@@ -57,6 +58,7 @@ function GetSquaredDistance2D(const A, B: TPoint2D): TGeometryFloat2D;
 //* Return distance between A and B
 function GetDistance2D(const A, B: TPoint2D): TGeometryFloat2D;
 
+function Add2D(AVec1, AVec2: TPoint2D): TPoint2D;
 function Subtract2D(AVec1, AVec2: TPoint2D): TPoint2D;
 
 //** Line functions
@@ -177,6 +179,12 @@ end;
 function GetDistance2D(const A, B: TPoint2D): TGeometryFloat2D;
 begin
 	Result := Hypot(A.X - B.X, A.Y - B.Y);
+end;
+
+function Add2D(AVec1, AVec2: TPoint2D): TPoint2D;
+begin
+	Result.X := AVec1.X + AVec2.X;
+	Result.Y := AVec1.Y + AVec2.Y;
 end;
 
 function Subtract2D(AVec1, AVec2: TPoint2D): TPoint2D;
@@ -436,6 +444,14 @@ begin
   Increment(F.X, AX);
   Decrement(F.Y, AY);
   Increment(F.Y, AY);
+end;
+
+procedure TRect2D.Normalize;
+begin
+  if F.X > T.X then
+    Exchange(F.X, T.X);
+  if F.Y > T.Y then
+    Exchange(F.Y, T.Y);
 end;
 
 end.
