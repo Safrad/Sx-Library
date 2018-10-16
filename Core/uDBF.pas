@@ -151,7 +151,7 @@ begin
 				NewSize := FColumnCount + 1;
 				if AllocByExp(Length(FColumns), NewSize) then
 					SetLength(FColumns, NewSize);
-				FColumns[FColumnCount].Name := Column.Name;
+				FColumns[FColumnCount].Name := string(Column.Name);
 				case Column.Typ of
 				'C'{hars}: FColumns[FColumnCount].Typ := varString;
 				'N'{umber}: FColumns[FColumnCount].Typ := varInteger; // varDouble
@@ -162,7 +162,7 @@ begin
 					FColumns[FColumnCount].Typ := varUnknown;
 					if FPTSize = 0 then
 					begin
-						FPT := ReadStringFromFile(DelFileExt(FFileName) + '.fpt');
+						FPT := AnsiString(ReadStringFromFile(DelFileExt(FFileName) + '.fpt'));
 						if Length(FPT) >= 8 then
 						begin
 							FPTSize := Ord(FPT[5]) shl 24 + Ord(FPT[6]) shl 16 + Ord(FPT[7]) shl 8 + Ord(FPT[8]);
@@ -277,17 +277,17 @@ begin
 							FColumns[j].Items[FItemCount] := SG(s[1]) + SG(s[2]) shl 8 + SG(s[3]) shl 16 + SG(s[4]) shl 24;}
 						varInteger:
 						begin
-							if Pos('.', DataStr) <> 0 then
+							if Pos('.', string(DataStr)) <> 0 then
 							begin
 								FColumns[j].Typ := varDouble;
-								FColumns[j].Items[FItemCount] := StrToF8(DataStr, ifIO);
+								FColumns[j].Items[FItemCount] := StrToF8(string(DataStr), ifIO);
 							end
 							else
-								FColumns[j].Items[FItemCount] := StrToSG(DataStr, ifIO); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
+								FColumns[j].Items[FItemCount] := StrToSG(string(DataStr), ifIO); //StrToValI(s, False, MinInt, 0, MaxInt, 1)
 
 						end;
 						varDouble:
-							FColumns[j].Items[FItemCount] := StrToF8(DataStr, ifIO);
+							FColumns[j].Items[FItemCount] := StrToF8(string(DataStr), ifIO);
 						varBoolean: FColumns[j].Items[FItemCount] := (DataStr <> 'F');
 						varOleStr:
 						begin
