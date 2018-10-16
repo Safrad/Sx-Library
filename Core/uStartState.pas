@@ -1,5 +1,7 @@
 unit uStartState;
 
+{$WARN SYMBOL_PLATFORM OFF}
+
 interface
 
 uses

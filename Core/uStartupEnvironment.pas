@@ -49,7 +49,6 @@ procedure TStartupEnvironment.Init;
 var
 	EnvironmentBlock, EnvironmentBlock2: LPTSTR;
 	Line: string;
-	i: SG;
 	InlineIndex: SG;
   Variable: TStringPair;
 begin
@@ -62,7 +61,6 @@ begin
 		end;
 
 		EnvironmentBlock2 := EnvironmentBlock;
-		i := 0;
 		while EnvironmentBlock2[1] <> #0 do
 		begin
 			Line := EnvironmentBlock2;
@@ -75,7 +73,6 @@ begin
       Add(Variable);
 
 			Inc(EnvironmentBlock2, Length(Line) + 1);
-			Inc(i);
 		end;
 	finally
 		FreeEnvironmentStrings(EnvironmentBlock);

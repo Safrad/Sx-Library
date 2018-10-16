@@ -437,7 +437,7 @@ begin
   end;
 
     //convert the array of char into an easy to access string
-    digits := PAnsiChar(Addr(floatRec.Digits[0]));
+    digits := string(PAnsiChar(Addr(floatRec.Digits[0])));
 
     if floatRec.Exponent > 0 then
     begin

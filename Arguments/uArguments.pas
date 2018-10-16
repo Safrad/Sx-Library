@@ -41,6 +41,7 @@ implementation
 
 uses
   SysUtils,
+  Classes,
   uStartState,
   uSwitchArgument,
   uTextAlignment,
@@ -181,7 +182,7 @@ var
   i: SG;
 begin
 	Result := 'Parameter' + CharSpace + 'Description' + LineSep;
-	Result := Result + StringOfChar(CharEmDash, LineWidth) + LineSep;
+	Result := Result + string(StringOfChar(CharEmDash, LineWidth)) + LineSep;
   for i := 0 to FArguments.Count - 1 do
   begin
     Result := Result + TCustomArgument(FArguments[i]).Preview;

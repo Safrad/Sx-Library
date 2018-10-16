@@ -7,7 +7,7 @@ type
 	private
 		FName: string;
 		procedure SetName(const Value: string);
-	published
+  public
 		property Name: string read FName write SetName;
 	end;
 
