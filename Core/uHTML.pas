@@ -9,9 +9,7 @@ uses
 
 function RelativePath(const Source, Target: string): string;
 function GetGeneratedBy: string;
-{$ifndef Console}
 function AddImageEx(const SelfFileName, FileName: TFileName; const Params: string): string;
-{$endif}
 function EncodeURL(const Path: string): string;
 
 type
@@ -67,12 +65,12 @@ type
 		procedure AddTableRow(const Cells: array of string);
 		procedure AddRef(const FileName: TFileName); overload;
 		procedure AddRef(const FileName: TFileName; const Text: string); overload;
-		{$ifndef Console}
 		procedure AddImage(const FileName: TFileName; const Params: string); overload;
 		procedure AddImage(const FileName: TFileName); overload;
+{$ifndef Console}
 		procedure AddSmallImage(const FileName: TFileName; const Params: string); overload;
 		procedure AddSmallImage(const FileName: TFileName); overload;
-		{$endif}
+{$endif}
 		procedure AddH1(const Text: string);
 		procedure AddH2(const Text: string);
 		procedure AddH3(const Text: string);
@@ -304,12 +302,12 @@ begin
 			Delete(a, i, 1);
 			s := '';
 			FmtStr(s, '%.2x', [U1(AnsiChar(c))]);
-			Insert('%' + s, a, i);
+			Insert('%' + AnsiString(s), a, i);
 			Inc(i, 2);
 		end;
 		Inc(i);
 	end;
-	Result := ReplaceF(a, '&', '&amp;');
+	Result := ReplaceF(string(a), '&', '&amp;');
 
 {	Result := '';
 	NumericBase := 16;
@@ -328,30 +326,35 @@ begin
 	AddBody('<a href="' + EncodeURL(RelativePath(FFileName, FileName)) + '">' + Text + '</a>');
 end;
 
-{$ifndef Console}
 function AddImageEx(const SelfFileName, FileName: TFileName; const Params: string): string;
 var
-	B: TDBitmap;
 	s: string;
+{$ifndef Console}
+	B: TDBitmap;
+{$endif}
 begin
-	B := TDBitmap.Create;
-	B.LoadFromFile(FileName);
-
 	s :=
 		'<img src="' + RelativePath(SelfFileName, FileName) + '" ';
-	if FileExists(FileName) then
+{$ifndef Console}
+	if FileExists(FileName) and (Pos('width', Params) = 0) and (Pos('height', Params) = 0) then
 	begin
-		s := s +
-			'width="' + IntToStr(B.Width) + '" ' +
-			'height="' + IntToStr(B.Height) + '" ';
+  	B := TDBitmap.Create;
+    try
+      B.LoadFromFile(FileName);
+      s := s +
+        'width="' + IntToStr(B.Width) + '" ' +
+        'height="' + IntToStr(B.Height) + '" ';
+    finally
+    	B.Free;
+    end;
 	end;
+{$endif}
 	if Pos('alt', Params) = 0 then
 		s := s + 'alt="' + ExtractFileName(DelFileExt(FileName)) + '" ';
 	if Pos('border', Params) = 0 then
 		s := s + 'border="0" ';
 	s := s + Params + '/>';
 	Result := s;
-	B.Free;
 end;
 
 procedure THTML.AddImage(const FileName: TFileName; const Params: string);
@@ -364,11 +367,12 @@ begin
 	AddImage(FileName, '');
 end;
 
+{$ifndef Console}
 procedure THTML.AddSmallImage(const FileName: TFileName; const Params: string);
 var
-	B: TDBitmap;
 	SmallImageFileName: TFileName;
 	x, y: SG;
+	B: TDBitmap;
 begin
 	B := TDBitmap.Create(FileName);
 	x := B.Width;
@@ -849,7 +853,7 @@ procedure THTML.AddHX(const Text, HX: string);
 var
 	Id: string;
 begin
-	Id := ConvertCharsetF(ReplaceF(Text, CharSpace, '-'), cp1250, cpAscii);
+	Id := string(ConvertToAscii(ReplaceF(Text, CharSpace, '-')));
 	FContentStr := FContentStr + '<li>' + '<a href="#' + Id + '">' + Text + '</a>' + '</li>';
 	AddBody('<a name="' + Id + '"></a>');
 	ClosedTag(Text, HX);
