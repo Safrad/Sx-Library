@@ -182,7 +182,7 @@ end;
 // Returns file name in ascii code page and without spaces (replaced by "-").
 function SafeFileName(const FileName: TFileName): TFileName;
 begin
-	Result := ExtractFilePath(FileName) + ReplaceF(ConvertToAscii(DelFileExt(ExtractFileName(FileName))), CharSpace, '-');
+	Result := ExtractFilePath(FileName) + ReplaceF(string(ConvertToAscii(DelFileExt(ExtractFileName(FileName)))), CharSpace, '-');
 end;
 
 function GetLastLinePos(const s: string): SG;
@@ -333,7 +333,7 @@ begin
 					if CreateHTMLIndexFile then
 					begin
 						InLineIndex := 1;
-						Line := LastLineFromFile(Dir + FileNames[i]);
+						Line := string(LastLineFromFile(Dir + FileNames[i]));
 						Author := ReadToChar(Line, InLineIndex, ',');
 						Created := SToDate(ReadToChar(Line, InLineIndex, ','), ifIO);
 
