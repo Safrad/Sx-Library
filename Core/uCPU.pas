@@ -500,7 +500,7 @@ begin
 	if OperatingSystem.IsNT then
 	begin
 //		tickCount := GetTickCount;
-		tickCount := PerformanceCounter;
+		tickCount := MainTimer.Value.Ticks;
 		if tickCount < LastTickCount then
 		begin
 			// Possible after hibernation or overflow

@@ -30,7 +30,7 @@ type
 implementation
 
 uses
-	uFile, uProjectInfo, uMath,
+	uFile, uProjectInfo, uMath, uMainTimer,
 	Windows;
 
 { TApplicationStatistics }
@@ -64,7 +64,7 @@ end;
 
 function TApplicationStatistics.GetElapsedTime: TTimeSpan;
 begin
-  FElapsedTime.Milliseconds := IntervalFrom(FStartTimeInMs);
+  FElapsedTime.Milliseconds := MainTimer.IntervalFrom(FStartTimeInMs);
   Result := FElapsedTime;
 end;
 
