@@ -22,7 +22,7 @@ procedure CheckForUpdate(const ShowMessageIfSuccess: BG); overload;
 implementation
 
 uses
-	uLog,
+	uLog, uStopwatch,
 	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, uOutputFormat, uMath, uAPI,
   IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack;
 
@@ -104,21 +104,22 @@ function DownloadFileWithPost(const AURL: string; const Source: TStrings; const 
 var
 	IdHTTP1: TIdHTTP;
 	AResponseContent: TStream;
-  StartTime: U4;
   Stream: TIdMultiPartFormDataStream;
   InLineIndex: SG;
   FieldName, FieldValue: string;
   i: SG;
   PostData: string;
+  Stopwatch: TStopwatch;
 begin
   Result := False;
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 //		IdHTTP1.HandleRedirects := True;
 	  AResponseContent := TFileStream.Create(TargetFileName, fmCreate or fmShareDenyNone);
+    Stopwatch := TStopwatch.Create;
     try
       try
-        StartTime := GetTickCount;
+        Stopwatch.Start;
         IdHTTP1.Request.UserAgent := GetProjectInfo(piInternalName);
         if Source.Count > 0 then
         begin
@@ -155,7 +156,8 @@ begin
         begin
           IdHTTP1.Get(AURL, AResponseContent);
         end;
-      	MainLog.Add('Download time: ' + MsToStr(IntervalFrom(StartTime), diSD, 3, False, ofIO) + 's', mlDebug);
+        Stopwatch.Stop;
+      	MainLog.Add('Download time: ' + MsToStr(Round(Stopwatch.Elapsed.Milliseconds), diSD, 3, False, ofIO) + 's', mlDebug);
         Result := True;
       except
         on E: Exception do
@@ -163,6 +165,7 @@ begin
           	MainLogAdd(E.Message, mlError);
       end;
 		finally
+      Stopwatch.Free;
   		AResponseContent.Free;
 		end;
 	finally
