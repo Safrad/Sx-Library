@@ -68,7 +68,7 @@ uses
   Vcl.Styles,
 {$ifend}
   Forms,
-	uSplash, uMenus, uMultiIns, uAbout, uLog, uSounds, uFileExt, uAPI, uNewThread,
+	uSplash, uMenus, uMultiIns, uAbout, uLog, uSounds, uFileExt, uNewThread,
 	uMsgDlg, uMsg, ufOptions, uReg, uProjectInfo, uLink,
 	uWebUpdate, uDictionary, uUsageInfo,
 	Classes, Windows, ExtCtrls;
