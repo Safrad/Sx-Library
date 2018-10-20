@@ -16,7 +16,7 @@ function InitInstance(const AllowMultiInstance: BG): BG;
 
 implementation
 
-uses uMsg, uStrings, uFiles, Forms, uDForm, uAPI;
+uses uMsg, uStrings, uFiles, Forms, uDForm;
 
 var
 	WProc: TFNWndProc;
