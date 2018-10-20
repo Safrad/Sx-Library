@@ -28,8 +28,6 @@ procedure ExecuteProcess(out ProcessOutput: TProcessOutput; const AFileName: TFi
 // @raise exception if Exit Code <> 0
 procedure ExecuteProcessCheckExitCode(out ProcessOutput: TProcessOutput; const AFileName: TFileName; AParams: string = ''; const ACurrentDirectory: string = ''; const AShowCmd: Word = SW_HIDE);
 
-procedure PropertiesDialog(FileName: TFileName);
-
 var
   AbortAPI: BG;
 
@@ -232,24 +230,6 @@ begin
   begin
     raise EExternalApplication.Create(AFilename + ' ' + AParams, ProcessOutput.ExitCode, ProcessOutput.OutputText);
   end;
-end;
-
-procedure PropertiesDialog(FileName: TFileName);
-var
-	sei: TShellExecuteInfo;
-begin
-	while True do
-	begin
-		FillChar(sei, SizeOf(sei), 0);
-		sei.cbSize := SizeOf(sei);
-		sei.lpFile := PChar(FileName);
-		sei.lpVerb := 'properties';
-		sei.fMask  := SEE_MASK_INVOKEIDLIST;
-		if ShellExecuteEx(@sei) = False then
-			if IOErrorRetry(FileName, GetLastError) then
-        Continue;
-		Break;
-	end;
 end;
 
 end.
