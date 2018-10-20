@@ -17,6 +17,7 @@ type
     FInitialized: BG;
     FTerminated: BG;
 
+    procedure RestartIfNeeded;
     procedure SetArguments(const Value: TArguments);
     procedure SetRestartAfterClose(const Value: BG);
   protected
@@ -52,12 +53,12 @@ implementation
 uses
   SysUtils,
   uLog,
+  uExternalApplication,
   uDefaultArguments,
   uCustomArgument,
   uConsole,
   uProjectInfo,
   uMsg,
-  uAPI,
   uChar,
   uFiles,
   uDIniFile,
@@ -117,8 +118,7 @@ begin
   FreeAndNil(LocalMainIni);
   FreeAndNil(MainLog);
 
-  if FRestartAfterClose then
-    ShellExecuteDirectNoExitCode(ExeFileName, ExeParameters);
+  RestartIfNeeded;
 end;
 
 procedure TCommonApplication.Initialize;
@@ -137,6 +137,24 @@ begin
     raise EArgumentException.Create(FArguments.ShowRequired);
   if FArguments.Check <> '' then
     raise EArgumentException.Create(FArguments.Check);
+end;
+
+procedure TCommonApplication.RestartIfNeeded;
+var
+  ExternalApplication: TExternalApplication;
+begin
+  if FRestartAfterClose then
+  begin
+    ExternalApplication := TExternalApplication.Create;
+    try
+      ExternalApplication.FileName := ExeFileName;
+      ExternalApplication.Parameters := ExeParameters;
+      ExternalApplication.Execute;
+    finally
+      ExternalApplication.Free;
+    end;
+
+  end;
 end;
 
 procedure TCommonApplication.Run;

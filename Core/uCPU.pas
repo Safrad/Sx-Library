@@ -66,7 +66,7 @@ implementation
 uses
   uChar,
   uStrings,
-  uAPI,
+  uExternalApplication,
   uLog,
   uMath,
   uOperatingSystem,
@@ -223,19 +223,27 @@ end;
 
 procedure TCPU.UpdateName;
 var
-  Output: TProcessOutput;
+  ExternalApplication: TExternalApplication;
   InLineIndex: SG;
 begin
+  ExternalApplication := TExternalApplication.Create;
   try
-    ExecuteProcess(Output, 'wmic', 'cpu get name', '');
-    Assert(Output.ExitCode = 0);
-    InLineIndex := 1;
-    ReadToChar(Output.OutputText, InLineIndex, CharLF);
-    FName := DelBESpaceF(ReadToChar(Output.OutputText, InLineIndex, CharLF));
-    if FName = '' then
+    try
+      ExternalApplication.FileName := 'wmic';
+      ExternalApplication.Parameters := 'cpu get name';
+      ExternalApplication.ExecuteWithOutputText;
+      ExternalApplication.CheckErrorCode;
+      Assert(ExternalApplication.ProcessOutput.ExitCode = 0);
+      InLineIndex := 1;
+      ReadToChar(ExternalApplication.ProcessOutput.OutputText, InLineIndex, CharLF);
+      FName := DelBESpaceF(ReadToChar(ExternalApplication.ProcessOutput.OutputText, InLineIndex, CharLF));
+      if FName = '' then
+        FName := '?';
+    except
       FName := '?';
-  except
-    FName := '?';
+    end;
+  finally
+    ExternalApplication.Free;
   end;
 end;
 
