@@ -217,18 +217,15 @@ var
 	i: SG;
 	s: string;
 begin
-	s := Caption;
-	i := Pos('/', s);
-//	if (Length(s) > 0) and (s[1] = '/') then
+	i := Pos('/', Caption);
 	if i = 1 then
 	begin
+		s := Caption;
 		Delete(s, i, 1);
 		Insert(AddSpace(ButtonNameToFileName(Name)), s, i);
+		Caption := s;
 	end;
 
-	if (Length(s) > 0) and (s[1] <> '&') then
-		s := '&' + s;
-	Caption := s;
 
 	inherited CreateParams(Params);
 	Params.Style := Params.Style or BS_OWNERDRAW;
