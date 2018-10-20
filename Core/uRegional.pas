@@ -2,11 +2,13 @@ unit uRegional;
 
 interface
 
-uses uTypes, Controls;
+uses
+  uTypes,
+  uOutputFormat;
 
-function DateToCS(const D: TDateTime): string; // Birthday, Players desription
-function DateToCSLong(const D: TDateTime): string; // Chart legend
-function DateToCSShort(const D: TDateTime): string; // Events
+function DateToCS(const D: TDateTime; const AOutputFormat: TOutputFormat): string; // Birthday, Players desription
+function DateToCSLong(const D: TDateTime; const AOutputFormat: TOutputFormat): string; // Chart legend
+function DateToCSShort(const D: TDateTime; const AOutputFormat: TOutputFormat): string; // Events
 
 function IsNewYear(const ADate: TDate): BG;
 function IsChristmas(const ADate: TDate): BG;
@@ -21,30 +23,35 @@ function IsChristmasOnStartup: BG;
 implementation
 
 uses
+  uStrings,
   SysUtils, DateUtils;
 
-function DateToCS(const D: TDateTime): string; // Birthday, Players desription
+function DateToCSCustom(const D: TDateTime; const AFromat: string; const AOutputFormat: TOutputFormat): string; // Birthday, Players desription
 begin
+  Assert(AOutputFormat <> ofIO);
 	if D = 0 then
 		Result := '-'
 	else
-		DateTimeToString(Result, 'd.m.yyyy', D);
+  begin
+		DateTimeToString(Result, AFromat, D);
+  	if AOutputFormat = ofHTML then
+      Replace(Result, ' ', '&thinsp;');
+  end;
 end;
 
-function DateToCSLong(const D: TDateTime): string; // Chart legend
+function DateToCS(const D: TDateTime; const AOutputFormat: TOutputFormat): string; // Birthday, Players desription
 begin
-	if D = 0 then
-		Result := '-'
-	else
-		DateTimeToString(Result, 'dd.mm.yyyy', D);
+  Result := DateToCSCustom(D, 'd. m. yyyy', AOutputFormat);
 end;
 
-function DateToCSShort(const D: TDateTime): string; // Events
+function DateToCSLong(const D: TDateTime; const AOutputFormat: TOutputFormat): string; // Chart legend
 begin
-	if D = 0 then
-		Result := '-'
-	else
-		DateTimeToString(Result, 'd.m.', D);
+  Result := DateToCSCustom(D, 'dd. mm. yyyy', AOutputFormat);
+end;
+
+function DateToCSShort(const D: TDateTime; const AOutputFormat: TOutputFormat): string; // Events
+begin
+  Result := DateToCSCustom(D, 'd. m.', AOutputFormat);
 end;
 
 function IsNewYear(const ADate: TDate): BG;
