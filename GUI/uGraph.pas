@@ -327,7 +327,7 @@ end;
 
 function IdealShadow(const Canvas: TCanvas): SG;
 begin
-  Result := Abs(RoundDiv(Canvas.Font.Height, 20));
+  Result := Abs((Canvas.Font.Height - 6) div 20);
 //	Result := RoundN(Abs(Canvas.Font.Size) div 16);
 end;
 
