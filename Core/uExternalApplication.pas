@@ -191,7 +191,7 @@ begin
       MainLogAdd('CreateProcess ' + FFileName + ' ' + FParameters, mlDebug);
     CreateProcessResult := CreateProcess(nil, PChar('"' + FFileNameWithoutVariables + '" ' + FParameters),
                             nil, nil, True, 0, nil,
-                            PChar(CurrentDirectory), SI, PI);
+                            PChar(FCurrentDirectory), SI, PI);
     if not CreateProcessResult then
     begin
       FHandle := INVALID_HANDLE_VALUE;
