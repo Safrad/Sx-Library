@@ -213,6 +213,7 @@ begin
 
       WaitFor;
     finally
+      FHandle := INVALID_HANDLE_VALUE;
       CloseHandle(PI.hThread);
       CloseHandle(PI.hProcess);
     end;
