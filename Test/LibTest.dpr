@@ -51,7 +51,8 @@ uses
   uDTimerTest in '..\GUI\uDTimerTest.pas',
   uSxThreadTimerTest in '..\Core\uSxThreadTimerTest.pas',
   uTextMacroTest in '..\Core\uTextMacroTest.pas',
-  uStartupEnvironmentTest in '..\Core\uStartupEnvironmentTest.pas';
+  uStartupEnvironmentTest in '..\Core\uStartupEnvironmentTest.pas',
+  uCyclicRedundancyCheckTest in '..\Core\uCyclicRedundancyCheckTest.pas';
 
 {$R *.RES}
 
