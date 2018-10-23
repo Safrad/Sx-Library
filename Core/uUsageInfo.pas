@@ -8,7 +8,7 @@ uses
 var
   DefaultAskedForUpload: BG = False;
 
-procedure TryUploadData;
+procedure TryUploadData(const AForce: BG = False);
 
 implementation
 
@@ -16,6 +16,7 @@ uses
   Windows,
   SysUtils,
   Classes,
+  OmniXML,
   uStrings,
   uDIniFile,
   uWebUpdate,
@@ -28,9 +29,7 @@ uses
   uCPU,
   uLog,
   uMsg,
-  uSxXMLDocument,
-  XMLIntf,
-  XMLDoc;
+  uSxXMLDocument;
 
 type
   TUsageInfo = class
@@ -87,26 +86,29 @@ begin
   end;
 end;
 
-procedure CreateXML(const FileName: TFileName);
+function GetXMLText: string;
 var
   GUID: TGUID;
-  XML: IXMLDocument;
+  XMLDocument: IXMLDocument;
 
   procedure SaveData(const Name, Value: string);
   var
-  	iNode: IXMLNode;
+  	XMLElement: IXMLElement;
   begin
-		iNode := XML.DocumentElement.AddChild(Name, '');
-    iNode.NodeValue := Value;
+		XMLElement := XMLDocument.CreateElement(Name);
+    XMLElement.Text := Value;
+    XMLDocument.DocumentElement.AppendChild(XMLElement);
   end;
 
+var
+  XMLElement: IXMLElement;
 begin
   GUID := GetComputerGUID;
 
-	XML := TSxXMLDocument.Create(nil);
-	XML.Active := True;
+	XMLDocument := TSxXMLDocument.Create;
 	try
-		XML.AddChild('root', '');
+		XMLElement := XMLDocument.CreateElement('root');
+    XMLDocument.AppendChild(XMLElement);
 
     // Key
     SaveData('GUID', GUIDToString(GUID));
@@ -131,17 +133,17 @@ begin
     SaveData('OSBuild', IntToStr(Win32BuildNumber));
 
     // Hardware
-    SaveData('CPU', GCPU.Name);
-    SaveData('CPUFrequency', FloatToStr(GCPU.Frequency));
+    SaveData('CPU', IntToStr(GCPU.ID));
+    SaveData('CPUName', GCPU.Name);
+    SaveData('CPUFrequency', IntToStr(GCPU.DefaultFrequency));
     SaveData('LogicalProcessorCount', IntToStr(GCPU.LogicalProcessorCount));
 
     SaveData('MemoryTotalPhys', IntToStr(SystemMemory.Physical.Total));
     SaveData('MemoryTotalPageFile', IntToStr(SystemMemory.PageFile.Total));
 
-		XML.SaveToFile(FileName);
+		Result := TSxXMLDocument(XMLDocument).GetAsString;
 	finally
-		XML.Active := False;
-		XML := nil;
+		XMLDocument := nil;
 		// Release XML document
 	end;
 end;
@@ -151,17 +153,24 @@ var
   FileName, ResponseFileName: TFileName;
   Source: TStrings;
   TempDir: string;
+  Response: string;
 begin
   TempDir := OperatingSystem.TemporaryDirectory.ProcessTempDir;
-  FileName := TempDir + 'log.xml';
   ResponseFileName := TempDir + 'response.txt';
-  CreateXML(FileName);
   Source := TStringList.Create;
   try
-    Source.Add('data=' + ReadStringFromFile(FileName));
+    Source.Add('data=' + GetXMLText);
     Result := DownloadFileWithPost('http://sx.rosada.cz/usage_info.php', Source, False, ResponseFileName);
-//    if ReadStringFromFile(ResponseFileName) <> 'ok' then
-//      raise Exception.Create('Invalid response.');
+    if Result then
+    begin
+      Response := ReadStringFromFile(ResponseFileName);
+      if Response <> 'Done.' then
+      begin
+        Result := False;
+        MainLog.Add('Invalid response: ' + Response, mlError);
+  //      raise Exception.Create('Invalid response.');
+      end;
+    end;
   finally
     Source.Free;
     DeleteFile(FileName);
@@ -169,37 +178,50 @@ begin
   end;
 end;
 
-procedure TryUploadData;
+procedure UploadAndUpdateOptions;
+begin
+  if UploadData then
+  begin
+    LastUploadCount := CommonApplication.Statistics.RunCount;
+    LastUploadTime := Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds);
+    RWOptions(True);
+  end;
+end;
+
+function CanUpload: BG;
+begin
+  if AskedForUpload = False then
+  begin
+    if Confirmation('To improve future versions of ' + GetProjectInfo(piProductName) + ', we can collect statistics on which application features you use. No sensitive information will be collected.' + FullSep +
+      'Do you wish to contribute your usage statistics?', [mbYes, mbNo]) = mbYes then
+    begin
+      UploadInfo := True;
+    end
+    else
+      UploadInfo := False;
+    AskedForUpload := True;
+    RWOptions(True);
+  end;
+  Result := UploadInfo;
+end;
+
+function TimeForUpload: BG;
 const
   MaxUploadInterval = 30 * Minute;
   MaxUploadCount = 20;
 begin
+  Result := (CommonApplication.Statistics.TotalElapsedTime.Milliseconds >= LastUploadTime + MaxUploadInterval) or (CommonApplication.Statistics.RunCount >= LastUploadCount + MaxUploadCount);
+end;
+
+procedure TryUploadData(const AForce: BG = False);
+begin
+  if (CommonApplication = nil) or (LocalMainIni = nil) then
+    Exit;
   try
     RWOptions(False);
-    if ((CommonApplication.Statistics.TotalElapsedTime.Milliseconds >= LastUploadTime + MaxUploadInterval) or (CommonApplication.Statistics.RunCount >= LastUploadCount + MaxUploadCount)) then
+    if AForce or (TimeForUpload and CanUpload) then
     begin
-      if AskedForUpload = False then
-      begin
-        if Confirmation('To improve future versions of ' + GetProjectInfo(piProductName) + ', we can collect statistics on which application features you use. No sensitive information will be collected.' + FullSep +
-          'Do you wish to contribute your usage statistics?', [mbYes, mbNo]) = mbYes then
-        begin
-          UploadInfo := True;
-        end
-        else
-        	UploadInfo := False;
-        AskedForUpload := True;
-        RWOptions(True);
-      end;
-
-      if UploadInfo then
-      begin
-        if UploadData then
-        begin
-	        LastUploadCount := CommonApplication.Statistics.RunCount;
-	        LastUploadTime := Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds);
-        end;
-        RWOptions(True);
-      end;
+      UploadAndUpdateOptions;
     end;
   except
     on E: Exception do

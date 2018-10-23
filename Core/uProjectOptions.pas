@@ -11,7 +11,7 @@ unit uProjectOptions;
 interface
 
 uses
-  uTypes, SysUtils, uSxStringList, uProjectInfo, uNProjectVersion, uDelphi, Classes, XMLIntf;
+  uTypes, SysUtils, uSxStringList, uProjectInfo, uNProjectVersion, uDelphi, Classes, OmniXML;
 
 type
   TExecutableType = (etProgram, etLibrary, etPackage);
@@ -114,7 +114,8 @@ function GetProjectMainIconFileName(const CurrentDir, ProjectName: string; const
 implementation
 
 uses
-  TypInfo, uStrings, uChar, uMath, uOutputFormat, XMLDoc, uSxXMLDocument, Variants, uInputFormat, uFiles, uFile,
+  TypInfo,
+  uStrings, uChar, uMath, uOutputFormat, uInputFormat, uFiles, uFile, uSxXMLDocument,
   uDIniFile, uMsg;
 
 const
@@ -203,15 +204,6 @@ end;
 
 { TProjectOptions }
 
-function FindOrCreateNode(const RootNode: IXMLNode; const Name: string): IXMLNode;
-begin
-  Result := RootNode.ChildNodes.FindNode(Name);
-  if Result = nil then
-  begin
-    Result := RootNode.AddChild(Name);
-  end;
-end;
-
 procedure TProjectOptions.WriteWarningsToNode(const Node: IXMLNode);
 const
   AttrName = 'Name';
@@ -226,12 +218,12 @@ begin
   begin
     if Warnings[TCompilerWarning(i)] <> owDefault then
     begin
-      cNode := FindOrCreateNode(Node, CompilerWarningsStr[TCompilerWarning(i)]);
-      cNode.NodeValue := OutputWarningToStr(Warnings[TCompilerWarning(i)]);
+      cNode := TSxXMLDocument.FindOrCreateNode(Node, CompilerWarningsStr[TCompilerWarning(i)]);
+      cNode.Text := OutputWarningToStr(Warnings[TCompilerWarning(i)]);
     end
     else
     begin
-      cNode := Node.ChildNodes.FindNode(CompilerWarningsStr[TCompilerWarning(i)]);
+      cNode := TSxXMLDocument.FindNode(Node, CompilerWarningsStr[TCompilerWarning(i)]);
       if cNode <> nil then
         Node.ChildNodes.Remove(cNode);
     end;
@@ -246,32 +238,18 @@ begin
   end;}
 end;
 
-function NodeToString(const Node: IXMLNode): string;
-begin
-  Result := '';
-  try
-    if (Node.IsTextElement = True) and (not VarIsNull(Node.NodeValue)) then
-      Result := Node.NodeValue;
-  except
-    // No Value
-  end;
-end;
-
 procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
-
-  function GetNameAttr(const Node: IXMLNode): string;
-  begin
-    Result := Node.Attributes['Name'];
-  end;
 
   procedure ReadCompilerNode(const Node: IXMLNode);
   var
     NodeValue, AttrValue: string;
     i: SG;
   begin
-    NodeValue := NodeToString(Node);
-    AttrValue := UpperCase(GetNameAttr(Node));
-    if AttrValue = 'ShowHints' then
+    NodeValue := TSxXMLDocument.NodeToString(Node);
+    AttrValue := UpperCase(TSxXMLDocument.GetAttributeValue(Node, 'Name'));
+    if AttrValue = '' then
+      Exit
+    else if AttrValue = 'ShowHints' then
       ShowHints := StrToBoolean(NodeValue)
     else if AttrValue = 'ShowWarnings' then
       ShowWarnings := StrToBoolean(NodeValue)
@@ -292,8 +270,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
   var
     NodeValue, AttrValue: string;
   begin
-    NodeValue := NodeToString(Node);
-    AttrValue := GetNameAttr(Node);
+    NodeValue := TSxXMLDocument.NodeToString(Node);
+    AttrValue := TSxXMLDocument.GetAttributeValue(Node, 'Name');
 //    if AttrValue = 'MapFile' then
 //    else if AttrValue = 'OutputObjs' then
 //    else if AttrValue = 'GenerateHpps' then
@@ -315,8 +293,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
   var
     NodeValue, AttrValue: string;
   begin
-    NodeValue := NodeToString(Node);
-    AttrValue := GetNameAttr(Node);
+    NodeValue := TSxXMLDocument.NodeToString(Node);
+    AttrValue := TSxXMLDocument.GetAttributeValue(Node, 'Name');
     if AttrValue = 'OutputDir' then
       OutputDir := NodeValue
     else if AttrValue = 'UnitOutputDir' then
@@ -345,8 +323,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     NodeValue, AttrValue: string;
     SubVersion: TSubVersion;
   begin
-    NodeValue := NodeToString(Node);
-    AttrValue := GetNameAttr(Node);
+    NodeValue := TSxXMLDocument.NodeToString(Node);
+    AttrValue := TSxXMLDocument.GetAttributeValue(Node, 'Name');
     for SubVersion := Low(SubVersion) to High(SubVersion) do
     begin
       if AttrValue = VerStr[SubVersion] then
@@ -391,7 +369,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
   begin
     if (ANode.NodeName = 'Compiler') then
     begin
-      iNode := ANode.ChildNodes.First;
+      ANode.ChildNodes.Reset;
+      iNode := ANode.ChildNodes.NextNode;
       while iNode <> nil do
       begin
         ReadCompilerNode(iNode);
@@ -400,7 +379,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     end
     else if (ANode.NodeName = 'Linker') then
     begin
-      iNode := ANode.ChildNodes.First;
+      ANode.ChildNodes.Reset;
+      iNode := ANode.ChildNodes.NextNode;
       while iNode <> nil do
       begin
         ReadLinkerNode(iNode);
@@ -409,7 +389,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     end
     else if (ANode.NodeName = 'Directories') then
     begin
-      iNode := ANode.ChildNodes.First;
+      ANode.ChildNodes.Reset;
+      iNode := ANode.ChildNodes.NextNode;
       while iNode <> nil do
       begin
         ReadDirectoriesNode(iNode);
@@ -418,7 +399,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
     end
     else if (ANode.NodeName = 'VersionInfo') then
     begin
-      iNode := ANode.ChildNodes.First;
+      ANode.ChildNodes.Reset;
+      iNode := ANode.ChildNodes.NextNode;
       while iNode <> nil do
       begin
         ReadVersionInfoNode(iNode);
@@ -431,7 +413,8 @@ procedure TProjectOptions.RWBDSProj(const AFileName: TFileName; const Save: BG);
   var
     iNode: IXMLNode;
   begin
-    iNode := Node.ChildNodes.First;
+    Node.ChildNodes.Reset;
+    iNode := Node.ChildNodes.NextNode;
     while iNode <> nil do
     begin
       ReadDelphiPersonality(iNode);
@@ -444,13 +427,12 @@ var
   iNode: IXMLNode;
 begin
   try
-    XML := TSxXMLDocument.Create(AFileName);
-    XML.Active := True;
-    XML.NodeIndentStr := XMLIndentStr;
+    XML := TXMLDocument.Create;
+    XML.Load(AFileName);
+//    XML.NodeIndentStr := XMLIndentStr;
     try
-      if XML.IsEmptyDoc then
-        Exit;
-      iNode := XML.DocumentElement.ChildNodes.First;
+      XML.DocumentElement.ChildNodes.Reset;
+      iNode := XML.DocumentElement.ChildNodes.NextNode;
       while iNode <> nil do
       begin
         if (iNode.NodeName = 'Delphi.Personality') then
@@ -462,11 +444,10 @@ begin
       iNode := nil;
       if Save then
       begin
-        XML.SaveToFile(AFileName);
+        XML.Save(AFileName, ofIndent);
         RepairDproj(AFileName);
       end;
     finally
-      XML.Active := False;
       XML := nil; // Release XML document
     end;
   except
@@ -531,10 +512,11 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     NodeValue: string;
     SubVersion: TSubVersion;
     i: SG;
+    Attribute: IXMLNode;
   begin
     if (Node = nil) then
       Exit;
-    NodeValue := NodeToString(Node);
+    NodeValue := TSxXMLDocument.NodeToString(Node);
 
     Name := UpperCase(Node.NodeName);
     if Name = UpperCase('MainSource') then
@@ -598,15 +580,16 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     end
     else if Name = UpperCase('VersionInfo') then
     begin
-      if Node.HasAttribute(AttrName) then
+      Attribute := Node.Attributes.GetNamedItem(AttrName);
+      if Attribute <> nil then
       begin
-        Name := Node.GetAttribute(AttrName);
+        Name := Attribute.NodeValue;
         for SubVersion := Low(SubVersion) to High(SubVersion) do
         begin
           if Name = VerStr[SubVersion] then
           begin
             if Save then
-//							Node.NodeValue := Version.GetAsString(SubVersion)
+//							Node.Text := Version.GetAsString(SubVersion)
 
             else
               Version.SetSubVersion(SubVersion, NodeValue);
@@ -649,23 +632,24 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     end
     else if Name = UpperCase('VersionInfoKeys') then
     begin
-      if Node.HasAttribute(AttrName) then
+      Attribute :=  Node.Attributes.GetNamedItem(AttrName);
+      if Attribute <> nil then
       begin
-        Name := Node.GetAttribute(AttrName);
+        Name := Attribute.NodeValue;
         AddVersionInfo(Name, NodeValue);
       end;
     end
     else if Name = UpperCase('DCC_Hints') then
     begin
       if Save then
-        Node.NodeValue := ShowHints
+        Node.Text := BoolToStr(ShowHints, True)
       else
         ShowHints := StrToBoolean(NodeValue);
     end
     else if Name = UpperCase('DCC_Warnings') then
     begin
       if Save then
-        Node.NodeValue := ShowWarnings
+        Node.Text := BoolToStr(ShowWarnings, True)
       else
         ShowWarnings := StrToBoolean(NodeValue);
     end
@@ -676,7 +660,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
         if Name = CompilerWarningsStr[TCompilerWarning(i)] then
         begin
           if Save then
-//            Node.NodeValue := Warnings[TCompilerWarning(i)]
+//            Node.Text:= Warnings[TCompilerWarning(i)]
 
           else
             Warnings[TCompilerWarning(i)] := StrToOutputWarning(NodeValue);
@@ -684,7 +668,8 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
         end;
     end;
 
-    cNode := Node.ChildNodes.First;
+    Node.ChildNodes.Reset;
+    cNode := Node.ChildNodes.NextNode;
     while cNode <> nil do
     begin
       ProcessNode(cNode);
@@ -696,6 +681,7 @@ var
   XML: IXMLDocument;
   iNode, cNode: IXMLNode;
   Name: string;
+  Attribute: IXMLNode;
 begin
   if Save = False then
   begin
@@ -707,20 +693,20 @@ begin
   if FileExists(AFileName) then
   begin
     try
-      XML := TSxXMLDocument.Create(AFileName);
-      XML.Active := True;
-      XML.NodeIndentStr := XMLIndentStr;
+      XML := TSxXMLDocument.Create;
+      XML.Load(AFileName);
+//      XML.NodeIndentStr := XMLIndentStr;
       try
-        if XML.IsEmptyDoc then
-          Exit;
-        iNode := XML.DocumentElement.ChildNodes.First;
+        XML.DocumentElement.ChildNodes.Reset;
+        iNode := XML.DocumentElement.ChildNodes.NextNode;
         while iNode <> nil do
         begin
           if (iNode.NodeName = 'PropertyGroup') then
           begin
-            if iNode.HasAttribute('Condition') then
+            Attribute := iNode.Attributes.GetNamedItem('Condition');
+            if Attribute <> nil then
             begin
-              Name := iNode.Attributes['Condition'];
+              Name := Attribute.NodeValue;
               if IsDebugCondition(Name) then
               begin
                 iNode := iNode.NextSibling;
@@ -730,11 +716,11 @@ begin
               begin
                 if Save then
                 begin
-                  cNode := FindOrCreateNode(iNode, 'Icon_MainIcon');
-                  cNode.NodeValue := IconFileName;
+                  cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'Icon_MainIcon');
+                  cNode.Text := IconFileName;
 
-                  cNode := FindOrCreateNode(iNode, 'DCC_Namespace');
-                  cNode.NodeValue := Namespaces.DelimitedTextWithoutQuotes;
+                  cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'DCC_Namespace');
+                  cNode.Text := Namespaces.DelimitedTextWithoutQuotes;
 
                   WriteWarningsToNode(iNode);
                 end;
@@ -743,7 +729,7 @@ begin
               begin
                 if Save then
                 begin
-                  cNode := iNode.ChildNodes.FindNode('VerInfo_Keys');
+                  cNode := TSxXMLDocument.FindNode(iNode, 'VerInfo_Keys');
                   if cNode <> nil then
                     iNode.ChildNodes.Remove(cNode);
                 end;
@@ -756,11 +742,10 @@ begin
         iNode := nil;
         if Save then
         begin
-          XML.SaveToFile(AFileName);
+          XML.Save(AFileName, ofIndent);
           RepairDproj(AFileName);
         end;
       finally
-        XML.Active := False;
         XML := nil; // Release XML document
       end;
     except

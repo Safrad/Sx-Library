@@ -4,15 +4,17 @@ interface
 
 uses
   uConfigFile,
-  SysUtils, Windows, XmlIntf, XMLDoc;
+  SysUtils, Windows, OmniXML;
 
 type
   TXMLFile = class(TConfigFile)
   private
-    FXMLDoc: IXMLDocument;
+    FXMLDocument: IXMLDocument;
+    function FindElement(const ARootNode: IXMLNode; const AElementName, AAttributeName, AAttributeValue: string): IXMLNode;
+    function FindOrCreateElement(const ARootNode: IXMLNode; const AElementName, AAttributeName, AAttributeValue: string): IXMLNode;
   protected
-    function ReadStringInt(const Section, Key, default: string): string; override;
-    procedure WriteStringInt(const Section, Key, Value: string); override;
+    function ReadStringInt(const ASection, AKey, ADefault: string): string; override;
+    procedure WriteStringInt(const ASection, AKey, AValue: string); override;
     procedure LoadFromFile; override;
     procedure SaveToFile; override;
   public
@@ -34,57 +36,90 @@ end;
 destructor TXMLFile.Destroy;
 begin
   inherited;
-  FXMLDoc := nil;
+  FXMLDocument := nil;
+end;
+
+function TXMLFile.FindElement(const ARootNode: IXMLNode; const AElementName, AAttributeName, AAttributeValue: string): IXMLNode;
+var
+  XMLNode: IXMLNode;
+  Attribute: IXMLNode;
+begin
+  ARootNode.ChildNodes.Reset;
+  XMLNode := ARootNode.ChildNodes.NextNode;
+  while XMLNode <> nil do
+  begin
+    if XMLNode.NodeName = AElementName then
+    begin
+      Attribute := XMLNode.Attributes.GetNamedItem(AAttributeName);
+      if Attribute <> nil then
+      begin
+        if Attribute.Text = AAttributeValue then
+        begin
+          Result := XMLNode;
+          Exit;
+        end;
+      end;
+    end;
+    XMLNode := XMLNode.NextSibling;
+  end;
+  Result := nil;
+end;
+
+function TXMLFile.FindOrCreateElement(const ARootNode: IXMLNode; const AElementName, AAttributeName, AAttributeValue: string): IXMLNode;
+var
+  XMLElement: IXMLElement;
+begin
+  Result := FindElement(ARootNode, AElementName, AAttributeName, AAttributeValue);
+  if Result = nil then
+  begin
+    XMLElement := FXMLDocument.CreateElement(AElementName);
+    XMLElement.SetAttribute(AAttributeName, AAttributeValue);
+    Result := ARootNode.AppendChild(XMLElement);
+  end;
 end;
 
 procedure TXMLFile.LoadFromFile;
 begin
   inherited;
-  FXMLDoc := TSxXMLDocument.Create(nil);
+
+  FXMLDocument := TSxXMLDocument.Create;
   if FileExists(FFileName) then
-    FXMLDoc.LoadFromFile(FFileName)
+    FXMLDocument.Load(FFileName)
   else
   begin
-    FXMLDoc.Active := True;
-    FXMLDoc.AddChild('Configuration');
+    FXMLDocument.AppendChild(FXMLDocument.CreateElement('Configuration'));
   end;
 end;
 
-function TXMLFile.ReadStringInt(const Section, Key, default: string): string;
+function TXMLFile.ReadStringInt(const ASection, AKey, ADefault: string): string;
 var
-  Node, Node2: IXMLNode;
+  NodeSection, NodeKey: IXMLNode;
 begin
-  Node := FXMLDoc.DocumentElement.ChildNodes.FindNode(Section);
-  if Assigned(Node) then
+  NodeSection := FindElement(FXMLDocument.DocumentElement, 'Section', 'Name', ASection);
+  if Assigned(NodeSection) then
   begin
-    Node2 := Node.ChildNodes.FindNode(Key);
-    Result := Node2.NodeValue;
+    NodeKey := FindElement(NodeSection, 'Key', 'Name', AKey);
+    if Assigned(NodeKey) then
+      Result := TSxXMLDocument.NodeToString(NodeKey)
+    else
+      Result := ADefault;
   end
   else
-    Result := default;
-{  if Assigned(Node) and Node.HasAttribute(Key) then
-    Result := Node.Attributes[Key]
-  else
-    Result := default;}
+    Result := ADefault;
 end;
 
 procedure TXMLFile.SaveToFile;
 begin
-  FXMLDoc.SaveToFile(FFileName);
+  FXMLDocument.Save(FFileName, ofIndent);
 end;
 
-procedure TXMLFile.WriteStringInt(const Section, Key, Value: string);
+procedure TXMLFile.WriteStringInt(const ASection, AKey, AValue: string);
 var
-  Node, Node2: IXMLNode;
+  NodeSection, NodeKey: IXMLNode;
 begin
-  Node := FXMLDoc.DocumentElement.ChildNodes.FindNode(Section);
-  if not Assigned(Node) then
-    Node := FXMLDoc.DocumentElement.AddChild(Section);
-//  Node.Attributes[Key] := Value;
-  Node2 := Node.ChildNodes.FindNode(Key);
-  if not Assigned(Node2) then
-    Node2 := Node.AddChild(Key);
-  Node2.NodeValue := Value;
+  NodeSection := FindOrCreateElement(FXMLDocument.DocumentElement, 'Section', 'Name', ASection);
+  NodeKey := FindOrCreateElement(NodeSection, 'Key', 'Name', AKey);
+  NodeKey.Text := AValue;
 end;
 
 end.

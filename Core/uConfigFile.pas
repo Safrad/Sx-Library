@@ -9,20 +9,20 @@ type
     FBackup: Boolean;
   protected
     FFileName: string;
-    function ReadStringInt(const Section, Key, default: string): string; virtual; abstract;
-    procedure WriteStringInt(const Section, Key, Value: string); virtual; abstract;
+    function ReadStringInt(const ASection, AKey, ADefault: string): string; virtual; abstract;
+    procedure WriteStringInt(const ASection, Key, AValue: string); virtual; abstract;
     procedure LoadFromFile; virtual; abstract;
     procedure SaveToFile; virtual; abstract;
   public
-    constructor Create(const FileName: string); virtual;
+    constructor Create(const AFileName: string); virtual;
     destructor Destroy; override;
     procedure Save;
-    function ReadString(const Section, Key, default: string): string; virtual;
-    procedure WriteString(const Section, Key, Value: string); virtual;
-    function ReadInteger(const Section, Key: string; default: Integer): Integer; virtual;
-    procedure WriteInteger(const Section, Key: string; Value: Integer); virtual;
-    function ReadBoolean(const Section, Key: string; default: Boolean): Boolean; virtual;
-    procedure WriteBoolean(const Section, Key: string; Value: Boolean); virtual;
+    function ReadString(const ASection, AKey, ADefault: string): string; virtual;
+    procedure WriteString(const ASection, AKey, AValue: string); virtual;
+    function ReadInteger(const ASection, AKey: string; ADefault: Integer): Integer; virtual;
+    procedure WriteInteger(const ASection, AKey: string; AValue: Integer); virtual;
+    function ReadBoolean(const ASection, AKey: string; ADefault: Boolean): Boolean; virtual;
+    procedure WriteBoolean(const ASection, AKey: string; AValue: Boolean); virtual;
   end;
 
 implementation
@@ -33,33 +33,36 @@ uses
 
 { TConfigFile }
 
-constructor TConfigFile.Create(const FileName: string);
+constructor TConfigFile.Create(const AFileName: string);
 begin
   inherited Create;
-  FBackup         := True;
-  FFileName       := FileName;
+  FBackup := True;
+  FFileName := AFileName;
   LoadFromFile;
 end;
 
 destructor TConfigFile.Destroy;
 begin
-  Save;
-  inherited;
+  try
+    Save;
+  finally
+    inherited;
+  end;
 end;
 
-function TConfigFile.ReadBoolean(const Section, Key: string; default: Boolean): Boolean;
+function TConfigFile.ReadBoolean(const ASection, AKey: string; ADefault: Boolean): Boolean;
 begin
-  Result := Boolean(ReadInteger(Section, Key, Integer(default)));
+  Result := Boolean(ReadInteger(ASection, AKey, Integer(ADefault)));
 end;
 
-function TConfigFile.ReadInteger(const Section, Key: string; default: Integer): Integer;
+function TConfigFile.ReadInteger(const ASection, AKey: string; ADefault: Integer): Integer;
 begin
-  Result := StrToInt(ReadString(Section, Key, IntToStr(default)));
+  Result := StrToInt(ReadString(ASection, AKey, IntToStr(ADefault)));
 end;
 
-function TConfigFile.ReadString(const Section, Key, default: string): string;
+function TConfigFile.ReadString(const ASection, AKey, ADefault: string): string;
 begin
-  Result := ReadStringInt(Section, Key, default);
+  Result := ReadStringInt(ASection, AKey, ADefault);
 end;
 
 procedure TConfigFile.Save;
@@ -72,21 +75,21 @@ begin
   FModified := False;
 end;
 
-procedure TConfigFile.WriteBoolean(const Section, Key: string; Value: Boolean);
+procedure TConfigFile.WriteBoolean(const ASection, AKey: string; AValue: Boolean);
 begin
-  WriteInteger(Section, Key, Integer(Value));
+  WriteInteger(ASection, AKey, Integer(AValue));
 end;
 
-procedure TConfigFile.WriteInteger(const Section, Key: string; Value: Integer);
+procedure TConfigFile.WriteInteger(const ASection, AKey: string; AValue: Integer);
 begin
-  WriteString(Section, Key, IntToStr(Value));
+  WriteString(ASection, AKey, IntToStr(AValue));
 end;
 
-procedure TConfigFile.WriteString(const Section, Key, Value: string);
+procedure TConfigFile.WriteString(const ASection, AKey, AValue: string);
 begin
-  if ReadString(Section, Key, '') = Value then
+  if ReadString(ASection, AKey, '') = AValue then
     Exit;
-  WriteStringInt(Section, Key, Value);
+  WriteStringInt(ASection, AKey, AValue);
   FModified := True;
 end;
 

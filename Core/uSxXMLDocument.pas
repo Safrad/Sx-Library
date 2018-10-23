@@ -3,103 +3,91 @@ unit uSxXMLDocument;
 interface
 
 uses
-  {$if CompilerVersion >= 25}Xml.Win.msxmldom{$else}msxmldom{$ifend},
-  XMLDoc, XMLIntf, Classes, XMLDom,
-  ActiveX;
-
-function ReadChildNode(const XMLNode: IXMLNode; const NodeName: string): string;
-function FindOrAddChild(const XMLNode: IXMLNode; const NodeName: string): IXMLNode;
-procedure AddXMLHeader(const XML: IXMLDocument; const FileDescription: string);
+  OmniXML;
 
 type
   TSxXMLDocument = class(TXMLDocument)
-  protected
-    procedure SetActive(const Value: Boolean); override;
   public
-    procedure SaveToFile(const AFileName: DOMString = ''); override;
-    class procedure InitializeCOM;
-    class procedure FinalizeCOM;
+    class function FindNode(const ARootXMLNode: IXMLNode; const AName: string): IXMLNode;
+    class function FindOrCreateNode(const ARootXMLNode: IXMLNode; const AName: string): IXMLNode;
+
+    class function NodeToString(const AXMLNode: IXMLNode): string;
+    class function GetAttributeValue(const AXMLNode: IXMLNode; const AName: string): string;
+
+    function GetAsString: string;
   end;
 
 implementation
 
 uses
-  uStrings,
-  uProjectInfo;
-
-function ReadChildNode(const XMLNode: IXMLNode; const NodeName: string): string;
-var
-  Node: IXMLNode;
-begin
-  Node := XMLNode.ChildNodes.FindNode(NodeName);
-  if Node <> nil then
-    Result := Node.NodeValue
-  else
-    Result := '';
-end;
-
-function FindOrAddChild(const XMLNode: IXMLNode; const NodeName: string): IXMLNode;
-begin
-  Result := XMLNode.ChildNodes.FindNode(NodeName);
-  if Result = nil then
-    Result := XMLNode.AddChild(NodeName);
-end;
-
-function GetXMLComment(const FileDescription: string): string;
-begin
-  if FileDescription <> '' then
-    Result := FileDescription + FileSep
-  else
-    Result := '';
-
-  AppendStr(Result, GetProjectInfo(piProductName) + CharSpace + GetProjectInfo(piFileVersion) + FileSep);
-  AppendStr(Result, GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName) + FileSep);
-  AppendStr(Result, GetProjectInfo(piWeb));
-end;
-
-procedure AddXMLHeader(const XML: IXMLDocument; const FileDescription: string);
-begin
-//  if XML.DocumentElement = nil then
-  begin
-    XML.ChildNodes.Add(XML.CreateNode(GetXMLComment(FileDescription), ntComment));
-  end;
-end;
+  Classes;
 
 { TSxXMLDocument }
 
-class procedure TSxXMLDocument.FinalizeCOM;
+class function TSxXMLDocument.FindNode(const ARootXMLNode: IXMLNode; const AName: string): IXMLNode;
+var
+  XMLNode: IXMLNode;
 begin
-	CoUninitialize;
-end;
-
-class procedure TSxXMLDocument.InitializeCOM;
-begin
-	Assert(CoInitializeEx(nil, COINIT_MULTITHREADED or COINIT_SPEED_OVER_MEMORY) <> S_FALSE);
-{$if CompilerVersion >= 25}
-  MSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False);
-{$else}
-{$if CompilerVersion >= 21}
-  MSXML6_ProhibitDTD := False;
-{$ifend}
-{$ifend}
-end;
-
-procedure TSxXMLDocument.SaveToFile(const AFileName: DOMString = '');
-begin
-  if Active then
+  ARootXMLNode.ChildNodes.Reset;
+  XMLNode := ARootXMLNode.ChildNodes.NextNode;
+  while XMLNode <> nil do
   begin
-    XML.Text := FormatXMLData(XML.Text);
-    Active := True;
+    if XMLNode.NodeName = AName then
+    begin
+      Result := XMLNode;
+      Exit;
+    end;
+    XMLNode := XMLNode.NextSibling;
+//    XMLNode := ARootXMLNode.ChildNodes.NextNode;
   end;
-  inherited;
+  Result := nil;
 end;
 
-procedure TSxXMLDocument.SetActive(const Value: Boolean);
+class function TSxXMLDocument.FindOrCreateNode(const ARootXMLNode: IXMLNode; const AName: string): IXMLNode;
+var
+  NewXMLNode: IXMLElement;
 begin
-  // Change default options
-//  Options := Options + [doNodeAutoIndent];
+  Result := FindNode(ARootXMLNode, AName);
+  if Result = nil then
+  begin
+    NewXMLNode := ARootXMLNode.OwnerDocument.CreateElement(AName);
+    Result := ARootXMLNode.AppendChild(NewXMLNode);
+  end;
+end;
 
-  inherited;
+class function TSxXMLDocument.GetAttributeValue(const AXMLNode: IXMLNode; const AName: string): string;
+var
+  Attribute: IXMLNode;
+begin
+  Attribute :=  AXMLNode.Attributes.GetNamedItem(AName);
+  if Attribute <> nil then
+    Result := Attribute.NodeValue
+  else
+    Result := '';
+end;
+
+class function TSxXMLDocument.NodeToString(const AXMLNode: IXMLNode): string;
+begin
+  Result := '';
+  if (AXMLNode.NodeType = ELEMENT_NODE) then
+    Result := AXMLNode.Text
+  else if (AXMLNode.NodeType = TEXT_NODE) then
+    Result := AXMLNode.NodeValue;
+end;
+
+function TSxXMLDocument.GetAsString: string;
+const
+  BOMSize = 3;
+var
+  MemoryStream: TMemoryStream;
+begin
+  MemoryStream := TMemoryStream.Create;
+  try
+    SaveToStream(MemoryStream, ofIndent);
+    SetString(Result, PAnsiChar(PByte(MemoryStream.Memory) + BOMSize), MemoryStream.Size - BOMSize);
+  finally
+    MemoryStream.Free;
+  end;
 end;
 
 end.

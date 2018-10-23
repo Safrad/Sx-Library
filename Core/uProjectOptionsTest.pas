@@ -8,12 +8,15 @@ type
   TProjectOptionsTest = class(TTestCase)
   published
     procedure Test;
+    procedure TestThreads;
   end;
 
 implementation
 
 uses
   SysUtils,
+  uThreadPool,
+  uAsyncTaskForProjectOptionsTest,
 	uTypes, uFiles, uProjectOptions;
 
 { TProjectOptionsTest }
@@ -27,6 +30,26 @@ begin
     ProjectOptions.RWBDSProj(DataDir + 'Test.bdsproj', False);
   finally
     ProjectOptions.Free;
+  end;
+end;
+
+procedure TProjectOptionsTest.TestThreads;
+var
+  ThreadPool: TThreadPool;
+  AsyncTask: TAsyncTaskForProjectOptionsTest;
+  i: SG;
+begin
+  ThreadPool := TThreadPool.Create;
+  try
+    for i := 0 to 99 do
+    begin
+      AsyncTask := TAsyncTaskForProjectOptionsTest.Create;
+      ThreadPool.AddTask(AsyncTask);
+    end;
+
+    ThreadPool.WaitForNoWork;
+  finally
+    ThreadPool.Free;
   end;
 end;
 
