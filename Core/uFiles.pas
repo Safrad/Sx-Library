@@ -684,7 +684,7 @@ begin
 		ReadSubDirSorted(FileNames, FileCount, CorrectDirF(ExpandDir(Path)), '', Extensions, Files, Dirs, SubDirs, FullPath);
 
 	if LogDebug then
-    MainLogAdd(NToS(FileCount) + ' files found in folder ' + Path + '.', mlDebug);
+    MainLogAdd(NToS(FileCount, ofIO) + ' files found in folder ' + Path + '.', mlDebug);
 (*	if Sort then
 	begin
 		Offset := FilesCount div 2;
