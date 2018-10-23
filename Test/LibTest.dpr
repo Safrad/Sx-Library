@@ -52,7 +52,8 @@ uses
   uSxThreadTimerTest in '..\Core\uSxThreadTimerTest.pas',
   uTextMacroTest in '..\Core\uTextMacroTest.pas',
   uStartupEnvironmentTest in '..\Core\uStartupEnvironmentTest.pas',
-  uCyclicRedundancyCheckTest in '..\Core\uCyclicRedundancyCheckTest.pas';
+  uCyclicRedundancyCheckTest in '..\Core\uCyclicRedundancyCheckTest.pas',
+  uSplitFileTest in '..\Core\uSplitFileTest.pas';
 
 {$R *.RES}
 
