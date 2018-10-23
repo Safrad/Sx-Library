@@ -23,7 +23,6 @@ type
     FQueueCriticalSection: TRTLCriticalSection;
     FThreadPriority: TThreadPriority;
     FOnTasksFinished: TNotifyEvent;
-    FUseCoInitialize: BG;
     procedure SetRunThreads(Value: SG);
     procedure SetMaxThreads(Value: SG);
     procedure QueueToThread;
@@ -31,7 +30,6 @@ type
     procedure WorkerCreate(const Index: SG);
     procedure SetThreadPriority(const Value: TThreadPriority);
     procedure SetOnTasksFinished(const Value: TNotifyEvent);
-    procedure SetUseCoInitialize(const Value: BG);
   public
     constructor Create;
     destructor Destroy; override;
@@ -58,7 +56,6 @@ type
     property MaxThreads: SG read FMaxThreads write SetMaxThreads;
     property ThreadPriority: TThreadPriority read FThreadPriority write SetThreadPriority;
     property OnTasksFinished: TNotifyEvent read FOnTasksFinished write SetOnTasksFinished;
-    property UseCoInitialize: BG read FUseCoInitialize write SetUseCoInitialize;
   end;
 
 implementation
@@ -295,7 +292,6 @@ var
   WorkerThread: TWorkerThread;
 begin
   WorkerThread := TWorkerThread.Create(Index, Self);
-  WorkerThread.UseCoInitialize := UseCoInitialize;
   InterlockedIncrement(FRunThreads);
   FThreads[Index] := WorkerThread;
   WorkerThread.Resume;
@@ -364,11 +360,6 @@ begin
       if FThreads[i] <> nil then
         FThreads[i].Priority := FThreadPriority;
   end;
-end;
-
-procedure TThreadPool.SetUseCoInitialize(const Value: BG);
-begin
-  FUseCoInitialize := Value;
 end;
 
 function TThreadPool.Working: BG;
