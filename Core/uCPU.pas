@@ -37,6 +37,7 @@ type
     procedure UpdateFrequency;
     procedure UpdateUsage;
 
+    function GetID: U4;
     function GetFamily: SG;
     function GetModel: SG;
     function GetStepping: SG;
@@ -50,6 +51,7 @@ type
     procedure Update; // changing over time
 
     property Name: string read GetName;
+    property ID: U4 read GetID;
     property Family: SG read GetFamily;
     property Model: SG read GetModel;
     property Stepping: SG read GetStepping;
@@ -254,23 +256,24 @@ end;
 
 function TCPU.GetFamily: SG;
 begin
+  Result := (GetID shr 8 and $0000000f) or (GetID shr 16 and $000000f0);
+end;
+
+function TCPU.GetID: U4;
+begin
   if FCPUIDA = 0 then
     CallCPUID;
-  Result := (FCPUIDA shr 8 and $0000000f) or (FCPUIDA shr 16 and $000000f0);
+  Result := FCPUIDA;
 end;
 
 function TCPU.GetModel: SG;
 begin
-  if FCPUIDA = 0 then
-    CallCPUID;
-  Result := (FCPUIDA shr 4 and $0000000f) or (FCPUIDA shr 12 and $000000f0);
+  Result := (GetID shr 4 and $0000000f) or (GetID shr 12 and $000000f0);
 end;
 
 function TCPU.GetStepping: SG;
 begin
-  if FCPUIDA = 0 then
-    CallCPUID;
-  Result := FCPUIDA and $000000f;
+  Result := GetID and $000000f;
 end;
 
 procedure TCPU.UpdateLogicalProcessorCount;
