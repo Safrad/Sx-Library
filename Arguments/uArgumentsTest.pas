@@ -20,6 +20,7 @@ type
 implementation
 
 uses
+  SysUtils,
   uStrings;
 
 { TArgumentsTest }
@@ -49,23 +50,23 @@ begin
   try
     Arguments.Parse('');
     // OK
-    Arguments.Parse('-r -d1 -number 10 -sa a;b;c -na 1;2;3');
+    Arguments.Parse('"*.exe" -r -d1 -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;
 
     // check "  " (double space) in command line
-    Arguments.Parse('-r  -d1   -number 10 -sa a;b;c -na 1;2;3');
+    Arguments.Parse('"*.exe" -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;
 
     // check " " in start command line
-    Arguments.Parse(' -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
+    Arguments.Parse('"*.exe"  -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;
 
-    Arguments.Parse('-r -d1 -number 10 -sa a;b;c -na 1;2;3');
+    Arguments.Parse('"*.exe" -r -d1 -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;
     CheckEquals('Argument "number" requires argument "d"' + LineSep, Arguments.Check);
 
-    Arguments.Parse('-d "1" -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
-    CheckEquals('"1"', Arguments.Dir.Value);
+    Arguments.Parse('"*.exe" -d "1" -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
+    CheckEquals(CorrectDirF(GetCurrentDir) + '1\', Arguments.Dir.Value);
     CheckEquals('', Arguments.Check);
   finally
     Arguments.Free;
