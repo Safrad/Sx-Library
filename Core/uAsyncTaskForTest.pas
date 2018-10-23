@@ -16,7 +16,7 @@ implementation
 uses
   uTypes, uStopwatch;
 
-{ TAsyncTask }
+{ TAsyncTaskForTest }
 
 procedure TAsyncTaskForTest.Execute;
 var
