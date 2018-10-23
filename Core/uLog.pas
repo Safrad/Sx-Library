@@ -97,7 +97,6 @@ procedure InitializeLog;
 begin
   InitializingLog := True;
 
-  InitPaths;
 	CreateDirEx(ExtractFilePath(MainLogFileName));
 	MainLog := TLog.Create(MainLogFileName);
   InitializingLog := False;
