@@ -167,7 +167,7 @@ begin
     LastUpdate := Now;
   end;
 
-	if not Installed then
+	if Statistics.RunFirstTime then
 	begin
 		LinkChange(goStartMenuIcon, ocCreate);
 	end;
@@ -178,7 +178,7 @@ begin
 	GlobalParams[goRunAfterStartUp].Bool := IsRegisteredStartup;
 
 //	Dictionary.TranslateForm(Form); TODO :
-	if not Installed then
+	if Statistics.RunFirstTime then
 	begin
     ufOptions.ShowOptions('Global Options', POptions(@GlobalOptions), Length(GlobalParams), PParams
         (@GlobalParams), OptionChanged);

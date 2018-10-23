@@ -130,7 +130,6 @@ function AllText: string;
 function AllSounds: string;
 
 function SplitStr(Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
-function Installed: BG;
 function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
 function FindFilesInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileNames;
 
@@ -142,14 +141,6 @@ uses
   uStartupEnvironment,
 	uChar, uMsg, uProjectInfo, uSorts, uCharset,
 	uOutputFormat, uMath, uLog;
-
-var
-	GInstalled: BG;
-
-function Installed: BG;
-begin
-	Result := GInstalled;
-end;
 
 function SplitStr(Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
 var
@@ -218,9 +209,7 @@ var
 	i: SG;
 	All: TArrayOfString;
   CommandLine: string;
-  SrcDir, Suffix, CompanySuffix: string;
-  OldMainIniFileName: TFileName;
-  NewLogPath, OldLogPath: string;
+  Suffix, CompanySuffix: string;
 begin
   All := nil;
 	if ExeFileName <> '' then Exit;
@@ -235,35 +224,21 @@ begin
   ModuleFileName := GetModuleFileNameFunc(HInstance);
 
 	WorkDir := '';
-{	if Length(ExeFileName) > 0 then
-	begin
-		if ExeFileName[1] = '"' then
-		begin
-			Delete(ExeFileName, 1, 1);
-			i := Pos('"', ExeFileName);
-			if i > 0 then Delete(ExeFileName, i, Length(ExeFileName) - i + 1);
-		end
-		else
-		begin
-			i := Pos(' ', ExeFileName);
-			Delete(ExeFileName, i, Length(ExeFileName) - i + 1);
-		end;}
-
-		// Split ExeFileName to WorkDir and InternalName
-		for i := Length(ModuleFileName) downto 0 do
-		begin
-			if i = 0 then
-			begin
-				Break;
-			end;
-			if (ModuleFileName[i] = PathDelim) then
-			begin
-				WorkDir := Copy(ModuleFileName, 1, i);
-				Break;
-			end;
-		end;
-//	end;
-	if WorkDir = '' then WorkDir := StartDir;
+  // Split ExeFileName to WorkDir and InternalName
+  for i := Length(ModuleFileName) downto 0 do
+  begin
+    if i = 0 then
+    begin
+      Break;
+    end;
+    if (ModuleFileName[i] = PathDelim) then
+    begin
+      WorkDir := Copy(ModuleFileName, 1, i);
+      Break;
+    end;
+  end;
+	if WorkDir = '' then
+    WorkDir := StartDir;
 	GraphDir := WorkDir + 'Graphics' + PathDelim;
 	SoundsDir := WorkDir + 'Sounds' + PathDelim;
 	DataDir := WorkDir + 'Data' + PathDelim;
@@ -279,11 +254,13 @@ begin
 	CorrectDir(WinDir);
 
 	ProgramFilesDir := GetEnvironmentVariable('ProgramFiles');
-	if ProgramFilesDir = '' then ProgramFilesDir := 'C' + DriveDelim + PathDelim + 'Program Files' + PathDelim;
+	if ProgramFilesDir = '' then
+    ProgramFilesDir := 'C' + DriveDelim + PathDelim + 'Program Files' + PathDelim;
 	CorrectDir(ProgramFilesDir);
 
 	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
-	if CommonAppDataDir = '' then CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
+	if CommonAppDataDir = '' then
+    CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
 	CorrectDir(CommonAppDataDir);
 
   CompanySuffix := '';
@@ -293,24 +270,9 @@ begin
   Suffix := CompanySuffix + GetProjectInfo(piInternalName) + PathDelim;
 
 	AppDataDir := CommonAppDataDir + Suffix;
-
-	if DirectoryExists(AppDataDir) then
-	begin
-		GInstalled := True
-	end
-	else
+	if not DirectoryExists(AppDataDir) then
 	begin
 		CreateDirsEx(AppDataDir);
-    SrcDir := CommonAppDataDir + 'Safrad' + PathDelim + GetProjectInfo(piInternalName) + PathDelim;
-    if DirectoryExists(SrcDir) then
-    begin
-  		GInstalled := True;
-      CopyDir(SrcDir, AppDataDir);
-    end
-    else
-    begin
-  		GInstalled := False;
-    end;
 	end;
 
 	UserProfileDir := StartupEnvironment.FindValue('UserProfile');
@@ -330,28 +292,13 @@ begin
 		CorrectDir(CommonLocalAppDataDir);
 	CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
+	if not DirectoryExists(LocalAppDataDir) then
+  begin
+  	CreateDirsEx(LocalAppDataDir);
+  end;
 
-	CreateDirsEx(LocalAppDataDir);
-
-//	DocsDir := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH');
-//	CorrectDir(DocsDir);
-
-	OldMainIniFileName := WorkDir + GetProjectInfo(piInternalName) + '.ini';
 	MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
-	if FileExists(OldMainIniFileName) and (not FileExists(MainIniFileName)) then
-  begin
-    RenameFile(OldMainIniFileName, MainIniFileName);
-  end;
-
-  OldLogPath := AppDataDir + 'Log' + PathDelim;
-  NewLogPath := LocalAppDataDir + 'Log' + PathDelim;
-  if DirectoryExists(OldLogPath) and (not DirectoryExists(NewLogPath)) then
-  begin
-    RenameFile(OldLogPath, NewLogPath);
-  end;
-
-	MainLogFileName := NewLogPath + GetProjectInfo(piInternalName) + '.log';
-
+	MainLogFileName := LocalAppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
 	LocalIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
 end;
 
