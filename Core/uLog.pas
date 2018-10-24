@@ -118,7 +118,7 @@ begin
   inherited;
 
 	Add('Started Version ' + GetProjectInfo(piFileVersion) + ' ' + ApplicationPlatform, mlInformation);
-  if LoggingLevel >= mlDebug then
+  if IsLoggerFor(mlDebug) then
     Add('Operating System: ' + OperatingSystem.NameAndVersion, mlDebug);
 end;
 
