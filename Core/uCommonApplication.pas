@@ -62,7 +62,6 @@ uses
   uChar,
   uFiles,
   uDIniFile,
-  uUsageInfo,
   uDictionary;
 
 { TCommonApplication }
@@ -133,8 +132,6 @@ begin
   FStatistics := TApplicationStatistics.Create;
 
   Dictionary := TDictionary.Create;
-
-  TryUploadData;
 
   FArguments := TDefaultArguments.Create;
   AddArguments;

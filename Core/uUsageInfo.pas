@@ -8,7 +8,7 @@ uses
 var
   DefaultAskedForUpload: BG = False;
 
-procedure TryUploadData(const AForce: BG = False);
+procedure TryUploadData(const AURL: string; const AForce: BG = False);
 
 implementation
 
@@ -148,7 +148,7 @@ begin
 	end;
 end;
 
-function UploadData: BG;
+function UploadData(const AURL: string): BG;
 var
   FileName, ResponseFileName: TFileName;
   Source: TStrings;
@@ -160,7 +160,7 @@ begin
   Source := TStringList.Create;
   try
     Source.Add('data=' + GetXMLText);
-    Result := DownloadFileWithPost('http://sx.rosada.cz/usage_info.php', Source, False, ResponseFileName);
+    Result := DownloadFileWithPost(AURL, Source, False, ResponseFileName);
     if Result then
     begin
       Response := ReadStringFromFile(ResponseFileName);
@@ -178,9 +178,9 @@ begin
   end;
 end;
 
-procedure UploadAndUpdateOptions;
+procedure UploadAndUpdateOptions(const AURL: string);
 begin
-  if UploadData then
+  if UploadData(AURL) then
   begin
     LastUploadCount := CommonApplication.Statistics.RunCount;
     LastUploadTime := Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds);
@@ -213,7 +213,7 @@ begin
   Result := (CommonApplication.Statistics.TotalElapsedTime.Milliseconds >= LastUploadTime + MaxUploadInterval) or (CommonApplication.Statistics.RunCount >= LastUploadCount + MaxUploadCount);
 end;
 
-procedure TryUploadData(const AForce: BG = False);
+procedure TryUploadData(const AURL: string; const AForce: BG = False);
 begin
   if (CommonApplication = nil) or (LocalMainIni = nil) then
     Exit;
@@ -221,7 +221,7 @@ begin
     RWOptions(False);
     if AForce or (TimeForUpload and CanUpload) then
     begin
-      UploadAndUpdateOptions;
+      UploadAndUpdateOptions(AURL);
     end;
   except
     on E: Exception do
