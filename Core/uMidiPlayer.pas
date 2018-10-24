@@ -43,7 +43,6 @@ type
 implementation
 
 uses
-  Forms,
   uOutputFormat,
   uFiles,
   uMsg;
