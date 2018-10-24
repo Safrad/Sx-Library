@@ -62,7 +62,8 @@ uses
   uChar,
   uFiles,
   uDIniFile,
-  uUsageInfo;
+  uUsageInfo,
+  uDictionary;
 
 { TCommonApplication }
 
@@ -112,6 +113,8 @@ procedure TCommonApplication.Finalize;
 begin
   FArguments.Free;
 
+  FreeAndNil(Dictionary);
+
   FStatistics.Free;
 
   FreeAndNil(MainIni);
@@ -128,6 +131,9 @@ begin
   LocalMainIni := TDIniFile.Create(LocalIniFileName);
 
   FStatistics := TApplicationStatistics.Create;
+
+  Dictionary := TDictionary.Create;
+
   TryUploadData;
 
   FArguments := TDefaultArguments.Create;
