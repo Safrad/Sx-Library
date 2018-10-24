@@ -4,7 +4,7 @@ interface
 
 uses
   uDictionary,
-	Forms, Controls, Classes, StdCtrls, ExtCtrls, ComCtrls, Menus;
+	Forms, Classes, Menus;
 
 type
 	TVCLDictionary = class(TDictionary)
@@ -22,7 +22,16 @@ implementation
 uses
   uTypes,
 	Windows,
-	uStrings, uSorts, uCharset, uCharTable, uCSVFile, uMath, uDIniFile, uDLabel, uDView, Buttons, uMsg;
+
+  Controls,
+  StdCtrls,
+  ExtCtrls,
+  ComCtrls,
+  Buttons,
+
+	uDIniFile,
+  uDLabel,
+  uDView;
 
 { TVCLDictionary }
 
