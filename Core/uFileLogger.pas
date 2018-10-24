@@ -3,6 +3,7 @@ unit uFileLogger;
 interface
 
 uses
+  Windows,
   SysUtils,
   uTypes,
   uFile,
@@ -11,6 +12,7 @@ uses
 type
   TFileLogger = class(TDateTimeLogger)
 	private
+  	FCriticalSection: TRTLCriticalSection;
 		FData: string;
 		FFileName: TFileName;
 		FFile: TFile;
@@ -30,7 +32,6 @@ type
 implementation
 
 uses
-  Windows,
   uMsg,
 	uFiles, uCharset,
   uMainTimer,
@@ -39,9 +40,6 @@ uses
 const
   MinLogFileSize = 4 * MB;
   MaxLogFileSize = 16 * MB; // > MinLogFileSize
-
-var
-	FCriticalSection: TRTLCriticalSection;
 
 { TFileLogger }
 
@@ -71,6 +69,8 @@ var
 //	DeleteOptions: TDeleteOptions;
 begin
 	inherited Create;
+
+	InitializeCriticalSection(FCriticalSection);
 
 	FFileName := GetLogWritableFileName;
 	FDirectWrite := True;
@@ -104,15 +104,19 @@ end;
 
 destructor TFileLogger.Destroy;
 begin
-	if Assigned(FFile) then
-	begin
-		Flush;
-		FFile.Close;
-		FreeAndNil(FFile);
-	end;
-	FFileName := '';
+  try
+    if Assigned(FFile) then
+    begin
+      Flush;
+      FFile.Close;
+      FreeAndNil(FFile);
+    end;
+    FFileName := '';
 
-	inherited;
+    DeleteCriticalSection(FCriticalSection);
+  finally
+  	inherited;
+  end;
 end;
 
 procedure TFileLogger.Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel);
@@ -181,13 +185,4 @@ begin
   end;
 end;
 
-
-initialization
-{$IFNDEF NoInitialization}
-	InitializeCriticalSection(FCriticalSection);
-{$ENDIF NoInitialization}
-finalization
-{$IFNDEF NoFinalization}
-	DeleteCriticalSection(FCriticalSection);
-{$ENDIF NoFinalization}
 end.
