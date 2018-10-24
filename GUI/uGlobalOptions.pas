@@ -70,7 +70,7 @@ uses
   Forms,
 	uSplash, uMenus, uMultiIns, uAbout, uLog, uSounds, uFileExt, uNewThread,
 	uMsgDlg, uMsg, ufOptions, uReg, uProjectInfo, uLink,
-	uWebUpdate, uDictionary, uUsageInfo,
+	uWebUpdate, uDictionary,
 	Classes, Windows, ExtCtrls;
 
 function GetBackgroundWindowTexture: BG;

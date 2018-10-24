@@ -63,8 +63,7 @@ uses
   uMsg,
   uChar,
   uFiles,
-  uDIniFile,
-  uUsageInfo;
+  uDIniFile;
 
 function GetConsoleWindow: HWND; stdcall; external kernel32;
 
