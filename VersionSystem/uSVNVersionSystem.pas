@@ -4,7 +4,7 @@ interface
 
 uses
   uTypes,
-  uAPI,
+  uExternalApplication,
   uProjectVersion,
   uVersionSystem;
 
@@ -74,15 +74,24 @@ end;
 
 function TSVNVersionSystem.ReadVersion: string;
 var
-  ProcessOutput: TProcessOutput;
+  ExternalApplication: TExternalApplication;
   FileName: TFileName;
 begin
   inherited;
 
-  FileName := 'svnversion.exe';
-  ExecuteProcessCheckExitCode(ProcessOutput, FileName, '-n "' + DelLastChar(RootDirectory) + '"', RootDirectory{Unused});
+  ExternalApplication := TExternalApplication.Create;
+  try
+    ExternalApplication.FileName := 'svnversion.exe';
+    ExternalApplication.Parameters := '-n "' + DelLastChar(RootDirectory) + '"';
+    ExternalApplication.CurrentDirectory := RootDirectory{Unused};
+    ExternalApplication.ExecuteWithOutputText;
+    ExternalApplication.CheckErrorCode;
+    ExternalApplication.CheckExitCode;
+    Result := ExternalApplication.ProcessOutput.OutputText;
+  finally
+    ExternalApplication.Free;
+  end;
 
-  Result := ProcessOutput.OutputText;
   if Result = 'Unversioned directory' then
     raise Exception.Create(QuotedStr(RootDirectory) + ' in not versioned directory.');
 end;
@@ -122,19 +131,41 @@ const
 
 function TSVNVersionSystem.SVNExecuteCheckExitCode(const AParameters: string): string;
 var
-  ProcessOutput: TProcessOutput;
+  ExternalApplication: TExternalApplication;
 begin
   inherited;
 
-  ExecuteProcessCheckExitCode(ProcessOutput, SVNExecutable, AParameters, RootDirectory);
-  Result := ProcessOutput.OutputText;
+  ExternalApplication := TExternalApplication.Create;
+  try
+    ExternalApplication.FileName := SVNExecutable;
+    ExternalApplication.Parameters := AParameters;
+    ExternalApplication.CurrentDirectory := RootDirectory;
+    ExternalApplication.ExecuteWithOutputText;
+    ExternalApplication.CheckErrorCode;
+    ExternalApplication.CheckExitCode;
+    Result := ExternalApplication.ProcessOutput.OutputText;
+  finally
+    ExternalApplication.Free;
+  end;
 end;
 
 function TSVNVersionSystem.SVNExecute(const AParameters: string): TProcessOutput;
+var
+  ExternalApplication: TExternalApplication;
 begin
   inherited;
 
-  ExecuteProcess(Result, SVNExecutable, AParameters, RootDirectory);
+  ExternalApplication := TExternalApplication.Create;
+  try
+    ExternalApplication.FileName := SVNExecutable;
+    ExternalApplication.Parameters := AParameters;
+    ExternalApplication.CurrentDirectory := RootDirectory;
+    ExternalApplication.ExecuteWithOutputText;
+    ExternalApplication.CheckErrorCode;
+    Result := ExternalApplication.ProcessOutput;
+  finally
+    ExternalApplication.Free;
+  end;
 end;
 
 procedure TSVNVersionSystem.Update(const ARevision: Integer);
