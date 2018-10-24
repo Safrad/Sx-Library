@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  uMath, uMainTimer, SysUtils, Classes;
+  uMath, uMainTimer, SysUtils;
 
 { TStopwatch }
 

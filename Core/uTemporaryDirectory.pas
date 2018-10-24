@@ -4,8 +4,7 @@ interface
 
 uses
   uTypes,
-  Windows,
-  Classes;
+  Windows;
 
 type
   TTemporaryDirectoryItem = record
@@ -46,7 +45,6 @@ implementation
 uses
   SysUtils,
   uProjectInfo,
-  uOutputFormat,
   uStrings,
   uFiles;
 
