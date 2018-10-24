@@ -77,7 +77,6 @@ implementation
 uses
   Windows,
   uStartupEnvironment,
-  Forms,
   ShellAPI,
   uMsg,
   uEIOException,

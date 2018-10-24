@@ -26,11 +26,7 @@ type
 implementation
 
 uses
-  Windows,
-  ShellAPI,
-  Classes,
-  uMsg,
-  uStartupEnvironment;
+  uMsg;
 
 { TExternalApplicationThread }
 

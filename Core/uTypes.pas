@@ -2,8 +2,13 @@ unit uTypes;
 
 interface
 
+{$if CompilerVersion < 32}
 uses
-  TypInfo, Math;
+  Math,
+{$if CompilerVersion < 16}
+  TypInfo;
+{$endif}
+{$endif}
 
 const
   IsDebug = {$ifopt d+}True{$else}False{$endif};
@@ -283,7 +288,6 @@ type
 	TArrayOfFG = array of FG;
 	TArrayOfString = array of string;
 	TArrayOfChar = array of Char;
-	TArrayOfVariant = array of Variant;
 
 	// Static Arrays
 	TArrayS1 = array[0..GB - 1] of S1;
