@@ -6,7 +6,6 @@ interface
 
 uses
   uTypes,
-  Classes,
   uTimeSpan,
   uStopwatch,
   uSxThread;

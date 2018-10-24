@@ -22,7 +22,7 @@ type
 implementation
 
 uses
-  Math, SysUtils, Classes;
+  Math, SysUtils;
 
 { TWorkerThread }
 

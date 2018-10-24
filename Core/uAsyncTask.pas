@@ -3,7 +3,7 @@ unit uAsyncTask;
 interface
 
 uses
-  uSxThread, Classes;
+  uSxThread;
 
 type
   TAsyncTask = class

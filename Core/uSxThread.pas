@@ -8,6 +8,10 @@ uses
   Classes;
 
 type
+  TNotifyEvent = procedure(Sender: TObject) of object;
+
+  TThreadMethod = procedure of object;
+
   TSxThread = class(TThread)
   private
     FName: string;

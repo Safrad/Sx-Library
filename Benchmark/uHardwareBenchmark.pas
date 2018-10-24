@@ -3,7 +3,6 @@ unit uHardwareBenchmark;
 interface
 
 uses
-  Classes,
   uTypes,
   uSxThread,
   uOutputInfo,
@@ -50,7 +49,6 @@ uses
   uUnitFormatter,
   uMath,
   uStrings,
-  uNewThread,
   uStopwatch,
   uOutputFormat,
   uFiles;
