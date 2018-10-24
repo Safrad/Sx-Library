@@ -62,7 +62,9 @@ uses
   uChar,
   uFiles,
   uDIniFile,
-  uDictionary;
+  uDictionary,
+  uMainTimer,
+  uFirst;
 
 { TCommonApplication }
 
@@ -126,6 +128,8 @@ end;
 procedure TCommonApplication.Initialize;
 begin
   InitializeLog;
+  MainLog.Add('Initialization sequence time [s]: ' + FloatToStr(MainTimer.IntervalFrom(ApplicationStartTicks) / MainTimer.Frequency), mlDebug);
+
   MainIni := TDIniFile.Create(MainIniFileName);
   LocalMainIni := TDIniFile.Create(LocalIniFileName);
 

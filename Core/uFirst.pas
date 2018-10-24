@@ -13,10 +13,14 @@ uses
 // Executable file is smaller
 {$SETPEFLAGS IMAGE_FILE_RELOCS_STRIPPED}
 
+var
+  ApplicationStartTicks: U8;
+
 implementation
 
 initialization
 {$IFNDEF NoInitialization}
+  QueryPerformanceCounter(TLargeInteger(ApplicationStartTicks));
 	if IsRelease then
 		NoErrMsg := True;
 
