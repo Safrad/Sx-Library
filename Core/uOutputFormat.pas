@@ -1132,7 +1132,7 @@ begin
 		end;
 	else
   begin
-    TimeInMs := T * MSecsPerDay + Power(10, -Decimals) / 2;
+    TimeInMs := T * MSecsPerDay;
 		Result := MsToStr(Trunc(TimeInMs), diHHMSD, Min(Decimals, 3), False, OutputFormat);
     if Decimals > 3 then
       Result := Result + NToS(Trunc(Frac(TimeInMs) * Power(10, Decimals - 3)), StringOfChar('0', Decimals - 3));
