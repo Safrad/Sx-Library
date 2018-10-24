@@ -121,7 +121,7 @@ implementation
 
 uses
 	Types, Math,
-  uMath, uDictionary,
+  uMath, uDictionary, uVCLDictionary,
 	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uOperatingSystem, uGlobalOptions, uLog, uRect;
 
 const
@@ -631,7 +631,7 @@ begin
 	if Assigned(FOnRWOptions) then
 		FOnRWOptions(Self, False);
 
-	Dictionary.TranslateForm(Self);
+	TVCLDictionary(Dictionary).TranslateForm(Self);
 end;
 
 destructor TDForm.Destroy;
