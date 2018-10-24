@@ -47,6 +47,7 @@ uses
   SysUtils,
   uCPU,
   uUnitFormatter,
+  uOperatingSystem,
   uMath,
   uStrings,
   uStopwatch,
@@ -67,7 +68,7 @@ begin
     Benchmarks[i] := GetBenchmark(ATestType);
     case ATestType of
     5..8:
-      TDiskBenchmark(Benchmarks[i]).FileName := TempDir + 'Test' + IntToStr(i) + '.tmp';
+      TDiskBenchmark(Benchmarks[i]).FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(i) + '.tmp';
     end;
     if ATestType = 5 then
       TDiskBenchmark(Benchmarks[i]).CreateFile;
