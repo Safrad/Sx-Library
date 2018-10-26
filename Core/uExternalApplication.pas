@@ -28,6 +28,7 @@ type
     FProcessOutput: TProcessOutput;
     FErrorCode: U4;
     FAbort: BG;
+    FBufferSize: SG;
     procedure SetFileName(const Value: TFileName);
     function GetExitCode: TExitCode;
     procedure SetParameters(const Value: string);
@@ -36,6 +37,7 @@ type
     procedure SetStartupWindowState(const Value: TStartupWindowState);
     procedure SetErrorCode(const Value: U4);
     procedure SetAbort(const Value: BG);
+    procedure SetBufferSize(const Value: SG);
   public
     constructor Create;
     destructor Destroy; override;
@@ -63,6 +65,7 @@ type
     property Parameters: string read FParameters write SetParameters;
     property CurrentDirectory: string read FCurrentDirectory write SetCurrentDirectory;
     property StartupWindowState: TStartupWindowState read FStartupWindowState write SetStartupWindowState;
+    property BufferSize: SG read FBufferSize write SetBufferSize;
 
     property ErrorCode: U4 read FErrorCode write SetErrorCode;
 
@@ -78,6 +81,7 @@ uses
   Windows,
   uStartupEnvironment,
   ShellAPI,
+  uFile,
   uMsg,
   uEIOException,
   uEExternalApplication,
@@ -113,6 +117,7 @@ begin
   FCurrentDirectory := GetCurrentDir;
   FStartupWindowState.WindowState := hwsNormal;
   FStartupWindowState.Active := True;
+  FBufferSize := DefFileBuffer;
 end;
 
 destructor TExternalApplication.Destroy;
@@ -165,7 +170,7 @@ var
   PI: TProcessInformation;
   StdOutPipeRead, StdOutPipeWrite: THandle;
   WasOK: Boolean;
-  Buffer: array[0..255] of AnsiChar;
+  Buffer: array of AnsiChar;
   BytesRead: Cardinal;
   CreateProcessResult: BG;
 begin
@@ -200,15 +205,17 @@ begin
     FHandle := PI.hProcess;
     CloseHandle(StdOutPipeWrite);
     StdOutPipeWrite := 0;
+    SetLength(Buffer, FBufferSize + 1);
     try
       repeat
-        WasOK := ReadFile(StdOutPipeRead, Buffer, Length(Buffer) - 1, BytesRead, nil);
+        WasOK := ReadFile(StdOutPipeRead, Buffer[0], FBufferSize, BytesRead, nil);
         if BytesRead > 0 then
         begin
           Buffer[BytesRead] := #0;
           FProcessOutput.OutputText := FProcessOutput.OutputText + string(Buffer);
         end;
       until not WasOK or (BytesRead = 0);
+      SetLength(Buffer, 0);
 
       WaitFor;
     finally
@@ -235,6 +242,11 @@ end;
 procedure TExternalApplication.SetAbort(const Value: BG);
 begin
   FAbort := Value;
+end;
+
+procedure TExternalApplication.SetBufferSize(const Value: SG);
+begin
+  FBufferSize := Value;
 end;
 
 procedure TExternalApplication.SetCurrentDirectory(const Value: string);
