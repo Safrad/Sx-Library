@@ -19,6 +19,7 @@ $(sx-library)\ExtLib\OmniXML
 $(sx-library)\ExtLib\OpenGL
 $(sx-library)\ExtLib\SafeMM
 $(sx-library)\Core
+$(sx-library)\API\Windows
 $(sx-library)\Math
 $(sx-library)\RandomGenerator
 $(sx-library)\Table
