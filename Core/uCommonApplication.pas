@@ -130,7 +130,9 @@ begin
   InitializeLog;
   MainLog.Add('Initialization sequence time [s]: ' + FloatToStr(MainTimer.IntervalFrom(ApplicationStartTicks) / MainTimer.Frequency), mlDebug);
 
+  CreateDirEx(ExtractFilePath(MainIniFileName));
   MainIni := TDIniFile.Create(MainIniFileName);
+  // CreateDirEx(ExtractFilePath(LocalIniFileName)); InitializeLog creates directories
   LocalMainIni := TDIniFile.Create(LocalIniFileName);
 
   FStatistics := TApplicationStatistics.Create;

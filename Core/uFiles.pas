@@ -269,10 +269,6 @@ begin
   Suffix := CompanySuffix + GetProjectInfo(piInternalName) + PathDelim;
 
 	AppDataDir := CommonAppDataDir + Suffix;
-	if not DirectoryExists(AppDataDir) then
-	begin
-		CreateDirsEx(AppDataDir);
-	end;
 
 	UserProfileDir := StartupEnvironment.FindValue('UserProfile');
 	CorrectDir(UserProfileDir);
@@ -291,10 +287,6 @@ begin
 		CorrectDir(CommonLocalAppDataDir);
 	CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
-	if not DirectoryExists(LocalAppDataDir) then
-  begin
-  	CreateDirsEx(LocalAppDataDir);
-  end;
 
 	MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
 	MainLogFileName := LocalAppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
