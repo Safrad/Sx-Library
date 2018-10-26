@@ -119,7 +119,7 @@ begin
 
 	Add('Started Version ' + GetProjectInfo(piFileVersion) + ' ' + ApplicationPlatform, mlInformation);
   if IsLoggerFor(mlDebug) then
-    Add('Operating System: ' + OperatingSystem.NameAndVersion, mlDebug);
+    Add('Operating System Version: ' + OperatingSystem.VersionAsString, mlDebug);
 end;
 
 destructor TLog.Destroy;
