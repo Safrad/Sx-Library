@@ -1075,7 +1075,7 @@ begin
 	begin
 		if i > 0 then
 		begin
-			FileOrDir := DirS + '_' + NToS(i, '0000') + DirE;
+			FileOrDir := DirS + '_' + NToS(i, ofIO) + DirE;
 		end;
 
 		if IsDir then
