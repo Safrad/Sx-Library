@@ -9,6 +9,7 @@ type
   published
     procedure TestSetFileDateTime;
     procedure TestSetFileModified;
+    procedure TestReadWriteString;
   end;
 
 implementation
@@ -16,7 +17,10 @@ implementation
 uses
   SysUtils,
   Windows,
+  uTypes,
+  uFile,
   uFiles,
+  uChar,
   uOperatingSystem;
 
 { TFilesTest }
@@ -36,6 +40,32 @@ begin
   CheckTrue(GetFileModified(FileName, Actual));
   CheckEquals(Expected.dwLowDateTime, Actual.dwLowDateTime);
   CheckEquals(Expected.dwHighDateTime, Actual.dwHighDateTime);
+end;
+
+procedure TFilesTest.TestReadWriteString;
+var
+	Text: string;
+	FileName: TFileName;
+	Lines: TArrayOfString;
+  Count: SG;
+	fc: TFileCharset;
+  i: SG;
+begin
+	Text := 'line1' + CharCR + 'line2' + CharLF + 'line3' + CharCR + CharLF + 'line4';
+	for fc := Low(fc) to High(fc) do
+	begin
+		if fc in [fcAnsi, fcUTF8{$if CompilerVersion >= 21} , fcUTF16BE, fcUTF16LE{$ifend}] then
+		begin
+      FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
+      WriteStringToFile(FileName, Text, False, fc);
+      Count := 0;
+      ReadStringsFromFile(FileName, Lines, Count);
+      Check(Count = 4, 'count');
+      for i := 0 to 3 do
+	      Check(Lines[i] = 'line' + IntToStr(i + 1), 'line ' + IntToStr(i + 1));
+      DeleteFileEx(FileName);
+    end;
+  end;
 end;
 
 procedure TFilesTest.TestSetFileDateTime;

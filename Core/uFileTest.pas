@@ -7,9 +7,8 @@ uses TestFrameWork;
 type
   TFileTest = class(TTestCase)
   published
-    procedure Test1;
-    procedure Test2;
-    procedure TestWriteSameData;
+    procedure TestReadWriteLine;
+    procedure TestRewriteFile;
   end;
 
 implementation
@@ -21,9 +20,9 @@ uses
 
 { TFileTest }
 
-procedure TFileTest.Test1;
+procedure TFileTest.TestReadWriteLine;
 const
-	Line1 = 'a è Šafránek David';
+	Line1 = 'a è Pøíliš žluouèký kùò úpìl ïábelské ódy';
 	Line2 = 'a' {$IFDEF UNICODE} + #$03A9 {$ENDIF};
 var
 	fc: TFileCharset;
@@ -79,33 +78,7 @@ begin
 	end;
 end;
 
-procedure TFileTest.Test2;
-var
-	Text: string;
-	FileName: TFileName;
-	Lines: TArrayOfString;
-  Count: SG;
-	fc: TFileCharset;
-  i: SG;
-begin
-	Text := 'line1' + CharCR + 'line2' + CharLF + 'line3' + CharCR + CharLF + 'line4';
-	for fc := Low(fc) to High(fc) do
-	begin
-		if fc in [fcAnsi, fcUTF8{$if CompilerVersion >= 21} , fcUTF16BE, fcUTF16LE{$ifend}] then
-		begin
-      FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
-      WriteStringToFile(FileName, Text, False, fc);
-      Count := 0;
-      ReadStringsFromFile(FileName, Lines, Count);
-      Check(Count = 4, 'count');
-      for i := 0 to 3 do
-	      Check(Lines[i] = 'line' + IntToStr(i + 1), 'line ' + IntToStr(i + 1));
-      DeleteFile(FileName);
-    end;
-  end;
-end;
-
-procedure TFileTest.TestWriteSameData;
+procedure TFileTest.TestRewriteFile;
 var
 	F: TFile;
 	FileName: TFileName;
