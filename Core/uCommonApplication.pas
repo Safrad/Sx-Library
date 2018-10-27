@@ -3,6 +3,7 @@ unit uCommonApplication;
 interface
 
 uses
+  uFirst,
   uTypes,
   uArguments,
   uSwitchArgument,
@@ -63,8 +64,7 @@ uses
   uFiles,
   uDIniFile,
   uDictionary,
-  uMainTimer,
-  uFirst;
+  uMainTimer;
 
 { TCommonApplication }
 

@@ -30,8 +30,8 @@ unit uConsoleApplication;
 interface
 
 uses
-  uTypes,
   uCommonApplication,
+  uTypes,
   uArguments;
 
 type
