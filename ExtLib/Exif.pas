@@ -107,7 +107,7 @@ type
     function GetDateTimeOriginal: TDateTime;
     public
       constructor Create;
-      procedure ReadFromFile(const FileName: AnsiString);
+      procedure ReadFromFile(const FileName: TFileName);
 
       property Valid: Boolean read FValid;
       property ImageDesc: String read FImageDesc;
@@ -327,7 +327,7 @@ begin
 end;
 
 
-procedure TExif.ReadFromFile(const FileName: AnsiString);
+procedure TExif.ReadFromFile(const FileName: TFileName);
 const
   orient   : Array[1..9] of String=('Normal','Mirrored','Rotated 180','Rotated 180, mirrored','Rotated 90 left, mirrored','Rotated 90 right','Rotated 90 right, mirrored','Rotated 90 left','Unknown');
   ExplType : Array[1..9] of String=('Unknown','Manual Control','Normal Program','Aperture Priority', 'Shutter Priority', 'Creative Program','Action Program','Portrait Mode','Landscape Mode');
