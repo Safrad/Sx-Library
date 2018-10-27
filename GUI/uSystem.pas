@@ -11,7 +11,7 @@ function ProcessPriority(const Prior: U1): Integer;
 function ThreadPriority(const Prior: U1): Integer;
 
 function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
-function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
+function ReadLinesFromFile(const F: TFile; Lines: TStrings): BG; overload;
 function WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG; const Charset: TFileCharset = DefaultFileCharset): BG;
 function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
 function WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream): BG;
@@ -238,7 +238,7 @@ begin
 		FileName := ShortDir(Dialog.FileName);
 end;
 
-function ReadLinesFromFile(const F: TFile; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG;
+function ReadLinesFromFile(const F: TFile; Lines: TStrings): BG;
 var
 	Line: string;
 begin
@@ -265,7 +265,7 @@ begin
 		F.DefaultCharset := DefaultCharset;
 		if F.Open(FileName, fmReadOnly) then
 		begin
-			ReadLinesFromFile(F, Lines, DefaultCharset);
+			ReadLinesFromFile(F, Lines);
 {			while not F.Eof do
 			begin
 				F.Readln(Line);
