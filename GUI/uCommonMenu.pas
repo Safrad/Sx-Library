@@ -127,21 +127,18 @@ end;
 
 procedure TCommonMenu.ViewIniFile1Click(Sender: TObject);
 begin
-	APIOpen(MainIniFileName);
-	APIOpen(LocalIniFileName);
+	APIOpen(MainIni.FileName);
+	APIOpen(LocalMainIni.FileName);
 end;
 
 procedure TCommonMenu.ViewLogFile1Click(Sender: TObject);
 begin
-	if Assigned(MainLog) then
-		APIOpen(MainLog.FileName)
-	else
-		APIOpen(MainLogFileName);
+	APIOpen(MainLog.FileName);
 end;
 
 procedure TCommonMenu.ViewAllLogFiles1Click(Sender: TObject);
 begin
-	APIOpen(ExtractFilePath(MainLogFileName));
+	APIOpen(ExtractFilePath(MainLog.FileName));
 end;
 
 procedure TCommonMenu.Sounds1Click(Sender: TObject);

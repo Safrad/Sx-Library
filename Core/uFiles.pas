@@ -27,7 +27,6 @@ var
 	ExeFileName: TFileName;
   ModuleFileName: TFileName;
   ExeParameters: string;
-  MainIniFileName, MainLogFileName, LocalIniFileName: TFileName;
 
 type
 	TFileNames = array of TFileName;
@@ -287,10 +286,6 @@ begin
 		CorrectDir(CommonLocalAppDataDir);
 	CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
 	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
-
-	MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
-	MainLogFileName := LocalAppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
-	LocalIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
 end;
 
 function RemoveWorkDir(const Dir: string): string;

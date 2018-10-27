@@ -15,7 +15,8 @@ type
 implementation
 
 uses
-  uFiles,
+  uLog,
+  uDIniFile,
   uExitCommand,
   uRestartCommand,
   uHelpCommand,
@@ -66,19 +67,19 @@ begin
   FShowLogCommand := TShowFileCommand.Create;
   FShowLogCommand.Shortcut := 'ShowLog';
   FShowLogCommand.Description := 'Show log file.';
-  FShowLogCommand.FileName := MainLogFileName;
+  FShowLogCommand.FileName := MainLog.FileName;
   Add(FShowLogCommand);
 
   FShowIniCommand := TShowFileCommand.Create;
   FShowIniCommand.Shortcut := 'ShowIni';
   FShowIniCommand.Description := 'Show main configuration file.';
-  FShowIniCommand.FileName := MainIniFileName;
+  FShowIniCommand.FileName := MainIni.FileName;
   Add(FShowIniCommand);
 
   FShowLocalIniCommand := TShowFileCommand.Create;
   FShowLocalIniCommand.Shortcut := 'ShowLocalIni';
   FShowLocalIniCommand.Description := 'Show local configuration file.';
-  FShowLocalIniCommand.FileName := LocalIniFileName;
+  FShowLocalIniCommand.FileName := LocalIni.FileName;
   Add(FShowLocalIniCommand);
 end;
 

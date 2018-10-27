@@ -126,14 +126,19 @@ begin
 end;
 
 procedure TCommonApplication.Initialize;
+var
+  MainIniFileName, LocalMainIniFileName: TFileName;
 begin
   InitializeLog;
   MainLog.Add('Initialization sequence time [s]: ' + FloatToStr(MainTimer.IntervalFrom(ApplicationStartTicks) / MainTimer.Frequency), mlDebug);
 
+  MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
   CreateDirEx(ExtractFilePath(MainIniFileName));
   MainIni := TDIniFile.Create(MainIniFileName);
-  // CreateDirEx(ExtractFilePath(LocalIniFileName)); InitializeLog creates directories
-  LocalMainIni := TDIniFile.Create(LocalIniFileName);
+
+  LocalMainIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
+  // CreateDirEx(ExtractFilePath(LocalMainIniFileName)); InitializeLog creates directories
+  LocalMainIni := TDIniFile.Create(LocalMainIniFileName);
 
   FStatistics := TApplicationStatistics.Create;
 
