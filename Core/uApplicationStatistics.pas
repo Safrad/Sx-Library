@@ -12,7 +12,7 @@ type
   strict private
     FRunCount: UG;
     FRunFirstTime: BG;
-    FStartTimeInMs: U4;
+    FStartTime: U8;
     FElapsedTime: TTimeSpan;
     FTotalElapsedTime: TTimeSpan;
     procedure RWData(const Save: BG);
@@ -39,7 +39,7 @@ constructor TApplicationStatistics.Create;
 begin
   inherited;
 
-	FStartTimeInMs := GetTickCount;
+	FStartTime := MainTimer.Value.Ticks;
   FElapsedTime := TTimeSpan.Create;
   FTotalElapsedTime := TTimeSpan.Create;
 
@@ -64,7 +64,7 @@ end;
 
 function TApplicationStatistics.GetElapsedTime: TTimeSpan;
 begin
-  FElapsedTime.Milliseconds := MainTimer.IntervalFrom(FStartTimeInMs);
+  FElapsedTime.Milliseconds := MainTimer.IntervalFrom(FStartTime);
   Result := FElapsedTime;
 end;
 
