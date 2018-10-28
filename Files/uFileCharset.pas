@@ -19,7 +19,7 @@ const
 		#$DD + #$73 + #$66 + #$73, #$0E + #$FE + #$FF, #$FB + #$EE + #$28, #$FB + #$EE + #$28 + #$FF,
 		#$84 + #$31 + #$95 + #$33);
 
-  CharsetSize : array [TFileCharset] of SG = (0, 0, 1, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+  CharsetSize : array [TFileCharset] of SG = (0, 1, 1, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
 function FindFileCharset(const AByteOrderMark: array of AnsiChar): TFileCharset;
 
