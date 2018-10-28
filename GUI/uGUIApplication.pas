@@ -1,6 +1,7 @@
 {
 	Usability in "Project file" (*.dpr):
-
+var
+  GUIApplication := TGUIApplication;
 begin
   GUIApplication := TGUIApplication.Create;
   try
@@ -44,9 +45,6 @@ type
     procedure Terminate; override;
     property MinimizeToTrayIcon: BG read FMinimizeToTrayIcon write SetMinimizeToTrayIcon;
   end;
-
-var
-  GUIApplication: TGUIApplication;
 
 implementation
 

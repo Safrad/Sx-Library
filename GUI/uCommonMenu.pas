@@ -4,7 +4,6 @@ interface
 
 uses
   uTypes,
-  uGUIApplication,
   Menus;
 
 type
@@ -54,22 +53,35 @@ uses
   uMsg,
   uSounds,
   uProjectInfo,
-  uGlobalOptions;
+  uGlobalOptions,
+  uCommonApplication,
+  uExitCommand,
+  uRestartCommand;
 
 { TCommonMenu }
 
 procedure TCommonMenu.Restart1Click(Sender: TObject);
+var
+  RestartCommand: TRestartCommand;
 begin
-  GUIApplication.RestartAfterClose := True;
-  Exit1Click(Sender);
+  RestartCommand := TRestartCommand.Create;
+  try
+    RestartCommand.ExecuteNoParam;
+  finally
+    RestartCommand.Free;
+  end;
 end;
 
 procedure TCommonMenu.Exit1Click(Sender: TObject);
+var
+  ExitCommand: TExitCommand;
 begin
-	if Assigned(Application.MainForm) then
-	begin
-		Application.Terminate;
-	end;
+  ExitCommand := TExitCommand.Create;
+  try
+    ExitCommand.ExecuteNoParam;
+  finally
+    ExitCommand.Free;
+  end;
 end;
 
 procedure TCommonMenu.WebHomepage1Click(Sender: TObject);
@@ -89,7 +101,7 @@ end;
 
 procedure TCommonMenu.ViewParams1Click(Sender: TObject);
 begin
-	Information(GUIApplication.Arguments.PreviewAsString);
+	Information(CommonApplication.Arguments.PreviewAsString);
 end;
 
 procedure MenuCheckForUpdate(AThread: TThread);
