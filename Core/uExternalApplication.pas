@@ -212,7 +212,7 @@ begin
         if BytesRead > 0 then
         begin
           Buffer[BytesRead] := #0;
-          FProcessOutput.OutputText := FProcessOutput.OutputText + string(Buffer);
+          FProcessOutput.OutputText := FProcessOutput.OutputText + PAnsiChar(Buffer);
         end;
       until not WasOK or (BytesRead = 0);
       SetLength(Buffer, 0);
