@@ -3,7 +3,7 @@ unit uFiles;
 interface
 
 uses
-	uTypes, uStrings, uFile, uBackup,
+	uTypes, uStrings, uFileCharset, uFile, uBackup,
 	SysUtils, Windows;
 
 var

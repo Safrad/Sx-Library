@@ -115,7 +115,7 @@ implementation
 
 uses
   TypInfo,
-  uStrings, uChar, uMath, uOutputFormat, uInputFormat, uFiles, uFile, uSxXMLDocument,
+  uStrings, uChar, uMath, uOutputFormat, uInputFormat, uFiles, uFileCharset, uSxXMLDocument,
   uDIniFile, uMsg;
 
 const

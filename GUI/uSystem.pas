@@ -2,7 +2,9 @@ unit uSystem;
 
 interface
 
-uses uTypes, SysUtils, Forms, ShlObj, Controls, Classes, Dialogs, uFile;
+uses
+  uTypes, uFileCharset, uFile,
+  SysUtils, Forms, ShlObj, Controls, Classes, Dialogs;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
 

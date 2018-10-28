@@ -18,7 +18,7 @@ uses
   SysUtils,
   Windows,
   uTypes,
-  uFile,
+  uFileCharset,
   uFiles,
   uChar,
   uOperatingSystem;

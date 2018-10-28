@@ -25,7 +25,7 @@ interface
 
 uses
 	SysUtils, Windows,
-	uTypes, uStrings, uChar, uLogger, uDateTimeLogger,
+	uTypes, uStrings, uChar, uLogger, uDateTimeLogger, uFileCharset,
   uBackup;
 
 const
@@ -46,7 +46,6 @@ type
 var
 	FileModeStr: array [TFileMode] of string;
 
-type
 	{
 		Flags:
 		FILE_FLAG_OVERLAPPED // Async read - not implemented yet
@@ -57,22 +56,10 @@ type
 		FILE_FLAG_WRITE_THROUGH // For write only
 		FILE_FLAG_NO_BUFFERING // Be carefully for use this
 		}
-	TFileCharset = (fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE { Windows } , fcUTF32BE, fcUTF32LE
-		{ Windows } , fcUTF7a, fcUTF7b, fcUTF7c, fcUTF7d, fcUTF1, fcUTFEBCDIC, fcSCSU, fcBOCU1,
-		fcBOCU1b, fcGB18030);
 
 const
 	FILE_FLAG_NO_PREFIX = $8;
 	DefaultFileCharset = fcUTF8;
-	MaxByteOrderMarkSize = 4;
-	ByteOrderMarks: array [TFileCharset] of AnsiString =
-		('', #$EF + #$BB + #$BF, #$FE + #$FF, #$FF + #$FE, #$00 + #$00 + #$FE + #$FF,
-		#$FF + #$FE + #$00 + #$00, #$2B + #$2F + #$76 + #$38, #$2B + #$2F + #$76 + #$39,
-		#$2B + #$2F + #$76 + #$2B, #$2B + #$2F + #$76 + #$2F, #$F7 + #$64 + #$4C,
-		#$DD + #$73 + #$66 + #$73, #$0E + #$FE + #$FF, #$FB + #$EE + #$28, #$FB + #$EE + #$28 + #$FF,
-		#$84 + #$31 + #$95 + #$33);
-
-  CharsetSize : array [TFileCharset] of SG = (1, 1, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
 type
 	TFile = class(TObject)
@@ -167,7 +154,8 @@ implementation
 uses
 	Math,
   uOperatingSystem,
-	uFiles, uOutputFormat, uCharset, uLog, uMsg;
+  uFiles,
+	uOutputFormat, uCharset, uLog, uMsg;
 
 constructor TFile.Create;
 begin
@@ -682,26 +670,26 @@ end;
 procedure TFile.ReadPrefix;
 var
 	ByteOrderMark: array [0 .. MaxByteOrderMarkSize - 1] of AnsiChar;
-	Charset: TFileCharset;
   FileExt: string;
 begin
 	ByteOrderMark := '    ';
 	BlockRead(ByteOrderMark[0], Min(FFileSize, MaxByteOrderMarkSize));
-	FCharset := FDefaultCharset;
-  FileExt := UpperCase(ExtractFileExt(FFileName));
-  if (FileExt = '.XML') or (FileExt = '.DPROJ') then
-    FCharset := fcUTF8;
-	for Charset := Succ( Low(Charset)) to High(Charset) do
-	begin
-		if Copy(ByteOrderMark, 1, Length(ByteOrderMarks[Charset])) = ByteOrderMarks[Charset] then
-		begin
-			FCharset := Charset;
-			FFilePos := 0;
-			FFileBegin := Length(ByteOrderMarks[FCharset]);
-			Dec(FFileSize, FFileBegin);
-			Break;
-		end;
-	end;
+
+  FCharset := FindFileCharset(ByteOrderMark);
+  if FCharset <> fcUnknown then
+  begin
+    FFilePos := 0;
+    FFileBegin := Length(ByteOrderMarks[FCharset]);
+    Dec(FFileSize, FFileBegin);
+  end
+  else
+  begin
+    FileExt := UpperCase(ExtractFileExt(FFileName));
+    if (FileExt = '.XML') or (FileExt = '.DPROJ') then
+      FCharset := fcUTF8
+    else
+      FCharset := FDefaultCharset;
+  end;
 
 	SeekBegin;
 end;

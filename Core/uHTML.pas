@@ -99,7 +99,8 @@ implementation
 
 uses
 	Math, Menus,
-	uStrings, uChar, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML, uFile;
+	uStrings, uChar, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML,
+  uFileCharset, uFile;
 
 const
 	ContentMark = '%HTMLcontent%';

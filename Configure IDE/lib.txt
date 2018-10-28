@@ -24,6 +24,7 @@ $(sx-library)\Math
 $(sx-library)\RandomGenerator
 $(sx-library)\Table
 $(sx-library)\Formatter
+$(sx-library)\Files
 $(sx-library)\Parser
 $(sx-library)\Geometry
 $(sx-library)\Arguments

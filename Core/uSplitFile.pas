@@ -13,6 +13,7 @@ implementation
 uses
   Windows,
   Math,
+  uFileCharset,
   uFile,
   uFiles,
   uStrings,
