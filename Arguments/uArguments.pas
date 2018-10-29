@@ -129,9 +129,10 @@ end;
 procedure TArguments.Parse(const ACommandLine: string);
 var
 	Arguments: TArrayOfString;
-  Remain: string;
+  ParametersAsString, Remain: string;
 begin
-	Arguments := SplitStr(ACommandLine, 1024, Remain);
+	SplitStr(ACommandLine, [CharSpace], 1, ParametersAsString); // Skip executable file name
+	Arguments := SplitStr(ParametersAsString, [CharSpace, ':'], 1024, Remain);
   ParseArguments(Arguments);
 end;
 
@@ -146,7 +147,7 @@ var
   Name: string;
   Argument: TCustomArgument;
 begin
-  Index := 1; // Skip executable file name
+  Index := 0;
   while Index < Length(AArguments) do
   begin
     Name := AArguments[Index];

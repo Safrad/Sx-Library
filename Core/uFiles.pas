@@ -127,7 +127,7 @@ function AllFiles: string;
 function AllText: string;
 function AllSounds: string;
 
-function SplitStr(Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
+function SplitStr(Source: string; const ASeparators: TSysCharSet; const MaxStrings: SG; out Remain: string): TArrayOfString;
 function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
 function FindFilesInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileNames;
 
@@ -140,7 +140,7 @@ uses
 	uChar, uMsg, uProjectInfo, uSorts, uCharset,
 	uOutputFormat, uMath, uLog;
 
-function SplitStr(Source: string; const MaxStrings: SG; out Remain: string): TArrayOfString;
+function SplitStr(Source: string; const ASeparators: TSysCharSet; const MaxStrings: SG; out Remain: string): TArrayOfString;
 var
 	i: SG;
 	EndIndex: SG;
@@ -153,7 +153,7 @@ begin
 	i := 1;
 	while i <= Length(Source) do
 	begin
-		if Source[i] = CharSpace then
+		if Source[i] in ASeparators then
 		begin
 			Inc(i);
 			Continue;
@@ -175,7 +175,10 @@ begin
 		end
 		else
 		begin
-			EndIndex := PosEx(CharSpace, Source, i + 1);
+			EndIndex := i + 1;
+      ReadToChars(Source, EndIndex, ASeparators);
+      Dec(EndIndex);
+//      PosEx(CharSpace, Source, i + 1);
 		end;
 		if EndIndex = 0 then EndIndex := MaxInt - 1;
 
@@ -217,7 +220,7 @@ begin
 
 	// Remove Parameters
   CommandLine := GetCommandLine;
-	All := SplitStr(CommandLine, 1, ExeParameters);
+	All := SplitStr(CommandLine, [CharSpace], 1, ExeParameters);
   ExeFileName := All[0];
   ModuleFileName := GetModuleFileNameFunc(HInstance);
 
