@@ -7,10 +7,9 @@ uses
 
 type
   TStartupEnvironment = class(TTextMacro)
-  private
-    procedure Init;
   public
     constructor Create;
+    procedure ReloadVariables;
   end;
 
 function StartupEnvironment: TStartupEnvironment;
@@ -42,10 +41,10 @@ begin
 
   CaseSensitive := False;
   RaiseErrorIfVariableNotFound := False;
-  Init;
+  ReloadVariables;
 end;
 
-procedure TStartupEnvironment.Init;
+procedure TStartupEnvironment.ReloadVariables;
 var
 	EnvironmentBlock, EnvironmentBlock2: LPTSTR;
 	Line: string;
@@ -78,7 +77,6 @@ begin
 		FreeEnvironmentStrings(EnvironmentBlock);
 	end;
 end;
-
 
 initialization
 
