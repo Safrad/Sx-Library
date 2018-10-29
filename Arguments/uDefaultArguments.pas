@@ -12,6 +12,7 @@ type
     FHelpArgument: TSwitchArgument;
   public
     constructor Create;
+    destructor Destroy; override;
 
     procedure Parse(const ACommandLine: string); override;
 
@@ -35,6 +36,13 @@ begin
   Add(FHelpArgument);
 end;
 
+destructor TDefaultArguments.Destroy;
+begin
+  FHelpArgument.Free;
+
+  inherited;
+end;
+
 procedure TDefaultArguments.Parse(const ACommandLine: string);
 begin
   inherited;
@@ -46,6 +54,6 @@ begin
     else
       Information(PreviewAsString);
   end;
-end;       
+end;
 
 end.

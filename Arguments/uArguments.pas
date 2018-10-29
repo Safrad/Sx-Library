@@ -71,7 +71,7 @@ end;
 constructor TArguments.Create;
 begin
   FArguments := TObjectList.Create;
-  FArguments.OwnsObjects := True;
+  FArguments.OwnsObjects := False;
 end;
 
 destructor TArguments.Destroy;
