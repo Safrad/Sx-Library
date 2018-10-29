@@ -2909,7 +2909,7 @@ var
   glGetPixelMapusv: procedure(map: TGLEnum; values: PGLushort); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   glGetPointerv: procedure(pname: TGLEnum; var params); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   glGetPolygonStipple: procedure(mask: PGLubyte); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
-  glGetString: function(name: TGLEnum): PChar; {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
+  glGetString: function(name: TGLEnum): PAnsiChar; {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   glGetTexEnvfv: procedure(target, pname: TGLEnum; params: PGLfloat); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   glGetTexEnviv: procedure(target, pname: TGLEnum; params: PGLint); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   glGetTexGendv: procedure(coord, pname: TGLEnum; params: PGLdouble); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
@@ -3182,8 +3182,8 @@ var
   glGetMinmaxParameterfv: procedure(target, pname: TGLEnum; params: PGLfloat); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
 
   // GL utility functions and procedures
-  gluErrorString: function(errCode: TGLEnum): PChar; {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
-  gluGetString: function(name: TGLEnum): PChar; {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
+  gluErrorString: function(errCode: TGLEnum): PAnsiChar; {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
+  gluGetString: function(name: TGLEnum): PAnsiChar; {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   gluOrtho2D: procedure(left, right, bottom, top: TGLdouble); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   gluPerspective: procedure(fovy, aspect, zNear, zFar: TGLdouble); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
   gluPickMatrix: procedure(x, y, width, height: TGLdouble; viewport: TVector4i); {$IFDEF Win32} stdcall; {$ENDIF} {$IFDEF LINUX} cdecl; {$ENDIF}
@@ -3243,7 +3243,7 @@ var
 
   // window support functions
   {$IFDEF Win32}
-  wglGetProcAddress: function(ProcName: PChar): Pointer; stdcall;
+  wglGetProcAddress: function(ProcName: PAnsiChar): Pointer; stdcall;
   wglCopyContext: function(p1: HGLRC; p2: HGLRC; p3: Cardinal): BOOL; stdcall;
   wglCreateContext: function(DC: HDC): HGLRC; stdcall;
   wglCreateLayerContext: function(p1: HDC; p2: Integer): HGLRC; stdcall;
@@ -3877,9 +3877,9 @@ var
   glXUseXFont: procedure(font: Font; first: TGLInt; count: TGLInt; list: TGLint); cdecl; 
 
   // GLX 1.1 and later
-  glXQueryExtensionsString: function(dpy: PDisplay; screen: TGLInt): PChar; cdecl; 
-  glXQueryServerString: function(dpy: PDisplay; screen: TGLInt; name: TGLInt): PChar; cdecl; 
-  glXGetClientString: function(dpy: PDisplay; name: TGLInt): PChar; cdecl; 
+  glXQueryExtensionsString: function(dpy: PDisplay; screen: TGLInt): PAnsiChar; cdecl;
+  glXQueryServerString: function(dpy: PDisplay; screen: TGLInt; name: TGLInt): PAnsiChar; cdecl;
+  glXGetClientString: function(dpy: PDisplay; name: TGLInt): PAnsiChar; cdecl;
 
   // GLX 1.2 and later
   glXGetCurrentDisplay: function: PDisplay; cdecl; 
@@ -6164,7 +6164,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TrimAndSplitVersionString(Buffer: String; var Max, Min: Integer);
+procedure TrimAndSplitVersionString(Buffer: AnsiString; var Max, Min: Integer);
 
 // Peels out the X.Y form from the given Buffer which must contain a version string like "text Minor.Major.Build text"
 // at least however "Major.Minor".
@@ -6199,7 +6199,7 @@ begin
       Min := StrToInt(Copy(Buffer, Separator + 1, 255)); 
     end
     else
-      Abort; 
+      Abort;
   except
     Min := 0; 
     Max := 0; 
@@ -6211,13 +6211,13 @@ end;
 procedure ReadImplementationProperties;
  
 var
-  Buffer: string; 
+  Buffer: AnsiString;
   MajorVersion,
   MinorVersion: Integer;
 
   //--------------- local function --------------------------------------------
 
-   function CheckExtension(const Extension: string): Boolean;
+   function CheckExtension(const Extension: AnsiString): Boolean;
 
    // Checks if the given Extension string is in Buffer.
 
@@ -6724,13 +6724,13 @@ begin
   CloseOpenGL;
 
   {$IFDEF Win32}
-  GLHandle := LoadLibrary(PChar(GLName)); 
-  GLUHandle := LoadLibrary(PChar(GLUName)); 
+  GLHandle := LoadLibrary(PChar(GLName));
+  GLUHandle := LoadLibrary(PChar(GLUName));
   {$ENDIF}
 
   {$IFDEF LINUX}
   GLHandle := dlopen(PChar(GLName), RTLD_GLOBAL or RTLD_LAZY); 
-  GLUHandle := dlopen(PChar(GLUName), RTLD_GLOBAL or RTLD_LAZY); 
+  GLUHandle := dlopen(PChar\(GLUName), RTLD_GLOBAL or RTLD_LAZY);
   {$ENDIF}
 
   if (GLHandle <> INVALID_MODULEHANDLE) and (GLUHandle <> INVALID_MODULEHANDLE) then
