@@ -17,6 +17,7 @@ type
     procedure TestImbalancedLowHigh(const ARandomGenerator: TRandomGenerator);
     procedure TestImbalancedLowHighU8(const ARandomGenerator: TRandomGenerator);
     procedure TestImbalancedLowHighU82(const ARandomGenerator: TRandomGenerator);
+    procedure TestRandomZeroDistanceValue(const AValue: SG; const AMinimum, AMaximum: SG);
   published
     procedure TestDelphiRandomGeneratorCompatibility;
     procedure TestDelphiGenerator;
@@ -26,6 +27,7 @@ type
     procedure TestRandom0Generator;
     procedure TestKnuthRandomGenerator;
     procedure TestSxRandomGenerator;
+    procedure TestRandomZeroDistance;
   end;
 
 implementation
@@ -113,6 +115,45 @@ begin
     TestSpecific(Random0Generator);
   finally
     Random0Generator.Free;
+  end;
+end;
+
+procedure TRandomGeneratorTest.TestRandomZeroDistance;
+begin
+  TestRandomZeroDistanceValue(0, 0, 0);
+  TestRandomZeroDistanceValue(1, -1, 1);
+  TestRandomZeroDistanceValue(2, -2, 2);
+  TestRandomZeroDistanceValue(1000, -1000, 1000);
+end;
+
+procedure TRandomGeneratorTest.TestRandomZeroDistanceValue(const AValue, AMinimum, AMaximum: SG);
+const
+  Count = 10000;
+var
+  Value: SG;
+  i: SG;
+  Minimum, Maximum, Suma: SG;
+  SxRandomGenerator: TSxRandomGenerator;
+begin
+  SxRandomGenerator := TSxRandomGenerator.Create;
+  try
+    Minimum := High(Minimum);
+    Maximum := Low(Minimum);
+    Suma := 0;
+    for i := 0 to Count - 1 do
+    begin
+      Value := SxRandomGenerator.RandomZeroDistance(AValue);
+      Inc(Suma, Value);
+      if Value < Minimum then
+        Minimum := Value;
+      if Value > Maximum then
+        Maximum := Value;
+    end;
+    CheckTrue(Abs(Suma) <= AValue * Count div 20, 'RandomZeroDistance is imbalanced');
+    CheckEquals(AMinimum, Minimum);
+    CheckEquals(AMaximum, Maximum);
+  finally
+    SxRandomGenerator.Free;
   end;
 end;
 

@@ -54,7 +54,7 @@ end;
 
 function TRandomGenerator.RandomZeroDistance(const AMaximalDistance: U4): S4;
 begin
-	Result := S4(RangeU4(2 * AMaximalDistance + 1)) - AMaximalDistance;
+	Result := S4(RangeU4(2 * AMaximalDistance)) - AMaximalDistance;
 end;
 
 function TRandomGenerator.RangeU4(const AMinimalValue, AMaximalValue: U4): U4;
