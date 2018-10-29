@@ -38,7 +38,7 @@ begin
     CheckTrue(GCPU.Usage <> 0);
 
   FirstCall := False;
-  Sleep(100);
+  Sleep(1000);
   GCPU.Update;
   CheckTrue(GCPU.Usage <> 0);
 end;

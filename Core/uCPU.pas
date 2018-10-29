@@ -499,8 +499,6 @@ end;
 *)
 
 function TCPU.GetCPUUsage: FG;
-const
-	IntervalTime = Second div 2;
 var
 	tickCount     : U8;
 //	processorTime : U8;
@@ -517,7 +515,7 @@ begin
 			// Possible after hibernation or overflow
 			LastTickCount := tickCount;
 		end;
-		if tickCount < LastTickCount + IntervalTime then
+		if tickCount < LastTickCount + MainTimer.Frequency div 2 then
 		begin
 			Result := FUsage;
 			Exit;
