@@ -17,7 +17,13 @@ type
 implementation
 
 uses
+  Windows,
   uCustomArgument;
+
+// Warning this flag can be used only in exe, not in dll/bpl
+// in some cases it is possible to use it with correctly set ImageBase of dll
+// Executable file is smaller
+{$SETPEFLAGS IMAGE_FILE_RELOCS_STRIPPED}
 
 { TUIApplication }
 
