@@ -105,11 +105,8 @@ begin
 end;
 
 function TTimeSpan.ToStringInSeconds: string;
-var
-  PrecisionDigits: SG;
 begin
-  PrecisionDigits := MainTimer.PrecisionDigits;
-  Result := FloatToDecimalString(Seconds, PrecisionDigits);
+  Result := FloatToDecimalString(Seconds, 16, MainTimer.PrecisionDigits);
 end;
 
 end.
