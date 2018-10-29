@@ -1,5 +1,17 @@
-{
-	Usability in "Project file" (*.dpr):
+(*
+Example of use:
+
+MyProgram.dpr:
+
+program MyProgram;
+
+uses
+  uGUIApplication,
+  uMain in 'uMain.pas',
+  Forms;
+
+{$R *.RES}
+
 var
   GUIApplication := TGUIApplication;
 begin
@@ -12,7 +24,7 @@ begin
   end;
 end.
 
-}
+*)
 
 unit uGUIApplication;
 
@@ -20,13 +32,13 @@ interface
 
 uses
   uTypes,
-  uCommonApplication,
+  uUIApplication,
   uSwitchArgument,
   Menus,
   Forms;
 
 type
-  TGUIApplication = class(TCommonApplication)
+  TGUIApplication = class(TUIApplication)
   private
     FAllowMultipleInstance: TSwitchArgument;
     FMinimizeToTrayIcon: BG;

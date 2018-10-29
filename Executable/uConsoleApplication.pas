@@ -1,16 +1,14 @@
-{
-	Usability in "Project file" (*.dpr):
+(*
+Example of use:
 
-type
-  TMain = class(TConsoleApplication)
-  private
-    ...: TDirectoryArgument;
-    ...: TSwitchArgument;
-    ...
-  protected
-    procedure AddArguments; override;
-    procedure OnRun; override;
-  end;
+MyProgram.dpr:
+
+program MyProgram;
+
+uses
+  uMain in 'uMain.pas';
+
+{$R *.RES}
 
 var
   Main: TMain;
@@ -23,19 +21,38 @@ begin
   end;
 end.
 
-}
+uMain.pas:
+unit uMain;
+
+interface
+
+type
+  TMain = class(TConsoleApplication)
+  private
+    ...: TDirectoryArgument;
+    ...: TSwitchArgument;
+    ...
+  protected
+    procedure AddArguments; override;
+    procedure OnRun; override;
+  end;
+
+...
+*)
 
 unit uConsoleApplication;
 
 interface
 
+{$APPTYPE CONSOLE}
+
 uses
-  uCommonApplication,
+  uUIApplication,
   uTypes,
   uArguments;
 
 type
-  TConsoleApplication = class(TCommonApplication)
+  TConsoleApplication = class(TUIApplication)
   private
     FShowVersionInfo: BG;
     procedure WriteVersionInfo;

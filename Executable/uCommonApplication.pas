@@ -6,7 +6,6 @@ uses
   uFirst,
   uTypes,
   uArguments,
-  uSwitchArgument,
   uApplicationStatistics;
 
 type
@@ -22,7 +21,12 @@ type
     procedure SetArguments(const Value: TArguments);
     procedure SetRestartAfterClose(const Value: BG);
   protected
-    FMinimizedArgument: TSwitchArgument;
+    procedure InitializeMainLog; virtual;
+    procedure InitializeMainIni; virtual;
+    procedure InitializeLocalMainIni; virtual;
+    procedure InitializeStatistics; virtual;
+    procedure InitializeDictionary; virtual;
+    procedure InitializeArguments; virtual;
     procedure AddArguments; virtual;
     procedure Initialize; virtual;
     procedure Finalize; virtual;
@@ -70,11 +74,7 @@ uses
 
 procedure TCommonApplication.AddArguments;
 begin
-  FMinimizedArgument := TSwitchArgument.Create;
-  FMinimizedArgument.Shortcut := 'minimized';
-  FMinimizedArgument.Description := 'Minimizes application';
-  FMinimizedArgument.RequireCheck := rcOptional;
-  Arguments.Add(FMinimizedArgument);
+  // No Code
 end;
 
 constructor TCommonApplication.Create;
@@ -112,38 +112,30 @@ end;
 
 procedure TCommonApplication.Finalize;
 begin
-  FArguments.Free;
-
-  FreeAndNil(Dictionary);
-
-  FStatistics.Free;
-
-  FreeAndNil(MainIni);
-  FreeAndNil(LocalMainIni);
-  FreeAndNil(MainLog);
-
-  RestartIfNeeded;
+  try
+    FArguments.Free;
+    FreeAndNil(Dictionary);
+    FStatistics.Free;
+    FreeAndNil(LocalMainIni);
+    FreeAndNil(MainIni);
+    FreeAndNil(MainLog);
+  finally
+    RestartIfNeeded;
+  end;
 end;
 
 procedure TCommonApplication.Initialize;
-var
-  MainIniFileName, LocalMainIniFileName: TFileName;
 begin
-  InitializeLog;
-  MainLog.Add('Initialization sequence time [s]: ' + FloatToStr(MainTimer.IntervalFrom(ApplicationStartTicks) / MainTimer.Frequency), mlDebug);
+  InitializeMainLog;
+  InitializeMainIni;
+  InitializeLocalMainIni;
+  InitializeStatistics;
+  InitializeDictionary;
+  InitializeArguments;
+end;
 
-  MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
-  CreateDirEx(ExtractFilePath(MainIniFileName));
-  MainIni := TDIniFile.Create(MainIniFileName);
-
-  LocalMainIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
-  // CreateDirEx(ExtractFilePath(LocalMainIniFileName)); InitializeLog creates directories
-  LocalMainIni := TDIniFile.Create(LocalMainIniFileName);
-
-  FStatistics := TApplicationStatistics.Create;
-
-  Dictionary := TDictionary.Create;
-
+procedure TCommonApplication.InitializeArguments;
+begin
   FArguments := TDefaultArguments.Create;
   AddArguments;
   FArguments.Parse;
@@ -151,6 +143,40 @@ begin
     raise EArgumentException.Create(FArguments.ShowRequired);
   if FArguments.Check <> '' then
     raise EArgumentException.Create(FArguments.Check);
+end;
+
+procedure TCommonApplication.InitializeDictionary;
+begin
+  Dictionary := TDictionary.Create;
+end;
+
+procedure TCommonApplication.InitializeLocalMainIni;
+var
+  LocalMainIniFileName: TFileName;
+begin
+  LocalMainIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
+  CreateDirEx(ExtractFilePath(LocalMainIniFileName)); // InitializeLog creates the same directory, but can be overriden
+  LocalMainIni := TDIniFile.Create(LocalMainIniFileName);
+end;
+
+procedure TCommonApplication.InitializeMainIni;
+var
+  MainIniFileName: TFileName;
+begin
+  MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
+  CreateDirEx(ExtractFilePath(MainIniFileName));
+  MainIni := TDIniFile.Create(MainIniFileName);
+end;
+
+procedure TCommonApplication.InitializeMainLog;
+begin
+  InitializeLog;
+  MainLog.Add('Initialization sequence time [s]: ' + FloatToStr(MainTimer.IntervalFrom(ApplicationStartTicks) / MainTimer.Frequency), mlDebug);
+end;
+
+procedure TCommonApplication.InitializeStatistics;
+begin
+  FStatistics := TApplicationStatistics.Create;
 end;
 
 procedure TCommonApplication.RestartIfNeeded;
