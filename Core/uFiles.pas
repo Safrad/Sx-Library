@@ -153,7 +153,7 @@ begin
 	i := 1;
 	while i <= Length(Source) do
 	begin
-		if Source[i] in ASeparators then
+		if CharInSet(Source[i], ASeparators) then
 		begin
 			Inc(i);
 			Continue;
