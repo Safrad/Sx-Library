@@ -155,7 +155,7 @@ var
   LocalMainIniFileName: TFileName;
 begin
   LocalMainIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
-  CreateDirEx(ExtractFilePath(LocalMainIniFileName)); // InitializeLog creates the same directory, but can be overriden
+  CreateDirsEx(ExtractFilePath(LocalMainIniFileName)); // InitializeLog creates the same directory, but can be overriden
   LocalMainIni := TDIniFile.Create(LocalMainIniFileName);
 end;
 
@@ -164,7 +164,7 @@ var
   MainIniFileName: TFileName;
 begin
   MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
-  CreateDirEx(ExtractFilePath(MainIniFileName));
+  CreateDirsEx(ExtractFilePath(MainIniFileName));
   MainIni := TDIniFile.Create(MainIniFileName);
 end;
 

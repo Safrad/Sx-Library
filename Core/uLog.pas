@@ -100,7 +100,7 @@ begin
   InitializingLog := True;
 
 	MainLogFileName := LocalAppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
-	CreateDirEx(ExtractFilePath(MainLogFileName));
+	CreateDirsEx(ExtractFilePath(MainLogFileName));
 	MainLog := TLog.Create(MainLogFileName);
   InitializingLog := False;
 end;
