@@ -64,7 +64,7 @@ end;
 
 function TApplicationStatistics.GetElapsedTime: TTimeSpan;
 begin
-  FElapsedTime.Milliseconds := MainTimer.IntervalFrom(FStartTime);
+  FElapsedTime.Ticks := MainTimer.IntervalFrom(FStartTime);
   Result := FElapsedTime;
 end;
 
