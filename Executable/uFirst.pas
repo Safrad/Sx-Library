@@ -4,7 +4,12 @@ unit uFirst;
 
 interface
 
+{.$define FastMM4} // Optional
+
 uses
+{$ifdef FastMM4}
+  FastMM4,
+{$endif}  
   uTypes;
 
 var
@@ -21,7 +26,9 @@ initialization
 	if IsRelease then
 		NoErrMsg := True;
 
+	{$ifndef FastMM4}	
 	if IsDebug then
-		ReportMemoryLeaksOnShutdown := True; // Can take long time for many unfreed objects
+		ReportMemoryLeaksOnShutdown := True; // Optional, can take long time for many unfreed objects
+	{$endif}
 {$ENDIF NoInitialization}
 end.
