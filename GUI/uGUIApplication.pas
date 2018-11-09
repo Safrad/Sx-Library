@@ -7,13 +7,13 @@ program MyProgram;
 
 uses
   uGUIApplication,
-  uMain in 'uMain.pas',
-  Forms;
+  Forms,
+  uMain in 'uMain.pas' {fMain};
 
 {$R *.RES}
 
 var
-  GUIApplication := TGUIApplication;
+  GUIApplication: TGUIApplication;
 begin
   GUIApplication := TGUIApplication.Create;
   try
@@ -31,8 +31,8 @@ unit uGUIApplication;
 interface
 
 uses
-  uTypes,
   uUIApplication,
+  uTypes,
   uSwitchArgument,
   Menus,
   Forms;
@@ -123,6 +123,7 @@ begin
     end;
 
     Application.MainForm.Free; // Do not use FreeAndNil
+    FreeAndNil(FAllowMultipleInstance);
   finally
     inherited;
   end;
