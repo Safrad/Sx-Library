@@ -6,8 +6,8 @@ program LibTest;
 {$endif}
 
 uses
-  FastMM4,
   uFirst,
+  uLog,
   uTypes,
   Forms,
   TestFramework,
@@ -58,6 +58,7 @@ uses
 {$R *.RES}
 
 begin
+  InitializeLog;
   Application.Initialize;
   Application.Title := 'Lib Test';
   if IsConsole then
