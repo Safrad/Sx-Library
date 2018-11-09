@@ -163,9 +163,11 @@ begin
 	begin
 		ThisProjectInfo := TProjectInfo.Create(GetModuleFileNameFunc(HInstance));
 		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then // if not initialized in ProjectInfo
+    begin
 			ThisProjectInfo.FProjectInfoNames[piInternalName] := DelFileExt(ExtractFileName(ThisProjectInfo.FApplicationFileName));
-		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then
-      ThisProjectInfo.FProjectInfoNames[piInternalName] := 'Unknown';
+  		if ThisProjectInfo.FProjectInfoNames[piInternalName] = '' then
+        ThisProjectInfo.FProjectInfoNames[piInternalName] := 'Unknown';
+    end;
 
 		if ThisProjectInfo.FProjectInfoNames[piCompanyName] = '' then
       ThisProjectInfo.FProjectInfoNames[piCompanyName] := 'Sx Software';
