@@ -26,6 +26,7 @@ type
 implementation
 
 uses
+  Classes,
   uMsg;
 
 { TExternalApplicationThread }
