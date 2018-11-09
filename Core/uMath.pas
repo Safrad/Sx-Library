@@ -155,8 +155,10 @@ function Hash(const Desc; Size: U4): U4;
 procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
-function BitScanReverse(AValue: U4): U4;
-function CountDigits(AValue: U4): U4;
+function BitScanReverse(AValue: U4): U4; overload;
+function BitScanReverse(AValue: U8): U4; overload;
+function CountDigits(AValue: U4): U4; overload;
+function CountDigits(AValue: U8): U4; overload;
 
 function PerformanceFrequency: S8; deprecated 'Use MainTimer';
 function PerformanceCounter: S8; deprecated 'Use MainTimer';
@@ -1809,7 +1811,31 @@ end;
 
 function BitScanReverse(AValue: U4): U4; register;
 asm // Highest bit set
-  BSR EAX, EAX
+{$ifdef CPUX64}
+  bsr ecx, AValue // ecx = BSR(AValue)
+  mov Result, ecx
+{$else}
+  bsr eax, AValue // Result = BSR(AValue)
+{$endif}
+end;
+
+function BitScanReverse(AValue: U8): U4; register;
+asm // Highest bit set
+{$ifdef CPUX64}
+  bsr rcx, AValue // rcx = BSR(AValue)
+  mov Result, ecx {low part of rcx}
+{$else}
+  xor eax, eax // required if AValue-hi or AValue-lo is 0 (bsr do not change eax in this case)
+  bsr eax, U4 ptr [AValue + 4] // AValue-hi
+  jz @low
+  add eax, 32
+  jmp @exit
+
+  @low:
+  bsr eax, U4 ptr [AValue] // AValue.lo
+  @exit:
+	mov Result, eax // Result-lo
+{$endif}
 end;
 
 function CountDigits(AValue: U4): U4;
@@ -1828,6 +1854,42 @@ const
   MaxDigits: array[0..32] of U4 =
     (1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5,
      6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10);
+begin
+  Result := MaxDigits[BitScanReverse(AValue)];
+  if (AValue < Powers[Result - 1]) then
+    Dec(Result);
+end;
+
+function CountDigits(AValue: U8): U4;
+const
+  Powers: array[0..19] of U8 = (
+    0,
+    10,
+    100,
+    1000,
+    10000,
+    100000,
+    1000000,
+    10000000,
+    100000000,
+    1000000000,
+    10000000000,
+    100000000000,
+    1000000000000,
+    10000000000000,
+    100000000000000,
+    1000000000000000,
+    10000000000000000,
+    100000000000000000,
+    1000000000000000000,
+    10000000000000000000
+    );
+  MaxDigits: array[0..64] of U4 =
+    (1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5,
+     6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10,
+     11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 16,
+     16, 16, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 20, 20, 20, 20
+   );
 begin
   Result := MaxDigits[BitScanReverse(AValue)];
   if (AValue < Powers[Result - 1]) then

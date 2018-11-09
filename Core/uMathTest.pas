@@ -27,13 +27,16 @@ type
     procedure TimeDifferenceTest;
     procedure MultiplyTest;
     procedure MultiplyAndReturnMostSignificantHalfTest;
-    procedure BitScanReverseTest;
-    procedure CountDigitsTest;
+    procedure BitScanReverseU4Test;
+    procedure BitScanReverseU8Test;
+    procedure CountDigitsU4Test;
+    procedure CountDigitsU8Test;
   end;
 
 implementation
 
 uses
+  Math,
   GammaF,
   uTimeSpan,
   uMath;
@@ -141,7 +144,7 @@ begin
   CheckEquals(-3, RoundN(-3.1));
 end;
 
-procedure TMathTest.BitScanReverseTest;
+procedure TMathTest.BitScanReverseU4Test;
 begin
   CheckEquals(0, BitScanReverse(0));
   CheckEquals(0, BitScanReverse(1));
@@ -158,6 +161,24 @@ begin
   CheckEquals(31, BitScanReverse($FFFFFFFF));
 end;
 
+procedure TMathTest.BitScanReverseU8Test;
+begin
+  CheckEquals(0, BitScanReverse(U8(0)));
+  CheckEquals(0, BitScanReverse(U8(1)));
+  CheckEquals(1, BitScanReverse(U8(2)));
+  CheckEquals(1, BitScanReverse(U8(3)));
+  CheckEquals(2, BitScanReverse(U8(4)));
+  CheckEquals(2, BitScanReverse(U8(5)));
+  CheckEquals(2, BitScanReverse(U8(6)));
+  CheckEquals(2, BitScanReverse(U8(7)));
+  CheckEquals(3, BitScanReverse(U8(8)));
+  CheckEquals(3, BitScanReverse(U8(9)));
+  CheckEquals(3, BitScanReverse(U8(15)));
+  CheckEquals(4, BitScanReverse(U8(16)));
+  CheckEquals(31, BitScanReverse(U8($FFFFFFFF)));
+  CheckEquals(63, BitScanReverse(U8($FFFFFFFFFFFFFFFF)));
+end;
+
 procedure TMathTest.BitsToByteTest;
 begin
   CheckEquals(0, BitsToByte(0));
@@ -168,17 +189,36 @@ begin
   CheckEquals(1186, BitsToByte(9485));
 end;
 
-procedure TMathTest.CountDigitsTest;
+procedure TMathTest.CountDigitsU4Test;
+var
+  Digits: UG;
+  Value: U4;
 begin
-  CheckEquals(1, CountDigits(0));
-  CheckEquals(1, CountDigits(1));
-  CheckEquals(1, CountDigits(9));
-  CheckEquals(2, CountDigits(10));
-  CheckEquals(2, CountDigits(99));
-  CheckEquals(3, CountDigits(100));
-  CheckEquals(3, CountDigits(999));
-  CheckEquals(4, CountDigits(1000));
+  Value := 1;
+  Digits := 1;
+  repeat
+    CheckEquals(Max(1, Digits - 1), CountDigits(Value - 1));
+    CheckEquals(Digits, CountDigits(Value));
+    Value := Value * 10;
+    Inc(Digits);
+  until Value > High(Value) div 10;
   CheckEquals(10, CountDigits($FFFFFFFF));
+end;
+
+procedure TMathTest.CountDigitsU8Test;
+var
+  Digits: UG;
+  Value: U8;
+begin
+  Value := 1;
+  Digits := 1;
+  repeat
+    CheckEquals(Max(1, Digits - 1), CountDigits(Value - 1));
+    CheckEquals(Digits, CountDigits(Value));
+    Value := Value * 10;
+    Inc(Digits);
+  until Value > High(Value) div 10;
+  CheckEquals(10, CountDigits(U8($FFFFFFFF)));
 end;
 
 procedure TMathTest.NopTest;
@@ -262,8 +302,11 @@ begin
   CheckEquals(2, Gamma(3));
   CheckEquals(6, Gamma(4));
   CheckEquals(24, Gamma(5));
-  CheckTrue(EqualRelative(Gamma(100), Factorial99, 1e-17));
-  CheckTrue(EqualRelative(Gamma(1000), Factorial999, 1e-15));
+  if SizeOf(FA) >= 10 then
+  begin
+    CheckTrue(EqualRelative(Gamma(100), Factorial99, 1e-17));
+    CheckTrue(EqualRelative(Gamma(1000), Factorial999, 1e-15));
+  end;
 end;
 
 initialization
