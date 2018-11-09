@@ -4,7 +4,6 @@ interface
 
 uses
 	uTypes,
-	uCharset,
 	SysUtils;
 
 function RelativePath(const Source, Target: string): string;
@@ -35,7 +34,7 @@ type
 		procedure AddHX(const Text: string; const HX: string);
 	public
 //		SourceCodePage: TCodePage;
-		HTMLCodePage: TCodePage;
+		HTMLCodePage: string;
 		Title: string;
 		RedirectURL: string;
 		AddHeadAndFoot: BG;
@@ -100,6 +99,7 @@ implementation
 uses
 	Math, Menus,
 	uStrings, uChar, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML,
+  uCharset,
   uFileCharset, uFile;
 
 const
@@ -190,7 +190,7 @@ begin
 	Result := Result +
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cs" lang="cs">' + HTMLSep +
 		'<head>' + HTMLSep +
-		HTMLTab + '<meta http-equiv="Content-Type" content="text/xml; charset='{html} + CodePageNames[HTMLCodePage] + '" />' + HTMLSep +
+		HTMLTab + '<meta http-equiv="Content-Type" content="text/xml; charset='{html} + HTMLCodePage + '" />' + HTMLSep +
 		HTMLTab + '<meta name="author" content="' + GetProjectInfo(piAuthor) + '; e-mail: ' + GetProjectInfo(piEMail) + '" />' + HTMLSep;
 //		HTMLTab + '<meta name="expires" content="' +  + '" />' + HTMLSep +
 	if RedirectURL = '' then
@@ -212,8 +212,7 @@ begin
 	FSaved := False;
 	FBody := '';
 	Title := '';
-//	SourceCodePage := cp1250;
-	HTMLCodePage := cpUTF8;
+	HTMLCodePage := 'utf-8';
 	FFrameset := False;
 	AddHeadAndFoot := UpperCase(DelFileExt(ExtractFileName(FileName))) <> 'MENU';
 end;
