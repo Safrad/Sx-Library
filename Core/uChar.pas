@@ -62,6 +62,8 @@ const
   CharRightawardsArrow = {$ifdef UNICODE}Char($2192){$else}'->'{$endif};
   CharDownawardsArrow = {$ifdef UNICODE}Char($2193){$else}'\'{$endif};
 
+  CharCopyright = {$ifdef UNICODE}Char($00A9){$else}'(c)'{$endif};
+
 implementation
 
 end.
