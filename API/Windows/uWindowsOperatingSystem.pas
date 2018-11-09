@@ -123,7 +123,7 @@ end;
 
 class function TWindowsOperatingSystem.GetNameInternal: string;
 begin
-  TWindowsManagementInstrumentation.GetDatabaseItem('Win32_OperatingSystem', 'Caption');
+  Result := TWindowsManagementInstrumentation.GetDatabaseItem('Win32_OperatingSystem', 'Caption');
 end;
 
 class function TWindowsOperatingSystem.GetUptimeInMs: U8;
