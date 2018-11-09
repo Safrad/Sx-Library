@@ -75,7 +75,7 @@ function TTextFilter.PrepareText(const AText: string): string;
 begin
 	Result := AText;
 	if FIgnoreDiacriticMarks then
-		Result := ConvertCharsetF(Result, cp1250, cpAscii);
+		Result := ConvertToAscii(Result);
 	if FIgnoreCaseSensitive then
 		Result := AnsiUpperCase(Result);
 end;
