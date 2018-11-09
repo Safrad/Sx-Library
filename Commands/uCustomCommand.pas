@@ -11,9 +11,11 @@ type
     FDescription: string;
     FShortcut: string;
     FResponse: string;
+    FEnabled: BG;
     procedure SetDescription(const Value: string);
     procedure SetShortcut(const Value: string);
     procedure SetResponse(const Value: string);
+    procedure SetEnabled(const Value: BG);
   protected
     function GetSyntax: string; virtual; abstract;
   public
@@ -23,6 +25,7 @@ type
 
     procedure Execute(const AParameters: string); virtual; abstract;
 
+    property Enabled: BG read FEnabled write SetEnabled;
     property Shortcut: string read FShortcut write SetShortcut;
     property Description: string read FDescription write SetDescription;
     property Response: string read FResponse write SetResponse;
@@ -33,6 +36,9 @@ implementation
 uses
   uStrings;
 
+resourcestring
+  Unknown = '???';
+
 { TCustomCommand }
 
 function TCustomCommand.GetShortcutAndSyntax: string;
@@ -40,7 +46,11 @@ var
   Syntax: string;
 begin
   Result := Shortcut;
-  Syntax := GetSyntax();
+  try
+    Syntax := GetSyntax;
+  except
+    Syntax := Unknown;
+  end;
   if Syntax <> '' then
     Result := Result + ' ' + Syntax;
 end;
@@ -48,6 +58,11 @@ end;
 procedure TCustomCommand.SetDescription(const Value: string);
 begin
   FDescription := Value;
+end;
+
+procedure TCustomCommand.SetEnabled(const Value: BG);
+begin
+  FEnabled := Value;
 end;
 
 procedure TCustomCommand.SetResponse(const Value: string);
@@ -61,16 +76,19 @@ begin
 end;
 
 constructor TCustomCommand.Create;
+const
+  Suffix = 'Command';
 begin
   inherited;
 
+  FEnabled := True;
   FShortcut := ClassName;
   if FirstChar(ClassName) = 'T' then
     FShortcut := DelFirstChar(FShortcut);
-  if EndStr('Command', FShortcut) then
-    SetLength(FShortcut, Length(FShortcut) - Length('Command'));
+  if EndStr(Suffix, FShortcut) then
+    SetLength(FShortcut, Length(FShortcut) - Length(Suffix));
 
-  FDescription := '???';
+  FDescription := Unknown;
 end;
 
 end.
