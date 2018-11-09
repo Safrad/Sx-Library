@@ -4,6 +4,7 @@ library DllForTest;
 
 uses
   uFirst,
+  uDynamicLinkLibrary,
   Windows,
   Graphics,
   SysUtils,
@@ -80,6 +81,9 @@ uses
   SynTaskDialog,
   TaskBarAPI;
 
+var
+  DynamicLinkLibrary: TDynamicLinkLibrary;
 begin
-  // No Code
+  DynamicLinkLibrary := TDynamicLinkLibrary.Create;
+  DynamicLinkLibrary.Run;
 end.
