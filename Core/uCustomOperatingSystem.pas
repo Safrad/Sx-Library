@@ -104,7 +104,7 @@ begin
       end;
     end;
   end;
-  Result := FName;
+  Result := FComputerName;
 end;
 
 function TCustomOperatingSystem.GetName: string;
