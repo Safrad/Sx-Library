@@ -96,6 +96,7 @@ type
 		procedure RWNum(const Section, Ident: string; var Value: NativeInt; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: NativeUInt; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: U8; const Save: BG); overload;
+		procedure ReadAndIncrementOrWrite(const Section, Ident: string; var Value: U8; const Save: BG); overload;
     {$ifend}
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
@@ -879,6 +880,19 @@ begin
 		WriteNum(Section, Ident, Value);
 	end;
 end;
+
+procedure TDIniFile.ReadAndIncrementOrWrite(const Section, Ident: string; var Value: U8; const Save: BG);
+begin
+	if Save = False then
+	begin
+		Inc(Value, ReadNum(Section, Ident, Value));
+	end
+	else
+	begin
+		WriteNum(Section, Ident, Value);
+	end;
+end;
+
 {$ifend}
 
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F4; const Save: BG);
@@ -1326,6 +1340,10 @@ begin
 	R.Top := FormOrigin.Y;
 	R.Right := FormOrigin.X + FormSize.cx;
 	R.Bottom := FormOrigin.Y + FormSize.cy;}
+
+  // Backward compatibility
+  if Save and Assigned(MainIni) then
+    MainIni.DeleteSection(Form.Name);
 end;
 
 procedure TDIniFile.RWFormPosV(const Form: TForm; const Save: BG);
