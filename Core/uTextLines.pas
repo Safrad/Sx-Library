@@ -114,6 +114,7 @@ begin
   begin
     while LastChar(FLines[i]) = CharCR do
       SetLength(FLines[i], Length(FLines[i]) - 1);
+    Replace(FLines[i], CharTab, '        ');
   end;
 end;
 
