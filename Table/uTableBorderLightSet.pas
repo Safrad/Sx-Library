@@ -3,7 +3,7 @@ unit uTableBorderLightSet;
 interface
 
 uses
-  uTableBorderSet, uItemType, uStrings;
+  uTableBorderSet, uItemType;
 
 type
   TTableBorderLightSet = class(TTableBorderSet)
@@ -14,7 +14,7 @@ type
 implementation
 
 uses
-  uChar;
+  uUnicodeChar;
 
 { TTableBorderLightSet }
 

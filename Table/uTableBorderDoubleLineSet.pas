@@ -3,7 +3,7 @@ unit uTableBorderDoubleLineSet;
 interface
 
 uses
-  uTableBorderSet, uItemType, uStrings;
+  uTableBorderSet, uItemType;
 
 type
   TTableBorderDoubleLineSet = class(TTableBorderSet)
@@ -12,6 +12,9 @@ type
   end;
 
 implementation
+
+uses
+  uUnicodeChar;
 
 { TTableBorderDoubleLineSet }
 

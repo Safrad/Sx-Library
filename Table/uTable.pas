@@ -47,7 +47,9 @@ implementation
 uses
   Math, StrUtils,
   uStrings,
+  uCodePage,
   uTableBorderTextSet,
+  uTableBorderDoubleLineSet,
   uItemType;
 
 { TTable }
@@ -104,10 +106,13 @@ begin
 end;
 
 class procedure TTable.CalculateMaximalWidthOfRows(const AResult: TArrayOfSG);
+const
+  RightSpacing = 1; // Minimum 1 is reguired to disable table row overflow to new line
+  BorderSize = 1;
 var
   maxIndex: SG;
 begin
-  while Suma(AResult) + 1 + Length(AResult) > TConsole.GetSize.X do
+  while Suma(AResult) + BorderSize + Length(AResult) > TConsole.GetSize.X - RightSpacing do
   begin
     maxIndex := MaxValueIndex(AResult);
     Dec(AResult[maxIndex]);
@@ -150,7 +155,10 @@ end;
 constructor TTable.Create(const ARowCount: SG);
 begin
   SetLength(FData, ARowCount);
-  FTableBorderSet := TTableBorderTextSet.Create;
+  if TConsole.CodePage >= cpUTF7 then
+    FTableBorderSet := TTableBorderDoubleLineSet.Create
+  else
+    FTableBorderSet := TTableBorderTextSet.Create;
 end;
 
 procedure TTable.DataLine(const ASizes: TArrayOfSG; const ARowHeight: SG; const AColumns: TColumns; const
@@ -165,11 +173,11 @@ begin
     TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
     for columnIndex := 0 to ColumnCount - 1 do
     begin
-        cell := AColumns[columnIndex];
-        TConsole.WriteAligned(cell.GetLineString(cell.TextAlignment.Vertical, lineIndex, ARowHeight), ASizes[columnIndex], cell.TextAlignment.Horizontal,
-          ccLightGray, ABackgroundColor);
-        if columnIndex < ColumnCount - 1 then
-          TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
+      cell := AColumns[columnIndex];
+      TConsole.WriteAligned(cell.GetLineString(cell.TextAlignment.Vertical, lineIndex, ARowHeight), ASizes[columnIndex], cell.TextAlignment.Horizontal,
+        ccLightGray, ABackgroundColor);
+      if columnIndex < ColumnCount - 1 then
+        TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
     end;
     TConsole.WriteLine(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
   end;
