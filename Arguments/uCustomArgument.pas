@@ -34,6 +34,7 @@ type
     function Preview: string; virtual;
     procedure Require(const ACustomArgument: TCustomArgument);
     function GetRequireList: string;
+    function GetRequired: string; virtual;
     function GetRequiredOrOptional: string; virtual;
     function GetArgumentShortcutAndSyntax: string;
     procedure SetValueFromString(const AValue: string); virtual; abstract;
@@ -64,6 +65,18 @@ begin
   if Syntax <> '' then
       Syntax := ' ' + Syntax;
   Result := Prefix + Shortcut + Syntax;
+end;
+
+function TCustomArgument.GetRequired: string;
+begin
+  case RequireCheck of
+  rcRequired:
+    Result := 'yes';
+  rcOptional:
+    Result := 'no';
+  else
+    Result := '';
+  end;
 end;
 
 function TCustomArgument.GetRequiredOrOptional: string;
@@ -127,7 +140,7 @@ begin
     begin
       Result := Result +  '"' + FRequires[i].Shortcut + '";';
     end;
-    Result := Result + FileSep;;
+    Result := Result + FileSep;
   end;
 end;
 

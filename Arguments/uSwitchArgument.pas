@@ -12,6 +12,7 @@ type
   public
     constructor Create;
 		procedure SetValueFromString(const AValue: string); override;
+    function GetRequired: string; override;
     function GetRequiredOrOptional: string; override;
   end;
 
@@ -26,6 +27,11 @@ begin
   inherited;
 
   RequireCheck := rcOptional;
+end;
+
+function TSwitchArgument.GetRequired: string;
+begin
+  Result := '';
 end;
 
 function TSwitchArgument.GetRequiredOrOptional: string;

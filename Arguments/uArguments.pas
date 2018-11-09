@@ -226,7 +226,7 @@ begin
   Row := TRow.Create(3);
   Row.Columns[0].Text := AArgument.GetArgumentShortcutAndSyntax;
   Row.Columns[1].Text := AArgument.Description;
-  Row.Columns[2].Text := AArgument.GetRequiredOrOptional + AArgument.GetRequireList;
+  Row.Columns[2].Text := AArgument.GetRequired + AArgument.GetRequireList;
   Result := Row;
 end;
 
