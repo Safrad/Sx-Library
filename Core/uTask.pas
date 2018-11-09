@@ -3,7 +3,7 @@ unit uTask;
 interface
 
 uses
-	uSchedule, uData, uTypes, SysUtils;
+	uSchedule, uData, uTypes, uTimeSpan, SysUtils;
 
 type
 	TTaskAction = (taNone, taSound, taNormal, taMore, taHibernate, taSuspend, taPowerOff, taReboot, taShutdown, taLogOff, taDownloadWebPage);
@@ -27,7 +27,7 @@ type
 		LastRunCount: S4;
 		LastRuns: array of TDateTime;
 		RunCount: UG;
-		LastSoundTime: U4;
+		LastSoundTime: U8;
 
 		// Calculated
 		FRunning: BG;
@@ -55,7 +55,6 @@ type
 var
 	Tasks: TData; // Array of TTask
 	GTaskId: UG;
-	NoStartup: BG;
 
 function GetRunningTaskCount: UG;
 function FindTaskByName(const AName: string): TTask;
@@ -141,8 +140,10 @@ begin
 	EveryXWeek := 1;
 	EveryXMonth := 1;
 	EveryXYear := 1;
-	EveryXIdle := 10 * Minute;
-	EveryXOverload := Minute;
+  EveryXIdle := TTimeSpan.Create;
+	EveryXIdle.Minutes := 10;
+  EveryXOverload := TTimeSpan.Create;
+	EveryXOverload.Minutes := 1;
 	for i := 0 to DaysInWeek - 1 do
 		WeekDays[i] := False;
 	for i := 0 to MonthsInYear - 1 do
@@ -154,6 +155,8 @@ end;
 destructor TTask.Destroy;
 begin
 	Running := False;
+  EveryXOverload.Free;
+  EveryXIdle.Free;
 
   inherited;
 end;

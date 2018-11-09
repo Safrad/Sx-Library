@@ -3,7 +3,7 @@ unit uSchedule;
 interface
 
 uses
-	uTypes, uDIniFile, SysUtils;
+	uTypes, uDIniFile, uTimeSpan, SysUtils;
 
 type
 	TScheduleType = (scNever, scOnce, scInterval, scDaily, scWeekly, scMonthly, scYearly,
@@ -24,8 +24,8 @@ type
 		EveryXWeek: U4; // scWeekly (Every x day of week)
 		EveryXMonth: U4; // scMonthly (Every x week of month)
 		EveryXYear: U4; // scYearly (Every month of x year)
-		EveryXIdle: U4; // scIdle
-		EveryXOverload: U4; // scOverload
+		EveryXIdle: TTimeSpan; // scIdle
+		EveryXOverload: TTimeSpan; // scOverload
 		WeekDays: array[0..DaysInWeek - 1] of BG; // scWeekly
 		Months: array[0..MonthsInYear - 1] of BG; // scMonthly
 
@@ -70,8 +70,10 @@ begin
 	EveryXWeek := 1;
 	EveryXMonth := 1;
 	EveryXYear := 1;
-	EveryXIdle := 10 * Minute;
-	EveryXOverload := Minute;
+	EveryXIdle := TTimeSpan.Create;
+  EveryXIdle.Minutes := 10;
+	EveryXOverload := TTimeSpan.Create;
+  EveryXOverload.Minutes := 1;
 	for i := 0 to DaysInWeek - 1 do
 		WeekDays[i] := False;
 	for i := 0 to MonthsInYear - 1 do
@@ -80,6 +82,9 @@ end;
 
 destructor TSchedule.Destroy;
 begin
+  EveryXOverload.Free;
+  EveryXIdle.Free;
+
 	inherited;
 end;
 
@@ -335,15 +340,15 @@ begin
 	end;
 	scWhenIdle:
 	begin
-		Result := 'Run when idle for ' + MsToStr(EveryXIdle, diDHMSD, 0, False);
+		Result := 'Run when idle for ' + MsToStr(Round(EveryXIdle.Milliseconds), diDHMSD, 0, False);
 	end;
 	scWhenOverload:
 	begin
-		Result := 'Run when overload for ' + MsToStr(EveryXOverload, diDHMSD, 0, False);
+		Result := 'Run when overload for ' + MsToStr(Round(EveryXOverload.Milliseconds), diDHMSD, 0, False);
 	end;
 	scLag:
 	begin
-		Result := 'Lag longer that ' + MsToStr(EveryXOverload, diDHMSD, 0, False);
+		Result := 'Lag longer that ' + MsToStr(Round(EveryXOverload.Milliseconds), diDHMSD, 0, False);
 	end;
 	scWindowsStartup:
 		Result :='Run at Windows startup';
@@ -392,7 +397,10 @@ end;
 
 procedure TSchedule.RWIni(const IniFile: TDIniFile; const Section: string;
   const Save: BG);
-var i: SG;
+var
+  i: SG;
+  EveryXIdleInMs: U8;
+  EveryXOverloadInMs: U8;
 begin
   IniFile.RWEnum(Section, TypeInfo(TScheduleType), U1(ScheduleType), Save);
   if Save = False then
@@ -406,8 +414,14 @@ begin
   IniFile.RWNum(Section, 'EveryXWeek', EveryXWeek, Save);
   IniFile.RWNum(Section, 'EveryXMonth', EveryXMonth, Save);
   IniFile.RWNum(Section, 'EveryXYear', EveryXYear, Save);
-  IniFile.RWNum(Section, 'EveryXIdle', EveryXIdle, Save);
-  IniFile.RWNum(Section, 'EveryXOverload', EveryXOverload, Save);
+
+  EveryXIdleInMs := Round(EveryXIdle.Milliseconds);
+  IniFile.RWNum(Section, 'EveryXIdle', EveryXIdleInMs, Save);
+  EveryXIdle.Milliseconds := EveryXIdleInMs;
+
+  EveryXOverloadInMs := Round(EveryXOverload.Milliseconds);
+  IniFile.RWNum(Section, 'EveryXOverload', EveryXOverloadInMs, Save);
+  EveryXOverload.Milliseconds := EveryXOverloadInMs;
 
   for i := 0 to DaysInWeek - 1 do
     IniFile.RWBool(Section, 'Day' + IntToStr(i), WeekDays[i], Save);
