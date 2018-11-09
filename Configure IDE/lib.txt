@@ -35,3 +35,4 @@ $(sx-library)\Sound
 $(sx-library)\Input
 $(sx-library)\VersionSystem
 $(sx-library)\GUI
+$(sx-library)\Regional
