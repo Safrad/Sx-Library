@@ -140,8 +140,8 @@ type
 
 type
   TFileStatistics = record
-  	ReadCount: UG;
-    WriteCount: UG;
+  	ReadCount: U8;
+    WriteCount: U8;
   	ReadBytes: U8;
     WriteBytes: U8;
   end;
