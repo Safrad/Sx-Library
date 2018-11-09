@@ -56,6 +56,7 @@ implementation
 uses
   Math,
   Windows,
+  uFileCharset,
   uFile,
   uOutputFormat,
   uStrings,

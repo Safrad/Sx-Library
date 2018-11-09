@@ -70,7 +70,7 @@ begin
     5..8:
       TDiskBenchmark(Benchmarks[i]).FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(i) + '.tmp';
     end;
-    if ATestType = 5 then
+    if ATestType in [5, 6] then
       TDiskBenchmark(Benchmarks[i]).CreateFile;
     if AThreadCount = 1 then
       FResultAsString := FResultAsString + Benchmarks[i].Description + ':' + CharSpace;
@@ -206,7 +206,7 @@ begin
         Performance := DoTest(TestType, Core);
         if Core = 1 then
           Performance1Core := Performance;
-        if Performance < LastPerformance * 1.05 then
+        if Performance < LastPerformance * 1.025 then
         begin
           if Performance1Core > 0 then
             FResultAsString := FResultAsString + 'Speedup ratio: ' + FloatToStrF(Max(Performance, LastPerformance) / Performance1Core, ffGeneral, 4, 5) + CharTimes;
