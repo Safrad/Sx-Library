@@ -160,17 +160,20 @@ begin
   D2 := GetDistance2D(A, B);
   Check(SameValue(D1, D2));
 
-  A := CreatePoint2D(0, 0);
-  B := CreatePoint2D(1e3, 1e-4);
-  D1 := Sqrt(GetSquaredDistance2D(A, B));
-  D2 := GetDistance2D(A, B);
-  Check(SameValue(D1, D2));
+  if SizeOf(TGeometryFloat2D) >= 10 then
+  begin
+    A := CreatePoint2D(0, 0);
+    B := CreatePoint2D(1e3, 1e-4);
+    D1 := Sqrt(GetSquaredDistance2D(A, B));
+    D2 := GetDistance2D(A, B);
+    Check(SameValue(D1, D2));
 
-  A := CreatePoint2D(10, 5);
-  B := CreatePoint2D(7, 3);
-  D1 := Sqrt(GetSquaredDistance2D(A, B));
-  D2 := GetDistance2D(A, B);
-  Check(SameValue(D1, D2));
+    A := CreatePoint2D(10, 5);
+    B := CreatePoint2D(7, 3);
+    D1 := Sqrt(GetSquaredDistance2D(A, B));
+    D2 := GetDistance2D(A, B);
+    Check(SameValue(D1, D2));
+  end;
 end;
 
 initialization
