@@ -163,11 +163,6 @@ var
 	NumFound: BG;
 begin
 	Result := '';
-	if (Num = Low(Num)) or (Num = High(Num)) then
-	begin
-		Result := 'Out of 64-bit range';
-		Exit;
-	end;
 
 	if NumericBase = 10 then
 		Nums := IntToStr(Abs(Num))
@@ -295,11 +290,6 @@ var
 	c: Char;
 begin
 	Result := '';
-	if (Num = Low(Num)) or (Num = High(Num)) then
-	begin
-		Result := 'Out of 64-bit range';
-		Exit;
-	end;
 
 	case OutputFormat of
 	ofDisplay:
