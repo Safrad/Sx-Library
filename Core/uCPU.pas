@@ -69,6 +69,7 @@ uses
   uChar,
   uStrings,
   uExternalApplication,
+  uStartupWindowState,
   uLog,
   uMath,
   uOperatingSystem,
@@ -227,12 +228,16 @@ procedure TCPU.UpdateName;
 var
   ExternalApplication: TExternalApplication;
   InLineIndex: SG;
+  StartupWindowState: TStartupWindowState;
 begin
   ExternalApplication := TExternalApplication.Create;
   try
     try
       ExternalApplication.FileName := 'wmic';
       ExternalApplication.Parameters := 'cpu get name';
+      StartupWindowState.WindowState := hwsHidden;
+      StartupWindowState.Active := False;
+      ExternalApplication.StartupWindowState := StartupWindowState;
       ExternalApplication.ExecuteWithOutputText;
       ExternalApplication.CheckErrorCode;
       Assert(ExternalApplication.ProcessOutput.ExitCode = 0);
