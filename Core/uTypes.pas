@@ -323,9 +323,6 @@ type
 {$if CompilerVersion < 15}
   TDate = type TDateTime;
 {$ifend}
-{$if CompilerVersion < 18}
-  IMAGE_FILE_LARGE_ADDRESS_AWARE = $20;
-{$ifend}
 {$if CompilerVersion < 22}
   TThreadID = Cardinal;
 {$ifend}
