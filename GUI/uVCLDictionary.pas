@@ -14,9 +14,6 @@ type
 		procedure TranslateMenu(const Src: TMenuItem);
 	end;
 
-var
-	VCLDictionary: TVCLDictionary;
-
 implementation
 
 uses
