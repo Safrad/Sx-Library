@@ -828,7 +828,7 @@ function MessageD(const Text: string; const Param: array of string; const MsgTyp
 var
 	ButtonNames: TArrayOfString;
   DlgButtons: TArrayOfDlgBtn;
-  TaskDialog: TTaskDialog;
+  TaskDialog: TTaskDialogEx;
 begin
 	Result := mbCancel;
   ButtonNames := nil;
@@ -850,10 +850,16 @@ begin
   dsWindowsVista:
   begin
     PlaySoundForMsgType(MsgType);
-    TaskDialog.Inst := '';
-    TaskDialog.Content := ReplaceParam(Text, Param);
-    TaskDialog.Buttons := StringsToString(ButtonNames, FullSep);
-    Result := SynDialogIndexToDlgBtn(TaskDialog.Execute(DlgButtonsToCommonButtons(Buttons), mrOk, [tdfAllowDialogCancellation, tdfUseCommandLinks], MessageLevelToTaskDialog[MsgType]), DlgButtons);
+    TaskDialog.Init;
+    TaskDialog.Base.Inst := '';
+    TaskDialog.Base.Content := ReplaceParam(Text, Param);
+    TaskDialog.Base.Buttons := StringsToString(ButtonNames, FullSep);
+    TaskDialog.CommonButtons := DlgButtonsToCommonButtons(Buttons);
+    TaskDialog.ButtonDef := mrOk;
+    TaskDialog.Flags := [tdfAllowDialogCancellation, tdfUseCommandLinks];
+    TaskDialog.DialogIcon := MessageLevelToTaskDialog[MsgType];
+
+    Result := SynDialogIndexToDlgBtn(TaskDialog.Execute(Application.Handle), DlgButtons);
   end;
   dsSxLibrary:
   begin
