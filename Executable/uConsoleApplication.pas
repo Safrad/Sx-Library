@@ -26,6 +26,9 @@ unit uMain;
 
 interface
 
+uses
+  uConsoleApplication;
+
 type
   TMain = class(TConsoleApplication)
   private
@@ -75,6 +78,7 @@ uses
   uLog,
   uStartState,
   uDefaultArguments,
+  uCodePage,
   uConsole,
   uProjectInfo,
   uMsg,
@@ -111,6 +115,9 @@ end;
 
 procedure TConsoleApplication.Initialize;
 begin
+  {$ifdef UNICODE}
+  TConsole.CodePage := cpUTF8;
+  {$endif}
   WriteVersionInfo;
 
   inherited;
@@ -139,6 +146,8 @@ begin
   if FShowVersionInfo then
   begin
     TConsole.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piFileVersion) + ']', ccWhite);
+    if GetProjectInfo(piFileDescription) <> '' then
+      TConsole.WriteLine(GetProjectInfo(piFileDescription), ccLightGray);
     if GetProjectInfo(piLegalCopyright) <> '' then
       TConsole.WriteLine(GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName), ccGray);
     TConsole.WriteLine('');
