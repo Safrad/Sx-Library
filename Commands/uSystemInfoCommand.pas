@@ -21,6 +21,7 @@ uses
   uOperatingSystem,
   uCPU,
   uSystemMemory,
+  uMainTimer,
   uOutputFormat,
   uStrings;
 
@@ -63,7 +64,7 @@ begin
 			  NToS(GCPU.LogicalProcessorCount),
 			  NToS(Round(10000 * GCPU.Usage), 2) + '%',
 			  NToS(Round(GCPU.Frequency)) + ' Hz',
-			  NToS(PerformanceFrequency),
+			  NToS(MainTimer.Frequency) + ' Hz',
 			  BToStr(SystemMemory.Physical.Used),
 			  BToStr(SystemMemory.Physical.Remain),
 			  BToStr(SystemMemory.Physical.Total),
