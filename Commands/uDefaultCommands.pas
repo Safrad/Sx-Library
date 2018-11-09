@@ -79,7 +79,7 @@ begin
   FShowLocalIniCommand := TShowFileCommand.Create;
   FShowLocalIniCommand.Shortcut := 'ShowLocalIni';
   FShowLocalIniCommand.Description := 'Show local configuration file.';
-  FShowLocalIniCommand.FileName := LocalIni.FileName;
+  FShowLocalIniCommand.FileName := LocalMainIni.FileName;
   Add(FShowLocalIniCommand);
 end;
 
