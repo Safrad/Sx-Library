@@ -15,12 +15,14 @@ type
     FConsoleReader: TConsoleReader;
     FCommands: TCommands;
     FStartupArgument: TFileNameArgument;
-    procedure ParseText(const AText: string);
   protected
     procedure AddArguments; override;
     procedure Initialize; override;
     procedure Finalize; override;
     procedure Wait; override;
+
+    // Can be overridden to handle unknown commands
+    procedure ParseText(const AText: string); virtual;
   public
     procedure Run; override;
     procedure Terminate; override;
@@ -66,6 +68,7 @@ begin
     end;
 
     FCommands.Free;
+    FStartupArgument.Free;
   finally
     inherited;
   end;
@@ -94,7 +97,8 @@ begin
     CommandAsText := ReadToChars(AText, InLineIndex, [CharSpace, CharCR]);
     Command := Commands.FindByStringException(CommandAsText);
     Command.Execute(ReadToNewLine(AText, InLineIndex));
-    Information(Command.Response);
+    if Command.Response <> '' then
+      Information(Command.Response);
   end;
 end;
 
