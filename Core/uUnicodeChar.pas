@@ -72,6 +72,7 @@ const
 //  MouseChar = Char($D83D) + Char($DDB0); // $1F5B0
   MouseChar = Char($D83D) + Char($DDB1); // $1F5B1
   EMailKey = Char($2709);
+  SnowmanChar = Char($2603);
 
   SearchChar = Char($2315);
   StopChar = Char($23F9);
