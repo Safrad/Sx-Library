@@ -9,18 +9,25 @@ uses
 type
   TStartupEnvironmentTest = class(TTestCase)
   published
-    procedure Test;
+    procedure TestStartupEnvironmentVariables;
+    procedure TestRemoveVariablesFromText;
   end;
 
 implementation
 
 uses
   SysUtils,
+  Windows,
+
+  uFiles,
+  uFileCharset,
+  uOperatingSystem,
+
   uStartupEnvironment;
 
 { TStartupEnvironmentTest }
 
-procedure TStartupEnvironmentTest.Test;
+procedure TStartupEnvironmentTest.TestStartupEnvironmentVariables;
 const
   StartupEnvironmentVariables: array[0..31] of string = (
     // Windows XP
@@ -84,6 +91,29 @@ begin
   finally
     StartupEnvironment.Free;
   end;
+end;
+
+procedure TStartupEnvironmentTest.TestRemoveVariablesFromText;
+var
+  Charset: TFileCharset;
+  Data: AnsiString;
+  SourceFileName, TargetFileName, ReferentialFileName: TFileName;
+begin
+  SetEnvironmentVariable('testVariable2', 'test2');
+  StartupEnvironment.ReloadVariables;
+  StartupEnvironment.Add('testVariable', 'test');
+
+  SourceFileName := DataDir + 'StartupEnvironment\Test.txt';
+
+  Charset := ReadStringFromFileEx(SourceFileName, Data);
+  Data := StartupEnvironment.RemoveVariables(Data);
+  TargetFileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test.txt';
+  if FileExists(TargetFileName) then
+    DeleteFileEx(TargetFileName);
+  CheckTrue(WriteStringToFile(TargetFileName, Data, False, Charset));
+
+  ReferentialFileName := DataDir + 'StartupEnvironment\Reference.txt';
+  Check(SameFilesNoPrefix(TargetFileName, ReferentialFileName) = True, 'Files are different!');
 end;
 
 initialization
