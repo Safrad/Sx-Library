@@ -88,7 +88,6 @@ uses
 constructor TDTimer.Create(AOwner: TComponent);
 begin
 	inherited Create(AOwner);
-  FPreciseInterval := TTimeSpan.Create;
 	FActiveOnly := False;
 	FEnabled := True;
 	FInterval := 1000;
@@ -117,7 +116,6 @@ begin
         FreeDIdleTimer;
       end;
     end;
-    FPreciseInterval.Free;
   finally
   	inherited Destroy;
   end;

@@ -140,9 +140,7 @@ begin
 	EveryXWeek := 1;
 	EveryXMonth := 1;
 	EveryXYear := 1;
-  EveryXIdle := TTimeSpan.Create;
 	EveryXIdle.Minutes := 10;
-  EveryXOverload := TTimeSpan.Create;
 	EveryXOverload.Minutes := 1;
 	for i := 0 to DaysInWeek - 1 do
 		WeekDays[i] := False;
@@ -155,8 +153,6 @@ end;
 destructor TTask.Destroy;
 begin
 	Running := False;
-  EveryXOverload.Free;
-  EveryXIdle.Free;
 
   inherited;
 end;

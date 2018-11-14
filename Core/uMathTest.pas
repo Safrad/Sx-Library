@@ -248,24 +248,19 @@ var
   Dif: FG;
   MeasuredTime: FG;
 begin
-  TestTime := TTimeSpan.Create;
-  try
-    for i := Low(TestTimeInMs) to High(TestTimeInMs) do
-    begin
-      TestTime.Milliseconds := TestTimeInMs[i];
-      Tick := PerformanceCounter;
-      if APreciseSleep then
-        PreciseSleep(TestTime)
-      else
-        Delay(TestTime);
-      Tick := IntervalFrom(Tick);
-      MeasuredTime := 1000 * Tick / PerformanceFrequency;
-      Dif := MeasuredTime - TestTimeInMs[i];
-      // 1 ms tolerance
-      Check(Abs(Dif) <= 0.1, 'Out of time tolerance ' + IntToStr(TestTimeInMs[i]) + ' -> ' + FloatToStr(MeasuredTime));
-    end;
-  finally
-    TestTime.Free;
+  for i := Low(TestTimeInMs) to High(TestTimeInMs) do
+  begin
+    TestTime.Milliseconds := TestTimeInMs[i];
+    Tick := PerformanceCounter;
+    if APreciseSleep then
+      PreciseSleep(TestTime)
+    else
+      Delay(TestTime);
+    Tick := IntervalFrom(Tick);
+    MeasuredTime := 1000 * Tick / PerformanceFrequency;
+    Dif := MeasuredTime - TestTimeInMs[i];
+    // 1 ms tolerance
+    Check(Abs(Dif) <= 0.1, 'Out of time tolerance ' + IntToStr(TestTimeInMs[i]) + ' -> ' + FloatToStr(MeasuredTime));
   end;
 end;
 

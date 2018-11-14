@@ -52,8 +52,6 @@ begin
   inherited;
 
 	FStartTime := MainTimer.Value.Ticks;
-  FElapsedTime := TTimeSpan.Create;
-  FTotalElapsedTime := TTimeSpan.Create;
 
   RWData(False);
 	Inc(FSection.RunStatistics.Count);
@@ -65,9 +63,6 @@ end;
 destructor TApplicationStatistics.Destroy;
 begin
   RWData(True);
-
-  FTotalElapsedTime.Free;
-  FElapsedTime.Free;
 
   inherited;
 end;

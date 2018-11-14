@@ -39,9 +39,6 @@ type
     procedure SetMeasureType(const Value: TMeasureType);
     function GetValue: TTimeSpan;
   public
-    constructor Create;
-    destructor Destroy; override;
-
     function IntervalFrom(const AStartTime: U8): U8;
 
     property Value: TTimeSpan read GetValue;
@@ -80,20 +77,6 @@ asm
 end;
 
 { TMainTimer }
-
-constructor TMainTimer.Create;
-begin
-  inherited;
-
-  FValue := TTimeSpan.Create;
-end;
-
-destructor TMainTimer.Destroy;
-begin
-  FValue.Free;
-
-  inherited;
-end;
 
 function TMainTimer.GetTickValue: U8;
 begin

@@ -60,13 +60,10 @@ begin
   inherited Create;
 
   FEnabled := False;
-  FInterval := TTimeSpan.Create;
   FInterval.Seconds := 1;
 
   FWorkingStopwatch := TStopwatch.Create;
   FIdleStopwatch := TStopwatch.Create;
-  FSleepTime := TTimeSpan.Create;
-  FElapsedTime := TTimeSpan.Create;
 end;
 
 destructor TSxThreadTimer.Destroy;
@@ -74,11 +71,8 @@ begin
   // Can not free memory of running thread
   TerminateAndWaitFor;
 
-  FreeAndNil(FElapsedTime);
   FreeAndNil(FWorkingStopwatch);
   FreeAndNil(FIdleStopwatch);
-  FreeAndNil(FSleepTime);
-  FreeAndNil(FInterval);
 
   inherited;
 end;

@@ -34,7 +34,6 @@ type
     FSampleIndex: SG;
   public
     constructor Create;
-    destructor Destroy; override;
 
     procedure Reset; virtual;
 
@@ -60,18 +59,9 @@ uses
 constructor TSoundItem.Create;
 begin
   inherited;
-  
-  FTime := TTimeSpan.Create;
 
   FSampleRate := DefaultSampleRate;
   Reset;
-end;
-
-destructor TSoundItem.Destroy;
-begin
-  FreeAndNil(FTime);
-
-  inherited;
 end;
 
 function TSoundItem.GetSample: TSampleF4;

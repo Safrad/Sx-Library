@@ -6,7 +6,7 @@ uses
   uTypes;
 
 type
-  TTimeSpan = class
+  TTimeSpan = record
   private
     FTicks: U8;
     procedure SetMicroseconds(const Value: FG);

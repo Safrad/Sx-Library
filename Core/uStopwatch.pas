@@ -17,9 +17,6 @@ type
     function GetElapsedTicks: U8;
     function GetElapsed: TTimeSpan;
   public
-    constructor Create;
-    destructor Destroy; override;
-
     // Stops time interval measurement and resets the elapsed time to zero.
     procedure Reset;
 
@@ -107,20 +104,6 @@ begin
     raise Exception.Create('Stopwatch is not started.');
   end;
   FStopTime := MainTimer.Value.Ticks;
-end;
-
-constructor TStopwatch.Create;
-begin
-  inherited;
-
-  FElapsed := TTimeSpan.Create;
-end;
-
-destructor TStopwatch.Destroy;
-begin
-  FreeAndNil(FElapsed);
-
-  inherited;
 end;
 
 end.
