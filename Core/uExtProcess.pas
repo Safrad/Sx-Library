@@ -6,9 +6,9 @@ uses
 	uTypes, Windows;
 
 (**
-	@return process exit code if success or High(UG)
+	@return process exit code if success or High(DWORD)
 *)
-function RunAndWaitForApplication(CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
+function RunAndWaitForApplication(CommandLine: string; const CurrentDir: string; const FWindowState: SG): DWORD;
 
 
 var
@@ -28,7 +28,7 @@ begin
 	until not (Result = WAIT_TIMEOUT);
 end;
 
-function RunAndWaitForApplication(CommandLine: string; const CurrentDir: string; const FWindowState: SG): UG;
+function RunAndWaitForApplication(CommandLine: string; const CurrentDir: string; const FWindowState: SG): DWORD;
 var
 	StartupInfo: TStartupInfo;
 begin
