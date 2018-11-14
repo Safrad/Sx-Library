@@ -2,17 +2,10 @@ program LibTest;
 
 {$ifopt d-}
 {$APPTYPE CONSOLE}
-{$define Console}
 {$endif}
 
 uses
-  uFirst,
-  uLog,
-  uTypes,
-  Forms,
-  TestFramework,
-  TextTestRunner,
-  GUITestRunner,
+  uTestsApplication,
   uEscapeTest in '..\Core\uEscapeTest.pas',
   uCharsetTest in '..\Core\uCharsetTest.pas',
   uDelphiTest in '..\Core\uDelphiTest.pas',
@@ -58,13 +51,13 @@ uses
 
 {$R *.RES}
 
+var
+  TestsApplication: TTestsApplication;
 begin
-  InitializeLog;
-  Application.Initialize;
-  Application.Title := 'Lib Test';
-  if IsConsole then
-	TextTestRunner.RunRegisteredTests
-  else
-	GUITestRunner.RunRegisteredTests;
+  TestsApplication := TTestsApplication.Create;
+  try
+    TestsApplication.Run;
+  finally
+    TestsApplication.Free;
+  end;
 end.
-
