@@ -21,17 +21,17 @@ uses
 class function TTableBorderDoubleLineSet.Get(const Value: TItemType): string;
 const
   data: array[TItemType] of Char = (
-    CharDoubleHorizontal,
-    CharDoubleVertical,
-    CharDoubleVerticalAndRight,
-    CharDoubleVerticalAndLeft,
-    CharDoubleVerticalAndHorizontal,
-    CharDoubleDownAndRight,
-    CharDoubleDownAndHorizontal,
-    CharDoubleDownAndLeft,
-    CharDoubleUpAndRight,
-    CharDoubleUpAndHorizontal,
-    CharDoubleUpAndLeft);
+    TUnicodeChar.DoubleHorizontal,
+    TUnicodeChar.DoubleVertical,
+    TUnicodeChar.DoubleVerticalAndRight,
+    TUnicodeChar.DoubleVerticalAndLeft,
+    TUnicodeChar.DoubleVerticalAndHorizontal,
+    TUnicodeChar.DoubleDownAndRight,
+    TUnicodeChar.DoubleDownAndHorizontal,
+    TUnicodeChar.DoubleDownAndLeft,
+    TUnicodeChar.DoubleUpAndRight,
+    TUnicodeChar.DoubleUpAndHorizontal,
+    TUnicodeChar.DoubleUpAndLeft);
 begin
   Result := data[Value];
 end;

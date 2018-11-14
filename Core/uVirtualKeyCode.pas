@@ -308,51 +308,51 @@ end;
 function VirtualKeyCodeToUnicodeSymbol(const AVirtualKeyCode: U2): string;
 begin
   case AVirtualKeyCode and $ff of
-  VK_TAB: Result := TabKey;
-  VK_BACK: Result := BackspaceKey;
-  VK_RETURN: Result := AlternativeEnterKey;
-  VK_VOLUME_UP: Result := BeamedEightNotes + '+';
-  VK_VOLUME_DOWN: Result := BeamedEightNotes + '-';
+  VK_TAB: Result := TUnicodeChar.TabKey;
+  VK_BACK: Result := TUnicodeChar.BackspaceKey;
+  VK_RETURN: Result := TUnicodeChar.AlternativeEnterKey;
+  VK_VOLUME_UP: Result := TUnicodeChar.BeamedEightNotes + '+';
+  VK_VOLUME_DOWN: Result := TUnicodeChar.BeamedEightNotes + '-';
   VK_LEFT: Result := CharLeftawardsArrow;
   VK_UP: Result := CharUpawardsArrow;
   VK_RIGHT: Result := CharRightawardsArrow;
   VK_DOWN: Result := CharDownawardsArrow;
 
-  VK_SHIFT: Result := ShiftKey;
-  VK_CONTROL: Result := ControlKey;
-  VK_MENU: Result := MenuKey; // Alt
+  VK_SHIFT: Result := TUnicodeChar.ShiftKey;
+  VK_CONTROL: Result := TUnicodeChar.ControlKey;
+  VK_MENU: Result := TUnicodeChar.MenuKey; // Alt
 
-  VK_LSHIFT: Result := 'Left' + ShiftKey;
-  VK_LCONTROL: Result := 'Left' + ControlKey;
-  VK_LMENU: Result := 'Left' + MenuKey;
-  VK_LWIN: Result := 'Left' + WindowsLogoKey;
+  VK_LSHIFT: Result := 'Left' + TUnicodeChar.ShiftKey;
+  VK_LCONTROL: Result := 'Left' + TUnicodeChar.ControlKey;
+  VK_LMENU: Result := 'Left' + TUnicodeChar.MenuKey;
+  VK_LWIN: Result := 'Left' + TUnicodeChar.WindowsLogoKey;
 
-  VK_RSHIFT: Result := 'Right' + ShiftKey;
-  VK_RCONTROL: Result := 'Right' + ControlKey;
-  VK_RMENU: Result := 'Right' + MenuKey;
-  VK_RWIN: Result := 'Right' + WindowsLogoKey;
+  VK_RSHIFT: Result := 'Right' + TUnicodeChar.ShiftKey;
+  VK_RCONTROL: Result := 'Right' + TUnicodeChar.ControlKey;
+  VK_RMENU: Result := 'Right' + TUnicodeChar.MenuKey;
+  VK_RWIN: Result := 'Right' + TUnicodeChar.WindowsLogoKey;
 
-  VK_DELETE: Result := DelKey;
-  VK_ESCAPE: Result := EscapeKey;
-  VK_SPACE: Result := SpaceKey;
-  VK_LBUTTON: Result := 'Left' + MouseChar;
-  VK_RBUTTON: Result := 'Right' + MouseChar;
-  VK_MBUTTON: Result := 'Middle' + MouseChar;
-  VK_XBUTTON1: Result := 'X1' + MouseChar;
-  VK_XBUTTON2: Result := 'X2' + MouseChar;
+  VK_DELETE: Result := TUnicodeChar.DelKey;
+  VK_ESCAPE: Result := TUnicodeChar.EscapeKey;
+  VK_SPACE: Result := TUnicodeChar.SpaceKey;
+  VK_LBUTTON: Result := 'Left' + TUnicodeChar.Mouse;
+  VK_RBUTTON: Result := 'Right' + TUnicodeChar.Mouse;
+  VK_MBUTTON: Result := 'Middle' + TUnicodeChar.Mouse;
+  VK_XBUTTON1: Result := 'X1' + TUnicodeChar.Mouse;
+  VK_XBUTTON2: Result := 'X2' + TUnicodeChar.Mouse;
 
-  VK_LAUNCH_MAIL: Result := EMailKey;
-  VK_BROWSER_SEARCH: Result := SearchChar;
-  VK_MEDIA_STOP: Result := StopChar;
-  VK_MEDIA_NEXT_TRACK: Result := NextChar;
-  VK_MEDIA_PREV_TRACK: Result := PrevChar;
-  VK_MEDIA_PLAY_PAUSE: Result := PlayChar;
+  VK_LAUNCH_MAIL: Result := TUnicodeChar.EMailKey;
+  VK_BROWSER_SEARCH: Result := TUnicodeChar.Search;
+  VK_MEDIA_STOP: Result := TUnicodeChar.Stop;
+  VK_MEDIA_NEXT_TRACK: Result := TUnicodeChar.Next;
+  VK_MEDIA_PREV_TRACK: Result := TUnicodeChar.Prev;
+  VK_MEDIA_PLAY_PAUSE: Result := TUnicodeChar.Play;
 
-  VK_SLEEP: Result := LastQuarterMoonChar;
-  VK_BROWSER_REFRESH: Result := RefreshChar;
-  VK_BROWSER_FAVORITES: Result := FavoritesChar;
+  VK_SLEEP: Result := TUnicodeChar.LastQuarterMoon;
+  VK_BROWSER_REFRESH: Result := TUnicodeChar.Refresh;
+  VK_BROWSER_FAVORITES: Result := TUnicodeChar.Favorites;
 
-  VK_CAPITAL: Result := CapsLockKey;
+  VK_CAPITAL: Result := TUnicodeChar.CapsLockKey;
 
   else
     Result := '';
@@ -362,13 +362,13 @@ begin
   begin
     // Prefix
   	if AVirtualKeyCode and scCommand <> 0 then
-      Result := WindowsLogoKey + '+' + Result;
+      Result := TUnicodeChar.WindowsLogoKey + '+' + Result;
     if AVirtualKeyCode and scAlt <> 0 then
-      Result := MenuKey + '+' + Result;
+      Result := TUnicodeChar.MenuKey + '+' + Result;
     if AVirtualKeyCode and scCtrl <> 0 then
-      Result := ControlKey + '+' + Result;
+      Result := TUnicodeChar.ControlKey + '+' + Result;
     if AVirtualKeyCode and scShift <> 0 then
-      Result := ShiftKey + '+' + Result;
+      Result := TUnicodeChar.ShiftKey + '+' + Result;
   end;
 end;
 {$endif}

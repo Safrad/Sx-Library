@@ -21,17 +21,17 @@ uses
 class function TTableBorderLightSet.Get(const Value: TItemType): string;
 const
   data: array[TItemType] of Char = (
-    CharLightHorizontal,
-    CharLightVertical,
-    CharLightVerticalAndRight,
-    CharLightVerticalAndLeft,
-    CharLightVerticalAndHorizontal,
-    CharLightDownAndRight,
-    CharLightDownAndHorizontal,
-    CharLightDownAndLeft,
-    CharLightUpAndRight,
-    CharLightUpAndHorizontal,
-    CharLightUpAndLeft);
+    TUnicodeChar.LightHorizontal,
+    TUnicodeChar.LightVertical,
+    TUnicodeChar.LightVerticalAndRight,
+    TUnicodeChar.LightVerticalAndLeft,
+    TUnicodeChar.LightVerticalAndHorizontal,
+    TUnicodeChar.LightDownAndRight,
+    TUnicodeChar.LightDownAndHorizontal,
+    TUnicodeChar.LightDownAndLeft,
+    TUnicodeChar.LightUpAndRight,
+    TUnicodeChar.LightUpAndHorizontal,
+    TUnicodeChar.LightUpAndLeft);
 begin
   Result := data[Value];
 end;
