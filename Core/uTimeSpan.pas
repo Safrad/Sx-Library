@@ -59,6 +59,7 @@ type
 implementation
 
 uses
+  uTimePrefix,
   uMainTimer,
   uOutputFormat;
 
@@ -66,7 +67,7 @@ uses
 
 function TTimeSpan.GetDays: FG;
 begin
-  Result := FTicks / (MainTimer.Frequency * (Day div Second));
+  Result := FTicks / (TTimePrefix.Day * MainTimer.Frequency);
 end;
 
 function TTimeSpan.GetFrequency: FG;
@@ -76,37 +77,37 @@ end;
 
 function TTimeSpan.GetHours: FG;
 begin
-  Result := FTicks / (MainTimer.Frequency * (Hour div Second));
+  Result := FTicks / (TTimePrefix.Hour * MainTimer.Frequency);
 end;
 
 function TTimeSpan.GetMicroseconds: FG;
 begin
-  Result := 1000 * Second * FTicks / MainTimer.Frequency;
+  Result :=  FTicks / (TTimePrefix.MicroSecond * MainTimer.Frequency);
 end;
 
 function TTimeSpan.GetMilliseconds: FG;
 begin
-  Result := Second * FTicks / MainTimer.Frequency;
+  Result := FTicks / (TTimePrefix.MilliSecond * MainTimer.Frequency);
 end;
 
 function TTimeSpan.GetMinutes: FG;
 begin
-  Result := FTicks / (MainTimer.Frequency * (Minute div Second));
+  Result := FTicks / (TTimePrefix.Minute * MainTimer.Frequency);
 end;
 
 function TTimeSpan.GetSeconds: FG;
 begin
-  Result := FTicks / MainTimer.Frequency;
+  Result := FTicks / (TTimePrefix.Second * MainTimer.Frequency);
 end;
 
 function TTimeSpan.GetTime: TDateTime;
 begin
-  Result := FTicks / (MainTimer.Frequency * (Day div Second));
+  Result := FTicks / (TTimePrefix.Day * MainTimer.Frequency);
 end;
 
 procedure TTimeSpan.SetDays(const Value: FG);
 begin
-  SetTicks(Round(Value * (Day / Second) * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.Day * MainTimer.Frequency));
 end;
 
 procedure TTimeSpan.SetFrequency(const Value: FG);
@@ -116,27 +117,27 @@ end;
 
 procedure TTimeSpan.SetHours(const Value: FG);
 begin
-  SetTicks(Round(Value * (Hour / Second) * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.Hour * MainTimer.Frequency));
 end;
 
 procedure TTimeSpan.SetMicroseconds(const Value: FG);
 begin
-  SetTicks(Round(MainTimer.Frequency * Value / (1000 * Second)));
+  SetTicks(Round(Value * TTimePrefix.MicroSecond * MainTimer.Frequency));
 end;
 
 procedure TTimeSpan.SetMilliseconds(const Value: FG);
 begin
-  SetMicroseconds(Second * Value);
+  SetMicroseconds(Value * TTimePrefix.MilliSecond);
 end;
 
 procedure TTimeSpan.SetMinutes(const Value: FG);
 begin
-  SetTicks(Round(Value * (Minute / Second) * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.Minute * MainTimer.Frequency));
 end;
 
 procedure TTimeSpan.SetSeconds(const Value: FG);
 begin
-  SetMicroseconds(1000 * Second * Value);
+  SetTicks(Round(Value * TTimePrefix.Second * MainTimer.Frequency));
 end;
 
 procedure TTimeSpan.SetTicks(const Value: U8);
@@ -146,7 +147,7 @@ end;
 
 procedure TTimeSpan.SetTime(const Value: TDateTime);
 begin
-  SetTicks(Round(Value * (Day / Second) * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.Day * MainTimer.Frequency));
 end;
 
 function TTimeSpan.ToStringInSeconds: string;
