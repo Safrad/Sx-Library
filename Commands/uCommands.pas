@@ -30,7 +30,8 @@ type
     procedure PreviewToConsole;
     function PreviewAsString: string;
 
-    procedure Add(const ACustomCommand: TCustomCommand);
+    procedure Add(const ACustomCommand: TCustomCommand); overload;
+    procedure Add(const ACommands: TObjectList); overload;
     procedure Delete(const ACustomCommand: TCustomCommand);
 
     property List: TObjectList read FCommands;
@@ -57,6 +58,17 @@ procedure TCommands.Add(const ACustomCommand: TCustomCommand);
 begin
   FCommands.Add(ACustomCommand);
   FChanged := True;
+end;
+
+procedure TCommands.Add(const ACommands: TObjectList);
+var
+  i: SG;
+begin
+  for i := 0 to ACommands.Count - 1 do
+  begin
+    FCommands.Add(TCustomCommand(ACommands[i]));
+    FChanged := True;
+  end;
 end;
 
 constructor TCommands.Create;
