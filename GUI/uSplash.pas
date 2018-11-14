@@ -4,6 +4,7 @@ interface
 
 uses
 	uTypes,
+  uStopwatch,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, uDTimer, uDForm;
 
@@ -20,16 +21,15 @@ type
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormDestroy(Sender: TObject);
 	private
-		{ Private declarations }
 		FirstX, FirstY: SG;
 		MoveCount: SG;
 
 		State: (stWait, stClosing);
-		StartTime: U4;
+		FStopwatch: TStopwatch;
 
 		procedure WantClose;
 	public
-		{ Public declarations }
+    property Stopwatch: TStopwatch read FStopwatch;
 	end;
 
 var
@@ -48,8 +48,8 @@ uses
 var
 	fSplash: TfSplash;
 const
-	MinimumTime = 2 * Second;
-	HideTime = 1500 * MilliSecond;
+	MinimumTimeInMs = 2000;
+	HideTimeInMs = 1500;
 	MaxAlphaBlendValue = 240; //223;
 
 procedure ShowSplashScreen(const FileName: TFileName); overload;
@@ -181,7 +181,7 @@ begin
 	Application.HandleMessage; // Process first queue even (change mouse cursor).
 
 	fSplash.State := stWait;
-	fSplash.StartTime := GetTickCount;
+	fSplash.Stopwatch.Restart;
 end;
 
 procedure ShowSplashScreen(const ChangeMouseCursor: BG = True);
@@ -203,13 +203,11 @@ begin
 	if State <> stClosing then
 	begin
 		State := stClosing;
-		StartTime := GetTickCount;
+  	fSplash.Stopwatch.Restart;
 	end;
 end;
 
 procedure HideSplashScreen(const Promptly: BG = False);
-var
-	ElapsedTime: U4;
 begin
 	if Assigned(fSplash) and fSplash.Visible then
 	begin
@@ -218,13 +216,11 @@ begin
 		if Promptly then
 		begin
 			fSplash.State := stClosing;
-			fSplash.StartTime := GetTickCount;
 			fSplash.Close;
 		end
 		else
 		begin
-			ElapsedTime := TimeDifference(GetTickCount, fSplash.StartTime);
-			if (ElapsedTime >= MinimumTime) then
+			if (fSplash.Stopwatch.Elapsed.Milliseconds >= MinimumTimeInMs) then
 			begin
 				fSplash.WantClose;
 			end;
@@ -235,17 +231,16 @@ end;
 procedure TfSplash.Timer1Timer(Sender: TObject);
 var ElapsedTime: U4;
 begin
-	ElapsedTime := TimeDifference(GetTickCount, StartTime);
 	case State of
 	stWait:
 	begin
-		if ElapsedTime >= MinimumTime then
+		if Stopwatch.Elapsed.Milliseconds >= MinimumTimeInMs then
 			WantClose;
 	end;
 	stClosing:
 	begin
-		if ElapsedTime <= HideTime then
-			AlphaBlendValue := RoundDiv(MaxAlphaBlendValue * (HideTime - ElapsedTime), HideTime)
+		if Stopwatch.Elapsed.Milliseconds <= HideTimeInMs then
+			AlphaBlendValue := Round(MaxAlphaBlendValue * (HideTimeInMs - Stopwatch.Elapsed.Milliseconds) / HideTimeInMs)
 		else
 		begin
 			Close;
@@ -271,6 +266,8 @@ procedure TfSplash.FormCreate(Sender: TObject);
 begin
 //	FormStyle := fsNormal;
 	Background := baUser;
+
+  FStopwatch := TStopwatch.Create;
 end;
 
 procedure TfSplash.FormMouseDown(Sender: TObject; Button: TMouseButton;
@@ -298,6 +295,8 @@ end;
 procedure TfSplash.FormDestroy(Sender: TObject);
 begin
 	fSplash := nil;
+
+  FStopwatch.Free;
 end;
 
 initialization
