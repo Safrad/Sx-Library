@@ -41,6 +41,7 @@ implementation
 
 uses
 	Windows, Variants,
+  uRegionalCodePage,
 	uFile, uFiles, uStrings, uInputFormat, uMsg, uOutputFormat, uMath, uCharset;
 
 procedure TDBF.Close;
