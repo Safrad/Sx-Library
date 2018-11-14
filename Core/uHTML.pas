@@ -11,6 +11,11 @@ function GetGeneratedBy: string;
 function AddImageEx(const SelfFileName, FileName: TFileName; const Params: string): string;
 function EncodeURL(const Path: string): string;
 
+const
+	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
+	IndexFile = 'index' + HTMLExt;
+	IndexPHPFile = 'index' + '.php';
+
 type
 	TDistanceUnit = (duPercentage, duPixels, duPoints);
 const

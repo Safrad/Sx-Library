@@ -14,6 +14,7 @@ type
 implementation
 
 uses
+  SysUtils,
   Windows,
   uMath,
   uStopwatch;
@@ -37,7 +38,7 @@ begin
     Stopwatch.Start;
     Sleep(SleepTime3);
     Stopwatch.Stop;
-    CheckTrue(EqualRelative(Stopwatch.Elapsed.Milliseconds, SleepTime1 + SleepTime3, 0.1));
+    Check(EqualRelative(Stopwatch.Elapsed.Milliseconds, SleepTime1 + SleepTime3, 0.1), 'Out of time tolerance ' + IntToStr(SleepTime1 + SleepTime3) + ' -> ' + FloatToStr(Stopwatch.Elapsed.Milliseconds));
   finally
     Stopwatch.Free;
   end;
@@ -54,7 +55,7 @@ begin
     Stopwatch.Start;
     Sleep(SleepTime);
     Stopwatch.Stop;
-    CheckTrue(EqualRelative(Stopwatch.Elapsed.Milliseconds, SleepTime, 0.1));
+    Check(EqualRelative(Stopwatch.Elapsed.Milliseconds, SleepTime, 0.1), 'Out of time tolerance ' + IntToStr(SleepTime) + ' -> ' + FloatToStr(Stopwatch.Elapsed.Milliseconds));
   finally
     Stopwatch.Free;
   end;

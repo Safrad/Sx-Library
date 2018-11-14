@@ -8,6 +8,7 @@ uses
 
 const
 	MinColumnWidth = 3;
+	MouseTolerance = 4; // 0=1 pixel..6=15 pixels, 3 pixels: Delphi panel, 13 pixels: Delphi Table
 
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnResize);
@@ -188,7 +189,7 @@ implementation
 uses
 	Math, StdCtrls, ClipBrd, Types, Forms,
 	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
-	uDWinControl,
+	uDWinControl, uDForm,
 	fFind, Variants;
 
 { TDView }
@@ -255,7 +256,7 @@ begin
 	begin
 		Result := vaColumnClick;
 		w := 0;
-		BestDist := MouseTolerance;
+		BestDist := LgToPx(MouseTolerance);
 		for i := 0 to FColumnCount - 1 do
 		begin
 			if FColumns[FColumnOrder[i]].Visible = False then

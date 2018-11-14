@@ -2,29 +2,11 @@ unit uTypes;
 
 interface
 
-{$if CompilerVersion < 32}
-uses
-  Math,
-{$if CompilerVersion < 16}
-  TypInfo;
-{$endif}
-{$endif}
-
 const
   IsDebug = {$ifopt d+}True{$else}False{$endif};
   IsRelease = not IsDebug;
 
-{$if CompilerVersion < 14}
-	NaN         =  0.0 / 0.0;
-	Infinity    =  1.0 / 0.0;
-	NegInfinity = -1.0 / 0.0;
-	SwitchChars = ['-', '/'];
-{$ifend}
-
 	MinInt = Low(Integer);
-{$if CompilerVersion < 32}
-  MaxExtended80 = MaxExtended;
-{$endif}
 
 	BitsPerByte = 8;
 	KB = 1024;
@@ -225,7 +207,7 @@ type
 //	F6 = Real48;
 	F8 = Double;
 {$ifdef CPUX64}
-  FA = {$if CompilerVersion >= 30}Extended{$else}Extended80{$ifend};
+  FA = Extended80;
 {$else}
   FA = Extended;
 {$endif}
@@ -320,12 +302,6 @@ type
 	TArrayString = array[0..{$ifdef CPUX64}256{$else}512{$endif} * MB - 2] of string;
 	PArrayString = ^TArrayString;
 
-{$if CompilerVersion < 15}
-  TDate = type TDateTime;
-{$ifend}
-{$if CompilerVersion < 22}
-  TThreadID = Cardinal;
-{$ifend}
 {
 Value	Meaning
 -1 The string pointed to by the Index0 parameter is less in lexical value than the string pointed to by the Index1 parameter.
@@ -347,7 +323,6 @@ Value	Meaning
 		mlNone);
 
 const
-	MilliSecond = 1;
 	Second = 1000;
 	Minute = 60 * Second;
 	Hour = 60 * Minute;
@@ -357,41 +332,10 @@ const
 	MSecsPerWeek = DaysInWeek * Day;
 	MSecsPerYear = 365 * U8(Day);
 
-// System
 	LoopSleepTime = 40; // [ms], 25 interrupts per second.
-	MouseTolerance = 4; // 0=1 pixel..6=15 pixels, 3 pixels: Delphi panel, 13 pixels: Delphi Table
-
-	{$EXTERNALSYM WM_XBUTTONDOWN}
-	WM_XBUTTONDOWN      = $020B;
-	{$EXTERNALSYM WM_XBUTTONUP}
-	WM_XBUTTONUP        = $020C;
-	{$EXTERNALSYM WM_XBUTTONDBLCLK}
-	WM_XBUTTONDBLCLK    = $020D;
-
-const
-	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
-	IndexFile = 'index' + HTMLExt;
-	IndexPHPFile = 'index' + '.php';
-	nbsp = '&nbsp;'; // Non-dividable Blank SPace.
 
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
-
-{$if CompilerVersion < 16}
-procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
-{$ifend}
-
-{$ifndef UNICODE}
-type
-	UnicodeString = WideString;
-
-{ Standard Character set type }
-
-	TSysCharSet = set of AnsiChar;
-
-function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; overload;
-function CharInSet(C: WideChar; const CharSet: TSysCharSet): Boolean; overload;
-{$endif}
 
 function CreateRange(const AF, AT: SG): TRange;
 
@@ -406,25 +350,6 @@ procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
 begin
 	Assert((ActualValue >= MinValue) and (ActualValue <= MaxValue));
 end;
-
-{$ifndef UNICODE}
-function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
-begin
-	Result := C in CharSet;
-end;
-
-function CharInSet(C: WideChar; const CharSet: TSysCharSet): Boolean;
-begin
-	Result := (C < #$0100) and (AnsiChar(C) in CharSet);
-end;
-{$endif}
-
-{$if CompilerVersion < 16}
-procedure CopyArray(const Dest: Pointer; const Source: Pointer; const T: PTypeInfo; const Count: SG);
-begin
-	Move(Source^, Dest^, GetTypeData(T).elSize * Count);
-end;
-{$ifend}
 
 function CreateRange(const AF, AT: SG): TRange;
 begin

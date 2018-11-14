@@ -12,6 +12,9 @@ type
 	TOutputFormat = (ofIO{Disk File Input/Output}, ofHTML{Disk HTML}, ofDisplay{Windows Locale});
 
 // Number Format
+const
+	nbsp = '&nbsp;'; // Non-dividable Blank SPace.
+
 var
 	NativeSymbols: string;
 
