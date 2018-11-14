@@ -127,7 +127,7 @@ end;
 
 procedure TTimeSpan.SetMilliseconds(const Value: FG);
 begin
-  SetMicroseconds(Value * TTimePrefix.MilliSecond);
+  SetTicks(Round(Value * TTimePrefix.MilliSecond * MainTimer.Frequency));
 end;
 
 procedure TTimeSpan.SetMinutes(const Value: FG);
