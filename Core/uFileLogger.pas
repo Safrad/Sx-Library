@@ -52,11 +52,12 @@ constructor TFileLogger.Create(const FileName: TFileName);
   begin
     Result := '';
     NewFileName := FileName;
-    for Instance := 1 to 9 do
+    for Instance := 1 to 10 do
     begin
       if IsFileWritable(NewFileName) then Break;
 
-      if Instance = 9 then Exit;
+      if Instance = 10 then
+        raise Exception.Create('Can not create logger file ' + AddQuoteF(FileName));
       NewFileName := DelFileExt(FileName) +  IntToStr(Instance) + ExtractFileExt(FileName);
     end;
     Result := NewFileName;
