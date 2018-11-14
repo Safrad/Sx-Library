@@ -15,7 +15,7 @@ type
 
   TThreadPool = class
   private
-    FMaxThreads: SG;
+    FMaxThreads: UG;
     FRunThreads: S4;
     FWorking: S4;
     FThreads: TThreads;
@@ -23,8 +23,8 @@ type
     FQueueCriticalSection: TRTLCriticalSection;
     FThreadPriority: TThreadPriority;
     FOnTasksFinished: TNotifyEvent;
-    procedure SetRunThreads(Value: SG);
-    procedure SetMaxThreads(Value: SG);
+    procedure SetRunThreads(Value: UG);
+    procedure SetMaxThreads(Value: UG);
     procedure QueueToThread;
     procedure WaitForWorkers;
     procedure WorkerCreate(const Index: SG);
@@ -53,7 +53,7 @@ type
     procedure WorkerDestroy(const Index: SG);
     procedure InternalTasksFinished;
 
-    property MaxThreads: SG read FMaxThreads write SetMaxThreads;
+    property MaxThreads: UG read FMaxThreads write SetMaxThreads;
     property ThreadPriority: TThreadPriority read FThreadPriority write SetThreadPriority;
     property OnTasksFinished: TNotifyEvent read FOnTasksFinished write SetOnTasksFinished;
   end;
@@ -61,7 +61,7 @@ type
 implementation
 
 uses
-  uLog, uSorts, uMath, uCPU, uWorkerThread, SysUtils;
+  uLog, uSorts, uMath, uCPU, uWorkerThread, uSxRandomGenerator, SysUtils;
 
 { TThreadPool }
 
@@ -150,19 +150,25 @@ procedure TThreadPool.RandomizeTaskOrder;
 var
   Count: SG;
   i, X: SG;
+  RandomGenerator: TSxRandomGenerator;
 begin
   EnterCriticalSection(FQueueCriticalSection);
   try
-    Count := FQueue.Count;
-    if Count <= 1 then
-      Exit;
-    for i := 0 to Count - 1 do
-    begin
-      X := Random(Count);
-      FQueue.Swap(i, X);
-  {		T := FQueue[i];
-      FQueue[i] := FQueue[X];
-      FQueue[X] := T;}
+    RandomGenerator := TSxRandomGenerator.Create;
+    try
+      Count := FQueue.Count;
+      if Count <= 1 then
+        Exit;
+      for i := 0 to Count - 1 do
+      begin
+        X := RandomGenerator.RangeU4(Count - 1);
+        FQueue.Swap(i, X);
+      {		T := FQueue[i];
+        FQueue[i] := FQueue[X];
+        FQueue[X] := T;}
+      end;
+    finally
+      RandomGenerator.Free;
     end;
   finally
     LeaveCriticalSection(FQueueCriticalSection);
@@ -178,7 +184,7 @@ begin
       FThreads[i].Resume;
 end;
 
-procedure TThreadPool.SetMaxThreads(Value: SG);
+procedure TThreadPool.SetMaxThreads(Value: UG);
 begin
   if Value <> FMaxThreads then
   begin
@@ -192,7 +198,7 @@ begin
   FOnTasksFinished := Value;
 end;
 
-procedure TThreadPool.SetRunThreads(Value: SG);
+procedure TThreadPool.SetRunThreads(Value: UG);
 var
   i: SG;
 begin
