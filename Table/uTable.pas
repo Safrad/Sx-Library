@@ -263,14 +263,14 @@ begin
   TConsole.WriteLine(TopHorizontalLine(sizes), BorderColor, rowColor);
   for row := 0 to Length(FData) - 1 do
   begin
-      if row > 0 then
-        rowColor := ccBlack;
+    if row > 0 then
+      rowColor := ccBlack;
 
-      if FData[row] <> nil then
-        DataLine(sizes, FData[row].GetHeight, FData[row].Columns, rowColor);
+    if FData[row] <> nil then
+      DataLine(sizes, FData[row].GetHeight, FData[row].Columns, rowColor);
       
-      if row < Length(FData) - 1 then
-        TConsole.WriteLine(MiddleHorizontalLine(sizes), BorderColor, rowColor);
+    if row < Length(FData) - 1 then
+      TConsole.WriteLine(MiddleHorizontalLine(sizes), BorderColor, rowColor);
   end;
   TConsole.WriteLine(BottomHorizontalLine(sizes), BorderColor, rowColor);
 end;
