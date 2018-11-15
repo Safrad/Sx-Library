@@ -127,7 +127,7 @@ function AllFiles: string;
 function AllText: string;
 function AllSounds: string;
 
-function SplitStr(Source: string; const ASeparators: TSysCharSet; const MaxStrings: SG; out Remain: string): TArrayOfString;
+function SplitCommandLine(ASource: string): TStringPair;
 function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
 function FindFilesInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileNames;
 
@@ -140,59 +140,37 @@ uses
 	uChar, uMsg, uProjectInfo, uSorts, uCharset,
 	uOutputFormat, uMath, uLog;
 
-function SplitStr(Source: string; const ASeparators: TSysCharSet; const MaxStrings: SG; out Remain: string): TArrayOfString;
+function SplitCommandLine(ASource: string): TStringPair;
 var
 	i: SG;
 	EndIndex: SG;
-	ResultCount: SG;
 begin
-	SetLength(Result, MaxStrings);
-	if MaxStrings <= 0 then Exit;
-
-	ResultCount := 0;
 	i := 1;
-	while i <= Length(Source) do
-	begin
-		if CharInSet(Source[i], ASeparators) then
-		begin
-			Inc(i);
-			Continue;
-		end;
-		if Source[i] = '"' then
-		begin
-			Inc(i);
-			EndIndex := i;
-			while True do
-			begin
-				EndIndex := PosEx('"', Source, EndIndex);
-				if CharAt(Source, EndIndex - 1) = '\' then
-				begin
-					Delete(Source, EndIndex - 1, 1);
-				end
-				else
-					Break;
-			end;
-		end
-		else
-		begin
-			EndIndex := i + 1;
-      ReadToChars(Source, EndIndex, ASeparators);
-      Dec(EndIndex);
-//      PosEx(CharSpace, Source, i + 1);
-		end;
-		if EndIndex = 0 then EndIndex := MaxInt - 1;
-
-		Result[ResultCount] := Copy(Source, i, EndIndex - i);
-		Inc(ResultCount);
-		if ResultCount >= MaxStrings then
+  SkipSpace(ASource, i);
+  if ASource[i] = '"' then
+  begin
+    Inc(i);
+    EndIndex := i;
+    while True do
     begin
-      Remain := Copy(Source, EndIndex + 1, MaxInt);
-			Exit;
+      EndIndex := PosEx('"', ASource, EndIndex);
+      if CharAt(ASource, EndIndex - 1) = '\' then
+      begin
+        Delete(ASource, EndIndex - 1, 1);
+      end
+      else
+        Break;
     end;
+  end
+  else
+  begin
+    EndIndex := i + 1;
+    ReadToChar(ASource, EndIndex, CharSpace);
+    Dec(EndIndex);
+  end;
 
-		i := EndIndex + 1;
-	end;
-  SetLength(Result, ResultCount);
+  Result.Name := Copy(ASource, i, EndIndex - i);
+  Result.Value := Copy(ASource, EndIndex + 1, MaxInt);
 end;
 
 function GetModuleFileNameFunc(const AHandle: THandle): string;
@@ -208,11 +186,10 @@ procedure InitPaths;
 var
 	NewLength: SG;
 	i: SG;
-	All: TArrayOfString;
+	CommandLinePair: TStringPair;
   CommandLine: string;
   Suffix, CompanySuffix: string;
 begin
-  All := nil;
 	if ExeFileName <> '' then Exit;
 
 	GetDir(0, StartDir);
@@ -220,8 +197,8 @@ begin
 
 	// Remove Parameters
   CommandLine := GetCommandLine;
-	All := SplitStr(CommandLine, [CharSpace], 1, ExeParameters);
-  ExeFileName := All[0];
+	CommandLinePair := SplitCommandLine(CommandLine);
+  ExeFileName := CommandLinePair.Name;
   ModuleFileName := GetModuleFileNameFunc(HInstance);
 
 	WorkDir := '';

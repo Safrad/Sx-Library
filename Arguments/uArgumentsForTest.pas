@@ -27,6 +27,7 @@ type
     FReplace: TSwitchArgument;
   public
     constructor Create;
+    destructor Destroy; override;
 
     property NumericArgument: TNumericalIntervalArgument read FNumericArgument;
     property ByteArgument: TByteArgument read FByteArgument;
@@ -93,6 +94,20 @@ begin
   FNA.Shortcut := 'na';
   FNA.RequireCheck := rcDisabled;
   Add(FNA);
+end;
+
+destructor TArgumentsForTest.Destroy;
+begin
+  FNA.Free;
+  FSA.Free;
+  FNumericArgument.Free;
+  FDir.Free;
+  FSource.Free;
+  FReplace.Free;
+  FD2.Free;
+  FD1.Free;
+
+  inherited;
 end;
 
 end.

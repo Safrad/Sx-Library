@@ -64,6 +64,17 @@ begin
     Arguments.Parse('"*.exe" -r -d1 -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;
     CheckEquals('Argument "number" requires argument "d"' + LineSep, Arguments.Check);
+    CheckEquals(10, Arguments.NumericArgument.Value);
+
+    Arguments.Parse('"*.exe" -r -d1 -number:10 -sa a;b;c -na 1;2;3');
+    CheckResult;
+    CheckEquals(10, Arguments.NumericArgument.Value);
+
+    Arguments.Parse('"*.exe" -r -d1 -number:10 -d C:\Test -na 1;2;3');
+    CheckEquals('C:\Test\', Arguments.Dir.Value);
+
+    Arguments.Parse('"*.exe" -r -d1 -number:10 -d  C:\Test -na 1;2;3');
+    CheckEquals('C:\Test\', Arguments.Dir.Value);
 
     Arguments.Parse('"*.exe" -d "1" -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
     CheckEquals(CorrectDirF(GetCurrentDir) + '1\', Arguments.Dir.Value);

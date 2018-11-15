@@ -9,11 +9,14 @@ uses
   uCustomArgument;
 
 type
+  TArrayOfStringPair = array of TStringPair;
+
   TArguments = class
   private
     FArguments: TObjectList;
 
-    procedure ParseArguments(const AArguments: TArrayOfString);
+    function ParseString(ASource: string): TArrayOfStringPair;
+    procedure ApplyArguments(const AArguments: TArrayOfStringPair);
     function FindByString(const AArgumentShortcut: string): TCustomArgument;
 
     function GetCount: SG;
@@ -81,12 +84,10 @@ begin
   inherited;
 end;
 
-function TArguments.FindByString(
-  const AArgumentShortcut: string): TCustomArgument;
+function TArguments.FindByString(const AArgumentShortcut: string): TCustomArgument;
 var
   i: SG;
 begin
-  // TODO : optimize
   for i := 0 to FArguments.Count - 1 do
   begin
     if SameText(TCustomArgument(FArguments[i]).Shortcut, AArgumentShortcut) then
@@ -126,14 +127,85 @@ begin
   end;
 end;
 
+function TArguments.ParseString(ASource: string): TArrayOfStringPair;
+var
+	i: SG;
+	EndIndex: SG;
+	ResultCount: SG;
+  ExpectedArgumentName: BG;
+begin
+	ResultCount := 0;
+	i := 1;
+
+  ExpectedArgumentName := True;
+	while i <= Length(ASource) do
+	begin
+    // Argument name prefix, argument value must be quoted if starts with - or /
+    if CharInSet(ASource[i], ['-', '/']) then
+    begin
+      ExpectedArgumentName := True;
+      Inc(i);
+      Continue;
+    end;
+
+    // Skip space
+		if ASource[i] = ' ' then
+		begin
+			Inc(i);
+			Continue;
+		end;
+
+		if ASource[i] = '"' then
+		begin
+			Inc(i);
+			EndIndex := i;
+			while True do
+			begin
+				EndIndex := PosEx('"', ASource, EndIndex);
+				if CharAt(ASource, EndIndex - 1) = '\' then
+				begin
+          // \" -> "
+					Delete(ASource, EndIndex - 1, 1);
+				end
+				else
+					Break;
+			end;
+		end
+		else
+		begin
+			EndIndex := i + 1;
+      if ExpectedArgumentName then
+        ReadToChars(ASource, EndIndex, [':', ' '])
+      else
+        ReadToChar(ASource, EndIndex, CharSpace);
+      Dec(EndIndex);
+		end;
+
+    if ExpectedArgumentName then
+    begin
+      SetLength(Result, ResultCount + 1);
+  		Result[ResultCount].Name := Copy(ASource, i, EndIndex - i);
+  		Inc(ResultCount);
+      ExpectedArgumentName := False;
+    end
+    else
+    begin
+  		Result[ResultCount - 1].Value := Copy(ASource, i, EndIndex - i);
+      ExpectedArgumentName := True;
+    end;
+
+		i := EndIndex + 1;
+	end;
+end;
+
 procedure TArguments.Parse(const ACommandLine: string);
 var
-	Arguments: TArrayOfString;
-  ParametersAsString, Remain: string;
+	Arguments: TArrayOfStringPair;
+  CommandLinePair: TStringPair;
 begin
-	SplitStr(ACommandLine, [CharSpace], 1, ParametersAsString); // Skip executable file name
-	Arguments := SplitStr(ParametersAsString, [CharSpace, ':'], 1024, Remain);
-  ParseArguments(Arguments);
+	CommandLinePair := SplitCommandLine(ACommandLine);
+	Arguments := ParseString(CommandLinePair.Value);
+  ApplyArguments(Arguments);
 end;
 
 procedure TArguments.Parse;
@@ -141,7 +213,7 @@ begin
   Parse(TStartState.CommandLine);
 end;
 
-procedure TArguments.ParseArguments(const AArguments: TArrayOfString);
+procedure TArguments.ApplyArguments(const AArguments: TArrayOfStringPair);
 var
   Index: SG;
   Name: string;
@@ -150,29 +222,25 @@ begin
   Index := 0;
   while Index < Length(AArguments) do
   begin
-    Name := AArguments[Index];
-    if CharInSet(FirstChar(Name), ['-', '/']) then
-    begin
-      Delete(Name, 1, 1);
-    end;
+    Name := AArguments[Index].Name;
 
     Argument := FindByString(Name);
     if (Argument = nil) then
     begin
-      raise EArgumentException.Create('Unknown command line argument ''' + Name + '''.');
+      raise EArgumentException.Create('Unknown command line argument ' + QuotedStr(Name) + '.');
     end;
     Argument.Exists := True;
-    Inc(Index);
 
-    if (not (Argument is TSwitchArgument)) then
+    if Argument is TSwitchArgument then
     begin
-      if Index >= Length(AArguments) then
-      begin
-        raise EArgumentException.Create('Argument value expected.');
-      end;
-      Argument.SetValueFromString(AArguments[Index]);
-      Inc(Index);
+      if AArguments[Index].Value <> '' then
+        raise EArgumentException.Create('Argument ' + QuotedStr(Name) + 'is switch, no value is expected.');
+    end
+    else
+    begin
+      Argument.SetValueFromString(AArguments[Index].Value);
     end;
+    Inc(Index);
   end;
 end;
 
@@ -218,8 +286,7 @@ begin
   end;
 end;
 
-function TArguments.PreviewTableArgument(
-  const AArgument: TCustomArgument): TRow;
+function TArguments.PreviewTableArgument(const AArgument: TCustomArgument): TRow;
 var
   Row: TRow;
 begin
