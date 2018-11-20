@@ -33,15 +33,15 @@ end;
 
 function WindowDivideSpaceOptions(const AWindowsSize: SG): TDivideSpaceOptions;
 var
-  OneSideProccessOrder: TOneSideDivideSpaceOptions;
+  OneSideProcessOrder: TOneSideDivideSpaceOptions;
 begin
   FillChar(Result, SizeOf(Result), 0);
 
-  OneSideProccessOrder.Divided := True;
-  OneSideProccessOrder.Size := AWindowsSize;
+  OneSideProcessOrder.Divided := True;
+  OneSideProcessOrder.Size := AWindowsSize;
 
-  Result.Horizontal := OneSideProccessOrder;
-  Result.Vertical := OneSideProccessOrder;
+  Result.Horizontal := OneSideProcessOrder;
+  Result.Vertical := OneSideProcessOrder;
 end;
 
 function HorizontalBarDivideSpaceOptions(const ABarSize: SG): TDivideSpaceOptions;

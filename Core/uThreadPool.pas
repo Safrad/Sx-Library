@@ -104,7 +104,7 @@ constructor TThreadPool.Create;
 begin
   inherited;
 
-  FThreadPriority := tpLowest; // tpLower freezes other proccesses;
+  FThreadPriority := tpLowest; // tpLower freezes other processes;
 
   FQueue := TData.Create;
   InitializeCriticalSection(FQueueCriticalSection);
