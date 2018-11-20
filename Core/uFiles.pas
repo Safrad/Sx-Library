@@ -147,7 +147,7 @@ var
 begin
 	i := 1;
   SkipSpace(ASource, i);
-  if ASource[i] = '"' then
+  if CharAt(ASource, i) = '"' then
   begin
     Inc(i);
     EndIndex := i;
