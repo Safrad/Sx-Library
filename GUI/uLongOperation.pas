@@ -31,7 +31,7 @@ implementation
 uses
   Controls,
   Forms,
-  uWave,
+  uPlaySound,
   uMsg,
   uOutputFormat,
   TaskBarAPI;

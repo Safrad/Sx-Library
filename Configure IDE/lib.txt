@@ -31,7 +31,10 @@ $(sx-library)\Arguments
 $(sx-library)\Commands
 $(sx-library)\Executable
 $(sx-library)\Benchmark
-$(sx-library)\Sound
+$(sx-library)\Sound\SoundItems
+$(sx-library)\Sound\Channels
+$(sx-library)\Sound\Mixers
+$(sx-library)\Sound\Players
 $(sx-library)\Input
 $(sx-library)\VersionSystem
 $(sx-library)\GUI

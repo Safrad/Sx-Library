@@ -6,9 +6,8 @@ uses
   uTypes,
   Windows,
   uSoundItem,
-  uISoundItem;
-
-// TODO : Multithreading
+  uISoundItem,
+  uChannels;
 
 type
   PSamplesF4 = ^TSamplesF4;
@@ -23,24 +22,32 @@ type
   private
     FSoundItems: TSoundItems;
     FBufferSamplesF4: PSamplesF4;
-    FBufferSampleCount: SG;
+    FBufferSingleChannelSampleCount: SG;
     FSampleRate: SG;
     FMaxVolume: FG;
     FActualVolume: FG;
+    FChannels: TChannels;
 
     procedure SetSoundItems(const Value: TSoundItems);
-    procedure SetBufferSampleCount(const Value: SG);
+    procedure SetBufferSingleChannelSampleCount(const Value: SG);
     function GetBufferSize: SG;
+    function GetBufferAllChannelsSampleCount: SG;
     procedure SetSampleRate(const Value: SG);
+    procedure SetChannels(const Value: TChannels);
   public
+    destructor Destroy; override;
+
     procedure Add(const ASoundItem: TSoundItem);
-    procedure FillBuffer(const ASamplesS2: PSamplesS2); virtual; abstract;
+    procedure FillBuffer(const ASamplesF4: PSamplesF4); virtual; abstract;
     procedure ConvertF4ToS2(const ASamplesF4: PSamplesF4; const ASamplesS2: PSamplesS2);
+    procedure Normalize(const ASamplesF4: PSamplesF4;
+      const ATargetF4: PSamplesF4);
 
     property BufferSamplesF4: PSamplesF4 read FBufferSamplesF4;
-    property BufferSampleCount: SG read FBufferSampleCount write SetBufferSampleCount;
+    property BufferSingleChannelSampleCount: SG read FBufferSingleChannelSampleCount write SetBufferSingleChannelSampleCount;
     property BufferSize: SG read GetBufferSize;
     property SampleRate: SG read FSampleRate write SetSampleRate;
+    property Channels: TChannels read FChannels write SetChannels;
     property SoundItems: TSoundItems read FSoundItems write SetSoundItems;
 
     property MaxVolume: FG read FMaxVolume;
@@ -64,15 +71,14 @@ begin
   MainLog.Add('Number of sounds: ' + IntToStr(Length(FSoundItems)), mlDebug);
 end;
 
-procedure TSoundMixer.ConvertF4ToS2(const ASamplesF4: PSamplesF4;
-  const ASamplesS2: PSamplesS2);
+procedure TSoundMixer.Normalize(const ASamplesF4, ATargetF4: PSamplesF4);
 var
   i: SG;
   Ratio, MaxValue, MinValue: F4;
 begin
   MinValue := 0;
   MaxValue := 0;
-  for i := 0 to FBufferSampleCount - 1 do
+  for i := 0 to GetBufferAllChannelsSampleCount - 1 do
   begin
     if ASamplesF4[i] > MaxValue then
     begin
@@ -83,11 +89,10 @@ begin
       MinValue := ASamplesF4[i];
     end;
   end;
-  Ratio := 8191; //32767;
+  Ratio := 0.5;
   MaxValue := Max(MaxValue, -MinValue);
-  if MaxValue * Ratio > 32767 then
-    Ratio := 32767 / MaxValue;
-//  Ratio := 8000;
+  if MaxValue * Ratio > 1 then
+    Ratio := 1 / MaxValue;
 
   FActualVolume := MaxValue;
   if FActualVolume > FMaxVolume then
@@ -95,22 +100,78 @@ begin
     FMaxVolume := FActualVolume;
   end;
 
-  for i := 0 to FBufferSampleCount - 1 do
+  for i := 0 to GetBufferAllChannelsSampleCount - 1 do
   begin
-    ASamplesS2[2 * i] := Round(Ratio * ASamplesF4[i]);
-    ASamplesS2[2 * i + 1] := ASamplesS2[2 * i];
+    ATargetF4[i] := Ratio * ASamplesF4[i];
   end;
+end;
+
+procedure TSoundMixer.ConvertF4ToS2(const ASamplesF4: PSamplesF4;
+  const ASamplesS2: PSamplesS2);
+var
+  i: SG;
+  Ratio, MaxValue, MinValue: F4;
+begin
+  MinValue := 0;
+  MaxValue := 0;
+  for i := 0 to GetBufferAllChannelsSampleCount - 1 do
+  begin
+    if ASamplesF4[i] > MaxValue then
+    begin
+      MaxValue := ASamplesF4[i];
+    end;
+    if ASamplesF4[i] < MinValue then
+    begin
+      MinValue := ASamplesF4[i];
+    end;
+  end;
+  Ratio := 8191;
+  MaxValue := Max(MaxValue, -MinValue);
+  if MaxValue * Ratio > 32767 then
+    Ratio := 32767 / MaxValue;
+
+  FActualVolume := MaxValue;
+  if FActualVolume > FMaxVolume then
+  begin
+    FMaxVolume := FActualVolume;
+  end;
+
+  for i := 0 to GetBufferAllChannelsSampleCount - 1 do
+  begin
+    ASamplesS2[i] := Round(Ratio * ASamplesF4[i]);
+  end;
+end;
+
+destructor TSoundMixer.Destroy;
+begin
+  FreeMem(FBufferSamplesF4);
+
+  inherited;
+end;
+
+function TSoundMixer.GetBufferAllChannelsSampleCount: SG;
+begin
+  Result := FBufferSingleChannelSampleCount * FChannels.Count;
 end;
 
 function TSoundMixer.GetBufferSize: SG;
 begin
-  Result := FBufferSampleCount * SizeOf(TSampleF4);
+  Result := FBufferSingleChannelSampleCount * FChannels.Count * SizeOf(TSampleF4);
 end;
 
-procedure TSoundMixer.SetBufferSampleCount(const Value: SG);
+procedure TSoundMixer.SetBufferSingleChannelSampleCount(const Value: SG);
 begin
-  FBufferSampleCount := Value;
-  GetMem(FBufferSamplesF4, BufferSize);
+  if FBufferSingleChannelSampleCount <> Value then
+  begin
+    FreeMem(FBufferSamplesF4);
+    FBufferSingleChannelSampleCount := Value;
+    GetMem(FBufferSamplesF4, BufferSize);
+  end;
+end;
+
+procedure TSoundMixer.SetChannels(const Value: TChannels);
+begin
+  FChannels := Value;
 end;
 
 procedure TSoundMixer.SetSampleRate(const Value: SG);

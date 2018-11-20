@@ -7,10 +7,10 @@ uses
   SysUtils,
   uWave,
   uISoundItem,
-  uSoundItem;
+  uSoundItem2D;
 
 type
-  TWaveItem = class(TSoundItem)
+  TWaveItem = class(TSoundItem2D)
   private
     FWave: TWave;
     procedure SetWave(const Value: TWave);

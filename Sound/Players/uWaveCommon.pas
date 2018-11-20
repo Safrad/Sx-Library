@@ -5,12 +5,14 @@ interface
 uses
   uTypes,
   uWave,
+  uChannels,
   Windows,
   MMSystem;
 
 const
   WAVE_FORMAT_EXTENSIBLE = $FFFE;
   KSDATAFORMAT_SUBTYPE_PCM = '{00000001-0000-0010-8000-00aa00389b71}';
+  KSDATAFORMAT_SUBTYPE_IEEE_FLOAT = '{00000003-0000-0010-8000-00AA00389B71}';
 
 type
   TSamples = packed record
@@ -39,12 +41,12 @@ type
 		FBufferOutCount: S4;
     FFrequency: SG;
     FBits: SG;
-    FChannels: SG; // Buffers in device, Shared in threads
+    FChannels: TChannels;
 
     procedure MMError(const FError: MMResult; const AMessagePrefix: string);
     procedure SetBits(const Value: SG);
     procedure SetFrequency(const Value: SG);
-    procedure SetChannels(const Value: SG);
+    procedure SetChannels(const Value: TChannels);
   protected
     IsWavePlayer: BG;
 		procedure FillBuffer(Buffer: PWaveSample); virtual; abstract;
@@ -72,7 +74,7 @@ type
 
 		property Bits: SG read FBits write SetBits;
 		property Frequency: SG read FFrequency write SetFrequency;
-		property Channels: SG read FChannels write SetChannels;
+		property Channels: TChannels read FChannels write SetChannels;
 	end;
 
 implementation
@@ -81,7 +83,6 @@ uses
   SysUtils,
   uMsg,
   uMath,
-  uChannels,
   uOutputFormat;
 
 (*	Header: PWaveHdr;
@@ -128,6 +129,7 @@ begin
   end;
 end;
 
+// Called from different thread
 procedure MMInDone(
 	wi: HWAVEIN;
 	Msg: UINT;
@@ -203,15 +205,16 @@ begin
 	FActive := False;
 	FCloseInvoked := False;
 
-	Bits := 16;
+	Bits := BitsPerByte * SizeOf(F4);
 	Frequency := 44100;
-	Channels := 2;
 end;
 
 destructor TWaveCommon.Destroy;
 begin
-	if FActive then Close;
+	if FActive then
+    Close;
 	FHWave := 0;
+
 	inherited Destroy;
 end;
 
@@ -250,8 +253,8 @@ begin
 
   FillChar(FWaveFormat, SizeOf(FWaveFormat), 0);
 
-	FWaveFormat.Format.WFormatTag := WAVE_FORMAT_EXTENSIBLE; // PCM format - the only option
-	FWaveFormat.Format.nChannels := Channels;
+	FWaveFormat.Format.WFormatTag := WAVE_FORMAT_EXTENSIBLE;
+	FWaveFormat.Format.nChannels := Channels.Count;
 	FWaveFormat.Format.nSamplesPerSec := Frequency;
 	FWaveFormat.Format.wBitsPerSample := Bits;
 	FWaveFormat.Format.nBlockAlign := (FWaveFormat.Format.wBitsPerSample shr 3) * FWaveFormat.Format.nChannels;
@@ -260,8 +263,8 @@ begin
 
   FWaveFormat.Samples.wValidBitsPerSample := Bits;
 
-  FWaveFormat.dwChannelMask := GetMaskForNumberOfChannels(Channels);
-  FWaveFormat.SubFormat := StringToGUID(KSDATAFORMAT_SUBTYPE_PCM);
+  FWaveFormat.dwChannelMask := Channels.Mask;
+  FWaveFormat.SubFormat := StringToGUID(KSDATAFORMAT_SUBTYPE_IEEE_FLOAT);
 
 	if IsWavePlayer then
 		FError := waveOutOpen(nil, WAVE_MAPPER, @FWaveFormat.Format, 0, 0, WAVE_FORMAT_QUERY)
@@ -398,18 +401,18 @@ begin
   end;
 end;
 
-procedure TWaveCommon.SetFrequency(const Value: SG);
+procedure TWaveCommon.SetChannels(const Value: TChannels);
 begin
-  FFrequency := Value;
+  FChannels := Value;
   if FActive then
   begin
     Restart;
   end;
 end;
 
-procedure TWaveCommon.SetChannels(const Value: SG);
+procedure TWaveCommon.SetFrequency(const Value: SG);
 begin
-  FChannels := Value;
+  FFrequency := Value;
   if FActive then
   begin
     Restart;

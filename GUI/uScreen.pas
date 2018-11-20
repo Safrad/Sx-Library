@@ -114,6 +114,7 @@ implementation
 {$R *.DFM}
 uses
 	Registry, Math, MMSystem,
+  uPlaySound,
 	uMsg, uStrings, uWave, uFiles, uGetInt, uDIniFile, uInputFormat, uOutputFormat, uSystem;
 var
 	First: Boolean;

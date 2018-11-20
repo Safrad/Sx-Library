@@ -3,7 +3,7 @@ unit uSounds;
 interface
 
 uses
-	uTypes, uDForm, uWave, uSoundMixer,
+	uTypes, uDForm, uSoundMixer,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs,
 	uDWinControl;
@@ -75,8 +75,11 @@ implementation
 
 {$R *.dfm}
 uses
+  UITypes,
   uWaveCommon,
   uWaveItem,
+  uWave,
+  uPlaySound,
 	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings, uLayout,
 	uDictionary;
 
@@ -296,7 +299,7 @@ begin
 				if P.WaveItem <> nil then
 				begin
 					P.Enabled := True;
-					P.WaveItem.Wave.Play;
+					PlayWave(P.WaveItem.Wave.CompleteWave);
 				end;
 			end;
 		end;
@@ -332,8 +335,7 @@ begin
 					StopPlayWave;
 					WaveBuffer.Free;
 					WaveBuffer := P.WaveItem.Wave.ConvertChannels(2, SoundLeft, SoundRight);
-          WaveBuffer.WriteToFile('C:\Net\Test.wav');
-					WaveBuffer.Play;
+					PlayWave(WaveBuffer.CompleteWave);
 				end
 				else if ((SoundReduce = False) or (P.Used = False)) then
 				begin

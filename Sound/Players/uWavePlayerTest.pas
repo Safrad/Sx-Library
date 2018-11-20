@@ -16,7 +16,8 @@ implementation
 
 uses
   Windows,
-  uWavePlayer;
+  uWavePlayer,
+  uStereoChannels;
 
 { TWavePlayerTest }
 
@@ -28,12 +29,13 @@ begin
 {  WavePlayer.Bits := 16;
   WavePlayer.Channels := 2;
   WavePlayer.Frequency := 44100;}
-  WavePlayer.Channels := 6;
+  WavePlayer.Channels := TStereoChannels.Create;
   try
     WavePlayer.Open;
     Sleep(200);
     WavePlayer.Close;
   finally
+    WavePlayer.Channels.Free;
     WavePlayer.Free;
   end;
 end;
@@ -44,13 +46,14 @@ var
 begin
   WavePlayer := TWavePlayer.Create;
   WavePlayer.Bits := 16;
-  WavePlayer.Channels := 2;
   WavePlayer.Frequency := 44100;
+  WavePlayer.Channels := TStereoChannels.Create;
   try
     WavePlayer.Open;
     Sleep(2000);
     WavePlayer.Close;
   finally
+    WavePlayer.Channels.Free;
     WavePlayer.Free;
   end;
 end;

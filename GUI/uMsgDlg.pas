@@ -4,7 +4,7 @@ interface
 
 uses
 	Dialogs, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Consts,
-	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel, uWave,
+	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel,
 	uDForm, uDTimer, uDEdit, uMsg, uTypes, uDWinControl, uDMemo;
 
 type
@@ -107,6 +107,7 @@ implementation
 uses
   uVisualOptions,
   SynTaskDialog,
+  uPlaySound,
 	uFiles, uColor, uDictionary,
 	uStrings, uChar, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uMath,
 	Registry, MMSystem, Math, UITypes;

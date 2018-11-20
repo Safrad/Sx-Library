@@ -42,11 +42,11 @@ uses
   uMath,
   uLog,
   uFiles,
-  uWaveFile,
   uOutputFormat,
-  uPianoOptions,
+  uStartupEnvironment,
   Windows,
-  SysUtils, uWaveCommon, Classes;
+  Classes,
+  SysUtils, uWaveCommon;
 
 function GetBufferSize(wBitsPerSample, nChannels, BufferOutSamples: SG): SG;
 begin
@@ -61,7 +61,6 @@ const
 var
   i: SG;
   FillCount: SG;
-  WaveFile: TWaveFile;
   PCMWaveFormat: TPCMWaveFormat;
 begin
   inherited;
@@ -81,9 +80,8 @@ begin
   // 6 * >=5 ok
   // 30 * >=2 ok
 
-  WaveFile := nil;
-  FMixer.BufferSampleCount := RoundDiv(FWavePlayer.WaveFormat.Format.nSamplesPerSec * BufferTime, 1000);
-  FBufferSize := GetBufferSize(FWavePlayer.WaveFormat.Format.wBitsPerSample, FWavePlayer.WaveFormat.Format.nChannels, FMixer.BufferSampleCount);
+  FMixer.BufferSingleChannelSampleCount := RoundDiv(FWavePlayer.WaveFormat.Format.nSamplesPerSec * BufferTime, 1000);
+  FBufferSize := GetBufferSize(FWavePlayer.WaveFormat.Format.wBitsPerSample, FWavePlayer.WaveFormat.Format.nChannels, FMixer.BufferSingleChannelSampleCount);
   BufferCount := 4; // minimum is 2
 
   while not Terminated do
@@ -100,17 +98,8 @@ begin
 
         WavePlayer.PrepareHeader(@FHeaders[i]);
 
-        if PianoParams[poAutomaticSave].Bool then
-        begin
-          if WaveFile = nil then
-          begin
-            CreateDirsEx(RemoveEV(PianoParams[poAutomaticSave].Str));
-            WaveFile := TWaveFile.Create(PianoParams[poSaveFolder].Str + 'Test.wav', @PCMWaveFormat);
-          end;
-          WaveFile.Write(Pointer(FHeaders[i].lpData), @FHeaders[i]);
-        end;
         WavePlayer.WriteBuffer(@FHeaders[i]);
-//        MainLog.Add('Write buffer ' + IntToStr(i) + ' - ' + BToStr(FHeaders[i].dwBufferLength), mlDebug);
+        MainLog.Add('Write buffer ' + IntToStr(i) + ' - ' + BToStr(FHeaders[i].dwBufferLength), mlDebug);
         Inc(FillCount);
       end;
     end;
@@ -125,7 +114,6 @@ begin
         BufferCount := BufferCount + 1;
     end;
   end;
-  WaveFile.Free;
   BufferCount := 0; // Free memory
 end;
 

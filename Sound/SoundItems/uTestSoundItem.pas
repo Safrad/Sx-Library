@@ -1,18 +1,17 @@
-unit uTone;
+unit uTestSoundItem;
 
 interface
 
 uses
   uTypes,
   uISoundItem,
-  uSoundItem;
+  uSoundItem2D;
 
 type
-  TTone = class(TSoundItem)
+  TTestSoundItem = class(TSoundItem2D)
   private
     FFrequency: FG;
     procedure SetFrequency(const Value: FG);
-
   public
     function GetSample: TSampleF4; override;
     property Frequency: FG read FFrequency write SetFrequency;
@@ -20,17 +19,21 @@ type
 
 implementation
 
-{ TTone }
+uses
+  uGeometry2D;
 
-function TTone.GetSample: TSampleF4;
+{ TTestSoundItem }
+
+function TTestSoundItem.GetSample: TSampleF4;
 begin
   Result := Sin(2 * pi * Frequency * FSampleIndex / SampleRate);
   Amplitude := Amplitude * (1 - AmplitudeFade / SampleRate);
+  Position := CreatePoint2D(2 * Sin(FSampleIndex / SampleRate), -2 * Cos(FSampleIndex / SampleRate));
 
   Inc(FSampleIndex);
 end;
 
-procedure TTone.SetFrequency(const Value: FG);
+procedure TTestSoundItem.SetFrequency(const Value: FG);
 begin
   FFrequency := Value;
 end;
