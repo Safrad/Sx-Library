@@ -48,7 +48,7 @@ begin
 			  'I/O Read Bytes',
 			  'I/O Write Count',
 			  'I/O Write Bytes',
-        'Proccess memory'
+        'Process memory'
       ],
       [
 			  NToS(CommonApplication.Statistics.RunCount),
