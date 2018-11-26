@@ -27,7 +27,6 @@ uses
   uCSVFileTest in '..\Core\uCSVFileTest.pas',
   uRegionalTest in '..\Core\uRegionalTest.pas',
   uMathTest in '..\Core\uMathTest.pas',
-  uMidiPlayerTest in '..\Core\uMidiPlayerTest.pas',
   uCPUTest in '..\Core\uCPUTest.pas',
   uDParserTest in '..\Parser\uDParserTest.pas',
   uArgumentsForTest in '..\Arguments\uArgumentsForTest.pas',
