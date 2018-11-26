@@ -52,6 +52,7 @@ type
 		3: (BLR: TBLR);
 		4: (WLR: TWLR);
 		5: (DLR: TDLR);
+    6: (F: F4);
 	end;
 
 	TId = array[0..3] of AnsiChar;
@@ -70,10 +71,12 @@ type
 		ftUnknown = 0,
 		ftPCM = 1, // PCM
 		ftADPCM = 2, // Microsoft ADPCM
+    ftIEEEFloat = 3, // IEEE Float
 		ftALAW = 6, // ALAW
 		ftMULAW = 7, // MULAW
 		ftDVIIMAADPCM = 17, // Intel's DVI/IMA ADPCM
 //		MPEGLayerIII = 85, // MPEG Layer III
+    ftExtensible = 65534,
 		ftMax = 65535);
 {
 #define WAVE_FORMAT_UNKNOWN		0x0000 /* Unknown Format */
@@ -231,8 +234,7 @@ type
 		FDataBytes: U8;
 		PWave: PCompleteWave;
 		FData: PWaveSample;
-		WithoutData: BG;
-    FSampleRate: U4;
+		FWithoutData: BG;
 		procedure ReadRIFFHeader(const F: TFile);
 		procedure ReadFormatChunk(const F: TFile);
 		procedure ReadDataChunk(const F: TFile);
@@ -252,6 +254,9 @@ type
 			const BitsPerSample: U2;
 			const SampleRate: U4); overload;
 		destructor Destroy; override;
+
+    procedure Clean;
+
 		function Sample(Index: UG; const Channel: UG): SG; overload;
 		function Sample(const Index: UG): SG; overload;
 		function GetSample(const BitLength: UG; var BitIndex: UG): SG;
@@ -271,7 +276,7 @@ type
     // Properties
 		property Data: PWaveSample read FData;
 		property Format: TWaveFormatChunk read FFormat;
-    property SampleRate: U4 read FSampleRate write SetSampleRate;
+    property SampleRate: U4 read FFormat.SampleRate write SetSampleRate;
 
 		property SampleCount: UG read FSampleCount write SetSampleCount;
 		property Length: UG read GetLength;
@@ -284,7 +289,9 @@ uses
 	Math,
   uMath,
   uFiles,
-	uMsg;
+  uStrings,
+  uLog,
+  uEReadFileException;
 
 procedure SoundLR(var Left, Right: SG; const NowPos, MaxPos: SG);
 begin
@@ -306,7 +313,7 @@ var
 begin
 	if F.FileSize < SizeOf(TWaveRIFFHeader) then
 	begin
-		IOErrorMessage(F.FileName, 'File truncated.');
+		raise EReadFileException.Create(F.FileName, 'File is truncated.');
 	end;
 	if not F.BlockRead(Wave, SizeOf(TWaveRIFFHeader)) then
 	begin
@@ -314,11 +321,11 @@ begin
 	end;
 	if (Wave.GroupID <> 'RIFF') or (Wave.RiffType <> 'WAVE') then
 	begin
-		IOErrorMessage(F.FileName, 'File is not wave.');
+		raise EReadFileException.Create(F.FileName, 'Invalid wave header (possibly not a wave file).');
 	end;
 	if Wave.BytesFollowing <> F.FileSize - 8 then
 	begin
-		IOErrorMessage(F.FileName, 'Wave bytes following repaired.');
+		MainLog.Add('Wave bytes following repaired in ' + AddQuoteF(F.FileName), mlWarning);
 		Wave.BytesFollowing := F.FileSize - 8;
 	end;
 end;
@@ -327,13 +334,13 @@ procedure TWave.ReadFormatChunk(const F: TFile);
 begin
 	F.BlockRead(FFormat, SizeOf(FFormat));
 	case FFormat.FormatTag of
-	ftPCM, ftALAW, ftMULAW,
-	ftADPCM, ftDVIIMAADPCM:
+	ftPCM, ftIEEEFloat, ftALAW, ftMULAW,
+	ftADPCM, ftDVIIMAADPCM, ftExtensible:
 	begin
 
 	end;
 	else
-		ErrorMsg('Invalid wave format. Chunk format tag is %1.', [IntToStr(SG(FFormat.FormatTag))]);
+		EReadFileException.Create(F.FileName, ReplaceParam('Invalid wave format. Chunk format tag is %1.', [IntToStr(SG(FFormat.FormatTag))]));
 	end;
 end;
 
@@ -356,7 +363,12 @@ procedure TWave.ReadDataChunk(const F: TFile);
 var
 	PUncompressedData: Pointer;
 begin
-	if WithoutData then Exit;
+	if FWithoutData then
+    Exit;
+
+  if PWave <> nil then
+    raise EReadFileException.Create(F.FileName, 'Duplicate data chunk.');
+
 	FPreDataSize := F.FilePos;
 	GetMem(PWave, FDataBytes + FPreDataSize);
 	F.SeekBegin;
@@ -389,6 +401,10 @@ const
 	fmt = Ord('f') + Ord('m') shl 8 + Ord('t') shl 16 + Ord(' ') shl 24;
 	data = Ord('d') + Ord('a') shl 8 + Ord('t') shl 16 + Ord('a') shl 24;
 	fact = Ord('f') + Ord('a') shl 8 + Ord('c') shl 16 + Ord('t') shl 24;
+ 	cue = Ord('c') + Ord('u') shl 8 + Ord('e') shl 16 + Ord(' ') shl 24;
+  peak = Ord('P') + Ord('E') shl 8 + Ord('A') shl 16 + Ord('K') shl 24;
+  afsp = Ord('a') + Ord('f') shl 8 + Ord('s') shl 16 + Ord('p') shl 24;
+  note = Ord('n') + Ord('o') shl 8 + Ord('t') shl 16 + Ord('e') shl 24;
 
 	list = Ord('L') + Ord('I') shl 8 + Ord('S') shl 16 + Ord('T') shl 24;
 	info = Ord('I') + Ord('N') shl 8 + Ord('F') shl 16 + Ord('O') shl 24;
@@ -426,15 +442,16 @@ begin
 		begin
 			F.Seek(FilePos + 4); // Skip List Id
 			ReadChunks(F);
+      FilePos := F.FilePos;
 		end;
-		icmt, icrd, isft, ieng, icop, isbj, disp:
+		icmt, icrd, isft, ieng, icop, isbj, disp, cue, peak, afsp, note:
 		begin
 //			ReadTextChunk(F);
 {			SetLength(s, Chunk.ChunkSize);
 			F.BlockRead(s[1], Chunk.ChunkSize);}
 		end
 		else
-			Warning('Unknown chunk id %1 in file %2!', [string(Chunk.ChunkId), F.FileName]);
+			MainLog.Add(ReplaceParam('Unknown chunk id %1 in file %2!', [string(Chunk.ChunkId), F.FileName]), mlWarning);
 		end;
 		if Chunk.ChunkSize and 1 <> 0 then
 			F.Seek(FilePos + (Chunk.ChunkSize + 1) and $fffffffe) // Word align of chunks.
@@ -451,7 +468,7 @@ begin
 	try
 		if F.Open(FileName, fmReadOnly) then
 		begin
-			FSampleCount := 0;
+      Clean;
 			ReadRIFFHeader(F);
 			ReadChunks(F);
 			F.Close;
@@ -476,8 +493,14 @@ begin
 	inherited Create;
 
 	BitsPerSamples := Channels * BitsPerSample;
+  case BitsPerSample of
+  8: FFormat.FormatTag := ftPCM;
+  16: FFormat.FormatTag := ftPCM;
+  32: FFormat.FormatTag := ftIEEEFloat;
+  else
+    raise Exception.Create('Invalid bits per sample. Only 8, 16 or 32 is supported.');
+  end;
 
-	FFormat.FormatTag := ftPCM;
 	FFormat.Channels := Channels;
 	FFormat.SampleRate := SampleRate;
 	FFormat.BytesPerSecond := BitsToByte(BitsPerSamples * U8(SampleRate));
@@ -500,9 +523,8 @@ end;
 
 destructor TWave.Destroy;
 begin
-	FillChar(FFormat, SizeOf(FFormat), 0);
-	FData := nil;
-	FreeMem(PWave); PWave := nil;
+  Clean;
+
 	inherited;
 end;
 
@@ -617,6 +639,16 @@ begin
 	end;
 end;
 
+procedure TWave.Clean;
+begin
+	FillChar(FFormat, SizeOf(FFormat), 0);
+  FSampleCount := 0;
+  FPreDataSize := 0;
+  FDataBytes := 0;
+	FreeMem(PWave); PWave := nil;
+	FData := nil;
+end;
+
 function TWave.ConvertBitsPerSample(const NewBitsPerSample: Integer): TWave;
 var
 	i: Integer;
@@ -673,14 +705,10 @@ var
   OriginalPosTrunc, LastOriginalPosTrunc: SG;
   W0, W1: FG;
 begin
-	Result := TWave.Create(FFormat.Channels, FFormat.BitsPerSample, ANewSampleRate);
+	Result := TWave.Create(FFormat.Channels, 32, ANewSampleRate);
 	Result.SampleCount := SampleCount;
 
 	case FFormat.BitsPerSample of
-	8:
-	begin
-    // raise NotImplemented
-	end;
 	16:
 	begin
     // TODO : Improve resample quality
@@ -708,8 +736,9 @@ begin
       end;
     end;
 	end;
+  else
+    raise ENotImplemented.Create('Invalid bits per sample. Only 16 PCM is supported.');
 	end;
-  Result.WriteToFile('C:\Net\Test.wav');
 end;
 
 procedure TWave.SetSampleRate(const Value: U4);
@@ -724,7 +753,7 @@ end;
 function TWave.GetLength: UG;
 begin
 	if FSampleCount = 0 then
-	Result := 0
+	  Result := 0
 	else
 		Result := RoundDiv(Second * U8(FSampleCount - 1), FFormat.SampleRate);
 end;
@@ -737,7 +766,7 @@ begin
 	begin
 		Wave := TWave.Create;
 		try
-			Wave.WithoutData := True;
+			Wave.FWithoutData := True;
 			Wave.ReadFromFile(FileName);
 			Result := Wave.Length;
 		finally
