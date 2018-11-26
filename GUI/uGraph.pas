@@ -567,14 +567,7 @@ begin
     end;
   end;
 
-  case ATextAlignment.Vertical of
-    vaTop:
-      CurY := ARect.Top;
-    vaBottom:
-      CurY := ARect.Bottom + 1 - TextHeight * LineCount;
-  else {vaCenter}
-    CurY := ARect.Top + (ARect.Bottom - ARect.Top + 1 - TextHeight * LineCount) div 2;
-  end;
+  CurY := ATextAlignment.GetTop(ARect, TextHeight * LineCount);
 
   for i := 0 to LineCount - 1 do
   begin
