@@ -10,12 +10,23 @@ uses
 
 type
   TPictureFactory = class(TFileFactory)
+  private
+    FBrightness: SG;
+    FContrast: SG;
+    FGamma: SG;
+    FGrayscale: SG;
+    FGradient: SG;
+    procedure SetBrightness(const Value: SG);
+    procedure SetContrast(const Value: SG);
+    procedure SetGamma(const Value: SG);
+    procedure SetGradient(const Value: SG);
+    procedure SetGrayscale(const Value: SG);
   public
-    Brightness: SG;
-    Contrast: SG;
-    Gamma: SG;
-    Grayscale: SG;
-    Gradient: SG;
+    property Brightness: SG read FBrightness write SetBrightness;
+    property Contrast: SG read FContrast write SetContrast;
+    property Gamma: SG read FGamma write SetGamma;
+    property Grayscale: SG read FGrayscale write SetGrayscale;
+    property Gradient: SG read FGradient write SetGradient;
     constructor Create;
     function GetBitmap(const Name: string): TDBitmap; overload;
     function GetBitmap(const Name: string; const Width, Height: SG; const KeepRatio: BG = True; const BackgroundColor: TColor = clNone): TDBitmap; overload;
@@ -45,7 +56,7 @@ begin
   if FO.CustomObject = nil then
   begin
     for j := 0 to Paths.Count - 1 do
-      for i := 0 to  AllowedExtensions.Count - 1 do
+      for i := 0 to AllowedExtensions.Count - 1 do
       begin
         FileName := Paths[j] + Name + '.' + AllowedExtensions[i];
         if FileExists(FileName) then
@@ -66,7 +77,7 @@ var
   i: SG;
 begin
 	inherited;
-  Contrast := 256;
+  FContrast := 256;
 	AllowedExtensions.Clear;
 	for i := 0 to Length(PrefferedExt) - 1 do
 		AllowedExtensions.Add(PrefferedExt[i]);
@@ -112,14 +123,14 @@ begin
     Result.Transparent := True;
   end;
 
-  if Gradient <> 0 then
+  if FGradient <> 0 then
   begin
-    C.R := Min($7F + Gradient, 254);
+    C.R := Min($7F + FGradient, 254);
     C.G := C.R;
     C.B := C.R;
     C.A := 0;
     Co[0] := C.L;
-    C.R := Max($7F - Gradient, 1);
+    C.R := Max($7F - FGradient, 1);
     C.G := C.R;
     C.B := C.R;
     C.A := 0;
@@ -128,8 +139,8 @@ begin
     Co[3] := Co[1];
     Result.GenerateRGB(gfFade2x, Co, efAdd127 , nil);
   end;
-  if (Brightness <> 0) or (Contrast <> 256) or (Gamma <> 0) or (Grayscale <> 0) then
-    Result.Colors(Result, Result.GetFullRect, Brightness, Contrast, Gamma, Grayscale, True, True, True, nil);
+  if (FBrightness <> 0) or (FContrast <> 256) or (FGamma <> 0) or (FGrayscale <> 0) then
+    Result.Colors(Result, Result.GetFullRect, FBrightness, FContrast, FGamma, FGrayscale, True, True, True, nil);
 end;
 
 function TPictureFactory.HasBitmap(const Name: string): BG;
@@ -150,17 +161,30 @@ begin
   end;
 end;
 
-initialization
+procedure TPictureFactory.SetBrightness(const Value: SG);
+begin
+  FBrightness := Value;
+end;
 
-{$IFNDEF NoInitialization}
-PictureFactory := TPictureFactory.Create;
-PictureFactory.Path := GraphDir;
-{$ENDIF NoInitialization}
+procedure TPictureFactory.SetContrast(const Value: SG);
+begin
+  FContrast := Value;
+end;
 
-finalization
+procedure TPictureFactory.SetGamma(const Value: SG);
+begin
+  FGamma := Value;
+end;
 
-{$IFNDEF NoFinalization}
-FreeAndNil(PictureFactory);
-{$ENDIF NoFinalization}
+procedure TPictureFactory.SetGradient(const Value: SG);
+begin
+  FGradient := Value;
+end;
+
+procedure TPictureFactory.SetGrayscale(const Value: SG);
+begin
+  FGrayscale := Value;
+end;
+
 end.
 

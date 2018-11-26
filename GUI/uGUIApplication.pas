@@ -7,7 +7,6 @@ program MyProgram;
 
 uses
   uGUIApplication,
-  Forms,
   uMain in 'uMain.pas' {fMain};
 
 {$R *.RES}
@@ -17,7 +16,7 @@ var
 begin
   GUIApplication := TGUIApplication.Create;
   try
-    Application.CreateForm(TfMain, fMain);
+    GUIApplication.CreateForm(TfMain, fMain);
     GUIApplication.Run;
   finally
     GUIApplication.Free;
@@ -35,7 +34,8 @@ uses
   uTypes,
   uSwitchArgument,
   Menus,
-  Forms;
+  Forms,
+  Classes;
 
 type
   TGUIApplication = class(TUIApplication)
@@ -54,7 +54,9 @@ type
     function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
     procedure CommonForm(const Form: TForm);
   public
+    procedure CreateForm(InstanceClass: TComponentClass; var Reference);
     procedure Terminate; override;
+
     property MinimizeToTrayIcon: BG read FMinimizeToTrayIcon write SetMinimizeToTrayIcon;
   end;
 
@@ -75,7 +77,8 @@ uses
   uWebUpdate,
   uProjectInfo,
   uCommonMenu,
-  uCustomArgument;
+  uCustomArgument,
+  uPictureFactory;
 
 { TGUIApplication }
 
@@ -113,6 +116,12 @@ begin
 	end;
 end;
 
+procedure TGUIApplication.CreateForm(InstanceClass: TComponentClass; var Reference);
+begin
+  if Initialized then
+    Application.CreateForm(InstanceClass, Reference);
+end;
+
 procedure TGUIApplication.Finalize;
 begin
   try
@@ -124,6 +133,7 @@ begin
 
     Application.MainForm.Free; // Do not use FreeAndNil
     FreeAndNil(FAllowMultipleInstance);
+    FreeAndNil(PictureFactory);
   finally
     inherited;
   end;
@@ -159,6 +169,9 @@ end;
 procedure TGUIApplication.Initialize;
 begin
   inherited;
+
+  PictureFactory := TPictureFactory.Create;
+  PictureFactory.Path := GraphDir;
 
   if not uMultiIns.InitInstance(FAllowMultipleInstance.Exists) then
     raise EAbort.Create('Another instance found.');
