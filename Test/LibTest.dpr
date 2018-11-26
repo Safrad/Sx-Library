@@ -35,7 +35,7 @@ uses
   uPermutationTest in '..\Core\uPermutationTest.pas',
   uPermutationList in '..\Core\uPermutationList.pas',
   uStopwatchTest in '..\Core\uStopwatchTest.pas',
-  uWavePlayerTest in '..\Sound\uWavePlayerTest.pas',
+  uWavePlayerTest in '..\Sound\Players\uWavePlayerTest.pas',
   uTicksTest in '..\Core\uTicksTest.pas',
   uColorSequenceTest in '..\GUI\uColorSequenceTest.pas',
   uRandomGeneratorTest in '..\RandomGenerator\uRandomGeneratorTest.pas',
