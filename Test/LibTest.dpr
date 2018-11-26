@@ -47,7 +47,8 @@ uses
   uStartupEnvironmentTest in '..\Core\uStartupEnvironmentTest.pas',
   uCyclicRedundancyCheckTest in '..\Core\uCyclicRedundancyCheckTest.pas',
   uSplitFileTest in '..\Core\uSplitFileTest.pas',
-  uRegionalCodePageTest in '..\Regional\uRegionalCodePageTest.pas';
+  uRegionalCodePageTest in '..\Regional\uRegionalCodePageTest.pas',
+  uWaveTest in '..\Sound\SoundItems\uWaveTest.pas';
 
 {$R *.RES}
 
