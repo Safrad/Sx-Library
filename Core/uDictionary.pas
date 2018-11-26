@@ -548,7 +548,7 @@ begin
           begin
             if (Po = 1) and (UpCase(Line[Po]) = Line[Po]) then
             begin
-              ToS[1] := UpCaseCz(ToS[1])[1];
+              ToS[1] := string(ToS[1]).ToUpper[1];
             end;
           end;
           WhatS2 := Entries[i].En;
@@ -588,7 +588,7 @@ begin
             ToS := Entries[i].Other;
             if (Po = 1) and (UpCase(Line[Po]) = Line[Po]) then
             begin
-              ToS[1] := UpCaseCz(ToS[1])[1];
+              ToS[1] := ToS[1])[1].ToUpper;
             end;
           end;
           WhatS2 := Entries[i].En;
