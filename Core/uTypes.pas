@@ -207,11 +207,11 @@ type
 //	F6 = Real48;
 	F8 = Double;
 {$ifdef CPUX64}
-  FA = Extended80;
+  FA = Extended; // same as Double for 64 bit
 {$else}
   FA = Extended;
 {$endif}
-  FG = FA;
+  FG = F8;
 
 
 { CG = Char;
