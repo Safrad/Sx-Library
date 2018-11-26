@@ -77,6 +77,7 @@ function RoundSG(Value: F4): SG; overload;
 function RoundSG(Value: F8): SG; overload;
 function RoundSG(Value: FA): SG; overload;
 function RoundS8(Value: FA): S8;
+function RoundU8(Value: FA): U8;
 function TruncS8(Value: FA): S8;
 function RangeS8(Value: FA): BG;
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
@@ -716,6 +717,16 @@ begin
 		Result := Low(Result)
 	else
 		Result := RoundN(Value);
+end;
+
+function RoundU8(Value: FA): U8;
+begin
+	if Value > MaxU8 then
+		Result := MaxU8
+	else if Value < MinU8 then
+		Result := MinU8
+	else
+		Result := Trunc(Value) + Trunc(Frac(Value) * 2);
 end;
 
 function TruncS8(Value: FA): S8;

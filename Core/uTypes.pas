@@ -334,6 +334,10 @@ const
 
 	LoopSleepTime = 40; // [ms], 25 interrupts per second.
 
+var
+  MinU8: U8 = 0;
+  MaxU8: U8 = 18446744073709551615;
+
 procedure AssertEqual(const ActualValue: SG; const ReferentialValue :SG);
 procedure AssertRange(const ActualValue: SG; const MinValue, MaxValue :SG);
 
