@@ -38,9 +38,11 @@ end;
 
 destructor TDefaultArguments.Destroy;
 begin
-  FHelpArgument.Free;
-
-  inherited;
+  try
+    FHelpArgument.Free;
+  finally
+    inherited;
+  end;
 end;
 
 procedure TDefaultArguments.Parse(const ACommandLine: string);

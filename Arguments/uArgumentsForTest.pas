@@ -60,9 +60,7 @@ begin
   FReplace := TSwitchArgument.Create;
   FReplace.Shortcut := 'r';
   FReplace.Description := 'Replace';
-//  FReplace.RequireCheck := rcRequired;
   FReplace.RequireCheck := rcOptional;
-  //argumentReplace.CorrectArgument += CorrectArgument;
   Add(FReplace);
 
   FSource := TFileNameArgument.Create;
@@ -98,16 +96,18 @@ end;
 
 destructor TArgumentsForTest.Destroy;
 begin
-  FNA.Free;
-  FSA.Free;
-  FNumericArgument.Free;
-  FDir.Free;
-  FSource.Free;
-  FReplace.Free;
-  FD2.Free;
-  FD1.Free;
-
-  inherited;
+  try
+    FNA.Free;
+    FSA.Free;
+    FNumericArgument.Free;
+    FDir.Free;
+    FSource.Free;
+    FReplace.Free;
+    FD2.Free;
+    FD1.Free;
+  finally
+    inherited;
+  end;
 end;
 
 end.
