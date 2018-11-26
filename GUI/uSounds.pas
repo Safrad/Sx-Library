@@ -294,7 +294,8 @@ begin
 				if P.WaveItem = nil then
 				begin
 					P.WaveItem := TWaveItem.Create;
-					P.WaveItem.ReadFromFile(P.FileName);
+					P.WaveItem.Wave := TWave.Create;
+					P.WaveItem.Wave.ReadFromFile(P.FileName);
 				end;
 				if P.WaveItem <> nil then
 				begin
