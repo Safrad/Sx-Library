@@ -3,13 +3,15 @@ unit uCustomArgument;
 interface
 
 uses
-  uTypes;
+  uTypes,
+  Classes;
 
 type
   TRequireCheck = (rcRequired, rcOptional, rcDisabled);
 
   TCustomArgument = class
   private
+    FOnChange: TNotifyEvent;
     FRequires: array of TCustomArgument;
     FDescription: string;
     FUsed: BG;
@@ -24,12 +26,13 @@ type
     function GetRequiredNotFound: BG;
     function GetExists: BG;
     function GetExistsNoUsed: BG;
+    procedure SetOnChange(const Value: TNotifyEvent);
   protected
+    procedure Changed;
     function GetSyntax: string; virtual; abstract;
   public
     constructor Create;
 
-//    function CorrectArgument(const ACustomArgument: TCustomArgument): BG; TODO
     function Check: string;
     function Preview: string; virtual;
     procedure Require(const ACustomArgument: TCustomArgument);
@@ -46,6 +49,7 @@ type
     property ExistsNoUsed: BG read GetExistsNoUsed;
     property Used: BG read FUsed write SetUsed;
     property RequiredNotFound: BG read GetRequiredNotFound;
+    property OnChange: TNotifyEvent read FOnChange write SetOnChange;
   end;
 
 implementation
@@ -106,6 +110,12 @@ begin
   end;
 end;
 
+procedure TCustomArgument.Changed;
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
 function TCustomArgument.Check: string;
 var
   i: SG;
@@ -158,6 +168,11 @@ end;
 procedure TCustomArgument.SetExists(const Value: BG);
 begin
   FExists := Value;
+end;
+
+procedure TCustomArgument.SetOnChange(const Value: TNotifyEvent);
+begin
+  FOnChange := Value;
 end;
 
 procedure TCustomArgument.SetRequireCheck(const Value: TRequireCheck);
