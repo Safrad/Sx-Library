@@ -117,11 +117,16 @@ begin
     Arguments.Parse('"*.exe" -combo first');
     CheckEquals(0, Arguments.Combo.Value);
 
-    // Swith parameter with invalid value
+    // Swith argument with invalid value
     Arguments.Clear;
     StartExpectingException(EParseError);
     Arguments.Parse('"*.exe" -r invalid -d1 -number 10 -sa a;b;c -na 1;2;3');
     StopExpectingException;
+
+    // Time argument
+    Arguments.Clear;
+    Arguments.Parse('"*.exe" -time 0:02:03.536');
+    CheckEquals(123536, Arguments.Time.Value.Milliseconds);
   finally
     Arguments.Free;
   end;
