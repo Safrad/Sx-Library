@@ -851,7 +851,18 @@ begin
 				vsSpin:
 					n := StrToValI(TDEdit(C).Text, True, O.Minimum, O.Default, O.Maximum, 1, ParserMessages);
 				vsFloat:
-					f := StrToValE(TDEdit(C).Text, True, O.MinimumF, O.DefaultF, O.MaximumF, ParserMessages);
+        begin
+          try
+            f := StrToF8(TDEdit(C).Text, ifDisplay);
+            if f < O.MinimumF then
+              f := O.MinimumF
+            else if f > O.MaximumF then
+              f := O.MaximumF;
+          except
+            on E: Exception do
+              f := O.DefaultF;
+          end;
+        end;
 				vsTime:
 					n := StrToMs(TDEdit(C).Text, O.Minimum, O.Default, O.Maximum, True, ParserMessages);
 				end;

@@ -277,7 +277,7 @@ begin
 			else if s = FalseTrue[1] then
 				Result.Bool := True
 			else
-				Exception.Create('Invalid parameter value.');
+				raise Exception.Create('Invalid parameter value.');
 		end;
 	vsSpin, vsTime, vsColor:
 		begin
@@ -285,7 +285,11 @@ begin
 		end;
 	vsFloat:
 		begin
-			Result.Float := StrToValE(s, False, E.MinimumF, E.DefaultF, E.MaximumF);
+      Result.Float := StrToF8(s, ifIO);
+      if Result.Float < E.MinimumF then
+        Result.Float := E.MinimumF
+      else if Result.Float > E.MaximumF then
+        Result.Float := E.MaximumF;
 		end;
 	vsCombo:
 		begin
