@@ -1,3 +1,18 @@
+(*
+  Descendands:
+    TSwitchArgument (BooleanArgument)
+    TNumericArgument (for all available TNumericalSet descendants see Math folder)
+      TNumericalIntervalArgument (TNumericalInterval is used as NumericalSet)
+        TByteArgument
+    TComboArgument
+    TTimeArgument
+    TStringArgument
+      TFileNameArgument
+      TDirectoryArgument
+    TStringArrayArgument
+      TNumericArrayArgument
+*)
+
 unit uCustomArgument;
 
 interface
