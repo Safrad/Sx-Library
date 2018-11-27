@@ -11,7 +11,8 @@ uses
   uFileNameArgument,
   uSwitchArgument,
   uNumericArrayArgument,
-  uStringArrayArgument;
+  uStringArrayArgument,
+  uComboArgument;
 
 type
 	TArgumentsForTest = class(TDefaultArguments)
@@ -25,6 +26,7 @@ type
     FD2: TSwitchArgument;
     FD1: TSwitchArgument;
     FReplace: TSwitchArgument;
+    FCombo: TComboArgument;
   public
     constructor Create;
     destructor Destroy; override;
@@ -38,6 +40,7 @@ type
     property Dir: TDirectoryArgument read FDir;
     property SA: TStringArrayArgument read FSA;
     property NA: TNumericArrayArgument read FNA;
+    property Combo: TComboArgument read FCombo;
   end;
 
 implementation
@@ -92,11 +95,19 @@ begin
   FNA.Shortcut := 'na';
   FNA.RequireCheck := rcDisabled;
   Add(FNA);
+
+  FCombo := TComboArgument.Create;
+  FCombo.Shortcut := 'combo';
+  FCombo.RequireCheck := rcDisabled;
+  FCombo.AddCaption('first');
+  FCombo.AddCaption('second');
+  Add(FCombo);
 end;
 
 destructor TArgumentsForTest.Destroy;
 begin
   try
+    FCombo.Free;
     FNA.Free;
     FSA.Free;
     FNumericArgument.Free;

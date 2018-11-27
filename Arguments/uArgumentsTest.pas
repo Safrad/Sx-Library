@@ -106,6 +106,22 @@ begin
     StartExpectingException(EParseError);
     Arguments.Parse('"*.exe" -r invalid -d1 -number 10 -sa a;b;c -na 1;2;3');
     StopExpectingException;
+
+    // Combo Argument
+    CheckEquals(-1, Arguments.Combo.Value);
+    Arguments.Clear;
+    CheckEquals(-1, Arguments.Combo.Value);
+    Arguments.Parse('"*.exe" -combo second');
+    CheckEquals(True, Arguments.Combo.Exists);
+    CheckEquals(1, Arguments.Combo.Value);
+    Arguments.Parse('"*.exe" -combo first');
+    CheckEquals(0, Arguments.Combo.Value);
+
+    // Swith parameter with invalid value
+    Arguments.Clear;
+    StartExpectingException(EParseError);
+    Arguments.Parse('"*.exe" -r invalid -d1 -number 10 -sa a;b;c -na 1;2;3');
+    StopExpectingException;
   finally
     Arguments.Free;
   end;
