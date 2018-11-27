@@ -71,8 +71,6 @@ function Over(const S: TPoint; const DR: TRect): Boolean; overload;
 
 function Over3D(const SX1, SY1, SZ1, SX2, SY2, SZ2: Integer; const DX1, DY1, DZ1, DX2, DY2, DZ2: Integer): Boolean;
   overload;
-{function OverE(const SX1, SY1, SX2, SY2: Extended;
-	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;}
 
 procedure InflatePoint(var P: TPoint; const d: SG); overload;
 
@@ -675,18 +673,6 @@ begin
     Exit;
   Result := True;
 end;
-
-{function OverE(const SX1, SY1, SX2, SY2: Extended;
-	const DX1, DY1, DX2, DY2: Extended): Boolean; overload;
-begin
-	Result := False;
-
-	if (SX1 > DX2) and (SX2 > DX2) then Exit;
-	if (SX1 < DX1) and (SX2 < DX1) then Exit;
-	if (SY1 > DY2) and (SY2 > DY2) then Exit;
-	if (SY1 < DY1) and (SY2 < DY1) then Exit;
-	Result := True;
-end;}
 
 procedure InflatePoint(var P: TPoint; const d: SG);
 begin
