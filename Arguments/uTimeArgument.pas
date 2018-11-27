@@ -4,19 +4,24 @@ interface
 
 uses
   uTypes,
-  uStringArgument;
+  uTimeSpan,
+  uCustomArgument;
 
 type
-  TTimeArgument = class(TStringArgument)
+  TTimeArgument = class(TCustomArgument)
   private
-    FValue: S8;
-    function GetValue: S8;
-    procedure SetValue(const Value: S8);
+    FValue: TTimeSpan;
+    FDefaultValue: TTimeSpan;
+    function GetValue: TTimeSpan;
+    procedure SetValue(const Value: TTimeSpan);
+    procedure SetDefaultValue(const Value: TTimeSpan);
   protected
     function GetSyntax: string; override;
   public
-    property Value: S8 read GetValue write SetValue;
     procedure SetValueFromString(const AValue: string); override;
+
+    property DefaultValue: TTimeSpan read FDefaultValue write SetDefaultValue;
+    property Value: TTimeSpan read GetValue write SetValue;
   end;
 
 implementation
@@ -31,20 +36,25 @@ begin
   Result := '<time>';
 end;
 
-function TTimeArgument.GetValue: S8;
+function TTimeArgument.GetValue: TTimeSpan;
 begin
   Used := True;
   Result := FValue;
 end;
 
-procedure TTimeArgument.SetValue(const Value: S8);
+procedure TTimeArgument.SetDefaultValue(const Value: TTimeSpan);
+begin
+  FDefaultValue := Value;
+end;
+
+procedure TTimeArgument.SetValue(const Value: TTimeSpan);
 begin
   FValue := Value;
 end;
 
 procedure TTimeArgument.SetValueFromString(const AValue: string);
 begin
-  FValue := SToMs(AValue, ifIO);
+  Value.Milliseconds := SToMs(AValue, ifIO);
 end;
 
 end.
