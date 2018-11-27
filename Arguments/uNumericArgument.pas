@@ -5,21 +5,25 @@ interface
 uses
   uTypes,
   uNumericalSet,
-  uStringArgument;
+  uCustomArgument;
 
 type
-	TNumericArgument = class(TStringArgument)
+	TNumericArgument = class(TCustomArgument)
 	private
     FValue: S8;
     FNumericalSet: TNumericalSet;
+    FDefaultValue: S8;
     procedure SetValue(const Value: S8);
     function GetValue: S8;
     procedure SetNumericalSet(const Value: TNumericalSet);
+    procedure SetDefaultValue(const Value: S8);
   protected
     function GetSyntax: string; override;
     property NumericalSet: TNumericalSet read FNumericalSet write SetNumericalSet;
   public
     procedure SetValueFromString(const AValue: string); override;
+
+    property DefaultValue: S8 read FDefaultValue write SetDefaultValue;
     property Value: S8 read GetValue write SetValue;
   end;
 
@@ -40,6 +44,11 @@ begin
   Result := FValue;
 end;
 
+procedure TNumericArgument.SetDefaultValue(const Value: S8);
+begin
+  FDefaultValue := Value;
+end;
+
 procedure TNumericArgument.SetNumericalSet(const Value: TNumericalSet);
 begin
   FNumericalSet := Value;
@@ -47,12 +56,16 @@ end;
 
 procedure TNumericArgument.SetValue(const Value: S8);
 begin
-  FValue := Value;
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    Changed;
+  end;
 end;
 
 procedure TNumericArgument.SetValueFromString(const AValue: string);
 begin
-  FValue := StrToInt64(AValue);
+  Value := StrToInt64(AValue);
 
   if not FNumericalSet.Contains(FValue) then
   begin

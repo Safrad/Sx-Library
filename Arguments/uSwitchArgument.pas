@@ -10,7 +10,9 @@ type
   TSwitchArgument = class(TCustomArgument)
   private
     FValue: BG;
+    FDefaultValue: BG;
     procedure SetValue(const Value: BG);
+    procedure SetDefaultValue(const Value: BG);
   protected
 		function GetSyntax: string; override;
   public
@@ -18,6 +20,7 @@ type
 		procedure SetValueFromString(const AValue: string); override;
     function GetRequired: string; override;
     function GetRequiredOrOptional: string; override;
+    property DefaultValue: BG read FDefaultValue write SetDefaultValue;
     property Value: BG read FValue write SetValue;
   end;
 
@@ -49,6 +52,11 @@ end;
 function TSwitchArgument.GetSyntax: string;
 begin
   Result := '';
+end;
+
+procedure TSwitchArgument.SetDefaultValue(const Value: BG);
+begin
+  FDefaultValue := Value;
 end;
 
 procedure TSwitchArgument.SetValue(const Value: BG);

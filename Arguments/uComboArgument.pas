@@ -11,8 +11,10 @@ type
   private
     FCaptions: TArrayOfString;
     FValue: SG;
+    FDefaultValue: SG;
     procedure SetCaptions(const Value: TArrayOfString);
     procedure SetValue(const Value: SG);
+    procedure SetDefaultValue(const Value: SG);
   protected
     function GetSyntax: string; override;
   public
@@ -21,8 +23,9 @@ type
     procedure SetValueFromString(const AValue: string); override;
     procedure AddCaption(const ACaption: string);
 
-    property Value: SG read FValue write SetValue;
     property Captions: TArrayOfString read FCaptions write SetCaptions;
+    property DefaultValue: SG read FDefaultValue write SetDefaultValue;
+    property Value: SG read FValue write SetValue;
   end;
 
 implementation
@@ -59,6 +62,11 @@ end;
 procedure TComboArgument.SetCaptions(const Value: TArrayOfString);
 begin
   FCaptions := Value;
+end;
+
+procedure TComboArgument.SetDefaultValue(const Value: SG);
+begin
+  FDefaultValue := Value;
 end;
 
 procedure TComboArgument.SetValue(const Value: SG);
