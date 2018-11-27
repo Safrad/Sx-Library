@@ -33,8 +33,8 @@ begin
 //	PassCount := 0;
 
 	CSVFile := TCSVFile.Create;
-  CSVFile.SetColumnNames(['Input', 'Result', 'Errors']);
 	try
+    CSVFile.SetColumnNames(['Input', 'Result', 'Errors']);
 		if CSVFile.Open(DataDir + 'DParser.csv') then
 		begin
 			while not CSVFile.EOF do
