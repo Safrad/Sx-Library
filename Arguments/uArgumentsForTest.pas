@@ -12,7 +12,8 @@ uses
   uSwitchArgument,
   uNumericArrayArgument,
   uStringArrayArgument,
-  uComboArgument;
+  uComboArgument,
+  uTimeArgument;
 
 type
 	TArgumentsForTest = class(TDefaultArguments)
@@ -27,6 +28,7 @@ type
     FD1: TSwitchArgument;
     FReplace: TSwitchArgument;
     FCombo: TComboArgument;
+    FTime: TTimeArgument;
   public
     constructor Create;
     destructor Destroy; override;
@@ -41,6 +43,7 @@ type
     property SA: TStringArrayArgument read FSA;
     property NA: TNumericArrayArgument read FNA;
     property Combo: TComboArgument read FCombo;
+    property Time: TTimeArgument read FTime;
   end;
 
 implementation
@@ -102,11 +105,17 @@ begin
   FCombo.AddCaption('first');
   FCombo.AddCaption('second');
   Add(FCombo);
+
+  FTime := TTimeArgument.Create;
+  FTime.Shortcut := 'time';
+  FTime.RequireCheck := rcDisabled;
+  Add(FTime);
 end;
 
 destructor TArgumentsForTest.Destroy;
 begin
   try
+    FTime.Free;
     FCombo.Free;
     FNA.Free;
     FSA.Free;
