@@ -10,7 +10,8 @@ type
   private
     function TokensToString(const ATokens: array of string): string;
   public
-    constructor Create(const AExpectedTokens: array of string; const AActualToken: string);
+    constructor Create(const AExpectedTokens: array of string; const AActualToken: string); overload;
+    constructor Create(const AMessage: string; const AExpectedTokens: array of string; const AActualToken: string); overload;
   end;
 
 implementation
@@ -23,7 +24,13 @@ uses
 
 constructor EParseError.Create(const AExpectedTokens: array of string; const AActualToken: string);
 begin
-  Message := 'Parse error: ' + TokensToString(AExpectedTokens) + ' expected but token ' + AddSingleQuoteF(AActualToken) + ' found.';
+  Create('Parse error:', AExpectedTokens, AActualToken);
+end;
+
+constructor EParseError.Create(const AMessage: string; const AExpectedTokens: array of string;
+  const AActualToken: string);
+begin
+  Message := AMessage + ' ' + TokensToString(AExpectedTokens) + ' expected but token ' + AddSingleQuoteF(AActualToken) + ' found.';
 end;
 
 function EParseError.TokensToString(const ATokens: array of string): string;
