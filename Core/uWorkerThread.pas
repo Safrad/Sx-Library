@@ -50,7 +50,7 @@ begin
     while FId < {FThreadPool.FRunThreads <=} FThreadPool.MaxThreads.Value do // Read shared object
     begin
 //      AsyncTask := FThreadPool.PopAsyncTask;
-      AsyncTasks := FThreadPool.PopAsyncTasks(Max(1, FThreadPool.RemainTaskCount div FThreadPool.MaxThreads.Value div 10));
+      AsyncTasks := FThreadPool.PopAsyncTasks(Max(1, FThreadPool.RemainTaskCount div UG(FThreadPool.MaxThreads.Value) div 10));
       for i := 0 to Length(AsyncTasks) - 1 do
       begin
         AsyncTask := AsyncTasks[i];
