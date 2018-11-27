@@ -26,6 +26,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure Clear;
     procedure Parse; overload;
     procedure Parse(const ACommandLine: string); overload; virtual;
     procedure PreviewToConsole;
@@ -68,6 +69,17 @@ begin
   for i := 0 to FArguments.Count - 1 do
   begin
     Result := Result + TCustomArgument(FArguments[i]).Check;
+  end;
+end;
+
+procedure TArguments.Clear;
+var
+  i: SG;
+begin
+  for i := 0 to FArguments.Count - 1 do
+  begin
+    TCustomArgument(FArguments[i]).Exists := False;
+    TCustomArgument(FArguments[i]).Used := False;
   end;
 end;
 
@@ -231,12 +243,7 @@ begin
     end;
     Argument.Exists := True;
 
-    if Argument is TSwitchArgument then
-    begin
-      if AArguments[Index].Value <> '' then
-        raise EArgumentException.Create('Argument ' + QuotedStr(Name) + 'is switch, no value is expected.');
-    end
-    else
+    if (not (Argument is TSwitchArgument)) or (AArguments[Index].Value <> '') then
     begin
       Argument.SetValueFromString(AArguments[Index].Value);
     end;

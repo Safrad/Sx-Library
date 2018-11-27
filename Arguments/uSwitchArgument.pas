@@ -3,10 +3,14 @@ unit uSwitchArgument;
 interface
 
 uses
+  uTypes,
   uCustomArgument;
 
 type
   TSwitchArgument = class(TCustomArgument)
+  private
+    FValue: BG;
+    procedure SetValue(const Value: BG);
   protected
 		function GetSyntax: string; override;
   public
@@ -14,11 +18,14 @@ type
 		procedure SetValueFromString(const AValue: string); override;
     function GetRequired: string; override;
     function GetRequiredOrOptional: string; override;
+    property Value: BG read FValue write SetValue;
   end;
 
 implementation
 
-uses SysUtils;
+uses
+  SysUtils,
+  uEParseError;
 
 { TSwitchArgument }
 
@@ -44,9 +51,27 @@ begin
   Result := '';
 end;
 
-procedure TSwitchArgument.SetValueFromString(const AValue: string);
+procedure TSwitchArgument.SetValue(const Value: BG);
 begin
-	raise Exception.Create('Invalid operation');
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    Changed;
+  end;
+end;
+
+procedure TSwitchArgument.SetValueFromString(const AValue: string);
+var
+  AUpperCaseValue: string;
+begin
+//  raise EArgumentException.Create('Argument ' + QuotedStr(Shortcut) + ' is switch, no value is expected.');
+  AUpperCaseValue := UpperCase(AValue);
+  if (AUpperCaseValue = 'FALSE') or (AUpperCaseValue = '0') then
+    Value := False
+  else if (AUpperCaseValue = 'TRUE') or (AUpperCaseValue = '1') then
+    Value := True
+  else
+    raise EParseError.Create('Argument ' + QuotedStr(Shortcut) + ' is switch, ', ['{no value}', 'false', 'true', '0', '1'], AValue);
 end;
 
 end.
