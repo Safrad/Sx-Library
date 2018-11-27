@@ -6,7 +6,8 @@ unit uThreadPool;
 interface
 
 uses
-  uTypes, uData, uAsyncTask, Windows, Classes;
+  uTypes, uData, uAsyncTask, uNumericalIntervalArgument,
+  Windows, Classes;
 
 // TODO: Wait for task, task priority
 
@@ -15,7 +16,7 @@ type
 
   TThreadPool = class
   private
-    FMaxThreads: UG;
+    FMaxThreads: TNumericalIntervalArgument;
     FRunThreads: S4;
     FWorking: S4;
     FThreads: TThreads;
@@ -24,7 +25,7 @@ type
     FThreadPriority: TThreadPriority;
     FOnTasksFinished: TNotifyEvent;
     procedure SetRunThreads(Value: UG);
-    procedure SetMaxThreads(Value: UG);
+    procedure MaxThreadsChanged(Sender: TObject);
     procedure QueueToThread;
     procedure WaitForWorkers;
     procedure WorkerCreate(const Index: SG);
@@ -53,7 +54,7 @@ type
     procedure WorkerDestroy(const Index: SG);
     procedure InternalTasksFinished;
 
-    property MaxThreads: UG read FMaxThreads write SetMaxThreads;
+    property MaxThreads: TNumericalIntervalArgument read FMaxThreads;
     property ThreadPriority: TThreadPriority read FThreadPriority write SetThreadPriority;
     property OnTasksFinished: TNotifyEvent read FOnTasksFinished write SetOnTasksFinished;
   end;
@@ -61,7 +62,9 @@ type
 implementation
 
 uses
-  uLog, uSorts, uMath, uCPU, uWorkerThread, uSxRandomGenerator, SysUtils;
+  SysUtils, Math,
+  uStartState,
+  uLog, uSorts, uMath, uCPU, uWorkerThread, uSxRandomGenerator;
 
 { TThreadPool }
 
@@ -110,7 +113,17 @@ begin
   InitializeCriticalSection(FQueueCriticalSection);
 
   FRunThreads := 0;
-  FMaxThreads := GCPU.LogicalProcessorCount;
+  FMaxThreads := TNumericalIntervalArgument.Create;
+  FMaxThreads.NumericalInterval.MinimalValue := 1;
+  if TStartState.RunFromIDE then
+  begin
+    FMaxThreads.NumericalInterval.MaximalValue := 4; // CreateThread is too slow if run from IDE
+  end
+  else
+    FMaxThreads.NumericalInterval.MaximalValue := 256;
+
+  FMaxThreads.DefaultValue := Min(GCPU.LogicalProcessorCount, FMaxThreads.NumericalInterval.MaximalValue);
+  FMaxThreads.OnChange := MaxThreadsChanged;
 end;
 
 destructor TThreadPool.Destroy;
@@ -124,6 +137,8 @@ begin
     LeaveCriticalSection(FQueueCriticalSection);
   end;
   DeleteCriticalSection(FQueueCriticalSection);
+
+  FMaxThreads.Free;
 
   inherited;
 end;
@@ -184,13 +199,9 @@ begin
       FThreads[i].Resume;
 end;
 
-procedure TThreadPool.SetMaxThreads(Value: UG);
+procedure TThreadPool.MaxThreadsChanged(Sender: TObject);
 begin
-  if Value <> FMaxThreads then
-  begin
-    FMaxThreads := Value;
-    QueueToThread;
-  end;
+  QueueToThread;
 end;
 
 procedure TThreadPool.SetOnTasksFinished(const Value: TNotifyEvent);
@@ -202,8 +213,8 @@ procedure TThreadPool.SetRunThreads(Value: UG);
 var
   i: SG;
 begin
-  Value := Range(1, Value, FMaxThreads);
-  if Value > FRunThreads then
+  Value := Range(1, Value, FMaxThreads.Value);
+  if S4(Value) > FRunThreads then
   begin
     SetLength(FThreads, Value);
     for i := FRunThreads to Value - 1 do
@@ -269,7 +280,7 @@ end;
 
 procedure TThreadPool.WaitForNoThread;
 begin
-  FMaxThreads := 0;
+  FMaxThreads.Value := 0;
   QueueToThread;
   while (FRunThreads > 0) do
   begin

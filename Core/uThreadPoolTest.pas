@@ -26,10 +26,10 @@ var
 begin
   ThreadPool := TThreadPool.Create;
   try
-    ThreadPool.MaxThreads := 4;
+    ThreadPool.MaxThreads.Value := 4;
     ThreadPool.WaitForNoWork;
 
-    ThreadPool.MaxThreads := 0;
+    ThreadPool.MaxThreads.Value := 0;
     ThreadPool.WaitForNoThread;
   finally
     ThreadPool.Free;
@@ -43,7 +43,7 @@ var
 begin
   ThreadPool := TThreadPool.Create;
   try
-    ThreadPool.MaxThreads := 4;
+    ThreadPool.MaxThreads.Value := 4;
 
     AsyncTask := TAsyncTaskForTest.Create;
     ThreadPool.AddTask(AsyncTask);
@@ -69,7 +69,7 @@ var
 begin
   ThreadPool := TThreadPool.Create;
   try
-    ThreadPool.MaxThreads := 4;
+    ThreadPool.MaxThreads.Value := 4;
 
     for i := 0 to 999 do
     begin
