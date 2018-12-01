@@ -27,6 +27,7 @@ procedure MenuAdvancedDrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect;
 
 procedure IconsFromMenu(const Menu: TComponent; const Panel: TPanel);
 procedure RecreateIconsFromMenu(const Menu: TComponent; const Panel: TPanel);
+procedure FreeIconsFromMenu(const Panel: TPanel);
 procedure UpdateIcons(Menu: TComponent; Panel: TPanel);
 procedure IconsResize(PanelTool: TPanel);
 
@@ -572,21 +573,27 @@ const
 	IconSuffix = 'I';
 
 procedure RecreateIconsFromMenu(const Menu: TComponent;const Panel: TPanel);
-var
-	i: SG;
-	C: TControl;
 begin
 {	Panel.Free;
 	Panel := TPanel.C}
-	for i  := 0 to Panel.ControlCount - 1 do
-	begin
-		C := Panel.Controls[0];
-		Panel.RemoveControl(C);
-		C.Free;
-	end;
+	FreeIconsFromMenu(Panel);
 	IconsFromMenu(Menu, Panel);
 	UpdateIcons(Menu, Panel);
 	IconsResize(Panel);
+end;
+
+procedure FreeIconsFromMenu(const Panel: TPanel);
+var
+	i: SG;
+	C: TDButton;
+begin
+	for i  := 0 to Panel.ControlCount - 1 do
+	begin
+		C := Panel.Controls[0] as TDButton;
+    C.FGlyph.Free;
+		Panel.RemoveControl(C);
+		C.Free;
+	end;
 end;
 
 procedure IconsFromMenu(const Menu: TComponent; const Panel: TPanel);
@@ -669,6 +676,7 @@ begin
 								B.Tag := M.Tag;
 								// Inc(IconX, B.Width + 1);
 								B.FGlyph := TDBitmap.Create;
+                B.OwnGlyph := True;
 								B.FGlyph.FromBitmap(M.Bitmap);
 								B.OnClick := M.OnClick;
 

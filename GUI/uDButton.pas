@@ -36,6 +36,7 @@ type
 		IsFocused: Boolean;
 		FMouseDown: Boolean;
 		FEllipseSize: SG;
+    FOwnGlyph: BG;
 
 		procedure InitRect;
 		procedure PlayButtonSound(const IsDown: BG);
@@ -58,6 +59,7 @@ type
 		procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
 		procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+    procedure SetOwnGlyph(const Value: BG);
 	protected
 		procedure CreateHandle; override;
 		procedure CreateParams(var Params: TCreateParams); override;
@@ -65,6 +67,8 @@ type
 	public
 		FGlyph: TDBitmap;
 		constructor Create(AOwner: TComponent); override;
+
+    property OwnGlyph: BG read FOwnGlyph write SetOwnGlyph;
 		destructor Destroy; override;
 		procedure Click; override;
 	published
@@ -203,8 +207,13 @@ end;
 
 destructor TDButton.Destroy;
 begin
-	Bitmap.Free;
-	inherited;
+  try
+    if OwnGlyph then
+      FGlyph.Free;
+  	Bitmap.Free;
+  finally
+  	inherited;
+  end;
 end;
 
 procedure TDButton.CreateHandle;
@@ -651,6 +660,11 @@ begin
 		FMargin := Value;
 		Invalidate;
 	end;
+end;
+
+procedure TDButton.SetOwnGlyph(const Value: BG);
+begin
+  FOwnGlyph := Value;
 end;
 
 procedure TDButton.SetColor(Value: TColor);
