@@ -96,7 +96,8 @@ end;
 procedure TStartupEnvironmentTest.TestRemoveVariablesFromText;
 var
   Charset: TFileCharset;
-  Data: AnsiString;
+  DataA: AnsiString;
+  Data: string;
   SourceFileName, TargetFileName, ReferentialFileName: TFileName;
 begin
   SetEnvironmentVariable('testVariable2', 'test2');
@@ -105,8 +106,8 @@ begin
 
   SourceFileName := DataDir + 'StartupEnvironment\Test.txt';
 
-  Charset := ReadStringFromFileEx(SourceFileName, Data);
-  Data := StartupEnvironment.RemoveVariables(Data);
+  Charset := ReadStringFromFileEx(SourceFileName, DataA);
+  Data := StartupEnvironment.RemoveVariables(string(DataA));
   TargetFileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test.txt';
   if FileExists(TargetFileName) then
     DeleteFileEx(TargetFileName);
