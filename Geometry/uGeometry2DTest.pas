@@ -16,9 +16,10 @@ type
 implementation
 
 uses
+  uTypes,
   uGeometry2D;
 
-function SameValue(const V1, V2: Extended): Boolean;
+function SameValue(const V1, V2: FG): Boolean;
 begin
   Result := Abs(V1 - V2) < (V1 / 1e19);
 end;
