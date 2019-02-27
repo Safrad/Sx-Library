@@ -353,7 +353,7 @@ begin
 			Inc(TimWork2, TimWork);
 			Inc(TimSleep2, TimSleep);
 			t := TimWork2 + TimSleep2;
-			if t >= PerformanceFrequency then
+			if t >= MainTimer.Frequency then
 			begin
 				CPUUsage2 := RoundDivS8(1000 * TimWork2, t);
 				LagCount2 := TotalLags;
@@ -371,3 +371,4 @@ begin
 end;
 
 end.
+
