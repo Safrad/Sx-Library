@@ -78,7 +78,7 @@ begin
     roughStep := AMinimumTicksStep;
 
   // Normalize rough step to find the normalized one that fits best
-  stepPower := Math.Power(10, -Math.Floor(Math.Log10(Abs(roughStep))));
+  stepPower := Power10(1, -Math.Floor(Math.Log10(Abs(roughStep))));
   normalizedStep := roughStep * stepPower;
 
   goodNormalizedStep := 0;
