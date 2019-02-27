@@ -65,11 +65,17 @@ type
     {$if CompilerVersion >= 23}
 		function ReadNum(const Section, Ident: string; Default: U8): U8; overload;
     {$ifend}
+		function ReadNum(const Section, Name: string; Default: F8): F8; overload;
+    {$ifndef CPUX64}
 		function ReadNum(const Section, Name: string; Default: FA): FA; overload;
+    {$endif}
 
 		procedure WriteNum(const Section, Ident: string; Value: S4); overload;
 		procedure WriteNum(const Section, Ident: string; Value: S8); overload;
+		procedure WriteNum(const Section, Name: string; Value: F8); overload;
+    {$ifndef CPUX64}
 		procedure WriteNum(const Section, Name: string; Value: FA); overload;
+    {$endif}
 
 		function ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 		procedure WriteDate(const Section, Name: string; Value: TDateTime);
@@ -100,7 +106,9 @@ type
     {$ifend}
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
+    {$ifndef CPUX64}
 		procedure RWNum(const Section, Ident: string; var Value: FA; const Save: BG); overload;
+    {$endif}
 		procedure RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
 			overload;
 		procedure RWPoint(const Section, Ident: string; var Value: TPoint; const Save: BG);
@@ -116,8 +124,11 @@ type
 		// deprecated;
 		function RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG): BG;
 		// deprecated;
-		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
+		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FG; const Save: BG): FG;
+    {$ifndef CPUX64}
+		function RWFAF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
 		// deprecated;
+    {$endif}
 
 		function GetSectionIndex(const Section: string): Integer;
 		// function GetSectionKeys(const Section: string): TKeys;
@@ -195,7 +206,7 @@ implementation
 uses
 	Windows, Math,
 	uChar, uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog, uRect, uWHRect
-{$IFNDEF Console}, uMenus, uDParser, uSystem {$ENDIF};
+{$IFNDEF Console}, uMenus, uSystem {$ENDIF};
 
 procedure TDIniFile.AddSection(const Section: string);
 var
@@ -384,17 +395,23 @@ begin
 end;
 {$ifend}
 
+function TDIniFile.ReadNum(const Section, Name: string; Default: F8): F8;
+var
+	s: string;
+begin
+	s := ReadString(Section, Name, '');
+	Result := StrToF8(s, ifIO);
+end;
+
+{$ifndef CPUX64}
 function TDIniFile.ReadNum(const Section, Name: string; Default: FA): FA;
 var
 	s: string;
 begin
 	s := ReadString(Section, Name, '');
-	{ if s = '' then
-		Result := Default
-		else
-		Result := ReadFAFast(DelCharsF(s, ',')); }
-	Result := StrToValE(s, False, Default);
+	Result := StrToFA(s, ifIO);
 end;
+{$endif}
 
 procedure TDIniFile.WriteNum(const Section, Ident: string; Value: S4);
 begin
@@ -406,10 +423,17 @@ begin
 	WriteString(Section, Ident, NToS(Value, ofIO));
 end;
 
+procedure TDIniFile.WriteNum(const Section, Name: string; Value: F8);
+begin
+	WriteString(Section, Name, FToS(Value, ofIO));
+end;
+
+{$ifndef CPUX64}
 procedure TDIniFile.WriteNum(const Section, Name: string; Value: FA);
 begin
 	WriteString(Section, Name, FToS(Value, ofIO));
 end;
+{$endif}
 
 function TDIniFile.ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
 var
@@ -919,6 +943,7 @@ begin
 	end;
 end;
 
+{$ifndef CPUX64}
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: FA; const Save: BG);
 begin
 	if Save = False then
@@ -930,6 +955,7 @@ begin
 		WriteNum(Section, Ident, Value);
 	end;
 end;
+{$endif}
 
 procedure TDIniFile.RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1;
 	const Save: BG);
@@ -1120,17 +1146,12 @@ begin
 	end;
 end;
 
-function TDIniFile.RWFGF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG)
-	: FA;
-var
-	CurrDecimalSeparator: string;
+function TDIniFile.RWFGF(const Section, Ident: string; const SaveVal, DefVal: FG; const Save: BG): FG;
 begin
 	if Save then
 		Result := SaveVal
 	else
 		Result := DefVal;
-	CurrDecimalSeparator := DecimalSeparator;
-	DecimalSeparator := '.';
 	if Save = False then
 	begin
 		Result := ReadNum(Section, Ident, DefVal);
@@ -1139,8 +1160,25 @@ begin
 	begin
 		WriteNum(Section, Ident, SaveVal);
 	end;
-	DecimalSeparator := CurrDecimalSeparator;
 end;
+
+{$ifndef CPUX64}
+function TDIniFile.RWFAF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
+begin
+	if Save then
+		Result := SaveVal
+	else
+		Result := DefVal;
+	if Save = False then
+	begin
+		Result := ReadNum(Section, Ident, DefVal);
+	end
+	else
+	begin
+		WriteNum(Section, Ident, SaveVal);
+	end;
+end;
+{$endif}
 
 function TDIniFile.RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG)
 	: BG;
