@@ -313,17 +313,6 @@ begin
 		Inc(i);
 	end;
 	Result := ReplaceF(string(a), '&', '&amp;');
-
-{	Result := '';
-	NumericBase := 16;
-	for i := 1 to Length(s) do
-	begin
-		if Ord(s[i]) < 128 then
-			Result := Result + s[i]
-		else
-			Result := Result + '%' + LowerCase(NToS(Ord(s[i]))); ddd
-	end;
-	NumericBase := 10;}
 end;
 
 procedure THTML.AddRef(const FileName: TFileName; const Text: string);
