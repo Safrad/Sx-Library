@@ -220,6 +220,9 @@ type
       // Default precision (number of significant digits) used for e.g. division.
       FDefaultPrecision: Integer;
 
+      // Set this to False if trailing zeroes should not be reduced to the preferred scale after a division.
+      FReduceTrailingZeros: Boolean;
+
       // Default character used to indicate exponent in scientific notation output. Either 'E' or 'e'. Default 'e'.
       FExponentDelimiter: Char;
 
@@ -756,8 +759,12 @@ type
 
     /// <summary>The (maximum) precision to be used for e.g. division if the operation would otherwise result in a
     /// non-terminating decimal expansion, i.e. if there is no exact representable decimal result, e.g. when
-    /// dividing <code>     BigDecimal(1) / BigDecimal(3) (= 0.3333333...)</code></summary>
+    /// dividing <code>BigDecimal(1) / BigDecimal(3) (= 0.3333333...)</code></summary>
     class property DefaultPrecision: Integer read FDefaultPrecision write FDefaultPrecision;
+
+    /// <summary>If set to False, division will not try to reduce the trailing zeros to match the
+    /// preferred scale. That is faster, but usually produces bigger decimals</summary>
+    class property ReduceTrailingZeros: Boolean read FReduceTrailingZeros write FReduceTrailingZeros;
 
     /// <summary>The string to be used to delimit the exponent part in scientific notation output.</summary>
     /// <remarks>Currently, only 'e' and 'E' are allowed. Setting any other value will be ignored. The default is 'e',
@@ -799,6 +806,8 @@ type
     /// significant digits of the BigDecimal. It is then scaled (in powers of ten) by Scale.</summary>
     property UnscaledValue: BigInteger read FValue;
   end;
+
+{$HPPEMIT END '#include "Velthuis.BigDecimals.operators.hpp"'}
 
 implementation
 
@@ -1299,8 +1308,8 @@ begin
   // remove as many trailing zeroes as possible to get as close as possible to the target scale without
   // changing the value.
   // This should be optional, as it is slower.
-
-  //  InPlaceRemoveTrailingZeros(Result, TargetScale);
+  if FReduceTrailingZeros then
+    InPlaceRemoveTrailingZeros(Result, TargetScale);
 
   // Finally, set the sign of the result.
   Result.FValue.Sign := LSign;
@@ -1656,6 +1665,9 @@ begin
   // The most used rounding mode in Delphi, AFAIK.
   BigDecimal.FDefaultRoundingMode := rmNearestEven;
 
+  // Reduce trialing zeros to target scale after division by default.
+  BigDecimal.FReduceTrailingZeros := True;
+
   // I prefer the lower case 'e', because it is more visible between a number of decimal digits.
   // IOW, the 'e' in 1.23456789e+345 has, IMO, a little higher visibility than in the 'E' in 1.23456789E+345
   BigDecimal.FExponentDelimiter := 'e';
@@ -1910,13 +1922,16 @@ type
 const
   // 1292913986 is Log10(2) * 1^32.
   CMultiplier = Int64(1292913986);
+var
+  Full: Int64;
 begin
   Result := FPrecision;
   if Result = 0 then
   begin
     //Note: Both 9999 ($270F) and 10000 ($2710) have a bitlength of 14, but 9999 has a precision of 4, while 10000 has a precision of 5.
     //      In other words: BitLength is not a good enough measure for precision. The test with the power of ten is necessary.
-    Result := CardRec((FValue.BitLength + 1) * CMultiplier).Hi;
+    Full := Int64(FValue.BitLength + 1) * CMultiplier;
+    Result := CardRec(Full).Hi;
     if (GetPowerOfTen(Result) <= Abs(FValue)) or (Result = 0) then
       Inc(Result);
     FPrecision := Result;
@@ -2072,51 +2087,41 @@ end;
 
 class function BigDecimal.Sqrt(const Value: BigDecimal; Precision: Integer): BigDecimal;
 begin
-  Result := Value.Sqrt(Precision);
+  Result := Value.Sqrt(System.Math.Max(Precision, DefaultPrecision));
 end;
 
 class function BigDecimal.Sqrt(const Value: BigDecimal): BigDecimal;
 begin
-  Result := Value.Sqrt(DefaultPrecision);
+  Result := Value.Sqrt(System.Math.Max(DefaultPrecision, Value.Precision));
 end;
 
 function BigDecimal.Sqrt(Precision: Integer): BigDecimal;
 var
   LMultiplier: Integer;
   LValue: BigInteger;
-  LScale: Integer;
-  Epsilon: BigDecimal;
 begin
   // Note: the following self-devised algorithm works. I don't yet know if it can be optimized.
   // With "works", I mean that if A := B.Sqrt, then (A*A).RoundToScale(B.Scale) = B.
   Result.Init;
-  LScale := 0;
+  Precision := System.Math.Max(Precision, 2 * Self.Precision);
 
   // Determine a suitable factor to multiply FValue by to get a useful precision
   LMultiplier := RangeCheckedScale(Precision - Self.Precision + 1);
   if Odd(LMultiplier + Self.Scale) then
-    Dec(LMultiplier);
+    Inc(LMultiplier);
 
-  // If the factor > 0, then multiply and use BigInteger.Sqrt and adjust scale accordingly
+  // If the multiplier > 0, then multiply BigInteger by 10^LMultiplier
   if LMultiplier > 0 then
-  begin
-    LValue := BigInteger.Sqrt(Self.FValue * GetPowerOfTen(LMultiplier));
-    LScale := RangeCheckedScale(Self.Scale + LMultiplier) shr 1;
-  end;
+    LValue := Self.FValue * GetPowerOfTen(LMultiplier)
+  else
+    LValue := Self.FValue;
 
   // Using BigInteger.Sqrt should already be pretty close to the desired result.
-  Result.FValue := LValue;
-  Result.FScale := LScale;
-
-  // Determine an epsilon for loop termination.
-  Epsilon := Half * BigDecimal.Create(BigInteger(1), Precision);
-
-  // Newton-Raphson kind of loop to refine the result, until a difference below the determined epsilon is reached.
-  while ((Result * Result - Self).Abs >= Epsilon) and not Result.IsZero do
-    Result := Half * (Result + BigDecimal.Divide(Self, Result, Precision * 2));
+  Result.FValue := BigInteger.Sqrt(LValue);
+  Result.FScale := RangeCheckedScale(Self.Scale + LMultiplier) div 2;
 
   // Round the result and remove any unnecessary trailing zeroes.
-  Result := Result.RoundToScale(RangeCheckedScale(Result.FScale + Precision - Result.Precision), DefaultRoundingMode);
+  Result := Result.RoundToScale(RangeCheckedScale(Result.FScale + Precision div 2 - Result.Precision + 1), DefaultRoundingMode);
   InPlaceRemoveTrailingZeros(Result, System.Math.Min(Self.Scale, Self.Scale div 2));
 end;
 

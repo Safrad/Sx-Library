@@ -164,29 +164,37 @@ unit Velthuis.BigIntegers;
 interface
 
 uses
-  CompilerAndRTLVersions, Velthuis.RandomNumbers, System.Types, System.SysUtils, System.Math;
+  CompilerAndRTLVersions, Velthuis.RandomNumbers, System.SysUtils, System.Math;
 
 // --- User settings ---
 
-// Setting PUREPASCAL forces the use of plain Object Pascal for all routines, i.e. no assembler is used.
+//------------------------------------------------------------------------------------------------------------------//
+// Setting PUREPASCAL forces the use of plain Object Pascal for all routines, i.e. no assembler is used.            //
+//------------------------------------------------------------------------------------------------------------------//
 
   { $DEFINE PUREPASCAL}
 
 
-// Setting RESETSIZE forces the Compact routine to shrink the dynamic array when that makes sense.
-// This can slow down code a little.
+//------------------------------------------------------------------------------------------------------------------//
+// Setting RESETSIZE forces the Compact routine to shrink the dynamic array when that makes sense.                  //
+// This can slow down code a little.                                                                                //
+//------------------------------------------------------------------------------------------------------------------//
 
   { $DEFINE RESETSIZE}
 
 
-// If set, none of the public methods modifies the instance it is called upon.
-// If necessary, a new instance is returned.
+//------------------------------------------------------------------------------------------------------------------//
+// If set, none of the public methods modifies the instance it is called upon.                                      //
+// If necessary, a new instance is returned.                                                                        //
+//------------------------------------------------------------------------------------------------------------------//
 
   {$DEFINE BIGINTEGERIMMUTABLE}
 
 
-// EXPERIMENTAL is set for code that tries something new without deleting the original code yet.
-// Undefine it to get the original code.
+//------------------------------------------------------------------------------------------------------------------//
+// EXPERIMENTAL is set for code that tries something new without deleting the original code yet.                    //
+// Undefine it to get the original code.                                                                            //
+//------------------------------------------------------------------------------------------------------------------//
 
   { $DEFINE EXPERIMENTAL}
 
@@ -1173,9 +1181,10 @@ type
 
     /// <summary>Global numeric base for BigIntegers</summary>
     class property Base: TNumberBase read FBase write SetBase;
+    /// <summary>A pure alias for Base</summary>
+    class property Radix: TNumberBase read FBase write SetBase;
     /// <summary>Global rounding mode used for conversion to floating point</summary>
     class property RoundingMode: TRoundingMode read FRoundingMode write FRoundingMode;
-
     /// <summary>Global flag indicating if partial flag stall is avoided</summary>
     class property StallAvoided: Boolean read FAvoidStall;
   {$ENDREGION}
@@ -1214,7 +1223,6 @@ uses
   Winapi.Windows,
   {$ENDIF}
 {$ENDIF}
-  System.StrUtils,
   Velthuis.Sizes, Velthuis.Numerics, Velthuis.FloatUtils, Velthuis.StrConsts;
 
 {$POINTERMATH ON}
@@ -1355,7 +1363,6 @@ asm
         MOV     [R8+4],EDX
 end;
 {$ENDIF}
-{$ENDREGION}
 
 class procedure BigInteger.DetectPartialFlagsStall;
 var
@@ -1382,6 +1389,7 @@ begin
   until False;
 end;
 {$ENDIF !PUREPASCAL}
+{$ENDREGION}
 
 {$RANGECHECKS OFF}
 {$OVERFLOWCHECKS OFF}
@@ -7461,7 +7469,7 @@ begin
     ecNegativeExponent:
       raise EInvalidArgument.CreateFmt(SNegativeExponent, ErrorInfo);
     ecNegativeRadicand:
-      raise EInvalidArgument.Create(SNegativeRadicand);
+      raise EInvalidArgument.CreateFmt(SNegativeRadicand, ErrorInfo);
   else
     raise EInvalidOp.Create(SInvalidOperation);
   end;
@@ -9652,7 +9660,8 @@ begin
     Exit;
   end;
 
-  LResult.MakeSize((Left.FSize and SizeMask) + (Right.FSize and SizeMask) + 1);
+//$$RV  LResult.MakeSize((Left.FSize and SizeMask) + (Right.FSize and SizeMask) + 1);
+  LResult.MakeSize((Left.FSize and SizeMask) + (Right.FSize and SizeMask) + 256);
   InternalMultiply(PLimb(Left.FData), PLimb(Right.FData), PLimb(LResult.FData), Left.FSize and SizeMask,
     Right.FSize and SizeMask);
   LResult.Compact;
@@ -10037,7 +10046,7 @@ begin
   begin
     if (Left.FSize > 0) then
     begin
-      if @PlainOp = @InternalAnd then
+      if Addr(PlainOp) = Addr(InternalAnd) then
         Result.MakeSize(MinSize)
       else
         Result.MakeSize(MaxSize);
@@ -10054,7 +10063,7 @@ begin
       Result.FSize := 0;
       Result.MakeSize(MaxSize);
       OppositeOp(LPtr, RPtr, PLimb(Result.FData), LSize, RSize); // Opposite op: AND --> OR, OR --> AND, XOR --> XOR
-      if @PlainOp = @InternalXor then
+      if Addr(PlainOp) = Addr(InternalXor) then
         Result.FSize := Result.FSize and SizeMask               // Make positive.
       else
       begin
@@ -10072,13 +10081,13 @@ begin
       CopyLimbs(PLimb(Right.FData), RPtr, RSize);
       InternalDecrement(RPtr, RSize);
       Result.FSize := 0;
-      if @PlainOp = @InternalOr then
+      if Addr(PlainOp) = Addr(InternalOr) then
         Result.MakeSize(RSize)
       else
         Result.MakeSize(MaxSize);
       // Inversion op: AND --> AND NOT, OR --> NOT AND, XOR --> XOR
       InversionOp(PLimb(Left.FData), RPtr, PLimb(Result.FData), LSize, RSize);
-      if @PlainOp = @InternalAnd then
+      if Addr(PlainOp) = Addr(InternalAnd) then
         Result.FSize := Result.FSize and SizeMask               // Make positive.
       else
       begin
@@ -10093,12 +10102,12 @@ begin
       CopyLimbs(PLimb(Left.FData), LPtr, LSize);
       InternalDecrement(LPtr, LSize);
       Result.FSize := 0;
-      if @PlainOp = @InternalOr then
+      if Addr(PlainOp) = Addr(InternalOr) then
         Result.MakeSize(LSize)
       else
         Result.MakeSize(MaxSize);
       InversionOp(PLimb(Right.FData), LPtr, PLimb(Result.FData), RSize, LSize);
-      if @PlainOp = @InternalAnd then
+      if Addr(PlainOp) = Addr(InternalAnd) then
         Result.FSize := Result.FSize and SizeMask
       else
       begin
