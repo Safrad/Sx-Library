@@ -6,10 +6,10 @@ interface
 
 {$if CompilerVersion < 32}
 uses
-  Math,
 {$if CompilerVersion < 16}
-  TypInfo;
+  TypInfo,
 {$endif}
+  Math;
 {$endif}
 
 {$if CompilerVersion < 14}
