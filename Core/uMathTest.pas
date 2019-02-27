@@ -282,9 +282,11 @@ begin
 end;
 
 procedure TMathTest.FactorialTest;
+{$ifndef CPUX64}
 const
   Factorial99: FA =  9.3326215443944152681E155; // 20 digits
   Factorial999: FA = 4.0238726007709377354E2564; // 20 digits
+{$endif}
 begin
   CheckEquals(1, Factorial(0));
   CheckEquals(1, Factorial(1));
@@ -297,11 +299,11 @@ begin
   CheckEquals(2, Gamma(3));
   CheckEquals(6, Gamma(4));
   CheckEquals(24, Gamma(5));
-  if SizeOf(FA) >= 10 then
-  begin
-    CheckTrue(EqualRelative(Gamma(100), Factorial99, 1e-17));
-    CheckTrue(EqualRelative(Gamma(1000), Factorial999, 1e-15));
-  end;
+
+  {$ifndef CPUX64}
+  CheckTrue(EqualRelative(Gamma(100), Factorial99, 1e-17));
+  CheckTrue(EqualRelative(Gamma(1000), Factorial999, 1e-15));
+  {$endif}
 end;
 
 initialization

@@ -17,19 +17,27 @@ type
 
 procedure Increment(var X: F4; const N: F4 = 1); overload;
 procedure Increment(var X: F8; const N: F8 = 1); overload;
+{$ifndef CPUX64}
 procedure Increment(var X: FA; const N: FA = 1); overload;
+{$endif}
 
 procedure Decrement(var X: F4; const N: F4 = 1); overload;
 procedure Decrement(var X: F8; const N: F8 = 1); overload;
+{$ifndef CPUX64}
 procedure Decrement(var X: FA; const N: FA = 1); overload;
+{$endif}
 
 procedure Multiply(var X: F4; const N: F4); overload;
 procedure Multiply(var X: F8; const N: F8); overload;
+{$ifndef CPUX64}
 procedure Multiply(var X: FA; const N: FA); overload;
+{$endif}
 
 procedure Divide(var X: F4; const N: F4); overload;
 procedure Divide(var X: F8; const N: F8); overload;
+{$ifndef CPUX64}
 procedure Divide(var X: FA; const N: FA); overload;
+{$endif}
 
 function Sgn(const I: S1): SG; overload;
 function Sgn(const I: S2): SG; overload;
@@ -37,7 +45,9 @@ function Sgn(const I: S4): SG; overload;
 function Sgn(const I: S8): SG; overload;
 function Sgn(const I: F4): SG; overload;
 function Sgn(const I: F8): SG; overload;
+{$ifndef CPUX64}
 function Sgn(const I: FA): SG; overload;
+{$endif}
 function SgnMul(const Signum, Num: SG): SG; overload;
 function SgnMul(const Signum, Num: FG): FG; overload;
 function AbsMin(const A, B: SG): SG;
@@ -62,24 +72,55 @@ procedure UnsignedDivMod10(const Dividend: U4; out Result: U4; out Reminder: U4)
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: Extended): Extended;
 
-function GetAbsoluteError(const A, B: FA): FA;
-function GetRelativeError(const A, B: FA): FA;
-function EqualRelative(const A, B, MaxRelativeError: FA): BG;
-function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG;
+function GetAbsoluteError(const A, B: FG): FG; overload;
+{$ifndef CPUX64}
+function GetAbsoluteError(const A, B: FA): FA; overload;
+{$endif}
+function GetRelativeError(const A, B: FG): FG; overload;
+{$ifndef CPUX64}
+function GetRelativeError(const A, B: FA): FA; overload;
+{$endif}
+function EqualRelative(const A, B, MaxRelativeError: FG): BG; overload;
+{$ifndef CPUX64}
+function EqualRelative(const A, B, MaxRelativeError: FA): BG; overload;
+{$endif}
+function EqualAbsolute(const A, B, MaxAbsoluteError: FG): BG; overload;
+{$ifndef CPUX64}
+function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG; overload;
+{$endif}
 function Factorial(const AValue: SG): SG;
 function FastSqrt(A: UG): UG;
 function LinearMax(Clock, Maximum: UG): UG;
 procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG); overload;
 procedure Rotate(var X, Y: Double; MaxX, MaxY: Double; Angle: SG); overload;
 
-function RoundN(const X: FA): S8;
+function RoundN(const X: FG): S8; overload;
+{$ifndef CPUX64}
+function RoundN(const X: FA): S8; overload;
+{$endif}
+
 function RoundSG(Value: F4): SG; overload;
 function RoundSG(Value: F8): SG; overload;
+{$ifndef CPUX64}
 function RoundSG(Value: FA): SG; overload;
-function RoundS8(Value: FA): S8;
-function RoundU8(Value: FA): U8;
-function TruncS8(Value: FA): S8;
-function RangeS8(Value: FA): BG;
+{$endif}
+function RoundS8(Value: FG): S8; overload;
+{$ifndef CPUX64}
+function RoundS8(Value: FA): S8; overload;
+{$endif}
+function RoundU8(Value: FG): U8; overload;
+{$ifndef CPUX64}
+function RoundU8(Value: FA): U8; overload;
+{$endif}
+function TruncS8(Value: FG): S8; overload;
+{$ifndef CPUX64}
+function TruncS8(Value: FA): S8; overload;
+{$endif}
+function RangeS8(Value: FG): BG; overload;
+{$ifndef CPUX64}
+function RangeS8(Value: FA): BG; overload;
+{$endif}
+
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG; //overload;
 function RoundDivU8(const Dividend: U8; const Divisor: U8): U8; //overload;
 function RoundDivS8(const Dividend: S8; const Divisor: S8): S8; //overload;
@@ -97,7 +138,9 @@ function IsInRange(const Min, Cur, Max: S8): BG; overload;
 function IsInRange(const Min, Cur, Max: U8): BG; overload;
 function IsInRange(const Min, Cur, Max: F4): BG; overload;
 function IsInRange(const Min, Cur, Max: F8): BG; overload;
+{$ifndef CPUX64}
 function IsInRange(const Min, Cur, Max: FA): BG; overload;
+{$endif}
 
 function Range(const Min, Cur, Max: SG): SG; overload;
 function Range(const Min, Cur, Max, Def: SG): SG; overload;
@@ -120,7 +163,9 @@ procedure Exchange(var A, B: NativeUInt); register; overload;
 {$ifend}
 procedure Exchange(var A, B: F4); register; overload;
 procedure Exchange(var A, B: F8); register; overload;
+{$ifndef CPUX64}
 procedure Exchange(var A, B: FA); register; overload;
+{$endif}
 procedure Exchange(var A, B: Pointer); register; overload;
 procedure Exchange(var P0, P1; Count: UG); register; overload;
 procedure Exchange(P0, P1: Pointer; Count: UG); register; overload;
@@ -201,10 +246,12 @@ begin
   X := X + N;
 end;
 
+{$ifndef CPUX64}
 procedure Increment(var X: FA; const N: FA = 1); overload;
 begin
   X := X + N;
 end;
+{$endif}
 
 procedure Decrement(var X: F4; const N: F4 = 1); overload;
 begin
@@ -216,10 +263,12 @@ begin
   X := X - N;
 end;
 
+{$ifndef CPUX64}
 procedure Decrement(var X: FA; const N: FA = 1); overload;
 begin
   X := X - N;
 end;
+{$endif}
 
 procedure Multiply(var X: F4; const N: F4); overload;
 begin
@@ -231,10 +280,12 @@ begin
   X := X * N;
 end;
 
+{$ifndef CPUX64}
 procedure Multiply(var X: FA; const N: FA); overload;
 begin
   X := X * N;
 end;
+{$endif}
 
 procedure Divide(var X: F4; const N: F4); overload;
 begin
@@ -246,10 +297,12 @@ begin
   X := X / N;
 end;
 
+{$ifndef CPUX64}
 procedure Divide(var X: FA; const N: FA); overload;
 begin
   X := X / N;
 end;
+{$endif}
 
 function Sgn(const I: S1): SG;
 begin
@@ -311,6 +364,7 @@ begin
 		Result := -1;
 end;
 
+{$ifndef CPUX64}
 function Sgn(const I: FA): SG;
 begin
 	if I = 0 then
@@ -320,6 +374,7 @@ begin
 	else
 		Result := -1;
 end;
+{$endif}
 
 function SgnMul(const Signum, Num: SG): SG; overload;
 begin
@@ -534,15 +589,22 @@ end;
 
 function ModE(x, y: Extended): Extended;
 begin
-	Result := x - {Trunc}Floor(x / y) * y;
+	Result := x - Floor(x / y) * y;
 end;
 
-function GetAbsoluteError(const A, B: FA): FA;
+function GetAbsoluteError(const A, B: FG): FG;
 begin
   Result := Abs(A - B);
 end;
 
-function GetRelativeError(const A, B: FA): FA;
+{$ifndef CPUX64}
+function GetAbsoluteError(const A, B: FA): FA;
+begin
+  Result := Abs(A - B);
+end;
+{$endif}
+
+function GetRelativeError(const A, B: FG): FG;
 begin
   if Abs(B) > Abs(A) then
     Result := Abs((A - B) / B)
@@ -550,6 +612,25 @@ begin
     Result := Abs((A - B) / A);
 end;
 
+{$ifndef CPUX64}
+function GetRelativeError(const A, B: FA): FA;
+begin
+  if Abs(B) > Abs(A) then
+    Result := Abs((A - B) / B)
+  else
+    Result := Abs((A - B) / A);
+end;
+{$endif}
+
+function EqualRelative(const A, B, MaxRelativeError: FG): BG;
+var
+  RelativeError: FG;
+begin
+  RelativeError := GetRelativeError(A, B);
+  Result := RelativeError <= MaxRelativeError;
+end;
+
+{$ifndef CPUX64}
 function EqualRelative(const A, B, MaxRelativeError: FA): BG;
 var
   RelativeError: FA;
@@ -557,7 +638,17 @@ begin
   RelativeError := GetRelativeError(A, B);
   Result := RelativeError <= MaxRelativeError;
 end;
+{$endif}
 
+function EqualAbsolute(const A, B, MaxAbsoluteError: FG): BG;
+var
+  AbsoluteError: FG;
+begin
+  AbsoluteError := GetAbsoluteError(A, B);
+  Result := AbsoluteError <= MaxAbsoluteError;
+end;
+
+{$ifndef CPUX64}
 function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG;
 var
   AbsoluteError: FA;
@@ -565,6 +656,7 @@ begin
   AbsoluteError := GetAbsoluteError(A, B);
   Result := AbsoluteError <= MaxAbsoluteError;
 end;
+{$endif}
 
 function Factorial(const AValue: SG): SG; overload;
 const
@@ -662,6 +754,24 @@ begin
 	end;
 end;
 
+function RoundN(const X: FG): S8;
+// Rounds a number "normally": if the fractional
+// part is >= 0.5 the number is rounded up (see RoundUp)
+// Otherwise, if the fractional part is < 0.5, the
+// number is rounded down (see RoundDn).
+//   RoundN(3.5) = 4     RoundN(-3.5) = -4
+//   RoundN(3.1) = 3     RoundN(-3.1) = -3
+begin
+(*
+  if Abs(Frac(X)) >= 0.5 then
+    Result := RoundUp(X)
+  else
+    Result := RoundDn(X);
+*)
+	Result := Trunc(X) + Trunc(Frac(X) * 2);
+end;
+
+{$ifndef CPUX64}
 function RoundN(const X: FA): S8;
 // Rounds a number "normally": if the fractional
 // part is >= 0.5 the number is rounded up (see RoundUp)
@@ -678,6 +788,7 @@ begin
 *)
 	Result := Trunc(X) + Trunc(Frac(X) * 2);
 end;
+{$endif}
 
 function RoundSG(Value: F4): SG;
 begin
@@ -699,6 +810,7 @@ begin
 		Result := RoundN(Value);
 end;
 
+{$ifndef CPUX64}
 function RoundSG(Value: FA): SG;
 begin
 	if Value > MaxInt then
@@ -708,8 +820,9 @@ begin
 	else
 		Result := RoundN(Value);
 end;
+{$endif}
 
-function RoundS8(Value: FA): S8;
+function RoundS8(Value: FG): S8;
 begin
 	if Value > High(Result) then
 		Result := High(Result)
@@ -719,7 +832,19 @@ begin
 		Result := RoundN(Value);
 end;
 
-function RoundU8(Value: FA): U8;
+{$ifndef CPUX64}
+function RoundS8(Value: FA): S8;
+begin
+	if Value > High(Result) then
+		Result := High(Result)
+	else if Value < Low(Result) then
+		Result := Low(Result)
+	else
+		Result := RoundN(Value);
+end;
+{$endif}
+
+function RoundU8(Value: FG): U8;
 begin
 	if Value > MaxU8 then
 		Result := MaxU8
@@ -729,7 +854,19 @@ begin
 		Result := Trunc(Value) + Trunc(Frac(Value) * 2);
 end;
 
-function TruncS8(Value: FA): S8;
+{$ifndef CPUX64}
+function RoundU8(Value: FA): U8;
+begin
+	if Value > MaxU8 then
+		Result := MaxU8
+	else if Value < MinU8 then
+		Result := MinU8
+	else
+		Result := Trunc(Value) + Trunc(Frac(Value) * 2);
+end;
+{$endif}
+
+function TruncS8(Value: FG): S8;
 begin
 	if Value > High(Result) then
 		Result := High(Result)
@@ -739,6 +876,29 @@ begin
 		Result := Trunc(Value);
 end;
 
+{$ifndef CPUX64}
+function TruncS8(Value: FA): S8;
+begin
+	if Value > High(Result) then
+		Result := High(Result)
+	else if Value < Low(Result) then
+		Result := Low(Result)
+	else
+		Result := Trunc(Value);
+end;
+{$endif}
+
+function RangeS8(Value: FG): BG;
+begin
+	if Value >= High(S8) then
+		Result := False
+	else if Value <= Low(S8) then
+		Result := False
+	else
+		Result := True;
+end;
+
+{$ifndef CPUX64}
 function RangeS8(Value: FA): BG;
 begin
 	if Value >= High(S8) then
@@ -748,6 +908,7 @@ begin
 	else
 		Result := True;
 end;
+{$endif}
 
 function RoundDiv(const Dividend: SG; const Divisor: SG): SG;
 // 0 div 4 is 0
@@ -906,10 +1067,12 @@ begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
 
+{$ifndef CPUX64}
 function IsInRange(const Min, Cur, Max: FA): BG;
 begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
+{$endif}
 
 function Range(const Min, Cur, Max: SG): SG;
 begin
@@ -1143,6 +1306,7 @@ begin
 	B := C;
 end;
 
+{$ifndef CPUX64}
 procedure Exchange(var A, B: FA);
 var C: FA;
 begin
@@ -1150,6 +1314,7 @@ begin
 	A := B;
 	B := C;
 end;
+{$endif}
 
 procedure Exchange(var P0, P1; Count: UG); register;
 asm
@@ -1263,7 +1428,8 @@ begin
 		Result := pi / 2 - ArcTan(X / Y);
 	end;}
 	Result := ArcTan2(Y, X);
-	if Result < 0 then Result := 2 * pi - Abs(Result);
+	if Result < 0 then
+    Result := 2 * pi - Abs(Result);
 end;
 
 procedure CheckBool(var Bool: B1);
