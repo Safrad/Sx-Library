@@ -145,8 +145,8 @@ type
 
 		function GetPosX(X: SG): SG;
 		function GetPosY(Y: SG): SG;
-		function GetPoint(const X, Y: FA): TPoint;
-		function GetFloPoint(const X, Y: FA): TFloPoint; overload;
+		function GetPoint(const X, Y: FG): TPoint;
+		function GetFloPoint(const X, Y: FG): TFloPoint; overload;
 		function GetFloPoint(const P: TFloPoint): TFloPoint; overload;
 
 		function OfsX: SG;
@@ -256,6 +256,8 @@ implementation
 
 uses
 	Math, ClipBrd,
+  Velthuis.BigDecimals,
+  uBigDecimalHelper,
 	uGraph, uStrings, uGetInt, uGColor, uOutputFormat, uMsg, uColor, uMenus, uDrawStyle, uDictionary,
 	uLog, uRect,
 	Types;
@@ -326,9 +328,9 @@ const
 var
 	Slf: TDImage;
 
-procedure OnApplyNum(Value: S8);
+procedure OnApplyNum(Value: BigDecimal);
 begin
-	Slf.ChangeZoom(Value / 1000);
+	Slf.ChangeZoom(Value.ToDouble);
 	Slf.Invalidate;
 end;
 
@@ -1212,13 +1214,13 @@ begin
 	Result.Y := (P.Y + FOfsY) / ActualZoom + UserArea.Top;
 end;
 
-function TDImage.GetPoint(const X, Y: FA): TPoint;
+function TDImage.GetPoint(const X, Y: FG): TPoint;
 begin
 	Result.X := RoundN(ActualZoom * (X - UserArea.Left) - FOfsX) + CenterOffset.X;
 	Result.Y := RoundN(ActualZoom * (Y - UserArea.Top) - FOfsY) + CenterOffset.Y;
 end;
 
-function TDImage.GetFloPoint(const X, Y: FA): TFloPoint;
+function TDImage.GetFloPoint(const X, Y: FG): TFloPoint;
 begin
 	Result.X := ActualZoom * (X - UserArea.Left) - FOfsX + CenterOffset.X;
 	Result.Y := ActualZoom * (Y - UserArea.Top)- FOfsY + CenterOffset.Y;
@@ -1242,8 +1244,8 @@ end;
 
 procedure TDImage.FillUserBitmap;
 var
-	ActualZoomX, ActualZoomY: FA;
-	e: FA;
+	ActualZoomX, ActualZoomY: FG;
+	e: FG;
 	i: SG;
 begin
 	if (UserBitmap <> nil) and (BmpS <> nil) then
@@ -1662,6 +1664,8 @@ procedure TDImage.SetZoom(Value: TZoom);
 begin
 	if TargetZoom <> Value then
 	begin
+    if Value = 0 then
+      Value := 1;
 		TargetZoom := Value;
 		ActualZoom := Value;
 		InitScrolls;
@@ -1842,7 +1846,7 @@ end;
 procedure TDImage.Serialize(const IniFile: TDIniFile; const Save: BG);
 var
 	Section: string;
-	XZoom: FA;
+	XZoom: FG;
 begin
 	Section := GetSectionName(Self);
 
