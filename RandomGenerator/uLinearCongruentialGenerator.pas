@@ -35,13 +35,14 @@ type
 implementation
 
 uses
-  uMath;
+  uMath,
+  uMainTimer;
 
 { TLinearCongruentialGenerator }
 
 procedure TLinearCongruentialGenerator.Randomize;
 begin
-  FSeed := PerformanceCounter;
+  FSeed := MainTimer.Value.Ticks;
 end;
 
 function TLinearCongruentialGenerator.RandomU4: U4;
