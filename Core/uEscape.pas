@@ -166,7 +166,6 @@ begin
 				Result := Result + s[i];
 		Inc(i);
 	end;
-
 end;
 
 function AddEscape(const s: string; const KeepCharser: BG = True): string;
@@ -202,16 +201,12 @@ begin
 				if Ord(s[i]) <= $ff then
 				begin
 				{$endif}
-					NumericBase := 8;
-					Result := Result + '\' + NToS(Ord(s[i]), '000');
-					NumericBase := 10;
+					Result := Result + '\' + U1ToOctalString(U1(Ord(s[i])));
 				{$ifdef UNICODE}
 				end
 				else
 				begin
-					NumericBase := 16;
-					Result := Result + '\u' + NToS(Ord(s[i]), '0000');
-					NumericBase := 10;
+					Result := Result + '\u' + IntToHex(U2(Ord(s[i])));
 				end;
 				{$endif}
 			end;
