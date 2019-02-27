@@ -10,15 +10,15 @@ type
 	TNumericComboBox = class(TComboBox)
 	private
 		{ Private declarations }
-		FMinimum: Extended;
-		FMaximum: Extended;
-		FDefault: Extended;
-		FValue: Extended;
+		FMinimum: FGetS8;
+		FMaximum: FGetS8;
+		FDefault: FGetS8;
+		FValue: FGetS8;
 		FValueUpdated: BG;
-		function GetValue: Extended;
-		procedure SetMinimum(const Value: Extended);
-		procedure SetDefault(const Value: Extended);
-		procedure SetMaximum(const Value: Extended);
+		function GetValue: FGetS8;
+		procedure SetMinimum(const Value: FGetS8);
+		procedure SetDefault(const Value: FGetS8);
+		procedure SetMaximum(const Value: FGetS8);
 	protected
 		procedure Change; override;
 	public
@@ -27,10 +27,10 @@ type
 		function RoundedValue: SG;
 	published
 		{ Published declarations }
-		property Miminum: Extended read FMinimum write SetMinimum;
-		property Maximum: Extended read FMaximum write SetMaximum;
-		property Default: Extended read FDefault write SetDefault;
-		property Value: Extended read GetValue;
+		property Miminum: FGetS8 read FMinimum write SetMinimum;
+		property Maximum: FGetS8 read FMaximum write SetMaximum;
+		property Default: FGetS8 read FDefault write SetDefault;
+		property Value: FGetS8 read GetValue;
 	end;
 
 implementation
@@ -62,7 +62,7 @@ begin
 //	Change;
 end;
 
-function TNumericComboBox.GetValue: Extended;
+function TNumericComboBox.GetValue: FGetS8;
 begin
 	if FValueUpdated = False then
 		Change;
@@ -74,19 +74,19 @@ begin
 	Result := RoundSG(GetValue);
 end;
 
-procedure TNumericComboBox.SetDefault(const Value: Extended);
+procedure TNumericComboBox.SetDefault(const Value: FGetS8);
 begin
 	FDefault := Value;
 	Change;
 end;
 
-procedure TNumericComboBox.SetMaximum(const Value: Extended);
+procedure TNumericComboBox.SetMaximum(const Value: FGetS8);
 begin
 	FMaximum := Value;
 	Change;
 end;
 
-procedure TNumericComboBox.SetMinimum(const Value: Extended);
+procedure TNumericComboBox.SetMinimum(const Value: FGetS8);
 begin
 	FMinimum := Value;
 	Change;
