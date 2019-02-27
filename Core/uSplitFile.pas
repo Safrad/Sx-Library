@@ -24,16 +24,10 @@ procedure WriteCRCFile(const FileName: string; const FileSize: U8; const CRC32: 
 var
 	Data: string;
 begin
-	NumericBase := 16;
-	try
-		Data := 'crc32=' + NToS(CRC32, '00000000') + FileSep;
-	finally
-		NumericBase := 10;
-	end;
-
-	Data := 'filename=' + FileName + FileSep +
+	Data :=
+    'filename=' + FileName + FileSep +
 		'size=' + IntToStr(FileSize) + FileSep +
-		Data;
+		'crc32=' + IntToHex(CRC32) + FileSep;
 	WriteStringToFile(TargetFileName, Data, False, fcAnsi);
 end;
 
@@ -56,7 +50,7 @@ begin
 		CopyFileToDir(Source, Dest, True);
 		Exit;
 	end; *)
-	Assert((MaxFileSize >= 1));
+	Assert(MaxFileSize >= 1);
 
 	FileNamePrefix := Dest + DelFileExt(ExtractFileName(Source));
 	SourceFile := TFile.Create;
