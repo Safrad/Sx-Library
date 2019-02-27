@@ -16,7 +16,7 @@ const
   Amplitude = Amplitude24; // Used apmlitude
 
 type
-  TSampleRate = S4;
+  TSampleRate = U4;
 
   TSoundItem = class(TInterfacedObject, ISoundItem)
   private
