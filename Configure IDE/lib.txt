@@ -1,6 +1,7 @@
 -$(sx-library)
 $(sx-library)\ExtLib
 $(sx-library)\ExtLib\7z
+$(sx-library)\ExtLib\DelphiBigNumbers
 $(sx-library)\ExtLib\CoolTrayIcon
 $(sx-library)\ExtLib\DCPCrypt
 $(sx-library)\ExtLib\DCPCrypt\Ciphers
