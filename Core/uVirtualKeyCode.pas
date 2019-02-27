@@ -10,7 +10,7 @@ function VirtualKeyCodeToText(const AVirtualKeyCode: U2): string;
 function VirtualKeyCodeToUnicodeSymbol(const AVirtualKeyCode: U2): string;
 {$endif}
 
-// if available KeyToUnicodeSymbol is used otherwise KeyToText is used
+// if available unicode symbol is used otherwise text is used
 function VirtualKeyCodeToString(const AVirtualKeyCode: U2): string;
 
 implementation
@@ -27,7 +27,7 @@ const
   scCtrl = $4000;
   scAlt = $8000;
 
-function VirtualKeyCodeToText(const AVirtualKeyCode: U2): string;
+function SingleKeyToText(const AVirtualKeyCode: U2): string;
 const
   KeyCodeToString: array[U1] of string = (
     '', // 0
@@ -292,8 +292,11 @@ begin
 
 	if (Result = '') and (AVirtualKeyCode <> 0) then
     Result := 'Virtual key code: ' + '0x' + IntToHex(AVirtualKeyCode and $ff, 2);
+end;
 
-  // Prefix
+function ShiftControlToText(const AVirtualKeyCode: U2): string;
+begin
+  Result := '';
 	if AVirtualKeyCode and scCommand <> 0 then
     Result := 'Cmd' + '+' + Result;
 	if AVirtualKeyCode and scAlt <> 0 then
@@ -304,8 +307,15 @@ begin
     Result := 'Shift' + '+' + Result;
 end;
 
+function VirtualKeyCodeToText(const AVirtualKeyCode: U2): string;
+begin
+  Result :=
+    ShiftControlToText(AVirtualKeyCode) +
+    SingleKeyToText(AVirtualKeyCode);
+end;
+
 {$ifdef Unicode}
-function VirtualKeyCodeToUnicodeSymbol(const AVirtualKeyCode: U2): string;
+function SingleKeyToUnicodeSymbol(const AVirtualKeyCode: U2): string;
 begin
   case AVirtualKeyCode and $ff of
   VK_TAB: Result := TUnicodeChar.TabKey;
@@ -353,33 +363,55 @@ begin
   VK_BROWSER_FAVORITES: Result := TUnicodeChar.Favorites;
 
   VK_CAPITAL: Result := TUnicodeChar.CapsLockKey;
-
   else
-    Result := '';
+    Result := SingleKeyToText(AVirtualKeyCode);
   end;
+end;
 
-  if Result <> '' then
-  begin
-    // Prefix
-  	if AVirtualKeyCode and scCommand <> 0 then
-      Result := TUnicodeChar.WindowsLogoKey + '+' + Result;
-    if AVirtualKeyCode and scAlt <> 0 then
-      Result := TUnicodeChar.MenuKey + '+' + Result;
-    if AVirtualKeyCode and scCtrl <> 0 then
-      Result := TUnicodeChar.ControlKey + '+' + Result;
-    if AVirtualKeyCode and scShift <> 0 then
-      Result := TUnicodeChar.ShiftKey + '+' + Result;
-  end;
+function ShiftControlToUnicodeSymbol(const AVirtualKeyCode: U2): string;
+begin
+  Result := '';
+  if AVirtualKeyCode and scCommand <> 0 then
+    Result := TUnicodeChar.WindowsLogoKey + '+' + Result;
+  if AVirtualKeyCode and scAlt <> 0 then
+    Result := TUnicodeChar.MenuKey + '+' + Result;
+  if AVirtualKeyCode and scCtrl <> 0 then
+    Result := TUnicodeChar.ControlKey + '+' + Result;
+  if AVirtualKeyCode and scShift <> 0 then
+    Result := TUnicodeChar.ShiftKey + '+' + Result;
+end;
+
+function VirtualKeyCodeToUnicodeSymbol(const AVirtualKeyCode: U2): string;
+begin
+  Result :=
+    ShiftControlToUnicodeSymbol(AVirtualKeyCode) +
+    SingleKeyToUnicodeSymbol(AVirtualKeyCode);
 end;
 {$endif}
 
-function VirtualKeyCodeToString(const AVirtualKeyCode: U2): string;
+function SingleKeyToString(const AVirtualKeyCode: U2): string;
 begin
   {$ifdef Unicode}
-  Result := VirtualKeyCodeToUnicodeSymbol(AVirtualKeyCode);
-  if Result = '' then
+  Result := SingleKeyToUnicodeSymbol(AVirtualKeyCode);
+  {$else}
+  Result := SingleKeyToText(AVirtualKeyCode);
   {$endif}
-    Result := VirtualKeyCodeToText(AVirtualKeyCode)
+end;
+
+function ShiftControlToString(const AVirtualKeyCode: U2): string;
+begin
+  {$ifdef Unicode}
+  Result := ShiftControlToText(AVirtualKeyCode); // Prefer text, not symbol
+  {$else}
+  Result := ShiftControlToText(AVirtualKeyCode);
+  {$endif}
+end;
+
+function VirtualKeyCodeToString(const AVirtualKeyCode: U2): string;
+begin
+  Result :=
+    ShiftControlToString(AVirtualKeyCode) +
+    SingleKeyToString(AVirtualKeyCode);
 end;
 
 end.
