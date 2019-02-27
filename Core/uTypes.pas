@@ -206,10 +206,10 @@ type
 	F4 = Single;
 //	F6 = Real48;
 	F8 = Double;
-{$ifdef CPUX64}
-  FA = Extended; // same as Double for 64 bit
-{$else}
+{$ifndef CPUX64}
   FA = Extended;
+{$else}
+  Extended = Double deprecated; // same as Double for 64 bit
 {$endif}
   FG = F8;
 
@@ -239,13 +239,13 @@ type
 
 	PFloPoint = ^TFloPoint;
 	TFloPoint = packed record
-		X, Y: Double;
+		X, Y: F8;
 	end;
 
 	PFloRect = ^TFloRect;
 	TFloRect = packed record
 		case Integer of
-			0: (Left, Top, Right, Bottom: Double);
+			0: (Left, Top, Right, Bottom: F8);
 			1: (TopLeft, BottomRight: TFloPoint);
 	end;
 
@@ -293,8 +293,10 @@ type
 	PArrayF4 = ^TArrayF4;
 	TArrayF8 = array[0..256 * MB - 2] of F8;
 	PArrayF8 = ^TArrayF8;
+{$ifndef CPUX64}
 	TArrayFA = array[0..128 * MB - 2] of FA;
 	PArrayFA = ^TArrayFA;
+{$endif}
 
 	TArrayChar = array[0..512 * MB - 1] of Char;
 	PArrayChar = ^TArrayChar;
