@@ -108,12 +108,7 @@ begin
 				begin
 					if LenOfValue = 4 then
 					begin
-						NumericBase := 16;
-						try
-							Id := NToS(SG(ValueA[1]), '00') + NToS(SG(ValueA[0]), '00') + NToS(SG(ValueA[3]), '00') + NToS(SG(ValueA[2]), '00');
-						finally
-							NumericBase := 10;
-						end;
+  					Id := IntToHex(U1(ValueA[1])) + IntToHex(U1(ValueA[0])) + IntToHex(U1(ValueA[3])) + IntToHex(U1(ValueA[2]));
 					end;
 				end;
 				for i := Low(TProjectInfoName) to High(TProjectInfoName) do
