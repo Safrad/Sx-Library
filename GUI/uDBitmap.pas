@@ -17,13 +17,12 @@ const
 	PixelOffsetMode = PixelOffsetModeHighQuality;
 	{$endif}
 	IconExt = '.png'; // Preferred graphic format
-	PictureTypeCount = 10;
+	PictureTypeCount = 9;
 	AllPictureExt: array[0..PictureTypeCount - 1] of string = (
 		'bmp', // Uncompresssed, doesn't support transparency
 		'jpg', 'jpeg', 'jfif', // Losing compresssion, doesn't support transparency
 		'gif', // Compresssed, doesn't support truecolor
 		'png', // Compresssed
-		'ppm', // Uncompresssed
 		'tga', // Uncompresssed
 		'tif', 'tiff');
 		//'rle'
@@ -35,7 +34,6 @@ const
 		'JFIF Compilant',
 		{CompuServe}'Graphics Interchange Format',
 		'Portable Network Graphics',
-		'Portable Pixelmap',
 		'Truevision Targa Graphic',
 		'Tag Image File Format',
 		'Tag Image File Format');
@@ -409,7 +407,7 @@ var
 implementation
 
 uses
-	Jpeg, GifImage, PngImage, PPMImage, TGAImage,
+	Jpeg, GifImage, PngImage, TGAImage,
 	{$ifdef GDIPlus}
 	GraphicEx,
 	{$endif}
@@ -2055,7 +2053,6 @@ var
 	MyJPEG: TJPEGImage;
 	MyGif: TGifImage;
 	MyPng: TPngImage;
-	MyPpm: TPpmImage;
 	MyTga: TTgaImage;
 	{$ifdef GDIPlus}
 	MyTIFF: TTIFFGraphic;
@@ -2114,19 +2111,6 @@ begin
 			Transparent := MyPng.Transparent;
 		finally
 			MyPng.Free;
-		end;
-	end
-	else if Ext = 'ppm' then
-	begin
-		MyPpm := TPpmImage.Create;
-		try
-			MyPpm.LoadFromStream(Stream);
-			FromBitmap(MyPpm);
-{			SetSize(MyPpm.Width, MyPpm.Height);
-			Assign(MyPpm);}
-//			Init;
-		finally
-			MyPpm.Free;
 		end;
 	end
 	else if Ext = 'tga' then
@@ -2266,7 +2250,6 @@ var
 	MyGif: TGifImage;
 	MyPng: TPngImage;
 	MyBmp: TBitmap;
-	MyPpm: TPpmImage;
 	MyTga: TTgaImage;
 	Stream: TMemoryStream;
 	Ext: string;
@@ -2404,24 +2387,6 @@ begin
 			end;
 		finally
 			MyPng.Free;
-		end;
-	end
-	else if Ext = 'ppm' then
-	begin
-		MyPpm := TPpmImage.Create;
-		try
-			MyPpm.Assign(Self);
-			try
-				Stream := TMemoryStream.Create;
-				MyPpm.SaveToStream(Stream);
-				Result := WriteStreamToFile(FileName, Stream);
-				Stream.Free;
-			except
-				on E: Exception do
-					Fatal(E, Self);
-			end;
-		finally
-			MyPpm.Free;
 		end;
 	end
 	else if Ext = 'tga' then
