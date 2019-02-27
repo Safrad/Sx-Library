@@ -629,7 +629,8 @@ begin
 	vsDirectory:
 		Result := SelectFolder(P.Str, Title);
 	vsTime:
-		Result := GetTime(Title, U4(P.Num), O.Minimum, O.Default, O.Maximum, nil);
+    Result := False;
+//		Result := GetTime(Title, U4(P.Num), O.Minimum, O.Default, O.Maximum, nil); TODO
 	vsColor:
 		Result := GetColor(Title, TColor(P.Num), O.Default, nil);
 	vsButton:
@@ -864,7 +865,7 @@ begin
           end;
         end;
 				vsTime:
-					n := StrToMs(TDEdit(C).Text, O.Minimum, O.Default, O.Maximum, True, ParserMessages);
+//					n := StrToMs(TDEdit(C).Text, O.Minimum, O.Default, O.Maximum, True, ParserMessages); TODO
 				end;
 				SetControlDesign(TDEdit(C), ParserMessages.Count > 0);
 				TDEdit(C).Hint := ParserMessages.ToString;
