@@ -125,7 +125,7 @@ end;
 constructor TExternalApp.Create(AOwner: TComponent); 
 begin 
   inherited Create(AOwner); 
-  fCurrentDirectory := ExtractFilePath(Application.ExeName); 
+  fCurrentDirectory := ExtractFilePath(Application.ExeName);
   fRunning := false; 
   fStdInAvailable := false; 
   fStdOutAvailable := false; 
@@ -142,9 +142,9 @@ begin
 	begin
 		fInvokerThread.Terminate;
 		fInvokerThread.WaitFor;
-		fInvokerThread.Free;
 	end;
-  fStdIn.Free; 
+	fInvokerThread.Free;
+  fStdIn.Free;
   fStdOut.Free; 
   fStdErr.Free; 
   inherited; 
@@ -198,7 +198,6 @@ begin
 
 //	fRunning := true;
 	fInvokerThread := TExternalAppThread.Create(self);
-  fInvokerThread.FreeOnTerminate := True;
 	fInvokerThread.fOnEventBreak := fOnEventBreak; 
 end; 
 
@@ -269,7 +268,7 @@ begin
 		_sa := nil;
 	end;
 
-  if fExternalApp.fModuleName <> '' then 
+  if fExternalApp.fModuleName <> '' then
     _pmodulename := pchar(fExternalApp.fModuleName) 
   else 
     _pmodulename := nil; 
@@ -296,10 +295,10 @@ begin
 		exit;
 	end;
 
-  if IsConsole then
-    SetRunning
-  else
-  	Synchronize(SetRunning); // Do not work in console
+//  if IsConsole then
+    SetRunning;
+//  else
+//  	Synchronize(SetRunning); // Do not work in console
 
 	while WaitForSingleObject(fExternalApp.fProcessInformation.hProcess, 40) = WAIT_TIMEOUT do
 	begin
@@ -311,10 +310,10 @@ begin
 			Synchronize(SynchronizedEventBreak);}
 	end;
 
-  if IsConsole then
-    SetNotRunning
-  else
-  	Synchronize(SetNotRunning);
+//  if IsConsole then
+    SetNotRunning;
+//  else
+//  	Synchronize(SetNotRunning);
 end;
 
 procedure TExternalAppThread.SetNotRunning;
