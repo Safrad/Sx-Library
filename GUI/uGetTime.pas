@@ -3,12 +3,14 @@ unit uGetTime;
 interface
 
 uses
-	uTypes, uParserMsg,
+	uTypes,
+  uParserMsg,
+  uTimeSpan,
 	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit, uDMemo;
 
 type
-	TOnApplyTime = procedure(Value: S8);
+	TOnApplyTime = procedure(Value: TTimeSpan);
 
 	TfGetTime = class(TDForm)
 		TrackBarH: TTrackBar;
@@ -46,12 +48,12 @@ type
 		procedure ButtonOkClick(Sender: TObject);
 		procedure ButtonCancelClick(Sender: TObject);
 		procedure SpinButtonHMSDChangingEx(Sender: TObject;
-			var AllowChange: Boolean; NewValue: Smallint;
+			var AllowChange: Boolean; NewValue: Integer;
 			Direction: TUpDownDirection);
 	private
 		{ Private declarations }
 		Messages: TParserMessages;
-		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: S8;
+		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: TTimeSpan;
 		OnApply: TOnApplyTime;
 		procedure ChangeTime;
 		procedure InitButtons;
@@ -64,42 +66,20 @@ type
 	end;
 
 function GetTime(const Prompt: string;
-	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyTime: TOnApplyTime): Boolean;
-function GetTimeS4(const Prompt: string;
-	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyTime: TOnApplyTime): Boolean;
-function GetTimeS8(const Prompt: string;
-	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyTime: TOnApplyTime): Boolean;
+	var CurVal: TTimeSpan; const MinVal, DefVal, MaxVal: TTimeSpan; OnApplyTime: TOnApplyTime): Boolean;
 
 implementation
 
 {$R *.DFM}
 uses
 	Math,
-	uStrings, uInputFormat, uDParser, uOutputFormat, uLayout, uDictionary;
+	uStrings, uInputFormat, uOutputFormat, uLayout, uDictionary;
 
 var
 	fGetTime: TfGetTime;
 
 function GetTime(const Prompt: string;
-	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyTime: TOnApplyTime): Boolean;
-var C: S8;
-begin
-	C := CurVal;
-	Result := GetTimeS8(Prompt, C, MinVal, DefVal, MaxVal, OnApplyTime);
-	CurVal := C;
-end;
-
-function GetTimeS4(const Prompt: string;
-	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyTime: TOnApplyTime): Boolean;
-var C: S8;
-begin
-	C := CurVal;
-	Result := GetTimeS8(Prompt, C, MinVal, DefVal, MaxVal, OnApplyTime);
-	CurVal := C;
-end;
-
-function GetTimeS8(const Prompt: string;
-	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyTime: TOnApplyTime): Boolean;
+	var CurVal: TTimeSpan; const MinVal, DefVal, MaxVal: TTimeSpan; OnApplyTime: TOnApplyTime): Boolean;
 begin
 {	Assert(not ((MinVal > MaxVal) or (DefVal < MinVal) or (DefVal > MaxVal)
 		or (CurVal < MinVal) or (CurVal > MaxVal)));}
@@ -117,17 +97,18 @@ begin
 		TCurVal := CurVal;
 		TDefVal := DefVal;
 		TMaxVal := MaxVal;
-		if TMaxVal < TMinVal then TMaxVal := TMinVal;
-		if TCurVal < TMinVal then
-			TCurVal := TMinVal
-		else if TCurVal > TMaxVal then
-			TCurVal := TMaxVal;
+		if TMaxVal.Ticks < TMinVal.Ticks then
+      TMaxVal.Ticks := TMinVal.Ticks;
+		if TCurVal.Ticks < TMinVal.Ticks then
+			TCurVal.Ticks := TMinVal.Ticks
+		else if TCurVal.Ticks > TMaxVal.Ticks then
+			TCurVal.Ticks := TMaxVal.Ticks;
 		NowVal := TCurVal;
 		Caption := Translate(RemoveSingleAmp(Prompt));
 	// H
 		TrackBarH.OnChange := nil;
-		TrackBarH.Min := TMinVal div Hour;
-		TrackBarH.Max := TMaxVal div Hour;
+		TrackBarH.Min := Trunc(TMinVal.Hours);
+		TrackBarH.Max := Trunc(TMaxVal.Hours);
 		if TrackBarH.Max - TrackBarH.Min > 112 then
 			TrackBarH.TickStyle := tsNone
 		else
@@ -135,10 +116,10 @@ begin
 		TrackBarH.OnChange := TrackBarHMSDChange;
 	// M
 		TrackBarM.OnChange := nil;
-		if TMaxVal < Hour then
+		if TMaxVal.Hours < 1 then
 		begin
-			TrackBarM.Min := TMinVal div Minute;
-			TrackBarM.Max := TMaxVal div Minute;
+			TrackBarM.Min := Trunc(TMinVal.Minutes);
+			TrackBarM.Max := Trunc(TMaxVal.Minutes);
 		end
 		else
 		begin
@@ -148,10 +129,10 @@ begin
 		TrackBarM.OnChange := TrackBarHMSDChange;
 	// S
 		TrackBarS.OnChange := nil;
-		if TMaxVal < Minute then
+		if TMaxVal.Minutes < 1 then
 		begin
-			TrackBarS.Min := TMinVal div Second;
-			TrackBarS.Max := TMaxVal div Second;
+			TrackBarS.Min := Trunc(TMinVal.Seconds);
+			TrackBarS.Max := Trunc(TMaxVal.Seconds);
 		end
 		else
 		begin
@@ -161,10 +142,10 @@ begin
 		TrackBarS.OnChange := TrackBarHMSDChange;
 	// D
 		TrackBarD.OnChange := nil;
-		if TMaxVal < 1000 then
+		if TMaxVal.Seconds < 1 then
 		begin
-			TrackBarD.Min := TMinVal;
-			TrackBarD.Max := TMaxVal;
+			TrackBarD.Min := Trunc(TMinVal.Milliseconds);
+			TrackBarD.Max := Trunc(TMaxVal.Milliseconds);
 		end
 		else
 		begin
@@ -200,27 +181,24 @@ begin
 end;
 
 procedure TfGetTime.InitButtons;
-var
-	H, M, S, D: U4;
 begin
 	ButtonMin.Enabled := NowVal <> TMinVal;
 	ButtonCur.Enabled := NowVal <> TCurVal;
 	ButtonDef.Enabled := NowVal <> TDefVal;
 	ButtonMax.Enabled := NowVal <> TMaxVal;
-	MsToHMSD(NowVal, H, M, S, D);
-	LabelH.Caption := IntToStr(H);
-	LabelM.Caption := IntToStr(M);
-	LabelS.Caption := IntToStr(S);
-	LabelD.Caption := IntToStr(D);
+	LabelH.Caption := IntToStr(Trunc(NowVal.Hours));
+	LabelM.Caption := IntToStr(Trunc(NowVal.Minutes));
+	LabelS.Caption := IntToStr(Trunc(NowVal.Seconds));
+	LabelD.Caption := IntToStr(Trunc(NowVal.Milliseconds));
 end;
 
 procedure TfGetTime.InitEdit;
 begin
 	EditInput.OnChange := nil;
-	if TMaxVal >= Hour then
-		EditInput.Text := MsToStr(NowVal, diMSD, -3, False)
+	if TMaxVal.Hours >= 1 then
+		EditInput.Text := MsToStr(Trunc(NowVal.Milliseconds), diMSD, -3, False)
 	else
-		EditInput.Text := MsToStr(NowVal, diHMSD, -3, False);
+		EditInput.Text := MsToStr(Trunc(NowVal.Milliseconds), diHMSD, -3, False);
 	EditInput.SelectAll;
 	EditInput.OnChange := EditInputChange;
 end;
@@ -229,15 +207,14 @@ procedure TfGetTime.InitTrackBar;
 var
 	H, M, S, D: U4;
 begin
-	msToHMSD(NowVal, H, M, S, D);
 	TrackBarH.OnChange := nil;
 	TrackBarM.OnChange := nil;
 	TrackBarS.OnChange := nil;
 	TrackBarD.OnChange := nil;
-	TrackBarH.Position := H;
-	TrackBarM.Position := M;
-	TrackBarS.Position := S;
-	TrackBarD.Position := D;
+	TrackBarH.Position := Trunc(NowVal.Hours);
+	TrackBarM.Position := Trunc(NowVal.Minutes);
+	TrackBarS.Position := Trunc(NowVal.Seconds);
+	TrackBarD.Position := Trunc(NowVal.Milliseconds);
 	TrackBarH.OnChange := TrackBarHMSDChange;
 	TrackBarM.OnChange := TrackBarHMSDChange;
 	TrackBarS.OnChange := TrackBarHMSDChange;
@@ -259,7 +236,7 @@ end;
 
 procedure TfGetTime.TrackBarHMSDChange(Sender: TObject);
 begin
-	NowVal :=
+	NowVal.Milliseconds :=
 		S8(TrackBarH.Position) * Hour +
 		TrackBarM.Position * Minute +
 		TrackBarS.Position * Second +
@@ -311,7 +288,8 @@ end;
 
 procedure TfGetTime.ChangeTime;
 begin
-	if Assigned(OnApply) then OnApply(NowVal);
+	if Assigned(OnApply) then
+    OnApply(NowVal);
 end;
 
 procedure TfGetTime.ButtonOkClick(Sender: TObject);
@@ -338,18 +316,24 @@ begin
 end;
 
 procedure TfGetTime.SpinButtonHMSDChangingEx(Sender: TObject;
-	var AllowChange: Boolean; NewValue: Smallint;
+	var AllowChange: Boolean; NewValue: Integer;
 	Direction: TUpDownDirection);
 var L: SG;
 begin
 	L := TUpDown(Sender).Tag;
 	if Direction = updUp then
 	begin
-		if NowVal + L <= TMaxVal  then Inc(NowVal, L) else NowVal := TMaxVal;
+		if NowVal.Milliseconds + L <= TMaxVal.Milliseconds then
+      NowVal.Milliseconds := NowVal.Milliseconds + L
+    else
+      NowVal := TMaxVal;
 	end
 	else
 	begin
-		if NowVal >= L + TMinVal then Dec(NowVal, L) else NowVal := 0;
+		if NowVal.Milliseconds >= L + TMinVal.Milliseconds then
+      NowVal.Milliseconds := NowVal.Milliseconds - L
+    else
+      NowVal := TMinVal;
 	end;
 {	if NowVal < TMinVal then
 		NowVal := TMinVal
