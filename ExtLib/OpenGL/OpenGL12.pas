@@ -195,12 +195,13 @@ interface
 
 
 uses
+  Types,
   {$IFDEF Win32}
     Windows
   {$ENDIF}
 
   {$IFDEF LINUX}
-    LibC, XLib, Types
+    LibC, XLib
   {$ENDIF}
   ;
 

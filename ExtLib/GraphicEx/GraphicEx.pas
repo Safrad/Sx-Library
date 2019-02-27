@@ -476,7 +476,8 @@ var
 implementation
 
 uses
-	Consts, Math, MZLib;
+	Consts, Math, MZLib,
+  Types;
 
 type
   // resampling support types
