@@ -427,57 +427,46 @@ begin
     EditRGBA.Update;
   end;
 
-	try
-		case ComboBoxNF.ItemIndex of
+  case ComboBoxNF.ItemIndex of
     0:
-		begin
-			NumericBase := 16;
-			UseThousandSeparator := False;
-			NumericPref := '#'
-		end;
-    1:
-		begin
-			NumericBase := 16;
-			UseThousandSeparator := False;
-			NumericPref := '$'
-		end;
-		2:
-			NumericPref := '';
+    begin
+      NumericPref := '#'
+    end
+    else
+    begin
+      NumericPref := '$'
     end;
-		if SkipEdit <> EditR then
-		begin
-			EditR.Text := NumericPref + NToS(NowRGB.R);
-			EditR.Update;
-		end;
-		if SkipEdit <> EditG then
-		begin
-			EditG.Text := NumericPref + NToS(NowRGB.G);
-			EditG.Update;
-		end;
-		if SkipEdit <> EditB then
-		begin
-			EditB.Text := NumericPref + NToS(NowRGB.B);
-			EditB.Update;
-		end;
-		if SkipEdit <> EditH then
-		begin
-			EditH.Text := NumericPref + NToS(NowHLS.H);
-			EditH.Update;
-		end;
-		if SkipEdit <> EditL then
-		begin
-			EditL.Text := NumericPref + NToS(NowHLS.L);
-			EditL.Update;
-		end;
-		if SkipEdit <> EditS then
-		begin
-			EditS.Text := NumericPref + NToS(NowHLS.S);
-			EditS.Update;
-		end;
-	finally
-		NumericBase := 10;
-		UseThousandSeparator := True;
-	end;
+  end;
+  if SkipEdit <> EditR then
+  begin
+    EditR.Text := NumericPref + IntToHex(NowRGB.R);
+    EditR.Update;
+  end;
+  if SkipEdit <> EditG then
+  begin
+    EditG.Text := NumericPref + IntToHex(NowRGB.G);
+    EditG.Update;
+  end;
+  if SkipEdit <> EditB then
+  begin
+    EditB.Text := NumericPref + IntToHex(NowRGB.B);
+    EditB.Update;
+  end;
+  if SkipEdit <> EditH then
+  begin
+    EditH.Text := NumericPref + IntToHex(NowHLS.H);
+    EditH.Update;
+  end;
+  if SkipEdit <> EditL then
+  begin
+    EditL.Text := NumericPref + IntToHex(NowHLS.L);
+    EditL.Update;
+  end;
+  if SkipEdit <> EditS then
+  begin
+    EditS.Text := NumericPref + IntToHex(NowHLS.S);
+    EditS.Update;
+  end;
 
 	EditR.OnChange := EditChange;
 	EditG.OnChange := EditChange;
