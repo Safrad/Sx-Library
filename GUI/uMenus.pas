@@ -40,7 +40,7 @@ implementation
 uses
 	Forms, Controls, SysUtils, ShellAPI, Math,
 	uDButton, uStrings, uColor, uDictionary, uSounds, uSplash, uDrawStyle, uGlobalOptions,
-	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath, uDParser, uLog, uOutputFormat,
+	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath, uLog, uOutputFormat,
   uDForm;
 
 var
