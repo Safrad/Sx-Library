@@ -29,7 +29,7 @@ begin
     ThreadPool.MaxThreads.Value := 4;
     ThreadPool.WaitForNoWork;
 
-    ThreadPool.MaxThreads.Value := 0;
+    ThreadPool.MaxThreads.Value := 1;
     ThreadPool.WaitForNoThread;
   finally
     ThreadPool.Free;
