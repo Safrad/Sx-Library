@@ -39,7 +39,9 @@ procedure SortU4(const Stability: Boolean; const Reverse: Boolean; AIndex: PArra
 procedure SortS8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS8; Count: UG);
 
 procedure SortF8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayF8; Count: UG);
+{$ifndef CPUX64}
 procedure SortFA(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayFA; Count: UG);
+{$endif}
 
 procedure SortS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of AnsiString); deprecated;
 procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of UnicodeString); deprecated;
@@ -118,6 +120,7 @@ type
 {$I Sort.inc}
 {$undef F}
 
+{$ifndef CPUX64}
 procedure SortFA;
 type
 	TValue = FA;
@@ -125,6 +128,7 @@ type
 {$define F}
 {$I Sort.inc}
 {$undef F}
+{$endif}
 
 procedure SortS;
 type

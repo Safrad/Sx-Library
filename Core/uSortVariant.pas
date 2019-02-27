@@ -19,7 +19,7 @@ var
 	VarTyp: TVarType;
 	AStr: array of string;
 	AInteger: array of S4;
-	AFloat: array of FA;
+	AFloat: array of {$ifndef CPUX64}FA{$else}F8{$endif};
 	AInt64: array of S8;
   i: SG;
 begin
@@ -58,9 +58,13 @@ begin
   			AFloat[i] := AVariant[i];
       end
       else
-  			AFloat[i] := MaxExtended80;
+  			AFloat[i] := {$ifndef CPUX64}MaxExtended{$else}MaxDouble{$endif};
     end;
+    {$ifndef CPUX64}
 		SortFA(True, Reverse, AIndex, PArrayFA(AFloat), Count);
+    {$else}
+		SortF8(True, Reverse, AIndex, PArrayF8(AFloat), Count);
+    {$endif}
   end;
   varOleStr, varString{$ifdef UniCode}, varUString{$endif}:
   begin

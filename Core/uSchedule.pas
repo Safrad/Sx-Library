@@ -82,7 +82,7 @@ var
 	StartTime: TSystemTime;
 	SystemTime: TSystemTime;
 	FNow, FNow2: TDateTime;
-	Offset: FA;
+	Offset: FG;
 	Ofs: SG;
 	Week, Month: UG;
 	i: SG;
