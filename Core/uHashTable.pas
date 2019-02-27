@@ -28,7 +28,7 @@ type
 		function FindNext: Pointer;
 		function Get(const Index: SG): Pointer;
 
-		function LoadFactor: FA;
+		function LoadFactor: FG;
 		function GetUsedKeyIndexes: TArrayOfKey;
 
 		property Count: SG read FCount;
@@ -132,7 +132,7 @@ begin
 	SetLength(Result, Count);
 end;
 
-function THashTable.LoadFactor: FA;
+function THashTable.LoadFactor: FG;
 begin
 	if FCapacity <= 0 then
 		Result := 1
