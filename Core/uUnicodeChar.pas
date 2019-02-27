@@ -6,6 +6,8 @@ type
   TUnicodeChar = class
   public
     const
+      Permille = Char($2030);
+
       CheckMark = Char($2713);
       CrossMark = Char($2717);
 
