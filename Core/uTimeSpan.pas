@@ -45,15 +45,55 @@ type
     // The total elapsed time measured by the current instance, in hours.
     property Hours: FG read GetHours write SetHours;
 
-    // The total elapsed time measured by the current instance, in days (the same as property Time but better precision).
+    // The total elapsed time measured by the current instance, in days.
+    // The same as property Time but better precision in 32 bit.
     property Days: FG read GetDays write SetDays;
 
-    // The total elapsed time measured by the current instance, in days (the same as property Days but lower precision).
+    // The total elapsed time measured by the current instance, in days.
+    // The same as property Days but lower precision in 32 bit.
     property Time: TDateTime read GetTime write SetTime;
 
     property Frequency: FG read GetFrequency write SetFrequency;
 
     function ToStringInSeconds: string;
+
+    // -- Comparison operators --
+
+    /// <summary>Returns True if Left is mathematically less than or equal to Right.</summary>
+    /// <param name="Left">The first operand</param>
+    /// <param name="Right">The second operand</param>
+    /// <returns><code>Result := Left &lt;= Right;</code></returns>
+    class operator LessThanOrEqual(const Left, Right: TTimeSpan): Boolean;
+
+    /// <summary>Returns True if Left is mathematically less than Right.</summary>
+    /// <param name="Left">The first operand</param>
+    /// <param name="Right">The second operand</param>
+    /// <returns><code>Result := Left &lt; Right;</code></returns>
+    class operator LessThan(const left, Right: TTimeSpan): Boolean;
+
+    /// <summary>Returns True if Left is mathematically greater than or equal to Right.</summary>
+    /// <param name="Left">The first operand</param>
+    /// <param name="Right">The second operand</param>
+    /// <returns><code>Result := Left &gt;= Right;</code></returns>
+    class operator GreaterThanOrEqual(const Left, Right: TTimeSpan): Boolean;
+
+    /// <summary>Returns True if Left is mathematically greater than Right.</summary>
+    /// <param name="Left">The first operand</param>
+    /// <param name="Right">The second operand</param>
+    /// <returns><code>Result := Left &gt; Right;</code></returns>
+    class operator GreaterThan(const Left, Right: TTimeSpan): Boolean;
+
+    /// <summary>Returns True if Left is mathematically equal to Right.</summary>
+    /// <param name="Left">The first operand</param>
+    /// <param name="Right">The second operand</param>
+    /// <returns><code>Result := Left = Right;</code></returns>
+    class operator Equal(const left, Right: TTimeSpan): Boolean;
+
+    /// <summary>Returns True if Left is mathematically not equal to Right.</summary>
+    /// <param name="Left">The first operand</param>
+    /// <param name="Right">The second operand</param>
+    /// <returns><code>Result := Left &lt;&gt; Right;</code></returns>
+    class operator NotEqual(const Left, Right: TTimeSpan): Boolean;
   end;
 
 implementation
@@ -64,6 +104,11 @@ uses
   uOutputFormat;
 
 { TTimeSpan }
+
+class operator TTimeSpan.Equal(const Left, Right: TTimeSpan): Boolean;
+begin
+  Result := Left.Ticks = Right.Ticks;
+end;
 
 function TTimeSpan.GetDays: FG;
 begin
@@ -103,6 +148,31 @@ end;
 function TTimeSpan.GetTime: TDateTime;
 begin
   Result := FTicks / (TTimePrefix.Day * MainTimer.Frequency);
+end;
+
+class operator TTimeSpan.GreaterThan(const Left, Right: TTimeSpan): Boolean;
+begin
+  Result := Left.Ticks > Right.Ticks;
+end;
+
+class operator TTimeSpan.GreaterThanOrEqual(const Left, Right: TTimeSpan): Boolean;
+begin
+  Result := Left.Ticks >= Right.Ticks;
+end;
+
+class operator TTimeSpan.LessThan(const left, Right: TTimeSpan): Boolean;
+begin
+  Result := Left.Ticks < Right.Ticks;
+end;
+
+class operator TTimeSpan.LessThanOrEqual(const Left, Right: TTimeSpan): Boolean;
+begin
+  Result := Left.Ticks <= Right.Ticks;
+end;
+
+class operator TTimeSpan.NotEqual(const Left, Right: TTimeSpan): Boolean;
+begin
+  Result := Left.Ticks <> Right.Ticks;
 end;
 
 procedure TTimeSpan.SetDays(const Value: FG);
