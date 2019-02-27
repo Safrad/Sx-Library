@@ -94,10 +94,8 @@ function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): strin
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
-function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
 function ReadSGFast(const Line: string): SG; overload;
 function ReadS8Fast(const Line: string): S8; overload;
-function ReadFAFast(const Line: string): FA; overload;
 procedure SkipSpace(const Line: string; var LineIndex: SG);
 function ReadToString(const Line: string; var LineIndex: SG;
 	const S: string): string; overload;
@@ -164,6 +162,9 @@ function PropertiesToString(const Keys: array of string; const Values: array of 
 
 function CompareStringLogical(AValue1, AValue2: AnsiString): TCompareResult; overload;
 function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
+
+function U1ToOctalString(AValue: U1): string;
+function CharToDigit(const AChar: Char): SG;
 
 implementation
 
@@ -656,10 +657,6 @@ function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
 {$i StrToNum.inc}
 
-// Do not accept decimal point !!!
-function ReadFAFast(const Line: string; var LineIndex: SG): FA; overload;
-{$i StrToNum.inc}
-
 function ReadSGFast(const Line: string): SG; overload;
 var LineIndex: SG;
 begin
@@ -672,13 +669,6 @@ var LineIndex: SG;
 begin
 	LineIndex := 1;
 	Result := ReadS8Fast(Line, LineIndex);
-end;
-
-function ReadFAFast(const Line: string): FA; overload;
-var LineIndex: SG;
-begin
-	LineIndex := 1;
-	Result := ReadFAFast(Line, LineIndex);
 end;
 
 procedure SkipSpace(const Line: string; var LineIndex: SG);
@@ -1250,37 +1240,6 @@ end;
 	{$UNDEF Q_PLUS}
 {$ENDIF}
 
-{
-function HashCode(const s: string): U4;
-var
-	i: Integer;
-	res: Extended;
-
-	function RoundEx(const x: Extended): U4;
-	begin
-		Result := Trunc(x) + Trunc(Frac(x) * 2);
-	end;
-begin
-	res := 0;
-
-	for i := 1 to Length(s) do
-	begin
-		res := res + Ord(s[i]) * Power(31, Length(s) - (i - 1) - 1);
-	end;
-
-	Result := RoundEx(res);
-end;}
-
-{
-function HashCode(const s: string): U4;
-var i: SG;
-begin
-//	Result := Hash(s, Length(s));
-	Result := 0;
-	for i := 1 to Length(s) do
-		Result := Result + Ord(s[i]);
-end;}
-
 function OddEven(const Index: SG): string;
 begin
 	if Index mod 2 = 0 then
@@ -1436,6 +1395,27 @@ end;
 function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
 begin
   Result := TCompareResult(StrCmpLogicalW(PWideChar(AValue1), PWideChar(AValue2)));
+end;
+
+function U1ToOctalString(AValue: U1): string;
+var
+  R: array[0..2] of U1;
+begin
+  R[0] := AValue and 7;
+  AValue := AValue shr 3;
+  R[1] := AValue and 7;
+  AValue := AValue shr 3;
+  R[2] := AValue;
+
+  Result :=
+    Char(Ord(R[2]) + Ord('0')) +
+    Char(Ord(R[1]) + Ord('0')) +
+    Char(Ord(R[0]) + Ord('0'));
+end;
+
+function CharToDigit(const AChar: Char): SG;
+begin
+  Result := Ord(AChar) - Ord('0');
 end;
 
 initialization
