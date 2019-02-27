@@ -1,0 +1,12 @@
+﻿#Expression,Result
+sin(0),0
+cos(0),1
+sin(pi/2),1
+# cos(pi/2),0
+# sin(pi),0
+cos(pi),−1
+tan(0),0
+# tan(pi),0
+arcSin(1),1.5707963267948966…
+arcCos(0),1.5707963267948966…
+Round(1e10*sin(pi)),0

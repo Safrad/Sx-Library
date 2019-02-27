@@ -1,0 +1,19 @@
+﻿#Expression,Result
+false,0
+true,1
+1 shl 2,4
+1 shl 64,18446744073709551616
+1 shr 2,0.25
+1024 shr 2,256
+8 and 7,0
+6 and 7,6
+1 or 2,3
+1 nor 3,−4
+1 xor 3,2
+1 xnor 3,−3
+Not(0),−1
+Not(1),−2
+Not(-1),0
+Not(-2),1
+(¬5^2),36
+¬(5^2),−26

@@ -173,9 +173,7 @@ begin
 		Replace(s, '%1', M.Params[0]);
 	if M.MesId = mtEIllegalChar then
 	begin
-		NumericBase := 16;
-		s := s + ' ($' + NToS(Ord(M.Params[0][1])) + ')';
-		NumericBase := 10;
+		s := s + ' ($' + IntToHex(Ord(M.Params[0][1])) + ')';
 	end;
 
 	Result := Result + s;}

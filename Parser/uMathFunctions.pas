@@ -1,4 +1,4 @@
-unit uMathFunctions;
+﻿unit uMathFunctions;
 
 interface
 
@@ -6,20 +6,14 @@ uses
 	uVector;
 
 const
-	ConstE = 2.7182818284590452353602874713527; // Euler's number
 	ConstC = 299792458; // Speed of the light [m / s]
-var
-	VariableX: TVector;
 
 implementation
 
 uses
+  uBigDecimalConsts,
+  Velthuis.BigDecimals,
   uNamespace, uStrings;
-
-function X: TVector;
-begin
-	Result := VariableX;
-end;
 
 function IfElse(const X, Y, Z: TVector): TVector;
 begin
@@ -31,7 +25,7 @@ end;
 
 function Equal(const X, Y: TVector): TVector;
 begin
-	if VectorToNum(X)= VectorToNum(Y) then // TODO: Epsilon
+	if BigDecimal.Compare(VectorToNum(X), VectorToNum(Y)) = 0 then
 		Result := NumToVector(1)
 	else
 		Result := NumToVector(0);
@@ -71,7 +65,7 @@ end;
 
 function E: TVector;
 begin
-	Result := NumToVector(ConstE);
+  Result := NumToVector(TBigDecimalConsts.NumberE);
 end;
 
 function C: TVector;
@@ -134,24 +128,59 @@ begin
 	Result := SqrtVector(X);
 end;
 
-function Trunc(const X: TVector): TVector;
-begin
-	Result := TruncVector(X);
-end;
-
 function Floor(const X: TVector): TVector;
 begin
 	Result := FloorVector(X);
 end;
 
-function Round(const X: TVector): TVector;
-begin
-	Result := RoundVector(X);
-end;
-
 function Ceil(const X: TVector): TVector;
 begin
 	Result := CeilVector(X);
+end;
+
+function Trunc(const X: TVector): TVector;
+begin
+	Result := TruncVector(X);
+end;
+
+function RoundTowardsZero(const X: TVector): TVector;
+begin
+	Result := RoundTowardsZeroVector(X);
+end;
+
+function RoundAwayFromZero(const X: TVector): TVector;
+begin
+	Result := RoundAwayFromZeroVector(X);
+end;
+
+function RoundHalfCeil(const X: TVector): TVector;
+begin
+	Result := RoundHalfCeilVector(X);
+end;
+
+function RoundHalfFloor(const X: TVector): TVector;
+begin
+	Result := RoundHalfFloorVector(X);
+end;
+
+function RoundHalfTowardsZero(const X: TVector): TVector;
+begin
+	Result := RoundHalfTowardsZeroVector(X);
+end;
+
+function RoundHalfAwayFromZero(const X: TVector): TVector;
+begin
+	Result := RoundHalfAwayFromZeroVector(X);
+end;
+
+function RoundHalfEven(const X: TVector): TVector;
+begin
+	Result := RoundHalfEvenVector(X);
+end;
+
+function Round(const X: TVector): TVector;
+begin
+	Result := RoundVector(X);
 end;
 
 function Frac(const X: TVector): TVector;
@@ -199,71 +228,18 @@ begin
 	Result := GammaVector(X);
 end;
 
-(* TODO :
-	opGCD: // Greatest Common Measure (Divident)
-	begin
-		if Node.ArgCount = 1 then
-			Result := RoundN(Calc(Node.Args[0]))
-		else if Node.ArgCount >= 2 then
-		begin
-			Result := RoundN(Calc(Node.Args[0]));
+function GCD(const AData: array of TVector): TVector;
+begin
+  Result := GCDVector(AData);
+end;
 
-			for i := 1 to Node.ArgCount - 1 do
-			begin
-				e := RoundN(Calc(Node.Args[i]));
-
-				while Result <> e do
-				begin
-					if Result > e then
-						Result := Result - e
-					else
-						e := e - Result;
-				end;
-			end;
-
-		end
-		else
-			Result := 0;
-	end;
-	opLCM: // Less Common Multipicator
-	begin
-		if Node.ArgCount = 1 then
-			Result := RoundN(Calc(Node.Args[0]))
-		else if Node.ArgCount >= 2 then
-		begin
-			e0 := RoundN(Calc(Node.Args[0]));
-
-			Result := e0;
-
-			for i := 1 to Node.ArgCount - 1 do
-			begin
-				e1 := RoundN(Calc(Node.Args[i]));
-				e := e1;
-				while Result <> e do
-				begin
-					if Result > e then
-						Result := Result - e
-					else
-						e := e - Result;
-				end;
-				if Result <> 0 then
-					Result := e0 * e1 / Result
-				else
-					Result := Infinity;
-				e0 := Result;
-			end;
-			{$ifopt c+}
-			for i := 0 to Node.ArgCount - 1 do
-				Assert(Frac(Result / RoundN(Calc(Node.Args[i]))) = 0);
-			{$endif}
-		end
-		else
-			Result := 0;
-	end; *)
+function LCM(const AData: array of TVector): TVector;
+begin
+  Result := LCMVector(AData);
+end;
 
 initialization
 {$IFNDEF NoInitialization}
-	AddFunction('Variable', 'x', X, 'Variable X.');
 	AddFunction('Conditional Tests', 'IfElse', IfElse, WikipediaURLPrefix + 'Conditional_(programming)');
 	AddFunction('Arithmetic', 'Equal', Equal, WikipediaURLPrefix + 'Conditional_(programming)');
 	AddFunction('Arithmetic', 'Greater', Greater, WikipediaURLPrefix + 'Inequality');
@@ -280,14 +256,24 @@ initialization
 	AddFunction('Arithmetic', 'div', Divide, '(Dividend;Divisor) ' + WikipediaURLPrefix + 'Division_(mathematics)');
 	AddFunction('Arithmetic', 'mod', Modulo, '(Dividend;Divisor) ' + WikipediaURLPrefix + 'Modular_arithmetic');
 	AddFunction('Arithmetic', 'power', Power, '(Base;Exponent) ' + WikipediaURLPrefix + 'Exponentiation');
-	AddFunction('Arithmetic', 'log', Log, '(Base;Exponent) ' + WikipediaURLPrefix + 'Logarithm');
+	AddFunction('Arithmetic', 'log', Log, '(Base;Value) ' + WikipediaURLPrefix + 'Logarithm');
 	AddFunction('Arithmetic', 'ln', Ln, WikipediaURLPrefix + 'Natural_logarithm');
 	AddFunction('Arithmetic', 'sqr', Sqr, WikipediaURLPrefix + 'Squared');
 	AddFunction('Arithmetic', 'sqrt', Sqrt, WikipediaURLPrefix + 'Square_root');
-	AddFunction('Arithmetic', 'trunc', Trunc, WikipediaURLPrefix + 'Truncation');
-	AddFunction('Arithmetic', 'floor', Floor, WikipediaURLPrefix + 'Floor_function');
-	AddFunction('Arithmetic', 'round', Round, WikipediaURLPrefix + 'Round_number');
-	AddFunction('Arithmetic', 'ceil', Ceil, WikipediaURLPrefix + 'Ceil_function');
+
+	AddFunction('Arithmetic', 'floor', Floor, WikipediaURLPrefix + 'Rounding#Rounding_down'); // Floor_function
+	AddFunction('Arithmetic', 'ceil', Ceil, WikipediaURLPrefix + 'Rounding#Rounding_up'); // Ceil_function
+	AddFunction('Arithmetic', 'trunc', Trunc, WikipediaURLPrefix + '/Rounding#Rounding_towards_zero'); // Truncation
+	AddFunction('Arithmetic', 'RoundTowardsZero', RoundTowardsZero, WikipediaURLPrefix + 'Rounding#Rounding_towards_zero');
+	AddFunction('Arithmetic', 'RoundAwayFromZero', RoundAwayFromZero, WikipediaURLPrefix + 'Rounding#Rounding_away_from_zero');
+
+	AddFunction('Arithmetic', 'RoundHalfCeil', RoundHalfCeil, WikipediaURLPrefix + 'Rounding#Round_half_down');
+	AddFunction('Arithmetic', 'RoundHalfFloor', RoundHalfFloor, WikipediaURLPrefix + 'Rounding#Round_half_up');
+	AddFunction('Arithmetic', 'RoundHalfTowardsZero', RoundHalfTowardsZero, WikipediaURLPrefix + 'Rounding#Round_half_towards_zero');
+	AddFunction('Arithmetic', 'RoundHalfAwayFromZero', RoundHalfAwayFromZero, WikipediaURLPrefix + 'Rounding#Round_half_away_from_zero');
+	AddFunction('Arithmetic', 'RoundHalfToEven', RoundHalfEven, WikipediaURLPrefix + 'Rounding#Round_half_to_even');
+	AddFunction('Arithmetic', 'round', Round, WikipediaURLPrefix + 'Rounding#Round_half_to_even');
+
 	AddFunction('Arithmetic', 'frac', Frac, WikipediaURLPrefix + 'Fractional_part');
 	AddFunction('Arithmetic', 'abs', Abs, WikipediaURLPrefix + 'Absolute_value');
 	AddFunction('Arithmetic', 'not', _Not, WikipediaURLPrefix + 'Logical_negation');
@@ -295,7 +281,10 @@ initialization
 	AddFunction('Arithmetic', 'dec', Dec, WikipediaURLPrefix + 'Decrement');
 	AddFunction('Arithmetic', 'exp', Exp, WikipediaURLPrefix + 'Exponential_function');
 	AddFunction('Arithmetic', 'fact', Fact, WikipediaURLPrefix + 'Factorial');
-	AddFunction('Arithmetic', 'gamma', Gamma, WikipediaURLPrefix + 'Gamma_function');
+	AddFunction('Arithmetic', 'Gamma', Gamma, WikipediaURLPrefix + 'Gamma_function');
+	AddFunction('Arithmetic', 'Γ', Gamma, WikipediaURLPrefix + 'Gamma_function');
+	AddFunction('Arithmetic', 'GCD', GCD, WikipediaURLPrefix + 'Greatest_common_divisor');
+	AddFunction('Arithmetic', 'LCM', LCM, WikipediaURLPrefix + 'Least_common_multiple');
 {$ENDIF NoInitialization}
 end.
 

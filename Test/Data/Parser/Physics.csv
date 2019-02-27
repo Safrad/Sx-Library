@@ -1,0 +1,5 @@
+#Expression,Result
+EarthGravityOnSurface,9.80665
+EarthGravity(6378000/2),4.903325
+EarthGravity(6378000),9.80665
+EarthGravity(2*6378000),2.4516625

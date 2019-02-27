@@ -21,7 +21,8 @@ function Skew(const Data: array of TVector): TVector;
 implementation
 
 uses
-	uNamespace, uMath, uStrings,
+  Velthuis.BigDecimals,
+	uNamespace, uMath, uStrings, uSxRandomGenerator,
 	Math;
 
 function CountData(const Data: array of TVector): TVector;
@@ -240,17 +241,20 @@ begin
 		Result := DivideVector(ux(Data, NumToVector(3)), PowerVector(SqrtVector(Variance0(Data)), NumToVector(3)));
 end;
 
+var
+  RandomGenerator: TSxRandomGenerator;
+
 function RandomFunction(const Data: array of TVector): TVector;
 begin
+  if RandomGenerator = nil then
+    RandomGenerator := TSxRandomGenerator.Create;
+
 	if Length(Data) = 0 then
-		Result := NumToVector(Random(MaxInt) / MaxInt)
-	else //if Length(Data) = 1 then
-		Result := NumToVector(Random(RoundN(VectorToNum(Data[0]))));
-{	else if Length(Data) >= 2 then
-	begin
-		e := Calc(Node.Args[0]);
-		Result := e + Random(RoundN(Calc(Node.Args[1]) - e))
-	end;}
+		Result := NumToVector(BigDecimal.Create(RandomGenerator.RandomU8) / BigDecimal.Create(MaxU8))
+	else if Length(Data) = 1 then
+		Result := NumToVector(RandomGenerator.RangeU8(VectorToNum(Data[0]).Trunc))
+	else if Length(Data) >= 2 then
+		Result := NumToVector(RandomGenerator.RangeU8(VectorToNum(Data[0]).Trunc, VectorToNum(Data[1]).Trunc));
 end;
 
 initialization
@@ -276,4 +280,6 @@ initialization
 	AddFunction('Statistics', 'Random', RandomFunction, WikipediaURLPrefix + 'Random_function');
 	// WikipediaURLPrefix + 'Median'
 {$ENDIF NoInitialization}
+finalization
+  RandomGenerator.Free;
 end.

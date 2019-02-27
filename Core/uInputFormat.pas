@@ -3,42 +3,52 @@ unit uInputFormat;
 interface
 
 uses
-	uTypes, uVector, uParserMsg, uLapStopwatch;
+  Velthuis.BigDecimals,
+	uTypes,
+  uVector,
+  uParserMsg,
+  uTimeSpan,
+  uLapStopwatch;
 
 type
 	TInputFormat = (ifIO{Disk File Input/Output}, ifDisplay{Windows Locale});
 
 function StrToF4(const Str: string; const InputFormat: TInputFormat): F4;
 function StrToF8(const Str: string; const InputFormat: TInputFormat): F8;
+{$ifndef CPUX64}
 function StrToFA(const Str: string; const InputFormat: TInputFormat): FA;
+{$endif}
 function StrToSG(const Str: string; const InputFormat: TInputFormat): SG;
 function StrToBG(const Str: string; const InputFormat: TInputFormat): BG;
 function SToTime(const Str: string; const InputFormat: TInputFormat): TDateTime;
 function SToMs(const Str: string; const InputFormat: TInputFormat): SG; // MsToStr<-
 
 // Str To Data
-function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
+function StrToMs(Line: string; const MinVal, DefVal, MaxVal: TTimeSpan; const UseWinFormat: BG; const Messages: TParserMessages = nil): TTimeSpan;
 
 function StrToVector(const Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil; const LapStopwatch: TLapStopwatch = nil): TVector;
+function StrToValBD(const Line: string; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal: BigDecimal; const Messages: TParserMessages = nil): BigDecimal; overload;
+function StrToValBD(const Line: string; const UseWinFormat: BG;
+	const DefVal: BigDecimal; const Messages: TParserMessages = nil): BigDecimal; overload;
+
+(*
 function StrToValE(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal: Extended; const Messages: TParserMessages = nil): Extended; overload;
+	const MinVal, DefVal, MaxVal: FG; const Messages: TParserMessages = nil): FG; overload;
 function StrToValE(Line: string; const UseWinFormat: BG;
-	const DefVal: Extended; const Messages: TParserMessages = nil): Extended; overload;
-{function StrToValE(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string): Extended; overload;}
+	const DefVal: FG; const Messages: TParserMessages = nil): FG; overload;
+*)
 
 function StrToValI(Line:string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG; const Messages: TParserMessages = nil): SG; overload;
 function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: UG; const Messages: TParserMessages = nil): UG; overload;
 
-{function StrToValI(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal, Denominator: SG): SG; overload;}
-{function StrToValI(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal, Denominator: UG; out ErrorMsg: string): UG; overload;}
-
 function StrToValS8(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: S8; const Messages: TParserMessages = nil): S8;
+
+function StrToValU8(Line: string; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: U8; const Messages: TParserMessages = nil): U8;
 
 function StrToValU1(Line: string; const UseWinFormat: BG;
 	const DefVal: U1; const Messages: TParserMessages = nil): U1;
@@ -51,13 +61,20 @@ implementation
 uses
 	SysUtils,
   Math,
-	uDParser, uStrings, uMath, uOutputFormat;
+  uMathExpressionParser,
+	uTimeExpressionParser,
+  uStrings, uMath, uOutputFormat,
+  uSxStringParser,
+  uExpressionTreeEvaluator;
 
-function StrToMs(Line: string; const MinVal, DefVal, MaxVal: UG; const UseWinFormat: BG; const Messages: TParserMessages = nil): UG;
-var Parser: TDParser;
+function StrToMs(Line: string; const MinVal, DefVal, MaxVal: TTimeSpan; const UseWinFormat: BG; const Messages: TParserMessages = nil): TTimeSpan;
+var Parser: TTimeExpressionParser;
 begin
-	Parser := TDParser.Create(Pointer(Line), Length(Line));
+	Parser := TTimeExpressionParser.Create;
 	try
+    Parser.SxParser := TSxStringParser.Create;
+    TSxStringParser(Parser.SxParser).Text := Line;
+
 		Parser.Messages := Messages;
 		if UseWinFormat then
 		begin
@@ -69,20 +86,24 @@ begin
 			Parser.DecimalSep := '.';
 			Parser.ThousandSep := ',';
 		end;
-		Result := Parser.ReadMs(MinVal, DefVal, MaxVal);
-		if Parser.InputType <> itEOI then Parser.AddMes(mtEUnusedChars, []);
+    Parser.Parse;
+		Result := Parser.Value;
 	finally
+    Parser.SxParser.Free;
 		Parser.Free;
 	end;
 end;
 
 function StrToVector(const Line: string; const UseWinFormat: BG; const Messages: TParserMessages = nil; const LapStopwatch: TLapStopwatch = nil): TVector;
 var
-  Parser: TDParser;
-  Root: PNode;
+  Parser: TMathExpressionParser;
+  ExpressionTreeEvaluator: TExpressionTreeEvaluator;
 begin
-	Parser := TDParser.Create(Line);
+	Parser := TMathExpressionParser.Create;
 	try
+    Parser.SxParser := TSxStringParser.Create;
+    TSxStringParser(Parser.SxParser).Text := Line;
+
 		Parser.Messages := Messages;
 		if UseWinFormat then
 		begin
@@ -97,29 +118,78 @@ begin
 
     LapStopwatch.Restart;
     Parser.ReadInput;
-    Root := Parser.NodeE(nil);
-    LapStopwatch.StoreLap;
-    if Root <> nil then
-    begin
-      Result := Calc(Root);
-      FreeTree(Root);
-    end
-    else
-      Result := nil;
+    ExpressionTreeEvaluator := Parser.CreateExpressionTreeEvaluator;
+    try
+      LapStopwatch.StoreLap;
+      if ExpressionTreeEvaluator <> nil then
+      begin
+        Result := ExpressionTreeEvaluator.EvaluateRoot;
+      end
+      else
+        Result := nil;
+    finally
+      ExpressionTreeEvaluator.Free;
+    end;
     LapStopwatch.Stop;
     LapStopwatch.StoreLap;
 	finally
+    Parser.SxParser.Free;
 		Parser.Free;
 	end;
 end;
 
-function StrToValE(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal: Extended; const Messages: TParserMessages = nil): Extended;
+function StrToValBD(const Line: string; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal: BigDecimal; const Messages: TParserMessages = nil): BigDecimal;
 var
-	Parser: TDParser;
+	Parser: TMathExpressionParser;
 	s: string;
 begin
-	Parser := TDParser.Create(Line);
+	Parser := TMathExpressionParser.Create;
+	try
+    Parser.SxParser := TSxStringParser.Create;
+    TSxStringParser(Parser.SxParser).Text := Line;
+
+		if Messages = nil then
+			Parser.Messages := TParserMessages.Create
+		else
+			Parser.Messages := Messages;
+		if UseWinFormat then
+		begin
+			Parser.DecimalSep := DecimalSeparator;
+			Parser.ThousandSep := ThousandSeparator;
+		end
+		else
+		begin
+			Parser.DecimalSep := '.';
+			Parser.ThousandSep := ',';
+		end;
+		Result := Parser.ReadNum(MinVal, DefVal, MaxVal);
+		if Messages = nil then
+		begin
+			if Parser.Messages.Count > 0 then
+			begin
+				s := Parser.Messages.ToString;
+				Parser.Messages.Free;
+				raise EConvertError.Create(s);
+			end
+			else
+			begin
+				Parser.Messages.Free;
+			end;
+		end
+	finally
+    Parser.SxParser.Free;
+		Parser.Free;
+	end;
+end;
+
+function StrToValBD(const Line: string; const UseWinFormat: BG;
+	const DefVal: BigDecimal; const Messages: TParserMessages = nil): BigDecimal;
+var
+	Parser: TMathExpressionParser;
+	s: string;
+begin
+	Parser := TMathExpressionParser.Create;
 	try
 		if Messages = nil then
 			Parser.Messages := TParserMessages.Create
@@ -135,18 +205,18 @@ begin
 			Parser.DecimalSep := '.';
 			Parser.ThousandSep := ',';
 		end;
-		Result := Parser.ReadFA(MinVal, DefVal, MaxVal);
+		Result := Parser.ReadNum(DefVal);
 		if Messages = nil then
 		begin
 			if Parser.Messages.Count > 0 then
 			begin
 				s := Parser.Messages.ToString;
-				FreeAndNil(Parser.Messages);
+				Parser.Messages.Free;
 				raise EConvertError.Create(s);
 			end
 			else
 			begin
-				FreeAndNil(Parser.Messages);
+				Parser.Messages.Free;
 			end;
 		end
 	finally
@@ -154,49 +224,42 @@ begin
 	end;
 end;
 
+(*
 function StrToValE(Line: string; const UseWinFormat: BG;
-	const DefVal: Extended; const Messages: TParserMessages = nil): Extended;
+	const MinVal, DefVal, MaxVal: FG; const Messages: TParserMessages = nil): FG;
 begin
-  Result := StrToValE(Line, UseWinFormat, -MaxExtended80, DefVal, MaxExtended80, Messages);
-end;
-{
-function StrToValE(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal: Extended; out ErrorMsg: string): Extended;
-var
-	InStr: string;
-	LineIndex: SG;
-begin
-	Result := StrToValExt(Line, UseWinFormat, MinVal, DefVal, MaxVal, ErrorMsg, InStr, LineIndex);
-end;}
-
-{function StrToValI(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal, Denominator: SG): SG;
-begin
-	Result := StrToValI(Line, UseWinFormat, MinVal, DefVal, MaxVal, Denominator);
+	Result := StrToValBD(Line, UseWinFormat, MinVal, DefVal, MaxVal, Messages);
 end;
 
-function StrToValI(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal, Denominator: UG): UG;
+function StrToValE(Line: string; const UseWinFormat: BG;
+	const DefVal: FG; const Messages: TParserMessages = nil): FG;
 begin
-	Result := StrToValI(Line, UseWinFormat, MinVal, DefVal, MaxVal, Denominator);
-end;}
+	Result := StrToValBD(Line, UseWinFormat, DefVal, Messages);
+end;
+*)
 
 function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG; const Messages: TParserMessages = nil): SG;
 begin
-	Result := RoundN(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
+	Result := BigDecimal.Round(Denominator * StrToValBD(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
 end;
 
 function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: UG; const Messages: TParserMessages = nil): UG;
 begin
-	Result := RoundN(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
+	Result := BigDecimal.Round(Denominator * StrToValBD(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
 end;
 
 function StrToValS8(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: S8; const Messages: TParserMessages = nil): S8;
 begin
-	Result := RoundN(Denominator * StrToValE(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
+	Result := BigDecimal.Round(Denominator * StrToValBD(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
+end;
+
+function StrToValU8(Line: string; const UseWinFormat: BG;
+	const MinVal, DefVal, MaxVal, Denominator: U8; const Messages: TParserMessages = nil): U8;
+begin
+	Result := BigDecimal.Round(Denominator * StrToValBD(Line, UseWinFormat, MinVal / Denominator, DefVal / Denominator, MaxVal / Denominator, Messages));
 end;
 
 function StrToValU1(Line: string; const UseWinFormat: BG;
@@ -443,6 +506,7 @@ begin
 	end;
 end;
 
+{$ifndef CPUX64}
 function StrToFA(const Str: string; const InputFormat: TInputFormat): FA;
 var
 	E: Integer;
@@ -454,6 +518,7 @@ begin
 		Val(Str, Result, E);
 	end;
 end;
+{$endif}
 
 function StrToSG(const Str: string; const InputFormat: TInputFormat): SG;
 var

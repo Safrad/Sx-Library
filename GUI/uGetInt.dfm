@@ -5,7 +5,7 @@ object fGetInt: TfGetInt
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
   ClientHeight = 193
-  ClientWidth = 335
+  ClientWidth = 394
   Color = clBtnFace
   ParentFont = True
   OldCreateOrder = False
@@ -16,7 +16,7 @@ object fGetInt: TfGetInt
   object LabelMin: TLabel
     Left = 16
     Top = 136
-    Width = 113
+    Width = 145
     Height = 13
     AutoSize = False
     Caption = '0123456789012345'
@@ -24,9 +24,9 @@ object fGetInt: TfGetInt
     Layout = tlCenter
   end
   object LabelMax: TLabel
-    Left = 208
-    Top = 136
-    Width = 113
+    Left = 224
+    Top = 138
+    Width = 153
     Height = 13
     Alignment = taRightJustify
     AutoSize = False
@@ -35,9 +35,9 @@ object fGetInt: TfGetInt
     Layout = tlCenter
   end
   object LabelNow: TLabel
-    Left = 11
+    Left = 8
     Top = 45
-    Width = 125
+    Width = 201
     Height = 13
     AutoSize = False
     Caption = '0123456789012345'
@@ -47,26 +47,25 @@ object fGetInt: TfGetInt
   object Bevel1: TBevel
     Left = 6
     Top = 102
-    Width = 324
+    Width = 380
     Height = 32
   end
   object EditInput: TLabeledEdit
     Left = 8
     Top = 24
-    Width = 137
+    Width = 201
     Height = 19
     AutoSize = False
-    EditLabel.Width = 27
+    EditLabel.Width = 26
     EditLabel.Height = 13
     EditLabel.Caption = '&Value'
     EditLabel.Transparent = True
-    MaxLength = 15
     TabOrder = 0
     Text = '0'
     OnChange = EditInputChange
   end
   object ButtonOk: TDButton
-    Left = 96
+    Left = 153
     Top = 160
     Width = 73
     Height = 25
@@ -77,7 +76,7 @@ object fGetInt: TfGetInt
     OnClick = ButtonOkClick
   end
   object ButtonCancel: TDButton
-    Left = 176
+    Left = 233
     Top = 160
     Width = 73
     Height = 25
@@ -90,7 +89,7 @@ object fGetInt: TfGetInt
   object TrackBar: TTrackBar
     Left = 8
     Top = 104
-    Width = 320
+    Width = 378
     Height = 28
     Max = 99
     PageSize = 10
@@ -99,43 +98,43 @@ object fGetInt: TfGetInt
     OnChange = TrackBarChange
   end
   object ButtonMin: TDButton
-    Left = 168
-    Top = 18
-    Width = 48
-    Height = 18
-    Caption = '&Min'
+    Left = 231
+    Top = 4
+    Width = 73
+    Height = 25
+    Caption = 'Minimal'
     TabOrder = 1
     OnClick = ButtonMinClick
   end
   object ButtonCur: TDButton
-    Left = 224
-    Top = 6
-    Width = 48
-    Height = 18
-    Caption = 'C&ur'
+    Left = 231
+    Top = 34
+    Width = 73
+    Height = 25
+    Caption = '&Currrent'
     TabOrder = 2
     OnClick = ButtonCurClick
   end
   object ButtonMax: TDButton
-    Left = 280
-    Top = 18
-    Width = 48
-    Height = 18
-    Caption = 'M&ax'
+    Left = 313
+    Top = 4
+    Width = 73
+    Height = 25
+    Caption = 'Maximal'
     TabOrder = 4
     OnClick = ButtonMaxClick
   end
   object ButtonDef: TDButton
-    Left = 224
-    Top = 28
-    Width = 48
-    Height = 18
-    Caption = '&Def'
+    Left = 313
+    Top = 33
+    Width = 73
+    Height = 25
+    Caption = '&Default'
     TabOrder = 3
     OnClick = ButtonDefClick
   end
   object ButtonApply: TDButton
-    Left = 256
+    Left = 313
     Top = 160
     Width = 73
     Height = 25
@@ -146,7 +145,7 @@ object fGetInt: TfGetInt
   object EditError: TDMemo
     Left = 8
     Top = 62
-    Width = 321
+    Width = 378
     Height = 33
     ParentColor = True
     ReadOnly = True
@@ -154,7 +153,7 @@ object fGetInt: TfGetInt
     TabOrder = 9
   end
   object UpDown: TUpDown
-    Left = 144
+    Left = 208
     Top = 24
     Width = 17
     Height = 19

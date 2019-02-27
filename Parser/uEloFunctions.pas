@@ -2,20 +2,20 @@ unit uEloFunctions;
 
 interface
 
-uses uTypes, uVector, uOutputFormat;
+uses
+  Velthuis.BigDecimals,
+  uTypes, uVector, uOutputFormat;
 
 type
-	TElo = SG; // 0..2999;
+	TElo = SG;
 const
 	ScoreOne = 100;
-	MinimalELO = 1250;
-	MaximalElo = 2850;
 
-function GetElo(const Fruitfulness: FA): TElo;
+function GetElo(const Fruitfulness: BigDecimal): TElo;
 function GetEloI(const Fruitfulness: SG): TElo;
-function GetArcElo(const EloDifference: FA): FA;
+function GetArcElo(const EloDifference: BigDecimal): BigDecimal;
 function ExpectedRes(Elo, OpElo: TElo; Bonus: SG; Rounded: BG): SG;
-function DeltaElo(const Elo, AvgElo: TElo; Age: TDateTime; Score, GameCount: SG): Extended;
+function DeltaElo(const Elo, AvgElo: TElo; Age: TDateTime; Score, GameCount: SG): BigDecimal;
 function DeltaEloI(const Elo, AvgElo: TElo; const Age: TDateTime; const Score, GameCount: SG): SG;
 
 function ScoreToS(const Score: SG; const HTML: BG = True): string;
@@ -40,16 +40,16 @@ var
 		72, 65, 57, 50, 43, 36, 29, 21, 14, 7, 0);
 // 0,5 + 1,4217 * 10^(-3) * x - 2,4336 * 10^(-7) * x * Abs(x) - 2,5140 * 10^(-9) * x * Abs(x)^2 + 1,9910 * 10^(-12) * x * Abs(x)^3
 
-function GetElo(const Fruitfulness: FA): TElo;
+function GetElo(const Fruitfulness: BigDecimal): TElo;
 begin
 	if Fruitfulness <= 0 then
 		Result := -EloTable[0]
 	else if Fruitfulness >= 1 then
 		Result := EloTable[0]
 	else if Fruitfulness < 0.5 then
-		Result := -EloTable[RoundN(EloTableCount * Fruitfulness)]
+		Result := -EloTable[BigDecimal.Round(EloTableCount * Fruitfulness)]
 	else
-		Result := EloTable[EloTableCount - RoundN(EloTableCount * Fruitfulness)];
+		Result := EloTable[EloTableCount - BigDecimal.Round(EloTableCount * Fruitfulness)];
 end;
 
 function GetEloI(const Fruitfulness: SG): TElo;
@@ -64,20 +64,20 @@ begin
 		Result := EloTable[EloTableCount - Fruitfulness];
 end;
 
-function GetArcElo(const EloDifference: FA): FA;
+function GetArcElo(const EloDifference: BigDecimal): BigDecimal;
 var
 	i: SG;
-	e0, e1: FA;
+	e0, e1: BigDecimal;
 begin
 	e0 := MaxInt;
 	Result := 0;
 	for i := 0 to 100 do
 	begin
-		e1 := Abs(GetElo(i / 100) - EloDifference);
+		e1 := BigDecimal.Abs(GetElo(BigDecimal(i) / 100) - EloDifference);
 		if e1 < e0 then
 		begin
 			e0 := e1;
-			Result := i / 100;
+			Result := BigDecimal(i) / 100;
 		end;
 	end;
 end;
@@ -128,7 +128,7 @@ begin
 	end
 	else
 	begin
-		Result := RoundN(ScoreOne * GetArcElo(Elo - OpElo));
+		Result := BigDecimal.Round(ScoreOne * GetArcElo(Elo - OpElo));
 	end;
 end;
 
@@ -136,7 +136,7 @@ function Elo(const Args: array of TVector): TVector;
 var
 	i: SG;
 	ArgCount: SG;
-	e: FA;
+	e: BigDecimal;
 begin
 	ArgCount := Length(Args);
 	if ArgCount = 0 then
@@ -159,7 +159,7 @@ function ArcElo(const Args: array of TVector): TVector;
 var
 	i: SG;
 	ArgCount: SG;
-	e: FA;
+	e: BigDecimal;
 begin
 	ArgCount := Length(Args);
 	if ArgCount = 0 then
@@ -177,7 +177,7 @@ begin
 	Result := NumToVector(GetArcElo(e));
 end;
 
-function DeltaElo(const Elo, AvgElo: TElo; Age: TDateTime; Score, GameCount: SG): Extended;
+function DeltaElo(const Elo, AvgElo: TElo; Age: TDateTime; Score, GameCount: SG): BigDecimal;
 var
 	Coef: SG;
 begin
@@ -187,7 +187,7 @@ begin
 		Coef := 25
 	else
 		Coef := 15;
-	Result := Coef * (Score / ScoreOne - RoundN(100 * GameCount * GetArcElo(Elo - AvgElo)) / 100);
+	Result := Coef * (BigDecimal(Score) / ScoreOne - BigDecimal(BigDecimal.Round(100 * GameCount * GetArcElo(Elo - AvgElo))) / 100);
 end;
 
 function DeltaEloI(const Elo, AvgElo: TElo; const Age: TDateTime; const Score, GameCount: SG): SG;
@@ -207,7 +207,7 @@ function EloC(const Args: array of TVector): TVector;
 var
 	i, j: SG;
 	ArgCount: SG;
-	e, e0, e1, MyElo: FA;
+	e, e0, e1, MyElo: BigDecimal;
 begin
 	ArgCount := Length(Args);
 	if ArgCount < 3 then
@@ -239,7 +239,8 @@ begin
 			if e0 > 0 then
 			begin
 				if ArgCount and 1 = 0 then
-					if e0 < MyElo - 300 then e0 := MyElo - 300; // New for year 2005
+					if e0 < MyElo - 300 then
+            e0 := MyElo - 300; // New for year 2005
 				e := e + e0;
 				e1 := e1 + VectorToNum(Args[2 * i + 1 - (ArgCount and 1)]); // Score
 				Inc(j);
@@ -247,9 +248,9 @@ begin
 		end;
 		if j > 0 then
 		begin
-			e0 := RoundN(e / j); // Avg opponets elo
+			e0 := BigDecimal.Round(e / j); // Avg opponets elo
 			if ArgCount and 1 = 0 then
-				Result := NumToVector(RoundN(VectorToNum(Args[0])){Delta} * (e1 - RoundN(100 * j * GetArcElo(MyElo - e0)) / 100))
+				Result := NumToVector(BigDecimal.Round(VectorToNum(Args[0])){Delta} * (e1 - BigDecimal(BigDecimal.Round(GetArcElo(MyElo - e0) * 100 * j)) / 100))
 			else
 				Result := NumToVector(e0{Avg opponets elo} + GetELO(e1 / j));
 		end;

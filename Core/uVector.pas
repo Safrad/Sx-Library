@@ -3,44 +3,18 @@ unit uVector;
 interface
 
 uses
+  Velthuis.BigDecimals,
 	uTypes,
 	uOutputFormat;
 
 type
-(*
-	TOperator = (opNone, opNumber, opIdent,
-//		opUnarMinus - implemented as opMinus with firts argument nil
-		// Arithmetic
-		opPlus, opMinus, opMul, opDiv, opMod,
-		opFact, opPower,
-		// Logic
-		opNot, opShl, opShr, opAnd, opOr, opXor, opXnor,
-		// Single
-		opRound, opTrunc, opAbs, opNeg, opInv, opInc, opDec, opGCD, opLCM,
-		// Exponencial
-		opExp, opLn, opLog, opSqr, opSqrt,
-		// Goniometric
-		opLength,
-		opSin, opCos, opTan,
-		opArcSin, opArcCos, opArcTan,
-		opSinh, opCosh, opTanh,
-		opArcSinh, opArcCosh, opArcTanh
-		{
-		b	a	| 0 and or xor xnor 1
-		0	0	  0  0  0   0   1   1
-		0	1   0  0  1   1   0   1
-		1	0   0  0  1   1   0   1
-		1	1   0  1  1   0   1   1
-		}
-); *)
-
-	TVector = array of FA;
+	TVector = array of BigDecimal;
 
 function NullVector: TVector;
 function NegVector(const V: TVector): TVector;
 function PlusVector(const V1, V2: TVector): TVector;
 function MinusVector(const V1, V2: TVector): TVector;
-function SumVector(const V: TVector): FA;
+function SumVector(const V: TVector): BigDecimal;
 function MultiplyVector(const V1, V2: TVector): TVector;
 function DivideVector(const V1, V2: TVector): TVector;
 function ModuloVector(const V1, V2: TVector): TVector;
@@ -49,33 +23,64 @@ function SqrtVector(const V: TVector): TVector;
 function PowerVector(const V1, V2: TVector): TVector;
 function LogVector(const V1, V2: TVector): TVector;
 function LnVector(const V: TVector): TVector;
-function TruncVector(const V: TVector): TVector;
-function FloorVector(const V: TVector): TVector;
-function RoundVector(const V: TVector): TVector;
+
 function CeilVector(const V: TVector): TVector;
-function FracVector(const V: TVector): TVector;
+function FloorVector(const V: TVector): TVector;
+
+function TruncVector(const V: TVector): TVector; // Same as RoundTowardZeroVector
+function RoundTowardsZeroVector(const V: TVector): TVector; // Same as TruncVector
+function RoundAwayFromZeroVector(const V: TVector): TVector;
+
+function RoundHalfCeilVector(const V: TVector): TVector;
+function RoundHalfFloorVector(const V: TVector): TVector;
+function RoundHalfTowardsZeroVector(const V: TVector): TVector;
+function RoundHalfAwayFromZeroVector(const V: TVector): TVector;
+function RoundHalfEvenVector(const V: TVector): TVector; // Same as RoundVector
+function RoundVector(const V: TVector): TVector; // Same as RoundHalfEvenVector
+
+function FracVector(const V: TVector): TVector; // Original = Ceil + Frac
 function AbsVector(const V: TVector): TVector;
 function NotVector(const V: TVector): TVector;
 function InvVector(const V: TVector): TVector;
 function ExpVector(const V: TVector): TVector;
 function FactVector(const V: TVector): TVector;
 function GammaVector(const V: TVector): TVector;
-function CompareVector(const V1, V2: TVector): FA;
+function GCDVector(const AData: array of TVector): TVector;
+function LCMVector(const AData: array of TVector): TVector;
+
+function CompareVector(const V1, V2: TVector): BigDecimal;
 function ShlVector(const V1, V2: TVector): TVector;
 function ShrVector(const V1, V2: TVector): TVector;
+
+(*
+  b a | 0  and or  xor xnor 1
+  –––––––––––––––––––––––––––
+  0 0 | 0   0   0   0   1   1
+  0 1 | 0   0   1   1   0   1
+  1 0 | 0   0   1   1   0   1
+  1 1 | 0   1   1   0   1   1
+*)
 function AndVector(const V1, V2: TVector): TVector;
 function OrVector(const V1, V2: TVector): TVector;
 function XorVector(const V1, V2: TVector): TVector;
 function XnorVector(const V1, V2: TVector): TVector;
 
-function NumToVector(const Num: FA): TVector;
-function VectorToNum(const V: TVector): FA;
+function BigDecimalToString(const ABigDeciomal: BigDecimal): string;
+function NumToVector(const Num: BigDecimal): TVector;
+function VectorToNum(const V: TVector): BigDecimal;
 function VectorToStr(const V: TVector; const OutputFormat: TOutputFormat): string;
 
 implementation
 
 uses
-	Math, GammaF,
+	SysUtils,
+  Math,
+  GammaF,
+
+  Velthuis.BigIntegers,
+  uChar,
+  uBigDecimalHelper,
+  uStrings,
 	uMath;
 
 function NullVector: TVector;
@@ -114,7 +119,7 @@ begin
 	Result := PlusVector(V1, NegVector(V2));
 end;
 
-function SumVector(const V: TVector): FA;
+function SumVector(const V: TVector): BigDecimal;
 var i: SG;
 begin
 	Result := 0;
@@ -125,7 +130,7 @@ end;
 function MultiplyVector(const V1, V2: TVector): TVector;
 var
 	i: SG;
-	M: FA;
+	M: BigDecimal;
 begin
 	M := SumVector(V2);
 	SetLength(Result, Length(V1));
@@ -138,13 +143,13 @@ end;
 function DivideVector(const V1, V2: TVector): TVector;
 var
 	i: SG;
-	M: FA;
+	M: BigDecimal;
 begin
 	M := SumVector(V2);
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(Result) - 1 do
 	begin
-		if M = 0 then
+{		if M = 0 then
 		begin
 			if Result[i] > 0 then
 				Result[i] := Infinity
@@ -154,22 +159,22 @@ begin
 				Result[i] := 0;
 		end
 		else
-		begin
-			Result[i] := V1[i] / M;
-		end;
+		begin}
+			Result[i] := V1[i].Divide(M);
+//		end;
 	end;
 end;
 
 function ModuloVector(const V1, V2: TVector): TVector;
 var
 	i: SG;
-	M: FA;
+	M: BigDecimal;
 begin
 	M := SumVector(V2);
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(Result) - 1 do
 	begin
-		if M = 0 then
+{		if M = 0 then
 		begin
 			if Result[i] > 0 then
 				Result[i] := Infinity
@@ -179,9 +184,9 @@ begin
 				Result[i] := 0;
 		end
 		else
-		begin
-			Result[i] := ModE(V1[i], M);
-		end;
+		begin}
+    	Result[i] := V1[i] - BigDecimal.Round(V1[i].Divide(M), rmFloor) * M;
+//		end;
 	end;
 end;
 
@@ -190,7 +195,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V));
 	for i := 0 to Length(V) - 1 do
-		Result[i] := Sqr(V[i]);
+		Result[i] := BigDecimal.Sqr(V[i]);
 end;
 
 function SqrtVector(const V: TVector): TVector;
@@ -198,10 +203,10 @@ var i: SG;
 begin
 	SetLength(Result, Length(V));
 	for i := 0 to Length(V) - 1 do
-		Result[i] := Sqrt(V[i]);
+		Result[i] := BigDecimal.Sqrt(V[i], Max(BigDecimal.DefaultPrecision, V[i].Precision));
 end;
 
-function VectorLength(const V: TVector): FA;
+function VectorLength(const V: TVector): BigDecimal;
 var i: SG;
 begin
 	Result := 0;
@@ -211,52 +216,173 @@ end;
 
 function PowerVector(const V1, V2: TVector): TVector;
 begin
-	Result := NumToVector(Math.Power(VectorToNum(V1), VectorToNum(V2)));
+	Result := NumToVector(VectorToNum(V1).Power(VectorToNum(V2)));
 end;
 
 function LogVector(const V1, V2: TVector): TVector;
 begin
-	Result := NumToVector(Math.LogN(VectorToNum(V1), VectorToNum(V2)));
+	Result := NumToVector(VectorToNum(V2).Ln.Divide(VectorToNum(V1).Ln));
 end;
 
 function LnVector(const V: TVector): TVector;
 begin
-	Result := NumToVector(Ln(VectorToNum(V)));
+  Result := NumToVector(VectorToNum(V).Ln);
 end;
 
-function TruncVector(const V: TVector): TVector;
+function RoundFloorVector(const V: TVector): TVector;
+var i: SG;
 begin
-	Result := NumToVector(Trunc(VectorToNum(V)));
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], rmFloor);
+end;
+
+function RoundDown(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], rmCeiling);
+end;
+
+function RoundUp(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], rmNearestEven);
+end;
+
+function RoundEvenVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], rmNearestEven);
+end;
+
+function CeilVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], rmCeiling);
 end;
 
 function FloorVector(const V: TVector): TVector;
+var i: SG;
 begin
-	Result := NumToVector(Floor(VectorToNum(V)));
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], rmFloor);
+end;
+
+function TruncVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmDown);
+end;
+
+function RoundTowardsZeroVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmDown);
+end;
+
+function RoundAwayFromZeroVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmUp);
+end;
+
+function RoundHalfCeilVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+  begin
+    if V[i] <= 0 then
+  		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmNearestDown)
+    else
+  		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmNearestUp);
+  end;
+end;
+
+function RoundHalfFloorVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+  begin
+    if V[i] <= 0 then
+  		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmNearestUp)
+    else
+  		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmNearestDown);
+  end;
+end;
+
+function RoundHalfTowardsZeroVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmNearestDown);
+end;
+
+function RoundHalfAwayFromZeroVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmNearestUp);
+end;
+
+function RoundHalfEvenVector(const V: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Round(V[i], BigDecimal.RoundingMode.rmNearestEven);
 end;
 
 function RoundVector(const V: TVector): TVector;
 begin
-	Result := NumToVector(RoundN(VectorToNum(V)));
-end;
-
-function CeilVector(const V: TVector): TVector;
-begin
-	Result := NumToVector(Ceil(VectorToNum(V)));
+  Result := RoundHalfEvenVector(V);
 end;
 
 function FracVector(const V: TVector): TVector;
+var
+  i: SG;
+  A: BigDecimal;
 begin
-	Result := NumToVector(Frac(VectorToNum(V)));
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+  begin
+    A := BigDecimal.Abs(V[i]);
+		Result[i] := A - BigDecimal.Round(A, rmFloor);
+  end;
 end;
 
 function AbsVector(const V: TVector): TVector;
+var i: SG;
 begin
-	Result := NumToVector(Abs(VectorToNum(V)));
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Abs(V[i]);
 end;
 
 function NotVector(const V: TVector): TVector;
+var i: SG;
 begin
-	Result := NumToVector(not RoundN(VectorToNum(V)));
+	SetLength(Result, Length(V));
+	for i := 0 to Length(V) - 1 do
+		Result[i] := BigDecimal.Negate(V[i]) - 1;
 end;
 
 function InvVector(const V: TVector): TVector;
@@ -266,52 +392,79 @@ end;
 
 function ExpVector(const V: TVector): TVector;
 begin
-	Result := NumToVector(Exp(VectorToNum(V)));
+	Result := NumToVector(VectorToNum(V).Exp);
 end;
 
 function FactVector(const V: TVector): TVector;
 var
-	i, j: SG;
-	e, x: FA;
+	j: SG;
+	e, x: BigDecimal;
 begin
-	x := 1;
-	for i := 0 to 0 do
-	begin
-		e := VectorToNum(V);
-		if Frac(e) = 0 then
-		begin
-			if e < 0 then
-			begin
-			//				ShowError('Input -infinity..2000 for Fact')
-			end
-			else if e <= 1754 then
-			begin
-				for j := 2 to RoundN(e) do
-					x := x * j;
-			end
-			else
-			begin
-				if e > 1754 then x := Infinity;
-			end;
-		end
-		else
-		begin
-			x := Gamma(e + 1);
-		end;
-	end;
-	Result := NumToVector(x);
+  e := VectorToNum(V);
+  if e.Frac = 0 then
+  begin
+    if e < 0 then
+    begin
+      raise EArgumentException.Create('Argument of factorial expect non-negative integer.');
+    end
+    else
+    begin
+      x := 1;
+      for j := 2 to BigDecimal.Round(e) do
+        x := x * j;
+    end;
+  	Result := NumToVector(x);
+  end
+  else
+  begin
+    Result := GammaVector(NumToVector(e + 1));
+  end;
 end;
 
 function GammaVector(const V: TVector): TVector;
 var
-	e, x: FA;
+	e, x: Extended;
 begin
-	e := VectorToNum(V);
+	e := VectorToNum(V).ToFloat;
 	x := Gamma(e);
 	Result := NumToVector(x);
 end;
 
-function CompareVector(const V1, V2: TVector): FA;
+function GCDVector2(const V1, V2: TVector): TVector;
+var i: SG;
+begin
+	SetLength(Result, Length(V1));
+	for i := 0 to Length(V1) - 1 do
+    Result[i] := BigInteger.GreatestCommonDivisor(V1[i].UnscaledValue, V2[i].UnscaledValue);
+end;
+
+function GCDVector(const AData: array of TVector): TVector;
+var
+  i: Integer;
+begin
+  if Length(AData) = 0 then
+    Exit;
+
+  Result := AData[0];
+  for i := 1 to Length(AData) - 1 do
+  begin
+    Result := GCDVector2(Result, AData[i]);
+  end;
+end;
+
+function LCMVector(const AData: array of TVector): TVector;
+begin
+  if Length(AData) = 0 then
+  else if Length(AData) = 1 then
+    Result := AData[0]
+  else if Length(AData) = 2 then
+    Result := DivideVector(MultiplyVector(AData[0], AData[1]), GCDVector2(AData[0], AData[1]))
+  else
+    raise ENotImplemented.Create('LCM expect 2 or less arguments.');
+  // TODO else if Length(AData) > 2 then
+end;
+
+function CompareVector(const V1, V2: TVector): BigDecimal;
 begin
 	Result := VectorLength(V1) - VectorLength(V2);
 end;
@@ -321,7 +474,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := RoundN(V1[i]) shl RoundN(VectorToNum(V2));
+		Result[i] := V1[i] * BigDecimal(2).Power(V2[i]);
 end;
 
 function ShrVector(const V1: TVector; const V2: TVector): TVector;
@@ -329,7 +482,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := RoundN(V1[i]) shr RoundN(VectorToNum(V2));
+		Result[i] := V1[i].Divide(BigDecimal(2).Power(V2[i]));
 end;
 
 function AndVector(const V1: TVector; const V2: TVector): TVector;
@@ -337,7 +490,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := RoundN(V1[i]) and RoundN(VectorToNum(V2));
+		Result[i] := V1[i].UnscaledValue and V2[i].UnscaledValue;
 end;
 
 function OrVector(const V1: TVector; const V2: TVector): TVector;
@@ -345,7 +498,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := RoundN(V1[i]) or RoundN(VectorToNum(V2));
+		Result[i] := V1[i].UnscaledValue or V2[i].UnscaledValue;
 end;
 
 function XorVector(const V1: TVector; const V2: TVector): TVector;
@@ -353,7 +506,7 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := RoundN(V1[i]) xor RoundN(VectorToNum(V2));
+		Result[i] := V1[i].UnscaledValue xor V2[i].UnscaledValue;
 end;
 
 function XnorVector(const V1: TVector; const V2: TVector): TVector;
@@ -361,91 +514,45 @@ var i: SG;
 begin
 	SetLength(Result, Length(V1));
 	for i := 0 to Length(V1) - 1 do
-		Result[i] := not (RoundN(V1[i]) xor Round(VectorToNum(V2)));
+		Result[i] := not (V1[i].UnscaledValue xor VectorToNum(V2).UnscaledValue);
 end;
 
-(*
-function UnaryOperation(const V: TVector; const Operation: TOperator; const GonFormat: TGoniometricFormat = gfRad): TVector;
-var i: SG;
-begin
-	SetLength(Result, Length(V));
-	for i := 0 to Length(V) - 1 do
-	begin
-			case GonFormat of
-			gfGrad: V[i] := GradToRad(V[i]);
-			gfDeg: V[i] := DegToRad(V[i]);
-			gfCycle: V[i] := CycleToRad(V[i]);
-			end;
-		case Operation of
-		opNeg: Result[i] := -V[i];
-		opTrunc: Result[i] := Trunc(V[i]);
-		opRound: Result[i] := Round(V[i]);
-		opAbs: Result[i] := Abs(V[i]);
-		opNot: Result[i] := not Round(V[i]);
-		opInc: Result[i] := V[i] + 1;
-		opDec: Result[i] := V[i] - 1;
-		opExp: Result[i] := Exp(V[i]);
-		opLn:
-		begin
-			if V[i] > 0 then
-				Result[i] := Ln(V[i])
-			else
-				Result[i] := NegInfinity;
-//					ShowError('Input 0..infinity for Ln');}
-		end;
-		opSqr: Result[i] := Sqr(V[i]);
-		opSqrt: Result[i] := Sqrt(V[i]);
-		// Goniometric
-		opSin: Result[i] := Sin(V[i]);
-		opCos: Result[i] := Cos(V[i]);
-		opTan: Result[i] := Tan(V[i]);
-		opArcSin: Result[i] := ArcSin(V[i]);
-		opArcCos: Result[i] := ArcCos(V[i]);
-		opArcTan: Result[i] := ArcTan(V[i]);
-
-		opSinH: Result[i] := Sinh(V[i]);
-		opCosH: Result[i] := Cosh(V[i]);
-		opTanH: Result[i] := Tanh(V[i]);
-		opArcSinH: Result[i] := ArcSinh(V[i]);
-		opArcCosH: Result[i] := ArcCosh(V[i]);
-		opArcTanH: Result[i] := ArcTanh(V[i]);
-
-		else Assert(False);
-		end;
-	end;
-end; *)
-
-function NumToVector(const Num: FA): TVector;
+function NumToVector(const Num: BigDecimal): TVector;
 begin
 	SetLength(Result, 1);
 	Result[0] := Num;
 end;
 
-function VectorToNum(const V: TVector): FA;
+function VectorToNum(const V: TVector): BigDecimal;
 begin
-//	Assert(Length(Vector) = 1);
+	Assert(Length(V) <= 1);
 	if Length(V) = 0 then
 		Result := 0
 	else
 		Result := V[0];
 end;
 
+function BigDecimalToString(const ABigDeciomal: BigDecimal): string;
+begin
+  Result := ABigDeciomal.RemoveTrailingZeros(0).ToString;
+end;
+
 function VectorToStr(const V: TVector; const OutputFormat: TOutputFormat): string;
 var i: SG;
 begin
 	case Length(V) of
-	0: Result := '';
-	1: Result := FToS(V[0], OutputFormat);
-	else
-	begin
-		Result := '(';
-		for i := 0 to Length(V) - 1 do
-			Result := Result + FToS(V[i], OutputFormat);
+    0: Result := '';
+    1: Result := BigDecimalToString(V[0]);
+    else
+    begin
+      Result := '(';
+      for i := 0 to Length(V) - 1 do
+        Result := Result + BigDecimalToString(V[i]);
 
-		Result := Result + ')';
+      Result := Result + ')';
+    end;
 	end;
-	end;
+  Replace(Result, '-', CharMinus);
 end;
 
 end.
-

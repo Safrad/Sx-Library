@@ -1,0 +1,17 @@
+#Expression,Result
+"Equal(1;1)",1
+"Equal(8;7)",0
+"Greater(8;7)",1
+"Greater(7;8)",0
+"Greater(7;7)",0
+"Less(8;7)",0
+"Less(7;8)",1
+"Less(7;7)",0
+"GreaterOrEqual(8;7)",1
+"GreaterOrEqual(7;7)",1
+"GreaterOrEqual(7;8)",0
+"LessOrEqual(7;8)",1
+"LessOrEqual(7;7)",1
+"LessOrEqual(8;7)",0
+"IfElse(1>2;7.5;8.5)",8.5
+"IfElse(1<2;7.5;8.5)",7.5

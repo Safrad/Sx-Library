@@ -15,6 +15,8 @@ type
 	TTernaryFunction = function(const X, Y, Z: TVector): TVector;
 	TNaryFunction = function(const X: array of TVector): TVector;
 
+  TFunctionName = U4;
+
 	PFunction = ^TFunction;
 	TFunction = record
 		Name: string;
@@ -30,10 +32,15 @@ procedure AddFunction(const UnitName, FunctionName: string; const BinaryFunction
 procedure AddFunction(const UnitName, FunctionName: string; const TernaryFunction: TTernaryFunction; const Description: string); overload;
 procedure AddFunction(const UnitName, FunctionName: string; const NaryFunction: TNaryFunction; const Description: string); overload;
 
-function CorrectParamCount(const UnitName, FunctionName: string; const ArgCount: SG): BG;
-function FindFunction(const UnitName, FunctionName: string; const ArgCount: SG): PFunction;
-function FunctionExists(const UnitName, FunctionName: string): BG;
-function CallFunction(const UnitName, FunctionName: string; const Args: array of TVector): TVector;
+function CorrectParamCount(const FunctionName: TFunctionName; const ArgCount: SG): BG;
+
+function FindFunction(const FunctionName: string; const ArgCount: SG): PFunction; overload;
+function FindFunction(const FunctionName: TFunctionName; const ArgCount: SG): PFunction; overload;
+
+function FunctionExists(const FunctionName: string): BG; overload;
+function FunctionExists(const FunctionName: TFunctionName): BG; overload;
+
+function CallFunction(const FunctionName: TFunctionName; const Args: array of TVector): TVector;
 
 var
 	Namespace: THashTable; // Read only
@@ -48,6 +55,7 @@ uses
 	uMathFunctions,
 	uLogicFunctions,
 	uGoniometricFunctions,
+  uHyperbolicFunctions,
 	uStatisticsFunctions,
 	uPhysicsFunctions,
 	uEloFunctions;
@@ -95,11 +103,16 @@ begin
 	AddFunctionEx(UnitName, FunctionName, Pointer(@NaryFunction), AnyParameters, Description);
 end;
 
-function FindFunction(const UnitName, FunctionName: string; const ArgCount: SG): PFunction;
+function FindFunction(const FunctionName: string; const ArgCount: SG): PFunction;
+begin
+  Result := FindFunction(HashCode(UpperCase(FunctionName)), ArgCount);
+end;
+
+function FindFunction(const FunctionName: TFunctionName; const ArgCount: SG): PFunction;
 var
 	F: PFunction;
 begin
-	F := Namespace.Find(HashCode(UpperCase(FunctionName)));
+	F := Namespace.Find(FunctionName);
 	if (F <> nil) and (ArgCount <> AnyParameters) and (F.ArgCount <> AnyParameters) then // Any parameters
 	begin
 		Result := nil;
@@ -117,21 +130,26 @@ begin
 		Result := F;
 end;
 
-function CorrectParamCount(const UnitName, FunctionName: string; const ArgCount: SG): BG;
+function CorrectParamCount(const FunctionName: TFunctionName; const ArgCount: SG): BG;
 begin
-	Result := FindFunction(UnitName, FunctionName, ArgCount) <> nil;
+	Result := FindFunction(FunctionName, ArgCount) <> nil;
 end;
 
-function FunctionExists(const UnitName, FunctionName: string): BG;
+function FunctionExists(const FunctionName: TFunctionName): BG;
 begin
-	Result := FindFunction(UnitName, FunctionName, AnyParameters) <> nil;
+	Result := FindFunction(FunctionName, AnyParameters) <> nil;
 end;
 
-function CallFunction(const UnitName, FunctionName: string; const Args: array of TVector): TVector;
+function FunctionExists(const FunctionName: string): BG;
+begin
+	Result := FindFunction(HashCode(UpperCase(FunctionName)), AnyParameters) <> nil;
+end;
+
+function CallFunction(const FunctionName: TFunctionName; const Args: array of TVector): TVector;
 var
 	F: PFunction;
 begin
-	F := FindFunction(UnitName, FunctionName, Length(Args));
+	F := FindFunction(FunctionName, Length(Args));
 	if (F <> nil) and (F.Address <> nil) then
 	begin
 		case F.ArgCount of

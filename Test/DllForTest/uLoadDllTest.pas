@@ -78,12 +78,13 @@ uses
   uGeometry3D,
   uPolygon2D,
 
-  uDParser,
+  uMathExpressionParser,
+  uTimeExpressionParser,
 
   uTable,
 
   uAbout,
-  PPMImage,
+//  PPMImage,
   TGAImage,
   uDBitmap,
   uDButton,

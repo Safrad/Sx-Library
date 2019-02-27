@@ -28,7 +28,7 @@ uses
   uRegionalTest in '..\Core\uRegionalTest.pas',
   uMathTest in '..\Core\uMathTest.pas',
   uCPUTest in '..\Core\uCPUTest.pas',
-  uDParserTest in '..\Parser\uDParserTest.pas',
+  uMathExpressionParserTest in '..\Parser\uMathExpressionParserTest.pas',
   uArgumentsForTest in '..\Arguments\uArgumentsForTest.pas',
   uArgumentsTest in '..\Arguments\uArgumentsTest.pas',
   uLoadDllTest in 'DllForTest\uLoadDllTest.pas',
@@ -47,7 +47,9 @@ uses
   uCyclicRedundancyCheckTest in '..\Core\uCyclicRedundancyCheckTest.pas',
   uSplitFileTest in '..\Core\uSplitFileTest.pas',
   uRegionalCodePageTest in '..\Regional\uRegionalCodePageTest.pas',
-  uWaveTest in '..\Sound\SoundItems\uWaveTest.pas';
+  uWaveTest in '..\Sound\SoundItems\uWaveTest.pas',
+  uCustomCharTable in '..\Core\uCustomCharTable.pas',
+  uTimeExpressionParserTest in '..\Parser\uTimeExpressionParserTest.pas';
 
 {$R *.RES}
 

@@ -3,12 +3,13 @@ unit uGetInt;
 interface
 
 uses
+  Velthuis.BigDecimals,
 	uTypes, uParserMsg,
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm, uDMemo;
 
 type
-	TOnApplyInt = procedure(Value: S8);
+	TOnApplyInt = procedure(Value: BigDecimal);
 
 	TfGetInt = class(TDForm)
 		EditInput: TLabeledEdit;
@@ -38,41 +39,48 @@ type
 		procedure ButtonOkClick(Sender: TObject);
 		procedure FormCreate(Sender: TObject);
 		procedure UpDownChangingEx(Sender: TObject; var AllowChange: Boolean;
-			NewValue: Smallint; Direction: TUpDownDirection);
+			NewValue: Integer; Direction: TUpDownDirection);
 	private
 		{ Private declarations }
-		Messages: TParserMessages;
-		TMinVal, TCurVal, TDefVal, TMaxVal, NowVal: S8;
-		OnApply: TOnApplyInt;
+		FMessages: TParserMessages;
+		FMinVal, FCurVal, FDefVal, FMaxVal, FNowVal: BigDecimal;
+		FOnApply: TOnApplyInt;
+    FTrackBarMultiplier: S8;
+    procedure InitTrackBarMultiplier;
 		procedure ChangeInt;
 		procedure InitButtons;
 		procedure InitEdit;
 		procedure InitTrackBar;
+    procedure InitAll;
 	public
 		{ Public declarations }
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
 	end;
 
+function GetNumber(APrompt: string;
+	var ACurVal: BigDecimal; const AMinVal, ADefVal, AMaxVal: BigDecimal; AOnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: S8; const AMinVal, ADefVal, AMaxVal: S8; AOnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: U4; const AMinVal, ADefVal, AMaxVal: U4; AOnApplyInt: TOnApplyInt): Boolean; overload;
 function GetNumber(Prompt: string;
-	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean; overload;
+	var ACurVal: S4; const AMinVal, ADefVal, AMaxVal: S4; AOnApplyInt: TOnApplyInt): Boolean; overload;
 function GetNumber(Prompt: string;
-	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean; overload;
-function GetNumber(Prompt: string;
-	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean; overload;
-function GetNumber(Prompt: string;
-	var CurVal: U2; const MinVal, DefVal, MaxVal: U2; OnApplyInt: TOnApplyInt): Boolean; overload;
-function GetNumber(Prompt: string;
-	var CurVal: S2; const MinVal, DefVal, MaxVal: S2; OnApplyInt: TOnApplyInt): Boolean; overload;
-function GetNumber(Prompt: string;
-	var CurVal: U1; const MinVal, DefVal, MaxVal: U1; OnApplyInt: TOnApplyInt): Boolean; overload;
-function GetNumber(Prompt: string;
-	var CurVal: S1; const MinVal, DefVal, MaxVal: S1; OnApplyInt: TOnApplyInt): Boolean; overload;
+	var ACurVal: U2; const AMinVal, ADefVal, AMaxVal: U2; AOnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: S2; const AMinVal, ADefVal, AMaxVal: S2; AOnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: U1; const AMinVal, ADefVal, AMaxVal: U1; AOnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: S1; const AMinVal, ADefVal, AMaxVal: S1; AOnApplyInt: TOnApplyInt): Boolean; overload;
 {$ifdef CPUX64}
-function GetNumber(Prompt: string;
-	var CurVal: SG; const MinVal, DefVal, MaxVal: SG; OnApplyInt: TOnApplyInt): Boolean; overload;
-function GetNumber(Prompt: string;
-	var CurVal: UG; const MinVal, DefVal, MaxVal: UG; OnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: U8; const AMinVal, ADefVal, AMaxVal: U8; AOnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: SG; const AMinVal, ADefVal, AMaxVal: SG; AOnApplyInt: TOnApplyInt): Boolean; overload;
+function GetNumber(APrompt: string;
+	var ACurVal: UG; const AMinVal, ADefVal, AMaxVal: UG; AOnApplyInt: TOnApplyInt): Boolean; overload;
 {$endif}
 
 implementation
@@ -81,65 +89,66 @@ implementation
 uses
 	Math,
 	uDictionary,
-	uStrings, uInputFormat, uDParser, uLayout;
+  uOutputFormat,
+	uStrings, uInputFormat, uMathExpressionParser, uLayout;
 
 var
 	fGetInt: TfGetInt;
 
-function GetNumber(Prompt: string;
-	var CurVal: S8; const MinVal, DefVal, MaxVal: S8; OnApplyInt: TOnApplyInt): Boolean;
+function GetNumber(APrompt: string;
+	var ACurVal: BigDecimal; const AMinVal, ADefVal, AMaxVal: BigDecimal; AOnApplyInt: TOnApplyInt): Boolean;
 begin
-	Assert(not ((MinVal > MaxVal) or (DefVal < MinVal) or (DefVal > MaxVal)
-		or (CurVal < MinVal) or (CurVal > MaxVal)));
+	Assert(not ((AMinVal > AMaxVal) or (ADefVal < AMinVal) or (ADefVal > AMaxVal)
+		or (ACurVal < AMinVal) or (ACurVal > AMaxVal)));
 
 	if not Assigned(fGetInt) then
 	begin
 		fGetInt := TfGetInt.Create(Application.MainForm);
 	end;
-	fGetInt.ButtonApply.Enabled := Assigned(OnApplyInt);
-	fGetInt.OnApply := OnApplyInt;
-	fGetInt.TMinVal := MinVal;
-	fGetInt.TCurVal := CurVal;
-	fGetInt.TDefVal := DefVal;
-	fGetInt.TMaxVal := MaxVal;
-	if fGetInt.TMaxVal < fGetInt.TMinVal then fGetInt.TMaxVal := fGetInt.TMinVal;
-	if fGetInt.TCurVal < fGetInt.TMinVal then
-		fGetInt.TCurVal := fGetInt.TMinVal
-	else if fGetInt.TCurVal > fGetInt.TMaxVal then
-		fGetInt.TCurVal := fGetInt.TMaxVal;
-	fGetInt.NowVal := fGetInt.TCurVal;
-	fGetInt.Caption := Translate(RemoveSingleAmp(Prompt));
-	fGetInt.LabelMin.Caption := IntToStr(fGetInt.TMinVal);
-	fGetInt.LabelMax.Caption := IntToStr(fGetInt.TMaxVal);
-	fGetInt.LabelNow.Caption := IntToStr(fGetInt.NowVal);
+	fGetInt.ButtonApply.Enabled := Assigned(AOnApplyInt);
+	fGetInt.FOnApply := AOnApplyInt;
+
+	fGetInt.FMinVal := AMinVal;
+	fGetInt.FCurVal := ACurVal;
+	fGetInt.FDefVal := ADefVal;
+	fGetInt.FMaxVal := AMaxVal;
+	if fGetInt.FMaxVal < fGetInt.FMinVal then fGetInt.FMaxVal := fGetInt.FMinVal;
+	if fGetInt.FCurVal < fGetInt.FMinVal then
+		fGetInt.FCurVal := fGetInt.FMinVal
+	else if fGetInt.FCurVal > fGetInt.FMaxVal then
+		fGetInt.FCurVal := fGetInt.FMaxVal;
+	fGetInt.FNowVal := fGetInt.FCurVal;
+	fGetInt.Caption := Translate(RemoveSingleAmp(APrompt));
+	fGetInt.LabelMin.Caption := fGetInt.FMinVal.ToString;
+	fGetInt.LabelMax.Caption := fGetInt.FMaxVal.ToString;
+	fGetInt.LabelNow.Caption := fGetInt.FNowVal.ToString;
+
+  fGetInt.InitTrackBarMultiplier;
 
 	fGetInt.TrackBar.OnChange := nil;
-	fGetInt.TrackBar.Frequency := (UG(Min(High(SG) div 2, fGetInt.TMaxVal - fGetInt.TMinVal)) + 19) div 20;
-	fGetInt.TrackBar.PageSize := fGetInt.TrackBar.Frequency;
-	if fGetInt.TMaxVal < fGetInt.TrackBar.Min then
+	fGetInt.TrackBar.PageSize := 10;
+	fGetInt.TrackBar.Frequency := fGetInt.TrackBar.PageSize div 2;
+	if fGetInt.FMaxVal < fGetInt.TrackBar.Min then
 	begin
-		fGetInt.TrackBar.Min := fGetInt.TMinVal;
-		fGetInt.TrackBar.Max := fGetInt.TMaxVal;
+		fGetInt.TrackBar.Min := 0;
+		fGetInt.TrackBar.Max := ((fGetInt.FMaxVal - fGetInt.FMinVal) div fGetInt.FTrackBarMultiplier).Trunc;
 	end
 	else
 	begin
-		fGetInt.TrackBar.Max := Min(High(SG), fGetInt.TMaxVal);
-		fGetInt.TrackBar.Min := fGetInt.TMinVal;
+		fGetInt.TrackBar.Max := ((fGetInt.FMaxVal - fGetInt.FMinVal) div fGetInt.FTrackBarMultiplier).Trunc;
+		fGetInt.TrackBar.Min := 0;
 	end;
-	fGetInt.TrackBar.SelStart := fGetInt.TCurVal;
-	fGetInt.TrackBar.SelEnd := fGetInt.TCurVal;
+	fGetInt.TrackBar.SelStart := SG((fGetInt.FCurVal - fGetInt.FMinVal) div fGetInt.FTrackBarMultiplier) - 1;
+	fGetInt.TrackBar.SelEnd := SG((fGetInt.FCurVal - fGetInt.FMinVal) div fGetInt.FTrackBarMultiplier) + 1;
 	fGetInt.TrackBar.OnChange := fGetInt.TrackBarChange;
 
-{ if MaxVal-MinVal > 112 then
-		TrackBar.TickStyle := tsNone
-	else
-		TrackBar.TickStyle := tsAuto;}
 	fGetInt.InitTrackBar;
 	fGetInt.InitButtons;
 	fGetInt.InitEdit;
 	fGetInt.EditInputChange(nil);
-	if fGetInt.ActiveControl <> fGetInt.EditInput then fGetInt.ActiveControl := fGetInt.EditInput;
-	if Assigned(fGetInt.OnApply) then
+	if fGetInt.ActiveControl <> fGetInt.EditInput then
+     fGetInt.ActiveControl := fGetInt.EditInput;
+	if Assigned(fGetInt.FOnApply) then
 	begin
 		fGetInt.FormStyle := fsStayOnTop;
 		fGetInt.Show;
@@ -150,7 +159,7 @@ begin
 		fGetInt.FormStyle := fsNormal;
 		if fGetInt.ShowModal = mrOK then
 		begin
-			CurVal := fGetInt.NowVal;
+			ACurVal := fGetInt.FNowVal;
 			Result := True;
 		end
 		else
@@ -160,20 +169,28 @@ begin
 	end;
 end;
 
+procedure TfGetInt.InitAll;
+begin
+	InitTrackBar;
+	InitEdit;
+	InitButtons;
+	ChangeInt;
+end;
+
 procedure TfGetInt.InitButtons;
 begin
-	ButtonMin.Enabled := NowVal <> TMinVal;
-	ButtonCur.Enabled := NowVal <> TCurVal;
-	ButtonDef.Enabled := NowVal <> TDefVal;
-	ButtonMax.Enabled := NowVal <> TMaxVal;
-	LabelNow.Caption := IntToStr(NowVal);
+	ButtonMin.Enabled := FNowVal <> FMinVal;
+	ButtonCur.Enabled := FNowVal <> FCurVal;
+	ButtonDef.Enabled := FNowVal <> FDefVal;
+	ButtonMax.Enabled := FNowVal <> FMaxVal;
+	LabelNow.Caption := FNowVal.ToString;
 	LabelNow.Update;
 end;
 
 procedure TfGetInt.InitEdit;
 begin
 	EditInput.OnChange := nil;
-	EditInput.Text := IntToStr(NowVal);
+	EditInput.Text := FNowVal.ToString;
 	EditInput.SelectAll;
 	EditInput.Update;
 	EditInput.OnChange := EditInputChange;
@@ -182,17 +199,28 @@ end;
 procedure TfGetInt.InitTrackBar;
 begin
 	TrackBar.OnChange := nil;
-	TrackBar.Position := Min(High(SG), NowVal);
+	TrackBar.Position := ((FNowVal - FMinVal) div FTrackBarMultiplier).Trunc;
 	TrackBar.Update;
 	TrackBar.OnChange := TrackBarChange;
+end;
+
+procedure TfGetInt.InitTrackBarMultiplier;
+const
+  MaxTrackBarTicks = 500;
+begin
+  FTrackBarMultiplier := 1;
+  while (FMaxVal - FMinVal) div FTrackBarMultiplier > MaxTrackBarTicks do
+  begin
+    FTrackBarMultiplier := FTrackBarMultiplier * 10;
+  end;
 end;
 
 procedure TfGetInt.EditInputChange(Sender: TObject);
 begin
 	EditInput.OnChange := nil;
-	NowVal := StrToValS8(EditInput.Text, True, TMinVal, NowVal, TMaxVal, 1, Messages);
-	EditError.Text := Messages.ToString;
-	Messages.Clear;
+ 	FNowVal := StrToValBD(EditInput.Text, True, FMinVal, FNowVal, FMaxVal, FMessages);
+	EditError.Text := FMessages.ToString;
+	FMessages.Clear;
 
 	InitButtons;
 	InitTrackBar;
@@ -202,7 +230,12 @@ end;
 
 procedure TfGetInt.TrackBarChange(Sender: TObject);
 begin
-	NowVal := TrackBar.Position;
+  if TrackBar.Position = TrackBar.Min then
+    FNowVal := FMinVal
+  else if TrackBar.Position = TrackBar.Max then
+    FNowVal := FMaxVal
+  else
+  	FNowVal := TrackBar.Position * FTrackBarMultiplier + FMinVal;
 	InitButtons;
 	InitEdit;
 	ChangeInt;
@@ -210,66 +243,55 @@ end;
 
 procedure TfGetInt.ButtonMinClick(Sender: TObject);
 begin
-	NowVal := TMinVal;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeInt;
+	FNowVal := FMinVal;
+  InitAll;
 end;
 
 procedure TfGetInt.ButtonCurClick(Sender: TObject);
 begin
-	NowVal := TCurVal;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeInt;
+	FNowVal := FCurVal;
+  InitAll;
 end;
 
 procedure TfGetInt.ButtonDefClick(Sender: TObject);
 begin
-	NowVal := TDefVal;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeInt;
+	FNowVal := FDefVal;
+  InitAll;
 end;
 
 procedure TfGetInt.ButtonMaxClick(Sender: TObject);
 begin
-	NowVal := TMaxVal;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeInt;
+	FNowVal := FMaxVal;
+  InitAll;
 end;
 
 procedure TfGetInt.SpinButton1DownClick(Sender: TObject);
 begin
-	if NowVal > TMinVal then Dec(NowVal) else Exit;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeInt;
+	if FNowVal > FMinVal then
+  begin
+    Dec(FNowVal);
+    InitAll;
+  end;
 end;
 
 procedure TfGetInt.SpinButton1UpClick(Sender: TObject);
 begin
-	if NowVal < TMaxVal then Inc(NowVal) else Exit;
-	InitTrackBar;
-	InitEdit;
-	InitButtons;
-	ChangeInt;
+	if FNowVal < FMaxVal then
+  begin
+    Inc(FNowVal);
+    InitAll;
+  end;
 end;
 
 procedure TfGetInt.ChangeInt;
 begin
-	if Assigned(OnApply) then OnApply(NowVal);
+	if Assigned(FOnApply) then
+    FOnApply(FNowVal);
 end;
 
 procedure TfGetInt.ButtonOkClick(Sender: TObject);
 begin
-	if Assigned(OnApply) then
+	if Assigned(FOnApply) then
 	begin
 		Close;
 	end;
@@ -277,9 +299,10 @@ end;
 
 procedure TfGetInt.ButtonCancelClick(Sender: TObject);
 begin
-	if Assigned(OnApply) then
+	if Assigned(FOnApply) then
 	begin
-		if NowVal <> TCurVal then OnApply(TCurVal);
+		if FNowVal <> FCurVal then
+      FOnApply(FCurVal);
 		Close;
 	end;
 end;
@@ -291,113 +314,138 @@ begin
 end;
 
 procedure TfGetInt.UpDownChangingEx(Sender: TObject;
-	var AllowChange: Boolean; NewValue: Smallint;
+	var AllowChange: Boolean; NewValue: Integer;
 	Direction: TUpDownDirection);
 begin
-	AllowChange := True; //(NewValue >= TMinVal) and (NewValue <= TMaxVal);
-	//	if NowVal > TMinVal then Dec(NowVal) else Exit;
+	AllowChange := True;
 
 	if AllowChange then
 	begin
 		if Direction = updUp then
 		begin
-			if NowVal < TMaxVal then Inc(NowVal) else Exit;
+			if FNowVal < FMaxVal then
+      begin
+        Inc(FNowVal);
+        InitAll;
+      end;
 		end
-		else
+		else if Direction = updDown then
 		begin
-			if NowVal > TMinVal then Dec(NowVal) else Exit;
+			if FNowVal > FMinVal then
+      begin
+        Dec(FNowVal);
+        InitAll;
+      end;
 		end;
-		InitTrackBar;
-		InitEdit;
-		InitButtons;
-		ChangeInt;
 	end;
 end;
 
-function GetNumber(Prompt: string;
-	var CurVal: U4; const MinVal, DefVal, MaxVal: U4; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
+function GetNumber(APrompt: string;
+	var ACurVal: S8; const AMinVal, ADefVal, AMaxVal: S8; AOnApplyInt: TOnApplyInt): Boolean;
+var C: BigDecimal;
 begin
-	C := CurVal;
-	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
+end;
+
+function GetNumber(APrompt: string;
+	var ACurVal: U4; const AMinVal, ADefVal, AMaxVal: U4; AOnApplyInt: TOnApplyInt): Boolean;
+var C: BigDecimal;
+begin
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
 end;
 
 function GetNumber(Prompt: string;
-	var CurVal: S4; const MinVal, DefVal, MaxVal: S4; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
+	var ACurVal: S4; const AMinVal, ADefVal, AMaxVal: S4; AOnApplyInt: TOnApplyInt): Boolean;
+var C: BigDecimal;
 begin
-	C := CurVal;
-	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
+	C := ACurVal;
+	Result := GetNumber(Prompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
+end;
+
+function GetNumber(APrompt: string;
+	var ACurVal: S2; const AMinVal, ADefVal, AMaxVal: S2; AOnApplyInt: TOnApplyInt): Boolean;
+var C: BigDecimal;
+begin
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
 end;
 
 function GetNumber(Prompt: string;
-	var CurVal: S2; const MinVal, DefVal, MaxVal: S2; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
+	var ACurVal: U2; const AMinVal, ADefVal, AMaxVal: U2; AOnApplyInt: TOnApplyInt): Boolean;
+var C: BigDecimal;
 begin
-	C := CurVal;
-	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
+	C := ACurVal;
+	Result := GetNumber(Prompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
 end;
 
-function GetNumber(Prompt: string;
-	var CurVal: U2; const MinVal, DefVal, MaxVal: U2; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
+function GetNumber(APrompt: string;
+	var ACurVal: S1; const AMinVal, ADefVal, AMaxVal: S1; AOnApplyInt: TOnApplyInt): Boolean;
+var C: BigDecimal;
 begin
-	C := CurVal;
-	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
 end;
 
-function GetNumber(Prompt: string;
-	var CurVal: S1; const MinVal, DefVal, MaxVal: S1; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
+function GetNumber(APrompt: string;
+	var ACurVal: U1; const AMinVal, ADefVal, AMaxVal: U1; AOnApplyInt: TOnApplyInt): Boolean;
+var C: BigDecimal;
 begin
-	C := CurVal;
-	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
-end;
-
-function GetNumber(Prompt: string;
-	var CurVal: U1; const MinVal, DefVal, MaxVal: U1; OnApplyInt: TOnApplyInt): Boolean;
-var C: S8;
-begin
-	C := CurVal;
-	Result := GetNumber(Prompt, C, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
 end;
 
 {$ifdef CPUX64}
-function GetNumber(Prompt: string;
-	var CurVal: SG; const MinVal, DefVal, MaxVal: SG; OnApplyInt: TOnApplyInt): Boolean; overload;
-var C: S8;
+function GetNumber(APrompt: string;
+	var ACurVal: U8; const AMinVal, ADefVal, AMaxVal: U8; AOnApplyInt: TOnApplyInt): Boolean; overload;
+var C: BigDecimal;
 begin
-	C := CurVal;
-	Result := GetNumber(Prompt, CurVal, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
 end;
 
-function GetNumber(Prompt: string;
-	var CurVal: UG; const MinVal, DefVal, MaxVal: UG; OnApplyInt: TOnApplyInt): Boolean; overload;
-var C: U8;
+function GetNumber(APrompt: string;
+	var ACurVal: SG; const AMinVal, ADefVal, AMaxVal: SG; AOnApplyInt: TOnApplyInt): Boolean; overload;
+var C: BigDecimal;
 begin
-	C := CurVal;
-	Result := GetNumber(Prompt, CurVal, MinVal, DefVal, MaxVal, OnApplyInt);
-	CurVal := C;
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
+end;
+
+function GetNumber(APrompt: string;
+	var ACurVal: UG; const AMinVal, ADefVal, AMaxVal: UG; AOnApplyInt: TOnApplyInt): Boolean; overload;
+var C: BigDecimal;
+begin
+	C := ACurVal;
+	Result := GetNumber(APrompt, C, AMinVal, ADefVal, AMaxVal, AOnApplyInt);
+	ACurVal := C.Trunc;
 end;
 {$endif}
 
 constructor TfGetInt.Create(AOwner: TComponent);
 begin
 	inherited;
-	Messages := TParserMessages.Create;
+
+	FMessages := TParserMessages.Create;
 end;
 
 destructor TfGetInt.Destroy;
 begin
-	FreeAndNil(Messages);
-	inherited;
+  try
+  	FreeAndNil(FMessages);
+  finally
+  	inherited;
+  end;
 end;
 
 end.

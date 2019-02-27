@@ -21,7 +21,6 @@ var
 	DecimalSeparator: string; // Decimal symbol
 	DigitsAfterDecimal: SG; // No. of digits after decimal
 	ThousandSeparator: string; // Digit grouping symbol
-	UseThousandSeparator: BG = True; // Custom
 	ThousandGroup: SG; // Digit grouping
 	FractionGroup: SG;
 	NegSymbol: string; // Negatove sing symbol
@@ -60,7 +59,7 @@ IntToStr	StrToInt ; 2102454545;  Windows Registry, IE
 }
 // Data To Str
 var
-	NumericBase: U1 = 10;
+	NumericBase: U1 = 10 deprecated;
 const
 	MaxNumericBase = 36;
 	NumberTable: array[0..MaxNumericBase - 1] of Char = (
@@ -74,12 +73,16 @@ const
 
 function NumToStr(Num: S8; const Base: SG): string;
 
-function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
-function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
-
 function NToS(const Num: S8; const UseFormat: string): string; overload;
+function NToS(const Num: U8; const UseFormat: string): string; overload;
+
+function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: U8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+
+function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
 function NToS(const Num: S8; const OutputFormat: TOutputFormat): string; overload;
+function NToS(const Num: U8; const OutputFormat: TOutputFormat): string; overload;
 
 type
   TFloatFormat= (ffAuto, ffScientic, ffNormal);
@@ -91,7 +94,6 @@ function BToStr(const Bytes: S4; const OutputFormat: TOutputFormat = ofDisplay):
 function BToStr(const Bytes: S8; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NodesToS(const Value: U8; const OutputFormat: TOutputFormat): string;
 
-procedure msToHMSD(const T: S8; out GH, GM, GS, GD: U4);
 type
 	TDisplay = (diSD, diMSD, diHMSD, diHHMSD, diDHMSD);
 
@@ -109,6 +111,8 @@ function DateToS(const D: TDateTime; const OutputFormat: TOutputFormat): string;
 function TimeToS(const T: TDateTime; const Decimals: SG; const OutputFormat: TOutputFormat): string;
 function DateTimeToS(const DT: TDateTime; const Decimals: SG; const OutputFormat: TOutputFormat): string;
 function PhoneToStr(const Phone: U8): string;
+
+function AddThousandSeparators(const AValue: string; const AFormatSettings: TFormatSettings; const AExponentPrefix: string): string;
 
 implementation
 
@@ -158,7 +162,7 @@ begin
 //	if Minus then AddMinusStr(Result);
 end;
 
-function NToS(const Num: S8; const UseFormat: string): string;
+function NToSInternal(const Num: S8; const Negative: BG; const UseFormat: string): string; overload;
 var
 	Nums: string;
 	i, j: SG;
@@ -251,6 +255,16 @@ begin
 	end;
 end;
 
+function NToS(const Num: S8; const UseFormat: string): string;
+begin
+  Result := NToSInternal(Num, True, UseFormat);
+end;
+
+function NToS(const Num: U8; const UseFormat: string): string;
+begin
+  Result := NToSInternal(Num, False, UseFormat);
+end;
+
 function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
 begin
 	case OutputFormat of
@@ -282,7 +296,7 @@ begin
 end;
 
 // 454,545,455.456465; 0.045
-function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToSInternal(const Num: U8; const Negative: BG; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 var
 	DecimalSep, ThousandSep: string;
 	ThousandGr, FractionGr: SG;
@@ -306,7 +320,10 @@ begin
 	begin
 		if (NumericBase = 10) and (Decimals = 0) then
 		begin
-			Result := IntToStr(Num);
+      if Negative then
+  			Result := IntToStr(Num)
+      else
+        Result := UIntToStr(Num);
 			Exit;
 		end
 		else
@@ -325,7 +342,6 @@ begin
 		FractionGr := 3;
 	end;
 	end;
-	if UseThousandSeparator = False then ThousandSep := '';
 
 	if Num = 0 then
 	begin
@@ -333,7 +349,12 @@ begin
 		Nums := '';
 	end
 	else if NumericBase = 10 then
-		Nums := IntToStr(Abs(Num))
+  begin
+    if Negative then
+  		Nums := IntToStr(Abs(Num))
+    else
+      Nums := UIntToStr(Num);
+  end
 	else
 		Nums := NumToStr(Abs(Num), NumericBase);
 
@@ -408,9 +429,24 @@ begin
 	end;
 end;
 
+function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+begin
+  Result := NToSInternal(Num, True, Decimals, OutputFormat);
+end;
+
+function NToS(const Num: U8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+begin
+  Result := NToSInternal(Num, False, Decimals, OutputFormat);
+end;
+
 function NToS(const Num: S8; const OutputFormat: TOutputFormat): string; overload;
 begin
-	Result := NToS(Num, 0, OutputFormat);
+	Result := NToSInternal(Num, True, 0, OutputFormat);
+end;
+
+function NToS(const Num: U8; const OutputFormat: TOutputFormat): string; overload;
+begin
+	Result := NToSInternal(Num, False, 0, OutputFormat);
 end;
 
 function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
@@ -505,37 +541,54 @@ begin
     Result := s;
 end;
 
-function AddThrousandSeparator(const s: string): string;
+function AddThousandSeparators(const AValue: string; const AFormatSettings: TFormatSettings; const AExponentPrefix: string): string;
 var
-	dp: SG;
-  i, M: SG;
+  LastNumberPosition, ExponentPrefixPosition: SG;
+  ThousandGroupPosition: SG;
+  Index: SG;
+  CopySize: SG;
+  StringBuilder: TStringBuilder;
 begin
-  Result := s;
-	if UseThousandSeparator then
+  if AValue = '' then
+    Exit;
+
+  if ThousandGroup <= 1 then
   begin
-    dp := Pos(DecimalSeparator, s);
-    if dp = 0 then
+    Result := AValue;
+    Exit;
+  end;
+
+  LastNumberPosition := Pos(AFormatSettings.DecimalSeparator, AValue) - 1;
+  if LastNumberPosition = -1 then
+    LastNumberPosition := Length(AValue);
+
+  ExponentPrefixPosition := Pos(AExponentPrefix, AValue) - 1;
+  if ExponentPrefixPosition <> -1 then
+    LastNumberPosition := Min(ExponentPrefixPosition, LastNumberPosition);
+
+  ThousandGroupPosition := (LastNumberPosition - 1) mod ThousandGroup;
+  StringBuilder := TStringBuilder.Create;
+  try
+    StringBuilder.Capacity := Length(AValue) + ((LastNumberPosition - 2) div ThousandGroup);
+    Result := AValue;
+    for Index := 1 to LastNumberPosition - 1 do
     begin
-      if Pos('E', s) <> 0 then
+      StringBuilder.Append(AValue[Index]);
+
+      if ThousandGroupPosition = 0 then
       begin
-      	Exit;
-      end
-      else
-      	dp := Length(s);
-    end
-    else
-    	Dec(dp);
-    M := 0;
-    for i := dp downto 2 do
-    begin
-    	if M = ThousandGroup - 1 then
-      begin
-        M := 0;
-        Insert(ThousandSeparator, Result, i);
-      end
-      else
-      	Inc(M);
+        ThousandGroupPosition := ThousandGroup;
+        if (AValue[Index] >= '0') and (AValue[Index] <= '9') then
+          StringBuilder.Append(AFormatSettings.ThousandSeparator);
+      end;
+      Dec(ThousandGroupPosition);
     end;
+    CopySize := Length(AValue) - LastNumberPosition + 1;
+    if CopySize > 0  then
+      StringBuilder.Append(AValue, LastNumberPosition - 1, CopySize);
+    Result := StringBuilder.ToString;
+  finally
+    StringBuilder.Free;
   end;
 end;
 
@@ -544,185 +597,11 @@ begin
   if OutputFormat = ofIO then
 	  Result := FloatToStr(Num, IOFormatSettings)
   else
-  	Result := AddThrousandSeparator(FloatToStr(Num)); //FloatToStrF(Num, ffNumber, 99, 99); // Format('%.99n', [Num]);//FloatToStr(Num);
+  begin
+  	Result := FloatToStr(Num); //FloatToStrF(Num, ffNumber, 99, 99); // Format('%.99n', [Num]);//FloatToStr(Num);
+    Result := AddThousandSeparators(Result, FormatSettings, 'E');
+  end;
 end;
-
-{
-function Using(const Typ: string; const Num: S8): string;
-var
-	inp: string;
-	inpP: Integer;
-	FixedSign: Boolean;
-	Poin: Integer;
-	DelSpace: Boolean;
-	i: Integer;
-	Fra: Boolean;
-begin
-	Result := '';
-	if UseFormat = '' then
-	begin
-		Exit;
-	end;
-
-	Poin := Pos('.', UseFormat);
-	if LastChar(UseFormat) = '~' then DelSpace := True else DelSpace := False;
-
-	if Num = 0 then inp := '' else inp := IntToStr(Abs(Num));
-	inpP := Length(inp);
-
-	FixedSign := False;
-	for i := 1 to Length(UseFormat) do
-	begin
-		if (UseFormat[i] = '+') or (UseFormat[i] = '-') then
-		begin
-			FixedSign := True;
-			Break;
-		end;
-	end;
-
-	Fra := False;
-	for i := Length(UseFormat) downto 1 do
-	begin
-		case UseFormat[i] of
-		'#':
-		begin
-			if inpP > 0 then
-			begin
-				if (inp[inpP] <> '0') or (Fra = True) then
-				begin
-					Result := inp[inpP] + Result;
-					Fra := True;
-				end
-				else
-					if DelSpace = False then Result := ' ' + Result;
-				Dec(inpP);
-			end
-			else
-			begin
-				if (i < Poin) and (FixedSign = False) and (num < 0) then
-				begin
-					FixedSign := True;
-					Result := '-' + Result;
-				end
-				else
-				begin
-					if (Fra = True) and ((i > Poin) and (Poin <> 0)) then
-					begin
-						Result := '0' + Result;
-						Fra := True;
-					end
-					else
-						if DelSpace = False then Result := ' ' + Result;
-				end;
-			end;
-		end;
-		'0':
-		begin
-			if inpP > 0 then
-			begin
-				Result := inp[inpP] + Result;
-				Fra := True;
-				Dec(inpP);
-			end
-			else
-			begin
-				Result := '0' + Result;
-				Fra := True;
-			end;
-		end;
-		'~':
-		begin
-			if i = 1 then
-			begin
-				while Length(Result) > 0 do
-				begin
-					if Result[1] = ' ' then Delete(Result, 1, 1) else goto LExit;
-				end;
-				goto LExit;
-			end;
-		end;
-		'+':
-		begin
-			if num = 0 then
-				Result := ' ' + Result
-			else
-			if num > 0 then
-				Result := '+' + Result
-			else
-				Result := '-' + Result;
-		end;
-		'-':
-		begin
-			if num >= 0 then
-				Result := ' ' + Result
-			else
-				Result := '-' + Result;
-		end;
-		'.':
-		begin
-			if Fra = False then
-			begin
-				if DelSpace = False then Result := Result + ' ';
-				fra := True;
-			end
-			else
-			begin
-				if UseWinFormat then
-					Result := DecimalSeparator + Result
-				else
-					Result := '.' + Result;
-			end;
-			if UseFormat[1] = '~' then DelSpace := True else DelSpace := False;
-		end;
-		' ':
-		begin
-			Result := ' ' + Result;
-		end;
-		',':
-		begin
-				if (inpP > 0) then
-				begin
-					if UseWinFormat then
-						Result := ThousandSeparator + Result
-					else
-						Result := ',' + Result;
-				end
-				else
-				begin
-					if DelSpace = False then Result := ' ' + Result;
-				end;
-		end;
-		end;
-	end;
-	LExit:
-end;
-
-{function StrToI(s: string): SG;
-begin
-	Result := StrToI(s, 0);
-{var
-	i: SG;
-	Minus: Boolean;
-begin
-	Result := 0;
-	Minus := False;
-	for i := 1 to Length(s) do
-	begin
-		case s[i] of
-		'-': Minus := not Minus;
-		'0'..'9':
-		begin
-			Result := Result * 10;
-			if Minus then
-				Result := Result - (Ord(s[i]) - Ord('0'))
-			else
-				Result := Result + (Ord(s[i]) - Ord('0'));
-		end;
-		'.': Break;
-		end;
-	end;
-end;
-}
 
 const
 	Sep = ' ';
@@ -1114,7 +993,7 @@ end;
 
 function TimeToS(const T: TDateTime; const Decimals: SG; const OutputFormat: TOutputFormat): string;
 var
-  TimeInMs: FA;
+  TimeInMs: FG;
 begin
 	case OutputFormat of
 	ofDisplay:
@@ -1128,7 +1007,7 @@ begin
     TimeInMs := T * MSecsPerDay;
 		Result := MsToStr(Trunc(TimeInMs), diHHMSD, Min(Decimals, 3), False, OutputFormat);
     if Decimals > 3 then
-      Result := Result + NToS(Trunc(Frac(TimeInMs) * Power(10, Decimals - 3)), StringOfChar('0', Decimals - 3));
+      Result := Result + NToS(Trunc(Frac(TimeInMs) * Power10(1, Decimals - 3)), StringOfChar('0', Decimals - 3));
   end;
 	end;
 end;
