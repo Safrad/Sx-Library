@@ -19,7 +19,6 @@ uses uTypes, uRegionalCodePage;
 procedure TRegionalCodePageTest.Test;
 var
 	a: AnsiString;
-	w: UnicodeString;
 begin
 	// Tests
 	a := 'δαθοιμνΎςστΰψϊωύ';
