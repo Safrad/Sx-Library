@@ -87,7 +87,7 @@ procedure RandomizeRangeArray(const AResult: TRangeArray);
 implementation
 
 uses
-  Math, Menus,
+  Math, Menus, Types, UITypes,
   uStrings, uChar, uMath, uSorts;
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;
