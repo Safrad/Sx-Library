@@ -331,7 +331,7 @@ begin
 	PlayButtonSound(IsDown);
 
 	// Glyph
-	if (not FLoaded) and (not Assigned(FGlyph)) then
+	if (not FLoaded) and (not Assigned(FGlyph)) and Assigned(PictureFactory) then
 	begin
     FLoaded := True;
 		// v := Height - 3 * Border;
