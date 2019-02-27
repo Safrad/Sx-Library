@@ -48,8 +48,9 @@ const
   CharHyphen = '-';
   CharEnDash = #$96; // –
   CharEmDash = #$97; // —
+  CharMinus = {$ifdef UNICODE}Char($2212){$else}CharEnDash{$endif};
   CharLeftPointingDoubleAngleQuotationMark = '«';
-  CharRightPointingDoubleAngleQuotationMark = '»'; 
+  CharRightPointingDoubleAngleQuotationMark = '»';
   CharHorizontalEllipsis = {$ifdef UNICODE}Char($2026){$else}#$85{$endif}; // ...
   CharMultiplicationSign = {$ifdef UNICODE}Char($00D7){$else}'x'{$endif}; // × (#$D7) is not supported in Windows-1251!
 
