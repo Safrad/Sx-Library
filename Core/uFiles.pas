@@ -40,7 +40,6 @@ function ExpandFileCmd(const FileName: TFileName): string;
 function ExpandDir(const Dir: string): string;
 function ExpandDirCmd(const Dir: string): string;
 function DelFileExt(const FName: string): string;
-function DelFileName(const FName: string): string;
 function AddAfterName(const FName: string; const Text: string): string;
 function ParentDir(var Dir: string; Level: SG = 1): BG;
 function ParentDirF(const Dir: string; const Level: SG = 1): string;
@@ -360,20 +359,6 @@ begin
 	Result := FName;
 	Ext := ExtractFileExt(FName);
 	if Length(Ext) > 0 then SetLength(Result, Length(Result) - Length(Ext));
-end;
-
-function DelFileName(const FName: string): string;
-var i: SG;
-begin
-	for i := Length(FName) downto 1 do
-	begin
-		if CharInSet(FName[i], ['/', '\']) then
-		begin
-			Result := Copy(FName, 1, i);
-			Exit;
-		end;
-	end;
-	Result := '';
 end;
 
 function AddAfterName(const FName: string; const Text: string): string;
@@ -1084,7 +1069,7 @@ var
 begin
 	FileName := ExtractFileName(FileOrDir);
 	Name := DelFileExt(FileName);
-	FileOrDir := DelFileName(FileOrDir);
+	FileOrDir := ExtractFilePath(FileOrDir);
 	if Name <> '' then
 		FileOrDir := FileOrDir + Name + ' ';
 	FileOrDir := FileOrDir + ReplaceF(DateTimeToS(Now, 0, ofIO), ':', '_') + ExtractFileExt(FileName);

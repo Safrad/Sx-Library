@@ -348,7 +348,7 @@ begin
 				SynchroDir(FTP, Tg, FileNameOrDir, TargetDir, SubDir, Logger)
 			else
 			begin
-				FTP.ChangeDir('/' + uFiles.DelFileName(TargetDir));
+				FTP.ChangeDir('/' + ExtractFilePath(TargetDir));
 
 				AStrings := TStringList.Create;
 				try

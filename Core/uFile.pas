@@ -890,7 +890,7 @@ LRetry :
 		if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) and (Forced = False) then
 		begin
 			// RenameFileEx(FTempFileName, FFileName); only on same disk
-			if DirectoryExists(ExtractFileDir(ExpandDir(FFileName))) = False then
+			if DirectoryExists(ExtractFilePath(ExpandDir(FFileName))) = False then
 				IOError(FFileName, 3)
 			else
 			begin

@@ -29,16 +29,16 @@ var
 begin
 	if (BackupFolder = bfNone) or (FileExists(FileName) = False) then Exit;
   case BackupFolder of
-  bfSame: BackupPath := DelFileName(FileName);
+  bfSame: BackupPath := ExtractFilePath(FileName);
   bfSub:
   begin
-    BackupPath := DelFileName(FileName) + '~backup\';
+    BackupPath := ExtractFilePath(FileName) + '~backup\';
   	if DirectoryExists(BackupPath) = False then
 	  	CreateDirEx(BackupPath);
   end;
   bfSubEx:
   begin
-    BackupPath := DelFileName(FileName) + '~backup\';
+    BackupPath := ExtractFilePath(FileName) + '~backup\';
   	if DirectoryExists(BackupPath) = False then
 	  	CreateDirEx(BackupPath);
     BackupPath := BackupPath + ExtractFileName(FileName) + '\';
