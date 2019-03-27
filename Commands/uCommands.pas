@@ -5,7 +5,6 @@ interface
 uses
   Contnrs,
   uTypes,
-  uDParser,
   uRow,
   uCustomCommand;
 
