@@ -2,6 +2,7 @@
 * Sample applications available [here](http://sx.rosada.cz/).
 
 ## Supported Delphi Versions (x86 and x64)
+* **10.3 Rio**
 * **10.2 Tokyo**
 * **10.1 Berlin**
 * **10 Seattle**
