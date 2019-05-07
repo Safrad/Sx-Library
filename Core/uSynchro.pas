@@ -18,12 +18,14 @@ type
     FDeletePathsList: TStringList;
     FCanCreateTargetDir: BG;
     FDeleteInexistingPathsInDestDir: BG;
+    FCopyOnlyMuchSmaller: BG;
     procedure DeleteFiles;
     procedure Synchro(const Source, Dest: string);
     procedure SetDestDir(const Value: string);
     procedure SetSourceDir(const Value: string);
     procedure SetCanCreateTargetDir(const Value: BG);
     procedure SetDeleteInexistingPathsInDestDir(const Value: BG);
+    procedure SetCopyOnlyMuchSmaller(const Value: BG);
   public
     constructor Create;
     destructor Destroy; override;
@@ -35,6 +37,7 @@ type
     property DestDir: string read FDestDir write SetDestDir;
     property DeleteInexistingPathsInDestDir: BG read FDeleteInexistingPathsInDestDir write SetDeleteInexistingPathsInDestDir;
     property CanCreateDestDir: BG read FCanCreateTargetDir write SetCanCreateTargetDir;
+    property CopyOnlyMuchSmaller: BG read FCopyOnlyMuchSmaller write SetCopyOnlyMuchSmaller;
 
     // Output
     property Report: TSynchroReport read FSynchroReport;
@@ -131,6 +134,11 @@ begin
   FCanCreateTargetDir := Value;
 end;
 
+procedure TSynchro.SetCopyOnlyMuchSmaller(const Value: BG);
+begin
+  FCopyOnlyMuchSmaller := Value;
+end;
+
 procedure TSynchro.SetDeleteInexistingPathsInDestDir(const Value: BG);
 begin
   FDeleteInexistingPathsInDestDir := Value;
@@ -213,6 +221,9 @@ begin
 					if IsFile then
 					begin
 						Copy := ({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} <> FileInfo.DateTime) or (SearchRec.Size <> FileInfo.Size);
+            if Copy and CopyOnlyMuchSmaller and (not (8 * SearchRec.Size < 10 * FileInfo.Size)) then
+              Copy := False; // Skip if source fil is not much smaller (80%) then destination
+
 						if {$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} < FileInfo.DateTime then
 							Warning('Destination file %1 (%2) is newer (%3)!', [Source + SearchRec.Name, DateTimeToStr({$if CompilerVersion < 21}FileDateToDateTime{$ifend}(FileInfo.DateTime)), DateTimeToStr({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}FileDateToDateTime(SearchRec.Time){$ifend})]);
 					end
