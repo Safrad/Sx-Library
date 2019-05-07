@@ -93,7 +93,7 @@ begin
   if FChanged then
     SortCommands;
 
-	if not FindS(FCommandNamesSorted, ACommandShortcut, FromV, ToV) then
+	if not FindS(FCommandNamesSorted, LowerCase(ACommandShortcut), FromV, ToV) then
 		Result := nil
   else
     Result := TCustomCommand(FCommands[FCommandIndexes[FromV]]);
