@@ -273,7 +273,7 @@ begin
 {	if Save = False then
 		AutomaticallyCheckForUpdate := True;
 	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);}
-	MainIni.RWDateTime(Section, 'LastUpdate', LastUpdate, Save);
+	LocalMainIni.RWDateTime(Section, 'LastUpdate', LastUpdate, Save);
 
   if Save = False then
   begin
