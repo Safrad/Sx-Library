@@ -4,6 +4,7 @@ interface
 
 uses
 	uTypes, uLog, uLogger,
+  uTimeSpan,
 	IdFTP;
 
 type
@@ -16,7 +17,8 @@ type
 
 	TTg = (tgDownload, tgUpload);
 
-function UploadDownload(const FileNameOrDir: string; TargetDir: string; const FTP: TIdFTP; const RetryCount, RetryInterval: SG; const Logger: TLogger; const Tg: TTg; const SubDir: BG): BG;
+function UploadDownload(const FileNameOrDir: string; TargetDir: string; const FTP: TIdFTP; const RetryCount: SG;
+  const RetryInterval: TTimeSpan; const Logger: TLogger; const Tg: TTg; const SubDir: BG): BG;
 
 var
   SetLocalTime: BG = True;
@@ -25,6 +27,7 @@ implementation
 
 uses
 	TypInfo,
+  uMath,
 	uChar, uStrings, uFiles, uHTML, uOutputFormat, uMsg,
 	SysUtils, Classes, Windows, IdFTPList, IdException, {$if CompilerVersion >= 16}IdAllFTPListParsers, {$ifend}IdFTPCommon;
 
@@ -297,7 +300,8 @@ begin
 	end;
 end;
 
-function UploadDownload(const FileNameOrDir: string; TargetDir: string; const FTP: TIdFTP; const RetryCount, RetryInterval: SG; const Logger: TLogger; const Tg: TTg; const SubDir: BG): BG;
+function UploadDownload(const FileNameOrDir: string; TargetDir: string; const FTP: TIdFTP; const RetryCount: SG;
+  const RetryInterval: TTimeSpan; const Logger: TLogger; const Tg: TTg; const SubDir: BG): BG;
 const
 	FTPTimeOut = 30 * Second;
 var
@@ -388,7 +392,7 @@ begin
 		end;
 		if Result or (NowRetryCount >= RetryCount) then Break;
 		Inc(NowRetryCount);
-		Sleep(RetryInterval);
+    PreciseSleep(RetryInterval);
 	end;
 end;
 
