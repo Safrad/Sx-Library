@@ -195,7 +195,10 @@ function TTable.GetColumnCount: SG;
 begin
   if Length(Data) > 0 then
   begin
-    Result := Length(Data[0].Columns);
+    if Data[0] = nil then
+      Result := 0
+    else
+      Result := Length(Data[0].Columns);
   end
   else
   begin
