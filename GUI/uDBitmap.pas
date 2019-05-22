@@ -326,7 +326,6 @@ type
 		procedure DrawStyle(var DS: TDrawStyle); overload;
 
 		procedure SaveToClipboard;
-		procedure SaveToFileDialog(var FileName: TFileName);
 		procedure DrawToDC(DC: HDC; Left, Top: SG);
 
 		procedure GetDirtyImage(out R: TRect); overload;
@@ -400,12 +399,10 @@ implementation
 
 uses
 	Jpeg, GifImage, PngImage, TGAImage,
-  Math,
 	{$ifdef GDIPlus}
 	GraphicEx,
 	{$endif}
-	ClipBrd, ExtDlgs, StdCtrls, Dialogs,
-  uStartupEnvironment,
+  Math, ClipBrd,
 	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
@@ -11270,27 +11267,6 @@ var
 begin
 	SaveToClipboardFormat(MyFormat, AData, APalette);
 	ClipBoard.SetAsHandle(MyFormat, AData);
-end;
-
-procedure TDBitmap.SaveToFileDialog(var FileName: TFileName);
-var
-	Quality: SG;
-	SavePictureDialog: TSavePictureDialog;
-  FileName2: TFileName;
-begin
-	SavePictureDialog := TSavePictureDialog.Create(nil);
-  try
-    SavePictureDialog.Filter := AllPictures;
-    SavePictureDialog.Options := SavePictureDialog.Options + [ofOverwritePrompt, ofPathMustExist];
-    if ExecuteDialog(SavePictureDialog, FileName) then
-    begin
-      Quality := 90;
-      FileName2 := StartupEnvironment.RemoveVariables(FileName);
-      SaveToFileEx(FileName2, Quality);
-    end;
-  finally
-  	SavePictureDialog.Free;
-  end;
 end;
 
 (*
