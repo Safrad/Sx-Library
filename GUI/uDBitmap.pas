@@ -6,9 +6,9 @@ unit uDBitmap;
 interface
 
 uses
-	Math, OpenGL12, {$ifdef GDIPlus}IGDIPlus,{$endif}
+	OpenGL12, {$ifdef GDIPlus}IGDIPlus,{$endif}
 	uTypes, uMath, uColor, uDrawStyle, uBlur,
-	Classes, Forms, Windows, Graphics, ExtCtrls, SysUtils;
+	Classes, Windows, Graphics, SysUtils;
 
 const
 	{$ifdef GDIPlus}
@@ -67,13 +67,8 @@ type
 const
 	MaxDone = 1024;
 
-// Font
 type
-	TRasterFontStyle = (fs6x8, fs8x8, fs8x16);
 	TQuality = (quLow, quHigh);
-const
-	FontWidth: array[TRasterFontStyle] of SG = (6, 8, 8);
-	FontHeight: array[TRasterFontStyle] of SG = (8, 8, 16);
 
 function WidthToByteX(const Width: U4): U4;
 procedure Pix(PD: Pointer; ByteXD: UG; X, Y: U4; C: PRGBA; Effect: TEffect); overload;
@@ -300,9 +295,6 @@ type
 			const ColorR, ColorG, ColorB: Boolean;
 			const InterruptProcedure: TInterruptProcedure);
 
-		procedure FTextOut(X, Y: SG;
-			RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; const Text: string);
-
 {		procedure BoxBlur(const Horz, Vert: Boolean;
 			InterruptProcedure: TInterruptProcedure); overload;}
 		procedure BoxBlur(const BmpS: TDBitmap; const Range: TRect; const Interactions: UG; const Horz, Vert: Boolean;
@@ -408,6 +400,7 @@ implementation
 
 uses
 	Jpeg, GifImage, PngImage, TGAImage,
+  Math,
 	{$ifdef GDIPlus}
 	GraphicEx,
 	{$endif}
@@ -10462,115 +10455,6 @@ begin
 		Effect);
 end;
 
-const
-	FontNames: array[TRasterFontStyle] of string = ('06x08', '08x08', '08x16');
-var
-	FontBitmap: array[TRasterFontStyle] of TDBitmap;
-	FontRead: array[TRasterFontStyle] of Boolean;
-	Letter: TDBitmap;
-
-procedure TDBitmap.FTextOut(X, Y: SG;
-	RasterFontStyle: TRasterFontStyle; FontColor, BackColor: TColor; Effect: TEffect; const Text: string);
-var
-	c, i, FX: SG;
-	CB: TColor;
-	FontColorR: TRGBA;
-begin
-	FontColorR := ColorToRGB(FontColor);
-	if FontRead[RasterFontStyle] = False then
-	begin
-		FontBitmap[RasterFontStyle] := TDBitmap.Create;
-		FontBitmap[RasterFontStyle].LoadFromFile(GraphDir + 'Font' + FontNames[RasterFontStyle] + IconExt);
-		FontBitmap[RasterFontStyle].Transparent := False;
-		FontRead[RasterFontStyle] := True;
-	end;
-	if FontBitmap[RasterFontStyle] = nil then Exit;
-	if FontBitmap[RasterFontStyle].Data = nil then Exit;
-	if Letter = nil then Letter := TDBitmap.Create;
-	Letter.SetSize(FontBitmap[RasterFontStyle].Width * 255, FontHeight[RasterFontStyle], clNone);
-	case BackColor of
-	clNone:
-	begin
-		Letter.Transparent := False;
-		Letter.TransparentColor := BackColor;
-	end
-	else
-	begin
-		Letter.Transparent := True;
-		Letter.TransparentColor := BackColor;
-	end;
-	end;
-
-	FX := 0;
-	for i := 1 to Length(Text) do
-	begin
-		c := Ord(Ord(Text[i]) - Ord(' '));
-		Letter.Bmp(FX, 0, FontBitmap[RasterFontStyle],
-			0, FontHeight[RasterFontStyle] * c,
-			FontBitmap[RasterFontStyle].Width, FontHeight[RasterFontStyle] * c + FontHeight[RasterFontStyle] - 1, ef16);
-		Inc(FX, FontBitmap[RasterFontStyle].Width);
-	end;
-
-	case BackColor of
-	clNone:
-	begin
-		if FontColor = FontBitmap[RasterFontStyle].TransparentColor then
-		begin
-			Letter.ChangeColor(FontBitmap[RasterFontStyle].TransparentColor, clSilver);
-			CB := clSilver;
-		end
-		else
-			CB := FontBitmap[RasterFontStyle].TransparentColor;
-		if FontColor <> clWhite then Letter.ChangeColor(clWhite, FontColor)
-	end
-	else
-	begin
-		CB := clNone;
-		if FontColor = FontBitmap[RasterFontStyle].TransparentColor then
-		begin
-			if BackColor <> FontBitmap[RasterFontStyle].TransparentColor then Letter.ChangeColor(FontBitmap[RasterFontStyle].TransparentColor, BackColor);
-			Letter.ChangeColor(clWhite, FontColor);
-		end
-		else
-		begin
-			if FontColor <> clWhite then Letter.ChangeColor(clWhite, FontColor);
-			if BackColor <> FontBitmap[RasterFontStyle].TransparentColor then Letter.ChangeColor(FontBitmap[RasterFontStyle].TransparentColor, BackColor);
-		end;
-	end;
-	end;
-	Letter.Transparent := True;
-	Letter.TransparentColor := CB;
-	Bmp(X, Y, Letter, 0, 0, FontBitmap[RasterFontStyle].Width * Length(Text) - 1, FontHeight[RasterFontStyle] - 1, Effect);
-end;
-
-procedure FreeFontBitmap;
-var i: TRasterFontStyle;
-begin
-	for i := Low(i) to High(i) do
-		if FontRead[i] then FreeAndNil(FontBitmap[i]);
-	FreeAndNil(Letter);
-end;
-
-function TrimInt(const Lower, Upper, theInteger: SG): SG;
-begin
-	if (theInteger <= Upper) and (theInteger >= Lower) then
-		Result := theInteger
-	else if theInteger > Upper then
-		Result := Upper
-	else
-		Result := Lower;
-end;
-{
-function TrimReal(const Lower, Upper: SG; const x: Double): SG;
-begin
-	if (x < upper) and (x >= lower) then
-		Result := trunc(x)
-	else if x > Upper then
-		Result := Upper
-	else
-		Result := Lower;
-end;}
-
 type
 	PRow = ^TRow;
 	TRow = array[0..256 * MB - 1] of TPixel;
@@ -10660,7 +10544,7 @@ type
 			for n := -K.Size to K.Size do
 			begin
 				//the TrimInt keeps us from running off the edge of the row...
-				RGBTriple := @Input[TrimInt(0, Limit, j - n)];
+				RGBTriple := @Input[uMath.Range(0, Limit, j - n)];
 				w := K.Weights[n];
 				tb := tb + w * RGBTriple.b;
 				tg := tg + w * RGBTriple.g;
@@ -10866,7 +10750,7 @@ type
 			tr := 0;
 			for n := -K.Size to K.Size do
 			begin
-				RGBTriple := @Input[TrimInt(0, Limit, j - n)];
+				RGBTriple := @Input[uMath.Range(0, Limit, j - n)];
 				w := K.Weights[n];
 				tb := tb + w * RGBTriple.b;
 				tg := tg + w * RGBTriple.g;
@@ -12137,7 +12021,6 @@ initialization
 finalization
 {$IFNDEF NoFinalization}
 	FreeAndNil(FBitmapF);
-	FreeFontBitmap;
 	if Sins <> nil then
 	begin
 		FreeMem(Sins);
