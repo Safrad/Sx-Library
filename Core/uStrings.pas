@@ -108,7 +108,7 @@ function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet; out LastChar: Char): string; overload;
 function ReadToSingleChar(const Line: string; var LineIndex: Integer;
 	const C: Char): string;
-function StartStr(const SubStr: string; const Str: string): BG;
+function StartStr(const SubStr: string; const Str: string; const AStrOffset: SG = 1): BG;
 function EndStr(const SubStr: string; const Str: string): BG;
 procedure RemoveSuffix(const SubStr: string; var Str: string);
 function RemoveSuffixF(const SubStr: string; const Str: string): string;
@@ -183,29 +183,33 @@ begin
 end;
 
 function PosEx(const SubStr, Str: string; FromPos, ToPos: SG): SG;
-label LNFound;
 var
-	i, j: SG;
+	i: SG;
 	Dir: SG;
 	SubStrLen, StrLen: SG;
 begin
 	Result := 0;
 	// Check parameters
 	SubStrLen := Length(SubStr);
-	if SubStrLen = 0 then Exit;
+	if SubStrLen = 0 then
+    Exit;
 	StrLen := Length(Str);
-	if SubStrLen > StrLen then Exit;
+	if SubStrLen > StrLen then
+    Exit;
 
-	if FromPos < 1 then FromPos := 1;
-	if ToPos < 1 then ToPos := 1;
+	if FromPos < 1 then
+    FromPos := 1;
+	if ToPos < 1 then
+    ToPos := 1;
 
 	if FromPos = ToPos then
 		Dir := 0
 	else if FromPos > ToPos then
 	begin
 		Dir := -1;
-		if FromPos > StrLen - SubStrLen + 1 then FromPos := StrLen - SubStrLen + 1;
-		if FromPos <= ToPos  then
+		if FromPos > StrLen - SubStrLen + 1 then
+      FromPos := StrLen - SubStrLen + 1;
+		if FromPos <= ToPos then
 		begin
 			FromPos := ToPos;
 			Dir := 0;
@@ -216,8 +220,9 @@ begin
 	else // if FromPos < ToPos then
 	begin
 		Dir := 1;
-		if ToPos > StrLen - SubStrLen + 1 then ToPos := StrLen - SubStrLen + 1;
-		if FromPos >= ToPos  then
+		if ToPos > StrLen - SubStrLen + 1 then
+       ToPos := StrLen - SubStrLen + 1;
+		if FromPos >= ToPos then
 		begin
 			FromPos := ToPos;
 			Dir := 0;
@@ -228,13 +233,13 @@ begin
 
 	i := FromPos;
 	repeat
-		if SubStr[1] = Str[i] then
+		if SubStr[1] = Str[i] then // Optimization
 		begin
-			for j := 2 to SubStrLen do
-				if Str[i - 1 + j] <> SubStr[j] then goto LNFound;
-			Result := i;
-			Exit;
-			LNFound:
+      if StartStr(SubStr, Str, i) then
+      begin
+  			Result := i;
+  			Exit;
+      end;
 		end;
 		Inc(i, Dir);
 	until i = ToPos;
@@ -801,7 +806,7 @@ begin
 	Inc(LineIndex);
 end;
 
-function StartStr(const SubStr: string; const Str: string): BG;
+function StartStr(const SubStr: string; const Str: string; const AStrOffset: SG = 1): BG;
 var i: SG;
 begin
 	Result := False;
@@ -809,7 +814,7 @@ begin
 		Exit;
 	for i := 1 to Length(SubStr) do
 	begin
-		if SubStr[i] <> Str[i] then
+		if SubStr[i] <> Str[AStrOffset + i - 1] then
 		begin
 			Exit;
 		end;
