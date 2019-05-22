@@ -204,8 +204,6 @@ begin
 end;
 
 procedure TfGetTime.InitTrackBar;
-var
-	H, M, S, D: U4;
 begin
 	TrackBarH.OnChange := nil;
 	TrackBarM.OnChange := nil;
