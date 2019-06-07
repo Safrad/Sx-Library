@@ -5,12 +5,10 @@ interface
 uses
   uCodePage,
   uTextAlignment,
+  uConsoleColor,
   Windows, SysUtils;
 
 type
-  TConsoleColor = (ccBlack, ccBlue, ccGreen, ccAqua, ccRed, ccPurple, ccYellow, ccLightGray, ccGray, ccLightBlue,
-    ccLightGreen, ccLightAqua, ccLightRed, ccLightPurple, ccLightYellow, ccWhite);
-
   TConsole = class
   private
     class function ConvertToConsoleCodePage(const AText: string): string;
