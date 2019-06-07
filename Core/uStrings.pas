@@ -91,6 +91,7 @@ function DelLastNumber(const s: string): string;
 
 function ReadToChar(const Line: string; const C: Char): string; overload;
 function ReadToChar(const Line: string; var LineIndex: SG; const C: Char): string; overload;
+function ReadToCharQuoted(const Line: string; var LineIndex: SG; const C: Char; const QuoteChar: Char): string;
 function ReadToNewLine(const Line: string; var LineIndex: SG): string;
 function ReadSGFast(const Line: string; var LineIndex: SG): SG; overload;
 function ReadS8Fast(const Line: string; var LineIndex: SG): S8; overload;
@@ -634,6 +635,27 @@ begin
 	LineLength := Length(Line);
 	while (LineIndex <= LineLength) and (Line[LineIndex] <> C) do
 		Inc(LineIndex);
+	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
+	Inc(LineIndex);
+end;
+
+function ReadToCharQuoted(const Line: string; var LineIndex: SG; const C: Char; const QuoteChar: Char): string;
+var
+	StartIndex: SG;
+	LineLength: SG;
+  InQuote: BG;
+begin
+	StartIndex := LineIndex;
+	LineLength := Length(Line);
+  InQuote := False;
+	while (LineIndex <= LineLength) do
+  begin
+    if Line[LineIndex] = QuoteChar then
+      InQuote := not InQuote;
+    if (InQuote = False) and (Line[LineIndex] = C) then
+      Break;
+		Inc(LineIndex);
+  end;
 	Result := Copy(Line, StartIndex, LineIndex - StartIndex);
 	Inc(LineIndex);
 end;
