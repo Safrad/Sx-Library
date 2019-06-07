@@ -10,7 +10,7 @@ type
   TSxComboBox = class(TComboBox)
   public
     procedure SetText(const AText: string);
-    procedure SetItemIndex(const AItemIndex: SG);
+    procedure SetItemIndex(const AItemIndex: SG); override;
   end;
 
 implementation
@@ -27,7 +27,7 @@ begin
   LastOnChange := OnChange;
   try
     OnChange := nil;
-    ItemIndex := AItemIndex;
+    inherited SetItemIndex(AItemIndex);
   finally
     OnChange := LastOnChange;
   end;
