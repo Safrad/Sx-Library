@@ -32,12 +32,10 @@ function StrToValBD(const Line: string; const UseWinFormat: BG;
 function StrToValBD(const Line: string; const UseWinFormat: BG;
 	const DefVal: BigDecimal; const Messages: TParserMessages = nil): BigDecimal; overload;
 
-(*
-function StrToValE(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal: FG; const Messages: TParserMessages = nil): FG; overload;
-function StrToValE(Line: string; const UseWinFormat: BG;
-	const DefVal: FG; const Messages: TParserMessages = nil): FG; overload;
-*)
+function StrToValE(const ALine: string; const UseWinFormat: BG;
+	const AMinVal, ADefVal, AMaxVal: FG; const Messages: TParserMessages = nil): FG; overload;
+function StrToValE(const ALine: string; const UseWinFormat: BG;
+	const ADefVal: FG; const Messages: TParserMessages = nil): FG; overload;
 
 function StrToValI(Line:string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG; const Messages: TParserMessages = nil): SG; overload;
@@ -61,6 +59,7 @@ implementation
 uses
 	SysUtils,
   Math,
+  uBigDecimalUtils,
   uMathExpressionParser,
 	uTimeExpressionParser,
   uStrings, uMath, uOutputFormat,
@@ -224,19 +223,25 @@ begin
 	end;
 end;
 
-(*
-function StrToValE(Line: string; const UseWinFormat: BG;
-	const MinVal, DefVal, MaxVal: FG; const Messages: TParserMessages = nil): FG;
+function StrToValE(const ALine: string; const UseWinFormat: BG;
+	const AMinVal, ADefVal, AMaxVal: FG; const Messages: TParserMessages = nil): FG;
+var
+  MinVal, DefVal, MaxVal: BigDecimal;
 begin
-	Result := StrToValBD(Line, UseWinFormat, MinVal, DefVal, MaxVal, Messages);
+  MinVal := Max(-MaxDouble, AMinVal);
+  DefVal := ADefVal;
+  MaxVal := Min(MaxDouble, AMaxVal);
+	Result := TBigDecimalUtils.ToDouble(StrToValBD(ALine, UseWinFormat, MinVal, DefVal, MaxVal, Messages));
 end;
 
-function StrToValE(Line: string; const UseWinFormat: BG;
-	const DefVal: FG; const Messages: TParserMessages = nil): FG;
+function StrToValE(const ALine: string; const UseWinFormat: BG;
+	const ADefVal: FG; const Messages: TParserMessages = nil): FG;
+var
+  DefVal: BigDecimal;
 begin
-	Result := StrToValBD(Line, UseWinFormat, DefVal, Messages);
+  DefVal := ADefVal;
+	Result := TBigDecimalUtils.ToDouble(StrToValBD(ALine, UseWinFormat, DefVal, Messages));
 end;
-*)
 
 function StrToValI(Line: string; const UseWinFormat: BG;
 	const MinVal, DefVal, MaxVal, Denominator: SG; const Messages: TParserMessages = nil): SG;
