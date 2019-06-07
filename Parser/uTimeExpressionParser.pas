@@ -82,13 +82,13 @@ begin
     j := NC - 1 - I;
 		case j of
 		0:
-			FValue.Seconds := FValue.Seconds + TBigDecimalUtils.ToDouble(N[I]);
+			FValue.SecondsAsBD := FValue.SecondsAsBD + N[I];
 		1:
-			FValue.Minutes := FValue.Minutes + TBigDecimalUtils.ToDouble(N[I]);
+			FValue.MinutesAsBD := FValue.MinutesAsBD + N[I];
 		2:
-			FValue.Hours := FValue.Hours + TBigDecimalUtils.ToDouble(N[I]);
+			FValue.HoursAsBD := FValue.HoursAsBD + N[I];
 		3:
-			FValue.Days := FValue.Days + TBigDecimalUtils.ToDouble(N[I]);
+			FValue.DaysAsBD := FValue.DaysAsBD + N[I];
 		end;
 	end;
 	if FValue.Ticks < FMinimalValue.Ticks then

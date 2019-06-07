@@ -81,10 +81,10 @@ begin
   if ASave then
   begin
     FSection.FileStatistics := FileStatistics;
-    FSection.RunStatistics.TotalElapsedTimeInMs := Round(FTotalElapsedTime.Milliseconds);
+    FSection.RunStatistics.TotalElapsedTimeInMs := FTotalElapsedTime.Milliseconds;
   	if Assigned(LocalMainIni) then
     begin
-      FSection.RunStatistics.TotalElapsedTimeInMs := Trunc(FTotalElapsedTime.Milliseconds + FElapsedTime.Milliseconds);
+      FSection.RunStatistics.TotalElapsedTimeInMs := FTotalElapsedTime.Milliseconds + FElapsedTime.Milliseconds;
       LocalMainIni.WriteString(Section, 'Version', GetProjectInfo(piProductVersion));
       RWSection(LocalMainIni, True);
     end;
