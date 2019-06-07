@@ -9,12 +9,13 @@ type
   TDefaultCommands = class(TCommands)
   public
     constructor Create;
-
   end;
 
 implementation
 
 uses
+  SysUtils,
+
   uLog,
   uDIniFile,
   uExitCommand,
@@ -64,23 +65,32 @@ begin
   FSystemInfoCommand := TSystemInfoCommand.Create;
   Add(FSystemInfoCommand);
 
-  FShowLogCommand := TShowFileCommand.Create;
-  FShowLogCommand.Shortcut := 'ShowLog';
-  FShowLogCommand.Description := 'Show log file.';
-  FShowLogCommand.FileName := MainLog.FileName;
-  Add(FShowLogCommand);
+  if FileExists(MainLog.FileName) then
+  begin
+    FShowLogCommand := TShowFileCommand.Create;
+    FShowLogCommand.Shortcut := 'ShowLog';
+    FShowLogCommand.Description := 'Show log file.';
+    FShowLogCommand.FileName := MainLog.FileName;
+    Add(FShowLogCommand);
+  end;
 
-  FShowIniCommand := TShowFileCommand.Create;
-  FShowIniCommand.Shortcut := 'ShowIni';
-  FShowIniCommand.Description := 'Show main configuration file.';
-  FShowIniCommand.FileName := MainIni.FileName;
-  Add(FShowIniCommand);
+  if FileExists(MainIni.FileName) then
+  begin
+    FShowIniCommand := TShowFileCommand.Create;
+    FShowIniCommand.Shortcut := 'ShowIni';
+    FShowIniCommand.Description := 'Show main configuration file.';
+    FShowIniCommand.FileName := MainIni.FileName;
+    Add(FShowIniCommand);
+  end;
 
-  FShowLocalIniCommand := TShowFileCommand.Create;
-  FShowLocalIniCommand.Shortcut := 'ShowLocalIni';
-  FShowLocalIniCommand.Description := 'Show local configuration file.';
-  FShowLocalIniCommand.FileName := LocalMainIni.FileName;
-  Add(FShowLocalIniCommand);
+  if FileExists(LocalMainIni.FileName) then
+  begin
+    FShowLocalIniCommand := TShowFileCommand.Create;
+    FShowLocalIniCommand.Shortcut := 'ShowLocalIni';
+    FShowLocalIniCommand.Description := 'Show local configuration file.';
+    FShowLocalIniCommand.FileName := LocalMainIni.FileName;
+    Add(FShowLocalIniCommand);
+  end;
 end;
 
 end.
