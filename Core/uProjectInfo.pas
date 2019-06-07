@@ -1,8 +1,10 @@
-unit uProjectInfo;
+﻿unit uProjectInfo;
 
 interface
 
-uses SysUtils;
+uses
+  SysUtils,
+  uTypes;
 
 type
 	TProjectInfoName = (
@@ -29,13 +31,29 @@ type
 	private
 		FProjectInfoNames: array[TProjectInfoName] of string;
 		FApplicationFileName: TFileName;
+    FPatched: BG;
+    FPreRelease: BG;
+    FDebug: BG;
+    FSpecialBuild: BG;
+    FInfoInferred: BG;
+    FPrivateBuild: BG;
 		procedure SetProjectInfos;
 	public
 		constructor Create(const ApplicationFileName: TFileName);
-		function GetProjectInfo(const ProjectInfoName: TProjectInfoName): string;
+
+    // Input
+	  property ApplicationFileName: TFileName read FApplicationFileName;
 		procedure SetProjectInfo(const ProjectInfoName: TProjectInfoName; const Value: string);
-	property
-		ApplicationFileName: TFileName read FApplicationFileName;
+
+    // Output
+		function GetProjectInfo(const ProjectInfoName: TProjectInfoName): string;
+    property Debug: BG read FDebug;
+    property PreRelease: BG read FPreRelease;
+    property Patched: BG read FPatched;
+    property PrivateBuild: BG read FPrivateBuild;
+    property InfoInferred: BG read FInfoInferred;
+    property SpecialBuild: BG read FSpecialBuild;
+    function GetSuffix: string;
 	end;
 
 var
@@ -50,8 +68,8 @@ var
 implementation
 
 uses
-	uTypes,
 	uFiles,
+  uProjectVersion,
 	Windows,
 	uOutputFormat, uStrings,
 	TypInfo;
@@ -67,10 +85,11 @@ var
 	Value: {$ifdef UNICODE}PWideChar{$else}PAnsiChar{$endif};
 	ValueA: PAnsiChar;
 	Id: string;
+  FixedFileInfo: ^tagVS_FIXEDFILEINFO;
 	// Unused
 	LenOfValue: U4;
 	Handle: Cardinal;
-//	__VS_FIXEDFILEINFO: ^VS_FIXEDFILEINFO;
+  Version: TProjectVersion;
 begin
 	AppFileName := PChar(ExpandDir(FApplicationFileName));
 	AppSize := GetFileVersionInfoSize(AppFileName, Handle{ API function initialize always to 0 });
@@ -80,14 +99,33 @@ begin
 		try
 			if GetFileVersionInfo(AppFileName, Handle{ Unused in API function }, AppSize, Buf) then
 			begin
-{				__VS_FIXEDFILEINFO := AllocMem(AppSize);
 				LenOfValue := 0;
-				if VerQueryValue(Buf, PChar('\'), Pointer(__VS_FIXEDFILEINFO), LenOfValue) then
+{$ifdef UNICODE}
+					if VerQueryValueW(Buf, PWideChar(WideString('\')), Pointer(FixedFileInfo), LenOfValue) then
+{$else}
+					if VerQueryValueA(Buf, PAnsiChar(AnsiString('\')), Pointer(FixedFileInfo), LenOfValue) then
+{$endif}
 				begin
-					Id := Value;
-				end;}
+          Assert(LenOfValue = SizeOf(tagVS_FIXEDFILEINFO));
+          if LenOfValue <> 0 then
+          begin
+            Version.Major := FixedFileInfo.dwFileVersionMS shr 16;
+            Version.Minor := FixedFileInfo.dwFileVersionMS and $FFFF;
+            Version.Release := FixedFileInfo.dwFileVersionLS shr 16;
+            Version.Build := FixedFileInfo.dwFileVersionLS and $FFFF;
+            FProjectInfoNames[piFileVersion] := VersionToStr(Version);
+
+            FDebug := FixedFileInfo.dwFileFlags and VS_FF_DEBUG <> 0;
+            FPreRelease := FixedFileInfo.dwFileFlags and VS_FF_PRERELEASE <> 0;
+            FPatched := FixedFileInfo.dwFileFlags and VS_FF_PATCHED <> 0;
+            FPrivateBuild := FixedFileInfo.dwFileFlags and VS_FF_PRIVATEBUILD <> 0;
+            FInfoInferred := FixedFileInfo.dwFileFlags and VS_FF_INFOINFERRED <> 0;
+            FSpecialBuild := FixedFileInfo.dwFileFlags and VS_FF_SPECIALBUILD <> 0;
+          end;
+				end;
+
 				Id := '040904E4';
-				for i := Low(TProjectInfoName) to High(TProjectInfoName) do
+				for i := piFileDescription to High(TProjectInfoName) do
 				begin
 {$ifdef UNICODE}
 					if VerQueryValueW(Buf, PWideChar(WideString('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, ''))), Pointer(Value), LenOfValue) then
@@ -111,7 +149,7 @@ begin
   					Id := IntToHex(U1(ValueA[1])) + IntToHex(U1(ValueA[0])) + IntToHex(U1(ValueA[3])) + IntToHex(U1(ValueA[2]));
 					end;
 				end;
-				for i := Low(TProjectInfoName) to High(TProjectInfoName) do
+				for i := piFileDescription to High(TProjectInfoName) do
 				begin
 {$ifdef UNICODE}
 					if VerQueryValueW(Buf, PWideChar(WideString('StringFileInfo\' + Id + '\' + ReplaceF(ProjectInfoStr[i], CharSpace, ''))), Pointer(Value), LenOfValue) then
@@ -146,10 +184,57 @@ begin
 	Result := FProjectInfoNames[ProjectInfoName];
 end;
 
+function TProjectInfo.GetSuffix: string;
+begin
+  Result := '';
+  if ThisProjectInfo.FPreRelease then
+  begin
+    if ThisProjectInfo.FSpecialBuild then
+      AppendStr(Result, 'pre-α')
+    else
+      AppendStr(Result, 'α');
+  end
+  else
+  begin
+    if ThisProjectInfo.FSpecialBuild then
+      AppendStr(Result, 'β');
+  end;
+
+  if ThisProjectInfo.FPatched then
+    AppendStr(Result, ' patched');
+  if ThisProjectInfo.FPrivateBuild then
+    AppendStr(Result, ' private');
+  if IsDebug or ThisProjectInfo.Debug then
+    AppendStr(Result, ' debug');
+end;
+
 procedure TProjectInfo.SetProjectInfo(
   const ProjectInfoName: TProjectInfoName; const Value: string);
 begin
   FProjectInfoNames[ProjectInfoName] := Value;
+end;
+
+function DelTrailingZeros(const AText: string): string;
+var
+  i: SG;
+begin
+  i := Length(AText);
+  while i >= 1 do
+  begin
+    if not CharInSet(AText[i], ['.', ',', '0']) then
+      Break;
+    Dec(i);
+  end;
+  Result := Copy(AText, 1, i);
+end;
+
+function ApplicationPlatform: string;
+begin
+  {$ifdef CPUx64}
+  Result := CharSpace + 'x64';
+  {$else}
+  Result := '';
+  {$endif}
 end;
 
 function ApplicationProjectInfo: TProjectInfo;
@@ -164,14 +249,11 @@ begin
         ThisProjectInfo.FProjectInfoNames[piInternalName] := 'Unknown';
     end;
 
+    Assert(ThisProjectInfo.FProjectInfoNames[piCompanyName] <> '');
 		if ThisProjectInfo.FProjectInfoNames[piCompanyName] = '' then
-      ThisProjectInfo.FProjectInfoNames[piCompanyName] := 'Sx Software';
+      ThisProjectInfo.FProjectInfoNames[piCompanyName] := 'Unknown';
 
-		if IsDebug then
-    begin
-			AppendStr(ThisProjectInfo.FProjectInfoNames[piFileVersion], '+');
-			AppendStr(ThisProjectInfo.FProjectInfoNames[piProductVersion], '+');
-		end;
+  	ThisProjectInfo.FProjectInfoNames[piProductVersion] := DelTrailingZeros(ThisProjectInfo.FProjectInfoNames[piProductVersion]) + ThisProjectInfo.GetSuffix + ApplicationPlatform;
 	end;
 	Result := ThisProjectInfo;
 end;

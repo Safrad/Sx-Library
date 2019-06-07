@@ -105,22 +105,13 @@ begin
   InitializingLog := False;
 end;
 
-function ApplicationPlatform: string;
-begin
-  {$ifdef CPUx64}
-  Result := 'x64';
-  {$else}
-  Result := 'x86';
-  {$endif}
-end;
-
 { TLog }
 
 constructor TLog.Create(const FileName: TFileName);
 begin
   inherited;
 
-	Add('Started Version ' + GetProjectInfo(piFileVersion) + ' ' + ApplicationPlatform, mlInformation);
+	Add('Started Version ' + GetProjectInfo(piProductVersion), mlInformation);
   if IsLoggerFor(mlDebug) then
     Add('Operating System Version: ' + OperatingSystem.VersionAsString, mlDebug);
 end;
