@@ -3,6 +3,7 @@ unit uConsole;
 interface
 
 uses
+  uTypes,
   uCodePage,
   uTextAlignment,
   uConsoleColor,
@@ -11,20 +12,29 @@ uses
 type
   TConsole = class
   private
+    const DefaultColor = U2(ccLightGray);
+    class var FOutputHandle: THandle;
+    class var FFlushEveryLine: BG;
+    class var FAskedIsRedirected: BG;
+    class var FIsRedirected: BG;
+    class function ValidOutputHandle: Boolean; static;
     class function ConvertToConsoleCodePage(const AText: string): string;
     class procedure SetCodePage(const Value: TCodePage); static;
     class function GetCodePage: TCodePage; static;
+    class procedure SetFlushEveryLine(const Value: BG); static;
+    class function GetIsRedirected: BG; static;
   public
     class procedure Write(const AText: string); overload;
-    class procedure Write(const AText: string; const AForegroundColor: TConsoleColor; const ABackgroundColor:
-      TConsoleColor = ccBlack); overload;
+    class procedure Write(const AText: string; const AForegroundColor: TConsoleColor;
+      const ABackgroundColor: TConsoleColor = ccBlack); overload;
 
     class procedure WriteLine(const AText: string); overload;
-    class procedure WriteLine(const AText: string; const AForegroundColor: TConsoleColor; const ABackgroundColor:
-      TConsoleColor = ccBlack); overload;
+    class procedure WriteLine(const AText: string; const AForegroundColor: TConsoleColor;
+      const ABackgroundColor: TConsoleColor = ccBlack); overload;
 
-    class procedure WriteAligned(const AText: string; const AFixedWidth: Integer; const AHorizontalAlignment: THorizontalAlignment;
-      AForegroundColor: TConsoleColor; ABackgroundColor: TConsoleColor);
+    class procedure WriteAligned(const AText: string; const AFixedWidth: Integer;
+      const AHorizontalAlignment: THorizontalAlignment;
+      const AForegroundColor: TConsoleColor; const ABackgroundColor: TConsoleColor = ccBlack);
 
     class function GetSize: TCoord;
     class procedure SetSize(const AValue: TCoord);
@@ -32,16 +42,20 @@ type
     class function GetCursorPosition: TCoord;
 
     class property CodePage: TCodePage read GetCodePage write SetCodePage;
+    class property FlushEveryLine: BG read FFlushEveryLine write SetFlushEveryLine;
+    class property IsRedirected: BG read GetIsRedirected;
   end;
 
 implementation
 
 uses
-  uTypes, uCharset, uChar, uStrings;
+  uCharset, uChar, uStrings;
 
 class procedure TConsole.WriteLine(const AText: string);
 begin
   System.Writeln(ConvertToConsoleCodePage(AText));
+  if IsRedirected and FFlushEveryLine then
+    Flush(Output);
 end;
 
 class procedure TConsole.Write(const AText: string);
@@ -54,13 +68,11 @@ const
   MaximalPipeWidth = 256;
 var
   csbi: CONSOLE_SCREEN_BUFFER_INFO;
-  handle: THandle;
 begin
   Result.X := MaximalPipeWidth;
   Result.Y := 0;
-  handle := GetStdHandle(STD_OUTPUT_HANDLE);
-  if handle <> INVALID_HANDLE_VALUE  then
-    if GetConsoleScreenBufferInfo(handle, csbi) then
+  if (not IsRedirected) then
+    if GetConsoleScreenBufferInfo(FOutputHandle, csbi) then
       Result := csbi.dwSize;
 end;
 
@@ -85,14 +97,31 @@ end;
 class function TConsole.GetCursorPosition: TCoord;
 var
   csbi: CONSOLE_SCREEN_BUFFER_INFO;
-  handle: THandle;
 begin
   Result.X := 0;
   Result.Y := 0;
-  handle := GetStdHandle(STD_OUTPUT_HANDLE);
-  if handle <> INVALID_HANDLE_VALUE  then
-    if GetConsoleScreenBufferInfo(handle, csbi) then
+  if (not IsRedirected) then
+    if GetConsoleScreenBufferInfo(FOutputHandle, csbi) then
       Result := csbi.dwCursorPosition;
+end;
+
+class function TConsole.GetIsRedirected: BG;
+var
+  FileType : DWORD;
+begin
+  if not FAskedIsRedirected then
+  begin
+    FAskedIsRedirected := True;
+
+    if ValidOutputHandle then
+    begin
+      FileType:= GetFileType(FOutputHandle);
+      FIsRedirected := FileType <> FILE_TYPE_CHAR{Console};
+    end
+    else
+      FIsRedirected := True; // No output
+  end;
+  Result := FIsRedirected;
 end;
 
 class procedure TConsole.SetCodePage(const Value: TCodePage);
@@ -100,43 +129,65 @@ begin
   SetConsoleOutputCP(UINT(Value));
 end;
 
+class procedure TConsole.SetFlushEveryLine(const Value: BG);
+begin
+  FFlushEveryLine := Value;
+end;
+
 class procedure TConsole.SetSize(const AValue: TCoord);
 var
   csbi: CONSOLE_SCREEN_BUFFER_INFO;
-  handle: THandle;
 begin
-  handle := GetStdHandle(STD_OUTPUT_HANDLE);
-  if handle <> INVALID_HANDLE_VALUE then
-    if GetConsoleScreenBufferInfo(handle, csbi) then
+  if ValidOutputHandle then
+    if GetConsoleScreenBufferInfo(FOutputHandle, csbi) then
     begin
       csbi.dwSize := AValue;
-      SetConsoleScreenBufferSize(handle, csbi.dwSize);
+      SetConsoleScreenBufferSize(FOutputHandle, csbi.dwSize);
     end;
 end;
 
-class procedure TConsole.WriteLine(const AText: string; const AForegroundColor, ABackgroundColor: TConsoleColor);
+class function TConsole.ValidOutputHandle: Boolean;
 begin
-  SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), U2(AForegroundColor) or U2(ABackgroundColor) shl 4);
+  if FOutputHandle = 0 then
+  begin
+    FOutputHandle := GetStdHandle(STD_OUTPUT_HANDLE);
+  end;
+  Result := FOutputHandle <> INVALID_HANDLE_VALUE;
+end;
+
+class procedure TConsole.WriteLine(const AText: string; const AForegroundColor, ABackgroundColor: TConsoleColor);
+var
+  Color: U2;
+begin
+  Color := U2(AForegroundColor) or U2(ABackgroundColor) shl 4;
+  if (Color <> DefaultColor) and (not IsRedirected) then
+    SetConsoleTextAttribute(FOutputHandle, Color);
   try
     WriteLine(AText);
   finally
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), U2(ccLightGray)); // Default
+    if (Color <> DefaultColor) and (not IsRedirected) then
+      SetConsoleTextAttribute(FOutputHandle, DefaultColor);
   end;
 end;
 
 class procedure TConsole.Write(const AText: string; const AForegroundColor, ABackgroundColor: TConsoleColor);
+var
+  Color: U2;
 begin
-  SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), U2(AForegroundColor) or U2(ABackgroundColor) shl 4);
+  Color := U2(AForegroundColor) or U2(ABackgroundColor) shl 4;
+  if (Color <> DefaultColor) and (not IsRedirected) then
+    SetConsoleTextAttribute(FOutputHandle, Color);
   try
     Write(AText);
   finally
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), U2(ccLightGray)); // Default
+    if (Color <> DefaultColor) and (not IsRedirected) then
+      SetConsoleTextAttribute(FOutputHandle, DefaultColor);
   end;
 end;
 
 class procedure TConsole.WriteAligned(const AText: string;
   const AFixedWidth: Integer; const AHorizontalAlignment: THorizontalAlignment;
-  AForegroundColor, ABackgroundColor: TConsoleColor);
+  const AForegroundColor: TConsoleColor; const ABackgroundColor: TConsoleColor = ccBlack);
 const
   HorizontalEllipsis = CharRightPointingDoubleAngleQuotationMark;
 begin
