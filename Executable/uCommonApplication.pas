@@ -193,7 +193,6 @@ begin
     finally
       ExternalApplication.Free;
     end;
-
   end;
 end;
 
