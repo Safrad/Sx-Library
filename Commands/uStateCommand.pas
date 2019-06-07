@@ -52,8 +52,8 @@ begin
       ],
       [
 			  NToS(CommonApplication.Statistics.RunCount),
-        MsToStr(Round(CommonApplication.Statistics.ElapsedTime.Milliseconds), diDHMSD, 3, False),
-			  MsToStr(Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds), diDHMSD, 3, False),
+        MsToStr(CommonApplication.Statistics.ElapsedTime.Milliseconds, diDHMSD, 3, False),
+			  MsToStr(CommonApplication.Statistics.TotalElapsedTime.Milliseconds, diDHMSD, 3, False),
 			  NToS(FileStatistics.ReadCount),
 			  BToStr(FileStatistics.ReadBytes),
 			  NToS(FileStatistics.WriteCount),
