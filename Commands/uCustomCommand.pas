@@ -12,10 +12,13 @@ type
     FShortcut: string;
     FResponse: string;
     FEnabled: BG;
+    FExecuteCount: UG;
     procedure SetDescription(const Value: string);
     procedure SetShortcut(const Value: string);
     procedure SetResponse(const Value: string);
     procedure SetEnabled(const Value: BG);
+    procedure SetExecuteCount(const Value: UG);
+    function GetSyntaxProperty: string;
   protected
     function GetSyntax: string; virtual; abstract;
   public
@@ -23,12 +26,14 @@ type
 
     function GetShortcutAndSyntax: string;
 
-    procedure Execute(const AParameters: string); virtual; abstract;
+    procedure Execute(const AParameters: string); virtual;
 
     property Enabled: BG read FEnabled write SetEnabled;
     property Shortcut: string read FShortcut write SetShortcut;
+    property Syntax: string read GetSyntaxProperty;
     property Description: string read FDescription write SetDescription;
     property Response: string read FResponse write SetResponse;
+    property ExecuteCount: UG read FExecuteCount write SetExecuteCount;
   end;
 
 implementation
@@ -41,18 +46,28 @@ resourcestring
 
 { TCustomCommand }
 
+procedure TCustomCommand.Execute(const AParameters: string);
+begin
+  Inc(FExecuteCount);
+end;
+
 function TCustomCommand.GetShortcutAndSyntax: string;
 var
-  Syntax: string;
+  SyntaxProperty: string;
 begin
   Result := Shortcut;
+  SyntaxProperty := Syntax;
+  if SyntaxProperty <> '' then
+    Result := Result + ' ' + SyntaxProperty;
+end;
+
+function TCustomCommand.GetSyntaxProperty: string;
+begin
   try
-    Syntax := GetSyntax;
+    Result := GetSyntax;
   except
-    Syntax := Unknown;
+    Result := Unknown;
   end;
-  if Syntax <> '' then
-    Result := Result + ' ' + Syntax;
 end;
 
 procedure TCustomCommand.SetDescription(const Value: string);
@@ -63,6 +78,11 @@ end;
 procedure TCustomCommand.SetEnabled(const Value: BG);
 begin
   FEnabled := Value;
+end;
+
+procedure TCustomCommand.SetExecuteCount(const Value: UG);
+begin
+  FExecuteCount := Value;
 end;
 
 procedure TCustomCommand.SetResponse(const Value: string);

@@ -23,6 +23,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure Clear;
+
     function FindByString(const ACommandShortcut: string): TCustomCommand;
     function FindByStringException(const ACommandShortcut: string): TCustomCommand;
 
@@ -32,6 +34,7 @@ type
     procedure Add(const ACustomCommand: TCustomCommand); overload;
     procedure Add(const ACommands: TObjectList); overload;
     procedure Delete(const ACustomCommand: TCustomCommand);
+    procedure Disable(const ACustomCommand: TCustomCommand);
 
     property List: TObjectList read FCommands;
   end;
@@ -43,13 +46,17 @@ uses
   SysUtils,
   Classes,
 
+  uUnsupportedCommand,
   uTextAlignment,
   uTable,
   uMath,
   uStrings,
   uSorts,
   uFind,
-  uEParseError;
+  uConsole,
+  uConsoleColor,
+  uEParseError,
+  uOutputFormat;
 
 { TCommands }
 
@@ -70,6 +77,14 @@ begin
   end;
 end;
 
+procedure TCommands.Clear;
+begin
+  FChanged := False;
+  SetLength(FCommandIndexes, 0);
+  SetLength(FCommandNamesSorted, 0);
+  FCommands.Clear;
+end;
+
 constructor TCommands.Create;
 begin
   inherited;
@@ -80,9 +95,12 @@ end;
 
 destructor TCommands.Destroy;
 begin
-  FCommands.Free;
-
-  inherited;
+  try
+    Clear;
+    FCommands.Free;
+  finally
+    inherited;
+  end;
 end;
 
 function TCommands.FindByString(
@@ -128,11 +146,13 @@ var
 begin
   Table := TTable.Create(1 + FCommands.Count);
   try
-    Row := TRow.Create(2);
+    Row := TRow.Create(3);
     Row.Columns[0].Text := 'Command name and parameters';
     Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Description';
     Row.Columns[1].VerticalAlignment := vaCenter;
+    Row.Columns[2].Text := 'Used';
+    Row.Columns[2].VerticalAlignment := vaCenter;
     Table.Data[0] := Row;
 
     for i := 0 to FCommands.Count - 1 do
@@ -177,18 +197,40 @@ var
 begin
   Index := FCommands.IndexOf(ACustomCommand);
   if Index >= 0 then
-    ACustomCommand.Enabled := False
+  begin
+    FChanged := True;
+    FCommands.Delete(Index);
+  end
   else
     raise EArgumentException.Create('Can not delete command "' + ACustomCommand.Shortcut + '" because not found in command list.');
+end;
+
+procedure TCommands.Disable(const ACustomCommand: TCustomCommand);
+var
+  Index: SG;
+begin
+  Index := FCommands.IndexOf(ACustomCommand);
+  if Index >= 0 then
+    ACustomCommand.Enabled := False
+  else
+    raise EArgumentException.Create('Can not disable command "' + ACustomCommand.Shortcut + '" because not found in command list.');
 end;
 
 function TCommands.PreviewTableCommand(const ACommand: TCustomCommand): TRow;
 var
   Row: TRow;
 begin
-  Row := TRow.Create(2);
+  Row := TRow.Create(3);
   Row.Columns[0].Text := ACommand.GetShortcutAndSyntax;
   Row.Columns[1].Text := ACommand.Description;
+  Row.Columns[2].Text := NToS(ACommand.ExecuteCount);
+  if (not ACommand.Enabled) or (ACommand is TUnsupportedCommand) then
+  begin
+    Row.Columns[0].TextColor := ccGray;
+    Row.Columns[1].TextColor := ccGray;
+    Row.Columns[2].TextColor := ccGray;
+  end;
+
   Result := Row;
 end;
 
