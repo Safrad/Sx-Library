@@ -55,6 +55,7 @@ type
     function GetRequired: string; virtual;
     function GetRequiredOrOptional: string; virtual;
     function GetArgumentShortcutAndSyntax: string;
+    function GetValueAsString: string; virtual; abstract;
     procedure SetValueFromString(const AValue: string); virtual; abstract;
 
     property Shortcut: string read FShortcut write SetShortcut;

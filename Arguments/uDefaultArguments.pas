@@ -49,7 +49,7 @@ procedure TDefaultArguments.Parse(const ACommandLine: string);
 begin
   inherited;
 
-  if HelpArgunment.Exists or ((Count = 0) and (RequiredArgumentCount > 0)) then
+  if HelpArgunment.Exists or ((ExistsCount = 0) and (RequiredArgumentCount > 0)) then
   begin
     if IsConsole then
       PreviewToConsole

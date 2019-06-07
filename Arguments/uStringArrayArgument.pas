@@ -19,6 +19,7 @@ type
     function GetSyntax: string; override;
   public
     constructor Create;
+    function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
     property Separator: string read FSeparator write SetSeparator;
@@ -44,6 +45,19 @@ end;
 function TStringArrayArgument.GetSyntax: string;
 begin
   Result := 'value1' + Separator + 'value2' + Separator + 'value3...';
+end;
+
+function TStringArrayArgument.GetValueAsString: string;
+var
+  i: SG;
+begin
+  Result := '';
+  for i := 0 to Length(FValues) - 1 do
+  begin
+    AppendStr(Result, FValues[i]);
+    if i < Length(Values) - 1 then
+      AppendStr(Result, Separator);
+  end;
 end;
 
 function TStringArrayArgument.GetValues: TArrayOfString;

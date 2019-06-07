@@ -20,6 +20,7 @@ type
   public
     constructor Create;
 
+    function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
     procedure AddCaption(const ACaption: string);
 
@@ -57,6 +58,11 @@ begin
   for i := 0 to Length(FCaptions) - 1 do
     Result := Result + FCaptions[i] + '|';
   Result := Result + ']';
+end;
+
+function TComboArgument.GetValueAsString: string;
+begin
+  Result := FCaptions[Value];
 end;
 
 procedure TComboArgument.SetCaptions(const Value: TArrayOfString);

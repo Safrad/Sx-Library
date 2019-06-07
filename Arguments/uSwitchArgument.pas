@@ -17,6 +17,7 @@ type
 		function GetSyntax: string; override;
   public
     constructor Create;
+    function GetValueAsString: string; override;
 		procedure SetValueFromString(const AValue: string); override;
     function GetRequired: string; override;
     function GetRequiredOrOptional: string; override;
@@ -54,6 +55,14 @@ begin
   Result := '';
 end;
 
+function TSwitchArgument.GetValueAsString: string;
+begin
+  if Value then
+    Result := 'true'
+  else
+    Result := 'false';
+end;
+
 procedure TSwitchArgument.SetDefaultValue(const Value: BG);
 begin
   FDefaultValue := Value;
@@ -76,7 +85,7 @@ begin
   AUpperCaseValue := UpperCase(AValue);
   if (AUpperCaseValue = 'FALSE') or (AUpperCaseValue = '0') then
     Value := False
-  else if (AUpperCaseValue = 'TRUE') or (AUpperCaseValue = '1') then
+  else if (AUpperCaseValue = '') or (AUpperCaseValue = 'TRUE') or (AUpperCaseValue = '1') then
     Value := True
   else
     raise EParseError.Create('Argument ' + QuotedStr(Shortcut) + ' is switch, ', ['{no value}', 'false', 'true', '0', '1'], AValue);

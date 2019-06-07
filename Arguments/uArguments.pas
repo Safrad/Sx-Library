@@ -17,11 +17,13 @@ type
 
     function ParseString(ASource: string): TArrayOfStringPair;
     procedure ApplyArguments(const AArguments: TArrayOfStringPair);
-    function FindByString(const AArgumentShortcut: string): TCustomArgument;
 
-    function GetCount: SG;
+    function GetExistsCount: SG;
     function GetRequiredArgumentCount: SG;
     function PreviewTableArgument(const AArgument: TCustomArgument): TRow;
+    function PreviewTableArgumentValue(const AArgument: TCustomArgument): TRow;
+    function Get(const Index: TIndex): TCustomArgument;
+    function GetDefinedCount: SG;
   public
     constructor Create;
     destructor Destroy; override;
@@ -29,7 +31,10 @@ type
     procedure Clear;
     procedure Parse; overload;
     procedure Parse(const ACommandLine: string); overload; virtual;
+    function FindByString(const AArgumentShortcut: string): TCustomArgument;
+
     procedure PreviewToConsole;
+    procedure PreviewValuesToConsole;
     function PreviewAsString: string;
     procedure WriteUnused;
     function ShowUnused: string;
@@ -37,8 +42,11 @@ type
     function Check: string;
 
     procedure Add(const ACustomArgument: TCustomArgument);
-    property Count: SG read GetCount;
+    property ExistsCount: SG read GetExistsCount;
     property RequiredArgumentCount: SG read GetRequiredArgumentCount;
+
+		property Items[const Index: TIndex]: TCustomArgument read Get; default; // operator []
+    property DefinedCount: SG read GetDefinedCount;
   end;
 
 implementation
@@ -47,7 +55,6 @@ uses
   SysUtils,
   Classes,
   uStartState,
-  uSwitchArgument,
   uTextAlignment,
   uTable,
   uFiles,
@@ -111,7 +118,17 @@ begin
   Result := nil;
 end;
 
-function TArguments.GetCount: SG;
+function TArguments.Get(const Index: TIndex): TCustomArgument;
+begin
+  Result := TCustomArgument(FArguments[Index]);
+end;
+
+function TArguments.GetDefinedCount: SG;
+begin
+  Result := FArguments.Count;
+end;
+
+function TArguments.GetExistsCount: SG;
 var
   i: SG;
 begin
@@ -243,10 +260,7 @@ begin
     end;
     Argument.Exists := True;
 
-    if (not (Argument is TSwitchArgument)) or (AArguments[Index].Value <> '') then
-    begin
-      Argument.SetValueFromString(AArguments[Index].Value);
-    end;
+    Argument.SetValueFromString(AArguments[Index].Value);
     Inc(Index);
   end;
 end;
@@ -293,6 +307,32 @@ begin
   end;
 end;
 
+procedure TArguments.PreviewValuesToConsole;
+var
+  Table: TTable;
+  Row: TRow;
+  i: SG;
+begin
+  Table := TTable.Create(1 + FArguments.Count);
+  try
+    Row := TRow.Create(2);
+    Row.Columns[0].Text := 'Parameter';
+    Row.Columns[0].HorizontalAlignment := haCenter;
+    Row.Columns[1].Text := 'Value';
+    Row.Columns[1].HorizontalAlignment := haCenter;
+    Table.Data[0] := Row;
+
+    for i := 0 to FArguments.Count - 1 do
+    begin
+      Row := PreviewTableArgumentValue(TCustomArgument(FArguments[i]));
+      Table.Data[i + 1] := Row;
+    end;
+    Table.WriteToConsole;
+  finally
+    Table.Free;
+  end;
+end;
+
 function TArguments.PreviewTableArgument(const AArgument: TCustomArgument): TRow;
 var
   Row: TRow;
@@ -301,6 +341,16 @@ begin
   Row.Columns[0].Text := AArgument.GetArgumentShortcutAndSyntax;
   Row.Columns[1].Text := AArgument.Description;
   Row.Columns[2].Text := AArgument.GetRequired + AArgument.GetRequireList;
+  Result := Row;
+end;
+
+function TArguments.PreviewTableArgumentValue(const AArgument: TCustomArgument): TRow;
+var
+  Row: TRow;
+begin
+  Row := TRow.Create(2);
+  Row.Columns[0].Text := AArgument.Shortcut;
+  Row.Columns[1].Text := AArgument.GetValueAsString;
   Result := Row;
 end;
 

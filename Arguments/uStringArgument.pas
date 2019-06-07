@@ -16,6 +16,7 @@ type
     FValue: string;
     function GetSyntax: string; override;
   public
+    function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
     property Value: string read GetValue write SetValue;
@@ -35,6 +36,11 @@ function TStringArgument.GetValue: string;
 begin
   Used := True;
   Result := FValue;
+end;
+
+function TStringArgument.GetValueAsString: string;
+begin
+  Result := Value;
 end;
 
 procedure TStringArgument.SetDefaultValue(const Value: string);

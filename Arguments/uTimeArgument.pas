@@ -18,6 +18,7 @@ type
   protected
     function GetSyntax: string; override;
   public
+    function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
     property DefaultValue: TTimeSpan read FDefaultValue write SetDefaultValue;
@@ -42,6 +43,11 @@ begin
   Result := FValue;
 end;
 
+function TTimeArgument.GetValueAsString: string;
+begin
+  Result := Value.ToStringInSeconds;
+end;
+
 procedure TTimeArgument.SetDefaultValue(const Value: TTimeSpan);
 begin
   FDefaultValue := Value;
@@ -54,7 +60,7 @@ end;
 
 procedure TTimeArgument.SetValueFromString(const AValue: string);
 begin
-  Value.Milliseconds := SToMs(AValue, ifIO);
+  FValue.Milliseconds := SToMs(AValue, ifIO);
 end;
 
 end.
