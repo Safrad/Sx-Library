@@ -221,8 +221,8 @@ begin
 					if IsFile then
 					begin
 						Copy := ({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} <> FileInfo.DateTime) or (SearchRec.Size <> FileInfo.Size);
-            if Copy and CopyOnlyMuchSmaller and (not (8 * SearchRec.Size < 10 * FileInfo.Size)) then
-              Copy := False; // Skip if source fil is not much smaller (80%) then destination
+            if Copy and CopyOnlyMuchSmaller and (8 * SearchRec.Size > 10 * FileInfo.Size) then
+              Copy := False; // Skip if source file is not much smaller (80%) then destination
 
 						if {$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} < FileInfo.DateTime then
 							Warning('Destination file %1 (%2) is newer (%3)!', [Source + SearchRec.Name, DateTimeToStr({$if CompilerVersion < 21}FileDateToDateTime{$ifend}(FileInfo.DateTime)), DateTimeToStr({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}FileDateToDateTime(SearchRec.Time){$ifend})]);
