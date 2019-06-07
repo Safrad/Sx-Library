@@ -46,9 +46,9 @@ function ParentDirF(const Dir: string; const Level: SG = 1): string;
 function LegalFileName(const FileName: string): string;
 function LegalPath(const Path: string): string;
 procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
-function HandleFileSize(FHandle: THandle): S8;
-function GetFileSizeU(const FileName: TFileName): S8;
-function GetFileSizeS(const FileName: TFileName): string;
+function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
+function GetFileSizeU(const AFileName: TFileName): S8;
+function GetFileSizeS(const AFileName: TFileName): string;
 function FileTimeToDateTime(F: TFileTime): TDateTime;
 function DateTimeToFileTime(const D: TDateTime): TFileTime;
 function GetFileCreated(const FileName: TFileName): TFileTime; overload;
@@ -609,7 +609,6 @@ begin
 	end;
 end;
 
-
 procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
 var
 	i: SG;
@@ -661,31 +660,27 @@ begin
 	end; *)
 end;
 
-function HandleFileSize(FHandle: THandle): S8;
-label LRetry;
+function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
 var ErrorCode: U4;
 begin
-	LRetry:
-	TU8(Result).D0 := GetFileSize(FHandle, @TU8(Result).D1);
+	TU8(Result).D0 := GetFileSize(AHandle, @TU8(Result).D1);
 
 	if TU8(Result).D0 = $FFFFFFFF then
 	begin
 		ErrorCode := GetLastError;
 		if Result <> NO_ERROR then
 		begin
-			Result := -1;
-			if ErrorRetry(ErrorCodeToStr(ErrorCode)) then goto LRetry;
-		end;
+   		raise EIOException.Create(AFileName, ErrorCode);
+    end;
 	end;
 end;
 
-function GetFileSizeU(const FileName: TFileName): S8;
+function GetFileSizeU(const AFileName: TFileName): S8;
 var
 	FHandle: THandle;
 begin
-	Result := -1;
 	FHandle := CreateFile(
-		PChar(FileName),  // pointer to name of the file
+		PChar(AFileName),  // pointer to name of the file
 		0,  // access (read-write) mode
 		0,  // share mode
 		nil,  // pointer to security attributes
@@ -695,26 +690,21 @@ begin
 	);
 	if FHandle <> INVALID_HANDLE_VALUE then
 	begin
-		Result := HandleFileSize(FHandle);
+		Result := HandleFileSize(FHandle, AFileName);
 		if CloseHandle(FHandle) = False then
 		begin
-			IOError(FileName, GetLastError);
+			IOError(AFileName, GetLastError);
 		end;
 	end
 	else
 	begin
-		IOError(FileName, GetLastError);
+ 		raise EIOException.Create(AFileName, GetLastError);
 	end;
 end;
 
-function GetFileSizeS(const FileName: TFileName): string;
-var FileSize: U8;
+function GetFileSizeS(const AFileName: TFileName): string;
 begin
-	FileSize := GetFileSizeU(FileName);
-	if FileSize < 0 then
-		Result := NAStr
-	else
-		Result := BToStr(FileSize);
+	Result := BToStr(GetFileSizeU(AFileName));
 end;
 
 function FileTimeToDateTime(F: TFileTime): TDateTime;
@@ -867,16 +857,14 @@ begin
 end;
 
 function RenameFileEx(const Source, Dest: TFileName): BG;
-label LRetry;
 var ErrorCode: U4;
 begin
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
-	LRetry:
 	Result := Windows.MoveFileEx(PChar(Source), PChar(Dest), MOVEFILE_REPLACE_EXISTING);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCodeToStr(ErrorCode) + LineSep + Source + LineSep + Dest) then goto LRetry;
+ 		raise EInOutError.Create(ErrorCodeToStr(ErrorCode) + LineSep + Source + LineSep + Dest);
 	end;
 end;
 
@@ -891,18 +879,16 @@ begin
 end;
 
 function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
-label LRetry;
 var ErrorCode: U4;
 begin
 	if LogDebug then
     MainLogAdd('Copy file ' + AddQuoteF(Source) + ' to ' + AddQuoteF(Dest), mlDebug);
 	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
-	LRetry:
 	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCodeToStr(ErrorCode) + LineSep + 'During copying file ' + LineSep + Source + LineSep + 'to' + LineSep + Dest) then goto LRetry;
+    raise EInOutError.Create(ErrorCodeToStr(ErrorCode) + LineSep + 'During copying file ' + LineSep + Source + LineSep + 'to' + LineSep + Dest);;
 	end;
 end;
 
