@@ -1410,11 +1410,41 @@ begin
 end;
 
 function SameDataInFile(const FileName: TFileName; const Line: AnsiString): BG;
-label LClose;
 var
 	F: TFile;
-	Buf, P: Pointer;
-	TotalBytes, ReadBytes: SG;
+	Buf: Pointer;
+
+  function InternalSameDataInFile: BG;
+  var
+	  TotalBytes, ReadBytes: SG;
+    P: Pointer;
+  begin
+    TotalBytes := F.FileSize;
+    if TotalBytes <> Length(Line) then
+    begin
+      Result := False;
+      Exit;
+    end;
+    while TotalBytes > 0 do
+    begin
+      ReadBytes := DefFileBuffer;
+      if ReadBytes > TotalBytes then
+        ReadBytes := TotalBytes;
+      if not F.BlockRead(Buf^, ReadBytes) then
+      begin
+        Result := False;
+        Exit;
+      end;
+      P := @Line[Length(Line) - TotalBytes + 1];
+      if SameData(Buf, P, ReadBytes) = False then
+      begin
+        Result := False;
+        Exit;
+      end;
+      Dec(TotalBytes, ReadBytes);
+    end;
+    Result := True;
+  end;
 begin
 	Result := False;
 	if FileExists(FileName) then
@@ -1424,22 +1454,7 @@ begin
 		try
 			if F.Open(FileName, fmReadOnly) then
 			begin
-				TotalBytes := F.FileSize;
-				if TotalBytes <> Length(Line) then goto LClose;
-				while TotalBytes > 0 do
-				begin
-					ReadBytes := DefFileBuffer;
-					if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
-					if not F.BlockRead(Buf^, ReadBytes) then
-					begin
-						goto LClose;
-					end;
-					P := @Line[Length(Line) - TotalBytes + 1];
-					if SameData(Buf, P, ReadBytes) = False then goto LClose;
-					Dec(TotalBytes, ReadBytes);
-				end;
-				Result := True;
-				LClose:
+        Result := InternalSameDataInFile;
 				F.Close;
 			end;
 		finally
@@ -1746,11 +1761,40 @@ begin
 end;
 
 function CompareFiles(const File1, File2: TFile): BG;
-label LClose;
 var
-	TotalBytes: U8;
-	ReadBytes, FileBufferSize: UG;
 	Buf1, Buf2: Pointer;
+  FileBufferSize: UG;
+
+  function InternalCompareFiles: BG;
+  var
+  	ReadBytes: UG;
+  	TotalBytes: U8;
+  begin
+    TotalBytes := File1.FileSize;
+    while TotalBytes > 0 do
+    begin
+      ReadBytes := FileBufferSize;
+      if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
+      if not File1.BlockRead(Buf1^, ReadBytes) then
+      begin
+        Result := False;
+        Exit;
+      end;
+      if not File2.BlockRead(Buf2^, ReadBytes) then
+      begin
+        Result := False;
+        Exit;
+      end;
+      Dec(TotalBytes, ReadBytes);
+      if SameData(Buf1, Buf2, ReadBytes) = False then
+      begin
+        Result := False;
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+
 begin
 	Result := False;
 	if File1.FileSize = File2.FileSize then
@@ -1763,25 +1807,7 @@ begin
 		GetMem(Buf1, FileBufferSize);
 		GetMem(Buf2, FileBufferSize);
 		try
-			TotalBytes := File1.FileSize;
-			while TotalBytes > 0 do
-			begin
-				ReadBytes := FileBufferSize;
-				if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
-				if not File1.BlockRead(Buf1^, ReadBytes) then
-				begin
-					goto LClose;
-				end;
-				if not File2.BlockRead(Buf2^, ReadBytes) then
-				begin
-					goto LClose;
-				end;
-				Dec(TotalBytes, ReadBytes);
-				if SameData(Buf1, Buf2, ReadBytes) = False then
-					goto LClose;
-			end;
-			Result := True;
-			LClose:
+			Result := InternalCompareFiles;
 		finally
 			FreeMem(Buf1);
 			FreeMem(Buf2);
