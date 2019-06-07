@@ -138,7 +138,10 @@ begin
   begin
     FEnabled := Value;
     if FEnabled then
-      Resume
+    begin
+      FStartTime := PerformanceCounter;
+      Resume;
+    end
     else
       Suspend;
   end;
