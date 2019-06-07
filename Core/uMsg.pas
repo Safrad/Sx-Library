@@ -3,7 +3,7 @@ unit uMsg;
 interface
 
 uses
-  SysUtils, Consts, uTypes, uConsole;
+  SysUtils, Consts, uTypes, uConsoleColor;
 
 var
   MessageLevelStr: array[TMessageLevel] of string;
@@ -78,7 +78,8 @@ function IOErrorMessageRetry(var FileName: TFileName; const ErrorMsg: string): B
 implementation
 
 uses
-  Windows, uStrings, uLog {$IFNDEF Console}, uMsgDlg, Dialogs {$ENDIF}, uChar;
+  Windows, uStrings,
+  uLog {$IFNDEF Console}, uMsgDlg, Dialogs {$ELSE}, uConsole {$ENDIF}, uChar;
 
 const
   MsgTypeNames: array[TMessageLevel] of string = (SMsgDlgConfirm, 'Debug', '', SMsgDlgWarning,
