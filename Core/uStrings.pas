@@ -100,6 +100,8 @@ procedure SkipSpace(const Line: string; var LineIndex: SG);
 function ReadToString(const Line: string; var LineIndex: SG;
 	const S: string): string; overload;
 function ReadToString(const Line: string;	const S: string): string; overload;
+function ReadToStrings(const Line: string; var ALineIndex: SG;
+	const APatterns: TArrayOfString): string;
 function ReadToChars(const Line: string; var LineIndex: SG;
 	const C: TCharSet): string; overload;
 function ReadToCharsEx(const Line: string; var LineIndex: SG;
@@ -165,6 +167,9 @@ function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; ove
 
 function U1ToOctalString(AValue: U1): string;
 function CharToDigit(const AChar: Char): SG;
+
+function ProgramInput(const AText: string): string;
+function ProgramOutput(const AText: string): string;
 
 implementation
 
@@ -728,6 +733,38 @@ var LineIndex: SG;
 begin
 	LineIndex := 1;
 	Result := ReadToString(Line, LineIndex, S);
+end;
+
+function ReadToStrings(const Line: string; var ALineIndex: SG;
+	const APatterns: TArrayOfString): string;
+var
+  BestFindLineIndex, FindLineIndex: SG;
+  BestFindStr: string;
+  i: SG;
+begin
+	BestFindLineIndex := High(BestFindLineIndex);
+  for i := 0 to Length(APatterns) - 1 do
+  begin
+  	FindLineIndex := PosEx(APatterns[i], Line, ALineIndex);
+    if (FindLineIndex <> 0) and (FindLineIndex < BestFindLineIndex) then
+    begin
+      BestFindStr := APatterns[i];
+      BestFindLineIndex := FindLineIndex;
+    end;
+  end;
+
+	if BestFindLineIndex = High(FindLineIndex) then
+	begin
+    // Not found
+		Result := Copy(Line, ALineIndex);
+		ALineIndex := Length(Line) + 1; // One char after end of input
+	end
+	else
+	begin
+    // Found
+		Result := Copy(Line, ALineIndex, BestFindLineIndex - ALineIndex);
+		ALineIndex := BestFindLineIndex; // First char of pattern
+	end;
 end;
 
 function ReadToChars(const Line: string; var LineIndex: SG;
@@ -1421,6 +1458,16 @@ end;
 function CharToDigit(const AChar: Char): SG;
 begin
   Result := Ord(AChar) - Ord('0');
+end;
+
+function ProgramInput(const AText: string): string;
+begin
+  Result := '<–: ' + AText;
+end;
+
+function ProgramOutput(const AText: string): string;
+begin
+  Result := '–>: ' + AText;
 end;
 
 initialization
