@@ -23,12 +23,10 @@ uses
 initialization
 {$IFNDEF NoInitialization}
   QueryPerformanceCounter(TLargeInteger(ApplicationStartTicks));
-	if IsRelease then
-		NoErrMsg := True;
+	NoErrMsg := IsRelease;
 
 	{$ifndef FastMM4}	
-	if IsDebug then
-		ReportMemoryLeaksOnShutdown := True; // Optional, can take long time for many unfreed objects
+	ReportMemoryLeaksOnShutdown := IsDebug; // Optional, can take long time for many unfreed objects
 	{$endif}
 {$ENDIF NoInitialization}
 end.
