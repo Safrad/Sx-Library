@@ -3,7 +3,7 @@ unit uTable;
 interface
 
 uses
-  uConsole,
+  uConsoleColor,
   uTypes, uRow, uCell, uTableBorderSet;
 
 const
@@ -48,6 +48,7 @@ uses
   Math, StrUtils,
   uStrings,
   uCodePage,
+  uConsole,
   uTableBorderTextSet,
   uTableBorderDoubleLineSet,
   uItemType;
@@ -175,7 +176,7 @@ begin
     begin
       cell := AColumns[columnIndex];
       TConsole.WriteAligned(cell.GetLineString(cell.TextAlignment.Vertical, lineIndex, ARowHeight), ASizes[columnIndex], cell.TextAlignment.Horizontal,
-        ccLightGray, ABackgroundColor);
+        cell.TextColor, ABackgroundColor);
       if columnIndex < ColumnCount - 1 then
         TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
     end;
