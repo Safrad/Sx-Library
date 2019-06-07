@@ -32,6 +32,8 @@ uses
 
 constructor TFileNameArgument.Create;
 begin
+  inherited;
+
   FMustExists := True;
 end;
 
