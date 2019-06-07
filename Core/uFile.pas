@@ -86,7 +86,6 @@ type
 		FFilePos: U8;
 		FFileSize: U8;
     FLogger: TDateTimeLogger;
-		function GetFileSize(var Size: U8): BG;
 		function IsOpened: BG;
 		function ErrorRetry(const ErrorCode: U4): BG;
 		procedure CreateBuffer;
@@ -272,7 +271,7 @@ LRetry :
 			Exit;
 		end;
 	end;
-	GetFileSize(FFileSize);
+	FFileSize := HandleFileSize(FHandle, FTempFileName);
 	FFileBegin := 0;
 	case Mode of
 	fmReadOnly, fmReadAndWrite:
@@ -299,12 +298,6 @@ LRetry :
 	end;
 
 	Result := True;
-end;
-
-function TFile.GetFileSize(var Size: U8): BG;
-begin
-	Size := HandleFileSize(FHandle);
-	Result := Size >= 0;
 end;
 
 function TFile.Seek(const Pos: U8): BG;
