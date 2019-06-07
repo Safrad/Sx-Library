@@ -23,14 +23,15 @@ unit ExternalApp;
 
 interface 
 
-uses 
-  SysUtils, Classes, Windows, Dialogs; 
+uses
+  uSxThread,
+  SysUtils, Classes, Windows, Dialogs;
 
-type 
-  EExternalApp = class(Exception); 
+type
+  EExternalApp = class(Exception);
 	TExternalApp = class;
 
-	TExternalAppThread = class(TThread)
+	TExternalAppThread = class(TSxThread)
 	private
 		fExternalApp: TExternalApp;
 	protected
@@ -66,6 +67,7 @@ type
 		fOnEventBreak: TNotifyEvent;
 		fOnSynchronizedEventBreak: TNotifyEvent;
 		procedure SetRunning(Value: boolean);
+    procedure SetModuleName(const Value: string);
 	public
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
@@ -81,7 +83,7 @@ type
 		property Running: boolean read fRunning write SetRunning;
 //		procedure ExitCode: U4 read GetExitCode;
 	published
-		property ModuleName: string read fModuleName write fModuleName;
+		property ModuleName: string read fModuleName write SetModuleName;
 		property CommandLine: string read fCommandLine write fCommandLine;
 		property ShowAppWindow: boolean read fShowAppWindow write fShowAppWindow;
 		property ProcessInformation: TProcessInformation read fProcessInformation;
@@ -201,7 +203,12 @@ begin
 	fInvokerThread.fOnEventBreak := fOnEventBreak; 
 end; 
 
-procedure TExternalApp.SetRunning(Value: boolean); 
+procedure TExternalApp.SetModuleName(const Value: string);
+begin
+  fModuleName := Value;
+end;
+
+procedure TExternalApp.SetRunning(Value: boolean);
 begin 
   if Value then 
     Run 
@@ -232,10 +239,12 @@ end;
 
 { TExternalAppThread } 
 
-constructor TExternalAppThread.Create(AExternalApp: TExternalApp); 
+constructor TExternalAppThread.Create(AExternalApp: TExternalApp);
 begin 
-  inherited Create(false); 
-  fExternalApp := AExternalApp; 
+  inherited Create;
+  fExternalApp := AExternalApp;
+  Name := 'Reader of ' + ExtractFileName(AExternalApp.ModuleName);
+  Resume;
 end; 
 
 procedure TExternalAppThread.EventBreak;
