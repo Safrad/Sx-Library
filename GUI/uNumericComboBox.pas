@@ -3,22 +3,23 @@ unit uNumericComboBox;
 interface
 
 uses
-	uTypes,
+  uTypes,
+	Velthuis.BigDecimals,
 	Classes, StdCtrls;
 
 type
 	TNumericComboBox = class(TComboBox)
 	private
 		{ Private declarations }
-		FMinimum: FGetS8;
-		FMaximum: FGetS8;
-		FDefault: FGetS8;
-		FValue: FGetS8;
+		FMinimum: BigDecimal;
+		FMaximum: BigDecimal;
+		FDefault: BigDecimal;
+		FValue: BigDecimal;
 		FValueUpdated: BG;
-		function GetValue: FGetS8;
-		procedure SetMinimum(const Value: FGetS8);
-		procedure SetDefault(const Value: FGetS8);
-		procedure SetMaximum(const Value: FGetS8);
+		function GetValue: BigDecimal;
+		procedure SetMinimum(const Value: BigDecimal);
+		procedure SetDefault(const Value: BigDecimal);
+		procedure SetMaximum(const Value: BigDecimal);
 	protected
 		procedure Change; override;
 	public
@@ -27,10 +28,10 @@ type
 		function RoundedValue: SG;
 	published
 		{ Published declarations }
-		property Miminum: FGetS8 read FMinimum write SetMinimum;
-		property Maximum: FGetS8 read FMaximum write SetMaximum;
-		property Default: FGetS8 read FDefault write SetDefault;
-		property Value: FGetS8 read GetValue;
+		property Miminum: BigDecimal read FMinimum write SetMinimum;
+		property Maximum: BigDecimal read FMaximum write SetMaximum;
+		property Default: BigDecimal read FDefault write SetDefault;
+		property Value: BigDecimal read GetValue;
 	end;
 
 implementation
@@ -46,7 +47,7 @@ begin
 	FValueUpdated := True;
 	Messages := TParserMessages.Create;
 	try
-		FValue := StrToValE(Text, True,
+		FValue := StrToValBD(Text, True,
 			FMinimum, FDefault,FMaximum, Messages);
 		SetDesign(Self, Messages);
 	finally
@@ -62,7 +63,7 @@ begin
 //	Change;
 end;
 
-function TNumericComboBox.GetValue: FGetS8;
+function TNumericComboBox.GetValue: BigDecimal;
 begin
 	if FValueUpdated = False then
 		Change;
@@ -71,22 +72,22 @@ end;
 
 function TNumericComboBox.RoundedValue: SG;
 begin
-	Result := RoundSG(GetValue);
+	Result := GetValue.Trunc;
 end;
 
-procedure TNumericComboBox.SetDefault(const Value: FGetS8);
+procedure TNumericComboBox.SetDefault(const Value: BigDecimal);
 begin
 	FDefault := Value;
 	Change;
 end;
 
-procedure TNumericComboBox.SetMaximum(const Value: FGetS8);
+procedure TNumericComboBox.SetMaximum(const Value: BigDecimal);
 begin
 	FMaximum := Value;
 	Change;
 end;
 
-procedure TNumericComboBox.SetMinimum(const Value: FGetS8);
+procedure TNumericComboBox.SetMinimum(const Value: BigDecimal);
 begin
 	FMinimum := Value;
 	Change;
