@@ -39,7 +39,10 @@ begin
 
   s := '';
 	for Id := 0 to Length(ProjectInfoStr) - 1 do
-    s := s + AddSpace(ProjectInfoStr[TProjectInfoName(Id)]) + '=' + GetProjectInfo(TProjectInfoName(Id)) +  LineSep;
+	begin
+    if GetProjectInfo(TProjectInfoName(Id)) <> '' then
+      s := s + AddSpace(ProjectInfoStr[TProjectInfoName(Id)]) + '=' + GetProjectInfo(TProjectInfoName(Id)) +  LineSep;
+	end;
   Response := s;
 end;
 
