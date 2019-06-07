@@ -4,26 +4,26 @@ interface
 
 uses
   uTypes,
-  uUnitPrefix;
+  uUnitPrefix,
+  uMetricPrefix;
 
 type
   TTimePrefix = class(TUnitPrefix)
   public
     const
-      Year = 31536e3; // Not exact (365/366 days)
-      Week = 6048e2;
-      Day = 864e2;
-      Hour = 36e2;
-      Minute = 6e1;
-      Second = 1e0;
-      MilliSecond = 1e-3;
-      MicroSecond = 1e-6;
-      NanoSecond = 1e-9;
-      PicoSecond = 1e-12;
-      FemtoSecond = 1e-15;
-      AttoSecond = 1e-18;
-      ZeptoSecond = 1e-21;
-      YoctoSecond = 1e-24;
+      YearAsF = 31536e3; // Not exact (365/366 days)
+      WeekAsF = 6048e2;
+      DayAsF = 864e2;
+      HourAsF = 36e2;
+      MinuteAsF = 6e1;
+      SecondAsF = 1e0;
+
+      YearAsI = 31536000; // Not exact (365/366 days)
+      WeekAsI = 604800;
+      DayAsI = 86400;
+      HourAsI = 3600;
+      MinuteAsI = 60;
+      SecondAsI = 1;
   protected
     class function GetCount: SG; override;
     class function GetMultiplicator(const AIndex: SG): FG; override;
@@ -63,20 +63,20 @@ type
         'zs',
         'ys');
       Multiplicator: array[TEnum] of FG = (
-        Year,
-        Week,
-        Day,
-        Hour,
-        Minute,
-        Second,
-        MilliSecond,
-        MicroSecond,
-        NanoSecond,
-        PicoSecond,
-        FemtoSecond,
-        AttoSecond,
-        ZeptoSecond,
-        YoctoSecond
+        YearAsF,
+        WeekAsF,
+        DayAsF,
+        HourAsF,
+        MinuteAsF,
+        SecondAsF,
+        TMetricPrefix.MilliAsF,
+        TMetricPrefix.MicroAsF,
+        TMetricPrefix.NanoAsF,
+        TMetricPrefix.PicoAsF,
+        TMetricPrefix.FemtoAsF,
+        TMetricPrefix.AttoAsF,
+        TMetricPrefix.ZeptoAsF,
+        TMetricPrefix.YoctoAsF
       );
   end;
 
