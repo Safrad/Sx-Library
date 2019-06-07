@@ -64,7 +64,7 @@ uses
   uStrings,
   uAPI,
   uVirtualKeyCode,
-  uCommon,
+  uPictureFactory,
   SysUtils;
 
 { TSxAction }
@@ -163,8 +163,6 @@ begin
 end;
 
 procedure TSxAction.SetActiveChild(const Value: TSxAction);
-var
-  i: SG;
 begin
   if FActiveChild <> Value then
   begin
