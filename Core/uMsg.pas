@@ -115,6 +115,9 @@ begin
   end;
   MessageD(ExpandedText, [], MessageLevel, [mbOK]);
 {$ELSE}
+  if MessageLevel in [mlError, mlFatalError] then
+    TConsole.WriteErrorLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText)
+  else
     TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
 {$ENDIF}
 end;
@@ -134,6 +137,9 @@ begin
   end;
   MessageD(Text, Param, MessageLevel, [mbOK]);
 {$ELSE}
+  if MessageLevel in [mlError, mlFatalError] then
+    TConsole.WriteErrorLine(AddMessagePrefix(ExpandedText, MessageLevel))
+  else
     TConsole.WriteLine(AddMessagePrefix(ExpandedText, MessageLevel), ConsoleColor[MessageLevel]);
 {$ENDIF}
 end;
@@ -238,7 +244,7 @@ begin
   Result := MessageD(Text, mlError, [mbRetry, mbIgnore]) <> mbIgnore;
 {$ELSE}
   Result := False;
-  TConsole.WriteLine('Error: ' + Text, ConsoleColor[mlError]);
+  TConsole.WriteErrorLine('Error: ' + Text);
 {$ENDIF}
 end;
 
@@ -307,7 +313,7 @@ begin
   end;
   MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mlError, [SMsgDlgOK], DlgWait);
 {$ELSE}
-  TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError]);
+  TConsole.WriteErrorLine('I/O Error: ' + OneLine(Text));
 {$ENDIF}
 end;
 

@@ -36,6 +36,8 @@ type
       const AHorizontalAlignment: THorizontalAlignment;
       const AForegroundColor: TConsoleColor; const ABackgroundColor: TConsoleColor = ccBlack);
 
+    class procedure WriteErrorLine(const AText: string);
+
     class function GetSize: TCoord;
     class procedure SetSize(const AValue: TCoord);
 
@@ -207,6 +209,21 @@ begin
       Write(PadCenter(AText, AFixedWidth), AForegroundColor, ABackgroundColor);
     end;
   end;
+end;
+
+class procedure TConsole.WriteErrorLine(const AText: string);
+begin
+  // if not redirected ErrOutput write text to console window as Output
+  if (not IsRedirected) then
+    SetConsoleTextAttribute(FOutputHandle, U2(ccLightRed));
+  try
+    System.Writeln(ErrOutput, ConvertToConsoleCodePage(AText));
+  finally
+    if (not IsRedirected) then
+      SetConsoleTextAttribute(FOutputHandle, DefaultColor);
+  end;
+  if IsRedirected and FFlushEveryLine then
+    Flush(ErrOutput);
 end;
 
 end.
