@@ -115,7 +115,7 @@ begin
   end;
   MessageD(ExpandedText, [], MessageLevel, [mbOK]);
 {$ELSE}
-  TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
+    TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
 {$ENDIF}
 end;
 
@@ -134,7 +134,7 @@ begin
   end;
   MessageD(Text, Param, MessageLevel, [mbOK]);
 {$ELSE}
-  TConsole.WriteLine(AddMessagePrefix(ExpandedText, MessageLevel), ConsoleColor[MessageLevel]);
+    TConsole.WriteLine(AddMessagePrefix(ExpandedText, MessageLevel), ConsoleColor[MessageLevel]);
 {$ENDIF}
 end;
 
@@ -331,8 +331,13 @@ begin
 {$ELSE}
   TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError]);
   TConsole.WriteLine('Press [R]etry or [I]gnore.', ConsoleColor[mlConfirmation]);
-  Readln(s);
-  Result := StartStr('R', UpperCase(s));
+  if not TConsole.IsRedirected then
+  begin
+    Readln(s);
+    Result := StartStr('R', UpperCase(s));
+  end
+  else
+    Result := False; // Ignore
 {$ENDIF}
 end;
 
