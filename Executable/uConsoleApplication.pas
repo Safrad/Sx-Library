@@ -57,11 +57,13 @@ uses
 type
   TConsoleApplication = class(TUIApplication)
   private
+    FAbortedBySystem: BG;
     FShowVersionInfo: BG;
     procedure WriteVersionInfo;
     procedure SetShowVersionInfo(const Value: BG);
   protected
     procedure Initialize; override;
+    procedure AbortedBySystem; virtual;
     procedure Wait; virtual;
   public
     constructor Create;
@@ -80,21 +82,46 @@ uses
   uDefaultArguments,
   uCodePage,
   uConsole,
+  uConsoleColor,
   uProjectInfo,
   uMsg,
   uChar,
   uFiles,
-  uDIniFile;
+  uDIniFile,
+  uCommonApplication;
 
 function GetConsoleWindow: HWND; stdcall; external kernel32;
 
-{ TConsoleApplication }
+function CtrlTypeToString(const dwCtrlType: DWORD): string;
+begin
+  case dwCtrlType of
+  CTRL_C_EVENT:
+    Result := 'Received Ctrl+C signal.';
+  CTRL_BREAK_EVENT:
+    Result := 'Received Ctrl+Break signal.';
+  CTRL_CLOSE_EVENT:
+    Result := 'Received close event.'; // User close console window (Ctrl+C, Close button etc.)
+  CTRL_LOGOFF_EVENT:
+    Result := 'Received logoff event.';
+  CTRL_SHUTDOWN_EVENT:
+    Result := 'Received shutdown event.';
+  end;
+end;
 
 function ConsoleCtrlHandler(dwCtrlType: DWORD): BOOL; stdcall;
 begin
-  Result := True;
+  Result := True; // function handles the control signal
 	if LogWarning then
-    MainLogAdd('Aborted by user.', mlWarning);
+    MainLogAdd(CtrlTypeToString(dwCtrlType), mlWarning);
+  TConsoleApplication(CommonApplication).AbortedBySystem;
+end;
+
+{ TConsoleApplication }
+
+procedure TConsoleApplication.AbortedBySystem;
+begin
+  FAbortedBySystem := True;
+  Terminate;
 end;
 
 constructor TConsoleApplication.Create;
@@ -107,10 +134,12 @@ end;
 
 destructor TConsoleApplication.Destroy;
 begin
-  inherited;
-
-  Wait;
-  SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
+  try
+    inherited;
+  finally
+    Wait;
+    SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
+  end;
 end;
 
 procedure TConsoleApplication.Initialize;
@@ -133,7 +162,7 @@ end;
 
 procedure TConsoleApplication.Wait;
 begin
-  if TStartState.RunFromIDE then
+  if (not TConsole.IsRedirected) and (not FAbortedBySystem) then
   begin
     TConsole.WriteLine('');
     TConsole.Write('Press Enter to continue...');
@@ -145,7 +174,7 @@ procedure TConsoleApplication.WriteVersionInfo;
 begin
   if FShowVersionInfo then
   begin
-    TConsole.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piFileVersion) + ']', ccWhite);
+    TConsole.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piProductVersion) + ']', ccWhite);
     if GetProjectInfo(piFileDescription) <> '' then
       TConsole.WriteLine(GetProjectInfo(piFileDescription), ccLightGray);
     if GetProjectInfo(piLegalCopyright) <> '' then
