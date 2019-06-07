@@ -105,6 +105,8 @@ begin
     Result := 'Received logoff event.';
   CTRL_SHUTDOWN_EVENT:
     Result := 'Received shutdown event.';
+  else
+    Result := 'Received unknown close event.';
   end;
 end;
 
