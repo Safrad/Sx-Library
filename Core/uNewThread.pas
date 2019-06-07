@@ -10,8 +10,8 @@ type
 	TExecuteProcedure = procedure(ANewThread: TThread);
 	TExecuteProcedureOfObject = procedure(AInstance: TObject; ANewThread: TThread);
 
-function RunInNewThread(AExecuteProcedure: TExecuteProcedure; ThreadPriority: TThreadPriority = tpNormal): TThread; overload;
-function RunInNewThread(AInstance: TObject; AExecuteProcedureOfObject: TExecuteProcedureOfObject; ThreadPriority: TThreadPriority = tpNormal): TThread; overload;
+function RunInNewThread(AExecuteProcedure: TExecuteProcedure; ThreadPriority: TThreadPriority = tpNormal; const AFreeOnTerminate: Boolean = True): TThread; overload;
+function RunInNewThread(AInstance: TObject; AExecuteProcedureOfObject: TExecuteProcedureOfObject; ThreadPriority: TThreadPriority = tpNormal; const AFreeOnTerminate: Boolean = True): TThread; overload;
 
 implementation
 
@@ -46,11 +46,12 @@ begin
   	ExecuteProcedureOfObject(Instance, Self);
 end;
 
-function RunInNewThread(AExecuteProcedure: TExecuteProcedure; ThreadPriority: TThreadPriority = tpNormal): TThread;
+function RunInNewThread(AExecuteProcedure: TExecuteProcedure; ThreadPriority: TThreadPriority = tpNormal; const AFreeOnTerminate: Boolean = True): TThread;
 var
 	NewThread: TNewThread;
 begin
 	NewThread := TNewThread.Create;
+  NewThread.FreeOnTerminate := AFreeOnTerminate;
 	NewThread.Priority := ThreadPriority;
 	NewThread.ExecuteProcedure := AExecuteProcedure;
 	{$if CompilerVersion >= 20}
@@ -61,11 +62,12 @@ begin
 	Result := NewThread;
 end;
 
-function RunInNewThread(AInstance: TObject; AExecuteProcedureOfObject: TExecuteProcedureOfObject; ThreadPriority: TThreadPriority = tpNormal): TThread; overload;
+function RunInNewThread(AInstance: TObject; AExecuteProcedureOfObject: TExecuteProcedureOfObject; ThreadPriority: TThreadPriority = tpNormal; const AFreeOnTerminate: Boolean = True): TThread; overload;
 var
 	NewThread: TNewThread;
 begin
 	NewThread := TNewThread.Create;
+  NewThread.FreeOnTerminate := AFreeOnTerminate;
 	NewThread.Priority := ThreadPriority;
   NewThread.Instance := AInstance;
 	NewThread.ExecuteProcedureOfObject := AExecuteProcedureOfObject;
