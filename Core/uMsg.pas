@@ -3,7 +3,14 @@ unit uMsg;
 interface
 
 uses
-  SysUtils, Consts, uTypes, uConsoleColor;
+  SysUtils,
+  Consts,
+
+  uTypes,
+  uOutputInfo;
+
+const
+  ErrorCodeStr = 'I/O: ';
 
 var
   MessageLevelStr: array[TMessageLevel] of string;
@@ -38,88 +45,37 @@ function ErrorRetry(const Text: string): BG;
 
 function ErrorCodeToStr(const ErrorCode: U4): string;
 
-const
-  ErrorCodeStr = 'I/O Error';
-
-type
-  TDlgBtn = (mbOK, mbYes, mbYesToAll, mbRetry, mbIgnore, mbAbort, mbDelete, mbDeleteAll, mbNo, mbNoToAll, mbCancel,
-    mbAll, mbHelp, mbClose);
-
-  TDlgButtons = set of TDlgBtn;
-
-{$if CompilerVersion < 21}
-resourcestring
-  SMsgDlgClose = '&Close'; // SCloseButton
-{$ifend}
-
-const
-  DlgBtnNames: array[TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry, SMsgDlgIgnore,
-    SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel, SMsgDlgAll, SMsgDlgHelp,
-    SMsgDlgClose);
-
-const
-  ConsoleColor: array[TMessageLevel] of TConsoleColor = (ccLightAqua, ccLightBlue, ccLightBlue, ccLightYellow,
-    ccWhite{Background is ccRed}, ccLightPurple, ccGray);
-
-function AddMessagePrefix(const AMessage: string; const AMessageLevel: TMessageLevel): string;
-
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
 
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 
-function IOErrorRetry(var FileName: TFileName; const ErrorCode: U4): BG;
+function IOErrorRetry(const FileName: TFileName; const ErrorCode: U4): BG;
 
-procedure IOErrorMessage(FileName: TFileName; const ErrorMsg: string);
+procedure IOErrorMessage(const FileName: TFileName; const ErrorMsg: string);
 
-function IOErrorMessageRetry(var FileName: TFileName; const ErrorMsg: string): BG;
+function IOErrorMessageRetry(const FileName: TFileName; const ErrorMsg: string): BG;
 
 implementation
 
 uses
-  Windows, uStrings,
-  uLog {$IFNDEF Console}, uMsgDlg, Dialogs {$ELSE}, uConsole {$ENDIF}, uChar;
+  Windows,
 
-const
-  MsgTypeNames: array[TMessageLevel] of string = (SMsgDlgConfirm, 'Debug', '', SMsgDlgWarning,
-    SMsgDlgError, 'Fatal Error', '');
+  uStrings,
+  uLog,
+  uCommonOutput,
+  uChar;
 
-function AddMessagePrefix(const AMessage: string; const AMessageLevel: TMessageLevel): string;
-begin
-  if MsgTypeNames[AMessageLevel] = '' then
-    Result := AMessage
-  else
-    Result := MsgTypeNames[AMessageLevel] + ': ' + AMessage;
-end;
-
-function IsMainThread: BG;
-begin
-  if IsMultiThread then
-  begin
-    Result := GetCurrentThreadID = MainThreadID;
-  end
-  else
-    Result := True;
-end;
+resourcestring
+  rsRetry = 'Retry?';
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 begin
   if MainLogWrite(MessageLevel) then
     MainLogAdd(ExpandedText, MessageLevel);
 
-{$IFNDEF Console}
-  if not IsMainThread then
-  begin
-    raise Exception.Create(ExpandedText);
-  end;
-  MessageD(ExpandedText, [], MessageLevel, [mbOK]);
-{$ELSE}
-  if MessageLevel in [mlError, mlFatalError] then
-    TConsole.WriteErrorLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText)
-  else
-    TConsole.WriteLine(MsgTypeNames[MessageLevel] + ': ' + ExpandedText, ConsoleColor[MessageLevel]);
-{$ENDIF}
+  CommonOutput.AddMessage(ExpandedText, MessageLevel);
 end;
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string; const Param: array of string); overload;
@@ -130,18 +86,7 @@ begin
   if MainLogWrite(MessageLevel) then
     MainLogAdd(ExpandedText, MessageLevel);
 
-{$IFNDEF Console}
-  if not IsMainThread then
-  begin
-    raise Exception.Create(ExpandedText);
-  end;
-  MessageD(Text, Param, MessageLevel, [mbOK]);
-{$ELSE}
-  if MessageLevel in [mlError, mlFatalError] then
-    TConsole.WriteErrorLine(AddMessagePrefix(ExpandedText, MessageLevel))
-  else
-    TConsole.WriteLine(AddMessagePrefix(ExpandedText, MessageLevel), ConsoleColor[MessageLevel]);
-{$ENDIF}
+  CommonOutput.AddMessage(ExpandedText, MessageLevel);
 end;
 
 procedure Debug(const Text: string);
@@ -159,7 +104,7 @@ end;
 procedure IE(const Text: string);
 begin
   if IsDebug then
-    ShowMessage(mlFatalError, 'Internal – ' + Text);
+    ShowMessage(mlFatalError, 'Internal' + CharSpace + CharEnDash + CharSpace + Text);
 end;
 
 procedure Information(const Text: string); overload;
@@ -235,17 +180,8 @@ begin
   if LogError then
     MainLogAdd(Text, mlError);
 
-{$IFNDEF Console}
-  if not IsMainThread then
-  begin
-    raise Exception.Create(Text);
-  end;
-	// Result := MessageDlg(Text, mtError, [Dialogs.mbRetry, Dialogs.mbIgnore], 0) <> 1;
-  Result := MessageD(Text, mlError, [mbRetry, mbIgnore]) <> mbIgnore;
-{$ELSE}
-  Result := False;
-  TConsole.WriteErrorLine('Error: ' + Text);
-{$ENDIF}
+  CommonOutput.AddError(Text);
+  Result := CommonOutput.ConfirmationYesNo(rsRetry);
 end;
 
 function ErrorCodeToStr(const ErrorCode: U4): string;
@@ -264,28 +200,19 @@ end;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
-{$IFNDEF Console}
-  if not IsMainThread then
-  begin
-    raise Exception.Create(Text);
-  end;
-  Result := MessageD(Text, mlConfirmation, Buttons);
-{$ELSE}
-  Result := mbCancel;
-{$ENDIF}
+  if LogConfirmation then
+    MainLogAdd(Text, mlConfirmation);
+  Result := CommonOutput.Confirmation(Text, Buttons);
 end;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn;
+var
+  ExpandedText: string;
 begin
-{$IFNDEF Console}
-  if not IsMainThread then
-  begin
-    raise Exception.Create(Text);
-  end;
-  Result := MessageD(Text, Param, mlConfirmation, Buttons);
-{$ELSE}
-  Result := mbCancel;
-{$ENDIF}
+  ExpandedText := ReplaceParam(Text, Param);
+  if LogConfirmation then
+    MainLogAdd(ExpandedText, mlConfirmation);
+  Result := CommonOutput.Confirmation(ExpandedText, Buttons);
 end;
 
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
@@ -293,12 +220,12 @@ begin
   IOErrorMessage(FileName, ErrorCodeToStr(ErrorCode));
 end;
 
-function IOErrorRetry(var FileName: TFileName; const ErrorCode: U4): BG;
+function IOErrorRetry(const FileName: TFileName; const ErrorCode: U4): BG;
 begin
   Result := IOErrorMessageRetry(FileName, ErrorCodeToStr(ErrorCode));
 end;
 
-procedure IOErrorMessage(FileName: TFileName; const ErrorMsg: string);
+procedure IOErrorMessage(const FileName: TFileName; const ErrorMsg: string);
 var
   Text: string;
 begin
@@ -306,45 +233,12 @@ begin
   if LogError then
     MainLogAdd(Text, mlError);
 
-{$IFNDEF Console}
-  if not IsMainThread then
-  begin
-    raise Exception.Create(Text);
-  end;
-  MsgDlg(ErrorMsg + LineSep + '%1', [FileName], False, mlError, [SMsgDlgOK], DlgWait);
-{$ELSE}
-  TConsole.WriteErrorLine('I/O Error: ' + OneLine(Text));
-{$ENDIF}
+  CommonOutput.AddError(ErrorCodeStr + Text);
 end;
 
-function IOErrorMessageRetry(var FileName: TFileName; const ErrorMsg: string): BG;
-var
-  Text: string;
-{$IFDEF Console}
-  s: string;
-{$ENDIF}
+function IOErrorMessageRetry(const FileName: TFileName; const ErrorMsg: string): BG;
 begin
-  Text := ErrorMsg + ': ' + FileName;
-  if LogError then
-    MainLogAdd(Text, mlError);
-
-{$IFNDEF Console}
-  if not IsMainThread then
-  begin
-    raise Exception.Create(Text);
-  end;
-  Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
-{$ELSE}
-  TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError], ccRed);
-  TConsole.WriteLine('Press [R]etry or [I]gnore.', ConsoleColor[mlConfirmation]);
-  if not TConsole.IsRedirected then
-  begin
-    Readln(s);
-    Result := StartStr('R', UpperCase(s));
-  end
-  else
-    Result := False; // Ignore
-{$ENDIF}
+  Result := ErrorRetry(ErrorMsg + ': ' + FileName);
 end;
 
 initialization

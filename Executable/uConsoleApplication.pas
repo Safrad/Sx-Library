@@ -77,6 +77,7 @@ implementation
 uses
   SysUtils,
   Windows,
+
   uLog,
   uStartState,
   uDefaultArguments,
@@ -88,7 +89,9 @@ uses
   uChar,
   uFiles,
   uDIniFile,
-  uCommonApplication;
+  uCommonApplication,
+  uCommonOutput,
+  uConsoleOutputInfo;
 
 function GetConsoleWindow: HWND; stdcall; external kernel32;
 
@@ -141,14 +144,13 @@ begin
   finally
     Wait;
     SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
+    CommonOutput := nil; // Interface
   end;
 end;
 
 procedure TConsoleApplication.Initialize;
 begin
-  {$ifdef UNICODE}
-  TConsole.CodePage := cpUTF8;
-  {$endif}
+  CommonOutput := TConsoleOutputInfo.Create;
   WriteVersionInfo;
 
   inherited;

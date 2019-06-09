@@ -33,6 +33,7 @@ uses
   uUIApplication,
   uTypes,
   uSwitchArgument,
+
   Menus,
   Forms,
   Classes;
@@ -54,6 +55,8 @@ type
     function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
     procedure CommonForm(const Form: TForm);
   public
+    destructor Destroy; override;
+
     procedure CreateForm(InstanceClass: TComponentClass; var Reference);
     procedure Terminate; override;
 
@@ -65,6 +68,7 @@ implementation
 uses
   ExtCtrls,
   SysUtils,
+
   uMultiIns,
   uMenus,
   uFiles,
@@ -78,7 +82,9 @@ uses
   uProjectInfo,
   uCommonMenu,
   uCustomArgument,
-  uPictureFactory;
+  uPictureFactory,
+  uCommonOutput,
+  uGUIOutputInfo;
 
 { TGUIApplication }
 
@@ -120,6 +126,15 @@ procedure TGUIApplication.CreateForm(InstanceClass: TComponentClass; var Referen
 begin
   if Initialized then
     Application.CreateForm(InstanceClass, Reference);
+end;
+
+destructor TGUIApplication.Destroy;
+begin
+  try
+    CommonOutput := nil; // Interface
+  finally
+    inherited;
+  end;
 end;
 
 procedure TGUIApplication.Finalize;
@@ -169,6 +184,8 @@ end;
 procedure TGUIApplication.Initialize;
 begin
   inherited;
+
+  CommonOutput := TGUIOutputInfo.Create;
 
   PictureFactory := TPictureFactory.Create;
   PictureFactory.Path := GraphDir;

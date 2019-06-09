@@ -19,7 +19,10 @@ implementation
 
 uses
 	Windows, Controls, Forms,
-	uFiles, uStrings, uMsg, uMath, uData, uOutputFormat;
+
+  uOutputInfo,
+  uMsg,
+	uFiles, uStrings, uMath, uData, uOutputFormat;
 
 type
 	PWatchedFile = ^TWatchedFile;

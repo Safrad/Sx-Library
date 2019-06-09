@@ -115,7 +115,9 @@ implementation
 uses
 	Registry, Math, MMSystem,
   uPlaySound,
-	uMsg, uStrings, uWave, uFiles, uGetInt, uDIniFile, uInputFormat, uOutputFormat, uSystem;
+  uOutputInfo,
+  uMsg,
+  uStrings, uWave, uFiles, uGetInt, uDIniFile, uInputFormat, uOutputFormat, uSystem;
 var
 	First: Boolean;
 

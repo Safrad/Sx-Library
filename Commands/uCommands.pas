@@ -28,8 +28,7 @@ type
     function FindByString(const ACommandShortcut: string): TCustomCommand;
     function FindByStringException(const ACommandShortcut: string): TCustomCommand;
 
-    procedure PreviewToConsole;
-    function PreviewAsString: string;
+    procedure WriteToCommonOutput;
 
     procedure Add(const ACustomCommand: TCustomCommand); overload;
     procedure Add(const ACommands: TObjectList); overload;
@@ -55,7 +54,8 @@ uses
   uFind,
   uConsoleColor,
   uEParseError,
-  uOutputFormat;
+  uOutputFormat,
+  uCommonOutput;
 
 { TCommands }
 
@@ -125,19 +125,7 @@ begin
 		raise EParseError.Create(['Enabled command'], ACommandShortcut);
 end;
 
-function TCommands.PreviewAsString: string;
-var
-  i: SG;
-begin
-  Result := '';
-  for i := 0 to FCommands.Count - 1 do
-  begin
-    if TCustomCommand(FCommands[i]).Enabled then
-      Result := Result + TCustomCommand(FCommands[i]).GetShortcutAndSyntax + ' ' + TCustomCommand(FCommands[i]).Description + LineSep;
-  end;
-end;
-
-procedure TCommands.PreviewToConsole;
+procedure TCommands.WriteToCommonOutput;
 var
   Table: TTable;
   Row: TRow;
@@ -159,7 +147,7 @@ begin
       Row := PreviewTableCommand(TCustomCommand(FCommands[i]));
       Table.Data[i + 1] := Row;
     end;
-    Table.WriteToConsole;
+    CommonOutput.AddTable(Table);
   finally
     Table.Free;
   end;

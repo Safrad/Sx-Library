@@ -4,7 +4,13 @@ interface
 
 uses
   uTypes,
-  uOutputInfo;
+  uOutputInfo,
+  uTable,
+  uConsoleColor;
+
+const
+  ConsoleColor: array[TMessageLevel] of TConsoleColor = (ccLightAqua, ccGreen, ccLightBlue, ccLightYellow,
+    ccWhite{Background is ccRed}, ccLightPurple, ccGray);
 
 type
 	TConsoleOutputInfo = class(TInterfacedObject, IOutputInfo)
@@ -21,6 +27,7 @@ type
     function GetAborted: BG;
     procedure SetAborted(const Value: BG);
   public
+    constructor Create;
     // From interface
     procedure AddCaption(const ACaption: string);
     procedure AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
@@ -29,13 +36,33 @@ type
     procedure AddWarning(const AWarningMessage: string);
     procedure AddInfo(const AInfoMessage: string);
     procedure AddDebug(const ADebugMessage: string);
+    procedure AddTable(const ATable: TTable);
+    function ConfirmationYesNo(const AMessage: string): BG;
+    function Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
   end;
 
 implementation
 
 uses
-  uMsg,
-  uConsole;
+  SysUtils,
+  Consts,
+
+  uConsole,
+  uConsoleTable,
+  uCodePage,
+  uStrings;
+
+const
+  MsgTypeNames: array[TMessageLevel] of string = (SMsgDlgConfirm, 'Debug', '', SMsgDlgWarning,
+    SMsgDlgError, 'Fatal Error', '');
+
+function AddMessagePrefix(const AMessage: string; const AMessageLevel: TMessageLevel): string;
+begin
+  if MsgTypeNames[AMessageLevel] = '' then
+    Result := AMessage
+  else
+    Result := MsgTypeNames[AMessageLevel] + ': ' + AMessage;
+end;
 
 { TConsoleOutputInfo }
 
@@ -66,12 +93,56 @@ end;
 
 procedure TConsoleOutputInfo.AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
 begin
-  TConsole.WriteLine(AddMessagePrefix(AMessage, AMessageLevel), ConsoleColor[AMessageLevel]);
+  if AMessageLevel in [mlError, mlFatalError] then
+    TConsole.WriteErrorLine(AddMessagePrefix(AMessage, AMessageLevel))
+  else
+    TConsole.WriteLine(AddMessagePrefix(AMessage, AMessageLevel), ConsoleColor[AMessageLevel]);
+end;
+
+procedure TConsoleOutputInfo.AddTable(const ATable: TTable);
+var
+  ConsoleTable: TConsoleTable;
+begin
+  ConsoleTable := TConsoleTable.Create;
+  try
+    ConsoleTable.Table := ATable;
+    ConsoleTable.WriteToConsole;
+  finally
+    ConsoleTable.Free;
+  end;
 end;
 
 procedure TConsoleOutputInfo.AddWarning(const AWarningMessage: string);
 begin
   AddMessage(AWarningMessage, mlWarning);
+end;
+
+function TConsoleOutputInfo.Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
+begin
+  // TODO
+  Result := mbCancel;
+end;
+
+function TConsoleOutputInfo.ConfirmationYesNo(const AMessage: string): BG;
+var
+  ReadedText: string;
+begin
+  if not TConsole.IsRedirected then
+  begin
+    Readln(ReadedText);
+    Result := StartStr('Y', UpperCase(ReadedText));
+  end
+  else
+    Result := False; // Ignore
+end;
+
+constructor TConsoleOutputInfo.Create;
+begin
+  inherited;
+
+  {$ifdef UNICODE}
+  TConsole.CodePage := cpUTF8;
+  {$endif}
 end;
 
 function TConsoleOutputInfo.GetAborted: BG;

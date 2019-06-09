@@ -45,10 +45,10 @@ end;
 
 procedure THelpCommand.Execute(const AParameters: string);
 
-  procedure OutputText(const AText: string; const AConsoleColor: TConsoleColor = ccLightGray);
+  procedure OutputText(const AText: string; const AColorAttribute: TColorAttribute);
   begin
     if IsConsole then
-      TConsole.Write(AText, AConsoleColor)
+      TConsole.Write(AText, AColorAttribute)
     else
       Response := Response + AText;
   end;
@@ -60,10 +60,7 @@ begin
 
   if AParameters = '' then
   begin
-    if IsConsole then
-      Commands.PreviewToConsole
-    else
-      Response := Commands.PreviewAsString;
+    Commands.WriteToCommonOutput;
   end
   else
   begin
@@ -73,21 +70,21 @@ begin
       Response := '';
       if Command.Syntax <> '' then
       begin
-        OutputText('Name and parameters: ', ConsoleColor[mlInformation]);
-        OutputText(Command.GetShortcutAndSyntax + LineSep);
+        OutputText('Name and parameters: ', TConsole.Theme.InformationColor);
+        OutputText(Command.GetShortcutAndSyntax + LineSep, TConsole.Theme.DefaultColor);
       end;
 
       if Command.Description <> '' then
       begin
-        OutputText(Command.Description + LineSep);
+        OutputText(Command.Description + LineSep, TConsole.Theme.DefaultColor);
       end;
 
       if Command is TUnsupportedCommand then
-        OutputText('Command is not supported.' + LineSep, ccGray);
+        OutputText('Command is not supported.' + LineSep, TConsole.Theme.GetColor(ccGray, TConsole.Theme.DefaultBackgroundColor));
 
       if not Command.Enabled then
       begin
-        OutputText('Command is currently disabled.' + LineSep, ccGray);
+        OutputText('Command is currently disabled.' + LineSep, TConsole.Theme.GetColor(ccGray, TConsole.Theme.DefaultBackgroundColor));
       end;
     end
     else

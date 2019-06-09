@@ -101,7 +101,7 @@ end;
 
 procedure TCommonMenu.ViewParams1Click(Sender: TObject);
 begin
-	Information(CommonApplication.Arguments.PreviewAsString);
+	CommonApplication.Arguments.WriteToCommonOutput;
 end;
 
 procedure MenuCheckForUpdate(AThread: TThread);

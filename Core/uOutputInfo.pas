@@ -1,11 +1,19 @@
+// Ancestor for TConsoleOutputInfo in uConsoleOutputInfo and TGUIOutputInfo in uGUIOutputInfo
+
 unit uOutputInfo;
 
 interface
 
 uses
-  uTypes;
+  uTypes,
+  uTable;
 
 type
+  TDlgBtn = (mbOK, mbYes, mbYesToAll, mbRetry, mbIgnore, mbAbort, mbDelete, mbDeleteAll, mbNo, mbNoToAll, mbCancel,
+    mbAll, mbHelp, mbClose);
+
+  TDlgButtons = set of TDlgBtn;
+
   IOutputInfo = interface(IInterface)
     procedure AddCaption(const ACaption: string);
     procedure AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
@@ -14,6 +22,9 @@ type
     procedure AddWarning(const AWarningMessage: string);
     procedure AddInfo(const AInfoMessage: string);
     procedure AddDebug(const ADebugMessage: string);
+    procedure AddTable(const ATable: TTable);
+    function ConfirmationYesNo(const AMessage: string): BG;
+    function Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
     procedure Start;
     procedure Stop;
     function GetLastCaption: string;
@@ -55,6 +66,9 @@ type
     procedure AddWarning(const AWarningMessage: string);
     procedure AddInfo(const AInfoMessage: string);
     procedure AddDebug(const ADebugMessage: string);
+    procedure AddTable(const ATable: TTable);
+    function ConfirmationYesNo(const AMessage: string): BG;
+    function Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
     procedure Start;
     procedure Stop;
     property LastCaption: string read GetLastCaption;
@@ -98,9 +112,24 @@ begin
 
 end;
 
+procedure TOutputInfo.AddTable(const ATable: TTable);
+begin
+
+end;
+
 procedure TOutputInfo.AddWarning(const AWarningMessage: string);
 begin
 
+end;
+
+function TOutputInfo.Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
+begin
+  Result := mbCancel;
+end;
+
+function TOutputInfo.ConfirmationYesNo(const AMessage: string): BG;
+begin
+  Result := False;
 end;
 
 function TOutputInfo.GetAborted: BG;

@@ -5,7 +5,8 @@ interface
 uses
 	Dialogs, Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Consts,
 	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel,
-	uDForm, uDTimer, uDEdit, uMsg, uTypes, uDWinControl, uDMemo;
+	uDForm, uDTimer, uDEdit,
+  uOutputInfo, uTypes, uDWinControl, uDMemo;
 
 type
 	TIgnoreAll = (iaNone, iaSame, iaAll);
@@ -108,14 +109,23 @@ uses
   uVisualOptions,
   SynTaskDialog,
   uPlaySound,
+  uMsg,
 	uFiles, uColor, uDictionary,
 	uStrings, uChar, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uMath,
 	Registry, MMSystem, Math, UITypes;
 
+{$if CompilerVersion < 21}
+resourcestring
+  SMsgDlgClose = '&Close'; // SCloseButton
+{$ifend}
+const
+  DlgBtnNames: array[TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry, SMsgDlgIgnore,
+    SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel, SMsgDlgAll, SMsgDlgHelp,
+    SMsgDlgClose);
+
 var
 	IgnoreAll: TIgnoreAll;
 
-var
 	fMsgDlg: TfMsgDlg;
 	Ignores: TData;
 	TickCount, StartTickCount: U8;

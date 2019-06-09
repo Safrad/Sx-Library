@@ -33,9 +33,8 @@ type
     procedure Parse(const ACommandLine: string); overload; virtual;
     function FindByString(const AArgumentShortcut: string): TCustomArgument;
 
-    procedure PreviewToConsole;
-    procedure PreviewValuesToConsole;
-    function PreviewAsString: string;
+    procedure WriteToCommonOutput;
+    procedure WriteValuesToCommonOutput;
     procedure WriteUnused;
     function ShowUnused: string;
     function ShowRequired: string;
@@ -59,6 +58,7 @@ uses
   uTable,
   uFiles,
   uMsg,
+  uCommonOutput,
   uChar,
   uStrings;
 
@@ -265,21 +265,7 @@ begin
   end;
 end;
 
-function TArguments.PreviewAsString: string;
-const
-	LineWidth = 16;
-var
-  i: SG;
-begin
-	Result := 'Parameter' + CharSpace + 'Description' + LineSep;
-	Result := Result + string(StringOfChar(CharEmDash, LineWidth)) + LineSep;
-  for i := 0 to FArguments.Count - 1 do
-  begin
-    Result := Result + TCustomArgument(FArguments[i]).Preview;
-  end;
-end;
-
-procedure TArguments.PreviewToConsole;
+procedure TArguments.WriteToCommonOutput;
 var
   Table: TTable;
   Row: TRow;
@@ -301,13 +287,13 @@ begin
       Row := PreviewTableArgument(TCustomArgument(FArguments[i]));
       Table.Data[i + 1] := Row;
     end;
-    Table.WriteToConsole;
+    CommonOutput.AddTable(Table);
   finally
     Table.Free;
   end;
 end;
 
-procedure TArguments.PreviewValuesToConsole;
+procedure TArguments.WriteValuesToCommonOutput;
 var
   Table: TTable;
   Row: TRow;
@@ -327,7 +313,7 @@ begin
       Row := PreviewTableArgumentValue(TCustomArgument(FArguments[i]));
       Table.Data[i + 1] := Row;
     end;
-    Table.WriteToConsole;
+    CommonOutput.AddTable(Table);
   finally
     Table.Free;
   end;

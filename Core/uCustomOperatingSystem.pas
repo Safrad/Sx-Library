@@ -62,6 +62,7 @@ implementation
 
 uses
   SysUtils,
+  uOutputInfo,
   uMsg;
 
 resourcestring

@@ -230,6 +230,9 @@ procedure SetScale(var x, y: SG; const MaxWidth, MaxHeight: SG);
 
 function BitsToByte(const Bits: U8): U8;
 
+function Suma(const AValues: TArrayOfSG): SG;
+function MaxValueIndex(const AValues: TArrayOfSG): SG;
+
 implementation
 
 uses
@@ -2444,6 +2447,34 @@ end;
 function BitsToByte(const Bits: U8): U8;
 begin
 	Result := (Bits + 7) shr 3;
+end;
+
+function Suma(const AValues: TArrayOfSG): SG;
+var
+  i: SG;
+begin
+  Result := 0;
+  for i := 0 to Length(AValues) - 1 do
+  begin
+    Inc(Result, AValues[i]);
+  end;
+end;
+
+function MaxValueIndex(const AValues: TArrayOfSG): SG;
+var
+  i: SG;
+  MaxValue: SG;
+begin
+  Result := -1;
+  MaxValue := MinInt;
+  for i := Length(AValues) - 1 downto 0 do
+  begin
+    if AValues[i] >= MaxValue then
+    begin
+      MaxValue := AValues[i];
+      Result := i;
+    end;
+  end;
 end;
 
 end.

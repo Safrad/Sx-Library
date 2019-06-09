@@ -51,10 +51,7 @@ begin
 
   if HelpArgunment.Exists or ((ExistsCount = 0) and (RequiredArgumentCount > 0)) then
   begin
-    if IsConsole then
-      PreviewToConsole
-    else
-      Information(PreviewAsString);
+    WriteToCommonOutput;
   end;
 end;
 

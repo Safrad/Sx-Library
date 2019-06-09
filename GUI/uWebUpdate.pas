@@ -23,7 +23,7 @@ implementation
 
 uses
 	uLog, uStopwatch,
-	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uProjectVersion, uOutputFormat, uMath, uAPI,
+	uInputFormat, uStrings, uProjectInfo, uFiles, uMsg, uOutputInfo, uProjectVersion, uOutputFormat, uMath, uAPI,
   IdHTTP, IdURI, IdMultipartFormData, IdException, IdStack;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);

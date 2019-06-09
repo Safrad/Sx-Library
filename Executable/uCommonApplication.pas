@@ -61,7 +61,6 @@ uses
   uExternalApplication,
   uDefaultArguments,
   uCustomArgument,
-  uConsole,
   uProjectInfo,
   uMsg,
   uChar,

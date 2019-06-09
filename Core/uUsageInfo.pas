@@ -28,6 +28,7 @@ uses
   uCommonApplication,
   uCPU,
   uLog,
+  uOutputInfo,
   uMsg,
   uSxXMLDocument;
 
