@@ -947,11 +947,13 @@ begin
 end;
 
 function OneLine(const s: string): string;
+const
+  SplitStr = CharSpace + CharEnDash + CharSpace;
 begin
 	Result := s;
-	Replace(Result, FullSep, ' - ');
-	Replace(Result, CharCR, ' - ');
-	Replace(Result, CharLF, ' - ');
+	Replace(Result, FullSep, SplitStr);
+	Replace(Result, CharCR, SplitStr);
+	Replace(Result, CharLF, SplitStr);
 	DelBESpace(Result);
 end;
 
