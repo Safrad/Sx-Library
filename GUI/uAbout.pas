@@ -380,8 +380,8 @@ begin
 		begin
 			case RowIndex of
 			0: Data := NToS(CommonApplication.Statistics.RunCount);
-			1: Data := MsToStr(Round(CommonApplication.Statistics.ElapsedTime.Milliseconds), diDHMSD, 0, False);
-			2: Data := MsToStr(Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds), diDHMSD, 3, False);
+			1: Data := MsToStr(CommonApplication.Statistics.ElapsedTime.Milliseconds, diDHMSD, 0, False);
+			2: Data := MsToStr(CommonApplication.Statistics.TotalElapsedTime.Milliseconds, diDHMSD, 3, False);
 			3: Data := NToS(FileStatistics.ReadCount);
 			4: Data := BToStr(FileStatistics.ReadBytes);
 			5: Data := NToS(FileStatistics.WriteCount);

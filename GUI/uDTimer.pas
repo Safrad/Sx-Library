@@ -252,7 +252,7 @@ begin
 	esInterval:
     FPreciseInterval.Milliseconds := FInterval;
 	esIntervalInSeconds:
-    FPreciseInterval.Seconds := FIntervalInSeconds;
+    FPreciseInterval.SecondsAsF := FIntervalInSeconds;
 	esFrequency:
     FPreciseInterval.Frequency := FInterval;
 	else

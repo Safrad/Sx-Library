@@ -107,6 +107,7 @@ object fAbout: TfAbout
     ActiveOnly = True
     Enabled = False
     Interval = 25
+    IntervalInSeconds = 1.000000000000000000
     EventStep = esFrequency
     OnTimer = DTimerFlashTimer
     Left = 24

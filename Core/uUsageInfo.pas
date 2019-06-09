@@ -120,7 +120,7 @@ begin
 
     // Statistics
     SaveData('RunCount', IntToStr(CommonApplication.Statistics.RunCount));
-    SaveData('RunTime', IntToStr(Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds)));
+    SaveData('RunTime', IntToStr(CommonApplication.Statistics.TotalElapsedTime.Milliseconds));
     SaveData('ReadCount', IntToStr(FileStatistics.ReadCount));
     SaveData('WriteCount', IntToStr(FileStatistics.WriteCount));
     SaveData('ReadBytes', IntToStr(FileStatistics.ReadBytes));
@@ -183,7 +183,7 @@ begin
   if UploadData(AURL) then
   begin
     LastUploadCount := CommonApplication.Statistics.RunCount;
-    LastUploadTime := Round(CommonApplication.Statistics.TotalElapsedTime.Milliseconds);
+    LastUploadTime := CommonApplication.Statistics.TotalElapsedTime.Milliseconds;
     RWOptions(True);
   end;
 end;

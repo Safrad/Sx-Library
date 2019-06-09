@@ -107,8 +107,8 @@ begin
 		Caption := Translate(RemoveSingleAmp(Prompt));
 	// H
 		TrackBarH.OnChange := nil;
-		TrackBarH.Min := Trunc(TMinVal.Hours);
-		TrackBarH.Max := Trunc(TMaxVal.Hours);
+		TrackBarH.Min := TMinVal.Hours;
+		TrackBarH.Max := TMaxVal.Hours;
 		if TrackBarH.Max - TrackBarH.Min > 112 then
 			TrackBarH.TickStyle := tsNone
 		else
@@ -118,8 +118,8 @@ begin
 		TrackBarM.OnChange := nil;
 		if TMaxVal.Hours < 1 then
 		begin
-			TrackBarM.Min := Trunc(TMinVal.Minutes);
-			TrackBarM.Max := Trunc(TMaxVal.Minutes);
+			TrackBarM.Min := TMinVal.Minutes;
+			TrackBarM.Max := TMaxVal.Minutes;
 		end
 		else
 		begin
@@ -131,8 +131,8 @@ begin
 		TrackBarS.OnChange := nil;
 		if TMaxVal.Minutes < 1 then
 		begin
-			TrackBarS.Min := Trunc(TMinVal.Seconds);
-			TrackBarS.Max := Trunc(TMaxVal.Seconds);
+			TrackBarS.Min := TMinVal.Seconds;
+			TrackBarS.Max := TMaxVal.Seconds;
 		end
 		else
 		begin
@@ -144,8 +144,8 @@ begin
 		TrackBarD.OnChange := nil;
 		if TMaxVal.Seconds < 1 then
 		begin
-			TrackBarD.Min := Trunc(TMinVal.Milliseconds);
-			TrackBarD.Max := Trunc(TMaxVal.Milliseconds);
+			TrackBarD.Min := TMinVal.Milliseconds;
+			TrackBarD.Max := TMaxVal.Milliseconds;
 		end
 		else
 		begin
@@ -186,19 +186,19 @@ begin
 	ButtonCur.Enabled := NowVal <> TCurVal;
 	ButtonDef.Enabled := NowVal <> TDefVal;
 	ButtonMax.Enabled := NowVal <> TMaxVal;
-	LabelH.Caption := IntToStr(Trunc(NowVal.Hours));
-	LabelM.Caption := IntToStr(Trunc(NowVal.Minutes));
-	LabelS.Caption := IntToStr(Trunc(NowVal.Seconds));
-	LabelD.Caption := IntToStr(Trunc(NowVal.Milliseconds));
+	LabelH.Caption := IntToStr(NowVal.Hours);
+	LabelM.Caption := IntToStr(NowVal.Minutes);
+	LabelS.Caption := IntToStr(NowVal.Seconds);
+	LabelD.Caption := IntToStr(NowVal.Milliseconds);
 end;
 
 procedure TfGetTime.InitEdit;
 begin
 	EditInput.OnChange := nil;
 	if TMaxVal.Hours >= 1 then
-		EditInput.Text := MsToStr(Trunc(NowVal.Milliseconds), diMSD, -3, False)
+		EditInput.Text := MsToStr(NowVal.Milliseconds, diMSD, -3, False)
 	else
-		EditInput.Text := MsToStr(Trunc(NowVal.Milliseconds), diHMSD, -3, False);
+		EditInput.Text := MsToStr(NowVal.Milliseconds, diHMSD, -3, False);
 	EditInput.SelectAll;
 	EditInput.OnChange := EditInputChange;
 end;
@@ -209,10 +209,10 @@ begin
 	TrackBarM.OnChange := nil;
 	TrackBarS.OnChange := nil;
 	TrackBarD.OnChange := nil;
-	TrackBarH.Position := Trunc(NowVal.Hours);
-	TrackBarM.Position := Trunc(NowVal.Minutes);
-	TrackBarS.Position := Trunc(NowVal.Seconds);
-	TrackBarD.Position := Trunc(NowVal.Milliseconds);
+	TrackBarH.Position := NowVal.Hours;
+	TrackBarM.Position := NowVal.Minutes;
+	TrackBarS.Position := NowVal.Seconds;
+	TrackBarD.Position := NowVal.Milliseconds;
 	TrackBarH.OnChange := TrackBarHMSDChange;
 	TrackBarM.OnChange := TrackBarHMSDChange;
 	TrackBarS.OnChange := TrackBarHMSDChange;

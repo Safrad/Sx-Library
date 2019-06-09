@@ -157,7 +157,7 @@ begin
           IdHTTP1.Get(AURL, AResponseContent);
         end;
         Stopwatch.Stop;
-      	MainLog.Add('Download time: ' + MsToStr(Round(Stopwatch.Elapsed.Milliseconds), diSD, 3, False, ofIO) + 's', mlDebug);
+      	MainLog.Add('Download time: ' + MsToStr(Stopwatch.Elapsed.Milliseconds, diSD, 3, False, ofIO) + 's', mlDebug);
         Result := True;
       except
         on E: Exception do

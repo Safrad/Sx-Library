@@ -72,7 +72,7 @@ end;
 
 function TSoundItem.GetTime: TTimeSpan;
 begin
-  FTime.Seconds := FSampleId / FSampleRate;
+  FTime.SecondsAsF := FSampleId / FSampleRate;
 
   Result := FTime;
 end;
