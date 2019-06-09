@@ -404,11 +404,11 @@ begin
   IniFile.RWNum(Section, 'EveryXMonth', EveryXMonth, Save);
   IniFile.RWNum(Section, 'EveryXYear', EveryXYear, Save);
 
-  EveryXIdleInMs := Round(EveryXIdle.Milliseconds);
+  EveryXIdleInMs := EveryXIdle.Milliseconds;
   IniFile.RWNum(Section, 'EveryXIdle', EveryXIdleInMs, Save);
   EveryXIdle.Milliseconds := EveryXIdleInMs;
 
-  EveryXOverloadInMs := Round(EveryXOverload.Milliseconds);
+  EveryXOverloadInMs := EveryXOverload.Milliseconds;
   IniFile.RWNum(Section, 'EveryXOverload', EveryXOverloadInMs, Save);
   EveryXOverload.Milliseconds := EveryXOverloadInMs;
 
