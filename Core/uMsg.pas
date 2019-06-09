@@ -58,8 +58,8 @@ const
     SMsgDlgClose);
 
 const
-  ConsoleColor: array[TMessageLevel] of TConsoleColor = (ccLightAqua, ccLightBlue, ccLightGray, ccLightYellow,
-    ccLightRed, ccLightPurple, ccGray);
+  ConsoleColor: array[TMessageLevel] of TConsoleColor = (ccLightAqua, ccLightBlue, ccLightBlue, ccLightYellow,
+    ccWhite{Background is ccRed}, ccLightPurple, ccGray);
 
 function AddMessagePrefix(const AMessage: string; const AMessageLevel: TMessageLevel): string;
 
@@ -335,7 +335,7 @@ begin
   end;
   Result := MsgDlg(ErrorMsg + LineSep + '%1', [FileName], True, mlError, [SMsgDlgRetry, SMsgDlgIgnore], DlgWait) = 0;
 {$ELSE}
-  TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError]);
+  TConsole.WriteLine('I/O Error: ' + OneLine(Text), ConsoleColor[mlError], ccRed);
   TConsole.WriteLine('Press [R]etry or [I]gnore.', ConsoleColor[mlConfirmation]);
   if not TConsole.IsRedirected then
   begin
