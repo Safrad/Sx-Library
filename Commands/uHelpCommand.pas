@@ -24,11 +24,13 @@ type
 implementation
 
 uses
+  uTypes,
   uConsole,
   uConsoleColor,
   uUnsupportedCommand,
   uStrings,
-  uEParseError;
+  uEParseError,
+  uMsg;
 
 { THelpCommand }
 
@@ -37,7 +39,8 @@ begin
   inherited;
 
   Description := 'Displays name, parameters and description of all commands or the specific command. Grayed commands are disabled.';
-  TConsole.WriteLine('Enter ''help'' for list of all commands.', ccGreen);
+  if IsConsole then
+    Information('Enter ''help'' for list of all commands.');
 end;
 
 procedure THelpCommand.Execute(const AParameters: string);
@@ -70,7 +73,7 @@ begin
       Response := '';
       if Command.Syntax <> '' then
       begin
-        OutputText('Name and parameters: ', ccGreen);
+        OutputText('Name and parameters: ', ConsoleColor[mlInformation]);
         OutputText(Command.GetShortcutAndSyntax + LineSep);
       end;
 
