@@ -53,7 +53,6 @@ uses
   uStrings,
   uSorts,
   uFind,
-  uConsole,
   uConsoleColor,
   uEParseError,
   uOutputFormat;
