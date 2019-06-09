@@ -57,7 +57,7 @@ begin
 
       Parser.Parse;
       CalcErrorCount := ParserMessages.Count;
-      Value := Trunc(Parser.Value.Milliseconds);
+      Value := Parser.Value.Milliseconds;
     finally
       Parser.SxParser.Free;
       FreeAndNil(Parser);
