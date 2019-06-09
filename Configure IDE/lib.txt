@@ -38,5 +38,6 @@ $(sx-library)\Sound\Mixers
 $(sx-library)\Sound\Players
 $(sx-library)\Input
 $(sx-library)\VersionSystem
+$(sx-library)\Console
 $(sx-library)\GUI
 $(sx-library)\Regional
