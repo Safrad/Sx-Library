@@ -329,15 +329,15 @@ begin
 	end;
 	scWhenIdle:
 	begin
-		Result := 'Run when idle for ' + MsToStr(Round(EveryXIdle.Milliseconds), diDHMSD, 0, False);
+		Result := 'Run when idle for ' + MsToStr(EveryXIdle.Milliseconds, diDHMSD, 0, False);
 	end;
 	scWhenOverload:
 	begin
-		Result := 'Run when overload for ' + MsToStr(Round(EveryXOverload.Milliseconds), diDHMSD, 0, False);
+		Result := 'Run when overload for ' + MsToStr(EveryXOverload.Milliseconds, diDHMSD, 0, False);
 	end;
 	scLag:
 	begin
-		Result := 'Lag longer that ' + MsToStr(Round(EveryXOverload.Milliseconds), diDHMSD, 0, False);
+		Result := 'Lag longer that ' + MsToStr(EveryXOverload.Milliseconds, diDHMSD, 0, False);
 	end;
 	scWindowsStartup:
 		Result :='Run at Windows startup';

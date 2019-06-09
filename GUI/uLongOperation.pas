@@ -73,7 +73,7 @@ begin
   SetTaskbarProgressState(tbpsNone);
 
   if IsDebug then
-    Information('Total time: ' + MsToStr(Round(FStopwatch.Elapsed.Milliseconds), diSD, 3));
+    Information('Total time: ' + MsToStr(FStopwatch.Elapsed.Milliseconds, diSD, 3));
 end;
 
 destructor TLongOperation.Destroy;

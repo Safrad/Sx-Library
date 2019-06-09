@@ -216,7 +216,7 @@ begin
         begin
           OutputInfo.AddCaption(Translate('Success:') + CharSpace + NToS(CalculatedItems, ofIO) + ' B (' + BToStr(CalculatedItems) + ')');
 
-          OutputInfo.AddCaption(Translate('Time:') + CharSpace + MsToStr(Round(Elapsed.Milliseconds), diSD, 3, False) + CharSpace + Sec);
+          OutputInfo.AddCaption(Translate('Time:') + CharSpace + MsToStr(Elapsed.Milliseconds, diSD, 3, False) + CharSpace + Sec);
 
           BS := Round(CalculatedItems / Elapsed.Seconds);
           s := NToS(BS, ofIO) + ' B/' + Sec + ' (' + BToStr(BS) + '/' + Sec + ')';
