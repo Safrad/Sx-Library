@@ -27,7 +27,7 @@ uses
 
 constructor EParseError.Create(const AExpectedTokens: array of string; const AActualToken: string);
 begin
-  Create('Parse error:', AExpectedTokens, AActualToken);
+  Create('Parse:', AExpectedTokens, AActualToken);
 end;
 
 constructor EParseError.Create(const AMessage: string; const AExpectedTokens: array of string;
@@ -38,7 +38,7 @@ end;
 
 constructor EParseError.Create(const AExpectedChars: array of Char; const AActualChar: Char);
 begin
-  Create('Parse error:', AExpectedChars, AActualChar);
+  Create('Parse:', AExpectedChars, AActualChar);
 end;
 
 constructor EParseError.Create(const AMessage: string; const AExpectedChars: array of Char; const AActualChar: Char);
