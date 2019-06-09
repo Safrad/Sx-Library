@@ -3,7 +3,6 @@ unit uConsoleGrayscaleTheme;
 interface
 
 uses
-  uTypes,
   uConsoleColor,
   uConsoleCustomTheme;
 
@@ -12,20 +11,27 @@ type
   private
     function GrayScaleColor(const AColor: TConsoleColor): TConsoleColor;
   public
-    function GetColor(const AForegroundColor: TConsoleColor; const ABackgroundColor: TConsoleColor): U2; override;
-    function ErrorColor: U2; override;
+    function GetColor(const AForegroundColor: TConsoleColor; const ABackgroundColor: TConsoleColor): TColorAttribute; override;
+    function ErrorColor: TColorAttribute; override;
+    function InformationColor: TColorAttribute; override;
+    function DebugColor: TColorAttribute; override;
   end;
 
 implementation
 
 { TConsoleGrayscaleTheme }
 
-function TConsoleGrayscaleTheme.ErrorColor: U2;
+function TConsoleGrayscaleTheme.DebugColor: TColorAttribute;
+begin
+  Result := GetColor(ccWhite, ccGray);
+end;
+
+function TConsoleGrayscaleTheme.ErrorColor: TColorAttribute;
 begin
   Result := GetColor(ccBlack, ccWhite);
 end;
 
-function TConsoleGrayscaleTheme.GetColor(const AForegroundColor, ABackgroundColor: TConsoleColor): U2;
+function TConsoleGrayscaleTheme.GetColor(const AForegroundColor, ABackgroundColor: TConsoleColor): TColorAttribute;
 begin
   Result := ReadableColor(GrayScaleColor(AForegroundColor), GrayScaleColor(ABackgroundColor));
 end;
@@ -52,6 +58,11 @@ begin
   else
     Result := ccLightGray;
   end;
+end;
+
+function TConsoleGrayscaleTheme.InformationColor: TColorAttribute;
+begin
+  Result := GetColor(ccLightGray, DefaultBackgroundColor);
 end;
 
 end.

@@ -3,9 +3,12 @@ unit uConsoleColor;
 interface
 
 uses
+  uTypes,
   UITypes;
 
 type
+  TColorAttribute = U2;
+
   TConsoleColor = (ccBlack, ccBlue, ccGreen, ccAqua, ccRed, ccPurple, ccYellow, ccLightGray, ccGray, ccLightBlue,
     ccLightGreen, ccLightAqua, ccLightRed, ccLightPurple, ccLightYellow, ccWhite);
 

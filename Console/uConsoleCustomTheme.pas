@@ -1,26 +1,29 @@
+// Ancestor for TConsoleDarkTheme in uConsoleDarkTheme and TConsoleGrayscaleTheme in uConsoleGrayscaleTheme
+
 unit uConsoleCustomTheme;
 
 interface
 
 uses
-  uTypes,
   uConsoleColor;
 
 type
   TConsoleCustomTheme = class
   private
-    FDefaultColor: U2;
-    procedure SetDefaultColor(const Value: U2);
+    FDefaultColor: TColorAttribute;
+    procedure SetDefaultColor(const Value: TColorAttribute);
   public
-    function IsLightColor(const AConsoleColor: TConsoleColor): BG;
+    function IsLightColor(const AConsoleColor: TConsoleColor): Boolean;
     function ChangeColorIntensity(const AConsoleColor: TConsoleColor): TConsoleColor;
-    function ReadableColor(const AForegroundColor, ABackgroundColor: TConsoleColor): U2;
-    property DefaultColor: U2 read FDefaultColor write SetDefaultColor;
+    function ReadableColor(const AForegroundColor, ABackgroundColor: TConsoleColor): TColorAttribute;
+    property DefaultColor: TColorAttribute read FDefaultColor write SetDefaultColor;
     function DefaultForegroundColor: TConsoleColor;
     function DefaultBackgroundColor: TConsoleColor;
 
-    function GetColor(const AForegroundColor, ABackgroundColor: TConsoleColor): U2; virtual; abstract;
-    function ErrorColor: U2; virtual; abstract;
+    function GetColor(const AForegroundColor, ABackgroundColor: TConsoleColor): TColorAttribute; virtual; abstract;
+    function ErrorColor: TColorAttribute; virtual; abstract;
+    function InformationColor: TColorAttribute; virtual; abstract;
+    function DebugColor: TColorAttribute; virtual; abstract;
   end;
 
 implementation
@@ -34,12 +37,12 @@ begin
   ccWhite,
   ccLightGray,
   ccGray:
-    Result := TConsoleColor(15 - U1(AConsoleColor));
+    Result := TConsoleColor(15 - TColorAttribute(AConsoleColor));
   else
-    if U1(AConsoleColor) < 8 then
-      Result := TConsoleColor(U1(AConsoleColor) + 8)
+    if TColorAttribute(AConsoleColor) < 8 then
+      Result := TConsoleColor(TColorAttribute(AConsoleColor) + 8)
     else
-      Result := TConsoleColor(U1(AConsoleColor) - 8);
+      Result := TConsoleColor(TColorAttribute(AConsoleColor) - 8);
   end;
 end;
 
@@ -53,12 +56,12 @@ begin
   Result := TConsoleColor(FDefaultColor and $0f);
 end;
 
-function TConsoleCustomTheme.IsLightColor(const AConsoleColor: TConsoleColor): BG;
+function TConsoleCustomTheme.IsLightColor(const AConsoleColor: TConsoleColor): Boolean;
 begin
-  Result := (U1(DefaultBackgroundColor) = 7)  or (U1(DefaultBackgroundColor) > 8);
+  Result := (TColorAttribute(DefaultBackgroundColor) = 7)  or (TColorAttribute(DefaultBackgroundColor) > 8);
 end;
 
-function TConsoleCustomTheme.ReadableColor(const AForegroundColor, ABackgroundColor: TConsoleColor): U2;
+function TConsoleCustomTheme.ReadableColor(const AForegroundColor, ABackgroundColor: TConsoleColor): TColorAttribute;
 var
   ForegroundColor: TConsoleColor;
 begin
@@ -67,10 +70,10 @@ begin
   else
     ForegroundColor := AForegroundColor;
 
-  Result := U2(ForegroundColor) or U2(ABackgroundColor) shl 4;
+  Result := TColorAttribute(ForegroundColor) or TColorAttribute(ABackgroundColor) shl 4;
 end;
 
-procedure TConsoleCustomTheme.SetDefaultColor(const Value: U2);
+procedure TConsoleCustomTheme.SetDefaultColor(const Value: TColorAttribute);
 begin
   FDefaultColor := ReadableColor(TConsoleColor(Value and $0f), TConsoleColor(Value shr 4));
 end;

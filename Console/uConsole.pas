@@ -27,11 +27,13 @@ type
     class procedure SetTheme(const Value: TConsoleCustomTheme); static;
   public
     class procedure Write(const AText: string); overload;
+    class procedure Write(const AText: string; const AColorAttribute: TColorAttribute); overload;
     class procedure Write(const AText: string; const AForegroundColor: TConsoleColor); overload;
     class procedure Write(const AText: string; const AForegroundColor: TConsoleColor;
       const ABackgroundColor: TConsoleColor); overload;
 
     class procedure WriteLine(const AText: string); overload;
+    class procedure WriteLine(const AText: string; const AColorAttribute: TColorAttribute); overload;
     class procedure WriteLine(const AText: string; const AForegroundColor: TConsoleColor); overload;
     class procedure WriteLine(const AText: string; const AForegroundColor: TConsoleColor;
       const ABackgroundColor: TConsoleColor); overload;
@@ -65,13 +67,6 @@ uses
   uChar,
   uStrings,
   uConsoleDarkTheme;
-
-class procedure TConsole.WriteLine(const AText: string);
-begin
-  System.Writeln(ConvertToConsoleCodePage(AText));
-  if IsRedirected and FFlushEveryLine then
-    Flush(Output);
-end;
 
 class procedure TConsole.Write(const AText: string);
 begin
@@ -205,34 +200,9 @@ begin
   Result := FOutputHandle <> INVALID_HANDLE_VALUE;
 end;
 
-class procedure TConsole.WriteLine(const AText: string; const AForegroundColor, ABackgroundColor: TConsoleColor);
-var
-  Color: U2;
-begin
-  Color := FTheme.GetColor(AForegroundColor, ABackgroundColor);
-  if (Color <> Theme.DefaultColor) and (not IsRedirected) then
-    SetConsoleTextAttribute(FOutputHandle, Color);
-  try
-    WriteLine(AText);
-  finally
-    if (Color <> Theme.DefaultColor) and (not IsRedirected) then
-      SetConsoleTextAttribute(FOutputHandle, FTheme.DefaultColor);
-  end;
-end;
-
 class procedure TConsole.Write(const AText: string; const AForegroundColor, ABackgroundColor: TConsoleColor);
-var
-  Color: U2;
 begin
-  Color := FTheme.GetColor(AForegroundColor, ABackgroundColor);
-  if (Color <> Theme.DefaultColor) and (not IsRedirected) then
-    SetConsoleTextAttribute(FOutputHandle, Color);
-  try
-    Write(AText);
-  finally
-    if (Color <> Theme.DefaultColor) and (not IsRedirected) then
-      SetConsoleTextAttribute(FOutputHandle, FTheme.DefaultColor);
-  end;
+  Write(AText, FTheme.GetColor(AForegroundColor, ABackgroundColor));
 end;
 
 class procedure TConsole.Write(const AText: string; const AForegroundColor: TConsoleColor);
@@ -244,6 +214,18 @@ class procedure TConsole.WriteAligned(const AText: string; const AFixedWidth: In
   const AHorizontalAlignment: THorizontalAlignment; const AForegroundColor: TConsoleColor);
 begin
   WriteAligned(AText, AFixedWidth, AHorizontalAlignment, AForegroundColor, FTheme.DefaultBackgroundColor);
+end;
+
+class procedure TConsole.Write(const AText: string; const AColorAttribute: TColorAttribute);
+begin
+  if (AColorAttribute <> Theme.DefaultColor) and (not IsRedirected) then
+    SetConsoleTextAttribute(FOutputHandle, AColorAttribute);
+  try
+    Write(AText);
+  finally
+    if (AColorAttribute <> Theme.DefaultColor) and (not IsRedirected) then
+      SetConsoleTextAttribute(FOutputHandle, FTheme.DefaultColor);
+  end;
 end;
 
 class procedure TConsole.WriteAligned(const AText: string;
@@ -285,6 +267,30 @@ begin
     Flush(ErrOutput);
 end;
 
+class procedure TConsole.WriteLine(const AText: string);
+begin
+  System.Writeln(ConvertToConsoleCodePage(AText));
+  if IsRedirected and FFlushEveryLine then
+    Flush(Output);
+end;
+
+class procedure TConsole.WriteLine(const AText: string; const AForegroundColor, ABackgroundColor: TConsoleColor);
+begin
+  WriteLine(AText, FTheme.GetColor(AForegroundColor, ABackgroundColor));
+end;
+
+class procedure TConsole.WriteLine(const AText: string; const AColorAttribute: TColorAttribute);
+begin
+  if (AColorAttribute <> Theme.DefaultColor) and (not IsRedirected) then
+    SetConsoleTextAttribute(FOutputHandle, AColorAttribute);
+  try
+    WriteLine(AText);
+  finally
+    if (AColorAttribute <> Theme.DefaultColor) and (not IsRedirected) then
+      SetConsoleTextAttribute(FOutputHandle, FTheme.DefaultColor);
+  end;
+end;
+
 class procedure TConsole.WriteLine(const AText: string; const AForegroundColor: TConsoleColor);
 begin
   WriteLine(AText, AForegroundColor, FTheme.DefaultBackgroundColor);
@@ -293,5 +299,7 @@ end;
 initialization
   TConsole.Theme := TConsoleDarkTheme.Create;
   TConsole.Theme.DefaultColor := TConsole.GetAttributes;
+finalization
+  FreeAndNil(TConsole.FTheme);
 end.
 
