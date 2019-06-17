@@ -33,6 +33,8 @@ implementation
 
 uses
   SysUtils,
+
+  uStrings,
   uEParseError;
 
 { TComboArgument }
@@ -62,7 +64,10 @@ end;
 
 function TComboArgument.GetValueAsString: string;
 begin
-  Result := FCaptions[Value];
+  if Value = -1 then
+    Result := NAStr
+  else
+    Result := FCaptions[Value];
 end;
 
 procedure TComboArgument.SetCaptions(const Value: TArrayOfString);
