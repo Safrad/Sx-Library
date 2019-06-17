@@ -37,12 +37,14 @@ type
    destructor Destroy;override;
 
    function Add(Value:LongInt):Integer;virtual;
+   function MinimalValue: Integer; virtual;
+   function MaximalValue: Integer; virtual;
    procedure AddIntegers(List:TIntegerList);virtual;
    procedure Assign(Source:TPersistent);override;
    procedure AssignTo(Dest:TPersistent);override;
    procedure Clear;virtual;
    procedure Delete(Index:Integer);virtual;
-   function Equals(List:TIntegerList):Boolean;
+   function Equals(List:TIntegerList):Boolean; reintroduce;
    procedure Exchange(Index1,Index2:Integer);virtual;
    function IndexOf(N:LongInt):Integer;virtual;
    procedure Insert(Index:Integer;Value:LongInt);virtual;
@@ -304,6 +306,34 @@ begin
  New(P);
  P^:=Value;
  FList.Insert(Index,P)
+end;
+
+function TIntegerList.MaximalValue: Integer;
+var
+  I: Integer;
+  Value: Integer;
+begin
+  Result := Low(Integer);
+  for I := 0 to Pred(GetCount) do
+  begin
+    Value := GetItem(I);
+    if Value > Result then
+      Result := Value;
+  end;
+end;
+
+function TIntegerList.MinimalValue: Integer;
+var
+  I: Integer;
+  Value: Integer;
+begin
+  Result := High(Integer);
+  for I := 0 to Pred(GetCount) do
+  begin
+    Value := GetItem(I);
+    if Value < Result then
+      Result := Value;
+  end;
 end;
 
 procedure TIntegerList.Move(CurIndex,NewIndex:Integer);
