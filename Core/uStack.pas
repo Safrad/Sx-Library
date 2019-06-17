@@ -17,80 +17,49 @@ type
 		procedure Grow;
 	public
 		destructor Destroy; override;
-		procedure Push(const Data: Pointer);
-		function Pop: Pointer;
+
+		procedure Push(const AData: Pointer); inline;
+		function Pop: Pointer; inline;
 	end;
 
 implementation
 
 { TStack }
 
-{
-	function Push(Value: Variant; NewValue: Variant): Variant;
-	var
-	tmp: PVariant;
-	begin
-	GetMem(tmp, SizeOf(Variant));
-	tmp^ := Value;
-	Stack.Push(tmp);
-	Result := NewValue;
-	end;
-
-	function Pop: Variant;
-	var
-	tmp: PVariant;
-	begin
-	if Stack.Count > 0 then begin
-	tmp := Stack.Pop;
-	Result := tmp^;
-	tmp^ := Null;
-	FreeMem(tmp, SizeOf(Variant));
-	end
-	else
-	Result := Null;
-	end;
-
-	The line
-	tmp^ := Null;
-	is necessary to prevent memory leaks. For example, if the stack element holds a string,
-	FreeMem(tmp, SizeOf(Variant));
-	will only free the pointer to the string, not the string itself.
-
-}
-
 destructor TStack.Destroy;
 begin
-	FreeMem(FList);
-	inherited;
+  try
+  	FreeMem(FList);
+  finally
+  	inherited;
+  end;
 end;
 
 procedure TStack.Grow;
 begin
-	if FCapacity > 0 then
-		Inc(FCapacity, FCapacity div 4)
-	else { if FCapacity > 8 then
-			Inc(FCapacity, 16)
-			else }
-		Inc(FCapacity, 16);
+	if FCapacity = 0 then
+		FCapacity := 16 // Initial value
+	else
+		Inc(FCapacity, 4 * ((FCapacity + 15) div 16)); // max 25% overhead (16, 20, 28, 36, 48, 60, 76...)
 	ReallocMem(FList, FCapacity * SizeOf(Pointer));
 end;
 
 function TStack.Pop: Pointer;
 begin
-	if FCount > 0 then
+	if FCount = 0 then
+		raise Exception.Create('Number of pop calls is bigger then number of push calls.')
+  else
 	begin
 		Dec(FCount);
 		Result := FList^[FCount];
-	end
-	else
-		Result := nil;
+	end;
 end;
 
-procedure TStack.Push(const Data: Pointer);
+procedure TStack.Push(const AData: Pointer);
 begin
 	if FCapacity = FCount then
 		Grow;
-	FList^[FCount] := Data;
+	FList^[FCount] := AData;
 	Inc(FCount);
 end;
 
