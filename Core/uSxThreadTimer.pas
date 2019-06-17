@@ -109,9 +109,15 @@ begin
   FStartTime := PerformanceCounter;
   while (not Terminated) do
   begin
-    FWorkingStopwatch.Start;
-    ExecuteOnTimer;
-    FWorkingStopwatch.Stop;
+    if FEnabled then
+    begin
+      FWorkingStopwatch.Start;
+      ExecuteOnTimer;
+      FWorkingStopwatch.Stop;
+    end;
+
+    if not FEnabled then
+      Suspend;
 
     if Terminated then
       Break;
@@ -141,9 +147,7 @@ begin
     begin
       FStartTime := PerformanceCounter;
       Resume;
-    end
-    else
-      Suspend;
+    end;
   end;
 end;
 
