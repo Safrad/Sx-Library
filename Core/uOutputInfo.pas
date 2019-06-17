@@ -5,6 +5,8 @@ unit uOutputInfo;
 interface
 
 uses
+  Consts,
+
   uTypes,
   uTable;
 
@@ -14,6 +16,16 @@ type
 
   TDlgButtons = set of TDlgBtn;
 
+{$if CompilerVersion < 21}
+resourcestring
+  SMsgDlgClose = '&Close'; // SCloseButton
+{$ifend}
+const
+  DlgBtnNames: array[TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry, SMsgDlgIgnore,
+    SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel, SMsgDlgAll, SMsgDlgHelp,
+    SMsgDlgClose);
+
+type
   IOutputInfo = interface(IInterface)
     procedure AddCaption(const ACaption: string);
     procedure AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
@@ -23,8 +35,9 @@ type
     procedure AddInfo(const AInfoMessage: string);
     procedure AddDebug(const ADebugMessage: string);
     procedure AddTable(const ATable: TTable);
-    function ConfirmationYesNo(const AMessage: string): BG;
     function Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
+    function ConfirmationYesNo(const AMessage: string): BG;
+    function ConfirmationRetryIgnore(const AMessage: string): BG;
     procedure Start;
     procedure Stop;
     function GetLastCaption: string;
@@ -67,8 +80,9 @@ type
     procedure AddInfo(const AInfoMessage: string);
     procedure AddDebug(const ADebugMessage: string);
     procedure AddTable(const ATable: TTable);
-    function ConfirmationYesNo(const AMessage: string): BG;
     function Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
+    function ConfirmationYesNo(const AMessage: string): BG;
+    function ConfirmationRetryIgnore(const AMessage: string): BG;
     procedure Start;
     procedure Stop;
     property LastCaption: string read GetLastCaption;
@@ -125,6 +139,11 @@ end;
 function TOutputInfo.Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
 begin
   Result := mbCancel;
+end;
+
+function TOutputInfo.ConfirmationRetryIgnore(const AMessage: string): BG;
+begin
+  Result := False;
 end;
 
 function TOutputInfo.ConfirmationYesNo(const AMessage: string): BG;

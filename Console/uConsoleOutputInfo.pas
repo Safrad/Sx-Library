@@ -5,12 +5,7 @@ interface
 uses
   uTypes,
   uOutputInfo,
-  uTable,
-  uConsoleColor;
-
-const
-  ConsoleColor: array[TMessageLevel] of TConsoleColor = (ccLightAqua, ccGreen, ccLightBlue, ccLightYellow,
-    ccWhite{Background is ccRed}, ccLightPurple, ccGray);
+  uTable;
 
 type
 	TConsoleOutputInfo = class(TInterfacedObject, IOutputInfo)
@@ -37,8 +32,9 @@ type
     procedure AddInfo(const AInfoMessage: string);
     procedure AddDebug(const ADebugMessage: string);
     procedure AddTable(const ATable: TTable);
-    function ConfirmationYesNo(const AMessage: string): BG;
     function Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
+    function ConfirmationYesNo(const AMessage: string): BG;
+    function ConfirmationRetryIgnore(const AMessage: string): BG;
   end;
 
 implementation
@@ -50,7 +46,8 @@ uses
   uConsole,
   uConsoleTable,
   uCodePage,
-  uStrings;
+  uStrings,
+  uEParseError;
 
 const
   MsgTypeNames: array[TMessageLevel] of string = (SMsgDlgConfirm, 'Debug', '', SMsgDlgWarning,
@@ -96,7 +93,7 @@ begin
   if AMessageLevel in [mlError, mlFatalError] then
     TConsole.WriteErrorLine(AddMessagePrefix(AMessage, AMessageLevel))
   else
-    TConsole.WriteLine(AddMessagePrefix(AMessage, AMessageLevel), ConsoleColor[AMessageLevel]);
+    TConsole.WriteLine(AddMessagePrefix(AMessage, AMessageLevel), TConsole.Theme.GetColorForMessageLevel(AMessageLevel));
 end;
 
 procedure TConsoleOutputInfo.AddTable(const ATable: TTable);
@@ -117,23 +114,65 @@ begin
   AddMessage(AWarningMessage, mlWarning);
 end;
 
-function TConsoleOutputInfo.Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
+function ButtonsToString(const AButtons: TDlgButtons): string;
+var
+  DlgBtn: TDlgBtn;
 begin
-  // TODO
-  Result := mbCancel;
+  Result := '';
+  for DlgBtn := Low(TDlgBtn) to High(TDlgBtn) do
+  begin
+    if DlgBtn in AButtons then
+      AppendStr(Result, DelCharsF(DlgBtnNames[DlgBtn], '&') + '|');
+  end;
+  Result := DelLastChar(Result);
 end;
 
-function TConsoleOutputInfo.ConfirmationYesNo(const AMessage: string): BG;
+function GetButton(const AButtonText: string; const AButtons: TDlgButtons): TDlgBtn;
+var
+  DlgBtn: TDlgBtn;
+begin
+  for DlgBtn := Low(TDlgBtn) to High(TDlgBtn) do
+  begin
+    if (DlgBtn in AButtons) and (UpperCase(AButtonText) = UpperCase(DelCharsF(DlgBtnNames[DlgBtn], '&'))) then
+    begin
+      Result := DlgBtn;
+      Exit;
+    end;
+  end;
+  raise EParseError.Create([ButtonsToString(AButtons)], AButtonText);
+end;
+
+function TConsoleOutputInfo.Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
 var
   ReadedText: string;
 begin
   if not TConsole.IsRedirected then
   begin
-    Readln(ReadedText);
-    Result := StartStr('Y', UpperCase(ReadedText));
+    TConsole.WriteLine(AMessage + ' [' + ButtonsToString(AButtons) + ']', TConsole.Theme.GetColorForMessageLevel(mlConfirmation));
+    while True do
+    begin
+      Readln(ReadedText);
+      try
+        Result := GetButton(ReadedText, AButtons);
+        Break;
+      except
+        on E: Exception do
+          AddError(E.Message);
+      end;
+    end;
   end
   else
-    Result := False; // Ignore
+    Result := mbCancel;
+end;
+
+function TConsoleOutputInfo.ConfirmationYesNo(const AMessage: string): BG;
+begin
+  Result := Confirmation(AMessage, [mbYes, mbNo]) = mbYes;
+end;
+
+function TConsoleOutputInfo.ConfirmationRetryIgnore(const AMessage: string): BG;
+begin
+  Result := Confirmation(AMessage, [mbRetry, mbIgnore]) = mbRetry;
 end;
 
 constructor TConsoleOutputInfo.Create;

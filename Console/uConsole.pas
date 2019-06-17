@@ -256,7 +256,7 @@ class procedure TConsole.WriteErrorLine(const AText: string);
 begin
   // if not redirected ErrOutput write text to console window as Output
   if (not IsRedirected) then
-    SetConsoleTextAttribute(FOutputHandle, FTheme.ErrorColor);
+    SetConsoleTextAttribute(FOutputHandle, FTheme.GetColorForMessageLevel(mlError));
   try
     System.Writeln(ErrOutput, ConvertToConsoleCodePage(AText));
   finally

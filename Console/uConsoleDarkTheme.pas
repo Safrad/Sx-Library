@@ -3,6 +3,7 @@ unit uConsoleDarkTheme;
 interface
 
 uses
+  uTypes,
   uConsoleColor,
   uConsoleCustomTheme;
 
@@ -10,24 +11,12 @@ type
   TConsoleDarkTheme = class(TConsoleCustomTheme)
   public
     function GetColor(const AForegroundColor: TConsoleColor; const ABackgroundColor: TConsoleColor): TColorAttribute; override;
-    function ErrorColor: TColorAttribute; override;
-    function InformationColor: TColorAttribute; override;
-    function DebugColor: TColorAttribute; override;
+    function GetColorForMessageLevel(const AMessageLevel: TMessageLevel): TColorAttribute; override;
   end;
 
 implementation
 
 { TConsoleDarkTheme }
-
-function TConsoleDarkTheme.DebugColor: TColorAttribute;
-begin
-  Result := GetColor(ccGray, ccLightGreen);
-end;
-
-function TConsoleDarkTheme.ErrorColor: TColorAttribute;
-begin
-  Result := GetColor(ccWhite, ccRed);
-end;
 
 function TConsoleDarkTheme.GetColor(const AForegroundColor, ABackgroundColor: TConsoleColor): TColorAttribute;
 var
@@ -40,9 +29,18 @@ begin
   Result := ReadableColor(ForegroundColor, ABackgroundColor);
 end;
 
-function TConsoleDarkTheme.InformationColor: TColorAttribute;
+function TConsoleDarkTheme.GetColorForMessageLevel(const AMessageLevel: TMessageLevel): TColorAttribute;
 begin
-  Result := GetColor(ccLightBlue, DefaultBackgroundColor);
+  case AMessageLevel of
+    mlConfirmation: Result := GetColor(ccLightAqua, DefaultBackgroundColor);
+    mlDebug: Result := GetColor(ccLightAqua, ccBlue);
+    mlInformation: Result := GetColor(ccLightBlue, DefaultBackgroundColor);
+    mlWarning: Result := GetColor(ccLightYellow, DefaultBackgroundColor);
+    mlError: Result := GetColor(ccWhite, ccRed);
+    mlFatalError: Result := GetColor(ccWhite, ccPurple);
+  else
+    Result := GetColor(DefaultForegroundColor, DefaultBackgroundColor);
+  end;
 end;
 
 end.

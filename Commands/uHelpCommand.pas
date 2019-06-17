@@ -70,7 +70,7 @@ begin
       Response := '';
       if Command.Syntax <> '' then
       begin
-        OutputText('Name and parameters: ', TConsole.Theme.InformationColor);
+        OutputText('Name and parameters: ', TConsole.Theme.GetColorForMessageLevel(mlInformation));
         OutputText(Command.GetShortcutAndSyntax + LineSep, TConsole.Theme.DefaultColor);
       end;
 

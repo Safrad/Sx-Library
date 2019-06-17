@@ -5,6 +5,7 @@ unit uConsoleCustomTheme;
 interface
 
 uses
+  uTypes,
   uConsoleColor;
 
 type
@@ -21,9 +22,7 @@ type
     function DefaultBackgroundColor: TConsoleColor;
 
     function GetColor(const AForegroundColor, ABackgroundColor: TConsoleColor): TColorAttribute; virtual; abstract;
-    function ErrorColor: TColorAttribute; virtual; abstract;
-    function InformationColor: TColorAttribute; virtual; abstract;
-    function DebugColor: TColorAttribute; virtual; abstract;
+    function GetColorForMessageLevel(const AMessageLevel: TMessageLevel): TColorAttribute; virtual; abstract;
   end;
 
 implementation

@@ -114,15 +114,6 @@ uses
 	uStrings, uChar, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uMath,
 	Registry, MMSystem, Math, UITypes;
 
-{$if CompilerVersion < 21}
-resourcestring
-  SMsgDlgClose = '&Close'; // SCloseButton
-{$ifend}
-const
-  DlgBtnNames: array[TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry, SMsgDlgIgnore,
-    SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel, SMsgDlgAll, SMsgDlgHelp,
-    SMsgDlgClose);
-
 var
 	IgnoreAll: TIgnoreAll;
 
@@ -775,7 +766,7 @@ begin
 end;
 
 type
-   TArrayOfDlgBtn = array of TDlgBtn;
+  TArrayOfDlgBtn = array of TDlgBtn;
 
 function DlgButtonsToArray(const Buttons: TDlgButtons): TArrayOfDlgBtn;
 var

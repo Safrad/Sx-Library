@@ -3,6 +3,7 @@ unit uConsoleGrayscaleTheme;
 interface
 
 uses
+  uTypes,
   uConsoleColor,
   uConsoleCustomTheme;
 
@@ -12,28 +13,30 @@ type
     function GrayScaleColor(const AColor: TConsoleColor): TConsoleColor;
   public
     function GetColor(const AForegroundColor: TConsoleColor; const ABackgroundColor: TConsoleColor): TColorAttribute; override;
-    function ErrorColor: TColorAttribute; override;
-    function InformationColor: TColorAttribute; override;
-    function DebugColor: TColorAttribute; override;
+    function GetColorForMessageLevel(const AMessageLevel: TMessageLevel): TColorAttribute; override;
   end;
 
 implementation
 
 { TConsoleGrayscaleTheme }
 
-function TConsoleGrayscaleTheme.DebugColor: TColorAttribute;
-begin
-  Result := GetColor(ccWhite, ccGray);
-end;
-
-function TConsoleGrayscaleTheme.ErrorColor: TColorAttribute;
-begin
-  Result := GetColor(ccBlack, ccWhite);
-end;
-
 function TConsoleGrayscaleTheme.GetColor(const AForegroundColor, ABackgroundColor: TConsoleColor): TColorAttribute;
 begin
   Result := ReadableColor(GrayScaleColor(AForegroundColor), GrayScaleColor(ABackgroundColor));
+end;
+
+function TConsoleGrayscaleTheme.GetColorForMessageLevel(const AMessageLevel: TMessageLevel): TColorAttribute;
+begin
+  case AMessageLevel of
+    mlConfirmation: Result := GetColor(ccLightGray, DefaultBackgroundColor);
+    mlDebug: Result := GetColor(ccWhite, ccGray);
+    mlInformation: Result := GetColor(ccLightGray, DefaultBackgroundColor);
+    mlWarning: Result := GetColor(ccWhite, ccGray);
+    mlError: Result := GetColor(ccBlack, ccWhite);
+    mlFatalError: Result := GetColor(ccBlack, ccWhite);
+  else
+    Result := GetColor(DefaultForegroundColor, DefaultBackgroundColor);
+  end;
 end;
 
 function TConsoleGrayscaleTheme.GrayScaleColor(const AColor: TConsoleColor): TConsoleColor;
@@ -58,11 +61,6 @@ begin
   else
     Result := ccLightGray;
   end;
-end;
-
-function TConsoleGrayscaleTheme.InformationColor: TColorAttribute;
-begin
-  Result := GetColor(ccLightGray, DefaultBackgroundColor);
 end;
 
 end.
