@@ -41,6 +41,7 @@ type
     function Check: string;
 
     procedure Add(const ACustomArgument: TCustomArgument);
+    procedure DeleteAll;
     property ExistsCount: SG read GetExistsCount;
     property RequiredArgumentCount: SG read GetRequiredArgumentCount;
 
@@ -94,6 +95,11 @@ constructor TArguments.Create;
 begin
   FArguments := TObjectList.Create;
   FArguments.OwnsObjects := False;
+end;
+
+procedure TArguments.DeleteAll;
+begin
+  FArguments.Clear;
 end;
 
 destructor TArguments.Destroy;
