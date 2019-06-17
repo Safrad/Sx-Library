@@ -15,6 +15,7 @@ type
 	TSortOrder = (soAscending, soDescending);
 
 	TFileItem = class
+  public
 		Name: string;
 		DateTime: TDateTime;
 		Size: U8;
