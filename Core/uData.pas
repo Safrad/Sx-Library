@@ -34,7 +34,7 @@ type
 		destructor Destroy; override;
 
 		// Data manipulation
-		procedure Clear;
+		procedure Clear; virtual;
 
 		// procedure Add(var Value); overload;
 		function Add(P: Pointer): Pointer; overload;
@@ -46,7 +46,7 @@ type
 
 		procedure DeleteFirst;
 		procedure DeleteLast;
-		procedure Delete(const Index: TIndex);
+		procedure Delete(const Index: TIndex); virtual;
 
 		function GetAndDeleteFirst: TObject; // Queue
 		function GetAndDeleteLast: TObject; // Queue
@@ -140,8 +140,11 @@ end;
 
 destructor TData.Destroy;
 begin
-	Clear;
-	inherited;
+  try
+  	Clear;
+  finally
+  	inherited;
+  end;
 end;
 
 function TData.Add: Pointer;
@@ -182,7 +185,7 @@ end;
 
 procedure TData.DeleteLast;
 begin
-	Delete(FItemCount - 1);
+  Dec(FItemCount);
 end;
 
 procedure TData.SetCount(NewCount: SG);
