@@ -14,7 +14,10 @@ type
 
 implementation
 
-uses Types, Graphics, uTypes;
+uses
+  Types, Graphics, UITypes,
+
+  uTypes;
 
 procedure TSxLabel.WMClick(var Message: TWMMouse);
 begin
