@@ -58,8 +58,6 @@ IntToStr	StrToInt ; 2102454545;  Windows Registry, IE
 		23.9.2003
 }
 // Data To Str
-var
-	NumericBase: U1 = 10 deprecated;
 const
 	MaxNumericBase = 36;
 	NumberTable: array[0..MaxNumericBase - 1] of Char = (
@@ -71,18 +69,18 @@ const
 		'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
 		'y', 'z', '-', '*'});
 
-function NumToStr(Num: S8; const Base: SG): string;
+function NumToStr(Num: S8; const ANumericBase: U1): string;
 
-function NToS(const Num: S8; const UseFormat: string): string; overload;
-function NToS(const Num: U8; const UseFormat: string): string; overload;
+function NToS(const Num: S8; const UseFormat: string; const ANumericBase: U1 = 10): string; overload;
+function NToS(const Num: U8; const UseFormat: string; const ANumericBase: U1 = 10): string; overload;
 
-function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
-function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
-function NToS(const Num: U8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay; const ANumericBase: U1 = 10): string; overload;
+function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay; const ANumericBase: U1 = 10): string; overload;
+function NToS(const Num: U8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay; const ANumericBase: U1 = 10): string; overload;
 
-function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
-function NToS(const Num: S8; const OutputFormat: TOutputFormat): string; overload;
-function NToS(const Num: U8; const OutputFormat: TOutputFormat): string; overload;
+function NToS(const Num: S4; const OutputFormat: TOutputFormat; const ANumericBase: U1 = 10): string; overload;
+function NToS(const Num: S8; const OutputFormat: TOutputFormat; const ANumericBase: U1 = 10): string; overload;
+function NToS(const Num: U8; const OutputFormat: TOutputFormat; const ANumericBase: U1 = 10): string; overload;
 
 type
   TFloatFormat= (ffAuto, ffScientic, ffNormal);
@@ -148,7 +146,7 @@ begin
 		Result := '-' + Result;
 end;
 
-function NumToStr(Num: S8; const Base: SG): string;
+function NumToStr(Num: S8; const ANumericBase: U1): string;
 var
 	M: SG;
 //	Minus: BG;
@@ -161,19 +159,19 @@ begin
 	end;
 {	else
 		Minus := False;}
-	Assert((Base >= 2) and (Base <= MaxNumericBase));
+	Assert((ANumericBase >= 2) and (ANumericBase <= MaxNumericBase));
 	while True do
 	begin
 //		DivModS64(Num, Base, D, M);
-		M := Num mod Base;
-		Num := Num div Base;
+		M := Num mod ANumericBase;
+		Num := Num div ANumericBase;
 		Result := NumberTable[M] + Result;
 		if Num = 0 then Break;
 	end;
 //	if Minus then AddMinusStr(Result);
 end;
 
-function NToSInternal(const Num: S8; const Negative: BG; const UseFormat: string): string; overload;
+function NToSInternal(const Num: S8; const Negative: BG; const UseFormat: string; const ANumericBase: U1): string; overload;
 var
 	Nums: string;
 	i, j: SG;
@@ -182,10 +180,10 @@ var
 begin
 	Result := '';
 
-	if NumericBase = 10 then
+	if ANumericBase = 10 then
 		Nums := IntToStr(Abs(Num))
 	else
-		Nums := NumToStr(Abs(Num), NumericBase);
+		Nums := NumToStr(Abs(Num), ANumericBase);
 	j := Length(Nums);
 	PointPos := Pos('.', UseFormat);
 	if PointPos = 0 then PointPos := High(PointPos);
@@ -266,23 +264,23 @@ begin
 	end;
 end;
 
-function NToS(const Num: S8; const UseFormat: string): string;
+function NToS(const Num: S8; const UseFormat: string; const ANumericBase: U1 = 10): string;
 begin
-  Result := NToSInternal(Num, True, UseFormat);
+  Result := NToSInternal(Num, True, UseFormat, ANumericBase);
 end;
 
-function NToS(const Num: U8; const UseFormat: string): string;
+function NToS(const Num: U8; const UseFormat: string; const ANumericBase: U1 = 10): string;
 begin
-  Result := NToSInternal(Num, False, UseFormat);
+  Result := NToSInternal(Num, False, UseFormat, ANumericBase);
 end;
 
-function NToS(const Num: S4; const OutputFormat: TOutputFormat): string; overload;
+function NToS(const Num: S4; const OutputFormat: TOutputFormat; const ANumericBase: U1 = 10): string; overload;
 begin
 	case OutputFormat of
 	ofDisplay:
 		Result := NToS(S8(Num), 0, OutputFormat);
 	ofIO:
-		if NumericBase = 10 then
+		if ANumericBase = 10 then
 			Result := IntToStr(Num)
 		else
 			Result := NToS(S8(Num), 0, OutputFormat);
@@ -291,13 +289,13 @@ begin
 	end;
 end;
 
-function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: S4; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay; const ANumericBase: U1 = 10): string; overload;
 begin
 	case OutputFormat of
 	ofDisplay:
 		Result := NToS(S8(Num), Decimals, OutputFormat);
 	ofIO:
-		if (NumericBase = 10) and (Decimals = 0) then
+		if (ANumericBase = 10) and (Decimals = 0) then
 			Result := IntToStr(Num)
 		else
 			Result := NToS(S8(Num), Decimals, OutputFormat);
@@ -307,7 +305,7 @@ begin
 end;
 
 // 454,545,455.456465; 0.045
-function NToSInternal(const Num: U8; const Negative: BG; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToSInternal(const Num: U8; const Negative: BG; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay; const ANumericBase: U1 = 10): string; overload;
 var
 	DecimalSep, ThousandSep: string;
 	ThousandGr, FractionGr: SG;
@@ -329,7 +327,7 @@ begin
 	end;
 	ofIO:
 	begin
-		if (NumericBase = 10) and (Decimals = 0) then
+		if (ANumericBase = 10) and (Decimals = 0) then
 		begin
       if Negative then
   			Result := IntToStr(Num)
@@ -359,7 +357,7 @@ begin
 //		if OutputFormat = ofHTML then Nums := nbsp else Nums := ''
 		Nums := '';
 	end
-	else if NumericBase = 10 then
+	else if ANumericBase = 10 then
   begin
     if Negative then
   		Nums := IntToStr(Abs(Num))
@@ -367,7 +365,7 @@ begin
       Nums := UIntToStr(Num);
   end
 	else
-		Nums := NumToStr(Abs(Num), NumericBase);
+		Nums := NumToStr(Abs(Num), ANumericBase);
 
 	M := -Abs(Decimals);
 	i := Length(Nums);
@@ -440,24 +438,25 @@ begin
 	end;
 end;
 
-function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: S8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay; const ANumericBase: U1 = 10): string; overload;
 begin
-  Result := NToSInternal(Num, True, Decimals, OutputFormat);
+  {$R-}
+  Result := NToSInternal(Num, True, Decimals, OutputFormat, ANumericBase);
 end;
 
-function NToS(const Num: U8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
+function NToS(const Num: U8; const Decimals: SG = 0; const OutputFormat: TOutputFormat = ofDisplay; const ANumericBase: U1 = 10): string; overload;
 begin
-  Result := NToSInternal(Num, False, Decimals, OutputFormat);
+  Result := NToSInternal(Num, False, Decimals, OutputFormat, ANumericBase);
 end;
 
-function NToS(const Num: S8; const OutputFormat: TOutputFormat): string; overload;
+function NToS(const Num: S8; const OutputFormat: TOutputFormat; const ANumericBase: U1 = 10): string; overload;
 begin
-	Result := NToSInternal(Num, True, 0, OutputFormat);
+	Result := NToSInternal(Num, True, 0, OutputFormat, ANumericBase);
 end;
 
-function NToS(const Num: U8; const OutputFormat: TOutputFormat): string; overload;
+function NToS(const Num: U8; const OutputFormat: TOutputFormat; const ANumericBase: U1 = 10): string; overload;
 begin
-	Result := NToSInternal(Num, False, 0, OutputFormat);
+	Result := NToSInternal(Num, False, 0, OutputFormat, ANumericBase);
 end;
 
 function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
