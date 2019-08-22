@@ -41,7 +41,7 @@ implementation
 
 uses
   SysUtils,
-  Consts,
+  VLC.Consts,
 
   uConsole,
   uConsoleTable,
