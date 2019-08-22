@@ -17,6 +17,8 @@ type
   protected
     procedure Execute; override;
   public
+    constructor Create;
+
     property OnReadInputText: TReadInputText read FOnReadInputText write SetOnReadInputText;
     property StartupText: string read FStartupText write SetStartupText;
   end;
@@ -25,9 +27,18 @@ implementation
 
 uses
   SysUtils,
+  Classes,
+
   uMsg;
 
 { TConsoleReader }
+
+constructor TConsoleReader.Create;
+begin
+  inherited;
+
+  Priority := tpHigher; // Fast response for commands
+end;
 
 procedure TConsoleReader.Execute;
 var
