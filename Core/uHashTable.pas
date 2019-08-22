@@ -18,7 +18,6 @@ type
 		FKeys: TData; // Used for resizing
 		FValues: TData;
 		FFindIndex: SG;
-		procedure DoubleSize;
 	public
 		procedure Add(const Key: TKey; const Data: Pointer);
 		procedure Clear;
@@ -37,7 +36,8 @@ type
 
 implementation
 
-uses SysUtils;
+uses
+  SysUtils;
 
 { THashTable }
 
@@ -45,12 +45,16 @@ procedure THashTable.Add(const Key: U4; const Data: Pointer);
 var Index: SG;
 begin
 	Assert(FCount <= FCapacity);
-	if Count >= Capacity div 2 then
-		DoubleSize;
+  {$ifopt d+}
+	if Count >= Capacity div 8 then
+  	raise Exception.Create('Increase hash table initial capacity.');
+  {$endif}
 	Inc(FCount);
 	Index := Key mod UG(FCapacity);
+  {$ifopt d+}
 	if U4(FKeys[Index]^) <> 0 then
-		Assert(False);
+		raise Exception.Create('Duplicate item index.');
+  {$endif}
 	FKeys.Replace(Index, @Key);
 	FValues.Replace(Index, Data);
 end;
@@ -82,11 +86,6 @@ begin
 	Clear;
 	FreeAndNil(FKeys);
 	FreeAndNil(FValues);
-end;
-
-procedure THashTable.DoubleSize;
-begin
-	Assert(False, 'Increase initial capacity.');
 end;
 
 function THashTable.Find(const Key: TKey): Pointer;
