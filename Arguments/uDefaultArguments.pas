@@ -22,6 +22,7 @@ type
 implementation
 
 uses
+  uCommonOutput,
   uMsg;
 
 { TDefaultArguments }
@@ -49,7 +50,7 @@ procedure TDefaultArguments.Parse(const ACommandLine: string);
 begin
   inherited;
 
-  if HelpArgunment.Exists or ((ExistsCount = 0) and (RequiredArgumentCount > 0)) then
+  if (HelpArgunment.Exists or ((ExistsCount = 0) and (RequiredArgumentCount > 0))) and (CommonOutput <> nil) then
   begin
     WriteToCommonOutput;
   end;
