@@ -205,8 +205,6 @@ procedure FillOrderUG(var Desc; const Count: UG);
 procedure Reverse4(var Desc; Size: UG);
 procedure ReverseG(var Desc; Size: UG);
 procedure Reverse(var Desc; const ItemSize: SG; const Count: SG);
-function Checksum(var Desc; Size: U4): U4;
-function Hash(const Desc; Size: U4): U4;
 procedure Swap02(var Desc; Count: UG; Step: S4);
 function SwapU4(D: U4): U4;
 
@@ -1994,53 +1992,6 @@ begin
   finally
     FreeMem(Tmp);
   end;
-end;
-
-function Checksum(var Desc; Size: U4): U4; register;
-asm
-	mov Result, 0
-	and Size, $fffffffc
-	cmp Size, 0
-	je @Exit
-	mov ecx, eax
-	add ecx, Size
-	@Loop:
-		mov edx, [eax]
-		add Result, edx
-
-		add eax, 4
-		cmp eax, ecx
-	jb @Loop
-	@Exit:
-end;
-
-function Hash(const Desc; Size: U4): U4; register;
-{const
-	Shift = 6;
-	Mask = 1 shl (8 * SizeOf(Result) - Shift);
-	Result := (Result and Mask) xor (Result shl Shift) xor Data;
-}
-asm
-	mov Result, 0
-	and Size, $fffffffc
-	cmp Size, 0
-	je @Exit
-	mov ecx, eax
-	add ecx, Size
-	@Loop:
-		// <<
-{		mov edx, Result
-		shl edx, Shift
-		xor Result, edx}
-
-		// Standard
-		mov edx, [eax]
-		xor Result, edx
-
-		add eax, 4
-		cmp eax, ecx
-	jb @Loop
-	@Exit:
 end;
 
 procedure Swap02(var Desc; Count: UG; Step: S4); register;
