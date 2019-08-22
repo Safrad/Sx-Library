@@ -157,11 +157,11 @@ end;
 procedure TSynchro.Synchro(const Source, Dest: string);
 type
 	PFileInfo = ^TFileInfo;
-	TFileInfo = packed record // 20
+	TFileInfo = packed record // 24
 		Name: TFileName; // 4
-		Size: S4; // 4
-		DateTime: {$if CompilerVersion >= 21}TDateTime{$else}S4{$ifend}; // 8
 		Found: B4; // 4
+		Size: S8; // 8
+		DateTime: {$if CompilerVersion >= 21}TDateTime{$else}S4{$ifend}; // 8
 	end;
 var
 	i, j: SG;
