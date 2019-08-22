@@ -57,6 +57,7 @@ implementation
 
 {$R *.DFM}
 uses
+  uStrings,
   uCPU,
   uOperatingSystem,
   uSystemMemory,
@@ -66,6 +67,7 @@ uses
 procedure TfSysInfo.FillComp;
 var
 	s: string;
+  QueriedFrequency: TLargeInteger;
 begin
   GCPU.Update;
 
@@ -82,7 +84,11 @@ begin
   EditThreads.Text := NToS(GCPU.LogicalProcessorCount);
 	EditCPUUsage.Text := NToS(Round(100 * 100 * GCPU.Usage), 2) + '%';
 	EditCPUFrequency.Text := NToS(Round(GCPU.Frequency)) + ' Hz';
-	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz';
+  QueriedFrequency := 0;
+  if QueryPerformanceFrequency(QueriedFrequency) then
+  	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz'
+  else
+  	EditCounter.Text := NAStr;
 
   SystemMemory.Update;
 
