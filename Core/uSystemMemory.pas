@@ -42,6 +42,7 @@ type
 
     procedure Update;
     function MaxPhysicalMemorySize: U8; // On 32bit system can be maximal 3 GB
+    function MaxPhysicalMemoryOneBlockSize: U8; // On 32bit system can be maximal 1.5 GB
     function MaxPhysicalMemorySize64: U8;
     function ReservedPhysicalMemoryForOthers: U8;
     function ProcessAllocatedVirtualMemory: U8;
@@ -147,14 +148,30 @@ begin
   Result := U8(Min(Physical.Total, Virtual.Total)) - ReservedPhysicalMemoryForOthers;
 end;
 
-function TSystemMemory.MaxPhysicalMemorySize: U8;
+function TSystemMemory.MaxPhysicalMemoryOneBlockSize: U8;
+const
+  OneBlockMemorySizeLimit = 1536 * U8(MB);
 begin
   Result := MaxPhysicalMemorySize64;
 
   {$ifdef CPUX86}
-  if Result > 3 * U8(GB) then
+  if Result > OneBlockMemorySizeLimit then
   begin
-    Result := 3 * U8(GB);
+    Result := OneBlockMemorySizeLimit;
+  end;
+  {$endif}
+end;
+
+function TSystemMemory.MaxPhysicalMemorySize: U8;
+const
+  MemorySizeLimit = 3 * U8(GB);
+begin
+  Result := MaxPhysicalMemorySize64;
+
+  {$ifdef CPUX86}
+  if Result > MemorySizeLimit then
+  begin
+    Result := MemorySizeLimit;
   end;
   {$endif}
 end;
