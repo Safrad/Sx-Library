@@ -229,7 +229,6 @@ begin
 end;
 
 procedure TfSplash.Timer1Timer(Sender: TObject);
-var ElapsedTime: U4;
 begin
 	case State of
 	stWait:
