@@ -160,7 +160,6 @@ begin
 			(Height - ClientHeight + 3 * FormBorder + ButtonOk.Height + StartGY)) div RowHeight;
 
 	XCount := Max(1, OptionCount div 16 + 1);
-	YCount := 0;
 	while True do
 	begin
 		YCount := (OptionCount + XCount - 1) div XCount;
@@ -636,7 +635,7 @@ begin
 	vsButton:
 		Result := True;
 	else
-		raise Exception.Create('Invalid option type.');
+		raise EArgumentException.Create('Invalid option type.');
 	end;
 end;
 
