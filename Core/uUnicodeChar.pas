@@ -143,6 +143,12 @@ type
       BlackChessRook = Char($265C);
       BlackChessQueen = Char($265B);
       BlackChessKing = Char($265A);
+
+      // Draughts
+      WhiteDraughtsMan = Char($26C0);
+      WhiteDraughtsKing = Char($26C1);
+      BlackDraughtsMan = Char($26C2);
+      BlackDraughtsKing = Char($26C3);
   end;
 
 implementation
