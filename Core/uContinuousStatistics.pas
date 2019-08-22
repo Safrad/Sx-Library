@@ -29,7 +29,7 @@ implementation
 uses
   Math;
 
-{ TStatistics }
+{ TContinuousStatistics }
 
 procedure TContinuousStatistics.Add(const ANumber: FG);
 begin
