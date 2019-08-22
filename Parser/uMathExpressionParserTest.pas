@@ -193,6 +193,7 @@ begin
         ExpressionTreeEvaluator.Free;
       end;
     finally
+      Parser.SxParser.Free;
       FreeAndNil(Parser);
     end;
     VectorAsString := VectorToStr(Vector, ofIO);
