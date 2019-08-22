@@ -1877,7 +1877,7 @@ end;
 const
 	reError = 0;
 	reOk = 1;
-	reReadFromSream = -1;
+	reReadFromStream = -1;
 
 function TDBitmap.ReadBitmapFromFile(const FileName: TFileName): SG;
 var
@@ -1913,7 +1913,7 @@ begin
 				SetSize(BitmapHead.Width, BitmapHead.Height, clWhite);
 				if BitmapHead.Compression <> 0 then
 				begin
-					Result := reReadFromSream;
+					Result := reReadFromStream;
 					Exit;
 				end;
 				case BitmapHead.Bits of
@@ -2021,7 +2021,7 @@ begin
 					{$endif}
 				end;
 				else
-					Result := reReadFromSream;
+					Result := reReadFromStream;
 					Exit;
 				end;
 				Result := reOk;
@@ -2161,7 +2161,7 @@ begin
 	end
 	else
 	begin
-		raise Exception.Create('Picture format not supported.');
+		raise ENotSupportedException.Create('Picture format not supported.');
 {			Picture := TPicture.Create;
 		try
 			Picture.LoadFromFile(FileName);
@@ -2196,7 +2196,7 @@ begin
 		begin
 			Res := ReadBitmapFromFile(FileName); // Faster then ReadStreamFromFile
 			Result := Res = reOk;
-			if Res <> reReadFromSream then
+			if Res <> reReadFromStream then
 				Exit;
 		end;
 		Stream := TMemoryStream.Create;
@@ -10467,13 +10467,14 @@ type
 
 const
 	Mult = 16384;
+	Delta = Mult div (2 * 255);
 
 procedure TDBitmap.GBlurCPU(BmpD: TDBitmap; const Range: TRect; Radius: SG; const Horz, Vert: Boolean;
 	const InterruptProcedure: TInterruptProcedure);
 type
 	TKernel = record
 		Size: TKernelSize;
-		Weights: array[ - MaxKernelSize..MaxKernelSize] of SG;
+		Weights: array[ - MaxKernelSize..MaxKernelSize] of UG;
 	end;
 //the idea is that when Using a TKernel you ignore the Weights
 //except for Weights in the range -Size..Size.
@@ -10482,7 +10483,7 @@ type
 		const MaxData, DataGranularity: Double);
 	var
 		j: SG;
-		temp, delta: SG;
+		temp: UG;
 		KernelSize: TKernelSize;
 	begin
 		for j := Low(K.Weights) to 0{High(K.Weights)} do
@@ -10505,7 +10506,6 @@ type
 		//this is important, otherwise a blur with a small radius
 		//will take as long as with a large radius...
 		KernelSize := MaxKernelSize;
-		delta := Mult div (2 * 255);
 		temp := 0;
 		while (temp < delta) and (KernelSize > 1) do
 		begin
@@ -10529,7 +10529,7 @@ type
 	var
 		j, n: SG;
 		tr, tg, tb: U8;
-		w: SG;
+		w: UG;
 		RGBTriple: PPixel;
 	begin
 		Assert(Input <> PRow(Output));
