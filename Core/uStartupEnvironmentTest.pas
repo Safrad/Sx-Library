@@ -79,7 +79,7 @@ begin
   StartupEnvironment := TStartupEnvironment.Create;
   try
     CheckEquals('', StartupEnvironment.FindValue('unknown'));
-    CheckEquals('C:\Windows', StartupEnvironment.FindValue('SystemRoot'));
+    CheckEquals('C:\WINDOWS', UpperCase(StartupEnvironment.FindValue('SystemRoot')));
 
     for i := 0 to Length(StartupEnvironmentVariables) - 1 do
     begin
@@ -87,7 +87,7 @@ begin
       CheckTrue(StartupEnvironment.FindValue(StartupEnvironmentVariables[i]) <> '', StartupEnvironmentVariables[i]);
     end;
 
-    CheckEquals('%SystemRoot%\Temp', StartupEnvironment.InsertVariablesFromStart('C:\Windows\Temp'));
+    CheckEquals('%SystemRoot%\Temp', StartupEnvironment.InsertVariablesFromStart('C:\WINDOWS\Temp'));
   finally
     StartupEnvironment.Free;
   end;
