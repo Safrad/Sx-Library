@@ -62,6 +62,7 @@ implementation
 {$R *.dfm}
 uses
 	ClipBrd,
+  uOutputInfo,
 	uReg, uDIniFile, uMenus, uOutputFormat, uStrings, uData, ufOptions, uMsg;
 
 procedure TfTableForm.DViewTableGetData(Sender: TObject; var Data: String;

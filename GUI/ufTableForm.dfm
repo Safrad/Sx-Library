@@ -1,12 +1,12 @@
 object fTableForm: TfTableForm
   Left = 351
   Top = 272
-  Width = 448
-  Height = 442
   HorzScrollBar.Tracking = True
   HorzScrollBar.Visible = False
   VertScrollBar.Tracking = True
   VertScrollBar.Visible = False
+  ClientHeight = 403
+  ClientWidth = 432
   Color = clBtnFace
   ParentFont = True
   OldCreateOrder = False
@@ -18,27 +18,32 @@ object fTableForm: TfTableForm
   object DViewTable: TDView
     Left = 0
     Top = 0
-    Width = 440
-    Height = 394
+    Width = 432
+    Height = 382
+    Align = alClient
     Zoom = 1.000000000000000000
     EnableZoom = True
-    Align = alClient
+    DisplayMode = dmCustom
     PopupMenu = PopupMenu
     TabOrder = 1
     TabStop = False
     OnKeyDown = FormKeyDown
     OnDblClick = DViewTableDblClick
     OnGetData = DViewTableGetData
+    ExplicitWidth = 440
+    ExplicitHeight = 394
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 394
-    Width = 440
+    Top = 382
+    Width = 432
     Height = 21
     Panels = <>
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
+    ExplicitTop = 394
+    ExplicitWidth = 440
   end
   object PopupMenu: TPopupMenu
     OnPopup = PopupMenuPopup
