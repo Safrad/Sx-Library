@@ -140,7 +140,7 @@ end;
 procedure RaiseNotImplementedException;
 begin
   if IsDebug then
-    raise Exception.Create('This function is not implemented.');
+    raise ENotImplementedException.Create('This function is not implemented.');
 end;
 
 procedure TFirefoxBookmarks.WriteToFile(const FileName: string);
