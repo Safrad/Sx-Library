@@ -17082,7 +17082,6 @@ var
 begin
   Result := 0;
   AValue := UpperCase( AValue );
-  Tmp := 0;
   for I := 1 to Length( AValue ) do
     begin
     if(( I = 1 ) and ( AValue[ 1 ] = '$' )) then
