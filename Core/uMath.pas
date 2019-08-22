@@ -187,8 +187,17 @@ procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
 procedure ReadMem(P: Pointer; Size: UG);
 function SameData(P0, P1: Pointer; Size: UG): BG;
+procedure FillMemory(var Desc; Count: UG; Value: S1); overload;
+procedure FillMemory(var Desc; Count: UG; Value: S2); overload;
+procedure FillMemory(var Desc; Count: UG; Value: S4); overload;
+procedure FillMemory(var Desc; Count: UG; Value: S8); overload;
+procedure FillMemory(var Desc; Count: UG; Value: U1); overload;
+procedure FillMemory(var Desc; Count: UG; Value: U2); overload;
+procedure FillMemory(var Desc; Count: UG; Value: U4); overload;
+procedure FillMemory(var Desc; Count: UG; Value: U8); overload;
 procedure FillU2(var Desc; Count: UG; Value: U2);
 procedure FillU4(var Desc; Count: UG; Value: U4);
+procedure FillU8(var Desc; Count: UG; Value: U8);
 procedure FillUG(var Desc; Count: UG; Value: UG);
 procedure FillOrderU1(var Desc; const Count: UG);
 procedure FillOrderU4(var Desc; const Count: UG);
@@ -1594,6 +1603,46 @@ asm
 {$endif}
 end;
 
+procedure FillMemory(var Desc; Count: UG; Value: U1);
+begin
+  FillChar(Desc, Count, Value);
+end;
+
+procedure FillMemory(var Desc; Count: UG; Value: U2);
+begin
+  FillU2(Desc, Count, Value);
+end;
+
+procedure FillMemory(var Desc; Count: UG; Value: U4);
+begin
+  FillU4(Desc, Count, Value);
+end;
+
+procedure FillMemory(var Desc; Count: UG; Value: U8);
+begin
+  FillU8(Desc, Count, Value);
+end;
+
+procedure FillMemory(var Desc; Count: UG; Value: S1);
+begin
+  FillChar(Desc, Count, Value);
+end;
+
+procedure FillMemory(var Desc; Count: UG; Value: S2);
+begin
+  FillU2(Desc, Count, Value);
+end;
+
+procedure FillMemory(var Desc; Count: UG; Value: S4);
+begin
+  FillU4(Desc, Count, Value);
+end;
+
+procedure FillMemory(var Desc; Count: UG; Value: S8);
+begin
+  FillU8(Desc, Count, Value);
+end;
+
 procedure FillU2(var Desc; Count: UG; Value: U2); register;
 {$ifdef CPUX64}
 var
@@ -1690,6 +1739,41 @@ asm
 @@exit:
 	POP     EDI
 {$endif}
+end;
+
+procedure FillU8(var Desc; Count: UG; Value: U8);
+var
+  I: NativeInt;
+  V: UG;
+  PB: PUG;
+  P: PInt64;
+  Total: NativeInt;
+begin
+  if Count >= 8 then
+  begin
+    V := Value;
+    P := PInt64(@Desc);
+    Total := Count;
+
+    for I := 0 to Total - 1 do
+    begin
+      P^ := V;
+      Inc(P);
+    end;
+    PB := Pointer(P);
+    Total := Count;
+  end
+  else
+  begin
+    PB := PUG(@Desc);
+    Total := Count;
+  end;
+
+  for I := Total - 1 downto 0 do
+  begin
+    PB^ := Value;
+    Inc(PB);
+  end;
 end;
 
 procedure FillUG(var Desc; Count: UG; Value: UG); register;
@@ -2146,7 +2230,7 @@ const
   // Thread swap time
   // Unix and new Windows: 1 ms
   // Old Windows: 15 ms!
-  MaximalAddedSleepTime = 1; // ms TODO: Detect old Windows 15 ms
+  MaximalAddedSleepTimeInMs = 1; // TODO: Detect old Windows 15 ms
 var
 	StartTickCount: U8;
   RemainTimeInMs: FG;
@@ -2157,10 +2241,10 @@ begin
   while True do
   begin
     RemainTimeInMs := Second * (S8(ATimeSpan.Ticks) - S8(MainTimer.IntervalFrom(StartTickCount))) / MainTimer.Frequency;
-    if RemainTimeInMs >= MaximalAddedSleepTime then
+    if RemainTimeInMs >= MaximalAddedSleepTimeInMs then
     begin
       // Method Sleep sleeps a bit longer then specified
-      Sleep(Min(Trunc(RemainTimeInMs - MaximalAddedSleepTime), MaximalSleepTime));
+      Sleep(Min(Trunc(RemainTimeInMs - MaximalAddedSleepTimeInMs), MaximalSleepTime));
     end
     else
       Break;
