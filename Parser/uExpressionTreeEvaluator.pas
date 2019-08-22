@@ -42,7 +42,7 @@ constructor TExpressionTreeEvaluator.Create(const AExpressionTree: TExpressionTr
 begin
   inherited Create;
 
-  FHashTable := THashTable.Create(64, SizeOf(Pointer));
+  FHashTable := THashTable.Create(1024, SizeOf(Pointer));
   FExpressionTree := AExpressionTree;
 end;
 
@@ -64,7 +64,7 @@ var
 	i: SG;
 begin
 	Result := 0;
-	for i := 0 to Length(AValues) do
+	for i := 0 to Length(AValues) - 1 do
 	begin
 		Result := 31 * Result + AValues[i];
 	end;
@@ -113,11 +113,11 @@ begin
     HashKey := ANode.OperationHash;
     for I := 0 to ANode.ArgCount - 1 do
       HashKey := HashKey xor VectorHashCode(X[I]);
-    FindNode :=  nil; // FHashTable.Find(HashKey); TODO
+    FindNode := FHashTable.Find(HashKey);
     if FindNode = nil then
     begin
       Result := CallFunction(ANode.OperationHash, X);
-//      FHashTable.Add(HashKey, @Result);
+      FHashTable.Add(HashKey, @Result);
     end
     else
       Result := FindNode^;
