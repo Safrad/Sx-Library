@@ -120,7 +120,7 @@ begin
 	if FMinTime <> High(FMinTime) then
 	begin
 		Result := False;
-		t := 1000 div 2 * FMinTime div MainTimer.Frequency;
+		t := 1000 div 2 * FMinTime div S8(MainTimer.Frequency);
 		if t >= 2 then
 			Sleep(Min(t, LagTime));
 	end
