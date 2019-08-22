@@ -174,7 +174,7 @@ implementation
 
 uses
 	Forms, Math, ShellAPI, uWatch, uMsgDlg,
-  uCustomArgument,
+  uCustomArgument, uOutputInfo,
 	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI,
 	uProjectInfo, uReg, uFilePosCache, uPropertiesDialog,
 	ufOpenedFiles;
