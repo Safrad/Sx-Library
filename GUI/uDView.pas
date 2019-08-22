@@ -187,7 +187,7 @@ type
 implementation
 
 uses
-	Math, StdCtrls, ClipBrd, Types, Forms,
+	Math, StdCtrls, ClipBrd, Types, Forms, UITypes,
 	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
 	uDWinControl, uDForm,
 	fFind, Variants;
