@@ -31,6 +31,7 @@ type
     procedure AddInfo(const AInfoMessage: string);
     procedure AddDebug(const ADebugMessage: string);
     procedure AddTable(const ATable: TTable);
+    function ConfirmationRetryIgnore(const AMessage: string): BG;
     function ConfirmationYesNo(const AMessage: string): BG;
     function Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
   end;
@@ -110,6 +111,11 @@ end;
 function TGUIOutputInfo.Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
 begin
   Result := MessageD(AMessage, mlConfirmation, AButtons);
+end;
+
+function TGUIOutputInfo.ConfirmationRetryIgnore(const AMessage: string): BG;
+begin
+  Result := MessageD(AMessage, mlConfirmation, [mbRetry, mbIgnore]) = mbRetry;
 end;
 
 function TGUIOutputInfo.ConfirmationYesNo(const AMessage: string): BG;
