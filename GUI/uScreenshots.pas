@@ -15,11 +15,17 @@ type
   private
 		FPath: string;
     FUnnamedIndex: SG;
-    FClientOnly: BG;
+    FChangeWindowColor: BG;
+    FClientRectangleOnly: BG;
     procedure ExpandBmp(const FormRect: TRect; const BmpD: TDBitmap; const HighlightedControls: array of TControl; const HighlightedTexts: array of string);
+    procedure SetChangeWindowColor(const Value: BG);
+    procedure SetClientRectangleOnly(const Value: BG);
   public
     constructor Create;
     destructor Destroy; override;
+
+    // Process
+    procedure Prepare;
     procedure Reset;
     procedure WaitForNewForm;
     procedure SetFormSize(const Form: TForm; const Width, Height: SG);
@@ -30,7 +36,10 @@ type
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string; const HighlightedControls: array of TControl); overload;
 		procedure TakeScreenshot(const Form: TCustomForm; const Name: string; const HighlightedControls: array of TControl; const HighlightedTexts: array of string); overload;
 
+    // Input
     property Path: string read FPath write FPath;
+    property ChangeWindowColor: BG read FChangeWindowColor write SetChangeWindowColor;
+    property ClientRectangleOnly: BG read FClientRectangleOnly write SetClientRectangleOnly;
   end;
 
 var
@@ -42,11 +51,13 @@ implementation
 
 uses
   SysUtils,
+  Classes,
+
   uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uOperatingSystem, ufGrate;
 
 function TakeScreenshots: BG;
 begin
-  Result := FindCmdLineSwitch('screenshots');
+  Result := False; //IsDebug;
 end;
 
 { TScreenshots }
@@ -54,9 +65,9 @@ end;
 constructor TScreenshots.Create;
 begin
 	inherited;
-  FPath := AppDataDir + 'screenshots\';
+  FPath := LocalAppDataDir + 'screenshots\';
 
-  if not OperatingSystem.IsAero then
+  if FChangeWindowColor and (not OperatingSystem.IsAero) then
     SetWindowColor(clSilver);
 end;
 
@@ -64,7 +75,7 @@ destructor TScreenshots.Destroy;
 begin
   FreeAndNil(fGrate);
 
-  if not OperatingSystem.IsAero then
+  if FChangeWindowColor and (not OperatingSystem.IsAero) then
   	RestoreSystemColors;
 
   inherited;
@@ -109,6 +120,32 @@ begin
   end;
 end;
 
+function GetFormByName(const AFormName: string): TForm;
+var
+  i: SG;
+begin
+  Result := nil;
+  for i := 0 to Screen.FormCount - 1 do
+  begin
+    if Screen.Forms[i].Name = AFormName then
+    begin
+      Result:= Screen.Forms[i];
+      Exit;
+    end;
+  end;
+end;
+
+procedure TScreenshots.Prepare;
+var
+  Splash: TComponent;
+begin
+  Splash := GetFormByName('fSplash');
+  if Splash is TForm then
+    TForm(Splash).Hide;
+
+  Sleep(1000);
+end;
+
 procedure TScreenshots.Reset;
 begin
   FUnnamedIndex := 0;
@@ -124,17 +161,28 @@ begin
 	fGrate.Repaint;
 end;
 
+procedure TScreenshots.SetChangeWindowColor(const Value: BG);
+begin
+  FChangeWindowColor := Value;
+end;
+
+procedure TScreenshots.SetClientRectangleOnly(const Value: BG);
+begin
+  FClientRectangleOnly := Value;
+end;
+
 procedure TScreenshots.SetFormClientSize(const Form: TForm; const Width,
   Height: SG);
 begin
+  Form.Left := 0;
+  Form.Top := 0;
 	Form.ClientWidth := Width;
   Form.ClientHeight := Height;
 end;
 
 procedure TScreenshots.SetFormSize(const Form: TForm; const Width, Height: SG);
 begin
-	Form.Width := Width;
-  Form.Height := Height;
+  Form.SetBounds(0, 0, Width, Height);
 end;
 
 procedure TScreenshots.SetWindowColor(const AColor: TColor);
@@ -179,7 +227,7 @@ var
 begin
   CreateDirEx(FPath);
 
-  if FClientOnly then
+  if FClientRectangleOnly then
   begin
 //	  Application.ProcessMessages;
 //	  Form.Repaint;
