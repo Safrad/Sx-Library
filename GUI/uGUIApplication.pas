@@ -183,9 +183,9 @@ end;
 
 procedure TGUIApplication.Initialize;
 begin
-  inherited;
-
   CommonOutput := TGUIOutputInfo.Create;
+
+  inherited;
 
   PictureFactory := TPictureFactory.Create;
   PictureFactory.Path := GraphDir;
