@@ -74,7 +74,8 @@ begin
   if MainLogWrite(MessageLevel) then
     MainLogAdd(ExpandedText, MessageLevel);
 
-  CommonOutput.AddMessage(ExpandedText, MessageLevel);
+  if Assigned(CommonOutput) then
+    CommonOutput.AddMessage(ExpandedText, MessageLevel);
 end;
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string; const Param: array of string); overload;
@@ -85,7 +86,8 @@ begin
   if MainLogWrite(MessageLevel) then
     MainLogAdd(ExpandedText, MessageLevel);
 
-  CommonOutput.AddMessage(ExpandedText, MessageLevel);
+  if Assigned(CommonOutput) then
+    CommonOutput.AddMessage(ExpandedText, MessageLevel);
 end;
 
 procedure Debug(const Text: string);
@@ -179,8 +181,13 @@ begin
   if LogError then
     MainLogAdd(Text, mlError);
 
-  CommonOutput.AddError(Text);
-  Result := CommonOutput.ConfirmationYesNo(rsRetry);
+  if Assigned(CommonOutput) then
+  begin
+    CommonOutput.AddError(Text);
+    Result := CommonOutput.ConfirmationYesNo(rsRetry);
+  end
+  else
+    Result := False;
 end;
 
 function ErrorCodeToStr(const ErrorCode: U4): string;
@@ -201,7 +208,10 @@ function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
   if LogConfirmation then
     MainLogAdd(Text, mlConfirmation);
-  Result := CommonOutput.Confirmation(Text, Buttons);
+  if Assigned(CommonOutput) then
+    Result := CommonOutput.Confirmation(Text, Buttons)
+  else
+    Result := mbCancel;
 end;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn;
@@ -211,7 +221,10 @@ begin
   ExpandedText := ReplaceParam(Text, Param);
   if LogConfirmation then
     MainLogAdd(ExpandedText, mlConfirmation);
-  Result := CommonOutput.Confirmation(ExpandedText, Buttons);
+  if Assigned(CommonOutput) then
+    Result := CommonOutput.Confirmation(ExpandedText, Buttons)
+  else
+    Result := mbCancel;
 end;
 
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
@@ -232,7 +245,8 @@ begin
   if LogError then
     MainLogAdd(Text, mlError);
 
-  CommonOutput.AddError(ErrorCodeStr + Text);
+  if Assigned(CommonOutput) then
+    CommonOutput.AddError(ErrorCodeStr + Text);
 end;
 
 function IOErrorMessageRetry(const FileName: TFileName; const ErrorMsg: string): BG;
