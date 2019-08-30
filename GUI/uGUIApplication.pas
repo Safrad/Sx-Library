@@ -43,9 +43,11 @@ type
   private
     FAllowMultipleInstance: TSwitchArgument;
     FMinimizeToTrayIcon: BG;
+    FUseCommonMenu: BG;
     procedure RWCommon(const Save: BG);
     procedure OptionChanged(const OptionIndex: SG);
     procedure SetMinimizeToTrayIcon(const Value: BG);
+    procedure SetUseCommonMenu(const Value: BG);
   protected
     procedure AddArguments; override;
     procedure OnRun; override;
@@ -61,6 +63,7 @@ type
     procedure Terminate; override;
 
     property MinimizeToTrayIcon: BG read FMinimizeToTrayIcon write SetMinimizeToTrayIcon;
+    property UseCommonMenu: BG read FUseCommonMenu write SetUseCommonMenu;
   end;
 
 implementation
@@ -242,7 +245,9 @@ begin
         Application.MainForm.WindowState := wsMinimized;
     end;
   end;
-  CommonForm(Application.MainForm);
+
+  if FUseCommonMenu then
+    CommonForm(Application.MainForm);
 
 	HideSplashScreen;
 	Application.Run; // Blocking
@@ -261,6 +266,11 @@ end;
 procedure TGUIApplication.SetMinimizeToTrayIcon(const Value: BG);
 begin
   FMinimizeToTrayIcon := Value;
+end;
+
+procedure TGUIApplication.SetUseCommonMenu(const Value: BG);
+begin
+  FUseCommonMenu := Value;
 end;
 
 procedure TGUIApplication.Terminate;
