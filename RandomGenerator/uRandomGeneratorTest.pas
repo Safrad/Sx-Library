@@ -274,9 +274,9 @@ end;
 
 procedure TRandomGeneratorTest.TestKnuthRandomGenerator;
 var
-  KnuthRandomGenerator: TKnutRandomGenerator;
+  KnuthRandomGenerator: TKnuthRandomGenerator;
 begin
-  KnuthRandomGenerator := TKnutRandomGenerator.Create;
+  KnuthRandomGenerator := TKnuthRandomGenerator.Create;
   try
     TestSpecific(KnuthRandomGenerator);
   finally

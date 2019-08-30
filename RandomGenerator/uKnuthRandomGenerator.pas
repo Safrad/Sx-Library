@@ -13,7 +13,7 @@ uses
   uRandomGenerator;
 
 type
-  TKnutRandomGenerator = class(TRandomGenerator)
+  TKnuthRandomGenerator = class(TRandomGenerator)
   private
     InitJ: SG;
     InitK: SG;
@@ -44,9 +44,9 @@ var
     1960622036, 315685891, 1196037864, 804614524, 1421733266,
     2017105031, 3882325900, 810735053, 384606609, 2393861397);
 
-{ TKnutRandomGenenrator }
+{ TKnuthRandomGenenrator }
 
-constructor TKnutRandomGenerator.Create;
+constructor TKnuthRandomGenerator.Create;
 begin
   inherited;
 
@@ -55,7 +55,7 @@ begin
   Move(cInitX, InitX, SizeOf(InitX));
 end;
 
-function TKnutRandomGenerator.RandomU4: U4;
+function TKnuthRandomGenerator.RandomU4: U4;
 begin
 	Result := (InitX[InitJ] + InitX[InitK]);
 	InitX[InitJ] := Result;
@@ -69,7 +69,7 @@ begin
 		Dec(InitK);
 end;
 
-function TKnutRandomGenerator.RandomU8: U8;
+function TKnuthRandomGenerator.RandomU8: U8;
 begin
   TU8(Result).D0 := RandomU4;
   TU8(Result).D1 := RandomU4;
