@@ -4,7 +4,8 @@ interface
 
 uses
   uTypes,
-  uStopwatch;
+  uStopwatch,
+  uPowerRequest;
 
 type
   TLongOperation = class
@@ -12,8 +13,11 @@ type
     FStopwatch: TStopwatch;
     FBackground: BG;
     FSound: BG;
+    FPowerRequest: TPowerRequest;
+    FTitle: string;
     procedure SetSound(const Value: BG);
     procedure SetBackground(const Value: BG);
+    procedure SetTitle(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -21,6 +25,7 @@ type
     procedure Start;
     procedure Stop;
 
+    property Title: string read FTitle write SetTitle;
     property Background: BG read FBackground write SetBackground;
     property Sound: BG read FSound write SetSound;
     property Stopwatch: TStopwatch read FStopwatch;
@@ -31,16 +36,22 @@ implementation
 uses
   Controls,
   Forms,
+
+  TaskBarAPI,
+
   uPlaySound,
   uMsg,
   uOutputFormat,
-  TaskBarAPI;
+  uCustomPowerRequest;
 
 { TLongOperation }
 
 constructor TLongOperation.Create;
 begin
   inherited Create;
+
+  FPowerRequest := TPowerRequest.Create;
+  FPowerRequest.RequestType := PowerRequestExecutionRequired;
 
   FStopwatch := TStopwatch.Create;
   FBackground := False;
@@ -49,6 +60,8 @@ end;
 
 procedure TLongOperation.Start;
 begin
+  FPowerRequest.Increment;
+
 	if FBackground then
 		Screen.Cursor := crAppStart
 	else
@@ -62,6 +75,7 @@ end;
 
 procedure TLongOperation.Stop;
 begin
+  FPowerRequest.Decrement;
   FStopwatch.Stop;
 
 	if FSound and (FStopwatch.Elapsed.Seconds >= 1) then
@@ -78,15 +92,25 @@ end;
 
 destructor TLongOperation.Destroy;
 begin
-  if FStopwatch.IsRunning then
-    Stop;
-  FStopwatch.Free;
-  inherited;
+  try
+    if FStopwatch.IsRunning then
+      Stop;
+    FStopwatch.Free;
+    FPowerRequest.Free;
+  finally
+    inherited;
+  end;
 end;
 
 procedure TLongOperation.SetSound(const Value: BG);
 begin
   FSound := Value;
+end;
+
+procedure TLongOperation.SetTitle(const Value: string);
+begin
+  FTitle := Value;
+  FPowerRequest.Title := FTitle;
 end;
 
 procedure TLongOperation.SetBackground(const Value: BG);
