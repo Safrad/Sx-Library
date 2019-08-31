@@ -17,6 +17,7 @@ begin
   GUIApplication := TGUIApplication.Create;
   try
     GUIApplication.CreateForm(TfMain, fMain);
+    GUIApplication.CreateForm(TfAnyForm, fAnyForm);
     GUIApplication.Run;
   finally
     GUIApplication.Free;
@@ -36,6 +37,7 @@ uses
 
   Menus,
   Forms,
+  ExtCtrls,
   Classes;
 
 type
@@ -45,7 +47,6 @@ type
     FMinimizeToTrayIcon: BG;
     FUseCommonMenu: BG;
     procedure RWCommon(const Save: BG);
-    procedure OptionChanged(const OptionIndex: SG);
     procedure SetMinimizeToTrayIcon(const Value: BG);
     procedure SetUseCommonMenu(const Value: BG);
   protected
@@ -54,8 +55,9 @@ type
     procedure Initialize; override;
     procedure Finalize; override;
 
-    function GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
-    procedure CommonForm(const Form: TForm);
+    function FindPanelTool(const AForm: TForm): TPanel;
+    function GetMainMenuOrPopupMenu(const AForm: TForm): TMenu;
+    procedure CommonForm(const AForm: TForm);
   public
     destructor Destroy; override;
 
@@ -69,7 +71,6 @@ type
 implementation
 
 uses
-  ExtCtrls,
   SysUtils,
 
   uMultiIns,
@@ -102,26 +103,20 @@ begin
   Arguments.Add(FAllowMultipleInstance);
 end;
 
-procedure TGUIApplication.CommonForm(const Form: TForm);
+procedure TGUIApplication.CommonForm(const AForm: TForm);
 var
-	i: SG;
 	Menu: TMenu;
+  PanelTool: TPanel;
 begin
-  Menu := GetMainMenuOrPopupMenu(Form);
+  Menu := GetMainMenuOrPopupMenu(AForm);
 
 	if Menu <> nil then
 	begin
 		CommonFileMenu(Menu);
 		MenuSet(Menu);
-		for i := 0 to Form.ComponentCount - 1 do
-		begin
-			if (Form.Components[i] is TPanel) and (Form.Components[i].Name = 'PanelTool') then
-			begin
-				IconsFromMenu(Menu, TPanel(Form.Components[i]));
-				// IconsResize(TPanel(Form.Components[i]));
-				Break;
-			end;
-		end;
+    PanelTool := FindPanelTool(AForm);
+    if PanelTool <> nil then
+      IconsFromMenu(Menu, PanelTool);
 	end;
 end;
 
@@ -143,13 +138,12 @@ end;
 procedure TGUIApplication.Finalize;
 begin
   try
-    if MainIni <> nil then
-    begin
-  		MainIni.UnregisterRW(RWCommon);
-  //		MainIni.UnregisterRW(Dictionary.RWLanguage);
-    end;
+    if Assigned(MainIni) then
+      MainIni.UnregisterRW(RWCommon);
 
-    Application.MainForm.Free; // Do not use FreeAndNil
+    if Assigned(Application) and Assigned(Application.MainForm) then
+      Application.MainForm.Free; // Do not use FreeAndNil
+
     FreeAndNil(FAllowMultipleInstance);
     FreeAndNil(PictureFactory);
   finally
@@ -157,27 +151,42 @@ begin
   end;
 end;
 
-function TGUIApplication.GetMainMenuOrPopupMenu(const Form: TForm): TMenu;
+function TGUIApplication.FindPanelTool(const AForm: TForm): TPanel;
+var
+  i: SG;
+begin
+  for i := 0 to AForm.ComponentCount - 1 do
+  begin
+    if (AForm.Components[i] is TPanel) and (AForm.Components[i].Name = 'PanelTool') then
+    begin
+      Result := TPanel(AForm.Components[i]);
+      Exit;
+    end;
+  end;
+  Result := nil;
+end;
+
+function TGUIApplication.GetMainMenuOrPopupMenu(const AForm: TForm): TMenu;
 var
 	i: SG;
 begin
 	Result := nil;
-	if Form <> nil then
+	if AForm <> nil then
 	begin
-		for i := 0 to Form.ComponentCount - 1 do
+		for i := 0 to AForm.ComponentCount - 1 do
 		begin
-			if Form.Components[i] is TMainMenu then
+			if AForm.Components[i] is TMainMenu then
 			begin
-				Result := TMainMenu(Form.Components[i]);
+				Result := TMainMenu(AForm.Components[i]);
 				Break;
 			end;
 		end;
 		if Result = nil then
-			for i := 0 to Form.ComponentCount - 1 do
+			for i := 0 to AForm.ComponentCount - 1 do
 			begin
-				if Form.Components[i] is TPopupMenu then
+				if AForm.Components[i] is TPopupMenu then
 				begin
-					Result := TMainMenu(Form.Components[i]);
+					Result := TMainMenu(AForm.Components[i]);
 					Break;
 				end;
 			end;
@@ -220,13 +229,6 @@ begin
 	GlobalParams[goDesktopIcon].Bool := LinkChange(goDesktopIcon, ocTest);
 	GlobalParams[goQuickLaunchIcon].Bool := LinkChange(goQuickLaunchIcon, ocTest);
 	GlobalParams[goRunAfterStartUp].Bool := IsRegisteredStartup;
-
-//	Dictionary.TranslateForm(Form); TODO :
-	if Statistics.RunFirstTime then
-	begin
-    ufOptions.ShowOptions('Global Options', POptions(@GlobalOptions), Length(GlobalParams), PParams
-        (@GlobalParams), OptionChanged);
-	end;
 end;
 
 procedure TGUIApplication.OnRun;
@@ -235,7 +237,7 @@ begin
 
   if FMinimizedArgument.Exists then
   begin
-    if MinimizeToTrayIcon then
+    if FMinimizeToTrayIcon then
     begin
       Application.ShowMainForm := False
     end
@@ -251,11 +253,6 @@ begin
 
 	HideSplashScreen;
 	Application.Run; // Blocking
-end;
-
-procedure TGUIApplication.OptionChanged(const OptionIndex: SG);
-begin
-  uGlobalOptions.OptionChanged(OptionIndex);
 end;
 
 procedure TGUIApplication.RWCommon(const Save: BG);
