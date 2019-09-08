@@ -286,6 +286,8 @@ type
 	PArrayU4 = ^TArrayU4;
 	TArrayS8 = array[0..256 * MB - 2] of S8;
 	PArrayS8 = ^TArrayS8;
+	TArrayU8 = array[0..256 * MB - 2] of U8;
+	PArrayU8 = ^TArrayU8;
 	TArraySG = array[0..256 * MB - 2] of SG;
 	PArraySG = ^TArraySG;
 
