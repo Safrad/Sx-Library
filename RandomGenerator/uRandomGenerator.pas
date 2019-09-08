@@ -84,7 +84,7 @@ begin
   AData := RandomU8;
 end;
 
-procedure TRandomGenerator.Random2(out AData: PByte; const ASize: SG);
+procedure TRandomGenerator.Random(out AData: PByte; const ASize: SG);
 var
   i: SG;
   Data: PU4;
