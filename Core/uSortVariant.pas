@@ -41,7 +41,7 @@ begin
     end;
     SortS4(True, Reverse, AIndex, PArrayS4(AInteger), Count);
   end;
-  varInt64:
+  varInt64, varUInt64:
   begin
     SetLength(AInt64, Count);
     for i := 0 to Count - 1 do
