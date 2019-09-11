@@ -219,6 +219,8 @@ begin
 		begin
 			FromPos := ToPos;
 			Dir := 0;
+      if FromPos >= StrLen then
+        Exit;
 		end
 		else
 			Dec(ToPos);
@@ -232,6 +234,8 @@ begin
 		begin
 			FromPos := ToPos;
 			Dir := 0;
+      if FromPos >= StrLen then
+        Exit;
 		end
 		else
 			Inc(ToPos);
