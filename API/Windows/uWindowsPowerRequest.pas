@@ -10,11 +10,6 @@ uses
 
   Windows;
 
-function PowerCreateRequest(_Context: PReasonContext): THandle; stdcall; external kernel32;
-function PowerSetRequest(_Handle: THandle; _RequestType: Integer): LongBool; stdcall; external kernel32;
-function PowerClearRequest(_Handle: THandle; _RequestType: Integer): LongBool; stdcall; external kernel32;
-
-
 type
   TWindowsPowerRequest = class(TCustomPowerRequest)
   private
@@ -36,6 +31,16 @@ implementation
 uses
   SysUtils;
 
+type
+  TPowerCreateRequest = function(_Context: PReasonContext): THandle; stdcall;
+  TPowerSetRequest = function(_Handle: THandle; _RequestType: Integer): LongBool; stdcall;
+  TPowerClearRequest = function(_Handle: THandle; _RequestType: Integer): LongBool; stdcall;
+
+var
+  GPowerCreateRequest: TPowerCreateRequest;
+  GPowerSetRequest:  TPowerSetRequest;
+  GPowerClearRequest: TPowerClearRequest;
+
 { TWindowsPowerRequest }
 
 constructor TWindowsPowerRequest.Create;
@@ -51,8 +56,9 @@ begin
     raise Exception.Create('Can not decrement request which hasn''t been incremented.');
 
   Dec(FCount);
-  if not PowerClearRequest(FHandle, GetRequestType) then
-    RaiseLastOSError;
+  if Assigned(GPowerClearRequest) then
+    if not GPowerClearRequest(FHandle, GetRequestType) then
+      RaiseLastOSError;
 end;
 
 destructor TWindowsPowerRequest.Destroy;
@@ -86,8 +92,9 @@ begin
   end;
 
   Inc(FCount);
-  if not PowerSetRequest(FHandle, GetRequestType) then
-    RaiseLastOSError;
+  if Assigned(GPowerSetRequest) then
+    if not GPowerSetRequest(FHandle, GetRequestType) then
+      RaiseLastOSError;
 end;
 
 procedure TWindowsPowerRequest.Initialize;
@@ -96,15 +103,22 @@ const
   POWER_REQUEST_CONTEXT_SIMPLE_STRING = 1;
   POWER_REQUEST_CONTEXT_DETAILED_STRING = 2;
 begin
-  FillChar(FReasonContext, SizeOf(FReasonContext), 0);
+  if Assigned(GPowerCreateRequest) then
+  begin
+    FillChar(FReasonContext, SizeOf(FReasonContext), 0);
 
-  FReasonContext.Version := POWER_REQUEST_CONTEXT_VERSION;
-  FReasonContext.Flags := POWER_REQUEST_CONTEXT_SIMPLE_STRING;
-  FReasonContext.SimpleReasonString := PWideChar(FTitle);
+    FReasonContext.Version := POWER_REQUEST_CONTEXT_VERSION;
+    FReasonContext.Flags := POWER_REQUEST_CONTEXT_SIMPLE_STRING;
+    FReasonContext.SimpleReasonString := PWideChar(FTitle);
 
-  FHandle := PowerCreateRequest(@FReasonContext);
-  if FHandle = INVALID_HANDLE_VALUE then
-    RaiseLastOSError;
+    FHandle := GPowerCreateRequest(@FReasonContext);
+    if FHandle = INVALID_HANDLE_VALUE then
+      RaiseLastOSError;
+  end;
 end;
 
+initialization
+  GPowerCreateRequest := GetProcAddress(GetModuleHandle(kernel32), 'PowerCreateRequest');
+  GPowerSetRequest := GetProcAddress(GetModuleHandle(kernel32), 'PowerSetRequest');
+  GPowerClearRequest := GetProcAddress(GetModuleHandle(kernel32), 'PowerClearRequest');
 end.
