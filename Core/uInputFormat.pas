@@ -190,6 +190,9 @@ var
 begin
 	Parser := TMathExpressionParser.Create;
 	try
+    Parser.SxParser := TSxStringParser.Create;
+    TSxStringParser(Parser.SxParser).Text := Line;
+
 		if Messages = nil then
 			Parser.Messages := TParserMessages.Create
 		else
@@ -219,6 +222,7 @@ begin
 			end;
 		end
 	finally
+    Parser.SxParser.Free;
 		Parser.Free;
 	end;
 end;
