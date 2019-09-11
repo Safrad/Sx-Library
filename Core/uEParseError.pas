@@ -50,6 +50,11 @@ function EParseError.TokensToString(const ATokens: array of string): string;
 var
   i: SG;
 begin
+  if Length(ATokens) = 0 then
+  begin
+    Result := 'nothing';
+    Exit;
+  end;
   Result := '';
   for i := 0 to Length(ATokens) - 1 do
   begin
@@ -65,6 +70,11 @@ function EParseError.CharsToString(const AChars: array of Char): string;
 var
   i: SG;
 begin
+  if Length(AChars) = 0 then
+  begin
+    Result := 'nothing';
+    Exit;
+  end;
   Result := '';
   for i := 0 to Length(AChars) - 1 do
   begin
