@@ -3,6 +3,7 @@ unit uStringArgument;
 interface
 
 uses
+  uTypes,
   uCustomArgument;
 
 type
@@ -16,6 +17,7 @@ type
     FValue: string;
     function GetSyntax: string; override;
   public
+    function IsDefault: BG; override;
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -41,6 +43,11 @@ end;
 function TStringArgument.GetValueAsString: string;
 begin
   Result := Value;
+end;
+
+function TStringArgument.IsDefault: BG;
+begin
+  Result := FValue = FDefaultValue;
 end;
 
 procedure TStringArgument.SetDefaultValue(const Value: string);

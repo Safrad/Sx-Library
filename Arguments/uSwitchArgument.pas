@@ -17,6 +17,8 @@ type
 		function GetSyntax: string; override;
   public
     constructor Create;
+
+    function IsDefault: BG; override;
     function GetValueAsString: string; override;
 		procedure SetValueFromString(const AValue: string); override;
     function GetRequired: string; override;
@@ -61,6 +63,11 @@ begin
     Result := 'true'
   else
     Result := 'false';
+end;
+
+function TSwitchArgument.IsDefault: BG;
+begin
+  Result := FValue = FDefaultValue;
 end;
 
 procedure TSwitchArgument.SetDefaultValue(const Value: BG);

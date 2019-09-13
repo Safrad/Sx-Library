@@ -20,6 +20,7 @@ type
   public
     constructor Create;
 
+    function IsDefault: BG; override;
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
     procedure AddCaption(const ACaption: string);
@@ -68,6 +69,11 @@ begin
     Result := NAStr
   else
     Result := FCaptions[Value];
+end;
+
+function TComboArgument.IsDefault: BG;
+begin
+  Result := FValue = FDefaultValue;
 end;
 
 procedure TComboArgument.SetCaptions(const Value: TArrayOfString);

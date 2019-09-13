@@ -21,6 +21,7 @@ type
     function GetSyntax: string; override;
     property NumericalSet: TNumericalSet read FNumericalSet write SetNumericalSet;
   public
+    function IsDefault: BG; override;
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -48,6 +49,11 @@ end;
 function TNumericArgument.GetValueAsString: string;
 begin
   Result := IntToStr(Value);
+end;
+
+function TNumericArgument.IsDefault: BG;
+begin
+  Result := FValue = FDefaultValue;
 end;
 
 procedure TNumericArgument.SetDefaultValue(const Value: S8);
