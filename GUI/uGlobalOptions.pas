@@ -12,15 +12,13 @@ type
 	TGlobalOption = (
     goLanguage,
     goStartMenuIcon, goDesktopIcon, goQuickLaunchIcon, goRunAfterStartUp,
-		goShowSplashScreenWhenApplicationStarts,
 		goMenuItemHeightScale,
 		goWindowBackgroundTexture,
-		goWindowBackgroundColor,
+		goWindowBackgroundColor
 {$if CompilerVersion >= 23}
-		goVisualStyle,
+		, goVisualStyle
 {$ifend}
-		goAutomaticallyCheckForUpdate,
-		goCheckForUpdateDaysPeriod);
+    );
 
 var
 	GlobalOptions: array [TGlobalOption] of TOption = (
@@ -29,19 +27,15 @@ var
     (Typ: vsCheck; Default: 1),
     (Typ: vsCheck; Default: 1),
 		(Typ: vsCheck; Default: 0),
-    (Typ: vsCheck; Default: 1),
 		(Typ: vsSpin; Default: 100; Minimum: 100; Maximum: 400),
 		(Typ: vsCheck; Default: 1),
-		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt),
+		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt)
 {$if CompilerVersion >= 23}
-		(Typ: vsFilename; DefaultStr: ''),
+		, (Typ: vsFilename; DefaultStr: '')
 {$ifend}
-		(Typ: vsCheck; Default: 1),
-		(Typ: vsSpin; Default: 14; Minimum: 0; Maximum: 365));
+    );
 
 	GlobalParams: array [TGlobalOption] of TParam;
-
-	LastUpdate: TDateTime;
 
 function GetBackgroundWindowTexture: BG;
 function GetBackgroundWindowColor: TColor;
@@ -61,7 +55,6 @@ uses
   uDIniFile,
   uStrings,
 
-  uSplash, // TODO : remove
   uMenus,
   uMsg,
   uReg,
@@ -192,13 +185,6 @@ begin
 			else
 				UnregisterStartup;
 		end;
-	goShowSplashScreenWhenApplicationStarts:
-		begin
-			if GlobalParams[TGlobalOption(OptionIndex)].Bool then
-//				ShowSplashScreen(False) Runtime 216 if application closed before splash hide
-			else
-				HideSplashScreen(True);
-		end;
   goMenuItemHeightScale:
   begin
     MenuItemHeightScale := GlobalParams[TGlobalOption(OptionIndex)].Num;
@@ -253,30 +239,10 @@ begin
 {$if CompilerVersion >= 23}
   	GlobalOptions[goVisualStyle].DefaultStr := GetVisualStylesDir;
 {$ifend}
-		if MainIni.ValueExists(Section, 'ViewSplashScreen') then
-		begin
-			GlobalOptions[goShowSplashScreenWhenApplicationStarts].Default := MainIni.ReadNum
-				(Section, 'ViewSplashScreen', 1);
-		end;
-		if MainIni.ValueExists(Section, 'AutomaticallyCheckForUpdate') then
-		begin
-			GlobalOptions[goAutomaticallyCheckForUpdate].Default := MainIni.ReadNum
-				(Section, 'AutomaticallyCheckForUpdate', 1);
-		end;
-	end
-	else
-	begin
-		MainIni.DeleteValue(Section, 'ViewSplashScreen');
-		MainIni.DeleteValue(Section, 'AutomaticallyCheckForUpdate');
 	end;
 
 	uOptions.RWOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalParams),
 		MainIni, 'Global Options', Save);
-
-{	if Save = False then
-		AutomaticallyCheckForUpdate := True;
-	MainIni.RWBool(Section, 'AutomaticallyCheckForUpdate', AutomaticallyCheckForUpdate, Save);}
-	LocalMainIni.RWDateTime(Section, 'LastUpdate', LastUpdate, Save);
 
   if Save = False then
   begin

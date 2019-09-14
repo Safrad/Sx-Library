@@ -9,7 +9,6 @@ uses
 type
 	TCommonMenu = class(TObject)
 	private
-		CheckForUpdate1: TMenuItem;
 		LoggingLevel1: TMenuItem;
 
 		procedure Restart1Click(Sender: TObject);
@@ -17,7 +16,6 @@ type
 		procedure LocalHomepage1Click(Sender: TObject);
 		procedure WebHomepage1Click(Sender: TObject);
 		procedure ViewParams1Click(Sender: TObject);
-		procedure CheckForUpdate1Click(Sender: TObject);
 		procedure About1Click(Sender: TObject);
 		procedure ViewIniFile1Click(Sender: TObject);
 		procedure ViewLogFile1Click(Sender: TObject);
@@ -40,7 +38,6 @@ uses
   Classes,
   SysUtils,
   Windows,
-  uWebUpdate,
   uAbout,
   uNewThread,
   uLog,
@@ -102,22 +99,6 @@ end;
 procedure TCommonMenu.ViewParams1Click(Sender: TObject);
 begin
 	CommonApplication.Arguments.WriteToCommonOutput;
-end;
-
-procedure MenuCheckForUpdate(AThread: TThread);
-begin
-	CommonMenu.CheckForUpdate1.Enabled := False;
-	try
-		CheckForUpdate;
-	finally
-		CommonMenu.CheckForUpdate1.Enabled := True;
-	end;
-end;
-
-procedure TCommonMenu.CheckForUpdate1Click(Sender: TObject);
-begin
-	LastUpdate := Now;
-	RunInNewThread(MenuCheckForUpdate);
 end;
 
 procedure TCommonMenu.About1Click(Sender: TObject);
@@ -299,16 +280,6 @@ begin
 		M := TMenuItem.Create(Help1);
 		M.Caption := cLineCaption;
 		Help1.Add(M);
-
-    if GetProjectInfo(piWeb) <> '' then
-    begin
-      M := TMenuItem.Create(Help1);
-      M.Name := 'CheckForUpdate1';
-      M.Caption := 'Check For Update' + cDialogSuffix;
-      M.OnClick := CommonMenu.CheckForUpdate1Click;
-      Help1.Add(M);
-      CommonMenu.CheckForUpdate1 := M;
-    end;
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'About';

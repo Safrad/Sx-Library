@@ -78,10 +78,7 @@ uses
   uFiles,
   uDIniFile,
   uGlobalOptions,
-  uOptions,
-  ufOptions,
   uStartup,
-  uWebUpdate,
   uProjectInfo,
   uCommonMenu,
   uCustomArgument,
@@ -208,12 +205,6 @@ begin
 	Application.Title := GetProjectInfo(piProductName);
 
 	MainIni.RegisterRW(RWCommon);
-
-  if GlobalParams[goAutomaticallyCheckForUpdate].Bool and (Now - LastUpdate > GlobalParams[goCheckForUpdateDaysPeriod].Num) then
-  begin
-    CheckForUpdate(False);
-    LastUpdate := Now;
-  end;
 
 	if Statistics.RunFirstTime then
 	begin
