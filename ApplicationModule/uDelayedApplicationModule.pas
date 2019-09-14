@@ -46,7 +46,7 @@ end;
 
 procedure TDelayedApplicationModule.Load;
 begin
-  if FThread <> nil then
+  if FThread = nil then
   begin
     FThread := TApplicationModuleThread.Create;
     TApplicationModuleThread(FThread).Module := Self;
