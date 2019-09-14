@@ -262,6 +262,7 @@ begin
 //	FormStyle := fsNormal;
 	Background := baUser;
 
+  FAddSplashScreenProjectName := True;
   FChangeMouseCursor := True;
   FStopwatch := TStopwatch.Create;
 end;
@@ -292,7 +293,6 @@ procedure TfSplash.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 	Timer1.Enabled := False;
 	BackBitmap.SetSize(0, 0, clNone);
-	Action := caFree;
 end;
 
 procedure TfSplash.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
