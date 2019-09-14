@@ -40,7 +40,9 @@ type
     procedure InitializeStatistics; virtual;
     procedure InitializeDictionary; virtual;
     procedure InitializeArguments; virtual;
+    procedure InitializeModules; virtual;
     procedure AddArguments; virtual;
+    procedure AddModules; virtual;
     procedure Initialize; virtual;
     procedure Finalize; virtual;
     procedure OnRun; virtual; abstract;
@@ -96,6 +98,11 @@ begin
   // No Code
 end;
 
+procedure TCommonApplication.AddModules;
+begin
+  // No Code
+end;
+
 constructor TCommonApplication.Create;
 begin
   CommonApplication := Self;
@@ -109,7 +116,6 @@ begin
       Finalize; // For testing
 
     Initialize;
-    FModuleManager.LoadModules;
     FInitialized := True;
   except
     on E: Exception do
@@ -162,7 +168,7 @@ begin
   InitializeStatistics;
   InitializeDictionary;
   InitializeArguments;
-  FModuleManager := TApplicationModuleManager.Create;
+  InitializeModules;
 end;
 
 procedure TCommonApplication.InitializeArguments;
@@ -202,6 +208,13 @@ end;
 procedure TCommonApplication.InitializeMainLog;
 begin
   InitializeLog;
+end;
+
+procedure TCommonApplication.InitializeModules;
+begin
+  FModuleManager := TApplicationModuleManager.Create;
+  AddModules;
+  FModuleManager.LoadModules;
 end;
 
 procedure TCommonApplication.InitializeStatistics;
