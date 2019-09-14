@@ -32,7 +32,7 @@ begin
     SetLength(AInteger, Count);
     for i := 0 to Count - 1 do
     begin
-      if VarType(AVariant[i]) = VarTyp then
+      if VarType(AVariant[i]) in [varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord] then
       begin
         AInteger[i] := AVariant[i];
       end
