@@ -83,7 +83,7 @@ implementation
 
 uses
 	Controls, Windows,
-	uGetStr, uMsg, uMath, uStrings;
+	uGetStr, uMsg, uMath, uStrings, uOutputInfo;
 
 procedure TDb.New(const NewDbDataSize: Integer; const HeadId: TDbHeadId; const HeadVersion: U4);
 begin
