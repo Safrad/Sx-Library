@@ -81,7 +81,6 @@ uses
   uOptions,
   ufOptions,
   uStartup,
-  uSplash,
   uWebUpdate,
   uProjectInfo,
   uCommonMenu,
@@ -202,7 +201,7 @@ begin
   PictureFactory := TPictureFactory.Create;
   PictureFactory.Path := GraphDir;
 
-  if not uMultiIns.InitInstance(FAllowMultipleInstance.Exists) then
+  if not uMultiIns.InitInstance(FAllowMultipleInstance.Value) then
     raise EAbort.Create('Another instance found.');
 
   Application.Initialize;
@@ -210,10 +209,6 @@ begin
 
 	MainIni.RegisterRW(RWCommon);
 
-  if GlobalParams[goShowSplashScreenWhenApplicationStarts].Bool and (not FMinimizedArgument.Exists) then
-  begin
-    ShowSplashScreen;
-  end;
   if GlobalParams[goAutomaticallyCheckForUpdate].Bool and (Now - LastUpdate > GlobalParams[goCheckForUpdateDaysPeriod].Num) then
   begin
     CheckForUpdate(False);
@@ -235,7 +230,7 @@ procedure TGUIApplication.OnRun;
 begin
   inherited;
 
-  if FMinimizedArgument.Exists then
+  if FMinimizedArgument.Value then
   begin
     if FMinimizeToTrayIcon then
     begin
@@ -251,7 +246,6 @@ begin
   if FUseCommonMenu then
     CommonForm(Application.MainForm);
 
-	HideSplashScreen;
 	Application.Run; // Blocking
 end;
 
