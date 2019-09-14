@@ -17,7 +17,6 @@ type
     FLoadTime: TTimeSpan;
     FUnloadTime: TTimeSpan;
     procedure UpdateLoadTime;
-    procedure LoadDelayed(Module: TApplicationModule);
   public
     constructor Create;
     destructor Destroy; override;
@@ -72,10 +71,6 @@ begin
               raise;
           end;
         end;
-      stDelayedStart:
-        begin
-          LoadDelayed(Module);
-        end;
       end;
     end;
   finally
@@ -98,15 +93,6 @@ begin
     if Module.LastUnloadSuccess = False then
       FAreAllUnloaded := False;
   end;
-end;
-
-procedure TApplicationModuleManager.LoadDelayed(Module: TApplicationModule);
-var
-  ApplicationModuleThread: TApplicationModuleThread;
-begin
-  ApplicationModuleThread := TApplicationModuleThread.Create;
-  ApplicationModuleThread.Module := Module;
-  ApplicationModuleThread.Start;
 end;
 
 procedure TApplicationModuleManager.UpdateLoadTime;

@@ -8,28 +8,28 @@ uses
   uStopwatch;
 
 type
-  TStartupType = (stRequired, stOptional, stDelayedStart, stDisabled);
+  TStartupType = (stRequired, stOptional, stDisabled);
 
   TApplicationModule = class
   private
     // Input
-    FDelayTime: TTimeSpan;
     FStartupType: TStartupType;
 
     // Output
     FLoadTime: TDateTime;
-    FLoadElapedTime: TTimeSpan;
-    FUnloadElapedTime: TTimeSpan;
     FLastLoadSuccess: BG;
     FLastUnloadSuccess: BG;
 
     // Local
-    FStopwatch: TStopwatch;
+    FStopwatchLoad: TStopwatch;
+    FStopwatchUnload: TStopwatch;
+    FLoaded: BG;
     procedure ForceUnload;
 
     // Properties
-    procedure SetDelayTime(const Value: TTimeSpan);
     procedure SetStartupType(const Value: TStartupType);
+    function GetLoadElapsedTime: TTimeSpan;
+    function GetUnloadElapedTime: TTimeSpan;
   protected
     procedure OnLoad; virtual; abstract;
     procedure OnUnload; virtual; abstract;
@@ -39,18 +39,18 @@ type
 
     // Input
     property StartupType: TStartupType read FStartupType write SetStartupType;
-    property DelayTime: TTimeSpan read FDelayTime write SetDelayTime;
 
     // Process
-    procedure Load;
-    procedure Unload;
+    procedure Load; virtual;
+    procedure Unload; virtual;
 
     // Output
     property LoadTime: TDateTime read FLoadTime;
-    property LoadElapedTime: TTimeSpan read FLoadElapedTime;
-    property UnloadElapedTime: TTimeSpan read FUnloadElapedTime;
+    property LoadElapedTime: TTimeSpan read GetLoadElapsedTime;
+    property UnloadElapedTime: TTimeSpan read GetUnloadElapedTime;
     property LastLoadSuccess: BG read FLastLoadSuccess;
     property LastUnloadSuccess: BG read FLastUnloadSuccess;
+    property Loaded: BG read FLoaded;
   end;
 
 implementation
@@ -66,15 +66,15 @@ constructor TApplicationModule.Create;
 begin
   inherited;
 
-  FDelayTime.Seconds := 10;
-
-  FStopwatch := TStopwatch.Create;
+  FStopwatchLoad := TStopwatch.Create;
+  FStopwatchUnload := TStopwatch.Create;
 end;
 
 destructor TApplicationModule.Destroy;
 begin
   try
-    FStopwatch.Free;
+    FStopwatchUnload.Free;
+    FStopwatchLoad.Free;
   finally
     inherited;
   end;
@@ -82,7 +82,7 @@ end;
 
 procedure TApplicationModule.ForceUnload;
 begin
-  FStopwatch.Start;
+  FStopwatchUnload.Start;
   try
     try
       OnUnload;
@@ -95,42 +95,46 @@ begin
       end;
     end;
   finally
-    FStopwatch.Stop;
-    FUnloadElapedTime := FStopwatch.Elapsed;
+    FStopwatchUnload.Stop;
   end;
+end;
+
+function TApplicationModule.GetLoadElapsedTime: TTimeSpan;
+begin
+  Result := FStopwatchLoad.Elapsed;
+end;
+
+function TApplicationModule.GetUnloadElapedTime: TTimeSpan;
+begin
+  Result := FStopwatchUnload.Elapsed;
 end;
 
 procedure TApplicationModule.Load;
 begin
   FLoadTime := Now;
 
-  FStopwatch.Start;
+  FStopwatchLoad.Start;
   try
     try
       OnLoad;
+      FLoaded := True;
       FLastLoadSuccess := True;
     except
       on E: Exception do
       begin
         FLastLoadSuccess := False;
-        MainLog.LogException(E);
         try
           ForceUnload;
         except
-          MainLog.LogException(E);
+          on E2: Exception do
+            MainLog.LogException(E2);
         end;
-        raise E;
+        raise;
       end;
     end;
   finally
-    FStopwatch.Stop;
-    FLoadElapedTime := FStopwatch.Elapsed;
+    FStopwatchLoad.Stop;
   end;
-end;
-
-procedure TApplicationModule.SetDelayTime(const Value: TTimeSpan);
-begin
-  FDelayTime := Value;
 end;
 
 procedure TApplicationModule.SetStartupType(const Value: TStartupType);
@@ -140,8 +144,9 @@ end;
 
 procedure TApplicationModule.Unload;
 begin
-  if FLastLoadSuccess then
+  if FLoaded then
   begin
+    FLoaded := False;
     ForceUnload;
   end;
 end;
