@@ -31,6 +31,7 @@ $(sx-library)\Geometry
 $(sx-library)\Arguments
 $(sx-library)\Commands
 $(sx-library)\Executable
+$(sx-library)\ApplicationModule
 $(sx-library)\Benchmark
 $(sx-library)\Sound\SoundItems
 $(sx-library)\Sound\Channels
