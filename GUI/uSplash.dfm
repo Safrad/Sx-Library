@@ -19,8 +19,10 @@ object fSplash: TfSplash
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnHide = FormHide
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Timer1: TTimer
