@@ -58,9 +58,6 @@ type
   TConsoleApplication = class(TUIApplication)
   private
     FAbortedBySystem: BG;
-    FShowVersionInfo: BG;
-    procedure WriteVersionInfo;
-    procedure SetShowVersionInfo(const Value: BG);
   protected
     procedure Initialize; override;
     procedure AbortedBySystem; virtual;
@@ -68,8 +65,6 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-
-    property ShowVersionInfo: BG read FShowVersionInfo write SetShowVersionInfo;
   end;
 
 implementation
@@ -79,19 +74,12 @@ uses
   Windows,
 
   uLog,
-  uStartState,
-  uDefaultArguments,
-  uCodePage,
-  uConsole,
-  uConsoleColor,
-  uProjectInfo,
-  uMsg,
-  uChar,
-  uFiles,
-  uDIniFile,
   uCommonApplication,
   uCommonOutput,
-  uConsoleOutputInfo;
+  uConsole,
+  uConsoleColor,
+  uConsoleOutputInfo,
+  uConsoleSplashScreen;
 
 function GetConsoleWindow: HWND; stdcall; external kernel32;
 
@@ -132,7 +120,7 @@ end;
 constructor TConsoleApplication.Create;
 begin
   SetConsoleCtrlHandler(@ConsoleCtrlHandler, True { add } );
-  FShowVersionInfo := True;
+  SplashScreen := TConsoleSplashScreen.Create;
 
   inherited;
 end;
@@ -151,17 +139,11 @@ end;
 procedure TConsoleApplication.Initialize;
 begin
   CommonOutput := TConsoleOutputInfo.Create;
-  WriteVersionInfo;
 
   inherited;
 
   if FMinimizedArgument.Exists then
     ShowWindow(GetConsoleWindow, SW_MINIMIZE);
-end;
-
-procedure TConsoleApplication.SetShowVersionInfo(const Value: BG);
-begin
-  FShowVersionInfo := Value;
 end;
 
 procedure TConsoleApplication.Wait;
@@ -171,19 +153,6 @@ begin
     TConsole.WriteLine('');
     TConsole.Write('Press Enter to continue...');
     Readln;
-  end;
-end;
-
-procedure TConsoleApplication.WriteVersionInfo;
-begin
-  if FShowVersionInfo then
-  begin
-    TConsole.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piProductVersion) + ']', ccWhite);
-    if GetProjectInfo(piFileDescription) <> '' then
-      TConsole.WriteLine(GetProjectInfo(piFileDescription), ccLightGray);
-    if GetProjectInfo(piLegalCopyright) <> '' then
-      TConsole.WriteLine(GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName), ccGray);
-    TConsole.WriteLine('');
   end;
 end;
 
