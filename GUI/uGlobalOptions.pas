@@ -54,22 +54,25 @@ implementation
 
 uses
   SysUtils,
-  Math,
+  Classes,
+  Forms,
+
   uFiles,
-  uStartState,
   uDIniFile,
-  uCPU,
   uStrings,
+
+  uSplash, // TODO : remove
+  uMenus,
+  uMsg,
+  uReg,
   // TODO
 {$if CompilerVersion >= 23}
   Vcl.Themes,
   Vcl.Styles,
 {$ifend}
-  Forms,
-	uSplash, uMenus, uMultiIns, uAbout, uLog, uSounds, uFileExt, uNewThread,
-	uMsgDlg, uMsg, ufOptions, uReg, uProjectInfo, uLink,
-	uWebUpdate, uDictionary,
-	Classes, Windows, ExtCtrls;
+	uProjectInfo,
+  uLink,
+	uDictionary;
 
 function GetBackgroundWindowTexture: BG;
 begin
