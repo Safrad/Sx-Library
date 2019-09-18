@@ -1,99 +1,115 @@
-unit GraphicStrings;
+п»їunit GraphicStringsRU;
 
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in compliance
-// with the License. You may obtain a copy of the License at http://www.mozilla.org/MPL/
+// The original code is GraphicStrings.pas, released November 1, 1999.
 //
-// Software distributed under the License is distributed on an "AS IS" basis,
-// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for the
-// specific language governing rights and limitations under the License.
+// The initial developer of the original code is Mike Lischke (www.soft-gems.net),
 //
-// The original code is GraphicColor.pas, released November 1, 1999.
-//
-// The initial developer of the original code is Dipl. Ing. Mike Lischke (PleiЯa, Germany, www.delphi-gems.com),
-//
-// Portions created by Dipl. Ing. Mike Lischke are Copyright
-// (C) 1999-2003 Dipl. Ing. Mike Lischke. All Rights Reserved.
+// Copyright (C) 1999-2003 Mike Lischke. All Rights Reserved.
 //----------------------------------------------------------------------------------------------------------------------
-// This file is part of the image library GraphicEx.
 //
-// GraphicStrings contains the strings used in GraphicEx which could be localized.
+// GraphicStrings contains the russian version of the strings used in GraphicEx, which can be localized.
+// Translation done by Shashlov Kirill.
+//
 // Rename the file to GraphicStrings.pas to use it as your favourite language file.
-//
-// This is the russian version of GraphicStrings.
 //
 //----------------------------------------------------------------------------------------------------------------------
 
 interface
-
-{$I GraphicConfiguration.inc}
-
-resourcestring
-  // image file descriptions
-  gesAllImages = 'Все изображения';
-  gesRegistration = 'Попытка харегистрировать %s файлы (дважды).';
-  
-  gesBitmaps = 'Windows битовые карты';
-  gesRLEBitmaps = 'Run length закодированные битовые карты Windows';
-  gesDIBs = 'Битовые карты Windows, независимые от устройства';
-  gesIcons = 'Пиктограммы Windows';
-  gesMetaFiles = 'Метафайлы Windows';
-  gesEnhancedMetaFiles = 'Расширенные метафайлы Windows';
-  gesJPGImages = 'Изображения JPG';
-  gesJPEGImages = 'Изображения JPEG';
-  gesTruevision = 'Изображения Truevision';
-  gesTIFF = 'Изображения формата TIFF';
-  gesMacTIFF =  'Изображения TIFF для Macintosh';
-  gesPCTIF = 'PC TIF изображения';
-  gesGFIFax = 'GFI fax images';
-  gesSGI = 'Изображения SGI';
-  gesSGITrueColor = 'Полноцветные изображения SGI';
-  gesZSoft = 'Изображения ZSoft Paintbrush';
-  gesZSoftWord = 'Снимки экрана Word 5.x';
-  gesAliasWaveFront = 'Изображения Alias/Wavefront';
-  gesSGITrueColorAlpha = 'Полноцветные изображения SGI с альфа-каналом';
-  gesSGIMono = 'Чёрно-белые изображения SGI';
-  gesPhotoshop = 'Изображения Photoshop';
-  gesPortable = 'Изображения Portable map';
-  gesPortablePixel = 'Изображения Portable pixel map';
-  gesPortableGray = 'Изображения Portable gray map';
-  gesPortableMono = 'Изображения Portable bitmap';
-  gesAutoDesk = 'Изображения Autodesk';
-  gesKodakPhotoCD = 'Изображения Kodak Photo-CD';
-  gesCompuserve = 'Изображения CompuServe';
-  gesHalo = 'Изображения Dr. Halo';
-  gesPaintShopPro = 'Изображения Paintshop Pro';
-  gesPortableNetworkGraphic = 'Изображения Portable network graphic (PNG)';
-
-  // image specific error messages
-  gesInvalidImage = 'Невозможно загружить изображение. Неправильный или неподдерживаемый формат изображения %s.';
-  gesInvalidColorFormat = 'Неправильный формат цвета в файле %s.';
-  gesStreamReadError = 'Ошибка чтения из потока в файле %s.';
-  gesUnsupportedImage = 'Невозможно загружить изображение. Неподдерживаемый формат изображения %s.';
-  gesUnsupportedFeature = 'Невозможно загружить изображение. %s не поддерживается для файлов %s.';
-  gesInvalidCRC = 'Невозможно загружить изображение. Ошибка CRC найдена в файлы %s.';
-  gesCompression = 'Невозможно загружить изображение. Ошибка сжатия в файле %s.';
-  gesExtraCompressedData = 'Невозможно загружить изображение. Дополнительные данные найдены в файле %s.';
-  gesInvalidPalette = 'Невозможно загружить изображение. Неправильная палитра в файле %s.';
-
-  // features (usually used together with unsupported feature string)
-  gesCompressionScheme = 'Схема сжатия ';
-  gesPCDImageSize = 'Размеры изображения, отличные от Base16, Base4 or Base ';
-  gesRLAPixelFormat = 'Форматы изображений, отличные от RGB and RGBA ';
-  gesPSPFileType = 'Версии формата файла, отличные от 3й или 4й ';
-
-  // errors which apply only to specific image types
-  gesUnknownCriticalChunk = 'Невозможно загрузить изображение PNG. Обнаружена неожиданная, но критическая ошибка.';
-
-  // color manager error messages
-  gesIndexedNotSupported = 'Конверсия между индексированными и не-индексированными форматами изображений не поддерживается.';
-  gesConversionUnsupported = 'Цветовая конверсия не поддерживается. Не возможно найти правильный метод.';
-  gesInvalidSampleDepth = 'Неправильная цветовая глубина. Поддерживается глубина в битах: 1, 2, 4, 8, or 16.';
-  gesInvalidPixelDepth = 'Глубина изображения в битах не подходит к текущей цветовой схеме.';
-
 //----------------------------------------------------------------------------------------------------------------------
 
 implementation
+
+uses GraphicStrings, AutoResourceStr, windows;
+
+initialization
+
+  with AutoResourceString(MakeLangId(LANG_RUSSIAN, SUBLANG_NEUTRAL)) do begin
+    // РћРїРёСЃР°РЅРёСЏ С„Р°Р№Р»РѕРІ РёР·РѕР±СЂР°Р¶РµРЅРёР№
+    Add(gesAllImages, 'Р’СЃРµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ');
+    Add(gesRegistration, 'РџРѕРїС‹С‚РєР° Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊ %s РґРІР°Р¶РґС‹.');
+
+    Add(gesBitmaps,'РўРѕС‡РµС‡РЅС‹Рµ СЂРёСЃСѓРЅРєРё Windows');
+    Add(gesRLEBitmaps, 'РўРѕС‡РµС‡РЅС‹Рµ СЂРёСЃСѓРЅРєРё RLE');
+    Add(gesDIBs, 'РђРїРїР°СЂР°С‚РЅРѕ-РЅРµР·Р°РІРёСЃРёРјС‹Рµ С‚РѕС‡РµС‡РЅС‹Рµ СЂРёСЃСѓРЅРєРё Windows');
+    Add(gesEPS, 'Р’РЅРµРґСЂС‘РЅРЅС‹Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ Postscript');
+    Add(gesIcons, 'РРєРѕРЅРєРё Windows');
+    Add(gesMetaFiles, 'РњРµС‚Р°С„Р°Р№Р»С‹ Windows');
+    Add(gesEnhancedMetaFiles, 'Р Р°СЃС€РёСЂРµРЅРЅС‹Рµ РјРµС‚Р°С„Р°Р№Р»С‹ Windows');
+    Add(gesJPGImages, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ JPG');
+    Add(gesJPEGImages, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ JPEG');
+    Add(gesJPEImages, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ JPE');
+    Add(gesJFIFImages, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ JFIF');
+    Add(gesTruevision, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Truevision');
+    Add(gesTIFF, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ TIFF');
+    Add(gesMacTIFF,  'РР·РѕР±СЂР°Р¶РµРЅРёСЏ TIFF РґР»СЏ Macintosh');
+    Add(gesPCTIF, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ TIF (PC)');
+    Add(gesGFIFax, 'Р¤Р°РєСЃ-РёР·РѕР±СЂР°Р¶РµРЅРёСЏ GFI');
+    Add(gesSGI, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ SGI');
+    Add(gesSGITrueColor, 'РџРѕР»РЅРѕС†РІРµС‚РЅС‹Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ SGI');
+    Add(gesZSoft, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ ZSoft Paintbrush');
+    Add(gesZSoftWord, 'РЎРЅРёРјРєРё СЌРєСЂР°РЅР° Word 5.x');
+    Add(gesAliasWaveFront, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Alias/Wavefront');
+    Add(gesSGITrueColorAlpha, 'РџРѕР»РЅРѕС†РІРµС‚РЅС‹Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ SGI СЃ Р°Р»СЊС„Р°-РєР°РЅР°Р»РѕРј');
+    Add(gesSGIMono, 'Р§С‘СЂРЅРѕ-Р±РµР»С‹Рµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ SGI');
+    Add(gesPhotoshop, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Photoshop');
+    Add(gesPortable, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Portable map');
+    Add(gesPortablePixel, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Portable pixel map');
+    Add(gesPortableGray, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Portable gray map');
+    Add(gesPortableMono, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Portable bitmap');
+    Add(gesAutoDesk, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Autodesk');
+    Add(gesKodakPhotoCD, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Kodak Photo-CD');
+    Add(gesCompuserve, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ CompuServe');
+    Add(gesHalo, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Dr. Halo');
+    Add(gesPaintShopPro, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Paintshop Pro');
+    Add(gesPaintshopProFrames, 'Paintshop Pro frames');
+    Add(gesPaintshopProTubes, 'Paintshop Pro tubes');
+    Add(gesPortableNetworkGraphic, 'РР·РѕР±СЂР°Р¶РµРЅРёСЏ Portable network graphic (PNG)');
+
+    // РЎРїРµС†РёС„РёС‡РЅС‹Рµ РѕС€РёР±РєРё РїСЂРё СЂР°Р±РѕС‚Рµ СЃ РёР·РѕР±СЂР°Р¶РµРЅРёСЏРјРё
+    Add(gesInvalidImage, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ. РќРµРІРµСЂРЅС‹Р№ РёР»Рё РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С„РѕСЂРјР°С‚ С„Р°Р№Р»Р° %s.');
+    Add(gesInvalidColorFormat, 'РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ С†РІРµС‚Р° РІ С„Р°Р№Р»Рµ %s.');
+    Add(gesStreamReadError, 'РћС€РёР±РєР° С‡С‚РµРЅРёСЏ РїРѕС‚РѕРєР° РїСЂРё С‡С‚РµРЅРёРё С„Р°Р№Р»Р° %s.');
+    Add(gesUnsupportedImage, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ. РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С„РѕСЂРјР°С‚ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ %s.');
+    Add(gesUnsupportedFeature, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ. %s РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ РґР»СЏ С„Р°Р№Р»РѕРІ %s.');
+    Add(gesInvalidCRC, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ. РќРµРІРµСЂРЅР°СЏ РєРѕРЅС‚СЂРѕР»СЊРЅР°СЏ СЃСѓРјРјР° С„Р°Р№Р»Р° %s.');
+    Add(gesCompression, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ. РћС€РёР±РєР° СЃР¶Р°С‚РёСЏ РІ С„Р°Р№Р»Рµ %s.');
+    Add(gesExtraCompressedData, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ. Р¤Р°Р№Р» %s СЃРѕРґРµСЂР¶РёС‚ Р»РёС€РЅРёРµ РґР°РЅРЅС‹Рµ.');
+    Add(gesInvalidPalette, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ. РќРµРІРµСЂРЅР°СЏ РїР°Р»РёС‚СЂР° РІ С„Р°Р№Р»Рµ %s.');
+    Add(gesUnknownCriticalChunk, 'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ PNG РёР·РѕР±СЂР°Р¶РµРЅРёРµ. Р¤РѕСЂРјР°С‚ РЅРµРѕР±С…РѕРґРёРјРѕР№ СЃРµРєС†РёРё РґР°РЅРЅС‹С… РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ.');
+
+    // РџР°СЂР°РјРµС‚СЂС‹ (РѕР±С‹С‡РЅРѕ РёСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ РІРјРµСЃС‚Рµ СЃ СЃРѕРѕР±С‰РµРЅРёСЏРјРё РѕР± РѕС‚СЃСѓС‚СЃС‚РІРёРё РїРѕРґРґРµСЂР¶РєРё)
+    Add(gesCompressionScheme, 'РЎС…РµРјР° СЃР¶Р°С‚РёСЏ:');
+    Add(gesRLAPixelFormat, 'Р¤РѕСЂРјР°С‚С‹ РёР·РѕР±СЂР°Р¶РµРЅРёР№, РѕС‚Р»РёС‡РЅС‹Рµ РѕС‚ RGB and RGBA:');
+    Add(gesPSPFileType, 'Р’РµСЂСЃРёРё С„РѕСЂРјР°С‚Р° С„Р°Р№Р»Р°, РѕС‚Р»РёС‡РЅС‹Рµ РѕС‚ 3Р№ РёР»Рё 4Р№:');
+
+    // РћС€РёР±РєРё РїСЂРё СЂР°Р±РѕС‚Рµ СЃ С†РІРµС‚РѕРј
+    Add(gesIndexedNotSupported, 'РџСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ РјРµР¶РґСѓ РёРЅРґРµРєСЃРёСЂРѕРІР°РЅРЅС‹РјРё Рё РЅРµРёРЅРґРµРєСЃРёСЂРѕРІР°РЅРЅС‹РјРё С„РѕСЂРјР°С‚Р°РјРё РїРёРєСЃРµР»РѕРІ РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ.');
+    Add(gesConversionUnsupported, 'РќРµРІРѕР·РјРѕР¶РЅРѕ РїСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ С†РІРµС‚. РќРµС‚ РїРѕРґС…РѕРґСЏС‰РµРіРѕ РјРµС‚РѕРґР°.');
+    Add(gesInvalidSampleDepth, 'РќРµРІРµСЂРЅР°СЏ РіР»СѓР±РёРЅР° С†РІРµС‚Р°. Р”РѕР»Р¶РЅРѕ Р±С‹С‚СЊ 1, 2, 4, 8 РёР»Рё 16 Р±РёС‚ РЅР° СЃСЌРјРїР».');
+    Add(gesInvalidPixelDepth, 'РљРѕР»РёС‡РµСЃС‚РІРѕ СЃСЌРјРїР»РѕРІ РЅР° РїРёРєСЃРµР» РЅРµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РґР°РЅРЅРѕР№ С†РІРµС‚РѕРІРѕР№ СЃС…РµРјРµ.');
+    Add(gesInvalidSubSampling, 'РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ СЃСЌРјРїР»РёСЂРѕРІР°РЅРёСЏ. Р”РѕРїСѓСЃС‚РёРјС‹ 1, 2 Рё 4.');
+    Add(gesVerticalSubSamplingError, 'Р—РЅР°С‡РµРЅРёРµ РІРµСЂС‚РёРєР°Р»СЊРЅРѕРіРѕ СЃСЌРјРїР»РёСЂРѕРІР°РЅРёСЏ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ РјРµРЅСЊС€Рµ РёР»Рё СЂР°РІРЅРѕ Р·РЅР°С‡РµРЅРёСЋ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕРіРѕ СЃСЌРјРїР»РёСЂРѕРІР°РЅРёСЏ.');
+
+    // РЎРѕСЃС‚РѕСЏРЅРёСЏ
+    Add(gesPreparing, 'РџРѕРґРіРѕС‚РѕРІРєР°...');
+    Add(gesLoadingData, 'Р—Р°РіСЂСѓР·РєР° РґР°РЅРЅС‹С…...');
+    Add(gesUpsampling, 'РџСЂРµСЃСЌРјРїР»РёСЂРѕРІР°РЅРёРµ...');
+    Add(gesTransfering, 'РџРµСЂРµРґР°С‡Р°...');
+
+    // РћС€РёР±РєРё СЃР¶Р°С‚РёСЏ
+    Add(gesLZ77Error, 'РћС€РёР±РєР° LZ77-РґРµРєРѕРјРїСЂРµСЃСЃРёРё.');
+    Add(gesJPEGEOI, 'РћС€РёР±РєР° РґРµРєРѕРјРїСЂРµСЃСЃРёРё JPEG. РќРµРѕР¶РёРґР°РЅРЅРѕРµ РѕРєРѕРЅС‡Р°РЅРёРµ РґР°РЅРЅС‹С….');
+    Add(gesJPEGStripSize, 'РќРµСЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ strip/tile СЂР°Р·РјРµСЂ JPEG.');
+    Add(gesJPEGComponentCount, 'РќРµСЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РєРѕРјРїРѕРЅРµРЅС‚ JPEG.');
+    Add(gesJPEGDataPrecision, 'РќРµСЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰Р°СЏ С‚РѕС‡РЅРѕСЃС‚СЊ РґР°РЅРЅС‹С… JPEG.');
+    Add(gesJPEGSamplingFactors, 'РќРµСЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ С„Р°РєС‚РѕСЂ СЃСЌРјРїР»РёСЂРѕРІР°РЅРёСЏ JPEG.');
+    Add(gesJPEGBogusTableField, 'РћС€РёР±РѕС‡РЅРѕРµ РїРѕР»Рµ JPEG.');
+    Add(gesJPEGFractionalLine, 'Р§Р°СЃС‚РёС‡РЅС‹Рµ СЃРєР°РЅ-Р»РёРЅРёРё JPEG РЅРµ РїРѕРґРґРµСЂР¶РёРІР°СЋС‚СЃСЏ.');
+
+    // Р Р°Р·РЅРѕРµ
+    Add(gesWarning, 'Р’РЅРёРјР°РЅРёРµ!');
+
+  end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
