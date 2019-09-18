@@ -15,10 +15,10 @@ type
     procedure SetModule(const Value: TDelayedApplicationModule);
   protected
     procedure Execute; override;
-    procedure Terminate; override;
   public
     constructor Create;
 
+    procedure Terminate; override;
     property Module: TDelayedApplicationModule read FModule write SetModule;
   end;
 
