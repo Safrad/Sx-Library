@@ -104,7 +104,7 @@ implementation
 uses
 	Math,
 
-  GraphicEx,
+  uReadImageProperties,
 
 	uStrings, uChar, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML,
   uCharset,

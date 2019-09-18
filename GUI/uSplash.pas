@@ -37,7 +37,7 @@ type
     FPromptlyClose: BG;
     FMinimumTime: TTimeSpan;
     FHideTime: TTimeSpan;
-    FMaxAlphaBlendValue: SG;
+    FMaxAlphaBlendValue: U1;
     FBorderSize: SG;
 
     function GetBitmapSize: TSize;
@@ -49,7 +49,7 @@ type
     procedure SetPromptlyClose(const Value: BG);
     procedure PlaceBitmapWithTexts(const ATargetBitmap: TDBitmap);
     procedure SetHideTime(const Value: TTimeSpan);
-    procedure SetMaxAlphaBlendValue(const Value: SG);
+    procedure SetMaxAlphaBlendValue(const Value: U1);
     procedure SetMinimumTime(const Value: TTimeSpan);
     procedure SetBorderSize(const Value: SG);
     procedure FillBitmapWithTexts(var BmpT: TDBitmap; const AWidth, AHeight: SG);
@@ -57,7 +57,7 @@ type
     // Input
 	  property MinimumTime: TTimeSpan read FMinimumTime write SetMinimumTime;
 	  property HideTime: TTimeSpan read FHideTime write SetHideTime;
-    property MaxAlphaBlendValue: SG read FMaxAlphaBlendValue write SetMaxAlphaBlendValue;
+    property MaxAlphaBlendValue: U1 read FMaxAlphaBlendValue write SetMaxAlphaBlendValue;
     property AddSplashScreenProjectName: BG read FAddSplashScreenProjectName write SetAddSplashScreenProjectName;
     property FileName: TFileName read FFileName write SetFileName;
     property PromptlyClose: BG read FPromptlyClose write SetPromptlyClose;
@@ -75,8 +75,7 @@ implementation
 {$R *.DFM}
 
 uses
-  GraphicEx,
-
+  uReadImageProperties,
 	uProjectInfo,
   uStrings,
 	uGraph,
@@ -286,7 +285,7 @@ begin
   FFileName := Value;
 end;
 
-procedure TfSplash.SetMaxAlphaBlendValue(const Value: SG);
+procedure TfSplash.SetMaxAlphaBlendValue(const Value: U1);
 begin
   FMaxAlphaBlendValue := Value;
 end;
