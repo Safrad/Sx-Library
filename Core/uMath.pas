@@ -290,6 +290,26 @@ begin
 end;
 {$endif}
 
+procedure Multiply(var X: U1; const N: U1); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: U2; const N: U2); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: U4; const N: U4); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: U8; const N: U8); overload;
+begin
+  X := X * N;
+end;
+
 procedure Multiply(var X: S1; const N: S1); overload;
 begin
   X := X * N;
