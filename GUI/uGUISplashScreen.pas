@@ -31,6 +31,8 @@ procedure TGUISplashScreen.AddMessage(const AText: string);
 begin
   inherited;
 
+  fSplash.LabelState.Caption := AText;
+  fSplash.LabelState.Update;
 end;
 
 destructor TGUISplashScreen.Destroy;
