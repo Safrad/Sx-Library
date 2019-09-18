@@ -398,10 +398,8 @@ var
 implementation
 
 uses
-	Jpeg, GifImage, PngImage, TGAImage,
-	{$ifdef GDIPlus}
+	Jpeg, PngImage,
 	GraphicEx,
-	{$endif}
   Math, ClipBrd,
 	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
@@ -2041,12 +2039,10 @@ const
 	BackgroundColor = $818283; // Used for icon Alpha
 var
 	MyJPEG: TJPEGImage;
-	MyGif: TGifImage;
 	MyPng: TPngImage;
-	MyTga: TTgaImage;
-	{$ifdef GDIPlus}
+	MyGif: TGIFGraphic;
+	MyTga: TTargaGraphic;
 	MyTIFF: TTIFFGraphic;
-	{$endif}
 //	My: TWICImage;
 	Icon: TIcon;
 begin
@@ -2067,25 +2063,6 @@ begin
 			MyJPEG.Free;
 		end;
 	end
-	else if (Ext = 'gif') then
-	begin
-		MyGif := TGifImage.Create;
-		try
-			MyGif.LoadFromStream(Stream);
-//				Assert(MyGif.IsTransparent = False);
-			MyGif.DrawOptions := [goDirectDraw, goAutoDither]; // Loop in Draw!
-			SetSize(MyGif.Width, MyGif.Height, clNone);
-			Canvas.Draw(0, 0, MyGif);
-			Transparent := MyGif.IsTransparent;
-			if Transparent then
-			begin
-//				TransparentColor := MyGif.BackgroundColor;
-				TryTransparent;
-			end;
-		finally
-			MyGif.Free;
-		end;
-	end
 	else if (Ext = 'png') then
 	begin
 		// TODO : PngImage.Init;
@@ -2103,9 +2080,26 @@ begin
 			MyPng.Free;
 		end;
 	end
+	else if (Ext = 'gif') then
+	begin
+		MyGif := TGIFGraphic.Create;
+		try
+			MyGif.LoadFromStream(Stream);
+			SetSize(MyGif.Width, MyGif.Height, clNone);
+			Canvas.Draw(0, 0, MyGif);
+			Transparent := MyGif.Transparent;
+			if Transparent then
+			begin
+//				TransparentColor := MyGif.BackgroundColor;
+				TryTransparent;
+			end;
+		finally
+			MyGif.Free;
+		end;
+	end
 	else if Ext = 'tga' then
 	begin
-		MyTga := TTgaImage.Create;
+		MyTga := TTargaGraphic.Create;
 		try
 			MyTga.LoadFromStream(Stream);
 			FromBitmap(MyTga);
@@ -2116,7 +2110,6 @@ begin
 			MyTga.Free;
 		end;
 	end
-	{$ifdef GDIPlus}
 	else if (Ext = 'tif') or (Ext = 'tiff') then
 	begin
 		MyTIFF := TTIFFGraphic.Create;
@@ -2127,7 +2120,6 @@ begin
 			MyTIFF.Free;
 		end;
 	end
-	{$endif}
 	else if Ext = 'ico' then
 	begin
 		Icon := TIcon.Create;
@@ -2237,10 +2229,10 @@ function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: SG): Boolea
 
 var
 	MyJPEG: TJPEGImage;
-	MyGif: TGifImage;
 	MyPng: TPngImage;
 	MyBmp: TBitmap;
-	MyTga: TTgaImage;
+	MyGif: TGIFGraphic;
+	MyTga: TTargaGraphic;
 	Stream: TMemoryStream;
 	Ext: string;
 //	B: TBitmap;
@@ -2299,10 +2291,8 @@ begin
 	end
 	else if (Ext = 'gif') then
 	begin
-		MyGif := TGifImage.Create;
+		MyGif := TGIFGraphic.Create;
 		try
-			MyGif.ColorReduction := rmQuantize; // rmPalette
-			MyGif.DitherMode := dmFloydSteinberg; // dmNearest changes backgroud color!
 			MyBmp := TBitmap.Create;
 			try
 				MyBmp.PixelFormat := pf24bit;
@@ -2381,7 +2371,7 @@ begin
 	end
 	else if Ext = 'tga' then
 	begin
-		MyTga := TTgaImage.Create;
+		MyTga := TTargaGraphic.Create;
 		try
 			MyTga.Assign(Self);
 			try

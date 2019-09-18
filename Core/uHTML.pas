@@ -102,7 +102,10 @@ var
 implementation
 
 uses
-	Math, Menus,
+	Math,
+
+  GraphicEx,
+
 	uStrings, uChar, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML,
   uCharset,
   uFileCharset, uFile;
@@ -323,26 +326,19 @@ end;
 function AddImageEx(const SelfFileName, FileName: TFileName; const Params: string): string;
 var
 	s: string;
-{$ifndef Console}
-	B: TDBitmap;
-{$endif}
+	ImageProperties: TImageProperties;
 begin
 	s :=
 		'<img src="' + RelativePath(SelfFileName, FileName) + '" ';
-{$ifndef Console}
 	if FileExists(FileName) and (Pos('width', Params) = 0) and (Pos('height', Params) = 0) then
 	begin
-  	B := TDBitmap.Create;
-    try
-      B.LoadFromFile(FileName);
+    if ReadImageProperties(FileName, ImageProperties) then
+    begin
       s := s +
-        'width="' + IntToStr(B.Width) + '" ' +
-        'height="' + IntToStr(B.Height) + '" ';
-    finally
-    	B.Free;
+        'width="' + IntToStr(ImageProperties.Width) + '" ' +
+        'height="' + IntToStr(ImageProperties.Height) + '" ';
     end;
 	end;
-{$endif}
 	if Pos('alt', Params) = 0 then
 		s := s + 'alt="' + ExtractFileName(DelFileExt(FileName)) + '" ';
 	if Pos('border', Params) = 0 then

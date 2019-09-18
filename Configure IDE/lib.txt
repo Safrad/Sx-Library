@@ -12,8 +12,8 @@ $(sx-library)\ExtLib\DUnit\src
 $(sx-library)\ExtLib\FastMM
 $(sx-library)\ExtLib\FFTs
 $(sx-library)\ExtLib\GammaF
-$(sx-library)\ExtLib\GifImage
 $(sx-library)\ExtLib\GraphicEx
+$(sx-library)\ExtLib\GraphicEx\3rd party\DelphiZlib
 $(sx-library)\ExtLib\IGDIPlus
 $(sx-library)\ExtLib\NLDJoystick
 $(sx-library)\ExtLib\OmniXML
