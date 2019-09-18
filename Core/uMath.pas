@@ -27,6 +27,16 @@ procedure Decrement(var X: F8; const N: F8 = 1); overload;
 procedure Decrement(var X: FA; const N: FA = 1); overload;
 {$endif}
 
+procedure Multiply(var X: U1; const N: U1); overload;
+procedure Multiply(var X: U2; const N: U2); overload;
+procedure Multiply(var X: U4; const N: U4); overload;
+procedure Multiply(var X: U8; const N: U8); overload;
+
+procedure Multiply(var X: S1; const N: S1); overload;
+procedure Multiply(var X: S2; const N: S2); overload;
+procedure Multiply(var X: S4; const N: S4); overload;
+procedure Multiply(var X: S8; const N: S8); overload;
+
 procedure Multiply(var X: F4; const N: F4); overload;
 procedure Multiply(var X: F8; const N: F8); overload;
 {$ifndef CPUX64}
@@ -279,6 +289,26 @@ begin
   X := X - N;
 end;
 {$endif}
+
+procedure Multiply(var X: S1; const N: S1); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: S2; const N: S2); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: S4; const N: S4); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: S8; const N: S8); overload;
+begin
+  X := X * N;
+end;
 
 procedure Multiply(var X: F4; const N: F4); overload;
 begin
