@@ -43,7 +43,6 @@ interface
 {$I GraphicConfiguration.inc}
 
 uses                                                
-  Windows, Classes, SysUtils, Graphics,
   zLibEx, ZLibExApi;  // general inflate/deflate and LZ77 compression support
 
 type
@@ -252,6 +251,7 @@ type
 implementation
 
 uses
+  SysUtils,
   Math,
   GraphicEx,
   GraphicStrings,
@@ -2446,7 +2446,7 @@ begin
   Height := UnpackedSize;
   
   // initialize Huffman tables
-  ZeroMemory(@PCDTable, SizeOf(PCDTable));
+  FillChar(PCDTable, SizeOf(PCDTable), 0);
   GetMem(Buffer, $800);
   try
     Accumulator := 0;

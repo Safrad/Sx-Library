@@ -64,9 +64,9 @@ procedure PlayWave(const PWave: Pointer);
 implementation
 
 uses
-  Windows,
-  Registry,
-  MMSystem,
+  Winapi.Windows,
+  System.Win.Registry,
+  Winapi.MMSystem,
 
   uTypes,
   uFiles,

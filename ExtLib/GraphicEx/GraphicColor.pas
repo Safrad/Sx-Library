@@ -49,7 +49,7 @@ interface
 {$Include Compilers.inc}
 
 uses
-  Windows, Graphics, GraphicStrings;
+  Winapi.Windows, Vcl.Graphics, GraphicStrings;
 
 const
   // This is the value for average CRT monitors, adjust it if your monitor differs.
@@ -577,7 +577,7 @@ begin
   HLS.L := (1 + Amount) * HLS.L;
 
   RGB := HLSToRGB(HLS);
-  Result := Windows.RGB(ClampByte(Round(255 * RGB.R)), ClampByte(Round(255 * RGB.G)), ClampByte(Round(255 * RGB.B)));
+  Result := Winapi.Windows.RGB(ClampByte(Round(255 * RGB.R)), ClampByte(Round(255 * RGB.G)), ClampByte(Round(255 * RGB.B)));
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -616,7 +616,7 @@ begin
   HLS.L := (1 - Amount) * HLS.L;
 
   RGB := HLSToRGB(HLS);
-  Result := Windows.RGB(ClampByte(Round(255 * RGB.R)), ClampByte(Round(255 * RGB.G)), ClampByte(Round(255 * RGB.B)));
+  Result := Winapi.Windows.RGB(ClampByte(Round(255 * RGB.R)), ClampByte(Round(255 * RGB.G)), ClampByte(Round(255 * RGB.B)));
 end;
 
 //----------------------------------------------------------------------------------------------------------------------

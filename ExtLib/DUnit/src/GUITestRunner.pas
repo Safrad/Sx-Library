@@ -41,11 +41,11 @@ interface
 uses
   TestFramework,
 
-  Windows,
+  Winapi.Windows,
   Math,
   Graphics, Controls, Forms, 
   ComCtrls, ExtCtrls, StdCtrls, ImgList, Buttons, Menus, ActnList,
-  Classes, IniFiles, ToolWin, DUnitConsts;
+  Classes, IniFiles, ToolWin, DUnitConsts, System.Actions, System.ImageList;
 
 
 
@@ -453,7 +453,7 @@ uses
     FastMM4,
   {$ENDIF}
 {$ENDIF}
-  Registry,
+  System.Win.Registry,
   SysUtils,
   Clipbrd;
 

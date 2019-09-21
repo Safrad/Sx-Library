@@ -27,7 +27,7 @@ unit TIFF;
 interface
 
 uses
-  Windows;
+  Winapi.Windows;
 
 const
   TIFF_VERSION      = 42;

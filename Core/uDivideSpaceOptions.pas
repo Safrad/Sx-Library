@@ -3,7 +3,7 @@ unit uDivideSpaceOptions;
 interface
 
 uses
-  uTypes, Windows;
+  uTypes;
 
 type
   TOneSideDivideSpaceOptions = record

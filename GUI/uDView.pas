@@ -4,7 +4,13 @@ interface
 
 uses
 	uTypes, uMath, uFiles, uDImage, uDIniFile, uTextFilter,
-	Classes, Controls, Windows, Graphics, SysUtils, Messages;
+
+  Types,
+  SysUtils,
+	Classes,
+  Winapi.Messages,
+  Controls,
+  Graphics;
 
 const
 	MinColumnWidth = 3;
@@ -187,7 +193,9 @@ type
 implementation
 
 uses
-	Math, StdCtrls, ClipBrd, Types, Forms, UITypes,
+	Math, StdCtrls, ClipBrd, Forms, UITypes,
+  Winapi.Windows,
+
 	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
 	uDWinControl, uDForm,
 	fFind, Variants;

@@ -32,7 +32,7 @@ unit SimpleTimer;
 interface
 
 uses
-  Windows, Classes;
+  Winapi.Windows, Classes;
 
 type
   TSimpleTimer = class(TObject)
@@ -68,7 +68,7 @@ function GetSimpleTimerActiveCount: Cardinal;
 implementation
 
 uses
-  Messages{$IFNDEF DELPHI_6_UP}, Forms {$ENDIF};
+  Winapi.Messages{$IFNDEF DELPHI_6_UP}, Forms {$ENDIF};
 
 type
   TSimpleTimerHandler = class(TObject)

@@ -15,12 +15,12 @@ type
 implementation
 
 uses
-  Windows,
+  SysUtils,
   uCPU;
 
 var
   FirstCall: BG = True;
-  
+
 procedure TCPUTest.Test;
 begin
   GCPU.Update;

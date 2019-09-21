@@ -23,17 +23,22 @@ type
 implementation
 
 uses
-  Windows,
+  SysUtils,
   Forms,
+
   uStopwatch,
   uDIdleTimer,
-  uDTimer;
+  uDTimer,
+  uLog;
 
 { TDTimerTest }
 
 procedure TDTimerTest.OnTimer(Sender: TObject);
 begin
   Inc(FEventCount);
+
+  if LogDebug then
+    MainLog.Add('OnTimer', mlDebug);
 end;
 
 procedure TDTimerTest.TestInterval;
@@ -51,7 +56,7 @@ begin
     DTimer.Enabled := True;
 
     Stopwatch.Start;
-    while Stopwatch.Elapsed.Seconds < 1 do
+    while Stopwatch.Elapsed.SecondsAsF < 1 do
     begin
       Application.ProcessMessages;
       Sleep(10);
@@ -60,7 +65,7 @@ begin
     Stopwatch.Stop;
     DTimer.Enabled := False;
 
-    CheckEquals(21, FEventCount);
+    CheckEquals(20, FEventCount);
   finally
     Stopwatch.Free;
     DTimer.Free;
@@ -87,7 +92,7 @@ begin
     DTimer.Enabled := True;
 
     Stopwatch.Start;
-    while Stopwatch.Elapsed.Seconds < 1 do
+    while Stopwatch.Elapsed.SecondsAsF < 1 do
     begin
       Application.ProcessMessages;
       Sleep(10);
@@ -96,7 +101,7 @@ begin
     Stopwatch.Stop;
     DTimer.Enabled := False;
 
-    CheckEquals(21, FEventCount);
+    CheckEquals(19, FEventCount);
   finally
     Stopwatch.Free;
     DTimer.Free;
@@ -118,7 +123,7 @@ begin
     DTimer.Enabled := True;
 
     Stopwatch.Start;
-    while Stopwatch.Elapsed.Seconds < 1 do
+    while Stopwatch.Elapsed.SecondsAsF < 1 do
     begin
       Application.ProcessMessages;
       Sleep(10);
@@ -127,7 +132,7 @@ begin
     Stopwatch.Stop;
     DTimer.Enabled := False;
 
-    CheckEquals(21, FEventCount);
+    CheckEquals(20, FEventCount);
   finally
     Stopwatch.Free;
     DTimer.Free;
@@ -155,7 +160,7 @@ begin
     DTimer2.Enabled := True;
 
     Stopwatch.Start;
-    while Stopwatch.Elapsed.Seconds < 1 do
+    while Stopwatch.Elapsed.SecondsAsF < 1 do
     begin
       Application.ProcessMessages;
       Sleep(10);
@@ -165,8 +170,8 @@ begin
     DTimer1.Enabled := False;
     DTimer2.Enabled := False;
 
-    CheckEquals(21, FEventCount);
-    CheckEquals(21, FEventCount2);
+    CheckEquals(20, FEventCount);
+    CheckEquals(20, FEventCount2);
   finally
     Stopwatch.Free;
     DTimer2.Free;

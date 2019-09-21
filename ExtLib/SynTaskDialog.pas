@@ -79,7 +79,7 @@ interface
 {$ENDIF}
 
 uses
-  Windows, CommCtrl, Classes, SysUtils, Consts, Messages,
+  Winapi.Windows, Winapi.CommCtrl, Classes, SysUtils, Consts, Winapi.Messages,
   Menus,
   {$ifdef USETMSPACK}
   AdvGlowButton, AdvMenus, TaskDialog, TaskDialogEx,

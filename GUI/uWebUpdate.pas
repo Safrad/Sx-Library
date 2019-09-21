@@ -5,7 +5,7 @@ interface
 uses
   uTypes,
 
-  Windows, Classes;
+  Classes;
 
 procedure DownloadFile(const AURL: string; const TargetFileName: string);
 function DownloadData(const AURL: string): string; overload;

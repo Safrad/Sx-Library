@@ -5,7 +5,7 @@ interface
 uses
 	uTypes, uDForm, uThreadPool,
 	Menus,
-	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+	SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, StdCtrls, ExtCtrls, uDButton, uDWinControl, uDImage, uDGauge;
 
 type
@@ -48,7 +48,7 @@ implementation
 {$R *.dfm}
 
 uses
-	uOutputFormat, uMath, uStrings, uDictionary;
+	uOutputFormat, uMath, uStrings, uDictionary, uMainTimer;
 
 var
 	fStatus: TfStatus;
@@ -80,7 +80,7 @@ begin
 	begin
 		if Actual = 0 then
 		begin
-			fStatus.StartTime := GetTickCount;
+			fStatus.StartTime := MainTimer.Value.Ticks;
 			fStatus.ElapsedTime := 0;
 			fStatus.RemainTime := 0;
 			fStatus.ButtonResume.Enabled := False;
@@ -88,7 +88,7 @@ begin
 		end
 		else
 		begin
-			fStatus.ElapsedTime := TimeDifference(GetTickCount, fStatus.StartTime);
+			fStatus.ElapsedTime := MainTimer.IntervalFrom(fStatus.StartTime);
 			if (fStatus.DGauge.Max > 0) then
 				fStatus.RemainTime := RoundDivS8((fStatus.DGauge.Max - Actual) * S8(fStatus.ElapsedTime), Actual);
 		end;
@@ -120,7 +120,7 @@ begin
 	begin
 		FThreadPool.Pause;
 	end;
-	PauseTime := GetTickCount;
+	PauseTime := MainTimer.Value.Ticks;
 	ButtonPause.Enabled := False;
 	ButtonResume.Enabled := True;
 end;
@@ -160,7 +160,7 @@ begin
 	begin
 		FThreadPool.Resume;
 	end;
-	Inc(StartTime, TimeDifference(GetTickCount, PauseTime));
+	Inc(StartTime, MainTimer.IntervalFrom(PauseTime));
 	ButtonPause.Enabled := True;
 	ButtonResume.Enabled := False;
 end;

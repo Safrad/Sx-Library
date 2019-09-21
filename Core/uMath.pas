@@ -1471,16 +1471,16 @@ asm
 	PUSH rDI
 	PUSH rSI
 
-	MOV ESI,EAX
-	MOV EDI,EDX
-	ADD EDX,ECX
+	MOV rSI,P0
+	MOV rDI,P1
+	ADD rDX,Count
 	@Loop:
-		mov al, [esi]
-		xchg al, [edi]
-		mov [esi], al
-		add edi, 1
-		add esi, 1
-		cmp edi, edx
+		mov al, [rsi]
+		xchg al, [rdi]
+		mov [rsi], al
+		add rdi, 1
+		add rsi, 1
+		cmp rdi, rdx
 	jb @Loop
 
 	POP rSI

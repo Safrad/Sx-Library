@@ -11,7 +11,6 @@ procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSi
 implementation
 
 uses
-  Windows,
   Math,
   uFileCharset,
   uFile,

@@ -19,7 +19,7 @@ unit NLDJoystick;
 interface
 
 uses
-  MMSystem, Windows, Messages, SysUtils, Classes, Math;
+  Winapi.MMSystem, Winapi.Windows, Winapi.Messages, SysUtils, Classes, Math;
 
 const
   JOY_POVCENTERED = $FFFFFFFF;

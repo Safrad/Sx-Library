@@ -56,11 +56,11 @@ interface
 
 uses
 {$IFnDEF FPC}
-  Windows,
+  Winapi.Windows,
 {$ELSE}
   LCLIntf, LCLType, LMessages,
 {$ENDIF}
-  Classes, ExtCtrls, Graphics, SysUtils, Contnrs,
+  Classes, Vcl.ExtCtrls, Vcl.Graphics, SysUtils, Contnrs,
   {$ifdef TIFFGraphic}
   TIFF,
   {$endif TIFFGraphic}
@@ -829,13 +829,13 @@ implementation
 
 uses
 {$IFnDEF FPC}
-  Consts,
+  Vcl.Consts,
 {$ELSE}
   IntfGraphics,
 {$ENDIF}
   Math, MZLib,
 {$IFDEF UseAnsiStringsUnit}AnsiStrings, System.Types,{$ENDIF}
-   JPEG, JpegCompression;
+   Vcl.Imaging.JPEG, JpegCompression;
 //we need System.Types because it allows to inline some functions and that'll
 //speed-up execution a little. And no warnings.
 

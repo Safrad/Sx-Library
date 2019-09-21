@@ -26,7 +26,8 @@ type
 
 implementation
 
-uses uTypes, Windows;
+uses
+  uTypes, uMainTimer;
 
 { TAsyncTask }
 
@@ -56,13 +57,13 @@ end;
 
 
 var
-  LastCall: U4;
+  LastCall: U8;
 
 function CanCall: Boolean;
 begin
-  Result := (GetTickCount - LastCall) >= LoopSleepTime;
+  Result := MainTimer.IntervalFrom(LastCall) >= LoopSleepTime;
   if Result = True then
-    LastCall := GetTickCount;
+    LastCall := MainTimer.Value.Ticks;
 end;
 
 procedure TAsyncTask.Synchronize(const AThreadMethod: TThreadMethod);

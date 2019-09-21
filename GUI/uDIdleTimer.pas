@@ -41,8 +41,7 @@ implementation
 
 uses
   SysUtils,
-  Windows,
-  Forms,
+  Vcl.Forms,
   Math,
   uMath,
   uMainTimer;

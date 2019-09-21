@@ -3,8 +3,9 @@ unit uAbout;
 interface
 
 uses
+  Types,
 	uDForm, uTypes, uDBitmap,
-	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
+	SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
   uSxRandomGenerator,
 	uDWinControl;
@@ -67,7 +68,9 @@ implementation
 
 {$R *.DFM}
 uses
-	Messages,
+  Winapi.Windows,
+  Winapi.Messages,
+
   uCommonApplication,
 	uAPI, uHTML, uDictionary,
 	uProjectInfo,
@@ -236,7 +239,7 @@ procedure TfAbout.ImageAboutMouseDown(Sender: TObject;
 	Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 const kSC_DragMove = $F012 ;
 begin
-	ReleaseCapture();
+	ReleaseCapture;
 	ImageAbout.Perform(WM_SYSCOMMAND, kSC_DragMove, 0);
 	if Button = mbLeft then
 	begin

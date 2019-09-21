@@ -48,7 +48,6 @@ uses
   uSplitFileTest in '..\Core\uSplitFileTest.pas',
   uRegionalCodePageTest in '..\Regional\uRegionalCodePageTest.pas',
   uWaveTest in '..\Sound\SoundItems\uWaveTest.pas',
-  uCustomCharTable in '..\Core\uCustomCharTable.pas',
   uTimeExpressionParserTest in '..\Parser\uTimeExpressionParserTest.pas',
   uSxObjectListTest in '..\Core\uSxObjectListTest.pas',
   uSxStringListText in '..\Core\uSxStringListText.pas';

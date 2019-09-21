@@ -4,7 +4,8 @@ interface
 
 uses
 	uTypes,
-	Windows, Graphics;
+	UITypes,
+  Winapi.Windows;
 
 procedure SetSystemColors(const Names: array of SG; const Colors: array of TColor);
 procedure RestoreSystemColors;

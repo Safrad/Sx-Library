@@ -15,7 +15,7 @@ type
 implementation
 
 uses
-  Windows,
+  SysUtils,
   uWavePlayer,
   uStereoChannels;
 

@@ -17,14 +17,14 @@ uses
   SysUtils,
   uFiles,
   uBackup,
-  uOperatingSystem;
+  uTemporaryDirectory;
 
 procedure TBackupTest.Test;
 var
   FileName: TFileName;
   i: SG;
 begin
-  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'data.txt';
+  FileName := TemporaryDirectory.ProcessTempDir + 'data.txt';
   for i := 0 to 199 do
   begin
 	  WriteStringToFile(FileName, 'text' + IntToStr(i), False);

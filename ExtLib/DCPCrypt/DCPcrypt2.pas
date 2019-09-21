@@ -274,7 +274,6 @@ procedure XorBlock(var InData1, InData2; Size: longword);
 
 implementation
 
-uses Windows;
 {$Q-}{$R-}
 
 

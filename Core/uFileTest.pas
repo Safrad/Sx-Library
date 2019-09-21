@@ -14,7 +14,7 @@ type
 implementation
 
 uses
-  Windows, SysUtils,
+  Winapi.Windows, SysUtils,
 	uTypes, uFileCharset, uFile, uFiles, uStrings, uChar, uOperatingSystem,
   uTemporaryDirectory;
 
@@ -33,7 +33,7 @@ begin
 	// Tests
 	for fc := Low(fc) to High(fc) do
 	begin
-		FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
+		FileName := TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
 		F := TFile.Create;
 		if not (fc in [fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE]) then
 			F.DeleteAfterClose := True;
@@ -84,7 +84,7 @@ var
 	FileName: TFileName;
   i: SG;
 begin
-  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'FileTest.txt';
+  FileName := TemporaryDirectory.ProcessTempDir + 'FileTest.txt';
   for i := 0 to 1 do
   begin
     F := TFile.Create;

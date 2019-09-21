@@ -3,7 +3,8 @@ unit uDivideSpace;
 interface
 
 uses
-  uTypes, uGraph, uMath, uDivideSpaceOptions, Windows;
+  Types,
+  uTypes, uGraph, uMath, uDivideSpaceOptions;
 
 type
   TDivideSpace = class
@@ -17,7 +18,7 @@ type
 implementation
 
 uses
-  Types, Math, SysUtils;
+  Math, SysUtils;
 
 function Separators(const F, T: SG; const AMaxParts: SG): TRangeArray;
 var

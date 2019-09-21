@@ -20,7 +20,7 @@ implementation
 
 uses
 	uFiles,
-	Windows, ShlObj, ActiveX, ComObj;
+	Winapi.Windows, Winapi.ShlObj, Winapi.ActiveX, System.Win.ComObj;
 
 procedure CreateLink(
 	const LinkFileName: UnicodeString;

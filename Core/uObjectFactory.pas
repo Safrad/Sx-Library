@@ -4,13 +4,14 @@ interface
 
 uses
   uTypes,
-  uData;
+  uData,
+  uTimeSpan;
 
 type
   TFactoryObject = class
   private
     Name: string;
-    LastUsed: U4;
+    LastUsed: U8;
     ReferenceCount: SG;
   public
     CustomObject: TObject;
@@ -28,7 +29,7 @@ type
 //    procedure CreateObject(const Name: string); virtual; abstract;
     function FindOrCreate(const Name: string): TFactoryObject;
     procedure DeleteUnusedObjects;
-    procedure DeleteOld(const Period: UG); // in [ms]
+    procedure DeleteOld(const Period: TTimeSpan);
   public
     constructor Create;
     destructor Destroy; override;
@@ -37,8 +38,9 @@ type
 implementation
 
 uses
-  Windows,
   SysUtils,
+
+  uMainTimer,
   uMath;
 
 { TFactoryObject }
@@ -63,7 +65,7 @@ begin
   Objects := TData.Create;
 end;
 
-procedure TObjectFactory.DeleteOld(const Period: UG);
+procedure TObjectFactory.DeleteOld(const Period: TTimeSpan);
 var
   FO: TFactoryObject;
   i: SG;
@@ -72,7 +74,7 @@ begin
   while i < Objects.Count do
   begin
     FO := TFactoryObject(Objects.GetObject(i));
-    if (FO.ReferenceCount <= 0) and (IntervalFrom(FO.LastUsed) >= Period) then
+    if (FO.ReferenceCount <= 0) and (MainTimer.IntervalFrom(FO.LastUsed) >= Period.Ticks) then
       Objects.Delete(i)
     else
       Inc(i);
@@ -114,7 +116,7 @@ begin
     Objects.Add(Result);
   end;
   Inc(Result.ReferenceCount);
-  Result.LastUsed := GetTickCount;
+  Result.LastUsed := MainTimer.Value.Ticks;
 end;
 
 function TObjectFactory.FoundObject(const Name: string): TFactoryObject;

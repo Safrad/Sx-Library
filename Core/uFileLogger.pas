@@ -3,8 +3,9 @@ unit uFileLogger;
 interface
 
 uses
-  WinApi.Windows,
   SysUtils,
+  SyncObjs,
+
   uTypes,
   uFile,
   uDateTimeLogger;
@@ -12,7 +13,7 @@ uses
 type
   TFileLogger = class(TDateTimeLogger)
 	private
-  	FCriticalSection: TRTLCriticalSection;
+  	FCriticalSection: TCriticalSection;
 		FData: string;
 		FFileName: TFileName;
 		FFile: TFile;
@@ -71,7 +72,7 @@ var
 begin
 	inherited Create;
 
-	InitializeCriticalSection(FCriticalSection);
+	FCriticalSection := TCriticalSection.Create;
 
 	FFileName := GetLogWritableFileName;
 	FDirectWrite := True;
@@ -114,7 +115,7 @@ begin
     end;
     FFileName := '';
 
-    DeleteCriticalSection(FCriticalSection);
+    FCriticalSection.Free;
   finally
   	inherited;
   end;
@@ -127,7 +128,7 @@ end;
 
 procedure TFileLogger.Flush;
 begin
-  EnterCriticalSection(FCriticalSection);
+  FCriticalSection.Enter;
   try
     if FDirectWrite then
     begin
@@ -140,7 +141,7 @@ begin
       FFile.FlushFileBuffers;
     end;
   finally
-    LeaveCriticalSection(FCriticalSection);
+    FCriticalSection.Leave;
   end;
 end;
 
@@ -162,11 +163,11 @@ begin
 
     //	FFile.Write(Line);
       LineA := ConvertUnicodeToUTF8(Line);
-      EnterCriticalSection(FCriticalSection);
+      FCriticalSection.Enter;
       try
         FFile.BlockWrite(LineA[1], Length(LineA));
       finally
-        LeaveCriticalSection(FCriticalSection);
+        FCriticalSection.Leave;
       end;
     end
     else
@@ -176,11 +177,11 @@ begin
         LoggingLevel := mlNone;
         Exit;
       end;
-      EnterCriticalSection(FCriticalSection);
+      FCriticalSection.Enter;
       try
         FData := FData + Line;
       finally
-        LeaveCriticalSection(FCriticalSection);
+        FCriticalSection.Leave;
       end;
     end;
   end;

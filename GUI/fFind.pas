@@ -5,7 +5,7 @@ interface
 uses
 	uTypes,
 	uDForm, uTextFilter,
-	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+	SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, StdCtrls, uDButton, ExtCtrls;
 
 type
@@ -49,7 +49,10 @@ var
 implementation
 
 {$R *.dfm}
-uses uDIniFile;
+
+uses
+  Winapi.Windows,
+  uDIniFile;
 
 procedure TfFindDialog.FormResize(Sender: TObject);
 begin

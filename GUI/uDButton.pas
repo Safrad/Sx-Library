@@ -4,8 +4,8 @@ interface
 
 uses
 	uTypes, uMath, uFiles, uDBitmap,
-	Windows, Messages, Classes, Controls, Forms, Graphics, StdCtrls,
-	ExtCtrls, CommCtrl, uWave, uDTimer;
+	Winapi.Windows, Winapi.Messages, Classes, Vcl.Controls, Vcl.Graphics, Vcl.StdCtrls,
+	uWave, uDTimer;
 
 type
 	THighlight = (hlNone, hlRect, hlBar, hlRectMov, hlBarHorz, hlBarVert, hlUnderlight);
@@ -108,7 +108,8 @@ implementation
 
 uses
 	uDForm,
-	Consts, SysUtils, ActnList, ImgList, MMSystem, Math, Types,
+  Vcl.Forms,
+	Consts, SysUtils, ActnList, ImgList, Math, Types,
 	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uGlobalOptions,
 	uPictureFactory, uSounds, uOperatingSystem, uDWinControl;
 

@@ -5,12 +5,11 @@ interface
 uses
 	uTypes, uData, uFiles,
 	SysUtils, TypInfo,
-	Types
+	Types,
+	uRWFile
 {$IFNDEF Console}
-	, uDFile, uDButton, uDForm,
+	, uDButton, uDForm,
 	Classes, Forms, ComCtrls, StdCtrls, Controls, Menus, CheckLst
-{$ELSE}
-	, uRWFile
 {$ENDIF};
 
 type
@@ -28,7 +27,7 @@ type
 
 	TRWOptions = procedure(const Save: BG) of object;
 
-	TDIniFile = class({$IFDEF Console} TRWFile {$ELSE} TDFile {$ENDIF})
+	TDIniFile = class(TRWFile)
 	private
 		// FFileName: TFileName;
 		FInMemory: BG;

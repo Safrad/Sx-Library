@@ -16,12 +16,12 @@ implementation
 
 uses
   SysUtils,
-  Windows,
+  Winapi.Windows,
   uTypes,
   uFileCharset,
   uFiles,
   uChar,
-  uOperatingSystem;
+  uTemporaryDirectory;
 
 { TFilesTest }
 
@@ -31,7 +31,7 @@ var
   FileName: TFileName;
   Expected, Actual: TFileTime;
 begin
-  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test.txt';
+  FileName := TemporaryDirectory.ProcessTempDir + 'Test.txt';
 
   WriteStringToFile(FileName, 'data', False);
 
@@ -56,7 +56,7 @@ begin
 	begin
 		if fc in [fcAnsi, fcUTF8{$if CompilerVersion >= 21} , fcUTF16BE, fcUTF16LE{$ifend}] then
 		begin
-      FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
+      FileName := TemporaryDirectory.ProcessTempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
       WriteStringToFile(FileName, Text, False, fc);
       Count := 0;
       ReadStringsFromFile(FileName, Lines, Count);
@@ -74,7 +74,7 @@ var
 	ExpectedCreationTime, ExpectedLastAccessTime, ExpectedLastWriteTime: TFileTime;
   ActualCreationTime, ActualLastAccessTime, ActualLastWriteTime: TFileTime;
 begin
-  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test.txt';
+  FileName := TemporaryDirectory.ProcessTempDir + 'Test.txt';
 
   WriteStringToFile(FileName, 'data', False);
 

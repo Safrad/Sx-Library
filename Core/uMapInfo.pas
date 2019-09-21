@@ -34,7 +34,7 @@ procedure WriteMid(const MiName: string);
 implementation
 
 uses
-	SysUtils, Windows,
+	SysUtils,
 	uFile, uFiles, uStrings, uMath;
 
 const

@@ -16,7 +16,9 @@ type
 implementation
 
 uses
-  uTypes, Windows, uAsyncTaskForTest, uThreadPool, uMath;
+  SysUtils,
+
+  uTypes, uAsyncTaskForTest, uThreadPool, uMath;
 
 { TThreadPoolTest }
 

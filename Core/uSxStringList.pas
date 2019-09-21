@@ -19,6 +19,8 @@ type
     procedure SetDuplicates(const Value: TDuplicates);
     procedure SetSorted(const Value: BG);
   public
+    constructor Create;
+
     function Get(const AIndex: SG): string;
     procedure Add(const AString: string);
 
@@ -36,6 +38,13 @@ implementation
 procedure TSxStringList.Add(const AString: string);
 begin
   inherited Add(PChar(AString));
+end;
+
+constructor TSxStringList.Create;
+begin
+  inherited;
+
+  OwnObjects := False; // string is reference counted
 end;
 
 function TSxStringList.Get(const AIndex: SG): string;

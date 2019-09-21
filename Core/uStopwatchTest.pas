@@ -15,7 +15,6 @@ implementation
 
 uses
   SysUtils,
-  Windows,
   uMath,
   uStopwatch;
 

@@ -26,14 +26,17 @@ var
 implementation
 
 uses
-	SysUtils, Windows,
-	uData;
+	SysUtils,
+  SyncObjs,
+
+	uData,
+  uMainTimer;
 
 type
 	PCall = ^TCall;
 	TCall = record
-		MissedCount: UG;
-		NextDrawTime: U4;
+		MissedCount: U4;
+		NextDrawTime: U8;
 		Address: TProcedure;
 	end;
 var
@@ -55,7 +58,7 @@ begin
 end;
 
 var
-	FCriticalSection: TRTLCriticalSection;
+	FCriticalSection: TCriticalSection;
 	Crit: SG;
 
 procedure CallProc(Call: PCall);
@@ -63,18 +66,18 @@ begin
 	if Assigned(Call.Address) then
 	begin
 		if Crit = 0 then
-			EnterCriticalSection(FCriticalSection);
+			FCriticalSection.Enter;
 		Inc(Crit);
 		try
 			Call.Address();
 		finally
 			Dec(Crit);
 			if Crit = 0 then
-				LeaveCriticalSection(FCriticalSection);
+				FCriticalSection.Leave;
 		end;
 	end;
 	Call.MissedCount := 0;
-	Call.NextDrawTime := GetTickCount;
+	Call.NextDrawTime := MainTimer.Value.Ticks;
 end;
 
 procedure DelayedCall(const Index: SG);
@@ -121,7 +124,7 @@ var
 	HTime: U4;
 begin
 	if DelayedCallEnabled then
-		HTime := GetTickCount
+		HTime := MainTimer.Value.Ticks
 	else
 		HTime := High(HTime);
 
@@ -153,13 +156,13 @@ end;
 
 initialization
 {$IFNDEF NoInitialization}
-	InitializeCriticalSection(FCriticalSection);
+	FCriticalSection := TCriticalSection.Create;
 	Calls := TData.Create;
 	Calls.ItemSize := SizeOf(TCall);
 {$ENDIF NoInitialization}
 finalization
 {$IFNDEF NoFinalization}
 	FreeAndNil(Calls);
-	DeleteCriticalSection(FCriticalSection);
+	FreeAndNil(FCriticalSection);
 {$ENDIF NoFinalization}
 end.

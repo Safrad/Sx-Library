@@ -197,7 +197,7 @@ interface
 uses
   Types,
   {$IFDEF Win32}
-    Windows
+    Winapi.Windows
   {$ENDIF}
 
   {$IFDEF LINUX}

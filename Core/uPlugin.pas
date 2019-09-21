@@ -43,7 +43,8 @@ implementation
 
 uses
   SysUtils,
-  Windows,
+  Winapi.Windows,
+
   uStrings,
   uMsg,
   uLog,

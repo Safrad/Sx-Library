@@ -3,7 +3,7 @@ unit TaskBarAPI;
 interface
 
 uses
-  Forms, Types, Windows, SysUtils, ComObj, Controls, Graphics;
+  Forms, Types, SysUtils, Controls, Graphics;
 
 type
   TTaskBarProgressState = (tbpsNone, tbpsIndeterminate, tbpsNormal, tbpsError, tbpsPaused);
@@ -24,6 +24,9 @@ function SetTaskbarOverlayIcon(const AList: TImageList; const IconIndex: Integer
   overload;
 
 implementation
+
+uses
+  System.Win.ComObj;
 
 const
   TASKBAR_CID: TGUID = '{56FDF344-FD6D-11d0-958A-006097C9A090}';

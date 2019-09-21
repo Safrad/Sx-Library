@@ -4,8 +4,8 @@ interface
 
 uses
 	uTypes, uDBitmap,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, StdCtrls;
+	Winapi.Windows, Winapi.Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+	Vcl.ExtCtrls, Vcl.StdCtrls;
 
 type
 	TBackground = (baNone, baUser, baStandard, baGradient, baOpenGL, baOpenGLBitmap);

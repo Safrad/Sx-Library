@@ -48,21 +48,13 @@ unit IGDIPlus;
 {$ENDIF}
 {$ENDIF}
 
-{$IFDEF VER230} // Delphi 16.0
-{$DEFINE DELPHI16_UP}
-{$ENDIF}
-
-{$IFDEF VER240} // Delphi 17.0
-{$DEFINE DELPHI16_UP}
-{$ENDIF}
-
-{$IFDEF VER250} // Delphi 18.0
+{$IF CompilerVersion >= 23} // Delphi 16.0
 {$DEFINE DELPHI16_UP}
 {$ENDIF}
 
 interface
 uses
-  Windows,
+  Winapi.Windows,
 {$IFDEF DELPHI16_UP} // Delphi 16.0
   System.UITypes,
 {$ENDIF}
@@ -70,12 +62,13 @@ uses
 {$IFNDEF PURE_FMX}
 {$IFDEF DELPHI16_UP} // Delphi 16.0
   VCL.Graphics,
+  Winapi.ActiveX,
 {$ELSE} // Delphi 16.0
   Graphics,
+  ActiveX,
 {$ENDIF} // Delphi 16.0
 {$ENDIF}
-  SysUtils,
-  ActiveX;
+  SysUtils;
 
 type
 {$IFNDEF DELPHI16_UP} // Delphi 16.0

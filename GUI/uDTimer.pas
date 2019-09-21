@@ -6,7 +6,7 @@ interface
 uses
 	uTypes,
   uTimeSpan,
-  SysUtils, Classes, Messages;
+  SysUtils, Classes, Winapi.Messages;
 
 type
 	TDTimerEvent = procedure(Sender: TObject) of object;
@@ -75,11 +75,12 @@ type
 implementation
 
 uses
+  Vcl.Controls,
+  Vcl.Forms,
+  Math,
+
   uDIdleTimer,
   uMainTimer,
-  Controls,
-  Forms,
-  Math,
   uMath,
   uMsg;
 

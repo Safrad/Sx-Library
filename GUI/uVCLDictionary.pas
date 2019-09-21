@@ -18,7 +18,6 @@ implementation
 
 uses
   uTypes,
-	Windows,
 
   Controls,
   StdCtrls,

@@ -3,7 +3,9 @@ unit uSxLabel;
 interface
 
 uses
-	SysUtils, Classes, Controls, StdCtrls, Messages;
+	SysUtils, Classes,
+  Winapi.Messages,
+  Controls, StdCtrls;
 
 type
 	TSxLabel = class(TLabel)

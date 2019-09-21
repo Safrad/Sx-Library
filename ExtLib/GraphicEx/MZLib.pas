@@ -32,7 +32,7 @@ unit MZLib;
 interface
 
 uses
-  Windows;
+  Winapi.Windows;
   
 // The 'zlib' compression library provides in-memory compression and decompression functions, including integrity checks
 // of the uncompressed data. This version of the library supports only one compression method (deflation) but other

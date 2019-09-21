@@ -19,7 +19,7 @@ uses
   uChar,
   uUnicodeChar,
   SysUtils,
-  Windows;
+  Winapi.Windows;
 
 const
   scCommand = $1000;

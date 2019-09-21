@@ -18,7 +18,7 @@ object fFindDialog: TfFindDialog
   object LabelText: TLabel
     Left = 16
     Top = 12
-    Width = 56
+    Width = 60
     Height = 13
     Hint = 'Pattern'
     Caption = '&Text to find:'
@@ -38,7 +38,6 @@ object fFindDialog: TfFindDialog
     Top = 8
     Width = 145
     Height = 21
-    ItemHeight = 13
     TabOrder = 0
     OnChange = cbPatternChange
   end

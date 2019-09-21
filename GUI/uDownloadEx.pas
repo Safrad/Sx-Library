@@ -13,7 +13,6 @@ uses
   uStrings,
   ufTextStatus,
   ufStatus,
-  Windows,
   SysUtils,
   ExtActns,
   Forms;

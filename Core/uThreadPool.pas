@@ -7,7 +7,8 @@ interface
 
 uses
   uTypes, uData, uAsyncTask, uNumericalIntervalArgument,
-  Windows, Classes;
+  SyncObjs,
+  Classes;
 
 // TODO: Wait for task, task priority
 
@@ -21,7 +22,7 @@ type
     FWorking: S4;
     FThreads: TThreads;
     FQueue: TData; // array of TAsyncTask;
-    FQueueCriticalSection: TRTLCriticalSection;
+    FQueueCriticalSection: TCriticalSection;
     FThreadPriority: TThreadPriority;
     FOnTasksFinished: TNotifyEvent;
     procedure SetRunThreads(Value: UG);
@@ -70,11 +71,11 @@ uses
 
 procedure TThreadPool.AddTask(const AAsyncTask: TAsyncTask);
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     FQueue.Add(AAsyncTask);
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
   QueueToThread;
 end;
@@ -83,23 +84,23 @@ procedure TThreadPool.AddTasks(const AAsyncTasks: TAsyncTasks);
 var
   i: SG;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     for i := 0 to Length(AAsyncTasks) - 1 do
       FQueue.Add(AAsyncTasks[i]);
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
   QueueToThread;
 end;
 
 procedure TThreadPool.ClearTasks;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     FQueue.Clear;
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
 end;
 
@@ -110,7 +111,7 @@ begin
   FThreadPriority := tpLowest; // tpLower freezes other processes;
 
   FQueue := TData.Create;
-  InitializeCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection := TCriticalSection.Create;
 
   FRunThreads := 0;
   FMaxThreads := TNumericalIntervalArgument.Create;
@@ -129,19 +130,22 @@ end;
 
 destructor TThreadPool.Destroy;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
   try
-    KillThreads;
+    FQueueCriticalSection.Enter;
+    try
+      KillThreads;
 
-    FreeAndNil(FQueue);
+      FreeAndNil(FQueue);
+    finally
+      FQueueCriticalSection.Leave;
+    end;
+    FreeAndNil(FQueueCriticalSection);
+
+    FMaxThreads.Free;
+
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    inherited;
   end;
-  DeleteCriticalSection(FQueueCriticalSection);
-
-  FMaxThreads.Free;
-
-  inherited;
 end;
 
 procedure TThreadPool.Pause;
@@ -168,7 +172,7 @@ var
   i, X: SG;
   RandomGenerator: TSxRandomGenerator;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     RandomGenerator := TSxRandomGenerator.Create;
     try
@@ -187,7 +191,7 @@ begin
       RandomGenerator.Free;
     end;
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
 end;
 
@@ -232,7 +236,7 @@ var
   i: SG;
   n: SG;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     // Sort
     SetLength(AIndex, Length(A));
@@ -260,7 +264,7 @@ begin
     FQueue.Free;
     FQueue := FQueue2;
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
 end;
 
@@ -297,12 +301,12 @@ end;
 
 procedure TThreadPool.WorkerFinishWork;
 begin
-  InterlockedDecrement(FWorking);
+  AtomicDecrement(FWorking);
 end;
 
 procedure TThreadPool.WorkerStartWork;
 begin
-  InterlockedIncrement(FWorking);
+  AtomicIncrement(FWorking);
 end;
 
 procedure TThreadPool.WorkerCreate(const Index: SG);
@@ -310,7 +314,7 @@ var
   WorkerThread: TWorkerThread;
 begin
   WorkerThread := TWorkerThread.Create(Index, Self);
-  InterlockedIncrement(FRunThreads);
+  AtomicIncrement(FRunThreads);
   FThreads[Index] := WorkerThread;
   WorkerThread.Resume;
 end;
@@ -318,12 +322,12 @@ end;
 procedure TThreadPool.WorkerDestroy(const Index: SG);
 begin
   FThreads[Index] := nil; // Write shared object
-  InterlockedDecrement(FRunThreads);
+  AtomicDecrement(FRunThreads);
 end;
 
 function TThreadPool.PopAsyncTask: TAsyncTask;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     if FQueue = nil then
       Result := nil
@@ -331,7 +335,7 @@ begin
       Result := FQueue.GetAndDeleteFirst as TAsyncTask;
 //      Result := FQueue.GetAndDeleteLast as TAsyncTask;
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
 end;
 
@@ -339,7 +343,7 @@ function TThreadPool.PopAsyncTasks(const ACount: SG): TAsyncTasks;
 var
   i: SG;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     if FQueue = nil then
       Result := nil
@@ -353,17 +357,17 @@ begin
       end;
     end;
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
 end;
 
 function TThreadPool.RemainTaskCount: UG;
 begin
-  EnterCriticalSection(FQueueCriticalSection);
+  FQueueCriticalSection.Enter;
   try
     Result := FQueue.Count;
   finally
-    LeaveCriticalSection(FQueueCriticalSection);
+    FQueueCriticalSection.Leave;
   end;
 end;
 

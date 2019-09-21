@@ -3,9 +3,12 @@ unit uDispl;
 interface
 
 uses
+  Types,
 	uTypes,
 	uDBitmap, uDrawStyle,
-	Windows, Graphics, Classes, StdCtrls;
+
+  Classes,
+	Vcl.Graphics, StdCtrls;
 
 const
 	clAVideo = $009fff1f;

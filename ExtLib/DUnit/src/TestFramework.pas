@@ -783,8 +783,8 @@ uses
   Posix.SysTime;
 {$ENDIF}
 {$IFDEF MSWINDOWS_OR_CLR}
-  Windows,
-  Registry;
+  Winapi.Windows,
+  System.Win.Registry;
 {$ENDIF}
 
 {$STACKFRAMES ON} // Required to retrieve caller's address

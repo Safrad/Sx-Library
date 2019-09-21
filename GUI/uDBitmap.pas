@@ -6,9 +6,10 @@ unit uDBitmap;
 interface
 
 uses
+  Types,
 	OpenGL12, {$ifdef GDIPlus}IGDIPlus,{$endif}
 	uTypes, uMath, uColor, uDrawStyle, uBlur,
-	Classes, Windows, Graphics, SysUtils;
+	Classes, Winapi.Windows, Vcl.Graphics, SysUtils;
 
 const
 	{$ifdef GDIPlus}
@@ -398,9 +399,9 @@ var
 implementation
 
 uses
-	Jpeg, PngImage,
+	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
-  Math, ClipBrd,
+  Math, Vcl.ClipBrd,
 	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
@@ -1849,7 +1850,7 @@ begin
 
 				Result := TIcon.Create;
 			//	Result.Handle := CreateIconIndirect(IconInfo); // Do not support more that 4 bits!
-				Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, NowScreenMode.Bits,
+				Result.Handle := Winapi.Windows.CreateIcon(HInstance, Wid, Hei, 1, NowScreenMode.Bits,
 					BmpMask,
 					BmpColor.ScanLine[BmpColor.Height - 1]);
 			finally
@@ -3010,7 +3011,7 @@ end;
 
 function TDBitmap.ColorToRGB(C: TColor): TRGBA;
 begin
-	Result.L := Graphics.ColorToRGB(C);
+	Result.L := Vcl.Graphics.ColorToRGB(C);
 	if ChangeRB then
 		Exchange(Result.R, Result.B);
 	Result.A := 0;
@@ -3018,7 +3019,7 @@ end;
 
 function TDBitmap.ColorToRGBStack(C: TColor): TRGBA;
 begin
-	Result.L := Graphics.ColorToRGB(C);
+	Result.L := Vcl.Graphics.ColorToRGB(C);
 	if ChangeRB = False then
 		Exchange(Result.R, Result.B);
 	Result.A := 0;
@@ -9366,7 +9367,7 @@ var
 	Co: array[0..3] of TColor;
 	CR: TRGBA;
 begin
-	CR.L := Graphics.ColorToRGB(Color);
+	CR.L := Vcl.Graphics.ColorToRGB(Color);
 	Co[0] := LighterColor(CR.L);
 	Co[1] := DarkerColor(CR.L);
 	Co[2] := Co[0];
