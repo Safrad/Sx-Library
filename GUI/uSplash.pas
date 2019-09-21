@@ -183,26 +183,29 @@ function TfSplash.GetBitmapSize: TSize;
 var
 	R: TRect;
   ImageProperties: TImageProperties;
+  Width, Height: SG;
 begin
 	R := Screen.WorkAreaRect;
 	if (FFileName <> '') and ReadImageProperties(FFileName, ImageProperties) then
 	begin
-    Result.cx := ImageProperties.Width;
-    Result.cy := ImageProperties.Height;
-    Assert(Result.cx <> 0);
-    Assert(Result.cy <> 0);
-    while (Result.cx < LgToPx(200)) or (Result.cy < LgToPx(3 * 256 div 4)) do
+    Width := ImageProperties.Width;
+    Height := ImageProperties.Height;
+    Assert(Width <> 0);
+    Assert(Height <> 0);
+    while (Width < LgToPx(200)) or (Result.cy < LgToPx(3 * 256 div 4)) do
     begin
-      Multiply(Result.cx, 2);
-      Multiply(Result.cy, 2);
+      Multiply(Width, 2);
+      Multiply(Height, 2);
     end;
   end
   else
   begin
-		Result.cx := LgToPx(512);
-		Result.cy := LgToPx(384);
+		Width := LgToPx(512);
+		Height := LgToPx(384);
   end;
-  SetSmallerSize(Result.cx, Result.cy, 3 * (R.Right - R.Left) div 4, 3 * (R.Bottom - R.Top) div 4);
+  SetSmallerSize(Width, Height, 3 * (R.Right - R.Left) div 4, 3 * (R.Bottom - R.Top) div 4);
+  Result.cx := Width;
+  Result.cy := Height;
 end;
 
 procedure TfSplash.Initialize;
