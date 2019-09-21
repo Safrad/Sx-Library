@@ -91,9 +91,11 @@ end;
 
 destructor TExpressionTree.Destroy;
 begin
-  FreeNode(FRoot);
-
-  inherited;
+  try
+    FreeNode(FRoot);
+  finally
+    inherited;
+  end;
 end;
 
 procedure TExpressionTree.FreeNode(const ANode: PNode);

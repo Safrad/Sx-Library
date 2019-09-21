@@ -3,8 +3,8 @@ unit uCPU;
 interface
 
 uses
-  Windows,
-  Registry,
+  Winapi.Windows,
+  System.Win.Registry,
   uTypes,
   uMainTimer;
 
@@ -73,6 +73,8 @@ uses
   uLog,
   uMath,
   uOperatingSystem,
+  uFiles,
+
   SysUtils;
 
 var
