@@ -29,7 +29,7 @@ procedure SxDeleteDirs(const Path: string; const DeleteOptions: TDeleteOptions);
 implementation
 
 uses
-  Math, Windows,
+  Math, Winapi.Windows,
   uDIniFile, uFolder, uFiles, uLog, uMath, uStrings, uSorts, uMsg;
 
 const

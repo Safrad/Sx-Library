@@ -19,8 +19,8 @@ uses
   uTypes,
   uLog,
 
-  Windows,
-  ShellAPI;
+  Winapi.Windows,
+  Winapi.ShellAPI;
 
 { TShellApplication }
 

@@ -4,7 +4,8 @@ interface
 
 uses
   uTypes,
-  Windows;
+
+  SyncObjs;
 
 type
   TTemporaryDirectoryItem = record
@@ -14,7 +15,7 @@ type
 
   TTemporaryDirectory = class
   private
-  	FCriticalSection: TRTLCriticalSection;
+  	FCriticalSection: TCriticalSection;
 
     FApplicationTempDirHandle: THandle;
     FProcessTempDirHandle: THandle;
@@ -40,13 +41,18 @@ type
     procedure DeleteAll;
   end;
 
+function TemporaryDirectory: TTemporaryDirectory;
+
 implementation
 
 uses
   SysUtils,
+  Winapi.Windows, // TODO : remove
+
   uProjectInfo,
   uStrings,
-  uFiles;
+  uFiles,
+  uOperatingSystem;
 
 { TTemporaryDirectory }
 
@@ -54,14 +60,14 @@ constructor TTemporaryDirectory.Create;
 begin
   inherited;
 
-  InitializeCriticalSection(FCriticalSection);
+  FCriticalSection := TCriticalSection.Create;
 
 	FUserTempDir := GetEnvironmentVariable('TEMP');
 	CorrectDir(FUserTempDir);
 
 	FApplicationTempDir := FUserTempDir + '_' + GetProjectInfo(piInternalName) + PathDelim;
 
-	FProcessTempDir := FApplicationTempDir + IntToStr(GetCurrentProcessID) + PathDelim;
+	FProcessTempDir := FApplicationTempDir + IntToStr(OperatingSystem.GetCurrentProcessId) + PathDelim;
 end;
 
 procedure TTemporaryDirectory.DeleteThread;
@@ -69,7 +75,7 @@ var
   Handle: THandle;
   ThreadId: TThreadId;
 begin
-  ThreadId := GetCurrentThreadId;
+  ThreadId := OperatingSystem.GetCurrentThreadId;
   Handle := FindHandleForThreadId(ThreadId);
   if Handle <> 0 then
   begin
@@ -97,7 +103,7 @@ begin
 
   CloseHandle(FApplicationTempDirHandle);
 
-  DeleteCriticalSection(FCriticalSection);
+  FreeAndNil(FCriticalSection);
 
   inherited;
 end;
@@ -108,7 +114,7 @@ var
   ExistingHandle: THandle;
   ThreadId: TThreadId;
 begin
-  ThreadId := GetCurrentThreadId;
+  ThreadId := OperatingSystem.GetCurrentThreadId;
   Result := GetDirectoryForThread(ThreadId);
   Handle := FindHandleForThreadId(ThreadId);
   if Handle = 0 then
@@ -116,13 +122,13 @@ begin
     ExistingHandle := CreateLockedDir(Result);
     if ExistingHandle <> INVALID_HANDLE_VALUE then
     begin
-      EnterCriticalSection(FCriticalSection);
+      FCriticalSection.Enter;
       try
         SetLength(FThreadTempDirHandles, Length(FThreadTempDirHandles) + 1);
         FThreadTempDirHandles[Length(FThreadTempDirHandles) - 1].ThreadId := ThreadId;
         FThreadTempDirHandles[Length(FThreadTempDirHandles) - 1].Handle := ExistingHandle;
       finally
-        LeaveCriticalSection(FCriticalSection);
+        FCriticalSection.Leave;
       end;
     end;
   end;
@@ -133,12 +139,12 @@ begin
   Result := FApplicationTempDir;
   if FApplicationTempDirHandle = 0 then
   begin
-    EnterCriticalSection(FCriticalSection);
+    FCriticalSection.Enter;
     try
       if FApplicationTempDirHandle = 0 then // Double-checked locking
         FApplicationTempDirHandle := CreateLockedDir(Result);
     finally
-      LeaveCriticalSection(FCriticalSection);
+      FCriticalSection.Leave;
     end;
   end;
 end;
@@ -168,14 +174,32 @@ begin
   Result := FProcessTempDir;
   if FProcessTempDirHandle = 0 then
   begin
-    EnterCriticalSection(FCriticalSection);
+    FCriticalSection.Enter;
     try
       if FProcessTempDirHandle = 0 then // Double-checked locking
         FProcessTempDirHandle := CreateLockedDir(Result);
     finally
-      LeaveCriticalSection(FCriticalSection);
+      FCriticalSection.Leave;
     end;
   end;
 end;
+
+var
+  GTemporaryDirectory: TTemporaryDirectory;
+
+function TemporaryDirectory: TTemporaryDirectory;
+begin
+  Result := GTemporaryDirectory;
+end;
+
+initialization
+{$IFNDEF NoInitialization}
+  GTemporaryDirectory := TTemporaryDirectory.Create;
+{$ENDIF NoInitialization}
+
+finalization
+{$IFNDEF NoFinalization}
+  FreeAndNil(GTemporaryDirectory);
+{$ENDIF NoFinalization}
 
 end.

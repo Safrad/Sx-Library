@@ -3,8 +3,9 @@ unit uTextAlignment;
 interface
 
 uses
-  uTypes,
-  Windows;
+  Types,
+
+  uTypes;
 
 type
   THorizontalAlignment = (haLeft, haCenter, haRight);

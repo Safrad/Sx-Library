@@ -59,7 +59,7 @@ function IOErrorMessageRetry(const FileName: TFileName; const ErrorMsg: string):
 implementation
 
 uses
-  Windows,
+  Winapi.Windows,
 
   uStrings,
   uLog,

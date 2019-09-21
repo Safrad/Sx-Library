@@ -204,7 +204,7 @@ var
 implementation
 
 uses
-	Windows, Math,
+	Math,
 	uChar, uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog, uRect, uWHRect
 {$IFNDEF Console}, uMenus, uSystem {$ENDIF};
 

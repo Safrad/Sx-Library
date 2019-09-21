@@ -126,7 +126,11 @@ function IntToHex(Value: UInt64): string; overload;
 implementation
 
 uses
-	Windows, Math,
+{$IFDEF MSWINDOWS}
+  Winapi.Windows,
+{$ENDIF}
+  Math,
+
 	uMath, uStrings, uDictionary;
 
 procedure AddMinusStr(var Result: string; const OutputFormat: TOutputFormat);
@@ -1059,13 +1063,13 @@ begin
 end;
 
 procedure GetLocale;
-{$ifndef LINUX}
+{$IFDEF MSWINDOWS}
 var
 	s: string;
 	InLineIndex: SG;
-{$endif}
+{$ENDIF}
 begin
-	{$ifndef LINUX}
+{$IFDEF MSWINDOWS}
 	NativeSymbols := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SNATIVEDIGITS, '0123456789');
 
 	DecimalSeparator := GetLocaleStr(SysLocale.DefaultLCID, LOCALE_SDECIMAL, '.');
@@ -1108,7 +1112,6 @@ begin
 
 // Time Format
 	TimeSeparator := ':';
-
 	{$ENDIF}
 end;
 

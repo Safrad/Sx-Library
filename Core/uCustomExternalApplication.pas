@@ -68,7 +68,7 @@ type
 implementation
 
 uses
-  Windows,
+  Winapi.Windows,
 
   uMsg,
   uEExternalApplication,

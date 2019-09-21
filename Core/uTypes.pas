@@ -326,6 +326,10 @@ Value	Meaning
 		// lmEmerg, // Emergencies - system is unusable
 		mlNone);
 
+{$ifdef ANDROID}
+  AnsiChar = U1;
+{$endif}
+
 const
 	Second = 1000;
 	Minute = 60 * Second;

@@ -20,7 +20,9 @@ uses
   uTypes,
   uStrings,
   uMsg,
-  Windows,
+{$IF defined(MSWINDOWS)}
+  Winapi.Windows,
+{$ENDIF}
   SysUtils;
 
 var
@@ -45,6 +47,7 @@ begin
 end;
 
 procedure TStartupEnvironment.ReloadVariables;
+{$IF defined(MSWINDOWS)}
 var
 	EnvironmentBlock, EnvironmentBlock2: LPTSTR;
 	Line: string;
@@ -76,6 +79,9 @@ begin
 	finally
 		FreeEnvironmentStrings(EnvironmentBlock);
 	end;
+{$ELSE}
+  // TODO : $USER_HOME
+{$ENDIF}
 end;
 
 initialization

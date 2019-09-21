@@ -8,7 +8,7 @@ uses
   uTypes,
   uCustomPowerRequest,
 
-  Windows;
+  Winapi.Windows;
 
 type
   TWindowsPowerRequest = class(TCustomPowerRequest)

@@ -1,10 +1,12 @@
-unit uFiles;
+﻿unit uFiles;
 
 interface
 
 uses
-	uTypes, uStrings, uFileCharset, uFile, uBackup,
-	SysUtils, Windows;
+	Winapi.Windows,
+  SysUtils,
+
+	uTypes, uStrings, uFileCharset, uFile, uBackup;
 
 var
 	// Directories
@@ -44,7 +46,6 @@ function AddAfterName(const FName: string; const Text: string): string;
 function ParentDir(var Dir: string; Level: SG = 1): BG;
 function ParentDirF(const Dir: string; const Level: SG = 1): string;
 function LegalFileName(const FileName: string): string;
-function LegalPath(const Path: string): string;
 procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
 function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
 function GetFileSizeU(const AFileName: TFileName): S8;
@@ -109,7 +110,9 @@ procedure ReplaceIfChanged(const TempFileName: TFileName); overload;
 function GetModuleFileNameFunc(const AHandle: THandle): string;
 procedure InitPaths;
 
-function DirectoryExistsEx(const DirName: TFileName): BG;
+function DirectoryExistsEx(const DirName: string): BG;
+procedure CheckDirectory(const ADirName: string);
+
 function FileExistsEx(const FileName: TFileName): BG;
 procedure TestFileReadable(const AFileName: string);
 function IsFileWritable(const AFileName: string): Boolean;
@@ -394,50 +397,12 @@ end;
 
 const
 	DisabledChars: array[0..8] of string = ('\', '/', ':', '*', '?', '"', '<', '>', '|');
+	NewChars: array[0..8] of string =      ('-', '∕', 'ː', '✱', '︖', '＂', '＜', '＞', '｜');
 
 function LegalFileName(const FileName: string): string;
 begin
 	Result := FileName;
-	DelStrings(Result, DisabledChars);
-end;
-
-function LegalPath(const Path: string): string;
-var
-	i: Integer;
-	StrLength: Integer;
-begin
-	Result := Path;
-	DelStrings(Result, DisabledChars);
-	if Length(Result) = 0 then
-	begin
-		Exit;
-	end;
-
-	i := 1;
-	StrLength := Length(Result);
-	while i <= StrLength do
-	begin
-		case Result[i] of
-		'a'..'z', 'A'..'Z', '0'..'9', '_', '.', '-', ' ', #160, {special space}
-		'+', '=', '`',
-		'~', '!', '@', '#', '$', '%', '^', '&', '(', ')',
-		'{', '}', '''', #180, ';', '[', ']', ',',
-		PathDelim, DriveDelim:
-		begin
-			Inc(i);
-		end
-		else
-		begin
-			Delete(Result, i, 1);
-			Dec(StrLength);
-		end;
-		end;
-	end;
-
-{	if Length(Result) > 63 then
-	begin
-		SetLength(Result, 63);
-	end;}
+	Replace(Result, DisabledChars, NewChars);
 end;
 
 function IsDirectory(const SearchRec: TSearchRec): BG;
@@ -859,8 +824,8 @@ end;
 function RenameFileEx(const Source, Dest: TFileName): BG;
 var ErrorCode: U4;
 begin
-	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
-	Result := Windows.MoveFileEx(PChar(Source), PChar(Dest), MOVEFILE_REPLACE_EXISTING);
+	Winapi.Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
+	Result := Winapi.Windows.MoveFileEx(PChar(Source), PChar(Dest), MOVEFILE_REPLACE_EXISTING);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
@@ -883,8 +848,8 @@ var ErrorCode: U4;
 begin
 	if LogDebug then
     MainLogAdd('Copy file ' + AddQuoteF(Source) + ' to ' + AddQuoteF(Dest), mlDebug);
-	Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
-	Result := Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
+	Winapi.Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
+	Result := Winapi.Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
 	if Result = False then
 	begin
 		ErrorCode := GetLastError;
@@ -1121,7 +1086,7 @@ function DeleteFileEx(const FileName: TFileName): BG;
 begin
 	if LogDebug then
     MainLogAdd('Delete file ' + AddQuoteF(FileName), mlDebug);
-	Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
+	Winapi.Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
 	Result := DeleteFile(PChar(FileName));
 	if Result = False then
 		raise EIOException.Create(FileName, GetLastError);
@@ -1642,7 +1607,7 @@ begin
 		if Result = '' then Result := string(Temp.cAlternateFileName);
 	end
 	else Result := '';
-	Windows.FindClose(SearchHandle);
+	Winapi.Windows.FindClose(SearchHandle);
 end;
 (*
 function LongToShortFileName(const LongName: string): string;
@@ -1934,9 +1899,15 @@ begin
 	Result := (Code <> High(Code)) and (FILE_ATTRIBUTE_DIRECTORY and Code <> 0);
 end;}
 
-function DirectoryExistsEx(const DirName: TFileName): BG;
+function DirectoryExistsEx(const DirName: string): BG;
 begin
 	Result := DirectoryExists(ExpandDir(DirName));
+end;
+
+procedure CheckDirectory(const ADirName: string);
+begin
+  if not DirectoryExists(ADirName) then
+    raise EDirectoryNotFoundException.Create('Path ' + AddQuoteF(ADirName) + ' not found.');
 end;
 
 function FileOrDirExists(const FileOrDirName: string): BG;

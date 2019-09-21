@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-	Windows, Math,
+	Math,
 	uStrings, uMath,
 	uFiles;
 

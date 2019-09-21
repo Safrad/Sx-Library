@@ -33,8 +33,10 @@ type
 
 implementation
 
+{$if CompilerVersion < 20}
 uses
   Windows;
+{$ifend}
 
 { TSxThread }
 
@@ -55,7 +57,7 @@ begin
     FName := Value;
     {$if CompilerVersion >= 20}
     NameThreadForDebugging(FName, ThreadId);
-    {$ifend}
+    {$endif}
   end;
 end;
 

@@ -24,7 +24,9 @@ unit uFile;
 interface
 
 uses
-	SysUtils, Windows,
+	SysUtils,
+  WinApi.Windows,
+
 	uTypes, uStrings, uChar, uLogger, uDateTimeLogger, uFileCharset,
   uBackup;
 
@@ -46,18 +48,20 @@ type
 var
 	FileModeStr: array [TFileMode] of string;
 
-	{
-		Flags:
-		FILE_FLAG_OVERLAPPED // Async read - not implemented yet
-
-		FILE_FLAG_RANDOM_ACCESS
-		FILE_FLAG_SEQUENTIAL_SCAN // Default value
-
-		FILE_FLAG_WRITE_THROUGH // For write only
-		FILE_FLAG_NO_BUFFERING // Be carefully for use this
-		}
-
 const
+  // Flags
+  FILE_FLAG_WRITE_THROUGH = DWORD($80000000); // For write only
+  FILE_FLAG_OVERLAPPED = $40000000;
+  FILE_FLAG_NO_BUFFERING = $20000000; // Be carefully for use this
+  FILE_FLAG_RANDOM_ACCESS = $10000000;
+  FILE_FLAG_SEQUENTIAL_SCAN = $8000000; // Default value
+
+  FILE_FLAG_DELETE_ON_CLOSE = $4000000;
+  FILE_FLAG_BACKUP_SEMANTICS = $2000000;
+  FILE_FLAG_POSIX_SEMANTICS = $1000000;
+  FILE_FLAG_OPEN_NO_RECALL = $00100000;
+  FILE_FLAG_FIRST_PIPE_INSTANCE = $00080000;
+
 	FILE_FLAG_NO_PREFIX = $8;
 	DefaultFileCharset = fcUTF8;
 
@@ -152,7 +156,8 @@ implementation
 
 uses
 	Math,
-  uOperatingSystem,
+
+  uTemporaryDirectory,
   uFiles,
 	uOutputFormat, uCharset, uLog, uMsg;
 
@@ -211,7 +216,7 @@ begin
 
 	if FProtection and (FMode in [fmRewrite, fmReadAndWrite]) then
 	begin
-		FTempFileName := OperatingSystem.TemporaryDirectory.ThreadTempDir + '~' + ExtractFileName(FileName);
+		FTempFileName := TemporaryDirectory.ThreadTempDir + '~' + ExtractFileName(FileName);
 		if FileExists(FTempFileName) then
 		begin
 			DeleteFileEx(FTempFileName);
@@ -945,7 +950,7 @@ var
 begin
 	SaveBuffer;
 LRetry :
-	Result := Windows.FlushFileBuffers(FHandle);
+	Result := Winapi.Windows.FlushFileBuffers(FHandle);
 	if (Result = False) and Assigned(FLogger) then
 	begin
 		ErrorCode := GetLastError;

@@ -3,7 +3,7 @@ unit uFileLogger;
 interface
 
 uses
-  Windows,
+  WinApi.Windows,
   SysUtils,
   uTypes,
   uFile,

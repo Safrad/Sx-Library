@@ -59,9 +59,9 @@ implementation
 
 uses
   SysUtils,
-  Windows,
+  Winapi.Windows,
   Math,
-  psAPI;
+  Winapi.psAPI;
 
 var
   GSystemMemory: TSystemMemory;

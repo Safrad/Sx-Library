@@ -3,7 +3,7 @@ unit uCodePage;
 interface
 
 uses
-  Windows;
+  Winapi.Windows;
 
 type
   TCodePage = (

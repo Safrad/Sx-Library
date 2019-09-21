@@ -3,7 +3,7 @@ unit uWHRect;
 interface
 
 uses
-  Windows;
+  Types;
 
 type
   TWHRect = record

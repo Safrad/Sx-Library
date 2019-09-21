@@ -71,8 +71,9 @@ implementation
 
 uses
   SysUtils,
-  Windows,
-
+{$IF defined(MSWINDOWS)}
+  Winapi.Windows,
+{$ENDIF}
   uLog,
   uCommonApplication,
   uCommonOutput,
@@ -81,6 +82,7 @@ uses
   uConsoleOutputInfo,
   uConsoleSplashScreen;
 
+{$IF defined(MSWINDOWS)}
 function GetConsoleWindow: HWND; stdcall; external kernel32;
 
 function CtrlTypeToString(const dwCtrlType: DWORD): string;
@@ -108,6 +110,7 @@ begin
     MainLogAdd(CtrlTypeToString(dwCtrlType), mlWarning);
   TConsoleApplication(CommonApplication).AbortedBySystem;
 end;
+{$ENDIF}
 
 { TConsoleApplication }
 
@@ -119,7 +122,9 @@ end;
 
 constructor TConsoleApplication.Create;
 begin
+{$IF defined(MSWINDOWS)}
   SetConsoleCtrlHandler(@ConsoleCtrlHandler, True { add } );
+{$ENDIF}
   SplashScreen := TConsoleSplashScreen.Create;
 
   inherited;
@@ -131,7 +136,9 @@ begin
     inherited;
   finally
     Wait;
+{$IF defined(MSWINDOWS)}
     SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
+{$ENDIF}
     CommonOutput := nil; // Interface
   end;
 end;

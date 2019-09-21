@@ -163,8 +163,7 @@ function PadRight(const AText: string; const ACharCount: SG; const AFillChar: Ch
 
 function PropertiesToString(const Keys: array of string; const Values: array of string; const ASeparator: string = ';'): string;
 
-function CompareStringLogical(AValue1, AValue2: AnsiString): TCompareResult; overload;
-function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
+function CompareStringLogical(AValue1, AValue2: string): TCompareResult;
 
 function U1ToOctalString(AValue: U1): string;
 function CharToDigit(const AChar: Char): SG;
@@ -1455,16 +1454,12 @@ begin
   end;
 end;
 
+
 function StrCmpLogicalW(psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll';
 
-function CompareStringLogical(AValue1, AValue2: AnsiString): TCompareResult; overload;
+function CompareStringLogical(AValue1, AValue2: string): TCompareResult; overload;
 begin
   Result := TCompareResult(StrCmpLogicalW(PWideChar(WideString(AValue1)), PWideChar(WideString(AValue2))));
-end;
-
-function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
-begin
-  Result := TCompareResult(StrCmpLogicalW(PWideChar(AValue1), PWideChar(AValue2)));
 end;
 
 function U1ToOctalString(AValue: U1): string;

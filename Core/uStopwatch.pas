@@ -4,8 +4,7 @@ interface
 
 uses
   uTypes,
-  uTimeSpan,
-  Windows;
+  uTimeSpan;
 
 type
   TStopwatch = class

@@ -8,7 +8,9 @@ uses
   uTextAlignment,
   uConsoleColor,
   uConsoleCustomTheme,
-  Windows, SysUtils;
+
+  Winapi.Windows,
+  SysUtils;
 
 type
   TConsole = class
