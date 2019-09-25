@@ -44,7 +44,8 @@ type
     procedure SetMeasureType(const Value: TMeasureType);
     function GetValue: TTimeSpan;
   public
-    function IntervalFrom(const AStartTime: U8): U8;
+    function IntervalFrom(const AStartTime: U8): U8; overload;
+    function IntervalFrom(const AStartTime: TTimeSpan): TTimeSpan; overload;
 
     property Value: TTimeSpan read GetValue;
     property Frequency: U8 read FFrequency;
@@ -130,6 +131,11 @@ end;
 function TMainTimer.IntervalFrom(const AStartTime: U8): U8;
 begin
   Result := TimeDifference(GetTickValue, AStartTime);
+end;
+
+function TMainTimer.IntervalFrom(const AStartTime: TTimeSpan): TTimeSpan;
+begin
+  Result.Ticks := TimeDifference(GetTickValue, AStartTime.Ticks);
 end;
 
 procedure TMainTimer.SetMeasureType(const Value: TMeasureType);
