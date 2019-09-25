@@ -1,5 +1,10 @@
 unit uMath;
 
+{$IF defined(CPUX86) and defined(ASSEMBLER)}
+  // Can use 32 bit assembler
+  {$DEFINE X86ASMRTL}
+{$ENDIF}
+
 interface
 
 uses
@@ -1878,13 +1883,13 @@ var
   I: NativeInt;
   V: UG;
   PB: PUG;
-  P: PInt64;
+  P: PUG;
   Total: NativeInt;
 begin
   if Count >= 8 then
   begin
     V := Value;
-    P := PInt64(@Desc);
+    P := PUG(@Desc);
     Total := Count;
 
     for I := 0 to Total - 1 do
