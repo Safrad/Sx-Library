@@ -192,7 +192,7 @@ begin
     Height := ImageProperties.Height;
     Assert(Width <> 0);
     Assert(Height <> 0);
-    while (Width < LgToPx(200)) or (Result.cy < LgToPx(3 * 256 div 4)) do
+    while (Width < LgToPx(200)) or (Height < LgToPx(3 * 256 div 4)) do
     begin
       Multiply(Width, 2);
       Multiply(Height, 2);
