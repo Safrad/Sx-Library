@@ -11,8 +11,8 @@ uses
 type
   TDateTimeLogger = class(TLogger)
   private
-    FCreatedTicks: U8;
-    FCreatedDataTime: TDateTime;
+    class var FCreatedTicks: U8;
+    class var FCreatedDataTime: TDateTime;
   public
     constructor Create;
 
@@ -36,8 +36,11 @@ constructor TDateTimeLogger.Create;
 begin
   inherited;
 
-  FCreatedDataTime := Now;
-  FCreatedTicks := MainTimer.Value.Ticks;
+  if FCreatedTicks = 0 then
+  begin
+    FCreatedDataTime := Now;
+    FCreatedTicks := MainTimer.Value.Ticks;
+  end;
 end;
 
 end.
