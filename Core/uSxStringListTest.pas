@@ -1,4 +1,4 @@
-unit uSxStringListText;
+unit uSxStringListTest;
 
 interface
 
