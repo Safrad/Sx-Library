@@ -51,14 +51,9 @@ begin
   try
     FillChar(DivideSpaceOptions, SizeOf(DivideSpaceOptions), 0);
     DivideSpaceOptions.Horizontal.Divided := True;
-    try
-      DivideSpace.Divide2D(ExampleRect, DivideSpaceOptions);
-    except
-      on E: EArgumentException do
-        ; // Expected exception
-      else
-        raise;
-    end;
+    StartExpectingException(EArgumentException);
+    DivideSpace.Divide2D(ExampleRect, DivideSpaceOptions);
+    StopExpectingException;
   finally
     DivideSpace.Free;
   end;
