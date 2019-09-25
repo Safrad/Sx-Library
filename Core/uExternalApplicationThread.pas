@@ -12,7 +12,7 @@ type
 	TExternalApplicationThread = class(TSxThread)
 	private
     FExternalApplication: TExternalApplication;
-		procedure Synchro;
+		procedure DisplayErrorMessage;
     procedure SetExternalApplication(const Value: TExternalApplication);
 	protected
 		procedure Execute; override;
@@ -52,7 +52,7 @@ begin
   inherited;
 
   FExternalApplication.Execute;
-  Synchronize(Synchro);
+  Synchronize(DisplayErrorMessage);
 end;
 
 procedure TExternalApplicationThread.SetExternalApplication(const Value: TExternalApplication);
@@ -60,7 +60,7 @@ begin
   FExternalApplication := Value;
 end;
 
-procedure TExternalApplicationThread.Synchro;
+procedure TExternalApplicationThread.DisplayErrorMessage;
 begin
   try
     FExternalApplication.CheckErrorCode;

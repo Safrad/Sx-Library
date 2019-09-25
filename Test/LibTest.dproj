@@ -171,7 +171,9 @@
         <DCCReference Include="..\Sound\SoundItems\uWaveTest.pas"/>
         <DCCReference Include="..\Parser\uTimeExpressionParserTest.pas"/>
         <DCCReference Include="..\Core\uSxObjectListTest.pas"/>
-        <DCCReference Include="..\Core\uSxStringListText.pas"/>
+        <DCCReference Include="..\Core\uSxStringListTest.pas"/>
+        <DCCReference Include="..\Core\uExternalApplicationTest.pas"/>
+        <DCCReference Include="..\Core\uPipedExternalApplicationTest.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

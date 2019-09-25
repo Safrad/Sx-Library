@@ -232,6 +232,8 @@ begin
     try
       ExternalApplication.FileName := ExeFileName;
       ExternalApplication.Parameters := ExeParameters;
+      ExternalApplication.CurrentDirectory := GetCurrentDir;
+      ExternalApplication.KeepRunning := True;
       ExternalApplication.Execute;
     finally
       ExternalApplication.Free;

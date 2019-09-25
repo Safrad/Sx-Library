@@ -4,6 +4,7 @@ interface
 
 uses
   SysUtils,
+  Winapi.Windows,
 
   uTypes,
   uStartupWindowState;
@@ -48,7 +49,7 @@ type
 
     // Process
     procedure Execute; virtual;
-    procedure Terminate;
+    procedure Terminate(const AExitCode: UINT = DBG_TERMINATE_PROCESS);
 
     // raise Exception
     procedure CheckErrorCode;
@@ -68,11 +69,11 @@ type
 implementation
 
 uses
-  Winapi.Windows,
-
   uMsg,
+  uFiles,
   uEExternalApplication,
-  uEIOException;
+  uEIOException,
+  uLog;
 
 { TCustomExternalApplication }
 
@@ -88,14 +89,20 @@ begin
     raise EIOException.Create(FFileName, FErrorCode);
 end;
 
-procedure TCustomExternalApplication.Terminate;
+procedure TCustomExternalApplication.Terminate(const AExitCode: UINT = DBG_TERMINATE_PROCESS);
 begin
   if FHandle <> INVALID_HANDLE_VALUE then
   begin
     if not FKeepRunning then
-      TerminateProcess(FHandle, 1);
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
+    begin
+      if GetExitCode = STILL_ACTIVE then
+      begin
+        if LogDebug then
+          MainLog.Add('Terminating ' + FFileName + ', ExitCode: ' + IntToStr(AExitCode), mlDebug);
+        TerminateProcess(FHandle, AExitCode);
+        Assert(GetExitCode <> STILL_ACTIVE);
+      end;
+    end;
   end;
 end;
 
@@ -124,6 +131,8 @@ destructor TCustomExternalApplication.Destroy;
 begin
   try
     Terminate;
+    CloseHandle(FHandle);
+    FHandle := INVALID_HANDLE_VALUE;
   finally
     inherited;
   end;
@@ -134,12 +143,15 @@ begin
   if FAllowOnlyOneInstance then
     Terminate;
 
-  Assert(FFileName <> '');
-  Assert(FCurrentDirectory <> '');
+  if FFileName = '' then
+    raise EArgumentException.Create('File name is empty.');
+  if FCurrentDirectory = '' then
+    raise EArgumentException.Create('Current directory is empty.');
 end;
 
 function TCustomExternalApplication.GetExitCode: TExitCode;
 begin
+  Assert(FHandle <> INVALID_HANDLE_VALUE);
   GetExitCodeProcess(FHandle, Result);
 end;
 

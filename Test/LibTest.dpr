@@ -50,7 +50,9 @@ uses
   uWaveTest in '..\Sound\SoundItems\uWaveTest.pas',
   uTimeExpressionParserTest in '..\Parser\uTimeExpressionParserTest.pas',
   uSxObjectListTest in '..\Core\uSxObjectListTest.pas',
-  uSxStringListText in '..\Core\uSxStringListText.pas';
+  uSxStringListTest in '..\Core\uSxStringListTest.pas',
+  uExternalApplicationTest in '..\Core\uExternalApplicationTest.pas',
+  uPipedExternalApplicationTest in '..\Core\uPipedExternalApplicationTest.pas';
 
 {$R *.RES}
 

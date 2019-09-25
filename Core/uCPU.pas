@@ -68,7 +68,7 @@ implementation
 uses
   uChar,
   uStrings,
-  uExternalApplication,
+  uPipedExternalApplication,
   uStartupWindowState,
   uLog,
   uMath,
@@ -194,6 +194,7 @@ var
 	TickCount: U8;
 	CPUTick: U8;
 begin
+  // alternative static in MHz: wmic cpu get CurrentClockSpeed
   if FLastCPUTick <> 0 then
   begin
     CPUTick := FCPUTimer.IntervalFrom(FLastCPUTick);
@@ -228,24 +229,28 @@ end;
 
 procedure TCPU.UpdateName;
 var
-  ExternalApplication: TExternalApplication;
+  ExternalApplication: TPipedExternalApplication;
   InLineIndex: SG;
   StartupWindowState: TStartupWindowState;
 begin
-  ExternalApplication := TExternalApplication.Create;
+  ExternalApplication := TPipedExternalApplication.Create;
   try
     try
       ExternalApplication.FileName := 'wmic';
       ExternalApplication.Parameters := 'cpu get name';
+      ExternalApplication.CurrentDirectory := LocalAppDataDir;
       StartupWindowState.WindowState := hwsHidden;
       StartupWindowState.Active := False;
       ExternalApplication.StartupWindowState := StartupWindowState;
-      ExternalApplication.ExecuteWithOutputText;
+      ExternalApplication.RequireOutputText := True;
+
+      ExternalApplication.Execute;
       ExternalApplication.CheckErrorCode;
-      Assert(ExternalApplication.ProcessOutput.ExitCode = 0);
+      ExternalApplication.WaitFor;
+
       InLineIndex := 1;
-      ReadToChar(ExternalApplication.ProcessOutput.OutputText, InLineIndex, CharLF);
-      FName := DelBESpaceF(ReadToChar(ExternalApplication.ProcessOutput.OutputText, InLineIndex, CharLF));
+      ReadToChar(ExternalApplication.OutputText, InLineIndex, CharLF);
+      FName := DelBESpaceF(ReadToChar(ExternalApplication.OutputText, InLineIndex, CharLF));
       if FName = '' then
         FName := '?';
     except
