@@ -22,8 +22,9 @@ uses
 
 initialization
 {$IFNDEF NoInitialization}
-  ApplicationStartTicks := Diagnostics.TStopwatch.GetTimeStamp;
   NoErrMsg := IsRelease;
+  Diagnostics.TStopwatch.Create; // required for hi resolution GetTimeStamp (calls InitStopwatchType)
+  ApplicationStartTicks := Diagnostics.TStopwatch.GetTimeStamp;
 
   {$ifndef FastMM4}
   ReportMemoryLeaksOnShutdown := IsDebug; // Optional, can take long time for many unfreed objects
