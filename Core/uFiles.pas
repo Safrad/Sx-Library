@@ -114,6 +114,8 @@ function DirectoryExistsEx(const DirName: string): BG;
 procedure CheckDirectory(const ADirName: string);
 
 function FileExistsEx(const FileName: TFileName): BG;
+procedure RaiseExceptionIfFileNotExists(const AFileName: string);
+
 procedure TestFileReadable(const AFileName: string);
 function IsFileWritable(const AFileName: string): Boolean;
 function FileOrDirExists(const FileOrDirName: string): BG;
@@ -396,8 +398,10 @@ begin
 end;
 
 const
-	DisabledChars: array[0..8] of string = ('\', '/', ':', '*', '?', '"', '<', '>', '|');
-	NewChars: array[0..8] of string =      ('-', '∕', 'ː', '✱', '︖', '＂', '＜', '＞', '｜');
+	DisabledChars: array[0..8] of string =
+    ('\', '/', ':', '*', '?', '"', '<', '>', '|');
+	NewChars: array[0..8] of string =
+    ('-', '∕', 'ː', '✱', '︖', '＂', '＜', '＞', '｜');
 
 function LegalFileName(const FileName: string): string;
 begin
@@ -1908,6 +1912,12 @@ procedure CheckDirectory(const ADirName: string);
 begin
   if not DirectoryExists(ADirName) then
     raise EDirectoryNotFoundException.Create('Path ' + AddQuoteF(ADirName) + ' not found.');
+end;
+
+procedure RaiseExceptionIfFileNotExists(const AFileName: string);
+begin
+  if not FileExistsEx(AFileName) then
+    raise EFileNotFoundException.Create('File ' + AddQuoteF(AFileName) + ' not found.');
 end;
 
 function FileOrDirExists(const FileOrDirName: string): BG;
