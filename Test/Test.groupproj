@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{7A9B4134-DB3A-4F34-9F8C-E900D84BD08A}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="DllForTest\DllForTest.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Echo\Echo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LibTest.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DllForTest">
+        <MSBuild Projects="DllForTest\DllForTest.dproj"/>
+    </Target>
+    <Target Name="DllForTest:Clean">
+        <MSBuild Projects="DllForTest\DllForTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DllForTest:Make">
+        <MSBuild Projects="DllForTest\DllForTest.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Echo">
+        <MSBuild Projects="Echo\Echo.dproj"/>
+    </Target>
+    <Target Name="Echo:Clean">
+        <MSBuild Projects="Echo\Echo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Echo:Make">
+        <MSBuild Projects="Echo\Echo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LibTest">
+        <MSBuild Projects="LibTest.dproj"/>
+    </Target>
+    <Target Name="LibTest:Clean">
+        <MSBuild Projects="LibTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LibTest:Make">
+        <MSBuild Projects="LibTest.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DllForTest;Echo;LibTest"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DllForTest:Clean;Echo:Clean;LibTest:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DllForTest:Make;Echo:Make;LibTest:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
