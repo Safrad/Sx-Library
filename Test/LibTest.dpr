@@ -52,7 +52,9 @@ uses
   uSxObjectListTest in '..\Core\uSxObjectListTest.pas',
   uSxStringListTest in '..\Core\uSxStringListTest.pas',
   uExternalApplicationTest in '..\Core\uExternalApplicationTest.pas',
-  uPipedExternalApplicationTest in '..\Core\uPipedExternalApplicationTest.pas';
+  uPipedExternalApplicationTest in '..\Core\uPipedExternalApplicationTest.pas',
+  uRawFileTest in '..\Files\uRawFileTest.pas',
+  uTextFileTest in '..\Files\uTextFileTest.pas';
 
 {$R *.RES}
 
