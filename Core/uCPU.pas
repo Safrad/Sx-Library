@@ -13,26 +13,30 @@ type
 
   TCPU = class
   private
-    // Properties
-    FName: string;
-    FFrequency: FG;
-
+    // Temp
+    Reg: TRegistry;
+    LastTickCount{, LastProcessorTime}: U8;
     FCPUTimer: TMainTimer;
     FLastTickCount: U8;
     FLastCPUTick: U8;
-    FLogicalProcessorCount: SG;
-    FUsage: FG;
     FNtQuerySystemInformation: TNtQuerySystemInformation;
     liOldIdleTime: LARGE_INTEGER;
     liOldSystemTime: LARGE_INTEGER;
-    Reg: TRegistry;
-    LastTickCount{, LastProcessorTime}: U8;
+    FInitialized: BG;
+
+    // Properties
+    FName: string;
+    FLogicalProcessorCount: SG;
+    FPageSize: SG;
+    FAllocationGranularity: SG;
+    FFrequency: FG;
+    FUsage: FG;
 
     function GetCPUUsage: FG;
     function GetCPUUsageForce: FG;
 
     procedure UpdateName;
-    procedure UpdateLogicalProcessorCount;
+    procedure UpdateSystemInfo;
 
     procedure UpdateFrequency;
     procedure UpdateUsage;
@@ -44,6 +48,8 @@ type
     function GetDefaultFrequency: U8;
     function GetName: string;
     function GetLogicalProcessorCount: SG;
+    function GetPageSize: SG;
+    function GetAllocationGranularity: SG;
   public
     constructor Create;
     destructor Destroy; override;
@@ -56,6 +62,8 @@ type
     property Model: SG read GetModel;
     property Stepping: SG read GetStepping;
     property LogicalProcessorCount: SG read GetLogicalProcessorCount;
+    property PageSize: SG read GetPageSize;
+    property AllocationGranularity: SG read GetAllocationGranularity;
     property Frequency: FG read FFrequency; // precision 0,00041666 (0.1s/4min, 1.5s/1hod. 36sec/24hod)
     property DefaultFrequency: U8 read GetDefaultFrequency;
     property Usage: FG read FUsage; // 0..1
@@ -288,19 +296,27 @@ begin
   Result := GetID and $000000f;
 end;
 
-procedure TCPU.UpdateLogicalProcessorCount;
+procedure TCPU.UpdateSystemInfo;
 var
   SystemInfo: SYSTEM_INFO;
 begin
-  FLogicalProcessorCount := 1;
-  try
-    GetSystemInfo(SystemInfo);
-    FLogicalProcessorCount := SystemInfo.dwNumberOfProcessors;
-    Assert(SystemInfo.dwPageSize = 4096);
-    Assert(SystemInfo.dwAllocationGranularity = 65536);
-    Assert(SystemInfo.wProcessorLevel = Family);
-    Assert(SystemInfo.wProcessorRevision = 256 * Model + Stepping);
-  except
+  if not FInitialized then
+  begin
+    FInitialized := True;
+
+    FLogicalProcessorCount := 1;
+    FPageSize := 4 * KB;
+    FAllocationGranularity := 64 * KB;
+    try
+      GetSystemInfo(SystemInfo);
+      FLogicalProcessorCount := SystemInfo.dwNumberOfProcessors;
+      Assert(SystemInfo.dwPageSize = 4 * KB);
+      Assert(SystemInfo.dwAllocationGranularity = 64 * KB);
+      Assert(SystemInfo.wProcessorLevel = Family);
+      Assert(SystemInfo.wProcessorRevision = 256 * Model + Stepping);
+    except
+      // No code
+    end;
   end;
 end;
 
@@ -365,7 +381,6 @@ var
 	status: DWORD;
 	dbSystemTime: U8;
 	dbIdleTime: U8;
-//	s: string;
 begin
 	Result := 0;
 
@@ -510,6 +525,12 @@ begin
 end;
 *)
 
+function TCPU.GetAllocationGranularity: SG;
+begin
+  UpdateSystemInfo;
+  Result := FAllocationGranularity;
+end;
+
 function TCPU.GetCPUUsage: FG;
 var
 	tickCount     : U8;
@@ -586,10 +607,15 @@ begin
   Result := FName;
 end;
 
+function TCPU.GetPageSize: SG;
+begin
+  UpdateSystemInfo;
+  Result := FPageSize;
+end;
+
 function TCPU.GetLogicalProcessorCount: SG;
 begin
-  if FLogicalProcessorCount = 0 then
-    UpdateLogicalProcessorCount;
+  UpdateSystemInfo;
   Result := FLogicalProcessorCount;
 end;
 
