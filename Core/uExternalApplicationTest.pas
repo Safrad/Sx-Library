@@ -74,12 +74,16 @@ var
 begin
   ExternalApplication := TExternalApplication.Create;
   try
+    CheckTrue(ExternalApplication.AllocatedMemory = 0);
+    CheckTrue(ExternalApplication.AllocatedMemoryPeak = 0);
     SetDeaultApplication(ExternalApplication);
 
     ExternalApplication.Execute;
 
     ExternalApplication.WaitFor;
     CheckFalse(ExternalApplication.Running);
+    CheckTrue(ExternalApplication.AllocatedMemory > 0);
+    CheckTrue(ExternalApplication.AllocatedMemoryPeak > 0);
   finally
     ExternalApplication.Free;
   end;

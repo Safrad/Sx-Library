@@ -7,7 +7,8 @@ uses
   Winapi.Windows,
 
   uTypes,
-  uStartupWindowState;
+  uStartupWindowState,
+  uTImeSpan;
 
 type
   TExitCode = U4;
@@ -15,7 +16,14 @@ type
   TCustomExternalApplication = class
   private
     FKeepRunning: BG;
+    FUpdateProcessMemoryInfoTime: TTimeSpan;
+    FAllocatedMemory: U8;
+    FAllocatedMemoryPeak: U8;
+
+    procedure UpdateProcessMemoryInfo;
     // Properties
+    function GetAllocatedMemory: U8;
+    function GetAllocatedMemoryPeak: U8;
     procedure SetFileName(const Value: TFileName);
     procedure SetParameters(const Value: string);
     procedure SetCurrentDirectory(const Value: string);
@@ -64,16 +72,21 @@ type
     property ExitCode: TExitCode read GetExitCode;
     property ErrorCode: U4 read FErrorCode;
     property Handle: THandle read FHandle;
+    property AllocatedMemory: U8 read GetAllocatedMemory;
+    property AllocatedMemoryPeak: U8 read GetAllocatedMemoryPeak;
   end;
 
 implementation
 
 uses
+  Winapi.psAPI,
+
   uMsg,
   uFiles,
   uEExternalApplication,
   uEIOException,
-  uLog;
+  uLog,
+  uMainTimer;
 
 { TCustomExternalApplication }
 
@@ -103,6 +116,28 @@ begin
         Assert(GetExitCode <> STILL_ACTIVE);
       end;
     end;
+  end;
+end;
+
+procedure TCustomExternalApplication.UpdateProcessMemoryInfo;
+var
+  ProcessMemoryCounters: _PROCESS_MEMORY_COUNTERS;
+begin
+  if (FHandle = INVALID_HANDLE_VALUE) then
+  begin
+    FAllocatedMemory := 0;
+    FAllocatedMemoryPeak := 0;
+  end
+  else if MainTimer.IntervalFrom(FUpdateProcessMemoryInfoTime).Milliseconds >= 1000 then
+  begin
+    FillChar(ProcessMemoryCounters, SizeOf(ProcessMemoryCounters), 0);
+    ProcessMemoryCounters.cb := SizeOf(ProcessMemoryCounters);
+    if not GetProcessMemoryInfo(FHandle, @ProcessMemoryCounters, ProcessMemoryCounters.cb) then
+      RaiseLastOSError;
+    FAllocatedMemory := ProcessMemoryCounters.WorkingSetSize;
+    FAllocatedMemoryPeak := ProcessMemoryCounters.PeakWorkingSetSize;
+
+    FUpdateProcessMemoryInfoTime := MainTimer.Value;
   end;
 end;
 
@@ -147,6 +182,18 @@ begin
     raise EArgumentException.Create('File name is empty.');
   if FCurrentDirectory = '' then
     raise EArgumentException.Create('Current directory is empty.');
+end;
+
+function TCustomExternalApplication.GetAllocatedMemory: U8;
+begin
+  UpdateProcessMemoryInfo;
+  Result := FAllocatedMemory;
+end;
+
+function TCustomExternalApplication.GetAllocatedMemoryPeak: U8;
+begin
+  UpdateProcessMemoryInfo;
+  Result := FAllocatedMemoryPeak;
 end;
 
 function TCustomExternalApplication.GetExitCode: TExitCode;
