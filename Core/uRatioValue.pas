@@ -6,7 +6,7 @@ uses
   uTypes;
 
 type
-  TRatioValue = class
+  TRatioValue = record
   private
     FUsed: S8;
     FTotal: S8;
