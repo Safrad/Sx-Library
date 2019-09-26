@@ -215,9 +215,9 @@ begin
     if LogDebug then
       MainLog.LogEnter(AExternalApplicationReadThread.Name + '.TerminateIfNoOutput');
     TExternalApplicationReadThread(AExternalApplicationReadThread).TerminateIfNoOutput;
-    FreeAndNil(AExternalApplicationReadThread);
     if LogDebug then
       MainLog.LogLeave(AExternalApplicationReadThread.Name + '.TerminateIfNoOutput');
+    FreeAndNil(AExternalApplicationReadThread);
   end;
 end;
 
