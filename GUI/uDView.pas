@@ -159,6 +159,7 @@ type
 		property RowOrder: TArrayOfSG read FRowOrder;
 		property RowHeight: SG read FRowHeight;
 		property ActualRow: SG read FActualRow write SetActualRow;
+		property ActualColumn: SG read FActualColumn;
 
 		// Selection
 		property SelCount: SG read GetSelCount;
