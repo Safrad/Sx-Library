@@ -22,6 +22,8 @@ type
     property NumericalSet: TNumericalSet read FNumericalSet write SetNumericalSet;
   public
     function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -54,6 +56,13 @@ end;
 function TNumericArgument.IsDefault: BG;
 begin
   Result := FValue = FDefaultValue;
+end;
+
+procedure TNumericArgument.SetDefault;
+begin
+  inherited;
+
+  FValue := FDefaultValue;
 end;
 
 procedure TNumericArgument.SetDefaultValue(const Value: S8);

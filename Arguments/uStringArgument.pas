@@ -18,6 +18,8 @@ type
     function GetSyntax: string; override;
   public
     function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -48,6 +50,13 @@ end;
 function TStringArgument.IsDefault: BG;
 begin
   Result := FValue = FDefaultValue;
+end;
+
+procedure TStringArgument.SetDefault;
+begin
+  inherited;
+
+  FValue := FDefaultValue;
 end;
 
 procedure TStringArgument.SetDefaultValue(const Value: string);

@@ -19,6 +19,8 @@ type
     function GetSyntax: string; override;
   public
     function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -52,6 +54,13 @@ end;
 function TTimeArgument.IsDefault: BG;
 begin
   Result := FValue.Ticks = FDefaultValue.Ticks;
+end;
+
+procedure TTimeArgument.SetDefault;
+begin
+  inherited;
+
+  FValue.Ticks := FDefaultValue.Ticks;
 end;
 
 procedure TTimeArgument.SetDefaultValue(const Value: TTimeSpan);

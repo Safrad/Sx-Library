@@ -19,6 +19,8 @@ type
     function GetSyntax: string; override;
   public
     function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -53,6 +55,13 @@ end;
 function TColorArgument.IsDefault: BG;
 begin
   Result := FValue.C = FDefaultValue.C;
+end;
+
+procedure TColorArgument.SetDefault;
+begin
+  inherited;
+
+  FValue.C := FDefaultValue.C;
 end;
 
 procedure TColorArgument.SetDefaultValue(const Value: TRGBA);

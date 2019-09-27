@@ -21,6 +21,8 @@ type
     constructor Create;
 
     function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -86,6 +88,19 @@ begin
   end;
 
   Result := True;
+end;
+
+procedure TStringArrayArgument.SetDefault;
+var
+  i: SG;
+begin
+  inherited;
+
+  SetLength(FValues, Length(FDefaultValues));
+  for i := 0 to Length(FValues) - 1 do
+  begin
+    FValues[i] := FDefaultValues[i];
+  end;
 end;
 
 procedure TStringArrayArgument.SetDefaultValues(const Value: TArrayOfString);

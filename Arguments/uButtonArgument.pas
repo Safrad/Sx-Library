@@ -12,6 +12,8 @@ type
     function GetSyntax: string; override;
   public
     function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
   end;
@@ -33,6 +35,12 @@ end;
 function TButtonArgument.IsDefault: BG;
 begin
   Result := True;
+end;
+
+procedure TButtonArgument.SetDefault;
+begin
+  inherited;
+
 end;
 
 procedure TButtonArgument.SetValueFromString(const AValue: string);
