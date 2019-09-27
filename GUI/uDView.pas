@@ -759,7 +759,7 @@ var
 begin
   VarTyp := VarType(VarData);
   case VarTyp of
-  varSmallint, varInteger, varInt64, varShortInt, varByte, varWord, varLongWord:
+  varSmallint, varInteger, varInt64, varUInt64, varShortInt, varByte, varWord, varLongWord:
   begin
     Result := NToS(VarData);
   end
