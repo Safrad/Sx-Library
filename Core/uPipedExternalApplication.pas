@@ -12,10 +12,6 @@ uses
   uExternalApplication;
 
 type
-//  TStartupType = uExternalApplication.TStartupType;
-//  TProcessPriority = uExternalApplication.TProcessPriority;
-//  TExitCode = uExternalApplication.TExitCode;
-
   TOnReadText = procedure(const AText: string) of object;
 
   TPipedExternalApplication = class(TExternalApplication)
