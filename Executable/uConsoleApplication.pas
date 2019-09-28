@@ -125,8 +125,6 @@ begin
 {$IF defined(MSWINDOWS)}
   SetConsoleCtrlHandler(@ConsoleCtrlHandler, True { add } );
 {$ENDIF}
-  SplashScreen := TConsoleSplashScreen.Create;
-
   inherited;
 end;
 
@@ -147,7 +145,13 @@ procedure TConsoleApplication.Initialize;
 begin
   CommonOutput := TConsoleOutputInfo.Create;
 
-  inherited;
+  SplashScreen := TConsoleSplashScreen.Create;
+  try
+    inherited;
+  finally
+    SplashScreen.Free;
+    SplashScreen := nil;
+  end;
 
   if FMinimizedArgument.Exists then
     ShowWindow(GetConsoleWindow, SW_MINIMIZE);
