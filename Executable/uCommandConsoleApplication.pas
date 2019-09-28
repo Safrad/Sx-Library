@@ -20,11 +20,12 @@ type
     FStartupArgument: TFileNameArgument;
     procedure DoCommand(const ACommandAsText: string; const AParameters: string);
     procedure ParseOneLine(const ALine: string);
-  protected
+  strict protected
     procedure AddArguments; override;
     procedure Initialize; override;
     procedure Finalize; override;
     procedure Wait; override;
+    procedure OnRun; override;
 
     // Can be overridden to handle unknown commands
     procedure ParseText(const AText: string); virtual;
@@ -116,6 +117,13 @@ end;
 procedure TCommandConsoleApplication.OnCommandException(const ACommand: TCustomCommand; const AException: Exception);
 begin
   Fatal(AException, ACommand);
+end;
+
+procedure TCommandConsoleApplication.OnRun;
+begin
+  inherited;
+
+  FConsoleReader.WaitFor;
 end;
 
 procedure TCommandConsoleApplication.ParseOneLine(const ALine: string);
