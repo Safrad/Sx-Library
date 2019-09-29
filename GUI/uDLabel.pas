@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes, uMath, uDWinControl,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl, uDrawStyle;
 
 type
@@ -102,7 +102,9 @@ type
 
 implementation
 
-uses uStrings, uScreen, uMsg, uColor;
+uses
+  Types,
+  uStrings, uScreen, uMsg, uColor;
 
 constructor TDLabel.Create(AOwner: TComponent);
 begin

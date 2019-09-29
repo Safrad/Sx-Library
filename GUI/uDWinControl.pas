@@ -4,11 +4,13 @@ interface
 
 uses
 	uTypes,
+  uDBitmap,
+
+	Winapi.Messages,
+
 	Classes,
 	Controls,
-	Messages,
-	Graphics,
-	uDBitmap;
+	Graphics;
 
 type
 	TDWinControl = class(TWinControl)
@@ -46,7 +48,9 @@ function GetSectionName(Control: TControl): string;
 implementation
 
 uses
-	SysUtils, Windows,
+	SysUtils,
+  Winapi.Windows,
+
 	uMath, uMsg;
 
 procedure CorrectFont(const Font: TFont);

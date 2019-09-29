@@ -55,11 +55,9 @@ uses
   uGeometry2D,
   uGeometry3D,
   uPolygon2D,
-  uDParser,
+  uSxCustomParser,
   uTable,
   uAbout,
-  PPMImage,
-  TGAImage,
   uDBitmap,
   uDButton,
   uDEdit,
@@ -74,12 +72,12 @@ uses
   uWatch,
   uWebUpdate,
   CoolTrayIcon,
-  GifImage,
   IGDIPlus,
   NLDJoystick,
   OpenGL12,
   SynTaskDialog,
-  TaskBarAPI;
+  TaskBarAPI,
+  GraphicEx;
 
 var
   DynamicLinkLibrary: TDynamicLinkLibrary;

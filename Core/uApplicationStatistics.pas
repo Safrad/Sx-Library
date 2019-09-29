@@ -42,8 +42,7 @@ type
 implementation
 
 uses
-	uProjectInfo, uMath, uMainTimer,
-	Windows;
+	uProjectInfo, uMath, uMainTimer;
 
 { TApplicationStatistics }
 

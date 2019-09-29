@@ -19,6 +19,10 @@ type
     function GetSyntax: string; override;
   public
     constructor Create;
+
+    function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
 
@@ -64,6 +68,39 @@ function TStringArrayArgument.GetValues: TArrayOfString;
 begin
   Used := True;
   Result := FValues;
+end;
+
+function TStringArrayArgument.IsDefault: BG;
+var
+  i: SG;
+begin
+  Result := False;
+
+  if Length(FValues) <> Length(FDefaultValues) then
+  begin
+    Exit;
+  end;
+
+  for i := 0 to Length(FValues) - 1 do
+  begin
+    if FValues[i] <> FDefaultValues[i] then
+      Exit;
+  end;
+
+  Result := True;
+end;
+
+procedure TStringArrayArgument.SetDefault;
+var
+  i: SG;
+begin
+  inherited;
+
+  SetLength(FValues, Length(FDefaultValues));
+  for i := 0 to Length(FValues) - 1 do
+  begin
+    FValues[i] := FDefaultValues[i];
+  end;
 end;
 
 procedure TStringArrayArgument.SetDefaultValues(const Value: TArrayOfString);

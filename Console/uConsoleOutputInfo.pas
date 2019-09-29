@@ -41,7 +41,7 @@ implementation
 
 uses
   SysUtils,
-  VCL.Consts,
+  FMX.Consts,
 
   uConsole,
   uConsoleTable,

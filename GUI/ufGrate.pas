@@ -39,7 +39,7 @@ type
 	public
 		{ Public declarations }
 		GrateColor, BackgroundColor: TColor;
-		GrateSize: SG;
+		GrateSize: U4;
 	end;
 
 var
@@ -50,7 +50,7 @@ implementation
 {$R *.DFM}
 uses
 	uScreen, uGraph, uDBitmap, uGColor, uGetInt, uDIniFile, uMenus, uColor, uDrawStyle, uDictionary,
-	Math;
+	Math, Velthuis.BigDecimals;
 
 const
 	DefaultGrateSize = 8;
@@ -104,9 +104,9 @@ begin
 	GetColor('Background Color', BackgroundColor, clBlack, OnApplyB);
 end;
 
-procedure OnApplyGrateSize(Value: S8);
+procedure OnApplyGrateSize(Value: BigDecimal);
 begin
-	fGrate.GrateSize := Value;
+	fGrate.GrateSize := Value.Trunc;
 	fGrate.Invalidate;
 end;
 

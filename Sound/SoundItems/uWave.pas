@@ -58,7 +58,7 @@ type
 	TId = array[0..3] of AnsiChar;
 
 	TWaveRIFFHeader = packed record // 12
-		GroupID: TId; // 'RIFF'	Marker1: TId; // 4
+		GroupID: TId; // 'RIFF' Marker1: TId; // 4
 		BytesFollowing: U4; // 4; FileSize - 8
 		RiffType: TId; // 'WAVE' //Marker2: TId; // 4
 	end;
@@ -418,7 +418,7 @@ const
 var
 	Chunk: TWaveChunk;
 	FilePos: U8;
-//	s: string;
+  FileSampleCount: U4;
 begin
 	while not F.Eof do
 	begin
@@ -436,7 +436,8 @@ begin
 		end;
 		fact:
 		begin
-			F.BlockRead(FSampleCount, SizeOf(FSampleCount));
+			F.BlockRead(FileSampleCount, SizeOf(FileSampleCount));
+      FSampleCount := FileSampleCount;
 		end;
 		list:
 		begin

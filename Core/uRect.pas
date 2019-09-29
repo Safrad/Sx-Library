@@ -4,7 +4,7 @@ interface
 
 uses
   uTypes,
-  Windows;
+  Types;
 
 function CreateRect(const Left, Top, Width, Height: LongInt): TRect;
 function SameRect(const R1, R2: TRect): BG;

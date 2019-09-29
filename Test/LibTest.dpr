@@ -48,10 +48,13 @@ uses
   uSplitFileTest in '..\Core\uSplitFileTest.pas',
   uRegionalCodePageTest in '..\Regional\uRegionalCodePageTest.pas',
   uWaveTest in '..\Sound\SoundItems\uWaveTest.pas',
-  uCustomCharTable in '..\Core\uCustomCharTable.pas',
   uTimeExpressionParserTest in '..\Parser\uTimeExpressionParserTest.pas',
   uSxObjectListTest in '..\Core\uSxObjectListTest.pas',
-  uSxStringListText in '..\Core\uSxStringListText.pas';
+  uSxStringListTest in '..\Core\uSxStringListTest.pas',
+  uExternalApplicationTest in '..\Core\uExternalApplicationTest.pas',
+  uPipedExternalApplicationTest in '..\Core\uPipedExternalApplicationTest.pas',
+  uRawFileTest in '..\Files\uRawFileTest.pas',
+  uTextFileTest in '..\Files\uTextFileTest.pas';
 
 {$R *.RES}
 

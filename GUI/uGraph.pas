@@ -5,7 +5,9 @@ interface
 uses
   uTypes, uColor,
   uTextAlignment,
-  Windows, Graphics, StdCtrls, Classes, SysUtils;
+
+  Types,
+  Vcl.Graphics, Vcl.StdCtrls, Classes, SysUtils;
 
 type
   TRectArray = array of TRect;
@@ -87,7 +89,7 @@ procedure RandomizeRangeArray(const AResult: TRangeArray);
 implementation
 
 uses
-  Math, Menus, Types, UITypes,
+  Math, UITypes, Winapi.Windows,
   uStrings, uChar, uMath, uSorts;
 
 function GetBmpSize(const X, Y: UG; const PixelFormat: U1): UG;

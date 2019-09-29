@@ -4,7 +4,10 @@ interface
 
 uses
 	uTypes,
-	Windows, Graphics, Menus, Messages, Classes, ExtCtrls, ImgList;
+
+  Types,
+  Winapi.Windows,
+  Graphics, Menus, Classes, ExtCtrls, ImgList;
 
 var
 	IconSize: SG; // Size of button on toolbar.
@@ -38,8 +41,8 @@ procedure MenuSet(Menu: TComponent);
 implementation
 
 uses
-	Forms, Controls, SysUtils, ShellAPI, Math,
-	uDButton, uStrings, uColor, uDictionary, uSounds, uSplash, uDrawStyle, uGlobalOptions,
+	Forms, Controls, SysUtils, Math,
+	uDButton, uStrings, uColor, uDictionary, uSounds, uDrawStyle, uGlobalOptions,
 	uGraph, uDBitmap, uScreen, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath, uLog, uOutputFormat,
   uDForm;
 

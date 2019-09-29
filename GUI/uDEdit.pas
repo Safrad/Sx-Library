@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes, uParserMsg,
-	SysUtils, Classes, Controls, StdCtrls, Messages;
+	SysUtils, Classes, Controls, StdCtrls;
 
 type
 	TDEdit = class(TEdit) // TMemo cannot display whole line

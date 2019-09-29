@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+	SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDLabel, uDButton, uDForm, uDEdit;
 
 type
@@ -59,6 +59,7 @@ implementation
 uses
   uStrings,
   uCPU,
+  uMainTimer,
   uOperatingSystem,
   uSystemMemory,
   uOutputFormat,
@@ -67,7 +68,6 @@ uses
 procedure TfSysInfo.FillComp;
 var
 	s: string;
-  QueriedFrequency: TLargeInteger;
 begin
   GCPU.Update;
 
@@ -84,11 +84,7 @@ begin
   EditThreads.Text := NToS(GCPU.LogicalProcessorCount);
 	EditCPUUsage.Text := NToS(Round(100 * 100 * GCPU.Usage), 2) + '%';
 	EditCPUFrequency.Text := NToS(Round(GCPU.Frequency)) + ' Hz';
-  QueriedFrequency := 0;
-  if QueryPerformanceFrequency(QueriedFrequency) then
-  	EditCounter.Text := NToS(PerformanceFrequency) + ' Hz'
-  else
-  	EditCounter.Text := NAStr;
+  EditCounter.Text := NToS(MainTimer.Frequency) + ' Hz';
 
   SystemMemory.Update;
 

@@ -4,7 +4,13 @@ interface
 
 uses
 	uTypes, uMath, uFiles, uDImage, uDIniFile, uTextFilter,
-	Classes, Controls, Windows, Graphics, SysUtils, Messages;
+
+  Types,
+  SysUtils,
+	Classes,
+  Winapi.Messages,
+  Controls,
+  Graphics;
 
 const
 	MinColumnWidth = 3;
@@ -153,6 +159,7 @@ type
 		property RowOrder: TArrayOfSG read FRowOrder;
 		property RowHeight: SG read FRowHeight;
 		property ActualRow: SG read FActualRow write SetActualRow;
+		property ActualColumn: SG read FActualColumn;
 
 		// Selection
 		property SelCount: SG read GetSelCount;
@@ -187,7 +194,9 @@ type
 implementation
 
 uses
-	Math, StdCtrls, ClipBrd, Types, Forms, UITypes,
+	Math, StdCtrls, ClipBrd, Forms, UITypes,
+  Winapi.Windows,
+
 	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
 	uDWinControl, uDForm,
 	fFind, Variants;
@@ -751,7 +760,7 @@ var
 begin
   VarTyp := VarType(VarData);
   case VarTyp of
-  varSmallint, varInteger, varInt64, varShortInt, varByte, varWord, varLongWord:
+  varSmallint, varInteger, varInt64, varUInt64, varShortInt, varByte, varWord, varLongWord:
   begin
     Result := NToS(VarData);
   end

@@ -6,8 +6,8 @@ uses
   uTypes,
   uWave,
   uChannels,
-  Windows,
-  MMSystem;
+  Winapi.Windows,
+  Winapi.MMSystem;
 
 const
   WAVE_FORMAT_EXTENSIBLE = $FFFE;

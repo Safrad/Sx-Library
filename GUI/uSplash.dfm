@@ -19,10 +19,18 @@ object fSplash: TfSplash
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnHide = FormHide
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
+  object LabelState: TSxLabel
+    Left = 0
+    Top = 0
+    Width = 3
+    Height = 13
+  end
   object Timer1: TTimer
     Interval = 40
     OnTimer = Timer1Timer

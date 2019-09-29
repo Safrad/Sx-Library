@@ -32,7 +32,7 @@ begin
     SetLength(AInteger, Count);
     for i := 0 to Count - 1 do
     begin
-      if VarType(AVariant[i]) = VarTyp then
+      if VarType(AVariant[i]) in [varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord] then
       begin
         AInteger[i] := AVariant[i];
       end
@@ -41,7 +41,7 @@ begin
     end;
     SortS4(True, Reverse, AIndex, PArrayS4(AInteger), Count);
   end;
-  varInt64:
+  varInt64, varUInt64:
   begin
     SetLength(AInt64, Count);
     for i := 0 to Count - 1 do

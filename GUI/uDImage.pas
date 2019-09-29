@@ -3,8 +3,13 @@ unit uDImage;
 interface
 
 uses
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Menus,
-	ExtCtrls, StdCtrls,
+  Types,
+	SysUtils, Classes,
+
+  Winapi.Windows,
+  Winapi.Messages,
+  Graphics, Controls, Forms, Menus, ExtCtrls, StdCtrls,
+
 	uDBitmap, uTypes, uMath, uDTimer, uDIniFile, uDWinControl;
 
 type
@@ -259,8 +264,7 @@ uses
   Velthuis.BigDecimals,
   uBigDecimalHelper,
 	uGraph, uStrings, uGetInt, uGColor, uOutputFormat, uMsg, uColor, uMenus, uDrawStyle, uDictionary,
-	uLog, uRect,
-	Types;
+	uLog, uRect;
 
 const
 	crHandPoint = 1;

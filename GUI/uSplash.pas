@@ -4,13 +4,17 @@ interface
 
 uses
 	uTypes,
+  uTimeSpan,
   uStopwatch,
+  uDBitmap,
+
 	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, uDTimer, uDForm;
+	ExtCtrls, uDTimer, uDForm, StdCtrls, uSxLabel;
 
 type
 	TfSplash = class(TDForm)
 		Timer1: TTimer;
+    LabelState: TSxLabel;
 		procedure Timer1Timer(Sender: TObject);
 		procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X,
 			Y: Integer);
@@ -20,212 +24,121 @@ type
 		procedure FormClose(Sender: TObject; var Action: TCloseAction);
 		procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormHide(Sender: TObject);
 	private
 		FirstX, FirstY: SG;
 		MoveCount: SG;
 
 		State: (stWait, stClosing);
 		FStopwatch: TStopwatch;
+    FAddSplashScreenProjectName: BG;
+    FFileName: TFileName;
+    FPromptlyClose: BG;
+    FMinimumTime: TTimeSpan;
+    FHideTime: TTimeSpan;
+    FMaxAlphaBlendValue: U1;
+    FBorderSize: SG;
 
-		procedure WantClose;
+    function GetBitmapSize: TSize;
+    function PrepareBitmap: TDBitmap;
+    procedure SetAddSplashScreenProjectName(const Value: BG);
+    procedure Initialize;
+    procedure AutomaticFileName;
+    procedure SetFileName(const Value: TFileName);
+    procedure SetPromptlyClose(const Value: BG);
+    procedure PlaceBitmapWithTexts(const ATargetBitmap: TDBitmap);
+    procedure SetHideTime(const Value: TTimeSpan);
+    procedure SetMaxAlphaBlendValue(const Value: U1);
+    procedure SetMinimumTime(const Value: TTimeSpan);
+    procedure SetBorderSize(const Value: SG);
+    procedure FillBitmapWithTexts(var BmpT: TDBitmap; const AWidth, AHeight: SG);
 	public
+    // Input
+	  property MinimumTime: TTimeSpan read FMinimumTime write SetMinimumTime;
+	  property HideTime: TTimeSpan read FHideTime write SetHideTime;
+    property MaxAlphaBlendValue: U1 read FMaxAlphaBlendValue write SetMaxAlphaBlendValue;
+    property AddSplashScreenProjectName: BG read FAddSplashScreenProjectName write SetAddSplashScreenProjectName;
+    property FileName: TFileName read FFileName write SetFileName;
+    property PromptlyClose: BG read FPromptlyClose write SetPromptlyClose;
+    property BorderSize: SG read FBorderSize write SetBorderSize;
+
+    // Process
+		procedure WantClose;
+
+    // Output
     property Stopwatch: TStopwatch read FStopwatch;
 	end;
-
-var
-	AddSplashScreenProjectName: BG = True;
-
-procedure ShowSplashScreen(const ChangeMouseCursor: BG = True); overload; // called as soon as possible
-procedure HideSplashScreen(const Promptly: BG = False); // called as late as possible (TfMain.FormShow)
 
 implementation
 
 {$R *.DFM}
+
 uses
-	StdCtrls,
-	uProjectInfo, uStrings,
-	uGraph, uDBitmap, uFiles, uMath, uDIniFile, uOutputFormat, uInputFormat, uDrawStyle;
-var
-	fSplash: TfSplash;
-const
-	MinimumTimeInMs = 2000;
-	HideTimeInMs = 1500;
-	MaxAlphaBlendValue = 240; //223;
-
-procedure ShowSplashScreen(const FileName: TFileName); overload;
-const
-	BorderSize = 7;
-var
-	x, y: SG;
-	R: TRect;
-	Co: array[0..3] of TColor;
-	Bmp, BmpT: TDBitmap;
-	s, LastFontName: string;
-begin
-	if fSplash = nil then
-	begin
-		if Application.MainForm <> nil then
-			fSplash := TfSplash.Create(Application.MainForm)
-		else
-			fSplash := TfSplash.Create(nil);
-	end;
-	fSplash.Cursor := crHourGlass;
-
-	Bmp := fSplash.BackBitmap;
-
-	R := Screen.WorkAreaRect;
-	if (FileName <> '') then
-	begin
-		fSplash.BackBitmap.LoadFromFile(FileName);
-		x := fSplash.BackBitmap.Width;
-		y := fSplash.BackBitmap.Height;
-		while (x < LgToPx(200)) or (y < LgToPx(3 * 256 div 4)) do
-		begin
-			x := x * 2;
-			y := y * 2;
-		end;
-		SetSmallerSize(x, y, 3 * (R.Right - R.Left) div 4, 3 * (R.Bottom - R.Top) div 4);
-		fSplash.BackBitmap.Resize(x, y);
-	end
-	else if (FileName = '') then
-	begin
-		x := LgToPx(512);
-		y := LgToPx(384);
-		SetSmallerSize(x, y, 3 * (R.Right - R.Left) div 4, 3 * (R.Bottom - R.Top) div 4);
-		Bmp.SetSize(x, y, clNone);
-		Co[0] := clRed;
-		Co[1] := clGreen;
-		Co[2] := clBlue;
-		Co[3] := clSilver;
-		Bmp.GenerateRGB(gfTriaHorz, Co, ef16, nil);
-		Co[0] := clWhite;
-		Co[1] := clBlack;
-		Co[2] := Co[0];
-		Co[3] := Co[1];
-		Bmp.GenerateRGB(gfFade2x, Co, ef10, nil);
-	end;
-
-	BmpT := TDBitmap.Create;
-	try
-		BmpT.TransparentColor := clSilver;
-		BmpT.SetSize(Bmp.Width, Bmp.Height, clSilver);
-		BmpT.Canvas.Brush.Style := bsClear;
-		if AddSplashScreenProjectName then
-		begin
-			PushFont(BmpT.Canvas.Font);
-			BmpT.Canvas.Font.Style := [fsBold];
-			LastFontName := BmpT.Canvas.Font.Name;
-			try
-				BmpT.Canvas.Font.Name := 'Times New Roman';
-				BmpT.Canvas.Font.Size := 20;
-
-				s := GetProjectInfo(piProductVersion);
-			{	for i := Length(s) downto 2 do
-				begin
-					if s[i] = '.' then
-					begin
-						SetLength(s, i - 1);
-						Break;
-					end;
-				end;}
-				GoodText(BmpT.Canvas, Rect(16, 16, Bmp.Width - 16, Bmp.Height - 16), GetProjectInfo(piProductName) + ' ' + s,
-					clBlack, clWhite, clSilver, taCenter, tlCenter);
-			finally
-				PopFont(BmpT.Canvas.Font);
-//				BmpT.Canvas.Font.Name := LastFontName;
-//		BmpT.Canvas.Font.Style := [];
-//		BmpT.Canvas.Font.Height := 14;
-			end;
-		end;
-
-
-//		BmpT.Canvas.Font.Style := [];
-		BmpT.Canvas.Font.Name := 'Tahoma';
-		BmpT.Canvas.Font.Style := [fsBold];
-		BmpT.Canvas.Font.Size := 10;
-	{	GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), 'by ' + GetProjectInfo(piAuthor),
-			clNone, clNone, clWhite, taRightJustify, tlCenter);
-		GoodText(BmpT.Canvas, Rect(BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - 4, Bmp.Width - BorderSize, Bmp.Height - BorderSize - 2), GetProjectInfo(piRelease),
-			clNone, clNone, clWhite, taLeftJustify, tlCenter);}
-		s := DateToS(SToDate(GetProjectInfo(piRelease), ifIO), ofDisplay);
-		if not AddSplashScreenProjectName then
-		begin
-			s := GetProjectInfo(piProductVersion) + CharSpace + '(' + s + ')';
-		end;
-		ShadowText(BmpT.Canvas, BorderSize + 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, s,
-			clWhite, clNone);
-
-		s := GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName);
-		ShadowText(BmpT.Canvas, Bmp.Width - 1 - BmpT.Canvas.TextWidth(s) - BorderSize - 2, Bmp.Height - BmpT.Canvas.TextHeight('W') - BorderSize - 2, s,
-				clWhite, clNone);
-
-		Bmp.Bmp(0, 0, BmpT, ef12);
-	finally
-		FreeAndNil(BmpT);
-	end;
-	if AddSplashScreenProjectName then
-		Bmp.Border(clWhite, clBlack, BorderSize, ef08);
-
-	fSplash.ClientWidth := fSplash.BackBitmap.Width;
-	fSplash.ClientHeight := fSplash.BackBitmap.Height;
-
-	// Set alpha after window size (care black blink).
-	if AddSplashScreenProjectName then
-		fSplash.AlphaBlendValue := MaxAlphaBlendValue
-	else
-		fSplash.AlphaBlendValue := High(fSplash.AlphaBlendValue);
-	fSplash.AlphaBlend := True;
-
-	fSplash.Show;
-	fSplash.Update;
-	Application.HandleMessage; // Process first queue even (change mouse cursor).
-
-	fSplash.State := stWait;
-	fSplash.Stopwatch.Restart;
-end;
-
-procedure ShowSplashScreen(const ChangeMouseCursor: BG = True);
-var i: SG;
-begin
-	for i := Length(AllPictureExt) - 1 downto 0 do
-	begin
-		if FileExists(GraphDir + 'Logo.' + AllPictureExt[i]) then
-		begin
-			ShowSplashScreen(GraphDir + 'Logo.' + AllPictureExt[i]);
-			Exit;
-		end;
-	end;
-	ShowSplashScreen('');
-end;
+  uReadImageProperties,
+	uProjectInfo,
+  uStrings,
+	uGraph,
+  uFiles,
+  uMath,
+  uOutputFormat,
+  uInputFormat,
+  uDrawStyle;
 
 procedure TfSplash.WantClose;
 begin
 	if State <> stClosing then
 	begin
 		State := stClosing;
-  	fSplash.Stopwatch.Restart;
+  	Stopwatch.Restart;
 	end;
 end;
 
-procedure HideSplashScreen(const Promptly: BG = False);
+procedure TfSplash.FillBitmapWithTexts(var BmpT: TDBitmap; const AWidth, AHeight: SG);
+var
+  s: string;
 begin
-	if Assigned(fSplash) and fSplash.Visible then
-	begin
-		fSplash.Cursor := crArrow;
+  BmpT.TransparentColor := clSilver;
+  BmpT.SetSize(AWidth, AHeight, clSilver);
+  BmpT.Canvas.Brush.Style := bsClear;
 
-		if Promptly then
-		begin
-			fSplash.State := stClosing;
-			fSplash.Close;
-		end
-		else
-		begin
-			if (fSplash.Stopwatch.Elapsed.Milliseconds >= MinimumTimeInMs) then
-			begin
-				fSplash.WantClose;
-			end;
-		end;
-	end;
+  if FAddSplashScreenProjectName then
+  begin
+    // Centered text
+    BmpT.Canvas.Font.Style := [fsBold];
+    BmpT.Canvas.Font.Name := 'Times New Roman';
+    BmpT.Canvas.Font.Size := 20;
+    s := GetProjectInfo(piProductVersion);
+    GoodText(BmpT.Canvas, Rect(16, 16, BmpT.Width - 16, BmpT.Height - 16), GetProjectInfo(piProductName) + ' ' + s, clBlack, clWhite, clSilver, taCenter, tlCenter);
+  end;
+
+  BmpT.Canvas.Font.Name := 'Tahoma';
+  BmpT.Canvas.Font.Style := [fsBold];
+  BmpT.Canvas.Font.Size := 10;
+  s := DateToS(SToDate(GetProjectInfo(piRelease), ifIO), ofDisplay);
+  if not FAddSplashScreenProjectName then
+  begin
+    s := GetProjectInfo(piProductVersion) + CharSpace + '(' + s + ')';
+  end;
+  // Left bottom text
+  ShadowText(BmpT.Canvas, FBorderSize + 2, BmpT.Height - BmpT.Canvas.TextHeight('W') - FBorderSize - 2, s, clWhite, clNone);
+
+  // Right bottom text
+  s := GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName);
+  ShadowText(BmpT.Canvas, BmpT.Width - 1 - BmpT.Canvas.TextWidth(s) - FBorderSize - 2, BmpT.Height - BmpT.Canvas.TextHeight('W') - FBorderSize - 2, s, clWhite, clNone);
+end;
+
+procedure TfSplash.PlaceBitmapWithTexts(const ATargetBitmap: TDBitmap);
+var
+  BmpT: TDBitmap;
+begin
+  BmpT := TDBitmap.Create;
+  try
+    FillBitmapWithTexts(BmpT, ATargetBitmap.Width, ATargetBitmap.Height);
+    ATargetBitmap.Bmp(0, 0, BmpT, ef12);
+  finally
+    FreeAndNil(BmpT);
+  end;
 end;
 
 procedure TfSplash.Timer1Timer(Sender: TObject);
@@ -233,13 +146,13 @@ begin
 	case State of
 	stWait:
 	begin
-		if Stopwatch.Elapsed.Milliseconds >= MinimumTimeInMs then
+		if Stopwatch.Elapsed >= MinimumTime then
 			WantClose;
 	end;
 	stClosing:
 	begin
-		if Stopwatch.Elapsed.Milliseconds <= HideTimeInMs then
-			AlphaBlendValue := Round(MaxAlphaBlendValue * (HideTimeInMs - Stopwatch.Elapsed.Milliseconds) / HideTimeInMs)
+		if Stopwatch.Elapsed <= FHideTime then
+			AlphaBlendValue := Round(MaxAlphaBlendValue * (FHideTime.Ticks - Stopwatch.Elapsed.Ticks) / HideTime.Ticks)
 		else
 		begin
 			Close;
@@ -261,10 +174,144 @@ begin
 	Inc(MoveCount);
 end;
 
+procedure TfSplash.FormShow(Sender: TObject);
+begin
+  Initialize;
+end;
+
+function TfSplash.GetBitmapSize: TSize;
+var
+	R: TRect;
+  ImageProperties: TImageProperties;
+  Width, Height: SG;
+begin
+	R := Screen.WorkAreaRect;
+	if (FFileName <> '') and ReadImageProperties(FFileName, ImageProperties) then
+	begin
+    Width := ImageProperties.Width;
+    Height := ImageProperties.Height;
+    Assert(Width <> 0);
+    Assert(Height <> 0);
+    while (Width < LgToPx(200)) or (Height < LgToPx(3 * 256 div 4)) do
+    begin
+      Multiply(Width, 2);
+      Multiply(Height, 2);
+    end;
+  end
+  else
+  begin
+		Width := LgToPx(512);
+		Height := LgToPx(384);
+  end;
+  SetSmallerSize(Width, Height, 3 * (R.Right - R.Left) div 4, 3 * (R.Bottom - R.Top) div 4);
+  Result.cx := Width;
+  Result.cy := Height;
+end;
+
+procedure TfSplash.Initialize;
+var
+	Bmp: TDBitmap;
+begin
+  if FFileName = '' then
+    AutomaticFileName;
+
+	Cursor := crHourGlass;
+
+  Bmp := PrepareBitmap;
+  PlaceBitmapWithTexts(Bmp);
+	if FAddSplashScreenProjectName then
+  begin
+    LabelState.Left := FBorderSize;
+    LabelState.Top := FBorderSize;
+		Bmp.Border(clWhite, clBlack, FBorderSize, ef08);
+  end;
+
+	// Set alpha after window size (care black blink).
+	if FAddSplashScreenProjectName then
+		AlphaBlendValue := MaxAlphaBlendValue
+	else
+		AlphaBlendValue := High(AlphaBlendValue);
+	AlphaBlend := True;
+
+	State := stWait;
+	Stopwatch.Restart;
+end;
+
+function TfSplash.PrepareBitmap: TDBitmap;
+var
+  Size: TSize;
+	Co: array[0..3] of TColor;
+begin
+  Size := GetBitmapSize;
+
+  SetBounds(Left, Top, Size.cx, Size.cy);
+	Result := BackBitmap;
+
+	if (FFileName <> '') then
+	begin
+		Result.LoadFromFile(FileName);
+		Result.Resize(Size.cx, Size.cy);
+	end
+	else
+	begin
+		Result.SetSize(Size.cx, Size.cy, clNone);
+		Co[0] := clRed;
+		Co[1] := clGreen;
+		Co[2] := clBlue;
+		Co[3] := clSilver;
+		Result.GenerateRGB(gfTriaHorz, Co, ef16, nil);
+		Co[0] := clWhite;
+		Co[1] := clBlack;
+		Co[2] := Co[0];
+		Co[3] := Co[1];
+		Result.GenerateRGB(gfFade2x, Co, ef10, nil);
+	end;
+end;
+
+procedure TfSplash.SetAddSplashScreenProjectName(const Value: BG);
+begin
+  FAddSplashScreenProjectName := Value;
+end;
+
+procedure TfSplash.SetBorderSize(const Value: SG);
+begin
+  FBorderSize := Value;
+end;
+
+procedure TfSplash.SetHideTime(const Value: TTimeSpan);
+begin
+  FHideTime := Value;
+end;
+
+procedure TfSplash.SetFileName(const Value: TFileName);
+begin
+  FFileName := Value;
+end;
+
+procedure TfSplash.SetMaxAlphaBlendValue(const Value: U1);
+begin
+  FMaxAlphaBlendValue := Value;
+end;
+
+procedure TfSplash.SetMinimumTime(const Value: TTimeSpan);
+begin
+  FMinimumTime := Value;
+end;
+
+procedure TfSplash.SetPromptlyClose(const Value: BG);
+begin
+  FPromptlyClose := Value;
+end;
+
 procedure TfSplash.FormCreate(Sender: TObject);
 begin
-//	FormStyle := fsNormal;
 	Background := baUser;
+
+	FMinimumTime.Milliseconds := 2000;
+	FHideTime.Milliseconds := 1500;
+	FMaxAlphaBlendValue := 240;
+  FAddSplashScreenProjectName := True;
+  FBorderSize := LgToPx(7);
 
   FStopwatch := TStopwatch.Create;
 end;
@@ -275,11 +322,26 @@ begin
 	WantClose;
 end;
 
+procedure TfSplash.AutomaticFileName;
+var
+  i: SG;
+  F: TFileName;
+begin
+	for i := Length(AllPictureExt) - 1 downto 0 do
+	begin
+    F := GraphDir + 'Logo.' + AllPictureExt[i];
+		if FileExists(F) then
+		begin
+			FFileName := F;
+			Exit;
+		end;
+	end;
+end;
+
 procedure TfSplash.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 	Timer1.Enabled := False;
 	BackBitmap.SetSize(0, 0, clNone);
-	Action := caFree;
 end;
 
 procedure TfSplash.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -293,17 +355,25 @@ end;
 
 procedure TfSplash.FormDestroy(Sender: TObject);
 begin
-	fSplash := nil;
-
   FStopwatch.Free;
 end;
 
-initialization
-{$IFNDEF NoInitialization}
-{$ENDIF NoInitialization}
+procedure TfSplash.FormHide(Sender: TObject);
+begin
+  Cursor := crArrow;
 
-finalization
-{$IFNDEF NoFinalization}
-	FreeAndNil(fSplash);
-{$ENDIF NoFinalization}
+  if FPromptlyClose then
+  begin
+    State := stClosing;
+    Close;
+  end
+  else
+  begin
+    if Stopwatch.Elapsed >= MinimumTime then
+    begin
+      WantClose;
+    end;
+  end;
+end;
+
 end.

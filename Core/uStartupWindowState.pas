@@ -21,7 +21,7 @@ implementation
 uses
   uTypes,
   SysUtils,
-  Windows,
+  Winapi.Windows,
   uStrings;
 
 { TStartupWindowState }

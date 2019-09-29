@@ -21,16 +21,21 @@ type
 implementation
 
 uses
-  Windows,
+  SysUtils,
   Forms,
+
   uStopwatch,
-  uSxThreadTimer;
+  uSxThreadTimer,
+  uLog;
 
 { TSxThreadTimerTest }
 
 procedure TSxThreadTimerTest.OnTimer(Sender: TObject);
 begin
   Inc(FEventCount);
+
+  if LogDebug then
+    MainLog.Add('OnTimer', mlDebug);
 end;
 
 procedure TSxThreadTimerTest.TestOneTimer;
@@ -48,7 +53,7 @@ begin
     DTimer.Enabled := True;
 
     Stopwatch.Start;
-    while Stopwatch.Elapsed.Seconds < 1 do
+    while Stopwatch.Elapsed.SecondsAsF < 1 do
     begin
       Application.ProcessMessages;
       Sleep(10);
@@ -56,7 +61,7 @@ begin
     Stopwatch.Stop;
     DTimer.Enabled := False;
 
-    CheckEquals(19, FEventCount);
+    CheckEquals(20, FEventCount);
   finally
     Stopwatch.Free;
     DTimer.Free;
@@ -89,7 +94,7 @@ begin
     DTimer2.Enabled := True;
 
     Stopwatch.Start;
-    while Stopwatch.Elapsed.Seconds < 1 do
+    while Stopwatch.Elapsed.SecondsAsF < 1 do
     begin
       Sleep(10);
     end;
@@ -97,8 +102,8 @@ begin
     DTimer1.Enabled := False;
     DTimer2.Enabled := False;
 
-    CheckEquals(19, FEventCount, 'Timer1');
-    CheckEquals(19, FEventCount2, 'Timer2');
+    CheckEquals(20, FEventCount, 'Timer1');
+    CheckEquals(20, FEventCount2, 'Timer2');
   finally
     Stopwatch.Free;
     DTimer2.Free;

@@ -34,7 +34,7 @@ object fMsgDlg: TfMsgDlg
   object LabelX: TLabel
     Left = 102
     Top = 35
-    Width = 5
+    Width = 4
     Height = 13
     Alignment = taCenter
     Caption = '/'
@@ -49,11 +49,11 @@ object fMsgDlg: TfMsgDlg
     Height = 21
     BevelOuter = bvNone
     Color = clBtnFace
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     ReadOnly = True
     TabOrder = 6
     OnMouseMove = FormMouseMove
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
   end
   object LabelTimeLeft: TDLabel
     Left = 200
@@ -74,6 +74,7 @@ object fMsgDlg: TfMsgDlg
     Width = 73
     Height = 17
     Alignment = taRightJustify
+    Caption = ''
     Displ.Format = '88'
     BevelOuter = bvLowered
     OnClick = LabelTimeLeftClick
@@ -97,6 +98,7 @@ object fMsgDlg: TfMsgDlg
     Width = 153
     Height = 17
     Alignment = taRightJustify
+    Caption = ''
     Displ.Format = '88'
     BevelOuter = bvLowered
     OnMouseMove = FormMouseMove
@@ -131,9 +133,16 @@ object fMsgDlg: TfMsgDlg
     Width = 273
     Height = 45
     Color = clBtnFace
+    Font.Charset = EASTEUROPE_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     ReadOnly = True
     TabOrder = 1
     WantReturns = False
+    Zoom = 100
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
@@ -166,13 +175,13 @@ object fMsgDlg: TfMsgDlg
     Top = 32
     Width = 37
     Height = 21
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 4
     OnChange = EditIndexChange
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
     OnMouseMove = FormMouseMove
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
   end
   object ButtonRight: TDButton
     Tag = 1
@@ -194,6 +203,7 @@ object fMsgDlg: TfMsgDlg
   end
   object Timer1: TDTimer
     Enabled = False
+    IntervalInSeconds = 1.000000000000000000
     OnTimer = Timer1Timer
     Left = 8
     Top = 88

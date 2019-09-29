@@ -46,7 +46,9 @@ type
 implementation
 
 uses
-  uStrings, uSystem, uDictionary, uProjectInfo, uMath, TaskBarAPI, SysUtils;
+  uStrings, uSystem, uDictionary, uProjectInfo, uMath, uMainTimer,
+
+  TaskBarAPI, SysUtils;
 
 { TProcess }
 
@@ -101,13 +103,13 @@ begin
   end;
 
   Application.ProcessMessages;
-  PauseTime := PerformanceCounter;
+  PauseTime := MainTimer.Value.Ticks;
   while FProcessStatus = psPaused do
   begin
     Sleep(LoopSleepTime);
     Application.ProcessMessages;
   end;
-  Inc(StartTime, IntervalFrom(PauseTime));
+  Inc(StartTime, MainTimer.IntervalFrom(PauseTime));
   Result := ProcessStatus <> psRun;
 end;
 
@@ -172,14 +174,11 @@ begin
 end;
 
 function TProcess.Interrupt: BG;
-var
-  NTime: U8;
 begin
-  NTime := PerformanceCounter;
-  if (NTime > LastInterruptTime + FOneTick) then
+  if (MainTimer.IntervalFrom(LastInterruptTime) > FOneTick) then
   begin
     Result := True;
-    LastInterruptTime := NTime;
+    LastInterruptTime := MainTimer.Value.Ticks;
   end
   else
     Result := False;

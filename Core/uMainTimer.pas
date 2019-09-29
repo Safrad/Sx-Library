@@ -26,7 +26,9 @@ type
     mtTSC
   );
 
+{$IF defined(MSWINDOWS)}
   TGetTickCount64 = function: U8; stdcall;
+{$ENDIF}
 
   TMainTimer = class
   private
@@ -34,12 +36,16 @@ type
     FMeasureType: TMeasureType;
     FFrequency: U8;
     FPrecisionDigits: U1;
+{$IF defined(MSWINDOWS)}
     FGetTickCount64: TGetTickCount64;
+{$ENDIF}
     function GetTickValue: U8;
+    function GetPerformanceCounterFrequecy: U8;
     procedure SetMeasureType(const Value: TMeasureType);
     function GetValue: TTimeSpan;
   public
-    function IntervalFrom(const AStartTime: U8): U8;
+    function IntervalFrom(const AStartTime: U8): U8; overload;
+    function IntervalFrom(const AStartTime: TTimeSpan): TTimeSpan; overload;
 
     property Value: TTimeSpan read GetValue;
     property Frequency: U8 read FFrequency;
@@ -53,10 +59,14 @@ var
 implementation
 
 uses
-  Windows,
+{$IF defined(MSWINDOWS)}
+  Winapi.Windows,
+{$ENDIF}
+  Diagnostics,
   SysUtils,
   uMath;
 
+{$IF defined(MSWINDOWS)}
 function GetCPUCounter: TU8; register;
 asm
 {$ifdef CPUX64}
@@ -75,16 +85,38 @@ asm
 	mov [ecx + 4], edx
 {$endif}
 end;
+{$ENDIF}
 
 { TMainTimer }
+
+function TMainTimer.GetPerformanceCounterFrequecy: U8;
+{$IF defined(MSWINDOWS)}
+var
+  QueriedFrequency: TLargeInteger;
+begin
+  Result := 0;
+  if QueryPerformanceFrequency(QueriedFrequency) then
+    Result := QueriedFrequency;
+{$ELSE}
+begin
+  Result := Diagnostics.TStopwatch.Frequency;
+{$ENDIF}
+end;
 
 function TMainTimer.GetTickValue: U8;
 begin
 	case FMeasureType of
-	mtGetTickCount32: Result := Windows.GetTickCount;
+  {$IF defined(MSWINDOWS)}
+	mtGetTickCount32: Result := GetTickCount;
   mtGetTickCount64: Result := FGetTickCount64;
 	mtPerformanceCounter: QueryPerformanceCounter(TLargeInteger(Result));
 	mtTSC: Result := GetCPUCounter.A;
+  {$ELSE}
+	mtGetTickCount32: Result := RoundDiv(1000 * Diagnostics.TStopwatch.GetTimeStamp, Diagnostics.TStopwatch.Frequency);
+  mtGetTickCount64: Result := RoundDiv(1000 * Diagnostics.TStopwatch.GetTimeStamp, Diagnostics.TStopwatch.Frequency);
+	mtPerformanceCounter: Result := Diagnostics.TStopwatch.GetTimeStamp;
+	mtTSC: Result := 0;
+  {$ENDIF}
   else
     raise EInvalidOpException.Create('Measure type is not initialized.');
 	end;
@@ -101,9 +133,12 @@ begin
   Result := TimeDifference(GetTickValue, AStartTime);
 end;
 
+function TMainTimer.IntervalFrom(const AStartTime: TTimeSpan): TTimeSpan;
+begin
+  Result.Ticks := TimeDifference(GetTickValue, AStartTime.Ticks);
+end;
+
 procedure TMainTimer.SetMeasureType(const Value: TMeasureType);
-var
-  QueriedFrequency: TLargeInteger;
 begin
   if FMeasureType <> Value then
   begin
@@ -115,34 +150,27 @@ begin
     end;
     mtGetTickCount64:
     begin
+      {$IF defined(MSWINDOWS)}
       FGetTickCount64 := GetProcAddress(GetModuleHandle(kernel32), 'GetTickCount64');
       if not Assigned(FGetTickCount64) then
       begin
-        SetMeasureType(mtGetTickCount32);
+        SetMeasureType(mtGetTickCount32); // Downgrade
         Exit;
       end;
+      {$ENDIF}
       FFrequency := 1000;
       FPrecisionDigits := 3;
     end;
     mtPerformanceCounter:
     begin
-      QueriedFrequency := 0;
-      if QueryPerformanceFrequency(QueriedFrequency) then
+      FFrequency := GetPerformanceCounterFrequecy;
+      if FFrequency >= 1000 then
       begin
-        if QueriedFrequency >= 1000 then
-        begin
-          FFrequency := QueriedFrequency;
-          FPrecisionDigits := CountDigits(QueriedFrequency - 1);
-        end
-        else
-        begin
-          SetMeasureType(mtGetTickCount64);
-          Exit;
-        end;
+        FPrecisionDigits := CountDigits(FFrequency - 1);
       end
       else
       begin
-        SetMeasureType(mtGetTickCount64);
+        SetMeasureType(mtGetTickCount64); // Downgrade
         Exit;
       end;
     end;

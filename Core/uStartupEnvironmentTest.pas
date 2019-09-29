@@ -17,11 +17,11 @@ implementation
 
 uses
   SysUtils,
-  Windows,
+  Winapi.Windows,
 
   uFiles,
   uFileCharset,
-  uOperatingSystem,
+  uTemporaryDirectory,
 
   uStartupEnvironment;
 
@@ -108,7 +108,7 @@ begin
 
   Charset := ReadStringFromFileEx(SourceFileName, DataA);
   Data := StartupEnvironment.RemoveVariables(string(DataA));
-  TargetFileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test.txt';
+  TargetFileName := TemporaryDirectory.ProcessTempDir + 'Test.txt';
   if FileExists(TargetFileName) then
     DeleteFileEx(TargetFileName);
   CheckTrue(WriteStringToFile(TargetFileName, Data, False, Charset));

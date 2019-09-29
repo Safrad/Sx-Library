@@ -86,15 +86,24 @@ implementation
 
 uses
 	uMath,
+
 	Math,
-  SysUtils,
-  Windows;
+  SysUtils
+{$IF defined(MSWINDOWS)}
+  , Winapi.Windows
+{$ENDIF}
+  ;
 
 function ColorToRGB(Color: TColor): Longint;
 begin
+{$IF defined(MSWINDOWS)}
   if Color < 0 then
-    Result := GetSysColor(Color and $000000FF) else
+    Result := GetSysColor(Color and $000000FF)
+  else
     Result := Color;
+{$ELSE}
+  Result := Color;
+{$ENDIF}
 end;
 
 function RGBToHLS(C: TRGBA): THLSColor;

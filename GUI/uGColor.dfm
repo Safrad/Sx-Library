@@ -196,10 +196,10 @@ object fGColor: TfGColor
     Top = 8
     Width = 34
     Height = 21
-    TabOrder = 4
-    OnChange = EditChange
     DoubleBuffered = True
     ParentDoubleBuffered = False
+    TabOrder = 4
+    OnChange = EditChange
   end
   object ButtonR: TDButton
     Left = 368
@@ -247,10 +247,10 @@ object fGColor: TfGColor
     Top = 32
     Width = 34
     Height = 21
-    TabOrder = 7
-    OnChange = EditChange
     DoubleBuffered = True
     ParentDoubleBuffered = False
+    TabOrder = 7
+    OnChange = EditChange
   end
   object ButtonG: TDButton
     Tag = 1
@@ -268,10 +268,10 @@ object fGColor: TfGColor
     Top = 56
     Width = 34
     Height = 21
-    TabOrder = 10
-    OnChange = EditChange
     DoubleBuffered = True
     ParentDoubleBuffered = False
+    TabOrder = 10
+    OnChange = EditChange
   end
   object ButtonB: TDButton
     Tag = 2
@@ -289,10 +289,10 @@ object fGColor: TfGColor
     Top = 152
     Width = 34
     Height = 21
-    TabOrder = 20
-    OnChange = EditChange
     DoubleBuffered = True
     ParentDoubleBuffered = False
+    TabOrder = 20
+    OnChange = EditChange
   end
   object PanelH: TPanel
     Left = 104
@@ -348,7 +348,6 @@ object fGColor: TfGColor
     Width = 57
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     PopupMenu = PopupMenu1
     TabOrder = 25
     OnChange = ComboBoxBitDepthChange
@@ -370,10 +369,10 @@ object fGColor: TfGColor
     Top = 128
     Width = 34
     Height = 21
-    TabOrder = 18
-    OnChange = EditChange
     DoubleBuffered = True
     ParentDoubleBuffered = False
+    TabOrder = 18
+    OnChange = EditChange
   end
   object LabelS: TDLabel
     Left = 8
@@ -474,10 +473,10 @@ object fGColor: TfGColor
     Top = 104
     Width = 34
     Height = 21
-    TabOrder = 16
-    OnChange = EditChange
     DoubleBuffered = True
     ParentDoubleBuffered = False
+    TabOrder = 16
+    OnChange = EditChange
   end
   object PanelS: TPanel
     Left = 104
@@ -509,7 +508,6 @@ object fGColor: TfGColor
     Width = 97
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     ItemIndex = 0
     PopupMenu = PopupMenu1
     TabOrder = 30
@@ -526,10 +524,10 @@ object fGColor: TfGColor
     Top = 80
     Width = 81
     Height = 21
-    TabOrder = 15
-    OnChange = EditChange
     DoubleBuffered = True
     ParentDoubleBuffered = False
+    TabOrder = 15
+    OnChange = EditChange
   end
   object PopupMenu1: TPopupMenu
     Images = ImageList1

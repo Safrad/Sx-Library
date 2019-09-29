@@ -63,10 +63,8 @@ uses
   uDictionary,
   uAlignedMemory,
   uFiles,
-  uMath;
-
-const
-  SectorSize = 4 * KB;
+  uMath,
+  uCPU;
 
 { TDiskBenchmark }
 
@@ -112,12 +110,12 @@ begin
 //      F.Truncate;
 
       // Write data of size "SectorSize" to the end of file
-      F.Seek(FFileSize - SectorSize);
+      F.Seek(FFileSize - GCPU.PageSize);
       AlignedMemory := TAlignedMemory.Create;
-      AlignedMemory.AlignSize := SectorSize;
-      AlignedMemory.Size := SectorSize;
+      AlignedMemory.AlignSize := GCPU.PageSize;
+      AlignedMemory.Size := GCPU.PageSize;
       try
-        F.BlockWrite(AlignedMemory.Data^, SectorSize);
+        F.BlockWrite(AlignedMemory.Data^, GCPU.PageSize);
       finally
         AlignedMemory.Free;
       end;
@@ -173,7 +171,7 @@ begin
     OutputInfo.AddCaption(Translate('Writing:') + CharSpace + s);
 
   AlignedMemory := TAlignedMemory.Create;
-  AlignedMemory.AlignSize := SectorSize;
+  AlignedMemory.AlignSize := GCPU.PageSize;
   AlignedMemory.Size := Clu;
   try
     if FAccess = daWrite then

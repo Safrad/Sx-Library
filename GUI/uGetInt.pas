@@ -4,8 +4,11 @@ interface
 
 uses
   Velthuis.BigDecimals,
+
 	uTypes, uParserMsg,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+
+  SysUtils, Classes,
+  Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm, uDMemo;
 
 type

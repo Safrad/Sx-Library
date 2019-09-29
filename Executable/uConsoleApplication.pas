@@ -58,9 +58,6 @@ type
   TConsoleApplication = class(TUIApplication)
   private
     FAbortedBySystem: BG;
-    FShowVersionInfo: BG;
-    procedure WriteVersionInfo;
-    procedure SetShowVersionInfo(const Value: BG);
   protected
     procedure Initialize; override;
     procedure AbortedBySystem; virtual;
@@ -68,31 +65,24 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-
-    property ShowVersionInfo: BG read FShowVersionInfo write SetShowVersionInfo;
   end;
 
 implementation
 
 uses
   SysUtils,
-  Windows,
-
+{$IF defined(MSWINDOWS)}
+  Winapi.Windows,
+{$ENDIF}
   uLog,
-  uStartState,
-  uDefaultArguments,
-  uCodePage,
-  uConsole,
-  uConsoleColor,
-  uProjectInfo,
-  uMsg,
-  uChar,
-  uFiles,
-  uDIniFile,
   uCommonApplication,
   uCommonOutput,
-  uConsoleOutputInfo;
+  uConsole,
+  uConsoleColor,
+  uConsoleOutputInfo,
+  uConsoleSplashScreen;
 
+{$IF defined(MSWINDOWS)}
 function GetConsoleWindow: HWND; stdcall; external kernel32;
 
 function CtrlTypeToString(const dwCtrlType: DWORD): string;
@@ -120,6 +110,7 @@ begin
     MainLogAdd(CtrlTypeToString(dwCtrlType), mlWarning);
   TConsoleApplication(CommonApplication).AbortedBySystem;
 end;
+{$ENDIF}
 
 { TConsoleApplication }
 
@@ -131,9 +122,9 @@ end;
 
 constructor TConsoleApplication.Create;
 begin
+{$IF defined(MSWINDOWS)}
   SetConsoleCtrlHandler(@ConsoleCtrlHandler, True { add } );
-  FShowVersionInfo := True;
-
+{$ENDIF}
   inherited;
 end;
 
@@ -143,7 +134,9 @@ begin
     inherited;
   finally
     Wait;
+{$IF defined(MSWINDOWS)}
     SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
+{$ENDIF}
     CommonOutput := nil; // Interface
   end;
 end;
@@ -151,17 +144,17 @@ end;
 procedure TConsoleApplication.Initialize;
 begin
   CommonOutput := TConsoleOutputInfo.Create;
-  WriteVersionInfo;
 
-  inherited;
+  SplashScreen := TConsoleSplashScreen.Create;
+  try
+    inherited;
+  finally
+    SplashScreen.Free;
+    SplashScreen := nil;
+  end;
 
   if FMinimizedArgument.Exists then
     ShowWindow(GetConsoleWindow, SW_MINIMIZE);
-end;
-
-procedure TConsoleApplication.SetShowVersionInfo(const Value: BG);
-begin
-  FShowVersionInfo := Value;
 end;
 
 procedure TConsoleApplication.Wait;
@@ -171,19 +164,6 @@ begin
     TConsole.WriteLine('');
     TConsole.Write('Press Enter to continue...');
     Readln;
-  end;
-end;
-
-procedure TConsoleApplication.WriteVersionInfo;
-begin
-  if FShowVersionInfo then
-  begin
-    TConsole.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piProductVersion) + ']', ccWhite);
-    if GetProjectInfo(piFileDescription) <> '' then
-      TConsole.WriteLine(GetProjectInfo(piFileDescription), ccLightGray);
-    if GetProjectInfo(piLegalCopyright) <> '' then
-      TConsole.WriteLine(GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName), ccGray);
-    TConsole.WriteLine('');
   end;
 end;
 

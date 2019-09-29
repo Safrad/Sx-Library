@@ -13,7 +13,7 @@ type
 implementation
 
 uses
-  Windows,
+  SysUtils,
   uTypes,
   uMainTimer;
 

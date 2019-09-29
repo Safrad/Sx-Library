@@ -1,5 +1,10 @@
 unit uMath;
 
+{$IF defined(CPUX86) and defined(ASSEMBLER)}
+  // Can use 32 bit assembler
+  {$DEFINE X86ASMRTL}
+{$ENDIF}
+
 interface
 
 uses
@@ -25,6 +30,22 @@ procedure Decrement(var X: F4; const N: F4 = 1); overload;
 procedure Decrement(var X: F8; const N: F8 = 1); overload;
 {$ifndef CPUX64}
 procedure Decrement(var X: FA; const N: FA = 1); overload;
+{$endif}
+
+procedure Multiply(var X: U1; const N: U1); overload;
+procedure Multiply(var X: U2; const N: U2); overload;
+procedure Multiply(var X: U4; const N: U4); overload;
+procedure Multiply(var X: U8; const N: U8); overload;
+{$ifdef CPUX64}
+procedure Multiply(var X: UG; const N: UG); overload;
+{$endif}
+
+procedure Multiply(var X: S1; const N: S1); overload;
+procedure Multiply(var X: S2; const N: S2); overload;
+procedure Multiply(var X: S4; const N: S4); overload;
+procedure Multiply(var X: S8; const N: S8); overload;
+{$ifdef CPUX64}
+procedure Multiply(var X: SG; const N: SG); overload;
 {$endif}
 
 procedure Multiply(var X: F4; const N: F4); overload;
@@ -160,7 +181,7 @@ procedure Exchange(var A, B: S8); register; overload;
 {$if CompilerVersion >= 23}
 procedure Exchange(var A, B: NativeInt); register; overload;
 procedure Exchange(var A, B: NativeUInt); register; overload;
-{$ifend}
+{$endif}
 procedure Exchange(var A, B: F4); register; overload;
 procedure Exchange(var A, B: F8); register; overload;
 {$ifndef CPUX64}
@@ -244,7 +265,11 @@ implementation
 
 uses
   uMainTimer,
-  Math, Windows, SysUtils;
+  Math,
+{$IF defined(MSWINDOWS)}
+  Winapi.Windows,
+{$ENDIF}
+  SysUtils;
 
 procedure Increment(var X: F4; const N: F4 = 1); overload;
 begin
@@ -277,6 +302,60 @@ end;
 procedure Decrement(var X: FA; const N: FA = 1); overload;
 begin
   X := X - N;
+end;
+{$endif}
+
+procedure Multiply(var X: U1; const N: U1); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: U2; const N: U2); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: U4; const N: U4); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: U8; const N: U8); overload;
+begin
+  X := X * N;
+end;
+
+{$ifdef CPUX64}
+procedure Multiply(var X: UG; const N: UG); overload;
+begin
+  X := X * N;
+end;
+{$endif}
+
+procedure Multiply(var X: S1; const N: S1); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: S2; const N: S2); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: S4; const N: S4); overload;
+begin
+  X := X * N;
+end;
+
+procedure Multiply(var X: S8; const N: S8); overload;
+begin
+  X := X * N;
+end;
+
+{$ifdef CPUX64}
+procedure Multiply(var X: SG; const N: SG); overload;
+begin
+  X := X * N;
 end;
 {$endif}
 
@@ -472,7 +551,7 @@ end;
 
 procedure DivModU2(const Dividend: U2; const Divisor: U1;
 	out Res, Remainder: U1); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 begin
   Res := Dividend div Divisor;
   Remainder := Dividend mod Divisor;
@@ -487,7 +566,7 @@ end;
 
 procedure DivModU4(const Dividend: U4; const Divisor: U2;
 	out Res, Remainder: U2); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 begin
   Res := Dividend div Divisor;
   Remainder := Dividend mod Divisor;
@@ -507,7 +586,7 @@ end;
 
 procedure DivModS4(const Dividend: S4; const Divisor: S2;
 	out Res, Remainder: S2); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 begin
   Res := Dividend div Divisor;
   Remainder := Dividend mod Divisor;
@@ -527,7 +606,7 @@ end;
 
 procedure DivModU8(const Dividend: U8; const Divisor: U4;
 	out Res, Remainder: U4); pascal;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 begin
   Res := Dividend div Divisor;
   Remainder := Dividend mod Divisor;
@@ -548,7 +627,7 @@ end;
 
 procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 begin
   Res := Dividend div Divisor;
   Remainder := Dividend mod Divisor;
@@ -1130,7 +1209,7 @@ begin
 end;
 
 procedure Exchange(var A, B: B1); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: B1;
 begin
@@ -1146,7 +1225,7 @@ asm
 end;
 
 procedure Exchange(var A, B: U1); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: U1;
 begin
@@ -1162,7 +1241,7 @@ asm
 end;
 
 procedure Exchange(var A, B: S1); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: S1;
 begin
@@ -1178,7 +1257,7 @@ asm
 end;
 
 procedure Exchange(var A, B: U2); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: U2;
 begin
@@ -1194,7 +1273,7 @@ asm
 end;
 
 procedure Exchange(var A, B: S2); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: S2;
 begin
@@ -1210,7 +1289,7 @@ asm
 end;
 
 procedure Exchange(var A, B: B4); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: B4;
 begin
@@ -1226,7 +1305,7 @@ asm
 end;
 
 procedure Exchange(var A, B: U4); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: U4;
 begin
@@ -1242,7 +1321,7 @@ asm
 end;
 
 procedure Exchange(var A, B: S4); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: S4;
 begin
@@ -1258,7 +1337,7 @@ asm
 end;
 
 procedure Exchange(var A, B: Pointer); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   C: Pointer;
 begin
@@ -1298,7 +1377,7 @@ begin
 	B := C;
 end;
 
-{$ifend}
+{$endif}
 
 procedure Exchange(var A, B: F4);
 var C: F8;
@@ -1327,6 +1406,17 @@ end;
 {$endif}
 
 procedure Exchange(var P0, P1; Count: UG); register;
+{$ifndef ASSEMBLER}
+var
+  i: SG;
+begin
+  for i := 0 to Count - 1 do
+  begin
+    Exchange(PByte(P0)^, PByte(P1)^);
+    Inc(PByte(P0), 1);
+    Inc(PByte(P1), 1);
+  end;
+{$else}
 asm
 {$ifdef CPUX64}
 	push rdi
@@ -1366,24 +1456,36 @@ asm
 	POP ESI
 	POP EDI
 {$endif}
+{$endif}
 end;
 
 procedure Exchange(P0, P1: Pointer; Count: UG); register;
+{$ifndef ASSEMBLER}
+var
+  i: SG;
+begin
+  for i := 0 to Count - 1 do
+  begin
+    Exchange(PByte(P0)^, PByte(P1)^);
+    Inc(PByte(P0), 1);
+    Inc(PByte(P1), 1);
+  end;
+{$else}
 asm
 {$ifdef CPUX64}
 	PUSH rDI
 	PUSH rSI
 
-	MOV ESI,EAX
-	MOV EDI,EDX
-	ADD EDX,ECX
+	MOV rSI,P0
+	MOV rDI,P1
+	ADD rDX,Count
 	@Loop:
-		mov al, [esi]
-		xchg al, [edi]
-		mov [esi], al
-		add edi, 1
-		add esi, 1
-		cmp edi, edx
+		mov al, [rsi]
+		xchg al, [rdi]
+		mov [rsi], al
+		add rdi, 1
+		add rsi, 1
+		cmp rdi, rdx
 	jb @Loop
 
 	POP rSI
@@ -1406,6 +1508,7 @@ asm
 
 	POP ESI
 	POP EDI
+{$endif}
 {$endif}
 end;
 
@@ -1505,7 +1608,7 @@ begin
 end;
 
 procedure ReadMem(P: Pointer; Size: UG); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   i: SG;
 begin
@@ -1530,7 +1633,7 @@ asm
 end;
 
 function SameData(P0, P1: Pointer; Size: UG): BG; register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   i: SG;
   b0, b1: U1;
@@ -1642,7 +1745,7 @@ begin
 end;
 
 procedure FillU2(var Desc; Count: UG; Value: U2); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   I: NativeInt;
   V: Int64;
@@ -1693,7 +1796,7 @@ asm
 end;
 
 procedure FillU4(var Desc; Count: UG; Value: U4); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   I: NativeInt;
   V: Int64;
@@ -1775,18 +1878,18 @@ begin
 end;
 
 procedure FillUG(var Desc; Count: UG; Value: UG); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   I: NativeInt;
   V: UG;
   PB: PUG;
-  P: PInt64;
+  P: PUG;
   Total: NativeInt;
 begin
   if Count >= 8 then
   begin
     V := Value;
-    P := PInt64(@Desc);
+    P := PUG(@Desc);
     Total := Count;
 
     for I := 0 to Total - 1 do
@@ -1821,7 +1924,7 @@ asm
 end;
 
 procedure FillOrderU1(var Desc; const Count: UG); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   P: PU1;
   i: SG;
@@ -1849,7 +1952,7 @@ asm
 end;
 
 procedure FillOrderU4(var Desc; const Count: UG); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   P: PU4;
   i: SG;
@@ -1878,7 +1981,7 @@ asm
 end;
 
 procedure FillOrderUG(var Desc; const Count: UG); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   P: PUG;
   i: SG;
@@ -1907,7 +2010,7 @@ asm
 end;
 
 procedure Reverse4(var Desc; Size: UG); register;
-{$ifdef CPUX64}
+{$ifndef X86ASMRTL}
 var
   P1, P2: PU4;
   i: SG;
@@ -1995,6 +2098,19 @@ begin
 end;
 
 procedure Swap02(var Desc; Count: UG; Step: S4); register;
+{$ifndef ASSEMBLER}
+var
+  i: UG;
+begin
+  Assert(Step > 0);
+  i := 0;
+  while i < Count do
+  begin
+    PWord(Desc) := PWord(Swap(Integer(PWord(Desc))));
+    Inc(PByte(Desc), Step);
+    Inc(i, Step);
+  end;
+{$else}
 asm
 {$ifdef CPUX64}
   push rdi
@@ -2016,15 +2132,39 @@ asm
 {$else}
 	POP EDI
 {$endif}
+{$endif}
 end;
 
 function SwapU4(D: U4): U4; register;
+{$ifndef ASSEMBLER}
+begin
+  TU4(Result).B3 := TU4(D).B0;
+  TU4(Result).B2 := TU4(D).B1;
+  TU4(Result).B1 := TU4(D).B2;
+  TU4(Result).B0 := TU4(D).B3;
+{$else}
 asm
 	bswap D
 	mov Result, D
+{$endif}
 end;
 
 function BitScanReverse(AValue: U4): U4; register;
+{$ifndef ASSEMBLER}
+var
+  i: SG;
+begin
+  for i := 31 downto 0 do
+  begin
+    if AValue and $80000000 <> 0 then
+    begin
+      Result := i;
+      Exit;
+    end;
+    AValue := AValue shl 1;
+  end;
+  Result := 0;
+{$else}
 asm // Highest bit set
 {$ifdef CPUX64}
   bsr ecx, AValue // ecx = BSR(AValue)
@@ -2032,9 +2172,25 @@ asm // Highest bit set
 {$else}
   bsr eax, AValue // Result = BSR(AValue)
 {$endif}
+{$endif}
 end;
 
 function BitScanReverse(AValue: U8): U4; register;
+{$ifndef ASSEMBLER}
+var
+  i: SG;
+begin
+  for i := 63 downto 0 do
+  begin
+    if AValue and $8000000000000000 <> 0 then
+    begin
+      Result := i;
+      Exit;
+    end;
+    AValue := AValue shl 1;
+  end;
+  Result := 0;
+{$else}
 asm // Highest bit set
 {$ifdef CPUX64}
   bsr rcx, AValue // rcx = BSR(AValue)
@@ -2050,6 +2206,7 @@ asm // Highest bit set
   bsr eax, U4 ptr [AValue] // AValue.lo
   @exit:
 	mov Result, eax // Result-lo
+{$endif}
 {$endif}
 end;
 
@@ -2122,9 +2279,14 @@ begin
 end;
 
 function TimeDifference(const NowTime, LastTime: U4): U4;
+{$ifndef ASSEMBLER}
+begin
+  Result := NowTime - LastTime;
+{$else}
 asm
 	mov Result, NowTime
 	sub Result, LastTime
+{$endif}
 end;
 
 function TimeDifference(const NowTime, LastTime: U8): U8;
@@ -2134,7 +2296,7 @@ end;
 
 function IntervalFrom(const StartTime: U4): U4;
 begin
-	Result := TimeDifference(GetTickCount, StartTime);
+  Result := TimeDifference({$IF defined(MSWINDOWS)}GetTickCount{$ELSE}MainTimer.Value.Milliseconds{$ENDIF}, StartTime);
 end;
 
 function IntervalFrom(const StartTime: U8): U8;
@@ -2143,13 +2305,23 @@ begin
 end;
 
 procedure Nop; assembler;
+{$ifndef ASSEMBLER}
+begin
+  // No code
+{$else}
 asm
   nop
+{$endif}
 end;
 
 procedure Pause; assembler;
+{$ifndef ASSEMBLER}
+begin
+  // No code
+{$else}
 asm
   pause // Same opcode F390h as "rep nop"
+{$endif}
 end;
 
 // CPU usage is 100% if used in loop

@@ -5,7 +5,7 @@ interface
 uses
 	uTypes, uDForm,
 	Menus,
-	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+	SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, StdCtrls, ExtCtrls, uDButton, uDWinControl, uDImage, uDGauge;
 
 type
@@ -47,7 +47,7 @@ implementation
 {$R *.dfm}
 
 uses
-	uOutputFormat, uMath, uStrings, uDictionary;
+	uOutputFormat, uMath, uStrings, uDictionary, uMainTimer;
 
 var
 	fTextStatus: TfTextStatus;
@@ -77,7 +77,7 @@ begin
 	begin
 		if Actual = 0 then
 		begin
-			fTextStatus.StartTime := GetTickCount;
+			fTextStatus.StartTime := MainTimer.Value.Ticks;
 			fTextStatus.ElapsedTime := 0;
 			fTextStatus.RemainTime := 0;
 			fTextStatus.ButtonResume.Enabled := False;
@@ -85,7 +85,7 @@ begin
 		end
 		else
 		begin
-			fTextStatus.ElapsedTime := TimeDifference(GetTickCount, fTextStatus.StartTime);
+			fTextStatus.ElapsedTime := MainTimer.IntervalFrom(fTextStatus.StartTime);
 			if (fTextStatus.DGauge.Max > 0) then
 				fTextStatus.RemainTime := RoundDivS8((fTextStatus.DGauge.Max - Actual) * fTextStatus.ElapsedTime, Actual);
 		end;
@@ -113,7 +113,7 @@ end;
 
 procedure TfTextStatus.ButtonPauseClick(Sender: TObject);
 begin
-	PauseTime := GetTickCount;
+	PauseTime := MainTimer.Value.Ticks;
 	ButtonPause.Enabled := False;
 	ButtonResume.Enabled := True;
 end;
@@ -144,7 +144,7 @@ end;
 
 procedure TfTextStatus.ButtonResumeClick(Sender: TObject);
 begin
-	Inc(StartTime, TimeDifference(GetTickCount, PauseTime));
+	Inc(StartTime, MainTimer.IntervalFrom(PauseTime));
 	ButtonPause.Enabled := True;
 	ButtonResume.Enabled := False;
 end;

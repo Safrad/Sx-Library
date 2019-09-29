@@ -58,10 +58,7 @@ begin
   FValue := ExpandFileCmd(AValue);
   if MustExists then
   begin
-    if not FileExists(FValue) then
-    begin
-      raise EFileNotFoundException.Create('File ' + FValue + ' not found.');
-    end;
+    RaiseExceptionIfFileNotExists(AValue);
   end;
 end;
 

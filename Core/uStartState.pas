@@ -18,7 +18,7 @@ implementation
 
 {$IFDEF MSWINDOWS}
 uses
-  Windows;
+  Winapi.Windows;
 {$ENDIF}
 
 { TStartup }

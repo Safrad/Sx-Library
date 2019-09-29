@@ -6,9 +6,10 @@ unit uDBitmap;
 interface
 
 uses
+  Types,
 	OpenGL12, {$ifdef GDIPlus}IGDIPlus,{$endif}
 	uTypes, uMath, uColor, uDrawStyle, uBlur,
-	Classes, Windows, Graphics, SysUtils;
+	Classes, Winapi.Windows, Vcl.Graphics, SysUtils;
 
 const
 	{$ifdef GDIPlus}
@@ -398,11 +399,9 @@ var
 implementation
 
 uses
-	Jpeg, GifImage, PngImage, TGAImage,
-	{$ifdef GDIPlus}
+	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
-	{$endif}
-  Math, ClipBrd,
+  Math, Vcl.ClipBrd,
 	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
@@ -1851,7 +1850,7 @@ begin
 
 				Result := TIcon.Create;
 			//	Result.Handle := CreateIconIndirect(IconInfo); // Do not support more that 4 bits!
-				Result.Handle := Windows.CreateIcon(HInstance, Wid, Hei, 1, NowScreenMode.Bits,
+				Result.Handle := Winapi.Windows.CreateIcon(HInstance, Wid, Hei, 1, NowScreenMode.Bits,
 					BmpMask,
 					BmpColor.ScanLine[BmpColor.Height - 1]);
 			finally
@@ -2041,12 +2040,10 @@ const
 	BackgroundColor = $818283; // Used for icon Alpha
 var
 	MyJPEG: TJPEGImage;
-	MyGif: TGifImage;
 	MyPng: TPngImage;
-	MyTga: TTgaImage;
-	{$ifdef GDIPlus}
+	MyGif: TGIFGraphic;
+	MyTga: TTargaGraphic;
 	MyTIFF: TTIFFGraphic;
-	{$endif}
 //	My: TWICImage;
 	Icon: TIcon;
 begin
@@ -2067,25 +2064,6 @@ begin
 			MyJPEG.Free;
 		end;
 	end
-	else if (Ext = 'gif') then
-	begin
-		MyGif := TGifImage.Create;
-		try
-			MyGif.LoadFromStream(Stream);
-//				Assert(MyGif.IsTransparent = False);
-			MyGif.DrawOptions := [goDirectDraw, goAutoDither]; // Loop in Draw!
-			SetSize(MyGif.Width, MyGif.Height, clNone);
-			Canvas.Draw(0, 0, MyGif);
-			Transparent := MyGif.IsTransparent;
-			if Transparent then
-			begin
-//				TransparentColor := MyGif.BackgroundColor;
-				TryTransparent;
-			end;
-		finally
-			MyGif.Free;
-		end;
-	end
 	else if (Ext = 'png') then
 	begin
 		// TODO : PngImage.Init;
@@ -2103,9 +2081,26 @@ begin
 			MyPng.Free;
 		end;
 	end
+	else if (Ext = 'gif') then
+	begin
+		MyGif := TGIFGraphic.Create;
+		try
+			MyGif.LoadFromStream(Stream);
+			SetSize(MyGif.Width, MyGif.Height, clNone);
+			Canvas.Draw(0, 0, MyGif);
+			Transparent := MyGif.Transparent;
+			if Transparent then
+			begin
+//				TransparentColor := MyGif.BackgroundColor;
+				TryTransparent;
+			end;
+		finally
+			MyGif.Free;
+		end;
+	end
 	else if Ext = 'tga' then
 	begin
-		MyTga := TTgaImage.Create;
+		MyTga := TTargaGraphic.Create;
 		try
 			MyTga.LoadFromStream(Stream);
 			FromBitmap(MyTga);
@@ -2116,7 +2111,6 @@ begin
 			MyTga.Free;
 		end;
 	end
-	{$ifdef GDIPlus}
 	else if (Ext = 'tif') or (Ext = 'tiff') then
 	begin
 		MyTIFF := TTIFFGraphic.Create;
@@ -2127,7 +2121,6 @@ begin
 			MyTIFF.Free;
 		end;
 	end
-	{$endif}
 	else if Ext = 'ico' then
 	begin
 		Icon := TIcon.Create;
@@ -2237,10 +2230,10 @@ function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: SG): Boolea
 
 var
 	MyJPEG: TJPEGImage;
-	MyGif: TGifImage;
 	MyPng: TPngImage;
 	MyBmp: TBitmap;
-	MyTga: TTgaImage;
+	MyGif: TGIFGraphic;
+	MyTga: TTargaGraphic;
 	Stream: TMemoryStream;
 	Ext: string;
 //	B: TBitmap;
@@ -2299,10 +2292,8 @@ begin
 	end
 	else if (Ext = 'gif') then
 	begin
-		MyGif := TGifImage.Create;
+		MyGif := TGIFGraphic.Create;
 		try
-			MyGif.ColorReduction := rmQuantize; // rmPalette
-			MyGif.DitherMode := dmFloydSteinberg; // dmNearest changes backgroud color!
 			MyBmp := TBitmap.Create;
 			try
 				MyBmp.PixelFormat := pf24bit;
@@ -2381,7 +2372,7 @@ begin
 	end
 	else if Ext = 'tga' then
 	begin
-		MyTga := TTgaImage.Create;
+		MyTga := TTargaGraphic.Create;
 		try
 			MyTga.Assign(Self);
 			try
@@ -3020,7 +3011,7 @@ end;
 
 function TDBitmap.ColorToRGB(C: TColor): TRGBA;
 begin
-	Result.L := Graphics.ColorToRGB(C);
+	Result.L := Vcl.Graphics.ColorToRGB(C);
 	if ChangeRB then
 		Exchange(Result.R, Result.B);
 	Result.A := 0;
@@ -3028,7 +3019,7 @@ end;
 
 function TDBitmap.ColorToRGBStack(C: TColor): TRGBA;
 begin
-	Result.L := Graphics.ColorToRGB(C);
+	Result.L := Vcl.Graphics.ColorToRGB(C);
 	if ChangeRB = False then
 		Exchange(Result.R, Result.B);
 	Result.A := 0;
@@ -9376,7 +9367,7 @@ var
 	Co: array[0..3] of TColor;
 	CR: TRGBA;
 begin
-	CR.L := Graphics.ColorToRGB(Color);
+	CR.L := Vcl.Graphics.ColorToRGB(Color);
 	Co[0] := LighterColor(CR.L);
 	Co[1] := DarkerColor(CR.L);
 	Co[2] := Co[0];

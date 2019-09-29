@@ -12,8 +12,8 @@ type
 implementation
 
 uses
-  ActiveX,
-  ComObj;
+  Winapi.ActiveX,
+  System.Win.ComObj;
 
 class function TWindowsManagementInstrumentation.GetWMIObject(const objectName: String): IDispatch;
 var

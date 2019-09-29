@@ -65,7 +65,7 @@ begin
   FSystemInfoCommand := TSystemInfoCommand.Create;
   Add(FSystemInfoCommand);
 
-  if FileExists(MainLog.FileName) then
+  if Assigned(MainLog) and FileExists(MainLog.FileName) then
   begin
     FShowLogCommand := TShowFileCommand.Create;
     FShowLogCommand.Shortcut := 'ShowLog';
@@ -74,7 +74,7 @@ begin
     Add(FShowLogCommand);
   end;
 
-  if FileExists(MainIni.FileName) then
+  if Assigned(MainIni) and FileExists(MainIni.FileName) then
   begin
     FShowIniCommand := TShowFileCommand.Create;
     FShowIniCommand.Shortcut := 'ShowIni';
@@ -83,7 +83,7 @@ begin
     Add(FShowIniCommand);
   end;
 
-  if FileExists(LocalMainIni.FileName) then
+  if Assigned(LocalMainIni) and FileExists(LocalMainIni.FileName) then
   begin
     FShowLocalIniCommand := TShowFileCommand.Create;
     FShowLocalIniCommand.Shortcut := 'ShowLocalIni';

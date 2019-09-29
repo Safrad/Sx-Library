@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes,
-	SysUtils, Messages;
+	SysUtils;
 
 type
 	TWatchFileChanged = procedure(const FileName: TFileName);
@@ -18,7 +18,9 @@ procedure WatchRemoveFile(const FileName: TFileName);
 implementation
 
 uses
-	Windows, Controls, Forms,
+	Winapi.Windows,
+  Winapi.Messages,
+  Controls, Forms,
 
   uOutputInfo,
   uMsg,

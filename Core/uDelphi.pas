@@ -5,7 +5,7 @@ interface
 uses
   uTypes,
   SysUtils,
-  Registry;
+  System.Win.Registry;
 
 type
   TDelphiVersion = (dvUnknown, dvPascal1, dvPascal2, dvPascal3, dvPascal4, dvPascal5, {dvPascal55,} dvPascal6, dvPascal7,
@@ -115,7 +115,7 @@ function GetPackageVersion(const PackageFileName: string): TDelphiVersion;
 implementation
 
 uses
-  Windows, uFiles, uOutputFormat, uMath, uStrings, uLog, uOperatingSystem;
+  Winapi.Windows, uFiles, uOutputFormat, uMath, uStrings, uLog, uTemporaryDirectory;
 
 const
   UnluckyNumber = 13;
@@ -406,8 +406,8 @@ begin
   Replace(SearchPaths, '$(DCC_Define)', '');
   Replace(SearchPaths, '$(DCC_UnitAlias)', '');
 
-  Replace(SearchPaths, '$(BDSUSERDIR)', OperatingSystem.TemporaryDirectory.ThreadTempDir);
-  Replace(SearchPaths, '$(BDSCOMMONDIR)', OperatingSystem.TemporaryDirectory.ThreadTempDir);
+  Replace(SearchPaths, '$(BDSUSERDIR)', TemporaryDirectory.ThreadTempDir);
+  Replace(SearchPaths, '$(BDSCOMMONDIR)', TemporaryDirectory.ThreadTempDir);
   ReplaceEnv(SearchPaths);
   Result := SearchPaths;
 end;

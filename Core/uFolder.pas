@@ -62,7 +62,6 @@ type
 implementation
 
 uses
-	Windows,
 	uMath, uMsg, uSorts, uStrings;
 
 const
@@ -123,9 +122,10 @@ var
 	FileItem: TFileItem;
 begin
 	ListCount := 0;
+
 	// faReadOnly or faHidden or faSysFile or
 	ErrorCode := FindFirst(Path + SubPath + '*.*', AttributeMask, SearchRec);
-	while ErrorCode = NO_ERROR do
+	while ErrorCode = 0 do
 	begin
 		IsDir := IsDirectory(SearchRec);
 		IsFile := (SearchRec.Attr and faDirectory) = 0;
@@ -158,8 +158,6 @@ begin
 		end;
 		ErrorCode := FindNext(SearchRec);
 	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then
-		IOError(Path + SubPath, ErrorCode);
 	SysUtils.FindClose(SearchRec);
 
 	if ListCount = 0 then Exit;
@@ -278,6 +276,9 @@ end;
 
 procedure TFolder.Read;
 begin
+  Assert(Path <> '');
+  CheckDirectory(Path);
+
 	ReadSubDirSorted('');
 end;
 

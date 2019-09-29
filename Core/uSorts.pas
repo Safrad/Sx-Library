@@ -3,6 +3,7 @@ unit uSorts;
 interface
 
 uses uTypes;
+
 type
 	TSortType = (
 		//                                                  For
@@ -58,9 +59,9 @@ function LocaleCompareText(const S1, S2: string): SG;
 implementation
 
 uses
+  SysUtils,
 	uMath,
-  uStrings,
-	Windows;
+  uStrings;
 
 const
 	MinIndex = 0;
@@ -257,9 +258,7 @@ end;
 
 function LocaleCompareText(const S1, S2: string): SG;
 begin
-	Result := CompareString(LOCALE_USER_DEFAULT, SORT_STRINGSORT,
-		PChar(S1), Length(S1),
-		PChar(S2), Length(S2)) - 2;
+	Result := AnsiCompareStr(S1, S2);
 end;
 
 var

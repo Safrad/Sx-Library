@@ -5,7 +5,7 @@ unit uOutputInfo;
 interface
 
 uses
-  VCL.Consts,
+  FMX.Consts,
 
   uTypes,
   uTable;

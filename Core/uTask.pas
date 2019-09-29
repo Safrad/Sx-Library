@@ -63,7 +63,7 @@ implementation
 
 uses
 	uInputFormat, uOutputFormat, uStrings, uMath, uDictionary, uFiles, uFile,
-	Windows, DateUtils, Math;
+	DateUtils, Math;
 
 var
 	MessagesLogDir: string;

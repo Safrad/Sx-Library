@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes,
-	Graphics, SysUtils;
+	Vcl.Graphics, SysUtils;
 
 type
 	TEffect = (ef00, ef01, ef02, ef03, ef04, ef05, ef06, ef07,

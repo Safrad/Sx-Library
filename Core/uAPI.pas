@@ -10,16 +10,17 @@ procedure APIOpen(const AFileName: TFileName; const AParameters: string = '');
 implementation
 
 uses
-  uExternalApplicationThread;
+  uShellApplicationThread;
 
 procedure APIOpen(const AFileName: TFileName; const AParameters: string = '');
 var
-  ExternalApplicationThread: TExternalApplicationThread;
+  ShellApplicationlThread: TShellApplicationThread;
 begin
-  ExternalApplicationThread := TExternalApplicationThread.Create;
-  ExternalApplicationThread.ExternalApplication.FileName := AFileName;
-  ExternalApplicationThread.ExternalApplication.Parameters := AParameters;
-  ExternalApplicationThread.Start;
+  ShellApplicationlThread := TShellApplicationThread.Create;
+  ShellApplicationlThread.ShellApplication.FileName := AFileName;
+  ShellApplicationlThread.ShellApplication.Parameters := AParameters;
+  ShellApplicationlThread.ShellApplication.CurrentDirectory := ExtractFileDir(AFileName);
+  ShellApplicationlThread.Start;
 end;
 
 end.

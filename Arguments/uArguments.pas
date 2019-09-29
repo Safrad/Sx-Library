@@ -24,9 +24,14 @@ type
     function PreviewTableArgumentValue(const AArgument: TCustomArgument): TRow;
     function Get(const Index: TIndex): TCustomArgument;
     function GetDefinedCount: SG;
+    procedure SetOwnsObjects(const Value: BG);
+    function GetOwnsObjects: BG;
   public
     constructor Create;
     destructor Destroy; override;
+
+    // Input
+    property OwnsObjects: BG read GetOwnsObjects write SetOwnsObjects;
 
     procedure Clear;
     procedure Parse; overload;
@@ -146,6 +151,11 @@ begin
       Inc(Result);
     end;
   end;
+end;
+
+function TArguments.GetOwnsObjects: BG;
+begin
+  Result := FArguments.OwnsObjects;
 end;
 
 function TArguments.GetRequiredArgumentCount: SG;
@@ -344,6 +354,11 @@ begin
   Row.Columns[0].Text := AArgument.Shortcut;
   Row.Columns[1].Text := AArgument.GetValueAsString;
   Result := Row;
+end;
+
+procedure TArguments.SetOwnsObjects(const Value: BG);
+begin
+  FArguments.OwnsObjects := Value;
 end;
 
 function TArguments.ShowRequired: string;

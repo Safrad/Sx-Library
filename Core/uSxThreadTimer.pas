@@ -51,7 +51,8 @@ implementation
 
 uses
   uMsg, uMath,
-  Windows, SysUtils, Math;
+
+  SysUtils, Math;
 
 { TSxThreadTimer }
 

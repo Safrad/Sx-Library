@@ -20,7 +20,10 @@ uses
   uTypes,
   uChar,
   uStrings,
-  SysUtils, Windows;
+{$IF defined(MSWINDOWS)}
+  Winapi.Windows,
+{$ENDIF}
+  SysUtils;
 
 function ConvertUTF8ToUnicode(const s: AnsiString): UnicodeString;
 begin
@@ -50,13 +53,14 @@ var
   WS: WideString;
 begin
   WS := WideString(AInput);
-  SetLength(Result, WideCharToMultiByte(CodePage, 0, PWideChar(WS),
+  SetLength(Result, LocaleCharsFromUnicode(CodePage, 0, PWideChar(WS),
     Length(WS), nil, 0, nil, nil));
-  WideCharToMultiByte(CodePage, 0, PWideChar(WS), Length(WS),
+  LocaleCharsFromUnicode(CodePage, 0, PWideChar(WS), Length(WS),
     PAnsiChar(Result), Length(Result), nil, nil);
 end;
 
 function ConvertAnsiToOem(const s: string): string;
+{$IF defined(MSWINDOWS)}
 var
   sBuffer: AnsiString;
 begin
@@ -71,6 +75,10 @@ begin
     Result := string(sBuffer)
   else
     Result := s;
+{$ELSE}
+begin
+  Result := s;
+{$ENDIF}
 end;
 
 function RemoveUnicode(const AInput: string): string;

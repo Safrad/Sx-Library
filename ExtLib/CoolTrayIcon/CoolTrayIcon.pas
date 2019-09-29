@@ -57,8 +57,9 @@ unit CoolTrayIcon;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Menus, ShellApi, ExtCtrls, SimpleTimer {$IFDEF DELPHI_4_UP}, ImgList{$ENDIF};
+  Winapi.ShellAPI,
+  Winapi.Windows, Winapi.Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  Menus, ExtCtrls, SimpleTimer {$IFDEF DELPHI_4_UP}, ImgList{$ENDIF};
 
 const
   // User-defined message sent by the trayicon
@@ -1346,7 +1347,6 @@ var
 begin
   BitmapImageList := TImageList.CreateSize(16, 16);
   try
-    Result := False;
     BitmapImageList.AddMasked(Bitmap, MaskColor);
     BitmapImageList.GetIcon(0, Icon);
     Result := True;
@@ -1382,7 +1382,7 @@ begin
   H := WindowFromPoint(P);
   { Convert current cursor X,Y coordinates to tray client coordinates.
     Add borders to tray icon size in the calculations. }
-  Windows.ScreenToClient(H, P);
+  Winapi.Windows.ScreenToClient(H, P);
   P.X := (P.X mod ((IconBorder*2)+IconSize)) -1;
   P.Y := (P.Y mod ((IconBorder*2)+IconSize)) -1;
   Result := P;

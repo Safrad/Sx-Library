@@ -15,7 +15,10 @@ type
 implementation
 
 uses
-  uTypes, SysUtils, IdHTTP, IdException, uFiles, uWebUpdate, uDownloadEx, uOperatingSystem;
+  SysUtils, IdHTTP, IdException,
+
+  uTypes, uFiles, uWebUpdate, uDownloadEx,
+  uTemporaryDirectory;
 
 { TWebUpdateTest }
 
@@ -24,7 +27,7 @@ var
   FileName: TFileName;
   i: SG;
 begin
-  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'data.txt';
+  FileName := TemporaryDirectory.ProcessTempDir + 'data.txt';
   for i := 0 to 9 do
   begin
     DownloadFile('http://sx.rosada.cz/test/test.txt', FileName);
@@ -37,7 +40,7 @@ var
   FileName: TFileName;
   Success: BG;
 begin
-  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'data.txt';
+  FileName := TemporaryDirectory.ProcessTempDir + 'data.txt';
   Success := False;
   try
     DownloadFileEx('http://software.rosada.cz/nonexisting.zip', FileName, '');

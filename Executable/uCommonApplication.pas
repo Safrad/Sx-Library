@@ -5,21 +5,34 @@ interface
 uses
   uFirst,
   uTypes,
+  uTimeSpan,
   uArguments,
-  uApplicationStatistics;
+  uApplicationStatistics,
+  uApplicationModuleManager,
+  uCustomSplashScreen;
 
 type
   TCommonApplication = class
   strict private
+    // Input
     FArguments: TArguments;
-    FStatistics: TApplicationStatistics;
+    FModuleManager: TApplicationModuleManager;
     FRestartAfterClose: BG;
+    FSplashScreen: TCustomSplashScreen;
+
+    // Output
     FInitialized: BG;
     FTerminated: BG;
+    FStatistics: TApplicationStatistics;
+    FInitializationSequenceTime: TTimeSpan;
 
+    // Local
     procedure RestartIfNeeded;
+
+    // Properties
     procedure SetArguments(const Value: TArguments);
     procedure SetRestartAfterClose(const Value: BG);
+    procedure SetSplashScreen(const Value: TCustomSplashScreen);
   protected
     procedure InitializeMainLog; virtual;
     procedure InitializeMainIni; virtual;
@@ -27,7 +40,9 @@ type
     procedure InitializeStatistics; virtual;
     procedure InitializeDictionary; virtual;
     procedure InitializeArguments; virtual;
+    procedure InitializeModules; virtual;
     procedure AddArguments; virtual;
+    procedure AddModules; virtual;
     procedure Initialize; virtual;
     procedure Finalize; virtual;
     procedure OnRun; virtual; abstract;
@@ -35,6 +50,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    // Process
     procedure Run; virtual;
     procedure Terminate; virtual;
 
@@ -43,11 +59,17 @@ type
     /// </summary>
     procedure RunWithException;
 
+    // Input
     property Arguments: TArguments read FArguments write SetArguments;
+    property ModuleManager: TApplicationModuleManager read FModuleManager;
     property RestartAfterClose: BG read FRestartAfterClose write SetRestartAfterClose;
+    property SplashScreen: TCustomSplashScreen read FSplashScreen write SetSplashScreen;
+
+    // Output
     property Initialized: BG read FInitialized;
     property Terminated: BG read FTerminated;
     property Statistics: TApplicationStatistics read FStatistics;
+    property InitializationSequenceTime: TTimeSpan read FInitializationSequenceTime;
   end;
 
 var
@@ -72,6 +94,11 @@ uses
 { TCommonApplication }
 
 procedure TCommonApplication.AddArguments;
+begin
+  // No Code
+end;
+
+procedure TCommonApplication.AddModules;
 begin
   // No Code
 end;
@@ -112,9 +139,14 @@ end;
 procedure TCommonApplication.Finalize;
 begin
   try
-    FArguments.Free;
+    if FModuleManager <> nil then
+    begin
+      FModuleManager.UnloadModules;
+      FreeAndNil(FModuleManager);
+    end;
+    FreeAndNil(FArguments);
     FreeAndNil(Dictionary);
-    FStatistics.Free;
+    FreeAndNil(FStatistics);
     FreeAndNil(LocalMainIni);
     FreeAndNil(MainIni);
     FreeAndNil(MainLog);
@@ -125,12 +157,18 @@ end;
 
 procedure TCommonApplication.Initialize;
 begin
+  if Assigned(SplashScreen) then
+  begin
+    FSplashScreen.Show;
+    FSplashScreen.AddMessage('Starting initialization sequence');
+  end;
   InitializeMainLog;
   InitializeMainIni;
   InitializeLocalMainIni;
   InitializeStatistics;
   InitializeDictionary;
   InitializeArguments;
+  InitializeModules;
 end;
 
 procedure TCommonApplication.InitializeArguments;
@@ -170,7 +208,13 @@ end;
 procedure TCommonApplication.InitializeMainLog;
 begin
   InitializeLog;
-  MainLog.Add('Initialization sequence time [s]: ' + FloatToStr(MainTimer.IntervalFrom(ApplicationStartTicks) / MainTimer.Frequency), mlDebug);
+end;
+
+procedure TCommonApplication.InitializeModules;
+begin
+  FModuleManager := TApplicationModuleManager.Create;
+  AddModules;
+  FModuleManager.LoadModules;
 end;
 
 procedure TCommonApplication.InitializeStatistics;
@@ -188,6 +232,8 @@ begin
     try
       ExternalApplication.FileName := ExeFileName;
       ExternalApplication.Parameters := ExeParameters;
+      ExternalApplication.CurrentDirectory := GetCurrentDir;
+      ExternalApplication.KeepRunning := True;
       ExternalApplication.Execute;
     finally
       ExternalApplication.Free;
@@ -196,10 +242,17 @@ begin
 end;
 
 procedure TCommonApplication.Run;
+var
+  s: string;
 begin
   if not FInitialized then
     Exit;
   try
+    FInitializationSequenceTime.Ticks := MainTimer.IntervalFrom(ApplicationStartTicks);
+    s := 'Initialization sequence done in ' + FInitializationSequenceTime.ToStringInSeconds + ' seconds.';
+    MainLog.Add(s, mlDebug);
+    if Assigned(SplashScreen) then
+      FSplashScreen.AddMessage(s);
     OnRun;
     ExitCode := 0;
     FArguments.WriteUnused;
@@ -225,6 +278,11 @@ end;
 procedure TCommonApplication.SetRestartAfterClose(const Value: BG);
 begin
   FRestartAfterClose := Value;
+end;
+
+procedure TCommonApplication.SetSplashScreen(const Value: TCustomSplashScreen);
+begin
+  FSplashScreen := Value;
 end;
 
 procedure TCommonApplication.Terminate;

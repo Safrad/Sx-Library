@@ -43,7 +43,6 @@ uses
   uLog,
   uFiles,
   uOutputFormat,
-  uStartupEnvironment,
   Windows,
   Classes,
   SysUtils, uWaveCommon;

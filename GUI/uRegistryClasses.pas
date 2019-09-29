@@ -3,7 +3,7 @@ unit uRegistryClasses;
 interface
 
 uses
-	Registry;
+	System.Win.Registry;
 
 type
 	TAccessPermission = (apCurrentUser, apLocalMachine, apClasses);
@@ -39,7 +39,7 @@ implementation
 uses
 	uTypes, uStrings, uMsg,
 	SysUtils,
-	Windows;
+	Winapi.Windows;
 
 function IsFolder(const FileType: string): BG;
 begin

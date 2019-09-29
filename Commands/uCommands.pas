@@ -41,7 +41,6 @@ type
 implementation
 
 uses
-  Windows,
   SysUtils,
   Classes,
 

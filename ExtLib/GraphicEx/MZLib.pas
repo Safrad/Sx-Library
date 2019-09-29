@@ -1,5 +1,7 @@
 unit MZLib;
 
+{$T-}
+
 // Original copyright of the creators:
 //
 // zlib.H -- interface of the 'zlib' general purpose compression library version 1.1.0, Feb 24th, 1998
@@ -27,12 +29,10 @@ unit MZLib;
 //
 // Delphi translation: (C) 2000 by Dipl. Ing. Mike Lischke (www.delphi-gems.com)
 
-{$T-}
-
 interface
 
 uses
-  Windows;
+  Winapi.Windows;
   
 // The 'zlib' compression library provides in-memory compression and decompression functions, including integrity checks
 // of the uncompressed data. This version of the library supports only one compression method (deflation) but other
@@ -327,7 +327,7 @@ const
   // preset dictionary flag in zlib header
   PRESET_DICT = $20;
 
-	ZLIB_VERSION: String = '1.1.2';
+  ZLIB_VERSION: String[10] = '1.1.2';
 
   ERROR_BASE = Z_NEED_DICT;
   ErrorMessages: array[0..9] of String = (
@@ -349,7 +349,7 @@ function CRC32(CRC: Cardinal; Buffer: PByte; Len: Cardinal): Cardinal;
 //----------------- deflation support ----------------------------------------------------------------------------------
 
 function DeflateInit(var ZState: TZState; Level: Integer): Integer;
-function DeflateInit_(ZState: PZState; Level: Integer; const Version: String; StreamSize: Integer): Integer;
+function DeflateInit_(ZState: PZState; Level: Integer; const Version: AnsiString; StreamSize: Integer): Integer;
 function Deflate(var ZState: TZState; Flush: Integer): Integer;
 function DeflateEnd(var ZState: TZState): Integer;
 
@@ -555,8 +555,8 @@ type
 //----------------- inflation support ----------------------------------------------------------------------------------
 
 function InflateInit(var Z: TZState): Integer;
-function InflateInit_(var Z: TZState; const Version: String; StreamSize: Integer): Integer;
-function InflateInit2_(var Z: TZState; W: Integer; const Version: String; StreamSize: Integer): Integer;
+function InflateInit_(var Z: TZState; const Version: AnsiString; StreamSize: Integer): Integer;
+function InflateInit2_(var Z: TZState; W: Integer; const Version: AnsiString; StreamSize: Integer): Integer;
 function InflateInit2(var Z: TZState; AWindowBits: Integer): Integer;
 function InflateEnd(var Z: TZState): Integer;
 function InflateReset(var Z: TZState): Integer;
@@ -941,8 +941,8 @@ const
   // Number of bits used within BitsBuffer. (BitsBuffer might be implemented on more than 16 bits on some systems.)
   BufferSize = 16;
 
-	StaticLiteralDescriptor: TStaticTreeDescriptor = (
-		StaticTree: @StaticLiteralTree;  // pointer to array of TTreeEntry
+  StaticLiteralDescriptor: TStaticTreeDescriptor = (
+    StaticTree: @StaticLiteralTree;  // pointer to array of TTreeEntry
     ExtraBits: @ExtraLengthBits;     // pointer to array of integer
     ExtraBase: LITERALS + 1;
     Elements: L_CODES;
@@ -1989,7 +1989,7 @@ end;
 //----------------------------------------------------------------------------------------------------------------------
 
 function DeflateInit2_(var ZState: TZState; Level: Integer; imMethod: Byte; AWindowBits: Integer; MemLevel:
-	Integer; Strategy: Integer; const Version: String; StreamSize: Integer): Integer;
+  Integer; Strategy: Integer; const Version: AnsiString; StreamSize: Integer): Integer;
 
 // initializes the hash table (Previous[] will be initialized on the fly)
 
@@ -2002,9 +2002,9 @@ var
 
 begin
   NoHeader := 0;
-	if (Version  =  '') or (Version[1] <> ZLIB_VERSION[1]) or (StreamSize <> SizeOf(TZState)) then
+  if (Version  =  '') or (Version[1] <> ZLIB_VERSION[1]) or (StreamSize <> SizeOf(TZState)) then
   begin
-		Result := Z_VERSION_ERROR;
+    Result := Z_VERSION_ERROR;
     Exit;
   end;
 
@@ -2132,7 +2132,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-function DeflateInit_(ZState: PZState; Level: Integer; const Version: String; StreamSize: Integer): Integer;
+function DeflateInit_(ZState: PZState; Level: Integer; const Version: AnsiString; StreamSize: Integer): Integer;
 
 // Initializes the internal stream state for compression. 
 //
@@ -4249,9 +4249,9 @@ Begin
   // first Huffman code is zero
   X[0] := 0;
   // grab values in bit order
-	P := @V;
+  P := @V;
   // no tables yet -> Level - 1
-	H := -1;
+  H := -1;
   // bits decoded = (L * H)
   W := -L;
 
@@ -5199,7 +5199,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-function InflateInit2_(var Z: TZState; W: Integer; const Version: String; StreamSize: Integer): Integer;
+function InflateInit2_(var Z: TZState; W: Integer; const Version: AnsiString; StreamSize: Integer): Integer;
 
 begin
   if (Version = '') or
@@ -5279,7 +5279,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-function InflateInit_(var Z: TZState; const Version: String; StreamSize: Integer): Integer;
+function InflateInit_(var Z: TZState; const Version: AnsiString; StreamSize: Integer): Integer;
 
 begin
   Result := InflateInit2_(Z, DEF_WBITS, Version, StreamSize);

@@ -4,8 +4,8 @@ interface
 
 uses
 	uTypes, uMath,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-	StdCtrls, uDButton, uDForm;
+	Winapi.Windows, Winapi.Messages, SysUtils, Classes, Vcl.Graphics,
+	uDButton, uDForm, Vcl.Controls, Vcl.StdCtrls;
 
 type
 	TfScreen = class(TDForm)
@@ -113,7 +113,9 @@ implementation
 
 {$R *.DFM}
 uses
-	Registry, Math, MMSystem,
+	Math,
+  System.Win.Registry,
+
   uPlaySound,
   uOutputInfo,
   uMsg,

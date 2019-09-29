@@ -30,7 +30,7 @@ object fTextStatus: TfTextStatus
     Width = 89
     Height = 21
     Color = clBtnFace
-    EditLabel.Width = 64
+    EditLabel.Width = 62
     EditLabel.Height = 13
     EditLabel.Caption = 'Elapsed Time'
     LabelPosition = lpLeft
@@ -43,7 +43,7 @@ object fTextStatus: TfTextStatus
     Width = 89
     Height = 21
     Color = clBtnFace
-    EditLabel.Width = 62
+    EditLabel.Width = 60
     EditLabel.Height = 13
     EditLabel.Caption = 'Remain Time'
     LabelPosition = lpLeft
@@ -56,7 +56,7 @@ object fTextStatus: TfTextStatus
     Width = 89
     Height = 21
     Color = clBtnFace
-    EditLabel.Width = 50
+    EditLabel.Width = 49
     EditLabel.Height = 13
     EditLabel.Caption = 'Total Time'
     LabelPosition = lpLeft

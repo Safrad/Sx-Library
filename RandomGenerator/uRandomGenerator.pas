@@ -13,6 +13,12 @@ type
     function RandomU4: U4; virtual; abstract;
     function RandomU8: U8; virtual; abstract;
 
+    procedure Random(out AData: U1); overload;
+    procedure Random(out AData: U2); overload;
+    procedure Random(out AData: U4); overload;
+    procedure Random(out AData: U8); overload;
+    procedure Random(out AData: PByte; const ASize: SG); overload;
+
     function RangeU4(const AMaxValue: U4): U4; overload;
     function RangeU4(const AMinimalValue, AMaximalValue: U4): U4; overload;
 
@@ -43,13 +49,69 @@ begin
 end;
 
 function TRandomGenerator.RandomU1: U1;
+var
+  X: TU4;
 begin
-	Result := RangeU4(256);
+  X.A := RandomU4;
+	Result := X.B0;
 end;
 
 function TRandomGenerator.RandomU2: U2;
+var
+  X: TU4;
 begin
-  Result := RangeU4(65536);
+  X.A := RandomU4;
+  Result := X.W0;
+end;
+
+procedure TRandomGenerator.Random(out AData: U1);
+begin
+  AData := RandomU1;
+end;
+
+procedure TRandomGenerator.Random(out AData: U2);
+begin
+  AData := RandomU2;
+end;
+
+procedure TRandomGenerator.Random(out AData: U4);
+begin
+  AData := RandomU4;
+end;
+
+procedure TRandomGenerator.Random(out AData: U8);
+begin
+  AData := RandomU8;
+end;
+
+procedure TRandomGenerator.Random(out AData: PByte; const ASize: SG);
+var
+  i: SG;
+  Data: PU4;
+  Remain: UG;
+  R: TU4;
+begin
+  Data := PU4(AData);
+  for i := 0 to ASize div 4 - 1 do
+  begin
+    Data^ := RandomU4;
+    Inc(Data);
+  end;
+  Remain := ASize mod 4;
+  if Remain <> 0 then
+  begin
+    R.A := RandomU4;
+    case Remain of
+    1: PU1(Data)^ := R.B0;
+    2: PU2(Data)^ := R.W0;
+    3:
+    begin
+      PU2(Data)^ := R.W0;
+      Inc(PU2(Data));
+      PU1(Data)^ := R.B2;
+    end;
+    end;
+  end;
 end;
 
 function TRandomGenerator.RandomZeroDistance(const AMaximalDistance: U4): S4;

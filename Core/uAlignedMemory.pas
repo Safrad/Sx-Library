@@ -63,10 +63,10 @@ begin
   FreeMem(FBuffer);
   FBuffer := nil;
   FData := nil;
-  if Size > 0 then
+  if FSize > 0 then
   begin
-    GetMem(FBuffer, Size + AlignSize - 1);
-    FData := Pointer((NativeInt(FBuffer) + AlignSize - 1) and (not (AlignSize - 1)));
+    GetMem(FBuffer, FSize + FAlignSize - 1);
+    FData := Pointer((NativeInt(FBuffer) + FAlignSize - 1) and (not (FAlignSize - 1)));
   end;
 end;
 

@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes,
-	Windows;
+	Winapi.Windows;
 
 type
 	TFileTypesOperation = (foCreate, foDelete, foExists);
@@ -30,7 +30,7 @@ implementation
 
 uses
 	uRegistryClasses,
-	SysUtils, Registry,
+	SysUtils, System.Win.Registry,
 	uStrings, uFiles, uMsg, uCSVFile;
 
 function CustomFileType(

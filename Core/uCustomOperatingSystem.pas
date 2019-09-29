@@ -4,16 +4,13 @@ interface
 
 uses
   uTypes,
-  uProjectVersion,
-  uTemporaryDirectory;
+  uProjectVersion;
 
 type
   TPowerForce = (pfNone, pfForceIfHang, pfForce);
 
   TCustomOperatingSystem = class
   private
-    FTemporaryDirectory: TTemporaryDirectory;
-
     FComputerName: string;
 
     FName: string;
@@ -29,9 +26,6 @@ type
 
     class function GetUptimeInMs: U8; virtual; abstract;
   public
-    constructor Create;
-    destructor Destroy; override;
-
     class procedure Hibernate; virtual; abstract;
     class procedure Sleep; virtual; abstract;
 
@@ -48,7 +42,9 @@ type
     class procedure RestartConfirmation(const APowerForce: TPowerForce);
     class procedure ShutDownConfirmation(const APowerForce: TPowerForce);
 
-    property TemporaryDirectory: TTemporaryDirectory read FTemporaryDirectory;
+    class function GetCurrentProcessId: U4; virtual; abstract;
+    class function GetCurrentThreadId: U4; virtual; abstract;
+
     property ComputerName: string read GetComputerName;
 
     property Name: string read GetName;
@@ -74,20 +70,6 @@ resourcestring
   rsSleep = 'Really sleep?';
 
 { TCustomOperatingSystem }
-
-constructor TCustomOperatingSystem.Create;
-begin
-  inherited;
-
-  FTemporaryDirectory := TTemporaryDirectory.Create;
-end;
-
-destructor TCustomOperatingSystem.Destroy;
-begin
-  FTemporaryDirectory.Free;
-
-  inherited;
-end;
 
 function TCustomOperatingSystem.GetComputerName: string;
 begin

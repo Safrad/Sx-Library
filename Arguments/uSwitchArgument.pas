@@ -11,12 +11,18 @@ type
   private
     FValue: BG;
     FDefaultValue: BG;
+    function ValueToString(const AValue: BG): string;
+
     procedure SetValue(const Value: BG);
     procedure SetDefaultValue(const Value: BG);
   protected
 		function GetSyntax: string; override;
   public
     constructor Create;
+
+    function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
 		procedure SetValueFromString(const AValue: string); override;
     function GetRequired: string; override;
@@ -57,10 +63,19 @@ end;
 
 function TSwitchArgument.GetValueAsString: string;
 begin
-  if Value then
-    Result := 'true'
-  else
-    Result := 'false';
+  Result := ValueToString(Value);
+end;
+
+function TSwitchArgument.IsDefault: BG;
+begin
+  Result := FValue = FDefaultValue;
+end;
+
+procedure TSwitchArgument.SetDefault;
+begin
+  inherited;
+
+  FValue := FDefaultValue;
 end;
 
 procedure TSwitchArgument.SetDefaultValue(const Value: BG);
@@ -89,6 +104,14 @@ begin
     Value := True
   else
     raise EParseError.Create('Argument ' + QuotedStr(Shortcut) + ' is switch, ', ['{no value}', 'false', 'true', '0', '1'], AValue);
+end;
+
+function TSwitchArgument.ValueToString(const AValue: BG): string;
+begin
+  if AValue then
+    Result := 'true'
+  else
+    Result := 'false';
 end;
 
 end.

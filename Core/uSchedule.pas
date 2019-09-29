@@ -50,7 +50,7 @@ implementation
 
 uses
 	uInputFormat, uOutputFormat, uStrings, uMath, uDictionary, uFiles, uFile,
-	Windows, DateUtils, Math;
+	Winapi.Windows, DateUtils, Math;
 
 { TSchedule }
 

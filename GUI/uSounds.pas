@@ -4,7 +4,9 @@ interface
 
 uses
 	uTypes, uDForm, uSoundMixer,
-	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+
+  Types,
+	SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs,
 	uDWinControl;
 

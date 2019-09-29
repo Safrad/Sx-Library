@@ -70,7 +70,7 @@ implementation
 uses
 	uFiles,
   uProjectVersion,
-	Windows,
+	Winapi.Windows,
 	uOutputFormat, uStrings,
 	TypInfo;
 

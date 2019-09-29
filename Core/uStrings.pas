@@ -135,6 +135,7 @@ function RemoveSingleAmp(const s: string): string;
 function AddSpace(const s: string): string;
 procedure AppendStr(var Dest: TFileName; const Source: string); overload;
 procedure AppendStr(var Dest: string; const Source: string); overload;
+procedure AppendStrSeparator(var Dest: string; const Source: string; const ASeparator: string);
 procedure AddPrefix(var Dest: string; const Source: string);
 function Plural(const Number: SG): string;
 procedure CorrectDir(var s: string);
@@ -163,8 +164,7 @@ function PadRight(const AText: string; const ACharCount: SG; const AFillChar: Ch
 
 function PropertiesToString(const Keys: array of string; const Values: array of string; const ASeparator: string = ';'): string;
 
-function CompareStringLogical(AValue1, AValue2: AnsiString): TCompareResult; overload;
-function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
+function CompareStringLogical(AValue1, AValue2: string): TCompareResult;
 
 function U1ToOctalString(AValue: U1): string;
 function CharToDigit(const AChar: Char): SG;
@@ -219,6 +219,8 @@ begin
 		begin
 			FromPos := ToPos;
 			Dir := 0;
+      if FromPos >= StrLen then
+        Exit;
 		end
 		else
 			Dec(ToPos);
@@ -232,6 +234,8 @@ begin
 		begin
 			FromPos := ToPos;
 			Dir := 0;
+      if FromPos >= StrLen then
+        Exit;
 		end
 		else
 			Inc(ToPos);
@@ -1174,6 +1178,14 @@ begin
 	Dest := Dest + Source;
 end;
 
+procedure AppendStrSeparator(var Dest: string; const Source: string; const ASeparator: string);
+begin
+  if Dest = '' then
+    Dest := Source
+  else
+    Dest := Dest + ASeparator + Source;
+end;
+
 procedure AddPrefix(var Dest: string; const Source: string);
 begin
 	Dest := Source + Dest;
@@ -1451,16 +1463,12 @@ begin
   end;
 end;
 
+
 function StrCmpLogicalW(psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll';
 
-function CompareStringLogical(AValue1, AValue2: AnsiString): TCompareResult; overload;
+function CompareStringLogical(AValue1, AValue2: string): TCompareResult; overload;
 begin
   Result := TCompareResult(StrCmpLogicalW(PWideChar(WideString(AValue1)), PWideChar(WideString(AValue2))));
-end;
-
-function CompareStringLogical(AValue1, AValue2: WideString): TCompareResult; overload;
-begin
-  Result := TCompareResult(StrCmpLogicalW(PWideChar(AValue1), PWideChar(AValue2)));
 end;
 
 function U1ToOctalString(AValue: U1): string;

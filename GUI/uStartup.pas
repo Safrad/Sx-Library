@@ -14,8 +14,9 @@ function IsRegisteredStartup: BG;
 implementation
 
 uses
-	Windows, Registry,
+	Winapi.Windows, System.Win.Registry,
 	uProjectInfo, uFiles;
+
 const
 	RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
 

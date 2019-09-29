@@ -203,7 +203,7 @@ end;
 
 function TTimeSpan.GetMicrosecondsAsI: U8;
 begin
-  Result :=  RoundDiv(FTicks * TMetricPrefix.MicroDivisorAsI, MainTimer.Frequency);
+  Result :=  RoundDivU8(FTicks * TMetricPrefix.MicroDivisorAsI, MainTimer.Frequency);
 end;
 
 function TTimeSpan.GetMillisecondsAsBD: BigDecimal;

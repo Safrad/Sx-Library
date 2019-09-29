@@ -20,6 +20,9 @@ type
   public
     constructor Create;
 
+    function IsDefault: BG; override;
+    procedure SetDefault; override;
+
     function GetValueAsString: string; override;
     procedure SetValueFromString(const AValue: string); override;
     procedure AddCaption(const ACaption: string);
@@ -70,9 +73,21 @@ begin
     Result := FCaptions[Value];
 end;
 
+function TComboArgument.IsDefault: BG;
+begin
+  Result := FValue = FDefaultValue;
+end;
+
 procedure TComboArgument.SetCaptions(const Value: TArrayOfString);
 begin
   FCaptions := Value;
+end;
+
+procedure TComboArgument.SetDefault;
+begin
+  inherited;
+
+  FValue := FDefaultValue;
 end;
 
 procedure TComboArgument.SetDefaultValue(const Value: SG);

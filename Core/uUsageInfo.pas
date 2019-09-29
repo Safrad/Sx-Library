@@ -22,6 +22,7 @@ uses
   uWebUpdate,
   uProjectInfo,
   uOperatingSystem,
+  uTemporaryDirectory,
   uSystemMemory,
   uFile,
   uFiles,
@@ -156,7 +157,7 @@ var
   TempDir: string;
   Response: string;
 begin
-  TempDir := OperatingSystem.TemporaryDirectory.ProcessTempDir;
+  TempDir := TemporaryDirectory.ProcessTempDir;
   ResponseFileName := TempDir + 'response.txt';
   Source := TStringList.Create;
   try

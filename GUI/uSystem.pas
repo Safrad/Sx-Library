@@ -3,8 +3,14 @@ unit uSystem;
 interface
 
 uses
-  uTypes, uFileCharset, uFile,
-  SysUtils, Forms, ShlObj, Controls, Classes, Dialogs;
+  uTypes,
+  uFileCharset,
+  uFile,
+
+  SysUtils,
+  Classes,
+  Winapi.ShlObj,
+  Vcl.Dialogs;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
 
@@ -40,7 +46,12 @@ procedure SetEnabledWinKeys(const AEnabled: BG);
 implementation
 
 uses
-	Windows, Math, Registry,
+  Math,
+	Winapi.Windows,
+  Winapi.Messages,
+  System.Win.Registry,
+  Vcl.Forms,
+
 	uStrings, uChar, uFiles, uDictionary;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);

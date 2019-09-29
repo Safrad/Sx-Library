@@ -48,6 +48,9 @@ type
   public
     constructor Create;
 
+    function IsDefault: BG; virtual; abstract;
+    procedure SetDefault; virtual; abstract;
+
     function Check: string;
     function Preview: string; virtual;
     procedure Require(const ACustomArgument: TCustomArgument);

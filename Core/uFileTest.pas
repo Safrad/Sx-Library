@@ -2,19 +2,25 @@ unit uFileTest;
 
 interface
 
-uses TestFrameWork;
+uses
+  SysUtils,
+  TestFrameWork;
 
 type
   TFileTest = class(TTestCase)
+  private
+    procedure CreateSampleFile(const FileName: TFileName);
   published
     procedure TestReadWriteLine;
     procedure TestRewriteFile;
+    procedure TestWriteThroughput;
+    procedure TestReadThroughput;
   end;
 
 implementation
 
 uses
-  Windows, SysUtils,
+  Winapi.Windows,
 	uTypes, uFileCharset, uFile, uFiles, uStrings, uChar, uOperatingSystem,
   uTemporaryDirectory;
 
@@ -33,7 +39,7 @@ begin
 	// Tests
 	for fc := Low(fc) to High(fc) do
 	begin
-		FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
+		FileName := TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(SG(fc)) + '.txt';
 		F := TFile.Create;
 		if not (fc in [fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE]) then
 			F.DeleteAfterClose := True;
@@ -74,7 +80,7 @@ begin
 				F.Free;
 			end;
 		end;
-    DeleteFile(FileName);
+    SysUtils.DeleteFile(FileName);
 	end;
 end;
 
@@ -84,7 +90,7 @@ var
 	FileName: TFileName;
   i: SG;
 begin
-  FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'FileTest.txt';
+  FileName := TemporaryDirectory.ProcessTempDir + 'FileTest.txt';
   for i := 0 to 1 do
   begin
     F := TFile.Create;
@@ -98,7 +104,59 @@ begin
       F.Free;
     end;
   end;
-  DeleteFile(fileName);
+  SysUtils.DeleteFile(fileName);
+end;
+
+procedure TFileTest.TestWriteThroughput;
+var
+	F: TFile;
+  i: SG;
+begin
+  F := TFile.Create;
+  try
+    F.DeleteAfterClose := True;
+    F.DefaultCharset := fcUTF8;
+    F.Open(TemporaryDirectory.ProcessTempDir + 'Test.txt', fmRewrite);
+    for i := 0 to 999999 do
+    begin
+      F.Writeln('[Test line]');
+    end;
+    F.Close;
+  finally
+    F.Free;
+  end;
+end;
+
+procedure TFileTest.TestReadThroughput;
+var
+  Line: string;
+  F: TFile;
+  FileName: TFileName;
+begin
+  FileName := TemporaryDirectory.ProcessTempDir + 'Test.txt';
+  CreateSampleFile(FileName);
+
+  F := TFile.Create;
+  try
+    F.DeleteAfterClose := True;
+    F.DefaultCharset := fcAnsi;
+    F.Open(FileName, fmReadOnly);
+    while not F.Eof do
+    begin
+      F.Readln(Line);
+    end;
+    F.Close;
+  finally
+    F.Free;
+  end;
+end;
+
+procedure TFileTest.CreateSampleFile(const FileName: TFileName);
+var
+  s: string;
+begin
+  s := RandomString(10 * MB);
+  WriteStringToFile(FileName, s, False);
 end;
 
 initialization

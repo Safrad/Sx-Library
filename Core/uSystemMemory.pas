@@ -33,13 +33,7 @@ type
     FVirtual: TRatioValue;
     FPhysical: TRatioValue;
     FPageFile: TRatioValue;
-    procedure SetPageFile(const Value: TRatioValue);
-    procedure SetPhysical(const Value: TRatioValue);
-    procedure SetVirtual(const Value: TRatioValue);
   public
-    constructor Create;
-    destructor Destroy; override;
-
     procedure Update;
     function MaxPhysicalMemorySize: U8; // On 32bit system can be maximal 3 GB
     function MaxPhysicalMemoryOneBlockSize: U8; // On 32bit system can be maximal 1.5 GB
@@ -48,9 +42,9 @@ type
     function ProcessAllocatedVirtualMemory: U8;
     function CanAllocateMemory(const Size: UG): BG;
 
-    property Physical: TRatioValue read FPhysical write SetPhysical;
-    property PageFile: TRatioValue read FPageFile write SetPageFile;
-    property Virtual: TRatioValue read FVirtual write SetVirtual;
+    property Physical: TRatioValue read FPhysical;
+    property PageFile: TRatioValue read FPageFile;
+    property Virtual: TRatioValue read FVirtual;
   end;
 
 function SystemMemory: TSystemMemory;
@@ -59,9 +53,9 @@ implementation
 
 uses
   SysUtils,
-  Windows,
+  Winapi.Windows,
   Math,
-  psAPI;
+  Winapi.psAPI;
 
 var
   GSystemMemory: TSystemMemory;
@@ -98,23 +92,12 @@ end;
 
 { TSystemMemory }
 
-{
-function MaxAllocationSize: U8;
-begin
-	FillMemoryStatus(MS);
-  Result := Max(0, MaxPhysicalMemorySize - ProcessAllocatedVirtualMemory);
-
-  Result := 2 * Result div 3; // Fragmentation
-end;
-}
-
 function TSystemMemory.CanAllocateMemory(const Size: UG): BG;
 const
   ReservedSize = 8 * MB;
 var
   P: Pointer;
 begin
-//  Result := Size + ReservedSize < MaxAllocationSize;
   try
     GetMem(P, Size + ReservedSize);
     Result := P <> nil;
@@ -122,24 +105,6 @@ begin
   except
     Result := False;
   end;
-end;
-
-constructor TSystemMemory.Create;
-begin
-  inherited;
-
-  FPhysical := TRatioValue.Create;
-  FPageFile := TRatioValue.Create;
-  FVirtual := TRatioValue.Create;
-end;
-
-destructor TSystemMemory.Destroy;
-begin
-  FVirtual.Free;
-  FPageFile.Free;
-  FPhysical.Free;
-
-  inherited;
 end;
 
 function TSystemMemory.MaxPhysicalMemorySize64: U8;
@@ -218,21 +183,6 @@ begin
   Result := Min(U8(Physical.Used), Result);
 end;
 
-procedure TSystemMemory.SetPageFile(const Value: TRatioValue);
-begin
-  FPageFile := Value;
-end;
-
-procedure TSystemMemory.SetPhysical(const Value: TRatioValue);
-begin
-  FPhysical := Value;
-end;
-
-procedure TSystemMemory.SetVirtual(const Value: TRatioValue);
-begin
-  FVirtual := Value;
-end;
-
 procedure TSystemMemory.Update;
 var
   MemoryStatusEx: TMemoryStatusEx;
@@ -248,21 +198,6 @@ begin
   PageFile.Total := Virtual.Total - Physical.Total;
   PageFile.Remain := Virtual.Remain - Physical.Remain;
 end;
-
-//function MMUsedMemory: U8;
-//var
-//    st: TMemoryManagerState;
-//    sb: TSmallBlockTypeState;
-//    i: SG;
-//begin
-//  GetMemoryManagerState(st);
-//  Result := st.TotalAllocatedMediumBlockSize + st.TotalAllocatedLargeBlockSize;
-//  for i := Low(st.SmallBlockTypeStates) to High(st.SmallBlockTypeStates) do
-//  begin
-//    sb := st.SmallBlockTypeStates[i];
-//      Inc(Result, sb.UseableBlockSize * sb.AllocatedBlockCount);
-//  end;
-//end;
 
 initialization
 {$IFNDEF NoInitialization}

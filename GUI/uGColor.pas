@@ -4,10 +4,12 @@ interface
 
 uses
 	uParserMsg,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+
+	Types,
+  SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
 	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,
-	uDWinControl, uNamedColors, uSxLabel, uSxColor;
+	uDWinControl, uNamedColors, uSxLabel, uSxColor, System.ImageList;
 
 type
 	TOnApplyColor = procedure(Color: TColor);

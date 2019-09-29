@@ -18,15 +18,16 @@ var
 implementation
 
 uses
-  Windows;
+  Diagnostics;
 
 initialization
 {$IFNDEF NoInitialization}
-  QueryPerformanceCounter(TLargeInteger(ApplicationStartTicks));
-	NoErrMsg := IsRelease;
+  NoErrMsg := IsRelease;
+  Diagnostics.TStopwatch.Create; // required for hi resolution GetTimeStamp (calls InitStopwatchType)
+  ApplicationStartTicks := Diagnostics.TStopwatch.GetTimeStamp;
 
-	{$ifndef FastMM4}	
-	ReportMemoryLeaksOnShutdown := IsDebug; // Optional, can take long time for many unfreed objects
-	{$endif}
+  {$ifndef FastMM4}
+  ReportMemoryLeaksOnShutdown := IsDebug; // Optional, can take long time for many unfreed objects
+  {$endif}
 {$ENDIF NoInitialization}
 end.

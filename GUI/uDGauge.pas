@@ -4,7 +4,9 @@ interface
 
 uses
 	uTypes, uDWinControl, uDrawStyle,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+
+  Winapi.Messages,
+	SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, StdCtrls, uDBitmap, uDispl;
 
 type
@@ -71,7 +73,9 @@ type
 
 implementation
 
-uses uGraph, uScreen, uOutputFormat, uColor;
+uses
+  Types,
+  uGraph, uScreen, uOutputFormat, uColor;
 
 constructor TDGauge.Create(AOwner: TComponent);
 begin

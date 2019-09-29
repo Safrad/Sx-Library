@@ -12,7 +12,7 @@ type
 
 const
 	MaxByteOrderMarkSize = 4;
-	ByteOrderMarks: array [TFileCharset] of AnsiString =
+	ByteOrderMarks: array [TFileCharset] of RawByteString =
 		('', '', #$EF + #$BB + #$BF, #$FE + #$FF, #$FF + #$FE, #$00 + #$00 + #$FE + #$FF,
 		#$FF + #$FE + #$00 + #$00, #$2B + #$2F + #$76 + #$38, #$2B + #$2F + #$76 + #$39,
 		#$2B + #$2F + #$76 + #$2B, #$2B + #$2F + #$76 + #$2F, #$F7 + #$64 + #$4C,
@@ -21,16 +21,17 @@ const
 
   CharsetSize : array [TFileCharset] of SG = (0, 1, 1, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
-function FindFileCharset(const AByteOrderMark: array of AnsiChar): TFileCharset;
+function FindFileCharset(const AByteOrderMark: RawByteString): TFileCharset;
 
 implementation
 
-function FindFileCharset(const AByteOrderMark: array of AnsiChar): TFileCharset;
+function FindFileCharset(const AByteOrderMark: RawByteString): TFileCharset;
 var
   Charset: TFileCharset;
 begin
 	for Charset := fcUTF8 to High(Charset) do
 	begin
+    // TODO: Optimize
 		if Copy(AByteOrderMark, 1, Length(ByteOrderMarks[Charset])) = ByteOrderMarks[Charset] then
 		begin
       Result := Charset;

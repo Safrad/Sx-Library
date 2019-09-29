@@ -31,6 +31,9 @@ type
     class procedure Restart(const APowerForce: TPowerForce); override;
     class procedure ShutDown(const APowerForce: TPowerForce); override;
 
+    class function GetCurrentProcessId: U4; override;
+    class function GetCurrentThreadId: U4; override;
+
     class function GetUptimeInMs: U8; override;
 
     class procedure SystemProperties;
@@ -47,9 +50,10 @@ implementation
 
 uses
   SysUtils,
-  Windows,
+  Winapi.Windows,
+  Winapi.Messages,
+
   uWindowsManagementInstrumentation,
-  Messages,
   uMsg,
   uAPI;
 
@@ -61,8 +65,18 @@ var
   Size: DWORD;
 begin
   Size := MAX_COMPUTERNAME_LENGTH + 1;
-  Windows.GetComputerName( ComputerName, Size );
+  Winapi.Windows.GetComputerName( ComputerName, Size );
   Result := ComputerName;
+end;
+
+class function TWindowsOperatingSystem.GetCurrentProcessId: U4;
+begin
+  Result := Winapi.Windows.GetCurrentProcessId;
+end;
+
+class function TWindowsOperatingSystem.GetCurrentThreadId: U4;
+begin
+  Result := Winapi.Windows.GetCurrentThreadId;
 end;
 
 class function TWindowsOperatingSystem.GetVersion: TProjectVersion;

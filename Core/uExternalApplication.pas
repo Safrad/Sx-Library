@@ -3,109 +3,136 @@ unit uExternalApplication;
 interface
 
 uses
+  SysUtils,
+  Winapi.Windows,
+
   uTypes,
-  uStartupWindowState,
-  SysUtils;
+  uTimeSpan,
+
+  uCustomExternalApplication;
 
 type
+  TStartupType = (stNormalApplication, stConsoleApplication);
+
+  TProcessPriority = (ppDefault, ppLow, ppBelowNormal, ppNormal, ppAboveNormal, ppHigh, ppRealTime);
+
   TExitCode = U4;
 
-  TProcessOutput = record
-    ErrorCode: U4;
-    ExitCode: TExitCode;
-    OutputText: string;
-  end;
-
-  TExternalApplication = class
+  TExternalApplication = class(TCustomExternalApplication)
   private
-    FFileName: TFileName;
-    FFileNameWithoutVariables: TFileName;
-    FHandle: THandle;
-    FExists: BG;
-    FParameters: string;
-    FCurrentDirectory: string;
-    FStartupWindowState: TStartupWindowState;
-    FProcessOutput: TProcessOutput;
-    FErrorCode: U4;
-    FAbort: BG;
-    FBufferSize: SG;
-    procedure SetFileName(const Value: TFileName);
-    function GetExitCode: TExitCode;
-    procedure SetParameters(const Value: string);
-    procedure SetCurrentDirectory(const Value: string);
-    procedure SetProcessOutput(const Value: TProcessOutput);
-    procedure SetStartupWindowState(const Value: TStartupWindowState);
-    procedure SetErrorCode(const Value: U4);
-    procedure SetAbort(const Value: BG);
-    procedure SetBufferSize(const Value: SG);
+    _sd: pointer;
+    _sa: PSecurityAttributes;
+    FAbortWaitFor: BG;
+    FProcessInformation: TProcessInformation;
+    FStartupType: TStartupType;
+    FProcessPriority: TProcessPriority;
+    FWaitForTimeOut: TTimeSpan;
+
+    function GetPriorityCreationFlag: DWORD;
+    procedure InitializeSecurityAttributes;
+    procedure FreeSecurityAttributes;
+
+    // Properties
+    function GetRunning: BG;
+    procedure SetStartupType(const Value: TStartupType);
+    procedure SetProcessPriority(const Value: TProcessPriority);
+    procedure SeWaitFortTimeOut(const Value: TTimeSpan);
+  protected
+    FStartupInfo: TStartupInfo;
   public
     constructor Create;
     destructor Destroy; override;
 
-    // Does not update ProcessOutput
-    procedure Execute;
+    // Input
+    property StartupType: TStartupType read FStartupType write SetStartupType;
+    property ProcessPriority: TProcessPriority read FProcessPriority write SetProcessPriority;
+    property WaitForTimeOut: TTimeSpan read FWaitForTimeOut write SeWaitFortTimeOut;
 
-    // Update ProcessOutput
-    procedure WaitFor;
+    // Process
+    procedure Execute; override;
+    procedure WaitFor; // Wait till not terminated or time out
+    procedure TerminateAndWaitFor;
+    procedure AbortWaitFor;
 
-    // Update ProcessOutput
-    procedure ExecuteWithOutputText;
-
-    // raise Exception
-    procedure CheckErrorCode;
-
-    // Display error code
-    procedure ShowErrorCode;
-
-    // @raise exception if Exit Code <> 0
-    procedure CheckExitCode;
-
-    property FileName: TFileName read FFileName write SetFileName;
-    property FileNameWithoutVariables: TFileName read FFileNameWithoutVariables;
-    property Parameters: string read FParameters write SetParameters;
-    property CurrentDirectory: string read FCurrentDirectory write SetCurrentDirectory;
-    property StartupWindowState: TStartupWindowState read FStartupWindowState write SetStartupWindowState;
-    property BufferSize: SG read FBufferSize write SetBufferSize;
-
-    property ErrorCode: U4 read FErrorCode write SetErrorCode;
-
-    property Handle: THandle read FHandle;
-    property Exists: BG read FExists;
-    property ProcessOutput: TProcessOutput read FProcessOutput write SetProcessOutput;
-    property Abort: BG read FAbort write SetAbort;
+    // Output
+    property Running: BG read GetRunning;
+    property ProcessInformation: TProcessInformation read FProcessInformation;
   end;
+
+(**
+	@return process exit code or throw exception
+*)
+function RunAndWaitForApplication(const AFileName: TFileName; const AParameters: string; const ACurrentDirectory: string; const AStartupType: TStartupType): TExitCode;
+
+procedure RaiseExceptionIfError(const AIsOk: Boolean);
 
 implementation
 
 uses
-  Windows,
-  uStartupEnvironment,
-  ShellAPI,
-  uFile,
-  uMsg,
-  uEIOException,
-  uEExternalApplication,
-	uLog;
+  Math,
+
+  uLog,
+  uOperatingSystem,
+  uMainTimer,
+  uETimeOutException;
+
+function RunAndWaitForApplication(const AFileName: TFileName; const AParameters: string; const ACurrentDirectory: string; const AStartupType: TStartupType): TExitCode;
+var
+  ExternalApplication: TExternalApplication;
+begin
+  ExternalApplication := TExternalApplication.Create;
+  try
+    ExternalApplication.FileName := AFileName;
+    ExternalApplication.Parameters := AParameters;
+    ExternalApplication.CurrentDirectory := ACurrentDirectory;
+    ExternalApplication.StartupType := AStartupType;
+
+    ExternalApplication.Execute;
+    ExternalApplication.CheckErrorCode;
+    ExternalApplication.WaitFor;
+    Result := ExternalApplication.ExitCode;
+  finally
+    ExternalApplication.Free;
+  end;
+end;
+
+procedure RaiseExceptionIfError(const AIsOk: Boolean);
+begin
+  if not AIsOk then
+    RaiseLastOSError;
+end;
 
 { TExternalApplicaton }
 
-procedure TExternalApplication.ShowErrorCode;
+procedure TExternalApplication.AbortWaitFor;
 begin
-  if FErrorCode <> 0 then
-    IOError(FFileName, FErrorCode);
+  FAbortWaitFor := True;
 end;
 
-procedure TExternalApplication.CheckErrorCode;
+procedure TExternalApplication.FreeSecurityAttributes;
 begin
-  if FErrorCode <> 0 then
-    raise EIOException.Create(FFileName, FErrorCode);
+  if (_sa <> nil) then
+    GlobalFree(dword(_sa));
+  if (_sd <> nil) then
+    GlobalFree(dword(_sd));
 end;
 
-procedure TExternalApplication.CheckExitCode;
+procedure TExternalApplication.InitializeSecurityAttributes;
 begin
-  if FProcessOutput.ExitCode <> 0 then
+  if OperatingSystem.IsNT then
   begin
-    raise EExternalApplication.Create(FFilename + ' ' + FParameters, FProcessOutput.ExitCode, FProcessOutput.OutputText);
+    _sd := pointer(GlobalAlloc(GPTR, SECURITY_DESCRIPTOR_MIN_LENGTH));
+    RaiseExceptionIfError(InitializeSecurityDescriptor(_sd, SECURITY_DESCRIPTOR_REVISION));
+    RaiseExceptionIfError(SetSecurityDescriptorDacl(_sd, true, nil, false));
+    _sa := PSecurityAttributes(GlobalAlloc(GPTR, sizeof(TSecurityAttributes)));
+    _sa.nLength := sizeof(TSecurityAttributes);
+    _sa.lpSecurityDescriptor := _sd;
+    _sa.bInheritHandle := true;
+  end
+  else
+  begin
+    _sd := nil;
+    _sa := nil;
   end;
 end;
 
@@ -113,48 +140,62 @@ constructor TExternalApplication.Create;
 begin
   inherited;
 
-  FHandle := INVALID_HANDLE_VALUE;
-  FCurrentDirectory := GetCurrentDir;
-  FStartupWindowState.WindowState := hwsNormal;
-  FStartupWindowState.Active := True;
-  FBufferSize := DefFileBuffer;
+  FStartupType := stNormalApplication;
+  FWaitForTimeOut.Seconds := 1;
+
+  FStartupInfo.cb := SizeOf(FStartupInfo);
+  InitializeSecurityAttributes;
 end;
 
 destructor TExternalApplication.Destroy;
 begin
-  if FHandle <> INVALID_HANDLE_VALUE then
-    CloseHandle(FHandle);
-
-  inherited;
+  try
+    FreeSecurityAttributes;
+  finally
+    inherited;
+  end;
 end;
 
 procedure TExternalApplication.Execute;
 var
-	lpExecInfo: TShellExecuteInfo;
+  CreationFlags: DWORD;
 begin
-  if FHandle <> INVALID_HANDLE_VALUE then
-    CloseHandle(FHandle);
+  inherited;
 
-  lpExecInfo.cbSize := SizeOf(lpExecInfo);
-  FillChar(lpExecInfo, SizeOf(lpExecInfo), 0);
+	FStartupInfo.dwFlags := FStartupInfo.dwFlags or STARTF_USESHOWWINDOW;
+  FStartupInfo.wShowWindow := FStartupWindowState.ToWindowsAPIParameter;
+  InitializeSecurityAttributes;
 
-  lpExecInfo.cbSize := SizeOf(lpExecInfo);
-  lpExecInfo.fMask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
-  if IsConsole then
-    lpExecInfo.fMask := lpExecInfo.fMask or SEE_MASK_FLAG_NO_UI;
-  lpExecInfo.Wnd := GetActiveWindow();
-  lpExecInfo.lpVerb := 'open';
-  lpExecInfo.lpParameters := PChar(FParameters);
-  lpExecInfo.lpFile := PChar(FFileNameWithoutVariables);
-  lpExecInfo.nShow := FStartupWindowState.ToWindowsAPIParameter;
-  lpExecInfo.hProcess := INVALID_HANDLE_VALUE;
-  lpExecInfo.lpDirectory := PWideChar(FCurrentDirectory);
+  CreationFlags := GetPriorityCreationFlag;
+
+  if FStartupType = stConsoleApplication then
+  begin
+    CreationFlags := CreationFlags or DETACHED_PROCESS; //CREATE_NEW_CONSOLE;// or CREATE_NO_WINDOW;
+    FStartupInfo.dwFlags := FStartupInfo.dwFlags or STARTF_USESIZE or STARTF_USECOUNTCHARS or STARTF_USEFILLATTRIBUTE;
+    FStartupInfo.dwXCountChars := 128;
+    FStartupInfo.dwYCountChars := 1024;
+    FStartupInfo.dwXSize := FStartupInfo.dwXCountChars * 8;
+    FStartupInfo.dwYSize := 400; // StartupInfo.dwYCountChars * 8;
+    FStartupInfo.dwFillAttribute := FOREGROUND_INTENSITY or BACKGROUND_BLUE;
+  end;
+
+  // CREATE_UNICODE_ENVIRONMENT TODO : test
 
   if LogDebug then
-    MainLogAdd('ShellExecuteEx ' + FFileName + ' ' + FParameters, mlDebug);
-  if ShellExecuteEx(@lpExecInfo) then
+    MainLogAdd('CreateProcess ' + FFileName + ' ' + FParameters, mlDebug);
+  if CreateProcess(
+    nil,
+    PChar('"' + FFileName + '" ' + FParameters),
+    _sa,
+    nil,
+    True,
+    CreationFlags,
+    nil,
+    PChar(fCurrentDirectory),
+    FStartupInfo,
+    FProcessInformation) then
   begin
-    FHandle := lpExecInfo.hProcess;
+    FHandle := FProcessInformation.hProcess;
   end
   else
   begin
@@ -163,139 +204,110 @@ begin
   end;
 end;
 
-procedure TExternalApplication.ExecuteWithOutputText;
-var
-  SA: TSecurityAttributes;
-  SI: TStartupInfo;
-  PI: TProcessInformation;
-  StdOutPipeRead, StdOutPipeWrite: THandle;
-  WasOK: Boolean;
-  Buffer: array of AnsiChar;
-  BytesRead: Cardinal;
-  CreateProcessResult: BG;
+function TExternalApplication.GetPriorityCreationFlag: DWORD;
 begin
-  if FHandle <> INVALID_HANDLE_VALUE then
-    CloseHandle(FHandle);
-
-  FillChar(FProcessOutput, SizeOf(FProcessOutput), 0);
-  SA.nLength := SizeOf(SA);
-  SA.bInheritHandle := True;
-  SA.lpSecurityDescriptor := nil;
-
-  CreatePipe(StdOutPipeRead, StdOutPipeWrite, @SA, 0);
-  try
-    FillChar(SI, SizeOf(SI), 0);
-    SI.cb := SizeOf(SI);
-    SI.dwFlags := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
-    SI.wShowWindow := FStartupWindowState.ToWindowsAPIParameter;
-    SI.hStdInput := GetStdHandle(STD_INPUT_HANDLE); // don't redirect stdin
-    SI.hStdOutput := StdOutPipeWrite;
-    SI.hStdError := StdOutPipeWrite;
-  	if LogDebug then
-      MainLogAdd('CreateProcess ' + FFileName + ' ' + FParameters, mlDebug);
-    CreateProcessResult := CreateProcess(nil, PChar('"' + FFileNameWithoutVariables + '" ' + FParameters),
-                            nil, nil, True, 0, nil,
-                            PChar(FCurrentDirectory), SI, PI);
-    if not CreateProcessResult then
-    begin
-      FHandle := INVALID_HANDLE_VALUE;
-      FErrorCode := GetLastError;
-      Exit;
-    end;
-    FHandle := PI.hProcess;
-    CloseHandle(StdOutPipeWrite);
-    StdOutPipeWrite := 0;
-    SetLength(Buffer, FBufferSize + 1);
-    try
-      repeat
-        WasOK := ReadFile(StdOutPipeRead, Buffer[0], FBufferSize, BytesRead, nil);
-        if BytesRead > 0 then
-        begin
-          Buffer[BytesRead] := #0;
-          FProcessOutput.OutputText := FProcessOutput.OutputText + string(PAnsiChar(Buffer));
-        end;
-      until not WasOK or (BytesRead = 0);
-      SetLength(Buffer, 0);
-
-      WaitFor;
-    finally
-      FHandle := INVALID_HANDLE_VALUE;
-      CloseHandle(PI.hThread);
-      CloseHandle(PI.hProcess);
-    end;
-  finally
-    CloseHandle(StdOutPipeWrite);
-    CloseHandle(StdOutPipeRead);
+  case FProcessPriority of
+  ppLow: Result := IDLE_PRIORITY_CLASS;
+  ppBelowNormal: Result := BELOW_NORMAL_PRIORITY_CLASS;
+  ppNormal: Result := NORMAL_PRIORITY_CLASS;
+  ppAboveNormal: Result := ABOVE_NORMAL_PRIORITY_CLASS;
+  ppHigh: Result := HIGH_PRIORITY_CLASS;
+  ppRealTime: Result := REALTIME_PRIORITY_CLASS;
+  else
+    Result := 0;
   end;
 end;
 
-function TExternalApplication.GetExitCode: TExitCode;
+function TExternalApplication.GetRunning: BG;
+var
+  ExitCode: TExitCode;
 begin
-  if FHandle <> 0 then
-  begin
-    GetExitCodeProcess(FHandle, Result);
-  end
+  if FHandle = INVALID_HANDLE_VALUE then
+    Result := False
   else
-    Result := 0;
+  begin
+    ExitCode := GetExitCode;
+    Result := ExitCode = STILL_ACTIVE;
+  end;
 end;
 
-procedure TExternalApplication.SetAbort(const Value: BG);
+procedure TExternalApplication.SetProcessPriority(const Value: TProcessPriority);
 begin
-  FAbort := Value;
+  FProcessPriority := Value;
 end;
 
-procedure TExternalApplication.SetBufferSize(const Value: SG);
+procedure TExternalApplication.SetStartupType(const Value: TStartupType);
 begin
-  FBufferSize := Value;
+  FStartupType := Value;
 end;
 
-procedure TExternalApplication.SetCurrentDirectory(const Value: string);
+procedure TExternalApplication.SeWaitFortTimeOut(const Value: TTimeSpan);
 begin
-  FCurrentDirectory := Value;
+  FWaitForTimeOut := Value;
 end;
 
-procedure TExternalApplication.SetErrorCode(const Value: U4);
+procedure TExternalApplication.TerminateAndWaitFor;
 begin
-  FErrorCode := Value;
+  Terminate;
 end;
 
-procedure TExternalApplication.SetFileName(const Value: TFileName);
+procedure BreakableWaitForSingleObject(const AHandle: THandle; const ATimeOut: TTimeSpan; var AAbort: BG);
+var
+  StartTime: TTimeSpan;
+  SleepTime: TTimeSpan;
+  RemainTimeInTicks: S8;
+  Result: DWORD;
+  MaximalSleepTime: TTimeSpan;
 begin
-  FFileName := Value;
-  FFileNameWithoutVariables := StartupEnvironment.RemoveVariables(FFileName);
+  Assert(AHandle <> INVALID_HANDLE_VALUE);
+  if AHandle = INVALID_HANDLE_VALUE then
+  begin
+    Exit;
+  end;
 
-  FExists := FileExists(FFileNameWithoutVariables);
-end;
+  MaximalSleepTime.Milliseconds := LoopSleepTime;
 
-procedure TExternalApplication.SetParameters(const Value: string);
-begin
-  FParameters := Value;
-end;
+  StartTime := MainTimer.Value;
+  RemainTimeInTicks := ATimeOut.Ticks;
+  while True do
+  begin
+    if AAbort then
+    begin
+      AAbort := False;
+      raise EAbort.Create('Wait internally abadoned.');
+    end;
+    SleepTime.Ticks := Min(S8(MaximalSleepTime.Ticks), RemainTimeInTicks);
 
-procedure TExternalApplication.SetProcessOutput(const Value: TProcessOutput);
-begin
-  FProcessOutput := Value;
-end;
-
-procedure TExternalApplication.SetStartupWindowState(const Value: TStartupWindowState);
-begin
-  FStartupWindowState := Value;
+    Result := WaitForSingleObject(AHandle, SleepTime.Milliseconds);
+    if Result = WAIT_TIMEOUT then
+    begin
+      RemainTimeInTicks := S8(ATimeOut.Ticks) - S8(MainTimer.IntervalFrom(StartTime).Ticks);
+      if RemainTimeInTicks <= 0 then
+      begin
+        raise ETimeOutException.Create('Time out (' + ATimeOut.ToStringInSeconds +  '). Waiting for event aborted.');
+      end;
+      Continue
+    end
+    else if Result = WAIT_OBJECT_0 then
+      Break
+    else if Result = WAIT_FAILED then
+      raise Exception.Create('Wait failed.')
+    else if Result = WAIT_ABANDONED then
+      raise Exception.Create('Wait abadoned.')
+    else
+      raise EArgumentException.Create('Invalid WaitForSingleObject result.');
+  end;
 end;
 
 procedure TExternalApplication.WaitFor;
-var
-  WaitResult: DWORD;
 begin
-  // WaitForSingleObject(PI.hProcess, INFINITE);
-  FAbort := False;
-  repeat
-    Sleep(LoopSleepTime);
-    WaitResult := WaitForSingleObject(FHandle, LoopSleepTime);
-    if FAbort then
-      Break;
-  until not ((WaitResult <> WAIT_OBJECT_0)); // WaitResult = WAIT_TIMEOUT;
+  if LogDebug then
+    MainLog.LogEnter('ExternalApplication.WaitFor');
 
-  FProcessOutput.ExitCode := GetExitCode;
+  BreakableWaitForSingleObject(FHandle, FWaitForTimeOut, FAbortWaitFor);
+
+  if LogDebug then
+    MainLog.LogLeave('ExternalApplication.WaitFor');
 end;
 
 end.

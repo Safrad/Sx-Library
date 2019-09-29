@@ -14,7 +14,7 @@ type
 implementation
 
 uses
-  Windows,
+  Winapi.Windows,
   uFiles,
   uFile,
   uPlugin,
@@ -31,7 +31,7 @@ uses
   ComCtrls,
   Menus,
   Math,
-  PsAPI,
+  Winapi.PsAPI,
 
   uConsole,
   uChar,
@@ -84,8 +84,6 @@ uses
   uTable,
 
   uAbout,
-//  PPMImage,
-  TGAImage,
   uDBitmap,
   uDButton,
   uDEdit,
@@ -102,7 +100,6 @@ uses
 
   CoolTrayIcon,
 
-  GifImage,
   IGDIPlus,
   NLDJoystick,
   OpenGL12,

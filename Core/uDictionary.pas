@@ -14,8 +14,8 @@ type
 
   PLanguage = ^TLanguage;
   TLanguage = record
-    Code: string[2]; // ISO 639-1 Code
-    Name: string[16]; // English name of language
+    Code: string; // ISO 639-1 Code
+    Name: string; // English name of language
   end;
 
 	TDictionary = class(TObject)
