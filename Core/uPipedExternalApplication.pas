@@ -43,6 +43,10 @@ type
     procedure SetErrorBufferSize(const Value: SG);
     procedure SetInputBufferSize(const Value: SG);
     procedure SetOutputBufferSize(const Value: SG);
+    procedure PreparePipes(
+      out AExternalStdIn, AExternalStdOut, AExternalStdErr: THandle;
+      out AInternalStdIn, AInternalStdOut, AInternalStdErr: THandle);
+    function GetStartedReadOutputThread(const AStream: THandleStream; const AName: string): TSxThread;
   public
     constructor Create;
     destructor Destroy; override;
@@ -109,37 +113,23 @@ end;
 
 procedure TPipedExternalApplication.Execute;
 var
-	_tmpStdOut, _tmpStdErr, _tmpStdIn: THandle;
-	_StdOut, _StdErr, _StdIn: THandle;
-	_stdOutH, _stdInH, _stdErrH: THandle;
-	_hProcess: THandle;
+  InternalStdIn, InternalStdOut, InternalStdErr: THandle;
+  ExternalStdIn, ExteranlStdOut, ExteranlStdErr: THandle;
 begin
-  RaiseExceptionIfError(CreatePipe(_stdInH, _tmpStdIn, @FSecurityAttributes, FInputBufferSize));
-  RaiseExceptionIfError(CreatePipe(_tmpStdOut, _stdOutH, @FSecurityAttributes, FOutputBufferSize));
-  RaiseExceptionIfError(CreatePipe(_tmpStdErr, _stdErrH, @FSecurityAttributes, FErrorBufferSize));
-
-  _hProcess := GetCurrentProcess;
-
-	RaiseExceptionIfError(DuplicateHandle(_hProcess, _tmpStdIn, _hProcess, @_StdIn, 0, false, DUPLICATE_SAME_ACCESS));
-	RaiseExceptionIfError(DuplicateHandle(_hProcess, _tmpStdOut, _hProcess, @_StdOut, 0, false, DUPLICATE_SAME_ACCESS));
-	RaiseExceptionIfError(DuplicateHandle(_hProcess, _tmpStdErr, _hProcess, @_StdErr, 0, false, DUPLICATE_SAME_ACCESS));
-
-  RaiseExceptionIfError(CloseHandle(_tmpStdIn));
-  RaiseExceptionIfError(CloseHandle(_tmpStdOut));
-  RaiseExceptionIfError(CloseHandle(_tmpStdErr));
+  PreparePipes(ExternalStdIn, ExteranlStdOut, ExteranlStdErr, InternalStdIn, InternalStdOut, InternalStdErr);
 
   FreeAndNil(FStdIn);
   FreeAndNil(FStdOut);
   FreeAndNil(FStdError);
 
-  FStdIn := THandleStream.Create(_StdIn);
-  FStdOut := THandleStream.Create(_StdOut);
-  FStdError := THandleStream.Create(_StdErr);
+  FStdIn := THandleStream.Create(InternalStdIn);
+  FStdOut := THandleStream.Create(InternalStdOut);
+  FStdError := THandleStream.Create(InternalStdErr);
 
   FStartupInfo.dwFlags := STARTF_USESTDHANDLES;
-	FStartupInfo.hStdOutput := _stdOutH;
-  FStartupInfo.hStdInput := _stdInH;
-	FStartupInfo.hStdError := _stdErrH;
+	FStartupInfo.hStdOutput := ExteranlStdOut;
+  FStartupInfo.hStdInput := ExternalStdIn;
+	FStartupInfo.hStdError := ExteranlStdErr;
 
   inherited;
 
@@ -147,19 +137,8 @@ begin
   begin
     if Assigned(FOnRead) or Assigned(FOnReadLine) or FRequireOutputText then
     begin
-      FExternalApplicationReadOutputThread := TExternalApplicationReadThread.Create;
-      FExternalApplicationReadOutputThread.FreeOnTerminate := False;
-      TExternalApplicationReadThread(FExternalApplicationReadOutputThread).ExternalApplication := Self; // or copy FOnRead, FOnReadLine
-      TExternalApplicationReadThread(FExternalApplicationReadOutputThread).Stream := FStdOut;
-      FExternalApplicationReadOutputThread.Name := 'ExternalApplication.Read.Output';
-      FExternalApplicationReadOutputThread.Start;
-
-      FExternalApplicationReadErrorThread := TExternalApplicationReadThread.Create;
-      FExternalApplicationReadErrorThread.FreeOnTerminate := False;
-      TExternalApplicationReadThread(FExternalApplicationReadErrorThread).ExternalApplication := Self; // or copy FOnRead, FOnReadLine
-      TExternalApplicationReadThread(FExternalApplicationReadErrorThread).Stream := FStdError;
-      FExternalApplicationReadOutputThread.Name := 'ExternalApplication.Read.Error';
-      FExternalApplicationReadErrorThread.Start;
+      FExternalApplicationReadOutputThread := GetStartedReadOutputThread(FStdOut, 'Output');
+      FExternalApplicationReadErrorThread := GetStartedReadOutputThread(FStdError, 'Error');
     end;
   end;
 end;
@@ -236,6 +215,34 @@ begin
 
   if LogDebug then
     MainLog.LogLeave('PipedExternalApplication.WaitFor');
+end;
+
+function TPipedExternalApplication.GetStartedReadOutputThread(const AStream: THandleStream; const AName: string): TSxThread;
+begin
+  Result := TExternalApplicationReadThread.Create;
+  Result.FreeOnTerminate := False;
+  TExternalApplicationReadThread(Result).ExternalApplication := Self; // or copy FOnRead, FOnReadLine
+  TExternalApplicationReadThread(Result).Stream := AStream;
+  Result.Name := 'ExternalApplication.Read.' + AName;
+  Result.Start;
+end;
+
+procedure TPipedExternalApplication.PreparePipes(
+  out AExternalStdIn, AExternalStdOut, AExternalStdErr: THandle;
+  out AInternalStdIn, AInternalStdOut, AInternalStdErr: THandle);
+var
+  TmpStdIn: THandle;
+  RmpStdOut: THandle;
+  TmpStdErr: THandle;
+  CurrentProcessHandle: THandle;
+begin
+  RaiseExceptionIfError(CreatePipe(AExternalStdIn, TmpStdIn, @FSecurityAttributes, FInputBufferSize));
+  RaiseExceptionIfError(CreatePipe(RmpStdOut, AExternalStdOut, @FSecurityAttributes, FOutputBufferSize));
+  RaiseExceptionIfError(CreatePipe(TmpStdErr, AExternalStdErr, @FSecurityAttributes, FErrorBufferSize));
+  CurrentProcessHandle := GetCurrentProcess;
+  RaiseExceptionIfError(DuplicateHandle(CurrentProcessHandle, TmpStdIn, CurrentProcessHandle, @AInternalStdIn, 0, false, DUPLICATE_CLOSE_SOURCE or DUPLICATE_SAME_ACCESS));
+  RaiseExceptionIfError(DuplicateHandle(CurrentProcessHandle, RmpStdOut, CurrentProcessHandle, @AInternalStdOut, 0, false, DUPLICATE_CLOSE_SOURCE or DUPLICATE_SAME_ACCESS));
+  RaiseExceptionIfError(DuplicateHandle(CurrentProcessHandle, TmpStdErr, CurrentProcessHandle, @AInternalStdErr, 0, false, DUPLICATE_CLOSE_SOURCE or DUPLICATE_SAME_ACCESS));
 end;
 
 procedure TPipedExternalApplication.WriteLine(const AText: string);
