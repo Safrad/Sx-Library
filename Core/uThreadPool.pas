@@ -17,6 +17,9 @@ type
 
   TThreadPool = class
   private
+    FNoThreadEvent: TEvent;
+    FNoWorkEvent: TEvent;
+
     FMaxThreads: TNumericalIntervalArgument;
     FRunThreads: S4;
     FWorking: S4;
@@ -28,7 +31,7 @@ type
     procedure SetRunThreads(Value: UG);
     procedure MaxThreadsChanged(Sender: TObject);
     procedure QueueToThread;
-    procedure WaitForWorkers;
+//    procedure WaitForWorkers;
     procedure WorkerCreate(const Index: SG);
     procedure SetThreadPriority(const Value: TThreadPriority);
     procedure SetOnTasksFinished(const Value: TNotifyEvent);
@@ -36,25 +39,31 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    // Process
     procedure AddTask(const AAsyncTask: TAsyncTask);
     procedure AddTasks(const AAsyncTasks: TAsyncTasks);
     procedure RandomizeTaskOrder;
     procedure SortTasks(const A: TArrayOfS4);
-    function PopAsyncTask: TAsyncTask;
-    function PopAsyncTasks(const ACount: SG): TAsyncTasks;
     procedure ClearTasks;
-    function Working: BG;
-    function RemainTaskCount: UG;
     procedure Pause;
     procedure Resume;
     procedure KillThreads;
     procedure WaitForNoWork;
     procedure WaitForNoThread;
+
+    // Output
+    function Working: BG;
+    function RemainTaskCount: UG;
+
+    // Called from Worker
+    function PopAsyncTask: TAsyncTask;
+    function PopAsyncTasks(const ACount: SG): TAsyncTasks;
     procedure WorkerStartWork;
     procedure WorkerFinishWork;
     procedure WorkerDestroy(const Index: SG);
     procedure InternalTasksFinished;
 
+    // Input
     property MaxThreads: TNumericalIntervalArgument read FMaxThreads;
     property ThreadPriority: TThreadPriority read FThreadPriority write SetThreadPriority;
     property OnTasksFinished: TNotifyEvent read FOnTasksFinished write SetOnTasksFinished;
@@ -126,6 +135,9 @@ begin
   FMaxThreads.DefaultValue := Min(GCPU.LogicalProcessorCount, FMaxThreads.NumericalInterval.MaximalValue);
   FMaxThreads.Value := FMaxThreads.DefaultValue;
   FMaxThreads.OnChange := MaxThreadsChanged;
+
+  FNoThreadEvent := TEvent.Create;
+  FNoWorkEvent := TEvent.Create;
 end;
 
 destructor TThreadPool.Destroy;
@@ -143,6 +155,8 @@ begin
 
     FMaxThreads.Free;
 
+    FreeAndNil(FNoThreadEvent);
+    FreeAndNil(FNoWorkEvent);
   finally
     inherited;
   end;
@@ -277,31 +291,46 @@ end;
 
 procedure TThreadPool.WaitForNoWork;
 begin
-  while Working do
+  if Working then
+  begin
+    FNoWorkEvent.WaitFor;
+    FNoWorkEvent.ResetEvent;
+  end;
+{  while Working do
   begin
     WaitForWorkers;
-  end;
+  end;}
 end;
 
 procedure TThreadPool.WaitForNoThread;
 begin
-  FMaxThreads.Value := 0;
-  QueueToThread;
-  while (FRunThreads > 0) do
+  if FRunThreads > 0 then
+  begin
+    FMaxThreads.Value := 0;
+    QueueToThread;
+    FNoThreadEvent.WaitFor;
+    FNoThreadEvent.ResetEvent;
+  end;
+{  while (FRunThreads > 0) do
   begin
     WaitForWorkers;
-  end;
+  end;}
 end;
-
+{
 procedure TThreadPool.WaitForWorkers;
 begin
   Sleep(LoopSleepTime);
   CheckSynchronize; // If not called deadlock can appear
-end;
+end;}
 
 procedure TThreadPool.WorkerFinishWork;
 begin
   AtomicDecrement(FWorking);
+  if FWorking = 0 then
+  begin
+    if FQueue.Count = 0 then
+      FNoWorkEvent.SetEvent;
+  end;
 end;
 
 procedure TThreadPool.WorkerStartWork;
@@ -323,6 +352,8 @@ procedure TThreadPool.WorkerDestroy(const Index: SG);
 begin
   FThreads[Index] := nil; // Write shared object
   AtomicDecrement(FRunThreads);
+  if FRunThreads = 0 then
+    FNoThreadEvent.SetEvent;
 end;
 
 function TThreadPool.PopAsyncTask: TAsyncTask;
