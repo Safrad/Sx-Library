@@ -28,6 +28,7 @@ type
     procedure TestKnuthRandomGenerator;
     procedure TestSxRandomGenerator;
     procedure TestRandomZeroDistance;
+    procedure TestDistributionMax;
   end;
 
 implementation
@@ -67,6 +68,46 @@ begin
     end;
   finally
     DelphiRandomGenerator.Free;
+  end;
+end;
+
+procedure TRandomGeneratorTest.TestDistributionMax;
+var
+  SxRandomGenerator: TSxRandomGenerator;
+begin
+  SxRandomGenerator := TSxRandomGenerator.Create;
+  try
+    CheckEquals(High(U4), SxRandomGenerator.GetDistrigutionMax(0));
+    CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax(U8(0)));
+
+    CheckEquals(High(U4), SxRandomGenerator.GetDistrigutionMax(1));
+    CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax(U8(1)));
+
+    CheckEquals(High(U4), SxRandomGenerator.GetDistrigutionMax(3));
+    CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax(U8(3)));
+
+    CheckEquals(High(U4), SxRandomGenerator.GetDistrigutionMax(7));
+    CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax(U8(7)));
+
+    CheckEquals(High(U4) - 1, SxRandomGenerator.GetDistrigutionMax(2));
+    CheckEquals(High(U8) - 1, SxRandomGenerator.GetDistrigutionMax(U8(2)));
+
+    CheckEquals(High(U4) - 4, SxRandomGenerator.GetDistrigutionMax(6));
+    CheckEquals(High(U8) - 4, SxRandomGenerator.GetDistrigutionMax(U8(6)));
+
+    CheckEquals(High(U4), SxRandomGenerator.GetDistrigutionMax($7FFFFFFF));
+    CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax($7FFFFFFFFFFFFFFF));
+
+    CheckEquals($80000000, SxRandomGenerator.GetDistrigutionMax($80000000));
+    CheckEquals($8000000000000000, SxRandomGenerator.GetDistrigutionMax($8000000000000000));
+
+    CheckEquals(High(U4) - 1, SxRandomGenerator.GetDistrigutionMax(High(U4) - 1));
+    CheckEquals(High(U8) - 1, SxRandomGenerator.GetDistrigutionMax(High(U8) - 1));
+
+    CheckEquals(High(U4), SxRandomGenerator.GetDistrigutionMax(High(U4)));
+    CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax(High(U8)));
+  finally
+    SxRandomGenerator.Free;
   end;
 end;
 

@@ -25,6 +25,15 @@ type
     function RangeU8(const AMaxValue: U8): U8; overload;
     function RangeU8(const AMinimalValue, AMaximalValue: U8): U8; overload;
 
+    function RangeExactDistributionU4(const AMaxValue: U4): U4; overload;
+    function RangeExactDistributionU4(const AMinimalValue, AMaximalValue: U4): U4; overload;
+
+    function RangeExactDistributionU8(const AMaxValue: U8): U8; overload;
+    function RangeExactDistributionU8(const AMinimalValue, AMaximalValue: U8): U8; overload;
+
+    function GetDistrigutionMax(const AMaxValue: U4): U4; overload;
+    function GetDistrigutionMax(const AMaxValue: U8): U8; overload;
+
     function RandomZeroDistance(const AMaximalDistance: U4): S4;
   end;
 
@@ -44,7 +53,7 @@ end;
 function TRandomGenerator.RangeU8(const AMaxValue: U8): U8;
 begin
   Result := RandomU8;
-  if AMaxValue <> $FFFFFFFFFFFFFFFF then
+  if AMaxValue <> High(AMaxValue) then
     Result := MultiplyAndReturnMostSignificantHalf(Result, AMaxValue + 1);
 end;
 
@@ -84,6 +93,19 @@ begin
   AData := RandomU8;
 end;
 
+function TRandomGenerator.GetDistrigutionMax(const AMaxValue: U8): U8;
+begin
+  if AMaxValue > High(AMaxValue) div 2 then
+    Result := AMaxValue
+  else
+    Result := (High(AMaxValue) - ((High(AMaxValue) div 2) + 1) mod (AMaxValue + 1));
+end;
+
+function TRandomGenerator.GetDistrigutionMax(const AMaxValue: U4): U4;
+begin
+  Result := U4(High(AMaxValue) - (U8(High(AMaxValue)) + 1) mod U8(AMaxValue + 1));
+end;
+
 procedure TRandomGenerator.Random(out AData: PByte; const ASize: SG);
 var
   i: SG;
@@ -117,6 +139,42 @@ end;
 function TRandomGenerator.RandomZeroDistance(const AMaximalDistance: U4): S4;
 begin
 	Result := S4(RangeU4(2 * AMaximalDistance)) - S4(AMaximalDistance);
+end;
+
+function TRandomGenerator.RangeExactDistributionU4(const AMaxValue: U4): U4;
+var
+  DistributionMax: U4;
+begin
+  DistributionMax := GetDistrigutionMax(AMaxValue);
+  while True do
+  begin
+    Result := RangeU4(AMaxValue);
+    if Result <= DistributionMax then
+      Break;
+  end;
+end;
+
+function TRandomGenerator.RangeExactDistributionU4(const AMinimalValue, AMaximalValue: U4): U4;
+begin
+  Result := RangeExactDistributionU4(AMaximalValue - AMinimalValue) + AMinimalValue;
+end;
+
+function TRandomGenerator.RangeExactDistributionU8(const AMaxValue: U8): U8;
+var
+  DistributionMax: U8;
+begin
+  DistributionMax := GetDistrigutionMax(AMaxValue);
+  while True do
+  begin
+    Result := RangeU8(AMaxValue);
+    if Result <= DistributionMax then
+      Break;
+  end;
+end;
+
+function TRandomGenerator.RangeExactDistributionU8(const AMinimalValue, AMaximalValue: U8): U8;
+begin
+  Result := RangeExactDistributionU8(AMaximalValue - AMinimalValue) + AMinimalValue;
 end;
 
 function TRandomGenerator.RangeU4(const AMinimalValue, AMaximalValue: U4): U4;
