@@ -103,7 +103,7 @@ end;
 
 function TRandomGenerator.GetDistrigutionMax(const AMaxValue: U4): U4;
 begin
-  Result := U4(High(AMaxValue) - (U8(High(AMaxValue)) + 1) mod U8(AMaxValue + 1));
+  Result := High(AMaxValue) - U4((U8(High(AMaxValue)) + 1) mod (U8(AMaxValue) + 1));
 end;
 
 procedure TRandomGenerator.Random(out AData: PByte; const ASize: SG);
