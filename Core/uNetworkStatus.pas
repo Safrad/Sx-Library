@@ -5,7 +5,8 @@ interface
 uses
   uTypes,
   uStopwatch,
-  uNewThread;
+  uNewThread,
+  uTimeSpan;
 
 type
   TResultType = (rtUnknown, rtWait, rtPingTime, rtError);
@@ -18,7 +19,7 @@ type
     // Properties
     FURLAddress: string;
     FResultType: TResultType;
-    FPingTime: U8;
+    FPingTime: TTimeSpan;
     FErrorMessage: string;
     FSentTime: TDateTime;
     FDataSize: U8;
@@ -31,7 +32,7 @@ type
 
     property URLAddress: string read FURLAddress write SetURLAddress;
     property ResultType: TResultType read FResultType;
-    property PingTime: U8 read FPingTime;
+    property PingTime: TTimeSpan read FPingTime;
     property DataSize: U8 read FDataSize;
     property SentTime: TDateTime read FSentTime;
     property ErrorMessage: string read FErrorMessage;
@@ -61,7 +62,7 @@ begin
       Self.FStopwatch.Stop;
       Self.FDataSize := Length(Data);
       Self.FResultType := rtPingTime;
-      Self.FPingTime := Round(Self.FStopwatch.Elapsed.Milliseconds);
+      Self.FPingTime := Self.FStopwatch.Elapsed;
       Self.FErrorMessage := '';
     except
       on E: Exception do
@@ -69,7 +70,7 @@ begin
         Self.FStopwatch.Stop;
         Self.FDataSize := 0;
         Self.FResultType := rtError;
-        Self.FPingTime := 0;
+        Self.FPingTime.Ticks := 0;
         Self.FErrorMessage := E.Message;
       end;
     end;
@@ -103,7 +104,7 @@ begin
     RunInNewThread(Self, GetData)
   else
   begin
-    if FStopwatch.Elapsed.Milliseconds > 2 * FPingTime then
+    if FStopwatch.Elapsed.Ticks > 2 * FPingTime.Ticks then
       FResultType := rtWait;
   end;
 end;
