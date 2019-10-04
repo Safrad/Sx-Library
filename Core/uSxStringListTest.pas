@@ -23,18 +23,24 @@ uses
 procedure TSxStringListTest.Test;
 var
   SxStringList: TSxStringList;
+  s: string;
 begin
-
   SxStringList := TSxStringList.Create;
   try
     SxStringList.FreeObjectsOnExit := False;
     SxStringList.Clear;
-    SxStringList.Add('1');
-    SxStringList.Add('2');
-    SxStringList.Add('3');
+    s := '1';
+    SxStringList.Add(s);
+    s := '2';
+    SxStringList.Add(s);
+    s := '3';
+    SxStringList.Add(s);
     SxStringList.Delete(1);
     CheckEquals('1', SxStringList.Get(0));
     CheckEquals('3', SxStringList.Get(1));
+
+    SxStringList.Delimiter := ';';
+    CheckEquals('1;3', SxStringList.DelimitedTextWithoutQuotes);
   finally
     SxStringList.Free;
   end;
