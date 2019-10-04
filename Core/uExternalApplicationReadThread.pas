@@ -81,7 +81,8 @@ var
   R: U4;
   s: AnsiString;
 begin
-  MainLog.LogEnter('ExternalApplicationReadThread.Execute');
+  if LogDebug then
+    MainLog.LogEnter('ExternalApplicationReadThread.Execute');
 
   inherited;
 
@@ -100,8 +101,8 @@ begin
       begin
         if FTerminateIfNoOutput then
           Break;
-        if LogDebug then
-          MainLog.Add('Sleep', mlDebug);
+{        if LogDebug then
+          MainLog.Add('ExternalApplicationReadThread read nothing', mlDebug);}
         Sleep(LoopSleepTime); // Fix 100% CPU usage if repeats to read nothink
       end
       else
@@ -113,7 +114,8 @@ begin
       Break;
   end;
 
-  MainLog.LogLeave('ExternalApplicationReadThread.Execute');
+  if LogDebug then
+    MainLog.LogLeave('ExternalApplicationReadThread.Execute');
 end;
 
 function TExternalApplicationReadThread.Read: AnsiString;
@@ -150,6 +152,8 @@ begin
     Dec(Remain, BytesRead);
     if Remain <= 0 then
       Exit;
+
+    // Never happen
     Inc(BufferIndex, BytesRead);
 
     if LogWarning then
