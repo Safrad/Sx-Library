@@ -6,7 +6,7 @@ uses
 	uTypes,
   uParserMsg,
   uTimeSpan,
-	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
+	Winapi.Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit, uDMemo;
 
 type

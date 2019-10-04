@@ -39,7 +39,7 @@ type
 implementation
 
 uses
-  Windows,
+  Winapi.Windows,
   SysUtils,
 
   ufTableForm,

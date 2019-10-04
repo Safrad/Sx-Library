@@ -3,8 +3,9 @@ unit ufTableForm;
 interface
 
 uses
+  Winapi.Windows,
 	uTypes, uParamDataModel, uDForm, uOptions,
-	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+	SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, uDImage, uDView, Menus, uDWinControl, ComCtrls;
 
 type

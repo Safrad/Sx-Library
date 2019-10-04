@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes, uDForm, uOptions,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+	SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ExtCtrls, uDButton, Buttons;
 
 type

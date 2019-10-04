@@ -4,10 +4,7 @@ interface
 
 uses
 	uTypes,
-	Windows, SysUtils, Messages;
-
-var
-	MessageId: UINT;
+	SysUtils;
 
 {
 	Return false if application instance already exists.
@@ -16,9 +13,17 @@ function InitInstance(const AllowMultiInstance: BG): BG;
 
 implementation
 
-uses uMsg, uStrings, uFiles, Forms, uDForm;
+uses
+  Winapi.Windows,
+  Forms,
+
+  uMsg,
+  uStrings,
+  uFiles,
+  uDForm;
 
 var
+	MessageId: UINT;
 	WProc: TFNWndProc;
 	MutHandle: THandle;
 

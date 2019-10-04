@@ -37,7 +37,7 @@ uses
   Forms,
   Classes,
   SysUtils,
-  Windows,
+  Winapi.Windows,
   uAbout,
   uNewThread,
   uLog,

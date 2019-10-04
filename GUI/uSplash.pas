@@ -8,7 +8,7 @@ uses
   uStopwatch,
   uDBitmap,
 
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+	Winapi.Windows, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, uDTimer, uDForm, StdCtrls, uSxLabel;
 
 type

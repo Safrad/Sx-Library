@@ -33,8 +33,7 @@ implementation
 
 {$R *.DFM}
 uses
-  Windows,
-  Messages,
+  Winapi.Windows,
   Dialogs,
   SynTaskDialog,
   uVisualOptions,
