@@ -263,7 +263,7 @@ begin
     if FUnicode then
     begin
       TextSize := TextSize * SizeOf(Char);
-      WritedSize := FStdIn.Write(AText[1], Length(AText));
+      WritedSize := FStdIn.Write(AText[1], TextSize);
     end
     else
     begin
