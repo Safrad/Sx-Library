@@ -230,10 +230,10 @@ begin
         NewSize := AvailableLanguageCount + 1;
         if AllocByExp(Length(AvailableLanguages), NewSize) then
           SetLength(AvailableLanguages, NewSize);
-        AvailableLanguages[AvailableLanguageCount].Code := ShortString(Row[0]);
+        AvailableLanguages[AvailableLanguageCount].Code := Row[0];
         if Row[1] = '' then
           Row[1] := Row[0];
-        AvailableLanguages[AvailableLanguageCount].Name := ShortString(Row[1]);
+        AvailableLanguages[AvailableLanguageCount].Name := Row[1];
         Inc(FAvailableLanguageCount);
 			end;
 			CSVFile.Close;
