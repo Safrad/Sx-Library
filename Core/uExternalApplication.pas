@@ -14,6 +14,8 @@ uses
 type
   TStartupType = (stNormalApplication, stConsoleApplication);
 
+  TConsoleStartupWindow = (cswDefault, cswDetachedProcess, cswNewWindow, cswNoWindow);
+
   TProcessPriority = (ppDefault, ppLow, ppBelowNormal, ppNormal, ppAboveNormal, ppHigh, ppRealTime);
 
   TExitCode = U4;
@@ -27,16 +29,24 @@ type
     FStartupType: TStartupType;
     FProcessPriority: TProcessPriority;
     FWaitForTimeOut: TTimeSpan;
+    FConsoleStartupWindow: TConsoleStartupWindow;
+    FConsoleCreateNewProcessGroup: BG;
+    FCreateSuspended: BG;
 
     function GetPriorityCreationFlag: DWORD;
     procedure InitializeSecurityAttributes;
     procedure FreeSecurityAttributes;
+    function GetConsoleStartupWindowToFlag: DWORD;
+    procedure CheckParameters;
 
     // Properties
     function GetRunning: BG;
     procedure SetStartupType(const Value: TStartupType);
     procedure SetProcessPriority(const Value: TProcessPriority);
     procedure SeWaitFortTimeOut(const Value: TTimeSpan);
+    procedure SetConsoleStartupWindow(const Value: TConsoleStartupWindow);
+    procedure SetConsoleCreateNewProcessGroup(const Value: BG);
+    procedure SetCreateSuspended(const Value: BG);
   protected
     FStartupInfo: TStartupInfo;
   public
@@ -45,12 +55,19 @@ type
 
     // Input
     property StartupType: TStartupType read FStartupType write SetStartupType;
+    property CreateSuspended: BG read FCreateSuspended write SetCreateSuspended;
+    property ConsoleStartupWindow: TConsoleStartupWindow read FConsoleStartupWindow write SetConsoleStartupWindow;
+    property ConsoleCreateNewProcessGroup: BG read FConsoleCreateNewProcessGroup write SetConsoleCreateNewProcessGroup;
     property ProcessPriority: TProcessPriority read FProcessPriority write SetProcessPriority;
+
     property WaitForTimeOut: TTimeSpan read FWaitForTimeOut write SeWaitFortTimeOut;
 
     // Process
     procedure Execute; override;
+    procedure Resume;
+    procedure Suspend;
     procedure WaitFor; // Wait till not terminated or time out
+    procedure Close; override;
     procedure TerminateAndWaitFor;
     procedure AbortWaitFor;
 
@@ -136,6 +153,23 @@ begin
   end;
 end;
 
+procedure TExternalApplication.CheckParameters;
+begin
+  if FConsoleCreateNewProcessGroup and (FConsoleStartupWindow = cswNewWindow) then
+    raise EArgumentException.Create('Can not combine "ConsoleCreateNewProcessGroup" with "ConsoleStartupWindow.cswNewWindow"');
+end;
+
+procedure TExternalApplication.Close;
+begin
+  if FStartupType = stConsoleApplication then
+  begin
+    if not GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, FProcessInformation.dwProcessId) then
+      RaiseLastOSError;
+  end
+  else
+    inherited;
+end;
+
 constructor TExternalApplication.Create;
 begin
   inherited;
@@ -162,24 +196,29 @@ var
 begin
   inherited;
 
+  CheckParameters;
+
 	FStartupInfo.dwFlags := FStartupInfo.dwFlags or STARTF_USESHOWWINDOW;
   FStartupInfo.wShowWindow := FStartupWindowState.ToWindowsAPIParameter;
   InitializeSecurityAttributes;
 
-  CreationFlags := GetPriorityCreationFlag;
+  CreationFlags := GetPriorityCreationFlag or CREATE_UNICODE_ENVIRONMENT;
+  if FCreateSuspended then
+    CreationFlags := CreationFlags or CREATE_SUSPENDED;
 
   if FStartupType = stConsoleApplication then
   begin
-    CreationFlags := CreationFlags or DETACHED_PROCESS; //CREATE_NEW_CONSOLE;// or CREATE_NO_WINDOW;
-    FStartupInfo.dwFlags := FStartupInfo.dwFlags or STARTF_USESIZE or STARTF_USECOUNTCHARS or STARTF_USEFILLATTRIBUTE;
+    CreationFlags := CreationFlags or GetConsoleStartupWindowToFlag;
+    if FConsoleCreateNewProcessGroup then
+      CreationFlags := CreationFlags or CREATE_NEW_PROCESS_GROUP;
+
+{    FStartupInfo.dwFlags := FStartupInfo.dwFlags or STARTF_USESIZE or STARTF_USECOUNTCHARS or STARTF_USEFILLATTRIBUTE;
     FStartupInfo.dwXCountChars := 128;
     FStartupInfo.dwYCountChars := 1024;
     FStartupInfo.dwXSize := FStartupInfo.dwXCountChars * 8;
     FStartupInfo.dwYSize := 400; // StartupInfo.dwYCountChars * 8;
-    FStartupInfo.dwFillAttribute := FOREGROUND_INTENSITY or BACKGROUND_BLUE;
+    FStartupInfo.dwFillAttribute := FOREGROUND_INTENSITY or BACKGROUND_BLUE;}
   end;
-
-  // CREATE_UNICODE_ENVIRONMENT TODO : test
 
   if LogDebug then
     MainLogAdd('CreateProcess ' + FFileName + ' ' + FParameters, mlDebug);
@@ -201,6 +240,17 @@ begin
   begin
     FHandle := INVALID_HANDLE_VALUE;
     FErrorCode := GetLastError;
+  end;
+end;
+
+function TExternalApplication.GetConsoleStartupWindowToFlag: DWORD;
+begin
+  case FConsoleStartupWindow of
+  cswDetachedProcess: Result := DETACHED_PROCESS;
+  cswNewWindow: Result := CREATE_NEW_CONSOLE;
+  cswNoWindow: Result := CREATE_NO_WINDOW;
+  else // cswDefault
+    Result := 0;
   end;
 end;
 
@@ -229,6 +279,31 @@ begin
     ExitCode := GetExitCode;
     Result := ExitCode = STILL_ACTIVE;
   end;
+end;
+
+procedure TExternalApplication.Resume;
+begin
+  ResumeThread(FProcessInformation.hThread);
+end;
+
+procedure TExternalApplication.Suspend;
+begin
+  SuspendThread(FProcessInformation.hThread);
+end;
+
+procedure TExternalApplication.SetConsoleCreateNewProcessGroup(const Value: BG);
+begin
+  FConsoleCreateNewProcessGroup := Value;
+end;
+
+procedure TExternalApplication.SetConsoleStartupWindow(const Value: TConsoleStartupWindow);
+begin
+  FConsoleStartupWindow := Value;
+end;
+
+procedure TExternalApplication.SetCreateSuspended(const Value: BG);
+begin
+  FCreateSuspended := Value;
 end;
 
 procedure TExternalApplication.SetProcessPriority(const Value: TProcessPriority);
