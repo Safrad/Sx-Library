@@ -13,7 +13,6 @@ procedure TryUploadData(const AURL: string; const AForce: BG = False);
 implementation
 
 uses
-  Windows,
   SysUtils,
   Classes,
   OmniXML,
