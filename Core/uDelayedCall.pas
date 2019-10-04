@@ -3,7 +3,8 @@ unit uDelayedCall;
 interface
 
 uses
-	uTypes;
+	uTypes,
+  uTimeSpan;
 
 {$define Thread}
 
@@ -18,10 +19,8 @@ procedure DelayedTimer;
 function GetDelayedCallEnabled: BG;
 procedure SetDelayedCallEnabled(const Value: BG);
 
-const
-	DefaultDelayedCallTime = 250; // ms
 var
-	DelayedCallTime: U4 = DefaultDelayedCallTime;
+	DelayedCallTime: TTimeSpan;
 
 implementation
 
@@ -94,7 +93,7 @@ begin
 		{$else}
 		if DelayedCallEnabled then
 		begin
-			if Call.NextDrawTime + DelayedCallTime > GetTickCount then
+			if Call.NextDrawTime + DelayedCallTime.Ticks > MainTimer.Value.Ticks then
 			begin
 				Inc(Call.MissedCount);
 				Exit;
@@ -121,7 +120,7 @@ end;
 procedure DelayedTimer;
 var
 	Call: PCall;
-	HTime: U4;
+	HTime: U8;
 begin
 	if DelayedCallEnabled then
 		HTime := MainTimer.Value.Ticks
@@ -131,7 +130,7 @@ begin
 	Call := Calls.GetFirst;
 	while Call <> nil do
 	begin
-		if (Call.MissedCount > 0) and (HTime >= Call.NextDrawTime + DelayedCallTime) then
+		if (Call.MissedCount > 0) and (HTime >= Call.NextDrawTime + DelayedCallTime.Ticks) then
 		begin
 			CallProc(Call);
 		end;
@@ -157,6 +156,8 @@ end;
 initialization
 {$IFNDEF NoInitialization}
 	FCriticalSection := TCriticalSection.Create;
+	DelayedCallTime.Milliseconds := 250;
+
 	Calls := TData.Create;
 	Calls.ItemSize := SizeOf(TCall);
 {$ENDIF NoInitialization}
