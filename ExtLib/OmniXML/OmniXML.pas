@@ -3687,7 +3687,8 @@ end;
 
 function TXMLDocument.CreateEntityReference(const Name: XmlString): IXMLEntityReference;
 begin
-  Result := InternalCreateEntityReference(Name);
+//  Result := InternalCreateEntityReference(Name);
+  Result := nil;
 end;
 
 function TXMLDocument.InternalCreateProcessingInstruction(const Target, Data: XmlString): TXMLProcessingInstruction;
