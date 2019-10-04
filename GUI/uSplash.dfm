@@ -30,6 +30,7 @@ object fSplash: TfSplash
     Top = 0
     Width = 3
     Height = 13
+    Transparent = True
   end
   object Timer1: TTimer
     Interval = 40
