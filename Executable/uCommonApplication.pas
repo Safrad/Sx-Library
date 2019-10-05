@@ -250,7 +250,8 @@ begin
   try
     FInitializationSequenceTime.Ticks := MainTimer.IntervalFrom(ApplicationStartTicks);
     s := 'Initialization sequence done in ' + FInitializationSequenceTime.ToStringInSeconds + ' seconds.';
-    MainLog.Add(s, mlDebug);
+    if LogDebug then
+      MainLog.Add(s, mlDebug);
     if Assigned(SplashScreen) then
       FSplashScreen.AddMessage(s);
     OnRun;
