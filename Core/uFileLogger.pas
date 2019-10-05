@@ -123,7 +123,8 @@ end;
 
 procedure TFileLogger.Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel);
 begin
-	WriteLine(DateTimeToS(LogTime, MainTimer.PrecisionDigits, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line, True) + FileSep);
+  Assert(IsLoggerFor(MessageLevel));
+  WriteLine(DateTimeToS(LogTime, MainTimer.PrecisionDigits, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line, True) + FileSep);
 end;
 
 procedure TFileLogger.Flush;
