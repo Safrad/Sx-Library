@@ -126,26 +126,19 @@ var
   Bookmark: TBookmark;
 begin
   s := ReadStringFromFile(FileName);
-  LJsonObj    := TJSONObject.ParseJSONValue(s) as TJSONObject;
+  LJsonObj := TJSONObject.ParseJSONValue(s) as TJSONObject;
   try
   	FBookmarks := TData.Create;
   	FBookmarks.ItemSize := SizeOf(TBookmark);
     ParseBookmark(LJsonObj, FBookmarks);
-
   finally
      LJsonObj.Free;
   end;
 end;
 
-procedure RaiseNotImplementedException;
-begin
-  if IsDebug then
-    raise ENotImplementedException.Create('This function is not implemented.');
-end;
-
 procedure TFirefoxBookmarks.WriteToFile(const FileName: string);
 begin
-  RaiseNotImplementedException;
+  raise ENotImplemented.Create('This function is not implemented.');
 end;
 
 end.
