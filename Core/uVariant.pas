@@ -32,8 +32,6 @@ begin
 end;
 
 function VariantToString(const AValue: Variant; const AOutputFormat: TOutputFormat): string;
-var
-  VarTyp: TVarType;
 begin
   if AOutputFormat = ofIO then
     Result := VarToStr(AValue)
