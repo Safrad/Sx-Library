@@ -108,7 +108,6 @@ type
 		procedure CMWantSpecialKey(var Message: TCMWantSpecialKey);
 		message CM_WANTSPECIALKEY;
 		procedure SetActualRow(const Value: SG);
-    procedure SetColumnOrder;
 		procedure UpdateFilter(Sender: TObject);
 	protected
 		{ Protected declarations }
@@ -141,6 +140,7 @@ type
 			const OwnDraw: BG = False);
 		procedure SetAllSortable(const Sortable: BG);
 		procedure OptimalColumnsWidth;
+    procedure UpdateColumnCount;
 
 		// Rows
 		property RowCount: SG read FAllRowCount write SetRowCount;
@@ -1174,15 +1174,15 @@ begin
 		begin
       FColumns[i] := TColumn.Create;
 		end;
-		FColumnCount := Value;
-    SetColumnOrder;
+    UpdateColumnCount;
 	end;
 end;
 
-procedure TDView.SetColumnOrder;
+procedure TDView.UpdateColumnCount;
 var
   i: SG;
 begin
+  FColumnCount := FColumns.Count;
   SetLength(FColumnOrder, FColumnCount);
   for i := FColumnCount to Length(FColumnOrder) - 1 do
   begin
@@ -1499,7 +1499,7 @@ begin
     Column.Free;
     raise;
   end;
-  SetColumnOrder;
+  UpdateColumnCount;
 end;
 
 procedure TDView.SetActualRow(const Value: SG);

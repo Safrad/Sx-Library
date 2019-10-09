@@ -3,12 +3,13 @@ unit uTable;
 interface
 
 uses
+  Generics.Collections,
+
   uDIniFile,
   uTypes,
   uRow,
   uCell,
-
-  Generics.Collections,
+  uColumn,
 
   uITable,
   uICell,
@@ -20,7 +21,7 @@ type
 //  TTable = class(ITable)
   TTable = class(TInterfacedObject, ITable)
   private
-    FHeader: IRow;
+    FColumns: TColumns;
     FData: TRows;
 //    function GetColumnCount: SG; override;
 //    function GetRowCount: SG; override;
@@ -53,6 +54,7 @@ type
 
     // Output
     property ColumnCount: SG read GetColumnCount;
+    property Columns: TColumns read FColumns;
     property RowCount: SG read GetRowCount;
   end;
 
@@ -67,8 +69,20 @@ uses
 { TTable }
 
 procedure TTable.AddHeaderRow(const ARow: IRow);
+var
+  i: SG;
+  Column: TColumn;
 begin
-  FHeader := ARow as TRow;
+  for i := 0 to ARow.GetColumnCount - 1 do
+  begin
+    Column := TColumn.Create;
+    try
+      Column.Caption := ARow.GetCell(i).GetData;
+      FColumns.Add(Column);
+    except
+      Column.Free;
+    end;
+  end;
 end;
 
 procedure TTable.AddRow(const ARow: IRow);
@@ -85,15 +99,15 @@ constructor TTable.Create;
 begin
   inherited Create;
 
+  FColumns := TColumns.Create;
   FData := TRows.Create;
-//  FData.OwnsObjects := True;
 end;
 
 destructor TTable.Destroy;
 begin
   try
     FData.Free;
-    FHeader :=nil;
+    FColumns.Free;
   finally
     inherited;
   end;
@@ -107,29 +121,16 @@ end;
 function TTable.GetCell(const AColumnIndex, ARowIndex: SG): ICell;
 begin
   Result := FData[ARowIndex].GetCell(AColumnIndex);
-{  Result.ForegroundColor := GetColor(Cell.TextColor);
-  Result.BackgroundColor := 0;}
 end;
 
 function TTable.GetColumnCount: SG;
 begin
-  Result := FHeader.GetColumnCount;
-{  if Length(Data) > 0 then
-  begin
-    if Data[0] = nil then
-      Result := 0
-    else
-      Result := Length(Data[0].Columns);
-  end
-  else
-  begin
-    Result := 0;
-  end;}
+  Result := FColumns.Count;
 end;
 
 function TTable.GetColumnName(const AColumnIndex: SG): string;
 begin
-  Result := FHeader.GetCell(AColumnIndex).GetData;
+  Result := FColumns[AColumnIndex].Caption;
 end;
 
 function TTable.GetRow(const ARowIndex: SG): IRow;

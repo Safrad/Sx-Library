@@ -44,7 +44,10 @@ type
     property Formatter: TFormatter read FFormatter write SetFormatter;
 	end;
 
-	TColumns = TObjectList<TColumn>;
+	TColumns = class(TObjectList<TColumn>)
+  public
+    procedure AddNames(const ANames: array of string);
+  end;
 
 implementation
 
@@ -55,7 +58,7 @@ begin
   inherited;
 
   FCaption := '<Empty>';
-  FWidth := 64;
+  FWidth := 0; // Automatic
   FRealWidth := 0;
   FClick := True;
   FAlignment := taLeftJustify;
@@ -105,6 +108,26 @@ end;
 procedure TColumn.SetWidth(const Value: S4);
 begin
   FWidth := Value;
+end;
+
+{ TColumns }
+
+procedure TColumns.AddNames(const ANames: array of string);
+var
+  ColumnIndex: SG;
+  Column: TColumn;
+begin
+  for ColumnIndex := 0 to Length(ANames) - 1 do
+  begin
+    Column := TColumn.Create;
+    try
+      Column.Caption := ANames[ColumnIndex];
+      Add(Column);
+    except
+      Column.Free;
+      raise;
+    end;
+  end;
 end;
 
 end.

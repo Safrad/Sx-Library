@@ -59,7 +59,7 @@ end;
 
 procedure TGUIOutputInfo.AddCaption(const ACaption: string);
 begin
-
+  // No code
 end;
 
 procedure TGUIOutputInfo.AddDebug(const ADebugMessage: string);
@@ -92,15 +92,15 @@ begin
 end;
 
 procedure TGUIOutputInfo.AddTable(const ATable: TTable);
-//var
-//  fTableForm: TfTableForm;
+var
+  fTableForm: TfTableForm;
 begin
-{  fTableForm := TfTableForm.Create(ATable, 'Table', True);
+  fTableForm := TfTableForm.Create(ATable, 'Table', True);
   try
-    fTableForm.Show;
+    fTableForm.ShowModal;
   finally
-    fTableForm.Free
-  end; TODO }
+    fTableForm.Free;
+  end;
 end;
 
 procedure TGUIOutputInfo.AddWarning(const AWarningMessage: string);
