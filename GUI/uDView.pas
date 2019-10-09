@@ -3,14 +3,21 @@ unit uDView;
 interface
 
 uses
-	uTypes, uMath, uFiles, uDImage, uDIniFile, uTextFilter,
-
   Types,
   SysUtils,
 	Classes,
   Winapi.Messages,
   Controls,
-  Graphics;
+  Graphics,
+
+  uTypes,
+  uColumn,
+  uMath,
+  uFiles,
+  uDImage,
+  uDIniFile,
+  uTextFilter;
+
 
 const
 	MinColumnWidth = 3;
@@ -18,25 +25,6 @@ const
 
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnResize);
-
-	TColumnOptions = record // 12
-		Caption: string;
-		Width: S4;
-		Alignment: TAlignment;
-	end;
-
-	TColumn = record // 20
-		Caption: string;
-		Width: S4;
-		MaxWidth: S4;
-		RealWidth: S4;
-		Alignment: TAlignment;
-		Click: B1;
-		Visible: B1;
-		OwnDraw: B1;
-	end;
-
-	TColumns = array of TColumn;
 
 	TOnGetRowCount = function(Sender: TObject): SG of object;
 	TOnGetData = procedure(Sender: TObject; var Data: string; ColIndex, RowIndex: Integer;
@@ -120,6 +108,7 @@ type
 		procedure CMWantSpecialKey(var Message: TCMWantSpecialKey);
 		message CM_WANTSPECIALKEY;
 		procedure SetActualRow(const Value: SG);
+    procedure SetColumnOrder;
 		procedure UpdateFilter(Sender: TObject);
 	protected
 		{ Protected declarations }
@@ -150,7 +139,6 @@ type
 		procedure AddColumn(const Caption: string; const Width: SG = 0;
 			const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True;
 			const OwnDraw: BG = False);
-		procedure AddColumns(const C: array of TColumnOptions);
 		procedure SetAllSortable(const Sortable: BG);
 		procedure OptimalColumnsWidth;
 
@@ -206,6 +194,8 @@ uses
 constructor TDView.Create(AOwner: TComponent);
 begin
 	inherited;
+
+  FColumns := TColumns.Create;
 	EnableZoom := True;
 
 	OnFill := LFill;
@@ -222,12 +212,14 @@ end;
 
 destructor TDView.Destroy;
 begin
-	SetLength(FColumns, 0);
-	SetLength(FColumnOrder, 0);
-	SetLength(FSelectedRows, 0);
-  FreeAndNil(FTextFilter);
-
-	inherited;
+  try
+    FColumns.Free;
+    SetLength(FColumnOrder, 0);
+    SetLength(FSelectedRows, 0);
+    FreeAndNil(FTextFilter);
+  finally
+  	inherited;
+  end;
 end;
 
 function TDView.PosToItem(MX, MY: SG; var IX, IY: SG): TViewAction;
@@ -1067,20 +1059,17 @@ end;
 
 procedure TDView.UpdateColumnVisibility;
 var
-	i: SG;
 	Data: string;
 	RowIndex, ColIndex: SG;
+  ColumnVisible: BG;
 begin
 	if Assigned(FOnGetRowCount) then
 		FAllRowCount := FOnGetRowCount(Self);
 	if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FAllRowCount > 0) then
 	begin
-		// Automatic hides empty column
-		for i := 0 to Length(FColumns) - 1 do
-			FColumns[i].Visible := False;
-
-		for ColIndex := 0 to Length(FColumns) - 1 do
+		for ColIndex := 0 to FColumnCount - 1 do
 		begin
+      ColumnVisible := False;
 			for RowIndex := 0 to FAllRowCount - 1 do
 			begin
 				Data := '';
@@ -1093,19 +1082,20 @@ begin
 
 				if Data <> '' then
 				begin
-					if FColumns[ColIndex].Visible = False then
+					if ColumnVisible = False then
 					begin
-						FColumns[ColIndex].Visible := True;
+						ColumnVisible := True;
 						Break;
 					end;
 				end;
 			end;
+      FColumns[ColIndex].Visible := ColumnVisible;
 		end;
 	end
 	else
 	begin
-		for i := 0 to Length(FColumns) - 1 do
-			FColumns[i].Visible := True;
+		for ColIndex := 0 to FColumnCount - 1 do
+			FColumns[ColIndex].Visible := True;
 	end;
 end;
 
@@ -1189,20 +1179,26 @@ var
 begin
 	if Value <> FColumnCount then
 	begin
-		SetLength(FColumns, Value);
+		FColumns.Count := Value;
 		SetLength(FColumnOrder, Value);
 		for i := FColumnCount to Value - 1 do
 		begin
-			FColumns[i].Caption := '<Empty>';
-			FColumns[i].Width := 64;
-			FColumns[i].RealWidth := 0;
-			FColumns[i].Click := True;
-			FColumns[i].Alignment := taLeftJustify;
-			FColumns[i].Visible := True;
-			FColumnOrder[i] := i;
+      FColumns[i] := TColumn.Create;
 		end;
 		FColumnCount := Value;
+    SetColumnOrder;
 	end;
+end;
+
+procedure TDView.SetColumnOrder;
+var
+  i: SG;
+begin
+  SetLength(FColumnOrder, FColumnCount);
+  for i := FColumnCount to Length(FColumnOrder) - 1 do
+  begin
+    FColumnOrder[i] := i;
+  end;
 end;
 
 procedure TDView.SetRowCount(Value: SG);
@@ -1269,7 +1265,7 @@ begin
 		for i := 0 to FAllRowCount - 1 do
 		begin
 			Accept := False;
-			for ColIndex := 0 to Length(FColumns) - 1 do
+			for ColIndex := 0 to FColumnCount - 1 do
 			begin
 				Data := GetDataAsString(ColIndex{FActualColumn}, i);
 				if FTextFilter.Accept(Data) then
@@ -1303,7 +1299,7 @@ begin
 			begin // User sort
 				try
 					FSortBy := FSortByIndexes[c];
-          if c < Length(FColumns) then
+          if c < FColumnCount then
   					FOnColumnClick(Self, FColumns[c]);
 				except
 					on E: Exception do
@@ -1496,23 +1492,24 @@ end;
 procedure TDView.AddColumn(const Caption: string; const Width: SG = 0;
 	const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True;
 	const OwnDraw: BG = False);
-begin
-	SetColumnCount(FColumnCount + 1);
-	SetColumn(FColumnCount - 1, Caption, Width, Alignment, Sortable, OwnDraw);
-end;
-
-procedure TDView.AddColumns(const C: array of TColumnOptions);
 var
-	i: SG;
+  Column: TColumn;
 begin
-	for i := 0 to Length(C) - 1 do
-	begin
-		ColumnCount := ColumnCount + 1;
-		FColumns[FColumnCount - 1].Caption := C[i].Caption;
-		FColumns[FColumnCount - 1].Width := C[i].Width;
-		FColumns[FColumnCount - 1].RealWidth := 0;
-		FColumns[FColumnCount - 1].Alignment := C[i].Alignment;
-	end;
+  Column := TColumn.Create;
+  try
+    Column.Caption := Caption;
+    Column.Width := Width;
+    Column.RealWidth := 0;
+    Column.Alignment := Alignment;
+    Column.Click := Sortable;
+    Column.OwnDraw := OwnDraw;
+
+    FColumns.Add(Column);
+  except
+    Column.Free;
+    raise;
+  end;
+  SetColumnOrder;
 end;
 
 procedure TDView.SetActualRow(const Value: SG);
@@ -1567,6 +1564,7 @@ var
 	c: SG;
 	Section: string;
 	s: string;
+  Width: S4;
 begin
 	inherited;
 
@@ -1601,7 +1599,9 @@ begin
 	// if Save = False then
 	for i := 0 to ColumnCount - 1 do
 	begin
-		IniFile.RWNum(Section, 'Width' + NToS(i, ofIO), FColumns[i].Width, Save);
+    Width := FColumns[i].Width;
+		IniFile.RWNum(Section, 'Width' + NToS(i, ofIO), Width, Save);
+    FColumns[i].Width := Width;
 		if Save = False then
 			FColumnOrder[i] := i;
 		IniFile.RWNum(Section, 'Order' + NToS(i, ofIO), FColumnOrder[i], Save);
