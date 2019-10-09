@@ -90,7 +90,7 @@ begin
   Result := '';
   for i := 0 to FLineCount - 1 do
   begin
-    Result := Result + FLines[i] + FileSep;
+    AppendStrSeparator(Result, FLines[i], FileSep);
   end;
 end;
 
