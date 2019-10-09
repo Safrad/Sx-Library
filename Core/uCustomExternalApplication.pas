@@ -45,6 +45,7 @@ type
 
     function GetExitCode: TExitCode;
     procedure CloseAndResetHandle;
+    procedure InternalTerminateProcessTree(const AParentProcessId: U4; const AExitCode: UINT);
   public
     constructor Create;
     destructor Destroy; override;
@@ -60,6 +61,7 @@ type
     // Process
     procedure Execute; virtual;
     procedure Terminate(const AExitCode: UINT = DBG_TERMINATE_PROCESS); virtual;
+    procedure TerminateProcessTree(const AExitCode: UINT = DBG_TERMINATE_PROCESS);
     procedure Close; virtual;
 
     // raise Exception
@@ -87,6 +89,7 @@ uses
 
   uMsg,
   uFiles,
+  uProcessInfos,
   uEExternalApplication,
   uEIOException,
   uLog,
@@ -113,11 +116,15 @@ begin
 
         if not TerminateProcess(FHandle, AExitCode) then
           RaiseLastOSError;
-        // TODO : Kill process tree CreateJobObject / AssignProcessToJobObject
         Assert(GetExitCode <> STILL_ACTIVE);
       end;
     end;
   end;
+end;
+
+procedure TCustomExternalApplication.TerminateProcessTree(const AExitCode: UINT);
+begin
+  InternalTerminateProcessTree(GetProcessId, AExitCode);
 end;
 
 procedure TCustomExternalApplication.UpdateProcessMemoryInfo;
@@ -240,6 +247,29 @@ end;
 function TCustomExternalApplication.GetProcessId: DWORD;
 begin
   Result := Winapi.Windows.GetProcessId(FHandle);
+end;
+
+procedure TCustomExternalApplication.InternalTerminateProcessTree(const AParentProcessId: U4; const AExitCode: UINT);
+var
+  ProcessInfo: TProcessInfoItem;
+  ChildList: TProcessInfoList;
+  Handle: THandle;
+begin
+  ChildList := ProcessInfos.CreateChildrenOneLevelList(AParentProcessId);
+  try
+    // Terminate parent first, otherwise parent can recreate child!
+    Handle := OpenProcess(PROCESS_ALL_ACCESS, False, AParentProcessId);
+    TerminateProcess(Handle, AExitCode);
+    CloseHandle(Handle);
+
+    for ProcessInfo in ChildList do
+    begin
+      Assert(ProcessInfo.ParentProcessId = AParentProcessId);
+      InternalTerminateProcessTree(ProcessInfo.ProcessId, AExitCode);
+    end;
+  finally
+    ChildList.Free;
+  end;
 end;
 
 procedure TCustomExternalApplication.SetAllowOnlyOneInstance(const Value: BG);
