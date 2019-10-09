@@ -1182,12 +1182,12 @@ procedure TDView.UpdateColumnCount;
 var
   i: SG;
 begin
-  FColumnCount := FColumns.Count;
-  SetLength(FColumnOrder, FColumnCount);
+  SetLength(FColumnOrder, FColumns.Count);
   for i := FColumnCount to Length(FColumnOrder) - 1 do
   begin
     FColumnOrder[i] := i;
   end;
+  FColumnCount := FColumns.Count;
 end;
 
 procedure TDView.SetRowCount(Value: SG);
@@ -1494,7 +1494,6 @@ begin
     Column.OwnDraw := OwnDraw;
 
     FColumns.Add(Column);
-    FColumnCount := FColumns.Count;
   except
     Column.Free;
     raise;
