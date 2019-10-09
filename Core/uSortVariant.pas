@@ -37,7 +37,7 @@ begin
         AInteger[i] := AVariant[i];
       end
       else
-        AInteger[i] := MaxInt;
+        AInteger[i] := High(AInteger[i]);
     end;
     SortS4(True, Reverse, AIndex, PArrayS4(AInteger), Count);
   end;
@@ -45,7 +45,14 @@ begin
   begin
     SetLength(AInt64, Count);
     for i := 0 to Count - 1 do
-  		AInt64[i] := AVariant[i];
+    begin
+      if VarType(AVariant[i]) in [varSmallint, varInteger, varBoolean, varShortInt, varByte, varWord, varLongWord, varInt64, varUInt64] then
+      begin
+        AInt64[i] := AVariant[i];
+      end
+      else
+        AInt64[i] := High(AInt64[i]);
+    end;
 		SortS8(True, Reverse, AIndex, PArrayS8(AInt64), Count);
   end;
   varSingle, varDouble, varCurrency, varDate:
