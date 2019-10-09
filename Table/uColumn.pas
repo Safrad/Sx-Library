@@ -6,7 +6,8 @@ uses
   Generics.Collections,
   Classes,
 
-  uTypes;
+  uTypes,
+  uFormatter;
 
 type
 	TColumn = class
@@ -19,6 +20,7 @@ type
     FAlignment: TAlignment;
     FClick: B1;
     FRealWidth: S4;
+    FFormatter: TFormatter;
     procedure SetAlignment(const Value: TAlignment);
     procedure SetCaption(const Value: string);
     procedure SetClick(const Value: B1);
@@ -27,6 +29,7 @@ type
     procedure SetRealWidth(const Value: S4);
     procedure SetVisible(const Value: B1);
     procedure SetWidth(const Value: S4);
+    procedure SetFormatter(const Value: TFormatter);
   public
     constructor Create;
 
@@ -38,6 +41,7 @@ type
 		property Click: B1 read FClick write SetClick;
 		property Visible: B1 read FVisible write SetVisible;
 		property OwnDraw: B1 read FOwnDraw write SetOwnDraw;
+    property Formatter: TFormatter read FFormatter write SetFormatter;
 	end;
 
 	TColumns = TObjectList<TColumn>;
@@ -71,6 +75,11 @@ end;
 procedure TColumn.SetClick(const Value: B1);
 begin
   FClick := Value;
+end;
+
+procedure TColumn.SetFormatter(const Value: TFormatter);
+begin
+  FFormatter := Value;
 end;
 
 procedure TColumn.SetMaxWidth(const Value: S4);

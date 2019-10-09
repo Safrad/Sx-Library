@@ -186,6 +186,7 @@ uses
   Winapi.Windows,
 
 	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
+  uVariant,
 	uDWinControl, uDForm,
 	fFind, Variants;
 
@@ -746,21 +747,6 @@ end;
 	end;
 	end; }
 
-function VarToStrGUI(const VarData: Variant): string;
-var
-  VarTyp: TVarType;
-begin
-  VarTyp := VarType(VarData);
-  case VarTyp of
-  varSmallint, varInteger, varInt64, varUInt64, varShortInt, varByte, varWord, varLongWord:
-  begin
-    Result := NToS(VarData);
-  end
-  else
-    Result := VarToStr(VarData);
-  end;
-end;
-
 procedure TDView.LFill(Sender: TObject);
 const
 	Border = 1;
@@ -885,7 +871,10 @@ begin
 										FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rect
 												(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].RealWidth - 2,
 												Y + FRowHeight - 2));
-										Data := VarToStrGUI(VarData);
+                    if Assigned(FColumns[FColumnOrder[IX]].Formatter) and IsVariantNumber(VarData) then
+                      Data := FColumns[FColumnOrder[IX]].Formatter.Format(VarData)
+                    else
+  										Data := VariantToString(VarData, ofDisplay);
 									end;
 								except
 									on E: Exception do
@@ -1359,7 +1348,7 @@ begin
   else if Assigned(FOnGetDataEx) then
   begin
     FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rec);
-    Result := VarToStrGUI(VarData);
+    Result := VariantToString(VarData, ofDisplay);
   end;
 end;
 
@@ -1505,6 +1494,7 @@ begin
     Column.OwnDraw := OwnDraw;
 
     FColumns.Add(Column);
+    FColumnCount := FColumns.Count;
   except
     Column.Free;
     raise;
