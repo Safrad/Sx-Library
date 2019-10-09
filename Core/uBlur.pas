@@ -51,7 +51,7 @@ function GetLength(const X, Y: SG; const P: TPointDS): TFlo; overload;
 
 implementation
 
-{ BlurClass }
+{ TBlurArray }
 
 constructor TBlurArray.Create;
 begin
