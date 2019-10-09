@@ -59,6 +59,7 @@ implementation
 uses
   SysUtils,
   Classes,
+
   uStartState,
   uTextAlignment,
   uTable,
@@ -287,21 +288,21 @@ var
   Row: TRow;
   i: SG;
 begin
-  Table := TTable.Create(1 + FArguments.Count);
+  Table := TTable.Create;
   try
-    Row := TRow.Create(3);
+    Row := THeaderRow.Create(3);
     Row.Columns[0].Text := 'Parameter';
     Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Description';
     Row.Columns[1].HorizontalAlignment := haCenter;
     Row.Columns[2].Text := 'Required';
     Row.Columns[2].HorizontalAlignment := haCenter;
-    Table.Data[0] := Row;
+    Table.AddHeaderRow(Row);
 
     for i := 0 to FArguments.Count - 1 do
     begin
       Row := PreviewTableArgument(TCustomArgument(FArguments[i]));
-      Table.Data[i + 1] := Row;
+      Table.AddRow(Row);
     end;
     CommonOutput.AddTable(Table);
   finally
@@ -315,19 +316,19 @@ var
   Row: TRow;
   i: SG;
 begin
-  Table := TTable.Create(1 + FArguments.Count);
+  Table := TTable.Create;
   try
-    Row := TRow.Create(2);
+    Row := THeaderRow.Create(2);
     Row.Columns[0].Text := 'Parameter';
     Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Value';
     Row.Columns[1].HorizontalAlignment := haCenter;
-    Table.Data[0] := Row;
+    Table.AddHeaderRow(Row);
 
     for i := 0 to FArguments.Count - 1 do
     begin
       Row := PreviewTableArgumentValue(TCustomArgument(FArguments[i]));
-      Table.Data[i + 1] := Row;
+      Table.AddRow(Row);
     end;
     CommonOutput.AddTable(Table);
   finally

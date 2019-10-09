@@ -70,12 +70,12 @@ var
   rowIndex, columnIndex: SG;
 begin
   SetLength(Result, FTable.ColumnCount);
-  for rowIndex := 0 to Length(FTable.Data) - 1 do
+  for rowIndex := 0 to FTable.RowCount - 1 do
   begin
     for columnIndex := 0 to FTable.ColumnCount - 1 do
     begin
-      if (FTable.Data[rowIndex] <> nil) and (columnIndex < Length(FTable.Data[rowIndex].Columns)) then
-        Result[columnIndex] := Max(Result[columnIndex], FTable.Data[rowIndex].Columns[columnIndex].GetMaximalLineLength);
+      if (FTable.Data[rowIndex] <> nil) and (columnIndex < FTable.Data[rowIndex].GetColumnCount) then
+        Result[columnIndex] := Max(Result[columnIndex], (FTable.Data[rowIndex].GetCell(columnIndex) as TCell).TextLines.GetMaximalLineLength);
     end;
   end;
 end;
@@ -115,19 +115,19 @@ procedure TConsoleTable.WordWrapData(const AResult: TArrayOfSG);
 var
   rowIndex, columnIndex: SG;
 begin
-  for rowIndex := 0 to Length(FTable.Data) - 1 do
+  for rowIndex := 0 to FTable.RowCount - 1 do
   begin
     for columnIndex := 0 to FTable.ColumnCount - 1 do
     begin
-      if (FTable.Data[rowIndex] <> nil) and (columnIndex < Length(FTable.Data[rowIndex].Columns)) then
-        FTable.Data[rowIndex].Columns[columnIndex].WordWrap(AResult[columnIndex]);
+      if (FTable.Data[rowIndex] <> nil) and (columnIndex < FTable.Data[rowIndex].GetColumnCount) then
+        (FTable.Data[rowIndex].GetCell(columnIndex) as TCell).TextLines.WordWrap(AResult[columnIndex]);
     end;
   end;
 end;
 
 function TConsoleTable.WordWrapAndCalculateOptimalWidthOfRows: TArrayOfSG;
 begin
-  if Length(FTable.Data) = 0 then
+  if FTable.RowCount = 0 then
   begin
     SetLength(Result, 0);
     Exit;
@@ -154,7 +154,7 @@ begin
     for columnIndex := 0 to FTable.ColumnCount - 1 do
     begin
       cell := AColumns[columnIndex];
-      TConsole.WriteAligned(cell.GetLineString(cell.TextAlignment.Vertical, lineIndex, ARowHeight), ASizes[columnIndex], cell.TextAlignment.Horizontal,
+      TConsole.WriteAligned(cell.TextLines.GetLineString(cell.TextAlignment.Vertical, lineIndex, ARowHeight), ASizes[columnIndex], cell.TextAlignment.Horizontal,
         cell.TextColor, ABackgroundColor);
       if columnIndex < FTable.ColumnCount - 1 then
         TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
@@ -221,15 +221,15 @@ begin
   sizes := WordWrapAndCalculateOptimalWidthOfRows;
   rowColor := ccGray;
   TConsole.WriteLine(TopHorizontalLine(sizes), BorderColor, rowColor);
-  for row := 0 to Length(FTable.Data) - 1 do
+  for row := 0 to FTable.RowCount - 1 do
   begin
     if row > 0 then
       rowColor := ccBlack;
 
     if FTable.Data[row] <> nil then
-      DataLine(sizes, FTable.Data[row].GetHeight, FTable.Data[row].Columns, rowColor);
+      DataLine(sizes, FTable.Data[row].GetHeight, (FTable.Data[row] as TRow).Columns, rowColor);
 
-    if row < Length(FTable.Data) - 1 then
+    if row < FTable.RowCount - 1 then
       TConsole.WriteLine(MiddleHorizontalLine(sizes), BorderColor, rowColor);
   end;
   TConsole.WriteLine(BottomHorizontalLine(sizes), BorderColor, rowColor);
