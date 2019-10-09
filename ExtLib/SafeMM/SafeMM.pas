@@ -214,7 +214,7 @@ var
 implementation
 
 uses
-  Windows;
+  Winapi.Windows;
 
 const
   //how many 4k blocks in a 64k pool
