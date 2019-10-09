@@ -44,6 +44,7 @@ type
     FErrorCode: U4;
 
     function GetExitCode: TExitCode;
+    procedure CloseAndResetHandle;
   public
     constructor Create;
     destructor Destroy; override;
@@ -177,6 +178,12 @@ begin
   EnumWindows(@TerminateAppEnum, LPARAM(ProcessId));
 end;
 
+procedure TCustomExternalApplication.CloseAndResetHandle;
+begin
+  CloseHandle(FHandle);
+  FHandle := INVALID_HANDLE_VALUE;
+end;
+
 constructor TCustomExternalApplication.Create;
 begin
   inherited;
@@ -191,8 +198,7 @@ destructor TCustomExternalApplication.Destroy;
 begin
   try
     Terminate;
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
+    CloseAndResetHandle;
   finally
     inherited;
   end;
@@ -200,8 +206,12 @@ end;
 
 procedure TCustomExternalApplication.Execute;
 begin
-  if FAllowOnlyOneInstance and (FHandle <> INVALID_HANDLE_VALUE) then
-    Terminate;
+  if FHandle <> INVALID_HANDLE_VALUE then
+  begin
+    if FAllowOnlyOneInstance then
+      Terminate;
+    CloseAndResetHandle;
+  end;
 
   if FFileName = '' then
     raise EArgumentException.Create('File name is empty.');
