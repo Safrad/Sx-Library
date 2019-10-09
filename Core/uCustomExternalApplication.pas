@@ -259,8 +259,11 @@ begin
   try
     // Terminate parent first, otherwise parent can recreate child!
     Handle := OpenProcess(PROCESS_ALL_ACCESS, False, AParentProcessId);
-    TerminateProcess(Handle, AExitCode);
-    CloseHandle(Handle);
+    try
+      TerminateProcess(Handle, AExitCode);
+    finally
+      CloseHandle(Handle);
+    end;
 
     for ProcessInfo in ChildList do
     begin

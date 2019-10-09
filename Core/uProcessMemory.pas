@@ -44,7 +44,11 @@ var
   ProcessInfo: TProcessInfoItem;
 begin
   Handle := OpenProcess(PROCESS_QUERY_INFORMATION, False, ARootProcessId);
-  Result := GetProcessMemoryCounters(Handle);
+  try
+    Result := GetProcessMemoryCounters(Handle);
+  finally
+    CloseHandle(Handle);
+  end;
 
   for ProcessInfo in ProcessInfos.CompleteList do
   begin

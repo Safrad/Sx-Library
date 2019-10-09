@@ -108,7 +108,7 @@ begin
         ProcessInfo.ProcessId := ProcessEntry.th32ProcessID;
         ProcessInfo.ParentProcessId := ProcessEntry.th32ParentProcessID;
         FCompleteList.Add(ProcessInfo);
-        Ok := Process32Next(Snap,ProcessEntry);
+        Ok := Process32Next(Snap, ProcessEntry);
       end;
     finally
       CloseHandle(Snap);
