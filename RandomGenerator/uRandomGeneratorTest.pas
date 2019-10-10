@@ -90,10 +90,10 @@ begin
     CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax(U8(7)));
 
     CheckEquals(High(U4) - 1, SxRandomGenerator.GetDistrigutionMax(2));
-    CheckEquals(High(U8) - 1, SxRandomGenerator.GetDistrigutionMax(U8(2)));
+    CheckEquals(High(U8) - 2, SxRandomGenerator.GetDistrigutionMax(U8(2)));
 
     CheckEquals(High(U4) - 4, SxRandomGenerator.GetDistrigutionMax(6));
-    CheckEquals(High(U8) - 4, SxRandomGenerator.GetDistrigutionMax(U8(6)));
+    CheckEquals(High(U8) - 1, SxRandomGenerator.GetDistrigutionMax(U8(6)));
 
     CheckEquals(High(U4), SxRandomGenerator.GetDistrigutionMax($7FFFFFFF));
     CheckEquals(High(U8), SxRandomGenerator.GetDistrigutionMax($7FFFFFFFFFFFFFFF));
