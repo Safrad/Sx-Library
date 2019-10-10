@@ -823,7 +823,7 @@ begin
 							Bitmap.Canvas.Brush.Color := ColorDiv(Bitmap.Canvas.Brush.Color, 63109);
 						if Assigned(FOnGetRowCount) then
 							FAllRowCount := FOnGetRowCount(Self);
-						if Assigned(FOnGetData) or Assigned(FOnGetDataEx) then
+						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth + 1) then
 						begin
 							ColIndex := FColumnOrder[IX];
 							RowIndex := FRowOrder[IY];
@@ -892,8 +892,8 @@ begin
 
 						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].RealWidth - 2, Y + FRowHeight - 2,
 							Bitmap.Canvas.Brush.Color, ef16);
-						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx))and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth) and
-							(FColumns[FColumnOrder[IX]].OwnDraw = False) then
+						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth) and
+							(FColumns[FColumnOrder[IX]].OwnDraw = False) and (Data <> '') then
 						begin
 							R.Left := X + Border + LeftOffset { Microsoft Sans Serif } ;
 							R.Top := Y + Border;
