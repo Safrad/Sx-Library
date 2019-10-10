@@ -38,7 +38,14 @@ begin
   else
   begin
     if IsVariantIntegerNumber(AValue) then
-      Result := NToS(AValue, AOutputFormat)
+    begin
+      case VarType(AValue) of
+      varUInt64:
+        Result := NToS(U8(AValue), AOutputFormat);
+      else
+        Result := NToS(S8(AValue), AOutputFormat);
+      end;
+    end
     else if IsVariantFloatNumber(AValue) then
       Result := FToS(AValue, AOutputFormat)
     else
