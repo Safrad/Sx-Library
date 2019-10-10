@@ -92,6 +92,7 @@ uses
   uProcessInfos,
   uEExternalApplication,
   uEIOException,
+  uOutputFormat,
   uLog,
   uMainTimer;
 
@@ -112,7 +113,7 @@ begin
       if GetExitCode = STILL_ACTIVE then
       begin
         if LogDebug then
-          MainLog.Add('Terminating ' + FFileName + ', ExitCode: ' + IntToStr(AExitCode), mlDebug);
+          MainLog.Add('Terminating ' + FFileName + ', ExitCode: ' + ExitCodeToString(AExitCode, ofIO), mlDebug);
 
         if not TerminateProcess(FHandle, AExitCode) then
           RaiseLastOSError;

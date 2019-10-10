@@ -91,6 +91,7 @@ function FToS(const Num: Extended; const OutputFormat: TOutputFormat = ofDisplay
 function BToStr(const Bytes: S4; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function BToStr(const Bytes: S8; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NodesToS(const Value: U8; const OutputFormat: TOutputFormat): string;
+function ExitCodeToString(const AExitCode: U4; const AOutputFormat: TOutputFormat): string;
 
 type
 	TDisplay = (diSD, diMSD, diHMSD, diHHMSD, diDHMSD);
@@ -759,6 +760,11 @@ begin
 		Result := NToS((Value + G div 2) div G, OutputFormat) + ' G'
 	else
 		Result := NToS((Value + T div 2) div T, OutputFormat) + ' T';
+end;
+
+function ExitCodeToString(const AExitCode: U4; const AOutputFormat: TOutputFormat): string;
+begin
+  Result := NToS(AExitCode, AOutputFormat, 16) + ' h';
 end;
 
 procedure MsToHMSD(const T: S8; out GH, GM, GS, GD: U4);
