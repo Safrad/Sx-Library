@@ -273,7 +273,7 @@ begin
 
 		M := TMenuItem.Create(Help1);
 		M.Name := 'Parameters1';
-		M.Caption := 'View Command Line Arguments...';
+		M.Caption := 'View Command-Line Parameters...';
 		M.OnClick := CommonMenu.ViewParams1Click;
 		Help1.Add(M);
 
