@@ -58,7 +58,7 @@ type
 		{ Public declarations }
 //		constructor Create(AOwner: TComponent); overload; override;
 		procedure AddAction(const Title: string; RowAction: TRowAction);
-		constructor Create(const TableModel: ITable; const FormCaption: string; const ReadOnly: BG); reintroduce;
+		constructor Create(const ATable: ITable; const AReadOnly: BG); reintroduce;
 	end;
 
 implementation
@@ -80,22 +80,25 @@ begin
 		Close;
 end;
 
-constructor TfTableForm.Create(const TableModel: ITable; const FormCaption: string; const ReadOnly: BG);
+constructor TfTableForm.Create(const ATable: ITable; const AReadOnly: BG);
 var
 	i : SG;
 begin
+  Assert(ATable <> nil);
+
 	inherited Create(nil);
+
 	Background := baNone;
 
 	ActiveControl := DViewTable;
 	DViewTable.OnCellClick := OnCellClick;
 
-	FTableModel := TableModel;
-	FReadOnly := ReadOnly;
-	Caption := FormCaption;
-	for i := 0 to TableModel.GetColumnCount - 1 do
+	FTableModel := ATable;
+	FReadOnly := AReadOnly;
+	Caption := ATable.GetCaption;
+	for i := 0 to ATable.GetColumnCount - 1 do
 	begin
-    DViewTable.Columns.Add((TableModel as TTable).Columns[i]);
+    DViewTable.Columns.Add(ATable.GetColumn(i));
 	end;
   DViewTable.Columns.OwnsObjects := False;
   DViewTable.UpdateColumnCount;

@@ -4,7 +4,7 @@ interface
 
 uses
   uTypes,
-
+  uColumn,
   uIRow,
   uICell;
 
@@ -22,15 +22,23 @@ type
   end;}
 
   ITable = interface(IInterface)
+
+    // Input
+    procedure SetCaption(const AValue: string);
     procedure Clear;
     procedure AddRow(const ARow: IRow);
-    function GetCell(const AColumnIndex: SG; const ARowIndex: SG): ICell;
+    procedure RemoveRow(const ARowIndex: SG);
     procedure SetCell(const AColumnIndex: SG; const ARowIndex: SG; const ACell: ICell);
+
+    // Output
+    function GetCaption: string;
+    function GetCell(const AColumnIndex: SG; const ARowIndex: SG): ICell;
     function GetColumnCount: SG;
     function GetRow(const ARowIndex: SG): IRow;
     function GetRowCount: SG;
-    procedure RemoveRow(const ARowIndex: SG);
     function GetColumnName(const AColumnIndex: SG): string;
+    function GetColumn(const AColumnIndex: SG): TColumn;
+    function GetColumns: TColumns;
   end;
 
 implementation

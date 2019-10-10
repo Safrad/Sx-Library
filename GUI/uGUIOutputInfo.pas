@@ -95,7 +95,7 @@ procedure TGUIOutputInfo.AddTable(const ATable: TTable);
 var
   fTableForm: TfTableForm;
 begin
-  fTableForm := TfTableForm.Create(ATable, 'Table', True);
+  fTableForm := TfTableForm.Create(ATable, True);
   try
     fTableForm.ShowModal;
   finally

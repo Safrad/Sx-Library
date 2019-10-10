@@ -21,41 +21,43 @@ type
 //  TTable = class(ITable)
   TTable = class(TInterfacedObject, ITable)
   private
+    FCaption: string;
     FColumns: TColumns;
     FData: TRows;
 //    function GetColumnCount: SG; override;
 //    function GetRowCount: SG; override;
     function GetColumnCount: SG;
     function GetRowCount: SG;
+    function GetColumns: TColumns;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure Free; reintroduce;
 
-    // Process
+    // Input
+    procedure SetCaption(const AValue: string);
     property Data: TRows read FData;
     procedure AddHeaderRow(const ARow: IRow);
 
-{    procedure Clear; override;
-    procedure AddRow(const ARow: IRow); override;
-    procedure RemoveRow(const ARowIndex: SG); override;
-    function GetCell(const AColumnIndex: SG; const ARowIndex: SG): ICell; override;
-    procedure SetCell(const AColumnIndex: SG; const ARowIndex: SG; const ACell: ICell); override;
-    function GetColumnName(const AColumnIndex: SG): string; override;}
     procedure Clear;
     procedure AddRow(const ARow: IRow);
-    function GetRow(const ARowIndex: SG): IRow;
     procedure RemoveRow(const ARowIndex: SG);
-    function GetCell(const AColumnIndex: SG; const ARowIndex: SG): ICell;
     procedure SetCell(const AColumnIndex: SG; const ARowIndex: SG; const ACell: ICell);
-    function GetColumnName(const AColumnIndex: SG): string;
-    procedure Serialize(const IniFile: TDIniFile; const Section: string; const Save: BG);
 
     // Output
+    function GetCaption: string;
+    function GetColumnName(const AColumnIndex: SG): string;
+    function GetColumn(const AColumnIndex: SG): TColumn;
+    function GetRow(const ARowIndex: SG): IRow;
+    function GetCell(const AColumnIndex: SG; const ARowIndex: SG): ICell;
     property ColumnCount: SG read GetColumnCount;
-    property Columns: TColumns read FColumns;
     property RowCount: SG read GetRowCount;
+    property Columns: TColumns read GetColumns;
+
+    // Input / Output
+    procedure Serialize(const IniFile: TDIniFile; const Section: string; const Save: BG);
+    property Caption: string read GetCaption write SetCaption;
   end;
 
 implementation
@@ -118,9 +120,19 @@ begin
   // No code, interface
 end;
 
+function TTable.GetCaption: string;
+begin
+  Result := FCaption;
+end;
+
 function TTable.GetCell(const AColumnIndex, ARowIndex: SG): ICell;
 begin
   Result := FData[ARowIndex].GetCell(AColumnIndex);
+end;
+
+function TTable.GetColumn(const AColumnIndex: SG): TColumn;
+begin
+  Result := FColumns[AColumnIndex];
 end;
 
 function TTable.GetColumnCount: SG;
@@ -131,6 +143,11 @@ end;
 function TTable.GetColumnName(const AColumnIndex: SG): string;
 begin
   Result := FColumns[AColumnIndex].Caption;
+end;
+
+function TTable.GetColumns: TColumns;
+begin
+  Result := FColumns;
 end;
 
 function TTable.GetRow(const ARowIndex: SG): IRow;
@@ -193,6 +210,11 @@ begin
 {		if IniFile.ValueExists(Section, 'Name' + IntToStr(Favorites.Count)) then
 			IniFile.WriteString(Section, 'Name' + IntToStr(Favorites.Count), '');}
 	end;
+end;
+
+procedure TTable.SetCaption(const AValue: string);
+begin
+  FCaption := AValue;
 end;
 
 procedure TTable.SetCell(const AColumnIndex, ARowIndex: SG; const ACell: ICell);

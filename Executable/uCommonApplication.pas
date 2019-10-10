@@ -174,6 +174,7 @@ end;
 procedure TCommonApplication.InitializeArguments;
 begin
   FArguments := TDefaultArguments.Create;
+  FArguments.Name := 'Command-Line Parameters';
   AddArguments;
   FArguments.Parse;
   if FArguments.ShowRequired <> '' then

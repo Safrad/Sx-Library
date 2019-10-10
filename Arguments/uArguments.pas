@@ -14,6 +14,7 @@ type
   TArguments = class
   private
     FArguments: TObjectList;
+    FName: string;
 
     function ParseString(ASource: string): TArrayOfStringPair;
     procedure ApplyArguments(const AArguments: TArrayOfStringPair);
@@ -26,6 +27,7 @@ type
     function GetDefinedCount: SG;
     procedure SetOwnsObjects(const Value: BG);
     function GetOwnsObjects: BG;
+    procedure SetName(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -52,6 +54,8 @@ type
 
 		property Items[const Index: TIndex]: TCustomArgument read Get; default; // operator []
     property DefinedCount: SG read GetDefinedCount;
+
+    property Name: string read FName write SetName;
   end;
 
 implementation
@@ -273,7 +277,7 @@ begin
     Argument := FindByString(Name);
     if (Argument = nil) then
     begin
-      raise EArgumentException.Create('Unknown command line argument ' + QuotedStr(Name) + '.');
+      raise EArgumentException.Create('Unknown command-line parameter ' + QuotedStr(Name) + '.');
     end;
     Argument.Exists := True;
 
@@ -290,6 +294,7 @@ var
 begin
   Table := TTable.Create;
   try
+    Table.Caption := FName;
     Row := THeaderRow.Create(3);
     Row.Columns[0].Text := 'Parameter';
     Row.Columns[0].HorizontalAlignment := haCenter;
@@ -357,6 +362,11 @@ begin
   Result := Row;
 end;
 
+procedure TArguments.SetName(const Value: string);
+begin
+  FName := Value;
+end;
+
 procedure TArguments.SetOwnsObjects(const Value: BG);
 begin
   FArguments.OwnsObjects := Value;
@@ -387,7 +397,7 @@ begin
     Argument := TCustomArgument(FArguments[i]);
     if ((not Argument.Used) and (Argument.RequireCheck = rcRequired)) then
     begin
-      Result := Result + LineSep + '  Argument ''' + Argument.Shortcut + ''' from command line is not used in program';
+      Result := Result + LineSep + '  Argument ''' + Argument.Shortcut + ''' from command-line is not used in program';
     end;
   end;
 end;
