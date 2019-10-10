@@ -9,13 +9,13 @@ uses
 type
   TUnitFormatter = class(TNumberFormatter)
   private
-    FUnitName: string;
-    procedure SetUnitName(const Value: string);
+    FUnitNameSuffix: string;
+    procedure SetUnitNameSuffix(const Value: string);
   public
     function Format(const AValue: S8): string; override;
     function Format(const AValue: FG): string; override;
 
-    property UnitName: string read FUnitName write SetUnitName;
+    property UnitNameSuffix: string read FUnitNameSuffix write SetUnitNameSuffix;
   end;
 
 implementation
@@ -32,7 +32,7 @@ var
   PrefixedResult: TPrefixedValue;
 begin
   PrefixedResult := TMetricPrefix.PrefixedValue(AValue);
-  Result := inherited Format(PrefixedResult.Value) + CharSpace + PrefixedResult.Prefix + UnitName;
+  Result := inherited Format(PrefixedResult.Value) + CharSpace + PrefixedResult.Prefix + UnitNameSuffix;
 end;
 
 function TUnitFormatter.Format(const AValue: FG): string;
@@ -40,12 +40,12 @@ var
   PrefixedResult: TPrefixedValue;
 begin
   PrefixedResult := TMetricPrefix.PrefixedValue(AValue);
-  Result := inherited Format(PrefixedResult.Value) + CharSpace + PrefixedResult.Prefix + UnitName;
+  Result := inherited Format(PrefixedResult.Value) + CharSpace + PrefixedResult.Prefix + UnitNameSuffix;
 end;
 
-procedure TUnitFormatter.SetUnitName(const Value: string);
+procedure TUnitFormatter.SetUnitNameSuffix(const Value: string);
 begin
-  FUnitName := Value;
+  FUnitNameSuffix := Value;
 end;
 
 end.
