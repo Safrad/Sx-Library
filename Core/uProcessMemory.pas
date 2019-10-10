@@ -8,9 +8,10 @@ uses
 type
   TProcessMemoryCounters = record
     WorkingSetSize: U8;
-    PeekWorkingSetSize: U8;
+    PeakWorkingSetSize: U8;
 
-    procedure Add(AProcessMemoryCounters: TProcessMemoryCounters);
+    procedure Add(const AProcessMemoryCounters: TProcessMemoryCounters);
+    procedure Update(const AProcessMemoryCounters: TProcessMemoryCounters);
   end;
 
 function GetProcessMemoryCounters(const AHandle: THandle): TProcessMemoryCounters;
@@ -35,7 +36,7 @@ begin
   if not GetProcessMemoryInfo(AHandle, @ProcessMemoryCounters, ProcessMemoryCounters.cb) then
     RaiseLastOSError;
   Result.WorkingSetSize := ProcessMemoryCounters.WorkingSetSize;
-  Result.PeekWorkingSetSize := ProcessMemoryCounters.PeakWorkingSetSize;
+  Result.PeakWorkingSetSize := ProcessMemoryCounters.PeakWorkingSetSize;
 end;
 
 function GetProcessMemoryCountersRecursive(const ARootProcessId: U4): TProcessMemoryCounters;
@@ -61,10 +62,17 @@ end;
 
 { TProcessMemoryCounters }
 
-procedure TProcessMemoryCounters.Add(AProcessMemoryCounters: TProcessMemoryCounters);
+procedure TProcessMemoryCounters.Add(const AProcessMemoryCounters: TProcessMemoryCounters);
 begin
   Inc(WorkingSetSize, AProcessMemoryCounters.WorkingSetSize);
-  Inc(PeekWorkingSetSize, AProcessMemoryCounters.PeekWorkingSetSize);
+  Inc(PeakWorkingSetSize, AProcessMemoryCounters.PeakWorkingSetSize);
+end;
+
+procedure TProcessMemoryCounters.Update(const AProcessMemoryCounters: TProcessMemoryCounters);
+begin
+  WorkingSetSize := AProcessMemoryCounters.WorkingSetSize;
+  if AProcessMemoryCounters.PeakWorkingSetSize > PeakWorkingSetSize then
+    PeakWorkingSetSize := AProcessMemoryCounters.PeakWorkingSetSize;
 end;
 
 end.
