@@ -7,7 +7,7 @@ uses
   uTypes;
 
 type
-  EExternalApplication = class(Exception)
+  EExternalApplication = class(EExternal)
   public
     constructor Create(const APath: string; const AExitCode: U4; const AOuput: string);
   end;
