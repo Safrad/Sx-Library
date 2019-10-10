@@ -70,7 +70,7 @@ begin
     if FBufferAllocation.Remain = 0 then
       ReadNextBuffer;
 
-    ReadSize := Min(FBufferAllocation.Remain, RemainReadCount);
+    ReadSize := Min(FBufferAllocation.Remain, S8(RemainReadCount));
 
     // Transfer buffer data
     Move(PByte(PByte(FAlignedMemory.Data) + FBufferAllocation.Used)^, Data^, ReadSize);
