@@ -27,7 +27,6 @@ var
 begin
   SxStringList := TSxStringList.Create;
   try
-    SxStringList.FreeObjectsOnExit := False;
     SxStringList.Clear;
     s := '1';
     SxStringList.Add(s);
