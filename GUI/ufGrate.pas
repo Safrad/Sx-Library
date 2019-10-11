@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+	Winapi.Windows, SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, Menus, uDImage, uDForm;
 
 type
@@ -49,7 +49,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uScreen, uGraph, uDBitmap, uGColor, uGetInt, uDIniFile, uMenus, uColor, uDrawStyle, uDictionary,
+	uGraph, uDBitmap, uGColor, uGetInt, uDIniFile, uMenus, uColor, uDrawStyle, uDictionary,
 	Math, Velthuis.BigDecimals;
 
 const
@@ -112,7 +112,7 @@ end;
 
 procedure TfGrate.Size1Click(Sender: TObject);
 begin
-	if GetNumber('Grate Size', GrateSize, 0, DefaultGrateSize, Max(NowScreenMode.Width div 2, NowScreenMode.Height div 2), OnApplyGrateSize) then
+	if GetNumber('Grate Size', GrateSize, 0, DefaultGrateSize, Max(Screen.Width div 2, Screen.Height div 2), OnApplyGrateSize) then
 end;
 
 procedure TfGrate.FormCreate(Sender: TObject);

@@ -3,7 +3,7 @@
 
 unit uSGL;
 
-{$define BPP4}
+{.$define BPP4}
 
 interface
 

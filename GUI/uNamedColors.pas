@@ -367,7 +367,7 @@ end;
 class function TNamedColors.GetRGBAColor(
   const ANamedColor: TNamedColorEnum): TRGBA;
 begin
-  Result.A := ColorRGBValues[ANamedColor];
+  Result.C := ColorRGBValues[ANamedColor];
   Exchange(Result.R, Result.B);
 end;
 

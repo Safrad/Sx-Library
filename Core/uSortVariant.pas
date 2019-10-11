@@ -65,7 +65,7 @@ begin
   			AFloat[i] := AVariant[i];
       end
       else
-  			AFloat[i] := {$ifndef CPUX64}MaxExtended{$else}MaxDouble{$endif};
+  			AFloat[i] := {$ifndef CPUX64}1.18973149535723176505e+4932{$else}MaxDouble{$endif};
     end;
     {$ifndef CPUX64}
 		SortFA(True, Reverse, AIndex, PArrayFA(AFloat), Count);

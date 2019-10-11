@@ -38,7 +38,9 @@ implementation
 uses
   Math,
   GammaF,
+
   uTimeSpan,
+  uMainTimer,
   uMath;
 
 procedure TMathTest.SgnTest;
@@ -238,29 +240,28 @@ begin
 end;
 
 const
-  TestTimeInMs: array[0..8] of SG = (0, 1, 9, 11, 15, 25, 50, 333, 1000);
+  TestTimeInMs: array[0..8] of UG = (0, 1, 9, 11, 15, 25, 50, 333, 1000);
 
 procedure TMathTest.DelayAndPresiceSleepTest(const APreciseSleep: BG);
 var
   TestTime: TTimeSpan;
   i: SG;
-  Tick: U8;
+  StartTime: TTimeSpan;
   Dif: FG;
-  MeasuredTime: FG;
+  MeasuredTime: TTimeSpan;
 begin
   for i := Low(TestTimeInMs) to High(TestTimeInMs) do
   begin
     TestTime.Milliseconds := TestTimeInMs[i];
-    Tick := PerformanceCounter;
+    StartTime := MainTimer.Value;
     if APreciseSleep then
       PreciseSleep(TestTime)
     else
       Delay(TestTime);
-    Tick := IntervalFrom(Tick);
-    MeasuredTime := 1000 * Tick / PerformanceFrequency;
-    Dif := MeasuredTime - TestTimeInMs[i];
+    MeasuredTime := MainTimer.IntervalFrom(StartTime);
+    Dif := MeasuredTime.Milliseconds - TestTimeInMs[i];
     // 1 ms tolerance
-    Check(Abs(Dif) <= 0.1, 'Out of time tolerance ' + IntToStr(TestTimeInMs[i]) + ' -> ' + FloatToStr(MeasuredTime));
+    Check(Abs(Dif) <= 0.1, 'Out of time tolerance [ms]' + IntToStr(TestTimeInMs[i]) + ' -> ' + IntToStr(MeasuredTime.Milliseconds));
   end;
 end;
 

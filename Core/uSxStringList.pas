@@ -21,8 +21,8 @@ type
   public
     constructor Create;
 
-    function Get(const AIndex: SG): string;
-    procedure Add(const AString: string);
+{    function Get(const AIndex: SG): string;
+    procedure Add(const AString: string);}
 
     property Duplicates: TDuplicates read FDuplicates write SetDuplicates;
     property Sorted: BG read FSorted write SetSorted;
@@ -35,11 +35,11 @@ implementation
 
 { TSxStringList }
 
-procedure TSxStringList.Add(const AString: string);
+{procedure TSxStringList.Add(const AString: string);
 begin
 //  inherited Add(PChar(AString));
   inherited Add(AString);
-end;
+end;}
 
 constructor TSxStringList.Create;
 begin
@@ -48,11 +48,11 @@ begin
 //  OwnObjects := False; // string is reference counted
 end;
 
-function TSxStringList.Get(const AIndex: SG): string;
+{function TSxStringList.Get(const AIndex: SG): string;
 begin
 //  Result := PChar(Self[AIndex]^);
   Result := inherited Strings[AIndex];
-end;
+end;}
 
 function TSxStringList.GetDelimitedTextWithoutQuotes: string;
 var

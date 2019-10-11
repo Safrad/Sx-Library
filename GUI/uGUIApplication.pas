@@ -119,7 +119,16 @@ end;
 procedure TGUIApplication.CreateForm(InstanceClass: TComponentClass; var Reference);
 begin
   if Initialized then
+  begin
     Application.CreateForm(InstanceClass, Reference);
+    if FUseCommonMenu then
+    begin
+      Assert(Application.MainForm <> nil);
+//      Assert(InstanceClass = Application.MainForm);
+      CommonForm({InstanceClass as TForm}Application.MainForm);
+      FUseCommonMenu := False;
+    end;
+  end;
 end;
 
 destructor TGUIApplication.Destroy;
@@ -225,7 +234,7 @@ begin
   begin
     if FMinimizeToTrayIcon then
     begin
-      Application.ShowMainForm := False
+      Application.ShowMainForm := False;
     end
     else
     begin
@@ -233,9 +242,6 @@ begin
         Application.MainForm.WindowState := wsMinimized;
     end;
   end;
-
-  if FUseCommonMenu then
-    CommonForm(Application.MainForm);
 
 	Application.Run; // Blocking
 end;

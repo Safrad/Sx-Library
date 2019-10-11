@@ -74,7 +74,7 @@ begin
 
     // Transfer buffer data
     Move(PByte(PByte(FAlignedMemory.Data) + FBufferAllocation.Used)^, Data^, ReadSize);
-    FBufferAllocation.Used := FBufferAllocation.Used + ReadSize;
+    FBufferAllocation.Used := U8(FBufferAllocation.Used) + ReadSize;
 
     Inc(Data, ReadSize);
     Dec(RemainReadCount, ReadSize);
@@ -99,7 +99,7 @@ begin
     ChangeBuffer;
   end
   else
-    FBufferAllocation.Used := FFilePosition - FBufferPos;
+    FBufferAllocation.Used := S8(FFilePosition) - FBufferPos;
 end;
 
 procedure TReadBuffer.ReadNextBuffer;

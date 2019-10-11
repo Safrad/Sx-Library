@@ -33,7 +33,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uOutputFormat, uFile, uDIniFile, uDBitmap, uGraph, uScreen, uGetStr, uColor;
+	uOutputFormat, uFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor;
 
 var
 	fScores: TfScores;

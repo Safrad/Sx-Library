@@ -32,7 +32,6 @@ uses
   uCharset,
   uCharTable,
   uLog,
-  uMapInfo,
   uMath,
   uMsg,
   uOptions,

@@ -221,7 +221,7 @@ end;
 
 procedure glTextOut(Canvas: TCanvas; const X, Y: Integer; const Text: string; const C: TColor);
 begin
-	glShadowText(Canvas, X, Y, Text, C, clNone, 0);
+	glShadowText(Canvas, X, Y, AnsiString(Text), C, clNone, 0);
 	{ glGetIntegerv(GL_VIEWPORT, @Params[0]);
 
 		if (Params[2] = 0) or (Params[3] = 0) then Exit;
@@ -261,9 +261,9 @@ begin
 	if CB <> clNone then
 	begin
 		sx := 2 * (X - 1) / Params[2] - 1;
-		sy := -2 * (Y + 1 + Canvas.TextHeight(Text)) / Params[3] + 1;
-		wx := 2 * (Canvas.TextWidth(Text) + 2) / Params[2];
-		wy := 2 * (Canvas.TextHeight(Text) + 2) / Params[3];
+		sy := -2 * (Y + 1 + Canvas.TextHeight(string(Text))) / Params[3] + 1;
+		wx := 2 * (Canvas.TextWidth(string(Text)) + 2) / Params[2];
+		wy := 2 * (Canvas.TextHeight(string(Text)) + 2) / Params[3];
 		{ sx := 2 * (X + 1) / Params[2] - 1;
 			sy := -2 * (Y + 1 + Canvas.TextHeight(Text)) / Params[3] + 1;
 			wx := 2 * (Canvas.TextWidth(Text) + 1) / Params[2];

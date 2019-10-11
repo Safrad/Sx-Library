@@ -136,13 +136,13 @@ procedure MMInDone(
 	Instance: U4;
 	Param1: U4;
 	Param2: U4); stdcall;
-var
-	Header: PWaveHdr;
+//var
+//	Header: PWaveHdr;
 {	NewSize: SG;
 	WaveSample: PWaveSample;}
 
-	BufferIn: PWaveSample;
-	WaveCommon: TWaveCommon;
+//	BufferIn: PWaveSample;
+//	WaveCommon: TWaveCommon;
 begin
 (*	if Msg = WIM_DATA then
 	begin

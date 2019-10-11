@@ -5,6 +5,7 @@ interface
 uses
   uTypes,
   uLongOperation,
+  uTimeSpan,
   Forms;
 
 type
@@ -14,7 +15,7 @@ type
   private
     FProcessStatus: TProcessStatus;
     FForm: TForm;
-    FOneTick: U8;
+    FOneTick: TTimeSpan;
     StartTime, PauseTime, LastInterruptTime: U8;
     FValue: S8;
     FMaximalValue: S8;
@@ -163,19 +164,19 @@ begin
   FValue := -1;
 
   FForm := Form;
-  FOneTick := RoundDivU8(PerformanceFrequency, 1000 div LoopSleepTime);
+  FOneTick.Milliseconds := LoopSleepTime;
   if Assigned(FForm) then
     FForm.Caption := StatusToCaption;
 end;
 
 function TProcess.GetTime: U8;
 begin
-  Result := IntervalFrom(StartTime);
+  Result := MainTimer.IntervalFrom(StartTime);
 end;
 
 function TProcess.Interrupt: BG;
 begin
-  if (MainTimer.IntervalFrom(LastInterruptTime) > FOneTick) then
+  if (MainTimer.IntervalFrom(LastInterruptTime) > FOneTick.Ticks) then
   begin
     Result := True;
     LastInterruptTime := MainTimer.Value.Ticks;
@@ -186,7 +187,7 @@ end;
 
 procedure TProcess.ResetTime;
 begin
-  StartTime := PerformanceCounter;
+  StartTime := MainTimer.Value.Ticks;
 end;
 
 procedure TProcess.SetMaximalValue(const Value: S8);

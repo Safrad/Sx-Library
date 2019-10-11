@@ -110,7 +110,7 @@ uses
 	uDForm,
   Vcl.Forms,
 	Consts, SysUtils, ActnList, ImgList, Math, Types,
-	uGraph, uScreen, uStrings, uColor, uMenus, uDrawStyle, uGlobalOptions,
+	uGraph, uStrings, uColor, uMenus, uDrawStyle, uGlobalOptions,
 	uPictureFactory, uSounds, uOperatingSystem, uDWinControl;
 
 { TDButton }

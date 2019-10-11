@@ -35,8 +35,8 @@ begin
     s := '3';
     SxStringList.Add(s);
     SxStringList.Delete(1);
-    CheckEquals('1', SxStringList.Get(0));
-    CheckEquals('3', SxStringList.Get(1));
+    CheckEquals('1', SxStringList[0]);
+    CheckEquals('3', SxStringList[1]);
 
     SxStringList.Delimiter := ';';
     CheckEquals('1;3', SxStringList.DelimitedTextWithoutQuotes);

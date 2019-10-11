@@ -89,6 +89,7 @@ procedure TTextFileTest.TestReadWriteLineCustom(const AFileCharset: TFileCharset
 const
 	Line1 = 'a è Pøíliš luouèkı kùò úpìl ïábelské ódy';
 	Line2 = 'a' {$IFDEF UNICODE} + #$03A9 {$ENDIF};
+	Line2a = 'a' {$IFDEF UNICODE} + '?' {$ENDIF};
 var
 	F: TTextFile;
 	FileName: TFileName;
@@ -129,7 +130,7 @@ begin
       if AFileCharset <> fcAnsi then
         Check(Line = Line2)
       else
-        Check(Line = AnsiString(Line2));
+        Check(Line = Line2a);
       F.Close;
     finally
       F.Free;

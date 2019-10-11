@@ -23,8 +23,8 @@ type
 		FEventStep: TEventStep;
 		FInterval: UG;
 		FPreciseInterval: TTimeSpan;
-		FNowFrameRate: Integer;
-		FOldTime: S8;
+		FNowFrameRate: UG;
+		FOldTime: U8;
 		FOldTime2: U8;
 		FOnActivate: TNotifyEvent;
 		FOnDeactivate: TNotifyEvent;
@@ -52,7 +52,7 @@ type
 	public
 		TimerCount: UG;
 		Clock,
-		ElapsedTime: S8;
+		ElapsedTime: U8;
 		LagCount, LagCount2: UG;
 		TimLeave: U8;
 		TimSleep, TimWork, CPUUsage, TimWork2, TimSleep2, CPUUsage2: U8;
@@ -290,14 +290,20 @@ end;
 
 procedure TDTimer.Step;
 var
-	NowTime: S8; // Actual PerformanceCounter Value
+	NowTime: U8; // Actual PerformanceCounter Value
 	NTime: S8;
 	t: S8;
 begin
 	if (FEnabled) and ((FSuspended = False) or (FActiveOnly = False)) then
 	begin
 		NowTime := MainTimer.Value.Ticks;
+
+    Assert(NowTime >= TimLeave);
 		TimSleep := NowTime - TimLeave;
+
+    if NowTime < FOldTime then
+      FOldTime := NowTime;
+    Assert(NowTime >= FOldTime);
 		ElapsedTime := NowTime - FOldTime;
 //				if MinTime > FInterval12 then MinTime := FInterval12;
 		if FEventStep = esCPU then
@@ -306,7 +312,7 @@ begin
         FInterval := 1;
 			FPreciseInterval.Ticks := Max(RoundDivU8(100 * TimWork, FInterval), 1);
 		end;
-		if (ElapsedTime > 0) and (ElapsedTime + RoundDivS8(MainTimer.Frequency * LagTime, 2 * Second) >= FPreciseInterval.Ticks) then
+		if (ElapsedTime > 0) and (ElapsedTime + RoundDivU8(MainTimer.Frequency * LagTime, 2 * Second) >= FPreciseInterval.Ticks) then
 		begin
 			// Frame Rate
 			Inc(FNowFrameRate);
@@ -316,7 +322,7 @@ begin
 				if t = 0 then
 					FFrameRate := High(FFrameRate)
 				else
-					FFrameRate := RoundDivS8(FNowFrameRate * MainTimer.Frequency * Second, t);
+					FFrameRate := RoundDivU8(FNowFrameRate * MainTimer.Frequency * Second, t);
 				FNowFrameRate := 0;
 {						LagCount := ElapsedTime div MainTimer.Frequency;
 				if LagCount < 1 then LagCount := 1;
@@ -329,9 +335,10 @@ begin
 			if LagCount < 1 then LagCount := 1;
 			if LagCount > 1 then Inc(TotalLags, LagCount - 1);
 			t := U8(LagCount) * FPreciseInterval.Ticks;
+      Assert(t >= 0);
 			Inc(FOldTime, t);
 
-			Inc(Clock, ElapsedTime + t);
+			Inc(Clock, S8(ElapsedTime) + t);
 
 			ElapsedTime := NowTime - FLastLeaveTime;
 			FLastLeaveTime := NowTime;
@@ -365,7 +372,7 @@ begin
 
 			Inc(TimerCount);
 		end;
-    t := S8(FPreciseInterval.Ticks + FOldTime) - NowTime;
+    t := S8(FPreciseInterval.Ticks + FOldTime) - S8(NowTime); // Can be negative
 		if DIdleTimer.MinTime > t then
       DIdleTimer.MinTime := t;
 	end;

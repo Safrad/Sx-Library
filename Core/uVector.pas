@@ -423,7 +423,7 @@ end;
 
 function GammaVector(const V: TVector): TVector;
 var
-	e, x: Extended;
+	e, x: {$ifndef CPUX64}Extended{$else}Double{$endif};
 begin
 	e := VectorToNum(V).ToFloat;
 	x := Gamma(e);

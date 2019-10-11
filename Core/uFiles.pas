@@ -578,20 +578,25 @@ begin
 	end;
 end;
 
-procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
+procedure CheckExtensions(const Extensions: array of string);
 var
-	i: SG;
+  i: Integer;
+begin
+  for i := 0 to Length(Extensions) - 1 do
+  begin
+    Assert(Length(Extensions[i]) > 0);
+    Assert(Extensions[i, 1] <> '.');
+  end;
+end;
+
+procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
 (*	Offset: Integer;
 	MaxLimit: Integer;
 	Switch: Integer;
 	FileName: TFileName; *)
 begin
 	if IsDebug then
-    for i := 0 to Length(Extensions) - 1 do
-    begin
-      Assert(Length(Extensions[i]) > 0);
-      Assert(Extensions[i, 1] <> '.');
-    end;
+    CheckExtensions(Extensions);
 {						if (Extensions = '') or (Extension = '*') or (Extension = '*.*') or
 	if Length(Extension) > 1 then
 		if (Extension <> '*') and (Extension <> '*.*') then

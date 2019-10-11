@@ -67,14 +67,16 @@ var
 implementation
 
 {$R *.DFM}
+
 uses
   Winapi.Windows,
   Winapi.Messages,
 
   uCommonApplication,
+  uMainTimer,
 	uAPI, uHTML, uDictionary,
 	uProjectInfo,
-	uGraph, uDIniFile, uScreen, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
+	uGraph, uDIniFile, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
 	uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
 
 function GetLocalHomepage: TFileName;
@@ -293,9 +295,9 @@ var
 begin
 	BitmapAbout := ImageAbout.Bitmap;
 	BitmapAbout.GenerateRGBEx(0, 0, BitmapAbout.Width - 1, BitmapAbout.Height - 1, TGenFunc(Typ), Co, ef03,
-		(16 * TimerFlash.Clock div PerformanceFrequency), nil);
+		(16 * TimerFlash.Clock div MainTimer.Frequency), nil);
 
-	HClock := (32 * TimerFlash.Clock div PerformanceFrequency) and $7f;
+	HClock := (32 * TimerFlash.Clock div MainTimer.Frequency) and $7f;
 	if HClock <= 32 then
 	begin
 		Effect := HClock shr 1;
@@ -317,7 +319,7 @@ begin
 
 	if (Effect > 0) and (BmpAbout <> nil) then
 	begin
-		RotateDef(BitmapAbout, BmpAbout, Typ, (U8(AngleCount) * U8(TimerFlash.Clock) div (8 * PerformanceFrequency)) and (AngleCount - 1), TEffect(Effect));
+		RotateDef(BitmapAbout, BmpAbout, Typ, (U8(AngleCount) * U8(TimerFlash.Clock) div (8 * MainTimer.Frequency)) and (AngleCount - 1), TEffect(Effect));
 	end;
 	
 	i := 0;

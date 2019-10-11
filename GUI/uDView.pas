@@ -185,7 +185,7 @@ uses
 	Math, StdCtrls, ClipBrd, Forms, UITypes,
   Winapi.Windows,
 
-	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
+	uGraph, uDBitmap, uMsg, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
   uVariant,
 	uDWinControl, uDForm,
 	fFind, Variants;
