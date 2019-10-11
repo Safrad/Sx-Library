@@ -239,7 +239,7 @@ end;
 procedure glShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: AnsiString;
 	const CF, CB: TColor; const Shadow: SG);
 var
-	Params: array [0 .. 3] of SG;
+	Params: array [0 .. 3] of S4;
 	C: TRGBA;
 	sx, sy, wx, wy: Single;
 	// px: array[0..3] of Double;
