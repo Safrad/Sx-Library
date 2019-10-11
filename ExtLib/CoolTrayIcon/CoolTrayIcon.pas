@@ -712,8 +712,6 @@ begin
   FShowHint := True;         // Show hint by default
   SettingPreview := False;
 
-  FIcon := TIcon.Create;
-  FIcon.OnChange := IconChanged;
   FillChar(IconData, SizeOf(IconData), 0);
   IconData.cbSize := SizeOf(TNotifyIconDataEx);
   { IconData.hWnd points to procedure to receive callback messages from the icon.
@@ -1046,9 +1044,9 @@ end;
 
 procedure TCoolTrayIcon.SetIcon(Value: TIcon);
 begin
-  FIcon.OnChange := nil;
-//  FIcon := Value;
-  FIcon.Assign(Value);      
+  if FIcon <> nil then
+    FIcon.Free;
+  FIcon := Value;
   FIcon.OnChange := IconChanged;
   ModifyIcon;
 end;
@@ -1183,6 +1181,8 @@ var
   ok: Boolean;
 begin
   Result := False;
+  if FIcon = nil then
+    Exit;
   ok := True;
   if (csDesigning in ComponentState) then
     ok := (SettingPreview or FDesignPreview);
