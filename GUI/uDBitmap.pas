@@ -402,7 +402,7 @@ uses
 	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
   Math, Vcl.ClipBrd,
-	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
+	uGraph, uMsg, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
 function SameColor(const P: PPixel; const C: TRGBA): BG; inline;
@@ -1811,16 +1811,7 @@ begin
 
 		BmpColor := TBitmap.Create;
 		try
-			case NowScreenMode.Bits of
-			1: BmpColor.PixelFormat := pf1bit;
-			4: BmpColor.PixelFormat := pf4bit;
-			8: BmpColor.PixelFormat := pf8bit;
-			15: BmpColor.PixelFormat := pf15bit;
-			16: BmpColor.PixelFormat := pf16bit;
-			24: BmpColor.PixelFormat := pf24bit;
-			else
-			BmpColor.PixelFormat := pf32bit;
-			end;
+      BmpColor.PixelFormat := pf32bit;
 			BmpColor.Width := Wid;
 			BmpColor.Height := Hei;
 			BmpColor.Canvas.Draw(0, 0, BmpC);
@@ -1850,7 +1841,7 @@ begin
 
 				Result := TIcon.Create;
 			//	Result.Handle := CreateIconIndirect(IconInfo); // Do not support more that 4 bits!
-				Result.Handle := Winapi.Windows.CreateIcon(HInstance, Wid, Hei, 1, NowScreenMode.Bits,
+				Result.Handle := Winapi.Windows.CreateIcon(HInstance, Wid, Hei, 1, 32,
 					BmpMask,
 					BmpColor.ScanLine[BmpColor.Height - 1]);
 			finally
