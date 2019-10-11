@@ -1844,6 +1844,8 @@ begin
 				Result.Handle := Winapi.Windows.CreateIcon(HInstance, Wid, Hei, 1, 32,
 					BmpMask,
 					BmpColor.ScanLine[BmpColor.Height - 1]);
+        if Result.Handle = 0 then
+          RaiseLastOSError;
 			finally
 				FreeMem(BmpMask);
 			end;
