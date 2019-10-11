@@ -37,7 +37,7 @@ begin
     MaxPrefix := GetCount - 1;
     for i := 0 to MaxPrefix do
     begin
-      NewValue := AValue * GetMultiplicator(i);
+      NewValue := AValue / GetMultiplicator(i);
 
       if (NewValue >= 1) or (i = MaxPrefix) then
       begin
