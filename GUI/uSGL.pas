@@ -3,7 +3,7 @@
 
 unit uSGL;
 
-// {$define BPP4}
+{$define BPP4}
 
 interface
 
@@ -192,8 +192,6 @@ sglSTextureObj = (
 var
 _libStatus: sglEErrorCode  = sglOpOk;
 sglFinishCoons: BG = True;
-sglErrors: array of sglEErrorCode;
-sglErrorCount: SG;
 
 
 (* Identifikator aktualni kreslici plochy (drawable). *)
@@ -594,27 +592,13 @@ begin
 end;
 
 function sglGetErrorStrings: string;
-var i: SG;
 begin
-	Result := '';
-	for i := 0 to sglErrorCount - 1 do
-		Result := Result + sglGetErrorString(sglErrors[i]) + LineSep;
-	sglErrorCount := 0;
-	SetLength(sglErrors, 0);
+	Result := sglGetErrorString(_libStatus);
 	_libStatus := sglOpOk;
 end;
 
 procedure AddError(sglError: sglEErrorCode);
-var NewSize: SG;
 begin
-	if IsDebug then
-  begin
-    NewSize := sglErrorCount + 1;
-    if AllocByExp(Length(sglErrors), NewSize) then
-      SetLength(sglErrors, NewSize);
-    sglErrors[sglErrorCount] := sglError;
-    Inc(sglErrorCount);
-	end;
 	_libStatus := sglError;
 end;
 
@@ -1855,19 +1839,7 @@ begin
 end;
 
 procedure BezierC;
-{var
-	i: SG;
-	G0, G1: TGraphicPoint;}
 begin
-{	if IsDebug then
-  begin
-	for i := 0 to Drawable.Index - 2 do
-	begin
-		Tran(Drawable.WP[i], G0);
-		Tran(Drawable.WP[i + 1], G1);
-		Lin(G0, G1);
-	end;
-  end;}
 	DrawCurveUsingRecursiveSubdivision4(Drawable.WP, 1);
 end;
 
@@ -1980,8 +1952,6 @@ end;
 procedure BezierG;
 begin
 	DrawCurveUsingRecursiveSubdivision(Drawable.WP, 1);
-//	if IsDebug then
-//	DrawWrap;
 end;
 
 function CoonsFergusonT(t: TFloat): TWorldPoint;
