@@ -196,7 +196,7 @@ begin
   Virtual.Remain := MemoryStatusEx.ullAvailPageFile;
 
   PageFile.Total := Virtual.Total - Physical.Total;
-  PageFile.Remain := Virtual.Remain - Physical.Remain;
+  PageFile.Remain := Max(0, Virtual.Remain - Physical.Remain);
 end;
 
 initialization
