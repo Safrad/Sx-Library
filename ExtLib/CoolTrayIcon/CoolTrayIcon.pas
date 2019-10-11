@@ -1047,8 +1047,11 @@ begin
   if FIcon <> nil then
     FIcon.Free;
   FIcon := Value;
-  FIcon.OnChange := IconChanged;
-  ModifyIcon;
+  if FIcon <> nil then
+  begin
+    FIcon.OnChange := IconChanged;
+    ModifyIcon;
+  end;
 end;
 
 
