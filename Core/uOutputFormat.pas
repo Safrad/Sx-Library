@@ -85,8 +85,8 @@ function NToS(const Num: U8; const OutputFormat: TOutputFormat; const ANumericBa
 type
   TFloatFormat= (ffAuto, ffScientic, ffNormal);
 
-function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
-function FToS(const Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
+function FloatToDecimalString(const Value: FM; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
+function FToS(const Num: FM; const OutputFormat: TOutputFormat = ofDisplay): string;
 
 function BToStr(const Bytes: S4; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function BToStr(const Bytes: S8; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
@@ -464,7 +464,7 @@ begin
 	Result := NToSInternal(Num, False, 0, OutputFormat, ANumericBase);
 end;
 
-function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
+function FloatToDecimalString(const Value: FM; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
 var
     digits: string;
     s: string;
@@ -607,7 +607,7 @@ begin
   end;
 end;
 
-function FToS(const Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
+function FToS(const Num: FM; const OutputFormat: TOutputFormat = ofDisplay): string;
 begin
   if OutputFormat = ofIO then
 	  Result := FloatToStr(Num, IOFormatSettings)

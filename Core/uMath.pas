@@ -91,7 +91,7 @@ procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
 procedure UnsignedDivMod10(const Dividend: U4; out Result: U4; out Reminder: U4);
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
-function ModE(x, y: Extended): Extended;
+function ModE(x, y: FM): FM;
 
 function GetAbsoluteError(const A, B: FG): FG; overload;
 {$ifndef CPUX64}
@@ -193,7 +193,7 @@ procedure Exchange(P0, P1: Pointer; Count: UG); register; overload;
 procedure Exchange(var s0, s1: string); overload;
 procedure Exchange(var A, B: TObject); overload;
 
-function Arg(X, Y: Extended): Extended; overload;
+function Arg(X, Y: FM): FM; overload;
 
 procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
@@ -234,8 +234,8 @@ function BitScanReverse(AValue: U8): U4; overload;
 function CountDigits(AValue: U4): U4; overload;
 function CountDigits(AValue: U8): U4; overload;
 
-function PerformanceFrequency: S8; deprecated 'Use MainTimer';
-function PerformanceCounter: S8; deprecated 'Use MainTimer';
+function PerformanceFrequency: U8; deprecated 'Use MainTimer';
+function PerformanceCounter: U8; deprecated 'Use MainTimer';
 
 function TimeDifference(const NowTime, LastTime: U4): U4; overload;
 function TimeDifference(const NowTime, LastTime: U8): U8; overload;
@@ -676,7 +676,7 @@ begin
 	end;
 end;
 
-function ModE(x, y: Extended): Extended;
+function ModE(x, y: FM): FM;
 begin
 	Result := x - Floor(x / y) * y;
 end;
@@ -1530,7 +1530,7 @@ begin
 	B := T;
 end;
 
-function Arg(X, Y: Extended): Extended; // <0..2pi)
+function Arg(X, Y: FM): FM; // <0..2pi)
 begin
 {	if Abs(X) > Abs(Y) then
 	begin
@@ -2268,12 +2268,12 @@ begin
     Dec(Result);
 end;
 
-function PerformanceFrequency: S8;
+function PerformanceFrequency: U8;
 begin
   Result := MainTimer.Frequency;
 end;
 
-function PerformanceCounter: S8;
+function PerformanceCounter: U8;
 begin
   Result := MainTimer.Value.Ticks;
 end;
