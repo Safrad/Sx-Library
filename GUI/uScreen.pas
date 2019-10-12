@@ -67,6 +67,8 @@ begin
   DISP_CHANGE_FAILED: Result := 'The display driver failed the specified graphics mode.';
   DISP_CHANGE_NOTUPDATED: Result := 'Unable to write settings to the registry.';
   DISP_CHANGE_RESTART: Result := 'The computer must be restarted for the graphics mode to work.';
+  else
+    Result := 'Unknown error code (' + IntToStr(AErrorCode) + ').';
   end;
 end;
 
