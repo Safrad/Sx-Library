@@ -56,7 +56,9 @@ uses
   uRawFileTest in '..\Files\uRawFileTest.pas',
   uTextFileTest in '..\Files\uTextFileTest.pas',
   uDBitmapTest in '..\GUI\uDBitmapTest.pas',
-  uPercentFormatterTest in '..\Formatter\uPercentFormatterTest.pas';
+  uPercentFormatterTest in '..\Formatter\uPercentFormatterTest.pas',
+  uDesktopWindowTest in '..\GUI\uDesktopWindowTest.pas',
+  uTaskBarWindowTest in '..\GUI\uTaskbarWindowTest.pas';
 
 {$R *.RES}
 

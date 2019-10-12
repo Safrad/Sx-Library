@@ -3,20 +3,19 @@ unit uDForm;
 interface
 
 uses
-	uTypes, uDBitmap,
-	Winapi.Windows, Winapi.Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-	Vcl.ExtCtrls, Vcl.StdCtrls;
+	uTypes,
+  uDBitmap,
+  UITypes,
+  Vcl.Graphics,
+	Winapi.Windows, Winapi.Messages, Classes, Vcl.Controls, Vcl.Forms;
 
 type
 	TBackground = (baNone, baUser, baStandard, baGradient, baOpenGL, baOpenGLBitmap);
-
-	TPosition = (poUnknown = -1, poLeft, poRight, poTop, poBottom);
 
 	TRWOptionsEvent = procedure(Sender: TObject; Save: Boolean) of object;
 
 	TDForm = class(TForm)
 	private
-		{ Private declarations }
 		FCaption: string;
 		FStoreWindow: Boolean;
 		FWindowPlacement: TWindowPlacement;
@@ -27,41 +26,30 @@ type
 
 		FBackground: TBackground;
 		FFullScreen: Boolean;
-		FChangeMode: Boolean;
 
 		FOnRWOptions: TRWOptionsEvent;
+    FFontBase: U4;
+    FRC: HGLRC;
 
 		procedure ResizeMessage;
 		procedure CheckPos;
-		procedure Common(Value: Boolean);
+		procedure InternalSetFullScreen(Value: Boolean);
 		procedure SetFullScreen(Value: Boolean);
 		procedure InitBackground(const Direct: BG);
 		procedure SetBackground(Value: TBackground);
-		procedure SetChangeMode(Value: Boolean);
 		procedure SetCaption(Value: string);
 
-		procedure WMSize(var Message: TWMSize);
-		message WM_SIZE;
-		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd);
-		message WM_ERASEBKGND;
-		procedure WMShow(var Message: TWMShowWindow);
-		message WM_SHOWWINDOW;
-		procedure WMSysColorChange(var Message: TWMSysColorChange);
-		message WM_SYSCOLORCHANGE;
+		procedure WMSize(var Message: TWMSize); message WM_SIZE;
+		procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+		procedure WMShow(var Message: TWMShowWindow); message WM_SHOWWINDOW;
+		procedure WMSysColorChange(var Message: TWMSysColorChange); message WM_SYSCOLORCHANGE;
 	public
-		{ Public declarations }
-		RC: HGLRC;
-		FontBase: U4;
-
 		constructor Create(AOwner: TComponent); override;
 		destructor Destroy; override;
 		procedure CreateParams(var Params: TCreateParams); override;
-		// function CloseQuery: Boolean; override;
 
 		procedure RestoreWindow;
 		procedure StoreWindow;
-
-		// procedure KeyDown(var Key: U2; Shift: TShiftState); override;
 
 		procedure Paint; override;
 		procedure ResizeScene;
@@ -73,29 +61,26 @@ type
 		procedure AlignControlRight(const AControl: TControl);
 		procedure AlignControlBottom(const AControl: TControl; const KeepSize: BG);
 		procedure AlignControlRightTop(const AControl: TControl);
+
+		property RC: HGLRC read FRC;
+		property FontBase: U4 read FFontBase;
 	published
-		{ published declarations }
 		property Caption: string read FCaption write SetCaption;
 		property BackBitmap: TDBitmap read FBitmapB;
 		property Background: TBackground read FBackground write SetBackground default baGradient;
 		property FullScreen: Boolean read FFullScreen write SetFullScreen default False;
-		property ChangeMode: Boolean read FChangeMode write SetChangeMode default False;
 
 		property OnRWOptions: TRWOptionsEvent read FOnRWOptions write FOnRWOptions;
-		// property OnMouseMove;
 	end;
 
-procedure FormFree(var Form: TDForm); overload;
-procedure FormFree(var Form: TForm); overload;
-function FormDraw(const Form: TForm): BG;
+procedure FormFree(var Form: TDForm); overload; // Close and Free Form
+procedure FormFree(var Form: TForm); overload; // Close and Free Form
+function FormDraw(const Form: TForm): BG; // Is form visible
 procedure ActivateForm(Form: TForm);
 
 procedure glShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: AnsiString;
 	const CF, CB: TColor; const Shadow: SG);
 procedure glTextOut(Canvas: TCanvas; const X, Y: Integer; const Text: string; const C: TColor);
-procedure ShowTaskBar(Visible: Boolean);
-function GetTaskBarPos: TPosition;
-// function GetDesktopRect(out Rect: TRect): SG; deprecated;
 
 // Logical size to real pixels (depends on current DPI)
 const
@@ -107,25 +92,26 @@ function LgToPx(const Value: SG; const OriginalDPI: SG): SG; overload;
 var
 	FormBorder: SG = 8;
 
-var
-	DesktopHWnd: HWnd;
-	DesktopDC: HDC;
-	DisableShowHideTaskBar: BG;
-
 function ActiveForm: TForm;
 procedure SetControlEnabled(Component: TComponent; E: BG);
-function GetDesktop: BG;
-procedure ReleaseDesktop;
 
 implementation
 
 uses
-	Types, Math,
-  uMath, uDictionary, uVCLDictionary,
-	uGraph, uFiles, OpenGL12, uScreen, uStrings, uColor, uProjectInfo, uDWinControl, uOperatingSystem, uGlobalOptions, uLog, uRect;
+  SysUtils,
+  uMath,
+  uDictionary,
+  uVCLDictionary,
+	uFiles,
+  OpenGL12,
+  uColor,
+  uProjectInfo,
+  uDWinControl,
+  uOperatingSystem,
+  uGlobalOptions;
 
 const
-	OneBuffer = False;
+	OneBufferForOpenGL = False;
 
 function ActiveForm: TForm;
 var
@@ -142,6 +128,28 @@ begin
 	end;
 end;
 
+procedure ActivateForm(Form: TForm);
+begin
+	if Form.Visible = False then
+		Form.Show
+	else
+	begin
+		Form.BringToFront;
+		SetForegroundWindow(Form.Handle); // Blink Taskbar
+	end;
+end;
+
+function Get8087CW: U2;
+asm
+	PUSH 0
+	FNSTCW [ESP].U2
+{$ifdef CPUX64}
+	POP RAX
+{$else}
+	POP EAX
+{$endif}
+end;
+
 procedure SetControlEnabled(Component: TComponent; E: BG);
 var
 	i: SG;
@@ -153,51 +161,12 @@ begin
 	end;
 end;
 
-function GetDesktop: BG;
-begin
-	Result := False;
-	if DesktopHWnd = INVALID_HANDLE_VALUE then
-	begin
-		DesktopDC := 0;
-		Exit;
-	end;
-	if (DesktopDC = 0) then
-	begin
-		DesktopHWnd := 0; // GetDesktopWindow;
-		if DesktopHWnd <> INVALID_HANDLE_VALUE then
-		begin
-			DesktopDC := GetDC(DesktopHWnd);
-			if DesktopDC <> 0 then
-				Result := True;
-		end;
-	end
-	else
-		Result := True;
-end;
-
-procedure ReleaseDesktop;
-begin
-	if (DesktopHWnd <> INVALID_HANDLE_VALUE) and (DesktopDC <> 0) then
-	begin
-		ReleaseDC(DesktopHWnd, DesktopDC);
-		DesktopHWnd := 0;
-		DesktopDC := 0;
-	end;
-end;
-
 function FormDraw(const Form: TForm): BG;
-// var WindowLong: S4;
 begin
 	Result := False;
-	if not Assigned(Form) then
+	if (not Assigned(Form)) or (Form.Visible = False) then
 		Exit;
 
-	{ WindowLong := GetWindowLong(Form.Handle, GWL_STYLE);
-		if WindowLong and WS_VISIBLE = 0 then Exit; }
-	// Assert(Form.Visible = True);
-	if Form.Visible = False then
-		Exit;
-	// if Form.WindowState = wsMinimized then Exit; // Do not work
 	Result := True;
 end;
 
@@ -300,125 +269,17 @@ begin
 {$ENDIF}, Pointer(Integer(@Text[1])));
 end;
 
-procedure ShowTaskBar(Visible: Boolean);
-var
-	hTaskBar: HWnd;
-begin
-	if DisableShowHideTaskBar then Exit;
-	hTaskBar := FindWindow('Shell_TrayWnd', nil);
-	if Visible then
-	begin
-		ShowWindow(hTaskBar, SW_SHOWNA);
-		if LogInformation then
-      MainLogAdd('ShowTaskBar', mlInformation);
-	end
-	else
-	begin
-		ShowWindow(hTaskBar, SW_HIDE);
-		if LogInformation then
-      MainLogAdd('HideTaskBar', mlInformation);
-	end;
-end;
+{ TDForm }
 
-function GetTaskBarPos: TPosition;
-var
-	hTaskBar: HWnd;
-	RectT: TRect;
-	w, h: SG;
-begin
-	hTaskBar := FindWindow('Shell_TrayWnd', nil);
-	GetWindowRect(hTaskBar, RectT);
-	w := Screen.Width;
-	h := Screen.Height;
-
-	if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Top <= 0) then
-	begin
-		Result := poTop;
-	end
-	else if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Bottom >= h) then
-	begin
-		Result := poBottom;
-	end
-	else if (RectT.Left <= 0) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-	begin
-		Result := poLeft;
-	end
-	else if (RectT.Right >= w) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-	begin
-		Result := poRight;
-	end
-	else
-		Result := poUnknown;
-end;
-
-{ function GetDesktopRect(out Rect: TRect): SG;
-	var
-	hTaskBar: HWND;
-	RectT: TRect;
-	w, h: SG;
-	begin
-	hTaskBar := FindWindow('Shell_TrayWnd', nil);
-	GetWindowRect(hTaskBar, RectT);
-	w := Screen.Width;
-	h := Screen.Height;
-	Rect.Left := 0;
-	Rect.Right := w;
-	Rect.Top := 0;
-	Rect.Bottom := h;
-
-	if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Top <= 0) then
-	begin
-	Rect.Top := RectT.Bottom; // Top
-	Result := 0;
-	end
-	else if (RectT.Left <= 0) and (RectT.Right >= w) and (RectT.Bottom >= h) then
-	begin
-	Rect.Bottom := RectT.Top; // Bottom
-	Result := 1;
-	end
-	else if (RectT.Left <= 0) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-	begin
-	Rect.Left := RectT.Right; // Left
-	Result := 2;
-	end
-	else if (RectT.Right >= w) and (RectT.Top <= 0) and (RectT.Bottom >= h) then
-	begin
-	Rect.Right := RectT.Left; // Right
-	Result := 3;
-	end
-	else
-	Result := -1;
-	end;
-
-	procedure TDForm.AfterCreate;
-	begin
-	if Parent.WindowState = wsMDIForm then
-	begin
-	Form.Style := fsMDIChild;
-	end;
-	end; }
-
-procedure TDForm.Common(Value: Boolean);
-const
-	FullScreenMode: TScreenMode = (Width: 640; Height: 480; Bits: 32; RefreshRate: 0);
+procedure TDForm.InternalSetFullScreen(Value: Boolean);
 var
 	Style: S4;
 	Rect: TRect;
-	// LActive: BG;
 begin
-	// LActive := Active;
 	if Value then
 	begin
-		StoreWindow;
-
-		if FChangeMode then
-		begin
-			ReadScreenModes;
-			SetScreenMode(FullScreenMode, False, False, False, False, True);
-		end;
 		Style := GetWindowLong(Handle, GWL_STYLE);
-		Style := Style and not WS_CAPTION;
-		Style := Style and not WS_THICKFRAME;
+		Style := Style and (not WS_CAPTION) and (not WS_THICKFRAME);
 		SetWindowLong(Handle, GWL_STYLE, Style);
 		if Active then
 			WindowState := wsMaximized;
@@ -429,19 +290,13 @@ begin
 	end
 	else
 	begin
-		if FChangeMode then
-			RestoreStartMode;
 		Style := GetWindowLong(Handle, GWL_STYLE);
-		Style := Style or (WS_CAPTION);
-		Style := Style or (WS_THICKFRAME);
+		Style := Style or WS_CAPTION or WS_THICKFRAME;
 		SetWindowLong(Handle, GWL_STYLE, Style);
 		if Active then
 			WindowState := wsNormal;
-		RestoreWindow;
 	end;
 
-	{ if LActive = False then
-		SendToBack; }
 	ResizeMessage;
 end;
 
@@ -450,22 +305,7 @@ begin
 	if FFullScreen <> Value then
 	begin
 		FFullScreen := Value;
-		if not SameRect(Screen.MonitorFromWindow(Handle).WorkareaRect, Screen.MonitorFromWindow(Handle)
-				.BoundsRect) then
-			ShowTaskBar(not Value);
-		Common(Value);
-	end;
-end;
-
-procedure TDForm.SetChangeMode(Value: Boolean);
-begin
-	if FChangeMode <> Value then
-	begin
-		FChangeMode := Value;
-		if FFullScreen then
-		begin
-			Common(Value);
-		end;
+		InternalSetFullScreen(Value);
 	end;
 end;
 
@@ -530,9 +370,9 @@ begin
 		baOpenGL, baOpenGLBitmap:
 			begin
 				// FreeOpenGL; Math
-				glDeleteLists(FontBase, 256);
-				DestroyRenderingContext(RC);
-				RC := 0;
+				glDeleteLists(FFontBase, 256);
+				DestroyRenderingContext(FRC);
+				FRC := 0;
 				SetExceptionMask([exDenormalized, exUnderflow .. exPrecision]);
 			end;
 		end;
@@ -546,11 +386,11 @@ begin
 			begin
 				SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow,
 					exPrecision]);
-				if OneBuffer then
+				if OneBufferForOpenGL then
           RCOptions := []
 				else
           RCOptions := [opDoubleBuffered];
-				RC := CreateRenderingContext(Canvas.Handle, RCOptions, 32, 0, 0, 0, 0, 0, Palette);
+				FRC := CreateRenderingContext(Canvas.Handle, RCOptions, 32, 0, 0, 0, 0, 0, Palette);
 				// CreateOpenGL(Handle, Canvas);
 				// SelectObject(Canvas.Handle, GetStockObject(ANSI_VAR_FONT));
 				// create the bitmap display lists
@@ -558,9 +398,9 @@ begin
 				// the display list numbering starts at 1000, an arbitrary choice
 
 				ActivateRenderingContext(Canvas.Handle, RC); // make context drawable
-				FontBase := glGenLists(256);
+				FFontBase := glGenLists(256);
 				SelectObject(Canvas.Handle, Canvas.Font.Handle { GetStockObject (SYSTEM_FONT) } );
-				wglUseFontBitmaps(Canvas.Handle, 0, 255, FontBase);
+				wglUseFontBitmaps(Canvas.Handle, 0, 255, FFontBase);
 				ResizeMessage;
 				DeactivateRenderingContext; // make context undrawable
 			end;
@@ -636,39 +476,18 @@ end;
 
 destructor TDForm.Destroy;
 begin
-	if FFullScreen then
-	begin
-		if FChangeMode then
-			RestoreStartMode;
-		ShowTaskBar(True);
-	end;
 	FreeAndNil(FBitmapB);
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
 		begin
-			glDeleteLists(FontBase, 256);
+			glDeleteLists(FFontBase, 256);
 			DestroyRenderingContext(RC);
-			RC := 0;
+			FRC := 0;
 			// FreeOpenGL;
 		end;
 	end;
 	inherited Destroy;
 end;
-
-{ function TDForm.CloseQuery: Boolean;
-	begin
-	//procedure TDForm.CloseQuery(Sender: TObject; var CanClose: Boolean);
-	if inherited CloseQuery then
-	if Assigned(FOnRWOptions) then FOnRWOptions(Self, True);
-	end; }
-
-{ procedure TDForm.KeyDown(var Key: Word; Shift: TShiftState);
-	begin
-	if (Key = VK_RETURN) and (ssAlt in Shift) then
-	FullScreen := not FullScreen
-	else
-	inherited KeyDown(Key, Shift);
-	end; }
 
 procedure TDForm.ResizeScene;
 begin
@@ -775,7 +594,7 @@ begin
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
 		begin
-			if OneBuffer then
+			if OneBufferForOpenGL then
 				glFlush
 			else
 				SwapBuffers(Canvas.Handle);
@@ -876,7 +695,6 @@ begin
 	FWindowLong := FWindowLong or WS_VISIBLE;
 	FWindowPlacement.Length := SizeOf(FWindowPlacement);
 	FStoreWindow := GetWindowPlacement(Handle, @FWindowPlacement);
-	// FStoreWindow := True;
 end;
 
 procedure TDForm.SetCaption(Value: string);
@@ -884,7 +702,7 @@ begin
 	if FCaption <> Value then
 	begin
 		FCaption := Value;
-		inherited Caption := Value; // + ' (' + NToS(ClientWidth) + ' ' + CharTimes + ' ' + NToS(ClientHeight) + ')';
+		inherited Caption := Value;
 	end;
 end;
 
@@ -922,52 +740,16 @@ end;
 
 procedure TDForm.SetVisible(const Value: Boolean);
 begin
-	// if FormStyle = fsMDIChild then
-	begin
-		if Value then
-		begin
-			Self.FormStyle := fsMDIChild;
-			Show;
-		end
-		else
-		begin
-			// Close;
-			Self.FormStyle := fsNormal;
-			Hide;
-			// FreeAndNil(Self);
-		end;
-	end
-	{ else
-		begin
-		if Value then
-		Show
-		else
-		Hide;
-		end; }
-end;
-
-function Get8087CW: U2;
-asm
-	PUSH 0
-	FNSTCW [ESP].U2
-{$ifdef CPUX64}
-	POP RAX
-{$else}
-	POP EAX
-{$endif}
-end;
-
-procedure ActivateForm(Form: TForm);
-begin
-	if Form.Visible = False then
-		Form.Show
-	else
-	begin
-//		Form.SendToBack;
-			Form.BringToFront;
-//{			ShowWindow(Handle, SW_SHOW); // SW_NORMAL, SW_RESTORE break windows stay on top!
-			SetForegroundWindow(Form.Handle); // Blink Taskbar
-	end;
+  if Value then
+  begin
+    Self.FormStyle := fsMDIChild;
+    Show;
+  end
+  else
+  begin
+    Self.FormStyle := fsNormal;
+    Hide;
+  end;
 end;
 
 procedure TDForm.AlignControlRight(const AControl: TControl);
