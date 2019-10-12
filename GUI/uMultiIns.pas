@@ -36,7 +36,7 @@ begin
 		Result := 0;
 		if IsIconic(Handle) = False then
 		begin
-      if Assigned(Application) and Application.ShowMainForm then
+      if Assigned(Application) and Assigned(Application.MainForm) and Application.ShowMainForm then
   			ActivateForm(Application.MainForm);
 		end;
 
