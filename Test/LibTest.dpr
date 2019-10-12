@@ -60,7 +60,9 @@ uses
   uDesktopWindowTest in '..\GUI\uDesktopWindowTest.pas',
   uTaskbarWindowTest in '..\GUI\uTaskbarWindowTest.pas',
   uScreenTest in '..\GUI\uScreenTest.pas',
-  uScreenMode in '..\GUI\uScreenMode.pas';
+  uScreenMode in '..\GUI\uScreenMode.pas',
+  uGraphicObjectsRendererTest in '..\Renderer\uGraphicObjectsRendererTest.pas',
+  uSVGReaderTest in '..\SVG\uSVGReaderTest.pas';
 
 {$R *.RES}
 

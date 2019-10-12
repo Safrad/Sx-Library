@@ -42,3 +42,5 @@ $(sx-library)\VersionSystem
 $(sx-library)\Console
 $(sx-library)\GUI
 $(sx-library)\Regional
+$(sx-library)\Renderer
+$(sx-library)\SVG

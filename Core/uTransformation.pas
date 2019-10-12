@@ -3,7 +3,8 @@ unit uTransformation;
 interface
 
 uses
-  Windows,
+  Types,
+
   uTypes,
   uGeometry2D;
 
