@@ -235,7 +235,7 @@ end;
 destructor TMathExpressionParser.Destroy;
 begin
   try
-//    FExpressionTree.Free; TODO
+    FExpressionTree.Free;
   finally
   	inherited;
   end;
@@ -699,6 +699,7 @@ begin
         Result := V[0];
     finally
       ExpressionTreeEvaluator.Free;
+      FExpressionTree := nil;
     end;
   end;
 end;
