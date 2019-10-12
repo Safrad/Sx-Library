@@ -377,7 +377,7 @@ begin
 	begin
 		WatchRemoveFile(CSVFileName);
 		CSVFile := TCSVFile.Create;
-    CSVFile.SetColumnNames(['Name', 'CountOn', 'TimeOn', 'Exists']);
+    CSVFile.SetColumnNames(['FileName', 'CountOn', 'TimeOn', 'Exists']);
 		try
 			if CSVFile.Open(CSVFileName) then
 			begin
