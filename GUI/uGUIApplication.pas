@@ -43,13 +43,13 @@ uses
 type
   TGUIApplication = class(TUIApplication)
   private
-    FAllowMultipleInstance: TSwitchArgument;
     FMinimizeToTrayIcon: BG;
     FUseCommonMenu: BG;
     procedure RWCommon(const Save: BG);
     procedure SetMinimizeToTrayIcon(const Value: BG);
     procedure SetUseCommonMenu(const Value: BG);
   protected
+    FAllowMultipleInstance: TSwitchArgument;
     procedure AddArguments; override;
     procedure OnRun; override;
     procedure Initialize; override;
@@ -84,7 +84,8 @@ uses
   uCustomArgument,
   uPictureFactory,
   uCommonOutput,
-  uGUIOutputInfo;
+  uGUIOutputInfo,
+  uLog;
 
 { TGUIApplication }
 
@@ -208,7 +209,12 @@ begin
   PictureFactory.Path := GraphDir;
 
   if not uMultiIns.InitInstance(FAllowMultipleInstance.Value) then
+  begin
+    if LogDebug then
+      MainLog.Add('Another instance found, aborting start.', mlDebug);
+
     raise EAbort.Create('Another instance found.');
+  end;
 
   Application.Initialize;
 	Application.Title := GetProjectInfo(piProductName);
