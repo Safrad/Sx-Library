@@ -9,14 +9,14 @@ uses
   Forms;
 
 type
-  TProcessStatus = (psIdle, psRun{ning}, psPaused, psAborted);
+  TProcessStatus = (psIdle, psRun, psPaused, psAborted);
 
   TProcess = class
   private
     FProcessStatus: TProcessStatus;
     FForm: TForm;
     FOneTick: TTimeSpan;
-    StartTime, PauseTime, LastInterruptTime: U8;
+    StartTime, LastInterruptTime: U8;
     FValue: S8;
     FMaximalValue: S8;
     FLongOperation: TLongOperation;
@@ -35,7 +35,6 @@ type
     procedure Done;
     procedure Pause;
     procedure Abort;
-    function Aborted: BG;
     function GetTime: U8;
     function Interrupt: BG;
     procedure ResetTime;
@@ -93,25 +92,6 @@ begin
     psRun, psPaused:
       ProcessStatus := psAborted;
   end;
-end;
-
-function TProcess.Aborted: BG;
-begin
-  if FProcessStatus = psAborted then
-  begin
-    Result := True;
-    Exit;
-  end;
-
-  Application.ProcessMessages;
-  PauseTime := MainTimer.Value.Ticks;
-  while FProcessStatus = psPaused do
-  begin
-    Sleep(LoopSleepTime);
-    Application.ProcessMessages;
-  end;
-  Inc(StartTime, MainTimer.IntervalFrom(PauseTime));
-  Result := ProcessStatus <> psRun;
 end;
 
 function TProcess.StatusToStr: string;
@@ -222,15 +202,10 @@ begin
 end;
 
 initialization
-{$IFNDEF NoInitialization}
-{$ENDIF NoInitialization}
-
-
 
 finalization
 {$IFNDEF NoFinalization}
   FinalizeTaskbarAPI;
 {$ENDIF NoFinalization}
-
 end.
 
