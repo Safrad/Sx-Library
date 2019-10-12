@@ -54,7 +54,8 @@ uses
   uExternalApplicationTest in '..\Core\uExternalApplicationTest.pas',
   uPipedExternalApplicationTest in '..\Core\uPipedExternalApplicationTest.pas',
   uRawFileTest in '..\Files\uRawFileTest.pas',
-  uTextFileTest in '..\Files\uTextFileTest.pas';
+  uTextFileTest in '..\Files\uTextFileTest.pas',
+  uDBitmapTest in '..\GUI\uDBitmapTest.pas';
 
 {$R *.RES}
 
