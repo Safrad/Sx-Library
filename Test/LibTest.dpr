@@ -58,7 +58,9 @@ uses
   uDBitmapTest in '..\GUI\uDBitmapTest.pas',
   uPercentFormatterTest in '..\Formatter\uPercentFormatterTest.pas',
   uDesktopWindowTest in '..\GUI\uDesktopWindowTest.pas',
-  uTaskBarWindowTest in '..\GUI\uTaskbarWindowTest.pas';
+  uTaskbarWindowTest in '..\GUI\uTaskbarWindowTest.pas',
+  uScreenTest in '..\GUI\uScreenTest.pas',
+  uScreenMode in '..\GUI\uScreenMode.pas';
 
 {$R *.RES}
 
