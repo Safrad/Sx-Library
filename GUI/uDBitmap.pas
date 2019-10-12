@@ -7,6 +7,7 @@ interface
 
 uses
   Types,
+  Math,
 	OpenGL12, {$ifdef GDIPlus}IGDIPlus,{$endif}
 	uTypes, uMath, uColor, uDrawStyle, uBlur,
 	Classes, Winapi.Windows, Vcl.Graphics, SysUtils;
@@ -401,7 +402,7 @@ implementation
 uses
 	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
-  Math, Vcl.ClipBrd,
+  Vcl.ClipBrd,
 	uGraph, uMsg, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}

@@ -77,10 +77,7 @@ const
 
 function GetLanguagesDir: string;
 begin
-	if IsDebug then
-		Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Languages' + PathDelim
-	else
-		Result := WorkDir + 'Languages' + PathDelim;
+	Result := WorkDir + 'Languages' + PathDelim;
 end;
 
 function Translate(const Line: string): string;
@@ -218,7 +215,8 @@ begin
 	SetLength(AvailableLanguages, 0);
 
 	FileName := GetLanguagesDir + 'Codes.csv';
-	if not FileExists(FileName) then Exit;
+	if not FileExists(FileName) then
+    Exit;
 	CSVFile := TCSVFile.Create;
   CSVFile.SetColumnNames(['Code', 'Title']);
 	try
@@ -243,30 +241,11 @@ begin
 	end;
 end;
 
-(*
-procedure TDictionary.ReadAvailableLanguages;
-var
-	i: SG;
-begin
-	AvailableLanguageCount := 0;
-	SetLength(AvailableLanguages, 0);
-	if DirectoryExists(GetLanguagesDir) then
-	begin
-		ReadDir(AvailableLanguages, AvailableLanguageCount, GetLanguagesDir, ['csv'], True, False,
-			False, True);
-		for i := 0 to AvailableLanguageCount - 1 do
-		begin
-			AvailableLanguages[i] := DelFileExt(AvailableLanguages[i]);
-		end;
-	end;
-end; *)
-
 procedure TDictionary.ReadDictionary(const FileName: TFileName);
 var
 	CSVFile: TCSVFile;
 	Row: TArrayOfString;
 	NewSize: SG;
-	EntryIndex: SG;
 begin
 	Row := nil;
   if not FileExists(FileName) then
@@ -282,19 +261,14 @@ begin
 				Row := CSVFile.ReadLine;
         if Length(Row) < 2 then
           Continue;
-				{ if (CSV.LineIndex < Length(MonthColors)) then
-					MonthColors[CSV.LineIndex - 1] := StringToColor(Row[0]); }
 				NewSize := EntryCount + 1;
 				if AllocByExp(Length(Entries), NewSize) then
 					SetLength(Entries, NewSize);
 				if IsDebug then
         begin
-          EntryIndex := FindEntry(Row[0]);
-          if EntryIndex >= 0 then
+          if FindEntry(Row[0]) >= 0 then
           begin
-  //					Entries[EntryIndex].En := Row[0];
-  //					Entries[EntryIndex].Other := Row[1];
-  //					Warning('Duplicate entry %1', [Row[0]]);
+  					Warning('Duplicate entry %1', [Row[0]]);
             Continue;
           end;
 				end;

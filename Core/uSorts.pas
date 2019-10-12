@@ -69,7 +69,9 @@ type
 	TIndex = SG;
 var
 	MaxIndex: TIndex;
+{$ifopt d+}
 	Depth: UG;
+{$endif}
 
 procedure SortS1;
 type
