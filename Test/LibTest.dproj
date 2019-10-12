@@ -178,6 +178,7 @@
         <DCCReference Include="..\Files\uRawFileTest.pas"/>
         <DCCReference Include="..\Files\uTextFileTest.pas"/>
         <DCCReference Include="..\GUI\uDBitmapTest.pas"/>
+        <DCCReference Include="..\Formatter\uPercentFormatterTest.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -55,7 +55,8 @@ uses
   uPipedExternalApplicationTest in '..\Core\uPipedExternalApplicationTest.pas',
   uRawFileTest in '..\Files\uRawFileTest.pas',
   uTextFileTest in '..\Files\uTextFileTest.pas',
-  uDBitmapTest in '..\GUI\uDBitmapTest.pas';
+  uDBitmapTest in '..\GUI\uDBitmapTest.pas',
+  uPercentFormatterTest in '..\Formatter\uPercentFormatterTest.pas';
 
 {$R *.RES}
 
