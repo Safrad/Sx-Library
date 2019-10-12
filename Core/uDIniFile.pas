@@ -6,6 +6,8 @@ uses
 	uTypes, uData, uFiles,
 	SysUtils, TypInfo,
 	Types,
+  uCustomArgument,
+  uArguments,
 	uRWFile
 {$IFNDEF Console}
 	, uDButton, uDForm,
@@ -84,6 +86,8 @@ type
 		procedure WriteDateTime(const Section, Name: string; Value: TDateTime);
 
 		// RW
+    procedure RWArgument(const ASection: string; const AArgument: TCustomArgument; const Save: BG);
+    procedure RWArguments(const AArguments: TArguments; const Save: BG);
 		procedure RWString(const Section, Ident: string; var Value: string; const Save: BG);
 		procedure RWMultilineString(const Section, Ident: string; var Value: string; const Save: BG);
 		procedure RWFileName(const Section, Ident: string; var Value: TFileName; const Save: BG);
@@ -1178,6 +1182,31 @@ begin
 	end;
 end;
 {$endif}
+
+procedure TDIniFile.RWArgument(const ASection: string; const AArgument: TCustomArgument; const Save: BG);
+var
+  s: string;
+begin
+  if Save = False then
+  begin
+    AArgument.SetDefault;
+  end
+  else
+    s := AArgument.GetValueAsString;
+  RWString(ASection, AArgument.Shortcut, s, Save);
+  if Save then
+    AArgument.SetValueFromString(s);
+end;
+
+procedure TDIniFile.RWArguments(const AArguments: TArguments; const Save: BG);
+var
+  i: SG;
+begin
+  for i := 0 to AArguments.DefinedCount - 1 do
+  begin
+    RWArgument(AArguments.Name, AArguments.Items[i], Save);
+  end;
+end;
 
 function TDIniFile.RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG)
 	: BG;
