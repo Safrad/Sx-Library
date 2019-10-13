@@ -39,6 +39,7 @@ uses
   SysUtils,
   Winapi.Windows,
 
+  uOutputFormat,
   uLog;
 
 var
@@ -179,7 +180,7 @@ begin
   if not AExactlySame then
   begin
     if LogWarning then
-      MainLog.Add('Screen mode ' + AScreenMode.AsString + ' can not be set, using ' + NearestMode.AsString + '.', mlWarning);
+      MainLog.Add('Screen mode ' + AScreenMode.AsString(ofIO) + ' can not be set, using ' + NearestMode.AsString(ofIO) + '.', mlWarning);
   end;
   SetScreenMode(NearestMode, ATest);
 end;
@@ -221,7 +222,7 @@ begin
   if not FScreenModes.Find(ScreenMode) then
   begin
     if LogDebug then
-      MainLog.Add('Found screen mode ' + ScreenMode.AsString, mlDebug);
+      MainLog.Add('Found screen mode ' + ScreenMode.AsString(ofIO), mlDebug);
     FScreenModes.Add(ScreenMode);
   end;
 end;

@@ -5,14 +5,15 @@ interface
 uses
   Generics.Collections,
 
-  uTypes;
+  uTypes,
+  uOutputFormat;
 
 type
 	TScreenMode = record
 		Width,
 		Height,
     Bits: UG;
-    function AsString: string;
+    function AsString(const AOutputFormat: TOutputFormat): string;
     function GetVideoMemory: UG;
     function Same(const AScreenMode: TScreenMode): BG;
 	end;
@@ -26,16 +27,15 @@ implementation
 
 uses
   uStrings,
-  uChar,
-  uOutputFormat;
+  uChar;
 
 { TScreenMode }
 
-function TScreenMode.AsString: string;
+function TScreenMode.AsString(const AOutputFormat: TOutputFormat): string;
 begin
-	Result := NToS(Width) + CharUnbrokableSpace + CharTimes + CharUnbrokableSpace + NToS(Height) + CharUnbrokableSpace  + 'pixels';
+	Result := NToS(Width, AOutputFormat) + CharUnbrokableSpace + CharTimes + CharUnbrokableSpace + NToS(Height, AOutputFormat) + CharUnbrokableSpace  + 'pixels';
 	if Bits <> 0 then
-    Result := Result + ',' + CharSpace + NToS(Bits) + ' bits';
+    Result := Result + ',' + CharSpace + NToS(Bits, AOutputFormat) + ' bits';
 end;
 
 function TScreenMode.GetVideoMemory: UG;
