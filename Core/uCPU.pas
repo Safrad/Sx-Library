@@ -5,7 +5,9 @@ interface
 uses
   Winapi.Windows,
   System.Win.Registry,
+
   uTypes,
+  uTimeSpan,
   uMainTimer;
 
 type
@@ -14,14 +16,17 @@ type
   TCPU = class
   private
     // Temp
-    Reg: TRegistry;
-    LastTickCount{, LastProcessorTime}: U8;
+    FRegistry: TRegistry;
+
+    FLastTickCountForFrequency: U8;
+
     FCPUTimer: TMainTimer;
-    FLastTickCount: U8;
+    FLastTickCountForCPUUsage: TTimeSpan;
     FLastCPUTick: U8;
+
     FNtQuerySystemInformation: TNtQuerySystemInformation;
-    liOldIdleTime: LARGE_INTEGER;
-    liOldSystemTime: LARGE_INTEGER;
+    FOldIdleTime: LARGE_INTEGER;
+    FOldSystemTime: LARGE_INTEGER;
     FInitialized: BG;
 
     // Properties
@@ -181,15 +186,15 @@ var
 begin
 	if OperatingSystem.IsNT = False then
 	begin
-		if Reg <> nil then
+		if FRegistry <> nil then
 		begin
-			if Reg.OpenKey('PerfStats\StopStat', False) then
+			if FRegistry.OpenKey('PerfStats\StopStat', False) then
 			begin
-				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
-				Reg.CloseKey;
+				FRegistry.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+				FRegistry.CloseKey;
 			end;
 
-			FreeAndNil(Reg);
+			FreeAndNil(FRegistry);
 		end;
 	end;
 
@@ -206,7 +211,7 @@ begin
   if FLastCPUTick <> 0 then
   begin
     CPUTick := FCPUTimer.IntervalFrom(FLastCPUTick);
-    TickCount := MainTimer.IntervalFrom(FLastTickCount);
+    TickCount := MainTimer.IntervalFrom(FLastTickCountForFrequency);
     if (TickCount > 0) and (CPUTick > 0) then
       FFrequency := MainTimer.Frequency * CPUTick / TickCount;
   end
@@ -214,19 +219,7 @@ begin
     FFrequency := DefaultFrequency;
 
   FLastCPUTick := FCPUTimer.Value.Ticks;
-  FLastTickCount := MainTimer.Value.Ticks;
-
-  {
-      if (TickCount > 0) and (CPUTick < High(Int64) div (2 * PerformanceFrequency)) then
-      begin
-        SysInfo.CPUFrequency := RoundDivS8(CPUTick * PerformanceFrequency, TickCount);
-        SysInfo.CPUPower := RoundDivS8(4 * Count * PerformanceFrequency, TickCount);
-      end
-      else
-      begin
-        SysInfo.CPUFrequency := 0;
-        SysInfo.CPUPower := 0;
-      end;}
+  FLastTickCountForFrequency := MainTimer.Value.Ticks;
 end;
 
 procedure TCPU.Update;
@@ -384,9 +377,12 @@ var
 begin
 	Result := 0;
 
-  FNtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQuerySystemInformation');
 	if not Assigned(FNtQuerySystemInformation) then
-    Exit;
+  begin
+    FNtQuerySystemInformation := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQuerySystemInformation');
+  	if not Assigned(FNtQuerySystemInformation) then
+      Exit;
+  end;
 
 		// get new system time
 	status := FNtQuerySystemInformation(SystemTimeInformation, @SysTimeInfo, SizeOf(SysTimeInfo), nil);
@@ -397,12 +393,12 @@ begin
 	if status <> 0 then Exit;
 
 	// if it's a first call - skip it
-	if (liOldIdleTime.QuadPart <> 0) then
+	if (FOldIdleTime.QuadPart <> 0) then
 	begin
 
 		// CurrentValue = NewValue - OldValue
-		dbIdleTime := SysPerfInfo.liIdleTime.QuadPart - liOldIdleTime.QuadPart;
-		dbSystemTime := SysTimeInfo.liKeSystemTime.QuadPart - liOldSystemTime.QuadPart;
+		dbIdleTime := SysPerfInfo.liIdleTime.QuadPart - FOldIdleTime.QuadPart;
+		dbSystemTime := SysTimeInfo.liKeSystemTime.QuadPart - FOldSystemTime.QuadPart;
 
 		// CurrentCpuIdle = IdleTime / SystemTime
 
@@ -417,9 +413,9 @@ begin
     MainLogAdd('GetCPUUsageForce=' + FloatToStr(Result), mlDebug);
 	end;
 
-		// store new CPU's idle and system time
-		liOldIdleTime := SysPerfInfo.liIdleTime;
-		liOldSystemTime := SysTimeInfo.liKeSystemTime;
+	// store new CPU's idle and system time
+	FOldIdleTime := SysPerfInfo.liIdleTime;
+	FOldSystemTime := SysTimeInfo.liKeSystemTime;
 end;
 
 (*
@@ -533,69 +529,55 @@ end;
 
 function TCPU.GetCPUUsage: FG;
 var
-	tickCount     : U8;
-//	processorTime : U8;
 	Dummy: array[0..KB] of U1;
   CPUUsage: Integer;
 begin
   MainLogAdd('GetCPUUsage', mlDebug);
 	if OperatingSystem.IsNT then
 	begin
-//		tickCount := GetTickCount;
-		tickCount := MainTimer.Value.Ticks;
-		if tickCount < LastTickCount then
+		if MainTimer.IntervalFrom(FLastTickCountForCPUUsage).Milliseconds < 500 then
 		begin
-			// Possible after hibernation or overflow
-			LastTickCount := tickCount;
-		end;
-		if tickCount < LastTickCount + MainTimer.Frequency div 2 then
-		begin
+      // Use cached value
 			Result := FUsage;
-			Exit;
-		end;
-//		processorTime := GetProcessorTime;
+		end
+    else
+    begin
+      // Calculate new value
+      FUsage := GetCPUUsageForce;
+      Result := FUsage;
 
-		if {(LastTickCount <> 0) and} (tickCount > LastTickCount) {and (processorTime >= LastProcessorTime)} then
-		begin // 1 000 * 10 000 = 10 000 000 / sec
-(*			CPUUsage := 100 - RoundDivS8(PerformanceFrequency * (processorTime - LastProcessorTime), 1000 * (tickCount - LastTickCount){ + 1}) ;
-			CPUUsage := Range(0, CPUUsage, 1);}*)
-			FUsage := GetCPUUsageForce;
-		end;
-
-		Result := FUsage;
-
-		LastTickCount := tickCount;
-//		LastProcessorTime := processorTime;
+      FLastTickCountForCPUUsage := MainTimer.Value;
+    end;
 	end
 	else
 	begin
 		Result := FUsage;
-		if Reg = nil then
+		if FRegistry = nil then
 		begin
-			Reg := TRegistry.Create(KEY_QUERY_VALUE);
-			Reg.RootKey := HKEY_DYN_DATA;
+			FRegistry := TRegistry.Create(KEY_QUERY_VALUE);
+			FRegistry.RootKey := HKEY_DYN_DATA;
 //			Reg.CreateKey('PerfStats');
-			if Reg.OpenKeyReadOnly('PerfStats\StartStat') then
+			if FRegistry.OpenKeyReadOnly('PerfStats\StartStat') then
 			begin
-				Reg.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
-				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+				FRegistry.ReadBinaryData('KERNEL\CPUUsage', Dummy, SizeOf(Dummy));
+				FRegistry.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
         FUsage := CPUUsage / 100;
-				Reg.CloseKey;
+				FRegistry.CloseKey;
 			end;
 
-			if Reg.OpenKeyReadOnly('PerfStats\StatData') then
+			if FRegistry.OpenKeyReadOnly('PerfStats\StatData') then
 			begin
-				Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+				FRegistry.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
 				Result := CPUUsage;
-				Reg.CloseKey;
+				FRegistry.CloseKey;
 			end;
 		end;
 
-		if Reg.OpenKeyReadOnly('PerfStats\StatData') then
+		if FRegistry.OpenKeyReadOnly('PerfStats\StatData') then
 		begin
-			Reg.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
+			FRegistry.ReadBinaryData('KERNEL\CPUUsage', CPUUsage, SizeOf(CPUUsage));
 			Result := CPUUsage;
-			Reg.CloseKey;
+			FRegistry.CloseKey;
 		end;
 	end;
 end;
