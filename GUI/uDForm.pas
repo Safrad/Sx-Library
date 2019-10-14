@@ -28,7 +28,6 @@ type
 		FFullScreen: Boolean;
 
 		FOnRWOptions: TRWOptionsEvent;
-    FFontBase: U4;
     FRC: HGLRC;
 
 		procedure ResizeMessage;
@@ -63,7 +62,6 @@ type
 		procedure AlignControlRightTop(const AControl: TControl);
 
 		property RC: HGLRC read FRC;
-		property FontBase: U4 read FFontBase;
 	published
 		property Caption: string read FCaption write SetCaption;
 		property BackBitmap: TDBitmap read FBitmapB;
@@ -370,7 +368,6 @@ begin
 		baOpenGL, baOpenGLBitmap:
 			begin
 				// FreeOpenGL; Math
-				glDeleteLists(FFontBase, 256);
 				DestroyRenderingContext(FRC);
 				FRC := 0;
 				SetExceptionMask([exDenormalized, exUnderflow .. exPrecision]);
@@ -391,16 +388,7 @@ begin
 				else
           RCOptions := [opDoubleBuffered];
 				FRC := CreateRenderingContext(Canvas.Handle, RCOptions, 32, 0, 0, 0, 0, 0, Palette);
-				// CreateOpenGL(Handle, Canvas);
-				// SelectObject(Canvas.Handle, GetStockObject(ANSI_VAR_FONT));
-				// create the bitmap display lists
-				// we're making images of glyphs 0 thru 255
-				// the display list numbering starts at 1000, an arbitrary choice
-
-				ActivateRenderingContext(Canvas.Handle, RC); // make context drawable
-				FFontBase := glGenLists(256);
-				SelectObject(Canvas.Handle, Canvas.Font.Handle { GetStockObject (SYSTEM_FONT) } );
-				wglUseFontBitmaps(Canvas.Handle, 0, 255, FFontBase);
+				ActivateRenderingContext(Canvas.Handle, FRC); // make context drawable
 				ResizeMessage;
 				DeactivateRenderingContext; // make context undrawable
 			end;
@@ -480,7 +468,6 @@ begin
 	case FBackground of
 	baOpenGL, baOpenGLBitmap:
 		begin
-			glDeleteLists(FFontBase, 256);
 			DestroyRenderingContext(RC);
 			FRC := 0;
 			// FreeOpenGL;
