@@ -397,8 +397,8 @@ begin
 	begin
 
 		// CurrentValue = NewValue - OldValue
-		dbIdleTime := SysPerfInfo.liIdleTime.QuadPart - FOldIdleTime.QuadPart;
-		dbSystemTime := SysTimeInfo.liKeSystemTime.QuadPart - FOldSystemTime.QuadPart;
+		dbIdleTime := TimeDifference(SysPerfInfo.liIdleTime.QuadPart, FOldIdleTime.QuadPart);
+		dbSystemTime := TimeDifference(SysTimeInfo.liKeSystemTime.QuadPart, FOldSystemTime.QuadPart);
 
 		// CurrentCpuIdle = IdleTime / SystemTime
 
