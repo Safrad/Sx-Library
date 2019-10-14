@@ -169,6 +169,8 @@ function Range(const Min, Cur, Max: UG): UG; overload;
 function Range(const Min, Cur, Max: FG): FG; overload;
 function RangeOverflow(const Min, Cur, Max: SG): SG; overload;
 
+function IsInTheMiddle(const AValue: SG; const AMaximalValue: SG; const AMaximalWidth: SG): BG;
+
 procedure Exchange(var A, B: B1); register; overload;
 procedure Exchange(var A, B: B4); register; overload;
 procedure Exchange(var A, B: U1); register; overload;
@@ -1206,6 +1208,11 @@ begin
 		Result := Max
 	else if Cur > Max then
 		Result := Min;
+end;
+
+function IsInTheMiddle(const AValue: SG; const AMaximalValue: SG; const AMaximalWidth: SG): BG;
+begin
+  Result := Abs(2 * AValue - AMaximalValue) < 2 * AMaximalWidth;
 end;
 
 procedure Exchange(var A, B: B1); register;

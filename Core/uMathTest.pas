@@ -24,6 +24,7 @@ type
     procedure PauseTest;
     procedure DelayTest;
     procedure PreciseSleepTest;
+    procedure IsInTheMiddleTest;
     procedure TimeDifferenceTest;
     procedure MultiplyTest;
     procedure MultiplyAndReturnMostSignificantHalfTest;
@@ -86,6 +87,40 @@ begin
   CheckEquals(69, FastSqrt(4761));
   CheckEquals(46340, FastSqrt(MaxInt));
   CheckEquals(65535, FastSqrt(High(U4)));
+end;
+
+procedure TMathTest.IsInTheMiddleTest;
+begin
+  CheckEquals(True, IsInTheMiddle(0, 0, 1));
+  CheckEquals(False, IsInTheMiddle(0, 0, 0));
+
+  CheckEquals(False, IsInTheMiddle(0, 1, 0));
+  CheckEquals(True, IsInTheMiddle(0, 1, 2));
+
+  CheckEquals(False, IsInTheMiddle(0, 2, 1));
+  CheckEquals(True, IsInTheMiddle(1, 2, 1));
+  CheckEquals(False, IsInTheMiddle(2, 2, 1));
+
+  CheckEquals(False, IsInTheMiddle(0, 7, 1));
+  CheckEquals(False, IsInTheMiddle(2, 7, 1));
+  CheckEquals(True, IsInTheMiddle(3, 7, 1));
+  CheckEquals(True, IsInTheMiddle(4, 7, 1));
+  CheckEquals(False, IsInTheMiddle(5, 7, 1));
+  CheckEquals(False, IsInTheMiddle(7, 7, 1));
+
+  CheckEquals(False, IsInTheMiddle(0, 6, 1));
+  CheckEquals(False, IsInTheMiddle(2, 6, 1));
+  CheckEquals(True, IsInTheMiddle(3, 6, 1));
+  CheckEquals(False, IsInTheMiddle(4, 6, 1));
+  CheckEquals(False, IsInTheMiddle(5, 6, 1));
+  CheckEquals(False, IsInTheMiddle(7, 6, 1));
+
+  CheckEquals(False, IsInTheMiddle(0, 6, 2));
+  CheckEquals(True, IsInTheMiddle(2, 6, 2));
+  CheckEquals(True, IsInTheMiddle(3, 6, 2));
+  CheckEquals(True, IsInTheMiddle(4, 6, 2));
+  CheckEquals(False, IsInTheMiddle(5, 6, 2));
+  CheckEquals(False, IsInTheMiddle(7, 6, 2));
 end;
 
 procedure TMathTest.MultiplyAndReturnMostSignificantHalfTest;
