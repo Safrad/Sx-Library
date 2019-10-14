@@ -261,7 +261,7 @@ begin
 
 	C.L := CF;
 	glColor3ubv(PGLUByte(@C));
-	glRasterPos3d(2 * X / Params[2] - 1, -2 * (Y + 11) / Params[3] + 1, 0); // OpenGL FP Exception
+	glRasterPos3d(2 * X / Params[2] - 1, -2 * (Y + Canvas.TextHeight(Text) - 6) / Params[3] + 1, 0); // OpenGL FP Exception
 	// glCallLists(Length(Text), GL_UNSIGNED_BYTE, Pointer(Integer(@AnsiString(Text)[1])));
 	glCallLists(Length(Text), {$IFDEF UNICODE} GL_UNSIGNED_BYTE {$ELSE} GL_UNSIGNED_BYTE
 {$ENDIF}, Pointer(Integer(@Text[1])));
