@@ -44,3 +44,4 @@ $(sx-library)\GUI
 $(sx-library)\Regional
 $(sx-library)\Renderer
 $(sx-library)\SVG
+$(sx-library)\Game
