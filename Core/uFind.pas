@@ -78,7 +78,7 @@ procedure CheckValueOrder(AValue: array of string);
 var
   i: SG;
 begin
-  for i := MinIndex to Length(AValue) - 1 do
+  for i := MinIndex to Length(AValue) - 2 do
   begin
     Assert(AValue[i] <= AValue[i + 1]);
   end;
