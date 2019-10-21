@@ -432,6 +432,7 @@ LRetry :
 		Inc(FFilePos, Suc);
 		Seek(FFilePos);
 	end;
+  FFileSize := Max(FFileSize, FFilePos);
 end;
 
 function TFile.FillWrite(Count: UG): BG;
