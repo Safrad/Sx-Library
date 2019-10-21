@@ -8,7 +8,6 @@ uses
   uBufferedRawFile;
 
 type
-
   TTextFile = class(TBufferedRawFile)
   private
     FLastCharCR: BG;
@@ -89,6 +88,7 @@ begin
 		begin
 			if FileSize > 0 then
 			begin
+        SeekBegin;
  				ReadPrefix;
 				SeekEnd;
 			end
