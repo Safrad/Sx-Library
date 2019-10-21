@@ -45,6 +45,8 @@ var
   ProcessInfo: TProcessInfoItem;
 begin
   Handle := OpenProcess(PROCESS_QUERY_INFORMATION, False, ARootProcessId);
+  if (Handle = 0) or (Handle = INVALID_HANDLE_VALUE) then
+    RaiseLastOSError;
   try
     Result := GetProcessMemoryCounters(Handle);
   finally
