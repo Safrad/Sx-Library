@@ -157,7 +157,7 @@ begin
 
     if Instance = MaxInstances then
       raise Exception.Create('Can not create logger file ' + AddQuoteF(FileName));
-    NewFileName := DelFileExt(FileName) + '-' + IntToStr(Instance) + ExtractFileExt(FileName);
+    NewFileName := DelFileExt(AFileName) + '-' + IntToStr(Instance) + ExtractFileExt(AFileName);
   end;
   Result := NewFileName;
 end;
