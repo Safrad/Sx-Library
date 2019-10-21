@@ -1852,81 +1852,22 @@ end;
 procedure FillU8(var Desc; Count: UG; Value: U8);
 var
   I: NativeInt;
-  V: UG;
-  PB: PUG;
-  P: PInt64;
-  Total: NativeInt;
+  P: PU8;
 begin
-  if Count >= 8 then
+  P := PU8(@Desc);
+  for I := Count - 1 downto 0 do
   begin
-    V := Value;
-    P := PInt64(@Desc);
-    Total := Count;
-
-    for I := 0 to Total - 1 do
-    begin
-      P^ := V;
-      Inc(P);
-    end;
-    PB := Pointer(P);
-    Total := Count;
-  end
-  else
-  begin
-    PB := PUG(@Desc);
-    Total := Count;
-  end;
-
-  for I := Total - 1 downto 0 do
-  begin
-    PB^ := Value;
-    Inc(PB);
+    P^ := Value;
+    Inc(P);
   end;
 end;
 
 procedure FillUG(var Desc; Count: UG; Value: UG); register;
-{$ifndef X86ASMRTL}
-var
-  I: NativeInt;
-  V: UG;
-  PB: PUG;
-  P: PUG;
-  Total: NativeInt;
 begin
-  if Count >= 8 then
-  begin
-    V := Value;
-    P := PUG(@Desc);
-    Total := Count;
-
-    for I := 0 to Total - 1 do
-    begin
-      P^ := V;
-      Inc(P);
-    end;
-    PB := Pointer(P);
-    Total := Count;
-  end
-  else
-  begin
-    PB := PUG(@Desc);
-    Total := Count;
-  end;
-
-  for I := Total - 1 downto 0 do
-  begin
-    PB^ := Value;
-    Inc(PB);
-  end;
+{$ifdef CPUX64}
+  FillU8(Desc, Count, Value);
 {$else}
-asm
-	PUSH    EDI
-	MOV     EDI,EAX
-	MOV     EAX,ECX
-	MOV     ECX,EDX
-	REP     STOSD
-@@exit:
-	POP     EDI
+  FillU4(Desc, Count, Value);
 {$endif}
 end;
 
