@@ -4,8 +4,8 @@ unit uCharset;
 
 interface
 
-function ConvertUTF8ToUnicode(const s: AnsiString): UnicodeString;
-function ConvertUnicodeToUTF8(const s: UnicodeString): AnsiString;
+function ConvertUTF8ToUnicode(const s: RawByteString): UnicodeString;
+function ConvertUnicodeToUTF8(const s: UnicodeString): RawByteString;
 
 function ConvertToAscii(const AInput: AnsiString): AnsiString; overload;
 function ConvertToAscii(const AInput: UnicodeString): AnsiString; overload;
@@ -25,13 +25,13 @@ uses
 {$ENDIF}
   SysUtils;
 
-function ConvertUTF8ToUnicode(const s: AnsiString): UnicodeString;
+function ConvertUTF8ToUnicode(const s: RawByteString): UnicodeString;
 begin
 	SetLength(Result, 2 * Length(s));
 	SetLength(Result, Utf8ToUnicode(PWideChar(Result), PAnsiChar(s), 2 * Length(s)) - 1);
 end;
 
-function ConvertUnicodeToUTF8(const s: UnicodeString): AnsiString;
+function ConvertUnicodeToUTF8(const s: UnicodeString): RawByteString;
 var
 	l: SG;
 begin

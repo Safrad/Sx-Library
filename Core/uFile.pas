@@ -127,7 +127,7 @@ type
 		function Readln(out Line: AnsiString): BG; overload;
 		function Readln(out Line: UnicodeString): BG; overload;
 		function WriteNoConversion(const Line: PAnsiChar; const LineLength: SG): BG; overload;
-		function WriteNoConversion(const Line: AnsiString): BG; overload;
+		function WriteNoConversion(const Line: RawByteString): BG; overload;
 		function Write(const Line: AnsiString): BG; overload;
 		function Write(const Line: UnicodeString): BG; overload;
 		function Writeln(const Line: AnsiString): BG; overload;
@@ -724,7 +724,7 @@ begin
 	end;
 end;
 
-function TFile.WriteNoConversion(const Line: AnsiString): BG;
+function TFile.WriteNoConversion(const Line: RawByteString): BG;
 (*var
 	InLineIndex, LineLength: SG;
 begin
