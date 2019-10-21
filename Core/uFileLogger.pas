@@ -18,102 +18,76 @@ type
 		FFileName: TFileName;
 		FFile: TFile;
 		FDirectWrite: BG;
+    FMinLogFileSize: U8;
+    FMaxLogFileSize: U8;
+    procedure CreateFile;
+    function GetLogWritableFileName(const AFileName: TFileName): TFileName;
+    procedure RenameOldLogIfNeeded;
+    procedure RenameOldLog;
 		procedure WriteLine(const Line: string);
+    procedure SetMinLogFileSize(const Value: U8);
+    procedure SetMaxLogFileSize(const Value: U8);
+    procedure SetFileName(const Value: TFileName);
+    procedure FreeFile;
 	public
-		constructor Create(const FileName: TFileName);
+		constructor Create(const AFileName: TFileName);
 		destructor Destroy; override;
 
     // Thread safe
 		procedure Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel); override;
 		procedure Flush;
 
-		property FileName: TFileName read FFileName;
+		property FileName: TFileName read FFileName write SetFileName;
+    property MinLogFileSize: U8 read FMinLogFileSize write SetMinLogFileSize;
+    property MaxLogFileSize: U8 read FMaxLogFileSize write SetMaxLogFileSize;
   end;
 
 implementation
 
 uses
+  Math,
+
   uMsg,
 	uFiles, uCharset,
   uMainTimer,
 	uOutputFormat, uEscape, uStrings;
 
-const
-  MinLogFileSize = 4 * MB;
-  MaxLogFileSize = 16 * MB; // > MinLogFileSize
-
 { TFileLogger }
 
-constructor TFileLogger.Create(const FileName: TFileName);
-
-  function GetLogWritableFileName: TFileName;
-  var
-    Instance: SG;
-    NewFileName: TFileName;
-  begin
-    Result := '';
-    NewFileName := FileName;
-    for Instance := 1 to 10 do
-    begin
-      if IsFileWritable(NewFileName) then Break;
-
-      if Instance = 10 then
-        raise Exception.Create('Can not create logger file ' + AddQuoteF(FileName));
-      NewFileName := DelFileExt(FileName) +  IntToStr(Instance) + ExtractFileExt(FileName);
-    end;
-    Result := NewFileName;
-  end;
-
-const
-	IdLine = ';Local Date Time	Type	Message' + FileSep;
-var
-	NewFileName: TFileName;
-//	DeleteOptions: TDeleteOptions;
+constructor TFileLogger.Create(const AFileName: TFileName);
 begin
 	inherited Create;
 
 	FCriticalSection := TCriticalSection.Create;
 
-	FFileName := GetLogWritableFileName;
+  SetFileName(AFileName);
 	FDirectWrite := True;
+  FMinLogFileSize := 4 * MB;
+  FMaxLogFileSize := 16 * MB; // > FMinLogFileSize
+end;
 
-	if GetFileSizeU(FFileName) >= MinLogFileSize then
-	begin
-		NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName)), ofIO) + ExtractFileExt(FFileName);
-		if FileExists(NewFileName) = False then
-		begin
-			RenameFileEx(FFileName, NewFileName);
-//      if MaxLogFiles > 0 then
-//      begin
-//				DeleteOptions.Mask := '*.log';
-//        DeleteOptions.MaxDirs := MaxLogFiles;
-//        DeleteOptions.SelectionType := stOld;
-//        DeleteOptions.AcceptFiles := True;
-//        DeleteOptions.Test := False;
-//        DeleteOptions.DisableLog := True;
-//      	SxDeleteDirs(ExtractFilePath(FFileName), DeleteOptions);
-//			end;
-		end;
-	end;
+procedure TFileLogger.CreateFile;
+const
+	IdLine = ';Local Date Time	Type	Message' + FileSep;
+begin
+  try
+    RenameOldLogIfNeeded;
 
-	FFile := TFile.Create;
-  FFile.Logger := nil;
-  if not FFile.Open(FFileName, fmAppend) then Exit;
+    FFile := TFile.Create;
+    FFile.Logger := nil;
+    if not FFile.Open(FFileName, fmAppend) then Exit;
 
-	if FFile.FileSize = 0 then
-		WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
+    if FFile.FileSize = 0 then
+      WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
+  except
+    // No code
+  end;
 end;
 
 destructor TFileLogger.Destroy;
 begin
   try
-    if Assigned(FFile) then
-    begin
-      Flush;
-      FFile.Close;
-      FreeAndNil(FFile);
-    end;
-    FFileName := '';
+    FreeFile;
 
     FCriticalSection.Free;
   finally
@@ -124,6 +98,8 @@ end;
 procedure TFileLogger.Add(const LogTime: TDateTime; const Line: string; const MessageLevel: TMessageLevel);
 begin
   Assert(IsLoggerFor(MessageLevel));
+  if FFile = nil then
+    CreateFile;
   WriteLine(DateTimeToS(LogTime, MainTimer.PrecisionDigits, ofIO) + CharTab + FirstChar(MessageLevelStr[MessageLevel]) + CharTab + AddEscape(Line, True) + FileSep);
 end;
 
@@ -146,6 +122,91 @@ begin
   end;
 end;
 
+procedure TFileLogger.FreeFile;
+begin
+  if Assigned(FFile) then
+  begin
+    Flush;
+    FFile.Close;
+    FreeAndNil(FFile);
+  end;
+end;
+
+function TFileLogger.GetLogWritableFileName(const AFileName: TFileName): TFileName;
+const
+  MaxInstances = 16;
+var
+  Instance: SG;
+  NewFileName: TFileName;
+begin
+  Result := '';
+  NewFileName := AFileName;
+  for Instance := 1 to MaxInstances do
+  begin
+    if IsFileWritable(NewFileName) then Break;
+
+    if Instance = MaxInstances then
+      raise Exception.Create('Can not create logger file ' + AddQuoteF(FileName));
+    NewFileName := DelFileExt(FileName) + '-' + IntToStr(Instance) + ExtractFileExt(FileName);
+  end;
+  Result := NewFileName;
+end;
+
+procedure TFileLogger.RenameOldLog;
+var
+  NewFileName: string;
+//	DeleteOptions: TDeleteOptions;
+begin
+  NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName)), ofIO) + ExtractFileExt(FFileName);
+  if FileExists(NewFileName) = False then
+  begin
+    RenameFileEx(FFileName, NewFileName);
+//      if MaxLogFiles > 0 then
+//      begin
+//				DeleteOptions.Mask := '*.log';
+//        DeleteOptions.MaxDirs := MaxLogFiles;
+//        DeleteOptions.SelectionType := stOld;
+//        DeleteOptions.AcceptFiles := True;
+//        DeleteOptions.Test := False;
+//        DeleteOptions.DisableLog := True;
+//      	SxDeleteDirs(ExtractFilePath(FFileName), DeleteOptions);
+//			end;
+  end;
+end;
+
+procedure TFileLogger.RenameOldLogIfNeeded;
+begin
+	if GetFileSizeU(FFileName) >= Min(FMinLogFileSize, FMaxLogFileSize) then
+	begin
+    RenameOldLog;
+	end;
+end;
+
+procedure TFileLogger.SetFileName(const Value: TFileName);
+var
+  NewFileName: TFileName;
+begin
+  NewFileName := GetLogWritableFileName(Value);
+  if FFileName <> NewFileName then
+  begin
+    FreeFile;
+
+    FFileName := NewFileName;
+    if Assigned(FFile) then
+      FreeAndNil(FFile);
+  end;
+end;
+
+procedure TFileLogger.SetMaxLogFileSize(const Value: U8);
+begin
+  FMaxLogFileSize := Value;
+end;
+
+procedure TFileLogger.SetMinLogFileSize(const Value: U8);
+begin
+  FMinLogFileSize := Value;
+end;
+
 procedure TFileLogger.WriteLine(const Line: string);
 var
 	LineA: AnsiString;
@@ -156,7 +217,7 @@ begin
     begin
       if not FFile.Opened then Exit;
 
-      if FFile.FileSize + U8(Length(Line)) > MaxLogFileSize then
+      if FFile.FileSize + U8(Length(Line)) > FMaxLogFileSize then
       begin
         LoggingLevel := mlNone;
         Exit;
@@ -173,7 +234,7 @@ begin
     end
     else
     begin
-      if Length(FData) + Length(Line) > MaxLogFileSize then
+      if Length(FData) + Length(Line) > FMaxLogFileSize then
       begin
         LoggingLevel := mlNone;
         Exit;
