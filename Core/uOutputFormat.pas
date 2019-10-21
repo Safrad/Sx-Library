@@ -437,7 +437,7 @@ begin
 		end;
 	end;
 
-	if Num < 0 then
+	if Negative and (S8(Num) < 0) then
 	begin
 		AddMinusStr(Result, OutputFormat);
 	end;
