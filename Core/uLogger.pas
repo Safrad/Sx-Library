@@ -18,6 +18,7 @@ type
   private
 		FLoggingLevel: TMessageLevel;
     procedure UpdateLoggingLevelFromEnvironmentVariable;
+    procedure SetLoggingLevelInternal(const Value: TMessageLevel);
 	public
     constructor Create;
 
@@ -36,7 +37,7 @@ type
     procedure LogLeave(const AName: string);
     procedure LogException(const E: Exception);
 
-		property LoggingLevel: TMessageLevel read FLoggingLevel write FLoggingLevel;
+		property LoggingLevel: TMessageLevel read FLoggingLevel write SetLoggingLevelInternal;
 
     procedure SetLoggingLevel(const Value: string);
 	end;
@@ -165,6 +166,11 @@ end;
 procedure TLogger.SetLoggingLevel(const Value: string);
 begin
 	FLoggingLevel := GetLoggingLevel(Value);
+end;
+
+procedure TLogger.SetLoggingLevelInternal(const Value: TMessageLevel);
+begin
+  FLoggingLevel := Value;
 end;
 
 procedure TLogger.UpdateLoggingLevelFromEnvironmentVariable;
