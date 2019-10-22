@@ -4,7 +4,7 @@ interface
 
 uses
   uTypes,
-  uFIleCharset,
+  uFileCharset,
   uBufferedRawFile;
 
 type
