@@ -49,6 +49,7 @@ uses
   Math,
 
   uMsg,
+  uFileCharset,
 	uFiles, uCharset,
   uMainTimer,
 	uOutputFormat, uEscape, uStrings;
@@ -69,7 +70,7 @@ end;
 
 procedure TFileLogger.CreateFile;
 const
-	IdLine = ';Local Date Time	Type	Message' + FileSep;
+	IdLine = ';Local Date Time' + CharTab + 'Type' + CharTab + 'Message' + FileSep;
 begin
   Assert(FFile = nil);
   try
@@ -82,7 +83,7 @@ begin
     FFile.Open;
 
     if FFile.FileSize = 0 then
-      WriteLine({';' + ExtractFileName(FFileName) + FileSep + }IdLine); // First line
+      WriteLine(ByteOrderMarks[fcUTF8] + IdLine); // First line
   except
     // No code
   end;
@@ -172,7 +173,7 @@ var
   NewFileName: string;
 //	DeleteOptions: TDeleteOptions;
 begin
-  NewFileName := DelFileExt(FFileName) + '_' + DateToS(FileTimeToDateTime(GetFileModified(FFileName)), ofIO) + ExtractFileExt(FFileName);
+  NewFileName := DelFileExt(FFileName) + CharSpace + '(' + ReplaceF(DateTimeToS(FileTimeToDateTime(GetFileModified(FFileName)), 0, ofIO), ':', '-') + ')' + ExtractFileExt(FFileName);
   if FileExists(NewFileName) = False then
   begin
     RenameFileEx(FFileName, NewFileName);
