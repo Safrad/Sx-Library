@@ -11,7 +11,7 @@
 { Portions by Jouni Airaksinen - mintus@codefield.com             }
 {*****************************************************************}
 
-unit CoolTrayIcon;
+unit CoolTrayIcon deprecated 'Use Vcl.ExtCtrls.TTrayIcon';
 
 {$T-}  // Use untyped pointers as we override TNotifyIconData with TNotifyIconDataEx
 
