@@ -20,7 +20,7 @@ uses
   uMsg,
   uStrings,
   uFiles,
-  uDForm;
+  uUIApplication;
 
 var
 	MessageId: UINT;
@@ -31,14 +31,10 @@ function NewWndProc(Handle: HWND; Msg: UINT; wParam: WPARAM; lParam: LPARAM): LR
 var
 	CmdLine: string;
 begin
-	if (Msg = MessageID) then
+	if Msg = MessageID then
 	begin
 		Result := 0;
-		if IsIconic(Handle) = False then
-		begin
-      if Assigned(Application) and Assigned(Application.MainForm) and Application.ShowMainForm then
-  			ActivateForm(Application.MainForm);
-		end;
+    TUIApplication.Activate;
 
 		SetLength(CmdLine, MAX_PATH);
 		SetLength(CmdLine, GlobalGetAtomName(wParam, PChar(CmdLine), MAX_PATH));
