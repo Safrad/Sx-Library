@@ -48,7 +48,7 @@ end;
 
 procedure TDirectoryArgument.SetValueFromString(const AValue: string);
 begin
-  FValue := ExpandDirCmd(AValue);
+  inherited SetValueFromString(ExpandDirCmd(AValue));
   if FMustExists then
   begin
     if not DirectoryExists(FValue) then

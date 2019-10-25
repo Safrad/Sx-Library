@@ -55,7 +55,7 @@ end;
 
 procedure TFileNameArgument.SetValueFromString(const AValue: string);
 begin
-  FValue := ExpandFileCmd(AValue);
+  inherited SetValueFromString(ExpandFileCmd(AValue));
   if MustExists then
   begin
     RaiseExceptionIfFileNotExists(AValue);
