@@ -247,6 +247,7 @@ end;
 
 function TCustomExternalApplication.GetProcessId: DWORD;
 begin
+  Assert(FHandle <> INVALID_HANDLE_VALUE);
   Result := Winapi.Windows.GetProcessId(FHandle);
 end;
 
