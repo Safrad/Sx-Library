@@ -119,16 +119,13 @@ end;
 
 procedure TGUIApplication.CreateForm(InstanceClass: TComponentClass; var Reference);
 begin
-  if Initialized then
+  Application.CreateForm(InstanceClass, Reference);
+  if FUseCommonMenu then
   begin
-    Application.CreateForm(InstanceClass, Reference);
-    if FUseCommonMenu then
-    begin
-      Assert(Application.MainForm <> nil);
+    Assert(Application.MainForm <> nil);
 //      Assert(InstanceClass = Application.MainForm);
-      CommonForm({InstanceClass as TForm}Application.MainForm);
-      FUseCommonMenu := False;
-    end;
+    CommonForm({InstanceClass as TForm}Application.MainForm);
+    FUseCommonMenu := False;
   end;
 end;
 
