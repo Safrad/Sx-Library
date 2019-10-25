@@ -62,7 +62,8 @@ uses
   uScreenTest in '..\GUI\uScreenTest.pas',
   uScreenMode in '..\GUI\uScreenMode.pas',
   uGraphicObjectsRendererTest in '..\Renderer\uGraphicObjectsRendererTest.pas',
-  uSVGReaderTest in '..\SVG\uSVGReaderTest.pas';
+  uSVGReaderTest in '..\SVG\uSVGReaderTest.pas',
+  uIntegerListTest in '..\Core\uIntegerListTest.pas';
 
 {$R *.RES}
 
