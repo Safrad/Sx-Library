@@ -83,7 +83,7 @@ begin
     FFile.Open;
 
     if FFile.FileSize = 0 then
-      WriteLine(ByteOrderMarks[fcUTF8] + IdLine); // First line
+      WriteLine(string(ByteOrderMarks[fcUTF8]) + IdLine); // First line
   except
     // No code
   end;
