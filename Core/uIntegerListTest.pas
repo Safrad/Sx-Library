@@ -20,13 +20,13 @@ uses
 
 procedure TIntegerListTest.Test;
 var
-  IntegerList: TIntegerList<S2>;
+  IntegerList: TIntegerList;
 begin
-  IntegerList := TIntegerList<S2>.Create;
+  IntegerList := TIntegerList.Create;
   try
     IntegerList.Add(10);
     IntegerList.Add(7);
-    CheckEquals(1, IntegerList.FindValue(7, 0));
+    CheckEquals(1, IntegerList.FindValueIndex(7, 0));
   finally
     IntegerList.Free;
   end;
@@ -36,10 +36,10 @@ procedure TIntegerListTest.TestAddSpeed;
 const
   Count = 100000000;
 var
-  IntegerList: TIntegerList<S4>;
+  IntegerList: TIntegerList;
   i: SG;
 begin
-  IntegerList := TIntegerList<S4>.Create;
+  IntegerList := TIntegerList.Create;
   try
     for i := 0 to Count - 1 do
     begin
@@ -54,10 +54,10 @@ procedure TIntegerListTest.TestDeleteSpeed;
 const
   Count = 100000000;
 var
-  IntegerList: TIntegerList<S4>;
+  IntegerList: TIntegerList;
   i: SG;
 begin
-  IntegerList := TIntegerList<S4>.Create;
+  IntegerList := TIntegerList.Create;
   try
     for i := 0 to Count - 1 do
     begin
