@@ -172,6 +172,8 @@ function CharToDigit(const AChar: Char): SG;
 function ProgramInput(const AText: string): string;
 function ProgramOutput(const AText: string): string;
 
+function JoinFileNameAndParameters(const AFileName: TFileName; const AParameters: string): string;
+
 implementation
 
 uses
@@ -438,7 +440,7 @@ begin
 	end
 	else
 	begin
-		Result := '"' + ReplaceF(s, '"', '""') + '"';
+		Result := AddQuoteF(ReplaceF(s, '"', '""'));
 	end;
 end;
 
@@ -1500,6 +1502,11 @@ end;
 function ProgramOutput(const AText: string): string;
 begin
   Result := '–>: ' + AText;
+end;
+
+function JoinFileNameAndParameters(const AFileName: TFileName; const AParameters: string): string;
+begin
+  Result := AddQuoteF(AFileName) + CharSpace + AParameters;
 end;
 
 initialization

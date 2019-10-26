@@ -89,6 +89,7 @@ uses
   Math,
 
   uLog,
+  uStrings,
   uOperatingSystem,
   uMainTimer,
   uETimeOutException;
@@ -224,7 +225,7 @@ begin
     MainLogAdd('CreateProcess ' + FFileName + ' ' + FParameters, mlDebug);
   if CreateProcess(
     nil,
-    PChar('"' + FFileName + '" ' + FParameters),
+    PChar(JoinFileNameAndParameters(FFileName, FParameters)),
     _sa,
     nil,
     True,
