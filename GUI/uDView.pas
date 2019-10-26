@@ -254,7 +254,7 @@ begin
 	if IX = -1 then
 		Exit;
 
-	if MY < FRowHeight then
+	if (MY >= 0) and (MY < FRowHeight) then
 	begin
 		Result := vaColumnClick;
 		w := 0;
