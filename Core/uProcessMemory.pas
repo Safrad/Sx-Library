@@ -45,12 +45,19 @@ var
   ProcessInfo: TProcessInfoItem;
 begin
   Handle := OpenProcess(PROCESS_QUERY_INFORMATION, False, ARootProcessId);
-  if (Handle = 0) or (Handle = INVALID_HANDLE_VALUE) then
-    RaiseLastOSError;
-  try
-    Result := GetProcessMemoryCounters(Handle);
-  finally
-    CloseHandle(Handle);
+  if (Handle <> 0) and (Handle <> INVALID_HANDLE_VALUE) then
+  begin
+    try
+      Result := GetProcessMemoryCounters(Handle);
+    finally
+      CloseHandle(Handle);
+    end;
+  end
+  else
+  begin
+    // Happen if process already terminated (87 – The parameter is incorrect)
+    if GetLastError <> ERROR_INVALID_PARAMETER then
+      RaiseLastOSError;
   end;
 
   for ProcessInfo in ProcessInfos.CompleteList do
