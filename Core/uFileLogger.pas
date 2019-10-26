@@ -83,7 +83,10 @@ begin
     FFile.Open;
 
     if FFile.FileSize = 0 then
-      WriteLine(string(ByteOrderMarks[fcUTF8]) + IdLine); // First line
+    begin
+      FFile.BlockWrite(ByteOrderMarks[fcUTF8][1], Length(ByteOrderMarks[fcUTF8]));
+      WriteLine(IdLine); // First line
+    end;
   except
     // No code
   end;
@@ -154,10 +157,11 @@ begin
   NewFileName := AFileName;
   for Instance := 1 to MaxInstances do
   begin
-    if IsFileWritable(NewFileName) then Break;
+    if IsFileWritable(NewFileName) then
+      Break;
 
     if Instance = MaxInstances then
-      raise Exception.Create('Can not create logger file ' + AddQuoteF(FileName));
+      raise Exception.Create('Can not create logger file ' + AddQuoteF(AFileName));
     NewFileName := DelFileExt(AFileName) + '-' + IntToStr(Instance) + ExtractFileExt(AFileName);
   end;
   Result := NewFileName;
