@@ -2,12 +2,16 @@ unit uStartup;
 
 interface
 
-uses uTypes;
+uses
+  uTypes;
+
+const
+  MinimizedParameter = '-minimized';
 
 type
 	TObjectChange = (ocTest, ocCreate, ocRemove);
 
-function RegisterStartup(const Params: string = ''): BG;
+function RegisterStartup(const AParameters: string = MinimizedParameter): BG;
 function UnregisterStartup: BG;
 function IsRegisteredStartup: BG;
 
@@ -15,12 +19,12 @@ implementation
 
 uses
 	Winapi.Windows, System.Win.Registry,
-	uProjectInfo, uFiles;
+	uProjectInfo, uFiles, uStrings;
 
 const
 	RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
 
-function RegExt(const ObjectChange: TObjectChange; Params: string = ''): BG;
+function RegExt(const ObjectChange: TObjectChange; const AParameters: string = ''): BG;
 var
 	Reg: TRegistry;
 begin
@@ -37,9 +41,7 @@ begin
 			end;
 			ocCreate:
 			begin
-				if Params = '' then
-					Params := '-Minimized';
-				Reg.WriteString(GetProjectInfo(piInternalName), '"' + ExeFileName + '" ' + Params);
+				Reg.WriteString(GetProjectInfo(piInternalName), JoinFileNameAndParameters(ExeFileName, AParameters));
 				Result := True;
 			end;
 			ocRemove:
@@ -57,9 +59,9 @@ begin
 	end;
 end;
 
-function RegisterStartup(const Params: string = ''): BG;
+function RegisterStartup(const AParameters: string = MinimizedParameter): BG;
 begin
-	Result := RegExt(ocCreate, Params);
+	Result := RegExt(ocCreate, AParameters);
 end;
 
 function UnregisterStartup: BG;
