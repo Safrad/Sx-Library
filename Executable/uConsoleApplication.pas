@@ -65,6 +65,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
+    procedure Run; override;
   end;
 
 implementation
@@ -146,15 +148,18 @@ begin
   CommonOutput := TConsoleOutputInfo.Create;
 
   SplashScreen := TConsoleSplashScreen.Create;
-  try
-    inherited;
-  finally
-    SplashScreen.Free;
-    SplashScreen := nil;
-  end;
+  inherited;
 
   if FMinimizedArgument.Exists then
     ShowWindow(GetConsoleWindow, SW_MINIMIZE);
+end;
+
+procedure TConsoleApplication.Run;
+begin
+  inherited;
+
+  SplashScreen.Free;
+  SplashScreen := nil;
 end;
 
 procedure TConsoleApplication.Wait;
