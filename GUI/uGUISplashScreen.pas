@@ -23,6 +23,8 @@ type
 implementation
 
 uses
+  uTypes,
+  uLog,
   SysUtils;
 
 { TGUISplashScreen }
@@ -30,6 +32,9 @@ uses
 procedure TGUISplashScreen.AddMessage(const AText: string);
 begin
   inherited;
+
+  if LogInformation then
+    MainLogAdd(AText, mlInformation);
 
   fSplash.LabelState.Caption := AText;
   fSplash.LabelState.Update;
