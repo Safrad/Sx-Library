@@ -243,18 +243,13 @@ begin
 end;
 
 procedure TCommonApplication.Run;
-var
-  s: string;
 begin
   if not FInitialized then
     Exit;
   try
     FInitializationSequenceTime.Ticks := MainTimer.IntervalFrom(ApplicationStartTicks);
-    s := 'Initialization sequence done in ' + FInitializationSequenceTime.ToStringInSeconds + ' seconds.';
-    if LogDebug then
-      MainLog.Add(s, mlDebug);
-    if Assigned(SplashScreen) then
-      FSplashScreen.AddMessage(s);
+    if Assigned(FSplashScreen) then
+      FSplashScreen.AddMessage('Initialization sequence done in ' + FInitializationSequenceTime.ToStringInSeconds + ' seconds.');
     OnRun;
     ExitCode := 0;
     FArguments.WriteUnused;
