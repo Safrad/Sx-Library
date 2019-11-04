@@ -95,8 +95,6 @@ uses
   uWatch,
   uWebUpdate,
 
-  CoolTrayIcon,
-
   IGDIPlus,
   NLDJoystick,
   OpenGL12,
