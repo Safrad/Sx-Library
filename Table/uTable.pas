@@ -173,7 +173,6 @@ var
   Row: TRow;
   C: SG;
 begin
-  FillChar(Cell, SizeOf(Cell), 0);
 	if Save = False then
 	begin
 		C := IniFile.ReadNum(Section, 'Count', 0);
