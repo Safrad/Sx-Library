@@ -296,7 +296,7 @@ begin
     MeasuredTime := MainTimer.IntervalFrom(StartTime);
     Dif := MeasuredTime.Milliseconds - TestTimeInMs[i];
     // 1 ms tolerance
-    Check(Abs(Dif) <= 0.1, 'Out of time tolerance [ms]' + IntToStr(TestTimeInMs[i]) + ' -> ' + IntToStr(MeasuredTime.Milliseconds));
+    Check(Abs(Dif) <= 0.1, 'Out of time tolerance [ms] ' + IntToStr(TestTimeInMs[i]) + ' -> ' + IntToStr(MeasuredTime.Milliseconds));
   end;
 end;
 
