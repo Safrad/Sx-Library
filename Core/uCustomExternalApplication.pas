@@ -139,7 +139,7 @@ begin
   end
   else if MainTimer.IntervalFrom(FUpdateProcessMemoryInfoTime).Milliseconds >= 1000 then
   begin
-    FillChar(ProcessMemoryCounters, SizeOf(ProcessMemoryCounters), 0);
+    ProcessMemoryCounters := Default(_PROCESS_MEMORY_COUNTERS);
     ProcessMemoryCounters.cb := SizeOf(ProcessMemoryCounters);
     if not GetProcessMemoryInfo(FHandle, @ProcessMemoryCounters, ProcessMemoryCounters.cb) then
       RaiseLastOSError;

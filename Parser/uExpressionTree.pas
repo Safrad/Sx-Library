@@ -81,8 +81,7 @@ end;
 
 function TExpressionTree.AddNumberNode(const ABigDecimal: BigDecimal): PNode;
 begin
-  GetMem(Result, NodeNum);
-  FillChar(Result^.Number, SizeOf(Result.Number), 0);
+  Result := AllocMem(NodeNum);
 	Result.OperationHash := opNumber;
   Result.Number := ABigDecimal;
   Inc(FSize, NodeNum + SizeOf(TLimb) * ABigDecimal.UnscaledValue.Size);

@@ -111,7 +111,7 @@ begin
   if (Ext = '.JPG') or (Ext = '.JPEG') or (Ext = '.JFIF') then
   begin
     // Not supported by GraphicEx
-    FillChar(AProperties, SizeOf(AProperties), 0);
+    AProperties := Default(TImageProperties);
     Stream := TFileStream.Create(AFileName, fmOpenRead);
     try
       ReadJpegImageProperties(Stream, AProperties);

@@ -31,7 +31,7 @@ function GetProcessMemoryCounters(const AHandle: THandle): TProcessMemoryCounter
 var
   ProcessMemoryCounters: _PROCESS_MEMORY_COUNTERS;
 begin
-  FillChar(ProcessMemoryCounters, SizeOf(ProcessMemoryCounters), 0);
+  ProcessMemoryCounters := Default(_PROCESS_MEMORY_COUNTERS);
   ProcessMemoryCounters.cb := SizeOf(ProcessMemoryCounters);
   if not GetProcessMemoryInfo(AHandle, @ProcessMemoryCounters, ProcessMemoryCounters.cb) then
     RaiseLastOSError;

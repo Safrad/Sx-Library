@@ -118,7 +118,7 @@ end;
 
 procedure TFillBufferThread.FillHeader(var WaveHdr: TWaveHdr);
 begin
-  FillChar(WaveHdr, SizeOf(WaveHdr), 0);
+  WaveHdr := Default(TWaveHdr);
   GetMem(WaveHdr.lpData, FBufferSize);
   MainLog.Add('GetMem ' + IntToStr(Integer(WaveHdr.lpData)), mlDebug);
   WaveHdr.dwBufferLength := FBufferSize;
@@ -158,7 +158,7 @@ procedure TFillBufferThread.UnfillHeader(var WaveHdr: TWaveHdr);
 begin
   MainLog.Add('FreeMem ' + IntToStr(Integer(WaveHdr.lpData)), mlDebug);
   FreeMem(WaveHdr.lpData);
-  FillChar(WaveHdr, SizeOf(WaveHdr), 0);
+  WaveHdr := Default(TWaveHdr);
 end;
 
 procedure TFillBufferThread.SetBufferSize(const Value: SG);

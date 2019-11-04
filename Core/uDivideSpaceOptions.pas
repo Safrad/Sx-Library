@@ -26,7 +26,7 @@ implementation
 
 function OneBlockDivideSpaceOptions: TDivideSpaceOptions;
 begin
-  FillChar(Result, SizeOf(Result), 0);
+  Result := Default(TDivideSpaceOptions);
   Result.Horizontal.Divided := False;
   Result.Vertical.Divided := False;
 end;
@@ -35,7 +35,7 @@ function WindowDivideSpaceOptions(const AWindowsSize: SG): TDivideSpaceOptions;
 var
   OneSideProcessOrder: TOneSideDivideSpaceOptions;
 begin
-  FillChar(Result, SizeOf(Result), 0);
+  Result := Default(TDivideSpaceOptions);
 
   OneSideProcessOrder.Divided := True;
   OneSideProcessOrder.Size := AWindowsSize;
@@ -46,7 +46,7 @@ end;
 
 function HorizontalBarDivideSpaceOptions(const ABarSize: SG): TDivideSpaceOptions;
 begin
-  FillChar(Result, SizeOf(Result), 0);
+  Result := Default(TDivideSpaceOptions);
 
   Result.Horizontal.Divided := False;
   Result.Vertical.Divided := True;

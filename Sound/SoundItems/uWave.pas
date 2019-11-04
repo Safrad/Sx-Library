@@ -642,7 +642,7 @@ end;
 
 procedure TWave.Clean;
 begin
-	FillChar(FFormat, SizeOf(FFormat), 0);
+	FFormat := Default(TWaveFormatChunk);
   FSampleCount := 0;
   FPreDataSize := 0;
   FDataBytes := 0;

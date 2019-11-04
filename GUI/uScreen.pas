@@ -141,7 +141,7 @@ begin
   FAreScreenModesInitialized := True;
 	// Enumerates all available Screen modes
 	ModeNumber := 0;
-	FillChar(DeviceMode, SizeOf(DeviceMode), 0);
+	DeviceMode := Default(TDeviceModeA);
 	DeviceMode.dmFields := DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT;
 	while True do
 	begin
@@ -200,7 +200,7 @@ begin
     Flags := Flags or CDS_TEST
   else
     LastMode := GetNowScreenMode;
-  FillChar(DeviceMode, SizeOf(DeviceMode), 0);
+  DeviceMode := Default(TDeviceMode);
   DeviceMode.dmSize := SizeOf(DeviceMode);
   DeviceMode.dmFields := DM_BITSPERPEL or DM_PELSWIDTH or DM_PELSHEIGHT;
   DeviceMode.dmPelsWidth := AScreenMode.Width;

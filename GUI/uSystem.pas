@@ -118,7 +118,7 @@ var
 	SectorsPerCluster, BytesPerSector, NumberOfFreeClusters,
 	TotalNumberOfClusters: U4;
 begin
-	FillChar(Result, SizeOf(Result), 0);
+	Result := Default(TDriveInfo);
 	Result.DriveLetter := Drive;
 	P[0] := Drive;
 	P[1] := DriveDelim;
@@ -179,7 +179,7 @@ var
 	folder: array[0..MAX_PATH] of char;
 	find_context: PItemIDList;
 begin
-	FillChar(browse_info, SizeOf(browse_info), #0);
+	browse_info := Default(TBrowseInfo);
 	lg_StartFolder := RepairDirectory(ExpandDir(Path));
 	browse_info.pszDisplayName := @folder[0];
 	if browseTitle <> '' then
@@ -380,11 +380,13 @@ begin
 end;
 
 procedure SetEnabledWinKeys(const AEnabled: BG);
+type
+  TBuffer = array[0..23] of U1;
 var
-  Buffer: array[0..23] of U1;
+  Buffer: TBuffer;
 	Reg: TRegistry;
 begin
-  FillChar(Buffer, SizeOf(Buffer), 0);
+  Buffer := Default(TBuffer);
   Buffer[8] := $03;
   Buffer[14] := $5B;
   Buffer[15] := $E0;

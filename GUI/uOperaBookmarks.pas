@@ -37,7 +37,7 @@ var
 begin
 	Bookmarks := TData.Create;
 	Bookmarks.ItemSize := SizeOf(TBookmark);
-	FillChar(Bookmark, SizeOf(Bookmark), 0);
+	Bookmark := Default(TBookmark);
 	while LineIndex < Lines.Count do
 	begin
 		s := Lines[LineIndex];
@@ -52,8 +52,7 @@ begin
 				ReadLevel(LineIndex, Lines, PB^.Bookmarks);
 			end;
 			Finalize(Bookmark);
-			FillChar(Bookmark, SizeOf(Bookmark), 0);
-//			FreeBookmark(@Bookmark);
+			Bookmark := Default(TBookmark);
 		end
 		else if s = '-' then
 		begin
@@ -62,8 +61,7 @@ begin
 		else if FirstChar(s) = '#' then
 		begin
 			Finalize(Bookmark);
-//			FreeBookmark(@Bookmark);
-			FillChar(Bookmark, SizeOf(Bookmark), 0);
+			Bookmark := Default(TBookmark);
 			s := UpperCase(Copy(s, 2, MaxInt));
 			if s = 'FOLDER' then
 			begin

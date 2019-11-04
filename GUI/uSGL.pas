@@ -629,7 +629,7 @@ begin
 	end;
 	TextureCount := 0;
 	SetLength(Textures, 0);
-	FillChar(ATexture, SizeOf(ATexture), 0);
+	ATexture := Default(TTexture);
 end;
 
 function Check: BG;
@@ -749,7 +749,6 @@ begin
 			if AllocByExp(Length(Drawables), NewSize) then
 			begin
 				SetLength(Drawables, NewSize);
-//			FillChar(Drawables[i], SizeOf(Drawables[i]), 0);
 			end;
 			sglRecreateDrawable(i, width, height, Data);
 			Break;
@@ -781,7 +780,7 @@ begin
 			NewSize := i + 1;
 			if AllocByExp(Length(Textures), NewSize) then
 				SetLength(Textures, NewSize);
-			FillChar(Textures[i], SizeOf(Textures[i]), 0);
+			Textures[i] := Default(TTexture);
 			Inc(TextureCount);
 		end;
 		if Textures[i].Enabled = False then
@@ -3221,7 +3220,7 @@ begin
 	if id = _currentDrawable then
 	begin
 		Move(Drawable, Drawables[id], SizeOf(Drawable));
-		FillChar(Drawable, SizeOf(Drawable), 0);
+		Drawable := Default(sglSDrawable);
 		_currentDrawable := -1;
 	end;
 	if not Drawables[id].Ext then
@@ -3232,7 +3231,7 @@ begin
 	FreeMem(Drawables[id]._depthBuffer);
 	SetLength(Drawables[id].Stack, 0);
 
-	FillChar(Drawables[id], SizeOf(Drawables[id]), 0);
+	Drawables[id] := Default(sglSDrawable);
 	_libStatus := sglOpOk;
 end;
 
@@ -3247,13 +3246,13 @@ begin
 	if id = _currentTexture then
 	begin
 		Move(ATexture, Textures[id], SizeOf(ATexture));
-		FillChar(ATexture, SizeOf(ATexture), 0);
+		ATexture := Default(TTexture);
 		_currentTexture := -1;
 	end;
 	for i := 0 to Length(Textures[id].MipMaps) - 1 do
 		FreeMem(Textures[id].MipMaps[i].Datas);
 
-	FillChar(Textures[id], SizeOf(Textures[id]), 0);
+	Textures[id] := Default(TTexture);
 	_libStatus := sglOpOk;
 end;
 
@@ -3274,7 +3273,7 @@ begin
 	if _currentDrawable >= 0 then
 		Move(Drawables[_currentDrawable], Drawable, SizeOf(Drawable))
 	else
-		FillChar(Drawable, SizeOf(Drawable), 0);
+		Drawable := Default(sglSDrawable);
 	_libStatus := sglOpOk;
 end;
 
@@ -3292,7 +3291,7 @@ begin
 	if id >= 0 then
 		ATexture := Textures[id]
 	else
-		FillChar(ATexture, SizeOf(ATexture), 0);
+		ATexture := Default(TTexture);
 	_libStatus := sglOpOk;
 end;
 

@@ -251,7 +251,7 @@ begin
 	FActive := False;
 	FCloseInvoked := False;
 
-  FillChar(FWaveFormat, SizeOf(FWaveFormat), 0);
+  FWaveFormat := Default(TWaveFormatExtensible);
 
 	FWaveFormat.Format.WFormatTag := WAVE_FORMAT_EXTENSIBLE;
 	FWaveFormat.Format.nChannels := Channels.Count;

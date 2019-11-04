@@ -137,7 +137,7 @@ begin
 	begin
 		for i := DbItemCount + 1 to ItemsCount do
 		begin
-			FillChar(DbItems[i], SizeOf(DbItems[i]), 0);
+			DbItems[i] := Default(TDbItem);
 			GetMem(DbItems[i].PData, DbItemSize);
 			FillChar(DbItems[i].PData^, DbItemSize, 0);
 		end;
@@ -345,13 +345,6 @@ begin
 				if Head.ItemSize > DbItemSize then Head.ItemSize := DbItemSize;
 				Head.ItemCount := Range(0, Head.ItemCount, 256);
 				SetItems(Head.ItemCount);
-	{     SetLength(DbItems, Head.ItemCount + 1);
-				for i := 1 to Head.ItemCount do
-				begin
-					FillChar(DbItems[i], SizeOf(DbItems[i]), 0);
-					GetMem(DbItems[i].PData, DbItemSize);
-					FillChar(DbItems[i].PData^, DbItemSize, 0);
-				end;}
 				for i := 1 to Head.ItemCount do
 				begin
 					BlockRead(DbFile, j, 4);
