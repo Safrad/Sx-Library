@@ -70,7 +70,6 @@ uses
   uVisualOptions,
   uWatch,
   uWebUpdate,
-  CoolTrayIcon,
   IGDIPlus,
   NLDJoystick,
   OpenGL12,
