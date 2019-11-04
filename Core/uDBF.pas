@@ -107,7 +107,6 @@ begin
 	Result := False;
 	Index := 0;
 	FPTSize := 0;
-	FillChar(DataStr, SizeOf(DataStr), 0);
 	Close;
 
 	F := TFile.Create;
