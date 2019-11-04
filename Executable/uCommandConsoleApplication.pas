@@ -24,7 +24,7 @@ type
     procedure AddArguments; override;
     procedure Initialize; override;
     procedure Finalize; override;
-    procedure Wait; override;
+    procedure WaitForEnter; override;
     procedure OnRun; override;
 
     // Can be overridden to handle unknown commands
@@ -178,7 +178,7 @@ begin
   FConsoleReader.Terminate;
 end;
 
-procedure TCommandConsoleApplication.Wait;
+procedure TCommandConsoleApplication.WaitForEnter;
 begin
   // No code, do not wait
 end;

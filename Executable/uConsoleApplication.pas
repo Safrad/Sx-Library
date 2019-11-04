@@ -61,7 +61,7 @@ type
   protected
     procedure Initialize; override;
     procedure AbortedBySystem; virtual;
-    procedure Wait; virtual;
+    procedure WaitForEnter; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -79,6 +79,7 @@ uses
   uLog,
   uCommonApplication,
   uCommonOutput,
+  uStartState,
   uConsole,
   uConsoleColor,
   uConsoleOutputInfo,
@@ -135,7 +136,7 @@ begin
   try
     inherited;
   finally
-    Wait;
+    WaitForEnter;
 {$IF defined(MSWINDOWS)}
     SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
 {$ENDIF}
@@ -162,9 +163,9 @@ begin
   SplashScreen := nil;
 end;
 
-procedure TConsoleApplication.Wait;
+procedure TConsoleApplication.WaitForEnter;
 begin
-  if (not TConsole.IsRedirected) and (not FAbortedBySystem) then
+  if TStartState.RunFromIDE and (not FAbortedBySystem) then
   begin
     TConsole.WriteLine('');
     TConsole.Write('Press Enter to continue...');
