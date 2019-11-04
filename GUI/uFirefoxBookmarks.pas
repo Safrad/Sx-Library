@@ -39,7 +39,6 @@ var
   i: SG;
 begin
 	Bookmark := Bookmarks.Add;
-//	FillChar(Bookmark, SizeOf(Bookmark), 0);
 
   JSONPair := LJsonObj.Get('type');
   if JSONPair <> nil then
@@ -106,9 +105,7 @@ begin
     end;
   end;
 
-
   Finalize(Bookmark);
-  FillChar(Bookmark, SizeOf(Bookmark), 0);
 end;
 
 procedure TFirefoxBookmarks.ReadFromFile(const FileName: TFileName);
