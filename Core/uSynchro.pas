@@ -19,18 +19,21 @@ type
     FCanCreateTargetDir: BG;
     FDeleteInexistingPathsInDestDir: BG;
     FCopyOnlyMuchSmaller: BG;
-    procedure DeleteFiles;
-    procedure Synchro(const Source, Dest: string);
+    procedure ProcessInternal(const ACalculateOnlyReport: BG);
+    procedure DeleteFiles(const ACalculateOnlyReport: BG);
+    procedure Synchro(const Source, Dest: string; const ACalculateOnlyReport: BG);
     procedure SetDestDir(const Value: string);
     procedure SetSourceDir(const Value: string);
     procedure SetCanCreateTargetDir(const Value: BG);
     procedure SetDeleteInexistingPathsInDestDir(const Value: BG);
     procedure SetCopyOnlyMuchSmaller(const Value: BG);
+    procedure CheckParameters;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure Process;
+    procedure CalculateReport;
 
     // Input
     property SourceDir: string read FSourceDir write SetSourceDir;
@@ -56,6 +59,33 @@ uses
 
 { TSynchro }
 
+procedure TSynchro.CalculateReport;
+begin
+  ProcessInternal(True);
+end;
+
+procedure TSynchro.CheckParameters;
+begin
+  if not DirectoryExists(FSourceDir) then
+  begin
+    raise EDirectoryNotFoundException.Create(ReplaceParam('Source directory %1 not found.', [FSourceDir]));
+  end;
+  if FCanCreateTargetDir then
+    CreateDirEx(FDestDir);
+  if not DirectoryExists(FDestDir) then
+  begin
+    raise EDirectoryNotFoundException.Create(ReplaceParam('Target directory %1 not found.', [FDestDir]));
+  end;
+  if SameFileName(FSourceDir, FDestDir) then
+  begin
+    raise EArgumentException.Create('Source and Target are the same.');
+  end;
+  if StartStr(FSourceDir, FDestDir) then
+  begin
+    raise EArgumentException.Create(ReplaceParam('Target directory %1 can not be in source directory %2.', [FDestDir, FSourceDir]));
+  end;
+end;
+
 constructor TSynchro.Create;
 begin
   inherited;
@@ -63,7 +93,7 @@ begin
   FDeletePathsList := TStringList.Create;
 end;
 
-procedure TSynchro.DeleteFiles;
+procedure TSynchro.DeleteFiles(const ACalculateOnlyReport: BG);
 var
   Size: S8;
   Path: string;
@@ -74,13 +104,13 @@ begin
     Path := FDeletePathsList[i];
     if LastChar(Path) = '\' then
     begin
-      if RemoveDirsEx(Path, True) then
+      if ACalculateOnlyReport or RemoveDirsEx(Path, True) then
         Inc(FSynchroReport.DirDeleted);
     end
     else
     begin
       Size := GetFileSizeU(Path);
-      if uFiles.DeleteFileEx(Path) then
+      if ACalculateOnlyReport or uFiles.DeleteFileEx(Path) then
       begin
         Inc(FSynchroReport.FileDeleted);
         Inc(FSynchroReport.FileDeletedData, Size);
@@ -99,33 +129,19 @@ end;
 
 procedure TSynchro.Process;
 begin
-  if not DirectoryExists(FSourceDir) then
-  begin
-    raise EDirectoryNotFoundException.Create(ReplaceParam('Source directory %1 not found.', [FSourceDir]));
-  end;
-  if FCanCreateTargetDir then
-    CreateDirEx(FDestDir);
+  ProcessInternal(False);
+end;
 
-  if not DirectoryExists(FDestDir) then
-  begin
-    raise EDirectoryNotFoundException.Create(ReplaceParam('Target directory %1 not found.', [FDestDir]));
-  end;
-
-  if SameFileName(FSourceDir, FDestDir) then
-  begin
-    raise EArgumentException.Create('Source and Target are the same.');
-  end;
-
-  if StartStr(FSourceDir, FDestDir) then
-  begin
-    raise EArgumentException.Create(ReplaceParam('Target directory %1 can not be in source directory %2.', [FDestDir, FSourceDir]));
-  end;
+procedure TSynchro.ProcessInternal(const ACalculateOnlyReport: BG);
+begin
+  FSynchroReport.Clear;
+  CheckParameters;
 
   FDeletePathsList.Clear;
   try
-    Synchro(FSourceDir, FDestDir);
+    Synchro(FSourceDir, FDestDir, ACalculateOnlyReport);
   finally
-    DeleteFiles;
+    DeleteFiles(ACalculateOnlyReport);
   end;
 end;
 
@@ -154,7 +170,7 @@ begin
   FSourceDir := Value;
 end;
 
-procedure TSynchro.Synchro(const Source, Dest: string);
+procedure TSynchro.Synchro(const Source, Dest: string; const ACalculateOnlyReport: BG);
 type
 	PFileInfo = ^TFileInfo;
 	TFileInfo = packed record // 24
@@ -175,31 +191,34 @@ begin
 	FileNamesD := TData.Create(True);
 	FileNamesD.ItemSize := SizeOf(TFileInfo);
 
-	ErrorCode := FindFirst(Dest + '*.*', faAnyFile, SearchRec);
-	while ErrorCode = NO_ERROR do
-	begin
-		IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
-		IsFile := (SearchRec.Attr and faDirectory) = 0;
-		if (IsDir) or (IsFile) then
-		begin
-			FileInfo := FileNamesD.Add;
-			FileInfo.Name := SearchRec.Name;
-			if IsDir then
-      	FileInfo.Name := FileInfo.Name + '\';
-			{$if CompilerVersion >= 21}
-			FileInfo.DateTime := SearchRec.TimeStamp;
-      {$else}
-			FileInfo.DateTime := SearchRec.Time;
-      {$ifend}
-			FileInfo.Size := SearchRec.Size;
-			FileInfo.Found := False;
-		end;
-		ErrorCode := FindNext(SearchRec);
-	end;
-	SysUtils.FindClose(SearchRec);
-	if ErrorCode <> ERROR_NO_MORE_FILES then
+  if DirectoryExists(Dest + SearchRec.Name) then
   begin
-    raise EIOException.Create(Dest, ErrorCode);
+    ErrorCode := FindFirst(Dest + '*.*', faAnyFile, SearchRec);
+    while ErrorCode = NO_ERROR do
+    begin
+      IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
+      IsFile := (SearchRec.Attr and faDirectory) = 0;
+      if (IsDir) or (IsFile) then
+      begin
+        FileInfo := FileNamesD.Add;
+        FileInfo.Name := SearchRec.Name;
+        if IsDir then
+          FileInfo.Name := FileInfo.Name + '\';
+        {$if CompilerVersion >= 21}
+        FileInfo.DateTime := SearchRec.TimeStamp;
+        {$else}
+        FileInfo.DateTime := SearchRec.Time;
+        {$ifend}
+        FileInfo.Size := SearchRec.Size;
+        FileInfo.Found := False;
+      end;
+      ErrorCode := FindNext(SearchRec);
+    end;
+    SysUtils.FindClose(SearchRec);
+    if ErrorCode <> ERROR_NO_MORE_FILES then
+    begin
+      raise EIOException.Create(Dest, ErrorCode);
+    end;
   end;
 
 	ErrorCode := FindFirst(Source + '*.*', faAnyFile, SearchRec);
@@ -224,14 +243,15 @@ begin
             if Copy and CopyOnlyMuchSmaller and (8 * SearchRec.Size > 10 * FileInfo.Size) then
               Copy := False; // Skip if source file is not much smaller (80%) then destination
 
-						if {$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} < FileInfo.DateTime then
-							Warning('Destination file %1 (%2) is newer (%3)!', [Source + SearchRec.Name, DateTimeToStr({$if CompilerVersion < 21}FileDateToDateTime{$ifend}(FileInfo.DateTime)), DateTimeToStr({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}FileDateToDateTime(SearchRec.Time){$ifend})]);
+						if ({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}SearchRec.Time{$ifend} < FileInfo.DateTime) and (not ACalculateOnlyReport) then
+ 							Warning('Destination file %1 (%2) is newer (%3)!', [Source + SearchRec.Name, DateTimeToStr({$if CompilerVersion < 21}FileDateToDateTime{$ifend}(FileInfo.DateTime)), DateTimeToStr({$if CompilerVersion >= 21}SearchRec.TimeStamp{$else}FileDateToDateTime(SearchRec.Time){$ifend})]);
 					end
 					else
 						Copy := False;
 					if {(not Copy) and} (SearchRec.Name <> FileInfo.Name) then
 					begin
-						uFiles.RenameFileEx(Dest + FileInfo.Name, Dest + SearchRec.Name);
+            if not ACalculateOnlyReport then
+		  				uFiles.RenameFileEx(Dest + FileInfo.Name, Dest + SearchRec.Name);
             Inc(FSynchroReport.FileRenamed);
 					end;
 					FileInfo.Found := True;
@@ -242,22 +262,24 @@ begin
 
 			if IsDir then
 			begin
-				if Copy then
-				begin
-					CopyDirOnly(Source + SearchRec.Name, Dest + SearchRec.Name);
-					Inc(FSynchroReport.DirCreated);
-				end
-				else
-				begin
-					CopyFileDateTime(Source + SearchRec.Name, Dest + SearchRec.Name);
-				end;
-				Synchro(Source + SearchRec.Name, Dest + SearchRec.Name);
+        if Copy then
+        begin
+          if not ACalculateOnlyReport then
+            CopyDirOnly(Source + SearchRec.Name, Dest + SearchRec.Name);
+          Inc(FSynchroReport.DirCreated);
+        end
+        else
+        begin
+          if not ACalculateOnlyReport then
+            CopyFileDateTime(Source + SearchRec.Name, Dest + SearchRec.Name);
+        end;
+				Synchro(Source + SearchRec.Name, Dest + SearchRec.Name, ACalculateOnlyReport);
 			end
 			else
 			begin
 				if Copy then
 				begin
-					if uFiles.CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False) then
+					if ACalculateOnlyReport or uFiles.CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False) then
           begin
             if Found then
             begin
