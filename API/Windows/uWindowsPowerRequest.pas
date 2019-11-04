@@ -105,8 +105,6 @@ const
 begin
   if Assigned(GPowerCreateRequest) then
   begin
-    FillChar(FReasonContext, SizeOf(FReasonContext), 0);
-
     FReasonContext.Version := POWER_REQUEST_CONTEXT_VERSION;
     FReasonContext.Flags := POWER_REQUEST_CONTEXT_SIMPLE_STRING;
     FReasonContext.SimpleReasonString := PWideChar(FTitle);
