@@ -1190,12 +1190,17 @@ begin
   if Save = False then
   begin
     AArgument.SetDefault;
+    if ValueExists(ASection, AArgument.Shortcut) then
+    begin
+      RWString(ASection, AArgument.Shortcut, s, Save);
+      AArgument.SetValueFromString(s);
+    end;
   end
   else
+  begin
     s := AArgument.GetValueAsString;
-  RWString(ASection, AArgument.Shortcut, s, Save);
-  if Save then
-    AArgument.SetValueFromString(s);
+    RWString(ASection, AArgument.Shortcut, s, Save);
+  end;
 end;
 
 procedure TDIniFile.RWArguments(const AArguments: TArguments; const Save: BG);
