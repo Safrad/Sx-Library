@@ -7885,7 +7885,6 @@ begin
 
 	SetLength(CColorCount, 0);
 	SetLength(CColorCount, ColorCount);
-//	FillChar(CColorCount[0], SizeOf(CColorCount[0]) * ColorMax, 0);
 
 	C2 := Data;
 	for cy := 0 to FHeight - 1 do
