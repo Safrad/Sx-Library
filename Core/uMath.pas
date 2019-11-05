@@ -210,6 +210,9 @@ procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
 procedure ReadMem(P: Pointer; Size: UG);
 function SameData(P0, P1: Pointer; Size: UG): BG;
+
+procedure ClearMemory(var AAddress; const ACount: UG);
+
 procedure FillMemory(var Desc; Count: UG; Value: S1); overload;
 procedure FillMemory(var Desc; Count: UG; Value: S2); overload;
 procedure FillMemory(var Desc; Count: UG; Value: S4); overload;
@@ -1708,6 +1711,51 @@ asm
 	pop edi
 	pop ebx
 	@Exit0:
+{$endif}
+end;
+
+procedure ClearMemory(var AAddress; const ACount: UG);
+const
+  Size = 8;
+{$ifdef PUREPASCAL}
+var
+  I: NativeInt;
+  PAddress: PU8;
+  Remain: UG;
+begin
+  PAddress := PU8(@AAddress);
+  for I := ACount div Size - 1 downto 0 do
+  begin
+    PAddress^ := 0;
+    Inc(PAddress);
+  end;
+  Remain := ACount and (Size - 1); // mod Size
+  if Remain <> 0 then
+  begin
+    for I := Remain - 1 downto 0 do
+    begin
+      PU1(PAddress)^ := 0;
+      Inc(PU1(PAddress));
+    end;
+  end;
+{$else}
+asm
+  // Optional speed up if ACount = 0
+  test ACount, ACount
+  jle @Exit
+
+  cld // Clear direction flag
+{$ifndef CPUX64}
+  mov edi, dword ptr AAddress {eax}
+  mov ecx, ACount {edx}
+  xor eax, eax
+{$else}
+  mov rdi, qword ptr AAddress {rcx}
+  mov rcx, ACount {rdx}
+  xor rax, rax
+{$endif}
+    rep stosb
+  @Exit:
 {$endif}
 end;
 

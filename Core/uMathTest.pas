@@ -10,7 +10,13 @@ uses
 type
   TMathTest = class(TTestCase)
   private
+    const
+      BlocksInLoop = 1024;
+    procedure RepeatClearMemory(const P: Pointer; const Size: SG);
+    procedure RepeatFillChar(const P: Pointer; const Size: SG);
+    procedure ClearMemoryOrFillChar(const Size: SG; const P: Pointer; const AUseFillChar: BG);
     procedure DelayAndPresiceSleepTest(const APreciseSleep: BG);
+    procedure TestClearMemory(const AUseFillChar: BG);
   published
     procedure SgnTest;
     procedure AbsMinTest;
@@ -32,6 +38,8 @@ type
     procedure BitScanReverseU8Test;
     procedure CountDigitsU4Test;
     procedure CountDigitsU8Test;
+    procedure FillCharTest;
+    procedure ClearMemoryTest;
   end;
 
 implementation
@@ -40,6 +48,8 @@ uses
   Math,
   GammaF,
 
+  uStopwatch,
+  uOutputFormat,
   uTimeSpan,
   uMainTimer,
   uMath;
@@ -87,6 +97,42 @@ begin
   CheckEquals(69, FastSqrt(4761));
   CheckEquals(46340, FastSqrt(MaxInt));
   CheckEquals(65535, FastSqrt(High(U4)));
+end;
+
+procedure TMathTest.FillCharTest;
+begin
+  TestClearMemory(True);
+end;
+
+procedure TMathTest.RepeatClearMemory(const P: Pointer; const Size: SG);
+var
+  i: SG;
+begin
+  for i := 0 to BlocksInLoop - 1 do
+  begin
+    ClearMemory(P^, Size);
+  end;
+end;
+
+procedure TMathTest.RepeatFillChar(const P: Pointer; const Size: SG);
+var
+  i: SG;
+begin
+  for i := 0 to BlocksInLoop - 1 do
+  begin
+    FillChar(P^, Size, 0);
+  end;
+end;
+
+procedure TMathTest.ClearMemoryOrFillChar(const Size: SG; const P: Pointer; const AUseFillChar: BG);
+begin
+  // CPU: Intel i7-8700 4.6 GHz
+  // FillChar 16kB block: 31 GB/sec (32 bit); 123 GB/sec (64 bit); Only 25 % of maximal speed for 32 bit
+  // ClearMemory 16kB block: 120 GB/sec (32 bit); 123 GB/sec (64 bit)
+  if AUseFillChar then
+    RepeatFillChar(P, Size)
+  else
+    RepeatClearMemory(P, Size);
 end;
 
 procedure TMathTest.IsInTheMiddleTest;
@@ -226,6 +272,11 @@ begin
   CheckEquals(1186, BitsToByte(9485));
 end;
 
+procedure TMathTest.ClearMemoryTest;
+begin
+  TestClearMemory(False);
+end;
+
 procedure TMathTest.CountDigitsU4Test;
 var
   Digits: UG;
@@ -308,6 +359,48 @@ end;
 procedure TMathTest.PreciseSleepTest;
 begin
   DelayAndPresiceSleepTest(True);
+end;
+
+procedure TMathTest.TestClearMemory(const AUseFillChar: BG);
+var
+  P: Pointer;
+  j: SG;
+  Stopwatch: TStopwatch;
+  Speed: U8;
+  LoopCount: U8;
+  Size: SG;
+begin
+  Stopwatch := TStopwatch.Create;
+  try
+    Size := 0;
+    for j := 0 to 23 do
+    begin
+      GetMem(P, Size);
+      try
+        LoopCount := 0;
+        Stopwatch.Restart;
+        while Stopwatch.Elapsed.SecondsAsF < 0.25 do
+        begin
+          ClearMemoryOrFillChar(Size, P, AUseFillChar);
+          Inc(LoopCount);
+        end;
+        Stopwatch.Stop;
+        if Stopwatch.Elapsed.Ticks > 0 then
+        begin
+          Speed := RoundDivU8(1000000 * BlocksInLoop * U8(Size) * LoopCount, Stopwatch.Elapsed.Microseconds);
+          Status('Block size ' + BToStr(Size) + ': ' + BToStr(Speed) + ' / second; ' + NToS(LoopCount) + ' ×');
+        end;
+        if Size = 0 then
+          Inc(Size)
+        else
+          Multiply(Size, 2);
+      finally
+        FreeMem(P);
+      end;
+    end;
+  finally
+    Stopwatch.Free;
+  end;
 end;
 
 procedure TMathTest.TimeDifferenceTest;
