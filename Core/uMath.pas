@@ -1715,9 +1715,9 @@ asm
 end;
 
 procedure ClearMemory(var AAddress; const ACount: UG);
+{$ifdef PUREPASCAL}
 const
   Size = 8;
-{$ifdef PUREPASCAL}
 var
   I: NativeInt;
   PAddress: PU8;
