@@ -109,7 +109,7 @@ begin
 
 	if Menu <> nil then
 	begin
-		CommonFileMenu(Menu);
+		TCommonMenu.CreateItems(Menu);
 		MenuSet(Menu);
     PanelTool := FindPanelTool(AForm);
     if PanelTool <> nil then
