@@ -1724,19 +1724,17 @@ var
   Remain: UG;
 begin
   PAddress := PU8(@AAddress);
-  for I := ACount div Size - 1 downto 0 do
+  for I := SG(ACount div Size) - 1 downto 0 do
   begin
     PAddress^ := 0;
     Inc(PAddress);
   end;
   Remain := ACount and (Size - 1); // mod Size
-  if Remain <> 0 then
+  while Remain > 0 do
   begin
-    for I := Remain - 1 downto 0 do
-    begin
-      PU1(PAddress)^ := 0;
-      Inc(PU1(PAddress));
-    end;
+    PU1(PAddress)^ := 0;
+    Inc(PU1(PAddress));
+    Dec(Remain);
   end;
 {$else}
 asm
@@ -1746,15 +1744,22 @@ asm
 
   cld // Clear direction flag
 {$ifndef CPUX64}
+  push edi
   mov edi, dword ptr AAddress {eax}
   mov ecx, ACount {edx}
   xor eax, eax
 {$else}
+  push rdi
   mov rdi, qword ptr AAddress {rcx}
   mov rcx, ACount {rdx}
   xor rax, rax
 {$endif}
     rep stosb
+{$ifndef CPUX64}
+  pop edi
+{$else}
+  pop rdi
+{$endif}
   @Exit:
 {$endif}
 end;
