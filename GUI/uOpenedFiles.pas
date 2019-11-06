@@ -114,8 +114,6 @@ type
 		procedure RWOptions(const Save: BG);
 		procedure SetItemChange(const Item: TOpenedFileItem; const Changed: BG);
 		function GetFilePos(const Index: SG): string;
-    procedure SetNoOpenArgument(const Value: TSwitchArgument);
-    procedure SetOpenArgument(const Value: TFileNameArgument);
 	public
 		File1, Window1: TMenuItem;
 
@@ -513,16 +511,6 @@ begin
 	Items[i].MenuItem.Tag := i;
 end;
 
-procedure TOpenedFiles.SetNoOpenArgument(const Value: TSwitchArgument);
-begin
-  FNoOpenArgument := Value;
-end;
-
-procedure TOpenedFiles.SetOpenArgument(const Value: TFileNameArgument);
-begin
-  FOpenArgument := Value;
-end;
-
 procedure TOpenedFiles.CreateMenuItem(i: SG);
 begin
 	if Assigned(Window1) = False then
@@ -554,7 +542,7 @@ begin
 
 	GetMem(P, FItemSize);
   Result.PData := P;
-	FillChar(Result.PData^, FItemSize, 0);
+	ClearMemory(Result.PData^, FItemSize);
 	Result.New := High(Result.New);
 end;
 
@@ -574,10 +562,10 @@ begin
 			if (FIndex >= 0) and (FIndex < FCount) and (Items[FIndex].PData <> nil) then
 			begin
 				Move(Items[FIndex].PData^, FItemAddr^, FItemSize);
-				FillChar(Items[FIndex].PData^, FItemSize, 0); // Safety - no duplicit memory
+				ClearMemory(Items[FIndex].PData^, FItemSize); // Safety - no duplicit memory
 			end
 			else
-				FillChar(FItemAddr^, FItemSize, 0); // Safety - no duplicit memory
+				ClearMemory(FItemAddr^, FItemSize); // Safety - no duplicit memory
 	end;
 end;
 
