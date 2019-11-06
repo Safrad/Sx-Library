@@ -7,7 +7,7 @@ uses
   uTypes;
 
 type
-  EExternalApplication = class(Exception)
+  EExternalApplication = class(EExternal)
   public
     constructor Create(const APath: string; const AExitCode: U4; const AOuput: string);
   end;
@@ -15,13 +15,13 @@ type
 implementation
 
 uses
-  uMsg;
+  uOutputFormat;
 
 { EExternalException }
 
 constructor EExternalApplication.Create(const APath: string; const AExitCode: U4; const AOuput: string);
 begin
-  Message := '"' + APath + '" exit code is ' + IntToStr(AExitCode) + ', Output: ' + AOuput;
+  Message := '"' + APath + '" exit code is ' + ExitCodeToString(AExitCode, ofIO) + ', Output: ' + AOuput;
 end;
 
 end.

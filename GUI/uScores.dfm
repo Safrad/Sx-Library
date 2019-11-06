@@ -1,9 +1,9 @@
 object fScores: TfScores
   Left = 2560
   Top = 442
-  Width = 497
-  Height = 292
   Caption = 'High Scores'
+  ClientHeight = 253
+  ClientWidth = 481
   Color = clBtnFace
   ParentFont = True
   OldCreateOrder = False
@@ -27,11 +27,14 @@ object fScores: TfScores
   object DViewHighScores: TDView
     Left = 0
     Top = 0
-    Width = 489
+    Width = 481
     Height = 225
-    Zoom = 1.000000000000000000
     Align = alTop
+    Zoom = 1.000000000000000000
+    EnableZoom = True
+    DisplayMode = dmCustom
     TabOrder = 1
     OnGetData = DViewHighScoresGetData
+    ExplicitWidth = 489
   end
 end

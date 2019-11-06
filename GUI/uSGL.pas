@@ -3,7 +3,7 @@
 
 unit uSGL;
 
-// {$define BPP4}
+{.$define BPP4}
 
 interface
 
@@ -192,8 +192,6 @@ sglSTextureObj = (
 var
 _libStatus: sglEErrorCode  = sglOpOk;
 sglFinishCoons: BG = True;
-sglErrors: array of sglEErrorCode;
-sglErrorCount: SG;
 
 
 (* Identifikator aktualni kreslici plochy (drawable). *)
@@ -594,27 +592,13 @@ begin
 end;
 
 function sglGetErrorStrings: string;
-var i: SG;
 begin
-	Result := '';
-	for i := 0 to sglErrorCount - 1 do
-		Result := Result + sglGetErrorString(sglErrors[i]) + LineSep;
-	sglErrorCount := 0;
-	SetLength(sglErrors, 0);
+	Result := sglGetErrorString(_libStatus);
 	_libStatus := sglOpOk;
 end;
 
 procedure AddError(sglError: sglEErrorCode);
-var NewSize: SG;
 begin
-	if IsDebug then
-  begin
-    NewSize := sglErrorCount + 1;
-    if AllocByExp(Length(sglErrors), NewSize) then
-      SetLength(sglErrors, NewSize);
-    sglErrors[sglErrorCount] := sglError;
-    Inc(sglErrorCount);
-	end;
 	_libStatus := sglError;
 end;
 
@@ -645,7 +629,7 @@ begin
 	end;
 	TextureCount := 0;
 	SetLength(Textures, 0);
-	FillChar(ATexture, SizeOf(ATexture), 0);
+	ATexture := Default(TTexture);
 end;
 
 function Check: BG;
@@ -765,7 +749,6 @@ begin
 			if AllocByExp(Length(Drawables), NewSize) then
 			begin
 				SetLength(Drawables, NewSize);
-//			FillChar(Drawables[i], SizeOf(Drawables[i]), 0);
 			end;
 			sglRecreateDrawable(i, width, height, Data);
 			Break;
@@ -797,7 +780,7 @@ begin
 			NewSize := i + 1;
 			if AllocByExp(Length(Textures), NewSize) then
 				SetLength(Textures, NewSize);
-			FillChar(Textures[i], SizeOf(Textures[i]), 0);
+			Textures[i] := Default(TTexture);
 			Inc(TextureCount);
 		end;
 		if Textures[i].Enabled = False then
@@ -865,7 +848,7 @@ begin
 			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
 				B or (G shl 8) or (R shl 16) or (A shl 24))
 		else
-			FillChar(Drawable._frameBuffer^, Drawable._frameBufferSize, 0);
+			ClearMemory(Drawable._frameBuffer^, Drawable._frameBufferSize);
 	end;
 end;
 
@@ -1855,19 +1838,7 @@ begin
 end;
 
 procedure BezierC;
-{var
-	i: SG;
-	G0, G1: TGraphicPoint;}
 begin
-{	if IsDebug then
-  begin
-	for i := 0 to Drawable.Index - 2 do
-	begin
-		Tran(Drawable.WP[i], G0);
-		Tran(Drawable.WP[i + 1], G1);
-		Lin(G0, G1);
-	end;
-  end;}
 	DrawCurveUsingRecursiveSubdivision4(Drawable.WP, 1);
 end;
 
@@ -1980,8 +1951,6 @@ end;
 procedure BezierG;
 begin
 	DrawCurveUsingRecursiveSubdivision(Drawable.WP, 1);
-//	if IsDebug then
-//	DrawWrap;
 end;
 
 function CoonsFergusonT(t: TFloat): TWorldPoint;
@@ -3251,7 +3220,7 @@ begin
 	if id = _currentDrawable then
 	begin
 		Move(Drawable, Drawables[id], SizeOf(Drawable));
-		FillChar(Drawable, SizeOf(Drawable), 0);
+		Drawable := Default(sglSDrawable);
 		_currentDrawable := -1;
 	end;
 	if not Drawables[id].Ext then
@@ -3262,7 +3231,7 @@ begin
 	FreeMem(Drawables[id]._depthBuffer);
 	SetLength(Drawables[id].Stack, 0);
 
-	FillChar(Drawables[id], SizeOf(Drawables[id]), 0);
+	Drawables[id] := Default(sglSDrawable);
 	_libStatus := sglOpOk;
 end;
 
@@ -3277,13 +3246,13 @@ begin
 	if id = _currentTexture then
 	begin
 		Move(ATexture, Textures[id], SizeOf(ATexture));
-		FillChar(ATexture, SizeOf(ATexture), 0);
+		ATexture := Default(TTexture);
 		_currentTexture := -1;
 	end;
 	for i := 0 to Length(Textures[id].MipMaps) - 1 do
 		FreeMem(Textures[id].MipMaps[i].Datas);
 
-	FillChar(Textures[id], SizeOf(Textures[id]), 0);
+	Textures[id] := Default(TTexture);
 	_libStatus := sglOpOk;
 end;
 
@@ -3304,7 +3273,7 @@ begin
 	if _currentDrawable >= 0 then
 		Move(Drawables[_currentDrawable], Drawable, SizeOf(Drawable))
 	else
-		FillChar(Drawable, SizeOf(Drawable), 0);
+		Drawable := Default(sglSDrawable);
 	_libStatus := sglOpOk;
 end;
 
@@ -3322,7 +3291,7 @@ begin
 	if id >= 0 then
 		ATexture := Textures[id]
 	else
-		FillChar(ATexture, SizeOf(ATexture), 0);
+		ATexture := Default(TTexture);
 	_libStatus := sglOpOk;
 end;
 

@@ -37,8 +37,7 @@ var
 begin
   inherited;
 
-  lpExecInfo.cbSize := SizeOf(lpExecInfo);
-  FillChar(lpExecInfo, SizeOf(lpExecInfo), 0);
+  lpExecInfo := Default(TShellExecuteInfo);
 
   lpExecInfo.cbSize := SizeOf(lpExecInfo);
   lpExecInfo.fMask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;

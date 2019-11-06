@@ -6165,7 +6165,7 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TrimAndSplitVersionString(Buffer: AnsiString; var Max, Min: Integer);
+procedure TrimAndSplitVersionString(Buffer: string; var Max, Min: Integer);
 
 // Peels out the X.Y form from the given Buffer which must contain a version string like "text Minor.Major.Build text"
 // at least however "Major.Minor".
@@ -6178,19 +6178,19 @@ begin
     // There must be at least one dot to separate major and minor version number.
     Separator := Pos('.', Buffer); 
     // At least one number must be before and one after the dot.
-    if (Separator > 1) and (Separator < Length(Buffer)) and (Buffer[Separator - 1] in ['0'..'9']) and
-      (Buffer[Separator + 1] in ['0'..'9']) then
+    if (Separator > 1) and (Separator < Length(Buffer)) and CharInSet(Buffer[Separator - 1], ['0'..'9']) and
+      CharInSet(Buffer[Separator + 1], ['0'..'9']) then
     begin
       // OK, it's a valid version string. Now remove unnecessary parts.
       Dec(Separator); 
       // Find last non-numeric character before version number.
-      while (Separator > 0) and (Buffer[Separator] in ['0'..'9']) do
+      while (Separator > 0) and CharInSet(Buffer[Separator], ['0'..'9']) do
         Dec(Separator); 
       // Delete leading characters which do not belong to the version string.
       Delete(Buffer, 1, Separator);
       Separator := Pos('.', Buffer) + 1;
       // Find first non-numeric character after version number
-      while (Separator <= Length(Buffer)) and (Buffer[Separator] in ['0'..'9']) do
+      while (Separator <= Length(Buffer)) and CharInSet(Buffer[Separator], ['0'..'9']) do
         Inc(Separator); 
       // delete trailing characters not belonging to the version string
       Delete(Buffer, Separator, 255); 
@@ -6241,8 +6241,8 @@ begin
   // determine version of implementation
   // GL
   Buffer := glGetString(GL_VERSION); 
-  TrimAndSplitVersionString(Buffer, Majorversion, MinorVersion); 
-  GL_VERSION_1_0 := True; 
+  TrimAndSplitVersionString(string(Buffer), MajorVersion, MinorVersion);
+  GL_VERSION_1_0 := True;
   GL_VERSION_1_1 := False; 
   GL_VERSION_1_2 := False; 
   if MajorVersion > 0 then
@@ -6263,7 +6263,7 @@ begin
   if Assigned(gluGetString) then
   begin
     Buffer := gluGetString(GLU_VERSION); 
-    TrimAndSplitVersionString(Buffer, Majorversion, MinorVersion); 
+    TrimAndSplitVersionString(string(Buffer), MajorVersion, MinorVersion);
     GLU_VERSION_1_1 := True; 
     if MinorVersion > 1 then
     begin

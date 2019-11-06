@@ -83,7 +83,7 @@ begin
     FSection.RunStatistics.TotalElapsedTimeInMs := FTotalElapsedTime.Milliseconds;
   	if Assigned(LocalMainIni) then
     begin
-      FSection.RunStatistics.TotalElapsedTimeInMs := FTotalElapsedTime.Milliseconds + FElapsedTime.Milliseconds;
+      FSection.RunStatistics.TotalElapsedTimeInMs := FTotalElapsedTime.Milliseconds + ElapsedTime.Milliseconds;
       LocalMainIni.WriteString(Section, 'Version', GetProjectInfo(piProductVersion));
       RWSection(LocalMainIni, True);
     end;

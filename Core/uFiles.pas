@@ -578,20 +578,25 @@ begin
 	end;
 end;
 
-procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
+procedure CheckExtensions(const Extensions: array of string);
 var
-	i: SG;
+  i: Integer;
+begin
+  for i := 0 to Length(Extensions) - 1 do
+  begin
+    Assert(Length(Extensions[i]) > 0);
+    Assert(Extensions[i, 1] <> '.');
+  end;
+end;
+
+procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
 (*	Offset: Integer;
 	MaxLimit: Integer;
 	Switch: Integer;
 	FileName: TFileName; *)
 begin
 	if IsDebug then
-    for i := 0 to Length(Extensions) - 1 do
-    begin
-      Assert(Length(Extensions[i]) > 0);
-      Assert(Extensions[i, 1] <> '.');
-    end;
+    CheckExtensions(Extensions);
 {						if (Extensions = '') or (Extension = '*') or (Extension = '*.*') or
 	if Length(Extension) > 1 then
 		if (Extension <> '*') and (Extension <> '*.*') then
@@ -892,7 +897,7 @@ begin
 				while Total > 0 do
 				begin
 					Count := Min(Total, MaxCount);
-					FillChar(Buf^, Count, 0);
+					ClearMemory(Buf^, Count);
 					if not FS.BlockRead(Buf^, Count) then
 						Result := False;
 					FD.BlockWrite(Buf^, Count);
@@ -1320,7 +1325,7 @@ end;
 function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
 var
 	F: TFile;
-	Data2: AnsiString;
+	Data2: RawByteString;
 begin
 	Result := False;
 	Data := '';
@@ -1354,7 +1359,7 @@ end;
 function ReadStringFromFile(const FileName: TFileName; const Limit: U8): string;
 var
 	F: TFile;
-	Data2: AnsiString;
+	Data2: RawByteString;
 begin
 	Result := '';
 	F := TFile.Create;
@@ -1433,7 +1438,7 @@ begin
 	end;
 end;
 
-procedure ConvertFileCharset(const Source: AnsiString; out Dest: AnsiString; const FileCharset: TFileCharset); overload;
+procedure ConvertFileCharset(const Source: AnsiString; out Dest: RawByteString; const FileCharset: TFileCharset); overload;
 begin
 	case FileCharset of
 	fcAnsi: Dest := Source;
@@ -1443,7 +1448,7 @@ begin
 	end;
 end;
 
-procedure ConvertFileCharset(const Source: UnicodeString; out Dest: AnsiString; const FileCharset: TFileCharset); overload;
+procedure ConvertFileCharset(const Source: UnicodeString; out Dest: RawByteString; const FileCharset: TFileCharset); overload;
 var
   Size: SG;
   u: UnicodeString;
@@ -1478,7 +1483,7 @@ function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; co
 var
 	F: TFile;
 	FileMode: TFileMode;
-	DataA: AnsiString;
+	DataA: RawByteString;
 begin
 	ConvertFileCharset(Data, DataA, FileCharset);
 
@@ -1513,7 +1518,7 @@ function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString;
 var
 	F: TFile;
 	FileMode: TFileMode;
-	DataA: AnsiString;
+	DataA: RawByteString;
 begin
 	ConvertFileCharset(Data, DataA, FileCharset);
 	if (Append = False) and SameDataInFile(FileName, DataA) then

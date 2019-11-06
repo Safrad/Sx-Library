@@ -14,6 +14,7 @@ type
   TArguments = class
   private
     FArguments: TObjectList;
+    FName: string;
 
     function ParseString(ASource: string): TArrayOfStringPair;
     procedure ApplyArguments(const AArguments: TArrayOfStringPair);
@@ -26,6 +27,7 @@ type
     function GetDefinedCount: SG;
     procedure SetOwnsObjects(const Value: BG);
     function GetOwnsObjects: BG;
+    procedure SetName(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -52,6 +54,8 @@ type
 
 		property Items[const Index: TIndex]: TCustomArgument read Get; default; // operator []
     property DefinedCount: SG read GetDefinedCount;
+
+    property Name: string read FName write SetName;
   end;
 
 implementation
@@ -59,6 +63,7 @@ implementation
 uses
   SysUtils,
   Classes,
+
   uStartState,
   uTextAlignment,
   uTable,
@@ -272,7 +277,7 @@ begin
     Argument := FindByString(Name);
     if (Argument = nil) then
     begin
-      raise EArgumentException.Create('Unknown command line argument ' + QuotedStr(Name) + '.');
+      raise EArgumentException.Create('Unknown command-line parameter ' + QuotedStr(Name) + '.');
     end;
     Argument.Exists := True;
 
@@ -287,21 +292,22 @@ var
   Row: TRow;
   i: SG;
 begin
-  Table := TTable.Create(1 + FArguments.Count);
+  Table := TTable.Create;
   try
-    Row := TRow.Create(3);
+    Table.Caption := FName;
+    Row := THeaderRow.Create(3);
     Row.Columns[0].Text := 'Parameter';
     Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Description';
     Row.Columns[1].HorizontalAlignment := haCenter;
     Row.Columns[2].Text := 'Required';
     Row.Columns[2].HorizontalAlignment := haCenter;
-    Table.Data[0] := Row;
+    Table.AddHeaderRow(Row);
 
     for i := 0 to FArguments.Count - 1 do
     begin
       Row := PreviewTableArgument(TCustomArgument(FArguments[i]));
-      Table.Data[i + 1] := Row;
+      Table.AddRow(Row);
     end;
     CommonOutput.AddTable(Table);
   finally
@@ -315,19 +321,19 @@ var
   Row: TRow;
   i: SG;
 begin
-  Table := TTable.Create(1 + FArguments.Count);
+  Table := TTable.Create;
   try
-    Row := TRow.Create(2);
+    Row := THeaderRow.Create(2);
     Row.Columns[0].Text := 'Parameter';
     Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Value';
     Row.Columns[1].HorizontalAlignment := haCenter;
-    Table.Data[0] := Row;
+    Table.AddHeaderRow(Row);
 
     for i := 0 to FArguments.Count - 1 do
     begin
       Row := PreviewTableArgumentValue(TCustomArgument(FArguments[i]));
-      Table.Data[i + 1] := Row;
+      Table.AddRow(Row);
     end;
     CommonOutput.AddTable(Table);
   finally
@@ -354,6 +360,11 @@ begin
   Row.Columns[0].Text := AArgument.Shortcut;
   Row.Columns[1].Text := AArgument.GetValueAsString;
   Result := Row;
+end;
+
+procedure TArguments.SetName(const Value: string);
+begin
+  FName := Value;
 end;
 
 procedure TArguments.SetOwnsObjects(const Value: BG);
@@ -386,7 +397,7 @@ begin
     Argument := TCustomArgument(FArguments[i]);
     if ((not Argument.Used) and (Argument.RequireCheck = rcRequired)) then
     begin
-      Result := Result + LineSep + '  Argument ''' + Argument.Shortcut + ''' from command line is not used in program';
+      Result := Result + LineSep + '  Argument ''' + Argument.Shortcut + ''' from command-line is not used in program';
     end;
   end;
 end;

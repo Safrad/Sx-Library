@@ -3,8 +3,13 @@ unit ufTableForm;
 interface
 
 uses
-	uTypes, uParamDataModel, uDForm, uOptions,
-	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+	uTypes,
+  uIRow,
+  uITable,
+  uDForm,
+
+  Winapi.Windows,
+	SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, uDImage, uDView, Menus, uDWinControl, ComCtrls;
 
 type
@@ -24,8 +29,6 @@ type
 		ImportFromCSV1: TMenuItem;
 		ExportToCSV1: TMenuItem;
 		Add1: TMenuItem;
-		procedure DViewTableGetData(Sender: TObject; var Data: String; ColIndex,
-			RowIndex: Integer; Rect: TRect);
 		procedure FormKeyDown(Sender: TObject; var Key: Word;
 			Shift: TShiftState);
 		procedure Copy1Click(Sender: TObject);
@@ -40,21 +43,22 @@ type
 		procedure DViewTableDblClick(Sender: TObject);
 		procedure PopupMenuPopup(Sender: TObject);
 		procedure Add1Click(Sender: TObject);
+    procedure DViewTableGetDataEx(Sender: TObject; var Data: Variant; ColIndex, RowIndex: Integer; Rect: TRect);
 	private
 		{ Private declarations }
-		FTableModel: TParamDataModel;
+		FTableModel: ITable;
 		FRowActions: array of TRowAction;
 		FReadOnly: BG;
 		procedure OnMenuClick(Sender: TObject);
 		procedure OnCellClick(Sender: TObject; ColumnIndex, RowIndex: SG; Shift: TShiftState);
 		procedure RWOptions(const Save: BG);
-		function AddEditOptions(const Caption: string; Params: PParams): BG;
+		function AddEditOptions(const ACaption: string; ARow: IRow): BG;
 		procedure UpdateStatusBar;
 	public
 		{ Public declarations }
 //		constructor Create(AOwner: TComponent); overload; override;
 		procedure AddAction(const Title: string; RowAction: TRowAction);
-		constructor Create(const TableModel: TParamDataModel; const FormCaption: string; const ReadOnly: BG); reintroduce;
+		constructor Create(const ATable: ITable; const AReadOnly: BG); reintroduce;
 	end;
 
 implementation
@@ -62,14 +66,12 @@ implementation
 {$R *.dfm}
 uses
 	ClipBrd,
-  uOutputInfo,
-	uReg, uDIniFile, uMenus, uOutputFormat, uStrings, uData, ufOptions, uMsg;
 
-procedure TfTableForm.DViewTableGetData(Sender: TObject; var Data: String;
-	ColIndex, RowIndex: Integer; Rect: TRect);
-begin
-	Data := FTableModel.GetCell(RowIndex, ColIndex);
-end;
+  uOutputInfo,
+  uRow,
+  uTable,
+	uReg,
+  uDIniFile, uMenus, uOutputFormat, uStrings, uData, ufOptions, uMsg;
 
 procedure TfTableForm.FormKeyDown(Sender: TObject; var Key: Word;
 	Shift: TShiftState);
@@ -78,26 +80,28 @@ begin
 		Close;
 end;
 
-constructor TfTableForm.Create(const TableModel: TParamDataModel; const FormCaption: string; const ReadOnly: BG);
+constructor TfTableForm.Create(const ATable: ITable; const AReadOnly: BG);
 var
 	i : SG;
-	s: string;
 begin
+  Assert(ATable <> nil);
+
 	inherited Create(nil);
+
 	Background := baNone;
 
 	ActiveControl := DViewTable;
 	DViewTable.OnCellClick := OnCellClick;
 
-	FTableModel := TableModel;
-	FReadOnly := ReadOnly;
-	Caption := FormCaption;
-	for i := 0 to TableModel.ColumnCount - 1 do
+	FTableModel := ATable;
+	FReadOnly := AReadOnly;
+	Caption := ATable.GetCaption;
+	for i := 0 to ATable.GetColumnCount - 1 do
 	begin
-		s := TableModel.GetColumnName(i);
-		DViewTable.AddColumn(s, DViewTable.Width div TableModel.ColumnCount);
-//		DViewTable.AddColumn(s, DViewTable.CellWidth(s));
+    DViewTable.Columns.Add(ATable.GetColumn(i));
 	end;
+  DViewTable.Columns.OwnsObjects := False;
+  DViewTable.UpdateColumnCount;
 
 	if Assigned(MainIni) then
 	begin
@@ -128,13 +132,12 @@ begin
 			if DViewTable.SelectedRows[i] then
 			begin
 				DViewTable.SelectedRows[i] := False;
-				Finalize(PCell(FTableModel.Get(j))^);
-				FTableModel.Delete(j);
+				FTableModel.RemoveRow(j);
 			end
 			else
 				Inc(j);
 		end;
-		DViewTable.RowCount := FTableModel.Count;
+		DViewTable.RowCount := FTableModel.GetRowCount;
 		DViewTable.DataChanged;
 		UpdateStatusBar;
 	end;
@@ -144,18 +147,15 @@ procedure TfTableForm.Edit1Click(Sender: TObject);
 var
 	i: SG;
 begin
-	if FTableModel is TParamDataModel then
-	begin
-		for i := 0 to DViewTable.RowCount - 1 do
-		begin
-			if DViewTable.SelectedRows[i] then
-			begin
-				if AddEditOptions('Edit', PParams(PCell(FTableModel.Get(i))^)) then
-					Invalidate;
-			end;
-		end;
-		DViewTable.DataChanged;
-	end;
+  for i := 0 to DViewTable.RowCount - 1 do
+  begin
+    if DViewTable.SelectedRows[i] then
+    begin
+      if AddEditOptions('Edit', FTableModel.GetRow(i)) then
+        Invalidate;
+    end;
+  end;
+  DViewTable.DataChanged;
 end;
 
 procedure TfTableForm.OnCellClick(Sender: TObject; ColumnIndex, RowIndex: SG; Shift: TShiftState);
@@ -170,17 +170,17 @@ begin
 end;
 
 procedure TfTableForm.Paste1Click(Sender: TObject);
-var
+{var
 	Lines: string;
-	InLineIndex: SG;
+	InLineIndex: SG;}
 begin
-	Lines := Clipboard.AsText;
+{	Lines := Clipboard.AsText;
 	InLineIndex := 1;
 	while InLineIndex < Length(Lines) do
 		FTableModel.AddRow(ReadToNewLine(Lines, InLineIndex));
-	DViewTable.RowCount := FTableModel.Count;
+	DViewTable.RowCount := FTableModel.GetRowCount;
 	DViewTable.DataChanged;
-	UpdateStatusBar;
+	UpdateStatusBar; TODO }
 end;
 
 procedure TfTableForm.ImportFromCSV1Click(Sender: TObject);
@@ -224,7 +224,7 @@ end;
 procedure TfTableForm.FormShow(Sender: TObject);
 begin
 	MenuSet(PopupMenu);
-	DViewTable.RowCount := FTableModel.Count;
+	DViewTable.RowCount := FTableModel.GetRowCount;
 	DViewTable.DataChanged;
 	UpdateStatusBar;
 end;
@@ -233,6 +233,12 @@ procedure TfTableForm.DViewTableDblClick(Sender: TObject);
 begin
 	if (Length(FRowActions) > 0) and (DViewTable.SelCount >= 0) then
 		FRowActions[0](DViewTable.SelectedRows);
+end;
+
+procedure TfTableForm.DViewTableGetDataEx(Sender: TObject; var Data: Variant; ColIndex, RowIndex: Integer; Rect: TRect);
+begin
+	Data := FTableModel.GetCell(ColIndex, RowIndex).GetData;
+  // TODO : Colors
 end;
 
 procedure TfTableForm.PopupMenuPopup(Sender: TObject);
@@ -256,24 +262,21 @@ end;
 
 procedure TfTableForm.Add1Click(Sender: TObject);
 var
-	Params: PCell;
+	Row: TRow;
 begin
-	Params := FTableModel.Add;
-	SetLength(Params^, FTableModel.OptionCount);
-	DefaultOptions(FTableModel.Options, FTableModel.OptionCount, PParams(Params^));
-	if AddEditOptions('Add', PParams(Params^)) then
+	Row := TRow.Create(FTableModel.GetColumnCount);
+	if AddEditOptions('Add', Row) then
 	begin
-//		FTableModel.Add(Params);
-//		Params := nil;
-		DViewTable.RowCount := FTableModel.Count;
+    FTableModel.AddRow(Row);
+		DViewTable.RowCount := FTableModel.GetRowCount;
 		DViewTable.DataChanged;
 	end;
 end;
 
-function TfTableForm.AddEditOptions(const Caption: string;
-	Params: PParams): BG;
+function TfTableForm.AddEditOptions(const ACaption: string;
+	ARow: IRow): BG;
 begin
-	Result := ShowOptions(Caption, FTableModel.Options, FTableModel.OptionCount, Params, nil);
+	Result := False; // ShowOptions(Caption, FTableModel.Options, FTableModel.OptionCount, Params, nil); TODO
 end;
 
 procedure TfTableForm.UpdateStatusBar;

@@ -130,21 +130,21 @@ var
   Row: TRow;
   i: SG;
 begin
-  Table := TTable.Create(1 + FCommands.Count);
+  Table := TTable.Create;
   try
-    Row := TRow.Create(3);
+    Row := THeaderRow.Create(3);
     Row.Columns[0].Text := 'Command name and parameters';
     Row.Columns[0].HorizontalAlignment := haCenter;
     Row.Columns[1].Text := 'Description';
     Row.Columns[1].VerticalAlignment := vaCenter;
     Row.Columns[2].Text := 'Used';
     Row.Columns[2].VerticalAlignment := vaCenter;
-    Table.Data[0] := Row;
+    Table.AddHeaderRow(Row);
 
     for i := 0 to FCommands.Count - 1 do
     begin
       Row := PreviewTableCommand(TCustomCommand(FCommands[i]));
-      Table.Data[i + 1] := Row;
+      Table.AddRow(Row);
     end;
     CommonOutput.AddTable(Table);
   finally

@@ -61,10 +61,12 @@ type
   protected
     procedure Initialize; override;
     procedure AbortedBySystem; virtual;
-    procedure Wait; virtual;
+    procedure WaitForEnter; virtual;
   public
     constructor Create;
     destructor Destroy; override;
+
+    procedure Run; override;
   end;
 
 implementation
@@ -77,6 +79,7 @@ uses
   uLog,
   uCommonApplication,
   uCommonOutput,
+  uStartState,
   uConsole,
   uConsoleColor,
   uConsoleOutputInfo,
@@ -133,7 +136,7 @@ begin
   try
     inherited;
   finally
-    Wait;
+    WaitForEnter;
 {$IF defined(MSWINDOWS)}
     SetConsoleCtrlHandler(@ConsoleCtrlHandler, False { remove } );
 {$ENDIF}
@@ -146,20 +149,23 @@ begin
   CommonOutput := TConsoleOutputInfo.Create;
 
   SplashScreen := TConsoleSplashScreen.Create;
-  try
-    inherited;
-  finally
-    SplashScreen.Free;
-    SplashScreen := nil;
-  end;
+  inherited;
 
   if FMinimizedArgument.Exists then
     ShowWindow(GetConsoleWindow, SW_MINIMIZE);
 end;
 
-procedure TConsoleApplication.Wait;
+procedure TConsoleApplication.Run;
 begin
-  if (not TConsole.IsRedirected) and (not FAbortedBySystem) then
+  inherited;
+
+  SplashScreen.Free;
+  SplashScreen := nil;
+end;
+
+procedure TConsoleApplication.WaitForEnter;
+begin
+  if TStartState.RunFromIDE and (not FAbortedBySystem) then
   begin
     TConsole.WriteLine('');
     TConsole.Write('Press Enter to continue...');

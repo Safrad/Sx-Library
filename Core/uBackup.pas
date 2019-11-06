@@ -55,7 +55,7 @@ begin
 		uFiles.CopyFile(FileName, FileNameD, True);
 
   // Delete old
-  FillChar(DeleteOptions, SizeOf(DeleteOptions), 0);
+  DeleteOptions := Default(TDeleteOptions);
   if BackupFolder = bfSubEx then
     DeleteOptions.Mask := '*.*'
   else

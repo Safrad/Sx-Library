@@ -7,6 +7,7 @@ uses uTypes;
 type
   PSynchroReport = ^TSynchroReport;
   TSynchroReport = record
+  public
 		FileSame: UG;
     FileSameData: U8;
     FileCopied: UG;
@@ -18,9 +19,10 @@ type
     FileDeleted: UG;
     FileDeletedData: U8;
     DirDeleted: UG;
-  end;
 
-function SynchroReportToString(const SynchroReport: TSynchroReport): string;
+    procedure Clear;
+    function AsString: string;
+  end;
 
 implementation
 
@@ -28,16 +30,23 @@ uses
   uStrings,
   uOutputFormat;
 
-function SynchroReportToString(const SynchroReport: TSynchroReport): string;
+{ TSynchroReport }
+
+function TSynchroReport.AsString: string;
 begin
 	Result := '';
-  Result := Result + 'File Same: ' + NToS(SynchroReport.FileSame) + ' (' + BToStr(SynchroReport.FileSameData) + ')' + LineSep;
-  Result := Result + 'File Copied: ' + NToS(SynchroReport.FileCopied) + ' (' + BToStr(SynchroReport.FileCopiedData) + ')' + LineSep;
-  Result := Result + 'File Replaced: ' + NToS(SynchroReport.FileReplaced) + ' (' + BToStr(SynchroReport.FileReplacedData) + ')' + LineSep;
-  Result := Result + 'File Renamed: ' + NToS(SynchroReport.FileRenamed) + LineSep;
-  Result := Result + 'Folder Created: ' + NToS(SynchroReport.DirCreated) + LineSep;
-  Result := Result + 'Folder Deleted: ' + NToS(SynchroReport.DirDeleted) + LineSep;
-  Result := Result + 'File Deleted: ' + NToS(SynchroReport.FileDeleted) + ' (' + BToStr(SynchroReport.FileDeletedData) + ')' + LineSep;
+  Result := Result + 'File Same: ' + NToS(FileSame) + ' (' + BToStr(FileSameData) + ')' + LineSep;
+  Result := Result + 'File Copied: ' + NToS(FileCopied) + ' (' + BToStr(FileCopiedData) + ')' + LineSep;
+  Result := Result + 'File Replaced: ' + NToS(FileReplaced) + ' (' + BToStr(FileReplacedData) + ')' + LineSep;
+  Result := Result + 'File Renamed: ' + NToS(FileRenamed) + LineSep;
+  Result := Result + 'Folder Created: ' + NToS(DirCreated) + LineSep;
+  Result := Result + 'Folder Deleted: ' + NToS(DirDeleted) + LineSep;
+  Result := Result + 'File Deleted: ' + NToS(FileDeleted) + ' (' + BToStr(FileDeletedData) + ')' + LineSep;
+end;
+
+procedure TSynchroReport.Clear;
+begin
+  Self := Default(TSynchroReport);
 end;
 
 end.

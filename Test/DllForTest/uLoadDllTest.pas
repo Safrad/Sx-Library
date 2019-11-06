@@ -20,7 +20,6 @@ uses
   uPlugin,
   uAPI,
 
-//  Windows,
   Graphics,
   SysUtils,
   Forms,
@@ -45,13 +44,11 @@ uses
   uDelayedCall,
   uDictionary,
   uFileList,
-//  uFiles,
   uFirst,
   uHTML,
   uCharset,
   uCharTable,
   uLog,
-  uMapInfo,
   uMath,
   uMsg,
   uNewThread,
@@ -97,8 +94,6 @@ uses
   uVisualOptions,
   uWatch,
   uWebUpdate,
-
-  CoolTrayIcon,
 
   IGDIPlus,
   NLDJoystick,

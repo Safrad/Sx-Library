@@ -4,7 +4,7 @@ interface
 
 uses
   uTypes,
-  Windows;
+  Winapi.Windows;
 
 type
   TRS232 = class
@@ -232,7 +232,7 @@ end;
 
 procedure TRS232.UpdateInfo;
 begin
-  FillChar(FInfo, SizeOf(FInfo), 0);
+  FInfo := Default(DCB);
   FInfo.DCBlength := SizeOf(FInfo);
 
   if not GetCommState(FHandle, FInfo) then

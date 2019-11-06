@@ -263,6 +263,7 @@ uses
 	Math, ClipBrd,
   Velthuis.BigDecimals,
   uBigDecimalHelper,
+  uMainTimer,
 	uGraph, uStrings, uGetInt, uGColor, uOutputFormat, uMsg, uColor, uMenus, uDrawStyle, uDictionary,
 	uLog, uRect;
 
@@ -1647,7 +1648,7 @@ begin
 {$ENDIF}
 
 			Inc(FIntervalFillCount);
-      PeriodTime := IntervalFrom(FIntervalStartTime);
+      PeriodTime := MainTimer.IntervalFrom(FIntervalStartTime);
 			if PeriodTime >= Second then
 			begin
 				if FIntervalStartTime > 0 then

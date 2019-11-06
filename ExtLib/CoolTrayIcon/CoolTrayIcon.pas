@@ -11,7 +11,7 @@
 { Portions by Jouni Airaksinen - mintus@codefield.com             }
 {*****************************************************************}
 
-unit CoolTrayIcon;
+unit CoolTrayIcon deprecated 'Use Vcl.ExtCtrls.TTrayIcon';
 
 {$T-}  // Use untyped pointers as we override TNotifyIconData with TNotifyIconDataEx
 
@@ -712,8 +712,6 @@ begin
   FShowHint := True;         // Show hint by default
   SettingPreview := False;
 
-  FIcon := TIcon.Create;
-  FIcon.OnChange := IconChanged;
   FillChar(IconData, SizeOf(IconData), 0);
   IconData.cbSize := SizeOf(TNotifyIconDataEx);
   { IconData.hWnd points to procedure to receive callback messages from the icon.
@@ -1046,11 +1044,14 @@ end;
 
 procedure TCoolTrayIcon.SetIcon(Value: TIcon);
 begin
-  FIcon.OnChange := nil;
-//  FIcon := Value;
-  FIcon.Assign(Value);      
-  FIcon.OnChange := IconChanged;
-  ModifyIcon;
+  if FIcon <> nil then
+    FIcon.Free;
+  FIcon := Value;
+  if FIcon <> nil then
+  begin
+    FIcon.OnChange := IconChanged;
+    ModifyIcon;
+  end;
 end;
 
 
@@ -1183,6 +1184,8 @@ var
   ok: Boolean;
 begin
   Result := False;
+  if FIcon = nil then
+    Exit;
   ok := True;
   if (csDesigning in ComponentState) then
     ok := (SettingPreview or FDesignPreview);

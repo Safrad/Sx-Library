@@ -16,6 +16,7 @@ type
 implementation
 
 uses
+  uChar,
   uStrings;
 
 { TPercentFormatter }
@@ -28,9 +29,9 @@ begin
   if AbsValue >= 10 then
     Result := inherited Format(AValue) + CharTimes
   else if (AbsValue > 0) and (AbsValue < 0.01) then
-    Result := inherited Format(AValue * 1000) + '‰'
+    Result := inherited Format(AValue * 1000) + CharUnbrokableSpace + '‰'
   else
-    Result := inherited Format(AValue * 100) + '%';
+    Result := inherited Format(AValue * 100) + CharUnbrokableSpace + '%';
 end;
 
 function TPercentFormatter.Format(const AValue: S8): string;

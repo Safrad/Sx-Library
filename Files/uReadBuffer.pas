@@ -48,6 +48,8 @@ implementation
 uses
   SysUtils,
   Math,
+
+  uMath,
   uCPU;
 
 { TSequentialReadBuffer }
@@ -58,7 +60,7 @@ var
   RemainReadCount, ReadSize: UG;
 begin
   if ASize > UG(U8(FDataCount) - FFilePosition) then
-    FillChar(AData^, ASize, 0);
+    ClearMemory(AData^, ASize);
 // TODO : raise exception is 30% slowest in the case if is not called
 {    raise EInvalidArgument.Create('Not enought requested ' + IntToStr(ASize) + ' bytes, ' +
       IntToStr(U8(DataCount) - FFilePosition) + ' remains');}
@@ -70,11 +72,11 @@ begin
     if FBufferAllocation.Remain = 0 then
       ReadNextBuffer;
 
-    ReadSize := Min(FBufferAllocation.Remain, RemainReadCount);
+    ReadSize := Min(FBufferAllocation.Remain, S8(RemainReadCount));
 
     // Transfer buffer data
     Move(PByte(PByte(FAlignedMemory.Data) + FBufferAllocation.Used)^, Data^, ReadSize);
-    FBufferAllocation.Used := FBufferAllocation.Used + ReadSize;
+    FBufferAllocation.Used := U8(FBufferAllocation.Used) + ReadSize;
 
     Inc(Data, ReadSize);
     Dec(RemainReadCount, ReadSize);
@@ -99,7 +101,7 @@ begin
     ChangeBuffer;
   end
   else
-    FBufferAllocation.Used := FFilePosition - FBufferPos;
+    FBufferAllocation.Used := S8(FFilePosition) - FBufferPos;
 end;
 
 procedure TReadBuffer.ReadNextBuffer;

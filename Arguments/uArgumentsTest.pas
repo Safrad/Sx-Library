@@ -55,12 +55,12 @@ begin
     Arguments.Parse('"*.exe" -r -d1 -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;
 
-    // check "  " (double space) in command line
+    // check "  " (double space) in command-line
     Arguments.Clear;
     Arguments.Parse('"*.exe" -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;
 
-    // check " " in start command line
+    // check " " in start command-line
     Arguments.Clear;
     Arguments.Parse('"*.exe"  -r  -d1   -number 10 -sa a;b;c -na 1;2;3');
     CheckResult;

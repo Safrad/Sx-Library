@@ -230,6 +230,8 @@ begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
 	FFileSize := HandleFileSize(FHandle, FFileName);
+  if FileMode = fmAppend then
+    SeekEnd;
 end;
 
 function TRawFile.GetFlags: U4;

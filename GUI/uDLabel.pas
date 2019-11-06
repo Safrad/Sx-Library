@@ -104,7 +104,7 @@ implementation
 
 uses
   Types,
-  uStrings, uScreen, uMsg, uColor;
+  uStrings, uMsg, uColor;
 
 constructor TDLabel.Create(AOwner: TComponent);
 begin

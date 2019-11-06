@@ -54,7 +54,7 @@ begin
     Stopwatch.Start;
     Sleep(SleepTime);
     Stopwatch.Stop;
-    Check(EqualRelative(Stopwatch.Elapsed.Milliseconds, SleepTime, 0.1), 'Out of time tolerance ' + IntToStr(SleepTime) + ' -> ' + FloatToStr(Stopwatch.Elapsed.Milliseconds));
+    Check(EqualRelative(Stopwatch.Elapsed.Milliseconds, SleepTime, 0.1), 'Out of time tolerance [ms] ' + IntToStr(SleepTime) + ' -> ' + FloatToStr(Stopwatch.Elapsed.Milliseconds));
   finally
     Stopwatch.Free;
   end;

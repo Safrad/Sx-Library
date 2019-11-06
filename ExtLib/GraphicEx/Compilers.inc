@@ -104,7 +104,7 @@
     {$IFEND}
  {$ENDIF}
 
-{$ifdef Win32}
+{$ifdef MSWINDOWS}
 
 // Compiler defines not specific to a particlular platform.
 

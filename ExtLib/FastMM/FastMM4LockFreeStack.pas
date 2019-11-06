@@ -47,7 +47,7 @@ type
 implementation
 
 uses
-  Windows;
+  Winapi.Windows;
 
 {$IF CompilerVersion < 23}
 {$IFNDEF CPUX64}

@@ -41,12 +41,12 @@ begin
     ColorSequence.FirstColor := $7f0f7f;
     ColorSequence.Count := 12;
     for i := 0 to 11 do
-      C1 := ColorSequence.GetNextColor;
+      ColorSequence.GetNextColor;
 
     ColorSequence.Reset;
     ColorSequence.Count := 12;
     for i := 0 to 11 do
-      C1 := ColorSequence.GetNextColor;
+      ColorSequence.GetNextColor;
 	finally
   	ColorSequence.Free;
 	end;

@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes, uDForm, uOptions,
-	Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+	SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ExtCtrls, uDButton, Buttons;
 
 type
@@ -86,8 +86,10 @@ implementation
 uses
 	Types, Math,
 	uDictionary,
+  uTimeSpan,
 	uStrings, uOutputFormat, uInputFormat, uParserMsg, uDEdit, uMath, uGetInt, uGetStr, uGColor,
 	uGetTime, uDIniFile, uSystem, uFiles, uLayout, uDMemo;
+
 {$R *.dfm}
 
 var
@@ -605,6 +607,10 @@ end;
 function OptionSet(const O: TOption; var P: TParam): BG; overload;
 var
 	Title: string;
+  MinimumTime: TTimeSpan;
+  DefaultTime: TTimeSpan;
+  MaximumTime: TTimeSpan;
+  ActualTime: TTimeSpan;
 begin
 	Title := AddSpace(O.Name);
 	case O.Typ of
@@ -628,8 +634,15 @@ begin
 	vsDirectory:
 		Result := SelectFolder(P.Str, Title);
 	vsTime:
-    Result := False;
-//		Result := GetTime(Title, U4(P.Num), O.Minimum, O.Default, O.Maximum, nil); TODO
+  begin
+    MinimumTime.Milliseconds := O.Minimum;
+    DefaultTime.Milliseconds := O.Default;
+    MaximumTime.Milliseconds := O.Maximum;
+    ActualTime.Milliseconds := P.Num;
+    Result := GetTime(Title, ActualTime, MinimumTime, DefaultTime, MaximumTime, nil);
+    if Result then
+      P.Num := ActualTime.Milliseconds;
+  end;
 	vsColor:
 		Result := GetColor(Title, TColor(P.Num), O.Default, nil);
 	vsButton:
@@ -829,6 +842,9 @@ var
 	n: SG;
 	f: Double;
 	ParserMessages: TParserMessages;
+  MinimumTime: TTimeSpan;
+  DefaultTime: TTimeSpan;
+  MaximumTime: TTimeSpan;
 begin
 	Result := False;
 	case O.Typ of
@@ -864,7 +880,12 @@ begin
           end;
         end;
 				vsTime:
-//					n := StrToMs(TDEdit(C).Text, O.Minimum, O.Default, O.Maximum, True, ParserMessages); TODO
+        begin
+          MinimumTime.Milliseconds := O.Minimum;
+          DefaultTime.Milliseconds := O.Default;
+          MaximumTime.Milliseconds := O.Maximum;
+					n := StrToMs(TDEdit(C).Text, MinimumTime, DefaultTime, MaximumTime, True, ParserMessages).Milliseconds;
+        end;
 				end;
 				SetControlDesign(TDEdit(C), ParserMessages.Count > 0);
 				TDEdit(C).Hint := ParserMessages.ToString;

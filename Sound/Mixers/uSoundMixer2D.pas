@@ -34,7 +34,7 @@ var
   Value, Amplitude, Sample, Distance: F4;
   Channel: TChannel;
 begin
-  FillChar(BufferSamplesF4^, BufferSize, 0);
+  ClearMemory(BufferSamplesF4^, BufferSize);
 
   SoundItemIndex := 0;
   while SoundItemIndex < Length(SoundItems) do

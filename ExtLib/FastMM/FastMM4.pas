@@ -1559,7 +1559,7 @@ implementation
 
 uses
 {$ifndef POSIX}
-  Windows,
+  Winapi.Windows,
   {$ifdef _EventLog}
     {$ifdef Delphi4or5}
   ShlObj,

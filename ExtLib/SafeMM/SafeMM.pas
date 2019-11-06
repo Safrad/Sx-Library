@@ -214,7 +214,7 @@ var
 implementation
 
 uses
-  Windows;
+  Winapi.Windows;
 
 const
   //how many 4k blocks in a 64k pool
@@ -274,9 +274,7 @@ var
 function offset(const p:pointer;const b: NativeUInt):Pointer;
 begin
  Assert(p<>nil);
- {$WARNINGS OFF}
  result:=pointer(NativeUInt(p)+b);
- {$WARNINGS ON}
 end;
 
 procedure PushAvail(const aPool:PPoolInfo);
@@ -715,10 +713,8 @@ end;
 
 initialization
 
-  {$WARNINGS OFF}
   //check that enough info can fit into 1 page
   Assert(SizeOf(TBlockInfo)*(cSubCount+1)<=(4*1024));
-  {$WARNINGS ON}
 
   FHoldStart:=0;
   FHoldEnd:=0;
@@ -734,6 +730,3 @@ finalization
   DeleteCriticalSection(fcritical);
 
 end.
-
-
-

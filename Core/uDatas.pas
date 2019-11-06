@@ -54,7 +54,7 @@ begin
 		if (FIndex >= 0) and (FIndex < Count) then
 			Move(Pointer(UG(GetFirst) + UG(FIndex) * ItemMemSize)^, ItemAddr^, ItemSize)
 		else
-			FillChar(ItemAddr^, ItemSize, 0);
+			ClearMemory(ItemAddr^, ItemSize);
 end;
 
 function TDatas.GetActive: Pointer;

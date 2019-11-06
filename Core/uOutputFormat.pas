@@ -85,12 +85,13 @@ function NToS(const Num: U8; const OutputFormat: TOutputFormat; const ANumericBa
 type
   TFloatFormat= (ffAuto, ffScientic, ffNormal);
 
-function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
-function FToS(const Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
+function FloatToDecimalString(const Value: FM; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
+function FToS(const Num: FM; const OutputFormat: TOutputFormat = ofDisplay): string;
 
 function BToStr(const Bytes: S4; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function BToStr(const Bytes: S8; const OutputFormat: TOutputFormat = ofDisplay): string; overload;
 function NodesToS(const Value: U8; const OutputFormat: TOutputFormat): string;
+function ExitCodeToString(const AExitCode: U4; const AOutputFormat: TOutputFormat): string;
 
 type
 	TDisplay = (diSD, diMSD, diHMSD, diHHMSD, diDHMSD);
@@ -436,7 +437,7 @@ begin
 		end;
 	end;
 
-	if Num < 0 then
+	if Negative and (S8(Num) < 0) then
 	begin
 		AddMinusStr(Result, OutputFormat);
 	end;
@@ -463,7 +464,7 @@ begin
 	Result := NToSInternal(Num, False, 0, OutputFormat, ANumericBase);
 end;
 
-function FloatToDecimalString(const Value: Extended; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
+function FloatToDecimalString(const Value: FM; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
 var
     digits: string;
     s: string;
@@ -606,7 +607,7 @@ begin
   end;
 end;
 
-function FToS(const Num: Extended; const OutputFormat: TOutputFormat = ofDisplay): string;
+function FToS(const Num: FM; const OutputFormat: TOutputFormat = ofDisplay): string;
 begin
   if OutputFormat = ofIO then
 	  Result := FloatToStr(Num, IOFormatSettings)
@@ -759,6 +760,11 @@ begin
 		Result := NToS((Value + G div 2) div G, OutputFormat) + ' G'
 	else
 		Result := NToS((Value + T div 2) div T, OutputFormat) + ' T';
+end;
+
+function ExitCodeToString(const AExitCode: U4; const AOutputFormat: TOutputFormat): string;
+begin
+  Result := NToS(AExitCode, AOutputFormat, 16) + ' h';
 end;
 
 procedure MsToHMSD(const T: S8; out GH, GM, GS, GD: U4);

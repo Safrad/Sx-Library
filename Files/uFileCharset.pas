@@ -11,15 +11,28 @@ type
 		fcBOCU1b, fcGB18030);
 
 const
-	MaxByteOrderMarkSize = 4;
-	ByteOrderMarks: array [TFileCharset] of RawByteString =
-		('', '', #$EF + #$BB + #$BF, #$FE + #$FF, #$FF + #$FE, #$00 + #$00 + #$FE + #$FF,
-		#$FF + #$FE + #$00 + #$00, #$2B + #$2F + #$76 + #$38, #$2B + #$2F + #$76 + #$39,
-		#$2B + #$2F + #$76 + #$2B, #$2B + #$2F + #$76 + #$2F, #$F7 + #$64 + #$4C,
-		#$DD + #$73 + #$66 + #$73, #$0E + #$FE + #$FF, #$FB + #$EE + #$28, #$FB + #$EE + #$28 + #$FF,
-		#$84 + #$31 + #$95 + #$33);
+  MaxByteOrderMarkSize = 4;
+  ByteOrderMarks: array [TFileCharset] of RawByteString = (
+    '',
+    '',
+    RawByteString(#$EF + #$BB + #$BF),
+    RawByteString(#$FE + #$FF),
+    RawByteString(#$FF + #$FE),
+    RawByteString(#$00 + #$00 + #$FE + #$FF),
+    RawByteString(#$FF + #$FE + #$00 + #$00),
+    RawByteString(#$2B + #$2F + #$76 + #$38),
+    RawByteString(#$2B + #$2F + #$76 + #$39),
+    RawByteString(#$2B + #$2F + #$76 + #$2B),
+    RawByteString(#$2B + #$2F + #$76 + #$2F),
+    RawByteString(#$F7 + #$64 + #$4C),
+    RawByteString(#$DD + #$73 + #$66 + #$73),
+    RawByteString(#$0E + #$FE + #$FF),
+    RawByteString(#$FB + #$EE + #$28),
+    RawByteString(#$FB + #$EE + #$28 + #$FF),
+    RawByteString(#$84 + #$31 + #$95 + #$33)
+  );
 
-  CharsetSize : array [TFileCharset] of SG = (0, 1, 1, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+  CharsetSize: array [TFileCharset] of SG = (0, 1, 1{1..4}, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1); // [Bytes / Char]
 
 function FindFileCharset(const AByteOrderMark: RawByteString): TFileCharset;
 

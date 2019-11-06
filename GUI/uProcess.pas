@@ -5,17 +5,18 @@ interface
 uses
   uTypes,
   uLongOperation,
+  uTimeSpan,
   Forms;
 
 type
-  TProcessStatus = (psIdle, psRun{ning}, psPaused, psAborted);
+  TProcessStatus = (psIdle, psRun, psPaused, psAborted);
 
   TProcess = class
   private
     FProcessStatus: TProcessStatus;
     FForm: TForm;
-    FOneTick: U8;
-    StartTime, PauseTime, LastInterruptTime: U8;
+    FOneTick: TTimeSpan;
+    StartTime, LastInterruptTime: U8;
     FValue: S8;
     FMaximalValue: S8;
     FLongOperation: TLongOperation;
@@ -34,7 +35,6 @@ type
     procedure Done;
     procedure Pause;
     procedure Abort;
-    function Aborted: BG;
     function GetTime: U8;
     function Interrupt: BG;
     procedure ResetTime;
@@ -94,25 +94,6 @@ begin
   end;
 end;
 
-function TProcess.Aborted: BG;
-begin
-  if FProcessStatus = psAborted then
-  begin
-    Result := True;
-    Exit;
-  end;
-
-  Application.ProcessMessages;
-  PauseTime := MainTimer.Value.Ticks;
-  while FProcessStatus = psPaused do
-  begin
-    Sleep(LoopSleepTime);
-    Application.ProcessMessages;
-  end;
-  Inc(StartTime, MainTimer.IntervalFrom(PauseTime));
-  Result := ProcessStatus <> psRun;
-end;
-
 function TProcess.StatusToStr: string;
 begin
   case FProcessStatus of
@@ -163,19 +144,19 @@ begin
   FValue := -1;
 
   FForm := Form;
-  FOneTick := RoundDivU8(PerformanceFrequency, 1000 div LoopSleepTime);
+  FOneTick.Milliseconds := LoopSleepTime;
   if Assigned(FForm) then
     FForm.Caption := StatusToCaption;
 end;
 
 function TProcess.GetTime: U8;
 begin
-  Result := IntervalFrom(StartTime);
+  Result := MainTimer.IntervalFrom(StartTime);
 end;
 
 function TProcess.Interrupt: BG;
 begin
-  if (MainTimer.IntervalFrom(LastInterruptTime) > FOneTick) then
+  if (MainTimer.IntervalFrom(LastInterruptTime) > FOneTick.Ticks) then
   begin
     Result := True;
     LastInterruptTime := MainTimer.Value.Ticks;
@@ -186,7 +167,7 @@ end;
 
 procedure TProcess.ResetTime;
 begin
-  StartTime := PerformanceCounter;
+  StartTime := MainTimer.Value.Ticks;
 end;
 
 procedure TProcess.SetMaximalValue(const Value: S8);
@@ -221,15 +202,10 @@ begin
 end;
 
 initialization
-{$IFNDEF NoInitialization}
-{$ENDIF NoInitialization}
-
-
 
 finalization
 {$IFNDEF NoFinalization}
   FinalizeTaskbarAPI;
 {$ENDIF NoFinalization}
-
 end.
 

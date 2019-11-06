@@ -82,7 +82,7 @@ begin
 	FPlaying := False;
   TestFileReadable(FileName);
 
-  FillChar(OpenParm, SizeOf(TMCI_Open_Parms), 0);
+  OpenParm := Default(TMCI_Open_Parms);
 
   OpenParm.dwCallback := 0;
   OpenParm.lpstrDeviceType := 'WaveAudio';

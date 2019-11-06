@@ -43,13 +43,13 @@ uses
 type
   TGUIApplication = class(TUIApplication)
   private
-    FAllowMultipleInstance: TSwitchArgument;
     FMinimizeToTrayIcon: BG;
     FUseCommonMenu: BG;
     procedure RWCommon(const Save: BG);
     procedure SetMinimizeToTrayIcon(const Value: BG);
     procedure SetUseCommonMenu(const Value: BG);
   protected
+    FAllowMultipleInstance: TSwitchArgument;
     procedure AddArguments; override;
     procedure OnRun; override;
     procedure Initialize; override;
@@ -84,7 +84,8 @@ uses
   uCustomArgument,
   uPictureFactory,
   uCommonOutput,
-  uGUIOutputInfo;
+  uGUIOutputInfo,
+  uLog;
 
 { TGUIApplication }
 
@@ -108,7 +109,7 @@ begin
 
 	if Menu <> nil then
 	begin
-		CommonFileMenu(Menu);
+		TCommonMenu.CreateItems(Menu);
 		MenuSet(Menu);
     PanelTool := FindPanelTool(AForm);
     if PanelTool <> nil then
@@ -118,8 +119,14 @@ end;
 
 procedure TGUIApplication.CreateForm(InstanceClass: TComponentClass; var Reference);
 begin
-  if Initialized then
-    Application.CreateForm(InstanceClass, Reference);
+  Application.CreateForm(InstanceClass, Reference);
+  if FUseCommonMenu then
+  begin
+    Assert(Application.MainForm <> nil);
+//      Assert(InstanceClass = Application.MainForm);
+    CommonForm({InstanceClass as TForm}Application.MainForm);
+    FUseCommonMenu := False;
+  end;
 end;
 
 destructor TGUIApplication.Destroy;
@@ -199,7 +206,12 @@ begin
   PictureFactory.Path := GraphDir;
 
   if not uMultiIns.InitInstance(FAllowMultipleInstance.Value) then
+  begin
+    if LogDebug then
+      MainLog.Add('Another instance found, aborting start.', mlDebug);
+
     raise EAbort.Create('Another instance found.');
+  end;
 
   Application.Initialize;
 	Application.Title := GetProjectInfo(piProductName);
@@ -225,7 +237,7 @@ begin
   begin
     if FMinimizeToTrayIcon then
     begin
-      Application.ShowMainForm := False
+      Application.ShowMainForm := False;
     end
     else
     begin
@@ -233,9 +245,6 @@ begin
         Application.MainForm.WindowState := wsMinimized;
     end;
   end;
-
-  if FUseCommonMenu then
-    CommonForm(Application.MainForm);
 
 	Application.Run; // Blocking
 end;

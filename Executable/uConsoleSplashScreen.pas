@@ -25,6 +25,7 @@ implementation
 uses
   uConsole,
   uConsoleColor,
+  uMsg,
   uProjectInfo,
   uStrings;
 
@@ -34,7 +35,7 @@ procedure TConsoleSplashScreen.AddMessage(const AMessage: string);
 begin
   inherited;
 
-  TConsole.WriteLine(AMessage);
+  Information(AMessage);
 end;
 
 constructor TConsoleSplashScreen.Create;

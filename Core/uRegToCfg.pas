@@ -24,9 +24,11 @@ procedure BplToReg(const Lines: TArrayOfString);
 implementation
 
 uses
+  Classes,
+
 	uMath, uMsg,
   uLog,
-	Classes;
+  uFileCharset;
 
 function GetDelphiLibraryPath(const RegPath: string; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
 begin

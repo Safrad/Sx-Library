@@ -4,10 +4,7 @@ interface
 
 uses
 	uTypes,
-	Windows, SysUtils, Messages;
-
-var
-	MessageId: UINT;
+	SysUtils;
 
 {
 	Return false if application instance already exists.
@@ -16,9 +13,17 @@ function InitInstance(const AllowMultiInstance: BG): BG;
 
 implementation
 
-uses uMsg, uStrings, uFiles, Forms, uDForm;
+uses
+  Winapi.Windows,
+  Forms,
+
+  uMsg,
+  uStrings,
+  uFiles,
+  uUIApplication;
 
 var
+	MessageId: UINT;
 	WProc: TFNWndProc;
 	MutHandle: THandle;
 
@@ -26,14 +31,10 @@ function NewWndProc(Handle: HWND; Msg: UINT; wParam: WPARAM; lParam: LPARAM): LR
 var
 	CmdLine: string;
 begin
-	if (Msg = MessageID) then
+	if Msg = MessageID then
 	begin
 		Result := 0;
-		if IsIconic(Handle) = False then
-		begin
-      if Assigned(Application) and Application.ShowMainForm then
-  			ActivateForm(Application.MainForm);
-		end;
+    TUIApplication.Activate;
 
 		SetLength(CmdLine, MAX_PATH);
 		SetLength(CmdLine, GlobalGetAtomName(wParam, PChar(CmdLine), MAX_PATH));

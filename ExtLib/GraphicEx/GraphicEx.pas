@@ -1696,8 +1696,8 @@ procedure SwapLong(P: PInteger; Count: Cardinal); overload;
 var i: Integer;
 begin
   for i := Count-1 downto 0 do begin
-    P^ := ((P^ and $FF000000) shr 24) or ((P^ and $00FF0000) shr 8) or
-          ((P^ and $0000FF00) shl 8) or  ((P^ and $000000FF) shl 24);
+    P^ := Integer(((Cardinal(P^) and $FF000000) shr 24) or ((Cardinal(P^) and $00FF0000) shr 8) or
+          ((Cardinal(P^) and $0000FF00) shl 8) or  ((Cardinal(P^) and $000000FF) shl 24));
     inc(P);
   end;
 {$ELSE}
@@ -1733,17 +1733,8 @@ end;
 //----------------------------------------------------------------------------------------------------------------------
 
 function SwapLong(Value: Integer): Integer; overload;
-
-// Swaps high and low bytes of the given 32 bit value.
-
-{$IFDEF ResortToPurePascal}
 begin
-  Result := ((Value and $FF000000) shr 24) or ((Value and $00FF0000) shr 8) or
-            ((Value and $0000FF00) shl 8) or ((Value and $000000FF) shl 24);
-{$ELSE}
-asm
-        BSWAP   EAX
-{$ENDIF}
+  Result := Integer(SwapLong(Cardinal(Value)));
 end;
 
 //----------------------------------------------------------------------------------------------------------------------

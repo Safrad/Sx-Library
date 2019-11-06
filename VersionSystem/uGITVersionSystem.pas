@@ -32,7 +32,7 @@ uses
   uFiles,
   uStrings,
   uChar,
-  uExternalApplication;
+  uPipedExternalApplication;
 
 { TGITVersionSystem }
 
@@ -121,19 +121,25 @@ function TGITVersionSystem.GITExecute(const AParameters: string): string;
 const
   GITExecutable = 'git.exe';
 var
-  ExternalApplication: TExternalApplication;
+  ExternalApplication: TPipedExternalApplication;
 begin
   inherited;
 
-  ExternalApplication := TExternalApplication.Create;
+  ExternalApplication := TPipedExternalApplication.Create;
   try
     ExternalApplication.FileName := GITExecutable;
     ExternalApplication.Parameters := AParameters;
     ExternalApplication.CurrentDirectory := RootDirectory;
-    ExternalApplication.ExecuteWithOutputText;
+    ExternalApplication.RequireOutputText := True;
+
+    ExternalApplication.Execute;
     ExternalApplication.CheckErrorCode;
+
+    ExternalApplication.WaitForTimeOut.Minutes := 1;
+    ExternalApplication.WaitFor;
     ExternalApplication.CheckExitCode;
-    Result := ExternalApplication.ProcessOutput.OutputText;
+
+    Result := ExternalApplication.OutputText;
   finally
     ExternalApplication.Free;
   end;

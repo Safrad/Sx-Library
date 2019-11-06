@@ -16,6 +16,9 @@ type
 
 implementation
 
+uses
+  Classes;
+
 function ArrayOfSGToIntegerList(const APermutation: TArrayOfSG): TIntegerList;
 var
   ol: TIntegerList;
@@ -28,7 +31,6 @@ begin
   end;
   Result := ol;
 end;
-
 
 { TPermutationList }
 

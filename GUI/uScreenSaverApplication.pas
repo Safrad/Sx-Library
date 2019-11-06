@@ -25,7 +25,6 @@ type
     procedure SetPassword;
     procedure Install;
     procedure Uninstall;
-    function WaitWindowVisible(const AParamHandle: THandle): BG;
     procedure TryPreview(const AParamHandle: THandle);
   protected
     procedure AddArguments; override;
@@ -58,6 +57,11 @@ uses
 procedure TScreenSaverApplication.AddArguments;
 begin
   inherited;
+
+  // "Settings" or "Preview" is called before "Small preview" application instance is finished
+  // 2 instances are required
+  FAllowMultipleInstance.DefaultValue := True;
+  FAllowMultipleInstance.Value := True;
 
   FStartArgument := TSwitchArgument.Create;
   FStartArgument.Shortcut := 's';
@@ -130,38 +134,6 @@ begin
     Information(GetProjectInfo(piProductName) + CharSpace + Translate('successfully installed.'));
 end;
 
-function TScreenSaverApplication.WaitWindowVisible(const AParamHandle: THandle): BG;
-var
-  Stopwatch: TStopwatch;
-begin
-  Stopwatch := TStopwatch.Create;
-  try
-    Stopwatch.Start;
-    while True do
-    begin
-      Application.ProcessMessages; // Require for IsWindowVisible
-      if IsWindowVisible(AParamHandle) then
-      begin
-        MainLog.Add('Window is visible.', mlDebug);
-        Result := True;
-        Exit;
-      end;
-      Sleep(LoopSleepTime);
-      if MainLog.IsLoggerFor(mlWarning) then
-        MainLog.Add('Window is not visible, waiting.', mlDebug);
-      if Stopwatch.Elapsed.Seconds > 1 then
-      begin
-        if MainLog.IsLoggerFor(mlWarning) then
-          MainLog.Add('Time out, window is not visible.', mlWarning);
-        Result := False;
-        Exit;
-      end;
-    end;
-  finally
-    Stopwatch.Free;
-  end;
-end;
-
 procedure TScreenSaverApplication.OnRun;
 begin
   inherited;
@@ -211,10 +183,11 @@ end;
 
 procedure TScreenSaverApplication.TryPreview(const AParamHandle: THandle);
 begin
-  MainLog.LogEnter('TryPreview');
-  if WaitWindowVisible(AParamHandle) then
-    FillPreview(AParamHandle);
-  MainLog.LogLeave('TryPreview');
+  if LogDebug then
+    MainLog.LogEnter('TryPreview');
+  FillPreview(AParamHandle);
+  if LogDebug then
+    MainLog.LogLeave('TryPreview');
 end;
 
 procedure TScreenSaverApplication.Uninstall;

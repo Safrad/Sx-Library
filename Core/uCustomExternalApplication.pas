@@ -30,6 +30,7 @@ type
     procedure SetStartupWindowState(const Value: TStartupWindowState);
     procedure SetAllowOnlyOneInstance(const Value: BG);
     procedure SetKeepRunning(const Value: BG);
+    function GetProcessId: DWORD;
   protected
     // Input
     FFileName: TFileName;
@@ -43,6 +44,8 @@ type
     FErrorCode: U4;
 
     function GetExitCode: TExitCode;
+    procedure CloseAndResetHandle;
+    procedure InternalTerminateProcessTree(const AParentProcessId: U4; const AExitCode: UINT);
   public
     constructor Create;
     destructor Destroy; override;
@@ -57,7 +60,9 @@ type
 
     // Process
     procedure Execute; virtual;
-    procedure Terminate(const AExitCode: UINT = DBG_TERMINATE_PROCESS);
+    procedure Terminate(const AExitCode: UINT = DBG_TERMINATE_PROCESS); virtual;
+    procedure TerminateProcessTree(const AExitCode: UINT = DBG_TERMINATE_PROCESS);
+    procedure Close; virtual;
 
     // raise Exception
     procedure CheckErrorCode;
@@ -69,6 +74,7 @@ type
     procedure CheckExitCode;
 
     // Output
+    property ProcessId: DWORD read GetProcessId;
     property ExitCode: TExitCode read GetExitCode;
     property ErrorCode: U4 read FErrorCode;
     property Handle: THandle read FHandle;
@@ -83,18 +89,14 @@ uses
 
   uMsg,
   uFiles,
+  uProcessInfos,
   uEExternalApplication,
   uEIOException,
+  uOutputFormat,
   uLog,
   uMainTimer;
 
 { TCustomExternalApplication }
-
-procedure TCustomExternalApplication.ShowErrorCode;
-begin
-  if FErrorCode <> 0 then
-    IOError(FFileName, FErrorCode);
-end;
 
 procedure TCustomExternalApplication.CheckErrorCode;
 begin
@@ -111,12 +113,19 @@ begin
       if GetExitCode = STILL_ACTIVE then
       begin
         if LogDebug then
-          MainLog.Add('Terminating ' + FFileName + ', ExitCode: ' + IntToStr(AExitCode), mlDebug);
-        TerminateProcess(FHandle, AExitCode);
+          MainLog.Add('Terminating ' + FFileName + ', ExitCode: ' + ExitCodeToString(AExitCode, ofIO), mlDebug);
+
+        if not TerminateProcess(FHandle, AExitCode) then
+          RaiseLastOSError;
         Assert(GetExitCode <> STILL_ACTIVE);
       end;
     end;
   end;
+end;
+
+procedure TCustomExternalApplication.TerminateProcessTree(const AExitCode: UINT);
+begin
+  InternalTerminateProcessTree(GetProcessId, AExitCode);
 end;
 
 procedure TCustomExternalApplication.UpdateProcessMemoryInfo;
@@ -130,7 +139,7 @@ begin
   end
   else if MainTimer.IntervalFrom(FUpdateProcessMemoryInfoTime).Milliseconds >= 1000 then
   begin
-    FillChar(ProcessMemoryCounters, SizeOf(ProcessMemoryCounters), 0);
+    ProcessMemoryCounters := Default(_PROCESS_MEMORY_COUNTERS);
     ProcessMemoryCounters.cb := SizeOf(ProcessMemoryCounters);
     if not GetProcessMemoryInfo(FHandle, @ProcessMemoryCounters, ProcessMemoryCounters.cb) then
       RaiseLastOSError;
@@ -152,6 +161,37 @@ begin
   end;
 end;
 
+function TerminateAppEnum(Ahwnd: HWND; AParam: LPARAM ): BOOL; stdcall;
+const
+  WM_CLOSE = $10;
+  WM_QUIT = $12;
+var
+  dwID: DWORD;
+begin
+  dwID := 0;
+  GetWindowThreadProcessId(Ahwnd, dwID) ;
+
+  if dwID = DWORD(AParam) then
+  begin
+    PostMessage(Ahwnd, WM_CLOSE, 0, 0); // GUI and some Console
+    PostMessage(Ahwnd, WM_QUIT, 0, 0); // GUI
+    Result := False; // Stop call TerminateAppEnum
+  end
+  else
+    Result := True; // Call TerminateAppEnum again
+end;
+
+procedure TCustomExternalApplication.Close;
+begin
+  EnumWindows(@TerminateAppEnum, LPARAM(ProcessId));
+end;
+
+procedure TCustomExternalApplication.CloseAndResetHandle;
+begin
+  CloseHandle(FHandle);
+  FHandle := INVALID_HANDLE_VALUE;
+end;
+
 constructor TCustomExternalApplication.Create;
 begin
   inherited;
@@ -166,8 +206,7 @@ destructor TCustomExternalApplication.Destroy;
 begin
   try
     Terminate;
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
+    CloseAndResetHandle;
   finally
     inherited;
   end;
@@ -175,8 +214,12 @@ end;
 
 procedure TCustomExternalApplication.Execute;
 begin
-  if FAllowOnlyOneInstance then
-    Terminate;
+  if FHandle <> INVALID_HANDLE_VALUE then
+  begin
+    if FAllowOnlyOneInstance then
+      Terminate;
+    CloseAndResetHandle;
+  end;
 
   if FFileName = '' then
     raise EArgumentException.Create('File name is empty.');
@@ -200,6 +243,38 @@ function TCustomExternalApplication.GetExitCode: TExitCode;
 begin
   Assert(FHandle <> INVALID_HANDLE_VALUE);
   GetExitCodeProcess(FHandle, Result);
+end;
+
+function TCustomExternalApplication.GetProcessId: DWORD;
+begin
+  Assert(FHandle <> INVALID_HANDLE_VALUE);
+  Result := Winapi.Windows.GetProcessId(FHandle);
+end;
+
+procedure TCustomExternalApplication.InternalTerminateProcessTree(const AParentProcessId: U4; const AExitCode: UINT);
+var
+  ProcessInfo: TProcessInfoItem;
+  ChildList: TProcessInfoList;
+  Handle: THandle;
+begin
+  ChildList := ProcessInfos.CreateChildrenOneLevelList(AParentProcessId);
+  try
+    // Terminate parent first, otherwise parent can recreate child!
+    Handle := OpenProcess(PROCESS_ALL_ACCESS, False, AParentProcessId);
+    try
+      TerminateProcess(Handle, AExitCode);
+    finally
+      CloseHandle(Handle);
+    end;
+
+    for ProcessInfo in ChildList do
+    begin
+      Assert(ProcessInfo.ParentProcessId = AParentProcessId);
+      InternalTerminateProcessTree(ProcessInfo.ProcessId, AExitCode);
+    end;
+  finally
+    ChildList.Free;
+  end;
 end;
 
 procedure TCustomExternalApplication.SetAllowOnlyOneInstance(const Value: BG);
@@ -230,6 +305,12 @@ end;
 procedure TCustomExternalApplication.SetStartupWindowState(const Value: TStartupWindowState);
 begin
   FStartupWindowState := Value;
+end;
+
+procedure TCustomExternalApplication.ShowErrorCode;
+begin
+  if FErrorCode <> 0 then
+    IOError(FFileName, FErrorCode);
 end;
 
 end.

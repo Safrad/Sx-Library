@@ -49,7 +49,7 @@ var
 begin
   DivideSpace := TDivideSpace.Create;
   try
-    FillChar(DivideSpaceOptions, SizeOf(DivideSpaceOptions), 0);
+    DivideSpaceOptions := Default(TDivideSpaceOptions);
     DivideSpaceOptions.Horizontal.Divided := True;
     StartExpectingException(EArgumentException);
     DivideSpace.Divide2D(ExampleRect, DivideSpaceOptions);

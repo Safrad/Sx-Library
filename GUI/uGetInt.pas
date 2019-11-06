@@ -238,7 +238,10 @@ begin
   else if TrackBar.Position = TrackBar.Max then
     FNowVal := FMaxVal
   else
-  	FNowVal := TrackBar.Position * FTrackBarMultiplier + FMinVal;
+  begin
+  	FNowVal := TrackBar.Position;
+    FNowVal := FNowVal * FTrackBarMultiplier + FMinVal;
+  end;
 	InitButtons;
 	InitEdit;
 	ChangeInt;

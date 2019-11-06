@@ -30,6 +30,7 @@ procedure TFileTest.TestReadWriteLine;
 const
 	Line1 = 'a è Pøíliš luouèkı kùò úpìl ïábelské ódy';
 	Line2 = 'a' {$IFDEF UNICODE} + #$03A9 {$ENDIF};
+	Line2a = 'a' {$IFDEF UNICODE} + '?' {$ENDIF};
 var
 	fc: TFileCharset;
 	F: TFile;
@@ -73,7 +74,7 @@ begin
 					if fc <> fcAnsi then
 						Check(Line = Line2)
 					else
-						Check(Line = AnsiString(Line2));
+						Check(Line = Line2a);
 					F.Close;
 				end;
 			finally

@@ -7,6 +7,7 @@ interface
 
 uses
   Types,
+  Math,
 	OpenGL12, {$ifdef GDIPlus}IGDIPlus,{$endif}
 	uTypes, uMath, uColor, uDrawStyle, uBlur,
 	Classes, Winapi.Windows, Vcl.Graphics, SysUtils;
@@ -401,8 +402,8 @@ implementation
 uses
 	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
-  Math, Vcl.ClipBrd,
-	uGraph, uMsg, uScreen, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
+  Vcl.ClipBrd,
+	uGraph, uMsg, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
 function SameColor(const P: PPixel; const C: TRGBA): BG; inline;
@@ -1689,16 +1690,19 @@ procedure TDBitmap.SwapRB;
 var
 	PD: PPixel;
 	cy: TCoor;
-	ByteXD: UG;
 {$ifdef CPUX64}
 	cx: TCoor;
   R: U1;
+{$else}
+	ByteXD: UG;
 {$endif}
 begin
 	if FData = nil then Exit;
 
+{$ifndef CPUX64}
 	ByteXD := FByteX;
 	PD := Pointer(TNative(FData) - UG(GraphMinY) * ByteXD);
+{$endif}
 	for cy := GraphMinY to GraphMaxY do
 	begin
 {$ifdef CPUX64}
@@ -1739,13 +1743,16 @@ procedure TDBitmap.Neg;
 var
 	PD: PPixel;
 	cy: TCoor;
-	ByteXD: UG;
 {$ifdef CPUX64}
 	cx: TCoor;
+{$else}
+	ByteXD: UG;
 {$endif}
 begin
+{$ifndef CPUX64}
 	ByteXD := FByteX;
 	PD := Pointer(TNative(FData) - UG(GraphMinY) * ByteXD);
+{$endif}
 	for cy := GraphMinY to GraphMaxY do
 	begin
 {$ifdef CPUX64}
@@ -1811,16 +1818,7 @@ begin
 
 		BmpColor := TBitmap.Create;
 		try
-			case NowScreenMode.Bits of
-			1: BmpColor.PixelFormat := pf1bit;
-			4: BmpColor.PixelFormat := pf4bit;
-			8: BmpColor.PixelFormat := pf8bit;
-			15: BmpColor.PixelFormat := pf15bit;
-			16: BmpColor.PixelFormat := pf16bit;
-			24: BmpColor.PixelFormat := pf24bit;
-			else
-			BmpColor.PixelFormat := pf32bit;
-			end;
+      BmpColor.PixelFormat := pf32bit;
 			BmpColor.Width := Wid;
 			BmpColor.Height := Hei;
 			BmpColor.Canvas.Draw(0, 0, BmpC);
@@ -1850,9 +1848,11 @@ begin
 
 				Result := TIcon.Create;
 			//	Result.Handle := CreateIconIndirect(IconInfo); // Do not support more that 4 bits!
-				Result.Handle := Winapi.Windows.CreateIcon(HInstance, Wid, Hei, 1, NowScreenMode.Bits,
+				Result.Handle := Winapi.Windows.CreateIcon(HInstance, Wid, Hei, 1, 32,
 					BmpMask,
 					BmpColor.ScanLine[BmpColor.Height - 1]);
+        if Result.Handle = 0 then
+          RaiseLastOSError;
 			finally
 				FreeMem(BmpMask);
 			end;
@@ -2638,23 +2638,18 @@ end;
 
 function TDBitmap.BmpColorIn(C: TColor): SG;
 var
+	CR: TRGBA;
 	PD: PPixel;
+{$ifdef CPUX64}
+  cx, cy: TCoor;
+{$else}
 	UseXD: UG;
 	ByteXD: UG;
 	EndPD: SG;
-	CR: TRGBA;
-{$ifdef CPUX64}
-  cx, cy: TCoor;
 {$endif}
 begin
 	Result := 0;
 	CR := ColorToRGB(C);
-
-	PD := Data;
-	UseXD := BPP * FWidth;
-	ByteXD := ByteX;
-
-	EndPD := SG(PD) - SG(FByteX * FHeight);
 
 {$ifdef CPUX64}
 	for cy := GraphMinY to GraphMaxY do
@@ -2668,6 +2663,10 @@ begin
     end;
   end;
 {$else}
+	PD := Data;
+	UseXD := BPP * FWidth;
+	ByteXD := ByteX;
+	EndPD := SG(PD) - SG(FByteX * FHeight);
 	asm
 	pushad
 	mov edi, PD
@@ -3165,15 +3164,16 @@ procedure TDBitmap.Bar(
 	XD1, YD1, XD2, YD2: TCoor; C: TColor; const Effect: TEffect);
 var
 	PD: PPixel;
-	UseXS, ByteXD: UG;
 
-	HX: UG;
-	EndPD: UG;
-
-	WordR, WordG, WordB: U2;
 	BackColorR, CR: TRGBA;
 {$ifdef CPUX64}
   cx, cy: TCoor;
+{$else}
+	WordR, WordG, WordB: U2;
+	UseXS: UG;
+  ByteXD: UG;
+	HX: UG;
+	EndPD: UG;
 {$endif}
 begin
 	if (Effect = ef00) or (C = clNone) or (Data = nil) then Exit;
@@ -3181,12 +3181,13 @@ begin
 
 	if InternalCutWindow(XD1, YD1, XD2, YD2) then Exit;
 
+{$ifndef CPUX64}
 	ByteXD := ByteX;
-
 	HX := XD2 - XD1 + 1;
 	{$ifdef BPP4}UseXS := HX shl 2{$else}UseXS := HX + HX + HX{$endif};
 	PD := GetPixelAddr(XD1, YD1);
 	EndPD := TNative(PD) - UG(ByteXD * UG(YD2 - YD1 + 1));
+{$endif}
 
 	if Transparent = False then
 	begin
@@ -4125,9 +4126,6 @@ begin
 	else
 	begin
 		BackColorR := ColorToRGBStack(TransparentColor);
-		WordB := CR.R;
-		WordG := CR.G;
-		WordR := CR.B;
 {$ifdef CPUX64}
     for cy := YD1 to YD2 do
     begin
@@ -4142,6 +4140,9 @@ begin
       end;
     end;
 {$else}
+		WordB := CR.R;
+		WordG := CR.G;
+		WordR := CR.B;
 		asm
 		pushad
 		mov edi, PD
@@ -5588,17 +5589,19 @@ procedure TDBitmap.BarBrg(
 var
 	PD: PPixel;
 	cy: TCoor;
-	UseXS: TCoor;
-	HX: TCoor;
 {$ifdef CPUX64}
   cx: TCoor;
 {$else}
+	UseXS: TCoor;
+	HX: TCoor;
   ByteXD: TCoor;
 {$endif}
 begin
+{$ifndef CPUX64}
 	HX := X2 - X1 + 1;
 	{$ifdef BPP4}UseXS := HX shl 2{$else}UseXS := HX + HX + HX{$endif};
 	PD := GetPixelAddr(X1, Y2);
+{$endif}
 	cy := Y1;
 	repeat
 {$ifdef CPUX64}
@@ -5660,15 +5663,17 @@ procedure TDBitmap.Bmp(
 	const Effect: TEffect);
 var
 	PS, PD: PPixel;
-	ByteXS, ByteXD: UG;
-	UseXSD: UG;
 
 	HX: SG;
-	EndPD: SG;
 	CR: TRGBA;
 	C: TColor;
 {$ifdef CPUX64}
   cx, cy: TCoor;
+{$else}
+	UseXSD: UG;
+	ByteXS: UG;
+  ByteXD: UG;
+	EndPD: SG;
 {$endif}
 begin
 	if (Effect = ef00) or (BmpS = nil) then Exit;
@@ -5733,16 +5738,15 @@ begin
 		ByteXD := ByteX;}
 
 
+{$ifndef CPUX64}
 	ByteXD := ByteX;
 	ByteXS := BmpS.ByteX;
-
 	HX := XS2 - XS1 + 1;
 	UseXSD := {$ifdef BPP4}HX shl 2{$else}HX + HX + HX{$endif};
-
-	PD := GetPixelAddr(XD1, YD1);
 	PS := BmpS.GetPixelAddr(XS1, YS1);
-
+	PD := GetPixelAddr(XD1, YD1);
 	EndPD := TNative(PD) - UG(ByteXD * UG(YS2 + 1 - YS1));
+{$endif}
 
 	if BmpS.Transparent = False then C := clNone else C := BmpS.TransparentColor;
 
@@ -7881,7 +7885,6 @@ begin
 
 	SetLength(CColorCount, 0);
 	SetLength(CColorCount, ColorCount);
-//	FillChar(CColorCount[0], SizeOf(CColorCount[0]) * ColorMax, 0);
 
 	C2 := Data;
 	for cy := 0 to FHeight - 1 do
@@ -8030,10 +8033,11 @@ var
 	PD: PPixel;
 	S1, S2, D1, D2: TRGBA;
 	cy: TCoor;
-	BmpDByteX: UG;
-	ByteXD: UG;
 {$ifdef CPUX64}
   cx: TCoor;
+{$else}
+	BmpDByteX: UG;
+	ByteXD: UG;
 {$endif}
 begin
 	S1 := ColorToRGB(CS1);
@@ -8130,14 +8134,17 @@ var
 	PD: PPixel;
 	CR: TRGBA;
 	cy: TCoor;
-	ByteXD: UG;
 {$ifdef CPUX64}
 	cx: TCoor;
+{$else}
+	ByteXD: UG;
 {$endif}
 begin
 	CR := ColorToRGB(C);
+{$ifndef CPUX64}
 	ByteXD := FByteX;
 	PD := Pointer(TNative(FData) - UG(GraphMinY) * ByteXD);
+{$endif}
 	for cy := GraphMinY to GraphMaxY do
 	begin
 {$ifdef CPUX64}
@@ -9389,7 +9396,10 @@ var
 	TmpYSToXD, TmpYSToYD: SG;
 
 	PD, PS, PDataS: PPixel;
-	ByteXD, ByteXS: UG;
+{$ifndef CPUX64}
+	ByteXD: UG;
+{$endif}
+  ByteXS: UG;
 
 	BmpSWidth, BmpSHeight: SG;
 	TransparentColor: TRGBA;
@@ -9425,9 +9435,11 @@ begin
 	DirYSToXD := DirYSToXD and (AngleCount - 1);
 	DirYSToYD := DirYSToYD and (AngleCount - 1);
 
+{$ifndef CPUX64}
 	PD := BmpD.Data;
-	PDataS := BmpS.Data;
 	ByteXD := BmpD.ByteX;
+{$endif}
+	PDataS := BmpS.Data;
 	ByteXS := BmpS.ByteX;
 
 	BmpSWidth := XS2 - XS1;

@@ -33,7 +33,7 @@ implementation
 
 {$R *.DFM}
 uses
-	uOutputFormat, uFile, uDIniFile, uDBitmap, uGraph, uScreen, uGetStr, uColor;
+	uOutputFormat, uFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor;
 
 var
 	fScores: TfScores;
@@ -58,7 +58,7 @@ var
 begin
 	if not FileExists(FileName) then
 	begin
-		FillChar(Highs, SizeOf(Highs), 0);
+		ClearMemory(Highs, SizeOf(Highs));
 		Exit;
 	end;
 

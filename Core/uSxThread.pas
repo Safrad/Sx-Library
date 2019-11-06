@@ -21,22 +21,30 @@ type
   public
     constructor Create;
 
+    {$IFDEF MSWINDOWS}
+    function WaitFor: LongWord; reintroduce; virtual;
+    {$ENDIF}
     procedure Terminate; reintroduce; virtual;
     function TerminateAndWaitFor: LongWord;
 
-    {$if CompilerVersion < 20}
+    {$IF Defined(MSWINDOWS) AND (CompilerVersion < 20)}
     class procedure NameThreadForDebugging(const AName: AnsiString; const AThreadId: LongWord);
+    {$IFEND}
+
+    {$IF CompilerVersion < 20}
     procedure Start;
-    {$ifend}
+    {$IFEND}
     property Name: string read FName write SetName;
   end;
 
 implementation
 
-{$if CompilerVersion < 20}
+{$IFDEF MSWINDOWS}
 uses
-  Windows;
-{$ifend}
+  Winapi.Windows;
+{$ENDIF}
+
+
 
 { TSxThread }
 
@@ -44,7 +52,7 @@ procedure TSxThread.Execute;
 begin
   inherited;
 
-  {$if CompilerVersion < 20}
+  {$IF Defined(MSWINDOWS) AND (CompilerVersion < 20)}
   if FName <> '' then
     NameThreadForDebugging(FName, ThreadID);
   {$ifend}
@@ -61,7 +69,7 @@ begin
   end;
 end;
 
-{$if CompilerVersion < 20}
+{$IF Defined(MSWINDOWS) AND (CompilerVersion < 20)}
 class procedure TSxThread.NameThreadForDebugging(const AName: AnsiString; const AThreadId: LongWord);
 type
   TThreadNameInfo = record
@@ -84,12 +92,14 @@ begin
     // No Code
   end;
 end;
+{$IFEND}
 
+{$IF CompilerVersion < 20}
 procedure TSxThread.Start;
 begin
   Resume;
 end;
-{$ifend}
+{$IFEND}
 
 constructor TSxThread.Create;
 begin
@@ -109,6 +119,15 @@ begin
   Terminate;
   Result := WaitFor;
 end;
+
+{$IFDEF MSWINDOWS}
+function TSxThread.WaitFor: LongWord;
+begin
+  // Delphi WaitFor called from main thread consumes CPU cycles
+  WaitForSingleObject(Handle, INFINITE);
+  GetExitCodeThread(Handle, Result);
+end;
+{$ENDIF}
 
 initialization
 {$IFNDEF NoInitialization}

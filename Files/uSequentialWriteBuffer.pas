@@ -87,7 +87,7 @@ begin
 
     // Transfer buffer data
     Move(Data^, PByte(PByte(FAlignedMemory.Data) + FBufferAllocation.Used)^, WriteSize);
-    FBufferAllocation.Used := FBufferAllocation.Used + WriteSize;
+    FBufferAllocation.Used := FBufferAllocation.Used + S8(WriteSize);
 
     if SaveBuf then
       Save

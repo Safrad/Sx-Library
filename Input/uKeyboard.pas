@@ -37,7 +37,7 @@ var
   i: SG;
   FNewKeyboardState: TKeyboardState;
 begin
-  FillChar(FNewKeyboardState, SizeOf(FNewKeyboardState), 0);
+  FNewKeyboardState := Default(TKeyboardState);
   GetKeyboardState(FNewKeyboardState);
   for i := Low(FNewKeyboardState) to High(FNewKeyboardState) do
   begin

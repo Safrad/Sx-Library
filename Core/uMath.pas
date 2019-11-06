@@ -91,7 +91,7 @@ procedure DivModS8(const Dividend: S8; const Divisor: S4;
 	out Res, Remainder: S4); pascal;
 procedure UnsignedDivMod10(const Dividend: U4; out Result: U4; out Reminder: U4);
 function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
-function ModE(x, y: Extended): Extended;
+function ModE(x, y: FM): FM;
 
 function GetAbsoluteError(const A, B: FG): FG; overload;
 {$ifndef CPUX64}
@@ -169,6 +169,8 @@ function Range(const Min, Cur, Max: UG): UG; overload;
 function Range(const Min, Cur, Max: FG): FG; overload;
 function RangeOverflow(const Min, Cur, Max: SG): SG; overload;
 
+function IsInTheMiddle(const AValue: SG; const AMaximalValue: SG; const AMaximalWidth: SG): BG;
+
 procedure Exchange(var A, B: B1); register; overload;
 procedure Exchange(var A, B: B4); register; overload;
 procedure Exchange(var A, B: U1); register; overload;
@@ -193,7 +195,7 @@ procedure Exchange(P0, P1: Pointer; Count: UG); register; overload;
 procedure Exchange(var s0, s1: string); overload;
 procedure Exchange(var A, B: TObject); overload;
 
-function Arg(X, Y: Extended): Extended; overload;
+function Arg(X, Y: FM): FM; overload;
 
 procedure CheckBool(var Bool: ByteBool); overload;
 procedure CheckBool(var Bool: WordBool); overload;
@@ -208,6 +210,9 @@ procedure FillSinTable(Sins: PSinTable; const AngleCount, SinDiv: SG);
 
 procedure ReadMem(P: Pointer; Size: UG);
 function SameData(P0, P1: Pointer; Size: UG): BG;
+
+procedure ClearMemory(var AAddress; const ACount: UG);
+
 procedure FillMemory(var Desc; Count: UG; Value: S1); overload;
 procedure FillMemory(var Desc; Count: UG; Value: S2); overload;
 procedure FillMemory(var Desc; Count: UG; Value: S4); overload;
@@ -234,8 +239,8 @@ function BitScanReverse(AValue: U8): U4; overload;
 function CountDigits(AValue: U4): U4; overload;
 function CountDigits(AValue: U8): U4; overload;
 
-function PerformanceFrequency: S8; deprecated 'Use MainTimer';
-function PerformanceCounter: S8; deprecated 'Use MainTimer';
+function PerformanceFrequency: U8; deprecated 'Use MainTimer';
+function PerformanceCounter: U8; deprecated 'Use MainTimer';
 
 function TimeDifference(const NowTime, LastTime: U4): U4; overload;
 function TimeDifference(const NowTime, LastTime: U8): U8; overload;
@@ -676,7 +681,7 @@ begin
 	end;
 end;
 
-function ModE(x, y: Extended): Extended;
+function ModE(x, y: FM): FM;
 begin
 	Result := x - Floor(x / y) * y;
 end;
@@ -1208,6 +1213,11 @@ begin
 		Result := Min;
 end;
 
+function IsInTheMiddle(const AValue: SG; const AMaximalValue: SG; const AMaximalWidth: SG): BG;
+begin
+  Result := Abs(2 * AValue - AMaximalValue) < 2 * AMaximalWidth;
+end;
+
 procedure Exchange(var A, B: B1); register;
 {$ifndef X86ASMRTL}
 var
@@ -1530,7 +1540,7 @@ begin
 	B := T;
 end;
 
-function Arg(X, Y: Extended): Extended; // <0..2pi)
+function Arg(X, Y: FM): FM; // <0..2pi)
 begin
 {	if Abs(X) > Abs(Y) then
 	begin
@@ -1704,6 +1714,56 @@ asm
 {$endif}
 end;
 
+procedure ClearMemory(var AAddress; const ACount: UG);
+{$ifdef PUREPASCAL}
+const
+  Size = 8;
+var
+  I: NativeInt;
+  PAddress: PU8;
+  Remain: UG;
+begin
+  PAddress := PU8(@AAddress);
+  for I := SG(ACount div Size) - 1 downto 0 do
+  begin
+    PAddress^ := 0;
+    Inc(PAddress);
+  end;
+  Remain := ACount and (Size - 1); // mod Size
+  while Remain > 0 do
+  begin
+    PU1(PAddress)^ := 0;
+    Inc(PU1(PAddress));
+    Dec(Remain);
+  end;
+{$else}
+asm
+  // Optional speed up if ACount = 0
+  test ACount, ACount
+  jle @Exit
+
+  cld // Clear direction flag
+{$ifndef CPUX64}
+  push edi
+  mov edi, dword ptr AAddress {eax}
+  mov ecx, ACount {edx}
+  xor eax, eax
+{$else}
+  push rdi
+  mov rdi, qword ptr AAddress {rcx}
+  mov rcx, ACount {rdx}
+  xor rax, rax
+{$endif}
+    rep stosb
+{$ifndef CPUX64}
+  pop edi
+{$else}
+  pop rdi
+{$endif}
+  @Exit:
+{$endif}
+end;
+
 procedure FillMemory(var Desc; Count: UG; Value: U1);
 begin
   FillChar(Desc, Count, Value);
@@ -1845,81 +1905,22 @@ end;
 procedure FillU8(var Desc; Count: UG; Value: U8);
 var
   I: NativeInt;
-  V: UG;
-  PB: PUG;
-  P: PInt64;
-  Total: NativeInt;
+  P: PU8;
 begin
-  if Count >= 8 then
+  P := PU8(@Desc);
+  for I := Count - 1 downto 0 do
   begin
-    V := Value;
-    P := PInt64(@Desc);
-    Total := Count;
-
-    for I := 0 to Total - 1 do
-    begin
-      P^ := V;
-      Inc(P);
-    end;
-    PB := Pointer(P);
-    Total := Count;
-  end
-  else
-  begin
-    PB := PUG(@Desc);
-    Total := Count;
-  end;
-
-  for I := Total - 1 downto 0 do
-  begin
-    PB^ := Value;
-    Inc(PB);
+    P^ := Value;
+    Inc(P);
   end;
 end;
 
 procedure FillUG(var Desc; Count: UG; Value: UG); register;
-{$ifndef X86ASMRTL}
-var
-  I: NativeInt;
-  V: UG;
-  PB: PUG;
-  P: PUG;
-  Total: NativeInt;
 begin
-  if Count >= 8 then
-  begin
-    V := Value;
-    P := PUG(@Desc);
-    Total := Count;
-
-    for I := 0 to Total - 1 do
-    begin
-      P^ := V;
-      Inc(P);
-    end;
-    PB := Pointer(P);
-    Total := Count;
-  end
-  else
-  begin
-    PB := PUG(@Desc);
-    Total := Count;
-  end;
-
-  for I := Total - 1 downto 0 do
-  begin
-    PB^ := Value;
-    Inc(PB);
-  end;
+{$ifdef CPUX64}
+  FillU8(Desc, Count, Value);
 {$else}
-asm
-	PUSH    EDI
-	MOV     EDI,EAX
-	MOV     EAX,ECX
-	MOV     ECX,EDX
-	REP     STOSD
-@@exit:
-	POP     EDI
+  FillU4(Desc, Count, Value);
 {$endif}
 end;
 
@@ -2268,12 +2269,12 @@ begin
     Dec(Result);
 end;
 
-function PerformanceFrequency: S8;
+function PerformanceFrequency: U8;
 begin
   Result := MainTimer.Frequency;
 end;
 
-function PerformanceCounter: S8;
+function PerformanceCounter: U8;
 begin
   Result := MainTimer.Value.Ticks;
 end;

@@ -22,6 +22,8 @@ type
     procedure TestNotLoaded;
     procedure TestLoad;
     procedure TestExitCode;
+    procedure TestClose;
+    procedure TestTerminate;
   end;
 
 implementation
@@ -203,6 +205,50 @@ begin
   AExternalApplication.WaitFor;
   CheckFalse(AExternalApplication.Running);
   CheckEquals(0, AExternalApplication.ExitCode);
+end;
+
+procedure TExternalApplicationTest.TestClose;
+var
+  ExternalApplication: TExternalApplication;
+begin
+  ExternalApplication := TExternalApplication.Create;
+  try
+    SetDeaultApplication(ExternalApplication);
+    ExternalApplication.FileName := 'echo.exe';
+    ExternalApplication.Parameters := '';
+
+    ExternalApplication.Execute;
+    ExternalApplication.CheckErrorCode;
+    Sleep(100);
+    CheckTrue(ExternalApplication.Running = True);
+    ExternalApplication.Close;
+    ExternalApplication.WaitFor;
+    CheckTrue(ExternalApplication.Running = False);
+  finally
+    ExternalApplication.Free;
+  end;
+end;
+
+procedure TExternalApplicationTest.TestTerminate;
+var
+  ExternalApplication: TExternalApplication;
+begin
+  ExternalApplication := TExternalApplication.Create;
+  try
+    SetDeaultApplication(ExternalApplication);
+    ExternalApplication.FileName := 'echo.exe';
+    ExternalApplication.Parameters := '';
+
+    ExternalApplication.Execute;
+    ExternalApplication.CheckErrorCode;
+    Sleep(100);
+    CheckTrue(ExternalApplication.Running = True);
+    ExternalApplication.Terminate;
+    ExternalApplication.WaitFor;
+    CheckTrue(ExternalApplication.Running = False);
+  finally
+    ExternalApplication.Free;
+  end;
 end;
 
 initialization

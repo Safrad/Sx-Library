@@ -4,12 +4,17 @@ interface
 
 uses
   uTypes,
-  uExternalApplication,
+  uPipedExternalApplication,
   uProjectVersion,
   uVersionSystem;
 
 type
   TRevisionState = (rsDoesNotExists, rsExists, rsNotInThisCheckout, rsError);
+
+  TProcessOutput = record
+    ExitCode: U4;
+    OutputText: string;
+  end;
 
   TSVNVersionSystem = class(TVersionSystem)
   private
@@ -36,6 +41,8 @@ implementation
 
 uses
   SysUtils,
+
+  uEExternalApplication,
   uFiles,
   uStrings;
 
@@ -74,20 +81,25 @@ end;
 
 function TSVNVersionSystem.ReadVersion: string;
 var
-  ExternalApplication: TExternalApplication;
-  FileName: TFileName;
+  ExternalApplication: TPipedExternalApplication;
 begin
   inherited;
 
-  ExternalApplication := TExternalApplication.Create;
+  ExternalApplication := TPipedExternalApplication.Create;
   try
     ExternalApplication.FileName := 'svnversion.exe';
     ExternalApplication.Parameters := '-n "' + DelLastChar(RootDirectory) + '"';
     ExternalApplication.CurrentDirectory := RootDirectory{Unused};
-    ExternalApplication.ExecuteWithOutputText;
+    ExternalApplication.RequireOutputText := True;
+
+    ExternalApplication.Execute;
     ExternalApplication.CheckErrorCode;
+
+    ExternalApplication.WaitForTimeOut.Seconds := 10;
+    ExternalApplication.WaitFor;
     ExternalApplication.CheckExitCode;
-    Result := ExternalApplication.ProcessOutput.OutputText;
+
+    Result := ExternalApplication.OutputText;
   finally
     ExternalApplication.Free;
   end;
@@ -131,38 +143,35 @@ const
 
 function TSVNVersionSystem.SVNExecuteCheckExitCode(const AParameters: string): string;
 var
-  ExternalApplication: TExternalApplication;
+  ProcessOutput: TProcessOutput;
 begin
   inherited;
 
-  ExternalApplication := TExternalApplication.Create;
-  try
-    ExternalApplication.FileName := SVNExecutable;
-    ExternalApplication.Parameters := AParameters;
-    ExternalApplication.CurrentDirectory := RootDirectory;
-    ExternalApplication.ExecuteWithOutputText;
-    ExternalApplication.CheckErrorCode;
-    ExternalApplication.CheckExitCode;
-    Result := ExternalApplication.ProcessOutput.OutputText;
-  finally
-    ExternalApplication.Free;
-  end;
+  ProcessOutput := SVNExecute(AParameters);
+  if ProcessOutput.ExitCode <> 0 then
+    raise EExternalApplication.Create(AParameters, ProcessOutput.ExitCode, ProcessOutput.OutputText);
+
+  Result := ProcessOutput.OutputText;
 end;
 
 function TSVNVersionSystem.SVNExecute(const AParameters: string): TProcessOutput;
 var
-  ExternalApplication: TExternalApplication;
+  ExternalApplication: TPipedExternalApplication;
 begin
   inherited;
 
-  ExternalApplication := TExternalApplication.Create;
+  ExternalApplication := TPipedExternalApplication.Create;
   try
     ExternalApplication.FileName := SVNExecutable;
     ExternalApplication.Parameters := AParameters;
     ExternalApplication.CurrentDirectory := RootDirectory;
-    ExternalApplication.ExecuteWithOutputText;
+    ExternalApplication.RequireOutputText := True;
+
+    ExternalApplication.Execute;
     ExternalApplication.CheckErrorCode;
-    Result := ExternalApplication.ProcessOutput;
+
+    Result.ExitCode := ExternalApplication.ExitCode;
+    Result.OutputText := ExternalApplication.OutputText;
   finally
     ExternalApplication.Free;
   end;

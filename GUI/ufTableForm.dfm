@@ -29,9 +29,7 @@ object fTableForm: TfTableForm
     TabStop = False
     OnKeyDown = FormKeyDown
     OnDblClick = DViewTableDblClick
-    OnGetData = DViewTableGetData
-    ExplicitWidth = 440
-    ExplicitHeight = 394
+    OnGetDataEx = DViewTableGetDataEx
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -42,8 +40,6 @@ object fTableForm: TfTableForm
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
-    ExplicitTop = 394
-    ExplicitWidth = 440
   end
   object PopupMenu: TPopupMenu
     OnPopup = PopupMenuPopup

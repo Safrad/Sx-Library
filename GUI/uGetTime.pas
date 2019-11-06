@@ -6,7 +6,7 @@ uses
 	uTypes,
   uParserMsg,
   uTimeSpan,
-	Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
+	Winapi.Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
 	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit, uDMemo;
 
 type
@@ -316,7 +316,8 @@ end;
 procedure TfGetTime.SpinButtonHMSDChangingEx(Sender: TObject;
 	var AllowChange: Boolean; NewValue: Integer;
 	Direction: TUpDownDirection);
-var L: SG;
+var
+  L: UG;
 begin
 	L := TUpDown(Sender).Tag;
 	if Direction = updUp then

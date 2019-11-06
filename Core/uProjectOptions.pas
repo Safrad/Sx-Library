@@ -71,6 +71,7 @@ type
     SearchPaths: TSxStringList;
     Namespaces: TSxStringList; // New in Delphi XE2
     DebugSourceDirs: string; // Not in cfg
+    Inlining: string;
     UsePackages: BG;
     Packages: string;
     Namespace: string;
@@ -92,8 +93,10 @@ type
     // Version Info Keys
     ProjectInfos: TProjectInfos;
     BuildVersions: string;
+
     constructor Create;
     destructor Destroy; override;
+
     procedure RWDproj(const AFileName: TFileName; const Save: BG);
     procedure AddConditionals(const AConditionals: string);
     procedure AddSearchPaths(const ASearchPaths: string);
@@ -426,33 +429,28 @@ var
   XML: IXMLDocument;
   iNode: IXMLNode;
 begin
-  try
-    XML := TXMLDocument.Create;
-    XML.Load(AFileName);
+  XML := TXMLDocument.Create;
+  XML.Load(AFileName);
 //    XML.NodeIndentStr := XMLIndentStr;
-    try
-      XML.DocumentElement.ChildNodes.Reset;
-      iNode := XML.DocumentElement.ChildNodes.NextNode;
-      while iNode <> nil do
+  try
+    XML.DocumentElement.ChildNodes.Reset;
+    iNode := XML.DocumentElement.ChildNodes.NextNode;
+    while iNode <> nil do
+    begin
+      if (iNode.NodeName = 'Delphi.Personality') then
       begin
-        if (iNode.NodeName = 'Delphi.Personality') then
-        begin
-          ReadBorlandProject(iNode);
-        end;
-        iNode := iNode.NextSibling;
+        ReadBorlandProject(iNode);
       end;
-      iNode := nil;
-      if Save then
-      begin
-        XML.Save(AFileName, ofIndent);
-        RepairDproj(AFileName);
-      end;
-    finally
-      XML := nil; // Release XML document
+      iNode := iNode.NextSibling;
     end;
-  except
-    on E: Exception do
-      Fatal(E, Self);
+    iNode := nil;
+    if Save then
+    begin
+      XML.Save(AFileName, ofNone);
+//        RepairDproj(AFileName);
+    end;
+  finally
+    XML := nil; // Release XML document
   end;
 end;
 
@@ -465,6 +463,15 @@ begin
     '''$(Configuration)|$(Platform)'' == ''Debug|AnyCPU''');
 end;
 
+function IsReleaseCondition(const Condition: string): BG;
+var
+  ReducedCondition: string;
+begin
+  ReducedCondition := DelBESpaceF(Condition);
+  Result := (ReducedCondition = '''$(Cfg_1)''!=''''') or (ReducedCondition =
+    '''$(Configuration)|$(Platform)'' == ''Release|AnyCPU''');
+end;
+
 procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
 
   procedure AddVersionInfo(const Name: string; const Value: string);
@@ -475,11 +482,7 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     begin
       if ProjectInfoStr[p] = Name then
       begin
-        try
-          ProjectInfos[p] := Value;
-        except
-
-        end;
+        ProjectInfos[p] := Value;
         Break;
       end;
     end;
@@ -500,6 +503,18 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
       Value := ReadToChar(VersionInfo, InLineIndex, CharNull);
       AddVersionInfo(Name, Value);
     end;
+  end;
+
+  function GetVersionInfos: string;
+  var
+    i: TProjectInfoName;
+  begin
+    Result := '';
+    for i := Low(TProjectInfoName) to High(TProjectInfoName) do
+    begin
+      Result := Result + ProjectInfoStr[i] + '=' + ProjectInfos[i] + ';';
+    end;
+    Result := DelLastChar(Result);
   end;
 
   procedure ProcessNode(const Node: IXMLNode);
@@ -547,6 +562,10 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     else if Name = UpperCase('DCC_Define') then
     begin
       AddConditionals(NodeValue);
+    end
+    else if Name = UpperCase('DCC_Inlining') then
+    begin
+      Inlining := NodeValue;
     end
     else if Name = UpperCase('DCC_Namespace') then
     begin
@@ -628,7 +647,10 @@ procedure TProjectOptions.RWDproj(const AFileName: TFileName; const Save: BG);
     end
     else if Name = UpperCase('VerInfo_Keys') then
     begin
-      AddVersionInfos(NodeValue);
+      if Save then
+        Node.Text := GetVersionInfos
+      else
+        AddVersionInfos(NodeValue);
     end
     else if Name = UpperCase('VersionInfoKeys') then
     begin
@@ -690,72 +712,91 @@ begin
 //		ProjectInfos[piFileDescription] := '';
   end;
 
-  if FileExists(AFileName) then
-  begin
-    try
-      XML := TSxXMLDocument.Create;
-      XML.Load(AFileName);
+  RaiseExceptionIfFileNotExists(AFileName);
+
+  XML := TSxXMLDocument.Create;
+  XML.Load(AFileName);
 //      XML.NodeIndentStr := XMLIndentStr;
-      try
-        XML.DocumentElement.ChildNodes.Reset;
-        iNode := XML.DocumentElement.ChildNodes.NextNode;
-        while iNode <> nil do
+  try
+    XML.DocumentElement.ChildNodes.Reset;
+    iNode := XML.DocumentElement.ChildNodes.NextNode;
+    while iNode <> nil do
+    begin
+      if (iNode.NodeName = 'PropertyGroup') then
+      begin
+        Attribute := iNode.Attributes.GetNamedItem('Condition');
+        if Attribute <> nil then
         begin
-          if (iNode.NodeName = 'PropertyGroup') then
+          Name := Attribute.NodeValue;
+          if IsReleaseCondition(Name) then
           begin
-            Attribute := iNode.Attributes.GetNamedItem('Condition');
-            if Attribute <> nil then
+            cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'DCC_Inlining');
+            cNode.Text := 'auto';
+
+            iNode := iNode.NextSibling;
+            Continue;
+          end;
+          if IsDebugCondition(Name) then
+          begin
+            cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'DCC_Inlining');
+            cNode.Text := 'off';
+
+            iNode := iNode.NextSibling;
+            Continue;
+          end
+          else if Name = '''$(Base)''!=''''' then
+          begin
+            if Save then
             begin
-              Name := Attribute.NodeValue;
-              if IsDebugCondition(Name) then
-              begin
-                iNode := iNode.NextSibling;
-                Continue;
-              end
-              else if Name = '''$(Base)''!=''''' then
-              begin
-                if Save then
-                begin
-                  cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'Icon_MainIcon');
-                  cNode.Text := IconFileName;
+              cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'Icon_MainIcon');
+              cNode.Text := IconFileName;
 
-                  cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'DCC_Namespace');
-                  cNode.Text := Namespaces.DelimitedTextWithoutQuotes;
+              cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'DCC_Namespace');
+              cNode.Text := Namespaces.DelimitedTextWithoutQuotes;
 
-                  WriteWarningsToNode(iNode);
-                end;
-              end
-              else
-              begin
-                if Save then
-                begin
-                  cNode := TSxXMLDocument.FindNode(iNode, 'VerInfo_Keys');
-                  if cNode <> nil then
-                    iNode.ChildNodes.Remove(cNode);
-                end;
-              end;
+              cNode := TSxXMLDocument.FindOrCreateNode(iNode, 'DCC_DcuOutput');
+              cNode.Text := UnitOutputDir;
+
+              WriteWarningsToNode(iNode);
+            end;
+          end
+          else
+          begin
+            if Save then
+            begin
+              cNode := TSxXMLDocument.FindNode(iNode, 'VerInfo_MajorVer');
+              if cNode <> nil then
+                iNode.ChildNodes.Remove(cNode);
+              cNode := TSxXMLDocument.FindNode(iNode, 'VerInfo_MinorVer');
+              if cNode <> nil then
+                iNode.ChildNodes.Remove(cNode);
+              cNode := TSxXMLDocument.FindNode(iNode, 'VerInfo_Release');
+              if cNode <> nil then
+                iNode.ChildNodes.Remove(cNode);
+              cNode := TSxXMLDocument.FindNode(iNode, 'VerInfo_Build');
+              if cNode <> nil then
+                iNode.ChildNodes.Remove(cNode);
+              cNode := TSxXMLDocument.FindNode(iNode, 'VerInfo_Keys');
+              if cNode <> nil then
+                iNode.ChildNodes.Remove(cNode);
+              cNode := TSxXMLDocument.FindNode(iNode, 'Icon_MainIcon');
+              if cNode <> nil then
+                iNode.ChildNodes.Remove(cNode);
             end;
           end;
-          ProcessNode(iNode);
-          iNode := iNode.NextSibling;
         end;
-        iNode := nil;
-        if Save then
-        begin
-          XML.Save(AFileName, ofIndent);
-          RepairDproj(AFileName);
-        end;
-      finally
-        XML := nil; // Release XML document
       end;
-    except
-      on E: Exception do
-        Fatal(E, Self);
+      ProcessNode(iNode);
+      iNode := iNode.NextSibling;
     end;
-  end
-  else
-  begin
-    raise Exception.Create(ReplaceParam('Dproj file %1 not found!', [AFileName]));
+    iNode := nil;
+    if Save then
+    begin
+      XML.Save(AFileName, ofNone);
+//          RepairDproj(AFileName);
+    end;
+  finally
+    XML := nil; // Release XML document
   end;
 end;
 
@@ -863,11 +904,14 @@ end;
 
 destructor TProjectOptions.Destroy;
 begin
-  FreeAndNil(Namespaces);
-  FreeAndNil(SearchPaths);
-  FreeAndNil(Conditionals);
-  FreeAndNil(Version);
-  inherited;
+  try
+    FreeAndNil(Namespaces);
+    FreeAndNil(SearchPaths);
+    FreeAndNil(Conditionals);
+    FreeAndNil(Version);
+  finally
+    inherited;
+  end;
 end;
 
 function TProjectOptions.GetExecutableType(const FileNamePrefix: TFileName): TExecutableType;

@@ -12,6 +12,8 @@ type
     FMinimizedArgument: TSwitchArgument;
     procedure AddArguments; override;
     procedure Finalize; override;
+  public
+    class procedure Activate;
   end;
 
 implementation
@@ -19,6 +21,7 @@ implementation
 uses
 {$IF defined(MSWINDOWS)}
   Winapi.Windows,
+  VCL.Forms,
 {$ENDIF}
   uCustomArgument;
 
@@ -30,6 +33,19 @@ uses
 {$ENDIF}
 
 { TUIApplication }
+
+class procedure TUIApplication.Activate;
+begin
+{$IF defined(MSWINDOWS)}
+  if Assigned(Application) and Assigned(Application.MainForm) and Application.ShowMainForm then
+    if Application.MainForm.Visible = False then
+      Application.MainForm.Show;
+  if IsIconic(Application.Handle) then
+    Application.Restore
+  else
+    Application.BringToFront;
+{$ENDIF}
+end;
 
 procedure TUIApplication.AddArguments;
 begin

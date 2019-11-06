@@ -1,4 +1,4 @@
-unit uFormatters deprecated;
+unit uFormatters;
 
 interface
 

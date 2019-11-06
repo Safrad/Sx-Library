@@ -3,14 +3,21 @@ unit uDView;
 interface
 
 uses
-	uTypes, uMath, uFiles, uDImage, uDIniFile, uTextFilter,
-
   Types,
   SysUtils,
 	Classes,
   Winapi.Messages,
   Controls,
-  Graphics;
+  Graphics,
+
+  uTypes,
+  uColumn,
+  uMath,
+  uFiles,
+  uDImage,
+  uDIniFile,
+  uTextFilter;
+
 
 const
 	MinColumnWidth = 3;
@@ -18,25 +25,6 @@ const
 
 type
 	TViewAction = (vaNone, vaRow, vaColumnClick, vaColumnResize);
-
-	TColumnOptions = record // 12
-		Caption: string;
-		Width: S4;
-		Alignment: TAlignment;
-	end;
-
-	TColumn = record // 20
-		Caption: string;
-		Width: S4;
-		MaxWidth: S4;
-		RealWidth: S4;
-		Alignment: TAlignment;
-		Click: B1;
-		Visible: B1;
-		OwnDraw: B1;
-	end;
-
-	TColumns = array of TColumn;
 
 	TOnGetRowCount = function(Sender: TObject): SG of object;
 	TOnGetData = procedure(Sender: TObject; var Data: string; ColIndex, RowIndex: Integer;
@@ -150,9 +138,9 @@ type
 		procedure AddColumn(const Caption: string; const Width: SG = 0;
 			const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True;
 			const OwnDraw: BG = False);
-		procedure AddColumns(const C: array of TColumnOptions);
 		procedure SetAllSortable(const Sortable: BG);
 		procedure OptimalColumnsWidth;
+    procedure UpdateColumnCount;
 
 		// Rows
 		property RowCount: SG read FAllRowCount write SetRowCount;
@@ -197,7 +185,8 @@ uses
 	Math, StdCtrls, ClipBrd, Forms, UITypes,
   Winapi.Windows,
 
-	uGraph, uDBitmap, uMsg, uScreen, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
+	uGraph, uDBitmap, uMsg, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
+  uVariant,
 	uDWinControl, uDForm,
 	fFind, Variants;
 
@@ -206,6 +195,8 @@ uses
 constructor TDView.Create(AOwner: TComponent);
 begin
 	inherited;
+
+  FColumns := TColumns.Create;
 	EnableZoom := True;
 
 	OnFill := LFill;
@@ -222,12 +213,14 @@ end;
 
 destructor TDView.Destroy;
 begin
-	SetLength(FColumns, 0);
-	SetLength(FColumnOrder, 0);
-	SetLength(FSelectedRows, 0);
-  FreeAndNil(FTextFilter);
-
-	inherited;
+  try
+    FColumns.Free;
+    SetLength(FColumnOrder, 0);
+    SetLength(FSelectedRows, 0);
+    FreeAndNil(FTextFilter);
+  finally
+  	inherited;
+  end;
 end;
 
 function TDView.PosToItem(MX, MY: SG; var IX, IY: SG): TViewAction;
@@ -261,7 +254,7 @@ begin
 	if IX = -1 then
 		Exit;
 
-	if MY < FRowHeight then
+	if (MY >= 0) and (MY < FRowHeight) then
 	begin
 		Result := vaColumnClick;
 		w := 0;
@@ -754,21 +747,6 @@ end;
 	end;
 	end; }
 
-function VarToStrGUI(const VarData: Variant): string;
-var
-  VarTyp: TVarType;
-begin
-  VarTyp := VarType(VarData);
-  case VarTyp of
-  varSmallint, varInteger, varInt64, varUInt64, varShortInt, varByte, varWord, varLongWord:
-  begin
-    Result := NToS(VarData);
-  end
-  else
-    Result := VarToStr(VarData);
-  end;
-end;
-
 procedure TDView.LFill(Sender: TObject);
 const
 	Border = 1;
@@ -845,7 +823,7 @@ begin
 							Bitmap.Canvas.Brush.Color := ColorDiv(Bitmap.Canvas.Brush.Color, 63109);
 						if Assigned(FOnGetRowCount) then
 							FAllRowCount := FOnGetRowCount(Self);
-						if Assigned(FOnGetData) or Assigned(FOnGetDataEx) then
+						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth + 1) then
 						begin
 							ColIndex := FColumnOrder[IX];
 							RowIndex := FRowOrder[IY];
@@ -893,7 +871,10 @@ begin
 										FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rect
 												(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].RealWidth - 2,
 												Y + FRowHeight - 2));
-										Data := VarToStrGUI(VarData);
+                    if Assigned(FColumns[FColumnOrder[IX]].Formatter) and IsVariantNumber(VarData) then
+                      Data := FColumns[FColumnOrder[IX]].Formatter.Format(VarData)
+                    else
+  										Data := VariantToString(VarData, ofDisplay);
 									end;
 								except
 									on E: Exception do
@@ -911,8 +892,8 @@ begin
 
 						Bitmap.Bar(X, Y, X + FColumns[FColumnOrder[IX]].RealWidth - 2, Y + FRowHeight - 2,
 							Bitmap.Canvas.Brush.Color, ef16);
-						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx))and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth) and
-							(FColumns[FColumnOrder[IX]].OwnDraw = False) then
+						if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FColumns[FColumnOrder[IX]].RealWidth > MinColumnWidth) and
+							(FColumns[FColumnOrder[IX]].OwnDraw = False) and (Data <> '') then
 						begin
 							R.Left := X + Border + LeftOffset { Microsoft Sans Serif } ;
 							R.Top := Y + Border;
@@ -1067,20 +1048,17 @@ end;
 
 procedure TDView.UpdateColumnVisibility;
 var
-	i: SG;
 	Data: string;
 	RowIndex, ColIndex: SG;
+  ColumnVisible: BG;
 begin
 	if Assigned(FOnGetRowCount) then
 		FAllRowCount := FOnGetRowCount(Self);
 	if (Assigned(FOnGetData) or Assigned(FOnGetDataEx)) and (FAllRowCount > 0) then
 	begin
-		// Automatic hides empty column
-		for i := 0 to Length(FColumns) - 1 do
-			FColumns[i].Visible := False;
-
-		for ColIndex := 0 to Length(FColumns) - 1 do
+		for ColIndex := 0 to FColumnCount - 1 do
 		begin
+      ColumnVisible := False;
 			for RowIndex := 0 to FAllRowCount - 1 do
 			begin
 				Data := '';
@@ -1093,19 +1071,20 @@ begin
 
 				if Data <> '' then
 				begin
-					if FColumns[ColIndex].Visible = False then
+					if ColumnVisible = False then
 					begin
-						FColumns[ColIndex].Visible := True;
+						ColumnVisible := True;
 						Break;
 					end;
 				end;
 			end;
+      FColumns[ColIndex].Visible := ColumnVisible;
 		end;
 	end
 	else
 	begin
-		for i := 0 to Length(FColumns) - 1 do
-			FColumns[i].Visible := True;
+		for ColIndex := 0 to FColumnCount - 1 do
+			FColumns[ColIndex].Visible := True;
 	end;
 end;
 
@@ -1189,20 +1168,26 @@ var
 begin
 	if Value <> FColumnCount then
 	begin
-		SetLength(FColumns, Value);
+		FColumns.Count := Value;
 		SetLength(FColumnOrder, Value);
 		for i := FColumnCount to Value - 1 do
 		begin
-			FColumns[i].Caption := '<Empty>';
-			FColumns[i].Width := 64;
-			FColumns[i].RealWidth := 0;
-			FColumns[i].Click := True;
-			FColumns[i].Alignment := taLeftJustify;
-			FColumns[i].Visible := True;
-			FColumnOrder[i] := i;
+      FColumns[i] := TColumn.Create;
 		end;
-		FColumnCount := Value;
+    UpdateColumnCount;
 	end;
+end;
+
+procedure TDView.UpdateColumnCount;
+var
+  i: SG;
+begin
+  SetLength(FColumnOrder, FColumns.Count);
+  for i := FColumnCount to Length(FColumnOrder) - 1 do
+  begin
+    FColumnOrder[i] := i;
+  end;
+  FColumnCount := FColumns.Count;
 end;
 
 procedure TDView.SetRowCount(Value: SG);
@@ -1269,7 +1254,7 @@ begin
 		for i := 0 to FAllRowCount - 1 do
 		begin
 			Accept := False;
-			for ColIndex := 0 to Length(FColumns) - 1 do
+			for ColIndex := 0 to FColumnCount - 1 do
 			begin
 				Data := GetDataAsString(ColIndex{FActualColumn}, i);
 				if FTextFilter.Accept(Data) then
@@ -1303,7 +1288,7 @@ begin
 			begin // User sort
 				try
 					FSortBy := FSortByIndexes[c];
-          if c < Length(FColumns) then
+          if c < FColumnCount then
   					FOnColumnClick(Self, FColumns[c]);
 				except
 					on E: Exception do
@@ -1363,7 +1348,7 @@ begin
   else if Assigned(FOnGetDataEx) then
   begin
     FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rec);
-    Result := VarToStrGUI(VarData);
+    Result := VariantToString(VarData, ofDisplay);
   end;
 end;
 
@@ -1496,23 +1481,24 @@ end;
 procedure TDView.AddColumn(const Caption: string; const Width: SG = 0;
 	const Alignment: TAlignment = taLeftJustify; const Sortable: BG = True;
 	const OwnDraw: BG = False);
-begin
-	SetColumnCount(FColumnCount + 1);
-	SetColumn(FColumnCount - 1, Caption, Width, Alignment, Sortable, OwnDraw);
-end;
-
-procedure TDView.AddColumns(const C: array of TColumnOptions);
 var
-	i: SG;
+  Column: TColumn;
 begin
-	for i := 0 to Length(C) - 1 do
-	begin
-		ColumnCount := ColumnCount + 1;
-		FColumns[FColumnCount - 1].Caption := C[i].Caption;
-		FColumns[FColumnCount - 1].Width := C[i].Width;
-		FColumns[FColumnCount - 1].RealWidth := 0;
-		FColumns[FColumnCount - 1].Alignment := C[i].Alignment;
-	end;
+  Column := TColumn.Create;
+  try
+    Column.Caption := Caption;
+    Column.Width := Width;
+    Column.RealWidth := 0;
+    Column.Alignment := Alignment;
+    Column.Click := Sortable;
+    Column.OwnDraw := OwnDraw;
+
+    FColumns.Add(Column);
+  except
+    Column.Free;
+    raise;
+  end;
+  UpdateColumnCount;
 end;
 
 procedure TDView.SetActualRow(const Value: SG);
@@ -1567,6 +1553,7 @@ var
 	c: SG;
 	Section: string;
 	s: string;
+  Width: S4;
 begin
 	inherited;
 
@@ -1601,7 +1588,9 @@ begin
 	// if Save = False then
 	for i := 0 to ColumnCount - 1 do
 	begin
-		IniFile.RWNum(Section, 'Width' + NToS(i, ofIO), FColumns[i].Width, Save);
+    Width := FColumns[i].Width;
+		IniFile.RWNum(Section, 'Width' + NToS(i, ofIO), Width, Save);
+    FColumns[i].Width := Width;
 		if Save = False then
 			FColumnOrder[i] := i;
 		IniFile.RWNum(Section, 'Order' + NToS(i, ofIO), FColumnOrder[i], Save);

@@ -6,6 +6,10 @@ uses
 	uParserMsg,
 
 	Types,
+{$IF defined(MSWINDOWS)}
+  Winapi.Windows,
+  UITypes,
+{$ENDIF}
   SysUtils, Classes, Graphics, Controls, Forms,
 	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
 	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,

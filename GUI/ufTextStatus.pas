@@ -87,7 +87,7 @@ begin
 		begin
 			fTextStatus.ElapsedTime := MainTimer.IntervalFrom(fTextStatus.StartTime);
 			if (fTextStatus.DGauge.Max > 0) then
-				fTextStatus.RemainTime := RoundDivS8((fTextStatus.DGauge.Max - Actual) * fTextStatus.ElapsedTime, Actual);
+				fTextStatus.RemainTime := RoundDivS8((fTextStatus.DGauge.Max - Actual) * S8(fTextStatus.ElapsedTime), Actual);
 		end;
 		fTextStatus.DGauge.Position := Actual;
 		fTextStatus.Init;

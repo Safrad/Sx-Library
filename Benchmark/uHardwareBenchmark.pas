@@ -189,7 +189,7 @@ begin
 
   UnitFormatter := TUnitFormatter.Create;
   try
-    UnitFormatter.UnitName := '';
+    UnitFormatter.UnitNameSuffix := '';
     FResultAsString := '';
   //  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS);
     OutputInfo.ProgressMaximum := TestCount;

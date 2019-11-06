@@ -208,8 +208,10 @@ type
 	F8 = Double;
 {$ifndef CPUX64}
   FA = Extended;
+  FM = Extended;
 {$else}
   Extended = Double deprecated; // same as Double for 64 bit
+  FM = Double;
 {$endif}
   FG = F8;
 

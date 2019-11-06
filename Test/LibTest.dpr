@@ -54,7 +54,16 @@ uses
   uExternalApplicationTest in '..\Core\uExternalApplicationTest.pas',
   uPipedExternalApplicationTest in '..\Core\uPipedExternalApplicationTest.pas',
   uRawFileTest in '..\Files\uRawFileTest.pas',
-  uTextFileTest in '..\Files\uTextFileTest.pas';
+  uTextFileTest in '..\Files\uTextFileTest.pas',
+  uDBitmapTest in '..\GUI\uDBitmapTest.pas',
+  uPercentFormatterTest in '..\Formatter\uPercentFormatterTest.pas',
+  uDesktopWindowTest in '..\GUI\uDesktopWindowTest.pas',
+  uTaskbarWindowTest in '..\GUI\uTaskbarWindowTest.pas',
+  uScreenTest in '..\GUI\uScreenTest.pas',
+  uScreenMode in '..\GUI\uScreenMode.pas',
+  uGraphicObjectsRendererTest in '..\Renderer\uGraphicObjectsRendererTest.pas',
+  uSVGReaderTest in '..\SVG\uSVGReaderTest.pas',
+  uIntegerListTest in '..\Core\uIntegerListTest.pas';
 
 {$R *.RES}
 
