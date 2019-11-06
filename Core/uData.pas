@@ -198,8 +198,8 @@ begin
 		if NewCount > FItemAlloc then
 		begin
 			if FClearCreated then
-				FillChar(Pointer(TIndex(Data) + FItemAlloc shl FItemSh)^, (NewCount - FItemAlloc)
-						shl FItemSh, 0);
+				ClearMemory(Pointer(TIndex(Data) + FItemAlloc shl FItemSh)^, (NewCount - FItemAlloc)
+						shl FItemSh);
 		end;
 		FItemAlloc := NewCount;
 	end;
@@ -219,7 +219,7 @@ begin
 	end;
 
 	if FClearCreated then
-		FillChar(Pointer(TIndex(Data) + Index shl FItemSh)^, ItemSize, 0);
+		ClearMemory(Pointer(TIndex(Data) + Index shl FItemSh)^, ItemSize);
 end;
 
 {

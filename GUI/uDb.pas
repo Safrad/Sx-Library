@@ -139,7 +139,7 @@ begin
 		begin
 			DbItems[i] := Default(TDbItem);
 			GetMem(DbItems[i].PData, DbItemSize);
-			FillChar(DbItems[i].PData^, DbItemSize, 0);
+			ClearMemory(DbItems[i].PData^, DbItemSize);
 		end;
 	end;
 	DbItemCount := ItemsCount;

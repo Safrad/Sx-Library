@@ -848,7 +848,7 @@ begin
 			FillU4(Drawable._frameBuffer^, Drawable._frameBufferSize shr 2,
 				B or (G shl 8) or (R shl 16) or (A shl 24))
 		else
-			FillChar(Drawable._frameBuffer^, Drawable._frameBufferSize, 0);
+			ClearMemory(Drawable._frameBuffer^, Drawable._frameBufferSize);
 	end;
 end;
 

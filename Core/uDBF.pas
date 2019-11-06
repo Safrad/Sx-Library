@@ -301,7 +301,7 @@ begin
 									Assert(SwapU4(PU4(@FPT[FPTSize * Index + 1])^) = 1);
 								k := SwapU4(PU4(@FPT[FPTSize * Index + 5])^);
 								SetLength(sa, k);
-								FillChar(sa[1], SizeOf(sa[1]) * k, 0);
+								ClearMemory(sa[1], SizeOf(sa[1]) * k);
 								if k > 0 then
 									Move(FPT[FPTSize * Index + 9], sa[1], k);
 							end

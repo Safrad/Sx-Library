@@ -41,7 +41,7 @@ uses
 
 procedure TBoard<T>.Clear;
 begin
-  FillChar(FSquares, Length(FSquares), 0);
+  ClearMemory(FSquares, Length(FSquares));
 end;
 
 procedure TBoard<T>.Fill(const ASquare: T);

@@ -517,8 +517,8 @@ begin
 	Wave.DataBytes := DataBytes;}
 
 { case BitsPerSample of
-	8: FillChar(Wave.Data.B, Wave.DataBytes, 128);
-	16: FillChar(Wave.Data.W, Wave.DataBytes div 2, 0);
+	8: FillMemory(Wave.Data.B, Wave.DataBytes, 128);
+	16: ClearMemory(Wave.Data.W, Wave.DataBytes div 2);
 	end;}
 end;
 

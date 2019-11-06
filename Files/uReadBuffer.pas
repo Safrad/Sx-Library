@@ -48,6 +48,8 @@ implementation
 uses
   SysUtils,
   Math,
+
+  uMath,
   uCPU;
 
 { TSequentialReadBuffer }
@@ -58,7 +60,7 @@ var
   RemainReadCount, ReadSize: UG;
 begin
   if ASize > UG(U8(FDataCount) - FFilePosition) then
-    FillChar(AData^, ASize, 0);
+    ClearMemory(AData^, ASize);
 // TODO : raise exception is 30% slowest in the case if is not called
 {    raise EInvalidArgument.Create('Not enought requested ' + IntToStr(ASize) + ' bytes, ' +
       IntToStr(U8(DataCount) - FFilePosition) + ' remains');}

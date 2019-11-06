@@ -897,7 +897,7 @@ begin
 				while Total > 0 do
 				begin
 					Count := Min(Total, MaxCount);
-					FillChar(Buf^, Count, 0);
+					ClearMemory(Buf^, Count);
 					if not FS.BlockRead(Buf^, Count) then
 						Result := False;
 					FD.BlockWrite(Buf^, Count);

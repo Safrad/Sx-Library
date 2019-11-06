@@ -29,7 +29,7 @@ var
   BufferSample: ^TSampleF4;
   Value: F4;
 begin
-  FillChar(BufferSamplesF4^, BufferSize, 0);
+  ClearMemory(BufferSamplesF4^, BufferSize);
 
   SoundItemIndex := 0;
   while SoundItemIndex < Length(SoundItems) do

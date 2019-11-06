@@ -26,11 +26,14 @@ type
 
 implementation
 
+uses
+  uMath;
+
 { TAlignedMemory }
 
 procedure TAlignedMemory.Clear;
 begin
-  FillChar(Data^, Size, 0);
+  ClearMemory(Data^, Size);
 end;
 
 destructor TAlignedMemory.Destroy;
