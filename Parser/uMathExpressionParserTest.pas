@@ -170,30 +170,33 @@ begin
     Parser := TMathExpressionParser.Create;
     try
       Parser.SxParser := TSxStringParser.Create;
-      TSxStringParser(Parser.SxParser).Text := AExpression;
-
-      Parser.Messages := ParserMessages;
-      Parser.DecimalSep := '.';
-      Parser.ThousandSep := ',';
-
-      Parser.ReadInput;
-      ExpressionTreeEvaluator := Parser.CreateExpressionTreeEvaluator;
-      CalcErrorCount := ParserMessages.Count;
       try
+        TSxStringParser(Parser.SxParser).Text := AExpression;
+
+        Parser.Messages := ParserMessages;
+        Parser.DecimalSep := '.';
+        Parser.ThousandSep := ',';
+
+        Parser.ReadInput;
+        ExpressionTreeEvaluator := Parser.CreateExpressionTreeEvaluator;
+        CalcErrorCount := ParserMessages.Count;
         try
-          if CalcErrorCount = 0 then
-            Vector := ExpressionTreeEvaluator.EvaluateRoot;
-          if Parser.InputType <> itEOI then
+          try
+            if CalcErrorCount = 0 then
+              Vector := ExpressionTreeEvaluator.EvaluateRoot;
+            if Parser.InputType <> itEOI then
+              CalcErrorCount := 1;
+          except
+            SetLength(Vector, 0);
             CalcErrorCount := 1;
-        except
-          SetLength(Vector, 0);
-          CalcErrorCount := 1;
+          end;
+        finally
+          ExpressionTreeEvaluator.Free;
         end;
       finally
-        ExpressionTreeEvaluator.Free;
+        Parser.SxParser.Free;
       end;
     finally
-      Parser.SxParser.Free;
       FreeAndNil(Parser);
     end;
     VectorAsString := VectorToStr(Vector, ofIO);
