@@ -17,7 +17,7 @@ procedure PropertiesDialog(const FileName: TFileName);
 var
 	sei: TShellExecuteInfo;
 begin
-	sei := Default(sei);
+	sei := Default(TShellExecuteInfo);
 	sei.cbSize := SizeOf(sei);
 	sei.lpFile := PChar(FileName);
 	sei.lpVerb := 'properties';
