@@ -5,7 +5,9 @@ interface
 uses
 	uTypes, uOpenedFiles,
 	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, uDImage, uDView, uDWinControl;
+	Dialogs, uDImage, uDView, uDWinControl,
+
+  uColumn;
 
 type
 	TfOpenedFiles = class(TForm)
