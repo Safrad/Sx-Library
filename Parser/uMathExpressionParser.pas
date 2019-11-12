@@ -176,7 +176,6 @@ type
     procedure SetMessages(const Value: TParserMessages);
 	public
 		constructor Create;
-		destructor Destroy; override;
 
     // Process
 		procedure ReadInput;
@@ -230,15 +229,6 @@ begin
   Root := NodeE(nil);
   FExpressionTree.Root := Root;
   Result := TExpressionTreeEvaluator.Create(FExpressionTree);
-end;
-
-destructor TMathExpressionParser.Destroy;
-begin
-  try
-    FExpressionTree.Free;
-  finally
-  	inherited;
-  end;
 end;
 
 procedure TMathExpressionParser.NodeFullNumber;
