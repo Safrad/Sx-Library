@@ -871,8 +871,13 @@ begin
 										FOnGetDataEx(Self, VarData, ColIndex, RowIndex, Rect
 												(X + 1, Y + 1, X + FColumns[FColumnOrder[IX]].RealWidth - 2,
 												Y + FRowHeight - 2));
-                    if Assigned(FColumns[FColumnOrder[IX]].Formatter) and IsVariantNumber(VarData) then
-                      Data := FColumns[FColumnOrder[IX]].Formatter.Format(VarData)
+                    if Assigned(FColumns[FColumnOrder[IX]].Formatter) then
+                    begin
+                      if IsVariantIntegerNumber(VarData) then
+                        Data := FColumns[FColumnOrder[IX]].Formatter.Format(S8(VarData))
+                      else if IsVariantFloatNumber(VarData) then
+                        Data := FColumns[FColumnOrder[IX]].Formatter.Format(FG(VarData));
+                    end
                     else
   										Data := VariantToString(VarData, ofDisplay);
 									end;
