@@ -68,6 +68,7 @@ end;
 procedure TPlugin.Load;
 var
   LastError: U4;
+  ErrorMessage: string;
   M: U8;
 begin
   if IsLoaded then
@@ -88,7 +89,10 @@ begin
       if LogInformation then
         MainLogAdd('<LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
       if not IsLoaded then
-        raise Exception.Create(ReplaceParam('%1 can not be loaded.' + LineSep + '%2', [FileName, ErrorCodeToStr(LastError)]));
+      begin
+        ErrorMessage := ReplaceParam(ErrorCodeToStr(LastError), [FileName]);
+        raise Exception.Create(ReplaceParam('%1 can not be loaded.' + LineSep + '%2', [FileName, ErrorMessage]));
+      end;
     end;
 
     FFileName := GetModuleFileNameFunc(FHandle);
