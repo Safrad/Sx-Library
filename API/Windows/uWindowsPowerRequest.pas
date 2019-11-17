@@ -29,7 +29,9 @@ type
 implementation
 
 uses
-  SysUtils;
+  SysUtils,
+
+  uLog;
 
 type
   TPowerCreateRequest = function(_Context: PReasonContext): THandle; stdcall;
@@ -52,6 +54,9 @@ end;
 
 procedure TWindowsPowerRequest.Decrement;
 begin
+  if LogDebug then
+    MainLog.LogEnter('WindowsPowerRequest.Decrement');
+
   if FCount <= 0 then
     raise Exception.Create('Can not decrement request which hasn''t been incremented.');
 
@@ -59,6 +64,9 @@ begin
   if Assigned(GPowerClearRequest) then
     if not GPowerClearRequest(FHandle, GetRequestType) then
       RaiseLastOSError;
+
+  if LogDebug then
+    MainLog.LogLeave('WindowsPowerRequest.Decrement');
 end;
 
 destructor TWindowsPowerRequest.Destroy;
@@ -86,6 +94,9 @@ end;
 
 procedure TWindowsPowerRequest.Increment;
 begin
+  if LogDebug then
+    MainLog.LogEnter('WindowsPowerRequest.Increment');
+
   if (FCount = 0) and (FHandle = INVALID_HANDLE_VALUE) then
   begin
     Initialize;
@@ -95,6 +106,9 @@ begin
   if Assigned(GPowerSetRequest) then
     if not GPowerSetRequest(FHandle, GetRequestType) then
       RaiseLastOSError;
+
+  if LogDebug then
+    MainLog.LogLeave('WindowsPowerRequest.Increment');
 end;
 
 procedure TWindowsPowerRequest.Initialize;
