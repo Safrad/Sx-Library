@@ -19,6 +19,7 @@ type
     procedure SetFileName(const Value: string);
     function GetIsLoaded: BG;
   public
+    class function GetSuffix: string;
     destructor Destroy; override;
 
     procedure Load;
@@ -194,6 +195,11 @@ end;
 function TPlugin.GetIsLoaded: BG;
 begin
   Result := FHandle <> 0; // or $7FFFFFFF
+end;
+
+class function TPlugin.GetSuffix: string;
+begin
+  Result := {$ifdef CPUX64}'-x64' + {$endif}{$ifdef MSWINDOWS}'.dll'{$else}'.o'{$endif};
 end;
 
 end.
