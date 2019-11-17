@@ -160,7 +160,7 @@ begin
   if Assigned(SplashScreen) then
   begin
     FSplashScreen.Show;
-    FSplashScreen.AddMessage('Starting initialization sequence');
+    FSplashScreen.AddMessage('Starting initialization sequence.');
   end;
   InitializeMainLog;
   InitializeMainIni;
