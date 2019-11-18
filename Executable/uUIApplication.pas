@@ -37,7 +37,7 @@ uses
 class procedure TUIApplication.Activate;
 begin
 {$IF defined(MSWINDOWS)}
-  if Assigned(Application) and Assigned(Application.MainForm) and Application.ShowMainForm then
+  if Assigned(Application) and Assigned(Application.MainForm) then
     if Application.MainForm.Visible = False then
       Application.MainForm.Show;
   if IsIconic(Application.Handle) then

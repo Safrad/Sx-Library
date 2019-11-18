@@ -19,6 +19,7 @@ type
     procedure SetFileName(const Value: string);
     function GetIsLoaded: BG;
   public
+    class function GetSuffix: string;
     destructor Destroy; override;
 
     procedure Load;
@@ -68,6 +69,7 @@ end;
 procedure TPlugin.Load;
 var
   LastError: U4;
+  ErrorMessage: string;
   M: U8;
 begin
   if IsLoaded then
@@ -88,7 +90,10 @@ begin
       if LogInformation then
         MainLogAdd('<LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
       if not IsLoaded then
-        raise Exception.Create(ReplaceParam('%1 can not be loaded.' + LineSep + '%2', [FileName, ErrorCodeToStr(LastError)]));
+      begin
+        ErrorMessage := ReplaceParam(ErrorCodeToStr(LastError), [FileName]);
+        raise Exception.Create(ReplaceParam('%1 can not be loaded.' + LineSep + '%2', [FileName, ErrorMessage]));
+      end;
     end;
 
     FFileName := GetModuleFileNameFunc(FHandle);
@@ -190,6 +195,11 @@ end;
 function TPlugin.GetIsLoaded: BG;
 begin
   Result := FHandle <> 0; // or $7FFFFFFF
+end;
+
+class function TPlugin.GetSuffix: string;
+begin
+  Result := {$ifdef CPUX64}'-x64' + {$endif}{$ifdef MSWINDOWS}'.dll'{$else}'.o'{$endif};
 end;
 
 end.
