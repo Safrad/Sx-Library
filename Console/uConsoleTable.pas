@@ -217,22 +217,39 @@ var
   sizes: TArrayOfSG;
   row: SG;
   rowColor: TConsoleColor;
+  HeaderRow: TRow;
+  column: SG;
+  cell: TCell;
 begin
-  sizes := WordWrapAndCalculateOptimalWidthOfRows;
-  rowColor := ccGray;
-  TConsole.WriteLine(TopHorizontalLine(sizes), BorderColor, rowColor);
-  for row := 0 to FTable.RowCount - 1 do
+  HeaderRow := TRow.Create(FTable.ColumnCount);
+  for column := 0 to FTable.ColumnCount - 1 do
   begin
-    if row > 0 then
-      rowColor := ccBlack;
-
-    if FTable.Data[row] <> nil then
-      DataLine(sizes, FTable.Data[row].GetHeight, (FTable.Data[row] as TRow).Columns, rowColor);
-
-    if row < FTable.RowCount - 1 then
-      TConsole.WriteLine(MiddleHorizontalLine(sizes), BorderColor, rowColor);
+    cell := TCell.Create;
+    cell.TextColor := ccBlack;
+    cell.SetData(FTable.Columns[column].Caption);
+    HeaderRow.SetCell(column, cell);
   end;
-  TConsole.WriteLine(BottomHorizontalLine(sizes), BorderColor, rowColor);
+
+  FTable.Data.Insert(0, HeaderRow);
+  try
+    sizes := WordWrapAndCalculateOptimalWidthOfRows;
+    rowColor := ccGray;
+    TConsole.WriteLine(TopHorizontalLine(sizes), BorderColor, rowColor);
+    for row := 0 to FTable.RowCount - 1 do
+    begin
+      if row > 0 then
+        rowColor := ccBlack;
+
+      if FTable.Data[row] <> nil then
+        DataLine(sizes, FTable.Data[row].GetHeight, (FTable.Data[row] as TRow).Columns, rowColor);
+
+      if row < FTable.RowCount - 1 then
+        TConsole.WriteLine(MiddleHorizontalLine(sizes), BorderColor, rowColor);
+    end;
+    TConsole.WriteLine(BottomHorizontalLine(sizes), BorderColor, rowColor);
+  finally
+    FTable.Data.Delete(0);
+  end;
 end;
 
 end.
