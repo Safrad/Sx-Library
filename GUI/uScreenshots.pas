@@ -53,6 +53,7 @@ uses
   SysUtils,
   Classes,
 
+  uDesktopWindow,
   uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uOperatingSystem, ufGrate;
 
 function TakeScreenshots: BG;
@@ -201,18 +202,14 @@ var
   Width, Height: SG;
 begin
 	Result := TDBitmap.Create;
-	if GetDesktop then
+	if DesktopWindow.DeviceContext <> 0 then
 	begin
-		try
-      Width := R.Right - R.Left;
-      Height := R.Bottom - R.Top;
-			Result.SetSize(Width, Height);
-			BitBlt(Result.Canvas.Handle, 0, 0, Width, Height, DesktopDC, R.Left, R.Top, SRCCOPY);
-			// Pix(Bmp.Data, Bmp.ByteX, 1, Bmp.Height -1, @BackgroundColor, ef16); // Replace red point (cause NVidia driver version 15.70). BitBlt problem (driver or windows)
+    Width := R.Right - R.Left;
+    Height := R.Bottom - R.Top;
+    Result.SetSize(Width, Height);
+    BitBlt(Result.Canvas.Handle, 0, 0, Width, Height, DesktopWindow.DeviceContext, R.Left, R.Top, SRCCOPY);
+    // Pix(Bmp.Data, Bmp.ByteX, 1, Bmp.Height -1, @BackgroundColor, ef16); // Replace red point (cause NVidia driver version 15.70). BitBlt problem (driver or windows)
 //			Bmp.TransparentColor := BackgroundColor;
-		finally
-			ReleaseDesktop;
-		end;
 	end;
 end;
 
