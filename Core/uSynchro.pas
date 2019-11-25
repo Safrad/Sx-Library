@@ -196,21 +196,24 @@ begin
     ErrorCode := FindFirst(Dest + '*.*', faAnyFile, SearchRec);
     while ErrorCode = NO_ERROR do
     begin
-      IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
-      IsFile := (SearchRec.Attr and faDirectory) = 0;
-      if (IsDir) or (IsFile) then
+      IsDir := (SearchRec.Attr and faDirectory) <> 0;
+      if (not IsDir) or (not IsActualOrParentDirectoryName(SearchRec.Name)) then
       begin
-        FileInfo := FileNamesD.Add;
-        FileInfo.Name := SearchRec.Name;
-        if IsDir then
-          FileInfo.Name := FileInfo.Name + '\';
-        {$if CompilerVersion >= 21}
-        FileInfo.DateTime := SearchRec.TimeStamp;
-        {$else}
-        FileInfo.DateTime := SearchRec.Time;
-        {$ifend}
-        FileInfo.Size := SearchRec.Size;
-        FileInfo.Found := False;
+        IsFile := (SearchRec.Attr and faDirectory) = 0;
+        if IsDir or IsFile then
+        begin
+          FileInfo := FileNamesD.Add;
+          FileInfo.Name := SearchRec.Name;
+          if IsDir then
+            FileInfo.Name := FileInfo.Name + '\';
+          {$if CompilerVersion >= 21}
+          FileInfo.DateTime := SearchRec.TimeStamp;
+          {$else}
+          FileInfo.DateTime := SearchRec.Time;
+          {$ifend}
+          FileInfo.Size := SearchRec.Size;
+          FileInfo.Found := False;
+        end;
       end;
       ErrorCode := FindNext(SearchRec);
     end;
