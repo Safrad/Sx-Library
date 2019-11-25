@@ -10,6 +10,9 @@ uses
 type
 	TGUIOutputInfo = class(TInterfacedObject, IOutputInfo)
   private
+    FProgressValue: SG;
+    FProgressMaximumValue: SG;
+
     // From interface
     procedure Start;
     procedure Stop;
@@ -39,8 +42,9 @@ type
 implementation
 
 uses
-  Winapi.Windows,
   SysUtils,
+  Winapi.Windows,
+  TaskBarAPI,
 
   ufTableForm,
   uMsgDlg;
@@ -135,17 +139,17 @@ end;
 
 function TGUIOutputInfo.GetProgressMaximum: SG;
 begin
-  Result := 0;
+  Result := FProgressMaximumValue;
 end;
 
 function TGUIOutputInfo.GetProgressValue: SG;
 begin
-  Result := 0;
+  Result := FProgressValue;
 end;
 
 procedure TGUIOutputInfo.IncrementProgressValue;
 begin
-  // No code
+  SetProgressValue(FProgressValue + 1);
 end;
 
 procedure TGUIOutputInfo.SetAborted(const Value: BG);
@@ -155,12 +159,16 @@ end;
 
 procedure TGUIOutputInfo.SetProgressMaximum(const Value: SG);
 begin
-  // No code
+  FProgressMaximumValue := Value;
 end;
 
 procedure TGUIOutputInfo.SetProgressValue(const Value: SG);
 begin
-  // No code
+  FProgressValue := Value;
+  if TaskBarAPI.InitializeTaskbarAPI then
+  begin
+    TaskBarAPI.SetTaskbarProgressValue(FProgressValue, FProgressMaximumValue);
+  end;
 end;
 
 procedure TGUIOutputInfo.Start;
