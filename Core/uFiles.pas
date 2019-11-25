@@ -135,6 +135,8 @@ function SplitCommandLine(ASource: string): TStringPair;
 function FindFileInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileName;
 function FindFilesInSubDir(const AFileName: TFileName; const StartInParentDir: BG): TFileNames;
 
+function IsActualOrParentDirectoryName(const AName: string): BG;
+
 implementation
 
 uses
@@ -411,7 +413,7 @@ end;
 
 function IsDirectory(const SearchRec: TSearchRec): BG;
 begin
-	Result := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..')
+	Result := ((SearchRec.Attr and faDirectory) <> 0);
 end;
 
 const
@@ -431,45 +433,49 @@ begin
 	while ErrorCode = NO_ERROR do
 	begin
 		IsDir := IsDirectory(SearchRec);
-		if IsDir and (Dirs or SubDirs) then SearchRec.Name := SearchRec.Name + PathDelim;
-		IsFile := (SearchRec.Attr and faDirectory) = 0;
+    if (not IsDir) or (not IsActualOrParentDirectoryName(SearchRec.Name)) then
+    begin
+      if IsDir and (Dirs or SubDirs) then
+        SearchRec.Name := SearchRec.Name + PathDelim;
+      IsFile := (SearchRec.Attr and faDirectory) = 0;
 
-		if (IsDir and Dirs)
-		or (IsFile and Files) then
-		begin
-			if Length(Extensions) = 0 then
-				Read := True
-			else
-			begin
-				Read := False;
-				for i := 0 to Length(Extensions) - 1 do
-				begin
-					if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
-					begin
-						Read := True;
-						Break;
-					end;
-				end;
-			end;
-			if Read then
-			begin
-				NewSize := FilesCount + 1;
-				if AllocByExp(Length(FileNames), NewSize) then
-					SetLength(FileNames, NewSize);
-				if SubDirs then
-					FileNames[FilesCount] := SubPath + SearchRec.Name
-				else
-					FileNames[FilesCount] := SearchRec.Name;
-        if FullPath then
-          FileNames[FilesCount] := Path + FileNames[FilesCount];
-				Inc(FilesCount);
-			end;
-		end;
+      if (IsDir and Dirs)
+      or (IsFile and Files) then
+      begin
+        if Length(Extensions) = 0 then
+          Read := True
+        else
+        begin
+          Read := False;
+          for i := 0 to Length(Extensions) - 1 do
+          begin
+            if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
+            begin
+              Read := True;
+              Break;
+            end;
+          end;
+        end;
+        if Read then
+        begin
+          NewSize := FilesCount + 1;
+          if AllocByExp(Length(FileNames), NewSize) then
+            SetLength(FileNames, NewSize);
+          if SubDirs then
+            FileNames[FilesCount] := SubPath + SearchRec.Name
+          else
+            FileNames[FilesCount] := SearchRec.Name;
+          if FullPath then
+            FileNames[FilesCount] := Path + FileNames[FilesCount];
+          Inc(FilesCount);
+        end;
+      end;
 
-		if IsDir and SubDirs then
-		begin
-			ReadSubDir(FileNames, FilesCount, Path, SubPath + SearchRec.Name, Extensions, Files, Dirs, SubDirs, FullPath);
-		end;
+      if IsDir and SubDirs then
+      begin
+        ReadSubDir(FileNames, FilesCount, Path, SubPath + SearchRec.Name, Extensions, Files, Dirs, SubDirs, FullPath);
+      end;
+    end;
 		ErrorCode := FindNext(SearchRec);
 	end;
 	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path + SubPath, ErrorCode);
@@ -507,34 +513,37 @@ begin
 	while ErrorCode = NO_ERROR do
 	begin
 		IsDir := IsDirectory(SearchRec);
-		IsFile := (SearchRec.Attr and faDirectory) = 0;
+    if (not IsDir) or (not IsActualOrParentDirectoryName(SearchRec.Name)) then
+    begin
+      IsFile := (SearchRec.Attr and faDirectory) = 0;
 
-		//if (IsDir and Dirs)
-		if IsDir or (IsFile and Files) then
-		begin
-			if IsDir or (Length(Extensions) = 0) then
-				Read := True
-			else
-			begin
-				Read := False;
-				for i := 0 to Length(Extensions) - 1 do
-				begin
-					if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
-					begin
-						Read := True;
-						Break;
-					end;
-				end;
-			end;
-			if Read then
-			begin
-				NewSize := ListCount + 1;
-				if AllocByExp(Length(List), NewSize) then
-					SetLength(List, NewSize);
-				List[ListCount] := SearchRec;
-				Inc(ListCount);
-			end;
-		end;
+      //if (IsDir and Dirs)
+      if IsDir or (IsFile and Files) then
+      begin
+        if IsDir or (Length(Extensions) = 0) then
+          Read := True
+        else
+        begin
+          Read := False;
+          for i := 0 to Length(Extensions) - 1 do
+          begin
+            if LowerCase(ExtractFileExt(SearchRec.Name)) = '.' + LowerCase(Extensions[i]) then
+            begin
+              Read := True;
+              Break;
+            end;
+          end;
+        end;
+        if Read then
+        begin
+          NewSize := ListCount + 1;
+          if AllocByExp(Length(List), NewSize) then
+            SetLength(List, NewSize);
+          List[ListCount] := SearchRec;
+          Inc(ListCount);
+        end;
+      end;
+    end;
 		ErrorCode := FindNext(SearchRec);
 	end;
 	if ErrorCode <> ERROR_NO_MORE_FILES then
@@ -1078,7 +1087,7 @@ begin
 	begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
 		begin
-			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+			if not IsActualOrParentDirectoryName(SearchRec.Name) then
 				CopyDir(Source + SearchRec.Name + PathDelim, Dest + SearchRec.Name + PathDelim, Attribute);
 		end
 		else
@@ -1130,7 +1139,7 @@ begin
 	begin
 		if (SearchRec.Attr and faDirectory) <> 0 then
 		begin
-			if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+			if not IsActualOrParentDirectoryName(SearchRec.Name) then
 			begin
 				Result := RemoveDirsEx(DirName + SearchRec.Name + PathDelim, True) and Result;
 			end;
@@ -2121,6 +2130,21 @@ begin
     if Dir = Dir2 then Break;
     Dir := Dir2;
   end;
+end;
+
+function IsActualOrParentDirectoryName(const AName: string): BG;
+var
+  NameLength: SG;
+begin
+  NameLength := Length(AName);
+  if NameLength > 2 then
+    Result := False
+  else if NameLength = 2 then
+    Result := (AName[1] = '.') and (AName[2] = '.')
+  else if NameLength = 1 then
+    Result := AName[1] = '.'
+  else // 0
+    Result := False;
 end;
 
 initialization
