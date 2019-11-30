@@ -2,7 +2,9 @@ unit uDatas;
 
 interface
 
-uses uTypes, uData;
+uses
+  uTypes,
+  uData;
 
 type
 	TDatas = class(TData)
@@ -20,6 +22,9 @@ type
 	end;
 
 implementation
+
+uses
+  uMath;
 
 { TDatas }
 
