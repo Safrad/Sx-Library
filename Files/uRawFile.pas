@@ -15,11 +15,18 @@ try
 end; }
 unit uRawFile;
 
+{$ifdef MSWINDOWS}
+  {$DEFINE UseWINAPI}
+{$endif}
+
+{$ifndef UseWINAPI}
+  {$IOCHECKS ON}
+{$endif}
+
 interface
 
 uses
   SysUtils,
-  Winapi.Windows,
 
   uTypes,
   uDateTimeLogger;
@@ -36,7 +43,7 @@ const
 
 	DefFileBuffer = 256 * KB;
   // Flags
-  FILE_FLAG_WRITE_THROUGH = DWORD($80000000); // For write only
+  FILE_FLAG_WRITE_THROUGH = $80000000; // For write only
   FILE_FLAG_OVERLAPPED = $40000000;
   FILE_FLAG_NO_BUFFERING = $20000000; // Be carefully for use this
   FILE_FLAG_RANDOM_ACCESS = $10000000;
@@ -58,7 +65,12 @@ type
 	TRawFile = class(TObject)
 	private
 		FDeleteAfterClose: BG;
+{$ifdef UseWINAPI}
 		FHandle: THandle;
+{$else}
+    FFile: File;
+    FOpened: BG;
+{$endif}
 		FFileName: TFileName;
     FFileSize: U8;
 
@@ -74,7 +86,9 @@ type
 		FFilePos: U8;
     FLogger: TDateTimeLogger;
     FChangeDate: BG;
+{$ifdef UseWINAPI}
     function GetFlags: U4;
+{$endif}
 		function GetOpened: BG;
     procedure SetLogger(const Value: TDateTimeLogger);
     procedure SetChangeDate(const Value: BG);
@@ -114,11 +128,15 @@ type
 		procedure Truncate;
 		procedure FlushFileBuffers; virtual;
 		function Eof: BG; virtual;
+{$ifdef UseWINAPI}
 		procedure Lock(From, Count: U8);
 		procedure UnLock(From, Count: U8);
+{$endif}
 
     // Result
+{$ifdef UseWINAPI}
 		property Handle: THandle read FHandle;
+{$endif}
 		property FilePos: U8 read FFilePos;
 		property FileSize: U8 read FFileSize;
 		property Opened: BG read GetOpened;
@@ -139,6 +157,10 @@ implementation
 
 uses
 	Math,
+{$ifdef MSWINDOWS}
+  Winapi.Windows,
+{$endif}
+
   uStrings,
   uEIOException,
 	uFiles,
@@ -150,7 +172,9 @@ constructor TRawFile.Create;
 begin
 	inherited Create;
 
+{$ifdef UseWINAPI}
 	FHandle := INVALID_HANDLE_VALUE;
+{$endif}
 //  FLogger := MainLog;
   FFileMode := fmReadOnly;
   FUseBuffer := True;
@@ -172,7 +196,11 @@ end;
 
 function TRawFile.GetOpened: BG;
 begin
+{$ifdef UseWINAPI}
 	Result := FHandle <> INVALID_HANDLE_VALUE;
+{$else}
+  Result := FOpened;
+{$endif}
 end;
 
 procedure TRawFile.Open;
@@ -191,6 +219,7 @@ begin
 	if FLogger.IsLoggerFor(mlDebug) then
     FLogger.Add('Opening for ' + FileModeStr[FFileMode] + ' ' + FFileName, mlDebug);
 
+{$ifdef UseWINAPI}
 	ShareMode := FILE_SHARE_READ;
 	case FFileMode of
 	fmReadOnly:
@@ -230,10 +259,37 @@ begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
 	FFileSize := HandleFileSize(FHandle, FFileName);
-  if FileMode = fmAppend then
+  if FFileMode = fmAppend then
     SeekEnd;
+{$else}
+  FOpened := False;
+  AssignFile(FFile, FFileName);
+  case FFileMode of
+  fmReadOnly:
+    System.Reset(FFile, 1);
+  fmRewrite:
+    System.Rewrite(FFile, 1);
+  fmAppend:
+  begin
+    if FileExists(FFileName) then
+      System.Reset(FFile, 1)
+    else
+      System.Rewrite(FFile, 1);
+  end;
+  fmReadAndWrite:
+    System.Reset(FFile, 1);
+  end;
+
+  FFileSize := System.FileSize(FFile);
+
+  if FFileMode = fmAppend then
+    System.Seek(FFile, FFileSize);
+
+  FOpened := True;
+{$endif}
 end;
 
+{$ifdef UseWINAPI}
 function TRawFile.GetFlags: U4;
 begin
   if FRandomAccess then
@@ -247,9 +303,11 @@ begin
   if not FWriteThrough then
     Result := Result or FILE_FLAG_WRITE_THROUGH;
 end;
+{$endif}
 
 procedure TRawFile.Seek(const APosition: U8);
 begin
+{$ifdef UseWINAPI}
 	if SetFilePointer(FHandle, // handle of file
 		TU8(APosition).D0, // number of bytes to move file pointer
 		@TU8(APosition).D1, // address of high-order word of distance to move
@@ -262,6 +320,9 @@ begin
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
+{$else}
+  System.Seek(FFile, APosition);
+{$endif}
 end;
 
 procedure TRawFile.SeekBegin;
@@ -278,6 +339,7 @@ procedure TRawFile.BlockRead(const AData: Pointer; const ASize: UG);
 var
 	Suc: U4;
 begin
+{$ifdef UseWINAPI}
 	if ReadFile(FHandle, AData^, ASize, Suc, nil) then
 	begin
 		Inc(FFilePos, Suc);
@@ -297,12 +359,16 @@ begin
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
+{$else}
+  System.BlockRead(FFile, AData^, ASize, Suc);
+{$endif}
 end;
 
 procedure TRawFile.BlockWrite(const AData: Pointer; const ASize: UG);
 var
 	Suc: U4;
 begin
+{$ifdef UseWINAPI}
   Suc := 0;
 	if WriteFile(FHandle, AData^, ASize, Suc, nil) then
 	begin
@@ -323,6 +389,9 @@ begin
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
+{$else}
+  System.BlockWrite(FFile, AData^, ASize, Suc);
+{$endif}
 end;
 
 procedure TRawFile.BlockRead(out AData; const ASize: UG);
@@ -366,6 +435,7 @@ begin
 	if FLogger.IsLoggerFor(mlDebug) then
     FLogger.Add('Closing ' + FFileName, mlDebug);
 
+  {$ifdef UseWINAPI}
 	if FChangeDate then
 		if FFileMode <> fmReadOnly then
 		begin
@@ -375,7 +445,9 @@ begin
 				SetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime);
 			end;
 		end;
+  {$endif}
 
+  {$ifdef UseWINAPI}
 	if CloseHandle(FHandle) then
 	begin
 		if FDeleteAfterClose then
@@ -386,22 +458,34 @@ begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
 	FHandle := INVALID_HANDLE_VALUE;
+  {$else}
+  CloseFile(FFile);
+  FOpened := False;
+  {$endif}
 end;
 
 procedure TRawFile.Truncate;
 begin
+  {$ifdef UseWINAPI}
 	if not SetEndOfFile(FHandle) then
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
+  {$else}
+  System.Truncate(FFile);
+  {$endif}
 end;
 
 procedure TRawFile.FlushFileBuffers;
 begin
+  {$ifdef UseWINAPI}
 	if not Winapi.Windows.FlushFileBuffers(FHandle) then
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
+  {$else}
+//  Winapi.Windows.FlushFileBuffers(TFileRec(FFile).Handle);
+  {$endif}
 end;
 
 function TRawFile.Eof: BG;
@@ -409,18 +493,19 @@ begin
 	Result := FFilePos >= FFileSize;
 end;
 
+procedure TRawFile.MustBeClosed(const APropertyName: string);
+begin
+  if GetOpened then
+    raise EArgumentException.Create('Property ' + APropertyName + 'can not be set if file is opened.');
+end;
+
+{$ifdef UseWINAPI}
 procedure TRawFile.Lock(From, Count: U8);
 begin
 	if not LockFile(FHandle, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1) then
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
-end;
-
-procedure TRawFile.MustBeClosed(const APropertyName: string);
-begin
-  if GetOpened then
-    raise EArgumentException.Create('Property ' + APropertyName + 'can not be set if file is opened.');
 end;
 
 procedure TRawFile.UnLock(From, Count: U8);
@@ -430,6 +515,7 @@ begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
 end;
+{$endif}
 
 procedure TRawFile.SetChangeDate(const Value: BG);
 begin

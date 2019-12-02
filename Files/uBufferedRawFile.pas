@@ -166,10 +166,10 @@ end;
 
 procedure TBufferedRawFile.Seek(const APosition: U8);
 begin
-  if APosition >= FileSize then
+  if APosition > FileSize then
     raise EInvalidArgument.Create('Seek position is after end of file');
 
-  if FileMode in [fmAppend, fmRewrite] then
+  if FileMode in [fmRewrite] then
     raise Exception.Create('Seek not supported.');
 
   if Assigned(FSequentialReadBuffer) then
