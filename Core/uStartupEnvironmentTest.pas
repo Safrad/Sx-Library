@@ -29,7 +29,7 @@ uses
 
 procedure TStartupEnvironmentTest.TestStartupEnvironmentVariables;
 const
-  StartupEnvironmentVariables: array[0..31] of string = (
+  StartupEnvironmentVariables: array[0..30] of string = (
     // Windows XP
     'ALLUSERSPROFILE',
     'APPDATA',
@@ -50,7 +50,7 @@ const
     'PROCESSOR_REVISION',
     'ProgramFiles',
 //    'PROMPT',
-    'SESSIONNAME',
+//    'SESSIONNAME',
     'SystemDrive',
     'SystemRoot',
     'TEMP',
