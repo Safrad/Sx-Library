@@ -29,6 +29,7 @@ uses
   SysUtils,
 
   uTypes,
+  uFileStatistics,
   uDateTimeLogger;
 
 const
@@ -141,17 +142,6 @@ type
 		property FileSize: U8 read FFileSize;
 		property Opened: BG read GetOpened;
 	end;
-
-type
-  TFileStatistics = record
-  	ReadCount: U8;
-    WriteCount: U8;
-  	ReadBytes: U8;
-    WriteBytes: U8;
-  end;
-
-var
-  FileStatistics: TFileStatistics;
 
 implementation
 

@@ -140,22 +140,12 @@ type
     property Logger: TDateTimeLogger read FLogger write SetLogger;
 	end;
 
-type
-  TFileStatistics = record
-  	ReadCount: U8;
-    WriteCount: U8;
-  	ReadBytes: U8;
-    WriteBytes: U8;
-  end;
-
-var
-  FileStatistics: TFileStatistics;
-
 implementation
 
 uses
 	Math,
 
+  uFileStatistics,
   uTemporaryDirectory,
   uFiles,
 	uOutputFormat, uCharset, uLog, uMsg;
