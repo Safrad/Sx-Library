@@ -15,21 +15,55 @@ type
 implementation
 
 uses
-  
-	uTypes, uFind;
+	uTypes,
+  uHammingDistance,
+  uLevenshteinDistance;
 
 { TFindTest }
 
 procedure TFindTest.TestHamming;
 var
-  i: SG;
+  i, j: SG;
+  HammingDistance: THammingDistance;
 begin
-  for i := 0 to 99999 do
-  begin
-    Check(SearchHamming('dog', 'adogb') = 2);
-    Check(SearchHamming('dog', 'adobb') = 0);
-    Check(SearchHamming('dog', 'adobb', 1) = 2);
-  //  Check(SearchHamming('dog', 'adgb', 1) = 2);
+  HammingDistance := THammingDistance.Create;
+  try
+    for i := 0 to 99999 do
+    begin
+      HammingDistance.Pattern := 'dog';
+
+      HammingDistance.Text := 'adogb';
+      HammingDistance.ErrorLen := 0;
+      HammingDistance.Update;
+      Check(HammingDistance.Distance = 2);
+
+      HammingDistance.Text := 'adobb';
+      HammingDistance.ErrorLen := 0;
+      HammingDistance.Update;
+      Check(HammingDistance.Distance = 0);
+
+      HammingDistance.Text := 'adobb';
+      HammingDistance.ErrorLen := 1;
+      HammingDistance.Update;
+      Check(HammingDistance.Distance = 2);
+
+      HammingDistance.Text := 'adgb';
+      HammingDistance.ErrorLen := 2;
+      HammingDistance.Update;
+      Check(HammingDistance.Distance = 1);
+
+      for j := 2 to THammingDistance.MaximalDistance do
+      begin
+        HammingDistance.Text := 'adgb';
+        HammingDistance.ErrorLen := j;
+        HammingDistance.Update;
+        Check(HammingDistance.Distance = 1);
+      end;
+
+    //  Check(SearchHamming('dog', 'adgb', 1) = 2);
+    end;
+  finally
+    HammingDistance.Free;
   end;
 end;
 
