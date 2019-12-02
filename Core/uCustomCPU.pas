@@ -22,7 +22,6 @@ type
     procedure UpdateFrequency;
     procedure UpdateUsage;
 
-    function GetID: U4;
     function GetFamily: SG;
     function GetModel: SG;
     function GetStepping: SG;
@@ -38,6 +37,7 @@ type
     FAllocationGranularity: SG;
     FUsage: FG;
 
+    function GetID: U4; virtual;
     procedure UpdateName; virtual;
     procedure UpdateSystemInfo; virtual;
     function GetCPUUsageForce: FG; virtual;
@@ -66,74 +66,6 @@ implementation
 
 uses
   uLog;
-
-type
-  TCPUIDB = record
-    CLFLUSH: U2;
-    LogicalProcessorCount: U1;
-    APICID: U1;
-  end;
-var
-  // Result of CPUID instruction
-  FCPUIDA: U4;
-  FCPUIDB: TCPUIDB;
-  FCPUIDStr: string[12] = '            ';
-
-procedure CallCPUID;
-asm
-{$ifdef CPUX64}
-  push rax
-  push rbx
-  push rcx
-  push rdx
-  push rdi
-
-  xor rax, rax
-  xor rbx, rbx
-  xor rcx, rcx
-  xor rdx, rdx
-  cpuid
-  mov dword ptr [FCPUIDStr+1], ebx
-  mov dword ptr [FCPUIDStr+5], edx
-  mov dword ptr [FCPUIDStr+9], ecx
-
-  mov eax, 1
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-  cpuid
-  mov [FCPUIDA], eax
-  mov [FCPUIDB], ebx
-
-  pop rdi
-  pop rdx
-  pop rcx
-  pop rbx
-  pop rax
-{$else}
-  pushad
-
-  xor eax, eax
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-  dw 0a20fh // cpuid
-  mov dword ptr [FCPUIDStr+1], ebx
-  mov dword ptr [FCPUIDStr+5], edx
-  mov dword ptr [FCPUIDStr+9], ecx
-
-  mov eax, 1
-  xor ebx, ebx
-  xor ecx, ecx
-  xor edx, edx
-  dw 0a20fh // cpuid
-  mov FCPUIDA, eax
-  mov FCPUIDB, ebx
-
-  popad
-{$endif}
-end;
-
 
 { TCustomCPU }
 
@@ -202,9 +134,7 @@ end;
 
 function TCustomCPU.GetID: U4;
 begin
-  if FCPUIDA = 0 then
-    CallCPUID;
-  Result := FCPUIDA;
+  Result := 0;
 end;
 
 function TCustomCPU.GetModel: SG;
