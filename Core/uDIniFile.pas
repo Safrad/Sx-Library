@@ -1173,7 +1173,7 @@ begin
 	end;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function TDIniFile.RWFAF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
 begin
 	if Save then

@@ -1,5 +1,9 @@
 unit uSorts;
 
+{$if SizeOf(Extended) > SizeOf(Double)}
+  {$DEFINE HasExtended}
+{$endif}
+
 interface
 
 uses uTypes;
@@ -40,11 +44,13 @@ procedure SortU4(const Stability: Boolean; const Reverse: Boolean; AIndex: PArra
 procedure SortS8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayS8; Count: UG);
 
 procedure SortF8(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayF8; Count: UG);
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure SortFA(const Stability: Boolean; const Reverse: Boolean; AIndex: PArraySG; AValue: PArrayFA; Count: UG);
 {$endif}
 
+{$ifdef MSWINDOWS}
 procedure SortS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of AnsiString); deprecated;
+{$endif}
 procedure SortWS(const Reverse: Boolean; AIndex: PArraySG; var AValue: array of UnicodeString); deprecated;
 
 type TCompare = function(const Index0, Index1: SG): TCompareResult;
@@ -123,7 +129,7 @@ type
 {$I Sort.inc}
 {$undef F}
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure SortFA;
 type
 	TValue = FA;
@@ -133,11 +139,13 @@ type
 {$undef F}
 {$endif}
 
+{$ifdef MSWINDOWS}
 procedure SortS;
 type
 	TValue = AnsiString;
 	TValue1 = U1;
 {$I SortS.inc}
+{$endif}
 
 procedure SortWS;
 type
