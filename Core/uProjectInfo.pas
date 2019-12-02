@@ -70,13 +70,16 @@ implementation
 uses
 	uFiles,
   uProjectVersion,
+{$ifdef MSWINDOWS}
 	Winapi.Windows,
+{$endif}
 	uOutputFormat, uStrings,
 	TypInfo;
 
 { TProjectInfo }
 
 procedure TProjectInfo.SetProjectInfos;
+{$ifdef MSWINDOWS}
 var
 	AppFileName: PChar;
 	AppSize: UG;
@@ -169,6 +172,9 @@ begin
 			FreeMem(Buf, AppSize);
 		end;
 	end;
+{$else}
+begin
+{$endif}
 end;
 
 constructor TProjectInfo.Create(const ApplicationFileName: TFileName);

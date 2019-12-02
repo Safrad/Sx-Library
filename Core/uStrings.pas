@@ -36,7 +36,7 @@ var
 	HexValue: array[AnsiChar] of U1;
 
 type
-	TCharSet = set of AnsiChar;
+	TCharSet = TSysCharSet; // set of AnsiChar;
 
 // Strings
 function PosEx(const SubStr, Str: string): SG; overload;
@@ -268,11 +268,12 @@ begin
 end;
 
 function LowCase(ch : AnsiChar): AnsiChar;
-{$IFDEF PUREPASCAL}
+{$IF not (defined(ASSEMBLER) and defined(CPUX86)) }
 begin
 	Result := ch;
 	case Result of
-	'A'..'Z':  Inc(Result, Ord('a') - Ord('A'));
+	AnsiChar('A')..AnsiChar('Z'):
+    Inc(Result, Ord('a') - Ord('A'));
 	end;
 end;
 {$ELSE}
@@ -1385,9 +1386,9 @@ var
 begin
 	for c := Low(c) to High(c) do
 		case c of
-		'0'..'9': HexValue[c] := Ord(c) - Ord('0');
-		'A'..'Z': HexValue[c] := Ord(c) - Ord('A') + 10;
-		'a'..'z': HexValue[c] := Ord(c) - Ord('a') + 10;
+		AnsiChar('0')..AnsiChar('9'): HexValue[c] := Ord(c) - Ord('0');
+		AnsiChar('A')..AnsiChar('Z'): HexValue[c] := Ord(c) - Ord('A') + 10;
+		AnsiChar('a')..AnsiChar('z'): HexValue[c] := Ord(c) - Ord('a') + 10;
 		else
 			HexValue[c] := 0;
 		end;
@@ -1465,12 +1466,22 @@ begin
   end;
 end;
 
-
+{$ifdef MSWINDOWS}
 function StrCmpLogicalW(psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll';
+{$endif}
 
 function CompareStringLogical(AValue1, AValue2: string): TCompareResult; overload;
 begin
+{$ifdef MSWINDOWS}
   Result := TCompareResult(StrCmpLogicalW(PWideChar(WideString(AValue1)), PWideChar(WideString(AValue2))));
+{$else}
+  if AValue1 = AValue2 then
+    Result := crBothSame
+  else if AValue1 < AValue2 then
+    Result := crFirstLess
+  else
+    Result :=  crFirstGreater;
+{$endif}
 end;
 
 function U1ToOctalString(AValue: U1): string;
