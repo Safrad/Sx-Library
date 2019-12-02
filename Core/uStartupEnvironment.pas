@@ -81,6 +81,7 @@ begin
 	end;
 {$ELSE}
   // TODO : $USER_HOME
+begin
 {$ENDIF}
 end;
 
