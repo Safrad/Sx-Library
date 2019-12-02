@@ -10,8 +10,9 @@ uses
 type
   TCSVFileTest = class(TTestCase)
   private
-    function ReadCSV(const AFileName: TFileName): SG;
+    function ReadIncorrectCSV(const AFileName: TFileName): SG;
   published
+    procedure EmptyDataTest;
     procedure CorrectDataTest;
     procedure IncorrectDataTest;
   end;
@@ -32,23 +33,21 @@ begin
   CSVFile := TCSVFile.Create;
   CSVFile.SetColumnNames(['Length', 'Text']);
   try
-    if CSVFile.Open(FileName) then
+    CSVFile.Open(FileName);
+    while not CSVFile.EOF do
     begin
-      while not CSVFile.EOF do
-      begin
-        Line := CSVFile.ReadLine;
+      Line := CSVFile.ReadLine;
 
-        CheckEquals(StrToInt(Line[0]), Length(Line[1]), 'Text: ''' + Line[1] + '''');
-      end;
-      CheckTrue(CSVFile.Errors = '');
-      CSVFile.Close;
+      CheckEquals(StrToInt(Line[0]), Length(Line[1]), 'Text: ''' + Line[1] + '''');
     end;
+    CheckTrue(CSVFile.Errors = '');
+    CSVFile.Close;
   finally
     CSVFile.Free;
   end;
 end;
 
-function TCSVFileTest.ReadCSV(const AFileName: TFileName): SG;
+function TCSVFileTest.ReadIncorrectCSV(const AFileName: TFileName): SG;
 var
   CSVFile: TCSVFile;
   Line: TArrayOfString;
@@ -56,16 +55,33 @@ begin
   Result := 0;
   CSVFile := TCSVFile.Create;
   try
-    if CSVFile.Open(AFileName) then
+    CSVFile.Open(AFileName);
+    while not CSVFile.EOF do
     begin
-      while not CSVFile.EOF do
-      begin
-        Line := CSVFile.ReadLine;
-        Inc(Result);
-      end;
-      CheckTrue(CSVFile.Errors <> '');
-      CSVFile.Close;
+      Line := CSVFile.ReadLine;
+      Inc(Result);
     end;
+    CheckTrue(CSVFile.Errors <> '');
+    CSVFile.Close;
+  finally
+    CSVFile.Free;
+  end;
+end;
+
+procedure TCSVFileTest.EmptyDataTest;
+var
+  FileName: TFileName;
+  CSVFile: TCSVFile;
+  Line: TArrayOfString;
+begin
+  FileName := DataDir + 'CSV' + PathDelim + 'Empty.csv';
+  CSVFile := TCSVFile.Create;
+  CSVFile.SetColumnNames(['Length', 'Text']);
+  try
+    CSVFile.Open(FileName);
+    CheckTrue(CSVFile.EOF);
+    CheckTrue(CSVFile.Errors = '');
+    CSVFile.Close;
   finally
     CSVFile.Free;
   end;
@@ -82,7 +98,7 @@ begin
     FileName := DataDir + 'CSV' + PathDelim + 'Incorrect' + IntToStr(i) + '.csv';
     if not FileExistsEx(FileName) then
       Break;
-    LineCount := ReadCSV(FileName);
+    LineCount := ReadIncorrectCSV(FileName);
     CheckEquals(i, LineCount);
   end;
 end;
