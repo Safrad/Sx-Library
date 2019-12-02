@@ -2194,12 +2194,10 @@ begin
 		end;
 		Stream := TMemoryStream.Create;
 		try
-			if ReadStreamFromFile(FileName, Stream) then
-			begin
-				Stream.Seek(0, 0);
-				ReadFromStream(Stream, Ext);
-				Result := True;
-			end;
+			ReadStreamFromFile(FileName, Stream);
+      Stream.Seek(0, 0);
+      ReadFromStream(Stream, Ext);
+      Result := True;
 		finally
 			Stream.Free;
 		end;
@@ -2248,7 +2246,8 @@ begin
 			Stream := TMemoryStream.Create;
 			try
 				SaveToStream(Stream);
-				Result := WriteStreamToFile(FileName, Stream);
+				WriteStreamToFile(FileName, Stream);
+        Result := True;
 			finally
 				Stream.Free;
 			end;
@@ -2280,7 +2279,8 @@ begin
 			try
 				Stream := TMemoryStream.Create;
 				MyJPEG.SaveToStream(Stream);
-				Result := WriteStreamToFile(FileName, Stream);
+				WriteStreamToFile(FileName, Stream);
+        Result := True;
 				Stream.Free;
 			except
 				on E: Exception do
@@ -2303,7 +2303,8 @@ begin
 					Stream := TMemoryStream.Create;
 					try
 						MyGif.SaveToStream(Stream);
-						Result := WriteStreamToFile(FileName, Stream);
+						WriteStreamToFile(FileName, Stream);
+            Result := True;
 					finally
 						FreeAndNil(Stream);
 					end;
@@ -2358,7 +2359,8 @@ begin
 				Stream := TMemoryStream.Create;
 				try
 					MyPng.SaveToStream(Stream);
-					Result := WriteStreamToFile(FileName, Stream);
+					WriteStreamToFile(FileName, Stream);
+          Result := True;
 				finally
 					Stream.Free;
 				end;
@@ -2378,7 +2380,8 @@ begin
 			try
 				Stream := TMemoryStream.Create;
 				MyTga.SaveToStream(Stream);
-				Result := WriteStreamToFile(FileName, Stream);
+				WriteStreamToFile(FileName, Stream);
+        Result := True;
 				Stream.Free;
 			except
 				on E: Exception do

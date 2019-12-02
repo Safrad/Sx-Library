@@ -379,26 +379,24 @@ begin
 		CSVFile := TCSVFile.Create;
     CSVFile.SetColumnNames(['FileName', 'CountOn', 'TimeOn', 'Exists']);
 		try
-			if CSVFile.Open(CSVFileName) then
-			begin
-				while not CSVFile.EOF do
-				begin
-					Values := CSVFile.ReadLine;
-					if Length(Values) >= 4 then
-					begin
-						NewSize := FWDCount + 1;
-						if AllocByExp(Length(WDs), NewSize) then
-							SetLength(WDs, NewSize);
-						Assert(Values[0] <> '');
-						WDs[FWDCount].Name := Values[0];
-						WDs[FWDCount].CountOn := StrToValI(Values[1], False, 0, 0, MaxInt, 1);
-						WDs[FWDCount].TimeOn := StrToValI(Values[2], False, 0, 0, MaxInt, 1);
-						WDs[FWDCount].PathIndex := -1;
-						Inc(FWDCount);
-					end;
-				end;
-				CSVFile.Close;
-			end;
+			CSVFile.Open(CSVFileName);
+      while not CSVFile.EOF do
+      begin
+        Values := CSVFile.ReadLine;
+        if Length(Values) >= 4 then
+        begin
+          NewSize := FWDCount + 1;
+          if AllocByExp(Length(WDs), NewSize) then
+            SetLength(WDs, NewSize);
+          Assert(Values[0] <> '');
+          WDs[FWDCount].Name := Values[0];
+          WDs[FWDCount].CountOn := StrToValI(Values[1], False, 0, 0, MaxInt, 1);
+          WDs[FWDCount].TimeOn := StrToValI(Values[2], False, 0, 0, MaxInt, 1);
+          WDs[FWDCount].PathIndex := -1;
+          Inc(FWDCount);
+        end;
+      end;
+      CSVFile.Close;
 		finally
 			CSVFile.Free;
 		end;

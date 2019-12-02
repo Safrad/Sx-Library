@@ -3,10 +3,19 @@
 interface
 
 uses
+{$ifdef MSWINDOWS}
 	Winapi.Windows,
+{$else}
+  System.IOUtils,
+{$endif}
   SysUtils,
 
-	uTypes, uStrings, uFileCharset, uFile, uBackup;
+	uTypes,
+  uStrings,
+  uFileCharset,
+  uRawFile,
+  uTextFile,
+  uBackup;
 
 var
 	// Directories
@@ -31,10 +40,15 @@ var
   ExeParameters: string;
 
 type
+{$ifndef MSWINDOWS}
+  TFileTime = TDateTime;
+const
+  NO_ERROR = 0;
+type
+{$endif}
+
 	TFileNames = array of TFileName;
 
-function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
-function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
 function ShortDir(const Dir: string): string;
 
 function ExpandFile(const FileName: TFileName): string;
@@ -47,24 +61,32 @@ function ParentDir(var Dir: string; Level: SG = 1): BG;
 function ParentDirF(const Dir: string; const Level: SG = 1): string;
 function LegalFileName(const FileName: string): string;
 procedure ReadDir(var FileNames: TFileNames; var FileCount: SG; const Path: string; const Extensions: array of string; const Files, Dirs, SubDirs, Sort: BG; const FullPath: BG = False);
-function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
-function GetFileSizeU(const AFileName: TFileName): S8;
-function GetFileSizeS(const AFileName: TFileName): string;
+
 function FileTimeToDateTime(F: TFileTime): TDateTime;
 function DateTimeToFileTime(const D: TDateTime): TFileTime;
+{$ifdef MSWINDOWS}
+function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
+{$endif}
+function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+function GetFileSizeU(const AFileName: TFileName): S8;
+function GetFileSizeS(const AFileName: TFileName): string;
 function GetFileCreated(const FileName: TFileName): TFileTime; overload;
 function GetFileModified(const FileName: TFileName; var LastWriteTime: TFileTime): BG; overload;
 function GetFileModified(const FileName: TFileName): TFileTime; overload;
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
 
-function RenameFileEx(const Source, Dest: TFileName): BG;
+procedure RenameFileEx(const Source, Dest: TFileName);
 function RenameFileIfExistsEx(const Source, Dest: TFileName): BG;
-function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
-function CopyFileToDir(Source, Dest: TFileName; const FailExist: BG): BG;
-function CopyDamagedFile(Source, Dest: TFileName): BG;
+procedure CopyFile(const Source, Dest: TFileName; const FailExist: BG);
+procedure CopyFileToDir(Source, Dest: TFileName; const FailExist: BG);
+procedure CopyDamagedFile(Source, Dest: TFileName);
 function CreateDirEx(const Dir: string): BG;
 function CreateDirsEx(const Dir: string): BG;
 function CreateLockedDir(const ADirectoryName: string): THandle;
+{$ifndef MSWINDOWS}
+procedure CloseHandle(const AHandle: THandle);
+{$endif}
 function NewFileOrDir(var FileOrDir: string): BG;
 function NewFileOrDirEx(var FileOrDir: string): BG;
 function CopyFileDateTime(const Source, Dest: string): BG;
@@ -78,23 +100,21 @@ function RemoveDirsEx(DirName: string; DeleteSelf: BG = False): BG;
 procedure FileLinesAndSize(const FileName: TFileName; out Size, Lines: U8);
 procedure CodeLinesAndSize(const Dir: string; out Size, Lines, Files: U8);
 
-function ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG): BG;
-function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: UG): BG;
+procedure ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG);
+procedure WriteBufferToFile(const FileName: TFileName; const Buf; const Count: UG);
 
-function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
-function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
+procedure ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: UG);
+procedure WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: UG);
 
-function ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
-function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
+procedure ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG);
+procedure WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG);
 
-function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG; overload;
-function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
-function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
+procedure ReadStringFromFile(const FileName: TFileName; out Data: string); overload;
+function ReadStringFromFile(const FileName: TFileName): string; overload;
 function ReadStringFromFile(const FileName: TFileName; const Limit: U8): string; overload;
-function ReadStringFromFileEx(const FileName: TFileName; out Data: AnsiString): TFileCharset;
+function ReadStringFromFileEx(const FileName: TFileName; out Data: string): TFileCharset;
 
-function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG; overload;
-function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG; overload;
+procedure WriteStringToFile(const FileName: TFileName; const Data: string; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone); overload;
 
 function ShortToLongFileName(const ShortName: string): string;
 function ShortToLongPath(ShortName: string): string;
@@ -103,7 +123,6 @@ function LongToShortPath(const LongName: string): string;}
 
 function RepairDirectory(const Dir: TFileName): TFileName;
 function SameFiles(const FileName1, FileName2: TFileName): BG;
-function SameFilesNoPrefix(const FileName1, FileName2: TFileName): BG;
 function TempFileName(const FileName: TFileName): TFileName;
 procedure ReplaceIfChanged(const OrigFileName, TempFileName: TFileName); overload;
 procedure ReplaceIfChanged(const TempFileName: TFileName); overload;
@@ -120,15 +139,22 @@ procedure TestFileReadable(const AFileName: string);
 function IsFileWritable(const AFileName: string): Boolean;
 function FileOrDirExists(const FileOrDirName: string): BG;
 function FileOrDirExistsEx(const FileOrDirName: string): BG;
+{$ifdef MSWINDOWS}
 function LastLineFromFile(const FileName: TFileName): AnsiString;
+{$endif}
 function SameFileName(const FileName1, FileName2: TFileName): BG;
 
 function DialogStrWithoutAll(const Ext, Des: array of string): string;
 function DialogStr(const Ext, Des: array of string): string;
 function GetFileNameFilter(const Description: string; const Extensions: array of string): string;
 function GetExecutableFilter: string;
+
+/// <returns>Return 'All Files (*.*)|*.*'</summareturnsry>
 function AllFiles: string;
+
+/// <returns>Return 'Text file (*.txt)|*.txt|'</returns>
 function AllText: string;
+
 function AllSounds: string;
 
 function SplitCommandLine(ASource: string): TStringPair;
@@ -190,10 +216,12 @@ end;
 
 procedure InitPaths;
 var
+{$ifdef MSWINDOWS}
 	NewLength: SG;
+  CommandLine: string;
+{$endif}
 	i: SG;
 	CommandLinePair: TStringPair;
-  CommandLine: string;
   Suffix, CompanySuffix: string;
 begin
 	if ExeFileName <> '' then Exit;
@@ -202,8 +230,14 @@ begin
 	CorrectDir(StartDir);
 
 	// Remove Parameters
+{$ifdef MSWINDOWS}
   CommandLine := GetCommandLine;
 	CommandLinePair := SplitCommandLine(CommandLine);
+{$else}
+  CommandLinePair.Name := ParamStr(0);
+  for i := 1 to ParamCount do
+    CommandLinePair.Value := CommandLinePair.Value + ParamStr(i);
+{$endif}
   ExeFileName := CommandLinePair.Name;
   ModuleFileName := GetModuleFileNameFunc(HInstance);
 
@@ -227,6 +261,7 @@ begin
 	SoundsDir := WorkDir + 'Sounds' + PathDelim;
 	DataDir := WorkDir + 'Data' + PathDelim;
 
+{$ifdef MSWINDOWS}
 	SetLength(SysDir, MAX_PATH);
 	NewLength := GetSystemDirectory(PChar(SysDir), MAX_PATH);
 	SetLength(SysDir, NewLength);
@@ -236,6 +271,7 @@ begin
 	NewLength := GetWindowsDirectory(PChar(WinDir), MAX_PATH);
 	SetLength(WinDir, NewLength);
 	CorrectDir(WinDir);
+{$endif}
 
 	ProgramFilesDir := GetEnvironmentVariable('ProgramFiles');
 	if ProgramFilesDir = '' then
@@ -478,7 +514,10 @@ begin
     end;
 		ErrorCode := FindNext(SearchRec);
 	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Path + SubPath, ErrorCode);
+  {$ifdef MSWINDOWS}
+	if ErrorCode <> ERROR_NO_MORE_FILES then
+    IOError(Path + SubPath, ErrorCode);
+  {$endif}
 	SysUtils.FindClose(SearchRec);
 end;
 
@@ -546,8 +585,10 @@ begin
     end;
 		ErrorCode := FindNext(SearchRec);
 	end;
+  {$ifdef MSWINDOWS}
 	if ErrorCode <> ERROR_NO_MORE_FILES then
 		IOError(Path + SubPath, ErrorCode);
+  {$endif}
 	SysUtils.FindClose(SearchRec);
 
 	if ListCount = 0 then Exit;
@@ -643,6 +684,7 @@ begin
 	end; *)
 end;
 
+{$ifdef MSWINDOWS}
 function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
 var ErrorCode: U4;
 begin
@@ -657,8 +699,10 @@ begin
     end;
 	end;
 end;
+{$endif}
 
 function GetFileSizeU(const AFileName: TFileName): S8;
+{$ifdef MSWINDOWS}
 var
 	FHandle: THandle;
 begin
@@ -683,6 +727,18 @@ begin
 	begin
  		raise EIOException.Create(AFileName, GetLastError);
 	end;
+{$else}
+var
+  F: File;
+begin
+  AssignFile(F, AFileName);
+  Reset(F, 1);
+  try
+    Result := FileSize(F);
+  finally
+    CloseFile(f);
+  end;
+{$endif}
 end;
 
 function GetFileSizeS(const AFileName: TFileName): string;
@@ -691,21 +747,31 @@ begin
 end;
 
 function FileTimeToDateTime(F: TFileTime): TDateTime;
+{$ifdef MSWINDOWS}
 var
 	SystemTime: TSystemTime;
 begin
 	FileTimeToLocalFileTime(F, F);
 	FileTimeToSystemTime(F, SystemTime);
 	Result := SystemTimeToDateTime(SystemTime);
+{$else}
+begin
+  Result := F;
+{$endif}
 end;
 
 function DateTimeToFileTime(const D: TDateTime): TFileTime;
+{$ifdef MSWINDOWS}
 var
 	SystemTime: TSystemTime;
 begin
 	DateTimeToSystemTime(D, SystemTime);
 	SystemTimeToFileTime(SystemTime, Result);
 	LocalFileTimeToFileTime(Result, Result);
+{$else}
+begin
+  Result := D;
+{$endif}
 end;
 
 function GetFileModified(const FileName: TFileName; var LastWriteTime: TFileTime): BG;
@@ -716,6 +782,7 @@ begin
 end;
 
 function GetFileCreated(const FileName: TFileName): TFileTime;
+{$ifdef MSWINDOWS}
 var
 	ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime;
 begin
@@ -723,9 +790,14 @@ begin
 	Result.dwHighDateTime := 0;
 	if GetFileDateTime(FileName, ACreationTime, ALastAccessTime, ALastWriteTime) then
 		Result := ACreationTime;
+{$else}
+begin
+  Result := TFile.GetCreationTime(FileName);
+{$endif}
 end;
 
 function GetFileModified(const FileName: TFileName): TFileTime;
+{$ifdef MSWINDOWS}
 var
 	ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime;
 begin
@@ -733,9 +805,14 @@ begin
 	Result.dwHighDateTime := 0;
 	if GetFileDateTime(FileName, ACreationTime, ALastAccessTime, ALastWriteTime) then
 		Result := ALastWriteTime;
+{$else}
+begin
+  Result := TFile.GetLastWriteTime(FileName);
+{$endif}
 end;
 
 function SetFileModified(FileName: TFileName; LastWriteTime: TFileTime): BG;
+{$ifdef MSWINDOWS}
 var
 	ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime;
   FHandle: THandle;
@@ -772,9 +849,14 @@ begin
 	begin
 		IOError(FileName, GetLastError);
 	end;
+{$else}
+begin
+  TFile.SetLastWriteTime(FileName, LastWriteTime);
+{$endif}
 end;
 
 function GetFileDateTime(const FileName: TFileName; out CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+{$ifdef MSWINDOWS}
 label LRetry;
 var
 	FHandle: THANDLE;
@@ -806,9 +888,16 @@ begin
 	begin
 		IOError(FileName, GetLastError);
 	end;
+{$else}
+begin
+  CreationTime := TFile.GetCreationTime(FileName);
+  LastWriteTime := TFile.GetLastWriteTime(FileName);
+  LastAccessTime := TFile.GetLastAccessTime(FileName);
+{$endif}
 end;
 
 function SetFileDateTime(const FileName: TFileName; const CreationTime, LastAccessTime, LastWriteTime: TFileTime): BG;
+{$ifdef MSWINDOWS}
 label LRetry;
 var
 	FHandle: THANDLE;
@@ -837,32 +926,49 @@ begin
 	begin
 		IOError(FileName, GetLastError);
 	end;
+{$else}
+begin
+  TFile.SetCreationTime(FileName, CreationTime);
+  TFile.SetLastAccessTime(FileName, LastWriteTime);
+  TFile.SetLastAccessTime(FileName, LastAccessTime);
+{$endif}
 end;
 
-function RenameFileEx(const Source, Dest: TFileName): BG;
-var ErrorCode: U4;
+procedure RenameFileEx(const Source, Dest: TFileName);
+var
+  Result: BG;
 begin
+{$ifdef MSWINDOWS}
 	Winapi.Windows.SetFileAttributes(PChar(Dest), FILE_ATTRIBUTE_ARCHIVE);
 	Result := Winapi.Windows.MoveFileEx(PChar(Source), PChar(Dest), MOVEFILE_REPLACE_EXISTING);
 	if Result = False then
 	begin
-		ErrorCode := GetLastError;
- 		raise EInOutError.Create(ErrorCodeToStr(ErrorCode) + LineSep + Source + LineSep + Dest);
+ 		raise EInOutError.Create(ErrorCodeToStr(GetLastError) + LineSep + Source + LineSep + Dest);
 	end;
+{$else}
+  Result := SysUtils.RenameFile(Source, Dest);
+	if Result = False then
+	begin
+ 		raise EInOutError.Create('Can not rename file' + LineSep + Source + LineSep + Dest);
+	end;
+{$endif}
 end;
 
 function RenameFileIfExistsEx(const Source, Dest: TFileName): BG;
 begin
   if FileExists(Source) and (Source <> Dest) then
   begin
-    Result := RenameFileEx(Source, Dest);
+    RenameFileEx(Source, Dest);
+    Result := True;
   end
   else
     Result := False;
 end;
 
-function CopyFile(const Source, Dest: TFileName; const FailExist: BG): BG;
-var ErrorCode: U4;
+procedure CopyFile(const Source, Dest: TFileName; const FailExist: BG);
+{$ifdef MSWINDOWS}
+var
+  Result: BG;
 begin
 	if LogDebug then
     MainLogAdd('Copy file ' + AddQuoteF(Source) + ' to ' + AddQuoteF(Dest), mlDebug);
@@ -870,53 +976,53 @@ begin
 	Result := Winapi.Windows.CopyFile(PChar(Source), PChar(Dest), FailExist);
 	if Result = False then
 	begin
-		ErrorCode := GetLastError;
-    raise EInOutError.Create(ErrorCodeToStr(ErrorCode) + LineSep + 'During copying file ' + LineSep + Source + LineSep + 'to' + LineSep + Dest);;
+    raise EInOutError.Create(ErrorCodeToStr(GetLastError) + LineSep + 'During copying file ' + LineSep + Source + LineSep + 'to' + LineSep + Dest);;
 	end;
-end;
-
-function CopyFileToDir(Source, Dest: TFileName; const FailExist: BG): BG;
+{$else}
 begin
-	Result := CopyFile(Source, Dest + ExtractFileName(Source), FailExist);
+  TFile.Copy(Source, Dest, {Overwrite: }not FailExist);
+{$endif}
 end;
 
-function CopyDamagedFile(Source, Dest: TFileName): BG;
+procedure CopyFileToDir(Source, Dest: TFileName; const FailExist: BG);
+begin
+	CopyFile(Source, Dest + ExtractFileName(Source), FailExist);
+end;
+
+procedure CopyDamagedFile(Source, Dest: TFileName);
 const
 	MaxCount = 512;
 var
 	Total: U8;
 	Count: UG;
-	FS, FD: TFile;
+	FS, FD: TRawFile;
 	Buf: Pointer;
 begin
-	Result := True;
 	Buf := nil;
 	FS := nil;
 	FD := nil;
 	try
 		GetMem(Buf, MaxCount);
-		FS := TFile.Create;
-		FD := TFile.Create;
-		FD.Charset := fcAnsi;
-		if FS.Open(Source, fmReadOnly) then
-		begin
-			if FD.Open(Dest, fmRewrite) then
-			begin
-				Total := FS.FileSize;
-				while Total > 0 do
-				begin
-					Count := Min(Total, MaxCount);
-					ClearMemory(Buf^, Count);
-					if not FS.BlockRead(Buf^, Count) then
-						Result := False;
-					FD.BlockWrite(Buf^, Count);
-					Dec(Total, Count);
-				end;
-				FD.Truncate;
-				FD.Close;
-			end;
-			FS.Close;
-		end;
+		FS := TRawFile.Create;
+		FD := TRawFile.Create;
+    FS.FileName := Source;
+    FS.FileMode := fmReadOnly;
+    FD.FileName := Dest;
+    FD.FileMode := fmReadOnly;
+    FS.Open;
+    FD.Open;
+    Total := FS.FileSize;
+    while Total > 0 do
+    begin
+      Count := Min(Total, MaxCount);
+      ClearMemory(Buf^, Count);
+      FS.BlockRead(Buf^, Count);
+      FD.BlockWrite(Buf^, Count);
+      Dec(Total, Count);
+    end;
+    FD.Truncate;
+    FD.Close;
+	  FS.Close;
 	finally
 		FreeAndNil(FS);
 		FreeAndNil(FD);
@@ -935,9 +1041,14 @@ begin
 		Result := True
 	else
 	begin
+{$ifdef MSWINDOWS}
 		Result := CreateDirectory(PChar(Dir), nil);
 		if Result = False then
 			IOError(Dir, GetLastError);
+{$else}
+    TDirectory.CreateDirectory(Dir);
+    Result := True;
+{$endif}
 	end;
 end;
 
@@ -957,6 +1068,7 @@ begin
 end;
 
 function CreateLockedDir(const ADirectoryName: string): THandle;
+{$ifdef MSWINDOWS}
 var
   DirectoryName: string;
 begin
@@ -983,7 +1095,18 @@ begin
 	begin
 		IOError(DirectoryName, GetLastError);
 	end;
+{$else}
+begin
+  CreateDirsEx(ADirectoryName);
+{$endif}
 end;
+
+{$ifndef MSWINDOWS}
+procedure CloseHandle(const AHandle: THandle);
+begin
+  // No code
+end;
+{$endif}
 
 function NewFileOrDir(var FileOrDir: string): BG;
 var
@@ -1062,7 +1185,11 @@ var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 begin
 	Result := True;
+  {$ifdef MSWINDOWS}
 	CreateDirectoryEx(PChar(Source), PChar(Dest), nil);
+  {$else}
+  TDirectory.CreateDirectory(Dest);
+  {$endif}
 //	if Result = then
 	begin
 		if GetFileDateTime(Source, CreationTime, LastAccessTime, LastWriteTime) then
@@ -1096,7 +1223,10 @@ begin
 		end;
 		ErrorCode := SysUtils.FindNext(SearchRec);
 	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(Source, ErrorCode);
+  {$ifdef MSWINDOWS}
+	if ErrorCode <> ERROR_NO_MORE_FILES then
+    IOError(Source, ErrorCode);
+  {$endif}
 	SysUtils.FindClose(SearchRec);
 end;
 
@@ -1104,7 +1234,10 @@ function DeleteFileEx(const FileName: TFileName): BG;
 begin
 	if LogDebug then
     MainLogAdd('Delete file ' + AddQuoteF(FileName), mlDebug);
+  {$ifdef MSWINDOWS}
+  // Readonly file can not be deleted
 	Winapi.Windows.SetFileAttributes(PChar(FileName), FILE_ATTRIBUTE_ARCHIVE);
+  {$endif}
 	Result := DeleteFile(PChar(FileName));
 	if Result = False then
 		raise EIOException.Create(FileName, GetLastError);
@@ -1114,9 +1247,13 @@ function RemoveDirEx(const DirName: string): BG;
 begin
 	if LogDebug then
     MainLogAdd('Remove directory ' + AddQuoteF(DirName), mlDebug);
+  {$ifdef MSWINDOWS}
 	Result := RemoveDirectory(PChar(DirName));
 	if Result = False then
 		raise EIOException.Create(DirName, GetLastError);
+  {$else}
+  TDirectory.Delete(DirName);
+  {$endif}
 end;
 
 function RemoveDirsEx(DirName: string; DeleteSelf: BG = False): BG;
@@ -1150,31 +1287,35 @@ begin
 		end;
 		ErrorCode := SysUtils.FindNext(SearchRec);
 	end;
-	if ErrorCode <> ERROR_NO_MORE_FILES then IOError(DirName, ErrorCode);
+  {$ifdef MSWINDOWS}
+	if ErrorCode <> ERROR_NO_MORE_FILES then
+    IOError(DirName, ErrorCode);
+  {$endif}
 	SysUtils.FindClose(SearchRec);
 
-	if DeleteSelf then Result := RemoveDirEx(DirName) and Result;
+	if DeleteSelf then
+    Result := RemoveDirEx(DirName) and Result;
 end;
 
 procedure FileLinesAndSize(const FileName: TFileName; out Size, Lines: U8);
 var
-	F: TFile;
+	F: TTextFile;
 	Line: string;
 begin
 	Size := 0;
 	Lines := 0;
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			Size := F.FileSize;
-			while not F.EOF do
-			begin
-				F.Readln(Line);
-				Inc(Lines);
-			end;
-			F.Close;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    Size := F.FileSize;
+    while not F.EOF do
+    begin
+      F.ReadLine(Line);
+      Inc(Lines);
+    end;
+    F.Close;
 	finally
 		F.Free;
 	end;
@@ -1202,199 +1343,142 @@ end;
 
 // TFile Read Write
 
-function ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG): BG;
+procedure ReadBufferFromFile(const FileName: TFileName; out Buf; out Count: SG);
 var
-	F: TFile;
+	F: TRawFile;
 begin
-	Result := False;
 	Count := 0;
 	Pointer(Buf) := nil;
-	F := TFile.Create;
+	F := TRawFile.Create;
+  F.FileName := FileName;
+  F.FileMode := fmReadOnly;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			GetMem(Pointer(Buf), F.FileSize);
-			F.BlockRead(Pointer(Buf)^, F.FileSize);
-			Count := F.FileSize;
-			F.Close;
-			Result := True;
-		end;
+		F.Open;
+    GetMem(Pointer(Buf), F.FileSize);
+    try
+      F.BlockRead(Pointer(Buf)^, F.FileSize);
+      Count := F.FileSize;
+      F.Close;
+    except
+      FreeMem(Pointer(Buf));
+      Pointer(Buf) := nil;
+    end;
 	finally
 		F.Free;
 	end;
 end;
 
-function WriteBufferToFile(const FileName: TFileName; const Buf; const Count: UG): BG;
+procedure WriteBufferToFile(const FileName: TFileName; const Buf; const Count: UG);
 var
-	F: TFile;
+	F: TRawFile;
 begin
-	Result := False;
-	F := TFile.Create;
+	F := TRawFile.Create;
 	try
-		F.Charset := fcAnsi;
-		if F.Open(FileName, fmRewrite) then
-		begin
-			F.BlockWrite(Pointer(Buf)^, Count);
-			F.Truncate;
-			F.Close;
-			Result := True;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmRewrite;
+		F.Open;
+    F.BlockWrite(Pointer(Buf)^, Count);
+    F.Truncate;
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
+procedure ReadBlockFromFile(const FileName: TFileName; Buf: Pointer; const Count: UG);
 var
-	F: TFile;
+	F: TRawFile;
 begin
-	Result := False;
-	F := TFile.Create;
+	F := TRawFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			F.BlockRead(Buf^, Min(Count, F.FileSize));
-			F.Close;
-			Result := True;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+    F.Open;
+    F.BlockRead(Buf^, Min(Count, F.FileSize));
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: UG): BG;
+procedure WriteBlockToFile(const FileName: TFileName; Buf: Pointer; const Count: UG);
 var
-	F: TFile;
+	F: TRawFile;
 begin
-	Result := False;
-	F := TFile.Create;
+	F := TRawFile.Create;
 	try
-		if F.Open(FileName, fmRewrite, FILE_FLAG_NO_PREFIX or FILE_FLAG_SEQUENTIAL_SCAN) then
-		begin
-			F.BlockWrite(Buf^, Count);
-			F.Truncate;
-			F.Close;
-			Result := True;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmRewrite;
+		F.Open;
+    F.BlockWrite(Buf^, Count);
+    F.Truncate;
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function ReadStringFromFileEx(const FileName: TFileName; out Data: AnsiString): TFileCharset;
+function ReadStringFromFileEx(const FileName: TFileName; out Data: string): TFileCharset;
 var
-	F: TFile;
+	F: TTextFile;
 begin
-	Result := fcUTF8;
 	Data := '';
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			SetLength(Data, F.FileSize);
-			if Length(Data) >= 1 then
-			begin
-				F.BlockRead(Data[1], F.FileSize);
-				if F.Charset = fcUTF8 then
-					Data := AnsiString(UTF8ToAnsi(Data));
-			end;
-			Result := F.Charset;
-			F.Close;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+    F.DefaultCharset := fcAnsi;
+		F.Open;
+    Data := F.ReadAsString;
+    Result := F.Charset;
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function ReadStringFromFile(const FileName: TFileName; out Data: AnsiString): BG; overload;
+procedure ReadStringFromFile(const FileName: TFileName; out Data: string); overload;
 var
-	F: TFile;
+	F: TTextFile;
 begin
-	Result := False;
 	Data := '';
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			SetLength(Data, F.FileSize);
-			if Length(Data) >= 1 then
-			begin
-				F.BlockRead(Data[1], F.FileSize);
-				if F.Charset = fcUTF8 then
-					Data := AnsiString(UTF8ToAnsi(Data));
-			end;
-			F.Close;
-			Result := True;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    Data := F.ReadAsString;
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function ReadStringFromFile(const FileName: TFileName; out Data: UnicodeString): BG; overload;
-var
-	F: TFile;
-	Data2: RawByteString;
-begin
-	Result := False;
-	Data := '';
-	F := TFile.Create;
-	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			SetLength(Data2, F.FileSize);
-			if Length(Data2) >= 1 then
-			begin
-				F.BlockRead(Data2[1], F.FileSize);
-				if F.Charset = fcUTF8 then
-					Data := ConvertUTF8ToUnicode(Data2)
-				else
-					Data := UnicodeString(Data2);
-			end;
-			SetLength(Data2, 0);
-			F.Close;
-			Result := True;
-		end;
-	finally
-		F.Free;
-	end;
-end;
-
-function ReadStringFromFile(const FileName: TFileName): UnicodeString; overload;
+function ReadStringFromFile(const FileName: TFileName): string; overload;
 begin
 	ReadStringFromFile(FileName, Result);
 end;
 
 function ReadStringFromFile(const FileName: TFileName; const Limit: U8): string;
 var
-	F: TFile;
-	Data2: RawByteString;
+	F: TTextFile;
 begin
 	Result := '';
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			SetLength(Data2, Min(Limit, F.FileSize));
-			if Length(Data2) >= 1 then
-			begin
-				F.BlockRead(Data2[1], Min(Limit, F.FileSize));
-				if F.Charset = fcUTF8 then
-					Result := ConvertUTF8ToUnicode(Data2)
-				else
-					Result := UnicodeString(Data2);
-			end;
-			SetLength(Data2, 0);
-			F.Close;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+    F.Open;
+    F.ReadAsString(Limit);
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function SameDataInFile(const FileName: TFileName; const Line: AnsiString): BG;
+function SameDataInFile(const FileName: TFileName; const Line: RawByteString): BG;
 var
-	F: TFile;
+	F: TRawFile;
 	Buf: Pointer;
 
   function InternalSameDataInFile: BG;
@@ -1413,11 +1497,7 @@ var
       ReadBytes := DefFileBuffer;
       if ReadBytes > TotalBytes then
         ReadBytes := TotalBytes;
-      if not F.BlockRead(Buf^, ReadBytes) then
-      begin
-        Result := False;
-        Exit;
-      end;
+      F.BlockRead(Buf^, ReadBytes);
       P := @Line[Length(Line) - TotalBytes + 1];
       if SameData(Buf, P, ReadBytes) = False then
       begin
@@ -1432,14 +1512,14 @@ begin
 	Result := False;
 	if FileExists(FileName) then
 	begin
-		F := TFile.Create;
+		F := TRawFile.Create;
 		GetMem(Buf, DefFileBuffer);
 		try
-			if F.Open(FileName, fmReadOnly) then
-			begin
-        Result := InternalSameDataInFile;
-				F.Close;
-			end;
+      F.FileName := FileName;
+      F.FileMode := fmReadOnly;
+			F.Open;
+      Result := InternalSameDataInFile;
+  		F.Close;
 		finally
 			FreeMem(Buf);
 			F.Free;
@@ -1447,13 +1527,13 @@ begin
 	end;
 end;
 
-procedure ConvertFileCharset(const Source: AnsiString; out Dest: RawByteString; const FileCharset: TFileCharset); overload;
+procedure ConvertFileCharset(const Source: RawByteString; out Dest: RawByteString; const FileCharset: TFileCharset); overload;
 begin
 	case FileCharset of
 	fcAnsi: Dest := Source;
 	fcUTF8: Dest := AnsiToUtf8(string(Source));
 	else
-		Warning('Unsupported charset.');
+    raise ENotSupportedException.Create('Unsupported charset.');
 	end;
 end;
 
@@ -1464,7 +1544,7 @@ var
   i: SG;
 begin
 	case FileCharset of
-	fcAnsi: Dest := AnsiString(Source);
+	fcAnsi: Dest := RawByteString(Source);
 	fcUTF8: Dest := ConvertUnicodeToUtf8(Source);
   fcUTF16BE:
   begin
@@ -1488,133 +1568,87 @@ begin
 	end;
 end;
 
-function WriteStringToFile(const FileName: TFileName; const Data: AnsiString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG;
+procedure WriteStringToFile(const FileName: TFileName; const Data: string; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone);
 var
-	F: TFile;
-	FileMode: TFileMode;
+	F: TTextFile;
 	DataA: RawByteString;
 begin
 	ConvertFileCharset(Data, DataA, FileCharset);
-
-	if (Append = False) and SameDataInFile(FileName, DataA) then
-		Result := True
-	else
+	if Append or (not SameDataInFile(FileName, DataA)) then
 	begin
-		Result := False;
-		if Append then
-			FileMode := fmAppend
-		else
-			FileMode := fmRewrite;
-		F := TFile.Create;
+		F := TTextFile.Create;
 		try
-  		F.Charset := FileCharset;
+      F.FileName := FileName;
+      if Append then
+        F.FileMode := fmAppend
+      else
+        F.FileMode := fmRewrite;
+  		F.DefaultCharset := FileCharset;
       F.Protection := Protection;
       F.SkipSameData := False;
       F.BackupFolder := BackupFolder;
-			if F.Open(FileName, FileMode, Flags) then
-			begin
-				F.WriteNoConversion(DataA);
-				F.Close;
-				Result := True;
-			end;
+			F.Open;
+      F.WriteNoConversion(DataA);
+      F.Close;
 		finally
 			F.Free;
 		end;
 	end;
 end;
 
-function WriteStringToFile(const FileName: TFileName; const Data: UnicodeString; const Append: BG; const FileCharset: TFileCharset = DefaultFileCharset; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN; const Protection: BG = True; const BackupFolder: TBackupFolder = bfNone): BG;
+procedure ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG);
 var
-	F: TFile;
-	FileMode: TFileMode;
-	DataA: RawByteString;
-begin
-	ConvertFileCharset(Data, DataA, FileCharset);
-	if (Append = False) and SameDataInFile(FileName, DataA) then
-		Result := True
-	else
-	begin
-		Result := False;
-		if Append then
-			FileMode := fmAppend
-		else
-			FileMode := fmRewrite;
-		F := TFile.Create;
-		try
-  		F.Charset := FileCharset;
-      F.Protection := Protection;
-      F.SkipSameData := False;
-      F.BackupFolder := BackupFolder;
-			if F.Open(FileName, FileMode, Flags) then
-			begin
-				F.WriteNoConversion(DataA);
-				F.Close;
-				Result := True;
-			end;
-		finally
-			F.Free;
-		end;
-	end;
-end;
-
-function ReadStringsFromFile(const FileName: TFileName; var Lines: TArrayOfString; var LineCount: SG): BG;
-var
-	F: TFile;
+	F: TTextFile;
 	Line: string;
 	NewSize: SG;
 begin
-	Result := False;
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			while not F.Eof do
-			begin
-				F.Readln(Line);
-				NewSize := LineCount + 1;
-				if AllocByExp(Length(Lines), NewSize) then
-					SetLength(Lines, NewSize);
-				Lines[LineCount] := Line;
-				Inc(LineCount);
-			end;
-			F.Close;
-			Result := True;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    while not F.Eof do
+    begin
+      F.ReadLine(Line);
+      NewSize := LineCount + 1;
+      if AllocByExp(Length(Lines), NewSize) then
+        SetLength(Lines, NewSize);
+      Lines[LineCount] := Line;
+      Inc(LineCount);
+    end;
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG; const Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
+procedure WriteStringsToFile(const FileName: TFileName; var Lines: TArrayOfString; OpeningNameCount: SG; const Append: BG);
 var
-	F: TFile;
+	F: TTextFile;
 	i: SG;
-	FileMode: TFileMode;
 begin
-	Result := False;
-	if Append then
-		FileMode := fmAppend
-	else
-		FileMode := fmRewrite;
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, FileMode, Flags) then
-		begin
-			i := 0;
-			while i < OpeningNameCount do
-			begin
-				F.Write(Lines[i] + FileSep);
-				Inc(i);
-			end;
-			F.Close;
-			Result := True;
-		end;
+    F.FileName := FileName;
+    if Append then
+      F.FileMode := fmAppend
+    else
+      F.FileMode := fmRewrite;
+		F.Open;
+    i := 0;
+    while i < OpeningNameCount do
+    begin
+      F.Write(Lines[i] + FileSep);
+      Inc(i);
+    end;
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
 function ShortToLongFileName(const ShortName: string): string;
+{$ifdef MSWINDOWS}
 var
 	Temp: TWIN32FindData;
 	SearchHandle: THandle;
@@ -1626,6 +1660,10 @@ begin
 	end
 	else Result := '';
 	Winapi.Windows.FindClose(SearchHandle);
+{$else}
+begin
+  Result := ShortName;
+{$endif}
 end;
 (*
 function LongToShortFileName(const LongName: string): string;
@@ -1743,7 +1781,7 @@ begin
 	end;
 end;
 
-function CompareFiles(const File1, File2: TFile): BG;
+function CompareFiles(const File1, File2: TRawFile): BG;
 var
 	Buf1, Buf2: Pointer;
   FileBufferSize: UG;
@@ -1758,16 +1796,8 @@ var
     begin
       ReadBytes := FileBufferSize;
       if ReadBytes > TotalBytes then ReadBytes := TotalBytes;
-      if not File1.BlockRead(Buf1^, ReadBytes) then
-      begin
-        Result := False;
-        Exit;
-      end;
-      if not File2.BlockRead(Buf2^, ReadBytes) then
-      begin
-        Result := False;
-        Exit;
-      end;
+      File1.BlockRead(Buf1^, ReadBytes);
+      File2.BlockRead(Buf2^, ReadBytes);
       Dec(TotalBytes, ReadBytes);
       if SameData(Buf1, Buf2, ReadBytes) = False then
       begin
@@ -1800,51 +1830,24 @@ end;
 
 function SameFiles(const FileName1, FileName2: TFileName): BG;
 var
-	File1, File2: TFile;
+	File1, File2: TRawFile;
 begin
-	Result := False;
-	File1 := TFile.Create;
+	File1 := TRawFile.Create;
 	try
-		if File1.Open(FileName1, fmReadOnly) then
-		begin
-			File2 := TFile.Create;
-			try
-				if File2.Open(FileName2, fmReadOnly) then
-				begin
-					Result := CompareFiles(File1, File2);
-					File2.Close;
-				end;
-				File1.Close;
-			finally
-				File2.Free;
-			end;
-		end;
-	finally
-		File1.Free;
-	end;
-end;
-
-function SameFilesNoPrefix(const FileName1, FileName2: TFileName): BG;
-var
-	File1, File2: TFile;
-begin
-	Result := False;
-	File1 := TFile.Create;
-	try
-		if File1.Open(FileName1, fmReadOnly, FILE_FLAG_NO_PREFIX) then
-		begin
-			File2 := TFile.Create;
-			try
-				if File2.Open(FileName2, fmReadOnly, FILE_FLAG_NO_PREFIX) then
-				begin
-					Result := CompareFiles(File1, File2);
-					File2.Close;
-				end;
-				File1.Close;
-			finally
-				File2.Free;
-			end;
-		end;
+    File1.FileName := FileName1;
+    File1.FileMode := fmReadOnly;
+		File1.Open;
+		File2 := TRawFile.Create;
+    try
+      File2.FileName := FileName2;
+      File2.FileMode := fmReadOnly;
+      File2.Open;
+      Result := CompareFiles(File1, File2);
+      File2.Close;
+      File1.Close;
+    finally
+      File2.Free;
+    end;
 	finally
 		File1.Free;
 	end;
@@ -1885,6 +1888,7 @@ begin
 end;
 
 procedure TestFileReadable(const AFileName: string);
+{$ifdef MSWINDOWS}
 var
   H: THandle;
 begin
@@ -1897,9 +1901,18 @@ begin
   begin
     raise Exception.Create(ReplaceParam(ErrorCodeToStr(GetLastError) + LineSep + '%1', [AFileName]));
   end;
+{$else}
+var
+  F: File;
+begin
+  AssignFile(F, AFileName);
+  Reset(F, 1);
+  CloseFile(F);
+{$endif}
 end;
 
 function IsFileWritable(const AFileName: string): Boolean;
+{$ifdef MSWINDOWS}
 var
   H: THandle;
 begin
@@ -1907,6 +1920,19 @@ begin
   Result := H <> INVALID_HANDLE_VALUE;
   if Result then
     CloseHandle(H);
+{$else}
+var
+  F: File;
+begin
+  AssignFile(F, AFileName);
+  try
+    Reset(F, 1);
+    CloseFile(F);
+    Result := True;
+  except
+    Result := False;
+  end;
+{$endif}
 end;
 {
 function DirectoryExists(const Directory: string): BG;
@@ -1954,40 +1980,45 @@ begin
 		Result := FileExistsEx(FileOrDirName);
 end;
 
+{$ifdef MSWINDOWS}
 function LastLineFromFile(const FileName: TFileName): AnsiString;
 var
 	i: SG;
-	F: TFile;
+	F: TTextFile;
 	C: AnsiChar;
 begin
 	Result := '';
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly, FILE_FLAG_RANDOM_ACCESS) then
-		begin
-			i := F.FileSize - 1;
-			while i >= 0 do
-			begin
-				F.Seek(i);
-				F.BlockRead(C, SizeOf(C));
-				if not CharInSet(C, [CharCR, CharLF]) then Break;
-				Dec(i);
-			end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+    F.RandomAccess := True;
+		F.Open;
+    i := F.FileSize - 1;
+    while i >= 0 do
+    begin
+      F.Seek(i);
+      F.BlockRead(C, SizeOf(C));
+      if not CharInSet(C, [CharCR, CharLF]) then
+        Break;
+      Dec(i);
+    end;
 
-			while i >= 0 do
-			begin
-				F.Seek(i);
-				F.BlockRead(C, SizeOf(C));
-				if CharInSet(C, [CharCR, CharLF]) then Break;
-				Result := c + Result;
-				Dec(i);
-			end;
-			F.Close;
-		end;
+    while i >= 0 do
+    begin
+      F.Seek(i);
+      F.BlockRead(C, SizeOf(C));
+      if CharInSet(C, [CharCR, CharLF]) then
+        Break;
+      Result := c + Result;
+      Dec(i);
+    end;
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
+{$endif}
 
 function SameFileName(const FileName1, FileName2: TFileName): BG;
 begin
@@ -2052,7 +2083,6 @@ begin
 	Result := Result + ExtString + ')|' + ExtString;
 end;
 
-// @return 'All Files (*.*)|*.*'
 function AllFiles: string;
 begin
 	Result := GetFileNameFilter('All Files', ['*']);
@@ -2068,7 +2098,6 @@ begin
 	Result := GetFileNameFilter('Executable files', ['exe', 'com', 'bat', 'cmd']);
 end;
 
-// @return 'Text file (*.txt)|*.txt|'
 function AllText: string;
 begin
 	Result := GetTextFilter + '|' + AllFiles;
