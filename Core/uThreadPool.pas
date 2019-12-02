@@ -132,7 +132,7 @@ begin
   else
     FMaxThreads.NumericalInterval.MaximalValue := 256;
 
-  FMaxThreads.DefaultValue := Min(GCPU.LogicalProcessorCount, FMaxThreads.NumericalInterval.MaximalValue);
+  FMaxThreads.DefaultValue := Min(CPU.LogicalProcessorCount, FMaxThreads.NumericalInterval.MaximalValue);
   FMaxThreads.Value := FMaxThreads.DefaultValue;
   FMaxThreads.OnChange := MaxThreadsChanged;
 
