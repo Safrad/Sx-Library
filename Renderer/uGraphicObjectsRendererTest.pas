@@ -205,7 +205,7 @@ begin
     Stopwatch := TStopwatch.Create;
     try
       LastFileSize := 0;
-      for ThreadCount := 1 to 2 * GCPU.LogicalProcessorCount do
+      for ThreadCount := 1 to 2 * CPU.LogicalProcessorCount do
       begin
         Bmp.Bar(TColors.Black, ef16);
         ThreadPool.MaxThreads.Value := ThreadCount;
