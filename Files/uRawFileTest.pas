@@ -31,11 +31,11 @@ var
   Block, Block2: TAlignedMemory;
 begin
   Block := TAlignedMemory.Create;
-  Block.AlignSize := GCPU.PageSize;
+  Block.AlignSize := CPU.PageSize;
   Block.Size := Size;
 
   Block2 := TAlignedMemory.Create;
-  Block2.AlignSize := GCPU.PageSize;
+  Block2.AlignSize := CPU.PageSize;
   Block2.Size := Block.Size;
 
   RawFile := TRawFile.Create;
