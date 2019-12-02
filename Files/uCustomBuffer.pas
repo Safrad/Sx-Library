@@ -34,7 +34,7 @@ begin
   inherited;
 
 	FAlignedMemory := TAlignedMemory.Create;
-  FAlignedMemory.AlignSize := GCPU.PageSize;
+  FAlignedMemory.AlignSize := CPU.PageSize;
 end;
 
 destructor TCustomBuffer.Destroy;
