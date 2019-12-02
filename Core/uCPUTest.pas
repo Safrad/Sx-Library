@@ -23,24 +23,24 @@ var
 
 procedure TCPUTest.Test;
 begin
-  GCPU.Update;
+  CPU.Update;
 
-  CheckTrue(GCPU.Name <> '');
-  CheckTrue(GCPU.Family <> 0);
-  CheckTrue(GCPU.Model <> 0);
-  CheckTrue(GCPU.Stepping <> 0);
-  CheckTrue(GCPU.Frequency <> 0);
-  CheckTrue(GCPU.DefaultFrequency <> 0);
-  CheckTrue(Abs(GCPU.Frequency / GCPU.DefaultFrequency - 1) < 1);
+  CheckTrue(CPU.Name <> '');
+  CheckTrue(CPU.Family <> 0);
+  CheckTrue(CPU.Model <> 0);
+  CheckTrue(CPU.Stepping <> 0);
+  CheckTrue(CPU.Frequency <> 0);
+  CheckTrue(CPU.DefaultFrequency <> 0);
+  CheckTrue(Abs(CPU.Frequency / CPU.DefaultFrequency - 1) < 1);
   if FirstCall then
-    CheckTrue(GCPU.Usage = 0)
+    CheckTrue(CPU.Usage = 0)
   else
-    CheckTrue(GCPU.Usage <> 0);
+    CheckTrue(CPU.Usage <> 0);
 
   FirstCall := False;
   Sleep(1000);
-  GCPU.Update;
-  CheckTrue(GCPU.Usage <> 0);
+  CPU.Update;
+  CheckTrue(CPU.Usage <> 0);
 end;
 
 initialization
