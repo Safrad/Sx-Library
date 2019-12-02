@@ -48,6 +48,7 @@ const
 	FirstLess = -1;
 	BothSame = 0;
 
+/// <returns>0 if Version1 = Version2, 1 if Version1 &gt; Version2, -1 if Version1 &lt; Version2</returns>
 function CompareVersion(const Version1, Version2: string): SG; overload;
 
 implementation
@@ -65,9 +66,6 @@ begin
 end;
 }
 
-(**
-* @return 0 if Version1 = Version2, 1 if Version1 > Version2, -1 if Version1 < Version2
-*)
 function CompareVersion(const Version1, Version2: string): SG; overload;
 var
 	Version1a, Version2a: TProjectVersion;
