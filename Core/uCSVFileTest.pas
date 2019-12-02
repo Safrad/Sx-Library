@@ -72,7 +72,6 @@ procedure TCSVFileTest.EmptyDataTest;
 var
   FileName: TFileName;
   CSVFile: TCSVFile;
-  Line: TArrayOfString;
 begin
   FileName := DataDir + 'CSV' + PathDelim + 'Empty.csv';
   CSVFile := TCSVFile.Create;
