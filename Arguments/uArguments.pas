@@ -3,7 +3,8 @@ unit uArguments;
 interface
 
 uses
-  Contnrs,
+  Generics.Collections,
+
   uTypes,
   uRow,
   uCustomArgument;
@@ -13,7 +14,7 @@ type
 
   TArguments = class
   private
-    FArguments: TObjectList;
+    FArguments: TObjectList<TCustomArgument>;
     FName: string;
 
     function ParseString(ASource: string): TArrayOfStringPair;
@@ -103,7 +104,7 @@ end;
 
 constructor TArguments.Create;
 begin
-  FArguments := TObjectList.Create;
+  FArguments := TObjectList<TCustomArgument>.Create;
   FArguments.OwnsObjects := False;
 end;
 
