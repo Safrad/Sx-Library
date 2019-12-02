@@ -803,15 +803,12 @@ begin
 			if RenameFile then
 			begin
 				WatchRemoveFile(Items[OpenedFile].FileName);
-				if RenameFileEx(Items[OpenedFile].FileName, NewFileName) then
-				begin
-					Result := True;
-					WatchAddFile(NewFileName, FileChanged);
-				end
-				else
-				begin
+        try
+  				RenameFileEx(Items[OpenedFile].FileName, NewFileName);
+  				WatchAddFile(NewFileName, FileChanged);
+				except
 					WatchAddFile(Items[OpenedFile].FileName, FileChanged);
-					Exit;
+					raise;
 				end;
 			end;
 
