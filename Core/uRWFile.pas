@@ -4,7 +4,7 @@ interface
 
 uses
 	SysUtils,
-	uTypes, uFile;
+	uTypes;
 
 type
 	TRWFile = class
