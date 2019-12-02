@@ -1,5 +1,9 @@
 unit uBigDecimalHelper;
 
+{$if SizeOf(Extended) > SizeOf(Double)}
+  {$DEFINE HasExtended}
+{$endif}
+
 interface
 
 uses
@@ -12,8 +16,8 @@ type
 	// Conversion
     function ToBigInteger: BigInteger;
     function ToDouble: Double;
-    function ToFloat: {$ifndef CPUX64}Extended{$else}Double{$endif};
-    {$ifndef CPUX64}
+    function ToFloat: {$ifdef HasExtended}Extended{$else}Double{$endif};
+    {$ifdef HasExtended}
     function ToExtended: Extended;
     {$endif}
 
@@ -136,12 +140,12 @@ begin
   Result := TBigDecimalUtils.ToDouble(Self);
 end;
 
-function TBigDecimalHelper.ToFloat: {$ifndef CPUX64}Extended{$else}Double{$endif};
+function TBigDecimalHelper.ToFloat: {$ifdef HasExtended}Extended{$else}Double{$endif};
 begin
   Result := TBigDecimalUtils.ToFloat(Self);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function TBigDecimalHelper.ToExtended: Extended;
 begin
   Result := TBigDecimalUtils.ToExtended(Self);

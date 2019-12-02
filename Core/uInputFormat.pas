@@ -1,5 +1,9 @@
 unit uInputFormat;
 
+{$if SizeOf(Extended) > SizeOf(Double)}
+  {$DEFINE HasExtended}
+{$endif}
+
 interface
 
 uses
@@ -15,7 +19,7 @@ type
 
 function StrToF4(const Str: string; const InputFormat: TInputFormat): F4;
 function StrToF8(const Str: string; const InputFormat: TInputFormat): F8;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function StrToFA(const Str: string; const InputFormat: TInputFormat): FA;
 {$endif}
 function StrToSG(const Str: string; const InputFormat: TInputFormat): SG;
@@ -515,7 +519,7 @@ begin
 	end;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function StrToFA(const Str: string; const InputFormat: TInputFormat): FA;
 var
 	E: Integer;

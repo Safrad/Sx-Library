@@ -1,5 +1,14 @@
 unit uDIniFile;
 
+{$if SizeOf(Extended) > SizeOf(Double)}
+  {$DEFINE HasExtended}
+{$endif}
+
+{$IFNDEF Console}
+{$IFDEF MSWINDOWS}
+  {$DEFINE VCL}
+{$ENDIF}
+{$ENDIF}
 interface
 
 uses
@@ -9,7 +18,7 @@ uses
   uCustomArgument,
   uArguments,
 	uRWFile
-{$IFNDEF Console}
+{$IFDEF VCL}
 	, uDButton, uDForm,
 	Classes, Forms, ComCtrls, StdCtrls, Controls, Menus, CheckLst
 {$ENDIF};
@@ -67,14 +76,14 @@ type
 		function ReadNum(const Section, Ident: string; Default: U8): U8; overload;
     {$ifend}
 		function ReadNum(const Section, Name: string; Default: F8): F8; overload;
-    {$ifndef CPUX64}
+    {$ifdef HasExtended}
 		function ReadNum(const Section, Name: string; Default: FA): FA; overload;
     {$endif}
 
 		procedure WriteNum(const Section, Ident: string; Value: S4); overload;
 		procedure WriteNum(const Section, Ident: string; Value: S8); overload;
 		procedure WriteNum(const Section, Name: string; Value: F8); overload;
-    {$ifndef CPUX64}
+    {$ifdef HasExtended}
 		procedure WriteNum(const Section, Name: string; Value: FA); overload;
     {$endif}
 
@@ -109,7 +118,7 @@ type
     {$ifend}
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
-    {$ifndef CPUX64}
+    {$ifdef HasExtended}
 		procedure RWNum(const Section, Ident: string; var Value: FA; const Save: BG); overload;
     {$endif}
 		procedure RWEnum(const Section: string; TypeInfo: PTypeInfo; var Value: U1; const Save: BG);
@@ -128,7 +137,7 @@ type
 		function RWBGF(const Section, Ident: string; const SaveVal, DefVal: BG; const Save: BG): BG;
 		// deprecated;
 		function RWFGF(const Section, Ident: string; const SaveVal, DefVal: FG; const Save: BG): FG;
-    {$ifndef CPUX64}
+    {$ifdef HasExtended}
 		function RWFAF(const Section, Ident: string; const SaveVal, DefVal: FA; const Save: BG): FA;
 		// deprecated;
     {$endif}
@@ -151,7 +160,7 @@ type
 
 		procedure LoadFromFile(const FileName: TFileName);
     procedure ParseString(const Data: string);
-{$IFNDEF Console}
+{$IFDEF VCL}
 		procedure ReadSection(const Section: string; Strings: TStrings);
 		procedure RWStrings(const Section: string; Val: TStrings; const Save: BG);
 		procedure RWFormPos(const Form: TForm; const Save: BG);
@@ -209,7 +218,7 @@ implementation
 uses
 	Math,
 	uChar, uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog, uRect, uWHRect
-{$IFNDEF Console}, uMenus, uSystem {$ENDIF};
+{$IFDEF VCL}, uMenus, uSystem {$ENDIF};
 
 procedure TDIniFile.AddSection(const Section: string);
 var
@@ -406,7 +415,7 @@ begin
 	Result := StrToF8(s, ifIO);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function TDIniFile.ReadNum(const Section, Name: string; Default: FA): FA;
 var
 	s: string;
@@ -431,7 +440,7 @@ begin
 	WriteString(Section, Name, FToS(Value, ofIO));
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure TDIniFile.WriteNum(const Section, Name: string; Value: FA);
 begin
 	WriteString(Section, Name, FToS(Value, ofIO));
@@ -719,10 +728,8 @@ begin
 	else
 	begin
 		FFileSaved := True;
-		if ReadStringFromFile(FFileName, s) then
-		begin
-      ParseString(s);
-		end;
+		ReadStringFromFile(FFileName, s);
+    ParseString(s);
 	end;
 end;
 
@@ -755,7 +762,8 @@ begin
 		FFileName := FileName;
 
   s := AsString;
-	FFileSaved := WriteStringToFile(FileName, s, False);
+	WriteStringToFile(FileName, s, False);
+  FFileSaved := True;
 end;
 
 procedure TDIniFile.Save;
@@ -946,7 +954,7 @@ begin
 	end;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: FA; const Save: BG);
 begin
 	if Save = False then
@@ -967,7 +975,7 @@ var
 	i: SG;
 	ValueStr: string;
 begin
-	Ident := string(TypeInfo.Name);
+	Ident := TypeInfo.NameFld.ToString;
 	if FirstChar(Ident) = 'T' then
 		Ident := DelFirstChar(Ident);
 	if Save = False then
@@ -1229,8 +1237,8 @@ begin
 		WriteBool(Section, Ident, SaveVal);
 	end;
 end;
-{$IFNDEF Console}
 
+{$IFDEF VCL}
 procedure TDIniFile.ReadSection(const Section: string; Strings: TStrings);
 var
 	i, SectionIndex: Integer;
@@ -1735,3 +1743,4 @@ begin
 end;
 
 end.
+

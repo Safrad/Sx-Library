@@ -5,6 +5,10 @@ unit uMath;
   {$DEFINE X86ASMRTL}
 {$ENDIF}
 
+{$if SizeOf(Extended) > SizeOf(Double)}
+  {$DEFINE HasExtended}
+{$endif}
+
 interface
 
 uses
@@ -22,13 +26,13 @@ type
 
 procedure Increment(var X: F4; const N: F4 = 1); overload;
 procedure Increment(var X: F8; const N: F8 = 1); overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Increment(var X: FA; const N: FA = 1); overload;
 {$endif}
 
 procedure Decrement(var X: F4; const N: F4 = 1); overload;
 procedure Decrement(var X: F8; const N: F8 = 1); overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Decrement(var X: FA; const N: FA = 1); overload;
 {$endif}
 
@@ -50,13 +54,13 @@ procedure Multiply(var X: SG; const N: SG); overload;
 
 procedure Multiply(var X: F4; const N: F4); overload;
 procedure Multiply(var X: F8; const N: F8); overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Multiply(var X: FA; const N: FA); overload;
 {$endif}
 
 procedure Divide(var X: F4; const N: F4); overload;
 procedure Divide(var X: F8; const N: F8); overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Divide(var X: FA; const N: FA); overload;
 {$endif}
 
@@ -66,7 +70,7 @@ function Sgn(const I: S4): SG; overload;
 function Sgn(const I: S8): SG; overload;
 function Sgn(const I: F4): SG; overload;
 function Sgn(const I: F8): SG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function Sgn(const I: FA): SG; overload;
 {$endif}
 function SgnMul(const Signum, Num: SG): SG; overload;
@@ -94,19 +98,19 @@ function UnsignedMod(const Dividend: S8; const Divisor: SG): SG;
 function ModE(x, y: FM): FM;
 
 function GetAbsoluteError(const A, B: FG): FG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function GetAbsoluteError(const A, B: FA): FA; overload;
 {$endif}
 function GetRelativeError(const A, B: FG): FG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function GetRelativeError(const A, B: FA): FA; overload;
 {$endif}
 function EqualRelative(const A, B, MaxRelativeError: FG): BG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function EqualRelative(const A, B, MaxRelativeError: FA): BG; overload;
 {$endif}
 function EqualAbsolute(const A, B, MaxAbsoluteError: FG): BG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG; overload;
 {$endif}
 function Factorial(const AValue: SG): SG;
@@ -116,29 +120,29 @@ procedure Rotate(var X, Y: SG; MaxX, MaxY: SG; Angle: SG); overload;
 procedure Rotate(var X, Y: Double; MaxX, MaxY: Double; Angle: SG); overload;
 
 function RoundN(const X: FG): S8; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundN(const X: FA): S8; overload;
 {$endif}
 
 function RoundSG(Value: F4): SG; overload;
 function RoundSG(Value: F8): SG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundSG(Value: FA): SG; overload;
 {$endif}
 function RoundS8(Value: FG): S8; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundS8(Value: FA): S8; overload;
 {$endif}
 function RoundU8(Value: FG): U8; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundU8(Value: FA): U8; overload;
 {$endif}
 function TruncS8(Value: FG): S8; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function TruncS8(Value: FA): S8; overload;
 {$endif}
 function RangeS8(Value: FG): BG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RangeS8(Value: FA): BG; overload;
 {$endif}
 
@@ -159,7 +163,7 @@ function IsInRange(const Min, Cur, Max: S8): BG; overload;
 function IsInRange(const Min, Cur, Max: U8): BG; overload;
 function IsInRange(const Min, Cur, Max: F4): BG; overload;
 function IsInRange(const Min, Cur, Max: F8): BG; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function IsInRange(const Min, Cur, Max: FA): BG; overload;
 {$endif}
 
@@ -186,7 +190,7 @@ procedure Exchange(var A, B: NativeUInt); register; overload;
 {$endif}
 procedure Exchange(var A, B: F4); register; overload;
 procedure Exchange(var A, B: F8); register; overload;
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Exchange(var A, B: FA); register; overload;
 {$endif}
 procedure Exchange(var A, B: Pointer); register; overload;
@@ -286,7 +290,7 @@ begin
   X := X + N;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Increment(var X: FA; const N: FA = 1); overload;
 begin
   X := X + N;
@@ -303,7 +307,7 @@ begin
   X := X - N;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Decrement(var X: FA; const N: FA = 1); overload;
 begin
   X := X - N;
@@ -374,7 +378,7 @@ begin
   X := X * N;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Multiply(var X: FA; const N: FA); overload;
 begin
   X := X * N;
@@ -391,7 +395,7 @@ begin
   X := X / N;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Divide(var X: FA; const N: FA); overload;
 begin
   X := X / N;
@@ -458,7 +462,7 @@ begin
 		Result := -1;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function Sgn(const I: FA): SG;
 begin
 	if I = 0 then
@@ -691,7 +695,7 @@ begin
   Result := Abs(A - B);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function GetAbsoluteError(const A, B: FA): FA;
 begin
   Result := Abs(A - B);
@@ -706,7 +710,7 @@ begin
     Result := Abs((A - B) / A);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function GetRelativeError(const A, B: FA): FA;
 begin
   if Abs(B) > Abs(A) then
@@ -724,7 +728,7 @@ begin
   Result := RelativeError <= MaxRelativeError;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function EqualRelative(const A, B, MaxRelativeError: FA): BG;
 var
   RelativeError: FA;
@@ -742,7 +746,7 @@ begin
   Result := AbsoluteError <= MaxAbsoluteError;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function EqualAbsolute(const A, B, MaxAbsoluteError: FA): BG;
 var
   AbsoluteError: FA;
@@ -865,7 +869,7 @@ begin
 	Result := Trunc(X) + Trunc(Frac(X) * 2);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundN(const X: FA): S8;
 // Rounds a number "normally": if the fractional
 // part is >= 0.5 the number is rounded up (see RoundUp)
@@ -904,7 +908,7 @@ begin
 		Result := RoundN(Value);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundSG(Value: FA): SG;
 begin
 	if Value > MaxInt then
@@ -926,7 +930,7 @@ begin
 		Result := RoundN(Value);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundS8(Value: FA): S8;
 begin
 	if Value > High(Result) then
@@ -948,7 +952,7 @@ begin
 		Result := Trunc(Value) + Trunc(Frac(Value) * 2);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RoundU8(Value: FA): U8;
 begin
 	if Value > MaxU8 then
@@ -970,7 +974,7 @@ begin
 		Result := Trunc(Value);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function TruncS8(Value: FA): S8;
 begin
 	if Value > High(Result) then
@@ -992,7 +996,7 @@ begin
 		Result := True;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function RangeS8(Value: FA): BG;
 begin
 	if Value >= High(S8) then
@@ -1161,7 +1165,7 @@ begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 function IsInRange(const Min, Cur, Max: FA): BG;
 begin
   Result := (Min <= Cur) and (Cur <= Max);
@@ -1405,7 +1409,7 @@ begin
 	B := C;
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 procedure Exchange(var A, B: FA);
 var C: FA;
 begin
@@ -1715,7 +1719,7 @@ asm
 end;
 
 procedure ClearMemory(var AAddress; const ACount: UG);
-{$ifdef PUREPASCAL}
+{$if not defined(ASSEMBLER)}
 const
   Size = 8;
 var
@@ -1736,7 +1740,7 @@ begin
     Inc(PU1(PAddress));
     Dec(Remain);
   end;
-{$else}
+{$ELSE}
 asm
   // Optional speed up if ACount = 0
   test ACount, ACount

@@ -1,8 +1,14 @@
 unit uBigDecimalUtils;
 
+{$if SizeOf(Extended) > SizeOf(Double)}
+  {$DEFINE HasExtended}
+{$endif}
+
 interface
 
 uses
+  uTypes,
+
   Velthuis.BigDecimals,
   Velthuis.BigIntegers;
 
@@ -14,10 +20,10 @@ type
   public
     class function ToBigInteger(const AValue: BigDecimal): BigInteger;
     class function ToDouble(const AValue: BigDecimal): Double;
-    {$ifndef CPUX64}
+    {$ifdef HasExtended}
     class function ToExtended(const AValue: BigDecimal): Extended;
     {$endif}
-    class function ToFloat(const AValue: BigDecimal): {$ifndef CPUX64}Extended{$else}Double{$endif};
+    class function ToFloat(const AValue: BigDecimal): {$ifdef HasExtended}Extended{$else}Double{$endif};
     class function Exp(const AValue: BigDecimal): BigDecimal;
     class function Ln(const AValue: BigDecimal): BigDecimal; overload;
     class function Sqrt(const AValue: BigDecimal): BigDecimal;
@@ -62,23 +68,23 @@ begin
 
   Value := AValue.RoundToPrecision(MaxExtendedDigists);
   // Power(10, -1) has low precision, i. e. 0.1 -> 0.10000003...
-  {$ifdef CPUX64}
-  Result := Value.UnscaledValue.AsDouble * Power10(1, -Value.Scale);
-  {$else}
+  {$ifdef HasExtended}
   Result := Value.UnscaledValue.AsExtended * Power10(1, -Value.Scale);
+  {$else}
+  Result := Value.UnscaledValue.AsDouble * Power10(1, -Value.Scale);
   {$endif}
 end;
 
 class function TBigDecimalUtils.ToFloat(const AValue: BigDecimal): {$ifndef CPUX64}Extended{$else}Double{$endif};
 begin
-  {$ifdef CPUX64}
-  Result := ToDouble(AValue);
-  {$else}
+  {$ifdef HasExtended}
   Result := ToExtended(AValue);
+  {$else}
+  Result := ToDouble(AValue);
   {$endif}
 end;
 
-{$ifndef CPUX64}
+{$ifdef HasExtended}
 class function TBigDecimalUtils.ToExtended(const AValue: BigDecimal): Extended;
 const
   { i.e. absolute error for float pi constant:
@@ -100,7 +106,7 @@ end;
 
 class function TBigDecimalUtils.Power(const ABase, AExponent: BigDecimal): BigDecimal;
 var
-  {$ifndef CPUX64}
+  {$ifdef HasExtended}
   Base, Exponent: Extended;
   {$else}
   Base, Exponent: Double;

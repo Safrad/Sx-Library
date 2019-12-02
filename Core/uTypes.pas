@@ -206,7 +206,7 @@ type
 	F4 = Single;
 //	F6 = Real48;
 	F8 = Double;
-{$ifndef CPUX64}
+{$IF SizeOf(Extended) > SizeOf(Double)}
   FA = Extended;
   FM = Extended;
 {$else}
@@ -302,7 +302,7 @@ type
 	PArrayF4 = ^TArrayF4;
 	TArrayF8 = array[0..256 * MB - 2] of F8;
 	PArrayF8 = ^TArrayF8;
-{$ifndef CPUX64}
+{$if SizeOf(Extended) > SizeOf(Double)}
 	TArrayFA = array[0..128 * MB - 2] of FA;
 	PArrayFA = ^TArrayFA;
 {$endif}
