@@ -63,7 +63,6 @@ const
   FILE_FLAG_FIRST_PIPE_INSTANCE = $00080000;
 
 	FILE_FLAG_NO_PREFIX = $8;
-	DefaultFileCharset = fcUTF8;
 
 type
 	TFile = class(TObject)
@@ -668,29 +667,34 @@ end;
 
 procedure TFile.ReadPrefix;
 var
-	ByteOrderMark: array [0 .. MaxByteOrderMarkSize - 1] of AnsiChar;
+	ByteOrderMark: TByteOrderMark;
   FileExt: string;
 begin
-	ByteOrderMark := '    ';
-	BlockRead(ByteOrderMark[0], Min(FFileSize, MaxByteOrderMarkSize));
-
-  FCharset := FindFileCharset(ByteOrderMark);
-  if FCharset <> fcUnknown then
+  if FFileSize > 0 then
   begin
-    FFilePos := 0;
-    FFileBegin := Length(ByteOrderMarks[FCharset]);
-    Dec(FFileSize, FFileBegin);
+    SetLength(ByteOrderMark, Min(FFileSize, MaxByteOrderMarkSize));
+    BlockRead(ByteOrderMark[0], Length(ByteOrdermark));
+
+    FCharset := FindFileCharset(ByteOrderMark);
+    if FCharset <> fcUnknown then
+    begin
+      FFilePos := 0;
+      FFileBegin := Length(ByteOrderMarks[FCharset]);
+      Dec(FFileSize, FFileBegin);
+    end
+    else
+    begin
+      FileExt := UpperCase(ExtractFileExt(FFileName));
+      if (FileExt = '.XML') or (FileExt = '.DPROJ') then
+        FCharset := fcUTF8
+      else
+        FCharset := FDefaultCharset;
+    end;
+
+    SeekBegin;
   end
   else
-  begin
-    FileExt := UpperCase(ExtractFileExt(FFileName));
-    if (FileExt = '.XML') or (FileExt = '.DPROJ') then
-      FCharset := fcUTF8
-    else
-      FCharset := FDefaultCharset;
-  end;
-
-	SeekBegin;
+    FCharset := FDefaultCharset;
 end;
 
 function TFile.WriteNoConversion(const Line: PAnsiChar; const LineLength: SG): BG;
@@ -853,7 +857,7 @@ var
 begin
 	L := Length(ByteOrderMarks[FCharset]);
 	if L > 0 then
-		BlockWrite(ByteOrderMarks[FCharset][1], L);
+		BlockWrite(ByteOrderMarks[FCharset][0], L);
 end;
 
 function TFile.Close(const ChangeDate: BG = True; const Forced: BG = False): BG;

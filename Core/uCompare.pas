@@ -11,7 +11,7 @@ implementation
 uses
   uColor,
 	uStrings,
-  uFind,
+  uLevenshteinDistance,
   UITypes,
   SysUtils;
 

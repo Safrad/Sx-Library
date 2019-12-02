@@ -5,8 +5,10 @@ unit uLog;
 interface
 
 uses
-	uTypes, uFile, uMsg, uFileLogger,
-	SysUtils;
+	SysUtils,
+
+	uTypes,
+  uFileLogger;
 
 type
 	TLog = class(TFileLogger)

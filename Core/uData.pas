@@ -71,7 +71,7 @@ type
 		function Next: TObject; overload;
 
 		function IsEmpty: Boolean;
-		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
+		function ToString: string; {$if CompilerVersion >= 20}override;{$endif}
 
     function GetInterator: TInterator;
 

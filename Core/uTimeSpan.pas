@@ -132,6 +132,9 @@ type
     /// <returns><code>Result := Left &lt;&gt; Right;</code></returns>
     class operator NotEqual(const Left, Right: TTimeSpan): Boolean;
 
+    /// <summary>Returns difference between actual time span and time span in AValue</summary>
+    /// <param name="AValue">The first operand</param>
+    /// <returns><code>Result := Self - AValue</code></returns>
     function Difference(const AValue: TTimeSpan): TTimeSpan;
   end;
 
@@ -392,3 +395,4 @@ begin
 end;
 
 end.
+

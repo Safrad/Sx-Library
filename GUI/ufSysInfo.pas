@@ -69,21 +69,21 @@ procedure TfSysInfo.FillComp;
 var
 	s: string;
 begin
-  GCPU.Update;
+  CPU.Update;
 
 	EditOS.Text := OperatingSystem.NameAndVersion;
 
-  s := GCPU.Name;
+  s := CPU.Name;
 	if s <> '' then
 		s := s + ListSeparator;
-	s := s + 'Family: ' + NToS(GCPU.Family) + ListSeparator;
-	s := s + 'Model: ' + NToS(GCPU.Model) + ListSeparator;
-	s := s + 'Stepping: ' + NToS(GCPU.Stepping) + ListSeparator;
+	s := s + 'Family: ' + NToS(CPU.Family) + ListSeparator;
+	s := s + 'Model: ' + NToS(CPU.Model) + ListSeparator;
+	s := s + 'Stepping: ' + NToS(CPU.Stepping) + ListSeparator;
 	EditCPU.Text := s;
 
-  EditThreads.Text := NToS(GCPU.LogicalProcessorCount);
-	EditCPUUsage.Text := NToS(Round(100 * 100 * GCPU.Usage), 2) + '%';
-	EditCPUFrequency.Text := NToS(Round(GCPU.Frequency)) + ' Hz';
+  EditThreads.Text := NToS(CPU.LogicalProcessorCount);
+	EditCPUUsage.Text := NToS(Round(100 * 100 * CPU.Usage), 2) + '%';
+	EditCPUFrequency.Text := NToS(Round(CPU.Frequency)) + ' Hz';
   EditCounter.Text := NToS(MainTimer.Frequency) + ' Hz';
 
   SystemMemory.Update;

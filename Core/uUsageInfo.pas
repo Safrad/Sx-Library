@@ -134,10 +134,10 @@ begin
     SaveData('OSBuild', IntToStr(Win32BuildNumber));
 
     // Hardware
-    SaveData('CPU', IntToStr(GCPU.ID));
-    SaveData('CPUName', GCPU.Name);
-    SaveData('CPUFrequency', IntToStr(GCPU.DefaultFrequency));
-    SaveData('LogicalProcessorCount', IntToStr(GCPU.LogicalProcessorCount));
+    SaveData('CPU', IntToStr(CPU.ID));
+    SaveData('CPUName', CPU.Name);
+    SaveData('CPUFrequency', IntToStr(CPU.DefaultFrequency));
+    SaveData('LogicalProcessorCount', IntToStr(CPU.LogicalProcessorCount));
 
     SaveData('MemoryTotalPhys', IntToStr(SystemMemory.Physical.Total));
     SaveData('MemoryTotalPageFile', IntToStr(SystemMemory.PageFile.Total));

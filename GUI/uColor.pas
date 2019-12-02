@@ -411,7 +411,7 @@ begin
 end;
 
 function SpectrumColor(X: SG): TColor;
-//0..255..510..765..1020..1275..1529
+// 0..255..510..765..1020..1275..1529
 begin
 	if (X < 0) or (X > 1529) then X := X mod 1530;
 	TRGBA(Result).A := 0;
@@ -446,7 +446,7 @@ begin
 		TRGBA(Result).G := 0;
 		TRGBA(Result).B := 255;
 	end;
-	else{1276..1529:}
+	else // 1276..1529:
 	begin
 		TRGBA(Result).R := 255;
 		TRGBA(Result).G := 0;
@@ -456,7 +456,7 @@ begin
 end;
 
 function SpectrumColor2(X: SG): TColor;
-//0..255..510..765..1020..1275..1529
+// 0..255..510..765..1020..1275..1529
 begin
 	TRGBA(Result).A := 0;
 	case X of
@@ -490,7 +490,7 @@ begin
 		TRGBA(Result).G := 0;
 		TRGBA(Result).B := 255;
 	end;
-	else{636..762:}
+	else // 636..762
 	begin
 		if X > 762 then X := 762;
 		TRGBA(Result).R := 255;

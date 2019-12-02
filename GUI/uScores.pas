@@ -32,7 +32,9 @@ procedure ShowHighScores;
 implementation
 
 {$R *.DFM}
+
 uses
+  uMath,
 	uOutputFormat, uFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor;
 
 var

@@ -206,11 +206,12 @@ type
 	F4 = Single;
 //	F6 = Real48;
 	F8 = Double;
-{$ifndef CPUX64}
+{$IF SizeOf(Extended) > SizeOf(Double)}
   FA = Extended;
   FM = Extended;
 {$else}
-  Extended = Double deprecated; // same as Double for 64 bit
+  /// <summary>same as Double for 64 bit</summary>
+  Extended = Double deprecated;
   FM = Double;
 {$endif}
   FG = F8;
@@ -225,17 +226,21 @@ type
 	T1 = AnsiString;
 	T2 = UnicodeString;}
 
-	BG = Boolean; // LongBool;
-	// Boolean // $00 / $01
-	B1 = ByteBool; // $00 / $FF
-	B2 = WordBool; // $0000 / $FFFF
-	B4 = LongBool; // $0000 / $FFFFFFFF
+  /// <summary> occupied 1 byte, same as ByteBool, valid values are $00 or $FF</summary>
+	BG = Boolean;
+  /// <summary> occupied 1 byte, same as Boolean, valid values are $00 or $FF</summary>
+	B1 = ByteBool;
+  /// <summary> occupied 2 bytes, valid values are $0000 or $FFFF</summary>
+	B2 = WordBool;
+  /// <summary> occupied 4 bytes, valid values are $0000 or $FFFFFFFF</summary>
+	B4 = LongBool;
 
 	TIndex = SG;
 
  	PStringPair = ^TStringPair;
 	TStringPair = record
-		Name: string; // or Key
+    /// <summary>similar name is "Key"</summary>
+		Name: string;
 		Value: string;
 	end;
 
@@ -297,7 +302,7 @@ type
 	PArrayF4 = ^TArrayF4;
 	TArrayF8 = array[0..256 * MB - 2] of F8;
 	PArrayF8 = ^TArrayF8;
-{$ifndef CPUX64}
+{$if SizeOf(Extended) > SizeOf(Double)}
 	TArrayFA = array[0..128 * MB - 2] of FA;
 	PArrayFA = ^TArrayFA;
 {$endif}
@@ -308,24 +313,28 @@ type
 	TArrayString = array[0..{$ifdef CPUX64}256{$else}512{$endif} * MB - 2] of string;
 	PArrayString = ^TArrayString;
 
-{
-Value	Meaning
--1 The string pointed to by the Index0 parameter is less in lexical value than the string pointed to by the Index1 parameter.
-0  The string pointed to by Index0 is equal in lexical value to the string pointed to by Index1.
-+1 The string pointed to by Index0 is greater in lexical value than the string pointed to by Index1.
-}
+  /// <summary>Result of comparision
+  /// <para>-1 The string pointed to by Index0 is less in lexical value than the string pointed to by Index1.</para>
+  /// <para>0  The string pointed to by Index0 is equal in lexical value to the string pointed to by Index1.</para>
+  /// <para>+1 The string pointed to by Index0 is greater in lexical value than the string pointed to by Index1.</para></summary>
   TCompareResult = (crFirstLess = -1, crBothSame = 0, crFirstGreater = 1);
 
+  /// <summary>
+  /// <param name="mlConfirmation">Confirmation dialogs, all messages are <c>enabled</c></param>
+  /// <param name="mlDebug">Debug-level messages (Opening file)</param>
+  /// <param name="mlInformation">Informational (Started, Finished)</param>
+  /// <param name="mlWarning">Warning conditions (File already opened)</param>
+  /// <param name="mlError">Error conditions (File not found)</param>
+  /// <param name="mlFatalError">Critical conditions only</param>
+  /// <param name="mlNone">All messages are <c>disabled</c></param>
+  /// </summary>
 	TMessageLevel = (
 		mlConfirmation,
-		mlDebug, // Debug-level messages (Opening file)
-		mlInformation, // Informational (Started, Finished)
-//		mlNotice, // (ltHint) Normal but significant condition
-		mlWarning, // Warning conditions (File already opened)
-		mlError, // Error conditions (File not found)
-		mlFatalError, // (ltFatalError) Critical conditions
-		// lmAlert, // Action must be taken immediately
-		// lmEmerg, // Emergencies - system is unusable
+		mlDebug,
+		mlInformation,
+		mlWarning,
+		mlError,
+		mlFatalError,
 		mlNone);
 
 {$ifdef ANDROID}
@@ -342,7 +351,8 @@ const
 	MSecsPerWeek = DaysInWeek * Day;
 	MSecsPerYear = 365 * U8(Day);
 
-	LoopSleepTime = 40; // [ms], 25 interrupts per second.
+  /// <summary><c>[ms]</c>, 25 interrupts per second.</summary>
+	LoopSleepTime = 40;
 
 var
   MinU8: U8 = 0;
@@ -372,3 +382,4 @@ begin
 end;
 
 end.
+

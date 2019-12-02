@@ -49,6 +49,7 @@ implementation
 
 {$R *.DFM}
 uses
+  uTaskBarWindow,
 	uGraph, uDBitmap, uGColor, uGetInt, uDIniFile, uMenus, uColor, uDrawStyle, uDictionary,
 	Math, Velthuis.BigDecimals;
 
@@ -74,7 +75,7 @@ end;
 
 procedure TfGrate.FormHide(Sender: TObject);
 begin
-	ShowTaskBar(True);
+	TaskbarWindow.Visible := True;
 end;
 
 procedure TfGrate.Close1Click(Sender: TObject);
