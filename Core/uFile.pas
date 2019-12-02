@@ -857,7 +857,7 @@ var
 begin
 	L := Length(ByteOrderMarks[FCharset]);
 	if L > 0 then
-		BlockWrite(ByteOrderMarks[FCharset][1], L);
+		BlockWrite(ByteOrderMarks[FCharset][0], L);
 end;
 
 function TFile.Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
