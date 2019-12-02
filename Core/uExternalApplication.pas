@@ -76,9 +76,7 @@ type
     property ProcessInformation: TProcessInformation read FProcessInformation;
   end;
 
-(**
-	@return process exit code or throw exception
-*)
+/// <returns>process exit code or throw exception</returns>
 function RunAndWaitForApplication(const AFileName: TFileName; const AParameters: string; const ACurrentDirectory: string; const AStartupType: TStartupType): TExitCode;
 
 procedure RaiseExceptionIfError(const AIsOk: Boolean);
