@@ -166,6 +166,10 @@ function IsInRange(const Min, Cur, Max: F8): BG; overload;
 {$ifdef HasExtended}
 function IsInRange(const Min, Cur, Max: FA): BG; overload;
 {$endif}
+{$ifdef MSWINDOWS}
+function IsInRange(const Min, Cur, Max: AnsiChar): BG; overload;
+{$endif}
+function IsInRange(const Min, Cur, Max: WideChar): BG; overload;
 
 function Range(const Min, Cur, Max: SG): SG; overload;
 function Range(const Min, Cur, Max, Def: SG): SG; overload;
@@ -1171,6 +1175,18 @@ begin
   Result := (Min <= Cur) and (Cur <= Max);
 end;
 {$endif}
+
+{$ifdef MSWINDOWS}
+function IsInRange(const Min, Cur, Max: AnsiChar): BG; overload;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
+{$endif}
+
+function IsInRange(const Min, Cur, Max: WideChar): BG; overload;
+begin
+  Result := (Min <= Cur) and (Cur <= Max);
+end;
 
 function Range(const Min, Cur, Max: SG): SG;
 begin
