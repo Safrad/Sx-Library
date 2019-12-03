@@ -1,5 +1,7 @@
 unit uDictionary;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses

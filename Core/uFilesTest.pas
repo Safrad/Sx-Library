@@ -37,7 +37,7 @@ begin
 
   Expected := DateTimeToFileTime(1);
   SetFileModified(FileName, Expected);
-  CheckTrue(GetFileModified(FileName, Actual));
+  Actual := GetFileModified(FileName);
   CheckEquals(Expected.dwLowDateTime, Actual.dwLowDateTime);
   CheckEquals(Expected.dwHighDateTime, Actual.dwHighDateTime);
 end;
@@ -83,8 +83,7 @@ begin
   ExpectedLastWriteTime := DateTimeToFileTime(3);
 
 	SetFileDateTime(FileName, ExpectedCreationTime, ExpectedLastAccessTime, ExpectedLastWriteTime);
-
-	CheckTrue(GetFileDateTime(FileName, ActualCreationTime, ActualLastAccessTime, ActualLastWriteTime));
+	GetFileDateTime(FileName, ActualCreationTime, ActualLastAccessTime, ActualLastWriteTime);
 
   CheckEquals(ExpectedCreationTime.dwLowDateTime, ActualCreationTime.dwLowDateTime);
   CheckEquals(ExpectedCreationTime.dwHighDateTime, ActualCreationTime.dwHighDateTime);

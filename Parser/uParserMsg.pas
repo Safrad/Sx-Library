@@ -28,7 +28,7 @@ type
 		procedure Add(const FileNameIndex, Line, X0, X1: UG; const Text: string; const MsgType: TMessageLevel);
 		procedure Clear;
 		procedure ShowAndClear(const FileName: TFileName = '');
-		function ToString: string; {$if CompilerVersion >= 20}override;{$ifend}
+		function ToString: string; {$if CompilerVersion >= 20}override;{$endif}
 		property Messages: TData read Data;
 		property Count: SG read GetCount;
 	end;

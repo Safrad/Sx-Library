@@ -1,5 +1,7 @@
 unit uTextFile;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses

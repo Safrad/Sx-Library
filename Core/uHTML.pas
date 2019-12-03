@@ -1,5 +1,7 @@
 unit uHTML;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses

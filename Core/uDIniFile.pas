@@ -74,7 +74,7 @@ type
 		function ReadNum(const Section, Ident: string; Default: S8): S8; overload;
     {$if CompilerVersion >= 23}
 		function ReadNum(const Section, Ident: string; Default: U8): U8; overload;
-    {$ifend}
+    {$endif}
 		function ReadNum(const Section, Name: string; Default: F8): F8; overload;
     {$ifdef HasExtended}
 		function ReadNum(const Section, Name: string; Default: FA): FA; overload;
@@ -115,7 +115,7 @@ type
 		procedure RWNum(const Section, Ident: string; var Value: NativeUInt; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: U8; const Save: BG); overload;
 		procedure ReadAndIncrementOrWrite(const Section, Ident: string; var Value: U8; const Save: BG); overload;
-    {$ifend}
+    {$endif}
 		procedure RWNum(const Section, Ident: string; var Value: F4; const Save: BG); overload;
 		procedure RWNum(const Section, Ident: string; var Value: F8; const Save: BG); overload;
     {$ifdef HasExtended}
@@ -405,7 +405,7 @@ begin
 	end;
 	// Result := StrToValS8(IntStr, False, Low(Result), Default, High(Result), 1);
 end;
-{$ifend}
+{$endif}
 
 function TDIniFile.ReadNum(const Section, Name: string; Default: F8): F8;
 var
@@ -928,7 +928,7 @@ begin
 	end;
 end;
 
-{$ifend}
+{$endif}
 
 procedure TDIniFile.RWNum(const Section, Ident: string; var Value: F4; const Save: BG);
 begin
@@ -984,7 +984,7 @@ begin
 		i := GetEnumValue(TypeInfo, ValueStr);
 		if i <> -1 then
 			Value := i
-		else if CharInSet(FirstChar(ValueStr), ['0' .. '9']) then
+		else if IsInRange('0', FirstChar(ValueStr), '9') then
 			Value := ReadS8Fast(DelCharsF(ValueStr, ','));
 	end
 	else

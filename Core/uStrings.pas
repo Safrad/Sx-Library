@@ -1,5 +1,7 @@
 unit uStrings;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses
@@ -1308,12 +1310,12 @@ end;
 // Java algorithm
 function HashCode(const s: string): U4;
 var
-	i: SG;
+	c: Char;
 begin
 	Result := 0;
-	for i := 1 to Length(s) do
+	for c in s do
 	begin
-		Result := 31 * Result + Ord(s[i]);
+		Result := 31 * Result + Ord(c);
 	end;
 end;
 {$IFDEF Q_PLUS}

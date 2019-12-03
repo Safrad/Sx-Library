@@ -415,8 +415,10 @@ begin
 end;
 
 procedure TRawFile.Close;
+{$ifdef UseWINAPI}
 var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
+{$endif}
 begin
 	if not GetOpened then
 	begin
@@ -425,17 +427,19 @@ begin
 	if FLogger.IsLoggerFor(mlDebug) then
     FLogger.Add('Closing ' + FFileName, mlDebug);
 
-  {$ifdef UseWINAPI}
 	if FChangeDate then
 		if FFileMode <> fmReadOnly then
 		begin
+      {$ifdef UseWINAPI}
 			if GetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime) then
 			begin
 				GetSystemTimeAsFileTime(LastWriteTime);
 				SetFileTime(FHandle, @CreationTime, @LastAccessTime, @LastWriteTime);
 			end;
+      {$else}
+      SetFileModified(FFileName, GetFileModified(FFileName));
+      {$endif}
 		end;
-  {$endif}
 
   {$ifdef UseWINAPI}
 	if CloseHandle(FHandle) then

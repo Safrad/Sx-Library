@@ -1,5 +1,7 @@
 unit uSystem;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses

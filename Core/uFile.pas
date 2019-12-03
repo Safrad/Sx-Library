@@ -21,6 +21,8 @@
 
 unit uFile;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses

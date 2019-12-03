@@ -1,5 +1,7 @@
 unit uRegionalCodePage;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses uTypes;

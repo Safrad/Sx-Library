@@ -11,7 +11,7 @@ type
     function Right: LongInt;
     function Bottom: LongInt;
     function Rect: TRect;
-{$ifend}
+{$endif}
 
     case Integer of
       0: (Left, Top, Width, Height: Longint);
@@ -71,6 +71,6 @@ begin
   Result.Right := Right;
   Result.Bottom := Bottom;
 end;
-{$ifend}
+{$endif}
 
 end.
