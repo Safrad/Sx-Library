@@ -1673,13 +1673,13 @@ begin
 	end;
 	Result := '';
 	LastSlash := StrRScan(AShortFileName);
+  ShortFileName := AShortFileName;
 	while LastSlash <> '' do
 	begin
-		Result := PathDelim + ShortToLongFileName(AShortFileName) + Result;
+		Result := PathDelim + ShortToLongFileName(ShortFileName) + Result;
 		if LastSlash <> '' then
 		begin
-      ShortFileName := AShortFileName;
-			SetLength(ShortFileName, Length(AShortFileName) - Length(LastSlash));
+			SetLength(ShortFileName, Length(ShortFileName) - Length(LastSlash));
 			LastSlash := StrRScan(ShortFileName);
 		end;
 	end;
