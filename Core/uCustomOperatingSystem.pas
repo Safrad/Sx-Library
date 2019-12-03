@@ -45,6 +45,8 @@ type
     class function GetCurrentProcessId: U4; virtual; abstract;
     class function GetCurrentThreadId: U4; virtual; abstract;
 
+    /// <returns> Operating system name and version.
+    /// <para>For example, "Microsoft Windows XP Professional Version = 5.1.2500".</para></returns>
     property ComputerName: string read GetComputerName;
 
     property Name: string read GetName;
