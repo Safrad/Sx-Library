@@ -2,11 +2,19 @@ unit uOperatingSystem;
 
 interface
 
+{$ifdef MSWINDOWS}
 uses
-{$ifdef MSWINDOWS}uWindowsOperatingSystem{$else}uCustomOperatingSystem{$endif};
-
+  uWindowsOperatingSystem;
 type
-  TSpecificOperatingSystem = {$ifdef MSWINDOWS}TWindowsOperatingSystem{$else}TCustomOperatingSystem{$endif};
+  TSpecificOperatingSystem = TWindowsOperatingSystem;
+{$endif}
+
+{$ifdef ANDROID}
+uses
+  uAndroidOperatingSystem;
+type
+  TSpecificOperatingSystem = TAndroidOperatingSystem;
+{$endif}
 
 function OperatingSystem: TSpecificOperatingSystem;
 
