@@ -1,5 +1,3 @@
-// Ancestor for TUCIWriter in uUCIWriter and TXBoardWriter in uXBoardWriter
-
 unit uCustomWriter;
 
 interface
@@ -9,6 +7,7 @@ uses
   uCommonEngine;
 
 type
+  /// <summary>Ancestor for TUCIWriter in uUCIWriter and TXBoardWriter in uXBoardWriter</summary>
   TCustomWriter = class
   private
     FEngine: TCommonEngine;
