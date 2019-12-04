@@ -37,7 +37,7 @@ end;
 procedure TSystemInfoCommand.ExecuteNoParam;
 begin
   inherited;
-  GCPU.Update;
+  CPU.Update;
   Response :=
     PropertiesToString(
       [
@@ -60,10 +60,10 @@ begin
         OperatingSystem.ComputerName,
         OperatingSystem.NameAndVersion,
 			  MsToStr(OperatingSystem.UptimeInMs, diDHMSD, 3, False),
-        GCPU.Name,
-			  NToS(GCPU.LogicalProcessorCount),
-			  NToS(Round(10000 * GCPU.Usage), 2) + '%',
-			  NToS(Round(GCPU.Frequency)) + ' Hz',
+        CPU.Name,
+			  NToS(CPU.LogicalProcessorCount),
+			  NToS(Round(10000 * CPU.Usage), 2) + '%',
+			  NToS(Round(CPU.Frequency)) + ' Hz',
 			  NToS(MainTimer.Frequency) + ' Hz',
 			  BToStr(SystemMemory.Physical.Used),
 			  BToStr(SystemMemory.Physical.Remain),
