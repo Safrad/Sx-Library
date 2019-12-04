@@ -484,6 +484,8 @@ begin
     //convert the array of byte into an easy to access string
     for i := 0 to Length(floatRec.Digits) - 1 do
     begin
+      if floatRec.Digits[i] = 0 then
+        Break;
       digits := digits + Char(floatRec.Digits[i]);
     end;
 
