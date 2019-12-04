@@ -175,15 +175,16 @@ begin
         Exchange(WhiteIncrementalTime, BlackIncrementalTime);
       end;
       MyLevel := TTimeControlLevel.Create;
-      TTimeControlLevel(MyLevel).MoveCount := MovesToGo;
-      TTimeControlLevel(MyLevel).MaximalMoveOverhead.Milliseconds := InternalEngine.CommonOptions.MaximalMoveOverhead.Value;
-      TTimeControlLevel(MyLevel).IncrementTime.Milliseconds := WhiteRemainTime;
-      TTimeControlLevel(MyLevel).MoveIncrementTime.Milliseconds := WhiteIncrementalTime;
-      TTimeControlLevel(MyLevel).FreeTime.Ticks := 0;
-      TTimeControlLevel(MyLevel).MoveIndex := 0;
       TTimeControlLevel(MyLevel).TimeUsage := InternalEngine.CommonOptions.TimeUsage.Value;
       TTimeControlLevel(MyLevel).FixedMoveTime := InternalEngine.CommonOptions.FixedMoveTime.Value;
       TTimeControlLevel(MyLevel).MinimalTime.Milliseconds := InternalEngine.CommonOptions.MinimalMoveTime.Value;
+      TTimeControlLevel(MyLevel).MaximalMoveOverhead.Milliseconds := InternalEngine.CommonOptions.MaximalMoveOverhead.Value;
+
+      TTimeControlLevel(MyLevel).MoveCount := MovesToGo;
+      TTimeControlLevel(MyLevel).IncrementTime.Milliseconds := WhiteRemainTime;
+      TTimeControlLevel(MyLevel).MoveIncrementTime.Milliseconds := WhiteIncrementalTime;
+      TTimeControlLevel(MyLevel).FreeTime.Ticks := 0;
+      TTimeControlLevel(MyLevel).MoveIndex := 0; // Init time limit
 
       OpponentLevel := TTimeControlLevel.Create;
       TTimeControlLevel(OpponentLevel).MoveCount := MovesToGo;
