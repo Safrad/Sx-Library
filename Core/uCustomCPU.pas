@@ -117,7 +117,7 @@ end;
 
 procedure TCustomCPU.UpdateSystemInfo;
 begin
-  FLogicalProcessorCount := 1;
+  FLogicalProcessorCount := System.CPUCount;
   FPageSize := 4 * KB;
   FAllocationGranularity := 64 * KB;
 end;

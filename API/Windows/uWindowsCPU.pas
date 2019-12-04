@@ -192,6 +192,7 @@ begin
       Assert(SystemInfo.wProcessorRevision = 256 * Model + Stepping);
 
       FLogicalProcessorCount := SystemInfo.dwNumberOfProcessors;
+      Assert(FLogicalProcessorCount = System.CPUCount);
       FPageSize := SystemInfo.dwPageSize;
       FAllocationGranularity := SystemInfo.dwAllocationGranularity;
     except
