@@ -76,7 +76,7 @@ uses
 {$IF defined(MSWINDOWS)}
   Winapi.Windows,
 {$ENDIF}
-  uLog,
+  uMainLog,
   uCommonApplication,
   uCommonOutput,
   uStartState,
@@ -109,8 +109,8 @@ end;
 function ConsoleCtrlHandler(dwCtrlType: DWORD): BOOL; stdcall;
 begin
   Result := True; // function handles the control signal
-	if LogWarning then
-    MainLogAdd(CtrlTypeToString(dwCtrlType), mlWarning);
+	if MainLog.IsLoggerFor(mlWarning) then
+    MainLog.Add(CtrlTypeToString(dwCtrlType), mlWarning);
   TConsoleApplication(CommonApplication).AbortedBySystem;
 end;
 {$ENDIF}
