@@ -64,15 +64,15 @@ end;
 function TProtocolEngineOutput.GetColorForTextType(const ATextType: TTextType): TColorAttribute;
 begin
   case ATextType of
-    ccDebug: Result := TConsole.Theme.GetColorForMessageLevel(mlDebug);
-    ccError: Result := TConsole.Theme.GetColorForMessageLevel(mlError);
-    ccInfo: Result := TConsole.Theme.GetColorForMessageLevel(mlInformation);
-    ccKeyword: Result := TConsole.Theme.GetColor(ccAqua, TConsole.Theme.DefaultBackgroundColor);
-    ccValue: Result := TConsole.Theme.GetColor(ccYellow, TConsole.Theme.DefaultBackgroundColor);
-    ccFalseValue: Result := TConsole.Theme.GetColor(ccLightRed, TConsole.Theme.DefaultBackgroundColor);
-    ccTrueValue: Result := TConsole.Theme.GetColor(ccLightGreen, TConsole.Theme.DefaultBackgroundColor);
+    ccDebug: Result := Console.Theme.GetColorForMessageLevel(mlDebug);
+    ccError: Result := Console.Theme.GetColorForMessageLevel(mlError);
+    ccInfo: Result := Console.Theme.GetColorForMessageLevel(mlInformation);
+    ccKeyword: Result := Console.Theme.GetColor(ccAqua, Console.Theme.DefaultBackgroundColor);
+    ccValue: Result := Console.Theme.GetColor(ccYellow, Console.Theme.DefaultBackgroundColor);
+    ccFalseValue: Result := Console.Theme.GetColor(ccLightRed, Console.Theme.DefaultBackgroundColor);
+    ccTrueValue: Result := Console.Theme.GetColor(ccLightGreen, Console.Theme.DefaultBackgroundColor);
     else
-      Result := TConsole.Theme.DefaultColor;
+      Result := Console.Theme.DefaultColor;
   end;
 end;
 
@@ -93,7 +93,7 @@ begin
   try
     inherited;
 
-    if TConsole.IsRedirected then
+    if Console.IsRedirected then
       Flush(Output);
   finally
     FCriticalSection.Leave;
@@ -106,10 +106,10 @@ begin
 
   if AText <> '' then
   begin
-    if TConsole.IsRedirected then
+    if Console.IsRedirected then
       AppendStr(FText, AText)
     else
-      TConsole.Write(AText, GetColorForTextType(ATextType));
+      Console.Write(AText, GetColorForTextType(ATextType));
   end;
 end;
 
@@ -117,16 +117,16 @@ procedure TProtocolEngineOutput.WriteLine(const AText: string; const ATextType: 
 begin
   inherited;
 
-  if TConsole.IsRedirected then
+  if Console.IsRedirected then
   begin
     try
-      TConsole.WriteLine(FText + AText)
+      Console.WriteLine(FText + AText)
     finally
       FText := '';
     end;
   end
   else
-    TConsole.WriteLine(AText, GetColorForTextType(ATextType));
+    Console.WriteLine(AText, GetColorForTextType(ATextType));
 end;
 
 end.

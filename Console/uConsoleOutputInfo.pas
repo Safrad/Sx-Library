@@ -65,7 +65,7 @@ end;
 
 procedure TConsoleOutputInfo.AddCaption(const ACaption: string);
 begin
-  TConsole.WriteLine(ACaption);
+  Console.WriteLine(ACaption);
 end;
 
 procedure TConsoleOutputInfo.AddDebug(const ADebugMessage: string);
@@ -91,9 +91,9 @@ end;
 procedure TConsoleOutputInfo.AddMessage(const AMessage: string; const AMessageLevel: TMessageLevel);
 begin
   if AMessageLevel in [mlError, mlFatalError] then
-    TConsole.WriteErrorLine(AddMessagePrefix(AMessage, AMessageLevel))
+    Console.WriteErrorLine(AddMessagePrefix(AMessage, AMessageLevel))
   else
-    TConsole.WriteLine(AddMessagePrefix(AMessage, AMessageLevel), TConsole.Theme.GetColorForMessageLevel(AMessageLevel));
+    Console.WriteLine(AddMessagePrefix(AMessage, AMessageLevel), Console.Theme.GetColorForMessageLevel(AMessageLevel));
 end;
 
 procedure TConsoleOutputInfo.AddTable(const ATable: TTable);
@@ -102,6 +102,7 @@ var
 begin
   ConsoleTable := TConsoleTable.Create;
   try
+    ConsoleTable.Console := Console;
     ConsoleTable.Table := ATable;
     ConsoleTable.WriteToConsole;
   finally
@@ -146,9 +147,9 @@ function TConsoleOutputInfo.Confirmation(const AMessage: string; const AButtons:
 var
   ReadedText: string;
 begin
-  if not TConsole.IsRedirected then
+  if not Console.IsRedirected then
   begin
-    TConsole.WriteLine(AMessage + ' [' + ButtonsToString(AButtons) + ']', TConsole.Theme.GetColorForMessageLevel(mlConfirmation));
+    Console.WriteLine(AMessage + ' [' + ButtonsToString(AButtons) + ']', Console.Theme.GetColorForMessageLevel(mlConfirmation));
     while True do
     begin
       Readln(ReadedText);
@@ -179,9 +180,6 @@ constructor TConsoleOutputInfo.Create;
 begin
   inherited;
 
-  {$ifdef UNICODE}
-  TConsole.CodePage := cpUTF8;
-  {$endif}
 end;
 
 function TConsoleOutputInfo.GetAborted: BG;

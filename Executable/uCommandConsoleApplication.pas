@@ -102,7 +102,7 @@ end;
 
 procedure TCommandConsoleApplication.Initialize;
 begin
-  TConsole.FlushEveryLine := True;
+  Console.FlushEveryLine := True;
 
   inherited;
 

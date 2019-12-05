@@ -169,8 +169,8 @@ procedure TConsoleApplication.WaitForEnter;
 begin
   if TStartState.RunFromIDE and (not FAbortedBySystem) then
   begin
-    TConsole.WriteLine('');
-    TConsole.Write('Press Enter to continue...');
+    Console.WriteLine('');
+    Console.Write('Press Enter to continue...');
     Readln;
   end;
 end;
