@@ -208,7 +208,7 @@ end;
 
 procedure TCommonApplication.InitializeMainLog;
 begin
-  InitializeMainLog;
+  uMainLog.InitializeMainLog;
 end;
 
 procedure TCommonApplication.InitializeModules;
