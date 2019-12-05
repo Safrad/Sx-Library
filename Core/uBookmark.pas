@@ -11,8 +11,8 @@ const
 	UnixStartDate: TDateTime = 25569.0;
 	Day = 24 * 60 * 60;
 
-function UnixToDateTime(const USec: Longint): TDateTime;
-function DateTimeToUnix(const ConvDate: TDateTime): Longint;
+function UnixToDateTime(const USec: SG): TDateTime;
+function DateTimeToUnix(const ConvDate: TDateTime): SG;
 
 type
 	TItemType = (itURL, itFolder, itSeperator);
@@ -61,12 +61,12 @@ implementation
 uses
   uMath;
 
-function UnixToDateTime(const USec: Longint): TDateTime;
+function UnixToDateTime(const USec: SG): TDateTime;
 begin
 		Result := (Usec / Day) + UnixStartDate;
 end;
 
-function DateTimeToUnix(const ConvDate: TDateTime): Longint;
+function DateTimeToUnix(const ConvDate: TDateTime): SG;
 begin
 	Result := RoundN((ConvDate - UnixStartDate) * Day);
 end;

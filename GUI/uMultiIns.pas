@@ -50,7 +50,7 @@ begin
 		Result := CallWindowProc(WProc, Handle, Msg, wParam, lParam); // pass message on to old window proc
 end;
 
-procedure BroadcastFocusMessage(wParam, lParam: LongInt);
+procedure BroadcastFocusMessage(wParam, lParam: SG);
 var
 	BSMRecipients: DWORD;
 begin
@@ -103,7 +103,7 @@ finalization
 {$IFNDEF NoFinalization}
 	if WProc <> nil then
 	begin
-		SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(WProc));
+		SetWindowLong(Application.Handle, GWL_WNDPROC, SG(WProc));
 		WProc := nil;
 	end;
 	if MutHandle <> 0 then

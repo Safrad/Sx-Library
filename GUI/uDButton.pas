@@ -714,7 +714,7 @@ begin
 	begin
 		Form := GetParentForm(Self);
 		if Form <> nil then
-			Form.Perform(CM_FOCUSCHANGED, 0, Longint(Form.ActiveControl));
+			Form.Perform(CM_FOCUSCHANGED, 0, S4(Form.ActiveControl));
 	end;
 end;}
 
