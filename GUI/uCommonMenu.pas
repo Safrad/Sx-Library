@@ -54,7 +54,7 @@ uses
   Winapi.Windows,
   uAbout,
   uNewThread,
-  uLog,
+  uMainLog,
   uAPI,
   ufOptions,
   uOptions,

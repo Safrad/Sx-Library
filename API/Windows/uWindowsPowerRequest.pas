@@ -30,7 +30,7 @@ implementation
 uses
   SysUtils,
 
-  uLog;
+  uMainLog;
 
 type
   TPowerCreateRequest = function(_Context: PReasonContext): THandle; stdcall;
@@ -53,7 +53,7 @@ end;
 
 procedure TWindowsPowerRequest.Decrement;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('WindowsPowerRequest.Decrement');
 
   if FCount <= 0 then
@@ -64,7 +64,7 @@ begin
     if not GPowerClearRequest(FHandle, GetRequestType) then
       RaiseLastOSError;
 
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('WindowsPowerRequest.Decrement');
 end;
 
@@ -93,7 +93,7 @@ end;
 
 procedure TWindowsPowerRequest.Increment;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('WindowsPowerRequest.Increment');
 
   if (FCount = 0) and (FHandle = INVALID_HANDLE_VALUE) then
@@ -106,7 +106,7 @@ begin
     if not GPowerSetRequest(FHandle, GetRequestType) then
       RaiseLastOSError;
 
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('WindowsPowerRequest.Increment');
 end;
 

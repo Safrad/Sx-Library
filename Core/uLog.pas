@@ -1,6 +1,4 @@
-// Main file logging
-
-unit uLog;
+unit uLog deprecated 'Use uMainLog';
 
 interface
 
@@ -8,129 +6,80 @@ uses
 	SysUtils,
 
 	uTypes,
-  uFileLogger;
+  uMainLog;
 
 type
-	TLog = class(TFileLogger)
-	public
-		constructor Create(const FileName: TFileName);
-		destructor Destroy; override;
-	end;
+	TLog = class(TMainLog);
 
-  // Optimization purposes only
-	procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel);
-	function MainLogWrite(const AMessageLevel: TMessageLevel): BG;
+// Optimization purposes only
+procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel);
+function MainLogWrite(const AMessageLevel: TMessageLevel): BG;
 
-  function LogFatalError: BG;
-  function LogError: BG;
-  function LogWarning: BG;
-  function LogInformation: BG;
-  function LogDebug: BG;
-  function LogConfirmation: BG;
+function LogFatalError: BG;
+function LogError: BG;
+function LogWarning: BG;
+function LogInformation: BG;
+function LogDebug: BG;
+function LogConfirmation: BG;
 
-  procedure LogException(const E: Exception);
+procedure LogException(const E: Exception);
 
-	procedure InitializeLog;
-
-var
-	MainLog: TLog;
+// Backward compatibility
+function MainLog: TMainLog;
 
 implementation
 
-uses
-  uOperatingSystem,
-	uFiles,
-	uProjectInfo;
-
-var
-  InitializingLog: BG; // or DeinitializingLog
-
 procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel);
 begin
-  if InitializingLog then Exit;
-
-	if Assigned(MainLog) then
+	if Assigned(uMainLog.MainLog) then
   	if AMessageLevel >= MainLog.LoggingLevel then
 	    MainLog.Add(ALine, AMessageLevel);
 end;
 
 function MainLogWrite(const AMessageLevel: TMessageLevel): BG;
 begin
-	Result := Assigned(MainLog) and (MainLog.LoggingLevel <= AMessageLevel);
+	Result := Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= AMessageLevel);
 end;
 
 function LogFatalError: BG;
 begin
-  Result := Assigned(MainLog) and (MainLog.LoggingLevel <= mlFatalError);
+  Result := Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= mlFatalError);
 end;
 
 function LogError: BG;
 begin
-  Result := Assigned(MainLog) and (MainLog.LoggingLevel <= mlError);
+  Result := Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= mlError);
 end;
 
 function LogWarning: BG;
 begin
-  Result := Assigned(MainLog) and (MainLog.LoggingLevel <= mlWarning);
+  Result := Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= mlWarning);
 end;
 
 function LogInformation: BG;
 begin
-  Result := Assigned(MainLog) and (MainLog.LoggingLevel <= mlInformation);
+  Result := Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= mlInformation);
 end;
 
 function LogDebug: BG;
 begin
-  Result := Assigned(MainLog) and (MainLog.LoggingLevel <= mlDebug);
+  Result := Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= mlDebug);
 end;
 
 function LogConfirmation: BG;
 begin
-  Result := Assigned(MainLog) and (MainLog.LoggingLevel <= mlConfirmation);
+  Result := Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= mlConfirmation);
 end;
 
 procedure LogException(const E: Exception);
 begin
-  if Assigned(MainLog) and (MainLog.LoggingLevel <= mlFatalError) then
+  if Assigned(uMainLog.MainLog) and (MainLog.LoggingLevel <= mlFatalError) then
     MainLog.LogException(E);
 end;
 
-procedure InitializeLog;
-var
-  MainLogFileName: TFileName;
+function MainLog: TMainLog;
 begin
-  InitializingLog := True;
-
-	MainLogFileName := LocalAppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
-	CreateDirsEx(ExtractFilePath(MainLogFileName));
-	MainLog := TLog.Create(MainLogFileName);
-  InitializingLog := False;
+  Result := uMainLog.MainLog;
 end;
 
-{ TLog }
-
-constructor TLog.Create(const FileName: TFileName);
-begin
-  inherited;
-
-	Add('Started Version ' + GetProjectInfo(piProductVersion), mlInformation);
-  if IsLoggerFor(mlDebug) then
-    Add('Operating System Version: ' + OperatingSystem.VersionAsString, mlDebug);
-end;
-
-destructor TLog.Destroy;
-begin
-  try
-  	Add('Finished', mlInformation);
-  finally
-    inherited;
-  end;
-end;
-
-initialization
-
-finalization
-{$IFNDEF NoFinalization}
-	FreeAndNil(MainLog);
-{$ENDIF NoFinalization}
 end.
