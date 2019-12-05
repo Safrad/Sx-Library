@@ -1,5 +1,3 @@
-// See "powercfg /requests"
-
 unit uWindowsPowerRequest;
 
 interface
@@ -11,6 +9,7 @@ uses
   Winapi.Windows;
 
 type
+  /// Actual system Windows power requests command: "powercfg /requests"
   TWindowsPowerRequest = class(TCustomPowerRequest)
   private
     FReasonContext: TReasonContext;
