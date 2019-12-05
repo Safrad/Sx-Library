@@ -333,8 +333,7 @@ begin
 	if ReadFile(FHandle, AData^, ASize, Suc, nil) then
 	begin
 		Inc(FFilePos, Suc);
-		Inc(FileStatistics.ReadCount);
-		Inc(FileStatistics.ReadBytes, Suc);
+		FileStatistics.AddRead(Suc);
 
 		if Suc <> ASize then
 		begin
@@ -363,8 +362,7 @@ begin
 	if WriteFile(FHandle, AData^, ASize, Suc, nil) then
 	begin
 		Inc(FFilePos, Suc);
-		Inc(FileStatistics.WriteCount);
-		Inc(FileStatistics.WriteBytes, Suc);
+		FileStatistics.AddWrite(Suc);
 
     if Suc <> ASize then
     begin

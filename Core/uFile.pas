@@ -347,8 +347,7 @@ LRetry :
 	if ReadFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
-		Inc(FileStatistics.ReadCount);
-		Inc(FileStatistics.ReadBytes, Suc);
+		FileStatistics.AddRead(Suc);
 
 		if Suc <> Count then
 		begin
@@ -391,8 +390,7 @@ LRetry :
 	if WriteFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
-		Inc(FileStatistics.WriteCount);
-		Inc(FileStatistics.WriteBytes, Suc);
+		FileStatistics.AddWrite(Suc);
 
     if Suc <> Count then
     begin
