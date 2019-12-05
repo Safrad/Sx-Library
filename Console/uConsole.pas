@@ -8,7 +8,17 @@ interface
     uWindowsConsole;
   type
     TConsole = TWindowsConsole;
+  {$else}
+  uses
+    uSimpleConsole;
+  type
+    TConsole = TSimpleConsole;
   {$endif}
+{$else}
+uses
+  uGUIConsole;
+type
+  TConsole = TGUIConsole;
 {$endif}
 
 function Console: TConsole;
