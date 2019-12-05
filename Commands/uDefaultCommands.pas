@@ -16,7 +16,7 @@ implementation
 uses
   SysUtils,
 
-  uLog,
+  uMainLog,
   uDIniFile,
   uExitCommand,
   uRestartCommand,
