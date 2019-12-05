@@ -151,8 +151,10 @@ begin
   SplashScreen := TConsoleSplashScreen.Create;
   inherited;
 
+{$IF defined(MSWINDOWS)}
   if FMinimizedArgument.Exists then
     ShowWindow(GetConsoleWindow, SW_MINIMIZE);
+{$ENDIF}
 end;
 
 procedure TConsoleApplication.Run;
