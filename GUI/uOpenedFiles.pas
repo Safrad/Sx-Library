@@ -715,7 +715,7 @@ begin
 
 					if FileExists(Item.FileName) then
           begin
-						GetFileModified(Item.FileName, LastWriteTime);
+						LastWriteTime := GetFileModified(Item.FileName);
             Item.LastWriteTime := LastWriteTime;
           end;
 
@@ -855,7 +855,7 @@ begin
 				if Result and (SaveCopy = False) then
 				begin
 					WatchAddFile(NewFileName, FileChanged);
-					GetFileModified(NewFileName, LastWriteTime);
+					LastWriteTime := GetFileModified(NewFileName);
           Items[OpenedFile].LastWriteTime := LastWriteTime;
 				end;
 			end;
@@ -1296,7 +1296,7 @@ begin
 					FOnLoadFromFile(Sender, TempFileName);
           Item.FileName := TempFileName;
         end;
-				GetFileModified(Item.FileName, LastWriteTime);
+				LastWriteTime := GetFileModified(Item.FileName);
         Item.LastWriteTime := LastWriteTime;
 			except
 				on E: Exception do
