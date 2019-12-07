@@ -81,7 +81,7 @@ uses
 
 function GetLocalHomepage: TFileName;
 begin
-	Result := WorkDir + 'ReadMe' + PathDelim + IndexFile
+	Result := WorkDir + 'ReadMe' + PathDelim + IndexFile;
 end;
 
 procedure OpenLocalHomepage;
