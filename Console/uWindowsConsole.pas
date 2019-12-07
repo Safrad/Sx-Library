@@ -151,6 +151,8 @@ end;
 
 procedure TWindowsConsole.SetCodePage(const Value: TCodePage);
 begin
+  inherited;
+
   SetConsoleOutputCP(UINT(Value));
 end;
 

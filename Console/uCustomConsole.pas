@@ -92,9 +92,9 @@ begin
   inherited;
 
   {$ifdef UNICODE}
-  FCodePage := cpUTF8;
+  CodePage := cpUTF8;
   {$else}
-  FCodePage := cpAnsi;
+  CodePage := cpAnsi;
   {$endif}
   FTheme := TConsoleDarkTheme.Create;
 end;
