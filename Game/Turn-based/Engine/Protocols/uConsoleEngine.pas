@@ -109,7 +109,7 @@ procedure TConsoleEngine.Initialize;
 begin
   inherited;
 
-  TConsole.FlushEveryLine := False; // Flush in TProtocolEngineOutput.StopWrite
+  Console.FlushEveryLine := False; // Flush in TProtocolEngineOutput.StopWrite
   Commands.Delete(Commands.FindByString('Exit'));
 end;
 

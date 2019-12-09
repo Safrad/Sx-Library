@@ -21,7 +21,11 @@ uses
 
 constructor EIOException.Create(const APath: string; const AErrorCode: U4);
 begin
+{$ifdef MSWINDOWS}
   Message := ErrorCodeToStr(AErrorCode) + ': ' + APath;
+{$else}
+  Message := IntToStr(AErrorCode) + ': ' + APath;
+{$endif}
 end;
 
 end.

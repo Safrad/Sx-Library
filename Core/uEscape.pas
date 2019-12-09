@@ -35,7 +35,9 @@ Sequence	Value	Char	What it does
 function RemoveEscape(const s: string): string;
 function AddEscape(const s: string; const KeepCharser:BG = True): string;
 
+{$ifdef MSWINDOWS}
 function RemovePercentEscape(const Input: AnsiString): string;
+{$endif}
 
 implementation
 
@@ -216,6 +218,7 @@ begin
 	end;
 end;
 
+{$ifdef MSWINDOWS}
 function RemovePercentEscape(const Input: AnsiString): string;
 var
   u: string;
@@ -234,5 +237,6 @@ begin
   Result := UTF8ToString(RawByteString(u));
   {$ifend}
 end;
+{$endif}
 
 end.

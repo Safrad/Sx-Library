@@ -1,0 +1,38 @@
+object FormConsole: TFormConsole
+  Left = 0
+  Top = 0
+  Caption = 'Console'
+  ClientHeight = 576
+  ClientWidth = 1024
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  ShowFullScreenIcon = True
+  DesignerMasterStyle = 0
+  object MemoConsole: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    ReadOnly = True
+    StyledSettings = [Size, Style, FontColor]
+    TextSettings.Font.Family = 'Consolas'
+    Align = Client
+    Size.Width = 1024.000000000000000000
+    Size.Height = 554.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Viewport.Width = 1024.000000000000000000
+    Viewport.Height = 554.000000000000000000
+  end
+  object ConsoleInput: TComboEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    Align = Bottom
+    TabOrder = 1
+    ItemHeight = 19.000000000000000000
+    ItemIndex = -1
+    Position.Y = 554.000000000000000000
+    Size.Width = 1024.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    OnKeyDown = ConsoleInputKeyDown
+  end
+end

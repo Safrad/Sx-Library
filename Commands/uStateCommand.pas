@@ -17,8 +17,7 @@ implementation
 
 uses
   uMath,
-  uFile,
-  uMsg,
+  uFileStatistics,
   uCommonApplication,
   uSystemMemory,
   uOutputFormat,

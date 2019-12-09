@@ -466,10 +466,11 @@ end;
 
 function FloatToDecimalString(const Value: FM; const Precision: Integer = 16; const Decimals: Integer = 20; const FloatFormat: TFloatFormat = ffAuto): string;
 var
-    digits: string;
-    s: string;
-    floatRec: TFloatRec;
-    Scientific: Boolean;
+  digits: string;
+  s: string;
+  floatRec: TFloatRec;
+  Scientific: Boolean;
+  i: SG;
 begin
     FloatToDecimal(floatRec, Value, fvExtended, Precision, 9999);
 
@@ -480,8 +481,13 @@ begin
     Scientific := Abs(floatRec.Exponent) > 10;
   end;
 
-    //convert the array of char into an easy to access string
-    digits := string(PAnsiChar(Addr(floatRec.Digits[0])));
+    //convert the array of byte into an easy to access string
+    for i := 0 to Length(floatRec.Digits) - 1 do
+    begin
+      if floatRec.Digits[i] = 0 then
+        Break;
+      digits := digits + Char(floatRec.Digits[i]);
+    end;
 
     if floatRec.Exponent > 0 then
     begin

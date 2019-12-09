@@ -1,5 +1,7 @@
 unit uFileLogger;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses

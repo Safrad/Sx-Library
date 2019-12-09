@@ -47,7 +47,9 @@ implementation
 
 uses
   SysUtils,
-  Winapi.Windows, // TODO : remove
+  {$ifdef MSWINDOWS}
+  Winapi.Windows,
+  {$endif}
 
   uProjectInfo,
   uStrings,

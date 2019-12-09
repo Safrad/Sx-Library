@@ -15,18 +15,13 @@ type
 		Indexes: array of SG;
 		Enums: array of string;
 	public
-		(**
-			@param TypeInfo
-		*)
 		constructor Create(const TypeInfo: PTypeInfo);
 
 		destructor Destroy; override;
 
-		(**
-			Decode string represents enum to its index.
-			@param s string to find
-			@return index of enum
-		*)
+		/// <summary>Decode string represents enum to its index.</summary>
+		/// <param name="EnumAsString">string to find</param>
+		/// <returns>index of enum</returns>
 		function FindIndex(const EnumAsString: string): SG;
 	end;
 

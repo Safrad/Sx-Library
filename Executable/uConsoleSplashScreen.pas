@@ -63,12 +63,12 @@ begin
 
   if FShowVersionInfo then
   begin
-    TConsole.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piProductVersion) + ']', ccWhite);
+    Console.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piProductVersion) + ']', ccWhite);
     if GetProjectInfo(piFileDescription) <> '' then
-      TConsole.WriteLine(GetProjectInfo(piFileDescription), ccLightGray);
+      Console.WriteLine(GetProjectInfo(piFileDescription), ccLightGray);
     if GetProjectInfo(piLegalCopyright) <> '' then
-      TConsole.WriteLine(GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName), ccGray);
-    TConsole.WriteLine('');
+      Console.WriteLine(GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName), ccGray);
+    Console.WriteLine('');
   end;
 end;
 

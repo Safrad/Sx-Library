@@ -3,13 +3,14 @@ unit uRect;
 interface
 
 uses
-  uTypes,
-  Types;
+  Types,
 
-function CreateRect(const Left, Top, Width, Height: LongInt): TRect;
+  uTypes;
+
+function CreateRect(const Left, Top, Width, Height: S4): TRect;
 function SameRect(const R1, R2: TRect): BG;
-function RectWidth(const Rect: TRect): LongInt;
-function RectHeight(const Rect: TRect): LongInt;
+function RectWidth(const Rect: TRect): S4;
+function RectHeight(const Rect: TRect): S4;
 function MoveRectInside(const SourceRect, ContainerRect: TRect; const PrefferSize: BG = True): TRect;
 function InnerRect(const TargetRect: TRect; const SourceWidth, SourceHeight: SG): TRect;
 
@@ -18,7 +19,7 @@ implementation
 uses
   uMath;
 
-function CreateRect(const Left, Top, Width, Height: LongInt): TRect;
+function CreateRect(const Left, Top, Width, Height: S4): TRect;
 begin
   Result.Left := Left;
   Result.Top := Top;
@@ -31,17 +32,17 @@ begin
 	Result := SameData(@R1, @R2, SizeOf(TRect));
 end;
 
-function RectWidth(const Rect: TRect): LongInt;
+function RectWidth(const Rect: TRect): S4;
 begin
   Result := Rect.Right - Rect.Left;
 end;
 
-function RectHeight(const Rect: TRect): LongInt;
+function RectHeight(const Rect: TRect): S4;
 begin
   Result := Rect.Bottom - Rect.Top;
 end;
 
-procedure MoveInside(var SourceFrom, SourceTo: LongInt; const ContainerFrom, ContainerTo: LongInt; const PrefferSize: BG = True);
+procedure MoveInside(var SourceFrom, SourceTo: S4; const ContainerFrom, ContainerTo: S4; const PrefferSize: BG = True);
 begin
   if SourceFrom < ContainerFrom then
   begin

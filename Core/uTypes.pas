@@ -25,8 +25,8 @@ type
 	U1 = Byte;
 	S2 = SmallInt;
 	U2 = Word;
-	S4 = LongInt;
-	U4 = LongWord;
+	S4 = Integer;
+	U4 = Cardinal;
 	S8 = Int64;
 	U8 = {$if CompilerVersion >= 23}UInt64{$else}Int64{$ifend};
   TNative = {$ifdef CPUX64}U8{$else}U4{$endif};
@@ -381,5 +381,15 @@ begin
   Result.T := AT;
 end;
 
+
+initialization
+  Assert(SizeOf(S1) = 1);
+  Assert(SizeOf(U1) = 1);
+  Assert(SizeOf(S2) = 2);
+  Assert(SizeOf(U2) = 2);
+  Assert(SizeOf(S4) = 4);
+  Assert(SizeOf(U4) = 4);
+  Assert(SizeOf(S8) = 8);
+  Assert(SizeOf(U8) = 8);
 end.
 

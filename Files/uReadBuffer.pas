@@ -73,6 +73,7 @@ begin
       ReadNextBuffer;
 
     ReadSize := Min(FBufferAllocation.Remain, S8(RemainReadCount));
+    Assert(ReadSize > 0);
 
     // Transfer buffer data
     Move(PByte(PByte(FAlignedMemory.Data) + FBufferAllocation.Used)^, Data^, ReadSize);
@@ -109,6 +110,7 @@ begin
   Inc(FBufferPos, FBufferAllocation.Total);
   // No seek required (sequential read)
   FBufferAllocation.Total := Min(FAlignedMemory.Size, FDataCount - FBufferPos);
+  Assert(FBufferAllocation.Total > 0);
   OnReadData(FAlignedMemory.Data, FBufferAllocation.Total);
   FBufferAllocation.Used := 0;
 end;

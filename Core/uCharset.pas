@@ -7,10 +7,12 @@ interface
 function ConvertUTF8ToUnicode(const s: RawByteString): UnicodeString;
 function ConvertUnicodeToUTF8(const s: UnicodeString): RawByteString;
 
+{$ifdef MSWINDOWS}
 function ConvertToAscii(const AInput: AnsiString): AnsiString; overload;
 function ConvertToAscii(const AInput: UnicodeString): AnsiString; overload;
 
 function ConvertAnsiToOem(const s: string): string;
+{$endif}
 
 function RemoveUnicode(const AInput: string): string;
 
@@ -27,19 +29,15 @@ uses
 
 function ConvertUTF8ToUnicode(const s: RawByteString): UnicodeString;
 begin
-	SetLength(Result, 2 * Length(s));
-	SetLength(Result, Utf8ToUnicode(PWideChar(Result), PAnsiChar(s), 2 * Length(s)) - 1);
+  Result := Utf8Decode(s);
 end;
 
 function ConvertUnicodeToUTF8(const s: UnicodeString): RawByteString;
-var
-	l: SG;
 begin
-//	Result := StringTo UTF8ToString(s;
-	SetLength(Result, 2 * Length(s) + 1);
-	l := UnicodeToUtf8(PAnsiChar(Result), Length(Result), PWideChar(s), Length(s));
-	SetLength(Result, l - 1);
+  Result := UTF8Encode(s);
 end;
+
+{$IF defined(MSWINDOWS)}
 
 function ConvertToAscii(const AInput: AnsiString): AnsiString;
 begin
@@ -60,7 +58,6 @@ begin
 end;
 
 function ConvertAnsiToOem(const s: string): string;
-{$IF defined(MSWINDOWS)}
 var
   sBuffer: AnsiString;
 begin
@@ -75,11 +72,8 @@ begin
     Result := string(sBuffer)
   else
     Result := s;
-{$ELSE}
-begin
-  Result := s;
-{$ENDIF}
 end;
+{$ENDIF}
 
 function RemoveUnicode(const AInput: string): string;
 begin

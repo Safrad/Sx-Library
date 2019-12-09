@@ -1,5 +1,7 @@
 unit uWaveCommon;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses

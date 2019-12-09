@@ -4,7 +4,7 @@ interface
 
 uses
   uTypes,
-  uFile,
+  uFileStatistics,
   uDIniFile,
   uTimeSpan;
 

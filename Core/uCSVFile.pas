@@ -4,7 +4,8 @@ interface
 
 uses
 	SysUtils,
-	uTypes, uFile;
+	uTypes,
+  uTextFile;
 
 const
 	CSVSep = ','; // ;
@@ -14,7 +15,7 @@ type
 	TCSVFile = class
 	private
 		{ Private declarations }
-		FFile: TFile;
+		FFile: TTextFile;
 		FColumnCount: SG;
 		FRowIndex: SG;
 		FColumnIndexes: TArrayOfSG;
@@ -36,8 +37,8 @@ type
 		destructor Destroy; override;
 
 		function ReadLine: TArrayOfString;
-		function Open(const FileName: TFileName): BG;
-		function Close: BG;
+		procedure Open(const FileName: TFileName);
+		procedure Close;
 		function EOF: BG;
 
     procedure WriteCSVData(const AFileName: TFileName; const AData: string; const ADelimeter: string = CSVSep);
@@ -51,7 +52,10 @@ implementation
 
 uses
 	Math,
-	uStrings, uMath,
+
+	uStrings,
+  uMath,
+  uRawFile,
 	uFiles;
 
 { TCSVFile }
@@ -60,7 +64,8 @@ constructor TCSVFile.Create;
 begin
 	inherited;
 
-	FFile := TFile.Create;
+	FFile := TTextFile.Create;
+  FFile.FileMode := fmReadOnly;
 end;
 
 destructor TCSVFile.Destroy;
@@ -95,8 +100,9 @@ begin
   ClearRow;
   Quoted := False;
   ColumnIndex := 0;
-  while FFile.Readln(Line) do
+  while FFile.Eof do
   begin
+    FFile.ReadLine(Line);
     if not Quoted then
     begin
       if Line = '' then Continue; // Empty line
@@ -184,21 +190,21 @@ begin
   end;
 end;
 
-function TCSVFile.Open(const FileName: TFileName): BG;
+procedure TCSVFile.Open(const FileName: TFileName);
 begin
   FRowIndex := 0;
   FErrors := '';
   ClearRow;
-	Result := FFile.Open(FileName, fmReadOnly);
+  FFile.FileName := FileName;
+	FFile.Open;
 end;
 
-function TCSVFile.Close: BG;
+procedure TCSVFile.Close;
 begin
-	Result := True;
 	if Assigned(FFile) then
 	begin
 		if FFile.Opened then
-			Result := FFile.Close;
+			FFile.Close;
 	end;
 end;
 

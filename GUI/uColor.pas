@@ -53,7 +53,7 @@ const
 
 	clDepth: array[0..3] of TColor = (TColors.Sys3DDkShadow{Black}, TColors.SysBtnShadow{Gray}, TColors.Sys3DLight{Silver}, TColors.SysBtnHighlight{White});
 
-function ColorToRGB(Color: TColor): Longint;
+function ColorToRGB(Color: TColor): S4;
 function RGBToHLS(C: TRGBA): THLSColor;
 function HLSToRGB(C: THLSColor): TRGBA;
 
@@ -94,7 +94,7 @@ uses
 {$ENDIF}
   ;
 
-function ColorToRGB(Color: TColor): Longint;
+function ColorToRGB(Color: TColor): S4;
 begin
 {$IF defined(MSWINDOWS)}
   if Color < 0 then

@@ -17,8 +17,6 @@ type
   protected
     class function GetComputerNameInternal: string; override;
 
-    // Returns an string which includes the operating system version.
-    // For example, "Microsoft Windows XP Professional Version = 5.1.2500".
     class function GetNameInternal: string; override;
     class function GetVersion: TProjectVersion; override;
 

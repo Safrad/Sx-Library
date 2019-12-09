@@ -76,12 +76,12 @@ uses
   uMainTimer,
 	uAPI, uHTML, uDictionary,
 	uProjectInfo,
-	uGraph, uDIniFile, ufSysInfo, uFiles, uFile, uMsg, uData, uWave, uColor, uDrawStyle,
+	uGraph, uDIniFile, ufSysInfo, uFiles, uFileStatistics, uMsg, uData, uWave, uColor, uDrawStyle,
 	uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLog;
 
 function GetLocalHomepage: TFileName;
 begin
-	Result := WorkDir + 'ReadMe' + PathDelim + IndexFile
+	Result := WorkDir + 'ReadMe' + PathDelim + IndexFile;
 end;
 
 procedure OpenLocalHomepage;

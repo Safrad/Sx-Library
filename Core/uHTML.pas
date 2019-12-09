@@ -1,5 +1,7 @@
 unit uHTML;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses
@@ -469,20 +471,18 @@ begin
 
 	if FileExists(FFileName) then
 	begin
-		if ReadStringFromFile(FFileName, BodySaved) then
-		begin
-			Replace(BodySaved, FullSep, HTMLSep);
-			HeadEnd := Pos('</head>', s);
-			HeadSavedEnd := Pos('</head>', BodySaved);
-			if (HeadEnd <> 0) and (HeadSavedEnd <> 0) then
-			begin
-				if SameData(@s[HeadEnd], Pointer(@BodySaved[HeadSavedEnd]), Length(s) - HeadEnd + 1) then
-					Exit; // Skip saving
-			end;
-		end;
+		ReadStringFromFile(FFileName, BodySaved);
+    Replace(BodySaved, FullSep, HTMLSep);
+    HeadEnd := Pos('</head>', s);
+    HeadSavedEnd := Pos('</head>', BodySaved);
+    if (HeadEnd <> 0) and (HeadSavedEnd <> 0) then
+    begin
+      if SameData(@s[HeadEnd], Pointer(@BodySaved[HeadSavedEnd]), Length(s) - HeadEnd + 1) then
+        Exit; // Skip saving
+    end;
 	end;
 
-	WriteStringToFile(FFileName, s, False, fcUTF8, FILE_FLAG_NO_PREFIX);
+	WriteStringToFile(FFileName, s, False, fcUTF8);
 end;
 
 procedure THTML.AddBodyFromFile;
@@ -546,29 +546,27 @@ begin
 	CSV := TCSVFile.Create;
 	try
 		CSV.AcceptRemark := True;
-		if CSV.Open(FileName) then
-		begin
-			while not CSV.EOF do
-			begin
-				Row := CSV.ReadLine;
-				Head := (Length(Row) > 0) and (FirstChar(Row[0]) = CSVRemark);
-				if Head then
-					Body := Body + '<thead>';
-				Body := Body + '<tr>';
-				for Wid := 0 to Length(Row) - 1 do
-				begin
-					if LineIndex = 0 then
-						Body := Body + '<th>' + Row[Wid] + '</th>'
-					else
-						Body := Body + '<td>' + Row[Wid] + '</td>';
-				end;
-				Body := Body + '</tr>';
-				if LineIndex = 0 then
-					Body := Body + '</thead>';
-				Inc(LineIndex);
-			end;
-			CSV.Close;
-		end
+		CSV.Open(FileName);
+    while not CSV.EOF do
+    begin
+      Row := CSV.ReadLine;
+      Head := (Length(Row) > 0) and (FirstChar(Row[0]) = CSVRemark);
+      if Head then
+        Body := Body + '<thead>';
+      Body := Body + '<tr>';
+      for Wid := 0 to Length(Row) - 1 do
+      begin
+        if LineIndex = 0 then
+          Body := Body + '<th>' + Row[Wid] + '</th>'
+        else
+          Body := Body + '<td>' + Row[Wid] + '</td>';
+      end;
+      Body := Body + '</tr>';
+      if LineIndex = 0 then
+        Body := Body + '</thead>';
+      Inc(LineIndex);
+    end;
+    CSV.Close;
 	finally
 		CSV.Free;
 	end;

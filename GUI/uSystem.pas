@@ -1,5 +1,7 @@
 unit uSystem;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses
@@ -20,8 +22,8 @@ function ThreadPriority(const Prior: U1): Integer;
 function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
 function ReadLinesFromFile(const F: TFile; Lines: TStrings): BG; overload;
 function WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG; const Charset: TFileCharset = DefaultFileCharset): BG;
-function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
-function WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream): BG;
+procedure ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream);
+procedure WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream);
 
 function SelectFolder(var Path: string; const browseTitle: string = ''): BG;
 function SelectFile(var FileName: TFileName; const browseTitle: string = ''; const Filter: string = ''; const Save: BG = False): BG;
@@ -252,13 +254,13 @@ begin
 	end;
 end;
 
-function ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream): BG;
+procedure ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream);
 var
 	Buf: Pointer;
 	Count: SG;
 begin
 	try
-		Result := ReadBufferFromFile(FileName, Buf, Count);
+		ReadBufferFromFile(FileName, Buf, Count);
 	{	Stream.SetSize(Count);
 		Stream.Seek(0, 0);}
 		if Buf <> nil then
@@ -271,7 +273,7 @@ begin
 	end;
 end;
 
-function WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream): BG;
+procedure WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream);
 var
 	Buf: Pointer;
 begin
@@ -279,7 +281,7 @@ begin
   try
   	Stream.Seek(0, 0);
   	Stream.ReadBuffer(Buf^, Stream.Size);
-  	Result := WriteBufferToFile(FileName, Buf, Stream.Size);
+  	WriteBufferToFile(FileName, Buf, Stream.Size);
   finally
 	  FreeMem(Buf);
   end;

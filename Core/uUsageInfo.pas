@@ -23,7 +23,7 @@ uses
   uOperatingSystem,
   uTemporaryDirectory,
   uSystemMemory,
-  uFile,
+  uFileStatistics,
   uFiles,
   uCommonApplication,
   uCPU,

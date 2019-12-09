@@ -66,8 +66,9 @@ begin
 				for i := 0 to WatchedFiles.Count - 1 do
 				begin
 					WatchedFile := WatchedFiles[i];
-					if FileExists(WatchedFile.FileName) and GetFileModified(WatchedFile.FileName, LastWriteTime) then
+					if FileExists(WatchedFile.FileName) then
 					begin
+            LastWriteTime := GetFileModified(WatchedFile.FileName);
 						if U8(WatchedFile.LastWriteTime) = 0 then
 							WatchedFile.LastWriteTime := LastWriteTime
 						else if U8(LastWriteTime) <> U8(WatchedFile.LastWriteTime) then
@@ -142,7 +143,7 @@ begin
 	WatchedFile.Changed := False;
 	WatchedFile.OnChange := OnChange;
 	if FileExists(WatchedFile.FileName) then
-		GetFileModified(WatchedFile.FileName, WatchedFile.LastWriteTime)
+		WatchedFile.LastWriteTime := GetFileModified(WatchedFile.FileName)
 	else
 		U8(WatchedFile.LastWriteTime) := 0;
 end;
@@ -157,7 +158,7 @@ begin
 	WatchedFile.Changed := False;
 	WatchedFile.OnChangeEx := OnChange;
 	if FileExists(WatchedFile.FileName) then
-		GetFileModified(WatchedFile.FileName, WatchedFile.LastWriteTime)
+		WatchedFile.LastWriteTime := GetFileModified(WatchedFile.FileName)
 	else
 		U8(WatchedFile.LastWriteTime) := 0;
 end;

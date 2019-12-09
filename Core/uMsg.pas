@@ -36,21 +36,27 @@ procedure ErrorMsg(const Text: string); overload;
 
 procedure ErrorMsg(const Text: string; const Param: array of string); overload;
 
+{$ifdef MSWINDOWS}
 procedure ErrorMsg(const ErrorCode: SG); overload;
+{$endif}
 
 procedure Fatal(const AException: Exception; const C: TObject = nil);
 
 function ErrorRetry(const Text: string): BG;
 
+{$ifdef MSWINDOWS}
 function ErrorCodeToStr(const ErrorCode: U4): string;
+{$endif}
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
 
+{$ifdef MSWINDOWS}
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 
 function IOErrorRetry(const FileName: TFileName; const ErrorCode: U4): BG;
+{$endif}
 
 procedure IOErrorMessage(const FileName: TFileName; const ErrorMsg: string);
 
@@ -59,7 +65,9 @@ function IOErrorMessageRetry(const FileName: TFileName; const ErrorMsg: string):
 implementation
 
 uses
+{$ifdef MSWINDOWS}
   Winapi.Windows,
+{$endif}
 
   uStrings,
   uLog,
@@ -138,11 +146,13 @@ begin
   ShowMessage(mlError, Text, Param);
 end;
 
+{$IFDEF MSWINDOWS}
 procedure ErrorMsg(const ErrorCode: SG);
 begin
   if ErrorCode <> 0 then
     ErrorMsg(ErrorCodeToStr(ErrorCode));
 end;
+{$ENDIF}
 
 procedure Fatal(const AException: Exception; const C: TObject = nil);
 var
@@ -190,6 +200,7 @@ begin
     Result := False;
 end;
 
+{$IFDEF MSWINDOWS}
 function ErrorCodeToStr(const ErrorCode: U4): string;
 var
   NewLength: SG;
@@ -203,6 +214,7 @@ begin
   DelBESpace(Result);
   Result := ErrorCodeStr + CharSpace + IntToStr(ErrorCode) + ' ' + CharEnDash + ' ' + Result;
 end;
+{$ENDIF}
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
@@ -227,6 +239,7 @@ begin
     Result := mbCancel;
 end;
 
+{$ifdef MSWINDOWS}
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 begin
   IOErrorMessage(FileName, ErrorCodeToStr(ErrorCode));
@@ -236,6 +249,7 @@ function IOErrorRetry(const FileName: TFileName; const ErrorCode: U4): BG;
 begin
   Result := IOErrorMessageRetry(FileName, ErrorCodeToStr(ErrorCode));
 end;
+{$endif}
 
 procedure IOErrorMessage(const FileName: TFileName; const ErrorMsg: string);
 var

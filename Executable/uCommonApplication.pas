@@ -79,7 +79,7 @@ implementation
 
 uses
   SysUtils,
-  uLog,
+  uMainLog,
   uExternalApplication,
   uDefaultArguments,
   uCustomArgument,
@@ -208,7 +208,7 @@ end;
 
 procedure TCommonApplication.InitializeMainLog;
 begin
-  InitializeLog;
+  uMainLog.InitializeMainLog;
 end;
 
 procedure TCommonApplication.InitializeModules;

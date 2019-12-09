@@ -12,7 +12,7 @@ type
 	PAnalysis = ^TAnalysis;
 	TAnalysis = record
 		ElapsedTime: TTimeSpan;
-		Nodes: U4;
+		Nodes: U8;
 		Status: TSubtreeStatus;
 		Depth: U1;
 		SelDepth: U1;

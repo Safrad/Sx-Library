@@ -7,6 +7,7 @@ uses
   uTable,
   uRow,
   uTableBorderSet,
+  uCustomConsole,
   uConsoleColor;
 
 type
@@ -14,6 +15,7 @@ type
   private
     FTableBorderSet: TTableBorderSet;
     FTable: TTable;
+    FConsole: TCustomConsole;
     function TopHorizontalLine(const ASizes: TArrayOfSG): string;
     function MiddleHorizontalLine(const ASizes: TArrayOfSG): string;
     function BottomHorizontalLine(const ASizes: TArrayOfSG): string;
@@ -24,10 +26,11 @@ type
     function CalculateOptimalWidthOfRows: TArrayOfSG;
     function WordWrapAndCalculateOptimalWidthOfRows: TArrayOfSG;
     function CalculateDataWidthOfRows: TArrayOfSG;
-    class procedure CalculateMaximalWidthOfRows(const AResult: TArrayOfSG);
+    procedure CalculateMaximalWidthOfRows(const AResult: TArrayOfSG);
     procedure WordWrapData(const AResult: TArrayOfSG);
     procedure SetTableBorderSet(const Value: TTableBorderSet);
     procedure SetTable(const Value: TTable);
+    procedure SetConsole(const Value: TCustomConsole);
   public
     constructor Create;
     destructor Destroy; override;
@@ -35,6 +38,7 @@ type
     property Table: TTable read FTable write SetTable;
     property TableBorderSet: TTableBorderSet read FTableBorderSet write SetTableBorderSet;
 
+    property Console: TCustomConsole read FConsole write SetConsole;
     procedure WriteToConsole;
   end;
 
@@ -49,7 +53,6 @@ uses
   uTableBorderTextSet,
   uTableBorderDoubleLineSet,
   uItemType,
-  uConsole,
   uCodePage;
 
 const
@@ -81,14 +84,14 @@ begin
 end;
 
 
-class procedure TConsoleTable.CalculateMaximalWidthOfRows(const AResult: TArrayOfSG);
+procedure TConsoleTable.CalculateMaximalWidthOfRows(const AResult: TArrayOfSG);
 const
   RightSpacing = 1; // Minimum 1 is reguired to disable table row overflow to new line
   BorderSize = 1;
 var
   maxIndex: SG;
 begin
-  while Suma(AResult) + BorderSize + Length(AResult) > TConsole.GetSize.X - RightSpacing do
+  while Suma(AResult) + BorderSize + Length(AResult) > FConsole.GetSize.X - RightSpacing do
   begin
     maxIndex := MaxValueIndex(AResult);
     Dec(AResult[maxIndex]);
@@ -105,10 +108,6 @@ constructor TConsoleTable.Create;
 begin
   inherited Create;
 
-  if TConsole.CodePage >= cpUTF7 then
-    FTableBorderSet := TTableBorderDoubleLineSet.Create
-  else
-    FTableBorderSet := TTableBorderTextSet.Create;
 end;
 
 procedure TConsoleTable.WordWrapData(const AResult: TArrayOfSG);
@@ -150,16 +149,16 @@ var
 begin
   for lineIndex := 0 to ARowHeight - 1 do
   begin
-    TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
+    FConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
     for columnIndex := 0 to FTable.ColumnCount - 1 do
     begin
       cell := AColumns[columnIndex];
-      TConsole.WriteAligned(cell.TextLines.GetLineString(cell.TextAlignment.Vertical, lineIndex, ARowHeight), ASizes[columnIndex], cell.TextAlignment.Horizontal,
+      FConsole.WriteAligned(cell.TextLines.GetLineString(cell.TextAlignment.Vertical, lineIndex, ARowHeight), ASizes[columnIndex], cell.TextAlignment.Horizontal,
         cell.TextColor, ABackgroundColor);
       if columnIndex < FTable.ColumnCount - 1 then
-        TConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
+        FConsole.Write(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
     end;
-    TConsole.WriteLine(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
+    FConsole.WriteLine(TableBorderSet.Get(itVertical), BorderColor, ABackgroundColor);
   end;
 end;
 
@@ -192,6 +191,18 @@ begin
     TableBorderSet.Get(itVerticalAndRight),
     TableBorderSet.Get(itVerticalAndHorizontal),
     TableBorderSet.Get(itVerticalAndLeft));
+end;
+
+procedure TConsoleTable.SetConsole(const Value: TCustomConsole);
+begin
+  if FConsole <> Value then
+  begin
+    FConsole := Value;
+    if (FConsole.CodePage = cpUTF7) or (FConsole.CodePage = cpUTF8) then
+      FTableBorderSet := TTableBorderDoubleLineSet.Create
+    else
+      FTableBorderSet := TTableBorderTextSet.Create;
+  end;
 end;
 
 procedure TConsoleTable.SetTable(const Value: TTable);
@@ -234,7 +245,7 @@ begin
   try
     sizes := WordWrapAndCalculateOptimalWidthOfRows;
     rowColor := ccGray;
-    TConsole.WriteLine(TopHorizontalLine(sizes), BorderColor, rowColor);
+    FConsole.WriteLine(TopHorizontalLine(sizes), BorderColor, rowColor);
     for row := 0 to FTable.RowCount - 1 do
     begin
       if row > 0 then
@@ -244,9 +255,9 @@ begin
         DataLine(sizes, FTable.Data[row].GetHeight, (FTable.Data[row] as TRow).Columns, rowColor);
 
       if row < FTable.RowCount - 1 then
-        TConsole.WriteLine(MiddleHorizontalLine(sizes), BorderColor, rowColor);
+        FConsole.WriteLine(MiddleHorizontalLine(sizes), BorderColor, rowColor);
     end;
-    TConsole.WriteLine(BottomHorizontalLine(sizes), BorderColor, rowColor);
+    FConsole.WriteLine(BottomHorizontalLine(sizes), BorderColor, rowColor);
   finally
     FTable.Data.Delete(0);
   end;

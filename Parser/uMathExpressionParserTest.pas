@@ -63,21 +63,19 @@ begin
 	CSVFile := TCSVFile.Create;
 	try
     CSVFile.SetColumnNames(['Expression', 'Result', 'Errors']);
-		if CSVFile.Open(DataDir + 'Parser\' + AFileName) then
-		begin
-			while not CSVFile.EOF do
-			begin
-				Line := CSVFile.ReadLine;
-        if Length(Line) < 2 then
-          raise Exception.Create('Invalid CSV line length.');
-        if Length(Line) <= 2 then
-          ExpectedErrorCount := 0
-        else
-          ExpectedErrorCount := StrToValI(Line[2], False, 0, 0, MaxInt, 1);
-        TestExpression(Line[0], Line[1], ExpectedErrorCount);
-        Inc(FTestCount);
-			end;
-		end;
+		CSVFile.Open(DataDir + 'Parser\' + AFileName);
+    while not CSVFile.EOF do
+    begin
+      Line := CSVFile.ReadLine;
+      if Length(Line) < 2 then
+        raise Exception.Create('Invalid CSV line length.');
+      if Length(Line) <= 2 then
+        ExpectedErrorCount := 0
+      else
+        ExpectedErrorCount := StrToValI(Line[2], False, 0, 0, MaxInt, 1);
+      TestExpression(Line[0], Line[1], ExpectedErrorCount);
+      Inc(FTestCount);
+    end;
 		CSVFile.Close;
 	finally
 		FreeAndNil(CSVFile);

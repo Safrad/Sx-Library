@@ -17,6 +17,10 @@ const
 
 type
 	TPosition = class(TPersistent)
+  private
+    procedure SetLongDraw(const Value: U4);
+    procedure SetMoveIndex(const Value: S4);
+    procedure SetSize(const Value: TSide);
   protected
 		FLongDraw: U4; // HalfMoveLongDraw
 		FMoveIndex: S4;
@@ -27,7 +31,6 @@ type
     procedure Assign(Source: TPersistent); override;
 
     function SideColorToString(const APlayerIndex: SG): string; virtual; abstract;
-    function SideColorToChar(const APlayerIndex: SG): Char;
 
     class function PieceToString(const APiece: TSquare; const APieceLanguage: TPieceLanguage): string; overload; virtual; abstract;
     class function PieceToString(APiece: TSquare; const ASide: TSide; const PieceLanguage: TPieceLanguage = plEnglish): string; overload;
@@ -45,8 +48,6 @@ type
     procedure MakeRevertableMove(const AMove: PMove); virtual; abstract;
     procedure RevertMove(const AMove: PMove); virtual; abstract;
 
-    procedure FromString(const AValue: string); virtual; abstract;
-    function ToFENString: string; virtual; abstract;
     procedure WriteToConsole; virtual; abstract;
     function MoveToString(const AMove: PMove): string; virtual; abstract;
     function StringToMove(const AMove: string): PMove; virtual; abstract;
@@ -54,9 +55,9 @@ type
     procedure InitializeHash;
     function Clone: TPosition; virtual; abstract;
 
-		property Side: TSide read FSide;
-    property LongDraw: U4 read FLongDraw;
-    property MoveIndex: S4 read FMoveIndex;
+		property Side: TSide read FSide write SetSize;
+    property LongDraw: U4 read FLongDraw write SetLongDraw;
+    property MoveIndex: S4 read FMoveIndex write SetMoveIndex;
   end;
 
 implementation
@@ -88,15 +89,19 @@ begin
 	Result := PieceToString(APiece,  PieceLanguage);
 end;
 
-function TPosition.SideColorToChar(const APlayerIndex: SG): Char;
-var
-  s: string;
+procedure TPosition.SetLongDraw(const Value: U4);
 begin
-  s := SideColorToString(APlayerIndex);
-  if s = '' then
-    Result := '-'
-  else
-    Result := LowCase(s[1]);
+  FLongDraw := Value;
+end;
+
+procedure TPosition.SetMoveIndex(const Value: S4);
+begin
+  FMoveIndex := Value;
+end;
+
+procedure TPosition.SetSize(const Value: TSide);
+begin
+  FSide := Value;
 end;
 
 class function TPosition.StringToPiece(const ALine: string; var AInLineIndex: SG; const ABothSides: BG;

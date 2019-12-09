@@ -1,5 +1,7 @@
 unit uTextFile;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses
@@ -17,9 +19,13 @@ type
 		FDefaultCharset: TFileCharset;
 
     FUseByteOrderMark: BG;
+    FDataSize: U8;
 		procedure ReadPrefix;
+    procedure SetDefaultCharsetIfNotInFile;
 		procedure WritePrefix;
     procedure SetUseByteOrderMark(const Value: BG);
+    function ConvertBuffer(const ABuffer: array of U1): string;
+    procedure RaiseUnsupportedCharset;
   public
     constructor Create;
     destructor Destroy; override;
@@ -31,25 +37,33 @@ type
     // Process
     procedure Open; override;
 
-		property Charset: TFileCharset read FCharset;
-
-		procedure ReadLineNoConversion(out Line: AnsiString);
+{$ifdef MSWINDOWS}
 		procedure ReadLine(out Line: AnsiString); overload;
-		procedure ReadLine(out Line: UnicodeString); overload;
+{$endif}
+		procedure ReadLine(out Line: string); overload;
 
+{$ifdef MSWINDOWS}
 		procedure Write(const Line: AnsiString); overload;
+{$endif}
 		procedure Write(const Line: UnicodeString); overload;
-		procedure WriteNoConversion(const Line: PAnsiChar; const LineLength: SG); overload;
-		procedure WriteNoConversion(const Line: AnsiString); overload;
+		procedure WriteNoConversion(const Line: PByte; const LineLength: SG); overload;
+		procedure WriteNoConversion(const Line: RawByteString); overload;
+{$ifdef MSWINDOWS}
 		procedure WriteLine(const Line: AnsiString); overload;
+{$endif}
 		procedure WriteLine(const Line: UnicodeString); overload;
+
+    function ReadAsString(const ALimit: U8 = 0): string;
+
+    // Output
+		property Charset: TFileCharset read FCharset;
+    property DataSize: U8 read FDataSize;
   end;
 
 implementation
 
 uses
   SysUtils,
-  Winapi.Windows,
   uRawFile,
   Math,
   uChar,
@@ -83,6 +97,7 @@ begin
 		begin
   		ReadPrefix;
       Seek(Length(ByteOrderMarks[FCharset]));
+      SetDefaultCharsetIfNotInFile;
 		end;
 	fmAppend:
 		begin
@@ -91,6 +106,7 @@ begin
         SeekBegin;
  				ReadPrefix;
 				SeekEnd;
+        SetDefaultCharsetIfNotInFile;
 			end
 			else if FUseByteOrderMark then
       begin
@@ -110,12 +126,17 @@ begin
 	end;
 end;
 
-procedure TTextFile.ReadLineNoConversion(out Line: AnsiString);
+procedure TTextFile.ReadLine(out Line: string);
+const
+  StartBufferSize = 256;
 var
 	InLineIndex: SG;
-	LineLength: SG;
-  ReadedAnsiChar: AnsiChar;
-  ReadedWideChar: WideChar;
+	BufferSize: SG;
+  ReadedU1: U1;
+  ReadedU2: U2;
+  Buffer: array of Byte;
+  CR: U2;
+  LF: U2;
 begin
 	Line := '';
 	if Eof then
@@ -123,21 +144,42 @@ begin
 		Exit;
 	end;
 
-	LineLength := 256;
-	SetLength(Line, LineLength);
-	InLineIndex := 1;
+  case FCharset of
+  fcUTF16LE:
+  begin
+    CR := U2(CharCR);
+    LF := U2(CharLF);
+  end;
+  fcUTF16BE:
+  begin
+    CR := Swap(U2(CharCR));
+    LF := Swap(U2(CharLF));
+  end;
+  fcAnsi, fcUTF8:
+  begin
+    CR := 0;
+    LF := 0;
+  end;
+  else
+    RaiseUnsupportedCharset;
+    Exit;
+  end;
+
+	BufferSize := StartBufferSize;
+  SetLength(Buffer, BufferSize);
+	InLineIndex := 0;
 	while not Eof do
 	begin
     case FCharset of
     fcAnsi, fcUTF8:
     begin
-      ReadedAnsiChar := ReadAnsiChar;
-      if ReadedAnsiChar = CharCR then
+      ReadedU1 := ReadU1;
+      if ReadedU1 = U1(CharCR) then
       begin
         FLastCharCR := True;
         Break; // Line ready
       end
-      else if ReadedAnsiChar = CharLF then
+      else if ReadedU1 = U1(CharLF) then
       begin
         if FLastCharCR then
         begin
@@ -153,22 +195,21 @@ begin
       else
       begin
         FLastCharCR := False;
-        Line[InLineIndex] := ReadedAnsiChar;
+
+        Buffer[InLineIndex] := ReadedU1;
         Inc(InLineIndex);
       end;
     end;
     fcUTF16BE, fcUTF16LE:
     begin
-      ReadedWideChar := ReadWideChar;
-      if FCharset = fcUTF16BE then
-        ReadedWideChar := WideChar(Swap(U2(ReadedWideChar)));
+      ReadedU2 := ReadU2;
 
-      if ReadedWideChar = CharCR then
+      if ReadedU2 = CR then
       begin
         FLastCharCR := True;
         Break; // Line ready
       end
-      else if ReadedWideChar = CharLF then
+      else if ReadedU2 = LF then
       begin
         if FLastCharCR then
         begin
@@ -184,95 +225,119 @@ begin
       else
       begin
         FLastCharCR := False;
-        Line[InLineIndex] := AnsiChar(TU2(ReadedWideChar).B0);
-        Inc(InLineIndex);
-        Line[InLineIndex] := AnsiChar(TU2(ReadedWideChar).B1);
-        Inc(InLineIndex);
+        Buffer[InLineIndex] := TU2(ReadedU2).B0;
+        Buffer[InLineIndex + 1] := TU2(ReadedU2).B1;
+        Inc(InLineIndex, 2);
       end;
 		end;
     end;
 
-    if InLineIndex + 1 > LineLength then
+    if InLineIndex + 1 > BufferSize then
     begin
-      LineLength := 2 * (InLineIndex - 1);
-      SetLength(Line, LineLength);
+      BufferSize := 2 * BufferSize;
+      SetLength(Buffer, BufferSize);
     end;
 	end;
-
-	SetLength(Line, InLineIndex - 1);
+  SetLength(Buffer, InLineIndex);
+  Line := ConvertBuffer(Buffer);
 end;
 
+{$ifdef MSWINDOWS}
 procedure TTextFile.ReadLine(out Line: AnsiString);
+var
+  s: string;
 begin
-	ReadLineNoConversion(Line);
-	case FCharset of
-	fcAnsi: ;
-	fcUTF8: Line := AnsiString(Utf8ToAnsi(Line));
-	else
-		Line := '';
-		raise ENotSupportedException.Create(ReplaceParam('Unsupported charset in file %1', [FileName]));
-	end;
+  ReadLine(s);
+  Line := AnsiString(s); // Convert to Ansi
+end;
+{$endif}
+
+procedure TTextFile.RaiseUnsupportedCharset;
+begin
+  raise ENotSupportedException.Create(ReplaceParam('Unsupported charset in file %1', [FileName]));
 end;
 
-procedure TTextFile.ReadLine(out Line: UnicodeString);
+function TTextFile.ReadAsString(const ALimit: U8 = 0): string;
 var
-	LineA: AnsiString;
+	Buffer: TBytes;
+  DataToRead: U8;
 begin
-	ReadLineNoConversion(LineA);
-	case FCharset of
-	fcAnsi:
-		Line := UnicodeString(LineA);
-	fcUTF8:
-  	Line := ConvertUtf8ToUnicode(LineA);
-  fcUTF16BE, fcUTF16LE:
-		begin
-			SetLength(Line, Length(LineA) div SizeOf(WideChar));
-			Move(LineA[1], Line[1], Length(LineA));
-		end;
-	else
-		begin
-			Line := '';
-  		raise ENotSupportedException.Create(ReplaceParam('Unsupported charset in file %1', [FileName]));
-		end;
-	end;
+  DataToRead := DataSize;
+
+  if ALimit > 0 then
+    DataToRead := Min(ALimit, DataSize);
+
+  if DataToRead = 0 then
+    Exit;
+
+  case FCharset of
+    fcAnsi:
+    begin
+      SetLength(Buffer, DataToRead);
+      BlockRead(Buffer[0], DataToRead);
+    end;
+    fcUTF8:
+    begin
+      SetLength(Buffer, DataToRead);
+      BlockRead(Buffer[0], DataToRead);
+    end;
+    fcUTF16BE, fcUTF16LE:
+    begin
+      SetLength(Buffer, (DataToRead + 1) div 2);
+      BlockRead(Buffer[0], DataToRead);
+    end
+    else
+      RaiseUnsupportedCharset;
+  end;
+
+  Result := ConvertBuffer(Buffer);
+end;
+
+function TTextFile.ConvertBuffer(const ABuffer: array of U1): string;
+begin
+  case FCharset of
+    fcAnsi:
+      Result := TEncoding.ANSI.GetString(ABuffer);
+    fcUTF8:
+      Result := TEncoding.UTF8.GetString(ABuffer);
+    fcUTF16LE:
+      Result := TEncoding.Unicode.GetString(ABuffer);
+    fcUTF16BE:
+      Result := TEncoding.BigEndianUnicode.GetString(ABuffer);
+  else
+    RaiseUnsupportedCharset;
+    Result := '';
+  end;
 end;
 
 procedure TTextFile.ReadPrefix;
 var
-	ByteOrderMark: array[0..MaxByteOrderMarkSize - 1] of AnsiChar;
+	ByteOrderMark: TByteOrderMark;
 begin
-  if FUseByteOrderMark then
+  if FUseByteOrderMark and (FileSize > 0) then
   begin
-  	ByteOrderMark := '    ';
-  	BlockRead(@ByteOrderMark, Min(FileSize, MaxByteOrderMarkSize));
+    SetLength(ByteOrderMark, Min(FileSize, MaxByteOrderMarkSize));
+    BlockRead(@ByteOrderMark[0], Length(ByteOrderMark));
 
     FCharset := FindFileCharset(ByteOrderMark);
+    FDataSize := FileSize - U8(Length(ByteOrderMarks[FCharset]));
   end
   else
     FCharset := fcUnknown;
-
-  if FCharset = fcUnknown then
-  begin
-    if FDefaultCharset = fcUnknown then
-    begin
-      FCharset := fcUTF8
-    end
-    else
-      FCharset := FDefaultCharset;
-  end;
 end;
 
-procedure TTextFile.WriteNoConversion(const Line: PAnsiChar; const LineLength: SG);
+procedure TTextFile.WriteNoConversion(const Line: PByte; const LineLength: SG);
 begin
   BlockWrite(Line, LineLength);
 end;
 
-procedure TTextFile.WriteNoConversion(const Line: AnsiString);
+procedure TTextFile.WriteNoConversion(const Line: RawByteString);
 begin
   if Line <> '' then
-    BlockWrite(PAnsiChar(Line), Length(Line));
+    BlockWrite(PByte(Line), Length(Line));
 end;
 
+{$ifdef MSWINDOWS}
 procedure TTextFile.Write(const Line: AnsiString);
 var
 	u: UnicodeString;
@@ -300,12 +365,13 @@ begin
         begin
           u[i] := WideChar(Swap(Ord(u[i])));
         end;
-			WriteNoConversion(PAnsiChar(@u), Length(Line) * SizeOf(WideChar));
+			WriteNoConversion(PByte(@u), Length(Line) * SizeOf(WideChar));
 		end;
 	else
-		raise ENotSupportedException.Create(ReplaceParam('Unsupported charset in file %1', [FileName]));
+		RaiseUnsupportedCharset;
 	end;
 end;
+{$endif}
 
 procedure TTextFile.Write(const Line: UnicodeString);
 var
@@ -320,7 +386,7 @@ begin
 	case FCharset of
 	fcUTF8:
 		begin
-			WriteNoConversion(AnsiString(ConvertUnicodeToUTF8(Line)));
+			WriteNoConversion(ConvertUnicodeToUTF8(Line));
 		end;
 	fcUTF16BE:
 		begin
@@ -329,25 +395,27 @@ begin
       begin
         u[i] := WideChar(Swap(Ord(u[i])));
       end;
-			WriteNoConversion(PAnsiChar(@u[1]), Length(u) * SizeOf(WideChar));
+			WriteNoConversion(PByte(@u[1]), Length(u) * SizeOf(WideChar));
 		end;
   fcUTF16LE:
 		begin
-			WriteNoConversion(PAnsiChar(@Line[1]), Length(Line) * SizeOf(WideChar));
+			WriteNoConversion(PByte(@Line[1]), Length(Line) * SizeOf(WideChar));
 		end;
 	fcAnsi:
 		begin
-			WriteNoConversion(AnsiString(Line));
+			WriteNoConversion(RawByteString(Line));
 		end;
 	else
-		raise ENotSupportedException.Create(ReplaceParam('Unsupported charset in file %1', [FileName]));
+    RaiseUnsupportedCharset;
 	end;
 end;
 
+{$ifdef MSWINDOWS}
 procedure TTextFile.WriteLine(const Line: AnsiString);
 begin
 	Write(Line + FileSep);
 end;
+{$endif}
 
 procedure TTextFile.WriteLine(const Line: UnicodeString);
 begin
@@ -360,7 +428,20 @@ var
 begin
 	L := Length(ByteOrderMarks[FCharset]);
 	if L > 0 then
-		BlockWrite(@ByteOrderMarks[FCharset][1], L);
+		BlockWrite(@ByteOrderMarks[FCharset][0], L);
+end;
+
+procedure TTextFile.SetDefaultCharsetIfNotInFile;
+begin
+  if FCharset = fcUnknown then
+  begin
+    if FDefaultCharset = fcUnknown then
+    begin
+      FCharset := fcUTF8
+    end
+    else
+      FCharset := FDefaultCharset;
+  end;
 end;
 
 procedure TTextFile.SetUseByteOrderMark(const Value: BG);

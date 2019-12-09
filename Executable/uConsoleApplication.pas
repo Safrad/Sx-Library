@@ -76,7 +76,7 @@ uses
 {$IF defined(MSWINDOWS)}
   Winapi.Windows,
 {$ENDIF}
-  uLog,
+  uMainLog,
   uCommonApplication,
   uCommonOutput,
   uStartState,
@@ -109,8 +109,8 @@ end;
 function ConsoleCtrlHandler(dwCtrlType: DWORD): BOOL; stdcall;
 begin
   Result := True; // function handles the control signal
-	if LogWarning then
-    MainLogAdd(CtrlTypeToString(dwCtrlType), mlWarning);
+	if MainLog.IsLoggerFor(mlWarning) then
+    MainLog.Add(CtrlTypeToString(dwCtrlType), mlWarning);
   TConsoleApplication(CommonApplication).AbortedBySystem;
 end;
 {$ENDIF}
@@ -151,8 +151,10 @@ begin
   SplashScreen := TConsoleSplashScreen.Create;
   inherited;
 
+{$IF defined(MSWINDOWS)}
   if FMinimizedArgument.Exists then
     ShowWindow(GetConsoleWindow, SW_MINIMIZE);
+{$ENDIF}
 end;
 
 procedure TConsoleApplication.Run;
@@ -167,8 +169,8 @@ procedure TConsoleApplication.WaitForEnter;
 begin
   if TStartState.RunFromIDE and (not FAbortedBySystem) then
   begin
-    TConsole.WriteLine('');
-    TConsole.Write('Press Enter to continue...');
+    Console.WriteLine('');
+    Console.Write('Press Enter to continue...');
     Readln;
   end;
 end;

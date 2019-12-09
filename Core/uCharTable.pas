@@ -8,7 +8,7 @@ type
 		ctPlus, ctMinus, ctExp, ctMul, ctDiv, ctOpen, ctClose,
 		ctPoint, ctComma, ctSemicolon);
 
-	TCharTable = array[AnsiChar] of TCharType;
+	TCharTable = array[Byte] of TCharType;
 var
 	StdCharTable: TCharTable;
 
@@ -21,29 +21,33 @@ uses uChar;
 // Fill CharTable with standard values.
 procedure FillStdCharTable(out CharTable: TCharTable);
 var
-	c: AnsiChar;
+	b: Byte;
+  c: Char;
 begin
 	// Make Char Table
-	for c := Low(c) to High(c) do
+	for b := Low(b) to High(b) do
+  begin
+    c := Char(b);
 		case c of
-		CharSpace, CharHT: CharTable[c] := ctBlank;
-		CharCR, CharLF: CharTable[c] := ctReturn;
-		'a'..'z', 'A'..'Z', '_'{, #$80..#$ff}: CharTable[c] := ctLetter;
-		'0'..'9': CharTable[c] := ctNumber;
-		{'!',} '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharTable[c] := ctNumberPrefix;
-		'+': CharTable[c] := ctPlus;
-		'-': CharTable[c] := ctMinus;
-		'^': CharTable[c] := ctExp;
-		'*': CharTable[c] := ctMul;
-		'/': CharTable[c] := ctDiv;
-		'(': CharTable[c] := ctOpen;
-		')': CharTable[c] := ctClose;
-		'.': CharTable[c] := ctPoint;
-		',': CharTable[c] := ctComma;
-		';': CharTable[c] := ctSemicolon;
+		CharSpace, CharHT: CharTable[b] := ctBlank;
+		CharCR, CharLF: CharTable[b] := ctReturn;
+		'a'..'z', 'A'..'Z', '_'{, #$80..#$ff}: CharTable[b] := ctLetter;
+		'0'..'9': CharTable[b] := ctNumber;
+		{'!',} '#', '$', '%' {'a'..'z', 'A'..'Z'}: CharTable[b] := ctNumberPrefix;
+		'+': CharTable[b] := ctPlus;
+		'-': CharTable[b] := ctMinus;
+		'^': CharTable[b] := ctExp;
+		'*': CharTable[b] := ctMul;
+		'/': CharTable[b] := ctDiv;
+		'(': CharTable[b] := ctOpen;
+		')': CharTable[b] := ctClose;
+		'.': CharTable[b] := ctPoint;
+		',': CharTable[b] := ctComma;
+		';': CharTable[b] := ctSemicolon;
 		else
-			CharTable[c] := ctIllegal;
+			CharTable[b] := ctIllegal;
 		end;
+  end;
 end;
 
 function CharType(const c: Char; const CharTable: TCharTable): TCharType;
@@ -51,7 +55,7 @@ begin
 	{$ifdef UNICODE}
 	if Ord(c) <= $ff then
 	{$endif}
-		Result := CharTable[AnsiChar(c)]
+		Result := CharTable[Byte(c)]
 	{$ifdef UNICODE}
 	else
 		Result := ctLetter; // i. e. Greece alphabet

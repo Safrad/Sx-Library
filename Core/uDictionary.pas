@@ -1,5 +1,7 @@
 unit uDictionary;
 
+{$ZEROBASEDSTRINGS OFF}
+
 interface
 
 uses
@@ -220,22 +222,20 @@ begin
 	CSVFile := TCSVFile.Create;
   CSVFile.SetColumnNames(['Code', 'Title']);
 	try
-		if CSVFile.Open(FileName) then
-		begin
-			while not CSVFile.EOF do
-			begin
-				Row := CSVFile.ReadLine;
-        NewSize := AvailableLanguageCount + 1;
-        if AllocByExp(Length(AvailableLanguages), NewSize) then
-          SetLength(AvailableLanguages, NewSize);
-        AvailableLanguages[AvailableLanguageCount].Code := Row[0];
-        if Row[1] = '' then
-          Row[1] := Row[0];
-        AvailableLanguages[AvailableLanguageCount].Name := Row[1];
-        Inc(FAvailableLanguageCount);
-			end;
-			CSVFile.Close;
-		end;
+		CSVFile.Open(FileName);
+    while not CSVFile.EOF do
+    begin
+      Row := CSVFile.ReadLine;
+      NewSize := AvailableLanguageCount + 1;
+      if AllocByExp(Length(AvailableLanguages), NewSize) then
+        SetLength(AvailableLanguages, NewSize);
+      AvailableLanguages[AvailableLanguageCount].Code := Row[0];
+      if Row[1] = '' then
+        Row[1] := Row[0];
+      AvailableLanguages[AvailableLanguageCount].Name := Row[1];
+      Inc(FAvailableLanguageCount);
+    end;
+    CSVFile.Close;
 	finally
 		CSVFile.Free;
 	end;
@@ -254,29 +254,27 @@ begin
 	CSVFile := TCSVFile.Create;
   CSVFile.SetColumnNames(['original', 'translated']);
 	try
-		if CSVFile.Open(FileName) then
-		begin
-			while not CSVFile.EOF do
-			begin
-				Row := CSVFile.ReadLine;
-        if Length(Row) < 2 then
-          Continue;
-				NewSize := EntryCount + 1;
-				if AllocByExp(Length(Entries), NewSize) then
-					SetLength(Entries, NewSize);
-				if IsDebug then
+	  CSVFile.Open(FileName);
+    while not CSVFile.EOF do
+    begin
+      Row := CSVFile.ReadLine;
+      if Length(Row) < 2 then
+        Continue;
+      NewSize := EntryCount + 1;
+      if AllocByExp(Length(Entries), NewSize) then
+        SetLength(Entries, NewSize);
+      if IsDebug then
+      begin
+        if FindEntry(Row[0]) >= 0 then
         begin
-          if FindEntry(Row[0]) >= 0 then
-          begin
-  					Warning('Duplicate entry %1', [Row[0]]);
-            Continue;
-          end;
-				end;
-				Entries[EntryCount].En := Row[0];
-				Entries[EntryCount].Other := Row[1];
+          Warning('Duplicate entry %1', [Row[0]]);
+          Continue;
+        end;
+      end;
+      Entries[EntryCount].En := Row[0];
+      Entries[EntryCount].Other := Row[1];
 
-				Inc(EntryCount);
-			end;
+      Inc(EntryCount);
 			CSVFile.Close;
 		end;
 	finally
