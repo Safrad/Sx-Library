@@ -31,7 +31,6 @@ type
     procedure Assign(Source: TPersistent); override;
 
     function SideColorToString(const APlayerIndex: SG): string; virtual; abstract;
-    function SideColorToChar(const APlayerIndex: SG): Char;
 
     class function PieceToString(const APiece: TSquare; const APieceLanguage: TPieceLanguage): string; overload; virtual; abstract;
     class function PieceToString(APiece: TSquare; const ASide: TSide; const PieceLanguage: TPieceLanguage = plEnglish): string; overload;
@@ -103,17 +102,6 @@ end;
 procedure TPosition.SetSize(const Value: TSide);
 begin
   FSide := Value;
-end;
-
-function TPosition.SideColorToChar(const APlayerIndex: SG): Char;
-var
-  s: string;
-begin
-  s := SideColorToString(APlayerIndex);
-  if s = '' then
-    Result := '-'
-  else
-    Result := LowCase(s[1]);
 end;
 
 class function TPosition.StringToPiece(const ALine: string; var AInLineIndex: SG; const ABothSides: BG;
