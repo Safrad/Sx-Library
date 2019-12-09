@@ -1,4 +1,4 @@
-unit uCustomWriter;
+unit uCustomEngineWriter;
 
 interface
 
@@ -8,7 +8,7 @@ uses
 
 type
   /// <summary>Ancestor for TUCIWriter in uUCIWriter and TXBoardWriter in uXBoardWriter</summary>
-  TCustomWriter = class
+  TCustomEngineWriter = class
   private
     FEngine: TCommonEngine;
     procedure SetEngine(const Value: TCommonEngine);
@@ -33,14 +33,14 @@ implementation
 uses
   uExternalEngine;
 
-{ TCustomWriter }
+{ TCustomEngineWriter }
 
-procedure TCustomWriter.SendCommand(const ACommand: string);
+procedure TCustomEngineWriter.SendCommand(const ACommand: string);
 begin
   TExternalEngine(Engine).SendCommand(ACommand);
 end;
 
-procedure TCustomWriter.SetEngine(const Value: TCommonEngine);
+procedure TCustomEngineWriter.SetEngine(const Value: TCommonEngine);
 begin
   FEngine := Value;
 end;

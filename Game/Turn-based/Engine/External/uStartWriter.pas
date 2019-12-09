@@ -3,10 +3,10 @@ unit uStartWriter;
 interface
 
 uses
-  uCustomWriter;
+  uCustomEngineWriter;
 
 type
-  TStartWriter = class(TCustomWriter)
+  TStartWriter = class(TCustomEngineWriter)
   public
     procedure Quit; override;
   end;
