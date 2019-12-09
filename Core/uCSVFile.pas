@@ -100,7 +100,7 @@ begin
   ClearRow;
   Quoted := False;
   ColumnIndex := 0;
-  while FFile.Eof do
+  while not FFile.Eof do
   begin
     FFile.ReadLine(Line);
     if not Quoted then
