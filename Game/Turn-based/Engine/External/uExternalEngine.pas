@@ -11,7 +11,7 @@ uses
   uLogger,
   uCommonEngine,
   uCustomParser,
-  uCustomWriter,
+  uCustomEngineWriter,
   uPipedExternalApplication;
 
 const
@@ -26,7 +26,7 @@ type
 		FExternalApp: TPipedExternalApplication;
     FPaused: BG;
     FParser: ICustomParser;
-    FWriter: TCustomWriter;
+    FWriter: TCustomEngineWriter;
     FProtocolError: string;
     FCalculationDoneEvent: TEvent;
 
@@ -37,7 +37,7 @@ type
     procedure SetFileName(const Value: TFileName);
     procedure SetLogger(const Value: TLogger);
     procedure SetParser(const Value: ICustomParser);
-    procedure SetWriter(const Value: TCustomWriter);
+    procedure SetWriter(const Value: TCustomEngineWriter);
     procedure SetProtocolError(const Value: string);
     function GetAllocatedMemory: U8;
   protected
@@ -69,7 +69,7 @@ type
     // Input
 		property FileName: TFileName read FFileName write SetFileName;
     property Parser: ICustomParser read FParser write SetParser;
-    property Writer: TCustomWriter read FWriter write SetWriter;
+    property Writer: TCustomEngineWriter read FWriter write SetWriter;
 
     // Process
 		procedure SendCommand(const ACommand: string);
@@ -372,7 +372,7 @@ begin
   FWriter.SetStartPos;
 end;
 
-procedure TExternalEngine.SetWriter(const Value: TCustomWriter);
+procedure TExternalEngine.SetWriter(const Value: TCustomEngineWriter);
 begin
   FWriter := Value;
 end;
