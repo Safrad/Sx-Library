@@ -17,6 +17,10 @@ const
 
 type
 	TPosition = class(TPersistent)
+  private
+    procedure SetLongDraw(const Value: U4);
+    procedure SetMoveIndex(const Value: S4);
+    procedure SetSize(const Value: TSide);
   protected
 		FLongDraw: U4; // HalfMoveLongDraw
 		FMoveIndex: S4;
@@ -45,8 +49,6 @@ type
     procedure MakeRevertableMove(const AMove: PMove); virtual; abstract;
     procedure RevertMove(const AMove: PMove); virtual; abstract;
 
-    procedure FromString(const AValue: string); virtual; abstract;
-    function ToFENString: string; virtual; abstract;
     procedure WriteToConsole; virtual; abstract;
     function MoveToString(const AMove: PMove): string; virtual; abstract;
     function StringToMove(const AMove: string): PMove; virtual; abstract;
@@ -54,9 +56,9 @@ type
     procedure InitializeHash;
     function Clone: TPosition; virtual; abstract;
 
-		property Side: TSide read FSide;
-    property LongDraw: U4 read FLongDraw;
-    property MoveIndex: S4 read FMoveIndex;
+		property Side: TSide read FSide write SetSize;
+    property LongDraw: U4 read FLongDraw write SetLongDraw;
+    property MoveIndex: S4 read FMoveIndex write SetMoveIndex;
   end;
 
 implementation
@@ -86,6 +88,21 @@ begin
 	if ASide <> 0 then
 		APiece := -APiece;
 	Result := PieceToString(APiece,  PieceLanguage);
+end;
+
+procedure TPosition.SetLongDraw(const Value: U4);
+begin
+  FLongDraw := Value;
+end;
+
+procedure TPosition.SetMoveIndex(const Value: S4);
+begin
+  FMoveIndex := Value;
+end;
+
+procedure TPosition.SetSize(const Value: TSide);
+begin
+  FSide := Value;
 end;
 
 function TPosition.SideColorToChar(const APlayerIndex: SG): Char;

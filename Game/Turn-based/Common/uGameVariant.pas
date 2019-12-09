@@ -7,7 +7,9 @@ uses
 
   uPortableGameNotation,
   uPosition,
-  uMoveGenerator;
+  uMoveGenerator,
+  uCustomForsythEdwardsNotationParser,
+  uCustomForsythEdwardsNotationWriter;
 
 type
 	TGameVariant = class
@@ -23,6 +25,8 @@ type
   public
     function CreateStartPosition: TPosition; virtual; abstract;
     function CreateMoveGenerator: TMoveGenerator; virtual; abstract;
+    function CreateForsythEdwardsNotationParser: TCustomForsythEdwardsNotationParser; virtual; abstract;
+    function CreateForsythEdwardsNotationWriter: TCustomForsythEdwardsNotationWriter; virtual; abstract;
 
     function GetStalemateGameTermination: TGameTermination; virtual; abstract;
 
