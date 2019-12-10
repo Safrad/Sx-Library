@@ -73,6 +73,12 @@ uses
 {$ifdef MSWINDOWS}
 	Winapi.Windows,
 {$endif}
+{$ifdef Android}
+  Androidapi.Helpers,
+  Androidapi.JNI.App,
+  Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.NativeActivity,
+{$endif}
 	uOutputFormat, uStrings,
 	TypInfo;
 
@@ -173,7 +179,32 @@ begin
 		end;
 	end;
 {$else}
+function GetPackageInfo: JPackageInfo;
+var
+  Activity: JActivity;
 begin
+  Activity := TJNativeActivity.Wrap(PANativeActivity(System.DelphiActivity)^.clazz);
+  Result := Activity.getPackageManager.getPackageInfo(Activity.getPackageName, 0);
+end;
+var
+  PackageInfo: JPackageInfo;
+  PackageName: string;
+  DotPos: SG;
+begin
+  PackageInfo := GetPackageInfo;
+  PackageName := JStringToString(PackageInfo.packageName);
+  DotPos := Pos('.', PackageName);
+  if DotPos <> 0 then
+  begin
+    FProjectInfoNames[piCompanyName] := Copy(PackageName, 1, DotPos - 1);
+    FProjectInfoNames[piProductName] := Copy(PackageName, DotPos + 1);
+  end
+  else
+  begin
+    raise EArgumentException.Create('Invalid package name');
+  end;
+  FProjectInfoNames[piFileVersion] := IntToStr(PackageInfo.versionCode);
+  FProjectInfoNames[piProductVersion] := JStringToString(PackageInfo.versionName);
 {$endif}
 end;
 
@@ -255,7 +286,7 @@ begin
         ThisProjectInfo.FProjectInfoNames[piInternalName] := 'Unknown';
     end;
 
-    Assert(ThisProjectInfo.FProjectInfoNames[piCompanyName] <> '');
+//    Assert(ThisProjectInfo.FProjectInfoNames[piCompanyName] <> '');
 		if ThisProjectInfo.FProjectInfoNames[piCompanyName] = '' then
       ThisProjectInfo.FProjectInfoNames[piCompanyName] := 'Unknown';
 
