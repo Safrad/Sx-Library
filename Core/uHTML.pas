@@ -14,7 +14,8 @@ function AddImageEx(const SelfFileName, FileName: TFileName; const Params: strin
 function EncodeURL(const Path: string): string;
 
 const
-	HTMLExt = '.html'; // Could be also ".htm", ".php", ".php3", ".php4".
+  /// <summary>Could be also ".htm", ".php", ".php3", ".php4".</summary>
+	HTMLExt = '.html';
 	IndexFile = 'index' + HTMLExt;
 	IndexPHPFile = 'index' + '.php';
 
@@ -93,13 +94,22 @@ procedure HTMLRedirectNoPHP(const SaveToFileName: TFileName; const RedirectURL: 
 //function GetContent(const HTMLIndex, HTMLCount: SG; Refers: SG; const HTMLRef, Zeros: string): string; deprecated; // Create static navigation bar. Use PHP.
 
 var
-	// Common options.
-	Compressed: BG = False; // If is true blank characters (Tab, New line) will not be used.
-	StyleFileName: string = 'style.css'; // Style sheed used in HTML head.
+	// Common options
+  /// <summary>If is true blank characters (Tab, New line) will not be used.</summary>
+	Compressed: BG = False;
+
+  /// <summary>Style sheed used in HTML head.<summary>
+	StyleFileName: string = 'style.css';
 	SkipHTMLHead: BG = False;
-	Head, Foot: string; // Use %title% as page title or %root% as path to the root dir.
-	RootDir: string; // Path where files favicon.ico, style.css are stored. Also replace %root% parameter in Head and Foot.
-	HTMLLastModified: string; // Used in HTML head as last-modified tag. Automatically initialized at startup.
+
+  /// <summary>Use %title% as page title or %root% as path to the root dir.</summary>
+	Head, Foot: string;
+
+  /// <summary>Path where files favicon.ico, style.css are stored. Also replace %root% parameter in Head and Foot.</summary>
+	RootDir: string;
+
+  /// <summary>HTML head as last-modified tag. Automatically initialized at startup.</summary>
+	HTMLLastModified: string;
 
 implementation
 
