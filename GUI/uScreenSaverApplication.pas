@@ -113,13 +113,12 @@ end;
 procedure TScreenSaverApplication.Install;
 var
 	TargetExeFileName: TFileName;
-	Res: BG;
 	Reg: TRegistry;
 begin
-  Res := CopyFile(ExeFileName, GetTargetExeFileName, False);
-  Res := Res and CopyDir(WorkDir + 'Languages\', SysDir + 'Languages\');
-  Res := Res and CopyDir(WorkDir + 'Sounds\', SysDir + 'Sounds\');
-  Res := Res and CopyDir(WorkDir + 'Graphics\', SysDir + 'Graphics\');
+  CopyFile(ExeFileName, GetTargetExeFileName, False);
+  CopyDir(WorkDir + 'Languages\', SysDir + 'Languages\');
+  CopyDir(WorkDir + 'Sounds\', SysDir + 'Sounds\');
+  CopyDir(WorkDir + 'Graphics\', SysDir + 'Graphics\');
   Reg := TRegistry.Create(KEY_SET_VALUE);
   try
     Reg.RootKey := HKEY_CURRENT_USER;
@@ -130,8 +129,7 @@ begin
   finally
     Reg.Free;
   end;
-  if Res then
-    Information(GetProjectInfo(piProductName) + CharSpace + Translate('successfully installed.'));
+  Information(GetProjectInfo(piProductName) + CharSpace + Translate('successfully installed.'));
 end;
 
 procedure TScreenSaverApplication.OnRun;
