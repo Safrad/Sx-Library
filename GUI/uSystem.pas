@@ -349,6 +349,9 @@ initialization
 
 finalization
 {$IFNDEF NoFinalization}
+  {$ifndef Console}
+    FreeAndNil(SaveDialog);
+  {$endif}
 	FreeAndNil(OpenDialog);
 {$ENDIF NoFinalization}
 end.
