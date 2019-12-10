@@ -4,7 +4,7 @@ interface
 
 uses
 	SysUtils, ExtCtrls,
-	uTypes, uFile, uRWFile;
+	uTypes, uRWFile;
 
 type
 	TDFile = class(TRWFile)

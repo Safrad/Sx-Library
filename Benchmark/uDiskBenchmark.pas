@@ -22,8 +22,6 @@ type
     FUseBuffer: BG;
     FWriteThrough: BG;
 
-    function GetFlag: U4;
-
     procedure SetAccess(const Value: TAccess);
     procedure SetBlockSize(const Value: SG);
     procedure SetFileName(const Value: TFileName);
@@ -57,7 +55,7 @@ uses
   Math,
   Windows,
   uFileCharset,
-  uFile,
+  uRawFile,
   uOutputFormat,
   uStrings,
   uDictionary,
@@ -95,32 +93,30 @@ end;
 
 procedure TDiskBenchmark.CreateFile;
 var
-  F: TFile;
-	Flag: U4;
+  F: TRawFile;
 	AlignedMemory: TAlignedMemory;
 begin
-  F := TFile.Create;
+  F := TRawFile.Create;
   try
-    F.Protection := False;
-    F.Charset := fcAnsi;
-    Flag := FILE_FLAG_NO_PREFIX or FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_RANDOM_ACCESS or FILE_FLAG_WRITE_THROUGH;
-    if F.Open(FFileName, fmReadAndWrite, Flag) then
-    begin
+    F.FileName := FFileName;
+    F.FileMode := fmReadAndWrite;
+    F.RandomAccess := True;
+    F.WriteThrough := True;
+    F.Open;
 //      F.Seek(FFileSize);
 //      F.Truncate;
 
-      // Write data of size "SectorSize" to the end of file
-      F.Seek(FFileSize - GCPU.PageSize);
-      AlignedMemory := TAlignedMemory.Create;
-      AlignedMemory.AlignSize := GCPU.PageSize;
-      AlignedMemory.Size := GCPU.PageSize;
-      try
-        F.BlockWrite(AlignedMemory.Data^, GCPU.PageSize);
-      finally
-        AlignedMemory.Free;
-      end;
-      F.Close;
+    // Write data of size "SectorSize" to the end of file
+    F.Seek(FFileSize - CPU.PageSize);
+    AlignedMemory := TAlignedMemory.Create;
+    AlignedMemory.AlignSize := CPU.PageSize;
+    AlignedMemory.Size := CPU.PageSize;
+    try
+      F.BlockWrite(AlignedMemory.Data^, CPU.PageSize);
+    finally
+      AlignedMemory.Free;
     end;
+    F.Close;
   finally
     F.Free;
   end;
@@ -141,7 +137,7 @@ procedure TDiskBenchmark.Execute;
 const
 	Sec = 's';
 var
-	F: TFile;
+	F: TRawFile;
 	FName: TFileName;
 
 	FileSiz, i, mi: U8;
@@ -149,7 +145,6 @@ var
 	Clu: S4;
 
 	FM: TFileMode;
-	Flag: U4;
 	s: string;
   AlignedMemory: TAlignedMemory;
 begin
@@ -158,9 +153,8 @@ begin
   Clu := FBlockSize;
   FileSiz := FFileSize;
 
-  i := 0;
   mi := RoundDivS8(FileSiz, Clu);
-  FileSiz := Clu * mi;
+  FileSiz := U8(Clu) * mi;
 
   OutputInfo.AddCaption(Translate('FileName:') + CharSpace + FFileName);
 
@@ -171,17 +165,15 @@ begin
     OutputInfo.AddCaption(Translate('Writing:') + CharSpace + s);
 
   AlignedMemory := TAlignedMemory.Create;
-  AlignedMemory.AlignSize := GCPU.PageSize;
+  AlignedMemory.AlignSize := CPU.PageSize;
   AlignedMemory.Size := Clu;
   try
     if FAccess = daWrite then
       FillBuffer(AlignedMemory.Data, Clu);
 
-    F := TFile.Create;
-    F.Protection := False;
-    F.Charset := fcAnsi;
-    FName := FFileName;
+    F := TRawFile.Create;
     try
+      FName := FFileName;
       OutputInfo.ProgressValue := 0;
       OutputInfo.ProgressMaximum := mi;
 
@@ -193,34 +185,34 @@ begin
       else
         FM := fmReadOnly;
       end;
-      Flag := GetFlag;
-      if F.Open(FName, FM, Flag) then
+      F.FileName := FName;
+      F.FileMode := FM;
+      F.RandomAccess := FRandomMode;
+      F.UseBuffer := FUseBuffer;
+      F.WriteThrough := FWriteThrough and (FAccess <> daRead);
+      F.Open;
+      i := 0;
+      while i < mi do
       begin
-        i := 0;
-        while i < mi do
+        if FRandomMode then
         begin
-          if FRandomMode then
-          begin
-            F.Seek(Clu * Random(mi)); // must be aligned
-          end;
-          if FAccess = daRead then
-          begin
-            if not F.BlockRead(AlignedMemory.Data^, Clu) then
-              Break;
-          end
-          else
-          begin
-            if not F.BlockWrite(AlignedMemory.Data^, Clu) then
-              Break;
-          end;
-          Inc(i);
-          OutputInfo.ProgressValue := i;
-          if OutputInfo.Aborted or Terminated then
-            Break;
+          F.Seek(Clu * Random(mi)); // must be aligned
         end;
+        if FAccess = daRead then
+        begin
+          F.BlockRead(AlignedMemory.Data^, Clu);
+        end
+        else
+        begin
+          F.BlockWrite(AlignedMemory.Data^, Clu);
+        end;
+        Inc(i);
         OutputInfo.ProgressValue := i;
-        F.Close;
+        if OutputInfo.Aborted or Terminated then
+          Break;
       end;
+      OutputInfo.ProgressValue := i;
+      F.Close;
     finally
       F.Free;
     end;
@@ -229,20 +221,6 @@ begin
   end;
 
   CalculatedItems := U8(Clu) * U8(i);
-end;
-
-function TDiskBenchmark.GetFlag: U4;
-begin
-  Result := FILE_FLAG_NO_PREFIX or FILE_ATTRIBUTE_TEMPORARY;
-  if FRandomMode = False then
-    Result := Result or FILE_FLAG_SEQUENTIAL_SCAN
-  else
-    Result := Result or FILE_FLAG_RANDOM_ACCESS;
-
-  if (FUseBuffer = False) then
-    Result := Result or FILE_FLAG_NO_BUFFERING;
-  if FWriteThrough and (FAccess <> daRead) then
-    Result := Result or FILE_FLAG_WRITE_THROUGH;
 end;
 
 function TDiskBenchmark.GetName: string;

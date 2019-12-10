@@ -16,7 +16,8 @@ implementation
 uses
   Winapi.Windows,
   uFiles,
-  uFile,
+  uRawFile,
+  uTextFile,
   uPlugin,
   uAPI,
 

@@ -49,7 +49,7 @@ type
 implementation
 
 uses
-	uInputFormat, uOutputFormat, uStrings, uMath, uDictionary, uFiles, uFile,
+	uInputFormat, uOutputFormat, uStrings, uMath, uDictionary, uFiles,
 	Winapi.Windows, DateUtils, Math;
 
 { TSchedule }

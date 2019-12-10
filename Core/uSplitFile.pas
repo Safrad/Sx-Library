@@ -13,7 +13,7 @@ implementation
 uses
   Math,
   uFileCharset,
-  uFile,
+  uRawFile,
   uFiles,
   uStrings,
   uOutputFormat,
@@ -32,8 +32,8 @@ end;
 
 procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSize: U8 = GB; const CreateCRCFile: BG = False);
 var
-	SourceFile: TFile;
-	DestFile: TFile;
+	SourceFile: TRawFile;
+	DestFile: TRawFile;
 	FileNamePrefix: string;
 	FileIndex: SG;
 	RemainSource: U8;
@@ -52,38 +52,37 @@ begin
 	Assert(MaxFileSize >= 1);
 
 	FileNamePrefix := Dest + DelFileExt(ExtractFileName(Source));
-	SourceFile := TFile.Create;
+	SourceFile := TRawFile.Create;
 	GetMem(Buf, DefFileBuffer);
 	try
 		CRC := $ffffffff;
-		if SourceFile.Open(Source, fmReadOnly, FILE_FLAG_SEQUENTIAL_SCAN or FILE_FLAG_NO_PREFIX) then
-		begin
-			RemainSource := SourceFileSize;
-			FileIndex := 0;
-			while RemainSource > 0 do
-			begin
-				DestFile := TFile.Create;
-        DestFile.Charset := fcAnsi;
-				RemainDest := Min(RemainSource, MaxFileSize);
-				try
-					if DestFile.Open(FileNamePrefix + '.' + NToS(FileIndex + 1, '000'), fmRewrite, FILE_FLAG_SEQUENTIAL_SCAN or FILE_FLAG_NO_PREFIX) then
-					begin
-						while RemainDest > 0 do
-						begin
-							Count := Min(DefFileBuffer, RemainDest);
-							SourceFile.BlockRead(Buf^, Count);
-							CRC := TCyclicRedundancyCheck.CountCyclicRedundancyCheck32(Buf, Count, CRC);
-							DestFile.BlockWrite(Buf^, Count);
-							Dec(RemainDest, Count);
-						end;
-					end;
-					DestFile.Close;
-				finally
-					DestFile.Free;
-				end;
-				Dec(RemainSource, Min(RemainSource, MaxFileSize));
-				Inc(FileIndex);
-			end;
+    SourceFile.FileName := Source;
+    SourceFile.FileMode := fmReadOnly;
+		SourceFile.Open;
+    RemainSource := SourceFileSize;
+    FileIndex := 0;
+    while RemainSource > 0 do
+    begin
+      DestFile := TRawFile.Create;
+      try
+        DestFile.FileName := FileNamePrefix + '.' + NToS(FileIndex + 1, '000');
+        DestFile.FileMode := fmRewrite;
+        RemainDest := Min(RemainSource, MaxFileSize);
+        DestFile.Open;
+        while RemainDest > 0 do
+        begin
+          Count := Min(DefFileBuffer, RemainDest);
+          SourceFile.BlockRead(Buf^, Count);
+          CRC := TCyclicRedundancyCheck.CountCyclicRedundancyCheck32(Buf, Count, CRC);
+          DestFile.BlockWrite(Buf^, Count);
+          Dec(RemainDest, Count);
+        end;
+        DestFile.Close;
+      finally
+        DestFile.Free;
+      end;
+      Dec(RemainSource, Min(RemainSource, MaxFileSize));
+      Inc(FileIndex);
 			SourceFile.Close;
 		end;
 		CRC := CRC xor $ffffffff;

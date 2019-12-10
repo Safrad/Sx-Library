@@ -19,7 +19,7 @@
 	end;
 }
 
-unit uFile;
+unit uFile deprecated 'Use uRawFile or uTextFile';
 
 {$ZEROBASEDSTRINGS OFF}
 

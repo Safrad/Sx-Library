@@ -35,7 +35,7 @@ implementation
 
 uses
   uMath,
-	uOutputFormat, uFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor;
+	uOutputFormat, uRawFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor;
 
 var
 	fScores: TfScores;
@@ -56,7 +56,7 @@ var
 
 procedure ReadScores(FileName: TFileName);
 var
-	F: TFile;
+	F: TRawFile;
 begin
 	if not FileExists(FileName) then
 	begin
@@ -64,13 +64,13 @@ begin
 		Exit;
 	end;
 
-	F := TFile.Create;
+	F := TRawFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			F.BlockRead(Highs, SizeOf(Highs));
-			F.Close;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    F.BlockRead(Highs, SizeOf(Highs));
+    F.Close;
 	finally
 		F.Free;
 	end;
@@ -78,16 +78,16 @@ end;
 
 procedure WriteScores;
 var
-	F: TFile;
+	F: TRawFile;
 begin
-	F := TFile.Create;
+	F := TRawFile.Create;
 	try
-		if F.Open(ScoresFileName, fmRewrite) then
-		begin
-			F.BlockWrite(Highs, SizeOf(Highs));
-			F.Truncate;
-			F.Close;
-		end;
+    F.FileName := ScoresFileName;
+    F.FileMode := fmRewrite;
+		F.Open;
+    F.BlockWrite(Highs, SizeOf(Highs));
+    F.Truncate;
+    F.Close;
 	finally
 		F.Free;
 	end;

@@ -110,7 +110,7 @@ uses
 
 	uStrings, uChar, uFiles, {$ifndef Console}uDBitmap,{$endif} uOutputFormat, uMath, uCSVFile, uProjectInfo, uToHTML,
   uCharset,
-  uFileCharset, uFile;
+  uFileCharset;
 
 const
 	ContentMark = '%HTMLcontent%';

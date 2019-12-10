@@ -7,7 +7,7 @@ interface
 uses
   uTypes,
   uFileCharset,
-  uFile,
+  uTextFile,
 
   SysUtils,
   Classes,
@@ -19,9 +19,9 @@ procedure StringArrayToStrings(const StringArray: array of string; const Strings
 function ProcessPriority(const Prior: U1): Integer;
 function ThreadPriority(const Prior: U1): Integer;
 
-function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG; overload;
-function ReadLinesFromFile(const F: TFile; Lines: TStrings): BG; overload;
-function WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG; const Charset: TFileCharset = DefaultFileCharset): BG;
+procedure ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi); overload;
+procedure ReadLinesFromFile(const F: TTextFile; Lines: TStrings); overload;
+procedure WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG; const Charset: TFileCharset = DefaultFileCharset);
 procedure ReadStreamFromFile(const FileName: TFileName; Stream: TMemoryStream);
 procedure WriteStreamToFile(const FileName: TFileName; Stream: TMemoryStream);
 
@@ -41,6 +41,7 @@ uses
   System.Win.Registry,
   Vcl.Forms,
 
+  uRawFile,
 	uStrings, uChar, uFiles, uDictionary;
 
 procedure StringArrayToStrings(const StringArray: array of string; const Strings: TStrings; const StartIndex: SG = 0);
@@ -183,7 +184,7 @@ begin
 		FileName := ShortDir(Dialog.FileName);
 end;
 
-function ReadLinesFromFile(const F: TFile; Lines: TStrings): BG;
+procedure ReadLinesFromFile(const F: TTextFile; Lines: TStrings);
 var
 	Line: string;
 begin
@@ -191,64 +192,57 @@ begin
 	Lines.Clear;
 	while not F.Eof do
 	begin
-		F.Readln(Line);
+		F.ReadLine(Line);
 		Lines.Add(Line);
 	end;
-	Result := True;
 end;
 
-function ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi): BG;
+procedure ReadLinesFromFile(const FileName: TFileName; Lines: TStrings; const DefaultCharset: TFileCharset = fcAnsi);
 var
-	F: TFile;
+	F: TTextFile;
 //	Line: string;
 begin
 	Assert(Lines <> nil);
-	Result := False;
 //	Lines.Clear;
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
 		F.DefaultCharset := DefaultCharset;
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			ReadLinesFromFile(F, Lines);
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    ReadLinesFromFile(F, Lines);
 {			while not F.Eof do
-			begin
-				F.Readln(Line);
-				Lines.Add(Line);
-			end;}
-			F.Close;
-			Result := True;
-		end;
+    begin
+      F.Readln(Line);
+      Lines.Add(Line);
+    end;}
+    F.Close;
 	finally
 		F.Free;
 	end;
 end;
 
-function WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG; const Charset: TFileCharset = DefaultFileCharset): BG;
+procedure WriteLinesToFile(const FileName: TFileName; const Lines: TStrings; const Append: BG; const Charset: TFileCharset = DefaultFileCharset);
 var
-	F: TFile;
+	F: TTextFile;
 	i: SG;
-	FileMode: TFileMode;
 begin
-	Result := False;
-	if Append then
-		FileMode := fmAppend
-	else
-		FileMode := fmRewrite;
-	F := TFile.Create;
-  F.Charset := Charset;
+	F := TTextFile.Create;
 	try
-		if F.Open(FileName, FileMode) then
-		begin
-			i := 0;
-			while i < Lines.Count do
-			begin
-				F.Write(Lines[i] + FileSep);
-				Inc(i);
-			end;
-			F.Close;
-			Result := True;
-		end;
+    F.DefaultCharset := Charset;
+    F.FileName := FileName;
+    if Append then
+      F.FileMode := fmAppend
+    else
+      F.FileMode := fmRewrite;
+		F.Open;
+    i := 0;
+    while i < Lines.Count do
+    begin
+      F.Write(Lines[i] + FileSep);
+      Inc(i);
+    end;
+    F.Close;
 	finally
 		F.Free;
 	end;

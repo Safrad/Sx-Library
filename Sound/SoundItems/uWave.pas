@@ -5,7 +5,7 @@ interface
 uses
   SysUtils,
 	uTypes,
-  uFile;
+  uRawFile;
 
 // For screen Width 800 is NowPos 0..799, MaxPos 799
 procedure SoundLR(var Left, Right: SG; const NowPos, MaxPos: SG);
@@ -235,10 +235,10 @@ type
 		PWave: PCompleteWave;
 		FData: PWaveSample;
 		FWithoutData: BG;
-		procedure ReadRIFFHeader(const F: TFile);
-		procedure ReadFormatChunk(const F: TFile);
-		procedure ReadDataChunk(const F: TFile);
-		procedure ReadChunks(const F: TFile);
+		procedure ReadRIFFHeader(const F: TRawFile);
+		procedure ReadFormatChunk(const F: TRawFile);
+		procedure ReadDataChunk(const F: TRawFile);
+		procedure ReadChunks(const F: TRawFile);
 		function GetLength: UG;
 		procedure DecodeALAW(InData: PU1);
 		procedure DecodeMULAW(InData: PU1);
@@ -307,7 +307,7 @@ begin
 		Right := ConvertPre;
 end;
 
-procedure TWave.ReadRIFFHeader(const F: TFile);
+procedure TWave.ReadRIFFHeader(const F: TRawFile);
 var
 	Wave: TWaveRIFFHeader;
 begin
@@ -315,10 +315,7 @@ begin
 	begin
 		raise EReadFileException.Create(F.FileName, 'File is truncated.');
 	end;
-	if not F.BlockRead(Wave, SizeOf(TWaveRIFFHeader)) then
-	begin
-
-	end;
+	F.BlockRead(Wave, SizeOf(TWaveRIFFHeader));
 	if (Wave.GroupID <> 'RIFF') or (Wave.RiffType <> 'WAVE') then
 	begin
 		raise EReadFileException.Create(F.FileName, 'Invalid wave header (possibly not a wave file).');
@@ -330,7 +327,7 @@ begin
 	end;
 end;
 
-procedure TWave.ReadFormatChunk(const F: TFile);
+procedure TWave.ReadFormatChunk(const F: TRawFile);
 begin
 	F.BlockRead(FFormat, SizeOf(FFormat));
 	case FFormat.FormatTag of
@@ -359,7 +356,7 @@ begin
 	PWave.DataChunk.ChunkSize := FDataBytes;
 end;
 
-procedure TWave.ReadDataChunk(const F: TFile);
+procedure TWave.ReadDataChunk(const F: TRawFile);
 var
 	PUncompressedData: Pointer;
 begin
@@ -396,7 +393,7 @@ begin
 		FData := Pointer(TNative(PWave) + TNative(FPreDataSize));
 end;
 
-procedure TWave.ReadChunks(const F: TFile);
+procedure TWave.ReadChunks(const F: TRawFile);
 const
 	fmt = Ord('f') + Ord('m') shl 8 + Ord('t') shl 16 + Ord(' ') shl 24;
 	data = Ord('d') + Ord('a') shl 8 + Ord('t') shl 16 + Ord('a') shl 24;
@@ -463,17 +460,17 @@ end;
 
 procedure TWave.ReadFromFile(const FileName: TFileName);
 var
-	F: TFile;
+	F: TRawFile;
 begin
-	F := TFile.Create;
+	F := TRawFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-      Clean;
-			ReadRIFFHeader(F);
-			ReadChunks(F);
-			F.Close;
-		end;
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    Clean;
+    ReadRIFFHeader(F);
+    ReadChunks(F);
+    F.Close;
 	finally
 		F.Free;
 	end;

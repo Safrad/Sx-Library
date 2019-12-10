@@ -54,7 +54,7 @@ type
 	end;
 
 function IsSameBookmarks(const Bookmark, Bookmark2: PBookmark): BG;
-function CopyBookmark(const SrcBookmark, DstBookmark: PBookmark): BG;
+procedure CopyBookmark(const SrcBookmark, DstBookmark: PBookmark);
 
 implementation
 
@@ -76,7 +76,7 @@ begin
 	Result := (Bookmark.Name = Bookmark2.Name) and (Bookmark.URL = Bookmark2.URL);
 end;
 
-function CopyBookmark(const SrcBookmark, DstBookmark: PBookmark): BG;
+procedure CopyBookmark(const SrcBookmark, DstBookmark: PBookmark);
 var
   i: SG;
 begin

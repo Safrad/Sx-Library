@@ -82,7 +82,7 @@ implementation
 uses
 	Math,
 	uDIniFile, uFolder,
-	uStrings, uMath, uCSVFile, uInputFormat, uFile, uOutputFormat, uWatch;
+	uStrings, uMath, uCSVFile, uInputFormat, uOutputFormat, uWatch, uRawFile, uTextFile;
 
 { TFileList }
 
@@ -407,25 +407,25 @@ end;
 procedure TFileList.SaveDatabase;
 var
 	i: SG;
-	F: TFile;
+	F: TTextFile;
 begin
 	WatchRemoveFile(FDatabaseFileName);
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FDatabaseFileName, fmRewrite) then
-		begin
-			F.Writeln(CSVRemark + 'FileName' + CSVSep + 'CountOn' + CSVSep + 'TimeOn' + CSVSep +
-					'Exists');
-			for i := 0 to FWDCount - 1 do
-			begin
-				if (WDs[i].Name <> '') and ((WDs[i].CountOn > 0) or (WDs[i].TimeOn > 0)) then
-					F.Writeln(CSVCell(WDs[i].Name) + CSVSep + CSVCell(NToS(WDs[i].CountOn, ofIO))
-							+ CSVSep + CSVCell(NToS(WDs[i].TimeOn, ofIO)) + CSVSep + CSVCell
-							(NToS(SG(WDs[i].PathIndex), ofIO)));
-			end;
-			F.Truncate;
-			F.Close;
-		end;
+    F.FileName := FDatabaseFileName;
+    F.FileMode := fmRewrite;
+		F.Open;
+    F.WriteLine(CSVRemark + 'FileName' + CSVSep + 'CountOn' + CSVSep + 'TimeOn' + CSVSep +
+        'Exists');
+    for i := 0 to FWDCount - 1 do
+    begin
+      if (WDs[i].Name <> '') and ((WDs[i].CountOn > 0) or (WDs[i].TimeOn > 0)) then
+        F.WriteLine(CSVCell(WDs[i].Name) + CSVSep + CSVCell(NToS(WDs[i].CountOn, ofIO))
+            + CSVSep + CSVCell(NToS(WDs[i].TimeOn, ofIO)) + CSVSep + CSVCell
+            (NToS(SG(WDs[i].PathIndex), ofIO)));
+    end;
+    F.Truncate;
+    F.Close;
 	finally
 		F.Free;
 		WatchAddFile(FDatabaseFileName, ReadDatabase);

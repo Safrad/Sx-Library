@@ -46,7 +46,7 @@ interface
 uses
   uTypes,
 	uInputFormat,
-  uFile,
+  uRawFile,
 	Classes, SysUtils;
 
 type
@@ -94,7 +94,7 @@ type
     FArtist             : string;
     FCompressedBPP      : string;
 
-    FFile                : TFile;
+    FFile                : TRawFile;
     ifdp                : Cardinal;
     FSwap               : boolean;
     function  ReadAsci(const Offset, Count: Cardinal): AnsiString;
@@ -364,10 +364,11 @@ begin
   if not FileExists(FileName) then exit;
   Init;
 
-  FFile := TFile.Create;
+  FFile := TRawFile.Create;
   try
-    if not FFile.Open(FileName, fmReadOnly) then
-      Exit;
+    FFile.FileName := FileName;
+    FFile.FileMode := fmReadOnly;
+    FFile.Open;
 
     FFile.BlockRead(SOI, SizeOf(SOI));
     if SOI=$D8FF then begin //Is this Jpeg

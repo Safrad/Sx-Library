@@ -62,8 +62,17 @@ function FindTaskByName(const AName: string): TTask;
 implementation
 
 uses
-	uInputFormat, uOutputFormat, uStrings, uMath, uDictionary, uFiles, uFile,
-	DateUtils, Math;
+	DateUtils,
+  Math,
+
+	uInputFormat,
+  uOutputFormat,
+  uStrings,
+  uMath,
+  uDictionary,
+  uFiles,
+  uRawFile,
+  uTextFile;
 
 var
 	MessagesLogDir: string;
@@ -160,24 +169,24 @@ end;
 procedure TTask.ReadRunLogFromFile;
 var
 	Line: string;
-	F: TFile;
+	F: TTextFile;
 begin
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
 		LastRunCount := 0;
 		SetLength(LastRuns, 0);
-		if F.Open(GetLastRunLogFileName, fmReadOnly) then
-		begin
-			while not F.Eof do
-			begin
-				F.Readln(Line);
+    F.FileName := GetLastRunLogFileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    while not F.Eof do
+    begin
+      F.ReadLine(Line);
 
-				SetLength(LastRuns, LastRunCount + 1);
-				LastRuns[LastRunCount] := SToDateTime(Line, ifIO);
-				Inc(LastRunCount);
-			end;
-			F.Close();
-		end;
+      SetLength(LastRuns, LastRunCount + 1);
+      LastRuns[LastRunCount] := SToDateTime(Line, ifIO);
+      Inc(LastRunCount);
+    end;
+    F.Close();
 	finally
 		F.Free;
 	end;

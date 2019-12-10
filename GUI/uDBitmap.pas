@@ -403,7 +403,7 @@ uses
 	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
   Vcl.ClipBrd,
-	uGraph, uMsg, uFiles, uFile, uGetInt, uStrings, uFind, uSystem;
+	uGraph, uMsg, uFiles, uRawFile, uGetInt, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
 function SameColor(const P: PPixel; const C: TRGBA): BG; inline;
@@ -1880,7 +1880,7 @@ const
 
 function TDBitmap.ReadBitmapFromFile(const FileName: TFileName): SG;
 var
-	F: TFile;
+	F: TRawFile;
 	FSize: Int64;
 
 	BitmapHead: PBitmapHead;
@@ -1891,145 +1891,145 @@ var
 	PD: PPixel;
 begin
 	Result := reError;
-	F := TFile.Create;
+	F := TRawFile.Create;
 	try
-		if F.Open(FileName, fmReadOnly) then
-		begin
-			FSize := F.FileSize;
-			BitmapHead := AllocMem(BitmapHeadSize);
-			try
-				if FSize < BitmapHeadSize then
-				begin
-					IOErrorMessage(FileName, 'File is truncated.');
-					Exit;
-				end;
-				if not F.BlockRead(BitmapHead^, BitmapHeadSize) then Exit;
-				if BitmapHead.Id <> 'BM' then
-				begin
-					IOErrorMessage(FileName, 'File is not bitmap.');
-					Exit;
-				end;
-				SetSize(BitmapHead.Width, BitmapHead.Height, clWhite);
-				if BitmapHead.Compression <> 0 then
-				begin
-					Result := reReadFromStream;
-					Exit;
-				end;
-				case BitmapHead.Bits of
-				4:
-				begin
-					ReallocMem(BitmapHead, BitmapHead.FileSize);
-					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+    F.FileName := FileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    FSize := F.FileSize;
+    BitmapHead := AllocMem(BitmapHeadSize);
+    try
+      if FSize < BitmapHeadSize then
+      begin
+        IOErrorMessage(FileName, 'File is truncated.');
+        Exit;
+      end;
+      F.BlockRead(BitmapHead^, BitmapHeadSize);
+      if BitmapHead.Id <> 'BM' then
+      begin
+        IOErrorMessage(FileName, 'File is not bitmap.');
+        Exit;
+      end;
+      SetSize(BitmapHead.Width, BitmapHead.Height, clWhite);
+      if BitmapHead.Compression <> 0 then
+      begin
+        Result := reReadFromStream;
+        Exit;
+      end;
+      case BitmapHead.Bits of
+      4:
+      begin
+        ReallocMem(BitmapHead, BitmapHead.FileSize);
+        F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
 
-					for y := 0 to BitmapHead.Height - 1 do
-					begin
-						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-	//					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * SG(WidthToByteX4(BitmapHead.Width)));
-						P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX4(BitmapHead.Width)));
-						for x := 0 to BitmapHead.Width - 1 do
-						begin
-							if (x and 1) = 0 then
-							begin
-								ColorIndex := P1^ shr 4;
-							end
-							else
-							begin
-								ColorIndex := P1^ and $f;
-								Inc(P1);
-							end;
+        for y := 0 to BitmapHead.Height - 1 do
+        begin
+          PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+//					P1 := Pointer(SG(@BitmapHead.Colors[16]) + y * SG(WidthToByteX4(BitmapHead.Width)));
+          P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX4(BitmapHead.Width)));
+          for x := 0 to BitmapHead.Width - 1 do
+          begin
+            if (x and 1) = 0 then
+            begin
+              ColorIndex := P1^ shr 4;
+            end
+            else
+            begin
+              ColorIndex := P1^ and $f;
+              Inc(P1);
+            end;
 
-							PD.R := BitmapHead.Colors[ColorIndex].R;
-							PD.G := BitmapHead.Colors[ColorIndex].G;
-							PD.B := BitmapHead.Colors[ColorIndex].B;
-							{$ifdef BPP4}
-							PD.A := 0;
-							{$endif}
-							Inc(PD);
-						end;
-					end;
-				end;
-				8:
-				begin
-					ReallocMem(BitmapHead, BitmapHead.FileSize);
-					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+            PD.R := BitmapHead.Colors[ColorIndex].R;
+            PD.G := BitmapHead.Colors[ColorIndex].G;
+            PD.B := BitmapHead.Colors[ColorIndex].B;
+            {$ifdef BPP4}
+            PD.A := 0;
+            {$endif}
+            Inc(PD);
+          end;
+        end;
+      end;
+      8:
+      begin
+        ReallocMem(BitmapHead, BitmapHead.FileSize);
+        F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
 
-					for y := 0 to BitmapHead.Height - 1 do
-					begin
-						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-	//					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * SG(WidthToByteX8(BitmapHead.Width)));
-						P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX8(BitmapHead.Width)));
-						for x := 0 to BitmapHead.Width - 1 do
-						begin
-							PD.R := BitmapHead.Colors[P1^].R;
-							PD.G := BitmapHead.Colors[P1^].G;
-							PD.B := BitmapHead.Colors[P1^].B;
-							{$ifdef BPP4}
-							PD.A := 0;
-							{$endif}
-							Inc(PD);
-							Inc(P1);
-						end;
-					end;
-				end;
-				24:
-				begin
-					{$ifdef BPP4}
-					ReallocMem(BitmapHead, BitmapHead.FileSize);
-					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
-					for y := 0 to BitmapHead.Height - 1 do
-					begin
-						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-	//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX24(BitmapHead.Width)));
-						PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX24(BitmapHead.Width)));
-						for x := 0 to BitmapHead.Width - 1 do
-						begin
-							PD^ := PS^;
-							PD.A := 0;
-							Inc(PByte(PS), 3);
-							Inc(PD);
-						end;
-					end;
-					{$else}
-					if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
-						BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
-					F.BlockRead(GLData^, BitmapHead.DataBytes);
-					{$endif}
-				end;
-				32:
-				begin
-					if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
-						BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
-					{$ifdef BPP4}
-					F.BlockRead(GLData^, BitmapHead.DataBytes);
-					{$else}
-					ReallocMem(BitmapHead, BitmapHead.FileSize);
-					F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
-					for y := 0 to BitmapHead.Height - 1 do
-					begin
-						PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
-	//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX32(BitmapHead.Width)));
-						PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX32(BitmapHead.Width)));
-						for x := 0 to BitmapHead.Width - 1 do
-						begin
-							PD.RG := PS.RG;
-							PD.B := PS.B;
-							Inc(SG(PS), 4);
-							Inc(PD);
-						end;
-					end;
-					{$endif}
-				end;
-				else
-					Result := reReadFromStream;
-					Exit;
-				end;
-				Result := reOk;
+        for y := 0 to BitmapHead.Height - 1 do
+        begin
+          PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+//					P1 := Pointer(SG(@BitmapHead.Colors[256]) + y * SG(WidthToByteX8(BitmapHead.Width)));
+          P1 := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX8(BitmapHead.Width)));
+          for x := 0 to BitmapHead.Width - 1 do
+          begin
+            PD.R := BitmapHead.Colors[P1^].R;
+            PD.G := BitmapHead.Colors[P1^].G;
+            PD.B := BitmapHead.Colors[P1^].B;
+            {$ifdef BPP4}
+            PD.A := 0;
+            {$endif}
+            Inc(PD);
+            Inc(P1);
+          end;
+        end;
+      end;
+      24:
+      begin
+        {$ifdef BPP4}
+        ReallocMem(BitmapHead, BitmapHead.FileSize);
+        F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+        for y := 0 to BitmapHead.Height - 1 do
+        begin
+          PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX24(BitmapHead.Width)));
+          PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX24(BitmapHead.Width)));
+          for x := 0 to BitmapHead.Width - 1 do
+          begin
+            PD^ := PS^;
+            PD.A := 0;
+            Inc(PByte(PS), 3);
+            Inc(PD);
+          end;
+        end;
+        {$else}
+        if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
+          BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
+        F.BlockRead(GLData^, BitmapHead.DataBytes);
+        {$endif}
+      end;
+      32:
+      begin
+        if BitmapHead.DataBytes <> BitmapHead.FileSize - BitmapHeadSize then
+          BitmapHead.DataBytes := BitmapHead.FileSize - BitmapHeadSize;
+        {$ifdef BPP4}
+        F.BlockRead(GLData^, BitmapHead.DataBytes);
+        {$else}
+        ReallocMem(BitmapHead, BitmapHead.FileSize);
+        F.BlockRead(BitmapHead.Colors, BitmapHead.FileSize - BitmapHeadSize);
+        for y := 0 to BitmapHead.Height - 1 do
+        begin
+          PD := Pointer(SG(Data) - (BitmapHead.Height - 1 - y) * SG(ByteX));
+//					PS := Pointer(SG(@BitmapHead.Colors[0]) + y * SG(WidthToByteX32(BitmapHead.Width)));
+          PS := Pointer(SG(@BitmapHead.Id) + BitmapHead.HeadAndColorsSize + y * SG(WidthToByteX32(BitmapHead.Width)));
+          for x := 0 to BitmapHead.Width - 1 do
+          begin
+            PD.RG := PS.RG;
+            PD.B := PS.B;
+            Inc(SG(PS), 4);
+            Inc(PD);
+          end;
+        end;
+        {$endif}
+      end;
+      else
+        Result := reReadFromStream;
+        Exit;
+      end;
+      Result := reOk;
 
-				F.Close;
-			finally
-				FreeMem(BitmapHead);
-			end;
-		end;
+      F.Close;
+    finally
+      FreeMem(BitmapHead);
+    end;
 	finally
 		F.Free;
 	end;

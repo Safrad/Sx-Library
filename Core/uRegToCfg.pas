@@ -7,7 +7,6 @@ uses
   uDelphi,
 	uStrings,
 	uFiles,
-	uFile,
 	SysUtils,
 	Registry,
 	Windows;

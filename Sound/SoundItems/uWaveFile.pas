@@ -4,13 +4,13 @@ interface
 
 uses
 	SysUtils,
-	uTypes, uFile, uWave,
+	uTypes, uRawFile, uWave,
 	MMSystem;
 
 type
 	TWaveFile = class
 	private
-		FOutputFile: TFile;
+		FOutputFile: TRawFile;
 		FFileDataCount: UG;
 		FFileName: TFileName;
 		FWaveFormat: PPCMWaveFormat;
@@ -51,13 +51,12 @@ begin
 	end;
 	if NewFileOrDirEx(NowFileName) then
 	begin
-		FOutputFile := TFile.Create;
-		FOutputFile.Protection := False;
+		FOutputFile := TRawFile.Create;
 		FFileDataCount := 0;
-		if FOutputFile.Open(NowFileName, fmRewrite) then
-		begin
-			WriteHead;
-		end;
+    FOutputFile.FileName := NowFileName;
+    FOutputFile.FileMode := fmRewrite;
+		FOutputFile.Open;
+		WriteHead;
 	end;
 end;
 

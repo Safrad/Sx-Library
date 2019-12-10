@@ -35,7 +35,7 @@ implementation
 
 uses
 	SysUtils,
-	uFile, uFiles, uStrings, uMath;
+	uRawFile, uTextFile, uFiles, uStrings, uMath;
 
 const
 	Delimiter = ',';
@@ -55,7 +55,7 @@ const
 
 procedure ReadMidMif(const MiName: string);
 var
-	FIn: TFile;
+	FIn: TTextFile;
 	DBFileName: TFileName;
 	Line: string;
 	InLineIndex: SG;
@@ -73,94 +73,94 @@ begin
 			DBFileName := DataDir + MiName + '.mif'
 		else
 			DBFileName := DataDir + MiName + '.mid';
-		FIn := TFile.Create;
+		FIn := TTextFile.Create;
 		try
-			if FIn.Open(DbFileName, fmReadOnly) then
-			begin
-				FieldMIndex := 0;
-				WhereMif := wmNone;
-				while not FIn.Eof do
-				begin
-					FIn.Readln(Line);
-					RemoveComment(Line);
-					if Line = '' then Continue;
-					InLineIndex := 1;
-					if FileIndex and 1 = 0 then
-					begin // MIF
-						case WhereMif of
-						wmNone:
-						begin
-							Po := Pos('Columns', Line);
-							if Po = 1 then
-							begin
-								WhereMif := wmType;
-	{							InLineIndex := Po + 7;
-								FormatCount := GetNextInt(Line, InLineIndex);
-								SetLength(Formats, FormatCount);
-								FormatIndex := 0;}
-							end;
-						end;
-						wmType:
-						begin
-							if Pos('Data', Line) = 1 then
-							begin
-								WhereMif := wmData;
-							end;
-						end;
-						wmData:
-						begin
-							Po := Pos('Point', Line);
-							if Po <> 0 then
-							begin
-								NewSize := FieldMCount + 1;
-								if AllocByExp(Length(FieldsM), NewSize) then
-									SetLength(FieldsM, NewSize);
-								FieldsM[FieldMCount].Point.X := GetNextFloat(Line, InLineIndex);
-								FieldsM[FieldMCount].Point.Y := GetNextFloat(Line, InLineIndex);
+      FIn.FileName := DbFileName;
+      FIn.FileMode := fmReadOnly;
+			FIn.Open;
+      FieldMIndex := 0;
+      WhereMif := wmNone;
+      while not FIn.Eof do
+      begin
+        FIn.ReadLine(Line);
+        RemoveComment(Line);
+        if Line = '' then Continue;
+        InLineIndex := 1;
+        if FileIndex and 1 = 0 then
+        begin // MIF
+          case WhereMif of
+          wmNone:
+          begin
+            Po := Pos('Columns', Line);
+            if Po = 1 then
+            begin
+              WhereMif := wmType;
+{							InLineIndex := Po + 7;
+              FormatCount := GetNextInt(Line, InLineIndex);
+              SetLength(Formats, FormatCount);
+              FormatIndex := 0;}
+            end;
+          end;
+          wmType:
+          begin
+            if Pos('Data', Line) = 1 then
+            begin
+              WhereMif := wmData;
+            end;
+          end;
+          wmData:
+          begin
+            Po := Pos('Point', Line);
+            if Po <> 0 then
+            begin
+              NewSize := FieldMCount + 1;
+              if AllocByExp(Length(FieldsM), NewSize) then
+                SetLength(FieldsM, NewSize);
+              FieldsM[FieldMCount].Point.X := GetNextFloat(Line, InLineIndex);
+              FieldsM[FieldMCount].Point.Y := GetNextFloat(Line, InLineIndex);
 
-								Inc(FieldMCount);
-							end;
-						end;
-						end;
-					end
-					else
-					begin
-						FieldsM[FieldMIndex].Kod := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
+              Inc(FieldMCount);
+            end;
+          end;
+          end;
+        end
+        else
+        begin
+          FieldsM[FieldMIndex].Kod := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
 
-						FieldsM[FieldMIndex].Nazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
+          FieldsM[FieldMIndex].Nazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
 
-						FieldsM[FieldMIndex].PSC := DelCharsF(DelCharsF(DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter)), '-'), ' ');
-						if (Length(FieldsM[FieldMIndex].PSC) <> 0) then
-							SetLength(FieldsM[FieldMIndex].PSC, 5);
-						FieldsM[FieldMIndex].Typ := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
-						FieldsM[FieldMIndex].Prior := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
+          FieldsM[FieldMIndex].PSC := DelCharsF(DelCharsF(DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter)), '-'), ' ');
+          if (Length(FieldsM[FieldMIndex].PSC) <> 0) then
+            SetLength(FieldsM[FieldMIndex].PSC, 5);
+          FieldsM[FieldMIndex].Typ := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
+          FieldsM[FieldMIndex].Prior := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));
 
-						FieldsM[FieldMIndex].GNazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
-						FieldsM[FieldMIndex].Vojvod := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
+          FieldsM[FieldMIndex].GNazev := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
+          FieldsM[FieldMIndex].Vojvod := DelQuoteF(ReadToChar(Line, InLineIndex, Delimiter));
 
 
-	(*					s := ReadToChar(Line, InLineIndex, Delimiter);
-						DelQuote(s);
-						FieldsM[FieldMIndex].NazevCo := s;
+(*					s := ReadToChar(Line, InLineIndex, Delimiter);
+          DelQuote(s);
+          FieldsM[FieldMIndex].NazevCo := s;
 
-						s := ReadToChar(Line, InLineIndex, Delimiter);
-						DelQuote(s);
-						FieldsM[FieldMIndex].NazevObc := s;
-						ReadToChar(Line, InLineIndex, Delimiter);
-						ReadToChar(Line, InLineIndex, Delimiter);
-						ReadToChar(Line, InLineIndex, Delimiter);
+          s := ReadToChar(Line, InLineIndex, Delimiter);
+          DelQuote(s);
+          FieldsM[FieldMIndex].NazevObc := s;
+          ReadToChar(Line, InLineIndex, Delimiter);
+          ReadToChar(Line, InLineIndex, Delimiter);
+          ReadToChar(Line, InLineIndex, Delimiter);
 
-						s := ReadToChar(Line, InLineIndex, Delimiter);
-						DelQuote(s);
-						FieldsM[FieldMIndex].PSC99 := s;*)
+          s := ReadToChar(Line, InLineIndex, Delimiter);
+          DelQuote(s);
+          FieldsM[FieldMIndex].PSC99 := s;*)
 
-	//				FieldsM[FieldMIndex].KodObc := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));}
-						Inc(FieldMIndex);
-	//				Inc(LineIndex);
-					end;
-				end;
-				FIn.Close;
-			end;
+//				FieldsM[FieldMIndex].KodObc := StrToInt(ReadToChar(Line, InLineIndex, Delimiter));}
+          Inc(FieldMIndex);
+//				Inc(LineIndex);
+        end;
+      end;
+      FIn.Close;
 		finally
 			FIn.Free;
 		end;
@@ -170,27 +170,27 @@ end;
 
 procedure WriteMid(const MiName: string);
 var
-	FIn: TFile;
+	FIn: TTextFile;
 	FieldMIndex: Integer;
 begin
-	FIn := TFile.Create;
+	FIn := TTextFile.Create;
 	try
-		if FIn.Open(DataDir + MiName + '.mid', fmRewrite) then
-		begin
-			for FieldMIndex := 0 to FieldMCount - 1 do
-			begin
-				FIn.Write(
-					IntToStr(FieldsM[FieldMIndex].Kod) + ',' +
-					'"' + FieldsM[FieldMIndex].Nazev + '",' +
-					'"' + FieldsM[FieldMIndex].PSC + '",' +
-					IntToStr(FieldsM[FieldMIndex].Typ) + ',' +
-					IntToStr(FieldsM[FieldMIndex].Prior) + ',' +
-					'"' + FieldsM[FieldMIndex].GNazev + '",' +
-					'"' + FieldsM[FieldMIndex].Vojvod + '"' + FileSep);
-			end;
-			FIn.Truncate;
-			FIn.Close;
-		end;
+    FIn.FileName := DataDir + MiName + '.mid';
+    FIn.FileMode := fmRewrite;
+		FIn.Open;
+    for FieldMIndex := 0 to FieldMCount - 1 do
+    begin
+      FIn.Write(
+        IntToStr(FieldsM[FieldMIndex].Kod) + ',' +
+        '"' + FieldsM[FieldMIndex].Nazev + '",' +
+        '"' + FieldsM[FieldMIndex].PSC + '",' +
+        IntToStr(FieldsM[FieldMIndex].Typ) + ',' +
+        IntToStr(FieldsM[FieldMIndex].Prior) + ',' +
+        '"' + FieldsM[FieldMIndex].GNazev + '",' +
+        '"' + FieldsM[FieldMIndex].Vojvod + '"' + FileSep);
+    end;
+    FIn.Truncate;
+    FIn.Close;
 	finally
 		FIn.Free;
 	end;

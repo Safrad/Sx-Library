@@ -3,8 +3,9 @@ unit uOperaBookmarks;
 interface
 
 uses
-  uBrowserBookmarks,
-  SysUtils;
+  SysUtils,
+
+  uBrowserBookmarks;
 
 type
 	TOperaBookmarks = class(TBrowserBookmarks)
@@ -26,7 +27,10 @@ implementation
 uses
   uBookmark,
 	Classes,
-	uTypes, uFile, uFiles, uStrings, uHTML, uCharset, uMath, uSorts, uMsg, uSystem, uData, uOutputFormat, uBackup;
+
+	uTypes, uFileCharset, uFiles, uStrings, uHTML, uCharset, uMath, uSorts, uMsg, uSystem, uData, uOutputFormat, uBackup,
+  uRawFile,
+  uTextFile;
 
 procedure ReadLevel(var LineIndex: SG; const Lines: TStrings; out Bookmarks: TBookmarks);
 var
@@ -189,12 +193,12 @@ begin
 	Result := Result + FileSep;
 end;
 
-procedure WriteBookmark(const Bookmark: PBookmark; const OutFile: TFile);
+procedure WriteBookmark(const Bookmark: PBookmark; const OutFile: TTextFile);
 begin
 	OutFile.Write(BookmarkToStr(Bookmark));
 end;
 
-procedure WriteLevel(const Bookmarks: TBookmarks; const OutFile: TFile);
+procedure WriteLevel(const Bookmarks: TBookmarks; const OutFile: TTextFile);
 var
 	Bookmark: PBookmark;
 begin
@@ -247,17 +251,17 @@ end;
 
 procedure TOperaBookmarks.WriteToFile(const FileName: string);
 var
-	OutFile: TFile;
+	OutFile: TTextFile;
 begin
-	OutFile := TFile.Create;
+	OutFile := TTextFile.Create;
 	try
     OutFile.BackupFolder := bfSub;
-		if OutFile.Open(FileName, fmRewrite) then
-		begin
-			OutFile.Write(Head);
-			WriteLevel(FBookmarks, OutFile);
-			OutFile.Close();
-		end;
+    OutFile.FileName := FileName;
+    OutFile.FileMode := fmRewrite;
+		OutFile.Open;
+    OutFile.Write(Head);
+    WriteLevel(FBookmarks, OutFile);
+    OutFile.Close();
 	finally
 		OutFile.Free;
 	end;
