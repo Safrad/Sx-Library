@@ -22,7 +22,7 @@ implementation
 uses
   uTypes,
   uStrings,
-  uLog;
+  uMainLog;
 
 { TLoggedEngineOutput }
 
@@ -38,7 +38,7 @@ begin
 
   if MainLog.IsLoggerFor(mlDebug) then
   begin
-    MainLogAdd(ProgramOutput(FText), mlDebug);
+    MainLog.Add(ProgramOutput(FText), mlDebug);
     FText := '';
   end;
 end;

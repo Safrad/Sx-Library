@@ -115,7 +115,7 @@ function GetPackageVersion(const PackageFileName: string): TDelphiVersion;
 implementation
 
 uses
-  Winapi.Windows, uFiles, uOutputFormat, uMath, uStrings, uLog, uTemporaryDirectory;
+  Winapi.Windows, uFiles, uOutputFormat, uMath, uStrings, uMainLog, uTemporaryDirectory;
 
 const
   UnluckyNumber = 13;
@@ -375,8 +375,8 @@ begin
     else
     begin
       i := p + Length(EnvName);
-      if LogWarning then
-        MainLogAdd('Environment Variable ' + EnvName + ' not found.', mlWarning);
+      if MainLog.IsLoggerFor(mlWarning) then
+        MainLog.Add('Environment Variable ' + EnvName + ' not found.', mlWarning);
     end;
   end;
 end;

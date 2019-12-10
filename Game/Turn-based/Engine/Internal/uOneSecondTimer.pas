@@ -26,7 +26,7 @@ uses
 
   uMath,
   uTimeSpan,
-  uLog;
+  uMainLog;
 
 { TOneSecondTimer }
 
@@ -66,7 +66,7 @@ begin
     end;
   except
     on E: Exception do
-      LogException(E);
+      MainLog.LogException(E);
   end;
 end;
 

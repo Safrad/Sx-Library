@@ -48,7 +48,7 @@ uses
 
   uStrings,
   uMsg,
-  uLog,
+  uMainLog,
   uOutputFormat,
   uProjectInfo,
   uSystemMemory,
@@ -81,14 +81,14 @@ begin
     FHandle := GetModuleHandle(PChar(FileName));
     if FHandle = 0 then
     begin
-      if LogInformation then
-        MainLogAdd('>LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
+      if MainLog.IsLoggerFor(mlDebug) then
+        MainLog.Add('>LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
       M := SystemMemory.ProcessAllocatedVirtualMemory;
       FHandle := LoadLibrary(PChar(FileName));
       LastError := GetLastError;
       FStartupMemory := SystemMemory.ProcessAllocatedVirtualMemory - M;
-      if LogInformation then
-        MainLogAdd('<LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
+      if MainLog.IsLoggerFor(mlDebug) then
+        MainLog.Add('<LoadLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
       if not IsLoaded then
       begin
         ErrorMessage := ReplaceParam(ErrorCodeToStr(LastError), [FileName]);
@@ -113,25 +113,27 @@ var
 begin
   if IsLoaded then
   begin
-    if LogInformation then
-      MainLogAdd('>FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
+    if MainLog.IsLoggerFor(mlDebug) then
+      MainLog.Add('>FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
 
     M := SystemMemory.ProcessAllocatedVirtualMemory;
     Result := FreeLibrary(Handle);
     LastError := GetLastError;
     FCleanUpMemory := M - SystemMemory.ProcessAllocatedVirtualMemory;
-    if LogInformation then
-      MainLogAdd('<FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
+    if MainLog.IsLoggerFor(mlDebug) then
+      MainLog.Add('<FreeLibrary' + CharSpace + QuotedStr(ExtractFileName(FileName)), mlDebug);
 
     if Result then
     begin
       if StartupMemory > CleanupMemory then
       begin
-        MainLogAdd('Memory leak of ' + NToS(StartupMemory - CleanupMemory) + ' bytes detected in ' + QuotedStr(ExtractFileName(FileName)), mlWarning);
+        if MainLog.IsLoggerFor(mlWarning) then
+          MainLog.Add('Memory leak of ' + NToS(StartupMemory - CleanupMemory) + ' bytes detected in ' + QuotedStr(ExtractFileName(FileName)), mlWarning);
       end
       else if StartupMemory < CleanupMemory then
       begin
-        MainLogAdd(NToS(CleanupMemory - StartupMemory) + ' bytes more memory cleaned up in ' + QuotedStr(ExtractFileName(FileName)), mlDebug);
+        if MainLog.IsLoggerFor(mlDebug) then
+          MainLog.Add(NToS(CleanupMemory - StartupMemory) + ' bytes more memory cleaned up in ' + QuotedStr(ExtractFileName(FileName)), mlDebug);
       end;
 
       FHandle := 0;

@@ -48,7 +48,7 @@ uses
   uFiles,
   uStrings,
   uStopwatch,
-  uLog,
+  uMainLog,
   uMsg,
   uMsgDlg;
 
@@ -181,10 +181,10 @@ end;
 
 procedure TScreenSaverApplication.TryPreview(const AParamHandle: THandle);
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('TryPreview');
   FillPreview(AParamHandle);
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('TryPreview');
 end;
 

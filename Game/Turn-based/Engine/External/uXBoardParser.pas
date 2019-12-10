@@ -19,7 +19,7 @@ uses
   uTypes,
   uChar,
   uStrings,
-  uLog,
+  uMainLog,
 
   uSubtreeStatus,
   uAnalysisInfo;
@@ -77,8 +77,8 @@ begin
 		end
 		else
     begin
-      if LogWarning then
-  			MainLogAdd('Unknown command ''' + s + '''', mlWarning);
+      if MainLog.IsLoggerFor(mlWarning) then
+  			MainLog.Add('Unknown command ''' + s + '''', mlWarning);
 			ReadToNewLine(Line, InLineIndex);
     end;
 	end;

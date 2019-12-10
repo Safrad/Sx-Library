@@ -85,7 +85,7 @@ uses
   uPictureFactory,
   uCommonOutput,
   uGUIOutputInfo,
-  uLog;
+  uMainLog;
 
 { TGUIApplication }
 
@@ -207,7 +207,7 @@ begin
 
   if not uMultiIns.InitInstance(FAllowMultipleInstance.Value) then
   begin
-    if LogDebug then
+    if MainLog.IsLoggerFor(mlDebug) then
       MainLog.Add('Another instance found, aborting start.', mlDebug);
 
     raise EAbort.Create('Another instance found.');

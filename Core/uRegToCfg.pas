@@ -27,7 +27,6 @@ uses
   Classes,
 
 	uMath, uMsg,
-  uLog,
   uFileCharset;
 
 function GetDelphiLibraryPath(const RegPath: string; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;

@@ -40,7 +40,7 @@ implementation
 
 uses
   uMath,
-  uLog,
+  uMainLog,
   uFiles,
   uOutputFormat,
   Windows,

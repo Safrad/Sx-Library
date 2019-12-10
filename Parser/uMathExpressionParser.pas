@@ -208,7 +208,7 @@ implementation
 
 uses
 	Math, TypInfo,
-	uStrings, uFind, uFiles, uLog, uOutputFormat,
+	uStrings, uFind, uFiles, uOutputFormat,
   Character,
   uBigDecimalParser,
   uSxStringParser,

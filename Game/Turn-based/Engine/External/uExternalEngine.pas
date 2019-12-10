@@ -31,6 +31,11 @@ type
     FCalculationDoneEvent: TEvent;
 
     procedure OnReadLine(const AText: string);
+
+    /// <summary>Required for:
+    /// 1) engine process freezes and command quit do not terminate process
+    /// 2) termination take long time (freeing swapped memory)
+    ///  </summary>
     procedure ForceClose;
 
     // Property setters
@@ -63,7 +68,7 @@ type
 
     procedure Pause; override;
 
-    // Use const NoTimeOut for no time out
+    /// <summary>Use const NoTimeOut for no time out</summary>
     procedure WaitForCalculationDone(const ATimeOutInMilliseconds: U8); override;
 
     // Input
@@ -90,7 +95,7 @@ uses
   uChar,
   uStrings,
   uFiles,
-  uLog,
+  uMainLog,
   uStartupWindowState,
   uETimeOutException,
 
@@ -189,10 +194,7 @@ end;
 
 procedure TExternalEngine.ForceClose;
 begin
-  // Required for:
-  // 1) engine process freezes and command quit do not terminate process
-  // 2) termination take long time (freeing swapped memory)
-  if LogError then
+  if Mainlog.IsLoggerFor(mlError) then
     MainLog.Add('Forcing close ' + FFileName, mlError);
   FExternalApp.Terminate;
 end;
@@ -397,7 +399,7 @@ procedure TExternalEngine.WaitForCalculationDone(const ATimeOutInMilliseconds: U
 var
   ElapsedTime: TStopwatch;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('WaitForBestMove');
   ElapsedTime := TStopwatch.Create;
   try
@@ -415,17 +417,17 @@ begin
 
     if not AnalysisInfo.ElapsedTime.IsRunning then
     begin
-      if LogDebug then
+      if MainLog.IsLoggerFor(mlDebug) then
         MainLog.Add('Abort waiting for best move, it is found.', mlDebug);
     end
     else if Terminated then
     begin
-      if LogWarning then
+      if MainLog.IsLoggerFor(mlWarning) then
         MainLog.Add('Abort waiting for best move, external engine has terminated.', mlWarning);
     end
     else if not FExternalApp.Running then
     begin
-      if LogError then
+      if MainLog.IsLoggerFor(mlError) then
         MainLog.Add('Abort waiting for best move, external application has terminated.', mlError);
     end
     else
@@ -433,7 +435,7 @@ begin
   finally
     ElapsedTime.Free;
   end;
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('WaitForBestMove');
 end;
 
@@ -444,7 +446,7 @@ const
 var
   TotalStopwatch: TStopwatch;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('WaitForReady');
   inherited;
 
@@ -458,13 +460,13 @@ begin
     begin
       if IsReady then
       begin
-        if LogDebug then
+        if MainLog.IsLoggerFor(mlDebug) then
           MainLog.Add('Is ready.', mlDebug);
         Break;
       end;
       if Terminated then
       begin
-        if LogWarning then
+        if MainLog.IsLoggerFor(mlWarning) then
           MainLog.Add('Abort waiting for best move, external engine has terminated.', mlWarning);
         Break;
       end;
@@ -478,7 +480,7 @@ begin
   finally
     TotalStopwatch.Free;
   end;
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('WaitForReady');
 end;
 

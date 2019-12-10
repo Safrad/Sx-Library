@@ -265,7 +265,7 @@ uses
   uBigDecimalHelper,
   uMainTimer,
 	uGraph, uStrings, uGetInt, uGColor, uOutputFormat, uMsg, uColor, uMenus, uDrawStyle, uDictionary,
-	uLog, uRect;
+	uRect;
 
 const
 	crHandPoint = 1;

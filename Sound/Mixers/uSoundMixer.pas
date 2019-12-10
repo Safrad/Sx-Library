@@ -56,7 +56,7 @@ type
 implementation
 
 uses
-  uLog,
+  uMainLog,
   SysUtils,
   Math;
 

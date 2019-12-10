@@ -22,7 +22,7 @@ uses
   SysUtils,
   uCustomArgument,
   uMath,
-  uLog,
+  uMainLog,
   uStrings,
   uChar,
   uOutputFormat,
@@ -43,8 +43,8 @@ begin
   Argument := InternalEngine.Options.FindByString(AOptionName);
   if Argument <> nil then
   begin
-    if LogInformation then
-      MainLogAdd('setoption ' + AOptionName + '=' + AParameters,  mlInformation);
+    if MainLog.IsLoggerFor(mlInformation) then
+      MainLog.Add('setoption ' + AOptionName + '=' + AParameters,  mlInformation);
     Argument.SetValueFromString(AParameters);
   end
   else

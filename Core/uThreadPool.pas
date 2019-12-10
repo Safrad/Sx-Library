@@ -74,7 +74,7 @@ implementation
 uses
   SysUtils, Math,
   uStartState,
-  uLog, uSorts, uMath, uCPU, uWorkerThread, uSxRandomGenerator;
+  uSorts, uMath, uCPU, uWorkerThread, uSxRandomGenerator;
 
 { TThreadPool }
 

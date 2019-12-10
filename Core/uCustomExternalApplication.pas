@@ -93,7 +93,7 @@ uses
   uEExternalApplication,
   uEIOException,
   uOutputFormat,
-  uLog,
+  uMainLog,
   uMainTimer;
 
 { TCustomExternalApplication }
@@ -112,7 +112,7 @@ begin
     begin
       if GetExitCode = STILL_ACTIVE then
       begin
-        if LogDebug then
+        if MainLog.IsLoggerFor(mlDebug) then
           MainLog.Add('Terminating ' + FFileName + ', ExitCode: ' + ExitCodeToString(AExitCode, ofIO), mlDebug);
 
         if not TerminateProcess(FHandle, AExitCode) then

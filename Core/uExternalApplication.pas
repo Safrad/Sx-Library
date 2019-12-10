@@ -86,7 +86,7 @@ implementation
 uses
   Math,
 
-  uLog,
+  uMainLog,
   uStrings,
   uOperatingSystem,
   uMainTimer,
@@ -219,8 +219,8 @@ begin
     FStartupInfo.dwFillAttribute := FOREGROUND_INTENSITY or BACKGROUND_BLUE;}
   end;
 
-  if LogDebug then
-    MainLogAdd('CreateProcess ' + FFileName + ' ' + FParameters, mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('CreateProcess ' + FFileName + ' ' + FParameters, mlDebug);
   if CreateProcess(
     nil,
     PChar(JoinFileNameAndParameters(FFileName, FParameters)),
@@ -375,12 +375,12 @@ end;
 
 procedure TExternalApplication.WaitFor;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('ExternalApplication.WaitFor');
 
   BreakableWaitForSingleObject(FHandle, FWaitForTimeOut, FAbortWaitFor);
 
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('ExternalApplication.WaitFor');
 end;
 

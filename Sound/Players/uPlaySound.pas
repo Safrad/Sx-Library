@@ -71,7 +71,7 @@ uses
   uTypes,
   uFiles,
 	uMsg,
-  uLog;
+  uMainLog;
 
 function GetWinSoundFileName(const WinSound: TWinSound): TFileName;
 var
@@ -97,8 +97,8 @@ end;
 
 procedure PlayWinSound(const WinSound: TWinSound);
 begin
-	if LogDebug then
-    MainLogAdd('Play windows sound ' + WinSoundNames[WinSound] + '.', mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('Play windows sound ' + WinSoundNames[WinSound] + '.', mlDebug);
 	PlayWaveFile(GetWinSoundFileName(WinSound));
 end;
 
@@ -117,8 +117,8 @@ end;
 
 procedure PlayWaveFile(const WaveName: TFileName);
 begin
-	if LogDebug then
-    MainLogAdd('Play sound ' + WaveName + '.', mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('Play sound ' + WaveName + '.', mlDebug);
 	if WaveName <> '' then
 		if PlaySound(PChar(ExpandDir(WaveName)), 0, SND_ASYNC {and SND_FILENAME}) = False then
 		begin

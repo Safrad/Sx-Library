@@ -183,7 +183,7 @@ uses
   uCharset,
 	uOutputFormat,
   uMath,
-  uLog;
+  uMainLog;
 
 function SplitCommandLine(ASource: string): TStringPair;
 var
@@ -676,8 +676,8 @@ begin
 	else
 		ReadSubDirSorted(AFileNames, AFileCount, CorrectDirF(ExpandDir(APath)), '', AExtensions, AFiles, ADirs, ASubDirs, AFullPath);
 
-	if LogDebug then
-    MainLogAdd(NToS(AFileCount, ofIO) + ' files found in folder ' + APath + '.', mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add(NToS(AFileCount, ofIO) + ' files found in folder ' + APath + '.', mlDebug);
 (*	if Sort then
 	begin
 		Offset := FilesCount div 2;
@@ -977,8 +977,8 @@ procedure CopyFile(const ASource, ADestination: TFileName; const AFailExist: BG)
 var
   Result: BG;
 begin
-	if LogDebug then
-    MainLogAdd('Copy file ' + AddQuoteF(ASource) + ' to ' + AddQuoteF(ADestination), mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('Copy file ' + AddQuoteF(ASource) + ' to ' + AddQuoteF(ADestination), mlDebug);
 	Winapi.Windows.SetFileAttributes(PChar(ADestination), FILE_ATTRIBUTE_ARCHIVE);
 	Result := Winapi.Windows.CopyFile(PChar(ASource), PChar(ADestination), AFailExist);
 	if Result = False then
@@ -1227,8 +1227,8 @@ end;
 
 function DeleteFileEx(const AFileName: TFileName): BG;
 begin
-	if LogDebug then
-    MainLogAdd('Delete file ' + AddQuoteF(AFileName), mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('Delete file ' + AddQuoteF(AFileName), mlDebug);
   {$ifdef MSWINDOWS}
   // Readonly file can not be deleted
 	Winapi.Windows.SetFileAttributes(PChar(AFileName), FILE_ATTRIBUTE_ARCHIVE);
@@ -1240,8 +1240,8 @@ end;
 
 procedure RemoveDirEx(const ADirectoryPath: string);
 begin
-	if LogDebug then
-    MainLogAdd('Remove directory ' + AddQuoteF(ADirectoryPath), mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('Remove directory ' + AddQuoteF(ADirectoryPath), mlDebug);
   {$ifdef MSWINDOWS}
 	if RemoveDirectory(PChar(ADirectoryPath)) = False then
 		raise EIOException.Create(ADirectoryPath, GetLastError);

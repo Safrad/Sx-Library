@@ -27,7 +27,7 @@ implementation
 uses
   SysUtils,
 
-  uLog,
+  uMainLog,
   uMath;
 
 { TApplicationModuleThread }

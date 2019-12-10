@@ -42,7 +42,7 @@ implementation
 uses
   uFiles,
   uMsg,
-  uLog,
+  uMainLog,
   uChar,
   uAPI,
   uStrings,
@@ -136,7 +136,7 @@ var
   InLineIndex: SG;
 begin
   if MainLog.IsLoggerFor(mlDebug) then
-    MainLogAdd(ProgramInput(ALine), mlDebug);
+    MainLog.Add(ProgramInput(ALine), mlDebug);
 
   if ALine = '' then
     Exit; // Skip empty line

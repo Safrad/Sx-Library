@@ -150,7 +150,7 @@ uses
   uFileStatistics,
   uTemporaryDirectory,
   uFiles,
-	uOutputFormat, uCharset, uLog, uMsg;
+	uOutputFormat, uCharset, uMainLog, uMsg;
 
 constructor TFile.Create;
 begin

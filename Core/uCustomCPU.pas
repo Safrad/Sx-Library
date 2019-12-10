@@ -65,7 +65,7 @@ type
 implementation
 
 uses
-  uLog;
+  uMainLog;
 
 { TCustomCPU }
 
@@ -155,7 +155,8 @@ end;
 
 function TCustomCPU.GetCPUUsage: FG;
 begin
-  MainLogAdd('GetCPUUsage', mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('GetCPUUsage', mlDebug);
   if MainTimer.IntervalFrom(FLastTickCountForCPUUsage).Milliseconds < 500 then
   begin
     // Use cached value

@@ -29,7 +29,7 @@ uses
   uStopwatch,
   uDIdleTimer,
   uDTimer,
-  uLog;
+  uMainLog;
 
 { TDTimerTest }
 
@@ -37,7 +37,7 @@ procedure TDTimerTest.OnTimer(Sender: TObject);
 begin
   Inc(FEventCount);
 
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.Add('OnTimer', mlDebug);
 end;
 

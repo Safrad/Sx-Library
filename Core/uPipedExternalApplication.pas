@@ -80,7 +80,7 @@ implementation
 uses
   uStrings,
   uExternalApplicationReadThread,
-  uLog;
+  uMainLog;
 
 { TPipedExternalApplication }
 
@@ -187,10 +187,10 @@ procedure TPipedExternalApplication.TerminateReadThread(var AExternalApplication
 begin
   if AExternalApplicationReadThread <> nil then
   begin
-    if LogDebug then
+    if MainLog.IsLoggerFor(mlDebug) then
       MainLog.LogEnter(AExternalApplicationReadThread.Name + '.TerminateIfNoOutput');
     TExternalApplicationReadThread(AExternalApplicationReadThread).TerminateIfNoOutput;
-    if LogDebug then
+    if MainLog.IsLoggerFor(mlDebug) then
       MainLog.LogLeave(AExternalApplicationReadThread.Name + '.TerminateIfNoOutput');
     FreeAndNil(AExternalApplicationReadThread);
   end;
@@ -204,7 +204,7 @@ end;
 
 procedure TPipedExternalApplication.WaitFor;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('PipedExternalApplication.WaitFor');
 
   FlushFileBuffers(FStdIn.Handle); // i. e. quit command
@@ -213,7 +213,7 @@ begin
 
   TerminateReadThreads;
 
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('PipedExternalApplication.WaitFor');
 end;
 
@@ -257,7 +257,7 @@ var
 begin
   if Assigned(FStdIn) and (AText <> '') then
 	begin
-    if LogDebug then
+    if MainLog.IsLoggerFor(mlDebug) then
       MainLog.Add('Writing ' + IntToStr(Length(AText)) + ' characters to ' + FileName, mlDebug);
     TextSize := Length(AText);
     if FUnicode then
@@ -270,7 +270,7 @@ begin
       ATextAsAnsi := AnsiString(AText);
       WritedSize := FStdIn.Write(ATextAsAnsi[1], TextSize);
     end;
-    if LogDebug then
+    if MainLog.IsLoggerFor(mlDebug) then
       MainLog.Add('Done Write ' + IntToStr(WritedSize) + ' bytes to ' + FileName, mlDebug);
     Assert(WritedSize = TextSize);
 	end;

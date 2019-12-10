@@ -26,7 +26,7 @@ uses
 
   uStopwatch,
   uSxThreadTimer,
-  uLog;
+  uMainLog;
 
 { TSxThreadTimerTest }
 
@@ -34,7 +34,7 @@ procedure TSxThreadTimerTest.OnTimer(Sender: TObject);
 begin
   Inc(FEventCount);
 
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.Add('OnTimer', mlDebug);
 end;
 

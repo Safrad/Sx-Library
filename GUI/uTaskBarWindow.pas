@@ -33,7 +33,7 @@ uses
   SysUtils,
   Forms,
 
-  uLog;
+  uMainLog;
 
 var
   GTaskbarWindow: TTaskbarWindow;
@@ -97,14 +97,14 @@ begin
 	if FVisible then
 	begin
 		ShowWindow(FWindowHandle, SW_SHOWNA);
-		if LogDebug then
-      MainLogAdd('ShowTaskBar', mlDebug);
+		if MainLog.IsLoggerFor(mlDebug) then
+      MainLog.Add('ShowTaskBar', mlDebug);
 	end
 	else
 	begin
 		ShowWindow(FWindowHandle, SW_HIDE);
-		if LogDebug then
-      MainLogAdd('HideTaskBar', mlDebug);
+		if MainLog.IsLoggerFor(mlDebug) then
+      MainLog.Add('HideTaskBar', mlDebug);
 	end;
 end;
 

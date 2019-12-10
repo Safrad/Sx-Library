@@ -9,7 +9,7 @@ implementation
 uses
   uTypes,
   uAPI,
-  uLog,
+  uMainLog,
   uStrings,
   ufTextStatus,
   ufStatus,
@@ -55,8 +55,8 @@ procedure DownloadFileEx(const AURL: string; const TargetFileName: string; const
 var
 	DownLoadURL: TDownLoadURL;
 begin
-  if LogDebug then
-		MainLogAdd('Download file ' + AddQuoteF(AURL), mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+		MainLog.Add('Download file ' + AddQuoteF(AURL), mlDebug);
   if Obj = nil then
     Obj := TObj.Create;
   Obj.Again := False;

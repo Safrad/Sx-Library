@@ -27,7 +27,7 @@ uses
   uFiles,
   uCommonApplication,
   uCPU,
-  uLog,
+  uMainLog,
   uOutputInfo,
   uMsg,
   uSxXMLDocument;
@@ -226,8 +226,8 @@ begin
     end;
   except
     on E: Exception do
-      if LogError then
-        MainLogAdd(E.Message, mlError);
+      if MainLog.IsLoggerFor(mlError) then
+        MainLog.Add(E.Message, mlError);
   end;
 end;
 

@@ -24,7 +24,7 @@ implementation
 
 uses
   uTypes,
-  uLog,
+  uMainLog,
   SysUtils;
 
 { TGUISplashScreen }
@@ -33,8 +33,8 @@ procedure TGUISplashScreen.AddMessage(const AText: string);
 begin
   inherited;
 
-  if LogInformation then
-    MainLogAdd(AText, mlInformation);
+  if MainLog.IsLoggerFor(mlInformation) then
+    MainLog.Add(AText, mlInformation);
 
   fSplash.LabelState.Caption := AText;
   fSplash.LabelState.Update;

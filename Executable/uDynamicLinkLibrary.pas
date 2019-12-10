@@ -36,7 +36,7 @@ implementation
 
 uses
   uTypes,
-  uLog,
+  uMainLog,
   SysUtils,
   Windows;
 

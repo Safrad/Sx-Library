@@ -103,7 +103,7 @@ implementation
 uses
   uOutputFormat,
   uTypes,
-  uLog,
+  uMainLog,
   SysUtils;
 
 const
@@ -245,8 +245,8 @@ begin
     begin
       s := MsToStr(test.ElapsedTestTime, diSD, 3, True, ofIO);
 			writeln(StringOfChar(' ', 6 - Length(s)) + s + ' : ' +  test.GetName);
-      if MainLogWrite(mlInformation) then
-        MainLogAdd(test.GetName + ' ' + 'finished.', mlInformation);
+      if MainLog.IsLoggerFor(mlInformation) then
+        MainLog.Add(test.GetName + ' ' + 'finished.', mlInformation);
     end;
   end;
 end;
@@ -263,8 +263,8 @@ procedure TTextTestListener.TestingStarts;
 begin
   writeln;
   writeln(sDUnitTesting);
-  if MainLogWrite(mlInformation) then
-    MainLogAdd('Testing Starts', mlInformation);
+  if MainLog.IsLoggerFor(mlInformation) then
+    MainLog.Add('Testing Starts', mlInformation);
   startTime := now;
 end;
 
@@ -275,8 +275,8 @@ begin
   writeln;
   writeln('Total time: ' + MsToStr(Round(MSecsPerDay * runTime), diSD, 3, True, ofIO));
   writeln(Report(testResult));
-  if MainLogWrite(mlInformation) then
-    MainLogAdd('Testing Ends', mlInformation);
+  if MainLog.IsLoggerFor(mlInformation) then
+    MainLog.Add('Testing Ends', mlInformation);
 end;
 
 class function TTextTestListener.RunTest(suite: ITest; exitBehavior: TRunnerExitBehavior = rxbContinue): TTestResult;
@@ -340,8 +340,8 @@ var
 begin
   Format('%s: %s', [test.Name, Msg]);
   writeln(s);
-  if MainLogWrite(mlInformation) then
-    MainLogAdd(s, mlInformation);
+  if MainLog.IsLoggerFor(mlInformation) then
+    MainLog.Add(s, mlInformation);
 end;
 
 procedure TTextTestListener.Warning(test: ITest; const Msg: string);
@@ -350,8 +350,8 @@ var
 begin
   s := Format('%s: %s', [test.Name, Msg]);
   writeln(s);
-  if MainLogWrite(mlWarning) then
-    MainLogAdd(s, mlWarning);
+  if MainLog.IsLoggerFor(mlWarning) then
+    MainLog.Add(s, mlWarning);
 end;
 
 function TTextTestListener.ShouldRunTest(test: ITest): boolean;

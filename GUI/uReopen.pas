@@ -61,7 +61,7 @@ implementation
 
 uses
 	Windows, Forms, Graphics, Math,
-	uEscape, uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uLog, uMenus, uStrings, uOutputFormat, uChar;
+	uEscape, uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uMenus, uStrings, uOutputFormat, uChar;
 
 var
 	ReopenBitmaps: array[TReopenExists] of TBitmap;

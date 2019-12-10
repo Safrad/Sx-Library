@@ -40,7 +40,7 @@ uses
   Winapi.Windows,
 
   uOutputFormat,
-  uLog;
+  uMainLog;
 
 var
   GScreen: TScreen;
@@ -179,7 +179,7 @@ begin
 	NearestMode := FindNearestMode(AScreenMode, AExactlySame);
   if not AExactlySame then
   begin
-    if LogWarning then
+    if MainLog.IsLoggerFor(mlWarning) then
       MainLog.Add('Screen mode ' + AScreenMode.AsString(ofIO) + ' can not be set, using ' + NearestMode.AsString(ofIO) + '.', mlWarning);
   end;
   SetScreenMode(NearestMode, ATest);
@@ -221,7 +221,7 @@ begin
   ScreenMode.Bits := ABits;
   if not FScreenModes.Find(ScreenMode) then
   begin
-    if LogDebug then
+    if MainLog.IsLoggerFor(mlDebug) then
       MainLog.Add('Found screen mode ' + ScreenMode.AsString(ofIO), mlDebug);
     FScreenModes.Add(ScreenMode);
   end;

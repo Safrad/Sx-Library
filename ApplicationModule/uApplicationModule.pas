@@ -58,7 +58,7 @@ implementation
 uses
   SysUtils,
 
-  uLog;
+  uMainLog;
 
 { TApplicationModule }
 

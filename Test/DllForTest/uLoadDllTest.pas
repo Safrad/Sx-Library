@@ -48,7 +48,7 @@ uses
   uHTML,
   uCharset,
   uCharTable,
-  uLog,
+  uMainLog,
   uMath,
   uMsg,
   uNewThread,

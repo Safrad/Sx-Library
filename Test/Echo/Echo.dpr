@@ -9,17 +9,18 @@ uses
   Winapi.Windows,
 
   uTypes,
-  uLog;
+  uMainLog;
 
 var
   Line, Command: string;
 begin
   try
-    InitializeLog;
+    InitializeMainLog;
     while True do
     begin
       Readln(Line);
-      MainLog.Add('Readed ' + IntToStr(Length(Line)) + ' chars: ' + Line, mlDebug);
+	  if MainLog.IsLoggerFor(mlDebug) then
+        MainLog.Add('Readed ' + IntToStr(Length(Line)) + ' chars: ' + Line, mlDebug);
 
       Command := UpperCase(Line);
       if (Command = 'QUIT') or (Command = 'EXIT') then

@@ -45,7 +45,7 @@ uses
   uStrings,
   uPipedExternalApplication,
   uStartupWindowState,
-  uLog,
+  uMainLog,
   uMath,
   uOperatingSystem,
   uFiles;
@@ -305,7 +305,8 @@ begin
       Result := 1 - (dbIdleTime / dbSystemTime) / LogicalProcessorCount;
   		Result := Range(0, Result, 1);
     end;
-    MainLogAdd('GetCPUUsageForce=' + FloatToStr(Result), mlDebug);
+    if MainLog.IsLoggerFor(mlDebug) then
+      MainLog.Add('GetCPUUsageForce=' + FloatToStr(Result), mlDebug);
 	end;
 
 	// store new CPU's idle and system time
@@ -421,7 +422,8 @@ var
 	Dummy: array[0..KB] of U1;
   CPUUsage: Integer;
 begin
-  MainLogAdd('GetCPUUsage', mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('GetCPUUsage', mlDebug);
 	if OperatingSystem.IsNT then
 	begin
 		if MainTimer.IntervalFrom(FLastTickCountForCPUUsage).Milliseconds < 500 then

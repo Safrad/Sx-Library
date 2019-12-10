@@ -33,7 +33,9 @@ uses
   {$ifdef MSWINDOWS}
   Winapi.Windows,
   {$endif}
-  uDIniFile, uFolder, uFiles, uLog, uMath, uStrings, uSorts, uMsg;
+  uLogger,
+  uFileLogger,
+  uDIniFile, uFolder, uFiles, uMath, uStrings, uSorts, uMsg;
 
 const
   OptionsFile = '_delete.ini';
@@ -71,7 +73,7 @@ begin
 	Result := FileExistsEx(FileName + OptionsFile);
 end;
 
-function DeleteTemp(const Path: string; const DeleteOptions: TDeleteOptions; const LogFile: TLog; const DateLimit: TDateTime): TDateTime;
+function DeleteTemp(const Path: string; const DeleteOptions: TDeleteOptions; const LogFile: TLogger; const DateLimit: TDateTime): TDateTime;
 var
   Folder: TFolder;
   ItemDateTime, NewestDate: TDateTime;
@@ -117,7 +119,8 @@ begin
             end
             else
             begin
-              LogFile.Add(Path + FileItem.RelativeFileId.RelativePath + ' selected.', mlInformation);
+              if LogFile.IsLoggerFor(mlInformation) then
+                LogFile.Add(Path + FileItem.RelativeFileId.RelativePath + ' selected.', mlInformation);
             end;
           end;
         end
@@ -160,7 +163,7 @@ const
   Intervals: array[TIntervalMode] of SG = (1, 7, 31, 365);
 var
   Folder: TFolder;
-  LogFile: TLog;
+  LogFile: TFileLogger;
   Deletes: array of BG;
   FolderCount: SG;
 
@@ -231,7 +234,7 @@ var
   Spaces: array of F8;
 begin
   if not DeleteOptions.DisableLog then
-	  LogFile := TLog.Create(Path + '_SxDelete.log');
+	  LogFile := TFileLogger.Create(Path + '_SxDelete.log');
   try
     if DeleteOptions.SelectionType = stNone then Exit;
 

@@ -23,7 +23,7 @@ uses
   IdException,
   IdStack,
 
-	uLog,
+	uMainLog,
   uStopwatch,
   uStrings,
   uProjectInfo,
@@ -36,8 +36,8 @@ var
 	AResponseContent: TStream;
   NotOk: BG;
 begin
-  if LogDebug then
-	  MainLogAdd('Download file ' + AddQuoteF(AURL), mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+	  MainLog.Add('Download file ' + AddQuoteF(AURL), mlDebug);
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 		IdHTTP1.HandleRedirects := True;
@@ -73,8 +73,8 @@ function DownloadData(const AURL: string): string;
 var
 	IdHTTP1: TIdHTTP;
 begin
-  if LogDebug then
-    MainLogAdd('Download data ' + AddQuoteF(AURL), mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('Download data ' + AddQuoteF(AURL), mlDebug);
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
 		IdHTTP1.HandleRedirects := True;
@@ -88,8 +88,8 @@ function DownloadData(const AURL: string; const AUserName: string; const APasswo
 var
 	IdHTTP1: TIdHTTP;
 begin
-  if LogDebug then
-    MainLogAdd('Download data ' + AddQuoteF(AURL), mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('Download data ' + AddQuoteF(AURL), mlDebug);
 	IdHTTP1 := TIdHTTP.Create(nil);
 	try
     IdHTTP1.Request.Clear;
@@ -161,13 +161,13 @@ begin
           IdHTTP1.Get(AURL, AResponseContent);
         end;
         Stopwatch.Stop;
-        if LogDebug then
+        if MainLog.IsLoggerFor(mlDebug) then
         	MainLog.Add('Download time: ' + MsToStr(Stopwatch.Elapsed.Milliseconds, diSD, 3, False, ofIO) + 's', mlDebug);
         Result := True;
       except
         on E: Exception do
-          if LogError then
-          	MainLogAdd(E.Message, mlError);
+          if MainLog.IsLoggerFor(mlError) then
+          	MainLog.Add(E.Message, mlError);
       end;
 		finally
       Stopwatch.Free;

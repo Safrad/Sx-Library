@@ -69,7 +69,7 @@ uses
   SysUtils,
 
   uMath,
-  uLog,
+  uMainLog,
   uTextType,
 
   uAnalysis;
@@ -383,7 +383,7 @@ begin
   except
     on E: Exception do
     begin
-      LogException(E);
+      MainLog.LogException(E);
     end;
   end;
 

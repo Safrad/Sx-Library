@@ -12,7 +12,6 @@ implementation
 
 uses
 	SysUtils,
-	uLog,
   uChar,
 	uStrings;
 

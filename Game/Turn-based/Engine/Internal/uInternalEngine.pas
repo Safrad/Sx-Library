@@ -75,7 +75,7 @@ uses
   SysUtils,
   uStrings,
   uProjectInfo,
-  uLog,
+  uMainLog,
   uStopwatch,
 
   uScore,
@@ -271,7 +271,7 @@ procedure TInternalEngine.WaitForCalculationDone(const ATimeOutInMilliseconds: U
 var
   ElapsedTime: TStopwatch;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('WaitForBestMove');
   ElapsedTime := TStopwatch.Create;
   try
@@ -289,12 +289,12 @@ begin
 
     if not AnalysisInfo.ElapsedTime.IsRunning then
     begin
-      if LogDebug then
+      if MainLog.IsLoggerFor(mlDebug) then
         MainLog.Add('Abort waiting for best move, it is found.', mlDebug);
     end
     else if Terminated then
     begin
-      if LogWarning then
+      if MainLog.IsLoggerFor(mlWarning) then
         MainLog.Add('Abort waiting for best move, external engine has terminated.', mlWarning);
     end
     else
@@ -302,7 +302,7 @@ begin
   finally
     ElapsedTime.Free;
   end;
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('WaitForBestMove');
 end;
 

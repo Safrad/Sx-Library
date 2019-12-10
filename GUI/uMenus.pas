@@ -43,7 +43,8 @@ implementation
 uses
 	Forms, Controls, SysUtils, Math,
 	uDButton, uStrings, uColor, uDictionary, uSounds, uDrawStyle, uGlobalOptions,
-	uGraph, uDBitmap, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath, uLog, uOutputFormat,
+	uGraph, uDBitmap, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath,
+  uOutputFormat,
   uDForm;
 
 var

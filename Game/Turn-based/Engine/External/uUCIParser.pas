@@ -23,7 +23,7 @@ uses
   uScore,
   uChar,
   uStrings,
-  uLog;
+  uMainLog;
 
 { TUCIParser }
 
@@ -70,7 +70,10 @@ begin
       ParseInfo(AText, InLineIndex);
 		end
 		else
-			MainLogAdd('Unknown command ''' + s + '''', mlWarning);
+    begin
+      if MainLog.IsLoggerFor(mlWarning) then
+  			MainLog.Add('Unknown command ''' + s + '''', mlWarning);
+    end;
 	end;
 end;
 
@@ -177,7 +180,10 @@ begin
       ReadToNewLine(Line, InLineIndex)
     end
     else
-      MainLogAdd('Unknown info ''' + s + '''', mlWarning);
+    begin
+      if MainLog.IsLoggerFor(mlWarning) then
+        MainLog.Add('Unknown info ''' + s + '''', mlWarning);
+    end;
   end;
 
   if NewDepth <> -1 then

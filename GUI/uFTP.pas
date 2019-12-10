@@ -3,7 +3,7 @@ unit uFTP;
 interface
 
 uses
-	uTypes, uLog, uLogger,
+	uTypes, uLogger,
   uTimeSpan,
 	IdFTP;
 

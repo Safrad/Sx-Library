@@ -17,7 +17,7 @@ implementation
 
 uses
   uTypes,
-  uLog,
+  uMainLog,
 
   Winapi.Windows,
   Winapi.ShellAPI;
@@ -51,8 +51,8 @@ begin
   lpExecInfo.hProcess := INVALID_HANDLE_VALUE;
   lpExecInfo.lpDirectory := PWideChar(FCurrentDirectory);
 
-  if LogDebug then
-    MainLogAdd('ShellExecuteEx ' + FFileName + ' ' + FParameters, mlDebug);
+  if MainLog.IsLoggerFor(mlDebug) then
+    MainLog.Add('ShellExecuteEx ' + FFileName + ' ' + FParameters, mlDebug);
   if ShellExecuteEx(@lpExecInfo) then
   begin
     FHandle := lpExecInfo.hProcess;

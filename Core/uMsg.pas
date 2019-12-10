@@ -70,7 +70,7 @@ uses
 {$endif}
 
   uStrings,
-  uLog,
+  uMainLog,
   uCommonOutput,
   uChar;
 
@@ -79,8 +79,8 @@ resourcestring
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 begin
-  if MainLogWrite(MessageLevel) then
-    MainLogAdd(ExpandedText, MessageLevel);
+  if MainLog.IsLoggerFor(MessageLevel) then
+    MainLog.Add(ExpandedText, MessageLevel);
 
   if Assigned(CommonOutput) then
     CommonOutput.AddMessage(ExpandedText, MessageLevel);
@@ -91,8 +91,8 @@ var
   ExpandedText: string;
 begin
   ExpandedText := ReplaceParam(Text, Param);
-  if MainLogWrite(MessageLevel) then
-    MainLogAdd(ExpandedText, MessageLevel);
+  if MainLog.IsLoggerFor(MessageLevel) then
+    MainLog.Add(ExpandedText, MessageLevel);
 
   if Assigned(CommonOutput) then
     CommonOutput.AddMessage(ExpandedText, MessageLevel);
@@ -188,8 +188,8 @@ end;
 
 function ErrorRetry(const Text: string): BG;
 begin
-  if LogError then
-    MainLogAdd(Text, mlError);
+  if MainLog.IsLoggerFor(mlError) then
+    MainLog.Add(Text, mlError);
 
   if Assigned(CommonOutput) then
   begin
@@ -218,8 +218,8 @@ end;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
-  if LogConfirmation then
-    MainLogAdd(Text, mlConfirmation);
+  if MainLog.IsLoggerFor(mlConfirmation) then
+    MainLog.Add(Text, mlConfirmation);
   if Assigned(CommonOutput) then
     Result := CommonOutput.Confirmation(Text, Buttons)
   else
@@ -231,8 +231,8 @@ var
   ExpandedText: string;
 begin
   ExpandedText := ReplaceParam(Text, Param);
-  if LogConfirmation then
-    MainLogAdd(ExpandedText, mlConfirmation);
+  if MainLog.IsLoggerFor(mlConfirmation) then
+    MainLog.Add(ExpandedText, mlConfirmation);
   if Assigned(CommonOutput) then
     Result := CommonOutput.Confirmation(ExpandedText, Buttons)
   else
@@ -256,8 +256,8 @@ var
   Text: string;
 begin
   Text := ErrorMsg + ': ' + FileName;
-  if LogError then
-    MainLogAdd(Text, mlError);
+  if MainLog.IsLoggerFor(mlError) then
+    MainLog.Add(Text, mlError);
 
   if Assigned(CommonOutput) then
     CommonOutput.AddError(ErrorCodeStr + Text);

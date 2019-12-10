@@ -217,7 +217,7 @@ implementation
 
 uses
 	Math,
-	uChar, uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uLog, uRect, uWHRect
+	uChar, uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uMainLog, uRect, uWHRect
 {$IFDEF VCL}, uMenus, uSystem {$ENDIF};
 
 procedure TDIniFile.AddSection(const Section: string);
@@ -1705,8 +1705,8 @@ procedure TDIniFile.RegisterRW(const RWOptions: TRWOptions);
 begin
 	if not Assigned(RWOptions) then
 		Exit;
-	if LogDebug then
-		MainLogAdd('RegisterRW', mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+		MainLog.Add('RegisterRW', mlDebug);
 	SetLength(FRWList, Length(FRWList) + 1);
 	FRWList[Length(FRWList) - 1] := RWOptions;
 	RWOptions(False);
@@ -1716,8 +1716,8 @@ procedure TDIniFile.UnregisterRW(const RWOptions: TRWOptions);
 var
 	i, j, l: SG;
 begin
-	if LogDebug then
-		MainLogAdd('UnregisterRW', mlDebug);
+	if MainLog.IsLoggerFor(mlDebug) then
+		MainLog.Add('UnregisterRW', mlDebug);
 	RWOptions(True);
 	i := 0;
 	while i < Length(FRWList) do

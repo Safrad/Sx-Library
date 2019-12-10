@@ -290,7 +290,7 @@ uses
   uMath,
   uFiles,
   uStrings,
-  uLog,
+  uMainLog,
   uEReadFileException;
 
 procedure SoundLR(var Left, Right: SG; const NowPos, MaxPos: SG);

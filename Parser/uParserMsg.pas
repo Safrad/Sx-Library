@@ -3,16 +3,16 @@ unit uParserMsg;
 interface
 
 uses
-	uTypes, uData, uLog,
+	uTypes, uData,
 	SysUtils;
 
 type
 	PParserMessage = ^TParserMessage;
-	TParserMessage = packed record // 24
+	TParserMessage = packed record // 24 / 28
 		FileNameIndex: U4; // 4
 		Line: U4; // 4
 		X0, X1: U4; // 8
-		Text: string; // 4
+		Text: string; // 4 / 8
 		MsgType: TMessageLevel; // 1
 		Reserve: array[0..2] of U1; // 3
 	end;
@@ -32,7 +32,6 @@ type
 		property Messages: TData read Data;
 		property Count: SG read GetCount;
 	end;
-
 
 implementation
 

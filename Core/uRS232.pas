@@ -67,8 +67,11 @@ type
 implementation
 
 uses
-  uMsg, uOutputFormat, uLog,
-  SysUtils;
+  SysUtils,
+
+  uMsg,
+  uOutputFormat,
+  uMainLog;
 
 { TRS232 }
 
@@ -146,8 +149,8 @@ begin
 			Result := False;
 		end
 		else
-			if LogDebug then
-        MainLogAdd('Reading ' + BToStr(Suc, ofIO) + ' from ' + GetComName, mlDebug);
+			if MainLog.IsLoggerFor(mlDebug) then
+        MainLog.Add('Reading ' + BToStr(Suc, ofIO) + ' from ' + GetComName, mlDebug);
 	end
 	else
 	begin
@@ -271,8 +274,8 @@ begin
 			Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
 					+ ' to ' + GetComName)
 		else
-			if LogDebug then
-        MainLogAdd('Writing ' + BToStr(Suc, ofIO) + ' to ' + GetComName, mlDebug);
+			if MainLog.IsLoggerFor(mlDebug) then
+        MainLog.Add('Writing ' + BToStr(Suc, ofIO) + ' to ' + GetComName, mlDebug);
 	end
 	else
 	begin

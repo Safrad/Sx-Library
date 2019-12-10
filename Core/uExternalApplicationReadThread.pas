@@ -44,7 +44,7 @@ uses
 
   uStrings,
   uChar,
-  uLog;
+  uMainLog;
 
 { TExternalApplicationReadThread }
 
@@ -81,7 +81,7 @@ var
   R: U4;
   s: AnsiString;
 begin
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogEnter('ExternalApplicationReadThread.Execute');
 
   inherited;
@@ -114,7 +114,7 @@ begin
       Break;
   end;
 
-  if LogDebug then
+  if MainLog.IsLoggerFor(mlDebug) then
     MainLog.LogLeave('ExternalApplicationReadThread.Execute');
 end;
 
@@ -146,7 +146,7 @@ begin
       Exit;
 
 		BytesRead := FStream.Read(Result[BufferIndex], Remain);
-    if LogDebug then
+    if MainLog.IsLoggerFor(mlDebug) then
       MainLog.Add('Reading ' + IntToStr(BytesRead) + ' bytes from ' + FExternalApplication.FileName, mlDebug);
 
     Dec(Remain, BytesRead);
@@ -156,7 +156,7 @@ begin
     // Never happen
     Inc(BufferIndex, BytesRead);
 
-    if LogWarning then
+    if MainLog.IsLoggerFor(mlWarning) then
       MainLog.Add('Partially read, buffer size is ' + IntToStr(Size) + ' bytes', mlWarning);
     Sleep(LoopSleepTime);
 	end;
