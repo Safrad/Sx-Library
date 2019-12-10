@@ -179,7 +179,7 @@ begin
   begin
     FDTR := Value;
     if FDTR then
-      Result := EscapeCommFunction(FHandle, Windows.SETDTR)
+      Result := EscapeCommFunction(FHandle, Winapi.Windows.SETDTR)
     else
       Result := EscapeCommFunction(FHandle, CLRDTR);
     if not Result then
@@ -205,7 +205,7 @@ begin
   begin
     FTxD := Value;
     if FTxD then
-      Result := EscapeCommFunction(FHandle, Windows.SETBREAK)
+      Result := EscapeCommFunction(FHandle, Winapi.Windows.SETBREAK)
     else
       Result := EscapeCommFunction(FHandle, CLRBREAK);
     if not Result then
@@ -222,7 +222,7 @@ begin
   begin
     FRTS := Value;
     if FRTS then
-      Result := EscapeCommFunction(FHandle, Windows.SETRTS)
+      Result := EscapeCommFunction(FHandle, Winapi.Windows.SETRTS)
     else
       Result := EscapeCommFunction(FHandle, CLRRTS);
     if not Result then
