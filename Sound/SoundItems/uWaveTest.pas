@@ -46,11 +46,9 @@ begin
     Folder.Path := DataDir + 'Wave\';
     Folder.Read;
 
-    FileItem := TFileItem(Folder.Files.First);
-    while FileItem <> nil do
+    for FileItem in Folder.Files do
     begin
-      ReadWave(Folder.Path + FileItem.Name);
-      FileItem := TFileItem(Folder.Files.Next);
+      ReadWave(FileItem.RelativeFileId.RelativePathAndName);
     end;
   finally
     Folder.Free;

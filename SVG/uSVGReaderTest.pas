@@ -33,16 +33,16 @@ end;
 procedure TSVGReaderTest.TestReadDirectory(const ADir: string);
 var
   Folder: TFolder;
-  i: Integer;
+  FileItem: TFileItem;
 begin
   Folder := TFolder.Create;
   try
     Folder.Path := ADir;
     Folder.Extensions := ['svg'];
     Folder.Read;
-    for i := 0 to Folder.Count - 1 do
+    for FileItem in Folder.Files do
     begin
-      TestReadFile(ADir + TFileItem(Folder.Files.GetObject(i)).Name);
+      TestReadFile(FileItem.RelativeFileId.RelativePathAndName);
     end;
   finally
     Folder.Free;

@@ -29,7 +29,10 @@ procedure SxDeleteDirs(const Path: string; const DeleteOptions: TDeleteOptions);
 implementation
 
 uses
-  Math, Winapi.Windows,
+  Math,
+  {$ifdef MSWINDOWS}
+  Winapi.Windows,
+  {$endif}
   uDIniFile, uFolder, uFiles, uLog, uMath, uStrings, uSorts, uMsg;
 
 const
@@ -92,17 +95,17 @@ begin
 
     for i := 0 to Folder.Files.Count - 1 do
     begin
-      FileItem := TFileItem(Folder.Files.GetObject(i));
-      if OwnFiles(FileItem.Name) then
+      FileItem := Folder.Files[i];
+      if OwnFiles(FileItem.RelativeFileId.Name) then
       begin
         ItemDateTime := MaxInt;
       end
-      else if LastChar(FileItem.Name) = '\' then
+      else if FileItem.IsDirectory then
       begin
-		    if not FileExists(Path + FileItem.Name + OptionsFile) then
+		    if not FileExists(Path + FileItem.RelativeFileId.RelativePath + OptionsFile) then
         begin
           if DeleteOptions.Recursive then
-            ItemDateTime := DeleteTemp(Path + FileItem.Name, DeleteOptions, LogFile, DateLimit)
+            ItemDateTime := DeleteTemp(Path + FileItem.RelativeFileId.RelativePath, DeleteOptions, LogFile, DateLimit)
           else
             ItemDateTime := FileItem.DateTime;
           Assert(ItemDateTime <> 0);
@@ -110,30 +113,30 @@ begin
           begin
             if not DeleteOptions.Test then
             begin
-              RemoveDirsEx(Path + FileItem.Name, True);
+              RemoveDirsEx(Path + FileItem.RelativeFileId.RelativePath, True);
             end
             else
             begin
-              LogFile.Add(Path + FileItem.Name + ' selected.', mlInformation);
+              LogFile.Add(Path + FileItem.RelativeFileId.RelativePath + ' selected.', mlInformation);
             end;
           end;
         end
         else
 	        ItemDateTime := MaxInt;
       end
-      else
+      else // is file
       begin
-        GetFileDateTime(Path + FileItem.Name, CreationTime, LastAccessTime, ModifiedTime);
+        GetFileDateTime(Path + FileItem.RelativeFileId.RelativePathAndName, CreationTime, LastAccessTime, ModifiedTime);
         ItemDateTime := Max(FileTimeToDateTime(CreationTime), FileItem.DateTime);
         if (ItemDateTime < DateLimit) then
         begin
           if not DeleteOptions.Test then
           begin
-            DeleteFileEx(Path + FileItem.Name);
+            DeleteFileEx(Path + FileItem.RelativeFileId.RelativePathAndName);
           end
           else
           begin
-            LogFile.Add(Path + FileItem.Name + ' selected.', mlInformation);
+            LogFile.Add(Path + FileItem.RelativeFileId.RelativePathAndName + ' selected.', mlInformation);
           end;
         end;
       end;
@@ -163,7 +166,7 @@ var
 
   function TryDelete(const Index: SG): BG;
   begin
-    if TFileItem(Folder.Files.GetObject(Index)).Attr and faReadOnly = 0 then
+    if Folder.Files[Index].Attr and faReadOnly = 0 then
     begin
       Deletes[Index] := True;
       Dec(FolderCount);
@@ -178,10 +181,10 @@ var
     NameForDelete: string;
     FullPathForDelete: string;
   begin
-    NameForDelete := TFileItem(Folder.Files.GetObject(Index)).Name;
+    NameForDelete := Folder.Files[Index].RelativeFileId.RelativePathAndName;
     if not DeleteOptions.Test then
     begin
-      FullPathForDelete := Path + NameForDelete;
+      FullPathForDelete := NameForDelete;
       if DeleteOptions.AcceptFiles then
       begin
         if uFiles.DeleteFileEx(FullPathForDelete) then
@@ -254,7 +257,7 @@ begin
       i := 0;
       while i < Folder.Files.Count do
       begin
-        if OwnFiles(TFileItem(Folder.Files.GetObject(i)).Name) or HasOwnFiles(Folder.Path + TFileItem(Folder.Files.GetObject(i)).Name) then
+        if OwnFiles(Folder.Files[i].RelativeFileId.Name) or HasOwnFiles(Folder.Path + Folder.Files[i].RelativeFileId.Name) then
         begin
           Folder.Files.Delete(i);
         end
@@ -319,17 +322,17 @@ begin
       begin
         for IntervalMode := imYear downto imDay do
         begin
-          LastDateTime := TFileItem(Folder.Files.GetObject(0)).DateTime;
+          LastDateTime := Folder.Files[0].DateTime;
           NewestDate := LastDateTime - Intervals[IntervalMode];
           i := 1;
           while i <= Folder.Files.Count - 2 do
           begin
-            ActualDate := TFileItem(Folder.Files.GetObject(i)).DateTime;
+            ActualDate := Folder.Files[i].DateTime;
             Deleted := False;
             if ActualDate < NewestDate then
             begin
               if (LastDateTime -
-                  TFileItem(Folder.Files.GetObject(i + 1)).DateTime <= Intervals[IntervalMode]) then
+                  Folder.Files[i + 1].DateTime <= Intervals[IntervalMode]) then
               begin
                 Deleted := TryDelete(i);
               end;
@@ -345,11 +348,11 @@ begin
         SetLength(AIndex, Folder.Files.Count);
         FillOrderUG(AIndex[0], Folder.Files.Count);
         SetLength(Spaces, Folder.Files.Count);
-        ActualDate := TFileItem(Folder.Files.GetObject(Folder.Files.Count - 1)).DateTime;
+        ActualDate := Folder.Files.Last.DateTime;
         for i := Folder.Files.Count - 2 downto 0 do
         begin
-          Spaces[i + 1] := TFileItem(Folder.Files.GetObject(i)).DateTime - ActualDate;
-          ActualDate := TFileItem(Folder.Files.GetObject(i)).DateTime;
+          Spaces[i + 1] := Folder.Files[i].DateTime - ActualDate;
+          ActualDate := Folder.Files[i].DateTime;
         end;
         Spaces[0] := MaxInt;
         SortF8(False, False, PArraySG(@AIndex[0]), PArrayF8(@Spaces[0]), Folder.Files.Count);
@@ -365,12 +368,12 @@ begin
         SetLength(AIndex, Folder.Files.Count);
         FillOrderUG(AIndex[0], Folder.Files.Count);
         SetLength(Spaces, Folder.Files.Count);
-        ActualDate := TFileItem(Folder.Files.GetObject(Folder.Files.Count - 1)).DateTime;
+        ActualDate := Folder.Files.Last.DateTime;
         Spaces[Folder.Files.Count - 1] := MaxInt;
         for i := Folder.Files.Count - 2 downto 0 do
         begin
-          Spaces[i] := TFileItem(Folder.Files.GetObject(i)).DateTime - ActualDate;
-          ActualDate := TFileItem(Folder.Files.GetObject(i)).DateTime;
+          Spaces[i] := Folder.Files[i].DateTime - ActualDate;
+          ActualDate := Folder.Files[i].DateTime;
         end;
         SortF8(False, False, PArraySG(@AIndex[0]), PArrayF8(@Spaces[0]), Folder.Files.Count);
         SetLength(Spaces, 0);
