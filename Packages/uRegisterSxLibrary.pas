@@ -9,27 +9,28 @@ implementation
 uses
   Classes,
 
-  uDView,
-  uDTimer,
-  uDPanel,
-  uDLabel,
-  uDImage,
-  uDGauge,
-  uDForm,
-  uDEdit,
   uDButton,
+  uDEdit,
+  uDForm,
+  uDGauge,
+  uDImage,
+  uDLabel,
+  uDMemo,
+  uDPanel,
+  uDTimer,
+  uDView,
   uNumericComboBox,
   uOpenedFiles,
-  uDMemo,
-  uSxPathEdit,
-  uSxCheckBox,
-  uSxLabel,
+  uSxColor,
+  uSxComboBox,
   uSxEmptyPanel,
   uSxGUI,
-  uSxToolBar,
-  uSxComboBox,
-  uSxColor;
-
+  uSxCheckBox,
+  uSxLabel,
+  uSxPathEdit,
+  uSxRibbon,
+  uSxToolBar;
+  
 {$R 'uDView.dcr'}
 {$R 'uDTimer.dcr'}
 {$R 'uDPanel.dcr'}
@@ -55,26 +56,27 @@ const
   ComponentPageName = 'Sx';
 begin
   RegisterComponents(ComponentPageName, [
-    TDView,
-    TDTimer,
-    TDPanel,
-    TDLabel,
-    TDImage,
-    TDGauge,
-    TDForm,
-    TDEdit,
     TDButton,
+    TDEdit,
+    TDForm,
+    TDGauge,
+    TDImage,
+    TDLabel,
+    TDMemo,
+    TDPanel,
+    TDTimer,
+    TDView,
     TNumericComboBox,
     TOpenedFiles,
-    TDMemo,
-    TSxPathEdit,
+    TSxColor,
     TSxCheckBox,
-    TSxLabel,
     TSxEmptyPanel,
     TSxGUI,
-    TSxToolBar,
     TSxComboBox,
-    TSxColor
+    TSxLabel,
+    TSxPathEdit,
+    TSxRibbon,
+    TSxToolBar
     ]);
 end;
 
