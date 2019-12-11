@@ -1,5 +1,4 @@
-// Singleton
-// Used in TDTimer
+/// <summary>Singleton used in TDTimer</summary>
 unit uDIdleTimer;
 
 interface
