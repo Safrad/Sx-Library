@@ -44,8 +44,8 @@ uses
   uNumericalIntervalArgument,
   uButtonArgument,
 
-  uProtocolEngineOutput,
   uUCIEngineOutput,
+
   uIsReadyCommand,
   uSetOptionCommand,
   uRegisterCommand,

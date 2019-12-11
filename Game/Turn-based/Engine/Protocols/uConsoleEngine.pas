@@ -35,8 +35,6 @@ type
 implementation
 
 uses
-  Winapi.Windows,
-
   uTypes,
   uMsg,
   uConsole,

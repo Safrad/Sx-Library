@@ -90,7 +90,6 @@ implementation
 
 uses
   Math,
-  Winapi.Windows,
 
   uChar,
   uStrings,
@@ -296,9 +295,9 @@ begin
 	if Assigned(FExternalApp) then
 	begin
 		if not FPaused then
-			SuspendThread(FExternalApp.ProcessInformation.hThread)
+			FExternalApp.Suspend
 		else
-			ResumeThread(FExternalApp.ProcessInformation.hThread);
+			FExternalApp.Resume;
 		FPaused := not FPaused;
 	end;
 	inherited;
