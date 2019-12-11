@@ -42,6 +42,9 @@ $(sx-library)\Input
 $(sx-library)\VersionSystem
 $(sx-library)\Console
 $(sx-library)\GUI
+$(sx-library)\GUI\VCL\Components
+$(sx-library)\GUI\VCL\Frames
+$(sx-library)\GUI\VCL\Forms
 $(sx-library)\Regional
 $(sx-library)\Renderer
 $(sx-library)\SVG
