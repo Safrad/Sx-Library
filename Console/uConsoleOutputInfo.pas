@@ -41,7 +41,6 @@ implementation
 
 uses
   SysUtils,
-  FMX.Consts,
 
   uConsole,
   uConsoleTable,

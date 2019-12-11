@@ -5,8 +5,6 @@ unit uOutputInfo;
 interface
 
 uses
-  FMX.Consts,
-
   uTypes,
   uTable;
 
@@ -16,13 +14,31 @@ type
 
   TDlgButtons = set of TDlgBtn;
 
-{$if CompilerVersion < 21}
 resourcestring
-  SMsgDlgClose = '&Close'; // SCloseButton
-{$ifend}
+  SMsgDlgWarning = 'Warning';
+  SMsgDlgError = 'Error';
+  SMsgDlgInformation = 'Information';
+  SMsgDlgConfirm = 'Confirm';
+  SMsgDlgYes = 'Yes';
+  SMsgDlgNo = 'No';
+  SMsgDlgOK = 'OK';
+  SMsgDlgCancel = 'Cancel';
+  SMsgDlgHelp = 'Help';
+  SMsgDlgHelpNone = 'No help available';
+  SMsgDlgHelpHelp = 'Help';
+  SMsgDlgAbort = 'Abort';
+  SMsgDlgRetry = 'Retry';
+  SMsgDlgIgnore = 'Ignore';
+  SMsgDlgAll = 'All';
+  SMsgDlgNoToAll = 'No to All';
+  SMsgDlgYesToAll = 'Yes to &All';
+  SMsgDlgClose = '&Close';
+  SMsgDlgDelete = '&Delete';
+  SMsgDlgDeleteAll = 'Delete All';
+
 const
   DlgBtnNames: array[TDlgBtn] of string = (SMsgDlgOK, SMsgDlgYes, SMsgDlgYesToAll, SMsgDlgRetry, SMsgDlgIgnore,
-    SMsgDlgAbort, '&Delete', 'Delete All', SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel, SMsgDlgAll, SMsgDlgHelp,
+    SMsgDlgAbort, SMsgDlgDelete, SMsgDlgDeleteAll, SMsgDlgNo, SMsgDlgNoToAll, SMsgDlgCancel, SMsgDlgAll, SMsgDlgHelp,
     SMsgDlgClose);
 
 type
