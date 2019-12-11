@@ -83,13 +83,7 @@ type
 implementation
 
 uses
-  SysUtils,
-  Classes,
-  Contnrs,
-
-  uStrings,
   uOptions,
-  uInputFormat,
 
   uXBoardProtocolCommand,
 
