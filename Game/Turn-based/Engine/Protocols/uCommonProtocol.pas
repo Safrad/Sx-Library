@@ -5,16 +5,15 @@ unit uCommonProtocol;
 interface
 
 uses
-  Contnrs,
-
   uTypes,
   uCustomCommand,
+  uCommands,
   uInternalEngine;
 
 type
   TCommonProtocol = class
   private
-    FCommands: TObjectList;
+    FCommands: TCommandsList;
     FInternalEngine: TInternalEngine;
     FAnalyzeMode: BG;
     procedure SetInternalEngine(const Value: TInternalEngine);
@@ -28,7 +27,7 @@ type
     procedure Initialize; virtual;
     procedure AddCommand(const ACommand: TCustomCommand);
 
-    property Commands: TObjectList read FCommands;
+    property Commands: TCommandsList read FCommands;
     property InternalEngine: TInternalEngine read FInternalEngine write SetInternalEngine;
     property AnalyzeMode: BG read FAnalyzeMode write SetAnalyzeMode;
 
@@ -72,7 +71,7 @@ end;
 
 procedure TCommonProtocol.CreateCommands;
 begin
-  FCommands := TObjectList.Create;
+  FCommands := TCommandsList.Create;
   FCommands.OwnsObjects := False;
 end;
 
