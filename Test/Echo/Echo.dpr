@@ -6,7 +6,6 @@ program Echo;
 
 uses
   System.SysUtils,
-  Winapi.Windows,
 
   uTypes,
   uMainLog;
