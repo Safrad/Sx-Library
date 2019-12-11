@@ -4,7 +4,6 @@ interface
 
 uses
   uTypes,
-  SysUtils,
   uSxThread,
   uShellApplication;
 
@@ -25,7 +24,8 @@ type
 implementation
 
 uses
-  Classes,
+  SysUtils,
+
   uMsg;
 
 { TShellApplicationThread }
