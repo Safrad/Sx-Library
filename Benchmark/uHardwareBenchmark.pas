@@ -43,11 +43,10 @@ uses
   uDiskBenchmark,
 
   Math,
-  Windows,
   SysUtils,
   uCPU,
   uUnitFormatter,
-  uOperatingSystem,
+  uTemporaryDirectory,
   uMath,
   uStrings,
   uStopwatch,
@@ -68,7 +67,7 @@ begin
     Benchmarks[i] := GetBenchmark(ATestType);
     case ATestType of
     5..8:
-      TDiskBenchmark(Benchmarks[i]).FileName := OperatingSystem.TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(i) + '.tmp';
+      TDiskBenchmark(Benchmarks[i]).FileName := TemporaryDirectory.ProcessTempDir + 'Test' + IntToStr(i) + '.tmp';
     end;
     if ATestType in [5, 6] then
       TDiskBenchmark(Benchmarks[i]).CreateFile;
@@ -200,7 +199,7 @@ begin
       LastPerformance := 0;
       Performance1Core := 0;
       Performance := 0;
-      for Core := 1 to GCPU.LogicalProcessorCount + 2 do
+      for Core := 1 to CPU.LogicalProcessorCount + 2 do
       begin
         Performance := DoTest(TestType, Core);
         if Core = 1 then

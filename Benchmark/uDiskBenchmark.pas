@@ -53,7 +53,6 @@ implementation
 
 uses
   Math,
-  Windows,
   uFileCharset,
   uRawFile,
   uOutputFormat,

@@ -80,7 +80,9 @@ implementation
 uses
   SysUtils,
   uMainLog,
+{$ifdef MSWINDOWS}
   uExternalApplication,
+{$endif}
   uDefaultArguments,
   uCustomArgument,
   uProjectInfo,
@@ -224,6 +226,7 @@ begin
 end;
 
 procedure TCommonApplication.RestartIfNeeded;
+{$ifdef MSWINDOWS}
 var
   ExternalApplication: TExternalApplication;
 begin
@@ -240,6 +243,10 @@ begin
       ExternalApplication.Free;
     end;
   end;
+{$else}
+begin
+  // TODO : Implement
+{$endif}
 end;
 
 procedure TCommonApplication.Run;

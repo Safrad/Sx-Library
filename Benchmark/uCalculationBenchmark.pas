@@ -21,7 +21,7 @@ implementation
 uses
   uTypes,
   uInputFormat,
-  uDParser,
+  uMathExpressionParser,
   uLapStopwatch;
 
 { TCalculationBenchmark }

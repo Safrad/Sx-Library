@@ -29,6 +29,18 @@ uses
   uOutputFormat,
   uMath;
 
+{$ifndef ASSEMBLER}
+procedure Loop(PMem: Pointer; MaxMem4: UG; Count: UG);
+var
+  i: UG;
+begin
+  for i := 0 to MaxMem4 do
+  begin
+    PUG(PMem)^ := 0;
+    Inc(PUG(PMem), MaxMem4);
+  end;
+end;
+{$else}
 {$ifdef CPUX64}
 procedure Loop(PMem: Pointer; MaxMem4: NativeInt; Count: NativeInt);
 asm
@@ -98,7 +110,7 @@ asm
 
   popad
 end;
-
+{$endif}
 {$endif}
 
 { TProcessorTests }
