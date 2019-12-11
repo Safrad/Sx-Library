@@ -3,19 +3,22 @@ unit uCommands;
 interface
 
 uses
-  Contnrs,
+  Generics.Collections,
+
   uTypes,
   uRow,
   uCustomCommand;
 
 type
+  TCommandsList = TObjectList<TCustomCommand>;
+
   TCommands = class
   private
     FChanged: BG;
     FCommandIndexes: TArrayOfSG;
     FCommandNamesSorted: TArrayOfString;
 
-    FCommands: TObjectList;
+    FCommands: TCommandsList;
 
     function PreviewTableCommand(const ACommand: TCustomCommand): TRow;
     procedure SortCommands;
@@ -31,11 +34,11 @@ type
     procedure WriteToCommonOutput;
 
     procedure Add(const ACustomCommand: TCustomCommand); overload;
-    procedure Add(const ACommands: TObjectList); overload;
+    procedure Add(const ACommands: TCommandsList); overload;
     procedure Delete(const ACustomCommand: TCustomCommand);
     procedure Disable(const ACustomCommand: TCustomCommand);
 
-    property List: TObjectList read FCommands;
+    property List: TCommandsList read FCommands;
   end;
 
 implementation
@@ -64,7 +67,7 @@ begin
   FChanged := True;
 end;
 
-procedure TCommands.Add(const ACommands: TObjectList);
+procedure TCommands.Add(const ACommands: TCommandsList);
 var
   i: SG;
 begin
@@ -87,7 +90,7 @@ constructor TCommands.Create;
 begin
   inherited;
 
-  FCommands := TObjectList.Create;
+  FCommands := TCommandsList.Create;
   FCommands.OwnsObjects := True;
 end;
 
