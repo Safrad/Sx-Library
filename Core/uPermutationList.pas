@@ -3,12 +3,13 @@ unit uPermutationList;
 interface
 
 uses
+  Generics.Collections,
+
   uTypes,
-  uIntegerList,
-  Contnrs;
+  uIntegerList;
 
 type
-  TPermutationList = class(TObjectList)
+  TPermutationList = class(TObjectList<TIntegerList>)
   public
     procedure Add(const APermutation: TArrayOfSG);
     function Exists(const APermutation: TArrayOfSG): BG;
