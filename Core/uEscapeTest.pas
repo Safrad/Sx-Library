@@ -20,14 +20,14 @@ uses
 procedure TEscapeTest.Test;
 var
 	i: SG;
-	s, s2: string;
+	Original, Escaped, Unescaped: string;
 begin
 	for i := 0 to 99 do
 	begin
-		s := RandomString(i);
-		s2 := AddEscape(s);
-		s2 := RemoveEscape(s2);
-    Check(s = s2, 'AddEscape & RemoveEscape is not compatible');
+		Original := RandomString(i);
+		Escaped := AddEscape(Original);
+		Unescaped := RemoveEscape(Escaped);
+    Check(Original = Unescaped, 'AddEscape & RemoveEscape is not compatible');
 	end;
 end;
 
