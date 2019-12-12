@@ -3,9 +3,17 @@ unit ufOptions;
 interface
 
 uses
+	SysUtils,
+  Classes,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+	Vcl.StdCtrls,
+  Vcl.ExtCtrls,
+  Vcl.Buttons,
+
 	uTypes, uDForm, uOptions,
-	SysUtils, Classes, Graphics, Controls, Forms,
-	StdCtrls, ExtCtrls, uDButton, Buttons;
+  uDButton;
 
 type
   // Label & Control

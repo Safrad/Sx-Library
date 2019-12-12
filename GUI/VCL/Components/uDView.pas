@@ -7,8 +7,8 @@ uses
   SysUtils,
 	Classes,
   Winapi.Messages,
-  Controls,
-  Graphics,
+  Vcl.Controls,
+  Vcl.Graphics,
 
   uTypes,
   uColumn,
@@ -182,7 +182,11 @@ type
 implementation
 
 uses
-	Math, StdCtrls, ClipBrd, Forms, UITypes,
+	Math,
+  UITypes,
+  Vcl.StdCtrls,
+  Vcl.ClipBrd,
+  Vcl.Forms,
   Winapi.Windows,
 
 	uGraph, uDBitmap, uMsg, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,

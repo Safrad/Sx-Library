@@ -3,12 +3,13 @@ unit uSxBitmapUtils;
 interface
 
 uses
+  Types,
   UITypes,
-  Windows,
+
   uTypes,
   uColor,
-  uSxBitmap,
   uDBitmap,
+  uSxBitmap,
   uClipping;
 
 type
@@ -37,7 +38,7 @@ procedure TSxBitmapUtils.Draw(const ASource: TSxBitmap; const ATarget: TDBitmap;
   const AColor: TRGBA; const AClipping: TClipping);
 var
   Source: PPixel;
-  Target: PPixel;
+  Target: uDBitmap.PPixel;
   x, y: SG;
   ASourceRect: TRect;
 begin
@@ -71,7 +72,7 @@ procedure TSxBitmapUtils.DrawShadow(const ASource: TSxBitmap; const ATarget: TDB
   const AClipping: TClipping);
 var
   Source: PPixel;
-  Target: PPixel;
+  Target: uDBitmap.PPixel;
   x, y: SG;
   ASourceRect: TRect;
 begin

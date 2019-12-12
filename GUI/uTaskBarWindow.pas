@@ -31,7 +31,7 @@ implementation
 
 uses
   SysUtils,
-  Forms,
+  Vcl.Forms,
 
   uMainLog;
 

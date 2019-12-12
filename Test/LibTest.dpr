@@ -33,14 +33,13 @@ uses
   uArgumentsTest in '..\Arguments\uArgumentsTest.pas',
   uLoadDllTest in 'DllForTest\uLoadDllTest.pas',
   uPermutationTest in '..\Core\uPermutationTest.pas',
-  uPermutationList in '..\Core\uPermutationList.pas',
   uStopwatchTest in '..\Core\uStopwatchTest.pas',
   uWavePlayerTest in '..\Sound\Players\uWavePlayerTest.pas',
   uTicksTest in '..\Core\uTicksTest.pas',
   uColorSequenceTest in '..\GUI\uColorSequenceTest.pas',
   uRandomGeneratorTest in '..\RandomGenerator\uRandomGeneratorTest.pas',
   uMainTimerTest in '..\Core\uMainTimerTest.pas',
-  uDTimerTest in '..\GUI\uDTimerTest.pas',
+  uDTimerTest in '..\GUI\VCL\Components\uDTimerTest.pas',
   uSxThreadTimerTest in '..\Core\uSxThreadTimerTest.pas',
   uTextMacroTest in '..\Core\uTextMacroTest.pas',
   uStartupEnvironmentTest in '..\Core\uStartupEnvironmentTest.pas',
@@ -63,7 +62,8 @@ uses
   uScreenMode in '..\GUI\uScreenMode.pas',
   uGraphicObjectsRendererTest in '..\Renderer\uGraphicObjectsRendererTest.pas',
   uSVGReaderTest in '..\SVG\uSVGReaderTest.pas',
-  uIntegerListTest in '..\Core\uIntegerListTest.pas';
+  uIntegerListTest in '..\Core\uIntegerListTest.pas',
+  uDBFTest in '..\Core\uDBFTest.pas';
 
 {$R *.RES}
 

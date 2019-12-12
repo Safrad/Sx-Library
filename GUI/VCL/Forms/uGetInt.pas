@@ -7,9 +7,16 @@ uses
 
 	uTypes, uParserMsg,
 
-  SysUtils, Classes,
-  Graphics, Controls, Forms,
-	StdCtrls, ComCtrls, uDButton, ExtCtrls, uDLabel, uDForm, uDMemo;
+  SysUtils,
+  Classes,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+	Vcl.StdCtrls,
+  Vcl.ComCtrls,
+  Vcl.ExtCtrls,
+
+  uDButton, uDLabel, uDForm, uDMemo;
 
 type
 	TOnApplyInt = procedure(Value: BigDecimal);

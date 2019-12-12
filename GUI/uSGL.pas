@@ -8,8 +8,11 @@ unit uSGL;
 interface
 
 uses
-	uTypes, uDBitmap, uColor,
-	Graphics;
+  UITypes,
+
+	uTypes,
+  uDBitmap,
+  uColor;
 
 type
 	PFloat = ^TFloat;

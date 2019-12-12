@@ -40,7 +40,6 @@ implementation
 
 uses
   Registry,
-  Forms,
 
   uProjectInfo,
   uDictionary,

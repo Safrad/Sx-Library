@@ -4,7 +4,7 @@ interface
 
 uses
   uTypes,
-  Menus;
+  Vcl.Menus;
 
 type
 	TCommonMenu = class(TObject)
@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  Forms,
+  Vcl.Forms,
   Classes,
   SysUtils,
   Winapi.Windows,

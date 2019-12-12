@@ -3,9 +3,16 @@ unit ufSysInfo;
 interface
 
 uses
-	uTypes, uMath,
-	SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, StdCtrls, uDLabel, uDButton, uDForm, uDEdit;
+	SysUtils,
+	Classes,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+	Vcl.ExtCtrls,
+  Vcl.StdCtrls,
+
+  uTypes, uMath,
+  uDLabel, uDButton, uDForm, uDEdit;
 
 type
 	TfSysInfo = class(TDForm)

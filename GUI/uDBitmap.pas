@@ -148,8 +148,8 @@ type
 
 		function ReadBitmapFromFile(const FileName: TFileName): SG;
 		procedure ReadFromStream(const Stream: TMemoryStream; const Ext: string);
-		function LoadFromFileEx(FileName: TFileName): BG;
-		function SaveToFileEx(var FileName: TFileName; var Quality: SG): Boolean;
+		function LoadFromFileEx(const FileName: TFileName): BG;
+		function SaveToFileEx(const FileName: TFileName; const Quality: SG): Boolean;
 
 
 		function BmpColorIn(C: TColor): SG;
@@ -403,7 +403,7 @@ uses
 	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
   Vcl.ClipBrd,
-	uGraph, uMsg, uFiles, uRawFile, uGetInt, uStrings, uFind, uSystem;
+	uGraph, uMsg, uFiles, uRawFile, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
 function SameColor(const P: PPixel; const C: TRGBA): BG; inline;
@@ -2167,7 +2167,7 @@ begin
 	end;
 end;
 
-function TDBitmap.LoadFromFileEx(FileName: TFileName): BG;
+function TDBitmap.LoadFromFileEx(const FileName: TFileName): BG;
 var
 	Stream: TMemoryStream;
 	Ext: string;
@@ -2209,7 +2209,7 @@ begin
 	end;
 end;
 
-function TDBitmap.SaveToFileEx(var FileName: TFileName; var Quality: SG): Boolean;
+function TDBitmap.SaveToFileEx(const FileName: TFileName; const Quality: SG): Boolean;
 
 {	procedure WriteIcon;
 	var
@@ -2267,14 +2267,7 @@ begin
 				MyJPEG.PixelFormat := jf8bit
 			else
 				MyJPEG.PixelFormat := jf24bit;
-			if Quality = 0 then Quality := -90;
-			if Quality > 0 then
-			begin
-				if GetNumber('JPEG Quality', Quality, 1, 90, 100, nil) = False then Exit;
-				MyJPEG.CompressionQuality := Quality
-			end
-			else
-				MyJPEG.CompressionQuality := -Quality;
+			MyJPEG.CompressionQuality := Quality;
 			MyJPEG.Assign(Self);
 			try
 				Stream := TMemoryStream.Create;

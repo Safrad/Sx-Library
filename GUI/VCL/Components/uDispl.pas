@@ -8,7 +8,8 @@ uses
 	uDBitmap, uDrawStyle,
 
   Classes,
-	Vcl.Graphics, StdCtrls;
+	Vcl.Graphics,
+  Vcl.StdCtrls;
 
 const
 	clAVideo = $009fff1f;

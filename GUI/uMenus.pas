@@ -6,8 +6,12 @@ uses
 	uTypes,
 
   Types,
+  Classes,
   Winapi.Windows,
-  Graphics, Menus, Classes, ExtCtrls, ImgList;
+  VCL.Graphics,
+  VCL.Menus,
+  VCL.ExtCtrls,
+  VCL.ImgList;
 
 var
 	IconSize: SG; // Size of button on toolbar.
@@ -41,7 +45,9 @@ procedure MenuSet(Menu: TComponent);
 implementation
 
 uses
-	Forms, Controls, SysUtils, Math,
+	Vcl.Forms,
+  Vcl.Controls,
+  SysUtils, Math,
 	uDButton, uStrings, uColor, uDictionary, uSounds, uDrawStyle, uGlobalOptions,
 	uGraph, uDBitmap, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath,
   uOutputFormat,

@@ -3,7 +3,8 @@ unit uPictureFactory;
 interface
 
 uses
-  Graphics,
+  UITypes,
+
   uTypes,
   uDBitmap,
   uFileFactory;
@@ -29,7 +30,7 @@ type
     property Gradient: SG read FGradient write SetGradient;
     constructor Create;
     function GetBitmap(const Name: string): TDBitmap; overload;
-    function GetBitmap(const Name: string; const Width, Height: SG; const KeepRatio: BG = True; const BackgroundColor: TColor = clNone): TDBitmap; overload;
+    function GetBitmap(const Name: string; const Width, Height: SG; const KeepRatio: BG = True; const BackgroundColor: TColor = TColorRec.SysNone): TDBitmap; overload;
     function HasBitmap(const Name: string): BG;
   end;
 
@@ -84,7 +85,7 @@ begin
 end;
 
 function TPictureFactory.GetBitmap(const Name: string; const Width,
-  Height: SG; const KeepRatio: BG = True; const BackgroundColor: TColor = clNone): TDBitmap;
+  Height: SG; const KeepRatio: BG = True; const BackgroundColor: TColor = TColorRec.SysNone): TDBitmap;
 var
   W, H: SG;
   IsTransparent: BG;
@@ -98,9 +99,9 @@ begin
 
   BitmapCopy(Result, Original);
 
-  if (BackgroundColor <> clNone) and (Result.Transparent = False) then
+  if (BackgroundColor <> TColorRec.SysNone) and (Result.Transparent = False) then
     Result.TryTransparent;
-  IsTransparent := Result.Transparent and (BackgroundColor <> clNone);
+  IsTransparent := Result.Transparent and (BackgroundColor <> TColorRec.SysNone);
   if IsTransparent then
   begin
     Result.Transparent := False;

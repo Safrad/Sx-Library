@@ -3,7 +3,7 @@ unit uSxColor;
 interface
 
 uses
-  Graphics,
+  UITypes,
   uDButton;
 
 type
@@ -36,9 +36,9 @@ end;
 
 procedure TSxColor.Init;
 begin
-	if Color = clNone then
+	if Color = TColorRec.SysNone then
 	begin
-		Font.Color := clWindowText;
+		Font.Color := TColorRec.SysWindowText;
 		Caption := 'None';
 	end
 	else

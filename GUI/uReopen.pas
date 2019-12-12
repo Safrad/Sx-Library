@@ -4,7 +4,9 @@ interface
 
 uses
 	uTypes,
-	SysUtils, Menus, Classes;
+	SysUtils,
+  Classes,
+  Vcl.Menus;
 
 const
 	MaxReopen = 50;
@@ -60,7 +62,10 @@ type
 implementation
 
 uses
-	Windows, Forms, Graphics, Math,
+  Math,
+  Winapi.Windows,
+  Vcl.Graphics,
+
 	uEscape, uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uMenus, uStrings, uOutputFormat, uChar;
 
 var

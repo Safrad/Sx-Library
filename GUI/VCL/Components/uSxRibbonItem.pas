@@ -4,7 +4,6 @@ interface
 
 uses
   uTypes,
-  Contnrs,
   Windows,
   Classes,
   ExtCtrls,

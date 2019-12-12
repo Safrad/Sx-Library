@@ -7,8 +7,7 @@ uses
   uSxAction,
   uSxRibbonItem,
   Classes,
-  ExtCtrls,
-  Contnrs;
+  ExtCtrls;
 
 var
 	IconSize: SG;

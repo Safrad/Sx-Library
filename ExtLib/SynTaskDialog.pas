@@ -79,12 +79,13 @@ interface
 {$ENDIF}
 
 uses
-  Winapi.Windows, Winapi.CommCtrl, Classes, SysUtils, Consts, Winapi.Messages,
-  Menus,
+  Winapi.Windows, Winapi.CommCtrl, Classes, SysUtils,
+  Vcl.Consts, Winapi.Messages,
+  Vcl.Menus,
   {$ifdef USETMSPACK}
   AdvGlowButton, AdvMenus, TaskDialog, TaskDialogEx,
   {$endif}
-  Graphics, Forms, Controls, StdCtrls, ExtCtrls, Buttons;
+  Vcl.Graphics, Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons;
 
 var
   /// will map a generic OK picture from SynTaskDialog.res

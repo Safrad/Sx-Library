@@ -8,7 +8,12 @@ uses
 
   Winapi.Windows,
   Winapi.Messages,
-  Graphics, Controls, Forms, Menus, ExtCtrls, StdCtrls,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.Menus,
+  Vcl.ExtCtrls,
+  Vcl.StdCtrls,
 
 	uDBitmap, uTypes, uMath, uDTimer, uDIniFile, uDWinControl;
 
@@ -260,7 +265,8 @@ const
 implementation
 
 uses
-	Math, ClipBrd,
+	Math,
+  Vcl.ClipBrd,
   Velthuis.BigDecimals,
   uBigDecimalHelper,
   uMainTimer,

@@ -3,8 +3,15 @@ unit uGetStr;
 interface
 
 uses
+  Classes,
+  SysUtils,
+	Vcl.StdCtrls,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.ExtCtrls,
+
 	uTypes,
-	StdCtrls, Classes, Controls, Forms, SysUtils, ExtCtrls, uDButton,
+  uDButton,
 	uDForm;
 
 type
@@ -34,7 +41,7 @@ implementation
 {$R *.DFM}
 uses
   Winapi.Windows,
-  Dialogs,
+  Vcl.Dialogs,
   SynTaskDialog,
   uVisualOptions,
   uStrings, uChar, uMsg, uDictionary;

@@ -9,8 +9,8 @@ uses
 	Winapi.Messages,
 
 	Classes,
-	Controls,
-	Graphics;
+	VCL.Controls,
+	VCL.Graphics;
 
 type
 	TDWinControl = class(TWinControl)

@@ -81,6 +81,7 @@ implementation
 
 {$R *.dfm}
 uses
+  uTimeSpan,
 	uMath, uGetTime, uInputFormat, uOutputFormat, uStrings, uFiles, uWave, uDictionary,
 	DateUtils, TypInfo;
 
@@ -335,7 +336,7 @@ begin
 				ComboBoxEvery.Items.Add(MsToStr(Second, diMSD, 0, False));
 				ComboBoxEvery.Items.Add(MsToStr(Minute, diMSD, 0, False));
 				ComboBoxEvery.Items.Add(MsToStr(Hour, diMSD, 0, False));
-				ComboBoxEvery.Text := MsToStr(FormSchedule.EveryXIdle, diMSD, -3, False);
+				ComboBoxEvery.Text := MsToStr(FormSchedule.EveryXIdle.Milliseconds, diMSD, -3, False);
 			end;
 			scWhenOverload:
 			begin
@@ -343,7 +344,7 @@ begin
 				ComboBoxEvery.Items.Add(MsToStr(Second, diMSD, 0, False));
 				ComboBoxEvery.Items.Add(MsToStr(Minute, diMSD, 0, False));
 				ComboBoxEvery.Items.Add(MsToStr(Hour,diMSD, 0, False));
-				ComboBoxEvery.Text := MsToStr(FormSchedule.EveryXOverload, diMSD, -3, False);
+				ComboBoxEvery.Text := MsToStr(FormSchedule.EveryXOverload.Milliseconds, diMSD, -3, False);
 			end;
 			scLag:
 			begin
@@ -351,7 +352,7 @@ begin
 				ComboBoxEvery.Items.Add(MsToStr(Second, diMSD, 0, False));
 				ComboBoxEvery.Items.Add(MsToStr(Minute, diMSD, 0, False));
 				ComboBoxEvery.Items.Add(MsToStr(Hour, diMSD, 0, False));
-				ComboBoxEvery.Text := MsToStr(FormSchedule.EveryXOverload, diMSD, -3, False);
+				ComboBoxEvery.Text := MsToStr(FormSchedule.EveryXOverload.Milliseconds, diMSD, -3, False);
 			end;
 			end;
 		finally
@@ -414,15 +415,22 @@ begin
 end;
 
 procedure TfSchedule.ComboBoxEveryChange(Sender: TObject);
+var
+  MinimalValue: TTimeSpan;
+  DefaultValue: TTimeSpan;
+  MaximalValue: TTimeSpan;
 begin
+  MinimalValue.Ticks := 0;
+  DefaultValue.Minutes := 1;
+  MaximalValue.Days := 1;
 	try
 		case FormSchedule.ScheduleType of
 		scDaily: FormSchedule.EveryXDay := StrToValI(ComboBoxEvery.Text, True, 1, 1, High(FormSchedule.EveryXDay), 1);
 		scWeekly: FormSchedule.EveryXWeek := StrToValI(ComboBoxEvery.Text, True, 1, 1, High(FormSchedule.EveryXWeek), 1);
 		scMonthly: FormSchedule.EveryXMonth := StrToValI(ComboBoxEvery.Text, True, 1, 1, UG(31), 1);
 		scYearly: FormSchedule.EveryXYear := StrToValI(ComboBoxEvery.Text, True, 1, 1, High(FormSchedule.EveryXYear), 1);
-		scWhenIdle: FormSchedule.EveryXIdle := StrToMs(ComboBoxEvery.Text, 0, Minute, MaxInt, True);
-		scWhenOverload: FormSchedule.EveryXOverload := StrToMs(ComboBoxEvery.Text, 0, Minute, MaxInt, True);
+		scWhenIdle: FormSchedule.EveryXIdle := StrToMs(ComboBoxEvery.Text, MinimalValue, DefaultValue, MaximalValue, True);
+		scWhenOverload: FormSchedule.EveryXOverload := StrToMs(ComboBoxEvery.Text, MinimalValue, DefaultValue, MaximalValue, True);
 		end;
 	finally
 		InitNextRun;

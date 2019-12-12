@@ -3,17 +3,26 @@ unit uGColor;
 interface
 
 uses
-	uParserMsg,
-
+  SysUtils,
+  Classes,
 	Types,
-{$IF defined(MSWINDOWS)}
-  Winapi.Windows,
   UITypes,
-{$ENDIF}
-  SysUtils, Classes, Graphics, Controls, Forms,
-	StdCtrls, ComCtrls, ExtCtrls, Menus, uGraph, uDButton,
-	uDLabel, ImgList, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,
-	uDWinControl, uNamedColors, uSxLabel, uSxColor, System.ImageList;
+  System.ImageList,
+
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+	Vcl.StdCtrls,
+  Vcl.ComCtrls,
+  Vcl.ExtCtrls,
+  Vcl.Menus,
+  Vcl.ImgList,
+
+  uGraph,
+  uDButton,
+	uParserMsg,
+	uDLabel, uDForm, uDBitmap, uDImage, uTypes, uMath, uColor, uDEdit,
+	uDWinControl, uNamedColors, uSxLabel, uSxColor;
 
 type
 	TOnApplyColor = procedure(Color: TColor);

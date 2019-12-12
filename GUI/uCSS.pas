@@ -3,8 +3,10 @@ unit uCSS;
 interface
 
 uses
-	uTypes, Graphics,
-	SysUtils;
+	SysUtils,
+  UITypes,
+
+	uTypes;
 
 function ColorToHTML(Color: TColor): string;
 

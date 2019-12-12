@@ -109,7 +109,12 @@ implementation
 uses
 	uDForm,
   Vcl.Forms,
-	Consts, SysUtils, ActnList, ImgList, Math, Types,
+	Vcl.Consts,
+  SysUtils,
+  Vcl.ActnList,
+  Vcl.ImgList,
+
+  Math, Types,
 	uGraph, uStrings, uColor, uMenus, uDrawStyle, uGlobalOptions,
 	uPictureFactory, uSounds, uOperatingSystem, uDWinControl;
 

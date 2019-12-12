@@ -4,7 +4,10 @@ interface
 
 uses
 	uTypes, uParserMsg,
-	SysUtils, Classes, Controls, StdCtrls;
+	SysUtils,
+  Classes,
+  Vcl.Controls,
+  Vcl.StdCtrls;
 
 type
 	TDEdit = class(TEdit) // TMemo cannot display whole line
@@ -32,8 +35,8 @@ procedure SetControlDesign(C: TComboBox; const WrongData: BG); overload;
 implementation
 
 uses
-	uColor,
-	Graphics;
+  UITypes,
+	uColor;
 
 procedure SetDesign(C: TComboBox; ParserMessages: TParserMessages);
 begin
@@ -72,14 +75,14 @@ begin
 	if WrongData then
 	begin
 //		TDEdit(C).Font.Style := [fsStrikeOut];
-		C.Font.Color := clGrayText; //clHighlightText;
-		C.Color := NegMonoColor(clGrayText);//clHotlight;
+		C.Font.Color := TColorRec.SysGrayText;
+		C.Color := NegMonoColor(TColorRec.SysGrayText);
 	end
 	else
 	begin
 //		TDEdit(C).Font.Style := [];
-		C.Font.Color := clWindowText;
-		C.Color := clWindow;
+		C.Font.Color := TColorRec.SysWindowText;
+		C.Color := TColorRec.SysWindow;
 	end;
 end;
 
@@ -88,14 +91,14 @@ begin
 	if WrongData then
 	begin
 //		TDEdit(C).Font.Style := [fsStrikeOut];
-		C.Font.Color := clGrayText;
-		C.Color := NegMonoColor(clGrayText);;
+		C.Font.Color := TColorRec.SysGrayText;
+		C.Color := NegMonoColor(TColorRec.SysGrayText);;
 	end
 	else
 	begin
 //		TDEdit(C).Font.Style := [];
-		C.Font.Color := clWindowText;
-		C.Color := clWindow;
+		C.Font.Color := TColorRec.SysWindowText;
+		C.Color := TColorRec.SysWindow;
 	end;
 end;
 

@@ -3,10 +3,10 @@ unit uFontCache;
 interface
 
 uses
-  Winapi.Windows,
+  Types,
   uTypes,
   SyncObjs,
-  
+
   uSxFont,
   uTextAlignment,
   uHashTable,

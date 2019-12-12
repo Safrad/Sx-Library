@@ -16,10 +16,11 @@ function VirtualKeyCodeToString(const AVirtualKeyCode: U2): string;
 implementation
 
 uses
-  uChar,
-  uUnicodeChar,
   SysUtils,
-  Winapi.Windows;
+  UITypes,
+
+  uChar,
+  uUnicodeChar;
 
 const
   scCommand = $1000;
@@ -318,51 +319,51 @@ end;
 function SingleKeyToUnicodeSymbol(const AVirtualKeyCode: U2): string;
 begin
   case AVirtualKeyCode and $ff of
-  VK_TAB: Result := TUnicodeChar.TabKey;
-  VK_BACK: Result := TUnicodeChar.BackspaceKey;
-  VK_RETURN: Result := TUnicodeChar.AlternativeEnterKey;
-  VK_VOLUME_UP: Result := TUnicodeChar.BeamedEightNotes + '+';
-  VK_VOLUME_DOWN: Result := TUnicodeChar.BeamedEightNotes + '-';
-  VK_LEFT: Result := CharLeftawardsArrow;
-  VK_UP: Result := CharUpawardsArrow;
-  VK_RIGHT: Result := CharRightawardsArrow;
-  VK_DOWN: Result := CharDownawardsArrow;
+  vkTAB: Result := TUnicodeChar.TabKey;
+  vkBack: Result := TUnicodeChar.BackspaceKey;
+  vkReturn: Result := TUnicodeChar.AlternativeEnterKey;
+  vkVolumeUp: Result := TUnicodeChar.BeamedEightNotes + '+';
+  vkVolumeDown: Result := TUnicodeChar.BeamedEightNotes + '-';
+  vkLeft: Result := CharLeftawardsArrow;
+  vkUp: Result := CharUpawardsArrow;
+  vkRight: Result := CharRightawardsArrow;
+  vkDown: Result := CharDownawardsArrow;
 
-  VK_SHIFT: Result := TUnicodeChar.ShiftKey;
-  VK_CONTROL: Result := TUnicodeChar.ControlKey;
-  VK_MENU: Result := TUnicodeChar.MenuKey; // Alt
+  vkShift: Result := TUnicodeChar.ShiftKey;
+  vkControl: Result := TUnicodeChar.ControlKey;
+  vkMenu: Result := TUnicodeChar.MenuKey; // Alt
 
-  VK_LSHIFT: Result := 'Left' + TUnicodeChar.ShiftKey;
-  VK_LCONTROL: Result := 'Left' + TUnicodeChar.ControlKey;
-  VK_LMENU: Result := 'Left' + TUnicodeChar.MenuKey;
-  VK_LWIN: Result := 'Left' + TUnicodeChar.WindowsLogoKey;
+  vkLShift: Result := 'Left' + TUnicodeChar.ShiftKey;
+  vkLControl: Result := 'Left' + TUnicodeChar.ControlKey;
+  vkLMenu: Result := 'Left' + TUnicodeChar.MenuKey;
+  vkLWin: Result := 'Left' + TUnicodeChar.WindowsLogoKey;
 
-  VK_RSHIFT: Result := 'Right' + TUnicodeChar.ShiftKey;
-  VK_RCONTROL: Result := 'Right' + TUnicodeChar.ControlKey;
-  VK_RMENU: Result := 'Right' + TUnicodeChar.MenuKey;
-  VK_RWIN: Result := 'Right' + TUnicodeChar.WindowsLogoKey;
+  vkRShift: Result := 'Right' + TUnicodeChar.ShiftKey;
+  vkRControl: Result := 'Right' + TUnicodeChar.ControlKey;
+  vkRMenu: Result := 'Right' + TUnicodeChar.MenuKey;
+  vkRWin: Result := 'Right' + TUnicodeChar.WindowsLogoKey;
 
-  VK_DELETE: Result := TUnicodeChar.DelKey;
-  VK_ESCAPE: Result := TUnicodeChar.EscapeKey;
-  VK_SPACE: Result := TUnicodeChar.SpaceKey;
-  VK_LBUTTON: Result := 'Left' + TUnicodeChar.Mouse;
-  VK_RBUTTON: Result := 'Right' + TUnicodeChar.Mouse;
-  VK_MBUTTON: Result := 'Middle' + TUnicodeChar.Mouse;
-  VK_XBUTTON1: Result := 'X1' + TUnicodeChar.Mouse;
-  VK_XBUTTON2: Result := 'X2' + TUnicodeChar.Mouse;
+  vkDelete: Result := TUnicodeChar.DelKey;
+  vkEscape: Result := TUnicodeChar.EscapeKey;
+  vkSpace: Result := TUnicodeChar.SpaceKey;
+  vkLButton: Result := 'Left' + TUnicodeChar.Mouse;
+  vkRButton: Result := 'Right' + TUnicodeChar.Mouse;
+  vkMButton: Result := 'Middle' + TUnicodeChar.Mouse;
+  vkXButton1: Result := 'X1' + TUnicodeChar.Mouse;
+  vkXButton2: Result := 'X2' + TUnicodeChar.Mouse;
 
-  VK_LAUNCH_MAIL: Result := TUnicodeChar.EMailKey;
-  VK_BROWSER_SEARCH: Result := TUnicodeChar.Search;
-  VK_MEDIA_STOP: Result := TUnicodeChar.Stop;
-  VK_MEDIA_NEXT_TRACK: Result := TUnicodeChar.Next;
-  VK_MEDIA_PREV_TRACK: Result := TUnicodeChar.Prev;
-  VK_MEDIA_PLAY_PAUSE: Result := TUnicodeChar.Play;
+  vkLaunchMail: Result := TUnicodeChar.EMailKey;
+  vkBrowserSearch: Result := TUnicodeChar.Search;
+  vkMediaStop: Result := TUnicodeChar.Stop;
+  vkMediaNextTrack: Result := TUnicodeChar.Next;
+  vkMediaPrevTrack: Result := TUnicodeChar.Prev;
+  vkMediaPlayPause: Result := TUnicodeChar.Play;
 
-  VK_SLEEP: Result := TUnicodeChar.LastQuarterMoon;
-  VK_BROWSER_REFRESH: Result := TUnicodeChar.Refresh;
-  VK_BROWSER_FAVORITES: Result := TUnicodeChar.Favorites;
+  vkSleep: Result := TUnicodeChar.LastQuarterMoon;
+  vkBrowserRefresh: Result := TUnicodeChar.Refresh;
+  vkBrowserFavorites: Result := TUnicodeChar.Favorites;
 
-  VK_CAPITAL: Result := TUnicodeChar.CapsLockKey;
+  vkCapital: Result := TUnicodeChar.CapsLockKey;
   else
     Result := SingleKeyToText(AVirtualKeyCode);
   end;

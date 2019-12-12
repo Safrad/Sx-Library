@@ -3,8 +3,18 @@ unit uMsgDlg;
 interface
 
 uses
-	Dialogs, SysUtils, Classes, Graphics, Controls, Forms, Consts,
-	ExtCtrls, StdCtrls, uDButton, ComCtrls, uDLabel,
+	SysUtils,
+  Classes,
+  Vcl.Dialogs,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.Consts,
+	Vcl.ExtCtrls,
+  Vcl.StdCtrls,
+  Vcl.ComCtrls,
+
+  uDButton, uDLabel,
 	uDForm, uDTimer, uDEdit,
   uOutputInfo, uTypes, uDWinControl, uDMemo;
 
@@ -840,7 +850,7 @@ begin
   case VisualOptions.DialogVisualStyle of
   dsWindowsXP:
   begin
-    Result := ModalResultToDlgBtn(Dialogs.MessageDlg(ReplaceParam(Text, Param), MessageLevelToMsgDlgType(MsgType), DlgButtonsToMsgDlgButtons(Buttons), 0));
+    Result := ModalResultToDlgBtn(Vcl.Dialogs.MessageDlg(ReplaceParam(Text, Param), MessageLevelToMsgDlgType(MsgType), DlgButtonsToMsgDlgButtons(Buttons), 0));
     Exit;
   end;
   end;

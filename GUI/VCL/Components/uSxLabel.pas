@@ -5,7 +5,8 @@ interface
 uses
 	SysUtils, Classes,
   Winapi.Messages,
-  Controls, StdCtrls;
+  Vcl.Controls,
+  Vcl.StdCtrls;
 
 type
 	TSxLabel = class(TLabel)
@@ -17,7 +18,9 @@ type
 implementation
 
 uses
-  Types, Graphics, UITypes,
+  Types,
+  UITypes,
+  Vcl.Graphics,
 
   uTypes;
 

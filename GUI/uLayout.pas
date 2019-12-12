@@ -4,7 +4,7 @@ interface
 
 uses
 	uTypes,
-	Controls;
+	Vcl.Controls;
 
 procedure LayoutControls(const Controls: array of TControl; const Width, Height: SG);
 

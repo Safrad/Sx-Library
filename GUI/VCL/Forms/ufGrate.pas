@@ -3,9 +3,15 @@ unit ufGrate;
 interface
 
 uses
+  SysUtils, Classes,
+	Winapi.Windows,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+	Vcl.ExtCtrls,
+  Vcl.Menus,
 	uTypes,
-	Winapi.Windows, SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, Menus, uDImage, uDForm;
+  uDImage, uDForm;
 
 type
 	TfGrate = class(TDForm)

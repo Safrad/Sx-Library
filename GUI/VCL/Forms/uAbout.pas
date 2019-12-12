@@ -3,10 +3,17 @@ unit uAbout;
 interface
 
 uses
+  SysUtils,
   Types,
+  Classes,
+	Vcl.Graphics,
+  Vcl.Forms,
+  Vcl.Controls,
+  Vcl.StdCtrls,
+	Vcl.ExtCtrls,
+
+  uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
 	uDForm, uTypes, uDBitmap,
-	SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
   uSxRandomGenerator,
 	uDWinControl;
 

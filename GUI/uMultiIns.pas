@@ -15,7 +15,7 @@ implementation
 
 uses
   Winapi.Windows,
-  Forms,
+  Vcl.Forms,
 
   uMsg,
   uStrings,

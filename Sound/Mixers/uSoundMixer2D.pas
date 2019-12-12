@@ -4,7 +4,6 @@ interface
 
 uses
   uTypes,
-  Windows,
   uSoundMixer;
 
 type

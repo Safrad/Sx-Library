@@ -3,7 +3,10 @@ unit TaskBarAPI;
 interface
 
 uses
-  Forms, Types, SysUtils, Controls, Graphics;
+  Types, SysUtils,
+  Vcl.Forms,
+  Vcl.Controls,
+  Vcl.Graphics;
 
 type
   TTaskBarProgressState = (tbpsNone, tbpsIndeterminate, tbpsNormal, tbpsError, tbpsPaused);

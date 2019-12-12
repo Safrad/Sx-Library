@@ -52,7 +52,7 @@ object fSchedule: TfSchedule
   object LabelEveryText: TLabel
     Left = 192
     Top = 120
-    Width = 9
+    Width = 12
     Height = 13
     Caption = '...'
     Transparent = True
@@ -186,7 +186,6 @@ object fSchedule: TfSchedule
     Width = 105
     Height = 21
     Date = 37709.000000000000000000
-    Time = 37709.000000000000000000
     Checked = False
     DateFormat = dfLong
     Kind = dtkTime
@@ -250,7 +249,6 @@ object fSchedule: TfSchedule
     Width = 193
     Height = 21
     Date = 37709.000000000000000000
-    Time = 37709.000000000000000000
     Checked = False
     DateFormat = dfLong
     TabOrder = 7
@@ -295,7 +293,6 @@ object fSchedule: TfSchedule
     Width = 105
     Height = 21
     Date = 37709.000000000000000000
-    Time = 37709.000000000000000000
     Checked = False
     DateFormat = dfLong
     Kind = dtkTime

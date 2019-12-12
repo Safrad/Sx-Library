@@ -19,8 +19,9 @@ type
 implementation
 
 uses
-	Forms, SysUtils,
-	uLog;
+  uMainLog,
+	Forms,
+  SysUtils;
 
 procedure TDViewLogger.Add(const Line: string; const LogType: TMessageLevel);
 var
@@ -36,8 +37,8 @@ begin
 	FDViewLog.DataChanged;
 //	FDViewLog.Repaint;
 //	Application.ProcessMessages;
-	if MainLogWrite(LogType) then
-    MainLogAdd(Line, LogType);
+	if MainLog.IsLoggerFor(LogType) then
+    MainLog.Add(Line, LogType);
 end;
 
 function TDViewLogger.Get(const Index: SG): PLogMessage;

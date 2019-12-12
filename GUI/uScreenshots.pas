@@ -3,12 +3,14 @@ unit uScreenshots;
 interface
 
 uses
-  uTypes,
-  uDBitmap,
-  Windows, Graphics,
   Types,
-  Controls,
-  Forms;
+  Winapi.Windows,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+
+  uTypes,
+  uDBitmap;
 
 type
   TScreenshots = class

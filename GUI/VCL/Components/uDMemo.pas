@@ -3,7 +3,8 @@ unit uDMemo;
 interface
 
 uses
-	Classes, StdCtrls;
+	Classes,
+  Vcl.StdCtrls;
 	
 type
 	TDMemo = class(TMemo)

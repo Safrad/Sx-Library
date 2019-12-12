@@ -3,11 +3,20 @@ unit uGetTime;
 interface
 
 uses
+  SysUtils,
+  Classes,
+	Winapi.Windows,
+  Vcl.Graphics,
+  Vcl.Forms,
+  Vcl.Controls,
+  Vcl.StdCtrls,
+	Vcl.ExtCtrls,
+  Vcl.ComCtrls,
+
 	uTypes,
   uParserMsg,
   uTimeSpan,
-	Winapi.Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-	ExtCtrls, ComCtrls, uDButton, uDLabel, uDForm, uDEdit, uDMemo;
+  uDButton, uDLabel, uDForm, uDEdit, uDMemo;
 
 type
 	TOnApplyTime = procedure(Value: TTimeSpan);

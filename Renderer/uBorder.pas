@@ -9,7 +9,6 @@ uses
   uTransformation,
   uClipping,
   UITypes,
-  Windows,
   uDrawStyle;
 
 type
@@ -37,7 +36,10 @@ type
 
 implementation
 
-{ TBar }
+uses
+  Types;
+
+{ TBorder }
 
 constructor TBorder.Create;
 begin

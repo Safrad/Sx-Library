@@ -3,14 +3,22 @@ unit ufTableForm;
 interface
 
 uses
+	SysUtils,
+  Classes,
+  Variants,
+  Winapi.Windows,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+	Vcl.Dialogs,
+  Vcl.Menus,
+  Vcl.ComCtrls,
+
 	uTypes,
   uIRow,
   uITable,
   uDForm,
-
-  Winapi.Windows,
-	SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	Dialogs, uDImage, uDView, Menus, uDWinControl, ComCtrls;
+  uDImage, uDView, uDWinControl;
 
 type
 	TRowAction = procedure(const ASelectedRows: TArrayOfBG) of object;
@@ -65,7 +73,7 @@ implementation
 
 {$R *.dfm}
 uses
-	ClipBrd,
+	Vcl.ClipBrd,
 
   uOutputInfo,
   uRow,

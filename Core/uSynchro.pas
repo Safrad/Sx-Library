@@ -49,7 +49,9 @@ type
 implementation
 
 uses
-	Windows,
+{$ifdef MSWINDOWS}
+	Winapi.Windows,
+{$endif}
 	SysUtils,
 	uFiles,
   uEIOException,
@@ -194,7 +196,7 @@ begin
   if DirectoryExists(Dest + SearchRec.Name) then
   begin
     ErrorCode := FindFirst(Dest + '*.*', faAnyFile, SearchRec);
-    while ErrorCode = NO_ERROR do
+    while ErrorCode = 0 do
     begin
       IsDir := (SearchRec.Attr and faDirectory) <> 0;
       if (not IsDir) or (not IsActualOrParentDirectoryName(SearchRec.Name)) then
@@ -218,14 +220,16 @@ begin
       ErrorCode := FindNext(SearchRec);
     end;
     SysUtils.FindClose(SearchRec);
+    {$ifdef MSWINDOWS}
     if ErrorCode <> ERROR_NO_MORE_FILES then
     begin
       raise EIOException.Create(Dest, ErrorCode);
     end;
+    {$endif}
   end;
 
 	ErrorCode := FindFirst(Source + '*.*', faAnyFile, SearchRec);
-	while ErrorCode = NO_ERROR do
+	while ErrorCode = 0 do
 	begin
 		IsDir := ((SearchRec.Attr and faDirectory) <> 0) and (SearchRec.Name <> '.') and (SearchRec.Name <> '..');
 		IsFile := (SearchRec.Attr and faDirectory) = 0;
@@ -282,18 +286,17 @@ begin
 			begin
 				if Copy then
 				begin
-					if ACalculateOnlyReport or uFiles.CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False) then
+					if not ACalculateOnlyReport then
+            uFiles.CopyFile(Source + SearchRec.Name, Dest + SearchRec.Name, False);
+          if Found then
           begin
-            if Found then
-            begin
-              Inc(FSynchroReport.FileReplaced);
-              Inc(FSynchroReport.FileReplacedData, SearchRec.Size);
-            end
-            else
-            begin
-              Inc(FSynchroReport.FileCopied);
-              Inc(FSynchroReport.FileCopiedData, SearchRec.Size);
-            end;
+            Inc(FSynchroReport.FileReplaced);
+            Inc(FSynchroReport.FileReplacedData, SearchRec.Size);
+          end
+          else
+          begin
+            Inc(FSynchroReport.FileCopied);
+            Inc(FSynchroReport.FileCopiedData, SearchRec.Size);
           end;
 				end
         else
@@ -306,10 +309,12 @@ begin
 		ErrorCode := FindNext(SearchRec);
 	end;
 	SysUtils.FindClose(SearchRec);
+  {$ifdef MSWINDOWS}
 	if ErrorCode <> ERROR_NO_MORE_FILES then
   begin
     raise EIOException.Create(Source, ErrorCode);
   end;
+  {$endif}
 
 	if FDeleteInexistingPathsInDestDir then
 	begin

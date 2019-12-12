@@ -8,11 +8,9 @@ uses
   uGraphicObject,
   uDBitmap,
   uSxFont,
-  Graphics,
   uTransformation,
   uClipping,
   UITypes,
-  Windows,
   uDrawStyle;
 
 type
@@ -39,6 +37,7 @@ type
 implementation
 
 uses
+  Types,
   uFontCache;
 
 { TText }

@@ -4,7 +4,8 @@ interface
 
 uses
 	uTypes,
-	Windows, Graphics;
+	Types,
+  Vcl.Graphics;
 
 type
 	TTextPos = class

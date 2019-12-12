@@ -3,9 +3,21 @@ unit uDLabel;
 interface
 
 uses
-	uTypes, uMath, uDWinControl,
-  SysUtils, Classes, Graphics, Controls, Forms,
-	ExtCtrls, StdCtrls, uGraph, uDBitmap, uDispl, uDrawStyle;
+  SysUtils,
+  Classes,
+  VCL.Graphics,
+  VCL.Controls,
+  VCL.Forms,
+	VCL.ExtCtrls,
+  VCL.StdCtrls,
+
+	uTypes,
+  uMath,
+  uDWinControl,
+  uGraph,
+  uDBitmap,
+  uDispl,
+  uDrawStyle;
 
 type
 	TDLabel = class(TDWinControl)

@@ -3,8 +3,11 @@ unit uVCLDictionary;
 interface
 
 uses
-  uDictionary,
-	Forms, Classes, Menus;
+  Classes,
+	VCL.Forms,
+  VCL.Menus,
+
+  uDictionary;
 
 type
 	TVCLDictionary = class(TDictionary)
@@ -19,11 +22,11 @@ implementation
 uses
   uTypes,
 
-  Controls,
-  StdCtrls,
-  ExtCtrls,
-  ComCtrls,
-  Buttons,
+  VCL.Controls,
+  VCL.StdCtrls,
+  VCL.ExtCtrls,
+  VCL.ComCtrls,
+  VCL.Buttons,
 
 	uDIniFile,
   uDLabel,

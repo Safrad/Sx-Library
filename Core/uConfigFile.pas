@@ -28,8 +28,8 @@ type
 implementation
 
 uses
-	SysUtils,
-  Windows;
+  uFiles,
+	SysUtils;
 
 { TConfigFile }
 
@@ -70,7 +70,7 @@ begin
   if not FModified then
     Exit;
   if FBackup then
-    CopyFile(PChar(FFileName), PChar(FFileName + '.bak'), False);
+    CopyFile(FFileName, FFileName + '.bak', False);
   SaveToFile;
   FModified := False;
 end;

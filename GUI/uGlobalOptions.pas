@@ -3,10 +3,11 @@ unit uGlobalOptions;
 interface
 
 uses
+  UITypes,
+
   uTypes,
   uOptions,
-  uStartup,
-  Graphics;
+  uStartup;
 
 type
 	TGlobalOption = (
@@ -29,7 +30,7 @@ var
 		(Typ: vsCheck; Default: 0),
 		(Typ: vsSpin; Default: 100; Minimum: 100; Maximum: 400),
 		(Typ: vsCheck; Default: 1),
-		(Typ: vsColor; Default: clBtnFace; Minimum: 0; Maximum: MaxInt)
+		(Typ: vsColor; Default: TColorRec.SysBtnFace; Minimum: 0; Maximum: MaxInt)
 {$if CompilerVersion >= 23}
 		, (Typ: vsFilename; DefaultStr: '')
 {$ifend}
@@ -49,7 +50,6 @@ implementation
 uses
   SysUtils,
   Classes,
-  Forms,
 
   uFiles,
   uDIniFile,
@@ -59,6 +59,7 @@ uses
   uMsg,
   uReg,
   // TODO
+  Vcl.Forms,
 {$if CompilerVersion >= 23}
   Vcl.Themes,
   Vcl.Styles,

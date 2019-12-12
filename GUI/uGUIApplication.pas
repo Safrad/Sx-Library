@@ -35,9 +35,9 @@ uses
   uTypes,
   uSwitchArgument,
 
-  Menus,
-  Forms,
-  ExtCtrls,
+  Vcl.Menus,
+  Vcl.Forms,
+  Vcl.ExtCtrls,
   Classes;
 
 type

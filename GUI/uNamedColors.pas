@@ -3,9 +3,10 @@ unit uNamedColors;
 interface
 
 uses
+  UITypes,
+
   uTypes,
-  uColor,
-  Graphics;
+  uColor;
 
 type
   TNamedColorEnum = (
@@ -194,7 +195,7 @@ const
     $FFFF7F50,
     $FF6495ED,
     $FFFFF8DC,
-    clCream,
+    TColorRec.Cream,
     $FFDC143C,
     $FF00FFFF,
     $FF00008B,

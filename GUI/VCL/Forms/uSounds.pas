@@ -6,8 +6,16 @@ uses
 	uTypes, uDForm, uSoundMixer,
 
   Types,
-	SysUtils, Variants, Classes, Graphics, Controls, Forms,
-	StdCtrls, uDButton, uDImage, uDView, uDLabel, ExtCtrls, Menus, Dialogs,
+	SysUtils, Variants, Classes,
+
+  Vcl.Controls,
+  Vcl.Forms,
+	Vcl.StdCtrls,
+  Vcl.ExtCtrls,
+  Vcl.Menus,
+  Vcl.Dialogs,
+
+  uDButton, uDImage, uDView, uDLabel,
 	uDWinControl;
 
 type
@@ -78,6 +86,8 @@ implementation
 {$R *.dfm}
 uses
   UITypes,
+  Vcl.Graphics,
+
   uWaveCommon,
   uWaveItem,
   uWave,
