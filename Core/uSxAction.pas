@@ -3,15 +3,20 @@ unit uSxAction;
 interface
 
 uses
+  Generics.Collections,
+
   uTypes,
   uMath,
   uDBitmap,
   Classes,
-  Contnrs,
   uDIniFile,
   uIntegerList;
 
 type
+  TSxAction = class;
+
+  TSxActionList = TObjectList<TSxAction>;
+
   TSxAction = class
   private
     FClickCount: SG;
@@ -20,7 +25,7 @@ type
     FName: string;
     FOnExecute: TNotifyEvent;
 
-    FItems: TObjectList; // Childs
+    FItems: TSxActionList; // Childs
     FParent: TSxAction;
     FActiveChild: TSxAction;
     function GetCount: Integer;
@@ -47,7 +52,7 @@ type
 
     property Name: string read FName write FName;
     property ShortCuts: TIntegerList read FShortCuts write FShortCuts;
-    property Items: TObjectList read FItems;
+    property Items: TSxActionList read FItems;
     property Count: Integer read GetCount;
     property OnExecute: TNotifyEvent read FOnExecute write FOnExecute;
     property ClickCountWithChildren: SG read GetClickCountWithChildren;
@@ -82,7 +87,7 @@ end;
 
 constructor TSxAction.Create;
 begin
-  FItems := TObjectList.Create;
+  FItems := TSxActionList.Create;
   FItems.OwnsObjects := True;
 
   FShortCuts := TIntegerList.Create;
