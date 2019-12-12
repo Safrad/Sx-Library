@@ -25,7 +25,7 @@ implementation
 
 uses
   SysUtils,
-
+  Classes,
   uMsg;
 
 { TShellApplicationThread }
