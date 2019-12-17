@@ -19,28 +19,6 @@ uses
   uTextFile,
   uBackup;
 
-var
-	// Directories
-	StartDir, // Actual Dir
-	WorkDir, // EXE file, data files (Read only)
-	GraphDir, // (Read only)
-	SoundsDir, // (Read only)
-	DataDir, // Input data (Read only)
-	SysDir,
-	WinDir, // Shared configuration files (Read and Write)
-	ProgramFilesDir,
-	UserProfileDir,
-	AppDataDir, // User specific configuration files (Ini, Autosaves, Logs) (Read and Write)
-	LocalAppDataDir,
-  CompanyAppDataDir,
-  CompanyLocalAppDataDir,
-//	HomeDir, // User documnets (Read and Write)
-	CommonAppDataDir, // Application Data
-  CommonLocalAppDataDir: string; // Local Application Data
-	ExeFileName: TFileName;
-  ModuleFileName: TFileName;
-  ExeParameters: string;
-
 type
 {$ifndef MSWINDOWS}
   TFileTime = TDateTime;
@@ -131,7 +109,6 @@ function TempFileName(const AFileName: TFileName): TFileName;
 procedure ReplaceIfChanged(const AOriginalFileName, ATempFileName: TFileName); overload;
 procedure ReplaceIfChanged(const ATempFileName: TFileName); overload;
 function GetModuleFileNameFunc(const AHandle: THandle): string;
-procedure InitPaths;
 
 function DirectoryExistsEx(const ADirectoryName: string): BG;
 procedure CheckDirectory(const ADirectoryName: string);
@@ -183,7 +160,9 @@ uses
   uCharset,
 	uOutputFormat,
   uMath,
-  uMainLog;
+  uMainLog,
+
+  uSystemPaths;
 
 function SplitCommandLine(ASource: string): TStringPair;
 var
@@ -227,121 +206,25 @@ begin
 	SetLength(Result, NewLength);
 end;
 
-procedure InitPaths;
-var
-{$ifdef MSWINDOWS}
-	NewLength: SG;
-  CommandLine: string;
-{$endif}
-	i: SG;
-	CommandLinePair: TStringPair;
-  Suffix, CompanySuffix: string;
-begin
-	if ExeFileName <> '' then Exit;
-
-	GetDir(0, StartDir);
-	CorrectDir(StartDir);
-
-	// Remove Parameters
-{$ifdef MSWINDOWS}
-  CommandLine := GetCommandLine;
-	CommandLinePair := SplitCommandLine(CommandLine);
-{$else}
-  CommandLinePair.Name := ParamStr(0);
-  for i := 1 to ParamCount do
-    CommandLinePair.Value := CommandLinePair.Value + ParamStr(i);
-{$endif}
-  ExeFileName := CommandLinePair.Name;
-  ModuleFileName := GetModuleFileNameFunc(HInstance);
-
-	WorkDir := '';
-  // Split ExeFileName to WorkDir and InternalName
-  for i := Length(ModuleFileName) downto 0 do
-  begin
-    if i = 0 then
-    begin
-      Break;
-    end;
-    if (ModuleFileName[i] = PathDelim) then
-    begin
-      WorkDir := Copy(ModuleFileName, 1, i);
-      Break;
-    end;
-  end;
-	if WorkDir = '' then
-    WorkDir := StartDir;
-	GraphDir := WorkDir + 'Graphics' + PathDelim;
-	SoundsDir := WorkDir + 'Sounds' + PathDelim;
-	DataDir := WorkDir + 'Data' + PathDelim;
-
-{$ifdef MSWINDOWS}
-	SetLength(SysDir, MAX_PATH);
-	NewLength := GetSystemDirectory(PChar(SysDir), MAX_PATH);
-	SetLength(SysDir, NewLength);
-	CorrectDir(SysDir);
-
-	SetLength(WinDir, MAX_PATH);
-	NewLength := GetWindowsDirectory(PChar(WinDir), MAX_PATH);
-	SetLength(WinDir, NewLength);
-	CorrectDir(WinDir);
-{$endif}
-
-	ProgramFilesDir := GetEnvironmentVariable('ProgramFiles');
-	if ProgramFilesDir = '' then
-    ProgramFilesDir := 'C' + DriveDelim + PathDelim + 'Program Files' + PathDelim;
-	CorrectDir(ProgramFilesDir);
-
-	CommonAppDataDir := GetEnvironmentVariable( 'APPDATA');
-	if CommonAppDataDir = '' then
-    CommonAppDataDir := WinDir + 'Application Data' + PathDelim;
-	CorrectDir(CommonAppDataDir);
-
-  CompanySuffix := '';
-  if GetProjectInfo(piCompanyName) <> '' then
-    CompanySuffix := CompanySuffix + GetProjectInfo(piCompanyName) + PathDelim;
-  CompanyAppDataDir := CommonAppDataDir + CompanySuffix;
-  Suffix := CompanySuffix + GetProjectInfo(piInternalName) + PathDelim;
-
-	AppDataDir := CommonAppDataDir + Suffix;
-
-	UserProfileDir := StartupEnvironment.FindValue('UserProfile');
-	CorrectDir(UserProfileDir);
-	CommonLocalAppDataDir := StartupEnvironment.FindValue('localappdata');
-	if CommonLocalAppDataDir = '' then
-	begin
-		CommonLocalAppDataDir := UserProfileDir;
-		CorrectDir(CommonLocalAppDataDir);
-		CommonLocalAppDataDir := CommonLocalAppDataDir + 'AppData\Local\';
-		if not DirectoryExists(CommonLocalAppDataDir) then
-			CommonLocalAppDataDir := CommonLocalAppDataDir + 'Local Settings\Application Data\' // Used for Windows XP w/o Service Pack
-		else
-			CommonLocalAppDataDir := CommonLocalAppDataDir + 'AppData\Local\';
-	end
-  else
-		CorrectDir(CommonLocalAppDataDir);
-	CompanyLocalAppDataDir := CommonLocalAppDataDir + CompanySuffix;
-	LocalAppDataDir := CommonLocalAppDataDir + Suffix;
-end;
-
 function RemoveWorkDir(const Dir: string): string;
 var
 	i: SG;
 begin
 	Result := Dir;
-	if Length(WorkDir) <= Length(Dir) then
+	if Length(SystemPaths.WorkDir) <= Length(Dir) then
 	begin
-		for i := 1 to Length(WorkDir) do
+		for i := 1 to Length(SystemPaths.WorkDir) do
 		begin
-			if UpCase(Dir[i]) <> UpCase(WorkDir[i]) then
+			if UpCase(Dir[i]) <> UpCase(SystemPaths.WorkDir[i]) then
 			begin
 				Exit;
 			end;
 		end;
-		for i := 1 to Length(Dir) - Length(WorkDir) do
+		for i := 1 to Length(Dir) - Length(SystemPaths.WorkDir) do
 		begin
-			Result[i] := Dir[i + Length(WorkDir)];
+			Result[i] := Dir[i + Length(SystemPaths.WorkDir)];
 		end;
-		SetLength(Result, Length(Dir) - Length(WorkDir));
+		SetLength(Result, Length(Dir) - Length(SystemPaths.WorkDir));
 	end;
 end;
 
@@ -390,22 +273,22 @@ end;
 
 function ExpandFile(const AFileName: TFileName): string;
 begin
-	Result := ExpandCustomDir(AFileName, WorkDir);
+	Result := ExpandCustomDir(AFileName, SystemPaths.WorkDir);
 end;
 
 function ExpandFileCmd(const AFileName: TFileName): string;
 begin
-	Result := ExpandCustomDir(AFileName, StartDir);
+	Result := ExpandCustomDir(AFileName, SystemPaths.StartDir);
 end;
 
 function ExpandDir(const ADirectoryPath: string): string;
 begin
-	Result := ExpandCustomDir(ADirectoryPath, WorkDir);
+	Result := ExpandCustomDir(ADirectoryPath, SystemPaths.WorkDir);
 end;
 
 function ExpandDirCmd(const ADirectoryPath: string): string;
 begin
-	Result := CorrectDirF(ExpandCustomDir(ADirectoryPath, StartDir));
+	Result := CorrectDirF(ExpandCustomDir(ADirectoryPath, SystemPaths.StartDir));
 end;
 
 function DelFileExt(const AFileName: string): string;
@@ -2092,8 +1975,4 @@ begin
     Result := False;
 end;
 
-initialization
-{$IFNDEF NoInitialization}
-	InitPaths;
-{$ENDIF NoInitialization}
 end.

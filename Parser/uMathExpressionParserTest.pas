@@ -39,7 +39,7 @@ uses
   uMathExpressionParser, uParserMsg,
   uExpressionTreeEvaluator,
   uSxStringParser,
-	uFiles, uCSVFile, uInputFormat, uOutputFormat, uVector;
+	uSystemPaths, uCSVFile, uInputFormat, uOutputFormat, uVector;
 
 { TMathExpressionParserTest }
 
@@ -63,7 +63,7 @@ begin
 	CSVFile := TCSVFile.Create;
 	try
     CSVFile.SetColumnNames(['Expression', 'Result', 'Errors']);
-		CSVFile.Open(DataDir + 'Parser\' + AFileName);
+		CSVFile.Open(SystemPaths.DataDir + 'Parser\' + AFileName);
     while not CSVFile.EOF do
     begin
       Line := CSVFile.ReadLine;

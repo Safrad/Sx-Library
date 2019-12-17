@@ -71,6 +71,7 @@ uses
   uMath,
   uDictionary,
   uFiles,
+  uSystemPaths,
   uRawFile,
   uTextFile;
 
@@ -225,6 +226,6 @@ begin
 end;
 
 initialization
-	MessagesLogDir := LocalAppDataDir + 'MessagesLog' + PathDelim;
-	CreateDirEx(MessagesLogDir);
+	MessagesLogDir := SystemPaths.LocalAppDataDir + 'MessagesLog' + PathDelim;
+	CreateDirsEx(MessagesLogDir);
 end.

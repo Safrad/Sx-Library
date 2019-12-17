@@ -18,6 +18,7 @@ implementation
 
 uses
   uTypes,
+  uSystemPaths,
   uFiles,
   uFolder,
   uWave;
@@ -43,7 +44,7 @@ var
 begin
   Folder := TFolder.Create;
   try
-    Folder.Path := DataDir + 'Wave\';
+    Folder.Path := SystemPaths.DataDir + 'Wave\';
     Folder.Read;
 
     for FileItem in Folder.Files do

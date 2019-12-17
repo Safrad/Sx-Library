@@ -92,7 +92,7 @@ uses
   uWaveItem,
   uWave,
   uPlaySound,
-	uData, uFiles, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings, uLayout,
+	uData, uFiles, uSystemPaths, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings, uLayout,
 	uDictionary;
 
 type
@@ -378,7 +378,7 @@ var
 	P: PSound;
 begin
 	P := Sounds.Get(SoundKind);
-  Result := FileExists(WorkDir + P.FileName);
+  Result := FileExists(SystemPaths.WorkDir + P.FileName);
 end;
 
 procedure UnuseSounds;

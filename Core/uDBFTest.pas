@@ -17,15 +17,15 @@ type
 implementation
 
 uses
-  uFiles,
+  uSystemPaths,
   uDBF;
 
 { TDBFTest }
 
 procedure TDBFTest.Test;
 begin
-  TestFile(DataDir + 'DBF\Cz-1250.dbf');
-  TestFile(DataDir + 'DBF\Cz-852.dbf');
+  TestFile(SystemPaths.DataDir + 'DBF\Cz-1250.dbf');
+  TestFile(SystemPaths.DataDir + 'DBF\Cz-852.dbf');
 end;
 
 procedure TDBFTest.TestFile(const AFileName: TFileName);

@@ -89,6 +89,7 @@ uses
   uMsg,
   uChar,
   uFiles,
+  uSystemPaths,
   uDIniFile,
   uDictionary,
   uMainTimer;
@@ -194,7 +195,7 @@ procedure TCommonApplication.InitializeLocalMainIni;
 var
   LocalMainIniFileName: TFileName;
 begin
-  LocalMainIniFileName := LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
+  LocalMainIniFileName := SystemPaths.LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
   CreateDirsEx(ExtractFilePath(LocalMainIniFileName)); // InitializeLog creates the same directory, but can be overriden
   LocalMainIni := TDIniFile.Create(LocalMainIniFileName);
 end;
@@ -203,7 +204,7 @@ procedure TCommonApplication.InitializeMainIni;
 var
   MainIniFileName: TFileName;
 begin
-  MainIniFileName := AppDataDir + GetProjectInfo(piInternalName) + '.ini';
+  MainIniFileName := SystemPaths.AppDataDir + GetProjectInfo(piInternalName) + '.ini';
   CreateDirsEx(ExtractFilePath(MainIniFileName));
   MainIni := TDIniFile.Create(MainIniFileName);
 end;
@@ -234,8 +235,8 @@ begin
   begin
     ExternalApplication := TExternalApplication.Create;
     try
-      ExternalApplication.FileName := ExeFileName;
-      ExternalApplication.Parameters := ExeParameters;
+      ExternalApplication.FileName := SystemPaths.ExeFileName;
+      ExternalApplication.Parameters := SystemPaths.ExeParameters;
       ExternalApplication.CurrentDirectory := GetCurrentDir;
       ExternalApplication.KeepRunning := True;
       ExternalApplication.Execute;

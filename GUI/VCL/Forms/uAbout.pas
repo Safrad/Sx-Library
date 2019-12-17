@@ -83,12 +83,12 @@ uses
   uMainTimer,
 	uAPI, uHTML, uDictionary,
 	uProjectInfo,
-	uGraph, uDIniFile, ufSysInfo, uFiles, uFileStatistics, uMsg, uData, uWave, uColor, uDrawStyle,
+	uGraph, uDIniFile, ufSysInfo, uSystemPaths, uFileStatistics, uMsg, uData, uWave, uColor, uDrawStyle,
 	uStrings, uMath, uSystem, uInputFormat, uOutputFormat;
 
 function GetLocalHomepage: TFileName;
 begin
-	Result := WorkDir + 'ReadMe' + PathDelim + IndexFile;
+	Result := SystemPaths.WorkDir + 'ReadMe' + PathDelim + IndexFile;
 end;
 
 procedure OpenLocalHomepage;
@@ -129,7 +129,7 @@ begin
 	Result := '';
 	for i := 0 to Length(PrefferedExt) - 1 do
 	begin
-		FileName := GraphDir + Base + '.' + PrefferedExt[i];
+		FileName := SystemPaths.GraphDir + Base + '.' + PrefferedExt[i];
 		if FileExists(FileName) then
 		begin
 			Result := FileName;

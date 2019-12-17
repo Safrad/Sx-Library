@@ -19,7 +19,7 @@ implementation
 
 uses
 	Winapi.Windows, System.Win.Registry,
-	uProjectInfo, uFiles, uStrings;
+	uProjectInfo, uSystemPaths, uStrings;
 
 const
 	RunKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
@@ -41,7 +41,7 @@ begin
 			end;
 			ocCreate:
 			begin
-				Reg.WriteString(GetProjectInfo(piInternalName), JoinFileNameAndParameters(ExeFileName, AParameters));
+				Reg.WriteString(GetProjectInfo(piInternalName), JoinFileNameAndParameters(SystemPaths.ExeFileName, AParameters));
 				Result := True;
 			end;
 			ocRemove:

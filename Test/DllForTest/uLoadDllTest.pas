@@ -16,6 +16,7 @@ implementation
 uses
   Winapi.Windows,
   uFiles,
+  uSystemPaths,
   uRawFile,
   uTextFile,
   uPlugin,
@@ -110,7 +111,7 @@ var
 begin
   Plugin := TPlugin.Create;
   try
-    Plugin.FileName := WorkDir + 'DllForTest\DllForTest.dll';
+    Plugin.FileName := SystemPaths.WorkDir + 'DllForTest\DllForTest.dll';
     for i := 0 to 9 do
     begin
       Plugin.Unload;
@@ -130,7 +131,7 @@ begin
 //  RunInNewThread(Proc);
   Plugin := TPlugin.Create;
   try
-    Plugin.FileName := WorkDir + 'DllForTest\DllForTest.dll';
+    Plugin.FileName := SystemPaths.WorkDir + 'DllForTest\DllForTest.dll';
     for i := 0 to 9 do
     begin
       Plugin.Unload;

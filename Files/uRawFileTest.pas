@@ -16,7 +16,7 @@ implementation
 
 uses
   uRawFile,
-  uFiles,
+  uSystemPaths,
   uMath,
   uAlignedMemory,
   uCPU;
@@ -41,7 +41,7 @@ begin
   RawFile := TRawFile.Create;
   try
     RawFile.UseBuffer := False;
-    RawFile.FileName := DataDir + 'Example Scalable Vector Graphics\Medium-Poly-Rose-Breasted-Groesbeck.svg';
+    RawFile.FileName := SystemPaths.DataDir + 'Example Scalable Vector Graphics\Medium-Poly-Rose-Breasted-Groesbeck.svg';
     RawFile.FileMode := fmReadOnly;
 
     RawFile.Open;

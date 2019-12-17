@@ -20,6 +20,7 @@ uses
   Winapi.Windows,
 
   uFiles,
+  uSystemPaths,
   uFileCharset,
   uTemporaryDirectory,
 
@@ -104,7 +105,7 @@ begin
   StartupEnvironment.ReloadVariables;
   StartupEnvironment.Add('testVariable', 'test');
 
-  SourceFileName := DataDir + 'StartupEnvironment\Test.txt';
+  SourceFileName := SystemPaths.DataDir + 'StartupEnvironment\Test.txt';
 
   Charset := ReadStringFromFileEx(SourceFileName, Data);
   Check(Charset = fcAnsi);
@@ -115,7 +116,7 @@ begin
     DeleteFileEx(TargetFileName);
   WriteStringToFile(TargetFileName, ReplacedText, False, Charset);
 
-  ReferentialFileName := DataDir + 'StartupEnvironment\Reference.txt';
+  ReferentialFileName := SystemPaths.DataDir + 'StartupEnvironment\Reference.txt';
   Check(SameFiles(TargetFileName, ReferentialFileName) = True, 'Files are different!');
 end;
 

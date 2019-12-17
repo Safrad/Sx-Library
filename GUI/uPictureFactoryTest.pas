@@ -15,7 +15,7 @@ implementation
 uses
   uPictureFactory,
   uDBitmap,
-  uFiles;
+  uSystemPaths;
 
 { TPictureFactoryTest }
 
@@ -26,7 +26,7 @@ var
 begin
   PictureFactory := TPictureFactory.Create;
   try
-    PictureFactory.Paths.Add(GraphDir);
+    PictureFactory.Paths.Add(SystemPaths.GraphDir);
     Bmp := PictureFactory.GetBitmap('my');
     Check(Bmp = nil);
     Bmp := PictureFactory.GetBitmap('my');

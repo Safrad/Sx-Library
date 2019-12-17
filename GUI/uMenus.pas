@@ -49,7 +49,7 @@ uses
   Vcl.Controls,
   SysUtils, Math,
 	uDButton, uStrings, uColor, uDictionary, uSounds, uDrawStyle, uGlobalOptions,
-	uGraph, uDBitmap, uFiles, uMsg, uMsgDlg, uVirtualKeyCode, uMath,
+	uGraph, uDBitmap, uSystemPaths, uMsg, uMsgDlg, uVirtualKeyCode, uMath,
   uOutputFormat,
   uDForm;
 
@@ -95,10 +95,10 @@ var
 	FileName: TFileName;
 	Bmp: TDBitmap;
 begin
-	FileName := TryFindIcon(Name, GraphDir + 'Images' + PathDelim);
+	FileName := TryFindIcon(Name, SystemPaths.GraphDir + 'Images' + PathDelim);
 	if FileName <> '' then
 	begin
-		FileName := GraphDir + 'Images' + PathDelim + FileName;
+		FileName := SystemPaths.GraphDir + 'Images' + PathDelim + FileName;
 		if FileExists(FileName) then
 		begin
 			Bmp := TDBitmap.Create;

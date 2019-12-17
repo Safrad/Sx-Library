@@ -32,7 +32,7 @@ uses
   uTypes,
   uStartupWindowState,
   uStrings,
-  uFiles,
+  uSystemPaths,
   uEIOException,
   uMainTimer,
   uTimeSpan,
@@ -46,7 +46,7 @@ var
 begin
   AExternalApplication.FileName := 'wmic';
   AExternalApplication.Parameters := 'cpu get name';
-  AExternalApplication.CurrentDirectory := LocalAppDataDir;
+  AExternalApplication.CurrentDirectory := SystemPaths.LocalAppDataDir;
   StartupWindowState.WindowState := hwsHidden;
   StartupWindowState.Active := False;
   AExternalApplication.StartupWindowState := StartupWindowState;

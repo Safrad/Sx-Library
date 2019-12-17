@@ -27,13 +27,14 @@ uses
   uTypes,
   uOperatingSystem,
   uFiles,
+  uSystemPaths,
   uProjectInfo;
 
 procedure InitializeMainLog;
 var
   MainLogFileName: TFileName;
 begin
-	MainLogFileName := LocalAppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
+	MainLogFileName := SystemPaths.LocalAppDataDir + 'Log' + PathDelim + GetProjectInfo(piInternalName) + '.log';
 	CreateDirsEx(ExtractFilePath(MainLogFileName));
 	MainLog := TMainLog.Create(MainLogFileName);
 end;

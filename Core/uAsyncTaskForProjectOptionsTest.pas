@@ -15,7 +15,7 @@ implementation
 
 uses
   uTypes,
-  uFiles,
+  uSystemPaths,
   uProjectOptions;
 
 { TAsyncTaskForProjectOptionsTest }
@@ -31,7 +31,7 @@ begin
   begin
     ProjectOptions := TProjectOptions.Create;
     try
-      ProjectOptions.RWBDSProj(DataDir + 'Test.bdsproj', False);
+      ProjectOptions.RWBDSProj(SystemPaths.DataDir + 'Test.bdsproj', False);
     finally
       ProjectOptions.Free;
     end;

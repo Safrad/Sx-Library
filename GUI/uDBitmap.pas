@@ -403,7 +403,7 @@ uses
 	Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage,
 	GraphicEx,
   Vcl.ClipBrd,
-	uGraph, uMsg, uFiles, uRawFile, uStrings, uFind, uSystem;
+	uGraph, uMsg, uFiles, uSystemPaths, uRawFile, uStrings, uFind, uSystem;
 
 {$ifdef CPUX64}
 function SameColor(const P: PPixel; const C: TRGBA): BG; inline;
@@ -9354,7 +9354,7 @@ begin
 		FBitmapF.SetSize(0, 0, clNone);
 		for i := 0 to Length(PrefferedExt) - 1 do
 		begin
-			FileName := GraphDir + 'Form' + '.' + PrefferedExt[i];
+			FileName := SystemPaths.GraphDir + 'Form' + '.' + PrefferedExt[i];
 			if FileExists(FileName) then
 			begin
 				FBitmapF.LoadFromFile(FileName);

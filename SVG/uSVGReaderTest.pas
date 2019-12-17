@@ -21,13 +21,13 @@ implementation
 
 uses
   uFolder,
-  uFiles;
+  uSystemPaths;
 
 { TSVGReaderTest }
 
 procedure TSVGReaderTest.Test;
 begin
-  TestReadDirectory(DataDir + 'Example Scalable Vector Graphics\');
+  TestReadDirectory(SystemPaths.DataDir + 'Example Scalable Vector Graphics\');
 end;
 
 procedure TSVGReaderTest.TestReadDirectory(const ADir: string);

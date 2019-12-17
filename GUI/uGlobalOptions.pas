@@ -52,6 +52,7 @@ uses
   Classes,
 
   uFiles,
+  uSystemPaths,
   uDIniFile,
   uStrings,
 
@@ -84,7 +85,7 @@ begin
 	if IsDebug then
 		Result := 'C:\Projects\Safrad\' + '_common' + PathDelim + 'Visual Styles' + PathDelim
 	else
-		Result := WorkDir + 'Visual Styles' + PathDelim;
+		Result := SystemPaths.WorkDir + 'Visual Styles' + PathDelim;
 end;
 {$ifend}
 
@@ -107,7 +108,7 @@ begin
 		LinkFileName := ShellFolder('Common Desktop', True) + GetProjectInfo(piProductName) + '.lnk';
 	goQuickLaunchIcon:
 	begin
-		LinkFileName := CommonAppDataDir + PathDelim + 'Microsoft' + PathDelim + 'Internet Explorer' +
+		LinkFileName := SystemPaths.CommonAppDataDir + PathDelim + 'Microsoft' + PathDelim + 'Internet Explorer' +
 			PathDelim + 'Quick Launch' + PathDelim;
 		LinkFileName2 := LinkFileName + 'User Pinned\TaskBar\';
 		if DirectoryExists(LinkFileName2) then
@@ -120,8 +121,8 @@ begin
 		Result := FileExists(LinkFileName);
 	ocCreate:
 		begin
-			CreateLink(LinkFileName, ExeFileName, '', WorkDir, 0, GetProjectInfo(piFileDescription),
-				ExeFileName, 0);
+			CreateLink(LinkFileName, SystemPaths.ExeFileName, '', SystemPaths.WorkDir, 0, GetProjectInfo(piFileDescription),
+				SystemPaths.ExeFileName, 0);
 		end;
 	ocRemove:
 		begin

@@ -16,7 +16,7 @@ implementation
 
 uses
   uSplitFile,
-  uFiles,
+  uSystemPaths,
   uTemporaryDirectory,
   SysUtils;
 
@@ -29,7 +29,7 @@ var
   TargetPath: string;
 begin
   TargetPath := TemporaryDirectory.ProcessTempDir;
-  SplitFile(DataDir + 'Text3.txt', TargetPath, MaximalFileSize, True);
+  SplitFile(SystemPaths.DataDir + 'Text3.txt', TargetPath, MaximalFileSize, True);
   CheckTrue(not FileExists(TargetPath + 'Text3.000'));
   CheckTrue(FileExists(TargetPath + 'Text3.001'));
   CheckTrue(FileExists(TargetPath + 'Text3.002'));

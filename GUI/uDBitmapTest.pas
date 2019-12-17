@@ -16,7 +16,7 @@ implementation
 
 uses
   uDBitmap,
-  uFiles;
+  uSystemPaths;
 
 { TDBitmapTest }
 
@@ -26,7 +26,7 @@ var
 begin
 	B := TDBitmap.Create;
   try
-    B.LoadFromFile(DataDir + 'Example Raster Graphics\Abalone.png');
+    B.LoadFromFile(SystemPaths.DataDir + 'Example Raster Graphics\Abalone.png');
     B.ResizeUp(600, 800);
 	finally
   	B.Free;

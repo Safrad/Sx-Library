@@ -48,7 +48,8 @@ uses
   uMainLog,
   uMath,
   uOperatingSystem,
-  uFiles;
+  uFiles,
+  uSystemPaths;
 
 type
   TCPUIDB = record
@@ -151,7 +152,7 @@ begin
     try
       ExternalApplication.FileName := 'wmic';
       ExternalApplication.Parameters := 'cpu get name';
-      ExternalApplication.CurrentDirectory := LocalAppDataDir;
+      ExternalApplication.CurrentDirectory := SystemPaths.LocalAppDataDir;
       StartupWindowState.WindowState := hwsHidden;
       StartupWindowState.Active := False;
       ExternalApplication.StartupWindowState := StartupWindowState;

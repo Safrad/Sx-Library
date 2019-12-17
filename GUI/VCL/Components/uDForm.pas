@@ -101,6 +101,7 @@ uses
   uDictionary,
   uVCLDictionary,
 	uFiles,
+  uSystemPaths,
   OpenGL12,
   uColor,
   uProjectInfo,
@@ -447,7 +448,7 @@ begin
 				FileName := GetProjectInfo(piInternalName);
 		end;
 
-		FileName := GraphDir + FileName + '.ico';
+		FileName := SystemPaths.GraphDir + FileName + '.ico';
 		if FileExists(FileName) then
 			Icon.LoadFromFile(FileName);
 	end

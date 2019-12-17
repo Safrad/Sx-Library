@@ -15,8 +15,9 @@ implementation
 
 uses
   SysUtils,
-  
+
   uFiles,
+  uSystemPaths,
   uStrings,
   uCSVFile,
   uDelphi;
@@ -42,7 +43,7 @@ begin
       GetDelphiRegistryName(DelphiVersion) + CSVSep +
       IntToStr(GetDelphiCompilerVersion(DelphiVersion)) +
       FileSep;
-  WriteStringToFile(LocalAppDataDir + 'DelphiVersions.csv', s, False);
+  WriteStringToFile(SystemPaths.LocalAppDataDir + 'DelphiVersions.csv', s, False);
 end;
 
 procedure TDelphiTest.TestPackageVersion;

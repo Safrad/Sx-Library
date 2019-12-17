@@ -21,6 +21,7 @@ implementation
 
 uses
   uFiles,
+  uSystemPaths,
   uCSVFile;
 
 procedure TCSVFileTest.CorrectDataTest;
@@ -29,7 +30,7 @@ var
   CSVFile: TCSVFile;
   Line: TArrayOfString;
 begin
-  FileName := DataDir + 'CSV' + PathDelim + 'Correct.csv';
+  FileName := SystemPaths.DataDir + 'CSV' + PathDelim + 'Correct.csv';
   CSVFile := TCSVFile.Create;
   CSVFile.SetColumnNames(['Length', 'Text']);
   try
@@ -73,13 +74,13 @@ var
   FileName: TFileName;
   CSVFile: TCSVFile;
 begin
-  FileName := DataDir + 'CSV' + PathDelim + 'Empty.csv';
+  FileName := SystemPaths.DataDir + 'CSV' + PathDelim + 'Empty.csv';
   CSVFile := TCSVFile.Create;
   CSVFile.SetColumnNames(['Length', 'Text']);
   try
     CSVFile.Open(FileName);
-    CheckTrue(CSVFile.EOF);
-    CheckTrue(CSVFile.Errors = '');
+    CheckEquals(True, CSVFile.EOF);
+    CheckEquals(27, Length(CSVFile.Errors));
     CSVFile.Close;
   finally
     CSVFile.Free;
@@ -94,7 +95,7 @@ var
 begin
   for i := 0 to 99 do
   begin
-    FileName := DataDir + 'CSV' + PathDelim + 'Incorrect' + IntToStr(i) + '.csv';
+    FileName := SystemPaths.DataDir + 'CSV' + PathDelim + 'Incorrect' + IntToStr(i) + '.csv';
     if not FileExistsEx(FileName) then
       Break;
     LineCount := ReadIncorrectCSV(FileName);

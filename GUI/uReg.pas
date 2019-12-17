@@ -31,7 +31,7 @@ implementation
 uses
 	uRegistryClasses,
 	SysUtils, System.Win.Registry,
-	uStrings, uFiles, uMsg, uCSVFile;
+	uStrings, uSystemPaths, uMsg, uCSVFile;
 
 function CustomFileType(
 	const FileTypesOperation: TFileTypesOperation;
@@ -183,7 +183,7 @@ initialization
 	DownloadsDir := ShellFolder('{374DE290-123F-4565-9164-39C4925E467B}');
 	if DownloadsDir = '' then
 	begin
-		DownloadsDir := UserProfileDir + 'Downloads';
+		DownloadsDir := SystemPaths.UserProfileDir + 'Downloads';
 	end;
 {$ENDIF NoInitialization}
 end.

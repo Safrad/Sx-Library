@@ -14,7 +14,7 @@ implementation
 
 uses
   SysUtils,
-	uTypes, uCompare, uFiles, uStrings;
+	uTypes, uCompare, uFiles, uSystemPaths, uStrings;
 
 { TCompareTest }
 
@@ -26,7 +26,7 @@ var
 begin
   for i := 0 to Length(Texts) - 1 do
   begin
-	  Texts[i] := ReplaceF(ReadStringFromFile(DataDir + 'Text' + IntToStr(i + 1) + '.txt'), FullSep, LineSep);
+	  Texts[i] := ReplaceF(ReadStringFromFile(SystemPaths.DataDir + 'Text' + IntToStr(i + 1) + '.txt'), FullSep, LineSep);
   end;
 
   r := CompareTexts(Texts[0], Texts[1], True);

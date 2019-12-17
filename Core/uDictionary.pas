@@ -65,6 +65,7 @@ implementation
 
 uses
   uFiles,
+  uSystemPaths,
 	uStrings,
   uSorts,
   uCharset,
@@ -79,7 +80,7 @@ const
 
 function GetLanguagesDir: string;
 begin
-	Result := WorkDir + 'Languages' + PathDelim;
+	Result := SystemPaths.WorkDir + 'Languages' + PathDelim;
 end;
 
 function Translate(const Line: string): string;
