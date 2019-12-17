@@ -247,7 +247,7 @@ begin
 			end;
 		end;
 		if (FColumnIndexes[i] = -1) and (FRow[i] <> '') then
-			AddError('Column ' + FRow[i] + ' not used.');
+			AddError('Column ' + AddQuoteF(FRow[i]) + ' not used.');
 	end;
 end;
 
