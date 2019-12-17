@@ -83,8 +83,8 @@ begin
       end;
       Dec(RemainSource, Min(RemainSource, MaxFileSize));
       Inc(FileIndex);
-			SourceFile.Close;
 		end;
+		SourceFile.Close;
 		CRC := CRC xor $ffffffff;
 		if CreateCRCFile then
 			WriteCRCFile(ExtractFileName(Source), SourceFileSize, CRC, FileNamePrefix + '.crc');
