@@ -549,5 +549,9 @@ begin
   FWriteThrough := Value;
 end;
 
+initialization
+{$IFNDEF NoInitialization}
+	EnumToStr(TypeInfo(TFileMode), FileModeStr);
+{$ENDIF NoInitialization}
 end.
 
