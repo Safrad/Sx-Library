@@ -56,7 +56,9 @@ uses
   Classes,
 
   uDesktopWindow,
-  uFiles, uSystemColors, uDrawStyle, uGraph, uDForm, uOperatingSystem, ufGrate;
+  uFiles,
+  uSystemPaths,
+  uSystemColors, uDrawStyle, uGraph, uDForm, uOperatingSystem, ufGrate;
 
 function TakeScreenshots: BG;
 begin
@@ -68,7 +70,7 @@ end;
 constructor TScreenshots.Create;
 begin
 	inherited;
-  FPath := LocalAppDataDir + 'screenshots\';
+  FPath := SystemPaths.LocalAppDataDir + 'screenshots\';
 
   if FChangeWindowColor and (not OperatingSystem.IsAero) then
     SetWindowColor(clSilver);
