@@ -5,7 +5,6 @@ interface
 uses
   Generics.Collections,
 
-  uDIniFile,
   uTypes,
   uRow,
   uCell,
@@ -56,17 +55,10 @@ type
     property Columns: TColumns read GetColumns;
 
     // Input / Output
-    procedure Serialize(const IniFile: TDIniFile; const Section: string; const Save: BG);
     property Caption: string read GetCaption write SetCaption;
   end;
 
 implementation
-
-uses
-  SysUtils,
-  Math,
-
-  uEscape;
 
 { TTable }
 
@@ -163,52 +155,6 @@ end;
 procedure TTable.RemoveRow(const ARowIndex: SG);
 begin
   FData.Delete(ARowIndex);
-end;
-
-procedure TTable.Serialize(const IniFile: TDIniFile; const Section: string; const Save: BG);
-var
-	SectionIndex, ValueIndex: SG;
-	RowIndex, ColumnIndex: SG;
-  Cell: TCell;
-  Row: TRow;
-  C: SG;
-begin
-	if Save = False then
-	begin
-		C := IniFile.ReadNum(Section, 'Count', 0);
-		SectionIndex := IniFile.GetSectionIndex(Section);
-		if SectionIndex >= 0 then
-		begin
-			for RowIndex := 0 to C - 1 do
-			begin
-        Row := TRow.Create(ColumnCount);
-				for ColumnIndex := 0 to ColumnCount - 1 do
-				begin
-					ValueIndex := IniFile.GetValueIndex(SectionIndex, GetColumnName(ColumnIndex) + IntToStr(RowIndex));
-					if ValueIndex >= 0 then
-					begin
-            Cell := TCell.Create;
-            Cell.Text := RemoveEscape(IniFile.GetKeyValue(SectionIndex, ValueIndex));
-            Row.SetCell(ColumnIndex, Cell);
-					end;
-				end;
-        AddRow(Row);
-			end;
-		end;
-	end
-	else
-	begin
-		IniFile.WriteNum(Section, 'Count', RowCount);
-		for RowIndex := 0 to RowCount - 1 do
-		begin
-			for ColumnIndex := 0 to ColumnCount - 1 do
-			begin
-				IniFile.WriteString(Section, GetColumnName(ColumnIndex) + IntToStr(RowIndex), AddEscape(GetCell(ColumnIndex, RowIndex).GetData, True));
-			end;
-		end;
-{		if IniFile.ValueExists(Section, 'Name' + IntToStr(Favorites.Count)) then
-			IniFile.WriteString(Section, 'Name' + IntToStr(Favorites.Count), '');}
-	end;
 end;
 
 procedure TTable.SetCaption(const AValue: string);
