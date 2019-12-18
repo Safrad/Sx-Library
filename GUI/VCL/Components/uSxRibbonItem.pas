@@ -3,6 +3,8 @@ unit uSxRibbonItem;
 interface
 
 uses
+  Generics.Collections,
+
   uTypes,
   Windows,
   Classes,
@@ -20,7 +22,7 @@ type
 
   TSxRibbonItem = class(TCustomPanel)
   private
-    FItems: TObjectList;
+    FItems: TObjectList<TSxAction>;
     FBitmap: TDBitmap;
     FSxAction: TSxAction;
     FDisplayStyle: TDisplayStyle;
@@ -76,7 +78,7 @@ constructor TSxRibbonItem.Create(AOwner: TComponent);
 begin
   inherited;
 
-  FItems := TObjectList.Create;
+  FItems := TObjectList<TSxAction>.Create;
 
   Width := IconSize;
   Height := IconSize;

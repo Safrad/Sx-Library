@@ -3,6 +3,8 @@ unit uSxRibbon;
 interface
 
 uses
+  Generics.Collections,
+
   uTypes,
   uSxAction,
   uSxRibbonItem,
@@ -20,7 +22,7 @@ type
     FTextButtons: BG;
     FHaveTouchscreen: BG;
 
-    FRibbonItems: TObjectList;
+    FRibbonItems: TObjectList<TSxRibbonItem>;
 
     procedure Clear;
     procedure IconFromAction(const SxAction: TSxAction);
@@ -89,7 +91,7 @@ begin
 
   Caption := '';
   FTextButtons := False;
-  FRibbonItems := TObjectList.Create(False);
+  FRibbonItems := TObjectList<TSxRibbonItem>.Create(False);
 
   FHaveTouchscreen := GetSystemMetrics(SM_MAXIMUMTOUCHES) > 0;
 end;
