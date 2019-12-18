@@ -28,7 +28,7 @@ implementation
 uses
   SysUtils,
   uColor,
-  uFiles;
+  uSystemPaths;
 
 const
 	FontNames: array[TRasterFontStyle] of string = ('06x08', '08x08', '08x16');
@@ -61,7 +61,7 @@ begin
 	if FontRead[RasterFontStyle] = False then
 	begin
 		FontBitmap[RasterFontStyle] := TDBitmap.Create;
-		FontBitmap[RasterFontStyle].LoadFromFile(GraphDir + 'Font' + FontNames[RasterFontStyle] + IconExt);
+		FontBitmap[RasterFontStyle].LoadFromFile(SystemPaths.GraphDir + 'Font' + FontNames[RasterFontStyle] + IconExt);
 		FontBitmap[RasterFontStyle].Transparent := False;
 		FontRead[RasterFontStyle] := True;
 	end;

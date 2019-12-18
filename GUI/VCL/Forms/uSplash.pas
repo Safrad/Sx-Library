@@ -79,7 +79,7 @@ uses
 	uProjectInfo,
   uStrings,
 	uGraph,
-  uFiles,
+  uSystemPaths,
   uMath,
   uOutputFormat,
   uInputFormat,
@@ -329,7 +329,7 @@ var
 begin
 	for i := Length(AllPictureExt) - 1 downto 0 do
 	begin
-    F := GraphDir + 'Logo.' + AllPictureExt[i];
+    F := SystemPaths.GraphDir + 'Logo.' + AllPictureExt[i];
 		if FileExists(F) then
 		begin
 			FFileName := F;

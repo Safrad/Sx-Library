@@ -25,6 +25,7 @@ uses
   uSystemMemory,
   uFileStatistics,
   uFiles,
+  uSystemPaths,
   uCommonApplication,
   uCPU,
   uMainLog,
@@ -72,7 +73,7 @@ var
   SxMainIni: TDIniFile;
   s: string;
 begin
-	SxMainIni := TDIniFile.Create(CompanyLocalAppDataDir + 'Main.ini');
+	SxMainIni := TDIniFile.Create(SystemPaths.CompanyLocalAppDataDir + 'Main.ini');
   try
     SxMainIni.RWString('Computer', 'GUID', s, False);
     if s = '' then
