@@ -5,7 +5,7 @@ interface
 
 uses
   uTypes,
-  uDTimer;
+  uCustomDTimer;
 
 const
 	LagTime = LoopSleepTime;
@@ -13,7 +13,7 @@ const
 type
 	TDIdleTimer = class
 	private
-	 	FTimers: array of TDTimer;
+	 	FTimers: array of TCustomDTimer;
     FMinTime: S8;
   	// Statistic Values
   	FTimLeave, FTimSleep, FTimWork, FCPUUsage, FTimWork2, FTimSleep2, FCPUUsage2: U8;
@@ -26,8 +26,8 @@ type
 
     function ExecuteTimers: BG;
 
-    procedure AddTimer(const ADTimer: TDTimer);
-    procedure RemoveTimer(const ADTimer: TDTimer);
+    procedure AddTimer(const ADTimer: TCustomDTimer);
+    procedure RemoveTimer(const ADTimer: TCustomDTimer);
 
     property MinTime: S8 read FMinTime write SetMinTime;
     property TimerCount: UG read GetTimerCount;
@@ -131,7 +131,7 @@ begin
   Result := Length(FTimers);
 end;
 
-procedure TDIdleTimer.RemoveTimer(const ADTimer: TDTimer);
+procedure TDIdleTimer.RemoveTimer(const ADTimer: TCustomDTimer);
 var
   i, j: SG;
 begin
@@ -152,7 +152,7 @@ begin
   FMinTime := Value;
 end;
 
-procedure TDIdleTimer.AddTimer(const ADTimer: TDTimer);
+procedure TDIdleTimer.AddTimer(const ADTimer: TCustomDTimer);
 begin
   SetLength(FTimers, Length(FTimers) + 1);
 		FTimers[Length(FTimers) - 1] := ADTimer;

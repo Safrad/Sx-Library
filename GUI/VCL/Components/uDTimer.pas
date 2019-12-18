@@ -1,4 +1,6 @@
-// Precise GUI Timer
+/// <summary>
+/// Precise GUI Timer
+/// </summary>
 unit uDTimer;
 
 interface
@@ -6,6 +8,7 @@ interface
 uses
 	uTypes,
   uTimeSpan,
+  uCustomDTimer,
   SysUtils, Classes, Winapi.Messages;
 
 type
@@ -13,7 +16,7 @@ type
 
 	TEventStep = (esInterval {in milliseconds}, esIntervalInSeconds, esFrequency, esCPU);
 
-	TDTimer = class(TComponent)
+	TDTimer = class(TCustomDTimer)
 	private
 		FActiveOnly: BG;
 		FEnabled: BG;
