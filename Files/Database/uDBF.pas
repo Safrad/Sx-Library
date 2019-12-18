@@ -33,7 +33,6 @@ type
 
     // Process
 		function FindColumn(const AColumnName: string): TDBFColumn;
-		procedure LoadFromFile(const AFileName: TFileName);
 		procedure Clear;
 
     // Output
@@ -46,8 +45,7 @@ type
 implementation
 
 uses
-	Variants,
-  uDBFReader;
+	Variants;
 
 { TDBF }
 
@@ -59,21 +57,6 @@ begin
 	FRowCount := 0;
 
 	FFileDate := 0;
-end;
-
-procedure TDBF.LoadFromFile(const AFileName: TFileName);
-var
-  DBFReader: TDBFReader;
-begin
-  DBFReader := TDBFReader.Create;
-  try
-    DBFReader.DBF := Self;
-    DBFReader.FileName := AFileName;
-    DBFReader.Read;
-  finally
-    DBFReader.Free;
-  end;
-
 end;
 
 procedure TDBF.SetFileDate(const Value: TDateTime);

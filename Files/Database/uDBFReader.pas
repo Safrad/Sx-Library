@@ -115,6 +115,7 @@ type
     property DBF: TDBF read FDBF write SetDBF;
     property FileName: TFileName read FFileName write SetFileName;
     procedure Read;
+    class procedure ReadDBFFromFile(const ADBF: TDBF; const AFileName: TFileName);
   end;
 
 implementation
@@ -385,6 +386,20 @@ begin
     DBFColumn.Width := Column.Width;
     Inc(FRowSize, Column.Width);
     FDBF.Columns.Add(DBFColumn);
+  end;
+end;
+
+class procedure TDBFReader.ReadDBFFromFile(const ADBF: TDBF; const AFileName: TFileName);
+var
+  DBFReader: TDBFReader;
+begin
+  DBFReader := TDBFReader.Create;
+  try
+    DBFReader.DBF := ADBF;
+    DBFReader.FileName := AFileName;
+    DBFReader.Read;
+  finally
+    DBFReader.Free;
   end;
 end;
 

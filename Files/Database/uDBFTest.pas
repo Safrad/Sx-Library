@@ -18,7 +18,8 @@ implementation
 
 uses
   uSystemPaths,
-  uDBF;
+  uDBF,
+  uDBFReader;
 
 { TDBFTest }
 
@@ -35,7 +36,7 @@ var
 begin
   DBF := TDBF.Create;
   try
-    DBF.LoadFromFile(AFileName);
+    TDBFReader.ReadDBFFromFile(DBF, AFileName);
     Column := DBF.FindColumn('TEXT');
     CheckEquals('Pøíliš luouèkı kùò úpìl ïábelské ódy', Column.Items[0]);
     Column := DBF.FindColumn('NUMBER');
