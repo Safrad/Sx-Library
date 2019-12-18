@@ -61,13 +61,13 @@ uses
   uDIniFile,
   uFiles,
   uStrings,
-  uMsg,
   uSounds,
   uProjectInfo,
   uGlobalOptions,
   uCommonApplication,
   uExitCommand,
-  uRestartCommand;
+  uRestartCommand,
+  uMessageLevel;
 
 { TCommonMenu }
 
