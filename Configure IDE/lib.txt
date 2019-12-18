@@ -71,3 +71,4 @@ $(sx-library)\Game\Turn-based\Engine\Protocols\Commands
 $(sx-library)\Game\Turn-based\Engine\Protocols\Commands\XBoard
 $(sx-library)\Game\Turn-based\Engine\Protocols\Commands\UCI
 $(sx-library)\Game\Turn-based\Engine\Protocols\Commands\USI
+$(sx-library)\Delphi IDE
