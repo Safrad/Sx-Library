@@ -12,11 +12,8 @@ uses
 {$endif}
   SysUtils,
 
-	uTypes,
-  uStrings,
+  uTypes,
   uFileCharset,
-  uRawFile,
-  uTextFile,
   uBackup;
 
 type
@@ -50,9 +47,6 @@ procedure ReadDir(
 
 function FileTimeToDateTime(AFileTime: TFileTime): TDateTime;
 function DateTimeToFileTime(const ADateTime: TDateTime): TFileTime;
-{$ifdef MSWINDOWS}
-function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
-{$endif}
 procedure GetFileDateTime(const AFileName: TFileName; out ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime);
 procedure SetFileDateTime(const AFileName: TFileName; const ACreationTime, ALastAccessTime, ALastWriteTime: TFileTime);
 function GetFileSizeU(const AFileName: TFileName): S8;
@@ -149,9 +143,13 @@ implementation
 uses
 	Math,
 {$ifdef MSWINDOWS}
+  uWindowsFileAPI,
   uMsg,
 {$endif}
 
+  uStrings,
+  uRawFile,
+  uTextFile,
   uEIOException,
   uStartupEnvironment,
 	uChar,
@@ -585,23 +583,6 @@ begin
 		end;
 	end; *)
 end;
-
-{$ifdef MSWINDOWS}
-function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
-var ErrorCode: U4;
-begin
-	TU8(Result).D0 := GetFileSize(AHandle, @TU8(Result).D1);
-
-	if TU8(Result).D0 = $FFFFFFFF then
-	begin
-		ErrorCode := GetLastError;
-		if Result <> NO_ERROR then
-		begin
-   		raise EIOException.Create(AFileName, ErrorCode);
-    end;
-	end;
-end;
-{$endif}
 
 function GetFileSizeU(const AFileName: TFileName): S8;
 {$ifdef MSWINDOWS}

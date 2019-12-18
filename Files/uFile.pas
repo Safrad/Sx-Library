@@ -147,6 +147,7 @@ implementation
 uses
 	Math,
 
+  uWindowsFileAPI,
   uFileStatistics,
   uTemporaryDirectory,
   uFiles,

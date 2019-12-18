@@ -148,12 +148,12 @@ implementation
 uses
 	Math,
 {$ifdef MSWINDOWS}
+  uWindowsFileAPI,
   Winapi.Windows,
 {$endif}
 
   uStrings,
   uEIOException,
-	uFiles,
   uOutputFormat;
 
 { TRawFile }
@@ -436,12 +436,7 @@ begin
 		end;
 
   {$ifdef UseWINAPI}
-	if CloseHandle(FHandle) then
-	begin
-		if FDeleteAfterClose then
-			DeleteFileEx(FFileName);
-	end
-	else
+	if not CloseHandle(FHandle) then
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
@@ -450,6 +445,8 @@ begin
   CloseFile(FFile);
   FOpened := False;
   {$endif}
+  if FDeleteAfterClose then
+    SysUtils.DeleteFile(FFileName);
 end;
 
 procedure TRawFile.Truncate;
