@@ -15,7 +15,6 @@ type
     procedure RepeatClearMemory(const P: Pointer; const Size: SG);
     procedure RepeatFillChar(const P: Pointer; const Size: SG);
     procedure ClearMemoryOrFillChar(const Size: SG; const P: Pointer; const AUseFillChar: BG);
-    procedure DelayAndPresiceSleepTest(const APreciseSleep: BG);
     procedure TestClearMemory(const AUseFillChar: BG);
   published
     procedure SgnTest;
@@ -28,8 +27,6 @@ type
     procedure BitsToByteTest;
     procedure NopTest;
     procedure PauseTest;
-    procedure DelayTest;
-    procedure PreciseSleepTest;
     procedure IsInTheMiddleTest;
     procedure TimeDifferenceTest;
     procedure MultiplyTest;
@@ -323,42 +320,6 @@ begin
   Pause;
   Pause;
   Pause;
-end;
-
-const
-  TestTimeInMs: array[0..8] of UG = (0, 1, 9, 11, 15, 25, 50, 333, 1000);
-
-procedure TMathTest.DelayAndPresiceSleepTest(const APreciseSleep: BG);
-var
-  TestTime: TTimeSpan;
-  i: SG;
-  StartTime: TTimeSpan;
-  Dif: FG;
-  MeasuredTime: TTimeSpan;
-begin
-  for i := Low(TestTimeInMs) to High(TestTimeInMs) do
-  begin
-    TestTime.Milliseconds := TestTimeInMs[i];
-    StartTime := MainTimer.Value;
-    if APreciseSleep then
-      PreciseSleep(TestTime)
-    else
-      Delay(TestTime);
-    MeasuredTime := MainTimer.IntervalFrom(StartTime);
-    Dif := MeasuredTime.Milliseconds - TestTimeInMs[i];
-    // 1 ms tolerance
-    Check(Abs(Dif) <= 0.1, 'Out of time tolerance [ms] ' + IntToStr(TestTimeInMs[i]) + ' -> ' + IntToStr(MeasuredTime.Milliseconds));
-  end;
-end;
-
-procedure TMathTest.DelayTest;
-begin
-  DelayAndPresiceSleepTest(False);
-end;
-
-procedure TMathTest.PreciseSleepTest;
-begin
-  DelayAndPresiceSleepTest(True);
 end;
 
 procedure TMathTest.TestClearMemory(const AUseFillChar: BG);

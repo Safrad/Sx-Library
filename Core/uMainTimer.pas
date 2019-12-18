@@ -44,6 +44,9 @@ type
     procedure SetMeasureType(const Value: TMeasureType);
     function GetValue: TTimeSpan;
   public
+    procedure Delay(const ATimeSpan: TTimeSpan);
+    procedure PreciseSleep(const ATimeSpan: TTimeSpan);
+
     function IntervalFrom(const AStartTime: U8): U8; overload;
     function IntervalFrom(const AStartTime: TTimeSpan): TTimeSpan; overload;
 
@@ -62,6 +65,7 @@ uses
 {$IF defined(MSWINDOWS)}
   Winapi.Windows,
 {$ENDIF}
+  Math,
   Diagnostics,
   SysUtils,
   uMath;
@@ -88,6 +92,21 @@ end;
 {$ENDIF}
 
 { TMainTimer }
+
+/// <summary>
+/// CPU usage is 100% if used in loop
+/// </summary>
+procedure TMainTimer.Delay(const ATimeSpan: TTimeSpan);
+var
+	StartTickCount: U8;
+begin
+	StartTickCount := Value.Ticks;
+  // busy-wait loop (spin-wait loop)
+	while IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
+  begin
+    Pause;
+  end;
+end;
 
 function TMainTimer.GetPerformanceCounterFrequecy: U8;
 {$IF defined(MSWINDOWS)}
@@ -136,6 +155,51 @@ end;
 function TMainTimer.IntervalFrom(const AStartTime: TTimeSpan): TTimeSpan;
 begin
   Result.Ticks := TimeDifference(GetTickValue, AStartTime.Ticks);
+end;
+
+/// <summary>
+/// CPU usage if used in loop
+/// Sleep Time [ms] CPU [%]
+/// 0  100
+/// 1  100
+/// 2   25
+/// 3   16
+/// 4   12
+/// 5    9
+/// 10   5
+/// </summary>
+procedure TMainTimer.PreciseSleep(const ATimeSpan: TTimeSpan);
+const
+  MaximalSleepTime = 250; // ms
+
+  // Thread swap time
+  // Unix and new Windows: 1 ms
+  // Old Windows: 15 ms!
+  MaximalAddedSleepTimeInMs = 1; // TODO: Detect old Windows 15 ms
+var
+	StartTickCount: U8;
+  RemainTimeInMs: FG;
+begin
+  StartTickCount := Value.Ticks;
+
+  // sleep-wait loop
+  while True do
+  begin
+    RemainTimeInMs := Second * (S8(ATimeSpan.Ticks) - S8(IntervalFrom(StartTickCount))) / MainTimer.Frequency;
+    if RemainTimeInMs >= MaximalAddedSleepTimeInMs then
+    begin
+      // Method Sleep sleeps a bit longer then specified
+      Sleep(Min(Trunc(RemainTimeInMs - MaximalAddedSleepTimeInMs), MaximalSleepTime));
+    end
+    else
+      Break;
+  end;
+
+  // busy-wait loop (spin-wait loop)
+  while IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
+  begin
+    Pause;
+  end;
 end;
 
 procedure TMainTimer.SetMeasureType(const Value: TMeasureType);
@@ -188,6 +252,8 @@ initialization
 {$IFNDEF NoInitialization}
   MainTimer := TMainTimer.Create;
   MainTimer.MeasureType := mtPerformanceCounter;
+  TTimeSpan.TicksPerSecond := MainTimer.Frequency;
+  TTimeSpan.PrecisionDigits := MainTimer.PrecisionDigits;
 {$ENDIF NoInitialization}
 finalization
 {$IFNDEF NoFinalization}

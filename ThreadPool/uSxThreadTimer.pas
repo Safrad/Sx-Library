@@ -50,9 +50,11 @@ type
 implementation
 
 uses
-  uMsg, uMath,
+  SysUtils,
 
-  SysUtils, Math;
+  uMainTimer,
+  uMsg;
+
 
 { TSxThreadTimer }
 
@@ -91,7 +93,7 @@ end;
 
 function TSxThreadTimer.GetElapsedTime: TTimeSpan;
 begin
-  FElapsedTime.Ticks := IntervalFrom(StartTime);
+  FElapsedTime.Ticks := MainTimer.IntervalFrom(StartTime);
   Result := FElapsedTime;
 end;
 
@@ -107,7 +109,7 @@ end;
 
 procedure TSxThreadTimer.InternalExecute;
 begin
-  FStartTime := PerformanceCounter;
+  FStartTime := MainTimer.Value.Ticks;
   while (not Terminated) do
   begin
     if FEnabled then
@@ -128,7 +130,7 @@ begin
     else
       FSleepTime.Ticks := FInterval.Ticks - ElapsedTime.Ticks mod FInterval.Ticks;
     FIdleStopwatch.Start;
-    PreciseSleep(FSleepTime);
+    MainTimer.PreciseSleep(FSleepTime);
     FIdleStopwatch.Stop;
   end;
 end;
@@ -146,7 +148,7 @@ begin
     FEnabled := Value;
     if FEnabled then
     begin
-      FStartTime := PerformanceCounter;
+      FStartTime := MainTimer.Value.Ticks;
       Resume;
     end;
   end;

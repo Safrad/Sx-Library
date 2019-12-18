@@ -13,7 +13,6 @@ interface
 
 uses
   uTypes,
-  uTimeSpan,
   Types;
 
 const
@@ -247,19 +246,11 @@ function BitScanReverse(AValue: U8): U4; overload;
 function CountDigits(AValue: U4): U4; overload;
 function CountDigits(AValue: U8): U4; overload;
 
-function PerformanceFrequency: U8; deprecated 'Use MainTimer';
-function PerformanceCounter: U8; deprecated 'Use MainTimer';
-
 function TimeDifference(const NowTime, LastTime: U4): U4; overload;
 function TimeDifference(const NowTime, LastTime: U8): U8; overload;
 
-function IntervalFrom(const StartTime: U4): U4; overload deprecated 'Use MainTimer';
-function IntervalFrom(const StartTime: U8): U8; overload deprecated 'Use MainTimer';
-
 procedure Nop; assembler;
 procedure Pause; assembler;
-procedure Delay(const ATimeSpan: TTimeSpan);
-procedure PreciseSleep(const ATimeSpan: TTimeSpan);
 
 function CalcShr(N: U4): S1;
 procedure CheckExpSize(const Size: SG);
@@ -277,11 +268,7 @@ function MaxValueIndex(const AValues: TArrayOfSG): SG;
 implementation
 
 uses
-  uMainTimer,
   Math,
-{$IF defined(MSWINDOWS)}
-  Winapi.Windows,
-{$ENDIF}
   SysUtils;
 
 procedure Increment(var X: F4; const N: F4 = 1); overload;
@@ -2289,16 +2276,6 @@ begin
     Dec(Result);
 end;
 
-function PerformanceFrequency: U8;
-begin
-  Result := MainTimer.Frequency;
-end;
-
-function PerformanceCounter: U8;
-begin
-  Result := MainTimer.Value.Ticks;
-end;
-
 function TimeDifference(const NowTime, LastTime: U4): U4;
 {$ifndef ASSEMBLER}
 begin
@@ -2313,16 +2290,6 @@ end;
 function TimeDifference(const NowTime, LastTime: U8): U8;
 begin
 	Result := NowTime - LastTime;
-end;
-
-function IntervalFrom(const StartTime: U4): U4;
-begin
-  Result := TimeDifference({$IF defined(MSWINDOWS)}GetTickCount{$ELSE}MainTimer.Value.Milliseconds{$ENDIF}, StartTime);
-end;
-
-function IntervalFrom(const StartTime: U8): U8;
-begin
-	Result := TimeDifference(PerformanceCounter, StartTime);
 end;
 
 procedure Nop; assembler;
@@ -2343,62 +2310,6 @@ begin
 asm
   pause // Same opcode F390h as "rep nop"
 {$endif}
-end;
-
-// CPU usage is 100% if used in loop
-procedure Delay(const ATimeSpan: TTimeSpan);
-var
-	StartTickCount: U8;
-begin
-	StartTickCount := MainTimer.Value.Ticks;
-  // busy-wait loop (spin-wait loop)
-	while MainTimer.IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
-  begin
-    Pause;
-  end;
-end;
-
-// CPU usage if used in loop
-// Sleep Time [ms] CPU [%]
-// 0  100
-// 1  100
-// 2   25
-// 3   16
-// 4   12
-// 5    9
-// 10   5
-procedure PreciseSleep(const ATimeSpan: TTimeSpan);
-const
-  MaximalSleepTime = 250; // ms
-
-  // Thread swap time
-  // Unix and new Windows: 1 ms
-  // Old Windows: 15 ms!
-  MaximalAddedSleepTimeInMs = 1; // TODO: Detect old Windows 15 ms
-var
-	StartTickCount: U8;
-  RemainTimeInMs: FG;
-begin
-  StartTickCount := MainTimer.Value.Ticks;
-
-  // sleep-wait loop
-  while True do
-  begin
-    RemainTimeInMs := Second * (S8(ATimeSpan.Ticks) - S8(MainTimer.IntervalFrom(StartTickCount))) / MainTimer.Frequency;
-    if RemainTimeInMs >= MaximalAddedSleepTimeInMs then
-    begin
-      // Method Sleep sleeps a bit longer then specified
-      Sleep(Min(Trunc(RemainTimeInMs - MaximalAddedSleepTimeInMs), MaximalSleepTime));
-    end
-    else
-      Break;
-  end;
-
-  // busy-wait loop (spin-wait loop)
-  while MainTimer.IntervalFrom(StartTickCount) < ATimeSpan.Ticks do
-  begin
-    Pause;
-  end;
 end;
 
 function CalcShr(N: U4): S1;

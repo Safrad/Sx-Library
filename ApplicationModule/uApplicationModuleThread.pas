@@ -30,7 +30,7 @@ uses
   SysUtils,
 
   uMainLog,
-  uMath;
+  uMainTimer;
 
 { TApplicationModuleThread }
 
@@ -46,7 +46,7 @@ begin
 
   inherited;
 
-  PreciseSleep(FDelay);
+  MainTimer.PreciseSleep(FDelay);
 
   if Terminated then
     Exit;

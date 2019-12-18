@@ -2,22 +2,65 @@ unit uMainTimerTest;
 
 interface
 
-uses TestFrameWork;
+uses
+  TestFrameWork,
+  uTypes;
 
 type
   TMainTimerTest = class(TTestCase)
+  private
+    procedure DelayAndPresiceSleepTest(const APreciseSleep: BG);
   published
     procedure Test;
+    procedure DelayTest;
+    procedure PreciseSleepTest;
   end;
 
 implementation
 
 uses
   SysUtils,
-  uTypes,
-  uMainTimer;
+
+  uMainTimer,
+  uTimeSpan;
 
 { TMainTimerTest }
+
+const
+  TestTimeInMs: array[0..8] of UG = (0, 1, 9, 11, 15, 25, 50, 333, 1000);
+
+procedure TMainTimerTest.DelayAndPresiceSleepTest(const APreciseSleep: BG);
+var
+  TestTime: TTimeSpan;
+  i: SG;
+  StartTime: TTimeSpan;
+  Dif: FG;
+  MeasuredTime: TTimeSpan;
+begin
+  for i := Low(TestTimeInMs) to High(TestTimeInMs) do
+  begin
+    TestTime.Milliseconds := TestTimeInMs[i];
+    StartTime := MainTimer.Value;
+    if APreciseSleep then
+      MainTimer.PreciseSleep(TestTime)
+    else
+      MainTimer.Delay(TestTime);
+    MeasuredTime := MainTimer.IntervalFrom(StartTime);
+    Dif := MeasuredTime.Milliseconds - TestTimeInMs[i];
+    // 1 ms tolerance
+    Check(Abs(Dif) <= 0.1, 'Out of time tolerance [ms] ' + IntToStr(TestTimeInMs[i]) + ' -> ' + IntToStr(MeasuredTime.Milliseconds));
+  end;
+end;
+
+procedure TMainTimerTest.DelayTest;
+begin
+  DelayAndPresiceSleepTest(False);
+end;
+
+procedure TMainTimerTest.PreciseSleepTest;
+begin
+  DelayAndPresiceSleepTest(True);
+end;
 
 procedure TMainTimerTest.Test;
 var

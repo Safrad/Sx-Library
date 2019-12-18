@@ -10,6 +10,8 @@ type
   TTimeSpan = record
   private
     FTicks: U8;
+    class var FTicksPerSecond: U8;
+    class var FPrecisionDigits: U1;
     procedure SetMicrosecondsAsF(const Value: FG);
     procedure SetMillisecondsAsF(const Value: FG);
     procedure SetTicks(const Value: U8);
@@ -51,9 +53,13 @@ type
     function GetDaysAsBD: BigDecimal;
     function GetHoursAsBD: BigDecimal;
     function GetMinutesAsBD: BigDecimal;
+    class procedure SetTicksPerSecond(const Value: U8); static;
+    class procedure SetPrecisionDigits(const Value: U1); static;
   public
     // The total elapsed time measured by the current instance, in timer ticks.
     property Ticks: U8 read FTicks write SetTicks;
+    class property TicksPerSecond: U8 read FTicksPerSecond write SetTicksPerSecond;
+    class property PrecisionDigits: U1 read FPrecisionDigits write SetPrecisionDigits;
 
     // The total elapsed time measured by the current instance, in microseconds.
     property Microseconds: U8 read GetMicrosecondsAsI write SetMicrosecondsAsI;
@@ -143,7 +149,6 @@ implementation
 uses
   uTimePrefix,
   uMath,
-  uMainTimer,
   uOutputFormat,
   uMetricPrefix;
 
@@ -161,102 +166,102 @@ end;
 
 function TTimeSpan.GetDaysAsBD: BigDecimal;
 begin
-  Result := BigDecimal.Divide(FTicks, BigDecimal(TTimePrefix.DayAsF) * BigDecimal(MainTimer.Frequency));
+  Result := BigDecimal.Divide(FTicks, BigDecimal(TTimePrefix.DayAsF) * BigDecimal(FTicksPerSecond));
 end;
 
 function TTimeSpan.GetDaysAsF: FG;
 begin
-  Result := FTicks / (TTimePrefix.DayAsF * MainTimer.Frequency);
+  Result := FTicks / (TTimePrefix.DayAsF * FTicksPerSecond);
 end;
 
 function TTimeSpan.GetDaysAsI: U8;
 begin
-  Result := RoundDivU8(FTicks, TTimePrefix.DayAsI * MainTimer.Frequency);
+  Result := RoundDivU8(FTicks, TTimePrefix.DayAsI * FTicksPerSecond);
 end;
 
 function TTimeSpan.GetFrequency: FG;
 begin
-  Result := MainTimer.Frequency / FTicks;
+  Result := FTicksPerSecond / FTicks;
 end;
 
 function TTimeSpan.GetHoursAsBD: BigDecimal;
 begin
-  Result := BigDecimal.Divide(FTicks, BigDecimal(TTimePrefix.HourAsI) * BigDecimal(MainTimer.Frequency));
+  Result := BigDecimal.Divide(FTicks, BigDecimal(TTimePrefix.HourAsI) * BigDecimal(FTicksPerSecond));
 end;
 
 function TTimeSpan.GetHoursAsF: FG;
 begin
-  Result := FTicks / (TTimePrefix.HourAsF * MainTimer.Frequency);
+  Result := FTicks / (TTimePrefix.HourAsF * FTicksPerSecond);
 end;
 
 function TTimeSpan.GetHoursAsI: U8;
 begin
-  Result := RoundDivU8(FTicks, TTimePrefix.HourAsI * MainTimer.Frequency);
+  Result := RoundDivU8(FTicks, TTimePrefix.HourAsI * FTicksPerSecond);
 end;
 
 function TTimeSpan.GetMicrosecondsAsBD: BigDecimal;
 begin
-  Result := BigDecimal.Divide(BigDecimal(FTicks) * TMetricPrefix.MicroDivisorAsI, MainTimer.Frequency);
+  Result := BigDecimal.Divide(BigDecimal(FTicks) * TMetricPrefix.MicroDivisorAsI, FTicksPerSecond);
 end;
 
 function TTimeSpan.GetMicrosecondsAsF: FG;
 begin
-  Result :=  FTicks / (TMetricPrefix.MicroAsF * MainTimer.Frequency);
+  Result :=  FTicks / (TMetricPrefix.MicroAsF * FTicksPerSecond);
 end;
 
 function TTimeSpan.GetMicrosecondsAsI: U8;
 begin
-  Result :=  RoundDivU8(FTicks * TMetricPrefix.MicroDivisorAsI, MainTimer.Frequency);
+  Result :=  RoundDivU8(FTicks * TMetricPrefix.MicroDivisorAsI, FTicksPerSecond);
 end;
 
 function TTimeSpan.GetMillisecondsAsBD: BigDecimal;
 begin
-  Result := BigDecimal.Divide(BigDecimal(FTicks) * TMetricPrefix.MilliDivisorAsI, MainTimer.Frequency);
+  Result := BigDecimal.Divide(BigDecimal(FTicks) * TMetricPrefix.MilliDivisorAsI, FTicksPerSecond);
 end;
 
 function TTimeSpan.GetMillisecondsAsF: FG;
 begin
-  Result := TMetricPrefix.MilliDivisorAsF * FTicks / MainTimer.Frequency;
+  Result := TMetricPrefix.MilliDivisorAsF * FTicks / FTicksPerSecond;
 end;
 
 function TTimeSpan.GetMillisecondsAsI: U8;
 begin
-  Result := RoundDivU8(FTicks * TMetricPrefix.MilliDivisorAsI, MainTimer.Frequency);
+  Result := RoundDivU8(FTicks * TMetricPrefix.MilliDivisorAsI, FTicksPerSecond);
 end;
 
 function TTimeSpan.GetMinutesAsBD: BigDecimal;
 begin
-  Result := BigDecimal.Divide(FTicks, BigDecimal(TTimePrefix.MinuteAsI) * BigDecimal(MainTimer.Frequency));
+  Result := BigDecimal.Divide(FTicks, BigDecimal(TTimePrefix.MinuteAsI) * BigDecimal(FTicksPerSecond));
 end;
 
 function TTimeSpan.GetMinutesAsF: FG;
 begin
-  Result := FTicks / (TTimePrefix.MinuteAsF * MainTimer.Frequency);
+  Result := FTicks / (TTimePrefix.MinuteAsF * FTicksPerSecond);
 end;
 
 function TTimeSpan.GetMinutesAsI: U8;
 begin
-  Result := RoundDivU8(FTicks, TTimePrefix.MinuteAsI * MainTimer.Frequency);
+  Result := RoundDivU8(FTicks, TTimePrefix.MinuteAsI * FTicksPerSecond);
 end;
 
 function TTimeSpan.GetSecondsAsBD: BigDecimal;
 begin
-  Result := BigDecimal.Divide(FTicks, MainTimer.Frequency);
+  Result := BigDecimal.Divide(FTicks, FTicksPerSecond);
 end;
 
 function TTimeSpan.GetSecondsAsF: FG;
 begin
-  Result := FTicks / MainTimer.Frequency;
+  Result := FTicks / FTicksPerSecond;
 end;
 
 function TTimeSpan.GetSecondsAsI: U8;
 begin
-  Result := RoundDivU8(FTicks, MainTimer.Frequency);
+  Result := RoundDivU8(FTicks, FTicksPerSecond);
 end;
 
 function TTimeSpan.GetTime: TDateTime;
 begin
-  Result := FTicks / (TTimePrefix.DayAsF * MainTimer.Frequency);
+  Result := FTicks / (TTimePrefix.DayAsF * FTicksPerSecond);
 end;
 
 class operator TTimeSpan.GreaterThan(const Left, Right: TTimeSpan): Boolean;
@@ -286,97 +291,107 @@ end;
 
 procedure TTimeSpan.SetDaysAsBD(const Value: BigDecimal);
 begin
-  SetTicks(BigDecimal.Round(Value * TTimePrefix.DayAsI * MainTimer.Frequency));
+  SetTicks(BigDecimal.Round(Value * TTimePrefix.DayAsI * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetDaysAsF(const Value: FG);
 begin
-  SetTicks(Round(Value * TTimePrefix.DayAsF * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.DayAsF * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetDaysAsI(const Value: U8);
 begin
-  SetTicks(Value * TTimePrefix.DayAsI * MainTimer.Frequency);
+  SetTicks(Value * TTimePrefix.DayAsI * FTicksPerSecond);
 end;
 
 procedure TTimeSpan.SetFrequency(const Value: FG);
 begin
-  SetTicks(Round(MainTimer.Frequency / Value));
+  SetTicks(Round(FTicksPerSecond / Value));
 end;
 
 procedure TTimeSpan.SetHoursAsBD(const Value: BigDecimal);
 begin
-  SetTicks(BigDecimal.Round(Value * TTimePrefix.HourAsI * MainTimer.Frequency));
+  SetTicks(BigDecimal.Round(Value * TTimePrefix.HourAsI * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetHoursAsF(const Value: FG);
 begin
-  SetTicks(Round(Value * TTimePrefix.HourAsF * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.HourAsF * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetHoursAsI(const Value: U8);
 begin
-  SetTicks(Value * TTimePrefix.HourAsI * MainTimer.Frequency);
+  SetTicks(Value * TTimePrefix.HourAsI * FTicksPerSecond);
 end;
 
 procedure TTimeSpan.SetMicrosecondsAsBD(const Value: BigDecimal);
 begin
-  SetTicks(BigDecimal.Round(BigDecimal.Divide(Value * MainTimer.Frequency, TMetricPrefix.MicroDivisorAsI)));
+  SetTicks(BigDecimal.Round(BigDecimal.Divide(Value * FTicksPerSecond, TMetricPrefix.MicroDivisorAsI)));
 end;
 
 procedure TTimeSpan.SetMicrosecondsAsF(const Value: FG);
 begin
-  SetTicks(Round(Value * TMetricPrefix.MicroAsF * MainTimer.Frequency));
+  SetTicks(Round(Value * TMetricPrefix.MicroAsF * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetMicrosecondsAsI(const Value: U8);
 begin
-  SetTicks(RoundDivU8(Value * MainTimer.Frequency, TMetricPrefix.MicroDivisorAsI));
+  SetTicks(RoundDivU8(Value * FTicksPerSecond, TMetricPrefix.MicroDivisorAsI));
 end;
 
 procedure TTimeSpan.SetMillisecondsAsBD(const Value: BigDecimal);
 begin
-  SetTicks(BigDecimal.Round(BigDecimal.Divide(Value * MainTimer.Frequency, TMetricPrefix.MilliDivisorAsI)));
+  SetTicks(BigDecimal.Round(BigDecimal.Divide(Value * FTicksPerSecond, TMetricPrefix.MilliDivisorAsI)));
 end;
 
 procedure TTimeSpan.SetMillisecondsAsF(const Value: FG);
 begin
-  SetTicks(Round(Value * TMetricPrefix.MilliAsF * MainTimer.Frequency));
+  SetTicks(Round(Value * TMetricPrefix.MilliAsF * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetMillisecondsAsI(const Value: U8);
 begin
-  SetTicks(RoundDivU8(Value * MainTimer.Frequency, TMetricPrefix.MilliDivisorAsI));
+  SetTicks(RoundDivU8(Value * FTicksPerSecond, TMetricPrefix.MilliDivisorAsI));
 end;
 
 procedure TTimeSpan.SetMinutesAsF(const Value: FG);
 begin
-  SetTicks(Round(Value * TTimePrefix.MinuteAsF * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.MinuteAsF * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetMinutesAsBD(const Value: BigDecimal);
 begin
-  SetTicks(BigDecimal.Round(Value * TTimePrefix.MinuteAsI * MainTimer.Frequency));
+  SetTicks(BigDecimal.Round(Value * TTimePrefix.MinuteAsI * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetMinutesAsI(const Value: U8);
 begin
-  SetTicks(Value * TTimePrefix.MinuteAsI * MainTimer.Frequency);
+  SetTicks(Value * TTimePrefix.MinuteAsI * FTicksPerSecond);
+end;
+
+class procedure TTimeSpan.SetPrecisionDigits(const Value: U1);
+begin
+  FPrecisionDigits := Value;
 end;
 
 procedure TTimeSpan.SetSeconds(const Value: FG);
 begin
-  SetTicks(Round(Value * MainTimer.Frequency));
+  SetTicks(Round(Value * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetSecondsAsBD(const Value: BigDecimal);
 begin
-  SetTicks(BigDecimal.Round(Value * MainTimer.Frequency));
+  SetTicks(BigDecimal.Round(Value * FTicksPerSecond));
 end;
 
 procedure TTimeSpan.SetSecondsAsI(const Value: U8);
 begin
-  SetTicks(Value * MainTimer.Frequency);
+  SetTicks(Value * FTicksPerSecond);
+end;
+
+class procedure TTimeSpan.SetTicksPerSecond(const Value: U8);
+begin
+  FTicksPerSecond := Value;
 end;
 
 procedure TTimeSpan.SetTicks(const Value: U8);
@@ -386,12 +401,12 @@ end;
 
 procedure TTimeSpan.SetTime(const Value: TDateTime);
 begin
-  SetTicks(Round(Value * TTimePrefix.DayAsF * MainTimer.Frequency));
+  SetTicks(Round(Value * TTimePrefix.DayAsF * FTicksPerSecond));
 end;
 
 function TTimeSpan.ToStringInSeconds: string;
 begin
-  Result := FloatToDecimalString(SecondsAsF, 16, MainTimer.PrecisionDigits);
+  Result := FloatToDecimalString(SecondsAsF, 16, FPrecisionDigits);
 end;
 
 end.

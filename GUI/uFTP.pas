@@ -27,9 +27,11 @@ implementation
 
 uses
 	TypInfo,
-  uMath,
+  uMainTimer,
 	uChar, uStrings, uFiles, uHTML, uOutputFormat, uMsg,
-	SysUtils, Classes, Windows, IdFTPList, IdException, {$if CompilerVersion >= 16}IdAllFTPListParsers, {$ifend}IdFTPCommon;
+	SysUtils, Classes,
+  Winapi.Windows,
+  IdFTPList, IdException, {$if CompilerVersion >= 16}IdAllFTPListParsers, {$ifend}IdFTPCommon;
 
 function FTPTimeToUTC(const DT: TDateTime): TDateTime;
 var
@@ -392,7 +394,7 @@ begin
 		end;
 		if Result or (NowRetryCount >= RetryCount) then Break;
 		Inc(NowRetryCount);
-    PreciseSleep(RetryInterval);
+    MainTimer.PreciseSleep(RetryInterval);
 	end;
 end;
 
