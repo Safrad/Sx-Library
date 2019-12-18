@@ -11,9 +11,6 @@ uses
 const
   ErrorCodeStr = 'I/O: ';
 
-var
-  MessageLevelStr: array[TMessageLevel] of string;
-
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string; const Param: array of string); overload;
@@ -234,12 +231,6 @@ begin
   if Assigned(CommonOutput) then
     CommonOutput.AddError(ErrorCodeStr + Text);
 end;
-
-initialization
-
-{$IFNDEF NoInitialization}
-  EnumToStr(TypeInfo(TMessageLevel), MessageLevelStr);
-{$ENDIF NoInitialization}
 
 end.
 

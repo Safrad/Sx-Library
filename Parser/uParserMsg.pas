@@ -36,7 +36,10 @@ type
 implementation
 
 uses
-	uOutputFormat, uStrings, uMsg;
+	uOutputFormat,
+  uStrings,
+  uMessageLevel,
+  uMsg;
 
 (*
 procedure AddMesEx2(MesId: TMesId; Params: array of string; Line, X0, X1, FileNameIndex: SG);

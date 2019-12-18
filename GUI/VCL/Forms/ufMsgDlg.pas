@@ -84,6 +84,7 @@ uses
   uVisualOptions,
   SynTaskDialog,
   uPlaySound,
+  uMessageLevel,
   uMsg,
 	uFiles, uColor, uDictionary,
 	uStrings, uChar, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uMath,

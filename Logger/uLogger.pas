@@ -48,7 +48,7 @@ implementation
 
 uses
   uStrings,
-  uMsg;
+  uMessageLevel;
 
 function StrIndex(const s: string; const AStrings: array of string): SG;
 var i: SG;

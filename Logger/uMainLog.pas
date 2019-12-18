@@ -20,7 +20,6 @@ procedure InitializeMainLog;
 var
 	MainLog: TMainLog;
 
-
 implementation
 
 uses

@@ -50,9 +50,10 @@ implementation
 uses
   Math,
 
-  uMsg,
+  uMessageLevel,
   uFileCharset,
-	uFiles, uCharset,
+	uFiles,
+  uCharset,
   uMainTimer,
 	uOutputFormat, uEscape, uStrings;
 
