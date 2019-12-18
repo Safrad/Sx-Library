@@ -26,7 +26,8 @@ type
 
     function GetShortcutAndSyntax: string;
 
-    procedure Execute(const AParameters: string); virtual;
+    procedure Execute; overload;
+    procedure Execute(const AParameters: string); overload; virtual;
 
     property Enabled: BG read FEnabled write SetEnabled;
     property Shortcut: string read FShortcut write SetShortcut;
@@ -49,6 +50,11 @@ resourcestring
 procedure TCustomCommand.Execute(const AParameters: string);
 begin
   Inc(FExecuteCount);
+end;
+
+procedure TCustomCommand.Execute;
+begin
+  Execute('');
 end;
 
 function TCustomCommand.GetShortcutAndSyntax: string;
