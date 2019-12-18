@@ -63,7 +63,7 @@ type
 		destructor Destroy; override;
 		property FrameRate: Integer read FFrameRate;
 		procedure Reset;
-		procedure Step;
+		procedure Step; override;
 	published
 		property ActiveOnly: BG read FActiveOnly write SetActiveOnly default False;
 		property Enabled: BG read FEnabled write SetEnabled default True;
