@@ -80,6 +80,7 @@ implementation
 uses
   SysUtils,
   uMainLog,
+  uMainLogDecorator,
 {$ifdef MSWINDOWS}
   uExternalApplication,
 {$endif}
@@ -211,7 +212,7 @@ end;
 
 procedure TCommonApplication.InitializeMainLog;
 begin
-  uMainLog.InitializeMainLog;
+  uMainLogDecorator.InitializeMainLog;
 end;
 
 procedure TCommonApplication.InitializeModules;
