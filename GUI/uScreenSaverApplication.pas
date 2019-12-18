@@ -3,7 +3,7 @@ unit uScreenSaverApplication;
 interface
 
 uses
-  uGUIApplication,
+  uVCLGUIApplication,
   uTypes,
   uCustomArgument,
   uSwitchArgument,
@@ -13,7 +13,7 @@ uses
   Windows;
 
 type
-  TScreenSaverApplication = class(TGUIApplication)
+  TScreenSaverApplication = class(TVCLGUIApplication)
   private
     FConfigParent: HWND;
     FConfigurationArgument: TNumericalIntervalArgument;
@@ -45,6 +45,7 @@ uses
   uDictionary,
   uOutputFormat,
   uFiles,
+  uSystemPaths,
   uStrings,
   uStopwatch,
   uMainLog,
@@ -106,7 +107,7 @@ end;
 
 function TScreenSaverApplication.GetTargetExeFileName: TFileName;
 begin
-  Result := SysDir + 'ss' + GetProjectInfo(piInternalName) + '.scr';
+  Result := SystemPaths.SysDir + 'ss' + GetProjectInfo(piInternalName) + '.scr';
 end;
 
 procedure TScreenSaverApplication.Install;
@@ -114,10 +115,10 @@ var
 	TargetExeFileName: TFileName;
 	Reg: TRegistry;
 begin
-  CopyFile(ExeFileName, GetTargetExeFileName, False);
-  CopyDir(WorkDir + 'Languages\', SysDir + 'Languages\');
-  CopyDir(WorkDir + 'Sounds\', SysDir + 'Sounds\');
-  CopyDir(WorkDir + 'Graphics\', SysDir + 'Graphics\');
+  CopyFile(SystemPaths.ExeFileName, GetTargetExeFileName, False);
+  CopyDir(SystemPaths.WorkDir + 'Languages\', SystemPaths.SysDir + 'Languages\');
+  CopyDir(SystemPaths.WorkDir + 'Sounds\', SystemPaths.SysDir + 'Sounds\');
+  CopyDir(SystemPaths.WorkDir + 'Graphics\', SystemPaths.SysDir + 'Graphics\');
   Reg := TRegistry.Create(KEY_SET_VALUE);
   try
     Reg.RootKey := HKEY_CURRENT_USER;
@@ -169,7 +170,7 @@ var
 	HLib : THandle;
 	P: function(a: PChar; ParentHandle: THandle; b, c: Integer): Integer; stdcall;
 begin
-	HLib := LoadLibrary(PChar(SysDir + 'MPR.DLL'));
+	HLib := LoadLibrary(PChar(SystemPaths.SysDir + 'MPR.DLL'));
 	if HLib <> 0 then begin
 		P := GetProcAddress(HLib, 'PwdChangePasswordA');
 		if Assigned(P) then
@@ -192,8 +193,8 @@ var
 	Res: BG;
 begin
   Res := DeleteFileEx(GetTargetExeFileName);
-  Res := Res and RemoveDirsEx(SysDir + 'Sounds\', True);
-  Res := Res and RemoveDirsEx(SysDir + 'Graphics\', True);
+  Res := Res and RemoveDirsEx(SystemPaths.SysDir + 'Sounds\', True);
+  Res := Res and RemoveDirsEx(SystemPaths.SysDir + 'Graphics\', True);
   if Res then
     Information(GetProjectInfo(piProductName) + CharSpace + Translate('successfully uninstalled.'));
 end;
