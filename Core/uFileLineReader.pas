@@ -21,7 +21,9 @@ type
 
 implementation
 
-uses uFile;
+uses
+  uRawFile,
+  uTextFile;
 
 { TFileLineReader }
 
@@ -32,21 +34,21 @@ end;
 
 procedure TFileLineReader.Parse;
 var
-	F: TFile;
+	F: TTextFile;
 	Line: string;
 begin
-	F := TFile.Create;
+	F := TTextFile.Create;
 	try
-		if F.Open(FFileName, fmReadOnly) then
-		begin
-			FStop := False;
-			while (not F.Eof) and (FStop = False) do
-			begin
-				F.Readln(Line);
-				ReadLine(Line);
-			end;
-			F.Close;
-		end;
+    F.FileName := FFileName;
+    F.FileMode := fmReadOnly;
+		F.Open;
+    FStop := False;
+    while (not F.Eof) and (FStop = False) do
+    begin
+      F.ReadLine(Line);
+      ReadLine(Line);
+    end;
+    F.Close;
 	finally
 		F.Free;
 	end;
