@@ -52,7 +52,6 @@ uses
   Winapi.Messages,
 
   uWindowsManagementInstrumentation,
-  uMsg,
   uAPI;
 
 { TWindowsOperatingSystem }
@@ -123,14 +122,14 @@ class procedure TWindowsOperatingSystem.Hibernate;
 begin
   SetPrivilege;
 	if SetSystemPowerState(False, True) = False then
-		ErrorMsg(GetLastError);
+		RaiseLastOSError;
 end;
 
 class procedure TWindowsOperatingSystem.LogOff(const APowerForce: TPowerForce);
 begin
   SetPrivilege;
 	if ExitWindowsEx(EWX_LOGOFF or GetFlag(APowerForce), 0) = False then
-		ErrorMsg(GetLastError);
+		RaiseLastOSError;
 end;
 
 class function TWindowsOperatingSystem.GetNameInternal: string;
@@ -147,20 +146,20 @@ class procedure TWindowsOperatingSystem.PowerOff(const APowerForce: TPowerForce)
 begin
   SetPrivilege;
 	if ExitWindowsEx(EWX_POWEROFF or GetFlag(APowerForce), 0) = False then
-		ErrorMsg(GetLastError);
+		RaiseLastOSError;
 end;
 
 class procedure TWindowsOperatingSystem.ShutDown(const APowerForce: TPowerForce);
 begin
 	if ExitWindowsEx(EWX_SHUTDOWN or GetFlag(APowerForce), 0) = False then
-		ErrorMsg(GetLastError);
+		RaiseLastOSError;
 end;
 
 class procedure TWindowsOperatingSystem.Sleep;
 begin
   SetPrivilege;
 	if SetSystemPowerState(True, True) = False then
-		ErrorMsg(GetLastError);
+		RaiseLastOSError;
 end;
 
 class procedure TWindowsOperatingSystem.RepaintScreen;
@@ -172,7 +171,7 @@ class procedure TWindowsOperatingSystem.Restart(const APowerForce: TPowerForce);
 begin
   SetPrivilege;
 	if ExitWindowsEx(EWX_REBOOT or GetFlag(APowerForce), 0) = False then
-		ErrorMsg(GetLastError);
+		RaiseLastOSError;
 end;
 
 class procedure TWindowsOperatingSystem.SetPrivilege;

@@ -37,7 +37,8 @@ interface
 uses
 	SysUtils,
   Velthuis.BigDecimals,
-	uTypes, uData, uMath, uVector, uCharTable, uInputFormat,
+	uTypes,
+  uVector,
   uChar,
   uParserMsg,
   uSxCustomLineParser,
@@ -207,12 +208,10 @@ type
 implementation
 
 uses
-	Math, TypInfo,
-	uStrings, uFind, uFiles, uOutputFormat,
+	uStrings,
+  uOutputFormat,
   Character,
   uBigDecimalParser,
-  uSxStringParser,
-  uUnicodeChar,
   uNamespace;
 
 constructor TMathExpressionParser.Create;

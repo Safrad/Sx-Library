@@ -68,12 +68,9 @@ uses
   uSystemPaths,
 	uStrings,
   uSorts,
-  uCharset,
   uCharTable,
   uCSVFile,
-  uMath,
-  uDIniFile,
-  uMsg;
+  uMath;
 
 const
 	EnglishLanguageIndex = -1;
@@ -268,7 +265,7 @@ begin
       begin
         if FindEntry(Row[0]) >= 0 then
         begin
-          Warning('Duplicate entry %1', [Row[0]]);
+          Assert(True, ReplaceParam('Duplicate entry %1', [Row[0]]));
           Continue;
         end;
       end;
