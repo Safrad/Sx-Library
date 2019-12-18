@@ -5,7 +5,6 @@ interface
 uses
 	uTypes,
 
-  Types,
   Classes,
   Winapi.Windows,
   VCL.Graphics,
@@ -45,11 +44,23 @@ procedure MenuSet(Menu: TComponent);
 implementation
 
 uses
+  SysUtils,
+  Math,
+
 	Vcl.Forms,
   Vcl.Controls,
-  SysUtils, Math,
-	uDButton, uStrings, uColor, uDictionary, uSounds, uDrawStyle, uGlobalOptions,
-	uGraph, uDBitmap, uSystemPaths, uMsg, uMsgDlg, uVirtualKeyCode, uMath,
+
+	uDButton,
+  uStrings,
+  uColor,
+  uDictionary,
+  uDrawStyle,
+  uGlobalOptions,
+	uGraph,
+  uDBitmap,
+  uSystemPaths,
+  uVirtualKeyCode,
+  uMath,
   uOutputFormat,
   uDForm;
 
