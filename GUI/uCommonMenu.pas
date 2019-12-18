@@ -55,6 +55,7 @@ uses
   uAbout,
   uNewThread,
   uMainLog,
+  uFileLogger,
   uAPI,
   ufOptions,
   uOptions,
@@ -377,12 +378,14 @@ end;
 
 class procedure TCommonMenu.ViewLogFile1Click(Sender: TObject);
 begin
-	APIOpen(MainLog.FileName);
+  if MainLog is TFileLogger then
+  	APIOpen(TFileLogger(MainLog).FileName);
 end;
 
 class procedure TCommonMenu.ViewAllLogFiles1Click(Sender: TObject);
 begin
-	APIOpen(ExtractFilePath(MainLog.FileName));
+  if MainLog is TFileLogger then
+  	APIOpen(ExtractFilePath(TFileLogger(MainLog).FileName));
 end;
 
 class procedure TCommonMenu.Sounds1Click(Sender: TObject);

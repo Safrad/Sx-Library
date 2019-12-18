@@ -17,6 +17,7 @@ uses
   SysUtils,
 
   uMainLog,
+  uFileLogger,
   uDIniFile,
   uExitCommand,
   uRestartCommand,
@@ -65,12 +66,12 @@ begin
   FSystemInfoCommand := TSystemInfoCommand.Create;
   Add(FSystemInfoCommand);
 
-  if Assigned(MainLog) and FileExists(MainLog.FileName) then
+  if Assigned(MainLog) and (MainLog is TFileLogger) and FileExists(TFileLogger(MainLog).FileName) then
   begin
     FShowLogCommand := TShowFileCommand.Create;
     FShowLogCommand.Shortcut := 'ShowLog';
     FShowLogCommand.Description := 'Show log file.';
-    FShowLogCommand.FileName := MainLog.FileName;
+    FShowLogCommand.FileName := TFileLogger(MainLog).FileName;
     Add(FShowLogCommand);
   end;
 

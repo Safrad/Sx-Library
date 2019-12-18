@@ -253,9 +253,9 @@ procedure TOperaBookmarks.WriteToFile(const FileName: string);
 var
 	OutFile: TTextFile;
 begin
+  BackupFile(FileName, bfSub);
 	OutFile := TTextFile.Create;
 	try
-    OutFile.BackupFolder := bfSub;
     OutFile.FileName := FileName;
     OutFile.FileMode := fmRewrite;
 		OutFile.Open;
