@@ -43,17 +43,18 @@ implementation
 
 uses
   SysUtils,
-  Winapi.Windows,
-  TaskBarAPI,
-
+{$ifdef MSWINDOWS}
   ufTableForm,
-  uMsgDlg;
+  TaskBarAPI,
+  uMsgDlg,
+{$endif}
+  Classes;
 
 function IsMainThread: BG;
 begin
   if IsMultiThread then
   begin
-    Result := GetCurrentThreadID = MainThreadID;
+    Result := TThread.Current.ThreadID = MainThreadID;
   end
   else
     Result := True;
@@ -92,10 +93,16 @@ begin
   begin
     raise Exception.Create(AMessage);
   end;
+{$ifdef MSWINDOWS}
   MessageD(AMessage, AMessageLevel, [mbOK]);
+{$else}
+begin
+  raise ENotSupportedException.Create('Table not supported.');
+{$endif}
 end;
 
 procedure TGUIOutputInfo.AddTable(const ATable: TTable);
+{$ifdef MSWINDOWS}
 var
   fTableForm: TfTableForm;
 begin
@@ -105,6 +112,10 @@ begin
   finally
     fTableForm.Free;
   end;
+{$else}
+begin
+  raise ENotSupportedException.Create('Table not supported.');
+{$endif}
 end;
 
 procedure TGUIOutputInfo.AddWarning(const AWarningMessage: string);
@@ -114,17 +125,29 @@ end;
 
 function TGUIOutputInfo.Confirmation(const AMessage: string; const AButtons: TDlgButtons): TDlgBtn;
 begin
+{$ifdef MSWINDOWS}
   Result := MessageD(AMessage, mlConfirmation, AButtons);
+{$else}
+  raise ENotSupportedException.Create('Confirmation not supported.');
+{$endif}
 end;
 
 function TGUIOutputInfo.ConfirmationRetryIgnore(const AMessage: string): BG;
 begin
+{$ifdef MSWINDOWS}
   Result := MessageD(AMessage, mlConfirmation, [mbRetry, mbIgnore]) = mbRetry;
+{$else}
+  raise ENotSupportedException.Create('Confirmation not supported.');
+{$endif}
 end;
 
 function TGUIOutputInfo.ConfirmationYesNo(const AMessage: string): BG;
 begin
+{$ifdef MSWINDOWS}
   Result := MessageD(AMessage, mlConfirmation, [mbYes, mbNo]) = mbYes;
+{$else}
+  raise ENotSupportedException.Create('Confirmation not supported.');
+{$endif}
 end;
 
 function TGUIOutputInfo.GetAborted: BG;
@@ -165,10 +188,14 @@ end;
 procedure TGUIOutputInfo.SetProgressValue(const Value: SG);
 begin
   FProgressValue := Value;
+{$ifdef MSWINDOWS}
   if TaskBarAPI.InitializeTaskbarAPI then
   begin
     TaskBarAPI.SetTaskbarProgressValue(FProgressValue, FProgressMaximumValue);
   end;
+{$else}
+  // Not supported on platform
+{$endif}
 end;
 
 procedure TGUIOutputInfo.Start;
