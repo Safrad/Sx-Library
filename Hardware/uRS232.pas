@@ -69,9 +69,11 @@ implementation
 uses
   SysUtils,
 
-  uMsg,
+  uErrorCodeToStr,
   uOutputFormat,
-  uMainLog;
+  uMainLog,
+  uStrings,
+  uEIOException;
 
 { TRS232 }
 
@@ -114,7 +116,7 @@ begin
 
    if FHandle = INVALID_HANDLE_VALUE then
    begin
-     ErrorMsg('Port %1 - %2', [GetComName, ErrorCodeToStr(GetLastError)]);
+     raise Exception.Create(ReplaceParam('Port %1 - %2', [GetComName, ErrorCodeToStr(GetLastError)]));
      Result := False;
      Exit;
    end;
@@ -144,7 +146,7 @@ begin
 
 		if Suc <> Count then
 		begin
-			Warning('Reading only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
+			raise Exception.Create('Reading only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
 					+ ' from ' + GetComName);
 			Result := False;
 		end
@@ -157,7 +159,7 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			ErrorMsg(ErrorCode);
+			raise EIOException.Create(GetComName, ErrorCode);
 			Result := False;
 		end
 		else
@@ -186,7 +188,7 @@ begin
     else
       Result := EscapeCommFunction(FHandle, CLRDTR);
     if not Result then
-      ErrorMsg(GetLastError);
+      raise EIOException.Create(GetComName, GetLastError);
   end;
 end;
 
@@ -194,8 +196,7 @@ procedure TRS232.SetInfo(const Value: DCB);
 begin
   if not SetCommState(FHandle, Value) then
   begin
-    ErrorMsg(GetLastError);
-    Exit;
+    raise EIOException.Create(GetComName, GetLastError);
   end;
   UpdateInfo;
 end;
@@ -212,10 +213,9 @@ begin
     else
       Result := EscapeCommFunction(FHandle, CLRBREAK);
     if not Result then
-      ErrorMsg(GetLastError);
+      raise EIOException.Create(GetComName, GetLastError);
   end;
 end;
-
 
 procedure TRS232.SetRTS(const Value: BG);
 var
@@ -229,7 +229,7 @@ begin
     else
       Result := EscapeCommFunction(FHandle, CLRRTS);
     if not Result then
-      ErrorMsg(GetLastError);
+      raise EIOException.Create(GetComName, GetLastError);
   end;
 end;
 
@@ -240,8 +240,7 @@ begin
 
   if not GetCommState(FHandle, FInfo) then
   begin
-   ErrorMsg(GetLastError);
-   Exit;
+    raise EIOException.Create(GetComName, GetLastError);
   end;
 end;
 
@@ -257,7 +256,7 @@ begin
     FDCD := (ModemStat and MS_RLSD_ON) <> 0;
   end
   else
-    ErrorMsg(GetLastError);
+    raise EIOException.Create(GetComName, GetLastError);
 end;
 
 function TRS232.BlockWrite(const Buf; const Count: UG): BG;
@@ -271,7 +270,7 @@ begin
 		Result := True;
 
 		if Suc <> Count then
-			Warning('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
+			raise Exception.Create('Writing only ' + BToStr(Suc, ofIO) + '/' + BToStr(Count, ofIO)
 					+ ' to ' + GetComName)
 		else
 			if MainLog.IsLoggerFor(mlDebug) then
@@ -282,7 +281,7 @@ begin
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			ErrorMsg(ErrorCode);
+      raise EIOException.Create(GetComName, ErrorCode);
 			Result := False;
 		end
 		else
