@@ -41,7 +41,7 @@ requires
 
 contains
   FastMM4,
-  uCompLog in uCompLog.pas',
+  uCompLog in 'uCompLog.pas',
   uDView in '..\GUI\uDView.pas',
   uDTimer in '..\GUI\uDTimer.pas',
   uDPanel in '..\GUI\uDPanel.pas',

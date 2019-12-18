@@ -105,6 +105,7 @@
         <DCCReference Include="IndyCore.dcp"/>
         <DCCReference Include="IndySystem.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
+        <DCCReference Include="uCompLog.pas"/>
         <DCCReference Include="..\GUI\uDView.pas"/>
         <DCCReference Include="..\GUI\uDTimer.pas"/>
         <DCCReference Include="..\GUI\uDPanel.pas"/>
@@ -116,7 +117,6 @@
         <DCCReference Include="..\GUI\uNumericComboBox.pas"/>
         <DCCReference Include="..\GUI\uOpenedFiles.pas"/>
         <DCCReference Include="..\GUI\uDMemo.pas"/>
-        <DCCReference Include="uCompLog.pas"/>
         <DCCReference Include="..\GUI\uSxPathEdit.pas"/>
         <DCCReference Include="..\GUI\uSxCheckBox.pas"/>
         <DCCReference Include="..\GUI\uSxLabel.pas"/>
