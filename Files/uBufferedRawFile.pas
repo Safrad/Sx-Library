@@ -127,7 +127,7 @@ procedure TBufferedRawFile.Open;
 begin
   inherited; // Initialize FileSize
 
-  if (FSequentialReadBuffer <> nil) and (FileMode in [fmReadOnly]) then
+  if (FSequentialReadBuffer <> nil) and (FileMode in [fmReadOnly, fmReadAndWrite]) then
   begin
     FSequentialReadBuffer.BufferSize := Min(DefFileBuffer, FileSize);
     FSequentialReadBuffer.DataCount := FileSize;
@@ -182,7 +182,7 @@ procedure TBufferedRawFile.SetFileMode(const AFileMode: TFileMode);
 begin
   inherited;
 
-  if AFileMode in [fmReadOnly] then
+  if AFileMode in [fmReadOnly, fmReadAndWrite] then
   begin
     if FSequentialReadBuffer = nil then
     begin
@@ -195,7 +195,7 @@ begin
   else if FSequentialReadBuffer <> nil then
     FreeAndNil(FSequentialReadBuffer);
 
-  if AFileMode in [fmRewrite, fmAppend] then
+  if AFileMode in [fmRewrite, fmReadAndWrite] then
   begin
     if FSequentialWriteBuffer = nil then
     begin

@@ -81,8 +81,9 @@ begin
     FFile := TRawFile.Create;
     FFile.Logger := nil;
     FFile.FileName := FFileName;
-    FFile.FileMode := fmAppend;
+    FFile.FileMode := fmReadAndWrite;
     FFile.Open;
+    FFile.SeekEnd;
 
     if FFile.FileSize = 0 then
     begin

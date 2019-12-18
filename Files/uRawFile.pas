@@ -57,7 +57,7 @@ const
   FILE_FLAG_FIRST_PIPE_INSTANCE = $00080000;
 
 type
-	TFileMode = (fmReadOnly, fmRewrite, fmAppend, fmReadAndWrite);
+	TFileMode = (fmReadOnly, fmRewrite, fmReadAndWrite);
 
 var
 	FileModeStr: array [TFileMode] of string;
@@ -217,7 +217,7 @@ begin
 			DesiredAccess := GENERIC_READ;
 			ShareMode := ShareMode or FILE_SHARE_WRITE;
 		end;
-	fmRewrite, fmAppend:
+	fmRewrite:
 		begin
 			DesiredAccess := GENERIC_WRITE;
 		end;
@@ -248,9 +248,10 @@ begin
 	begin
     raise EIOException.Create(FFileName, GetLastError);
 	end;
+  if FileMode = fmRewrite then
+    Truncate;
+
 	FFileSize := HandleFileSize(FHandle, FFileName);
-  if FFileMode = fmAppend then
-    SeekEnd;
 {$else}
   FOpened := False;
   AssignFile(FFile, FFileName);
@@ -259,21 +260,16 @@ begin
     System.Reset(FFile, 1);
   fmRewrite:
     System.Rewrite(FFile, 1);
-  fmAppend:
+  fmReadAndWrite:
   begin
     if FileExists(FFileName) then
       System.Reset(FFile, 1)
     else
       System.Rewrite(FFile, 1);
   end;
-  fmReadAndWrite:
-    System.Reset(FFile, 1);
   end;
 
   FFileSize := System.FileSize(FFile);
-
-  if FFileMode = fmAppend then
-    System.Seek(FFile, FFileSize);
 
   FOpened := True;
 {$endif}

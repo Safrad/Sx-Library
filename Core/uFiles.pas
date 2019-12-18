@@ -1441,7 +1441,7 @@ begin
 		try
       F.FileName := AFileName;
       if AAppend then
-        F.FileMode := fmAppend
+        F.FileMode := fmReadAndWrite // Needs to read BOM
       else
         F.FileMode := fmRewrite;
   		F.DefaultCharset := AFileCharset;
@@ -1449,6 +1449,8 @@ begin
       F.SkipSameData := False;
       F.BackupFolder := ABackupFolder;
 			F.Open;
+      if F.FileMode <> fmRewrite then
+        F.SeekEnd;
       F.WriteNoConversion(DataA);
       F.Close;
 		finally
@@ -1492,10 +1494,12 @@ begin
 	try
     F.FileName := AFileName;
     if AAppend then
-      F.FileMode := fmAppend
+      F.FileMode := fmReadAndWrite
     else
       F.FileMode := fmRewrite;
 		F.Open;
+    if AAppend then
+      F.SeekEnd;
     i := 0;
     while i < AOpeningNameCount do
     begin

@@ -22,10 +22,11 @@ type
     FDataSize: U8;
 		procedure ReadPrefix;
     procedure SetDefaultCharsetIfNotInFile;
-		procedure WritePrefix;
+		procedure ForceWritePrefix;
     procedure SetUseByteOrderMark(const Value: BG);
     function ConvertBuffer(const ABuffer: array of U1): string;
     procedure RaiseUnsupportedCharset;
+    procedure WritePrefixIfEnabled;
   public
     constructor Create;
     destructor Destroy; override;
@@ -95,33 +96,20 @@ begin
 	case FileMode of
 	fmReadOnly, fmReadAndWrite:
 		begin
-  		ReadPrefix;
-      Seek(Length(ByteOrderMarks[FCharset]));
-      SetDefaultCharsetIfNotInFile;
-		end;
-	fmAppend:
-		begin
 			if FileSize > 0 then
 			begin
-        SeekBegin;
- 				ReadPrefix;
-				SeekEnd;
+        ReadPrefix;
+        Seek(Length(ByteOrderMarks[FCharset]));
         SetDefaultCharsetIfNotInFile;
-			end
-			else if FUseByteOrderMark then
+      end
+			else if FileMode = fmReadAndWrite then
       begin
-        FCharset := FDefaultCharset;
-				WritePrefix;
+        WritePrefixIfEnabled;
       end;
 		end;
 	fmRewrite:
 		begin
-			Truncate;
-			if FUseByteOrderMark then
-      begin
-        FCharset := FDefaultCharset;
-				WritePrefix;
-      end;
+      WritePrefixIfEnabled;
 		end;
 	end;
 end;
@@ -293,6 +281,15 @@ begin
   Result := ConvertBuffer(Buffer);
 end;
 
+procedure TTextFile.WritePrefixIfEnabled;
+begin
+  if FUseByteOrderMark then
+  begin
+    FCharset := FDefaultCharset;
+    ForceWritePrefix;
+  end;
+end;
+
 function TTextFile.ConvertBuffer(const ABuffer: array of U1): string;
 begin
   case FCharset of
@@ -422,7 +419,7 @@ begin
 	Write(Line + FileSep);
 end;
 
-procedure TTextFile.WritePrefix;
+procedure TTextFile.ForceWritePrefix;
 var
 	L: SG;
 begin

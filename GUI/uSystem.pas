@@ -232,10 +232,12 @@ begin
     F.DefaultCharset := Charset;
     F.FileName := FileName;
     if Append then
-      F.FileMode := fmAppend
+      F.FileMode := fmReadAndWrite
     else
       F.FileMode := fmRewrite;
 		F.Open;
+    if Append then
+      F.SeekEnd;
     i := 0;
     while i < Lines.Count do
     begin
