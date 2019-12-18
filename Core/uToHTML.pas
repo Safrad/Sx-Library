@@ -15,7 +15,6 @@ function SToHTML(const Text: string): string;
 function TextToHTML(const Text: string): string;
 function FileToHTML(const FileName: TFileName): TFileName;
 procedure DirToHTML(const Dir: string; const CreateHTMLIndexFile: BG);
-function RepairCell(const Data: string): string;
 
 implementation
 
@@ -99,14 +98,6 @@ end;
 procedure CloseTable(var Result: string);
 begin
 	Result := Result + '</table>';
-end;
-
-function RepairCell(const Data: string): string;
-begin
-	if (Data <> '') and ((Pos('/', Data) <> 0) or (Pos('htm', Data) <> 0)) and (Pos('<', Data) = 0) then
-		Result := '<a href="' + Data + '">' + ExtractFileName(ReplaceF(Data, '/', '\')) + '</a>'
-	else
-		Result := Data;
 end;
 
 function TextToHTML(const Text: string): string;
