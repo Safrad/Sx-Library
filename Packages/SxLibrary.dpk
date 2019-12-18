@@ -41,6 +41,7 @@ requires
 
 contains
   FastMM4,
+  uCompLog in uCompLog.pas',
   uDView in '..\GUI\uDView.pas',
   uDTimer in '..\GUI\uDTimer.pas',
   uDPanel in '..\GUI\uDPanel.pas',
@@ -52,7 +53,6 @@ contains
   uNumericComboBox in '..\GUI\uNumericComboBox.pas',
   uOpenedFiles in '..\GUI\uOpenedFiles.pas',
   uDMemo in '..\GUI\uDMemo.pas',
-  uCompLog in '..\Packages\uCompLog.pas',
   uSxPathEdit in '..\GUI\uSxPathEdit.pas',
   uSxCheckBox in '..\GUI\uSxCheckBox.pas',
   uSxLabel in '..\GUI\uSxLabel.pas',
