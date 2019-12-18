@@ -191,7 +191,8 @@ uses
 
 	uGraph, uDBitmap, uMsg, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
   uVariant,
-	uDWinControl, uDForm,
+	uDWinControl,
+  uLgToPx,
 	fFind, Variants;
 
 { TDView }

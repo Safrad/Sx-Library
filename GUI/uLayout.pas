@@ -10,7 +10,7 @@ procedure LayoutControls(const Controls: array of TControl; const Width, Height:
 
 implementation
 
-uses uDForm;
+uses uLgToPx;
 
 procedure LayoutControls(const Controls: array of TControl; const Width, Height: SG);
 var

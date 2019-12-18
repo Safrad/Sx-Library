@@ -107,7 +107,6 @@ type
 implementation
 
 uses
-	uDForm,
   Vcl.Forms,
 	Vcl.Consts,
   SysUtils,
@@ -116,7 +115,7 @@ uses
 
   Math, Types,
 	uGraph, uStrings, uColor, uMenus, uDrawStyle, uGlobalOptions,
-	uPictureFactory, uSounds, uOperatingSystem, uDWinControl;
+	uPictureFactory, uSounds, uOperatingSystem, uDWinControl, uLgToPx;
 
 { TDButton }
 var

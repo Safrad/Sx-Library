@@ -165,7 +165,7 @@ implementation
 
 uses
 	Math,
-	uMenus, uInputFormat, uOutputFormat, uDIniFile, uLayout, uDrawStyle, uDictionary, uStrings;
+	uMenus, uInputFormat, uOutputFormat, uDIniFile, uLayout, uDrawStyle, uDictionary, uStrings, uLgToPx;
 
 const
 	SpectrumPixel = 4;

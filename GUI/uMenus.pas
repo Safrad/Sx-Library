@@ -62,7 +62,7 @@ uses
   uVirtualKeyCode,
   uMath,
   uOutputFormat,
-  uDForm;
+  uLgToPx;
 
 var
 	ImageList: TCustomImageList;

@@ -80,6 +80,7 @@ uses
   uStrings,
 	uGraph,
   uSystemPaths,
+  uLgToPx,
   uMath,
   uOutputFormat,
   uInputFormat,

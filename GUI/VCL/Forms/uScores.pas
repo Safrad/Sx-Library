@@ -35,7 +35,8 @@ implementation
 
 uses
   uMath,
-	uOutputFormat, uRawFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor;
+	uOutputFormat, uRawFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor,
+  uLgToPx;
 
 var
 	fScores: TfScores;

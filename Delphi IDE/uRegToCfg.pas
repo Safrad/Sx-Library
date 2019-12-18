@@ -6,7 +6,6 @@ uses
 	uTypes,
   uDelphi,
 	uStrings,
-	uFiles,
 	SysUtils,
 	Registry,
 	Windows;
@@ -25,7 +24,10 @@ implementation
 uses
   Classes,
 
-	uMath, uMsg,
+  uSystemPaths,
+  uMsg,
+	uMath,
+  uFiles,
   uFileCharset;
 
 function GetDelphiLibraryPath(const RegPath: string; const DelphiVersion: TDelphiVersion; const SystemPlatform: TSystemPlatform): string;
@@ -44,12 +46,12 @@ var
   i: TDelphiVersion;
 begin
   Result := '';
-  FileName := DataDir + 'default.cfg';
+  FileName := SystemPaths.DataDir + 'default.cfg';
   if FileExistsEx(FileName) then
 	  Result := Result + ReadStringFromFile(FileName) + FileSep;
 	for i := dvDelphi1 to DelphiVersion do
   begin
-	  FileName := DataDir + 'default-D' + GetDelphiShortName(i) + '.cfg';
+	  FileName := SystemPaths.DataDir + 'default-D' + GetDelphiShortName(i) + '.cfg';
 	  if FileExistsEx(FileName) then
 		  Result := Result + ReadStringFromFile(FileName) + FileSep;
   end;

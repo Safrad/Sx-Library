@@ -86,6 +86,7 @@ uses
   uPlaySound,
   uMessageLevel,
   uMsg,
+  uLgToPx,
 	uFiles, uColor, uDictionary,
 	uStrings, uChar, uGraph, uDBitmap, uData, uInputFormat, uOutputFormat, uMath,
 	Winapi.Windows, Math, UITypes;
@@ -135,10 +136,7 @@ begin
 	try
 		SetLength(ParamStart, Length(Ignore.Param));
 		i := 1;
-		if StartStr(ErrorCodeStr, Ignore.Text) then
-			Input := Ignore.Text
-		else
-			Input := Translate(Ignore.Text);
+		Input := Translate(Ignore.Text);
 		while i <= Length(Input) do
 		begin
 			LastPos := i;

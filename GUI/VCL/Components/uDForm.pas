@@ -80,16 +80,6 @@ procedure glShadowText(Canvas: TCanvas; const X, Y: Integer; const Text: AnsiStr
 	const CF, CB: TColor; const Shadow: SG);
 procedure glTextOut(Canvas: TCanvas; const X, Y: Integer; const Text: string; const C: TColor);
 
-// Logical size to real pixels (depends on current DPI)
-const
-  DefaultDPI = 96;
-
-function LgToPx(const Value: SG): SG; overload;
-function LgToPx(const Value: SG; const OriginalDPI: SG): SG; overload;
-
-var
-	FormBorder: SG = 8;
-
 function ActiveForm: TForm;
 procedure SetControlEnabled(Component: TComponent; E: BG);
 
@@ -107,7 +97,8 @@ uses
   uProjectInfo,
   uDWinControl,
   uOperatingSystem,
-  uGlobalOptions;
+  uGlobalOptions,
+  uLgToPx;
 
 const
 	OneBufferForOpenGL = False;
@@ -819,24 +810,4 @@ begin
 //	Params.Style := Params.Style and not WS_CLIPCHILDREN;
 end;
 
-function LgToPx(const Value: SG): SG; overload;
-begin
-  if Screen.PixelsPerInch = DefaultDPI then
-    Result := Value
-  else
-    Result := RoundDiv(Value * Screen.PixelsPerInch, DefaultDPI);
-end;
-
-function LgToPx(const Value: SG; const OriginalDPI: SG): SG; overload;
-begin
-  if Screen.PixelsPerInch = OriginalDPI then
-    Result := Value
-  else
-    Result := RoundDiv(Value * Screen.PixelsPerInch, OriginalDPI);
-end;
-
-initialization
-{$IFNDEF NoInitialization}
-  FormBorder := LgToPx(FormBorder);
-{$ENDIF NoInitialization}
 end.

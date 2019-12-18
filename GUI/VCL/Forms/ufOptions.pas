@@ -94,6 +94,7 @@ implementation
 uses
 	Types, Math,
 	uDictionary,
+  uLgToPx,
   uTimeSpan,
 	uStrings, uOutputFormat, uInputFormat, uParserMsg, uDEdit, uMath, uGetInt, uGetStr, uGColor,
 	uGetTime, uDIniFile, uSystem, uFiles, uLayout, uDMemo;

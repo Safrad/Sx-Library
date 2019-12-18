@@ -84,7 +84,7 @@ uses
 	uAPI, uHTML, uDictionary,
 	uProjectInfo,
 	uGraph, uDIniFile, ufSysInfo, uSystemPaths, uFileStatistics, uMsg, uData, uWave, uColor, uDrawStyle,
-	uStrings, uMath, uSystem, uInputFormat, uOutputFormat;
+	uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLgToPx;
 
 function GetLocalHomepage: TFileName;
 begin

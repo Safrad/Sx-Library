@@ -35,7 +35,8 @@ implementation
 
 uses
 	SysUtils,
-	uRawFile, uTextFile, uFiles, uStrings, uMath;
+	uRawFile, uTextFile,
+  uStrings, uMath;
 
 const
 	Delimiter = ',';
@@ -70,9 +71,9 @@ begin
 	while FileIndex <= 1 do
 	begin
 		if FileIndex = 0 then
-			DBFileName := DataDir + MiName + '.mif'
+			DBFileName := MiName + '.mif'
 		else
-			DBFileName := DataDir + MiName + '.mid';
+			DBFileName := MiName + '.mid';
 		FIn := TTextFile.Create;
 		try
       FIn.FileName := DbFileName;
@@ -175,7 +176,7 @@ var
 begin
 	FIn := TTextFile.Create;
 	try
-    FIn.FileName := DataDir + MiName + '.mid';
+    FIn.FileName := MiName + '.mid';
     FIn.FileMode := fmRewrite;
 		FIn.Open;
     for FieldMIndex := 0 to FieldMCount - 1 do

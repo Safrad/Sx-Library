@@ -217,6 +217,8 @@ implementation
 
 uses
 	Math,
+
+  uLgToPx,
 	uChar, uMath, uStrings, uInputFormat, uOutputFormat, uEscape, uMainLog, uRect, uWHRect
 {$IFDEF VCL}, uMenus, uSystem {$ENDIF};
 

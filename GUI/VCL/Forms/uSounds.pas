@@ -93,7 +93,8 @@ uses
   uWave,
   uPlaySound,
 	uData, uFiles, uSystemPaths, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings, uLayout,
-	uDictionary;
+	uDictionary,
+  uLgToPx;
 
 type
 	PSound = ^TSound; // Used Sounds
