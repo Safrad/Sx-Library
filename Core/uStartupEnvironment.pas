@@ -19,7 +19,6 @@ implementation
 uses
   uTypes,
   uStrings,
-  uMsg,
 {$IF defined(MSWINDOWS)}
   Winapi.Windows,
   uErrorCodeToStr,
