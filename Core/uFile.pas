@@ -92,7 +92,7 @@ type
 		FFileSize: U8;
     FLogger: TDateTimeLogger;
 		function IsOpened: BG;
-		function ErrorRetry(const ErrorCode: U4): BG;
+		procedure ShowError(const ErrorCode: U4);
 		procedure CreateBuffer;
 		procedure FillBuffer;
 		procedure DestroyBuffer;
@@ -174,9 +174,9 @@ begin
 	inherited Destroy;
 end;
 
-function TFile.ErrorRetry(const ErrorCode: U4): BG;
+procedure TFile.ShowError(const ErrorCode: U4);
 begin
-	Result := IOErrorRetry(FTempFileName, ErrorCode);
+  IOError(FTempFileName, ErrorCode);
 end;
 
 function TFile.IsOpened: BG;
@@ -186,7 +186,6 @@ end;
 
 function TFile.Open(const FileName: TFileName; const Mode: TFileMode;
 	Flags: U4 = FILE_FLAG_SEQUENTIAL_SCAN): BG;
-label LRetry;
 var
 	CreationDistribution: U4;
 	DesiredAccess, ShareMode: U4;
@@ -221,7 +220,6 @@ begin
 	if FLogger.IsLoggerFor(mlDebug) then
     FLogger.Add('Opening for ' + FileModeStr[Mode] + ' ' + FTempFileName, mlDebug);
 
-LRetry :
 	ShareMode := FILE_SHARE_READ;
 	case Mode of
 	fmReadOnly:
@@ -262,8 +260,7 @@ LRetry :
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then
-				goto LRetry;
+			ShowError(ErrorCode);
 			Exit;
 		end;
 	end;
@@ -297,12 +294,10 @@ LRetry :
 end;
 
 function TFile.Seek(const Pos: U8): BG;
-label LRetry;
 var
 	ErrorCode: U4;
 	Pos2: U8;
 begin
-LRetry :
 	Result := False;
 	Pos2 := Pos + U8(FFileBegin);
 	if SetFilePointer(FHandle, // handle of file
@@ -319,8 +314,7 @@ LRetry :
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then
-				goto LRetry;
+			ShowError(ErrorCode);
 		end
 		else
 			Result := True;
@@ -338,12 +332,10 @@ begin
 end;
 
 function TFile.BlockRead(out Buf; const Count: UG): BG;
-label LRetry;
 var
 	Suc: U4;
 	ErrorCode: U4;
 begin
-LRetry :
 	if ReadFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
@@ -366,11 +358,7 @@ LRetry :
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then
-			begin
-				Seek(FFilePos);
-				goto LRetry;
-			end;
+			ShowError(ErrorCode);
 			Result := False;
 		end
 		else
@@ -381,12 +369,10 @@ LRetry :
 end;
 
 function TFile.BlockWrite(const Buf; const Count: UG): BG;
-label LRetry;
 var
 	Suc: U4;
 	ErrorCode: U4;
 begin
-LRetry :
 	if WriteFile(FHandle, Buf, Count, Suc, nil) then
 	begin
 		Result := True;
@@ -409,11 +395,7 @@ LRetry :
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then
-			begin
-				Seek(FFilePos);
-				goto LRetry;
-			end;
+			ShowError(ErrorCode);
 			Result := False;
 		end
 		else
@@ -851,13 +833,11 @@ begin
 end;
 
 function TFile.Close(const ChangeDate: BG = True; const Forced: BG = False): BG;
-label LRetry;
 var
 	CreationTime, LastAccessTime, LastWriteTime: TFileTime;
 	ErrorCode: U4;
   OriginalFileExists: BG;
 begin
-LRetry :
 	Result := False;
 	if not IsOpened then
 	begin
@@ -909,8 +889,7 @@ LRetry :
 		ErrorCode := GetLastError;
 		if ErrorCode <> NO_ERROR then
 		begin
-			if ErrorRetry(ErrorCode) then
-				goto LRetry;
+			ShowError(ErrorCode);
 			Result := False;
 		end
 		else
@@ -920,11 +899,7 @@ LRetry :
 end;
 
 function TFile.Truncate: BG;
-label LRetry;
-var
-	ErrorCode: U4;
 begin
-LRetry :
 	Result := SetEndOfFile(FHandle);
 	if Result then
 	begin
@@ -932,25 +907,17 @@ LRetry :
 	end
 	else
 	begin
-		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then
-			goto LRetry;
+		ShowError(GetLastError);
 	end;
 end;
 
 function TFile.FlushFileBuffers: BG;
-label LRetry;
-var
-	ErrorCode: U4;
 begin
 	SaveBuffer;
-LRetry :
 	Result := Winapi.Windows.FlushFileBuffers(FHandle);
 	if (Result = False) and Assigned(FLogger) then
 	begin
-		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then
-			goto LRetry;
+		ShowError(GetLastError);
 	end;
 end;
 
@@ -960,32 +927,20 @@ begin
 end;
 
 function TFile.Lock(From, Count: U8): BG;
-label LRetry;
-var
-	ErrorCode: U4;
 begin
-LRetry :
 	Result := LockFile(FHandle, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
-		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then
-			goto LRetry;
+		ShowError(GetLastError);
 	end;
 end;
 
 function TFile.UnLock(From, Count: U8): BG;
-label LRetry;
-var
-	ErrorCode: U4;
 begin
-LRetry :
 	Result := UnLockFile(FHandle, TU8(From).D0, TU8(From).D1, TU8(Count).D0, TU8(Count).D1);
 	if Result = False then
 	begin
-		ErrorCode := GetLastError;
-		if ErrorRetry(ErrorCode) then
-			goto LRetry;
+		ShowError(GetLastError);
 	end;
 end;
 

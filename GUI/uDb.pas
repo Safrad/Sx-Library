@@ -356,7 +356,7 @@ begin
 			else
 			begin
 				CloseFile(DbFile); IOResult;
-				IOErrorMessageRetry(FileName,
+				IOErrorMessage(FileName,
 					'File version ' + IntToStr(Head.Version) + ', ' + LineSep +
 					'required version ' + IntToStr(Version) + '.');
 				Exit;
@@ -366,7 +366,7 @@ begin
 		finally
 			CloseFile(DbFile); IOResult;
 			if ErrorCode <> 0 then
-				IOErrorRetry(FName, ErrorCode);
+				IOError(FName, ErrorCode);
 		end;
 	end;
 end;
@@ -388,7 +388,7 @@ begin
 	ErrorCode := IOResult;
 	if ErrorCode <> 0 then
 	begin
-		IOErrorRetry(FName, ErrorCode);
+		IOError(FName, ErrorCode);
 	end
 	else
 	begin
@@ -415,7 +415,7 @@ begin
 		CloseFile(DbFile);
 		IOResult;
 		if ErrorCode <> 0 then
-			IOErrorRetry(FName, ErrorCode);
+			IOError(FName, ErrorCode);
 	end;
 end;
 

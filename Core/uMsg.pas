@@ -42,8 +42,6 @@ procedure ErrorMsg(const ErrorCode: SG); overload;
 
 procedure Fatal(const AException: Exception; const C: TObject = nil);
 
-function ErrorRetry(const Text: string): BG;
-
 {$ifdef MSWINDOWS}
 function ErrorCodeToStr(const ErrorCode: U4): string;
 {$endif}
@@ -54,13 +52,9 @@ function Confirmation(const Text: string; const Buttons: TDlgButtons; const Para
 
 {$ifdef MSWINDOWS}
 procedure IOError(const FileName: TFileName; const ErrorCode: U4);
-
-function IOErrorRetry(const FileName: TFileName; const ErrorCode: U4): BG;
 {$endif}
 
 procedure IOErrorMessage(const FileName: TFileName; const ErrorMsg: string);
-
-function IOErrorMessageRetry(const FileName: TFileName; const ErrorMsg: string): BG;
 
 implementation
 
@@ -73,9 +67,6 @@ uses
   uMainLog,
   uCommonOutput,
   uChar;
-
-resourcestring
-  rsRetry = 'Retry?';
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 begin
@@ -186,20 +177,6 @@ begin
   ShowMessage(mlFatalError, ExpandedText);
 end;
 
-function ErrorRetry(const Text: string): BG;
-begin
-  if MainLog.IsLoggerFor(mlError) then
-    MainLog.Add(Text, mlError);
-
-  if Assigned(CommonOutput) then
-  begin
-    CommonOutput.AddError(Text);
-    Result := CommonOutput.ConfirmationYesNo(rsRetry);
-  end
-  else
-    Result := False;
-end;
-
 {$IFDEF MSWINDOWS}
 function ErrorCodeToStr(const ErrorCode: U4): string;
 var
@@ -244,11 +221,6 @@ procedure IOError(const FileName: TFileName; const ErrorCode: U4);
 begin
   IOErrorMessage(FileName, ErrorCodeToStr(ErrorCode));
 end;
-
-function IOErrorRetry(const FileName: TFileName; const ErrorCode: U4): BG;
-begin
-  Result := IOErrorMessageRetry(FileName, ErrorCodeToStr(ErrorCode));
-end;
 {$endif}
 
 procedure IOErrorMessage(const FileName: TFileName; const ErrorMsg: string);
@@ -261,11 +233,6 @@ begin
 
   if Assigned(CommonOutput) then
     CommonOutput.AddError(ErrorCodeStr + Text);
-end;
-
-function IOErrorMessageRetry(const FileName: TFileName; const ErrorMsg: string): BG;
-begin
-  Result := ErrorRetry(ErrorMsg + ': ' + FileName);
 end;
 
 initialization

@@ -2177,9 +2177,9 @@ begin
 	try
 		FreeImage;
 		Result := False;
-		while not FileExistsEx(FileName) do
+		if not FileExistsEx(FileName) then
 		begin
-			if IOErrorMessageRetry(FileName, ErrorCodeToStr(3)) then Continue;
+			IOError(FileName, 3);
 			Exit;
 		end;
 		Ext := LowerCase(ExtractFileExt(FileName));
