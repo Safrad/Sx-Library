@@ -5,20 +5,17 @@ interface
 uses
   SysUtils,
   uTypes,
-  uRawFile,
-  uBackup;
+  uRawFile;
 
 type
   TProtectedRawFile = class(TRawFile)
   private
 		FProtection: BG;
-    FBackupFolder: TBackupFolder;
     FSkipSameData: BG;
     FFileName: TFileName;
     function CanProtect: BG;
     procedure SetProtection(const Value: BG);
     procedure SetFileName(const Value: TFileName);
-    procedure SetBackupFolder(const Value: TBackupFolder);
     procedure SetSkipSameData(const Value: BG);
   public
     constructor Create;
@@ -29,7 +26,6 @@ type
     property FileName: TFileName read FFileName write SetFileName;
 		property Protection: BG read FProtection write SetProtection;
 		property SkipSameData: BG read FSkipSameData write SetSkipSameData;
-    property BackupFolder: TBackupFolder read FBackupFolder write SetBackupFolder;
   end;
 
 implementation
@@ -52,7 +48,6 @@ begin
 
 	FProtection := True;
   FSkipSameData := True;
-  FBackupFolder := bfNone;
 end;
 
 procedure TProtectedRawFile.Open;
@@ -93,8 +88,6 @@ begin
       OriginalFileExists := FileExists(FFileName);
       if (FSkipSameData = False) or (OriginalFileExists = False) or (not SameFiles(inherited FileName, FFileName)) then
       begin
-        if OriginalFileExists then
-          BackupFile(FFileName, FBackupFolder);
         CopyFile(inherited FileName, FFileName, False);
       end;
       DeleteFileEx(inherited FileName);
@@ -103,12 +96,6 @@ begin
       if FileExists(FFileName) then
         DeleteFileEx(FFileName);
   end
-end;
-
-procedure TProtectedRawFile.SetBackupFolder(const Value: TBackupFolder);
-begin
-	MustBeClosed('BackupFolder');
-  FBackupFolder := Value;
 end;
 
 procedure TProtectedRawFile.SetFileName(const Value: TFileName);

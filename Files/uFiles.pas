@@ -13,8 +13,7 @@ uses
   SysUtils,
 
   uTypes,
-  uFileCharset,
-  uBackup;
+  uFileCharset;
 
 type
 {$ifndef MSWINDOWS}
@@ -92,7 +91,7 @@ function ReadStringFromFile(const AFileName: TFileName): string; overload;
 function ReadStringFromFile(const AFileName: TFileName; const ALimit: U8): string; overload;
 function ReadStringFromFileEx(const AFileName: TFileName; out AData: string): TFileCharset;
 
-procedure WriteStringToFile(const AFileName: TFileName; const AData: string; const AAppend: BG; const AFileCharset: TFileCharset = DefaultFileCharset; const AProtection: BG = True; const ABackupFolder: TBackupFolder = bfNone); overload;
+procedure WriteStringToFile(const AFileName: TFileName; const AData: string; const AAppend: BG; const AFileCharset: TFileCharset = DefaultFileCharset; const AProtection: BG = True); overload;
 
 function ShortToLongFileName(const AShortFileName: string): string;
 function ShortToLongPath(const AShortFileName: string): string;
@@ -1409,8 +1408,7 @@ procedure WriteStringToFile(
   const AData: string;
   const AAppend: BG;
   const AFileCharset: TFileCharset = DefaultFileCharset;
-  const AProtection: BG = True;
-  const ABackupFolder: TBackupFolder = bfNone);
+  const AProtection: BG = True);
 var
 	F: TTextFile;
 	DataA: RawByteString;
@@ -1428,7 +1426,6 @@ begin
   		F.DefaultCharset := AFileCharset;
       F.Protection := AProtection;
       F.SkipSameData := False;
-      F.BackupFolder := ABackupFolder;
 			F.Open;
       if F.FileMode <> fmRewrite then
         F.SeekEnd;
