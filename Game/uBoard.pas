@@ -17,7 +17,7 @@ type
     function SquareToStr(const AX, AY: SG): string;
   public
     // Setup
-    procedure SetSize(const AWidth, AHeight: SG);
+    procedure SetSize(const AWidth, AHeight: SG); virtual;
     property OutOfBoard: T read FOutOfBoard write SetOutOfBoard;
 
     // Process
@@ -35,7 +35,8 @@ type
 implementation
 
 uses
-  SysUtils;
+  SysUtils,
+  uMath;
 
 { TBoard<T> }
 
