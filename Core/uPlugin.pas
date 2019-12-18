@@ -47,7 +47,7 @@ uses
   Winapi.Windows,
 
   uStrings,
-  uMsg,
+  uErrorCodeToStr,
   uMainLog,
   uOutputFormat,
   uProjectInfo,

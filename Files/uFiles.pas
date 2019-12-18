@@ -144,7 +144,7 @@ uses
 	Math,
 {$ifdef MSWINDOWS}
   uWindowsFileAPI,
-  uMsg,
+  uErrorCodeToStr,
 {$endif}
 
   uStrings,

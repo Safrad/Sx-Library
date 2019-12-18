@@ -22,6 +22,7 @@ uses
   uMsg,
 {$IF defined(MSWINDOWS)}
   Winapi.Windows,
+  uErrorCodeToStr,
 {$ENDIF}
   SysUtils;
 

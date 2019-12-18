@@ -14,8 +14,10 @@ type
 
 implementation
 
+{$ifdef MSWINDOWS}
 uses
-  uMsg;
+  uErrorCodeToStr;
+{$endif}
 
 { EIOException }
 
@@ -29,3 +31,4 @@ begin
 end;
 
 end.
+

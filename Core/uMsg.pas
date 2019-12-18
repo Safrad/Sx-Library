@@ -8,9 +8,6 @@ uses
   uTypes,
   uOutputInfo;
 
-const
-  ErrorCodeStr = 'I/O: ';
-
 procedure ShowMessage(const MessageLevel: TMessageLevel; const ExpandedText: string); overload;
 
 procedure ShowMessage(const MessageLevel: TMessageLevel; const Text: string; const Param: array of string); overload;
@@ -39,10 +36,6 @@ procedure ErrorMsg(const ErrorCode: SG); overload;
 
 procedure Fatal(const AException: Exception; const C: TObject = nil);
 
-{$ifdef MSWINDOWS}
-function ErrorCodeToStr(const ErrorCode: U4): string;
-{$endif}
-
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn; overload;
 
 function Confirmation(const Text: string; const Buttons: TDlgButtons; const Param: array of string): TDlgBtn; overload;
@@ -57,7 +50,7 @@ implementation
 
 uses
 {$ifdef MSWINDOWS}
-  Winapi.Windows,
+  uErrorCodeToStr,
 {$endif}
 
   uStrings,
@@ -174,22 +167,6 @@ begin
   ShowMessage(mlFatalError, ExpandedText);
 end;
 
-{$IFDEF MSWINDOWS}
-function ErrorCodeToStr(const ErrorCode: U4): string;
-var
-  NewLength: SG;
-begin
-  SetLength(Result, MAX_PATH);
-  NewLength := FormatMessage(
-		{ FORMAT_MESSAGE_ALLOCATE_BUFFER or }
-    FORMAT_MESSAGE_FROM_SYSTEM or FORMAT_MESSAGE_IGNORE_INSERTS, nil, ErrorCode, 0{LANG_USER_DEFAULT}
-    {LANG_NEUTRAL or SUBLANG_DEFAULT shl 10}, PChar(Result), MAX_PATH, nil);
-  SetLength(Result, NewLength);
-  DelBESpace(Result);
-  Result := ErrorCodeStr + CharSpace + IntToStr(ErrorCode) + ' ' + CharEnDash + ' ' + Result;
-end;
-{$ENDIF}
-
 function Confirmation(const Text: string; const Buttons: TDlgButtons): TDlgBtn;
 begin
   if MainLog.IsLoggerFor(mlConfirmation) then
@@ -221,6 +198,8 @@ end;
 {$endif}
 
 procedure IOErrorMessage(const FileName: TFileName; const ErrorMsg: string);
+const
+  ErrorCodeStr = 'I/O: ';
 var
   Text: string;
 begin
