@@ -26,11 +26,17 @@ $(sx-library)\Math
 $(sx-library)\RandomGenerator
 $(sx-library)\Table
 $(sx-library)\Formatter
+$(sx-library)\Logger
 $(sx-library)\Files
+$(sx-library)\Files\Config
+$(sx-library)\Files\Database
+$(sx-library)\Memory
 $(sx-library)\Parser
 $(sx-library)\Geometry
 $(sx-library)\Arguments
 $(sx-library)\Commands
+$(sx-library)\ThreadPool
+$(sx-library)\ExternalApplication
 $(sx-library)\Executable
 $(sx-library)\ApplicationModule
 $(sx-library)\Benchmark
@@ -41,6 +47,7 @@ $(sx-library)\Sound\Players
 $(sx-library)\Input
 $(sx-library)\VersionSystem
 $(sx-library)\Console
+$(sx-library)\Hardware
 $(sx-library)\GUI
 $(sx-library)\GUI\VCL
 $(sx-library)\GUI\VCL\Components
