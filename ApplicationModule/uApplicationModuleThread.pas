@@ -5,21 +5,23 @@ interface
 uses
   uSxThread,
   uTimeSpan,
-  uDelayedApplicationModule;
+  uApplicationModule;
 
 type
   TApplicationModuleThread = class(TSxThread)
   private
-    FModule: TDelayedApplicationModule;
+    FModule: TApplicationModule;
     FDelay: TTimeSpan;
-    procedure SetModule(const Value: TDelayedApplicationModule);
+    procedure SetModule(const Value: TApplicationModule);
+    procedure SetDelay(const Value: TTimeSpan);
   protected
     procedure Execute; override;
   public
     constructor Create;
 
     procedure Terminate; override;
-    property Module: TDelayedApplicationModule read FModule write SetModule;
+    property Delay: TTimeSpan read FDelay write SetDelay;
+    property Module: TApplicationModule read FModule write SetModule;
   end;
 
 implementation
@@ -44,7 +46,6 @@ begin
 
   inherited;
 
-  FDelay := FModule.DelayTime;
   PreciseSleep(FDelay);
 
   if Terminated then
@@ -58,7 +59,12 @@ begin
   end;
 end;
 
-procedure TApplicationModuleThread.SetModule(const Value: TDelayedApplicationModule);
+procedure TApplicationModuleThread.SetDelay(const Value: TTimeSpan);
+begin
+  FDelay := Value;
+end;
+
+procedure TApplicationModuleThread.SetModule(const Value: TApplicationModule);
 begin
   FModule := Value;
 end;

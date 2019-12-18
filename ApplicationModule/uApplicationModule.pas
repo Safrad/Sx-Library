@@ -43,6 +43,7 @@ type
     // Process
     procedure Load; virtual;
     procedure Unload; virtual;
+    procedure CallOnLoad;
 
     // Output
     property LoadTime: TDateTime read FLoadTime;
@@ -61,6 +62,11 @@ uses
   uMainLog;
 
 { TApplicationModule }
+
+procedure TApplicationModule.CallOnLoad;
+begin
+  OnLoad;
+end;
 
 constructor TApplicationModule.Create;
 begin

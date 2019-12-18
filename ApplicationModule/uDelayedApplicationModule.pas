@@ -19,8 +19,6 @@ type
     procedure Load; override;
     procedure Unload; override;
 
-    procedure CallOnLoad;
-
     property DelayTime: TTimeSpan read FDelayTime write SetDelayTime;
   end;
 
@@ -31,11 +29,6 @@ uses
   uApplicationModuleThread;
 
 { TDelayedApplicationModule }
-
-procedure TDelayedApplicationModule.CallOnLoad;
-begin
-  OnLoad;
-end;
 
 constructor TDelayedApplicationModule.Create;
 begin
@@ -50,6 +43,7 @@ begin
   begin
     FThread := TApplicationModuleThread.Create;
     TApplicationModuleThread(FThread).Module := Self;
+    TApplicationModuleThread(FThread).Delay := FDelayTime;
     FThread.Start;
   end;
 end;
