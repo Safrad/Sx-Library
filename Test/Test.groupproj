@@ -9,7 +9,7 @@
         <Projects Include="Echo\Echo.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LibTest.dproj">
+        <Projects Include="DUnitTests\DUnitTests.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="DUnitXTests\DUnitXTests.dproj">
@@ -41,14 +41,14 @@
     <Target Name="Echo:Make">
         <MSBuild Projects="Echo\Echo.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LibTest">
-        <MSBuild Projects="LibTest.dproj"/>
+    <Target Name="DUnitTests">
+        <MSBuild Projects="DUnitTests\DUnitTests.dproj"/>
     </Target>
-    <Target Name="LibTest:Clean">
-        <MSBuild Projects="LibTest.dproj" Targets="Clean"/>
+    <Target Name="DUnitTests:Clean">
+        <MSBuild Projects="DUnitTests\DUnitTests.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LibTest:Make">
-        <MSBuild Projects="LibTest.dproj" Targets="Make"/>
+    <Target Name="DUnitTests:Make">
+        <MSBuild Projects="DUnitTests\DUnitTests.dproj" Targets="Make"/>
     </Target>
     <Target Name="DUnitXTests">
         <MSBuild Projects="DUnitXTests\DUnitXTests.dproj"/>
@@ -60,13 +60,13 @@
         <MSBuild Projects="DUnitXTests\DUnitXTests.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="DllForTest;Echo;LibTest;DUnitXTests"/>
+        <CallTarget Targets="DllForTest;Echo;DUnitTests;DUnitXTests"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DllForTest:Clean;Echo:Clean;LibTest:Clean;DUnitXTests:Clean"/>
+        <CallTarget Targets="DllForTest:Clean;Echo:Clean;DUnitTests:Clean;DUnitXTests:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DllForTest:Make;Echo:Make;LibTest:Make;DUnitXTests:Make"/>
+        <CallTarget Targets="DllForTest:Make;Echo:Make;DUnitTests:Make;DUnitXTests:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -1,4 +1,4 @@
-program LibTest;
+program DUnitTests;
 
 {$ifopt d-}
 {$APPTYPE CONSOLE}

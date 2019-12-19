@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{F7B05A6C-00F0-4CF9-99B2-3BEA7A137553}</ProjectGuid>
-        <MainSource>LibTest.dpr</MainSource>
+        <MainSource>DUnitTests.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -60,7 +60,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>LibTest</SanitizedProjectName>
+        <SanitizedProjectName>DUnitTests</SanitizedProjectName>
         <VerInfo_Keys>CompanyName=SxSoft;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
         <DCC_UsePackage>vcl;rtl;vclx;indy;VclSmp;DelphiX_for6;$(DCC_UsePackage)</DCC_UsePackage>
@@ -206,7 +206,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">LibTest.dpr</Source>
+                    <Source Name="MainSource">DUnitTests.dpr</Source>
                 </Source>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -242,21 +242,21 @@
                 <Platform value="Win64">True</Platform>
             </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="LibTest.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="DUnitTests.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>LibTest.exe</RemoteName>
+                        <RemoteName>DUnitTests.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="LibTest.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="DUnitTests.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
-                        <RemoteName>LibTest.exe</RemoteName>
+                        <RemoteName>DUnitTests.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="LibTest.exe" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="DUnitTests.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>LibTest.exe</RemoteName>
+                        <RemoteName>DUnitTests.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
