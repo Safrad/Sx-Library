@@ -13,8 +13,8 @@ type
     FKeyboardState: TKeyboardState;
     FUpdated: BG;
   public
-    procedure ReadState;
-    function IsKeyDown(const AKeyIndex: SG): BG;
+    procedure ReadState; override;
+    function IsKeyDown(const AKeyIndex: SG): BG; override;
   end;
 
 implementation
