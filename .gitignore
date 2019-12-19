@@ -127,6 +127,7 @@ thumbs.db
 *.projdata
 *.tvsconfig
 *.dsk
+dunitx-results.xml
 
 # Delphi history and backups
 __history/
