@@ -142,7 +142,7 @@ procedure AddPrefix(var Dest: string; const Source: string);
 function Plural(const Number: SG): string;
 procedure CorrectDir(var s: string);
 function CorrectDirF(const s: string): string;
-function RandomString(const Size: SG): string;
+function RandomString(const Size: SG; const FromChar: U1 = 1; const ToChar: U1 = 255): string;
 function RandomText(const Size: SG): string;
 
 procedure EnumToStr(const TypeInfo: PTypeInfo; out AString: array of string; const EnumPrefixLength: SG = 2);
@@ -1216,12 +1216,12 @@ begin
 	CorrectDir(Result);
 end;
 
-function RandomString(const Size: SG): string;
+function RandomString(const Size: SG; const FromChar: U1 = 1; const ToChar: U1 = 255): string;
 var i: SG;
 begin
 	SetLength(Result, Size);
 	for i := 1 to Size do
-		Result[i] := Char(1 + Random(255));
+		Result[i] := Char(FromChar + Random(ToChar - FromChar + 1));
 end;
 
 function RandomText(const Size: SG): string;

@@ -60,7 +60,7 @@ procedure TTextFileTest.CreateSampleFile(const FileName: TFileName);
 var
   s: string;
 begin
-  s := RandomString(10 * MB);
+  s := RandomString(10 * MB, 32, 127);
   WriteStringToFile(FileName, s, False);
 end;
 
