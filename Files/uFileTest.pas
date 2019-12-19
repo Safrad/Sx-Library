@@ -1,5 +1,7 @@
 unit uFileTest;
 
+{$WARN UNIT_DEPRECATED OFF}
+
 interface
 
 uses
