@@ -20,7 +20,6 @@ type
 implementation
 
 uses
-  Winapi.Windows,
 	uTypes, uFileCharset, uFile, uFiles, uStrings, uChar, uOperatingSystem,
   uTemporaryDirectory;
 

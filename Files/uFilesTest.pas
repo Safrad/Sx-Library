@@ -16,7 +16,6 @@ implementation
 
 uses
   SysUtils,
-  Winapi.Windows,
   uTypes,
   uFileCharset,
   uFiles,
