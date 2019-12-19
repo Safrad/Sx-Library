@@ -5,7 +5,7 @@ program LibTest;
 {$endif}
 
 uses
-  uTestsApplication,
+  uDUnitApplication,
   uEscapeTest in '..\Core\uEscapeTest.pas',
   uCharsetTest in '..\Core\uCharsetTest.pas',
   uStringsTest in '..\Core\uStringsTest.pas',
@@ -84,9 +84,9 @@ uses
 {$R *.RES}
 
 var
-  TestsApplication: TTestsApplication;
+  TestsApplication: TDUnitApplication;
 begin
-  TestsApplication := TTestsApplication.Create;
+  TestsApplication := TDUnitApplication.Create;
   try
     TestsApplication.Run;
   finally

@@ -12,6 +12,9 @@
         <Projects Include="LibTest.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="DUnitXTests\DUnitXTests.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -47,14 +50,23 @@
     <Target Name="LibTest:Make">
         <MSBuild Projects="LibTest.dproj" Targets="Make"/>
     </Target>
+    <Target Name="DUnitXTests">
+        <MSBuild Projects="DUnitXTests\DUnitXTests.dproj"/>
+    </Target>
+    <Target Name="DUnitXTests:Clean">
+        <MSBuild Projects="DUnitXTests\DUnitXTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DUnitXTests:Make">
+        <MSBuild Projects="DUnitXTests\DUnitXTests.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="DllForTest;Echo;LibTest"/>
+        <CallTarget Targets="DllForTest;Echo;LibTest;DUnitXTests"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DllForTest:Clean;Echo:Clean;LibTest:Clean"/>
+        <CallTarget Targets="DllForTest:Clean;Echo:Clean;LibTest:Clean;DUnitXTests:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DllForTest:Make;Echo:Make;LibTest:Make"/>
+        <CallTarget Targets="DllForTest:Make;Echo:Make;LibTest:Make;DUnitXTests:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
