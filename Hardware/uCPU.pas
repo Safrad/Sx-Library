@@ -2,11 +2,17 @@ unit uCPU;
 
 interface
 
+{$ifdef MSWINDOWS}
 uses
-{$ifdef MSWINDOWS}uWindowsCPU{$else}uCustomCPU{$endif};
-
+	uWindowsCPU;
 type
-  TSpecificCPU = {$ifdef MSWINDOWS}TWindowsCPU{$else}TCustomCPU{$endif};
+  TSpecificCPU = TWindowsCPU;
+{$else}
+uses
+	uCustomCPU;
+type
+  TSpecificCPU = TCustomCPU;
+{$endif}
 
 function CPU: TSpecificCPU;
 
