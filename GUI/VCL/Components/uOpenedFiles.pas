@@ -36,7 +36,11 @@ uses
 	uTypes, uReopen, uOpenedFileItem,
   uSwitchArgument,
   uFileNameArgument,
-	Windows, SysUtils, Menus, Graphics, Classes, Controls, Messages, Dialogs;
+
+  Winapi.Windows,
+  Winapi.Messages,
+
+  SysUtils, Menus, Graphics, Classes, Controls, Dialogs;
 
 type
 	TOnNewFileEvent = function(Sender: TObject; const Item: TOpenedFileItem): BG of object;
@@ -171,7 +175,8 @@ type
 implementation
 
 uses
-	Forms, Math, ShellAPI, uWatch, uMsgDlg,
+  UITypes,
+	Forms, Math, Winapi.ShellAPI, uWatch, uMsgDlg, uKeyboard,
   uCustomArgument, uOutputInfo,
 	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI,
 	uProjectInfo, uReg, uFilePosCache, uPropertiesDialog,
@@ -1368,7 +1373,7 @@ const
 var
 	i: SG;
 begin
-	if GetKeyState(VK_CONTROL) < 0 then
+	if Keyboard.IsKeyDown(vkControl) then
 	begin
 		if Assigned(fOpenedFiles) = False then
 			fOpenedFiles := TfOpenedFiles.Create(Self);

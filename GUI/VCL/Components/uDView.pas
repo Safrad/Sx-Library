@@ -187,8 +187,8 @@ uses
   Vcl.StdCtrls,
   Vcl.ClipBrd,
   Vcl.Forms,
-  Winapi.Windows,
 
+  uKeyboard,
 	uGraph, uDBitmap, uMsg, uStrings, uColor, uSorts, uSortVariant, uOutputFormat, uDrawStyle,
   uVariant,
 	uDWinControl,
@@ -622,9 +622,9 @@ begin
 	end;
 
 	case Key of
-	VK_SPACE:
+	vkSpace:
 		CellClick(-1, PhysicalRow(FActualRow), Shift);
-	VK_RETURN:
+	vkReturn:
 		begin
 			if Assigned(OnDblClick) then
 			begin
@@ -639,7 +639,7 @@ begin
 				Exit;
 				end; }
 		end;
-	VK_ESCAPE:
+	vkEscape:
 		begin
 			FSearchText := '';
 			if ColumnMove <> -1 then
@@ -653,9 +653,9 @@ begin
 				Exit;
 			end;
 		end;
-	VK_UP:
+	vkUp:
 		begin
-			if GetKeyState(VK_Scroll) = 0 then
+			if not Keyboard.IsKeyDown(vkScroll) then
 			begin
 				if PhysicalRow(FActualRow) > 0 then
 				begin
@@ -666,9 +666,9 @@ begin
 				LineDownUp(-1);
 			Exit;
 		end;
-	VK_DOWN:
+	vkDown:
 		begin
-			if GetKeyState(VK_Scroll) = 0 then
+			if not Keyboard.IsKeyDown(vkScroll) then
 			begin
 				if PhysicalRow(FActualRow) < FFilteredRowCount - 1 then
 				begin
@@ -681,9 +681,9 @@ begin
 		end;
 	{ VK_LEFT: ScrollTo(OfsX - HorizontalOffset, OfsY);
 		VK_RIGHT: ScrollTo(OfsX + HorizontalOffset, OfsY); }
-	VK_PRIOR:
+	vkPrior:
 		begin
-			if GetKeyState(VK_Scroll) = 0 then
+			if not Keyboard.IsKeyDown(vkScroll) then
 			begin
 				if FFilteredRowCount > 0 then
 					CellClick(-1, Max(0, PhysicalRow(FActualRow) - (NowMaxHeight - FRowHeight) div FRowHeight)
@@ -693,9 +693,9 @@ begin
 				PageDownUp(-1);
 			Exit;
 		end;
-	VK_NEXT:
+	vkNext:
 		begin
-			if GetKeyState(VK_Scroll) = 0 then
+			if not Keyboard.IsKeyDown(vkScroll) then
 			begin
 				if FFilteredRowCount > 0 then
 					CellClick(-1, Min(FFilteredRowCount - 1, PhysicalRow(FActualRow) + (NowMaxHeight - FRowHeight)
@@ -705,9 +705,9 @@ begin
 				PageDownUp(1);
 			Exit;
 		end;
-	VK_HOME:
+	vkHome:
 		begin
-			if GetKeyState(VK_Scroll) = 0 then
+			if not Keyboard.IsKeyDown(vkScroll) then
 			begin
 				if FFilteredRowCount > 0 then
 					CellClick(-1, 0, Shift);
@@ -716,9 +716,9 @@ begin
 				ScrollHome;
 			Exit;
 		end;
-	VK_END:
+	vkEnd:
 		begin
-			if GetKeyState(VK_Scroll) = 0 then
+			if not Keyboard.IsKeyDown(vkScroll) then
 			begin
 				if FFilteredRowCount > 0 then
 					CellClick(-1, FFilteredRowCount - 1, Shift);
@@ -1400,7 +1400,7 @@ begin
 	case Message.CharCode of
 	{ VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT:
 		Message.Result := 1; }
-	VK_ESCAPE:
+	vkEscape:
 		begin
 			if ColumnMove <> -1 then
 				Message.Result := 1;
