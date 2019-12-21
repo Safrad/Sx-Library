@@ -49,16 +49,7 @@ implementation
 
 uses
 	SysUtils,
-	uFind,
-	uStrings,
-	// Addons:
-	uMathFunctions,
-	uLogicFunctions,
-	uGoniometricFunctions,
-  uHyperbolicFunctions,
-	uStatisticsFunctions,
-	uPhysicsFunctions,
-	uEloFunctions;
+	uStrings;
 
 const
 	AnyParameters = -1;

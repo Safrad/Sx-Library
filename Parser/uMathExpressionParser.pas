@@ -212,7 +212,15 @@ uses
   uOutputFormat,
   Character,
   uBigDecimalParser,
-  uNamespace;
+  uNamespace,
+	// Addons:
+	uMathFunctions,
+	uLogicFunctions,
+	uGoniometricFunctions,
+  uHyperbolicFunctions,
+	uStatisticsFunctions,
+	uPhysicsFunctions,
+	uEloFunctions;
 
 constructor TMathExpressionParser.Create;
 begin
