@@ -88,11 +88,10 @@ uses
 	uMath,
 
 	Math,
-  SysUtils
 {$IF defined(MSWINDOWS)}
-  , Winapi.Windows
+  Winapi.Windows,
 {$ENDIF}
-  ;
+  SysUtils;
 
 function ColorToRGB(Color: TColor): S4;
 begin
