@@ -46,8 +46,6 @@ type
     procedure Changed;
     function GetSyntax: string; virtual; abstract;
   public
-    constructor Create;
-
     function IsDefault: BG; virtual; abstract;
     procedure SetDefault; virtual; abstract;
 
@@ -218,13 +216,6 @@ function TCustomArgument.GetExists: BG;
 begin
   Used := True;
   Result := FExists;
-end;
-
-constructor TCustomArgument.Create;
-begin
-  inherited;
-
-  FDescription := '???';
 end;
 
 function TCustomArgument.GetExistsNoUsed: BG;
