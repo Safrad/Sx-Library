@@ -10,7 +10,9 @@ function SetFileMetadata(const FileName: TFileName; const FileMetadata: string):
 implementation
 
 uses
-	Windows,
+{$ifdef MSWINDOWS}
+	Winapi.Windows,
+{$endif}
 	uFiles;
 
 function GetMetadataFileName(const FileName: TFileName): TFileName;
@@ -38,7 +40,9 @@ begin
 	if (FileMetadata <> '') or (FileExists(MetadataFileName)) then
 	begin
 		WriteStringToFile(MetadataFileName, FileMetadata, False);
+{$ifdef MSWINDOWS}
 		SetFileAttributes(PChar(MetadataFileName), FILE_ATTRIBUTE_ARCHIVE or FILE_ATTRIBUTE_HIDDEN);
+{$endif}
 	end;
 end;
 
