@@ -143,7 +143,7 @@ begin
     CR := Swap(U2(CharCR));
     LF := Swap(U2(CharLF));
   end;
-  fcAnsi, fcUTF8:
+  fcAscii, fcAnsi, fcUTF8:
   begin
     CR := 0;
     LF := 0;
@@ -159,7 +159,7 @@ begin
 	while not Eof do
 	begin
     case FCharset of
-    fcAnsi, fcUTF8:
+    fcAscii, fcAnsi, fcUTF8:
     begin
       ReadedU1 := ReadU1;
       if ReadedU1 = U1(CharCR) then
@@ -259,7 +259,7 @@ begin
     Exit;
 
   case FCharset of
-    fcAnsi:
+    fcAscii, fcAnsi:
     begin
       SetLength(Buffer, DataToRead);
       BlockRead(Buffer[0], DataToRead);
@@ -293,6 +293,8 @@ end;
 function TTextFile.ConvertBuffer(const ABuffer: array of U1): string;
 begin
   case FCharset of
+    fcAscii:
+      Result := TEncoding.ASCII.GetString(ABuffer);
     fcAnsi:
       Result := TEncoding.ANSI.GetString(ABuffer);
     fcUTF8:
@@ -398,7 +400,7 @@ begin
 		begin
 			WriteNoConversion(PByte(@Line[1]), Length(Line) * SizeOf(WideChar));
 		end;
-	fcAnsi:
+	fcAscii, fcAnsi:
 		begin
 			WriteNoConversion(RawByteString(Line));
 		end;
@@ -433,9 +435,7 @@ begin
   if FCharset = fcUnknown then
   begin
     if FDefaultCharset = fcUnknown then
-    begin
-      FCharset := fcUTF8
-    end
+      FCharset := fcAnsi
     else
       FCharset := FDefaultCharset;
   end;

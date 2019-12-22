@@ -497,7 +497,7 @@ begin
       end
 			else*)
       case FCharset of
-      fcAnsi, fcUTF8:
+      fcAscii, fcAnsi, fcUTF8:
         if (FBuffer[BufPos] = CharCR) or (FBuffer[BufPos] = CharLF) then
         begin
           LastCharCR := FBuffer[BufPos] = CharCR;
@@ -593,7 +593,7 @@ function TFile.Readln(out Line: AnsiString): BG;
 begin
 	Result := ReadLnNoConversion(Line);
 	case FCharset of
-	fcAnsi: ;
+	fcAscii, fcAnsi: ;
 	fcUTF8: Line := AnsiString(Utf8ToAnsi(Line));
 	else
 		Line := '';
@@ -608,7 +608,7 @@ var
 begin
 	Result := ReadlnNoConversion(LineA);
 	case FCharset of
-	fcAnsi:
+	fcAscii, fcAnsi:
 		Line := UnicodeString(LineA);
 	fcUTF8:
 		begin
@@ -765,7 +765,7 @@ begin
 			u := UnicodeString(Line);
 			Result := WriteNoConversion(PAnsiChar(@u), Length(Line) * SizeOf(WideChar));
 		end;
-	fcAnsi:
+	fcAscii, fcAnsi:
 		begin
 			Result := WriteNoConversion(Line);
 		end;
@@ -804,7 +804,7 @@ begin
 		begin
 			Result := WriteNoConversion(PAnsiChar(@Line[1]), Length(Line) * SizeOf(WideChar));
 		end;
-	fcAnsi:
+	fcAscii, fcAnsi:
 		begin
 			Result := WriteNoConversion(AnsiString(Line));
 		end;

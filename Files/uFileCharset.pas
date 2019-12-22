@@ -6,7 +6,7 @@ uses
   uTypes;
 
 type
-	TFileCharset = (fcUnknown, fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE { Windows } , fcUTF32BE, fcUTF32LE
+	TFileCharset = (fcUnknown, fcAscii, fcAnsi, fcUTF8, fcUTF16BE, fcUTF16LE { Windows } , fcUTF32BE, fcUTF32LE
 		{ Windows } , fcUTF7a, fcUTF7b, fcUTF7c, fcUTF7d, fcUTF1, fcUTFEBCDIC, fcSCSU, fcBOCU1b, fcBOCU1,
 		fcGB18030);
 
@@ -17,6 +17,7 @@ type
   TByteOrderMark = array of U1;
 const
   ByteOrderMarks: array [TFileCharset] of TByteOrderMark = (
+    [],
     [],
     [],
     [$EF, $BB, $BF],
@@ -36,7 +37,7 @@ const
     [$84, $31, $95, $33]
   );
 
-  CharsetSize: array [TFileCharset] of SG = (0, 1, 1{1..4}, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1); // [Bytes / Char]
+  CharsetSize: array [TFileCharset] of SG = (0, 1, 1, 1{1..4}, 2, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1); // [Bytes / Char]
 
 function FindFileCharset(const AHeader: TByteOrderMark): TFileCharset;
 

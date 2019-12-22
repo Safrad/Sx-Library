@@ -27,7 +27,7 @@ begin
     'filename=' + FileName + FileSep +
 		'size=' + IntToStr(FileSize) + FileSep +
 		'crc32=' + IntToHex(CRC32) + FileSep;
-	WriteStringToFile(TargetFileName, Data, False, fcAnsi);
+	WriteStringToFile(TargetFileName, Data, False, fcAscii);
 end;
 
 procedure SplitFile(const Source: TFileName; const Dest: string; const MaxFileSize: U8 = GB; const CreateCRCFile: BG = False);

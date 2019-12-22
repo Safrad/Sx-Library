@@ -53,7 +53,7 @@ begin
 	Text := 'line1' + CharCR + 'line2' + CharLF + 'line3' + CharCR + CharLF + 'line4';
 	for fc := Low(fc) to High(fc) do
 	begin
-		if fc in [fcAnsi, fcUTF8{$if CompilerVersion >= 21} , fcUTF16BE, fcUTF16LE{$ifend}] then
+		if fc in [fcAscii, fcAnsi, fcUTF8{$if CompilerVersion >= 21} , fcUTF16BE, fcUTF16LE{$ifend}] then
 		begin
       FileName := TemporaryDirectory.ProcessTempDir + 'TestLine' + IntToStr(SG(fc)) + '.txt';
       WriteStringToFile(FileName, Text, False, fc);
