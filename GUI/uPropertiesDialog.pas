@@ -11,7 +11,7 @@ implementation
 
 uses
   uMsg,
-  ShellAPI;
+  Winapi.ShellAPI;
 
 procedure PropertiesDialog(const FileName: TFileName);
 var
