@@ -18,7 +18,8 @@ uses
 
   uMainLog,
   uFileLogger,
-  uDIniFile,
+  uLocalMainCfg,
+  uMainCfg,
   uExitCommand,
   uRestartCommand,
   uHelpCommand,
@@ -75,21 +76,21 @@ begin
     Add(FShowLogCommand);
   end;
 
-  if Assigned(MainIni) and FileExists(MainIni.FileName) then
+  if Assigned(MainCfg) and FileExists(MainCfg.FileName) then
   begin
     FShowIniCommand := TShowFileCommand.Create;
     FShowIniCommand.Shortcut := 'ShowIni';
     FShowIniCommand.Description := 'Show main configuration file.';
-    FShowIniCommand.FileName := MainIni.FileName;
+    FShowIniCommand.FileName := MainCfg.FileName;
     Add(FShowIniCommand);
   end;
 
-  if Assigned(LocalMainIni) and FileExists(LocalMainIni.FileName) then
+  if Assigned(LocalMainCfg) and FileExists(LocalMainCfg.FileName) then
   begin
     FShowLocalIniCommand := TShowFileCommand.Create;
     FShowLocalIniCommand.Shortcut := 'ShowLocalIni';
     FShowLocalIniCommand.Description := 'Show local configuration file.';
-    FShowLocalIniCommand.FileName := LocalMainIni.FileName;
+    FShowLocalIniCommand.FileName := LocalMainCfg.FileName;
     Add(FShowLocalIniCommand);
   end;
 end;

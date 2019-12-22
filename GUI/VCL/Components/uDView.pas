@@ -15,9 +15,8 @@ uses
   uMath,
   uFiles,
   uDImage,
-  uDIniFile,
+  uSxIniFile,
   uTextFilter;
-
 
 const
 	MinColumnWidth = 3;
@@ -168,7 +167,7 @@ type
 
 		// Import & Export
 		procedure CopySelection;
-		procedure Serialize(const IniFile: TDIniFile; const Save: BG);
+		procedure Serialize(const IniFile: TSxIniFile; const Save: BG);
 	published
 		{ Published declarations }
 		property EnableColumnSelection: BG read FEnableColumnSelection write FEnableColumnSelection default False;
@@ -1557,7 +1556,7 @@ begin
 	end;
 end;
 
-procedure TDView.Serialize(const IniFile: TDIniFile; const Save: BG);
+procedure TDView.Serialize(const IniFile: TSxIniFile; const Save: BG);
 var
 	i: SG;
 	c: SG;

@@ -74,7 +74,7 @@ uses
   uMultiIns,
   uMenus,
   uSystemPaths,
-  uDIniFile,
+  uMainCfg,
   uGlobalOptions,
   uStartup,
   uProjectInfo,
@@ -128,8 +128,8 @@ end;
 procedure TVclGuiApplication.Finalize;
 begin
   try
-    if Assigned(MainIni) then
-      MainIni.UnregisterRW(RWCommon);
+    if Assigned(MainCfg) then
+      MainCfg.UnregisterRW(RWCommon);
 
     if Assigned(Application) and Assigned(Application.MainForm) then
       Application.MainForm.Free; // Do not use FreeAndNil
@@ -201,7 +201,7 @@ begin
   Application.Initialize;
 	Application.Title := GetProjectInfo(piProductName);
 
-	MainIni.RegisterRW(RWCommon);
+	MainCfg.RegisterRW(RWCommon);
 
 	if Statistics.RunFirstTime then
 	begin

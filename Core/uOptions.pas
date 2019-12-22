@@ -2,7 +2,11 @@ unit uOptions;
 
 interface
 
-uses uTypes, uDIniFile, TypInfo;
+uses
+  TypInfo,
+
+  uTypes,
+  uSxIniFile;
 
 type
 	TVisualStyle = (vsCheck, vsSpin, vsFloat, vsCombo, vsButton, vsString, vsFilename, vsDirectory,
@@ -57,7 +61,7 @@ function IsDefaultOption(const Option: POption; const Param: PParam): BG;
 procedure DefaultOption(const Option: POption; const Param: PParam);
 procedure DefaultOptions(const Options: POptions; const OptionCount: SG; const Params: PParams);
 procedure RWOptions(const Options: POptions; const OptionCount: SG; const Params: PParams;
-	const IniFile: TDIniFile; const Section: string; const Save: BG);
+	const IniFile: TSxIniFile; const Section: string; const Save: BG);
 function StrToVisualStyle(const s: string): TVisualStyle;
 function ParamToStr(E: POption; P: PParam; const ComboNumber: BG = False): string;
 function StrToParam(E: POption; const s: string): TParam;
@@ -141,7 +145,7 @@ begin
 end;
 
 procedure RWOptions(const Options: POptions; const OptionCount: SG; const Params: PParams;
-	const IniFile: TDIniFile; const Section: string; const Save: BG);
+	const IniFile: TSxIniFile; const Section: string; const Save: BG);
 var
 	OptionIndex: SG;
 	Option: POption;

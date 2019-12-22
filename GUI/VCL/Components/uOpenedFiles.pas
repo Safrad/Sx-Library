@@ -178,7 +178,7 @@ uses
   UITypes,
 	Forms, Math, Winapi.ShellAPI, uWatch, uMsgDlg, uKeyboard,
   uCustomArgument, uOutputInfo,
-	uMath, uFiles, uMsg, uStrings, uDIniFile, uOutputFormat, uSystem, uAPI,
+	uMath, uFiles, uMsg, uStrings, uLocalMainCfg, uOutputFormat, uSystem, uAPI,
 	uProjectInfo, uReg, uFilePosCache, uPropertiesDialog,
 	ufOpenedFiles;
 
@@ -474,7 +474,7 @@ begin
 		if FNoOpenArgument.Exists then
 			Exit;
 		c := 0;
-		MainIni.RWNum(Section, 'Count', c, Save);
+		LocalMainCfg.RWNum(Section, 'Count', c, Save);
 	end;
 
 	c2 := 0;
@@ -486,14 +486,14 @@ begin
 				Continue;
 			FileName := ShortDir(Items[i].FileName);
 		end;
-		MainIni.RWString(Section, NToS(c2, ofIO), FileName, Save);
+		LocalMainCfg.RWString(Section, NToS(c2, ofIO), FileName, Save);
 		Inc(c2);
 		if Save = False then
 			OpenedFileLoadFromFile(ExpandDir(FileName));
 	end;
 
 	NewIndex := FIndex;
-	MainIni.RWNum(Section, 'Index', NewIndex, Save);
+	LocalMainCfg.RWNum(Section, 'Index', NewIndex, Save);
 	NewIndex := Range(-1, NewIndex, FCount - 1);
 	if Save = False then
 	begin
@@ -507,7 +507,7 @@ begin
 	end;
 
 	if Save = True then
-		MainIni.RWNum(Section, 'Count', c2, Save);
+		LocalMainCfg.RWNum(Section, 'Count', c2, Save);
 end;
 
 procedure TOpenedFiles.SetMenuItem(i: SG);

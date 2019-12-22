@@ -3,7 +3,11 @@ unit uSchedule;
 interface
 
 uses
-	uTypes, uDIniFile, uTimeSpan, SysUtils;
+  SysUtils,
+
+	uTypes,
+  uSxIniFile,
+  uTimeSpan;
 
 type
 	TScheduleType = (scNever, scOnce, scInterval, scDaily, scWeekly, scMonthly, scYearly,
@@ -41,7 +45,7 @@ type
 
     procedure Clone(const Source: TSchedule);
 
-    procedure RWIni(const IniFile: TDIniFile; const Section: string; const Save: BG);
+    procedure RWIni(const IniFile: TSxIniFile; const Section: string; const Save: BG);
 
     property Enabled: Boolean read FEnabled write SetEnabled;
 	end;
@@ -384,7 +388,7 @@ begin
   end;
 end;
 
-procedure TSchedule.RWIni(const IniFile: TDIniFile; const Section: string;
+procedure TSchedule.RWIni(const IniFile: TSxIniFile; const Section: string;
   const Save: BG);
 var
   i: SG;

@@ -18,6 +18,7 @@ uses
   OmniXML,
   uStrings,
   uDIniFile,
+  uLocalMainCfg,
   uWebUpdate,
   uProjectInfo,
   uOperatingSystem,
@@ -60,12 +61,12 @@ procedure RWOptions(const Save: BG);
 begin
   if Save = False then
   	AskedForUpload := DefaultAskedForUpload;
-  LocalMainIni.RWBool('Upload', 'AskedForUpload', AskedForUpload, Save);
+  LocalMainCfg.RWBool('Upload', 'AskedForUpload', AskedForUpload, Save);
   if Save = False then
   	UploadInfo := True;
-  LocalMainIni.RWBool('Upload', 'UploadInfo', UploadInfo, Save);
-  LocalMainIni.RWNum('Upload', 'LastUploadCount', LastUploadCount, Save);
-  LocalMainIni.RWNum('Upload', 'LastUploadTime', LastUploadTime, Save);
+  LocalMainCfg.RWBool('Upload', 'UploadInfo', UploadInfo, Save);
+  LocalMainCfg.RWNum('Upload', 'LastUploadCount', LastUploadCount, Save);
+  LocalMainCfg.RWNum('Upload', 'LastUploadTime', LastUploadTime, Save);
 end;
 
 function GetComputerGUID: TGUID;
@@ -217,7 +218,7 @@ end;
 
 procedure TryUploadData(const AURL: string; const AForce: BG = False);
 begin
-  if (CommonApplication = nil) or (LocalMainIni = nil) then
+  if (CommonApplication = nil) or (LocalMainCfg = nil) then
     Exit;
   try
     RWOptions(False);

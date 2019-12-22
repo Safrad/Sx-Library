@@ -66,7 +66,7 @@ uses
   Winapi.Windows,
   Vcl.Graphics,
 
-	uEscape, uFiles, uDIniFile, uGetInt, uGraph, uDBitmap, uMenus, uStrings, uOutputFormat, uChar;
+	uEscape, uFiles, uLocalMainCfg, uGetInt, uGraph, uDBitmap, uMenus, uStrings, uOutputFormat, uChar;
 
 var
 	ReopenBitmaps: array[TReopenExists] of TBitmap;
@@ -249,11 +249,11 @@ begin
 	begin
 		Clear;
 	end;
-	MainIni.RWNum(Section, 'Count', FReopenCount, Save);
+	LocalMainCfg.RWNum(Section, 'Count', FReopenCount, Save);
 	if FReopenCount > MaxReopen then FReopenCount := MaxReopen;
 
 	if Save = False then FReopenLimit := 10;
-	MainIni.RWNum(Section, 'Limit', FReopenLimit, Save);
+	LocalMainCfg.RWNum(Section, 'Limit', FReopenLimit, Save);
 	if FReopenLimit > MaxReopen then FReopenLimit := MaxReopen;
 
 	if Save = False then
@@ -268,7 +268,7 @@ begin
 	end;
 	for i := 0 to FReopenCount - 1 do
 	begin
-		MainIni.RWFileName(Section, IntToStr(i), FReopenItems[i].FileName, Save);
+		LocalMainCfg.RWFileName(Section, IntToStr(i), FReopenItems[i].FileName, Save);
 //		MainIni.RWString(Section, IntToStr(i) + 'Pos', FReopenItems[i].FilePos, Save);
 	end;
 end;
@@ -358,27 +358,29 @@ begin
 		Result := reNo;
 		Exit;
 	end;
-
-	if FileName[1] = PathDelim then
-		DriveType := DRIVE_REMOTE
-	else
-	begin
+  {$ifdef MSWINDOWS}
+	Result := reUnknown;
+	if FileName[1] <> PathDelim then
+  begin
 		P[0] := FileName[1];
 		P[1] := FileName[2];
 		P[2] := FileName[3];
 		P[3] := CharNull;
 		DriveType := GetDriveType(P);
+    if (DriveType = DRIVE_FIXED) or (DriveType = DRIVE_RAMDISK) then
+    begin
+      if not FileOrDirExists(FileName) then
+        Result := reNo
+      else
+        Result := reYes;
+    end;
 	end;
-
-	if (DriveType = DRIVE_FIXED) or (DriveType = DRIVE_RAMDISK) then
-	begin
-		if not FileOrDirExists(FileName) then
-			Result := reNo
-		else
-			Result := reYes;
-	end
-	else
-		Result := reUnknown;
+  {$else}
+  if not FileOrDirExists(FileName) then
+    Result := reNo
+  else
+    Result := reYes;
+  {$endif}
 end;
 
 procedure TReopen.DrawReopenCaption;

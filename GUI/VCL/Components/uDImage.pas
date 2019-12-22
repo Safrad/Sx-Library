@@ -15,7 +15,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.StdCtrls,
 
-	uDBitmap, uTypes, uMath, uDTimer, uDIniFile, uDWinControl;
+	uDBitmap, uTypes, uMath, uDTimer, uSxIniFile, uDWinControl;
 
 type
 	TZoomMenu = (zmIn, zmOut, zm12, zm1, zm2, zmFitImage, zmFitWidth, zmFitHeight, zmCustom,
@@ -178,7 +178,7 @@ type
 		procedure UserBitmapChanged;
 		function SToL(const P: TPoint): TFloPoint;
 
-		procedure Serialize(const IniFile: TDIniFile; const Save: BG);
+		procedure Serialize(const IniFile: TSxIniFile; const Save: BG);
 
 		procedure ToClipboard;
 
@@ -1854,7 +1854,7 @@ begin
 	end;
 end;
 
-procedure TDImage.Serialize(const IniFile: TDIniFile; const Save: BG);
+procedure TDImage.Serialize(const IniFile: TSxIniFile; const Save: BG);
 var
 	Section: string;
 	XZoom: FG;

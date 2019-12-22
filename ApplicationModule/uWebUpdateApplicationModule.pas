@@ -58,7 +58,7 @@ uses
   uAPI,
   uStrings,
   uApplicationModule,
-  uDIniFile;
+  uLocalMainCfg;
 
 { TWebUpdateApplicationModule }
 
@@ -148,7 +148,7 @@ begin
 
   if FAutomaticallyCheckForUpdate.Value then
   begin
-    LocalMainIni.RWDateTime('Options', 'LastUpdate', FLastUpdate, False);
+    LocalMainCfg.RWDateTime('Options', 'LastUpdate', FLastUpdate, False);
     if (Now - FLastUpdate > FCheckForUpdateDaysPeriod.Value.Days) then
       CheckForUpdate;
   end;
@@ -163,7 +163,7 @@ end;
 procedure TWebUpdateApplicationModule.SetLastUpdate(const Value: TDateTime);
 begin
   FLastUpdate := Value;
-  LocalMainIni.RWDateTime('Options', 'LastUpdate', FLastUpdate, True);
+  LocalMainCfg.RWDateTime('Options', 'LastUpdate', FLastUpdate, True);
 end;
 
 procedure TWebUpdateApplicationModule.SetShowMessageIfSuccess(const Value: BG);

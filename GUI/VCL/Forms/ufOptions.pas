@@ -97,7 +97,7 @@ uses
   uLgToPx,
   uTimeSpan,
 	uStrings, uOutputFormat, uInputFormat, uParserMsg, uDEdit, uMath, uGetInt, uGetStr, uGColor,
-	uGetTime, uDIniFile, uSystem, uFiles, uLayout, uDMemo;
+	uGetTime, uGUIMainCfg, uSystem, uFiles, uLayout, uDMemo;
 
 {$R *.dfm}
 
@@ -430,7 +430,7 @@ begin
 	ClientWidth := Max(GX, 4 * FormBorder + ButtonOk.Width + ButtonCancel.Width + ButtonApply.Width);
 	ClientHeight := YCount * RowHeight + ButtonOk.Height + 3 * FormBorder + StartGY;
 
-	MainIni.RegisterRW(RWOptions);
+	GUIMainCfg.RegisterRW(RWOptions);
 	InitControls;
 end;
 
@@ -743,12 +743,12 @@ end;
 
 procedure TfOptions.FormDestroy(Sender: TObject);
 begin
-	MainIni.UnregisterRW(RWOptions);
+	GUIMainCfg.UnregisterRW(RWOptions);
 end;
 
 procedure TfOptions.RWOptions(const Save: BG);
 begin
-	MainIni.RWFormPos(Self, Save);
+	GUIMainCfg.RWFormPos(Self, Save);
 end;
 
 procedure TfOptions.ComboBoxTemplateChange(Sender: TObject);

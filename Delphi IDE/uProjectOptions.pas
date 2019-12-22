@@ -11,7 +11,15 @@ unit uProjectOptions;
 interface
 
 uses
-  uTypes, SysUtils, uSxStringList, uProjectInfo, uNProjectVersion, uDelphi, Classes, OmniXML;
+  SysUtils,
+  Classes,
+  OmniXML,
+
+  uTypes,
+  uSxStringList,
+  uProjectInfo,
+  uNProjectVersion,
+  uDelphi;
 
 type
   TExecutableType = (etProgram, etLibrary, etPackage);
@@ -118,8 +126,17 @@ implementation
 
 uses
   TypInfo,
-  uStrings, uChar, uMath, uOutputFormat, uInputFormat, uFiles, uFileCharset, uSxXMLDocument,
-  uDIniFile, uMsg;
+
+  uStrings,
+  uChar,
+  uMath,
+  uOutputFormat,
+  uInputFormat,
+  uFiles,
+  uFileCharset,
+  uSxXMLDocument,
+  uSxIniFile,
+  uMsg;
 
 const
   DefaultMinStackSize = 16 * KB;
@@ -997,12 +1014,12 @@ const
   LinkerSectionName = 'Linker';
   BuildSectionName = 'Build';
 var
-  IniFile: TDIniFile;
+  IniFile: TSxIniFile;
   ProjectInfoName: TProjectInfoName;
 begin
   if FileExists(AFileName) then
   begin
-    IniFile := TDIniFile.Create(AFileName);
+    IniFile := TSxIniFile.Create(AFileName);
     try
       if IniFile.SectionExists(BuildSectionName) then
       begin

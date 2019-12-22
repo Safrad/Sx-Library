@@ -60,8 +60,8 @@ implementation
 {$R *.dfm}
 
 uses
-  Winapi.Windows,
-  uDIniFile;
+  UITypes,
+  uGUIMainCfg;
 
 procedure TfFindDialog.FormResize(Sender: TObject);
 begin
@@ -140,12 +140,12 @@ procedure TfFindDialog.RWOptions(const Save: BG);
 const
 	Section = 'Options';
 begin
-	MainIni.RWComboBox(Section, cbPattern, Save); // TODO -oSafrad : Items
-	MainIni.RWCheckBox(Section, cbIgnoreCaseSensitive, Save);
-	MainIni.RWCheckBox(Section, cbIgnoreDiacriticMarks, Save);
-	MainIni.RWCheckBox(Section, cbWholeWordsOnly, Save);
-	MainIni.RWCheckBox(Section, cbInteligentMode, Save);
-	MainIni.RWFormPos(Self, Save);
+	GUIMainCfg.RWComboBox(Section, cbPattern, Save); // TODO -oSafrad : Items
+	GUIMainCfg.RWCheckBox(Section, cbIgnoreCaseSensitive, Save);
+	GUIMainCfg.RWCheckBox(Section, cbIgnoreDiacriticMarks, Save);
+	GUIMainCfg.RWCheckBox(Section, cbWholeWordsOnly, Save);
+	GUIMainCfg.RWCheckBox(Section, cbInteligentMode, Save);
+	GUIMainCfg.RWFormPos(Self, Save);
 {	if Save = False then
 		if Assigned(FTextFilter) then
 			if Assigned(FTextFilter.OnUpdate) then
@@ -160,7 +160,7 @@ end;
 procedure TfFindDialog.CMWantSpecialKey(var Message: TCMWantSpecialKey);
 begin
 	case Message.CharCode of
-	VK_ESCAPE:
+	vkEscape:
 		begin
 			Close;
 		end;

@@ -5,7 +5,7 @@ interface
 uses
   uTypes,
   uFileStatistics,
-  uDIniFile,
+  uSxIniFile,
   uTimeSpan;
 
 type
@@ -27,7 +27,7 @@ type
     FElapsedTime: TTimeSpan;
     FTotalElapsedTime: TTimeSpan;
     procedure RWData(const ASave: BG);
-    procedure RWSection(const AIniFile: TDIniFile; const ASave: BG);
+    procedure RWSection(const AIniFile: TSxIniFile; const ASave: BG);
     function GetElapsedTime: TTimeSpan;
   public
     constructor Create;
@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-	uProjectInfo, uMath, uMainTimer;
+	uProjectInfo, uMath, uMainTimer, uLocalMainCfg;
 
 { TApplicationStatistics }
 
@@ -81,16 +81,16 @@ begin
   begin
     FSection.FileStatistics := FileStatistics;
     FSection.RunStatistics.TotalElapsedTimeInMs := FTotalElapsedTime.Milliseconds;
-  	if Assigned(LocalMainIni) then
+  	if Assigned(LocalMainCfg) then
     begin
       FSection.RunStatistics.TotalElapsedTimeInMs := FTotalElapsedTime.Milliseconds + ElapsedTime.Milliseconds;
-      LocalMainIni.WriteString(Section, 'Version', GetProjectInfo(piProductVersion));
-      RWSection(LocalMainIni, True);
+      LocalMainCfg.WriteString(Section, 'Version', GetProjectInfo(piProductVersion));
+      RWSection(LocalMainCfg, True);
     end;
 
     // Backward compatibility
-  	if Assigned(MainIni) then
-      MainIni.DeleteSection(Section);
+  	if Assigned(LocalMainCfg) then
+      LocalMainCfg.DeleteSection(Section);
   end
   else
   begin
@@ -98,18 +98,18 @@ begin
     FSection.FileStatistics := FileStatistics;
 
     // Backward compatibility
-  	if Assigned(MainIni) then
-      RWSection(MainIni, False);
+  	if Assigned(LocalMainCfg) then
+      RWSection(LocalMainCfg, False);
 
-  	if Assigned(LocalMainIni) then
-      RWSection(LocalMainIni, False);
+  	if Assigned(LocalMainCfg) then
+      RWSection(LocalMainCfg, False);
 
     FTotalElapsedTime.Milliseconds := FSection.RunStatistics.TotalElapsedTimeInMs;
     FileStatistics := FSection.FileStatistics;
 	end;
 end;
 
-procedure TApplicationStatistics.RWSection(const AIniFile: TDIniFile; const ASave: BG);
+procedure TApplicationStatistics.RWSection(const AIniFile: TSxIniFile; const ASave: BG);
 begin
   AIniFile.ReadAndIncrementOrWrite(Section, 'RunCount', FSection.RunStatistics.Count, ASave);
   AIniFile.ReadAndIncrementOrWrite(Section, 'RunTime', FSection.RunStatistics.TotalElapsedTimeInMs, ASave);

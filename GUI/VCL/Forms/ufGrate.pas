@@ -4,7 +4,6 @@ interface
 
 uses
   SysUtils, Classes,
-	Winapi.Windows,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -56,7 +55,8 @@ implementation
 {$R *.DFM}
 uses
   uTaskBarWindow,
-	uGraph, uDBitmap, uGColor, uGetInt, uDIniFile, uMenus, uColor, uDrawStyle, uDictionary,
+  UITypes,
+	uGraph, uDBitmap, uGColor, uGetInt, uGUIMainCfg, uMenus, uColor, uDrawStyle, uDictionary,
 	Math, Velthuis.BigDecimals;
 
 const
@@ -71,12 +71,12 @@ begin
 		BackgroundColor := clBlack;
 		GrateSize := DefaultGrateSize;
 	end;
-	MainIni.RWNum(Section, 'Grate Color', U4(GrateColor), Save);
-	MainIni.RWNum(Section, 'Background Color', U4(BackgroundColor), Save);
-	MainIni.RWMenuItem(Section, ShowGrate1, Save);
-	MainIni.RWNum(Section, 'Size', GrateSize, Save);
-	MainIni.RWMenuItem(Section, Centered1, Save);
-	MainIni.RWMenuItem(Section, FullScreen1, Save);
+	GUIMainCfg.RWNum(Section, 'Grate Color', U4(GrateColor), Save);
+	GUIMainCfg.RWNum(Section, 'Background Color', U4(BackgroundColor), Save);
+	GUIMainCfg.RWMenuItem(Section, ShowGrate1, Save);
+	GUIMainCfg.RWNum(Section, 'Size', GrateSize, Save);
+	GUIMainCfg.RWMenuItem(Section, Centered1, Save);
+	GUIMainCfg.RWMenuItem(Section, FullScreen1, Save);
 end;
 
 procedure TfGrate.FormHide(Sender: TObject);
@@ -128,15 +128,15 @@ begin
 	Background := baUser;
 	MenuSet(PopupMenu1);
 
-  if MainIni <> nil then
-  	MainIni.RegisterRW(RWOptions);
+  if GUIMainCfg <> nil then
+  	GUIMainCfg.RegisterRW(RWOptions);
 	FullScreen := FullScreen1.Checked;
 end;
 
 procedure TfGrate.FormDestroy(Sender: TObject);
 begin
-  if MainIni <> nil then
-  	MainIni.UnregisterRW(RWOptions);
+  if GUIMainCfg <> nil then
+  	GUIMainCfg.UnregisterRW(RWOptions);
 end;
 
 procedure TfGrate.Centered1Click(Sender: TObject);
@@ -148,9 +148,9 @@ end;
 procedure TfGrate.FormKeyDown(Sender: TObject; var Key: Word;
 	Shift: TShiftState);
 begin
-	if (Key = VK_F10) and (ssShift in Shift) then
+	if (Key = vkF10) and (ssShift in Shift) then
 		PopupMenu1.Popup(0, 0);
-	if Key = VK_ESCAPE then
+	if Key = vkESCAPE then
 		Close;
 end;
 

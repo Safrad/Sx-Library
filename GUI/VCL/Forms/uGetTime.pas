@@ -5,7 +5,6 @@ interface
 uses
   SysUtils,
   Classes,
-	Winapi.Windows,
   Vcl.Graphics,
   Vcl.Forms,
   Vcl.Controls,

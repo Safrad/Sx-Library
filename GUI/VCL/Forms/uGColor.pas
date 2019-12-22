@@ -165,7 +165,7 @@ implementation
 
 uses
 	Math,
-	uMenus, uInputFormat, uOutputFormat, uDIniFile, uLayout, uDrawStyle, uDictionary, uStrings, uLgToPx;
+	uMenus, uInputFormat, uOutputFormat, uGUIMainCfg, uLayout, uDrawStyle, uDictionary, uStrings, uLgToPx;
 
 const
 	SpectrumPixel = 4;
@@ -745,10 +745,10 @@ end;
 
 procedure TfGColor.RWOptions(const Save: BG);
 begin
-	if Assigned(MainIni) then
+	if Assigned(GUIMainCfg) then
 	begin
-		MainIni.RWComboBox('ColorDialog', ComboBoxBitDepth, Save);
-		MainIni.RWComboBox('ColorDialog', ComboBoxNF, Save);
+		GUIMainCfg.RWComboBox('ColorDialog', ComboBoxBitDepth, Save);
+		GUIMainCfg.RWComboBox('ColorDialog', ComboBoxNF, Save);
 	end;
 end;
 

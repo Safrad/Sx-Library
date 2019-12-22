@@ -4,7 +4,8 @@ interface
 
 uses
 	uTypes, uOpenedFiles,
-	Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+	Types,
+  SysUtils, Variants, Classes, Graphics, Controls, Forms,
 	Dialogs, uDImage, uDView, uDWinControl,
 
   uColumn;
@@ -41,7 +42,8 @@ implementation
 
 {$R *.dfm}
 uses
-	uDIniFile, uOutputFormat, uFiles, uSorts, uMath, uDictionary, uOpenedFileItem;
+  UITypes,
+	uGUIMainCfg, uOutputFormat, uFiles, uSorts, uMath, uDictionary, uOpenedFileItem;
 
 procedure TfOpenedFiles.FormCreate(Sender: TObject);
 begin
@@ -56,13 +58,13 @@ begin
 	DViewOpenedFiles.AddColumn('Work Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
 	DViewOpenedFiles.AddColumn('Modification Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
 	DViewOpenedFiles.AddColumn('Save Time', DViewOpenedFiles.Width div 8, taLeftJustify, True);
-	MainIni.RegisterRW(RWOptions);
+	GUIMainCfg.RegisterRW(RWOptions);
 end;
 
 procedure TfOpenedFiles.DViewOpenedFilesKeyUp(Sender: TObject;
 	var Key: Word; Shift: TShiftState);
 begin
-	if Key = VK_CONTROL then
+	if Key = vkControl then
 	begin
 		if DViewOpenedFiles.ActualRow = -1 then
 			FOpenedFiles.Index := -1
@@ -109,13 +111,13 @@ end;
 procedure TfOpenedFiles.DViewOpenedFilesKeyPress(Sender: TObject;
 	var Key: Char);
 begin
-	if Key = Char(VK_ESCAPE) then
+	if Key = Char(vkEscape) then
 		Close;
 end;
 
 procedure TfOpenedFiles.FormDestroy(Sender: TObject);
 begin
-	MainIni.UnregisterRW(RWOptions);
+	GUiMainCfg.UnregisterRW(RWOptions);
 end;
 
 procedure TfOpenedFiles.DViewOpenedFilesKeyDown(Sender: TObject;
@@ -123,7 +125,7 @@ procedure TfOpenedFiles.DViewOpenedFilesKeyDown(Sender: TObject;
 var
 	Direction: SG;
 begin
-	if Key = VK_TAB then
+	if Key = vkTab then
 	begin
 		if ssShift in Shift then
 			Direction := -1
@@ -197,8 +199,8 @@ end;
 
 procedure TfOpenedFiles.RWOptions(const Save: BG);
 begin
-	MainIni.RWFormPos(Self, Save);
-	DViewOpenedFiles.Serialize(MainIni, Save);
+	GUIMainCfg.RWFormPos(Self, Save);
+	DViewOpenedFiles.Serialize(GUIMainCfg, Save);
 end;
 
 end.

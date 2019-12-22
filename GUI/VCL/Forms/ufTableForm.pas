@@ -6,7 +6,7 @@ uses
 	SysUtils,
   Classes,
   Variants,
-  Winapi.Windows,
+  Types,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -74,17 +74,19 @@ implementation
 {$R *.dfm}
 uses
 	Vcl.ClipBrd,
+  Winapi.Windows,
+  UITypes,
 
   uOutputInfo,
   uRow,
   uTable,
 	uReg,
-  uDIniFile, uMenus, uOutputFormat, uStrings, uData, ufOptions, uMsg;
+  uGUIMainCfg, uMenus, uOutputFormat, uStrings, uData, ufOptions, uMsg;
 
 procedure TfTableForm.FormKeyDown(Sender: TObject; var Key: Word;
 	Shift: TShiftState);
 begin
-	if Key = VK_ESCAPE then
+	if Key = vkEscape then
 		Close;
 end;
 
@@ -111,16 +113,16 @@ begin
   DViewTable.Columns.OwnsObjects := False;
   DViewTable.UpdateColumnCount;
 
-	if Assigned(MainIni) then
+	if Assigned(GUIMainCfg) then
 	begin
-		MainIni.RegisterRW(RWOptions);
+		GUIMainCfg.RegisterRW(RWOptions);
 	end;
 end;
 
 procedure TfTableForm.RWOptions(const Save: BG);
 begin
-	MainIni.RWFormPos(Self, Save);
-	DViewTable.Serialize(MainIni, Save);
+	GUIMainCfg.RWFormPos(Self, Save);
+	DViewTable.Serialize(GUIMainCfg, Save);
 end;
 
 procedure TfTableForm.Copy1Click(Sender: TObject);
@@ -203,8 +205,8 @@ end;
 
 procedure TfTableForm.FormDestroy(Sender: TObject);
 begin
-	if Assigned(MainIni) then
-		MainIni.UnregisterRW(RWOptions);
+	if Assigned(GUIMainCfg) then
+		GUIMainCfg.UnregisterRW(RWOptions);
 end;
 
 procedure TfTableForm.OnMenuClick(Sender: TObject);

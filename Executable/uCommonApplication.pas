@@ -91,7 +91,9 @@ uses
   uChar,
   uFiles,
   uSystemPaths,
-  uDIniFile,
+  uSxIniFile,
+  uMainCfg,
+  uLocalMainCfg,
   uDictionary,
   uMainTimer;
 
@@ -151,8 +153,8 @@ begin
     FreeAndNil(FArguments);
     FreeAndNil(Dictionary);
     FreeAndNil(FStatistics);
-    FreeAndNil(LocalMainIni);
-    FreeAndNil(MainIni);
+    FreeAndNil(LocalMainCfg);
+    FreeAndNil(MainCfg);
     FreeAndNil(MainLog);
   finally
     RestartIfNeeded;
@@ -198,7 +200,7 @@ var
 begin
   LocalMainIniFileName := SystemPaths.LocalAppDataDir + GetProjectInfo(piInternalName) + '.ini';
   CreateDirsEx(ExtractFilePath(LocalMainIniFileName)); // InitializeLog creates the same directory, but can be overriden
-  LocalMainIni := TDIniFile.Create(LocalMainIniFileName);
+  LocalMainCfg := TSxIniFile.Create(LocalMainIniFileName);
 end;
 
 procedure TCommonApplication.InitializeMainIni;
@@ -207,7 +209,7 @@ var
 begin
   MainIniFileName := SystemPaths.AppDataDir + GetProjectInfo(piInternalName) + '.ini';
   CreateDirsEx(ExtractFilePath(MainIniFileName));
-  MainIni := TDIniFile.Create(MainIniFileName);
+  MainCfg := TSxIniFile.Create(MainIniFileName);
 end;
 
 procedure TCommonApplication.InitializeMainLog;

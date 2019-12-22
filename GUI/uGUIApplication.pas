@@ -18,7 +18,9 @@ implementation
 
 uses
   uCommonOutput,
-  uGUIOutputInfo;
+  uGUIOutputInfo,
+  uMainCfg,
+  uGUIMainCfg;
 
 { TGUIApplication }
 
@@ -36,6 +38,8 @@ begin
   CommonOutput := TGUIOutputInfo.Create;
 
   inherited;
+
+  TObject(GUIMainCfg) := TObject(MainCfg);
 end;
 
 end.

@@ -41,7 +41,7 @@ implementation
 
 {$R *.dfm}
 
-uses uTypes, uReg, uDIniFile, uMenus, uOutputFormat, uStrings, uDictionary;
+uses uTypes, uReg, uGUIMainCfg, uMenus, uOutputFormat, uStrings, uDictionary;
 
 type
 	TFileType = packed record // 24
@@ -156,19 +156,19 @@ begin
 	DViewFileExtensions.AddColumn('Action Name', 128);
 	DViewFileExtensions.AddColumn('Action Filename', 128);
 
-	if Assigned(MainIni) then
+	if Assigned(GUIMainCfg) then
 	begin
-		MainIni.RWFormPos(Self, False);
-		DViewFileExtensions.Serialize(MainIni, False);
+		GUIMainCfg.RWFormPos(Self, False);
+		DViewFileExtensions.Serialize(GUIMainCfg, False);
 	end;
 end;
 
 procedure TfFileExt.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-	if Assigned(MainIni) then
+	if Assigned(GUIMainCfg) then
 	begin
-		MainIni.RWFormPos(Self, True);
-		DViewFileExtensions.Serialize(MainIni, True);
+		GUIMainCfg.RWFormPos(Self, True);
+		DViewFileExtensions.Serialize(GUIMainCfg, True);
 	end;
 end;
 

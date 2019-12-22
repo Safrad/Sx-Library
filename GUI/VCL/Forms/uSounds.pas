@@ -92,7 +92,7 @@ uses
   uWaveItem,
   uWave,
   uPlaySound,
-	uData, uFiles, uSystemPaths, uDIniFile, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings, uLayout,
+	uData, uFiles, uSystemPaths, uMainCfg, uGUIMainCfg, uInputFormat, uMath, uMenus, uOutputFormat, uSystem, uStrings, uLayout,
 	uDictionary,
   uLgToPx;
 
@@ -152,16 +152,17 @@ var
 	i: SG;
 	P: PSound;
 begin
-	if MainIni = nil then Exit;
+	if MainCfg = nil then
+    Exit;
 	Section := 'Sounds';
-	MainIni.RWBool(Section, 'Enabled', SoundEnabled, Save);
-	MainIni.RWBool(Section, 'Music', MusicEnabled, Save);
+	MainCfg.RWBool(Section, 'Enabled', SoundEnabled, Save);
+	MainCfg.RWBool(Section, 'Music', MusicEnabled, Save);
 	if Assigned(SoundMixer) then
 	begin
-		MainIni.RWBool(Section, 'Reduce', SoundReduce, Save);
-		MainIni.RWBool(Section, '16bits', Sound16bits, Save);
-		MainIni.RWNum(Section, 'Frequency', SoundFrequency, Save);
-		MainIni.RWBool(Section, 'Stereo', SoundStereo, Save);
+		MainCfg.RWBool(Section, 'Reduce', SoundReduce, Save);
+		MainCfg.RWBool(Section, '16bits', Sound16bits, Save);
+		MainCfg.RWNum(Section, 'Frequency', SoundFrequency, Save);
+		MainCfg.RWBool(Section, 'Stereo', SoundStereo, Save);
     if Save = False then
   		InitSound;
 	end;
@@ -171,8 +172,8 @@ begin
 	P := Sounds.GetFirst;
 	for i := 0 to Sounds.Count - 1 do
 	begin
-		MainIni.RWFileName(Section, P.Name, P.FileName, Save);
-		MainIni.RWBool(Section, P.Name + ' Enabled', P.Enabled, Save);
+		MainCfg.RWFileName(Section, P.Name, P.FileName, Save);
+		MainCfg.RWBool(Section, P.Name + ' Enabled', P.Enabled, Save);
 		Sounds.Next(Pointer(P));
 	end;
 end;
@@ -229,7 +230,7 @@ begin
 	if IniLoaded = False then
 	begin
 		IniLoaded := True;
-		MainIni.RegisterRW(TOb.RWOptions);
+		MainCfg.RegisterRW(TOb.RWOptions);
 	end;
 
 	P := Sounds.GetFirst;
@@ -255,8 +256,8 @@ begin
 	if IniLoaded then
 	begin
 		IniLoaded := False;
-    if MainIni <> nil then
-  		MainIni.UnregisterRW(TOb.RWOptions);
+    if MainCfg <> nil then
+  		MainCfg.UnregisterRW(TOb.RWOptions);
 	end;
 
 	if Assigned(Sounds) and (Sounds.Count > 0) then
@@ -293,7 +294,7 @@ begin
 		if IniLoaded = False then
 		begin
 			IniLoaded := True;
-			MainIni.RegisterRW(TOb.RWOptions);
+			MainCfg.RegisterRW(TOb.RWOptions);
 		end;
 
 		P := Sounds.Get(SoundKind);
@@ -327,10 +328,10 @@ var
 begin
 	if SoundEnabled and Assigned(Sounds) then
 	begin
-		if Assigned(MainIni) and (IniLoaded = False) then
+		if Assigned(MainCfg) and (IniLoaded = False) then
 		begin
 			IniLoaded := True;
-			MainIni.RegisterRW(TOb.RWOptions);
+			MainCfg.RegisterRW(TOb.RWOptions);
 		end;
 
 		P := Sounds.Get(SoundKind);
@@ -402,7 +403,7 @@ begin
 	if IniLoaded = False then
 	begin
 		IniLoaded := True;
-		MainIni.RegisterRW(TOb.RWOptions);
+		MainCfg.RegisterRW(TOb.RWOptions);
 	end;
 	fSounds := TfSounds.Create(nil);
 	try
@@ -448,9 +449,9 @@ begin
 	DViewSounds.AddColumn('File Name', DViewSounds.Width - 114 - 64 - 56);
 	DViewSounds.AddColumn('Length', 64);
 
-	if Assigned(MainIni) then
+	if Assigned(MainCfg) then
 	begin
-		MainIni.RegisterRW(RWOptions);
+		MainCfg.RegisterRW(RWOptions);
 	end;
 
 	B := SoundMixer <> nil;
@@ -716,8 +717,8 @@ end;
 
 procedure TfSounds.RWOptions(const Save: BG);
 begin
-	MainIni.RWFormPos(Self, Save);
-	DViewSounds.Serialize(MainIni, Save);
+	GUIMainCfg.RWFormPos(Self, Save);
+	DViewSounds.Serialize(MainCfg, Save);
 end;
 
 procedure TfSounds.Init;
@@ -750,9 +751,9 @@ end;
 
 procedure TfSounds.FormDestroy(Sender: TObject);
 begin
-	if Assigned(MainIni) then
+	if Assigned(MainCfg) then
 	begin
-		MainIni.UnregisterRW(RWOptions);
+		MainCfg.UnregisterRW(RWOptions);
 	end;
 end;
 

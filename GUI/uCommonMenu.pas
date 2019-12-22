@@ -49,9 +49,9 @@ implementation
 
 uses
   Vcl.Forms,
+  UITypes,
   Classes,
   SysUtils,
-  Winapi.Windows,
   uAbout,
   uNewThread,
   uMainLog,
@@ -59,7 +59,8 @@ uses
   uAPI,
   ufOptions,
   uOptions,
-  uDIniFile,
+  uMainCfg,
+  uLocalMainCfg,
   uFiles,
   uStrings,
   uSounds,
@@ -88,7 +89,7 @@ begin
   M := TMenuItem.Create(AOwner);
   M.Name := 'Exit1';
   M.Caption := 'Exit';
-  M.ShortCut := ShortCut(VK_F4, [ssAlt]);
+  M.ShortCut := ShortCut(vkF4, [ssAlt]);
   M.OnClick := Exit1Click;
   AOwner.Add(M);
 end;
@@ -372,8 +373,8 @@ end;
 
 class procedure TCommonMenu.ViewIniFile1Click(Sender: TObject);
 begin
-	APIOpen(MainIni.FileName);
-	APIOpen(LocalMainIni.FileName);
+	APIOpen(MainCfg.FileName);
+	APIOpen(LocalMainCfg.FileName);
 end;
 
 class procedure TCommonMenu.ViewLogFile1Click(Sender: TObject);

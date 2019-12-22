@@ -35,7 +35,7 @@ implementation
 
 uses
   uMath,
-	uOutputFormat, uRawFile, uDIniFile, uDBitmap, uGraph, uGetStr, uColor,
+	uOutputFormat, uRawFile, uGUIMainCfg, uDBitmap, uGraph, uGetStr, uColor,
   uLgToPx;
 
 var
@@ -114,19 +114,19 @@ begin
 	if PlayerScore > Highs[MaxHigh].Score then
 	begin
 		if PlayerName = '' then
-			PlayerName := MainIni.ReadString('Options', 'PlayerName', 'Unknown');
+			PlayerName := GUIMainCfg.ReadString('Options', 'PlayerName', 'Unknown');
 		if GetStr('Your Name', PlayerName, 'Unknown', 15) then
 		begin
-			MainIni.WriteString('Options', 'PlayerName', PlayerName);
+			GUIMainCfg.WriteString('Options', 'PlayerName', PlayerName);
 			InsPlayer := -1;
 			for i := MaxHigh downto 0 do
 			begin
-				if UpperCase(Highs[i].Name) = UpperCase(PlayerName) then
+				if UpperCase(string(Highs[i].Name)) = UpperCase(PlayerName) then
 				begin
 					if Highs[i].Score < PlayerScore then
 					begin
 						Highs[i].Score := PlayerScore;
-						Highs[i].Name := PlayerName;
+						Highs[i].Name := AnsiString(PlayerName);
 						Highs[i].DateTime := Now;
 						Highs[i].GameTime := GameTime;
 						InsPlayer := i;
@@ -150,7 +150,7 @@ begin
 							Highs[j] := Highs[j - 1];
 						end;
 						Highs[i].Score := PlayerScore;
-						Highs[i].Name := PlayerName;
+						Highs[i].Name := AnsiString(PlayerName);
 						Highs[i].DateTime := Now;
 						Highs[i].GameTime := GameTime;
 						Break;
@@ -177,8 +177,8 @@ end;
 
 procedure TfScores.RWOptions(const Save: Boolean);
 begin
-	MainIni.RWFormPos(Self, Save);
-	DViewHighScores.Serialize(MainIni, Save);
+	GUIMainCfg.RWFormPos(Self, Save);
+	DViewHighScores.Serialize(GUIMainCfg, Save);
 end;
 
 procedure TfScores.FormCreate(Sender: TObject);
@@ -266,7 +266,7 @@ procedure TfScores.DViewHighScoresGetData(Sender: TObject;
 	var Data: String; ColIndex, RowIndex: Integer; Rect: TRect);
 begin
 	case ColIndex of
-	0: Data := Highs[RowIndex].Name;
+	0: Data := string(Highs[RowIndex].Name);
 	1: Data := NToS(Highs[RowIndex].Score);
 	2: Data := DateTimeToS(Highs[RowIndex].DateTime, 0, ofDisplay);
 	3: Data := MsToStr(Highs[RowIndex].GameTime, diMSD, 0, False);

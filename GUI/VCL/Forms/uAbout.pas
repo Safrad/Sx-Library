@@ -83,7 +83,7 @@ uses
   uMainTimer,
 	uAPI, uHTML, uDictionary,
 	uProjectInfo,
-	uGraph, uDIniFile, ufSysInfo, uSystemPaths, uFileStatistics, uMsg, uData, uWave, uColor, uDrawStyle,
+	uGraph, uMainCfg, uGUIMainCfg, ufSysInfo, uSystemPaths, uFileStatistics, uMsg, uData, uWave, uColor, uDrawStyle,
 	uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLgToPx;
 
 function GetLocalHomepage: TFileName;
@@ -206,13 +206,13 @@ begin
 			Inc(UsedValueCount);
 		end;
 	end;
-	MainIni.RegisterRW(RWOptions);
+	MainCfg.RegisterRW(RWOptions);
 end;
 
 procedure TfAbout.FormDestroy(Sender: TObject);
 begin
   FSxRandomGenerator.Free;
-	MainIni.UnregisterRW(RWOptions);
+	MainCfg.UnregisterRW(RWOptions);
 	if Assigned(BmpAbout) then
 	begin
 		FreeAndNil(BmpAbout);
@@ -434,10 +434,10 @@ end;
 
 procedure TfAbout.RWOptions(const Save: BG);
 begin
-	if Assigned(MainIni) then
+	if Assigned(GUIMainCfg) then
 	begin
-		MainIni.RWFormPos(Self, Save);
-		DViewAbout.Serialize(MainIni, Save);
+		GUIMainCfg.RWFormPos(Self, Save);
+		DViewAbout.Serialize(MainCfg, Save);
 	end;
 	if Save = False then
 		UpdateView;

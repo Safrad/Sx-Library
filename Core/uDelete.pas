@@ -30,12 +30,10 @@ implementation
 
 uses
   Math,
-  {$ifdef MSWINDOWS}
-  Winapi.Windows,
-  {$endif}
   uLogger,
   uFileLogger,
-  uDIniFile, uFolder, uFiles, uMath, uStrings, uSorts, uMsg;
+  uSxIniFile,
+  uFolder, uFiles, uMath, uStrings, uSorts, uMsg;
 
 const
   OptionsFile = '_delete.ini';
@@ -44,9 +42,9 @@ function ReadOptions(const FileName: TFileName): TDeleteOptions;
 const
   Section = 'Delete';
 var
-  IniFile: TDIniFile;
+  IniFile: TSxIniFile;
 begin
-  IniFile := TDIniFile.Create(FileName);
+  IniFile := TSxIniFile.Create(FileName);
   try
     Result.Mask := IniFile.ReadString(Section, 'Mask', '*');
     Result.MaxDirs := IniFile.ReadNum(Section, 'Max', MaxInt);

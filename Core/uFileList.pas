@@ -81,7 +81,7 @@ implementation
 
 uses
 	Math,
-	uDIniFile, uFolder,
+	uMainCfg, uFolder,
 	uStrings, uMath, uCSVFile, uInputFormat, uOutputFormat, uWatch, uRawFile, uTextFile;
 
 { TFileList }
@@ -458,7 +458,7 @@ begin
 	if Save then
 		FSelectedFileNames := GetFileNames;
 
-	MainIni.RWFileNames(Section, 'FileNames', FSelectedFileNames, Save);
+	MainCfg.RWFileNames(Section, 'FileNames', FSelectedFileNames, Save);
 
 	if Save = False then
 		SetFileNames(FSelectedFileNames);
