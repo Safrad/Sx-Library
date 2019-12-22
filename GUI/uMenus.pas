@@ -3,17 +3,18 @@ unit uMenus;
 interface
 
 uses
-	uTypes,
-
+  Types,
   Classes,
   Winapi.Windows,
+
   VCL.Graphics,
   VCL.Menus,
   VCL.ExtCtrls,
-  VCL.ImgList;
+  VCL.ImgList,
+
+	uTypes;
 
 var
-	IconSize: SG; // Size of button on toolbar.
   ImageSize: SG; // Size of image.
 
   // Supports touch screen
@@ -992,7 +993,6 @@ end;
 initialization
 
 {$IFNDEF NoInitialization}
-IconSize := LgToPx(22);
 ImageSize := LgToPx(16);
 MenuBmp := TDBitmap.Create;
 BCanvas := MenuBmp.Canvas;

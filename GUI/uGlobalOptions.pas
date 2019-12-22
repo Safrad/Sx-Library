@@ -9,6 +9,9 @@ uses
   uOptions,
   uStartup;
 
+var
+  IconSize: SG; // Size of button on toolbar.
+
 type
 	TGlobalOption = (
     goLanguage,
@@ -52,8 +55,9 @@ uses
   Classes,
 
   uFiles,
+  uLgToPx,
   uSystemPaths,
-  uDIniFile,
+  uMainCfg,
   uStrings,
 
   uMenus,
@@ -244,7 +248,7 @@ begin
 	end;
 
 	uOptions.RWOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalParams),
-		MainIni, 'Global Options', Save);
+		MainCfg, 'Global Options', Save);
 
   if Save = False then
   begin
@@ -260,5 +264,7 @@ initialization
 InitOptionNames(TypeInfo(TGlobalOption), GlobalOptions);
 
 DefaultOptions(POptions(@GlobalOptions), Length(GlobalOptions), PParams(@GlobalParams));
+
+IconSize := LgToPx(22);
 
 end.

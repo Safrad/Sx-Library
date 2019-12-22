@@ -114,7 +114,7 @@ uses
   Vcl.ImgList,
 
   Math, Types,
-	uGraph, uStrings, uColor, uMenus, uDrawStyle, uGlobalOptions,
+	uGraph, uStrings, uColor, uDrawStyle, uGlobalOptions,
 	uPictureFactory, uSounds, uOperatingSystem, uDWinControl, uLgToPx;
 
 { TDButton }
