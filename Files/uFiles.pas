@@ -16,7 +16,9 @@ uses
   uFileCharset;
 
 type
-{$ifndef MSWINDOWS}
+{$ifdef MSWINDOWS}
+  TFileTime = Winapi.Windows.TFileTime;
+{$else}
   TFileTime = TDateTime;
 const
   NO_ERROR = 0;
@@ -62,9 +64,6 @@ procedure CopyDamagedFile(ASource, ADestination: TFileName);
 function CreateDirEx(const ADirectoryPath: string): BG;
 function CreateDirsEx(const ADirectoryPath: string): BG;
 function CreateLockedDir(const ADirectoryName: string): THandle;
-{$ifndef MSWINDOWS}
-procedure CloseHandle(const AHandle: THandle);
-{$endif}
 function NewFileOrDir(var AFileOrDirectory: string): BG;
 function NewFileOrDirEx(var AFileOrDirectory: string): BG;
 procedure CopyFileDateTime(const ASourceFile, ADestinationFile: string);
@@ -971,13 +970,6 @@ begin
   Result := 0;
 {$endif}
 end;
-
-{$ifndef MSWINDOWS}
-procedure CloseHandle(const AHandle: THandle);
-begin
-  // No code
-end;
-{$endif}
 
 function NewFileOrDir(var AFileOrDirectory: string): BG;
 var

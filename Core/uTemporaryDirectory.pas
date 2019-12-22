@@ -47,12 +47,10 @@ implementation
 
 uses
   SysUtils,
-  {$ifdef MSWINDOWS}
-  Winapi.Windows,
-  {$endif}
 
   uProjectInfo,
   uStrings,
+  uWindowsFileAPI,
   uFiles,
   uOperatingSystem;
 

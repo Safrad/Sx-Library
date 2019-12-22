@@ -49,12 +49,10 @@ type
 implementation
 
 uses
-{$ifdef MSWINDOWS}
-	Winapi.Windows,
-{$endif}
 	SysUtils,
 	uFiles,
   uEIOException,
+  uWindowsFileAPI,
 	uData,
   uMsg,
 	uStrings;

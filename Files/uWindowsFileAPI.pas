@@ -3,16 +3,25 @@ unit uWindowsFileAPI;
 interface
 
 uses
+{$ifdef MSWINDOWS}
   SysUtils,
+  Winapi.Windows,
+{$endif}
+
   uTypes;
 
+{$ifdef MSWINDOWS}
+const
+  ERROR_NO_MORE_FILES = Winapi.Windows.ERROR_NO_MORE_FILES;
+
 function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
+{$endif}
+function CloseHandle(const AHandle: THandle): BG;
 
 implementation
 
+{$ifdef MSWINDOWS}
 uses
-  Winapi.Windows,
-
   uEIOException;
 
 function HandleFileSize(const AHandle: THandle; const AFileName: TFileName): S8;
@@ -28,6 +37,16 @@ begin
    		raise EIOException.Create(AFileName, ErrorCode);
     end;
 	end;
+end;
+{$endif}
+
+function CloseHandle(const AHandle: THandle): BG;
+begin
+{$ifdef MSWINDOWS}
+  Result := Winapi.Windows.CloseHandle(AHandle);
+{$else}
+  Result := True;
+{$endif}
 end;
 
 end.
