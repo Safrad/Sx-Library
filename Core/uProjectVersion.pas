@@ -27,7 +27,9 @@ implementation
 
 uses
 	SysUtils,
-	uStrings, uInputFormat, Math;
+  Math,
+	uStrings,
+  uInputFormat;
 
 function IsNAVersion(const ProjectVersion: TProjectVersion): BG;
 begin

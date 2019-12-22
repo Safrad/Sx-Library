@@ -3,7 +3,7 @@ unit uOpenedFileItem;
 interface
 uses
 	uTypes,
-	Windows,
+	uFiles,
 	Menus,
 	SysUtils;
 
@@ -61,7 +61,9 @@ type
 implementation
 
 uses
-	uOutputFormat, uMath;
+	uOutputFormat,
+  uMath,
+  uMainTimer;
 
 { TOpenedFileItem }
 
@@ -96,7 +98,7 @@ begin
 			S := S + ' *';
 		S := S + ' ' + Shorter(FileName);
 		if FChanged then
-			S := S + ' (' + MsToStr(IntervalFrom(ModificationTime), diMSD, 0,
+			S := S + ' (' + MsToStr(MainTimer.IntervalFrom(ModificationTime), diMSD, 0,
 				False) + ')';
 		if New <> 0 then
 			S := S + ' (New)';

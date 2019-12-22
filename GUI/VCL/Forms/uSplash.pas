@@ -3,12 +3,14 @@ unit uSplash;
 interface
 
 uses
+  Types,
+
 	uTypes,
   uTimeSpan,
   uStopwatch,
   uDBitmap,
 
-	Winapi.Windows, SysUtils, Classes, Graphics, Controls, Forms,
+	SysUtils, Classes, Graphics, Controls, Forms,
 	ExtCtrls, uDTimer, uDForm, StdCtrls, uSxLabel;
 
 type

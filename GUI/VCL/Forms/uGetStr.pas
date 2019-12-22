@@ -40,7 +40,6 @@ implementation
 
 {$R *.DFM}
 uses
-  Winapi.Windows,
   Vcl.Dialogs,
   SynTaskDialog,
   uVisualOptions,

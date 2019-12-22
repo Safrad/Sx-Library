@@ -4,8 +4,7 @@ interface
 
 uses
   uTypes,
-  uChannel,
-  uSpeakerConfiguration;
+  uChannel;
 
 type
   TChannels = class

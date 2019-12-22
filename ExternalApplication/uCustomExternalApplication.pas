@@ -88,7 +88,6 @@ uses
   Winapi.psAPI,
 
   uMsg,
-  uFiles,
   uProcessInfos,
   uEExternalApplication,
   uEIOException,
