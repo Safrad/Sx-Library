@@ -42,9 +42,6 @@ implementation
 uses
   uStrings;
 
-resourcestring
-  Unknown = '???';
-
 { TCustomCommand }
 
 procedure TCustomCommand.Execute(const AParameters: string);
@@ -72,7 +69,7 @@ begin
   try
     Result := GetSyntax;
   except
-    Result := Unknown;
+    Result := '';
   end;
 end;
 
@@ -113,8 +110,6 @@ begin
     FShortcut := DelFirstChar(FShortcut);
   if EndStr(Suffix, FShortcut) then
     SetLength(FShortcut, Length(FShortcut) - Length(Suffix));
-
-  FDescription := Unknown;
 end;
 
 end.
