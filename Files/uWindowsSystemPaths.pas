@@ -135,7 +135,7 @@ end;
 
 function TWindowsSystemPaths.ForceGetLocalAppDataDir: string;
 begin
-	Result := CommonLocalAppDataDir + GetProjectInfo(piInternalName) + PathDelim;
+	Result := CompanyLocalAppDataDir + GetProjectInfo(piInternalName) + PathDelim;
 end;
 
 function TWindowsSystemPaths.ForceGetModuleFileName: TFileName;
