@@ -106,6 +106,8 @@ begin
 end;
 
 procedure AddNewScore(PlayerScore, GameTime: U4);
+const
+  Unknown = 'Unknown';
 var
 	i, j: SG;
 	InsPlayer: SG;
@@ -114,8 +116,8 @@ begin
 	if PlayerScore > Highs[MaxHigh].Score then
 	begin
 		if PlayerName = '' then
-			PlayerName := GUIMainCfg.ReadString('Options', 'PlayerName', 'Unknown');
-		if GetStr('Your Name', PlayerName, 'Unknown', 15) then
+			PlayerName := GUIMainCfg.ReadString('Options', 'PlayerName', Unknown);
+		if GetStr('Your Name', PlayerName, Unknown, 15) then
 		begin
 			GUIMainCfg.WriteString('Options', 'PlayerName', PlayerName);
 			InsPlayer := -1;
