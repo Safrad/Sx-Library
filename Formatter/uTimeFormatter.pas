@@ -25,7 +25,7 @@ var
   TimeSpan: TTimeSpan;
 begin
   TimeSpan.Ticks := AValue;
-  Result := MsToStr(TimeSpan.Milliseconds, diMSD, Precision);
+  Result := MsToStr(TimeSpan.Milliseconds, TDisplay.diMSD, Precision);
 end;
 
 end.

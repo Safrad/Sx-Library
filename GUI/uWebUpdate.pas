@@ -162,7 +162,7 @@ begin
         end;
         Stopwatch.Stop;
         if MainLog.IsLoggerFor(mlDebug) then
-        	MainLog.Add('Download time: ' + MsToStr(Stopwatch.Elapsed.Milliseconds, diSD, 3, False, ofIO) + 's', mlDebug);
+        	MainLog.Add('Download time: ' + MsToStr(Stopwatch.Elapsed.Milliseconds, TDisplay.diSD, 3, False, ofIO) + 's', mlDebug);
         Result := True;
       except
         on E: Exception do

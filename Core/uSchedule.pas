@@ -266,7 +266,7 @@ begin
 	end;
 	scInterval:
 	begin
-		Result := 'At ' + DateTimeToS(StartDT, 0, ofDisplay) + ' every ' + MsToStr(Duration, diDHMSD, 0, False);
+		Result := 'At ' + DateTimeToS(StartDT, 0, ofDisplay) + ' every ' + MsToStr(Duration, TDisplay.diDHMSD, 0, False);
 	end;
 	scDaily:
 	begin
@@ -333,15 +333,15 @@ begin
 	end;
 	scWhenIdle:
 	begin
-		Result := 'Run when idle for ' + MsToStr(EveryXIdle.Milliseconds, diDHMSD, 0, False);
+		Result := 'Run when idle for ' + MsToStr(EveryXIdle.Milliseconds, TDisplay.diDHMSD, 0, False);
 	end;
 	scWhenOverload:
 	begin
-		Result := 'Run when overload for ' + MsToStr(EveryXOverload.Milliseconds, diDHMSD, 0, False);
+		Result := 'Run when overload for ' + MsToStr(EveryXOverload.Milliseconds, TDisplay.diDHMSD, 0, False);
 	end;
 	scLag:
 	begin
-		Result := 'Lag longer that ' + MsToStr(EveryXOverload.Milliseconds, diDHMSD, 0, False);
+		Result := 'Lag longer that ' + MsToStr(EveryXOverload.Milliseconds, TDisplay.diDHMSD, 0, False);
 	end;
 	scWindowsStartup:
 		Result :='Run at Windows startup';

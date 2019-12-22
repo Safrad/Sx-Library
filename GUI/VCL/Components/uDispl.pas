@@ -87,7 +87,9 @@ implementation
 uses
 	SysUtils,
 	uGraph,
-  uOutputFormat;
+  uOutputFormat,
+  uLocaleFormatSettings;
+
 const
 	MaxChar = 2 + 10 + 26 - 1;
 type
@@ -544,7 +546,7 @@ begin
 		'.':
 		begin
 			LPoint:
-			if (CaptionIndex <= 0) or (CaptionIndex > MaxCaption) or ((Caption[CaptionIndex] <> '.') and (Caption[CaptionIndex] <> DecimalSeparator)) then
+			if (CaptionIndex <= 0) or (CaptionIndex > MaxCaption) or ((Caption[CaptionIndex] <> '.') and (Caption[CaptionIndex] <> LocaleFormatSettings.DecimalSeparator)) then
 				C := CD
 			else
 			begin
@@ -594,7 +596,7 @@ begin
 		end
 		else
 		begin
-			if Format[B] = DecimalSeparator then
+			if Format[B] = LocaleFormatSettings.DecimalSeparator then
 			begin
 				goto LPoint;
 				A := 0; // Delphi Warning

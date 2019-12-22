@@ -243,7 +243,7 @@ begin
   begin
    	if test.GetName[1] = 'T' then
     begin
-      s := MsToStr(test.ElapsedTestTime, diSD, 3, True, ofIO);
+      s := MsToStr(test.ElapsedTestTime, TDisplay.diSD, 3, True, ofIO);
 			writeln(StringOfChar(' ', 6 - Length(s)) + s + ' : ' +  test.GetName);
       if MainLog.IsLoggerFor(mlInformation) then
         MainLog.Add(test.GetName + ' ' + 'finished.', mlInformation);
@@ -273,7 +273,7 @@ begin
   endTime := now;
   runTime := endTime-startTime;
   writeln;
-  writeln('Total time: ' + MsToStr(Round(MSecsPerDay * runTime), diSD, 3, True, ofIO));
+  writeln('Total time: ' + MsToStr(Round(MSecsPerDay * runTime), TDisplay.diSD, 3, True, ofIO));
   writeln(Report(testResult));
   if MainLog.IsLoggerFor(mlInformation) then
     MainLog.Add('Testing Ends', mlInformation);

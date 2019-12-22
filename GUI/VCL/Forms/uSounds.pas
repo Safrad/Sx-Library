@@ -595,7 +595,7 @@ begin
 	end;
 	3:
 	begin
-		Data := MsToStr(DSound.Length, diSD, 3, False, ofDisplay);
+		Data := MsToStr(DSound.Length, TDisplay.diSD, 3, False, ofDisplay);
 	end;
 	end;
 end;

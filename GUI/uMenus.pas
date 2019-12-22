@@ -830,7 +830,7 @@ begin
 		Result := '';
 	Result := Result + Translate(AddSpace(DelLastNumber(M.Name))) + ' (';
 	if AsTime then
-		Result := Result + MsToStr(Value, diSD, 3, False)
+		Result := Result + MsToStr(Value, TDisplay.diSD, 3, False)
 	else
 		Result := Result + NToS(Value);
 

@@ -68,7 +68,9 @@ uses
 	uTimeExpressionParser,
   uStrings, uMath, uOutputFormat,
   uSxStringParser,
-  uExpressionTreeEvaluator;
+  uExpressionTreeEvaluator,
+  uEnglishFormatSettings,
+  uLocaleFormatSettings;
 
 function StrToMs(Line: string; const MinVal, DefVal, MaxVal: TTimeSpan; const UseWinFormat: BG; const Messages: TParserMessages = nil): TTimeSpan;
 var Parser: TTimeExpressionParser;
@@ -81,13 +83,13 @@ begin
 		Parser.Messages := Messages;
 		if UseWinFormat then
 		begin
-			Parser.DecimalSep := DecimalSeparator;
-			Parser.ThousandSep := ThousandSeparator;
+			Parser.DecimalSep := LocaleFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := LocaleFormatSettings.ThousandSeparator;
 		end
 		else
 		begin
-			Parser.DecimalSep := '.';
-			Parser.ThousandSep := ',';
+			Parser.DecimalSep := EnglishFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := EnglishFormatSettings.ThousandSeparator;
 		end;
     Parser.Parse;
 		Result := Parser.Value;
@@ -110,13 +112,13 @@ begin
 		Parser.Messages := Messages;
 		if UseWinFormat then
 		begin
-			Parser.DecimalSep := DecimalSeparator;
-			Parser.ThousandSep := ThousandSeparator;
+			Parser.DecimalSep := LocaleFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := LocaleFormatSettings.ThousandSeparator;
 		end
 		else
 		begin
-			Parser.DecimalSep := '.';
-			Parser.ThousandSep := ',';
+			Parser.DecimalSep := EnglishFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := EnglishFormatSettings.ThousandSeparator;
 		end;
 
     LapStopwatch.Restart;
@@ -158,13 +160,13 @@ begin
 			Parser.Messages := Messages;
 		if UseWinFormat then
 		begin
-			Parser.DecimalSep := DecimalSeparator;
-			Parser.ThousandSep := ThousandSeparator;
+			Parser.DecimalSep := LocaleFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := LocaleFormatSettings.ThousandSeparator;
 		end
 		else
 		begin
-			Parser.DecimalSep := '.';
-			Parser.ThousandSep := ',';
+			Parser.DecimalSep := EnglishFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := EnglishFormatSettings.ThousandSeparator;
 		end;
 		Result := Parser.ReadNum(MinVal, DefVal, MaxVal);
 		if Messages = nil then
@@ -203,13 +205,13 @@ begin
 			Parser.Messages := Messages;
 		if UseWinFormat then
 		begin
-			Parser.DecimalSep := DecimalSeparator;
-			Parser.ThousandSep := ThousandSeparator;
+			Parser.DecimalSep := LocaleFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := LocaleFormatSettings.ThousandSeparator;
 		end
 		else
 		begin
-			Parser.DecimalSep := '.';
-			Parser.ThousandSep := ',';
+			Parser.DecimalSep := EnglishFormatSettings.DecimalSeparator;
+			Parser.ThousandSep := EnglishFormatSettings.ThousandSeparator;
 		end;
 		Result := Parser.ReadNum(DefVal);
 		if Messages = nil then

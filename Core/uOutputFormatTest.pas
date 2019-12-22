@@ -16,6 +16,8 @@ implementation
 
 uses
   uOutputFormat,
+  uEnglishFormatSettings,
+  uLocaleFormatSettings,
   Math,
   uTypes,
   uStrings,
@@ -39,9 +41,9 @@ end;
 procedure TOutputFormatTest.TestFToS;
 begin
   CheckEquals('1000.789', FToS(1000.789, ofIO));
-  CheckEquals('2' + ThousandSeparator + '451' + ThousandSeparator + '000' + DecimalSeparator + '789', FToS(2451000.789, ofDisplay));
+  CheckEquals('2' + LocaleFormatSettings.ThousandSeparator + '451' + LocaleFormatSettings.ThousandSeparator + '000' + LocaleFormatSettings.DecimalSeparator + '789', FToS(2451000.789, ofDisplay));
   CheckEquals('1000', FToS(1000, ofIO));
-  CheckEquals('2' + ThousandSeparator + '451' + ThousandSeparator + '000', FToS(2451000, ofDisplay));
+  CheckEquals('2' + LocaleFormatSettings.ThousandSeparator + '451' + LocaleFormatSettings.ThousandSeparator + '000', FToS(2451000, ofDisplay));
 end;
 
 procedure TOutputFormatTest.TestAddThousandSeparators;
@@ -49,32 +51,32 @@ var
   i: SG;
   s: string;
 begin
-  CheckEquals('', AddThousandSeparators('', IOFormatSettings, 'e'));
-  CheckEquals('1', AddThousandSeparators('1', IOFormatSettings, 'e'));
-  CheckEquals('1.7784', AddThousandSeparators('1.7784', IOFormatSettings, 'e'));
-  CheckEquals('10.7784', AddThousandSeparators('10.7784', IOFormatSettings, 'e'));
-  CheckEquals('100.7784', AddThousandSeparators('100.7784', IOFormatSettings, 'e'));
-  CheckEquals('1,000.7784', AddThousandSeparators('1000.7784', IOFormatSettings, 'e'));
-  CheckEquals('10,000.7784', AddThousandSeparators('10000.7784', IOFormatSettings, 'e'));
-  CheckEquals('100,000.7784', AddThousandSeparators('100000.7784', IOFormatSettings, 'e'));
-  CheckEquals('1,000,000.7784', AddThousandSeparators('1000000.7784', IOFormatSettings, 'e'));
-  CheckEquals('', AddThousandSeparators('', IOFormatSettings, 'e'));
-  CheckEquals('-1', AddThousandSeparators('-1', IOFormatSettings, 'e'));
-  CheckEquals('-1.7784', AddThousandSeparators('-1.7784', IOFormatSettings, 'e'));
-  CheckEquals('-10.7784', AddThousandSeparators('-10.7784', IOFormatSettings, 'e'));
-  CheckEquals('-100.7784', AddThousandSeparators('-100.7784', IOFormatSettings, 'e'));
-  CheckEquals('-1,000.7784', AddThousandSeparators('-1000.7784', IOFormatSettings, 'e'));
-  CheckEquals('-10,000.7784', AddThousandSeparators('-10000.7784', IOFormatSettings, 'e'));
-  CheckEquals('-100,000.7784', AddThousandSeparators('-100000.7784', IOFormatSettings, 'e'));
-  CheckEquals('-1,000,000.7784', AddThousandSeparators('-1000000.7784', IOFormatSettings, 'e'));
-  CheckEquals('- 100,000.7784', AddThousandSeparators('- 100000.7784', IOFormatSettings, 'e'));
-  CheckEquals('- 100,000.7784e10', AddThousandSeparators('- 100000.7784e10', IOFormatSettings, 'e'));
-  CheckEquals('- 100,000e10', AddThousandSeparators('- 100000e10', IOFormatSettings, 'e'));
+  CheckEquals('', AddThousandSeparators('', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('1', AddThousandSeparators('1', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('1.7784', AddThousandSeparators('1.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('10.7784', AddThousandSeparators('10.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('100.7784', AddThousandSeparators('100.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('1,000.7784', AddThousandSeparators('1000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('10,000.7784', AddThousandSeparators('10000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('100,000.7784', AddThousandSeparators('100000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('1,000,000.7784', AddThousandSeparators('1000000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('', AddThousandSeparators('', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-1', AddThousandSeparators('-1', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-1.7784', AddThousandSeparators('-1.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-10.7784', AddThousandSeparators('-10.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-100.7784', AddThousandSeparators('-100.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-1,000.7784', AddThousandSeparators('-1000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-10,000.7784', AddThousandSeparators('-10000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-100,000.7784', AddThousandSeparators('-100000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('-1,000,000.7784', AddThousandSeparators('-1000000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('- 100,000.7784', AddThousandSeparators('- 100000.7784', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('- 100,000.7784e10', AddThousandSeparators('- 100000.7784e10', EnglishFormatSettings.IOFormatSettings, 'e'));
+  CheckEquals('- 100,000e10', AddThousandSeparators('- 100000e10', EnglishFormatSettings.IOFormatSettings, 'e'));
   s := StringOfChar('7', 9999);
   for i := 0 to 999 do
   begin
-    CheckEquals('1,000,000', AddThousandSeparators('1000000', IOFormatSettings, 'e'));
-    AddThousandSeparators(s, IOFormatSettings, 'e');
+    CheckEquals('1,000,000', AddThousandSeparators('1000000', EnglishFormatSettings.IOFormatSettings, 'e'));
+    AddThousandSeparators(s, EnglishFormatSettings.IOFormatSettings, 'e');
   end;
 end;
 
@@ -88,8 +90,8 @@ begin
 	for i := 0 to MaxNumber do
   begin
     e := TestNumber;
-    s1 := ReplaceF(Format('%g', [e], IOFormatSettings), 'E0', 'E');
-    s2 := FloatToStr(e, IOFormatSettings);
+    s1 := ReplaceF(Format('%g', [e], EnglishFormatSettings.IOFormatSettings), 'E0', 'E');
+    s2 := FloatToStr(e, EnglishFormatSettings.IOFormatSettings);
     CheckEquals(s1, s2, 'Output format is wrong.');
   end;
 end;

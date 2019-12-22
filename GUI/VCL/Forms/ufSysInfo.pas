@@ -70,7 +70,8 @@ uses
   uOperatingSystem,
   uSystemMemory,
   uOutputFormat,
-  uProjectVersion;
+  uProjectVersion,
+  uLocaleFormatSettings;
 
 procedure TfSysInfo.FillComp;
 var
@@ -82,10 +83,10 @@ begin
 
   s := CPU.Name;
 	if s <> '' then
-		s := s + ListSeparator;
-	s := s + 'Family: ' + NToS(CPU.Family) + ListSeparator;
-	s := s + 'Model: ' + NToS(CPU.Model) + ListSeparator;
-	s := s + 'Stepping: ' + NToS(CPU.Stepping) + ListSeparator;
+		s := s + LocaleFormatSettings.ListSeparator;
+	s := s + 'Family: ' + NToS(CPU.Family) + LocaleFormatSettings.ListSeparator;
+	s := s + 'Model: ' + NToS(CPU.Model) + LocaleFormatSettings.ListSeparator;
+	s := s + 'Stepping: ' + NToS(CPU.Stepping) + LocaleFormatSettings.ListSeparator;
 	EditCPU.Text := s;
 
   EditThreads.Text := NToS(CPU.LogicalProcessorCount);
