@@ -9,11 +9,25 @@ uses
   SysUtils;
 
 type
-	TOutputFormat = (ofIO{Disk File Input/Output}, ofHTML{Disk HTML}, ofDisplay{Windows Locale});
+	TOutputFormat = (
+    /// <summary>
+    /// Disk File Input/Output
+    /// </summary>
+    ofIO,
+    /// <summary>
+    /// Disk HTML
+    /// </summary>
+    ofHTML,
+    /// <summary>
+    /// Windows Locale
+    /// </summary>
+    ofDisplay);
 
-// Number Format
 const
-	nbsp = '&nbsp;'; // Non-dividable Blank SPace.
+  /// <summary>
+  /// Non-dividable Blank Space.
+  /// </summary>
+	nbsp = '&nbsp;';
 
 var
 	NativeSymbols: string;
@@ -113,17 +127,6 @@ function PhoneToStr(const Phone: U8): string;
 
 function AddThousandSeparators(const AValue: string; const AFormatSettings: TFormatSettings; const AExponentPrefix: string): string;
 
-{$if CompilerVersion < 32}
-function IntToHex(Value: Int8): string; overload;
-function IntToHex(Value: UInt8): string; overload;
-function IntToHex(Value: Int16): string; overload;
-function IntToHex(Value: UInt16): string; overload;
-function IntToHex(Value: Int32): string; overload;
-function IntToHex(Value: UInt32): string; overload;
-function IntToHex(Value: Int64): string; overload;
-function IntToHex(Value: UInt64): string; overload;
-{$endif}
-
 implementation
 
 uses
@@ -132,7 +135,7 @@ uses
 {$ENDIF}
   Math,
 
-	uMath, uStrings, uDictionary;
+	uMath, uStrings;
 
 procedure AddMinusStr(var Result: string; const OutputFormat: TOutputFormat);
 begin
@@ -636,10 +639,7 @@ begin
 	if B < KB then // 2^10 ($400)
 	begin
 		Result := NToS(B, 0, OutputFormat) + Sep;
-		if OutputFormat = ofDisplay then
-			Result := Result + Translate('byte' + Plural(B))
-		else
-			Result := Result + 'byte' + Plural(B);
+		Result := Result + 'byte' + Plural(B);
 	end
 	else if B < 10 * KB then
 	begin
@@ -863,19 +863,19 @@ begin
 		if DT >= MSecsPerYear then
 		begin
 			Year := DT div S8(MSecsPerYear);
-			Result := Result + IntToStr(Year) + CharSpace + Translate('year' + Plural(Year)) + ListSep;
+			Result := Result + IntToStr(Year) + CharSpace + 'year' + Plural(Year) + ListSep;
 			DT := DT mod S8(MSecsPerYear);
 		end;
 		if DT >= MSecsPerWeek then
 		begin
 			Week := DT div MSecsPerWeek;
-			Result := Result + IntToStr(Week) + CharSpace + Translate('week' + Plural(Week)) + ListSep;
+			Result := Result + IntToStr(Week) + CharSpace + 'week' + Plural(Week) + ListSep;
 			DT := DT mod MSecsPerWeek;
 		end;
 		if DT >= MSecsPerDay then
 		begin
 			Day := DT div MSecsPerDay;
-			Result := Result + IntToStr(Day) + CharSpace + Translate('day' + Plural(Day)) + ListSep;
+			Result := Result + IntToStr(Day) + CharSpace + 'day' + Plural(Day) + ListSep;
 			DT := DT mod MSecsPerDay;
 		end;
 	end;
@@ -1192,47 +1192,6 @@ begin
   Result.ListSeparator := ',';
 end;
 
-{$if CompilerVersion < 32}
-function IntToHex(Value: Int8): string;
-begin
-  Result := IntToHex(UInt8(Value), SizeOf(Int8)*2);
-end;
-
-function IntToHex(Value: UInt8): string;
-begin
-  Result := IntToHex(Value, SizeOf(UInt8)*2);
-end;
-
-function IntToHex(Value: Int16): string;
-begin
-  Result := IntToHex(UInt16(Value), SizeOf(Int16)*2);
-end;
-
-function IntToHex(Value: UInt16): string;
-begin
-  Result := IntToHex(Value, SizeOf(UInt16)*2);
-end;
-
-function IntToHex(Value: Int32): string;
-begin
-  Result := IntToHex(UInt32(Value), SizeOf(Int32)*2);
-end;
-
-function IntToHex(Value: UInt32): string;
-begin
-  Result := IntToHex(Value, SizeOf(UInt32)*2);
-end;
-
-function IntToHex(Value: Int64): string;
-begin
-  Result := IntToHex(UInt64(Value), SizeOf(Int64)*2);
-end;
-
-function IntToHex(Value: UInt64): string;
-begin
-  Result := IntToHex(Value, SizeOf(UInt64)*2);
-end;
-{$endif}
 
 initialization
 {$IFNDEF NoInitialization}
