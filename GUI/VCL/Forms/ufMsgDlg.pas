@@ -118,7 +118,7 @@ begin
 	if Ignore.TimeLeft = 0 then
 		PanelTimeLeft.Caption := ''
 	else
-		PanelTimeLeft.Caption := MsToStr(Second * S8(Ignore.TimeLeft) - 1 - S8(TimeDifference(TickCount, StartTickCount)), diMSD, 0, False);
+		PanelTimeLeft.Caption := MsToStr(Second * S8(Ignore.TimeLeft) - 1 - S8(TimeDifference(TickCount, StartTickCount)), TDisplay.diMSD, 0, False);
 end;
 
 const
