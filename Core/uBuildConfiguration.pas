@@ -57,9 +57,6 @@ end;
 { BuildConfiguration }
 
 class function BuildConfiguration.AsString: string;
-var
-  s: string;
-
 begin
   Result := '';
 
