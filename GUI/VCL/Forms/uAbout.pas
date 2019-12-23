@@ -101,7 +101,8 @@ uses
   uDrawStyle,
 	uStrings,
   uOutputFormat,
-  uLgToPx;
+  uLgToPx,
+  uBuildConfiguration;
 
 function GetLocalHomepage: TFileName;
 begin
@@ -303,7 +304,6 @@ procedure TfAbout.ImageAboutFill(Sender: TObject);
 var
 	BitmapAbout: TDBitmap;
 	HClock: U1;
-	i: SG;
 	Co: array[0..3] of TColor;
 begin
 	BitmapAbout := ImageAbout.Bitmap;
@@ -472,42 +472,8 @@ begin
 end;
 
 procedure TfAbout.ButtonBuildParamsClick(Sender: TObject);
-var
-  s: string;
-
-  procedure Append(const ABuildParam: string; const ATurnedOn: BG);
-  begin
-    s := s + ABuildParam;
-    if ATurnedOn then
-      s := s + '+'
-    else
-      s := s + '-';
-    s := s + LineSep;
-  end;
-
 begin
-  s := '';
-
-  s := s + 'Code generation:' + LineSep;
-  Append('o (Optimization)', {$ifopt o+}True{$else}False{$endif});
-  Append('w (Stack frames)', {$ifopt w+}True{$else}False{$endif});
-  Append('u (Pentium-safe FDIV)', {$ifopt u+}True{$else}False{$endif});
-  Append('a (Record field alignment)', {$ifopt a+}True{$else}False{$endif});
-
-  s := s + 'Runtime errors:' + LineSep;
-  Append('r (Range checking)', {$ifopt r+}True{$else}False{$endif});
-  Append('i (I/O checking)', {$ifopt i+}True{$else}False{$endif});
-  Append('q (Overflow checking)', {$ifopt q+}True{$else}False{$endif});
-
-  s := s + 'Debugging:' + LineSep;
-  Append('d (Debug information)', {$ifopt d+}True{$else}False{$endif});
-  Append('l (Local symbols)', {$ifopt l+}True{$else}False{$endif});
-  Append('y (Reference info)', {$ifopt y+}True{$else}False{$endif});
-  Append('c (Assertions)', {$ifopt c+}True{$else}False{$endif});
-  Append('m (Runtime type information)', {$ifopt m+}True{$else}False{$endif});
-  Append('h (Show Hints)', {$ifopt h+}True{$else}False{$endif});
-
-  Information(s);
+  Information(BuildConfiguration.AsString);
 end;
 
 procedure TfAbout.DViewAboutCellClick(Sender: TObject; ColumnIndex,

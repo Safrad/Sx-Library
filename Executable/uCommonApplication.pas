@@ -95,7 +95,8 @@ uses
   uMainCfg,
   uLocalMainCfg,
   uDictionary,
-  uMainTimer;
+  uMainTimer,
+  uBuildConfiguration;
 
 { TCommonApplication }
 
@@ -118,6 +119,7 @@ begin
   inherited;
 
   try
+    BuildConfiguration.CheckCorrect;
     if IsDebug then
       Finalize; // For testing
 
