@@ -17,7 +17,7 @@ uses
   Classes,
   OmniXML,
   uStrings,
-  uDIniFile,
+  uSxIniFile,
   uLocalMainCfg,
   uWebUpdate,
   uProjectInfo,
@@ -71,10 +71,10 @@ end;
 
 function GetComputerGUID: TGUID;
 var
-  SxMainIni: TDIniFile;
+  SxMainIni: TSxIniFile;
   s: string;
 begin
-	SxMainIni := TDIniFile.Create(SystemPaths.CompanyLocalAppDataDir + 'Main.ini');
+	SxMainIni := TSxIniFile.Create(SystemPaths.CompanyLocalAppDataDir + 'Main.ini');
   try
     SxMainIni.RWString('Computer', 'GUID', s, False);
     if s = '' then
