@@ -12,6 +12,9 @@ uses
 type
   TCommandsList = TObjectList<TCustomCommand>;
 
+  /// <summary>
+  /// <see>https://en.wikipedia.org/wiki/Command_pattern</see>
+  /// </summary>
   TCommands = class
   private
     FChanged: BG;
