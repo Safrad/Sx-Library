@@ -12,10 +12,17 @@ uses
   Vcl.StdCtrls,
 	Vcl.ExtCtrls,
 
-  uDButton, uDLabel, uDTimer, uDImage, uDEdit, uDView,
-	uDForm, uTypes, uDBitmap,
-  uSxRandomGenerator,
-	uDWinControl;
+  uDButton,
+  uDLabel,
+  uDTimer,
+  uDImage,
+  uDEdit,
+  uDView,
+	uDForm,
+  uTypes,
+  uDBitmap,
+  uDWinControl,
+  uSparks;
 
 type
 	TfAbout = class(TDForm)
@@ -56,10 +63,9 @@ type
 		ViewInfo: SG;
 		UsedValues: array of SG;
 		UsedValueCount: SG;
-    FSxRandomGenerator: TSxRandomGenerator;
+    FSparks: TSparks;
 		procedure UpdateView;
 		procedure RWOptions(const Save: BG);
-		procedure NewFlash;
 	public
 		procedure LoadFile(AboutFile: TFileName);
 	end;
@@ -81,10 +87,21 @@ uses
 
   uCommonApplication,
   uMainTimer,
-	uAPI, uHTML, uDictionary,
+	uAPI,
+  uHTML,
+  uDictionary,
 	uProjectInfo,
-	uGraph, uMainCfg, uGUIMainCfg, ufSysInfo, uSystemPaths, uFileStatistics, uMsg, uData, uWave, uColor, uDrawStyle,
-	uStrings, uMath, uSystem, uInputFormat, uOutputFormat, uLgToPx;
+	uGraph,
+  uMainCfg,
+  uGUIMainCfg,
+  ufSysInfo,
+  uSystemPaths,
+  uFileStatistics,
+  uMsg,
+  uDrawStyle,
+	uStrings,
+  uOutputFormat,
+  uLgToPx;
 
 function GetLocalHomepage: TFileName;
 begin
@@ -103,7 +120,6 @@ end;
 
 procedure ExecuteAboutEx(AOwner: TComponent; const FileName: TFileName; const Modal: Boolean);
 begin
-//	PlayWinSound(wsExclamation);
 	if not Assigned(fAbout) then
 	begin
 		fAbout := TfAbout.Create(AOwner);
@@ -141,7 +157,8 @@ end;
 function GetFileName: TFileName; overload;
 begin
 	Result := GetFileName('Logo');
-	if Result <> '' then Exit;
+	if Result <> '' then
+    Exit;
 	Result := GetFileName(GetProjectInfo(piInternalName));
 end;
 
@@ -191,7 +208,6 @@ var
 	Id: SG;
 begin
 	ButtonBuildParams.Visible := IsDebug;
-  FSxRandomGenerator := TSxRandomGenerator.Create;
 
 	Background := baGradient;
 
@@ -207,11 +223,15 @@ begin
 		end;
 	end;
 	MainCfg.RegisterRW(RWOptions);
+
+  FSparks := TSparks.Create;
+  FSparks.MaxY := ImageAbout.Height;
 end;
 
 procedure TfAbout.FormDestroy(Sender: TObject);
 begin
-  FSxRandomGenerator.Free;
+  FSparks.Free;
+
 	MainCfg.UnregisterRW(RWOptions);
 	if Assigned(BmpAbout) then
 	begin
@@ -234,35 +254,32 @@ begin
 	Close;
 end;
 
-type
-	PFlash = ^TFlash;
-	TFlash = packed record // 16
-		X, Y: S4;
-		Power: S4;
-		Color: TRGBA;
-	end;
-var
-	Flashs: TData;
-
 procedure TfAbout.ImageAboutMouseDown(Sender: TObject;
 	Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-const kSC_DragMove = $F012 ;
+const
+  kSC_DragMove = $F012 ;
 begin
 	ReleaseCapture;
 	ImageAbout.Perform(WM_SYSCOMMAND, kSC_DragMove, 0);
 	if Button = mbLeft then
 	begin
-		if Typ >= MaxTyp then Typ := 0 else Inc(Typ);
+		if Typ >= MaxTyp then
+      Typ := 0
+    else
+      Inc(Typ);
 	end
 	else if Button = mbRight then
 	begin
-		if Typ <= 0 then Typ := MaxTyp else Dec(Typ);
+		if Typ <= 0 then
+      Typ := MaxTyp
+    else
+      Dec(Typ);
 	end;
 end;
 
 procedure TfAbout.EditWebClick(Sender: TObject);
 begin
-	APIOpen(GetProjectInfo(piWeb));
+	OpenWebHomepage;
 end;
 
 procedure TfAbout.EditEMailClick(Sender: TObject);
@@ -272,7 +289,8 @@ end;
 
 procedure TfAbout.DTimerFlashTimer(Sender: TObject);
 begin
-	NewFlash;
+	FSparks.New(ImageAbout.LMouseX, ImageAbout.LMouseY);
+  FSparks.Update;
 	ImageAbout.Invalidate;
 end;
 
@@ -281,23 +299,11 @@ begin
 	DisplaySysInfo(Self);
 end;
 
-procedure TfAbout.NewFlash;
-var
-	Flash: PFlash;
-begin
-	Flash := Flashs.Add;
-	Flash.X := ImageAbout.LMouseX;
-	Flash.Y := ImageAbout.LMouseY;
-	Flash.Power := 128 + 32 + Random(128 + 15 - 32);
-	Flash.Color.L := FireColor(256 + Random(256)); // SpectrumColor(Random(MaxSpectrum));
-end;
-
 procedure TfAbout.ImageAboutFill(Sender: TObject);
 var
 	BitmapAbout: TDBitmap;
 	HClock: U1;
 	i: SG;
-	Flash: ^TFlash;
 	Co: array[0..3] of TColor;
 begin
 	BitmapAbout := ImageAbout.Bitmap;
@@ -328,24 +334,9 @@ begin
 	begin
 		RotateDef(BitmapAbout, BmpAbout, Typ, (U8(AngleCount) * U8(TimerFlash.Clock) div (8 * MainTimer.Frequency)) and (AngleCount - 1), TEffect(Effect));
 	end;
-	
-	i := 0;
-	while i < Flashs.Count do
-	begin
-		Flash := Flashs.Get(i);
-		Dec(Flash.Power, 10);
-		Inc(Flash.Y, 2);
-		Inc(Flash.X, FSxRandomGenerator.RandomZeroDistance(2));
-		if (Flash.Y > SG(BitmapAbout.Height)) or (Flash.Power <= 0) then
-		begin
-			Flashs.Delete(i);
-		end
-		else
-		begin
-			BitmapAbout.BarBorder(Flash.X - 1, Flash.Y - 1, Flash.X + 2, Flash.Y + 2, Flash.Color.L, TEffect(Flash.Power div 16));
-			Inc(i);
-		end;
-	end;
+
+  FSparks.RenderToBitmap(BitmapAbout);
+
 	if TimerFlash.TimerCount < 200 then
 	begin
 		BitmapAbout.Canvas.Brush.Style := bsClear;
@@ -532,14 +523,4 @@ begin
   end;
 end;
 
-initialization
-{$IFNDEF NoInitialization}
-	Flashs := TData.Create(True);
-	Flashs.ItemSize := SizeOf(TFlash);
-{$ENDIF NoInitialization}
-finalization
-{$IFNDEF NoFinalization}
-	FreeAndNil(Flashs);
-//	FreeAndNil(fAbout);
-{$ENDIF NoFinalization}
 end.
