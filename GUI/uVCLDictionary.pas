@@ -28,7 +28,6 @@ uses
   VCL.ComCtrls,
   VCL.Buttons,
 
-	uDIniFile,
   uDLabel,
   uDView;
 
