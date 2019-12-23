@@ -204,9 +204,9 @@ procedure TfGetTime.InitEdit;
 begin
 	EditInput.OnChange := nil;
 	if TMaxVal.Hours >= 1 then
-		EditInput.Text := MsToStr(NowVal.Milliseconds, diMSD, -3, False)
+		EditInput.Text := MsToStr(NowVal.Milliseconds, TDisplay.diMSD, -3, False)
 	else
-		EditInput.Text := MsToStr(NowVal.Milliseconds, diHMSD, -3, False);
+		EditInput.Text := MsToStr(NowVal.Milliseconds, TDisplay.diHMSD, -3, False);
 	EditInput.SelectAll;
 	EditInput.OnChange := EditInputChange;
 end;
