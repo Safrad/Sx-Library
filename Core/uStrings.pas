@@ -138,6 +138,7 @@ function AddSpace(const s: string): string;
 procedure AppendStr(var Dest: TFileName; const Source: string); overload;
 procedure AppendStr(var Dest: string; const Source: string); overload;
 procedure AppendStrSeparator(var Dest: string; const Source: string; const ASeparator: string);
+procedure AppendLine(var Dest: string; const Source: string);
 procedure AddPrefix(var Dest: string; const Source: string);
 function Plural(const Number: SG): string;
 procedure CorrectDir(var s: string);
@@ -1189,6 +1190,11 @@ begin
     Dest := Source
   else
     Dest := Dest + ASeparator + Source;
+end;
+
+procedure AppendLine(var Dest: string; const Source: string);
+begin
+	Dest := Dest + Source + LineSep;
 end;
 
 procedure AddPrefix(var Dest: string; const Source: string);
