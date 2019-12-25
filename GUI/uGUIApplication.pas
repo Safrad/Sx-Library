@@ -19,7 +19,7 @@ implementation
 uses
   uCommonOutput,
   uGUIOutputInfo,
-  uMainCfg,
+  uLocalMainCfg,
   uGUIMainCfg;
 
 { TGUIApplication }
@@ -39,7 +39,7 @@ begin
 
   inherited;
 
-  TObject(GUIMainCfg) := TObject(MainCfg);
+  TObject(GUIMainCfg) := TObject(LocalMainCfg);
 end;
 
 end.
