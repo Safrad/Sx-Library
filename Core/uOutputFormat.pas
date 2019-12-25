@@ -128,9 +128,9 @@ function NToS(const Num: S8; const OutputFormat: TOutputFormat; const ANumericBa
 begin
   case OutputFormat of
   ofIO:
-    Result := CommonOutputFormat.NToS(Num, ANumericBase);
+    Result := CommonOutputFormat.NToSBase(Num, ANumericBase);
   else
-    Result := LocaleOutputFormat.NToS(Num, ANumericBase);
+    Result := LocaleOutputFormat.NToSBase(Num, ANumericBase);
   end;
 end;
 
@@ -138,9 +138,9 @@ function NToS(const Num: U8; const OutputFormat: TOutputFormat; const ANumericBa
 begin
   case OutputFormat of
   ofIO:
-    Result := CommonOutputFormat.NToS(Num, ANumericBase);
+    Result := CommonOutputFormat.NToSBase(Num, ANumericBase);
   else
-    Result := LocaleOutputFormat.NToS(Num, ANumericBase);
+    Result := LocaleOutputFormat.NToSBase(Num, ANumericBase);
   end;
 end;
 
