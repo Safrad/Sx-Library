@@ -42,7 +42,10 @@ type
 implementation
 
 uses
-	uProjectInfo, uMath, uMainTimer, uLocalMainCfg;
+	uProjectInfo,
+  uMainTimer,
+  uMainCfg,
+  uLocalMainCfg;
 
 { TApplicationStatistics }
 
@@ -89,7 +92,7 @@ begin
     end;
 
     // Backward compatibility
-  	if Assigned(LocalMainCfg) then
+  	if Assigned(MainCfg) then
       LocalMainCfg.DeleteSection(Section);
   end
   else
