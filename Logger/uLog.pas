@@ -6,10 +6,11 @@ uses
 	SysUtils,
 
 	uTypes,
-  uMainLog;
+  uMainLog,
+  uDateTimeLogger;
 
 type
-	TLog = class(TMainLog);
+	TLog = TDateTimeLogger;
 
 // Optimization purposes only
 procedure MainLogAdd(const ALine: string; const AMessageLevel: TMessageLevel);
@@ -25,7 +26,7 @@ function LogConfirmation: BG;
 procedure LogException(const E: Exception);
 
 // Backward compatibility
-function MainLog: TMainLog;
+function MainLog: TLog;
 
 implementation
 
@@ -77,7 +78,7 @@ begin
     MainLog.LogException(E);
 end;
 
-function MainLog: TMainLog;
+function MainLog: TDateTimeLogger;
 begin
   Result := uMainLog.MainLog;
 end;
