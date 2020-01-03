@@ -56,8 +56,6 @@ type
     class procedure SetTicksPerSecond(const Value: U8); static;
     class procedure SetPrecisionDigits(const Value: U1); static;
   public
-    class constructor Create;
-
     // The total elapsed time measured by the current instance, in timer ticks.
     property Ticks: U8 read FTicks write SetTicks;
     class property TicksPerSecond: U8 read FTicksPerSecond write SetTicksPerSecond;
@@ -155,14 +153,6 @@ uses
   uMetricPrefix;
 
 { TTimeSpan }
-
-class constructor TTimeSpan.Create;
-begin
-  inherited;
-
-  FTicksPerSecond := 1000000000;
-  FPrecisionDigits := 9;
-end;
 
 function TTimeSpan.Difference(const AValue: TTimeSpan): TTimeSpan;
 begin
