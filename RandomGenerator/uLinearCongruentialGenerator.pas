@@ -1,9 +1,6 @@
 // https://en.wikipedia.org/wiki/Linear_congruential_generator
 unit uLinearCongruentialGenerator;
 
-{$R-}
-{$Q-}
-
 interface
 
 uses
@@ -45,6 +42,8 @@ begin
   FSeed := MainTimer.Value.Ticks;
 end;
 
+{$ifopt Q+} {$Q-} {$define OverflowCheck} {$endif}
+{$ifopt R+} {$R-} {$define RangeCheck} {$endif}
 function TLinearCongruentialGenerator.RandomU4: U4;
 begin
   FSeed := FSeed * FMultiplicand + FAddition;
@@ -56,6 +55,8 @@ begin
   FSeed := FSeed * FMultiplicand + FAddition;
   Result := FSeed;
 end;
+{$ifdef OverflowCheck} {$Q+} {$undef OverflowCheck} {$endif}
+{$ifdef RangeCheck} {$R+} {$undef RangeCheck} {$endif}
 
 procedure TLinearCongruentialGenerator.SetAddition(const Value: U8);
 begin

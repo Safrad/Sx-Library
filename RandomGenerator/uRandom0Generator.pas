@@ -4,9 +4,6 @@
 
 unit uRandom0Generator;
 
-{$R-}
-{$Q-}
-
 interface
 
 uses
@@ -34,6 +31,8 @@ begin
   Addition := 28411;
 end;
 
+{$ifopt Q+} {$Q-} {$define OverflowCheck} {$endif}
+{$ifopt R+} {$R-} {$define RangeCheck} {$endif}
 function TRandom0Generator.RandomU4: U4;
 const
   Modulo = 134456;
@@ -55,5 +54,7 @@ begin
   ResultOffset := (Seed mod (32 * Modulo)) div Modulo;
   Result := ((Seed shr ResultOffset) mod Modulo) * U8(137195395324192) {2^64 div Modulo};
 end;
+{$ifdef OverflowCheck} {$Q+} {$undef OverflowCheck} {$endif}
+{$ifdef RangeCheck} {$R+} {$undef RangeCheck} {$endif}
 
 end.
