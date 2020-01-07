@@ -12,8 +12,10 @@ type
   TCommonOutputFormat = class
   private
     function NToSInternal(const Num: S8; const Negative: BG; const UseFormat: string; const ANumericBase: U1): string; overload;
+    function NToSInternal(const Num: U8; const Negative: BG; const UseFormat: string; const ANumericBase: U1): string; overload;
     procedure MsToHMSD(const T: S8; out GH, GM, GS, GD: U4);
   protected
+    function NToSInternal(const Num: S8; const Negative: BG; const Decimals: SG = 0; const ANumericBase: U1 = 10): string; overload; virtual;
     function NToSInternal(const Num: U8; const Negative: BG; const Decimals: SG = 0; const ANumericBase: U1 = 10): string; overload; virtual;
   public
     type
@@ -29,7 +31,8 @@ type
         'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
         'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
         'y', 'z', '-', '*'});
-    function NumToStr(Num: S8; const ANumericBase: U1): string;
+    function NumToStr(const ANum: S8; const ANumericBase: U1): string; overload;
+    function NumToStr(const ANum: U8; const ANumericBase: U1): string; overload;
 
     function NToS(const Num: S8; const UseFormat: string; const ANumericBase: U1 = 10): string; overload;
     function NToS(const Num: U8; const UseFormat: string; const ANumericBase: U1 = 10): string; overload;
@@ -80,28 +83,30 @@ uses
 
 { TCommonOuptutFormat }
 
-function TCommonOutputFormat.NumToStr(Num: S8; const ANumericBase: U1): string;
-var
-	M: SG;
-//	Minus: BG;
+function TCommonOutputFormat.NumToStr(const ANum: S8; const ANumericBase: U1): string;
 begin
-	Result := '';
-	if Num < 0 then
+	if ANum < 0 then
 	begin
-		Num := -Num;
-//		Minus := True;
-	end;
-{	else
-		Minus := False;}
+		Result := NumToStr(U8(-ANum), ANumericBase);
+	end
+  else
+		Result := NumToStr(U8(ANum), ANumericBase);
+end;
+
+function TCommonOutputFormat.NumToStr(const ANum: U8; const ANumericBase: U1): string;
+var
+	Modulo: SG;
+  Reminder: U8;
+begin
 	Assert((ANumericBase >= 2) and (ANumericBase <= MaxNumericBase));
-	while True do
-	begin
-//		DivModS64(Num, Base, D, M);
-		M := Num mod ANumericBase;
-		Num := Num div ANumericBase;
-		Result := NumberTable[M] + Result;
-		if Num = 0 then Break;
-	end;
+
+	Result := '';
+  Reminder := ANum;
+	repeat
+		Modulo := Reminder mod ANumericBase;
+		Reminder := Reminder div ANumericBase;
+		Result := NumberTable[Modulo] + Result;
+	until Reminder = 0;
 end;
 
 function TCommonOutputFormat.NToSInternal(const Num: S8; const Negative: BG; const UseFormat: string; const ANumericBase: U1): string;
@@ -113,10 +118,23 @@ var
 begin
 	Result := '';
 
+{$ifopt R+} {$R-} {$define RangeCheck} {$endif}
 	if ANumericBase = 10 then
-		Nums := IntToStr(Abs(Num))
+  begin
+    if Negative and (Num < 0) then
+  		Nums := IntToStr(U8(-Num))
+    else
+  		Nums := UIntToStr(U8(Num))
+  end
 	else
-		Nums := NumToStr(Abs(Num), ANumericBase);
+  begin
+    if Negative and (Num < 0) then
+  		Nums := NumToStr(U8(-Num), ANumericBase)
+    else
+  		Nums := NumToStr(U8(Num), ANumericBase);
+  end;
+{$ifdef RangeCheck} {$R+} {$undef RangeCheck} {$endif}
+
 	j := Length(Nums);
 	PointPos := Pos('.', UseFormat);
 	if PointPos = 0 then PointPos := High(PointPos);
@@ -179,7 +197,7 @@ begin
 		end
 		else if UseFormat[i] = '+' then
 		begin
-			if Num < 0 then
+			if Negative and (Num < 0) then
 				Result := '-' + Result
 			else
 				Result := '+' + Result;
@@ -187,7 +205,7 @@ begin
 		end
 		else if UseFormat[i] = '-' then
 		begin
-			if Num < 0 then
+			if Negative and (Num < 0) then
 				Result := '-' + Result
 			else
 				Result := ' ' + Result;
@@ -204,7 +222,9 @@ end;
 
 function TCommonOutputFormat.NToS(const Num: U8; const UseFormat: string; const ANumericBase: U1 = 10): string;
 begin
+{$ifopt R+} {$R-} {$define RangeCheck} {$endif}
   Result := NToSInternal(Num, False, UseFormat, ANumericBase);
+{$ifdef RangeCheck} {$R+} {$undef RangeCheck} {$endif}
 end;
 
 function TCommonOutputFormat.NToSBase(const Num: S4; const ANumericBase: U1 = 10): string;
@@ -239,7 +259,9 @@ begin
   if (ANumericBase = 10) and (Decimals = 0) then
   begin
     if Negative then
-      Result := IntToStr(Num)
+{$ifopt R+} {$R-} {$define RangeCheck} {$endif}
+      Result := IntToStr(S8(Num))
+{$ifdef RangeCheck} {$R+} {$undef RangeCheck} {$endif}
     else
       Result := UIntToStr(Num);
     Exit;
@@ -331,9 +353,24 @@ begin
 	end;
 end;
 
+function TCommonOutputFormat.NToSInternal(const Num: U8; const Negative: BG; const UseFormat: string;
+  const ANumericBase: U1): string;
+begin
+{$ifopt R+} {$R-} {$define RangeCheck} {$endif}
+  Result := NToSInternal(S8(Num), True, UseFormat, ANumericBase);
+{$ifdef RangeCheck} {$R+} {$undef RangeCheck} {$endif}
+end;
+
+function TCommonOutputFormat.NToSInternal(const Num: S8; const Negative: BG; const Decimals: SG;
+  const ANumericBase: U1): string;
+begin
+{$ifopt R+} {$R-} {$define RangeCheck} {$endif}
+  Result := NToSInternal(U8(Num), True, Decimals, ANumericBase);
+{$ifdef RangeCheck} {$R+} {$undef RangeCheck} {$endif}
+end;
+
 function TCommonOutputFormat.NToS(const Num: S8; const Decimals: SG = 0; const ANumericBase: U1 = 10): string;
 begin
-  {$R-}
   Result := NToSInternal(Num, True, Decimals, ANumericBase);
 end;
 
