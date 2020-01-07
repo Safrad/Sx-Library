@@ -108,6 +108,8 @@ begin
     SizeableForm := (Form.BorderStyle = bsSizeable) or (Form.BorderStyle = bsSizeToolWin);
     PixelsPerInch := Screen.PixelsPerInch;
 		RWNum(Form.Name, 'PixelsPerInch', PixelsPerInch, Save);
+    if (Save = False) and (PixelsPerInch <= 0) then
+      PixelsPerInch := 96;
 		if not (Form.Position in [poDefault, poDefaultSizeOnly]) then
 			if SizeableForm then
 			// if (not (Form is TDForm)) or (TDForm(Form).FullScreen = False) then
