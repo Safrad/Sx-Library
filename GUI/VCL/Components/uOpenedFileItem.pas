@@ -98,7 +98,7 @@ begin
 			S := S + ' *';
 		S := S + ' ' + Shorter(FileName);
 		if FChanged then
-			S := S + ' (' + MsToStr(MainTimer.IntervalFrom(ModificationTime), diMSD, 0,
+			S := S + ' (' + MsToStr(MainTimer.IntervalFrom(ModificationTime), TDisplay.diMSD, 0,
 				False) + ')';
 		if New <> 0 then
 			S := S + ' (New)';

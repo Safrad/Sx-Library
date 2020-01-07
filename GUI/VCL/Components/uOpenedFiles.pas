@@ -33,7 +33,9 @@ unit uOpenedFiles;
 interface
 
 uses
-	uTypes, uReopen, uOpenedFileItem,
+	uTypes,
+  uReopen,
+  uOpenedFileItem,
   uSwitchArgument,
   uFileNameArgument,
 
@@ -907,7 +909,7 @@ begin
 		begin
 			case Confirmation(Items[OpenedFile].FileName + LineSep +
 					'Save changes, you have made during last ' + MsToStr
-					(TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime), diMSD, 0, False)
+					(TimeDifference(GetTickCount, Items[OpenedFile].ModificationTime), TDisplay.diMSD, 0, False)
 					+ '?', [mbYes, mbNo, mbCancel]) of
 			mbYes:
 			begin
@@ -1284,7 +1286,7 @@ begin
 	if Item <> nil then
 		if (Item.FChanged = False) or (Confirmation(Item.FileName + LineSep +
 					'Lose all changes in during ' + MsToStr(TimeDifference(GetTickCount, Item.SaveTime),
-					diMSD, 0, False) + '?', [mbYes, mbNo]) = mbYes) then
+					TDisplay.diMSD, 0, False) + '?', [mbYes, mbNo]) = mbYes) then
 		begin
 			try
 				if Assigned(FOnFreeFile) then
@@ -1362,9 +1364,9 @@ var
 	Item: TOpenedFileItem;
 begin
 	Item := ActualItem;
-	if Item <> nil then
+{	if Item <> nil then
 		if DeleteFileDialog(Item.FileName) then
-			Close1Click(Sender);
+			Close1Click(Sender); TODO }
 end;
 
 procedure TOpenedFiles.PreviousNextWindow1Click(Sender: TObject);
