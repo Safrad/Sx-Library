@@ -45,8 +45,6 @@ type
 		{ Public declarations }
 	end;
 
-procedure RWDrawStyle(MainIni: TDIniFile; Name: string; var DS: TDrawStyle; Save: BG);
-
 var
 	fStyle: TfStyle;
 
@@ -77,17 +75,6 @@ begin
 		ComboBoxLineSize.Items.EndUpdate;
 	end;
 	LayoutControls([ButtonOk, ButtonCancel, ButtonApply], ClientWidth, ClientHeight);
-end;
-
-procedure RWDrawStyle(MainIni: TDIniFile; Name: string; var DS: TDrawStyle; Save: BG);
-begin
-	MainIni.RWEnum(Name, TypeInfo(TGraphicStyle), U1(DS.Style), Save);
-	MainIni.RWEnum(Name, TypeInfo(TEffect), U1(DS.Effect), Save);
-	MainIni.RWEnum(Name, TypeInfo(TGenFunc), U1(DS.GenFunc), Save);
-	MainIni.RWNum(Name, 'Color0', S4(DS.Colors[0]), Save);
-	MainIni.RWNum(Name, 'Color1', S4(DS.Colors[1]), Save);
-	MainIni.RWNum(Name, 'BorderSize', DS.BorderSize, Save);
-	MainIni.RWFileName(Name, 'TextureFileName', DS.TextureFileName, Save);
 end;
 
 procedure TfStyle.FormToData(Sender: TObject);
