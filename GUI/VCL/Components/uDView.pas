@@ -887,7 +887,7 @@ begin
 									end;
 								except
 									on E: Exception do
-										Fatal(E, Self);
+										Data := E.Message;
 								end;
 							end;
 						end
