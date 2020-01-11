@@ -153,5 +153,7 @@ end;
 initialization
 
 finalization
+{$IFNDEF NoFinalization}
   FreeAndNil(GEnglishFormatSettings);
+{$ENDIF NoFinalization}
 end.

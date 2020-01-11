@@ -82,4 +82,10 @@ begin
 {$ENDIF}
 end;
 
+initialization
+
+finalization
+{$IFNDEF NoFinalization}
+  FreeAndNil(GLocaleFormatSettings);
+{$ENDIF NoFinalization}
 end.
