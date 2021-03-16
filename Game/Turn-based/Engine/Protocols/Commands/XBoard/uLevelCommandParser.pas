@@ -37,6 +37,7 @@ uses
 
   uInputFormat,
   uOutputFormat,
+  uCommonOutputFormat,
   uStrings;
 
 { TLevelCommandParser }
@@ -45,7 +46,7 @@ function TLevelCommandParser.ParametersToString: string;
 begin
   Result :=
     IntToStr(FMoveCount) + CharSpace +
-    MsToStr(FIncrementTime.Milliseconds, diMSD, 0) + CharSpace +
+    MsToStr(FIncrementTime.Milliseconds, TCommonOutputFormat.TDisplay.diMSD, 0) + CharSpace +
     FToS(FMoveIncrementTime.SecondsAsF);
 end;
 
