@@ -21,7 +21,8 @@ uses
   uCommonApplication,
   uSystemMemory,
   uOutputFormat,
-  uStrings;
+  uStrings,
+  uCommonOutputFormat;
 
 { TStateCommand }
 
@@ -51,8 +52,8 @@ begin
       ],
       [
 			  NToS(CommonApplication.Statistics.RunCount),
-        MsToStr(CommonApplication.Statistics.ElapsedTime.Milliseconds, diDHMSD, 3, False),
-			  MsToStr(CommonApplication.Statistics.TotalElapsedTime.Milliseconds, diDHMSD, 3, False),
+        MsToStr(CommonApplication.Statistics.ElapsedTime.Milliseconds, TCommonOutputFormat.TDisplay.diDHMSD, 3, False),
+			  MsToStr(CommonApplication.Statistics.TotalElapsedTime.Milliseconds, TCommonOutputFormat.TDisplay.diDHMSD, 3, False),
 			  NToS(FileStatistics.ReadCount),
 			  BToStr(FileStatistics.ReadBytes),
 			  NToS(FileStatistics.WriteCount),

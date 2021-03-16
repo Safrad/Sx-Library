@@ -23,6 +23,7 @@ uses
   uSystemMemory,
   uMainTimer,
   uOutputFormat,
+  uCommonOutputFormat,
   uStrings;
 
 { TStateCommand }
@@ -59,7 +60,7 @@ begin
       [
         OperatingSystem.ComputerName,
         OperatingSystem.NameAndVersion,
-			  MsToStr(OperatingSystem.UptimeInMs, diDHMSD, 3, False),
+			  MsToStr(OperatingSystem.UptimeInMs, TCommonOutputFormat.TDisplay.diDHMSD, 3, False),
         CPU.Name,
 			  NToS(CPU.LogicalProcessorCount),
 			  NToS(Round(10000 * CPU.Usage), 2) + '%',
