@@ -12,8 +12,8 @@ type
   TGoCommand = class(TEngineCommand)
   private
     const
-      Keywords: array[0..10] of string = ('searchmoves', 'infinite', 'depth', 'mate', 'movetime', 'nodes',
-        'movestogo', 'wtime', 'btime', 'winc', 'binc');
+      Keywords: array[0..11] of string = ('searchmoves', 'infinite', 'depth', 'mate', 'movetime', 'nodes',
+        'movestogo', 'wtime', 'btime', 'winc', 'binc', 'byoyomi');
     var
       MyLevel: TCustomLevel;
       OpponentLevel: TCustomLevel;
@@ -63,7 +63,7 @@ end;
 
 procedure TGoCommand.Execute(const AParameters: string);
 var
-  WhiteRemainTime, BlackRemainTime, WhiteIncrementalTime, BlackIncrementalTime: SG;
+  WhiteRemainTime, BlackRemainTime, WhiteIncrementalTime, BlackIncrementalTime, ByoyomiTime: SG;
   MovesToGo: SG;
   InLineIndex: SG;
   Value: string;
@@ -83,6 +83,7 @@ begin
     BlackRemainTime := 0;
     WhiteIncrementalTime := 0;
     BlackIncrementalTime := 0;
+    ByoyomiTime := 0;
     MovesToGo := 0;
 
     InternalEngine.LevelManager.InfiniteAnalysis := False;
@@ -129,6 +130,10 @@ begin
       else if Value = 'binc' then
       begin
         BlackIncrementalTime := ReadSGFast(AParameters, InLineIndex);
+      end
+      else if Value = 'byoyomi' then
+      begin
+        ByoyomiTime := ReadSGFast(AParameters, InLineIndex);
       end
       else if Value = 'depth' then
       begin
@@ -183,7 +188,7 @@ begin
       TTimeControlLevel(MyLevel).MoveCount := MovesToGo;
       TTimeControlLevel(MyLevel).IncrementTime.Milliseconds := WhiteRemainTime;
       TTimeControlLevel(MyLevel).MoveIncrementTime.Milliseconds := WhiteIncrementalTime;
-      TTimeControlLevel(MyLevel).FreeTime.Ticks := 0;
+      TTimeControlLevel(MyLevel).FreeTime.Milliseconds := ByoyomiTime;
       TTimeControlLevel(MyLevel).MoveIndex := 0; // Init time limit
 
       OpponentLevel := TTimeControlLevel.Create;
@@ -191,7 +196,7 @@ begin
       TTimeControlLevel(OpponentLevel).MaximalMoveOverhead.Milliseconds := InternalEngine.CommonOptions.MaximalMoveOverhead.Value;
       TTimeControlLevel(OpponentLevel).IncrementTime.Milliseconds := BlackRemainTime;
       TTimeControlLevel(OpponentLevel).MoveIncrementTime.Milliseconds := BlackIncrementalTime;
-      TTimeControlLevel(OpponentLevel).FreeTime.Ticks := 0;
+      TTimeControlLevel(OpponentLevel).FreeTime.Milliseconds := ByoyomiTime;
       TTimeControlLevel(OpponentLevel).MoveIndex := 0;
       TTimeControlLevel(OpponentLevel).TimeUsage := InternalEngine.CommonOptions.TimeUsage.Value;
       TTimeControlLevel(OpponentLevel).FixedMoveTime := InternalEngine.CommonOptions.FixedMoveTime.Value;
