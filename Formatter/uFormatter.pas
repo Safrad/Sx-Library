@@ -1,3 +1,4 @@
+{$TYPEINFO OFF}
 unit uFormatter;
 
 interface
