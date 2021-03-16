@@ -119,11 +119,11 @@ begin
   inherited;
 
   try
-    BuildConfiguration.CheckCorrect;
     if IsDebug then
       Finalize; // For testing
 
     Initialize;
+    BuildConfiguration.CheckCorrect;
     FInitialized := True;
   except
     on E: Exception do
