@@ -57,7 +57,7 @@ uses
 procedure TReadBuffer.ReadData(const AData: Pointer; const ASize: UG);
 var
   Data: PByte;
-  RemainReadCount, ReadSize: UG;
+  RemainReadCount, ReadSize: SG;
 begin
   if ASize > UG(U8(FDataCount) - FFilePosition) then
     ClearMemory(AData^, ASize);
@@ -69,7 +69,7 @@ begin
   RemainReadCount := ASize;
   while RemainReadCount > 0 do
   begin
-    if FBufferAllocation.Remain = 0 then
+    if FBufferAllocation.Remain <= 0 then
       ReadNextBuffer;
 
     ReadSize := Min(FBufferAllocation.Remain, S8(RemainReadCount));
@@ -112,7 +112,8 @@ begin
   FBufferAllocation.Total := Min(FAlignedMemory.Size, FDataCount - FBufferPos);
   Assert(FBufferAllocation.Total > 0);
   OnReadData(FAlignedMemory.Data, FBufferAllocation.Total);
-  FBufferAllocation.Used := 0;
+  FBufferAllocation.Used := S8(FFilePosition) - FBufferPos;;
+  Assert(FBufferAllocation.Remain > 0);
 end;
 
 procedure TReadBuffer.Seek(const APosition: U8);
