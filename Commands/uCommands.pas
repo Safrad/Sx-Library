@@ -53,6 +53,7 @@ uses
   uUnsupportedCommand,
   uTextAlignment,
   uTable,
+  uITable,
   uMath,
   uStrings,
   uSorts,
@@ -132,29 +133,33 @@ end;
 
 procedure TCommands.WriteToCommonOutput;
 var
-  Table: TTable;
+  Table: ITable;
   Row: TRow;
   i: SG;
 begin
   Table := TTable.Create;
   try
     Row := THeaderRow.Create(3);
-    Row.Columns[0].Text := 'Command name and parameters';
-    Row.Columns[0].HorizontalAlignment := haCenter;
-    Row.Columns[1].Text := 'Description';
-    Row.Columns[1].VerticalAlignment := vaCenter;
-    Row.Columns[2].Text := 'Used';
-    Row.Columns[2].VerticalAlignment := vaCenter;
-    Table.AddHeaderRow(Row);
+    try
+      Row.Columns[0].Text := 'Command name and parameters';
+      Row.Columns[0].HorizontalAlignment := haCenter;
+      Row.Columns[1].Text := 'Description';
+      Row.Columns[1].VerticalAlignment := vaCenter;
+      Row.Columns[2].Text := 'Used';
+      Row.Columns[2].VerticalAlignment := vaCenter;
+      TTable(Table).AddHeaderRow(Row);
+    finally
+      Row.Free;
+    end;
 
     for i := 0 to FCommands.Count - 1 do
     begin
       Row := PreviewTableCommand(TCustomCommand(FCommands[i]));
       Table.AddRow(Row);
     end;
-    CommonOutput.AddTable(Table);
+    CommonOutput.AddTable(TTable(Table));
   finally
-    Table.Free;
+    Table := nil;
   end;
 end;
 
