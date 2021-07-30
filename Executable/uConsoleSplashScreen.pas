@@ -58,6 +58,8 @@ begin
 end;
 
 procedure TConsoleSplashScreen.Show;
+var
+  LegalCopyrightAndCompany: string;
 begin
   inherited;
 
@@ -66,8 +68,13 @@ begin
     Console.WriteLine(GetProjectInfo(piProductName) + ' [Version ' + GetProjectInfo(piProductVersion) + ']', ccWhite);
     if GetProjectInfo(piFileDescription) <> '' then
       Console.WriteLine(GetProjectInfo(piFileDescription), ccLightGray);
+    LegalCopyrightAndCompany := '';
     if GetProjectInfo(piLegalCopyright) <> '' then
-      Console.WriteLine(GetProjectInfo(piLegalCopyright) + CharSpace + GetProjectInfo(piCompanyName), ccGray);
+      AppendStrSeparator(LegalCopyrightAndCompany, GetProjectInfo(piLegalCopyright), CharSpace);
+    if GetProjectInfo(piCompanyName) <> '' then
+      AppendStrSeparator(LegalCopyrightAndCompany, GetProjectInfo(piCompanyName), CharSpace);
+    if LegalCopyrightAndCompany <> '' then
+      Console.WriteLine(LegalCopyrightAndCompany, ccGray);
     Console.WriteLine('');
   end;
 end;
