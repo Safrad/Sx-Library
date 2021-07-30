@@ -46,6 +46,7 @@ type
     procedure Initialize; virtual;
     procedure Finalize; virtual;
     procedure OnRun; virtual; abstract;
+    procedure FreeSplashScreen;
   public
     constructor Create;
     destructor Destroy; override;
@@ -161,6 +162,11 @@ begin
   finally
     RestartIfNeeded;
   end;
+end;
+
+procedure TCommonApplication.FreeSplashScreen;
+begin
+  FreeAndNil(FSplashScreen);
 end;
 
 procedure TCommonApplication.Initialize;

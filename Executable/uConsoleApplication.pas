@@ -134,6 +134,8 @@ end;
 destructor TConsoleApplication.Destroy;
 begin
   try
+    FreeSplashScreen; // required if Run method is not called
+
     inherited;
   finally
     WaitForEnter;
@@ -161,8 +163,7 @@ procedure TConsoleApplication.Run;
 begin
   inherited;
 
-  SplashScreen.Free;
-  SplashScreen := nil;
+  FreeSplashScreen;
 end;
 
 procedure TConsoleApplication.WaitForEnter;
