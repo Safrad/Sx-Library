@@ -3,16 +3,19 @@ var
 	F: TRawFile;
 begin
 	F := TRawFile.Create;
-try
-  F.FileName := DataDir + 'FileName.dat';
-  F.FileMode := ffmReadOnly;
-  F.Open;
+  try
+    F.FileName := DataDir + 'FileName.dat';
+    F.FileMode := ffmReadOnly;
+    F.Open;
 
-	F.BlockRead(...);
+    F.BlockRead(...);
 
-	F.Close; // Optional
-	F.Free;
-end; }
+    F.Close; // Optional
+  finally
+  	F.Free;
+  end;
+end;
+}
 unit uRawFile;
 
 {$ifdef MSWINDOWS}
