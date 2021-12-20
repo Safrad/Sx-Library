@@ -7,6 +7,7 @@ uses
 
 type
   TBuildConfiguration = record
+    CompilerVersion: FG;
     Optimization: BG;
     StackFrames: BG;
     PentiumSafeFDiv: BG;
@@ -60,6 +61,9 @@ class function BuildConfiguration.AsString: string;
 begin
   Result := '';
 
+  AppendLine(Result, 'Compiler Version:');
+  AppendLine(Result, FloatToStr(FBuildConfiguration.CompilerVersion));
+
   AppendLine(Result, 'Code generation:');
   AppendBoolValue(Result, 'o (Optimization)', FBuildConfiguration.Optimization);
   AppendBoolValue(Result, 'w (Stack frames)', FBuildConfiguration.StackFrames);
@@ -109,6 +113,8 @@ type
     AlignedData: TAlignedData;
   end;
 begin
+  FBuildConfiguration.CompilerVersion := CompilerVersion;
+
   FBuildConfiguration.Optimization := {$ifopt o+}True{$else}False{$endif};
   FBuildConfiguration.StackFrames := {$ifopt w+}True{$else}False{$endif};
   FBuildConfiguration.PentiumSafeFDiv := {$ifopt u+}True{$else}False{$endif};
