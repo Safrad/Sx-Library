@@ -7,7 +7,6 @@ uses
 
   uTypes,
 
-  uPieceLanguage,
   uSquare,
   uHash,
   uMove;
@@ -32,10 +31,10 @@ type
 
     function SideColorToString(const APlayerIndex: SG): string; virtual; abstract;
 
-    class function PieceToString(const APiece: TSquare; const APieceLanguage: TPieceLanguage): string; overload; virtual; abstract;
-    class function PieceToString(APiece: TSquare; const ASide: TSide; const PieceLanguage: TPieceLanguage = plEnglish): string; overload;
+    class function PieceToString(const APiece: TSquare): string; overload; virtual; abstract;
+    class function PieceToString(APiece: TSquare; const ASide: TSide): string; overload;
 
-    class function StringToPiece(const ALine: string; var AInLineIndex: SG; const ABothSides: BG; const APieceLanguage: TPieceLanguage): TPiece;
+    class function StringToPiece(const ALine: string; var AInLineIndex: SG; const ABothSides: BG): TPiece;
 
     function GetRemainMoveCount: SG; virtual; abstract;
 
@@ -81,12 +80,12 @@ begin
   FHash := GetHash;
 end;
 
-class function TPosition.PieceToString(APiece: TSquare; const ASide: TSide; const PieceLanguage: TPieceLanguage): string;
+class function TPosition.PieceToString(APiece: TSquare; const ASide: TSide): string;
 begin
 	Assert(APiece >= 0);
 	if ASide <> 0 then
 		APiece := -APiece;
-	Result := PieceToString(APiece,  PieceLanguage);
+	Result := PieceToString(APiece);
 end;
 
 procedure TPosition.SetLongDraw(const Value: U4);
@@ -104,8 +103,7 @@ begin
   FSide := Value;
 end;
 
-class function TPosition.StringToPiece(const ALine: string; var AInLineIndex: SG; const ABothSides: BG;
-  const APieceLanguage: TPieceLanguage): TPiece;
+class function TPosition.StringToPiece(const ALine: string; var AInLineIndex: SG; const ABothSides: BG): TPiece;
 var
 	s, s1, s2: string;
 	i: SG;
@@ -115,7 +113,7 @@ begin
     Exit;
 	for i := 1 to High(TSquare) do
 	begin
-		s := PieceToString(i, APieceLanguage);
+		s := PieceToString(i);
     if s = '' then
       Break; // No more pieces
 		s1 := Copy(ALine, AInLineIndex, Length(s));
