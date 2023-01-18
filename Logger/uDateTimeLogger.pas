@@ -29,7 +29,8 @@ uses
 
 procedure TDateTimeLogger.Add(const Line: string; const MessageLevel: TMessageLevel);
 begin
- 	Add(FCreatedDataTime + MainTimer.IntervalFrom(FCreatedTicks) / (MainTimer.Frequency * MSecsPerDay / 1000), Line, MessageLevel);
+  if IsLoggerFor(MessageLevel) then
+   	Add(FCreatedDataTime + MainTimer.IntervalFrom(FCreatedTicks) / (MainTimer.Frequency * MSecsPerDay / 1000), Line, MessageLevel);
 end;
 
 constructor TDateTimeLogger.Create;

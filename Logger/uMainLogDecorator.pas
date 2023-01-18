@@ -40,7 +40,8 @@ constructor TMainLogDecorator.Create(const FileName: TFileName);
 begin
   inherited;
 
-	Add('Started Version ' + GetProjectInfo(piProductVersion), mlInformation);
+  if IsLoggerFor(mlInformation) then
+  	Add('Started Version ' + GetProjectInfo(piProductVersion), mlInformation);
   if IsLoggerFor(mlDebug) then
     Add('Operating System Version: ' + OperatingSystem.VersionAsString, mlDebug);
 end;
