@@ -24,7 +24,7 @@ constructor TMemoryCommand.Create;
 begin
   inherited;
 
-  Description := 'THow much memory it is allowed to use maximally, in MegaBytes.';
+  Description := 'How much memory it is allowed to use maximally, in MegaBytes.';
 end;
 
 function TMemoryCommand.GetSyntax: string;
