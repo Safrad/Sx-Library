@@ -11,7 +11,10 @@ type
   TTimeLevel = class(TCustomLevel)
   private
     FFixedMoveTime: BG;
+    FPlayUnbalancedPositionsFaster: BG;
     procedure SetFixedMoveTime(const Value: BG);
+    function GetAvgFactor: FG;
+    procedure SetPlayUnbalancedPositionsFaster(const Value: BG);
   protected
     FAverageTime: TTimeSpan;
     FMaximalTime: TTimeSpan;
@@ -20,17 +23,22 @@ type
     function CanStopOnMove: BG; override;
     function CanStopOnNode: BG; override;
   public
+    constructor Create;
+
     property MinimalTime: TTimeSpan read FMinimalTime;
     property MaximalTime: TTimeSpan read FMaximalTime;
     property AverageTime: TTimeSpan read FAverageTime;
 
     function GetAsString: string; override;
     property FixedMoveTime: BG read FFixedMoveTime write SetFixedMoveTime;
+    property PlayUnbalancedPositionsFaster: BG read FPlayUnbalancedPositionsFaster write SetPlayUnbalancedPositionsFaster;
   end;
 
 implementation
 
 uses
+  Math,
+
   uAnalysisInfo;
 
 { TTimeLevel }
@@ -39,8 +47,6 @@ const
   MinimalCompleteDepth = 1;
 
 function TTimeLevel.CanStopOnDepth: BG;
-const
-  AvgFactor = 2;
 var
   ElapsedWithAverageMoveOverheadTicks: U8;
 begin
@@ -50,7 +56,7 @@ begin
     Result :=
       (AnalysisInfo.ElapsedTime.Elapsed.Ticks >= MinimalTime.Ticks) and
       (
-        (ElapsedWithAverageMoveOverheadTicks * AvgFactor > AverageTime.Ticks) or
+        (ElapsedWithAverageMoveOverheadTicks * GetAvgFactor > AverageTime.Ticks) or
         (ElapsedWithAverageMoveOverheadTicks >= MaximalTime.Ticks)
       );
   end
@@ -96,6 +102,13 @@ begin
     Result := False;
 end;
 
+constructor TTimeLevel.Create;
+begin
+  inherited;
+
+  FPlayUnbalancedPositionsFaster := True;
+end;
+
 function TTimeLevel.GetAsString: string;
 begin
 	Result := 'Time Limits: ';
@@ -104,9 +117,29 @@ begin
 		Result := Result + ' | Max: ' + FMaximalTime.ToStringInSeconds;
 end;
 
+// @result:
+// 0 the fastest
+// 1 play MaximalTime
+// 2 default (do not exceed 1/2 of average time)
+// 3 play faster (do not exceed 1/3 of average time)
+// 10 the slowest
+function TTimeLevel.GetAvgFactor: FG;
+begin
+  Result := 2;
+  if not FPlayUnbalancedPositionsFaster then
+  begin
+    Result := Result + Min(8, Abs(AnalysisInfo.ActualAnalysis.Status.Score) div 300);
+  end;
+end;
+
 procedure TTimeLevel.SetFixedMoveTime(const Value: BG);
 begin
   FFixedMoveTime := Value;
+end;
+
+procedure TTimeLevel.SetPlayUnbalancedPositionsFaster(const Value: BG);
+begin
+  FPlayUnbalancedPositionsFaster := Value;
 end;
 
 end.
