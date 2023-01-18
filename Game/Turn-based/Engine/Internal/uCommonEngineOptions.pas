@@ -282,7 +282,7 @@ end;
 procedure TCommonEngineOptions.CreateOptionOwnBook;
 begin
   FOwnBook := TSwitchArgument.Create;
-  FOwnBook.Shortcut := 'Own Book';
+  FOwnBook.Shortcut := 'OwnBook'; // Defined in UCI protocol specification without space
   FOwnBook.Description := 'Engine uses internal opening book.';
   FOwnBook.DefaultValue := True;
   FOwnBook.Value := FOwnBook.DefaultValue;
