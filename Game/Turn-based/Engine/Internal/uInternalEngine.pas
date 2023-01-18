@@ -7,6 +7,7 @@ uses
   uSxThreadTimer,
   uPowerRequest,
 
+  uTimeSpan,
   uGameVariant,
   uCommonEngine,
   uCommonEngineOptions,
@@ -59,6 +60,8 @@ type
     procedure EvalToConsole; virtual; abstract;
     procedure WriteBoardToConsole; virtual; abstract;
     procedure WaitForCalculationDone(const ATimeOutInMilliseconds: U8); override;
+    procedure SetHashForMoveTime(const ATimeSpan: TTimeSpan);
+    procedure SetNumberOfHashEntries(const AHashEntries: U8); virtual; abstract;
 
 
     function GetCurrentLine: string; virtual; abstract;
@@ -73,6 +76,8 @@ implementation
 
 uses
   SysUtils,
+  Math,
+
   uStrings,
   uProjectInfo,
   uMainLog,
@@ -80,6 +85,7 @@ uses
 
   uScore,
   uTimeLevel,
+  uMoveTimeLevel,
   uTimeControlLevel,
   uOneSecondTimer;
 
@@ -209,6 +215,13 @@ begin
     Output.AcceptDraw;
 end;
 
+procedure TInternalEngine.SetHashForMoveTime(const ATimeSpan: TTimeSpan);
+const
+  NodesPerSecond = 4 * 1000 * 1000; // TODO : Calculate
+begin
+  SetNumberOfHashEntries(Round(ATimeSpan.SecondsAsF * FG(NodesPerSecond)));
+end;
+
 procedure TInternalEngine.Start;
 begin
   try
@@ -234,6 +247,23 @@ begin
           TTimeControlLevel(LevelManager.OpponentLevel).MoveIndex := 0;
         end;
         Output.TellGUIInfo(TTimeLevel(LevelManager.MyLevel).GetAsString);
+      end;
+
+      // Set Automatic Hash Size
+      if FCommonOptions.AutomaticHashSize.Value = True then
+      begin
+        if LevelManager.MyLevel is TMoveTimeLevel then
+        begin
+          SetHashForMoveTime(TMoveTimeLevel(LevelManager.MyLevel).Value);
+        end
+        else if LevelManager.MyLevel is TTimeLevel then
+        begin
+          SetHashForMoveTime(TTimeLevel(LevelManager.MyLevel).MaximalTime);
+        end
+        else
+        begin
+          FCommonOptions.HashSizeInMB.OnChange(Self);
+        end;
       end;
     end;
 

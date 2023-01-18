@@ -39,6 +39,7 @@ type
 
     // OnSetOption...
     procedure OnOptionOwnBookChange(Sender: TObject);
+    procedure OnSetOptionAutomaticHashSizeChange(Sender: TObject);
     procedure OnSetOptionHashChange(Sender: TObject);
     procedure OnSetOptionClearHashChange(Sender: TObject);
 
@@ -58,6 +59,7 @@ type
     procedure Start; override;
     procedure Stop; override;
     procedure Undo; override;
+    procedure SetNumberOfHashEntries(const AHashEntries: U8); override;
     procedure BookMoves; override;
     procedure GetPerft(const ADepth: SG); override;
     procedure WriteBoardToConsole; override;
@@ -70,6 +72,8 @@ type
 implementation
 
 uses
+  Math,
+
   uFiles,
   uNewThread,
   uSystemMemory,
@@ -196,6 +200,7 @@ end;
 procedure TDllEngine.CreateOptions;
 begin
   CommonOptions.OwnBook.OnChange := OnOptionOwnBookChange;
+  CommonOptions.AutomaticHashSize.OnChange := OnSetOptionAutomaticHashSizeChange;
   CommonOptions.HashSizeInMB.OnChange := OnSetOptionHashChange;
   CommonOptions.ClearHash.OnChange := OnSetOptionClearHashChange;
 end;
@@ -311,6 +316,11 @@ begin
   FSetOptionOwnBook(CommonOptions.OwnBook.Value);
 end;
 
+procedure TDllEngine.OnSetOptionAutomaticHashSizeChange(Sender: TObject);
+begin
+  OnSetOptionHashChange(Sender);
+end;
+
 procedure TDllEngine.OnSetOptionClearHashChange(Sender: TObject);
 begin
   FSetOptionClearHash();
@@ -329,6 +339,15 @@ begin
     GetDllMethods;
     CreateCallbacks;
   end;
+end;
+
+procedure TDllEngine.SetNumberOfHashEntries(const AHashEntries: U8);
+const
+  EntrySize = 8; // TODO : Dll specific
+begin
+  inherited;
+
+  FSetOptionHash(Math.Min(CommonOptions.HashSizeInMB.Value, Round(EntrySize * AHashEntries / MB)));
 end;
 
 procedure TDllEngine.SetOutput(const Value: TEngineOutput);

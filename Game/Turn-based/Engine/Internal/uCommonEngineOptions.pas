@@ -18,6 +18,7 @@ type
     FOwnBook: TSwitchArgument;
     FBookFile: TFileNameArgument;
 
+    FAutomaticHashSize: TSwitchArgument;
     FHashSizeInMB: TNumericalIntervalArgument;
     FClearHash: TButtonArgument;
 
@@ -35,6 +36,7 @@ type
     procedure CreateOptionPonder;
     procedure CreateOptionOwnBook;
     procedure CreateOptionBookFile;
+    procedure CreateOptionAutomaticHashSize;
     procedure CreateOptionHashSizeInMB;
     procedure CreateOptionClearHash;
     procedure CreateOptionContemptValuye;
@@ -57,6 +59,7 @@ type
     property OwnBook: TSwitchArgument read FOwnBook;
     property BookFile: TFileNameArgument read FBookFile;
 
+    property AutomaticHashSize: TSwitchArgument read FAutomaticHashSize;
     property HashSizeInMB: TNumericalIntervalArgument read FHashSizeInMB;
     property ClearHash: TButtonArgument read FClearHash;
 
@@ -101,6 +104,7 @@ begin
   CreateOptionPonder;
   CreateOptionOwnBook;
   CreateOptionBookFile;
+  CreateOptionAutomaticHashSize;
   CreateOptionHashSizeInMB;
   CreateOptionClearHash;
   CreateOptionContemptValuye;
@@ -128,6 +132,7 @@ begin
     FContemptValue.Free;
     FClearHash.Free;
     FHashSizeInMB.Free;
+    FAutomaticHashSize.Free;
     FBookFile.Free;
     FOwnBook.Free;
     FPonder.Free;
@@ -167,6 +172,15 @@ begin
   FMinimalMoveTime.NumericalInterval.MaximalValue := 1 * 1000; // [milliseconds] = 1 second
   FMinimalMoveTime.DefaultValue := 50; // [milliseconds]
   FMinimalMoveTime.Value := FMinimalMoveTime.DefaultValue;
+end;
+
+procedure TCommonEngineOptions.CreateOptionAutomaticHashSize;
+begin
+  FAutomaticHashSize := TSwitchArgument.Create;
+  FAutomaticHashSize.Shortcut := 'Automatic Hash Size';
+  FAutomaticHashSize.Description := '';
+  FAutomaticHashSize.DefaultValue := True;
+  FAutomaticHashSize.Value := FAutomaticHashSize.DefaultValue;
 end;
 
 procedure TCommonEngineOptions.CreateOptionAverageMoveOverhead;
