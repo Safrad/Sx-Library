@@ -34,6 +34,7 @@ implementation
 uses
   uUCIProtocol,
   uUCIEngineOutput,
+  uGameVariant,
   uGameVariants;
 
 { TUCICommand }
@@ -41,6 +42,7 @@ uses
 procedure TUCICommand.AddOptions;
 var
   i: SG;
+  Name: string;
 begin
   FindChess960 := -1;
 
@@ -52,11 +54,14 @@ begin
   FUCI_Variant.Description := '';
   for i := 0 to GameVariants.Count - 1 do
   begin
-    FUCI_Variant.AddCaption(GameVariants[i].Name);
-    if GameVariants[i].Name = 'chess' then
-      FUCI_Variant.DefaultValue := i
-    else if GameVariants[i].Name = 'chess960' then
-      FindChess960 := i;
+    for Name in GameVariants[i].Names do
+    begin
+      FUCI_Variant.AddCaption(Name);
+      if Name = 'chess' then
+        FUCI_Variant.DefaultValue := i
+      else if Name = 'chess960' then
+        FindChess960 := i;
+    end;
   end;
   FUCI_Variant.Value := FUCI_Variant.DefaultValue;
   FUCI_Variant.OnChange := OnVariantChange;
@@ -111,14 +116,18 @@ begin
 end;
 
 procedure TUCICommand.OnVariantChange(Sender: TObject);
+var
+  GameVariant: TGameVariant;
 begin
+  GameVariant := GameVariants.FindByName(FUCI_Variant.Captions[FUCI_Variant.Value]);
+
   FUCI_Chess960.OnChange := nil;
   try
-    FUCI_Chess960.Value := GameVariants[FUCI_Variant.Value].Name = 'chess960';
+    FUCI_Chess960.Value := GameVariant.Names[0] = 'chess960';
   finally
     FUCI_Chess960.OnChange := OnChess960Change;
   end;
-  ConsoleEngine.InternalEngine.GameVariant := GameVariants[FUCI_Variant.Value];
+  ConsoleEngine.InternalEngine.GameVariant := GameVariant;
 end;
 
 constructor TUCICommand.Create;

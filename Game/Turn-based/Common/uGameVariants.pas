@@ -11,7 +11,7 @@ type
   public
     constructor Create;
 
-    function FindByName(const AGameVaraintName: string): TGameVariant;
+    function FindByName(const AGameVariantName: string): TGameVariant;
     function ToXBoardString: string;
   end;
 
@@ -35,16 +35,15 @@ begin
   OwnsObjects := True;
 end;
 
-function TGameVariants.FindByName(const AGameVaraintName: string): TGameVariant;
+function TGameVariants.FindByName(const AGameVariantName: string): TGameVariant;
 var
   i: SG;
-  GameVaraintNameUpperCase: string;
+  GameVariantNameUpperCase: string;
 begin
-  GameVaraintNameUpperCase := UpperCase(AGameVaraintName);
+  GameVariantNameUpperCase := UpperCase(AGameVariantName);
   for i := 0 to Count - 1 do
   begin
-
-    if UpperCase(Self[i].Name) = GameVaraintNameUpperCase then
+    if Self[i].IsVariant(GameVariantNameUpperCase) then
     begin
       Result := Self[i];
       Exit;
@@ -60,7 +59,7 @@ begin
   Result := '';
   for i := 0 to Count - 1 do
   begin
-    AppendStr(Result, Self[i].Name);
+    AppendStr(Result, Self[i].Names[0]);
     if i < Count - 1 then
       AppendStr(Result, ',');
   end;

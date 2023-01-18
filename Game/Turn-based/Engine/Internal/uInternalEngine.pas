@@ -105,7 +105,7 @@ begin
     begin
       if Value <> nil then
       begin
-        Output.TellGUIInfo('Game variant changed to: ' + Value.Name)
+        Output.TellGUIInfo('Game variant changed to: ' + Value.Names[0])
       end
       else
       begin
